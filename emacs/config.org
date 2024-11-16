@@ -502,6 +502,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#emacs-speech-input][emacs-speech-input]]
   - [[#read-aloud][read-aloud]]
   - [[#read-aloud-extras][read-aloud-extras]]
+  - [[#subed][subed]]
 - [[#misc][misc]]
   - [[#calc][calc]]
   - [[#calc-ext][calc-ext]]
@@ -12713,6 +12714,18 @@ Requires configuration. Disabled for the time being.
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package read-aloud-extras
   :after read-aloud)
+#+end_src
+
+** subed
+:PROPERTIES:
+:ID:       2FE4816E-F6F8-452A-9417-345FE4E01014
+:END:
+
+/[[https://github.com/sachac/subed][subed]] is a subtitle editor for Emacs./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package subed
+:disabled)
 #+end_src
 
 * misc

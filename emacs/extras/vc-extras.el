@@ -126,8 +126,10 @@ If NAME is nil, prompt for one. If ACCOUNT is nil, select one."
 (defun vc-extras-clone-repo (&optional name account no-forge)
   "Clone an existing repo.
 ACCOUNT is the name of the GitHub account. If NAME is nil, prompt the user for a
-repo name. If NO-FORGE is non-nil, do not prompt the user to add the repo to the
-Forge database."
+repo name. If NO-FORGE is non-nil, do not prompt to add the repo to Forge.
+
+This function does not use `vc-git-clone' because it does not support cloning
+submodules."
   (interactive)
   (let* ((repos nil)
 	 (name (or name
@@ -136,24 +138,36 @@ Forge database."
 				  (alist-get name repos nil nil #'string=)
 				(user-error "If you provide a repo name, you must also provide its account"))))
 	 (remote (vc-extras-get-github-remote name account))
-	 (dir (file-name-concat (vc-extras-get-account-prop account :dir) name)))
+	 (dir (file-name-concat (vc-extras-get-account-prop account :dir) name))
+	 (process-buffer "*git-clone-output*"))
     (when (file-exists-p dir)
       (user-error "Directory `%s' already exists" dir))
-    (vc-clone remote 'Git dir)
-    (pcase vc-extras-split-repo
-      ('nil)
-      ('prompt (if (y-or-n-p "Move `.git' directory to separate directory?")
-		   (vc-extras-split-local-repo dir)
-		 (message "You can customize the `vc-extras-split-repo' user option to avoid this prompt.")))
-      (_ (vc-extras-split-local-repo dir)))
-    (let ((default-directory dir))
-      (require 'forge-core)
-      (require 'forge-extras)
-      (if (and (not no-forge)
-	       (not (forge-get-repository :tracked?))
-	       (y-or-n-p "Add to Forge? "))
-	  (forge-extras-track-repository dir)
-	(dired dir)))))
+    (make-directory dir t)
+    (let ((default-directory (file-name-directory dir)))
+      (set-process-sentinel
+       (start-process "git-clone" process-buffer
+		      "git" "clone" "--recurse-submodules" remote (file-name-nondirectory dir))
+       (lambda (proc event)
+	 (when (string= event "finished\n")
+	   (if (= (process-exit-status proc) 0)
+	       (let ((default-directory dir))
+		 ;; Handle git directory splitting if needed
+		 (pcase vc-extras-split-repo
+		   ('nil)
+		   ('prompt (if (y-or-n-p "Move `.git' directory to separate directory?")
+				(vc-extras-split-local-repo dir)
+			      (message "You can customize `vc-extras-split-repo' to avoid this prompt.")))
+		   (_ (vc-extras-split-local-repo dir)))
+		 ;; Handle forge
+		 (require 'forge-core)
+		 (require 'forge-extras)
+		 (if (and (not no-forge)
+			  (not (forge-get-repository :tracked?))
+			  (y-or-n-p "Add to Forge? "))
+		     (forge-extras-track-repository dir)
+		   (dired dir))
+		 (kill-buffer process-buffer))
+	     (message "Clone failed with exit status %d" (process-exit-status proc)))))))))
 
 (defun vc-extras-get-github-remote (name &optional account)
   "Return the GitHub remote named NAME in ACCOUNT.

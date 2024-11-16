@@ -245,7 +245,7 @@ from NAME."
 	 deleted)
     (when (and (file-exists-p dir)
 	       ;; check that it is a repo, to prevent accidental deletion
-	       (locate-dominating-file dir ".git"))
+	       (vc-extras-is-git-dir-p dir))
       (delete-directory dir t)
       (push dir deleted))
     (when (file-exists-p split-git)

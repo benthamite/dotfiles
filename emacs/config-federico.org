@@ -739,7 +739,7 @@
   (setq tab-bar-extras-global-mode-string
         `(
           ;;,tab-bar-extras-prefix-element
-          ,tab-bar-extras-chemacs-element
+          ,tab-bar-extras-emacs-profile-element
           ,tab-bar-extras-debug-element
           ,tab-bar-extras-github-element
 	  ,tab-bar-extras-telega-element

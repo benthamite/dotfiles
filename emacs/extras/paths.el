@@ -41,9 +41,9 @@
   :type 'directory
   :group 'paths)
 
-(defcustom paths-dir-chemacs-profiles
+(defcustom paths-dir-emacs-profiles
   (file-name-concat (expand-file-name "~") ".config/emacs-profiles/")
-  "Path to the Chemacs profiles directory."
+  "Path to the Emacs profiles directory."
   :type 'directory
   :group 'paths)
 
@@ -788,7 +788,7 @@ This includes personal files and `tlon' files."
   :group 'paths)
 
 (defcustom paths-dir-init-default
-  (file-name-concat paths-dir-chemacs-profiles "develop/")
+  (file-name-concat paths-dir-emacs-profiles "develop/")
   "Default target location for the init files to be tangled."
   :type 'directory
   :group 'paths)

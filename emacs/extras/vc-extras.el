@@ -137,37 +137,47 @@ submodules."
 	 (account (or account (if repos
 				  (alist-get name repos nil nil #'string=)
 				(user-error "If you provide a repo name, you must also provide its account"))))
-	 (remote (vc-extras-get-github-remote name account))
-	 (dir (file-name-concat (vc-extras-get-account-prop account :dir) name))
-	 (process-buffer "*git-clone-output*"))
+         (remote (vc-extras-get-github-remote name account))
+         (parent-dir (vc-extras-get-account-prop account :dir))
+         (dir (file-name-concat parent-dir name))
+         (process-buffer "/git-clone-output/"))
     (when (file-exists-p dir)
       (user-error "Directory `%s' already exists" dir))
-    (make-directory dir t)
-    (let ((default-directory (file-name-directory dir)))
+    (message "Cloning repo %s..." name)
+    (let ((default-directory parent-dir))
       (set-process-sentinel
        (start-process "git-clone" process-buffer
-		      "git" "clone" "--recurse-submodules" remote (file-name-nondirectory dir))
+                      "git" "clone" "--recurse-submodules" remote (file-name-nondirectory dir))
        (lambda (proc event)
-	 (when (string= event "finished\n")
-	   (if (= (process-exit-status proc) 0)
-	       (let ((default-directory dir))
-		 ;; Handle git directory splitting if needed
-		 (pcase vc-extras-split-repo
-		   ('nil)
-		   ('prompt (if (y-or-n-p "Move `.git' directory to separate directory?")
-				(vc-extras-split-local-repo dir)
-			      (message "You can customize `vc-extras-split-repo' to avoid this prompt.")))
-		   (_ (vc-extras-split-local-repo dir)))
-		 ;; Handle forge
-		 (require 'forge-core)
-		 (require 'forge-extras)
-		 (if (and (not no-forge)
-			  (not (forge-get-repository :tracked?))
-			  (y-or-n-p "Add to Forge? "))
-		     (forge-extras-track-repository dir)
-		   (dired dir))
-		 (kill-buffer process-buffer))
-	     (message "Clone failed with exit status %d" (process-exit-status proc)))))))))
+	 (when (and (string= event "finished\n")
+                    (= (process-exit-status proc) 0))
+           (let ((default-directory dir))
+             (when (vc-extras-has-submodules-p dir)
+	       (call-process "git" nil nil nil "submodule" "init")
+               (call-process "git" nil nil nil "submodule" "update" "--recursive"))
+             (if (= (process-exit-status proc) 0)
+		 (progn
+                   (pcase vc-extras-split-repo
+                     ('nil)
+                     ('prompt (if (y-or-n-p "Move `.git' directory to separate directory?")
+                                  (vc-extras-split-local-repo dir)
+				(message "You can customize `vc-extras-split-repo' to avoid this prompt.")))
+                     (_ (vc-extras-split-local-repo dir)))
+                   (require 'forge-core)
+                   (require 'forge-extras)
+                   (if (and (not no-forge)
+                            (not (forge-get-repository :tracked?))
+                            (y-or-n-p "Add to Forge? "))
+                       (forge-extras-track-repository dir)
+                     (dired dir))
+                   (kill-buffer process-buffer)
+                   (message (concat "Cloned repo "
+				    name (when (vc-extras-has-submodules-p dir) " and all its submodules") ".")))
+               (message "Clone failed with exit status %d" (process-exit-status proc))))))))))
+
+(defun vc-extras-has-submodules-p (dir)
+  "Return non-nil if the repository in DIR has submodules."
+  (file-exists-p (expand-file-name ".gitmodules" dir)))
 
 (defun vc-extras-get-github-remote (name &optional account)
   "Return the GitHub remote named NAME in ACCOUNT.

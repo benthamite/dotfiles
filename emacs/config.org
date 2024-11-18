@@ -3799,7 +3799,7 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
         (";" . dired-do-rename)
         ("." . dired-find-alternate-file)
         ("C" . dired-do-copy)
-        ("C-s" . dired-isearch-filenames)
+        ("s-s" . dired-isearch-filenames)
         ("J" . dired-jump-other-window)
         ("e" . browse-url-extras-of-dired-file-externally)
         ("f" . avy-extras-dired-find-file)

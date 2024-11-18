@@ -322,6 +322,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#docs][docs]]
   - [[#pdf-tools][pdf-tools]]
   - [[#pdf-tools-extras][pdf-tools-extras]]
+  - [[#pdf-tools-pages][pdf-tools-pages]]
   - [[#scroll-other-window][scroll-other-window]]
   - [[#pdf-view-restore][pdf-view-restore]]
   - [[#moon-reader][moon-reader]]
@@ -1776,7 +1777,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (advice-add 'orgit-store-link :override #'forge-extras-orgit-store-link)
   ;; hack: to mark the topic as read, we browse it in the background
   (advice-add 'forge-visit-this-topic :before #'forge-extras-sync-read-status)
-  
+
   (run-with-idle-timer 30 t #'forge-extras-pull-notifications))
 #+end_src
 
@@ -6951,43 +6952,65 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
   (with-eval-after-load 'pdf-annot
     (bind-keys :map pdf-annot-minor-mode-map
                ("c" . pdf-tools-extras-copy-dwim)
-               ("C" . pdf-tools-extras-count-words)
-               ("s-c" . pdf-tools-extras-clear-page-selection)
-               ("D" . pdf-tools-extras-delete)
+               ("x" . pdf-tools-extras-count-words)
                ("e" . pdf-tools-extras-open-in-ebib)
                ("h" . pdf-annot-extras-add-highlight-markup-annotation)
                ("t" . pdf-tools-extras-toggle-writeroom)
-               ("x" . pdf-tools-extras-open-externally)
-               ("S" . pdf-tools-extras-add-or-remove-page)
-               ("X" . pdf-tools-extras-extract-pages)))
+               ("x" . pdf-tools-extras-open-externally)))
   (with-eval-after-load 'pdf-history
     (bind-keys
      :map pdf-history-minor-mode-map
      ("c" . pdf-tools-extras-copy-dwim)
-     ("C" . pdf-tools-extras-count-words)
-     ("s-c" . pdf-tools-extras-clear-page-selection)
-     ("D" . pdf-tools-extras-delete)
+     ("x" . pdf-tools-extras-count-words)
      ("e" . pdf-tools-extras-open-in-ebib)
      ("h" . pdf-annot-extras-add-highlight-markup-annotation)
      ("t" . pdf-tools-extras-toggle-writeroom)
-     ("x" . pdf-tools-extras-open-externally)
-     ("S" . pdf-tools-extras-add-or-remove-page)
-     ("X" . pdf-tools-extras-extract-pages)))
+     ("x" . pdf-tools-extras-open-externally)))
 
   :hook
   (pdf-tools-enabled-hook . pdf-tools-extras-apply-theme)
 
   :bind (:map pdf-view-mode-map
               ("c" . pdf-tools-extras-copy-dwim)
-              ("C" . pdf-tools-extras-count-words)
-              ("s-c" . pdf-tools-extras-clear-page-selection)
-              ("D" . pdf-tools-extras-delete)
+              ("x" . pdf-tools-extras-count-words)
               ("e" . pdf-tools-extras-open-in-ebib)
               ("h" . pdf-annot-extras-add-highlight-markup-annotation)
               ("t" . pdf-tools-extras-toggle-writeroom)
-              ("x" . pdf-tools-extras-open-externally)
-              ("S" . pdf-tools-extras-add-or-remove-page)
-              ("X" . pdf-tools-extras-extract-pages)))
+              ("x" . pdf-tools-extras-open-externally)))
+#+end_src
+
+** pdf-tools-pages
+:PROPERTIES:
+:ID:       45E2FBF2-8C01-4BA5-82EA-E9BB2F322D6F
+:END:
+
+/[[https://github.com/benthamite/pdf-tools-pages][pdf-tools-pages]] is a simple =pdf-tools= extension I created to delete and extract pages from PDF files./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package pdf-tools-pages
+  :ensure (:host github
+                 :repo "benthamite/pdf-tools-pages")
+  :after pdf-tools
+  :init
+  (with-eval-after-load 'pdf-annot
+    (bind-keys :map pdf-annot-minor-mode-map
+               ("C" . pdf-tools-pages-clear-page-selection)
+               ("D" . pdf-tools-pages-delete-pages)
+               ("S" . pdf-tools-pages-select-dwim)
+               ("X" . pdf-tools-pages-extract-pages)))
+  (with-eval-after-load 'pdf-history
+    (bind-keys
+     :map pdf-history-minor-mode-map
+     ("C" . pdf-tools-pages-clear-page-selection)
+     ("D" . pdf-tools-pages-delete-pages)
+     ("S" . pdf-tools-pages-select-dwim)
+     ("X" . pdf-tools-pages-extract-pages)))
+
+  :bind (:map pdf-view-mode-map
+              ("C" . pdf-tools-pages-clear-page-selection)
+              ("D" . pdf-tools-pages-delete-pages)
+              ("S" . pdf-tools-pages-select-dwim)
+              ("X" . pdf-tools-pages-extract-pages)))
 #+end_src
 
 ** scroll-other-window

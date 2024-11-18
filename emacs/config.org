@@ -11406,7 +11406,9 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
         ("o" . nil)
         :map telega-root-mode-map
         ("k" . telega-button-backward)
+        ("<up>" . telega-button-backward)
         ("l" . telega-button-forward)
+        ("<down>" . telega-button-forward)
         ("SPC" . telega-root-next-unread)
         ("." . telega-chat-with)
         ("a" . telega-chat-toggle-archive)

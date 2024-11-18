@@ -10666,7 +10666,25 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   :init
   (with-eval-after-load 'ebib
     (bind-keys :map ebib-entry-mode-map
-               ("s-a" . annas-archive-download))))
+               ("s-a" . annas-archive-download)))
+
+  :custom
+  (annas-archive-included-file-types '("pdf"))
+  (annas-archive-use-fast-download-links t)
+  (annas-archive-use-eww t)
+
+  :config
+  (defun annas-archive-process-download (url &optional file)
+  "Process downloaded FILE from URL in Anna's Archive."
+    (when-let ((key ebib-extras-attach-file-key))
+      (setq ebib-extras-attach-file-key nil)
+      (if annas-archive-use-eww
+          (ebib-extras-attach-file file key)
+        (message "Save the file that opens in your browser (%s) and attach it to the relevant Ebib entry (%s)"
+                 url key))))
+
+  :hook
+  (annas-archive-post-download-hook . annas-archive-process-download))
 #+end_src
 
 ** scihub

@@ -6995,22 +6995,22 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
   (with-eval-after-load 'pdf-annot
     (bind-keys :map pdf-annot-minor-mode-map
                ("C" . pdf-tools-pages-clear-page-selection)
-               ("D" . pdf-tools-pages-delete-pages)
+               ("D" . pdf-tools-pages-delete-selected-pages)
                ("S" . pdf-tools-pages-select-dwim)
-               ("X" . pdf-tools-pages-extract-pages)))
+               ("X" . pdf-tools-pages-extract-selected-pages)))
   (with-eval-after-load 'pdf-history
     (bind-keys
      :map pdf-history-minor-mode-map
      ("C" . pdf-tools-pages-clear-page-selection)
-     ("D" . pdf-tools-pages-delete-pages)
+     ("D" . pdf-tools-pages-delete-selected-pages)
      ("S" . pdf-tools-pages-select-dwim)
-     ("X" . pdf-tools-pages-extract-pages)))
+     ("X" . pdf-tools-pages-extract-selected-pages)))
 
   :bind (:map pdf-view-mode-map
               ("C" . pdf-tools-pages-clear-page-selection)
-              ("D" . pdf-tools-pages-delete-pages)
+              ("D" . pdf-tools-pages-delete-selected-pages)
               ("S" . pdf-tools-pages-select-dwim)
-              ("X" . pdf-tools-pages-extract-pages)))
+              ("X" . pdf-tools-pages-extract-selected-pages)))
 #+end_src
 
 ** scroll-other-window

@@ -1,0 +1,60 @@
+# -*- mode: snippet -*-
+# name: package-template
+# key: pt
+# contributor: Pablo Stafforini
+# --
+#+title: $1
+
+** Introduction
+
+
+
+** Requirements
+
+
+
+** Installation
+
+*** Manual installation
+
+Clone this repository and add this to your =init.el= file:
+
+#+begin_src emacs-lisp
+(add-to-list 'load-path "path/to/$1")
+#+end_src
+
+Where ="path/to/$1"= is the path to the local repository you just cloned.
+
+*** Package managers
+
+If you use a package manager, or Emacs +30, you just need to add this your =init.el= file:
+
+#+begin_src emacs-lisp
+;; with vc (Emacs 30 or later)
+(use-package $1
+:vc (:url "https://github.com/benthamite/$1"))
+
+;; with elpaca
+(use-package $1
+:ensure (:host github :repo "benthamite/$1"))
+
+;; with straight
+(use-package $1
+:straight (:host github :repo "benthamite/$1"))
+
+;; with quelpa
+(use-package $1
+:quelpa ($1 :fetcher github :repo "benthamite/$1"))
+#+end_src
+
+** Configuration
+
+
+
+** Usage
+
+
+
+** Troubleshooting
+
+The package has not been extensively tested. If you encounter any problems, feel free to open an issue.

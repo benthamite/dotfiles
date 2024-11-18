@@ -7044,8 +7044,15 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package pdf-view-restore
   :after pdf-tools
+  :init
+  ;; https://github.com/007kevin/pdf-view-restore/issues/6
+  (defun pdf-view-restore-mode-conditionally ()
+    "Enable `pdf-view-restore-mode' iff the current buffer is visiting a PDF."
+    (when (buffer-file-name)
+      (pdf-view-restore-mode)))
+
   :hook
-  (pdf-view-mode-hook . pdf-view-restore-mode))
+  (pdf-view-mode-hook . pdf-view-restore-mode-conditionally))
 #+end_src
 
 ** moon-reader

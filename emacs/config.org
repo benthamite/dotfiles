@@ -10911,7 +10911,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (mu4e-split-view 'single-window)
   (mu4e-headers-show-target nil)
   (mu4e-get-mail-command "sh $HOME/bin/mbsync-parallel")
-  (mu4e-update-interval (* 25 60))
+  (mu4e-update-interval (* 5 60))
   (mu4e-drafts-folder "/Drafts")
   (mu4e-sent-folder "/Sent")
   (mu4e-refile-folder "/Refiled")

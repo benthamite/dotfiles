@@ -339,6 +339,7 @@
 :END:
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'mu4e-extras
+  (setq mu4e-extras-newsletters-folder "/NEWSLETTERS")
   (setq org-msg-extras-personal-plain-text-signature "\n--\nLeo\n")
   (setq org-msg-extras-personal-html-signature "\n#+begin_signature\n--\n*Leo*\n#+end_signature")
   (setq org-msg-extras-work-plain-text-signature org-msg-extras-personal-plain-text-signature)

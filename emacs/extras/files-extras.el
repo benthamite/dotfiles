@@ -611,12 +611,12 @@ To install the extension, drag the latter onto the former."
     ("a" "annas-archive"    (lambda () (interactive )(files-extras-open-elpaca-package "annas-archive")))
     ("b" "bib"              (lambda () (interactive )(files-extras-open-elpaca-package "bib")))
     ("d" "gdrive"           (lambda () (interactive )(files-extras-open-elpaca-package "gdrive")))
+    ("f" "pdf-tools-pages"  (lambda () (interactive )(files-extras-open-elpaca-package "pdf-tools-pages")))
     ("g" "goldendict-ng"    (lambda () (interactive )(files-extras-open-elpaca-package "goldendict-ng")))
     ("o" "macos"            (lambda () (interactive )(files-extras-open-elpaca-package "macos")))
     ("m" "mullvad"          (lambda () (interactive )(files-extras-open-elpaca-package "mullvad")))
     ("p" "pomodoro-centile" (lambda () (interactive ) (files-extras-open-elpaca-package "pomodoro-centile")))
-    ("s" "scihub"           (lambda () (interactive )(files-extras-open-elpaca-package "scihub")))
-    ("t" "pdf-tools-pages"  (lambda () (interactive )(files-extras-open-elpaca-package "pdf-tools-pages")))]])
+    ("s" "scihub"           (lambda () (interactive )(files-extras-open-elpaca-package "scihub")))]])
 
 (provide 'files-extras)
 ;;; files-extras.el ends here

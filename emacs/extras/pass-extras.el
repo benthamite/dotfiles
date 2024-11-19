@@ -57,6 +57,23 @@ user input."
   (call-interactively #'password-store-generate-no-symbols)
   (pass-update-buffer))
 
+;;;;; Keys
+
+;;;###autoload
+(defun pass-extras-store-key (file entry)
+  "Store a key in FILE as an ENTRY in `pass'."
+  (interactive (list (read-file-name "Key file: ")
+		     (completing-read "Entry: " (password-store-list))))
+  (shell-command (format "cat %s | pass insert --multiline %s" file entry)))
+
+;;;###autoload
+(defun pass-extras-export-key (entry file)
+  "Export `pass' ENTRY to FILE."
+  (interactive (list (completing-read "Entry: " (password-store-list) nil 'match)
+		     (read-file-name "Export to: ")))
+  (shell-command (format "pass %s > %s" entry file))
+  (message "Key exported to `%s'" file))
+
 (provide 'pass-extras)
 
 ;;; pass-extras.el ends here

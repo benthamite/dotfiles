@@ -47,6 +47,11 @@
   :type 'string
   :group 'mu4e-extras)
 
+(defcustom mu4e-extras-newsletters-folder ""
+  "Name of the `newsletters' folder."
+  :type 'string
+  :group 'mu4e-extras)
+
 (defcustom mu4e-extras-wide-reply 'prompt
   "Whether the reply to messages should be \"wide\" (a.k.a. \"reply-to-all\").
 If `prompt', ask the user. If t, always reply to all. If nil, always reply to

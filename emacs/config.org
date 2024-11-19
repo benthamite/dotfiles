@@ -5689,7 +5689,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
   (defun cape-enable-completions ()
     "Enable file and emoji completion in the current buffer."
     (setq-local completion-at-point-functions
-		(cons #'cape-file completion-at-point-functions)
+                (cons #'cape-file completion-at-point-functions)
                 completion-at-point-functions
                 (cons #'cape-emoji completion-at-point-functions)))
 
@@ -10673,7 +10673,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 
   :config
   (defun annas-archive-process-download (url &optional file)
-  "Process downloaded FILE from URL in Anna's Archive."
+    "Process downloaded FILE from URL in Anna's Archive."
     (when-let ((key ebib-extras-attach-file-key))
       (setq ebib-extras-attach-file-key nil)
       (if annas-archive-use-eww

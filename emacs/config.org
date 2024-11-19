@@ -7037,7 +7037,7 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
 :ID:       159A7ABF-5D9C-46C3-BAA2-C1E486682875
 :END:
 
-/[[https://github.com/007kevin/pdf-view-restore][pdf-view-restore]] adds support to saving and reopening last known pdf position./
+/[[https://github.com/007kevin/pdf-view-restore][pdf-view-restore]] adds support to saving and reopening the last known  PDF position./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package pdf-view-restore

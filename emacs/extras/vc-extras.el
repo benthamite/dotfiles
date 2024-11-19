@@ -218,25 +218,25 @@ If the repository has submodules, move their `.git' directories, too."
 	 (git-file (directory-file-name source)))
     (when (file-exists-p target)
       (user-error "Directory `%s' already exists" target))
-    (rename-file source target t)
+    ;; Move main .git directory
+    (copy-directory source target t t)
+    (delete-directory source t)
     (with-temp-file git-file
-      (insert (format "gitdir: %s" target))
-      (write-file git-file))
+      (insert (format "gitdir: %s" target)))
+    
     (when (vc-extras-has-submodules-p dir)
       (let ((default-directory dir))
         ;; Update submodule configurations
         (call-process "git" nil nil nil "submodule" "sync")
-        ;; For each submodule
-        (dolist (submodule (directory-files-recursively dir "^\\.git$" t))
-          (let* ((submodule-dir (file-name-directory submodule))
-                 (submodule-name (file-name-nondirectory (directory-file-name submodule-dir)))
-                 (submodule-target (file-name-concat target "modules" submodule-name)))
-            ;; Move submodule .git directory
-            (when (file-exists-p submodule)
-              (make-directory (file-name-directory submodule-target) t)
-              (rename-file submodule submodule-target t)
-              (with-temp-file submodule
-                (insert (format "gitdir: %s" submodule-target))))))
+        ;; For each submodule directory
+        (dolist (module-dir (directory-files-recursively dir "^uqbar-" t))
+          (when (file-directory-p module-dir)
+            (let* ((module-name (file-name-nondirectory module-dir))
+                   (git-file (file-name-concat module-dir ".git"))
+                   (module-target (file-name-concat target "modules" module-name)))
+              (when (file-exists-p git-file)
+                (with-temp-file git-file
+                  (insert (format "gitdir: %s" module-target)))))))
         ;; Reinitialize submodules with new paths
         (call-process "git" nil nil nil "submodule" "update" "--init" "--recursive")))))
 

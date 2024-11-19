@@ -395,10 +395,10 @@ right before the index but currently there is no hook for that."
               mu4e-index-cleanup t)
       (setq mu4e-index-lazy-check t
             mu4e-index-cleanup nil))
-    (when (not (and (equal old-lazy mu4e-index-lazy-check)
-                    (equal old-cleanup mu4e-index-cleanup)))
-      (message (format "my-set-mu4e-index-params: idle:%s lazy:%s cleanup:%s"
-                       idle mu4e-index-lazy-check mu4e-index-cleanup)))))
+    (when (not (and (eq old-lazy mu4e-index-lazy-check)
+                    (eq old-cleanup mu4e-index-cleanup)))
+      (message "`mu4e-extras-set-index-params' idle:%s lazy:%s cleanup:%s"
+               idle mu4e-index-lazy-check mu4e-index-cleanup))))
 
 ;;;;; Patches
 

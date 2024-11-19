@@ -615,7 +615,8 @@ To install the extension, drag the latter onto the former."
     ("o" "macos"            (lambda () (interactive )(files-extras-open-elpaca-package "macos")))
     ("m" "mullvad"          (lambda () (interactive )(files-extras-open-elpaca-package "mullvad")))
     ("p" "pomodoro-centile" (lambda () (interactive ) (files-extras-open-elpaca-package "pomodoro-centile")))
-    ("s" "scihub"           (lambda () (interactive )(files-extras-open-elpaca-package "scihub")))]])
+    ("s" "scihub"           (lambda () (interactive )(files-extras-open-elpaca-package "scihub")))
+    ("t" "pdf-tools-pages"  (lambda () (interactive )(files-extras-open-elpaca-package "pdf-tools-pages")))]])
 
 (provide 'files-extras)
 ;;; files-extras.el ends here

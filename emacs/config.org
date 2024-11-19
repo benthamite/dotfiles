@@ -10938,8 +10938,8 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   ;; performance improvements (but with downsides)
   ;; groups.google.com/g/mu-discuss/c/hRRNhM5mwr0
   ;; djcbsoftware.nl/code/mu/mu4e/Retrieval-and-indexing.html
-  (mu4e-index-cleanup t) ; nil improves performance; do not sell to nil: refiled messages won’t show up
-  (mu4e-index-lazy-check nil) ; t improves performance
+  (mu4e-index-cleanup nil) ; nil improves performance
+  (mu4e-index-lazy-check t) ; t improves performance
 
   (mu4e-compose-context-policy 'ask)
   (mu4e-context-policy nil)
@@ -10967,6 +10967,9 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (remove-hook 'mu4e-compose-mode-hook 'org-contacts-setup-completion-at-point)
   (faces-extras-set-and-store-face-attributes
    '((mu4e-compose-separator-face :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)))
+
+  :hook
+  (mu4e-update-pre-hook . mu4e-extras-set-index-params)
 
   :bind
   (("A-m" . mu4e)

@@ -378,6 +378,28 @@ takes just a couple of seconds."
       (mm-destroy-parts parts)
       (stringp (cl-find "text/html" (flatten-tree parts) :test 'equal)))))
 
+;;;;; Index
+
+;; https://github.com/djcb/mu/issues/2778#issuecomment-2485462344
+(defun mu4e-extras-set-index-params ()
+  "Set the index parameters for the current update.
+This is dependant on if I'm active (hence wanting a quick update) or
+away (in which case it can take its time). Ideally we would do this
+right before the index but currently there is no hook for that."
+  (let ((idle (time-convert (current-idle-time) 'integer))
+        (old-lazy mu4e-index-lazy-check)
+        (old-cleanup mu4e-index-cleanup))
+    (if (and (current-idle-time)
+             (> idle mu4e-update-interval))
+	(setq mu4e-index-lazy-check nil
+              mu4e-index-cleanup t)
+      (setq mu4e-index-lazy-check t
+            mu4e-index-cleanup nil))
+    (when (not (and (equal old-lazy mu4e-index-lazy-check)
+                    (equal old-cleanup mu4e-index-cleanup)))
+      (message (format "my-set-mu4e-index-params: idle:%s lazy:%s cleanup:%s"
+                       idle mu4e-index-lazy-check mu4e-index-cleanup)))))
+
 ;;;;; Patches
 
 ;; do not prompt for an URL number when there is only one URL

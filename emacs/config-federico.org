@@ -511,7 +511,7 @@
                 org-replace-disputed-keys t)
 
   ;; remove unwanted keybindings from Pablo
-  (keymap-unset org-mode-map "s-i")  
+  (keymap-unset org-mode-map "s-i")
   (keymap-unset org-mode-map "M-<right>")
   (keymap-unset org-mode-map "M-<left>")
   (keymap-unset org-mode-map "M-<up>")
@@ -629,7 +629,7 @@
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (cancel-timer org-extras-agenda-switch-to-agenda-current-day-timer) ;; this is run in pablo's init so it must be outside eval-after-load
 (with-eval-after-load 'org-extras
-  (setq org-extras-bbdb-anniversaries-heading nil)  
+  (setq org-extras-bbdb-anniversaries-heading nil)
   (remove-hook 'before-save-hook #'org-extras-id-auto-add-ids-to-headings-in-file)
   (message "`org-extras' late-init config loaded."))
 #+end_src
@@ -641,7 +641,6 @@
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'org-roam
   (setq org-roam-directory paths-dir-org-roam)
-  (org-roam-db-autosync-mode 1)
   (message "`org-roam' late-init config loaded."))
 #+end_src
 
@@ -696,8 +695,8 @@
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (with-eval-after-load 'tlon-forg
   (setq tlon-forg-when-reconciling 'issue)
-  (setq tlon-when-asignee-is-nil 'no-capture)
-  (setq tlon-when-asignee-is-someone-else 'no-capture)
+  (setq tlon-when-assignee-is-nil 'no-capture)
+  (setq tlon-when-assignee-is-someone-else 'no-capture)
   (message "`tlon-forg' late-init config loaded."))
 #+end_src
 
@@ -742,13 +741,13 @@
           ,tab-bar-extras-emacs-profile-element
           ,tab-bar-extras-debug-element
           ,tab-bar-extras-github-element
-	  ,tab-bar-extras-telega-element
+          ,tab-bar-extras-telega-element
           ;;,tab-bar-extras-notification-status-element
           ;;,tab-bar-extras-date-element
           ;;,tab-bar-extras-separator-element
           ;;,tab-bar-extras-battery-element
           ;;,tab-bar-extras-pomodoro-element
-	  ;;,tab-bar-extras-separator-element
+          ;;,tab-bar-extras-separator-element
           ))
   (setq global-mode-string tab-bar-extras-global-mode-string)
   (message "`tab-bar-extras' late-init config loaded.")
@@ -880,7 +879,7 @@ This should be at the very end of the ~late-init~ file.
     (save-buffer)
     (files-extras-kill-this-buffer)
     (find-file file)))
-    
+
 (add-hook
  'tlon-init-post-init-hook
  (lambda ()
@@ -892,7 +891,7 @@ This should be at the very end of the ~late-init~ file.
    (setq gpt-commit-openai-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-core-email-shared)))
    (setq bib-isbndb-key
          (auth-source-pass-get "key" (concat "tlon/babel/isbndb.com/" tlon-core-email-shared)))
-   (global-flycheck-mode -1)
+   ;; (global-flycheck-mode -1)
    (setq calendar-extras-use-geolocation nil)
    (recentf-mode)
    (telega)
@@ -900,6 +899,7 @@ This should be at the very end of the ~late-init~ file.
    (org-tidy-mode -1)
    (kill-buffer-then-reopen-file)
    (global-auto-revert-mode 1)
+   (setq revert-without-query '(".*gptel-context.*"))
    (message "Fede's post-init-hook finished.")
    ))
 (run-hooks 'tlon-init-post-init-hook)

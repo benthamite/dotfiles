@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: mom-usd-uala-deposit
+# key: muud
+# contributor: Pablo Stafforini
+# --
+`(format-time-string "%Y-%m-%d")` Mom
+Assets:Cash                              -$1.00 USD @ $2.00 ARS
+Assets:Ualá
+

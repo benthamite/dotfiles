@@ -245,7 +245,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#isearch-extras][isearch-extras]]
   - [[#replace][replace]]
   - [[#substitute][substitute]]
-  - [[#visual-regexp][visual-regexp]]
   - [[#imenu][imenu]]
   - [[#pcre2el][pcre2el]]
   - [[#wgrep][wgrep]]
@@ -323,6 +322,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
 - [[#docs][docs]]
   - [[#pdf-tools][pdf-tools]]
   - [[#pdf-tools-extras][pdf-tools-extras]]
+  - [[#pdf-tools-pages][pdf-tools-pages]]
   - [[#scroll-other-window][scroll-other-window]]
   - [[#pdf-view-restore][pdf-view-restore]]
   - [[#moon-reader][moon-reader]]
@@ -368,6 +368,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#gptel-extras][gptel-extras]]
   - [[#gptel-quick][gptel-quick]]
   - [[#gpt-commit][gpt-commit]]
+  - [[#dall-e-shell][dall-e-shell]]
 - [[#org-mode][org-mode]]
   - [[#org][org]]
   - [[#org-extras][org-extras]]
@@ -502,6 +503,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#emacs-speech-input][emacs-speech-input]]
   - [[#read-aloud][read-aloud]]
   - [[#read-aloud-extras][read-aloud-extras]]
+  - [[#subed][subed]]
 - [[#misc][misc]]
   - [[#calc][calc]]
   - [[#calc-ext][calc-ext]]
@@ -560,6 +562,15 @@ The contents of this code block are tangled to the ~early-init.el~ file.
   (startup-redirect-eln-cache
    (file-name-concat (getenv "HOME")
                      ".config/emacs-profiles/var/eln-cache/")))
+
+;; for debugging
+(defun early-init-trace-feature-load (feature)
+  "Print a backtrace immediately after FEATURE is loaded."
+  (eval-after-load feature
+    `(message "Feature '%s' loaded by:\n%s"
+              ',feature
+              (with-output-to-string
+                (backtrace)))))
 #+end_src
 
 * package management
@@ -788,8 +799,8 @@ NAME and ARGS as in `use-package'."
   ;; these directories should be shared across profiles, so there should
   ;; be only one `var' and one `etc' directory in `emacs-profiles'
   ;; rather than a pair of such directories for each profile
-  (setq no-littering-etc-directory (file-name-concat paths-dir-chemacs-profiles "etc/"))
-  (setq no-littering-var-directory (file-name-concat paths-dir-chemacs-profiles "var/"))
+  (setq no-littering-etc-directory (file-name-concat paths-dir-emacs-profiles "etc/"))
+  (setq no-littering-var-directory (file-name-concat paths-dir-emacs-profiles "var/"))
 
   :config
   ;; github.com/emacscollective/no-littering#auto-save-settings
@@ -866,7 +877,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
   :custom
   (transient-default-level 7) ; magit.vc/manual/transient/Enabling-and-Disabling-Suffixes.html
   (transient-save-history nil) ; the history file was throwing an error on startup
-  
+
   :bind
   (:map transient-base-map
         ("M-q" . transient-quit-one)))
@@ -881,6 +892,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package casual
+  :defer t
   :init
   (with-eval-after-load 'calc-mode
     (bind-keys :map calc-mode-map
@@ -1108,7 +1120,8 @@ CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
 :END:
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-feature profiler)
+(use-feature profiler
+  :defer t)
 #+end_src
 
 ** profiler-extras
@@ -1375,7 +1388,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature log-edit
-  :after magit
+  :defer t
   :config
   (with-eval-after-load 'savehist
     (add-to-list 'savehist-additional-variables 'log-edit-comment-ring)))
@@ -2159,8 +2172,9 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 :ID:       0873C089-B832-4EB2-BAFF-2D3CF0268AE4
 :END:
 
-
 /[[file:extras/color-extras.el][color-extras]] collects my extensions for ~color~./
+
+Note that the loading of ~color~ cannot be deferred, since it is required by ~pulse~. So we defer-load this package.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package color-extras
@@ -2388,7 +2402,7 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
           ,tab-bar-extras-notification-status-element
           ,tab-bar-extras-time-element
           ,tab-bar-extras-separator-element
-          ,tab-bar-extras-chemacs-element
+          ,tab-bar-extras-emacs-profile-element
           ,tab-bar-extras-separator-element
           ,tab-bar-extras-battery-element
           ,tab-bar-extras-telega-element
@@ -2501,6 +2515,8 @@ Note that the icons need to be installed via =nerd-icons-install-fonts=. If you 
 :PROPERTIES:
 :ID:       6473F2BF-059F-464B-859E-B8DA91B81DE2
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/delsel.el][delsel]] deletes the selection when the user start typing./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature delsel
@@ -3783,7 +3799,7 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
         (";" . dired-do-rename)
         ("." . dired-find-alternate-file)
         ("C" . dired-do-copy)
-        ("C-s" . dired-isearch-filenames)
+        ("s-s" . dired-isearch-filenames)
         ("J" . dired-jump-other-window)
         ("e" . browse-url-extras-of-dired-file-externally)
         ("f" . avy-extras-dired-find-file)
@@ -5169,25 +5185,16 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
    ("A-H-d" . substitute-target-in-defun)))
 #+end_src
 
-** visual-regexp
-:PROPERTIES:
-:ID:       0DE5075B-AC82-4AB3-9B0A-3D84DC6CF942
-:END:
-
-/[[https://github.com/benma/visual-regexp.el][visual-regexp]] provides visual feedback to regexp search and replace./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package visual-regexp
-  :after isearch)
-#+end_src
-
 ** imenu
 :PROPERTIES:
 :ID:       CC1F3F93-2446-4399-A14D-9DCB6753D26B
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/imenu.el][imenu]] is a framework for mode-specific buffer indexes./
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature imenu
+  :defer t
   :custom
   (org-imenu-depth 3))
 #+end_src
@@ -5388,8 +5395,6 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
 
   :config
   (setq consult-ripgrep-args (concat consult-ripgrep-args " --hidden")) ; include hidden files
-  ;; (advice-remove 'consult-org-heading #'org-extras-cycle-content)
-  ;; (advice-add 'consult-org-agenda :after #'org-extras-narrow-to-entry-and-children)
 
   :bind
   (("C-H-l" . consult-line)
@@ -5612,7 +5617,6 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
                   :includes (corfu-info
                              corfu-echo
                              corfu-history
-                             ;; corfu-indexed
                              corfu-popupinfo
                              corfu-quick))
   :after faces-extras
@@ -5675,22 +5679,20 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package cape
   :after corfu
-  :init
-  (add-to-list 'completion-at-point-functions #'cape-file)
-  ;;(add-to-list 'completion-at-point-functions #'cape-history)
-  (add-to-list 'completion-at-point-functions #'cape-keyword)
-  ;;(add-to-list 'completion-at-point-functions #'cape-tex)
-  ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
-  ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
-  ;;(add-to-list 'completion-at-point-functions #'cape-abbrev)
-  ;;(add-to-list 'completion-at-point-functions #'cape-dict)
-  ;;(add-to-list 'completion-at-point-functions #'cape-symbol)
-  ;;(add-to-list 'completion-at-point-functions #'cape-line)
-
   :custom
-  (cape-dabbrev-min-length 4))
-#+end_src
+  (cape-dabbrev-min-length 4)
 
+  :config
+  (defun cape-enable-completions ()
+    "Enable file and emoji completion in the current buffer."
+    (setq-local completion-at-point-functions
+                (cons #'cape-file completion-at-point-functions)
+                completion-at-point-functions
+                (cons #'cape-emoji completion-at-point-functions)))
+
+  :hook
+  ((text-mode-hook prog-mode-hook) . cape-enable-completions))
+#+end_src
 
 ** corg
 :PROPERTIES:
@@ -6496,6 +6498,7 @@ CLOCK: [2021-12-03 Fri 22:21]--[2021-12-03 Fri 23:02] =>  0:41
     "Search for each line in FILE and share the selected results.
 The file should contain one search query per line."
     (interactive "f")
+    (require 'gdrive)
     (when (gdrive-mark-clear-prompt)
       (let ((lines (files-extras-lines-to-list file)))
         (dolist (line lines)
@@ -6864,7 +6867,10 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package pdf-tools
   :mode ("\\.pdf\\'" . pdf-view-mode)
+  :after (:any dired-extras ebib)
   :init
+  (pdf-tools-install t)
+
   (with-eval-after-load 'pdf-annot
     (bind-keys :map pdf-annot-minor-mode-map
                ("e" . pdf-annot-add-highlight-markup-annotation)
@@ -6904,7 +6910,6 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 
   :config
   (pdf-cache-prefetch-minor-mode -1) ; https://github.com/vedang/pdf-tools/issues/278#issuecomment-2096894629
-  (pdf-tools-install t)
 
   :hook
   (pdf-view-mode-hook . pdf-view-fit-page-to-window)
@@ -6942,43 +6947,65 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
   (with-eval-after-load 'pdf-annot
     (bind-keys :map pdf-annot-minor-mode-map
                ("c" . pdf-tools-extras-copy-dwim)
-               ("C" . pdf-tools-extras-count-words)
-               ("s-c" . pdf-tools-extras-clear-page-selection)
-               ("D" . pdf-tools-extras-delete)
+               ("x" . pdf-tools-extras-count-words)
                ("e" . pdf-tools-extras-open-in-ebib)
                ("h" . pdf-annot-extras-add-highlight-markup-annotation)
                ("t" . pdf-tools-extras-toggle-writeroom)
-               ("x" . pdf-tools-extras-open-externally)
-               ("S" . pdf-tools-extras-add-or-remove-page)
-               ("X" . pdf-tools-extras-extract-pages)))
+               ("x" . pdf-tools-extras-open-externally)))
   (with-eval-after-load 'pdf-history
     (bind-keys
      :map pdf-history-minor-mode-map
      ("c" . pdf-tools-extras-copy-dwim)
-     ("C" . pdf-tools-extras-count-words)
-     ("s-c" . pdf-tools-extras-clear-page-selection)
-     ("D" . pdf-tools-extras-delete)
+     ("x" . pdf-tools-extras-count-words)
      ("e" . pdf-tools-extras-open-in-ebib)
      ("h" . pdf-annot-extras-add-highlight-markup-annotation)
      ("t" . pdf-tools-extras-toggle-writeroom)
-     ("x" . pdf-tools-extras-open-externally)
-     ("S" . pdf-tools-extras-add-or-remove-page)
-     ("X" . pdf-tools-extras-extract-pages)))
+     ("x" . pdf-tools-extras-open-externally)))
 
   :hook
   (pdf-tools-enabled-hook . pdf-tools-extras-apply-theme)
 
   :bind (:map pdf-view-mode-map
               ("c" . pdf-tools-extras-copy-dwim)
-              ("C" . pdf-tools-extras-count-words)
-              ("s-c" . pdf-tools-extras-clear-page-selection)
-              ("D" . pdf-tools-extras-delete)
+              ("x" . pdf-tools-extras-count-words)
               ("e" . pdf-tools-extras-open-in-ebib)
               ("h" . pdf-annot-extras-add-highlight-markup-annotation)
               ("t" . pdf-tools-extras-toggle-writeroom)
-              ("x" . pdf-tools-extras-open-externally)
-              ("S" . pdf-tools-extras-add-or-remove-page)
-              ("X" . pdf-tools-extras-extract-pages)))
+              ("x" . pdf-tools-extras-open-externally)))
+#+end_src
+
+** pdf-tools-pages
+:PROPERTIES:
+:ID:       45E2FBF2-8C01-4BA5-82EA-E9BB2F322D6F
+:END:
+
+/[[https://github.com/benthamite/pdf-tools-pages][pdf-tools-pages]] is a simple =pdf-tools= extension I created to delete and extract pages from PDF files./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package pdf-tools-pages
+  :ensure (:host github
+                 :repo "benthamite/pdf-tools-pages")
+  :after pdf-tools
+  :init
+  (with-eval-after-load 'pdf-annot
+    (bind-keys :map pdf-annot-minor-mode-map
+               ("C" . pdf-tools-pages-clear-page-selection)
+               ("D" . pdf-tools-pages-delete-selected-pages)
+               ("S" . pdf-tools-pages-select-dwim)
+               ("X" . pdf-tools-pages-extract-selected-pages)))
+  (with-eval-after-load 'pdf-history
+    (bind-keys
+     :map pdf-history-minor-mode-map
+     ("C" . pdf-tools-pages-clear-page-selection)
+     ("D" . pdf-tools-pages-delete-selected-pages)
+     ("S" . pdf-tools-pages-select-dwim)
+     ("X" . pdf-tools-pages-extract-selected-pages)))
+
+  :bind (:map pdf-view-mode-map
+              ("C" . pdf-tools-pages-clear-page-selection)
+              ("D" . pdf-tools-pages-delete-selected-pages)
+              ("S" . pdf-tools-pages-select-dwim)
+              ("X" . pdf-tools-pages-extract-selected-pages)))
 #+end_src
 
 ** scroll-other-window
@@ -7007,13 +7034,20 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
 :ID:       159A7ABF-5D9C-46C3-BAA2-C1E486682875
 :END:
 
-/[[https://github.com/007kevin/pdf-view-restore][pdf-view-restore]] adds support to saving and reopening last known pdf position./
+/[[https://github.com/007kevin/pdf-view-restore][pdf-view-restore]] adds support to saving and reopening the last known  PDF position./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package pdf-view-restore
   :after pdf-tools
+  :init
+  ;; https://github.com/007kevin/pdf-view-restore/issues/6
+  (defun pdf-view-restore-mode-conditionally ()
+    "Enable `pdf-view-restore-mode' iff the current buffer is visiting a PDF."
+    (when (buffer-file-name)
+      (pdf-view-restore-mode)))
+
   :hook
-  (pdf-view-mode-hook . pdf-view-restore-mode))
+  (pdf-view-mode-hook . pdf-view-restore-mode-conditionally))
 #+end_src
 
 ** moon-reader
@@ -7738,8 +7772,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package gptel-extras
   :custom
-  (gptel-post-response-functions '(gptel-extras-generate-latex-previews
-                                   gptel-extras-kill-buffer-then-reopen-file))
+  (gptel-post-response-functions '(gptel-extras-generate-latex-previews))
 
   :init
   (advice-add 'gptel :after #'gptel-extras-save-buffer)
@@ -7776,7 +7809,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package gpt-commit
-  :after tlon log-edit
+  :after log-edit
   :demand t
   :custom
   (gpt-commit-model-name "gpt-4o")
@@ -7786,6 +7819,21 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
   :bind (:map git-commit-mode-map
               ("s-g" . gpt-commit-message)))
+#+end_src
+
+** dall-e-shell
+:PROPERTIES:
+:ID:       635C8C3D-5614-433C-B3A3-81384F13273D
+:END:
+
+/[[https://github.com/xenodium/dall-e-shell][dall-e-shell]] provides an Emacs shell for OpenAI’s DALL-E./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package dall-e-shell
+  :disabled
+  :demand t
+  :custom
+  (dall-e-shell-openai-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared))))
 #+end_src
 
 * org-mode
@@ -9112,8 +9160,7 @@ Note to self: Typescript syntax highlighting works fine, but calling ~org-edit-s
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org-tempo
-  :after org
-  :defer 5)
+  :after org)
 #+end_src
 
 ** org-src
@@ -9560,7 +9607,6 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 (use-package org-roam
   :after org
   :custom
-  (org-roam-database-connector 'sqlite-builtin)
   (org-roam-capture-templates nil)
   (org-roam-directory paths-dir-org-roam)
   (org-roam-node-display-template
@@ -10390,35 +10436,33 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
   (ebib-entry-mode-hook . visual-line-mode)
 
   :bind
-  (
-   :map ebib-multiline-mode-map
-   ("s-c" . ebib-quit-multiline-buffer-and-save)
-   :map ebib-index-mode-map
-   ("<return>" . ebib-edit-entry)
-   ("A" . ebib-add-entry)
-   ("D" . ebib-delete-entry)
-   ("f" . avy-extras-ebib-view-entry)
-   ("k" . ebib-prev-entry)
-   ("l" . ebib-next-entry)
-   ("H-s" . ebib-save-current-database)
-   ("K" . ebib-copy-key-as-kill)
-   ("Q" . ebib-quit)
-   ("W" . zotra-download-attachment)
-   :map ebib-entry-mode-map
-   ("TAB" . ebib-goto-next-set)
-   ("<backtab>" . ebib-goto-prev-set)
-   ("H-s" . ebib-save-current-database)
-   ("H-S" . ebib-save-all-databases)
-   ("!" . ebib-generate-autokey)
-   ;; "/" (lambda! (ebib-extras-attach-file t))
-   ("A" . ebib-add-field)
-   ("c" . ebib-copy-current-field-contents)
-   ("D" . ebib-delete-current-field-contents)
-   ("E" . ebib-edit-keyname)
-   ("H-s" . ebib-save-current-database)
-   ("K" . ebib-copy-key-as-kill)
-   ("Q" . ebib-quit)
-   ("W" . zotra-download-attachment)))
+  (:map ebib-multiline-mode-map
+        ("s-c" . ebib-quit-multiline-buffer-and-save)
+        :map ebib-index-mode-map
+        ("<return>" . ebib-edit-entry)
+        ("A" . ebib-add-entry)
+        ("D" . ebib-delete-entry)
+        ("f" . avy-extras-ebib-view-entry)
+        ("k" . ebib-prev-entry)
+        ("l" . ebib-next-entry)
+        ("H-s" . ebib-save-current-database)
+        ("K" . ebib-copy-key-as-kill)
+        ("Q" . ebib-quit)
+        ("W" . zotra-download-attachment)
+        :map ebib-entry-mode-map
+        ("TAB" . ebib-goto-next-set)
+        ("<backtab>" . ebib-goto-prev-set)
+        ("H-s" . ebib-save-current-database)
+        ("H-S" . ebib-save-all-databases)
+        ("!" . ebib-generate-autokey)
+        ("A" . ebib-add-field)
+        ("c" . ebib-copy-current-field-contents)
+        ("D" . ebib-delete-current-field-contents)
+        ("E" . ebib-edit-keyname)
+        ("H-s" . ebib-save-current-database)
+        ("K" . ebib-copy-key-as-kill)
+        ("Q" . ebib-quit)
+        ("W" . zotra-download-attachment)))
 #+end_src
 
 The macro below generates the commands correctly. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
@@ -10606,8 +10650,29 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 (use-package annas-archive
   :ensure (:host github
                  :repo "benthamite/annas-archive")
-  :bind (:map ebib-entry-mode-map
-              ("s-a" . annas-archive-download)))
+  :defer t
+  :init
+  (with-eval-after-load 'ebib
+    (bind-keys :map ebib-entry-mode-map
+               ("s-a" . annas-archive-download)))
+
+  :custom
+  (annas-archive-included-file-types '("pdf"))
+  (annas-archive-use-fast-download-links t)
+  (annas-archive-use-eww t)
+
+  :config
+  (defun annas-archive-process-download (url &optional file)
+    "Process downloaded FILE from URL in Anna's Archive."
+    (when-let ((key ebib-extras-attach-file-key))
+      (setq ebib-extras-attach-file-key nil)
+      (if annas-archive-use-eww
+          (ebib-extras-attach-file file key)
+        (message "Save the file that opens in your browser (%s) and attach it to the relevant Ebib entry (%s)"
+                 url key))))
+
+  :hook
+  (annas-archive-post-download-hook . annas-archive-process-download))
 #+end_src
 
 ** scihub
@@ -10832,6 +10897,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
                  :pre-build (("./autogen.sh") ("ninja" "-C" "build"))
                  :build (:not elpaca--compile-info)
                  :depth nil)
+  :defer 10
   :custom
   ;; (mu4e-debug t) ; uncomment when debugging
   (mu4e-index-update-error-warning nil) ; set to `t' when debugging
@@ -10863,8 +10929,8 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   ;; performance improvements (but with downsides)
   ;; groups.google.com/g/mu-discuss/c/hRRNhM5mwr0
   ;; djcbsoftware.nl/code/mu/mu4e/Retrieval-and-indexing.html
-  (mu4e-index-cleanup t) ; nil improves performance; do not sell to nil: refiled messages won’t show up
-  (mu4e-index-lazy-check nil) ; t improves performance
+  (mu4e-index-cleanup nil) ; nil improves performance
+  (mu4e-index-lazy-check t) ; t improves performance
 
   (mu4e-compose-context-policy 'ask)
   (mu4e-context-policy nil)
@@ -10892,6 +10958,9 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (remove-hook 'mu4e-compose-mode-hook 'org-contacts-setup-completion-at-point)
   (faces-extras-set-and-store-face-attributes
    '((mu4e-compose-separator-face :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)))
+
+  :hook
+  (mu4e-update-pre-hook . mu4e-extras-set-index-params)
 
   :bind
   (("A-m" . mu4e)
@@ -11324,7 +11393,7 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
         ("<return>" . telega-extras-smart-enter)
         ("," . telega-chatbuf-goto-pinned-message)
         ("C" . telega-msg-copy-link)
-        ("D" . telega-msg-delete-marked-or-at-point)
+        ("D" . telega-msg-delete-dwim)
         ("F" . telega-msg-forward-marked-or-at-point)
         ("f" . ace-link-org)
         ("s" . telega-chatbuf-filter-search)
@@ -11335,7 +11404,9 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
         ("o" . nil)
         :map telega-root-mode-map
         ("k" . telega-button-backward)
+        ("<up>" . telega-button-backward)
         ("l" . telega-button-forward)
+        ("<down>" . telega-button-forward)
         ("SPC" . telega-root-next-unread)
         ("." . telega-chat-with)
         ("a" . telega-chat-toggle-archive)
@@ -12685,6 +12756,18 @@ Requires configuration. Disabled for the time being.
   :after read-aloud)
 #+end_src
 
+** subed
+:PROPERTIES:
+:ID:       2FE4816E-F6F8-452A-9417-345FE4E01014
+:END:
+
+/[[https://github.com/sachac/subed][subed]] is a subtitle editor for Emacs./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package subed
+:disabled)
+#+end_src
+
 * misc
 :PROPERTIES:
 :ID:       EB8682EE-77BC-4D88-AA87-5ECB804C8B53
@@ -12800,7 +12883,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature midnight
-  :defer (* 30 60)
+  :defer 3600
   :custom
   (clean-buffer-list-kill-never-buffer-names
         '("*mu4e-headers*"
@@ -12827,7 +12910,9 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
                            mu4e-extras-update-all-mail-and-index
                            org-gcal-sync
                            elfeed-update)))
-    (add-hook 'midnight-hook (lambda () (simple-extras-call-verbosely fun "Midnight hook now calling `%s'...")))))
+    (add-hook 'midnight-hook
+            (apply-partially #'simple-extras-call-verbosely
+                           fun "Midnight hook now calling `%s'..."))))
 #+end_src
 
 ** bbdb

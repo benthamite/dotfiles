@@ -598,7 +598,7 @@
         `(,tab-bar-extras-prefix-element
           ;; ,tab-bar-extras-time-element
           ;; ,tab-bar-extras-separator-element
-          ,tab-bar-extras-chemacs-element
+          ,tab-bar-extras-emacs-profile-element
           ;; ,tab-bar-extras-separator-element
           ;; ,tab-bar-extras-battery-element
           ,tab-bar-extras-telega-element

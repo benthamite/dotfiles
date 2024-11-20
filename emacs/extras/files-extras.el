@@ -354,7 +354,7 @@ One normally uses `recover-session' for this, but when Emacs crashes a session
 may fail to be created and then each file has to be recovered separately. This
 command automates the recovery process in these cases."
   (interactive)
-  (dolist (file (directory-files (file-name-concat paths-dir-chemacs-profiles "var/auto-save")))
+  (dolist (file (directory-files (file-name-concat paths-dir-emacs-profiles "var/auto-save")))
     (when-let ((file-to-recover (string-replace "#" "" file)))
       (ignore-errors (recover-file (string-replace "!" "/" file-to-recover)))
       (files-extras-diff-buffer-with-file))))
@@ -611,6 +611,7 @@ To install the extension, drag the latter onto the former."
     ("a" "annas-archive"    (lambda () (interactive )(files-extras-open-elpaca-package "annas-archive")))
     ("b" "bib"              (lambda () (interactive )(files-extras-open-elpaca-package "bib")))
     ("d" "gdrive"           (lambda () (interactive )(files-extras-open-elpaca-package "gdrive")))
+    ("f" "pdf-tools-pages"  (lambda () (interactive )(files-extras-open-elpaca-package "pdf-tools-pages")))
     ("g" "goldendict-ng"    (lambda () (interactive )(files-extras-open-elpaca-package "goldendict-ng")))
     ("o" "macos"            (lambda () (interactive )(files-extras-open-elpaca-package "macos")))
     ("m" "mullvad"          (lambda () (interactive )(files-extras-open-elpaca-package "mullvad")))

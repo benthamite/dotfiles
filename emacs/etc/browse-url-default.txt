@@ -46,6 +46,7 @@ effectivealtruism.org
 embluemail.com
 etsy.com
 facebook.com
+getguesstimate.com
 gitguardian.com
 github.com
 gmail.com
@@ -112,6 +113,7 @@ soundcloud.com
 spopessentials1.com
 spotify.com
 squarespace.com
+squiggle-language.com
 stafforini.com
 stripe.com
 supermemo.guru

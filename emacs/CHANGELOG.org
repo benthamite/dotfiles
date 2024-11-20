@@ -4,6 +4,44 @@
 
 This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository. It is meant to be read primarily by members of the Tlön team, but it may be of interest to others as well.
 
+* Version 6.8.1 on 2024-11-19
+** Package management and initialization
+- Removed Chemacs dependency
+- Added early initialization debugging function ~early-init-trace-feature-load~
+- Several packages now use deferred loading: ~casual~, ~annas-archive~, ~imenu~, ~profiler~
+
+** Git and version control
+*** forge-extras
+- Improved GitHub notification syncing using AppleScript with Safari
+
+*** magit-extras 
+- Added ~magit-extras-checkout-tag-with-submodules~ for handling tags in repos with submodules
+
+*** vc-extras
+- Enhanced submodule handling in cloning and git directory splitting
+- Improved repo handling functionality
+
+** PDF tools
+- Moved page manipulation functionality from ~pdf-tools-extras~ to new package ~pdf-tools-pages~
+- Updated command names and bindings for consistency
+
+** Email and communication
+*** mu4e
+- Adjusted indexing parameters for better performance
+
+** UI and navigation
+*** tab-bar-extras
+- Now regularly updates battery status
+- Changed Chemacs profile element to generic Emacs profile element
+
+** Other changes
+*** Minor improvements
+- Added several ledger mode snippets
+- Cleaned up/removed commented code in various files
+- Fixed binding issues in several packages
+- Added many autoload directives
+
+The most significant changes relate to PDF handling (with the new dedicated package), forge notification handling (with improved Safari integration), and version control improvements around submodule handling. There's also a notable shift away from Chemacs dependency and toward more deferred package loading.
 * Version 6.7.12 on 2024-11-05
 
 ** Elpaca

@@ -28,7 +28,11 @@
 ;;; Code:
 
 (require 'doom-modeline)
-(require 'el-patch)
+
+;;;; Variables
+
+(defvar doom-modeline-extras-github-last-count 0
+  "Last count of GitHub notifications.")
 
 ;;;; User options
 
@@ -74,8 +78,22 @@
 (defvar org-roam-extras-current-backlink-count)
 (doom-modeline-def-segment org-roam-backlinks
   (when (and (derived-mode-p 'org-mode)
-             (bound-and-true-p org-roam-extras-current-backlink-count))
+	     (bound-and-true-p org-roam-extras-current-backlink-count))
     (concat (doom-modeline-spc) (format "%dB" org-roam-extras-current-backlink-count))))
+
+;;;;; GitHub notifications
+
+(declare-function forge-pull-notifications "forge-commands")
+(defun doom-modeline-extras-handle-github-notifications (&rest _)
+  "Handle GitHub notifications after they are fetched."
+  (unless (= doom-modeline--github-notification-number doom-modeline-extras-github-last-count)
+    (when (> doom-modeline--github-notification-number 0)
+      (require 'forge-commands)
+      (forge-pull-notifications)
+      (message "Pulled forge notifications.")))
+  (setq doom-modeline-extras-github-last-count doom-modeline--github-notification-number))
+
+(add-hook 'doom-modeline-after-github-fetch-notification-hook #'doom-modeline-extras-handle-github-notifications)
 
 (provide 'doom-modeline-extras)
 ;;; doom-modeline-extras.el ends here

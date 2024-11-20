@@ -559,7 +559,7 @@ TYPE can be \"pdf\", \"html\" or \"srt\"."
 	    ('bibtex-mode (bibtex-extras-get-key))
 	    ((or 'ebib-entry-mode 'ebib-index-mode)
 	     (ebib--get-key-at-point))))
-    (annas-archive-download id 'confirm #'ebib-extras-attach-file)))
+    (annas-archive-download id 'confirm)))
 
 (defun ebib-extras-doi-attach ()
   "Get a PDF of the DOI of the entry at point and attach it."

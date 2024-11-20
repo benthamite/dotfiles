@@ -48,6 +48,8 @@
 (declare-function f-read "f")
 (declare-function s-split "s")
 ;; TODO: remove first line and "rewards" lines
+;; TODO: handle "redeem", "merge" transactions
+;;;###autoload
 (defun ledger-extras-import-polymarket (file)
   "Import Polymarket CSV FILE into the current ledger file.
 To download the CSV file, go to <https://polymarket.com/portfolio?tab=history>,
@@ -75,6 +77,7 @@ expiration, you must set its resolution value manually."
 	(push (cons token-name token-symbol) token-alist)
 	(ledger-mode-extras-insert-transaction (list payee date account quantity token-symbol price nil))))))
 
+;;;###autoload
 (defun ledger-extras-import-interactive-brokers (file)
   "Import Interactive Brokers CSV FILE into the current ledger file.
 To download the CSV file, go to the IBKR site, click on \"performance & reports

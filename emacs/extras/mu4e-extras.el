@@ -47,6 +47,11 @@
   :type 'string
   :group 'mu4e-extras)
 
+(defcustom mu4e-extras-newsletters-folder ""
+  "Name of the `newsletters' folder."
+  :type 'string
+  :group 'mu4e-extras)
+
 (defcustom mu4e-extras-wide-reply 'prompt
   "Whether the reply to messages should be \"wide\" (a.k.a. \"reply-to-all\").
 If `prompt', ask the user. If t, always reply to all. If nil, always reply to
@@ -377,6 +382,28 @@ takes just a couple of seconds."
     (when-let ((parts (mm-dissect-buffer t t)))
       (mm-destroy-parts parts)
       (stringp (cl-find "text/html" (flatten-tree parts) :test 'equal)))))
+
+;;;;; Index
+
+;; https://github.com/djcb/mu/issues/2778#issuecomment-2485462344
+(defun mu4e-extras-set-index-params ()
+  "Set the index parameters for the current update.
+This is dependant on if I'm active (hence wanting a quick update) or
+away (in which case it can take its time). Ideally we would do this
+right before the index but currently there is no hook for that."
+  (let ((idle (time-convert (current-idle-time) 'integer))
+        (old-lazy mu4e-index-lazy-check)
+        (old-cleanup mu4e-index-cleanup))
+    (if (and (current-idle-time)
+             (> idle mu4e-update-interval))
+	(setq mu4e-index-lazy-check nil
+              mu4e-index-cleanup t)
+      (setq mu4e-index-lazy-check t
+            mu4e-index-cleanup nil))
+    (when (not (and (eq old-lazy mu4e-index-lazy-check)
+                    (eq old-cleanup mu4e-index-cleanup)))
+      (message "`mu4e-extras-set-index-params' idle:%s lazy:%s cleanup:%s"
+               idle mu4e-index-lazy-check mu4e-index-cleanup))))
 
 ;;;;; Patches
 

@@ -65,17 +65,18 @@
   "Element to display the time.
 To change how the time is displayed, customize `display-time-format'.")
 
-(defconst tab-bar-extras-chemacs-element
-  `(" " tlon-init-chemacs-profile-name)
-  "Element to display the Chemacs profile.")
+(defconst tab-bar-extras-emacs-profile-element
+  `(" " ,(file-name-nondirectory (directory-file-name user-emacs-directory)))
+  "Element to display the active Emacs profile.")
 
 (defvar doom-modeline--battery-status)
 (defconst tab-bar-extras-battery-element
-  `(:eval ,(format "%s %s"
-		   ;; icon
-		   (car doom-modeline--battery-status)
-		   ;;  percentage
-		   (cdr doom-modeline--battery-status)))
+  '(:eval (when battery-status-function
+            (let ((data (funcall battery-status-function)))
+              (format "%s %s"
+                      (or (and (string= (cdr (assq ?b data)) "+") "🔌")
+                          "🔋")
+                      (cdr (assq ?p data))))))
   "Element to display the battery.")
 
 (defconst tab-bar-extras-telega-element

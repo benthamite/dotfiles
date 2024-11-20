@@ -126,8 +126,10 @@ If NAME is nil, prompt for one. If ACCOUNT is nil, select one."
 (defun vc-extras-clone-repo (&optional name account no-forge)
   "Clone an existing repo.
 ACCOUNT is the name of the GitHub account. If NAME is nil, prompt the user for a
-repo name. If NO-FORGE is non-nil, do not prompt the user to add the repo to the
-Forge database."
+repo name. If NO-FORGE is non-nil, do not prompt to add the repo to Forge.
+
+This function does not use `vc-git-clone' because it does not support cloning
+submodules."
   (interactive)
   (let* ((repos nil)
 	 (name (or name
@@ -135,25 +137,47 @@ Forge database."
 	 (account (or account (if repos
 				  (alist-get name repos nil nil #'string=)
 				(user-error "If you provide a repo name, you must also provide its account"))))
-	 (remote (vc-extras-get-github-remote name account))
-	 (dir (file-name-concat (vc-extras-get-account-prop account :dir) name)))
+         (remote (vc-extras-get-github-remote name account))
+         (parent-dir (vc-extras-get-account-prop account :dir))
+         (dir (file-name-concat parent-dir name))
+         (process-buffer "/git-clone-output/"))
     (when (file-exists-p dir)
       (user-error "Directory `%s' already exists" dir))
-    (vc-clone remote 'Git dir)
-    (pcase vc-extras-split-repo
-      ('nil)
-      ('prompt (if (y-or-n-p "Move `.git' directory to separate directory?")
-		   (vc-extras-split-local-repo dir)
-		 (message "You can customize the `vc-extras-split-repo' user option to avoid this prompt.")))
-      (_ (vc-extras-split-local-repo dir)))
-    (let ((default-directory dir))
-      (require 'forge-core)
-      (require 'forge-extras)
-      (if (and (not no-forge)
-	       (not (forge-get-repository :tracked?))
-	       (y-or-n-p "Add to Forge? "))
-	  (forge-extras-track-repository dir)
-	(dired dir)))))
+    (message "Cloning repo %s..." name)
+    (let ((default-directory parent-dir))
+      (set-process-sentinel
+       (start-process "git-clone" process-buffer
+                      "git" "clone" "--recurse-submodules" remote (file-name-nondirectory dir))
+       (lambda (proc event)
+	 (when (and (string= event "finished\n")
+                    (= (process-exit-status proc) 0))
+           (let ((default-directory dir))
+             (when (vc-extras-has-submodules-p dir)
+	       (call-process "git" nil nil nil "submodule" "init")
+               (call-process "git" nil nil nil "submodule" "update" "--recursive"))
+             (if (= (process-exit-status proc) 0)
+		 (progn
+                   (pcase vc-extras-split-repo
+                     ('nil)
+                     ('prompt (if (y-or-n-p "Move `.git' directory to separate directory?")
+                                  (vc-extras-split-local-repo dir)
+				(message "You can customize `vc-extras-split-repo' to avoid this prompt.")))
+                     (_ (vc-extras-split-local-repo dir)))
+                   (require 'forge-core)
+                   (require 'forge-extras)
+                   (if (and (not no-forge)
+                            (not (forge-get-repository :tracked?))
+                            (y-or-n-p "Add to Forge? "))
+                       (forge-extras-track-repository dir)
+                     (dired dir))
+                   (kill-buffer process-buffer)
+                   (message (concat "Cloned repo "
+				    name (when (vc-extras-has-submodules-p dir) " and all its submodules") ".")))
+               (message "Clone failed with exit status %d" (process-exit-status proc))))))))))
+
+(defun vc-extras-has-submodules-p (dir)
+  "Return non-nil if the repository in DIR has submodules."
+  (file-exists-p (expand-file-name ".gitmodules" dir)))
 
 (defun vc-extras-get-github-remote (name &optional account)
   "Return the GitHub remote named NAME in ACCOUNT.
@@ -186,8 +210,7 @@ the repo’s `.git' directory. If GIT is `split-git', return the repo’s split
 
 (defun vc-extras-split-local-repo (dir)
   "Move the `.git' dir in DIR to a split dir and set the `.git' file accordingly.
-Normally, this command is run for repos managed by Dropbox, to protect the Git
-files from possible corruption."
+If the repository has submodules, move their `.git' directories, too."
   (interactive "D")
   (let* ((name (file-name-nondirectory (directory-file-name dir)))
 	 (source (file-name-concat dir ".git/"))
@@ -195,10 +218,27 @@ files from possible corruption."
 	 (git-file (directory-file-name source)))
     (when (file-exists-p target)
       (user-error "Directory `%s' already exists" target))
-    (rename-file source target t)
+    ;; Move main .git directory
+    (copy-directory source target t t)
+    (delete-directory source t)
     (with-temp-file git-file
-      (insert (format "gitdir: %s" target))
-      (write-file git-file))))
+      (insert (format "gitdir: %s" target)))
+    
+    (when (vc-extras-has-submodules-p dir)
+      (let ((default-directory dir))
+        ;; Update submodule configurations
+        (call-process "git" nil nil nil "submodule" "sync")
+        ;; For each submodule directory
+        (dolist (module-dir (directory-files-recursively dir "^uqbar-" t))
+          (when (file-directory-p module-dir)
+            (let* ((module-name (file-name-nondirectory module-dir))
+                   (git-file (file-name-concat module-dir ".git"))
+                   (module-target (file-name-concat target "modules" module-name)))
+              (when (file-exists-p git-file)
+                (with-temp-file git-file
+                  (insert (format "gitdir: %s" module-target)))))))
+        ;; Reinitialize submodules with new paths
+        (call-process "git" nil nil nil "submodule" "update" "--init" "--recursive")))))
 
 ;;;;; Delete
 
@@ -231,7 +271,7 @@ from NAME."
 	 deleted)
     (when (and (file-exists-p dir)
 	       ;; check that it is a repo, to prevent accidental deletion
-	       (locate-dominating-file dir ".git"))
+	       (vc-extras-is-git-dir-p dir))
       (delete-directory dir t)
       (push dir deleted))
     (when (file-exists-p split-git)
@@ -273,7 +313,6 @@ If ACCOUNT is nil, list all repos in all accounts."
       (vc-extras-gh-list-repos-in-account account)
     (vc-extras-gh-list-repos-in-all-accounts)))
 
-;; TODO: make it more efficient; currently it takes a couple of seconds
 (defun vc-extras-gh-list-repos-in-account (account)
   "List all repos in GitHub ACCOUNT.
 Return the result as a list of cons cells, where the car is the repo name and

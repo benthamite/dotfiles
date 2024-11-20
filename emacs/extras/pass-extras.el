@@ -74,7 +74,18 @@ user input."
   (shell-command (format "pass %s > %s" entry file))
   (message "Key exported to `%s'" file))
 
-(provide 'pass-extras)
+(declare-function password-store-list "password-store")
+;;;###autoload
+(defun pass-extras-git-crypt-unlock (&optional repo entry)
+  "Unlock `git-crypt' REPO with key stored in ENTRY."
+  (interactive)
+  (let* ((default-directory (or repo default-directory))
+	 (entry (or entry (completing-read "Key: " (password-store-list) nil 'match)))
+	 (output (shell-command-to-string (format "git-crypt unlock <(pass %s)" entry))))
+    (if (string-empty-p output)
+	(message "Unlocked repository `%s'" repo)
+      (message "Error unlocking repository `%s':\n%s" repo output))))
 
+(provide 'pass-extras)
 ;;; pass-extras.el ends here
 

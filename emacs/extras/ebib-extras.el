@@ -607,6 +607,7 @@ If file is already attached, set the abstract."
 If FORCE is non-nil, or the command is invoked with a prefix argument, force OCR
 even if already present."
   (interactive "P")
+  (require 'files-extras)
   (files-extras-ocr-pdf force))
 
 (declare-function bibtex-set-field "bibex")

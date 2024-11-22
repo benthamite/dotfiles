@@ -1,10 +1,11 @@
-;;; vc-extras.el --- Extensions for vc -*- lexical-binding: t -*-
+;;; vc-extras.el --- Extensions for vc -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/vc-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((paths "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -29,7 +30,6 @@
 
 (require 'paths)
 (require 'vc)
-(require 'vc-git)
 
 ;;;; User options
 
@@ -163,8 +163,6 @@ submodules."
                                   (vc-extras-split-local-repo dir)
 				(message "You can customize `vc-extras-split-repo' to avoid this prompt.")))
                      (_ (vc-extras-split-local-repo dir)))
-                   (require 'forge-core)
-                   (require 'forge-extras)
                    (if (and (not no-forge)
                             (not (forge-get-repository :tracked?))
                             (y-or-n-p "Add to Forge? "))

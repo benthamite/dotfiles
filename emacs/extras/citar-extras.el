@@ -1,10 +1,11 @@
-;;; citar-extras.el --- Extensions for citar -*- lexical-binding: t -*-
+;;; citar-extras.el --- Extensions for citar -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/citar-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((citar "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -28,11 +29,10 @@
 ;;; Code:
 
 (require 'citar)
-(require 'el-patch)
 
 ;;;; Main variables
 
-(declare-function nerd-icons-faicon "nerd-icons")
+(autoload 'nerd-icons-faicon "nerd-icons")
 (defvar citar-extras-indicator-files-icons
   (citar-indicator-create
    :symbol (nerd-icons-faicon
@@ -53,7 +53,7 @@
    :padding "  "
    :tag "has:links"))
 
-(declare-function nerd-icons-codicon "nerd-icons")
+(autoload 'nerd-icons-codicon "nerd-icons")
 (defvar citar-extras-indicator-notes-icons
   (citar-indicator-create
    :symbol (nerd-icons-codicon
@@ -75,12 +75,11 @@
 
 ;;;; Functions
 
-(declare-function ebib "ebibu")
+(declare-function ebib "ebib")
 (declare-function ebib-extras-open-key "ebib-extras")
 (defun citar-extras-open-in-ebib (citekey)
   "Open bibliographic entry associated with the CITEKEY in Ebib."
   (interactive (list (citar-select-ref)))
-  (require 'ebib-extras)
   (unless (get-buffer "*ebib*")
     (ebib))
   (ebib-extras-open-key citekey))
@@ -105,7 +104,7 @@
         (re-search-forward (format "@.*?{%s" citekey)))
     (user-error "No entry found for %s" citekey)))
 
-(declare-function files-extras-get-stem-of-current-buffer "files-extras")
+(autoload 'files-extras-get-stem-of-current-buffer "files-extras")
 (defun citar-extras-open-file-at-point ()
   "Launch `citar' with citekey associated with file at point."
   (interactive)

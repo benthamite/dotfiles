@@ -1,10 +1,11 @@
-;;; org-ref-extras.el --- Extensions for org-ref -*- lexical-binding: t -*-
+;;; org-ref-extras.el --- Extensions for org-ref -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/org-ref-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((org-ref "3.1") (el-patch "1.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -29,7 +30,6 @@
 
 (require 'el-patch)
 (require 'org-ref)
-(require 'org-ref-isbn)
 
 ;;;; Functions
 
@@ -83,6 +83,7 @@
       (bibtex-clean-entry))))
 
 ;; Remove redundant and conflicting `Year' field
+(declare-function org-ref-isbn-clean-bibtex-entry "org-ref-isbn")
 (el-patch-defun isbn-to-bibtex (isbn bibfile)
   "Get bibtex entry for ISBN and insert it into BIBFILE.
 Nothing happens if an entry with the generated key already exists

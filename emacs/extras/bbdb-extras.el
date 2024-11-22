@@ -1,10 +1,11 @@
-;;; bbdb-extras.el --- Additional functionality for bbdb -*- lexical-binding: t -*-
+;;; bbdb-extras.el --- Additional functionality for bbdb -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/bbdb-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((bbdb "3.1"))
 
 ;; This file is NOT part of GNU Emacs.
 

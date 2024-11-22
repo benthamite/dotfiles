@@ -1,10 +1,10 @@
-;;; tab-bar-extras.el --- Extra functionality for the tab bar -*- lexical-binding: t -*-
+;;; tab-bar-extras.el --- Extra functionality for the tab bar -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/tab-bar-extras.el
-;; Version: 0.1
+;; Version: 0.2
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -174,8 +174,7 @@ reset functions."
   "Reset the Tab Bar when `org-clock' isn't running.
 The condition is included to prevent the currently clocked task from
 disappearing when the Tab Bar is reset."
-  (require 'org-clock)
-  (unless org-clock-current-task
+  (unless (bound-and-true-p org-clock-current-task)
     (tab-bar-extras-reset)))
 
 ;;;;; notifications

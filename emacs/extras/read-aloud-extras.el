@@ -1,10 +1,11 @@
-;;; read-aloud-extras.el --- Extensions for read-aloud -*- lexical-binding: t -*-
+;;; read-aloud-extras.el --- Extensions for read-aloud -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/read-aloud-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((el-patch "1.1") (read-aloud "0.0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -131,7 +132,7 @@
 
 ;;;;; Read file
 
-(declare-function tlon-convert-pdf "tlon-import")
+(autoload 'tlon-convert-pdf "tlon-import")
 (defun read-aloud-extras-read-file (&optional file)
   "Read the contents of FILE aloud.
 If FILE is nil, read the file visited by the current buffer."
@@ -154,8 +155,8 @@ If FILE is nil, read the file visited by the current buffer."
 ;;;;; Patched functions
 
 ;; allow reading text in PDFs
-(declare-function pdf-view-active-region-p "pdf-view")
-(declare-function pdf-view-active-region-text "pdf-view")
+(autoload 'pdf-view-active-region-p "pdf-view")
+(autoload 'pdf-view-active-region-text "pdf-view")
 (el-patch-cl-defun read-aloud-this()
   "Pronounce either the selection or a word under the pointer."
   (interactive)

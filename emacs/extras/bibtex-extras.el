@@ -1,11 +1,11 @@
-;;; bibtex-extras.el --- Extensions for bibtex -*- lexical-binding: t -*-
+;;; bibtex-extras.el --- Extensions for bibtex -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/bibtex-extras.el
-;; Version: 0.1
-
+;; Version: 0.2
+;; Package-Requires: ((ebib "2.0") (el-patch "2.1"))
 ;; This file is NOT part of GNU Emacs.
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -28,7 +28,6 @@
 ;;; Code:
 
 (require 'bibtex)
-(require 'doi-utils)
 (require 'el-patch)
 (require 'ebib)
 
@@ -136,6 +135,7 @@
       (setq current (cdr current))))
   list)
 
+;;;###autoload
 (defun bibtex-extras-get-key ()
   "Return the key of the current BibTeX entry."
   (save-excursion
@@ -146,6 +146,7 @@
           (match-string-no-properties 1)
         (user-error "Not on a BibTeX entry")))))
 
+(autoload 'bibtex-set-field "doi-utils")
 (defun bibtex-extras-add-or-update-field (field value)
   "Add or update FIELD with VALUE in the current BibTeX entry."
   (bibtex-beginning-of-entry)
@@ -233,6 +234,7 @@ If DELIMITER is nil, use a semicolon."
       (bibtex-narrow-to-entry)
       (buffer-substring-no-properties (point-min) (point-max)))))
 
+;;;###autoload
 (defun bibtex-extras-get-field (field)
   "Return the value of FIELD in the current BibTeX entry."
   (save-excursion

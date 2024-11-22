@@ -1,10 +1,11 @@
-;;; pass-extras.el --- Exteions for pass -*- lexical-binding: t -*-
+;;; pass-extras.el --- Exteions for pass -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/pass-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((pass "1.0.0"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -74,7 +75,7 @@ user input."
   (shell-command (format "pass %s > %s" entry file))
   (message "Key exported to `%s'" file))
 
-(declare-function password-store-list "password-store")
+(autoload 'password-store-list "password-store")
 ;;;###autoload
 (defun pass-extras-git-crypt-unlock (&optional repo entry)
   "Unlock `git-crypt' REPO with key stored in ENTRY."

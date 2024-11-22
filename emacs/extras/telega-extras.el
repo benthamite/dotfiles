@@ -1,10 +1,11 @@
-;;; telega-extras.el --- Extensions for telega -*- lexical-binding: t -*-
+;;; telega-extras.el --- Extensions for telega -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/telega-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((paths "0.1") (telega "0.8.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -29,7 +30,6 @@
 
 (require 'paths)
 (require 'telega)
-(require 'tlon-core)
 
 ;;;; Variables
 
@@ -143,7 +143,7 @@ archive buffer."
 	(dolist (file dired-files)
 	  (funcall (telega-extras-dired-attach-func file) file))))))
 
-(declare-function files-extras-newest-file "files-extras")
+(autoload 'files-extras-newest-file "files-extras")
 (defun telega-extras-chatbuf-attach-most-recent-file ()
   "Attach most recently saved file in `downloads' folder."
   (interactive)
@@ -252,6 +252,7 @@ respectively, as defined in `telega-extras-chats'."
     (sleep-for 0.2) ; hack to ensure the buffer is loaded
     (telega-chatbuf-input-insert "")))
 
+(declare-function tlon-lookup "tlon-core")
 (defun telega-extras-get-id (chat &optional topic)
   "Return the ID of CHAT.
 If TOPIC is non-nil, return the associated topic ID"

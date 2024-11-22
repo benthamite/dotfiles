@@ -1,10 +1,11 @@
-;;; markdown-mode-extras.el --- Extensions for markdown-mode -*- lexical-binding: t -*-
+;;; markdown-mode-extras.el --- Extensions for markdown-mode -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/markdown-mode-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((markdown-mode "2.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -28,8 +29,6 @@
 ;;; Code:
 
 (require 'markdown-mode)
-(require 'el-patch)
-(require 'simple-extras)
 
 ;;;; Functions
 
@@ -85,6 +84,7 @@ With ARG prefix argument, prompt for the URL to use."
 	    (insert (format "[%s](%s)" name (read-string "URL: ")))
 	  (insert name))))))
 
+(autoload 'simple-extras-pandoc-convert "simple-extras")
 (defun markdown-mode-extras-paste-with-conversion ()
   "Convert the contents of the system clipboard to target Markdown using Pandoc.
 This command will convert from HTML if the clipboard contains HTML, and from Org
@@ -94,22 +94,6 @@ See also `org-extras-paste-with-conversion'. For the reverse process, use
 `ox-clip-formatted-copy'."
   (interactive)
   (insert (simple-extras-pandoc-convert "gfm-raw_html" "org")))
-
-;;;;; Patched functions
-
-(el-patch-defun markdown-insert-italic ()
-  "Insert markup to make a region or word italic.
-If there is an active region, make the region italic.  If the point
-is at a non-italic word, make the word italic.  If the point is at an
-italic word or phrase, remove the italic markup.  Otherwise, simply
-insert italic delimiters and place the point in between them."
-  (interactive)
-  (let ((delim (el-patch-swap
-		 (if markdown-italic-underscore "_" "*")
-		 (cond ((eq markdown-italic-underscore t) "_")
-		       ((eq markdown-italic-underscore nil) "*")
-		       ((eq markdown-italic-underscore 'double) "__")))))
-    (markdown--insert-common delim delim markdown-regex-italic 1 3 'markdown-italic-face t)))
 
 (provide 'markdown-mode-extras)
 ;;; markdown-mode-extras.el ends here

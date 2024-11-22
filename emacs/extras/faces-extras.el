@@ -1,4 +1,4 @@
-;;; faces-extras.el --- Extensions for faces -*- lexical-binding: t -*-
+;;; faces-extras.el --- Extensions for faces -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 

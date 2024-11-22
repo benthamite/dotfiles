@@ -1,9 +1,9 @@
-;;; ebib-extras.el --- Extensions for ebib -*- lexical-binding: t -*-
+;;; ebib-extras.el --- Extensions for ebib -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Author: Pablo Stafforini
 ;; Maintainer: Pablo Stafforini
-;; Version: 0.1
-;; Homepage: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/ebib-extras.el
+;; Version: 0.2
+;; Package-Requires: ((el-patch "1.1") (ebib "2.0") (paths "0.1") (shut-up "0.3.1"))
 
 ;; This file is not part of GNU Emacs
 
@@ -27,15 +27,10 @@
 
 ;;; Code:
 
-(require 'bibtex)
 (require 'el-patch)
 (require 'ebib)
-(require 'filenotify)
 (require 'paths)
-(require 'simple-extras)
 (require 'shut-up)
-(require 'tlon)
-(require 'eww-extras)
 
 ;;;; User options
 
@@ -89,6 +84,7 @@
     (winum-select-window-2))
   (ebib))
 
+;;;###autoload
 (defun ebib-extras-reload-database-no-confirm (db)
   "Reload the database DB from disk, without asking for confirmation."
   (ebib--execute-when
@@ -199,6 +195,7 @@ value is copied to the kill ring."
   (interactive)
   (ebib-copy-field-contents (ebib--current-field)))
 
+;;;###autoload
 (defun ebib-extras-get-file (extension)
   "Return the file with EXTENSION in entry at point.
 A file will be returned if it uniquely exists."
@@ -272,6 +269,7 @@ exists."
   (interactive)
   (ebib-extras-open-file-externally "mp3"))
 
+(defvar browse-url-handlers)
 (defun ebib-extras-open-html-file ()
   "Open `html' file in entry at point, if it (uniquely) exists."
   (interactive)
@@ -386,11 +384,10 @@ If EXTENSION is non-nil, set its extension to its value."
 (defvar ebib-extras-invalid-files nil
   "List of invalid files.")
 
-(declare-function tlon-bibliography-lookup "tlon-tex")
+(autoload 'tlon-bibliography-lookup "tlon-tex")
 (defun ebib-extras-file-is-valid-p (file)
   "Check if FILE has a valid slug."
   (let ((slug (file-name-base file)))
-    (require 'tlon-tex)
     (stringp (tlon-bibliography-lookup "=key=" slug))))
 
 (defun ebib-extras-list-invalid-files (&optional dirs)
@@ -459,6 +456,7 @@ Try to fetch it with Zotero or ."
 (declare-function files-extras-newest-file "files-extras")
 (declare-function bibtex-extras-get-key "bibex-extras")
 (declare-function tlon-get-abstract-with-or-without-ai "tlon-ai")
+;;;###autoload
 (defun ebib-extras-attach-file (&optional file key open)
   "Attach a file to the entry with KEY.
 If FILE is a string, attach it. If FILE is a symbol, attach the most recent
@@ -598,35 +596,32 @@ If file is already attached, set the abstract."
 
 ;;;;; ?
 
-(declare-function files-extras-ocr-pdf "files-extras")
-(declare-function tlon-lookup-all "tlon-core")
-(declare-function tlon-lookup "tlon-core")
+(autoload 'files-extras-ocr-pdf "files-extras")
 (defvar tlon-languages-properties)
 (defun ebib-extras-ocr-pdf (&optional force)
   "OCR the PDF file in the current entry.
 If FORCE is non-nil, or the command is invoked with a prefix argument, force OCR
 even if already present."
   (interactive "P")
-  (require 'files-extras)
   (files-extras-ocr-pdf force))
 
+(declare-function tlon-lookup "tlon-core")
+(declare-function tlon-lookup-all "tlon-core")
 (declare-function bibtex-set-field "bibex")
 (defun ebib-extras-get-or-set-language ()
   "Return the language of the current entry, prompting the user for one if needed."
-  (let* ((get-field (pcase major-mode
-		      ('ebib-entry-mode #'ebib-extras-get-field)
-		      ('bibtex-mode #'bibtex-extras-get-field)))
-	 (set-field (pcase major-mode
-		      ('ebib-entry-mode #'ebib-extras-set-field)
-		      ('bibtex-mode #'bibtex-set-field)))
-	 (get-lang (lambda () (funcall get-field "langid")))
-	 (set-lang (lambda (lang) (funcall set-field "langid" lang)))
-	 (lang (funcall get-lang))
-	 (valid-lang (tlon-lookup tlon-languages-properties :standard :name lang)))
-    (or valid-lang
-	(funcall set-lang
-		 (completing-read "Select language: " (tlon-lookup-all tlon-languages-properties :standard)
-				  nil t "english")))))
+  (cl-destructuring-bind (get-field set-field)
+      (pcase major-mode
+	('ebib-entry-mode '(ebib-extras-get-field ebib-extras-set-field))
+	('bibtex-mode '(bibtex-extras-get-field bibtex-set-field)))
+    (let* ((get-lang (lambda () (funcall get-field "langid")))
+	   (set-lang (lambda (lang) (funcall set-field "langid" lang)))
+	   (lang (funcall get-lang))
+	   (valid-lang (tlon-lookup tlon-languages-properties :standard :name lang)))
+      (or valid-lang
+	  (funcall set-lang
+		   (completing-read "Select language: " (tlon-lookup-all tlon-languages-properties :standard)
+				    nil t "english"))))))
 
 (defconst ebib-extras-library-genesis
   '("Library Genesis"
@@ -1043,6 +1038,7 @@ If called interactively, open the entry. Otherwise, return it as a string."
       (bibtex-search-entry key)
       (unless (called-interactively-p 'any) (bibtex-extras-get-entry-as-string)))))
 
+;;;###autoload
 (defun ebib-extras-get-file-of-key (key)
   "Return the bibliographic file in which the entry with KEY is found."
   (unless ebib--databases
@@ -1064,6 +1060,8 @@ If called interactively, open the entry. Otherwise, return it as a string."
     (sleep-for 0.01)
     (ebib-edit-entry)))
 
+(autoload 'simple-extras-get-next-element "simple-extras")
+;;;###autoload
 (defun ebib-extras-sort (&optional state)
   "Sort Ebib index buffer by STATE.
 If STATE is nil, toggle between the relevant states."
@@ -1100,7 +1098,6 @@ If STATE is nil, toggle between the relevant states."
 			 (ebib-db-uniquify-key (ebib--get-key-at-point) ebib--cur-db)
 		       key))
 	    (file (progn
-		    (require 'zotra-extras)
 		    (zotra-extras-set-bibfile)))
 	    entry)
        (with-temp-buffer
@@ -1157,6 +1154,7 @@ The list of files to be watched is defined in `ebib-extras-auto-save-files'."
 
 (run-with-timer 1 nil #'ebib-extras-auto-save-databases)
 
+(autoload 'file-notify-add-watch "filenotify")
 (defun ebib-extras-auto-reload-databases ()
   "Check if any db file has been modified and reload its Ebib database if so.
 The list of files to be watched is defined in `ebib-extras-auto-save-files'."
@@ -1179,6 +1177,7 @@ The list of files to be watched is defined in `ebib-extras-auto-save-files'."
     (,tlon-file-stable . 4))
   "Association list of database files and their numbers.")
 
+;;;###autoload
 (defun ebib-extras-get-db-number (file)
   "Get database number for FILE."
   (cdr (assoc file ebib-extras-db-numbers)))
@@ -1243,6 +1242,7 @@ If applicable, open external website to set rating there as well."
 			  key db)
     (ebib-extras-update-entry-buffer db)))
 
+;;;###autoload
 (defun ebib-extras-get-field (field)
   "Get the value of FIELD for the entry at point.
 Convenience function that calls `ebib-get-field-value' with
@@ -1438,7 +1438,7 @@ exceeded, only the first author will be listed, followed by \" et al\"."
 	(format "%s et al" (car authors))
       (mapconcat 'identity authors separator))))
 
-(declare-function zotra-extras-get-field "zotra-extras")
+(autoload 'zotra-extras-get-field "zotra-extras")
 (defun ebib-extras-update-field (&optional field keep-braces)
   "Update FIELD in entry at point.
 If FIELD is nil, update the field at point. If KEEP-BRACES is non-nil, do not
@@ -1446,8 +1446,7 @@ remove braces from the field value."
   (interactive)
   (when-let* ((id-or-url (ebib-extras-get-id-or-url))
 	      (field (or field (ebib--current-field)))
-	      (value (progn (require 'zotra-extras)
-			    (zotra-extras-get-field field id-or-url keep-braces))))
+	      (value (zotra-extras-get-field field id-or-url keep-braces)))
     (ebib-set-field-value
      field value (ebib--get-key-at-point) ebib--cur-db 'overwrite)
     (ebib-extras-update-entry-buffer ebib--cur-db)))

@@ -1,10 +1,11 @@
-;;; eww-extras.el --- Extensions for eww -*- lexical-binding: t -*-
+;;; eww-extras.el --- Extensions for eww -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/eww-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((paths "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -29,7 +30,6 @@
 
 (require 'eww)
 (require 'paths)
-(require 'simple-extras)
 
 ;;;; Variables
 
@@ -122,10 +122,13 @@ or prompt the user for a file."
       (user-error "No file found at point"))))
 
 (defvar ebib--cur-db)
+(autoload 'simple-extras-get-url "simple-extras")
+(autoload 'ebib-db-get-filename "ebib-db")
+(autoload 'org-web-tools-extras-org-title-for-url "org-web-tools-extras")
+(declare-function simple-extras-slugify "simple-extras")
 (declare-function bibtex-extras-get-key "bibtex-extras")
 (declare-function ebib-extras-get-field "ebib-extras")
-(declare-function ebib-db-get-filename "ebib-db")
-(declare-function org-web-tools-extras-org-title-for-url "org-web-tools-extras")
+;;;###autoload
 (defun eww-extras-url-to-file (type &optional url callback)
   "Generate file of TYPE for URL and run CALLBACK function.
 CALLBACK is a function called when the process concludes. The function takes two
@@ -253,8 +256,8 @@ The exceptions are listed in `eww-extras-readable-exceptions'."
 
 (add-hook 'eww-after-render-hook #'eww-extras-readable-autoview)
 
-(declare-function ffap-url-p "ffap")
-(declare-function browse-url-extras-write-url-to-file "browse-url-extras")
+(autoload 'ffap-url-p "ffap")
+(autoload 'browse-url-extras-write-url-to-file "browse-url-extras")
 (defun eww-extras-add-domain-to-readable-exceptions ()
   "Prompt for a URL and add its domain to the list of `eww-readable' exceptions.
 If buffer is visiting a URL or if there is a URL in the kill ring, use its
@@ -303,26 +306,24 @@ With prefix ARG is passed, open in new EWW buffer."
 	(eww (current-kill 0)))
     (eww (current-kill 0))))
 
-(declare-function s-split "s")
-(declare-function s-join "s")
 (defun eww-extras-go-up-url-hierarchy ()
   "Go up the URL hierarchy."
   (interactive)
   (let* ((url (url-generic-parse-url (eww-current-url)))
-	 (filepath (url-filename url))
-	 (paths (s-split "/" filepath))
-	 (new-path (s-join "/" (butlast paths 1)))
-	 (new-url nil))
+         (filepath (url-filename url))
+         (paths (split-string filepath "/" t))
+         (new-path (mapconcat #'identity (butlast paths 1) "/"))
+         (new-url nil))
     (setq new-url (url-parse-make-urlobj
-		   (url-type url)
-		   (url-user url)
-		   (url-password url)
-		   (url-host url)
-		   (url-port url)
-		   new-path
-		   (url-target url)
-		   nil
-		   (url-fullness url)))
+                   (url-type url)
+                   (url-user url)
+                   (url-password url)
+                   (url-host url)
+                   (url-port url)
+                   new-path
+                   (url-target url)
+                   nil
+                   (url-fullness url)))
     (eww-browse-url (url-recreate-url new-url))))
 
 (defun eww-extras-go-to-root-url-hierarchy ()

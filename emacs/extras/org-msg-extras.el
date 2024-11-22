@@ -1,10 +1,11 @@
-;;; org-msg-extras.el --- Extensions for org-msg -*- lexical-binding: t -*-
+;;; org-msg-extras.el --- Extensions for org-msg -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/org-msg-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((org-msg "4.0") (org-extras "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -29,7 +30,6 @@
 
 (require 'org-extras)
 (require 'org-msg)
-(require 'simple-extras)
 
 ;;;; User options
 
@@ -85,6 +85,7 @@
   (org-msg-extras-kill-message)
   (browse-url "https://app.grammarly.com/ddocs/2264307164"))
 
+(declare-function simple-extras-visible-mode-enhanced "simple-extras")
 (defun org-msg-extras-begin-compose ()
   "Move point to start composing an email.
 This is a slightly tweaked version of `org-msg-goto-body'."

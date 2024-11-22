@@ -1,10 +1,11 @@
-;;; magit-extra.el --- Extensions for magit -*- lexical-binding: t -*-
+;;; magit-extra.el --- Extensions for magit -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/magit-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((magit "3.1") (paths "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -85,7 +86,7 @@ return instead the full path; if PATH is `sans-dir', return the filename only."
 	('sans-dir (file-name-nondirectory file))
 	(_ file)))))
 
-(declare-function org-entry-get "org")
+(autoload 'org-entry-get "org")
 (declare-function window-extras-switch-to-last-window "window-extras")
 (defun magit-extras-get-commit-heading ()
   "Get the `org-mode' heading above the code to be committed."

@@ -1,10 +1,11 @@
-;;; dired-extras.el --- Extensions for dired -*- lexical-binding: t -*-
+;;; dired-extras.el --- Extensions for dired -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/dired-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((el-patch "1.1") (paths "0.1") (shut-up "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -29,9 +30,7 @@
 
 (require 'dired)
 (require 'el-patch)
-(require 'gnus-dired)
 (require 'paths)
-(require 'shut-up)
 (require 'transient)
 
 ;;;; Variables
@@ -69,7 +68,7 @@ directories; otherwise copy the full paths."
   (let ((files (dired-get-marked-files dired-hide-details-mode nil)))
     (kill-new (mapconcat #'identity files "\n"))))
 
-(declare-function image-dired-copy-filename-as-kill "image-dired")
+(autoload 'image-dired-copy-filename-as-kill "image-dired")
 (defun dired-extras-image-copy-filename-as-kill-absolute ()
   "Copy absolute names of marked (or next ARG) images into the kill ring."
   (interactive)
@@ -84,15 +83,24 @@ If no files are marked, copy file at point instead."
   (kill-new (concat "https://stafforini.com/docs/" (dired-copy-filename-as-kill))))
 
 ;; emacs.stackexchange.com/a/30681/32089
-(define-advice dired-clean-up-after-deletion
-    (:around (old-fun &rest r) kill-dired-buffer-quietly)
-  (define-advice y-or-n-p (:around (old-fun prompt) just-yes)
-    (if (or (string-prefix-p "Kill Dired buffer" prompt)
-	    (string-prefix-p "Kill buffer of" prompt))
-	t
-      (funcall old-fun prompt)))
+(defun dired-extras-y-or-n-p-just-yes (old-fun prompt)
+  "Return t if PROMPT is a kill buffer prompt, nil otherwise.
+OLD-FUN is the original `y-or-n-p' function."
+  (if (or (string-prefix-p "Kill Dired buffer" prompt)
+          (string-prefix-p "Kill buffer of" prompt))
+      t
+    (funcall old-fun prompt)))
+
+(defun dired-extras-clean-up-after-deletion-quietly (old-fun &rest r)
+  "Advice to suppress the prompt when deleting files.
+OLD-FUN is the original `dired-clean-up-after-deletion' function. R is the
+arguments passed to OLD-FUN."
+  (advice-add 'y-or-n-p :around #'dired-extras-y-or-n-p-just-yes)
   (unwind-protect (apply old-fun r)
-    (advice-remove 'y-or-n-p #'y-or-n-p@just-yes)))
+    (advice-remove 'y-or-n-p #'dired-extras-y-or-n-p-just-yes)))
+
+(advice-add 'dired-clean-up-after-deletion
+            :around #'dired-extras-clean-up-after-deletion-quietly)
 
 (defun dired-extras-do-delete-fast (&optional arg)
   "Delete all marked (or next ARG) files, without using the `trash' utility.
@@ -120,13 +128,13 @@ losing the `put back' option."
 
 ;;;;; image-dired
 
+(autoload 'image-dired-show-all-from-dir "image-dired")
 (defun dired-extras-image-dired-current-directory ()
   "Run `image-dired' in the current directory."
   (interactive)
-  (require 'image-dired)
   (image-dired-show-all-from-dir (dired-current-directory)))
 
-(declare-function files-extras-read-file "files-extras")
+(autoload 'files-extras-read-file "files-extras")
 ;;;###autoload
 (defun dired-extras-copy-image ()
   "Copy image FILE to the kill ring."

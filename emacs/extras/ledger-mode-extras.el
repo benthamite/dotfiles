@@ -1,10 +1,11 @@
-;;; ledger-mode-extras.el --- Extensions for ledger-mode -*- lexical-binding: t -*-
+;;; ledger-mode-extras.el --- Extensions for ledger-mode -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/ledger-mode-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((ledger-mode) (paths "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -45,8 +46,6 @@
 
 ;;;;; Import
 
-(declare-function f-read "f")
-(declare-function s-split "s")
 ;; TODO: remove first line and "rewards" lines
 ;; TODO: handle "redeem", "merge" transactions
 ;;;###autoload
@@ -55,27 +54,29 @@
 To download the CSV file, go to <https://polymarket.com/portfolio?tab=history>,
 click on \"Filter\", set a range from one day after the most recent Polymarket
 transaction on Ledger to today. Remove the first row of the CSV file and the
-‘Reward’ lines before importing it. Note that if you held a contract until
+`Reward' lines before importing it. Note that if you held a contract until
 expiration, you must set its resolution value manually."
   (interactive (list (read-file-name "Polymarket CSV file: " paths-dir-downloads)))
   (let (token-alist)
-    (dolist (raw (s-split "\n" (f-read file) t))
-      (let* ((clean (split-string (replace-regexp-in-string "\"" "" raw) "," t))
-	     (payee "Polymarket")
-	     (date (format-time-string "%Y-%m-%d" (seconds-to-time (string-to-number (nth 5 clean)))))
-	     (account "Assets:Polymarket")
-	     (sign (pcase (nth 1 clean) ("Buy" 1) ("Sell" -1)
-			  (_ (user-error "Unknown transaction type `%s'" (nth 1 clean)))))
-	     (quantity (float (* sign (string-to-number (nth 3 clean)))))
-	     (token-name (string-trim (nth 0 clean)))
-	     (token-symbol
-	      (if-let ((match (alist-get token-name token-alist nil nil #'string=)))
-		  match
-		(read-string (format "Token symbol for `%s': " token-name))))
-	     (proceeds (float (string-to-number (nth 2 clean))))
-	     (price (abs (/ proceeds quantity))))
-	(push (cons token-name token-symbol) token-alist)
-	(ledger-mode-extras-insert-transaction (list payee date account quantity token-symbol price nil))))))
+    (with-temp-buffer
+      (insert-file-contents file)
+      (dolist (raw (split-string (buffer-string) "\n" t))
+        (let* ((clean (split-string (replace-regexp-in-string "\"" "" raw) "," t))
+               (payee "Polymarket")
+               (date (format-time-string "%Y-%m-%d" (seconds-to-time (string-to-number (nth 5 clean)))))
+               (account "Assets:Polymarket")
+               (sign (pcase (nth 1 clean) ("Buy" 1) ("Sell" -1)
+			    (_ (user-error "Unknown transaction type `%s'" (nth 1 clean)))))
+               (quantity (float (* sign (string-to-number (nth 3 clean)))))
+               (token-name (string-trim (nth 0 clean)))
+               (token-symbol
+                (if-let ((match (alist-get token-name token-alist nil nil #'string=)))
+                    match
+                  (read-string (format "Token symbol for `%s': " token-name))))
+               (proceeds (float (string-to-number (nth 2 clean))))
+               (price (abs (/ proceeds quantity))))
+          (push (cons token-name token-symbol) token-alist)
+          (ledger-mode-extras-insert-transaction (list payee date account quantity token-symbol price nil)))))))
 
 ;;;###autoload
 (defun ledger-extras-import-interactive-brokers (file)
@@ -85,16 +86,18 @@ To download the CSV file, go to the IBKR site, click on \"performance & reports
 that IBKR sometimes adds an extra line with the total amount of a transaction
 broken down into multiple trades. You must remove these lines manually."
   (interactive (list (read-file-name "IBKR CSV file: " paths-dir-downloads)))
-  (dolist (raw (s-split "\n" (f-read file) t))
-    (let* ((clean (split-string (replace-regexp-in-string "\"" "" raw) "," t))
-	   (payee "Interactive Brokers")
-	   (date (ledger-extras-convert-interactive-brokers-date (nth 0 clean)))
-	   (account "Assets:Interactive Brokers")
-	   (quantity (format "%.2f" (string-to-number (nth 2 clean))))
-	   (token-symbol (nth 1 clean))
-	   (price (nth 3 clean))
-	   (fees (float (* -1 (string-to-number (nth 5 clean))))))
-      (ledger-mode-extras-insert-transaction (list payee date account quantity token-symbol price fees)))))
+  (with-temp-buffer
+    (insert-file-contents file)
+    (dolist (raw (split-string (buffer-string) "\n" t))
+      (let* ((clean (split-string (replace-regexp-in-string "\"" "" raw) "," t))
+             (payee "Interactive Brokers")
+             (date (ledger-extras-convert-interactive-brokers-date (nth 0 clean)))
+             (account "Assets:Interactive Brokers")
+             (quantity (format "%.2f" (string-to-number (nth 2 clean))))
+             (token-symbol (nth 1 clean))
+             (price (nth 3 clean))
+             (fees (float (* -1 (string-to-number (nth 5 clean))))))
+        (ledger-mode-extras-insert-transaction (list payee date account quantity token-symbol price fees))))))
 
 (defun ledger-extras-convert-interactive-brokers-date (string)
   "Convert an Interactive Brokers date STRING to the YYYY-MM-DD date format."
@@ -124,7 +127,6 @@ If FILE is nil, use `paths-file-ledger'."
 (defun ledger-mode-extras-new-entry-below ()
   "Create new entry below one at point."
   (interactive)
-  (require 'crux)
   (indent-for-tab-command)
   (ledger-navigate-next-xact-or-directive)
   (crux-smart-open-line-above))
@@ -263,6 +265,7 @@ If FILE is nil, use `paths-file-ledger'."
   (interactive)
   (ledger-mode-extras-copy-or-kill-transaction-at-point 'copy))
 
+;;;###autoload
 (defun ledger-mode-extras-narrow-to-xact ()
   "Narrow to the current transaction."
   (interactive)

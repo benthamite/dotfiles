@@ -1,10 +1,10 @@
-;;; ediff-extras.el --- Extensions for ediff -*- lexical-binding: t -*-
+;;; ediff-extras.el --- Extensions for ediff -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/ediff-extras.el
-;; Version: 0.1
+;; Version: 0.2
 
 ;; This file is NOT part of GNU Emacs.
 

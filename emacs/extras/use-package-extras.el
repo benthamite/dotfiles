@@ -1,10 +1,11 @@
-;;; use-package-extras.el --- Extensions for use-package -*- lexical-binding: t -*-
+;;; use-package-extras.el --- Extensions for use-package -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/use-package-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((use-package))
 
 ;; This file is NOT part of GNU Emacs.
 

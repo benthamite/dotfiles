@@ -1,10 +1,11 @@
-;;; mu4e-extras.el --- Extensions for mu4e -*- lexical-binding: t -*-
+;;; mu4e-extras.el --- Extensions for mu4e -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/mu4e-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((mu4e "1.4.0") (el-patch "1.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -29,7 +30,6 @@
 
 (require 'el-patch)
 (require 'mu4e)
-(require 'org-msg-extras)
 
 ;;;; User options
 
@@ -311,6 +311,11 @@ takes just a couple of seconds."
 
 ;;;;; Contexts
 
+(declare-function org-msg-mode "org-msg")
+(defvar org-msg-extras-personal-html-signature)
+(defvar org-msg-extras-personal-plain-text-signature)
+(defvar org-msg-extras-work-html-signature)
+(defvar org-msg-extras-work-plain-text-signature)
 (defun mu4e-extras-set-contexts ()
   "Set `mu4e-contexts'."
   (setq mu4e-contexts

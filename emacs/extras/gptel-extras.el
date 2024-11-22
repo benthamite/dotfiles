@@ -1,10 +1,11 @@
-;;; gptel-extras.el --- Extensions for gptel -*- lexical-binding: t -*-
+;;; gptel-extras.el --- Extensions for gptel -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/gptel-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((gptel "0.7.1") (paths "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -29,7 +30,6 @@
 
 (require 'gptel)
 (require 'paths)
-(require 'simple-extras)
 
 ;;;; User options
 
@@ -207,8 +207,8 @@ to add an additional cost field in the header line."
 
 ;;;;; Summarize commit diffs
 
-(declare-function magit-commit-at-point "magit-git")
-(declare-function magit-git-insert "magit-git")
+(autoload 'magit-commit-at-point "magit-git")
+(autoload 'magit-git-insert "magit-git")
 (defun gptel-extras-summarize-commit-diffs (beg end &optional include-stats)
   "Summarize the diffs of commits in the selected region using an LLM.
 BEG and END mark the region of commits to summarize. When INCLUDE-STATS is
@@ -282,8 +282,9 @@ Use to circumvent Gemini’s location restrictions."
 
 ;;;;; Save buffer
 
-(declare-function org-insert-heading "org")
-(declare-function org-next-visible-heading "org")
+(declare-function simple-extras-slugify "simple-extras")
+(autoload 'org-insert-heading "org")
+(autoload 'org-next-visible-heading "org")
 (defun gptel-extras-save-buffer (name _ _ interactivep)
   "Save the `gptel' buffer with NAME right after it is created.
 The buffer is saved to a file in `gptel-extras-dir'. INTERACTIVEP is t when
@@ -315,15 +316,15 @@ This function is meant to be an `:after' advice to `gptel'."
 
 ;;;;; post-response
 
-(declare-function org-latex-preview "org")
+(autoload 'org-latex-preview "org")
 (defun gptel-extras-generate-latex-previews (_ _)
   "Generate LaTeX previews in the current `gptel' buffer."
   (when (and (derived-mode-p 'org-mode)
 	     (string= default-directory gptel-extras-dir))
     (org-latex-preview)))
 
+(autoload 'org-fold-show-all "org-fold")
 (declare-function files-extras-kill-this-buffer "files-extras")
-(declare-function org-fold-show-all "org-fold")
 ;;;###autoload
 (defun gptel-extras-kill-buffer-then-reopen-file (&optional _ _)
   "Kill the current buffer then reopen the file it was visiting.
@@ -371,7 +372,7 @@ often enough to fix this)."
 	     (local-variable-p var))
 	   gptel-extras-local-variables))
 
-(declare-function org-entry-get "org")
+(autoload 'org-entry-get "org")
 (defun gptel-extras-file-has-gptel-org-property-p ()
   "Return t iff the current buffer has a `gptel' Org property."
   (cl-some (lambda (prop)
@@ -382,7 +383,7 @@ often enough to fix this)."
 
 ;;;;;; Save
 
-(declare-function org-set-property "org")
+(autoload 'org-set-property "org")
 (defun gptel-extras-save-file-context ()
   "Save the current `gptel' file context in file visited by the current buffer.
 In Org files, saves as a file property. In Markdown, as a file-local variable."

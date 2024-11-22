@@ -238,7 +238,7 @@ the red, green, and blue components."
 	 (parsed (color-extras-parse-color color1))
 	 (color1-valid (cond
 			((listp parsed)
-			 (apply #'color-extras-hsl-to-hex (append (mapcar #'string-to-number list) '(percent))))
+			 (apply #'color-extras-hsl-to-hex (append (mapcar #'string-to-number parsed) '(percent))))
 			((stringp parsed)
 			 (if (string-match  "#" color1) color1 (concat "#" color1)))
 			(t (user-error "Invalid color"))))

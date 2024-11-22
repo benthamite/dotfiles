@@ -559,35 +559,6 @@ all headlines up to that level."
   (org-fold-show-all '(headings))
   (org-cycle-hide-archived-subtrees 'all))
 
-;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#hiding-the-properties-drawer
-;; TODO: consider deleting; I don’t think this is being used
-(defun org-extras-hide-properties ()
-  "Hide all `org-mode' headline property drawers in buffer.
-Could be slow if it has a lot of overlays."
-  (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (while (re-search-forward
-	    "^ *:properties:\n\\( *:.+?:.*\n\\)+ *:end:\n" nil t)
-      (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
-	(overlay-put ov_this 'display "")
-	(overlay-put ov_this 'hidden-prop-drawer t))))
-  (put 'org-toggle-properties-hide-state 'state 'hidden))
-
-;; TODO: consider deleting; I don’t think this is being used
-(defun org-extras-hide-logbook ()
-  "Hide all `org-mode' headline logbook drawers in buffer.
-Could be slow if it has a lot of overlays."
-  (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (while (re-search-forward
-	    "^ *:logbook:\n\\(^clock:.*?\n\\)+ *:end:\n" nil t)
-      (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
-	(overlay-put ov_this 'display "")
-	(overlay-put ov_this 'hidden-logbook-drawer t))))
-  (put 'org-toggle-logbook-hide-state 'state 'hidden))
-
 (defun org-extras-show-properties ()
   "Show all `org-mode' property drawers hidden by org-hide-properties."
   (interactive)

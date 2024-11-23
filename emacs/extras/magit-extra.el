@@ -35,16 +35,20 @@
 
 ;; adapted from Sacha Chua
 ;;;###autoload
-(defun magit-extras-stage-commit-and-push (message)
-  "Stage all modified files, commit them with MESSAGE and push to remote."
+(defun magit-extras-stage-commit-and-push (message &optional file no-push)
+  "Stage modifications, commit with MESSAGE and push to remote.
+If FILE is provided, only stage and commit that file. If NO-PUSH is non-nil, do
+not push to remote."
   (interactive
    (list (progn (magit-diff-unstaged) (read-string "Commit Message: "))))
-  (when (or
-	 (magit-anything-staged-p)
-	 (magit-anything-unstaged-p))
-    (magit-stage-modified t)
+  (when (or (magit-anything-staged-p)
+            (magit-anything-unstaged-p))
+    (if file
+        (magit-stage-file file)
+      (magit-stage-modified t))
     (magit-commit-create (list "-m" message)))
-  (call-interactively #'magit-push-current-to-pushremote))
+  (unless no-push
+    (call-interactively #'magit-push-current-to-pushremote)))
 
 ;;;###autoload
 (defun magit-extras-stage-commit-and-push-all-repos ()

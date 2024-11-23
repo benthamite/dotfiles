@@ -181,6 +181,7 @@ functionality in macOS."
     (files-extras-kill-this-buffer)))
 
 (declare-function window-extras-switch-to-last-window "window-extras")
+;;;###autoload
 (defun files-extras-kill-this-buffer-switch-to-other-window ()
   "Kill the current buffer and switch to the other window."
   (interactive)

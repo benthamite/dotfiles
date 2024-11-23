@@ -305,8 +305,9 @@ If PRIVATE is non-nil, make it a private repository."
   "Ensure that `gh' is authenticated."
   (interactive)
   (vc-extras-ensure-gh-exists)
-  (unless (string-match "Logged in to github\\.com account"
-			(shell-command-to-string "gh auth status"))
+  (if (string-match "Logged in to github\\.com account"
+		    (shell-command-to-string "gh auth status"))
+      (message "`gh' is authenticated.")
     (user-error "`gh' not authenticated; please authenticate (`gh auth login')")))
 
 ;;;;;; List repos

@@ -1053,6 +1053,7 @@ If called interactively, open the entry. Otherwise, return it as a string."
 		  nil)))
     (alist-get 'filename result)))
 
+;;;###autoload
 (defun ebib-extras-open-key (key)
   "Open the entry for KEY in Ebib."
   (when-let ((file (ebib-extras-get-file-of-key key)))
@@ -1155,6 +1156,7 @@ The list of files to be watched is defined in `ebib-extras-auto-save-files'."
 (run-with-timer 1 nil #'ebib-extras-auto-save-databases)
 
 (autoload 'file-notify-add-watch "filenotify")
+;;;###autoload
 (defun ebib-extras-auto-reload-databases ()
   "Check if any db file has been modified and reload its Ebib database if so.
 The list of files to be watched is defined in `ebib-extras-auto-save-files'."

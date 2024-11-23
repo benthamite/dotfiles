@@ -13060,6 +13060,7 @@ CLOCK: [2024-10-17 Thu 11:58]--[2024-10-17 Thu 12:20] =>  0:22
 (use-package activity-watch-mode
   :defer 5
   :config
+  (require 'magit)
   (global-activity-watch-mode))
 #+end_src
 

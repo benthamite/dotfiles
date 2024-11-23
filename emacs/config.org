@@ -4794,8 +4794,6 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 
 (That's the actively maintained fork; the [[https://github.com/myuhe/org-gcal.el/issues/124#issuecomment-642859466][official repository]] is no longer maintained.)
 
-[2023-09-12 Tue 12:03] There is currently an [[https://github.com/kidd/org-gcal.el/issues/238#issuecomment-1555902363][issue]] that, apparently, can only be solved by downgrading to an earlier version of ~gnupg~.
-
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-gcal
   :ensure (:host github

@@ -13054,7 +13054,7 @@ CLOCK: [2024-10-17 Thu 11:58]--[2024-10-17 Thu 12:20] =>  0:22
 
 
 
-/[[https://github.com/pauldub/activity-watch-mode][activity-watch-mode]] is an Emacs watcher for [[https://activitywatch.net/][ActivityWatch]]./
+/[[https://github.com/wakatime/wakatime-mode][activity-watch-mode]] is an Emacs watcher for [[https://activitywatch.net/][ActivityWatch]]./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package activity-watch-mode

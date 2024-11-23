@@ -5,7 +5,7 @@
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/simle-extras.el
 ;; Version: 0.2
-;; Package-Requires: ((paths "0.1"))
+;; Package-Requires: ((no-littering "1.1") (paths "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -29,6 +29,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'no-littering)
 (require 'paths)
 
 ;;;; Variables
@@ -37,13 +38,11 @@
   "Extensions for `simple'."
   :group 'simple)
 
-(defvar no-littering-var-directory)
 (defcustom simple-extras-new-buffer-auto-save-dir
   (file-name-concat no-littering-var-directory "auto-save/new-buffers/")
   "Directory in which to store auto-save files for new, non-file-visiting buffers."
   :type 'directory
   :group 'simple-extras
-  :initialize 'custom-initialize-delay ; wait until Emacs fully load so `no-littering' var is initialized
   :set (lambda (symbol value)
          (set-default symbol value)
          (unless (file-directory-p value)

@@ -48,7 +48,7 @@
 
 ;;;###autoload
 (defun magit-extras-stage-commit-and-push-all-repos ()
-  "Update all active depositories."
+  "Update all active repositories."
   (dolist (directory paths-dir-all-repos)
     (magit-extras-midnight-update directory)))
 

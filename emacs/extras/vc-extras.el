@@ -337,5 +337,21 @@ the cdr is ACCOUNT."
 	    (vc-extras-gh-list-repos-in-account (plist-get profile :account)))
 	  vc-extras-profiles))
 
+;;;;; Menu
+
+;;;###autoload (autoload 'vc-extras-menu "vc-extras" nil t)
+(transient-define-prefix vc-extras-menu ()
+  "`vc-extras' menu."
+  [[""
+    ("c" "Create remote repo"                       vc-extras-create-repo)
+    ("l" "Clone remote repo"                        vc-extras-clone-repo)
+    ("H-l" "Clone remote repo with confirmation"   (lambda () (interactive) (let ((current-prefix-arg '(4)))
+									 (vc-extras-clone-repo))))
+    ""
+    ("s" "Split local repo"                         vc-extras-split-local-repo)
+    ("d" "Delete local repo"                        vc-extras-delete-local-repo)
+    ""
+    ("a" "Check authentication status"              vc-extras-check-gh-authenticated)]])
+
 (provide 'vc-extras)
 ;;; vc-extras.el ends here

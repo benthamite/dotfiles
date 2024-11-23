@@ -1376,7 +1376,10 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 (use-personal-package vc-extras
   :after vc
   :custom
-  (vc-extras-split-repo t))
+  (vc-extras-split-repo t)
+
+  :bind
+  ("A-v" . vc-extras-menu))
 #+end_src
 
 ** log-edit

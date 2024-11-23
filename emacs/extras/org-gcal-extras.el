@@ -47,6 +47,7 @@
 				   (replace-regexp-in-string "/" " " id))))))
   (user-error "No id found"))
 
+;;;###autoload (autoload 'org-gcal-extras-menu "org-gcal-extras" nil t)
 (transient-define-prefix org-gcal-extras-menu ()
   "Dispatch an `org-gcal' command."
   [["Fetch"

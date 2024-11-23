@@ -5,7 +5,7 @@
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/avy-extras.el
 ;; Version: 0.2
-;; Package-Requires: ((avy "0.4.0") (el-patch "1.1"))
+;; Package-Requires: ((avy "0.4.0") (el-patch "1.1") (use-package-extras "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -30,6 +30,7 @@
 
 (require 'avy)
 (require 'el-patch)
+(require 'use-package-extras)
 
 ;;;; Variables
 
@@ -76,7 +77,6 @@ will no longer jump to its next occurrence."
 		     (point)
 		     (save-excursion (end-of-visual-line) (point)))))
 
-(autoload 'lambda! "use-package-extras")
 ;;;###autoload
 (defun avy-extras-goto-end-of-line-above (&optional offset bottom-up)
   "Go to visible end of line above the cursor.

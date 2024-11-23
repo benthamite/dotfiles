@@ -7442,6 +7442,9 @@ This needs to be configured.
 :ID:       7B4A0E63-4509-4BC0-AE08-08F517911959
 :END:
 
+
+/[[https://github.com/json-emacs/json-mode][json-mode]]/ is major mode for editing JSON files.
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package json-mode
   :defer t

@@ -1823,6 +1823,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
     "Display git blame message, right-aligned with Magit-style faces.
 If another message is already being displayed, display both messages unless they
 do not both fit in the echo area."
+    (require 'magit-log)
     (let* ((message-log-max nil)
            (cur-msg (current-message))
            (blm-msg (format "%s %s %s "

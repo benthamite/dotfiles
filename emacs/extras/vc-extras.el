@@ -128,20 +128,26 @@ If NAME is nil, prompt for one. If ACCOUNT is nil, select one."
   "Clone an existing repo.
 ACCOUNT is the name of the GitHub account. If NAME is nil, prompt the user for a
 repo name. If NO-FORGE is non-nil, do not prompt to add the repo to Forge.
+With prefix argument, prompt for the target directory.
 
 This function does not use `vc-git-clone' because it does not support cloning
 submodules."
-  (interactive)
+  (interactive "P")
   (let* ((repos nil)
 	 (name (or name
 		   (completing-read "Repo: " (setq repos (vc-extras-gh-list-repos account)))))
 	 (account (or account (if repos
 				  (alist-get name repos nil nil #'string=)
 				(user-error "If you provide a repo name, you must also provide its account"))))
-         (remote (vc-extras-get-github-remote name account))
-         (parent-dir (vc-extras-get-account-prop account :dir))
-         (dir (file-name-concat parent-dir name))
-         (process-buffer "/git-clone-output/"))
+	 (remote (vc-extras-get-github-remote name account))
+	 (parent-dir (vc-extras-get-account-prop account :dir))
+	 (dir (if current-prefix-arg
+		  (let* ((child (expand-file-name (read-directory-name "Parent directory: " parent-dir)))
+			 (parent (file-name-directory (directory-file-name child))))
+		    (setq parent-dir parent)
+		    child)
+		(file-name-concat parent-dir name)))
+	 (process-buffer "/git-clone-output/"))
     (when (file-exists-p dir)
       (user-error "Directory `%s' already exists" dir))
     (message "Cloning repo %s..." name)

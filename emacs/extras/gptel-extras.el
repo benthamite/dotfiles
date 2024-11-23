@@ -92,12 +92,13 @@ the actual cost may deviate from this estimate."
 
 (defun gptel-extras-count-words-in-context ()
   "Iterate over the files in context and sum the number of words in each file."
-  (cl-reduce (lambda (acc file)
-	       (let ((words (with-current-buffer (find-file-noselect (car file))
-			      (count-words (point-min) (point-max)))))
-		 (+ acc words)))
-	     gptel-context--alist
-	     :initial-value 0))
+  (let ((auto-revert-notify-modify-p nil))
+    (cl-reduce (lambda (acc file)
+                 (let ((words (with-current-buffer (find-file-noselect (car file))
+				(count-words (point-min) (point-max)))))
+                   (+ acc words)))
+               gptel-context--alist
+               :initial-value 0)))
 
 (define-minor-mode gptel-mode
   "Minor mode for interacting with LLMs.
@@ -272,7 +273,6 @@ you notice patterns. If commit messages are included, use them to inform your an
   "Enable `mullvad' when connecting to Gemini, then call ORIG-FUN with ARGS.
 Use to circumvent Gemini’s location restrictions."
   (when (eq gptel-model 'gemini-pro)
-    (require 'mullvad)
     (mullvad-connect-to-website "Gemini"
 				gptel-extras-gemini-mullvad-disconnect-after
 				'silently))

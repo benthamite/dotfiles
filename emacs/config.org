@@ -10053,6 +10053,8 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package bibtex-extras
+  :after bibtex
+  :demand t
   :custom
   (bibtex-maintain-sorted-entries
    '(bibtex-extras-entry-sorter bibtex-extras-lessp))

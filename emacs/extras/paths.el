@@ -547,11 +547,12 @@ This should be the path you set `org-roam-directory' to."
 
 (defcustom paths-dir-all-repos
   (list paths-dir-android
-	paths-dir-personal-bibliography
+	paths-dir-archive
 	paths-dir-bibliographic-notes
 	paths-dir-journal
 	paths-dir-notes
-	paths-dir-people)
+	paths-dir-people
+	paths-dir-personal-bibliography)
   "List of all personal repos."
   :type '(repeat directory)
   :group 'paths)

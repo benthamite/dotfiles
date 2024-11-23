@@ -9202,13 +9202,6 @@ Note to self: Typescript syntax highlighting works fine, but calling ~org-edit-s
    ("s-c" . org-table-fedit-finish)))
 #+end_src
 
-*** Resources
-:PROPERTIES:
-:ID:       BF9BD230-8771-4883-9DFD-65723C011314
-:END:
-
-- [cite:@EMACKS2022HowCreateTable]
-
 ** orgtbl-edit
 :PROPERTIES:
 :ID:       7C3382D2-F7B4-4F1B-854E-BB60D568E299
@@ -9919,14 +9912,6 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
    '((t . (csl "long.csl")))))
 #+end_src
 
-*** Resources
-:PROPERTIES:
-:ID:       8EA82227-F7EF-4C46-B40C-C5DE40F13130
-:END:
-
-- [cite:@Balintona2022CitationsOrgmodeOrgcite]. The most comprehensive explanation I'm aware of about how to use ~org-cite~. See [[https://www.reddit.com/r/orgmode/comments/vc7ys6/how_i_run_my_wiki_with_org_mode/][Reddit discussion]].
-- [cite:@Kolsc2021HowActuallyInsert]. Reddit thread about the basics of ~org-cite~.
-
 ** oc-csl
 :PROPERTIES:
 :ID:       72710244-0369-4C12-8B83-0674EE0E11D5
@@ -10256,13 +10241,6 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
 :ID:       FB459DDE-BFDD-4740-9FFA-7AFFB74A38D1
 :END:
 Having headings tagged with the type of work they are notes of allows me to query the org-roam db specifically for notes of a particular type.
-
-*** Resources
-:PROPERTIES:
-:ID:       EAB0E32B-129C-4980-A06B-94B4C25966E2
-:END:
-
-[cite:@Balintona2022CitationsOrgmodeOrgcite]
 
 ** citar-extras
 :PROPERTIES:

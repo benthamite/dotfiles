@@ -109,6 +109,7 @@ functionality in macOS."
 	(funcall files-extras-new-empty-buffer-major-mode)))
     (switch-to-buffer newbuf nil 'force-same-window)))
 
+;;;###autoload
 (defun files-extras-read-file (&optional file)
   "Read FILE, using various sources as initial input."
   (expand-file-name

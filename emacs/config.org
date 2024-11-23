@@ -7636,7 +7636,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
                  :files ("dist" "*.el"))
   :after jsonrpc
   :custom
-  (copilot-max-char 1000000)
+  (copilot-max-char -1)
   (copilot-indent-offset-warning-disable t)
 
   :config

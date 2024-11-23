@@ -30,6 +30,7 @@
 
 (require 'paths)
 (require 'vc)
+(require 'transient)
 
 ;;;; User options
 

@@ -510,7 +510,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#calc][calc]]
   - [[#calc-ext][calc-ext]]
   - [[#alert][alert]]
-  - [[#unpackaged][unpackaged]]
   - [[#midnight][midnight]]
   - [[#bbdb][bbdb]]
   - [[#bbdb-extras][bbdb-extras]]
@@ -12948,22 +12947,6 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
                          (alert-encode-string (plist-get info :message))
                          (alert-encode-string (plist-get info :title)))))
     (alert-message-notify info)))
-#+end_src
-
-** unpackaged
-:PROPERTIES:
-:ID:       484FDD89-4C12-4624-82CB-FC36795C0A8F
-:END:
-:LOGBOOK:
-:END:
-
-/[[https://github.com/alphapapa/unpackaged.el][unpackaged]] is a collection of useful Emacs Lisp code that isn't substantial enough to be packaged./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package unpackaged
-  :ensure (:host github
-           :repo "alphapapa/unpackaged.el")
-  :commands (unpackaged/org-forward-to-entry-content))
 #+end_src
 
 ** midnight

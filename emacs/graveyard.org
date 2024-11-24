@@ -9,6 +9,24 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** unpackaged
+:PROPERTIES:
+:ID:       484FDD89-4C12-4624-82CB-FC36795C0A8F
+:END:
+:LOGBOOK:
+:END:
+
+/[[https://github.com/alphapapa/unpackaged.el][unpackaged]] is a collection of useful Emacs Lisp code that isn't substantial enough to be packaged./
+
+[2024-11-24 Sun] Disabling since the package was throwing lots of errors due to the use of =:general= and other =use-package= keywords requiring external dependencies.
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package unpackaged
+  :ensure (:host github
+           :repo "alphapapa/unpackaged.el")
+  :commands (unpackaged/org-forward-to-entry-content))
+#+end_src
+
 ** visual-regexp
 :PROPERTIES:
 :ID:       0DE5075B-AC82-4AB3-9B0A-3D84DC6CF942

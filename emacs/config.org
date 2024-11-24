@@ -8175,6 +8175,12 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
   (dolist (module '(org-habit org-tempo))
     (add-to-list 'org-modules module))
 
+  ;; force reloading of first file opened so the buffer is correctly formatted
+  (with-eval-after-load 'org
+    (when (and (buffer-file-name)
+               (string-match "\\.org$" (buffer-file-name)))
+      (revert-buffer nil t)))
+
   :bind
   (:map org-mode-map
         ("C-H-M-s-z" . org-shiftleft)

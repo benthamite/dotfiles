@@ -12998,7 +12998,6 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
                            ledger-mode-extras-update-coin-prices
                            ledger-mode-extras-update-commodities
                            magit-extras-stage-commit-and-push-all-repos
-                           pass-extras-git-sync
                            org-roam-db-sync
                            org-extras-id-update-id-locations
                            el-patch-validate-all

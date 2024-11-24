@@ -93,6 +93,7 @@ the actual cost may deviate from this estimate."
 (defun gptel-extras-count-words-in-context ()
   "Iterate over the files in context and sum the number of words in each file."
   (let ((auto-revert-notify-modify-p nil))
+  (let ((revert-without-query t))
     (cl-reduce (lambda (acc file)
                  (let ((words (with-current-buffer (find-file-noselect (car file))
 				(count-words (point-min) (point-max)))))

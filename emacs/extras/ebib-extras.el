@@ -1153,7 +1153,8 @@ The list of files to be watched is defined in `ebib-extras-auto-save-files'."
 	(ebib--save-database db '(16)))))
   (run-with-timer 1 nil #'ebib-extras-auto-save-databases))
 
-(run-with-timer 1 nil #'ebib-extras-auto-save-databases)
+;; 2024-11-24 Why is this timer run when package loads? Test, and remove if safe.
+;; (run-with-timer 1 nil #'ebib-extras-auto-save-databases)
 
 (autoload 'file-notify-add-watch "filenotify")
 ;;;###autoload

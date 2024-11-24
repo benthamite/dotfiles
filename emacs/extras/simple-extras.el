@@ -833,6 +833,53 @@ to it."
 
 (advice-add 'auto-save-mode :around #'simple-extras-new-buffer-auto-save-dir)
 
+;;;;; sort
+
+;; adapted from alphapapa’s unpackaged package
+(defun simple-extras-sort-sexps (beg end)
+  "Sort sexps in region between BEG and END."
+  (interactive "r")
+  (cl-flet ((skip-whitespace () (while (looking-at (rx (1+ (or space "\n"))))
+                                  (goto-char (match-end 0))))
+            (skip-both () (while (cond ((or (nth 4 (syntax-ppss))
+                                            (ignore-errors
+                                              (save-excursion
+                                                (forward-char 1)
+                                                (nth 4 (syntax-ppss)))))
+                                        (forward-line 1))
+                                       ((looking-at (rx (1+ (or space "\n"))))
+                                        (goto-char (match-end 0)))))))
+    (save-excursion
+      (save-restriction
+        (narrow-to-region beg end)
+        (goto-char beg)
+        (skip-both)
+        (cl-destructuring-bind (sexps markers)
+            (cl-loop do (skip-whitespace)
+                     for start = (point-marker)
+                     for sexp = (ignore-errors
+                                  (read (current-buffer)))
+                     for end = (point-marker)
+                     while sexp
+                     ;; Collect the real string, then one used for sorting.
+                     collect (cons (buffer-substring (marker-position start) (marker-position end))
+                                   (save-excursion
+                                     (goto-char (marker-position start))
+                                     (skip-both)
+                                     (buffer-substring (point) (marker-position end))))
+                     into sexps
+                     collect (cons start end)
+                     into markers
+                     finally return (list sexps markers))
+          (setq sexps (sort sexps (lambda (a b)
+                                    (string< (cdr a) (cdr b)))))
+          (cl-loop for (real . sort) in sexps
+                   for (start . end) in markers
+                   do (progn
+                        (goto-char (marker-position start))
+                        (insert-before-markers real)
+                        (delete-region (point) (marker-position end)))))))))
+
 ;;;;; Misc
 
 (defun simple-extras-init-disable-funs (seconds funs)

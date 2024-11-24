@@ -10256,7 +10256,9 @@ Having headings tagged with the type of work they are notes of allows me to quer
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package citar-extras
   :after citar
-  :demand t
+  :init
+  (run-with-idle-timer (* 60 60) t #'citar-extras-update-bibliographies)
+
   :config
   ;; https://github.com/emacs-citar/citar/wiki/Indicators
   (setq citar-indicators

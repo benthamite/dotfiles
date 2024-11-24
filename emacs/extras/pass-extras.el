@@ -45,11 +45,6 @@
           (user-error "Field `%s' not in  %s" field entry))
         (browse-url (password-store-get-field entry field))))))
 
-(defun pass-extras-git-sync ()
-  "Synchronize with remote repository."
-  (interactive)
-  (shell-command "pass git pull; pass git push"))
-
 (defun pass-extras-insert-generated-no-symbols ()
   "Insert an entry to the password-store without symbols.
 Use a generated password instead of reading the password from

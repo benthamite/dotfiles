@@ -471,6 +471,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#erc][erc]]
   - [[#circe][circe]]
   - [[#slack][slack]]
+  - [[#ol-emacs-slack][ol-emacs-slack]]
 - [[#web][web]]
   - [[#browse-url][browse-url]]
   - [[#browse-url-extras][browse-url-extras]]
@@ -11655,6 +11656,20 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
    ("s-c" . slack-message-send-from-buffer)
    ("s-f" . slack-message-select-file)
    ("s-m" . slack-message-embed-mention)))
+#+end_src
+
+** ol-emacs-slack
+:PROPERTIES:
+:ID:       5F9F6EF6-55A5-4DD4-BB81-BBA16266364B
+:END:
+
+/[[https://github.com/ag91/ol-emacs-slack][ol-emacs-slack]] provides ~org-store-link~ support for [[94F76C3D-9547-431D-93AB-8814F4218AFF][slack]]./
+
+#+begin_src emacs-lisp :results silent
+(use-package ol-emacs-slack
+  :ensure (:host github
+             :repo "ag91/ol-emacs-slack")
+  :after slack)
 #+end_src
 
 * web

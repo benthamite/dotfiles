@@ -79,7 +79,8 @@ This is used to display the relevant information in the `gptel' headerline.
 
 Note that the cost is an approximation based on the number of words in the
 buffer or selection. The function uses a 1.4 token/word conversion factor, but
-the actual cost may deviate from this estimate."
+the actual cost may deviate from this estimate. Also note that this estimate is
+for text requests; media files are not included in the calculation."
   (let* ((cost-per-1m-tokens (get gptel-model :input-cost))
 	 (words-main (if (region-active-p)
 			 (count-words (region-beginning) (region-end))
@@ -91,13 +92,16 @@ the actual cost may deviate from this estimate."
     cost))
 
 (defun gptel-extras-count-words-in-context ()
-  "Iterate over the files in context and sum the number of words in each file."
-  (let ((auto-revert-notify-modify-p nil))
+  "Iterate over the files in context and sum the number of words in each file.
+Image files are skipped."
   (let ((revert-without-query t))
     (cl-reduce (lambda (acc file)
-                 (let ((words (with-current-buffer (find-file-noselect (car file))
-				(count-words (point-min) (point-max)))))
-                   (+ acc words)))
+                 (if (member (file-name-extension (car file))
+                             image-file-name-extensions)
+                     acc  ; skip image files
+                   (let ((words (with-current-buffer (find-file-noselect (car file))
+                                  (count-words (point-min) (point-max)))))
+                     (+ acc words))))
                gptel-context--alist
                :initial-value 0)))
 

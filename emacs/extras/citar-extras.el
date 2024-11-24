@@ -37,11 +37,6 @@
   "Extensions for `citar'."
   :group 'citar)
 
-(defcustom citar-extras-auto-update-bibliographies t
-  "Whether to automatically update the bibliography when `citar' is loaded."
-  :type 'boolean
-  :group 'citar-extras)
-
 ;;;; Variables
 
 (autoload 'nerd-icons-faicon "nerd-icons")
@@ -132,10 +127,9 @@ This function should be run via a post-init hook, to ensure that
 ;;;###autoload
 (defun citar-extras-update-bibliographies ()
   "Update the bibliographies."
-  (when citar-extras-auto-update-bibliographies
-    (dolist (bibliography citar-bibliography)
-      (citar-cache--update-bibliography
-       (citar-cache--get-bibliography bibliography)))))
+  (dolist (bibliography citar-bibliography)
+    (citar-cache--update-bibliography
+     (citar-cache--get-bibliography bibliography)))))
 
 (provide 'citar-extras)
 ;;; citar-extras.el ends here

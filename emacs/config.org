@@ -470,6 +470,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#ement][ement]]
   - [[#erc][erc]]
   - [[#circe][circe]]
+  - [[#slack][slack]]
 - [[#web][web]]
   - [[#browse-url][browse-url]]
   - [[#browse-url-extras][browse-url-extras]]
@@ -11549,6 +11550,111 @@ CLOCK: [2021-10-07 Thu 14:31]--[2021-10-07 Thu 15:23] =>  0:52
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package circe
   :defer t)
+#+end_src
+
+** slack
+:PROPERTIES:
+:ID:       DEC2C46C-8837-4676-B495-BB2BA91D9681
+:END:
+:LOGBOOK:
+CLOCK: [2022-07-14 Thu 10:44]--[2022-07-14 Thu 10:46] =>  0:02
+CLOCK: [2022-07-12 Tue 13:32]--[2022-07-12 Tue 13:51] =>  0:19
+CLOCK: [2022-07-11 Mon 14:43]--[2022-07-11 Mon 15:08] =>  0:25
+CLOCK: [2022-07-09 Sat 19:16]--[2022-07-09 Sat 19:25] =>  0:09
+CLOCK: [2022-07-09 Sat 15:17]--[2022-07-09 Sat 16:24] =>  1:07
+CLOCK: [2022-07-08 Fri 18:57]--[2022-07-08 Fri 19:26] =>  0:29
+CLOCK: [2022-07-08 Fri 17:58]--[2022-07-08 Fri 18:37] =>  0:39
+CLOCK: [2022-07-08 Fri 13:56]--[2022-07-08 Fri 14:14] =>  0:18
+CLOCK: [2022-07-08 Fri 13:42]--[2022-07-08 Fri 13:54] =>  0:12
+CLOCK: [2022-07-02 Sat 14:13]--[2022-07-02 Sat 14:25] =>  0:12
+CLOCK: [2022-06-08 Wed 16:59]--[2022-06-08 Wed 17:06] =>  0:07
+CLOCK: [2021-06-25 Fri 21:41]--[2021-06-25 Fri 22:16] =>  0:35
+CLOCK: [2021-05-29 Sat 14:10]--[2021-05-29 Sat 14:40] =>  0:30
+CLOCK: [2021-04-18 Sun 13:08]--[2021-04-18 Sun 13:16] =>  0:08
+CLOCK: [2021-04-12 Mon 19:40]--[2021-04-12 Mon 19:43] =>  0:03
+CLOCK: [2021-04-11 Sun 14:18]--[2021-04-11 Sun 14:36] =>  0:18
+CLOCK: [2021-04-07 Wed 12:41]--[2021-04-07 Wed 12:42] =>  0:01
+CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
+:END:
+
+/[[https://github.com/yuya373/emacs-slack][slack]] is a Slack client for Emacs./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package slack
+  :custom
+  (slack-file-dir paths-dir-downloads)
+  (slack-prefer-current-team t)
+
+  :config
+  (defun slack-chat-org-capture ()
+    "Capture Slack message at point with `org-capture'."
+    (interactive)
+    (org-capture nil "s"))
+
+  (require 'pass)
+  (slack-register-team
+   :default t
+   :name "Tlön"
+   :token (auth-source-pick-first-password
+           :host "tlon"
+           :user (getenv "PERSONAL_GMAIL"))
+   :cookie (auth-source-pick-first-password
+            :host "tlon^cookie"
+            :user (concat (getenv "PERSONAL_GMAIL") "^cookie")))
+
+  (slack-register-team
+   :name "Samotsvety Forecasting"
+   :token (auth-source-pick-first-password
+           :host "samotsvety"
+           :user (getenv "PERSONAL_GMAIL"))
+   :cookie (auth-source-pick-first-password
+            :host "samotsvety^cookie"
+            :user (concat (getenv "PERSONAL_GMAIL") "^cookie")))
+
+  :hook
+  (slack-buffer-mode-hook . (lambda () (setq line-spacing nil)))
+
+  :bind
+  (("A-s" . slack-channel-select)
+   :map slack-mode-map
+   ("s-a" . slack-all-threads)
+   ("s-c" . slack-channel-select)
+   ("s-g" . slack-group-select)
+   ("s-m" . slack-im-select)
+   ("H-s-t" . slack-change-current-team)
+   ("s-u" . slack-select-rooms)
+   ("H-s-u" . slack-select-unread-rooms)
+   :map slack-buffer-mode-map
+   ("s-a" . slack-all-threads)
+   ("s-c" . slack-channel-select)
+   ("s-g" . slack-group-select)
+   ("s-m" . slack-im-select)
+   ("H-s-t" . slack-change-current-team)
+   ("s-u" . slack-select-rooms)
+   ("H-s-u" . slack-select-unread-rooms) ; `slack-all-unreads' not working
+   :map slack-thread-message-buffer-mode-map
+   ("d" . slack-thread-show-or-create)
+   ("e" . slack-message-edit)
+   ("k" . slack-buffer-goto-prev-message)
+   ("l" . slack-buffer-goto-next-message)
+   ("o" . slack-chat-org-capture)
+   ("q" . files-extras-kill-other-buffer)
+   ("r" . slack-message-add-reaction)
+   ("R" . slack-message-remove-reaction)
+   ("z" . slack-message-write-another-buffer)
+   :map slack-message-buffer-mode-map
+   ("d" . slack-thread-show-or-create)
+   ("e" . slack-message-edit)
+   ("k" . slack-buffer-goto-prev-message)
+   ("l" . slack-buffer-goto-next-message)
+   ("o" . slack-chat-org-capture)
+   ("r" . slack-message-add-reaction)
+   ("R" . slack-message-remove-reaction)
+   ("z" . slack-message-write-another-buffer)
+   :map slack-message-compose-buffer-mode-map
+   ("s-c" . slack-message-send-from-buffer)
+   ("s-f" . slack-message-select-file)
+   ("s-m" . slack-message-embed-mention)))
 #+end_src
 
 * web

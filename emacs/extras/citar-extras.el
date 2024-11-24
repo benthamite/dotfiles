@@ -5,7 +5,7 @@
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/citar-extras.el
 ;; Version: 0.2
-;; Package-Requires: ((citar "0.1"))
+;; Package-Requires: ((citar "0.1") (paths "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -29,8 +29,20 @@
 ;;; Code:
 
 (require 'citar)
+(require 'paths)
 
-;;;; Main variables
+;;;; User options
+
+(defgroup citar-extras ()
+  "Extensions for `citar'."
+  :group 'citar)
+
+(defcustom citar-extras-auto-update-bibliographies t
+  "Whether to automatically update the bibliography when `citar' is loaded."
+  :type 'boolean
+  :group 'citar-extras)
+
+;;;; Variables
 
 (autoload 'nerd-icons-faicon "nerd-icons")
 (defvar citar-extras-indicator-files-icons
@@ -110,11 +122,20 @@
   (interactive)
   (citar-open `(,(files-extras-get-stem-of-current-buffer))))
 
-(defun citar-extras-update-old-bibliography ()
-  "Update `old.bib' bibliography."
-  (interactive)
-  (citar-cache--update-bibliography
-   (citar-cache--get-bibliography (cadr citar-bibliography))))
+;;;###autoload
+(defun citar-extras-set-bibliography ()
+  "Set the bibliography to `paths-files-bibliography-all'.
+This function should be run via a post-init hook, to ensure that
+`paths-files-bibliography-all' is initialized."
+  (setq citar-bibliography paths-files-bibliography-all))
+
+;;;###autoload
+(defun citar-extras-update-bibliographies ()
+  "Update the bibliographies."
+  (when citar-extras-auto-update-bibliographies
+    (dolist (bibliography citar-bibliography)
+      (citar-cache--update-bibliography
+       (citar-cache--get-bibliography bibliography)))))
 
 (provide 'citar-extras)
 ;;; citar-extras.el ends here

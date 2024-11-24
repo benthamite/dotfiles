@@ -2649,30 +2649,6 @@ CLOCK: [2022-06-17 Fri 17:41]--[2022-06-17 Fri 17:55] =>  0:14
   (hammy-mode))
 #+end_src
 
-** ol-emacs-slack
-:PROPERTIES:
-:ID:       5F9F6EF6-55A5-4DD4-BB81-BBA16266364B
-:END:
-
-/[[https://github.com/ag91/ol-emacs-slack][ol-emacs-slack]] provides ~org-store-link~ support for [[94F76C3D-9547-431D-93AB-8814F4218AFF][slack]]./
-
-#+begin_src emacs-lisp :results silent
-(use-package ol-emacs-slack
-  :disabled
-  :elpaca (ol-emacs-slack
-             :host github
-             :repo "ag91/ol-emacs-slack")
-  :after slack
-  :demand t)
-#+end_src
-
-*** CANCELLED [#6] Disable ~emacs-slack~ notifications
-CLOSED: [2024-05-14 Tue 23:14]
-:PROPERTIES:
-:ID:       6CF836CF-74C0-4D80-98D8-0F3CA29182DE
-:Effort:   1:00
-:END:
-
 ** elisp-bug-hunter
 :PROPERTIES:
 :ID:       0C19171B-8DFA-4E06-9E17-45C1F9158C28

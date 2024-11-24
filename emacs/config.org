@@ -10219,11 +10219,6 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
         (cons '(insert-citation . citar-org-insert-citation)
               (alist-get 't citar-major-mode-functions)))
 
-  :hook
-  (tlon-post-init-hook . (lambda ()
-                           "Set `citar-bibliography' after `paths-files-bibliography-all' is set."
-                           (setq citar-bibliography paths-files-bibliography-all)))
-
   :bind
   (("H-/" . citar-insert-citation)
    :map citar-map
@@ -10269,6 +10264,9 @@ Having headings tagged with the type of work they are notes of allows me to quer
               citar-extras-indicator-files-icons
               citar-extras-indicator-notes-icons
               citar-extras-indicator-cited-icons))
+
+  :hook
+  (tlon-post-init-hook . citar-extras-set-bibliography)
 
   :bind
   ("A-H-M-s-?" . citar-extras-open-file-at-point)) ; i.e. H-S-/

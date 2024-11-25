@@ -390,19 +390,20 @@
 #+begin_src emacs-lisp :tangle (print tlon-init-file-excluded-packages)
 (setq tlon-init-excluded-packages
       '(
-       erc
-       ;; lsp-grammarly
-       midnight
-       ;; mu4e
-       persistent-scratch
-       org-gcal
-       consult-mu
-       org-roam
-       org2blog
-       remember
-       org-journal
-       ;; vulpea
-       ))
+	erc
+	;; lsp-grammarly
+	midnight
+	;; mu4e
+	persistent-scratch
+	org-gcal
+	org-gcal-extras
+	consult-mu
+	org-roam
+	org2blog
+	remember
+	org-journal
+	;; vulpea
+	))
 #+end_src
 
 * paths-override

@@ -3986,6 +3986,7 @@
     ("thne" "then" nil :count 1)
     ("thnig" "thing" nil :count 1)
     ("thnigs" "things" nil :count 1)
+    ("thorougly" "thoroughly" nil :count 0)
     ("thoughout" "throughout" nil :count 1)
     ("threatend" "threatened" nil :count 1)
     ("threatning" "threatening" nil :count 1)

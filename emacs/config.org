@@ -231,6 +231,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#calfw-org][calfw-org]]
   - [[#calfw-blocks][calfw-blocks]]
   - [[#time][time]]
+  - [[#timer-list][timer-list]]
   - [[#tmr][tmr]]
   - [[#display-wttr][display-wttr]]
 - [[#history][history]]
@@ -4910,6 +4911,18 @@ The original package appears to no longer be maintained, so I have created my ow
 
   :bind
   ("M-A-t" . world-clock))
+#+end_src
+
+** timer-list
+:PROPERTIES:
+:ID:       5B9F0580-D100-4F53-8B99-7BEAE7E233A5
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature timer-list
+  :config
+  ;; disable warning
+  (put 'list-timers 'disabled nil))
 #+end_src
 
 ** tmr

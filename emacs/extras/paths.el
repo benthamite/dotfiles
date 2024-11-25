@@ -1,10 +1,10 @@
-;;; paths.el --- Set variable paths -*- lexical-binding: t -*-
+;;; paths.el --- Set variable paths -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/paths.el
-;; Version: 0.1
+;; Version: 0.2
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -547,11 +547,12 @@ This should be the path you set `org-roam-directory' to."
 
 (defcustom paths-dir-all-repos
   (list paths-dir-android
-	paths-dir-personal-bibliography
+	paths-dir-archive
 	paths-dir-bibliographic-notes
 	paths-dir-journal
 	paths-dir-notes
-	paths-dir-people)
+	paths-dir-people
+	paths-dir-personal-bibliography)
   "List of all personal repos."
   :type '(repeat directory)
   :group 'paths)

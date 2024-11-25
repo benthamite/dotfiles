@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: package-requires
+# key: pr
+# contributor: Pablo Stafforini
+# --
+;; Package-Requires: ($1)$0

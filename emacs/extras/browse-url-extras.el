@@ -1,10 +1,11 @@
-;;; browse-url-extras.el --- Extensions for browse-url -*- lexical-binding: t -*-
+;;; browse-url-extras.el --- Extensions for browse-url -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/browse-url-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((paths "0.1") (f "0.10.0") (s "1.5.0"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -51,8 +52,8 @@
 
 ;;;; Functions
 
-(declare-function f-read "f")
-(declare-function s-split "s")
+(autoload 'f-read "f")
+(autoload 's-split "s")
 (defun browse-url-extras-set-handler (urls-file handler)
   "Set the URL HANDLER from a URLS-FILE."
   (dolist (url (s-split "\n" (f-read urls-file) t))

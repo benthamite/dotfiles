@@ -1,10 +1,11 @@
-;;; forge-extras.el --- Extensions for forge -*- lexical-binding: t -*-
+;;; forge-extras.el --- Extensions for forge -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/forge-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((forge "0.3.1") (shut-up "0.3.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -28,7 +29,6 @@
 ;;; Code:
 
 (require 'forge)
-(require 'orgit-forge)
 (require 'shut-up)
 
 ;;;; Variables
@@ -54,6 +54,7 @@
 
 ;;;; Functions
 
+(declare-function org-store-link "ol")
 (defun forge-extras-orgit-store-link (_arg)
   "Like `org-store-link' but store links to all selected commits, if any."
   (interactive "P")
@@ -95,7 +96,60 @@ Do not update if `elfeed' is in the process of being updated, since this causes
 problems."
   (unless (bound-and-true-p elfeed-extras-auto-update-in-process)
     (shut-up
-      (forge-pull-notifications))))
+      (with-no-warnings
+	(forge-pull-notifications)))))
+
+;;;;; sync read status
+
+(autoload 'doom-modeline--github-fetch-notifications "doom-modeline-segments")
+(defun forge-extras-sync-read-status (&optional _)
+  "Ensure that the read status of the issue at point in Forge matches GitHub's."
+  (let* ((issue (forge-current-topic))
+         (url (forge-get-url issue)))
+    (when (eq (oref issue status) 'unread)
+      (forge-extras-async-shell-command-to-string
+       (format forge-extras-safari-script-format-string url)
+       #'forge-extras-update-github-counter))))
+
+(defun forge-extras-update-github-counter (output)
+  "Update the GitHub notification counter after the Safari page is loaded.
+OUTPUT is the output of the AppleScript script; it is used to check whether
+JavaScript is enabled in Safari, which is needed for the command to run
+successfully."
+  (forge-extras-safari-ensure-javascript-enabled output)
+  (when (bound-and-true-p doom-modeline-github)
+    (doom-modeline--github-fetch-notifications)))
+
+(defun forge-extras-async-shell-command-to-string (command callback)
+  "Execute shell command COMMAND asynchronously in the background.
+Call CALLBACK with the resulting output when done."
+  (let ((output-buffer (generate-new-buffer "*Async Shell Command*")))
+    (set-process-sentinel
+     (start-process "Shell" output-buffer shell-file-name shell-command-switch command)
+     (lambda (process _signal)
+       (when (memq (process-status process) '(exit signal))
+         (let ((output (with-current-buffer output-buffer
+                         (buffer-string))))
+           (funcall callback output)
+           (kill-buffer output-buffer)))))))
+
+(defun forge-extras-safari-github-logged-in-p ()
+  "Check if user is logged in to GitHub in Safari."
+  (let ((output (shell-command-to-string
+		 "osascript -e 'tell application \"Safari\" to get name of document 1'")))
+    (forge-extras-safari-ensure-javascript-enabled output)
+    ;; we search for a word that only shows up if the user is logged in
+    (numberp (string-match-p "issue" output))))
+
+(defun forge-extras-safari-ensure-javascript-enabled (output)
+  "Ensure that JavaScript is enabled in Safari.
+OUTPUT is the output of the shell command that calls the AppleScript."
+  (when (string-match-p "allow javascript from apple events" output)
+    (error "For this function to work, JavaScript from Apple Events must be enabled in
+Safari. This can be done by going to Safari > Preferences > Advanced, ticking
+the box labelled \"Show features for web developers\", and then going to Safari
+> Preferences > Developer and ticking the box labeled \"Allow JavaScript from
+Apple Events\"")))
 
 ;;;;; sync read status
 
@@ -152,14 +206,13 @@ Apple Events\"")))
 ;;;;; Track repos
 
 (declare-function magit-status "magit-status")
-(declare-function vc-extras-is-git-dir-p "vc-extras")
+(autoload 'vc-extras-is-git-dir-p "vc-extras")
 ;;;###autoload
 (defun forge-extras-track-repository (&optional dir)
   "Add DIR to the Forge database.
 If DIR is nil, use the current directory."
   (interactive)
   (let ((default-directory (or dir default-directory)))
-    (require 'vc-extras)
     (if (vc-extras-is-git-dir-p default-directory)
 	(let ((url (and-let*
 		       ((repo (forge-get-repository :stub))

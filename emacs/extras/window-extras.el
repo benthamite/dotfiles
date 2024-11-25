@@ -1,10 +1,10 @@
-;;; window-extras.el --- Extensions for window.el -*- lexical-binding: t -*-
+;;; window-extras.el --- Extensions for window.el -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/window-extras.el
-;; Version: 0.1
+;; Version: 0.2
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -27,6 +27,8 @@
 
 ;;; Code:
 
+(require 'window)
+
 ;;;; User options
 
 (defgroup window-extras ()
@@ -48,6 +50,7 @@ The most recently selected window may include the minibuffer window."
       (select-window (active-minibuffer-window))
     (get-mru-window (selected-frame) t t)))
 
+;;;###autoload
 (defun window-extras-switch-to-last-window ()
   "Switch to the most recently selected window in the current frame.
 The most recently selected window may include the minibuffer window."
@@ -93,12 +96,11 @@ If there is only one window, create a second one."
    (window-buffer)
    (window-buffer (window-extras-get-last-window))))
 
-(declare-function files-extras-get-alternate-buffer "files-extras")
+(autoload 'files-extras-get-alternate-buffer "files-extras")
 (defun window-extras-buffer-move (target-window)
   "Move the current buffer to the TARGET-WINDOW.
 If there is only one window, create a second one."
   (interactive)
-  (require 'files-extras)
   (window-extras--move-or-swap
    (window-buffer) (files-extras-get-alternate-buffer) target-window))
 

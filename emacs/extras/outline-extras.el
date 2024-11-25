@@ -1,10 +1,10 @@
-;;; outline-extras.el --- Extensions for outline -*- lexical-binding: t -*-
+;;; outline-extras.el --- Extensions for outline -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/outline-extras.el
-;; Version: 0.1
+;; Version: 0.2
 
 ;; This file is NOT part of GNU Emacs.
 

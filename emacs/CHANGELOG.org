@@ -9,6 +9,52 @@ This document summarizes the changes pertaining to my Emacs configuration in eac
 - Removed outdated patches for mu4e functions
 - Added proper requirements and autoloads
 
+*** avy-extras
+- Added proper package requirements and autoloads
+- Removed patch now submitted as PR to use =;= instead of =?= for dispatcher
+
+*** citar-extras
+- Added proper package requirements
+
+*** ebib-extras 
+- Added various autoloads and proper requirements
+
+*** gptel-extras
+- Fixed auto-revert issue with context files modified externally
+- Exclude media files from cost calculation
+- Fixed Mullvad integration
+
+*** magit-extra
+- Improved docstrings and function signatures
+
+*** org-extras
+- Removed unused functions for hiding properties and logbook drawers
+- Fixed several autoloads and requirements
+
+*** simple-extras
+- Added functionality to auto-save new non-file buffers
+- Fixed proper requirements and autoloads
+
+*** vc-extras
+- Added menu interface accessed via =vc-extras-menu=
+- Support cloning repos to user-specified directories
+- Improved authentication status checking
+
+** Infrastructure improvements
+- Standardized package headers with proper requirements
+- Set fill-column to 80 in all extras files
+- Added proper autoloads throughout codebase
+- Cleaned up require statements to only include necessary dependencies
+- Updated package versions to 0.2 across the board
+- Fixed various compiler warnings
+
+** File organization
+- Moved =check_tlon_pass_changes= script from home folder to bin
+- Updated various snippets in yasnippet collections
+- Added/removed several yasnippet templates
+
+The changes mainly focus on code cleanup, proper package requirements, and standardizing the codebase structure. The most significant functional changes are in =gptel-extras= (cost calculation improvements) and =vc-extras= (menu interface and cloning improvements).
+
 * Version 6.8.1 on 2024-11-19
 ** Package management and initialization
 - Removed Chemacs dependency

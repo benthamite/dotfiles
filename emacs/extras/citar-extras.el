@@ -118,13 +118,6 @@
   (citar-open `(,(files-extras-get-stem-of-current-buffer))))
 
 ;;;###autoload
-(defun citar-extras-set-bibliography ()
-  "Set the bibliography to `paths-files-bibliography-all'.
-This function should be run via a post-init hook, to ensure that
-`paths-files-bibliography-all' is initialized."
-  (setq citar-bibliography paths-files-bibliography-all))
-
-;;;###autoload
 (defun citar-extras-update-bibliographies ()
   "Update the bibliographies."
   (dolist (bibliography citar-bibliography)

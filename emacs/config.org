@@ -9911,6 +9911,15 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 
 See [[https://github.com/emacs-citar/citar/wiki/Comparisons#summary-of-diverse-emacs-bibliographic-and-citation-packages][this section]] of [[id:67AB4C5F-2425-4D31-9590-9D13790B4C97][citar]]'s manual for a handy summary of the main bibliographic and citation Emacs packages.
 
+I split my bibliographies into two categories: personal and work. The files providing my personal bibliography are defined in =paths-files-bibliography-personal=. The files providing my work bibliography are defined in =tlon-bibliography-files=. I then define =paths-files-bibliography-all= as the concatenation of these two lists. Finally, this master variable is used to set the values of the user options for all package that define bibliographies:
+
+- =bibtex-files= (for =bibtext=)
+- =bibtex-completion-bibliography= (for =bibtex-completion=)
+- =citar-bibliography= (for =citar=)
+- =ebib-preload-bib-files= (for =ebib=)
+
+Each of these packages requires =tlon=, since the latter must load for ==paths-files-bibliography-all== to be set.
+
 ** oc
 :PROPERTIES:
 :ID:       8AF25840-AC38-4FF7-A45F-F01B96C5DF5A
@@ -9977,6 +9986,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 (use-feature bibtex
   :after ebib
   :custom
+  (bibtex-files paths-files-bibliography-all)
   ;; This corresponds (roughly?) to `auth+year+shorttitle(3,3)' on Better BibTeX
   ;; retorque.re/zotero-better-bibtex/citing/
   (bibtex-search-entry-globally t)
@@ -9998,6 +10008,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   (bibtex-field-indentation 8) ; match ebib value
 
   :config
+  (require 'tlon) ; see explanatory note under ‘reference & citation’
   (push '("\\." . "") bibtex-autokey-name-change-strings)
   ;; add extra entry types
   (dolist (entry '(("Video" . "Video file")
@@ -10023,10 +10034,6 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
              ("archiveprefix" nil nil -5)
              ("urldate")))
           bibtex-biblatex-entry-alist))
-  :hook
-  (tlon-post-init-hook . (lambda ()
-                           "Set `bibtex-files' after `paths-files-bibliography-all' is set."
-                           (setq bibtex-files paths-files-bibliography-all)))
 
   :bind
   (:map bibtex-mode-map
@@ -10115,18 +10122,17 @@ The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-b
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package bibtex-completion
   :ensure (:version (lambda (_) "2.0.0")) ; github.com/progfolio/elpaca/issues/229
-  :defer t
+  :after bibtex
   :custom
+  (bibtex-completion-bibliography paths-files-bibliography-all)
   (bibtex-completion-pdf-open-function 'find-file)
   (bibtex-completion-notes-path paths-dir-bibliographic-notes)
   (bibtex-completion-pdf-field "file")
   (bibtex-dialect 'biblatex)
   (bibtex-completion-library-path paths-dir-pdf-library)
 
-  :hook
-  (tlon-post-init-hook . (lambda ()
-                           "Set `bibtex-completion-bibliography' after `paths-files-bibliography-all' is set."
-                           (setq bibtex-completion-bibliography paths-files-bibliography-all))))
+  :config
+  (require 'tlon)) ; see explanatory note under ‘reference & citation’
 #+end_src
 
 ** bibtex-completion-extras
@@ -10195,12 +10201,16 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
 
 /[[https://github.com/emacs-citar/citar][citar]] is a package to quickly find and act on bibliographic references, and edit org, markdown, and latex academic documents./
 
+We defer-load the package to activate the timer that in turn updates the bibliography files when Emacs is idle, like we do with =ebib= below.
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package citar
   :ensure (:host github
                  :repo "emacs-citar/citar"
                  :includes (citar-org))
+  :defer 30
   :custom
+  (citar-bibliography paths-files-bibliography-all)
   (citar-notes-paths `(,paths-dir-bibliographic-notes))
   (citar-at-point-function 'embark-act)
   (citar-symbol-separator "  ")
@@ -10212,6 +10222,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
   (citar-notes-source 'orb-citar-source)
 
   :config
+  (require 'tlon) ; see explanatory note under ‘reference & citation’
   (with-eval-after-load 'savehist
     (add-to-list 'savehist-additional-variables 'citar-history))
 
@@ -10263,14 +10274,14 @@ Having headings tagged with the type of work they are notes of allows me to quer
 :ID:       6CC7F660-F6E6-4605-AA42-B495FF090B5D
 :END:
 
-
 /[[file:extras/citar-extras.el][citar-extras]] collects my extensions for ~citar~./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package citar-extras
   :after citar
   :init
-  (run-with-idle-timer (* 60 60) t #'citar-extras-update-bibliographies)
+  ;; reloading the bibliographies is time-intensive, so we try to do it in the background
+  (run-with-idle-timer (* 30 60) nil #'citar-extras-update-bibliographies)
 
   :config
   ;; https://github.com/emacs-citar/citar/wiki/Indicators
@@ -10278,13 +10289,7 @@ Having headings tagged with the type of work they are notes of allows me to quer
         (list citar-extras-indicator-links-icons
               citar-extras-indicator-files-icons
               citar-extras-indicator-notes-icons
-              citar-extras-indicator-cited-icons))
-
-  :hook
-  (tlon-post-init-hook . citar-extras-set-bibliography)
-
-  :bind
-  ("A-H-M-s-?" . citar-extras-open-file-at-point)) ; i.e. H-S-/
+              citar-extras-indicator-cited-icons)))
 #+end_src
 
 ** citar-citeproc
@@ -10412,9 +10417,13 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 
 /[[https://github.com/joostkremers/ebib][ebib]] ([[http://joostkremers.github.io/ebib/][homepage]]) is a BibTeX database manager for Emacs./
 
+We defer-load the package to activate the timer that in turn updates the bibliography files when Emacs is idle, like we do with =citar= above.
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package ebib
+  :defer 30
   :custom
+  (ebib-preload-bib-files paths-files-bibliography-all)
   (ebib-notes-directory paths-dir-bibliographic-notes)
   (ebib-notes-use-org-capture t)
   (ebib-notes-display-max-lines 9999)
@@ -10434,11 +10443,10 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
    '((biblatex "abstract" "keywords" "origdate" "langid" "translation" "narrator" "file" "timestamp" "wordcount" "rating" "crossref" "=key=")
      (bibtex "crossref" "annote" "abstract" "keywords" "file" "timestamp" "url" "doi")))
 
-  :hook
-  (tlon-post-init-hook . (lambda ()
-                           "Set `ebib-preload-bib-files' after `paths-files-bibliography-all' is set."
-                           (setq ebib-preload-bib-files paths-files-bibliography-all)))
+  :config
+  (require 'tlon) ; see explanatory note under ‘reference & citation’
 
+  :hook
   (ebib-entry-mode-hook . visual-line-mode)
 
   :bind
@@ -10510,13 +10518,14 @@ The macro below generates the commands correctly. But attempting to define key b
 :ID:       9E86F42E-2F41-4BB7-ABC5-1C929DBD5C06
 :END:
 
-
 /[[file:extras/ebib-extras.el][ebib-extras]] collects my extensions for ~ebib~./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package ebib-extras
   :init
   (advice-add 'ebib-init :after #'ebib-extras-auto-reload-databases)
+  ;; reloading the bibliographies is time-intensive, so we try to do it in the background
+  (run-with-idle-timer (* 35 60) t #'ebib-extras-reload-all-databases)
 
   :hook
   (ebib-add-entry . ebib-extras-create-list-of-existing-authors)

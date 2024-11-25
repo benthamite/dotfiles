@@ -305,7 +305,7 @@
 :ID:       8CECA615-ADC3-4EF6-B88F-8D4E936106B8
 :END:
 #+begin_src emacs-lisp
-(setq gptel-extras-dir "/Users/cartago/Library/CloudStorage/Dropbox/tlon/leo/GPT")
+(setq gptel-extras-dir "/Users/cartago/Library/CloudStorage/Dropbox/tlon/leo/gptel")
 #+end_src
 
 ** citar

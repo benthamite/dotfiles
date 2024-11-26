@@ -122,7 +122,7 @@
   "Update the bibliographies."
   (dolist (bibliography citar-bibliography)
     (citar-cache--update-bibliography
-     (citar-cache--get-bibliography bibliography)))))
+     (citar-cache--get-bibliography bibliography))))
 
 (provide 'citar-extras)
 ;;; citar-extras.el ends here

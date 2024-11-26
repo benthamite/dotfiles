@@ -1,10 +1,11 @@
-;;; consult-extras.el --- Extensions for consult -*- lexical-binding: t -*-
+;;; consult-extras.el --- Extensions for consult -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/consult-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((consult "1.1") (paths "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -68,7 +69,6 @@ entries are offered.  By default, all entries of the current
 buffer are offered."
   (interactive)
   (widen)
-  (require 'org-extras)
   (org-extras-fold-show-all-headings)
   (consult-org-heading match scope)
   (recenter 1))

@@ -1,10 +1,11 @@
-;;; elfeed-extras.el --- Extensions for elfeed -*- lexical-binding: t -*-
+;;; elfeed-extras.el --- Extensions for elfeed -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/elfeed-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((elfeed))
 
 ;; This file is NOT part of GNU Emacs.
 

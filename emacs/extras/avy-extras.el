@@ -1,10 +1,11 @@
-;;; avy-extras.el --- Extensions for avy -*- lexical-binding: t -*-
+;;; avy-extras.el --- Extensions for avy -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/avy-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((avy "0.4.0") (el-patch "1.1") (use-package-extras "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -29,7 +30,6 @@
 
 (require 'avy)
 (require 'el-patch)
-(require 'simple-extras)
 (require 'use-package-extras)
 
 ;;;; Variables
@@ -73,9 +73,9 @@ will no longer jump to its next occurrence."
   "Jump to a word start between point and end of visual line."
   (interactive)
   (avy-with avy-goto-word-0
-	    (avy-goto-word-0 nil
-			     (point)
-			     (save-excursion (end-of-visual-line) (point)))))
+    (avy-goto-word-0 nil
+		     (point)
+		     (save-excursion (end-of-visual-line) (point)))))
 
 ;;;###autoload
 (defun avy-extras-goto-end-of-line-above (&optional offset bottom-up)
@@ -95,30 +95,27 @@ cursor. When BOTTOM-UP is non-nil, display avy candidates from top to bottom."
   (call-interactively (lambda! (avy-goto-line-below offset bottom-up)))
   (end-of-line))
 
-(declare-function dired-find-alternate-file "dired")
+(autoload 'dired-find-alternate-file "dired")
 ;;;###autoload
 (defun avy-extras-dired-find-file ()
   "In Dired, visit the file or directory in selected line."
   (interactive)
-  (require 'dired)
   (avy-goto-line)
   (dired-find-alternate-file))
 
-(declare-function ebib-edit-entry "ebib")
+(autoload 'ebib-edit-entry "ebib")
 ;;;###autoload
 (defun avy-extras-ebib-view-entry ()
   "In Ebib, view the entry in selected line."
   (interactive)
-  (require 'ebib)
   (avy-goto-line)
   (ebib-edit-entry))
 
-(declare-function mu4e-headers-view-message "mu4e-headers")
+(autoload 'mu4e-headers-view-message "mu4e-headers")
 ;;;###autoload
 (defun avy-extras-headers-view-message ()
   "In mu4e, view the message in selected line."
   (interactive)
-  (require 'mu4e-headers)
   (avy-goto-line)
   (mu4e-headers-view-message))
 
@@ -182,30 +179,6 @@ Repeat the search by pressing the same key."
 Repeat the search by pressing the same key."
   (interactive "cJump to char (backward): ")
   (avy-extras-goto-char char 'backward))
-
-;;;; Patched functions
-
-;; Launch dispatcher with `;' rather than `?'
-(el-patch-defun avy-handler-default (char)
-  "The default handler for a bad CHAR."
-  (let (dispatch)
-    (cond ((setq dispatch (assoc char avy-dispatch-alist))
-	   (unless (eq avy-style 'words)
-	     (setq avy-action (cdr dispatch)))
-	   (throw 'done 'restart))
-	  ((memq char avy-escape-chars)
-	   ;; exit silently
-	   (throw 'done 'abort))
-	  ((el-patch-swap
-	     (eq char ??)
-	     (eq char ?\;))
-	   (avy-show-dispatch-help)
-	   (throw 'done 'restart))
-	  ((mouse-event-p char)
-	   (signal 'user-error (list "Mouse event not handled" char)))
-	  (t
-	   (message "No such candidate: %s, hit `C-g' to quit."
-		    (if (characterp char) (string char) char))))))
 
 (provide 'avy-extras)
 ;;; avy-extras.el ends here

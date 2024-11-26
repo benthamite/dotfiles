@@ -1,10 +1,11 @@
-;;; forge-extras.el --- Extensions for forge -*- lexical-binding: t -*-
+;;; forge-extras.el --- Extensions for forge -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/forge-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((forge "0.3.1") (shut-up "0.3.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -28,7 +29,6 @@
 ;;; Code:
 
 (require 'forge)
-(require 'orgit-forge)
 (require 'shut-up)
 
 ;;;; Variables
@@ -54,6 +54,7 @@
 
 ;;;; Functions
 
+(declare-function org-store-link "ol")
 (defun forge-extras-orgit-store-link (_arg)
   "Like `org-store-link' but store links to all selected commits, if any."
   (interactive "P")
@@ -95,11 +96,12 @@ Do not update if `elfeed' is in the process of being updated, since this causes
 problems."
   (unless (bound-and-true-p elfeed-extras-auto-update-in-process)
     (shut-up
-      (forge-pull-notifications))))
+      (with-no-warnings
+	(forge-pull-notifications)))))
 
 ;;;;; sync read status
 
-(declare-function doom-modeline--github-fetch-notifications "doom-modeline-segments")
+(autoload 'doom-modeline--github-fetch-notifications "doom-modeline-segments")
 (defun forge-extras-sync-read-status (&optional _)
   "Ensure that the read status of the issue at point in Forge matches GitHub's."
   (let* ((issue (forge-current-topic))
@@ -152,14 +154,13 @@ Apple Events\"")))
 ;;;;; Track repos
 
 (declare-function magit-status "magit-status")
-(declare-function vc-extras-is-git-dir-p "vc-extras")
+(autoload 'vc-extras-is-git-dir-p "vc-extras")
 ;;;###autoload
 (defun forge-extras-track-repository (&optional dir)
   "Add DIR to the Forge database.
 If DIR is nil, use the current directory."
   (interactive)
   (let ((default-directory (or dir default-directory)))
-    (require 'vc-extras)
     (if (vc-extras-is-git-dir-p default-directory)
 	(let ((url (and-let*
 		       ((repo (forge-get-repository :stub))

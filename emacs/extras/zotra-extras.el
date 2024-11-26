@@ -1,10 +1,11 @@
-;;; zotra-extras.el --- Extensions for zotra -*- lexical-binding: t -*-
+;;; zotra-extras.el --- Extensions for zotra -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/zotra-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((paths "0.1") (zotra "1.0"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -89,9 +90,10 @@ Refer to the `mullvad' package documentation for details."
 
 (defvar ebib--cur-db)
 (declare-function ebib "ebib")
-(declare-function elfeed-extras-kill-link-url-of-entry "elfeed-extras")
-(declare-function eww-copy-page-url "eww")
 (declare-function mullvad-connect-to-website "mullvad")
+(autoload 'eww-copy-page-url "eww")
+(autoload 'elfeed-extras-kill-link-url-of-entry "elfeed-extras")
+;;;###autoload
 (defun zotra-extras-add-entry (&optional url-or-search-string entry-format bibfile)
   "Like `zotra-extras-add-entry', but set BIBFILE and open in Ebib.
 Pass URL-OR-SEARCH-STRING and ENTRY-FORMAT to `zotra-get-entry'
@@ -104,7 +106,6 @@ to get the entry.
       ('elfeed-show-mode (elfeed-extras-kill-link-url-of-entry))
       ('eww-mode (eww-copy-page-url)))
     (when zotra-extras-use-mullvad-p
-      (require 'mullvad)
       (mullvad-connect-to-website "IMDb" 1 'silently))
     (zotra-add-entry url-or-search-string entry-format bibfile)
     (zotra-extras-open-in-ebib zotra-extras-most-recent-bibkey)))
@@ -112,6 +113,7 @@ to get the entry.
 ;;;;; Bibfile
 
 (defvar tlon-file-fluid)
+;;;###autoload
 (defun zotra-extras-set-bibfile ()
   "Prompt the user to select a value for `org-cite-global-bibliography'."
   (completing-read "Bibfile" (list
@@ -120,15 +122,15 @@ to get the entry.
 
 ;;;;; Ebib
 
-(declare-function ebib-switch-to-database-nth "ebib")
-(declare-function ebib-save-current-database "ebib")
-(declare-function ebib--update-buffers "ebib")
+(autoload 'ebib-switch-to-database-nth "ebib")
+(autoload 'ebib-save-current-database "ebib")
+(autoload 'ebib--update-buffers "ebib")
+(autoload 'ebib-extras-process-entry "ebib-extras")
+(declare-function ebib-extras-open-key "ebib-extras")
+(declare-function ebib-extras-sort "ebib-extras")
 (declare-function ebib-extras-open-or-switch "ebib-extras")
 (declare-function ebib-extras-get-db-number "ebib-extras")
 (declare-function ebib-extras-reload-database-no-confirm "ebib-extras")
-(declare-function ebib-extras-sort "ebib-extras")
-(declare-function ebib-extras-open-key "ebib-extras")
-(declare-function ebib-extras-process-entry "ebib-extras")
 (defun zotra-extras-open-in-ebib (bibkey)
   "Open BIBKEY in Ebib after adding entry via `zotra-add-entry'."
   (ebib)
@@ -152,19 +154,14 @@ to get the entry.
 (defvar ebib-timestamp-format)
 (declare-function org-ref-clean-bibtex-entry "org-ref-bibtex")
 (declare-function bibtex-set-field "doi-utils")
-(declare-function bibtex-extras-convert-titleaddon-to-journaltitle "bibtex-extras")
 (declare-function bibtex-extras-get-key "bibtex-extras")
 (declare-function tlon-cleanup-eaf-replace-urls "tlon-cleanup")
+(autoload 'bibtex-extras-convert-titleaddon-to-journaltitle "bibtex-extras")
 (defun zotra-extras-after-add-process-bibtex ()
   "Process newly added bibtex entry."
   ;; TODO: check that there are no unsaved changes in
   ;; `zotra-extras-most-recent-bibfile'
   (goto-char (point-max))
-  (require 'bibtex)
-  (require 'bibtex-extras)
-  (require 'doi-utils)
-  (require 'org-ref-bibtex)
-  (require 'tlon-cleanup)
   (bibtex-extras-convert-titleaddon-to-journaltitle)
   (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format nil "GMT"))
   (zotra-extras-fix-octal-sequences)
@@ -236,7 +233,7 @@ gracefully."
 
 (declare-function ebib-save-all-databases "ebib")
 (declare-function ebib-extras-sort "ebib-extras")
-(declare-function files-extras-lines-to-list "files-extras")
+(autoload 'files-extras-lines-to-list "files-extras")
 ;;;###autoload
 (defun zotra-extras-add-multiple-urls (file)
   "Prompt the user to select a FILE with a list of URLs and add them."

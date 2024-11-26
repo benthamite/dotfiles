@@ -1,10 +1,10 @@
-;;; calendar-extras.el --- Extensions for calendar -*- lexical-binding: t -*-
+;;; calendar-extras.el --- Extensions for calendar -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/calendar-extras.el
-;; Version: 0.1
+;; Version: 0.2
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -28,7 +28,6 @@
 ;;; Code:
 
 (require 'calendar)
-(require 'auth-source-pass)
 
 ;;;; User options
 
@@ -60,6 +59,10 @@ The value can be set manually. It can also be set via
 ;;;; Functions
 ;;;;; Geolocation
 
+(defvar url-request-method)
+(defvar url-request-extra-headers)
+(autoload 'json-read "json")
+(declare-function auth-source-pass-get "auth-source-pass")
 (defun calendar-extras-get-geolocation ()
   "Get geolocation from IP address.
 If IP is non-nil, use the local IP address."
@@ -108,8 +111,8 @@ If IP is non-nil, use the local IP address."
 	     "%Y-%m-%d"
 	     (encode-time 0 0 0 day month year)))))
 
-(declare-function cfw:open-calendar-buffer "cfw:org")
-(declare-function cfw:org-create-source "cfw:org")
+(autoload 'cfw:open-calendar-buffer "cfw:org")
+(autoload 'cfw:org-create-source "cfw:org")
 (defun calendar-extras-calfw-block-agenda ()
   "Display today’s agenda as visual time blocks."
   (interactive)

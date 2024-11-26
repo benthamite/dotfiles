@@ -1,10 +1,11 @@
-;;; doom-modeline-extras.el --- Extensions for doom-modeline -*- lexical-binding: t -*-
+;;; doom-modeline-extras.el --- Extensions for doom-modeline -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/doom-modeline-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((doom-modeline "2.0"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -88,7 +89,6 @@
   "Handle GitHub notifications after they are fetched."
   (unless (= doom-modeline--github-notification-number doom-modeline-extras-github-last-count)
     (when (> doom-modeline--github-notification-number 0)
-      (require 'forge-commands)
       (forge-pull-notifications)
       (message "Pulled forge notifications.")))
   (setq doom-modeline-extras-github-last-count doom-modeline--github-notification-number))

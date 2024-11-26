@@ -1,10 +1,11 @@
-;;; pdf-tools-extras.el --- Extensions for pdf-tools -*- lexical-binding: t -*-
+;;; pdf-tools-extras.el --- Extensions for pdf-tools -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/pdf-tools-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((pdf-tools "1.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -27,7 +28,6 @@
 
 ;;; Code:
 
-(require 'pdf-annot)
 (require 'pdf-tools)
 
 ;;;; Functions
@@ -128,13 +128,13 @@ If `opentopage' script is available, open to current page."
       (delete-file file)
       (kill-buffer))))
 
+(autoload 'pdf-annot-add-markup-annotation "pdf-annot")
 (defun pdf-annot-extras-add-highlight-markup-annotation (list-of-edges
 							 &optional color property-alist)
   "Like `pdf-annot-add-highlight-markup-annotation', but copy the region.
 LIST-OF-EDGES is a list of edges of the region to highlight. COLOR and
 PROPERTY-ALIST are as in `pdf-annot-add-highlight-markup-annotation'."
   (interactive (list (pdf-view-active-region)))
-  (require 'pdf-annot)
   (let* ((txt (pdf-view-active-region-text)))
     (pdf-annot-add-markup-annotation list-of-edges 'highlight color property-alist)
     (pdf-view-deactivate-region)

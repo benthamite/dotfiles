@@ -470,6 +470,8 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#ement][ement]]
   - [[#erc][erc]]
   - [[#circe][circe]]
+  - [[#slack][slack]]
+  - [[#ol-emacs-slack][ol-emacs-slack]]
 - [[#web][web]]
   - [[#browse-url][browse-url]]
   - [[#browse-url-extras][browse-url-extras]]
@@ -508,7 +510,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#calc][calc]]
   - [[#calc-ext][calc-ext]]
   - [[#alert][alert]]
-  - [[#unpackaged][unpackaged]]
   - [[#midnight][midnight]]
   - [[#bbdb][bbdb]]
   - [[#bbdb-extras][bbdb-extras]]
@@ -1299,8 +1300,7 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
   (:map pass-mode-map
         ("SPC" . pass-extras-open-at-point)
         ("e" . pass-extras-edit)
-        ("I" . pass-extras-insert-generated-no-symbols)
-        ("y" . pass-extras-git-sync)))
+        ("I" . pass-extras-insert-generated-no-symbols)))
 #+end_src
 
 ** password-store-otp
@@ -1376,7 +1376,10 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 (use-personal-package vc-extras
   :after vc
   :custom
-  (vc-extras-split-repo t))
+  (vc-extras-split-repo t)
+
+  :bind
+  ("A-v" . vc-extras-menu))
 #+end_src
 
 ** log-edit
@@ -1820,13 +1823,14 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
     "Display git blame message, right-aligned with Magit-style faces.
 If another message is already being displayed, display both messages unless they
 do not both fit in the echo area."
+    (require 'magit-log)
     (let* ((message-log-max nil)
            (cur-msg (current-message))
            (blm-msg (format "%s %s %s "
                             emsg-blame--commit-summary
                             (propertize emsg-blame--commit-author 'face 'magit-log-author)
                             (propertize emsg-blame--commit-date 'face 'magit-log-date)))
-           (available-width (- (frame-width) (length cur-msg) 1))
+           (available-width (- (frame-width) (length cur-msg) 6))
            (blm-msg-fits-p (lambda () (> available-width (length blm-msg))))
            (rev-blm-msg (if (< (length blm-msg) (frame-width))
                             (let ((padding (if (funcall blm-msg-fits-p)
@@ -4791,8 +4795,6 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 
 (That's the actively maintained fork; the [[https://github.com/myuhe/org-gcal.el/issues/124#issuecomment-642859466][official repository]] is no longer maintained.)
 
-[2023-09-12 Tue 12:03] There is currently an [[https://github.com/kidd/org-gcal.el/issues/238#issuecomment-1555902363][issue]] that, apparently, can only be solved by downgrading to an earlier version of ~gnupg~.
-
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package org-gcal
   :ensure (:host github
@@ -7439,6 +7441,9 @@ This needs to be configured.
 :ID:       7B4A0E63-4509-4BC0-AE08-08F517911959
 :END:
 
+
+/[[https://github.com/json-emacs/json-mode][json-mode]]/ is major mode for editing JSON files.
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package json-mode
   :defer t
@@ -7636,7 +7641,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
                  :files ("dist" "*.el"))
   :after jsonrpc
   :custom
-  (copilot-max-char 1000000)
+  (copilot-max-char -1)
   (copilot-indent-offset-warning-disable t)
 
   :config
@@ -8170,6 +8175,12 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
   (dolist (module '(org-habit org-tempo))
     (add-to-list 'org-modules module))
 
+  ;; force reloading of first file opened so the buffer is correctly formatted
+  (with-eval-after-load 'org
+    (when (and (buffer-file-name)
+               (string-match "\\.org$" (buffer-file-name)))
+      (revert-buffer nil t)))
+
   :bind
   (:map org-mode-map
         ("C-H-M-s-z" . org-shiftleft)
@@ -8266,7 +8277,9 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
         (run-with-idle-timer (* 10 60) nil #'org-extras-agenda-switch-to-agenda-current-day))
 
   :custom
-  (org-extras-id-auto-add-excluded-directories `(,paths-dir-dropbox-tlon-fede
+  (org-extras-id-auto-add-excluded-directories `(,paths-dir-dropbox-tlon-leo
+                                                 ,(file-name-concat paths-dir-dropbox-tlon-leo "gptel/")
+                                                 ,paths-dir-dropbox-tlon-fede
                                                  ,(file-name-concat paths-dir-dropbox-tlon-fede "archive/")))
 
   (org-extras-agenda-files-excluded (list paths-file-tlon-tareas-leo
@@ -9197,13 +9210,6 @@ Note to self: Typescript syntax highlighting works fine, but calling ~org-edit-s
    ("s-c" . org-table-fedit-finish)))
 #+end_src
 
-*** Resources
-:PROPERTIES:
-:ID:       BF9BD230-8771-4883-9DFD-65723C011314
-:END:
-
-- [cite:@EMACKS2022HowCreateTable]
-
 ** orgtbl-edit
 :PROPERTIES:
 :ID:       7C3382D2-F7B4-4F1B-854E-BB60D568E299
@@ -9892,6 +9898,15 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 
 See [[https://github.com/emacs-citar/citar/wiki/Comparisons#summary-of-diverse-emacs-bibliographic-and-citation-packages][this section]] of [[id:67AB4C5F-2425-4D31-9590-9D13790B4C97][citar]]'s manual for a handy summary of the main bibliographic and citation Emacs packages.
 
+I split my bibliographies into two categories: personal and work. The files providing my personal bibliography are defined in =paths-files-bibliography-personal=. The files providing my work bibliography are defined in =tlon-bibliography-files=. I then define =paths-files-bibliography-all= as the concatenation of these two lists. Finally, this master variable is used to set the values of the user options for all package that define bibliographies:
+
+- =bibtex-files= (for =bibtext=)
+- =bibtex-completion-bibliography= (for =bibtex-completion=)
+- =citar-bibliography= (for =citar=)
+- =ebib-preload-bib-files= (for =ebib=)
+
+Each of these packages requires =tlon=, since the latter must load for ==paths-files-bibliography-all== to be set.
+
 ** oc
 :PROPERTIES:
 :ID:       8AF25840-AC38-4FF7-A45F-F01B96C5DF5A
@@ -9913,14 +9928,6 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
   (org-cite-export-processors
    '((t . (csl "long.csl")))))
 #+end_src
-
-*** Resources
-:PROPERTIES:
-:ID:       8EA82227-F7EF-4C46-B40C-C5DE40F13130
-:END:
-
-- [cite:@Balintona2022CitationsOrgmodeOrgcite]. The most comprehensive explanation I'm aware of about how to use ~org-cite~. See [[https://www.reddit.com/r/orgmode/comments/vc7ys6/how_i_run_my_wiki_with_org_mode/][Reddit discussion]].
-- [cite:@Kolsc2021HowActuallyInsert]. Reddit thread about the basics of ~org-cite~.
 
 ** oc-csl
 :PROPERTIES:
@@ -9966,6 +9973,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 (use-feature bibtex
   :after ebib
   :custom
+  (bibtex-files paths-files-bibliography-all)
   ;; This corresponds (roughly?) to `auth+year+shorttitle(3,3)' on Better BibTeX
   ;; retorque.re/zotero-better-bibtex/citing/
   (bibtex-search-entry-globally t)
@@ -9987,6 +9995,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   (bibtex-field-indentation 8) ; match ebib value
 
   :config
+  (require 'tlon) ; see explanatory note under ‘reference & citation’
   (push '("\\." . "") bibtex-autokey-name-change-strings)
   ;; add extra entry types
   (dolist (entry '(("Video" . "Video file")
@@ -10012,10 +10021,6 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
              ("archiveprefix" nil nil -5)
              ("urldate")))
           bibtex-biblatex-entry-alist))
-  :hook
-  (tlon-post-init-hook . (lambda ()
-                           "Set `bibtex-files' after `paths-files-bibliography-all' is set."
-                           (setq bibtex-files paths-files-bibliography-all)))
 
   :bind
   (:map bibtex-mode-map
@@ -10053,6 +10058,8 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package bibtex-extras
+  :after bibtex
+  :demand t
   :custom
   (bibtex-maintain-sorted-entries
    '(bibtex-extras-entry-sorter bibtex-extras-lessp))
@@ -10102,18 +10109,17 @@ The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-b
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package bibtex-completion
   :ensure (:version (lambda (_) "2.0.0")) ; github.com/progfolio/elpaca/issues/229
-  :defer t
+  :after bibtex
   :custom
+  (bibtex-completion-bibliography paths-files-bibliography-all)
   (bibtex-completion-pdf-open-function 'find-file)
   (bibtex-completion-notes-path paths-dir-bibliographic-notes)
   (bibtex-completion-pdf-field "file")
   (bibtex-dialect 'biblatex)
   (bibtex-completion-library-path paths-dir-pdf-library)
 
-  :hook
-  (tlon-post-init-hook . (lambda ()
-                           "Set `bibtex-completion-bibliography' after `paths-files-bibliography-all' is set."
-                           (setq bibtex-completion-bibliography paths-files-bibliography-all))))
+  :config
+  (require 'tlon)) ; see explanatory note under ‘reference & citation’
 #+end_src
 
 ** bibtex-completion-extras
@@ -10182,12 +10188,16 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
 
 /[[https://github.com/emacs-citar/citar][citar]] is a package to quickly find and act on bibliographic references, and edit org, markdown, and latex academic documents./
 
+We defer-load the package to activate the timer that in turn updates the bibliography files when Emacs is idle, like we do with =ebib= below.
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package citar
   :ensure (:host github
                  :repo "emacs-citar/citar"
                  :includes (citar-org))
+  :defer 30
   :custom
+  (citar-bibliography paths-files-bibliography-all)
   (citar-notes-paths `(,paths-dir-bibliographic-notes))
   (citar-at-point-function 'embark-act)
   (citar-symbol-separator "  ")
@@ -10199,6 +10209,7 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
   (citar-notes-source 'orb-citar-source)
 
   :config
+  (require 'tlon) ; see explanatory note under ‘reference & citation’
   (with-eval-after-load 'savehist
     (add-to-list 'savehist-additional-variables 'citar-history))
 
@@ -10218,11 +10229,6 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
   (setf (alist-get 't citar-major-mode-functions)
         (cons '(insert-citation . citar-org-insert-citation)
               (alist-get 't citar-major-mode-functions)))
-
-  :hook
-  (tlon-post-init-hook . (lambda ()
-                           "Set `citar-bibliography' after `paths-files-bibliography-all' is set."
-                           (setq citar-bibliography paths-files-bibliography-all)))
 
   :bind
   (("H-/" . citar-insert-citation)
@@ -10250,35 +10256,27 @@ CLOCK: [2021-07-26 Mon 14:26]--[2021-07-26 Mon 15:14] =>  0:48
 :END:
 Having headings tagged with the type of work they are notes of allows me to query the org-roam db specifically for notes of a particular type.
 
-*** Resources
-:PROPERTIES:
-:ID:       EAB0E32B-129C-4980-A06B-94B4C25966E2
-:END:
-
-[cite:@Balintona2022CitationsOrgmodeOrgcite]
-
 ** citar-extras
 :PROPERTIES:
 :ID:       6CC7F660-F6E6-4605-AA42-B495FF090B5D
 :END:
-
 
 /[[file:extras/citar-extras.el][citar-extras]] collects my extensions for ~citar~./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package citar-extras
   :after citar
-  :demand t
+  :init
+  ;; reloading the bibliographies is time-intensive, so we try to do it in the background
+  (run-with-idle-timer (* 30 60) nil #'citar-extras-update-bibliographies)
+
   :config
   ;; https://github.com/emacs-citar/citar/wiki/Indicators
   (setq citar-indicators
         (list citar-extras-indicator-links-icons
               citar-extras-indicator-files-icons
               citar-extras-indicator-notes-icons
-              citar-extras-indicator-cited-icons))
-
-  :bind
-  ("A-H-M-s-?" . citar-extras-open-file-at-point)) ; i.e. H-S-/
+              citar-extras-indicator-cited-icons)))
 #+end_src
 
 ** citar-citeproc
@@ -10406,9 +10404,13 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
 
 /[[https://github.com/joostkremers/ebib][ebib]] ([[http://joostkremers.github.io/ebib/][homepage]]) is a BibTeX database manager for Emacs./
 
+We defer-load the package to activate the timer that in turn updates the bibliography files when Emacs is idle, like we do with =citar= above.
+
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package ebib
+  :defer 30
   :custom
+  (ebib-preload-bib-files paths-files-bibliography-all)
   (ebib-notes-directory paths-dir-bibliographic-notes)
   (ebib-notes-use-org-capture t)
   (ebib-notes-display-max-lines 9999)
@@ -10428,11 +10430,10 @@ CLOCK: [2022-07-16 Sat 14:45]--[2022-07-16 Sat 15:17] =>  0:32
    '((biblatex "abstract" "keywords" "origdate" "langid" "translation" "narrator" "file" "timestamp" "wordcount" "rating" "crossref" "=key=")
      (bibtex "crossref" "annote" "abstract" "keywords" "file" "timestamp" "url" "doi")))
 
-  :hook
-  (tlon-post-init-hook . (lambda ()
-                           "Set `ebib-preload-bib-files' after `paths-files-bibliography-all' is set."
-                           (setq ebib-preload-bib-files paths-files-bibliography-all)))
+  :config
+  (require 'tlon) ; see explanatory note under ‘reference & citation’
 
+  :hook
   (ebib-entry-mode-hook . visual-line-mode)
 
   :bind
@@ -10504,13 +10505,14 @@ The macro below generates the commands correctly. But attempting to define key b
 :ID:       9E86F42E-2F41-4BB7-ABC5-1C929DBD5C06
 :END:
 
-
 /[[file:extras/ebib-extras.el][ebib-extras]] collects my extensions for ~ebib~./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package ebib-extras
   :init
   (advice-add 'ebib-init :after #'ebib-extras-auto-reload-databases)
+  ;; reloading the bibliographies is time-intensive, so we try to do it in the background
+  (run-with-idle-timer (* 35 60) t #'ebib-extras-reload-all-databases)
 
   :hook
   (ebib-add-entry . ebib-extras-create-list-of-existing-authors)
@@ -11563,6 +11565,125 @@ CLOCK: [2021-10-07 Thu 14:31]--[2021-10-07 Thu 15:23] =>  0:52
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package circe
   :defer t)
+#+end_src
+
+** slack
+:PROPERTIES:
+:ID:       DEC2C46C-8837-4676-B495-BB2BA91D9681
+:END:
+:LOGBOOK:
+CLOCK: [2022-07-14 Thu 10:44]--[2022-07-14 Thu 10:46] =>  0:02
+CLOCK: [2022-07-12 Tue 13:32]--[2022-07-12 Tue 13:51] =>  0:19
+CLOCK: [2022-07-11 Mon 14:43]--[2022-07-11 Mon 15:08] =>  0:25
+CLOCK: [2022-07-09 Sat 19:16]--[2022-07-09 Sat 19:25] =>  0:09
+CLOCK: [2022-07-09 Sat 15:17]--[2022-07-09 Sat 16:24] =>  1:07
+CLOCK: [2022-07-08 Fri 18:57]--[2022-07-08 Fri 19:26] =>  0:29
+CLOCK: [2022-07-08 Fri 17:58]--[2022-07-08 Fri 18:37] =>  0:39
+CLOCK: [2022-07-08 Fri 13:56]--[2022-07-08 Fri 14:14] =>  0:18
+CLOCK: [2022-07-08 Fri 13:42]--[2022-07-08 Fri 13:54] =>  0:12
+CLOCK: [2022-07-02 Sat 14:13]--[2022-07-02 Sat 14:25] =>  0:12
+CLOCK: [2022-06-08 Wed 16:59]--[2022-06-08 Wed 17:06] =>  0:07
+CLOCK: [2021-06-25 Fri 21:41]--[2021-06-25 Fri 22:16] =>  0:35
+CLOCK: [2021-05-29 Sat 14:10]--[2021-05-29 Sat 14:40] =>  0:30
+CLOCK: [2021-04-18 Sun 13:08]--[2021-04-18 Sun 13:16] =>  0:08
+CLOCK: [2021-04-12 Mon 19:40]--[2021-04-12 Mon 19:43] =>  0:03
+CLOCK: [2021-04-11 Sun 14:18]--[2021-04-11 Sun 14:36] =>  0:18
+CLOCK: [2021-04-07 Wed 12:41]--[2021-04-07 Wed 12:42] =>  0:01
+CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
+:END:
+
+/[[https://github.com/yuya373/emacs-slack][slack]] is a Slack client for Emacs./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package slack
+  :custom
+  (slack-file-dir paths-dir-downloads)
+  (slack-prefer-current-team t)
+
+  :config
+  (defun slack-chat-org-capture ()
+    "Capture Slack message at point with `org-capture'."
+    (interactive)
+    (org-capture nil "s"))
+
+  (require 'pass)
+  (slack-register-team
+   :default t
+   :name "Tlön"
+   :token (auth-source-pick-first-password
+           :host "tlon"
+           :user (getenv "PERSONAL_GMAIL"))
+   :cookie (auth-source-pick-first-password
+            :host "tlon^cookie"
+            :user (concat (getenv "PERSONAL_GMAIL") "^cookie")))
+
+  (slack-register-team
+   :name "Samotsvety Forecasting"
+   :token (auth-source-pick-first-password
+           :host "samotsvety"
+           :user (getenv "PERSONAL_GMAIL"))
+   :cookie (auth-source-pick-first-password
+            :host "samotsvety^cookie"
+            :user (concat (getenv "PERSONAL_GMAIL") "^cookie")))
+
+  :hook
+  (slack-buffer-mode-hook . (lambda () (setq line-spacing nil)))
+
+  :bind
+  (("A-s" . slack-channel-select)
+   :map slack-mode-map
+   ("s-a" . slack-all-threads)
+   ("s-c" . slack-channel-select)
+   ("s-g" . slack-group-select)
+   ("s-m" . slack-im-select)
+   ("H-s-t" . slack-change-current-team)
+   ("s-u" . slack-select-rooms)
+   ("H-s-u" . slack-select-unread-rooms)
+   :map slack-buffer-mode-map
+   ("s-a" . slack-all-threads)
+   ("s-c" . slack-channel-select)
+   ("s-g" . slack-group-select)
+   ("s-m" . slack-im-select)
+   ("H-s-t" . slack-change-current-team)
+   ("s-u" . slack-select-rooms)
+   ("H-s-u" . slack-select-unread-rooms) ; `slack-all-unreads' not working
+   :map slack-thread-message-buffer-mode-map
+   ("d" . slack-thread-show-or-create)
+   ("e" . slack-message-edit)
+   ("k" . slack-buffer-goto-prev-message)
+   ("l" . slack-buffer-goto-next-message)
+   ("o" . slack-chat-org-capture)
+   ("q" . files-extras-kill-other-buffer)
+   ("r" . slack-message-add-reaction)
+   ("R" . slack-message-remove-reaction)
+   ("z" . slack-message-write-another-buffer)
+   :map slack-message-buffer-mode-map
+   ("d" . slack-thread-show-or-create)
+   ("e" . slack-message-edit)
+   ("k" . slack-buffer-goto-prev-message)
+   ("l" . slack-buffer-goto-next-message)
+   ("o" . slack-chat-org-capture)
+   ("r" . slack-message-add-reaction)
+   ("R" . slack-message-remove-reaction)
+   ("z" . slack-message-write-another-buffer)
+   :map slack-message-compose-buffer-mode-map
+   ("s-c" . slack-message-send-from-buffer)
+   ("s-f" . slack-message-select-file)
+   ("s-m" . slack-message-embed-mention)))
+#+end_src
+
+** ol-emacs-slack
+:PROPERTIES:
+:ID:       5F9F6EF6-55A5-4DD4-BB81-BBA16266364B
+:END:
+
+/[[https://github.com/ag91/ol-emacs-slack][ol-emacs-slack]] provides ~org-store-link~ support for [[94F76C3D-9547-431D-93AB-8814F4218AFF][slack]]./
+
+#+begin_src emacs-lisp :results silent
+(use-package ol-emacs-slack
+  :ensure (:host github
+             :repo "ag91/ol-emacs-slack")
+  :after slack)
 #+end_src
 
 * web
@@ -12843,22 +12964,6 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
     (alert-message-notify info)))
 #+end_src
 
-** unpackaged
-:PROPERTIES:
-:ID:       484FDD89-4C12-4624-82CB-FC36795C0A8F
-:END:
-:LOGBOOK:
-:END:
-
-/[[https://github.com/alphapapa/unpackaged.el][unpackaged]] is a collection of useful Emacs Lisp code that isn't substantial enough to be packaged./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package unpackaged
-  :ensure (:host github
-           :repo "alphapapa/unpackaged.el")
-  :commands (unpackaged/org-forward-to-entry-content))
-#+end_src
-
 ** midnight
 :PROPERTIES:
 :ID:       C6B68696-DCCC-4143-A0BC-E5EEE249AACF
@@ -12902,7 +13007,6 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
                            ledger-mode-extras-update-coin-prices
                            ledger-mode-extras-update-commodities
                            magit-extras-stage-commit-and-push-all-repos
-                           pass-extras-git-sync
                            org-roam-db-sync
                            org-extras-id-update-id-locations
                            el-patch-validate-all
@@ -13052,12 +13156,13 @@ CLOCK: [2024-10-17 Thu 11:58]--[2024-10-17 Thu 12:20] =>  0:22
 
 
 
-/[[https://github.com/pauldub/activity-watch-mode][activity-watch-mode]] is an Emacs watcher for [[https://activitywatch.net/][ActivityWatch]]./
+/[[https://github.com/wakatime/wakatime-mode][activity-watch-mode]] is an Emacs watcher for [[https://activitywatch.net/][ActivityWatch]]./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package activity-watch-mode
   :defer 5
   :config
+  (require 'magit)
   (global-activity-watch-mode))
 #+end_src
 
@@ -13233,11 +13338,11 @@ So when you see a monstrous key binding such as ~C-H-M-s-d~, remember that every
 
 I set key bindings in the following ways:
 - With the =:bind= keyword of =use-package=.
-    - For commands provided by the package or feature being loaded in that block.
-    - For commands provided by other packages or features, when these are being set in a keymap provided by the feature being loaded in that block. This approach is appropriate when one wants to bind a key to a command in a keymap and wants this binding to be active even before the feature providing the command is loaded. Example:
+  - For commands provided by the package or feature being loaded in that block.
+  - For commands provided by other packages or features, when these are being set in a keymap provided by the feature being loaded in that block. This approach is appropriate when one wants to bind a key to a command in a keymap and wants this binding to be active even before the feature providing the command is loaded. Example:
 - With =bind-keys= within the =:init= section of =use-package=.
-    - For commands provided by the feature being loaded in that block that are bound in a keymap provided by another feature. This is appropriate when the feature providing the keymap may load after the feature providing the command. In these cases, using =:bind= is not possible since Emacs will throw an error. Example: binding the command =scroll-down-command=, which is provided by =window=, to the key =y= in =elfeed-show-mode-map=, which is provided by =elfeed=. Note that if the command is not natively autoloaded, an autoload must be set, e.g. =(autoload #'=scroll-down-command "window" nil t)=. [confirm that this is so: it’s possible =bind-keys= automatically creates autoloads, just like the =:bind= keyword does]
-    - For commands provided by the feature being loaded in that block that are bound globally and should be available even before the feature is configured. (Note that I distinguish between the loading of a feature and its configuration. A key binding specified via the =:bind= keyword of =use-package= will be available before the package is loaded but only after it is configured. If, for example, the block includes the =:after= keyword, the package will only be configured after that condition is satisfied.) Example: =ebib-extras-open-or-switch=, which is provided by =ebib-extras= and will be configured after =ebib= is loaded, yet we want it to be available even before =ebib= is loaded.
+  - For commands provided by the feature being loaded in that block that are bound in a keymap provided by another feature. This is appropriate when the feature providing the keymap may load after the feature providing the command. In these cases, using =:bind= is not possible since Emacs will throw an error. Example: binding the command =scroll-down-command=, which is provided by =window=, to the key =y= in =elfeed-show-mode-map=, which is provided by =elfeed=. Note that if the command is not natively autoloaded, an autoload must be set, e.g. =(autoload #'=scroll-down-command "window" nil t)=. [confirm that this is so: it’s possible =bind-keys= automatically creates autoloads, just like the =:bind= keyword does]
+  - For commands provided by the feature being loaded in that block that are bound globally and should be available even before the feature is configured. (Note that I distinguish between the loading of a feature and its configuration. A key binding specified via the =:bind= keyword of =use-package= will be available before the package is loaded but only after it is configured. If, for example, the block includes the =:after= keyword, the package will only be configured after that condition is satisfied.) Example: =ebib-extras-open-or-switch=, which is provided by =ebib-extras= and will be configured after =ebib= is loaded, yet we want it to be available even before =ebib= is loaded.
 
 ** debugging                                                       :noexport:
 :PROPERTIES:

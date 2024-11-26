@@ -1,10 +1,11 @@
-;;; org-roam-extras.el --- Extensions for org-roam -*- lexical-binding: t -*-
+;;; org-roam-extras.el --- Extensions for org-roam -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/org-roam-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((org-roam "2.1") (el-patch "1.0.0") (org-extras "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -112,10 +113,10 @@ Optionally, return such list only if its length is less than LIMIT."
     (org-extras-narrow-to-entry-and-children)
     (goto-char (point-max))))
 
+(declare-function simple-extras-slugify "simple-extras")
 (defun org-roam-extras-create-file-for-note (note-name &optional dir)
   "Create a file named after NOTE-NAME.
 If DIR is nil, use `paths-dir-notes'."
-  (require 'prot-eww)
   (let* ((slug (simple-extras-slugify note-name))
 	 (filename (file-name-with-extension slug "org")))
     (when (file-exists-p filename)
@@ -162,7 +163,7 @@ If DIR is nil, use `paths-dir-notes'."
   (org-roam-node-find)
   (recenter 1))
 
-(declare-function consult--read "consult")
+(autoload 'consult--read "consult")
 (defun org-roam-extras-node-find-special (&optional arg)
   "Return a list of selected headings sorted by priority.
 The selection includes all headings with a priority and either no todo status or
@@ -170,7 +171,6 @@ the todo status TODO, and excludes all headings with a date (scheduled or
 deadline). With ARG prefix argument, prompt the user to select from a unique
 list of tags and further restrict the selection to headings with that tag."
   (interactive "P")
-  (require 'consult)
   (let* ((selection (when arg
                       (org-roam-extras-node-select-tag)))
 	 (headings-with-priority
@@ -264,7 +264,7 @@ list of tags and further restrict the selection to headings with that tag."
   (setq org-roam-extras-current-backlink-count
         (org-roam-extras-backlink-count)))
 
-(declare-function doom-modeline-update-buffer-file-name "doom-modeline-segments")
+(autoload 'doom-modeline-update-buffer-file-name "doom-modeline-segments")
 (defun org-roam-extras-update-modeline ()
   "Update the modeline with the number of backlinks for the current buffer."
   (when (derived-mode-p 'org-mode)

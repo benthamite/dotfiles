@@ -1,10 +1,11 @@
-;;; corfu-extras.el --- Extensions for corfu -*- lexical-binding: t -*-
+;;; corfu-extras.el --- Extensions for corfu -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/corfu-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((corfu "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -28,7 +29,6 @@
 ;;; Code:
 
 (require 'corfu)
-(require 'consult)
 
 ;;;; Functions
 
@@ -40,6 +40,7 @@ Useful for prompts such as `eval-expression' and `shell-command'."
     (corfu-mode)))
 
 ;; github.com/minad/corfu#transfer-completion-to-the-minibuffer
+(declare-function consult-completion-in-region "consult")
 (defun corfu-extras-move-to-minibuffer ()
   "Transfer selected candidate to the minibuffer."
   (interactive)

@@ -1,10 +1,11 @@
-;;; ace-link-extras.el --- Extensions for ace-link -*- lexical-binding: t -*-
+;;; ace-link-extras.el --- Extensions for ace-link -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/ace-link-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((ace-link "0.4.0"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -28,7 +29,6 @@
 ;;; Code:
 
 (require 'ace-link)
-(require 'el-patch)
 
 ;;;; Functions
 
@@ -77,14 +77,13 @@ specified by `browse-url-handlers')."
 (defun ace-link-extras-org-roam ()
   "Open a visible link in an `org-roam-mode' buffer."
   (interactive)
-  (require 'org-roam)
   (let ((pt (avy-with ace-link-org
-              (avy-process
-               (mapcar #'cdr (ace-link--org-collect))
-               (avy--style-fn avy-style)))))
+		      (avy-process
+		       (mapcar #'cdr (ace-link--org-collect))
+		       (avy--style-fn avy-style)))))
     (ace-link-extras--org-roam-action pt)))
 
-(declare-function org-roam-preview-visit "org-roam-mode")
+(autoload 'org-roam-preview-visit "org-roam-mode")
 (defun ace-link-extras--org-roam-action (pt)
   "Visit the link at PT in an `org-roam-mode' buffer."
   (when (numberp pt)
@@ -93,19 +92,27 @@ specified by `browse-url-handlers')."
 
 ;;;;; Patched functions
 
-(declare-function shr-browse-url "shr")
-(declare-function mu4e--view-browse-url-from-binding "mu4e-view")
-(declare-function mu4e--view-open-attach-from-binding "mu4e-view")
-(el-patch-defun ace-link--mu4e-action (pt)
-  "Open link at PT in a `mu4e-view' buffer."
-  (when (number-or-marker-p pt)
-    (goto-char (1+ pt))
-    (cond ((get-text-property (point) 'shr-url)
-	   (shr-browse-url))
-          ((get-text-property (point) 'mu4e-url)
-	   (el-patch-swap (mu4e~view-browse-url-from-binding) (mu4e--view-browse-url-from-binding)))
-          ((get-text-property (point) 'mu4e-attnum)
-	   (el-patch-swap (mu4e~view-open-attach-from-binding) (mu4e--view-open-attach-from-binding))))))
+;; (declare-function shr-browse-url "shr")
+;; (declare-function mu4e--view-browse-url-from-binding "mu4e-view")
+;; (declare-function mu4e--view-open-attach-from-binding "mu4e-view")
+;; 2024-11-21 this patch tries to replace two obsolete functions with their
+;; replacements. however, the replacement for
+;; `mu4e~view-open-attach-from-binding' does not exist, and I wasn’t able to
+;; find the name of the actual replacement. Moreover, it seems that these
+;; conditions are never triggered, so there is no need to patch the function.
+;; commenting out for the time being; delete when I am reasonably confident that
+;; the patch is not needed.
+
+;; (el-patch-defun ace-link--mu4e-action (pt)
+;; "Open link at PT in a `mu4e-view' buffer."
+;; (when (number-or-marker-p pt)
+;; (goto-char (1+ pt))
+;; (cond ((get-text-property (point) 'shr-url)
+;; (shr-browse-url))
+;; ((get-text-property (point) 'mu4e-url)
+;; (el-patch-swap (mu4e--view-browse-url-from-binding) (mu4e--view-browse-url-from-binding)))
+;; ((get-text-property (point) 'mu4e-attnum)
+;; (el-patch-swap (mu4e--view-open-attach-from-binding) (mu4e--view-open-attach-from-binding))))))
 
 (provide 'ace-link-extras)
 ;;; ace-link-extras.el ends here

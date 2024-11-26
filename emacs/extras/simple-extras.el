@@ -1,10 +1,11 @@
-;;; simple-extras.el --- Extra functionality for the simple feature -*- lexical-binding: t -*-
+;;; simple-extras.el --- Extra functionality for the simple feature -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/simle-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((no-littering "1.1") (paths "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -27,6 +28,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'no-littering)
 (require 'paths)
 
@@ -43,9 +45,8 @@
   :group 'simple-extras
   :set (lambda (symbol value)
          (set-default symbol value)
-         ;; Ensure the directory exists when the user option is set
          (unless (file-directory-p value)
-	   (make-directory value t))))
+           (make-directory value t))))
 
 ;;;; Functions
 
@@ -450,6 +451,7 @@ Transient Mark mode is on but the region is inactive."
        (not arg)
      arg)))
 
+;;;###autoload
 (defun simple-extras-visible-mode-enhanced (&optional arg)
   "Set `visible-mode' and associated modes.
 Toggle the mode if ARG is `toggle' or called interactively. Enable the mode if
@@ -474,14 +476,13 @@ number."
 
 (declare-function org-tidy-mode "org-tidy")
 (declare-function org-modern-mode "org-modern")
-(declare-function org-extras-inline-images "org-extras")
+(autoload 'org-extras-inline-images "org-extras")
 (defvar org-mode-hook)
 (defun simple-extras-visible-mode-enhanced-org (&optional arg)
   "Set associated `org' modes based on ARG."
   (when (derived-mode-p 'org-mode 'org-agenda-mode 'org-msg-mode)
     (when (member 'org-tidy-mode org-mode-hook)
       (org-tidy-mode arg))
-    (require 'org-extras)
     (org-extras-inline-images arg)
     (when (and (not (derived-mode-p 'org-agenda-mode))
 	       (featurep 'org-modern))
@@ -558,15 +559,14 @@ The DWIM behaviour of this command is as follows:
 ;;;;; Indent
 
 (defvar org-src-tab-acts-natively)
-(declare-function org-in-src-block-p "org")
-(declare-function org-narrow-to-block "org")
+(autoload 'org-in-src-block-p "org")
+(autoload 'org-narrow-to-block "org")
 ;; Adapted from `spacemacs/indent-region-or-buffer'.
 (defun simple-extras-indent-dwim ()
   "Indent in a smart way, depending on context.
 If a region is selected, indent it. Otherwise, if point is on code block indent
 block only, else indent whole buffer."
   (interactive)
-  (require 'org)
   (save-excursion
     (if (region-active-p)
 	(progn
@@ -585,6 +585,7 @@ block only, else indent whole buffer."
 ;;;;; Strip
 
 ;; github.com/typester/emacs/blob/master/lisp/url/url-util.el
+(defvar url-nonrelative-link)
 (defun simple-extras-get-url-at-point (&optional pt)
   "Get the URL closest to point, but don't change position.
 Has a preference for looking backward when not directly on a symbol.
@@ -681,7 +682,7 @@ FORMS are evaluated with point restored to its original position."
 	   fill-column)))
     (call-interactively #'fill-paragraph)))
 
-(declare-function eww-current-url "eww")
+(autoload 'eww-current-url "eww")
 (declare-function ebib-extras-get-field "ebib-extras")
 (declare-function bibtex-extras-get-field "bibtex-extras")
 (defun simple-extras-get-url (&optional url)
@@ -695,6 +696,8 @@ FORMS are evaluated with point restored to its original position."
 
 ;;;;; Url-parse
 
+(declare-function url-host "url-parse")
+(declare-function url-type "url-parse")
 (defun simple-extras-string-is-url-p (str)
   "Check if STR is a valid URL."
   (let ((url (url-generic-parse-url str)))
@@ -830,6 +833,53 @@ to it."
 
 (advice-add 'auto-save-mode :around #'simple-extras-new-buffer-auto-save-dir)
 
+;;;;; sort
+
+;; adapted from alphapapa’s unpackaged package
+(defun simple-extras-sort-sexps (beg end)
+  "Sort sexps in region between BEG and END."
+  (interactive "r")
+  (cl-flet ((skip-whitespace () (while (looking-at (rx (1+ (or space "\n"))))
+                                  (goto-char (match-end 0))))
+            (skip-both () (while (cond ((or (nth 4 (syntax-ppss))
+                                            (ignore-errors
+                                              (save-excursion
+                                                (forward-char 1)
+                                                (nth 4 (syntax-ppss)))))
+                                        (forward-line 1))
+                                       ((looking-at (rx (1+ (or space "\n"))))
+                                        (goto-char (match-end 0)))))))
+    (save-excursion
+      (save-restriction
+        (narrow-to-region beg end)
+        (goto-char beg)
+        (skip-both)
+        (cl-destructuring-bind (sexps markers)
+            (cl-loop do (skip-whitespace)
+                     for start = (point-marker)
+                     for sexp = (ignore-errors
+                                  (read (current-buffer)))
+                     for end = (point-marker)
+                     while sexp
+                     ;; Collect the real string, then one used for sorting.
+                     collect (cons (buffer-substring (marker-position start) (marker-position end))
+                                   (save-excursion
+                                     (goto-char (marker-position start))
+                                     (skip-both)
+                                     (buffer-substring (point) (marker-position end))))
+                     into sexps
+                     collect (cons start end)
+                     into markers
+                     finally return (list sexps markers))
+          (setq sexps (sort sexps (lambda (a b)
+                                    (string< (cdr a) (cdr b)))))
+          (cl-loop for (real . sort) in sexps
+                   for (start . end) in markers
+                   do (progn
+                        (goto-char (marker-position start))
+                        (insert-before-markers real)
+                        (delete-region (point) (marker-position end)))))))))
+
 ;;;;; Misc
 
 (defun simple-extras-init-disable-funs (seconds funs)
@@ -845,7 +895,6 @@ to it."
 
 (declare-function org-extras-narrow-to-entry-and-children "org-extras")
 (declare-function ledger-mode-extras-narrow-to-xact "ledger-mode-extras")
-
 ;; Modified from endlessparentheses.com/emacs-narrow-or-widen-dwim.html
 (defun simple-extras-narrow-or-widen-dwim ()
   "Widen if buffer is narrowed, narrow-dwim otherwise.

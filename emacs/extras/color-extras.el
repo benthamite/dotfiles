@@ -1,10 +1,10 @@
-;;; color-extras.el --- Extensions for color -*- lexical-binding: t -*-
+;;; color-extras.el --- Extensions for color -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/color-extras.el
-;; Version: 0.1
+;; Version: 0.2
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -27,6 +27,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'color)
 
 ;;;; Variables
@@ -58,7 +59,7 @@ If color is HSL, return it as a list of three numbers, unless STRING is non-nil.
 
 ;;;;; Looking at
 
-(declare-function thing-at-point-looking-at "thingatpt")
+(autoload 'thing-at-point-looking-at "thingatpt")
 (defun color-extras-looking-at-rgb ()
   "Return the RGB color at point, if any."
   (when (thing-at-point-looking-at color-extras-hex-pattern)
@@ -228,7 +229,7 @@ the red, green, and blue components."
 
 ;;;;; Contrast
 
-(declare-function ct-contrast-ratio "ct")
+(autoload 'ct-contrast-ratio "ct")
 (defun color-extras-contrast (&optional color1 color2)
   "Measure WCAG contrast ratio between COLOR1 and COLOR2."
   (interactive)
@@ -238,7 +239,7 @@ the red, green, and blue components."
 	 (parsed (color-extras-parse-color color1))
 	 (color1-valid (cond
 			((listp parsed)
-			 (apply #'color-extras-hsl-to-hex (append (mapcar #'string-to-number list) '(percent))))
+			 (apply #'color-extras-hsl-to-hex (append (mapcar #'string-to-number parsed) '(percent))))
 			((stringp parsed)
 			 (if (string-match  "#" color1) color1 (concat "#" color1)))
 			(t (user-error "Invalid color"))))
@@ -253,7 +254,7 @@ the red, green, and blue components."
 
 ;;;;; Embark integration
 
-(declare-function simple-extras-string-at-point "simple-extras")
+(autoload 'simple-extras-string-at-point "simple-extras")
 (defun color-extras-embark-color-finder ()
   "Return the HEX or HSL color value at point."
   (when-let* ((string (simple-extras-string-at-point))

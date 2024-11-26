@@ -1,12 +1,11 @@
-;;; org-extras.el --- Extensions for org-mode -*- lexical-binding: t -*-
+;;; org-extras.el --- Extensions for org-mode -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024 Pablo Stafforini
 
 ;; Author: Pablo Stafforini
 ;; Maintainer: Pablo Stafforini
 ;; Version: 0.0.1
-;; Homepage: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/org-extras.el
-;; Keywords: org-mode
+;; Package-Requires: ((el-patch "1.1") (paths "0.1"))
 
 ;; This file is not part of GNU Emacs.
 
@@ -31,12 +30,7 @@
 
 (require 'el-patch)
 (require 'org)
-(require 'org-agenda)
-(require 'org-capture)
-(require 'org-clock)
-(require 'oc)
 (require 'paths)
-(require 'simple-extras)
 (require 'transient)
 
 ;;;; User options
@@ -172,6 +166,7 @@ If the subtree contains other subheadings, insert it above them."
     (org-do-demote)))
 
 ;; Adapted from hungyi.net/posts/org-mode-subtree-contents
+(autoload 'org-agenda-get-some-entry-text "org-agenda")
 (defun org-extras-get-heading-contents ()
   "Get the content text of the heading at point and add it to the `kill-ring'.
 Excludes the heading itself and any child subtrees."
@@ -235,6 +230,7 @@ Excludes the heading itself and any child subtrees."
   (org-next-visible-heading 1))
 
 ;; TODO: revise this
+(defvar browse-url-handlers)
 (defun org-extras-super-return ()
   "Call a special form of RET.
 When `org-return-follows-link' is non-nil and point is on a link, call
@@ -244,7 +240,7 @@ When `org-return-follows-link' is non-nil and point is on a link, call
 	(browse-url-handlers nil))
     (org-open-at-point)))
 
-(declare-function simple-extras-pandoc-convert "simple-extras")
+(autoload 'simple-extras-pandoc-convert "simple-extras")
 (defun org-extras-paste-with-conversion ()
   "Convert the contents of the system clipboard to Org Mode using Pandoc.
 This command will convert from HTML if the clipboard contains HTML, and from
@@ -355,12 +351,14 @@ number. Disable the mode if ARG is a negative number."
       (org-extras-agenda-toggle-anniversaries t)
       (org-agenda nil "a"))))
 
+(autoload 'org-agenda-goto "org-agenda")
 (defun org-extras-agenda-goto-and-start-clock ()
   "In `org-agenda', go to entry at point and clock in."
   (interactive)
   (org-agenda-goto)
   (org-clock-in))
 
+(declare-function org-agenda-next-line "org-agenda")
 (defun org-extras-agenda-done-and-next ()
   "Temporary command to address bug when setting status via `org-agenda-todo'."
   (interactive)
@@ -369,20 +367,24 @@ number. Disable the mode if ARG is a negative number."
   (org-extras-agenda-switch-to-agenda-current-day)
   (org-agenda-next-line))
 
+(declare-function org-agenda-date-later "org-agenda")
 (defun org-extras-agenda-postpone-and-next ()
   "Postpone task at point by one day and move to next task."
   (interactive)
   (org-agenda-date-later 1)
   (org-agenda-next-line))
 
+(declare-function org-unhighlight "org-agenda")
 (defun org-extras-unhighlight ()
   "Interactive version of `org-unhighlight'."
   (interactive)
   (org-unhighlight))
 
+(defvar org-agenda-show-log)
+(declare-function org-agenda-switch-to "org-agenda")
 (defun org-extras-agenda-switch-to-dwim ()
   "Open the file at point or go to timer, based on `org-agenda' log state.
-When point is in an agenda log line, go to that line and position in the
+When point is on an agenda log line, go to that line and position in the
 corresponding file. Else, open the file."
   (interactive)
   (if org-agenda-show-log
@@ -393,13 +395,13 @@ corresponding file. Else, open the file."
 ;; in `calendar.org', which is the only way I found to hide
 ;; anniversaries temporarily from the agenda
 ;; for context, see https://orgmode.org/manual/Weekly_002fdaily-agenda.html
+(declare-function org-agenda-redo "org-agenda")
 (declare-function org-roam-extras-id-goto "org-roam-extras")
 (defun org-extras-agenda-toggle-anniversaries (&optional just-enable)
   "Toggle display of BBDB birthdays in the agenda.
 If JUST-ENABLE is non-nil, always enable the display of birthdays."
   (interactive)
   (when org-extras-bbdb-anniversaries-heading
-    (require 'org-roam-extras)
     (save-window-excursion
       (org-roam-extras-id-goto org-extras-bbdb-anniversaries-heading)
       (org-narrow-to-subtree)
@@ -412,6 +414,7 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
     (unless just-enable
       (org-agenda-redo))))
 
+(declare-function org-agenda-log-mode "org-agenda")
 (defun org-extras-agenda-toggle-log-mode ()
   "Toggle `org-agenda-log-mode' and `org-agenda-log-mode-items'."
   (interactive)
@@ -419,6 +422,7 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
 
 ;;;;; org-capture
 
+(defvar org-capture-plist)
 (declare-function org-web-tools-insert-link-for-url "org-web-tools")
 (declare-function org-extras-web-tools--org-title-for-url "org-web-tools")
 (declare-function youtube-dl "youtube-dl")
@@ -426,6 +430,7 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
 (declare-function org-roam-tag-add "org-roam")
 (declare-function files-extras-show-buffer-name "file-extras")
 (declare-function files-extras-switch-to-alternate-buffer "files-extras")
+(declare-function simple-extras-slugify "simple-extras")
 (defun org-extras-capture-before-finalize-hook-function ()
   "Define behavior of `org-capture-before-finalize-hook'."
   (pcase (plist-get org-capture-plist :key)
@@ -536,6 +541,8 @@ SCOPE is the scope of the report, and can be `agenda', `file', or `subtree'."
 	  (let ((end (save-excursion (or (outline-next-heading) (point-max)))))
 	    (delete-region (line-beginning-position) end)))))))
 
+(defvar simple-extras-slugify)
+(defvar org-clock-clocktable-formatter)
 (defun org-extras-clocktable-sorter (ipos tables params)
   "Sort clocktable tables by time.
 IPOS, TABLES and PARAMS are required by the formatter function."
@@ -554,39 +561,11 @@ all headlines up to that level."
 
 ;;;;; org-fold
 
+;;;###autoload
 (defun org-extras-fold-show-all-headings ()
   "Show contents of all headings in buffer, except archives."
   (org-fold-show-all '(headings))
   (org-cycle-hide-archived-subtrees 'all))
-
-;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#hiding-the-properties-drawer
-;; TODO: consider deleting; I don’t think this is being used
-(defun org-extras-hide-properties ()
-  "Hide all `org-mode' headline property drawers in buffer.
-Could be slow if it has a lot of overlays."
-  (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (while (re-search-forward
-	    "^ *:properties:\n\\( *:.+?:.*\n\\)+ *:end:\n" nil t)
-      (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
-	(overlay-put ov_this 'display "")
-	(overlay-put ov_this 'hidden-prop-drawer t))))
-  (put 'org-toggle-properties-hide-state 'state 'hidden))
-
-;; TODO: consider deleting; I don’t think this is being used
-(defun org-extras-hide-logbook ()
-  "Hide all `org-mode' headline logbook drawers in buffer.
-Could be slow if it has a lot of overlays."
-  (interactive)
-  (save-excursion
-    (goto-char (point-min))
-    (while (re-search-forward
-	    "^ *:logbook:\n\\(^clock:.*?\n\\)+ *:end:\n" nil t)
-      (let ((ov_this (make-overlay (match-beginning 0) (match-end 0))))
-	(overlay-put ov_this 'display "")
-	(overlay-put ov_this 'hidden-logbook-drawer t))))
-  (put 'org-toggle-logbook-hide-state 'state 'hidden))
 
 (defun org-extras-show-properties ()
   "Show all `org-mode' property drawers hidden by org-hide-properties."
@@ -682,6 +661,8 @@ files, recursively all files in `org-directory', and all files in
 	       (org-find-exact-headline-in-buffer heading))))
     (org-refile nil nil (list heading file nil pos))))
 
+(autoload 'org-refile-cache-clear "org-refile")
+(declare-function org-refile-get-targets "org-refile")
 ;;;###autoload
 (defun org-extras-refile-regenerate-cache ()
   "Regenerate the `org-refile' cache."
@@ -811,6 +792,7 @@ LANG is the language of the code block."
 
 ;;;;; org-crypt
 
+(declare-function org-element-type "org-element-ast")
 (defun org-extras-crypt-dwim ()
   "Decrypt entry unless in clock, then evaluate time range."
   (interactive)
@@ -828,6 +810,7 @@ LANG is the language of the code block."
   (org-fold-show-entry)
   (org-fold-show-children))
 
+;;;###autoload
 (defun org-extras-narrow-to-entry-and-children ()
   "Narrow org buffer to entry and all its children."
   (interactive)
@@ -984,6 +967,9 @@ empty headings, which trigger an `org-roam' warning."
 
 ;; replace `org-files-list' with `org-agenda-files' so that
 ;; extraneous files are excluded from the dangling clocks check.
+(defvar org-clock-resolving-clocks)
+(declare-function org-find-open-clocks "org-clock")
+(declare-function org-clock-resolve "org-clock")
 (el-patch-defun org-resolve-clocks (&optional only-dangling-p prompt-fn last-valid)
   "Resolve all currently open Org clocks.
 If `only-dangling-p' is non-nil, only ask to resolve dangling
@@ -1033,6 +1019,7 @@ If `only-dangling-p' is non-nil, only ask to resolve dangling
 ;; in any mode. Even if inserting a citation is not allowed, one may
 ;; want to invoke the command to trigger contextual actions via
 ;; `embark'.
+(declare-function org-element-type-p "org-element-ast")
 (with-eval-after-load 'oc
   (el-patch-defun org-cite-insert (arg)
     "Insert a citation at point.

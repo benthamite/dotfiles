@@ -1,10 +1,11 @@
-;;; org-noter-extras.el --- Extensions for org-noter -*- lexical-binding: t -*-
+;;; org-noter-extras.el --- Extensions for org-noter -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/org-noter-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((org-noter "1.1"))
 
 ;; This file is NOT part of GNU Emacs.
 

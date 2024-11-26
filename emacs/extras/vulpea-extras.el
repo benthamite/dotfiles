@@ -1,10 +1,11 @@
-;;; vulpea-extras.el --- Extensions for vulpea -*- lexical-binding: t -*-
+;;; vulpea-extras.el --- Extensions for vulpea -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/vulpea-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((paths "0.1") (vulpea "0.2.0"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -123,11 +124,9 @@ tasks."
           (apply #'vulpea-buffer-tags-set tags))))))
 
 (defvar org-extras-agenda-files-excluded)
-(declare-function org-roam-extras-recent "org-roam")
+(autoload 'org-roam-extras-recent "org-roam")
 (defun vulpea-extras-agenda-files-update (&rest _)
   "Update the value of `org-agenda-files'."
-  (require 'org-extras)
-  (require 'org-roam-extras)
   (setq org-agenda-files
         (seq-difference
          (delete-dups (append

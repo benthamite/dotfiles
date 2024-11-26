@@ -1,10 +1,11 @@
-;;; files-extras.el --- Extensions for files.el -*- lexical-binding: t -*-
+;;; files-extras.el --- Extensions for files.el -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/files-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((paths "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -27,10 +28,9 @@
 
 ;;; Code:
 
-(require 'dired)
-(require 'dired-extras)
 (require 'files)
 (require 'paths)
+(require 'transient)
 
 ;;;; Variables
 
@@ -97,6 +97,7 @@ functionality in macOS."
 (add-hook 'kill-buffer-query-functions #'files-extras-bury-scratch-buffer)
 
 ;; Adapted from `spacemacs/new-empty-buffer'.
+(autoload 'dired-get-filename "dired")
 (defun files-extras-new-empty-buffer (&optional)
   "Create a new buffer called `untitled<n>'."
   (interactive)
@@ -108,6 +109,7 @@ functionality in macOS."
 	(funcall files-extras-new-empty-buffer-major-mode)))
     (switch-to-buffer newbuf nil 'force-same-window)))
 
+;;;###autoload
 (defun files-extras-read-file (&optional file)
   "Read FILE, using various sources as initial input."
   (expand-file-name
@@ -165,6 +167,7 @@ functionality in macOS."
   (switch-to-buffer (files-extras-get-alternate-buffer)))
 
 ;; reddit.com/r/emacs/comments/64xb3q/killthisbuffer_sometimes_just_stops_working/
+;;;###autoload
 (defun files-extras-kill-this-buffer ()
   "Kill the current buffer."
   (interactive)
@@ -178,6 +181,7 @@ functionality in macOS."
     (files-extras-kill-this-buffer)))
 
 (declare-function window-extras-switch-to-last-window "window-extras")
+;;;###autoload
 (defun files-extras-kill-this-buffer-switch-to-other-window ()
   "Kill the current buffer and switch to the other window."
   (interactive)
@@ -271,8 +275,8 @@ files which do not exist any more or are no longer readable will be killed."
     (define-key newmap key command)
     (use-local-map newmap)))
 
+(autoload 'ebib-extras-get-or-set-language "ebib-extras")
 (declare-function ebib-extras-get-file "ebib-extras")
-(declare-function ebib-extras-get-or-set-language "ebib-extras")
 (declare-function tlon-select-language "tlon-core")
 (declare-function tlon-lookup "tlon-core")
 (defvar tlon-languages-properties)
@@ -316,6 +320,8 @@ This function gets STRING when PROCESS produces output."
       (message "OCR in progress...")
       (cond ((string-match-p "page already has text! - aborting" string)
 	     (message "OCR already performed on this file; to perform OCR any way, run with a prefix argument."))
+	    ((string-match-p "TaggedPDFError" string)
+	     (message "The file was generated from an office document and does not need OCR."))
 	    ;; when invoked with `--force-ocr'
 	    ((or (string-match-p "page already has text" string)
 		 (string-match-p "common.py:261" string))
@@ -467,7 +473,6 @@ OLD-FUN and ARGS are arguments passed to the original function."
 (defvar elpaca-repos-directory)
 (defun files-extras-open-elpaca-package (package)
   "Open the package named PACKAGE in the `repos' elpaca directory."
-  (require 'elpaca)
   (let ((file (file-name-concat elpaca-repos-directory
 				package
 				(file-name-with-extension package "el"))))
@@ -505,6 +510,7 @@ current helpful buffer displays, then kill the buffer."
     (while (re-search-forward "\\(^\\s-*$\\)\n\\(\\(^\\s-*$\\)\n\\)+" nil t)
       (replace-match "\n"))))
 
+;;;###autoload
 (defun files-extras-buffer-file-name ()
   "Return name of file BUFFER is visiting, handling `git-dirs' path."
   (when-let ((file (buffer-file-name))
@@ -527,10 +533,12 @@ If N is nil, default to 0 (the first directory)."
 
 ;;;;; Bypass paywalls
 
+(declare-function dired-compress-file "dired-aux")
 (defvar macos-keyboard-maestro-open-chrome-extensions)
 (defvar macos-keyboard-maestro-open-firefox-extensions)
-(declare-function macos-open-in-finder "macos")
-(declare-function macos-run-keyboard-maestro-script "macos")
+(autoload 'macos-open-in-finder "macos")
+(autoload 'macos-run-keyboard-maestro-script "macos")
+(autoload 'url-file-exists-p "url-handlers")
 (defun files-extras-download-bypass-paywalls-chrome ()
   "Download and install Bypass Paywalls Chrome Clean.
 After running the command, both the extensions page and the local folder will

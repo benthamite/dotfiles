@@ -1,10 +1,11 @@
-;;; magit-extra.el --- Extensions for magit -*- lexical-binding: t -*-
+;;; magit-extra.el --- Extensions for magit -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/magit-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((magit "3.1") (paths "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -34,20 +35,24 @@
 
 ;; adapted from Sacha Chua
 ;;;###autoload
-(defun magit-extras-stage-commit-and-push (message)
-  "Stage all modified files, commit them with MESSAGE and push to remote."
+(defun magit-extras-stage-commit-and-push (message &optional file no-push)
+  "Stage modifications, commit with MESSAGE and push to remote.
+If FILE is provided, only stage and commit that file. If NO-PUSH is non-nil, do
+not push to remote."
   (interactive
    (list (progn (magit-diff-unstaged) (read-string "Commit Message: "))))
-  (when (or
-	 (magit-anything-staged-p)
-	 (magit-anything-unstaged-p))
-    (magit-stage-modified t)
+  (when (or (magit-anything-staged-p)
+            (magit-anything-unstaged-p))
+    (if file
+        (magit-stage-file file)
+      (magit-stage-modified t))
     (magit-commit-create (list "-m" message)))
-  (call-interactively #'magit-push-current-to-pushremote))
+  (unless no-push
+    (call-interactively #'magit-push-current-to-pushremote)))
 
 ;;;###autoload
 (defun magit-extras-stage-commit-and-push-all-repos ()
-  "Update all active depositories."
+  "Update all active repositories."
   (dolist (directory paths-dir-all-repos)
     (magit-extras-midnight-update directory)))
 
@@ -85,7 +90,7 @@ return instead the full path; if PATH is `sans-dir', return the filename only."
 	('sans-dir (file-name-nondirectory file))
 	(_ file)))))
 
-(declare-function org-entry-get "org")
+(autoload 'org-entry-get "org")
 (declare-function window-extras-switch-to-last-window "window-extras")
 (defun magit-extras-get-commit-heading ()
   "Get the `org-mode' heading above the code to be committed."

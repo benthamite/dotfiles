@@ -1,10 +1,11 @@
-;;; jinx-extras.el --- Extensions for jinx -*- lexical-binding: t -*-
+;;; jinx-extras.el --- Extensions for jinx -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/jinx-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((jinx "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 

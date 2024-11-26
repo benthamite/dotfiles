@@ -1,10 +1,10 @@
-;;; kmacro-extras.el --- Extensions for kmacro -*- lexical-binding: t -*-
+;;; kmacro-extras.el --- Extensions for kmacro -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/kmacro-extras.el
-;; Version: 0.1
+;; Version: 0.2
 
 ;; This file is NOT part of GNU Emacs.
 

@@ -1,10 +1,11 @@
-;;; vc-extras.el --- Extensions for vc -*- lexical-binding: t -*-
+;;; vc-extras.el --- Extensions for vc -*- lexical-binding: t; fill-column: 80 -*-
 
 ;; Copyright (C) 2024
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/vc-extras.el
-;; Version: 0.1
+;; Version: 0.2
+;; Package-Requires: ((paths "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -29,7 +30,7 @@
 
 (require 'paths)
 (require 'vc)
-(require 'vc-git)
+(require 'transient)
 
 ;;;; User options
 
@@ -127,20 +128,26 @@ If NAME is nil, prompt for one. If ACCOUNT is nil, select one."
   "Clone an existing repo.
 ACCOUNT is the name of the GitHub account. If NAME is nil, prompt the user for a
 repo name. If NO-FORGE is non-nil, do not prompt to add the repo to Forge.
+With prefix argument, prompt for the target directory.
 
 This function does not use `vc-git-clone' because it does not support cloning
 submodules."
-  (interactive)
+  (interactive "P")
   (let* ((repos nil)
 	 (name (or name
 		   (completing-read "Repo: " (setq repos (vc-extras-gh-list-repos account)))))
 	 (account (or account (if repos
 				  (alist-get name repos nil nil #'string=)
 				(user-error "If you provide a repo name, you must also provide its account"))))
-         (remote (vc-extras-get-github-remote name account))
-         (parent-dir (vc-extras-get-account-prop account :dir))
-         (dir (file-name-concat parent-dir name))
-         (process-buffer "/git-clone-output/"))
+	 (remote (vc-extras-get-github-remote name account))
+	 (parent-dir (vc-extras-get-account-prop account :dir))
+	 (dir (if current-prefix-arg
+		  (let* ((child (expand-file-name (read-directory-name "Parent directory: " parent-dir)))
+			 (parent (file-name-directory (directory-file-name child))))
+		    (setq parent-dir parent)
+		    child)
+		(file-name-concat parent-dir name)))
+	 (process-buffer "/git-clone-output/"))
     (when (file-exists-p dir)
       (user-error "Directory `%s' already exists" dir))
     (message "Cloning repo %s..." name)
@@ -163,8 +170,6 @@ submodules."
                                   (vc-extras-split-local-repo dir)
 				(message "You can customize `vc-extras-split-repo' to avoid this prompt.")))
                      (_ (vc-extras-split-local-repo dir)))
-                   (require 'forge-core)
-                   (require 'forge-extras)
                    (if (and (not no-forge)
                             (not (forge-get-repository :tracked?))
                             (y-or-n-p "Add to Forge? "))
@@ -300,8 +305,9 @@ If PRIVATE is non-nil, make it a private repository."
   "Ensure that `gh' is authenticated."
   (interactive)
   (vc-extras-ensure-gh-exists)
-  (unless (string-match "Logged in to github\\.com account"
-			(shell-command-to-string "gh auth status"))
+  (if (string-match "Logged in to github\\.com account"
+		    (shell-command-to-string "gh auth status"))
+      (message "`gh' is authenticated.")
     (user-error "`gh' not authenticated; please authenticate (`gh auth login')")))
 
 ;;;;;; List repos
@@ -330,6 +336,22 @@ the cdr is ACCOUNT."
   (mapcan (lambda (profile)
 	    (vc-extras-gh-list-repos-in-account (plist-get profile :account)))
 	  vc-extras-profiles))
+
+;;;;; Menu
+
+;;;###autoload (autoload 'vc-extras-menu "vc-extras" nil t)
+(transient-define-prefix vc-extras-menu ()
+  "`vc-extras' menu."
+  [[""
+    ("c" "Create remote repo"                       vc-extras-create-repo)
+    ("l" "Clone remote repo"                        vc-extras-clone-repo)
+    ("H-l" "Clone remote repo with confirmation"   (lambda () (interactive) (let ((current-prefix-arg '(4)))
+									 (vc-extras-clone-repo))))
+    ""
+    ("s" "Split local repo"                         vc-extras-split-local-repo)
+    ("d" "Delete local repo"                        vc-extras-delete-local-repo)
+    ""
+    ("a" "Check authentication status"              vc-extras-check-gh-authenticated)]])
 
 (provide 'vc-extras)
 ;;; vc-extras.el ends here

@@ -434,6 +434,7 @@ In Org files, saves as a file property. In Markdown, as a file-local variable."
 
 ;;;;;; Clear
 
+;;;###autoload
 (defun gptel-extras-clear-file-context ()
   "Clear the current `gptel' file context."
   (interactive)

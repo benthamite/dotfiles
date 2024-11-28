@@ -84,6 +84,7 @@
 
 (declare-function ebib "ebib")
 (declare-function ebib-extras-open-key "ebib-extras")
+;;;###autoload
 (defun citar-extras-open-in-ebib (citekey)
   "Open bibliographic entry associated with the CITEKEY in Ebib."
   (interactive (list (citar-select-ref)))

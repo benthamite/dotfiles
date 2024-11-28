@@ -1184,13 +1184,16 @@ The list of files to be watched is defined in `ebib-extras-auto-save-files'."
 
 ;;;###autoload
 (defun ebib-extras-reload-all-databases ()
-  "Reload all databases, if none are modified."
-  (when (ebib-extras-no-db-modified-p)
-    (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
-    (dolist (db ebib--databases)
-      (ebib--reload-database db)
-      (ebib--set-modified nil db))
-    (ebib--update-buffers)))
+  "Reload all databases, if none are modified.
+If Ebib is not running, launch it."
+  (if ebib--databases
+      (when (ebib-extras-no-db-modified-p)
+	(ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+	(dolist (db ebib--databases)
+	  (ebib--reload-database db)
+	  (ebib--set-modified nil db))
+	(ebib--update-buffers))
+    (ebib)))
 
 ;;;;; <new section>
 

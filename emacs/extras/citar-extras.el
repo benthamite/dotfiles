@@ -111,12 +111,6 @@
         (re-search-forward (format "@.*?{%s" citekey)))
     (user-error "No entry found for %s" citekey)))
 
-(autoload 'files-extras-get-stem-of-current-buffer "files-extras")
-(defun citar-extras-open-file-at-point ()
-  "Launch `citar' with citekey associated with file at point."
-  (interactive)
-  (citar-open `(,(files-extras-get-stem-of-current-buffer))))
-
 ;;;###autoload
 (defun citar-extras-update-bibliographies ()
   "Update the bibliographies."

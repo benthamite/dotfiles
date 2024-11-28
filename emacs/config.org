@@ -1434,12 +1434,6 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 
 /[[file:extras/ediff-extras.el][ediff-extras]] collects my extensions for ~ediff~./
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-personal-package ediff-extras
-  :hook
-  (ediff-startup-hook . ediff-extras-toggle-word-mode))
-#+end_src
-
 ** smerge
 :PROPERTIES:
 :ID:       FE85CC7E-E2A0-4494-8D1E-A64A4C40013E

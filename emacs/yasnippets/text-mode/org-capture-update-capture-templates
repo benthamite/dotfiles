@@ -2,5 +2,6 @@
 # name: org-capture-update-capture-templates
 # key: ocut
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 org-capture: update capture templates

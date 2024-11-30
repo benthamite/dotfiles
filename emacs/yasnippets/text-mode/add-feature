@@ -2,5 +2,6 @@
 # name: add-feature
 # key: af
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 $1: add feature

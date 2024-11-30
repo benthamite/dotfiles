@@ -2,5 +2,6 @@
 # name: update-browse-url-firefox
 # key: ubuf
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 browse-url-firefox.txt: add urls

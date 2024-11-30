@@ -2,5 +2,6 @@
 # name: tlon-magit-add-new-file
 # key: Args out of range: "", 0, 1
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 `(let ((file (save-excursion (other-window 1) (re-search-forward "new file   .*/\\(wiki--test\\).md") (match-string 1)))) (insert (format "Add %s" file)))`

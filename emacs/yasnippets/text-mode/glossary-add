@@ -2,5 +2,6 @@
 # name: glossary-add
 # key: ga
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 Glossary: add "$1"

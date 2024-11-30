@@ -2,5 +2,6 @@
 # name: shell-update-zsh_history
 # key: suz
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 shell: update .zsh_history

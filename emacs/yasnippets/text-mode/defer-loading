@@ -2,5 +2,6 @@
 # name: defer-loading
 # key: def
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 $1: defer loading

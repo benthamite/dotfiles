@@ -2,5 +2,6 @@
 # name: add-package
 # key: ap
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 $1: add package

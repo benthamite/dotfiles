@@ -2,5 +2,6 @@
 # name: yasnippet-rename-snippet
 # key: yrs
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 yasnippet: rename snippet (`(magit-extras-get-commit-file 'sans-dir)`)

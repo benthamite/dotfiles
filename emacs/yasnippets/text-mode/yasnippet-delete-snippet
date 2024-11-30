@@ -2,5 +2,6 @@
 # name: yasnippet-delete-snippet
 # key: yds
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 yasnippet: delete snippet (`(magit-extras-get-commit-file 'sans-dir)`)

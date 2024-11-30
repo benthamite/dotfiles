@@ -2,5 +2,6 @@
 # name: update-bibliography
 # key: ub
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 Update bibliography

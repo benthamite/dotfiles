@@ -2,5 +2,6 @@
 # name: archive-todos
 # key: at
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 Archive TODOs

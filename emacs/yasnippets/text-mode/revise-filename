@@ -2,5 +2,6 @@
 # name: revise filename
 # key: r
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 Revise `(file-name-nondirectory (magit-extras-get-commit-file))`

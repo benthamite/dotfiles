@@ -2,5 +2,6 @@
 # name: update key
 # key: uu
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 Update `(tlon-get-commit-key)`

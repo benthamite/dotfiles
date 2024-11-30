@@ -2,5 +2,6 @@
 # name: abbrev-update-abbrevs
 # key: aua
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 abbrev: update abbrevs

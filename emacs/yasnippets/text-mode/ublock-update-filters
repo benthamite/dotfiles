@@ -2,5 +2,6 @@
 # name: ublock-update-filters
 # key: uuf
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 uBlock: update filters

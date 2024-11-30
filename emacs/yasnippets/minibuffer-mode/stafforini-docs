@@ -3,4 +3,4 @@
 # key: sd
 # contributor: Pablo Stafforini
 # --
-/ssh:fede@tlon.team:/home/fede/stafforini.com/docs/
+/ssh:fede@tlon.team:/var/www/stafforini.com/docs

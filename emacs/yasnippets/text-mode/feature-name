@@ -2,5 +2,6 @@
 # name: feature-name
 # key: fn
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 `(car (last (split-string (file-name-sans-extension (file-name-nondirectory (magit-extras-get-commit-file))) "-")))`: $0

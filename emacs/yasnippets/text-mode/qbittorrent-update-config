@@ -2,5 +2,6 @@
 # name: qbittorrent-update-config
 # key: quc
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 qBittorrent: update config

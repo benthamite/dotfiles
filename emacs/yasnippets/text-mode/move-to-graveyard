@@ -2,5 +2,6 @@
 # name: move-to-graveyard
 # key: mtg
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 `(magit-extras-get-commit-heading)`: move to graveyard

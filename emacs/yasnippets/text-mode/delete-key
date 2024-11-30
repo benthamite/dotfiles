@@ -2,5 +2,6 @@
 # name: delete key
 # key: ll
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 Delete `(tlon-get-commit-key)`

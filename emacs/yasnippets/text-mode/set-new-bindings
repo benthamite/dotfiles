@@ -2,5 +2,6 @@
 # name: set-new-bindings
 # key: snb
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 $1: set new bindings

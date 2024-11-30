@@ -2,5 +2,6 @@
 # name: update-browse-url-default
 # key: ubud
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 browse-url-default.txt: add urls

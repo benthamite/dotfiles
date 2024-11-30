@@ -2,4 +2,5 @@
 # name: initial-commit
 # key: ic
 # --
+# condition: (bound-and-true-p git-commit-mode)
 initial commit

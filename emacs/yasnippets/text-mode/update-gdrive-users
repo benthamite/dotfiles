@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: update-gdrive-users
+# key: gu
+# contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
+# --
+etc: update gdrive-usersl.el

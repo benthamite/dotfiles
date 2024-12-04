@@ -11406,7 +11406,7 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
         ("," . telega-chatbuf-goto-pinned-message)
         ("C" . telega-msg-copy-link)
         ("D" . telega-msg-delete-dwim)
-        ("F" . telega-msg-forward-marked-or-at-point)
+        ("F" . telega-msg-forward-dwim)
         ("f" . ace-link-org)
         ("s" . telega-chatbuf-filter-search)
         ("w" . telega-browse-url)

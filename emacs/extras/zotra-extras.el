@@ -210,13 +210,15 @@ INFO is a plist with the following keys:
 
 ;;;;; Misc
 
-(defun zotra-extras-fetch-field (field url-or-search-string &optional ignore-errors)
+(defun zotra-extras-fetch-field (field url-or-search-string &optional ignore-errors timeout)
   "Get FIELD value in bibliographic entry for URL-OR-SEARCH-STRING.
 If IGNORE-ERRORS is non-nil, handle error thrown by `zotra-get-entry-1'
-gracefully."
+gracefully. IF TIMEOUT is non-nil, give up after that many seconds; otherwise,
+use the default."
   (let* ((query-result (zotra-query-url-or-search-string url-or-search-string))
 	 (data (car query-result))
 	 (endpoint (cdr query-result))
+	 (zotra-url-retrieve-timeout (or timeout zotra-url-retrieve-timeout))
 	 (entry (if ignore-errors
                     (condition-case nil
 			(zotra-get-entry-1 data zotra-default-entry-format endpoint)

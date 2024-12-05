@@ -67,6 +67,13 @@ the sender only."
 
 ;;;; Functions
 
+(defun mu4e-extras-init ()
+  "Initialize the `mu' database, killing `mu4e' if it is running."
+  (interactive)
+  (mu4e-kill-update-mail)
+  (mu4e-quit)
+  (async-shell-command "muinit" "*muinit*"))
+
 ;;;;; Post-processing
 
 ;;;;;; Fix flags

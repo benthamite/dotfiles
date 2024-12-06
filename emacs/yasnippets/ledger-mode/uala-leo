@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: uala-leo
+# key: ual
+# contributor: Pablo Stafforini
+# --
+`(format-time-string "%Y-%m-%d")` ${1:recipient}
+Liabilities:Leonardo Picón  ${2:amount}.00 ARS ; ${4:details}
+Assets:Ualá
+
+$0

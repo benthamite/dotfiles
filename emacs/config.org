@@ -5956,6 +5956,7 @@ CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature simple
   :custom
+  (shell-command-switch "-ic") ; https://stackoverflow.com/a/12229404/4479455
   (async-shell-command-buffer 'new-buffer)) ; don't ask for confirmation before running command in a new buffer
 #+end_src
 

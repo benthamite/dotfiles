@@ -2,5 +2,6 @@
 # name: glossary-update
 # key: gu
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 Glossary: update translation of "$1"

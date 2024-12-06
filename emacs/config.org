@@ -231,6 +231,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#calfw-org][calfw-org]]
   - [[#calfw-blocks][calfw-blocks]]
   - [[#time][time]]
+  - [[#timer-list][timer-list]]
   - [[#tmr][tmr]]
   - [[#display-wttr][display-wttr]]
 - [[#history][history]]
@@ -675,7 +676,6 @@ NAME and ARGS as in `use-package'."
     `(use-package ,name
        :ensure (:host github
                       :repo "benthamite/dotfiles"
-                      ;; :branch "dev"
                       :files ,(list (file-name-concat
                                      "emacs/extras"
                                      (file-name-with-extension (symbol-name (eval `(quote ,name))) "el")))
@@ -773,7 +773,6 @@ NAME and ARGS as in `use-package'."
 (use-package tlon-init
   :ensure (:host github
                  :repo "tlon-team/tlon-init"
-                 ;; :branch "dev"
                  :depth nil ; clone entire repo, not just last commit
                  :wait t)
   :after paths
@@ -1432,12 +1431,6 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 :END:
 
 /[[file:extras/ediff-extras.el][ediff-extras]] collects my extensions for ~ediff~./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-personal-package ediff-extras
-  :hook
-  (ediff-startup-hook . ediff-extras-toggle-word-mode))
-#+end_src
 
 ** smerge
 :PROPERTIES:
@@ -4912,6 +4905,18 @@ The original package appears to no longer be maintained, so I have created my ow
   ("M-A-t" . world-clock))
 #+end_src
 
+** timer-list
+:PROPERTIES:
+:ID:       5B9F0580-D100-4F53-8B99-7BEAE7E233A5
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-feature timer-list
+  :config
+  ;; disable warning
+  (put 'list-timers 'disabled nil))
+#+end_src
+
 ** tmr
 :PROPERTIES:
 :ID:       87D2EB00-727C-4CA3-85F1-B8D82D37B48D
@@ -5394,6 +5399,7 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
   (consult-locate-args "mdfind-wrapper")
   (consult-narrow-key "<")
   (consult-widen-key ">")
+  (consult-grep-max-columns nil)
 
   :config
   (setq consult-ripgrep-args (concat consult-ripgrep-args " --hidden")) ; include hidden files
@@ -5948,6 +5954,7 @@ CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature simple
   :custom
+  (shell-command-switch "-ic") ; https://stackoverflow.com/a/12229404/4479455
   (async-shell-command-buffer 'new-buffer)) ; don't ask for confirmation before running command in a new buffer
 #+end_src
 
@@ -6662,7 +6669,6 @@ https://gitlab.com/chrisberkhout/pricehist
 (use-package tlon
   :ensure (:host github
                  :repo "tlon-team/tlon.el"
-                 ;; :branch "dev"
                  :depth nil) ; clone entire repo, not just last commit
   :after paths
   :init
@@ -7700,10 +7706,10 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :custom
   (gptel-default-mode 'org-mode)
   (gptel-track-media t)
-  (gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared)))
 
   :config
   (require 'tlon-core)
+  (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared)))
   (setq gptel-expert-commands t) ; not a user option
 
   ;; default model
@@ -7764,7 +7770,9 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
    ("H-s-g" . gptel)
    ("H-s-a" . gptel-abort)
    ("H-s-m" . gptel-menu)
-   ("H-s-t" . gptel-add)))
+   ("H-s-t" . gptel-add)
+   ("A-C-s-r" . gptel-context-previous)
+   ("A-C-s-f" . gptel-context-next)))
 #+end_src
 
 ** gptel-extras
@@ -10275,7 +10283,7 @@ Having headings tagged with the type of work they are notes of allows me to quer
   :after citar
   :init
   ;; reloading the bibliographies is time-intensive, so we try to do it in the background
-  (run-with-idle-timer (* 30 60) nil #'citar-extras-update-bibliographies)
+  (run-with-idle-timer (* 30 60) t #'citar-extras-update-bibliographies)
 
   :config
   ;; https://github.com/emacs-citar/citar/wiki/Indicators
@@ -10516,10 +10524,11 @@ The macro below generates the commands correctly. But attempting to define key b
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package ebib-extras
+  :after ebib
   :init
   (advice-add 'ebib-init :after #'ebib-extras-auto-reload-databases)
   ;; reloading the bibliographies is time-intensive, so we try to do it in the background
-  (run-with-idle-timer (* 35 60) t #'ebib-extras-reload-all-databases)
+  (run-with-idle-timer (* 30 60) t #'ebib-extras-reload-all-databases)
 
   :hook
   (ebib-add-entry . ebib-extras-create-list-of-existing-authors)
@@ -11403,7 +11412,7 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
         ("," . telega-chatbuf-goto-pinned-message)
         ("C" . telega-msg-copy-link)
         ("D" . telega-msg-delete-dwim)
-        ("F" . telega-msg-forward-marked-or-at-point)
+        ("F" . telega-msg-forward-dwim)
         ("f" . ace-link-org)
         ("s" . telega-chatbuf-filter-search)
         ("w" . telega-browse-url)
@@ -11464,24 +11473,6 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package telega-extras
-  :custom
-  (telega-extras-auto-share-audio-transcript nil)
-  (telega-extras-chats '((:name "Tlön" :id -1001867927081
-                                :topics ((:name "Emacs" :id 1641021440)
-                                         (:name "Social" :id 1642070016)
-                                         (:name "Meta" :id 1643118592)
-                                         (:name "General" :id 1661992960)))))
-
-  :config
-  (transient-define-prefix telega-extras-menu ()
-  "`telega-extras' menu."
-  [["Tlön"
-    ("l" "All" (lambda () (interactive) (telega-extras-open-chat "Tlön")))
-    ("g" "General" (lambda () (interactive) (telega-extras-open-chat "Tlön" "General")))
-    ("s" "Social" (lambda () (interactive) (telega-extras-open-chat "Tlön" "Social")))
-    ("e" "Emacs" (lambda () (interactive) (telega-extras-open-chat "Tlön" "Emacs")))
-    ("m" "Meta" (lambda () (interactive) (telega-extras-open-chat "Tlön" "Meta")))]])
-
   :hook
   (telega-chat-post-message-hook . telega-extras-transcribe-audio)
 

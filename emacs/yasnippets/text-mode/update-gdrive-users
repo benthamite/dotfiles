@@ -1,7 +1,7 @@
 # -*- mode: snippet -*-
-# name: update-browse-url-firefox
-# key: ubuf
+# name: update-gdrive-users
+# key: gu
 # contributor: Pablo Stafforini
 # condition: (bound-and-true-p git-commit-mode)
 # --
-browse-url-firefox.txt: add urls
+etc: update gdrive-usersl.el

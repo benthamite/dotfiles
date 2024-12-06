@@ -2,5 +2,6 @@
 # name: update-version
 # key: uv
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 Update to `(file-name-sans-extension (file-name-nondirectory (magit-extras-get-commit-file)))` version $1

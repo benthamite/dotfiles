@@ -2,5 +2,6 @@
 # name: delete filename
 # key: d
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 Delete `(file-name-nondirectory (magit-extras-get-commit-file))`

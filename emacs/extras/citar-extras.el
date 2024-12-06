@@ -84,6 +84,7 @@
 
 (declare-function ebib "ebib")
 (declare-function ebib-extras-open-key "ebib-extras")
+;;;###autoload
 (defun citar-extras-open-in-ebib (citekey)
   "Open bibliographic entry associated with the CITEKEY in Ebib."
   (interactive (list (citar-select-ref)))
@@ -111,18 +112,12 @@
         (re-search-forward (format "@.*?{%s" citekey)))
     (user-error "No entry found for %s" citekey)))
 
-(autoload 'files-extras-get-stem-of-current-buffer "files-extras")
-(defun citar-extras-open-file-at-point ()
-  "Launch `citar' with citekey associated with file at point."
-  (interactive)
-  (citar-open `(,(files-extras-get-stem-of-current-buffer))))
-
 ;;;###autoload
 (defun citar-extras-update-bibliographies ()
   "Update the bibliographies."
   (dolist (bibliography citar-bibliography)
     (citar-cache--update-bibliography
-     (citar-cache--get-bibliography bibliography)))))
+     (citar-cache--get-bibliography bibliography))))
 
 (provide 'citar-extras)
 ;;; citar-extras.el ends here

@@ -2,5 +2,6 @@
 # name: extras-section
 # key: es
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 `(file-name-sans-extension (magit-extras-get-commit-file 'sans-dir))`: $0

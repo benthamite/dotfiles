@@ -91,17 +91,17 @@ for text requests; media files are not included in the calculation."
 	 (cost (/ (* cost-per-1m-tokens tokens-per-word total-words) 1000000.0)))
     cost))
 
+(declare-function gptel--file-binary-p "gptel-context")
 (defun gptel-extras-count-words-in-context ()
   "Iterate over the files in context and sum the number of words in each file.
-Image files are skipped."
+Binaries are skipped."
   (let ((revert-without-query t))
-    (cl-reduce (lambda (acc file)
-                 (if (member (file-name-extension (car file))
-                             image-file-name-extensions)
-                     acc  ; skip image files
+    (cl-reduce (lambda (accum file)
+                 (if (gptel--file-binary-p (car file))
+                     accum
                    (let ((words (with-current-buffer (find-file-noselect (car file))
                                   (count-words (point-min) (point-max)))))
-                     (+ acc words))))
+                     (+ accum words))))
                gptel-context--alist
                :initial-value 0)))
 

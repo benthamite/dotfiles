@@ -117,7 +117,8 @@ Optionally, return such list only if its length is less than LIMIT."
 (defun org-roam-extras-create-file-for-note (note-name &optional dir)
   "Create a file named after NOTE-NAME.
 If DIR is nil, use `paths-dir-notes'."
-  (let* ((slug (simple-extras-slugify note-name))
+  (let* ((dir (or dir paths-dir-notes))
+	 (slug (simple-extras-slugify note-name))
 	 (filename (file-name-with-extension slug "org")))
     (when (file-exists-p filename)
       (user-error (format "File `%s' already exists" filename)))

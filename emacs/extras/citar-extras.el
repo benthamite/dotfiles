@@ -114,10 +114,10 @@
 
 ;;;###autoload
 (defun citar-extras-update-bibliographies ()
-  "Update the bibliographies."
-  (dolist (bibliography citar-bibliography)
-    (citar-cache--update-bibliography
-     (citar-cache--get-bibliography bibliography))))
+  "Update the bibliographies in the cache."
+  (when-let ((bibs (citar--bibliographies)))
+    (dolist (bib bibs)
+      (citar-cache--update-bibliography bib))))
 
 (provide 'citar-extras)
 ;;; citar-extras.el ends here

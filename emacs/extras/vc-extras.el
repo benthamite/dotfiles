@@ -121,7 +121,7 @@ If NAME is nil, prompt for one. If ACCOUNT is nil, select one."
 
 ;;;;; Clone
 
-(declare-function forge-get-repository "forge-core")
+(autoload 'forge-get-repository "forge-core")
 (declare-function forge-extras-track-repository "forge-extras")
 ;;;###autoload
 (defun vc-extras-clone-repo (&optional name account no-forge)

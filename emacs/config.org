@@ -292,6 +292,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#em-hist][em-hist]]
   - [[#eshell-syntax-highlighting][eshell-syntax-highlighting]]
   - [[#dwim-shell-command][dwim-shell-command]]
+  - [[#eat][eat]]
 - [[#spelling--grammar][spelling & grammar]]
   - [[#jinx][jinx]]
   - [[#jinx-extras][jinx-extras]]
@@ -6079,6 +6080,25 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
            :host github
            :repo "xenodium/dwim-shell-command")
   :defer t)
+#+end_src
+
+** eat
+:PROPERTIES:
+:ID:       80E53FAD-1669-408C-A45D-9232C2D51924
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package eat
+  :ensure (:host codeberg
+		 :repo "akib/emacs-eat"
+		 :files ("*.el" ("term" "term/*.el") "*.texi"
+			 "*.ti" ("terminfo/e" "terminfo/e/*")
+			 ("terminfo/65" "terminfo/65/*")
+			 ("integration" "integration/*")
+			 (:exclude ".dir-locals.el" "*-tests.el")))
+  :hook
+  (eshell-load-hook . eat-eshell-mode)
+  (eshell-load-hook . eat-eshell-visual-command-mode))
 #+end_src
 
 * spelling & grammar

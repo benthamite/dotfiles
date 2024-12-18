@@ -6076,8 +6076,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package dwim-shell-command
-  :ensure (dwim-shell-command
-           :host github
+  :ensure (:host github
            :repo "xenodium/dwim-shell-command")
   :defer t)
 #+end_src

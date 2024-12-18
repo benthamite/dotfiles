@@ -4836,6 +4836,10 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
   (require 'plstore))
 #+end_src
 
+*** TODO Revise org-gcal capture template to offer list of participants
+:PROPERTIES:
+:ID:       3CB2429F-32FC-4CD8-A417-DEB58C0F2C1E
+:END:
 ** org-gcal-extras
 :PROPERTIES:
 :ID:       BBED8E2E-2A29-4465-926A-22D531E6DBE7

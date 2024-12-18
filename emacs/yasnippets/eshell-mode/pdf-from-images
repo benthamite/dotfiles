@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: pdf-from-images
+# key: pfi
+# contributor: Pablo Stafforini
+# --
+img2pdf *.$1jpg -o output.pdf$0

@@ -55,12 +55,12 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#gcmh][gcmh]]
   - [[#seq][seq]]
   - [[#paths][paths]]
+  - [[#transient][transient]]
   - [[#tlon-init][tlon-init]]
   - [[#no-littering][no-littering]]
   - [[#ns-win][ns-win]]
   - [[#iso-transl][iso-transl]]
   - [[#el-patch][el-patch]]
-  - [[#transient][transient]]
   - [[#casual][casual]]
   - [[#warnings][warnings]]
   - [[#comp][comp]]
@@ -207,6 +207,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#reveal-in-osx-finder][reveal-in-osx-finder]]
   - [[#tramp][tramp]]
   - [[#pandoc-mode][pandoc-mode]]
+  - [[#sudo-edit][sudo-edit]]
 - [[#windows--frames][windows & frames]]
   - [[#window][window]]
   - [[#window-extras][window-extras]]
@@ -291,6 +292,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#em-hist][em-hist]]
   - [[#eshell-syntax-highlighting][eshell-syntax-highlighting]]
   - [[#dwim-shell-command][dwim-shell-command]]
+  - [[#eat][eat]]
 - [[#spelling--grammar][spelling & grammar]]
   - [[#jinx][jinx]]
   - [[#jinx-extras][jinx-extras]]
@@ -556,7 +558,7 @@ The contents of this code block are tangled to the ~early-init.el~ file.
 ;; recommended for straight/elpaca (github.com/radian-software/straight.el#getting-started)
 (setq package-enable-at-startup nil)
 
-(add-to-list 'default-frame-alist '(undecorated . t)) ; remove title bar
+(add-to-list 'default-frame-alist '(undecorated-round . t)) ; remove title bar
 (add-to-list 'initial-frame-alist '(fullscreen . maximized)) ; maximize frame on startup
 
 ;; github.com/emacscollective/no-littering#native-compilation-cache
@@ -762,6 +764,26 @@ NAME and ARGS as in `use-package'."
 (use-personal-package paths)
 #+end_src
 
+** transient
+:PROPERTIES:
+:ID:       E21AC33E-D108-4860-997C-A4982569005E
+:END:
+
+/transient is a library for creating keyboard-driven menus./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package transient
+  :ensure (:wait t)
+  :after seq
+  :custom
+  (transient-default-level 7) ; magit.vc/manual/transient/Enabling-and-Disabling-Suffixes.html
+  (transient-save-history nil) ; the history file was throwing an error on startup
+
+  :bind
+  (:map transient-base-map
+        ("M-q" . transient-quit-one)))
+#+end_src
+
 ** tlon-init
 :PROPERTIES:
 :ID:       BCE74006-DDB4-4AF5-AAFA-D44BC6AF55A7
@@ -781,7 +803,10 @@ NAME and ARGS as in `use-package'."
   (tlon-init-startup)
 
   :hook
-  (elpaca-after-init-hook . tlon-init-run-post-init-hook))
+  (elpaca-after-init-hook . tlon-init-run-post-init-hook)
+
+  :bind
+  ("A-n" . tlon-init-menu))
 #+end_src
 
 ** no-littering
@@ -862,25 +887,6 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package el-patch)
-#+end_src
-
-** transient
-:PROPERTIES:
-:ID:       E21AC33E-D108-4860-997C-A4982569005E
-:END:
-
-/transient is a library for creating keyboard-driven menus./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package transient
-  :after seq
-  :custom
-  (transient-default-level 7) ; magit.vc/manual/transient/Enabling-and-Disabling-Suffixes.html
-  (transient-save-history nil) ; the history file was throwing an error on startup
-
-  :bind
-  (:map transient-base-map
-        ("M-q" . transient-quit-one)))
 #+end_src
 
 ** casual
@@ -1421,8 +1427,19 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
   (ediff-window-setup-function 'ediff-setup-windows-plain)
   (ediff-split-window-function 'split-window-horizontally)
 
+  :config
+  (defun ediff-toggle-word-mode ()
+    "Toggle between linewise and wordwise comparisons."
+    (interactive)
+    (setq ediff-word-mode (not ediff-word-mode))
+    (message "Word mode %s"
+             (if ediff-word-mode "disabled" "enabled"))
+    (ediff-update-diffs))
+  
   :bind
-  ("A-d" . ediff))
+  (("A-d" . ediff)
+   :map ediff-mode-map
+   ("." . ediff-toggle-word-mode)))
 #+end_src
 
 ** ediff-extras
@@ -4259,6 +4276,17 @@ Most of the below is copied from Murilo Pereira's [[https://github.com/mpereira/
 :ID:       3C4F154F-6600-4DF0-826F-0EB031146BA2
 :END:
 
+** sudo-edit
+:PROPERTIES:
+:ID:       57885F68-6A4E-4E61-BC0D-128F7764ED77
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package sudo-edit
+  :ensure (:host github
+		 :repo "nflath/sudo-edit"))
+#+end_src
+
 * windows & frames
 :PROPERTIES:
 :ID:       7E9A81E0-CAEB-4029-AD2C-B2416439FCDA
@@ -4812,6 +4840,10 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
   (require 'plstore))
 #+end_src
 
+*** TODO Revise org-gcal capture template to offer list of participants
+:PROPERTIES:
+:ID:       3CB2429F-32FC-4CD8-A417-DEB58C0F2C1E
+:END:
 ** org-gcal-extras
 :PROPERTIES:
 :ID:       BBED8E2E-2A29-4465-926A-22D531E6DBE7
@@ -6052,10 +6084,28 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package dwim-shell-command
-  :ensure (dwim-shell-command
-           :host github
+  :ensure (:host github
            :repo "xenodium/dwim-shell-command")
   :defer t)
+#+end_src
+
+** eat
+:PROPERTIES:
+:ID:       80E53FAD-1669-408C-A45D-9232C2D51924
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package eat
+  :ensure (:host codeberg
+		 :repo "akib/emacs-eat"
+		 :files ("*.el" ("term" "term/*.el") "*.texi"
+			 "*.ti" ("terminfo/e" "terminfo/e/*")
+			 ("terminfo/65" "terminfo/65/*")
+			 ("integration" "integration/*")
+			 (:exclude ".dir-locals.el" "*-tests.el")))
+  :hook
+  (eshell-load-hook . eat-eshell-mode)
+  (eshell-load-hook . eat-eshell-visual-command-mode))
 #+end_src
 
 * spelling & grammar
@@ -7822,7 +7872,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package gpt-commit
-  :after log-edit
+  :after tlon-core log-edit
   :demand t
   :custom
   (gpt-commit-model-name "gpt-4o")
@@ -8204,7 +8254,6 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
         ("C-H-M-s-e" . org-shiftmetadown)
         ("C-H-M-s-r" . org-shiftmetaright)
         ("s-j" . consult-extras-org-heading)
-        ("s-b" . tlon-init-build)
         ("s-A-k" . org-web-tools-insert-link-for-url)
         ("s-l" . org-transclusion-add-all)
         ("s-c" . ox-clip-formatted-copy)
@@ -9814,8 +9863,8 @@ CLOCK: [2021-12-14 Tue 19:46]--[2021-12-14 Tue 20:06] =>  0:20
 /[[https://github.com/d12frosted/vulpea][vulpea]] is a collection of functions for note taking based on ~org~ and ~org-roam~./
 
 I use this package to define a dynamic agenda, as explained and illustrated [[https://d12frosted.io/posts/2021-01-16-task-management-with-roam-vol5.html][here]]. I've made some changes to the system in that link, specifically to exclude files and directories at various stages:
-1. At the broadest level, I exclude files and directories from the function (=org-extras-id-auto-add-ids-to-headings-in-file=) that otherwise automatically adds an ID to every org heading in a file-visiting buffer. Headings so excluded are not indexed by org-roam, because a heading requires an ID to be indexed. See the variables =org-extras-id-auto-add-excluded-files= and =org-extras-id-auto-add-excluded-directories= under the ~org-id~ section of this file.
-2. I then exclude some headings with IDs from the org-roam database. See the variables =org-roam-file-exclude-regexp= and =org-roam-db-node-include-function=  under the ~org-roam~ section of this file.
+1. At the broadest level, I exclude files and directories from the function (=org-extras-id-auto-add-ids-to-headings-in-file=) that otherwise automatically adds an ID to every org heading in a file-visiting buffer. Headings so excluded are not indexed by org-roam, because a heading requires an ID to be indexed. For details, see that function’s docstring. For examples of how this is used in my config, see the variables =org-extras-id-auto-add-excluded-files= and =org-extras-id-auto-add-excluded-directories= under the =org-id== section of this file.
+2. I then exclude some headings with IDs from the org-roam database. For examples of how this is used in my config, see the variables =org-roam-file-exclude-regexp= and =org-roam-db-node-include-function=  under the =org-roam== section of this file.
 3. Finally, I selectively include in =org-agenda-files= files that satisfy certain conditions (as defined by =vulpea-extras-project-p=) and files modified recently (as specified by =org-roam-extras-recent=), and exclude from =org-agenda-files= files listed in =org-extras-agenda-files-excluded=.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
@@ -10704,7 +10753,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 (use-package scihub
   :ensure (:host github
            :repo "benthamite/scihub")
-  :defer t)
+  :defer 15)
 #+end_src
 
 * email

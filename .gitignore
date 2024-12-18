@@ -2,3 +2,4 @@
 emacs/early-init.el
 emacs/variables.el
 emacs/init-pablo.el
+shell/.zshrc.local

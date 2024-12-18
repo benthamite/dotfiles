@@ -1421,8 +1421,19 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
   (ediff-window-setup-function 'ediff-setup-windows-plain)
   (ediff-split-window-function 'split-window-horizontally)
 
+  :config
+  (defun ediff-toggle-word-mode ()
+    "Toggle between linewise and wordwise comparisons."
+    (interactive)
+    (setq ediff-word-mode (not ediff-word-mode))
+    (message "Word mode %s"
+             (if ediff-word-mode "disabled" "enabled"))
+    (ediff-update-diffs))
+  
   :bind
-  ("A-d" . ediff))
+  (("A-d" . ediff)
+   :map ediff-mode-map
+   ("." . ediff-toggle-word-mode)))
 #+end_src
 
 ** ediff-extras

@@ -11798,6 +11798,7 @@ CLOCK: [2021-11-19 Fri 12:33]--[2021-11-19 Fri 12:35] =>  0:02
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package shr-tag-pre-highlight
+  :disabled
   :after (:any eww elfeed)
   :config
   (add-to-list 'shr-external-rendering-functions

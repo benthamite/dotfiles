@@ -803,7 +803,10 @@ NAME and ARGS as in `use-package'."
   (tlon-init-startup)
 
   :hook
-  (elpaca-after-init-hook . tlon-init-run-post-init-hook))
+  (elpaca-after-init-hook . tlon-init-run-post-init-hook)
+
+  :bind
+  ("A-n" . tlon-init-menu))
 #+end_src
 
 ** no-littering
@@ -8251,7 +8254,6 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
         ("C-H-M-s-e" . org-shiftmetadown)
         ("C-H-M-s-r" . org-shiftmetaright)
         ("s-j" . consult-extras-org-heading)
-        ("s-b" . tlon-init-build)
         ("s-A-k" . org-web-tools-insert-link-for-url)
         ("s-l" . org-transclusion-add-all)
         ("s-c" . ox-clip-formatted-copy)

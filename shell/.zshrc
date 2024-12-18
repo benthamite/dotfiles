@@ -1,3 +1,6 @@
+# local override file
+[[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
+
 # node
 source $(brew --prefix nvm)/nvm.sh
 
@@ -46,7 +49,6 @@ alias EmacsK="while true; do pkill -SIGUSR2 emacs; done"
 alias emacsicon="osascript -e 'tell application \"Finder\" to make alias file to posix file \"/opt/homebrew/opt/emacs-plus@30/Emacs.app\" at POSIX file \"/Applications\" with properties {name:\"Emacs.app\"}'"
 
 export DOTFILES="$HOME/Library/CloudStorage/Dropbox/dotfiles"
-export USER_CONFIG_FILE="$DOTFILES/emacs/config-pablo.org"
 
 # libby
 export LIBBY_OUTPUT_DIR="$HOME/Downloads/"

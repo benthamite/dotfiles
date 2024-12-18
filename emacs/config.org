@@ -55,12 +55,12 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#gcmh][gcmh]]
   - [[#seq][seq]]
   - [[#paths][paths]]
+  - [[#transient][transient]]
   - [[#tlon-init][tlon-init]]
   - [[#no-littering][no-littering]]
   - [[#ns-win][ns-win]]
   - [[#iso-transl][iso-transl]]
   - [[#el-patch][el-patch]]
-  - [[#transient][transient]]
   - [[#casual][casual]]
   - [[#warnings][warnings]]
   - [[#comp][comp]]
@@ -764,6 +764,26 @@ NAME and ARGS as in `use-package'."
 (use-personal-package paths)
 #+end_src
 
+** transient
+:PROPERTIES:
+:ID:       E21AC33E-D108-4860-997C-A4982569005E
+:END:
+
+/transient is a library for creating keyboard-driven menus./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package transient
+  :ensure (:wait t)
+  :after seq
+  :custom
+  (transient-default-level 7) ; magit.vc/manual/transient/Enabling-and-Disabling-Suffixes.html
+  (transient-save-history nil) ; the history file was throwing an error on startup
+
+  :bind
+  (:map transient-base-map
+        ("M-q" . transient-quit-one)))
+#+end_src
+
 ** tlon-init
 :PROPERTIES:
 :ID:       BCE74006-DDB4-4AF5-AAFA-D44BC6AF55A7
@@ -864,25 +884,6 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package el-patch)
-#+end_src
-
-** transient
-:PROPERTIES:
-:ID:       E21AC33E-D108-4860-997C-A4982569005E
-:END:
-
-/transient is a library for creating keyboard-driven menus./
-
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
-(use-package transient
-  :after seq
-  :custom
-  (transient-default-level 7) ; magit.vc/manual/transient/Enabling-and-Disabling-Suffixes.html
-  (transient-save-history nil) ; the history file was throwing an error on startup
-
-  :bind
-  (:map transient-base-map
-        ("M-q" . transient-quit-one)))
 #+end_src
 
 ** casual

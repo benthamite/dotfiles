@@ -207,6 +207,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#reveal-in-osx-finder][reveal-in-osx-finder]]
   - [[#tramp][tramp]]
   - [[#pandoc-mode][pandoc-mode]]
+  - [[#sudo-edit][sudo-edit]]
 - [[#windows--frames][windows & frames]]
   - [[#window][window]]
   - [[#window-extras][window-extras]]
@@ -4269,6 +4270,17 @@ Most of the below is copied from Murilo Pereira's [[https://github.com/mpereira/
 :PROPERTIES:
 :ID:       3C4F154F-6600-4DF0-826F-0EB031146BA2
 :END:
+
+** sudo-edit
+:PROPERTIES:
+:ID:       57885F68-6A4E-4E61-BC0D-128F7764ED77
+:END:
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package sudo-edit
+  :ensure (:host github
+		 :repo "nflath/sudo-edit"))
+#+end_src
 
 * windows & frames
 :PROPERTIES:

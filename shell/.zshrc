@@ -45,6 +45,8 @@ alias Emacsk="pkill -SIGUSR2 emacs"
 alias EmacsK="while true; do pkill -SIGUSR2 emacs; done"
 alias emacsicon="osascript -e 'tell application \"Finder\" to make alias file to posix file \"/opt/homebrew/opt/emacs-plus@30/Emacs.app\" at POSIX file \"/Applications\" with properties {name:\"Emacs.app\"}'"
 
+export USER_CONFIG_FILE="$DOTFILES/config-pablo.org"
+
 # libby
 export LIBBY_OUTPUT_DIR="$HOME/Downloads/"
 

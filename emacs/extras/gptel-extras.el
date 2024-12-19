@@ -81,14 +81,14 @@ Note that the cost is an approximation based on the number of words in the
 buffer or selection. The function uses a 1.4 token/word conversion factor, but
 the actual cost may deviate from this estimate. Also note that this estimate is
 for text requests; media files are not included in the calculation."
-  (let* ((cost-per-1m-tokens (get gptel-model :input-cost))
-	 (words-main (if (region-active-p)
-			 (count-words (region-beginning) (region-end))
-		       (count-words (point-min) (point))))
-	 (words-context (gptel-extras-count-words-in-context))
-	 (total-words (+ words-main words-context))
-	 (tokens-per-word 1.4)
-	 (cost (/ (* cost-per-1m-tokens tokens-per-word total-words) 1000000.0)))
+  (when-let* ((cost-per-1m-tokens (get gptel-model :input-cost))
+	      (words-main (if (region-active-p)
+			      (count-words (region-beginning) (region-end))
+			    (count-words (point-min) (point))))
+	      (words-context (gptel-extras-count-words-in-context))
+	      (total-words (+ words-main words-context))
+	      (tokens-per-word 1.4)
+	      (cost (/ (* cost-per-1m-tokens tokens-per-word total-words) 1000000.0)))
     cost))
 
 (declare-function gptel--file-binary-p "gptel-context")
@@ -140,11 +140,12 @@ to add an additional cost field in the header line."
 				   'mouse-face 'highlight
 				   'help-echo "System message for session"))
 				 (cost
-				  (propertize
-				   (buttonize (format "[Cost: $%.2f]" (gptel-extras-get-cost))
-					      (lambda (&rest _) (gptel-menu)))
-				   'mouse-face 'highlight
-				   'help-echo "Cost of the current prompt"))
+				  (when-let ((cost (gptel-extras-get-cost)))
+				    (propertize
+				     (buttonize (format "[Cost: $%.2f]" cost)
+						(lambda (&rest _) (gptel-menu)))
+				     'mouse-face 'highlight
+				     'help-echo "Cost of the current prompt")))
 				 (context
 				  (and gptel-context--alist
 				       (cl-loop for entry in gptel-context--alist

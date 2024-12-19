@@ -5,6 +5,6 @@
 # --
 `(format-time-string "%Y-%m-%d")` Mercado Libre
 Expenses:${5:account}  ${2:amount} ARS ; ${4:details}
-Assets:Ualá
+Assets:${3:$$(yas-choose-value '("Ualá" "Mercado Pago"))}
 
 $0

@@ -11019,9 +11019,6 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (faces-extras-set-and-store-face-attributes
    '((mu4e-compose-separator-face :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)))
 
-  :hook
-  (mu4e-update-pre-hook . mu4e-extras-set-index-params)
-
   :bind
   (("A-m" . mu4e)
    :map mu4e-main-mode-map
@@ -11139,6 +11136,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
   :hook
   (mu4e-mark-execute-pre-hook . mu4e-extras-gmail-fix-flags)
   (mu4e-view-mode-hook . mu4e-extras-set-face-locally)
+  (mu4e-update-pre-hook . mu4e-extras-set-index-params)
 
   :bind
   (:map mu4e-main-mode-map

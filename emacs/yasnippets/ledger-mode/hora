@@ -5,5 +5,5 @@
 # --
 `(format-time-string "%Y-%m-%d")` Hora
 Expenses:Food:Takeaway                 $1.00 ARS ; lunch
-Assets:Ualá
+Assets:${2:$$(yas-choose-value '("Cash" "Ualá" "Mercado Pago"))}
 

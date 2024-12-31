@@ -41,16 +41,6 @@
   "Extensions for `doom-modeline'."
   :group 'doom-modeline)
 
-(defcustom doom-modeline-extras-gptel t
-  "Whether to display the `gptel' model in the modeline."
-  :type 'boolean
-  :group 'doom-modeline)
-
-(defcustom doom-modeline-extras-gptel-cost t
-  "Whether to display the `gptel' model cost in the modeline."
-  :type 'boolean
-  :group 'doom-modeline)
-
 (defcustom doom-modeline-extras-org-roam t
   "Whether to display the `org-roam' backlink count in the modeline."
   :type 'boolean

@@ -69,7 +69,7 @@
 
 ;;;; Main variables
 
-(defvar org-roam-extras-current-backlink-count nil)
+(defvar-local org-roam-extras-current-backlink-count nil)
 
 ;;;; Functions
 
@@ -281,7 +281,7 @@ list of tags and further restrict the selection to headings with that tag."
     (org-roam-extras-update-backlink-count)
     (doom-modeline-update-buffer-file-name)))
 
-(add-hook 'post-command-hook #'org-roam-extras-update-modeline)
+(add-hook 'buffer-list-update-hook #'org-roam-extras-update-modeline)
 
 ;;;;;; backlink buffer
 

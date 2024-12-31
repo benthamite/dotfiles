@@ -62,6 +62,11 @@
   :type '(repeat string)
   :group 'org-roam-extras)
 
+(defcustom org-roam-extras-auto-show-backlink-buffer nil
+  "Whether to show the org-roam buffer when opening a file with backlinks."
+  :type 'boolean
+  :group 'org-roam-extras)
+
 ;;;; Main variables
 
 (defvar org-roam-extras-current-backlink-count nil)
@@ -277,6 +282,18 @@ list of tags and further restrict the selection to headings with that tag."
     (doom-modeline-update-buffer-file-name)))
 
 (add-hook 'post-command-hook #'org-roam-extras-update-modeline)
+
+;;;;;; backlink buffer
+
+(defun org-roam-extras-show-backlink-buffer ()
+  "Show the org-roam buffer if the current buffer has backlinks."
+  (when (and org-roam-extras-auto-show-backlink-buffer
+	     (derived-mode-p 'org-mode)
+	     (member (org-roam-buffer--visibility) '(exists none)))
+    (display-buffer (get-buffer-create org-roam-buffer))
+    (org-roam-buffer-persistent-redisplay)))
+
+(add-hook 'find-file-hook #'org-roam-extras-show-backlink-buffer)
 
 ;;;;; Patched functions
 

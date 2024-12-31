@@ -251,6 +251,10 @@ list of tags and further restrict the selection to headings with that tag."
 
 ;;;;; Backlinks
 
+;;;;;; backlink count
+;; whether the count is shown in the modeline is controlled by the user option
+;; `doom-modeline-extras-org-roam', of which see
+
 (defun org-roam-extras-backlink-count ()
   "Return the number of org-roam backlinks for the current buffer."
   (when (derived-mode-p 'org-mode)

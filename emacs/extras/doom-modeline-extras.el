@@ -71,7 +71,8 @@
   (when (and (derived-mode-p 'org-mode)
 	     doom-modeline-extras-org-roam
 	     (bound-and-true-p org-roam-extras-current-backlink-count))
-    (concat (doom-modeline-spc) (format "%dB" org-roam-extras-current-backlink-count))))
+    (concat (doom-modeline-spc) (doom-modeline-spc)
+	    (format "⟲(%s)" org-roam-extras-current-backlink-count))))
 
 ;;;;; GitHub notifications
 

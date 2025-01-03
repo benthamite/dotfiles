@@ -281,7 +281,7 @@ list of tags and further restrict the selection to headings with that tag."
     (org-roam-extras-update-backlink-count)
     (doom-modeline-update-buffer-file-name)))
 
-(add-hook 'buffer-list-update-hook #'org-roam-extras-update-modeline)
+;; (add-hook 'buffer-list-update-hook #'org-roam-extras-update-modeline)
 
 ;;;;;; backlink buffer
 
@@ -293,7 +293,7 @@ list of tags and further restrict the selection to headings with that tag."
     (display-buffer (get-buffer-create org-roam-buffer))
     (org-roam-buffer-persistent-redisplay)))
 
-(add-hook 'find-file-hook #'org-roam-extras-show-backlink-buffer)
+;; (add-hook 'find-file-hook #'org-roam-extras-show-backlink-buffer)
 
 ;;;;; Patched functions
 

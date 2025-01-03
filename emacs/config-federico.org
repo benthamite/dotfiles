@@ -30,9 +30,11 @@
         midnight
         mixed-pitch
         mu4e
+        mu4e-extras
         ;; mullvad
         ns-win
         org-gcal
+        org-gcal-extras
         ;; org-roam
         org2blog
         orgmdb
@@ -42,6 +44,7 @@
         remember
         ;; server
         slack
+        skeleton
         ;; spelling
         ;; tlon-init
         theme-loaddefs
@@ -145,7 +148,7 @@
 (setq user-mail-address "fstafforini@gmail.com")
 #+end_src
 
-** claendar-extras
+** calendar-extras
 :PROPERTIES:
 :ID:       09286FD9-FE88-445D-BAC4-236A04211800
 :END:
@@ -154,6 +157,20 @@
   (setq calendar-extras-location-name "Buenos Aires")
   (setq calendar-extras-use-geolocation nil)
   (message "`calendar-extras' late-init config loaded."))
+#+end_src
+
+** citar-extras
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'citar-extras
+  (cancel-function-timers 'citar-extras-update-bibliographies)
+  (message "`citar-extras' late-init config loaded."))
+#+end_src
+
+** ebib-extras
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(with-eval-after-load 'ebib-extras
+  (cancel-function-timers 'ebib-extras-reload-all-databases)
+  (message "`ebib-extras' late-init config loaded."))
 #+end_src
 
 ** exec-path-from-shell
@@ -899,6 +916,7 @@ This should be at the very end of the ~late-init~ file.
    (org-tidy-mode -1)
    (kill-buffer-then-reopen-file)
    (global-auto-revert-mode 1)
+   (cancel-function-timers 'ebib-extras-reload-all-databases)
    (setq revert-without-query '(".*gptel-context.*"))
    (message "Fede's post-init-hook finished.")
    ))

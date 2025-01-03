@@ -2,5 +2,6 @@
 # name: revisekey
 # key: rr
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 Revise `(tlon-get-commit-key)`

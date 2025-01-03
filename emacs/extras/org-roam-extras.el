@@ -62,9 +62,14 @@
   :type '(repeat string)
   :group 'org-roam-extras)
 
+(defcustom org-roam-extras-auto-show-backlink-buffer nil
+  "Whether to show the org-roam buffer when opening a file with backlinks."
+  :type 'boolean
+  :group 'org-roam-extras)
+
 ;;;; Main variables
 
-(defvar org-roam-extras-current-backlink-count nil)
+(defvar-local org-roam-extras-current-backlink-count nil)
 
 ;;;; Functions
 
@@ -117,7 +122,8 @@ Optionally, return such list only if its length is less than LIMIT."
 (defun org-roam-extras-create-file-for-note (note-name &optional dir)
   "Create a file named after NOTE-NAME.
 If DIR is nil, use `paths-dir-notes'."
-  (let* ((slug (simple-extras-slugify note-name))
+  (let* ((dir (or dir paths-dir-notes))
+	 (slug (simple-extras-slugify note-name))
 	 (filename (file-name-with-extension slug "org")))
     (when (file-exists-p filename)
       (user-error (format "File `%s' already exists" filename)))
@@ -250,6 +256,10 @@ list of tags and further restrict the selection to headings with that tag."
 
 ;;;;; Backlinks
 
+;;;;;; backlink count
+;; whether the count is shown in the modeline is controlled by the user option
+;; `doom-modeline-extras-org-roam', of which see
+
 (defun org-roam-extras-backlink-count ()
   "Return the number of org-roam backlinks for the current buffer."
   (when (derived-mode-p 'org-mode)
@@ -271,7 +281,19 @@ list of tags and further restrict the selection to headings with that tag."
     (org-roam-extras-update-backlink-count)
     (doom-modeline-update-buffer-file-name)))
 
-(add-hook 'post-command-hook #'org-roam-extras-update-modeline)
+(add-hook 'buffer-list-update-hook #'org-roam-extras-update-modeline)
+
+;;;;;; backlink buffer
+
+(defun org-roam-extras-show-backlink-buffer ()
+  "Show the org-roam buffer if the current buffer has backlinks."
+  (when (and org-roam-extras-auto-show-backlink-buffer
+	     (derived-mode-p 'org-mode)
+	     (member (org-roam-buffer--visibility) '(exists none)))
+    (display-buffer (get-buffer-create org-roam-buffer))
+    (org-roam-buffer-persistent-redisplay)))
+
+(add-hook 'find-file-hook #'org-roam-extras-show-backlink-buffer)
 
 ;;;;; Patched functions
 

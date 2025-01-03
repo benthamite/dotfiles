@@ -2,5 +2,6 @@
 # name: update filename
 # key: u
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 Update `(file-name-nondirectory (magit-extras-get-commit-file))`

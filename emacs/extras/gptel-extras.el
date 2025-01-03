@@ -81,27 +81,27 @@ Note that the cost is an approximation based on the number of words in the
 buffer or selection. The function uses a 1.4 token/word conversion factor, but
 the actual cost may deviate from this estimate. Also note that this estimate is
 for text requests; media files are not included in the calculation."
-  (let* ((cost-per-1m-tokens (get gptel-model :input-cost))
-	 (words-main (if (region-active-p)
-			 (count-words (region-beginning) (region-end))
-		       (count-words (point-min) (point))))
-	 (words-context (gptel-extras-count-words-in-context))
-	 (total-words (+ words-main words-context))
-	 (tokens-per-word 1.4)
-	 (cost (/ (* cost-per-1m-tokens tokens-per-word total-words) 1000000.0)))
+  (when-let* ((cost-per-1m-tokens (get gptel-model :input-cost))
+	      (words-main (if (region-active-p)
+			      (count-words (region-beginning) (region-end))
+			    (count-words (point-min) (point))))
+	      (words-context (gptel-extras-count-words-in-context))
+	      (total-words (+ words-main words-context))
+	      (tokens-per-word 1.4)
+	      (cost (/ (* cost-per-1m-tokens tokens-per-word total-words) 1000000.0)))
     cost))
 
+(declare-function gptel--file-binary-p "gptel-context")
 (defun gptel-extras-count-words-in-context ()
   "Iterate over the files in context and sum the number of words in each file.
-Image files are skipped."
+Binaries are skipped."
   (let ((revert-without-query t))
-    (cl-reduce (lambda (acc file)
-                 (if (member (file-name-extension (car file))
-                             image-file-name-extensions)
-                     acc  ; skip image files
+    (cl-reduce (lambda (accum file)
+                 (if (gptel--file-binary-p (car file))
+                     accum
                    (let ((words (with-current-buffer (find-file-noselect (car file))
                                   (count-words (point-min) (point-max)))))
-                     (+ acc words))))
+                     (+ accum words))))
                gptel-context--alist
                :initial-value 0)))
 
@@ -140,11 +140,12 @@ to add an additional cost field in the header line."
 				   'mouse-face 'highlight
 				   'help-echo "System message for session"))
 				 (cost
-				  (propertize
-				   (buttonize (format "[Cost: $%.2f]" (gptel-extras-get-cost))
-					      (lambda (&rest _) (gptel-menu)))
-				   'mouse-face 'highlight
-				   'help-echo "Cost of the current prompt"))
+				  (when-let ((cost (gptel-extras-get-cost)))
+				    (propertize
+				     (buttonize (format "[Cost: $%.2f]" cost)
+						(lambda (&rest _) (gptel-menu)))
+				     'mouse-face 'highlight
+				     'help-echo "Cost of the current prompt")))
 				 (context
 				  (and gptel-context--alist
 				       (cl-loop for entry in gptel-context--alist
@@ -434,6 +435,7 @@ In Org files, saves as a file property. In Markdown, as a file-local variable."
 
 ;;;;;; Clear
 
+;;;###autoload
 (defun gptel-extras-clear-file-context ()
   "Clear the current `gptel' file context."
   (interactive)

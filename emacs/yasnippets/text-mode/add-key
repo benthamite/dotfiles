@@ -2,5 +2,6 @@
 # name: add key
 # key: aa
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 Add `(tlon-get-commit-key)`

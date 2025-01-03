@@ -3,6 +3,31 @@
 #+langauge: en
 
 This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository. It is meant to be read primarily by members of the Tlön team, but it may be of interest to others as well.
+
+* Version 6.8.3 on 2024-12-06
+** Configuration Updates
+*** Package Loading
+- Changed bibliography-related packages to require 'tlon' before setting values
+- Removed dev branches from multiple package configurations
+
+** Interface & Usability
+*** consult
+- Set =consult-grep-max-columns= to nil to address wgrep issue
+- Updated consult settings for better performance
+
+*** gptel & Other AI Tools
+- Made various autoload improvements for AI-related functions
+- Added functionality to exclude binaries from word counts
+- Improved user feedback messages
+
+** Other Notable Changes
+*** Code Organization
+- Multiple yasnippet updates and condition refinements
+- URL list updates for browser handling
+- Telega configuration cleanup and function name updates
+- Several small fixes and improvements across various packages
+
+
 * Version 6.8.2 on 2024-11-24
 ** Package updates and refinements
 *** ace-link-extras

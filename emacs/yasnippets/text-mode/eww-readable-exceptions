@@ -2,5 +2,6 @@
 # name: eww-readable-exceptions
 # key: ere
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 eww-readable-exceptions.txt: add urls

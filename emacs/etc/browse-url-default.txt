@@ -1,6 +1,7 @@
 accounts.google.com
 airbnb.co.uk
 airbnb.com
+aireuropanews.com
 airserbia.com
 airtable.com
 airwander.com
@@ -69,6 +70,7 @@ kentclarkcenter.org
 keyboardmaestro.com
 kmail-lists.com
 kroll.com
+kucoin.com
 letterboxd.com
 libgen.
 LinkedIn.com
@@ -102,10 +104,12 @@ pref.docusign.com
 qualtrics.com
 quora.com
 reddit.com
+rehau.com
 rescuetime.com
 revolut.com
 savvycal.com
 shademap.app
+skinceuticals.com
 skyscanner.com
 skyscanner.net
 slack.com

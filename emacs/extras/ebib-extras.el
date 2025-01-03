@@ -27,6 +27,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'el-patch)
 (require 'ebib)
 (require 'paths)
@@ -1143,18 +1144,24 @@ is created following the same schema as notes created with
   "List of database files that should be auto-saved.
 The big files containing the `old' bibliographic entries are excluded.")
 
-(defun ebib-extras-auto-save-databases ()
-  "Check if any Ebib database has been modified and save it to its file if so.
-The list of files to be watched is defined in `ebib-extras-auto-save-files'."
-  (dolist (db ebib--databases)
-    (let ((db-file (ebib-db-get-filename db)))
-      (when (and (member db-file ebib-extras-auto-save-files)
-		 (ebib-db-modified-p db))
-	(ebib--save-database db '(16)))))
-  (run-with-timer 0.1 nil #'ebib-extras-auto-save-databases))
+;;;;; Saving and reloading databases
 
-;; 2024-11-24 Why is this timer run when package loads? Test, and remove if safe.
-;; (run-with-timer 1 nil #'ebib-extras-auto-save-databases)
+;; `ebib-extras-auto-save-databases' saves a database to its file when it
+;; detects that the db has been modified. `ebib-extras-auto-reload-databases'
+;; reloads a database from its file detects that the file has been modified.
+;; since reloading a large database can be slow, we only reload the databases
+;; that are in the list `ebib-extras-auto-save-files'. for the remaining dbs, we
+;; use `ebib-extras-reload-all-databases', which is meant to be triggered by an
+;; idle timer (set in the config file).
+
+(defun ebib-extras-auto-save-databases ()
+  "Check if any Ebib database has been modified and save it to its file if so."
+  (dolist (db ebib--databases)
+    (when (ebib-db-modified-p db)
+      (ebib--save-database db '(16))))
+  (run-with-timer 1 nil #'ebib-extras-auto-save-databases))
+
+(ebib-extras-auto-save-databases)
 
 (autoload 'file-notify-add-watch "filenotify")
 ;;;###autoload
@@ -1164,13 +1171,32 @@ The list of files to be watched is defined in `ebib-extras-auto-save-files'."
   (dolist (db ebib--databases)
     (let ((db-file (ebib-db-get-filename db)))
       (when (member db-file ebib-extras-auto-save-files)
-	;; (file-notify-rm-all-watches)
 	(file-notify-add-watch
 	 db-file
 	 '(change attribute-change)
 	 (lambda (_event)
 	   (message "reloading database")
 	   (ebib-extras-reload-database-no-confirm db)))))))
+
+(defun ebib-extras-no-db-modified-p ()
+  "Return t iff no databases are modified."
+  (null (cl-some #'ebib-db-modified-p ebib--databases)))
+
+;;;###autoload
+(defun ebib-extras-reload-all-databases ()
+  "Reload all databases, if none are modified."
+  (unless ebib--initialized
+    (ebib-init)
+    (setq ebib--needs-update t)
+    (ebib-check-notes-config))
+  (when (ebib-extras-no-db-modified-p)
+    (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
+    (dolist (db ebib--databases)
+      (ebib--reload-database db)
+      (ebib--set-modified nil db))
+    (ebib--update-buffers)))
+
+;;;;; <new section>
 
 (defvar tlon-file-stable)
 (defconst ebib-extras-db-numbers

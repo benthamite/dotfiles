@@ -124,7 +124,7 @@ tasks."
           (apply #'vulpea-buffer-tags-set tags))))))
 
 (defvar org-extras-agenda-files-excluded)
-(autoload 'org-roam-extras-recent "org-roam")
+(autoload 'org-roam-extras-recent "org-roam-extras")
 (defun vulpea-extras-agenda-files-update (&rest _)
   "Update the value of `org-agenda-files'."
   (setq org-agenda-files

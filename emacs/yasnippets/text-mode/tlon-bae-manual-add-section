@@ -2,5 +2,6 @@
 # name: tlon-manual-add-section
 # key: tbmas
 # contributor: Pablo Stafforini
+# condition: (bound-and-true-p git-commit-mode)
 # --
 Manual: add "$1" section

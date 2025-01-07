@@ -1437,9 +1437,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
     (ediff-update-diffs))
   
   :bind
-  (("A-d" . ediff)
-   :map ediff-mode-map
-   ("." . ediff-toggle-word-mode)))
+  (("A-d" . ediff)))
 #+end_src
 
 ** ediff-extras

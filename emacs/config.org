@@ -10652,7 +10652,6 @@ The macro below generates the commands correctly. But attempting to define key b
   (add-to-list 'ebib-hidden-fields "year")) ; hide others
 #+end_src
 
-
 ** ebib-extras
 :PROPERTIES:
 :ID:       9E86F42E-2F41-4BB7-ABC5-1C929DBD5C06

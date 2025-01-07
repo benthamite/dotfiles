@@ -7824,6 +7824,13 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
    ("A-C-s-f" . gptel-context-next)))
 #+end_src
 
+*** TODO Check out these =gptel= extensions
+:PROPERTIES:
+:ID:       D10F728E-9AC8-4389-BB55-952F1F5E8470
+:END:
+
+https://github.com/meain/dotfiles/blob/master/emacs/.config/emacs/init.el#L4525
+
 ** gptel-extras
 :PROPERTIES:
 :ID:       AEA2E978-0321-4F3D-B3EB-14CDA505A9D9

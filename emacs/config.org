@@ -1140,7 +1140,7 @@ CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package profiler-extras
   :bind
-  (("C-H-p" . profiler-extras-profiler-toggle)
+  (("A-H-p" . profiler-extras-profiler-toggle)
    :map profiler-report-mode-map
    ("<backtab>" . profiler-extras-profiler-report-toggle-entry-global)))
 #+end_src

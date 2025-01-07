@@ -8154,7 +8154,6 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature org
-  :after org-agenda
   :custom
   (org-directory paths-dir-org) ; set org directory
   (org-todo-keywords

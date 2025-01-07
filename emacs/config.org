@@ -1688,7 +1688,8 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 (use-package forge
   :ensure (:host github
                  :repo "magit/forge"
-                 :branch "main") ; github.com/progfolio/elpaca/issues/342
+                 :branch "main" ; github.com/progfolio/elpaca/issues/342
+                 :build (:not elpaca--check-version))
   :after magit ghub emacsql auth-source-pass
   :custom
   (forge-owned-accounts '(("benthamite")))

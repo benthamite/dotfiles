@@ -9859,6 +9859,9 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package org-roam-extras
+  :custom
+  (org-roam-extras-auto-show-backlink-buffer t)
+  
   :config
   ;; exclude headings in specific files and directories
   (setq org-roam-file-exclude-regexp

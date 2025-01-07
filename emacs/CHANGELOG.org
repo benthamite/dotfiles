@@ -4,6 +4,32 @@
 
 This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository. It is meant to be read primarily by members of the Tlön team, but it may be of interest to others as well.
 
+* Version 6.8.5 on 2025-01-07
+** org-vcard
+- Added package for importing/exporting vCards from org-mode
+- Configured for optimal compatibility with macOS Contacts.app
+- Includes custom handling of photo attachments
+
+** org-roam-extras
+- Added auto-showing of backlinks buffer functionality
+- Introduced =org-roam-extras-auto-show-backlink-buffer= custom option
+- Fixed issues with modeline updates by making backlink count buffer-local
+- Commented out problematic modeline update hooks (pending review)
+
+** gptel-extras
+- Improved cost calculation handling for when cost data isn't available
+
+** doom-modeline-extras
+- Improved org-roam backlinks display format (now shows "⟲(N)"), where N is the number of backlinks
+- Removed obsolete gptel-related user options
+
+** profiler-extras
+- Revised key binding from =C-H-p= to =A-H-p=
+
+** ediff
+- Removed local key binding for =ediff-toggle-word-mode=
+
+
 * Version 6.8.3 on 2024-12-06
 ** Configuration Updates
 *** Package Loading

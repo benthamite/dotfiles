@@ -803,9 +803,6 @@ NAME and ARGS as in `use-package'."
   :config
   (tlon-init-startup)
 
-  :hook
-  (elpaca-after-init-hook . tlon-init-run-post-init-hook)
-
   :bind
   ("A-n" . tlon-init-menu))
 #+end_src

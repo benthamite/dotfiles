@@ -2581,7 +2581,7 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
      tabulated-list-mode-hook))
 
   :hook
-  (tlon-init-run-post-init-hook . lin-global-mode))
+  (tlon-init-post-init-hook . lin-global-mode))
 #+end_src
 
 ** jit-lock

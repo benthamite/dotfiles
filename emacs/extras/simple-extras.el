@@ -784,7 +784,7 @@ Optionally, remove accents in region from BEGIN to END."
 ;; mostly borrowed from Prot
 (defun simple-extras-slug-no-punct (str)
   "Convert STR to a file name slug."
-  (replace-regexp-in-string "[][{}!@#$%^&*()_=+'\"?,.\|;:~`‘’“”]*" "" str))
+  (replace-regexp-in-string "[][{}!@#$%^&*()_=+'\"?,.\|;:~`‘’“”]*/" "" str))
 
 (defun simple-extras-slug-hyphenate (str)
   "Replace spaces with hyphens in STR.

@@ -348,6 +348,7 @@ number. Disable the mode if ARG is a negative number."
   (let ((agenda "*Org Agenda(a)*"))
     (if (get-buffer agenda)
 	(switch-to-buffer agenda)
+      (find-file paths-file-config) ; hack to avoid the ‘not in org-mode’ error
       (org-extras-agenda-toggle-anniversaries t)
       (org-agenda nil "a"))))
 

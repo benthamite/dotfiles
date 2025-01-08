@@ -395,7 +395,7 @@ corresponding file. Else, open the file."
 ;; in `calendar.org', which is the only way I found to hide
 ;; anniversaries temporarily from the agenda
 ;; for context, see https://orgmode.org/manual/Weekly_002fdaily-agenda.html
-(declare-function org-agenda-redo "org-agenda")
+(autoload 'org-agenda-redo "org-agenda")
 (declare-function org-roam-extras-id-goto "org-roam-extras")
 (defun org-extras-agenda-toggle-anniversaries (&optional just-enable)
   "Toggle display of BBDB birthdays in the agenda.
@@ -414,7 +414,7 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
     (unless just-enable
       (org-agenda-redo))))
 
-(declare-function org-agenda-log-mode "org-agenda")
+(autoload 'org-agenda-log-mode "org-agenda")
 (defun org-extras-agenda-toggle-log-mode ()
   "Toggle `org-agenda-log-mode' and `org-agenda-log-mode-items'."
   (interactive)

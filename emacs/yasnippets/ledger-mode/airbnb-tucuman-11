@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: airbnb-tucuman-11
+# key: at1
+# contributor: Pablo Stafforini
+# --
+`(calendar-extras-time-last-day-of-last-month)` $1
+    Expenses:Tucumán 11                         $2.00 ARS
+    Liabilities:Mom
+
+$0

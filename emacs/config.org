@@ -355,6 +355,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#json-mode][json-mode]]
   - [[#csv-mode][csv-mode]]
   - [[#yaml][yaml]]
+  - [[#yaml-mode][yaml-mode]]
   - [[#shut-up][shut-up]]
   - [[#puni][puni]]
   - [[#hl-todo][hl-todo]]
@@ -7516,6 +7517,17 @@ This needs to be configured.
   :ensure (:host github
                  :repo "zkry/yaml.el")
   :defer t)
+#+end_src
+
+** yaml-mode
+:PROPERTIES:
+:ID:       1D83E6E8-B7DC-4D40-A9B4-A93EFDC9FF0C
+:END:
+
+/[[https://github.com/yoshiki/yaml-mode][yaml-mode]] is a major mode for editing YAML files./
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package yaml-mode)
 #+end_src
 
 ** shut-up

@@ -1,0 +1,43 @@
+# -*- mode: snippet -*-
+# name: home-assistant-light-automation
+# key: hala
+# contributor: Pablo Stafforini
+# expand-env: ((yas-indent-line 'fixed))
+# --
+alias: Philips Hue dimmer switch ${1:room name}
+description: ""
+use_blueprint:
+  path: patpac9/Hue_Dimmer_Switch_Easy_Custom_Buttons.yaml
+  input:
+    controller: Philips Hue dimmer switch $1
+    on_press: []
+    on_released:
+      - action: light.toggle
+        metadata: {}
+        data: {}
+        target:
+          entity_id: light.${2:room}_lights
+    down_released:
+      - target:
+          entity_id: light.$2_lights
+        data:
+          brightness_step_pct: -10
+        action: light.turn_on
+    up_hold_released: []
+    up_released:
+      - target:
+          entity_id: light.$2_lights
+        data:
+          brightness_step_pct: 10
+        action: light.turn_on
+    off_released:
+      - target:
+          entity_id: input_select.light_scenes
+        action: input_select.select_next
+        data:
+          cycle: true
+      - data:
+          preset_id: "{{ states.input_select.light_scenes.state }}"
+          targets:
+            entity_id: light.$2_lights
+        action: scene_presets.apply_preset

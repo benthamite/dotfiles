@@ -77,10 +77,10 @@ user input."
   (interactive)
   (let* ((default-directory (or repo default-directory))
 	 (entry (or entry (completing-read "Key: " (password-store-list) nil 'match)))
-	 (output (shell-command-to-string (format "git-crypt unlock <(pass %s)" entry))))
-    (if (string-empty-p output)
+	 (output (call-process-shell-command (format "git-crypt unlock <(pass %s)" entry))))
+    (if (zerop output)
 	(message "Unlocked repository `%s'" repo)
-      (message "Error unlocking repository `%s':\n%s" repo output))))
+      (message "Error unlocking repository `%s'. Perhaps the repo is dirty?" repo))))
 
 (provide 'pass-extras)
 ;;; pass-extras.el ends here

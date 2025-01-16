@@ -73,34 +73,7 @@
 
 ;;;; Functions
 
-(defun org-roam-extras-recent (days &optional limit)
-  "Return a list of all files modified in the last DAYS.
-Optionally, return such list only if its length is less than LIMIT."
-  (let* ((mins (* 60 24 days))
-	 (file-list (split-string
-		     (shell-command-to-string
-		      (format
-		       "find %s -name '*.org'  -mmin -%s"
-		       (directory-file-name org-roam-directory) mins)))))
-    ;; Remove excluded files
-    (setq file-list (cl-delete-if (lambda (k)
-				    (string-match-p org-roam-file-exclude-regexp k))
-				  file-list))
-    (if limit
-	(when (< (length file-list) limit)
-	  file-list)
-      file-list)))
-
-(defun org-roam-extras-remove-file-level-properties ()
-  "Remove `ROAM_REFS' and `ID' properties from file-level drawer."
-  (when (string= "r" (plist-get org-capture-plist :key))
-    (goto-char (point-min))
-    (unless (org-get-heading)
-      ;; Take action with file-level properties only.
-      (org-delete-property "ID")
-      (org-delete-property "ROAM_REFS")
-      (org-extras-jump-to-first-heading)
-      (org-id-get-create))))
+;;;;; Note management
 
 (defun org-roam-extras-new-note ()
   "Create a new `org-roam' note, prompting for its type."
@@ -154,12 +127,14 @@ If DIR is nil, use `paths-dir-notes'."
     (save-restriction
       (org-narrow-to-subtree)
       (kill-region (point-min) (point-max)))
-    (org-roam-extras-create-file-for-note note-name)
+    (org-roam-extras-create-file-for-note note-name default-directory)
     (insert "#+title: " note-name "\n\n")
     (insert (current-kill 0))
     (goto-char (point-min))
     (org-next-visible-heading 1)
     (org-edit-headline note-name)))
+
+;;;;; Node find
 
 (defun org-roam-extras-node-find ()
   "Find and open an Org-roam node by its title or alias."
@@ -178,10 +153,10 @@ deadline). With ARG prefix argument, prompt the user to select from a unique
 list of tags and further restrict the selection to headings with that tag."
   (interactive "P")
   (let* ((selection (when arg
-                      (org-roam-extras-node-select-tag)))
+		      (org-roam-extras-node-select-tag)))
 	 (headings-with-priority
 	  (if selection
-              (org-roam-db-query `[:select [id file title priority]
+	      (org-roam-db-query `[:select [id file title priority]
 					   :from nodes
 					   :left-join tags
 					   :on (= nodes:id tags:node-id)
@@ -219,17 +194,17 @@ list of tags and further restrict the selection to headings with that tag."
 	     (formatted-heading (concat formatted-priority title)))
 	(push (cons formatted-heading `(lambda ()
 					 (org-id-goto ,id)))
-              result)))
+	      result)))
     (if result
 	(let* ((candidates (reverse result))
-               (selection (consult--read
+	       (selection (consult--read
 			   candidates
 			   :prompt "Jump to heading: "
 			   :category 'jump
 			   :history t
 			   :require-match t
 			   :sort nil))
-               (action (cdr (assoc selection candidates))))
+	       (action (cdr (assoc selection candidates))))
 	  (funcall action))
       (message "No headings with priority found."))))
 
@@ -239,20 +214,12 @@ list of tags and further restrict the selection to headings with that tag."
   (let* ((query-result (org-roam-db-query [:select :distinct [tag] :from tags]))
 	 (tag-candidates (mapcar #'car query-result))
 	 (selected-tag (consult--read tag-candidates
-                                      :prompt "Select a tag: "
-                                      :history 'org-roam-tag-history
-                                      :sort t
-                                      :require-match t)))
+				      :prompt "Select a tag: "
+				      :history 'org-roam-tag-history
+				      :sort t
+				      :require-match t)))
     (message "Selected tag: %s" selected-tag)
     selected-tag))
-
-;;;###autoload
-(defun org-roam-extras-id-goto (id)
-  "Open ID even if narrowed."
-  (widen)
-  (org-roam-id-open id nil)
-  (widen)
-  (org-roam-id-open id nil))
 
 ;;;;; Backlinks
 
@@ -272,7 +239,7 @@ list of tags and further restrict the selection to headings with that tag."
 (defun org-roam-extras-update-backlink-count ()
   "Update the number of backlinks for the current buffer."
   (setq org-roam-extras-current-backlink-count
-        (org-roam-extras-backlink-count)))
+	(org-roam-extras-backlink-count)))
 
 (autoload 'doom-modeline-update-buffer-file-name "doom-modeline-segments")
 (defun org-roam-extras-update-modeline ()
@@ -294,6 +261,46 @@ list of tags and further restrict the selection to headings with that tag."
     (org-roam-buffer-persistent-redisplay)))
 
 ;; (add-hook 'find-file-hook #'org-roam-extras-show-backlink-buffer)
+
+;;;;; Misc
+
+(defun org-roam-extras-recent (days &optional limit)
+  "Return a list of all files modified in the last DAYS.
+Optionally, return such list only if its length is less than LIMIT."
+  (let* ((mins (* 60 24 days))
+	 (file-list (split-string
+		     (shell-command-to-string
+		      (format
+		       "find %s -name '*.org'  -mmin -%s"
+		       (directory-file-name org-roam-directory) mins)))))
+    ;; Remove excluded files
+    (setq file-list (cl-delete-if (lambda (k)
+				    (string-match-p org-roam-file-exclude-regexp k))
+				  file-list))
+    (if limit
+	(when (< (length file-list) limit)
+	  file-list)
+      file-list)))
+
+(defun org-roam-extras-remove-file-level-properties ()
+  "Remove `ROAM_REFS' and `ID' properties from file-level drawer."
+  (when (string= "r" (plist-get org-capture-plist :key))
+    (goto-char (point-min))
+    (unless (org-get-heading)
+      ;; Take action with file-level properties only.
+      (org-delete-property "ID")
+      (org-delete-property "ROAM_REFS")
+      (org-extras-jump-to-first-heading)
+      (org-id-get-create))))
+
+
+;;;###autoload
+(defun org-roam-extras-id-goto (id)
+  "Open ID even if narrowed."
+  (widen)
+  (org-roam-id-open id nil)
+  (widen)
+  (org-roam-id-open id nil))
 
 (defun org-roam-extras-get-excluded ()
   "Return a regular expression matching the files to be excluded from the db."
@@ -318,4 +325,3 @@ SQL can be either the emacsql vector representation, or a string."
 
 (provide 'org-roam-extras)
 ;;; org-roam-extras.el ends here
-

@@ -295,6 +295,19 @@ list of tags and further restrict the selection to headings with that tag."
 
 ;; (add-hook 'find-file-hook #'org-roam-extras-show-backlink-buffer)
 
+(defun org-roam-extras-get-excluded ()
+  "Return a regular expression matching the files to be excluded from the db."
+  (let (result)
+    (dolist (dir-or-file
+	     (append
+	      org-roam-extras-excluded-dirs
+	      org-roam-extras-excluded-files)
+	     (regexp-opt result))
+      (push (if (file-directory-p dir-or-file)
+		(file-relative-name dir-or-file paths-dir-org-roam)
+	      dir-or-file)
+	    result))))
+
 ;;;;; Patched functions
 
 (el-patch-defun org-roam-db-query (sql &rest args)

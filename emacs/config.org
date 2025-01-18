@@ -6214,7 +6214,6 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package flycheck-languagetool
   :after flycheck
-  :disabled
   :init
   (setq flycheck-languagetool-server-jar
         (expand-file-name (file-name-concat paths-dir-external-repos "LanguageTool/languagetool-server.jar")))

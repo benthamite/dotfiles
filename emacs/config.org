@@ -4964,6 +4964,7 @@ The original package appears to no longer be maintained, so I have created my ow
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package display-wttr
+  :disabled ; triggering lots of errors
   :after calendar-extras
   :custom
   (display-wttr-interval (* 15 60))

@@ -52,7 +52,6 @@
 (defcustom org-roam-extras-excluded-files
   (list
    paths-file-orb-noter-template
-   "calendar.org" ; added directly as agenda file
    "quotes-old.org"
    ".org2blog.org"
    "wiki-notes.org" ; removing temporarily

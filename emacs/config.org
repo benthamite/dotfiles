@@ -7623,8 +7623,9 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package aggressive-indent
-  :hook
-  (prog-mode-hook . aggressive-indent-mode))
+  :config
+  (global-aggressive-indent-mode 1)
+  (add-to-list 'aggressive-indent-excluded-modes 'snippet-mode))
 #+end_src
 
 ** elpy

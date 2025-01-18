@@ -967,11 +967,11 @@ CLOCK: [2023-04-30 Sun 11:59]--[2023-04-30 Sun 12:07] =>  0:08
          [:r [:open "/Applications/Karabiner-Elements.app"]]
          [:s [:open "/Applications/Slack.app"]]
          [:t [:open "/System/Applications/Utilities/Terminal.app"]]
-         [:u [:open "/Applications/Revolut.app"]]
          [:v [:open "/Applications/mpv.app"]]
          [:w [:open "/Applications/HoudahSpot.app"]]
+         [:x [:open "/Applications/Plex Media Server.app/"]]
          [:y [:open "/Applications/Spotify.app"]]
-         [:comma [:open "/Applications/Plex Media Server.app/"]]
+         [:comma [:open "/Applications/Home Assistant.app"]]
          [:period [:open "/Applications/Tor Browser.app"]]
          ]}
 #+end_src

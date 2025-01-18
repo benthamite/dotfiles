@@ -1175,7 +1175,9 @@ Partly borrowed from [[https://gitlab.com/protesilaos/dotfiles/-/blob/350ca3144c
   (redisplay-skip-fontification-on-input t)
   ;; emacs-lsp.github.io/lsp-mode/page/performance/
   (read-process-output-max (expt 1024 2))
-  (default bidi-paragraph-direction 'left-to-right))
+
+  :config
+  (setq bidi-paragraph-direction 'left-to-right))
 #+end_src
 
 * secrets

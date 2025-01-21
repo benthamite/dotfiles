@@ -55,7 +55,11 @@ To download the CSV file, go to <https://polymarket.com/portfolio?tab=history>,
 click on \"Filter\", set a range from one day after the most recent Polymarket
 transaction on Ledger to today. Remove the first row of the CSV file and the
 `Reward' lines before importing it. Note that if you held a contract until
-expiration, you must set its resolution value manually."
+expiration, you must set its resolution value manually.
+
+NOTE: The Polymarket export functionality seems broken, so as of 2025-01-20 I am
+not using this function; instead, I record the changes in the balance as capital
+gains."
   (interactive (list (read-file-name "Polymarket CSV file: " paths-dir-downloads)))
   (let (token-alist)
     (with-temp-buffer

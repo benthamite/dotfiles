@@ -6685,7 +6685,6 @@ https://gitlab.com/chrisberkhout/pricehist
         ("A-s-b" . ledger-mode-extras-decrease-date-by-one-day)
         ("A-s-c" . ledger-mode-extras-copy-transaction-at-point)
         ("A-s-f" . ledger-mode-extras-increase-date-by-one-day)
-        ("A-s-p" . mode-mode-extras-extras-report-net-worth-USD)
         ("A-s-t" . ledger-mode-extras-sort-region-or-buffer-reversed)
         ("A-s-u" . ledger-mode-extras-report-net-worth-USD)
         ("A-s-w" . ledger-mode-extras-report-net-worth)

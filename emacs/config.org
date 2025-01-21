@@ -10947,15 +10947,6 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
         ("s-A-s" . message-send)))
 #+end_src
 
-*** TODO [#4] Configure =message-send-mail-function= so that messages are sent asynchronously
-:PROPERTIES:
-:ID:       6A48B9FE-3FC9-4D41-B124-F9D7D3898CB4
-:Effort:   0:45
-:END:
-
-[[https://turkja.fi/posts/emacs-and-smtp/][Emacs and SMTP with gmail | Jarkko Turkulainen]]
-https://gist.github.com/loziju/66d3f024e102704ff5222e54a4bfd50e
-
 ** mml
 :PROPERTIES:
 :ID:       2A87061B-BE45-443B-AB2C-893A69C20003

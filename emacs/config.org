@@ -7761,7 +7761,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
   :config
   (require 'tlon-core)
-  (setq gptel-api-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared)))
+  (setq gptel-api-key (auth-source-pass-get "emacs" (concat "tlon/core/openai.com/" tlon-email-shared)))
   (setq gptel-expert-commands t) ; not a user option
 
   ;; default model

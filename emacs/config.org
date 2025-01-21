@@ -6160,6 +6160,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   (flycheck-emacs-lisp-load-path 'inherit)
   (flycheck-indication-mode nil)
   (flycheck-display-errors-delay 0.5)
+  (flycheck-checker-error-threshold 10000)
 
   :config
   (faces-extras-set-and-store-face-attributes

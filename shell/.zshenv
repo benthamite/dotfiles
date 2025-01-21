@@ -1,6 +1,7 @@
 # Basic PATH setup
 export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 export PATH="$HOME/bin:$HOME/.local/bin:$PATH"
+export PATH="/opt/homebrew/opt/node/bin:$PATH"
 
 # Essential environment variables
 export DOTFILES="$HOME/Library/CloudStorage/Dropbox/dotfiles"

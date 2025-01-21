@@ -1693,6 +1693,9 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :custom
   (forge-owned-accounts '(("benthamite")))
   (forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'
+  ;; do not show inactive topics by default; keep other settings unchanged
+  (forge-status-buffer-default-topic-filters
+   (forge--topics-spec :type 'topic :active nil :state 'open :order 'newest))
 
   :config
   ;; why is this turned on by default!?

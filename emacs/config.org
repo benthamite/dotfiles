@@ -1435,7 +1435,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
     (message "Word mode %s"
              (if ediff-word-mode "disabled" "enabled"))
     (ediff-update-diffs))
-  
+
   :bind
   (("A-d" . ediff)))
 #+end_src
@@ -6088,12 +6088,12 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package eat
   :ensure (:host codeberg
-		 :repo "akib/emacs-eat"
-		 :files ("*.el" ("term" "term/*.el") "*.texi"
-			 "*.ti" ("terminfo/e" "terminfo/e/*")
-			 ("terminfo/65" "terminfo/65/*")
-			 ("integration" "integration/*")
-			 (:exclude ".dir-locals.el" "*-tests.el")))
+                 :repo "akib/emacs-eat"
+                 :files ("*.el" ("term" "term/*.el") "*.texi"
+                         "*.ti" ("terminfo/e" "terminfo/e/*")
+                         ("terminfo/65" "terminfo/65/*")
+                         ("integration" "integration/*")
+                         (:exclude ".dir-locals.el" "*-tests.el")))
   :hook
   (eshell-load-hook . eat-eshell-mode)
   (eshell-load-hook . eat-eshell-visual-command-mode))
@@ -6668,7 +6668,6 @@ https://gitlab.com/chrisberkhout/pricehist
 :PROPERTIES:
 :ID:       3FC5A39F-AEA9-4D54-AB55-836F58DA8103
 :END:
-
 
 /[[file:extras/ledger-mode-extras.el][ledger-mode-extras]] collects my extensions for ~ledger-mode~./
 
@@ -9535,30 +9534,30 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
   (org-vcard-styles-languages-mappings
    '(("flat"
       (("en"
-        (("3.0"  
-	  (("ADDRESS_HOME" . "ADR;TYPE=\"home\";PREF=1")
-	   ("ADDRESS_HOME" . "ADR;TYPE=\"home\"")
-	   ("BIRTHDAY" . "BDAY")
-	   ("EMAIL" . "EMAIL;PREF=1")
-	   ("FN" . "FN")
-	   ("PHOTO" . "PHOTO;TYPE=JPEG")
-	   ("URL" . "item1.URL;type=pref")))
-	 ("4.0"
-	  (("ADDRESS_HOME" . "ADR;TYPE=\"home\";PREF=1")
-	   ("ADDRESS_HOME" . "ADR;TYPE=\"home\"")
-	   ("BIRTHDAY" . "BDAY")
-	   ("EMAIL" . "EMAIL;PREF=1")
-	   ("FN" . "FN")
-	   ("PHOTO" . "PHOTO;TYPE=JPEG")
-	   ("URL" . "URL;PREF=1")))
-	 ("2.1"
-	  (("ADDRESS_HOME" . "ADR;HOME;PREF")
-	   ("ADDRESS_HOME" . "ADR;HOME")
-	   ("BIRTHDAY" . "BDAY")
-	   ("EMAIL" . "EMAIL;PREF")
-	   ("FN" . "FN")
-	   ("PHOTO" . "PHOTO;TYPE=JPEG")
-	   ("URL" . "URL;PREF")))))))))
+        (("3.0"
+          (("ADDRESS_HOME" . "ADR;TYPE=\"home\";PREF=1")
+           ("ADDRESS_HOME" . "ADR;TYPE=\"home\"")
+           ("BIRTHDAY" . "BDAY")
+           ("EMAIL" . "EMAIL;PREF=1")
+           ("FN" . "FN")
+           ("PHOTO" . "PHOTO;TYPE=JPEG")
+           ("URL" . "item1.URL;type=pref")))
+         ("4.0"
+          (("ADDRESS_HOME" . "ADR;TYPE=\"home\";PREF=1")
+           ("ADDRESS_HOME" . "ADR;TYPE=\"home\"")
+           ("BIRTHDAY" . "BDAY")
+           ("EMAIL" . "EMAIL;PREF=1")
+           ("FN" . "FN")
+           ("PHOTO" . "PHOTO;TYPE=JPEG")
+           ("URL" . "URL;PREF=1")))
+         ("2.1"
+          (("ADDRESS_HOME" . "ADR;HOME;PREF")
+           ("ADDRESS_HOME" . "ADR;HOME")
+           ("BIRTHDAY" . "BDAY")
+           ("EMAIL" . "EMAIL;PREF")
+           ("FN" . "FN")
+           ("PHOTO" . "PHOTO;TYPE=JPEG")
+           ("URL" . "URL;PREF")))))))))
 
   :config
   (defun org-vcard--save-photo-and-make-link (base64-data contact-name)
@@ -9567,28 +9566,28 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
            (safe-name (replace-regexp-in-string "[^a-zA-Z0-9]" "_" contact-name))
            (filename (expand-file-name (concat safe-name ".jpg") photo-dir)))
       (unless (file-directory-p photo-dir)
-	(make-directory photo-dir t))
+        (make-directory photo-dir t))
       (with-temp-file filename
-	(set-buffer-multibyte nil)  ; Use unibyte mode for binary data
-	(let ((coding-system-for-write 'binary))
+        (set-buffer-multibyte nil)  ; Use unibyte mode for binary data
+        (let ((coding-system-for-write 'binary))
           ;; Remove potential MIME type header if present
           (when (string-match "^data:image/[^;]+;base64," base64-data)
             (setq base64-data (substring base64-data (match-end 0))))
           ;; Process base64 data in chunks
           (let ((chunk-size 4096)
-		(start 0)
-		(total-length (length base64-data)))
+                (start 0)
+                (total-length (length base64-data)))
             (while (< start total-length)
               (let* ((end (min (+ start chunk-size) total-length))
                      (chunk (substring base64-data start end)))
-		(insert (base64-decode-string chunk))
-		(setq start end))))))
+                (insert (base64-decode-string chunk))
+                (setq start end))))))
       (format "\n#+ATTR_ORG: :width 300\n[[file:%s]]\n" filename)))
 
   (advice-add 'org-vcard--transfer-write :around
               (lambda (orig-fun direction content destination)
-		"Convert PHOTO properties to image links before writing."
-		(if (eq direction 'import)
+                "Convert PHOTO properties to image links before writing."
+                (if (eq direction 'import)
                     (let ((modified-content
                            (with-temp-buffer
                              (insert content)
@@ -9596,20 +9595,20 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
                              (while (re-search-forward "^:PHOTO: \\(.+\\)$" nil t)
                                (let* ((base64-data (match-string 1))
                                       (heading (save-excursion
-						 (re-search-backward "^\\* \\(.+\\)$" nil t)
-						 (match-string 1)))
+                                                 (re-search-backward "^\\* \\(.+\\)$" nil t)
+                                                 (match-string 1)))
                                       (photo-link (condition-case err
                                                       (org-vcard--save-photo-and-make-link
                                                        base64-data heading)
                                                     (error
-                                                     (message "Error processing photo for %s: %s" 
+                                                     (message "Error processing photo for %s: %s"
                                                               heading (error-message-string err))
                                                      ":PHOTO: [Error processing photo]\n"))))
-				 (delete-region (line-beginning-position) (line-end-position))
-				 ;; Delete any following empty line
-				 (when (looking-at "\n")
+                                 (delete-region (line-beginning-position) (line-end-position))
+                                 ;; Delete any following empty line
+                                 (when (looking-at "\n")
                                    (delete-char 1))
-				 (save-excursion
+                                 (save-excursion
                                    (re-search-forward ":END:\n" nil t)
                                    (insert photo-link))))
                              (buffer-string))))
@@ -9858,14 +9857,13 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 :ID:       44F722DC-C324-4A86-85A1-F103812B2A6A
 :END:
 
-
 /[[file:extras/org-roam-extras.el][org-roam-extras]] collects my extensions for ~org-roam~./
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-personal-package org-roam-extras
   :custom
   (org-roam-extras-auto-show-backlink-buffer t)
-  
+
   :config
   ;; exclude headings in specific files and directories
   (setq org-roam-file-exclude-regexp

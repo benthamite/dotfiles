@@ -6601,15 +6601,15 @@ To populate the database of historical prices:
   :config
   (dolist (report
            '(("net worth"
-              "%(binary) -f %(ledger-file) bal --strict")
+              "%(binary) --date-format '%Y-%m-%d' -f %(ledger-file) bal --strict")
              ("net worth (USD)"
-              "%(binary) -f %(ledger-file) --price-db .pricedb --exchange USD bal ^assets ^liabilities --strict")
+              "%(binary) --date-format '%Y-%m-%d' -f %(ledger-file) --price-db .pricedb --exchange USD bal ^assets ^liabilities --strict")
              ("account (USD)"
-              "%(binary) -f %(ledger-file) reg %(account) --price-db .pricedb --exchange USD")
-             ;; I need to understand how the `--basis' flag works
+              "%(binary) --date-format '%Y-%m-%d' -f %(ledger-file) reg %(account) --price-db .pricedb --exchange USD --limit \"commodity == 'USD'\"")
              ("cost basis"
-              "%(binary) -f %(ledger-file) --basis bal %(account) --strict")
-             ("account (unrounded)" "%(binary) --unround  -f %(ledger-file) reg %(account)")))
+              "%(binary) --date-format '%Y-%m-%d' -f %(ledger-file) --basis bal %(account) --strict")
+             ("account (unrounded)" 
+              "%(binary) --date-format '%Y-%m-%d' --unround -f %(ledger-file) reg %(account)")))
     (add-to-list 'ledger-reports report))
 
   :bind

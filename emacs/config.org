@@ -10934,6 +10934,10 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
      (message-header-other :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)
      (message-header-cc :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)))
 
+  :hook
+  (message-send-hook . buffer-disable-undo) ; required to avoid an error
+  (message-sent-hook . files-extras-kill-this-buffer)
+
   :bind
   (:map message-mode-map
         ("s-a" . ml-attach-file)

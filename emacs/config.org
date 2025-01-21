@@ -6593,7 +6593,7 @@ To populate the database of historical prices:
   :custom
   (ledger-default-date-format ledger-iso-date-format)
   (ledger-reconcile-default-commodity "ARS")
-  (ledger-mode-extras-currencies '("USD" "EUR" "GBP" "MXN" "ARS"))
+  (ledger-mode-extras-currencies '("USD" "EUR" "GBP" "ARS"))
   (ledger-schedule-file paths-file-tlon-ledger-schedule-file)
   (ledger-schedule-look-forward 0)
   (ledger-schedule-look-backward 30)

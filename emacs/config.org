@@ -2545,7 +2545,8 @@ Note that the icons need to be installed via =nerd-icons-install-fonts=. If you 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-feature hl-line
   :hook
-  ('dired-mode-hook . hl-line-mode))
+  (dired-mode-hook . hl-line-mode)
+  (ledger-reconcile-mode-hook . hl-line-mode))
 #+end_src
 
 ** lin

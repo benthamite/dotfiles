@@ -68,7 +68,7 @@ the function `vulpea-agenda-files-update')."
   :group 'org-extras)
 
 (defcustom org-extras-bbdb-anniversaries-heading
-  "2A37A3CC-2A11-4933-861B-48B129B9EA2D"
+  "2CE5A4E6-842C-4350-ADD0-13D5FC101A20"
   "Heading in `calendar.org' that contains the BBDB anniversaries.
 Set to nil to disable display of BBDB anniversaries in agenda."
   :type 'string

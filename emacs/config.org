@@ -8602,9 +8602,6 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
    `(("." "Todo" entry
       (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
       "** TODO %?\n" :empty-lines 1)
-     ("c" "Calendar" entry
-      (file ,paths-file-calendar)
-      "* TODO %^ \nDEADLINE: %^T" :empty-lines 1 :immediate-finish t :prepend t)
      ;; djcbsoftware.nl/code/mu/mu4e/Org_002dmode-links.html
      ("e" "Email" entry
       (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
@@ -8622,11 +8619,9 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
      ("n" "Telegram" entry
       (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
       "** TODO Follow up with %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
-     ("r" "Bibliography reference" plain
-      (file ,paths-file-orb-noter-template)
-      ;; :if-new
-      ;; (file ,paths-file-orb-capture-template)
-      :unnarrowed t :immediate-finish t)
+     ("r" "Calendar" entry
+      (file ,paths-file-calendar)
+      "* TODO %^ \nDEADLINE: %^T" :empty-lines 1 :immediate-finish t :prepend t)
      ("s" "Slack" entry
       (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
       "** TODO Follow up %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)

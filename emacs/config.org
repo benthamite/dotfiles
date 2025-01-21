@@ -8383,7 +8383,7 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
    ("A-s-c" . org-extras-mark-checkbox-complete-and-move-to-next-item)
    ("A-s-o" . org-extras-reset-checkbox-state-subtree)
    ("H-s-w" . org-extras-refile-and-archive)
-   ("A-s-w" . org-extras-refile-goto-latest)
+   ("A-H-w" . org-extras-refile-goto-latest)
    ("s-A-l" . org-extras-url-dwim)))
 #+end_src
 
@@ -8647,7 +8647,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
 
   :bind
   (("H-t" . org-capture)
-   ("H-T" . org-capture-goto-last-stored)
+   ("A-H-t" . org-capture-goto-last-stored)
    :map org-capture-mode-map
    ("s-c" . org-capture-finalize)
    ("s-w" . org-capture-refile)))

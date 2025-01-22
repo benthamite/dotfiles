@@ -6608,11 +6608,13 @@ To populate the database of historical prices:
               "%(binary) --date-format '%Y-%m-%d' -f %(ledger-file) bal --strict")
              ("net worth (USD)"
               "%(binary) --date-format '%Y-%m-%d' -f %(ledger-file) --price-db .pricedb --exchange USD bal ^assets ^liabilities --strict")
+              ("account"
+              "%(binary) --date-format '%Y-%m-%d' -f %(ledger-file) reg %(account) --price-db .pricedb")
              ("account (USD)"
               "%(binary) --date-format '%Y-%m-%d' -f %(ledger-file) reg %(account) --price-db .pricedb --exchange USD --limit \"commodity == 'USD'\"")
              ("cost basis"
               "%(binary) --date-format '%Y-%m-%d' -f %(ledger-file) --basis bal %(account) --strict")
-             ("account (unrounded)" 
+             ("account (unrounded)"
               "%(binary) --date-format '%Y-%m-%d' --unround -f %(ledger-file) reg %(account)")))
     (add-to-list 'ledger-reports report))
 

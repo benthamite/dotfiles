@@ -4,6 +4,47 @@
 
 This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository. It is meant to be read primarily by members of the Tlön team, but it may be of interest to others as well.
 
+* Version 6.8.6 on 2025-01-22
+** Shell & Environment Configuration
+- Modified shell configuration for better organization and performance:
+  - Added lazy loading for nvm and node path setup
+  - Cleaned up zsh configuration based on Claude suggestions
+
+** Package Specific Changes
+*** forge
+- Changed topic filters to not hide inactive topics by default
+
+*** flycheck
+- Set ~flycheck-checker-error-threshold~ to 10000
+
+*** ledger-mode 
+- Modified reports to use ISO 8601 date format
+- Added new report option for account viewing
+- Removed unused currency from ~ledger-mode-extras-currencies~
+
+*** message-mode
+- Added hooks to handle post-send buffer behavior
+
+*** org-capture
+- Modified default priority for calendar todos
+- Made key bindings more consistent
+
+*** org-roam
+- Removed calendar.org from excluded files
+- Revert previous commit that caused recursive loop issues
+
+*** yasnippet
+- Added several new snippets:
+- Added snippet-mode to aggressive-indent excluded modes
+
+** UI & Display Changes
+*** display-wttr
+- Disabled package due to persistent errors
+
+*** eww
+- Changed default search engine to DuckDuckGo since Google requires Javascript
+
+
 * Version 6.8.5 on 2025-01-07
 ** org-vcard
 - Added package for importing/exporting vCards from org-mode
@@ -29,7 +70,6 @@ This document summarizes the changes pertaining to my Emacs configuration in eac
 ** ediff
 - Removed local key binding for =ediff-toggle-word-mode=
 
-
 * Version 6.8.3 on 2024-12-06
 ** Configuration Updates
 *** Package Loading
@@ -52,7 +92,6 @@ This document summarizes the changes pertaining to my Emacs configuration in eac
 - URL list updates for browser handling
 - Telega configuration cleanup and function name updates
 - Several small fixes and improvements across various packages
-
 
 * Version 6.8.2 on 2024-11-24
 ** Package updates and refinements

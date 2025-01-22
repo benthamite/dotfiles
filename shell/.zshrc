@@ -1,8 +1,10 @@
 # Local override file
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
 
-# Lazy-load nvm
 export NVM_DIR="$HOME/.nvm"
+export PATH="$NVM_DIR/versions/node/v20.18.2/bin:$PATH"
+
+# Lazy-load nvm
 nvm() {
     unset nvm
     [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && . "/opt/homebrew/opt/nvm/nvm.sh"

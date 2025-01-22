@@ -8626,7 +8626,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
       "** TODO Follow up with %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
      ("r" "Calendar" entry
       (file ,paths-file-calendar)
-      "* TODO %^ \nDEADLINE: %^T" :empty-lines 1 :immediate-finish t :prepend t)
+      "* TODO [#5] %^ \nDEADLINE: %^T" :empty-lines 1 :immediate-finish t :prepend t)
      ("s" "Slack" entry
       (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
       "** TODO Follow up %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)

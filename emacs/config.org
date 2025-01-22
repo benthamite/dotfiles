@@ -11984,7 +11984,7 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
 (use-feature eww
   :after simple-extras
   :custom
-  (eww-search-prefix "https://www.google.com/search?q=")
+  (eww-search-prefix "https://duckduckgo.com/?t=h_&q=")
   (eww-restore-desktop t)
   (eww-desktop-remove-duplicates t)
   (eww-header-line-format nil)

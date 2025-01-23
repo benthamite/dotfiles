@@ -6245,6 +6245,13 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
         (flycheck-select-checker 'languagetool)))))
 #+end_src
 
+*** TODO Submit patch for persistent error
+:PROPERTIES:
+:ID:       74AC88E6-2752-44AE-A1F8-D3FE2BA2AE68
+:END:
+
+See [[id:CBEE980E-2D38-4D73-A806-FF824EE5305C][Claude discussion]].
+
 ** lsp-mode
 :PROPERTIES:
 :ID:       E9D2E6CA-5256-4776-801F-13281BD390C9

@@ -148,64 +148,66 @@ If DIR is nil, use `paths-dir-notes'."
   "Return a list of selected headings sorted by priority.
 The selection includes all headings with a priority and either no todo status or
 the todo status TODO, and excludes all headings with a date (scheduled or
-deadline). With ARG prefix argument, prompt the user to select from a unique
-list of tags and further restrict the selection to headings with that tag."
+deadline). With ARG prefix argument, prompt user to filter by tag or directory."
   (interactive "P")
-  (let* ((selection (when arg
-		      (org-roam-extras-node-select-tag)))
-	 (headings-with-priority
-	  (if selection
-	      (org-roam-db-query `[:select [id file title priority]
+  (let* ((filter-type (when arg
+			(completing-read "Filter by: " '("tag" "directory"))))
+         (selection (when (equal filter-type "tag")
+                      (org-roam-extras-node-select-tag)))
+         (directory (when (equal filter-type "directory")
+                      (expand-file-name (read-directory-name "Select directory: "))))
+         (dir-clause (when directory
+                       `(like nodes:file ,(concat (file-name-as-directory directory) "%"))))
+         (headings-with-priority
+          (if selection
+              (org-roam-db-query `[:select [id file title priority]
 					   :from nodes
 					   :left-join tags
 					   :on (= nodes:id tags:node-id)
 					   :where (and
 						   (= tags:tag ,selection)
 						   (notnull nodes:priority)
-						   ;; how do I avoid the double negation?
 						   (not (notnull nodes:scheduled))
 						   (not (notnull nodes:deadline))
 						   (or
 						    (= nodes:todo "TODO")
 						    (not (notnull nodes:todo))))
 					   :order-by (asc nodes:priority)])
-	    (org-roam-db-query `[:select [id file title priority]
+            (org-roam-db-query `[:select [id file title priority]
 					 :from nodes
-					 :left-join tags
-					 :on (= nodes:id tags:node-id)
 					 :where (and
 						 (notnull nodes:priority)
-						 ;; how do I avoid the double negation?
 						 (not (notnull nodes:scheduled))
 						 (not (notnull nodes:deadline))
 						 (or
 						  (= nodes:todo "TODO")
-						  (not (notnull nodes:todo))))
+						  (not (notnull nodes:todo)))
+						 ,@(when dir-clause (list dir-clause)))
 					 :order-by (asc nodes:priority)])))
-	 (result '()))
+         (result '()))
     (dolist (record headings-with-priority)
       (let* ((id (nth 0 record))
-	     (title (nth 2 record))
-	     (priority (nth 3 record))
-	     (formatted-priority (if priority
-				     (format "[#%c] " priority)
-				   ""))
-	     (formatted-heading (concat formatted-priority title)))
-	(push (cons formatted-heading `(lambda ()
+             (title (nth 2 record))
+             (priority (nth 3 record))
+             (formatted-priority (if priority
+                                     (format "[#%c] " priority)
+                                   ""))
+             (formatted-heading (concat formatted-priority title)))
+        (push (cons formatted-heading `(lambda ()
 					 (org-id-goto ,id)))
-	      result)))
+              result)))
     (if result
 	(let* ((candidates (reverse result))
 	       (selection (consult--read
-			   candidates
-			   :prompt "Jump to heading: "
-			   :category 'jump
-			   :history t
-			   :require-match t
-			   :sort nil))
+                           candidates
+                           :prompt "Jump to heading: "
+                           :category 'jump
+                           :history t
+                           :require-match t
+                           :sort nil))
 	       (action (cdr (assoc selection candidates))))
-	  (funcall action))
-      (message "No headings with priority found."))))
+          (funcall action))
+      (message "No headings found."))))
 
 (defun org-roam-extras-node-select-tag ()
   "Prompt for tag selection from list of org tags."

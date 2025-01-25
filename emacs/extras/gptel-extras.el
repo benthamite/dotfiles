@@ -82,12 +82,12 @@ buffer or selection. The function uses a 1.4 token/word conversion factor, but
 the actual cost may deviate from this estimate. Also note that this estimate is
 for text requests; media files are not included in the calculation."
   (when-let* ((cost-per-1m-tokens (get gptel-model :input-cost))
+	      (tokens-per-word 1.4)
 	      (words-main (if (region-active-p)
 			      (count-words (region-beginning) (region-end))
 			    (count-words (point-min) (point))))
 	      (words-context (gptel-extras-count-words-in-context))
 	      (total-words (+ words-main words-context))
-	      (tokens-per-word 1.4)
 	      (cost (/ (* cost-per-1m-tokens tokens-per-word total-words) 1000000.0)))
     cost))
 

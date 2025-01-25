@@ -218,8 +218,8 @@ to add an additional cost field in the header line."
 (autoload 'magit-git-insert "magit-git")
 (defun gptel-extras-summarize-commit-diffs (beg end &optional include-stats)
   "Summarize the diffs of commits in the selected region using an LLM.
-BEG and END mark the region of commits to summarize. When INCLUDE-STATS is
-non-nil (with prefix arg), include diffstats in the prompt."
+BEG and END mark the region of commits to summarize in `magit-log-mode'. When
+INCLUDE-STATS is non-nil (with prefix arg), include diffstats in the prompt."
   (interactive "r\nP")
   (unless (derived-mode-p 'magit-log-mode)
     (user-error "This function is meant to be called from the Magit log (`M-x magit RET ll')"))

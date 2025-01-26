@@ -18,6 +18,7 @@ beyondpricing.com
 bloomberg.com
 bolt.eu
 box.com
+buenosaires.gob.ar
 calendar.google.com
 calendly.com
 cheerfy.com
@@ -37,6 +38,7 @@ dhl.
 digitalconcerthall.com
 disqus.com
 docs.google.com
+docusign.net
 doi.org
 domains.google.com
 drive.google.com

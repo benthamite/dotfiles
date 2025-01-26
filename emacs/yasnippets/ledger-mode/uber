@@ -5,6 +5,6 @@
 # --
 `(format-time-string "%Y-%m-%d")` Uber
 Expenses:Transportation:Taxi  $1 ARS ; taxi $2
-Assets:Ualá
+Assets:Mercado Pago
 
 $0

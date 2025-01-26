@@ -319,7 +319,7 @@ This function gets STRING when PROCESS produces output."
     (with-current-buffer (process-buffer process)
       (message "OCR in progress...")
       (cond ((string-match-p "page already has text! - aborting" string)
-	     (message "OCR already performed on this file; to perform OCR any way, run with a prefix argument."))
+	     (message "OCR already performed on this file; to perform OCR anyway, run with a prefix argument."))
 	    ((string-match-p "TaggedPDFError" string)
 	     (message "The PDF was generated from an office document and does not need OCR."))
 	    ;; when invoked with `--force-ocr'

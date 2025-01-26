@@ -96,12 +96,13 @@ for text requests; media files are not included in the calculation."
   "Iterate over the files in context and sum the number of words in each file.
 Binaries are skipped."
   (let ((revert-without-query t))
-    (cl-reduce (lambda (accum file)
-                 (if (gptel--file-binary-p (car file))
-                     accum
-                   (let ((words (with-current-buffer (find-file-noselect (car file))
-                                  (count-words (point-min) (point-max)))))
-                     (+ accum words))))
+    (cl-reduce (lambda (accum file-list)
+		 (let ((file (car file-list)))
+                   (if (gptel--file-binary-p file)
+                       accum
+                     (let ((words (with-current-buffer (find-file-noselect file)
+                                    (count-words (point-min) (point-max)))))
+                       (+ accum words)))))
                gptel-context--alist
                :initial-value 0)))
 

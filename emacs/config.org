@@ -104,6 +104,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#orgit-forge][orgit-forge]]
   - [[#forge-search][forge-search]]
   - [[#forge-extras][forge-extras]]
+  - [[#emacs-pr-review][emacs-pr-review]]
   - [[#git-auto-commit-mode][git-auto-commit-mode]]
   - [[#emsg-blame][emsg-blame]]
 - [[#display][display]]
@@ -1794,6 +1795,20 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   (advice-add 'forge-visit-this-topic :before #'forge-extras-sync-read-status)
 
   (run-with-idle-timer 30 t #'forge-extras-pull-notifications))
+#+end_src
+
+** emacs-pr-review
+:PROPERTIES:
+:ID:       56FB9BF0-5E8A-4D4E-8D1A-DDD2AE2A8B4C
+:END:
+
+/[[https://github.com/blahgeek/emacs-pr-review][emacs-pr-review]] provides support for reviewing pull requests in Emacs./
+
+See [[https://gitlab.com/magus/mes/-/blob/8615353ec007bd66209ee1ae3badddd26d3a3dc9/lisp/mes-dev-basics.el#L76][this config]] for ideas.
+
+#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+(use-package pr-review
+  :after forge)
 #+end_src
 
 ** git-auto-commit-mode

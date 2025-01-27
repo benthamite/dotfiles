@@ -266,6 +266,29 @@ Binaries are skipped."
 	      gptel--old-header-line nil)
       (setq mode-line-process nil))))
 
+;; this command is useful for identifying large context files that may be adding
+;; unnecessary costs
+(defun gptel-extras-list-context-files ()
+  "List all files in the current gptel context, sorted by size (largest first)."
+  (interactive)
+  (let* ((files (cl-remove-if-not #'stringp (mapcar #'car gptel-context--alist)))
+         (file-sizes (mapcar (lambda (f)
+                               (cons f (file-attribute-size
+					(file-attributes f))))
+                             files))
+         (sorted-files (sort file-sizes
+                             (lambda (a b) (> (cdr a) (cdr b))))))
+    (with-current-buffer (get-buffer-create "*GPTel Context Files*")
+      (erase-buffer)
+      (insert "Context Files (sorted by size):\n\n")
+      (dolist (file sorted-files)
+        (insert (format "%.2f KB\t%s\n"
+			(/ (cdr file) 1024.0)
+			(car file))))
+      (goto-char (point-min))
+      (pop-to-buffer (current-buffer))
+      (view-mode 1))))
+
 ;;;;; Summarize commit diffs
 
 (autoload 'magit-commit-at-point "magit-git")
@@ -489,12 +512,12 @@ In Org files, saves as a file property. In Markdown, as a file-local variable."
 
 ;;;;;; Clear
 
-(autoload 'gptel-context-remove "gptel-context")
+(autoload 'gptel-context-remove-all "gptel-context")
 ;;;###autoload
 (defun gptel-extras-clear-file-context ()
   "Clear the current `gptel' file context."
   (interactive)
-  (gptel-context-remove)
+  (gptel-context-remove-all)
   (message "Cleared `gptel' context."))
 
 ;;;;; Misc

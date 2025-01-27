@@ -76,6 +76,9 @@ Users may want to set this to nil when adding lots of files to the context, to
   (file-name-concat paths-dir-dotemacs "extras/gptel-extras-changelog-template.org")
   "The file with the changelog template for `gptel-extras-summarize-commit-diffs'.")
 
+(defvar gptel-extras--context-cost nil
+  "Cached cost calculation for context files.")
+
 ;;;; Functions
 
 ;;;;; Estimate cost
@@ -88,15 +91,31 @@ Note that the cost is an approximation based on the number of words in the
 buffer or selection. The function uses a 1.4 token/word conversion factor, but
 the actual cost may deviate from this estimate. Also note that this estimate is
 for text requests; media files are not included in the calculation."
+  (when-let ((buffer-cost (gptel-extras-get-buffer-cost)))
+    (+ buffer-cost (or gptel-extras--context-cost 0))))
+
+(defun gptel-extras-get-context-cost ()
+  "Calculate cost for the current context files."
   (when-let* ((cost-per-1m-tokens (get gptel-model :input-cost))
-	      (tokens-per-word 1.4)
-	      (words-main (if (region-active-p)
-			      (count-words (region-beginning) (region-end))
-			    (count-words (point-min) (point))))
-	      (words-context (gptel-extras-count-words-in-context))
-	      (total-words (+ words-main words-context))
-	      (cost (/ (* cost-per-1m-tokens tokens-per-word total-words) 1000000.0)))
-    cost))
+              (tokens-per-word 1.4)
+              (words-context (gptel-extras-count-words-in-context)))
+    (/ (* cost-per-1m-tokens tokens-per-word words-context) 1000000.0)))
+
+(defun gptel-extras-get-buffer-cost ()
+  "Calculate cost for the current buffer or region."
+  (when-let* ((cost-per-1m-tokens (get gptel-model :input-cost))
+              (tokens-per-word 1.4)
+              (words-main (if (region-active-p)
+                              (count-words (region-beginning) (region-end))
+                            (count-words (point-min) (point)))))
+    (/ (* cost-per-1m-tokens tokens-per-word words-main) 1000000.0)))
+
+(defun gptel-extras-update-context-cost (&rest _)
+  "Update the context cost when the context is modified."
+  (setq gptel-extras--context-cost (gptel-extras-get-context-cost)))
+
+(advice-add 'gptel-context-add :after #'gptel-extras-update-context-cost)
+(advice-add 'gptel-context-remove :after #'gptel-extras-update-context-cost)
 
 (declare-function gptel--file-binary-p "gptel-context")
 (defun gptel-extras-count-words-in-context ()

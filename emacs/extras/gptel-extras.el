@@ -95,16 +95,23 @@ for text requests; media files are not included in the calculation."
 (defun gptel-extras-count-words-in-context ()
   "Iterate over the files in context and sum the number of words in each file.
 Binaries are skipped."
-  (let ((revert-without-query t))
-    (cl-reduce (lambda (accum file-list)
-		 (let ((file (car file-list)))
-                   (if (gptel--file-binary-p file)
-                       accum
-                     (let ((words (with-current-buffer (find-file-noselect file)
-                                    (count-words (point-min) (point-max)))))
-                       (+ accum words)))))
-               gptel-context--alist
-               :initial-value 0)))
+  (let ((revert-without-query t)
+	(initial-buffers (buffer-list)))
+    (prog1
+	(cl-reduce (lambda (accum file-list)
+		     (let ((file (car file-list)))
+		       (if (gptel--file-binary-p file)
+			   accum
+			 (+ accum
+			    (with-temp-buffer
+			      (insert-file-contents file)
+			      (count-words (point-min) (point-max)))))))
+		   gptel-context--alist
+		   :initial-value 0)
+      ;; Clean up any temp buffers we created
+      (dolist (buf (buffer-list))
+	(unless (member buf initial-buffers)
+	  (kill-buffer buf))))))
 
 (define-minor-mode gptel-mode
   "Minor mode for interacting with LLMs.

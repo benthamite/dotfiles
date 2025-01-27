@@ -72,7 +72,7 @@
   :group 'paths)
 
 (defcustom paths-dir-google-drive
-  (file-name-concat (expand-file-name "~") "Google Drive/")
+  (file-name-concat (expand-file-name "~") "My Drive/")
   "Path to the Google Drive directory."
   :type 'directory
   :group 'paths)

@@ -5,7 +5,7 @@
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/gptel-extras.el
 ;; Version: 0.2
-;; Package-Requires: ((gptel "0.7.1") (paths "0.1"))
+;; Package-Requires: ((el-patch "3.1") (gptel "0.7.1") (paths "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -28,6 +28,7 @@
 
 ;;; Code:
 
+(require 'el-patch)
 (require 'gptel)
 (require 'paths)
 
@@ -139,10 +140,10 @@ Binaries are skipped."
 	(unless (member buf initial-buffers)
 	  (kill-buffer buf))))))
 
-(define-minor-mode gptel-mode
-  "Minor mode for interacting with LLMs.
-This is just the original `gptel-mode' definition with a modification
-to add an additional cost field in the header line."
+;; This is just the original `gptel-mode' definition with a modification to add
+;; an additional cost field in the header line.
+(el-patch-define-minor-mode gptel-mode
+  "Minor mode for interacting with LLMs."
   :lighter " GPT"
   :keymap
   (let ((map (make-sparse-keymap)))
@@ -150,8 +151,7 @@ to add an additional cost field in the header line."
     map)
   (if gptel-mode
       (progn
-	(unless (or (derived-mode-p 'org-mode 'markdown-mode)
-		    (eq major-mode 'text-mode))
+	(unless (derived-mode-p 'org-mode 'markdown-mode 'text-mode)
 	  (gptel-mode -1)
 	  (user-error (format "`gptel-mode' is not supported in `%s'." major-mode)))
 	(add-hook 'before-save-hook #'gptel--save-state nil t)
@@ -169,17 +169,18 @@ to add an additional cost field in the header line."
 				   (buttonize
 				    (format "[Prompt: %s]"
 					    (or (car-safe (rassoc gptel--system-message gptel-directives))
-						(truncate-string-to-width gptel--system-message 15 nil nil t)))
+						(gptel--describe-directive gptel--system-message 15)))
 				    (lambda (&rest _) (gptel-system-prompt)))
 				   'mouse-face 'highlight
 				   'help-echo "System message for session"))
-				 (cost
-				  (when-let ((cost (and gptel-extras-display-cost (gptel-extras-get-cost))))
-				    (propertize
-				     (buttonize (format "[Cost: $%.2f]" cost)
-						(lambda (&rest _) (gptel-menu)))
-				     'mouse-face 'highlight
-				     'help-echo "Cost of the current prompt")))
+				 (el-patch-add
+				   (cost
+				    (when-let ((cost (and gptel-extras-display-cost (gptel-extras-get-cost))))
+				      (propertize
+				       (buttonize (format "[Cost: $%.2f]" cost)
+						  (lambda (&rest _) (gptel-menu)))
+				       'mouse-face 'highlight
+				       'help-echo "Cost of the current prompt"))))
 				 (context
 				  (and gptel-context--alist
 				       (cl-loop for entry in gptel-context--alist
@@ -223,14 +224,29 @@ to add an additional cost field in the header line."
 					  (buttonize "[Ignoring media]" toggle-track-media)
 					  'mouse-face 'highlight
 					  'help-echo
-					  "Ignoring images from standalone links/urls.\nClick to toggle")))))
+					  "Ignoring images from standalone links/urls.\nClick to toggle"))))
+				 (toggle-tools (lambda (&rest _) (interactive)
+						 (run-at-time 0 nil
+							      (lambda () (call-interactively #'gptel-tools)))))
+				 (tools (when (and gptel-use-tools gptel-tools)
+					  (propertize
+					   (buttonize (pcase (length gptel-tools)
+							(0 "[No tools]") (1 "[1 tool]")
+							(len (format "[%d tools]" len)))
+						      toggle-tools)
+					   'mouse-face 'highlight
+					   'help-echo "Select tools"))))
 			    (concat
 			     (propertize
 			      " " 'display
-			      `(space :align-to (- right ,(+ 5 (length model) (length system)
-							     (length track-media) (length context) (length cost)))))
-			     track-media (and context " ") context " " cost
-			     " " system " "
+			      `(space :align-to (- right
+						   ,(+ 5 (length model) (length system)
+						       (length track-media) (length context)
+						       (el-patch-add (length cost))
+						       (length tools)))))
+			     tools (and track-media " ") track-media (and context " ") context " "
+			     (el-patch-add cost " ")
+			     system " "
 			     (propertize
 			      (buttonize (concat "[" model "]")
 					 (lambda (&rest _) (gptel-menu)))

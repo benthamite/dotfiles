@@ -84,7 +84,7 @@ Users may want to set this to nil when adding lots of files to the context, to
 
 ;;;;; Estimate cost
 
-(defun gptel-extras-get-cost ()
+(defun gptel-extras-get-total-cost ()
   "Get the rough input cost of prompting the current model.
 This is used to display the relevant information in the `gptel' headerline.
 
@@ -95,21 +95,25 @@ for text requests; media files are not included in the calculation."
   (when-let ((buffer-cost (gptel-extras-get-buffer-cost)))
     (+ buffer-cost (or gptel-extras--context-cost 0))))
 
-(defun gptel-extras-get-context-cost ()
-  "Calculate cost for the current context files."
+(defun gptel-extras-get-cost (type)
+  "Get the cost of the current buffer or the context files.
+TYPE is either `buffer' or `context'."
   (when-let* ((cost-per-1m-tokens (get gptel-model :input-cost))
               (tokens-per-word 1.4)
-              (words-context (gptel-extras-count-words-in-context)))
+              (words-context (pcase type
+			       ('context (gptel-extras-count-words-in-context))
+			       ('buffer (if (region-active-p)
+					    (count-words (region-beginning) (region-end))
+					  (count-words (point-min) (point-max)))))))
     (/ (* cost-per-1m-tokens tokens-per-word words-context) 1000000.0)))
+
+(defun gptel-extras-get-context-cost ()
+  "Calculate cost for the current context files."
+  (gptel-extras-get-cost 'context))
 
 (defun gptel-extras-get-buffer-cost ()
   "Calculate cost for the current buffer or region."
-  (when-let* ((cost-per-1m-tokens (get gptel-model :input-cost))
-              (tokens-per-word 1.4)
-              (words-main (if (region-active-p)
-                              (count-words (region-beginning) (region-end))
-                            (count-words (point-min) (point)))))
-    (/ (* cost-per-1m-tokens tokens-per-word words-main) 1000000.0)))
+  (gptel-extras-get-cost 'buffer))
 
 (defun gptel-extras-update-context-cost (&rest _)
   "Update the context cost when the context is modified."
@@ -175,7 +179,7 @@ Binaries are skipped."
 				   'help-echo "System message for session"))
 				 (el-patch-add
 				   (cost
-				    (when-let ((cost (and gptel-extras-display-cost (gptel-extras-get-cost))))
+				    (when-let ((cost (and gptel-extras-display-cost (gptel-extras-get-total-cost))))
 				      (propertize
 				       (buttonize (format "[Cost: $%.2f]" cost)
 						  (lambda (&rest _) (gptel-menu)))

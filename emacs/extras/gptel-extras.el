@@ -489,11 +489,12 @@ In Org files, saves as a file property. In Markdown, as a file-local variable."
 
 ;;;;;; Clear
 
+(autoload 'gptel-context-remove "gptel-context")
 ;;;###autoload
 (defun gptel-extras-clear-file-context ()
   "Clear the current `gptel' file context."
   (interactive)
-  (setq gptel-context--alist nil)
+  (gptel-context-remove)
   (message "Cleared `gptel' context."))
 
 ;;;;; Misc

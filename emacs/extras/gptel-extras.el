@@ -101,10 +101,8 @@ TYPE is either `buffer' or `context'."
   (when-let* ((cost-per-1m-tokens (get gptel-model :input-cost))
               (tokens-per-word 1.4)
               (words-context (pcase type
-			       ('context (gptel-extras-count-words-in-context))
-			       ('buffer (if (region-active-p)
-					    (count-words (region-beginning) (region-end))
-					  (count-words (point-min) (point-max)))))))
+			       ('buffer (gptel-extras-count-words-in-buffer))
+			       ('context (gptel-extras-count-words-in-context)))))
     (/ (* cost-per-1m-tokens tokens-per-word words-context) 1000000.0)))
 
 (defun gptel-extras-get-context-cost ()
@@ -121,6 +119,17 @@ TYPE is either `buffer' or `context'."
 
 (advice-add 'gptel-context-add :after #'gptel-extras-update-context-cost)
 (advice-add 'gptel-context-remove :after #'gptel-extras-update-context-cost)
+
+;; TODO: handle restricted
+;; (https://github.com/karthink/gptel#limit-conversation-context-to-an-org-heading)
+;; and branching
+;; (https://github.com/karthink/gptel#use-branching-context-in-org-mode-tree-of-conversations)
+;; conversations
+(defun gptel-extras-count-words-in-buffer ()
+  "Count the number of words in the current buffer or region."
+  (if (region-active-p)
+      (count-words (region-beginning) (region-end))
+    (count-words (point-min) (point))))
 
 (declare-function gptel--file-binary-p "gptel-context")
 (defun gptel-extras-count-words-in-context ()

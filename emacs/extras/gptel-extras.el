@@ -275,7 +275,7 @@ Binaries are skipped."
 	      gptel--old-header-line nil)
       (setq mode-line-process nil))))
 
-;; this command is useful for identifying large context files that may be adding
+;; useful for identifying large files in context, which may be adding
 ;; unnecessary costs
 (defun gptel-extras-list-context-files ()
   "List all files in the current gptel context, sorted by size (largest first)."
@@ -287,9 +287,9 @@ Binaries are skipped."
                              files))
          (sorted-files (sort file-sizes
                              (lambda (a b) (> (cdr a) (cdr b))))))
-    (with-current-buffer (get-buffer-create "*GPTel Context Files*")
+    (with-current-buffer (get-buffer-create "*gptel context files*")
       (erase-buffer)
-      (insert "Context Files (sorted by size):\n\n")
+      (insert "Context files (sorted by size):\n\n")
       (dolist (file sorted-files)
         (insert (format "%.2f KB\t%s\n"
 			(/ (cdr file) 1024.0)

@@ -10085,7 +10085,7 @@ I split my bibliographies into two categories: personal and work. The files prov
 - =citar-bibliography= (for =citar=)
 - =ebib-preload-bib-files= (for =ebib=)
 
-Each of these packages requires =tlon=, since the latter must load for ==paths-files-bibliography-all== to be set.
+Each of these packages requires =tlon=, since the latter must load for =paths-files-bibliography-all= to be set.
 
 ** oc
 :PROPERTIES:

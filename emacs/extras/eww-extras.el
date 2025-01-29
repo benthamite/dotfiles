@@ -157,20 +157,30 @@ function was called, if any."
 (defun eww-extras-url-to-file-sentinel (callback output-file bibtex-key)
   "Create a process sentinel for URL-to-file operations.
 
-This function returns a lambda function suitable for use as a process sentinel.
-The returned sentinel will handle the completion of the URL-to-file process.
-
 CALLBACK is a function to be called upon successful file download.
 OUTPUT-FILE is the path of the file being downloaded.
 BIBTEX-KEY is the BibTeX key associated with the download, if any.
 
-The returned sentinel function takes two arguments: _PROC: the process
-object (which is ignored in this implementation) and EVENT, a string describing
-the process status change."
-  (lambda (_proc event)
-    (if (string= event "finished\n")
-	(eww-extras-run-callback callback output-file bibtex-key)
-      (user-error "Could not get file. Error:\n\n%s" event))))
+The returned sentinel function takes two arguments:
+PROC, the process object, and EVENT, a string describing the process status."
+  (lambda (proc event)
+    (let ((exit-status (process-exit-status proc)))
+      (cond
+       ;; If the process truly exited “successfully.”
+       ((eq exit-status 0)
+        (eww-extras-run-callback callback output-file bibtex-key))
+       ;; If exit-status ≠ 0 but the file really exists and is nonempty,
+       ;; assume the download at least mostly succeeded, so attach it.
+       ((and (file-exists-p output-file)
+             (file-regular-p output-file)
+             (> (file-attribute-size (file-attributes output-file)) 0))
+        (message "Warning: process exited with status %s, but %s was created. Attaching anyway."
+                 exit-status (file-name-nondirectory output-file))
+        (eww-extras-run-callback callback output-file bibtex-key))
+       ;; Otherwise, bail out with the original error message.
+       (t
+        (user-error "Could not get file. Process exit status was %s.\n\nRaw event:\n%s"
+                    exit-status event))))))
 
 (defun eww-extras-url-to-file-make-command (url output-file type)
   "Make command to generate OUTPUT-FILE of TYPE from URL."

@@ -147,7 +147,7 @@ archive buffer."
 (defun telega-extras-chatbuf-attach-most-recent-file ()
   "Attach most recently saved file in `downloads' folder."
   (interactive)
-  (if-let ((file (files-extras-newest-file paths-dir-downloads)))
+  (if-let* ((file (files-extras-newest-file paths-dir-downloads)))
       (telega-chatbuf-attach-file file)
     (user-error (format "No files found in %s" paths-dir-downloads))))
 

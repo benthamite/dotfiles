@@ -38,7 +38,7 @@
 (defun org-gcal-extras-open-at-point ()
   "Open the event at point in a Google Calendar."
   (interactive)
-  (if-let ((id (org-entry-get nil "entry-id")))
+  (if-let* ((id (org-entry-get nil "entry-id")))
       (browse-url
        (concat
 	"https://calendar.google.com/calendar/u/0/r/eventedit/"

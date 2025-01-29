@@ -74,7 +74,7 @@ gains."
                (quantity (float (* sign (string-to-number (nth 3 clean)))))
                (token-name (string-trim (nth 0 clean)))
                (token-symbol
-                (if-let ((match (alist-get token-name token-alist nil nil #'string=)))
+                (if-let* ((match (alist-get token-name token-alist nil nil #'string=)))
                     match
                   (read-string (format "Token symbol for `%s': " token-name))))
                (proceeds (float (string-to-number (nth 2 clean))))

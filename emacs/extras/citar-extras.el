@@ -104,7 +104,7 @@
 (defun citar-extras-goto-bibtex-entry (citekey)
   "Goto the bibliographic entry associated with the CITEKEY in the bibtex file."
   (interactive (list (citar-select-ref)))
-  (if-let ((file (ebib-extras-get-file-of-key citekey)))
+  (if-let* ((file (ebib-extras-get-file-of-key citekey)))
       (progn
         (find-file file)
         (widen)

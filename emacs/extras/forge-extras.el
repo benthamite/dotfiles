@@ -58,7 +58,7 @@
 (defun forge-extras-orgit-store-link (_arg)
   "Like `org-store-link' but store links to all selected commits, if any."
   (interactive "P")
-  (if-let ((sections (magit-region-sections 'commit)))
+  (if-let* ((sections (magit-region-sections 'commit)))
       (save-excursion
         (dolist (section sections)
           (goto-char (oref section start))

@@ -223,7 +223,7 @@ A file will be returned if it uniquely exists."
   "Open file with EXTENSION in entry at point.
 A file will be opened if it uniquely exists."
   (interactive)
-  (if-let ((file-name (ebib-extras-get-file extension)))
+  (if-let* ((file-name (ebib-extras-get-file extension)))
       (find-file file-name)
     (user-error (format "No (unique) `%s' file found" extension))))
 
@@ -231,7 +231,7 @@ A file will be opened if it uniquely exists."
   "Open file with EXTENSION in entry at point, if it (uniquely)
 exists."
   (interactive)
-  (if-let ((file-name (expand-file-name (ebib-extras-get-file extension))))
+  (if-let* ((file-name (expand-file-name (ebib-extras-get-file extension))))
       (shell-command (format "open '%s'" file-name))
     (user-error (format "No (unique) `%s' file found" extension))))
 
@@ -291,7 +291,7 @@ exists."
 If the entry contains more than one file, use the preference
 ordering defined in `ebib-extras-valid-file-extensions'."
   (interactive)
-  (if-let ((extension
+  (if-let* ((extension
 	    (catch 'tag
 	      (dolist (extension ebib-extras-valid-file-extensions)
 		(when (ebib-extras-get-file extension)
@@ -858,7 +858,7 @@ The list of book search functions is specified by
   (interactive)
   (ebib--execute-when
     (entries
-     (if-let ((title (ebib-extras--get-title-at-point)))
+     (if-let* ((title (ebib-extras--get-title-at-point)))
 	 (ebib-extras-search-book title)
        (user-error "Title field is empty")))
     (default
@@ -877,7 +877,7 @@ The list of article search functions is specified by
   (interactive)
   (ebib--execute-when
     (entries
-     (if-let ((title (ebib-extras-get-field "title")))
+     (if-let* ((title (ebib-extras-get-field "title")))
 	 (ebib-extras-search-article title)
        (user-error "Title field is empty")))
     (default
@@ -896,7 +896,7 @@ The list of film search functions is specified by
   (interactive)
   (ebib--execute-when
     (entries
-     (if-let ((title (ebib-extras-get-field "title")))
+     (if-let* ((title (ebib-extras-get-field "title")))
 	 (ebib-extras-search-film title)
        (user-error "Title field is empty")))
     (default
@@ -935,7 +935,7 @@ The list of book download functions is specified by
   (interactive)
   (ebib--execute-when
     (entries
-     (if-let ((title (ebib-extras--get-title-at-point)))
+     (if-let* ((title (ebib-extras--get-title-at-point)))
 	 (ebib-extras-download-book title)
        (user-error "Title field is empty")))
     (default
@@ -954,7 +954,7 @@ The list of article download functions is specified by
   (interactive)
   (ebib--execute-when
     (entries
-     (if-let ((title (ebib-extras-get-field "title")))
+     (if-let* ((title (ebib-extras-get-field "title")))
 	 (ebib-extras-download-article title)
        (user-error "Title field is empty")))
     (default

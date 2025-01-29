@@ -13565,7 +13565,7 @@ CLOCK: [2021-08-15 Sun 17:03]--[2021-08-15 Sun 17:06] =>  0:03
 
 For personal reference, these are the most recent Emacs installations (in reverse chronological order).
 
-(After installing, you may need to create a symlink to the ~Emacs.app~ folder in  ~/opt/homebrew/Cellar/~)
+(After installing, you may need to create a symlink to the =Emacs.app= folder in  =/opt/homebrew/Cellar/emacs-plus@30/<version>/Emacs.app=, replacing =version= with the version number.)
 
 [2024-10-09 Wed]:
 

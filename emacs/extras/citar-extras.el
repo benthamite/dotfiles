@@ -115,7 +115,7 @@
 ;;;###autoload
 (defun citar-extras-update-bibliographies ()
   "Update the bibliographies in the cache."
-  (when-let ((bibs (citar--bibliographies)))
+  (when-let* ((bibs (citar--bibliographies)))
     (dolist (bib bibs)
       (citar-cache--update-bibliography bib))))
 

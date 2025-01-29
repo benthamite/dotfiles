@@ -176,7 +176,7 @@ field for this information is `journaltitle', so we move it there."
   (save-excursion
     (bibtex-narrow-to-entry)
     (bibtex-beginning-of-entry)
-    (when-let ((pos (cadr (bibtex-search-forward-field field t))))
+    (when-let* ((pos (cadr (bibtex-search-forward-field field t))))
       (goto-char pos)
       (bibtex-kill-field))))
 

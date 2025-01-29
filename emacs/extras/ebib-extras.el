@@ -110,7 +110,7 @@
 (declare-function s-replace "s")
 (defun ebib-extras-get-isbn ()
   "Return ISBN for the current entry, if it exists."
-  (when-let ((get-field (pcase major-mode
+  (when-let* ((get-field (pcase major-mode
 			  ('ebib-entry-mode #'ebib-extras-get-field)
 			  ('bibtex-mode #'bibtex-extras-get-field)))
 	     (isbn
@@ -203,7 +203,7 @@ A file will be returned if it uniquely exists."
   (let ((get-field (pcase major-mode
 		     ('ebib-entry-mode #'ebib-extras-get-field)
 		     ('bibtex-mode #'bibtex-extras-get-field))))
-    (when-let ((files (funcall get-field "file")))
+    (when-let* ((files (funcall get-field "file")))
       (catch 'tag
 	(mapc
 	 (lambda (file)
@@ -216,7 +216,7 @@ A file will be returned if it uniquely exists."
   "Return the first text file with a valid extension in the entry at point."
   (catch 'tag
     (dolist (extension ebib-extras-valid-text-file-extensions)
-      (when-let ((file (ebib-extras-get-file extension)))
+      (when-let* ((file (ebib-extras-get-file extension)))
 	(throw 'tag file)))))
 
 (defun ebib-extras-open-file (extension)
@@ -331,7 +331,7 @@ ordering defined in `ebib-extras-valid-file-extensions'."
 
 (defun ebib-extras-validate-file-stem ()
   "Check that stem of each attached file equals entry's unique key."
-  (when-let ((files (ebib-extras-get-field "file")))
+  (when-let* ((files (ebib-extras-get-field "file")))
     (when (catch 'tag
 	    (mapc
 	     (lambda (file)
@@ -466,7 +466,7 @@ current entry or, if not available, the key stored in
 `ebib-extras-attach-file-key'. If OPEN is non-nil, open the file."
   (interactive)
   (let ((key (or key
-		 (when-let ((fun (pcase major-mode
+		 (when-let* ((fun (pcase major-mode
 				   ('ebib-entry-mode #'ebib--get-key-at-point)
 				   ('bibtex-mode #'bibtex-extras-get-key))))
 		   (funcall fun))
@@ -541,7 +541,7 @@ TYPE can be \"pdf\", \"html\" or \"srt\"."
 (defun ebib-extras-url-to-srt-attach ()
   "Generate SRT of URL and attach it to the entry at point."
   (interactive)
-  (when-let ((url (ebib-extras-get-field "url"))
+  (when-let* ((url (ebib-extras-get-field "url"))
 	     (title (ebib-extras-get-field "title"))
 	     (default-directory paths-dir-downloads))
     (message "Downloading subtitles for `%s'.... You need to attach it manually when ready." url)
@@ -550,7 +550,7 @@ TYPE can be \"pdf\", \"html\" or \"srt\"."
 (defun ebib-extras-book-attach ()
   "Get a PDF of the book-type entry at point and attach it to it."
   (interactive)
-  (when-let ((id (or (ebib-extras-get-isbn)
+  (when-let* ((id (or (ebib-extras-get-isbn)
 		     (and (member (ebib-extras-get-field "=type=") ebib-extras-book-like-entry-types)
 			  (ebib-extras-get-field "title")))))
     (setq ebib-extras-attach-file-key
@@ -563,7 +563,7 @@ TYPE can be \"pdf\", \"html\" or \"srt\"."
 (defun ebib-extras-doi-attach ()
   "Get a PDF of the DOI of the entry at point and attach it."
   (interactive)
-  (when-let ((doi (ebib-extras-get-field "doi")))
+  (when-let* ((doi (ebib-extras-get-field "doi")))
     (scihub-download doi #'ebib-extras-attach-file)))
 
 (defun ebib-extras-attach-file-to-entry (&optional file key)
@@ -846,7 +846,7 @@ The list of book search functions is specified by
   "Get the title of the entry at point."
   (let ((title (catch 'found
 		 (dolist (field '("title" "booktitle"))
-		   (when-let ((title
+		   (when-let* ((title
 			       (ebib-extras-get-field field)))
 		     (throw 'found title))))))
     title))
@@ -968,11 +968,11 @@ The list of article download functions is specified by
   (let ((get-field (pcase major-mode
 		     ('ebib-entry-mode #'ebib-extras-get-field)
 		     ('bibtex-mode #'bibtex-extras-get-field))))
-    (or (when-let ((doi (funcall get-field "doi")))
+    (or (when-let* ((doi (funcall get-field "doi")))
 	  (scihub-download doi))
-	(when-let ((url (funcall get-field "url")))
+	(when-let* ((url (funcall get-field "url")))
 	  (eww-extras-url-to-pdf url))
-	(when-let ((isbn (ebib-extras-get-isbn)))
+	(when-let* ((isbn (ebib-extras-get-isbn)))
 	  (ebib-extras-download-book isbn)))))
 
 ;; all we want is to search for a film, and there is no film
@@ -1032,7 +1032,7 @@ The list of article download functions is specified by
   "Get or open the BibTeX entry, depending on how the function was called.
 If called interactively, open the entry. Otherwise, return it as a string."
   (interactive)
-  (when-let ((file (ebib-db-get-filename ebib--cur-db))
+  (when-let* ((file (ebib-db-get-filename ebib--cur-db))
 	     (key (ebib--get-key-at-point))
 	     (fun (if (called-interactively-p 'any) #'find-file #'find-file-noselect)))
     (with-current-buffer (funcall fun file)
@@ -1057,7 +1057,7 @@ If called interactively, open the entry. Otherwise, return it as a string."
 ;;;###autoload
 (defun ebib-extras-open-key (key)
   "Open the entry for KEY in Ebib."
-  (when-let ((file (ebib-extras-get-file-of-key key)))
+  (when-let* ((file (ebib-extras-get-file-of-key key)))
     (ebib file key)
     (sleep-for 0.01)
     (ebib-edit-entry)))
@@ -1132,7 +1132,7 @@ is created following the same schema as notes created with
   (interactive)
   (ebib--execute-when
     (entries
-     (when-let ((citekey (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)))
+     (when-let* ((citekey (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)))
        (citar-open-notes (list citekey))))
     (default
      (beep))))
@@ -1285,9 +1285,9 @@ sensible defaults and remove line breaks and empty spaces."
   (let ((get-field (pcase major-mode
 		     ('ebib-entry-mode #'ebib-extras-get-field)
 		     ('bibtex-mode #' (bibtex-extras-get-field)))))
-    (when-let ((id-or-url (catch 'found
+    (when-let* ((id-or-url (catch 'found
 			    (dolist (field '("doi" "isbn" "url"))
-			      (when-let ((value (funcall get-field field)))
+			      (when-let* ((value (funcall get-field field)))
 				(throw 'found value))))))
       id-or-url)))
 
@@ -1318,7 +1318,7 @@ Fetching is done using `bib'."
 (defun ebib-extras-browse-url-or-doi ()
   "Browse the URL or DOI of the entry at point."
   (interactive)
-  (when-let ((type (cond ((ebib-extras-get-field "url") 'url)
+  (when-let* ((type (cond ((ebib-extras-get-field "url") 'url)
 			 ((ebib-extras-get-field "doi") 'doi))))
     (pcase type
       ('url (ebib-browse-url))
@@ -1341,7 +1341,7 @@ Fetching is done using `bib'."
 
 (defun ebib-extras-bibtex-command (command)
   "Execute a `bibtex' COMMAND with point on the current entry."
-  (when-let ((file (ebib-db-get-filename ebib--cur-db)))
+  (when-let* ((file (ebib-db-get-filename ebib--cur-db)))
     (with-current-buffer (find-file-noselect file)
       (funcall command))))
 
@@ -1420,7 +1420,7 @@ DIRECTION can be `prev' or `next'."
     (user-error "Please install `exiftool' (e.g. `brew install exiftool'"))
   (unless (derived-mode-p 'ebib-entry-mode 'bibtex-mode)
     (user-error "Not in `ebib-entry-mode' or `bibtex-mode'"))
-  (when-let ((get-field (pcase major-mode
+  (when-let* ((get-field (pcase major-mode
 			  ('ebib-entry-mode #'ebib-extras-get-field)
 			  ('bibtex-mode #'bibtex-extras-get-field)))
 	     (file (ebib-extras-get-file "pdf"))

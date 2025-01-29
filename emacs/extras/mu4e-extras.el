@@ -125,7 +125,7 @@ When `mu4e' sends an email with Gmail, Gmail automatically saves a copy in the
 `mu4e-sent-messages-behavior'). However, the saved copy is treated as a new,
 unread message when synchronized back to the local client. To fix this, this
 function marks the saved copy as read."
-  (when-let ((message-id (message-fetch-field "Message-ID")))
+  (when-let* ((message-id (message-fetch-field "Message-ID")))
     (add-to-list 'mu4e-extras-mark-as-read-queue message-id)))
 
 ;; TODO: this doesn’t seem to be working properly; investigate
@@ -391,7 +391,7 @@ takes just a couple of seconds."
   (with-temp-buffer
     (insert-file-contents-literally
      (mu4e-message-readable-path msg) nil nil nil t)
-    (when-let ((parts (mm-dissect-buffer t t)))
+    (when-let* ((parts (mm-dissect-buffer t t)))
       (mm-destroy-parts parts)
       (stringp (cl-find "text/html" (flatten-tree parts) :test 'equal)))))
 

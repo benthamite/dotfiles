@@ -48,7 +48,7 @@ We do not use `ace-link-w3m' because we do not want to browse the URL with
 specified by `browse-url-handlers')."
   (interactive)
   (if (eq mm-text-html-renderer 'w3m)
-      (when-let ((url (ace-link-extras-w3m-get-url)))
+      (when-let* ((url (ace-link-extras-w3m-get-url)))
 	(browse-url url))
     (ace-link-mu4e)))
 

@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: salads
+# key: sa
+# contributor: Pablo Stafforini
+# --
+`(format-time-string "%Y-%m-%d")` Hora
+Expenses:Food:Takeaway                 $1.00 ARS ; $3 salads
+Assets:${2:$$(yas-choose-value '("Cash" "Ualá" "Mercado Pago"))}
+

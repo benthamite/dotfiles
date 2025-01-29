@@ -201,7 +201,7 @@ If MESSAGE is nil, use the message at point."
 
 (defun telega-extras-maybe-get-audio-transcript (message)
   "Check if the transcript for audio in MESSAGE is ready, and process it if so."
-  (when-let ((transcript (telega-extras-get-audio-transcript message)))
+  (when-let* ((transcript (telega-extras-get-audio-transcript message)))
     (telega-extras-cancel-audio-timers)
     (telega-extras-post-audio-transcript transcript message)))
 

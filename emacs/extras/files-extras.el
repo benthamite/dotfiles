@@ -342,7 +342,7 @@ This function gets STRING when PROCESS produces output."
 
 (defun files-extras-get-stem-of-current-buffer ()
   "Return the stem of the current buffer."
-  (when-let ((file-name buffer-file-name))
+  (when-let* ((file-name buffer-file-name))
     (file-name-base file-name)))
 
 (defun file-extras-bollp ()
@@ -361,7 +361,7 @@ may fail to be created and then each file has to be recovered separately. This
 command automates the recovery process in these cases."
   (interactive)
   (dolist (file (directory-files (file-name-concat paths-dir-emacs-profiles "var/auto-save")))
-    (when-let ((file-to-recover (string-replace "#" "" file)))
+    (when-let* ((file-to-recover (string-replace "#" "" file)))
       (ignore-errors (recover-file (string-replace "!" "/" file-to-recover)))
       (files-extras-diff-buffer-with-file))))
 
@@ -513,7 +513,7 @@ current helpful buffer displays, then kill the buffer."
 ;;;###autoload
 (defun files-extras-buffer-file-name ()
   "Return name of file BUFFER is visiting, handling `git-dirs' path."
-  (when-let ((file (buffer-file-name))
+  (when-let* ((file (buffer-file-name))
 	     (filename (file-name-nondirectory file))
 	     (dir (catch 'found
 		    (dolist (dir (list paths-dir-tlon-repos paths-dir-dropbox))

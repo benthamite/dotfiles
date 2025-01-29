@@ -187,7 +187,7 @@ submodules."
 (defun vc-extras-get-github-remote (name &optional account)
   "Return the GitHub remote named NAME in ACCOUNT.
 If ACCOUNT is nil, search in all accounts listed in `vc-extras-profiles'."
-  (when-let ((account (or account (vc-extras-get-account-of-name name))))
+  (when-let* ((account (or account (vc-extras-get-account-of-name name))))
     (format "https://github.com/%s/%s.git" account name)))
 
 (defun vc-extras-get-account-of-name (name)

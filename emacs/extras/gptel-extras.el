@@ -92,7 +92,7 @@ Note that the cost is an approximation based on the number of words in the
 buffer or selection. The function uses a 1.4 token/word conversion factor, but
 the actual cost may deviate from this estimate. Also note that this estimate is
 for text requests; media files are not included in the calculation."
-  (when-let ((buffer-cost (gptel-extras-get-buffer-cost)))
+  (when-let* ((buffer-cost (gptel-extras-get-buffer-cost)))
     (+ buffer-cost (or gptel-extras--context-cost 0))))
 
 (defun gptel-extras-get-cost (type)
@@ -188,7 +188,7 @@ Binaries are skipped."
 				   'help-echo "System message for session"))
 				 (el-patch-add
 				   (cost
-				    (when-let ((cost (and gptel-extras-display-cost (gptel-extras-get-total-cost))))
+				    (when-let* ((cost (and gptel-extras-display-cost (gptel-extras-get-total-cost))))
 				      (propertize
 				       (buttonize (format "[Cost: $%.2f]" cost)
 						  (lambda (&rest _) (gptel-menu)))
@@ -425,7 +425,7 @@ necessary, or called manually, whenever `gptel' starts refusing to process the
 request (mysteriously, just killing the buffer and reopening the visited file is
 often enough to fix this)."
   (interactive)
-  (when-let ((file (buffer-file-name)))
+  (when-let* ((file (buffer-file-name)))
     (save-buffer)
     (save-buffer)
     (files-extras-kill-this-buffer)
@@ -511,9 +511,9 @@ In Org files, saves as a file property. In Markdown, as a file-local variable."
 (defun gptel-extras-restore-file-context ()
   "Restore the saved file context from the file visited by the current buffer."
   (interactive)
-  (when-let ((context (pcase major-mode
+  (when-let* ((context (pcase major-mode
 			('org-mode
-			 (when-let ((gptel-context-prop (org-entry-get (point-min) "GPTEL_CONTEXT")))
+			 (when-let* ((gptel-context-prop (org-entry-get (point-min) "GPTEL_CONTEXT")))
 			   (read gptel-context-prop)))
 			('markdown-mode gptel-context)
 			(_ (user-error "Not in and Org or Markdown buffer")))))

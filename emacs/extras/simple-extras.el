@@ -69,7 +69,7 @@
 
 (defun simple-extras-kill-whole-thing (thing)
   "Kill the `thing-at-point' for the specified kind of THING."
-  (when-let ((bounds (bounds-of-thing-at-point thing)))
+  (when-let* ((bounds (bounds-of-thing-at-point thing)))
     (kill-region (car bounds) (cdr bounds))))
 
 ;;;;;; Words

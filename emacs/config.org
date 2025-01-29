@@ -13041,7 +13041,9 @@ Requires configuration. Disabled for the time being.
 
 #+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
 (use-package subed
-:disabled)
+  :ensure (:host github
+		 :repo "sachac/subed"
+		 :files ("subed/*.el")))
 #+end_src
 
 * misc

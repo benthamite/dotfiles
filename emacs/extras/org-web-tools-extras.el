@@ -1,6 +1,6 @@
 ;;; org-web-tools-extras.el --- Extensions for org-web-tools -*- lexical-binding: t; fill-column: 80 -*-
 
-;; Copyright (C) 2024
+;; Copyright (C) 2025
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/org-web-tools-extras.el

@@ -1,6 +1,6 @@
 ;;; zotra-extras.el --- Extensions for zotra -*- lexical-binding: t; fill-column: 80 -*-
 
-;; Copyright (C) 2024
+;; Copyright (C) 2025
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/zotra-extras.el

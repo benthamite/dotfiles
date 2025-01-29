@@ -435,7 +435,6 @@ often enough to fix this)."
 
 ;;;;; Enable gptel
 
-(declare-function breadcrumb-mode "breadcrumb")
 (defun gptel-extras-enable-gptel-in-org ()
   "Enable `gptel-mode' in `org-mode' files with `gptel' data."
   (when (gptel-extras-file-has-gptel-org-property-p)
@@ -446,6 +445,7 @@ often enough to fix this)."
   (when (gptel-extras-file-has-gptel-local-variable-p)
     (gptel-extras-enable-gptel-common)))
 
+(declare-function breadcrumb-mode "breadcrumb")
 (defun gptel-extras-enable-gptel-common ()
   "Enable `gptel-mode' and in any buffer with `gptel' data."
   (let ((buffer-modified-p (buffer-modified-p)))

@@ -1,6 +1,6 @@
 ;;; ace-link-extras.el --- Extensions for ace-link -*- lexical-binding: t; fill-column: 80 -*-
 
-;; Copyright (C) 2024
+;; Copyright (C) 2025
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/ace-link-extras.el

@@ -1,6 +1,6 @@
 ;;; org-extras.el --- Extensions for org-mode -*- lexical-binding: t; fill-column: 80 -*-
 
-;; Copyright (C) 2024 Pablo Stafforini
+;; Copyright (C) 2025 Pablo Stafforini
 
 ;; Author: Pablo Stafforini
 ;; Maintainer: Pablo Stafforini

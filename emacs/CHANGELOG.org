@@ -4,6 +4,21 @@
 
 This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository. It is meant to be read primarily by members of the Tlön team, but it may be of interest to others as well.
 
+* Version 6.8.7 on 2025-01-29
+** Emacs core packages
+*** eww-extras
+- Improved error handling in ~eww-extras-url-to-file-sentinel~ to better handle different process exit scenarios. More robustly checks if downloaded files exist despite non-zero exit status
+
+*** gptel-extras
+- Significant refactoring of cost calculation functionality:
+  - Split cost calculation into buffer and context costs for better performance
+  - Added caching of context costs 
+  - Added user option ~gptel-extras-display-cost~ to control cost display
+- Improved listing of context files with new ~gptel-extras-list-context-files~ command
+
+*** emacs-pr-review
+- Added new package for reviewing pull requests in Emacs
+
 * Version 6.8.6 on 2025-01-22
 ** Shell & Environment Configuration
 - Modified shell configuration for better organization and performance:
@@ -43,7 +58,6 @@ This document summarizes the changes pertaining to my Emacs configuration in eac
 
 *** eww
 - Changed default search engine to DuckDuckGo since Google requires Javascript
-
 
 * Version 6.8.5 on 2025-01-07
 ** org-vcard

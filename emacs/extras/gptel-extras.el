@@ -91,7 +91,9 @@ This is used to display the relevant information in the `gptel' headerline.
 Note that the cost is an approximation based on the number of words in the
 buffer or selection. The function uses a 1.4 token/word conversion factor, but
 the actual cost may deviate from this estimate. Also note that this estimate is
-for text requests; media files are not included in the calculation."
+for text requests; media files are not included in the calculation. Finally,
+note that the estimate considers input costs only; it does not include the cost
+of the response (output costs are normally much lower)."
   (when-let* ((buffer-cost (gptel-extras-get-buffer-cost)))
     (+ buffer-cost (or gptel-extras--context-cost 0))))
 

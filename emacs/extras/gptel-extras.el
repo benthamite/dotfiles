@@ -122,6 +122,13 @@ TYPE is either `buffer' or `context'."
 (advice-add 'gptel-context-add :after #'gptel-extras-update-context-cost)
 (advice-add 'gptel-context-remove :after #'gptel-extras-update-context-cost)
 
+(defun gptel-extras--update-cost-on-model-change (sym _ &optional _)
+  "Update context cost when SYM is `gptel-model' or `gptel-backend'."
+  (when (memq sym '(gptel-model gptel-backend))
+    (gptel-extras-update-context-cost)))
+
+(advice-add 'gptel--set-with-scope :after #'gptel-extras--update-cost-on-model-change)
+
 ;; TODO: handle restricted
 ;; (https://github.com/karthink/gptel#limit-conversation-context-to-an-org-heading)
 ;; and branching

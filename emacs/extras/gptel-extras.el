@@ -559,5 +559,17 @@ In Org files, saves as a file property. In Markdown, as a file-local variable."
   (goto-char (point-max))
   (gptel-send))
 
+(declare-function gptel-rewrite "gptel-rewrite")
+;;;###autoload
+(defun gptel-extras-rewrite-defun ()
+  "Rewrite the current function definition, marking it first.
+This command is meant to be invoked via `embark'; simply binding `gptel-rewrite'
+won't work because it needs the function to be selected."
+  (interactive)
+  (if (thing-at-point 'defun t)
+      (progn (mark-defun)
+             (gptel-rewrite))
+    (user-error "Not on a function definition")))
+
 (provide 'gptel-extras)
 ;;; gptel-extras.el ends here

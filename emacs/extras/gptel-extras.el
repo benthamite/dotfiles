@@ -51,13 +51,6 @@ directory-local sorting is set via a the `.dir-locals.el' file in the directory.
   :type 'directory
   :group 'gptel-extras)
 
-(defcustom gptel-extras-display-cost t
-  "Whether to display the cost of the current prompt in the `gptel' header line.
-Users may want to set this to nil when adding lots of files to the context, to
- avoid slowdowns."
-  :type 'boolean
-  :group 'gptel-extras)
-
 ;;;; Variables
 
 (defvar-local gptel-context nil
@@ -198,7 +191,7 @@ Binaries are skipped."
 				     'help-echo "System message for session"))
 				   (el-patch-add
 				     (cost
-				      (when-let ((cost (and gptel-extras-display-cost (gptel-extras-get-total-cost))))
+				      (when-let ((cost (gptel-extras-get-total-cost)))
 					(propertize
 					 (buttonize (format "[Cost: $%.2f]" cost)
 						    (lambda (&rest _) (gptel-menu)))
@@ -243,7 +236,6 @@ Binaries are skipped."
 					      'mouse-face 'highlight
 					      'help-echo
 					      "Sending media from standalone links/urls when supported.\nClick to toggle")
->>>>>>> Stashed changes
 					   (propertize
 					    (buttonize "[Ignoring media]" toggle-track-media)
 					    'mouse-face 'highlight

@@ -614,7 +614,7 @@ To install the extension, drag the latter onto the former."
   "Dispatcher for personal package files."
   [["Tlön"
     ("t" "tlon"             (lambda () (interactive) (files-extras-open-elpaca-package "tlon")))
-    ("i" "tlon-init"        (lambda () (interactive) (files-extras-open-elpaca-package "tlon-init")))]
+    ("i" "tlon-init"        (lambda () (interactive) (files-extras-open-elpaca-package "init")))]
    ["Personal"
     ("a" "annas-archive"    (lambda () (interactive )(files-extras-open-elpaca-package "annas-archive")))
     ("b" "bib"              (lambda () (interactive )(files-extras-open-elpaca-package "bib")))

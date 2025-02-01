@@ -20,7 +20,7 @@ This is a place where I move Emacs packages I no longer use.
 
 [2024-11-24 Sun] Disabling since the package was throwing lots of errors due to the use of =:general= and other =use-package= keywords requiring external dependencies.
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package unpackaged
   :ensure (:host github
            :repo "alphapapa/unpackaged.el")
@@ -34,7 +34,7 @@ This is a place where I move Emacs packages I no longer use.
 
 /[[https://github.com/benma/visual-regexp.el][visual-regexp]] provides visual feedback to regexp search and replace./
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package visual-regexp
   :disabled
   :hook
@@ -46,7 +46,7 @@ This is a place where I move Emacs packages I no longer use.
 :ID:       A7D68397-66E3-4085-AF8C-7A17935654E7
 :END:
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package dall-e-shell
   :after chatgpt-shell)
 #+end_src
@@ -63,7 +63,7 @@ I use =gptel= for text-based AI interaction, but for other modalities (such as i
 
 [2024-10-13 Sun]=gptel= now supports multi-modal models, so I’m moving this to the graveyard.
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package chatgpt-shell
   :ensure (:files ("*.el"))
   :after gptel-extras
@@ -89,7 +89,7 @@ I only use this package to define key bindings for multiple keymaps at once. Cur
 
 [2024-09-30 Mon 21:02] No longer using.
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package general
   :ensure (:wait t)
   :demand t
@@ -114,7 +114,7 @@ CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
 
 <2023-12-01 Fri> Failed to send an email when I tested it. So not using for the time being.
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package async-email-sending
   :disabled
   :ensure (async-email-sending
@@ -138,7 +138,7 @@ CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
 
 [2024-09-29 Sun] Superseded by =battery=.
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package fancy-battery
   :custom
   (fancy-battery-show-percentage t)
@@ -154,7 +154,7 @@ CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
 
 /[[https://github.com/zx2c4/password-store][password-store]] provides functions for working with pass, the standard Unix password manager./
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package password-store
   :ensure (:host github
             :repo "zx2c4/password-store"
@@ -170,7 +170,7 @@ CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
 
  /[[https://github.com/purcell/unfill][unfill]] provides functions to do the reverse of =fill-paragraph= and =fill-region=./
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package unfill
   :defer 10)
 #+end_src
@@ -184,7 +184,7 @@ CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
 
 [2024-09-24 Tue] I think this adds nothing given that I’m already using zotra.
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package persid
   :ensure (persid
            :host github
@@ -198,7 +198,7 @@ CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
 :END:
 /[[https://github.com/cpitclaudel/biblio.el][biblio]] supports browsing and importing bibliographic references from various databases./
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package biblio)
 #+end_src
 
@@ -210,7 +210,7 @@ CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
 CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
 :END:
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package ledger-prices
   :ensure (ledger-prices
            :host github
@@ -230,7 +230,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
 
 /[[https://codeberg.org/akib/emacs-eat][emacs-eat]] is a terminal emulator./
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package eat
   :ensure (:host codeberg
                  :repo "akib/emacs-eat"
@@ -248,7 +248,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
 
 /[[https://github.com/benma/visual-regexp-steroids.el/][visual-regexp-steroids]] extends visual-regexp to support additional regexp engines./
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package visual-regexp-steroids
   ;; :after visual-regexp
   :custom
@@ -269,7 +269,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
 :END:
 /[[https://github.com/positron-solutions/transient-showcase][transient-showcase]] provides code examples for interactive explanations of ~transient~./
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package transient-showcase
   :disabled t
   :ensure (:host github
@@ -286,7 +286,7 @@ CLOCK: [2023-10-24 Tue 18:58]--[2023-10-24 Tue 20:33] =>  1:35
 
 I use =hl-line= by default, but replace it with =hl-sentence= in modes (specifically, =org-mode= and =markdown-mode=) where the sentence is the more natural syntactic unit. I use the same face set by ~lin~ so that there are no stylistic changes between highlighted sentences in these modes and highlighted lines in all the other modes. See the above sections and the =modus-themes-extras-set-faces= function from ~modus-themes-extras~.
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package hl-sentence
   :ensure (:host github
 		 :repo "milkypostman/hl-sentence")
@@ -302,7 +302,7 @@ I use =hl-line= by default, but replace it with =hl-sentence= in modes (specific
 
 /[[https://github.com/FrostyX/dired-open-with][dired-open-with]] is an 'open with' dialog for opening files in external applications from Dired./
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package dired-open-with
   :disabled
   :general
@@ -315,7 +315,7 @@ I use =hl-line= by default, but replace it with =hl-sentence= in modes (specific
 :ID:       89ED4046-C75A-441C-BEF8-DC4322F0167F
 :END:
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package pomodoro-centile
   :ensure (:host github
                  :repo "benthamite/pomodoro-centile"
@@ -337,7 +337,7 @@ I use =hl-line= by default, but replace it with =hl-sentence= in modes (specific
 
 [2024-09-14 Sat] Superseded by the the =annas-archive= functions in =eww-extras=.
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package internet-archive
   :ensure (internet-archive
            :host github
@@ -359,7 +359,7 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
 
 /[[https://github.com/armindarvish/consult-gh][consult-gh]] provides an interface to interact with GitHub repositories./
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package consult-gh
   :ensure (consult-gh
            :host github
@@ -401,7 +401,7 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
 
 /[[https://github.com/armindarvish/consult-mu][consult-mu]] provides a dynamically updated search interface to mu4e./
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package consult-mu
   :elpaca (consult-mu :type git
                       :host github
@@ -429,7 +429,7 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
 /[[https://github.com/xenodium/org-block-capf][org-block-cafp]] adds support for org block completion at point./
 
 [2024-08-28 Wed] Replaced with [[https://github.com/isamert/corg.el][corg]].
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-block-capf
   :elpaca (org-block-capf :host github :repo "xenodium/org-block-capf")
   :after org
@@ -443,7 +443,7 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
 :ID:       A9DD66E0-49A5-4A8C-8F45-016DECFF0BF0
 :END:
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package hexrgb
   :elpaca (hexrgb
            :host github
@@ -546,7 +546,7 @@ CLOCK: [2023-07-05 Wed 09:34]--[2023-07-05 Wed 09:48] =>  0:14
 
 /[[https://github.com/emacs-mirror/emacs/blob/e819413e24d81875abaf81c281115e695ad5cc28/lisp/textmodes/remember.el][remember]] is a mode for quickly jotting down things to remember./
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature remember
   :demand t
   :init
@@ -573,7 +573,7 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
 
 [2024-04-23 Tue] Moving to graveyard because it is not allowing me to control certain faces when active, such as =org-code= and =org-verbatim=. The user option ~modus-themes-mixed-fonts~ seems enough to get a similar experience without the drawbacks.
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package mixed-pitch
   ;; :demand t
   :disabled
@@ -593,7 +593,7 @@ CLOCK: [2021-11-18 Thu 21:52]--[2021-11-18 Thu 22:20] =>  0:28
 :ID:       9BE75448-80A0-4CD7-9341-97F723C44A4A
 :END:
 
-#+begin_src emacs-lisp :tangle (tlon-init-tangle-conditionally)
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package tlon-core
   :elpaca (tlon-core
            :host github
@@ -795,7 +795,7 @@ CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
 
 /[[file:extras/gh-notify-extras.el][gh-notify-extras]] collects my extensions for ~gh-notify~./
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
+#+begin_src emacs-lisp :results silent :tangle (init-get-tangle-flag :forge)
 (use-personal-package gh-notify-extras
   :after gh-notify
   :disabled
@@ -816,7 +816,7 @@ CLOCK: [2021-05-06 Thu 06:01]--[2021-05-06 Thu 06:22] =>  0:21
 
 [2024-02-09 Fri] Not working anymore, after Forge introduced various breaking changes.
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :forge)
+#+begin_src emacs-lisp :results silent :tangle (init-get-tangle-flag :forge)
 (use-package gh-notify
   :elpaca (gh-notify
            :host github
@@ -923,7 +923,7 @@ CLOCK: [2022-06-22 Wed 14:50]--[2022-06-22 Wed 15:10] =>  0:20
 
 [2023-12-01 Fri] I couldn’t make it work and it provides very limited functionality (which I can replicate with the media keys).
 
-#+begin_src emacs-lisp :results silent  :tangle (tlon-init-get-tangle-flag :espotify)
+#+begin_src emacs-lisp :results silent  :tangle (init-get-tangle-flag :espotify)
 (use-package espotify
   :after auth-source-pass
   :demand t
@@ -943,7 +943,7 @@ CLOCK: [2022-06-22 Wed 14:50]--[2022-06-22 Wed 15:10] =>  0:20
 
 [2023-12-01 Fri] Not using it.
 
-#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :mu4e)
+#+begin_src emacs-lisp :tangle (init-get-tangle-flag :mu4e)
 (use-feature mu4e-contrib
   :disabled
   :after mu4e
@@ -981,7 +981,7 @@ CLOCK: [2022-06-22 Wed 14:50]--[2022-06-22 Wed 15:10] =>  0:20
 
 [2023-11-25 Sat] I do not regard email messages as requiring immediate attention, so I now prefer not to be notified of unread messages.
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :mu4e)
+#+begin_src emacs-lisp :results silent :tangle (init-get-tangle-flag :mu4e)
 (use-package mu4e-alert
   :after mu4e
   :demand t
@@ -1050,7 +1050,7 @@ This package is required by lsp-grammarly.
 
 [2023-11-16 Thu] No longer using ~grammarly~.
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :keytar)
+#+begin_src emacs-lisp :results silent :tangle (init-get-tangle-flag :keytar)
 (use-package keytar
 ** lsp-ui
 :PROPERTIES:
@@ -1218,7 +1218,7 @@ CLOCK: [2021-04-03 Sat 17:59]--[2021-04-03 Sat 18:15] =>  0:16
 
 [2023-11-11 Sat 06:27] Stopped working.
 
-#+begin_src emacs-lisp :results silent  :tangle (tlon-init-get-tangle-flag :ps/twittering-mode)
+#+begin_src emacs-lisp :results silent  :tangle (init-get-tangle-flag :ps/twittering-mode)
 (use-package twittering-mode
   :defer t
   :config
@@ -1498,7 +1498,7 @@ CLOCK: [2021-04-03 Sat 17:59]--[2021-04-03 Sat 18:15] =>  0:16
 
 [2023-10-05 Thu] I don’t use ~flyspell~ anymore.
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/spelling)
+#+begin_src emacs-lisp :results silent :tangle (init-get-tangle-flag :ps/spelling)
 (use-package consult-flyspell
   :after consult flyspell)
 #+end_src
@@ -1700,7 +1700,7 @@ Disscussion [[https://www.reddit.com/r/emacs/comments/zhwhww/comment/izp8rxy/?ut
 
 No longer using ~flyspell~.
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/spelling)
+#+begin_src emacs-lisp :results silent :tangle (init-get-tangle-flag :ps/spelling)
 (use-package flyspell-correct
   :demand t
   :after flyspell)
@@ -1715,7 +1715,7 @@ No longer using ~flyspell~.
 
 No longer using ~flyspell~.
 
-#+begin_src emacs-lisp :tangle (tlon-init-get-tangle-flag :ps/spelling)
+#+begin_src emacs-lisp :tangle (init-get-tangle-flag :ps/spelling)
 (use-package flyspell-lazy
   :after flyspell
   :demand t
@@ -1837,7 +1837,7 @@ CLOCK: [2021-08-03 Tue 10:05]--[2021-08-03 Tue 10:13] =>  0:08
 CLOCK: [2021-07-27 Tue 11:32]--[2021-07-27 Tue 11:39] =>  0:07
 :END:
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/spelling)
+#+begin_src emacs-lisp :results silent :tangle (init-get-tangle-flag :ps/spelling)
 (use-feature ispell
   :defer 10
   :config
@@ -1887,7 +1887,7 @@ CLOCK: [2021-07-27 Tue 11:32]--[2021-07-27 Tue 11:39] =>  0:07
 
 [2023-06-16 Fri 10:34] Removing, due to hard-to-diagnose errors.
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/corfu-doc-terminal)
+#+begin_src emacs-lisp :results silent :tangle (init-get-tangle-flag :ps/corfu-doc-terminal)
 (use-package corfu-doc-terminal
   :elpaca (corfu-doc-terminal :type git :repo "https://codeberg.org/akib/emacs-corfu-doc-terminal.git")
   :after corfu-terminal
@@ -1905,7 +1905,7 @@ CLOCK: [2021-07-27 Tue 11:32]--[2021-07-27 Tue 11:39] =>  0:07
 
 [2023-06-16 Fri 10:34] Removing, due to hard-to-diagnose errors.
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/corfu-terminal)
+#+begin_src emacs-lisp :results silent :tangle (init-get-tangle-flag :ps/corfu-terminal)
 (use-package corfu-terminal
   :after corfu
   :defer 30
@@ -2154,7 +2154,7 @@ CLOCK: [2021-02-05 Fri 19:09]--[2021-02-05 Fri 19:14] =>  0:05
 
 [2023-04-29 Sat 17:03] I have no need for this package given that I'm already using several other GTP-4 packages.
 
-#+begin_src emacs-lisp :results silent :tangle (tlon-init-get-tangle-flag :ps/aide)
+#+begin_src emacs-lisp :results silent :tangle (init-get-tangle-flag :ps/aide)
 (use-package aide
   :elpaca (aide
              :host github

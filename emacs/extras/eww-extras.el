@@ -188,7 +188,7 @@ PROC, the process object, and EVENT, a string describing the process status."
 		     ("pdf" eww-extras-chrome-data-dir-copy-pdf)
 		     ("html" eww-extras-chrome-data-dir-copy-html)
 		     (_ (user-error "Invalid type: %s" type))))
-	 (common (format "timeout 60s '%s' --headless --user-data-dir=\"%s\" "
+	 (common (format "timeout 15s '%s' --headless --user-data-dir=\"%s\" "
 			 browse-url-chrome-program data-dir))
 	 (flags "--disable-gpu --disable-extensions --disable-software-rasterizer ")
 	 (format-string (pcase type

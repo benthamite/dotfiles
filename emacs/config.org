@@ -6770,7 +6770,7 @@ https://gitlab.com/chrisberkhout/pricehist
   (run-with-idle-timer (* 30 60) t #'tlon-pull-issues-in-all-repos)
 
   :hook
-  (tlon-init-post-init-hook . initialize)
+  (init-post-init-hook . tlon-initialize)
 
   :bind
   (("H-r" . tlon-dispatch)

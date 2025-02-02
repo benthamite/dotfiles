@@ -695,7 +695,7 @@ NAME and ARGS as in `use-package'."
 :ID:       A1D2F9BE-0983-4CE8-89C2-6727149F3268
 :END:
 
-/[[file:extras/use-package-extras.el][use-package-extras]] collects my extensions for ~use-package~./
+/[[file:extras/use-package-extras.el][use-package-extras]] collects my extensions for =use-package=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package use-package-extras
@@ -709,7 +709,7 @@ NAME and ARGS as in `use-package'."
 :ID:       9A6A90C2-ACB6-4899-B38C-1C483A4FFE06
 :END:
 
-/[[file:extras/elpaca-extras.el][elpaca-extras]] collects my extensions for ~elpaca~./
+/[[file:extras/elpaca-extras.el][elpaca-extras]] collects my extensions for =elpaca=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package elpaca-extras
@@ -1135,7 +1135,7 @@ CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
 :ID:       21CE8D7E-377F-49AD-A864-D7926F462D4E
 :END:
 
-/[[file:extras/profiler-extras.el][profiler-extras]] collects my extensions for ~profiler~./
+/[[file:extras/profiler-extras.el][profiler-extras]] collects my extensions for =profiler=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package profiler-extras
@@ -1299,7 +1299,7 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
 :ID:       524FE3D7-EA5B-408E-A338-68E633528632
 :END:
 
-/[[file:extras/pass-extras.el][pass-extras]] collects my extensions for ~pass~./
+/[[file:extras/pass-extras.el][pass-extras]] collects my extensions for =pass=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package pass-extras
@@ -1377,7 +1377,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 :ID:       A7254905-0FBE-4F8F-8D93-1A5D1FA95BB9
 :END:
 
-/[[file:extras/vc-extras.el][vc-extras]] collects my extensions for ~vc~./
+/[[file:extras/vc-extras.el][vc-extras]] collects my extensions for =vc=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package vc-extras
@@ -1447,7 +1447,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 :ID:       BFD82441-5547-45C5-AD36-E5DE9FDD4898
 :END:
 
-/[[file:extras/ediff-extras.el][ediff-extras]] collects my extensions for ~ediff~./
+/[[file:extras/ediff-extras.el][ediff-extras]] collects my extensions for =ediff=./
 
 ** smerge
 :PROPERTIES:
@@ -1596,7 +1596,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 :END:
 
 
-/[[file:extras/magit-extra.el][magit-extra]] collects my extensions for ~magit~./
+/[[file:extras/magit-extra.el][magit-extra]] collects my extensions for =magit=./
 
 Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magit already provides a feature called ~magit-extras~.
 
@@ -1788,7 +1788,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 :ID:       B74712E7-2A8C-4D17-8FD4-C854C88D3D72
 :END:
 
-/[[file:extras/forge-extras.el][forge-extras]] collects my extensions for ~forge~./
+/[[file:extras/forge-extras.el][forge-extras]] collects my extensions for =forge=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package forge-extras
@@ -1946,7 +1946,7 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 :END:
 
 
-/[[file:extras/faces-extras.el][faces-extras]] collects my extensions for ~faces~./
+/[[file:extras/faces-extras.el][faces-extras]] collects my extensions for =faces=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package faces-extras
@@ -2124,7 +2124,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 :END:
 
 
-/[[file:extras/modus-themes-extras.el][modus-themes-extras]] collects my extensions for ~modus-themes~./
+/[[file:extras/modus-themes-extras.el][modus-themes-extras]] collects my extensions for =modus-themes=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package modus-themes-extras
@@ -2208,7 +2208,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 :ID:       0873C089-B832-4EB2-BAFF-2D3CF0268AE4
 :END:
 
-/[[file:extras/color-extras.el][color-extras]] collects my extensions for ~color~./
+/[[file:extras/color-extras.el][color-extras]] collects my extensions for =color=./
 
 Note that the loading of ~color~ cannot be deferred, since it is required by ~pulse~. So we defer-load this package.
 
@@ -2356,7 +2356,7 @@ Here’s a screenshot illustrating the modeline and tab bar in action (click to 
 :ID:       AA94A6D8-DD39-415C-9E34-5793F44B9FF9
 :END:
 
-/[[file:extras/doom-modeline-extras.el][doom-modeline-extras]] collects my extensions for ~doom-modeline~./
+/[[file:extras/doom-modeline-extras.el][doom-modeline-extras]] collects my extensions for =doom-modeline=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package doom-modeline-extras
@@ -2428,7 +2428,7 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
 :END:
 
 
-/[[file:extras/tab-bar-extras.el][tab-bar-extras]] collects my extensions for ~tab-bar~./
+/[[file:extras/tab-bar-extras.el][tab-bar-extras]] collects my extensions for =tab-bar=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package tab-bar-extras
@@ -2883,7 +2883,7 @@ CLOCK: [2021-05-29 Sat 19:02]--[2021-05-29 Sat 19:52] =>  0:50
 :END:
 
 
-/[[file:extras/simple-extras.el][simple-extras]] collects my extensions for ~simple~./
+/[[file:extras/simple-extras.el][simple-extras]] collects my extensions for =simple=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package simple-extras
@@ -3180,7 +3180,7 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
 :END:
 
 
-/[[file:extras/outline-extras.el][outline-extras]] collects my extensions for ~outline~./
+/[[file:extras/outline-extras.el][outline-extras]] collects my extensions for =outline=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package outline-extras
@@ -3255,7 +3255,7 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
 :ID:       50BEF838-0ECD-42E1-9B26-A17FB4E44EA3
 :END:
 
-/[[file:extras/abbrev-extras.el][abbrev-extras]] collects my extensions for ~abbrev~./
+/[[file:extras/abbrev-extras.el][abbrev-extras]] collects my extensions for =abbrev=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package abbrev-extras
@@ -3525,7 +3525,7 @@ CLOCK: [2021-07-30 Fri 21:16]--[2021-07-30 Fri 21:31] =>  0:15
 :ID:       A2DCE7E0-6094-45FC-B5BE-AF3A0351D3CC
 :END:
 
-/[[file:extras/register-extras.el][register-extras]] collects my extensions for ~register~./
+/[[file:extras/register-extras.el][register-extras]] collects my extensions for =register=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package register-extras
@@ -3653,7 +3653,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
 :END:
 
 
-/[[file:extras/files-extras.el][files-extras]] collects my extensions for ~files~./
+/[[file:extras/files-extras.el][files-extras]] collects my extensions for =files=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package files-extras
@@ -3892,7 +3892,7 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
 :ID:       DDF9A650-13A5-4C47-B2C5-6B376B75998D
 :END:
 
-/[[file:extras/dired-extras.el][dired-extras]] collects my extensions for ~dired~./
+/[[file:extras/dired-extras.el][dired-extras]] collects my extensions for =dired=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package dired-extras
@@ -4400,7 +4400,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 :END:
 
 
-/[[file:extras/window-extras.el][window-extras]] collects my extensions for ~window~./
+/[[file:extras/window-extras.el][window-extras]] collects my extensions for =window=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package window-extras
@@ -4447,7 +4447,7 @@ CLOCK: [2024-08-26 Mon 21:09]--[2024-08-26 Mon 21:29] =>  0:20
 :END:
 
 
-/[[file:extras/frame-extras.el][frame-extras]] collects my extensions for ~frame~./
+/[[file:extras/frame-extras.el][frame-extras]] collects my extensions for =frame=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package frame-extras
@@ -4618,7 +4618,7 @@ Maybe the way to do this is by creating a =pass-to-avy= generic function, which 
 :END:
 
 
-/[[file:extras/avy-extras.el][avy-extras]] collects my extensions for ~avy~./
+/[[file:extras/avy-extras.el][avy-extras]] collects my extensions for =avy=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package avy-extras
@@ -4709,7 +4709,7 @@ CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
 :END:
 
 
-/[[file:extras/ace-link-extras.el][ace-link-extras]] collects my extensions for ~ace-link~./
+/[[file:extras/ace-link-extras.el][ace-link-extras]] collects my extensions for =ace-link=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package ace-link-extras
@@ -4775,7 +4775,7 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
 :PROPERTIES:
 :ID:       746F8B0D-5817-4FCC-9DA5-C198CE632F92
 :END:
-/[[file:extras/calendar-extras.el][calendar-extras]] collects my extensions for ~calendar~./
+/[[file:extras/calendar-extras.el][calendar-extras]] collects my extensions for =calendar=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package calendar-extras
@@ -4867,7 +4867,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 :PROPERTIES:
 :ID:       BBED8E2E-2A29-4465-926A-22D531E6DBE7
 :END:
-/[[file:extras/org-gcal-extras.el][org-gcal-extras]] collects my extensions for ~org-gcal~./
+/[[file:extras/org-gcal-extras.el][org-gcal-extras]] collects my extensions for =org-gcal=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package org-gcal-extras
@@ -5191,7 +5191,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 :END:
 
 
-/[[file:extras/isearch-extras.el][isearch-extras]] collects my extensions for ~isearch~./
+/[[file:extras/isearch-extras.el][isearch-extras]] collects my extensions for =isearch=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package isearch-extras
@@ -5720,7 +5720,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 :END:
 
 
-/[[file:extras/corfu-extras.el][corfu-extras]] collects my extensions for ~corfu~./
+/[[file:extras/corfu-extras.el][corfu-extras]] collects my extensions for =corfu=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package corfu-extras
@@ -5988,7 +5988,7 @@ CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
 :END:
 
 
-/[[file:extras/kmacro-extras.el][kmacro-extras]] collects my extensions for ~kmacro~./
+/[[file:extras/kmacro-extras.el][kmacro-extras]] collects my extensions for =kmacro=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package kmacro-extras
@@ -6170,7 +6170,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 :END:
 
 
-/[[file:extras/jinx-extras.el][jinx-extras]] collects my extensions for ~jinx~./
+/[[file:extras/jinx-extras.el][jinx-extras]] collects my extensions for =jinx=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package jinx-extras
@@ -6476,7 +6476,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
 :ID:       856FDF94-95B6-49EB-A6D5-B95F0A53384A
 :END:
 
-/[[file:extras/markdown-mode-extras.el][markdown-mode-extras]] collects my extensions for ~markdown-mode~./
+/[[file:extras/markdown-mode-extras.el][markdown-mode-extras]] collects my extensions for =markdown-mode=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package markdown-mode-extras
@@ -6711,7 +6711,7 @@ https://gitlab.com/chrisberkhout/pricehist
 :ID:       3FC5A39F-AEA9-4D54-AB55-836F58DA8103
 :END:
 
-/[[file:extras/ledger-mode-extras.el][ledger-mode-extras]] collects my extensions for ~ledger-mode~./
+/[[file:extras/ledger-mode-extras.el][ledger-mode-extras]] collects my extensions for =ledger-mode=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package ledger-mode-extras
@@ -7028,7 +7028,7 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
 :END:
 
 
-/[[file:extras/pdf-tools-extras.el][pdf-tools-extras]] collects my extensions for ~pdf-tools~./
+/[[file:extras/pdf-tools-extras.el][pdf-tools-extras]] collects my extensions for =pdf-tools=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package pdf-tools-extras
@@ -7762,7 +7762,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
 :ID:       AB88D95E-3D6F-4B70-850F-F1B7E13AF1AD
 :END:
 
-/[[file:extras/copilot-extras.el][copilot-extras]] collects my extensions for ~copilot~./
+/[[file:extras/copilot-extras.el][copilot-extras]] collects my extensions for =copilot=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package copilot-extras
@@ -7881,7 +7881,7 @@ https://github.com/meain/dotfiles/blob/master/emacs/.config/emacs/init.el#L4525
 :ID:       AEA2E978-0321-4F3D-B3EB-14CDA505A9D9
 :END:
 
-/[[file:extras/gptel-extras.el][gptel-extras]] collects my extensions for ~gptel~./
+/[[file:extras/gptel-extras.el][gptel-extras]] collects my extensions for =gptel=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package gptel-extras
@@ -8375,7 +8375,7 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
 :ID:       4DE04276-B164-441D-ADCA-017346C525D6
 :END:
 
-/[[file:extras/org-extras.el][org-extras]] collects my extensions for ~org~./
+/[[file:extras/org-extras.el][org-extras]] collects my extensions for =org=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package org-extras
@@ -9505,7 +9505,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 :END:
 
 
-/[[file:extras/org2blog-extras.el][org2blog-extras]] collects my extensions for ~org2blog~./
+/[[file:extras/org2blog-extras.el][org2blog-extras]] collects my extensions for =org2blog=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package org2blog-extras
@@ -9900,7 +9900,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 :ID:       44F722DC-C324-4A86-85A1-F103812B2A6A
 :END:
 
-/[[file:extras/org-roam-extras.el][org-roam-extras]] collects my extensions for ~org-roam~./
+/[[file:extras/org-roam-extras.el][org-roam-extras]] collects my extensions for =org-roam=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package org-roam-extras
@@ -10015,7 +10015,7 @@ I use this package to define a dynamic agenda, as explained and illustrated [[ht
 :END:
 
 
-/[[file:extras/vulpea-extras.el][vulpea-extras]] collects my extensions for ~vulpea~./
+/[[file:extras/vulpea-extras.el][vulpea-extras]] collects my extensions for =vulpea=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package vulpea-extras
@@ -10077,7 +10077,7 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 :END:
 
 
-/[[file:extras/org-noter-extras.el][org-noter-extras]] collects my extensions for ~org-noter~./
+/[[file:extras/org-noter-extras.el][org-noter-extras]] collects my extensions for =org-noter=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package org-noter-extras
@@ -10255,7 +10255,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 :END:
 
 
-/[[file:extras/bibtex-extras.el][bibtex-extras]] collects my extensions for ~bibtex~./
+/[[file:extras/bibtex-extras.el][bibtex-extras]] collects my extensions for =bibtex=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package bibtex-extras
@@ -10462,7 +10462,7 @@ Having headings tagged with the type of work they are notes of allows me to quer
 :ID:       6CC7F660-F6E6-4605-AA42-B495FF090B5D
 :END:
 
-/[[file:extras/citar-extras.el][citar-extras]] collects my extensions for ~citar~./
+/[[file:extras/citar-extras.el][citar-extras]] collects my extensions for =citar=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package citar-extras
@@ -10554,7 +10554,7 @@ I use this package only to run the cleanup function ~org-ref-clean-bibtex-entry~
 :END:
 
 
-/[[file:extras/org-ref-extras.el][org-ref-extras]] collects my extensions for ~org-ref~./
+/[[file:extras/org-ref-extras.el][org-ref-extras]] collects my extensions for =org-ref=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package org-ref-extras
@@ -10705,7 +10705,7 @@ The macro below generates the commands correctly. But attempting to define key b
 :ID:       9E86F42E-2F41-4BB7-ABC5-1C929DBD5C06
 :END:
 
-/[[file:extras/ebib-extras.el][ebib-extras]] collects my extensions for ~ebib~./
+/[[file:extras/ebib-extras.el][ebib-extras]] collects my extensions for =ebib=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package ebib-extras
@@ -10824,7 +10824,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 :ID:       29BBF8F1-FC6D-4AFE-AEE4-6C01BB4AAA5F
 :END:
 
-/[[file:extras/zotra-extras.el][zotra-extras]] collects my extensions for ~zotra~./
+/[[file:extras/zotra-extras.el][zotra-extras]] collects my extensions for =zotra=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package zotra-extras
@@ -11256,7 +11256,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 :END:
 
 
-/[[file:extras/mu4e-extras.el][mu4e-extras]] collects my extensions for ~mu4e~./
+/[[file:extras/mu4e-extras.el][mu4e-extras]] collects my extensions for =mu4e=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package mu4e-extras
@@ -11445,7 +11445,7 @@ I.e. the message quoted when on replies to, or forwards, an existing email.
 :END:
 
 
-/[[file:extras/org-msg-extras.el][org-msg-extras]] collects my extensions for ~org-msg~./
+/[[file:extras/org-msg-extras.el][org-msg-extras]] collects my extensions for =org-msg=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package org-msg-extras
@@ -11647,7 +11647,7 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
 :ID:       C7D90E9B-3503-4BFA-A736-89803A9DA664
 :END:
 
-/[[file:extras/telega-extras.el][telega-extras]] collects my extensions for ~telega~./
+/[[file:extras/telega-extras.el][telega-extras]] collects my extensions for =telega=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package telega-extras
@@ -11899,7 +11899,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 :ID:       15B6192C-652C-47FC-8477-0B701129E89F
 :END:
 
-/[[file:extras/browse-url-extras.el][browse-url-extras]] collects my extensions for ~browse-url~./
+/[[file:extras/browse-url-extras.el][browse-url-extras]] collects my extensions for =browse-url=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package browse-url-extras
@@ -12092,7 +12092,7 @@ CLOCK: [2022-07-19 Tue 20:49]--[2022-07-19 Tue 21:05] =>  0:16
 :ID:       69B35912-79CB-4611-8E43-7C8A5BC82B55
 :END:
 
-/[[file:extras/eww-extras.el][eww-extras]] collects my extensions for ~eww~./
+/[[file:extras/eww-extras.el][eww-extras]] collects my extensions for =eww=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package eww-extras
@@ -12313,7 +12313,7 @@ These key bindings produce the same behavior in eww.
 :ID:       57DE6F0B-9245-4E39-A747-6C2A6714B02A
 :END:
 
-/[[file:extras/elfeed-extras.el][elfeed-extras]] collects my extensions for ~elfeed~./
+/[[file:extras/elfeed-extras.el][elfeed-extras]] collects my extensions for =elfeed=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package elfeed-extras
@@ -12802,7 +12802,7 @@ CLOCK: [2021-10-01 Fri 21:10]--[2021-10-01 Fri 21:51] =>  0:41
 :END:
 
 
-/[[file:extras/org-web-tools-extras.el][org-web-tools-extras]] collects my extensions for ~org-web-tools~./
+/[[file:extras/org-web-tools-extras.el][org-web-tools-extras]] collects my extensions for =org-web-tools=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package org-web-tools-extras
@@ -13245,7 +13245,7 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 :END:
 
 
-/[[file:extras/bbdb-extras.el][bbdb-extras]] collects my extensions for ~bbdb~./
+/[[file:extras/bbdb-extras.el][bbdb-extras]] collects my extensions for =bbdb=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package bbdb-extras

@@ -167,6 +167,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#outline-extras][outline-extras]]
   - [[#outli][outli]]
   - [[#abbrev][abbrev]]
+  - [[#abbrev-extras][abbrev-extras]]
   - [[#yasnippet][yasnippet]]
   - [[#yasnippet-snippets][yasnippet-snippets]]
   - [[#expand-region][expand-region]]
@@ -3247,6 +3248,18 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
   ;; do not look up abbrevs with case folding; e.g. `EA' will not expand an `ea' abbrev
   (abbrev-table-put global-abbrev-table :case-fixed t)
   (abbrev-table-put text-mode-abbrev-table :case-fixed t))
+#+end_src
+
+** abbrev-extras
+:PROPERTIES:
+:ID:       50BEF838-0ECD-42E1-9B26-A17FB4E44EA3
+:END:
+
+/[[file:extras/abbrev-extras.el][abbrev-extras]] collects my extensions for ~abbrev~./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-personal-package abbrev-extras
+  :after abbrev)
 #+end_src
 
 ** yasnippet

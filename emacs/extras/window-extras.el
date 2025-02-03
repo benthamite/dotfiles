@@ -55,7 +55,9 @@ The most recently selected window may include the minibuffer window."
   "Switch to the most recently selected window in the current frame.
 The most recently selected window may include the minibuffer window."
   (interactive)
-  (select-window (window-extras-get-last-window)))
+  (if-let* ((last-win (window-extras-get-last-window)))
+      (select-window last-win)
+    (user-error "No other window in the current frame")))
 
 ;;;###autoload
 (defun window-extras-split-if-unsplit ()

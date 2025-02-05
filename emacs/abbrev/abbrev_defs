@@ -1974,7 +1974,7 @@
     ("hting" "thing" nil :count 1)
     ("htink" "think" nil :count 1)
     ("htis" "this" nil :count 1)
-    ("htu" "Here's the output:" nil :count 0)
+    ("hto" "Here's the output:" nil :count 0)
     ("humer" "humor" nil :count 1)
     ("humerous" "humorous" nil :count 1)
     ("huminoid" "humanoid" nil :count 1)

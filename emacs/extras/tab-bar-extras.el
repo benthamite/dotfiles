@@ -150,6 +150,7 @@ This resets the clock, refreshes the Tab Bar and its color, and updates the
 geolocation and weather information. If QUICK is non-nil, run only the essential
 reset functions."
   (interactive)
+  (display-time) ; in case clock gets stuck
   (tab-bar-extras-set-global-mode-string)
   (unless quick
     (when (featurep 'calendar-extras)

@@ -6680,6 +6680,9 @@ To populate the database of historical prices:
         ("s-x" . ledger-fully-complete-xact)
         ("s-y" . ledger-copy-transaction-at-point)
         ("s-z" . ledger-report-redo)
+        :map ledger-report-mode-map
+        ("A-C-s-f" . ledger-navigate-next-xact-or-directive)
+        ("A-C-s-r" . ledger-navigate-prev-xact-or-directive)
         :map ledger-reconcile-mode-map
         ("q" . ledger-reconcile-quit)))
 #+end_src

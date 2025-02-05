@@ -4352,7 +4352,7 @@ CLOSED: [2021-11-23 Tue 22:32]
 #+begin_src emacs-lisp :results silent :tangle (when (memq version '()) (print paths-file-init))
 (use-feature remember
   :custom
-  (remember-data-file "~/Google Drive/Apps/Emacs/notes")
+  (remember-data-file "~/My Drive/Apps/Emacs/notes")
   (remember-notes-buffer-name "\*scratch\*"))
 #+end_src
 
@@ -4775,7 +4775,7 @@ CLOCK: [2021-03-27 Sat 21:17]--[2021-03-27 Sat 21:30] =>  0:13
 #+begin_src emacs-lisp :results silent :tangle no
 (require 'command-log-mode)
 (global-command-log-mode 1)
-(setq clm/logging-dir "~/Google Drive/Apps/Emacs/.log/")
+(setq clm/logging-dir "~/My Drive/Apps/Emacs/.log/")
 #+end_src
 
 ** company-box

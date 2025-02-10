@@ -84,7 +84,9 @@ This is used to display the relevant information in the `gptel' headerline.
 The input cost is approximated based on the number of words in the buffer or
 selection. The function uses a 1.4 token/word conversion factor, but the actual
 cost may deviate from this estimate. For the output cost, we simply assume a
-response of 100 tokens, which appears to be the average LLM response length."
+response of 100 tokens, which appears to be the average LLM response length.
+
+Note that, currently, images are not included in the cost calculation."
   (let ((total-cost (+ (gptel-extras-get-input-cost)
 		       (gptel-extras-get-output-cost))))
     (gptel-extras-normalize-cost total-cost)))

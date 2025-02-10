@@ -89,15 +89,20 @@ response of 100 tokens, which appears to be the average LLM response length."
 		       (gptel-extras-get-output-cost))))
     (gptel-extras-normalize-cost total-cost)))
 
-(defun gptel-extras-get-cost-of-input-type (type)
-  "Get the cost of the current buffer or the context files.
-TYPE is either `buffer' or `context'."
-  (when-let* ((cost-per-1m-input-tokens (get gptel-model :input-cost))
-              (tokens-per-word 1.4)
-              (words-context (pcase type
-			       ('buffer (gptel-extras-count-words-in-buffer))
-			       ('context (gptel-extras-count-words-in-context)))))
-    (* cost-per-1m-input-tokens tokens-per-word words-context)))
+(defun gptel-extras-get-input-cost ()
+  "Return cost for the input."
+  (when-let* ((buffer-cost (gptel-extras-get-buffer-cost)))
+    (+ buffer-cost (or gptel-extras--context-cost 0))))
+
+(defun gptel-extras-get-output-cost ()
+  "Return cost for the output."
+  (when-let* ((cost-per-1m-output-tokens (get gptel-model :output-cost))
+	      (tokens-in-output 100))
+    (* cost-per-1m-output-tokens tokens-in-output)))
+
+(defun gptel-extras-normalize-cost (cost)
+  "Normalize COST to a dollar amount."
+  (/ cost 1000000.0))
 
 (defun gptel-extras-get-context-cost ()
   "Return cost for the current context files."
@@ -107,20 +112,15 @@ TYPE is either `buffer' or `context'."
   "Return cost for the current buffer or region."
   (gptel-extras-get-cost-of-input-type 'buffer))
 
-(defun gptel-extras-normalize-cost (cost)
-  "Normalize COST to a dollar amount."
-  (/ cost 1000000.0))
-
-(defun gptel-extras-get-input-cost ()
-"Return cost for the input."
-  (when-let* ((buffer-cost (gptel-extras-get-buffer-cost)))
-    (+ buffer-cost (or gptel-extras--context-cost 0))))
-
-(defun gptel-extras-get-output-cost ()
-  "Return cost for the output."
-  (when-let* ((cost-per-1m-output-tokens (get gptel-model :output-cost))
-	      (tokens-in-output 100))
-    (* cost-per-1m-output-tokens tokens-in-output)))
+(defun gptel-extras-get-cost-of-input-type (type)
+  "Get the cost of the current buffer or the context files.
+TYPE is either `buffer' or `context'."
+  (when-let* ((cost-per-1m-input-tokens (get gptel-model :input-cost))
+              (tokens-per-word 1.4)
+              (words-context (pcase type
+			       ('buffer (gptel-extras-count-words-in-buffer))
+			       ('context (gptel-extras-count-words-in-context)))))
+    (* cost-per-1m-input-tokens tokens-per-word words-context)))
 
 (defun gptel-extras-update-context-cost (&rest _)
   "Update the context cost when the context is modified."

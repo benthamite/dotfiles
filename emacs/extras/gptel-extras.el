@@ -78,17 +78,16 @@ directory-local sorting is set via a the `.dir-locals.el' file in the directory.
 ;;;;; Estimate cost
 
 (defun gptel-extras-get-total-cost ()
-  "Get the rough input cost of prompting the current model.
+  "Get the rough cost of prompting the current model.
 This is used to display the relevant information in the `gptel' headerline.
 
-Note that the cost is an approximation based on the number of words in the
-buffer or selection. The function uses a 1.4 token/word conversion factor, but
-the actual cost may deviate from this estimate. Also note that this estimate is
-for text requests; media files are not included in the calculation. Finally,
-note that the estimate considers input costs only; it does not include the cost
-of the response (output costs are normally much lower)."
-  (when-let* ((buffer-cost (gptel-extras-get-buffer-cost)))
-    (+ buffer-cost (or gptel-extras--context-cost 0))))
+The input cost is approximated based on the number of words in the buffer or
+selection. The function uses a 1.4 token/word conversion factor, but the actual
+cost may deviate from this estimate. For the output cost, we simply assume a
+response of 100 tokens, which appears to be the average LLM response length."
+  (let ((total-cost (+ (gptel-extras-get-input-cost)
+		       (gptel-extras-get-output-cost))))
+    (gptel-extras-normalize-cost total-cost)))
 
 (defun gptel-extras-get-cost (type)
   "Get the cost of the current buffer or the context files.
@@ -107,6 +106,11 @@ TYPE is either `buffer' or `context'."
 (defun gptel-extras-get-buffer-cost ()
   "Calculate cost for the current buffer or region."
   (gptel-extras-get-cost 'buffer))
+(defun gptel-extras-get-output-cost ()
+  "Return cost for the output."
+  (when-let* ((cost-per-1m-output-tokens (get gptel-model :output-cost))
+	      (tokens-in-output 100))
+    (* cost-per-1m-output-tokens tokens-in-output)))
 
 (defun gptel-extras-update-context-cost (&rest _)
   "Update the context cost when the context is modified."

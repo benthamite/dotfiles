@@ -337,6 +337,21 @@ the cdr is ACCOUNT."
 	    (vc-extras-gh-list-repos-in-account (plist-get profile :account)))
 	  vc-extras-profiles))
 
+;;;;; misc
+
+(defun vc-extras-strip-diff-markers (start end)
+  "Remove leading `+' or `-' characters from each line in region from START to END."
+  (interactive "r")
+  (save-excursion
+    (goto-char end)
+    (let ((end-marker (point-marker)))
+      (goto-char start)
+      (while (< (point) end-marker)
+        (beginning-of-line)
+        (when (looking-at "^\\([+-]\\)")
+          (replace-match "" nil nil nil 1))
+        (forward-line 1)))))
+
 ;;;;; Menu
 
 ;;;###autoload (autoload 'vc-extras-menu "vc-extras" nil t)

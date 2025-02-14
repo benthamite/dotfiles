@@ -7822,6 +7822,25 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
     :stream t
     :key (auth-source-pass-get 'secret (concat "tlon/core/aistudio.google.com/" tlon-email-shared)))
 
+  (gptel-make-openai "DeepSeek"
+    :host "api.deepseek.com"
+    :endpoint "/chat/completions"
+    :stream t
+    :key (auth-source-pass-get "emacs" (concat "tlon/core/deepseek.com/" tlon-email-shared))
+    :models '(;; <https://api-docs.deepseek.com/quick_start/pricing/
+              (deepseek-chat
+               :context-window 64.0
+               :input-cost 0.27
+	       :output-cost 1.10
+               :cutoff-date "2024-07"
+               :description "For simple chat responses or quick answers." )
+              (deepseek-reasoner
+               :context-window 64.0
+               :input-cost 0.55
+	       :output-cost 2.19
+               :cutoff-date "2024-07"
+               :description "For detailed reasoning or complex problem-solving.")))
+
   (gptel-make-openai "Perplexity"
     :host "api.perplexity.ai"
     :key (auth-source-pass-get "key" (concat "tlon/core/perplexity.ai/" tlon-email-shared))

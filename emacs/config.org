@@ -7811,6 +7811,9 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (setq gptel-api-key (auth-source-pass-get "emacs" (concat "tlon/core/openai.com/" tlon-email-shared)))
   (setq gptel-expert-commands t) ; not a user option
 
+  ;; to set reasoning effort in o3-mini:
+  ;; (put 'o3-mini :request-params '(:reasoning_effort "high" :stream :json-false))
+  
   ;; default model
   (setq gptel-model 'claude-3-5-sonnet-20241022
         gptel-backend (gptel-make-anthropic "Claude"

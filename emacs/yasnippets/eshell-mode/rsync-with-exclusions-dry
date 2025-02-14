@@ -1,0 +1,14 @@
+# -*- mode: snippet -*-
+# name: rsync-with-exclusions-dry
+# key: rwed
+# contributor: Pablo Stafforini
+# --
+rsync -av \
+--exclude='*.gdoc' \
+--exclude='*.gsheet' \
+--exclude='*.gform' \
+--exclude='*.gslides' \
+--exclude='*.gmap' \
+--exclude='.DS_Store' \
+'$1/' \
+'$2'

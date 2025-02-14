@@ -5501,7 +5501,8 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
   (consult-dir-default-command 'consult-dir-dired)
 
   :bind
-  ("H-B" . consult-dir))
+  (:map minibuffer-mode-map
+        ("H-d" . consult-dir)))
 #+end_src
 
 ** consult-git-log-grep

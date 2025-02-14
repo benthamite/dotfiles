@@ -524,6 +524,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#keycast][keycast]]
   - [[#activity-watch-mode][activity-watch-mode]]
   - [[#custom][custom]]
+  - [[#kelly][kelly]]
   - [[#fatebook][fatebook]]
   - [[#tetris][tetris]]
 - [[#personal][personal]]
@@ -13362,6 +13363,22 @@ CLOCK: [2024-10-17 Thu 11:58]--[2024-10-17 Thu 12:20] =>  0:22
   :bind
   (:map custom-mode-map
         ("f" . ace-link-custom)))
+#+end_src
+
+** kelly
+:PROPERTIES:
+:ID:       259863E9-6C12-4C58-B959-30C27C3D6BDF
+:END:
+
+/[[https://github.com/benthamite/kelly][kelly]] is a Kelly criterion calculator./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package kelly
+  :ensure (:host github
+		 :repo "benthamite/kelly")
+
+  :custom
+  (kelly-b-parameter-type 'probability))
 #+end_src
 
 ** fatebook

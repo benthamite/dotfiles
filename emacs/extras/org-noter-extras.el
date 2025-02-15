@@ -70,7 +70,7 @@ heading in a quote."
 	    (goto-char (point-max))
 	    (insert (concat quote-begin content quote-end))
 	    (goto-char (point-min))
-	    (re-search-forward (concat "\n" (regexp-quote quote-end)))
+	    (re-search-forward (concat "\n" (regexp-quote quote-end)) 'noerror)
 	    (replace-match quote-end)))
 	(org-next-visible-heading 1)
 	(org-fold-show-subtree)))))

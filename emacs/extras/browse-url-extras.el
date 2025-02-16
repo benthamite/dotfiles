@@ -110,6 +110,12 @@ of URLs to open in Firefox instead."
 
 (browse-url-extras-set-domains-to-open-externally)
 
+(defun browse-url-open-externally-in-background (url)
+  "Open URL externally in the background.
+If URL is nil, prompt for a URL."
+  (interactive "sURL: ")
+  (start-process (concat "open " url) nil "open" "-a" "Firefox" "--background" url))
+
 (provide 'browse-url-extras)
 ;;; browse-url-extras.el ends here
 

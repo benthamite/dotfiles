@@ -6461,6 +6461,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
         ("s-k" . markdown-insert-link)
         ("s-p" . markdown-preview)
         :map markdown-mode-map
+        ("s-a" . markdown-insert-gfm-code-block)
         ("s-z" . markdown-edit-code-block)
         ("A-C-H-t" . markdown-mode-extras-copy-section)
         ("A-C-s-r" . markdown-outline-previous)

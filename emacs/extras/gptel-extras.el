@@ -350,9 +350,7 @@ Each file is shown along with its size. In this buffer:
   (read-only-mode 1))
 
 (defun gptel-extras-toggle-mark ()
-  "Toggle the mark on the current line’s file entry and move to the next entry.
-A marked line shows “[X]” (indicating it will be removed) while
-an unmarked line shows “[ ]”."
+  "Toggle the mark on the current line’s file entry and move to the next entry."
   (interactive)
   (let ((line-start (line-beginning-position)))
     (when-let ((file (get-text-property line-start 'gptel-context-file)))

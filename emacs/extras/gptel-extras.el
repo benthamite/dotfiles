@@ -337,6 +337,7 @@ Each file is shown along with its size. In this buffer:
           (put-text-property start (+ start 3) 'gptel-flag nil)))))
   (goto-char (point-min)))
 
+(declare-function #'files-extras-kill-this-buffer "files-extras")
 (define-derived-mode gptel-context-files-mode special-mode "GPT Context Files"
   "Major mode for flagging gptel context files for removal."
   (setq-local truncate-lines t)
@@ -344,6 +345,7 @@ Each file is shown along with its size. In this buffer:
                    (define-key map (kbd "x") #'gptel-extras-toggle-mark)
                    (define-key map (kbd "D") #'gptel-extras-remove-flagged-context-files)
                    (define-key map (kbd "g") #'gptel-extras-refresh-context-files-buffer)
+		   (define-key map (kbd "q") #'files-extras-kill-this-buffer)
                    map))
   (read-only-mode 1))
 

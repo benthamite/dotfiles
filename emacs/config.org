@@ -7926,8 +7926,10 @@ https://github.com/meain/dotfiles/blob/master/emacs/.config/emacs/init.el#L4525
   (markdown-mode-hook . gptel-extras-enable-gptel-in-markdown)
 
   :bind
-  ("H-s-c" . gptel-extras-goto-end-and-send)
-  ("H-s-o" . gptel-extras-toggle-major-mode))
+  (("H-s-c" . gptel-extras-goto-end-and-send)
+  ("H-s-o" . gptel-extras-toggle-major-mode)
+  :map gptel-mode-map
+  ("s-l" . gptel-extras-list-context-files)))
 #+end_src
 
 ** gptel-quick

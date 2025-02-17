@@ -297,28 +297,106 @@ Binaries are skipped."
 		gptel--old-header-line nil)
 	(setq mode-line-process nil)))))
 
-;; useful for identifying large files in context, which may be adding
-;; unnecessary costs
+;;;;; List and remove files from context
+
 (defun gptel-extras-list-context-files ()
-  "List all files in the current gptel context, sorted by size (largest first)."
+  "List all files in the current `gptel' context sorted by size.
+Each file is shown along with its size. In this buffer:
+
+- `x': flags or unflags file.
+
+- `D': removes the flagged files from the `gptel' context.
+
+- `g': refreshes the file list."
   (interactive)
+  (with-current-buffer (get-buffer-create "*gptel context files*")
+    (gptel-context-files-mode)
+    (gptel-extras-list-context-files-internal)
+    (pop-to-buffer (current-buffer))))
+
+(defun gptel-extras-list-context-files-internal ()
+  "Populate the current buffer with the gptel context files in a flaggable format."
   (let* ((files (cl-remove-if-not #'stringp (mapcar #'car gptel-context--alist)))
          (file-sizes (mapcar (lambda (f)
-                               (cons f (file-attribute-size
-					(file-attributes f))))
+                               (cons f (file-attribute-size (file-attributes f))))
                              files))
-         (sorted-files (sort file-sizes
-                             (lambda (a b) (> (cdr a) (cdr b))))))
-    (with-current-buffer (get-buffer-create "*gptel context files*")
+         (sorted-files (sort file-sizes (lambda (a b) (> (cdr a) (cdr b))))))
+    (let ((inhibit-read-only t))
       (erase-buffer)
       (insert "Context files (sorted by size):\n\n")
-      (dolist (file sorted-files)
-        (insert (format "%.2f KB\t%s\n"
-			(/ (cdr file) 1024.0)
-			(car file))))
+      (dolist (entry sorted-files)
+        (let* ((file (car entry))
+               (size (cdr entry))
+               (start (point)))
+          (insert (format "[ ]\t%.2f KB\t%s\n" (/ size 1024.0) file))
+          ;; On the marker region (first three characters), attach text properties:
+          ;; • 'gptel-context-file' stores the corresponding file name.
+          ;; • 'gptel-flag' is nil by default.
+          (put-text-property start (+ start 3) 'gptel-context-file file)
+          (put-text-property start (+ start 3) 'gptel-flag nil)))))
+  (goto-char (point-min)))
+
+(define-derived-mode gptel-context-files-mode special-mode "GPT Context Files"
+  "Major mode for flagging gptel context files for removal."
+  (setq-local truncate-lines t)
+  (use-local-map (let ((map (make-sparse-keymap)))
+                   (define-key map (kbd "x") #'gptel-extras-toggle-mark)
+                   (define-key map (kbd "D") #'gptel-extras-remove-flagged-context-files)
+                   (define-key map (kbd "g") #'gptel-extras-refresh-context-files-buffer)
+                   map))
+  (read-only-mode 1))
+
+(defun gptel-extras-toggle-mark ()
+  "Toggle the mark on the current line’s file entry and move to the next entry.
+A marked line shows “[X]” (indicating it will be removed) while
+an unmarked line shows “[ ]”."
+  (interactive)
+  (let ((line-start (line-beginning-position)))
+    (when-let ((file (get-text-property line-start 'gptel-context-file)))
+      (let* ((current-flag (get-text-property line-start 'gptel-flag))
+             (new-flag (not current-flag))
+             (new-marker (if new-flag "[X]" "[ ]")))
+        (let ((inhibit-read-only t))
+          (delete-region line-start (+ line-start 3))
+          (goto-char line-start)
+          (insert new-marker)
+          (put-text-property line-start (+ line-start 3) 'gptel-context-file file)
+          (put-text-property line-start (+ line-start 3) 'gptel-flag new-flag)))
+      (forward-line 1))))
+
+(defun gptel-extras-remove-flagged-context-files ()
+  "Remove from the gptel context all files that have been flagged in this buffer.
+This command scans the buffer for file entries where the marker property
+`gptel-flag' is non-nil, removes those files from `gptel-context--alist’,
+updates the cost, and then refreshes the buffer."
+  (interactive)
+  (let (files-to-remove)
+    (save-excursion
       (goto-char (point-min))
-      (pop-to-buffer (current-buffer))
-      (view-mode 1))))
+      (while (not (eobp))
+        (when (and (get-text-property (line-beginning-position) 'gptel-context-file)
+                   (get-text-property (line-beginning-position) 'gptel-flag))
+          (push (get-text-property (line-beginning-position) 'gptel-context-file)
+                files-to-remove))
+        (forward-line 1)))
+    (if files-to-remove
+        (progn
+          ;; Remove each flagged file from the context:
+          (dolist (file files-to-remove)
+            (setq gptel-context--alist (assq-delete-all file gptel-context--alist)))
+          (gptel-extras-update-context-cost)
+          (message "Removed flagged files from context: %s"
+                   (mapconcat 'identity files-to-remove ", "))
+          (gptel-extras-refresh-context-files-buffer))
+      (message "No files flagged for removal."))))
+
+(defun gptel-extras-refresh-context-files-buffer ()
+  "Refresh the buffer showing the gptel context-files list."
+  (interactive)
+  (when-let ((buf (get-buffer "*gptel context files*")))
+    (with-current-buffer buf
+      (gptel-extras-list-context-files-internal)
+      (message "Context file listing refreshed."))))
 
 ;;;;; Summarize commit diffs
 

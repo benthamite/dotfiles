@@ -299,6 +299,7 @@ Binaries are skipped."
 
 ;;;;; List and remove files from context
 
+;;;###autoload
 (defun gptel-extras-list-context-files ()
   "List all files in the current `gptel' context sorted by size.
 Each file is shown along with its size. In this buffer:

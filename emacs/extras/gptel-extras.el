@@ -660,5 +660,15 @@ won't work because it needs the function to be selected."
              (gptel-rewrite))
     (user-error "Not on a function definition")))
 
+(defun gptel-extras-fix-garbled-chars ()
+  "Replace `let/' and `=(' with proper `let*' and `\`(' from point to end of buffer."
+  (interactive)
+  (save-excursion
+    (while (search-forward "let/" nil t)
+      (replace-match "let*"))
+    (goto-char (point))
+    (while (search-forward "=(" nil t)
+      (replace-match "`("))))
+
 (provide 'gptel-extras)
 ;;; gptel-extras.el ends here

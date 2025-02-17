@@ -524,6 +524,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#keycast][keycast]]
   - [[#activity-watch-mode][activity-watch-mode]]
   - [[#custom][custom]]
+  - [[#polymarket][polymarket]]
   - [[#kelly][kelly]]
   - [[#fatebook][fatebook]]
   - [[#tetris][tetris]]
@@ -13388,6 +13389,21 @@ CLOCK: [2024-10-17 Thu 11:58]--[2024-10-17 Thu 12:20] =>  0:22
   :bind
   (:map custom-mode-map
         ("f" . ace-link-custom)))
+#+end_src
+
+** polymarket
+:PROPERTIES:
+:ID:       735A9793-ABDB-4251-AA0B-237D7F2D7788
+:END:
+
+/[[https://github.com/benthamite/polymarket][polymarket]]/ is a package to fetch and place trades on Polymarket, a popular prediction market.
+
+(This package is not currently public.)
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package polymarket
+  :ensure (:host github
+                 :repo "benthamite/polymarket"))
 #+end_src
 
 ** kelly

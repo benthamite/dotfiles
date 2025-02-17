@@ -10886,7 +10886,6 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 (use-package annas-archive
   :ensure (:host github
                  :repo "benthamite/annas-archive")
-  :defer t
   :init
   (with-eval-after-load 'ebib
     (bind-keys :map ebib-entry-mode-map

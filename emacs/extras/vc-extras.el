@@ -126,60 +126,84 @@ If NAME is nil, prompt for one. If ACCOUNT is nil, select one."
 ;;;###autoload
 (defun vc-extras-clone-repo (&optional name account no-forge)
   "Clone an existing repo.
-ACCOUNT is the name of the GitHub account. If NAME is nil, prompt the user for a
-repo name. If NO-FORGE is non-nil, do not prompt to add the repo to Forge.
-With prefix argument, prompt for the target directory.
-
-This function does not use `vc-git-clone' because it does not support cloning
-submodules."
+If NAME is nil, prompt for one using the repository list from GitHub.
+ACCOUNT may be specified explicitly; if not, it is derived from the repo lookup.
+NO-FORGE, if non-nil, skips prompting to add the repo to Forge.
+With a prefix argument, the target parent directory is prompted."
   (interactive "P")
-  (let* ((repos nil)
-	 (name (or name
-		   (completing-read "Repo: " (setq repos (vc-extras-gh-list-repos account)))))
-	 (account (or account (if repos
-				  (alist-get name repos nil nil #'string=)
-				(user-error "If you provide a repo name, you must also provide its account"))))
-	 (remote (vc-extras-get-github-remote name account))
-	 (parent-dir (vc-extras-get-account-prop account :dir))
-	 (dir (if current-prefix-arg
-		  (let* ((child (expand-file-name (read-directory-name "Parent directory: " parent-dir)))
-			 (parent (file-name-directory (directory-file-name child))))
-		    (setq parent-dir parent)
-		    child)
-		(file-name-concat parent-dir name)))
-	 (process-buffer "/git-clone-output/"))
-    (when (file-exists-p dir)
-      (user-error "Directory `%s' already exists" dir))
-    (message "Cloning repo %s..." name)
+  (let* ((repo-data (vc-extras--select-repo name account))
+         (name (car repo-data))
+         (account (cdr repo-data))
+         (remote (vc-extras-get-github-remote name account))
+         (parent-dir (vc-extras-get-account-prop account :dir))
+         (clone-dir (if current-prefix-arg
+                        (vc-extras--prompt-target-directory parent-dir name)
+                      (file-name-concat parent-dir name)))
+         (process-buffer "/git-clone-output/"))
+    (when (file-exists-p clone-dir)
+      (user-error "Directory `%s' already exists" clone-dir))
+    (message "Cloning asynchronously repo %s..." name)
     (let ((default-directory parent-dir))
       (set-process-sentinel
        (start-process "git-clone" process-buffer
-                      "git" "clone" "--recurse-submodules" remote (file-name-nondirectory dir))
+                      "git" "clone" "--recurse-submodules" remote
+                      (file-name-nondirectory clone-dir))
        (lambda (proc event)
-	 (when (and (string= event "finished\n")
-                    (= (process-exit-status proc) 0))
-           (let ((default-directory dir))
-             (when (vc-extras-has-submodules-p dir)
-	       (call-process "git" nil nil nil "submodule" "init")
-               (call-process "git" nil nil nil "submodule" "update" "--recursive"))
-             (if (= (process-exit-status proc) 0)
-		 (progn
-                   (pcase vc-extras-split-repo
-                     ('nil)
-                     ('prompt (if (y-or-n-p "Move `.git' directory to separate directory?")
-                                  (vc-extras-split-local-repo dir)
-				(message "You can customize `vc-extras-split-repo' to avoid this prompt.")))
-                     (_ (vc-extras-split-local-repo dir)))
-                   (if (and (not no-forge)
-                            (not (forge-get-repository :tracked?))
-                            (y-or-n-p "Add to Forge? "))
-                       (forge-extras-track-repository dir)
-                     (dired dir))
-		   (when (get-buffer process-buffer)
-                     (kill-buffer process-buffer))
-                   (message (concat "Cloned repo "
-				    name (when (vc-extras-has-submodules-p dir) " and all its submodules") ".")))
-               (message "Clone failed with exit status %d" (process-exit-status proc))))))))))
+         (vc-extras--clone-sentinel proc event clone-dir name no-forge))))))
+
+;; Helper to prompt/select repository information.
+(defun vc-extras--select-repo (name account)
+  "Return a cons cell (NAME . ACCOUNT) for cloning.
+If NAME is nil, prompt for one (and if ACCOUNT is nil, try to use the repo
+list)."
+  (let* ((repos (and (not name)
+                     (vc-extras-gh-list-repos account)))
+         (name (or name
+                   (completing-read "Repo: " (mapcar #'car repos))))
+         (account (or account
+                      (alist-get name repos nil nil #'string=)
+                      (user-error "If a repo is provided, account must be provided"))))
+    (cons name account)))
+
+;; Helper to choose the target directory.
+(defun vc-extras--prompt-target-directory (parent-dir name)
+  "Prompt for a PARENT-DIR and return a directory with NAME appended."
+  (let* ((custom-parent (read-directory-name "Parent directory: " parent-dir))
+         (target (file-name-concat custom-parent name)))
+    target))
+
+;; Helper to initialize submodules.
+(defun vc-extras--initialize-submodules (dir)
+  "Initialize submodules of the repo at DIR.
+Runs ‘git submodule init’ and ‘git submodule update --recursive’ with DIR as the
+working directory."
+  (let ((default-directory dir))
+    (call-process "git" nil nil nil "submodule" "init")
+    (call-process "git" nil nil nil "submodule" "update" "--recursive")))
+
+;; Helper to handle clone completion.
+(defun vc-extras--clone-sentinel (proc event clone-dir name no-forge)
+  "Process sentinel for git clone.
+PROC is the process, EVENT is the clone event, CLONE-DIR is the cloned repo
+directory, NAME is the repo name, and NO-FORGE controls adding the repo to
+Forge."
+  (when (and (string= event "finished\n")
+             (= (process-exit-status proc) 0))
+    (let ((default-directory clone-dir))
+      (when (vc-extras-has-submodules-p clone-dir)
+        (vc-extras--initialize-submodules clone-dir))
+      (pcase vc-extras-split-repo
+        ('nil nil)
+        ('prompt (when (y-or-n-p "Move .git directory to separate directory? ")
+                   (vc-extras-split-local-repo clone-dir)))
+        (_ (vc-extras-split-local-repo clone-dir)))
+      (unless no-forge
+        (when (and (not (forge-get-repository :tracked?))
+                   (y-or-n-p "Add to Forge? "))
+          (forge-extras-track-repository clone-dir)))
+      (message (concat "Cloned repo " name
+                       (if (vc-extras-has-submodules-p clone-dir)
+                           " with all its submodules." ".") )))))
 
 (defun vc-extras-has-submodules-p (dir)
   "Return non-nil if the repository in DIR has submodules."

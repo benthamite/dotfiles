@@ -175,7 +175,8 @@ submodules."
                             (y-or-n-p "Add to Forge? "))
                        (forge-extras-track-repository dir)
                      (dired dir))
-                   (kill-buffer process-buffer)
+		   (when (get-buffer process-buffer)
+                     (kill-buffer process-buffer))
                    (message (concat "Cloned repo "
 				    name (when (vc-extras-has-submodules-p dir) " and all its submodules") ".")))
                (message "Clone failed with exit status %d" (process-exit-status proc))))))))))

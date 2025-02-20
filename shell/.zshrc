@@ -13,11 +13,13 @@ nvm() {
 }
 
 # Lazy-load pyenv
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+
 pyenv() {
-    unset pyenv
-    export PYENV_ROOT="$HOME/.pyenv"
-    export PATH="$PYENV_ROOT/bin:$PATH"
+    unset -f pyenv
     eval "$(command pyenv init -)"
+    eval "$(command pyenv init --path)"
     pyenv "$@"
 }
 

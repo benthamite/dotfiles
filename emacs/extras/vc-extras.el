@@ -251,41 +251,72 @@ If the repository has submodules, move their `.git' directories, too."
 ;;;###autoload
 (defun vc-extras-delete-local-repo (&optional name account)
   "Delete the repo named NAME in ACCOUNT.
-If NAME is nil, prompt the user for a repo name. If ACCOUNT is nil, infer it
-from NAME."
+If NAME is nil, prompt the user to select one from local repositories. If
+ACCOUNT is nil, candidates will be gathered from all available profiles.
+Otherwise, only local repos in the directory of ACCOUNT will be displayed. Note
+that if multiple accounts share the same directory, repos from all these
+accounts will be displayed.
+
+Deletes both the main repository directory (if it exists and is a Git repo) and
+the corresponding split Git directory (if it exists). A message is displayed
+listing the directories that were deleted."
   (interactive)
-  (let* ((names-and-dirs)
-	 (name (or name
-		   (let* ((repo-dirs (if account
-					 (list (vc-extras-get-account-prop account :dir))
-				       (delete-dups
-					(mapcar (lambda (profile)
-						  (vc-extras-get-account-prop (plist-get profile :account) :dir))
-						vc-extras-profiles))))
-			  (dirs (mapcan (lambda (dir)
-					  (directory-files dir t "^[^.][^/]*$"))
-					repo-dirs)))
-		     (setq names-and-dirs (mapcar (lambda (dir)
-						    (let ((name (file-name-nondirectory dir)))
-						      (cons name dir)))
-						  dirs))
-		     (completing-read "Dir: " names-and-dirs))))
-	 (dir (if account
-		  (file-name-concat (vc-extras-get-account-prop account :dir) name)
-		(alist-get name names-and-dirs nil nil #'string=)))
-	 (split-git (file-name-concat paths-dir-split-git name))
-	 deleted)
-    (when (and (file-exists-p dir)
-	       ;; check that it is a repo, to prevent accidental deletion
-	       (vc-extras-is-git-dir-p dir))
-      (delete-directory dir t)
-      (push dir deleted))
-    (when (file-exists-p split-git)
-      (delete-directory split-git t)
-      (push split-git deleted))
+  (let* ((candidates (unless name (vc-extras-list-local-candidates account)))
+         (name (or name
+                   (completing-read "Repo to delete: " (mapcar #'car candidates) nil t)))
+         (main-dir (vc-extras-resolve-repo-dir name account candidates))
+         (split-dir (file-name-concat paths-dir-split-git name))
+         deleted)
+    (when (file-exists-p main-dir)
+      (if (vc-extras-is-git-dir-p main-dir)
+          (progn
+            (delete-directory main-dir t)
+            (push main-dir deleted))
+        (message "Directory `%s' is not a Git repository. Skipping deletion." main-dir)))
+    (when (file-exists-p split-dir)
+      (delete-directory split-dir t)
+      (push split-dir deleted))
     (if deleted
-	(message "Deleted repos: %s" (string-join deleted ", "))
-      (message "Repo `%s' not found locally" name))))
+        (message "Deleted repos: %s" (string-join (nreverse deleted) ", "))
+      (message "Repo `%s' not found locally." name))))
+
+(defun vc-extras-resolve-repo-dir (name account candidates)
+  "Return the directory for the repository NAME.
+If ACCOUNT is non-nil, construct it using the account’s repository directory.
+Otherwise, look it up in CANDIDATES (an alist of (NAME . DIR))."
+  (if account
+      (file-name-concat (vc-extras-get-account-prop account :dir) name)
+    (or (cdr (assoc name candidates))
+        (user-error "Repository `%s' not found locally" name))))
+
+(defun vc-extras--delete-repo-directory (dir)
+  "Delete directory DIR if it exists and is a Git repository.
+Return DIR if deletion was performed, or nil otherwise."
+  (when (and (file-exists-p dir) (vc-extras-is-git-dir-p dir))
+    (delete-directory dir t)
+    dir))
+
+(defun vc-extras-list-local-candidates (&optional account)
+  "Return an alist of local Git repositories as (NAME . DIR).
+If ACCOUNT is non-nil, only consider repositories in that account’s directory;
+otherwise, search all accounts listed in `vc-extras-profiles'. Only directories
+that appear to be Git repositories (according to `vc-extras-is-git-dir-p') are
+included."
+  (let* ((repo-dirs (if account
+                        (list (vc-extras-get-account-prop account :dir))
+                      (delete-dups
+                       (mapcar (lambda (profile)
+                                 (vc-extras-get-account-prop (plist-get profile :account) :dir))
+                               vc-extras-profiles))))
+         (dirs (mapcan (lambda (dir)
+                         (directory-files dir t "^[^.][^/]*$"))
+                       repo-dirs)))
+    (delq nil
+          (mapcar (lambda (d)
+                    (let ((name (file-name-nondirectory (directory-file-name d))))
+                      (when (vc-extras-is-git-dir-p d)
+                        (cons name d))))
+                  dirs))))
 
 ;;;;; gh
 

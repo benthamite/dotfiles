@@ -6027,6 +6027,17 @@ CLOCK: [2022-09-02 Fri 18:00]--[2022-09-02 Fri 18:07] =>  0:07
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature shell
+  :init
+  ;; remove maddening "saving session" messages in non-interactive shells
+  (let ((filtered-env
+       (seq-filter
+        (lambda (var)
+          (let ((var-name (car (split-string var "="))))
+            (not (member var-name '("TERM_PROGRAM" "TERM_SESSION_ID")))))
+        process-environment)))
+  (setq process-environment filtered-env
+        shell-command-environment filtered-env))
+        
   :bind
   (:map shell-mode-map
    ("M-p" . nil)

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: sudo-edit
+# key: se
+# contributor: Pablo Stafforini
+# --
+sudo -i nano $1

@@ -7762,6 +7762,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   :custom
   (copilot-max-char -1)
   (copilot-indent-offset-warning-disable t)
+  (copilot-version "1.272.0") ; needs to match installed version to suppress warning
 
   :config
   (unless (copilot-installed-version)

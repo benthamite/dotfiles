@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: polymarket-add-trader
+# key: pat
+# contributor: Pablo Stafforini
+# --
+$1: {
+id: "$2",
+totalAmount: 1000,
+},
+$0

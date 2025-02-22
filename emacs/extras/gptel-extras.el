@@ -38,6 +38,18 @@
   "Extensions for `gptel'."
   :group 'gptel)
 
+(defcustom gptel-extras-tokens-per-word 1.4
+  "The approximate number of tokens per word.
+Used to estimate input costs, based on the number of words in the prompt."
+  :type 'number
+  :group 'gptel-extras)
+
+(defcustom gptel-extras-tokens-in-output 100
+  "The average number of tokens in the response output.
+Used to estimate output costs."
+  :type 'number
+  :group 'gptel-extras)
+
 (defcustom gptel-extras-gemini-mullvad-disconnect-after 1
   "The number of minutes to disconnect `mullvad' after starting the Gemini session."
   :type 'integer
@@ -82,9 +94,11 @@ directory-local sorting is set via a the `.dir-locals.el' file in the directory.
 This is used to display the relevant information in the `gptel' headerline.
 
 The input cost is approximated based on the number of words in the buffer or
-selection. The function uses a 1.4 token/word conversion factor, but the actual
-cost may deviate from this estimate. For the output cost, we simply assume a
-response of 100 tokens, which appears to be the average LLM response length.
+selection. The function uses a default 1.4 token/word conversion factor, but the
+actual cost may deviate from this estimate. (To change this default, customize
+`gptel-extras-tokens-per-word'.) For the output cost, we simply assume a
+response of 100 tokens, which appears to be the average LLM response length. (To
+change this default, customize `gptel-extras-tokens-in-output'.)
 
 Note that, currently, images are not included in the cost calculation."
   (let ((total-cost (+ (gptel-extras-get-input-cost)
@@ -99,7 +113,7 @@ Note that, currently, images are not included in the cost calculation."
 (defun gptel-extras-get-output-cost ()
   "Return cost for the output."
   (when-let* ((cost-per-1m-output-tokens (get gptel-model :output-cost))
-	      (tokens-in-output 100))
+	      (tokens-in-output gptel-extras-tokens-in-output))
     (* cost-per-1m-output-tokens tokens-in-output)))
 
 (defun gptel-extras-normalize-cost (cost)
@@ -118,7 +132,7 @@ Note that, currently, images are not included in the cost calculation."
   "Get the cost of the current buffer or the context files.
 TYPE is either `buffer' or `context'."
   (when-let* ((cost-per-1m-input-tokens (get gptel-model :input-cost))
-              (tokens-per-word 1.4)
+              (tokens-per-word gptel-extras-tokens-per-word)
               (words-context (pcase type
 			       ('buffer (gptel-extras-count-words-in-buffer))
 			       ('context (gptel-extras-count-words-in-context)))))

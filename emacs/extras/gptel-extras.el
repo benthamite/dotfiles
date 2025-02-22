@@ -587,6 +587,7 @@ often enough to fix this)."
 	   gptel-extras-org-properties))
 
 ;;;;; Save, restore & clear file context
+;; FIXME: code in this section is not working; currently semi-abandoned
 
 ;;;;;; Save
 

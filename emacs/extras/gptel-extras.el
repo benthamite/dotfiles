@@ -203,7 +203,7 @@ Binaries are skipped."
 	  (add-hook 'before-save-hook #'gptel--save-state nil t)
 	  (when (derived-mode-p 'org-mode)
             ;; Work around bug in `org-fontify-extend-region'.
-            (add-hook 'gptel-post-response-functions #'font-lock-fontify-region nil t))
+            (add-hook 'gptel-post-response-functions #'gptel--font-lock-update nil t))
 	  (gptel--restore-state)
 	  (if gptel-use-header-line
 	      (setq gptel--old-header-line header-line-format

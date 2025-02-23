@@ -5,7 +5,7 @@
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/pass-extras.el
 ;; Version: 0.2
-;; Package-Requires: ((pass "1.0.0"))
+;; Package-Requires: ((pass "1.0.0") (password-generator "1.20"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -29,6 +29,7 @@
 ;;; Code:
 
 (require 'pass)
+(require 'password-generator)
 
 ;;;; Functions
 
@@ -81,6 +82,36 @@ user input."
     (if (zerop output)
 	(message "Unlocked repository `%s'" repo)
       (message "Error unlocking repository `%s'. Perhaps the repo is dirty?" repo))))
+
+;;;;; Generate
+
+;;;###autoload
+(defun pass-extras-generate-password ()
+  "Generate a password and copy it to clipboard.
+Prompts for password type and copies result to clipboard."
+  (interactive)
+  (let* ((types '(("Simple (alphanumeric)" . password-generator-simple)
+                  ("Strong (with special chars)" . password-generator-strong)
+                  ("Numeric (PIN)" . password-generator-numeric)
+                  ("Phonetic (memorable)" . password-generator-phonetic)
+                  ("Words (correct horse battery)" . password-generator-words)
+                  ("Custom (your alphabet)" . password-generator-custom)))
+         (choice (completing-read "Password type: " types nil t))
+         (generator-fn (cdr (assoc choice types)))
+         (password (funcall generator-fn nil t)))
+    ;; Clear previous password from kill ring
+    (password-store-clear 'generated)
+    ;; Add new password to kill ring and track its position
+    (kill-new password)
+    (setq password-store-kill-ring-pointer kill-ring-yank-pointer)
+    (message "Password copied to clipboard. Will clear in %s seconds."
+             password-store-time-before-clipboard-restore)
+    ;; Set timer to clear password
+    (when password-store-timeout-timer
+      (cancel-timer password-store-timeout-timer))
+    (setq password-store-timeout-timer
+          (run-at-time password-store-time-before-clipboard-restore nil
+                       #'password-store-clear 'generated))))
 
 (provide 'pass-extras)
 ;;; pass-extras.el ends here

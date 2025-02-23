@@ -85,6 +85,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#pass-extras][pass-extras]]
   - [[#password-store-otp][password-store-otp]]
   - [[#auth-source-pass][auth-source-pass]]
+  - [[#password-generator][password-generator]]
 - [[#version-control][version control]]
   - [[#vc][vc]]
   - [[#vc-extras][vc-extras]]
@@ -1347,6 +1348,20 @@ CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
 
   :hook
   (doom-modeline-before-github-fetch-notification-hook . auth-source-pass-enable))
+#+end_src
+
+** password-generator
+:PROPERTIES:
+:ID:       D1CAD413-7307-49C4-86BC-48EF397C083C
+:END:
+
+/[[https://github.com/vandrlexay/emacs-password-genarator][password-generator]] [sic] generates various types of passwords./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package password-generator
+  :ensure (:host github
+		 :repo "vandrlexay/emacs-password-genarator") ; sic
+  :defer t)
 #+end_src
 
 * version control

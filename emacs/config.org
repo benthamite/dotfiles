@@ -7827,8 +7827,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package gptel
   :ensure (:host github
-                 :repo "benthamite/gptel"
-                 :branch "exclude-gitignored")
+                 :repo "benthamite/gptel")
   :init
   (with-eval-after-load 'dired
     (bind-keys

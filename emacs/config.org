@@ -1309,6 +1309,7 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
   (:map pass-mode-map
         ("SPC" . pass-extras-open-at-point)
         ("e" . pass-extras-edit)
+        ("G" . pass-extras-generate-password)
         ("I" . pass-extras-insert-generated-no-symbols)))
 #+end_src
 

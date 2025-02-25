@@ -484,7 +484,7 @@
          [:d [:open "/System/Library/CoreServices/Finder.app"]]
          [:e [:open "/Applications/Emacs.app"]]
          [:f [:open "/Applications/Firefox.app"]]
-         [:g [:open "/Applications/Goldendict.app"]]
+         [:g [:open "/Applications/GoldenDict-ng.app"]]
          [:h [:open "/Applications/Google Chrome.app"]]
          [:i [:open "/Applications/Anki.app"]]
          [:j [:km "open: System Preferences"]]

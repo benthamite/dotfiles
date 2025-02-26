@@ -310,35 +310,40 @@ have no effect."
 	   (process (start-process-shell-command
 		     "ocrmypdf" "*ocr-pdf*"
 		     (concat "ocrmypdf " parameters))))
+      (message "OCR process started for %s" filename)
       (set-process-filter process 'files-extras-ocr-pdf-process-filter))))
+
+(defvar-local files-extras-ocr-messages nil
+  "Stores all OCR messages that have been displayed.")
 
 (defun files-extras-ocr-pdf-process-filter (process string)
   "Process filter function to handle output from `ocrmypdf'.
 This function gets STRING when PROCESS produces output."
   (when (buffer-live-p (process-buffer process))
     (with-current-buffer (process-buffer process)
-      (message "OCR in progress...")
-      (cond ((string-match-p "page already has text! - aborting" string)
-	     (message "OCR already performed on this file; to perform OCR anyway, run with a prefix argument."))
-	    ((string-match-p "TaggedPDFError" string)
-	     (message "The PDF was generated from an office document and does not need OCR."))
-	    ;; when invoked with `--force-ocr'
-	    ((or (string-match-p "page already has text" string)
-		 (string-match-p "common.py:261" string))
-	     (message "OCR already performed on this file; forcing new OCR."))
-	    ;; silence irrelevant messages
-	    ((or (string-match-p "Scanning contents" string)
-		 (string-match-p "Start processing" string)
-		 (string-match-p "Recompressing JPEGs" string)
-		 (string-match-p "Deflating JPEGs" string)
-		 (string-match-p "empty page" string)
-		 (string-match-p "lots of diacritics" string) ; maybe should leave this to alert about lang mismatch?
-		 (string-match-p "image will be rendered at" string)
-		 (string-match-p "weight average at" string)
-		 (string-match-p "postprocessing..." string)
-		 (string-match-p "image too small to scale" string)))
-	    ;; print all other messages
-	    (t (princ string))))))
+      (let ((msg (cond
+                  ((string-match-p "page already has text! - aborting" string)
+                   "OCR already performed on this file; to perform OCR anyway, run with a prefix argument.")
+                  ((string-match-p "TaggedPDFError" string)
+                   "The PDF was generated from an office document and does not need OCR.")
+                  ((or (string-match-p "page already has text" string)
+                       (string-match-p "common.py:261" string))
+                   "OCR already performed on this file; forcing new OCR.")
+                  ((or (string-match-p "Scanning contents" string)
+                       (string-match-p "Start processing" string)
+                       (string-match-p "Recompressing JPEGs" string)
+                       (string-match-p "Deflating JPEGs" string)
+                       (string-match-p "empty page" string)
+                       (string-match-p "lots of diacritics" string)
+                       (string-match-p "image will be rendered at" string)
+                       (string-match-p "weight average at" string)
+                       (string-match-p "postprocessing..." string)
+                       (string-match-p "image too small to scale" string))
+                   nil)
+                  (t string))))
+        (when (and msg (not (member msg files-extras-ocr-messages)))
+          (push msg files-extras-ocr-messages)
+          (message "%s" msg))))))
 
 (defun files-extras-get-stem-of-current-buffer ()
   "Return the stem of the current buffer."

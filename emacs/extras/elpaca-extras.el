@@ -79,15 +79,21 @@ using this command."
       (message "Reloaded: %s" (mapconcat #'symbol-name package-features " ")))))
 
 ;;;###autoload
-(defun elpaca-extras-update-and-reload (&optional package)
-  "Update PACKAGE and reload its features.
-If PACKAGE is nil, prompt for it."
-  (interactive)
-  (list (let ((elpaca-overriding-prompt "Update and reload package: ")
-	      (package (or package (elpaca--read-queued))))
-	  (elpaca-update package t)
-	  (sleep-for 2) ; hack; not sure it’s even needed
-	  (elpaca-extras-reload package))))
+(defun elpaca-extras-update-and-reload (&optional pkg)
+  "Update PKG and reload its features.
+If PKG is nil, prompt for it."
+  (interactive (list (elpaca--read-queued "Update and reload package: ")))
+  (let ((on-update-finish
+         (lambda ()
+           (let ((pkg-data (elpaca-get pkg)))
+             (when (and pkg-data (eq (elpaca--status pkg-data) 'finished))
+               ;; Once finished, remove the hook and reload the package.
+               (remove-hook 'elpaca--post-queues-hook on-update-finish)
+               (elpaca-extras-reload pkg))))))
+    ;; Add the callback to be run after elpaca finishes processing its queues.
+    (add-hook 'elpaca--post-queues-hook on-update-finish)
+    ;; Start the update (the t here requests immediate processing).
+    (elpaca-update pkg t)))
 
 (provide 'elpaca-extras)
 ;;; elpaca-extras.el ends here

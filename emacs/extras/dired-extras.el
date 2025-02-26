@@ -204,6 +204,7 @@ number."
     ("o" "Google Drive" (lambda () (interactive) (dired paths-dir-google-drive)))
     ("p" "People" (lambda () (interactive) (dired paths-dir-people)))
     ("r" "Repos" (lambda () (interactive) (dired paths-dir-personal-repos)))
+    ("s" "Source" (lambda () (interactive) (dired paths-dir-external-repos)))
     ("U" "Audiobooks" (lambda () (interactive) (dired paths-dir-audiobooks)))
     ("v" "movies" (lambda () (interactive) (dired paths-dir-movies)))
     ("w" "downloads" (lambda () (interactive) (dired paths-dir-downloads)))

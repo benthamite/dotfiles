@@ -4305,7 +4305,21 @@ Most of the below is copied from Murilo Pereira's [[https://github.com/mpereira/
 
   (add-to-list 'tramp-connection-properties
                (list (regexp-quote "/ssh:fede@tlon.team:")
-                     "direct-async-process" t)))
+                     "direct-async-process" t))
+
+  (defun tramp-suppress-tramp-stderr-warning (orig-fun &rest args)
+    "Suppress the STDERR not supported warning in TRAMP.
+This warning is triggered when Tramp tries to connect using Samba."
+    (let ((tramp-message-show-message
+           (lambda (vec flag string &rest objects)
+             (unless (and (eq flag 2)
+                          (string-match "STDERR not supported" string))
+               (apply #'tramp-message-original vec flag string objects)))))
+      (cl-letf (((symbol-function 'tramp-message-original)
+		 (symbol-function 'tramp-message)))
+	(apply orig-fun args))))
+
+  (advice-add 'tramp-handle-make-process :around #'tramp-suppress-tramp-stderr-warning))
 #+end_src
 
 ** pandoc-mode
@@ -4726,7 +4740,6 @@ CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
 :PROPERTIES:
 :ID:       BD522C3E-92F7-4D61-A697-8186F01E2BE7
 :END:
-
 
 /[[file:extras/ace-link-extras.el][ace-link-extras]] collects my extensions for =ace-link=./
 

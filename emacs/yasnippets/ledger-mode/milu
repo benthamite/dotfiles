@@ -3,7 +3,7 @@
 # key: milu
 # contributor: Pablo Stafforini
 # --
-`(format-time-string "%Y-%m-%d")`  Milu
+`(format-time-string "%Y-%m-%d")` Milu
     Expenses:Housing:Maid                  15$1,000.00 ARS ; maid
     Assets:Mercado Pago
 

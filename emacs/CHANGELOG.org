@@ -4,6 +4,36 @@
 
 This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository. It is meant to be read primarily by members of the Tlön team, but it may be of interest to others as well.
 
+* Version 7.1.1
+
+** =init=
+- Renamed package from =tlon-init= to =init= throughout the codebase
+
+** =elpaca=
+- Updated elpaca installer to version 0.10
+- Revamped =elpaca-extras-update-and-reload= to use hooks for more reliable package updates.
+
+** =gptel=
+- Fixed cost calculation to properly include both input and output costs
+- Made tokens per word and output token count conversion factors customizable via user options
+- Added =gptel-extras-rewrite-defun= to rewrite Emacs Lisp function definitions via embark: =C-;= (=embark-act=), followed by =R=.
+- Added hack =gptel-extras-fix-garbled-chars= to replace common token encoding errors like "let/" → "let/" and "=(" → "\=(".
+- Improved cost estimation for better performance.
+
+** Files
+- Made OCR process less verbose with buffered notifications
+
+** Shell Integration
+- Improved Python environment handling in .zshrc with better lazy-loading
+- Removed annoying "saving session" messages in non-interactive shells
+
+** VC and Git
+- Refactored and improved =vc-extras-clone-repo= with better helper functions
+- Completely refactored =vc-extras-delete-local-repo= for more reliable operation
+- Added =vc-extras-strip-diff-markers= to clean up diff output
+- Fixed issue where process buffers weren't properly checked before killing
+
+
 * Version 6.8.7 on 2025-01-29
 ** Emacs core packages
 *** eww-extras

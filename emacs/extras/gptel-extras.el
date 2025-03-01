@@ -314,53 +314,70 @@ Binaries are skipped."
 ;;;;; List and remove files from context
 
 ;;;###autoload
-(defun gptel-extras-list-context-files ()
-  "List all files in the current `gptel' context sorted by size.
-Each file is shown along with its size. In this buffer:
-
-- `x': flags or unflags file.
-
-- `D': removes the flagged files from the `gptel' context.
-
-- `g': refreshes the file list."
-  (interactive)
-  (with-current-buffer (get-buffer-create "*gptel context files*")
-    (gptel-context-files-mode)
-    (gptel-extras-list-context-files-internal)
-    (pop-to-buffer (current-buffer))))
+(defun gptel-context-files--describe-keybindings (keymap)
+  "Return a string description of KEYMAP's bindings in the format: key = command."
+  (let ((bindings '()))
+    (map-keymap
+     (lambda (event binding)
+       (when (and (not (keymapp binding))
+                  (commandp binding))
+         (let ((key-str (key-description (vector event)))
+               (cmd-str (if (symbolp binding)
+                            (symbol-name binding)
+                          (prin1-to-string binding))))
+           (push (format "%s = %s" key-str cmd-str) bindings))))
+     keymap)
+    (mapconcat 'identity (sort bindings 'string<) "\n")))
 
 (defun gptel-extras-list-context-files-internal ()
-  "Populate the current buffer with the gptel context files in a flaggable format."
-  (let* ((files (cl-remove-if-not #'stringp (mapcar #'car gptel-context--alist)))
+  "Populate the current buffer with the gptel context files in a flaggable format.
+Lists key bindings dynamically based on the current mode's keymap."
+  (let* ((key-bindings (gptel-context-files--describe-keybindings (current-local-map)))
+         (files (cl-remove-if-not #'stringp (mapcar #'car gptel-context--alist)))
          (file-sizes (mapcar (lambda (f)
                                (cons f (file-attribute-size (file-attributes f))))
                              files))
-         (sorted-files (sort file-sizes (lambda (a b) (> (cdr a) (cdr b))))))
+         (sorted-files (sort file-sizes (lambda (a b) (> (cdr a) (cdr b)))))
+         (home-dir (expand-file-name "~/")))
     (let ((inhibit-read-only t))
       (erase-buffer)
-      (insert "Context files (sorted by size):\n\n")
+      (insert "Context files (sorted by size):\n")
+      (insert (format "\n%s\n\n" key-bindings))
       (dolist (entry sorted-files)
         (let* ((file (car entry))
+               (display-file (if (string-prefix-p home-dir file)
+                                 (concat "~/" (substring file (length home-dir)))
+                               file))
                (size (cdr entry))
                (start (point)))
-          (insert (format "[ ]\t%.2f KB\t%s\n" (/ size 1024.0) file))
-          ;; On the marker region (first three characters), attach text properties:
-          ;; • 'gptel-context-file' stores the corresponding file name.
-          ;; • 'gptel-flag' is nil by default.
+          (insert (format "[ ]\t%.2f KB\t%s\n" (/ size 1024.0) display-file))
           (put-text-property start (+ start 3) 'gptel-context-file file)
-          (put-text-property start (+ start 3) 'gptel-flag nil)))))
-  (goto-char (point-min)))
+          (put-text-property start (+ start 3) 'gptel-flag nil))))
+    (goto-char (point-min))))
 
-(declare-function #'files-extras-kill-this-buffer "files-extras")
+(defun gptel-extras-list-context-files ()
+  "List all files in the current `gptel' context sorted by size.
+Each file is shown along with its size."
+  (interactive)
+  (if gptel-context--alist
+      (with-current-buffer (get-buffer-create "*gptel context files*")
+        (gptel-context-files-mode)
+        (gptel-extras-list-context-files-internal)
+        (pop-to-buffer (current-buffer)))
+    (message "No files in context.")))
+
+(declare-function files-extras-kill-this-buffer "files-extras")
 (define-derived-mode gptel-context-files-mode special-mode "GPT Context Files"
   "Major mode for flagging gptel context files for removal."
   (setq-local truncate-lines t)
-  (use-local-map (let ((map (make-sparse-keymap)))
-                   (define-key map (kbd "x") #'gptel-extras-toggle-mark)
-                   (define-key map (kbd "D") #'gptel-extras-remove-flagged-context-files)
-                   (define-key map (kbd "g") #'gptel-extras-refresh-context-files-buffer)
-		   (define-key map (kbd "q") #'files-extras-kill-this-buffer)
-                   map))
+  (hl-line-mode)
+  (use-local-map
+   (let ((map (make-sparse-keymap)))
+     (define-key map (kbd "x") #'gptel-extras-toggle-mark)
+     (define-key map (kbd "D") #'gptel-extras-remove-flagged-context-files)
+     (define-key map (kbd "g") #'gptel-extras-refresh-context-files-buffer)
+     (define-key map (kbd "q") #'files-extras-kill-this-buffer)
+     map))
   (read-only-mode 1))
 
 (defun gptel-extras-toggle-mark ()
@@ -412,6 +429,7 @@ updates the cost, and then refreshes the buffer."
     (with-current-buffer buf
       (gptel-extras-list-context-files-internal)
       (message "Context file listing refreshed."))))
+
 
 ;;;;; Summarize commit diffs
 

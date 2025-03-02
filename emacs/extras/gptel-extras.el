@@ -38,6 +38,8 @@
   "Extensions for `gptel'."
   :group 'gptel)
 
+;;;;; Estimate cost
+
 (defcustom gptel-extras-tokens-per-word 1.4
   "The approximate number of tokens per word.
 Used to estimate input costs, based on the number of words in the prompt."
@@ -49,6 +51,14 @@ Used to estimate input costs, based on the number of words in the prompt."
 Used to estimate output costs."
   :type 'number
   :group 'gptel-extras)
+
+(defcustom gptel-extras-cost-warning-threshold 0.15
+  "The cost threshold above which to display a warning before sending a prompt.
+To disable warnings, set this value to nil."
+  :type 'number
+  :group 'gptel-extras)
+
+;;;;; Misc
 
 (defcustom gptel-extras-gemini-mullvad-disconnect-after 1
   "The number of minutes to disconnect `mullvad' after starting the Gemini session."
@@ -184,6 +194,17 @@ Binaries are skipped."
       (dolist (buf (buffer-list))
 	(unless (member buf initial-buffers)
 	  (kill-buffer buf))))))
+
+(defun gptel-extras-confirm-when-costs-high ()
+  "Prompt user for confirmation if the cost of current prompt exceeds threshold.
+The threshold is set via `gptel-extras-cost-warning-threshold'."
+  (let ((cost (gptel-extras-get-total-cost)))
+    (when-let ((threshold gptel-extras-cost-warning-threshold))
+      (when (> cost threshold)
+	(unless (y-or-n-p (format "The cost of this prompt is $%.2f. Continue? " cost))
+	  (user-error "Prompt cancelled"))))))
+
+(advice-add 'gptel-send :before #'gptel-extras-confirm-when-costs-high)
 
 ;; This is just the original `gptel-mode' definition with a modification to add
 ;; an additional cost field in the header line.

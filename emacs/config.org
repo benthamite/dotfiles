@@ -13403,7 +13403,46 @@ CLOCK: [2024-10-17 Thu 11:58]--[2024-10-17 Thu 12:20] =>  0:22
   :defer 5
   :config
   (require 'magit)
-  (global-activity-watch-mode))
+  (global-activity-watch-mode)
+
+  (defun activity-watch-disable-on-remote-files ()
+    "Prevent activity-watch from running on remote files."
+    ;; Cancel existing timer
+    (dolist (timer timer-list)
+      (when (and (timerp timer)
+                 (eq (timer--function timer) 'activity-watch--save))
+        (cancel-timer timer)))
+
+    ;; Replace the core function safely
+    (defun activity-watch--save ()
+      "Safe version that won't run on remote files."
+      (let ((remote-p nil))
+        ;; Check for remote file without using file-remote-p directly
+        (condition-case nil
+            (when (buffer-file-name)
+              (setq remote-p (string-match-p "^/" (buffer-file-name))))
+          (error nil))
+
+        ;; Only run for non-remote files
+        (unless remote-p
+          (condition-case nil
+              (when (fboundp 'activity-watch--send-heartbeat)
+                (let ((file-name (buffer-file-name))
+                      (project-name (if (and (boundp 'projectile-mode)
+                                             projectile-mode
+                                             (fboundp 'projectile-project-p)
+                                             (projectile-project-p))
+                                        (projectile-project-name)
+                                      nil)))
+                  (activity-watch--send-heartbeat file-name project-name)))
+            (error nil)))))
+
+    ;; Create new safe timer
+    (when (boundp 'activity-watch-idle-timer)
+      (run-with-idle-timer activity-watch-idle-timer t 'activity-watch--save)))
+
+  (with-eval-after-load 'activity-watch
+    (activity-watch-disable-on-remote-files)))
 #+end_src
 
 ** custom

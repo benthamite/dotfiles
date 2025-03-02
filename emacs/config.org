@@ -7942,15 +7942,13 @@ https://github.com/meain/dotfiles/blob/master/emacs/.config/emacs/init.el#L4525
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package gptel-extras
-  :custom
-  (gptel-post-response-functions '(gptel-extras-generate-latex-previews))
-
   :init
   (advice-add 'gptel :after #'gptel-extras-save-buffer)
 
   :hook
   (org-mode-hook . gptel-extras-enable-gptel-in-org)
   (markdown-mode-hook . gptel-extras-enable-gptel-in-markdown)
+  (gptel-post-response-functions . gptel-extras-generate-latex-previews)
 
   :bind
   (("H-s-c" . gptel-extras-goto-end-and-send)

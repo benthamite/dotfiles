@@ -923,6 +923,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
   (warning-suppress-types '((copilot copilot-exceeds-max-char)
                             (flycheck syntax-checker)
                             (org-roam)
+                            (tramp)
                             (org-element-cache)
                             (yasnippet backquote-change))))
 #+end_src
@@ -4256,8 +4257,6 @@ CLOCK: [2022-08-20 Sat 18:11]--[2022-08-20 Sat 18:32] =>  0:21
 
 /[[https://www.gnu.org/software/tramp/][tramp]] is a remote file editing package for Emacs./
 
-Most of the below is copied from Murilo Pereira's [[https://github.com/mpereira/.emacs.d#tramp][configuration]].
-
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature tramp
   :after dired-x
@@ -4305,21 +4304,7 @@ Most of the below is copied from Murilo Pereira's [[https://github.com/mpereira/
 
   (add-to-list 'tramp-connection-properties
                (list (regexp-quote "/ssh:fede@tlon.team:")
-                     "direct-async-process" t))
-
-  (defun tramp-suppress-tramp-stderr-warning (orig-fun &rest args)
-    "Suppress the STDERR not supported warning in TRAMP.
-This warning is triggered when Tramp tries to connect using Samba."
-    (let ((tramp-message-show-message
-           (lambda (vec flag string &rest objects)
-             (unless (and (eq flag 2)
-                          (string-match "STDERR not supported" string))
-               (apply #'tramp-message-original vec flag string objects)))))
-      (cl-letf (((symbol-function 'tramp-message-original)
-		 (symbol-function 'tramp-message)))
-	(apply orig-fun args))))
-
-  (advice-add 'tramp-handle-make-process :around #'tramp-suppress-tramp-stderr-warning))
+                     "direct-async-process" t)))
 #+end_src
 
 ** pandoc-mode
@@ -6067,7 +6052,7 @@ CLOCK: [2022-09-02 Fri 18:00]--[2022-09-02 Fri 18:07] =>  0:07
         process-environment)))
   (setq process-environment filtered-env
         shell-command-environment filtered-env))
-        
+
   :bind
   (:map shell-mode-map
    ("M-p" . nil)

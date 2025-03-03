@@ -195,7 +195,7 @@ Binaries are skipped."
 	(unless (member buf initial-buffers)
 	  (kill-buffer buf))))))
 
-(defun gptel-extras-confirm-when-costs-high ()
+(defun gptel-extras-confirm-when-costs-high (&optional _)
   "Prompt user for confirmation if the cost of current prompt exceeds threshold.
 The threshold is set via `gptel-extras-cost-warning-threshold'."
   (let ((cost (gptel-extras-get-total-cost)))

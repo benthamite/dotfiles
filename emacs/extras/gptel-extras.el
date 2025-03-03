@@ -451,7 +451,6 @@ updates the cost, and then refreshes the buffer."
       (gptel-extras-list-context-files-internal)
       (message "Context file listing refreshed."))))
 
-
 ;;;;; Summarize commit diffs
 
 (autoload 'magit-commit-at-point "magit-git")
@@ -511,81 +510,6 @@ Be concise but thorough when analyzing changes. Group related changes together i
 you notice patterns. If commit messages are included, use them to inform your analysis.")
 	  (pop-to-buffer (current-buffer))
 	  (view-mode 1))))))
-
-;;;;; Activate Mullvad
-
-(declare-function mullvad-connect-to-website "mullvad")
-(defun gptel-extras-set-mullvad (orig-fun &rest args)
-  "Enable `mullvad' when connecting to Gemini, then call ORIG-FUN with ARGS.
-Use to circumvent Gemini’s location restrictions."
-  (when (eq gptel-model 'gemini-pro)
-    (mullvad-connect-to-website "Gemini"
-				gptel-extras-gemini-mullvad-disconnect-after
-				'silently))
-  (apply orig-fun args))
-
-(advice-add 'gptel-curl-get-response :around #'gptel-extras-set-mullvad)
-
-;;;;; Save buffer
-
-(declare-function simple-extras-slugify "simple-extras")
-(autoload 'org-insert-heading "org")
-(autoload 'org-next-visible-heading "org")
-(defun gptel-extras-save-buffer (name _ _ interactivep)
-  "Save the `gptel' buffer with NAME right after it is created.
-The buffer is saved to a file in `gptel-extras-dir'. INTERACTIVEP is t when
-gptel is called interactively.
-
-This function is meant to be an `:after' advice to `gptel'."
-  (when interactivep
-    ;; do not run if the buffer is visiting a file, because that means the user
-    ;; selected an existing buffer
-    (unless (buffer-file-name (get-buffer name))
-      (switch-to-buffer name)
-      (let* ((extension (pcase major-mode
-			  ('org-mode "org")
-			  ('markdown-mode "md")
-			  (_ (user-error "Unsupported major mode"))))
-	     (filename (file-name-concat gptel-extras-dir
-					 (file-name-with-extension (simple-extras-slugify name) extension))))
-	(when (derived-mode-p 'org-mode)
-	  (goto-char (point-min))
-	  (org-insert-heading nil nil 1)
-	  (insert name)
-	  (org-next-visible-heading 1)
-	  (end-of-line))
-	;; we temporarily remove the hook because `gptel--save-state' throws an
-	;; error if called at this early stage
-	(remove-hook 'before-save-hook #'gptel--save-state t)
-	(write-file filename 'confirm)
-	(add-hook 'before-save-hook #'gptel--save-state nil t)))))
-
-;;;;; post-response
-
-(autoload 'org-latex-preview "org")
-(defun gptel-extras-generate-latex-previews (_ _)
-  "Generate LaTeX previews in the current `gptel' buffer."
-  (when (and (derived-mode-p 'org-mode)
-	     (string= default-directory gptel-extras-dir))
-    (org-latex-preview)))
-
-(autoload 'org-fold-show-all "org-fold")
-(declare-function files-extras-kill-this-buffer "files-extras")
-;;;###autoload
-(defun gptel-extras-kill-buffer-then-reopen-file (&optional _ _)
-  "Kill the current buffer then reopen the file it was visiting.
-This hack command is meant to be added to `gptel-post-response-functions', if
-necessary, or called manually, whenever `gptel' starts refusing to process the
-request (mysteriously, just killing the buffer and reopening the visited file is
-often enough to fix this)."
-  (interactive)
-  (when-let* ((file (buffer-file-name)))
-    (save-buffer)
-    (save-buffer)
-    (files-extras-kill-this-buffer)
-    (find-file file)
-    (when (derived-mode-p 'org-mode)
-      (org-fold-show-all))))
 
 ;;;;; Enable gptel
 
@@ -668,11 +592,11 @@ In Org files, saves as a file property. In Markdown, as a file-local variable."
   "Restore the saved file context from the file visited by the current buffer."
   (interactive)
   (when-let* ((context (pcase major-mode
-			('org-mode
-			 (when-let* ((gptel-context-prop (org-entry-get (point-min) "GPTEL_CONTEXT")))
-			   (read gptel-context-prop)))
-			('markdown-mode gptel-context)
-			(_ (user-error "Not in and Org or Markdown buffer")))))
+			 ('org-mode
+			  (when-let* ((gptel-context-prop (org-entry-get (point-min) "GPTEL_CONTEXT")))
+			    (read gptel-context-prop)))
+			 ('markdown-mode gptel-context)
+			 (_ (user-error "Not in and Org or Markdown buffer")))))
     (message "Restored `gptel' context: %s" (setq gptel-context--alist context))))
 
 ;;;;;; Clear
@@ -684,6 +608,81 @@ In Org files, saves as a file property. In Markdown, as a file-local variable."
   (interactive)
   (gptel-context-remove-all)
   (message "Cleared `gptel' context."))
+
+;;;;; Activate Mullvad
+
+(declare-function mullvad-connect-to-website "mullvad")
+(defun gptel-extras-set-mullvad (orig-fun &rest args)
+  "Enable `mullvad' when connecting to Gemini, then call ORIG-FUN with ARGS.
+Use to circumvent Gemini’s location restrictions."
+  (when (eq gptel-model 'gemini-pro)
+    (mullvad-connect-to-website "Gemini"
+				gptel-extras-gemini-mullvad-disconnect-after
+				'silently))
+  (apply orig-fun args))
+
+(advice-add 'gptel-curl-get-response :around #'gptel-extras-set-mullvad)
+
+;;;;; Save buffer
+
+(declare-function simple-extras-slugify "simple-extras")
+(autoload 'org-insert-heading "org")
+(autoload 'org-next-visible-heading "org")
+(defun gptel-extras-save-buffer (name _ _ interactivep)
+  "Save the `gptel' buffer with NAME right after it is created.
+The buffer is saved to a file in `gptel-extras-dir'. INTERACTIVEP is t when
+gptel is called interactively.
+
+This function is meant to be an `:after' advice to `gptel'."
+  (when interactivep
+    ;; do not run if the buffer is visiting a file, because that means the user
+    ;; selected an existing buffer
+    (unless (buffer-file-name (get-buffer name))
+      (switch-to-buffer name)
+      (let* ((extension (pcase major-mode
+			  ('org-mode "org")
+			  ('markdown-mode "md")
+			  (_ (user-error "Unsupported major mode"))))
+	     (filename (file-name-concat gptel-extras-dir
+					 (file-name-with-extension (simple-extras-slugify name) extension))))
+	(when (derived-mode-p 'org-mode)
+	  (goto-char (point-min))
+	  (org-insert-heading nil nil 1)
+	  (insert name)
+	  (org-next-visible-heading 1)
+	  (end-of-line))
+	;; we temporarily remove the hook because `gptel--save-state' throws an
+	;; error if called at this early stage
+	(remove-hook 'before-save-hook #'gptel--save-state t)
+	(write-file filename 'confirm)
+	(add-hook 'before-save-hook #'gptel--save-state nil t)))))
+
+;;;;; post-response
+
+(autoload 'org-latex-preview "org")
+(defun gptel-extras-generate-latex-previews (_ _)
+  "Generate LaTeX previews in the current `gptel' buffer."
+  (when (and (derived-mode-p 'org-mode)
+	     (string= default-directory gptel-extras-dir))
+    (org-latex-preview)))
+
+(autoload 'org-fold-show-all "org-fold")
+(declare-function files-extras-kill-this-buffer "files-extras")
+;;;###autoload
+(defun gptel-extras-kill-buffer-then-reopen-file (&optional _ _)
+  "Kill the current buffer then reopen the file it was visiting.
+This hack command is meant to be added to `gptel-post-response-functions', if
+necessary, or called manually, whenever `gptel' starts refusing to process the
+request (mysteriously, just killing the buffer and reopening the visited file is
+often enough to fix this)."
+  (interactive)
+  (when-let* ((file (buffer-file-name)))
+    (save-buffer)
+    (save-buffer)
+    (files-extras-kill-this-buffer)
+    (find-file file)
+    (when (derived-mode-p 'org-mode)
+      (org-fold-show-all))))
 
 ;;;;; Misc
 

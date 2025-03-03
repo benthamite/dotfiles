@@ -626,7 +626,6 @@ often enough to fix this)."
 	   gptel-extras-org-properties))
 
 ;;;;; Save, restore & clear file context
-;; FIXME: code in this section is not working; currently semi-abandoned
 
 ;;;;;; Save
 
@@ -636,20 +635,22 @@ often enough to fix this)."
 In Org files, saves as a file property. In Markdown, as a file-local variable."
   (interactive)
   (let ((context (pcase major-mode
-		   ('org-mode
-		    (save-excursion
-		      (goto-char (point-min))
-		      (org-set-property "GPTEL_CONTEXT" (prin1-to-string gptel-context--alist))))
+		   ('org-mode (gptel-extras-save-file-context-in-org))
 		   ('markdown-mode (gptel-extras-save-file-context-in-markdown))
 		   (_ (user-error "Not in and Org or Markdown buffer")))))
     (message "Saved `gptel' context: %s" context)))
+
+(defun gptel-extras-save-file-context-in-org ()
+  "Save the current `gptel' file context in file visited by the current Org buffer."
+  (save-excursion
+    (goto-char (point-min))
+    (org-set-property "GPTEL_CONTEXT" (prin1-to-string gptel-context--alist))))
 
 (defun gptel-extras-save-file-context-in-markdown ()
   "Save the current `gptel' file context in file visited by the current MD buffer."
   (gptel-extras-remove-local-variables-section)
   (let ((context (format "%S" gptel-context--alist)))
-    (add-file-local-variable 'gptel-context context)
-    (message "Saved `gptel' context: %s" context)))
+    (add-file-local-variable 'gptel-context context)))
 
 (defun gptel-extras-remove-local-variables-section ()
   "Remove the existing Local Variables section from the current buffer."

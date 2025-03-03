@@ -334,21 +334,16 @@ The threshold is set via `gptel-extras-cost-warning-threshold'."
 
 ;;;;; List and remove files from context
 
-;;;###autoload
-(defun gptel-context-files--describe-keybindings (keymap)
-  "Return a string description of KEYMAP's bindings in the format: key = command."
-  (let ((bindings '()))
-    (map-keymap
-     (lambda (event binding)
-       (when (and (not (keymapp binding))
-                  (commandp binding))
-         (let ((key-str (key-description (vector event)))
-               (cmd-str (if (symbolp binding)
-                            (symbol-name binding)
-                          (prin1-to-string binding))))
-           (push (format "%s = %s" key-str cmd-str) bindings))))
-     keymap)
-    (mapconcat 'identity (sort bindings 'string<) "\n")))
+(defun gptel-extras-list-context-files ()
+  "List all files in the current `gptel' context sorted by size.
+Each file is shown along with its size."
+  (interactive)
+  (if gptel-context--alist
+      (with-current-buffer (get-buffer-create "*gptel context files*")
+        (gptel-context-files-mode)
+        (gptel-extras-list-context-files-internal)
+        (pop-to-buffer (current-buffer)))
+    (message "No files in context.")))
 
 (defun gptel-extras-list-context-files-internal ()
   "Populate the current buffer with the gptel context files in a flaggable format.
@@ -376,17 +371,6 @@ Lists key bindings dynamically based on the current mode's keymap."
           (put-text-property start (+ start 3) 'gptel-flag nil))))
     (goto-char (point-min))))
 
-(defun gptel-extras-list-context-files ()
-  "List all files in the current `gptel' context sorted by size.
-Each file is shown along with its size."
-  (interactive)
-  (if gptel-context--alist
-      (with-current-buffer (get-buffer-create "*gptel context files*")
-        (gptel-context-files-mode)
-        (gptel-extras-list-context-files-internal)
-        (pop-to-buffer (current-buffer)))
-    (message "No files in context.")))
-
 (declare-function files-extras-kill-this-buffer "files-extras")
 (define-derived-mode gptel-context-files-mode special-mode "GPT Context Files"
   "Major mode for flagging gptel context files for removal."
@@ -400,6 +384,21 @@ Each file is shown along with its size."
      (define-key map (kbd "q") #'files-extras-kill-this-buffer)
      map))
   (read-only-mode 1))
+
+(defun gptel-context-files--describe-keybindings (keymap)
+  "Return a string description of KEYMAP's bindings in the format: key = command."
+  (let ((bindings '()))
+    (map-keymap
+     (lambda (event binding)
+       (when (and (not (keymapp binding))
+                  (commandp binding))
+         (let ((key-str (key-description (vector event)))
+	       (cmd-str (if (symbolp binding)
+                            (symbol-name binding)
+                          (prin1-to-string binding))))
+           (push (format "%s = %s" key-str cmd-str) bindings))))
+     keymap)
+    (mapconcat 'identity (sort bindings 'string<) "\n")))
 
 (defun gptel-extras-toggle-mark ()
   "Toggle the mark on the current line’s file entry and move to the next entry."

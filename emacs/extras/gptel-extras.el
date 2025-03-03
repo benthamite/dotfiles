@@ -321,7 +321,7 @@ The threshold is set via `gptel-extras-cost-warning-threshold'."
 				(buttonize (concat "[" model "]")
 					   (lambda (&rest _) (gptel-menu)))
 				'mouse-face 'highlight
-				'help-echo "GPT model in use"))))))
+				'help-echo "Model in use"))))))
 	    (setq mode-line-process
 		  '(:eval (concat " "
 				  (buttonize (gptel--model-name gptel-model)

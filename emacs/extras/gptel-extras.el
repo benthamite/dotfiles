@@ -494,6 +494,7 @@ each package or feature, following this model:\n\n%s"
       (with-current-buffer (get-buffer-create "*Commit Summary*")
 	(let ((inhibit-read-only t))
 	  (erase-buffer)
+	  (read-only-mode -1)
 	  (insert "Commit Summary:\n"
 		  "==============\n\n"
 		  (format "Selected commits: %s\n\n"

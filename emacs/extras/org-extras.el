@@ -552,37 +552,48 @@ IPOS, TABLES and PARAMS are required by the formatter function."
 
 ;;;;;; org-clock-in
 
-(autoload 'org-roam-db-query "org-roam-db")
+(defconst org-extras-particiants-introducer "Participants: "
+  "String that introduces a list of participants in an org heading.")
+
 (defun org-extras-clock-in-with-calendar-prompt ()
   "When clocking in, check for calendar-id property and prompt for selection."
   (when (org-entry-get (point) "calendar-id")
-    (let* ((nodes (org-extras-get-person))
-	   (introducer "Participants: ")
-           (options (mapcar (lambda (node)
-			      "Create alist of (title . id) for completion."
-			      (cons (car node) (cadr node)))
-			    nodes))
-	   (titles (completing-read-multiple introducer (mapcar #'car options) nil t))
-           (links (mapcar (lambda (title)
-			    "Create links for each selected participant."
-                            (let ((id (cdr (assoc title options))))
-			      (org-link-make-string (concat "id:" id) title)))
-                          titles))
-           (formatted-links (string-join links ", ")))
-      (when links
-        (org-back-to-heading 'invisible-ok)
-        (org-end-of-meta-data 'full)
-        (insert (concat introducer formatted-links))
-        (newline)))))
+    (unless (org-extras-heading-has-participans-p)
+      (let* ((nodes (org-extras-get-people))
+             (options (mapcar (lambda (node)
+                                "Create alist of (title . id) for completion."
+                                (cons (car node) (cadr node)))
+                              nodes))
+             (titles (completing-read-multiple org-extras-particiants-introducer
+					       (mapcar #'car options) nil t))
+             (links (mapcar (lambda (title)
+                              "Create links for each selected participant."
+                              (let ((id (cdr (assoc title options))))
+                                (org-link-make-string (concat "id:" id) title)))
+                            titles))
+             (formatted-links (string-join links ", ")))
+        (when links
+          (org-back-to-heading 'invisible-ok)
+          (org-end-of-meta-data 'full)
+          (insert (concat org-extras-particiants-introducer formatted-links))
+          (newline))))))
 
-(defun org-extras-get-person ()
+(defun org-extras-heading-has-participans-p ()
+  "Return t iff the current heading has a list of participants."
+  (org-back-to-heading 'invisible-ok)
+  (save-excursion
+    (org-end-of-meta-data 'full)
+    (looking-at org-extras-particiants-introducer)))
+
+(autoload 'org-roam-db-query "org-roam-db")
+(defun org-extras-get-people ()
   "Query title and ID of level-1 headings in files within the people directory."
   (org-roam-db-query
    [:select [nodes:title nodes:id]
-	    :from nodes
-	    :where (and (like nodes:file $s1)
-			(= nodes:level 1))
-	    :order-by [nodes:title]]
+            :from nodes
+            :where (and (like nodes:file $s1)
+                        (= nodes:level 1))
+            :order-by [nodes:title]]
    (file-name-concat paths-dir-people "%")))
 
 (advice-add 'org-clock-in :after #'org-extras-clock-in-with-calendar-prompt)

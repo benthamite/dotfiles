@@ -555,7 +555,7 @@ IPOS, TABLES and PARAMS are required by the formatter function."
 (defconst org-extras-particiants-introducer "Participants: "
   "String that introduces a list of participants in an org heading.")
 
-(defun org-extras-clock-in-with-calendar-prompt ()
+(defun org-extras-clock-in-with-calendar-prompt (&optional _ _)
   "When clocking in, check for calendar-id property and prompt for selection."
   (when (org-entry-get (point) "calendar-id")
     (unless (org-extras-heading-has-participans-p)

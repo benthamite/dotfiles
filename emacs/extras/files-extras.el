@@ -591,6 +591,15 @@ To install the extension, drag the latter onto the former."
       (insert (format "%s\n" element)))
     (write-file file)))
 
+;;;;; Misc
+
+(defun files-extras-get-current-dir-lowercased ()
+  "Return the current directory, sans directories, lowercased."
+  (let* ((cur-dir default-directory)
+	 (prev-dir (file-name-directory (directory-file-name cur-dir)))
+	 (cur-dir-sans-dir (file-relative-name cur-dir prev-dir)))
+    (replace-regexp-in-string "-" "_" (directory-file-name cur-dir-sans-dir))))
+
 ;;;;; Dispatcher
 
 ;;;###autoload (autoload 'files-extras-dispatch "files-extras" nil t)

@@ -11886,7 +11886,7 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
   (slack-buffer-mode-hook . (lambda () (setq line-spacing nil)))
 
   :bind
-  (("A-s" . slack-channel-select)
+  (("A-k" . slack-channel-select)
    :map slack-mode-map
    ("s-a" . slack-all-threads)
    ("s-c" . slack-channel-select)

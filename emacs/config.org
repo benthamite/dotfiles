@@ -7917,6 +7917,24 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
                :cutoff-date ""
                :description "")))
 
+  (gptel-make-openai "xAI"
+    :host "api.x.ai"
+    :key (auth-source-pass-get "emacs" (concat "tlon/core/x.ai/" tlon-email-shared))
+    :endpoint "/v1/chat/completions"
+    :stream t
+    :models '((grok-2-latest
+               :context-window 131.072
+               :input-cost 2
+               :output-cost 10
+               :cutoff-date "2024-07"
+               :description "Latest Grok model")
+              (grok-2-vision-latest
+               :context-window 32.768
+               :input-cost 2
+               :output-cost 10
+               :cutoff-date "2024-07"
+               :description "Latest Grok vision model")))
+
   :bind
   (("M-c" . gptel-send)
    ("H-s-g" . gptel)

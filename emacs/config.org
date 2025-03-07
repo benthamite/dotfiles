@@ -2456,11 +2456,11 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
   (setq tab-bar-extras-global-mode-string
         `(,tab-bar-extras-prefix-element
           ,tab-bar-extras-notification-status-element
-          ,tab-bar-extras-time-element
-          ,tab-bar-extras-separator-element
+          ;; ,tab-bar-extras-time-element
+          ;; ,tab-bar-extras-separator-element
           ,tab-bar-extras-emacs-profile-element
-          ,tab-bar-extras-separator-element
-          ,tab-bar-extras-battery-element
+          ;; ,tab-bar-extras-separator-element
+          ;; ,tab-bar-extras-battery-element
           ,tab-bar-extras-telega-element
           ,tab-bar-extras-github-element
           ,tab-bar-extras-pomodoro-element

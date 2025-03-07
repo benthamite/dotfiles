@@ -8476,7 +8476,7 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
                             (directory-files paths-dir-inactive t "^[^.][^/]*$"))))
 
   (quote (:link t :maxlevel 5 :fileskip0 t :narrow 70 :formula % :indent t :formatter org-extras-clocktable-sorter))
-
+  
   :hook
   (before-save-hook . org-extras-id-auto-add-ids-to-headings-in-file)
 

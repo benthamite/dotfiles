@@ -83,16 +83,17 @@ using this command."
   "Update PKG and reload its features.
 If PKG is nil, prompt for it."
   (interactive (list (elpaca--read-queued "Update and reload package: ")))
-  (let ((on-update-finish
-         (lambda ()
-           (let ((pkg-data (elpaca-get pkg)))
-             (when (and pkg-data (eq (elpaca--status pkg-data) 'finished))
-               ;; Once finished, remove the hook and reload the package.
-               (remove-hook 'elpaca--post-queues-hook on-update-finish)
-               (elpaca-extras-reload pkg))))))
-    ;; Add the callback to be run after elpaca finishes processing its queues.
+  (let (on-update-finish)
+    (setq on-update-finish
+          (lambda ()
+            (let ((pkg-data (elpaca-get pkg)))
+              (when (and pkg-data (eq (elpaca--status pkg-data) 'finished))
+                ;; Remove the callback before reloading.
+                (remove-hook 'elpaca--post-queues-hook on-update-finish)
+                (elpaca-extras-reload pkg)))))
+    ;; Install that callback into elpaca’s post–queues hook.
     (add-hook 'elpaca--post-queues-hook on-update-finish)
-    ;; Start the update (the t here requests immediate processing).
+    ;; Trigger the update immediately.
     (elpaca-update pkg t)))
 
 (provide 'elpaca-extras)

@@ -100,6 +100,7 @@ directory-local sorting is set via a the `.dir-locals.el' file in the directory.
 
 ;;;;; Estimate cost
 
+;; TODO: estimate cost added via `gptel-context--add-region'
 (defun gptel-extras-get-total-cost ()
   "Get the rough cost of prompting the current model.
 This is used to display the relevant information in the `gptel' headerline.

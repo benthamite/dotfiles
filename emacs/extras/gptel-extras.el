@@ -588,18 +588,25 @@ In Org files, saves as a file property. In Markdown, as a file-local variable."
           (delete-region start (point))
           (delete-blank-lines))))))
 
+;;;;;; Get saved
+
+(defun gptel-extras-get-saved-context ()
+  "Get the saved `gptel' context from the file visited by the current buffer."
+  (pcase major-mode
+    ('org-mode
+     (when-let* ((gptel-context-prop (org-entry-get (point-min) "GPTEL_CONTEXT")))
+       (read gptel-context-prop)))
+    ('markdown-mode gptel-context)
+    (_ (user-error "Not in and Org or Markdown buffer"))))
+
 ;;;;;; Restore
 
 (defun gptel-extras-restore-file-context ()
   "Restore the saved file context from the file visited by the current buffer."
   (interactive)
-  (when-let* ((context (pcase major-mode
-			 ('org-mode
-			  (when-let* ((gptel-context-prop (org-entry-get (point-min) "GPTEL_CONTEXT")))
-			    (read gptel-context-prop)))
-			 ('markdown-mode gptel-context)
-			 (_ (user-error "Not in and Org or Markdown buffer")))))
-    (mapc 'gptel-context-add-file context)))
+  (if-let ((context (gptel-extras-get-saved-context)))
+      (mapc 'gptel-context-add-file context)
+    (message "No saved `gptel' context found.")))
 
 ;;;;;; Clear
 

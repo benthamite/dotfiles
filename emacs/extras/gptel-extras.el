@@ -30,6 +30,7 @@
 
 (require 'el-patch)
 (require 'gptel)
+(require 'gptel-context)
 (require 'paths)
 
 ;;;; User options

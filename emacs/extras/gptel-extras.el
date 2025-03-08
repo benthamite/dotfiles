@@ -175,7 +175,6 @@ TYPE is either `buffer' or `context'."
       (count-words (region-beginning) (region-end))
     (count-words (point-min) (point))))
 
-(declare-function gptel--file-binary-p "gptel-context")
 (defun gptel-extras-count-words-in-context ()
   "Iterate over the files in context and sum the number of words in each file.
 Binaries are skipped."
@@ -617,7 +616,6 @@ In Org files, saves as a file property. In Markdown, as a file-local variable."
 
 ;;;;;; Clear
 
-(autoload 'gptel-context-remove-all "gptel-context")
 ;;;###autoload
 (defun gptel-extras-clear-file-context ()
   "Clear the current `gptel' file context."

@@ -608,9 +608,11 @@ In Org files, saves as a file property. In Markdown, as a file-local variable."
   "Restore the saved file context from the file visited by the current buffer."
   (interactive)
   (if-let ((context (gptel-extras-get-saved-context)))
-      (mapc (lambda (monolist)
-	      (gptel-context-add-file (car monolist)))
-	    context)
+      (when (or (not gptel-context--alist)
+		(y-or-n-p "Overwrite current `gptel' context? "))
+	(mapc (lambda (monolist)
+		(gptel-context-add-file (car monolist)))
+	      context))
     (message "No saved `gptel' context found.")))
 
 ;;;;;; Clear

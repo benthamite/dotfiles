@@ -560,11 +560,14 @@ you notice patterns. If commit messages are included, use them to inform your an
   "Save the current `gptel' file context in file visited by the current buffer.
 In Org files, saves as a file property. In Markdown, as a file-local variable."
   (interactive)
-  (let ((context (pcase major-mode
-		   ('org-mode (gptel-extras-save-file-context-in-org))
-		   ('markdown-mode (gptel-extras-save-file-context-in-markdown))
-		   (_ (user-error "Not in and Org or Markdown buffer")))))
-    (message "Saved `gptel' context: %s" context)))
+  (if (derived-mode-p 'org-mode 'markdown-mode)
+      (when (or (not (gptel-extras-get-saved-context))
+		(yes-or-no-p "Overwrite existing file context? "))
+	(let ((context (pcase major-mode
+			 ('org-mode (gptel-extras-save-file-context-in-org))
+			 ('markdown-mode (gptel-extras-save-file-context-in-markdown)))))
+	  (message "Saved `gptel' context: %s" context)))
+    (user-error "Not in and Org or Markdown buffer")))
 
 (defun gptel-extras-save-file-context-in-org ()
   "Save the current `gptel' file context in file visited by the current Org buffer."

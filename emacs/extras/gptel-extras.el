@@ -153,7 +153,7 @@ TYPE is either `buffer' or `context'."
   "Update the context cost when the context is modified."
   (setq gptel-extras--context-cost (gptel-extras-get-context-cost)))
 
-(advice-add 'gptel-context-add :after #'gptel-extras-update-context-cost)
+(advice-add 'gptel-context-add-file :after #'gptel-extras-update-context-cost)
 (advice-add 'gptel-context-remove :after #'gptel-extras-update-context-cost)
 
 (defun gptel-extras--update-cost-on-model-change (sym _ &optional _)
@@ -598,7 +598,7 @@ In Org files, saves as a file property. In Markdown, as a file-local variable."
 			    (read gptel-context-prop)))
 			 ('markdown-mode gptel-context)
 			 (_ (user-error "Not in and Org or Markdown buffer")))))
-    (message "Restored `gptel' context: %s" (setq gptel-context--alist context))))
+    (mapc 'gptel-context-add-file context)))
 
 ;;;;;; Clear
 

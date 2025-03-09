@@ -74,6 +74,14 @@ directory-local sorting is set via a the `.dir-locals.el' file in the directory.
   :type 'directory
   :group 'gptel-extras)
 
+(defcustom gptel-extras-alert-when-finished '()
+  "List of models for which an alert is displayed when the response is inserted.
+If t, always display an alert. If nil, never display an alert."
+  :type '(choice (const :tag "Always" t)
+		 (const :tag "Never" nil)
+		 (repeat :tag "Models" symbol))
+  :group 'gptel-extras)
+
 ;;;; Variables
 
 (defvar-local gptel-context nil
@@ -697,6 +705,19 @@ often enough to fix this)."
     (find-file file)
     (when (derived-mode-p 'org-mode)
       (org-fold-show-all))))
+
+;;;;; Alert
+
+(declare-function alert "alert")
+(defun gptel-extras-alert-when-finished (_ _)
+  "Alert the user when `gptel' finishes inserting its response.
+START and END are the positions of the inserted response.
+To enable this feature, customize `gptel-extras-alert-when-finished'."
+  (when (or (eq gptel-extras-alert-when-finished t)
+            (memq gptel-model gptel-extras-alert-when-finished))
+    (alert "Response inserted" :title "gptel")))
+
+(add-hook 'gptel-post-response-functions #'gptel-extras-alert-when-finished)
 
 ;;;;; Misc
 

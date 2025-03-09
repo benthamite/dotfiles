@@ -31,7 +31,20 @@
 (require 'bbdb)
 (require 'bbdb-com)
 
-;;;; Patched functions
+;;;; Functions
+
+;;;;; Export vcard
+
+(declare-function bbdb-vcard-export "bbdb-vcard")
+(declare-function simple-extras-slugify "simple-extras")
+(defun bbdb-extras-export-vcard ()
+  "Export the current BBDB record to macOS Contacts."
+  (interactive)
+  (let* ((file (make-temp-file nil nil ".vcf")))
+    (bbdb-vcard-export file nil nil t)
+    (shell-command (concat "open " file))))
+
+;;;;; Patched functions
 
 ;; open URL directly, without prompting for confirmation
 (defun bbdb-extras-bbdb-browse-url (records &optional which)

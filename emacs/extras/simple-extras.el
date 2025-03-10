@@ -781,32 +781,29 @@ Optionally, remove accents in region from BEGIN to END."
 
 ;;;;; Slugify
 
-;; mostly borrowed from Prot
-(defun simple-extras-slug-no-punct (str)
-  "Convert STR to a file name slug."
-  (replace-regexp-in-string "[][{}!@#$%^&*()_=+'\"?,.\|;:~`‘’“”]*/" "" str))
-
-(defun simple-extras-slug-hyphenate (str)
-  "Replace spaces with hyphens in STR.
-Also replace multiple hyphens with a single one and remove any
-trailing hyphen."
-  (replace-regexp-in-string
-   "-$" ""
-   (replace-regexp-in-string
-    "-\\{2,\\}" "-"
-    (replace-regexp-in-string "--+\\|\s+" "-" str))))
-
+;; adapted from `denote'
 ;;;###autoload
 (defun simple-extras-slugify (string)
   "Convert STRING into slug."
-  (simple-extras-asciify-string
-   (downcase (simple-extras-slug-hyphenate (simple-extras-slug-no-punct string)))))
+  (downcase
+   (simple-extras-slug-hyphenate
+    (replace-regexp-in-string "[][{}!@#$%^&*()+'\"?,\|;:~`‘’“”/=]*" "" string))))
 
 ;;;###autoload
 (defun simple-extras-slugify-clipboard ()
   "Convert the clipboard or first element in kill ring into a slug."
   (interactive)
   (kill-new (simple-extras-slugify (current-kill 0))))
+
+(defun simple-extras-slug-hyphenate (str)
+  "Replace spaces and underscores with hyphens in STR.
+Also replace multiple hyphens with a single one and remove any
+leading and trailing hyphen."
+  (replace-regexp-in-string
+   "^-\\|-$" ""
+   (replace-regexp-in-string
+    "-\\{2,\\}" "-"
+    (replace-regexp-in-string "_\\|\\.\\|\s+" "-" str))))
 
 ;;;;; auto-save-mode
 

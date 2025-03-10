@@ -263,6 +263,18 @@ deadline). With ARG prefix argument, prompt user to filter by tag or directory."
 
 ;; (add-hook 'find-file-hook #'org-roam-extras-show-backlink-buffer)
 
+;;;;; Get people
+
+(defun org-roam-extras-get-people ()
+  "Query title and ID of level-1 headings in files within the people directory."
+  (org-roam-db-query
+   [:select [nodes:title nodes:id]
+            :from nodes
+            :where (and (like nodes:file $s1)
+                        (= nodes:level 1))
+            :order-by [nodes:title]]
+   (file-name-concat paths-dir-people "%")))
+
 ;;;;; Misc
 
 (defun org-roam-extras-recent (days &optional limit)

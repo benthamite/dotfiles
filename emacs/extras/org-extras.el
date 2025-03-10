@@ -585,16 +585,6 @@ IPOS, TABLES and PARAMS are required by the formatter function."
     (org-end-of-meta-data 'full)
     (looking-at org-extras-particiants-introducer)))
 
-(autoload 'org-roam-db-query "org-roam-db")
-(defun org-extras-get-people ()
-  "Query title and ID of level-1 headings in files within the people directory."
-  (org-roam-db-query
-   [:select [nodes:title nodes:id]
-            :from nodes
-            :where (and (like nodes:file $s1)
-                        (= nodes:level 1))
-            :order-by [nodes:title]]
-   (file-name-concat paths-dir-people "%")))
 
 (advice-add 'org-clock-in :after #'org-extras-clock-in-with-calendar-prompt)
 

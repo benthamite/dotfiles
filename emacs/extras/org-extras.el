@@ -81,6 +81,11 @@ The first %s is the scope of the report, and the second %s is the range."
   :type 'string
   :group 'org-extras)
 
+(defcustom org-extras-clock-in-add-participants-exclude nil
+  "Exclude headings matching this regexp from prompting for participants."
+  :type 'regexp
+  :group 'org-extras)
+
 ;;;; Variables
 
 (defvar-local org-extras-id-auto-add-exclude-file nil
@@ -550,33 +555,42 @@ IPOS, TABLES and PARAMS are required by the formatter function."
   (setq tables (cl-sort tables (lambda (table1 table2) (> (nth 1 table1) (nth 1 table2)))))
   (funcall (or org-clock-clocktable-formatter 'org-clocktable-write-default) ipos tables params))
 
-;;;;;; org-clock-in
+;;;;;; add meeting participants
 
 (defconst org-extras-particiants-introducer "Participants: "
   "String that introduces a list of participants in an org heading.")
 
-  "When clocking in, check for calendar-id property and prompt for selection."
-  (when (org-entry-get (point) "calendar-id")
 (defun org-extras-clock-in-add-participants (&optional _ _)
+  "When clocking in, prompt for participants and add them to the current heading."
+  (when (and (org-entry-get (point) "calendar-id")
+	     (not (string-match
+		   org-extras-clock-in-add-participants-exclude
+		   (org-get-heading t t t t))))
     (unless (org-extras-heading-has-participans-p)
-      (let* ((nodes (org-extras-get-people))
-             (options (mapcar (lambda (node)
-                                "Create alist of (title . id) for completion."
-                                (cons (car node) (cadr node)))
-                              nodes))
-             (titles (completing-read-multiple org-extras-particiants-introducer
-					       (mapcar #'car options) nil t))
-             (links (mapcar (lambda (title)
-                              "Create links for each selected participant."
-                              (let ((id (cdr (assoc title options))))
-                                (org-link-make-string (concat "id:" id) title)))
-                            titles))
-             (formatted-links (string-join links ", ")))
-        (when links
-          (org-back-to-heading 'invisible-ok)
-          (org-end-of-meta-data 'full)
-          (insert (concat org-extras-particiants-introducer formatted-links))
-          (newline))))))
+      (org-extras-add-participants))))
+
+(declare-function org-roam-extras-get-people "org-roam-extras")
+(defun org-extras-add-participants ()
+  "Prompt for participants and add them to the current heading."
+  (interactive)
+  (let* ((nodes (org-roam-extras-get-people))
+         (options (mapcar (lambda (node)
+                            "Create alist of (title . id) for completion."
+                            (cons (car node) (cadr node)))
+                          nodes))
+         (titles (completing-read-multiple org-extras-particiants-introducer
+					   (mapcar #'car options) nil t))
+         (links (mapcar (lambda (title)
+                          "Create links for each selected participant."
+                          (let ((id (cdr (assoc title options))))
+                            (org-link-make-string (concat "id:" id) title)))
+                        titles))
+         (formatted-links (string-join links ", ")))
+    (when links
+      (org-back-to-heading 'invisible-ok)
+      (org-end-of-meta-data 'full)
+      (insert (concat org-extras-particiants-introducer formatted-links))
+      (newline))))
 
 (defun org-extras-heading-has-participans-p ()
   "Return t iff the current heading has a list of participants."

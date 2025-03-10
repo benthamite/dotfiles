@@ -555,9 +555,9 @@ IPOS, TABLES and PARAMS are required by the formatter function."
 (defconst org-extras-particiants-introducer "Participants: "
   "String that introduces a list of participants in an org heading.")
 
-(defun org-extras-clock-in-with-calendar-prompt (&optional _ _)
   "When clocking in, check for calendar-id property and prompt for selection."
   (when (org-entry-get (point) "calendar-id")
+(defun org-extras-clock-in-add-participants (&optional _ _)
     (unless (org-extras-heading-has-participans-p)
       (let* ((nodes (org-extras-get-people))
              (options (mapcar (lambda (node)
@@ -585,8 +585,7 @@ IPOS, TABLES and PARAMS are required by the formatter function."
     (org-end-of-meta-data 'full)
     (looking-at org-extras-particiants-introducer)))
 
-
-(advice-add 'org-clock-in :after #'org-extras-clock-in-with-calendar-prompt)
+(advice-add 'org-clock-in :after #'org-extras-clock-in-add-participants)
 
 ;;;;; org-cycle
 

@@ -8724,16 +8724,6 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
      ("e" "Email" entry
       (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
       "** TODO Follow up with %:fromname on %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
-     ("g" "GPT")
-     ("gg" "GPT-4: generic" entry
-      (id "9FF746E2-06DE-4E03-B536-5DC65A4023F8")
-      "*** %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)
-     ("ge" "GPT-4: Elisp" entry
-      (id "7E3248D0-1C65-479A-85D0-94A21C73AAF5")
-      "*** %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)
-     ("gd" "DALL-E" entry
-      (id "15B74595-50DC-40A6-8FDC-B8DB8AA4DFAB")
-      "*** %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)
      ("n" "Telegram" entry
       (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
       "** TODO Follow up with %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)

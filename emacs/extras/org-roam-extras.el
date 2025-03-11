@@ -144,18 +144,32 @@ If DIR is nil, use `paths-dir-notes'."
   (recenter 1))
 
 (autoload 'consult--read "consult")
-(defun org-roam-extras-node-find-special (&optional arg)
+;;;###autoload
+(defun org-roam-extras-node-find-special (&optional filter-spec)
   "Return a list of selected headings sorted by priority.
 The selection includes all headings with a priority and either no todo status or
 the todo status TODO, and excludes all headings with a date (scheduled or
-deadline). With ARG prefix argument, prompt user to filter by tag or directory."
+deadline).
+
+Optional FILTER-SPEC can be:
+- nil: no filter applied
+- t: prompt user to filter by tag or directory
+- (:tag TAG): filter by the specified TAG
+- (:dir DIRECTORY): filter by the specified DIRECTORY"
   (interactive "P")
-  (let* ((filter-type (when arg
-			(completing-read "Filter by: " '("tag" "directory"))))
-         (selection (when (equal filter-type "tag")
-                      (org-roam-extras-node-select-tag)))
-         (directory (when (equal filter-type "directory")
-                      (expand-file-name (read-directory-name "Select directory: "))))
+  (let* ((filter-spec (if (eq filter-spec t)
+                          (let ((filter-type (completing-read "Filter by: " '("tag" "directory"))))
+                            (cond
+                             ((equal filter-type "tag")
+                              (cons :tag (org-roam-extras-node-select-tag)))
+                             ((equal filter-type "directory")
+                              (cons :dir (expand-file-name (read-directory-name "Select directory: "))))
+                             (t nil)))
+                        filter-spec))
+         (selection (when (eq (car-safe filter-spec) :tag)
+                      (cdr filter-spec)))
+         (directory (when (eq (car-safe filter-spec) :dir)
+                      (expand-file-name (cadr filter-spec))))
          (dir-clause (when directory
                        `(like nodes:file ,(concat (file-name-as-directory directory) "%"))))
          (headings-with-priority

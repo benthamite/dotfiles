@@ -303,6 +303,12 @@ value."
   :type 'directory
   :group 'paths)
 
+(defcustom paths-dir-tlon-todos
+  (file-name-concat paths-dir-dropbox "tlon-notes/")
+  "Path to the Tlön todos directory."
+  :type 'directory
+  :group 'paths)
+
 (defcustom paths-dir-personal-repos
   (file-name-concat paths-dir-dropbox "repos/")
   "Path to the personal repositories directory."

@@ -8735,7 +8735,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
       "** TODO Follow up %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
      ("t" "Tlön inbox " entry
       (id "E9C77367-DED8-4D59-B08C-E6E1CCDDEC3A")
-      "** TODO [#6] %? \n" :empty-lines 1 :prepend t)
+      "** TODO %? \n" :empty-lines 1 :prepend t)
      ("y" "YouTube playlist" entry
       (id "319B1611-A5A6-42C8-923F-884A354333F9")
       "* %(org-web-tools-extras-youtube-dl (current-kill 0))\n[[%c][YouTube link]]" :empty-lines 1 :prepend t :immediate-finish t)

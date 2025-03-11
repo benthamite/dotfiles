@@ -8473,6 +8473,9 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
   (org-extras-agenda-files-excluded (list paths-file-tlon-tareas-leo
                                           paths-file-tlon-tareas-fede))
 
+  (org-extras-clock-in-with-calendar-prompt-exclude
+   "Leo<>Pablo\\|Fede<>Pablo\\|Tlön: group meeting")
+  
   :config
   (setq org-extras-agenda-files-excluded
         (append org-extras-agenda-files-excluded

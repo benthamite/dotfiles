@@ -7964,6 +7964,11 @@ https://github.com/meain/dotfiles/blob/master/emacs/.config/emacs/init.el#L4525
   :init
   (advice-add 'gptel :after #'gptel-extras-save-buffer)
 
+  :custom
+  ;; since these models take a while, we trigger a growl-like alert when they
+  ;; finish, in case we want to do something else in the meantime
+  (gptel-extras-alert-when-finished '(o3-mini o1))
+
   :hook
   (org-mode-hook . gptel-extras-enable-gptel-in-org)
   (markdown-mode-hook . gptel-extras-enable-gptel-in-markdown)

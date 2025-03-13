@@ -525,6 +525,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#keycast][keycast]]
   - [[#activity-watch-mode][activity-watch-mode]]
   - [[#custom][custom]]
+  - [[#mercado-libre][mercado-libre]]
   - [[#polymarket][polymarket]]
   - [[#kelly][kelly]]
   - [[#fatebook][fatebook]]
@@ -13475,6 +13476,22 @@ CLOCK: [2024-10-17 Thu 11:58]--[2024-10-17 Thu 12:20] =>  0:22
   :bind
   (:map custom-mode-map
         ("f" . ace-link-custom)))
+#+end_src
+
+** mercado-libre
+:PROPERTIES:
+:ID:       EE7E910B-F443-44F7-87F1-5E44137DDB9E
+:END:
+
+/[[https://github.com/benthamite/mercado-libre][mercado-libre]] is a package for querying MercadoLibre, a popular Latin American e-commerce platform./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package mercado-libre
+  :ensure (:host github
+                 :repo "benthamite/mercado-libre")
+  :custom
+  (mercado-libre-listings-db-file
+   (file-name-concat paths-dir-dropbox "Mercado Libre/mercado-libre-listings.el")))
 #+end_src
 
 ** polymarket

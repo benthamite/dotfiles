@@ -13375,15 +13375,6 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
    ("C-M-s-g" . macos-set-dication-language)))
 #+end_src
 
-*** DONE Fix announce the time issues
-CLOSED: [2025-01-22 Wed 12:36]
-:PROPERTIES:
-:ID:       CE5F7C57-97EA-4E69-B929-BAA3C21F4FF0
-:END:
-:LOGBOOK:
-CLOCK: [2024-10-17 Thu 11:58]--[2024-10-17 Thu 12:20] =>  0:22
-:END:
-
 ** keycast
 :PROPERTIES:
 :ID:       8D51F4B0-7443-420B-919F-7AA9B0EC0CE9

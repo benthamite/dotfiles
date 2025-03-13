@@ -48,6 +48,7 @@ domains.google.com
 drive.google.com
 dropbox.com
 easy.jet
+ebay.com
 ecoveritas.es
 effectivealtruism.org
 embluemail.com
@@ -63,6 +64,7 @@ grammarly.com
 hathitrust.org
 heinonline.org
 holafly.com
+houzz.com
 hsluv.org
 igmchicago.org
 imdb.com

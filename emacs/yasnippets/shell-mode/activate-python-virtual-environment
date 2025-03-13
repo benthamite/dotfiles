@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: activate-python-virtual-environment
+# key: ave
+# contributor: Pablo Stafforini
+# --
+source `(files-extras-get-current-dir-lowercased)`/bin/activate

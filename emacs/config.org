@@ -8611,7 +8611,7 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
       todo "TODO")
      ("G" "All Tlön TODOs"
       todo "TODO"
-      ((org-agenda-files (list (file-name-concat paths-dir-dropbox "tlon-private/")))))
+      ((org-agenda-files (list paths-dir-tlon-todos))))
      ("," "All tasks with no priority"
       tags-todo "-PRIORITY=\"1\"-PRIORITY=\"2\"-PRIORITY=\"3\"-PRIORITY=\"4\"-PRIORITY=\"5\"-PRIORITY=\"6\"-PRIORITY=\"7\"-PRIORITY=\"8\"-PRIORITY=\"9\"")))
   (org-agenda-files (list paths-file-calendar))

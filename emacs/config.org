@@ -4511,9 +4511,10 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
   (winum-mode)
 
   :bind
-  (("C-," . winum-select-window-1)
-   ("C-." . winum-select-window-2)
-   ("C-/" . winum-select-window-3)))
+  (("<C-m>" . winum-select-window-1)
+   ("C-," . winum-select-window-2)
+   ("C-." . winum-select-window-3)
+   ("C-/" . winum-select-window-4)))
 #+end_src
 
 ** winner

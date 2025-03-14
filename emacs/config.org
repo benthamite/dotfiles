@@ -6280,7 +6280,6 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package flycheck-languagetool
-  :disabled
   :after flycheck
   :init
   (setq flycheck-languagetool-server-jar

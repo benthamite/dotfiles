@@ -371,6 +371,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#copilot][copilot]]
   - [[#copilot-extras][copilot-extras]]
   - [[#gptel][gptel]]
+  - [[#gptel-plus][gptel-plus]]
   - [[#gptel-extras][gptel-extras]]
   - [[#gptel-quick][gptel-quick]]
   - [[#gpt-commit][gpt-commit]]
@@ -7960,6 +7961,29 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
 https://github.com/meain/dotfiles/blob/master/emacs/.config/emacs/init.el#L4525
 
+** gptel-plus
+:PROPERTIES:
+:ID:       2843FB0D-7653-4BB5-ABBF-73D4D1D18C68
+:END:
+
+/[[https://github.com/benthamite/gptel-plus][gptel-plus]] is a collection of enhancements for gptel./
+
+This package evolved out of gptel-extras.
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package gptel-plus
+  :ensure (:host github
+		 :repo "benthamite/gptel-plus")
+  
+  :hook
+  (org-mode-hook . gptel-plus-enable-gptel-in-org)
+  (markdown-mode-hook . gptel-plus-enable-gptel-in-markdown)
+
+  :bind
+  (:map gptel-mode-map
+	("s-l" . gptel-extras-list-context-files)))
+#+end_src
+
 ** gptel-extras
 :PROPERTIES:
 :ID:       AEA2E978-0321-4F3D-B3EB-14CDA505A9D9
@@ -7978,15 +8002,11 @@ https://github.com/meain/dotfiles/blob/master/emacs/.config/emacs/init.el#L4525
   (gptel-extras-alert-when-finished '(o3-mini o1))
 
   :hook
-  (org-mode-hook . gptel-extras-enable-gptel-in-org)
-  (markdown-mode-hook . gptel-extras-enable-gptel-in-markdown)
   (gptel-post-response-functions . gptel-extras-generate-latex-previews)
 
   :bind
   (("H-s-c" . gptel-extras-goto-end-and-send)
-  ("H-s-o" . gptel-extras-toggle-major-mode)
-  :map gptel-mode-map
-  ("s-l" . gptel-extras-list-context-files)))
+   ("H-s-o" . gptel-extras-toggle-major-mode)))
 #+end_src
 
 ** gptel-quick

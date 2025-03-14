@@ -6314,7 +6314,12 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
         (flycheck-select-checker 'languagetool)))))
 #+end_src
 
-*** TODO Submit patch for persistent error
+*** TODO [#6] Create command to toggle languagetool
+:PROPERTIES:
+:ID:       554BE364-0D93-46F4-BCA1-E872B1B2C336
+:END:
+
+*** TODO [#7] Submit patch for persistent error
 :PROPERTIES:
 :ID:       74AC88E6-2752-44AE-A1F8-D3FE2BA2AE68
 :END:

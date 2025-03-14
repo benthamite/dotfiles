@@ -8483,7 +8483,7 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
 
   (org-extras-clock-in-with-calendar-prompt-exclude
    "Leo<>Pablo\\|Fede<>Pablo\\|Tlön: group meeting")
-  
+
   :config
   (setq org-extras-agenda-files-excluded
         (append org-extras-agenda-files-excluded
@@ -8492,7 +8492,7 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
                             (directory-files paths-dir-inactive t "^[^.][^/]*$"))))
 
   (quote (:link t :maxlevel 5 :fileskip0 t :narrow 70 :formula % :indent t :formatter org-extras-clocktable-sorter))
-  
+
   :hook
   (before-save-hook . org-extras-id-auto-add-ids-to-headings-in-file)
 
@@ -13490,7 +13490,7 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
                  :repo "benthamite/mercado-libre")
   :custom
   (mercado-libre-listings-db-file
-   (file-name-concat paths-dir-dropbox "Mercado Libre/mercado-libre-listings.el")))
+   (file-name-concat paths-dir-dropbox "Apps/Mercado Libre/mercado-libre-listings.el")))
 #+end_src
 
 ** polymarket

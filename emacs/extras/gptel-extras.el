@@ -84,7 +84,7 @@ If t, always display an alert. If nil, never display an alert."
 
 ;;;; Variables
 
-(defvar-local gptel-context nil
+(defvar-local gptel-extras-context nil
   "The context for the current buffer.")
 
 (defconst gptel-extras-local-variables
@@ -586,7 +586,7 @@ In Org files, saves as a file property. In Markdown, as a file-local variable."
   "Save the current `gptel' file context in file visited by the current MD buffer."
   (gptel-extras-remove-local-variables-section)
   (let ((context (format "%S" gptel-context--alist)))
-    (add-file-local-variable 'gptel-context context)))
+    (add-file-local-variable 'gptel-extras-context context)))
 
 (defun gptel-extras-remove-local-variables-section ()
   "Remove the existing Local Variables section from the current buffer."

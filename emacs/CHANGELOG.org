@@ -4,7 +4,49 @@
 
 This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository. It is meant to be read primarily by members of the Tlön team, but it may be of interest to others as well.
 
-* Version 7.1.1
+* Version 7.1.2 on 2025-03-15
+
+** gptel-plus
+:PROPERTIES:
+:CUSTOM_ID: gptel-plus
+:END:
+A new package =gptel-plus= has been added, which collects some functionality previously in =gptel-extras=. See its [[https://github.com/benthamite/gptel-plus][readme]] for details.
+
+** elpaca
+
+Switched to from Savannah to Emacs mirror because Savannah is down incredibly often.
+
+** UI and Binding Changes
+:PROPERTIES:
+:CUSTOM_ID: ui-and-binding-changes
+:END:
+- Key binding changes:
+  - =A-k= now bound to =slack-channel-select= (previously =A-s=)
+  - =A-s= now bound to =shell=
+  - Revised =winum-select-window-{n}= bindings with =<C-m>=, =C-,=, =C-.=, =C-/=
+  - Org-agenda keybindings revised: =w= for refile, =W= for week view
+
+** Additional Features and Fixes
+:PROPERTIES:
+:CUSTOM_ID: additional-features-and-fixes
+:END:
+- Added =gptel-max-tokens= set to 10000
+- Added new AI models including Grok 2 from xAI
+- Added =mercado-libre= package.
+- Re-enabled =flycheck-languagetool=
+- Added functionality to suppress warnings in tramp
+- Fixed bug in =elpaca-extras-update-and-reload=
+
+** Cleanup and Minor Changes
+:PROPERTIES:
+:CUSTOM_ID: cleanup-and-minor-changes
+:END:
+- Tab-bar-extras: Disabled clock and battery display (since macOS menu bar now shows these)
+- Fixed handling of activity-watch errors on remote files
+
+Overall, these changes represent a significant refactoring of gptel-related functionality, improvements to keyboard shortcuts for better ergonomics, and various quality-of-life improvements across different packages.
+
+* Version 7.1.1 on 2025-02-26
 
 ** =init=
 - Renamed package from =tlon-init= to =init= throughout the codebase
@@ -32,7 +74,6 @@ This document summarizes the changes pertaining to my Emacs configuration in eac
 - Completely refactored =vc-extras-delete-local-repo= for more reliable operation
 - Added =vc-extras-strip-diff-markers= to clean up diff output
 - Fixed issue where process buffers weren't properly checked before killing
-
 
 * Version 6.8.7 on 2025-01-29
 ** Emacs core packages

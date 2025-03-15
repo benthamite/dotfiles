@@ -3232,6 +3232,7 @@
     ("realy" "really" nil :count 1)
     ("realyl" "really" nil :count 1)
     ("reasearch" "research" nil :count 1)
+    ("reassesed" "reassessed" nil :count 0)
     ("rebiulding" "rebuilding" nil :count 1)
     ("rebllions" "rebellions" nil :count 1)
     ("rebounce" "rebound" nil :count 1)

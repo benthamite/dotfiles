@@ -647,6 +647,16 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
 (elpaca `(,@elpaca-order))
 (elpaca-wait)
 
+(require 'elpaca-menu-elpa)
+(setf (alist-get 'packages-url (alist-get 'gnu elpaca-menu-elpas))
+      "https://raw.githubusercontent.com/emacsmirror/gnu_elpa/refs/heads/main/elpa-packages"
+      (alist-get 'remote (alist-get 'gnu elpaca-menu-elpas))
+      "https://github.com/emacsmirror/gnu_elpa"
+      (alist-get 'packages-url (alist-get 'nongnu elpaca-menu-elpas))
+      "https://raw.githubusercontent.com/emacsmirror/nongnu_elpa/refs/heads/main/elpa-packages"
+      (alist-get 'remote (alist-get 'nongnu elpaca-menu-elpas))
+      "https://github.com/emacsmirror/nongnu_elpa")
+      
 (toggle-debug-on-error) ; uncomment when debugging
 #+end_src
 

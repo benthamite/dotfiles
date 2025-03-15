@@ -31,6 +31,7 @@
 (require 'el-patch)
 (require 'gptel)
 (require 'gptel-context)
+(require 'org)
 (require 'paths)
 
 ;;;; User options
@@ -219,6 +220,49 @@ To enable this feature, customize `gptel-extras-alert-when-finished'."
 
 (add-hook 'gptel-post-response-functions #'gptel-extras-alert-when-finished)
 
+;;;;; Continue in new buffer
+
+(defmacro gptel-extras--with-top-level-heading (&rest body)
+  "Execute BODY after moving point to the first top-level heading."
+  `(org-with-wide-buffer
+    (goto-char (point-min))
+    (while (not (and
+                 (org-at-heading-p)
+                 (= (org-current-level) 1)))
+      (org-next-visible-heading 1))
+    ,@body))
+
+(defun gptel-extras-continue-in-new-buffer ()
+  "Continue the conversation in a new buffer with a link from the original.
+Create a new buffer with the same heading as the current buffer, but with a
+number appended to it. Then insert a link to the new buffer at the end of the
+current buffer."
+  (interactive)
+  (gptel-extras-ensure-gptel-mode)
+  (let* ((original-buffer (current-buffer))
+         (heading (gptel-extras--with-top-level-heading
+		   (substring-no-properties (org-get-heading t t t t))))
+         (new-buffer-name (gptel-extras--generate-next-heading heading)))
+    (gptel new-buffer-name nil nil t)
+    (let ((new-buffer-id (gptel-extras--with-top-level-heading
+			  (org-id-get-create))))
+      (with-current-buffer original-buffer
+        (gptel-extras--insert-continuation-link new-buffer-id)))))
+
+(defun gptel-extras--generate-next-heading (heading)
+  "Generate the next heading based on HEADING, incrementing any number suffix."
+  (if (string-match "\\(.*\\) \\([0-9]+\\)$" heading)
+      (format "%s %d"
+              (match-string 1 heading)
+              (1+ (string-to-number (match-string 2 heading))))
+    (concat heading " 2")))
+
+(defun gptel-extras--insert-continuation-link (buffer-id)
+  "Insert a link to continuation with BUFFER-ID at the end of the current buffer."
+  (save-excursion
+    (goto-char (point-max))
+    (insert (format "Continued [[id:%s][here]]" buffer-id))))
+
 ;;;;; Misc
 
 ;;;###autoload
@@ -259,6 +303,11 @@ won't work because it needs the function to be selected."
     (goto-char (point))
     (while (search-forward "=(" nil t)
       (replace-match "`("))))
+
+(defun gptel-extras-ensure-gptel-mode ()
+  "Throw an error unless `gptel-mode' is non-nil in the current buffer."
+  (unless gptel-mode
+    (user-error "Not in a `gptel' buffer")))
 
 (provide 'gptel-extras)
 ;;; gptel-extras.el ends here

@@ -6164,6 +6164,8 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 :ID:       80E53FAD-1669-408C-A45D-9232C2D51924
 :END:
 
+
+/[[https://codeberg.org/akib/emacs-eat][eat]] provides a visual command line for eshell./
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package eat
   :ensure (:host codeberg

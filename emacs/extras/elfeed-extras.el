@@ -31,14 +31,6 @@
 (require 'elfeed)
 (require 'elfeed-show)
 
-;;;; Variables
-
-(defvar elfeed-extras-update-timer nil
-  "Timer for updating elfeed.")
-
-(defvar elfeed-extras-auto-update-in-process nil
-  "Whether elfeed is currently being updated.")
-
 ;;;; Functions
 
 ;; Borrowed from Prot
@@ -106,19 +98,10 @@ poorly-designed websites."
   (elfeed-show-next-link)
   (recenter))
 
-(declare-function global-flycheck-mode "flycheck")
-(defun elfeed-extras-auto-update ()
-  "Automatically update `elfeed' every 15 minutes of idleness."
-  (let ((elfeed-extras-auto-update-in-process t)
-	(global-flycheck-mode-enabled-p (bound-and-true-p global-flycheck-mode)))
-    (when global-flycheck-mode-enabled-p
-      (global-flycheck-mode -1))
-    (when elfeed-extras-update-timer
-      (cancel-timer elfeed-extras-update-timer))
-    (setq elfeed-extras-update-timer
-	  (run-with-idle-timer (* 15 60) t #'elfeed-update))
-    (when global-flycheck-mode-enabled-p
-      (global-flycheck-mode))))
+(defun elfeed-extras-update ()
+  "Update all the feeds in elfeed-feeds."
+  (message "Updating elfeed...")
+  (elfeed-update))
 
 (defun elfeed-extras-disable-undo ()
   "Disable undo in the *elfeed-search* buffer."

@@ -376,6 +376,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#gptel-quick][gptel-quick]]
   - [[#gpt-commit][gpt-commit]]
   - [[#llm-tool-collection][llm-tool-collection]]
+  - [[#codel][codel]]
   - [[#dall-e-shell][dall-e-shell]]
 - [[#org-mode][org-mode]]
   - [[#org][org]]
@@ -8068,6 +8069,22 @@ This package evolved out of gptel-extras.
   :ensure (:host github
                  :repo "skissue/llm-tool-collection")
   :defer t)
+#+end_src
+
+** codel
+:PROPERTIES:
+:ID:       349C4CE5-0091-42EC-BDD0-F5DBB200BC88
+:END:
+
+/[[https://github.com/llll][codel]] is another collection of llm tools./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package codel
+  :ensure (:host github
+                 :repo "ultronozm/codel.el")
+  :defer t
+  :config
+  (codel-setup-gptel))
 #+end_src
 
 ** dall-e-shell

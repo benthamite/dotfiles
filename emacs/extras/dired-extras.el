@@ -126,6 +126,19 @@ losing the `put back' option."
     (copy-file existing-file new-file))
   (revert-buffer))
 
+(defun dired-extras-sort-toggle-dwim ()
+  "Toggle sorting by date and refresh the Dired buffer in a dwim fashion.
+If point is on the first file, keep the point there after sorting. Otherwise,
+follow the file that point is on.
+
+With a prefix argument, edit the current listing switches instead."
+  (interactive)
+  (let ((looking-at-first-file (eq (line-number-at-pos) 2)))
+    (dired-sort-toggle-or-edit)
+    (when looking-at-first-file
+      (goto-char (point-min))
+      (dired-next-line 1))))
+
 ;;;;; image-dired
 
 (autoload 'image-dired-show-all-from-dir "image-dired")

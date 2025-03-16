@@ -12407,7 +12407,7 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
   (elfeed-curl-max-connections 4)
 
   :config
-  (setq-default elfeed-search-filter "+unread")
+  (setq-default elfeed-search-filter "@15-days-ago +unread")
 
   :hook
   (elfeed-show-mode-hook . visual-line-mode)

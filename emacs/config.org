@@ -12474,7 +12474,9 @@ These key bindings produce the same behavior in eww.
   :demand t
   :custom
   (elfeed-show-entry-switch #'elfeed-extras-display-buffer)
-  ;; (advice-add 'elfeed :after #'elfeed-extras-auto-update)
+
+  :config
+  (run-with-idle-timer (* 20 60) t #'elfeed-extras-update)
 
   :hook
   (elfeed-search-mode-hook . elfeed-extras-disable-undo)

@@ -375,6 +375,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#gptel-extras][gptel-extras]]
   - [[#gptel-quick][gptel-quick]]
   - [[#gpt-commit][gpt-commit]]
+  - [[#llm-tool-collection][llm-tool-collection]]
   - [[#dall-e-shell][dall-e-shell]]
 - [[#org-mode][org-mode]]
   - [[#org][org]]
@@ -8053,6 +8054,20 @@ This package evolved out of gptel-extras.
 
   :bind (:map git-commit-mode-map
               ("s-g" . gpt-commit-message)))
+#+end_src
+
+** llm-tool-collection
+:PROPERTIES:
+:ID:       382BA84D-0C8C-43FD-9419-9A892653EF2B
+:END:
+
+/[[https://github.com/skissue/llm-tool-collection][llm-tool-collection]] is a crowd-sourced collection of tools for working with large language models./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package llm-tool-collection
+  :ensure (:host github
+                 :repo "skissue/llm-tool-collection")
+  :defer t)
 #+end_src
 
 ** dall-e-shell

@@ -66,3 +66,8 @@ alias emacsicon="osascript -e 'tell application \"Finder\" to make alias file to
 
 # make node use local certs
 export NODE_EXTRA_CA_CERTS="$HOME/Library/Application Support/mkcert/rootCA.pem"
+
+# EAT
+
+[ -n "$EAT_SHELL_INTEGRATION_DIR" ] && \
+    source "$EAT_SHELL_INTEGRATION_DIR/zsh"

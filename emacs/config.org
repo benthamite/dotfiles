@@ -13321,35 +13321,36 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature midnight
-  :defer 3600
+  :defer 5
   :custom
   (clean-buffer-list-kill-never-buffer-names
-        '("*mu4e-headers*"
-          " *mu4e-update*"))
+   '("*mu4e-headers*"
+     " *mu4e-update*"))
   (clean-buffer-list-kill-never-regexps
-        '("\\` \\*Minibuf-.*\\*\\'"
-          "^untitled.*"))
+   '("\\` \\*Minibuf-.*\\*\\'"
+     "^untitled.*"))
   (clean-buffer-list-delay-general 2) ; kill buffers unused for more than three days
 
   :config
   (midnight-mode)
-  (midnight-delay-set 'midnight-delay "5:00am")
+  ;; setting the delay causes midnight to run immediately, so we set it via a timer
+  (run-with-timer (* 60 60) nil (lambda () (midnight-delay-set 'midnight-delay "5:00am")))
 
   (dolist (fun (nreverse '(files-extras-save-all-buffers
-                           clean-buffer-list
-                           ledger-mode-extras-update-coin-prices
-                           ledger-mode-extras-update-commodities
-                           magit-extras-stage-commit-and-push-all-repos
-                           org-roam-db-sync
-                           org-extras-id-update-id-locations
-                           el-patch-validate-all
-                           org-extras-agenda-switch-to-agenda-current-day
-                           mu4e-extras-update-all-mail-and-index
-                           org-gcal-sync
-                           elfeed-update)))
+			   clean-buffer-list
+			   ledger-mode-extras-update-coin-prices
+			   ledger-mode-extras-update-commodities
+			   magit-extras-stage-commit-and-push-all-repos
+			   org-roam-db-sync
+			   org-extras-id-update-id-locations
+			   el-patch-validate-all
+			   org-extras-agenda-switch-to-agenda-current-day
+			   mu4e-extras-update-all-mail-and-index
+			   org-gcal-sync
+			   elfeed-update)))
     (add-hook 'midnight-hook
-            (apply-partially #'simple-extras-call-verbosely
-                           fun "Midnight hook now calling `%s'..."))))
+	      (apply-partially #'simple-extras-call-verbosely
+			       fun "Midnight hook now calling `%s'..."))))
 #+end_src
 
 ** bbdb

@@ -6108,6 +6108,8 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   :bind
   (("A-e" . eshell)
    :map eshell-mode-map
+   ("<tab>" . yas-expand)
+   ("TAB" . yas-expand) ; why is this necessary for eshell only?
    ("C-H-M-z" . eshell-kill-input)
    ("A-C-s-m" . beginning-of-line)
    ("M-k" . eshell-previous-matching-input-from-input)

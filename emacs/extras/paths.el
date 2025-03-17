@@ -558,6 +558,7 @@ This should be the path you set `org-roam-directory' to."
 	paths-dir-journal
 	paths-dir-notes
 	paths-dir-people
+	paths-dir-tlon-todos
 	paths-dir-personal-bibliography)
   "List of all personal repos."
   :type '(repeat directory)

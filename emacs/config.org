@@ -7856,7 +7856,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (with-eval-after-load 'dired
     (bind-keys
      :map dired-mode-map
-     ("s-l" . gptel-add)))
+     ("s-l" . gptel-context-add)))
 
   :custom
   (gptel-default-mode 'org-mode)
@@ -7966,7 +7966,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
    ("H-s-g" . gptel)
    ("H-s-a" . gptel-abort)
    ("H-s-m" . gptel-menu)
-   ("H-s-t" . gptel-add)
+   ("H-s-t" . gptel-context-add)
    ("A-C-s-r" . gptel-context-previous)
    ("A-C-s-f" . gptel-context-next)))
 #+end_src

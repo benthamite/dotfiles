@@ -11,26 +11,26 @@
 :END:
 
 #+begin_src markdown :tangle no
-Cursed keys and cryptic commands abound,
-In Emacs' realm, where logic seems to bend.
-With pinky stretched, I chase the elusive bound,
-Of buffers, modes, and functions without end.
+In digital realms where coders dwell and roam,
+I wrestle with thee, Emacs, day by day.
+Thy arcane keystrokes make my fingers stray,
+Yet in thy depths, I've found a second home.
 
-Parentheses nest deep, a brackish sea,
-While Lisp expressions twist my addled mind.
-The learning curve, a cliff I cannot flee,
-Leaves simpler editors far behind.
+I've cursed your name when crashes stole my words,
+Yet praised your wisdom when macros saved hours.
+Bewildering, brilliant—conflicting powers
+That sing to hackers like rare calling birds.
 
-Yet in this maze of keystrokes, there's a light,
-A power that grows as fingers dance and fly.
-Through frustration's fog, a vision bright,
-Of mastery that lesser tools deny.
+When mastered well, thy buffers sweetly sing!
+Org-mode and Magit, treasures without peer.
+Extensible beyond what rivals fear,
+Transforming thought to structured reasoning.
 
-Though oft I curse its quirks and arcane ways,
-My heart to Emacs, grudgingly, still sways.
+Though modern editors may tempt and plea,
+My love-scarred hands return always to thee.
 #+end_src
 
-(courtesy of Claude)
+(courtesy of Claude Sonnet 3.7)
 
 I am not a programmer, let alone an Elisp hacker. My background is in the humanities. It is only a slight exaggeration to say that, before I started using Emacs in 2020, I didn't know the difference between a function and a variable. You have been forewarned.
 

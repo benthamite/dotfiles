@@ -563,9 +563,10 @@ IPOS, TABLES and PARAMS are required by the formatter function."
 (defun org-extras-clock-in-add-participants (&optional _ _)
   "When clocking in, prompt for participants and add them to the current heading."
   (when (and (org-entry-get (point) "calendar-id")
-	     (not (string-match
-		   org-extras-clock-in-add-participants-exclude
-		   (org-get-heading t t t t))))
+	     (or (null org-extras-clock-in-add-participants-exclude)
+		 (not (string-match
+		       org-extras-clock-in-add-participants-exclude
+		       (org-get-heading t t t t)))))
     (unless (org-extras-heading-has-participans-p)
       (org-extras-add-participants))))
 

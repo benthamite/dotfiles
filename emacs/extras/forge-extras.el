@@ -192,11 +192,11 @@ repo."
 ;;;;; Copy message at point
 
 (defun forge-extras-copy-message-at-point-as-kill ()
-  "Copy the body of the post at point to the kill ring.
-The formatting of the post is preserved."
+  "Copy the body of the message at point to the kill ring.
+The formatting of the message is preserved."
   (interactive)
-  (when-let ((post (forge-post-at-point t)))
-    (kill-new (oref post body))
+  (when-let ((message (forge-post-at-point t)))
+    (kill-new (oref message body))
     (message "Message copied to kill ring.")))
 
 (provide 'forge-extras)

@@ -9693,8 +9693,20 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
   (org-journal-file-format "%Y.org")
   (org-journal-file-type 'yearly) ; set org-journal to use the same files for same year entries
 
+  :config
+  (defun org-journal-new-entry-in-journal ()
+    "Create a new journal entry in the selected journal."
+    (interactive)
+    (let* ((journal-dirs (list paths-dir-tlon-todos paths-dir-journal))
+           (cons (mapcar (lambda (dir)
+                           (cons (file-name-nondirectory (directory-file-name dir)) dir))
+                         journal-dirs))
+           (choice (completing-read "Journal: " cons))
+           (org-journal-dir (alist-get choice cons nil nil 'string=)))
+      (org-journal-new-entry nil)))
+
   :bind
-  ("A-j" . org-journal-new-entry))
+  ("A-j" . org-journal-new-entry-in-journal))
 #+end_src
 
 *** TODO [#5] Explore how to use org journal as the day organizer

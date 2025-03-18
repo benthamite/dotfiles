@@ -117,6 +117,17 @@ return instead the full path; if PATH is `sans-dir', return the filename only."
         (magit-run-git "submodule" "foreach" "--recursive" "git" "reset" "--hard")
         (magit-run-git "submodule" "update" "--recursive" "--init" "--force")))))
 
+;;;;; dirty repo
+
+(declare-function alert "alert")
+(defun magit-extras-warn-if-repo-is-dirty (repo-path)
+  "Check if repository at REPO-PATH is dirty and emit an alert if so."
+  (let ((default-directory repo-path))
+    (when (and (file-directory-p repo-path)
+               (magit-git-repo-p repo-path)
+               (magit-anything-modified-p))
+      (alert (format "Repository at %s is dirty!" repo-path)))))
+
 ;;;;; transient
 
 (defun magit-extras-get-unstaged-files ()

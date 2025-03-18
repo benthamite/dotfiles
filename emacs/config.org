@@ -13384,12 +13384,15 @@ CLOCK: [2023-03-28 Tue 22:32]--[2023-03-28 Tue 22:47] =>  0:15
 
 A tutorial for this undocumented package may be found [[https://github.com/andycowl/bbdb3-manual/blob/master/tutorial.rst][here]].
 
-[2023-04-09 Sun 02:20] I wasn't able to build it, but I was able to install it with =M-x package-install=, from which I created a local repo.
-
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package bbdb
   :ensure (:host github
-           :repo "tlon-team/bbdb")
+                 :repo "emacsmirror/bbdb"
+                 :files (:defaults "lisp/*.el")
+                 :pre-build (("./autogen.sh")
+                             ("./configure")
+                             ("make"))
+                 :build (:not elpaca--compile-info))
 
   :custom
   (bbdb-file (file-name-concat paths-dir-bbdb "bbdn.el"))

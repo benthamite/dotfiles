@@ -6643,22 +6643,29 @@ CLOCK: [2021-12-03 Fri 22:21]--[2021-12-03 Fri 23:02] =>  0:41
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package gdrive
   :ensure (:host github
-           :repo "benthamite/gdrive"
-           :depth nil)
+                 :repo "benthamite/gdrive"
+                 :depth nil)
   :defer t
   :init
   (load-file (file-name-concat paths-dir-dotemacs "etc/gdrive-users.el"))
-  (defun gdrive-extras-mark-multiple-and-share (file)
+  (defun gdrive-extras-mark-multiple-and-share (&optional file)
     "Search for each line in FILE and share the selected results.
 The file should contain one search query per line."
-    (interactive "f")
+    (interactive)
     (require 'gdrive)
-    (when (gdrive-mark-clear-prompt)
-      (let ((lines (files-extras-lines-to-list file)))
+    (gdrive-mark-clear)
+    (if-let ((file (or file (when (y-or-n-p "Read file? ")
+                              (read-file-name "File: "))))
+             (lines (files-extras-lines-to-list file)))
         (dolist (line lines)
-          (let ((results (gdrive-act-on-selected-search-results line)))
-            (gdrive-mark-results results))))
-      (gdrive-share-results gdrive-marked-files))))
+          (gdrive-extras--mark-matching-results line))
+      (gdrive-extras--mark-matching-results (read-string "ID: ")))
+    (gdrive-share-results gdrive-marked-files))
+
+  (defun gdrive-extras--mark-matching-results (string)
+    "Mark the files that match STRING."
+    (let ((results (gdrive-act-on-selected-search-results string)))
+      (gdrive-mark-results results))))
 #+end_src
 
 *** TODO [#5] Write command to create new Google Doc in chosen folder

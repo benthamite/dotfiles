@@ -189,6 +189,47 @@ repo."
 	 (repo (forge-get-repository repo-url nil :insert!)))
     (forge--pull repo nil nil)))
 
+;;;;; Navigate messages
+
+(defun forge--goto-message (direction)
+  "Move to a post in the current topic in the specified DIRECTION.
+DIRECTION should be either `next or `prev."
+  (let ((section (magit-current-section)))
+    (cond
+     ;; If we're on a post, try to find the next/previous post
+     ((magit-section-match 'post section)
+      (if-let ((target (car (magit-section-siblings section direction))))
+          (progn
+            (goto-char (oref target start))
+            (magit-section-update-highlight))
+        (message "No %s post" direction)))
+     ;; If we're not on a post, find the first/last post
+     (t
+      (let* ((posts (seq-filter
+                     (lambda (s) (eq (oref s type) 'post))
+                     (oref (or (magit-section-at (point))
+                               (magit-current-section))
+                           children)))
+             ;; For 'next, take the first post; for 'prev, take the last
+             (target (if (eq direction 'next)
+                         (car posts)
+                       (car (last posts)))))
+        (if target
+            (progn
+              (goto-char (oref target start))
+              (magit-section-update-highlight))
+          (message "No posts found")))))))
+
+(defun forge-next-message ()
+  "Move to the next message in the current topic."
+  (interactive)
+  (forge--goto-message 'next))
+
+(defun forge-previous-message ()
+  "Move to the previous message in the current topic."
+  (interactive)
+  (forge--goto-message 'prev))
+
 ;;;;; Copy message at point
 
 (defun forge-extras-copy-message-at-point-as-kill ()

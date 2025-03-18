@@ -1833,7 +1833,13 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   ;; hack: to mark the topic as read, we browse it in the background
   (advice-add 'forge-visit-this-topic :before #'forge-extras-sync-read-status)
 
-  (run-with-idle-timer 30 t #'forge-extras-pull-notifications))
+  (run-with-idle-timer 30 t #'forge-extras-pull-notifications)
+
+:bind
+(:map forge-issue-mode-map
+      ("A-C-s-d" . forge-previous-message)
+      ("A-C-s-f" . forge-next-message)
+      ("s-w" . forge-extras-copy-message-at-point-as-kill)))
 #+end_src
 
 ** emacs-pr-review

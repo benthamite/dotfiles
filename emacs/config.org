@@ -11952,22 +11952,21 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
 
   (require 'pass)
   (slack-register-team
-   :default t
-   :name "Tlön"
+   :name "Altruismo eficaz y racionalidad"
    :token (auth-source-pick-first-password
-           :host "tlon"
-           :user (getenv "PERSONAL_GMAIL"))
+           :host "altruismo-eficaz^token"
+           :user (concat (getenv "PERSONAL_GMAIL") "^token"))
    :cookie (auth-source-pick-first-password
-            :host "tlon^cookie"
+            :host "altruismo-eficaz^cookie"
             :user (concat (getenv "PERSONAL_GMAIL") "^cookie")))
 
   (slack-register-team
-   :name "Samotsvety Forecasting"
+   :name "EA Translations"
    :token (auth-source-pick-first-password
-           :host "samotsvety"
-           :user (getenv "PERSONAL_GMAIL"))
+           :host "ea-translationa^token"
+           :user (concat (getenv "PERSONAL_GMAIL") "^token"))
    :cookie (auth-source-pick-first-password
-            :host "samotsvety^cookie"
+            :host "ea-translationa^cookie"
             :user (concat (getenv "PERSONAL_GMAIL") "^cookie")))
 
   :hook

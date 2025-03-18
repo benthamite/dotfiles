@@ -189,5 +189,15 @@ repo."
 	 (repo (forge-get-repository repo-url nil :insert!)))
     (forge--pull repo nil nil)))
 
+;;;;; Copy message at point
+
+(defun forge-extras-copy-message-at-point-as-kill ()
+  "Copy the body of the post at point to the kill ring.
+The formatting of the post is preserved."
+  (interactive)
+  (when-let ((post (forge-post-at-point t)))
+    (kill-new (oref post body))
+    (message "Message copied to kill ring.")))
+
 (provide 'forge-extras)
 ;;; forge-extras.el ends here

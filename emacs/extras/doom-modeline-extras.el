@@ -51,6 +51,11 @@
   :type 'boolean
   :group 'doom-modeline)
 
+(defcustom doom-modeline-extras-ai-context t
+  "Whether to display the number of files in the AI context in the modeline."
+  :type 'boolean
+  :group 'doom-modeline)
+
 ;;;; Functions
 
 ;;;;; Modeline segments
@@ -74,6 +79,17 @@
     (concat (doom-modeline-spc) (doom-modeline-spc)
 	    (format "⟲(%s)" org-roam-extras-current-backlink-count))))
 
+;;;;;; AI context
+
+(defvar gptel-context--alist)
+(doom-modeline-def-segment ai-context
+  "Display the number of files in the AI context."
+  (let ((count (length gptel-context--alist)))
+    (when (and doom-modeline-extras-ai-context
+               (> count 0))
+      (concat (doom-modeline-spc)
+              (format "✨(%s)" count)))))
+  
 ;;;;; GitHub notifications
 
 (declare-function forge-pull-notifications "forge-commands")

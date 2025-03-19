@@ -120,6 +120,7 @@ return instead the full path; if PATH is `sans-dir', return the filename only."
 ;;;;; dirty repo
 
 (declare-function alert "alert")
+;;;###autoload
 (defun magit-extras-warn-if-repo-is-dirty (repo-path)
   "Check if repository at REPO-PATH is dirty and emit an alert if so."
   (let ((default-directory repo-path))

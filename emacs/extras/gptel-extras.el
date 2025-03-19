@@ -151,6 +151,7 @@ Use to circumvent Gemini’s location restrictions."
 (declare-function simple-extras-slugify "simple-extras")
 (autoload 'org-insert-heading "org")
 (autoload 'org-next-visible-heading "org")
+;;;###autoload
 (defun gptel-extras-save-buffer (name _ _ interactivep)
   "Save the `gptel' buffer with NAME right after it is created.
 The buffer is saved to a file in `gptel-extras-dir'. INTERACTIVEP is t when

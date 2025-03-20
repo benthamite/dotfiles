@@ -78,17 +78,40 @@ If TARGET-WINDOW is non-nil, move THIS-BUFFER to TARGET-WINDOW and OTHER-BUFFER
 to the current window. If there is no other window, create it and move
 THIS-BUFFER to it."
   (window-extras-split-if-unsplit)
-  (let* ((target-window (if (or (not target-window)
-                                (eq (window-extras-get-last-window) target-window)
-                                (eq (selected-window) target-window))
-                            (window-extras-get-last-window)
-                          target-window))
-         (source-window (if (eq (selected-window) target-window)
-                            (window-extras-get-last-window)
-                          (selected-window))))
+  (let* ((windows (window-extras--get-target-and-source-windows target-window))
+         (target-window (car windows))
+         (source-window (cdr windows)))
     (set-window-buffer target-window this-buffer)
     (set-window-buffer source-window other-buffer)
+    (window-extras--remove-buffer-from-window-history this-buffer source-window)
     (select-window target-window)))
+
+(defun window-extras--remove-buffer-from-window-history (buffer window)
+  "Remove BUFFER from WINDOW's buffer history.
+This prevents BUFFER from reappearing when the it is killed in the source
+WINDOW."
+  (let* ((prev-buffers (window-prev-buffers window))
+         (next-buffers (window-next-buffers window))
+         (filtered-prev (cl-remove-if (lambda (entry)
+					(eq (car entry) buffer))
+                                      prev-buffers))
+         (filtered-next (cl-remove-if (lambda (buf)
+					(eq buf buffer))
+                                      next-buffers)))
+    (set-window-prev-buffers window filtered-prev)
+    (set-window-next-buffers window filtered-next)))
+
+(defun window-extras--get-target-and-source-windows (target-window)
+  "Return a cons cell with the target and source windows given TARGET-WINDOW."
+  (let ((target (if (or (not target-window)
+                        (eq (window-extras-get-last-window) target-window)
+                        (eq (selected-window) target-window))
+                    (window-extras-get-last-window)
+                  target-window)))
+    (cons target
+          (if (eq (selected-window) target)
+              (window-extras-get-last-window)
+            (selected-window)))))
 
 (defun window-extras-buffer-swap ()
   "Swap the current buffer and the buffer in the other window.

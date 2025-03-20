@@ -106,21 +106,23 @@ If there is only one window, create a second one."
   (window-extras--move-or-swap
    (window-buffer) (files-extras-get-alternate-buffer) target-window))
 
-(declare-function winum-get-window-by-number "winum")
-(declare-function winum-get-number "winum")
 ;;;###autoload
 (defun window-extras-buffer-move-right ()
-  "Move the current buffer to the right window."
+  "Move the current buffer to the window on the right."
   (interactive)
-  (window-extras-buffer-move
-   (winum-get-window-by-number (1+ (mod (winum-get-number) (count-windows))))))
+  (let ((other-window (window-in-direction 'right)))
+    (if other-window
+        (window-extras-buffer-move other-window)
+      (user-error "No window on the right"))))
 
 ;;;###autoload
 (defun window-extras-buffer-move-left ()
-  "Move the current buffer to the left window."
+  "Move the current buffer to the window on the left."
   (interactive)
-  (window-extras-buffer-move
-   (winum-get-window-by-number (1+ (mod (count-windows) (winum-get-number))))))
+  (let ((other-window (window-in-direction 'left)))
+    (if other-window
+        (window-extras-buffer-move other-window)
+      (user-error "No window on the left"))))
 
 (defun window-extras-frame-is-maximized-p ()
   "Return t iff the current frame is maximized."

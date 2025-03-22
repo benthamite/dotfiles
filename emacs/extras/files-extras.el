@@ -493,6 +493,7 @@ OLD-FUN and ARGS are arguments passed to the original function."
     (find-file file)))
 
 ;; TODO: Expand for other modes
+;;;###autoload
 (defun file-extras-copy-as-kill-dwim ()
   "Copy the relevant string in the current buffer, depending on its mode.
 - In a `helpful-mode' buffer, get the name of the symbol whose docstring the

@@ -63,6 +63,18 @@ If t, always display an alert. If nil, never display an alert."
 		 (repeat :tag "Models" symbol))
   :group 'gptel-extras)
 
+;;;;; Aider
+
+(defcustom gptel-extras-add-repo-map-to-context nil
+  "Whether to add the repository map to the context when sending a request."
+  :type 'boolean
+  :group 'gptel-extras)
+
+(defcustom gptel-extras-add-conventions-to-context nil
+  "Whether to add the conventions file to the context when sending a request."
+  :type 'boolean
+  :group 'gptel-extras)
+
 ;;;; Variables
 
 (defconst gptel-extras-changelog-file
@@ -263,6 +275,91 @@ current buffer."
   (save-excursion
     (goto-char (point-max))
     (insert (format "Continued [[id:%s][here]]" buffer-id))))
+
+;;;;; Aider
+
+(defconst gptel-extras-repo-map-buffer-name-formatter "*Repo Map: %s*"
+  "The buffer where the repository map is shown.")
+
+(autoload 'project-name "project")
+(autoload 'project-root "project")
+(defun gptel-extras-get-repo-map-buffer-name ()
+  "Return the name of the repository map buffer."
+  (let* ((repo (gptel-extras-get-repo))
+	 (name (project-name (project-current nil repo))))
+    (format gptel-extras-repo-map-buffer-name-formatter name)))
+
+(defun gptel-extras-get-repo ()
+  "Return the repository for the current request."
+  (let ((prompt (lambda () (expand-file-name
+		       (read-directory-name "Repository: " paths-dir-personal-repos)))))
+    (pcase major-mode
+      ('org-mode
+       (or (org-entry-get (point-min) "GPTEL_REPO")
+	   (let ((repo (funcall prompt)))
+	     (org-entry-put (point-min) "GPTEL_REPO" repo)
+	     repo)))
+      ;; TODO: Add markdown-mode support
+      ('markdown-mode)
+      (_ (if-let* ((project (project-current)))
+	     (project-root project)
+	   (funcall prompt))))))
+
+(defun gptel-extras-get-repo-map ()
+  "Return a map of current repository, if available."
+  (let ((default-directory (gptel-extras-get-repo)))
+    (and (project-current)
+	 (executable-find "aider")
+	 (shell-command-to-string "aider --show-repo-map"))))
+
+(defun gptel-extras-create-repo-map ()
+  "Create and return a repo map buffer for the current project."
+  (when-let* ((repo-map (gptel-extras-get-repo-map)))
+    (with-current-buffer (get-buffer-create (gptel-extras-get-repo-map-buffer-name))
+      (erase-buffer)
+      (insert repo-map)
+      (goto-char (point-min))
+      (current-buffer))))
+
+(defun gptel-extras-show-repo-map ()
+  "Show the repository map in a new buffer."
+  (interactive)
+  (when-let* ((buffer (gptel-extras-create-repo-map)))
+    (pop-to-buffer buffer)))
+
+(defun gptel-extras-add-repo-map-to-context ()
+  "Add the repository map to the gptel context."
+  (interactive)
+  (when-let* ((buffer (gptel-extras-create-repo-map)))
+    (gptel-extras-remove-repo-map-from-context)
+    (with-current-buffer buffer
+      (insert "This is repository map of the current project. Please use it to get a sense of the project structure and to request any files you think might help you answer the prompt.\n\n")
+      (gptel-context-add))))
+
+(defun gptel-extras-add-conventions-to-context ()
+  "Add the conventions file to the gptel context."
+  (interactive)
+  (let* ((default-directory (gptel-extras-get-repo))
+	 (file (file-name-concat default-directory "conventions.md")))
+    (gptel-context-add-file file)))
+
+(defun gptel-extras-remove-repo-map-from-context ()
+  "Remove the repository map from the gptel context."
+  (interactive)
+  (when-let ((buffer (get-buffer (gptel-extras-get-repo-map-buffer-name))))
+    (setq gptel-context--alist (assq-delete-all buffer gptel-context--alist))))
+
+(defun gptel-extras-add-context-files (&optional _)
+  "Add relevant context files to the `gptel' context.
+The files added is controlled by the user options
+`gptel-extras-add-repo-map-to-context' and
+`gptel-extras-add-conventions-to-context'."
+  (when gptel-extras-add-repo-map-to-context
+    (gptel-extras-add-repo-map-to-context))
+  (when gptel-extras-add-conventions-to-context
+    (gptel-extras-add-conventions-to-context)))
+
+(advice-add 'gptel-send :before #'gptel-extras-add-context-files)
 
 ;;;;; Misc
 

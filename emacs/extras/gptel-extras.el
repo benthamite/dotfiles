@@ -330,11 +330,11 @@ Keys are repository paths, values are cons cells of the form (TIMESTAMP . MAP)."
 
 (defun gptel-extras-repo-map-cache-valid-p (repo)
   "Check if the cached repository map for REPO is still valid."
-  (when-let* ((cache-entry (gethash repo gptel-extras--repo-map-cache))
-              (timestamp (car cache-entry)))
+  (when-let* ((cache-entry (gethash repo gptel-extras--repo-map-cache)))
     (and
      ;; Check if the cache entry is still fresh
-     (< (- (float-time) timestamp) gptel-extras-repo-map-cache-ttl)
+     (when-let ((timestamp (cdr (assoc 'timestamp cache-entry))))
+       (< (- (float-time) timestamp) gptel-extras-repo-map-cache-ttl))
      ;; Check if git HEAD has changed (if enabled)
      (or (not gptel-extras-repo-map-invalidate-on-git-changes)
          (let ((cached-head (cdr (assoc 'git-head cache-entry)))

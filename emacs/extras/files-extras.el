@@ -400,6 +400,22 @@ more intrusive alert."
     (kill-new path)
     (message "Copied `%s'" path)))
 
+;;;###autoload
+(defun file-extras-copy-contents (&optional file)
+  "Copy the contents of FILE to the kill ring.
+If FILE is nil, use the file at point if in Dired mode, the file visited by the
+current buffer, or prompt the user for a file, in that order."
+  (interactive)
+  (let* ((file (or file
+		   (when (derived-mode-p 'dired-mode) (dired-get-filename))
+		   (buffer-file-name)
+		   (read-file-name "File: ")))
+	 (contents (with-temp-buffer
+		     (insert-file-contents file)
+		     (buffer-string))))
+    (kill-new contents)
+    (message "Copied contents of \"%s\" to the kill ring." file)))
+
 (add-hook 'find-file-hook #'files-extras-auto-save-alert)
 
 ;; reddit.com/r/emacs/comments/t07e7e/comment/hy88bum/?utm_source=reddit&utm_medium=web2x&context=3

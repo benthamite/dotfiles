@@ -420,6 +420,14 @@ The files added is controlled by the user options
 
 (advice-add 'gptel-send :before #'gptel-extras-add-context-files)
 
+(defun gptel-extras-toggle-aider-files ()
+  "Toggle inclusion or exclusion of Aider files."
+  (interactive)
+  (let ((state gptel-extras-add-conventions-to-context))
+    (setq gptel-extras-add-conventions-to-context (not state)
+	  gptel-extras-add-repo-map-to-context (not state))
+    (message (concat (if state "Diabled" "Enabled") " Aider files."))))
+
 ;;;;; Misc
 
 ;;;###autoload

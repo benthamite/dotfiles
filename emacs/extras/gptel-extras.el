@@ -40,6 +40,31 @@
   "Extensions for `gptel'."
   :group 'gptel)
 
+;;;;; Aider
+
+(defcustom gptel-extras-add-repo-map-to-context nil
+  "Whether to add the repository map to the context when sending a request."
+  :type 'boolean
+  :group 'gptel-extras)
+
+(defcustom gptel-extras-add-conventions-to-context nil
+  "Whether to add the conventions file to the context when sending a request."
+  :type 'boolean
+  :group 'gptel-extras)
+
+(defcustom gptel-extras-repo-map-cache-ttl 3600
+  "Time-to-live for repository map cache entries, in seconds.
+After this time, the cache entry is considered stale and will be regenerated."
+  :type 'integer
+  :group 'gptel-extras)
+
+(defcustom gptel-extras-repo-map-invalidate-on-git-changes t
+  "Whether to invalidate the repository map cache when git changes are detected.
+If non-nil, the cache entry is considered stale when the git HEAD reference
+changes."
+  :type 'boolean
+  :group 'gptel-extras)
+
 ;;;;; Misc
 
 (defcustom gptel-extras-gemini-mullvad-disconnect-after 1
@@ -61,18 +86,6 @@ If t, always display an alert. If nil, never display an alert."
   :type '(choice (const :tag "Always" t)
 		 (const :tag "Never" nil)
 		 (repeat :tag "Models" symbol))
-  :group 'gptel-extras)
-
-;;;;; Aider
-
-(defcustom gptel-extras-add-repo-map-to-context nil
-  "Whether to add the repository map to the context when sending a request."
-  :type 'boolean
-  :group 'gptel-extras)
-
-(defcustom gptel-extras-add-conventions-to-context nil
-  "Whether to add the conventions file to the context when sending a request."
-  :type 'boolean
   :group 'gptel-extras)
 
 ;;;; Variables
@@ -278,6 +291,10 @@ current buffer."
 
 ;;;;; Aider
 
+(defvar gptel-extras--repo-map-cache (make-hash-table :test 'equal)
+  "Cache for repository maps.
+Keys are repository paths, values are cons cells of the form (TIMESTAMP . MAP).")
+
 (defconst gptel-extras-repo-map-buffer-name-formatter "*Repo Map: %s*"
   "The buffer where the repository map is shown.")
 
@@ -305,12 +322,46 @@ current buffer."
 	     (project-root project)
 	   (funcall prompt))))))
 
+(defun gptel-extras-get-git-head-ref (repo)
+  "Return the current git HEAD reference for REPO."
+  (let ((default-directory repo))
+    (when (file-exists-p ".git")
+      (string-trim (shell-command-to-string "git rev-parse HEAD")))))
+
+(defun gptel-extras-repo-map-cache-valid-p (repo)
+  "Check if the cached repository map for REPO is still valid."
+  (when-let* ((cache-entry (gethash repo gptel-extras--repo-map-cache))
+              (timestamp (car cache-entry)))
+    (and
+     ;; Check if the cache entry is still fresh
+     (< (- (float-time) timestamp) gptel-extras-repo-map-cache-ttl)
+     ;; Check if git HEAD has changed (if enabled)
+     (or (not gptel-extras-repo-map-invalidate-on-git-changes)
+         (let ((cached-head (cdr (assoc 'git-head cache-entry)))
+               (current-head (gptel-extras-get-git-head-ref repo)))
+           (or (not current-head) ; Not a git repo
+               (and cached-head (string= cached-head current-head))))))))
+
 (defun gptel-extras-get-repo-map ()
-  "Return a map of current repository, if available."
-  (let ((default-directory (gptel-extras-get-repo)))
-    (and (project-current)
-	 (executable-find "aider")
-	 (shell-command-to-string "aider --show-repo-map"))))
+  "Return a map of current repository, if available.
+Uses cached version if available and not stale."
+  (let* ((repo (gptel-extras-get-repo))
+         (cache-entry (gethash repo gptel-extras--repo-map-cache)))
+    (if (and cache-entry (gptel-extras-repo-map-cache-valid-p repo))
+        ;; Return cached map
+        (cdr (assoc 'map cache-entry))
+      ;; Generate new map
+      (when (and (project-current nil repo)
+                 (executable-find "aider"))
+        (let* ((default-directory repo)
+               (map (shell-command-to-string "aider --show-repo-map"))
+               (git-head (gptel-extras-get-git-head-ref repo))
+               (new-cache-entry `((timestamp . ,(float-time))
+                                  (git-head . ,git-head)
+                                  (map . ,map))))
+          ;; Update cache
+          (puthash repo new-cache-entry gptel-extras--repo-map-cache)
+          map)))))
 
 (defun gptel-extras-create-repo-map ()
   "Create and return a repo map buffer for the current project."
@@ -348,6 +399,14 @@ current buffer."
   (interactive)
   (when-let ((buffer (get-buffer (gptel-extras-get-repo-map-buffer-name))))
     (setq gptel-context--alist (assq-delete-all buffer gptel-context--alist))))
+
+(defun gptel-extras-invalidate-repo-map-cache (&optional repo)
+  "Invalidate the repository map cache for REPO.
+If REPO is nil, use the current repository."
+  (interactive)
+  (let ((repo (or repo (gptel-extras-get-repo))))
+    (remhash repo gptel-extras--repo-map-cache)
+    (message "Repository map cache invalidated for %s" repo)))
 
 (defun gptel-extras-add-context-files (&optional _)
   "Add relevant context files to the `gptel' context.

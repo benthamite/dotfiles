@@ -375,6 +375,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#gptel-extras][gptel-extras]]
   - [[#gptel-quick][gptel-quick]]
   - [[#gpt-commit][gpt-commit]]
+  - [[#aidermacs][aidermacs]]
   - [[#llm-tool-collection][llm-tool-collection]]
   - [[#codel][codel]]
   - [[#dall-e-shell][dall-e-shell]]
@@ -8074,6 +8075,29 @@ This package evolved out of gptel-extras.
 
   :bind (:map git-commit-mode-map
               ("s-g" . gpt-commit-message)))
+#+end_src
+
+** aidermacs
+:PROPERTIES:
+:ID:       29E4D020-70BF-408C-A8AC-D40E411F2F42
+:END:
+
+/[[https://github.com/MatthewZMD/aidermacs][aidermacs]] integrates with Aider, an AI pair programming tool./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package aidermacs
+  :custom
+  (aidermacs-default-model "sonnet")
+  (aidermacs-use-architect-mode t)
+  (aidermacs-auto-accept-architect nil)
+  (aidermacs-auto-commits t)
+  (aidermacs-show-diff-after-change nil)
+  (aidermacs-extra-args '("--thinking-tokens" "16k"))
+
+  :config
+  (setenv "ANTHROPIC_API_KEY" (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared)))
+
+  :bind (("C-c a" . aidermacs-transient-menu)))
 #+end_src
 
 ** llm-tool-collection

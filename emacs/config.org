@@ -13368,12 +13368,9 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
   ;; the settings below are not working; is it because `alert-default-style' is set to `notifier'?
   (alert-fade-time 2)
   (alert-persist-idle-time 60)
+  (alert-default-style 'osx-notifier)
 
   :config
-  (if (eq system-type 'darwin)
-      (setq alert-default-style 'osx-notifier)
-    (setq alert-default-style 'notifications))
-
   ;; This function has to be loaded manually, for some reason.
   (defun alert-osx-notifier-notify (info)
     (apply #'call-process "osascript" nil nil nil "-e"

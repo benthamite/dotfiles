@@ -376,6 +376,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#gptel-quick][gptel-quick]]
   - [[#gpt-commit][gpt-commit]]
   - [[#aidermacs][aidermacs]]
+  - [[#mcp][mcp]]
   - [[#llm-tool-collection][llm-tool-collection]]
   - [[#codel][codel]]
   - [[#dall-e-shell][dall-e-shell]]
@@ -8099,6 +8100,19 @@ This package evolved out of gptel-extras.
   (setenv "ANTHROPIC_API_KEY" (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared)))
 
   :bind (("C-c a" . aidermacs-transient-menu)))
+#+end_src
+
+** mcp
+:PROPERTIES:
+:ID:       edd16d61-f4ae-4b00-a631-28235d1f5d5b
+:END:
+
+/[[https://github.com/lizqwerscott/mcp.el][mcp]] an Emacs client for interfacing with [[https://modelcontextprotocol.io/introduction][MCP]]./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package mcp
+  :ensure (:host github
+                 :repo "lizqwerscott/mcp.el"))
 #+end_src
 
 ** llm-tool-collection

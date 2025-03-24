@@ -13634,7 +13634,11 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
 (use-package mercado-libre
   :ensure (:host github
                  :repo "benthamite/mercado-libre")
+  :defer t
   :custom
+  (mercado-libre-client-id (auth-source-pass-get "app-id" "chrome/mercadolibre.com/benthamite"))
+  (mercado-libre-client-key (auth-source-pass-get "app-key" "chrome/mercadolibre.com/benthamite"))
+  (mercado-libre-new-results-limit nil)
   (mercado-libre-listings-db-file
    (file-name-concat paths-dir-dropbox "Apps/Mercado Libre/mercado-libre-listings.el")))
 #+end_src

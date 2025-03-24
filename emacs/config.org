@@ -5456,7 +5456,9 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
    :map embark-general-map
    ("I" . embark-insert)
    :map embark-identifier-map
-   ("i" . citar-extras-open-in-ebib)))
+   ("i" . citar-extras-open-in-ebib)
+   :map embark-file-map
+   ("H-c" . file-extras-copy-contents)))
 #+end_src
 
 ** consult

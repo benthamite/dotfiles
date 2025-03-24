@@ -50,6 +50,7 @@ dropbox.com
 easy.jet
 ebay.com
 ecoveritas.es
+edesur.com.ar
 effectivealtruism.org
 embluemail.com
 etsy.com
@@ -104,12 +105,14 @@ musvc2.net
 muvin.com.ar
 myaccount.google.com
 myheritage.es
+nabucasa.com
 openai.com
 paxful.com
 perplexity.ai
 polygonscan.com
 polymarket-tracker.com
 polymarket.com
+polymarketanalytics.com
 pref.docusign.com
 pstmrk.it
 qualtrics.com
@@ -119,6 +122,7 @@ rehau.com
 rescuetime.com
 revolut.com
 savvycal.com
+semrush.com
 shademap.app
 skinceuticals.com
 skyscanner.com

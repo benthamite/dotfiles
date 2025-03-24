@@ -7902,6 +7902,19 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
                         :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))))
 
   ;; other models
+  (gptel-make-anthropic "Claude-thinking" ;Any name you want
+    :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))
+    :stream t
+    :models '(claude-3-7-sonnet-20250219)
+    :header (lambda () (when-let* ((key (gptel--get-api-key)))
+                    `(("x-api-key" . ,key)
+                      ("anthropic-version" . "2023-06-01")
+                      ("anthropic-beta" . "pdfs-2024-09-25")
+                      ("anthropic-beta" . "output-128k-2025-02-19")
+                      ("anthropic-beta" . "prompt-caching-2024-07-31"))))
+    :request-params `(:thinking (:type "enabled" :budget_tokens ,(* 1024 16))
+				:max_tokens ,(* 1024 32)))
+  
   (gptel-make-gemini "Gemini"
     :stream t
     :key (auth-source-pass-get 'secret (concat "tlon/core/aistudio.google.com/" tlon-email-shared)))

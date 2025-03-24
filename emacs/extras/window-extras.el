@@ -131,21 +131,23 @@ If there is only one window, create a second one."
 
 ;;;###autoload
 (defun window-extras-buffer-move-right ()
-  "Move the current buffer to the window on the right."
+  "Move the current buffer to the window on the right, creating one if necessary."
   (interactive)
   (let ((other-window (window-in-direction 'right)))
-    (if other-window
-        (window-extras-buffer-move other-window)
-      (user-error "No window on the right"))))
+    (when (= (count-windows) 1)
+      (split-window-right))
+    (window-extras-buffer-move other-window)))
 
 ;;;###autoload
 (defun window-extras-buffer-move-left ()
-  "Move the current buffer to the window on the left."
+  "Move the current buffer to the window on the left, creating one if necessary."
   (interactive)
   (let ((other-window (window-in-direction 'left)))
-    (if other-window
-        (window-extras-buffer-move other-window)
-      (user-error "No window on the left"))))
+    ;; the logic differs from `window-extras-buffer-move-right' because we want
+    ;; focus to remain on left window after new window is created
+    (if (= (count-windows) 1)
+	(split-window-right)
+      (window-extras-buffer-move other-window))))
 
 (defun window-extras-frame-is-maximized-p ()
   "Return t iff the current frame is maximized."

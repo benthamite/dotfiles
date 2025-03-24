@@ -1303,6 +1303,9 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
   (pass-suppress-confirmations t)
   (pass-show-keybindings nil)
 
+  :config
+  (run-with-timer (* 5 60) t (lambda () (magit-extras-warn-if-repo-is-dirty paths-dir-dropbox-tlon-pass)))
+
   :bind
   (("A-H-o" . pass)
    :map pass-mode-map

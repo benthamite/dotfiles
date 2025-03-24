@@ -7885,6 +7885,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (gptel-default-mode 'org-mode)
   (gptel-track-media t)
   (gptel-max-tokens 10000)
+  (gptel-include-reasoning nil)
 
   :config
   (require 'tlon-core)

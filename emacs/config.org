@@ -8114,7 +8114,8 @@ This package evolved out of gptel-extras.
   (aidermacs-auto-accept-architect nil)
   (aidermacs-auto-commits t)
   (aidermacs-show-diff-after-change nil)
-  (aidermacs-extra-args '("--thinking-tokens" "16k"))
+  ;; for thinking mode, add "--thinking-tokens" "16k"
+  (aidermacs-extra-args '("--architect"))
 
   :config
   (setenv "ANTHROPIC_API_KEY" (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared)))

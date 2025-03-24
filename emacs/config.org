@@ -12456,6 +12456,7 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
   :custom
   (elfeed-curl-timeout 5)
   (elfeed-curl-max-connections 4)
+  (elfeed-search-remain-on-entry t)
 
   :config
   (setq-default elfeed-search-filter "@15-days-ago +unread")

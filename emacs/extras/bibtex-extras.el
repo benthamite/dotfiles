@@ -227,9 +227,12 @@ If DELIMITER is nil, use a semicolon."
 
 ;;;;; getters
 
-(defun bibtex-extras-get-entry-as-string (&optional key)
+(defun bibtex-extras-get-entry-as-string (&optional key field)
   "Return the BibTeX entry with KEY as a string.
-If KEY is nil, return the current entry.
+If KEY is nil, use the current entry.
+
+By default, return the entire entry. If FIELD is non-nil, return its value
+instead.
 
 The search is performed across all files in `bibtex-files'."
   (save-excursion
@@ -237,7 +240,9 @@ The search is performed across all files in `bibtex-files'."
       (when key
 	(bibtex-search-entry key 'global))
       (bibtex-narrow-to-entry)
-      (buffer-substring-no-properties (point-min) (point-max)))))
+      (if field
+	  (bibtex-extras-get-field field)
+	(buffer-substring-no-properties (point-min) (point-max))))))
 
 ;;;###autoload
 (defun bibtex-extras-get-field (field)

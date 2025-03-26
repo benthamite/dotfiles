@@ -6252,7 +6252,8 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 (use-package flycheck
   :after faces-extras
   :custom
-  (flycheck-temp-prefix ".flycheck") ; hide flycheck temp files
+  ;; move temporary flycheck files to a temporary directory
+  (flycheck-temp-prefix (concat temporary-file-directory "flycheck-"))
   (flycheck-emacs-lisp-load-path 'inherit)
   (flycheck-indication-mode nil)
   (flycheck-display-errors-delay 0.5)

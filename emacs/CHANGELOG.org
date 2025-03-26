@@ -4,6 +4,79 @@
 
 This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository. It is meant to be read primarily by members of the Tlön team, but it may be of interest to others as well.
 
+* Version 7.1.3 on 2025-03-26
+
+** aidermacs
+- Added new package =aidermacs= for integration with the Aider AI pair programming tool.
+
+** bbdb
+- Updated the =use-package= recipe to correctly build and install =bbdb= from the =emacsmirror= repository.
+
+** codel
+- Added new package =codel=, another collection of LLM tools, configured to set up =gptel=.
+
+** doom-modeline-extras
+- Added a new modeline segment =ai-context= to display the count of files currently in the AI context (e.g., =gptel=), indicated by =✨(n)=. This can be toggled with the new custom variable =doom-modeline-extras-ai-context=. 
+
+** elfeed
+- Changed the default search filter =elfeed-search-filter= to =@15-days-ago +unread= to potentially improve performance by limiting the initial view to recent unread entries.
+- Set =elfeed-search-remain-on-entry= to =t=, keeping the point on the current entry when its link is followed. 
+
+** elfeed-extras
+- Revised =elfeed-extras-update= to allow feed updates to run in the background without requiring the =*elfeed-search*= buffer to be open, ensuring the database is loaded and saved correctly. 
+- Refactored the auto-update mechanism to use =run-with-idle-timer= directly in the config instead of a dedicated function and variables.
+
+** embark
+- Added a keybinding =H-c= in the =embark-file-map= to invoke =file-extras-copy-contents=.
+
+** flycheck
+- Configured =flycheck-temp-prefix= to place temporary files in the standard =temporary-file-directory= instead of the project root.
+- Excluded =elfeed-search-mode= from =flycheck-global-modes= to prevent potential performance issues in Elfeed. 
+
+** forge-extras
+- Added functions =forge-next-message= and =forge-previous-message= to navigate between comments/messages in an issue buffer, bound to =A-C-s-f= and =A-C-s-d= respectively in =forge-issue-mode-map=.
+- Added function =forge-extras-copy-message-at-point-as-kill= to copy the content of the message at point, bound to =s-w= in =forge-issue-mode-map=.
+- Renamed internal references from "post" to "message" for consistency (e.g., in function names, docstrings).
+
+** gptel
+- Added a configuration for a "Claude-thinking" model using =gptel-make-anthropic=, enabling specific Anthropic beta features and parameters, and sett =gptel-include-reasoning= to =nil= to omit the reasoning step.
+- Switched the =gptel= package source to the =exclude-gitignored= branch on the user's fork.
+- Added a keybinding =H-s-l= to call =gptel-context-remove-all= without confirmation.
+
+** gptel-extras
+- Introduced Aider integration: Added functionality to optionally include the Aider-generated repository map and =conventions.md= file in the =gptel= context. This is controlled by new custom variables =gptel-extras-add-repo-map-to-context= and =gptel-extras-add-conventions-to-context=.
+- Implemented a caching mechanism for the repository map generation to improve performance. The cache uses a time-to-live (=gptel-extras-repo-map-cache-ttl=) and can optionally invalidate based on git HEAD changes (=gptel-extras-repo-map-invalidate-on-git-changes=). Added =gptel-extras-invalidate-repo-map-cache= command.
+- Added a command =gptel-extras-toggle-aider-files= to easily enable/disable the inclusion of the Aider repo map and conventions file in the context.
+
+** llm-tool-collection
+- Added new package =llm-tool-collection=.
+
+** mcp
+- Added new package =mcp= (Model Context Protocol client).
+
+** org-extras
+- Updated the variable name =org-extras-clock-in-with-calendar-prompt-exclude= to the current =org-extras-clock-in-add-participants-exclude= in the configuration.
+- Corrected the logic in =org-extras-clock-in-add-participants= to properly handle cases where =org-extras-clock-in-add-participants-exclude= is =nil=. 
+
+** org-journal
+- Added a new function =org-journal-new-entry-in-journal= which prompts the user to select a journal directory before creating a new entry. This function is now bound to =A-j=, replacing the default =org-journal-new-entry=.
+
+** pass
+- Configured a timer to run every 5 minutes, calling =magit-extras-warn-if-repo-is-dirty= on the Tlön pass repository path to alert about uncommitted changes.
+  
+** paths
+- Added =paths-dir-tlon-todos= to the =paths-dir-all-repos= list. 
+
+** pyenv-mode
+- Corrected the =use-package= declaration to use =:after python= (lowercase) instead of =:after Python=. (fde401db)
+
+** slack
+- Updated the configured Slack teams, changing names and associated token/cookie retrieval paths from =auth-source=.
+
+** window-extras
+- Enhanced =window-extras-buffer-move-right= and =window-extras-buffer-move-left= to automatically split the window if only one window exists, before moving the buffer. Thanks, Leo!
+- Removed the dependency on the =winum= package for moving buffers left/right, now using built-in =window-in-direction=. 
+
 * Version 7.1.2 on 2025-03-15
 
 ** gptel-plus

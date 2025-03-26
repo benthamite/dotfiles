@@ -13420,7 +13420,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
   :config
   (midnight-mode)
   ;; setting the delay causes midnight to run immediately, so we set it via a timer
-  (run-with-timer (* 60 60) nil (lambda () (midnight-delay-set 'midnight-delay "5:00am")))
+  (run-with-timer (* 3 60 60) nil (lambda () (midnight-delay-set 'midnight-delay "5:00am")))
 
   (dolist (fun (nreverse '(files-extras-save-all-buffers
 			   clean-buffer-list

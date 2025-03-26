@@ -1,0 +1,45 @@
+# -*- mode: snippet -*-
+# name: dimmer-switch
+# key: ds
+# contributor: Pablo Stafforini
+# --
+alias: ${1:room name} dimmer switch
+description: ""
+use_blueprint:
+  path: benthamite/standard-light-switch.yaml
+  input:
+    controller: ${1:room name} dimmer switch (Philips Hue)
+    on_press: []
+    on_released:
+      - action: light.toggle
+        metadata: {}
+        data: {}
+        target:
+          entity_id: light.${1:$(string-join (split-string yas-text) "_")}_lights_all
+    up_released:
+      - action: light.turn_on
+        data:
+          brightness_step_pct: 10
+        target:
+          entity_id: light.master_suite_lights_all
+    down_pressed: []
+    down_released:
+      - action: light.turn_on
+        data:
+          brightness_step_pct: -10
+        target:
+          entity_id: light.master_suite_lights_all
+    off_released:
+      - target:
+          entity_id: input_select.light_scenes
+        action: input_select.select_next
+        data:
+          cycle: true
+      - data:
+          message: Applying scene {{ states.input_select.light_scenes.state }}
+        action: system_log.write
+      - data:
+          preset_id: "{{ states.input_select.light_scenes.state }}"
+          targets:
+            entity_id: light.master_suite_lights
+        action: scene_presets.apply_preset

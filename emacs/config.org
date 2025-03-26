@@ -8119,6 +8119,7 @@ This package evolved out of gptel-extras.
 
   :config
   (setenv "ANTHROPIC_API_KEY" (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared)))
+  (setenv "GEMINI_API_KEY" (auth-source-pass-get 'secret (concat "tlon/core/aistudio.google.com/" tlon-email-shared)))
 
   :bind (("C-c a" . aidermacs-transient-menu)))
 #+end_src

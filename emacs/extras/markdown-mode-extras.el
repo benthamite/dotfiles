@@ -52,17 +52,29 @@
     (kill-new output)
     (yank)))
 
-(defun markdown-mode-extras-copy-section ()
-  "Copy the current section to the clipboard."
+(defun markdown-mode-extras-get-section (&optional section)
+  "Return SECTION in the current buffer.
+If SECTION is nil, return the current section."
+  (save-excursion
+    (let (beg end)
+      (when section
+	(goto-char (point-min))
+	(re-search-forward (format "^#\\{1,\\} %s" section)))
+      (unless (thing-at-point-looking-at markdown-regex-header)
+	(markdown-outline-previous))
+      (forward-line)
+      (setq beg (point))
+      (markdown-outline-next)
+      (setq end (point))
+      (buffer-substring-no-properties beg end))))
+
+(defun markdown-mode-extras-copy-section (&optional section)
+  "Copy SECTION in the current buffer to the clipboard.
+If SECTION is nil, copy the current section."
   (interactive)
-  (let ((beg (save-excursion
-	       (markdown-outline-previous)
-	       (forward-line)
-	       (point)))
-	(end (save-excursion
-	       (markdown-outline-next)
-	       (point))))
-    (copy-region-as-kill beg end)))
+  (let ((section (markdown-mode-extras-get-section section)))
+    (kill-new section)
+    (message section)))
 
 (defun markdown-mode-extras-delete-link ()
   "Delete link at point and return its name."

@@ -104,6 +104,9 @@ Unlike `elfeed-update', this function will update the database even if `ellfeed'
 isn’t open."
   ;; Ensure database is loaded
   (elfeed-db-ensure)
+  (with-current-buffer (elfeed-search-buffer)
+    (unless (eq major-mode 'elfeed-search-mode)
+      (elfeed-search-mode)))
   ;; Run the standard update process
   (elfeed-log 'info "Elfeed update: %s"
               (format-time-string "%B %e %Y %H:%M:%S %Z"))

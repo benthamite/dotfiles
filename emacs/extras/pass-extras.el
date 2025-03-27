@@ -80,8 +80,8 @@ user input."
 	 (entry (or entry (completing-read "Key: " (password-store-list) nil 'match)))
 	 (output (call-process-shell-command (format "git-crypt unlock <(pass %s)" entry))))
     (if (zerop output)
-	(message "Unlocked repository `%s'" repo)
-      (message "Error unlocking repository `%s'. Perhaps the repo is dirty?" repo))))
+	(message "Unlocked repository `%s'" default-directory)
+      (message "Error unlocking repository `%s'. Perhaps the repo is dirty?" default-directory))))
 
 ;;;;; Generate
 

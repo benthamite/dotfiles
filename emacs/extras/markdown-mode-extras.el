@@ -52,6 +52,7 @@
     (kill-new output)
     (yank)))
 
+;;;###autoload
 (defun markdown-mode-extras-get-section (&optional section)
   "Return SECTION in the current buffer.
 If SECTION is nil, return the current section."

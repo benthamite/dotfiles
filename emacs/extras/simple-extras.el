@@ -892,6 +892,7 @@ to it."
 
 (declare-function org-extras-narrow-to-entry-and-children "org-extras")
 (declare-function ledger-mode-extras-narrow-to-xact "ledger-mode-extras")
+(autoload 'markdown-narrow-to-subtree "markdown-mode")
 ;; Modified from endlessparentheses.com/emacs-narrow-or-widen-dwim.html
 (defun simple-extras-narrow-or-widen-dwim ()
   "Widen if buffer is narrowed, narrow-dwim otherwise.
@@ -913,6 +914,8 @@ is already narrowed."
          ;; you don't want it.
          (cond ((ignore-errors (org-narrow-to-block) t))
                (t (org-extras-narrow-to-entry-and-children))))
+	((derived-mode-p 'markdown-mode)
+	 (markdown-narrow-to-subtree))
         ((derived-mode-p 'ledger-mode)
          (ledger-mode-extras-narrow-to-xact))
         (t (narrow-to-defun))))

@@ -100,21 +100,10 @@ poorly-designed websites."
 
 (defun elfeed-extras-update ()
   "Update all feeds in `elfeed-feeds'.
-Unlike `elfeed-update', this function will update the database even if `ellfeed'
+Unlike `elfeed-update', this function will update the database even if `elfeed'
 isn’t open."
-  ;; Ensure database is loaded
   (elfeed-db-ensure)
-  (with-current-buffer (elfeed-search-buffer)
-    (unless (eq major-mode 'elfeed-search-mode)
-      (elfeed-search-mode)))
-  ;; Run the standard update process
-  (elfeed-log 'info "Elfeed update: %s"
-              (format-time-string "%B %e %Y %H:%M:%S %Z"))
-  (let ((elfeed--inhibit-update-init-hooks nil))
-    (run-hooks 'elfeed-update-init-hooks)
-    (mapc #'elfeed-update-feed (elfeed--shuffle (elfeed-feed-list))))
-  ;; Save the database when complete
-  (elfeed-db-save)
+  (elfeed-update)
   (message "Elfeed update started in background."))
 
 (defun elfeed-extras-disable-undo ()

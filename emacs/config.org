@@ -660,7 +660,7 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
       "https://raw.githubusercontent.com/emacsmirror/nongnu_elpa/refs/heads/main/elpa-packages"
       (alist-get 'remote (alist-get 'nongnu elpaca-menu-elpas))
       "https://github.com/emacsmirror/nongnu_elpa")
-      
+
 (toggle-debug-on-error) ; uncomment when debugging
 #+end_src
 
@@ -1381,7 +1381,7 @@ CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package password-generator
   :ensure (:host github
-		 :repo "vandrlexay/emacs-password-genarator") ; sic
+                 :repo "vandrlexay/emacs-password-genarator") ; sic
   :defer t)
 #+end_src
 
@@ -7914,8 +7914,8 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
                       ("anthropic-beta" . "output-128k-2025-02-19")
                       ("anthropic-beta" . "prompt-caching-2024-07-31"))))
     :request-params `(:thinking (:type "enabled" :budget_tokens ,(* 1024 16))
-				:max_tokens ,(* 1024 32)))
-  
+                                :max_tokens ,(* 1024 32)))
+
   (gptel-make-gemini "Gemini"
     :stream t
     :key (auth-source-pass-get 'secret (concat "tlon/core/aistudio.google.com/" tlon-email-shared)))
@@ -7929,13 +7929,13 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
               (deepseek-chat
                :context-window 64.0
                :input-cost 0.27
-	       :output-cost 1.10
+               :output-cost 1.10
                :cutoff-date "2024-07"
                :description "For simple chat responses or quick answers." )
               (deepseek-reasoner
                :context-window 64.0
                :input-cost 0.55
-	       :output-cost 2.19
+               :output-cost 2.19
                :cutoff-date "2024-07"
                :description "For detailed reasoning or complex problem-solving.")))
 
@@ -8029,15 +8029,15 @@ This package evolved out of gptel-extras.
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package gptel-plus
   :ensure (:host github
-		 :repo "benthamite/gptel-plus")
-  
+                 :repo "benthamite/gptel-plus")
+
   :hook
   (org-mode-hook . gptel-plus-enable-gptel-in-org)
   (markdown-mode-hook . gptel-plus-enable-gptel-in-markdown)
 
   :bind
   (:map gptel-mode-map
-	("s-l" . gptel-extras-list-context-files)))
+        ("s-l" . gptel-extras-list-context-files)))
 #+end_src
 
 ** gptel-extras
@@ -13435,8 +13435,8 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
 			   org-gcal-sync
 			   elfeed-update)))
     (add-hook 'midnight-hook
-	      (apply-partially #'simple-extras-call-verbosely
-			       fun "Midnight hook now calling `%s'..."))))
+              (apply-partially #'simple-extras-call-verbosely
+                               fun "Midnight hook now calling `%s'..."))))
 #+end_src
 
 ** bbdb
@@ -13681,7 +13681,7 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package kelly
   :ensure (:host github
-		 :repo "benthamite/kelly")
+                 :repo "benthamite/kelly")
 
   :custom
   (kelly-b-parameter-type 'probability))

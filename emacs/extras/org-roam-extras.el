@@ -157,13 +157,13 @@ Optional FILTER-SPEC can be:
 - (:tag TAG): filter by the specified TAG
 - (:dir DIRECTORY): filter by the specified DIRECTORY"
   (interactive "P")
-  (let* ((filter-spec (if (eq filter-spec t)
+  (let* ((filter-spec (if (or (eq filter-spec t) (consp filter-spec))
                           (let ((filter-type (completing-read "Filter by: " '("tag" "directory"))))
                             (cond
                              ((equal filter-type "tag")
                               (cons :tag (org-roam-extras-node-select-tag)))
                              ((equal filter-type "directory")
-                              (cons :dir (expand-file-name (read-directory-name "Select directory: "))))
+                              (list :dir (expand-file-name (read-directory-name "Select directory: "))))
                              (t nil)))
                         filter-spec))
          (selection (when (eq (car-safe filter-spec) :tag)

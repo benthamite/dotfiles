@@ -5397,7 +5397,7 @@ CLOCK: [2022-06-21 Tue 20:10]--[2022-06-21 Tue 20:57] =>  0:47
      (consult-grep buffer)
      (isearch-extras-consult-line buffer)))
   (vertico-multiform-categories
-   '((file grid)))
+   '((grid)))
   (vertico-cycle t)
   (vertico-count 16)
 

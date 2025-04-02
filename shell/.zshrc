@@ -68,6 +68,9 @@ alias emacsicon="osascript -e 'tell application \"Finder\" to make alias file to
 export NODE_EXTRA_CA_CERTS="$HOME/Library/Application Support/mkcert/rootCA.pem"
 
 # EAT
-
 [ -n "$EAT_SHELL_INTEGRATION_DIR" ] && \
     source "$EAT_SHELL_INTEGRATION_DIR/zsh"
+
+# Docker
+export DOCKER_BUILDKIT=1
+export COMPOSE_BAKE=1

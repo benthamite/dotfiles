@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: make-script-executable
+# key: mse
+# contributor: Pablo Stafforini
+# --
+chmod +x $1

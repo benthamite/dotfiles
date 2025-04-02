@@ -8111,18 +8111,22 @@ This package evolved out of gptel-extras.
 (use-package aidermacs
   :custom
   (aidermacs-default-model "sonnet")
+  (aidermacs-architect-model "sonnet")
   (aidermacs-use-architect-mode t)
   (aidermacs-auto-accept-architect nil)
   (aidermacs-auto-commits t)
   (aidermacs-show-diff-after-change nil)
   ;; for thinking mode, add "--thinking-tokens" "16k"
-  (aidermacs-extra-args '("--architect" "--multiline"))
+  (aidermacs-extra-args '("--editor-model" "gemini/gemini-2.5-pro-exp-03-25"))
 
   :config
   (setenv "ANTHROPIC_API_KEY" (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared)))
   (setenv "GEMINI_API_KEY" (auth-source-pass-get 'secret (concat "tlon/core/aistudio.google.com/" tlon-email-shared)))
 
-  :bind (("C-c a" . aidermacs-transient-menu)))
+  :bind (("C-c a" . aidermacs-transient-menu)
+	 :map aidermacs-comint-mode-map
+         ("S-<return>" . comint-send-input)
+         ("<return>" . comint-accumulate)))
 #+end_src
 
 ** mcp

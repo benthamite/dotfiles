@@ -1,4 +1,4 @@
-;;; mu4e-extras.el --- Extensions for mu4e -*- lexical-binding: t; fill-column: 80 -*-
+;;; mu4e-extras.el --- Extensions for mu4e -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

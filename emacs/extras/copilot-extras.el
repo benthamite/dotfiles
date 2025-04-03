@@ -1,4 +1,4 @@
-;;; copilot-extras.el --- Extensions for copilot -*- lexical-binding: t; fill-column: 80 -*-
+;;; copilot-extras.el --- Extensions for copilot -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

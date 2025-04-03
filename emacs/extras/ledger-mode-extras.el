@@ -1,4 +1,4 @@
-;;; ledger-mode-extras.el --- Extensions for ledger-mode -*- lexical-binding: t; fill-column: 80 -*-
+;;; ledger-mode-extras.el --- Extensions for ledger-mode -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

@@ -1,4 +1,4 @@
-;;; window-extras.el --- Extensions for window.el -*- lexical-binding: t; fill-column: 80 -*-
+;;; window-extras.el --- Extensions for window.el -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

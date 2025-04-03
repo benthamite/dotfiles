@@ -1,4 +1,4 @@
-;;; color-extras.el --- Extensions for color -*- lexical-binding: t; fill-column: 80 -*-
+;;; color-extras.el --- Extensions for color -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

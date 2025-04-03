@@ -1,4 +1,4 @@
-;;; citar-extras.el --- Extensions for citar -*- lexical-binding: t; fill-column: 80 -*-
+;;; citar-extras.el --- Extensions for citar -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

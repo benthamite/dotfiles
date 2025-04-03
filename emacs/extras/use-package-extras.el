@@ -1,4 +1,4 @@
-;;; use-package-extras.el --- Extensions for use-package -*- lexical-binding: t; fill-column: 80 -*-
+;;; use-package-extras.el --- Extensions for use-package -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

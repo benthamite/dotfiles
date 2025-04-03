@@ -1,4 +1,4 @@
-;;; corfu-extras.el --- Extensions for corfu -*- lexical-binding: t; fill-column: 80 -*-
+;;; corfu-extras.el --- Extensions for corfu -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

@@ -1,4 +1,4 @@
-;;; browse-url-extras.el --- Extensions for browse-url -*- lexical-binding: t; fill-column: 80 -*-
+;;; browse-url-extras.el --- Extensions for browse-url -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

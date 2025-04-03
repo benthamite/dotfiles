@@ -1,4 +1,4 @@
-;;; magit-extra.el --- Extensions for magit -*- lexical-binding: t; fill-column: 80 -*-
+;;; magit-extra.el --- Extensions for magit -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

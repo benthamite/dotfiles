@@ -1,4 +1,4 @@
-;;; register-extras.el --- Extensions for register -*- lexical-binding: t; fill-column: 80 -*-
+;;; register-extras.el --- Extensions for register -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

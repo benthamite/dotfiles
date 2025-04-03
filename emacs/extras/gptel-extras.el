@@ -1,4 +1,4 @@
-;;; gptel-extras.el --- Extensions for gptel -*- lexical-binding: t; fill-column: 80 -*-
+;;; gptel-extras.el --- Extensions for gptel -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

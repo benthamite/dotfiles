@@ -1,4 +1,4 @@
-;;; simple-extras.el --- Extra functionality for the simple feature -*- lexical-binding: t; fill-column: 80 -*-
+;;; simple-extras.el --- Extra functionality for the simple feature -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

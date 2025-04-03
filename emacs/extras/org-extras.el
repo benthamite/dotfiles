@@ -1,4 +1,4 @@
-;;; org-extras.el --- Extensions for org-mode -*- lexical-binding: t; fill-column: 80 -*-
+;;; org-extras.el --- Extensions for org-mode -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025 Pablo Stafforini
 

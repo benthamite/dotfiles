@@ -1,4 +1,4 @@
-;;; isearch-extras.el --- Extensions for isearch -*- lexical-binding: t; fill-column: 80 -*-
+;;; isearch-extras.el --- Extensions for isearch -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

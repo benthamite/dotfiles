@@ -1,4 +1,4 @@
-;;; zotra-extras.el --- Extensions for zotra -*- lexical-binding: t; fill-column: 80 -*-
+;;; zotra-extras.el --- Extensions for zotra -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

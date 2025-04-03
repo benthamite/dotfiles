@@ -1,4 +1,4 @@
-;;; forge-extras.el --- Extensions for forge -*- lexical-binding: t; fill-column: 80 -*-
+;;; forge-extras.el --- Extensions for forge -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

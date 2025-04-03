@@ -1,4 +1,4 @@
-;;; org-noter-extras.el --- Extensions for org-noter -*- lexical-binding: t; fill-column: 80 -*-
+;;; org-noter-extras.el --- Extensions for org-noter -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

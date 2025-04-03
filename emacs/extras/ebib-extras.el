@@ -1,4 +1,4 @@
-;;; ebib-extras.el --- Extensions for ebib -*- lexical-binding: t; fill-column: 80 -*-
+;;; ebib-extras.el --- Extensions for ebib -*- lexical-binding: t -*-
 
 ;; Author: Pablo Stafforini
 ;; Maintainer: Pablo Stafforini

@@ -1,4 +1,4 @@
-;;; elpaca-extras.el --- Extensions for elpaca -*- lexical-binding: t; fill-column: 80 -*-
+;;; elpaca-extras.el --- Extensions for elpaca -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

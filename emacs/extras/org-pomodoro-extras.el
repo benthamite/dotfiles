@@ -1,4 +1,4 @@
-;;; org-pomodoro-extras.el --- Extensions for org-pomodoro -*- lexical-binding: t; fill-column: 80 -*-
+;;; org-pomodoro-extras.el --- Extensions for org-pomodoro -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

@@ -1,4 +1,4 @@
-;;; org-web-tools-extras.el --- Extensions for org-web-tools -*- lexical-binding: t; fill-column: 80 -*-
+;;; org-web-tools-extras.el --- Extensions for org-web-tools -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

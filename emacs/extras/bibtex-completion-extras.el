@@ -1,4 +1,4 @@
-;;; bibtex-completion-extras.el --- Extensions for bibtex-completion -*- lexical-binding: t; fill-column: 80 -*-
+;;; bibtex-completion-extras.el --- Extensions for bibtex-completion -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

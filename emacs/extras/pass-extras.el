@@ -1,4 +1,4 @@
-;;; pass-extras.el --- Exteions for pass -*- lexical-binding: t; fill-column: 80 -*-
+;;; pass-extras.el --- Exteions for pass -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

@@ -1,4 +1,4 @@
-;;; avy-extras.el --- Extensions for avy -*- lexical-binding: t; fill-column: 80 -*-
+;;; avy-extras.el --- Extensions for avy -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

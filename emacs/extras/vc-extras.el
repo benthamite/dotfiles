@@ -1,4 +1,4 @@
-;;; vc-extras.el --- Extensions for vc -*- lexical-binding: t; fill-column: 80 -*-
+;;; vc-extras.el --- Extensions for vc -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

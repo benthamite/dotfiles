@@ -1,4 +1,4 @@
-;;; org-ref-extras.el --- Extensions for org-ref -*- lexical-binding: t; fill-column: 80 -*-
+;;; org-ref-extras.el --- Extensions for org-ref -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

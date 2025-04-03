@@ -6863,7 +6863,7 @@ https://gitlab.com/chrisberkhout/pricehist
                ("A-C-s-<tab>" . tlon-md-end-of-buffer-dwim)))
 
   :config
-  (run-with-idle-timer (* 30 60) t #'tlon-pull-issues-in-all-repos)
+  (run-with-idle-timer (* 60 60) t #'tlon-pull-issues-in-all-repos)
 
   :hook
   (init-post-init-hook . tlon-initialize)

@@ -1,4 +1,4 @@
-;;; files-extras.el --- Extensions for files.el -*- lexical-binding: t; fill-column: 80 -*-
+;;; files-extras.el --- Extensions for files.el -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

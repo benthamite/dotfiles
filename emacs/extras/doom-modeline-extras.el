@@ -1,4 +1,4 @@
-;;; doom-modeline-extras.el --- Extensions for doom-modeline -*- lexical-binding: t; fill-column: 80 -*-
+;;; doom-modeline-extras.el --- Extensions for doom-modeline -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

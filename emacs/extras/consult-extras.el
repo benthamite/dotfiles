@@ -1,4 +1,4 @@
-;;; consult-extras.el --- Extensions for consult -*- lexical-binding: t; fill-column: 80 -*-
+;;; consult-extras.el --- Extensions for consult -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

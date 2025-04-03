@@ -1,4 +1,4 @@
-;;; profiler-extras.el --- Assorted functions for Pablo's config -*- lexical-binding: t; fill-column: 80 -*-
+;;; profiler-extras.el --- Assorted functions for Pablo's config -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

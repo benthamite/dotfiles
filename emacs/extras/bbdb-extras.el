@@ -1,4 +1,4 @@
-;;; bbdb-extras.el --- Additional functionality for bbdb -*- lexical-binding: t; fill-column: 80 -*-
+;;; bbdb-extras.el --- Additional functionality for bbdb -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

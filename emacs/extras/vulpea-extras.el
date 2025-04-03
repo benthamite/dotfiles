@@ -1,4 +1,4 @@
-;;; vulpea-extras.el --- Extensions for vulpea -*- lexical-binding: t; fill-column: 80 -*-
+;;; vulpea-extras.el --- Extensions for vulpea -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

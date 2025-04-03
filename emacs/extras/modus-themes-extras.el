@@ -1,4 +1,4 @@
-;;; modus-themes-extras.el --- Extra functionality for modus-themes -*- lexical-binding: t; fill-column: 80 -*-
+;;; modus-themes-extras.el --- Extra functionality for modus-themes -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

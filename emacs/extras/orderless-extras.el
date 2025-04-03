@@ -1,4 +1,4 @@
-;;; orderless-extras.el --- Extensions for orderless -*- lexical-binding: t; fill-column: 80 -*-
+;;; orderless-extras.el --- Extensions for orderless -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

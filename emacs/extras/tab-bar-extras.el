@@ -1,4 +1,4 @@
-;;; tab-bar-extras.el --- Extra functionality for the tab bar -*- lexical-binding: t; fill-column: 80 -*-
+;;; tab-bar-extras.el --- Extra functionality for the tab bar -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

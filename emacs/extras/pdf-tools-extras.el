@@ -1,4 +1,4 @@
-;;; pdf-tools-extras.el --- Extensions for pdf-tools -*- lexical-binding: t; fill-column: 80 -*-
+;;; pdf-tools-extras.el --- Extensions for pdf-tools -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

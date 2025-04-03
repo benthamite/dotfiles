@@ -1,4 +1,4 @@
-;;; org2blog-extras.el --- Extensions for org2blog -*- lexical-binding: t; fill-column: 80 -*-
+;;; org2blog-extras.el --- Extensions for org2blog -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

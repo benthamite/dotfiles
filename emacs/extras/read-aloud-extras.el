@@ -1,4 +1,4 @@
-;;; read-aloud-extras.el --- Extensions for read-aloud -*- lexical-binding: t; fill-column: 80 -*-
+;;; read-aloud-extras.el --- Extensions for read-aloud -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

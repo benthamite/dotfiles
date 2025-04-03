@@ -1,4 +1,4 @@
-;;; org-msg-extras.el --- Extensions for org-msg -*- lexical-binding: t; fill-column: 80 -*-
+;;; org-msg-extras.el --- Extensions for org-msg -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

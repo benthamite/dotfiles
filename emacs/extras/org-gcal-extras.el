@@ -1,4 +1,4 @@
-;;; org-gcal-extras.el --- Extensions for org-gcal -*- lexical-binding: t; fill-column: 80 -*-
+;;; org-gcal-extras.el --- Extensions for org-gcal -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

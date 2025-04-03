@@ -1,4 +1,4 @@
-;;; markdown-mode-extras.el --- Extensions for markdown-mode -*- lexical-binding: t; fill-column: 80 -*-
+;;; markdown-mode-extras.el --- Extensions for markdown-mode -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

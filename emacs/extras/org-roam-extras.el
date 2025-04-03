@@ -1,4 +1,4 @@
-;;; org-roam-extras.el --- Extensions for org-roam -*- lexical-binding: t; fill-column: 80 -*-
+;;; org-roam-extras.el --- Extensions for org-roam -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

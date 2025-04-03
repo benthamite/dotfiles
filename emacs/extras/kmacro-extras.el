@@ -1,4 +1,4 @@
-;;; kmacro-extras.el --- Extensions for kmacro -*- lexical-binding: t; fill-column: 80 -*-
+;;; kmacro-extras.el --- Extensions for kmacro -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

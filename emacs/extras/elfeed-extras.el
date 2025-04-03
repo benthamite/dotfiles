@@ -1,4 +1,4 @@
-;;; elfeed-extras.el --- Extensions for elfeed -*- lexical-binding: t; fill-column: 80 -*-
+;;; elfeed-extras.el --- Extensions for elfeed -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

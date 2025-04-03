@@ -1,4 +1,4 @@
-;;; paths.el --- Set variable paths -*- lexical-binding: t; fill-column: 80 -*-
+;;; paths.el --- Set variable paths -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

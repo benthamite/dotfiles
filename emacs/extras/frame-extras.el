@@ -1,4 +1,4 @@
-;;; frame-extras.el --- Extensions for frame -*- lexical-binding: t; fill-column: 80 -*-
+;;; frame-extras.el --- Extensions for frame -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

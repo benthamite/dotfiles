@@ -1,4 +1,4 @@
-;;; eww-extras.el --- Extensions for eww -*- lexical-binding: t; fill-column: 80 -*-
+;;; eww-extras.el --- Extensions for eww -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

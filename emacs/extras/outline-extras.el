@@ -1,4 +1,4 @@
-;;; outline-extras.el --- Extensions for outline -*- lexical-binding: t; fill-column: 80 -*-
+;;; outline-extras.el --- Extensions for outline -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

@@ -1,4 +1,4 @@
-;;; ace-link-extras.el --- Extensions for ace-link -*- lexical-binding: t; fill-column: 80 -*-
+;;; ace-link-extras.el --- Extensions for ace-link -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

@@ -1,4 +1,4 @@
-;;; calendar-extras.el --- Extensions for calendar -*- lexical-binding: t; fill-column: 80 -*-
+;;; calendar-extras.el --- Extensions for calendar -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

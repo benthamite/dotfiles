@@ -1,4 +1,4 @@
-;;; dired-extras.el --- Extensions for dired -*- lexical-binding: t; fill-column: 80 -*-
+;;; dired-extras.el --- Extensions for dired -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

@@ -1,4 +1,4 @@
-;;; telega-extras.el --- Extensions for telega -*- lexical-binding: t; fill-column: 80 -*-
+;;; telega-extras.el --- Extensions for telega -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2025
 

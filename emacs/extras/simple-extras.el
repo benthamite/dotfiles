@@ -787,7 +787,8 @@ Optionally, remove accents in region from BEGIN to END."
   "Convert STRING into slug."
   (downcase
    (simple-extras-slug-hyphenate
-    (replace-regexp-in-string "[][{}!@#$%^&*()+'\"?,\|;:~`‘’“”/=]*" "" string))))
+    (simple-extras-asciify-string
+     (replace-regexp-in-string "[][{}!@#$%^&*()+'\"?,\|;:~`‘’“”/=]*" "" string)))))
 
 ;;;###autoload
 (defun simple-extras-slugify-clipboard ()

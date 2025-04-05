@@ -8011,6 +8011,28 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
    ("A-C-s-f" . gptel-context-next)))
 #+end_src
 
+*** TODO Debug save gptel buffers
+:PROPERTIES:
+:ID:       17B331DF-656B-4560-BCE1-BEE909AFBF6C
+:END:
+
+#+begin_src emacs-lisp
+Debugger entered--Lisp error: (wrong-type-argument number-or-marker-p nil)
+  #f(compiled-function (attempts) #<bytecode -0x17bc3e64b3958cb7>)(6)
+  gptel-org--save-state()
+  gptel--save-state()
+  run-hooks(before-save-hook)
+  basic-save-buffer(nil)
+  save-buffer()
+  #<subr F616e6f6e796d6f75732d6c616d626461_anonymous_lambda_125>(#<buffer anthropic-max-tokens.org>)
+  map-y-or-n-p(#f(compiled-function (buffer) #<bytecode -0x339c3b88c93a90b>) #<subr F616e6f6e796d6f75732d6c616d626461_anonymous_lambda_125> (#<buffer anthropic-max-tokens.org>) ("buffer" "buffers" "save") ((18 #f(compiled-function (buf) #<bytecode -0x1489dcc4836c5eab>) "view this buffer") (6 #f(compiled-function (buf) #<bytecode 0x183ac22bed3e6f60>) "view this buffer and quit") (100 #f(compiled-function (buf) #<bytecode 0x628ada97b07e6e0>) "view changes in this buffer")))
+  save-some-buffers((4))
+  files-extras-save-all-buffers()
+  funcall-interactively(files-extras-save-all-buffers)
+  command-execute(files-extras-save-all-buffers)
+
+#+end_src
+
 *** TODO [#5] Check out these =gptel= extensions
 :PROPERTIES:
 :ID:       D10F728E-9AC8-4389-BB55-952F1F5E8470

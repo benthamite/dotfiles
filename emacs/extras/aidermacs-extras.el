@@ -35,7 +35,26 @@
 
 ;;;; Functions
 
-
+(defun aidermacs-extras-copy-recent-history-to-kill-ring (&optional line-count)
+  "Copy the last LINE-COUNT lines of `.aider.chat.history.md' to the kill ring.
+If LINE-COUNT is nil, defaults to 1000 lines. This function avoids opening the
+file in Emacs for better performance with large files."
+  (interactive "P")
+  (let* ((line-count (or line-count 1000))
+         (repo-root (aidermacs-project-root))
+         (history-file (expand-file-name ".aider.chat.history.md" repo-root)))
+    (if (file-exists-p history-file)
+        (let ((output (with-temp-buffer
+                        ;; Use tail to get the last N lines efficiently
+                        (call-process "tail" nil t nil
+                                      (format "-%d" line-count)
+                                      history-file)
+                        (buffer-string))))
+          (if (string-empty-p output)
+              (message "No content found in history file")
+            (kill-new output)
+            (message "Copied last %d lines of chat history to kill ring" line-count)))
+      (message "Chat history file not found: %s" history-file))))
 
 (provide 'aidermacs-extras)
 ;;; aidermacs-extras.el ends here

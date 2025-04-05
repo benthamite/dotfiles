@@ -95,6 +95,7 @@ maps.google.com
 mediacore.app
 mega.nz
 mercadolibre.com
+mercadolibre.com.ar
 mercadopago.com
 metacritic.com
 metaculus.com

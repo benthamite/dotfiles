@@ -30,6 +30,7 @@
 
 (require 'el-patch)
 (require 'org)
+(require 'org-agenda)
 (require 'paths)
 (require 'transient)
 

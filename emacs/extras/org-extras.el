@@ -946,7 +946,7 @@ empty headings, which trigger an `org-roam' warning."
     ("b s" "babel-es"          (lambda () (interactive) (org-roam-extras-id-goto "A2347582-CF81-497E-81C9-CF82E56D8312")))
     ("b r" "babel-refs"        (lambda () (interactive) (org-roam-extras-id-goto "06C5E072-99F2-4A1F-A87E-0E05E330E111")))]
    ["Uqbar"
-    ("q q" "uqbar-common"      (lambda () (interactive) (org-roam-extras-id-goto "1844F672-62B5-49CF-8BD8-A55F8FCAAFE9")))
+    ("q q" "uqbar-common"      (lambda () (interactive) (org-roam-extras-id-goto "5BB257FF-5E68-49D1-813B-9D08C5D0ACF5")))
     ("q s" "uqbar-es"          (lambda () (interactive) (org-roam-extras-id-goto "EF190A03-0037-430A-B8A1-414738AEAEA4")))
     ("q t" "uqbar-it"          (lambda () (interactive) (org-roam-extras-id-goto "124B8358-88C8-49CC-9C4D-6B6919BF64BE")))
     ("q r" "uqbar-fr"          (lambda () (interactive) (org-roam-extras-id-goto "8FDA9155-C270-4FB0-AA2A-DA87BED19BE0")))]

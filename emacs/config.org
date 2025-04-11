@@ -8038,7 +8038,8 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 :ID:       17B331DF-656B-4560-BCE1-BEE909AFBF6C
 :END:
 
-#+begin_src emacs-lisp
+
+#+begin_src emacs-lisp :tangle nil
 Debugger entered--Lisp error: (wrong-type-argument number-or-marker-p nil)
   #f(compiled-function (attempts) #<bytecode -0x17bc3e64b3958cb7>)(6)
   gptel-org--save-state()

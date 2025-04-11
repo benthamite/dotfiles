@@ -294,6 +294,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#em-hist][em-hist]]
   - [[#eshell-syntax-highlighting][eshell-syntax-highlighting]]
   - [[#dwim-shell-command][dwim-shell-command]]
+  - [[#comint][comint]]
   - [[#eat][eat]]
 - [[#spelling--grammar][spelling & grammar]]
   - [[#jinx][jinx]]
@@ -6173,6 +6174,24 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   :ensure (:host github
            :repo "xenodium/dwim-shell-command")
   :defer t)
+#+end_src
+
+** comint
+:PROPERTIES:
+:ID:       264E8E57-7C7D-4458-AD13-78980C36C008
+:END:
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-feature comint
+  :config
+  (defun comint-confirm-kill-buffer ()
+    "Confirm before killing a comint buffer with active process."
+    (when (and (eq major-mode 'comint-mode)
+               (term-check-proc (current-buffer)))
+      (unless (yes-or-no-p "Buffer has a running process. Kill anyway? ")
+	(error "Aborted"))))
+
+  (add-hook 'kill-buffer-query-functions #'comint-confirm-kill-buffer))
 #+end_src
 
 ** eat

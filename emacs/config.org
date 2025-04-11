@@ -7583,6 +7583,9 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 :ID:       1D91CD1E-F1E6-4D69-AA42-83C81DC09D57
 :END:
 
+
+/[[https://github.com/pythonic-emacs/pyenv-mode][pyenv-mode]] integrates pyenv with python-mode./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package pyenv-mode
   :after python)

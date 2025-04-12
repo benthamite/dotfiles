@@ -97,18 +97,30 @@ Refer to the `mullvad' package documentation for details."
 (defun zotra-extras-add-entry (&optional url-or-search-string entry-format bibfile)
   "Like `zotra-extras-add-entry', but set BIBFILE and open in Ebib.
 Pass URL-OR-SEARCH-STRING and ENTRY-FORMAT to `zotra-get-entry'
-to get the entry.
-`zotra-add-entry'."
+to get the entry."
   (interactive)
   (let* ((bibfile (or bibfile
-		      (setq zotra-extras-most-recent-bibfile (zotra-extras-set-bibfile)))))
+		      (setq zotra-extras-most-recent-bibfile (zotra-extras-set-bibfile))))
+	 (url-or-search-string (or url-or-search-string
+				   (read-string "URL or search string: "))))
     (pcase major-mode
       ('elfeed-show-mode (elfeed-extras-kill-link-url-of-entry))
       ('eww-mode (eww-copy-page-url)))
     (when zotra-extras-use-mullvad-p
       (mullvad-connect-to-website "IMDb" 1 'silently))
-    (zotra-add-entry url-or-search-string entry-format bibfile)
-    (zotra-extras-open-in-ebib zotra-extras-most-recent-bibkey)))
+    (condition-case err
+        (progn
+          (zotra-add-entry url-or-search-string entry-format bibfile)
+          (zotra-extras-open-in-ebib zotra-extras-most-recent-bibkey))
+      (error
+       (if (and (string-match-p "JSON parse error: Internal Server Error" (error-message-string err))
+                (y-or-n-p (format "Zotra failed with default backend. Retry with `citoid'? ")))
+           (let ((zotra-backend 'citoid))
+             (message "Retrying with `citoid' backend...")
+             (zotra-add-entry url-or-search-string entry-format bibfile)
+             (zotra-extras-open-in-ebib zotra-extras-most-recent-bibkey))
+         ;; Otherwise, re-signal the original error
+         (signal (car err) (cdr err)))))))
 
 ;;;;; Bibfile
 

@@ -139,6 +139,13 @@ functionality in macOS."
   (save-some-buffers
    `(4)))
 
+(defun files-extras-save-buffer-no-hooks ()
+  "Save the current buffer without running any hooks."
+  (interactive)
+  (let ((before-save-hook nil)
+	(after-save-hook nil))
+    (save-buffer)))
+
 (defun files-extras-eval-region-or-buffer ()
   "Evaluate a region if selected, otherwise the whole buffer."
   (interactive)

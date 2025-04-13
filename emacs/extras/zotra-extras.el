@@ -95,7 +95,7 @@ Refer to the `mullvad' package documentation for details."
 (autoload 'elfeed-extras-kill-link-url-of-entry "elfeed-extras")
 ;;;###autoload
 (defun zotra-extras-add-entry (&optional url-or-search-string entry-format bibfile)
-  "Like `zotra-extras-add-entry', but set BIBFILE and open in Ebib.
+  "Like `zotra-add-entry', but set BIBFILE and open in Ebib.
 Pass URL-OR-SEARCH-STRING and ENTRY-FORMAT to `zotra-get-entry'
 to get the entry."
   (interactive)

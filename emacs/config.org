@@ -376,6 +376,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#gptel-plus][gptel-plus]]
   - [[#gptel-extras][gptel-extras]]
   - [[#gptel-quick][gptel-quick]]
+  - [[#magit-gptcommit][magit-gptcommit]]
   - [[#aidermacs][aidermacs]]
   - [[#aidermacs-extras][aidermacs-extras]]
   - [[#mcp][mcp]]
@@ -8139,15 +8140,22 @@ This package evolved out of gptel-extras.
   ("H-s-u" . gptel-quick))
 #+end_src
 
+** magit-gptcommit
 :PROPERTIES:
+:ID:       DFF89B96-95F6-4EDD-A3C2-3152928ED787
 :END:
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package magit-gptcommit
+  :after magit
   :custom
+  (magit-gptcommit-llm-provider (make-llm-openai :key "OPENAI-KEY"))
 
   :config
+  (magit-gptcommit-status-buffer-setup)
 
   :bind (:map git-commit-mode-map
+	      ("s-g" . magit-gptcommit-commit-accept)))
 #+end_src
 
 ** aidermacs

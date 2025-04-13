@@ -109,18 +109,21 @@ to get the entry."
     (when zotra-extras-use-mullvad-p
       (mullvad-connect-to-website "IMDb" 1 'silently))
     (condition-case err
-        (progn
-          (zotra-add-entry url-or-search-string entry-format bibfile)
-          (zotra-extras-open-in-ebib zotra-extras-most-recent-bibkey))
+	(zotra-extras--add-and-open url-or-search-string entry-format bibfile)
       (error
        (if (and (string-match-p "JSON parse error: Internal Server Error" (error-message-string err))
                 (y-or-n-p (format "Zotra failed with default backend. Retry with `citoid'? ")))
            (let ((zotra-backend 'citoid))
              (message "Retrying with `citoid' backend...")
-             (zotra-add-entry url-or-search-string entry-format bibfile)
-             (zotra-extras-open-in-ebib zotra-extras-most-recent-bibkey))
-         ;; Otherwise, re-signal the original error
+             (zotra-extras--add-and-open url-or-search-string entry-format bibfile))
          (signal (car err) (cdr err)))))))
+
+(defun zotra-extras--add-and-open (url-or-search-string entry-format bibfile)
+  "Add entry using `zotra-add-entry' and open it in Ebib.
+Pass URL-OR-SEARCH-STRING and ENTRY-FORMAT to `zotra-get-entry' to get the
+entry. BIBFILE is the file where the BibTeX entry should be saved."
+  (zotra-add-entry url-or-search-string entry-format bibfile)
+  (zotra-extras-open-in-ebib zotra-extras-most-recent-bibkey))
 
 ;;;;; Bibfile
 

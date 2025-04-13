@@ -6131,7 +6131,7 @@ I don't really see the need for this. I'm happy with have separate files for my 
 :END:
 # Local Variables:
 # eval: (files-extras-buffer-local-set-key (kbd "H-;") 'hydra-org-config/body)
-# eval: (files-extras-buffer-local-set-key (kbd "s-a") 'org-archive-hierarchically)
+# org-archive-default-command: org-archive-hierarchically
 # eval: (add-hook 'before-save-hook 'org-make-toc nil t)
 # eval: (flycheck-mode -1)
 # doom-modeline-enable-word-count: nil

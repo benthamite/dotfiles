@@ -376,7 +376,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#gptel-plus][gptel-plus]]
   - [[#gptel-extras][gptel-extras]]
   - [[#gptel-quick][gptel-quick]]
-  - [[#gpt-commit][gpt-commit]]
   - [[#aidermacs][aidermacs]]
   - [[#aidermacs-extras][aidermacs-extras]]
   - [[#mcp][mcp]]
@@ -8140,25 +8139,15 @@ This package evolved out of gptel-extras.
   ("H-s-u" . gptel-quick))
 #+end_src
 
-** gpt-commit
 :PROPERTIES:
-:ID:       735CC302-C86D-4886-A78B-8EF89171086C
 :END:
 
-/[[https://github.com/ywkim/gpt-commit][gpt-commit]] generates conventional commit messages using GPT./
-
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package gpt-commit
-  :after tlon-core log-edit
-  :demand t
   :custom
-  (gpt-commit-model-name "gpt-4o")
 
   :config
-  (setq gpt-commit-openai-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared)))
 
   :bind (:map git-commit-mode-map
-              ("s-g" . gpt-commit-message)))
 #+end_src
 
 ** aidermacs

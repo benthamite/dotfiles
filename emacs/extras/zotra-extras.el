@@ -95,9 +95,10 @@ Refer to the `mullvad' package documentation for details."
 (autoload 'elfeed-extras-kill-link-url-of-entry "elfeed-extras")
 ;;;###autoload
 (defun zotra-extras-add-entry (&optional url-or-search-string entry-format bibfile)
-  "Like `zotra-add-entry', but set BIBFILE and open in Ebib.
-Pass URL-OR-SEARCH-STRING and ENTRY-FORMAT to `zotra-get-entry'
-to get the entry."
+  "Like `zotra-add-entry', but with various customizations.
+Pass URL-OR-SEARCH-STRING and ENTRY-FORMAT to `zotra-get-entry' to get the
+entry. BIBFILE is the file where the BibTeX entry should be saved; if nil,
+prompt the user to select it."
   (interactive)
   (let* ((bibfile (or bibfile
 		      (setq zotra-extras-most-recent-bibfile (zotra-extras-set-bibfile))))

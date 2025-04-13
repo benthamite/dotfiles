@@ -102,7 +102,7 @@ to get the entry."
   (let* ((bibfile (or bibfile
 		      (setq zotra-extras-most-recent-bibfile (zotra-extras-set-bibfile))))
 	 (url-or-search-string (or url-or-search-string
-				   (read-string "URL or search string: "))))
+				   (read-string "URL or search string: " (current-kill 0)))))
     (pcase major-mode
       ('elfeed-show-mode (elfeed-extras-kill-link-url-of-entry))
       ('eww-mode (eww-copy-page-url)))

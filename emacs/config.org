@@ -8137,19 +8137,18 @@ This package evolved out of gptel-extras.
 (use-package magit-gptcommit
   :after magit
   :demand t
+  :init
+  (require 'llm-claude)
+
   :custom
   (magit-gptcommit-llm-provider
-	(make-llm-claude
-	 :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))
-	 :chat-model "claude-3-5-haiku-20241022"))
+   (make-llm-claude
+    :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))
+    :chat-model "claude-3-5-haiku-20241022"))
 
   :config
-  (require 'llm-claude)
   (magit-gptcommit-status-buffer-setup)
-  (magit-gptcommit-mode)
-
-  :bind (:map magit-status-mode-map
-	      ("s-g" . magit-gptcommit-commit-accept)))
+  (magit-gptcommit-mode))
 #+end_src
 
 ** aidermacs

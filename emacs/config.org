@@ -6192,7 +6192,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
     (when (and (eq major-mode 'comint-mode)
                (term-check-proc (current-buffer)))
       (unless (yes-or-no-p "Buffer has a running process. Kill anyway? ")
-	(error "Aborted"))))
+        (error "Aborted"))))
 
   (add-hook 'kill-buffer-query-functions #'comint-confirm-kill-buffer))
 #+end_src
@@ -7939,9 +7939,9 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
   ;; default model
   (setq gptel-model 'gemini-2.5-pro-preview-03-25
-	gptel-backend (gptel-make-gemini "Gemini"
-			:stream t
-			:key (auth-source-pass-get 'secret (concat "tlon/core/aistudio.google.com/" tlon-email-shared))))
+        gptel-backend (gptel-make-gemini "Gemini"
+                        :stream t
+                        :key (auth-source-pass-get 'secret (concat "tlon/core/aistudio.google.com/" tlon-email-shared))))
 
   ;; other models
   (gptel-make-anthropic "Claude"
@@ -7953,13 +7953,13 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
     :stream t
     :models '(claude-3-7-sonnet-20250219)
     :header (lambda () (when-let* ((key (gptel--get-api-key)))
-		    `(("x-api-key" . ,key)
-		      ("anthropic-version" . "2023-06-01")
-		      ("anthropic-beta" . "pdfs-2024-09-25")
-		      ("anthropic-beta" . "output-128k-2025-02-19")
-		      ("anthropic-beta" . "prompt-caching-2024-07-31"))))
+                    `(("x-api-key" . ,key)
+                      ("anthropic-version" . "2023-06-01")
+                      ("anthropic-beta" . "pdfs-2024-09-25")
+                      ("anthropic-beta" . "output-128k-2025-02-19")
+                      ("anthropic-beta" . "prompt-caching-2024-07-31"))))
     :request-params `(:thinking (:type "enabled" :budget_tokens ,(* 1024 16))
-				:max_tokens ,(* 1024 32)))
+                                :max_tokens ,(* 1024 32)))
 
   (gptel-make-openai "DeepSeek"
     :host "api.deepseek.com"
@@ -8186,7 +8186,7 @@ This package evolved out of gptel-extras.
   (setenv "OPENROUTER_API_KEY" (auth-source-pass-get "key" (concat "tlon/core/openrouter.ai/" tlon-email-shared)))
 
   :bind (("C-c a" . aidermacs-transient-menu)
-	 :map aidermacs-comint-mode-map
+         :map aidermacs-comint-mode-map
          ("S-<return>" . comint-send-input)
          ("<return>" . comint-accumulate)))
 #+end_src
@@ -13534,17 +13534,17 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
   (run-with-idle-timer (* 3 60 60) nil (lambda () (midnight-delay-set 'midnight-delay "5:00am")))
 
   (dolist (fun (nreverse '(files-extras-save-all-buffers
-			   clean-buffer-list
-			   ledger-mode-extras-update-coin-prices
-			   ledger-mode-extras-update-commodities
-			   magit-extras-stage-commit-and-push-all-repos
-			   org-roam-db-sync
-			   org-extras-id-update-id-locations
-			   el-patch-validate-all
-			   org-extras-agenda-switch-to-agenda-current-day
-			   mu4e-extras-update-all-mail-and-index
-			   org-gcal-sync
-			   elfeed-update)))
+                           clean-buffer-list
+                           ledger-mode-extras-update-coin-prices
+                           ledger-mode-extras-update-commodities
+                           magit-extras-stage-commit-and-push-all-repos
+                           org-roam-db-sync
+                           org-extras-id-update-id-locations
+                           el-patch-validate-all
+                           org-extras-agenda-switch-to-agenda-current-day
+                           mu4e-extras-update-all-mail-and-index
+                           org-gcal-sync
+                           elfeed-update)))
     (add-hook 'midnight-hook
               (apply-partially #'simple-extras-call-verbosely
                                fun "Midnight hook now calling `%s'..."))))

@@ -11921,8 +11921,9 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
   (:map telega-chat-mode-map
         ("M-p" . nil)
         ("S-<return>" . newline)
-        ("A-C-s-r" . telega-chatbuf-beginning-of-thing)
         ("A-s-r" . telega-chatbuf-next-unread-reaction)
+        ("A-C-s-f" . telega-msg-next)
+        ("A-C-s-r" . telega-msg-previous)
         ("<return>" . telega-extras-smart-enter)
         ;; if point is on a URL, `telega-msg-button-map' ceases to be
         ;; active and `<return>' triggers `newline' rather than

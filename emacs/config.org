@@ -7606,7 +7606,8 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package pyenv-mode
-  :after python)
+  :init
+  (add-to-list 'exec-path "~/.pyenv/bin"))
 #+end_src
 
 ** emacs-ipython-notebook

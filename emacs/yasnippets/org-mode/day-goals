@@ -1,0 +1,12 @@
+# -*- mode: snippet -*-
+# name: day-goals
+# key: dg
+# contributor: Pablo Stafforini
+# --
+Goals:
+
+- 1st workday:
+  - $1
+
+- 2nd workday:
+  - $2    

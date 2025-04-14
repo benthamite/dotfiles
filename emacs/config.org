@@ -6338,15 +6338,15 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   (defun flycheck-languagetool-enable ()
     "Enable `flycheck-languagetool' in selected buffers."
     (unless (derived-mode-p 'forge-post-mode
-			    'gfm-mode
-			    'mhtml-mode
-			    'flycheck-error-message-mode
-			    'mu4e-compose-mode
-			    'mu4e-view-mode
-			    'org-journal-mode
-			    'org-msg-edit-mode)
+                            'gfm-mode
+                            'mhtml-mode
+                            'flycheck-error-message-mode
+                            'mu4e-compose-mode
+                            'mu4e-view-mode
+                            'org-journal-mode
+                            'org-msg-edit-mode)
       (flycheck-select-checker 'languagetool)))
-  
+
   :hook
   ((markdown-mode-hook
     org-mode-hook
@@ -8178,13 +8178,13 @@ This package evolved out of gptel-extras.
   "Confirm before killing a comint buffer with an active Aidermacs process."
   (unless (and (eq major-mode 'comint-mode)
                (term-check-proc (current-buffer))
-	       (string-match-p "\\*aidermacs" (buffer-name))
-	       (null (yes-or-no-p "Buffer has a running process. Kill anyway? ")))
+               (string-match-p "\\*aidermacs" (buffer-name))
+               (null (yes-or-no-p "Buffer has a running process. Kill anyway? ")))
     t))
 
   ;; :hook
   ;; (kill-buffer-query-functions . aidermacs-confirm-kill-buffer)
- 
+
   :bind (("C-c a" . aidermacs-transient-menu)
          :map aidermacs-comint-mode-map
          ("S-<return>" . comint-send-input)
@@ -8229,12 +8229,12 @@ This package evolved out of gptel-extras.
 (use-package semext
   :disabled t
   :ensure (:host github
-		 :repo "ahyatt/semext")
+                 :repo "ahyatt/semext")
   :init
-  
+
   (setopt semext-provider (make-llm-gemini
-			   :key (auth-source-pass-get 'secret (concat "tlon/core/aistudio.google.com/" tlon-email-shared))
-			   :chat-model "gemini-2.5-pro-preview-03-25")))
+                           :key (auth-source-pass-get 'secret (concat "tlon/core/aistudio.google.com/" tlon-email-shared))
+                           :chat-model "gemini-2.5-pro-preview-03-25")))
 #+end_src
 
 ** mcp

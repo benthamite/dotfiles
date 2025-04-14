@@ -56,6 +56,14 @@ file in Emacs for better performance with large files."
             (message "Copied last %d lines of chat history to kill ring" line-count)))
       (message "Chat history file not found: %s" history-file))))
 
+(defun aidermacs-extras-confirm-kill-buffer ()
+  "Confirm before killing a comint buffer with an active Aidermacs process."
+  (unless (and (eq major-mode 'comint-mode)
+               (term-check-proc (current-buffer))
+               (string-match-p "\\*aidermacs" (buffer-name))
+               (null (yes-or-no-p "Buffer has a running process. Kill anyway? ")))
+    t))
+
 (provide 'aidermacs-extras)
 ;;; aidermacs-extras.el ends here
 

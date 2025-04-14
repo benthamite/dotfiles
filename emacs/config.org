@@ -2531,6 +2531,7 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature battery
+  :defer t
   :config
   (display-battery-mode))
 #+end_src

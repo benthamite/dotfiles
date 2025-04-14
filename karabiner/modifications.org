@@ -1855,6 +1855,6 @@ Source: [[https://en.wikipedia.org/wiki/Letter_frequency][Wikipedia]]
  :END:
 # Local Variables:
 # eval: (add-hook 'before-save-hook 'org-make-toc nil t)
-# eval: (files-extras-buffer-local-set-key (kbd "s-a") 'org-archive-hierarchically)
+# org-archive-default-command: org-archive-hierarchically
 # eval: (flycheck-mode -1)
 # End:

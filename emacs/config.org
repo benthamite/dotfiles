@@ -8654,7 +8654,6 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
         ("s-c" . ox-clip-formatted-copy)
         ("s-w" . org-refile)
         ("s-A-i" . org-id-copy)
-        ("s-a" . org-archive-to-archive-sibling)
         ("<S-left>" . nil)
         ("<S-right>" . nil)
         ("<S-up>" . nil)
@@ -9158,7 +9157,11 @@ CLOCK: [2021-03-11 Thu 09:41]--[2021-03-11 Thu 10:00] =>  0:19
   :defer t
   :custom
   (org-archive-default-command 'org-archive-to-archive-sibling)
-  (org-archive-location (expand-file-name "%s_archive.org::" paths-dir-archive)))
+  (org-archive-location (expand-file-name "%s_archive.org::" paths-dir-archive))
+
+  :bind
+  (:map org-mode-map
+        ("s-a" . org-archive-subtree-default)))
 #+end_src
 
 *** TODO [#6] Process archives ~org/archive~
@@ -9359,7 +9362,7 @@ Enable speed keys. To trigger a speed key, point must be at the very beginning o
      ("w" . (org-shiftmetaup))
      ("r" . (org-shiftmetaright))
      ("Archiving")
-     ("A" . (org-archive-to-archive-sibling))
+     ("A" . (org-archive-subtree-default))
      ("'" . (org-force-cycle-archived))
      ("Meta data editing")
      ("t" . (org-todo))
@@ -14167,7 +14170,7 @@ Some useful config files:
 # Local Variables:
 # eval: (run-with-timer 0.1 nil (lambda () (flycheck-mode -1)))
 # eval: (files-extras-buffer-local-set-key (kbd "H-:") 'org-extras-config-dispatch)
-# eval: (files-extras-buffer-local-set-key (kbd "s-a") 'org-archive-hierarchically)
 # eval: (add-hook 'before-save-hook 'org-make-toc nil t)
+# org-archive-default-command: org-archive-hierarchically
 # doom-modeline-enable-word-count: nil
 # End:

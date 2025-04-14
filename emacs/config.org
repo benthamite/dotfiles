@@ -8130,7 +8130,6 @@ This package evolved out of gptel-extras.
 :ID:       DFF89B96-95F6-4EDD-A3C2-3152928ED787
 :END:
 
-
 /[[https://github.com/douo/magit-gptcommit][magit-gptcommit]] generates git commit messages on Magit using LLM providers./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)

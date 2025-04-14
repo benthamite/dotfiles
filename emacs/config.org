@@ -8175,16 +8175,8 @@ This package evolved out of gptel-extras.
   (setenv "GEMINI_API_KEY" (auth-source-pass-get 'secret (concat "tlon/core/aistudio.google.com/" tlon-email-shared)))
   (setenv "OPENROUTER_API_KEY" (auth-source-pass-get "key" (concat "tlon/core/openrouter.ai/" tlon-email-shared)))
 
-  (defun aidermacs-confirm-kill-buffer ()
-  "Confirm before killing a comint buffer with an active Aidermacs process."
-  (unless (and (eq major-mode 'comint-mode)
-               (term-check-proc (current-buffer))
-               (string-match-p "\\*aidermacs" (buffer-name))
-               (null (yes-or-no-p "Buffer has a running process. Kill anyway? ")))
-    t))
-
   ;; :hook
-  ;; (kill-buffer-query-functions . aidermacs-confirm-kill-buffer)
+  ;; (kill-buffer-query-functions . aidermacs-extras-confirm-kill-buffer)
 
   :bind (("C-c a" . aidermacs-transient-menu)
          :map aidermacs-comint-mode-map

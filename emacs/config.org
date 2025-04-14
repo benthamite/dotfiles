@@ -8137,7 +8137,7 @@ This package evolved out of gptel-extras.
   :after magit
   :demand t
   :custom
-  (setq magit-gptcommit-llm-provider
+  (magit-gptcommit-llm-provider
 	(make-llm-claude
 	 :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))
 	 :chat-model "claude-3-5-haiku-20241022"))

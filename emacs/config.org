@@ -8148,16 +8148,25 @@ This package evolved out of gptel-extras.
 :ID:       DFF89B96-95F6-4EDD-A3C2-3152928ED787
 :END:
 
+
+/[[https://github.com/douo/magit-gptcommit][magit-gptcommit]] generates git commit messages on Magit using LLM providers./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package magit-gptcommit
   :after magit
+  :demand t
   :custom
-  (magit-gptcommit-llm-provider (make-llm-openai :key "OPENAI-KEY"))
+  (setq magit-gptcommit-llm-provider
+	(make-llm-claude
+	 :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))
+	 :chat-model "claude-3-5-haiku-20241022"))
 
   :config
+  (require 'llm-claude)
   (magit-gptcommit-status-buffer-setup)
+  (magit-gptcommit-mode)
 
-  :bind (:map git-commit-mode-map
+  :bind (:map magit-status-mode-map
 	      ("s-g" . magit-gptcommit-commit-accept)))
 #+end_src
 

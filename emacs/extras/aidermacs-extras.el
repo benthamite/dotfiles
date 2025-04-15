@@ -68,7 +68,9 @@ file in Emacs for better performance with large files."
   "Copy a region of the Aider history buffer based on user prompts.
 Prompts the user to select a start prompt (lines beginning with '#### ')
 and an end prompt. Copies the text from the beginning of the start
-prompt line up to the beginning of the end prompt line to the kill ring."
+prompt line up to the beginning of the *next* prompt after the selected
+end prompt (or end of buffer if the end prompt is the last one).
+If the user presses RET for the end prompt, copies to the end of the buffer."
   (interactive)
   (unless (string-match-p "\\.aider\\.chat\\.history\\.md\\'" (or (buffer-file-name) ""))
     (message "Warning: This buffer might not be an Aider history file."))
@@ -86,37 +88,46 @@ prompt line up to the beginning of the end prompt line to the kill ring."
     (let* ((prompt-strings (mapcar #'car prompts))
            (start-prompt-text (completing-read "Select start prompt: " prompt-strings nil t))
            (start-assoc (assoc start-prompt-text prompts))
-           (start-pos (cdr start-assoc))
-           ;; Filter prompts to only include those *after* the selected start prompt
-           (remaining-prompts (seq-filter (lambda (p) (> (cdr p) start-pos)) prompts))
-           end-prompt-text end-assoc end-pos)
+           start-pos candidate-end-prompts-assoc-list end-prompt-text end-assoc end-pos next-prompt-assoc)
 
       (unless start-assoc
         (user-error "Invalid start prompt selected"))
+      (setq start-pos (cdr start-assoc))
 
-      (unless remaining-prompts
-        ;; If no prompts remain, copy from start prompt to end of buffer
-        (kill-new (buffer-substring-no-properties start-pos (point-max)))
-        (message "Copied region from '%s' to end of buffer into kill ring" start-prompt-text)
-        (cl-return-from aidermacs-extras-copy-prompt-region)) ; Exit function early
+      ;; Candidate end prompts include the start prompt and all subsequent ones
+      (setq candidate-end-prompts-assoc-list (member start-assoc prompts))
+
+      (unless candidate-end-prompts-assoc-list
+        ;; This should theoretically not happen if start-assoc was found, but safety first
+        (user-error "Could not determine candidate end prompts"))
 
       (setq end-prompt-text (completing-read "Select end prompt (or press RET for end of buffer): "
-                                             (mapcar #'car remaining-prompts)
+                                             (mapcar #'car candidate-end-prompts-assoc-list)
                                              nil nil nil nil "")) ; Allow empty input
 
+      ;; Determine the final end position for the copy
       (if (string-empty-p end-prompt-text)
           ;; User pressed RET, copy to end of buffer
           (setq end-pos (point-max))
         ;; User selected an end prompt
-        (setq end-assoc (assoc end-prompt-text remaining-prompts))
+        (setq end-assoc (assoc end-prompt-text candidate-end-prompts-assoc-list))
         (unless end-assoc
           (user-error "Invalid end prompt selected"))
-        (setq end-pos (cdr end-assoc)))
+        ;; Find the prompt *after* the selected end prompt
+        (setq next-prompt-assoc (cadr (member end-assoc prompts))) ; Check original list
+        (if next-prompt-assoc
+            ;; If there is a next prompt, end region at its start
+            (setq end-pos (cdr next-prompt-assoc))
+          ;; If the selected end prompt was the last one, end region at buffer end
+          (setq end-pos (point-max))))
 
       (kill-new (buffer-substring-no-properties start-pos end-pos))
-      (message "Copied region from '%s' to %s into kill ring"
+      (message "Copied region from '%s' up to %s into kill ring"
                start-prompt-text
-               (if end-assoc (format "'%s'" end-prompt-text) "end of buffer")))))
+               (cond
+                ((string-empty-p end-prompt-text) "end of buffer") ; User pressed RET
+                (next-prompt-assoc (format "start of next prompt ('%s')" (car next-prompt-assoc))) ; Ended before next prompt
+                (t (format "end of buffer (after '%s')" end-prompt-text))))))) ; Selected end prompt was last
 
 (provide 'aidermacs-extras)
 ;;; aidermacs-extras.el ends here

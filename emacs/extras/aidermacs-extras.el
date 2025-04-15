@@ -65,25 +65,37 @@ file in Emacs for better performance with large files."
     t))
 
 (defun aidermacs-extras-copy-prompt-region ()
-  "Copy a region of the Aider history buffer based on user prompts.
-Prompts the user to select a start prompt (lines beginning with '#### ')
-and an end prompt. Copies the text from the beginning of the start
-prompt line up to the beginning of the *next* prompt after the selected
-end prompt (or end of buffer if the end prompt is the last one).
+  "Copy a region of the Aider history buffer based on user prompt blocks.
+Prompts the user to select the first line of a start prompt block
+(consecutive lines beginning with '#### ') and an end prompt block.
+Copies the text from the beginning of the start block's first line
+up to the beginning of the *next* block after the selected end block
+(or end of buffer if the end block is the last one).
 If the user presses RET for the end prompt, copies to the end of the buffer."
   (interactive)
   (unless (string-match-p "\\.aider\\.chat\\.history\\.md\\'" (or (buffer-file-name) ""))
     (message "Warning: This buffer might not be an Aider history file."))
   (let ((prompts '()))
-    ;; Collect all prompts and their positions
+    ;; Collect the start position and first line of each prompt block
     (save-excursion
       (goto-char (point-min))
       (while (re-search-forward "^#### \\(.*\\)" nil t)
-        (push (cons (match-string 1) (match-beginning 0)) prompts)))
+        (let ((first-line-text (match-string 1))
+              (block-start-pos (match-beginning 0)))
+          ;; Store the first line text and the block's starting position
+          (push (cons first-line-text block-start-pos) prompts)
+          ;; Skip subsequent contiguous '#### ' lines within the same block
+          (while (and (not (eobp))
+                      (progn (forward-line 1) (looking-at "^#### ")))
+            ;; Keep moving forward within the block
+            )
+          ;; Ensure the next search starts after the current block
+          ;; (re-search-forward moves point, but the inner loop might have moved it further)
+          (goto-char (line-end-position)))))
     (setq prompts (nreverse prompts)) ; Put them in buffer order
 
     (unless prompts
-      (user-error "No Aider prompts ('#### ...') found in the buffer"))
+      (user-error "No Aider prompt blocks ('#### ...') found in the buffer"))
 
     (let* ((prompt-strings (mapcar #'car prompts))
            (start-prompt-text (completing-read "Select start prompt: " prompt-strings nil t))

@@ -8174,7 +8174,7 @@ This package evolved out of gptel-extras.
 :ID:       29E4D020-70BF-408C-A8AC-D40E411F2F42
 :END:
 
-/[[https://github.com/MatthewZMD/aidermacs][aidermacs]] integrates with Aider, an AI pair programming tool./
+/[[https://github.com/MatthewZMD/aidermacs][aidermacs]] is an alternative Aider integration for Emacs./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package aidermacs
@@ -8185,12 +8185,12 @@ This package evolved out of gptel-extras.
   (aidermacs-auto-commits t)
   (aidermacs-show-diff-after-change nil)
   ;; for thinking mode, add "--thinking-tokens" "16k"
-  (aidermacs-extra-args '("--editor-model" "gemini/gemini-2.5-pro-preview-03-25"))
+  (aidermacs-extra-args '("--model" "gemini/gemini-2.5-pro-preview-03-25" "--no-auto-accept-architect"))
 
   :config
   (setenv "ANTHROPIC_API_KEY" (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared)))
   (setenv "GEMINI_API_KEY" (auth-source-pass-get 'secret (concat "tlon/core/aistudio.google.com/" tlon-email-shared)))
-  (setenv "OPENROUTER_API_KEY" (auth-source-pass-get "key" (concat "tlon/core/openrouter.ai/" tlon-email-shared)))
+  ;; (setenv "OPENROUTER_API_KEY" (auth-source-pass-get "key" (concat "tlon/core/openrouter.ai/" tlon-email-shared)))
 
   ;; :hook
   ;; (kill-buffer-query-functions . aidermacs-extras-confirm-kill-buffer)

@@ -64,6 +64,60 @@ file in Emacs for better performance with large files."
                (null (yes-or-no-p "Buffer has a running process. Kill anyway? ")))
     t))
 
+(defun aidermacs-extras-copy-prompt-region ()
+  "Copy a region of the Aider history buffer based on user prompts.
+Prompts the user to select a start prompt (lines beginning with '#### ')
+and an end prompt. Copies the text from the beginning of the start
+prompt line up to the beginning of the end prompt line to the kill ring."
+  (interactive)
+  (unless (string-match-p "\\.aider\\.chat\\.history\\.md\\'" (or (buffer-file-name) ""))
+    (message "Warning: This buffer might not be an Aider history file."))
+  (let ((prompts '()))
+    ;; Collect all prompts and their positions
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "^#### \\(.*\\)" nil t)
+        (push (cons (match-string 1) (match-beginning 0)) prompts)))
+    (setq prompts (nreverse prompts)) ; Put them in buffer order
+
+    (unless prompts
+      (user-error "No Aider prompts ('#### ...') found in the buffer"))
+
+    (let* ((prompt-strings (mapcar #'car prompts))
+           (start-prompt-text (completing-read "Select start prompt: " prompt-strings nil t))
+           (start-assoc (assoc start-prompt-text prompts))
+           (start-pos (cdr start-assoc))
+           ;; Filter prompts to only include those *after* the selected start prompt
+           (remaining-prompts (seq-filter (lambda (p) (> (cdr p) start-pos)) prompts))
+           end-prompt-text end-assoc end-pos)
+
+      (unless start-assoc
+        (user-error "Invalid start prompt selected"))
+
+      (unless remaining-prompts
+        ;; If no prompts remain, copy from start prompt to end of buffer
+        (kill-new (buffer-substring-no-properties start-pos (point-max)))
+        (message "Copied region from '%s' to end of buffer into kill ring" start-prompt-text)
+        (cl-return-from aidermacs-extras-copy-prompt-region)) ; Exit function early
+
+      (setq end-prompt-text (completing-read "Select end prompt (or press RET for end of buffer): "
+                                             (mapcar #'car remaining-prompts)
+                                             nil nil nil nil "")) ; Allow empty input
+
+      (if (string-empty-p end-prompt-text)
+          ;; User pressed RET, copy to end of buffer
+          (setq end-pos (point-max))
+        ;; User selected an end prompt
+        (setq end-assoc (assoc end-prompt-text remaining-prompts))
+        (unless end-assoc
+          (user-error "Invalid end prompt selected"))
+        (setq end-pos (cdr end-assoc)))
+
+      (kill-new (buffer-substring-no-properties start-pos end-pos))
+      (message "Copied region from '%s' to %s into kill ring"
+               start-prompt-text
+               (if end-assoc (format "'%s'" end-prompt-text) "end of buffer")))))
+
 (provide 'aidermacs-extras)
 ;;; aidermacs-extras.el ends here
 

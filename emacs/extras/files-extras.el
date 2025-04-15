@@ -168,6 +168,7 @@ functionality in macOS."
 	;; `other-buffer' honors `buffer-predicate' so no need to filter
 	(other-buffer current-buffer t))))
 
+;;;###autoload
 (defun files-extras-switch-to-alternate-buffer ()
   "Switch to the last buffer active in the current window."
   (interactive)

@@ -32,12 +32,41 @@
 
 ;;;; Functions
 
+;;;;; kill to register
+
 ;;;###autoload
 (defun register-extras-kill-to-register (text register)
   "Copy TEXT from the kill ring to REGISTER."
   (interactive (list (read-from-kill-ring "Kill to store: ")
 		     (register-read-with-preview "Register: ")))
   (set-register register text))
+
+;;;;; buffer register
+
+(defvar register-extras-keys-alist nil
+  "Alist mapping characters to buffers for quick switching.
+Each element is (KEY . BUFFER).")
+
+(defun register-extras-buffer-to-register (key)
+  "Associate KEY (a character) with the current buffer."
+  (interactive "cSet buffer for key: ")
+  (let ((buf (current-buffer)))
+    ;; Remove existing binding for this key, if any
+    (setq register-extras-keys-alist (assq-delete-all key register-extras-keys-alist))
+    ;; Add new binding to the front
+    (push (cons key buf) register-extras-keys-alist))
+  (message "Associated key '%c' with buffer '%s'" key (buffer-name)))
+
+(defun register-extras-jump-to-buffer (key)
+  "Switch to the buffer associated with KEY."
+  (interactive "cJump to buffer for key: ")
+  (let* ((pair (assoc key register-extras-keys-alist))
+         (buf (cdr pair)))
+    (if (and buf (buffer-live-p buf))
+        (switch-to-buffer buf)
+      (message "No live buffer associated with key '%c'" key))))
+
+;;;;; menu
 
 ;;;###autoload (autoload 'register-extras-dispatch "register-extras" nil t)
 (transient-define-prefix register-extras-dispatch ()
@@ -63,6 +92,9 @@
    ["navigation"
     ("j" "jump" jump-to-register)
     ("o" "store point" point-to-register)]
+   ["buffer"
+    ("b" "jump" register-extras-jump-to-buffer)
+    ("B" "store" register-extras-buffer-to-register)]
    ["display"
     ("h" "consult" consult-register)
     ("l" "list" list-registers)

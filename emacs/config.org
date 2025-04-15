@@ -7434,7 +7434,19 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
 :END:
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-feature debug)
+(use-feature debug
+  :config
+  (defun debug-copy-and-save-backtrace ()
+    "Copy the backtrace to the clipboard and save it to a file."
+    (interactive)
+    (when (string-match-p "\\*Backtrace\\*" (buffer-name))
+      (kill-new (buffer-string))
+      (write-file (file-name-concat paths-dir-downloads "backtrace.el"))
+      (kill-buffer)))
+
+  :bind
+  (:map debugger-mode-map
+	("s" . debug-copy-and-save-backtrace)))
 #+end_src
 
 ** edebug

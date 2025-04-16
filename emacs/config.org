@@ -8234,10 +8234,11 @@ This package evolved out of gptel-extras.
 :ID:       6D49D977-CD85-413E-8C19-884361746678
 :END:
 
-/[[https://github.com/ahyatt/llm][llm]] is a package that provides a common interface for LLMs./
+/[[https://github.com/ahyatt/llm][llm]] provides a common interface for LLMs./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package llm
+  :disabled t
   :custom
   (llm-warn-on-nonfree nil))
 #+end_src

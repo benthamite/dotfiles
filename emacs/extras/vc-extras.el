@@ -142,7 +142,7 @@ With a prefix argument, the target parent directory is prompted."
          (process-buffer "/git-clone-output/"))
     (when (file-exists-p clone-dir)
       (user-error "Directory `%s' already exists" clone-dir))
-    (message "Cloning asynchronously repo %s..." name)
+    (message "Asynchronously cloning repo %s..." name)
     (let ((default-directory parent-dir))
       (set-process-sentinel
        (start-process "git-clone" process-buffer

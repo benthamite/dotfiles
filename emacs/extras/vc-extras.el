@@ -151,7 +151,6 @@ With a prefix argument, the target parent directory is prompted."
        (lambda (proc event)
          (vc-extras--clone-sentinel proc event clone-dir name no-forge))))))
 
-;; Helper to prompt/select repository information.
 (defun vc-extras--select-repo (name account)
   "Return a cons cell (NAME . ACCOUNT) for cloning.
 If NAME is nil, prompt for one (and if ACCOUNT is nil, try to use the repo
@@ -165,14 +164,12 @@ list)."
                       (user-error "If a repo is provided, account must be provided"))))
     (cons name account)))
 
-;; Helper to choose the target directory.
 (defun vc-extras--prompt-target-directory (parent-dir name)
   "Prompt for a PARENT-DIR and return a directory with NAME appended."
   (let* ((custom-parent (read-directory-name "Parent directory: " parent-dir))
          (target (file-name-concat custom-parent name)))
     target))
 
-;; Helper to initialize submodules.
 (defun vc-extras--initialize-submodules (dir)
   "Initialize submodules of the repo at DIR.
 Runs ‘git submodule init’ and ‘git submodule update --recursive’ with DIR as the
@@ -181,7 +178,34 @@ working directory."
     (call-process "git" nil nil nil "submodule" "init")
     (call-process "git" nil nil nil "submodule" "update" "--recursive")))
 
-;; Helper to handle clone completion.
+(defun vc-extras--get-submodule-paths (dir)
+  "Return a list of submodule paths relative to DIR."
+  (let ((default-directory dir)
+        ;; Use --quiet to avoid the initial summary line if present
+        (output (shell-command-to-string "git submodule status --recursive --quiet")))
+    (delq nil
+          (mapcar (lambda (line)
+                    ;; Match lines like " 123abc... path/to/submodule (branch)"
+                    ;; Or " +123abc... path/to/submodule (branch)" (if status differs)
+                    ;; Or "-123abc... path/to/submodule (branch)" (if not initialized)
+                    ;; Capture the path (group 1), which is the sequence of non-space characters after the hash.
+                    (when (string-match "^[ +-]?[0-9a-f]+[[:space:]]+\\([^[:space:]]+\\)" line)
+                      (match-string 1 line)))
+                  (split-string output "\n" t)))))
+
+(defun vc-extras--get-submodule-paths-from-gitmodules (dir)
+  "Return a list of submodule paths relative to DIR by parsing .gitmodules."
+  (let ((gitmodules-file (expand-file-name ".gitmodules" dir))
+        (paths '()))
+    (when (file-exists-p gitmodules-file)
+      (with-temp-buffer
+        (insert-file-contents gitmodules-file)
+        (goto-char (point-min))
+        ;; Look for lines like 'path = path/to/submodule'
+        (while (re-search-forward "^[[:space:]]*path[[:space:]]*=[[:space:]]*\\(.*?\\)[[:space:]]*$" nil t)
+          (push (match-string 1) paths))))
+    (nreverse paths)))
+
 (defun vc-extras--clone-sentinel (proc event clone-dir name no-forge)
   "Process sentinel for git clone.
 PROC is the process, EVENT is the clone event, CLONE-DIR is the cloned repo
@@ -191,7 +215,9 @@ Forge."
              (= (process-exit-status proc) 0))
     (let ((default-directory clone-dir))
       (when (vc-extras-has-submodules-p clone-dir)
-        (vc-extras--initialize-submodules clone-dir))
+        (vc-extras--initialize-submodules clone-dir)
+        ;; Configure git to automatically update submodules on pull
+        (call-process "git" nil nil nil "config" "--local" "submodule.recurse" "true"))
       (pcase vc-extras-split-repo
         ('nil nil)
         ('prompt (when (y-or-n-p "Move .git directory to separate directory? ")
@@ -245,30 +271,58 @@ If the repository has submodules, move their `.git' directories, too."
   (let* ((name (file-name-nondirectory (directory-file-name dir)))
 	 (source (file-name-concat dir ".git/"))
 	 (target (file-name-concat paths-dir-split-git name))
-	 (git-file (directory-file-name source)))
+	 (git-file (file-name-concat dir ".git"))
+	 (has-submodules (vc-extras-has-submodules-p dir))
+	 (submodule-paths (when has-submodules
+			    (vc-extras--get-submodule-paths-from-gitmodules dir))))
     (when (file-exists-p target)
       (user-error "Directory `%s' already exists" target))
-    ;; Move main .git directory
-    (copy-directory source target t t)
-    (delete-directory source t)
-    (with-temp-file git-file
-      (insert (format "gitdir: %s" target)))
-    
-    (when (vc-extras-has-submodules-p dir)
-      (let ((default-directory dir))
-        ;; Update submodule configurations
-        (call-process "git" nil nil nil "submodule" "sync")
-        ;; For each submodule directory
-        (dolist (module-dir (directory-files-recursively dir "^uqbar-" t))
-          (when (file-directory-p module-dir)
-            (let* ((module-name (file-name-nondirectory module-dir))
-                   (git-file (file-name-concat module-dir ".git"))
-                   (module-target (file-name-concat target "modules" module-name)))
-              (when (file-exists-p git-file)
-                (with-temp-file git-file
-                  (insert (format "gitdir: %s" module-target)))))))
-        ;; Reinitialize submodules with new paths
-        (call-process "git" nil nil nil "submodule" "update" "--init" "--recursive")))))
+    (vc-extras--move-git-dir source target)
+    (vc-extras--create-git-pointer target git-file)
+    (when has-submodules
+      (vc-extras--handle-submodules submodule-paths))))
+
+(defun vc-extras--move-git-dir (source target)
+  "Move the .git directory from SOURCE to TARGET."
+  (make-directory (file-name-directory target) t)
+  (rename-file source target t))
+
+(defun vc-extras--create-git-pointer (target git-file)
+  "Create a .git file at GIT-FILE pointing to TARGET."
+  (let ((temp-git-file (make-temp-file "vc-extras-gitdir-")))
+    (with-temp-file temp-git-file
+      (insert (format "gitdir: %s" (expand-file-name target))))
+    (rename-file temp-git-file git-file t)))
+
+(defun vc-extras--handle-submodules (submodule-paths)
+  "Handle SUBMODULE-PATHS in the repository."
+  (let ((default-directory dir))
+    ;; Submodule git data is already moved within target/modules/
+    ;; We just need to create the pointer files in their working directories.
+    ;; This should happen *after* the main gitdir points correctly.
+    (call-process "git" nil nil nil "submodule" "sync" "--recursive")
+    ;; For each submodule path obtained earlier
+    (dolist (submodule-path submodule-paths)
+      (let* ((submodule-dir (file-name-concat dir submodule-path))
+	     ;; Assume submodule name for module path is the last component of its working dir path
+	     (submodule-name (file-name-nondirectory submodule-path))
+	     ;; Path to the .git file/dir within the submodule's working directory
+	     (git-file (file-name-concat submodule-dir ".git"))
+	     ;; Target path for the submodule's git data within the *main repo's* split .git directory
+	     (module-target (file-name-concat target "modules" submodule-name)))
+        ;; Update the .git file in the submodule's working directory
+        ;; Ensure the submodule directory actually exists
+        (when (file-directory-p submodule-dir)
+          ;; --- Create gitdir content in temp file ---
+          (let ((temp-submodule-git-file (make-temp-file "vc-extras-submodule-gitdir-")))
+	    (with-temp-file temp-submodule-git-file
+              (insert (format "gitdir: %s" (expand-file-name module-target))))
+	    ;; --- Rename temp file to final submodule .git path ---
+	    ;; The final 't' allows overwriting if the path somehow still exists.
+	    (rename-file temp-submodule-git-file git-file t)))))
+    ;; Sync and Update submodules *after* all pointer files are created
+    (call-process "git" nil nil nil "submodule" "sync" "--recursive")
+    (call-process "git" nil nil nil "submodule" "update" "--init" "--recursive")))
 
 ;;;;; Delete
 

@@ -3,6 +3,63 @@
 #+langauge: en
 
 This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository. It is meant to be read primarily by members of the Tlön team, but it may be of interest to others as well.
+* Version 7.1.4 on 2025-04-16
+
+** aidermacs
+*** Configuration
+- Set default model to =gemini/gemini-2.5-pro-preview-03-25=.
+- Unset =aidermacs-architect-model=.
+- Disabled architect mode (=aidermacs-use-architect-mode= is now nil).
+- Moved comint kill buffer confirmation function to =aidermacs-extras=.
+- Revised documentation.
+- Updated =aidermacs-extra-args=.
+- Set =OPENROUTER_API_KEY=.
+- Added keybindings for sending input and accumulating input in =aidermacs-comint-mode-map=.
+
+** aidermacs-extras
+*** New Functionality
+- Added function =aidermacs-extras-copy-recent-history-to-kill-ring= to copy recent chat history to the kill ring without opening the file.
+- Added function =aidermacs-extras-copy-prompt-region= to copy a region of the Aider history buffer based on user-selected prompt blocks.
+- Added function =aidermacs-extras-confirm-kill-buffer= to confirm before killing a comint buffer with an active Aidermacs process.
+
+** elpaca
+- Updated elpaca installer to version 0.11.
+
+** warnings
+- Suppressed aidermacs warnings.
+
+** debug
+- Added =debug-copy-and-save-backtrace= to copy the backtrace to the clipboard and save it to a file.  Bound to ="s"= in =debugger-mode-map=.
+
+** gptel
+- Switched to master branch of fork.
+- Set =gemini-2.5-pro-preview-03-25= as default model.
+
+** org
+- Use =org-archive-subtree-default= for archiving, bound to =s-a=.
+
+** register-extras
+- Added buffer register functionality.
+  - =register-extras-buffer-to-register= associates a key with the current buffer.
+  - =register-extras-jump-to-buffer= switches to the buffer associated with a key.
+- Added buffer register commands to the =register-extras-dispatch= menu.
+
+** tlon
+- Pull issues in all repos every 60 minutes (was 30 minutes).
+
+** zotra-extras
+- Updated docstrings.
+- Fixed typo in docstring.
+- Ignored errors for initial input string.
+- Extracted =zotra-extras--add-and-open=.
+- Used current kill as initial input.
+- Added retry with citoid backend on server error.
+
+** citar
+- Removed needless timer to reload bibliographies.
+
+** midnight
+- Used idle timer for =midnight-delay-set=.
 
 * Version 7.1.3 on 2025-03-26
 

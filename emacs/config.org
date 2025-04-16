@@ -13335,6 +13335,7 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package emms
   :defer t
+  :disabled t ; temporarily because server is down
   :custom
   (emms-player-list '(emms-player-mpv))
   (emms-source-file-default-directory paths-dir-music-tango)

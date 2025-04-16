@@ -102,6 +102,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#with-editor][with-editor]]
   - [[#ghub][ghub]]
   - [[#forge][forge]]
+  - [[#orgit][orgit]]
   - [[#orgit-forge][orgit-forge]]
   - [[#forge-search][forge-search]]
   - [[#forge-extras][forge-extras]]
@@ -1793,6 +1794,18 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
         ("s-s" . forge-list-assigned-issues)
         ("s-t" . forge-topic-set-title)
         ("s-x" . forge-extras-state-set-dwim)))
+#+end_src
+
+** orgit
+:PROPERTIES:
+:ID:       92DF0F69-73D6-4234-B227-02D0DE120F46
+:END:
+
+/[[https://github.com/magit/orgit][orgit]] provides support for Org links to Magit buffers./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package orgit
+  :ensure (:build (:not elpaca--check-version))
 #+end_src
 
 ** orgit-forge

@@ -280,7 +280,7 @@ If the repository has submodules, move their `.git' directories, too."
     (vc-extras--move-git-dir source target)
     (vc-extras--create-git-pointer target git-file)
     (when has-submodules
-      (vc-extras--handle-submodules submodule-paths))))
+      (vc-extras--handle-submodules dir target submodule-paths))))
 
 (defun vc-extras--move-git-dir (source target)
   "Move the .git directory from SOURCE to TARGET."
@@ -294,8 +294,8 @@ If the repository has submodules, move their `.git' directories, too."
       (insert (format "gitdir: %s" (expand-file-name target))))
     (rename-file temp-git-file git-file t)))
 
-(defun vc-extras--handle-submodules (submodule-paths)
-  "Handle SUBMODULE-PATHS in the repository."
+(defun vc-extras--handle-submodules (dir target submodule-paths)
+  "Handle SUBMODULE-PATHS in the repository at DIR, using TARGET for split git dir."
   (let ((default-directory dir))
     ;; Submodule git data is already moved within target/modules/
     ;; We just need to create the pointer files in their working directories.

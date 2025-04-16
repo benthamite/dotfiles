@@ -1748,6 +1748,50 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   ;; why is this turned on by default!?
   (remove-hook 'forge-post-mode-hook 'turn-on-flyspell)
 
+  ;; temporarily overwrite function until idiotic error message is removed
+  (defun forge--ghub-massage-notification (data githost)
+    (let-alist data
+      (let* ((type (intern (downcase .subject.type)))
+             (type (if (eq type 'pullrequest) 'pullreq type))
+             (_ (unless (memq type '( discussion issue pullreq
+                                      commit release checksuite)) ; Added checksuite
+                  (message "Forge: Ignoring unknown notification type: %s" type))) ; Changed error to message
+             (number-or-commit (and .subject.url
+                                    (string-match "[^/]*\\'" .subject.url)
+                                    (match-string 0 .subject.url)))
+             (number (and (memq type '(discussion issue pullreq))
+                          (string-to-number number-or-commit)))
+             (repo   (forge-get-repository
+                      (list githost
+                            .repository.owner.login
+                            .repository.name)
+                      nil :insert!))
+             (repoid (oref repo id))
+             (owner  (oref repo owner))
+             (name   (oref repo name))
+             (id     (forge--object-id repoid (string-to-number .id)))
+             (alias  (intern (concat "_" (string-replace "=" "_" id)))))
+	(and number
+             (list alias id
+                   `((,alias repository)
+                     [(name ,name)
+                      (owner ,owner)]
+                     ,@(cddr
+			(caddr
+			 (ghub--graphql-prepare-query
+                          ghub-fetch-repository
+                          (pcase type
+                            ('discussion `(repository
+                                           discussions
+                                           (discussion . ,number)))
+                            ('issue      `(repository
+                                           issues
+                                           (issue . ,number)))
+                            ('pullreq    `(repository
+                                           pullRequest
+                                           (pullRequest . ,number))))))))
+                   repo type data)))))
+  
   :hook
   (forge-issue-mode-hook . simple-extras-visual-line-mode-enhanced)
 

@@ -8252,7 +8252,8 @@ This package evolved out of gptel-extras.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package magit-gptcommit
-  :after magit
+  :disabled t
+  :after magit paths
   :demand t
   :init
   (require 'llm-claude)

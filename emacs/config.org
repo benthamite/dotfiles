@@ -7500,10 +7500,13 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
     "Copy the backtrace to the clipboard and save it to a file."
     (interactive)
     (when (string-match-p "\\*Backtrace\\*" (buffer-name))
-      (kill-new (buffer-string))
-      (write-file (file-name-concat paths-dir-downloads "backtrace.el"))
+      (let ((contents (buffer-string)))
+	(kill-new contents)
+	(with-temp-buffer
+	  (insert contents)
+	  (write-region (point-min) (point-max) (file-name-concat paths-dir-downloads "backtrace.el"))))
       (kill-buffer)))
-
+  
   :bind
   (:map debugger-mode-map
 	("s" . debug-copy-and-save-backtrace)))

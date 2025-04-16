@@ -5,7 +5,7 @@
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/gptel-extras.el
 ;; Version: 0.2
-;; Package-Requires: ((el-patch "3.1") (gptel "0.7.1") (paths "0.1"))
+;; Package-Requires: ((gptel "0.7.1") (paths "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -28,7 +28,6 @@
 
 ;;; Code:
 
-(require 'el-patch)
 (require 'gptel)
 (require 'gptel-context)
 (require 'org)

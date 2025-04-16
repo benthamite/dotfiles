@@ -1818,7 +1818,8 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package orgit-forge
-  :after org forge)
+  :after org forge
+  :ensure (:build (:not elpaca--check-version)))
 #+end_src
 
 ** forge-search

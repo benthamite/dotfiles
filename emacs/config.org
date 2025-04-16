@@ -8295,7 +8295,8 @@ This package evolved out of gptel-extras.
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package mcp
   :ensure (:host github
-                 :repo "lizqwerscott/mcp.el"))
+                 :repo "lizqwerscott/mcp.el"
+		 :build (:not elpaca--check-version)))
 #+end_src
 
 ** dall-e-shell

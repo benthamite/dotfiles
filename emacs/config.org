@@ -945,6 +945,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
                             (flycheck syntax-checker)
                             (org-roam)
                             (tramp)
+                            (aidermacs)
                             (org-element-cache)
                             (yasnippet backquote-change))))
 #+end_src

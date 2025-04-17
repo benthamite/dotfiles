@@ -144,8 +144,10 @@ If the user presses RET for the end prompt, copies to the end of the buffer."
 (defun aidermacs-extras-save-repo-map (&optional async)
   "Save the Aider repository map to a file.
 If ASYNC is non-nil, run the command asynchronously."
-  (let ((command (if async 'async-shell-command 'shell-command)))
-    (funcall command "aider --show-repo-map > repo_map.md")))
+  (let ((command (if async 'async-shell-command 'shell-command))
+	(repo (file-name-concat (aidermacs-project-root) "repo-map.md")))
+    (message "`default-directory' is %s" default-directory)
+    (funcall command (format "aider --show-repo-map > %s" repo))))
 
 (provide 'aidermacs-extras)
 ;;; aidermacs-extras.el ends here

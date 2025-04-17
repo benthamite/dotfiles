@@ -1,0 +1,105 @@
+#+title: ace-link-extras: Extensions for ace-link
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: ace-link-extras.info
+#+texinfo_filename: ace-link-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Ace Link Extras: (ace-link-extras)
+#+texinfo_dir_desc: Extensions for ace-link
+
+This manual describes the features and customization options for the Emacs Lisp file =ace-link-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=ace-link-extras.el= provides extensions for the =ace-link= package, which allows jumping to links in various contexts using =avy=. These extensions tailor =ace-link='s behavior for specific modes like =mu4e=, =eww=, and =org-roam=, and provide additional actions.
+
+The main features include:
+
++ Conditional link opening in =mu4e= based on the HTML renderer being used (=w3m= or other).
++ Commands to open links in =eww= using the secondary browser or in a new buffer.
++ A command to open links specifically within =org-roam-mode= buffers.
++ Handling for opening links selected via =ace-link= in external applications or new buffers.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=ace-link-extras.el= provides the following interactive commands:
+
+** Open link in mu4e conditionally
+:PROPERTIES:
+:CUSTOM_ID: h:ace-link-extras-mu4e
+:END:
+
+#+findex: ace-link-extras-mu4e
+The command ~ace-link-extras-mu4e~ opens a visible link within a =mu4e-view-mode= buffer. Its behavior adapts based on the value of the variable ~mm-text-html-renderer~:
+
+- If ~mm-text-html-renderer~ is set to =w3m=, it uses ~ace-link--w3m-collect~ to gather URLs. It then extracts the selected URL using ~ace-link-extras-w3m-get-url~ and opens it using the standard ~browse-url~ function (respecting ~browse-url-handlers~).
+- Otherwise, it falls back to the default ~ace-link-mu4e~ behavior.
+
+This allows users who render HTML emails with =w3m= to still open links in their preferred browser (like =eww= or an external one) rather than being forced to use =w3m= for browsing.
+
+** Open link in EWW externally
+:PROPERTIES:
+:CUSTOM_ID: h:ace-link-extras-eww-externally
+:END:
+
+#+findex: ace-link-extras-eww-externally
+The command ~ace-link-extras-eww-externally~ uses =ace-link-eww= to select a link in an =eww= buffer and then opens it using the browser specified by ~browse-url-secondary-browser-function~. This is achieved by passing a prefix argument of =(4)= to ~ace-link-eww~ internally.
+
+** Open link in EWW in a new buffer
+:PROPERTIES:
+:CUSTOM_ID: h:ace-link-extras-eww-new-buffer
+:END:
+
+#+findex: ace-link-extras-eww-new-buffer
+The command ~ace-link-extras-eww-new-buffer~ uses =ace-link-eww= to select a link in an =eww= buffer and then opens it in a new =eww= buffer. This is achieved by passing a prefix argument of =(16)= to ~ace-link-eww~ internally.
+
+** Open link in Org Roam
+:PROPERTIES:
+:CUSTOM_ID: h:ace-link-extras-org-roam
+:END:
+
+#+findex: ace-link-extras-org-roam
+The command ~ace-link-extras-org-roam~ is specifically designed for =org-roam-mode= buffers. It uses =ace-link-org= to collect and select an Org link within the buffer. Once a link is selected via =avy=, it calls ~ace-link-extras--org-roam-action~ to visit the target, potentially using =org-roam-preview-visit=.
+
+* Internal Functions (for reference)
+:PROPERTIES:
+:CUSTOM_ID: h:internal-functions
+:END:
+
+These functions are used internally by the main commands but are not typically called directly by the user.
+
++ ~ace-link-extras-w3m-get-url~: Called by ~ace-link-extras-mu4e~ when using =w3m= renderer. It uses =avy= to select a link collected by ~ace-link--w3m-collect~ and returns the URL string associated with the selected link's text properties.
++ ~ace-link-extras--org-roam-action~: Called by ~ace-link-extras-org-roam~ after a link is selected. It takes the point (PT) returned by =avy=, moves the cursor there, and then calls =org-roam-preview-visit= interactively to navigate to the link target within the Org Roam context.
+
+* Patched Functions (Informational)
+:PROPERTIES:
+:CUSTOM_ID: h:patched-functions
+:END:
+
+The file contains commented-out code attempting to patch ~ace-link--mu4e-action~. The goal was likely to update calls to potentially obsolete =mu4e= functions. However, as noted in the comments within the code, the patch was deemed unnecessary or problematic and is currently inactive.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

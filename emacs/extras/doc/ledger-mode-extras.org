@@ -1,0 +1,149 @@
+#+title: ledger-mode-extras: Extensions for ledger-mode
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: ledger-mode-extras.info
+#+texinfo_filename: ledger-mode-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Ledger Mode Extras: (ledger-mode-extras)
+#+texinfo_dir_desc: Extensions for ledger-mode
+
+This manual describes the features and customization options for the Emacs Lisp file =ledger-mode-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=ledger-mode-extras.el= provides extensions for =ledger-mode=, the Emacs mode for editing plain text accounting files compatible with the Ledger, Hledger, and Beancount command-line tools. These extensions focus on importing data from external sources (CSV files), enhancing navigation and editing within Ledger files, running reports, fetching commodity prices, and sorting transactions.
+
+The main features include:
+
++ Commands to import transaction data from CSV files exported by Polymarket and Interactive Brokers.
++ Navigation commands to create new entries below the current one or align and move to the next entry.
++ Convenience commands to run common Ledger reports (account balance, net worth, payee).
++ Commands to update commodity prices by running external Python scripts.
++ Enhanced sorting commands to sort regions or the entire buffer chronologically or reverse-chronologically.
++ Commands to copy or kill the transaction at point.
++ Command to narrow the buffer view to the current transaction.
++ Commands to increment or decrement the date of the transaction at point.
+
+* User Options
+:PROPERTIES:
+:CUSTOM_ID: h:user-options
+:END:
+
+** ~ledger-mode-extras-currencies~
+:PROPERTIES:
+:CUSTOM_ID: h:ledger-mode-extras-currencies
+:END:
+
+#+vindex: ledger-mode-extras-currencies
+A list of currency symbols (strings) for which price information might be fetched (likely used by the external Python scripts, though not directly by the Elisp code shown). Default is an empty list.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=ledger-mode-extras.el= provides the following interactive commands, intended for use within =ledger-mode= buffers:
+
+** Import Data
+:PROPERTIES:
+:CUSTOM_ID: h:import-data
+:END:
+
+#+findex: ledger-extras-import-polymarket
+~ledger-extras-import-polymarket~: Imports transactions from a Polymarket CSV FILE. Prompts for the file path. Parses the CSV, prompts for token symbols if unknown, and inserts formatted Ledger transactions using ~ledger-mode-extras-insert-transaction~. *Note:* The commentary mentions this might be outdated due to changes in Polymarket's export.
+
+#+findex: ledger-extras-import-interactive-brokers
+~ledger-extras-import-interactive-brokers~: Imports trades from an Interactive Brokers CSV FILE. Prompts for the file path. Parses the CSV, converts the date format, and inserts formatted Ledger transactions using ~ledger-mode-extras-insert-transaction~. Requires manual removal of summary lines from the CSV beforehand.
+
+** Navigation and Editing
+:PROPERTIES:
+:CUSTOM_ID: h:navigation-editing
+:END:
+
+#+findex: ledger-mode-extras-new-entry-below
+~ledger-mode-extras-new-entry-below~: Inserts a new line below the current transaction, ready for a new entry.
+#+findex: ledger-mode-extras-align-and-next
+~ledger-mode-extras-align-and-next~: Aligns the amounts in the current transaction (=ledger-post-align-xact=) and moves point to the beginning of the next transaction or directive.
+#+findex: ledger-mode-extras-kill-transaction-at-point
+~ledger-mode-extras-kill-transaction-at-point~: Kills (cuts) the entire transaction at point to the kill ring.
+#+findex: ledger-mode-extras-copy-transaction-at-point
+~ledger-mode-extras-copy-transaction-at-point~: Copies the entire transaction at point to the kill ring.
+#+findex: ledger-mode-extras-narrow-to-xact
+~ledger-mode-extras-narrow-to-xact~: Narrows the buffer view to only the current transaction. Use `widen` (=C-x n w=) to restore the full view.
+#+findex: ledger-mode-extras-increase-date-by-one-day
+~ledger-mode-extras-increase-date-by-one-day~: Increments the date of the transaction at point by one day.
+#+findex: ledger-mode-extras-decrease-date-by-one-day
+~ledger-mode-extras-decrease-date-by-one-day~: Decrements the date of the transaction at point by one day.
+
+** Reporting
+:PROPERTIES:
+:CUSTOM_ID: h:reporting
+:END:
+
+#+findex: ledger-mode-extras-report-account
+~ledger-mode-extras-report-account~: Runs the "account" report using =ledger-report=.
+#+findex: ledger-mode-extras-report-net-worth
+~ledger-mode-extras-report-net-worth~: Runs the "net worth" report.
+#+findex: ledger-mode-extras-report-net-worth-USD
+~ledger-mode-extras-report-net-worth-USD~: Runs the "net worth (USD)" report.
+#+findex: mode-mode-extras-extras-report-net-worth-USD
+*(Typo in original Elisp)* Likely intended as ~ledger-mode-extras-report-payee~: Runs the "payee" report.
+
+** Price Updates
+:PROPERTIES:
+:CUSTOM_ID: h:price-updates
+:END:
+
+#+findex: ledger-mode-extras-update-commodities
+~ledger-mode-extras-update-commodities~: Runs the external Python script `commodities.py` (located in =paths-dir-ledger=) asynchronously to update commodity prices.
+#+findex: ledger-mode-extras-update-coin-prices
+~ledger-mode-extras-update-coin-prices~: Runs the external Python script `coinprices.py` (located in =paths-dir-ledger/coinprices/=) asynchronously and appends its output to the price database file (=paths-file-ledger-db=).
+
+** Sorting
+:PROPERTIES:
+:CUSTOM_ID: h:sorting
+:END:
+
+#+findex: ledger-mode-extras-sort-region-reversed
+~ledger-mode-extras-sort-region-reversed~: Sorts the transactions within the active region in reverse chronological order (newest first).
+#+findex: ledger-mode-extras-sort-buffer-reversed
+~ledger-mode-extras-sort-buffer-reversed~: Sorts all transactions in the buffer in reverse chronological order.
+#+findex: ledger-mode-extras-sort-region-or-buffer
+~ledger-mode-extras-sort-region-or-buffer~: Sorts the active region chronologically (oldest first) if active, otherwise sorts the entire buffer chronologically.
+#+findex: ledger-mode-extras-sort-region-or-buffer-reversed
+~ledger-mode-extras-sort-region-or-buffer-reversed~: Sorts the active region reverse-chronologically if active, otherwise sorts the entire buffer reverse-chronologically.
+
+* Utility Functions
+:PROPERTIES:
+:CUSTOM_ID: h:utility-functions
+:END:
+
+These functions provide helper functionalities used by the main commands.
+
++ ~ledger-extras-convert-interactive-brokers-date~: Converts an IBKR date string (YYYYMMDD) to YYYY-MM-DD format.
++ ~ledger-mode-extras-insert-transaction~: Takes a list of FIELDS (payee, date, account, quantity, token, price, fees) and inserts a formatted transaction into the specified FILE (defaults to =paths-file-ledger=). Aligns the new transaction.
++ ~ledger-mode-extras-copy-or-kill-transaction-at-point~: Core logic for copying or killing the transaction at point.
++ ~ledger-mode-extras-increase-date~: Core logic for changing the date of the transaction at point by a given number of DAYS.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

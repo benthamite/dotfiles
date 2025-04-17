@@ -141,6 +141,12 @@ If the user presses RET for the end prompt, copies to the end of the buffer."
                 (next-prompt-assoc (format "start of next prompt ('%s')" (car next-prompt-assoc))) ; Ended before next prompt
                 (t (format "end of buffer (after '%s')" end-prompt-text))))))) ; Selected end prompt was last
 
+(defun aidermacs-extras-save-repo-map (&optional async)
+  "Save the Aider repository map to a file.
+If ASYNC is non-nil, run the command asynchronously."
+  (let ((command (if async 'async-shell-command 'shell-command)))
+    (funcall command "aider --show-repo-map > repo_map.md")))
+
 (provide 'aidermacs-extras)
 ;;; aidermacs-extras.el ends here
 

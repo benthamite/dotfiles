@@ -1,0 +1,217 @@
+#+title: vc-extras: Extensions for Version Control (VC)
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: vc-extras.info
+#+texinfo_filename: vc-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: VC Extras: (vc-extras)
+#+texinfo_dir_desc: Extensions for Version Control (VC)
+
+This manual describes the features and customization options for the Emacs Lisp file =vc-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=vc-extras.el= provides extensions for Emacs' built-in Version Control interface (=vc.el=) and integrates with the external GitHub CLI tool (`gh`). It focuses on managing GitHub repositories (creation, cloning, deletion), handling multiple GitHub accounts/profiles, managing submodules, and optionally splitting the `.git` directory for cleaner project structures.
+
+The main features include:
+
++ Commands to create, clone, and delete GitHub repositories using the `gh` CLI, supporting multiple accounts and private/public visibility.
++ Configuration for multiple GitHub profiles, associating accounts with specific local directories.
++ Enhanced cloning that automatically initializes submodules and optionally splits the `.git` directory.
++ Command to delete local repositories, including their potentially split `.git` directories.
++ Functions to check `gh` authentication status and list repositories via `gh`.
++ Option to automatically split the `.git` directory into a separate location (`paths-dir-split-git`) upon cloning.
++ Helper functions for checking Git repository status and submodule presence.
++ Command to strip diff markers (`+/-`) from a region.
+
+* User Options
+:PROPERTIES:
+:CUSTOM_ID: h:user-options
+:END:
+
+** ~vc-extras-gh-executable~
+:PROPERTIES:
+:CUSTOM_ID: h:vc-extras-gh-executable
+:END:
+
+#+vindex: vc-extras-gh-executable
+The path to the GitHub CLI executable (`gh`). Auto-detected using `executable-find`.
+
+** ~vc-extras-github-account-personal~
+:PROPERTIES:
+:CUSTOM_ID: h:vc-extras-github-account-personal
+:END:
+
+#+vindex: vc-extras-github-account-personal
+The GitHub username for the "personal" profile. Default: "benthamite".
+
+** ~vc-extras-github-account-work~
+:PROPERTIES:
+:CUSTOM_ID: h:vc-extras-github-account-work
+:END:
+
+#+vindex: vc-extras-github-account-work
+The GitHub username or organization name for the "work" profile. Default: "tlon-team".
+
+** ~vc-extras-personal-repo-dir~
+:PROPERTIES:
+:CUSTOM_ID: h:vc-extras-personal-repo-dir
+:END:
+
+#+vindex: vc-extras-personal-repo-dir
+The local directory path where personal repositories are stored. Default: Value of `paths-dir-personal-repos`.
+
+** ~vc-extras-work-repo-dir~
+:PROPERTIES:
+:CUSTOM_ID: h:vc-extras-work-repo-dir
+:END:
+
+#+vindex: vc-extras-work-repo-dir
+The local directory path where work repositories are stored. Default: Value of `paths-dir-tlon-repos`.
+
+** ~vc-extras-profiles~
+:PROPERTIES:
+:CUSTOM_ID: h:vc-extras-profiles
+:END:
+
+#+vindex: vc-extras-profiles
+An alist defining GitHub profiles. Each profile is a plist containing `:name` (symbol), `:account` (string), and `:dir` (string). Used to associate accounts with local directories for cloning and listing.
+
+** ~vc-extras-split-repo~
+:PROPERTIES:
+:CUSTOM_ID: h:vc-extras-split-repo
+:END:
+
+#+vindex: vc-extras-split-repo
+Controls whether the `.git` directory should be moved to a separate location (`paths-dir-split-git`) when cloning a repository using `vc-extras-clone-repo`.
+- `nil`: Never split.
+- `prompt`: Ask the user each time.
+- `t` (or any other non-nil): Always split.
+Default: `prompt`.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=vc-extras.el= provides the following interactive commands:
+
+** Create GitHub Repository
+:PROPERTIES:
+:CUSTOM_ID: h:vc-extras-create-repo
+:END:
+
+#+findex: vc-extras-create-repo
+The command ~vc-extras-create-repo~ creates a new repository on GitHub using the `gh` CLI. It prompts for the repository NAME, ACCOUNT (from `vc-extras-profiles`), DESCRIPTION, and whether it should be PRIVATE. After creating the remote repository, it asks if the user wants to clone it locally using ~vc-extras-clone-repo~.
+
+** Clone GitHub Repository
+:PROPERTIES:
+:CUSTOM_ID: h:vc-extras-clone-repo
+:END:
+
+#+findex: vc-extras-clone-repo
+The command ~vc-extras-clone-repo~ clones a GitHub repository.
+- It prompts for the repository NAME (with completion using `gh repo list` if NAME is not provided) and determines the corresponding ACCOUNT.
+- It clones the repository using `git clone --recurse-submodules` into the directory associated with the ACCOUNT (from `vc-extras-profiles`), or prompts for a parent directory if called with a prefix argument.
+- After cloning, it initializes submodules (`git submodule init`, `git submodule update --recursive`).
+- It optionally splits the `.git` directory based on ~vc-extras-split-repo~.
+- It optionally prompts to add the repository to Forge (`forge-extras-track-repository`) unless NO-FORGE is non-nil.
+- It runs asynchronously and provides status messages.
+
+** Delete Local Repository
+:PROPERTIES:
+:CUSTOM_ID: h:vc-extras-delete-local-repo
+:END:
+
+#+findex: vc-extras-delete-local-repo
+The command ~vc-extras-delete-local-repo~ deletes a local Git repository.
+- It prompts for the repository NAME (with completion listing local Git repos found in profile directories).
+- It deletes the main repository directory *if* it exists and is recognized as a Git repository.
+- It deletes the corresponding split `.git` directory from `paths-dir-split-git` *if* it exists.
+- It messages the user about which directories were deleted.
+
+** Check GH Authentication
+:PROPERTIES:
+:CUSTOM_ID: h:vc-extras-check-gh-authenticated
+:END:
+
+#+findex: vc-extras-check-gh-authenticated
+The command ~vc-extras-check-gh-authenticated~ runs `gh auth status` to verify that the GitHub CLI is properly authenticated. It messages the user accordingly or signals an error if not authenticated or if `gh` is not found.
+
+** Split Local Repo `.git` Directory
+:PROPERTIES:
+:CUSTOM_ID: h:vc-extras-split-local-repo
+:END:
+
+#+findex: vc-extras-split-local-repo
+The command ~vc-extras-split-local-repo~ moves the `.git` directory of a local repository (specified by DIR) to a centralized location (`paths-dir-split-git/<repo-name>`) and replaces the original `.git` directory with a `.git` file containing a `gitdir:` pointer to the new location. It also handles moving submodule `.git` data and updating pointers correctly.
+
+** Strip Diff Markers
+:PROPERTIES:
+:CUSTOM_ID: h:vc-extras-strip-diff-markers
+:END:
+
+#+findex: vc-extras-strip-diff-markers
+The command ~vc-extras-strip-diff-markers~ removes leading `+` or `-` characters from each line within the active region. Useful for cleaning up pasted diff output.
+
+** Transient Menu
+:PROPERTIES:
+:CUSTOM_ID: h:vc-extras-menu
+:END:
+
+#+findex: vc-extras-menu
+The command ~vc-extras-menu~ displays a transient menu for quick access to the main `vc-extras` commands: Create, Clone (with/without confirmation for target dir), Split, Delete, and Check Auth.
+
+* Utility Functions
+:PROPERTIES:
+:CUSTOM_ID: h:utility-functions-vc
+:END:
+
+*(Includes functions for internal use or programmatic access)*
+
++ ~vc-extras-is-git-dir-p~: Checks if DIR is a Git repository using `vc-responsible-backend`.
++ ~vc-extras-get-account-prop~: Retrieves a property (e.g., `:dir`) for a given ACCOUNT from the `vc-extras-profiles` alist.
++ ~vc-extras-gh-create-repo~: Helper function to execute the `gh repo create` shell command.
++ ~vc-extras-ensure-gh-exists~: Checks if `gh` executable is found, errors otherwise.
++ ~vc-extras--select-repo~: Helper for `vc-extras-clone-repo`; prompts for repo/account if needed.
++ ~vc-extras--prompt-target-directory~: Helper for `vc-extras-clone-repo`; prompts for parent directory when cloning with prefix arg.
++ ~vc-extras--initialize-submodules~: Runs `git submodule init` and `update --recursive`.
++ ~vc-extras--get-submodule-paths~: Gets submodule paths using `git submodule status`.
++ ~vc-extras--get-submodule-paths-from-gitmodules~: Gets submodule paths by parsing `.gitmodules`.
++ ~vc-extras--clone-sentinel~: Process sentinel function called after `git clone` finishes. Handles submodule initialization, `.git` splitting, and Forge tracking.
++ ~vc-extras-has-submodules-p~: Checks if a `.gitmodules` file exists in DIR.
++ ~vc-extras-get-github-remote~: Constructs the HTTPS remote URL for a given NAME and ACCOUNT.
++ ~vc-extras-get-account-of-name~: Finds the ACCOUNT associated with a repository NAME by querying `gh repo list`.
++ ~vc-extras-get-repo-dir~: Constructs the local path for a repository NAME under a specific ACCOUNT, optionally pointing to the `.git` or split `.git` directory.
++ ~vc-extras-resolve-repo-dir~: Helper for `vc-extras-delete-local-repo`; finds the local directory path for a repo name.
++ ~vc-extras--delete-repo-directory~: Helper for `vc-extras-delete-local-repo`; deletes a directory if it's a Git repo.
++ ~vc-extras-list-local-candidates~: Helper for `vc-extras-delete-local-repo`; lists local Git repositories found in profile directories as `(NAME . DIR)` pairs.
++ ~vc-extras-gh-list-repos~: Lists repositories via `gh repo list`, either for a specific ACCOUNT or all accounts in `vc-extras-profiles`.
++ ~vc-extras-gh-list-repos-in-account~: Helper to list repos for a single account.
++ ~vc-extras-gh-list-repos-in-all-accounts~: Helper to list repos for all configured accounts.
++ ~vc-extras--move-git-dir~: Helper for `vc-extras-split-local-repo`; moves the `.git` directory.
++ ~vc-extras--create-git-pointer~: Helper for `vc-extras-split-local-repo`; creates the `.git` file pointer.
++ ~vc-extras--handle-submodules~: Helper for `vc-extras-split-local-repo`; updates submodule pointers after splitting the main `.git` directory.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

@@ -1,0 +1,285 @@
+#+title: simple-extras: Extensions for Simple Built-ins
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: simple-extras.info
+#+texinfo_filename: simple-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Simple Extras: (simple-extras)
+#+texinfo_dir_desc: Extensions for Simple Built-ins
+
+This manual describes the features and customization options for the Emacs Lisp file =simple-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=simple-extras.el= provides a collection of extensions and modifications for various built-in Emacs functionalities found in =simple.el= and related core libraries. It enhances editing commands (killing, deleting, copying, transposing), navigation, mode toggling, auto-saving, and adds miscellaneous utility functions.
+
+The main features include:
+
++ **Enhanced Editing:**
+  + Delete/Copy variants of kill commands (word, line, sentence, paragraph, sexp, zap-to-char) that *do not* modify the kill ring.
+  + Kill/Delete/Copy commands for the "whole" text object at point (word, line, etc.).
+  + Backward variants for transposition commands (chars, words, lines, sentences, paragraphs, sexps).
+  + Smart kill/delete/copy commands that operate on the region if active, or the current line otherwise.
+  + Yanking commands: yank and pop kill ring, paste without properties.
++ **Navigation & Modes:**
+  + Enhanced `exchange-point-and-mark` with modified behavior in transient mark mode.
+  + Enhanced `visible-mode` toggle affecting related modes (Dired, Org).
+  + Enhanced `visual-line-mode` toggle managing `truncate-lines`.
+  + DWIM `keyboard-quit` command.
++ **Utilities:**
+  + Word counting (region or clipboard).
+  + DWIM indentation (region, Org block, or buffer).
+  + DWIM narrowing/widening.
+  + Getting URL at point, simplifying URLs.
+  + Converting clipboard content via Pandoc.
+  + Asciifying text (removing accents), slugifying strings.
+  + Getting the next element cyclically from a list.
+  + Detecting Emacs distribution (mac port, emacs-plus).
+  + Getting quoted string at point.
+  + Setting buffer-local keys.
++ **Auto-Save:** Enabling auto-save for new untitled buffers, using a dedicated directory and hashed filenames for these auto-saves.
++ **Advice Management:** Function to remove all advice from a symbol.
++ **Sorting:** Command to sort S-expressions in a region.
+
+* User Options
+:PROPERTIES:
+:CUSTOM_ID: h:user-options
+:END:
+
+** ~simple-extras-new-buffer-auto-save-dir~
+:PROPERTIES:
+:CUSTOM_ID: h:simple-extras-new-buffer-auto-save-dir
+:END:
+
+#+vindex: simple-extras-new-buffer-auto-save-dir
+Specifies the directory where auto-save files for new, non-file-visiting buffers (e.g., "untitled") should be stored. Ensures the directory exists. Default: `~/.cache/emacs/var/auto-save/new-buffers/` (using `no-littering`).
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=simple-extras.el= provides numerous interactive commands:
+
+** Editing Commands (Delete/Copy without Kill Ring)
+:PROPERTIES:
+:CUSTOM_ID: h:editing-commands-simple
+:END:
+
+*(Note: These commands perform deletion or copying *without* adding the text to the kill ring, unlike standard `kill-*` commands.)*
+
+#+findex: simple-extras-delete-word
+~simple-extras-delete-word~: Deletes forward word(s).
+#+findex: simple-extras-backward-delete-word
+~simple-extras-backward-delete-word~: Deletes backward word(s).
+#+findex: simple-extras-copy-word
+~simple-extras-copy-word~: Copies forward word(s).
+#+findex: simple-extras-backward-copy-word
+~simple-extras-backward-copy-word~: Copies backward word(s).
+#+findex: simple-extras-delete-whole-word
+~simple-extras-delete-whole-word~: Deletes the word at point.
+#+findex: simple-extras-copy-whole-word
+~simple-extras-copy-whole-word~: Copies the word at point.
+
+#+findex: simple-extras-delete-line
+~simple-extras-delete-line~: Deletes line(s) forward from point.
+#+findex: simple-extras-backward-delete-line
+~simple-extras-backward-delete-line~: Deletes the line backward from point.
+#+findex: simple-extras-copy-line
+~simple-extras-copy-line~: Copies line(s) forward from point.
+#+findex: simple-extras-backward-copy-line
+~simple-extras-backward-copy-line~: Copies the line backward from point.
+#+findex: simple-extras-delete-whole-line
+~simple-extras-delete-whole-line~: Deletes the current line.
+#+findex: simple-extras-copy-whole-line
+~simple-extras-copy-whole-line~: Copies the current line.
+
+#+findex: simple-extras-delete-sentence
+~simple-extras-delete-sentence~: Deletes sentence(s) forward.
+#+findex: simple-extras-backward-delete-sentence
+~simple-extras-backward-delete-sentence~: Deletes sentence(s) backward.
+#+findex: simple-extras-copy-sentence
+~simple-extras-copy-sentence~: Copies sentence(s) forward.
+#+findex: simple-extras-backward-copy-sentence
+~simple-extras-backward-copy-sentence~: Copies sentence(s) backward.
+#+findex: simple-extras-delete-whole-sentence
+~simple-extras-delete-whole-sentence~: Deletes the sentence at point.
+#+findex: simple-extras-copy-whole-sentence
+~simple-extras-copy-whole-sentence~: Copies the sentence at point.
+
+#+findex: simple-extras-delete-paragraph
+~simple-extras-delete-paragraph~: Deletes paragraph(s) forward/backward.
+#+findex: simple-extras-backward-delete-paragraph
+~simple-extras-backward-delete-paragraph~: Deletes paragraph(s) backward/forward.
+#+findex: simple-extras-copy-paragraph
+~simple-extras-copy-paragraph~: Copies paragraph(s) forward/backward.
+#+findex: simple-extras-backward-copy-paragraph
+~simple-extras-backward-copy-paragraph~: Copies paragraph(s) backward/forward.
+#+findex: simple-extras-delete-whole-paragraph
+~simple-extras-delete-whole-paragraph~: Deletes the paragraph at point.
+#+findex: simple-extras-copy-whole-paragraph
+~simple-extras-copy-whole-paragraph~: Copies the paragraph at point.
+
+#+findex: simple-extras-delete-sexp
+~simple-extras-delete-sexp~: Deletes sexp(s) forward/backward.
+#+findex: simple-extras-backward-delete-sexp
+~simple-extras-backward-delete-sexp~: Deletes sexp(s) backward/forward.
+#+findex: simple-extras-copy-sexp
+~simple-extras-copy-sexp~: Copies sexp(s) forward/backward.
+#+findex: simple-extras-backward-copy-sexp
+~simple-extras-backward-copy-sexp~: Copies sexp(s) backward/forward.
+#+findex: simple-extras-delete-whole-sexp
+~simple-extras-delete-whole-sexp~: Deletes the sexp at point.
+#+findex: simple-extras-copy-whole-sexp
+~simple-extras-copy-whole-sexp~: Copies the sexp at point.
+
+#+findex: simple-extras-zap-delete-to-char
+~simple-extras-zap-delete-to-char~: Deletes forward up to Nth occurrence of CHAR.
+#+findex: simple-extras-backward-zap-delete-to-char
+~simple-extras-backward-zap-delete-to-char~: Deletes backward up to Nth occurrence of CHAR.
+#+findex: simple-extras-zap-copy-to-char
+~simple-extras-zap-copy-to-char~: Copies forward up to Nth occurrence of CHAR.
+#+findex: simple-extras-backward-zap-copy-to-char
+~simple-extras-backward-zap-copy-to-char~: Copies backward up to Nth occurrence of CHAR.
+
+** Editing Commands (Kill Ring Related)
+:PROPERTIES:
+:CUSTOM_ID: h:editing-kill-ring-simple
+:END:
+
+#+findex: simple-extras-kill-whole-word
+~simple-extras-kill-whole-word~: Kills the word at point.
+#+findex: simple-extras-kill-whole-line
+~simple-extras-kill-whole-line~: Kills the current line.
+#+findex: simple-extras-kill-whole-sentence
+~simple-extras-kill-whole-sentence~: Kills the sentence at point.
+#+findex: simple-extras-kill-whole-paragraph
+~simple-extras-kill-whole-paragraph~: Kills the paragraph at point.
+#+findex: simple-extras-kill-whole-sexp
+~simple-extras-kill-whole-sexp~: Kills the sexp at point.
+#+findex: simple-extras-backward-zap-to-char
+~simple-extras-backward-zap-to-char~: Kills backward up to Nth occurrence of CHAR.
+#+findex: simple-extras-yank-and-pop
+~simple-extras-yank-and-pop~: Yanks the top of the kill ring, then removes it from the ring.
+#+findex: simple-extras-paste-no-properties
+~simple-extras-paste-no-properties~: Yanks the top of the kill ring, removing all text properties.
+
+** Editing Commands (Smart/DWIM)
+:PROPERTIES:
+:CUSTOM_ID: h:editing-smart-simple
+:END:
+
+#+findex: simple-extras-smart-kill-region
+~simple-extras-smart-kill-region~: Kills the active region, or kills the current line if no region is active.
+#+findex: simple-extras-smart-delete-region
+~simple-extras-smart-delete-region~: Deletes the active region, or deletes the current line if no region is active (without using kill ring).
+#+findex: simple-extras-smart-copy-region
+~simple-extras-smart-copy-region~: Copies the active region, or copies the current line if no region is active (without using kill ring).
+#+findex: simple-extras-eval-region-or-buffer
+~simple-extras-eval-region-or-buffer~: Evaluates the active region if present, otherwise evaluates the entire buffer.
+#+findex: simple-extras-count-words-dwim
+~simple-extras-count-words-dwim~: Counts words in the active region, or in the clipboard content if no region is active. Copies the count to the kill ring and messages the user.
+#+findex: simple-extras-indent-dwim
+~simple-extras-indent-dwim~: Indents the active region, or the current Org source block, or the entire buffer, whichever applies first. Runs `whitespace-cleanup` afterwards.
+#+findex: simple-extras-narrow-or-widen-dwim
+~simple-extras-narrow-or-widen-dwim~: Widens if the buffer is narrowed. Otherwise, narrows to the active region, Org source block, Org subtree, Ledger transaction, or defun, whichever applies first.
+#+findex: simple-extras-keyboard-quit-dwim
+~simple-extras-keyboard-quit-dwim~: Context-aware quit command (deactivates region, closes completions, aborts minibuffer, or calls `keyboard-quit`).
+
+** Editing Commands (Transposition)
+:PROPERTIES:
+:CUSTOM_ID: h:editing-transpose-simple
+:END:
+
+#+findex: simple-extras-transpose-words-backward
+~simple-extras-transpose-words-backward~: Transposes words around point, moving point backward.
+#+findex: simple-extras-transpose-chars-backward
+~simple-extras-transpose-chars-backward~: Transposes characters around point, moving point backward.
+#+findex: simple-extras-transpose-lines-backward
+~simple-extras-transpose-lines-backward~: Transposes the current and previous lines.
+#+findex: simple-extras-transpose-sentences-backward
+~simple-extras-transpose-sentences-backward~: Transposes the current and previous sentences.
+#+findex: simple-extras-transpose-paragraphs-backward
+~simple-extras-transpose-paragraphs-backward~: Transposes the current and previous paragraphs.
+#+findex: simple-extras-transpose-sexps-backward
+~simple-extras-transpose-sexps-backward~: Transposes sexps around point, moving point backward.
+
+** Editing Commands (Misc)
+:PROPERTIES:
+:CUSTOM_ID: h:editing-misc-simple
+:END:
+
+#+findex: simple-extras-exchange-point-and-mark
+~simple-extras-exchange-point-and-mark~: Like `exchange-point-and-mark`, but with slightly modified behavior regarding mark activation when transient mark mode is on but inactive.
+#+findex: simple-extras-visible-mode-enhanced
+~simple-extras-visible-mode-enhanced~: Toggles `visible-mode` and related modes (`dired-hide-details-mode`, `dired-omit-mode`, `org-tidy-mode`, `org-extras-inline-images`, `org-modern-mode`) together.
+#+findex: simple-extras-visual-line-mode-enhanced
+~simple-extras-visual-line-mode-enhanced~: Toggles `visual-line-mode` and sets `truncate-lines` appropriately.
+#+findex: simple-extras-fill-or-unfill-paragraph
+~simple-extras-fill-or-unfill-paragraph~: Fills the current paragraph; if called again immediately, unfills it (sets fill-column to max).
+#+findex: simple-extras-asciify-text
+~simple-extras-asciify-text~: Removes accents and converts some non-ASCII characters to their ASCII equivalents in the region or current line.
+#+findex: simple-extras-slugify-clipboard
+~simple-extras-slugify-clipboard~: Converts the text in the kill ring to a URL-friendly "slug" (lowercase, hyphenated, ASCII) and replaces the kill ring content with it.
+#+findex: simple-extras-strip-thing-at-point
+~simple-extras-strip-thing-at-point~: Attempts to simplify the "thing" at point (currently only supports simplifying URLs via ~simple-extras-strip-url~).
+#+findex: simple-extras-sort-sexps
+~simple-extras-sort-sexps~: Sorts S-expressions within the active region alphabetically.
+#+findex: simple-extras-buffer-local-set-key
+~simple-extras-buffer-local-set-key~: Interactively binds a KEY to a COMMAND locally in the current buffer.
+
+* Utility Functions
+:PROPERTIES:
+:CUSTOM_ID: h:utility-functions-simple
+:END:
+
+*(Includes functions for internal use, configuration, or programmatic access)*
+
++ ~simple-extras-delete-instead-of-kill~ (macro): Executes BODY, temporarily replacing `kill-region` with `delete-region`.
++ ~simple-extras-copy-instead-of-kill~ (macro): Executes BODY, temporarily replacing `kill-region` with `kill-ring-save`.
++ ~simple-extras-kill-whole-thing~: Kills the `thing-at-point` of the specified THING type.
++ ~simple-extras-visible-mode-enhanced-dired~, ~simple-extras-visible-mode-enhanced-org~: Helpers for ~simple-extras-visible-mode-enhanced~ to toggle related modes.
++ ~files-extras-read-file~: Prompts for a file path with context-aware default.
++ ~simple-extras-save-excursion~ (macro): Like `save-excursion`, but ensures the original buffer is restored even if switched during execution.
++ ~simple-extras-get-url-at-point~: Tries to find and return a URL string near point.
++ ~simple-extras-remove-trailing-slash~: Removes a trailing slash from a string.
++ ~simple-extras-simplify-url~: Removes `http(s)://`, `www.`, and trailing slash from a URL string.
++ ~simple-extras-strip-url~: Replaces the URL at point with its simplified version.
++ ~simple-extras-pandoc-convert~: Converts clipboard content between formats using Pandoc.
++ ~simple-extras-asciify-string~: Returns a string with accents removed.
++ ~simple-extras-slugify~: Converts a string to a URL-friendly slug.
++ ~simple-extras-slug-hyphenate~: Helper for slugify; replaces spaces/underscores with hyphens.
++ ~simple-extras-is-new-buffer-p~: Checks if the current buffer is an "untitled" buffer.
++ ~simple-extras-new-buffer-enable-auto-save~: Hook function to enable auto-save for new buffers.
++ ~simple-extras-new-buffer-auto-save-dir~ (advice): Modifies `auto-save-mode` to use a specific directory for untitled buffer auto-saves.
++ ~simple-extras-init-disable-funs~: Disables specified functions after a timer delay.
++ ~simple-extras-advice-remove-all~: Removes all advice from a function symbol.
++ ~simple-extras-get-next-element~: Gets the next element in a list cyclically.
++ ~simple-extras-call-verbosely~: Calls a function and messages its name.
++ ~simple-extras-get-emacs-distro~: Detects the Emacs distribution (mac port or emacs-plus).
++ ~simple-extras-string-at-point~: Returns the quoted string at point.
++ ~simple-extras-local-set-key~: Sets a buffer-local key binding (duplicate of `files-extras-buffer-local-set-key`?).
++ ~simple-extras-string-is-url-p~: Checks if a string looks like a valid URL using `url-generic-parse-url`.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

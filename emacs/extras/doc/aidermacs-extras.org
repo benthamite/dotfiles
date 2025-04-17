@@ -1,0 +1,104 @@
+#+title: aidermacs-extras: Extensions for aidermacs
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: aidermacs-extras.info
+#+texinfo_filename: aidermacs-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Aidermacs Extras: (aidermacs-extras)
+#+texinfo_dir_desc: Extensions for aidermacs
+
+This manual describes the features and customization options for the Emacs Lisp file =aidermacs-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=aidermacs-extras.el= provides extensions for the =aidermacs= package, which integrates the Aider AI coding assistant with Emacs. These extensions focus on interacting with the Aider chat history file (=.aider.chat.history.md=) and managing the Aidermacs process.
+
+The main features include:
+
++ Commands to copy portions of the Aider chat history to the kill ring.
++ A function to confirm before killing an Aidermacs buffer with a running process.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=aidermacs-extras.el= provides the following interactive commands:
+
+** Copy Recent Chat History
+:PROPERTIES:
+:CUSTOM_ID: h:aidermacs-extras-copy-recent-history-to-kill-ring
+:END:
+
+#+findex: aidermacs-extras-copy-recent-history-to-kill-ring
+The command ~aidermacs-extras-copy-recent-history-to-kill-ring~ copies the last N lines of the =.aider.chat.history.md= file (located in the project root) to the Emacs kill ring.
+
+By default, it copies the last 1000 lines. With an optional prefix argument (e.g., =C-u 500=), the user can specify the number of lines to copy.
+
+This command uses the external =tail= command for efficiency, avoiding loading potentially large history files into an Emacs buffer. It messages the user if the history file is not found or if the copy was successful.
+
+** Copy Prompt Region from History
+:PROPERTIES:
+:CUSTOM_ID: h:aidermacs-extras-copy-prompt-region
+:END:
+
+#+findex: aidermacs-extras-copy-prompt-region
+The command ~aidermacs-extras-copy-prompt-region~ allows the user to copy a specific section of the Aider chat history buffer, defined by selecting start and end prompt blocks.
+
+Aider prompt blocks are identified by lines starting with =#### =. The command works as follows:
+
+1.  It scans the current buffer (expected to be the =.aider.chat.history.md= file) and identifies all prompt blocks.
+2.  It prompts the user (using minibuffer completion) to select the *first line* of the desired *start* prompt block.
+3.  It prompts the user (using minibuffer completion) to select the *first line* of the desired *end* prompt block.
+    - If the user presses =RET= at the end prompt without selecting anything, the copy region extends to the end of the buffer.
+4.  It copies the text from the beginning of the selected start prompt block up to the beginning of the prompt block *immediately following* the selected end prompt block (or to the end of the buffer if the selected end block was the last one, or if the user pressed =RET= for the end prompt).
+5.  The copied text is placed in the kill ring.
+
+This command is useful for extracting specific interactions or sections from a long chat history.
+
+* Configuration Functions
+:PROPERTIES:
+:CUSTOM_ID: h:configuration-functions
+:END:
+
+These functions are intended for use in Emacs configuration, typically added to hooks or advice.
+
+** Confirm Killing Aidermacs Buffer
+:PROPERTIES:
+:CUSTOM_ID: h:aidermacs-extras-confirm-kill-buffer
+:END:
+
+#+findex: aidermacs-extras-confirm-kill-buffer
+The function ~aidermacs-extras-confirm-kill-buffer~ is designed to be added to the ~kill-buffer-query-functions~ hook.
+
+When the user attempts to kill a buffer:
+1. It checks if the buffer's major mode is =comint-mode=.
+2. It checks if there is a running process associated with the buffer (using =term-check-proc=).
+3. It checks if the buffer name matches the pattern =\\*aidermacs*=.
+
+If all these conditions are true, it prompts the user with "Buffer has a running process. Kill anyway? ". If the user answers no (or cancels), the function returns nil, preventing the buffer from being killed. Otherwise (if the user answers yes, or if any of the initial checks fail), it returns t, allowing the buffer kill operation to proceed.
+
+This prevents accidental termination of an active Aider session.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

@@ -1,0 +1,56 @@
+#+title: bibtex-completion-extras: Extensions for bibtex-completion
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: bibtex-completion-extras.info
+#+texinfo_filename: bibtex-completion-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: BibTeX Completion Extras: (bibtex-completion-extras)
+#+texinfo_dir_desc: Extensions for bibtex-completion
+
+This manual describes the features and customization options for the Emacs Lisp file =bibtex-completion-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=bibtex-completion-extras.el= provides a minor extension for the =bibtex-completion= package, which facilitates inserting citations and bibliographies. The primary purpose of this extension is to disable the automatic file-watching feature of =bibtex-completion=.
+
+* Patched Functions
+:PROPERTIES:
+:CUSTOM_ID: h:patched-functions
+:END:
+
+=bibtex-completion-extras.el= modifies the behavior of one standard =bibtex-completion= function using =el-patch=:
+
+** Disable File Watching in Initialization
+:PROPERTIES:
+:CUSTOM_ID: h:bibtex-completion-init-patch
+:END:
+
+#+findex: bibtex-completion-init
+The original ~bibtex-completion-init~ function is patched to remove the code responsible for setting up file watches on the bibliography files specified in ~bibtex-completion-bibliography~.
+
+The original function would normally add watches using ~file-notify-add-watch~ to automatically reload the bibliography data when the underlying BibTeX files change. This patch disables that behavior.
+
+*Rationale:* Disabling file watching might be desirable in setups where bibliography files are large or numerous, and the overhead of file watching is noticeable, or if the user prefers to manually refresh the bibliography data when needed.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

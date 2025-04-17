@@ -1,0 +1,73 @@
+#+title: org-web-tools-extras: Extensions for org-web-tools
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: org-web-tools-extras.info
+#+texinfo_filename: org-web-tools-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Org Web Tools Extras: (org-web-tools-extras)
+#+texinfo_dir_desc: Extensions for org-web-tools
+
+This manual describes the features and customization options for the Emacs Lisp file =org-web-tools-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=org-web-tools-extras.el= provides extensions for the =org-web-tools= package, which offers utilities for interacting with web content within Org mode. These extensions focus on fetching web page titles and inserting formatted Org links, particularly adapting functionality for use within Org Capture templates.
+
+The main features include:
+
++ A function to insert an Org link for a URL found in the kill ring (clipboard), suitable for Org Capture.
++ A function to fetch the title of a web page at a given URL and return it, cleaned for use in Org links.
+
+* Functions
+:PROPERTIES:
+:CUSTOM_ID: h:functions
+:END:
+
+=org-web-tools-extras.el= provides the following functions:
+
+** Insert Link for Clipboard URL
+:PROPERTIES:
+:CUSTOM_ID: h:org-web-tools-extras-insert-link-for-clipboard-url
+:END:
+
+#+findex: org-web-tools-extras-insert-link-for-clipboard-url
+The function ~org-web-tools-extras-insert-link-for-clipboard-url~ is a wrapper around the internal =org-web-tools--org-link-for-url= function. It first retrieves the first URL found in the kill ring (using =org-web-tools--get-first-url=) and then passes this URL to =org-web-tools--org-link-for-url= to fetch the page title and insert a fully formatted Org link (`[[url][title]]`) at the current point.
+
+This function is specifically designed to be easily callable from an Org Capture template, allowing automatic link creation based on a URL previously copied to the clipboard.
+
+** Get Org Title for URL
+:PROPERTIES:
+:CUSTOM_ID: h:org-web-tools-extras-org-title-for-url
+:END:
+
+#+findex: org-web-tools-extras-org-title-for-url
+The function ~org-web-tools-extras-org-title-for-url~ fetches the HTML content of a given URL, extracts the content of the `<title>` tag, cleans it up (using =org-web-tools--cleanup-title=), and returns the cleaned title string.
+
+- If the URL argument is not provided, it defaults to fetching the first URL from the kill ring.
+- It uses the =plz= library (presumably configured elsewhere) to fetch the URL content and =libxml-parse-html-region= to parse the HTML.
+- If fetching or parsing fails, or if the page has no `<title>` tag, it returns the fallback string "Downloaded webpage".
+
+This function can be used to programmatically get titles for URLs for various purposes within Emacs Lisp.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

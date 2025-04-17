@@ -1,6 +1,6 @@
 #+title: abbrev-extras: Extensions for Emacs Abbreviations
 #+author: Pablo Stafforini
-#+email: YOUR-EMAIL-HERE ; TODO: Replace with actual email
+#+email: pablo@stafforini.com
 #+language: en
 #+options: ':t toc:t author:t email:t num:t
 #+startup: content
@@ -11,23 +11,6 @@
 #+texinfo_dir_desc: Extensions for Emacs Abbreviations
 
 This manual describes the features and customization options for the Emacs Lisp file =abbrev-extras.el=.
-
-* COPYING
-:PROPERTIES:
-:COPYING: t
-:CUSTOM_ID: h:copying
-:END:
-
-Copyright (C) 2025 Pablo Stafforini
-
-#+begin_quote
-Permission is granted to copy, distribute and/or modify this document
-under the terms of the GNU Free Documentation License, Version 1.3 or
-any later version published by the Free Software Foundation; with no
-Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts. A
-copy of the license is included in the section entitled "GNU Free
-Documentation License".
-#+end_quote
 
 * Overview
 :PROPERTIES:
@@ -109,22 +92,6 @@ These functions are used internally by the main commands but are not typically c
 + ~abbrev-extras-get-sorted-modes~: Returns a sorted list of symbols representing available major modes. Used to provide completion candidates for the mode prompt in ~abbrev-extras-add-mode-abbrev~.
 + ~abbrev-extras-add-abbrev-to-table~: Defines a given abbrev and expansion in a specified abbrev table symbol.
 + ~abbrev-extras-maybe-create-abbrev-table~: Creates an abbrev table variable if it is not already bound.
-
-* GNU Free Documentation License
-:PROPERTIES:
-:APPENDIX: t
-:CUSTOM_ID: h:gnu-fdl
-:END:
-
-#+include: "../../../../source/denote/doclicense.texi" export texinfo
-
-#+begin_export html
-<pre>
-                GNU Free Documentation License
-                 Version 1.3, 3 November 2008
- [...] // FDL text omitted for brevity - assume full text is included
-</pre>
-#+end_export
 
 * Indices
 :PROPERTIES:

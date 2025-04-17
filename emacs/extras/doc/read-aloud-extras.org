@@ -1,0 +1,151 @@
+#+title: read-aloud-extras: Extensions for read-aloud
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: read-aloud-extras.info
+#+texinfo_filename: read-aloud-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Read Aloud Extras: (read-aloud-extras)
+#+texinfo_dir_desc: Extensions for read-aloud
+
+This manual describes the features and customization options for the Emacs Lisp file =read-aloud-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=read-aloud-extras.el= provides extensions for the =read-aloud= package, which enables text-to-speech functionality within Emacs. These extensions focus on customizing the speech engine parameters (rate and voice), reading entire files (including PDFs), and patching the core functionality to work correctly with PDF selections.
+
+The main features include:
+
++ User options and commands to set, increase, or decrease the speech rate.
++ User options and commands to select the voice used by the speech engine (currently implemented for macOS `say`).
++ A command to read the entire content of the current buffer or a specified file (with PDF text extraction).
++ A patch to allow reading the selected region in PDF Tools buffers.
+
+* User Options
+:PROPERTIES:
+:CUSTOM_ID: h:user-options
+:END:
+
+This section details the user-configurable variables provided by =read-aloud-extras.el=.
+
+** Speech Rate
+:PROPERTIES:
+:CUSTOM_ID: h:speech-rate-options
+:END:
+
+#+vindex: read-aloud-extras-rate
++ ~read-aloud-extras-rate~: The target speech rate in words per minute (Default: 200). This value is used when updating the speech engine configuration.
+#+vindex: read-aloud-extras-rate-change
++ ~read-aloud-extras-rate-change~: The amount (in words per minute) by which the rate is increased or decreased by the respective commands (Default: 10).
+
+** Speech Voice
+:PROPERTIES:
+:CUSTOM_ID: h:speech-voice-options
+:END:
+
+#+vindex: read-aloud-extras-voice
++ ~read-aloud-extras-voice~: The name of the voice to be used by the speech engine. This should correspond to a voice name recognized by the configured `read-aloud-engine` (e.g., "Alex", "Samantha" for macOS `say`). Defaults to an empty string, likely relying on the engine's default voice.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=read-aloud-extras.el= provides the following interactive commands:
+
+** Set Speech Rate
+:PROPERTIES:
+:CUSTOM_ID: h:read-aloud-extras-set-rate
+:END:
+
+#+findex: read-aloud-extras-set-rate
+The command ~read-aloud-extras-set-rate~ prompts the user for a new speech rate (in words per minute). It updates the ~read-aloud-extras-rate~ variable and then calls ~read-aloud-extras-update-current-engine~ to apply the change to the active speech engine configuration.
+
+** Increase Speech Rate
+:PROPERTIES:
+:CUSTOM_ID: h:read-aloud-extras-increase-rate
+:END:
+
+#+findex: read-aloud-extras-increase-rate
+The command ~read-aloud-extras-increase-rate~ increases the current speech rate (~read-aloud-extras-rate~) by the amount specified in ~read-aloud-extras-rate-change~ and applies the change using ~read-aloud-extras-update-current-engine~.
+
+** Decrease Speech Rate
+:PROPERTIES:
+:CUSTOM_ID: h:read-aloud-extras-decrease-rate
+:END:
+
+#+findex: read-aloud-extras-decrease-rate
+The command ~read-aloud-extras-decrease-rate~ decreases the current speech rate (~read-aloud-extras-rate~) by the amount specified in ~read-aloud-extras-rate-change~ and applies the change using ~read-aloud-extras-update-current-engine~.
+
+** Set Speech Voice
+:PROPERTIES:
+:CUSTOM_ID: h:read-aloud-extras-set-voice
+:END:
+
+#+findex: read-aloud-extras-set-voice
+The command ~read-aloud-extras-set-voice~ allows the user to select a new voice for the speech engine. Currently, it only supports the macOS `say` engine. It calls ~read-aloud-extras-select-say-voice~ to present a list of available voices, updates the ~read-aloud-extras-voice~ variable with the selection, and then calls ~read-aloud-extras-update-current-engine~ to apply the change.
+
+** Read File Aloud
+:PROPERTIES:
+:CUSTOM_ID: h:read-aloud-extras-read-file
+:END:
+
+#+findex: read-aloud-extras-read-file
+The command ~read-aloud-extras-read-file~ reads the entire content of a file aloud.
+- If called without an argument, it reads the file associated with the current buffer.
+- If given a FILE argument (interactively or programmatically), it reads that file.
+- It detects the file extension:
+  - If it's a PDF, it extracts the text using ~tlon-convert-pdf~ (presumably a custom function calling `pdftotext`).
+  - Otherwise, it reads the buffer content directly.
+- It creates or uses a dedicated buffer (`*read-aloud*`), inserts the extracted/read text, fills it to remove excessive line breaks, and then calls the standard =read-aloud-buf= command to start reading from the beginning of that buffer. It also switches focus to the `*read-aloud*` buffer.
+
+* Patched Functions
+:PROPERTIES:
+:CUSTOM_ID: h:patched-functions
+:END:
+
+=read-aloud-extras.el= modifies the behavior of one standard =read-aloud= function using =el-patch=:
+
+** Allow Reading PDF Selections
+:PROPERTIES:
+:CUSTOM_ID: h:read-aloud-this-patch
+:END:
+
+#+findex: read-aloud-this
+The original ~read-aloud-this~ command reads either the active region or the word at point. This patch modifies it to correctly handle text selected within a PDF Tools buffer (`pdf-view-mode`).
+- It changes the condition `(use-region-p)` to `(or (use-region-p) (pdf-view-active-region-p))` to detect selections made with PDF Tools.
+- When reading the selection, it checks if the current mode is `pdf-view-mode`. If so, it uses `(car (pdf-view-active-region-text))` to get the selected text; otherwise, it uses the standard `(buffer-substring-no-properties (region-beginning) (region-end))`.
+This allows the "read selection" functionality to work seamlessly with PDFs viewed using PDF Tools.
+
+* Internal Functions
+:PROPERTIES:
+:CUSTOM_ID: h:internal-functions
+:END:
+
++ ~read-aloud-extras-update-engine~: Updates the entry for a specific engine (NAME) in the `read-aloud-engines` variable with new PARAMETERS.
++ ~read-aloud-extras-update-current-engine~: Calls the appropriate update function (currently only ~read-aloud-extras-update-say-engine~) based on the value of `read-aloud-engine`.
++ ~read-aloud-extras-update-say-engine~: Updates the "say" engine configuration in `read-aloud-engines` using the current values of ~read-aloud-extras-voice~ and ~read-aloud-extras-rate~.
++ ~read-aloud-extras-change-rate~: Helper function to increase or decrease the rate variable.
++ ~read-aloud-extras-select-say-voice~: Uses the `say -v \?` shell command to get a list of available voices on macOS and prompts the user to select one using `completing-read`. Returns the selected voice name.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

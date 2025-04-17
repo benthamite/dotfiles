@@ -1,0 +1,64 @@
+#+title: outline-extras: Extensions for Outline Mode
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: outline-extras.info
+#+texinfo_filename: outline-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Outline Extras: (outline-extras)
+#+texinfo_dir_desc: Extensions for Outline Mode
+
+This manual describes the features and customization options for the Emacs Lisp file =outline-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=outline-extras.el= provides minor extensions for Emacs' built-in =outline-mode= and modes derived from it (like =org-mode=). These extensions offer slightly modified commands for promoting and demoting headings.
+
+The main features include:
+
++ Commands to promote or demote the current heading while keeping the point on the heading line.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=outline-extras.el= provides the following interactive commands:
+
+** Promote Heading (Keep Point)
+:PROPERTIES:
+:CUSTOM_ID: h:outline-extras-promote-heading
+:END:
+
+#+findex: outline-extras-promote-heading
+The command ~outline-extras-promote-heading~ promotes the current outline heading (e.g., decreases its level in Org mode) by calling the standard =outline-promote= command with a prefix argument of 4 (which typically corresponds to promoting by one level). Crucially, after promoting, it calls =outline-previous-heading= to move the point back to the heading line that was just promoted. This differs from the standard =outline-promote= which might leave the point at the beginning of the line below the heading.
+
+** Demote Heading (Keep Point)
+:PROPERTIES:
+:CUSTOM_ID: h:outline-extras-demote-heading
+:END:
+
+#+findex: outline-extras-demote-heading
+The command ~outline-extras-demote-heading~ demotes the current outline heading (e.g., increases its level in Org mode) by calling the standard =outline-demote= command with a prefix argument of 4. Similar to ~outline-extras-promote-heading~, it then calls =outline-previous-heading= to move the point back to the heading line that was just demoted, keeping the focus on the modified heading.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

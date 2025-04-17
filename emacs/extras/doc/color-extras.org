@@ -1,0 +1,158 @@
+#+title: color-extras: Extensions for Color Handling
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: color-extras.info
+#+texinfo_filename: color-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Color Extras: (color-extras)
+#+texinfo_dir_desc: Extensions for Color Handling
+
+This manual describes the features and customization options for the Emacs Lisp file =color-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=color-extras.el= provides extensions for handling color values within Emacs. It focuses on parsing, converting, and analyzing colors represented in hexadecimal (HEX) and Hue-Saturation-Luminance (HSL) formats. It also integrates with the =embark= package for contextual actions on color values.
+
+The main features include:
+
++ Parsing HEX and HSL color strings.
++ Functions to detect HEX or HSL color values at point.
++ Commands to convert colors between HEX and HSL formats (either at point or throughout a buffer).
++ Functions for internal color space conversions (HEX to RGB, RGB to HSL, HSL to HEX).
++ A command to calculate the WCAG contrast ratio between colors.
++ Integration with =embark= to provide color-specific actions.
+
+* Variables
+:PROPERTIES:
+:CUSTOM_ID: h:variables
+:END:
+
+** Regular Expressions
+:PROPERTIES:
+:CUSTOM_ID: h:regexps
+:END:
+
+#+vindex: color-extras-hex-pattern
+~color-extras-hex-pattern~: A regular expression to match standard 6-digit hexadecimal color codes (e.g., =#RRGGBB=), capturing the hex digits without the leading =#=.
+
+#+vindex: color-extras-hsl-scaled-pattern
+~color-extras-hsl-scaled-pattern~: A regular expression to match HSL color strings in the format "H, S%, L%" or "H, S, L", where H is 0-360 and S, L are 0-100. Captures the three numeric values.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=color-extras.el= provides the following interactive commands:
+
+** Convert Color Format
+:PROPERTIES:
+:CUSTOM_ID: h:color-extras-convert
+:END:
+
+#+findex: color-extras-convert
+The command ~color-extras-convert~ converts the color value at point between HEX and HSL formats.
+- If the color at point is HEX (e.g., =#ff0000=), it converts it to HSL (e.g., =0, 100%, 50%=) and copies the HSL string to the kill ring.
+- If the color at point is HSL (e.g., =0, 100%, 50%=), it converts it to HEX (e.g., =#ff0000=) and copies the HEX string to the kill ring.
+- If no color is found at point, it prompts the user to enter a color.
+
+** Convert All Colors in Buffer/File
+:PROPERTIES:
+:CUSTOM_ID: h:color-extras-convert-all
+:END:
+
+#+findex: color-extras-convert-all
+The command ~color-extras-convert-all~ converts *all* color values within the current buffer (or specified FILE) to the target FORMAT (either "hex" or "hsl"). It searches for colors matching the *opposite* format and replaces them with the converted value. For example, if FORMAT is "hex", it finds all HSL strings and replaces them with their HEX equivalents.
+
+** Calculate Contrast Ratio
+:PROPERTIES:
+:CUSTOM_ID: h:color-extras-contrast
+:END:
+
+#+findex: color-extras-contrast
+The command ~color-extras-contrast~ calculates the WCAG contrast ratio between two colors.
+- It prompts for the first color (COLOR1), defaulting to the color at point if available.
+- It prompts for an optional second color (COLOR2).
+- It calculates and displays the contrast ratio between COLOR1 and white (#ffffff), COLOR1 and black (#000000), and COLOR1 and COLOR2 (if provided).
+- It requires the =ct= package for the underlying contrast calculation (=ct-contrast-ratio=).
+
+* Utility Functions
+:PROPERTIES:
+:CUSTOM_ID: h:utility-functions
+:END:
+
+These functions provide helper functionalities for parsing, formatting, and converting colors.
+
+** Parsing and Detection
+:PROPERTIES:
+:CUSTOM_ID: h:parsing-detection
+:END:
+
++ ~color-extras-parse-color~: Parses a COLOR string. Returns the HEX string (without #) if it's HEX. Returns a list of three numbers (H, S, L scaled 0-100) if it's HSL. Can optionally return the HSL list as a formatted string.
++ ~color-extras-looking-at-rgb~: Returns the 6-digit HEX string at point (without #) if found, else nil.
++ ~color-extras-looking-at-hsl-scaled~: Returns the HSL color at point as a list `(H S L)` (scaled 0-100) or as a formatted string if optional STRING argument is non-nil. Returns nil if no HSL color is found.
++ ~color-extras-looking-at-color~: Returns the HEX string or HSL list/string found at point, preferring HEX.
+
+** HSL Formatting and Splitting
+:PROPERTIES:
+:CUSTOM_ID: h:hsl-formatting
+:END:
+
++ ~color-extras-hsl-split~: Extracts the H, S, L numeric values from the current regexp match data (assuming a match for =color-extras-hsl-scaled-pattern=) and returns them as a list `(H S L)`.
++ ~color-extras-hsl-to-string~: Converts an HSL list `(H S L)` (scaled 0-100) into a formatted string "H, S%, L%".
++ ~color-extras-format-hsl~: Takes an HSL list `(H S L)` and returns either the list itself or the formatted string version based on the optional STRING argument.
+
+** Color Space Conversions
+:PROPERTIES:
+:CUSTOM_ID: h:color-space-conversions
+:END:
+
++ ~color-extras-hex-to-rgb~: Converts a HEX color string (e.g., "#RRGGBB", "#RGB") to a list of three RGB floats `(R G B)` (scaled 0.0-1.0). Handles 3, 4, 6, and 8-digit hex codes (ignoring alpha for 4/8 digits).
++ ~color-extras-rgb-to-hex~: Converts three RGB integers `(R G B)` (scaled 0-255) to a 6-digit HEX string (e.g., "#RRGGBB").
++ ~color-extras-hex-to-hsl~: Converts a HEX string to an HSL list `(H S L)`. If optional RESCALE is non-nil, returns values scaled 0-360 for H and 0-100 for S, L. Otherwise, returns values scaled 0.0-1.0.
++ ~color-extras-hsl-to-hex~: Converts an HSL list `(H S L)` to a HEX string. If optional RESCALE is non-nil, assumes input values are scaled (0-360 for H, 0-100 for S, L). Otherwise, assumes input values are scaled 0.0-1.0.
+
+** Internal Rescaling Helpers
+:PROPERTIES:
+:CUSTOM_ID: h:rescaling-helpers
+:END:
+
++ ~color-extras-hsl-rescale~: Rescales HSL values between the 0.0-1.0 range and the scaled range (0-360 for H, 0-100 for S, L) based on the OPERATION (`*` or `/`).
++ ~color-extras-hsl-maybe-rescale~: Calls ~color-extras-hsl-rescale~ only if the RESCALE argument is non-nil.
+
+* Embark Integration
+:PROPERTIES:
+:CUSTOM_ID: h:embark-integration
+:END:
+
+=color-extras.el= integrates with the =embark= package to provide contextual actions for color values.
+
++ ~color-extras-embark-color-finder~: A function designed for =embark-target-finders=. It identifies HEX or HSL color strings at point and returns them with the category =color=.
++ ~color-extras-embark-map~: A keymap associated with the =color= category. It binds:
+  + =c= to ~color-extras-convert~ (convert color format).
+  + =w= to =embark-copy-as-kill= (copy the color string).
+
+This allows users to invoke Embark on a color string and quickly convert it or copy it.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

@@ -1,0 +1,123 @@
+#+title: vulpea-extras: Extensions for vulpea
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: vulpea-extras.info
+#+texinfo_filename: vulpea-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Vulpea Extras: (vulpea-extras)
+#+texinfo_dir_desc: Extensions for the vulpea note-taking helper
+
+This manual describes the features and customization options for the Emacs Lisp file =vulpea-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=vulpea-extras.el= provides extensions for the =vulpea= package, which enhances note-taking workflows, particularly with Org Roam. These extensions focus on automatically identifying "project" files based on their content (TODO items, scheduled tasks, deadlines, anniversaries) and managing the =org-agenda-files= list accordingly.
+
+The main features include:
+
++ Automatically detecting if an Org Roam note qualifies as a "project" file.
++ Automatically adding or removing a "project" tag to files based on their status.
++ Dynamically updating =org-agenda-files= to include project files and recently modified notes before the agenda is generated.
++ Customizable exclusion lists for directories and specific files.
+
+* Configuration Variables
+:PROPERTIES:
+:CUSTOM_ID: h:configuration-variables
+:END:
+
+These variables allow customization of which files are considered for project status and inclusion in the agenda.
+
+** ~vulpea-extras-excluded-directories~
+:PROPERTIES:
+:CUSTOM_ID: h:vulpea-extras-excluded-directories
+:END:
+
+#+vindex: vulpea-extras-excluded-directories
+A list of directory paths. Org files within these directories will be ignored by ~vulpea-extras-project-p~ and thus will not be automatically tagged as projects or necessarily included in the agenda based on project status.
+
+** ~vulpea-extras-excluded-files~
+:PROPERTIES:
+:CUSTOM_ID: h:vulpea-extras-excluded-files
+:END:
+
+#+vindex: vulpea-extras-excluded-files
+A list of specific file paths. These files will be ignored by ~vulpea-extras-project-p~, similar to files in excluded directories.
+
+* Configuration Functions
+:PROPERTIES:
+:CUSTOM_ID: h:configuration-functions
+:END:
+
+These functions are designed to be used in hooks or advice to automate the project tagging and agenda file management.
+
+** Update Project Tag
+:PROPERTIES:
+:CUSTOM_ID: h:vulpea-extras-project-update-tag
+:END:
+
+#+findex: vulpea-extras-project-update-tag
+The function ~vulpea-extras-project-update-tag~ checks if the current buffer qualifies as a project (using ~vulpea-extras-project-p~ or ~vulpea-extras-anniversary-p~) and adds or removes the "project" tag accordingly using =vulpea-buffer-tags-set=. It ensures tags are unique and only modifies the tags if a change is needed. This function is typically added to a hook, such as ~after-save-hook~, for Org Roam files.
+
+** Update Org Agenda Files
+:PROPERTIES:
+:CUSTOM_ID: h:vulpea-extras-agenda-files-update
+:END:
+
+#+findex: vulpea-extras-agenda-files-update
+The function ~vulpea-extras-agenda-files-update~ dynamically updates the global variable =org-agenda-files= before the agenda is generated. It adds:
+1. Files currently in =org-agenda-files=.
+2. Files identified as projects via the "project" tag (queried using ~vulpea-extras-project-files~).
+3. Recently modified Org Roam files (using ~org-roam-extras-recent~, limited by days and count).
+It then removes duplicates and any files listed in the user-defined variable =org-extras-agenda-files-excluded=. This function is added as `:before` advice to the =org-agenda= command.
+
+* Helper Functions
+:PROPERTIES:
+:CUSTOM_ID: h:helper-functions
+:END:
+
+These functions provide the core logic used by the configuration functions.
+
++ ~vulpea-extras-project-p~: Determines if the current Org mode buffer represents a project. It returns non-nil if the buffer contains at least one headline that:
+  - Is not archived (does not have the "ARCHIVE" tag, respecting inheritance).
+  - Is a TODO item (type 'todo').
+  - OR is not DONE and has a SCHEDULED or DEADLINE property.
+  It respects the ~vulpea-extras-excluded-directories~ and ~vulpea-extras-excluded-files~ variables.
++ ~vulpea-extras-anniversary-p~: Returns non-nil if the current Org mode buffer contains an Org anniversary expression (e.g., =%%(org-anniversary ...)=).
++ ~vulpea-extras-project-files~: Queries the Org Roam database to return a unique list of file paths that have the "project" tag associated with any node within them.
++ ~vulpea-extras-buffer-p~: Returns non-nil if the current buffer's file name is located within the =org-roam-directory=.
+
+* Advised Functions
+:PROPERTIES:
+:CUSTOM_ID: h:advised-functions
+:END:
+
+** ~org-agenda~
+:PROPERTIES:
+:CUSTOM_ID: h:org-agenda-advice
+:END:
+
+#+findex: org-agenda
+The standard =org-agenda= command is advised `:before` by ~vulpea-extras-agenda-files-update~. This ensures that the =org-agenda-files= list is up-to-date with project files and recent notes immediately before the agenda view is constructed.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

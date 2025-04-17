@@ -1,0 +1,403 @@
+#+title: files-extras: Extensions for File and Buffer Handling
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: files-extras.info
+#+texinfo_filename: files-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Files Extras: (files-extras)
+#+texinfo_dir_desc: Extensions for File and Buffer Handling
+
+This manual describes the features and customization options for the Emacs Lisp file =files-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=files-extras.el= provides a wide range of extensions for general file and buffer manipulation in Emacs. It enhances built-in commands, adds new convenience functions, integrates with external tools (like `trash`, `ocrmypdf`, `pandoc`), and offers custom transient menus.
+
+The main features include:
+
++ **File Deletion:** Overrides `system-move-file-to-trash` to use the external `trash` utility (macOS) for "Put Back" functionality.
++ **Buffer Management:** Commands to save/revert, bury the scratch buffer instead of killing, create new empty buffers, switch to alternate buffers, kill buffers smartly, and revert all file buffers.
++ **Editing Enhancements:** Macros and functions for deleting or copying text units (words, lines, sentences, paragraphs, sexps) without affecting the kill ring, transposing units backward, zapping characters (kill/copy/delete), and smart kill/delete/copy based on region state.
++ **Yanking:** Commands to yank and pop the kill ring, or paste without text properties.
++ **Point/Mark:** Enhanced `exchange-point-and-mark` with slightly different behavior in transient mark mode.
++ **Mode Toggling:** Enhanced `visible-mode` toggle that also affects related modes (Dired, Org). Enhanced `visual-line-mode` toggle that manages `truncate-lines`.
++ **DWIM Commands:** `keyboard-quit-dwim` for context-aware quitting, `indent-dwim` for context-aware indentation.
++ **File/Path Utilities:** Get newest file in a directory (excluding macOS clutter), switch to most recent buffer in a specific mode, set buffer-local keys, get file stem, check if point is on last line, copy current path, copy file contents.
++ **External Tools Integration:**
+  + OCR PDF files using `ocrmypdf`.
+  + Download and install "Bypass Paywalls" browser extensions.
+  + Convert clipboard content using Pandoc.
++ **Text Manipulation:** Asciify text (remove accents), slugify strings (for filenames/URLs), remove extra blank lines.
++ **Auto-Save:** Enable auto-save for new untitled buffers, use hashed filenames for auto-save/backup files to avoid long paths.
++ **File Recovery:** Command to recover all auto-saved files after a crash, alert when auto-save data is detected for the current file.
++ **Diffing:** Command to diff the current buffer against its saved file.
++ **Directory Locals:** Option to walk `.dir-locals.el` upward for chained evaluation (currently commented out).
++ **Image Conversion:** Command to convert the current image buffer to PDF using `convert`.
++ **Package Management:** Commands to open Elpaca package files or specific "extras" files.
++ **Transient Menus:** Dispatchers for quickly opening common configuration files, project files, and package files.
+
+* User Options
+:PROPERTIES:
+:CUSTOM_ID: h:user-options
+:END:
+
+** ~files-extras-new-empty-buffer-major-mode~
+:PROPERTIES:
+:CUSTOM_ID: h:files-extras-new-empty-buffer-major-mode
+:END:
+
+#+vindex: files-extras-new-empty-buffer-major-mode
+Specifies the major mode (symbol) to activate in new buffers created by ~files-extras-new-empty-buffer~. Default is =org-mode=.
+
+** ~files-extras-walk-dir-locals-upward~
+:PROPERTIES:
+:CUSTOM_ID: h:files-extras-walk-dir-locals-upward
+:END:
+
+#+vindex: files-extras-walk-dir-locals-upward
+If non-nil, advice for `hack-dir-local-variables` (currently commented out) would evaluate `.dir-locals.el` files starting from the current directory and moving upwards, effectively chaining their settings. Default is nil.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=files-extras.el= provides numerous interactive commands:
+
+** Buffer and File Management
+:PROPERTIES:
+:CUSTOM_ID: h:buffer-file-management
+:END:
+
+#+findex: files-extras-save-and-revert-buffer
+~files-extras-save-and-revert-buffer~: Saves the current buffer, then reverts it from the file on disk.
+#+findex: files-extras-new-empty-buffer
+~files-extras-new-empty-buffer~: Creates a new buffer named "untitled<n>" with the major mode specified by ~files-extras-new-empty-buffer-major-mode~.
+#+findex: files-extras-new-buffer-in-current-mode
+~files-extras-new-buffer-in-current-mode~: Creates a new buffer with the same major mode as the current buffer. Handles shell/eshell modes specially.
+#+findex: files-extras-save-all-buffers
+~files-extras-save-all-buffers~: Saves all file-visiting buffers without prompting.
+#+findex: files-extras-save-buffer-no-hooks
+~files-extras-save-buffer-no-hooks~: Saves the current buffer without running `before-save-hook` or `after-save-hook`.
+#+findex: files-extras-switch-to-alternate-buffer
+~files-extras-switch-to-alternate-buffer~: Switches to the most recently visited buffer in the current window (respecting frame's `buffer-predicate`).
+#+findex: files-extras-kill-this-buffer
+~files-extras-kill-this-buffer~: Kills the current buffer.
+#+findex: file-extras-kill-other-buffer
+~file-extras-kill-other-buffer~: Kills the buffer displayed in the other window.
+#+findex: files-extras-kill-this-buffer-switch-to-other-window
+~files-extras-kill-this-buffer-switch-to-other-window~: Kills the current buffer and switches focus to the other window.
+#+findex: files-extras-kill-all-file-visiting-buffers
+~files-extras-kill-all-file-visiting-buffers~: Kills all buffers that are visiting files, optionally excluding specific files.
+#+findex: files-extras-bury-buffer-switch-to-other-window
+~files-extras-bury-buffer-switch-to-other-window~: Buries the current buffer and switches focus to the other window.
+#+findex: files-extras-revert-all-file-buffers
+~files-extras-revert-all-file-buffers~: Reverts all unmodified file-visiting buffers without confirmation. Kills buffers whose files no longer exist or are unreadable.
+#+findex: files-extras-show-buffer-name
+~files-extras-show-buffer-name~: Displays the full path of the current buffer's file in the echo area and copies it to the kill ring.
+#+findex: files-extras-recover-all-files
+~files-extras-recover-all-files~: Attempts to recover all files found in the auto-save directory. Useful after a crash when `recover-session` might not work. Runs `diff-buffer-with-file` after each recovery attempt.
+#+findex: files-extras-diff-buffer-with-file
+~files-extras-diff-buffer-with-file~: Runs `diff-buffer-with-file` using unified diff format (`-u`). Also added as `:after` advice to `recover-this-file`.
+#+findex: files-extras-copy-current-path
+~files-extras-copy-current-path~: Copies the current buffer's file path or `default-directory` to the kill ring.
+#+findex: file-extras-copy-contents
+~file-extras-copy-contents~: Copies the entire content of a specified file (or file at point/current buffer's file) to the kill ring.
+#+findex: files-extras-buffer-local-set-key
+~files-extras-buffer-local-set-key~: Interactively binds a KEY to a COMMAND locally in the current buffer.
+
+** Editing Commands (Delete/Copy without Kill Ring)
+:PROPERTIES:
+:CUSTOM_ID: h:editing-commands
+:END:
+
+*(Note: These commands perform deletion or copying *without* adding the text to the kill ring, unlike standard `kill-*` commands.)*
+
+#+findex: simple-extras-delete-word
+~simple-extras-delete-word~: Deletes forward word(s).
+#+findex: simple-extras-backward-delete-word
+~simple-extras-backward-delete-word~: Deletes backward word(s).
+#+findex: simple-extras-copy-word
+~simple-extras-copy-word~: Copies forward word(s).
+#+findex: simple-extras-backward-copy-word
+~simple-extras-backward-copy-word~: Copies backward word(s).
+#+findex: simple-extras-delete-whole-word
+~simple-extras-delete-whole-word~: Deletes the word at point.
+#+findex: simple-extras-copy-whole-word
+~simple-extras-copy-whole-word~: Copies the word at point.
+
+#+findex: simple-extras-delete-line
+~simple-extras-delete-line~: Deletes line(s) forward from point.
+#+findex: simple-extras-backward-delete-line
+~simple-extras-backward-delete-line~: Deletes the line backward from point.
+#+findex: simple-extras-copy-line
+~simple-extras-copy-line~: Copies line(s) forward from point.
+#+findex: simple-extras-backward-copy-line
+~simple-extras-backward-copy-line~: Copies the line backward from point.
+#+findex: simple-extras-delete-whole-line
+~simple-extras-delete-whole-line~: Deletes the current line.
+#+findex: simple-extras-copy-whole-line
+~simple-extras-copy-whole-line~: Copies the current line.
+
+#+findex: simple-extras-delete-sentence
+~simple-extras-delete-sentence~: Deletes sentence(s) forward.
+#+findex: simple-extras-backward-delete-sentence
+~simple-extras-backward-delete-sentence~: Deletes sentence(s) backward.
+#+findex: simple-extras-copy-sentence
+~simple-extras-copy-sentence~: Copies sentence(s) forward.
+#+findex: simple-extras-backward-copy-sentence
+~simple-extras-backward-copy-sentence~: Copies sentence(s) backward.
+#+findex: simple-extras-delete-whole-sentence
+~simple-extras-delete-whole-sentence~: Deletes the sentence at point.
+#+findex: simple-extras-copy-whole-sentence
+~simple-extras-copy-whole-sentence~: Copies the sentence at point.
+
+#+findex: simple-extras-delete-paragraph
+~simple-extras-delete-paragraph~: Deletes paragraph(s) forward/backward.
+#+findex: simple-extras-backward-delete-paragraph
+~simple-extras-backward-delete-paragraph~: Deletes paragraph(s) backward/forward.
+#+findex: simple-extras-copy-paragraph
+~simple-extras-copy-paragraph~: Copies paragraph(s) forward/backward.
+#+findex: simple-extras-backward-copy-paragraph
+~simple-extras-backward-copy-paragraph~: Copies paragraph(s) backward/forward.
+#+findex: simple-extras-delete-whole-paragraph
+~simple-extras-delete-whole-paragraph~: Deletes the paragraph at point.
+#+findex: simple-extras-copy-whole-paragraph
+~simple-extras-copy-whole-paragraph~: Copies the paragraph at point.
+
+#+findex: simple-extras-delete-sexp
+~simple-extras-delete-sexp~: Deletes sexp(s) forward/backward.
+#+findex: simple-extras-backward-delete-sexp
+~simple-extras-backward-delete-sexp~: Deletes sexp(s) backward/forward.
+#+findex: simple-extras-copy-sexp
+~simple-extras-copy-sexp~: Copies sexp(s) forward/backward.
+#+findex: simple-extras-backward-copy-sexp
+~simple-extras-backward-copy-sexp~: Copies sexp(s) backward/forward.
+#+findex: simple-extras-delete-whole-sexp
+~simple-extras-delete-whole-sexp~: Deletes the sexp at point.
+#+findex: simple-extras-copy-whole-sexp
+~simple-extras-copy-whole-sexp~: Copies the sexp at point.
+
+#+findex: simple-extras-zap-delete-to-char
+~simple-extras-zap-delete-to-char~: Deletes forward up to Nth occurrence of CHAR.
+#+findex: simple-extras-backward-zap-delete-to-char
+~simple-extras-backward-zap-delete-to-char~: Deletes backward up to Nth occurrence of CHAR.
+#+findex: simple-extras-zap-copy-to-char
+~simple-extras-zap-copy-to-char~: Copies forward up to Nth occurrence of CHAR.
+#+findex: simple-extras-backward-zap-copy-to-char
+~simple-extras-backward-zap-copy-to-char~: Copies backward up to Nth occurrence of CHAR.
+
+** Editing Commands (Kill Ring Related)
+:PROPERTIES:
+:CUSTOM_ID: h:editing-kill-ring
+:END:
+
+#+findex: simple-extras-kill-whole-word
+~simple-extras-kill-whole-word~: Kills the word at point.
+#+findex: simple-extras-kill-whole-line
+~simple-extras-kill-whole-line~: Kills the current line.
+#+findex: simple-extras-kill-whole-sentence
+~simple-extras-kill-whole-sentence~: Kills the sentence at point.
+#+findex: simple-extras-kill-whole-paragraph
+~simple-extras-kill-whole-paragraph~: Kills the paragraph at point.
+#+findex: simple-extras-kill-whole-sexp
+~simple-extras-kill-whole-sexp~: Kills the sexp at point.
+#+findex: simple-extras-backward-zap-to-char
+~simple-extras-backward-zap-to-char~: Kills backward up to Nth occurrence of CHAR.
+#+findex: simple-extras-yank-and-pop
+~simple-extras-yank-and-pop~: Yanks the top of the kill ring, then removes it from the ring.
+#+findex: simple-extras-paste-no-properties
+~simple-extras-paste-no-properties~: Yanks the top of the kill ring, removing all text properties.
+
+** Editing Commands (Smart/DWIM)
+:PROPERTIES:
+:CUSTOM_ID: h:editing-smart
+:END:
+
+#+findex: simple-extras-smart-kill-region
+~simple-extras-smart-kill-region~: Kills the active region, or kills the current line if no region is active.
+#+findex: simple-extras-smart-delete-region
+~simple-extras-smart-delete-region~: Deletes the active region, or deletes the current line if no region is active (without using kill ring).
+#+findex: simple-extras-smart-copy-region
+~simple-extras-smart-copy-region~: Copies the active region, or copies the current line if no region is active (without using kill ring).
+#+findex: simple-extras-eval-region-or-buffer
+~simple-extras-eval-region-or-buffer~: Evaluates the active region if present, otherwise evaluates the entire buffer.
+#+findex: simple-extras-count-words-dwim
+~simple-extras-count-words-dwim~: Counts words in the active region, or in the clipboard content if no region is active. Copies the count to the kill ring and messages the user.
+#+findex: simple-extras-indent-dwim
+~simple-extras-indent-dwim~: Indents the active region, or the current Org source block, or the entire buffer, whichever applies first. Runs `whitespace-cleanup` afterwards.
+#+findex: simple-extras-narrow-or-widen-dwim
+~simple-extras-narrow-or-widen-dwim~: Widens if the buffer is narrowed. Otherwise, narrows to the active region, Org source block, Org subtree, Ledger transaction, or defun, whichever applies first.
+#+findex: file-extras-copy-as-kill-dwim
+~file-extras-copy-as-kill-dwim~: Copies the relevant string based on context (e.g., symbol name from helpful buffer) to the kill ring.
+
+** Editing Commands (Transposition)
+:PROPERTIES:
+:CUSTOM_ID: h:editing-transpose
+:END:
+
+#+findex: simple-extras-transpose-words-backward
+~simple-extras-transpose-words-backward~: Transposes words around point, moving point backward.
+#+findex: simple-extras-transpose-chars-backward
+~simple-extras-transpose-chars-backward~: Transposes characters around point, moving point backward.
+#+findex: simple-extras-transpose-lines-backward
+~simple-extras-transpose-lines-backward~: Transposes the current and previous lines.
+#+findex: simple-extras-transpose-sentences-backward
+~simple-extras-transpose-sentences-backward~: Transposes the current and previous sentences.
+#+findex: simple-extras-transpose-paragraphs-backward
+~simple-extras-transpose-paragraphs-backward~: Transposes the current and previous paragraphs.
+#+findex: simple-extras-transpose-sexps-backward
+~simple-extras-transpose-sexps-backward~: Transposes sexps around point, moving point backward.
+
+** Editing Commands (Misc)
+:PROPERTIES:
+:CUSTOM_ID: h:editing-misc
+:END:
+
+#+findex: simple-extras-exchange-point-and-mark
+~simple-extras-exchange-point-and-mark~: Like `exchange-point-and-mark`, but with slightly modified behavior regarding mark activation when transient mark mode is on but inactive.
+#+findex: simple-extras-visible-mode-enhanced
+~simple-extras-visible-mode-enhanced~: Toggles `visible-mode` and related modes (`dired-hide-details-mode`, `dired-omit-mode`, `org-tidy-mode`, `org-extras-inline-images`, `org-modern-mode`) together.
+#+findex: simple-extras-visual-line-mode-enhanced
+~simple-extras-visual-line-mode-enhanced~: Toggles `visual-line-mode` and sets `truncate-lines` appropriately.
+#+findex: simple-extras-keyboard-quit-dwim
+~simple-extras-keyboard-quit-dwim~: Context-aware quit command (deactivates region, closes completions, aborts minibuffer, or calls `keyboard-quit`).
+#+findex: simple-extras-fill-or-unfill-paragraph
+~simple-extras-fill-or-unfill-paragraph~: Fills the current paragraph; if called again immediately, unfills it (sets fill-column to max).
+#+findex: simple-extras-asciify-text
+~simple-extras-asciify-text~: Removes accents and converts some non-ASCII characters to their ASCII equivalents in the region or current line.
+#+findex: simple-extras-slugify-clipboard
+~simple-extras-slugify-clipboard~: Converts the text in the kill ring to a URL-friendly "slug" (lowercase, hyphenated, ASCII) and replaces the kill ring content with it.
+#+findex: simple-extras-strip-thing-at-point
+~simple-extras-strip-thing-at-point~: Attempts to simplify the "thing" at point (currently only supports simplifying URLs via ~simple-extras-strip-url~).
+#+findex: file-extras-remove-extra-blank-lines
+~file-extras-remove-extra-blank-lines~: Removes consecutive blank lines, leaving only single blank lines.
+#+findex: simple-extras-sort-sexps
+~simple-extras-sort-sexps~: Sorts S-expressions within the active region alphabetically.
+
+** External Tools and Integration
+:PROPERTIES:
+:CUSTOM_ID: h:external-tools
+:END:
+
+#+findex: files-extras-ocr-pdf
+~files-extras-ocr-pdf~: Runs `ocrmypdf` on a PDF file (at point in Dired, current buffer, or associated with Ebib entry). Prompts for language. Handles forcing OCR and provides feedback via messages.
+#+findex: files-extras-download-bypass-paywalls-chrome
+~files-extras-download-bypass-paywalls-chrome~: Downloads the "Bypass Paywalls Clean" Chrome extension zip, extracts it, and opens both the Chrome extensions page and the extracted folder for manual installation.
+#+findex: files-extras-download-bypass-paywalls-firefox
+~files-extras-download-bypass-paywalls-firefox~: Downloads the "Bypass Paywalls Clean" Firefox extension XPI file and opens both the Firefox extensions page and the downloads folder containing the XPI for manual installation.
+#+findex: file-extras-grammarly-open-in-external-editor
+~file-extras-grammarly-open-in-external-editor~: Opens a specific Grammarly document URL in the default browser.
+
+** Package Management (Elpaca)
+:PROPERTIES:
+:CUSTOM_ID: h:package-management
+:END:
+
+#+findex: files-extras-open-elpaca-package
+~files-extras-open-elpaca-package~: Opens the main Elisp file for a specified Elpaca-managed package.
+#+findex: files-extras-open-extras-package
+~files-extras-open-extras-package~: Prompts (with completion) for an "extras" file within the `emacs/extras/` directory and opens it.
+
+** Transient Dispatch Menus
+:PROPERTIES:
+:CUSTOM_ID: h:transient-dispatch-menus
+:END:
+
+#+findex: files-extras-dispatch
+~files-extras-dispatch~: Transient menu for quickly opening common configuration files (inbox, agenda, config, feeds, ledger, notes, etc.).
+#+findex: files-extras-packages-dispatch
+~files-extras-packages-dispatch~: Transient menu (part of `files-extras-dispatch`) for opening personal Elpaca package files.
+
+* Configuration Functions
+:PROPERTIES:
+:CUSTOM_ID: h:configuration-functions
+:END:
+
+*(Includes functions for internal use, configuration, or programmatic access)*
+
++ ~files-extras-bury-scratch-buffer~: Hook function for `kill-buffer-query-functions` to bury the scratch buffer instead of killing it.
++ ~files-extras-auto-save-alert~: Hook function for `find-file-hook` to alert the user if auto-save data exists for the opened file.
++ ~simple-extras-new-buffer-enable-auto-save~: Hook function for `buffer-list-update-hook` to enable `auto-save-mode` in new, untitled buffers.
+
+* Utility Functions
+:PROPERTIES:
+:CUSTOM_ID: h:utility-functions
+:END:
+
+*(Includes functions for internal use, configuration, or programmatic access)*
+
++ ~simple-extras-delete-instead-of-kill~ (macro): Executes BODY, temporarily replacing `kill-region` with `delete-region`.
++ ~simple-extras-copy-instead-of-kill~ (macro): Executes BODY, temporarily replacing `kill-region` with `kill-ring-save`.
++ ~simple-extras-kill-whole-thing~: Kills the `thing-at-point` of the specified THING type.
++ ~simple-extras-transpose-words-backward~, ~simple-extras-transpose-chars-backward~, etc.: Internal helpers for backward transposition.
++ ~simple-extras-visible-mode-enhanced-dired~, ~simple-extras-visible-mode-enhanced-org~: Helpers for ~simple-extras-visible-mode-enhanced~ to toggle related modes.
++ ~files-extras-get-alternate-buffer~: Returns the buffer name for ~files-extras-switch-to-alternate-buffer~.
++ ~files-extras-newest-file~: Returns the path of the most recently modified file in a directory, ignoring `.DS_Store` and `.localized`.
++ ~files-extras-switch-to-most-recent-buffer-in-mode~: Switches to the most recent buffer matching a given major MODE.
++ ~files-extras-ocr-pdf-process-filter~: Process filter for `ocrmypdf` output, displaying relevant messages.
++ ~files-extras-get-stem-of-current-buffer~: Returns the filename base (without extension) of the current buffer's file.
++ ~file-extras-bollp~: Returns t if point is at the beginning of the last line.
++ ~files-extras-open-buffer-files~: Returns a list of `.org` files currently open in buffers.
++ ~files-extras-walk-dir-locals-file~ (advice, commented out): Would modify `hack-dir-local-variables` to evaluate `.dir-locals.el` upwards.
++ ~files-extras-get-current-dir-lowercased~: Returns the base name of the current directory, lowercased, with hyphens replaced by underscores.
++ ~files-extras-lines-to-list~: Reads a file and returns its lines as a list of strings.
++ ~files-extras-list-to-lines~: Writes a list of strings to a file, one element per line.
++ ~simple-extras-get-url-at-point~: Tries to find and return a URL string near point.
++ ~simple-extras-remove-trailing-slash~: Removes a trailing slash from a string.
++ ~simple-extras-simplify-url~: Removes `http(s)://`, `www.`, and trailing slash from a URL string.
++ ~simple-extras-strip-url~: Replaces the URL at point with its simplified version.
++ ~simple-extras-save-excursion~ (macro): Like `save-excursion`, but ensures the original buffer is restored even if switched during execution.
++ ~simple-extras-get-url~: Gets a URL from context (EWW, Ebib, BibTeX) or prompts the user.
++ ~simple-extras-string-is-url-p~: Checks if a string looks like a valid URL.
++ ~simple-extras-pandoc-convert~: Converts clipboard content between formats using Pandoc.
++ ~simple-extras-asciify-string~: Returns a string with accents removed.
++ ~simple-extras-slugify~: Converts a string to a URL-friendly slug.
++ ~simple-extras-slug-hyphenate~: Helper for slugify; replaces spaces/underscores with hyphens.
++ ~simple-extras-is-new-buffer-p~: Checks if the current buffer is an "untitled" buffer.
++ ~simple-extras-init-disable-funs~: Disables specified functions after a timer delay.
++ ~simple-extras-advice-remove-all~: Removes all advice from a function symbol.
++ ~simple-extras-get-next-element~: Gets the next element in a list cyclically.
++ ~simple-extras-call-verbosely~: Calls a function and messages its name.
++ ~simple-extras-get-emacs-distro~: Detects the Emacs distribution (mac port or emacs-plus).
++ ~simple-extras-string-at-point~: Returns the quoted string at point.
++ ~simple-extras-local-set-key~: Sets a buffer-local key binding.
+
+* Patched Functions / Advice
+:PROPERTIES:
+:CUSTOM_ID: h:patched-functions-advice-files
+:END:
+
+=files-extras.el= advises or overrides several built-in functions:
+
++ ~system-move-file-to-trash~: Overridden by ~files-extras-system-move-file-to-trash~ to use the external `trash` utility on macOS.
++ `kill-buffer-query-functions`: Hooked by ~files-extras-bury-scratch-buffer~ to prevent killing the scratch buffer.
++ `find-file-hook`: Hooked by ~files-extras-auto-save-alert~ to check for auto-save data.
++ `recover-this-file`: Advised `:after` by ~files-extras-diff-buffer-with-file~ to show diff after recovery.
++ `make-auto-save-file-name`: Advised `:around` by ~files-extras-make-hashed-auto-save-file-name-a~ to use hashed names for non-file buffers.
++ `make-backup-file-name-1`: Advised `:around` by ~files-extras-make-hashed-backup-file-name-a~ to use hashed names for backups in specified directories.
++ `auto-save-mode`: Advised `:around` by ~simple-extras-new-buffer-auto-save-dir~ to change auto-save location for new buffers.
++ `hack-dir-local-variables`: Advised `:around` by ~files-extras-walk-dir-locals-file~ (commented out) to change evaluation order.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

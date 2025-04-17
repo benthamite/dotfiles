@@ -1,0 +1,96 @@
+#+title: org-gcal-extras: Extensions for org-gcal
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: org-gcal-extras.info
+#+texinfo_filename: org-gcal-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Org Gcal Extras: (org-gcal-extras)
+#+texinfo_dir_desc: Extensions for org-gcal
+
+This manual describes the features and customization options for the Emacs Lisp file =org-gcal-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=org-gcal-extras.el= provides extensions for the =org-gcal= package, which synchronizes Org mode entries with Google Calendar events. These extensions add commands for opening events in the Google Calendar web interface and provide a transient menu for common =org-gcal= operations. It also includes patches to modify the default behavior of how event times and descriptions are handled during synchronization.
+
+The main features include:
+
++ A command to open the Google Calendar event corresponding to the Org entry at point in a web browser.
++ A transient menu (`org-gcal-extras-menu`) for quick access to fetch, sync, post, open, delete, and setup commands.
++ Patches to modify how =org-gcal= reads timestamps (preferring DEADLINE over SCHEDULED) and how it updates Org entries (inserting description as body text, using DEADLINE instead of SCHEDULED).
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=org-gcal-extras.el= provides the following interactive commands:
+
+** Open Event in Google Calendar
+:PROPERTIES:
+:CUSTOM_ID: h:org-gcal-extras-open-at-point
+:END:
+
+#+findex: org-gcal-extras-open-at-point
+The command ~org-gcal-extras-open-at-point~ retrieves the Google Calendar event ID stored in the "entry-id" property of the Org heading at point. It then constructs the corresponding Google Calendar edit URL and opens it in the default web browser using =browse-url=. If no "entry-id" property is found, it signals a user error.
+
+** Org Gcal Extras Menu
+:PROPERTIES:
+:CUSTOM_ID: h:org-gcal-extras-menu
+:END:
+
+#+findex: org-gcal-extras-menu
+The command ~org-gcal-extras-menu~ displays a transient menu (using the =transient= package) that provides quick access to common =org-gcal= commands grouped logically:
+- *Fetch:* Fetch all (=org-gcal-fetch=), Fetch buffer (=org-gcal-fetch-buffer=).
+- *Sync:* Sync all (=org-gcal-sync=), Sync buffer (=org-gcal-sync-buffer=).
+- *Act:* Post entry at point (=org-gcal-post-at-point=), Open event at point in browser (=org-gcal-extras-open-at-point=), Delete event at point (=org-gcal-delete-at-point=).
+- *Setup:* Unlock sync (=org-gcal--sync-unlock=), Clear token (=org-gcal-sync-tokens-clear=), Toggle debug (=org-gcal-toggle-debug=), Reload secret (=org-gcal-reload-client-id-secret=).
+
+* Patched Functions
+:PROPERTIES:
+:CUSTOM_ID: h:patched-functions-org-gcal
+:END:
+
+=org-gcal-extras.el= modifies core =org-gcal= functions using =el-patch=:
+
+** ~org-gcal--get-time-and-desc~ Patch
+:PROPERTIES:
+:CUSTOM_ID: h:org-gcal--get-time-and-desc-patch
+:END:
+
+The internal function ~org-gcal--get-time-and-desc~ is patched to change the preference for reading timestamps from Org entries. The original function prefers the =SCHEDULED= property. The patched version prefers the =DEADLINE= property over =SCHEDULED= when determining the start/end times for an event to be synced *to* Google Calendar. It still falls back to timestamps found within the =:org-gcal:= drawer if neither property exists.
+
+** ~org-gcal--update-entry~ Patch
+:PROPERTIES:
+:CUSTOM_ID: h:org-gcal--update-entry-patch
+:END:
+
+The internal function ~org-gcal--update-entry~ is patched to modify how Google Calendar event details are written back into an Org entry during synchronization:
+- It removes the creation of the =:ORG-GCAL:= drawer entirely.
+- Instead of putting the event description inside the drawer, it inserts the description directly into the body of the Org heading.
+- It sets the event's date/time using the =DEADLINE= property instead of the =SCHEDULED= property. If a =DEADLINE= already exists, it updates it; otherwise, it creates a new =DEADLINE=.
+
+These patches aim to integrate Google Calendar events more naturally into an Org workflow that primarily uses deadlines and keeps descriptive text within the main heading body.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

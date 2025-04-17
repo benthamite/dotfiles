@@ -1,0 +1,68 @@
+#+title: org-ref-extras: Extensions for Org Ref
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: org-ref-extras.info
+#+texinfo_filename: org-ref-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Org Ref Extras: (org-ref-extras)
+#+texinfo_dir_desc: Extensions for Org Ref
+
+This manual describes the features and customization options for the Emacs Lisp file =org-ref-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=org-ref-extras.el= provides extensions for the =org-ref= package, which enhances Org mode's capabilities for managing citations and bibliographies. These extensions modify the behavior of existing =org-ref= functions, primarily related to cleaning and formatting BibTeX entries obtained from external sources like ISBN lookups.
+
+The main features include:
+
++ Patches to modify =org-ref= functions:
+  + Remove automatic filling (line wrapping) after sorting BibTeX entry fields.
+  + Remove the redundant `Year` field often added by ISBN-to-BibTeX services.
+
+* Patched Functions
+:PROPERTIES:
+:CUSTOM_ID: h:patched-functions
+:END:
+
+=org-ref-extras.el= modifies the behavior of standard =org-ref= and related functions using =el-patch=:
+
+** Disable Filling After Sorting BibTeX Entry
+:PROPERTIES:
+:CUSTOM_ID: h:org-ref-sort-bibtex-entry-patch
+:END:
+
+#+findex: org-ref-sort-bibtex-entry
+The original ~org-ref-sort-bibtex-entry~ command sorts the fields within a BibTeX entry according to the order defined in ~org-ref-bibtex-sort-order~ and then calls =bibtex-fill-entry= to format and wrap the lines. This patch removes the call to =bibtex-fill-entry=, preventing the automatic line wrapping after sorting. The entry cleaning step (=bibtex-clean-entry=) remains.
+
+*Rationale:* Users might prefer to control line wrapping manually or use other formatting tools, finding the automatic filling disruptive.
+
+** Remove Redundant Year Field from ISBN Lookup
+:PROPERTIES:
+:CUSTOM_ID: h:isbn-to-bibtex-patch
+:END:
+
+#+findex: isbn-to-bibtex
+The ~isbn-to-bibtex~ command (from =org-ref-isbn=) fetches BibTeX data for a given ISBN from an external source (like www.ebook.de). Often, these sources include both a `date` field and a separate `Year` field, which is redundant. This patch modifies ~isbn-to-bibtex~ to remove any line starting with `Year =` from the fetched BibTeX entry string *before* inserting it into the bibliography file and cleaning it. This prevents the redundant `Year` field from being added.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

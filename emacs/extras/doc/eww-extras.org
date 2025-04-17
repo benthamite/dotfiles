@@ -1,0 +1,186 @@
+#+title: eww-extras: Extensions for EWW
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: eww-extras.info
+#+texinfo_filename: eww-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: EWW Extras: (eww-extras)
+#+texinfo_dir_desc: Extensions for EWW
+
+This manual describes the features and customization options for the Emacs Lisp file =eww-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=eww-extras.el= provides extensions for EWW (Emacs Web Wowser), the built-in web browser for Emacs. These extensions focus on generating files (PDF, HTML, SRT) from web pages, managing readability mode exceptions, providing Vimium-like navigation commands, and integrating with other packages like =elfeed-tube= and =zotra-extras=.
+
+The main features include:
+
++ Commands to generate PDF or HTML files from a URL using headless Chrome.
++ Command to download subtitles (SRT) using =yt-dlp=.
++ Automatic application of =eww-readable= mode, with configurable exceptions based on URL patterns stored in a file.
++ Command to add the current domain to the readability exceptions list.
++ Vimium-like commands for editing the current URL, opening kill ring content, and navigating the URL hierarchy (up/root).
++ Integration to handle YouTube URLs by fetching transcripts and opening the video in an external player (MPV).
++ Command to add the current EWW page URL to a bibliography using =zotra-extras=.
+
+* User Options
+:PROPERTIES:
+:CUSTOM_ID: h:user-options
+:END:
+
+** ~eww-extras-readable-exceptions~
+:PROPERTIES:
+:CUSTOM_ID: h:eww-extras-readable-exceptions
+:END:
+
+#+vindex: eww-extras-readable-exceptions
+A list of URL patterns (strings, treated as regexps) for which =eww-readable= should *not* be automatically enabled by ~eww-extras-readable-autoview~. This list is populated from the file specified by ~eww-extras-readable-exceptions-file~.
+
+** ~eww-extras-readable-exceptions-file~
+:PROPERTIES:
+:CUSTOM_ID: h:eww-extras-readable-exceptions-file
+:END:
+
+#+vindex: eww-extras-readable-exceptions-file
+The path to the file containing the list of URL patterns for readability exceptions (one pattern per line). Default: =~/.config/emacs/etc/eww-readable-exceptions.txt= (assuming =paths-dir-dotemacs= points to =~/.config/emacs=).
+
+** ~eww-extras-chrome-data-dir~
+:PROPERTIES:
+:CUSTOM_ID: h:eww-extras-chrome-data-dir
+:END:
+
+#+vindex: eww-extras-chrome-data-dir
+The path to the user's main Google Chrome profile/data directory. Used as the source for copying profile data needed by headless Chrome instances. Default: =~/Library/Application Support/Google/Chrome/=.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=eww-extras.el= provides the following interactive commands:
+
+** Browse Local File
+:PROPERTIES:
+:CUSTOM_ID: h:eww-extras-browse-file
+:END:
+
+#+findex: eww-extras-browse-file
+The command ~eww-extras-browse-file~ opens a local file in EWW. It prompts for the file path, defaulting to the filename at point, the current buffer's file, or prompting if neither is available.
+
+** Generate File from URL (PDF/HTML)
+:PROPERTIES:
+:CUSTOM_ID: h:generate-file-from-url
+:END:
+
+#+findex: eww-extras-url-to-html
+~eww-extras-url-to-html~: Generates an HTML file from a given URL (or the current EWW URL) using headless Chrome. Saves the file to the downloads directory (=paths-dir-downloads=) with a filename derived from the page title or BibTeX key (if called from Ebib/BibTeX). Optionally runs a CALLBACK function upon completion (e.g., to attach the file to a BibTeX entry). *Requires headless Chrome and copied profile data.*
+
+#+findex: eww-extras-url-to-pdf
+~eww-extras-url-to-pdf~: Generates a PDF file from a given URL (or the current EWW URL) using headless Chrome's print-to-pdf functionality. Saves the file to the downloads directory (=paths-dir-downloads=) with a filename derived from the page title or BibTeX key. Optionally runs a CALLBACK function upon completion. *Requires headless Chrome and copied profile data.*
+
+** Manage Chrome Data Copies
+:PROPERTIES:
+:CUSTOM_ID: h:manage-chrome-data
+:END:
+
+#+findex: eww-extras-chrome-copy-data-dirs
+~eww-extras-chrome-copy-data-dirs~: Creates/updates two separate copies of the user's Chrome profile data directory (specified by ~eww-extras-chrome-data-dir~) into temporary locations (~eww-extras-chrome-data-dir-copy-pdf~ and ~eww-extras-chrome-data-dir-copy-html~). This is necessary because headless Chrome instances need profile data (for cookies, logins) but cannot access the main profile if Chrome is running. Running this command ensures the copies exist and are reasonably up-to-date. *Requires Chrome to be closed and may take time on the first run.* Uses =rsync=.
+
+#+findex: eww-extras-chrome-delete-data-dirs
+~eww-extras-chrome-delete-data-dirs~: Deletes the two copied Chrome data directories created by the previous command. Prompts for confirmation.
+
+** Add Readability Exception
+:PROPERTIES:
+:CUSTOM_ID: h:eww-extras-add-domain-to-readable-exceptions
+:END:
+
+#+findex: eww-extras-add-domain-to-readable-exceptions
+~eww-extras-add-domain-to-readable-exceptions~: Prompts the user for a domain (defaulting to the current EWW page's domain or a domain from the kill ring) and adds it as a pattern to the ~eww-extras-readable-exceptions-file~. It then reloads the exceptions list and reloads the current EWW page.
+
+** Vimium-like Navigation
+:PROPERTIES:
+:CUSTOM_ID: h:vimium-navigation
+:END:
+
+#+findex: eww-extras-edit-current-url
+~eww-extras-edit-current-url~: Prompts the user to edit the current EWW URL or enter a new search query, then navigates to the result. With prefix arg, opens in a new EWW buffer.
+
+#+findex: eww-extras-open-with-recent-kill-ring
+~eww-extras-open-with-recent-kill-ring~: Opens the URL currently at the top of the kill ring in EWW. With prefix arg, opens in a new EWW buffer.
+
+#+findex: eww-extras-go-up-url-hierarchy
+~eww-extras-go-up-url-hierarchy~: Navigates one level up in the current URL's path hierarchy (e.g., from `example.com/a/b/c` to `example.com/a/b`).
+
+#+findex: eww-extras-go-to-root-url-hierarchy
+~eww-extras-go-to-root-url-hierarchy~: Navigates to the root domain of the current URL (e.g., from `example.com/a/b/c` to `example.com`).
+
+** Integration Commands
+:PROPERTIES:
+:CUSTOM_ID: h:integration-commands
+:END:
+
+#+findex: eww-extras-add-entry
+~eww-extras-add-entry~: Adds the URL of the current EWW page to a bibliography using =zotra-extras-add-entry=.
+
+* Configuration Functions
+:PROPERTIES:
+:CUSTOM_ID: h:configuration-functions
+:END:
+
+** ~eww-extras-readable-autoview~
+:PROPERTIES:
+:CUSTOM_ID: h:eww-extras-readable-autoview
+:END:
+
+#+findex: eww-extras-readable-autoview
+This function is intended to be added to =eww-after-render-hook=. It automatically calls =eww-readable= unless the current URL matches a pattern in the ~eww-extras-readable-exceptions~ list.
+
+** ~eww-extras-set-readable-exceptions-from-file~
+:PROPERTIES:
+:CUSTOM_ID: h:eww-extras-set-readable-exceptions-from-file
+:END:
+
+#+findex: eww-extras-set-readable-exceptions-from-file
+Reads the patterns from ~eww-extras-readable-exceptions-file~ and populates the ~eww-extras-readable-exceptions~ variable. Called automatically on load and after adding a new exception.
+
+** ~eww-extras-browse-youtube~
+:PROPERTIES:
+:CUSTOM_ID: h:eww-extras-browse-youtube
+:END:
+
+#+findex: eww-extras-browse-youtube
+This function is intended to be used as a handler in =browse-url-handlers= for YouTube URLs. When called with a YouTube URL, it kills the current EWW buffer, fetches the transcript using =elfeed-tube-fetch=, and opens the video URL in an external PLAYER (defaults to "mpv"). Ensures the player application is running first (macOS specific).
+
+* Internal Functions (for reference)
+:PROPERTIES:
+:CUSTOM_ID: h:internal-functions
+:END:
+
++ ~eww-extras-url-to-file~: Core logic for generating PDF/HTML files using headless Chrome. Handles process creation and sentinel setup.
++ ~eww-extras-url-to-file-make-command~: Constructs the shell command string for headless Chrome based on the desired output TYPE (pdf/html).
++ ~eww-extras-url-to-file-sentinel~: Process sentinel function that checks the exit status of the Chrome process and runs the CALLBACK if successful or if the file was created despite errors.
++ ~eww-extras-run-callback~: Helper to safely execute the optional CALLBACK function after file generation.
++ ~eww-extras-chrome-delete-data-dir~: Helper to delete one of the copied Chrome data directories.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

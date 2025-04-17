@@ -1,0 +1,182 @@
+#+title: dired-extras: Extensions for Dired
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: dired-extras.info
+#+texinfo_filename: dired-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Dired Extras: (dired-extras)
+#+texinfo_dir_desc: Extensions for Dired
+
+This manual describes the features and customization options for the Emacs Lisp file =dired-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=dired-extras.el= provides extensions for Dired, Emacs' directory editor. These extensions enhance file manipulation, navigation, integration with other tools (like Image Dired and Forge), and provide custom transient menus for quick access to common directories and actions.
+
+The main features include:
+
++ Commands for copying file names (absolute, relative, sans extension).
++ Marking specific file types (e.g., screenshots).
++ Enhanced navigation commands (up directory reusing buffer).
++ Integration with macOS trash utility for "Put Back" functionality (via patch in =files-extras.el=).
++ Commands for fast deletion (bypassing trash).
++ File duplication command.
++ Enhanced sorting toggle command.
++ Integration with Image Dired (viewing, copying names).
++ Integration with Gnus Dired for attaching files to emails (patched for modern mail modes).
++ Enhanced `dired-hide-details-mode` toggle.
++ Transient dispatch menus for quick directory navigation and package file access.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=dired-extras.el= provides the following interactive commands, mostly intended for use within Dired buffers:
+
+** Copy Filename Variations
+:PROPERTIES:
+:CUSTOM_ID: h:copy-filename
+:END:
+
+#+findex: dired-extras-copy-filename-as-kill-sans-extension
+~dired-extras-copy-filename-as-kill-sans-extension~: Copies the filename at point to the kill ring, *excluding* its file extension.
+
+#+findex: dired-extras-copy-filename-as-kill-absolute
+~dired-extras-copy-filename-as-kill-absolute~: Copies the *absolute* path(s) of the marked files (or the file at point if none are marked) to the kill ring.
+
+#+findex: dired-extras-copy-filename-as-kill-dwim
+~dired-extras-copy-filename-as-kill-dwim~: Copies the names of marked files (or file at point). If =dired-hide-details-mode= is active, copies only the base filenames; otherwise, copies the full paths relative to the Dired directory.
+
+** Mark Screenshots
+:PROPERTIES:
+:CUSTOM_ID: h:dired-extras-mark-screenshots
+:END:
+
+#+findex: dired-extras-mark-screenshots
+~dired-extras-mark-screenshots~: Marks all files in the current Dired buffer whose names match the typical macOS screenshot pattern (e.g., "Screenshot YYYY-MM-DD at HH.MM.SS.png").
+
+** Up Directory (Reuse Buffer)
+:PROPERTIES:
+:CUSTOM_ID: h:dired-extras-up-directory-reuse
+:END:
+
+#+findex: dired-extras-up-directory-reuse
+~dired-extras-up-directory-reuse~: Navigates to the parent directory, similar to =dired-up-directory=, but reuses the current Dired buffer instead of creating a new one (by calling =find-alternate-file ".."=).
+
+** Copy to Remote Directory
+:PROPERTIES:
+:CUSTOM_ID: h:dired-extras-copy-to-remote-docs-directory
+:END:
+
+#+findex: dired-extras-copy-to-remote-docs-directory
+~dired-extras-copy-to-remote-docs-directory~: Copies the marked files (or file at point) to a hardcoded remote server path (`stafforini.com/docs`) using =scp=. It then copies the presumed public URL of the *last* copied file to the kill ring. *Note:* This command contains hardcoded server details and requires appropriate SSH setup.
+
+** Fast Delete (No Trash)
+:PROPERTIES:
+:CUSTOM_ID: h:dired-extras-do-delete-fast
+:END:
+
+#+findex: dired-extras-do-delete-fast
+~dired-extras-do-delete-fast~: Deletes the marked files (or file at point) *without* moving them to the system trash. This is faster for large numbers of files but bypasses the safety net of the trash. It temporarily overrides =system-move-file-to-trash= before calling =dired-do-delete=.
+
+** Duplicate File
+:PROPERTIES:
+:CUSTOM_ID: h:dired-extras-duplicate-this-file
+:END:
+
+#+findex: dired-extras-duplicate-this-file
+~dired-extras-duplicate-this-file~: Creates a duplicate of the file at point in the same directory. The duplicate file is named by appending "[N]" before the extension, where N is the first available integer starting from 1 (e.g., "file.txt" becomes "file[1].txt"). Refreshes the Dired buffer afterwards.
+
+** Sort Toggle DWIM
+:PROPERTIES:
+:CUSTOM_ID: h:dired-extras-sort-toggle-dwim
+:END:
+
+#+findex: dired-extras-sort-toggle-dwim
+~dired-extras-sort-toggle-dwim~: Toggles the Dired sorting method (like =dired-sort-toggle-or-edit=) and refreshes the buffer. If point was on the first file listing before sorting, it remains there. Otherwise, it attempts to keep point on the same file after sorting. With a prefix argument, it calls =dired-sort-toggle-or-edit= to allow editing the sort switches directly.
+
+** Image Dired Integration
+:PROPERTIES:
+:CUSTOM_ID: h:image-dired
+:END:
+
+#+findex: dired-extras-image-dired-current-directory
+~dired-extras-image-dired-current-directory~: Runs =image-dired= on all image files within the current Dired directory.
+
+#+findex: dired-extras-image-copy-filename-as-kill-absolute
+~dired-extras-image-copy-filename-as-kill-absolute~: In an Image Dired buffer, copies the *absolute* path of the marked image file (or the one at point) to the kill ring.
+
+#+findex: dired-extras-copy-image
+~dired-extras-copy-image~: When in an =image-mode= buffer (presumably opened from Dired or Image Dired), copies the image file itself to the system clipboard using macOS's =osascript= to set the clipboard to a POSIX file. *Note:* macOS specific.
+
+** Hide Details Mode Enhanced
+:PROPERTIES:
+:CUSTOM_ID: h:dired-extras-hide-details-mode-enhanced
+:END:
+
+#+findex: dired-extras-hide-details-mode-enhanced
+~dired-extras-hide-details-mode-enhanced~: Toggles =dired-hide-details-mode= and also toggles =dired-omit-mode= simultaneously. Provides a more consistent "clean" view by hiding both details and omitted files together. Accepts optional ARG like the standard toggle commands.
+
+** Transient Dispatch Menus
+:PROPERTIES:
+:CUSTOM_ID: h:transient-dispatch
+:END:
+
+#+findex: dired-extras-dispatch
+~dired-extras-dispatch~: A transient menu providing quick access to frequently used directories (dotfiles, Emacs config, notes, downloads, various project directories, etc.) and special locations (root, home, current buffer's directory). Includes submenus for specific project structures (e.g., "Tlön").
+
+#+findex: files-extras-packages-dispatch
+~files-extras-packages-dispatch~: (Defined in =files-extras.el= but included in the Dired dispatch menu) A transient menu for quickly opening Elisp files of specific personal packages managed by Elpaca.
+
+* Patched Functions / Advice
+:PROPERTIES:
+:CUSTOM_ID: h:patched-functions-advice
+:END:
+
+** Use `trash` Utility (macOS)
+:PROPERTIES:
+:CUSTOM_ID: h:files-extras-system-move-file-to-trash
+:END:
+
+#+findex: files-extras-system-move-file-to-trash
+(Defined in =files-extras.el= but relevant here) The function ~system-move-file-to-trash~ is advised/overridden by ~files-extras-system-move-file-to-trash~. This replacement uses the external =trash= command-line utility (requires installation, e.g., via `brew install trash`) to move files to the trash on macOS. This method preserves macOS's "Put Back" functionality, which the default Emacs mechanism might not.
+
+** Quiet Deletion Confirmation
+:PROPERTIES:
+:CUSTOM_ID: h:dired-extras-clean-up-after-deletion-quietly
+:END:
+
+#+findex: dired-extras-clean-up-after-deletion-quietly
+The function =dired-clean-up-after-deletion= is advised `:around` by ~dired-extras-clean-up-after-deletion-quietly~. This advice temporarily modifies =y-or-n-p= to automatically answer "yes" to prompts specifically asking about killing Dired buffers after file deletion, effectively suppressing these confirmation prompts.
+
+** Gnus Dired Mail Buffers Patch
+:PROPERTIES:
+:CUSTOM_ID: h:gnus-dired-mail-buffers-patch
+:END:
+
+#+findex: gnus-dired-mail-buffers
+The function =gnus-dired-mail-buffers= (used by =gnus-dired-attach=) is patched using =el-patch=. The original function might only recognize specific mail composition modes. The patch modifies it to use =derived-mode-p 'mail-mode=, making it compatible with a wider range of mail composition modes, such as =mu4e-compose-mode=.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

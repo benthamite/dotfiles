@@ -1,0 +1,75 @@
+#+title: profiler-extras: Extensions for Emacs Profiler
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: profiler-extras.info
+#+texinfo_filename: profiler-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Profiler Extras: (profiler-extras)
+#+texinfo_dir_desc: Extensions for Emacs Profiler
+
+This manual describes the features and customization options for the Emacs Lisp file =profiler-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=profiler-extras.el= provides extensions for Emacs' built-in profiler (=profiler.el=). These extensions offer convenience commands for toggling the profiler and interacting with the profiler report buffer.
+
+The main features include:
+
++ A command to toggle the CPU and memory profiler on and off, automatically generating a report when stopped.
++ A command to expand all sub-entries under the entry at point in a profiler report buffer.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=profiler-extras.el= provides the following interactive commands:
+
+** Toggle Profiler
+:PROPERTIES:
+:CUSTOM_ID: h:profiler-extras-profiler-toggle
+:END:
+
+#+findex: profiler-extras-profiler-toggle
+The command ~profiler-extras-profiler-toggle~ acts as a toggle for the Emacs profiler.
+- If the profiler is not currently running (tracked by the internal variable ~profiler-extras-profiler-toggle~ being nil), it starts the profiler for both CPU and memory usage using =profiler-start 'cpu+mem=.
+- If the profiler is already running, it first generates a profiler report using =profiler-report= and then stops the profiler using =profiler-stop=.
+It updates the internal toggle variable accordingly.
+
+** Toggle Entry Global (Expand All Sub-entries)
+:PROPERTIES:
+:CUSTOM_ID: h:profiler-extras-profiler-report-toggle-entry-global
+:END:
+
+#+findex: profiler-extras-profiler-report-toggle-entry-global
+When executed within a profiler report buffer (`*Profiler Report*`), the command ~profiler-extras-profiler-report-toggle-entry-global~ expands or collapses *all* levels of sub-entries under the profiler entry at the current point. It achieves this by calling the standard =profiler-report-toggle-entry= command with a prefix argument of `(4)`, which typically signifies a recursive or global toggle action in such contexts.
+
+* Internal Variables
+:PROPERTIES:
+:CUSTOM_ID: h:internal-variables
+:END:
+
++ ~profiler-extras-profiler-toggle~: A boolean flag used internally by ~profiler-extras-profiler-toggle~ to track whether the profiler is currently considered active by the toggle command.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

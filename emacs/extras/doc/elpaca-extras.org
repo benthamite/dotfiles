@@ -1,0 +1,85 @@
+#+title: elpaca-extras: Extensions for Elpaca
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: elpaca-extras.info
+#+texinfo_filename: elpaca-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Elpaca Extras: (elpaca-extras)
+#+texinfo_dir_desc: Extensions for Elpaca
+
+This manual describes the features and customization options for the Emacs Lisp file =elpaca-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=elpaca-extras.el= provides extensions for the =elpaca= package manager. These extensions focus on reloading packages after updates without requiring a full Emacs restart.
+
+The main features include:
+
++ A command to reload a package's features after it has been updated.
++ A command that combines updating a package and then automatically reloading it.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=elpaca-extras.el= provides the following interactive commands:
+
+** Reload Package Features
+:PROPERTIES:
+:CUSTOM_ID: h:elpaca-extras-reload
+:END:
+
+#+findex: elpaca-extras-reload
+The command ~elpaca-extras-reload~ attempts to reload the features provided by a specified PACKAGE. This is useful after updating a package to apply the changes without restarting Emacs.
+
+It works by:
+1. Identifying the directory of the installed PACKAGE.
+2. Finding all =.el= files within that directory.
+3. Extracting the feature names provided by those files (using =provide= statements).
+4. Determining which of these features are currently loaded.
+5. Unloading the currently loaded features associated with the package (using =unload-feature 'force=).
+6. Reloading those features using =require=.
+
+*Important Note:* This command forcefully unloads features. Any data stored in variables defined by the package might be lost. If the package relies on saving state (e.g., during mode deactivation or Emacs exit), the user should ensure this state is saved *before* running this command.
+
+By default, it only reloads features that were already loaded. If called with a prefix argument (ALLP non-nil), it attempts to load *all* features provided by the package, regardless of their previous load state.
+
+** Update and Reload Package
+:PROPERTIES:
+:CUSTOM_ID: h:elpaca-extras-update-and-reload
+:END:
+
+#+findex: elpaca-extras-update-and-reload
+The command ~elpaca-extras-update-and-reload~ combines updating and reloading a package. It prompts the user to select a package managed by Elpaca.
+
+It then:
+1. Sets up a temporary callback function to run after Elpaca finishes processing its queues (=elpaca--post-queues-hook=).
+2. Triggers an update for the selected package using =elpaca-update PKG t=.
+3. The callback function checks if the update for the specific package was successful (status is 'finished).
+4. If successful, the callback removes itself from the hook and calls ~elpaca-extras-reload~ on the package to apply the changes.
+
+This provides a convenient way to update a single package and immediately see the effects without restarting Emacs.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

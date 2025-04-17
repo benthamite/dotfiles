@@ -1,0 +1,91 @@
+#+title: consult-extras: Extensions for Consult
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: consult-extras.info
+#+texinfo_filename: consult-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Consult Extras: (consult-extras)
+#+texinfo_dir_desc: Extensions for Consult
+
+This manual describes the features and customization options for the Emacs Lisp file =consult-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=consult-extras.el= provides extensions for the =consult= package, which offers enhanced searching and previewing capabilities within Emacs. These extensions add specialized search commands and integrate =consult= with Org mode headings.
+
+The main features include:
+
++ A command to toggle multiline searching for =consult-ripgrep=.
++ Commands to run =consult-locate= scoped to the current directory, optionally matching only file names.
++ A command to run =consult-ripgrep= scoped to the current directory.
++ An enhanced command to jump to Org headings using =consult-org-heading= with automatic widening and unfolding.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=consult-extras.el= provides the following interactive commands:
+
+** Toggle Multiline Ripgrep Search
+:PROPERTIES:
+:CUSTOM_ID: h:consult-extras-toggle-multiline
+:END:
+
+#+findex: consult-extras-toggle-multiline
+The command ~consult-extras-toggle-multiline~ toggles the multiline search flags (=--multiline --multiline-dotall=) for =consult-ripgrep=. It modifies the ~consult-ripgrep-args~ variable by appending or removing these flags. This allows users to quickly switch between single-line and multiline searching when using =consult-ripgrep=.
+
+** Locate Files in Current Directory
+:PROPERTIES:
+:CUSTOM_ID: h:consult-extras-locate-current
+:END:
+
+#+findex: consult-extras-locate-current
+The command ~consult-extras-locate-current~ runs =consult-locate= but restricts the search scope to the current directory (=default-directory=). It achieves this by temporarily setting ~consult-locate-args~ to use =mdfind-wrapper= (presumably a custom script) with the =-onlyin= option pointing to the current directory.
+
+** Locate File Names in Current Directory
+:PROPERTIES:
+:CUSTOM_ID: h:consult-extras-locate-file-current
+:END:
+
+#+findex: consult-extras-locate-file-current
+Similar to ~consult-extras-locate-current~, this command runs =consult-locate= restricted to the current directory. However, it also adds the =-name= flag to =mdfind-wrapper=, instructing it to match only against file names, not their contents.
+
+** Ripgrep in Current Directory
+:PROPERTIES:
+:CUSTOM_ID: h:consult-extras-ripgrep-current
+:END:
+
+#+findex: consult-extras-ripgrep-current
+The command ~consult-extras-ripgrep-current~ provides a shortcut to run =consult-ripgrep= specifically within the current directory (=default-directory=).
+
+** Enhanced Org Heading Jump
+:PROPERTIES:
+:CUSTOM_ID: h:consult-extras-org-heading
+:END:
+
+#+findex: consult-extras-org-heading
+The command ~consult-extras-org-heading~ enhances the standard =consult-org-heading= command. Before calling =consult-org-heading=, it ensures the buffer is widened (using =widen=) and all headings are unfolded (using ~org-extras-fold-show-all-headings~). After the jump, it recenters the view. This provides a more consistent experience when jumping to Org headings, ensuring the target heading is always visible. It accepts the same optional MATCH and SCOPE arguments as =consult-org-heading=.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

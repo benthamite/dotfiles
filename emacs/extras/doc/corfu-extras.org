@@ -1,0 +1,76 @@
+#+title: corfu-extras: Extensions for Corfu
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: corfu-extras.info
+#+texinfo_filename: corfu-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Corfu Extras: (corfu-extras)
+#+texinfo_dir_desc: Extensions for Corfu
+
+This manual describes the features and customization options for the Emacs Lisp file =corfu-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=corfu-extras.el= provides extensions for the =corfu= package, which offers a Completion Overlay Region FUnctionality for Emacs. These extensions focus on controlling Corfu's activation in the minibuffer and integrating it with other completion UIs like =consult=.
+
+The main features include:
+
++ Conditional activation of =corfu-mode= in the minibuffer, avoiding conflicts with =vertico=.
++ A command to transfer the current Corfu completion session to the minibuffer using =consult-completion-in-region=.
+
+* Configuration Functions
+:PROPERTIES:
+:CUSTOM_ID: h:configuration-functions
+:END:
+
+These functions are intended for use in Emacs configuration, typically added to hooks.
+
+** Enable Corfu Always in Minibuffer (Conditionally)
+:PROPERTIES:
+:CUSTOM_ID: h:corfu-extras-enable-always-in-minibuffer
+:END:
+
+#+findex: corfu-extras-enable-always-in-minibuffer
+The function ~corfu-extras-enable-always-in-minibuffer~ is designed to be added to ~minibuffer-setup-hook~. It enables =corfu-mode= within the minibuffer *only if* the =vertico= package's input state variable (=vertico--input=) is not bound and true.
+
+This ensures that Corfu provides completion assistance in minibuffer prompts like =eval-expression= or =shell-command=, but automatically disables itself when Vertico is active (e.g., during =find-file= or =M-x=), preventing conflicts between the two completion UIs.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=corfu-extras.el= provides the following interactive command:
+
+** Move Corfu Completion to Minibuffer
+:PROPERTIES:
+:CUSTOM_ID: h:corfu-extras-move-to-minibuffer
+:END:
+
+#+findex: corfu-extras-move-to-minibuffer
+The command ~corfu-extras-move-to-minibuffer~ transfers the current in-buffer Corfu completion session to the minibuffer using =consult-completion-in-region= (from the =consult= package). This allows the user to leverage Consult's features (like preview and narrowing) for the completion candidates initially presented by Corfu.
+
+This command is automatically added to the ~corfu-continue-commands~ list, meaning it can typically be invoked while the Corfu popup is active using a key binding associated with continuing completion (often =M-n= or similar, depending on the user's setup).
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

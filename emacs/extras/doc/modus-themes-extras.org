@@ -1,0 +1,100 @@
+#+title: modus-themes-extras: Extensions for Modus Themes
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: modus-themes-extras.info
+#+texinfo_filename: modus-themes-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Modus Themes Extras: (modus-themes-extras)
+#+texinfo_dir_desc: Extensions for Modus Themes
+
+This manual describes the features and customization options for the Emacs Lisp file =modus-themes-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=modus-themes-extras.el= provides extensions for the =modus-themes= package (Modus Operandi and Modus Vivendi themes). These extensions focus on automatically loading the appropriate theme based on the system's appearance (light/dark mode) and applying theme-specific face customizations.
+
+The main features include:
+
++ Conditional theme loading based on the Emacs distribution (Emacs Mac port vs. Emacs Plus) and system appearance.
++ Functions to apply specific face customizations, particularly for parenthesis highlighting.
+
+* Conditional Theme Loading
+:PROPERTIES:
+:CUSTOM_ID: h:conditional-theme-loading
+:END:
+
+These functions automate the process of selecting the light (Modus Operandi) or dark (Modus Vivendi) theme based on the operating system's appearance setting.
+
+** ~modus-themes-extras-load-theme-conditionally~
+:PROPERTIES:
+:CUSTOM_ID: h:modus-themes-extras-load-theme-conditionally
+:END:
+
+#+findex: modus-themes-extras-load-theme-conditionally
+This function checks the Emacs distribution using ~simple-extras-get-emacs-distro~ (presumably defined elsewhere).
+- If it's the Emacs Mac port ('emacs-mac), it calls ~modus-themes-extras-load-theme-emacs-mac~ immediately to set the theme based on the current system appearance.
+- If it's Emacs Plus ('emacs-plus), it adds ~modus-themes-extras-load-theme-emacs-plus~ to the ~ns-system-appearance-change-functions~ hook, so the theme will be updated automatically whenever the system appearance changes.
+
+** ~modus-themes-extras-load-theme-emacs-mac~
+:PROPERTIES:
+:CUSTOM_ID: h:modus-themes-extras-load-theme-emacs-mac
+:END:
+
+#+findex: modus-themes-extras-load-theme-emacs-mac
+This function is specific to the Emacs Mac port. It checks the current system appearance using `mac-application-state`.
+- If the appearance is "NSAppearanceNameAqua" (light mode), it loads the Modus Operandi theme.
+- If the appearance is "NSAppearanceNameDarkAqua" (dark mode), it loads the Modus Vivendi theme.
+
+** ~modus-themes-extras-load-theme-emacs-plus~
+:PROPERTIES:
+:CUSTOM_ID: h:modus-themes-extras-load-theme-emacs-plus
+:END:
+
+#+findex: modus-themes-extras-load-theme-emacs-plus
+This function is designed for the `ns-system-appearance-change-functions` hook in Emacs Plus. It receives the new system appearance ('light or 'dark) as an argument.
+- If the appearance is 'light, it loads Modus Operandi.
+- If the appearance is 'dark, it loads Modus Vivendi.
+
+* Theme Customizations
+:PROPERTIES:
+:CUSTOM_ID: h:theme-customizations
+:END:
+
+** Highlight Parentheses Customization
+:PROPERTIES:
+:CUSTOM_ID: h:modus-themes-extras-highlight-parentheses
+:END:
+
+#+findex: modus-themes-extras-highlight-parentheses
+The function ~modus-themes-extras-highlight-parentheses~ sets the colors used by the `highlight-parentheses-mode`. It uses the `modus-themes-with-colors` macro to access the theme's color palette and sets the `highlight-parentheses-background-colors` and `highlight-parentheses-colors` variables to specific intense background and foreground colors from the Modus themes palette (cyan, magenta, green, yellow). This ensures the parenthesis highlighting matches the active Modus theme.
+
+** Set Extra Faces (Placeholder)
+:PROPERTIES:
+:CUSTOM_ID: h:modus-themes-extras-set-faces
+:END:
+
+#+findex: modus-themes-extras-set-faces
+The function ~modus-themes-extras-set-faces~ is currently defined as an empty function. Its docstring serves as a placeholder and example, showing how a user could add further theme-specific face customizations within this function, potentially checking the value of `custom-enabled-themes` to apply different settings for Modus Operandi versus Modus Vivendi.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

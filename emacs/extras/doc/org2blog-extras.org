@@ -1,0 +1,79 @@
+#+title: org2blog-extras: Extensions for org2blog
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: org2blog-extras.info
+#+texinfo_filename: org2blog-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: org2blog Extras: (org2blog-extras)
+#+texinfo_dir_desc: Extensions for org2blog
+
+This manual describes the features and customization options for the Emacs Lisp file =org2blog-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=org2blog-extras.el= provides extensions for the =org2blog= package, which facilitates publishing Org mode content to WordPress blogs. These extensions focus on tag management and modifying the publishing confirmation behavior.
+
+The main features include:
+
++ A command to convert standard Org mode heading tags (e.g., `:tag1:tag2:`) into the `POST_TAGS` property used by =org2blog=.
++ Advice to modify the confirmation prompt when publishing, making it conditional on whether the post already has an ID.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=org2blog-extras.el= provides the following interactive command:
+
+** Move Tags to POST_TAGS Property
+:PROPERTIES:
+:CUSTOM_ID: h:org2blog-extras-move-tags-to-drawer
+:END:
+
+#+findex: org2blog-extras-move-tags-to-drawer
+The command ~org2blog-extras-move-tags-to-drawer~ searches the current buffer for Org mode headings that have tags defined in the standard way (e.g., `* Heading :tag1:tag2:`). For each such heading found, it extracts the tags, formats them as a comma-separated string (e.g., "tag1, tag2"), and sets the `POST_TAGS` property in the heading's property drawer to this string. This helps prepare Org files for =org2blog= which uses the `POST_TAGS` property for WordPress tags. Note that this command does *not* remove the original tags from the heading line itself.
+
+* Patched Functions
+:PROPERTIES:
+:CUSTOM_ID: h:patched-functions
+:END:
+
+=org2blog-extras.el= modifies the behavior of some standard =org2blog= functions using advice:
+
+** Conditional Publishing Confirmation
+:PROPERTIES:
+:CUSTOM_ID: h:org2blog-extras-subtree-publish-save
+:END:
+
+#+findex: org2blog-extras-subtree-publish-save
+The internal helper function ~org2blog-extras-subtree-publish-save~ is added as `:around` advice to the standard =org2blog= publishing commands ~org2blog-subtree-post-save~ and ~org2blog-subtree-page-save~.
+
+Normally, if the user option `org2blog/wp-confirm-post` is set to `t`, =org2blog= will always ask for confirmation before publishing a post or page. This advice modifies that behavior:
+- It first checks if the post/page being published already has a `post-id` property (meaning it has been published before).
+- If a `post-id` *exists*, the advice calls the original publishing function directly, *skipping* the confirmation prompt regardless of the value of `org2blog/wp-confirm-post`.
+- If a `post-id` does *not* exist (i.e., it's a new post/page), the advice explicitly asks the user "Post has no ID. Proceed anyway? ". Only if the user confirms ('yes') does it call the original publishing function.
+
+This makes the confirmation prompt appear only when publishing *new* content, not when updating existing content.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

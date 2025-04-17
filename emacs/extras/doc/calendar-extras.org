@@ -1,0 +1,130 @@
+#+title: calendar-extras: Extensions for Emacs Calendar
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: calendar-extras.info
+#+texinfo_filename: calendar-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Calendar Extras: (calendar-extras)
+#+texinfo_dir_desc: Extensions for Emacs Calendar
+
+This manual describes the features and customization options for the Emacs Lisp file =calendar-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=calendar-extras.el= provides extensions for Emacs' built-in calendar functionality. It includes features for geolocation integration, date manipulation, and integration with the =calfw= (Calendar Framework) package.
+
+The main features include:
+
++ Fetching geolocation data (latitude, longitude, city name) based on the user's IP address.
++ Setting calendar location variables based on fetched or predefined geolocation data.
++ A command to insert the date of the last day of the previous month.
++ A command to display the Org agenda using =calfw='s block view.
++ A utility function to generate a list of dates within a specified range.
+
+* User Options
+:PROPERTIES:
+:CUSTOM_ID: h:user-options
+:END:
+
+This section details the user-configurable variables provided by =calendar-extras.el=.
+
+** ~calendar-extras-location-name~
+:PROPERTIES:
+:CUSTOM_ID: h:calendar-extras-location-name
+:END:
+
+#+vindex: calendar-extras-location-name
+Stores the name of the current location (e.g., city name). This can be set manually or automatically via ~calendar-extras-set-geolocation~. It defaults to an empty string.
+
+** ~calendar-extras-personal-geolocation~
+:PROPERTIES:
+:CUSTOM_ID: h:calendar-extras-personal-geolocation
+:END:
+
+#+vindex: calendar-extras-personal-geolocation
+An alist storing personal geolocation data. The expected format is an alist where keys are city names (strings) and values are plists containing =:latitude= (float), =:longitude= (float), and =:timezone= (string). This variable is intended to be set manually or by ~calendar-extras-set-geolocation~. It defaults to an empty list.
+
+** ~calendar-extras-use-geolocation~
+:PROPERTIES:
+:CUSTOM_ID: h:calendar-extras-use-geolocation
+:END:
+
+#+vindex: calendar-extras-use-geolocation
+A boolean flag indicating whether to use geolocation features. If non-nil, functions like ~calendar-extras-set-geolocation~ can be used to automatically determine and set location-related variables. Defaults to nil.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=calendar-extras.el= provides the following interactive commands:
+
+** Set Geolocation
+:PROPERTIES:
+:CUSTOM_ID: h:calendar-extras-set-geolocation
+:END:
+
+#+findex: calendar-extras-set-geolocation
+The command ~calendar-extras-set-geolocation~ fetches the user's current geolocation (latitude, longitude, city name) based on their IP address using the Geoapify API (requires an API key stored via =auth-source-pass= under the entry =tlon/core/api.geoapify.com=). It then updates the ~calendar-extras-personal-geolocation~ variable with the fetched data and sets ~calendar-extras-location-name~ to the retrieved city name. It messages the user with the results upon completion.
+
+** Insert Last Day of Previous Month
+:PROPERTIES:
+:CUSTOM_ID: h:calendar-extras-time-last-day-of-last-month
+:END:
+
+#+findex: calendar-extras-time-last-day-of-last-month
+The command ~calendar-extras-time-last-day-of-last-month~ calculates the date of the last day of the month immediately preceding the current date and inserts it at the point in =YYYY-MM-DD= format.
+
+** Display Calfw Block Agenda
+:PROPERTIES:
+:CUSTOM_ID: h:calendar-extras-calfw-block-agenda
+:END:
+
+#+findex: calendar-extras-calfw-block-agenda
+The command ~calendar-extras-calfw-block-agenda~ displays the current day's Org agenda items using the =calfw= (Calendar Framework) package in its 'block-day' view. This provides a visual, time-blocked representation of the agenda. It requires the =cfw:org= library from =calfw= to be available.
+
+* Utility Functions
+:PROPERTIES:
+:CUSTOM_ID: h:utility-functions
+:END:
+
+These functions provide general utility and might be useful in other contexts.
+
+** Get Geolocation Data
+:PROPERTIES:
+:CUSTOM_ID: h:calendar-extras-get-geolocation
+:END:
+
+#+findex: calendar-extras-get-geolocation
+The function ~calendar-extras-get-geolocation~ performs the actual API call to Geoapify to retrieve geolocation data based on the user's IP address. It parses the JSON response and returns a plist containing =:lat= (latitude), =:lon= (longitude), and =:city= (city name). This function requires an API key configured via =auth-source-pass=.
+
+** Get Dates in Range
+:PROPERTIES:
+:CUSTOM_ID: h:calendar-extras-get-dates-in-range
+:END:
+
+#+findex: calendar-extras-get-dates-in-range
+The function ~calendar-extras-get-dates-in-range~ takes two date strings (START-DATE and END-DATE, expected in a format parseable by =date-to-time=, like "YYYY-MM-DD") and returns a list of all date strings between them, inclusive, in "YYYY-MM-DD" format.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

@@ -1,0 +1,117 @@
+#+title: pass-extras: Extensions for Pass (Password Store)
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: pass-extras.info
+#+texinfo_filename: pass-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Pass Extras: (pass-extras)
+#+texinfo_dir_desc: Extensions for Pass (Password Store)
+
+This manual describes the features and customization options for the Emacs Lisp file =pass-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=pass-extras.el= provides extensions for the =pass= package (interfacing with the `pass` Unix password manager). These extensions focus on interacting with password entries, managing keys, generating passwords, and integrating with `git-crypt`.
+
+The main features include:
+
++ A command to open the URL associated with the password entry at point while copying the password to the clipboard.
++ A command to insert a new password entry using a generated password (without symbols).
++ Commands to store an external key file into `pass` or export a `pass` entry to a file.
++ A command to unlock a `git-crypt` repository using a key stored in `pass`.
++ A command to generate various types of passwords (simple, strong, numeric, phonetic, words, custom) and copy the result to the clipboard with automatic clearing.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=pass-extras.el= provides the following interactive commands:
+
+** Open URL and Copy Password at Point
+:PROPERTIES:
+:CUSTOM_ID: h:pass-extras-open-at-point
+:END:
+
+#+findex: pass-extras-open-at-point
+When executed in a =pass-mode= buffer (listing password entries), the command ~pass-extras-open-at-point~ performs two actions for the entry at the current point:
+1. Copies the password of the entry to the kill ring using =pass-copy=.
+2. Retrieves the URL stored in the field specified by =password-store-url-field= (typically "url" or a custom field) for that entry.
+3. Opens the retrieved URL in the default browser using =browse-url=.
+It signals an error if the entry does not contain the specified URL field.
+
+** Insert Generated Password (No Symbols)
+:PROPERTIES:
+:CUSTOM_ID: h:pass-extras-insert-generated-no-symbols
+:END:
+
+#+findex: pass-extras-insert-generated-no-symbols
+The command ~pass-extras-insert-generated-no-symbols~ provides a way to add a new password entry using a generated password that *excludes* symbols. It calls the standard =password-store-generate-no-symbols= command (which handles the generation and insertion prompts) and then updates the =pass-mode= buffer using =pass-update-buffer=.
+
+** Store Key File in Pass
+:PROPERTIES:
+:CUSTOM_ID: h:pass-extras-store-key
+:END:
+
+#+findex: pass-extras-store-key
+The command ~pass-extras-store-key~ imports the contents of an external key file into the password store as a multiline entry. It prompts the user for:
+1. The path to the key file (FILE).
+2. The name of the `pass` entry (ENTRY) to store the key under (with completion).
+It then uses a shell command (`cat <file> | pass insert --multiline <entry>`) to perform the import.
+
+** Export Pass Entry to File
+:PROPERTIES:
+:CUSTOM_ID: h:pass-extras-export-key
+:END:
+
+#+findex: pass-extras-export-key
+The command ~pass-extras-export-key~ exports the contents of a `pass` entry to an external file. It prompts the user for:
+1. The name of the `pass` entry (ENTRY) to export (with completion).
+2. The path to the file (FILE) where the entry should be saved.
+It uses a shell command (`pass <entry> > <file>`) to perform the export and messages the user upon completion.
+
+** Unlock Git Crypt Repository
+:PROPERTIES:
+:CUSTOM_ID: h:pass-extras-git-crypt-unlock
+:END:
+
+#+findex: pass-extras-git-crypt-unlock
+The command ~pass-extras-git-crypt-unlock~ attempts to unlock a `git-crypt` encrypted repository using a key stored in `pass`. It prompts the user for:
+1. The path to the repository (REPO), defaulting to the current directory.
+2. The name of the `pass` entry (ENTRY) containing the `git-crypt` key (with completion).
+It then executes `git-crypt unlock <(pass <entry>)` within the repository's directory using `call-process-shell-command`. It messages the user about success or failure (e.g., if the repository is dirty).
+
+** Generate and Copy Password
+:PROPERTIES:
+:CUSTOM_ID: h:pass-extras-generate-password
+:END:
+
+#+findex: pass-extras-generate-password
+The command ~pass-extras-generate-password~ provides an interface to generate various types of passwords using the =password-generator= package and copies the result to the clipboard with automatic clearing.
+1. It prompts the user to select a password type from a predefined list (Simple, Strong, Numeric, Phonetic, Words, Custom) using minibuffer completion.
+2. It calls the corresponding generator function from the =password-generator= package.
+3. It copies the generated password to the kill ring using =kill-new=.
+4. It sets a timer (using =run-at-time=) to automatically clear the generated password from the clipboard/kill ring after the duration specified by =password-store-time-before-clipboard-restore=, using =password-store-clear=.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

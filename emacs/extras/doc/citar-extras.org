@@ -1,0 +1,112 @@
+#+title: citar-extras: Extensions for Citar
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: citar-extras.info
+#+texinfo_filename: citar-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Citar Extras: (citar-extras)
+#+texinfo_dir_desc: Extensions for Citar
+
+This manual describes the features and customization options for the Emacs Lisp file =citar-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=citar-extras.el= provides extensions for the =citar= package, which enhances Emacs' bibliography management capabilities. These extensions focus on integrating =citar= with =ebib=, managing bibliography files, and customizing the display of citation indicators.
+
+The main features include:
+
++ Commands to open or navigate to BibTeX entries selected via =citar= within =ebib= or the source =.bib= file.
++ A command to move a BibTeX entry to a specific bibliography file (intended for a "Tlön" workflow).
++ Custom indicator definitions using =nerd-icons= for files, links, notes, and cited status within the =citar= selection UI.
++ A command to manually update the =citar= cache for all configured bibliographies.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=citar-extras.el= provides the following interactive commands:
+
+** Open Entry in Ebib
+:PROPERTIES:
+:CUSTOM_ID: h:citar-extras-open-in-ebib
+:END:
+
+#+findex: citar-extras-open-in-ebib
+The command ~citar-extras-open-in-ebib~ prompts the user to select a bibliographic reference using the =citar= interface (=citar-select-ref=). It then opens the corresponding entry in =ebib=. If the =*ebib*= buffer doesn't exist, it starts =ebib= first. It relies on ~ebib-extras-open-key~ to locate and display the entry within =ebib=.
+
+** Move Entry to Tlön Bibliography
+:PROPERTIES:
+:CUSTOM_ID: h:citar-extras-move-entry-to-tlon
+:END:
+
+#+findex: citar-extras-move-entry-to-tlon
+The command ~citar-extras-move-entry-to-tlon~ prompts the user to select a reference using =citar-select-ref=. It then navigates to the entry in its source BibTeX file (using ~citar-extras-goto-bibtex-entry~) and calls ~tlon-move-entry-to-fluid~ (presumably a custom function) to move the entry to a specific bibliography file designated for the "Tlön" project.
+
+** Go To BibTeX Entry in File
+:PROPERTIES:
+:CUSTOM_ID: h:citar-extras-goto-bibtex-entry
+:END:
+
+#+findex: citar-extras-goto-bibtex-entry
+The command ~citar-extras-goto-bibtex-entry~ prompts the user to select a reference using =citar-select-ref=. It then finds the BibTeX file containing the entry (using ~ebib-extras-get-file-of-key~) opens that file, and moves the point to the beginning of the selected entry's definition (=@type{citekey...=).
+
+** Update Bibliographies
+:PROPERTIES:
+:CUSTOM_ID: h:citar-extras-update-bibliographies
+:END:
+
+#+findex: citar-extras-update-bibliographies
+The command ~citar-extras-update-bibliographies~ manually triggers an update of the =citar= cache for all bibliography files configured in ~bibtex-completion-bibliography~. It iterates through the list of bibliographies obtained via ~citar--bibliographies~ and calls ~citar-cache--update-bibliography~ for each one.
+
+* Custom Indicators
+:PROPERTIES:
+:CUSTOM_ID: h:custom-indicators
+:END:
+
+=citar-extras.el= defines several custom indicators for use with the =citar-indicators= variable. These indicators use icons from the =nerd-icons= package to provide visual cues in the =citar= selection UI.
+
+#+vindex: citar-extras-indicator-files-icons
++ ~citar-extras-indicator-files-icons~: Displays a green file icon (nf-fa-file_o) if the entry has associated files (=citar-has-files=).
+
+#+vindex: citar-extras-indicator-links-icons
++ ~citar-extras-indicator-links-icons~: Displays an orange link icon (nf-fa-link) if the entry has associated links (=citar-has-links=).
+
+#+vindex: citar-extras-indicator-notes-icons
++ ~citar-extras-indicator-notes-icons~: Displays a blue note icon (nf-cod-note) if the entry has associated notes (=citar-has-notes=).
+
+#+vindex: citar-extras-indicator-cited-icons
++ ~citar-extras-indicator-cited-icons~: Displays a green circle icon (nf-fa-circle_o) if the entry is cited in the current document (=citar-is-cited=).
+
+These can be added to the ~citar-indicators~ list in your configuration, for example:
+#+begin_src emacs-lisp
+(setq citar-indicators
+      (list citar-extras-indicator-files-icons
+            citar-extras-indicator-links-icons
+            citar-extras-indicator-notes-icons
+            citar-extras-indicator-cited-icons
+            citar-indicator-cited-count)) ; Example: Keep the default cited count too
+#+end_src
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

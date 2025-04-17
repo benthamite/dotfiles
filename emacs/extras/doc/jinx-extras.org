@@ -1,0 +1,84 @@
+#+title: jinx-extras: Extensions for Jinx
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: jinx-extras.info
+#+texinfo_filename: jinx-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Jinx Extras: (jinx-extras)
+#+texinfo_dir_desc: Extensions for Jinx
+
+This manual describes the features and customization options for the Emacs Lisp file =jinx-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=jinx-extras.el= provides extensions for the =jinx= package, which offers interactive spell checking using external checkers like Hunspell or Aspell. These extensions focus on integrating Jinx corrections with Emacs' abbreviation system and providing language toggling.
+
+The main features include:
+
++ Automatically adding corrected misspellings as text-mode abbreviations.
++ A command to quickly toggle between configured Jinx languages (e.g., English and Spanish).
+
+* Enhanced Functionality
+:PROPERTIES:
+:CUSTOM_ID: h:enhanced-functionality
+:END:
+
+** Add Corrections as Abbreviations
+:PROPERTIES:
+:CUSTOM_ID: h:jinx-extras--add-to-abbrev
+:END:
+
+#+findex: jinx-extras--add-to-abbrev
+The internal function ~jinx-extras--add-to-abbrev~ is added as `:before` advice to the Jinx internal function ~jinx--correct-replace~.
+
+When the user selects a correction for a misspelled word using Jinx:
+1. This advice function runs *before* the replacement happens.
+2. It extracts the original misspelled word from the Jinx overlay.
+3. It takes the selected correction (WORD) passed to ~jinx--correct-replace~.
+4. It defines a new abbreviation in the =text-mode-abbrev-table= where the misspelled word expands to the corrected word, using =define-abbrev=.
+5. It messages the user about the abbreviation being added.
+6. Control then passes to the original ~jinx--correct-replace~ function to perform the actual replacement in the buffer.
+
+This automatically builds up a list of abbreviations for common typos corrected via Jinx, potentially speeding up future writing.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=jinx-extras.el= provides the following interactive command:
+
+** Toggle Jinx Languages
+:PROPERTIES:
+:CUSTOM_ID: h:jinx-extras-toggle-languages
+:END:
+
+#+findex: jinx-extras-toggle-languages
+The command ~jinx-extras-toggle-languages~ provides a quick way to switch between two pre-configured languages for Jinx spell checking. It checks the current value of ~jinx-languages~:
+- If it's currently "en" (English), it switches to "es" (Spanish).
+- If it's currently "es", it switches back to "en".
+
+This assumes the user primarily switches between English and Spanish. For more languages or different primary languages, this command would need modification. It calls the standard ~jinx-languages~ function to apply the change.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

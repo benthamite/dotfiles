@@ -1,0 +1,92 @@
+#+title: register-extras: Extensions for Emacs Registers
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: register-extras.info
+#+texinfo_filename: register-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Register Extras: (register-extras)
+#+texinfo_dir_desc: Extensions for Emacs Registers
+
+This manual describes the features and customization options for the Emacs Lisp file =register-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=register-extras.el= provides extensions for Emacs' built-in register functionality (=register.el=). These extensions add new ways to interact with registers, particularly for storing text from the kill ring and managing buffer associations with specific keys, and provides a transient menu for accessing register commands.
+
+The main features include:
+
++ A command to copy text from the kill ring directly into a specified register.
++ Functions to associate single character keys with specific buffers for quick switching.
++ A transient dispatch menu (`register-extras-dispatch`) providing access to various register-related commands.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=register-extras.el= provides the following interactive commands:
+
+** Copy Kill Ring Entry to Register
+:PROPERTIES:
+:CUSTOM_ID: h:register-extras-kill-to-register
+:END:
+
+#+findex: register-extras-kill-to-register
+The command ~register-extras-kill-to-register~ allows the user to copy an item from the kill ring into a specified register.
+1. It prompts the user to select an item from the kill ring using `read-from-kill-ring`.
+2. It prompts the user to select a target register using `register-read-with-preview`.
+3. It stores the selected text into the chosen register using `set-register`.
+
+** Associate Key with Current Buffer
+:PROPERTIES:
+:CUSTOM_ID: h:register-extras-buffer-to-register
+:END:
+
+#+findex: register-extras-buffer-to-register
+The command ~register-extras-buffer-to-register~ associates a single character key with the current buffer. It prompts the user for a character (KEY). It then updates the internal alist ~register-extras-keys-alist~, removing any previous association for that key and adding a new pair `(KEY . current-buffer)`. This allows for quick buffer switching using ~register-extras-jump-to-buffer~.
+
+** Jump to Buffer Associated with Key
+:PROPERTIES:
+:CUSTOM_ID: h:register-extras-jump-to-buffer
+:END:
+
+#+findex: register-extras-jump-to-buffer
+The command ~register-extras-jump-to-buffer~ prompts the user for a character key. It looks up the key in the ~register-extras-keys-alist~. If a live buffer is associated with that key, it switches to that buffer using `switch-to-buffer`. If no association exists or the buffer is dead, it displays a message.
+
+** Register Dispatch Menu
+:PROPERTIES:
+:CUSTOM_ID: h:register-extras-dispatch
+:END:
+
+#+findex: register-extras-dispatch
+The command ~register-extras-dispatch~ presents a transient menu (using =transient=) that groups various register-related commands for easy access. The menu organizes commands by the type of content they handle (region, number, kill ring, kmacro, rectangle, window/frame config, navigation, buffer) and includes commands for displaying and inserting register contents. This provides a unified interface for interacting with registers.
+
+* Internal Variables
+:PROPERTIES:
+:CUSTOM_ID: h:internal-variables
+:END:
+
++ ~register-extras-keys-alist~: An internal alist storing the mapping between character keys and buffers, used by ~register-extras-buffer-to-register~ and ~register-extras-jump-to-buffer~.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

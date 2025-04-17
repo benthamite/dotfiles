@@ -1,0 +1,113 @@
+#+title: isearch-extras: Extensions for Isearch
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: isearch-extras.info
+#+texinfo_filename: isearch-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Isearch Extras: (isearch-extras)
+#+texinfo_dir_desc: Extensions for Isearch
+
+This manual describes the features and customization options for the Emacs Lisp file =isearch-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=isearch-extras.el= provides extensions for Emacs' built-in incremental search facility (=isearch.el=). These extensions add new actions available during an active search, modify how searches are initiated, and integrate isearch with other tools like =consult= and =project=.
+
+The main features include:
+
++ Commands to exit isearch at the opposite end of the match or copy the current match to the kill ring.
++ A command to yank text from the kill ring literally into the search string.
++ Advice to automatically use the active region as the initial search string.
++ Integration commands to transfer the current search term to =consult-line= or =project-find-regexp=.
+
+* Commands Available During Isearch
+:PROPERTIES:
+:CUSTOM_ID: h:commands-during-isearch
+:END:
+
+These commands are intended to be bound to keys within the =isearch-mode-map=.
+
+** Exit Isearch at Other End
+:PROPERTIES:
+:CUSTOM_ID: h:isearch-extras-exit-other-end
+:END:
+
+#+findex: isearch-extras-exit-other-end
+The command ~isearch-extras-exit-other-end~ exits the current incremental search (using =isearch-exit=) and then moves the point to the opposite end of the last match found (using the value stored in =isearch-other-end=).
+
+** Copy Isearch Match
+:PROPERTIES:
+:CUSTOM_ID: h:isearch-extras-copy-match
+:END:
+
+#+findex: isearch-extras-copy-match
+The command ~isearch-extras-copy-match~ copies the text of the current isearch match (from point to =isearch-other-end=) to the kill ring using =kill-new= and then exits the search using =isearch-done=.
+
+** Yank Kill Literally
+:PROPERTIES:
+:CUSTOM_ID: h:isearch-extras-yank-kill-literally
+:END:
+
+#+findex: isearch-extras-yank-kill-literally
+The command ~isearch-extras-yank-kill-literally~ inserts the text from the kill ring (the most recent kill) directly into the isearch prompt *without* interpreting any special characters (like regexp metacharacters). This differs from the standard isearch yank command (=M-y=) which might interpret the yanked text.
+
+** Transfer Search to Consult Line
+:PROPERTIES:
+:CUSTOM_ID: h:isearch-extras-consult-line
+:END:
+
+#+findex: isearch-extras-consult-line
+The command ~isearch-extras-consult-line~ takes the current isearch string, updates the isearch ring, exits the isearch session, and then immediately starts =consult-line= using the same search string (properly quoted if it wasn't already a regexp). This allows seamlessly switching from an in-buffer isearch to a =consult= interface for the same query. Requires the =consult= package.
+
+** Transfer Search to Project Search
+:PROPERTIES:
+:CUSTOM_ID: h:isearch-extras-project-search
+:END:
+
+#+findex: isearch-extras-project-search
+The command ~isearch-extras-project-search~ takes the current isearch string, updates the isearch ring, exits the isearch session, and then immediately starts =project-find-regexp= using the same search string (properly quoted if it wasn't already a regexp). This allows easily escalating an in-buffer search to a project-wide search. Requires Emacs' built-in =project= library.
+
+* Enhanced Functionality
+:PROPERTIES:
+:CUSTOM_ID: h:enhanced-functionality
+:END:
+
+** Use Active Region for Initial Search
+:PROPERTIES:
+:CUSTOM_ID: h:isearch-extras-use-selection
+:END:
+
+#+findex: isearch-extras-use-selection
+The function ~isearch-extras-use-selection~ is designed to be added as `:around` advice to isearch commands like =isearch-forward= and =isearch-backward=.
+
+If a region is active when the advised isearch command is invoked, this function:
+1. Takes the text within the active region.
+2. Adds this text to the isearch ring (=isearch-update-ring=).
+3. Deactivates the mark.
+4. Calls the original isearch command.
+5. Immediately repeats the search in the appropriate direction (forward or backward) to find the first occurrence of the selected text.
+
+If no region is active, it simply calls the original isearch command as usual. This provides a convenient way to start searching for the currently selected text.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

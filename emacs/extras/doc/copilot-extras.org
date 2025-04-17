@@ -1,0 +1,300 @@
+#+title: copilot-extras: Extensions for Copilot
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: copilot-extras.info
+#+texinfo_filename: copilot-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Copilot Extras: (copilot-extras)
+#+texinfo_dir_desc: Extensions for Copilot
+
+This manual describes the features and customization options for the Emacs Lisp file =copilot-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=copilot-extras.el= provides extensions for the =copilot.el= package, which integrates GitHub Copilot into Emacs. These extensions focus on controlling when Copilot is active and providing a way to restart the Copilot process.
+
+The main features include:
+
++ Conditional activation of =copilot-mode= based on buffer properties (read-only status) and major mode.
++ A command to restart the Copilot minor mode, intended as a workaround for potential issues.
+
+* User Options
+:PROPERTIES:
+:CUSTOM_ID: h:user-options
+:END:
+
+This section details the user-configurable variables provided by =copilot-extras.el=.
+
+** ~copilot-extras-excluded-modes~
+:PROPERTIES:
+:CUSTOM_ID: h:copilot-extras-excluded-modes
+:END:
+
+#+vindex: copilot-extras-excluded-modes
+This user option holds a list of major mode symbols in which =copilot-mode= should *not* be automatically enabled by ~copilot-extras-enable-conditionally~. This allows users to prevent Copilot from activating in specific modes where it might not be desired or useful (e.g., documentation modes, terminal emulators).
+
+The default value is an empty list =()=.
+
+* Configuration Functions
+:PROPERTIES:
+:CUSTOM_ID: h:configuration-functions
+:END:
+
+These functions are intended for use in Emacs configuration, typically added to hooks.
+
+** Enable Copilot Conditionally
+:PROPERTIES:
+:CUSTOM_ID: h:copilot-extras-enable-conditionally
+:END:
+
+#+findex: copilot-extras-enable-conditionally
+The function ~copilot-extras-enable-conditionally~ is designed to be added to a relevant hook, such as ~prog-mode-hook~ or a global mode hook. It activates =copilot-mode= *unless* either of the following conditions is met:
+1. The current buffer is read-only (=buffer-read-only= is non-nil).
+2. The current buffer's major mode is a member of the ~copilot-extras-excluded-modes~ list.
+
+This provides a convenient way to enable Copilot broadly while excluding specific contexts.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=copilot-extras.el= provides the following interactive command:
+
+** Restart Copilot
+:PROPERTIES:
+:CUSTOM_ID: h:copilot-extras-restart-copilot
+:END:
+
+#+findex: copilot-extras-restart-copilot
+The command ~copilot-extras-restart-copilot~ attempts to "restart" the Copilot integration by quickly disabling and then re-enabling =copilot-mode= in the current buffer. This is described as a "hack" and is likely intended as a workaround if Copilot stops providing suggestions or encounters other issues, potentially avoiding a full Emacs restart. It only performs the restart if =copilot-mode= is currently active.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:
+
+#+title: corfu-extras: Extensions for Corfu
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: corfu-extras.info
+#+texinfo_filename: corfu-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Corfu Extras: (corfu-extras)
+#+texinfo_dir_desc: Extensions for Corfu
+
+This manual describes the features and customization options for the Emacs Lisp file =corfu-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=corfu-extras.el= provides extensions for the =corfu= package, which offers a Completion Overlay Region FUnctionality for Emacs. These extensions focus on controlling Corfu's activation in the minibuffer and integrating it with other completion UIs like =consult=.
+
+The main features include:
+
++ Conditional activation of =corfu-mode= in the minibuffer, avoiding conflicts with =vertico=.
++ A command to transfer the current Corfu completion session to the minibuffer using =consult-completion-in-region=.
+
+* Configuration Functions
+:PROPERTIES:
+:CUSTOM_ID: h:configuration-functions
+:END:
+
+These functions are intended for use in Emacs configuration, typically added to hooks.
+
+** Enable Corfu Always in Minibuffer (Conditionally)
+:PROPERTIES:
+:CUSTOM_ID: h:corfu-extras-enable-always-in-minibuffer
+:END:
+
+#+findex: corfu-extras-enable-always-in-minibuffer
+The function ~corfu-extras-enable-always-in-minibuffer~ is designed to be added to ~minibuffer-setup-hook~. It enables =corfu-mode= within the minibuffer *only if* the =vertico= package's input state variable (=vertico--input=) is not bound and true.
+
+This ensures that Corfu provides completion assistance in minibuffer prompts like =eval-expression= or =shell-command=, but automatically disables itself when Vertico is active (e.g., during =find-file= or =M-x=), preventing conflicts between the two completion UIs.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=corfu-extras.el= provides the following interactive command:
+
+** Move Corfu Completion to Minibuffer
+:PROPERTIES:
+:CUSTOM_ID: h:corfu-extras-move-to-minibuffer
+:END:
+
+#+findex: corfu-extras-move-to-minibuffer
+The command ~corfu-extras-move-to-minibuffer~ transfers the current in-buffer Corfu completion session to the minibuffer using =consult-completion-in-region= (from the =consult= package). This allows the user to leverage Consult's features (like preview and narrowing) for the completion candidates initially presented by Corfu.
+
+This command is automatically added to the ~corfu-continue-commands~ list, meaning it can typically be invoked while the Corfu popup is active using a key binding associated with continuing completion (often =M-n= or similar, depending on the user's setup).
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:
+
+#+title: doom-modeline-extras: Extensions for Doom Modeline
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: doom-modeline-extras.info
+#+texinfo_filename: doom-modeline-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Doom Modeline Extras: (doom-modeline-extras)
+#+texinfo_dir_desc: Extensions for Doom Modeline
+
+This manual describes the features and customization options for the Emacs Lisp file =doom-modeline-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=doom-modeline-extras.el= provides extensions for the =doom-modeline= package, adding custom segments and enhancing existing functionality, particularly related to notifications.
+
+The main features include:
+
++ Custom modeline segments to display:
+  + Org Roam backlink count.
+  + Tlön split mode status.
+  + AI context file count (from =gptel=).
++ Enhanced handling of GitHub notifications fetched by Doom Modeline, automatically pulling Forge notifications when the count changes.
+
+* User Options
+:PROPERTIES:
+:CUSTOM_ID: h:user-options
+:END:
+
+This section details the user-configurable variables provided by =doom-modeline-extras.el=. These options control the visibility of the custom segments.
+
+** ~doom-modeline-extras-org-roam~
+:PROPERTIES:
+:CUSTOM_ID: h:doom-modeline-extras-org-roam
+:END:
+
+#+vindex: doom-modeline-extras-org-roam
+If non-nil (the default), display the Org Roam backlink count segment (=org-roam-backlinks=) in the modeline when in =org-mode= and the backlink count variable (=org-roam-extras-current-backlink-count=) is available.
+
+** ~doom-modeline-extras-tlon-split~
+:PROPERTIES:
+:CUSTOM_ID: h:doom-modeline-extras-tlon-split
+:END:
+
+#+vindex: doom-modeline-extras-tlon-split
+If non-nil (the default), display the Tlön split mode segment (=tlon-split=) in the modeline when =tlon-split-mode= is active.
+
+** ~doom-modeline-extras-ai-context~
+:PROPERTIES:
+:CUSTOM_ID: h:doom-modeline-extras-ai-context
+:END:
+
+#+vindex: doom-modeline-extras-ai-context
+If non-nil (the default), display the AI context file count segment (=ai-context=) in the modeline when the =gptel= context list (=gptel-context--alist=) is not empty.
+
+* Modeline Segments
+:PROPERTIES:
+:CUSTOM_ID: h:modeline-segments
+:END:
+
+=doom-modeline-extras.el= defines the following custom segments using ~doom-modeline-def-segment~. These can be added to the ~doom-modeline-segments~ list in your configuration.
+
+** Tlön Split Mode Segment
+:PROPERTIES:
+:CUSTOM_ID: h:tlon-split-segment
+:END:
+
+#+vindex: tlon-split
+Displays the literal string "split" followed by a space when =tlon-split-mode= is active and ~doom-modeline-extras-tlon-split~ is non-nil.
+
+** Org Roam Backlinks Segment
+:PROPERTIES:
+:CUSTOM_ID: h:org-roam-backlinks-segment
+:END:
+
+#+vindex: org-roam-backlinks
+Displays the Org Roam backlink count, formatted as "⟲(COUNT)", when in =org-mode=, ~doom-modeline-extras-org-roam~ is non-nil, and the variable =org-roam-extras-current-backlink-count= (presumably defined elsewhere) holds the count.
+
+** AI Context Segment
+:PROPERTIES:
+:CUSTOM_ID: h:ai-context-segment
+:END:
+
+#+vindex: ai-context
+Displays the number of files currently in the =gptel= AI context list (=gptel-context--alist=), formatted as "✨(COUNT)", when ~doom-modeline-extras-ai-context~ is non-nil and the count is greater than zero.
+
+* Enhanced Functionality
+:PROPERTIES:
+:CUSTOM_ID: h:enhanced-functionality
+:END:
+
+** GitHub Notification Handling
+:PROPERTIES:
+:CUSTOM_ID: h:github-notification-handling
+:END:
+
+#+findex: doom-modeline-extras-handle-github-notifications
+The function ~doom-modeline-extras-handle-github-notifications~ is added to the ~doom-modeline-after-github-fetch-notification-hook~. It compares the newly fetched GitHub notification count (=doom-modeline--github-notification-number=) with the previously stored count (=doom-modeline-extras-github-last-count=).
+
+If the count has changed *and* is greater than zero, it automatically calls ~forge-pull-notifications~ (from the =forge= package) to fetch detailed notifications and messages the user. It then updates the stored count. This provides tighter integration between Doom Modeline's basic notification count and Forge's detailed notification management.
+
+* Internal Variables
+:PROPERTIES:
+:CUSTOM_ID: h:internal-variables
+:END:
+
++ ~doom-modeline-extras-github-last-count~: Stores the previous GitHub notification count to detect changes.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

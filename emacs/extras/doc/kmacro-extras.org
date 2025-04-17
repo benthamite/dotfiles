@@ -1,0 +1,61 @@
+#+title: kmacro-extras: Extensions for Keyboard Macros
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: kmacro-extras.info
+#+texinfo_filename: kmacro-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Kmacro Extras: (kmacro-extras)
+#+texinfo_dir_desc: Extensions for Keyboard Macros
+
+This manual describes the features and customization options for the Emacs Lisp file =kmacro-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=kmacro-extras.el= provides extensions for Emacs' built-in keyboard macro functionality (=kmacro.el=). It currently offers a command to toggle the format of the keyboard macro counter between numeric and alphabetical.
+
+The main features include:
+
++ A command to switch the keyboard macro counter format (=kmacro-counter-format=) and reset the counter value accordingly.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=kmacro-extras.el= provides the following interactive command:
+
+** Toggle Counter Format (Numeric/Alphabetical)
+:PROPERTIES:
+:CUSTOM_ID: h:kmacro-extras-counter-toggle-alpha-number
+:END:
+
+#+findex: kmacro-extras-counter-toggle-alpha-number
+The command ~kmacro-extras-counter-toggle-alpha-number~ switches the format used for inserting the keyboard macro counter (via =kmacro-insert-counter= or =F3= during macro execution).
+
+- If the current format (=kmacro-counter-format=) is numeric ("%d"), it changes the format to alphabetical ("%c") and resets the counter (=kmacro-set-counter=) to 97 (the ASCII value for 'a'). It messages "Set to alphabetical".
+- If the current format is alphabetical ("%c"), it changes the format back to numeric ("%d") and resets the counter to 1. It messages "Set to numeric".
+
+This allows users to easily switch between inserting numbers (1, 2, 3...) and letters (a, b, c...) using the macro counter.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

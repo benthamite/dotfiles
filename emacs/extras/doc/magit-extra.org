@@ -1,0 +1,142 @@
+#+title: magit-extras: Extensions for Magit
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: magit-extras.info
+#+texinfo_filename: magit-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Magit Extras: (magit-extras)
+#+texinfo_dir_desc: Extensions for Magit
+
+This manual describes the features and customization options for the Emacs Lisp file =magit-extra.el=. (Note the filename difference: =magit-extra.el= vs =magit-extras.org=).
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=magit-extra.el= provides extensions for the =magit= package, the popular Git interface for Emacs. These extensions streamline common workflows like staging, committing, and pushing, manage submodules, interact with Org mode, and customize the Magit interface.
+
+The main features include:
+
++ Commands to stage, commit, and push changes in one step, optionally for a single file or across multiple repositories.
++ A function to convert Git remote URLs to HTTP URLs.
++ Helper functions to get information about the file(s) being committed, including associated Org headings.
++ A command to check out Git tags across the main repository and all submodules simultaneously.
++ A function to warn the user if a specified repository is dirty (has uncommitted changes).
++ A customized Magit dispatch transient menu.
++ A command to finish a =with-editor= commit session and immediately push.
++ A transient suffix command to update all submodules recursively.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=magit-extra.el= provides the following interactive commands:
+
+** Stage, Commit, and Push
+:PROPERTIES:
+:CUSTOM_ID: h:magit-extras-stage-commit-and-push
+:END:
+
+#+findex: magit-extras-stage-commit-and-push
+The command ~magit-extras-stage-commit-and-push~ performs a sequence of Git actions:
+1. Stages modified files (all unstaged modifications if FILE is nil, or just FILE if provided).
+2. Creates a commit using the MESSAGE provided interactively.
+3. Pushes the current branch to its push remote (unless NO-PUSH is non-nil).
+
+This streamlines the common workflow of committing and pushing changes.
+
+** Stage, Commit, and Push All Repositories
+:PROPERTIES:
+:CUSTOM_ID: h:magit-extras-stage-commit-and-push-all-repos
+:END:
+
+#+findex: magit-extras-stage-commit-and-push-all-repos
+The command ~magit-extras-stage-commit-and-push-all-repos~ iterates through a list of directories defined in the variable =paths-dir-all-repos= (presumably defined elsewhere) and calls ~magit-extras-midnight-update~ for each directory.
+
+#+findex: magit-extras-midnight-update
+The helper function ~magit-extras-midnight-update~ changes the =default-directory= to the specified repository directory and then calls ~magit-extras-stage-commit-and-push~ with the commit message "Midnight update". This is likely intended for automated, periodic updates of multiple repositories.
+
+** Checkout Tag with Submodules
+:PROPERTIES:
+:CUSTOM_ID: h:magit-extras-checkout-tag-with-submodules
+:END:
+
+#+findex: magit-extras-checkout-tag-with-submodules
+The command ~magit-extras-checkout-tag-with-submodules~ provides a way to check out a specific Git tag (or the "main" branch) consistently across the main repository and all its recursive submodules.
+1. It prompts the user to select a tag from the list of available tags (=magit-list-tags=) or the "main" branch.
+2. It forces a checkout of the selected tag/branch in the main repository (=git checkout -f ...=).
+3. If "main" was selected, it recursively checks out "main" in all submodules and then pulls changes (=git submodule foreach --recursive git checkout main; git submodule foreach --recursive git pull=).
+4. If a tag was selected, it recursively resets submodules to match the state recorded in the main repository's commit and updates them (=git submodule foreach --recursive git reset --hard; git submodule update --recursive --init --force=).
+
+** Warn if Repository is Dirty
+:PROPERTIES:
+:CUSTOM_ID: h:magit-extras-warn-if-repo-is-dirty
+:END:
+
+#+findex: magit-extras-warn-if-repo-is-dirty
+The command ~magit-extras-warn-if-repo-is-dirty~ checks if the Git repository at the specified REPO-PATH has any uncommitted modifications (=magit-anything-modified-p=). If the repository is dirty, it displays an alert message using the =alert= package (presumably defined elsewhere). This is likely intended for use in hooks or automated processes to prevent actions on repositories with pending changes.
+
+** Customized Magit Dispatch Menu
+:PROPERTIES:
+:CUSTOM_ID: h:magit-extras-dispatch
+:END:
+
+#+findex: magit-extras-dispatch
+The function ~magit-extras-dispatch~ defines a custom transient menu using =transient-define-prefix=. This menu largely mirrors the default Magit dispatch menu but potentially includes customizations or rearrangements. It is then installed as an override for the standard =magit-dispatch= command using =advice-add=, meaning that invoking the standard Magit dispatch key (usually =C-x g=) will display this custom menu instead.
+
+** Finish Editor Commit and Push
+:PROPERTIES:
+:CUSTOM_ID: h:magit-extras-with-editor-finish-and-push
+:END:
+
+#+findex: magit-extras-with-editor-finish-and-push
+The command ~magit-extras-with-editor-finish-and-push~ is intended for use within a =with-editor= session (e.g., when writing a commit message). It first calls =with-editor-finish= to finalize the editing session and then immediately calls =magit-push-current-to-pushremote= interactively to push the newly created commit.
+
+* Transient Suffixes
+:PROPERTIES:
+:CUSTOM_ID: h:transient-suffixes
+:END:
+
+** Update All Submodules
+:PROPERTIES:
+:CUSTOM_ID: h:magit-extras-update-all-submodules
+:END:
+
+#+findex: magit-extras-update-all-submodules
+The transient suffix ~magit-extras-update-all-submodules~ is defined for use within Magit transient menus (likely intended for the submodule menu). When invoked, it runs =git submodule update --init --recursive= asynchronously to initialize and update all submodules. It uses =magit-submodule-arguments= to potentially add the =--recursive= flag based on context.
+
+* Helper Functions
+:PROPERTIES:
+:CUSTOM_ID: h:helper-functions
+:END:
+
+These functions provide utility for other commands or for direct use in Elisp.
+
++ ~magit-extras-parse-url~: Converts a Git remote URL (potentially in SSH format like =git@github.com:user/repo.git=) into an HTTPS URL (=https://github.com/user/repo=). Handles existing HTTP(S) URLs correctly.
++ ~magit-extras-move-point-to-start~: A simple utility to move the point to the beginning of the buffer after a short delay (0.3 seconds).
++ ~magit-extras-get-commit-file~: Intended for use during a commit process (e.g., from a hook). It attempts to find the name of the file being committed from the Magit status buffer section "Changes to be committed". It can return the path relative to the repository root (default), the full absolute path (if PATH is 'full), or just the filename (if PATH is 'sans-dir). Returns the first file if multiple are staged.
++ ~magit-extras-get-commit-heading~: Attempts to find the Org mode heading associated with the code being committed. It gets the full path of the file being committed using ~magit-extras-get-commit-file~, switches to the previous window (assuming the commit process started from an Org buffer), visits the file being committed at the diff location, and then retrieves the Org heading item using =org-entry-get nil "ITEM"=.
++ ~magit-extras-get-unstaged-files~: Returns a list of files that have unstaged changes in the current repository using =git diff --name-only --diff-filter=d=.
++ ~magit-extras-track-file~: Stages the specified FILE using =git add=.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

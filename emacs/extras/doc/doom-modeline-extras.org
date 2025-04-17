@@ -1,0 +1,129 @@
+#+title: doom-modeline-extras: Extensions for Doom Modeline
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: doom-modeline-extras.info
+#+texinfo_filename: doom-modeline-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Doom Modeline Extras: (doom-modeline-extras)
+#+texinfo_dir_desc: Extensions for Doom Modeline
+
+This manual describes the features and customization options for the Emacs Lisp file =doom-modeline-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=doom-modeline-extras.el= provides extensions for the =doom-modeline= package, adding custom segments and enhancing existing functionality, particularly related to notifications.
+
+The main features include:
+
++ Custom modeline segments to display:
+  + Org Roam backlink count.
+  + Tlön split mode status.
+  + AI context file count (from =gptel=).
++ Enhanced handling of GitHub notifications fetched by Doom Modeline, automatically pulling Forge notifications when the count changes.
+
+* User Options
+:PROPERTIES:
+:CUSTOM_ID: h:user-options
+:END:
+
+This section details the user-configurable variables provided by =doom-modeline-extras.el=. These options control the visibility of the custom segments.
+
+** ~doom-modeline-extras-org-roam~
+:PROPERTIES:
+:CUSTOM_ID: h:doom-modeline-extras-org-roam
+:END:
+
+#+vindex: doom-modeline-extras-org-roam
+If non-nil (the default), display the Org Roam backlink count segment (=org-roam-backlinks=) in the modeline when in =org-mode= and the backlink count variable (=org-roam-extras-current-backlink-count=) is available.
+
+** ~doom-modeline-extras-tlon-split~
+:PROPERTIES:
+:CUSTOM_ID: h:doom-modeline-extras-tlon-split
+:END:
+
+#+vindex: doom-modeline-extras-tlon-split
+If non-nil (the default), display the Tlön split mode segment (=tlon-split=) in the modeline when =tlon-split-mode= is active.
+
+** ~doom-modeline-extras-ai-context~
+:PROPERTIES:
+:CUSTOM_ID: h:doom-modeline-extras-ai-context
+:END:
+
+#+vindex: doom-modeline-extras-ai-context
+If non-nil (the default), display the AI context file count segment (=ai-context=) in the modeline when the =gptel= context list (=gptel-context--alist=) is not empty.
+
+* Modeline Segments
+:PROPERTIES:
+:CUSTOM_ID: h:modeline-segments
+:END:
+
+=doom-modeline-extras.el= defines the following custom segments using ~doom-modeline-def-segment~. These can be added to the ~doom-modeline-segments~ list in your configuration.
+
+** Tlön Split Mode Segment
+:PROPERTIES:
+:CUSTOM_ID: h:tlon-split-segment
+:END:
+
+#+vindex: tlon-split
+Displays the literal string "split" followed by a space when =tlon-split-mode= is active and ~doom-modeline-extras-tlon-split~ is non-nil.
+
+** Org Roam Backlinks Segment
+:PROPERTIES:
+:CUSTOM_ID: h:org-roam-backlinks-segment
+:END:
+
+#+vindex: org-roam-backlinks
+Displays the Org Roam backlink count, formatted as "⟲(COUNT)", when in =org-mode=, ~doom-modeline-extras-org-roam~ is non-nil, and the variable =org-roam-extras-current-backlink-count= (presumably defined elsewhere) holds the count.
+
+** AI Context Segment
+:PROPERTIES:
+:CUSTOM_ID: h:ai-context-segment
+:END:
+
+#+vindex: ai-context
+Displays the number of files currently in the =gptel= AI context list (=gptel-context--alist=), formatted as "✨(COUNT)", when ~doom-modeline-extras-ai-context~ is non-nil and the count is greater than zero.
+
+* Enhanced Functionality
+:PROPERTIES:
+:CUSTOM_ID: h:enhanced-functionality
+:END:
+
+** GitHub Notification Handling
+:PROPERTIES:
+:CUSTOM_ID: h:github-notification-handling
+:END:
+
+#+findex: doom-modeline-extras-handle-github-notifications
+The function ~doom-modeline-extras-handle-github-notifications~ is added to the ~doom-modeline-after-github-fetch-notification-hook~. It compares the newly fetched GitHub notification count (=doom-modeline--github-notification-number=) with the previously stored count (=doom-modeline-extras-github-last-count=).
+
+If the count has changed *and* is greater than zero, it automatically calls ~forge-pull-notifications~ (from the =forge= package) to fetch detailed notifications and messages the user. It then updates the stored count. This provides tighter integration between Doom Modeline's basic notification count and Forge's detailed notification management.
+
+* Internal Variables
+:PROPERTIES:
+:CUSTOM_ID: h:internal-variables
+:END:
+
++ ~doom-modeline-extras-github-last-count~: Stores the previous GitHub notification count to detect changes.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

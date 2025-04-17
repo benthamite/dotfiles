@@ -1,0 +1,151 @@
+#+title: forge-extras: Extensions for Forge
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: forge-extras.info
+#+texinfo_filename: forge-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Forge Extras: (forge-extras)
+#+texinfo_dir_desc: Extensions for Forge
+
+This manual describes the features and customization options for the Emacs Lisp file =forge-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=forge-extras.el= provides extensions for the =forge= package, which integrates Emacs with Git forges like GitHub and GitLab. These extensions focus on notification handling, issue/PR management, repository tracking, and navigating topic discussions.
+
+The main features include:
+
++ Storing Org links for multiple selected commits in =magit-status= buffers.
++ A command to browse the GitHub notification inbox.
++ A DWIM (Do What I Mean) command to toggle the state (open/closed) of the issue/PR at point.
++ Automatic pulling of Forge notifications when the GitHub notification count (from =doom-modeline=) changes.
++ Synchronization of read status between Forge and GitHub by briefly opening the issue/PR URL in Safari (macOS specific).
++ Commands to track Git repositories in Forge, pulling all topics.
++ Commands to navigate between posts (messages) within a Forge topic buffer.
++ A command to copy the body of the message at point to the kill ring.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=forge-extras.el= provides the following interactive commands:
+
+** Store Org Links for Multiple Commits
+:PROPERTIES:
+:CUSTOM_ID: h:forge-extras-orgit-store-link
+:END:
+
+#+findex: forge-extras-orgit-store-link
+The command ~forge-extras-orgit-store-link~ enhances the standard =org-store-link= functionality within Magit/Forge contexts.
+- If multiple commit sections are selected in a Magit buffer, it iterates through them and calls =org-store-link= for each, effectively storing links to all selected commits.
+- If no region is active or the region doesn't contain commits, it determines the Forge topic (issue or pull request) at point, visits it, and then calls =org-store-link= for that topic.
+
+** Browse GitHub Inbox
+:PROPERTIES:
+:CUSTOM_ID: h:forge-extras-browse-github-inbox
+:END:
+
+#+findex: forge-extras-browse-github-inbox
+The command ~forge-extras-browse-github-inbox~ opens the GitHub notifications page (https://github.com/notifications) in the default browser using =browse-url=.
+
+** Toggle Issue/PR State (DWIM)
+:PROPERTIES:
+:CUSTOM_ID: h:forge-extras-state-set-dwim
+:END:
+
+#+findex: forge-extras-state-set-dwim
+The command ~forge-extras-state-set-dwim~ toggles the state of the Forge issue or pull request at point (or the one associated with the current buffer). If the topic is currently 'open', it attempts to close it (set state to 'completed'). If it's 'completed', it attempts to reopen it (set state to 'open'). It uses the internal ~forge--set-topic-state~ function.
+
+** Track Repository in Forge
+:PROPERTIES:
+:CUSTOM_ID: h:forge-extras-track-repository
+:END:
+
+#+findex: forge-extras-track-repository
+The command ~forge-extras-track-repository~ adds the Git repository in the specified directory (DIR, defaults to current directory) to the Forge database. It first checks if the directory is a valid Git repository. If so, it retrieves the remote URL, ensures the repository is known to Forge (inserting it if necessary using ~forge-get-repository~ with =:insert!=), pulls all topics (issues, PRs) for that repository using ~forge--pull~, and finally refreshes the Magit status buffer for the directory.
+
+** Navigate Messages in Topic Buffer
+:PROPERTIES:
+:CUSTOM_ID: h:navigate-messages
+:END:
+
+#+findex: forge-next-message
+The command ~forge-next-message~ moves the point to the start of the next post (message) section within the current Forge topic buffer. If already on the last post, it messages "No next post". If not currently on a post section, it moves to the first post.
+
+#+findex: forge-previous-message
+The command ~forge-previous-message~ moves the point to the start of the previous post (message) section within the current Forge topic buffer. If already on the first post, it messages "No prev post". If not currently on a post section, it moves to the last post.
+
+** Copy Message at Point
+:PROPERTIES:
+:CUSTOM_ID: h:forge-extras-copy-message-at-point-as-kill
+:END:
+
+#+findex: forge-extras-copy-message-at-point-as-kill
+The command ~forge-extras-copy-message-at-point-as-kill~ copies the body text of the Forge post section at point to the Emacs kill ring, preserving its formatting.
+
+* Enhanced Functionality
+:PROPERTIES:
+:CUSTOM_ID: h:enhanced-functionality
+:END:
+
+** Automatic Notification Pulling
+:PROPERTIES:
+:CUSTOM_ID: h:forge-extras-pull-notifications
+:END:
+
+#+findex: forge-extras-pull-notifications
+The function ~forge-extras-pull-notifications~ calls the standard ~forge-pull-notifications~ command, but wraps it in ~shut-up~ and ~with-no-warnings~ to suppress output. It also includes a check to prevent running if Elfeed updates are in progress (using the variable =elfeed-extras-auto-update-in-process=, presumably defined elsewhere), as this was found to cause issues. This function might be intended for use in timers or hooks for automatic background updates.
+
+** Sync Read Status with GitHub (macOS Safari)
+:PROPERTIES:
+:CUSTOM_ID: h:forge-extras-sync-read-status
+:END:
+
+#+findex: forge-extras-sync-read-status
+The function ~forge-extras-sync-read-status~ attempts to mark a Forge notification as read on GitHub by briefly opening its URL in Safari (macOS only). It only proceeds if the issue/PR at point currently has an 'unread' status in Forge.
+
+It works by:
+1. Getting the URL of the issue/PR at point.
+2. Constructing an AppleScript command (using ~forge-extras-safari-script-format-string~) that tells Safari to open the URL in a new tab, wait briefly (5 seconds), attempt to check the document's `readyState` using JavaScript, and then close the tab if loading seems complete.
+3. Executing this AppleScript asynchronously using ~forge-extras-async-shell-command-to-string~.
+4. When the script finishes, it calls the callback ~forge-extras-update-github-counter~.
+
+#+findex: forge-extras-update-github-counter
+The callback function ~forge-extras-update-github-counter~ first checks if the AppleScript output indicates a problem with JavaScript execution in Safari (using ~forge-extras-safari-ensure-javascript-enabled~). If JavaScript seems okay, it then triggers an update of the GitHub notification count in Doom Modeline (if active) by calling ~doom-modeline--github-fetch-notifications~.
+
+*Caveats:* This synchronization mechanism is macOS-specific, relies on AppleScript and Safari's ability to execute JavaScript from Apple Events (which needs to be enabled in Safari's Developer menu), and uses a fixed delay which might not always be sufficient for the page to load and GitHub to register the "read". It also requires the user to be logged into GitHub in Safari.
+
+* Internal Functions (for reference)
+:PROPERTIES:
+:CUSTOM_ID: h:internal-functions
+:END:
+
++ ~forge--goto-message~: Core logic for navigating between posts, used by ~forge-next-message~ and ~forge-previous-message~.
++ ~forge-extras-track-repo-all-topics~: Helper function to add/update a repository in Forge and pull all its topics.
++ ~forge-extras-async-shell-command-to-string~: Executes a shell command asynchronously and calls a callback with the output.
++ ~forge-extras-safari-github-logged-in-p~: Checks if the user appears logged into GitHub in Safari by checking the Safari window title (heuristic).
++ ~forge-extras-safari-ensure-javascript-enabled~: Checks AppleScript output for errors related to JavaScript execution permissions in Safari.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

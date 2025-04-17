@@ -1,0 +1,103 @@
+#+title: frame-extras: Extensions for Emacs Frames
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: frame-extras.info
+#+texinfo_filename: frame-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Frame Extras: (frame-extras)
+#+texinfo_dir_desc: Extensions for Emacs Frames
+
+This manual describes the features and customization options for the Emacs Lisp file =frame-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=frame-extras.el= provides extensions for managing Emacs frames (the top-level windows managed by the window system). These extensions focus on resizing and positioning frames, particularly for half-screen layouts, and restoring focus or visual elements.
+
+The main features include:
+
++ Commands to maximize the current frame or resize it to occupy the left or right half of the screen.
++ A command to restore the visibility of the window divider face.
++ A command (macOS specific) to restore focus to the Emacs application.
+
+* Variables
+:PROPERTIES:
+:CUSTOM_ID: h:variables
+:END:
+
+** ~frame-extras-maximized-frame-width~
+:PROPERTIES:
+:CUSTOM_ID: h:frame-extras-maximized-frame-width
+:END:
+
+#+vindex: frame-extras-maximized-frame-width
+This variable stores the width (in columns) of the frame after it has been maximized by ~frame-extras-maximize-frame~. This value is then used by ~frame-extras-left-half~ and ~frame-extras-right-half~ to calculate the correct width for half-screen layouts. It defaults to 244 but is updated dynamically when ~frame-extras-maximize-frame~ is called.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+=frame-extras.el= provides the following interactive commands:
+
+** Maximize Frame
+:PROPERTIES:
+:CUSTOM_ID: h:frame-extras-maximize-frame
+:END:
+
+#+findex: frame-extras-maximize-frame
+The command ~frame-extras-maximize-frame~ maximizes the current Emacs frame to fill the screen. It first ensures the frame is not in fullscreen mode (`fullscreen` parameter set to `nil`) and then sets the `fullscreen` parameter to `'maximized`. It includes a small delay (`sleep-for 0.01`) before capturing the frame width to ensure the window manager has finished resizing, storing the result in ~frame-extras-maximized-frame-width~.
+
+** Resize Frame to Left Half
+:PROPERTIES:
+:CUSTOM_ID: h:frame-extras-left-half
+:END:
+
+#+findex: frame-extras-left-half
+The command ~frame-extras-left-half~ first maximizes the frame using ~frame-extras-maximize-frame~ (to get the full screen width) and then sets the frame width to half of the stored maximized width (~frame-extras-maximized-frame-width~). The frame remains positioned at the left edge of the screen.
+
+** Resize Frame to Right Half
+:PROPERTIES:
+:CUSTOM_ID: h:frame-extras-right-half
+:END:
+
+#+findex: frame-extras-right-half
+The command ~frame-extras-right-half~ first resizes the frame to the left half using ~frame-extras-left-half~ and then moves the frame's position horizontally so that its left edge aligns with the calculated midpoint of the screen (using `frame-pixel-width` which now reflects the half-width).
+
+** Restore Window Divider Visibility
+:PROPERTIES:
+:CUSTOM_ID: h:frame-extras-restore-window-divider
+:END:
+
+#+findex: frame-extras-restore-window-divider
+The command ~frame-extras-restore-window-divider~ resets the `window-divider` face to its default attributes using `custom-set-faces`. This is useful if the divider has been made invisible or customized in a way the user wants to undo.
+
+** Restore Focus to Emacs (macOS)
+:PROPERTIES:
+:CUSTOM_ID: h:frame-extras-restore-focus
+:END:
+
+#+findex: frame-extras-restore-focus
+The command ~frame-extras-restore-focus~ uses AppleScript (`do-applescript`) to tell the "Emacs" application to activate. This brings the Emacs application to the foreground and gives it input focus on macOS.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

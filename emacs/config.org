@@ -8254,6 +8254,7 @@ This package evolved out of gptel-extras.
   :bind (("C-c a" . aidermacs-transient-menu)
          :map aidermacs-comint-mode-map
          ("S-<return>" . comint-send-input)
+         ("s-c" . comint-send-input)
          ("<return>" . comint-accumulate)))
 #+end_src
 

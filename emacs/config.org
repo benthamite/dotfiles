@@ -2376,7 +2376,6 @@ Note that the loading of ~color~ cannot be deferred, since it is required by ~pu
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature image
   :after image-mode
-  :defer t
   :init
   ;; Use imagemagick, if available.
   ;; djcbsoftware.nl/code/mu/mu4e/Viewing-images-inline.html
@@ -7717,7 +7716,6 @@ This needs to be configured.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package json-mode
-  :defer t
   :bind
   (:map json-mode-map
         ("RET" . nil)))
@@ -9227,7 +9225,6 @@ CLOCK: [2021-03-11 Thu 09:41]--[2021-03-11 Thu 10:00] =>  0:19
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature org-archive
   :after org
-  :defer t
   :custom
   (org-archive-default-command 'org-archive-to-archive-sibling)
   (org-archive-location (expand-file-name "%s_archive.org::" paths-dir-archive))

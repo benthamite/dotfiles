@@ -618,21 +618,21 @@ To install the extension, drag the latter onto the former."
 
 ;;;;; help files
 
+;;;###autoload
 (defun files-extras-get-help-file (file)
   "Return the help file for FILE, if it exists."
   (let* ((base (file-name-base file))
 	 (dir (file-name-directory file))
-	 (help-files (list (file-name-with-extension base "md")
-			   (file-name-with-extension base "org")))
+	 (help-files (list (file-name-with-extension base "org")
+			   (file-name-with-extension base "md")))
 	 (help-dirs (list (file-name-concat dir "doc/")
 			  (file-name-concat dir "docs/"))))
-    ;; Check if any help file exists in any help dirs, return the first found.
-    (cl-loop for help-dir in help-dirs
-             if (file-directory-p help-dir) ; Ensure the help directory exists
+    (cl-loop named outer-loop for help-dir in help-dirs
+             if (file-directory-p help-dir)
              do (cl-loop for help-file in help-files
                          for full-path = (file-name-concat help-dir help-file)
                          if (file-exists-p full-path)
-                         do (cl-return full-path)))))
+                         do (cl-return-from outer-loop full-path)))))
 
 ;;;;; Misc
 

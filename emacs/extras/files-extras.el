@@ -626,11 +626,13 @@ To install the extension, drag the latter onto the former."
 			   (file-name-with-extension base "org")))
 	 (help-dirs (list (file-name-concat dir "doc/")
 			  (file-name-concat dir "docs/"))))
-    ;; if any help file exists in any help dirs, return it. use cl library
-    (cl-loop for help-file in help-files
-	     for help-dir in help-dirs
-	     ;; complete the rest
-	     )))
+    ;; Check if any help file exists in any help dirs, return the first found.
+    (cl-loop for help-dir in help-dirs
+             if (file-directory-p help-dir) ; Ensure the help directory exists
+             do (cl-loop for help-file in help-files
+                         for full-path = (file-name-concat help-dir help-file)
+                         if (file-exists-p full-path)
+                         do (cl-return full-path)))))
 
 ;;;;; Misc
 

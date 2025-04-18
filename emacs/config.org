@@ -8209,8 +8209,12 @@ This package evolved out of gptel-extras.
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package llm-tool-collection
   :ensure (:host github
-                 :repo "skissue/llm-tool-collection")
-  :defer t)
+		 :repo "skissue/llm-tool-collection")
+  :after gptel
+  :config
+  ;; register every tool
+  (mapcar (apply-partially #'apply #'gptel-make-tool)
+	  (llm-tool-collection-get-all)))
 #+end_src
 
 ** codel

@@ -2124,9 +2124,8 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
 (use-package org-modern-indent
   :ensure (:host github
                  :repo "jdtsmith/org-modern-indent")
-  :after org-modern org-indent
-  :hook
-  (org-mode-hook . org-modern-indent-mode))
+  :after org-modern
+  :hook org-mode-hook)
 #+end_src
 
 ** org-tidy
@@ -2146,8 +2145,7 @@ CLOCK: [2023-11-05 Sun 13:34]--[2023-11-05 Sun 13:59] =>  0:25
   (org-tidy-properties-inline-symbol "")
   (org-tidy-protect-overlay nil) ; github.com/jxq0/org-tidy/issues/11
 
-  :hook
-  (org-mode-hook . org-tidy-mode))
+  :hook org-mode-hook)
 #+end_src
 
 ** org-appear
@@ -2160,8 +2158,7 @@ CLOCK: [2023-11-05 Sun 13:34]--[2023-11-05 Sun 13:59] =>  0:25
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-appear
   :after org
-  :hook
-  (org-mode-hook . org-appear-mode))
+  :hook org-mode-hook)
 #+end_src
 
 ** face-remap
@@ -3337,8 +3334,7 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
      ("Other")
      ("?" . outli-speed-command-help)))
 
-  :hook
-  (emacs-lisp-mode-hook . outli-mode))
+  :hook emacs-lisp-mode-hook)
 #+end_src
 
 ** abbrev
@@ -5202,8 +5198,7 @@ The original package appears to no longer be maintained, so I have created my ow
   (add-to-list 'recentf-exclude no-littering-var-directory)
   (add-to-list 'recentf-exclude no-littering-etc-directory)
 
-  :hook
-  (find-file-hook . recentf-mode))
+  :hook find-file-hook)
 #+end_src
 
 * search & replace
@@ -13184,8 +13179,7 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
     "https://www.youtube.com/results?lclk=long&filters=hd%2Clong&search_query=%s"
     :keybinding "y m")
 
-  :hook
-  (minibuffer-setup-hook . engine-mode))
+  :hook minibuffer-setup-hook)
 #+end_src
 
 ** org-download

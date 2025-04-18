@@ -149,6 +149,19 @@ If ASYNC is non-nil, run the command asynchronously."
     (message "`default-directory' is %s" default-directory)
     (funcall command (format "aider --show-repo-map > %s" repo))))
 
+(declare-function files-extras-get-help-file "files-extras")
+(defun aidermacs-extras-run-in-current-dir ()
+  "Run Aider in the current directory `default-directory`.
+If invoked from a file-visiting buffer, add the current file and, if available,
+its associated help file."
+  (interactive)
+  (let* ((current-file (buffer-file-name))
+	 (help-file (and current-file (files-extras-get-help-file current-file)))
+	 (extra-args (append (when current-file (list "--file" current-file))
+			     (when help-file (list "--file" help-file))))
+	 (aidermacs-extra-args (append aidermacs-extra-args extra-args)))
+    (aidermacs-run-in-current-dir)))
+
 (provide 'aidermacs-extras)
 ;;; aidermacs-extras.el ends here
 

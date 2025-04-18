@@ -616,6 +616,22 @@ To install the extension, drag the latter onto the former."
       (insert (format "%s\n" element)))
     (write-file file)))
 
+;;;;; help files
+
+(defun files-extras-get-help-file (file)
+  "Return the help file for FILE, if it exists."
+  (let* ((base (file-name-base file))
+	 (dir (file-name-directory file))
+	 (help-files (list (file-name-with-extension base "md")
+			   (file-name-with-extension base "org")))
+	 (help-dirs (list (file-name-concat dir "doc/")
+			  (file-name-concat dir "docs/"))))
+    ;; if any help file exists in any help dirs, return it. use cl library
+    (cl-loop for help-file in help-files
+	     for help-dir in help-dirs
+	     ;; complete the rest
+	     )))
+
 ;;;;; Misc
 
 (defun files-extras-get-current-dir-lowercased ()

@@ -253,14 +253,16 @@ should be fast."
 (defun eww-extras-readable-autoview ()
   "Display the \"readable\" parts of the current web page by default.
 The exceptions are listed in `eww-extras-readable-exceptions'."
-  (let* ((current-url (eww-current-url))
-	 (exception
-	  (catch 'exception
-	    (dolist (url eww-extras-readable-exceptions)
-	      (when (string-match-p url current-url)
-		(throw 'exception t))))))
-    (unless (or exception
-		;; if `:source' is nil, `eww-readable' will throw an error
+  (let ((current-url (eww-current-url)))
+    ;; Only proceed if current-url is a valid string
+    (when (stringp current-url)
+      (let ((exception
+             (catch 'exception
+               (dolist (url eww-extras-readable-exceptions)
+                 (when (string-match-p url current-url)
+                   (throw 'exception t))))))
+        (unless (or exception
+                    ;; if `:source' is nil, `eww-readable' will throw an error
 		(not (plist-get eww-data :source)))
       (eww-readable))))
 

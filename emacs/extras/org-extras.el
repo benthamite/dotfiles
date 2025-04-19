@@ -666,8 +666,13 @@ scan all agenda files, all associated archives, all open Org
 files, recursively all files in `org-directory', and all files in
 `org-id-extra-files'."
   (interactive)
-  (org-id-update-id-locations
-   (directory-files-recursively org-directory ".org$\\|.org.gpg$")))
+  (let* ((all-files (directory-files-recursively org-directory ".org$\\|.org.gpg$"))
+         ;; Filter out files in .Trash directories and files with carriage returns in their names.
+         (filtered-files (seq-filter (lambda (f)
+                                       (and (not (string-match-p "/\\.Trash/" f))
+                                            (not (string-match-p "\r" (file-name-nondirectory f)))))
+                                     all-files)))
+    (org-id-update-id-locations filtered-files)))
 
 ;;;;; org-list
 

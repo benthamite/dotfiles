@@ -263,8 +263,8 @@ The exceptions are listed in `eww-extras-readable-exceptions'."
                    (throw 'exception t))))))
         (unless (or exception
                     ;; if `:source' is nil, `eww-readable' will throw an error
-		(not (plist-get eww-data :source)))
-      (eww-readable))))
+                    (not (plist-get eww-data :source)))
+          (eww-readable))))))
 
 (add-hook 'eww-after-render-hook #'eww-extras-readable-autoview)
 

@@ -8243,11 +8243,6 @@ This package evolved out of gptel-extras.
   (aidermacs-show-diff-after-change nil)
   ;; for thinking mode, add "--thinking-tokens" "16k" to `aidermacs-extra-args'
 
-  :config
-  (setenv "ANTHROPIC_API_KEY" (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared)))
-  (setenv "GEMINI_API_KEY" (auth-source-pass-get 'secret (concat "tlon/core/aistudio.google.com/" tlon-email-shared)))
-  ;; (setenv "OPENROUTER_API_KEY" (auth-source-pass-get "key" (concat "tlon/core/openrouter.ai/" tlon-email-shared)))
-
   ;; :hook
   ;; (kill-buffer-query-functions . aidermacs-extras-confirm-kill-buffer)
 

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: transfer-github-issue
+# key: tgi
+# contributor: Pablo Stafforini
+# --
+gh issue transfer ${1:full url of issue} ${2:destination repository}

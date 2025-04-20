@@ -9,12 +9,14 @@
 #+texinfo_dir_category: Emacs misc features
 #+texinfo_dir_title: Vulpea Extras: (vulpea-extras)
 #+texinfo_dir_desc: Extensions for the vulpea note-taking helper
+#+filetags: :project:
 
 This manual describes the features and customization options for the Emacs Lisp file =vulpea-extras.el=.
 
 * Overview
 :PROPERTIES:
 :CUSTOM_ID: h:overview
+:ID:       A0917B55-928D-4DA7-A64A-92E36BCF4DC0
 :END:
 
 =vulpea-extras.el= provides extensions for the =vulpea= package, which enhances note-taking workflows, particularly with Org Roam. These extensions focus on automatically identifying "project" files based on their content (TODO items, scheduled tasks, deadlines, anniversaries) and managing the =org-agenda-files= list accordingly.
@@ -29,6 +31,7 @@ The main features include:
 * Configuration Variables
 :PROPERTIES:
 :CUSTOM_ID: h:configuration-variables
+:ID:       E8057F54-8030-4528-BAAC-1DE51107A769
 :END:
 
 These variables allow customization of which files are considered for project status and inclusion in the agenda.
@@ -36,6 +39,7 @@ These variables allow customization of which files are considered for project st
 ** ~vulpea-extras-excluded-directories~
 :PROPERTIES:
 :CUSTOM_ID: h:vulpea-extras-excluded-directories
+:ID:       A3BEBEC8-4B97-4318-AF83-132DCE84D14B
 :END:
 
 #+vindex: vulpea-extras-excluded-directories
@@ -44,6 +48,7 @@ A list of directory paths. Org files within these directories will be ignored by
 ** ~vulpea-extras-excluded-files~
 :PROPERTIES:
 :CUSTOM_ID: h:vulpea-extras-excluded-files
+:ID:       CECD0FEC-D01A-42EA-A9AF-46538A976CC0
 :END:
 
 #+vindex: vulpea-extras-excluded-files
@@ -52,6 +57,7 @@ A list of specific file paths. These files will be ignored by ~vulpea-extras-pro
 * Configuration Functions
 :PROPERTIES:
 :CUSTOM_ID: h:configuration-functions
+:ID:       4755E83A-2311-4625-8869-DA15F476537E
 :END:
 
 These functions are designed to be used in hooks or advice to automate the project tagging and agenda file management.
@@ -59,6 +65,7 @@ These functions are designed to be used in hooks or advice to automate the proje
 ** Update Project Tag
 :PROPERTIES:
 :CUSTOM_ID: h:vulpea-extras-project-update-tag
+:ID:       7F6DF99F-7E9B-4895-857D-998A6A3B2A96
 :END:
 
 #+findex: vulpea-extras-project-update-tag
@@ -67,6 +74,7 @@ The function ~vulpea-extras-project-update-tag~ checks if the current buffer qua
 ** Update Org Agenda Files
 :PROPERTIES:
 :CUSTOM_ID: h:vulpea-extras-agenda-files-update
+:ID:       BE29B86A-D92F-4821-BBF8-9E764C729670
 :END:
 
 #+findex: vulpea-extras-agenda-files-update
@@ -79,6 +87,7 @@ It then removes duplicates and any files listed in the user-defined variable =or
 * Helper Functions
 :PROPERTIES:
 :CUSTOM_ID: h:helper-functions
+:ID:       4B5F3F83-122D-4B59-91B2-526FDA77A83F
 :END:
 
 These functions provide the core logic used by the configuration functions.
@@ -95,11 +104,13 @@ These functions provide the core logic used by the configuration functions.
 * Advised Functions
 :PROPERTIES:
 :CUSTOM_ID: h:advised-functions
+:ID:       46918FE0-D561-4312-AA6A-978A460A18C7
 :END:
 
 ** ~org-agenda~
 :PROPERTIES:
 :CUSTOM_ID: h:org-agenda-advice
+:ID:       75DE8755-B960-4435-9B29-872C131B8D8A
 :END:
 
 #+findex: org-agenda
@@ -108,16 +119,19 @@ The standard =org-agenda= command is advised `:before` by ~vulpea-extras-agenda-
 * Indices
 :PROPERTIES:
 :CUSTOM_ID: h:indices
+:ID:       66EE49A0-EB74-4083-B834-5FB7DD28572B
 :END:
 
 ** Function index
 :PROPERTIES:
 :INDEX: fn
 :CUSTOM_ID: h:function-index
+:ID:       74FD1268-250D-46C2-88CB-BCD2A5C735D0
 :END:
 
 ** Variable index
 :PROPERTIES:
 :INDEX: vr
 :CUSTOM_ID: h:variable-index
+:ID:       9D163E28-5DF1-4A8B-93F1-B6DFA63ADA58
 :END:

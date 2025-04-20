@@ -8035,41 +8035,18 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
     :endpoint "/chat/completions"
     :stream t
     :models '(;; <https://docs.perplexity.ai/docs/model-cards>
-              (llama-3.1-sonar-huge-128k-online
-               :context-window 127.072
-               :input-cost 5
-               :cutoff-date ""
-               :description "[recommended]" )
-              (llama-3.1-sonar-large-128k-online
-               :context-window 127.072
+              (sonar
+               :context-window 128
                :input-cost 1
+	       :output-cost 1
                :cutoff-date ""
-               :description "")
-              (llama-3.1-sonar-small-128k-online
-               :context-window 127.072
-               :input-cost 0.2
+               :description "Lightweight, cost-effective search model optimized for quick answers" )
+              (sonar-pro
+               :context-window 200
+               :input-cost 3
+	       :output-cost 15
                :cutoff-date ""
-               :description "")
-              (llama-3.1-sonar-small-128k-chat
-               :context-window 131.072
-               :input-cost 0.2
-               :cutoff-date ""
-               :description "")
-              (llama-3.1-sonar-large-128k-chat
-               :context-window 131.072
-               :input-cost 1
-               :cutoff-date ""
-               :description "")
-              (llama-3.1-8b-instruct
-               :context-window 131.072
-               :input-cost 0.2
-               :cutoff-date ""
-               :description "")
-              (llama-3.1-70b-instruct
-               :context-window 131.072
-               :input-cost 1
-               :cutoff-date ""
-               :description "")))
+               :description "Advanced search model designed for complex queries")))
 
   (gptel-make-openai "xAI"
     :host "api.x.ai"

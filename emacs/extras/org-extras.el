@@ -379,7 +379,15 @@ user error."
           (target-pos (marker-position marker)))
       ;; Validate the marker's target before attempting navigation.
       (unless (and target-buffer (buffer-live-p target-buffer) target-pos)
-        (user-error "Agenda item marker is invalid or points to a dead buffer/position"))
+        ;; If marker is invalid, offer to refresh the agenda.
+        (if (y-or-n-p "Agenda item marker is invalid (stale agenda?). Refresh agenda? ")
+            (progn
+              (org-agenda-redo)
+              ;; Abort the current command after refresh. User needs to retry.
+              (user-error "Agenda refreshed. Please try the command again"))
+          ;; If user declines refresh, signal the original error.
+          (user-error "Agenda item marker is invalid or points to a dead buffer/position")))
+      ;; Marker is valid, proceed with navigation.
       ;; Manually switch buffer and go to position.
       (condition-case err
           (progn

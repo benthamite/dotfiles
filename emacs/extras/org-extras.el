@@ -369,11 +369,11 @@ user error."
   (interactive)
   (unless (derived-mode-p 'org-agenda-mode)
     (user-error "Not in an Org agenda buffer"))
-  ;; Check for the 'org-marker' text property at point before proceeding.
-  (let ((marker (get-text-property (point) 'org-marker)))
+  ;; Check for the 'org-marker' property at the beginning of the line.
+  (let ((marker (org-get-at-bol 'org-marker)))
     (unless marker
-      (user-error "Point does not have an 'org-marker' property"))
-    ;; Marker property exists, proceed with goto.
+      (user-error "Point is not on a line with an Org agenda item marker"))
+    ;; Marker exists at BOL, proceed with goto.
     (let ((origin-buffer (current-buffer)))
       (condition-case err
           ;; Call org-agenda-goto interactively to mimic user action

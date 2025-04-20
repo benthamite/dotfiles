@@ -8631,7 +8631,6 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
   (org-deadline-warning-days 0)              ; show due tasks only on the day the tasks are due
   (org-hide-emphasis-markers t)
   (org-hide-leading-stars t) ; indent every heading and hide all but the last leading star
-  (org-startup-folded t)
   (org-startup-indented t)
   (org-log-into-drawer "STATES")
   (org-log-done 'time) ; add timestamp when task is marked as DONE

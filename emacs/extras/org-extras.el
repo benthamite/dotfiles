@@ -363,7 +363,7 @@ number. Disable the mode if ARG is a negative number."
   "Go to the Org entry for the item at point and start the clock there.
 This must be called from an Org agenda buffer. It first checks if the
 point is on a valid agenda item. If so, it navigates to the source Org
-file location using `org-agenda-goto', then starts the clock on that item
+file location using the item's marker, then starts the clock on that item
 using `org-clock-in'. If the point is not on a valid item, it signals a
 user error."
   (interactive)
@@ -373,14 +373,21 @@ user error."
   (let ((marker (org-get-at-bol 'org-marker)))
     (unless marker
       (user-error "Point is not on a line with an Org agenda item marker"))
-    ;; Marker exists at BOL, proceed with goto.
-    (let ((origin-buffer (current-buffer)))
+    ;; Marker exists at BOL, proceed with navigation.
+    (let ((origin-buffer (current-buffer))
+          (target-buffer (marker-buffer marker))
+          (target-pos (marker-position marker)))
+      ;; Validate the marker's target before attempting navigation.
+      (unless (and target-buffer (buffer-live-p target-buffer) target-pos)
+        (user-error "Agenda item marker is invalid or points to a dead buffer/position"))
+      ;; Manually switch buffer and go to position.
       (condition-case err
-          ;; Call org-agenda-goto interactively to mimic user action
-          (call-interactively #'org-agenda-goto)
-        (error (message "Error during org-agenda-goto: %s" err)
+          (progn
+            (switch-to-buffer target-buffer)
+            (goto-char target-pos))
+        (error (message "Error navigating to agenda item: %s" err)
                (signal (car err) (cdr err)))) ; Re-signal the error
-      ;; If goto was successful and switched buffer, clock in the item there.
+      ;; If navigation was successful and switched buffer, clock in the item there.
       (unless (eq origin-buffer (current-buffer))
         ;; Ensure we are at a headline before clocking in
         (when (org-at-heading-p)

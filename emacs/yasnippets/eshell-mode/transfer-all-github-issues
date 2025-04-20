@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: transfer-all-github-issues
+# key: tagi
+# contributor: Pablo Stafforini
+# --
+gh issue list -R tlon-team/${1:source} --state all --limit 2000 --json url | jq -r '.[] | .url' | xargs -I% gh issue transfer % tlon-team/${2:destination}

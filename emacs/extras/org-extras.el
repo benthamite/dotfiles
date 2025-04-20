@@ -387,15 +387,13 @@ user error."
               (user-error "Agenda refreshed. Please try the command again"))
           ;; If user declines refresh, signal the original error.
           (user-error "Agenda item marker is invalid or points to a dead buffer/position")))
-      ;; Marker is valid, proceed with navigation.
-      ;; Manually switch buffer and go to position.
+      ;; Marker is valid, proceed with navigation using org-agenda-goto.
       (condition-case err
-          (progn
-            (switch-to-buffer target-buffer)
-            (goto-char target-pos))
-        (error (message "Error navigating to agenda item: %s" err)
+          ;; Call org-agenda-goto interactively to mimic user action
+          (call-interactively #'org-agenda-goto)
+        (error (message "Error during org-agenda-goto: %s" err)
                (signal (car err) (cdr err)))) ; Re-signal the error
-      ;; If navigation was successful and switched buffer, clock in the item there.
+      ;; If goto was successful and switched buffer, clock in the item there.
       (unless (eq origin-buffer (current-buffer))
         ;; Ensure we are at a headline before clocking in
         (when (org-at-heading-p)

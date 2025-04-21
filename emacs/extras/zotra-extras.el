@@ -82,9 +82,9 @@ Refer to the `mullvad' package documentation for details."
 (defvar zotra-extras-most-recent-bibkey nil
   "The bibkey of the most recently added entry.")
 
-(defconst zotra-extras-add-multiple-urls-filename
+(defconst zotra-extras-add-multiple-urls-from-file-filename
   (file-name-concat paths-dir-downloads "zotra-add-multiple-urls.txt")
-  "Default file for `zotra-extras-add-multiple-urls'.")
+  "Default file for `zotra-extras-add-multiple-urls-from-file'.")
 
 ;;;; Functions
 
@@ -253,16 +253,21 @@ use the default."
 (declare-function ebib-extras-sort "ebib-extras")
 (autoload 'files-extras-lines-to-list "files-extras")
 ;;;###autoload
-(defun zotra-extras-add-multiple-urls (file)
-  "Prompt the user to select a FILE with a list of URLs and add them."
+(defun zotra-extras-add-multiple-urls-from-file (file bibfile)
+  "Prompt the user to select a FILE with a list of URLs and add them to BIBFILE."
   (interactive (list (read-file-name "File with URLs (one URL per line): " paths-dir-downloads
-				     zotra-extras-add-multiple-urls-filename nil nil)))
+				     zotra-extras-add-multiple-urls-from-file-filename nil nil)))
   (let ((urls (delete-dups (files-extras-lines-to-list file))))
+    (zotra-extras-process-multiple-urls urls bibfile)))
+
+(defun zotra-extras-process-multiple-urls (urls bibfile)
+  "Add URLS to BIBFILE."
+  (let ((urls urls))
     (ebib-save-all-databases)
     (dolist (url urls)
       (message "Adding entry for %s..." url)
-      (zotra-add-entry url nil tlon-file-fluid))
-    (ebib tlon-file-fluid)
+      (zotra-add-entry url nil bibfile))
+    (ebib bibfile)
     (ebib-extras-sort 'Timestamp)))
 
 (provide 'zotra-extras)

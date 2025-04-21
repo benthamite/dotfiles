@@ -603,6 +603,7 @@ To install the extension, drag the latter onto the former."
 
 ;;;;; List <> lines
 
+;;;###autoload
 (defun files-extras-lines-to-list (file)
   "Return a list of lines of FILE."
   (with-temp-buffer

@@ -251,7 +251,7 @@ use the default."
 
 (declare-function ebib-save-all-databases "ebib")
 (declare-function ebib-extras-sort "ebib-extras")
-(autoload 'files-extras-lines-to-list "files-extras")
+(declare-function files-extras-lines-to-list "files-extras")
 ;;;###autoload
 (defun zotra-extras-add-multiple-urls-from-file (file bibfile)
   "Prompt the user to select a FILE with a list of URLs and add them to BIBFILE."

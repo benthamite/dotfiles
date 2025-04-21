@@ -257,7 +257,7 @@ use the default."
   "Prompt the user to select a FILE with a list of URLs and add them."
   (interactive (list (read-file-name "File with URLs (one URL per line): " paths-dir-downloads
 				     zotra-extras-add-multiple-urls-filename nil nil)))
-  (let ((urls (files-extras-lines-to-list file)))
+  (let ((urls (delete-dups (files-extras-lines-to-list file))))
     (ebib-save-all-databases)
     (dolist (url urls)
       (message "Adding entry for %s..." url)

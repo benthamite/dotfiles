@@ -456,13 +456,19 @@ Creates a new gptel buffer, sets the model and backend according to
 						  ('markdown-mode "md")
 						  ('org-mode "org")))))
     (browse-url search-url)
-    (gptel query nil nil t)
+    (gptel query nil nil t) ; Create the gptel buffer
     (with-current-buffer buffer-name
+      ;; Set the model and backend buffer-locally *before* the request
+      (setq-local gptel-backend (alist-get (car gptel-extras-search-model)
+                                           gptel--known-backends nil nil #'string=))
+      (setq-local gptel-model (cdr gptel-extras-search-model))
+      ;; Now make the request using the buffer-local settings
       (goto-char (point-max))
-      (let ((gptel-model (cdr gptel-extras-search-model))
-	    (gptel-backend (alist-get (car gptel-extras-search-model)
-				      gptel--known-backends nil nil #'string=)))
-	(gptel-request query)))))
+      (let ((gptel-stream t)) ; Ensure streaming is enabled if desired globally
+        (gptel-request query
+          :buffer (current-buffer)
+          :position (point)
+          :in-place t)))))
 
 ;;;###autoload
 (defun gptel-extras-toggle-major-mode ()

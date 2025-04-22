@@ -113,12 +113,12 @@
   (let ((target-key (or key (ebib--get-key-at-point))))
     ;; Use ebib-extras-get-field directly as it now handles the key
     (when-let* ((isbn (ebib-extras-get-field "isbn" target-key)))
-    (car (split-string
-	  (s-replace "-"
-		     ""
-		     (substring-no-properties
-		      isbn))
-	  " "))))
+      (car (split-string
+            (s-replace "-"
+                       ""
+                       (substring-no-properties
+                        isbn))
+            " ")))))
 
 (defun ebib-extras-video-p (string)
   "Return t if STRING is a video URL."

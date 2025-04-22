@@ -108,13 +108,11 @@
 
 (declare-function bibtex-extras-get-field "bibex-extras")
 (declare-function s-replace "s")
-(defun ebib-extras-get-isbn ()
-  "Return ISBN for the current entry, if it exists."
-  (when-let* ((get-field (pcase major-mode
-			  ('ebib-entry-mode #'ebib-extras-get-field)
-			  ('bibtex-mode #'bibtex-extras-get-field)))
-	     (isbn
-	      (funcall get-field "isbn")))
+(defun ebib-extras-get-isbn (&optional key)
+  "Return ISBN for the entry with KEY, or the current entry if KEY is nil."
+  (let ((target-key (or key (ebib--get-key-at-point))))
+    ;; Use ebib-extras-get-field directly as it now handles the key
+    (when-let* ((isbn (ebib-extras-get-field "isbn" target-key)))
     (car (split-string
 	  (s-replace "-"
 		     ""
@@ -438,12 +436,15 @@ generate an abstract if needed.
 The function requires the fields `type', `author', `date' and `title' to be
 correctly set."
   (interactive)
-  (when (or (not (ebib-extras-key-is-valid-p))
-	    (y-or-n-p "Regenerate key? "))
-    (ebib-generate-autokey))
-  (ebib-extras-get-or-set-language)
-  (tlon-deepl-translate-abstract)
-  (ebib-extras-attach-files))
+  (let (entry-key)
+    (when (or (not (ebib-extras-key-is-valid-p))
+	      (y-or-n-p "Regenerate key? "))
+      (ebib-generate-autokey))
+    ;; Get the key *after* potential regeneration
+    (setq entry-key (ebib--get-key-at-point))
+    (ebib-extras-get-or-set-language) ; Assumes this operates on current entry
+    (tlon-deepl-translate-abstract) ; Assumes this operates on current entry
+    (ebib-extras-attach-files entry-key)))
 
 (defun ebib-extras-set-abstract ()
   "Set abstract for entry at point.
@@ -521,79 +522,98 @@ current entry or, if not available, the key stored in
 ;;;;; File attachment
 
 (declare-function eww-extras-url-to-file "eww-extras")
-(defun ebib-extras-url-to-file-attach (type)
-  "Generate a file  of TYPE for the URL of the entry at point and attach it.
-TYPE can be \"pdf\", \"html\" or \"srt\"."
-  (when (ebib-extras-get-field "url")
-    (eww-extras-url-to-file type nil #'ebib-extras-attach-file-to-entry)))
+(defun ebib-extras-url-to-file-attach (type &optional key)
+  "Generate a file of TYPE for the URL of the entry with KEY and attach it.
+If KEY is nil, use the entry at point. TYPE can be \"pdf\" or \"html\"."
+  (let ((target-key (or key (ebib--get-key-at-point))))
+    (when-let* ((url (ebib-extras-get-field "url" target-key)))
+      (eww-extras-url-to-file type url (lambda (file)
+					 (ebib-extras-attach-file-to-entry file target-key))))))
 
-(defun ebib-extras-url-to-pdf-attach ()
-  "Generate PDF of URL and attach it to the entry at point."
-  (interactive)
-  (ebib-extras-url-to-file-attach "pdf"))
+(defun ebib-extras-url-to-pdf-attach (&optional key)
+  "Generate PDF of URL for entry with KEY and attach it.
+If KEY is nil, use the entry at point."
+  (interactive (list nil))
+  (ebib-extras-url-to-file-attach "pdf" key))
 
-(defun ebib-extras-url-to-html-attach ()
-  "Generate HTML of URL and attach it to the entry at point."
-  (interactive)
-  (ebib-extras-url-to-file-attach "html"))
+(defun ebib-extras-url-to-html-attach (&optional key)
+  "Generate HTML of URL for entry with KEY and attach it.
+If KEY is nil, use the entry at point."
+  (interactive (list nil))
+  (ebib-extras-url-to-file-attach "html" key))
 
 (defvar eww-extras-download-subtitles)
-(defun ebib-extras-url-to-srt-attach ()
-  "Generate SRT of URL and attach it to the entry at point."
-  (interactive)
-  (when-let* ((url (ebib-extras-get-field "url"))
-	     (title (ebib-extras-get-field "title"))
-	     (default-directory paths-dir-downloads))
-    (message "Downloading subtitles for `%s'.... You need to attach it manually when ready." url)
-    (shell-command (format eww-extras-download-subtitles url))))
+(defun ebib-extras-url-to-srt-attach (&optional key)
+  "Download SRT subtitles for the URL of the entry with KEY.
+If KEY is nil, use the entry at point. Attachment must be done manually."
+  (interactive (list nil))
+  (let ((target-key (or key (ebib--get-key-at-point))))
+    (when-let* ((url (ebib-extras-get-field "url" target-key))
+		(_title (ebib-extras-get-field "title" target-key)) ; Title not used in command?
+		(default-directory paths-dir-downloads))
+      (message "Downloading subtitles for entry %s (URL: %s).... Attach manually when ready." target-key url)
+      ;; Assuming eww-extras-download-subtitles is a format string taking the URL
+      (shell-command (format eww-extras-download-subtitles url)))))
 
-(defun ebib-extras-book-attach ()
-  "Get a PDF of the book-type entry at point and attach it to it."
-  (interactive)
-  (when-let* ((id (or (ebib-extras-get-isbn)
-		     (and (member (ebib-extras-get-field "=type=") ebib-extras-book-like-entry-types)
-			  (ebib-extras-get-field "title")))))
-    (setq ebib-extras-attach-file-key
-	  (pcase major-mode
-	    ('bibtex-mode (bibtex-extras-get-key))
-	    ((or 'ebib-entry-mode 'ebib-index-mode)
-	     (ebib--get-key-at-point))))
-    (annas-archive-download id 'confirm)))
+(defun ebib-extras-book-attach (&optional key)
+  "Get a PDF for the book-type entry with KEY and attach it.
+If KEY is nil, use the entry at point."
+  (interactive (list nil))
+  (let ((target-key (or key (ebib--get-key-at-point))))
+    ;; Use target-key when getting fields
+    (when-let* ((id (or (ebib-extras-get-isbn target-key)
+		       (let ((type (ebib-extras-get-field "=type=" target-key)))
+			 (and (member type ebib-extras-book-like-entry-types)
+			      (ebib-extras-get-field "title" target-key))))))
+      ;; Set the global key variable used by the callback mechanism of attach-file
+      (setq ebib-extras-attach-file-key target-key)
+      (annas-archive-download id 'confirm))))
 
-(defun ebib-extras-doi-attach ()
-  "Get a PDF of the DOI of the entry at point and attach it."
-  (interactive)
-  (when-let* ((doi (ebib-extras-get-field "doi")))
-    (scihub-download doi #'ebib-extras-attach-file)))
+(defun ebib-extras-doi-attach (&optional key)
+  "Get a PDF for the DOI of the entry with KEY and attach it.
+If KEY is nil, use the entry at point."
+  (interactive (list nil))
+  (let ((target-key (or key (ebib--get-key-at-point))))
+    (when-let* ((doi (ebib-extras-get-field "doi" target-key)))
+      (scihub-download doi (lambda (file)
+			     (ebib-extras-attach-file-to-entry file target-key))))))
 
 (defun ebib-extras-attach-file-to-entry (&optional file key)
-  "Attach FILE to the BibTeX entry with KEY."
-  (save-excursion
-    (ebib-extras-open-key key)
-    (ebib-extras-attach-file file)
-    (message "Attached `%s' to %s" file key)))
+  "Attach FILE to the BibTeX entry with KEY.
+This function is intended as a callback for downloaders."
+  ;; Do not switch buffers here, pass the key directly to attach-file
+  (ebib-extras-attach-file file key)
+  (message "Attached `%s' to %s" file key))
 
 (declare-function annas-archive-download "eww-extras")
-(defun ebib-extras-attach-files ()
-  "Attach files appropriate for the current entry type.
-If file is already attached, set the abstract."
-  (interactive)
-  (let ((doi (ebib-extras-get-field "doi"))
-	(url (ebib-extras-get-field "url"))
-	(isbn (ebib-extras-get-field "isbn"))
-	(type (ebib-extras-get-field "=type=")))
-    (if (ebib-extras-get-field "file")
-	(ebib-extras-set-abstract)
-      (cond (doi (ebib-extras-doi-attach))
+(defun ebib-extras-attach-files (&optional key)
+  "Attach files appropriate for the entry with KEY.
+If KEY is nil, use the entry at point. If file is already attached, set the
+abstract."
+  (interactive
+   ;; If called interactively, key is nil, use entry at point
+   (list nil))
+  (let* ((target-key (or key (ebib--get-key-at-point)))
+	 ;; Use target-key when getting field values
+	 (doi (ebib-extras-get-field "doi" target-key))
+	 (url (ebib-extras-get-field "url" target-key))
+	 (isbn (ebib-extras-get-field "isbn" target-key))
+	 (type (ebib-extras-get-field "=type=" target-key))
+	 (file (ebib-extras-get-field "file" target-key)))
+    ;; Logic remains similar, but pass target-key down
+    (if file
+	;; TODO: Ensure ebib-extras-set-abstract works for target-key if not current
+	(ebib-extras-set-abstract) ; This might need adjustment if it assumes current entry
+      (cond (doi (ebib-extras-doi-attach target-key))
 	    ((or isbn (member type ebib-extras-book-like-entry-types))
-	     (ebib-extras-book-attach))
+	     (ebib-extras-book-attach target-key))
 	    ((and url (cl-some (lambda (regexp)
 				 (string-match regexp url))
 			       ebib-extras-video-websites))
-	     (ebib-extras-url-to-srt-attach))
+	     (ebib-extras-url-to-srt-attach target-key))
 	    ((and url (string-match "online" type))
-	     (ebib-extras-url-to-pdf-attach)
-	     (ebib-extras-url-to-html-attach))))))
+	     (ebib-extras-url-to-pdf-attach target-key)
+	     (ebib-extras-url-to-html-attach target-key))))))
 
 ;;;;; ?
 
@@ -1272,13 +1292,13 @@ If applicable, open external website to set rating there as well."
     (ebib-extras-update-entry-buffer db)))
 
 ;;;###autoload
-(defun ebib-extras-get-field (field)
-  "Get the value of FIELD for the entry at point.
+(defun ebib-extras-get-field (field &optional key)
+  "Get the value of FIELD for the entry with KEY, or entry at point if KEY is nil.
 Convenience function that calls `ebib-get-field-value' with
 sensible defaults and remove line breaks and empty spaces."
-  (when-let* ((key (ebib--get-key-at-point))
-	      (value (ebib-get-field-value field key ebib--cur-db t t t)))
-    (replace-regexp-in-string "[\n\t ]+" " " value)))
+  (let ((target-key (or key (ebib--get-key-at-point))))
+    (when-let* ((value (ebib-get-field-value field target-key ebib--cur-db t t t)))
+      (replace-regexp-in-string "[\n\t ]+" " " value))))
 
 (defun ebib-extras-get-id-or-url ()
   "Get the ID or URL of the entry at point."

@@ -165,7 +165,7 @@ If non-nil, functions that download content (like ~ebib-extras-download-book~) m
 ~ebib-extras-url-to-srt-attach~: Downloads subtitles (SRT) for the URL in the entry's "url" field using =yt-dlp=. *Note:* Requires manual attachment after download.
 
 #+findex: ebib-extras-book-attach
-~ebib-extras-book-attach~: Attempts to download a PDF for a book entry using Annas Archive (via =annas-archive-download=) based on its ISBN or title, and then attaches it.
+~ebib-extras-book-attach~: Attempts to download a PDF for a book entry using Annas Archive (via =annas-archive-download=) based on its ISBN or title. If the download is performed using =eww= (see =annas-archive-use-eww=), the downloaded file is automatically attached. Otherwise, manual attachment is required.
 #+findex: ebib-extras-doi-attach
 ~ebib-extras-doi-attach~: Attempts to download a PDF for an article entry using Sci-Hub (via =scihub-download=) based on its DOI, and then attaches it.
 #+findex: ebib-extras-attach-files

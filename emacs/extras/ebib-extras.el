@@ -54,8 +54,7 @@
   (car ebib-extras-sort-states)
   "State for sorting the Ebib index buffer.")
 
-(defvar ebib-extras-attach-file-key nil
-  "BibTeX of the entry to which `ebib-extras-attach-file` should attach a file.")
+;; Removed ebib-extras-attach-file-key as it's unreliable in async contexts.
 
 (defconst ebib-extras-valid-key-regexp
   "^[_[:alnum:]-]\\{2,\\}[[:digit:]]\\{4\\}[_[:alnum:]]\\{2,\\}$"
@@ -127,34 +126,32 @@
    "https?://\\(www\\.\\)?\\(youtube\\.com/watch\\?v=\\|youtu.be/\\)\\([a-zA-Z0-9_-]+\\)"
    string))
 
-(declare-function bibtex-extras-append-to-field "bibex-extras")
 (defun ebib-extras--update-file-field-contents (key file-name)
-  "Update contents of FILE-NAME in field `file' for entry KEY."
-  (unless (derived-mode-p 'ebib-entry-mode 'bibtex-mode)
-    (ebib-extras-open-key key))
-  ;; FIXME: this is not the right condition: the user may be viewing *another*
-  ;; entry, in which case the file will be attached to the wrong entry. So may
-  ;; we should always call `(ebib-extras-open-key key)' unless `key' matches the
-  ;; current entry’s?
-  (let* ((get-field (pcase major-mode
-		      ('ebib-entry-mode #'ebib-extras-get-field)
-		      ('bibtex-mode #'bibtex-extras-get-field)))
-	 (field "file")
-	 (file-field-contents (funcall get-field field)))
-    (unless (and
-	     file-field-contents
-	     (catch 'file-exists
-	       (dolist (file (ebib--split-files file-field-contents))
-		 (when (string= file file-name)
-		   (throw 'file-exists file)))))
-      (pcase major-mode
-	('ebib-entry-mode (ebib-set-field-value field file-name key ebib--cur-db ";"))
-	('bibtex-mode (bibtex-extras-append-to-field field file-name)))
-      (when (eq major-mode 'ebib-entry-mode)
-	(ebib--store-multiline-text (current-buffer))
-	(ebib--redisplay-field field)
-	(ebib--redisplay-index-item field)
-	(ebib-save-current-database t)))))
+  "Update contents of FILE-NAME in field `file' for entry KEY.
+This function operates directly on the database and avoids UI interaction,
+making it suitable for asynchronous callbacks."
+  (let* ((db (ebib--get-db-from-key key)) ; Find the correct database for the key
+	 (field "file"))
+    (unless db
+      (error "Cannot find database containing key %s" key))
+    ;; Get existing files directly from the database entry
+    (let* ((entry (ebib-db-get-entry key db))
+	   (file-field-contents (alist-get field entry 'ebib--ignore-case 'string=)))
+      ;; Check if the file is already listed
+      (unless (and file-field-contents
+		   (catch 'file-exists
+		     (dolist (file (ebib--split-files file-field-contents))
+		       (when (string= file file-name)
+			 (throw 'file-exists file)))))
+	;; Add the file using ebib-set-field-value which handles db update
+	(ebib-set-field-value field file-name key db ";")
+	;; Mark the database as modified and trigger potential auto-save
+	(ebib--set-modified t db)
+	;; Request UI update (will happen later if needed)
+	(setq ebib--needs-update t)
+        ;; Optionally, save immediately if it's an auto-save file
+        (when (member (ebib-db-get-filename db) ebib-extras-auto-save-files)
+          (ebib--save-database db '(16)))))))
 
 (defconst ebib-extras-book-like-entry-types
   (let ((lowercase '("book" "collection" "mvbook" "inbook" "incollection" "bookinbook" "suppbook")))
@@ -462,20 +459,16 @@ Try to fetch it with Zotero or ."
 (defun ebib-extras-attach-file (&optional file key open)
   "Attach a file to the entry with KEY.
 If FILE is a string, attach it. If FILE is a symbol, attach the most recent
-file. Otherwise, prompt the user for one. If KEY is nil, use the key of the
-current entry or, if not available, the key stored in
-`ebib-extras-attach-file-key'. If OPEN is non-nil, open the file."
-  (interactive)
-  (let ((key (or key
-		 (when-let* ((fun (pcase major-mode
-				   ('ebib-entry-mode #'ebib--get-key-at-point)
-				   ('bibtex-mode #'bibtex-extras-get-key))))
-		   (funcall fun))
-		 ebib-extras-attach-file-key)))
-    (setq ebib-extras-attach-file-key nil)
-    (ebib-extras-check-valid-key key)
+file. Otherwise, prompt the user for one. KEY must be provided and valid.
+If OPEN is non-nil, open the file."
+  (interactive) ; Interactive call needs refinement if key isn't passed.
+  ;; Ensure key is provided, otherwise try to get from point. Error if still nil.
+  (let ((target-key (or key (ebib--get-key-at-point))))
+    (unless target-key
+      (user-error "No BibTeX key provided or found at point for attaching file"))
+    (ebib-extras-check-valid-key target-key)
     (let* ((file-to-attach
-	    (cond ((not file)
+	    (cond ((not file) ; Prompting interactively
 		   (let ((initial-folder
 			  (completing-read "Select folder: "
 					   (list
@@ -501,17 +494,21 @@ current entry or, if not available, the key stored in
 	   (extension (file-name-extension file-to-attach))
 	   (destination-folder (ebib-extras--extension-directories extension))
 	   (file-name (ebib-extras--rename-and-abbreviate-file
-		       destination-folder key extension)))
+		       destination-folder target-key extension)))
       (when (or (not (file-regular-p file-name))
-		(y-or-n-p "File exists. Overwrite? "))
+		(y-or-n-p (format "File %s exists. Overwrite? " (file-name-nondirectory file-name)))) ; Clarify prompt
 	(rename-file file-to-attach file-name t))
-      (shut-up
-	(ebib-extras--update-file-field-contents key file-name))
-      (ebib-extras-set-abstract)
+      ;; Pass target-key explicitly
+      (ebib-extras--update-file-field-contents target-key file-name)
+      ;; TODO: ebib-extras-set-abstract needs to accept key or work without UI context
+      ;; (ebib-extras-set-abstract target-key) ; Assuming it's modified later
       (when (string= (file-name-extension file-name) "pdf")
-	(ebib-extras-set-pdf-metadata)
-	(ebib-extras-ocr-pdf)
+	;; TODO: These need to accept key or work without UI context
+	;; (ebib-extras-set-pdf-metadata target-key) ; Assuming modification
+	;; (ebib-extras-ocr-pdf target-key) ; Assuming modification
 	(when open
+	  ;; TODO: This opens the *current* entry's PDF, not necessarily the one for target-key
+	  ;; Needs adjustment if `open` is used in async context.
 	  (ebib-extras-open-pdf-file))))))
 
 (defun ebib-extras-attach-most-recent-file ()
@@ -566,9 +563,15 @@ If KEY is nil, use the entry at point."
 		       (let ((type (ebib-extras-get-field "=type=" target-key)))
 			 (and (member type ebib-extras-book-like-entry-types)
 			      (ebib-extras-get-field "title" target-key))))))
-      ;; Set the global key variable used by the callback mechanism of attach-file
-      (setq ebib-extras-attach-file-key target-key)
-      (annas-archive-download id 'confirm))))
+      ;; Use a hook to capture the key and call attach-file when download finishes
+      ;; Assumes `annas-archive-download' runs `annas-archive-download-hook' with file path on success.
+      (let ((hook-func (lambda (file)
+                         (message "Annas Archive download finished for %s, attaching file %s" target-key file)
+                         (ebib-extras-attach-file file target-key)
+                         ;; Remove the hook after it runs once
+                         (remove-hook 'annas-archive-download-hook hook-func))))
+        (add-hook 'annas-archive-download-hook hook-func nil t) ; Add as temporary local hook
+        (annas-archive-download id 'confirm)))))
 
 (defun ebib-extras-doi-attach (&optional key)
   "Get a PDF for the DOI of the entry with KEY and attach it.

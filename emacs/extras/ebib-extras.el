@@ -571,14 +571,19 @@ If KEY is nil, use the entry at point."
 		       (let ((type (ebib-extras-get-field "=type=" target-key)))
 			 (and (member type ebib-extras-book-like-entry-types)
 			      (ebib-extras-get-field "title" target-key))))))
-      ;; Use a hook to capture the key and call attach-file when download finishes
-      ;; Assumes `annas-archive-download' runs `annas-archive-download-hook' with file path on success.
-      (let ((hook-func (lambda (file)
-                         (message "Annas Archive download finished for %s, attaching file %s" target-key file)
-                         (ebib-extras-attach-file file target-key)
-                         ;; Remove the hook after it runs once
-                         (remove-hook 'annas-archive-download-hook hook-func))))
-        (add-hook 'annas-archive-download-hook hook-func nil t) ; Add as temporary local hook
+      ;; Use a hook to capture the key and call attach-file when download finishes.
+      ;; This hook (`annas-archive-post-download-hook`) receives (url path) if
+      ;; downloaded via eww, or just (url) if downloaded externally.
+      (let ((hook-func (lambda (url &optional path)
+                          (if path
+                              (progn
+                                (message "Annas Archive download finished for %s, attaching file %s" target-key path)
+                                (ebib-extras-attach-file path target-key))
+                            (message "Annas Archive download initiated externally for %s (URL: %s). Attach file manually." target-key url))
+                          ;; Remove the hook after it runs once, regardless of success
+                          (remove-hook 'annas-archive-post-download-hook hook-func))))
+        ;; Use the actual hook name from annas-archive.el
+        (add-hook 'annas-archive-post-download-hook hook-func nil t) ; Add as temporary local hook
         (annas-archive-download id 'confirm)))))
 
 (defun ebib-extras-doi-attach (&optional key)

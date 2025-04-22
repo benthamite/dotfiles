@@ -87,6 +87,13 @@ If t, always display an alert. If nil, never display an alert."
 		 (repeat :tag "Models" symbol))
   :group 'gptel-extras)
 
+;;;;; Search
+
+(defcustom gptel-extras-search-model '("Perplexity" . sonar)
+  "The model to use for search queries."
+  :type '(cons (string :tag "Backend") (symbol :tag "Model"))
+  :group 'gptel-extras)
+
 (defcustom gptel-extras-search-prefix "https://www.google.com/search?q="
   "The prefix to use for search queries."
   :type 'string
@@ -436,27 +443,25 @@ The files added is controlled by the user options
 
 (defvar eww-search-prefix)
 ;;;###autoload
-(defun gptel-extras-search-and-ask-perplexity (query)
-  "Prompt for QUERY, ran a web search, and ask Perplexity.
-Opens the search results in a browser and sends the same QUERY to the
-`perplexity:sonar' model in a new gptel buffer."
+(defun gptel-extras-search-and-ask-model (query)
+  "Prompt for QUERY and use it to run a web search and ask an AI model.
+Use `gptel-extras-search-prefix' and `gptel-extras-search-model' to configure
+the serach engine and AI model, respectively."
   (interactive "sSearch query: ")
   (let* ((search-url (concat gptel-extras-search-prefix (url-hexify-string query)))
 	 (browse-url-browser-function 'browse-url-chrome)
-         (buffer-name (simple-extras-slugify query)))
+	 (buffer-name (file-name-with-extension (simple-extras-slugify query)
+						(pcase gptel-default-mode
+						  ('markdown-mode "md")
+						  ('org-mode "org")))))
     (browse-url search-url)
-    (gptel buffer-name)
+    (gptel query nil nil t)
     (with-current-buffer buffer-name
       (goto-char (point-max))
-      (when (> (point) (point-min))
-        (insert "\n\n"))
-      (let ((gptel-stream t) ; Ensure streaming is enabled if desired globally
-            (gptel-model 'perplexity:sonar))
-        (gptel-request query
-          ;; :model 'perplexity:sonar ; Model is set via let-binding gptel-model
-          :buffer (current-buffer)
-          :position (point)
-          :in-place t)))))
+      (let ((gptel-model (cdr gptel-extras-search-model))
+	    (gptel-backend (alist-get (car gptel-extras-search-model)
+				      gptel--known-backends nil nil #'string=)))
+	(gptel-request query)))))
 
 ;;;###autoload
 (defun gptel-extras-toggle-major-mode ()

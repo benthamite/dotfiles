@@ -141,6 +141,9 @@ The command ~gptel-extras-summarize-commit-diffs~ takes the active region in a `
 #+findex: gptel-extras-fix-garbled-chars
 ~gptel-extras-fix-garbled-chars~: Replaces occurrences of `let/` with `let*` and `=(` with `` `(`` from point to the end of the buffer. Useful for fixing common LLM output errors in Lisp code.
 
+#+findex: gptel-extras-search-and-ask-perplexity
+~gptel-extras-search-and-ask-perplexity~: Prompts the user for a search query. It then opens the default web browser to search for the query on DuckDuckGo. Simultaneously, it creates a new `gptel` buffer named after the query and sends the same query as a prompt to the `perplexity:sonar` model.
+
 * Configuration Functions
 :PROPERTIES:
 :CUSTOM_ID: h:configuration-functions-gptel
@@ -208,6 +211,8 @@ This function is added as `:around` advice to `gptel-curl-get-response`. If the 
 :INDEX: fn
 :CUSTOM_ID: h:function-index
 :END:
+
+- =gptel-extras-search-and-ask-perplexity=: [[h:misc-commands][Miscellaneous Commands]]
 
 ** Variable index
 :PROPERTIES:

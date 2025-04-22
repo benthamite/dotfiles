@@ -87,6 +87,11 @@ If t, always display an alert. If nil, never display an alert."
 		 (repeat :tag "Models" symbol))
   :group 'gptel-extras)
 
+(defcustom gptel-extras-search-prefix "https://www.google.com/search?q="
+  "The prefix to use for search queries."
+  :type 'string
+  :group 'gptel-extras)
+
 ;;;; Variables
 
 (defconst gptel-extras-changelog-file
@@ -432,11 +437,11 @@ The files added is controlled by the user options
 (defvar eww-search-prefix)
 ;;;###autoload
 (defun gptel-extras-search-and-ask-perplexity (query)
-  "Prompt for QUERY, search it on DuckDuckGo, and ask Perplexity Sonar via gptel.
-Opens the search results in a browser and sends the same QUERY
-to the 'perplexity:sonar' model in a new gptel buffer."
+  "Prompt for QUERY, ran a web search, and ask Perplexity.
+Opens the search results in a browser and sends the same QUERY to the
+`perplexity:sonar' model in a new gptel buffer."
   (interactive "sSearch query: ")
-  (let* ((search-url (concat eww-search-prefix (url-hexify-string query)))
+  (let* ((search-url (concat gptel-extras-search-prefix (url-hexify-string query)))
 	 (browse-url-browser-function 'browse-url-chrome)
          (buffer-name (simple-extras-slugify query)))
     (browse-url search-url)

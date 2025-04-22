@@ -141,8 +141,8 @@ making it suitable for asynchronous callbacks."
       (error "Cannot find database containing key %s" key))
     ;; Get existing files directly from the database entry
     (let* ((entry (ebib-db-get-entry key db))
-           ;; Correct arguments for alist-get: (key alist default remove testfn)
-	   (file-field-contents (alist-get field entry nil nil 'ebib--ignore-case)))
+           ;; Use string-equal for case-insensitive field comparison instead of ebib--ignore-case
+	   (file-field-contents (alist-get field entry nil nil #'string-equal)))
       ;; Check if the file is already listed
       ;; If file-field-contents is nil, the 'and' fails, and we add the file.
       ;; If it's a string, ebib--split-files is called correctly.

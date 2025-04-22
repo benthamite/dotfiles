@@ -44,7 +44,7 @@ not push to remote."
   (when (or (magit-anything-staged-p)
             (magit-anything-unstaged-p))
     (if file
-        (magit-stage-file file)
+        (magit-stage-files (list file))
       (magit-stage-modified t))
     (magit-commit-create (list "-m" message)))
   (unless no-push

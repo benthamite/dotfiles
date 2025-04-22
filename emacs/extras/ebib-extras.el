@@ -130,7 +130,12 @@
   "Update contents of FILE-NAME in field `file' for entry KEY.
 This function operates directly on the database and avoids UI interaction,
 making it suitable for asynchronous callbacks."
-  (let* ((db (ebib--get-db-from-key key)) ; Find the correct database for the key
+  ;; Find the database containing the key by iterating through ebib--databases
+  (let* ((db (catch 'found
+	       (dolist (d ebib--databases)
+		 (when (ebib-db-has-key key d)
+		   (throw 'found d)))
+	       nil)) ; Return nil if not found
 	 (field "file"))
     (unless db
       (error "Cannot find database containing key %s" key))

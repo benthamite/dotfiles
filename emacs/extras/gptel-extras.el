@@ -441,7 +441,23 @@ The files added is controlled by the user options
 
 ;;;;; Misc
 
-(defvar eww-search-prefix)
+(defun gptel-extras-run-query (query &optional model backend)
+  "Prompt for QUERY with MODEL and BACKEND and run it in a gptel buffer.
+If MODEL and BACKEND are nil, use the default model and backend."
+  (let* ((buffer-name (file-name-with-extension (simple-extras-slugify query)
+						(pcase gptel-default-mode
+						  ('markdown-mode "md")
+						  ('org-mode "org")))))
+    (gptel query nil nil t)
+    (with-current-buffer buffer-name
+      (setq-local gptel-model (or model gptel-model))
+      (setq-local gptel-backend (when backend (alist-get model gptel--known-backends nil nil #'string=)))
+      (goto-char (point-max))
+      (gptel-request query
+        :buffer (current-buffer)
+        :position (point)
+        :in-place t))))
+
 ;;;###autoload
 (defun gptel-extras-search-and-ask-model (query)
   "Prompt for QUERY, search it externally, and ask a configured AI model via gptel.
@@ -449,26 +465,11 @@ Opens the search results in a browser using `gptel-extras-search-prefix'.
 Creates a new gptel buffer, sets the model and backend according to
 `gptel-extras-search-model' buffer-locally, and sends the QUERY to that model."
   (interactive "sSearch query: ")
-  (let* ((search-url (concat gptel-extras-search-prefix (url-hexify-string query)))
-	 (browse-url-browser-function 'browse-url-chrome)
-	 (buffer-name (file-name-with-extension (simple-extras-slugify query)
-						(pcase gptel-default-mode
-						  ('markdown-mode "md")
-						  ('org-mode "org")))))
-    (browse-url search-url)
-    (gptel query nil nil t) ; Create the gptel buffer
-    (with-current-buffer buffer-name
-      ;; Set the model and backend buffer-locally *before* the request
-      (setq-local gptel-backend (alist-get (car gptel-extras-search-model)
-                                           gptel--known-backends nil nil #'string=))
-      (setq-local gptel-model (cdr gptel-extras-search-model))
-      ;; Now make the request using the buffer-local settings
-      (goto-char (point-max))
-      (let ((gptel-stream t)) ; Ensure streaming is enabled if desired globally
-        (gptel-request query
-          :buffer (current-buffer)
-          :position (point)
-          :in-place t)))))
+  (let ((browse-url-browser-function 'browse-url-chrome))
+    (browse-url (concat gptel-extras-search-prefix (url-hexify-string query))))
+  (gptel-extras-run-query query
+			  (car gptel-extras-search-model)
+			  (cdr gptel-extras-search-model)))
 
 ;;;###autoload
 (defun gptel-extras-toggle-major-mode ()

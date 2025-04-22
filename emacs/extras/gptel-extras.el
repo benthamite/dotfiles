@@ -450,9 +450,10 @@ Opens the search results in a browser and sends the same QUERY to the
       (goto-char (point-max))
       (when (> (point) (point-min))
         (insert "\n\n"))
-      (let ((gptel-stream t)) ; Ensure streaming is enabled if desired globally
+      (let ((gptel-stream t) ; Ensure streaming is enabled if desired globally
+            (gptel-model 'perplexity:sonar))
         (gptel-request query
-          :model 'perplexity:sonar
+          ;; :model 'perplexity:sonar ; Model is set via let-binding gptel-model
           :buffer (current-buffer)
           :position (point)
           :in-place t)))))

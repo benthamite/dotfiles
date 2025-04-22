@@ -430,6 +430,28 @@ The files added is controlled by the user options
 ;;;;; Misc
 
 ;;;###autoload
+(defun gptel-extras-search-and-ask-perplexity (query)
+  "Prompt for QUERY, search it on DuckDuckGo, and ask Perplexity Sonar via gptel.
+Opens the search results in a browser and sends the same QUERY
+to the 'perplexity:sonar' model in a new gptel buffer."
+  (interactive "sSearch query: ")
+  (let* ((search-url (concat "https://duckduckgo.com/?q="
+                             (url-hexify-string query)))
+         (buffer-name (simple-extras-slugify query)))
+    (browse-url search-url)
+    (gptel buffer-name)
+    (with-current-buffer buffer-name
+      (goto-char (point-max))
+      (when (> (point) (point-min))
+        (insert "\n\n"))
+      (let ((gptel-stream t)) ; Ensure streaming is enabled if desired globally
+        (gptel-request query
+                       :model 'perplexity:sonar
+                       :buffer (current-buffer)
+                       :position (point)
+                       :in-place t)))))
+
+;;;###autoload
 (defun gptel-extras-toggle-major-mode ()
   "Toggle between `markdown-mode' and `org-mode'."
   (interactive)

@@ -94,11 +94,12 @@ Refer to the `mullvad' package documentation for details."
 (autoload 'eww-copy-page-url "eww")
 (autoload 'elfeed-extras-kill-link-url-of-entry "elfeed-extras")
 ;;;###autoload
-(defun zotra-extras-add-entry (&optional url-or-search-string entry-format bibfile)
+(defun zotra-extras-add-entry (&optional url-or-search-string entry-format bibfile do-not-open)
   "Like `zotra-add-entry', but with various customizations.
 Pass URL-OR-SEARCH-STRING and ENTRY-FORMAT to `zotra-get-entry' to get the
 entry. BIBFILE is the file where the BibTeX entry should be saved; if nil,
-prompt the user to select it."
+prompt the user to select it. If DO-NOT-OPEN is non-nil, do not open the entry
+in Ebib after adding it."
   (interactive)
   (let* ((bibfile (or bibfile
 		      (setq zotra-extras-most-recent-bibfile (zotra-extras-set-bibfile))))
@@ -110,21 +111,22 @@ prompt the user to select it."
     (when zotra-extras-use-mullvad-p
       (mullvad-connect-to-website "IMDb" 1 'silently))
     (condition-case err
-	(zotra-extras--add-and-open url-or-search-string entry-format bibfile)
+	(zotra-extras--add-and-maybe-open url-or-search-string entry-format bibfile do-not-open)
       (error
-       (if (and (string-match-p "JSON parse error: Internal Server Error" (error-message-string err))
-                (y-or-n-p (format "Zotra failed with default backend. Retry with `citoid'? ")))
-           (let ((zotra-backend 'citoid))
-             (message "Retrying with `citoid' backend...")
-             (zotra-extras--add-and-open url-or-search-string entry-format bibfile))
-         (signal (car err) (cdr err)))))))
+       (if (string-match-p "JSON parse error: Internal Server Error" (error-message-string err))
+	   (let ((zotra-backend 'citoid))
+             (message "Request with main backend failed. Retrying with `citoid'...")
+             (zotra-extras--add-and-maybe-open url-or-search-string entry-format bibfile do-not-open))
+	 (signal (car err) (cdr err)))))))
 
-(defun zotra-extras--add-and-open (url-or-search-string entry-format bibfile)
-  "Add entry using `zotra-add-entry' and open it in Ebib.
+(defun zotra-extras--add-and-maybe-open (url-or-search-string entry-format bibfile &optional do-not-open)
+  "Add entry using `zotra-add-entry' and, by default, open it in Ebib.
 Pass URL-OR-SEARCH-STRING and ENTRY-FORMAT to `zotra-get-entry' to get the
-entry. BIBFILE is the file where the BibTeX entry should be saved."
+entry. BIBFILE is the file where the BibTeX entry should be saved. If
+DO-NOT-OPEN is non-nil, do not open the entry in Ebib after adding it."
   (zotra-add-entry url-or-search-string entry-format bibfile)
-  (zotra-extras-open-in-ebib zotra-extras-most-recent-bibkey))
+  (unless do-not-open
+    (zotra-extras-open-in-ebib zotra-extras-most-recent-bibkey)))
 
 ;;;;; Bibfile
 
@@ -258,15 +260,15 @@ use the default."
   (interactive (list (read-file-name "File with URLs (one URL per line): " paths-dir-downloads
 				     zotra-extras-add-multiple-urls-from-file-filename nil nil)))
   (let ((urls (delete-dups (files-extras-lines-to-list file))))
-    (zotra-extras-process-multiple-urls urls bibfile)))
+    (zotra-extras-add-multiple-urls urls bibfile)))
 
-(defun zotra-extras-process-multiple-urls (urls bibfile)
+(defun zotra-extras-add-multiple-urls (urls bibfile)
   "Add URLS to BIBFILE."
   (let ((urls urls))
     (ebib-save-all-databases)
     (dolist (url urls)
       (message "Adding entry for %s..." url)
-      (zotra-add-entry url nil bibfile))
+      (zotra-extras-add-entry url nil bibfile 'do-not-open))
     (ebib bibfile)
     (ebib-extras-sort 'Timestamp)))
 

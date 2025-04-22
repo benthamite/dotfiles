@@ -527,7 +527,8 @@ current entry or, if not available, the key stored in
 If KEY is nil, use the entry at point. TYPE can be \"pdf\" or \"html\"."
   (let ((target-key (or key (ebib--get-key-at-point))))
     (when-let* ((url (ebib-extras-get-field "url" target-key)))
-      (eww-extras-url-to-file type url (lambda (file)
+      ;; Accept optional second argument in callback lambda
+      (eww-extras-url-to-file type url (lambda (file &optional _status)
 					 (ebib-extras-attach-file-to-entry file target-key))))))
 
 (defun ebib-extras-url-to-pdf-attach (&optional key)
@@ -575,7 +576,8 @@ If KEY is nil, use the entry at point."
   (interactive (list nil))
   (let ((target-key (or key (ebib--get-key-at-point))))
     (when-let* ((doi (ebib-extras-get-field "doi" target-key)))
-      (scihub-download doi (lambda (file)
+      ;; Accept optional second argument in callback lambda
+      (scihub-download doi (lambda (file &optional _status)
 			     (ebib-extras-attach-file-to-entry file target-key))))))
 
 (defun ebib-extras-attach-file-to-entry (&optional file key)

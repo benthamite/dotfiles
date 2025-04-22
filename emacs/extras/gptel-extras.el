@@ -444,9 +444,10 @@ The files added is controlled by the user options
 (defvar eww-search-prefix)
 ;;;###autoload
 (defun gptel-extras-search-and-ask-model (query)
-  "Prompt for QUERY and use it to run a web search and ask an AI model.
-Use `gptel-extras-search-prefix' and `gptel-extras-search-model' to configure
-the serach engine and AI model, respectively."
+  "Prompt for QUERY, search it externally, and ask a configured AI model via gptel.
+Opens the search results in a browser using `gptel-extras-search-prefix'.
+Creates a new gptel buffer, sets the model and backend according to
+`gptel-extras-search-model' buffer-locally, and sends the QUERY to that model."
   (interactive "sSearch query: ")
   (let* ((search-url (concat gptel-extras-search-prefix (url-hexify-string query)))
 	 (browse-url-browser-function 'browse-url-chrome)

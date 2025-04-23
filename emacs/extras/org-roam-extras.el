@@ -163,42 +163,64 @@ Optional FILTER-SPEC can be:
                              ((equal filter-type "tag")
                               (cons :tag (org-roam-extras-node-select-tag)))
                              ((equal filter-type "directory")
-                              (list :dir (expand-file-name (read-directory-name "Select directory: "))))
+                              ;; Use file-truename to resolve symlinks/aliases
+                              (list :dir (file-truename (read-directory-name "Select directory: "))))
                              (t nil)))
                         filter-spec))
+         ;; Extract tag or directory from the determined filter-spec
          (selection (when (eq (car-safe filter-spec) :tag)
                       (cdr filter-spec)))
          (directory (when (eq (car-safe filter-spec) :dir)
-                      (expand-file-name (cadr filter-spec))))
+                      ;; Get the directory path from the spec (already canonicalized if interactive)
+                      (cadr filter-spec)))
+         ;; Build the directory clause for the SQL query if a directory was specified
          (dir-clause (when directory
+                       ;; Ensure directory has trailing slash for LIKE pattern
                        `(like nodes:file ,(concat (file-name-as-directory directory) "%"))))
          (headings-with-priority
-          (if selection
-              (org-roam-db-query `[:select [id file title priority]
-					   :from nodes
-					   :left-join tags
-					   :on (= nodes:id tags:node-id)
-					   :where (and
-						   (= tags:tag ,selection)
-						   (notnull nodes:priority)
-						   (not (notnull nodes:scheduled))
-						   (not (notnull nodes:deadline))
-						   (or
-						    (= nodes:todo "TODO")
-						    (not (notnull nodes:todo))))
-					   :order-by (asc nodes:priority)])
+          (cond
+           ;; Filter by tag
+           (selection
             (org-roam-db-query `[:select [id file title priority]
-					 :from nodes
-					 :where (and
-						 (notnull nodes:priority)
-						 (not (notnull nodes:scheduled))
-						 (not (notnull nodes:deadline))
-						 (or
-						  (= nodes:todo "TODO")
-						  (not (notnull nodes:todo)))
-						 ,@(when dir-clause (list dir-clause)))
-					 :order-by (asc nodes:priority)])))
+                                         :from nodes
+                                         :left-join tags
+                                         :on (= nodes:id tags:node-id)
+                                         :where (and
+                                                 (= tags:tag ,selection)
+                                                 (notnull nodes:priority)
+                                                 (not (notnull nodes:scheduled))
+                                                 (not (notnull nodes:deadline))
+                                                 (or
+                                                  (= nodes:todo "TODO")
+                                                  (not (notnull nodes:todo))))
+                                         :order-by (asc nodes:priority)]))
+           ;; Filter by directory (using the original complex query conditions)
+           (dir-clause
+            (org-roam-db-query `[:select [id file title priority]
+                                         :from nodes
+                                         :where (and
+                                                 (notnull nodes:priority)
+                                                 (not (notnull nodes:scheduled))
+                                                 (not (notnull nodes:deadline))
+                                                 (or
+                                                  (= nodes:todo "TODO")
+                                                  (not (notnull nodes:todo)))
+                                                 ,dir-clause) ; Add the directory clause
+                                         :order-by (asc nodes:priority)]))
+           ;; No filter (original complex query without tag/dir)
+           (t
+            (org-roam-db-query `[:select [id file title priority]
+                                         :from nodes
+                                         :where (and
+                                                 (notnull nodes:priority)
+                                                 (not (notnull nodes:scheduled))
+                                                 (not (notnull nodes:deadline))
+                                                 (or
+                                                  (= nodes:todo "TODO")
+                                                  (not (notnull nodes:todo))))
+                                         :order-by (asc nodes:priority)]))))
          (result '()))
+    ;; Process the results
     (dolist (record headings-with-priority)
       (let* ((id (nth 0 record))
              (title (nth 2 record))

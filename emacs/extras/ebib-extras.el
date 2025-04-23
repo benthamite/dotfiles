@@ -447,7 +447,7 @@ correctly set."
       (ebib-generate-autokey))
     (setq entry-key (ebib--get-key-at-point))
     (ebib-extras-get-or-set-language)
-    (tlon-deepl-translate-abstract)
+    (tlon-deepl-translate-abstract nil nil nil 'interactive-call-p)
     (ebib-extras-attach-files entry-key)))
 
 (defun ebib-extras-set-abstract ()

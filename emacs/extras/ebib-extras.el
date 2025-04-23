@@ -445,10 +445,9 @@ correctly set."
     (when (or (not (ebib-extras-key-is-valid-p))
 	      (y-or-n-p "Regenerate key? "))
       (ebib-generate-autokey))
-    ;; Get the key *after* potential regeneration
     (setq entry-key (ebib--get-key-at-point))
-    (ebib-extras-get-or-set-language) ; Assumes this operates on current entry
-    (tlon-deepl-translate-abstract) ; Assumes this operates on current entry
+    (ebib-extras-get-or-set-language)
+    (tlon-deepl-translate-abstract)
     (ebib-extras-attach-files entry-key)))
 
 (defun ebib-extras-set-abstract ()

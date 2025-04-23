@@ -493,7 +493,7 @@ If OPEN is non-nil, open the file."
 						     initial-folder
 						     (file-name-with-extension target-key extension)))
 				(throw 'found extension))))
-			  (file-name-concat initial-folder key)
+			  (file-name-concat initial-folder target-key)
 			initial-folder))))
 		  ((and file (symbolp file))
 		   (files-extras-newest-file paths-dir-downloads))

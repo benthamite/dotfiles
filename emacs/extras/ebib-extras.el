@@ -555,7 +555,6 @@ If KEY is nil, use the entry at point. Attachment must be done manually."
   (interactive (list nil))
   (let ((target-key (or key (ebib--get-key-at-point))))
     (when-let* ((url (ebib-extras-get-field "url" target-key))
-		(_title (ebib-extras-get-field "title" target-key)) ; Title not used in command?
 		(default-directory paths-dir-downloads))
       (message "Downloading subtitles for entry %s (URL: %s).... Attach manually when ready." target-key url)
       ;; Assuming eww-extras-download-subtitles is a format string taking the URL

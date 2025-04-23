@@ -491,7 +491,7 @@ If OPEN is non-nil, open the file."
 			    (dolist (extension ebib-extras-valid-file-extensions)
 			      (when (file-regular-p (file-name-concat
 						     initial-folder
-						     (file-name-with-extension key extension)))
+						     (file-name-with-extension target-key extension)))
 				(throw 'found extension))))
 			  (file-name-concat initial-folder key)
 			initial-folder))))

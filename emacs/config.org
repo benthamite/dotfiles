@@ -498,7 +498,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#eww][eww]]
   - [[#eww-extras][eww-extras]]
   - [[#prot-eww][prot-eww]]
-  - [[#consult-web][consult-web]]
   - [[#w3m][w3m]]
   - [[#elfeed][elfeed]]
   - [[#elfeed-extras][elfeed-extras]]
@@ -12488,49 +12487,6 @@ Remember that every piece of Elisp that I write is for my own educational and re
   (:map eww-mode-map
         ("M-f" . prot-eww-visit-url-on-page)
         ("A-M-f" . prot-eww-jump-to-url-on-page)))
-#+end_src
-
-** consult-web
-:PROPERTIES:
-:ID:       899872DF-AFE2-4F35-853A-24CD7935B703
-:END:
-
-/[[https://www.github.com/armindarvish/consult-web][consult-web]] is browses search results from one or several custom sources (such web search engines, AI assistants, elfeed database, and org notes) directly in the Emacs minibuffer./
-
-[2024-07-27 Sat] This has now become [[https://github.com/armindarvish/consult-omni][consult-omni]]; disabling for the time being.
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package consult-web
-  :ensure (consult-web
-           :host github
-           :repo "armindarvish/consult-web"
-           :files (:defaults "sources/*.el"))
-  :disabled
-  :after consult gptel
-  :config
-  (setq consult-web-group-by nil)
-  (require 'consult-web-embark)
-  ;; not working
-  (require 'consult-web-bing)
-  (setq consult-web-bing-api-key (auth-source-pass-get
-                                  "consult-mu" (concat "tlon/core/azure.com/" tlon-email-shared)))
-  (require 'consult-web-brave)
-  (setq consult-web-brave-autosuggest-api-.key (auth-source-pass-get
-                                               "consult-mu"
-                                               (concat "chrome/brave.com/" (getenv "PERSONAL_EMAIL"))))
-  (require 'consult-web-google)
-  (require 'consult-web-google-autosuggest)
-  (setq consult-web-google-customsearch-key (auth-source-pass-get
-                                             "consult-mu"
-                                             (concat "chrome/developers.google.com/" (getenv "PERSONAL_GMAIL"))))
-  (setq consult-web-google-customsearch-cx "726594e5b929f4a80")
-  (require 'consult-web-gptel)
-  (require 'consult-web-wikipedia)
-  (setq consult-web-dynamic-sources '("gptel" "Google" "Wikipedia"))
-  (setq consult-web-omni-sources consult-web-dynamic-sources)
-  (setq consult-web-openai-api-key gptel-api-key)
-  (setq consult-web-default-autosuggest-command #'consult-web-dynamic-google-autosuggest)
-  (setq consult-web-alternate-browse-function 'browse-url-chrome-program))
 #+end_src
 
 ** w3m

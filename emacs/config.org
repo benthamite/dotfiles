@@ -2434,6 +2434,7 @@ Here’s a screenshot illustrating the modeline and tab bar in action (click to 
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package doom-modeline
+  :ensure (:build (:not elpaca--check-version))
   :demand t
   :custom
   (doom-modeline-time nil) ; we display time (and date) in the tab bar

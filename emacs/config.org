@@ -380,7 +380,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#codel][codel]]
   - [[#aidermacs][aidermacs]]
   - [[#aidermacs-extras][aidermacs-extras]]
-  - [[#magit-gptcommit][magit-gptcommit]]
   - [[#semext][semext]]
   - [[#mcp][mcp]]
   - [[#dall-e-shell][dall-e-shell]]
@@ -8242,32 +8241,6 @@ This package evolved out of gptel-extras.
   :demand t
   :bind
   (("H-s-." . aidermacs-extras-run-in-current-dir)))
-#+end_src
-
-** magit-gptcommit
-:PROPERTIES:
-:ID:       DFF89B96-95F6-4EDD-A3C2-3152928ED787
-:END:
-
-/[[https://github.com/douo/magit-gptcommit][magit-gptcommit]] generates git commit messages on Magit using LLM providers./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package magit-gptcommit
-  :disabled t
-  :after magit paths
-  :demand t
-  :init
-  (require 'llm-claude)
-
-  :custom
-  (magit-gptcommit-llm-provider
-   (make-llm-claude
-    :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))
-    :chat-model "claude-3-5-haiku-20241022"))
-
-  :config
-  (magit-gptcommit-status-buffer-setup)
-  (magit-gptcommit-mode))
 #+end_src
 
 ** semext

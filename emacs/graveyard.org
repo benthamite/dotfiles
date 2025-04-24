@@ -9,6 +9,21 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** llm
+:PROPERTIES:
+:ID:       6D49D977-CD85-413E-8C19-884361746678
+:END:
+
+/[[https://github.com/ahyatt/llm][llm]] provides a common interface for LLMs./
+
+[2025-04-24 Thu] Removing since it was only required by magit-gptcommit, which I have just removed.
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package llm
+  :custom
+  (llm-warn-on-nonfree nil))
+#+end_src
+
 ** unpackaged
 :PROPERTIES:
 :ID:       484FDD89-4C12-4624-82CB-FC36795C0A8F

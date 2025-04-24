@@ -380,7 +380,6 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#codel][codel]]
   - [[#aidermacs][aidermacs]]
   - [[#aidermacs-extras][aidermacs-extras]]
-  - [[#llm][llm]]
   - [[#magit-gptcommit][magit-gptcommit]]
   - [[#semext][semext]]
   - [[#mcp][mcp]]
@@ -8243,20 +8242,6 @@ This package evolved out of gptel-extras.
   :demand t
   :bind
   (("H-s-." . aidermacs-extras-run-in-current-dir)))
-#+end_src
-
-** llm
-:PROPERTIES:
-:ID:       6D49D977-CD85-413E-8C19-884361746678
-:END:
-
-/[[https://github.com/ahyatt/llm][llm]] provides a common interface for LLMs./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package llm
-  :disabled t
-  :custom
-  (llm-warn-on-nonfree nil))
 #+end_src
 
 ** magit-gptcommit

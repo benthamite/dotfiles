@@ -8236,8 +8236,6 @@ This package evolved out of gptel-extras.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package aidermacs-extras
-  :after aidermacs
-  :demand t
   :bind
   (("H-s-." . aidermacs-extras-run-in-current-dir)))
 #+end_src

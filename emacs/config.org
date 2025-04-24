@@ -8149,7 +8149,8 @@ This package evolved out of gptel-extras.
 
   :bind
   (("H-s-c" . gptel-extras-goto-end-and-send)
-   ("H-s-o" . gptel-extras-toggle-major-mode)))
+   ("H-s-o" . gptel-extras-toggle-major-mode)
+   ("H-s-s" . gptel-extras-search-and-ask-model)))
 #+end_src
 
 ** gptel-quick

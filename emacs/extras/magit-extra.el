@@ -129,6 +129,22 @@ return instead the full path; if PATH is `sans-dir', return the filename only."
                (magit-anything-modified-p))
       (alert (format "Repository at %s is dirty!" repo-path)))))
 
+;;;;; auto-pull
+
+;;;###autoload
+(defun magit-extra-async-pull (repo)
+  "Asynchronously pull from the remote repository at REPO."
+  (unless (file-exists-p repo) (user-error "Repo %S not on disk" repo))
+  (let ((default-directory repo))
+    (make-process
+     :name "git-async-pull"
+     :buffer "*git-async-pull*"
+     :command (list "git" "pull")
+     :sentinel
+     (lambda (_ event)
+       (unless (string= event "finished\n")
+	 (message "Error Fetching %s" repo))))))
+
 ;;;;; transient
 
 (defun magit-extras-get-unstaged-files ()

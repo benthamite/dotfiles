@@ -119,7 +119,7 @@ The command ~vc-extras-create-repo~ creates a new repository on GitHub using the
 The command ~vc-extras-clone-repo~ clones a GitHub repository.
 - It prompts for the repository NAME (with completion using `gh repo list` if NAME is not provided) and determines the corresponding ACCOUNT.
 - It clones the repository using `git clone --recurse-submodules` into the directory associated with the ACCOUNT (from `vc-extras-profiles`), or prompts for a parent directory if called with a prefix argument.
-- After cloning, it initializes submodules (`git submodule init`, `git submodule update --recursive`).
+- After cloning, it initializes submodules (`git submodule init`, `git submodule update --recursive`) and checks out the default branch (`main` or `master`, whichever exists) in each submodule.
 - It optionally splits the `.git` directory based on ~vc-extras-split-repo~.
 - It optionally prompts to add the repository to Forge (`forge-extras-track-repository`) unless NO-FORGE is non-nil.
 - It runs asynchronously and provides status messages.
@@ -181,7 +181,7 @@ The command ~vc-extras-menu~ displays a transient menu for quick access to the m
 + ~vc-extras-ensure-gh-exists~: Checks if `gh` executable is found, errors otherwise.
 + ~vc-extras--select-repo~: Helper for `vc-extras-clone-repo`; prompts for repo/account if needed.
 + ~vc-extras--prompt-target-directory~: Helper for `vc-extras-clone-repo`; prompts for parent directory when cloning with prefix arg.
-+ ~vc-extras--initialize-submodules~: Runs `git submodule init` and `update --recursive`.
++ ~vc-extras--initialize-submodules~: Runs `git submodule init`, `update --recursive`, and then checks for and checks out the default branch (`main` or `master`) in each submodule.
 + ~vc-extras--get-submodule-paths~: Gets submodule paths using `git submodule status`.
 + ~vc-extras--get-submodule-paths-from-gitmodules~: Gets submodule paths by parsing `.gitmodules`.
 + ~vc-extras--clone-sentinel~: Process sentinel function called after `git clone` finishes. Handles submodule initialization, `.git` splitting, and Forge tracking.

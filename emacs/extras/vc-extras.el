@@ -173,16 +173,36 @@ list)."
 (defun vc-extras--initialize-submodules (dir)
   "Initialize submodules of the repo at DIR.
 Runs ‘git submodule init’ and ‘git submodule update --recursive’ with DIR as the
-working directory."
+working directory. Then, checks if 'origin/main' or 'origin/master' exists for
+each submodule and checks out the first one found."
   (let ((default-directory dir))
     (call-process "git" nil nil nil "submodule" "init")
-    (call-process "git" nil nil nil "submodule" "update" "--recursive")))
+    (call-process "git" nil nil nil "submodule" "update" "--recursive")
+    ;; Check for and checkout default branch for each submodule
+    (dolist (submodule-path (vc-extras--get-submodule-paths dir))
+      (let ((submodule-dir (expand-file-name submodule-path dir)))
+        (when (file-directory-p submodule-dir)
+          (let ((default-directory submodule-dir))
+            ;; Check if 'origin/main' exists
+            (if (zerop (call-process "git" nil nil nil "show-ref" "--verify" "--quiet" "refs/remotes/origin/main"))
+                ;; If 'main' exists, checkout 'main'
+                (call-process "git" nil nil nil "checkout" "main")
+              ;; Else, check if 'origin/master' exists
+              (when (zerop (call-process "git" nil nil nil "show-ref" "--verify" "--quiet" "refs/remotes/origin/master"))
+                ;; If 'master' exists, checkout 'master'
+                (call-process "git" nil nil nil "checkout" "master")))))))))
 
 (defun vc-extras--get-submodule-paths (dir)
   "Return a list of submodule paths relative to DIR."
   (let ((default-directory dir)
-        ;; Use --quiet to avoid the initial summary line if present
-        (output (shell-command-to-string "git submodule status --recursive --quiet")))
+        output)
+    ;; Use call-process instead of shell-command-to-string
+    (with-temp-buffer
+      ;; Use --quiet to avoid the initial summary line if present
+      (let ((exit-status (call-process "git" nil (current-buffer) nil "submodule" "status" "--recursive" "--quiet")))
+        (unless (zerop exit-status)
+          (error "git submodule status failed with exit code %s in %s" exit-status dir))
+        (setq output (buffer-string))))
     (delq nil
           (mapcar (lambda (line)
                     ;; Match lines like " 123abc... path/to/submodule (branch)"

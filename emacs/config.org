@@ -1705,8 +1705,9 @@ Running with --debug will show why files are being skipped.
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package ghub
   :ensure (:host github
-                 :repo "magit/ghub"
-                 :branch "main")
+		 :build (:not elpaca--check-version)
+		 :repo "magit/ghub"
+		 :branch "main")
   :defer t
   :config
   (require 'pass))

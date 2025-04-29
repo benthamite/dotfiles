@@ -441,6 +441,7 @@ The files added is controlled by the user options
 
 ;;;;; Misc
 
+;;;###autoload
 (defun gptel-extras-set-backend-and-model (&optional backend model)
   "Set the model and backend for the current `gptel' buffer.
 If MODEL is nil, use `gptel-model'. If BACKEND is nil, use `gptel-backend'."

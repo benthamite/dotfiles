@@ -3,6 +3,65 @@
 #+langauge: en
 
 This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository. It is meant to be read primarily by members of the Tlön team, but it may be of interest to others as well.
+
+* Version 7.1.5 on 2025-04-29
+
+** Documentation
+- Created initial documentation files (.org format) for all packages under =emacs/extras/doc/=, providing overviews, command descriptions, variable explanations, and function indices.
+
+** ebib-extras
+- Improved asynchronous file attachment reliability by replacing internal Ebib functions with safer alternatives (=string-equal=, loops) and using hooks for callbacks (=annas-archive-post-download-hook=, =eww-extras= callback signature fix).
+- Fixed several bugs related to file attachment, including:
+  - Correctly handling attachments when the BibTeX key has been regenerated.
+  - Using the target key (not the current entry's key) when suggesting file paths.
+  - Preventing errors when attachment download functions invoke callbacks with incorrect arguments.
+  - Fixing a missing parenthesis in =ebib-extras-get-isbn=.
+
+** gptel-extras
+- Added new command =gptel-extras-search-and-ask-model= to search a query both externally and with Perplexity.
+
+** Configuration (=config.org=)
+- **Package Management:**
+  - Deferred loading for =json-mode=.
+  - Skipped Elpaca version check for =ghub= and =doom-modeline=.
+  - Moved =consult-web=, =magit-gptcommit=, and =llm= packages to =graveyard.org=.
+  - Tidied =aidermacs-extras= =use-package= declaration.
+  - Registered all tools from =llm-tool-collection=.
+  - Removed unnecessary =:defer t= lines for features loaded via =:after=.
+  - Set hooks more concisely using =:hook= keyword directly with the mode symbol (e.g., =:hook org-mode-hook=).
+- **Behavior:**
+  - Removed obsolete options: =org-startup-folded=, =macos-homebrew-excluded-casks=.
+  - Moved API key definitions (=ANTHROPIC_API_KEY=, =GEMINI_API_KEY=, =OPENROUTER_API_KEY=) from Elisp =setenv= calls to =shell/.zshenv-secrets=.
+  - Increased =org-roam-db-sync= timer interval from 5 to 20 minutes.
+  - Fixed incorrect code block syntax (=:tangle nil= to =:tangle no=).
+- **Keybindings:**
+  - Added =H-s-s= keybinding for =gptel-extras-search-and-ask-model=.
+  - Added =s-c= keybinding in =aidermacs-comint-mode-map= for =comint-send-input=.
+- **Models:**
+  - Updated =gptel= configuration for Perplexity models (using =sonar= and =sonar-pro=).
+- **Debugging:**
+  - Improved =debug-copy-and-save-backtrace= to show file size message.
+
+** vc-extras
+- Enhanced submodule initialization in =vc-extras-clone-repo= to automatically check out the default branch (=main= or =master=) in each submodule after cloning and updating.
+- Used =call-process= instead of =shell-command-to-string= in =vc-extras--get-submodule-paths= for robustness.
+
+** aidermacs-extras
+- Added command =aidermacs-extras-run-in-current-dir= which runs aider, automatically adding the current buffer's file and its associated help file (if found via =files-extras-get-help-file=).
+- Added command =aidermacs-extras-save-repo-map= to save the Aider repo map to =repo-map.md= in the project root.
+
+** files-extras
+- Added function =files-extras-get-help-file= to find associated documentation files (.org or .md in doc/ or docs/ subdirs).
+
+** magit-extra
+- Added command =magit-extra-async-pull= for asynchronous pulling.
+
+** Shell / Secrets
+- Updated various API keys in =shell/.zshenv-secrets=.
+- Added =OPENROUTER_API_KEY=, =GEMINI_API_KEY=, =ANTHROPIC_API_KEY=, =OPENAI_API_KEY= to secrets file.
+- Removed an old =OPENAI_KEY=.
+
+
 * Version 7.1.4 on 2025-04-16
 
 ** aidermacs

@@ -441,7 +441,19 @@ The files added is controlled by the user options
 
 ;;;;; Misc
 
-(defun gptel-extras-run-query (query &optional model backend)
+(defun gptel-extras-set-backend-and-model (&optional backend model)
+  "Set the model and backend for the current `gptel' buffer.
+If MODEL is nil, use `gptel-model'. If BACKEND is nil, use `gptel-backend'."
+  (unless (derived-mode-p 'org-mode)
+    (user-error "Not in an `org-mode' buffer"))
+  (setq-local gptel-backend
+	      (if backend
+		  (alist-get backend gptel--known-backends nil nil #'string=)
+		gptel-backend))
+  (setq-local gptel-model
+	      (or model gptel-model)))
+
+(defun gptel-extras-run-query (query &optional backend model)
   "Prompt for QUERY with MODEL and BACKEND and run it in a gptel buffer.
 If MODEL and BACKEND are nil, use the default model and backend."
   (let* ((buffer-name (file-name-with-extension (simple-extras-slugify query)
@@ -450,13 +462,12 @@ If MODEL and BACKEND are nil, use the default model and backend."
 						  ('org-mode "org")))))
     (gptel query nil nil t)
     (with-current-buffer buffer-name
-      (setq-local gptel-model (or model gptel-model))
-      (setq-local gptel-backend (when backend (alist-get model gptel--known-backends nil nil #'string=)))
-      (goto-char (point-max))
-      (gptel-request query
-        :buffer (current-buffer)
-        :position (point)
-        :in-place t))))
+      (gptel-extras-set-backend-and-model backend model))
+    (goto-char (point-max))
+    (gptel-request query
+      :buffer (current-buffer)
+      :position (point)
+      :in-place t)))
 
 ;;;###autoload
 (defun gptel-extras-search-and-ask-model (query)

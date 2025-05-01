@@ -145,6 +145,17 @@ return instead the full path; if PATH is `sans-dir', return the filename only."
        (unless (string= event "finished\n")
 	 (message "Error Fetching %s" repo))))))
 
+;;;;; pull all submodules
+
+(defun magit-extras-pull-and-update-submodules (&rest _)
+  "Run `magit-extras-update-all-submodules' after `magit-pull'."
+  (let ((toplevel (magit-toplevel)))
+    (when (and toplevel (file-exists-p (expand-file-name ".gitmodules" toplevel)))
+      (message "Magit: Updating submodules after pull...")
+      (magit-extras-update-all-submodules (magit-submodule-arguments "--recursive")))))
+
+(advice-add 'magit-pull :after #'magit-extras-pull-and-update-submodules)
+
 ;;;;; transient
 
 (defun magit-extras-get-unstaged-files ()

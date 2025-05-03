@@ -38,10 +38,16 @@
   :group 'zotra)
 
 (defcustom zotra-extras-use-mullvad-p nil
-  "If non-nil, connect to this city temporarily to fetch film data from IMDb.
-The Internet Movie Database fetches data in the language of the country where
-the user is located. If you want to fetch data in a different language, set this
-user option to a city where this language is spoken.
+  "If non-nil, connect via Mullvad temporarily when fetching data for IMDb URLs.
+When adding an entry using `zotra-extras-add-entry', if this option is non-nil
+*and* the URL or search string provided matches \"imdb.com\", attempt to connect
+to the Mullvad VPN server associated with the city defined for \"IMDb\" in
+`mullvad-websites-and-cities'.
+
+The Internet Movie Database (IMDb) may return data based on the geographic
+location of the request. Connecting via a specific Mullvad server (e.g., New
+York for English results) can help control the language or region of the fetched
+data.
 
 This option requires the `mullvad' package, and the user options
 `mullvad-websites-and-cities' and `mullvad-cities-and-servers' to be set
@@ -108,10 +114,12 @@ in Ebib after adding it."
     (pcase major-mode
       ('elfeed-show-mode (elfeed-extras-kill-link-url-of-entry))
       ('eww-mode (eww-copy-page-url)))
-    (when zotra-extras-use-mullvad-p
-      (mullvad-connect-to-website "IMDb" 1 'silently))
-    (condition-case err
-	(zotra-extras--add-and-maybe-open url-or-search-string entry-format bibfile do-not-open)
+   (when (and zotra-extras-use-mullvad-p
+              (string-match-p "imdb\\.com" url-or-search-string))
+     (message "IMDb URL detected and `zotra-extras-use-mullvad-p' is set. Connecting via Mullvad...")
+     (mullvad-connect-to-website "IMDb" 1 'silently))
+   (condition-case err
+(zotra-extras--add-and-maybe-open url-or-search-string entry-format bibfile do-not-open)
       (error
        (if (string-match-p "JSON parse error: Internal Server Error" (error-message-string err))
 	   (let ((zotra-backend 'citoid))

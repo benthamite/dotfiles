@@ -6,4 +6,5 @@ shell/.zshrc.local
 
 ## aider
 .aider*
+!.aider.conf.yml
 repo-map.md

@@ -147,14 +147,14 @@ return instead the full path; if PATH is `sans-dir', return the filename only."
 
 ;;;;; pull all submodules
 
-(defun magit-extras-pull-and-update-submodules (&rest _)
-  "Run `magit-extras-update-all-submodules' after `magit-pull'."
+(defun magit-extras-pull-including-submodules (&rest _)
+  "Pull all submodules in repos containing submodules."
   (let ((toplevel (magit-toplevel)))
     (when (and toplevel (file-exists-p (expand-file-name ".gitmodules" toplevel)))
-      (message "Magit: Updating submodules after pull...")
-      (magit-extras-update-all-submodules (magit-submodule-arguments "--recursive")))))
+      (message "Magit: Updating submodules...")
+      (magit-extras-pull-all-submodules (magit-submodule-arguments "--recursive")))))
 
-(advice-add 'magit-pull :after #'magit-extras-pull-and-update-submodules)
+(advice-add 'magit-pull :after #'magit-extras-pull-including-submodules)
 
 ;;;;; transient
 
@@ -167,12 +167,20 @@ return instead the full path; if PATH is `sans-dir', return the filename only."
   (magit-call-git "add" (expand-file-name file)))
 
 (transient-define-suffix magit-extras-update-all-submodules (args)
-  "Update all submodules in the current Git repository."
+  "Update submodules to the commit recorded in the superproject."
   :class 'magit--git-submodule-suffix
-  :description "Update all modules    git submodule update --init [--recursive]"
+  :description "Update recorded       git submodule update --init [--recursive]"
   (interactive (list (magit-submodule-arguments "--recursive")))
   (magit-with-toplevel
     (magit-run-git-async "submodule" "update" "--init" args)))
+
+(transient-define-suffix magit-extras-pull-all-submodules (args)
+  "Pull latest changes in all submodules."
+  :class 'magit--git-submodule-suffix
+  :description "Pull all modules      git submodule foreach --recursive git pull"
+  (interactive (list (magit-submodule-arguments "--recursive"))) ; Pass --recursive if needed, though foreach already has it
+  (magit-with-toplevel
+    (magit-run-git-async "submodule" "foreach" "--recursive" "git" "pull")))
 
 (transient-define-prefix magit-extras-dispatch ()
   "Invoke a Magit command from a list of available commands."

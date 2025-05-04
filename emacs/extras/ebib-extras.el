@@ -581,9 +581,10 @@ If KEY is nil, use the entry at point."
                            (message "Annas Archive download initiated externally for %s (URL: %s). Attach file manually." target-key url))
                          ;; Remove the hook after it runs once, regardless of success
                          (remove-hook 'annas-archive-post-download-hook hook-func))))
-        ;; Use the actual hook name from annas-archive.el
-        (add-hook 'annas-archive-post-download-hook hook-func nil t) ; Add as temporary local hook
-        (annas-archive-download id)))))
+       ;; Use the actual hook name from annas-archive.el
+       ;; Add hook globally (nil) instead of locally (t), append=nil (add to front)
+       (add-hook 'annas-archive-post-download-hook hook-func nil nil)
+       (annas-archive-download id)))))
 
 (defun ebib-extras-doi-attach (&optional key)
   "Get a PDF for the DOI of the entry with KEY and attach it.

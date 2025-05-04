@@ -245,6 +245,7 @@ files which do not exist any more or are no longer readable will be killed."
       (error "Buffer not visiting a file"))))
 
 ;; On MacOS, `DS_Store' files can interfere with this command.
+;;;###autoload
 (defun files-extras-newest-file (path)
   "Get latest file in PATH, excluding `.DS_Store` and `.localized` files."
   (car

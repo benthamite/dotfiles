@@ -1,3 +1,5 @@
+- Please respond in the same language as the prompt.
+
 ## Emacs Lisp
 
 - If you need to write Emacs Lisp, please write atomic, focused functions. When you find yourself writing a comment to explain what some code does, consider refactoring it into a function. In general, the functions should not be more than just a few lines long.

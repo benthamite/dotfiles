@@ -10933,7 +10933,6 @@ We defer-load the package to activate the timer that in turn updates the bibliog
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package ebib
-  :defer 30
   :custom
   (ebib-preload-bib-files paths-files-bibliography-all)
   (ebib-notes-directory paths-dir-bibliographic-notes)

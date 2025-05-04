@@ -447,7 +447,6 @@ correctly set."
       (ebib-generate-autokey))
     (setq entry-key (ebib--get-key-at-point))
     (ebib-extras-get-or-set-language)
-    (tlon-deepl-translate-abstract nil nil nil 'interactive-call-p)
     (ebib-extras-attach-files entry-key)))
 
 (defun ebib-extras-set-abstract ()
@@ -566,23 +565,23 @@ If KEY is nil, use the entry at point."
   (let ((target-key (or key (ebib--get-key-at-point))))
     ;; Use target-key when getting fields
     (when-let* ((id (or (ebib-extras-get-isbn target-key)
-		       (let ((type (ebib-extras-get-field "=type=" target-key)))
-			 (and (member type ebib-extras-book-like-entry-types)
-			      (ebib-extras-get-field "title" target-key))))))
+			(let ((type (ebib-extras-get-field "=type=" target-key)))
+			  (and (member type ebib-extras-book-like-entry-types)
+			       (ebib-extras-get-field "title" target-key))))))
       ;; Use a hook to capture the key and call attach-file when download finishes.
       ;; This hook (`annas-archive-post-download-hook`) receives (url path) if
       ;; downloaded via eww, or just (url) if downloaded externally.
       (let ((hook-func (lambda (url &optional path)
-                          (if path
-                              (progn
-                                (message "Annas Archive download finished for %s, attaching file %s" target-key path)
-                                (ebib-extras-attach-file path target-key))
-                            (message "Annas Archive download initiated externally for %s (URL: %s). Attach file manually." target-key url))
-                          ;; Remove the hook after it runs once, regardless of success
-                          (remove-hook 'annas-archive-post-download-hook hook-func))))
+                         (if path
+                             (progn
+                               (message "Annas Archive download finished for %s, attaching file %s" target-key path)
+                               (ebib-extras-attach-file path target-key))
+                           (message "Annas Archive download initiated externally for %s (URL: %s). Attach file manually." target-key url))
+                         ;; Remove the hook after it runs once, regardless of success
+                         (remove-hook 'annas-archive-post-download-hook hook-func))))
         ;; Use the actual hook name from annas-archive.el
         (add-hook 'annas-archive-post-download-hook hook-func nil t) ; Add as temporary local hook
-        (annas-archive-download id 'confirm)))))
+        (annas-archive-download id)))))
 
 (defun ebib-extras-doi-attach (&optional key)
   "Get a PDF for the DOI of the entry with KEY and attach it.

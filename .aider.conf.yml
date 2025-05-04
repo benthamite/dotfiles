@@ -1,0 +1,4 @@
+commit-prompt: |
+  Generate a concise commit message following these rules:
+  - Begin with the name of the file being modified, sans its extension. For example, if the file is `emacs/extras/files-extras.el`, use `files-extras`.
+  - Continue with ": " followed by a brief description of the change. The word after the colon should be in lowercase. For example, if you are refactoring a function in `emacs/extras/files-extras.el`, your commit message should look like this: `files-extras: refactor function name`.

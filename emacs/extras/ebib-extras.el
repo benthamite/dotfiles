@@ -610,27 +610,25 @@ abstract."
   (interactive
    ;; If called interactively, key is nil, use entry at point
    (list nil))
-  (let* ((target-key (or key (ebib--get-key-at-point)))
-	 ;; Use target-key when getting field values
-	 (doi (ebib-extras-get-field "doi" target-key))
-	 (url (ebib-extras-get-field "url" target-key))
-	 (isbn (ebib-extras-get-field "isbn" target-key))
-	 (type (ebib-extras-get-field "=type=" target-key))
-	 (file (ebib-extras-get-field "file" target-key)))
-    ;; Logic remains similar, but pass target-key down
-    (if file
-	;; TODO: Ensure ebib-extras-set-abstract works for target-key if not current
-	(ebib-extras-set-abstract) ; This might need adjustment if it assumes current entry
-      (cond (doi (ebib-extras-doi-attach target-key))
-	    ((or isbn (member type ebib-extras-book-like-entry-types))
-	     (ebib-extras-book-attach target-key))
-	    ((and url (cl-some (lambda (regexp)
-				 (string-match regexp url))
-			       ebib-extras-video-websites))
-	     (ebib-extras-url-to-srt-attach target-key))
-	    ((and url (string-match "online" type))
-	     (ebib-extras-url-to-pdf-attach target-key)
-	     (ebib-extras-url-to-html-attach target-key))))))
+  (let ((target-key (or key (ebib--get-key-at-point))))
+    (cl-destructuring-bind (doi url isbn type file)
+	(mapcar #'(lambda (field)
+		    (ebib-extras-get-field field target-key))
+		'("doi" "url" "isbn" "=type=" "file"))
+      ;; Logic remains similar, but pass target-key down
+      (if file
+	  ;; TODO: Ensure ebib-extras-set-abstract works for target-key if not current
+	  (ebib-extras-set-abstract) ; This might need adjustment if it assumes current entry
+	(cond (doi (ebib-extras-doi-attach target-key))
+	      ((or isbn (member type ebib-extras-book-like-entry-types))
+	       (ebib-extras-book-attach target-key))
+	      ((and url (cl-some (lambda (regexp)
+				   (string-match regexp url))
+				 ebib-extras-video-websites))
+	       (ebib-extras-url-to-srt-attach target-key))
+	      ((and url (string-match "online" type))
+	       (ebib-extras-url-to-pdf-attach target-key)
+	       (ebib-extras-url-to-html-attach target-key)))))))
 
 ;;;;; ?
 

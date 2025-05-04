@@ -11033,7 +11033,6 @@ The macro below generates the commands correctly. But attempting to define key b
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package ebib-extras
-  :after ebib
   :init
   (advice-add 'ebib-init :after #'ebib-extras-auto-reload-databases)
   ;; reloading the bibliographies is time-intensive, so we try to do it in the background

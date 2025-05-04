@@ -54,7 +54,9 @@
   (car ebib-extras-sort-states)
   "State for sorting the Ebib index buffer.")
 
-;; Removed ebib-extras-attach-file-key as it's unreliable in async contexts.
+;; The variable ebib-extras-attach-file-key was removed as it's unreliable
+;; in async contexts. The annas-archive package might need updating if it
+;; still references this variable internally.
 
 (defconst ebib-extras-valid-key-regexp
   "^[_[:alnum:]-]\\{2,\\}[[:digit:]]\\{4\\}[_[:alnum:]]\\{2,\\}$"

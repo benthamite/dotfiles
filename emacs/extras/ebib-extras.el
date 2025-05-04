@@ -573,18 +573,19 @@ If KEY is nil, use the entry at point."
       ;; Use a hook to capture the key and call attach-file when download finishes.
       ;; This hook (`annas-archive-post-download-hook`) receives (url path) if
       ;; downloaded via eww, or just (url) if downloaded externally.
-      (let ((hook-func (lambda (url &optional path)
-                         (if path
-                             (progn
-                               (message "Annas Archive download finished for %s, attaching file %s" target-key path)
-                               (ebib-extras-attach-file path target-key))
-                           (message "Annas Archive download initiated externally for %s (URL: %s). Attach file manually." target-key url))
-                         ;; Remove the hook after it runs once, regardless of success
-                         (remove-hook 'annas-archive-post-download-hook hook-func))))
-       ;; Use the actual hook name from annas-archive.el
-       ;; Add hook globally (nil) instead of locally (t), append=nil (add to front)
-       (add-hook 'annas-archive-post-download-hook hook-func nil nil)
-       (annas-archive-download id)))))
+      ;; Use cl-labels to define a function that can refer to itself for removal.
+      (cl-labels ((attach-and-remove-hook (url &optional path)
+                   (if path
+                       (progn
+                         (message "Annas Archive download finished for %s, attaching file %s" target-key path)
+                         (ebib-extras-attach-file path target-key))
+                     (message "Annas Archive download initiated externally for %s (URL: %s). Attach file manually." target-key url))
+                   ;; Remove this specific function instance from the hook after it runs.
+                   (remove-hook 'annas-archive-post-download-hook #'attach-and-remove-hook)))
+        ;; Use the actual hook name from annas-archive.el
+        ;; Add hook globally (nil) instead of locally (t), append=nil (add to front)
+        (add-hook 'annas-archive-post-download-hook #'attach-and-remove-hook nil nil)
+        (annas-archive-download id)))))
 
 (defun ebib-extras-doi-attach (&optional key)
   "Get a PDF for the DOI of the entry with KEY and attach it.

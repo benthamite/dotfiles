@@ -45,19 +45,19 @@ The command ~bbdb-extras-export-vcard~ exports the BBDB record currently being v
 
 ** Quick Create Record
 :PROPERTIES:
-:CUSTOM_ID: h:bbdb-extras-bbdb-create-quick
+:CUSTOM_ID: h:bbdb-extras-create-quick
 :END:
 
-#+findex: bbdb-extras-bbdb-create-quick
-The command ~bbdb-extras-bbdb-create-quick~ provides a faster way to create a new BBDB record by prompting *only* for the contact's name. It uses ~bbdb-extras-bbdb-read-record-quick~ internally to get the name and then adds the new, minimal record to the database and displays it.
+#+findex: bbdb-extras-create-quick
+The command ~bbdb-extras-create-quick~ provides a faster way to create a new BBDB record by prompting *only* for the contact's name. It uses ~bbdb-extras-read-record-quick~ internally to get the name and then adds the new, minimal record to the database and displays it.
 
 ** Delete Field or Record Without Confirmation
 :PROPERTIES:
-:CUSTOM_ID: h:bbdb-extras-bbdb-delete-field-or-record-no-confirm
+:CUSTOM_ID: h:bbdb-extras-delete-field-or-record-no-confirm
 :END:
 
-#+findex: bbdb-extras-bbdb-delete-field-or-record-no-confirm
-The command ~bbdb-extras-bbdb-delete-field-or-record-no-confirm~ deletes the field or record at point without asking for confirmation. This overrides the default behavior of ~bbdb-delete-field-or-record~ which normally prompts the user before deletion. Use with caution.
+#+findex: bbdb-extras-delete-field-or-record-no-confirm
+The command ~bbdb-extras-delete-field-or-record-no-confirm~ deletes the field or record at point without asking for confirmation. This overrides the default behavior of ~bbdb-delete-field-or-record~ which normally prompts the user before deletion. Use with caution.
 
 * Patched Functions
 :PROPERTIES:
@@ -68,19 +68,19 @@ The command ~bbdb-extras-bbdb-delete-field-or-record-no-confirm~ deletes the fie
 
 ** Browse URL Directly
 :PROPERTIES:
-:CUSTOM_ID: h:bbdb-extras-bbdb-browse-url
+:CUSTOM_ID: h:bbdb-extras-browse-url
 :END:
 
-#+findex: bbdb-extras-bbdb-browse-url
-The original ~bbdb-browse-url~ command is overridden by ~bbdb-extras-bbdb-browse-url~. The modified version opens the URL found in the =url= field of the selected BBDB record(s) directly using ~browse-url~, without prompting for confirmation first.
+#+findex: bbdb-extras-browse-url
+The original ~bbdb-browse-url~ command is overridden by ~bbdb-extras-browse-url~. The modified version opens the URL found in the =url= field of the selected BBDB record(s) directly using ~browse-url~, without prompting for confirmation first.
 
 ** Prevent Window Splitting
 :PROPERTIES:
-:CUSTOM_ID: h:bbdb-extras-bbdb-pop-up-window
+:CUSTOM_ID: h:bbdb-extras-pop-up-window
 :END:
 
-#+findex: bbdb-extras-bbdb-pop-up-window
-The original ~bbdb-pop-up-window~ function, which normally displays the =*BBDB*= buffer by splitting the largest window, is overridden by ~bbdb-extras-bbdb-pop-up-window~. The modified version prevents this window splitting behavior, instead displaying the =*BBDB*= buffer in an existing window or simply selecting the window if it's already visible. This aims to provide a less disruptive user experience.
+#+findex: bbdb-extras-pop-up-window
+The original ~bbdb-pop-up-window~ function, which normally displays the =*BBDB*= buffer by splitting the largest window, is overridden by ~bbdb-extras-pop-up-window~. The modified version prevents this window splitting behavior, instead displaying the =*BBDB*= buffer in an existing window or simply selecting the window if it's already visible. This aims to provide a less disruptive user experience.
 
 * Internal Functions (for reference)
 :PROPERTIES:
@@ -89,7 +89,7 @@ The original ~bbdb-pop-up-window~ function, which normally displays the =*BBDB*=
 
 These functions are used internally by the main commands but are not typically called directly by the user.
 
-+ ~bbdb-extras-bbdb-read-record-quick~: Helper function for ~bbdb-extras-bbdb-create-quick~. Reads only the name for a new BBDB record.
++ ~bbdb-extras-read-record-quick~: Helper function for ~bbdb-extras-create-quick~. Reads only the name for a new BBDB record.
 
 * Indices
 :PROPERTIES:

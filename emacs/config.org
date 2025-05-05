@@ -13525,7 +13525,7 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
    ("c" . bbdb-copy-fields-as-kill)
    ("C-k" . nil)
    ("M-d" . nil)
-   ("D" . bbdb-extras-bbdb-delete-field-or-record-no-confirm)))
+   ("D" . bbdb-extras-delete-field-or-record-no-confirm)))
 #+end_src
 
 ** bbdb-extras

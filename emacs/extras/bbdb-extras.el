@@ -47,7 +47,7 @@
 ;;;;; Patched functions
 
 ;; open URL directly, without prompting for confirmation
-(defun bbdb-extras-bbdb-browse-url (records &optional which)
+(defun bbdb-extras-browse-url (records &optional which)
   "Brwose URLs stored in the `url' field of RECORDS.
 Interactively, use BBDB prefix \
 \\<bbdb-mode-map>\\[bbdb-do-all-records], see `bbdb-do-all-records'.
@@ -64,10 +64,10 @@ Default is the first URL."
         (unless (string= "" url)
           (browse-url url))))))
 
-(advice-add 'bbdb-browse-url :override #'bbdb-extras-bbdb-browse-url)
+(advice-add 'bbdb-browse-url :override #'bbdb-extras-browse-url)
 
 ;; do not split windows
-(defun bbdb-extras-bbdb-pop-up-window (&optional select horiz-p)
+(defun bbdb-extras-pop-up-window (&optional select horiz-p)
   "Display *BBDB* buffer by popping up a new window.
 Finds the largest window on the screen, splits it, displaying the
 *BBDB* buffer in the bottom `bbdb-pop-up-window-size' lines (unless
@@ -135,17 +135,17 @@ then the window will be split horizontally rather than vertically."
 		      (display-buffer-record-window 'window window buffer)))
 	       (if select (select-window window))))))))
 
-(advice-add 'bbdb-pop-up-window :override #'bbdb-extras-bbdb-pop-up-window)
+(advice-add 'bbdb-pop-up-window :override #'bbdb-extras-pop-up-window)
 
 ;; the two functions below replace the corresponding "non-quick"
 ;; native functions. they prompt for a name only.
-(defun bbdb-extras-bbdb-create-quick (record)
+(defun bbdb-extras-create-quick (record)
   "Add a new RECORD to BBDB. Prompt for name only."
-  (interactive (list (bbdb-extras-bbdb-read-record-quick current-prefix-arg)))
+  (interactive (list (bbdb-extras-read-record-quick current-prefix-arg)))
   (bbdb-change-record record)
   (bbdb-display-records (list record)))
 
-(defun bbdb-extras-bbdb-read-record-quick (&optional first-and-last)
+(defun bbdb-extras-read-record-quick (&optional first-and-last)
   "Read and return a new BBDB record.
 To be used with `bbdb-extras-bbdb-create-quick'. FIRST-AND-LAST controls the
 reading mode; see the `bbdb-read-name' docstring for details."
@@ -159,7 +159,7 @@ reading mode; see the `bbdb-read-name' docstring for details."
       (setf (bbdb-record-lastname record) (cdr name)))
     record))
 
-(defun bbdb-extras-bbdb-delete-field-or-record-no-confirm ()
+(defun bbdb-extras-delete-field-or-record-no-confirm ()
   "Delete the current field or record without confirmation."
   (interactive)
   (bbdb-delete-field-or-record (bbdb-do-records) (bbdb-current-field) t))

@@ -70,6 +70,13 @@
   '("html" "pdf" "srt" "vtt")
   "List of valid text file extensions.")
 
+(defvar tlon-file-fluid)
+(defconst ebib-extras-auto-save-files
+  `(,paths-file-personal-bibliography-new
+    ,tlon-file-fluid)
+  "List of database files that should be auto-saved.
+The big files containing the `old' bibliographic entries are excluded.")
+
 ;;;; Functions
 
 (defvar window-extras-frame-split-width-threshold)
@@ -1173,13 +1180,6 @@ is created following the same schema as notes created with
        (citar-open-notes (list citekey))))
     (default
      (beep))))
-
-(defvar tlon-file-fluid)
-(defconst ebib-extras-auto-save-files
-  `(,paths-file-personal-bibliography-new
-    ,tlon-file-fluid)
-  "List of database files that should be auto-saved.
-The big files containing the `old' bibliographic entries are excluded.")
 
 ;;;;; Saving and reloading databases
 

@@ -1705,9 +1705,9 @@ Running with --debug will show why files are being skipped.
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package ghub
   :ensure (:host github
-		 :build (:not elpaca--check-version)
-		 :repo "magit/ghub"
-		 :branch "main")
+                 :build (:not elpaca--check-version)
+                 :repo "magit/ghub"
+                 :branch "main")
   :defer t
   :config
   (require 'pass))
@@ -1769,14 +1769,14 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
              (name   (oref repo name))
              (id     (forge--object-id repoid (string-to-number .id)))
              (alias  (intern (concat "_" (string-replace "=" "_" id)))))
-	(and number
+        (and number
              (list alias id
                    `((,alias repository)
                      [(name ,name)
                       (owner ,owner)]
                      ,@(cddr
-			(caddr
-			 (ghub--graphql-prepare-query
+                        (caddr
+                         (ghub--graphql-prepare-query
                           ghub-fetch-repository
                           (pcase type
                             ('discussion `(repository
@@ -1789,7 +1789,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
                                            pullRequest
                                            (pullRequest . ,number))))))))
                    repo type data)))))
-  
+
   :hook
   (forge-issue-mode-hook . simple-extras-visual-line-mode-enhanced)
 
@@ -7494,18 +7494,18 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
     (interactive)
     (when (string-match-p "\\*Backtrace\\*" (buffer-name))
       (let ((contents (buffer-string))
-	    (file (file-name-concat paths-dir-downloads "backtrace.el")))
-	(kill-new contents)
-	(with-temp-buffer
-	  (insert contents)
-	  (write-region (point-min) (point-max) file)))
+            (file (file-name-concat paths-dir-downloads "backtrace.el")))
+        (kill-new contents)
+        (with-temp-buffer
+          (insert contents)
+          (write-region (point-min) (point-max) file)))
       (kill-buffer)
       (message "Backtrace copied to clipboard and saved to \"backtrace.el\" (%s)"
- 	       (file-size-human-readable (file-attribute-size (file-attributes file))))))
+               (file-size-human-readable (file-attribute-size (file-attributes file))))))
 
   :bind
   (:map debugger-mode-map
-	("s" . debug-copy-and-save-backtrace)))
+        ("s" . debug-copy-and-save-backtrace)))
 #+end_src
 
 ** edebug
@@ -8040,13 +8040,13 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
               (sonar
                :context-window 128
                :input-cost 1
-	       :output-cost 1
+               :output-cost 1
                :cutoff-date ""
                :description "Lightweight, cost-effective search model optimized for quick answers" )
               (sonar-pro
                :context-window 200
                :input-cost 3
-	       :output-cost 15
+               :output-cost 15
                :cutoff-date ""
                :description "Advanced search model designed for complex queries")))
 
@@ -8159,12 +8159,12 @@ This package evolved out of gptel-extras.
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package llm-tool-collection
   :ensure (:host github
-		 :repo "skissue/llm-tool-collection")
+                 :repo "skissue/llm-tool-collection")
   :after gptel
   :config
   ;; register every tool
   (mapcar (apply-partially #'apply #'gptel-make-tool)
-	  (llm-tool-collection-get-all)))
+          (llm-tool-collection-get-all)))
 #+end_src
 
 ** codel
@@ -8254,7 +8254,7 @@ This package evolved out of gptel-extras.
 (use-package mcp
   :ensure (:host github
                  :repo "lizqwerscott/mcp.el"
-		 :build (:not elpaca--check-version)))
+                 :build (:not elpaca--check-version)))
 #+end_src
 
 ** dall-e-shell

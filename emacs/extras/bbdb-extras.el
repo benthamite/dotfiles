@@ -33,6 +33,35 @@
 
 ;;;; Functions
 
+;;;;; Quick commands
+
+;; the two functions below replace the corresponding "non-quick"
+;; native functions. they prompt for a name only.
+(defun bbdb-extras-create-quick (record)
+  "Add a new RECORD to BBDB. Prompt for name only."
+  (interactive (list (bbdb-extras-read-record-quick current-prefix-arg)))
+  (bbdb-change-record record)
+  (bbdb-display-records (list record)))
+
+(defun bbdb-extras-read-record-quick (&optional first-and-last)
+  "Read and return a new BBDB record.
+To be used with `bbdb-extras-bbdb-create-quick'. FIRST-AND-LAST controls the
+reading mode; see the `bbdb-read-name' docstring for details."
+  (bbdb-editable)
+  (let ((record (bbdb-empty-record)))
+    (let (name)
+      (bbdb-error-retry
+       (setq name (bbdb-read-name first-and-last))
+       (bbdb-check-name name))
+      (setf (bbdb-record-firstname record) (car name))
+      (setf (bbdb-record-lastname record) (cdr name)))
+    record))
+
+(defun bbdb-extras-delete-field-or-record-no-confirm ()
+  "Delete the current field or record without confirmation."
+  (interactive)
+  (bbdb-delete-field-or-record (bbdb-do-records) (bbdb-current-field) t))
+
 ;;;;; Export vcard
 
 (declare-function bbdb-vcard-export "bbdb-vcard")
@@ -136,33 +165,6 @@ then the window will be split horizontally rather than vertically."
 	       (if select (select-window window))))))))
 
 (advice-add 'bbdb-pop-up-window :override #'bbdb-extras-pop-up-window)
-
-;; the two functions below replace the corresponding "non-quick"
-;; native functions. they prompt for a name only.
-(defun bbdb-extras-create-quick (record)
-  "Add a new RECORD to BBDB. Prompt for name only."
-  (interactive (list (bbdb-extras-read-record-quick current-prefix-arg)))
-  (bbdb-change-record record)
-  (bbdb-display-records (list record)))
-
-(defun bbdb-extras-read-record-quick (&optional first-and-last)
-  "Read and return a new BBDB record.
-To be used with `bbdb-extras-bbdb-create-quick'. FIRST-AND-LAST controls the
-reading mode; see the `bbdb-read-name' docstring for details."
-  (bbdb-editable)
-  (let ((record (bbdb-empty-record)))
-    (let (name)
-      (bbdb-error-retry
-       (setq name (bbdb-read-name first-and-last))
-       (bbdb-check-name name))
-      (setf (bbdb-record-firstname record) (car name))
-      (setf (bbdb-record-lastname record) (cdr name)))
-    record))
-
-(defun bbdb-extras-delete-field-or-record-no-confirm ()
-  "Delete the current field or record without confirmation."
-  (interactive)
-  (bbdb-delete-field-or-record (bbdb-do-records) (bbdb-current-field) t))
 
 (provide 'bbdb-extras)
 ;;; bbdb-extras.el ends here

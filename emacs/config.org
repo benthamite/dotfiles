@@ -13505,7 +13505,6 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
    :map bbdb-mode-map
    ("A-C-s-r" . bbdb-prev-record)
    ("A-C-s-f" . bbdb-next-record)
-   ("n" . bbdb-extras-bbdb-create-quick)
    ("c" . bbdb-copy-fields-as-kill)
    ("C-k" . nil)
    ("M-d" . nil)
@@ -13522,7 +13521,10 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package bbdb-extras
-  :after bbdb)
+  :after bbdb
+  :bind (:map bbdb-mode-map
+              ("E" . bbdb-extras-export-vcard)
+              ("n" . bbdb-extras-create-quick)))
 #+end_src
 
 ** bbdb-vcard

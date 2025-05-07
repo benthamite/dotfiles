@@ -172,7 +172,6 @@ If the subtree contains other subheadings, insert it above them."
     (org-do-demote)))
 
 ;; Adapted from hungyi.net/posts/org-mode-subtree-contents
-(autoload 'org-agenda-get-some-entry-text "org-agenda")
 (defun org-extras-get-heading-contents ()
   "Get the content text of the heading at point and add it to the `kill-ring'.
 Excludes the heading itself and any child subtrees."
@@ -358,7 +357,6 @@ number. Disable the mode if ARG is a negative number."
       (org-extras-agenda-toggle-anniversaries t)
       (org-agenda nil "a"))))
 
-(autoload 'org-agenda-goto "org-agenda")
 (defun org-extras-agenda-goto-and-start-clock ()
   "Go to the Org entry for the item at point and start the clock there.
 This must be called from an Org agenda buffer. It first checks if the
@@ -399,28 +397,23 @@ user error."
         (when (org-at-heading-p)
           (org-clock-in))))))
 
-(declare-function org-agenda-next-line "org-agenda")
 (defun org-extras-agenda-done-and-next ()
   "Temporary command to address bug when setting status via `org-agenda-todo'."
   (interactive)
   (org-agenda-todo "DONE")
   (org-agenda-next-line))
 
-(declare-function org-agenda-date-later "org-agenda")
 (defun org-extras-agenda-postpone-and-next ()
   "Postpone task at point by one day and move to next task."
   (interactive)
   (org-agenda-date-later 1)
   (org-agenda-next-line))
 
-(declare-function org-unhighlight "org-agenda")
 (defun org-extras-unhighlight ()
   "Interactive version of `org-unhighlight'."
   (interactive)
   (org-unhighlight))
 
-(defvar org-agenda-show-log)
-(declare-function org-agenda-switch-to "org-agenda")
 (defun org-extras-agenda-switch-to-dwim ()
   "Open the file at point or go to timer, based on `org-agenda' log state.
 When point is on an agenda log line, go to that line and position in the
@@ -434,7 +427,6 @@ corresponding file. Else, open the file."
 ;; in `calendar.org', which is the only way I found to hide
 ;; anniversaries temporarily from the agenda
 ;; for context, see https://orgmode.org/manual/Weekly_002fdaily-agenda.html
-(autoload 'org-agenda-redo "org-agenda")
 (declare-function org-roam-extras-id-goto "org-roam-extras")
 (defun org-extras-agenda-toggle-anniversaries (&optional just-enable)
   "Toggle display of BBDB birthdays in the agenda.
@@ -453,7 +445,6 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
     (unless just-enable
       (org-agenda-redo))))
 
-(autoload 'org-agenda-log-mode "org-agenda")
 (defun org-extras-agenda-toggle-log-mode ()
   "Toggle `org-agenda-log-mode' and `org-agenda-log-mode-items'."
   (interactive)

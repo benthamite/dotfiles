@@ -7515,6 +7515,7 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature edebug
   :custom
+  (edebug-sit-for-seconds 10)
   (edebug-sit-on-break nil)
   ;; do not truncate print results
   (print-level nil)

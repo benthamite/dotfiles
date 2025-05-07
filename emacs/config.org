@@ -7293,9 +7293,8 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
 (use-package moon-reader
   :ensure (:host github
            :repo "benthamite/moon-reader")
-  :disabled
   :after pdf-view-restore
-  :config
+  :custom
   (moon-reader-cache-directory (file-name-concat paths-dir-google-drive "Apps/Books/.Moon+/Cache/")))
 #+end_src
 

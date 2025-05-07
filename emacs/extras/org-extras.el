@@ -403,9 +403,7 @@ user error."
 (defun org-extras-agenda-done-and-next ()
   "Temporary command to address bug when setting status via `org-agenda-todo'."
   (interactive)
-  (org-agenda-goto)
-  (org-todo "DONE")
-  (org-extras-agenda-switch-to-agenda-current-day)
+  (org-agenda-todo "DONE")
   (org-agenda-next-line))
 
 (declare-function org-agenda-date-later "org-agenda")

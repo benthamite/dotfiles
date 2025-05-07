@@ -10597,21 +10597,27 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   (bibtex-extras-replace-element-by-name
    bibtex-biblatex-entry-alist
    "Online" '("Online" "Online Resource"
-              (("author" nil nil 0) ("title") ("journaltitle" nil nil 3)
-               ("date" nil nil 1) ("year" nil nil -1)
-               ("doi" nil nil 2) ("url" nil nil 2))
-              nil
-              (("subtitle") ("language") ("version") ("note")
-               ("organization") ("month")
-               ("pubstate") ("eprintclass" nil nil 4) ("primaryclass" nil nil -4)
-               ("eprinttype" nil nil 5) ("archiveprefix" nil nil -5) ("urldate"))))
+	      (("author" nil nil 0) ("title") ("journaltitle" nil nil 3)
+	       ("date" nil nil 1) ("year" nil nil -1)
+	       ("doi" nil nil 2) ("url" nil nil 2))
+	      nil
+	      (("subtitle") ("language") ("version") ("note")
+	       ("organization") ("month")
+	       ("pubstate") ("eprintclass" nil nil 4) ("primaryclass" nil nil -4)
+	       ("eprinttype" nil nil 5) ("archiveprefix" nil nil -5) ("urldate"))))
+
+  (add-to-list 'bibtex-biblatex-entry-alist
+	       '("Performance" "A performance entry"
+		 (("author") ("title") ("date")) ; Required fields
+		 nil ; Crossref fields
+		 (("venue") ("location") ("note"))))
   :bind
   (:map bibtex-mode-map
-        ("s-a" . bibtex-extras-set-field)
-        ("s-d" . bibtex-extras-url-to-pdf-attach)
-        ("s-h" . bibtex-extras-url-to-html-attach)
-        ("s-i" . bibtex-extras-open-in-ebib)
-        ("s-t" . bibtex-extras-move-entry-to-tlon)))
+	("s-a" . bibtex-extras-set-field)
+	("s-d" . bibtex-extras-url-to-pdf-attach)
+	("s-h" . bibtex-extras-url-to-html-attach)
+	("s-i" . bibtex-extras-open-in-ebib)
+	("s-t" . bibtex-extras-move-entry-to-tlon)))
 #+end_src
 
 ** bibtex-completion

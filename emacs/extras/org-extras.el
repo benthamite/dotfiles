@@ -967,7 +967,7 @@ empty headings, which trigger an `org-roam' warning."
   "Menu for Tlön projects."
   [["Tlön"
     ("t t" "tlon"              (lambda () (interactive) (org-roam-extras-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A")))
-    ("t e" "tlon-emacs"        (lambda () (interactive) (org-roam-extras-id-goto "E38478D6-1540-4496-83F3-43C964567A15")))
+    ("t e" "tlon.el"        (lambda () (interactive) (org-roam-extras-id-goto "E38478D6-1540-4496-83F3-43C964567A15")))
     ("t i" "tlon inbox"        (lambda () (interactive) (org-roam-extras-id-goto "E9C77367-DED8-4D59-B08C-E6E1CCDDEC3A")))]
    ["Babel"
     ("b c" "babel"             (lambda () (interactive) (org-roam-extras-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24")))

@@ -153,11 +153,11 @@ deadline).
 
 Optional FILTER-SPEC can be:
 - nil: no filter applied
-- t: prompt user to filter by tag or directory
+- t or prefix arg: prompt user to filter by tag or directory
 - (:tag TAG): filter by the specified TAG
 - (:dir DIRECTORY): filter by the specified DIRECTORY"
   (interactive "P")
-  (let* ((filter-spec (if (or (eq filter-spec t) (consp filter-spec))
+  (let* ((filter-spec (if (or (eq filter-spec t) current-prefix-arg)
                           (let ((filter-type (completing-read "Filter by: " '("tag" "directory"))))
                             (cond
                              ((equal filter-type "tag")

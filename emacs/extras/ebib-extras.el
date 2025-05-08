@@ -32,6 +32,7 @@
 (require 'ebib)
 (require 'paths)
 (require 'shut-up)
+(require 's)
 
 ;;;; User options
 
@@ -158,7 +159,7 @@ making it suitable for asynchronous callbacks."
       (unless (and file-field-contents
 		   (catch 'file-exists
 		     (dolist (file (ebib--split-files file-field-contents))
-		       (when (string= file file-name)
+		       (when (string= (s-trim file) file-name)
 			 (throw 'file-exists file)))))
 	;; Add the file using ebib-set-field-value which handles db update
 	(ebib-set-field-value field file-name key db ";")

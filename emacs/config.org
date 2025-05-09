@@ -6928,7 +6928,7 @@ https://gitlab.com/chrisberkhout/pricehist
   (init-post-init-hook . tlon-initialize)
 
   :bind
-  (("M-J" . tlon-list-all-todos)
+  (("M-J" . tlon-node-find)
    ("H-r" . tlon-dispatch)
    ("H-?" . tlon-md-insert-mdx-cite)
    ("A-C-p" . tlon-grep)))

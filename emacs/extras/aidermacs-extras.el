@@ -31,6 +31,15 @@
 
 ;;;; User options
 
+(defgroup aidermacs-extras ()
+  "Extensions for `aidermacs'."
+  :group 'aidermacs-extras)
+
+(defcustom aidermacs-extras-confirm-kill-buffer t
+  "If non-nil, confirm before killing an Aidermacs buffer with a running process."
+  :type 'boolean
+  :group 'aidermacs-extras)
+
 ;;;; Main variables
 
 ;;;; Functions
@@ -57,12 +66,20 @@ file in Emacs for better performance with large files."
       (message "Chat history file not found: %s" history-file))))
 
 (defun aidermacs-extras-confirm-kill-buffer ()
-  "Confirm before killing a comint buffer with an active Aidermacs process."
-  (unless (and (eq major-mode 'comint-mode)
-               (term-check-proc (current-buffer))
-               (string-match-p "\\*aidermacs" (buffer-name))
-               (null (yes-or-no-p "Buffer has a running process. Kill anyway? ")))
+  "Query before killing an Aidermacs buffer with a running process.
+Return t if the buffer can be killed (i.e., if it's not an
+aidermacs comint buffer with a process, or if the user confirms
+the kill). Return nil if the user decides not to kill the
+buffer."
+  (if (and (derived-mode-p 'comint-mode)
+           (buffer-name)
+           (string-prefix-p "*aidermacs" (buffer-name))
+           (get-buffer-process (current-buffer))
+	   aidermacs-extras-confirm-kill-buffer)
+      (yes-or-no-p "Are you sure you want to kill this Aidermacs buffer? ")
     t))
+
+(add-hook 'kill-buffer-query-functions #'aidermacs-extras-confirm-kill-buffer)
 
 (defun aidermacs-extras-copy-prompt-region ()
   "Copy a region of the Aider history buffer based on user prompt blocks.

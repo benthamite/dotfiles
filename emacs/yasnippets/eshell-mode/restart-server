@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: restart-server
+# key: rs
+# contributor: Pablo Stafforini
+# --
+./launch.py stop dev & ./launch.py start dev

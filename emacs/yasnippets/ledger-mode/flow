@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: flow
+# key: flow
+# contributor: Pablo Stafforini
+# --
+`(format-time-string "%Y-%m-%d")` Flow
+    Expenses:Housing:Utility               $1 ARS
+    Assets:Mercado Pago  
+
+

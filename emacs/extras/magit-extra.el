@@ -174,7 +174,7 @@ return instead the full path; if PATH is `sans-dir', return the filename only."
   (magit-with-toplevel
     (magit-run-git-async "submodule" "update" "--init" args)))
 
-(transient-define-suffix magit-extras-pull-all-submodules (args)
+(transient-define-suffix magit-extras-pull-all-submodules (_args)
   "Pull latest changes in all submodules."
   :class 'magit--git-submodule-suffix
   :description "Pull all modules      git submodule foreach --recursive git pull"

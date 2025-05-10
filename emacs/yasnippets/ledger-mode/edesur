@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: edesur
+# key: edesur
+# contributor: Pablo Stafforini
+# --
+`(format-time-string "%Y-%m-%d")` Edesur
+    Expenses:Housing:Utility               $1 ARS
+    Assets:Comafi
+

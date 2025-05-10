@@ -8227,7 +8227,6 @@ This package evolved out of gptel-extras.
 :ID:       CEB2A11F-3C30-4E80-B59B-9B54C50C0AA4
 :END:
 
-
 /[[https://github.com/ahyatt/semext][semext]] provides LLM-powered semantic versions of various Emacs commands./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)

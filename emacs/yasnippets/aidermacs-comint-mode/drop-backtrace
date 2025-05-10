@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: drop-backtrace
+# key: db
+# contributor: Pablo Stafforini
+# --
+/drop `(expand-file-name "~/Downloads/backtrace.el")`

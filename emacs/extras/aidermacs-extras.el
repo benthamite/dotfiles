@@ -35,13 +35,6 @@
   "Extensions for `aidermacs'."
   :group 'aidermacs-extras)
 
-(defcustom aidermacs-extras-confirm-kill-buffer t
-  "If non-nil, confirm before killing an Aidermacs buffer with a running process."
-  :type 'boolean
-  :group 'aidermacs-extras)
-
-;;;; Main variables
-
 ;;;; Functions
 
 (defun aidermacs-extras-copy-recent-history-to-kill-ring (&optional line-count)
@@ -74,12 +67,9 @@ buffer."
   (if (and (derived-mode-p 'comint-mode)
            (buffer-name)
            (string-prefix-p "*aidermacs" (buffer-name))
-           (get-buffer-process (current-buffer))
-	   aidermacs-extras-confirm-kill-buffer)
+           (get-buffer-process (current-buffer)))
       (yes-or-no-p "Are you sure you want to kill this Aidermacs buffer? ")
     t))
-
-(add-hook 'kill-buffer-query-functions #'aidermacs-extras-confirm-kill-buffer)
 
 (defun aidermacs-extras-copy-prompt-region ()
   "Copy a region of the Aider history buffer based on user prompt blocks.

@@ -1,0 +1,45 @@
+# -*- mode: snippet -*-
+# name: personal-package-readme
+# key: ppr
+# contributor: Pablo Stafforini
+# --
+#+title: $1
+
+* $1
+
+=$1= 
+
+** Introduction
+
+** Installation
+Clone this repository to your Emacs load path and add this to your =init.el= file:
+
+#+begin_src emacs-lisp
+(require '$2)
+#+end_src
+
+*** With =use-package=
+You can also install this package with =use-package=:
+
+#+begin_src emacs-lisp
+;; with vc
+(use-package $2
+  :vc (:url "https://github.com/benthamite/$2"))
+
+;; with elpaca
+(use-package $2
+  :ensure (:host github :repo "benthamite/$2"))
+
+;; with straight
+(use-package $2
+  :straight (:host github :repo "benthamite/$2"))
+
+;; with quelpa
+(use-package $2
+  :quelpa ($2 :fetcher github :repo "benthamite/$2"))
+#+end_src
+
+** Configuration
+** Usage
+** Troubleshooting
+The package has not been extensively tested. If you encounter any problems, feel free to open an issue.

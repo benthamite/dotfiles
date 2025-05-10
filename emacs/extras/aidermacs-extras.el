@@ -84,11 +84,11 @@ buffer."
 (defun aidermacs-extras-copy-prompt-region ()
   "Copy a region of the Aider history buffer based on user prompt blocks.
 Prompts the user to select the first line of a start prompt block
-(consecutive lines beginning with '#### ') and an end prompt block.
-Copies the text from the beginning of the start block's first line
-up to the beginning of the *next* block after the selected end block
-(or end of buffer if the end block is the last one).
-If the user presses RET for the end prompt, copies to the end of the buffer."
+\\=(consecutive lines beginning with '#### ') and an end prompt block. Copies
+the text from the beginning of the start block's first line up to the beginning
+of the *next* block after the selected end block (or end of buffer if the end
+block is the last one). If the user presses RET for the end prompt, copies to
+the end of the buffer."
   (interactive)
   (unless (string-match-p "\\.aider\\.chat\\.history\\.md\\'" (or (buffer-file-name) ""))
     (message "Warning: This buffer might not be an Aider history file."))

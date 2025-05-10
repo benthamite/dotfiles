@@ -12628,7 +12628,6 @@ These key bindings produce the same behavior in eww.
   :after elfeed
   :custom
   (rmh-elfeed-org-files (list paths-file-feeds-pablo))
-  (rmh-elfeed-org-auto-ignore-invalid-feeds t)
 
   :config
   (elfeed-org))

@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: metrogas
+# key: metrogas
+# contributor: Pablo Stafforini
+# --
+`(format-time-string "%Y-%m-%d")` Metrogas
+    Expenses:Housing:Utility               $1 ARS
+    Assets:Mercado Pago  
+

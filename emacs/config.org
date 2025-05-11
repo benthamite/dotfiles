@@ -8193,8 +8193,6 @@ This package evolved out of gptel-extras.
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package aidermacs
   :custom
-  (aidermacs-use-architect-mode nil)
-  (aidermacs-auto-accept-architect nil)
   (aidermacs-auto-commits t)
   (aidermacs-show-diff-after-change nil)
   ;; for thinking mode, add "--thinking-tokens" "16k" to `aidermacs-extra-args'

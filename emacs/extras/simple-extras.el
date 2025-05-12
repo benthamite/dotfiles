@@ -788,7 +788,7 @@ Optionally, remove accents in region from BEGIN to END."
   (downcase
    (simple-extras-slug-hyphenate
     (simple-extras-asciify-string
-     (replace-regexp-in-string "[][{}!@#$%^&*()+'\"?,\|;:~`‘’“”/=]*" "" string)))))
+     (replace-regexp-in-string "[][{}!@#$%^&*()+'\"?,\\\\\|;:~`‘’“”/=]*" "" string)))))
 
 ;;;###autoload
 (defun simple-extras-slugify-clipboard ()

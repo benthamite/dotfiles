@@ -12550,7 +12550,7 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
    ("A-C-s-r" . shr-heading-previous)
    ("A-C-s-f" . shr-heading-next)
    ("q" . nil)
-   ("a" . zotra-extras-add)
+   ("a" . zotra-extras-add-entry)
    ("b" . nil)
    ("f" . ace-link-eww)
    ("F" . ace-link-extras-eww-new-buffer)

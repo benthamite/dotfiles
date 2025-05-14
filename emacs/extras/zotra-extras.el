@@ -107,24 +107,24 @@ entry. BIBFILE is the file where the BibTeX entry should be saved; if nil,
 prompt the user to select it. If DO-NOT-OPEN is non-nil, do not open the entry
 in Ebib after adding it."
   (interactive)
+  (pcase major-mode
+    ('elfeed-show-mode (elfeed-extras-kill-link-url-of-entry))
+    ('eww-mode (eww-copy-page-url)))
   (let* ((bibfile (or bibfile
 		      (setq zotra-extras-most-recent-bibfile (zotra-extras-set-bibfile))))
 	 (url-or-search-string (or url-or-search-string
 				   (read-string "URL or search string: " (ignore-errors (current-kill 0 t))))))
-    (pcase major-mode
-      ('elfeed-show-mode (elfeed-extras-kill-link-url-of-entry))
-      ('eww-mode (eww-copy-page-url)))
-   (when (and zotra-extras-use-mullvad-p
-              (string-match-p "imdb\\.com" url-or-search-string))
-     (message "IMDb URL detected and `zotra-extras-use-mullvad-p' is set. Connecting via Mullvad...")
-     (mullvad-connect-to-website "IMDb" 1 'silently))
-   (condition-case err
-(zotra-extras--add-and-maybe-open url-or-search-string entry-format bibfile do-not-open)
+    (when (and zotra-extras-use-mullvad-p
+	       (string-match-p "imdb\\.com" url-or-search-string))
+      (message "IMDb URL detected and `zotra-extras-use-mullvad-p' is set. Connecting via Mullvad...")
+      (mullvad-connect-to-website "IMDb" 1 'silently))
+    (condition-case err
+	(zotra-extras--add-and-maybe-open url-or-search-string entry-format bibfile do-not-open)
       (error
        (if (string-match-p "JSON parse error: Internal Server Error" (error-message-string err))
 	   (let ((zotra-backend 'citoid))
-             (message "Request with main backend failed. Retrying with `citoid'...")
-             (zotra-extras--add-and-maybe-open url-or-search-string entry-format bibfile do-not-open))
+	     (message "Request with main backend failed. Retrying with `citoid'...")
+	     (zotra-extras--add-and-maybe-open url-or-search-string entry-format bibfile do-not-open))
 	 (signal (car err) (cdr err)))))))
 
 (defun zotra-extras--add-and-maybe-open (url-or-search-string entry-format bibfile &optional do-not-open)

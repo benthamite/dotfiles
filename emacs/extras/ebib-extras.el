@@ -106,7 +106,7 @@ This function splits the current window if necessary and selects a target window
 ;;;###autoload
 (defun ebib-extras-reload-database-no-confirm (db)
   "Reload the Ebib database DB from disk without asking for confirmation.
-If the database is modified, it will still prompt unless `yes-or-no-p` returns
+If the database is modified, it will still prompt unless `yes-or-no-p' returns
 true. It preserves the current entry key and updates buffers."
   (ebib--execute-when
     (entries
@@ -115,8 +115,6 @@ true. It preserves the current entry key and updates buffers."
        (ebib-db-set-current-entry-key (ebib--get-key-at-point) db)
        (ebib--reload-database db)
        (ebib--set-modified nil db)
-       (save-window-excursion
-	 (ebib--update-buffers))
        (message "Database reloaded")))
     (default
      (beep))))
@@ -1274,16 +1272,22 @@ is created following the same schema as notes created with
 
 (autoload 'file-notify-add-watch "filenotify")
 ;;;###autoload
+(defun ebib-extras-auto-reload-database (nth)
+  "Monitor the NTH db file for modifications and reload its Ebib db when so."
+  (let* ((db (nth nth ebib--databases))
+	 (db-file (ebib-db-get-filename db)))
+    (file-notify-add-watch
+     db-file
+     '(change attribute-change)
+     (lambda (_event)
+       (message "Reloading database...")
+       (ebib-extras-reload-database-no-confirm db)))))
+
+;;;###autoload
 (defun ebib-extras-auto-reload-databases ()
-  "Check if any db file has been modified and reload its Ebib database if so."
-  (dolist (db ebib--databases)
-    (let ((db-file (ebib-db-get-filename db)))
-      (file-notify-add-watch
-       db-file
-       '(change attribute-change)
-       (lambda (_event)
-	 (message "reloading database")
-	 (ebib-extras-reload-database-no-confirm db))))))
+  "Monitor each db file for modifications and reload its Ebib db when so."
+  (dotimes (n (length ebib--databases))
+    (ebib-extras-auto-reload-database n)))
 
 (defun ebib-extras-no-db-modified-p ()
   "Return t iff no databases are modified."

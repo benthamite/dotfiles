@@ -149,13 +149,8 @@ making it suitable for asynchronous callbacks."
 	 (field "file"))
     (unless db
       (error "Cannot find database containing key %s" key))
-    ;; Get existing files directly from the database entry
     (let* ((entry (ebib-db-get-entry key db))
-           ;; Use string-equal for case-insensitive field comparison instead of ebib--ignore-case
 	   (file-field-contents (alist-get field entry nil nil #'string-equal)))
-      ;; Check if the file is already listed
-      ;; If file-field-contents is nil, the 'and' fails, and we add the file.
-      ;; If it's a string, ebib--split-files is called correctly.
       (unless (and file-field-contents
 		   (catch 'file-exists
 		     (dolist (file (ebib--split-files file-field-contents))
@@ -167,9 +162,7 @@ making it suitable for asynchronous callbacks."
 	(ebib--set-modified t db)
 	;; Request UI update (will happen later if needed)
 	(setq ebib--needs-update t)
-        ;; Optionally, save immediately if it's an auto-save file
-        (when (member (ebib-db-get-filename db) ebib-extras-auto-save-files)
-          (ebib--save-database db '(16)))))))
+        (ebib--save-database db '(16))))))
 
 (defconst ebib-extras-book-like-entry-types
   (let ((lowercase '("book" "collection" "mvbook" "inbook" "incollection" "bookinbook" "suppbook")))
@@ -1187,10 +1180,6 @@ is created following the same schema as notes created with
 ;; `ebib-extras-auto-save-databases' saves a database to its file when it
 ;; detects that the db has been modified. `ebib-extras-auto-reload-databases'
 ;; reloads a database from its file detects that the file has been modified.
-;; since reloading a large database can be slow, we only reload the databases
-;; that are in the list `ebib-extras-auto-save-files'. for the remaining dbs, we
-;; use `ebib-extras-reload-all-databases', which is meant to be triggered by an
-;; idle timer (set in the config file).
 
 (defun ebib-extras-auto-save-databases ()
   "Check if any Ebib database has been modified and save it to its file if so."
@@ -1204,17 +1193,15 @@ is created following the same schema as notes created with
 (autoload 'file-notify-add-watch "filenotify")
 ;;;###autoload
 (defun ebib-extras-auto-reload-databases ()
-  "Check if any db file has been modified and reload its Ebib database if so.
-The list of files to be watched is defined in `ebib-extras-auto-save-files'."
+  "Check if any db file has been modified and reload its Ebib database if so."
   (dolist (db ebib--databases)
     (let ((db-file (ebib-db-get-filename db)))
-      (when (member db-file ebib-extras-auto-save-files)
-	(file-notify-add-watch
-	 db-file
-	 '(change attribute-change)
-	 (lambda (_event)
-	   (message "reloading database")
-	   (ebib-extras-reload-database-no-confirm db)))))))
+      (file-notify-add-watch
+       db-file
+       '(change attribute-change)
+       (lambda (_event)
+	 (message "reloading database")
+	 (ebib-extras-reload-database-no-confirm db))))))
 
 (defun ebib-extras-no-db-modified-p ()
   "Return t iff no databases are modified."

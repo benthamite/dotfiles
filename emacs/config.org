@@ -11036,8 +11036,6 @@ The macro below generates the commands correctly. But attempting to define key b
 (use-personal-package ebib-extras
   :init
   (advice-add 'ebib-init :after #'ebib-extras-auto-reload-databases)
-  ;; reloading the bibliographies is time-intensive, so we try to do it in the background
-  (run-with-idle-timer (* 30 60) t #'ebib-extras-reload-all-databases)
 
   :hook
   (ebib-add-entry . ebib-extras-create-list-of-existing-authors)

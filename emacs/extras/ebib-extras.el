@@ -103,6 +103,8 @@ The big files containing the `old' bibliographic entries are excluded.")
        (ebib-db-set-current-entry-key (ebib--get-key-at-point) db)
        (ebib--reload-database db)
        (ebib--set-modified nil db)
+       (save-window-excursion
+	 (ebib--update-buffers))
        (message "Database reloaded")))
     (default
      (beep))))

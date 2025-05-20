@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: crop-video
+# key: cv
+# contributor: Pablo Stafforini
+# --
+ffmpeg -i "${1:input}" -ss ${2:HH:MM:SS} -to ${3:HH:MM:SS} -c copy output.mp4

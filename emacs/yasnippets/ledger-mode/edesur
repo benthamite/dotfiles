@@ -3,6 +3,10 @@
 # key: edesur
 # contributor: Pablo Stafforini
 # --
+`(format-time-string "%Y-%m-%d")` Pablo Stafforini
+    Assets:Mercado Pago                   -$1 ARS
+    Assets:Comafi
+
 `(format-time-string "%Y-%m-%d")` Edesur
     Expenses:Housing:Utility               $1 ARS
     Assets:Comafi

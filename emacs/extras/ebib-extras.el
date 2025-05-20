@@ -139,12 +139,11 @@ The big files containing the `old' bibliographic entries are excluded.")
   "Update contents of FILE-NAME in field `file' for entry KEY.
 This function operates directly on the database and avoids UI interaction,
 making it suitable for asynchronous callbacks."
-  ;; Find the database containing the key by iterating through ebib--databases
   (let* ((db (catch 'found
 	       (dolist (d ebib--databases)
 		 (when (ebib-db-has-key key d)
 		   (throw 'found d)))
-	       nil)) ; Return nil if not found
+	       nil))
 	 (field "file"))
     (unless db
       (error "Cannot find database containing key %s" key))
@@ -155,13 +154,10 @@ making it suitable for asynchronous callbacks."
 		     (dolist (file (ebib--split-files file-field-contents))
 		       (when (string= (string-trim file) file-name)
 			 (throw 'file-exists file)))))
-	;; Add the file using ebib-set-field-value which handles db update
 	(ebib-set-field-value field file-name key db ";")
-	;; Mark the database as modified and trigger potential auto-save
 	(ebib--set-modified t db)
-	;; Request UI update (will happen later if needed)
 	(setq ebib--needs-update t)
-        (ebib--save-database db '(16))))))
+	(ebib--save-database db '(16))))))
 
 (defconst ebib-extras-book-like-entry-types
   (let ((lowercase '("book" "collection" "mvbook" "inbook" "incollection" "bookinbook" "suppbook")))

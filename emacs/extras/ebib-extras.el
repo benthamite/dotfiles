@@ -32,7 +32,6 @@
 (require 'ebib)
 (require 'paths)
 (require 'shut-up)
-(require 's)
 
 ;;;; User options
 
@@ -154,7 +153,7 @@ making it suitable for asynchronous callbacks."
       (unless (and file-field-contents
 		   (catch 'file-exists
 		     (dolist (file (ebib--split-files file-field-contents))
-		       (when (string= (s-trim file) file-name)
+		       (when (string= (string-trim file) file-name)
 			 (throw 'file-exists file)))))
 	;; Add the file using ebib-set-field-value which handles db update
 	(ebib-set-field-value field file-name key db ";")
@@ -1035,35 +1034,28 @@ The list of article download functions is specified by
     (default
      (beep))))
 
-(declare-function s-downcase "s")
-(declare-function s-capitalize "s")
 (defun ebib-extras-sentence-case ()
   "Convert the current field to sentence case."
   (interactive)
   (ebib--execute-when
     (entries
      (let* ((field (ebib--current-field))
-	    (value (ebib-extras-get-field field))
-	    (words (split-string value)))
-       (setq words (mapcar
-		    (lambda (word)
-		      (if
-			  ;; match words containing {} or \ which are probably
-			  ;; LaTeX or protected words
-			  (string-match "\\$\\|{\\|}\\|\\\\" word)
-			  word
-			(s-downcase word)))
-		    words))
-       ;; capitalize first word
-       (setf (car words) (s-capitalize (car words)))
+            (value (ebib-extras-get-field field))
+            (words (split-string value)))
+       (setq words
+             (mapcar (lambda (word)
+                       (if (string-match "\\$\\|{\\|}\\|\\\\" word)
+                           word
+                         (downcase word)))
+                     words))
+       (setf (car words) (capitalize (car words)))
        (setq value (mapconcat 'identity words " "))
        (ebib-set-field-value field value (ebib--get-key-at-point) ebib--cur-db 'overwrite 'unbraced)
        (ebib--store-multiline-text (current-buffer))
        (ebib--redisplay-field field)
        (ebib--redisplay-index-item field)
        (ebib-save-current-database nil)))
-    (default
-     (beep))))
+    (default (beep))))
 
 (declare-function bibtex-extras-get-entry-as-string "bibtex-extras")
 (defun ebib-extras-get-or-open-entry ()

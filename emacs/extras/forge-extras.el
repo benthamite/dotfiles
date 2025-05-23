@@ -900,10 +900,10 @@ This command helps in finding the Node ID required for variables like
           (with-current-buffer buffer
             (erase-buffer)
             (insert (format "Project Fields for Project Node ID: %s\n\n" forge-extras-project-node-id))
-            (insert (format "%-*s | Field ID\n" max-name-len "Field Name"))
+            (insert (format (format "%%-%ds | Field ID\n" max-name-len) "Field Name"))
             (insert (format "%s-|-%s\n" (make-string max-name-len ?-) (make-string 30 ?-))) ; Adjust 30 if ID length varies significantly
             (dolist (field fields)
-              (insert (format "%-*s | %s\n" max-name-len (car field) (cdr field)))))
+              (insert (format (format "%%-%ds | %%s\n" max-name-len) (car field) (cdr field)))))
           (display-buffer buffer)
           (message "Project fields displayed in *GitHub Project Fields* buffer."))
       (user-error "Could not retrieve or parse project fields for Project Node ID: %s" forge-extras-project-node-id))))

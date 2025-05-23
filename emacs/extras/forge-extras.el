@@ -529,7 +529,7 @@ This function specifically looks for data related to project number
                   (setq status-name (cdr (assoc "singleSelectValue" status-node)))
                   (setq selected-status-option-id (cdr (assoc "optionId" status-node)))
                   (setq status-field-id (cdr (assoc "id" (cdr (assoc "field" status-node))))))))
-              (cl-return-from project-item-loop)))))
+            (cl-return-from project-item-loop))))
       (list :issue-node-id issue-node-id
             :title title
             :assignees assignees
@@ -606,7 +606,7 @@ Updates are performed via GitHub API calls."
            (target-project-item-id current-project-item-id))
 
       (unless issue-node-id
-        (user-error "Could not retrieve GitHub Issue Node ID. Aborting.")
+        (user-error "Could not retrieve GitHub Issue Node ID. Aborting")
         (cl-return-from forge-extras-set-project-status))
 
       (when (string= chosen-status-name current-status-name)
@@ -620,7 +620,7 @@ Updates are performed via GitHub API calls."
               (message "Adding issue #%s to project %s..." issue-number forge-extras-project-node-id)
               (setq target-project-item-id (forge-extras-gh-add-issue-to-project forge-extras-project-node-id issue-node-id))
               (unless target-project-item-id
-                (user-error "Failed to add issue to project. Aborting status update.")
+                (user-error "Failed to add issue to project. Aborting status update")
                 (cl-return-from forge-extras-set-project-status))
               (message "Issue added to project (New Item ID: %s)." target-project-item-id))
           (progn

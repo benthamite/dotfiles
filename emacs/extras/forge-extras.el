@@ -689,6 +689,22 @@ alist like ((PROPERTY-KEY . value) ...)."
         (t ; Alist ((KEY . VAL) ...)
          (cdr (assoc property-key field-obj)))))
 
+(defun forge-extras--ensure-issue-in-project (issue-number issue-node-id current-project-item-id prompt-message)
+  "Add issue to project when needed and return its project item ID.
+ISSUE-NUMBER is the human-readable issue number.  ISSUE-NODE-ID is the
+GraphQL node ID for that issue.  CURRENT-PROJECT-ITEM-ID is an existing
+project item ID or nil.  PROMPT-MESSAGE is shown when the issue is not yet
+in the project.  If the user agrees, the issue is added and the new item ID
+is returned; otherwise nil is returned."
+  (or current-project-item-id
+      (when (y-or-n-p prompt-message)
+        (let ((new-id (forge-extras-gh-add-issue-to-project
+                       forge-extras-project-node-id
+                       issue-node-id)))
+          (unless new-id
+            (message "Failed to add issue #%s to project." issue-number))
+          new-id)))
+
 (defun forge-extras-gh-add-issue-to-project (project-node-id issue-node-id)
   "Add ISSUE-NODE-ID to PROJECT-NODE-ID.
 Returns the new project item's Node ID, or nil on failure."

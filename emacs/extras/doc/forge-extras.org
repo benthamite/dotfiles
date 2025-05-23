@@ -90,6 +90,38 @@ The command ~forge-previous-message~ moves the point to the start of the previou
 #+findex: forge-extras-copy-message-at-point-as-kill
 The command ~forge-extras-copy-message-at-point-as-kill~ copies the body text of the Forge post section at point to the Emacs kill ring, preserving its formatting.
 
+** Set GitHub Project Status
+:PROPERTIES:
+:CUSTOM_ID: h:forge-extras-set-project-status
+:END:
+
+#+findex: forge-extras-set-project-status
+The command ~forge-extras-set-project-status~ allows you to set the status of the current Forge issue or pull request within a configured GitHub Project.
+- It prompts for a status from a predefined list (configured via ~forge-extras-status-option-ids-alist~).
+- If the issue is not already part of the target GitHub Project (configured by ~forge-extras-project-owner~ and ~forge-extras-project-number~), it will prompt the user whether to add it.
+- The changes are made by interacting with the GitHub GraphQL API.
+- After a successful update, if in a `forge-topic-mode` buffer, it attempts to refresh the topic.
+
+This functionality relies on the `gh` command-line tool being installed and authenticated.
+
+* Customization
+:PROPERTIES:
+:CUSTOM_ID: h:customization
+:END:
+
+=forge-extras.el= offers several customization options, primarily for the GitHub Project integration features. These are typically set using Emacs' M-x customize-group RET forge-extras-projects RET.
+
++ ~forge-extras-project-owner~: The GitHub organization or user owning the target project (default: "tlon-team").
+#+vindex: forge-extras-project-owner
++ ~forge-extras-project-number~: The number of the target GitHub Project (default: 9).
+#+vindex: forge-extras-project-number
++ ~forge-extras-project-node-id~: The GraphQL Node ID of the target GitHub Project. This usually needs to be specific to the project.
+#+vindex: forge-extras-project-node-id
++ ~forge-extras-status-field-node-id~: The GraphQL Node ID of the "Status" field within the target project.
+#+vindex: forge-extras-status-field-node-id
++ ~forge-extras-status-option-ids-alist~: An alist mapping human-readable status names (e.g., "Doing", "Next") to their corresponding GraphQL Option IDs for the "Status" field in the target project. This list is used for prompting the user.
+#+vindex: forge-extras-status-option-ids-alist
+
 * Enhanced Functionality
 :PROPERTIES:
 :CUSTOM_ID: h:enhanced-functionality
@@ -149,3 +181,9 @@ The callback function ~forge-extras-update-github-counter~ first checks if the A
 :INDEX: vr
 :CUSTOM_ID: h:variable-index
 :END:
+
+* Local Variables :noexport:
+# Local Variables:
+# eval: (put 'texinfo-show-flindex-menu 'safe-local-variable #'functionp)
+# eval: (put 'texinfo-show-menu 'safe-local-variable #'functionp)
+# End:

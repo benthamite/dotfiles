@@ -355,6 +355,26 @@ With prefix ARG is passed, open in new EWW buffer."
 		   (url-fullness url)))
     (eww-browse-url (url-recreate-url new-url))))
 
+;;;;; open with
+
+(defun eww-extras-open-with-xwidget ()
+  "Open URL in xwidget-webkit."
+  (interactive)
+  (unless (derived-mode-p 'eww-mode)
+    (user-error "Not in eww mode"))
+  (if-let ((url (eww-current-url)))
+      (xwidget-webkit-browse-url url)
+    (user-error "No URL at point")))
+
+(defun eww-extras-open-with-eww ()
+  "Open URL in `eww'."
+  (interactive)
+  (unless (derived-mode-p 'xwidget-webkit-mode)
+    (user-error "Not in eww mode"))
+  (if-let ((url (xwidget-webkit-uri (xwidget-webkit-current-session))))
+      (eww-browse-url url)
+    (user-error "No URL at point")))
+
 ;;;;; Misc
 
 (declare-function elfeed-tube-fetch "elfeed-tube")

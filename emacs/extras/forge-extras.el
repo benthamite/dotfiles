@@ -266,7 +266,7 @@ Default is for tlon-team/Project #9."
   :group 'forge-extras-projects)
 
 (defcustom forge-extras-status-field-node-id "PVTSSF_lADOBtGWf84A5jZfzguVNY8"
-  "The global Relay Node ID of the \"Status\" field within the target GitHub Project.
+  "The global Relay Node ID of the \"Status\" field within the Project.
 Default is for tlon-team/Project #9's Status field."
   :type 'string
   :group 'forge-extras-projects)

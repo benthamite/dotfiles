@@ -512,24 +512,38 @@ This function specifically looks for data related to project number
            (selected-status-option-id nil)
            (status-name nil)
            (effort nil))
-      (cl-block project-item-loop
-        (dolist (item project-items-nodes)
-          (let* ((project-node (cdr (assoc 'project item)))
-                 (project-number (cdr (assoc 'number project-node))))
-            (when (eql project-number forge-extras-project-number)
-              (setq project-item-id (cdr (assoc 'id item)))
-              (let ((field-values (cdr (assoc 'nodes (cdr (assoc 'fieldValues item))))))
-                (when-let ((effort-node (seq-find (lambda (fv-item)
-                                                    (string= "Estimate" (cdr (assoc 'name (cdr (assoc 'field fv-item))))))
-                                                  field-values)))
-                  (setq effort (cdr (assoc 'numberValue effort-node))))
-                (when-let ((status-node (seq-find (lambda (fv-item)
-                                                    (string= "Status" (cdr (assoc 'name (cdr (assoc 'field fv-item))))))
-                                                  field-values)))
-                  (setq status-name (cdr (assoc 'singleSelectValue status-node)))
-                  (setq selected-status-option-id (cdr (assoc 'optionId status-node)))
-                  (setq status-field-id (cdr (assoc 'id (cdr (assoc 'field status-node))))))))
-            (cl-return-from project-item-loop))))
+      ;; Locate the project item that belongs to `forge-extras-project-number'.
+      (when-let* ((target-item
+                   (seq-find
+                    (lambda (it)
+                      (let* ((proj      (cdr (assoc 'project it)))
+                             (proj-num  (cdr (assoc 'number proj))))
+                        (eql proj-num forge-extras-project-number)))
+                    project-items-nodes)))
+        (setq project-item-id (cdr (assoc 'id target-item)))
+        (let ((field-values (cdr (assoc 'nodes (cdr (assoc 'fieldValues target-item))))))
+          ;; Effort
+          (when-let ((effort-node
+                      (seq-find
+                       (lambda (fv)
+                         (string= "Estimate"
+                                  (forge-extras--get-field-property-value
+                                   (cdr (assoc 'field fv)) 'name)))
+                       field-values)))
+            (setq effort (cdr (assoc 'numberValue effort-node))))
+          ;; Status
+          (when-let ((status-node
+                      (seq-find
+                       (lambda (fv)
+                         (string= "Status"
+                                  (forge-extras--get-field-property-value
+                                   (cdr (assoc 'field fv)) 'name)))
+                       field-values)))
+            (setq status-name               (cdr (assoc 'singleSelectValue status-node)))
+            (setq selected-status-option-id (cdr (assoc 'optionId status-node)))
+            (setq status-field-id
+                  (forge-extras--get-field-property-value
+                   (cdr (assoc 'field status-node)) 'id)))))
       (list :issue-node-id issue-node-id
             :title title
             :assignees assignees
@@ -539,6 +553,18 @@ This function specifically looks for data related to project number
             :project-item-id project-item-id
             :status-field-id status-field-id
             :selected-status-option-id selected-status-option-id))))
+
+(defun forge-extras--get-field-property-value (field-obj property-key)
+  "Return the value of PROPERTY-KEY within FIELD-OBJ.
+FIELD-OBJ might be a single cons pair like (PROPERTY-KEY . value) or an
+alist like ((PROPERTY-KEY . value) ...)."
+  (cond ((null field-obj) nil)
+        ((and (consp field-obj) (not (consp (car field-obj)))) ; Single pair (KEY . VAL)
+         (if (eq (car field-obj) property-key)
+             (cdr field-obj)
+           nil))
+        (t ; Alist ((KEY . VAL) ...)
+         (cdr (assoc property-key field-obj)))))
 
 (defun forge-extras-gh-add-issue-to-project (project-node-id issue-node-id)
   "Add ISSUE-NODE-ID to PROJECT-NODE-ID.
@@ -555,15 +581,15 @@ Returns the new project item's Node ID, or nil on failure."
         (message "Failed to add issue to project. Response: %s" response)
         nil))))
 
-(defun forge-extras-gh-update-project-item-status-field (project-node-id item-node-id field-node-id new-status-option-id)
+(defun forge-extras-gh-update-project-item-status-field (project-node-id item-node-id field-node-id status-option-id)
   "Update the project item's status field.
 PROJECT-NODE-ID is the project's Node ID. ITEM-NODE-ID is the project item's
-Node ID. FIELD-NODE-ID is the \"Status\" field's Node ID. NEW-STATUS-OPTION-ID
-is the Node ID of the desired status option (e.g., for \"Doing\")."
+Node ID. FIELD-NODE-ID is the \"Status\" field's Node ID. STATUS-OPTION-ID is
+the Node ID of the desired status option (e.g., for \"Doing\")."
   (let* ((variables `(("projectNodeId" . ,project-node-id)
                       ("itemNodeId" . ,item-node-id)
                       ("fieldNodeId" . ,field-node-id)
-                      ("statusOptionId" . ,new-status-option-id)))
+                      ("statusOptionId" . ,status-option-id)))
          (response (forge-extras-gh--call-api-graphql-mutation forge-extras-gh-update-project-item-field-mutation-query variables)))
     (if-let* ((data (cdr (assoc 'data response)))
               (update-value (cdr (assoc 'updateProjectV2ItemFieldValue data)))
@@ -571,10 +597,9 @@ is the Node ID of the desired status option (e.g., for \"Doing\")."
               (item-id (cdr (assoc 'id projectV2Item))))
         (progn
           (message "Successfully updated project item status.")
-          t) ; Return t on success
-      (progn
-        (message "Failed to update project item status. Response: %s" response)
-        nil))))
+          t)
+      (message "Failed to update project item status. Response: %s" response)
+      nil)))
 
 ;;;###autoload
 (defun forge-extras-set-project-status (&optional issue)
@@ -589,30 +614,35 @@ Updates are performed via GitHub API calls."
   (let* ((repo (forge-get-repository issue))
          (issue-number (oref issue number))
          (repo-name (oref repo name))
+         ;; Fetch current project data once so we can offer its status as default
+         (gh-fields (forge-extras-gh-get-issue-fields issue-number repo-name))
+         (parsed-fields (when gh-fields
+                          (forge-extras-gh-parse-issue-fields gh-fields)))
+         (current-status-name (plist-get parsed-fields :status))
          (status-choices (mapcar #'car forge-extras-status-option-ids-alist))
-         (chosen-status-name (completing-read "Set project status: " status-choices nil t nil nil (caar forge-extras-status-option-ids-alist)))
+         (default-status (if (member current-status-name status-choices)
+                             current-status-name
+                           (caar forge-extras-status-option-ids-alist)))
+         (chosen-status-name (completing-read "Set project status: "
+					      status-choices nil 'require-match default-status))
          (chosen-status-option-id (cdr (assoc chosen-status-name forge-extras-status-option-ids-alist))))
-
     (unless chosen-status-option-id
       (user-error "Invalid status selected or selection cancelled")
       (cl-return-from forge-extras-set-project-status))
 
-    (message "Fetching current project fields for issue #%s in %s/%s..." issue-number forge-extras-project-owner repo-name)
-    (let* ((gh-fields (forge-extras-gh-get-issue-fields issue-number repo-name))
-           (parsed-fields (if gh-fields (forge-extras-gh-parse-issue-fields gh-fields) nil))
-           (issue-node-id (plist-get parsed-fields :issue-node-id))
+    (message "Fetching current project fields for issue #%s in %s/%s..."
+	     issue-number forge-extras-project-owner repo-name)
+    (unless parsed-fields
+      (user-error "Could not retrieve project data for issue. Aborting"))
+    (let* ((issue-node-id (plist-get parsed-fields :issue-node-id))
            (current-project-item-id (plist-get parsed-fields :project-item-id))
-           (current-status-name (plist-get parsed-fields :status))
            (target-project-item-id current-project-item-id))
-
       (unless issue-node-id
         (user-error "Could not retrieve GitHub Issue Node ID. Aborting")
         (cl-return-from forge-extras-set-project-status))
-
       (when (string= chosen-status-name current-status-name)
         (message "Issue #%s is already in status '%s'. No change needed." issue-number chosen-status-name)
         (cl-return-from forge-extras-set-project-status))
-
       (unless target-project-item-id
         (if (y-or-n-p (format "Issue #%s is not in Project %s (%s). Add it and set status to '%s'?"
                               issue-number forge-extras-project-number forge-extras-project-owner chosen-status-name))
@@ -626,7 +656,6 @@ Updates are performed via GitHub API calls."
           (progn
             (message "User cancelled adding issue to project. Aborting status update.")
             (cl-return-from forge-extras-set-project-status))))
-
       (message "Updating project status for item %s to '%s' (Option ID: %s)..."
                target-project-item-id chosen-status-name chosen-status-option-id)
       (if (forge-extras-gh-update-project-item-status-field
@@ -638,7 +667,7 @@ Updates are performed via GitHub API calls."
             (message "Project status updated successfully for issue #%s." issue-number)
             ;; Refresh the topic to reflect potential changes
             (when (derived-mode-p 'forge-topic-mode)
-              (forge-topic-refresh)))
+              (forge-topic-refresh-buffer)))
         (user-error "Failed to update project status for issue #%s" issue-number)))))
 
 (provide 'forge-extras)

@@ -119,15 +119,22 @@ return instead the full path; if PATH is `sans-dir', return the filename only."
 
 ;;;;; dirty repo
 
+;;;###autoload
+(defun magit-extras-repo-is-dirty-p (&optional repo-path)
+  "Return t iff the repository at REPO-PATH is dirty.
+If REPO-PATH is nil, use the current repository."
+  (let ((default-directory (or repo-path default-directory)))
+    (and (file-directory-p default-directory)
+	 (magit-git-repo-p default-directory)
+	 (magit-anything-modified-p))))
+
 (declare-function alert "alert")
 ;;;###autoload
-(defun magit-extras-warn-if-repo-is-dirty (repo-path)
-  "Check if repository at REPO-PATH is dirty and emit an alert if so."
-  (let ((default-directory repo-path))
-    (when (and (file-directory-p repo-path)
-               (magit-git-repo-p repo-path)
-               (magit-anything-modified-p))
-      (alert (format "Repository at %s is dirty!" repo-path)))))
+(defun magit-extras-warn-if-repo-is-dirty (&optional repo-path)
+  "Check if repository at REPO-PATH is dirty and emit an alert if so.
+If REPO-PATH is nil, use the current repository."
+  (when (magit-extras-repo-is-dirty-p repo-path)
+    (alert (format "Repository at %s is dirty!" repo-path))))
 
 ;;;;; auto-pull
 

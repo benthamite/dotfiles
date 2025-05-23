@@ -433,6 +433,7 @@ for GraphQL Ints/Floats. This function sends the request by piping a
 JSON payload to `gh api ... --input -`."
   (let* ((lines (split-string mutation-query-string "\n" t))
          (lines-without-comments (mapcar (lambda (line) (replace-regexp-in-string "#.*" "" line)) lines))
+         (query-almost-single-line (string-join lines-without-comments " "))
          (single-line-mutation (string-trim (replace-regexp-in-string "\\s-+" " " query-almost-single-line)))
          ;; Construct the JSON payload for gh api --input -
          (payload-alist `(("query" . ,single-line-mutation)))
@@ -457,8 +458,17 @@ JSON payload to `gh api ... --input -`."
       (unless gh-executable
         (error "The 'gh' command-line tool was not found. Please ensure it is installed and accessible"))
       (message "forge-extras-gh--call-api-graphql-mutation: Executing 'gh %s' with payload via stdin" (string-join process-args " "))
-      ;; Pass json-payload-string as stdin to the gh process
-      (setq exit-status (apply #'call-process gh-executable json-payload-string output-buffer nil process-args)))
+      ;; Pass json-payload-string via stdin using call-process-region
+      (with-temp-buffer
+        (insert json-payload-string)
+        (setq exit-status
+              (apply #'call-process-region
+                     (point-min) (point-max)
+                     gh-executable
+                     nil
+                     output-buffer
+                     nil
+                     process-args))))
 
     (with-current-buffer output-buffer
       (setq json-string (buffer-string)))

@@ -717,7 +717,7 @@ the numerical estimate to set."
   (let* ((variables `(("projectNodeId" . ,project-node-id)
                       ("itemNodeId" . ,item-node-id)
                       ("fieldNodeId" . ,field-node-id)
-                      ("estimateValue" . ,(number-to-string estimate-value))))
+                      ("estimateValue" . ,(number-to-string (float estimate-value))))) ; Ensure value is float
          (response (forge-extras-gh--call-api-graphql-mutation forge-extras-gh-update-project-item-estimate-field-mutation-query variables)))
     (if-let* ((data (cdr (assoc 'data response)))
               (update-value (cdr (assoc 'updateProjectV2ItemFieldValue data)))

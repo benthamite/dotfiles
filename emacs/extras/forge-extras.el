@@ -408,6 +408,23 @@ and issue number.")
   }"
   "GraphQL mutation to update a numeric field (e.g., Estimate) of a project item.")
 
+(defconst forge-extras-gh-project-fields-query
+  "query($projectNodeId:ID!) {
+    node(id: $projectNodeId) {
+      ... on ProjectV2 {
+        fields(first: 100) { # Assuming max 100 fields
+          nodes {
+            ... on ProjectV2FieldCommon {
+              id
+              name
+            }
+          }
+        }
+      }
+    }
+  }"
+  "GraphQL query to fetch all fields (name and ID) for a given project Node ID.")
+
 (defun forge-extras-gh--call-api-graphql-mutation (mutation-query-string variables)
   "Execute a GitHub GraphQL MUTATION-QUERY-STRING with VARIABLES.
 VARIABLES is a list of cons cells like \\='((key . value) (key2 . value2)) for
@@ -574,6 +591,76 @@ This function specifically looks for data related to project number
             :project-item-id project-item-id
             :status-field-id status-field-id
             :selected-status-option-id selected-status-option-id))))
+
+(defun forge-extras-gh-get-project-fields (project-node-id)
+  "Fetch all fields for PROJECT-NODE-ID using GitHub GraphQL API.
+Returns the raw parsed JSON response, or nil on failure."
+  (let* ((query-string forge-extras-gh-project-fields-query)
+         (variables `(("projectNodeId" . ,project-node-id)))
+         (lines (split-string query-string "\n" t))
+         (lines-without-comments (mapcar (lambda (line) (replace-regexp-in-string "#.*" "" line)) lines))
+         (query-almost-single-line (string-join lines-without-comments " "))
+         (single-line-query (string-trim (replace-regexp-in-string "\\s-+" " " query-almost-single-line)))
+         (temp-file (make-temp-file "forge-extras-gh-query-" nil ".graphql" single-line-query))
+         (process-args (list "api" "graphql" "-F" (concat "query=@" temp-file)))
+         (output-buffer (generate-new-buffer "*gh-graphql-query-output*"))
+         (json-string "")
+         (parsed-json nil)
+         (exit-status nil))
+    (when variables
+      (setq process-args
+            (append process-args
+                    (mapcan (lambda (kv)
+                              (list "-f" (format "%s=%s" (car kv) (cdr kv))))
+                            variables))))
+    (message "forge-extras-gh-get-project-fields: Query content (single line):\n%s" single-line-query)
+    (when variables
+      (let ((json-object-type 'object)) ; Ensure json-encode produces an object for alist
+        (message "forge-extras-gh-get-project-fields: Intended variables: %s" (json-encode variables))))
+    (message "forge-extras-gh-get-project-fields: Executing 'gh %s'" (string-join process-args " "))
+    (let ((gh-executable (executable-find "gh")))
+      (unless gh-executable
+        (error "The 'gh' command-line tool was not found. Please ensure it is installed and accessible"))
+      (setq exit-status (apply #'call-process gh-executable nil output-buffer nil process-args)))
+    (with-current-buffer output-buffer
+      (setq json-string (buffer-string)))
+    (kill-buffer output-buffer)
+    (when (file-exists-p temp-file)
+      (delete-file temp-file))
+    (if (not (zerop exit-status))
+        (message "forge-extras-gh-get-project-fields: 'gh' process exited with status %s. Output:\n%s" exit-status json-string)
+      (message "forge-extras-gh-get-project-fields: 'gh' process exited successfully."))
+    (message "forge-extras-gh-get-project-fields: Raw JSON response:\n%s" json-string)
+    (if (or (null json-string) (string-empty-p json-string) (not (zerop exit-status)))
+        (progn
+          (message "forge-extras-gh-get-project-fields: Received empty or error response from gh command.")
+          nil)
+      (with-temp-buffer
+        (insert json-string)
+        (goto-char (point-min))
+        (setq parsed-json (condition-case err
+                              (json-read-from-string (buffer-string))
+                            (error
+                             (message "forge-extras-gh-get-project-fields: Error parsing JSON: %s" err)
+                             nil))))
+      (if parsed-json
+          (message "forge-extras-gh-get-project-fields: Successfully parsed JSON.")
+        (message "forge-extras-gh-get-project-fields: Failed to parse JSON from response."))
+      parsed-json)))
+
+(defun forge-extras-gh-parse-project-fields (raw-json-response)
+  "Parse RAW-JSON-RESPONSE from project fields query into a list of (name . id) cons cells."
+  (message "Debug: forge-extras-gh-parse-project-fields received raw-json: %S" raw-json-response)
+  (if-let* ((data (cdr (assoc 'data raw-json-response)))
+            (node (cdr (assoc 'node data)))
+            (fields (cdr (assoc 'fields node)))
+            (field-nodes (cdr (assoc 'nodes fields))))
+      (mapcar (lambda (field-node)
+                (cons (cdr (assoc 'name field-node))
+                      (cdr (assoc 'id field-node))))
+              field-nodes)
+    (message "Debug: forge-extras-gh-parse-project-fields: Could not parse expected structure from %S" raw-json-response)
+    nil))
 
 (defun forge-extras--get-field-property-value (field-obj property-key)
   "Return the value of PROPERTY-KEY within FIELD-OBJ.
@@ -783,6 +870,43 @@ Updates are performed via GitHub API calls using the field ID from
                 (when (derived-mode-p 'forge-topic-mode)
                   (forge-topic-refresh-buffer)))
             (user-error "Failed to update project estimate for issue #%s" issue-number)))))))
+
+;;;###autoload
+(defun forge-extras-get-project-field-ids ()
+  "Fetch and display all field names and their Node IDs for the configured GitHub Project.
+The project is determined by `forge-extras-project-node-id`.
+The results are shown in a new buffer, `*GitHub Project Fields*`.
+This command helps in finding the Node ID required for variables like
+`forge-extras-estimate-field-node-id` and `forge-extras-status-field-node-id`."
+  (interactive)
+  (unless (and (boundp 'forge-extras-project-node-id)
+               (stringp forge-extras-project-node-id)
+               (not (string-empty-p forge-extras-project-node-id)))
+    (user-error "`forge-extras-project-node-id' is not configured. Please set it first."))
+
+  (message "Fetching project fields for Project Node ID: %s..." forge-extras-project-node-id)
+  (let* ((raw-response (forge-extras-gh-get-project-fields forge-extras-project-node-id))
+         (fields (if raw-response
+                     (forge-extras-gh-parse-project-fields raw-response)
+                   nil)))
+    (if fields
+        (let ((buffer (get-buffer-create "*GitHub Project Fields*"))
+              (max-name-len 0))
+          ;; Determine max field name length for formatting
+          (dolist (field fields)
+            (setq max-name-len (max max-name-len (length (car field)))))
+          (setq max-name-len (max max-name-len (length "Field Name"))) ; Ensure header fits
+
+          (with-current-buffer buffer
+            (erase-buffer)
+            (insert (format "Project Fields for Project Node ID: %s\n\n" forge-extras-project-node-id))
+            (insert (format "%-*s | Field ID\n" max-name-len "Field Name"))
+            (insert (format "%s-|-%s\n" (make-string max-name-len ?-) (make-string 30 ?-))) ; Adjust 30 if ID length varies significantly
+            (dolist (field fields)
+              (insert (format "%-*s | %s\n" max-name-len (car field) (cdr field)))))
+          (display-buffer buffer)
+          (message "Project fields displayed in *GitHub Project Fields* buffer."))
+      (user-error "Could not retrieve or parse project fields for Project Node ID: %s" forge-extras-project-node-id))))
 
 (provide 'forge-extras)
 ;;; forge-extras.el ends here

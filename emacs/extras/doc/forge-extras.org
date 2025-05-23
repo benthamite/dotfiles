@@ -119,12 +119,18 @@ The command ~forge-extras-set-project-estimate~ allows you to set a numerical es
 - After a successful update, if in a `forge-topic-mode` buffer, it attempts to refresh the topic.
 
 This functionality relies on the `gh` command-line tool being installed and authenticated, and requires ~forge-extras-estimate-field-node-id~ to be correctly configured.
-- It prompts for a status from a predefined list (configured via ~forge-extras-status-option-ids-alist~).
-- If the issue is not already part of the target GitHub Project (configured by ~forge-extras-project-owner~ and ~forge-extras-project-number~), it will prompt the user whether to add it.
-- The changes are made by interacting with the GitHub GraphQL API.
-- After a successful update, if in a `forge-topic-mode` buffer, it attempts to refresh the topic.
 
-This functionality relies on the `gh` command-line tool being installed and authenticated.
+** Get GitHub Project Field IDs
+:PROPERTIES:
+:CUSTOM_ID: h:forge-extras-get-project-field-ids
+:END:
+
+#+findex: forge-extras-get-project-field-ids
+The command ~forge-extras-get-project-field-ids~ fetches and displays all field names and their Node IDs for the GitHub Project configured via ~forge-extras-project-node-id~.
+- It requires ~forge-extras-project-node-id~ to be set beforehand.
+- The results are displayed in a new buffer named =*GitHub Project Fields*=.
+- This command is crucial for finding the correct Node IDs to set for ~forge-extras-status-field-node-id~ and ~forge-extras-estimate-field-node-id~.
+- It relies on the `gh` command-line tool being installed and authenticated.
 
 * Customization
 :PROPERTIES:
@@ -133,17 +139,45 @@ This functionality relies on the `gh` command-line tool being installed and auth
 
 =forge-extras.el= offers several customization options, primarily for the GitHub Project integration features. These are typically set using Emacs' M-x customize-group RET forge-extras-projects RET.
 
-+ ~forge-extras-project-owner~: The GitHub organization or user owning the target project (default: "tlon-team").
+*** Setup for GitHub Project Integration
+To use the GitHub Project integration features like setting status or estimate, you need to configure a few variables:
+1. *Find your Project's Node ID*:
+   - Go to your GitHub Project (e.g., https://github.com/orgs/YOUR_ORG/projects/YOUR_PROJECT_NUMBER).
+   - The Project's Node ID is not directly visible in the URL for "Projects (beta)" or "ProjectsV2".
+   - One way to get it is using the `gh` CLI:
+     #+begin_src sh
+     gh api graphql -f query='query{organization(login: "YOUR_ORG"){projectV2(number: YOUR_PROJECT_NUMBER){id}}}'
+     #+end_src
+     Replace =YOUR_ORG= and =YOUR_PROJECT_NUMBER=. For a user-owned project, replace =organization(login: "YOUR_ORG")= with =user(login: "YOUR_USER"){projectV2...}=.
+   - Set ~forge-extras-project-node-id~ to this ID.
+2. *Find Field Node IDs*:
+   - Once ~forge-extras-project-node-id~ is set, run ~M-x forge-extras-get-project-field-ids~.
+   - This command will display a list of all fields in your project with their names and Node IDs in the =*GitHub Project Fields*= buffer.
+3. *Configure Field IDs*:
+   - From the output of ~forge-extras-get-project-field-ids~:
+     - Find the Node ID for your "Status" field and set ~forge-extras-status-field-node-id~ to it.
+     - Find the Node ID for your "Estimate" field (or equivalent numeric field) and set ~forge-extras-estimate-field-node-id~ to it.
+4. *Configure Status Options* (for ~forge-extras-set-project-status~):
+   - For the "Status" field, you also need the Option IDs for each status choice (e.g., "Todo", "In Progress", "Done").
+   - These are not directly provided by ~forge-extras-get-project-field-ids~.
+   - You can find these using GitHub's API explorer or by inspecting network requests in your browser when changing a status in the GitHub UI.
+   - Populate ~forge-extras-status-option-ids-alist~ with these mappings.
+
+You can set these variables using ~M-x customize-group RET forge-extras-projects RET~ or directly in your Emacs configuration file.
+
+*** Custom Variables
+
++ ~forge-extras-project-owner~: The GitHub owner (organization or user) for the target project (default: "tlon-team"). This is used by some functions but ~forge-extras-project-node-id~ is generally preferred for newer project features.
 #+vindex: forge-extras-project-owner
-+ ~forge-extras-project-number~: The number of the target GitHub Project (default: 9).
++ ~forge-extras-project-number~: The GitHub Project number (default: 9). This is used by some functions but ~forge-extras-project-node-id~ is generally preferred for newer project features.
 #+vindex: forge-extras-project-number
-+ ~forge-extras-project-node-id~: The GraphQL Node ID of the target GitHub Project. This usually needs to be specific to the project.
++ ~forge-extras-project-node-id~: The GraphQL Node ID of the target GitHub Project. This is essential for most project-related commands. See the setup guide above for how to obtain this.
 #+vindex: forge-extras-project-node-id
-+ ~forge-extras-estimate-field-node-id~: The GraphQL Node ID of the "Estimate" (or equivalent numeric) field within the target project. This must be configured by the user.
++ ~forge-extras-estimate-field-node-id~: The GraphQL Node ID of the "Estimate" (or equivalent numeric) field within the target project. This must be configured by the user. Use ~M-x forge-extras-get-project-field-ids~ to find the correct ID after setting ~forge-extras-project-node-id~.
 #+vindex: forge-extras-estimate-field-node-id
-+ ~forge-extras-status-field-node-id~: The GraphQL Node ID of the "Status" field within the target project.
++ ~forge-extras-status-field-node-id~: The GraphQL Node ID of the "Status" field within the target project. Use ~M-x forge-extras-get-project-field-ids~ to find the correct ID after setting ~forge-extras-project-node-id~.
 #+vindex: forge-extras-status-field-node-id
-+ ~forge-extras-status-option-ids-alist~: An alist mapping human-readable status names (e.g., "Doing", "Next") to their corresponding GraphQL Option IDs for the "Status" field in the target project. This list is used for prompting the user.
++ ~forge-extras-status-option-ids-alist~: An alist mapping human-readable status names (e.g., "Doing", "Next") to their corresponding GraphQL Option IDs for the "Status" field in the target project. This list is used for prompting the user. Finding these Option IDs requires manual API inspection (see setup guide).
 #+vindex: forge-extras-status-option-ids-alist
 
 * Enhanced Functionality

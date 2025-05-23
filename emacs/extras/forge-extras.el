@@ -271,6 +271,12 @@ Default is for tlon-team/Project #9's Status field."
   :type 'string
   :group 'forge-extras-projects)
 
+(defcustom forge-extras-estimate-field-node-id ""
+  "The global Relay Node ID of the \"Estimate\" field (or equivalent numeric field) within the Project.
+This needs to be configured by the user for their specific project setup."
+  :type 'string
+  :group 'forge-extras-projects)
+
 (defcustom forge-extras-status-option-ids-alist
   '(("Doing" . "47fc9ee4")
     ("Next" . "8607328f")
@@ -386,6 +392,21 @@ and issue number.")
     }
   }"
   "GraphQL mutation to update a single field (e.g., Status) of a project item.")
+
+(defconst forge-extras-gh-update-project-item-estimate-field-mutation-query
+  "mutation($projectNodeId:ID!, $itemNodeId:ID!, $fieldNodeId:ID!, $estimateValue:Float!) {
+    updateProjectV2ItemFieldValue(input:{
+      projectId:$projectNodeId,
+      itemId:$itemNodeId,
+      fieldId:$fieldNodeId,
+      value:{ number: $estimateValue }
+    }) {
+      projectV2Item {
+        id
+      }
+    }
+  }"
+  "GraphQL mutation to update a numeric field (e.g., Estimate) of a project item.")
 
 (defun forge-extras-gh--call-api-graphql-mutation (mutation-query-string variables)
   "Execute a GitHub GraphQL MUTATION-QUERY-STRING with VARIABLES.
@@ -601,6 +622,26 @@ the Node ID of the desired status option (e.g., for \"Doing\")."
       (message "Failed to update project item status. Response: %s" response)
       nil)))
 
+(defun forge-extras-gh-update-project-item-estimate-field (project-node-id item-node-id field-node-id estimate-value)
+  "Update the project item's estimate field.
+PROJECT-NODE-ID is the project's Node ID. ITEM-NODE-ID is the project item's
+Node ID. FIELD-NODE-ID is the \"Estimate\" field's Node ID. ESTIMATE-VALUE is
+the numerical estimate to set."
+  (let* ((variables `(("projectNodeId" . ,project-node-id)
+                      ("itemNodeId" . ,item-node-id)
+                      ("fieldNodeId" . ,field-node-id)
+                      ("estimateValue" . ,(number-to-string estimate-value))))
+         (response (forge-extras-gh--call-api-graphql-mutation forge-extras-gh-update-project-item-estimate-field-mutation-query variables)))
+    (if-let* ((data (cdr (assoc 'data response)))
+              (update-value (cdr (assoc 'updateProjectV2ItemFieldValue data)))
+              (projectV2Item (cdr (assoc 'projectV2Item update-value)))
+              (item-id (cdr (assoc 'id projectV2Item))))
+        (progn
+          (message "Successfully updated project item estimate.")
+          t)
+      (message "Failed to update project item estimate. Response: %s" response)
+      nil)))
+
 ;;;###autoload
 (defun forge-extras-set-project-status (&optional issue)
   "Set the GitHub Project status for the current ISSUE.
@@ -669,6 +710,79 @@ Updates are performed via GitHub API calls."
             (when (derived-mode-p 'forge-topic-mode)
               (forge-topic-refresh-buffer)))
         (user-error "Failed to update project status for issue #%s" issue-number)))))
+
+;;;###autoload
+(defun forge-extras-set-project-estimate (&optional issue)
+  "Set the GitHub Project estimate for the current ISSUE.
+ISSUE defaults to `forge-current-topic'.
+Prompts for a numerical estimate. The current estimate (if any, from a field
+named \"Estimate\") is offered as default.
+If the issue is not yet in `forge-extras-project-number', prompts to add it.
+Updates are performed via GitHub API calls using the field ID from
+`forge-extras-estimate-field-node-id'."
+  (interactive (list (forge-current-topic)))
+  (unless issue
+    (user-error "No current issue/topic found"))
+  (unless (and (boundp 'forge-extras-estimate-field-node-id)
+               (stringp forge-extras-estimate-field-node-id)
+               (not (string-empty-p forge-extras-estimate-field-node-id)))
+    (user-error "`forge-extras-estimate-field-node-id' is not configured. Please set it."))
+
+  (let* ((repo (forge-get-repository issue))
+         (issue-number (oref issue number))
+         (repo-name (oref repo name))
+         (gh-fields (forge-extras-gh-get-issue-fields issue-number repo-name))
+         (parsed-fields (when gh-fields
+                          (forge-extras-gh-parse-issue-fields gh-fields)))
+         (current-estimate (plist-get parsed-fields :effort)) ; :effort is from "Estimate" field
+         (chosen-estimate (read-number "Set project estimate: " current-estimate)))
+
+    (unless (numberp chosen-estimate)
+      (user-error "Invalid estimate entered or selection cancelled")
+      (cl-return-from forge-extras-set-project-estimate))
+
+    (message "Fetching current project fields for issue #%s in %s/%s..."
+	     issue-number forge-extras-project-owner repo-name)
+    (unless parsed-fields
+      (user-error "Could not retrieve project data for issue. Aborting"))
+
+    (let* ((issue-node-id (plist-get parsed-fields :issue-node-id))
+           (current-project-item-id (plist-get parsed-fields :project-item-id))
+           (target-project-item-id current-project-item-id))
+      (unless issue-node-id
+        (user-error "Could not retrieve GitHub Issue Node ID. Aborting")
+        (cl-return-from forge-extras-set-project-estimate))
+
+      (if (and current-estimate (= chosen-estimate current-estimate))
+          (message "Issue #%s already has estimate '%s'. No change needed." issue-number current-estimate)
+        (progn ; Proceed with update
+          (unless target-project-item-id
+            (if (y-or-n-p (format "Issue #%s is not in Project %s (%s). Add it and set estimate to '%s'?"
+                                  issue-number forge-extras-project-number forge-extras-project-owner chosen-estimate))
+                (progn
+                  (message "Adding issue #%s to project %s..." issue-number forge-extras-project-node-id)
+                  (setq target-project-item-id (forge-extras-gh-add-issue-to-project forge-extras-project-node-id issue-node-id))
+                  (unless target-project-item-id
+                    (user-error "Failed to add issue to project. Aborting estimate update")
+                    (cl-return-from forge-extras-set-project-estimate))
+                  (message "Issue added to project (New Item ID: %s)." target-project-item-id))
+              (progn
+                (message "User cancelled adding issue to project. Aborting estimate update.")
+                (cl-return-from forge-extras-set-project-estimate))))
+
+          (message "Updating project estimate for item %s to '%s'..."
+                   target-project-item-id chosen-estimate)
+          (if (forge-extras-gh-update-project-item-estimate-field
+               forge-extras-project-node-id
+               target-project-item-id
+               forge-extras-estimate-field-node-id ; Use the configured estimate field ID
+               chosen-estimate)
+              (progn
+                (message "Project estimate updated successfully for issue #%s." issue-number)
+                ;; Refresh the topic to reflect potential changes
+                (when (derived-mode-p 'forge-topic-mode)
+                  (forge-topic-refresh-buffer)))
+            (user-error "Failed to update project estimate for issue #%s" issue-number)))))))
 
 (provide 'forge-extras)
 ;;; forge-extras.el ends here

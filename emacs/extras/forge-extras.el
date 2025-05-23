@@ -271,7 +271,7 @@ Default is for tlon-team/Project #9's Status field."
   :type 'string
   :group 'forge-extras-projects)
 
-(defcustom forge-extras-estimate-field-node-id ""
+(defcustom forge-extras-estimate-field-node-id "PVTF_lADOBtGWf84A5jZfzguVNc0"
   "The global Relay Node ID of the \"Estimate\" field (or equivalent numeric field) within the Project.
 This needs to be configured by the user for their specific project setup."
   :type 'string

@@ -427,38 +427,43 @@ and issue number.")
 
 (defun forge-extras-gh--call-api-graphql-mutation (mutation-query-string variables)
   "Execute a GitHub GraphQL MUTATION-QUERY-STRING with VARIABLES.
-VARIABLES is a list of cons cells like \\='((key . value) (key2 . value2)) for
--F options."
-  (let* ((lines (split-string mutation-query-string "\n" t)) ; t = omit empty lines
+VARIABLES is an alist of (var-name . value) for GraphQL variables.
+Values should be Elisp strings for GraphQL Strings/IDs, and Elisp numbers
+for GraphQL Ints/Floats. This function sends the request by piping a
+JSON payload to `gh api ... --input -`."
+  (let* ((lines (split-string mutation-query-string "\n" t))
          (lines-without-comments (mapcar (lambda (line) (replace-regexp-in-string "#.*" "" line)) lines))
-         (query-almost-single-line (string-join lines-without-comments " "))
          (single-line-mutation (string-trim (replace-regexp-in-string "\\s-+" " " query-almost-single-line)))
-         (temp-file (make-temp-file "forge-extras-gh-mutation-" nil ".graphql" single-line-mutation))
-         (process-args (list "api" "graphql" "-F" (concat "query=@" temp-file)))
+         ;; Construct the JSON payload for gh api --input -
+         (payload-alist `(("query" . ,single-line-mutation)))
+         (json-payload-string "")
          (output-buffer (generate-new-buffer "*gh-graphql-mutation-output*"))
          (json-string "")
          (parsed-json nil)
          (exit-status nil))
+
     (when variables
-      (setq process-args
-            (append process-args
-                    (mapcan (lambda (kv)
-                              (list "-f" (format "%s=%s" (car kv) (cdr kv))))
-                            variables))))
-    (message "forge-extras-gh--call-api-graphql-mutation: Mutation query content (single line):\n%s" single-line-mutation)
-    (when variables
-      (let ((json-object-type 'object))
-        (message "forge-extras-gh--call-api-graphql-mutation: Intended variables: %s" (json-encode variables))))
-    (message "forge-extras-gh--call-api-graphql-mutation: Executing 'gh %s'" (string-join process-args " "))
-    (let ((gh-executable (executable-find "gh")))
+      (setq payload-alist (append payload-alist `(("variables" . ,variables)))))
+
+    ;; `json-encode` will correctly handle Elisp numbers (integers, floats)
+    ;; as JSON numbers, and Elisp strings as JSON strings.
+    (setq json-payload-string (json-encode payload-alist))
+
+    (message "forge-extras-gh--call-api-graphql-mutation: JSON payload for gh api:\n%s" json-payload-string)
+
+    ;; Arguments for gh api --method POST -H "Content-Type: application/json" /graphql --input -
+    (let* ((process-args (list "api" "--method" "POST" "-H" "Content-Type: application/json" "/graphql" "--input" "-"))
+           (gh-executable (executable-find "gh")))
       (unless gh-executable
         (error "The 'gh' command-line tool was not found. Please ensure it is installed and accessible"))
-      (setq exit-status (apply #'call-process gh-executable nil output-buffer nil process-args)))
+      (message "forge-extras-gh--call-api-graphql-mutation: Executing 'gh %s' with payload via stdin" (string-join process-args " "))
+      ;; Pass json-payload-string as stdin to the gh process
+      (setq exit-status (apply #'call-process gh-executable json-payload-string output-buffer nil process-args)))
+
     (with-current-buffer output-buffer
       (setq json-string (buffer-string)))
     (kill-buffer output-buffer)
-    (when (file-exists-p temp-file)
-      (delete-file temp-file))
+    ;; No temporary query file was created with this method
     (if (not (zerop exit-status))
         (message "forge-extras-gh--call-api-graphql-mutation: 'gh' process exited with status %s. Output:\n%s" exit-status json-string)
       (message "forge-extras-gh--call-api-graphql-mutation: 'gh' process exited successfully."))
@@ -717,7 +722,7 @@ the numerical estimate to set."
   (let* ((variables `(("projectNodeId" . ,project-node-id)
                       ("itemNodeId" . ,item-node-id)
                       ("fieldNodeId" . ,field-node-id)
-                      ("estimateValue" . ,(number-to-string (float estimate-value))))) ; Ensure value is float
+                      ("estimateValue" . ,(float estimate-value))))) ; Pass as Elisp float
          (response (forge-extras-gh--call-api-graphql-mutation forge-extras-gh-update-project-item-estimate-field-mutation-query variables)))
     (if-let* ((data (cdr (assoc 'data response)))
               (update-value (cdr (assoc 'updateProjectV2ItemFieldValue data)))

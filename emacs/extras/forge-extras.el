@@ -722,13 +722,13 @@ the numerical estimate to set."
   (let* ((variables `(("projectNodeId" . ,project-node-id)
                       ("itemNodeId" . ,item-node-id)
                       ("fieldNodeId" . ,field-node-id)
-                      ("estimateValue" . ,(float estimate-value))))) ; Pass as Elisp float
-         (response (forge-extras-gh--call-api-graphql-mutation forge-extras-gh-update-project-item-estimate-field-mutation-query variables)))
+                      ("estimateValue" . ,(float estimate-value))))
+	 (response (forge-extras-gh--call-api-graphql-mutation forge-extras-gh-update-project-item-estimate-field-mutation-query variables)))
     (if-let* ((data (cdr (assoc 'data response)))
               (update-value (cdr (assoc 'updateProjectV2ItemFieldValue data)))
               (projectV2Item (cdr (assoc 'projectV2Item update-value)))
               (item-id (cdr (assoc 'id projectV2Item))))
-        (progn
+	(progn
           (message "Successfully updated project item estimate.")
           t)
       (message "Failed to update project item estimate. Response: %s" response)

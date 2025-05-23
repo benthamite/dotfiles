@@ -786,19 +786,13 @@ Updates are performed via GitHub API calls."
       (when (string= chosen-status-name current-status-name)
         (message "Issue #%s is already in status '%s'. No change needed." issue-number chosen-status-name)
         (cl-return-from forge-extras-set-project-status))
+      (setq target-project-item-id
+            (forge-extras--ensure-issue-in-project
+             issue-number issue-node-id current-project-item-id
+             (format "Issue #%s is not in Project %s (%s). Add it and set status to '%s'?"
+                     issue-number forge-extras-project-number forge-extras-project-owner chosen-status-name)))
       (unless target-project-item-id
-        (if (y-or-n-p (format "Issue #%s is not in Project %s (%s). Add it and set status to '%s'?"
-                              issue-number forge-extras-project-number forge-extras-project-owner chosen-status-name))
-            (progn
-              (message "Adding issue #%s to project %s..." issue-number forge-extras-project-node-id)
-              (setq target-project-item-id (forge-extras-gh-add-issue-to-project forge-extras-project-node-id issue-node-id))
-              (unless target-project-item-id
-                (user-error "Failed to add issue to project. Aborting status update")
-                (cl-return-from forge-extras-set-project-status))
-              (message "Issue added to project (New Item ID: %s)." target-project-item-id))
-          (progn
-            (message "User cancelled adding issue to project. Aborting status update.")
-            (cl-return-from forge-extras-set-project-status))))
+        (cl-return-from forge-extras-set-project-status))
       (message "Updating project status for item %s to '%s' (Option ID: %s)..."
                target-project-item-id chosen-status-name chosen-status-option-id)
       (if (forge-extras-gh-update-project-item-status-field
@@ -858,19 +852,13 @@ Updates are performed via GitHub API calls using the field ID from
       (if (and current-estimate (= chosen-estimate current-estimate))
           (message "Issue #%s already has estimate '%s'. No change needed." issue-number current-estimate)
         (progn ; Proceed with update
+          (setq target-project-item-id
+                (forge-extras--ensure-issue-in-project
+                 issue-number issue-node-id current-project-item-id
+                 (format "Issue #%s is not in Project %s (%s). Add it and set estimate to '%s'?"
+                         issue-number forge-extras-project-number forge-extras-project-owner chosen-estimate)))
           (unless target-project-item-id
-            (if (y-or-n-p (format "Issue #%s is not in Project %s (%s). Add it and set estimate to '%s'?"
-                                  issue-number forge-extras-project-number forge-extras-project-owner chosen-estimate))
-                (progn
-                  (message "Adding issue #%s to project %s..." issue-number forge-extras-project-node-id)
-                  (setq target-project-item-id (forge-extras-gh-add-issue-to-project forge-extras-project-node-id issue-node-id))
-                  (unless target-project-item-id
-                    (user-error "Failed to add issue to project. Aborting estimate update")
-                    (cl-return-from forge-extras-set-project-estimate))
-                  (message "Issue added to project (New Item ID: %s)." target-project-item-id))
-              (progn
-                (message "User cancelled adding issue to project. Aborting estimate update.")
-                (cl-return-from forge-extras-set-project-estimate))))
+            (cl-return-from forge-extras-set-project-estimate))
 
           (message "Updating project estimate for item %s to '%s'..."
                    target-project-item-id chosen-estimate)

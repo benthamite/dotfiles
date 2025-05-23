@@ -195,7 +195,7 @@ repo."
 
 (defun forge--goto-message (direction)
   "Move to a post in the current topic in the specified DIRECTION.
-DIRECTION should be either `next or `prev."
+DIRECTION should be either `next' or `prev'."
   (let ((section (magit-current-section)))
     (cond
      ;; If we're on a post, try to find the next/previous post
@@ -430,7 +430,7 @@ and issue number.")
 VARIABLES is an alist of (var-name . value) for GraphQL variables.
 Values should be Elisp strings for GraphQL Strings/IDs, and Elisp numbers
 for GraphQL Ints/Floats. This function sends the request by piping a
-JSON payload to `gh api ... --input -`."
+JSON payload to `gh api ... --input -'."
   (let* ((lines (split-string mutation-query-string "\n" t))
          (lines-without-comments (mapcar (lambda (line) (replace-regexp-in-string "#.*" "" line)) lines))
          (query-almost-single-line (string-join lines-without-comments " "))
@@ -442,16 +442,12 @@ JSON payload to `gh api ... --input -`."
          (json-string "")
          (parsed-json nil)
          (exit-status nil))
-
     (when variables
       (setq payload-alist (append payload-alist `(("variables" . ,variables)))))
-
-    ;; `json-encode` will correctly handle Elisp numbers (integers, floats)
+    ;; `json-encode' will correctly handle Elisp numbers (integers, floats)
     ;; as JSON numbers, and Elisp strings as JSON strings.
     (setq json-payload-string (json-encode payload-alist))
-
     (message "forge-extras-gh--call-api-graphql-mutation: JSON payload for gh api:\n%s" json-payload-string)
-
     ;; Arguments for gh api --method POST -H "Content-Type: application/json" /graphql --input -
     (let* ((process-args (list "api" "--method" "POST" "-H" "Content-Type: application/json" "/graphql" "--input" "-"))
            (gh-executable (executable-find "gh")))
@@ -469,13 +465,13 @@ JSON payload to `gh api ... --input -`."
                      output-buffer
                      nil
                      process-args))))
-
     (with-current-buffer output-buffer
       (setq json-string (buffer-string)))
     (kill-buffer output-buffer)
     ;; No temporary query file was created with this method
     (if (not (zerop exit-status))
-        (message "forge-extras-gh--call-api-graphql-mutation: 'gh' process exited with status %s. Output:\n%s" exit-status json-string)
+        (message "forge-extras-gh--call-api-graphql-mutation: 'gh' process exited with status %s. Output:\n%s"
+		 exit-status json-string)
       (message "forge-extras-gh--call-api-graphql-mutation: 'gh' process exited successfully."))
     (message "forge-extras-gh--call-api-graphql-mutation: Raw JSON response:\n%s" json-string)
     (if (or (null json-string) (string-empty-p json-string) (not (zerop exit-status)))
@@ -523,7 +519,8 @@ JSON payload to `gh api ... --input -`."
     (when (file-exists-p temp-file)
       (delete-file temp-file))
     (if (not (zerop exit-status))
-        (message "forge-extras-gh-get-issue-fields: 'gh' process exited with status %s. Output:\n%s" exit-status json-string)
+        (message "forge-extras-gh-get-issue-fields: 'gh' process exited with status %s. Output:\n%s"
+		 exit-status json-string)
       (message "forge-extras-gh-get-issue-fields: 'gh' process exited successfully."))
     (message "forge-extras-gh-get-issue-fields: Raw JSON string response:\n%s" json-string)
     (if (or (null json-string) (string-empty-p json-string) (not (zerop exit-status)))
@@ -664,7 +661,7 @@ Returns the raw parsed JSON response, or nil on failure."
       parsed-json)))
 
 (defun forge-extras-gh-parse-project-fields (raw-json-response)
-  "Parse RAW-JSON-RESPONSE from project fields query into a list of (name . id) cons cells."
+  "Parse RAW-JSON-RESPONSE from project fields query into a list of cons cells."
   (message "Debug: forge-extras-gh-parse-project-fields received raw-json: %S" raw-json-response)
   (if-let* ((data (cdr (assoc 'data raw-json-response)))
             (node (cdr (assoc 'node data)))
@@ -703,7 +700,7 @@ is returned; otherwise nil is returned."
                        issue-node-id)))
           (unless new-id
             (message "Failed to add issue #%s to project." issue-number))
-          new-id)))
+          new-id))))
 
 (defun forge-extras-gh-add-issue-to-project (project-node-id issue-node-id)
   "Add ISSUE-NODE-ID to PROJECT-NODE-ID.
@@ -716,9 +713,8 @@ Returns the new project item's Node ID, or nil on failure."
               (item (cdr (assoc 'item add-item)))
               (item-id (cdr (assoc 'id item))))
         item-id
-      (progn
-        (message "Failed to add issue to project. Response: %s" response)
-        nil))))
+      (message "Failed to add issue to project. Response: %s" response)
+      nil)))
 
 (defun forge-extras-gh-update-project-item-status-field (project-node-id item-node-id field-node-id status-option-id)
   "Update the project item's status field.
@@ -838,8 +834,7 @@ Updates are performed via GitHub API calls using the field ID from
   (unless (and (boundp 'forge-extras-estimate-field-node-id)
                (stringp forge-extras-estimate-field-node-id)
                (not (string-empty-p forge-extras-estimate-field-node-id)))
-    (user-error "`forge-extras-estimate-field-node-id' is not configured. Please set it."))
-
+    (user-error "`forge-extras-estimate-field-node-id' is not configured. Please set it"))
   (let* ((repo (forge-get-repository issue))
          (issue-number (oref issue number))
          (repo-name (oref repo name))
@@ -848,23 +843,19 @@ Updates are performed via GitHub API calls using the field ID from
                           (forge-extras-gh-parse-issue-fields gh-fields)))
          (current-estimate (plist-get parsed-fields :effort)) ; :effort is from "Estimate" field
          (chosen-estimate (read-number "Set project estimate: " current-estimate)))
-
     (unless (numberp chosen-estimate)
       (user-error "Invalid estimate entered or selection cancelled")
       (cl-return-from forge-extras-set-project-estimate))
-
     (message "Fetching current project fields for issue #%s in %s/%s..."
 	     issue-number forge-extras-project-owner repo-name)
     (unless parsed-fields
       (user-error "Could not retrieve project data for issue. Aborting"))
-
     (let* ((issue-node-id (plist-get parsed-fields :issue-node-id))
            (current-project-item-id (plist-get parsed-fields :project-item-id))
            (target-project-item-id current-project-item-id))
       (unless issue-node-id
         (user-error "Could not retrieve GitHub Issue Node ID. Aborting")
         (cl-return-from forge-extras-set-project-estimate))
-
       (if (and current-estimate (= chosen-estimate current-estimate))
           (message "Issue #%s already has estimate '%s'. No change needed." issue-number current-estimate)
         (progn ; Proceed with update
@@ -875,7 +866,6 @@ Updates are performed via GitHub API calls using the field ID from
                          issue-number forge-extras-project-number forge-extras-project-owner chosen-estimate)))
           (unless target-project-item-id
             (cl-return-from forge-extras-set-project-estimate))
-
           (message "Updating project estimate for item %s to '%s'..."
                    target-project-item-id chosen-estimate)
           (if (forge-extras-gh-update-project-item-estimate-field
@@ -892,17 +882,16 @@ Updates are performed via GitHub API calls using the field ID from
 
 ;;;###autoload
 (defun forge-extras-get-project-field-ids ()
-  "Fetch and display all field names and their Node IDs for the configured GitHub Project.
-The project is determined by `forge-extras-project-node-id`.
-The results are shown in a new buffer, `*GitHub Project Fields*`.
-This command helps in finding the Node ID required for variables like
-`forge-extras-estimate-field-node-id` and `forge-extras-status-field-node-id`."
+  "Fetch and display all field names and their Node IDs for the Project.
+The project is determined by `forge-extras-project-node-id'. The results are
+shown in a new buffer, \"*GitHub Project Fields*\". This command helps in
+finding the Node ID required for variables like
+`forge-extras-estimate-field-node-id' and `forge-extras-status-field-node-id'."
   (interactive)
   (unless (and (boundp 'forge-extras-project-node-id)
                (stringp forge-extras-project-node-id)
                (not (string-empty-p forge-extras-project-node-id)))
-    (user-error "`forge-extras-project-node-id' is not configured. Please set it first."))
-
+    (user-error "`forge-extras-project-node-id' is not configured. Please set it first"))
   (message "Fetching project fields for Project Node ID: %s..." forge-extras-project-node-id)
   (let* ((raw-response (forge-extras-gh-get-project-fields forge-extras-project-node-id))
          (fields (if raw-response
@@ -920,7 +909,9 @@ This command helps in finding the Node ID required for variables like
             (erase-buffer)
             (insert (format "Project Fields for Project Node ID: %s\n\n" forge-extras-project-node-id))
             (insert (format (format "%%-%ds | Field ID\n" max-name-len) "Field Name"))
-            (insert (format "%s-|-%s\n" (make-string max-name-len ?-) (make-string 30 ?-))) ; Adjust 30 if ID length varies significantly
+            (insert (format "%s-|-%s\n"
+			    (make-string max-name-len ?-)
+			    (make-string 30 ?-))) ; Adjust 30 if ID length varies significantly
             (dolist (field fields)
               (insert (format (format "%%-%ds | %%s\n" max-name-len) (car field) (cdr field)))))
           (display-buffer buffer)

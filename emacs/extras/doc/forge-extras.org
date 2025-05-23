@@ -104,6 +104,28 @@ The command ~forge-extras-set-project-status~ allows you to set the status of th
 
 This functionality relies on the `gh` command-line tool being installed and authenticated.
 
+** Set GitHub Project Estimate
+:PROPERTIES:
+:CUSTOM_ID: h:forge-extras-set-project-estimate
+:END:
+
+#+findex: forge-extras-set-project-estimate
+The command ~forge-extras-set-project-estimate~ allows you to set a numerical estimate for the current Forge issue or pull request within a configured GitHub Project.
+- It prompts for a number (e.g., story points, hours). The current estimate, if available from a field named "Estimate", is offered as the default.
+- It uses the GitHub Project configured by ~forge-extras-project-owner~ and ~forge-extras-project-number~.
+- The specific "Estimate" field to update is identified by its Node ID stored in ~forge-extras-estimate-field-node-id~.
+- If the issue is not already part of the target GitHub Project, it will prompt the user whether to add it.
+- The changes are made by interacting with the GitHub GraphQL API.
+- After a successful update, if in a `forge-topic-mode` buffer, it attempts to refresh the topic.
+
+This functionality relies on the `gh` command-line tool being installed and authenticated, and requires ~forge-extras-estimate-field-node-id~ to be correctly configured.
+- It prompts for a status from a predefined list (configured via ~forge-extras-status-option-ids-alist~).
+- If the issue is not already part of the target GitHub Project (configured by ~forge-extras-project-owner~ and ~forge-extras-project-number~), it will prompt the user whether to add it.
+- The changes are made by interacting with the GitHub GraphQL API.
+- After a successful update, if in a `forge-topic-mode` buffer, it attempts to refresh the topic.
+
+This functionality relies on the `gh` command-line tool being installed and authenticated.
+
 * Customization
 :PROPERTIES:
 :CUSTOM_ID: h:customization
@@ -117,6 +139,8 @@ This functionality relies on the `gh` command-line tool being installed and auth
 #+vindex: forge-extras-project-number
 + ~forge-extras-project-node-id~: The GraphQL Node ID of the target GitHub Project. This usually needs to be specific to the project.
 #+vindex: forge-extras-project-node-id
++ ~forge-extras-estimate-field-node-id~: The GraphQL Node ID of the "Estimate" (or equivalent numeric) field within the target project. This must be configured by the user.
+#+vindex: forge-extras-estimate-field-node-id
 + ~forge-extras-status-field-node-id~: The GraphQL Node ID of the "Status" field within the target project.
 #+vindex: forge-extras-status-field-node-id
 + ~forge-extras-status-option-ids-alist~: An alist mapping human-readable status names (e.g., "Doing", "Next") to their corresponding GraphQL Option IDs for the "Status" field in the target project. This list is used for prompting the user.

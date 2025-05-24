@@ -33,27 +33,6 @@
 (require 'json)
 (require 'seq)
 
-;;;; Variables
-
-(defconst forge-extras-safari-script-format-string
-  "osascript -e 'tell application \"Safari\"
-                 tell window 1
-                   set beforeCount to count of tabs
-                   make new tab with properties {URL:\"%s\"}
-                   delay 5
-                   try
-                     set loadState to do JavaScript \"document.readyState\" in tab (beforeCount + 1)
-                     if loadState is \"complete\" then
-                       close tab (beforeCount + 1)
-                       return \"Tab loaded and closed\"
-                     end if
-                   on error errMsg
-                     return \"Error: \" & errMsg
-                   end try
-                 end tell
-               end tell'"
-  "The AppleScript to open a new tab in Safari and run JavaScript.")
-
 ;;;; Functions
 
 (declare-function org-store-link "ol")
@@ -102,6 +81,25 @@ problems."
 	(forge-pull-notifications)))))
 
 ;;;;; sync read status
+
+(defconst forge-extras-safari-script-format-string
+  "osascript -e 'tell application \"Safari\"
+                 tell window 1
+                   set beforeCount to count of tabs
+                   make new tab with properties {URL:\"%s\"}
+                   delay 5
+                   try
+                     set loadState to do JavaScript \"document.readyState\" in tab (beforeCount + 1)
+                     if loadState is \"complete\" then
+                       close tab (beforeCount + 1)
+                       return \"Tab loaded and closed\"
+                     end if
+                   on error errMsg
+                     return \"Error: \" & errMsg
+                   end try
+                 end tell
+               end tell'"
+  "The AppleScript to open a new tab in Safari and run JavaScript.")
 
 (autoload 'doom-modeline--github-fetch-notifications "doom-modeline-segments")
 (defun forge-extras-sync-read-status (&optional _)

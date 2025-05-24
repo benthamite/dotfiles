@@ -8754,6 +8754,7 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
   :bind
   (("H-l" . org-extras-tlon-menu)
    ("H-;" . org-extras-personal-menu)
+   ("A-H-w" . org-extras-refile-goto-latest)
    :map org-mode-map
    ("s-<return>" . org-extras-super-return)
    ("s-v" . org-extras-paste-with-conversion)
@@ -8772,7 +8773,6 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
    ("A-s-c" . org-extras-mark-checkbox-complete-and-move-to-next-item)
    ("A-s-o" . org-extras-reset-checkbox-state-subtree)
    ("H-s-w" . org-extras-refile-and-archive)
-   ("A-H-w" . org-extras-refile-goto-latest)
    ("s-A-l" . org-extras-url-dwim)))
 #+end_src
 

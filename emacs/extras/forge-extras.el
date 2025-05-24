@@ -247,31 +247,28 @@ The formatting of the message is preserved."
   :group 'forge-extras
   :group 'external)
 
-(defcustom forge-extras-project-owner "tlon-team"
+(defcustom forge-extras-project-owner nil
   "The GitHub owner (organization or user) for the target project."
   :type 'string
   :group 'forge-extras-projects)
 
-(defcustom forge-extras-project-number 9
+(defcustom forge-extras-project-number nil
   "The GitHub Project number to use for fetching/setting issue status."
   :type 'integer
   :group 'forge-extras-projects)
 
-(defcustom forge-extras-project-node-id "PVT_kwDOBtGWf84A5jZf"
-  "The global Relay Node ID of the target GitHub Project.
-Default is for tlon-team/Project #9."
+(defcustom forge-extras-project-node-id nil
+  "The global Relay Node ID of the target GitHub project."
   :type 'string
   :group 'forge-extras-projects)
 
-(defcustom forge-extras-status-field-node-id "PVTSSF_lADOBtGWf84A5jZfzguVNY8"
-  "The global Relay Node ID of the \"Status\" field within the Project.
-Default is for tlon-team/Project #9."
+(defcustom forge-extras-status-field-node-id nil
+  "The global Relay Node ID of the \"Status\" field in project."
   :type 'string
   :group 'forge-extras-projects)
 
-(defcustom forge-extras-estimate-field-node-id "PVTF_lADOBtGWf84A5jZfzguVNc0"
-  "The global Relay Node ID of the \"Estimate\" field within the Project.
-Default is for tlon-team/Project #9."
+(defcustom forge-extras-estimate-field-node-id nil
+  "The global Relay Node ID of the \"Estimate\" field in project."
   :type 'string
   :group 'forge-extras-projects)
 
@@ -281,9 +278,7 @@ Default is for tlon-team/Project #9."
     ("Later" . "13e22f63")
     ("Someday" . "4bf0f00e")
     ("Done" . "98236657"))
-  "Alist mapping GitHub Project status names (car) to their global Option IDs (cdr)
-for the \"Status\" field in the target project.
-Default is for tlon-team/Project #9."
+  "Alist mapping status names to Option IDs for the \"Status\" field in project."
   :type '(alist :key-type string :value-type string)
   :group 'forge-extras-projects)
 

@@ -1,4 +1,8 @@
+## General
+
 - Please respond in the same language as the prompt.
+
+- Whenever you find yourself guessing something you could directly learn by looking at documentation you don't have access to, please ask me to provide you with the relevant files.
 
 ## Emacs Lisp
 

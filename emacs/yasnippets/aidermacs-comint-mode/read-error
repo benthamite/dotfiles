@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: read-error
+# key: re
+# contributor: Pablo Stafforini
+# --
+/read `(expand-file-name "~/Downloads/error.txt")`

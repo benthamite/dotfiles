@@ -13566,8 +13566,7 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
    ("A-C-s-f" . bbdb-next-record)
    ("c" . bbdb-copy-fields-as-kill)
    ("C-k" . nil)
-   ("M-d" . nil)
-   ("D" . bbdb-extras-delete-field-or-record-no-confirm)))
+   ("M-d" . nil)))
 #+end_src
 
 ** bbdb-extras
@@ -13580,8 +13579,8 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package bbdb-extras
-  :after bbdb
   :bind (:map bbdb-mode-map
+              ("D" . bbdb-extras-delete-field-or-record-no-confirm)
               ("E" . bbdb-extras-export-vcard)
               ("n" . bbdb-extras-create-quick)))
 #+end_src

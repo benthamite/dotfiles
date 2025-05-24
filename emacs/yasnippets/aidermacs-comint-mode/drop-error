@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: drop-error
+# key: de
+# contributor: Pablo Stafforini
+# --
+/drop `(expand-file-name "~/Downloads/error.txt")`

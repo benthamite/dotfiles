@@ -502,6 +502,7 @@
          [:y [:open "/Applications/Spotify.app"]]
          [:comma [:open "/Applications/Home Assistant.app"]]
          [:period [:open "/Applications/Tor Browser.app"]]
+         [:slash [:open "/Applications/Safari.app"]]
          ]}
 
 {:des "v-mode (numbers)"

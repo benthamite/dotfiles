@@ -12402,7 +12402,7 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
    ("o" . eww-toggle-fonts)
    ("r" . eww-reload)
    ;; ":" (lambda! (eww-follow-link '(4)))
-   ("x" . eww-browse-with-external-browser)
+   ("X" . eww-browse-with-external-browser)
    ("s-c" . org-extras-eww-copy-for-org-mode)))
 #+end_src
 
@@ -12450,8 +12450,11 @@ CLOCK: [2022-07-19 Tue 20:49]--[2022-07-19 Tue 21:05] =>  0:16
         ;; "p" 'eww-extras-open-with-recent-kill-ring
         ("h" . eww-extras-url-to-html)
         ("p" . eww-extras-url-to-pdf)
+        ("x" . eww-extras-open-with-xwidget)
         ("s-d" . eww-extras-url-to-pdf)
-        ("s-h" . eww-extras-url-to-html)))
+        ("s-h" . eww-extras-url-to-html)
+        :map xwidget-webkit-mode-map
+        ("x" . eww-extras-open-with-eww)))
 #+end_src
 
 ** prot-eww

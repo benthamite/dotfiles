@@ -8243,7 +8243,7 @@ This package evolved out of gptel-extras.
 (use-personal-package aidermacs-extras
   :hook
   (kill-buffer-query-functions . aidermacs-extras-confirm-kill-buffer)
-  
+
   :bind
   (("H-s-." . aidermacs-extras-run-in-current-dir)))
 #+end_src
@@ -8555,8 +8555,10 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
                "MAYBE(m)"
                "WAITING(w)"
                "PROJECT(p)"
+               "NEXT(n)"
+               "LATER(l)"
                "|"
-               "DELEGATED(l)"
+               "DELEGATED(e)"
                "DONE(d)"
                "CANCELLED(c)")))
   (org-priority-highest 1)

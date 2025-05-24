@@ -10597,27 +10597,27 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
   (bibtex-extras-replace-element-by-name
    bibtex-biblatex-entry-alist
    "Online" '("Online" "Online Resource"
-	      (("author" nil nil 0) ("title") ("journaltitle" nil nil 3)
-	       ("date" nil nil 1) ("year" nil nil -1)
-	       ("doi" nil nil 2) ("url" nil nil 2))
-	      nil
-	      (("subtitle") ("language") ("version") ("note")
-	       ("organization") ("month")
-	       ("pubstate") ("eprintclass" nil nil 4) ("primaryclass" nil nil -4)
-	       ("eprinttype" nil nil 5) ("archiveprefix" nil nil -5) ("urldate"))))
+              (("author" nil nil 0) ("title") ("journaltitle" nil nil 3)
+               ("date" nil nil 1) ("year" nil nil -1)
+               ("doi" nil nil 2) ("url" nil nil 2))
+              nil
+              (("subtitle") ("language") ("version") ("note")
+               ("organization") ("month")
+               ("pubstate") ("eprintclass" nil nil 4) ("primaryclass" nil nil -4)
+               ("eprinttype" nil nil 5) ("archiveprefix" nil nil -5) ("urldate"))))
 
   (add-to-list 'bibtex-biblatex-entry-alist
-	       '("Performance" "A performance entry"
-		 (("author") ("title") ("date")) ; Required fields
-		 nil ; Crossref fields
-		 (("venue") ("location") ("note"))))
+               '("Performance" "A performance entry"
+                 (("author") ("title") ("date")) ; Required fields
+                 nil ; Crossref fields
+                 (("venue") ("location") ("note"))))
   :bind
   (:map bibtex-mode-map
-	("s-a" . bibtex-extras-set-field)
-	("s-d" . bibtex-extras-url-to-pdf-attach)
-	("s-h" . bibtex-extras-url-to-html-attach)
-	("s-i" . bibtex-extras-open-in-ebib)
-	("s-t" . bibtex-extras-move-entry-to-tlon)))
+        ("s-a" . bibtex-extras-set-field)
+        ("s-d" . bibtex-extras-url-to-pdf-attach)
+        ("s-h" . bibtex-extras-url-to-html-attach)
+        ("s-i" . bibtex-extras-open-in-ebib)
+        ("s-t" . bibtex-extras-move-entry-to-tlon)))
 #+end_src
 
 ** bibtex-completion
@@ -13337,8 +13337,8 @@ Requires configuration. Disabled for the time being.
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package subed
   :ensure (:host github
-		 :repo "sachac/subed"
-		 :files ("subed/*.el"))
+                 :repo "sachac/subed"
+                 :files ("subed/*.el"))
 
   :config
   (defun subed-export-transcript ()
@@ -13348,26 +13348,26 @@ as WebVTT timing or style tags within the text lines), and then saves the
 result to a user-specified file."
     (interactive)
     (let* ((subtitles (subed-subtitle-list))
-	   (raw-text (if subtitles
-			 (subed-subtitle-list-text subtitles nil) ; nil = do not include comments
-		       ""))
-	   (cleaned-text (if (string-empty-p raw-text)
-			     ""
-			   (let* ((lines (split-string raw-text "\n" t)) ; OMIT-NULLS is t
-				  (stripped-lines (mapcar #'subed--strip-tags lines))
-				  (unique-lines (seq-uniq stripped-lines)))
-			     (mapconcat #'identity unique-lines "\n"))))
-	   (buffer-filename (buffer-file-name))
-	   (default-output-name (if buffer-filename
-				    (concat (file-name-sans-extension buffer-filename) ".txt")
-				  "transcript.txt"))
-	   (output-file (read-file-name "Export clean transcript to: " nil default-output-name t)))
+           (raw-text (if subtitles
+                         (subed-subtitle-list-text subtitles nil) ; nil = do not include comments
+                       ""))
+           (cleaned-text (if (string-empty-p raw-text)
+                             ""
+                           (let* ((lines (split-string raw-text "\n" t)) ; OMIT-NULLS is t
+                                  (stripped-lines (mapcar #'subed--strip-tags lines))
+                                  (unique-lines (seq-uniq stripped-lines)))
+                             (mapconcat #'identity unique-lines "\n"))))
+           (buffer-filename (buffer-file-name))
+           (default-output-name (if buffer-filename
+                                    (concat (file-name-sans-extension buffer-filename) ".txt")
+                                  "transcript.txt"))
+           (output-file (read-file-name "Export clean transcript to: " nil default-output-name t)))
       (if output-file
-	  (progn
-	    (with-temp-file output-file
-	      (insert cleaned-text))
-	    (message "Transcript exported to %s" output-file))
-	(message "Transcript export cancelled")))))
+          (progn
+            (with-temp-file output-file
+              (insert cleaned-text))
+            (message "Transcript exported to %s" output-file))
+        (message "Transcript export cancelled")))))
 #+end_src
 
 * misc

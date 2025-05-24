@@ -1576,7 +1576,6 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
    ("k" . magit-section-backward-sibling)
    ("l" . magit-section-forward-sibling)
    :map magit-mode-map
-   ("n" . forge-dispatch)
    ("p" . magit-pull)
    ("." . magit-push)
    :map magit-diff-mode-map
@@ -1601,21 +1600,9 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
    ("s-b" . magit-smerge-keep-base)
    ("s-c" . magit-smerge-keep-current)
    ("s-r" . tlon-commit-when-slug-at-point)
-   ("s-a" . forge-topic-set-assignees)
-   ("s-d" . forge-delete-comment)
-   ("s-e" . forge-edit-post)
-   ("s-i" . forge-browse-issue)
-   ("s-I" . forge-browse-issues)
-   ("s-l" . forge-topic-set-labels)
-   ("s-o" . forge-topic-status-set-done)
-   ("s-p" . forge-create-post)
-   ("s-r" . forge-create-post)
-   ("s-s" . forge-list-assigned-issues)
-   ("s-t" . forge-topic-set-title)
    ("s-u" . magit-remote-unshallow)
    ("A-C-s-r" . magit-section-backward-sibling)
    ("A-C-s-f" . magit-section-forward-sibling)
-   ("s-x" . forge-extras-state-set-dwim)
    :map magit-revision-mode-map
    ("A-C-s-r" . magit-section-backward-sibling)
    ("A-C-s-f" . magit-section-forward-sibling)))
@@ -1735,6 +1722,22 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
                  :branch "main" ; github.com/progfolio/elpaca/issues/342
                  :build (:not elpaca--check-version))
   :after magit ghub emacsql auth-source-pass
+  :init
+  (with-eval-after-load 'magit-status
+    (bind-keys :map 'magit-status-mode-map
+	       ("s-a" . forge-topic-set-assignees)
+	       ("s-d" . forge-delete-comment)
+	       ("s-e" . forge-edit-post)
+	       ("s-i" . forge-browse-issue)
+	       ("s-I" . forge-browse-issues)
+	       ("s-l" . forge-topic-set-labels)
+	       ("s-o" . forge-topic-status-set-done)
+	       ("s-p" . forge-create-post)
+	       ("s-r" . forge-create-post)
+	       ("s-t" . forge-topic-set-title)))
+  (with-eval-after-load 'magit
+    (bind-keys :map 'magit-mode-map
+	       ("n" . forge-dispatch)))
   :custom
   (forge-owned-accounts '(("benthamite")))
   (forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'
@@ -1808,7 +1811,6 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
         ("s-o" . forge-topic-status-set-done)
         ("s-p" . forge-create-post)
         ("s-r" . forge-create-post)
-        ("s-s" . forge-list-assigned-issues)
         ("s-t" . forge-topic-set-title)
         :map forge-notifications-mode-map
         ("s-a" . forge-topic-set-assignees)
@@ -1820,10 +1822,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
         ("s-o" . forge-topic-status-set-done)
         ("s-p" . forge-create-post)
         ("s-r" . forge-create-post)
-        ("s-s" . forge-list-assigned-issues)
         ("s-t" . forge-topic-set-title)
-        ("s-x" . forge-extras-state-set-dwim)
-        ("x" . forge-extras-browse-github-inbox)
         :map forge-topic-mode-map
         ("s-a" . forge-topic-set-assignees)
         ("s-d" . forge-delete-comment)
@@ -1834,9 +1833,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
         ("s-o" . forge-topic-status-set-done)
         ("s-p" . forge-create-post)
         ("s-r" . forge-create-post)
-        ("s-s" . forge-list-assigned-issues)
-        ("s-t" . forge-topic-set-title)
-        ("s-x" . forge-extras-state-set-dwim)))
+        ("s-t" . forge-topic-set-title)))
 #+end_src
 
 ** orgit
@@ -1902,11 +1899,17 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
   (run-with-idle-timer 30 t #'forge-extras-pull-notifications)
 
-:bind
-(:map forge-issue-mode-map
-      ("A-C-s-d" . forge-previous-message)
-      ("A-C-s-f" . forge-next-message)
-      ("s-w" . forge-extras-copy-message-at-point-as-kill)))
+  :bind
+  (:map forge-issue-mode-map
+	("A-C-s-d" . forge-previous-message)
+	("A-C-s-f" . forge-next-message)
+	("s-s" . forge-extras-set-project-status)
+	("s-w" . forge-extras-copy-message-at-point-as-kill))
+  (:map forge-notification-mode-map
+	("x" . forge-extras-browse-github-inbox)
+	("s-x" . forge-extras-state-set-dwim))
+  (:map forge-topic-mode-map
+	("s-x" . forge-extras-state-set-dwim)))
 #+end_src
 
 ** emacs-pr-review

@@ -1919,13 +1919,13 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
   :bind
   (:map forge-issue-mode-map
-	("A-C-s-d" . forge-previous-message)
-	("A-C-s-f" . forge-next-message)
-	("s-s" . forge-extras-set-project-status)
-	("s-w" . forge-extras-copy-message-at-point-as-kill))
-  (:map forge-notification-mode-map
-	("x" . forge-extras-browse-github-inbox)
-	("s-x" . forge-extras-state-set-dwim))
+        ("A-C-s-d" . forge-previous-message)
+        ("A-C-s-f" . forge-next-message)
+        ("s-s" . forge-extras-set-project-status)
+        ("s-w" . forge-extras-copy-message-at-point-as-kill))
+  (:map forge-notifications-mode-map
+        ("x" . forge-extras-browse-github-inbox)
+        ("s-x" . forge-extras-state-set-dwim))
   (:map forge-topic-mode-map
 	("s-x" . forge-extras-state-set-dwim)))
 #+end_src

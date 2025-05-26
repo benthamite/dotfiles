@@ -19,14 +19,14 @@ CLOCK: [2021-02-28 Sun 19:56]--[2021-02-28 Sun 20:00] =>  0:04
 Steps to try my layout:
 
 1. If you have a normal keyboard, proceed to step (2). If you have a special keyboard like the Moonlandeer or the Kinesis Advantage, use their configuration software to map the thumb keys as follows:
-     - left-hand thumb keys:   
-         - left key: ~left control~
-         - middle key: ~left option~
-         - right key: ~left command~
-     - right-hand thumb keys:
-         - left key: ~spacebar~
-         - middle key: ~right command~
-         - right key: ~right option~
+   - left-hand thumb keys:
+     - left key: ~left control~
+     - middle key: ~left option~
+     - right key: ~left command~
+   - right-hand thumb keys:
+     - left key: ~spacebar~
+     - middle key: ~right command~
+     - right key: ~right option~
 2. Install [[https://karabiner-elements.pqrs.org/][Karabiner-Elements]].
 3. Install [[https://github.com/yqrashawn/GokuRakuJoudo][goku]].
 4. Clone this repo and load the config in ~dotfiles/karabiner/karabiner.edn~.
@@ -713,10 +713,10 @@ CLOCK: [2023-08-26 Sat 10:53]--[2023-08-26 Sat 12:31] =>  1:38
 
 - The right-hand top row keys control window placement, via Emacs Lisp commands in Emacs, or via [[https://github.com/rxhanson/Rectangle][Rectangle]] otherwise.
 - The right-hand home row keys control playback.
-    - ~l~ triggers a Keyboard Maestro script that runs the AppleScript included below.
+  - ~l~ triggers a Keyboard Maestro script that runs the AppleScript included below.
 - The right-hand bottom row keys control volume.
 - ~h~  and ~n~ control dictation and narration, respectively.
-    - The keyboard shortcuts need to be set under Settings > Keyboard > Dictation > Shortcut (for dictation) and Settings > Accessibility > Spoken content > Speak selection (for narration).
+  - The keyboard shortcuts need to be set under Settings > Keyboard > Dictation > Shortcut (for dictation) and Settings > Accessibility > Spoken content > Speak selection (for narration).
 
 #+begin_src clojure
 {:des "b-mode (media controls, window sizing)"
@@ -1855,7 +1855,7 @@ Source: [[https://en.wikipedia.org/wiki/Letter_frequency][Wikipedia]]
 * Local variables
 :PROPERTIES:
 :ID:       2137CAE3-8576-467C-BA76-7060BE9FE6D0
- :END:
+:END:
 # Local Variables:
 # eval: (add-hook 'before-save-hook 'org-make-toc nil t)
 # org-archive-default-command: org-archive-hierarchically

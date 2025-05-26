@@ -12440,11 +12440,11 @@ CLOCK: [2022-07-19 Tue 20:49]--[2022-07-19 Tue 21:05] =>  0:16
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package eww-extras
+  :after eww
+  :demand t
   :config
-  (advice-add 'eww :before
-              (lambda (url &optional _new-session)
-                "When browsing a YouTube URL, display the transcript and open the video with `mpv'."
-                (eww-extras-browse-youtube url)))
+  (require 'xwidget)
+  (advice-add 'eww :before #'eww-extras-browse-youtube)
 
   :bind
   (:map eww-mode-map

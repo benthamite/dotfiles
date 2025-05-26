@@ -5817,6 +5817,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
   (corfu-count vertico-count)
   (corfu-auto-prefix 3)
   (corfu-auto-delay 0.5)
+  (corfu-popupinfo-delay 0.1)
 
   :config
   (faces-extras-set-and-store-face-attributes

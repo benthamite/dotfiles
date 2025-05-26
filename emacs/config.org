@@ -13769,6 +13769,7 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
 (use-package kelly
   :ensure (:host github
                  :repo "benthamite/kelly")
+  :defer t
 
   :custom
   (kelly-b-parameter-type 'probability))

@@ -8019,15 +8019,15 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (put 'o3-mini :request-params '(:reasoning_effort "high" :stream :json-false))
 
   ;; default model
-  (setq gptel-model 'gemini-2.5-pro-preview-05-06
-        gptel-backend (gptel-make-gemini "Gemini"
-                        :stream t
-                        :key (auth-source-pass-get 'secret (concat "tlon/core/aistudio.google.com/" tlon-email-shared))))
+  (setq gptel-model 'claude-sonnet-4-20250514
+        gptel-backend (gptel-make-anthropic "Claude"
+			:stream t
+			:key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))))
 
   ;; other models
-  (gptel-make-anthropic "Claude"
+  (gptel-make-gemini "Gemini"
     :stream t
-    :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared)))
+    :key (auth-source-pass-get 'secret (concat "tlon/core/aistudio.google.com/" tlon-email-shared)))
 
   (gptel-make-anthropic "Claude-thinking"
     :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))

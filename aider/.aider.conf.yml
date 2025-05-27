@@ -1,9 +1,11 @@
-model: gemini/gemini-2.5-pro-preview-05-06
-edit-format: diff-fenced
-# model: o3
-# editor-model: gpt-4.1
-# editor-edit-format: editor-diff
-# architect: true
+# model: anthropic/claude-sonnet-4-20250514
+# edit-format: diff-fenced
+# model: gemini/gemini-2.5-pro-preview-05-06
+# edit-format: diff-fenced
+model: o3
+editor-model: gpt-4.1
+editor-edit-format: editor-diff
+architect: true
 commit-prompt: |
   Generate a concise commit message following these rules:
   - If the current project is `dotfiles` and the file(s) being committed are in `emacs/extras` or `emacs/extras/doc` (relative to that project), proceed as follows: (1) Begin with the name of the file being modified, sans its extension. For example, if the file is `emacs/extras/files-extras.el`, use `files-extras`. (2) Continue with ": " followed by a brief description of the change. The word after the colon should be in lowercase. For example, if you are refactoring a function in `emacs/extras/files-extras.el`, your commit message should look like this: `files-extras: refactor function name`.

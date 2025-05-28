@@ -359,41 +359,30 @@ number. Disable the mode if ARG is a negative number."
 
 (defun org-extras-agenda-goto-and-start-clock ()
   "Go to the Org entry for the item at point and start the clock there.
-This must be called from an Org agenda buffer. It first checks if the
-point is on a valid agenda item. If so, it navigates to the source Org
-file location using the item's marker, then starts the clock on that item
-using `org-clock-in'. If the point is not on a valid item, it signals a
-user error."
+This must be called from an Org agenda buffer. It first checks if the point is
+on a valid agenda item. If so, it navigates to the source Org file location
+using the item's marker, then starts the clock on that item using
+`org-clock-in'. If the point is not on a valid item, it signals a user error."
   (interactive)
   (unless (derived-mode-p 'org-agenda-mode)
     (user-error "Not in an Org agenda buffer"))
-  ;; Check for the 'org-marker' property at the beginning of the line.
   (let ((marker (org-get-at-bol 'org-marker)))
     (unless marker
       (user-error "Point is not on a line with an Org agenda item marker"))
-    ;; Marker exists at BOL, proceed with navigation.
     (let ((origin-buffer (current-buffer))
           (target-buffer (marker-buffer marker))
           (target-pos (marker-position marker)))
-      ;; Validate the marker's target before attempting navigation.
       (unless (and target-buffer (buffer-live-p target-buffer) target-pos)
-        ;; If marker is invalid, offer to refresh the agenda.
         (if (y-or-n-p "Agenda item marker is invalid (stale agenda?). Refresh agenda? ")
             (progn
               (org-agenda-redo)
-              ;; Abort the current command after refresh. User needs to retry.
               (user-error "Agenda refreshed. Please try the command again"))
-          ;; If user declines refresh, signal the original error.
           (user-error "Agenda item marker is invalid or points to a dead buffer/position")))
-      ;; Marker is valid, proceed with navigation using org-agenda-goto.
       (condition-case err
-          ;; Call org-agenda-goto interactively to mimic user action
           (call-interactively #'org-agenda-goto)
         (error (message "Error during org-agenda-goto: %s" err)
-               (signal (car err) (cdr err)))) ; Re-signal the error
-      ;; If goto was successful and switched buffer, clock in the item there.
+               (signal (car err) (cdr err))))
       (unless (eq origin-buffer (current-buffer))
-        ;; Ensure we are at a headline before clocking in
         (when (org-at-heading-p)
           (org-clock-in))))))
 

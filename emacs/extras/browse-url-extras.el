@@ -78,6 +78,7 @@ respectively."
     (browse-url-of-dired-file)))
 
 (declare-function ffap-url-p "f")
+;;;###autoload
 (defun browse-url-extras-add-domain-to-open-externally (arg)
   "Prompt for a URL and add its domain to the list of URLs to open externally.
 If buffer is visiting a URL or if there is a URL in the kill ring,

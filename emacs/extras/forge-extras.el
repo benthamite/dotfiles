@@ -537,14 +537,11 @@ JSON payload to `gh api ... --input -'."
   "Parse RAW-LIST of issue fields into a property list.
 This function specifically looks for data related to project number
 `forge-extras-project-number'."
-  (message "Debug: forge-extras-gh-parse-issue-fields received raw-list: %S" raw-list)
   (let* ((data (cdr (assoc 'data raw-list)))
          (repository (cdr (assoc 'repository data)))
          (issue (cdr (assoc 'issue repository)))
          (issue-node-id (cdr (assoc 'id issue)))
          (title (cdr (assoc 'title issue))))
-    (message "Debug: forge-extras-gh-parse-issue-fields extracted issue-node-id: %S" issue-node-id)
-    (message "Debug: forge-extras-gh-parse-issue-fields extracted title: %S" title)
     (let* ((assignees (mapcar (lambda (node) (cdr (assoc 'login node)))
                               (cdr (assoc 'nodes (cdr (assoc 'assignees issue))))))
            (labels (mapcar (lambda (node) (cdr (assoc 'name node)))
@@ -655,7 +652,6 @@ Returns the raw parsed JSON response, or nil on failure."
 
 (defun forge-extras-gh-parse-project-fields (raw-json-response)
   "Parse RAW-JSON-RESPONSE from project fields query into a list of cons cells."
-  (message "Debug: forge-extras-gh-parse-project-fields received raw-json: %S" raw-json-response)
   (if-let* ((data (cdr (assoc 'data raw-json-response)))
             (node (cdr (assoc 'node data)))
             (fields (cdr (assoc 'fields node)))
@@ -664,7 +660,6 @@ Returns the raw parsed JSON response, or nil on failure."
                 (cons (cdr (assoc 'name field-node))
                       (cdr (assoc 'id field-node))))
               field-nodes)
-    (message "Debug: forge-extras-gh-parse-project-fields: Could not parse expected structure from %S" raw-json-response)
     nil))
 
 (defun forge-extras--get-field-property-value (field-obj property-key)

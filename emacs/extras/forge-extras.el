@@ -75,6 +75,12 @@
   :type '(alist :key-type string :value-type string)
   :group 'forge-extras)
 
+(defcustom forge-extras-issue-link-state "open"
+  "Which issues to retrieve with `gh issue list`.
+Allowed values are \"open\", \"closed\" or \"all\"."
+  :type '(choice (const "open") (const "closed") (const "all"))
+  :group 'forge-extras)
+
 (defcustom forge-extras-issue-link-repositories nil
   "A list of GitHub repositories (e.g., \"owner/repo\") to fetch issues from
 for `forge-extras-insert-issue-markdown-link'."
@@ -290,6 +296,18 @@ The formatting of the message is preserved."
 
 ;;;; Insert Markdown link to GitHub Issue
 
+;;;###autoload
+(defun forge-extras-test-fetch-issues (&optional repo)
+  "Fetch issues for REPO and echo the result for debugging."
+  (interactive
+   (list (completing-read "Repository: "
+                          forge-extras-issue-link-repositories nil t)))
+  (let ((issues (forge-extras--fetch-issues-for-repo repo)))
+    (if issues
+        (message "Fetched %d issues for %s"
+                 (length issues) repo)
+      (message "No issues fetched for %s" repo))))
+
 (defun forge-extras--parse-gh-issue-json (json-string repo-string)
   "Parse JSON-STRING from `gh issue list` for REPO-STRING.
 Return a list of issue plists."
@@ -325,8 +343,11 @@ Return a list of issue plists, or nil on error."
 
     (let ((output-buffer (generate-new-buffer (format "*gh-issues-%s*" (replace-regexp-in-string "/" "-" repo-string))))
           (error-file (make-temp-file "gh-issues-err-"))
-          ;; Fetch open issues, with a limit of 300 per repository.
-          (process-args (list "issue" "list" "-R" repo-string "--json" "number,title,url" "--limit" "300" "--state" "open"))
+          (process-args (list "issue" "list"
+                              "-R" repo-string
+                              "--json" "number,title,url"
+                              "--limit" "300"
+                              "--state" forge-extras-issue-link-state))
           issues)
       (unwind-protect
           (progn
@@ -341,6 +362,23 @@ Return a list of issue plists, or nil on error."
                     (setq issues (forge-extras--parse-gh-issue-json
                                   (with-current-buffer output-buffer (buffer-string))
                                   repo-string))
+                    (when (and (null issues)
+                               (string= forge-extras-issue-link-state "open"))
+                      ;; nothing open – try again with all states
+                      (setq process-args
+                            (list "issue" "list"
+                                  "-R" repo-string
+                                  "--json" "number,title,url"
+                                  "--limit" "300"
+                                  "--state" "all"))
+                      (message "No open issues found; retrying with --state all...")
+                      (setq exit-status
+                            (apply #'call-process gh-executable
+                                   nil (list output-buffer error-file) nil process-args))
+                      (when (zerop exit-status)
+                        (setq issues (forge-extras--parse-gh-issue-json
+                                      (with-current-buffer output-buffer (buffer-string))
+                                      repo-string))))
                     (message "Fetched %d issues for %s." (if issues (length issues) 0) repo-string))
                 (let ((err (with-temp-buffer
                              (insert-file-contents error-file)

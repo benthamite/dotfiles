@@ -377,12 +377,13 @@ Prompt the user to select an issue, then insert a Markdown link to it."
                           issue))
                   all-issues))
 
-    (let* ((selected-issue-plist
-            (completing-read "Select issue: " completion-alist nil 'require-match nil nil)))
+    (let* ((selected-key (completing-read
+                          "Select issue: " completion-alist nil 'require-match))
+           (selected-issue-plist (cdr (assoc selected-key completion-alist))))
       (when selected-issue-plist
-        (let* ((repo (plist-get selected-issue-plist :repo))
+        (let* ((repo   (plist-get selected-issue-plist :repo))
                (number (plist-get selected-issue-plist :number))
-               (url (plist-get selected-issue-plist :url))
+               (url    (plist-get selected-issue-plist :url))
                (markdown-link (format "[%s#%s](%s)" repo number url)))
           (insert markdown-link)
           (message "Inserted: %s" markdown-link))))))

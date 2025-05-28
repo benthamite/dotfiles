@@ -320,7 +320,7 @@ Return a list of issue plists, or nil on error."
       (unwind-protect
           (progn
             (message "Fetching issues for %s..." repo-string)
-            (let ((exit-status (apply #'call-process gh-executable nil (vector output-buffer error-buffer) nil process-args)))
+            (let ((exit-status (apply #'call-process gh-executable nil (list output-buffer error-buffer) nil process-args)))
               (if (zerop exit-status)
                   (progn
                     (setq issues (forge-extras--parse-gh-issue-json

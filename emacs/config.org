@@ -7519,18 +7519,21 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
 (use-feature debug
   :config
   (defun debug-copy-and-save-backtrace ()
-    "Copy the backtrace to the clipboard and save it to a file."
-    (interactive)
-    (when (string-match-p "\\*Backtrace\\*" (buffer-name))
-      (let ((contents (buffer-string))
-            (file (file-name-concat paths-dir-downloads "backtrace.el")))
-        (kill-new contents)
-        (with-temp-buffer
-          (insert contents)
-          (write-region (point-min) (point-max) file)))
-      (kill-buffer)
-      (message "Backtrace copied to clipboard and saved to \"backtrace.el\" (%s)"
-               (file-size-human-readable (file-attribute-size (file-attributes file))))))
+  "Copy the backtrace to the clipboard and save it to a file."
+  (interactive)
+  (when (string-match-p "\\*Backtrace\\*" (buffer-name))
+    (let* ((contents (buffer-string))
+           (file (file-name-concat paths-dir-downloads "backtrace.el"))
+	   message)
+      (kill-new contents)
+      (with-temp-buffer
+	(insert contents)
+	(write-region (point-min) (point-max) file)
+	(setq message (format "Backtrace copied to clipboard and saved to \"%s\" (%s)"
+			      (abbreviate-file-name file)
+			      (file-size-human-readable (file-attribute-size (file-attributes file))))))
+      (run-at-time 0.1 nil (lambda () (message message))))
+    (kill-buffer)))
 
   :bind
   (:map debugger-mode-map

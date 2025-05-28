@@ -33,6 +33,47 @@
 (require 'json)
 (require 'seq)
 
+;;;; User options
+
+(defgroup forge-extras ()
+  "Extensions for `forge'."
+  :group 'forge-extras)
+
+(defcustom forge-extras-project-owner nil
+  "The GitHub owner (organization or user) for the target project."
+  :type 'string
+  :group 'forge-extras)
+
+(defcustom forge-extras-project-number nil
+  "The GitHub Project number to use for fetching/setting issue status."
+  :type 'integer
+  :group 'forge-extras)
+
+(defcustom forge-extras-project-node-id nil
+  "The global Relay Node ID of the target GitHub project."
+  :type 'string
+  :group 'forge-extras)
+
+(defcustom forge-extras-status-field-node-id nil
+  "The global Relay Node ID of the \"Status\" field in project."
+  :type 'string
+  :group 'forge-extras)
+
+(defcustom forge-extras-estimate-field-node-id nil
+  "The global Relay Node ID of the \"Estimate\" field in project."
+  :type 'string
+  :group 'forge-extras)
+
+(defcustom forge-extras-status-option-ids-alist
+  '(("Doing" . "47fc9ee4")
+    ("Next" . "8607328f")
+    ("Later" . "13e22f63")
+    ("Someday" . "4bf0f00e")
+    ("Done" . "98236657"))
+  "Alist mapping status names to Option IDs for the \"Status\" field in project."
+  :type '(alist :key-type string :value-type string)
+  :group 'forge-extras)
+
 ;;;; Functions
 
 (declare-function org-store-link "ol")
@@ -242,48 +283,8 @@ The formatting of the message is preserved."
 
 ;;;; GitHub Project Integration
 
-(defgroup forge-extras-projects nil
-  "Settings for Forge Extras GitHub Project integration."
-  :group 'forge-extras
-  :group 'external)
-
-(defcustom forge-extras-project-owner nil
-  "The GitHub owner (organization or user) for the target project."
-  :type 'string
-  :group 'forge-extras-projects)
-
-(defcustom forge-extras-project-number nil
-  "The GitHub Project number to use for fetching/setting issue status."
-  :type 'integer
-  :group 'forge-extras-projects)
-
-(defcustom forge-extras-project-node-id nil
-  "The global Relay Node ID of the target GitHub project."
-  :type 'string
-  :group 'forge-extras-projects)
-
-(defcustom forge-extras-status-field-node-id nil
-  "The global Relay Node ID of the \"Status\" field in project."
-  :type 'string
-  :group 'forge-extras-projects)
-
-(defcustom forge-extras-estimate-field-node-id nil
-  "The global Relay Node ID of the \"Estimate\" field in project."
-  :type 'string
-  :group 'forge-extras-projects)
-
-(defcustom forge-extras-status-option-ids-alist
-  '(("Doing" . "47fc9ee4")
-    ("Next" . "8607328f")
-    ("Later" . "13e22f63")
-    ("Someday" . "4bf0f00e")
-    ("Done" . "98236657"))
-  "Alist mapping status names to Option IDs for the \"Status\" field in project."
-  :type '(alist :key-type string :value-type string)
-  :group 'forge-extras-projects)
-
 (defconst forge-extras-gh-project-query
-"{
+  "{
   repository(owner: \"%s\", name: \"%s\") {
     issue(number: %s) {
       id # Issue's global Node ID

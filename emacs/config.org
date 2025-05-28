@@ -8613,15 +8613,12 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
      ("v" . "verse")
      ("w" . "WP")))
 
+  ;; refile
+  (org-reverse-note-order t) ; store notes at the beginning of header
+
   ;; export
   (org-export-backends '(ascii html icalendar latex md odt texinfo)) ; set export backends
   (org-preview-latex-default-process 'dvisvgm)
-
-  ;; refile
-  (org-refile-targets '((org-agenda-files :maxlevel . 9)
-                        (files-extras-open-buffer-files :maxlevel . 9)
-                        (nil :maxlevel . 9)))
-  (org-reverse-note-order t) ; refile to the beginning of header
 
   ;; org-src
   (org-src-fontify-natively t)
@@ -9311,6 +9308,9 @@ CLOCK: [2021-02-24 Wed 06:47]--[2021-02-24 Wed 07:30] =>  0:43
   :after org
   :defer t
   :custom
+  (org-refile-targets '((org-agenda-files :maxlevel . 9)
+                        (files-extras-open-buffer-files :maxlevel . 9)
+                        (nil :maxlevel . 9)))
   (org-refile-use-outline-path 'level3)
   (org-outline-path-complete-in-steps nil)
   (org-refile-allow-creating-parent-nodes nil)

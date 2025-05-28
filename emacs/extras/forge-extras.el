@@ -81,11 +81,6 @@ Allowed values are \"open\", \"closed\" or \"all\"."
   :type '(choice (const "open") (const "closed") (const "all"))
   :group 'forge-extras)
 
-(defcustom forge-extras-issue-link-repositories nil
-  "A list of GitHub repositories (e.g., \"owner/repo\") to fetch issues from
-for `forge-extras-insert-issue-markdown-link'."
-  :type '(repeat string)
-  :group 'forge-extras)
 
 ;;;; Functions
 
@@ -300,8 +295,7 @@ The formatting of the message is preserved."
 (defun forge-extras-test-fetch-issues (&optional repo)
   "Fetch issues for REPO and echo the result for debugging."
   (interactive
-   (list (completing-read "Repository: "
-                          forge-extras-issue-link-repositories nil t)))
+   (list (read-string "Repository (owner/repo): ")))
   (let ((issues (forge-extras--fetch-issues-for-repo repo)))
     (if issues
         (message "Fetched %d issues for %s"
@@ -390,21 +384,24 @@ Return a list of issue plists, or nil on error."
       issues)))
 
 ;;;###autoload
-(defun forge-extras-insert-issue-markdown-link ()
-  "Fetch issues from repositories in `forge-extras-issue-link-repositories`.
-Prompt the user to select an issue, then insert a Markdown link to it."
-  (interactive)
+(defun forge-extras-insert-issue-markdown-link (&optional repositories)
+  "Fetch issues from REPOSITORIES, prompt the user, then insert a markdown link.
+REPOSITORIES should be a list of \"owner/repo\" strings."
+  (interactive
+   (list (split-string
+          (read-string "Repositories (space or comma separated owner/repo): ")
+          "[ ,]+" t)))
   (unless (executable-find "gh")
     (user-error "The 'gh' command-line tool is not installed or not in PATH.")
     (cl-return-from forge-extras-insert-issue-markdown-link))
 
-  (unless forge-extras-issue-link-repositories
-    (user-error "`forge-extras-issue-link-repositories' is not configured or empty.")
+  (unless repositories
+    (user-error "No repositories supplied")
     (cl-return-from forge-extras-insert-issue-markdown-link))
 
   (let ((all-issues nil)
         (completion-alist nil))
-    (dolist (repo forge-extras-issue-link-repositories)
+    (dolist (repo repositories)
       (let ((repo-issues (forge-extras--fetch-issues-for-repo repo)))
         (when repo-issues
           (setq all-issues (append all-issues repo-issues)))))

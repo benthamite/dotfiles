@@ -365,65 +365,25 @@ Return a list of issue plists, or nil on error."
     (let ((output-buffer (generate-new-buffer (format "*gh-issues-%s*" (replace-regexp-in-string "/" "-" repo-string))))
           (error-file (make-temp-file "gh-issues-err-"))
           (process-args (list "issue" "list"
-                              "-R" repo-string
-                              "--json" "number,title,url"
-                              "--limit" "300"
-                              "--state" forge-extras-issue-link-state))
+                              "--repo" repo-string
+                              "--state" forge-extras-issue-link-state
+                              "--limit" "300"))
           issues)
       (unwind-protect
-          (progn
-            (message "Fetching issues for %s..." repo-string)
-            (let ((exit-status (apply #'call-process gh-executable
-                                      nil
-                                      (list output-buffer error-file)   ;; stdout → buffer, stderr → file
-                                      nil
-                                      process-args)))
-              (if (zerop exit-status)
-                  (progn
-                    (setq issues (forge-extras--parse-gh-issue-json
-                                  (with-current-buffer output-buffer (buffer-string))
-                                  repo-string))
-                    (when (and (null issues)
-                               (string= forge-extras-issue-link-state "open"))
-                      ;; nothing open – try again with all states
-                      (setq process-args
-                            (list "issue" "list"
-                                  "-R" repo-string
-                                  "--json" "number,title,url"
-                                  "--limit" "300"
-                                  "--state" "all"))
-                      (message "No open issues found; retrying with --state all...")
-                      (setq exit-status
-                            (apply #'call-process gh-executable
-                                   nil (list output-buffer error-file) nil process-args))
-                      (when (zerop exit-status)
-                        (setq issues (forge-extras--parse-gh-issue-json
-                                      (with-current-buffer output-buffer (buffer-string))
-                                      repo-string))))
-                    (message "Fetched %d issues for %s." (if issues (length issues) 0) repo-string))
-                ;;-------------------------------------------------------------------
-                ;; fallback: plain `gh issue list` (no --json) when JSON failed
-                ;;-------------------------------------------------------------------
-                (when (null issues)
-                  (with-current-buffer output-buffer (erase-buffer))
-                  (setq process-args
-                        (list "issue" "list"
-                              "--repo" repo-string
-                              ))
-                  (message "JSON mode failed; retrying with plain output...")
-                  (let ((exit-status
-                         (apply #'call-process gh-executable
-                                nil (list output-buffer error-file) nil process-args)))
-                    (when (zerop exit-status)
-                      (setq issues (forge-extras--parse-gh-issue-table
-                                    (with-current-buffer output-buffer (buffer-string))
-                                    repo-string)))))
-                (let ((err (with-temp-buffer
-                             (insert-file-contents error-file)
-                             (buffer-string))))
-                  (message "Error fetching issues for %s (exit status %d): %s"
-                           repo-string exit-status err))
-                (setq issues nil))))
+          (let ((exit-status
+                 (apply #'call-process gh-executable
+                        nil (list output-buffer error-file) nil process-args)))
+            (if (zerop exit-status)
+                ;; plain-text table → plist list
+                (setq issues (forge-extras--parse-gh-issue-table
+                              (with-current-buffer output-buffer (buffer-string))
+                              repo-string))
+              ;; non-zero exit, capture stderr
+              (let ((err (with-temp-buffer
+                           (insert-file-contents error-file)
+                           (buffer-string))))
+                (message "Error fetching issues for %s (exit status %d): %s"
+                         repo-string exit-status err))))
         (kill-buffer output-buffer)
         (when (file-exists-p error-file)
           (delete-file error-file)))

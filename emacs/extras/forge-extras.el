@@ -294,26 +294,26 @@ The formatting of the message is preserved."
   "Parse JSON-STRING from `gh issue list` for REPO-STRING.
 Return a list of issue plists."
   (condition-case err
-    ;; read the json with string keys and list arrays
-    (let* ((json-object-type 'alist)
-           (json-array-type  'list)
-           (json-key-type    'string)
-           (raw-issues       (json-read-from-string json-string))) ; ⇒ list of alists
-      ;; transform each gh issue alist into our internal plist,
-      ;; dropping any record whose number is missing
-      (cl-remove-if
-       #'null
-       (mapcar
-        (lambda (issue)
-          (let ((num   (alist-get "number" issue))
-                (title (alist-get "title"  issue))
-                (url   (alist-get "url"    issue)))
-            (when num
-              `(:repo ,repo-string  :number ,num  :title ,title  :url ,url))))
-        raw-issues)))
-  (error
-   (message "Error parsing JSON for %s: %s" repo-string err)
-   nil))
+      ;; read the json with string keys and list arrays
+      (let* ((json-object-type 'alist)
+             (json-array-type  'list)
+             (json-key-type    'string)
+             (raw-issues       (json-read-from-string json-string))) ; ⇒ list of alists
+	;; transform each gh issue alist into our internal plist,
+	;; dropping any record whose number is missing
+	(cl-remove-if
+	 #'null
+	 (mapcar
+          (lambda (issue)
+            (let ((num   (alist-get "number" issue))
+                  (title (alist-get "title"  issue))
+                  (url   (alist-get "url"    issue)))
+              (when num
+		`(:repo ,repo-string  :number ,num  :title ,title  :url ,url))))
+          raw-issues)))
+    (error
+     (message "Error parsing JSON for %s: %s" repo-string err)
+     nil)))
 
 (defun forge-extras--fetch-issues-for-repo (repo-string)
   "Fetch open issues for REPO-STRING using `gh` CLI.

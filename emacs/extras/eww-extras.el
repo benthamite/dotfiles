@@ -382,6 +382,7 @@ With prefix ARG is passed, open in new EWW buffer."
 (declare-function elfeed-tube-fetch "elfeed-tube")
 (declare-function macos-open-app "macos")
 (declare-function macos-app-is-open-p "macos")
+;;;###autoload
 (defun eww-extras-browse-youtube (url &optional player)
   "For YouTube URLs, show its transcript and open video with PLAYER.
 If PLAYER is nil, default to `mpv'."

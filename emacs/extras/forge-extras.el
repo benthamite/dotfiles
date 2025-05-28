@@ -333,6 +333,27 @@ Return a list of issue plists."
      (message "Error parsing JSON for %s: %s" repo-string err)
      nil)))
 
+(defun forge-extras--parse-gh-issue-table (table-string repo-string)
+  "Parse the default (tabular) output of `gh issue list`.
+Return a list of plists with :repo :number :title :url."
+  (let ((lines   (split-string table-string "\n" t))
+        (issues  nil))
+    (dolist (ln lines)
+      (when (string-match "^#?\\([0-9]+\\)\\s-+\\(.+\\)$" ln)
+        (let* ((num   (string-to-number (match-string 1 ln)))
+               (rest  (string-trim (match-string 2 ln)))
+               ;; strip a trailing state word (Open, Closed, etc.) if present
+               (title (if (string-match "\\(.*?\\)\\s-+\\(Open\\|Closed\\|Draft\\|Done\\|Merged\\)$" rest)
+                          (match-string 1 rest)
+                        rest)))
+          (push (list :repo   repo-string
+                      :number num
+                      :title  title
+                      :url    (format "https://github.com/%s/issues/%s"
+                                      repo-string num))
+                issues))))
+    (nreverse issues)))
+
 (defun forge-extras--fetch-issues-for-repo (repo-string)
   "Fetch open issues for REPO-STRING using `gh` CLI.
 Return a list of issue plists, or nil on error."
@@ -380,6 +401,24 @@ Return a list of issue plists, or nil on error."
                                       (with-current-buffer output-buffer (buffer-string))
                                       repo-string))))
                     (message "Fetched %d issues for %s." (if issues (length issues) 0) repo-string))
+                    ;;-------------------------------------------------------------------
+                    ;; fallback: plain `gh issue list` (no --json) when JSON failed
+                    ;;-------------------------------------------------------------------
+                    (when (null issues)
+                      (with-current-buffer output-buffer (erase-buffer))
+                      (setq process-args
+                            (list "issue" "list"
+                                  "--repo" repo-string
+                                  "--state" forge-extras-issue-link-state
+                                  "--limit" "300"))
+                      (message "JSON mode failed; retrying with plain output...")
+                      (let ((exit-status
+                             (apply #'call-process gh-executable
+                                    nil (list output-buffer error-file) nil process-args)))
+                        (when (zerop exit-status)
+                          (setq issues (forge-extras--parse-gh-issue-table
+                                        (with-current-buffer output-buffer (buffer-string))
+                                        repo-string)))))
                 (let ((err (with-temp-buffer
                              (insert-file-contents error-file)
                              (buffer-string))))

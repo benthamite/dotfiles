@@ -32,6 +32,7 @@
 (require 'shut-up)
 (require 'json)
 (require 'seq)
+(require 'cl-lib)
 
 ;;;; User options
 
@@ -72,6 +73,12 @@
     ("Done" . "98236657"))
   "Alist mapping status names to Option IDs for the \"Status\" field in project."
   :type '(alist :key-type string :value-type string)
+  :group 'forge-extras)
+
+(defcustom forge-extras-issue-link-repositories nil
+  "A list of GitHub repositories (e.g., \"owner/repo\") to fetch issues from
+for `forge-extras-insert-issue-markdown-link'."
+  :type '(repeat string)
   :group 'forge-extras)
 
 ;;;; Functions
@@ -280,6 +287,105 @@ The formatting of the message is preserved."
   (when-let ((message (forge-post-at-point t)))
     (kill-new (oref message body))
     (message "Message copied to kill ring.")))
+
+;;;; Insert Markdown link to GitHub Issue
+
+(defun forge-extras--parse-gh-issue-json (json-string repo-string)
+  "Parse JSON-STRING from `gh issue list` for REPO-STRING.
+Return a list of issue plists."
+  (condition-case err
+      (let ((raw-issues (json-read-from-string json-string))) ; Returns a vector of alists
+        (cl-map 'list
+                (lambda (issue-alist) ; issue-alist is e.g., (("number" . N) ("title" . T) ("url" . U))
+                  `(:repo ,repo-string
+                    :number ,(cdr (assoc "number" issue-alist))
+                    :title ,(cdr (assoc "title" issue-alist))
+                    :url ,(cdr (assoc "url" issue-alist))))
+                raw-issues))
+    (error (message "Error parsing JSON for %s: %s" repo-string err) nil)))
+
+(defun forge-extras--fetch-issues-for-repo (repo-string)
+  "Fetch open issues for REPO-STRING using `gh` CLI.
+Return a list of issue plists, or nil on error."
+  (let ((gh-executable (executable-find "gh")))
+    (unless gh-executable
+      ;; This error is better handled by the calling function once.
+      (cl-return-from forge-extras--fetch-issues-for-repo nil))
+
+    (let ((output-buffer (generate-new-buffer (format "*gh-issues-%s*" (replace-regexp-in-string "/" "-" repo-string))))
+          (error-buffer (generate-new-buffer (format "*gh-issues-err-%s*" (replace-regexp-in-string "/" "-" repo-string))))
+          ;; Fetch open issues, with a limit of 300 per repository.
+          (process-args (list "issue" "list" "-R" repo-string "--json" "number,title,url" "--limit" "300" "--state" "open"))
+          issues)
+      (unwind-protect
+          (progn
+            (message "Fetching issues for %s..." repo-string)
+            (let ((exit-status (apply #'call-process gh-executable nil (vector output-buffer error-buffer) nil process-args)))
+              (if (zerop exit-status)
+                  (progn
+                    (setq issues (forge-extras--parse-gh-issue-json
+                                  (with-current-buffer output-buffer (buffer-string))
+                                  repo-string))
+                    (message "Fetched %d issues for %s." (if issues (length issues) 0) repo-string))
+                (progn
+                  (message "Error fetching issues for %s (exit status %d): %s"
+                           repo-string exit-status
+                           (with-current-buffer error-buffer (buffer-string)))
+                  (setq issues nil)))))
+        (kill-buffer output-buffer)
+        (kill-buffer error-buffer))
+      issues)))
+
+;;;###autoload
+(defun forge-extras-insert-issue-markdown-link ()
+  "Fetch issues from repositories in `forge-extras-issue-link-repositories`.
+Prompt the user to select an issue, then insert a Markdown link to it."
+  (interactive)
+  (unless (executable-find "gh")
+    (user-error "The 'gh' command-line tool is not installed or not in PATH.")
+    (cl-return-from forge-extras-insert-issue-markdown-link))
+
+  (unless forge-extras-issue-link-repositories
+    (user-error "`forge-extras-issue-link-repositories' is not configured or empty.")
+    (cl-return-from forge-extras-insert-issue-markdown-link))
+
+  (let ((all-issues nil)
+        (completion-alist nil))
+    (dolist (repo forge-extras-issue-link-repositories)
+      (let ((repo-issues (forge-extras--fetch-issues-for-repo repo)))
+        (when repo-issues
+          (setq all-issues (append all-issues repo-issues)))))
+
+    (unless all-issues
+      (user-error "No issues found in the configured repositories, or an error occurred.")
+      (cl-return-from forge-extras-insert-issue-markdown-link))
+
+    ;; Sort issues by repository name (ascending), then by issue number (descending).
+    (setq all-issues
+          (sort all-issues
+                (lambda (i1 i2)
+                  (if (string= (plist-get i1 :repo) (plist-get i2 :repo))
+                      (> (plist-get i1 :number) (plist-get i2 :number))
+                    (string< (plist-get i1 :repo) (plist-get i2 :repo))))))
+
+    (setq completion-alist
+          (mapcar (lambda (issue)
+                    (cons (format "%s #%s: %s"
+                                  (plist-get issue :repo)
+                                  (plist-get issue :number)
+                                  (plist-get issue :title))
+                          issue))
+                  all-issues))
+
+    (let* ((selected-issue-plist
+            (completing-read "Select issue: " completion-alist nil 'require-match nil nil)))
+      (when selected-issue-plist
+        (let* ((repo (plist-get selected-issue-plist :repo))
+               (number (plist-get selected-issue-plist :number))
+               (url (plist-get selected-issue-plist :url))
+               (markdown-link (format "[%s#%s](%s)" repo number url)))
+          (insert markdown-link)
+          (message "Inserted: %s" markdown-link))))))
 
 ;;;; GitHub Project Integration
 

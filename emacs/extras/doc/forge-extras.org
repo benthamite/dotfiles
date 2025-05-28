@@ -90,6 +90,19 @@ The command ~forge-previous-message~ moves the point to the start of the previou
 #+findex: forge-extras-copy-message-at-point-as-kill
 The command ~forge-extras-copy-message-at-point-as-kill~ copies the body text of the Forge post section at point to the Emacs kill ring, preserving its formatting.
 
+** Insert Markdown Link to GitHub Issue
+:PROPERTIES:
+:CUSTOM_ID: h:forge-extras-insert-issue-markdown-link
+:END:
+
+#+findex: forge-extras-insert-issue-markdown-link
+The command ~forge-extras-insert-issue-markdown-link~ allows you to quickly insert a Markdown link to a GitHub issue.
+- It fetches open issues from a list of repositories defined in the customizable variable ~forge-extras-issue-link-repositories~.
+- It uses the =gh= command-line tool to retrieve issue data (number, title, URL).
+- The user is prompted to select an issue from a combined list, formatted as "owner/repo #number: title".
+- Upon selection, a Markdown link like =[owner/repo#number](issue-url)= is inserted at point.
+- This command requires the =gh= CLI to be installed and authenticated.
+
 ** Set GitHub Project Status
 :PROPERTIES:
 :CUSTOM_ID: h:forge-extras-set-project-status
@@ -179,6 +192,8 @@ You can set these variables using ~M-x customize-group RET forge-extras-projects
 #+vindex: forge-extras-status-field-node-id
 + ~forge-extras-status-option-ids-alist~: An alist mapping human-readable status names (e.g., "Doing", "Next") to their corresponding GraphQL Option IDs for the "Status" field in the target project. This list is used for prompting the user. Finding these Option IDs requires manual API inspection (see setup guide).
 #+vindex: forge-extras-status-option-ids-alist
++ ~forge-extras-issue-link-repositories~: A list of GitHub repository identifiers (e.g., "owner/repo") from which to fetch issues for the ~forge-extras-insert-issue-markdown-link~ command.
+#+vindex: forge-extras-issue-link-repositories
 
 * Enhanced Functionality
 :PROPERTIES:
@@ -234,11 +249,15 @@ The callback function ~forge-extras-update-github-counter~ first checks if the A
 :CUSTOM_ID: h:function-index
 :END:
 
+#+findex: forge-extras-insert-issue-markdown-link
+
 ** Variable index
 :PROPERTIES:
 :INDEX: vr
 :CUSTOM_ID: h:variable-index
 :END:
+
+#+vindex: forge-extras-issue-link-repositories
 
 * Local Variables :noexport:
 # Local Variables:

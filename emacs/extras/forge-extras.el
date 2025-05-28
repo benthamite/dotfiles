@@ -401,24 +401,23 @@ Return a list of issue plists, or nil on error."
                                       (with-current-buffer output-buffer (buffer-string))
                                       repo-string))))
                     (message "Fetched %d issues for %s." (if issues (length issues) 0) repo-string))
-                    ;;-------------------------------------------------------------------
-                    ;; fallback: plain `gh issue list` (no --json) when JSON failed
-                    ;;-------------------------------------------------------------------
-                    (when (null issues)
-                      (with-current-buffer output-buffer (erase-buffer))
-                      (setq process-args
-                            (list "issue" "list"
-                                  "--repo" repo-string
-                                  "--state" forge-extras-issue-link-state
-                                  "--limit" "300"))
-                      (message "JSON mode failed; retrying with plain output...")
-                      (let ((exit-status
-                             (apply #'call-process gh-executable
-                                    nil (list output-buffer error-file) nil process-args)))
-                        (when (zerop exit-status)
-                          (setq issues (forge-extras--parse-gh-issue-table
-                                        (with-current-buffer output-buffer (buffer-string))
-                                        repo-string)))))
+                ;;-------------------------------------------------------------------
+                ;; fallback: plain `gh issue list` (no --json) when JSON failed
+                ;;-------------------------------------------------------------------
+                (when (null issues)
+                  (with-current-buffer output-buffer (erase-buffer))
+                  (setq process-args
+                        (list "issue" "list"
+                              "--repo" repo-string
+                              ))
+                  (message "JSON mode failed; retrying with plain output...")
+                  (let ((exit-status
+                         (apply #'call-process gh-executable
+                                nil (list output-buffer error-file) nil process-args)))
+                    (when (zerop exit-status)
+                      (setq issues (forge-extras--parse-gh-issue-table
+                                    (with-current-buffer output-buffer (buffer-string))
+                                    repo-string)))))
                 (let ((err (with-temp-buffer
                              (insert-file-contents error-file)
                              (buffer-string))))

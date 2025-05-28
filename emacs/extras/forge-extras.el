@@ -313,27 +313,33 @@ Return a list of issue plists, or nil on error."
       (cl-return-from forge-extras--fetch-issues-for-repo nil))
 
     (let ((output-buffer (generate-new-buffer (format "*gh-issues-%s*" (replace-regexp-in-string "/" "-" repo-string))))
-          (error-buffer (generate-new-buffer (format "*gh-issues-err-%s*" (replace-regexp-in-string "/" "-" repo-string))))
+          (error-file (make-temp-file "gh-issues-err-"))
           ;; Fetch open issues, with a limit of 300 per repository.
           (process-args (list "issue" "list" "-R" repo-string "--json" "number,title,url" "--limit" "300" "--state" "open"))
           issues)
       (unwind-protect
           (progn
             (message "Fetching issues for %s..." repo-string)
-            (let ((exit-status (apply #'call-process gh-executable nil (list output-buffer error-buffer) nil process-args)))
+            (let ((exit-status (apply #'call-process gh-executable
+                                      nil
+                                      (list output-buffer error-file)   ;; stdout → buffer, stderr → file
+                                      nil
+                                      process-args)))
               (if (zerop exit-status)
                   (progn
                     (setq issues (forge-extras--parse-gh-issue-json
                                   (with-current-buffer output-buffer (buffer-string))
                                   repo-string))
                     (message "Fetched %d issues for %s." (if issues (length issues) 0) repo-string))
-                (progn
+                (let ((err (with-temp-buffer
+                             (insert-file-contents error-file)
+                             (buffer-string))))
                   (message "Error fetching issues for %s (exit status %d): %s"
-                           repo-string exit-status
-                           (with-current-buffer error-buffer (buffer-string)))
-                  (setq issues nil)))))
+                           repo-string exit-status err))
+                (setq issues nil))))
         (kill-buffer output-buffer)
-        (kill-buffer error-buffer))
+        (when (file-exists-p error-file)
+          (delete-file error-file)))
       issues)))
 
 ;;;###autoload

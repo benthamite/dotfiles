@@ -962,15 +962,16 @@ Updates are performed via GitHub API calls."
         (user-error "Failed to update project status for issue #%s" issue-number)))))
 
 ;;;###autoload
-(defun forge-extras-set-project-estimate (&optional issue)
-  "Set the GitHub Project estimate for the current ISSUE.
+(defun forge-extras-set-project-estimate (&optional issue estimate)
+  "Set the GitHub Project estimate for the current ISSUE to ESTIMATE.
 ISSUE defaults to `forge-current-topic'.
-Prompts for a numerical estimate. The current estimate (if any, from a field
-named \"Estimate\") is offered as default.
-If the issue is not yet in `forge-extras-project-number', prompts to add it.
+If ESTIMATE is provided, use it directly. Otherwise, prompt for a numerical
+estimate. The current estimate (if any, from a field named \"Estimate\") is
+offered as default when prompting.
+If the issue is not yet in `forge-extras-project-number', automatically add it.
 Updates are performed via GitHub API calls using the field ID from
 `forge-extras-estimate-field-node-id'."
-  (interactive (list (forge-current-topic)))
+  (interactive (list (forge-current-topic) nil))
   (unless issue
     (user-error "No current issue/topic found"))
   (unless (and (boundp 'forge-extras-estimate-field-node-id)
@@ -984,7 +985,8 @@ Updates are performed via GitHub API calls using the field ID from
          (parsed-fields (when gh-fields
                           (forge-extras-gh-parse-issue-fields gh-fields)))
          (current-estimate (plist-get parsed-fields :effort)) ; :effort is from "Estimate" field
-         (chosen-estimate (read-number "Set project estimate: " current-estimate)))
+         (chosen-estimate (or estimate
+                              (read-number "Set project estimate: " current-estimate))))
     (unless (numberp chosen-estimate)
       (user-error "Invalid estimate entered or selection cancelled")
       (cl-return-from forge-extras-set-project-estimate))

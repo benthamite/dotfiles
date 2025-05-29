@@ -929,7 +929,6 @@ Updates are performed via GitHub API calls."
     (unless chosen-status-option-id
       (user-error "Invalid status selected or selection cancelled")
       (cl-return-from forge-extras-set-project-status))
-
     (message "Fetching current project fields for issue #%s in %s/%s..."
 	     issue-number forge-extras-project-owner repo-name)
     (unless parsed-fields

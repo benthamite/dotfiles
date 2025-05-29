@@ -797,7 +797,10 @@ NAME and ARGS as in `use-package'."
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package transient
-  :ensure (:wait t)
+  :ensure (:host github
+                 :repo "magit/transient"
+                 :branch "main" ; github.com/progfolio/elpaca/issues/342
+                 :build (:not elpaca--check-version))
   :after seq
   :custom
   (transient-default-level 7) ; magit.vc/manual/transient/Enabling-and-Disabling-Suffixes.html

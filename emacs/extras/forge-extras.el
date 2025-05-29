@@ -902,13 +902,14 @@ the numerical estimate to set."
       nil)))
 
 ;;;###autoload
-(defun forge-extras-set-project-status (&optional issue)
-  "Set the GitHub Project status for the current ISSUE.
+(defun forge-extras-set-project-status (&optional issue status)
+  "Set the GitHub Project status for the current ISSUE to STATUS.
 ISSUE defaults to `forge-current-topic'.
-Prompts for a status from `forge-extras-status-option-ids-alist'.
-If the issue is not yet in `forge-extras-project-number', prompts to add it.
+If STATUS is provided, use it directly. Otherwise, prompt for a status from
+`forge-extras-status-option-ids-alist'.
+If the issue is not yet in `forge-extras-project-number', automatically add it.
 Updates are performed via GitHub API calls."
-  (interactive (list (forge-current-topic)))
+  (interactive (list (forge-current-topic) nil))
   (unless issue
     (user-error "No current issue/topic found"))
   (let* ((repo (forge-get-repository issue))
@@ -923,8 +924,9 @@ Updates are performed via GitHub API calls."
          (default-status (if (member current-status-name status-choices)
                              current-status-name
                            (caar forge-extras-status-option-ids-alist)))
-         (chosen-status-name (completing-read "Set project status: "
-					      status-choices nil 'require-match default-status))
+         (chosen-status-name (or status
+                                 (completing-read "Set project status: "
+                                                  status-choices nil 'require-match default-status)))
          (chosen-status-option-id (cdr (assoc chosen-status-name forge-extras-status-option-ids-alist))))
     (unless chosen-status-option-id
       (user-error "Invalid status selected or selection cancelled")

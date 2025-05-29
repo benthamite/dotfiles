@@ -4,6 +4,84 @@
 
 This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository. It is meant to be read primarily by members of the Tlön team, but it may be of interest to others as well.
 
+* Version 7.1.6 on 2025-05-29
+
+** Core Configuration & Package Management
+
+*** Elpaca & Package Loading
+- Updated several packages to use GitHub sources with specific build configurations
+- Fixed package loading order issues
+- Added deferred loading for several packages to improve startup performance
+
+** AI & Language Models
+
+*** GPTel Enhancements
+- Updated default model to ~claude-sonnet-4-20250514~
+- Added new AI providers: Perplexity (Sonar models), OpenAI o1/o3 models
+- Configured model-specific parameters and cost settings
+- Added ~llm-tool-collection~ for crowd-sourced list of AI tools
+
+*** Aider Integration
+- Added comprehensive Aider configuration with ~.aider.conf.yml~ for AI-assisted coding
+- New ~aidermacs~ package with custom model settings and key bindings
+- Created ~aidermacs-extras~ with buffer kill confirmation and history management
+- Added Aider-specific yasnippets for common operations
+
+
+*** New AI Packages
+- ~mcp~ (Model Context Protocol)
+- ~semext~ for LLM-powered semantic commands
+- ~dall-e-shell~ for image generation
+- ~codel~ for code completion
+
+** Development Tools
+
+*** Version Control (Magit/Forge)
+- Added ~magit-extras-pull-all-submodules~ for submodule management
+- Improved Forge integration with project status management via GitHub API
+- Added ~forge-extras-set-project-status~ with GraphQL mutations
+- Enhanced notification handling and state synchronization
+
+*** Bibliography Management (Ebib)
+- Major refactoring of file attachment system to work asynchronously
+- Added auto-reload functionality for database files
+- Improved integration with Anna's Archive and SciHub for PDF downloads
+- Enhanced entry validation and file management
+
+** Text Processing & Organization
+
+*** Org Mode
+- Expanded TODO keywords: added "NEXT", "LATER", changed "DELEGATED" shortcut
+
+*** Document Processing
+- Added ~subed~ package with transcript export functionality
+- Enhanced ~grip-mode~ for Markdown preview with xwidget integration
+- Updated document conversion workflows
+
+** User Interface
+
+*** Key Binding Reorganization
+- Systematic cleanup of key bindings across multiple packages
+- Standardized Super modifier usage for custom commands
+- Improved consistency between similar packages (e.g., BBDB, Forge)
+
+*** Buffer & Window Management
+- Enhanced EWW integration with xwidget support
+- Added commands to switch between EWW and xwidget-webkit
+- Improved buffer navigation and management
+
+** Utilities & Snippets
+
+*** YASnippet Templates
+- Added utility snippets for Ledger mode (various Argentine services)
+- Created development snippets for common operations
+- Added Eshell snippets for video/audio processing with ffmpeg
+
+*** File & System Integration
+- Enhanced file processing with cropping, audio extraction capabilities
+- Updated browse-url configurations for specific sites
+- Improved external application integration
+
 * Version 7.1.5 on 2025-04-29
 
 ** Documentation

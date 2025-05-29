@@ -1553,8 +1553,9 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package magit
   :ensure (:host github
-                 :repo "magit/magit"
-                 :branch "main")
+		 :repo "magit/magit"
+		 :branch "main"
+		 :build (:not elpaca--check-version))
   :custom
   (magit-commit-ask-to-stage 'stage)
   (magit-clone-set-remote.pushDefault t)

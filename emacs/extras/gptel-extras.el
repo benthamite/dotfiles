@@ -165,8 +165,7 @@ each package or feature, following this model:\n\n%s"
 	    "You are a software developer's assistant focused on git commit analysis. \
 Be concise but thorough when analyzing changes. Group related changes together if \
 you notice patterns. If commit messages are included, use them to inform your analysis.")
-	  (pop-to-buffer (current-buffer))
-	  (view-mode 1))))))
+	  (pop-to-buffer (current-buffer)))))))
 
 ;;;;; Activate Mullvad
 

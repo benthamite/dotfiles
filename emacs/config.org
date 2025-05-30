@@ -12255,6 +12255,10 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package browse-url-extras
+  :init
+  (with-eval-after-load 'xwidget
+    (bind-keys :map 'xwidget-webkit-mode-map
+               ("X" . browse-extras-browse-url-externally)))
   :defer t)
 #+end_src
 

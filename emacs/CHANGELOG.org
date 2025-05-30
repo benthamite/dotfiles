@@ -4,6 +4,10 @@
 
 This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository. It is meant to be read primarily by members of the Tlön team, but it may be of interest to others as well.
 
+* Version 7.1.7 on 2025-05-30
+
+This version only includes changes to =forge-extras=, which are integrated into the associated =tlon= package.
+
 * Version 7.1.6 on 2025-05-29
 
 ** Core Configuration & Package Management

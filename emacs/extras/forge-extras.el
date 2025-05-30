@@ -1188,15 +1188,18 @@ the last time `forge-extras-list-project-items-ordered` was successfully execute
 It can be inspected or cleared manually if needed.")
 
 ;;;###autoload
-(defun forge-extras-list-project-items-ordered (&optional include-closed-p display-buffer-p project-items-list)
+(defun forge-extras-list-project-items-ordered (&optional include-closed-p display-buffer-p use-cache-p)
   "List all issues and pull requests from the configured GitHub project.
 Items are fetched page by page and listed in the order they appear on the project board.
 
-If `project-items-list` is non-nil, it is used directly instead of fetching from GitHub.
-Otherwise, items are fetched from the GitHub API.
+If `use-cache-p` is true and `forge-extras--cached-project-items` is non-nil,
+the cached list is used. Otherwise, items are fetched from the GitHub API.
+Note: If cached data is used, the `include-closed-p` argument from the
+current call does not re-filter the cached items; it only applies if new data is fetched.
 
-If `include-closed-p' is non-nil (e.g., when called with any prefix argument),
-closed and merged items are included. Otherwise, they are excluded.
+If `include-closed-p' is non-nil (e.g., when called with any prefix argument
+and not using a populated cache for fetching), closed and merged items are
+included in the fetch. Otherwise, they are excluded.
 
 If `display-buffer-p' is non-nil (e.g., when called without a prefix argument),
 results are displayed in a new buffer \"*All Project Items (Ordered by Board)*\".
@@ -1205,19 +1208,22 @@ Otherwise, the buffer is not displayed.
 Default behavior (no prefix argument): Exclude closed items, display buffer.
 With a prefix argument (e.g., C-u): Include closed items, do NOT display buffer.
 
-The returned list is always cached in `forge-extras--cached-project-items`.
+The returned list (whether fetched or from cache) is always (re)cached in
+`forge-extras--cached-project-items`.
 Returns the list of issue/PR plists."
   (interactive
    (list (prefix-numeric-value current-prefix-arg) ; include-closed-p: non-nil if any prefix
          (not current-prefix-arg)                ; display-buffer-p: t if no prefix, nil if any prefix
-         nil))                                   ; project-items-list: nil for interactive calls
+         nil))                                   ; use-cache-p: nil for interactive calls, meaning fetch fresh
 
   (let ((items-to-process nil))
-    (if project-items-list
+    (if (and use-cache-p forge-extras--cached-project-items)
         (progn
-          (message "Using provided list of %d project items." (length project-items-list))
-          (setq items-to-process project-items-list))
-      (progn ; Fetch from GitHub
+          (message "Using cached list of %d project items." (length forge-extras--cached-project-items))
+          (setq items-to-process forge-extras--cached-project-items))
+      (progn ; Fetch from GitHub (or if use-cache-p was true but cache was empty)
+        (when (and use-cache-p (not forge-extras--cached-project-items))
+          (message "Cache is empty, fetching fresh data."))
         (unless (and (boundp 'forge-extras-project-node-id)
                      (stringp forge-extras-project-node-id)
                      (not (string-empty-p forge-extras-project-node-id)))
@@ -1258,7 +1264,7 @@ Returns the list of issue/PR plists."
 
     ;; Display and return
     (if items-to-process
-	(progn
+        (progn
           (if display-buffer-p
               (let* ((buffer-name "*All Project Items (Ordered by Board)*")
                      (buffer (get-buffer-create buffer-name))
@@ -1295,10 +1301,10 @@ Returns the list of issue/PR plists."
             (message "Processed %d project items. Buffer not displayed." (length items-to-process)))
           items-to-process) ; Return the items
       (progn
-	(if project-items-list
-            (message "No items provided or an empty list was given.")
+        (if (and use-cache-p forge-extras--cached-project-items) ; This case should ideally not be hit if items-to-process is nil
+            (message "Cached items list was empty.")
           (message "No items found in project %s, or an error occurred." forge-extras-project-node-id))
-	nil)))) ; Return nil if no items
+        nil)))) ; Return nil if no items
 
 (provide 'forge-extras)
 ;;; forge-extras.el ends here

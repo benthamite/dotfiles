@@ -1160,7 +1160,7 @@ Returns a list of plists, each with :type :number :title :url :repo."
                     (repo-name (cdr (assoc 'nameWithOwner repo-info))))
           (when (and (member type-name '("Issue" "PullRequest"))
                      (or (null target-repo-name-with-owner) ; If nil, don't filter by repo
-                         (string= repo-name target-repo-name-with-owner)))
+                         (and repo-name (string= repo-name target-repo-name-with-owner)))) ; Guard against nil repo-name if target-repo-name-with-owner is non-nil
             (let ((number (cdr (assoc 'number content)))
                   (title (cdr (assoc 'title content)))
                   (url (cdr (assoc 'url content))))

@@ -1224,10 +1224,8 @@ Returns the list of issue/PR plists."
           (user-error "`forge-extras-project-node-id' is not configured. Please set it first"))
         (unless (executable-find "gh")
           (user-error "The 'gh' command-line tool is not installed or not in PATH."))
-
         (message "Fetching all project items from project %s (Include closed: %s)..."
                  forge-extras-project-node-id (if include-closed-p "yes" "no"))
-
         (let ((fetched-items-accumulator nil)
               (current-cursor nil)
               (has-next-page t))
@@ -1243,10 +1241,8 @@ Returns the list of issue/PR plists."
                                     nil))
                    (current-page-items (car parsed-result))
                    (page-info (cdr parsed-result)))
-
-              (when (and raw-response parsed-result current-page-items)
-                (setq fetched-items-accumulator (nconc fetched-items-accumulator current-page-items)))
-
+	      (when (and raw-response parsed-result current-page-items)
+		(setq fetched-items-accumulator (nconc fetched-items-accumulator current-page-items)))
               (let ((new-cursor (and page-info (cdr (assoc 'endCursor page-info)))))
                 (if (and page-info (cdr (assoc 'hasNextPage page-info)) new-cursor)
                     (setq current-cursor new-cursor)
@@ -1255,14 +1251,14 @@ Returns the list of issue/PR plists."
                       (message "Warning: pageInfo not found in GraphQL response. Assuming no more pages.")
                     (when (and (cdr (assoc 'hasNextPage page-info)) (not new-cursor))
                       (message "Warning: hasNextPage was true but endCursor is missing/null. Stopping pagination.")))))))
-          (setq items-to-process fetched-items-accumulator)))))
+          (setq items-to-process fetched-items-accumulator))))
 
     ;; Cache the result
     (setq forge-extras--cached-project-items items-to-process)
 
     ;; Display and return
     (if items-to-process
-        (progn
+	(progn
           (if display-buffer-p
               (let* ((buffer-name "*All Project Items (Ordered by Board)*")
                      (buffer (get-buffer-create buffer-name))
@@ -1270,16 +1266,16 @@ Returns the list of issue/PR plists."
                      (max-title-len 0)
                      (max-num-len 0))
 
-                ;; Determine max lengths for formatting
-                (dolist (item items-to-process)
+		;; Determine max lengths for formatting
+		(dolist (item items-to-process)
                   (setq max-repo-len (max max-repo-len (length (plist-get item :repo))))
                   (setq max-title-len (max max-title-len (length (plist-get item :title))))
                   (setq max-num-len (max max-num-len (length (number-to-string (plist-get item :number))))))
-                (setq max-repo-len (max max-repo-len (length "Repo"))) ; Ensure header fits
-                (setq max-title-len (min max-title-len 80)) ; Cap title length for display
-                (setq max-num-len (max max-num-len (length "Number")))
+		(setq max-repo-len (max max-repo-len (length "Repo"))) ; Ensure header fits
+		(setq max-title-len (min max-title-len 80)) ; Cap title length for display
+		(setq max-num-len (max max-num-len (length "Number")))
 
-                (with-current-buffer buffer
+		(with-current-buffer buffer
                   (erase-buffer)
                   (insert (format "All project items (Project Node ID: %s)\n" forge-extras-project-node-id))
                   (insert (format "Order reflects the project board.\n\n"))
@@ -1294,15 +1290,15 @@ Returns the list of issue/PR plists."
                                     (plist-get item :repo)
                                     (plist-get item :number)
                                     (truncate-string-to-width (plist-get item :title) max-title-len nil nil "…")))))
-                (display-buffer buffer)
-                (message "All project items displayed in %s buffer. Total: %d" buffer-name (length items-to-process)))
+		(display-buffer buffer)
+		(message "All project items displayed in %s buffer. Total: %d" buffer-name (length items-to-process)))
             (message "Processed %d project items. Buffer not displayed." (length items-to-process)))
           items-to-process) ; Return the items
       (progn
-        (if project-items-list
+	(if project-items-list
             (message "No items provided or an empty list was given.")
           (message "No items found in project %s, or an error occurred." forge-extras-project-node-id))
-        nil)))) ; Return nil if no items
+	nil)))) ; Return nil if no items
 
 (provide 'forge-extras)
 ;;; forge-extras.el ends here

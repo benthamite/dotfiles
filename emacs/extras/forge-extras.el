@@ -561,35 +561,47 @@ and issue number.")
 
 (defun forge-extras--execute-gh-graphql-query (query-string variables)
   "Execute a GitHub GraphQL QUERY-STRING with VARIABLES.
-VARIABLES is an alist of (var-name . value) for GraphQL variables.
+VARIABLES is an alist of (var-name . value) suitable for a JSON 'variables' object.
 Returns the parsed JSON response as an Elisp data structure, or nil on failure."
   (let* ((lines (split-string query-string "\n" t))
          (lines-without-comments (mapcar (lambda (line) (replace-regexp-in-string "#.*" "" line)) lines))
          (query-almost-single-line (string-join lines-without-comments " "))
          (single-line-query (string-trim (replace-regexp-in-string "\\s-+" " " query-almost-single-line)))
-         (temp-file (make-temp-file "forge-extras-gh-query-" nil ".graphql" single-line-query))
-         (process-args (list "api" "graphql" "-F" (concat "query=@" temp-file)))
+         ;; Construct JSON payload
+         (payload-alist `(("query" . ,single-line-query)))
+         (json-payload-string "")
          (output-buffer (generate-new-buffer "*gh-graphql-query-output*"))
          (json-string "")
          (parsed-json nil)
          (exit-status nil))
+
+    ;; Add variables to payload if they exist
     (when variables
-      (setq process-args
-            (append process-args
-                    (mapcan (lambda (kv)
-                              (list "-f" (format "%s=%s" (car kv) (cdr kv))))
-                            variables))))
-    (let ((gh-executable (executable-find "gh")))
+      (setq payload-alist (append payload-alist `(("variables" . ,variables)))))
+    (setq json-payload-string (json-encode payload-alist))
+
+    (let* ((process-args (list "api" "--method" "POST" "-H" "Content-Type: application/json" "/graphql" "--input" "-"))
+           (gh-executable (executable-find "gh")))
       (unless gh-executable
         (error "The 'gh' command-line tool was not found. Please ensure it is installed and accessible"))
-      (setq exit-status (apply #'call-process gh-executable nil output-buffer nil process-args)))
+      (with-temp-buffer
+        (insert json-payload-string)
+        (setq exit-status
+              (apply #'call-process-region
+                     (point-min) (point-max)
+                     gh-executable
+                     nil ; no infile
+                     output-buffer ; capture stdout
+                     nil ; display stdout: no
+                     process-args))))
+
     (with-current-buffer output-buffer
       (setq json-string (buffer-string)))
     (kill-buffer output-buffer)
-    (when (file-exists-p temp-file)
-      (delete-file temp-file))
+
     (if (not (zerop exit-status))
         (message "forge-extras--execute-gh-graphql-query: 'gh' process exited with status %s. Output:\n%s" exit-status json-string))
+
     (if (or (null json-string) (string-empty-p json-string) (not (zerop exit-status)))
         (progn
           (message "forge-extras--execute-gh-graphql-query: Received empty or error response from gh command.")
@@ -691,52 +703,14 @@ JSON payload to `gh api ... --input -'."
 
 (defun forge-extras-gh-get-issue-fields (issue-number repo-name)
   "Return the relevant fields for ISSUE-NUMBER in REPO-NAME as a raw list."
-  (let* ((raw-query (format forge-extras-gh-project-query
-                            forge-extras-project-owner
-                            repo-name
-                            issue-number))
-         (lines (split-string raw-query "\n" t))
-         (lines-without-comments (mapcar (lambda (line) (replace-regexp-in-string "#.*" "" line)) lines))
-         (query-almost-single-line (string-join lines-without-comments " "))
-         (single-line-query (string-trim (replace-regexp-in-string "\\s-+" " " query-almost-single-line)))
-         (temp-file (make-temp-file "forge-extras-gh-query-" nil ".graphql" single-line-query))
-         (process-args (list "api" "graphql" "-F" (concat "query=@" temp-file)))
-         (output-buffer (generate-new-buffer "*gh-graphql-output*"))
-         (json-string "")
-         (parsed-json nil)
-         (exit-status nil))
-    (message "forge-extras-gh-get-issue-fields: Query content (single line):\n%s" single-line-query)
-    (message "forge-extras-gh-get-issue-fields: Executing 'gh %s'" (string-join process-args " "))
-    (let ((gh-executable (executable-find "gh")))
-      (unless gh-executable
-        (error "The 'gh' command-line tool was not found. Please ensure it is installed and accessible"))
-      (setq exit-status (apply #'call-process gh-executable nil output-buffer nil process-args)))
-    (with-current-buffer output-buffer
-      (setq json-string (buffer-string)))
-    (kill-buffer output-buffer)
-    (when (file-exists-p temp-file)
-      (delete-file temp-file))
-    (if (not (zerop exit-status))
-        (message "forge-extras-gh-get-issue-fields: 'gh' process exited with status %s. Output:\n%s"
-		 exit-status json-string)
-      (message "forge-extras-gh-get-issue-fields: 'gh' process exited successfully."))
-    (message "forge-extras-gh-get-issue-fields: Raw JSON string response:\n%s" json-string)
-    (if (or (null json-string) (string-empty-p json-string) (not (zerop exit-status)))
-        (progn
-          (message "forge-extras-gh-get-issue-fields: Received empty or error response from gh command.")
-          nil)
-      (with-temp-buffer
-        (insert json-string)
-        (goto-char (point-min))
-        (setq parsed-json (condition-case err
-                              (json-read-from-string (buffer-string)) ; Using json-read-from-string
-                            (error
-                             (message "forge-extras-gh-get-issue-fields: Error parsing JSON: %s" err)
-                             nil))))
-      (if parsed-json
-          (message "forge-extras-gh-get-issue-fields: Successfully parsed JSON.")
-        (message "forge-extras-gh-get-issue-fields: Failed to parse JSON from response."))
-      parsed-json)))
+  (let* ((formatted-query-string (format forge-extras-gh-project-query
+                                         forge-extras-project-owner
+                                         repo-name
+                                         issue-number))
+         (parsed-json (forge-extras--execute-gh-graphql-query formatted-query-string nil)))
+    (message "forge-extras-gh-get-issue-fields: Executed query for issue %s in %s. Success: %s"
+             issue-number repo-name (if parsed-json "yes" "no"))
+    parsed-json))
 
 (defun forge-extras-gh-parse-issue-fields (raw-list)
   "Parse RAW-LIST of issue fields into a property list.
@@ -804,56 +778,10 @@ This function specifically looks for data related to project number
 Returns the raw parsed JSON response, or nil on failure."
   (let* ((query-string forge-extras-gh-project-fields-query)
          (variables `(("projectNodeId" . ,project-node-id)))
-         (lines (split-string query-string "\n" t))
-         (lines-without-comments (mapcar (lambda (line) (replace-regexp-in-string "#.*" "" line)) lines))
-         (query-almost-single-line (string-join lines-without-comments " "))
-         (single-line-query (string-trim (replace-regexp-in-string "\\s-+" " " query-almost-single-line)))
-         (temp-file (make-temp-file "forge-extras-gh-query-" nil ".graphql" single-line-query))
-         (process-args (list "api" "graphql" "-F" (concat "query=@" temp-file)))
-         (output-buffer (generate-new-buffer "*gh-graphql-query-output*"))
-         (json-string "")
-         (parsed-json nil)
-         (exit-status nil))
-    (when variables
-      (setq process-args
-            (append process-args
-                    (mapcan (lambda (kv)
-                              (list "-f" (format "%s=%s" (car kv) (cdr kv))))
-                            variables))))
-    (message "forge-extras-gh-get-project-fields: Query content (single line):\n%s" single-line-query)
-    (when variables
-      (let ((json-object-type 'object)) ; Ensure json-encode produces an object for alist
-        (message "forge-extras-gh-get-project-fields: Intended variables: %s" (json-encode variables))))
-    (message "forge-extras-gh-get-project-fields: Executing 'gh %s'" (string-join process-args " "))
-    (let ((gh-executable (executable-find "gh")))
-      (unless gh-executable
-        (error "The 'gh' command-line tool was not found. Please ensure it is installed and accessible"))
-      (setq exit-status (apply #'call-process gh-executable nil output-buffer nil process-args)))
-    (with-current-buffer output-buffer
-      (setq json-string (buffer-string)))
-    (kill-buffer output-buffer)
-    (when (file-exists-p temp-file)
-      (delete-file temp-file))
-    (if (not (zerop exit-status))
-        (message "forge-extras-gh-get-project-fields: 'gh' process exited with status %s. Output:\n%s" exit-status json-string)
-      (message "forge-extras-gh-get-project-fields: 'gh' process exited successfully."))
-    (message "forge-extras-gh-get-project-fields: Raw JSON response:\n%s" json-string)
-    (if (or (null json-string) (string-empty-p json-string) (not (zerop exit-status)))
-        (progn
-          (message "forge-extras-gh-get-project-fields: Received empty or error response from gh command.")
-          nil)
-      (with-temp-buffer
-        (insert json-string)
-        (goto-char (point-min))
-        (setq parsed-json (condition-case err
-                              (json-read-from-string (buffer-string))
-                            (error
-                             (message "forge-extras-gh-get-project-fields: Error parsing JSON: %s" err)
-                             nil))))
-      (if parsed-json
-          (message "forge-extras-gh-get-project-fields: Successfully parsed JSON.")
-        (message "forge-extras-gh-get-project-fields: Failed to parse JSON from response."))
-      parsed-json)))
+         (parsed-json (forge-extras--execute-gh-graphql-query query-string variables)))
+    (message "forge-extras-gh-get-project-fields: Executed query for project %s. Success: %s"
+             project-node-id (if parsed-json "yes" "no"))
+    parsed-json))
 
 (defun forge-extras-gh-parse-project-fields (raw-json-response)
   "Parse RAW-JSON-RESPONSE from project fields query into a list of cons cells."

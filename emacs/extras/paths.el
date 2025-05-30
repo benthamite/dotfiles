@@ -810,7 +810,7 @@ This includes personal files and `tlon' files."
 ;;;;; Other
 
 (defcustom paths-tlon-todos-generic-id
-  "4388B4D0-3830-48E0-A118-C3195B62F0D1"
+  "E9C77367-DED8-4D59-B08C-E6E1CCDDEC3A"
   "ID of the user-specific `org-mode' heading where generic TODOs are stored.
 \"Generic\" TODOs are all TODOs except those related to a translation job."
   :type 'string

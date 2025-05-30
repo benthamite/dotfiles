@@ -559,6 +559,51 @@ and issue number.")
   }"
   "GraphQL mutation to update a numeric field (e.g., Estimate) of a project item.")
 
+(defun forge-extras--execute-gh-graphql-query (query-string variables)
+  "Execute a GitHub GraphQL QUERY-STRING with VARIABLES.
+VARIABLES is an alist of (var-name . value) for GraphQL variables.
+Returns the parsed JSON response as an Elisp data structure, or nil on failure."
+  (let* ((lines (split-string query-string "\n" t))
+         (lines-without-comments (mapcar (lambda (line) (replace-regexp-in-string "#.*" "" line)) lines))
+         (query-almost-single-line (string-join lines-without-comments " "))
+         (single-line-query (string-trim (replace-regexp-in-string "\\s-+" " " query-almost-single-line)))
+         (temp-file (make-temp-file "forge-extras-gh-query-" nil ".graphql" single-line-query))
+         (process-args (list "api" "graphql" "-F" (concat "query=@" temp-file)))
+         (output-buffer (generate-new-buffer "*gh-graphql-query-output*"))
+         (json-string "")
+         (parsed-json nil)
+         (exit-status nil))
+    (when variables
+      (setq process-args
+            (append process-args
+                    (mapcan (lambda (kv)
+                              (list "-f" (format "%s=%s" (car kv) (cdr kv))))
+                            variables))))
+    (let ((gh-executable (executable-find "gh")))
+      (unless gh-executable
+        (error "The 'gh' command-line tool was not found. Please ensure it is installed and accessible"))
+      (setq exit-status (apply #'call-process gh-executable nil output-buffer nil process-args)))
+    (with-current-buffer output-buffer
+      (setq json-string (buffer-string)))
+    (kill-buffer output-buffer)
+    (when (file-exists-p temp-file)
+      (delete-file temp-file))
+    (if (not (zerop exit-status))
+        (message "forge-extras--execute-gh-graphql-query: 'gh' process exited with status %s. Output:\n%s" exit-status json-string))
+    (if (or (null json-string) (string-empty-p json-string) (not (zerop exit-status)))
+        (progn
+          (message "forge-extras--execute-gh-graphql-query: Received empty or error response from gh command.")
+          nil)
+      (with-temp-buffer
+        (insert json-string)
+        (goto-char (point-min))
+        (setq parsed-json (condition-case err
+                              (json-read-from-string (buffer-string))
+                            (error
+                             (message "forge-extras--execute-gh-graphql-query: Error parsing JSON: %s" err)
+                             nil))))
+      parsed-json)))
+
 (defconst forge-extras-gh-project-fields-query
   "query($projectNodeId:ID!) {
     node(id: $projectNodeId) {
@@ -1061,6 +1106,134 @@ finding the Node ID required for variables like
           (display-buffer buffer)
           (message "Project fields displayed in *GitHub Project Fields* buffer."))
       (user-error "Could not retrieve or parse project fields for Project Node ID: %s" forge-extras-project-node-id))))
+
+(defconst forge-extras-gh-project-items-by-repo-query
+  "query($projectNodeId:ID!) {
+    node(id: $projectNodeId) {
+      ... on ProjectV2 {
+        items(first: 100, orderBy: {field: POSITION, direction: ASC}) { # Ensure order
+          nodes {
+            content {
+              __typename
+              ... on Issue {
+                id
+                number
+                title
+                url
+                repository {
+                  nameWithOwner
+                }
+              }
+              ... on PullRequest {
+                id
+                number
+                title
+                url
+                repository {
+                  nameWithOwner
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }"
+  "GraphQL query to fetch items (Issues/PRs) for a project, ordered by position.")
+
+(defun forge-extras--parse-project-items (raw-json-response target-repo-name-with-owner)
+  "Parse RAW-JSON-RESPONSE from project items query.
+Filter items for TARGET-REPO-NAME-WITH-OWNER and type (Issue or PullRequest).
+Returns a list of plists, each with :type :number :title :url :repo."
+  (let ((issues-and-prs nil))
+    (when-let* ((data (cdr (assoc 'data raw-json-response)))
+                (node (cdr (assoc 'node data)))
+                (items (cdr (assoc 'items node)))
+                (item-nodes (cdr (assoc 'nodes items))))
+      (dolist (item-node item-nodes)
+        (when-let* ((content (cdr (assoc 'content item-node)))
+                    (type-name (cdr (assoc '__typename content)))
+                    (repo-info (cdr (assoc 'repository content)))
+                    (repo-name (cdr (assoc 'nameWithOwner repo-info))))
+          (when (and (member type-name '("Issue" "PullRequest"))
+                     (string= repo-name target-repo-name-with-owner))
+            (let ((number (cdr (assoc 'number content)))
+                  (title (cdr (assoc 'title content)))
+                  (url (cdr (assoc 'url content))))
+              (when (and number title url)
+                (push `(:type ,(if (string= type-name "Issue") 'issue 'pullreq)
+                        :repo ,repo-name
+                        :number ,number
+                        :title ,title
+                        :url ,url)
+                      issues-and-prs)))))))
+    (nreverse issues-and-prs)))
+
+;;;###autoload
+(defun forge-extras-list-project-issues-by-repo-ordered (repo-name-with-owner)
+  "List issues and pull requests from REPO-NAME-WITH-OWNER in the configured GitHub project.
+The items are listed in the order they appear on the project board.
+REPO-NAME-WITH-OWNER should be in \"owner/repo\" format.
+Results are displayed in a new buffer \"*Project Issues for REPO-NAME-WITH-OWNER*\".
+Returns the list of issue/PR plists."
+  (interactive
+   (list (read-string "Repository (owner/repo): ")))
+  (unless (and (boundp 'forge-extras-project-node-id)
+               (stringp forge-extras-project-node-id)
+               (not (string-empty-p forge-extras-project-node-id)))
+    (user-error "`forge-extras-project-node-id' is not configured. Please set it first"))
+  (unless (executable-find "gh")
+    (user-error "The 'gh' command-line tool is not installed or not in PATH."))
+  (unless (string-match-p ".+/.+" repo-name-with-owner)
+    (user-error "Invalid repository format. Expected \"owner/repo\"."))
+
+  (message "Fetching project items for %s from project %s..."
+           repo-name-with-owner forge-extras-project-node-id)
+
+  (let* ((variables `(("projectNodeId" . ,forge-extras-project-node-id)))
+         (raw-response (forge-extras--execute-gh-graphql-query
+                        forge-extras-gh-project-items-by-repo-query
+                        variables))
+         (items (if raw-response
+                    (forge-extras--parse-project-items raw-response repo-name-with-owner)
+                  nil)))
+    (if items
+        (let* ((buffer-name (format "*Project Issues for %s*" repo-name-with-owner))
+               (buffer (get-buffer-create buffer-name))
+               (max-title-len 0)
+               (max-repo-len (length repo-name-with-owner))
+               (max-num-len 0))
+
+          ;; Determine max lengths for formatting
+          (dolist (item items)
+            (setq max-title-len (max max-title-len (length (plist-get item :title))))
+            (setq max-num-len (max max-num-len (length (number-to-string (plist-get item :number))))))
+          (setq max-title-len (min max-title-len 80)) ; Cap title length for display
+          (setq max-repo-len (max max-repo-len (length "Repo")))
+          (setq max-num-len (max max-num-len (length "Number")))
+
+
+          (with-current-buffer buffer
+            (erase-buffer)
+            (insert (format "Project items for %s (Project Node ID: %s)\n"
+                            repo-name-with-owner forge-extras-project-node-id))
+            (insert (format "Order reflects the project board.\n\n"))
+            (insert (format (format "%%-%ds | %%-%ds | %%s\n" max-repo-len max-num-len)
+                            "Repo" "Number" "Title"))
+            (insert (format "%s-|-%s-|-%s\n"
+                            (make-string max-repo-len ?-)
+                            (make-string max-num-len ?-)
+                            (make-string max-title-len ?-)))
+            (dolist (item items)
+              (insert (format (format "%%-%ds | %%-%ds | %%s\n" max-repo-len max-num-len)
+                              (plist-get item :repo)
+                              (plist-get item :number)
+                              (truncate-string-to-width (plist-get item :title) max-title-len nil nil "…")))))
+          (display-buffer buffer)
+          (message "Project items for %s displayed in %s buffer." repo-name-with-owner buffer-name))
+      (message "No items found for %s in project %s, or an error occurred."
+               repo-name-with-owner forge-extras-project-node-id))
+    items))
 
 (provide 'forge-extras)
 ;;; forge-extras.el ends here

@@ -1234,9 +1234,10 @@ Returns the list of issue/PR plists."
                  forge-extras-project-node-id (if include-closed-p "yes" "no"))
         (let ((fetched-items-accumulator nil)
               (current-cursor nil)
-              (has-next-page t))
+              (has-next-page t)
+              (page-counter 1)) ; Initialize page counter
           (while has-next-page
-            (message "Fetching project items page (cursor: %s)..." (or current-cursor "start"))
+            (message "Fetching project items page %d..." page-counter) ; Use page counter
             (let* ((variables `(("projectNodeId" . ,forge-extras-project-node-id)
                                 ,@(when current-cursor `(("cursor" . ,current-cursor)))))
                    (raw-response (forge-extras--execute-gh-graphql-query
@@ -1251,12 +1252,20 @@ Returns the list of issue/PR plists."
 		(setq fetched-items-accumulator (nconc fetched-items-accumulator current-page-items)))
               (let ((new-cursor (and page-info (cdr (assoc 'endCursor page-info)))))
                 (if (and page-info (cdr (assoc 'hasNextPage page-info)) new-cursor)
-                    (setq current-cursor new-cursor)
+                    (progn
+                      (setq current-cursor new-cursor)
+                      (setq page-counter (1+ page-counter)))
+                  ;; else, stop pagination
                   (setq has-next-page nil)
-                  (if (not page-info)
-                      (message "Warning: pageInfo not found in GraphQL response. Assuming no more pages.")
-                    (when (and (cdr (assoc 'hasNextPage page-info)) (not new-cursor))
-                      (message "Warning: hasNextPage was true but endCursor is missing/null. Stopping pagination.")))))))
+                  (cond
+                   ((not page-info) ; Case 1: pageInfo itself is nil
+                    (message "Warning: pageInfo not found in GraphQL response. Assuming no more pages."))
+                   ((not (cdr (assoc 'hasNextPage page-info))) ; Case 2: pageInfo exists, but hasNextPage is false
+                    (message "Reached end of project items (hasNextPage is false)."))
+                   ;; Case 3: pageInfo exists, hasNextPage is true, but new-cursor is nil
+                   ((not new-cursor)
+                    (message "Reached end of project items (hasNextPage was true, but no further cursor was provided)."))
+                   ))))))
           (setq items-to-process fetched-items-accumulator))))
 
     ;; Cache the result

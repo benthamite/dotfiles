@@ -367,6 +367,7 @@ With prefix ARG is passed, open in new EWW buffer."
       (xwidget-webkit-browse-url url)
     (user-error "No URL at point")))
 
+(declare-function xwidget-webkit-current-session "xwidget")
 ;;;###autoload
 (defun eww-extras-open-with-eww ()
   "Open URL in `eww'."

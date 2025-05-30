@@ -65,12 +65,7 @@
   :type 'string
   :group 'forge-extras)
 
-(defcustom forge-extras-status-option-ids-alist
-  '(("Doing" . "47fc9ee4")
-    ("Next" . "8607328f")
-    ("Later" . "13e22f63")
-    ("Someday" . "4bf0f00e")
-    ("Done" . "98236657"))
+(defcustom forge-extras-status-option-ids-alist nil
   "Alist mapping status names to Option IDs for the \"Status\" field in project."
   :type '(alist :key-type string :value-type string)
   :group 'forge-extras)

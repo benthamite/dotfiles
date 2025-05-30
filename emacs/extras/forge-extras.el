@@ -1181,10 +1181,19 @@ Returns the list of issue/PR plists."
                repo-name-with-owner forge-extras-project-node-id))
     items))
 
+(defvar forge-extras--cached-project-items nil
+  "Cache for items returned by `forge-extras-list-project-items-ordered`.
+This variable stores the list of project items (issues and pull requests)
+the last time `forge-extras-list-project-items-ordered` was successfully executed.
+It can be inspected or cleared manually if needed.")
+
 ;;;###autoload
-(defun forge-extras-list-project-items-ordered (&optional include-closed-p display-buffer-p)
+(defun forge-extras-list-project-items-ordered (&optional include-closed-p display-buffer-p project-items-list)
   "List all issues and pull requests from the configured GitHub project.
 Items are fetched page by page and listed in the order they appear on the project board.
+
+If `project-items-list` is non-nil, it is used directly instead of fetching from GitHub.
+Otherwise, items are fetched from the GitHub API.
 
 If `include-closed-p' is non-nil (e.g., when called with any prefix argument),
 closed and merged items are included. Otherwise, they are excluded.
@@ -1196,54 +1205,63 @@ Otherwise, the buffer is not displayed.
 Default behavior (no prefix argument): Exclude closed items, display buffer.
 With a prefix argument (e.g., C-u): Include closed items, do NOT display buffer.
 
+The returned list is always cached in `forge-extras--cached-project-items`.
 Returns the list of issue/PR plists."
   (interactive
    (list (prefix-numeric-value current-prefix-arg) ; include-closed-p: non-nil if any prefix
-         (not current-prefix-arg)))                ; display-buffer-p: t if no prefix, nil if any prefix
-  (unless (and (boundp 'forge-extras-project-node-id)
-               (stringp forge-extras-project-node-id)
-               (not (string-empty-p forge-extras-project-node-id)))
-    (user-error "`forge-extras-project-node-id' is not configured. Please set it first"))
-  (unless (executable-find "gh")
-    (user-error "The 'gh' command-line tool is not installed or not in PATH."))
+         (not current-prefix-arg)                ; display-buffer-p: t if no prefix, nil if any prefix
+         nil))                                   ; project-items-list: nil for interactive calls
 
-  (message "Fetching all project items from project %s (Include closed: %s)..."
-           forge-extras-project-node-id (if include-closed-p "yes" "no"))
+  (let ((items-to-process nil))
+    (if project-items-list
+        (progn
+          (message "Using provided list of %d project items." (length project-items-list))
+          (setq items-to-process project-items-list))
+      (progn ; Fetch from GitHub
+        (unless (and (boundp 'forge-extras-project-node-id)
+                     (stringp forge-extras-project-node-id)
+                     (not (string-empty-p forge-extras-project-node-id)))
+          (user-error "`forge-extras-project-node-id' is not configured. Please set it first"))
+        (unless (executable-find "gh")
+          (user-error "The 'gh' command-line tool is not installed or not in PATH."))
 
-  (let ((all-items nil)
-        (current-cursor nil)
-        (has-next-page t))
+        (message "Fetching all project items from project %s (Include closed: %s)..."
+                 forge-extras-project-node-id (if include-closed-p "yes" "no"))
 
-    (while has-next-page
-      (message "Fetching project items page (cursor: %s)..." (or current-cursor "start"))
-      (let* ((variables `(("projectNodeId" . ,forge-extras-project-node-id)
-                          ,@(when current-cursor `(("cursor" . ,current-cursor)))))
-             (raw-response (forge-extras--execute-gh-graphql-query
-                            forge-extras-gh-project-items-by-repo-query
-                            variables))
-             (parsed-result (if raw-response
-                                (forge-extras--parse-project-items raw-response nil include-closed-p)
-                              nil))
-             (current-page-items (car parsed-result))
-             (page-info (cdr parsed-result)))
+        (let ((fetched-items-accumulator nil)
+              (current-cursor nil)
+              (has-next-page t))
+          (while has-next-page
+            (message "Fetching project items page (cursor: %s)..." (or current-cursor "start"))
+            (let* ((variables `(("projectNodeId" . ,forge-extras-project-node-id)
+                                ,@(when current-cursor `(("cursor" . ,current-cursor)))))
+                   (raw-response (forge-extras--execute-gh-graphql-query
+                                  forge-extras-gh-project-items-by-repo-query
+                                  variables))
+                   (parsed-result (if raw-response
+                                      (forge-extras--parse-project-items raw-response nil include-closed-p)
+                                    nil))
+                   (current-page-items (car parsed-result))
+                   (page-info (cdr parsed-result)))
 
-        (if (and raw-response parsed-result current-page-items)
-            (setq all-items (nconc all-items current-page-items))) ; Use nconc for efficiency
+              (when (and raw-response parsed-result current-page-items)
+                (setq fetched-items-accumulator (nconc fetched-items-accumulator current-page-items)))
 
-        (let ((new-cursor (and page-info (cdr (assoc 'endCursor page-info)))))
-          (if (and page-info (cdr (assoc 'hasNextPage page-info)) new-cursor)
-              ;; Continue if hasNextPage is true AND new-cursor is valid
-              (setq current-cursor new-cursor)
-            ;; Else, stop pagination for any other reason (no pageInfo, hasNextPage is false, or no valid new_cursor)
-            (setq has-next-page nil)
-            (if (not page-info)
-                (message "Warning: pageInfo not found in GraphQL response. Assuming no more pages.")
-              (when (and (cdr (assoc 'hasNextPage page-info)) (not new-cursor)) ; Log if stopped due to missing cursor despite hasNextPage=true
-                (message "Warning: hasNextPage was true but endCursor is missing/null. Stopping pagination."))))))
-        ;; Removed sleep-for 0.2 to improve performance
-        )
+              (let ((new-cursor (and page-info (cdr (assoc 'endCursor page-info)))))
+                (if (and page-info (cdr (assoc 'hasNextPage page-info)) new-cursor)
+                    (setq current-cursor new-cursor)
+                  (setq has-next-page nil)
+                  (if (not page-info)
+                      (message "Warning: pageInfo not found in GraphQL response. Assuming no more pages.")
+                    (when (and (cdr (assoc 'hasNextPage page-info)) (not new-cursor))
+                      (message "Warning: hasNextPage was true but endCursor is missing/null. Stopping pagination.")))))))
+          (setq items-to-process fetched-items-accumulator)))))
 
-    (if all-items
+    ;; Cache the result
+    (setq forge-extras--cached-project-items items-to-process)
+
+    ;; Display and return
+    (if items-to-process
         (progn
           (if display-buffer-p
               (let* ((buffer-name "*All Project Items (Ordered by Board)*")
@@ -1253,14 +1271,13 @@ Returns the list of issue/PR plists."
                      (max-num-len 0))
 
                 ;; Determine max lengths for formatting
-                (dolist (item all-items) ; Use all-items
+                (dolist (item items-to-process)
                   (setq max-repo-len (max max-repo-len (length (plist-get item :repo))))
                   (setq max-title-len (max max-title-len (length (plist-get item :title))))
                   (setq max-num-len (max max-num-len (length (number-to-string (plist-get item :number))))))
                 (setq max-repo-len (max max-repo-len (length "Repo"))) ; Ensure header fits
                 (setq max-title-len (min max-title-len 80)) ; Cap title length for display
                 (setq max-num-len (max max-num-len (length "Number")))
-
 
                 (with-current-buffer buffer
                   (erase-buffer)
@@ -1272,16 +1289,20 @@ Returns the list of issue/PR plists."
                                   (make-string max-repo-len ?-)
                                   (make-string max-num-len ?-)
                                   (make-string max-title-len ?-)))
-                  (dolist (item all-items) ; Use all-items
+                  (dolist (item items-to-process)
                     (insert (format (format "%%-%ds | %%-%ds | %%s\n" max-repo-len max-num-len)
                                     (plist-get item :repo)
                                     (plist-get item :number)
                                     (truncate-string-to-width (plist-get item :title) max-title-len nil nil "…")))))
                 (display-buffer buffer)
-                (message "All project items displayed in %s buffer. Total: %d" buffer-name (length all-items)))
-            (message "Fetched %d project items. Buffer not displayed." (length all-items))))
-      (message "No items found in project %s, or an error occurred." forge-extras-project-node-id))
-    all-items)) ; Return all-items
+                (message "All project items displayed in %s buffer. Total: %d" buffer-name (length items-to-process)))
+            (message "Processed %d project items. Buffer not displayed." (length items-to-process)))
+          items-to-process) ; Return the items
+      (progn
+        (if project-items-list
+            (message "No items provided or an empty list was given.")
+          (message "No items found in project %s, or an error occurred." forge-extras-project-node-id))
+        nil)))) ; Return nil if no items
 
 (provide 'forge-extras)
 ;;; forge-extras.el ends here

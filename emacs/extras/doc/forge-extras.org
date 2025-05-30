@@ -165,13 +165,15 @@ The command ~forge-extras-list-project-issues-by-repo-ordered~ fetches issues an
 
 #+findex: forge-extras-list-project-items-ordered
 The command ~forge-extras-list-project-items-ordered~ fetches all issues and pull requests from the GitHub Project configured by ~forge-extras-project-node-id~, handling pagination to retrieve all items.
-- Behavior with prefix arguments:
+- Behavior with prefix arguments (interactive calls):
   - *Without a prefix argument*: Excludes closed/merged items and displays results in a new buffer named =*All Project Items (Ordered by Board)*=.
   - *With any prefix argument* (e.g., =C-u M-x forge-extras-list-project-items-ordered=): Includes closed/merged items and does *not* display the results buffer.
-- It does not filter by repository, listing items from all repositories present in the project.
-- The items are listed in the order they appear on the project board.
-- The command also returns the list of fetched items as Elisp plists.
-- This command requires the =gh= CLI to be installed and authenticated, and ~forge-extras-project-node-id~ to be configured.
+- Programmatic calls can pass an optional list of items as the third argument. If provided, this list is used directly, bypassing the GitHub API call.
+- It does not filter by repository, listing items from all repositories present in the project (when fetching).
+- The items are listed in the order they appear on the project board (when fetching).
+- The command returns the list of fetched or provided items as Elisp plists.
+- The returned list is always cached in the internal variable ~forge-extras--cached-project-items~.
+- Fetching items requires the =gh= CLI to be installed and authenticated, and ~forge-extras-project-node-id~ to be configured.
 
 * Customization
 :PROPERTIES:

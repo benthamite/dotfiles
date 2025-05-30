@@ -324,7 +324,9 @@ Return a list of issue plists."
 
 (defun forge-extras--parse-gh-issue-table (table-string repo-string)
   "Parse the default (tabular) output of `gh issue list`.
-Return a list of plists with :repo :number :title :url."
+Return a list of plists with :repo :number :title :url.
+TABLE-STRING is the output string from `gh issue list`. REPO-STRING is the
+repository string in the format \"owner/repo\"."
   (let ((lines   (split-string table-string "\n" t))
         (issues  nil))
     (dolist (ln lines)
@@ -387,7 +389,7 @@ REPOSITORIES should be a list of \"owner/repo\" strings."
           (read-string "Repositories (space or comma separated owner/repo): ")
           "[ ,]+" t)))
   (unless (executable-find "gh")
-    (user-error "The 'gh' command-line tool is not installed or not in PATH.")
+    (user-error "The 'gh' command-line tool is not installed or not in PATH")
     (cl-return-from forge-extras-insert-issue-markdown-link))
 
   (unless repositories
@@ -402,7 +404,7 @@ REPOSITORIES should be a list of \"owner/repo\" strings."
           (setq all-issues (append all-issues repo-issues)))))
 
     (unless all-issues
-      (user-error "No issues found in the configured repositories, or an error occurred.")
+      (user-error "No issues found in the configured repositories, or an error occurred")
       (cl-return-from forge-extras-insert-issue-markdown-link))
 
     ;; Sort issues by repository name (ascending), then by issue number (descending).
@@ -556,8 +558,9 @@ and issue number.")
 
 (defun forge-extras--execute-gh-graphql-query (query-string variables)
   "Execute a GitHub GraphQL QUERY-STRING with VARIABLES.
-VARIABLES is an alist of (var-name . value) suitable for a JSON 'variables' object.
-Returns the parsed JSON response as an Elisp data structure, or nil on failure."
+VARIABLES is an alist of (var-name . value) suitable for a JSON `variables'
+object. Returns the parsed JSON response as an Elisp data structure, or nil on
+failure."
   (let* ((lines (split-string query-string "\n" t))
          (lines-without-comments (mapcar (lambda (line) (replace-regexp-in-string "#.*" "" line)) lines))
          (query-almost-single-line (string-join lines-without-comments " "))
@@ -1070,15 +1073,14 @@ finding the Node ID required for variables like
       }
     }
   }"
-  "GraphQL query to fetch items (Issues/PRs) for a project, ordered by position, with pagination support.")
+  "GraphQL query to fetch items (Issues/PRs) for a project, ordered by position.")
 
 (defun forge-extras--parse-project-items (raw-json-response &optional target-repo-name-with-owner include-closed-p)
   "Parse RAW-JSON-RESPONSE from project items query.
-If TARGET-REPO-NAME-WITH-OWNER is non-nil, filter items for that repository.
-If INCLUDE-CLOSED-P is nil, filter out closed/merged items.
-Filters for type (Issue or PullRequest).
-Returns a cons cell: (LIST-OF-ITEMS . PAGE-INFO-ALIST).
-Each item in LIST-OF-ITEMS is a plist with :type :number :title :url :repo :state."
+If TARGET-REPO-NAME-WITH-OWNER is non-nil, filter items for that repository. If
+INCLUDE-CLOSED-P is nil, filter out closed/merged items. Filters for type (Issue
+or PullRequest). Returns a cons cell: (LIST-OF-ITEMS . PAGE-INFO-ALIST). Each
+item in LIST-OF-ITEMS is a plist with :type :number :title :url :repo :state."
   (let ((items-and-prs nil)
         (page-info nil))
     (when-let* ((data (cdr (assoc 'data raw-json-response)))
@@ -1115,11 +1117,11 @@ Each item in LIST-OF-ITEMS is a plist with :type :number :title :url :repo :stat
 
 ;;;###autoload
 (defun forge-extras-list-project-issues-by-repo-ordered (repo-name-with-owner)
-  "List issues and pull requests from REPO-NAME-WITH-OWNER in the configured GitHub project.
+  "List issues and pull requests from REPO-NAME-WITH-OWNER in the GitHub project.
 The items are listed in the order they appear on the project board.
-REPO-NAME-WITH-OWNER should be in \"owner/repo\" format.
-Results are displayed in a new buffer \"*Project Issues for REPO-NAME-WITH-OWNER*\".
-Returns the list of issue/PR plists."
+REPO-NAME-WITH-OWNER should be in \"owner/repo\" format. Results are displayed
+in a new buffer \"*Project Issues for REPO-NAME-WITH-OWNER*\". Returns the list
+of issue/PR plists."
   (interactive
    (list (read-string "Repository (owner/repo): ")))
   (unless (and (boundp 'forge-extras-project-node-id)
@@ -1127,9 +1129,9 @@ Returns the list of issue/PR plists."
                (not (string-empty-p forge-extras-project-node-id)))
     (user-error "`forge-extras-project-node-id' is not configured. Please set it first"))
   (unless (executable-find "gh")
-    (user-error "The 'gh' command-line tool is not installed or not in PATH."))
+    (user-error "The 'gh' command-line tool is not installed or not in PATH"))
   (unless (string-match-p ".+/.+" repo-name-with-owner)
-    (user-error "Invalid repository format. Expected \"owner/repo\"."))
+    (user-error "Invalid repository format. Expected \"owner/repo\""))
 
   (message "Fetching project items for %s from project %s..."
            repo-name-with-owner forge-extras-project-node-id)
@@ -1183,34 +1185,35 @@ Returns the list of issue/PR plists."
 
 (defvar forge-extras--cached-project-items nil
   "Cache for items returned by `forge-extras-list-project-items-ordered`.
-This variable stores the list of project items (issues and pull requests)
-the last time `forge-extras-list-project-items-ordered` was successfully executed.
+This variable stores the list of project items (issues and pull requests) the
+last time `forge-extras-list-project-items-ordered` was successfully executed.
 It can be inspected or cleared manually if needed.")
 
 ;;;###autoload
 (defun forge-extras-list-project-items-ordered (&optional include-closed-p display-buffer-p use-cache-p)
   "List all issues and pull requests from the configured GitHub project.
-Items are fetched page by page and listed in the order they appear on the project board.
+Items are fetched page by page and listed in the order they appear on the
+project board.
 
-If `use-cache-p` is true and `forge-extras--cached-project-items` is non-nil,
-the cached list is used. Otherwise, items are fetched from the GitHub API.
-Note: If cached data is used, the `include-closed-p` argument from the
-current call does not re-filter the cached items; it only applies if new data is fetched.
+If USE-CACHE-P is non-nil and `forge-extras--cached-project-items` is non-nil,
+the cached list is used. Otherwise, items are fetched from the GitHub API. Note:
+If cached data is used, the `include-closed-p` argument from the current call
+does not re-filter the cached items; it only applies if new data is fetched.
 
-If `include-closed-p' is non-nil (e.g., when called with any prefix argument
-and not using a populated cache for fetching), closed and merged items are
-included in the fetch. Otherwise, they are excluded.
+If INCLUDE-CLOSED-P is non-nil (e.g., when called with any prefix argument and
+not using a populated cache for fetching), closed and merged items are included
+in the fetch. Otherwise, they are excluded.
 
-If `display-buffer-p' is non-nil (e.g., when called without a prefix argument),
-results are displayed in a new buffer \"*All Project Items (Ordered by Board)*\".
-Otherwise, the buffer is not displayed.
+If DISPLAY-BUFFER-P is non-nil (e.g., when called without a prefix argument),
+results are displayed in a new buffer \"*All Project Items (Ordered by
+Board)*\". Otherwise, the buffer is not displayed.
 
 Default behavior (no prefix argument): Exclude closed items, display buffer.
-With a prefix argument (e.g., C-u): Include closed items, do NOT display buffer.
+With a prefix argument (e.g., \\<mapvar> & \\[command]): Include closed items,
+do NOT display buffer.
 
 The returned list (whether fetched or from cache) is always (re)cached in
-`forge-extras--cached-project-items`.
-Returns the list of issue/PR plists."
+`forge-extras--cached-project-items`. Returns the list of issue/PR plists."
   (interactive
    (list (prefix-numeric-value current-prefix-arg) ; include-closed-p: non-nil if any prefix
          (not current-prefix-arg)                ; display-buffer-p: t if no prefix, nil if any prefix

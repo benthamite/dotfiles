@@ -1295,15 +1295,15 @@ Returns the list of issue/PR plists."
              (page-info (cdr parsed-result)))
 
         (if (and raw-response parsed-result current-page-items)
-            (setq all-items (append all-items current-page-items)))
+            (setq all-items (nconc all-items current-page-items))) ; Use nconc for efficiency
 
         (if (and page-info (cdr (assoc 'hasNextPage page-info)))
             (setq current-cursor (cdr (assoc 'endCursor page-info)))
           (setq has-next-page nil)
           (unless page-info
-            (message "Warning: pageInfo not found in GraphQL response. Assuming no more pages.")))
-        ;; Basic rate limit politeness, consider making this configurable or smarter
-        (when has-next-page (sleep-for 0.2))))
+            (message "Warning: pageInfo not found in GraphQL response. Assuming no more pages."))))
+        ;; Removed sleep-for 0.2 to improve performance
+        )
 
     (if all-items
         (let* ((buffer-name "*All Project Items (Ordered by Board)*")

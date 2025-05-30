@@ -598,7 +598,9 @@ Returns the parsed JSON response as an Elisp data structure, or nil on failure."
         (insert json-string)
         (goto-char (point-min))
         (setq parsed-json (condition-case err
-                              (json-read-from-string (buffer-string))
+                              (let ((json-array-type 'list)
+                                    (json-object-type 'alist))
+                                (json-read-from-string (buffer-string)))
                             (error
                              (message "forge-extras--execute-gh-graphql-query: Error parsing JSON: %s" err)
                              nil))))

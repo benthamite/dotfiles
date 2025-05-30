@@ -1553,9 +1553,9 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package magit
   :ensure (:host github
-		 :repo "magit/magit"
-		 :branch "main"
-		 :build (:not elpaca--check-version))
+                 :repo "magit/magit"
+                 :branch "main"
+                 :build (:not elpaca--check-version))
   :custom
   (magit-commit-ask-to-stage 'stage)
   (magit-clone-set-remote.pushDefault t)
@@ -1729,19 +1729,19 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :init
   (with-eval-after-load 'magit-status
     (bind-keys :map 'magit-status-mode-map
-	       ("s-a" . forge-topic-set-assignees)
-	       ("s-d" . forge-delete-comment)
-	       ("s-e" . forge-edit-post)
-	       ("s-i" . forge-browse-issue)
-	       ("s-I" . forge-browse-issues)
-	       ("s-l" . forge-topic-set-labels)
-	       ("s-o" . forge-topic-status-set-done)
-	       ("s-p" . forge-create-post)
-	       ("s-r" . forge-create-post)
-	       ("s-t" . forge-topic-set-title)))
+               ("s-a" . forge-topic-set-assignees)
+               ("s-d" . forge-delete-comment)
+               ("s-e" . forge-edit-post)
+               ("s-i" . forge-browse-issue)
+               ("s-I" . forge-browse-issues)
+               ("s-l" . forge-topic-set-labels)
+               ("s-o" . forge-topic-status-set-done)
+               ("s-p" . forge-create-post)
+               ("s-r" . forge-create-post)
+               ("s-t" . forge-topic-set-title)))
   (with-eval-after-load 'magit
     (bind-keys :map 'magit-mode-map
-	       ("n" . forge-dispatch)))
+               ("n" . forge-dispatch)))
   :custom
   (forge-owned-accounts '(("benthamite")))
   (forge-topic-list-limit '(500 . -500)) ; show closed topics only via `forge-toggle-closed-visibility'
@@ -1899,7 +1899,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :init
   (with-eval-after-load 'magit-status
     (bind-keys :map 'magit-status-mode-map
-	       ("s-x" . forge-extras-state-set-dwim)))
+               ("s-x" . forge-extras-state-set-dwim)))
 
   :custom
   (forge-extras-project-owner "tlon-team")
@@ -1913,7 +1913,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
      ("Later" . "13e22f63")
      ("Someday" . "4bf0f00e")
      ("Done" . "98236657")))
-  
+
   :config
   (advice-add 'orgit-store-link :override #'forge-extras-orgit-store-link)
   ;; hack: to mark the topic as read, we browse it in the background
@@ -1931,7 +1931,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
         ("x" . forge-extras-browse-github-inbox)
         ("s-x" . forge-extras-state-set-dwim))
   (:map forge-topic-mode-map
-	("s-x" . forge-extras-state-set-dwim)))
+        ("s-x" . forge-extras-state-set-dwim)))
 #+end_src
 
 ** emacs-pr-review
@@ -7528,14 +7528,14 @@ Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-custo
   (when (string-match-p "\\*Backtrace\\*" (buffer-name))
     (let* ((contents (buffer-string))
            (file (file-name-concat paths-dir-downloads "backtrace.el"))
-	   message)
+           message)
       (kill-new contents)
       (with-temp-buffer
-	(insert contents)
-	(write-region (point-min) (point-max) file)
-	(setq message (format "Backtrace copied to clipboard and saved to \"%s\" (%s)"
-			      (abbreviate-file-name file)
-			      (file-size-human-readable (file-attribute-size (file-attributes file))))))
+        (insert contents)
+        (write-region (point-min) (point-max) file)
+        (setq message (format "Backtrace copied to clipboard and saved to \"%s\" (%s)"
+                              (abbreviate-file-name file)
+                              (file-size-human-readable (file-attribute-size (file-attributes file))))))
       (run-at-time 0.1 nil (lambda () (message message))))
     (kill-buffer)))
 
@@ -8028,8 +8028,8 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   ;; default model
   (setq gptel-model 'claude-sonnet-4-20250514
         gptel-backend (gptel-make-anthropic "Claude"
-			:stream t
-			:key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))))
+                        :stream t
+                        :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))))
 
   ;; other models
   (gptel-make-gemini "Gemini"

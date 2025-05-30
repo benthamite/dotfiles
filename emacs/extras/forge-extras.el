@@ -1229,7 +1229,7 @@ Returns the list of issue/PR plists."
                      (not (string-empty-p forge-extras-project-node-id)))
           (user-error "`forge-extras-project-node-id' is not configured. Please set it first"))
         (unless (executable-find "gh")
-          (user-error "The 'gh' command-line tool is not installed or not in PATH."))
+          (user-error "The 'gh' command-line tool is not installed or not in PATH"))
         (message "Fetching all project items from project %s (Include closed: %s)..."
                  forge-extras-project-node-id (if include-closed-p "yes" "no"))
         (let ((fetched-items-accumulator nil)
@@ -1265,15 +1265,11 @@ Returns the list of issue/PR plists."
                    ;; Case 3: pageInfo exists, hasNextPage is true, but new-cursor is nil
                    ((not new-cursor)
                     (message "Reached end of project items (hasNextPage was true, but no further cursor was provided)."))
-                   ))))))
+                   )))))
           (setq items-to-process fetched-items-accumulator))))
-
-    ;; Cache the result
     (setq forge-extras--cached-project-items items-to-process)
-
-    ;; Display and return
     (if items-to-process
-        (progn
+	(progn
           (if display-buffer-p
               (let* ((buffer-name "*All Project Items (Ordered by Board)*")
                      (buffer (get-buffer-create buffer-name))
@@ -1310,10 +1306,10 @@ Returns the list of issue/PR plists."
             (message "Processed %d project items. Buffer not displayed." (length items-to-process)))
           items-to-process) ; Return the items
       (progn
-        (if (and use-cache-p forge-extras--cached-project-items) ; This case should ideally not be hit if items-to-process is nil
+	(if (and use-cache-p forge-extras--cached-project-items) ; This case should ideally not be hit if items-to-process is nil
             (message "Cached items list was empty.")
           (message "No items found in project %s, or an error occurred." forge-extras-project-node-id))
-        nil)))) ; Return nil if no items
+	nil))))
 
 (provide 'forge-extras)
 ;;; forge-extras.el ends here

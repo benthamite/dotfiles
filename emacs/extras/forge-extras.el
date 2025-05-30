@@ -1225,11 +1225,16 @@ Returns the list of issue/PR plists."
         (if (and raw-response parsed-result current-page-items)
             (setq all-items (nconc all-items current-page-items))) ; Use nconc for efficiency
 
-        (if (and page-info (cdr (assoc 'hasNextPage page-info)))
-            (setq current-cursor (cdr (assoc 'endCursor page-info)))
-          (setq has-next-page nil)
-          (unless page-info
-            (message "Warning: pageInfo not found in GraphQL response. Assuming no more pages."))))
+        (let ((new-cursor (and page-info (cdr (assoc 'endCursor page-info)))))
+          (if (and page-info (cdr (assoc 'hasNextPage page-info)) new-cursor)
+              ;; Continue if hasNextPage is true AND new-cursor is valid
+              (setq current-cursor new-cursor)
+            ;; Else, stop pagination for any other reason (no pageInfo, hasNextPage is false, or no valid new_cursor)
+            (setq has-next-page nil)
+            (if (not page-info)
+                (message "Warning: pageInfo not found in GraphQL response. Assuming no more pages.")
+              (when (and (cdr (assoc 'hasNextPage page-info)) (not new-cursor)) ; Log if stopped due to missing cursor despite hasNextPage=true
+                (message "Warning: hasNextPage was true but endCursor is missing/null. Stopping pagination."))))))
         ;; Removed sleep-for 0.2 to improve performance
         )
 

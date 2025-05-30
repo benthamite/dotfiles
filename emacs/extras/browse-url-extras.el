@@ -111,6 +111,19 @@ of URLs to open in Firefox instead."
 
 (browse-url-extras-set-domains-to-open-externally)
 
+(declare-function xwidget-webkit-current-session "xwidget")
+;;;###autoload
+(defun browse-extras-browse-url-externally (&optional url)
+  "Browse the current URL with an external browser.
+The browser to use is specified by the
+`browse-url-secondary-browser-function' variable."
+  (interactive)
+  (funcall browse-url-secondary-browser-function
+           (or url (cond ((derived-mode-p 'eww-mode)
+			  (plist-get eww-data :url))
+			 ((derived-mode-p 'xwidget-webkit-mode)
+			  (xwidget-webkit-uri (xwidget-webkit-current-session)))))))
+
 (defun browse-url-open-externally-in-background (url)
   "Open URL externally in the background.
 If URL is nil, prompt for a URL."

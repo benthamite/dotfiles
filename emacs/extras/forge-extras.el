@@ -1187,14 +1187,24 @@ Returns the list of issue/PR plists."
     items))
 
 ;;;###autoload
-(defun forge-extras-list-project-items-ordered (&optional include-closed-p)
+(defun forge-extras-list-project-items-ordered (&optional include-closed-p display-buffer-p)
   "List all issues and pull requests from the configured GitHub project.
 Items are fetched page by page and listed in the order they appear on the project board.
-If `include-closed-p' (e.g., called with a prefix argument) is non-nil,
-closed and merged items are included. Otherwise, they are excluded by default.
-Results are displayed in a new buffer \"*All Project Items (Ordered by Board)*\".
+
+If `include-closed-p' is non-nil (e.g., when called with any prefix argument),
+closed and merged items are included. Otherwise, they are excluded.
+
+If `display-buffer-p' is non-nil (e.g., when called without a prefix argument),
+results are displayed in a new buffer \"*All Project Items (Ordered by Board)*\".
+Otherwise, the buffer is not displayed.
+
+Default behavior (no prefix argument): Exclude closed items, display buffer.
+With a prefix argument (e.g., C-u): Include closed items, do NOT display buffer.
+
 Returns the list of issue/PR plists."
-  (interactive "P")
+  (interactive
+   (list (prefix-numeric-value current-prefix-arg) ; include-closed-p: non-nil if any prefix
+         (not current-prefix-arg)))                ; display-buffer-p: t if no prefix, nil if any prefix
   (unless (and (boundp 'forge-extras-project-node-id)
                (stringp forge-extras-project-node-id)
                (not (string-empty-p forge-extras-project-node-id)))
@@ -1239,39 +1249,42 @@ Returns the list of issue/PR plists."
         )
 
     (if all-items
-        (let* ((buffer-name "*All Project Items (Ordered by Board)*")
-               (buffer (get-buffer-create buffer-name))
-               (max-repo-len 0)
-               (max-title-len 0)
-               (max-num-len 0))
+        (progn
+          (if display-buffer-p
+              (let* ((buffer-name "*All Project Items (Ordered by Board)*")
+                     (buffer (get-buffer-create buffer-name))
+                     (max-repo-len 0)
+                     (max-title-len 0)
+                     (max-num-len 0))
 
-          ;; Determine max lengths for formatting
-          (dolist (item all-items) ; Use all-items
-            (setq max-repo-len (max max-repo-len (length (plist-get item :repo))))
-            (setq max-title-len (max max-title-len (length (plist-get item :title))))
-            (setq max-num-len (max max-num-len (length (number-to-string (plist-get item :number))))))
-          (setq max-repo-len (max max-repo-len (length "Repo"))) ; Ensure header fits
-          (setq max-title-len (min max-title-len 80)) ; Cap title length for display
-          (setq max-num-len (max max-num-len (length "Number")))
+                ;; Determine max lengths for formatting
+                (dolist (item all-items) ; Use all-items
+                  (setq max-repo-len (max max-repo-len (length (plist-get item :repo))))
+                  (setq max-title-len (max max-title-len (length (plist-get item :title))))
+                  (setq max-num-len (max max-num-len (length (number-to-string (plist-get item :number))))))
+                (setq max-repo-len (max max-repo-len (length "Repo"))) ; Ensure header fits
+                (setq max-title-len (min max-title-len 80)) ; Cap title length for display
+                (setq max-num-len (max max-num-len (length "Number")))
 
 
-          (with-current-buffer buffer
-            (erase-buffer)
-            (insert (format "All project items (Project Node ID: %s)\n" forge-extras-project-node-id))
-            (insert (format "Order reflects the project board.\n\n"))
-            (insert (format (format "%%-%ds | %%-%ds | %%s\n" max-repo-len max-num-len)
-                            "Repo" "Number" "Title"))
-            (insert (format "%s-|-%s-|-%s\n"
-                            (make-string max-repo-len ?-)
-                            (make-string max-num-len ?-)
-                            (make-string max-title-len ?-)))
-            (dolist (item all-items) ; Use all-items
-              (insert (format (format "%%-%ds | %%-%ds | %%s\n" max-repo-len max-num-len)
-                              (plist-get item :repo)
-                              (plist-get item :number)
-                              (truncate-string-to-width (plist-get item :title) max-title-len nil nil "…")))))
-          (display-buffer buffer)
-          (message "All project items displayed in %s buffer. Total: %d" buffer-name (length all-items)))
+                (with-current-buffer buffer
+                  (erase-buffer)
+                  (insert (format "All project items (Project Node ID: %s)\n" forge-extras-project-node-id))
+                  (insert (format "Order reflects the project board.\n\n"))
+                  (insert (format (format "%%-%ds | %%-%ds | %%s\n" max-repo-len max-num-len)
+                                  "Repo" "Number" "Title"))
+                  (insert (format "%s-|-%s-|-%s\n"
+                                  (make-string max-repo-len ?-)
+                                  (make-string max-num-len ?-)
+                                  (make-string max-title-len ?-)))
+                  (dolist (item all-items) ; Use all-items
+                    (insert (format (format "%%-%ds | %%-%ds | %%s\n" max-repo-len max-num-len)
+                                    (plist-get item :repo)
+                                    (plist-get item :number)
+                                    (truncate-string-to-width (plist-get item :title) max-title-len nil nil "…")))))
+                (display-buffer buffer)
+                (message "All project items displayed in %s buffer. Total: %d" buffer-name (length all-items)))
+            (message "Fetched %d project items. Buffer not displayed." (length all-items))))
       (message "No items found in project %s, or an error occurred." forge-extras-project-node-id))
     all-items)) ; Return all-items
 

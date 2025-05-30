@@ -1110,10 +1110,10 @@ finding the Node ID required for variables like
       (user-error "Could not retrieve or parse project fields for Project Node ID: %s" forge-extras-project-node-id))))
 
 (defconst forge-extras-gh-project-items-by-repo-query
-  "query($projectNodeId:ID!) {
+  "query($projectNodeId:ID!, $cursor:String) {
     node(id: $projectNodeId) {
       ... on ProjectV2 {
-        items(first: 100, orderBy: {field: POSITION, direction: ASC}) { # Ensure order
+        items(first: 100, orderBy: {field: POSITION, direction: ASC}, after: $cursor) {
           nodes {
             content {
               __typename
@@ -1122,6 +1122,7 @@ finding the Node ID required for variables like
                 number
                 title
                 url
+                state # Issue state (e.g., OPEN, CLOSED)
                 repository {
                   nameWithOwner
                 }
@@ -1131,47 +1132,63 @@ finding the Node ID required for variables like
                 number
                 title
                 url
+                state # PR state (e.g., OPEN, CLOSED, MERGED)
                 repository {
                   nameWithOwner
                 }
               }
             }
           }
+          pageInfo {
+            endCursor
+            hasNextPage
+          }
         }
       }
     }
   }"
-  "GraphQL query to fetch items (Issues/PRs) for a project, ordered by position.")
+  "GraphQL query to fetch items (Issues/PRs) for a project, ordered by position, with pagination support.")
 
-(defun forge-extras--parse-project-items (raw-json-response &optional target-repo-name-with-owner)
+(defun forge-extras--parse-project-items (raw-json-response &optional target-repo-name-with-owner include-closed-p)
   "Parse RAW-JSON-RESPONSE from project items query.
 If TARGET-REPO-NAME-WITH-OWNER is non-nil, filter items for that repository.
+If INCLUDE-CLOSED-P is nil, filter out closed/merged items.
 Filters for type (Issue or PullRequest).
-Returns a list of plists, each with :type :number :title :url :repo."
-  (let ((issues-and-prs nil))
+Returns a cons cell: (LIST-OF-ITEMS . PAGE-INFO-ALIST).
+Each item in LIST-OF-ITEMS is a plist with :type :number :title :url :repo :state."
+  (let ((items-and-prs nil)
+        (page-info nil))
     (when-let* ((data (cdr (assoc 'data raw-json-response)))
                 (node (cdr (assoc 'node data)))
-                (items (cdr (assoc 'items node)))
-                (item-nodes (cdr (assoc 'nodes items))))
-      (dolist (item-node item-nodes)
-        (when-let* ((content (cdr (assoc 'content item-node)))
-                    (type-name (cdr (assoc '__typename content)))
-                    (repo-info (cdr (assoc 'repository content)))
-                    (repo-name (cdr (assoc 'nameWithOwner repo-info))))
-          (when (and (member type-name '("Issue" "PullRequest"))
-                     (or (null target-repo-name-with-owner) ; If nil, don't filter by repo
-                         (and repo-name (string= repo-name target-repo-name-with-owner)))) ; Guard against nil repo-name if target-repo-name-with-owner is non-nil
-            (let ((number (cdr (assoc 'number content)))
-                  (title (cdr (assoc 'title content)))
-                  (url (cdr (assoc 'url content))))
-              (when (and number title url)
-                (push `(:type ,(if (string= type-name "Issue") 'issue 'pullreq)
-                        :repo ,repo-name
-                        :number ,number
-                        :title ,title
-                        :url ,url)
-                      issues-and-prs)))))))
-    (nreverse issues-and-prs)))
+                (items-connection (cdr (assoc 'items node))))
+      (setq page-info (cdr (assoc 'pageInfo items-connection)))
+      (when-let* ((item-nodes (cdr (assoc 'nodes items-connection))))
+        (dolist (item-node item-nodes)
+          (when-let* ((content (cdr (assoc 'content item-node)))
+                      (type-name (cdr (assoc '__typename content)))
+                      (item-state (cdr (assoc 'state content)))
+                      (repo-info (cdr (assoc 'repository content)))
+                      (repo-name (cdr (assoc 'nameWithOwner repo-info))))
+            (when (and (member type-name '("Issue" "PullRequest"))
+                       (or (null target-repo-name-with-owner)
+                           (and repo-name (string= repo-name target-repo-name-with-owner)))
+                       (or include-closed-p
+                           (not (cond ((string= type-name "Issue")
+                                       (string= item-state "CLOSED"))
+                                      ((string= type-name "PullRequest")
+                                       (member item-state '("CLOSED" "MERGED")))))))
+              (let ((number (cdr (assoc 'number content)))
+                    (title (cdr (assoc 'title content)))
+                    (url (cdr (assoc 'url content))))
+                (when (and number title url)
+                  (push `(:type ,(if (string= type-name "Issue") 'issue 'pullreq)
+                          :repo ,repo-name
+                          :number ,number
+                          :title ,title
+                          :url ,url
+                          :state ,item-state)
+                        items-and-prs))))))))
+    (cons (nreverse items-and-prs) page-info)))
 
 ;;;###autoload
 (defun forge-extras-list-project-issues-by-repo-ordered (repo-name-with-owner)
@@ -1197,10 +1214,12 @@ Returns the list of issue/PR plists."
   (let* ((variables `(("projectNodeId" . ,forge-extras-project-node-id)))
          (raw-response (forge-extras--execute-gh-graphql-query
                         forge-extras-gh-project-items-by-repo-query
-                        variables))
-         (items (if raw-response
-                    (forge-extras--parse-project-items raw-response repo-name-with-owner)
-                  nil)))
+                        variables)) ; variables will not include cursor for this func
+         (parsed-result (if raw-response
+                            ;; Pass t to include closed items, maintaining previous behavior for this command.
+                            (forge-extras--parse-project-items raw-response repo-name-with-owner t)
+                          nil))
+         (items (car parsed-result))) ; Get items from (items . pageInfo)
     (if items
         (let* ((buffer-name (format "*Project Issues for %s*" repo-name-with-owner))
                (buffer (get-buffer-create buffer-name))
@@ -1240,12 +1259,14 @@ Returns the list of issue/PR plists."
     items))
 
 ;;;###autoload
-(defun forge-extras-list-project-items-ordered ()
+(defun forge-extras-list-project-items-ordered (&optional include-closed-p)
   "List all issues and pull requests from the configured GitHub project.
-The items are listed in the order they appear on the project board.
+Items are fetched page by page and listed in the order they appear on the project board.
+If `include-closed-p' (e.g., called with a prefix argument) is non-nil,
+closed and merged items are included. Otherwise, they are excluded by default.
 Results are displayed in a new buffer \"*All Project Items (Ordered by Board)*\".
 Returns the list of issue/PR plists."
-  (interactive)
+  (interactive "P")
   (unless (and (boundp 'forge-extras-project-node-id)
                (stringp forge-extras-project-node-id)
                (not (string-empty-p forge-extras-project-node-id)))
@@ -1253,17 +1274,38 @@ Returns the list of issue/PR plists."
   (unless (executable-find "gh")
     (user-error "The 'gh' command-line tool is not installed or not in PATH."))
 
-  (message "Fetching all project items from project %s..." forge-extras-project-node-id)
+  (message "Fetching all project items from project %s (Include closed: %s)..."
+           forge-extras-project-node-id (if include-closed-p "yes" "no"))
 
-  (let* ((variables `(("projectNodeId" . ,forge-extras-project-node-id)))
-         (raw-response (forge-extras--execute-gh-graphql-query
-                        forge-extras-gh-project-items-by-repo-query
-                        variables))
-         ;; Call parser without a target-repo-name to get all items
-         (items (if raw-response
-                    (forge-extras--parse-project-items raw-response nil)
-                  nil)))
-    (if items
+  (let ((all-items nil)
+        (current-cursor nil)
+        (has-next-page t))
+
+    (while has-next-page
+      (message "Fetching project items page (cursor: %s)..." (or current-cursor "start"))
+      (let* ((variables `(("projectNodeId" . ,forge-extras-project-node-id)
+                          ,@(when current-cursor `(("cursor" . ,current-cursor)))))
+             (raw-response (forge-extras--execute-gh-graphql-query
+                            forge-extras-gh-project-items-by-repo-query
+                            variables))
+             (parsed-result (if raw-response
+                                (forge-extras--parse-project-items raw-response nil include-closed-p)
+                              nil))
+             (current-page-items (car parsed-result))
+             (page-info (cdr parsed-result)))
+
+        (if (and raw-response parsed-result current-page-items)
+            (setq all-items (append all-items current-page-items)))
+
+        (if (and page-info (cdr (assoc 'hasNextPage page-info)))
+            (setq current-cursor (cdr (assoc 'endCursor page-info)))
+          (setq has-next-page nil)
+          (unless page-info
+            (message "Warning: pageInfo not found in GraphQL response. Assuming no more pages.")))
+        ;; Basic rate limit politeness, consider making this configurable or smarter
+        (when has-next-page (sleep-for 0.2))))
+
+    (if all-items
         (let* ((buffer-name "*All Project Items (Ordered by Board)*")
                (buffer (get-buffer-create buffer-name))
                (max-repo-len 0)
@@ -1271,7 +1313,7 @@ Returns the list of issue/PR plists."
                (max-num-len 0))
 
           ;; Determine max lengths for formatting
-          (dolist (item items)
+          (dolist (item all-items) ; Use all-items
             (setq max-repo-len (max max-repo-len (length (plist-get item :repo))))
             (setq max-title-len (max max-title-len (length (plist-get item :title))))
             (setq max-num-len (max max-num-len (length (number-to-string (plist-get item :number))))))
@@ -1290,15 +1332,15 @@ Returns the list of issue/PR plists."
                             (make-string max-repo-len ?-)
                             (make-string max-num-len ?-)
                             (make-string max-title-len ?-)))
-            (dolist (item items)
+            (dolist (item all-items) ; Use all-items
               (insert (format (format "%%-%ds | %%-%ds | %%s\n" max-repo-len max-num-len)
                               (plist-get item :repo)
                               (plist-get item :number)
                               (truncate-string-to-width (plist-get item :title) max-title-len nil nil "…")))))
           (display-buffer buffer)
-          (message "All project items displayed in %s buffer." buffer-name))
+          (message "All project items displayed in %s buffer. Total: %d" buffer-name (length all-items)))
       (message "No items found in project %s, or an error occurred." forge-extras-project-node-id))
-    items))
+    all-items)) ; Return all-items
 
 (provide 'forge-extras)
 ;;; forge-extras.el ends here

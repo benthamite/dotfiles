@@ -6954,6 +6954,7 @@ https://gitlab.com/chrisberkhout/pricehist
 
   :custom
   (tlon-forg-archive-todo-on-close t)
+  (tlon-forg-sort-after-sync-or-capture t)
 
   :config
   (run-with-idle-timer (* 60 60) t #'tlon-pull-issues-in-all-repos)

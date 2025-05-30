@@ -158,6 +158,19 @@ The command ~forge-extras-list-project-issues-by-repo-ordered~ fetches issues an
 - The command also returns the list of fetched items as Elisp plists.
 - This command requires the =gh= CLI to be installed and authenticated, and ~forge-extras-project-node-id~ to be configured.
 
+** List All Project Items (Ordered)
+:PROPERTIES:
+:CUSTOM_ID: h:forge-extras-list-project-items-ordered
+:END:
+
+#+findex: forge-extras-list-project-items-ordered
+The command ~forge-extras-list-project-items-ordered~ fetches all issues and pull requests from the GitHub Project configured by ~forge-extras-project-node-id~.
+- It does not filter by repository, listing items from all repositories present in the project.
+- The items are listed in the order they appear on the project board.
+- Results are displayed in a new buffer named =*All Project Items (Ordered by Board)*=.
+- The command also returns the list of fetched items as Elisp plists.
+- This command requires the =gh= CLI to be installed and authenticated, and ~forge-extras-project-node-id~ to be configured.
+
 * Customization
 :PROPERTIES:
 :CUSTOM_ID: h:customization
@@ -264,6 +277,7 @@ The callback function ~forge-extras-update-github-counter~ first checks if the A
 
 #+findex: forge-extras-insert-issue-markdown-link
 #+findex: forge-extras-list-project-issues-by-repo-ordered
+#+findex: forge-extras-list-project-items-ordered
 
 ** Variable index
 :PROPERTIES:

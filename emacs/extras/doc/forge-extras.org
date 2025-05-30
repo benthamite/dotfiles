@@ -145,6 +145,19 @@ The command ~forge-extras-get-project-field-ids~ fetches and displays all field 
 - This command is crucial for finding the correct Node IDs to set for ~forge-extras-status-field-node-id~ and ~forge-extras-estimate-field-node-id~.
 - It relies on the `gh` command-line tool being installed and authenticated.
 
+** List Project Issues by Repository (Ordered)
+:PROPERTIES:
+:CUSTOM_ID: h:forge-extras-list-project-issues-by-repo-ordered
+:END:
+
+#+findex: forge-extras-list-project-issues-by-repo-ordered
+The command ~forge-extras-list-project-issues-by-repo-ordered~ fetches issues and pull requests associated with a specific repository from the GitHub Project configured by ~forge-extras-project-node-id~.
+- It prompts the user for the repository name in "owner/repo" format.
+- The items are listed in the order they appear on the project board.
+- Results are displayed in a new buffer named =*Project Issues for owner/repo*=.
+- The command also returns the list of fetched items as Elisp plists.
+- This command requires the =gh= CLI to be installed and authenticated, and ~forge-extras-project-node-id~ to be configured.
+
 * Customization
 :PROPERTIES:
 :CUSTOM_ID: h:customization
@@ -250,6 +263,7 @@ The callback function ~forge-extras-update-github-counter~ first checks if the A
 :END:
 
 #+findex: forge-extras-insert-issue-markdown-link
+#+findex: forge-extras-list-project-issues-by-repo-ordered
 
 ** Variable index
 :PROPERTIES:

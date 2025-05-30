@@ -1143,9 +1143,10 @@ finding the Node ID required for variables like
   }"
   "GraphQL query to fetch items (Issues/PRs) for a project, ordered by position.")
 
-(defun forge-extras--parse-project-items (raw-json-response target-repo-name-with-owner)
+(defun forge-extras--parse-project-items (raw-json-response &optional target-repo-name-with-owner)
   "Parse RAW-JSON-RESPONSE from project items query.
-Filter items for TARGET-REPO-NAME-WITH-OWNER and type (Issue or PullRequest).
+If TARGET-REPO-NAME-WITH-OWNER is non-nil, filter items for that repository.
+Filters for type (Issue or PullRequest).
 Returns a list of plists, each with :type :number :title :url :repo."
   (let ((issues-and-prs nil))
     (when-let* ((data (cdr (assoc 'data raw-json-response)))
@@ -1158,7 +1159,8 @@ Returns a list of plists, each with :type :number :title :url :repo."
                     (repo-info (cdr (assoc 'repository content)))
                     (repo-name (cdr (assoc 'nameWithOwner repo-info))))
           (when (and (member type-name '("Issue" "PullRequest"))
-                     (string= repo-name target-repo-name-with-owner))
+                     (or (null target-repo-name-with-owner) ; If nil, don't filter by repo
+                         (string= repo-name target-repo-name-with-owner)))
             (let ((number (cdr (assoc 'number content)))
                   (title (cdr (assoc 'title content)))
                   (url (cdr (assoc 'url content))))
@@ -1235,6 +1237,67 @@ Returns the list of issue/PR plists."
           (message "Project items for %s displayed in %s buffer." repo-name-with-owner buffer-name))
       (message "No items found for %s in project %s, or an error occurred."
                repo-name-with-owner forge-extras-project-node-id))
+    items))
+
+;;;###autoload
+(defun forge-extras-list-project-items-ordered ()
+  "List all issues and pull requests from the configured GitHub project.
+The items are listed in the order they appear on the project board.
+Results are displayed in a new buffer \"*All Project Items (Ordered by Board)*\".
+Returns the list of issue/PR plists."
+  (interactive)
+  (unless (and (boundp 'forge-extras-project-node-id)
+               (stringp forge-extras-project-node-id)
+               (not (string-empty-p forge-extras-project-node-id)))
+    (user-error "`forge-extras-project-node-id' is not configured. Please set it first"))
+  (unless (executable-find "gh")
+    (user-error "The 'gh' command-line tool is not installed or not in PATH."))
+
+  (message "Fetching all project items from project %s..." forge-extras-project-node-id)
+
+  (let* ((variables `(("projectNodeId" . ,forge-extras-project-node-id)))
+         (raw-response (forge-extras--execute-gh-graphql-query
+                        forge-extras-gh-project-items-by-repo-query
+                        variables))
+         ;; Call parser without a target-repo-name to get all items
+         (items (if raw-response
+                    (forge-extras--parse-project-items raw-response nil)
+                  nil)))
+    (if items
+        (let* ((buffer-name "*All Project Items (Ordered by Board)*")
+               (buffer (get-buffer-create buffer-name))
+               (max-repo-len 0)
+               (max-title-len 0)
+               (max-num-len 0))
+
+          ;; Determine max lengths for formatting
+          (dolist (item items)
+            (setq max-repo-len (max max-repo-len (length (plist-get item :repo))))
+            (setq max-title-len (max max-title-len (length (plist-get item :title))))
+            (setq max-num-len (max max-num-len (length (number-to-string (plist-get item :number))))))
+          (setq max-repo-len (max max-repo-len (length "Repo"))) ; Ensure header fits
+          (setq max-title-len (min max-title-len 80)) ; Cap title length for display
+          (setq max-num-len (max max-num-len (length "Number")))
+
+
+          (with-current-buffer buffer
+            (erase-buffer)
+            (insert (format "All project items (Project Node ID: %s)\n" forge-extras-project-node-id))
+            (insert (format "Order reflects the project board.\n\n"))
+            (insert (format (format "%%-%ds | %%-%ds | %%s\n" max-repo-len max-num-len)
+                            "Repo" "Number" "Title"))
+            (insert (format "%s-|-%s-|-%s\n"
+                            (make-string max-repo-len ?-)
+                            (make-string max-num-len ?-)
+                            (make-string max-title-len ?-)))
+            (dolist (item items)
+              (insert (format (format "%%-%ds | %%-%ds | %%s\n" max-repo-len max-num-len)
+                              (plist-get item :repo)
+                              (plist-get item :number)
+                              (truncate-string-to-width (plist-get item :title) max-title-len nil nil "…")))))
+          (display-buffer buffer)
+          (message "All project items displayed in %s buffer." buffer-name))
+      (message "No items found in project %s, or an error occurred." forge-extras-project-node-id))
     items))
 
 (provide 'forge-extras)

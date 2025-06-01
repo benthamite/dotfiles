@@ -8144,7 +8144,7 @@ This package evolved out of gptel-extras.
 
   :bind
   (:map gptel-mode-map
-        ("s-l" . gptel-extras-list-context-files)))
+        ("s-l" . gptel-plus-list-context-files)))
 #+end_src
 
 ** gptel-extras

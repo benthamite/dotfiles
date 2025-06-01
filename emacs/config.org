@@ -4008,7 +4008,7 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
   :config
   (setopt dired-omit-files
    (concat dired-omit-files "\\|^.localized$\\|^\\.DS_Store$\\|^\\.pdf-view-restore\\|^Icon\\\015"))
-   
+
   :hook
   (dired-mode-hook . dired-omit-mode))
 #+end_src
@@ -8108,7 +8108,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (with-eval-after-load 'gptel-transient
     (transient-suffix-put 'gptel-menu "M+" :key "M-a")
     (transient-suffix-put 'gptel-menu "M-" :key "M-k"))
-  
+
   :bind
   (("M-c" . gptel-send)
    ("H-s-g" . gptel)

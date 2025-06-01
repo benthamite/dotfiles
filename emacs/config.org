@@ -563,14 +563,14 @@ The contents of this code block are tangled to the ~early-init.el~ file.
 (defun early-init-blacken-screen ()
   "Blacken screen as soon as Emacs starts, if the system theme is `dark'."
   (when (eq (macos-get-system-appearance) 'dark)
-    (setq mode-line-format nil)
+    (setopt mode-line-format nil)
     (set-face-attribute 'default nil :background "#000000" :foreground "#ffffff")
     (set-face-attribute 'mode-line nil :background "#000000" :foreground "#ffffff" :box 'unspecified)))
 
 (early-init-blacken-screen)
 
 ;; recommended for straight/elpaca (github.com/radian-software/straight.el#getting-started)
-(setq package-enable-at-startup nil)
+(setopt package-enable-at-startup nil)
 
 (add-to-list 'default-frame-alist '(undecorated-round . t)) ; remove title bar
 (add-to-list 'initial-frame-alist '(fullscreen . maximized)) ; maximize frame on startup
@@ -1203,9 +1203,7 @@ Partly borrowed from [[https://gitlab.com/protesilaos/dotfiles/-/blob/350ca3144c
   (redisplay-skip-fontification-on-input t)
   ;; emacs-lsp.github.io/lsp-mode/page/performance/
   (read-process-output-max (expt 1024 2))
-
-  :config
-  (setq bidi-paragraph-direction 'left-to-right))
+  (bidi-paragraph-direction 'left-to-right))
 #+end_src
 
 * secrets
@@ -2232,7 +2230,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
   (modus-themes-mixed-fonts t)
 
   :config
-  (setq modus-themes-common-palette-overrides
+  (setopt modus-themes-common-palette-overrides
    `((fringe unspecified) ; hide the fringe
      (bg-prose-block-delimiter bg-inactive)
      (fg-prose-block-delimiter gray)
@@ -4003,15 +4001,14 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature dired-x
-  :config
-  (setq dired-omit-files
-   (concat dired-omit-files "\\|^.localized$\\|^\\.DS_Store$\\|^\\.pdf-view-restore\\|^Icon\\\015"))
-
   :custom
   (dired-omit-verbose nil) ; shut up
-
   (dired-omit-size-limit nil)  ; always omit, regardless of directory size
 
+  :config
+  (setopt dired-omit-files
+   (concat dired-omit-files "\\|^.localized$\\|^\\.DS_Store$\\|^\\.pdf-view-restore\\|^Icon\\\015"))
+   
   :hook
   (dired-mode-hook . dired-omit-mode))
 #+end_src
@@ -4659,7 +4656,7 @@ CLOCK: [2024-08-28 Wed 09:31]--[2024-08-28 Wed 11:38] =>  2:07
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package popper
   :init
-  (setq popper-reference-buffers
+  (setopt popper-reference-buffers
         '("\\*Warnings\\*"
           "Output\\*$"
           help-mode
@@ -4803,7 +4800,7 @@ CLOCK: [2021-03-30 Tue 21:45]--[2021-03-30 Tue 22:02] =>  0:17
   :config
   (advice-add 'writeroom-mode :before (lambda (&rest args)
                                         "Set `writeroom-width' to the width of the window in which it is invoked."
-                                        (setq writeroom-width (window-total-width))))
+                                        (setopt writeroom-width (window-total-width))))
 
   :bind
   ("H-u" . writeroom-mode))
@@ -5107,7 +5104,7 @@ The original package appears to no longer be maintained, so I have created my ow
 (use-package tmr
   :config
   (when (eq system-type 'darwin)
-    (setq tmr-sound-file "/System/Library/Sounds/Blow.aiff"))
+    (setopt tmr-sound-file "/System/Library/Sounds/Blow.aiff"))
 
   :bind
   ("A-t" . tmr))
@@ -5586,7 +5583,7 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
   (consult-grep-max-columns nil)
 
   :config
-  (setq consult-ripgrep-args (concat consult-ripgrep-args " --hidden")) ; include hidden files
+  (setopt consult-ripgrep-args (concat consult-ripgrep-args " --hidden")) ; include hidden files
 
   :bind
   (("C-H-l" . consult-line)
@@ -6400,7 +6397,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 (use-package flycheck-languagetool
   :after flycheck
   :init
-  (setq flycheck-languagetool-server-jar
+  (setopt flycheck-languagetool-server-jar
         (expand-file-name (file-name-concat paths-dir-external-repos "LanguageTool/languagetool-server.jar")))
 
   :config
@@ -8017,17 +8014,17 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (gptel-track-media t)
   (gptel-max-tokens 10000)
   (gptel-include-reasoning nil)
+  (gptel-api-key (auth-source-pass-get "emacs" (concat "tlon/core/openai.com/" tlon-email-shared)))
 
   :config
   (require 'tlon-core)
-  (setq gptel-api-key (auth-source-pass-get "emacs" (concat "tlon/core/openai.com/" tlon-email-shared)))
   (setq gptel-expert-commands t) ; not a user option
 
   ;; set reasoning effort in o3-mini
   (put 'o3-mini :request-params '(:reasoning_effort "high" :stream :json-false))
 
   ;; default model
-  (setq gptel-model 'claude-sonnet-4-20250514
+  (setopt gptel-model 'claude-sonnet-4-20250514
         gptel-backend (gptel-make-anthropic "Claude"
                         :stream t
                         :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))))
@@ -8749,7 +8746,7 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
    "Leo<>Pablo\\|Fede<>Pablo\\|Tlön: group meeting")
 
   :config
-  (setq org-extras-agenda-files-excluded
+  (setopt org-extras-agenda-files-excluded
         (append org-extras-agenda-files-excluded
                 ;; files in `paths-dir-inactive' sans ., .., hidden files and subdirectories
                 (seq-filter (lambda (f) (not (file-directory-p f)))
@@ -8834,7 +8831,7 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
 (use-feature org-agenda
   :after org
   :init
-  (setq org-agenda-hide-tags-regexp "project")
+  (setopt org-agenda-hide-tags-regexp "project")
 
   :custom
   (org-agenda-window-setup 'current-window)
@@ -10273,7 +10270,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 
   :config
   ;; exclude headings in specific files and directories
-  (setq org-roam-file-exclude-regexp
+  (setopt org-roam-file-exclude-regexp
    (let (result)
      (dolist (dir-or-file
               (append
@@ -10284,7 +10281,6 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
                  (file-relative-name dir-or-file paths-dir-org-roam)
                dir-or-file)
              result))))
-
   :hook
   (org-capture-prepare-finalize-hook . org-roam-extras-remove-file-level-properties)
 
@@ -11867,7 +11863,7 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package telega
   :init
-  (setq telega-server-libs-prefix "/opt/homebrew")
+  (setopt telega-server-libs-prefix "/opt/homebrew")
 
   :custom
   (telega-chat-input-markups '("org"))
@@ -12155,7 +12151,7 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
             :user (concat (getenv "PERSONAL_GMAIL") "^cookie")))
 
   :hook
-  (slack-buffer-mode-hook . (lambda () (setq line-spacing nil)))
+  (slack-buffer-mode-hook . (lambda () (setopt line-spacing nil)))
 
   :bind
   (("A-k" . slack-channel-select)
@@ -12392,7 +12388,7 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
 
   :config
   (dolist (cons browse-url-handlers)
-    (setq eww-use-browse-url
+    (setopt eww-use-browse-url
           (concat eww-use-browse-url "\\|" (car cons))))
 
   (with-eval-after-load 'savehist

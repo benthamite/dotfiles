@@ -8018,6 +8018,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
   :config
   (require 'tlon-core)
+  (require 'gptel-integrations)
   (setq gptel-expert-commands t) ; not a user option
 
   ;; set reasoning effort in o3-mini
@@ -8025,9 +8026,9 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
   ;; default model
   (setopt gptel-model 'claude-sonnet-4-20250514
-        gptel-backend (gptel-make-anthropic "Claude"
-                        :stream t
-                        :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))))
+          gptel-backend (gptel-make-anthropic "Claude"
+                          :stream t
+                          :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))))
 
   ;; other models
   (gptel-make-gemini "Gemini"
@@ -8103,6 +8104,11 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
                :cutoff-date "2024-07"
                :description "Latest Grok vision model")))
 
+  ;; replace default key bindings in `gptel--suffix-mcp-disconnect'
+  (with-eval-after-load 'gptel-transient
+    (transient-suffix-put 'gptel-menu "M+" :key "M-a")
+    (transient-suffix-put 'gptel-menu "M-" :key "M-k"))
+  
   :bind
   (("M-c" . gptel-send)
    ("H-s-g" . gptel)
@@ -8284,29 +8290,31 @@ This package evolved out of gptel-extras.
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package mcp
   :ensure (:host github
-		 :repo "lizqwerscott/mcp.el"
-		 :build (:not elpaca--check-version))
+                 :repo "lizqwerscott/mcp.el"
+                 :build (:not elpaca--check-version))
   :after gptel
   :config
-  (setq mcp-hub-servers
-	`(("github-tlon-ai" .
-	   (:command "npx"
-		     :args ("-y" "@modelcontextprotocol/server-github")
-		     :env (:GITHUB_PERSONAL_ACCESS_TOKEN
-			   ,(auth-source-pass-get "github-mcp"
-						  (concat "tlon/core/github.com/tlon-ai")))))
-	  ("github-benthamite-owner-benthamite" .
-	   (:command "npx"
-		     :args ("-y" "@modelcontextprotocol/server-github")
-		     :env (:GITHUB_PERSONAL_ACCESS_TOKEN
-			   ,(auth-source-pass-get "github-mcp-owner-benthamite"
-						  (concat "chrome/github.com/benthamite")))))
-	  ("github-benthamite-owner-tlon-team" .
-	   (:command "npx"
-		     :args ("-y" "@modelcontextprotocol/server-github")
-		     :env (:GITHUB_PERSONAL_ACCESS_TOKEN
-			   ,(auth-source-pass-get "github-mcp-owner-tlon-team"
-						  (concat "chrome/github.com/benthamite"))))))))
+  (setopt mcp-hub-servers
+          `(("github-tlon-ai" .
+             (:command "npx"
+                       :args ("-y" "@modelcontextprotocol/server-github")
+                       :env (:GITHUB_PERSONAL_ACCESS_TOKEN
+                             ,(auth-source-pass-get "github-mcp"
+                                                    (concat "tlon/core/github.com/tlon-ai")))))))
+  (when (string= (system-name) "Pablos-MacBook-Pro.local")
+    (push `(("github-benthamite-owner-benthamite" .
+             (:command "npx"
+                       :args ("-y" "@modelcontextprotocol/server-github")
+                       :env (:GITHUB_PERSONAL_ACCESS_TOKEN
+                             ,(auth-source-pass-get "github-mcp-owner-benthamite"
+                                                    (concat "chrome/github.com/benthamite")))))
+            ("github-benthamite-owner-tlon-team" .
+             (:command "npx"
+                       :args ("-y" "@modelcontextprotocol/server-github")
+                       :env (:GITHUB_PERSONAL_ACCESS_TOKEN
+                             ,(auth-source-pass-get "github-mcp-owner-tlon-team"
+                                                    (concat "chrome/github.com/benthamite"))))))
+          mcp-hub-servers)))
 #+end_src
 
 ** dall-e-shell

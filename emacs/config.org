@@ -8284,8 +8284,29 @@ This package evolved out of gptel-extras.
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package mcp
   :ensure (:host github
-                 :repo "lizqwerscott/mcp.el"
-                 :build (:not elpaca--check-version)))
+		 :repo "lizqwerscott/mcp.el"
+		 :build (:not elpaca--check-version))
+  :after gptel
+  :config
+  (setq mcp-hub-servers
+	`(("github-tlon-ai" .
+	   (:command "npx"
+		     :args ("-y" "@modelcontextprotocol/server-github")
+		     :env (:GITHUB_PERSONAL_ACCESS_TOKEN
+			   ,(auth-source-pass-get "github-mcp"
+						  (concat "tlon/core/github.com/tlon-ai")))))
+	  ("github-benthamite-owner-benthamite" .
+	   (:command "npx"
+		     :args ("-y" "@modelcontextprotocol/server-github")
+		     :env (:GITHUB_PERSONAL_ACCESS_TOKEN
+			   ,(auth-source-pass-get "github-mcp-owner-benthamite"
+						  (concat "chrome/github.com/benthamite")))))
+	  ("github-benthamite-owner-tlon-team" .
+	   (:command "npx"
+		     :args ("-y" "@modelcontextprotocol/server-github")
+		     :env (:GITHUB_PERSONAL_ACCESS_TOKEN
+			   ,(auth-source-pass-get "github-mcp-owner-tlon-team"
+						  (concat "chrome/github.com/benthamite"))))))))
 #+end_src
 
 ** dall-e-shell

@@ -59,6 +59,7 @@
   (dolist (url (s-split "\n" (f-read urls-file) t))
     (push (cons (regexp-quote url) handler) browse-url-handlers)))
 
+;;;###autoload
 (defun browse-url-extras-set-domains-to-open-externally ()
   "Set the domains to open externally.
 Read the files `browse-url-extras-browse-url-default-file' and

@@ -1355,7 +1355,7 @@ Results are shown in \"*GitHub Project Status Options*\" buffer, formatted for
                       ("statusFieldNodeId" . ,forge-extras-status-field-node-id)))
          (raw-response (forge-extras--execute-gh-graphql-query
                         forge-extras-gh-project-status-options-query
-                        variables))))
+                        variables)))
     (if raw-response
         (let ((parsed-options (forge-extras--parse-project-status-options raw-response)))
           (if parsed-options

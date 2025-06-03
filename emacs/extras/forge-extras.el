@@ -34,6 +34,9 @@
 (require 'seq)
 (require 'cl-lib)
 
+(defvar forge-extras-debug nil
+  "When non-nil, enable verbose debugging messages for forge-extras.")
+
 ;;;; User options
 
 (defgroup forge-extras ()
@@ -78,6 +81,13 @@ Allowed values are \"open\", \"closed\" or \"all\"."
 
 
 ;;;; Functions
+
+(defmacro forge-extras-message-debug (format-string &rest args)
+  "Display a debugging message using FORMAT-STRING and ARGS.
+The message is only displayed if `forge-extras-debug' is non-nil or if
+`tlon-debug' is bound and non-nil."
+  `(when (or forge-extras-debug (and (boundp 'tlon-debug) tlon-debug))
+     (message ,format-string ,@args)))
 
 (declare-function org-store-link "ol")
 (defun forge-extras-orgit-store-link (_arg)
@@ -598,11 +608,11 @@ failure."
     (kill-buffer output-buffer)
 
     (if (not (zerop exit-status))
-        (message "forge-extras--execute-gh-graphql-query: 'gh' process exited with status %s. Output:\n%s" exit-status json-string))
+        (forge-extras-message-debug "forge-extras--execute-gh-graphql-query: 'gh' process exited with status %s. Output:\n%s" exit-status json-string))
 
     (if (or (null json-string) (string-empty-p json-string) (not (zerop exit-status)))
         (progn
-          (message "forge-extras--execute-gh-graphql-query: Received empty or error response from gh command.")
+          (forge-extras-message-debug "forge-extras--execute-gh-graphql-query: Received empty or error response from gh command.")
           nil)
       (with-temp-buffer
         (insert json-string)
@@ -612,7 +622,7 @@ failure."
                                     (json-object-type 'alist))
                                 (json-read-from-string (buffer-string)))
                             (error
-                             (message "forge-extras--execute-gh-graphql-query: Error parsing JSON: %s" err)
+                             (forge-extras-message-debug "forge-extras--execute-gh-graphql-query: Error parsing JSON: %s" err)
                              nil))))
       parsed-json)))
 
@@ -655,13 +665,13 @@ JSON payload to `gh api ... --input -'."
     ;; `json-encode' will correctly handle Elisp numbers (integers, floats)
     ;; as JSON numbers, and Elisp strings as JSON strings.
     (setq json-payload-string (json-encode payload-alist))
-    (message "forge-extras-gh--call-api-graphql-mutation: JSON payload for gh api:\n%s" json-payload-string)
+    (forge-extras-message-debug "forge-extras-gh--call-api-graphql-mutation: JSON payload for gh api:\n%s" json-payload-string)
     ;; Arguments for gh api --method POST -H "Content-Type: application/json" /graphql --input -
     (let* ((process-args (list "api" "--method" "POST" "-H" "Content-Type: application/json" "/graphql" "--input" "-"))
            (gh-executable (executable-find "gh")))
       (unless gh-executable
         (error "The 'gh' command-line tool was not found. Please ensure it is installed and accessible"))
-      (message "forge-extras-gh--call-api-graphql-mutation: Executing 'gh %s' with payload via stdin" (string-join process-args " "))
+      (forge-extras-message-debug "forge-extras-gh--call-api-graphql-mutation: Executing 'gh %s' with payload via stdin" (string-join process-args " "))
       ;; Pass json-payload-string via stdin using call-process-region
       (with-temp-buffer
         (insert json-payload-string)
@@ -678,13 +688,13 @@ JSON payload to `gh api ... --input -'."
     (kill-buffer output-buffer)
     ;; No temporary query file was created with this method
     (if (not (zerop exit-status))
-        (message "forge-extras-gh--call-api-graphql-mutation: 'gh' process exited with status %s. Output:\n%s"
+        (forge-extras-message-debug "forge-extras-gh--call-api-graphql-mutation: 'gh' process exited with status %s. Output:\n%s"
 		 exit-status json-string)
-      (message "forge-extras-gh--call-api-graphql-mutation: 'gh' process exited successfully."))
-    (message "forge-extras-gh--call-api-graphql-mutation: Raw JSON response:\n%s" json-string)
+      (forge-extras-message-debug "forge-extras-gh--call-api-graphql-mutation: 'gh' process exited successfully."))
+    (forge-extras-message-debug "forge-extras-gh--call-api-graphql-mutation: Raw JSON response:\n%s" json-string)
     (if (or (null json-string) (string-empty-p json-string) (not (zerop exit-status)))
         (progn
-          (message "forge-extras-gh--call-api-graphql-mutation: Received empty or error response from gh command.")
+          (forge-extras-message-debug "forge-extras-gh--call-api-graphql-mutation: Received empty or error response from gh command.")
           nil)
       (with-temp-buffer
         (insert json-string)
@@ -692,11 +702,11 @@ JSON payload to `gh api ... --input -'."
         (setq parsed-json (condition-case err
                               (json-read-from-string (buffer-string)) ; Using json-read-from-string
                             (error
-                             (message "forge-extras-gh--call-api-graphql-mutation: Error parsing JSON: %s" err)
+                             (forge-extras-message-debug "forge-extras-gh--call-api-graphql-mutation: Error parsing JSON: %s" err)
                              nil))))
       (if parsed-json
-          (message "forge-extras-gh--call-api-graphql-mutation: Successfully parsed JSON.")
-        (message "forge-extras-gh--call-api-graphql-mutation: Failed to parse JSON from response."))
+          (forge-extras-message-debug "forge-extras-gh--call-api-graphql-mutation: Successfully parsed JSON.")
+        (forge-extras-message-debug "forge-extras-gh--call-api-graphql-mutation: Failed to parse JSON from response."))
       parsed-json)))
 
 (defun forge-extras-gh-get-issue-fields (issue-number repo-name)
@@ -706,7 +716,7 @@ JSON payload to `gh api ... --input -'."
                                          repo-name
                                          issue-number))
          (parsed-json (forge-extras--execute-gh-graphql-query formatted-query-string nil)))
-    (message "forge-extras-gh-get-issue-fields: Executed query for issue %s in %s. Success: %s"
+    (forge-extras-message-debug "forge-extras-gh-get-issue-fields: Executed query for issue %s in %s. Success: %s"
              issue-number repo-name (if parsed-json "yes" "no"))
     parsed-json))
 
@@ -777,7 +787,7 @@ Returns the raw parsed JSON response, or nil on failure."
   (let* ((query-string forge-extras-gh-project-fields-query)
          (variables `(("projectNodeId" . ,project-node-id)))
          (parsed-json (forge-extras--execute-gh-graphql-query query-string variables)))
-    (message "forge-extras-gh-get-project-fields: Executed query for project %s. Success: %s"
+    (forge-extras-message-debug "forge-extras-gh-get-project-fields: Executed query for project %s. Success: %s"
              project-node-id (if parsed-json "yes" "no"))
     parsed-json))
 
@@ -849,7 +859,7 @@ the Node ID of the desired status option (e.g., for \"Doing\")."
               (projectV2Item (cdr (assoc 'projectV2Item update-value)))
               (item-id (cdr (assoc 'id projectV2Item))))
         (progn
-          (message "Successfully updated project item status.")
+          (forge-extras-message-debug "Successfully updated project item status.")
           t)
       (message "Failed to update project item status. Response: %s" response)
       nil)))
@@ -869,7 +879,7 @@ the numerical estimate to set."
               (projectV2Item (cdr (assoc 'projectV2Item update-value)))
               (item-id (cdr (assoc 'id projectV2Item))))
 	(progn
-          (message "Successfully updated project item estimate.")
+          (forge-extras-message-debug "Successfully updated project item estimate.")
           t)
       (message "Failed to update project item estimate. Response: %s" response)
       nil)))
@@ -904,7 +914,7 @@ Updates are performed via GitHub API calls."
     (unless chosen-status-option-id
       (user-error "Invalid status selected or selection cancelled")
       (cl-return-from forge-extras-set-project-status))
-    (message "Fetching current project fields for issue #%s in %s/%s..."
+    (forge-extras-message-debug "Fetching current project fields for issue #%s in %s/%s..."
 	     issue-number forge-extras-project-owner repo-name)
     (unless parsed-fields
       (user-error "Could not retrieve project data for issue. Aborting"))
@@ -915,14 +925,14 @@ Updates are performed via GitHub API calls."
         (user-error "Could not retrieve GitHub Issue Node ID. Aborting")
         (cl-return-from forge-extras-set-project-status))
       (when (string= chosen-status-name current-status-name)
-        (message "Issue #%s is already in status '%s'. No change needed." issue-number chosen-status-name)
+        (forge-extras-message-debug "Issue #%s is already in status '%s'. No change needed." issue-number chosen-status-name)
         (cl-return-from forge-extras-set-project-status))
       (setq target-project-item-id
             (forge-extras--ensure-issue-in-project
              issue-number issue-node-id current-project-item-id))
       (unless target-project-item-id
         (cl-return-from forge-extras-set-project-status))
-      (message "Updating project status for item %s to '%s' (Option ID: %s)..."
+      (forge-extras-message-debug "Updating project status for item %s to '%s' (Option ID: %s)..."
                target-project-item-id chosen-status-name chosen-status-option-id)
       (if (forge-extras-gh-update-project-item-status-field
            forge-extras-project-node-id
@@ -965,7 +975,7 @@ Updates are performed via GitHub API calls using the field ID from
     (unless (numberp chosen-estimate)
       (user-error "Invalid estimate entered or selection cancelled")
       (cl-return-from forge-extras-set-project-estimate))
-    (message "Fetching current project fields for issue #%s in %s/%s..."
+    (forge-extras-message-debug "Fetching current project fields for issue #%s in %s/%s..."
 	     issue-number forge-extras-project-owner repo-name)
     (unless parsed-fields
       (user-error "Could not retrieve project data for issue. Aborting"))
@@ -976,14 +986,14 @@ Updates are performed via GitHub API calls using the field ID from
         (user-error "Could not retrieve GitHub Issue Node ID. Aborting")
         (cl-return-from forge-extras-set-project-estimate))
       (if (and current-estimate (= chosen-estimate current-estimate))
-          (message "Issue #%s already has estimate '%s'. No change needed." issue-number current-estimate)
+          (forge-extras-message-debug "Issue #%s already has estimate '%s'. No change needed." issue-number current-estimate)
         (progn ; Proceed with update
           (setq target-project-item-id
                 (forge-extras--ensure-issue-in-project
                  issue-number issue-node-id current-project-item-id))
           (unless target-project-item-id
             (cl-return-from forge-extras-set-project-estimate))
-          (message "Updating project estimate for item %s to '%s'..."
+          (forge-extras-message-debug "Updating project estimate for item %s to '%s'..."
                    target-project-item-id chosen-estimate)
           (if (forge-extras-gh-update-project-item-estimate-field
                forge-extras-project-node-id
@@ -1222,25 +1232,25 @@ The returned list (whether fetched or from cache) is always (re)cached in
   (let ((items-to-process nil))
     (if (and use-cache-p forge-extras--cached-project-items)
         (progn
-          (message "Using cached list of %d project items." (length forge-extras--cached-project-items))
+          (forge-extras-message-debug "Using cached list of %d project items." (length forge-extras--cached-project-items))
           (setq items-to-process forge-extras--cached-project-items))
       (progn ; Fetch from GitHub (or if use-cache-p was true but cache was empty)
         (when (and use-cache-p (not forge-extras--cached-project-items))
-          (message "Cache is empty, fetching fresh data."))
+          (forge-extras-message-debug "Cache is empty, fetching fresh data."))
         (unless (and (boundp 'forge-extras-project-node-id)
                      (stringp forge-extras-project-node-id)
                      (not (string-empty-p forge-extras-project-node-id)))
           (user-error "`forge-extras-project-node-id' is not configured. Please set it first"))
         (unless (executable-find "gh")
           (user-error "The 'gh' command-line tool is not installed or not in PATH"))
-        (message "Fetching all project items from project %s (Include closed: %s)..."
+        (forge-extras-message-debug "Fetching all project items from project %s (Include closed: %s)..."
                  forge-extras-project-node-id (if include-closed-p "yes" "no"))
         (let ((fetched-items-accumulator nil)
               (current-cursor nil)
               (has-next-page t)
               (page-counter 1)) ; Initialize page counter
           (while has-next-page
-            (message "Fetching project items page %d..." page-counter) ; Use page counter
+            (forge-extras-message-debug "Fetching project items page %d..." page-counter) ; Use page counter
             (let* ((variables `(("projectNodeId" . ,forge-extras-project-node-id)
                                 ,@(when current-cursor `(("cursor" . ,current-cursor)))))
                    (raw-response (forge-extras--execute-gh-graphql-query
@@ -1262,12 +1272,12 @@ The returned list (whether fetched or from cache) is always (re)cached in
                   (setq has-next-page nil)
                   (cond
                    ((not page-info) ; Case 1: pageInfo itself is nil
-                    (message "Warning: pageInfo not found in GraphQL response. Assuming no more pages."))
+                    (forge-extras-message-debug "Warning: pageInfo not found in GraphQL response. Assuming no more pages."))
                    ((not (cdr (assoc 'hasNextPage page-info))) ; Case 2: pageInfo exists, but hasNextPage is false
-                    (message "Reached end of project items (hasNextPage is false)."))
+                    (forge-extras-message-debug "Reached end of project items (hasNextPage is false)."))
                    ;; Case 3: pageInfo exists, hasNextPage is true, but new-cursor is nil
                    ((not new-cursor)
-                    (message "Reached end of project items (hasNextPage was true, but no further cursor was provided)."))
+                    (forge-extras-message-debug "Reached end of project items (hasNextPage was true, but no further cursor was provided)."))
                    )))))
           (setq items-to-process fetched-items-accumulator))))
     (setq forge-extras--cached-project-items items-to-process)
@@ -1306,12 +1316,12 @@ The returned list (whether fetched or from cache) is always (re)cached in
                                     (truncate-string-to-width (plist-get item :title) max-title-len nil nil "…")))))
 		(display-buffer buffer)
 		(message "All project items displayed in %s buffer. Total: %d" buffer-name (length items-to-process)))
-            (message "Processed %d project items. Buffer not displayed." (length items-to-process)))
+            (forge-extras-message-debug "Processed %d project items. Buffer not displayed." (length items-to-process)))
           items-to-process) ; Return the items
       (progn
 	(if (and use-cache-p forge-extras--cached-project-items) ; This case should ideally not be hit if items-to-process is nil
-            (message "Cached items list was empty.")
-          (message "No items found in project %s, or an error occurred." forge-extras-project-node-id))
+            (forge-extras-message-debug "Cached items list was empty.")
+          (forge-extras-message-debug "No items found in project %s, or an error occurred." forge-extras-project-node-id))
 	nil))))
 
 ;;;;; Discover IDs
@@ -1442,20 +1452,20 @@ Returns a list of (\"Status Name\" . \"OptionID\") cons cells."
         ;; If GraphQL returned an 'errors' object, log that specifically.
         ;; Otherwise, log the general parsed response that couldn't be processed.
         (if-let ((errors (assoc 'errors raw-json-response)))
-            (message "forge-extras--parse-project-status-options: GraphQL query returned errors: %S" (cdr errors))
-          (message "forge-extras--parse-project-status-options: Could not parse options. Parsed response: %S" raw-json-response))
+            (forge-extras-message-debug "forge-extras--parse-project-status-options: GraphQL query returned errors: %S" (cdr errors))
+          (forge-extras-message-debug "forge-extras--parse-project-status-options: Could not parse options. Parsed response: %S" raw-json-response))
 
         (cond
          ;; This 'data' check might be redundant if 'errors' key is present and handled above,
          ;; but it's useful for other unexpected response structures.
          ((not data)
-          (message "forge-extras--parse-project-status-options: 'data' key missing or invalid in GraphQL response."))
+          (forge-extras-message-debug "forge-extras--parse-project-status-options: 'data' key missing or invalid in GraphQL response."))
          ((not field-node)
-          (message "forge-extras--parse-project-status-options: 'node' key (representing the field itself) missing under 'data', or is null. The Status Field ID ('%s') might be incorrect or the object it refers to is not a field." forge-extras-status-field-node-id))
+          (forge-extras-message-debug "forge-extras--parse-project-status-options: 'node' key (representing the field itself) missing under 'data', or is null. The Status Field ID ('%s') might be incorrect or the object it refers to is not a field." forge-extras-status-field-node-id))
          ((not (assoc 'options field-node))
-          (message "forge-extras--parse-project-status-options: 'options' key missing for the specified field node. This usually means the field ID ('%s') does not refer to a 'Single-Select' type, or it's a Single-Select field with no defined options. Field node received: %S" forge-extras-status-field-node-id field-node))
+          (forge-extras-message-debug "forge-extras--parse-project-status-options: 'options' key missing for the specified field node. This usually means the field ID ('%s') does not refer to a 'Single-Select' type, or it's a Single-Select field with no defined options. Field node received: %S" forge-extras-status-field-node-id field-node))
          (t ; This case implies (assoc 'options field-node) is true, but (cdr (assoc 'options field-node)) is nil (e.g. "options": null)
-          (message "forge-extras--parse-project-status-options: 'options' key found, but its value is null or not a list. Field node received: %S" field-node)))
+          (forge-extras-message-debug "forge-extras--parse-project-status-options: 'options' key found, but its value is null or not a list. Field node received: %S" field-node)))
         nil))))
 
 (provide 'forge-extras)

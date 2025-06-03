@@ -1379,10 +1379,10 @@ formatted for `forge-extras-status-option-ids-alist'."
                 (display-buffer buffer)
                 (message "Project status options displayed in *GitHub Project Status Options* buffer."))
             ;; else (parsed-options is nil after parsing)
-            (user-error "Failed to parse project status options from GraphQL response. Project Node ID: %s, Status Field ID: %s. This often means the 'Status Field ID' (%s) does not refer to a 'Single-Select' field type or has no options. Check *Messages* for parsing details."
+            (user-error "Failed to parse project status options from GraphQL response. Project Node ID: %s, Status Field ID: %s. This often means the 'Status Field ID' (%s) does not refer to a 'Single-Select' field type or has no options. Check *Messages* for parsing details"
                         forge-extras-project-node-id forge-extras-status-field-node-id forge-extras-status-field-node-id)))
       ;; else (raw-response is nil - query failed)
-      (user-error "Failed to retrieve project status options (GraphQL query failed or `gh` command returned no data). Project Node ID: %s, Status Field ID: %s. Check *Messages* for `gh` command output or errors."
+      (user-error "Failed to retrieve project status options (GraphQL query failed or `gh` command returned no data). Project Node ID: %s, Status Field ID: %s. Check *Messages* for `gh` command output or errors"
                   forge-extras-project-node-id forge-extras-status-field-node-id))))
 
 ;;;###autoload
@@ -1423,7 +1423,7 @@ The found Option ID is displayed in the echo area."
                         forge-extras-status-field-node-id
                         forge-extras-project-node-id
                         (mapcar #'car all-options))))
-      (user-error "Could not retrieve or parse status options for Project Node ID: %s, Status Field ID: %s. Check *Messages*."
+      (user-error "Could not retrieve or parse status options for Project Node ID: %s, Status Field ID: %s. Check *Messages*"
                   forge-extras-project-node-id forge-extras-status-field-node-id))))
 
 (defun forge-extras--parse-project-status-options (raw-json-response)

@@ -1051,6 +1051,51 @@ finding the Node ID required for variables like
       ... on ProjectV2 {
         items(first: 100, orderBy: {field: POSITION, direction: ASC}, after: $cursor) {
           nodes {
+            fieldValues(first: 10) {
+              nodes {
+                __typename
+                ... on ProjectV2ItemFieldTextValue {
+                  textValue: text
+                  field {
+                    ... on ProjectV2FieldCommon {
+                      name
+                    }
+                  }
+                }
+                ... on ProjectV2ItemFieldNumberValue {
+                  numberValue: number
+                  field {
+                    ... on ProjectV2FieldCommon {
+                      name
+                    }
+                  }
+                }
+                ... on ProjectV2ItemFieldSingleSelectValue {
+                  singleSelectValue: name
+                  field {
+                    ... on ProjectV2FieldCommon {
+                      name
+                    }
+                  }
+                }
+                ... on ProjectV2ItemFieldIterationValue {
+                  iterationValue: title
+                  field {
+                    ... on ProjectV2FieldCommon {
+                      name
+                    }
+                  }
+                }
+                ... on ProjectV2ItemFieldDateValue {
+                  dateValue: date
+                  field {
+                    ... on ProjectV2FieldCommon {
+                      name
+                    }
+                  }
+                }
+              }
+            }
             content {
               __typename
               ... on Issue {
@@ -1083,14 +1128,15 @@ finding the Node ID required for variables like
       }
     }
   }"
-  "GraphQL query to fetch items (Issues/PRs) for a project, ordered by position.")
+  "GraphQL query to fetch items (Issues/PRs) for a project, ordered by position, including field values.")
 
 (defun forge-extras--parse-project-items (raw-json-response &optional target-repo-name-with-owner include-closed-p)
   "Parse RAW-JSON-RESPONSE from project items query.
 If TARGET-REPO-NAME-WITH-OWNER is non-nil, filter items for that repository. If
 INCLUDE-CLOSED-P is nil, filter out closed/merged items. Filters for type (Issue
 or PullRequest). Returns a cons cell: (LIST-OF-ITEMS . PAGE-INFO-ALIST). Each
-item in LIST-OF-ITEMS is a plist with :type :number :title :url :repo :state."
+item in LIST-OF-ITEMS is a plist with :type :number :title :url :repo :state
+and optionally :status :estimate if the data includes project field values."
   (let ((items-and-prs nil)
         (page-info nil))
     (when-let* ((data (cdr (assoc 'data raw-json-response)))
@@ -1114,15 +1160,31 @@ item in LIST-OF-ITEMS is a plist with :type :number :title :url :repo :state."
                                        (member item-state '("CLOSED" "MERGED")))))))
               (let ((number (cdr (assoc 'number content)))
                     (title (cdr (assoc 'title content)))
-                    (url (cdr (assoc 'url content))))
+                    (url (cdr (assoc 'url content)))
+                    (status nil)
+                    (estimate nil))
+                ;; Extract project field values if present
+                (when-let ((field-values (cdr (assoc 'nodes (cdr (assoc 'fieldValues item-node))))))
+                  (dolist (field-value field-values)
+                    (when-let ((field (cdr (assoc 'field field-value)))
+                               (field-name (forge-extras--get-field-property-value field 'name)))
+                      (cond
+                       ((string= field-name "Status")
+                        (setq status (cdr (assoc 'singleSelectValue field-value))))
+                       ((string= field-name "Estimate")
+                        (setq estimate (cdr (assoc 'numberValue field-value))))))))
                 (when (and number title url)
-                  (push `(:type ,(if (string= type-name "Issue") 'issue 'pullreq)
-				:repo ,repo-name
-				:number ,number
-				:title ,title
-				:url ,url
-				:state ,item-state)
-                        items-and-prs))))))))
+                  (let ((item-plist `(:type ,(if (string= type-name "Issue") 'issue 'pullreq)
+					    :repo ,repo-name
+					    :number ,number
+					    :title ,title
+					    :url ,url
+					    :state ,item-state)))
+                    (when status
+                      (setq item-plist (plist-put item-plist :status status)))
+                    (when estimate
+                      (setq item-plist (plist-put item-plist :estimate estimate)))
+                    (push item-plist items-and-prs)))))))))
     (cons (nreverse items-and-prs) page-info)))
 
 ;;;###autoload

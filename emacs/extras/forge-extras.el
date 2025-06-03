@@ -1355,51 +1355,66 @@ Results are shown in \"*GitHub Project Status Options*\" buffer, formatted for
                       ("statusFieldNodeId" . ,forge-extras-status-field-node-id)))
          (raw-response (forge-extras--execute-gh-graphql-query
                         forge-extras-gh-project-status-options-query
-                        variables))
-         (options (if raw-response
-                      (forge-extras--parse-project-status-options raw-response)
-                    nil)))
-    (if options
-        (let ((buffer (get-buffer-create "*GitHub Project Status Options*"))
-              (max-name-len 0))
-          (dolist (option options)
-            (setq max-name-len (max max-name-len (length (car option)))))
-          (setq max-name-len (max max-name-len (length "Status Name")))
-          (with-current-buffer buffer
-            (erase-buffer)
-            (insert (format "Status Options for Project Node ID: %s\n" forge-extras-project-node-id))
-            (insert (format "Status Field Node ID (e.g., for \"Status\"): %s\n\n" forge-extras-status-field-node-id))
-            (insert "This output can be used to populate `forge-extras-status-option-ids-alist':\n\n")
-            (insert "(\n")
-            (dolist (option options)
-              (insert (format " (\"%s\" . \"%s\")\n" (car option) (cdr option))))
-            (insert ")\n\n")
-            (insert ";; Raw data for reference:\n")
-            (insert (format (format "%%-%ds | Option ID\n" max-name-len) "Status Name"))
-            (insert (format "%s-|-%s\n"
-                            (make-string max-name-len ?-)
-                            (make-string 30 ?-)))
-            (dolist (option options)
-              (insert (format (format "%%-%ds | %%s\n" max-name-len) (car option) (cdr option)))))
-          (display-buffer buffer)
-          (message "Project status options displayed in *GitHub Project Status Options* buffer."))
-      (user-error "Could not retrieve or parse project status options for Project Node ID: %s, Status Field ID: %s"
+                        variables))))
+    (if raw-response
+        (let ((parsed-options (forge-extras--parse-project-status-options raw-response)))
+          (if parsed-options
+              (let ((buffer (get-buffer-create "*GitHub Project Status Options*"))
+                    (max-name-len 0))
+                (dolist (option parsed-options)
+                  (setq max-name-len (max max-name-len (length (car option)))))
+                (setq max-name-len (max max-name-len (length "Status Name")))
+                (with-current-buffer buffer
+                  (erase-buffer)
+                  (insert (format "Status Options for Project Node ID: %s\n" forge-extras-project-node-id))
+                  (insert (format "Status Field Node ID (e.g., for \"Status\"): %s\n\n" forge-extras-status-field-node-id))
+                  (insert "This output can be used to populate `forge-extras-status-option-ids-alist':\n\n")
+                  (insert "(\n")
+                  (dolist (option parsed-options)
+                    (insert (format " (\"%s\" . \"%s\")\n" (car option) (cdr option))))
+                  (insert ")\n\n")
+                  (insert ";; Raw data for reference:\n")
+                  (insert (format (format "%%-%ds | Option ID\n" max-name-len) "Status Name"))
+                  (insert (format "%s-|-%s\n"
+                                  (make-string max-name-len ?-)
+                                  (make-string 30 ?-)))
+                  (dolist (option parsed-options)
+                    (insert (format (format "%%-%ds | %%s\n" max-name-len) (car option) (cdr option)))))
+                (display-buffer buffer)
+                (message "Project status options displayed in *GitHub Project Status Options* buffer."))
+            ;; else (parsed-options is nil after parsing)
+            (user-error "Failed to parse project status options from GraphQL response. Project Node ID: %s, Status Field ID: %s. This often means the 'Status Field ID' (%s) does not refer to a 'Single-Select' field type or has no options. Check *Messages* for parsing details."
+                        forge-extras-project-node-id forge-extras-status-field-node-id forge-extras-status-field-node-id)))
+      ;; else (raw-response is nil - query failed)
+      (user-error "Failed to retrieve project status options (GraphQL query failed or `gh` command returned no data). Project Node ID: %s, Status Field ID: %s. Check *Messages* for `gh` command output or errors."
                   forge-extras-project-node-id forge-extras-status-field-node-id))))
 
 (defun forge-extras--parse-project-status-options (raw-json-response)
   "Parse RAW-JSON-RESPONSE from project status options query.
 Returns a list of (\"Status Name\" . \"OptionID\") cons cells."
-  (if-let* ((data (cdr (assoc 'data raw-json-response)))
-            (node (cdr (assoc 'node data)))
-            (field (cdr (assoc 'field node)))
-            (options (cdr (assoc 'options field))))
-      (mapcar (lambda (option-alist)
-                (cons (cdr (assoc 'name option-alist))
-                      (cdr (assoc 'id option-alist))))
-              options)
-    (progn
-      (message "forge-extras--parse-project-status-options: Could not parse options from response: %s" raw-json-response)
-      nil)))
+  (let* ((data (cdr (assoc 'data raw-json-response)))
+         (node (cdr (assoc 'node data)))
+         (field-data (cdr (assoc 'field node))))
+    (if-let* ((options-list (and field-data (cdr (assoc 'options field-data)))))
+        (mapcar (lambda (option-alist)
+                  (cons (cdr (assoc 'name option-alist))
+                        (cdr (assoc 'id option-alist))))
+                options-list)
+      (progn
+        (message "forge-extras--parse-project-status-options: Could not parse options. Raw response excerpt: %s"
+                 (substring raw-json-response 0 (min (length raw-json-response) 500)))
+        (cond
+         ((not data)
+          (message "forge-extras--parse-project-status-options: 'data' key missing in GraphQL response."))
+         ((not node)
+          (message "forge-extras--parse-project-status-options: 'node' key (for project) missing under 'data'."))
+         ((not field-data)
+          (message "forge-extras--parse-project-status-options: 'field' key (for status field) missing under 'node'. The Status Field ID might be incorrect or not part of this project."))
+         ((not (assoc 'options field-data))
+          (message "forge-extras--parse-project-status-options: 'options' key missing for the specified field. This usually means the field is not a 'Single-Select' type, or it's a Single-Select field with no defined options. Field data received: %s" field-data))
+         (t ; This case implies (assoc 'options field-data) is true, but (cdr (assoc 'options field-data)) is nil (e.g. "options": null)
+          (message "forge-extras--parse-project-status-options: 'options' key found, but its value is null or not a list. Field data received: %s" field-data)))
+        nil))))
 
 (provide 'forge-extras)
 ;;; forge-extras.el ends here

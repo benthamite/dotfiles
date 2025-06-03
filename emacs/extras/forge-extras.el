@@ -1328,15 +1328,15 @@ The returned list (whether fetched or from cache) is always (re)cached in
       }
     }
   }"
-  "GraphQL query to fetch all options for a given single-select field by its Node ID.
-The field is fetched directly using `node(id: $statusFieldNodeId)`.")
+  "GraphQL query to fetch all options for a given single-select field.
+The field is fetched by its Node ID using `node(id: $statusFieldNodeId)`.")
 
 (defun forge-extras-discover-project-status-options ()
-  "Fetch and display status options and Node IDs for the configured project/status field.
+  "Fetch and display status options and Node IDs for a project/status field.
 The project is determined by `forge-extras-project-node-id`.
 The status field is determined by `forge-extras-status-field-node-id`.
-Results are shown in \"*GitHub Project Status Options*\" buffer, formatted for
-`forge-extras-status-option-ids-alist'."
+Results are shown in the \"*GitHub Project Status Options*\" buffer,
+formatted for `forge-extras-status-option-ids-alist'."
   (interactive)
   (unless (and (boundp 'forge-extras-project-node-id)
                (stringp forge-extras-project-node-id)
@@ -1387,7 +1387,7 @@ Results are shown in \"*GitHub Project Status Options*\" buffer, formatted for
 
 ;;;###autoload
 (defun forge-extras-get-project-status-option-id (status-name)
-  "Fetch and display the Node ID for a specific STATUS-NAME in a project's status field.
+  "Fetch and display the Node ID for STATUS-NAME in a project's status field.
 The project is determined by `forge-extras-project-node-id`.
 The status field is determined by `forge-extras-status-field-node-id`.
 The found Option ID is displayed in the echo area."

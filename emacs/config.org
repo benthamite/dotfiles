@@ -8105,6 +8105,45 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
                :cutoff-date "2024-07"
                :description "Latest Grok vision model")))
 
+  (gptel-make-preset 'default
+    :description nil :backend "Claude" :model 'claude-sonnet-4-20250514 :system
+    'default :tools
+    '("get_episodes" "get_entity_edge" "delete_episode" "delete_entity_edge"
+      "search_facts" "search_nodes" "add_episode")
+    :stream t :temperature 1.0 :max-tokens 10000 :use-context 'system
+    :include-reasoning nil)
+
+  (gptel-make-preset 'search
+    :description nil :backend "Claude" :model 'claude-sonnet-4-20250514 :system
+    'default :tools
+    '("brave_local_search" "brave_web_search" "search_issues" "search_code"
+      "search_repositories" "fetch_content" "search")
+    :stream t :temperature 1.0 :max-tokens 10000 :use-context 'system
+    :include-reasoning nil)
+
+  (gptel-make-preset 'github
+    :description nil :backend "Claude" :model 'claude-sonnet-4-20250514 :system
+    'default :tools
+    '("get_pull_request_reviews" "get_pull_request_comments"
+      "update_pull_request_branch" "get_pull_request_status"
+      "get_pull_request_files" "merge_pull_request" "create_pull_request_review"
+      "list_pull_requests" "get_pull_request" "get_issue" "search_users"
+      "search_issues" "search_code" "add_issue_comment" "update_issue"
+      "list_issues" "list_commits" "create_branch" "fork_repository"
+      "create_pull_request" "create_issue" "push_files" "get_file_contents"
+      "create_repository" "search_repositories" "create_or_update_file")
+    :stream t :temperature 1.0 :max-tokens 10000 :use-context 'system
+    :include-reasoning nil)
+
+  (gptel-make-preset 'slack
+    :description nil :backend "Claude" :model 'claude-sonnet-4-20250514 :system
+    'default :tools
+    '("slack_get_user_profile" "slack_get_users" "slack_get_thread_replies"
+      "slack_get_channel_history" "slack_add_reaction" "slack_reply_to_thread"
+      "slack_post_message" "slack_list_channels")
+    :stream t :temperature 1.0 :max-tokens 10000 :use-context 'system
+    :include-reasoning nil)
+
   ;; replace default key bindings in `gptel--suffix-mcp-disconnect'
   (with-eval-after-load 'gptel-transient
     (transient-suffix-put 'gptel-menu "M+" :key "M-a")

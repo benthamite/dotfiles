@@ -1443,19 +1443,25 @@ Returns a list of (\"Status Name\" . \"OptionID\") cons cells."
                         (cdr (assoc 'id option-alist))))
                 options-list)
       (progn
-        (message "forge-extras--parse-project-status-options: Could not parse options. Raw response excerpt: %s"
-                 (substring raw-json-response 0 (min (length raw-json-response) 500)))
+        ;; If GraphQL returned an 'errors' object, log that specifically.
+        ;; Otherwise, log the general parsed response that couldn't be processed.
+        (if-let ((errors (assoc 'errors raw-json-response)))
+            (message "forge-extras--parse-project-status-options: GraphQL query returned errors: %S" (cdr errors))
+          (message "forge-extras--parse-project-status-options: Could not parse options. Parsed response: %S" raw-json-response))
+
         (cond
+         ;; This 'data' check might be redundant if 'errors' key is present and handled above,
+         ;; but it's useful for other unexpected response structures.
          ((not data)
-          (message "forge-extras--parse-project-status-options: 'data' key missing in GraphQL response."))
+          (message "forge-extras--parse-project-status-options: 'data' key missing or invalid in GraphQL response."))
          ((not node)
           (message "forge-extras--parse-project-status-options: 'node' key (for project) missing under 'data'."))
          ((not field-data)
-          (message "forge-extras--parse-project-status-options: 'field' key (for status field) missing under 'node'. The Status Field ID might be incorrect or not part of this project."))
+          (message "forge-extras--parse-project-status-options: 'field' key (for status field) missing under 'node'. The Status Field ID might be incorrect, not part of this project, or the query structure is wrong for fetching a field by ID."))
          ((not (assoc 'options field-data))
-          (message "forge-extras--parse-project-status-options: 'options' key missing for the specified field. This usually means the field is not a 'Single-Select' type, or it's a Single-Select field with no defined options. Field data received: %s" field-data))
+          (message "forge-extras--parse-project-status-options: 'options' key missing for the specified field. This usually means the field is not a 'Single-Select' type, or it's a Single-Select field with no defined options. Field data received: %S" field-data))
          (t ; This case implies (assoc 'options field-data) is true, but (cdr (assoc 'options field-data)) is nil (e.g. "options": null)
-          (message "forge-extras--parse-project-status-options: 'options' key found, but its value is null or not a list. Field data received: %s" field-data)))
+          (message "forge-extras--parse-project-status-options: 'options' key found, but its value is null or not a list. Field data received: %S" field-data)))
         nil))))
 
 (provide 'forge-extras)

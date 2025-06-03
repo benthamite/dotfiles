@@ -8146,8 +8146,8 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
   ;; replace default key bindings in `gptel--suffix-mcp-disconnect'
   (with-eval-after-load 'gptel-transient
-    (transient-suffix-put 'gptel-menu "M+" :key "M-a")
-    (transient-suffix-put 'gptel-menu "M-" :key "M-k"))
+    (transient-suffix-put 'gptel-tools "M+" :key "M-a")
+    (transient-suffix-put 'gptel-tools "M-" :key "M-k"))
 
   :bind
   (("M-c" . gptel-send)

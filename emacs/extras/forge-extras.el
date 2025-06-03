@@ -1317,23 +1317,19 @@ The returned list (whether fetched or from cache) is always (re)cached in
 ;;;;; Discover IDs
 
 (defconst forge-extras-gh-project-status-options-query
-  "query($projectNodeId:ID!) {
-    node(id: $projectNodeId) {
-      ... on ProjectV2 {
-        field(id: \"%s\") { # statusFieldNodeId is Sprintf'd here
-          ... on ProjectV2SingleSelectField {
-            name # Field name, e.g., \"Status\"
-            options {
-              id   # Option ID
-              name # Option Name, e.g., \"Todo\", \"In Progress\", \"Done\"
-            }
-          }
+  "query($statusFieldNodeId:ID!) {
+    node(id: $statusFieldNodeId) {
+      ... on ProjectV2SingleSelectField {
+        name # Field name, e.g., \"Status\"
+        options {
+          id   # Option ID
+          name # Option Name, e.g., \"Todo\", \"In Progress\", \"Done\"
         }
       }
     }
   }"
-  "GraphQL query to fetch all options for a given single-select field (e.g., Status) in a project.
-The field ID is directly formatted into the query string.")
+  "GraphQL query to fetch all options for a given single-select field by its Node ID.
+The field is fetched directly using `node(id: $statusFieldNodeId)`.")
 
 (defun forge-extras-discover-project-status-options ()
   "Fetch and display status options and Node IDs for the configured project/status field.
@@ -1352,10 +1348,9 @@ Results are shown in \"*GitHub Project Status Options*\" buffer, formatted for
     (user-error "`forge-extras-status-field-node-id' is not configured. Please set it first. You can use `forge-extras-get-project-field-ids` to find it"))
   (message "Fetching status options for Project Node ID: %s, Status Field ID: %s..."
            forge-extras-project-node-id forge-extras-status-field-node-id)
-  (let* ((formatted-query (format forge-extras-gh-project-status-options-query forge-extras-status-field-node-id))
-         (variables `(("projectNodeId" . ,forge-extras-project-node-id)))
+  (let* ((variables `(("statusFieldNodeId" . ,forge-extras-status-field-node-id)))
          (raw-response (forge-extras--execute-gh-graphql-query
-                        formatted-query
+                        forge-extras-gh-project-status-options-query
                         variables)))
     (if raw-response
         (let ((parsed-options (forge-extras--parse-project-status-options raw-response)))
@@ -1410,10 +1405,9 @@ The found Option ID is displayed in the echo area."
     (user-error "Status name cannot be empty"))
 
   (message "Fetching status options to find ID for '%s'..." status-name)
-  (let* ((formatted-query (format forge-extras-gh-project-status-options-query forge-extras-status-field-node-id))
-         (variables `(("projectNodeId" . ,forge-extras-project-node-id)))
+  (let* ((variables `(("statusFieldNodeId" . ,forge-extras-status-field-node-id)))
          (raw-response (forge-extras--execute-gh-graphql-query
-                        formatted-query
+                        forge-extras-gh-project-status-options-query
                         variables))
          (all-options (if raw-response
                           (forge-extras--parse-project-status-options raw-response)
@@ -1436,9 +1430,10 @@ The found Option ID is displayed in the echo area."
   "Parse RAW-JSON-RESPONSE from project status options query.
 Returns a list of (\"Status Name\" . \"OptionID\") cons cells."
   (let* ((data (cdr (assoc 'data raw-json-response)))
-         (node (cdr (assoc 'node data)))
-         (field-data (cdr (assoc 'field node))))
-    (if-let* ((options-list (and field-data (cdr (assoc 'options field-data)))))
+         ;; 'field-node' here is the ProjectV2SingleSelectField itself,
+         ;; fetched via node(id: $statusFieldNodeId)
+         (field-node (cdr (assoc 'node data))))
+    (if-let* ((options-list (and field-node (cdr (assoc 'options field-node)))))
         (mapcar (lambda (option-alist)
                   (cons (cdr (assoc 'name option-alist))
                         (cdr (assoc 'id option-alist))))
@@ -1455,14 +1450,12 @@ Returns a list of (\"Status Name\" . \"OptionID\") cons cells."
          ;; but it's useful for other unexpected response structures.
          ((not data)
           (message "forge-extras--parse-project-status-options: 'data' key missing or invalid in GraphQL response."))
-         ((not node)
-          (message "forge-extras--parse-project-status-options: 'node' key (for project) missing under 'data'."))
-         ((not field-data)
-          (message "forge-extras--parse-project-status-options: 'field' key (for status field) missing under 'node'. The Status Field ID might be incorrect, not part of this project, or the query structure is wrong for fetching a field by ID."))
-         ((not (assoc 'options field-data))
-          (message "forge-extras--parse-project-status-options: 'options' key missing for the specified field. This usually means the field is not a 'Single-Select' type, or it's a Single-Select field with no defined options. Field data received: %S" field-data))
-         (t ; This case implies (assoc 'options field-data) is true, but (cdr (assoc 'options field-data)) is nil (e.g. "options": null)
-          (message "forge-extras--parse-project-status-options: 'options' key found, but its value is null or not a list. Field data received: %S" field-data)))
+         ((not field-node)
+          (message "forge-extras--parse-project-status-options: 'node' key (representing the field itself) missing under 'data', or is null. The Status Field ID ('%s') might be incorrect or the object it refers to is not a field." forge-extras-status-field-node-id))
+         ((not (assoc 'options field-node))
+          (message "forge-extras--parse-project-status-options: 'options' key missing for the specified field node. This usually means the field ID ('%s') does not refer to a 'Single-Select' type, or it's a Single-Select field with no defined options. Field node received: %S" forge-extras-status-field-node-id field-node))
+         (t ; This case implies (assoc 'options field-node) is true, but (cdr (assoc 'options field-node)) is nil (e.g. "options": null)
+          (message "forge-extras--parse-project-status-options: 'options' key found, but its value is null or not a list. Field node received: %S" field-node)))
         nil))))
 
 (provide 'forge-extras)

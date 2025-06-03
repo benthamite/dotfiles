@@ -1378,13 +1378,13 @@ Results are shown in \"*GitHub Project Status Options*\" buffer, formatted for
             (insert (format (format "%%-%ds | Option ID\n" max-name-len) "Status Name"))
             (insert (format "%s-|-%s\n"
                             (make-string max-name-len ?-)
-                            (make-string 30 ?-))))
-          (dolist (option options)
-            (insert (format (format "%%-%ds | %%s\n" max-name-len) (car option) (cdr option)))))
-      (display-buffer buffer)
-      (message "Project status options displayed in *GitHub Project Status Options* buffer."))
-    (user-error "Could not retrieve or parse project status options for Project Node ID: %s, Status Field ID: %s"
-                forge-extras-project-node-id forge-extras-status-field-node-id)))
+                            (make-string 30 ?-)))
+            (dolist (option options)
+              (insert (format (format "%%-%ds | %%s\n" max-name-len) (car option) (cdr option)))))
+          (display-buffer buffer)
+          (message "Project status options displayed in *GitHub Project Status Options* buffer."))
+      (user-error "Could not retrieve or parse project status options for Project Node ID: %s, Status Field ID: %s"
+                  forge-extras-project-node-id forge-extras-status-field-node-id))))
 
 (defun forge-extras--parse-project-status-options (raw-json-response)
   "Parse RAW-JSON-RESPONSE from project status options query.

@@ -1317,10 +1317,10 @@ The returned list (whether fetched or from cache) is always (re)cached in
 ;;;;; Discover IDs
 
 (defconst forge-extras-gh-project-status-options-query
-  "query($projectNodeId:ID!, $statusFieldNodeId:ID!) {
+  "query($projectNodeId:ID!) {
     node(id: $projectNodeId) {
       ... on ProjectV2 {
-        field(id: $statusFieldNodeId) { # Use the specific ID of the Status field
+        field(id: \"%s\") { # statusFieldNodeId is Sprintf'd here
           ... on ProjectV2SingleSelectField {
             name # Field name, e.g., \"Status\"
             options {
@@ -1332,7 +1332,8 @@ The returned list (whether fetched or from cache) is always (re)cached in
       }
     }
   }"
-  "GraphQL query to fetch all options for a given single-select field (e.g., Status) in a project.")
+  "GraphQL query to fetch all options for a given single-select field (e.g., Status) in a project.
+The field ID is directly formatted into the query string.")
 
 (defun forge-extras-discover-project-status-options ()
   "Fetch and display status options and Node IDs for the configured project/status field.
@@ -1351,10 +1352,10 @@ Results are shown in \"*GitHub Project Status Options*\" buffer, formatted for
     (user-error "`forge-extras-status-field-node-id' is not configured. Please set it first. You can use `forge-extras-get-project-field-ids` to find it"))
   (message "Fetching status options for Project Node ID: %s, Status Field ID: %s..."
            forge-extras-project-node-id forge-extras-status-field-node-id)
-  (let* ((variables `(("projectNodeId" . ,forge-extras-project-node-id)
-                      ("statusFieldNodeId" . ,forge-extras-status-field-node-id)))
+  (let* ((formatted-query (format forge-extras-gh-project-status-options-query forge-extras-status-field-node-id))
+         (variables `(("projectNodeId" . ,forge-extras-project-node-id)))
          (raw-response (forge-extras--execute-gh-graphql-query
-                        forge-extras-gh-project-status-options-query
+                        formatted-query
                         variables)))
     (if raw-response
         (let ((parsed-options (forge-extras--parse-project-status-options raw-response)))
@@ -1409,10 +1410,10 @@ The found Option ID is displayed in the echo area."
     (user-error "Status name cannot be empty"))
 
   (message "Fetching status options to find ID for '%s'..." status-name)
-  (let* ((variables `(("projectNodeId" . ,forge-extras-project-node-id)
-                      ("statusFieldNodeId" . ,forge-extras-status-field-node-id)))
+  (let* ((formatted-query (format forge-extras-gh-project-status-options-query forge-extras-status-field-node-id))
+         (variables `(("projectNodeId" . ,forge-extras-project-node-id)))
          (raw-response (forge-extras--execute-gh-graphql-query
-                        forge-extras-gh-project-status-options-query
+                        formatted-query
                         variables))
          (all-options (if raw-response
                           (forge-extras--parse-project-status-options raw-response)

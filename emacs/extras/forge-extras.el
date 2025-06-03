@@ -1389,6 +1389,48 @@ Results are shown in \"*GitHub Project Status Options*\" buffer, formatted for
       (user-error "Failed to retrieve project status options (GraphQL query failed or `gh` command returned no data). Project Node ID: %s, Status Field ID: %s. Check *Messages* for `gh` command output or errors."
                   forge-extras-project-node-id forge-extras-status-field-node-id))))
 
+;;;###autoload
+(defun forge-extras-get-project-status-option-id (status-name)
+  "Fetch and display the Node ID for a specific STATUS-NAME in a project's status field.
+The project is determined by `forge-extras-project-node-id`.
+The status field is determined by `forge-extras-status-field-node-id`.
+The found Option ID is displayed in the echo area."
+  (interactive
+   (list (read-string "Status name to find ID for (e.g., Waiting): ")))
+  (unless (and (boundp 'forge-extras-project-node-id)
+               (stringp forge-extras-project-node-id)
+               (not (string-empty-p forge-extras-project-node-id)))
+    (user-error "`forge-extras-project-node-id' is not configured. Please set it first"))
+  (unless (and (boundp 'forge-extras-status-field-node-id)
+               (stringp forge-extras-status-field-node-id)
+               (not (string-empty-p forge-extras-status-field-node-id)))
+    (user-error "`forge-extras-status-field-node-id' is not configured. Please set it first. You can use `forge-extras-get-project-field-ids` to find it"))
+  (when (string-empty-p status-name)
+    (user-error "Status name cannot be empty"))
+
+  (message "Fetching status options to find ID for '%s'..." status-name)
+  (let* ((variables `(("projectNodeId" . ,forge-extras-project-node-id)
+                      ("statusFieldNodeId" . ,forge-extras-status-field-node-id)))
+         (raw-response (forge-extras--execute-gh-graphql-query
+                        forge-extras-gh-project-status-options-query
+                        variables))
+         (all-options (if raw-response
+                          (forge-extras--parse-project-status-options raw-response)
+                        nil))
+         (found-option nil))
+    (if all-options
+        (progn
+          (setq found-option (assoc-string status-name all-options t)) ; t for case-insensitive
+          (if found-option
+              (message "Option ID for '%s': %s" (car found-option) (cdr found-option))
+            (user-error "Status option '%s' not found for field ID %s in project %s. Available options: %s"
+                        status-name
+                        forge-extras-status-field-node-id
+                        forge-extras-project-node-id
+                        (mapcar #'car all-options))))
+      (user-error "Could not retrieve or parse status options for Project Node ID: %s, Status Field ID: %s. Check *Messages*."
+                  forge-extras-project-node-id forge-extras-status-field-node-id))))
+
 (defun forge-extras--parse-project-status-options (raw-json-response)
   "Parse RAW-JSON-RESPONSE from project status options query.
 Returns a list of (\"Status Name\" . \"OptionID\") cons cells."

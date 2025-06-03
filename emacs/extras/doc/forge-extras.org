@@ -177,6 +177,33 @@ The command ~forge-extras-list-project-items-ordered~ fetches all issues and pul
 - The list of items is always stored/updated in the internal variable ~forge-extras--cached-project-items~ after processing.
 - Fetching items requires the =gh= CLI to be installed and authenticated, and ~forge-extras-project-node-id~ to be configured.
 
+** Discover Project Status Options
+:PROPERTIES:
+:CUSTOM_ID: h:forge-extras-discover-project-status-options
+:END:
+
+#+findex: forge-extras-discover-project-status-options
+The command ~forge-extras-discover-project-status-options~ fetches and displays all available status option names and their corresponding Node IDs for the "Status" field configured via ~forge-extras-status-field-node-id~ within the project specified by ~forge-extras-project-node-id~.
+- The results are displayed in a new buffer named =*GitHub Project Status Options*=.
+- This output is formatted to be easily copied into the ~forge-extras-status-option-ids-alist~ variable.
+- It helps in identifying the correct Option IDs needed for ~forge-extras-status-option-ids-alist~.
+- This command requires the =gh= CLI to be installed and authenticated, and both ~forge-extras-project-node-id~ and ~forge-extras-status-field-node-id~ to be configured.
+
+** Get Specific Project Status Option ID
+:PROPERTIES:
+:CUSTOM_ID: h:forge-extras-get-project-status-option-id
+:END:
+
+#+findex: forge-extras-get-project-status-option-id
+The command ~forge-extras-get-project-status-option-id~ allows you to quickly find the Node ID for a specific status option name (e.g., "Waiting", "Todo").
+- It prompts for the status name you are looking for.
+- It uses the project configured by ~forge-extras-project-node-id~ and the status field configured by ~forge-extras-status-field-node-id~.
+- It fetches all available options for that field and then searches (case-insensitively) for the one matching the provided name.
+- If found, the Option ID is displayed in the echo area (e.g., "Option ID for 'Waiting': PVTO_lADOBtGWf84A5jZfzguVNY8_lQDOVepg").
+- If not found, an error is shown, listing the available option names.
+- This command is useful for quickly verifying an Option ID or finding one if you know its name.
+- It requires the =gh= CLI to be installed and authenticated, and both ~forge-extras-project-node-id~ and ~forge-extras-status-field-node-id~ to be configured.
+
 * Customization
 :PROPERTIES:
 :CUSTOM_ID: h:customization
@@ -284,6 +311,8 @@ The callback function ~forge-extras-update-github-counter~ first checks if the A
 #+findex: forge-extras-insert-issue-markdown-link
 #+findex: forge-extras-list-project-issues-by-repo-ordered
 #+findex: forge-extras-list-project-items-ordered
+#+findex: forge-extras-discover-project-status-options
+#+findex: forge-extras-get-project-status-option-id
 
 ** Variable index
 :PROPERTIES:

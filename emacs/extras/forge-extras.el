@@ -1107,11 +1107,11 @@ item in LIST-OF-ITEMS is a plist with :type :number :title :url :repo :state."
                     (url (cdr (assoc 'url content))))
                 (when (and number title url)
                   (push `(:type ,(if (string= type-name "Issue") 'issue 'pullreq)
-                          :repo ,repo-name
-                          :number ,number
-                          :title ,title
-                          :url ,url
-                          :state ,item-state)
+				:repo ,repo-name
+				:number ,number
+				:title ,title
+				:url ,url
+				:state ,item-state)
                         items-and-prs))))))))
     (cons (nreverse items-and-prs) page-info)))
 
@@ -1313,6 +1313,93 @@ The returned list (whether fetched or from cache) is always (re)cached in
             (message "Cached items list was empty.")
           (message "No items found in project %s, or an error occurred." forge-extras-project-node-id))
 	nil))))
+
+;;;;; Discover IDs
+
+(defconst forge-extras-gh-project-status-options-query
+  "query($projectNodeId:ID!, $statusFieldNodeId:ID!) {
+    node(id: $projectNodeId) {
+      ... on ProjectV2 {
+        field(id: $statusFieldNodeId) { # Use the specific ID of the Status field
+          ... on ProjectV2SingleSelectField {
+            name # Field name, e.g., \"Status\"
+            options {
+              id   # Option ID
+              name # Option Name, e.g., \"Todo\", \"In Progress\", \"Done\"
+            }
+          }
+        }
+      }
+    }
+  }"
+  "GraphQL query to fetch all options for a given single-select field (e.g., Status) in a project.")
+
+(defun forge-extras-discover-project-status-options ()
+  "Fetch and display status options and Node IDs for the configured project/status field.
+The project is determined by `forge-extras-project-node-id`.
+The status field is determined by `forge-extras-status-field-node-id`.
+Results are shown in \"*GitHub Project Status Options*\" buffer, formatted for
+`forge-extras-status-option-ids-alist'."
+  (interactive)
+  (unless (and (boundp 'forge-extras-project-node-id)
+               (stringp forge-extras-project-node-id)
+               (not (string-empty-p forge-extras-project-node-id)))
+    (user-error "`forge-extras-project-node-id' is not configured. Please set it first"))
+  (unless (and (boundp 'forge-extras-status-field-node-id)
+               (stringp forge-extras-status-field-node-id)
+               (not (string-empty-p forge-extras-status-field-node-id)))
+    (user-error "`forge-extras-status-field-node-id' is not configured. Please set it first. You can use `forge-extras-get-project-field-ids` to find it"))
+  (message "Fetching status options for Project Node ID: %s, Status Field ID: %s..."
+           forge-extras-project-node-id forge-extras-status-field-node-id)
+  (let* ((variables `(("projectNodeId" . ,forge-extras-project-node-id)
+                      ("statusFieldNodeId" . ,forge-extras-status-field-node-id)))
+         (raw-response (forge-extras--execute-gh-graphql-query
+                        forge-extras-gh-project-status-options-query
+                        variables))
+         (options (if raw-response
+                      (forge-extras--parse-project-status-options raw-response)
+                    nil)))
+    (if options
+        (let ((buffer (get-buffer-create "*GitHub Project Status Options*"))
+              (max-name-len 0))
+          (dolist (option options)
+            (setq max-name-len (max max-name-len (length (car option)))))
+          (setq max-name-len (max max-name-len (length "Status Name")))
+          (with-current-buffer buffer
+            (erase-buffer)
+            (insert (format "Status Options for Project Node ID: %s\n" forge-extras-project-node-id))
+            (insert (format "Status Field Node ID (e.g., for \"Status\"): %s\n\n" forge-extras-status-field-node-id))
+            (insert "This output can be used to populate `forge-extras-status-option-ids-alist':\n\n")
+            (insert "(\n")
+            (dolist (option options)
+              (insert (format " (\"%s\" . \"%s\")\n" (car option) (cdr option))))
+            (insert ")\n\n")
+            (insert ";; Raw data for reference:\n")
+            (insert (format (format "%%-%ds | Option ID\n" max-name-len) "Status Name"))
+            (insert (format "%s-|-%s\n"
+                            (make-string max-name-len ?-)
+                            (make-string 30 ?-))))
+          (dolist (option options)
+            (insert (format (format "%%-%ds | %%s\n" max-name-len) (car option) (cdr option)))))
+      (display-buffer buffer)
+      (message "Project status options displayed in *GitHub Project Status Options* buffer."))
+    (user-error "Could not retrieve or parse project status options for Project Node ID: %s, Status Field ID: %s"
+                forge-extras-project-node-id forge-extras-status-field-node-id)))
+
+(defun forge-extras--parse-project-status-options (raw-json-response)
+  "Parse RAW-JSON-RESPONSE from project status options query.
+Returns a list of (\"Status Name\" . \"OptionID\") cons cells."
+  (if-let* ((data (cdr (assoc 'data raw-json-response)))
+            (node (cdr (assoc 'node data)))
+            (field (cdr (assoc 'field node)))
+            (options (cdr (assoc 'options field))))
+      (mapcar (lambda (option-alist)
+                (cons (cdr (assoc 'name option-alist))
+                      (cdr (assoc 'id option-alist))))
+              options)
+    (progn
+      (message "forge-extras--parse-project-status-options: Could not parse options from response: %s" raw-json-response)
+      nil)))
 
 (provide 'forge-extras)
 ;;; forge-extras.el ends here

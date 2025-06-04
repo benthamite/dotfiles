@@ -12373,7 +12373,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
   (with-eval-after-load 'xwidget
     (bind-keys :map 'xwidget-webkit-mode-map
                ("X" . browse-extras-browse-url-externally)))
-  :defer t)
+  :after browse-url)
 #+end_src
 
 ** shr

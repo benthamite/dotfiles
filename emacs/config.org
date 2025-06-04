@@ -8027,9 +8027,9 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
   ;; default model
   (setopt gptel-model 'claude-sonnet-4-20250514
-          gptel-backend (gptel-make-anthropic "Claude"
-                          :stream t
-                          :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))))
+	  gptel-backend (gptel-make-anthropic "Claude"
+			  :stream t
+			  :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))))
 
   ;; other models
   (gptel-make-gemini "Gemini"
@@ -8041,13 +8041,13 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
     :stream t
     :models '(claude-sonnet-4-20250514)
     :header (lambda () (when-let* ((key (gptel--get-api-key)))
-                    `(("x-api-key" . ,key)
-                      ("anthropic-version" . "2023-06-01")
-                      ("anthropic-beta" . "pdfs-2024-09-25")
-                      ("anthropic-beta" . "output-128k-2025-02-19")
-                      ("anthropic-beta" . "prompt-caching-2024-07-31"))))
+		    `(("x-api-key" . ,key)
+		      ("anthropic-version" . "2023-06-01")
+		      ("anthropic-beta" . "pdfs-2024-09-25")
+		      ("anthropic-beta" . "output-128k-2025-02-19")
+		      ("anthropic-beta" . "prompt-caching-2024-07-31"))))
     :request-params `(:thinking (:type "enabled" :budget_tokens ,(* 1024 16))
-                                :max_tokens ,(* 1024 32)))
+				:max_tokens ,(* 1024 32)))
 
   (gptel-make-openai "DeepSeek"
     :host "api.deepseek.com"
@@ -8055,18 +8055,18 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
     :stream t
     :key (auth-source-pass-get "emacs" (concat "tlon/core/deepseek.com/" tlon-email-shared))
     :models '(;; <https://api-docs.deepseek.com/quick_start/pricing/
-              (deepseek-chat
-               :context-window 64.0
-               :input-cost 0.27
-               :output-cost 1.10
-               :cutoff-date "2024-07"
-               :description "For simple chat responses or quick answers." )
-              (deepseek-reasoner
-               :context-window 64.0
-               :input-cost 0.55
-               :output-cost 2.19
-               :cutoff-date "2024-07"
-               :description "For detailed reasoning or complex problem-solving.")))
+	      (deepseek-chat
+	       :context-window 64.0
+	       :input-cost 0.27
+	       :output-cost 1.10
+	       :cutoff-date "2024-07"
+	       :description "For simple chat responses or quick answers." )
+	      (deepseek-reasoner
+	       :context-window 64.0
+	       :input-cost 0.55
+	       :output-cost 2.19
+	       :cutoff-date "2024-07"
+	       :description "For detailed reasoning or complex problem-solving.")))
 
   (gptel-make-openai "Perplexity"
     :host "api.perplexity.ai"
@@ -8074,18 +8074,18 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
     :endpoint "/chat/completions"
     :stream t
     :models '(;; <https://docs.perplexity.ai/docs/model-cards>
-              (sonar
-               :context-window 128
-               :input-cost 1
-               :output-cost 1
-               :cutoff-date ""
-               :description "Lightweight, cost-effective search model optimized for quick answers" )
-              (sonar-pro
-               :context-window 200
-               :input-cost 3
-               :output-cost 15
-               :cutoff-date ""
-               :description "Advanced search model designed for complex queries")))
+	      (sonar
+	       :context-window 128
+	       :input-cost 1
+	       :output-cost 1
+	       :cutoff-date ""
+	       :description "Lightweight, cost-effective search model optimized for quick answers" )
+	      (sonar-pro
+	       :context-window 200
+	       :input-cost 3
+	       :output-cost 15
+	       :cutoff-date ""
+	       :description "Advanced search model designed for complex queries")))
 
   (gptel-make-openai "xAI"
     :host "api.x.ai"
@@ -8093,56 +8093,21 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
     :endpoint "/v1/chat/completions"
     :stream t
     :models '((grok-2-latest
-               :context-window 131.072
-               :input-cost 2
-               :output-cost 10
-               :cutoff-date "2024-07"
-               :description "Latest Grok model")
-              (grok-2-vision-latest
-               :context-window 32.768
-               :input-cost 2
-               :output-cost 10
-               :cutoff-date "2024-07"
-               :description "Latest Grok vision model")))
+	       :context-window 131.072
+	       :input-cost 2
+	       :output-cost 10
+	       :cutoff-date "2024-07"
+	       :description "Latest Grok model")
+	      (grok-2-vision-latest
+	       :context-window 32.768
+	       :input-cost 2
+	       :output-cost 10
+	       :cutoff-date "2024-07"
+	       :description "Latest Grok vision model")))
 
-  (gptel-make-preset 'default
-    :description nil :backend "Claude" :model 'claude-sonnet-4-20250514 :system
-    'default :tools
-    '("get_episodes" "get_entity_edge" "delete_episode" "delete_entity_edge"
-      "search_facts" "search_nodes" "add_episode")
-    :stream t :temperature 1.0 :max-tokens 10000 :use-context 'system
-    :include-reasoning nil)
-
-  (gptel-make-preset 'search
-    :description nil :backend "Claude" :model 'claude-sonnet-4-20250514 :system
-    'default :tools
-    '("brave_local_search" "brave_web_search" "search_issues" "search_code"
-      "search_repositories" "fetch_content" "search")
-    :stream t :temperature 1.0 :max-tokens 10000 :use-context 'system
-    :include-reasoning nil)
-
-  (gptel-make-preset 'github
-    :description nil :backend "Claude" :model 'claude-sonnet-4-20250514 :system
-    'default :tools
-    '("get_pull_request_reviews" "get_pull_request_comments"
-      "update_pull_request_branch" "get_pull_request_status"
-      "get_pull_request_files" "merge_pull_request" "create_pull_request_review"
-      "list_pull_requests" "get_pull_request" "get_issue" "search_users"
-      "search_issues" "search_code" "add_issue_comment" "update_issue"
-      "list_issues" "list_commits" "create_branch" "fork_repository"
-      "create_pull_request" "create_issue" "push_files" "get_file_contents"
-      "create_repository" "search_repositories" "create_or_update_file")
-    :stream t :temperature 1.0 :max-tokens 10000 :use-context 'system
-    :include-reasoning nil)
-
-  (gptel-make-preset 'slack
-    :description nil :backend "Claude" :model 'claude-sonnet-4-20250514 :system
-    'default :tools
-    '("slack_get_user_profile" "slack_get_users" "slack_get_thread_replies"
-      "slack_get_channel_history" "slack_add_reaction" "slack_reply_to_thread"
-      "slack_post_message" "slack_list_channels")
-    :stream t :temperature 1.0 :max-tokens 10000 :use-context 'system
-    :include-reasoning nil)
+  (gptel-make-preset 'tools-clear
+    :description "Remove all tools"
+    :tools 'nil)
 
   ;; replace default key bindings in `gptel--suffix-mcp-disconnect'
   (with-eval-after-load 'gptel-transient
@@ -8199,6 +8164,8 @@ This package evolved out of gptel-extras.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package gptel-extras
+  :after gptel
+  :demand t
   :init
   (advice-add 'gptel :after #'gptel-extras-save-buffer)
 
@@ -8206,6 +8173,48 @@ This package evolved out of gptel-extras.
   ;; since these models take a while, we trigger a growl-like alert when they
   ;; finish, in case we want to do something else in the meantime
   (gptel-extras-alert-when-finished '(o3-mini o1))
+
+  :config
+  ;; the `gptel-extras-make-tool-presets' macro creates two sets of tools:
+  ;; one that clears existing tools and replaces them with the new ones,
+  ;; and another one that appends the new tools to the existing ones.
+  (gptel-extras-make-tool-presets
+   tools-git
+   "git-related tools"
+   '("git_wrapup_instructions" "git_worktree" "git_tag" "git_status" "git_stash"
+     "git_show" "git_set_working_dir" "git_reset" "git_remote" "git_rebase"
+     "git_push" "git_pull" "git_merge" "git_log" "git_init" "git_fetch"
+     "git_diff" "git_commit" "git_clone" "git_clear_working_dir" "git_clean"
+     "git_cherry_pick" "git_checkout" "git_branch" "git_add"))
+
+  (gptel-extras-make-tool-presets
+   tools-github
+   "GitHub-related tools"
+   '("get_pull_request_reviews" "get_pull_request_comments"
+     "update_pull_request_branch" "get_pull_request_status"
+     "get_pull_request_files" "merge_pull_request" "create_pull_request_review"
+     "list_pull_requests" "get_pull_request" "get_issue" "search_users"
+     "search_issues" "search_code" "add_issue_comment" "update_issue"
+     "list_issues" "list_commits" "create_branch" "fork_repository"
+     "create_pull_request" "create_issue" "push_files" "get_file_contents"
+     "create_repository" "search_repositories" "create_or_update_file"))
+
+  (gptel-extras-make-tool-presets
+   tools-web-search
+   "web search tools"
+   '("get_pull_request_reviews" "get_pull_request_comments"
+     "update_pull_request_branch" "get_pull_request_status"
+     "get_pull_request_files" "merge_pull_request" "create_pull_request_review"
+     "list_pull_requests" "get_pull_request" "get_issue" "search_users"
+     "search_issues" "search_code" "add_issue_comment" "update_issue"
+     "list_issues" "list_commits" "create_branch" "fork_repository"
+     "create_pull_request" "create_issue" "push_files" "get_file_contents"
+     "create_repository" "search_repositories" "create_or_update_file"))
+
+  (gptel-extras-make-tool-presets
+   tools-slack
+   "Slack-related tools"
+   '("slack_get_user_profile" "slack_get_users" "slack_get_thread_replies"))
 
   :hook
   (gptel-post-response-functions . gptel-extras-generate-latex-previews)
@@ -8355,6 +8364,8 @@ This package evolved out of gptel-extras.
 	  ("filesystem" . (:command "npx"
 				    :args ("-y" "@modelcontextprotocol/server-filesystem"
 					   ,paths-dir-tlon-repos)))
+	  ("git" . (:command "npx"
+			     :args ("-y" "@cyanheads/git-mcp-server")))
 	  ("github-tlon-ai" .
 	   (:command "npx"
 		     :args ("-y" "@modelcontextprotocol/server-github")
@@ -8403,7 +8414,9 @@ This package evolved out of gptel-extras.
 			       :args ("-y" "@modelcontextprotocol/server-github")
 			       :env (:GITHUB_PERSONAL_ACCESS_TOKEN
 				     ,(auth-source-pass-get "github-mcp-owner-tlon-team"
-							    (concat "chrome/github.com/benthamite"))))))))))
+							    (concat "chrome/github.com/benthamite")))))))))
+
+  (mcp-hub-start-all-server))
 #+end_src
 
 ** dall-e-shell

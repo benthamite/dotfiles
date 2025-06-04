@@ -438,6 +438,33 @@ The files added is controlled by the user options
 	  gptel-extras-add-repo-map-to-context (not state))
     (message (concat (if state "Diabled" "Enabled") " Aider files."))))
 
+;;;;; Tools
+
+(defmacro gptel-extras-make-tool-presets (name description tools)
+  "Create two gptel presets for TOOLS with NAME and DESCRIPTION.
+Create a base preset named NAME that sets the tools to TOOLS, and an additive
+preset named NAME+ that appends TOOLS to existing tools. TOOLS is a list of tool
+name strings. NAME is a symbol for the preset name (e.g., `tools-web-search').
+DESCRIPTION is a string describing the tools (e.g., \"web search tools\")."
+  (let* ((name-str (symbol-name name))
+         (base-symbol name)
+         (additive-symbol (intern (concat name-str "+")))
+         (base-desc (concat "Set tools to " description))
+         (additive-desc (concat "Add " description " to existing tools"))
+         (actual-tools (if (and (consp tools)
+                                (eq (car tools) 'quote)
+                                (consp (cdr tools))
+                                (listp (cadr tools)))
+                           (cadr tools)
+                         tools)))
+    `(progn
+       (gptel-make-preset ',base-symbol
+         :description ,base-desc
+         :tools ',actual-tools)
+       (gptel-make-preset ',additive-symbol
+         :description ,additive-desc
+         :tools '(:append ,@actual-tools)))))
+
 ;;;;; Misc
 
 ;;;###autoload

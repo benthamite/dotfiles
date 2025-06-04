@@ -172,8 +172,8 @@ list)."
 
 (defun vc-extras--initialize-submodules (dir)
   "Initialize submodules of the repo at DIR.
-Runs ‘git submodule init’ and ‘git submodule update --recursive’ with DIR as the
-working directory. Then, checks if 'origin/main' or 'origin/master' exists for
+Runs `git submodule init' and `git submodule update --recursive' with DIR as the
+working directory. Then, checks if `origin/main' or `origin/master' exists for
 each submodule and checks out the first one found."
   (let ((default-directory dir))
     (call-process "git" nil nil nil "submodule" "init")
@@ -201,7 +201,7 @@ each submodule and checks out the first one found."
       ;; Use --quiet to avoid the initial summary line if present
       (let ((exit-status (call-process "git" nil (current-buffer) nil "submodule" "status" "--recursive" "--quiet")))
         (unless (zerop exit-status)
-          (error "git submodule status failed with exit code %s in %s" exit-status dir))
+          (error "Git submodule status failed with exit code %s in %s" exit-status dir))
         (setq output (buffer-string))))
     (delq nil
           (mapcar (lambda (line)

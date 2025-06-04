@@ -1128,7 +1128,7 @@ finding the Node ID required for variables like
       }
     }
   }"
-  "GraphQL query to fetch items (Issues/PRs) for a project, ordered by position, including field values.")
+  "GraphQL query to fetch items for a project, ordered by position.")
 
 (defun forge-extras--parse-project-items (raw-json-response &optional target-repo-name-with-owner include-closed-p)
   "Parse RAW-JSON-RESPONSE from project items query.

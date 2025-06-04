@@ -32,7 +32,7 @@
 (require 'no-littering)
 (require 'paths)
 
-;;;; Variables
+;;;; User options
 
 (defgroup simple-extras ()
   "Extensions for `simple'."
@@ -49,6 +49,18 @@
            (make-directory value t))))
 
 ;;;; Functions
+
+;;;;; Personal
+
+(defun simple-extras-connected-to-network-p (network)
+  "Check if connected to home WiFi NETWORK."
+  (let ((ssid (string-trim
+               (shell-command-to-string
+                (pcase system-type
+                  ('darwin "networksetup -getairportnetwork en0 | cut -d: -f2")
+                  ('gnu/linux "iwgetid -r")
+                  (_ ""))))))
+    (string= ssid network)))
 
 ;;;;; Editing
 

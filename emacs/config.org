@@ -8281,7 +8281,7 @@ This package evolved out of gptel-extras.
 :ID:       349C4CE5-0091-42EC-BDD0-F5DBB200BC88
 :END:
 
-/[[https://github.com/llll][codel]] is another collection of llm tools./
+/[[https://github.com/ultronozm/codel.el][codel]] is another collection of llm tools./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package codel

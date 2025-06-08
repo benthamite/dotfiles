@@ -8287,7 +8287,7 @@ This package evolved out of gptel-extras.
 (use-package codel
   :ensure (:host github
                  :repo "ultronozm/codel.el")
-  :defer t
+  :after gptel
   :config
   (codel-setup-gptel))
 #+end_src

@@ -8027,9 +8027,9 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
   ;; default model
   (setopt gptel-model 'claude-sonnet-4-20250514
-	  gptel-backend (gptel-make-anthropic "Claude"
-			  :stream t
-			  :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))))
+          gptel-backend (gptel-make-anthropic "Claude"
+                          :stream t
+                          :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))))
 
   ;; other models
   (gptel-make-gemini "Gemini"
@@ -8041,13 +8041,13 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
     :stream t
     :models '(claude-sonnet-4-20250514)
     :header (lambda () (when-let* ((key (gptel--get-api-key)))
-		    `(("x-api-key" . ,key)
-		      ("anthropic-version" . "2023-06-01")
-		      ("anthropic-beta" . "pdfs-2024-09-25")
-		      ("anthropic-beta" . "output-128k-2025-02-19")
-		      ("anthropic-beta" . "prompt-caching-2024-07-31"))))
+                    `(("x-api-key" . ,key)
+                      ("anthropic-version" . "2023-06-01")
+                      ("anthropic-beta" . "pdfs-2024-09-25")
+                      ("anthropic-beta" . "output-128k-2025-02-19")
+                      ("anthropic-beta" . "prompt-caching-2024-07-31"))))
     :request-params `(:thinking (:type "enabled" :budget_tokens ,(* 1024 16))
-				:max_tokens ,(* 1024 32)))
+                                :max_tokens ,(* 1024 32)))
 
   (gptel-make-openai "DeepSeek"
     :host "api.deepseek.com"
@@ -8055,18 +8055,18 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
     :stream t
     :key (auth-source-pass-get "emacs" (concat "tlon/core/deepseek.com/" tlon-email-shared))
     :models '(;; <https://api-docs.deepseek.com/quick_start/pricing/
-	      (deepseek-chat
-	       :context-window 64.0
-	       :input-cost 0.27
-	       :output-cost 1.10
-	       :cutoff-date "2024-07"
-	       :description "For simple chat responses or quick answers." )
-	      (deepseek-reasoner
-	       :context-window 64.0
-	       :input-cost 0.55
-	       :output-cost 2.19
-	       :cutoff-date "2024-07"
-	       :description "For detailed reasoning or complex problem-solving.")))
+              (deepseek-chat
+               :context-window 64.0
+               :input-cost 0.27
+               :output-cost 1.10
+               :cutoff-date "2024-07"
+               :description "For simple chat responses or quick answers." )
+              (deepseek-reasoner
+               :context-window 64.0
+               :input-cost 0.55
+               :output-cost 2.19
+               :cutoff-date "2024-07"
+               :description "For detailed reasoning or complex problem-solving.")))
 
   (gptel-make-openai "Perplexity"
     :host "api.perplexity.ai"
@@ -8074,18 +8074,18 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
     :endpoint "/chat/completions"
     :stream t
     :models '(;; <https://docs.perplexity.ai/docs/model-cards>
-	      (sonar
-	       :context-window 128
-	       :input-cost 1
-	       :output-cost 1
-	       :cutoff-date ""
-	       :description "Lightweight, cost-effective search model optimized for quick answers" )
-	      (sonar-pro
-	       :context-window 200
-	       :input-cost 3
-	       :output-cost 15
-	       :cutoff-date ""
-	       :description "Advanced search model designed for complex queries")))
+              (sonar
+               :context-window 128
+               :input-cost 1
+               :output-cost 1
+               :cutoff-date ""
+               :description "Lightweight, cost-effective search model optimized for quick answers" )
+              (sonar-pro
+               :context-window 200
+               :input-cost 3
+               :output-cost 15
+               :cutoff-date ""
+               :description "Advanced search model designed for complex queries")))
 
   (gptel-make-openai "xAI"
     :host "api.x.ai"
@@ -8093,17 +8093,17 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
     :endpoint "/v1/chat/completions"
     :stream t
     :models '((grok-2-latest
-	       :context-window 131.072
-	       :input-cost 2
-	       :output-cost 10
-	       :cutoff-date "2024-07"
-	       :description "Latest Grok model")
-	      (grok-2-vision-latest
-	       :context-window 32.768
-	       :input-cost 2
-	       :output-cost 10
-	       :cutoff-date "2024-07"
-	       :description "Latest Grok vision model")))
+               :context-window 131.072
+               :input-cost 2
+               :output-cost 10
+               :cutoff-date "2024-07"
+               :description "Latest Grok model")
+              (grok-2-vision-latest
+               :context-window 32.768
+               :input-cost 2
+               :output-cost 10
+               :cutoff-date "2024-07"
+               :description "Latest Grok vision model")))
 
   (gptel-make-preset 'tools-clear
     :description "Remove all tools"
@@ -8339,8 +8339,8 @@ This package evolved out of gptel-extras.
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package mcp
   :ensure (:host github
-		 :repo "lizqwerscott/mcp.el"
-		 :build (:not elpaca--check-version))
+                 :repo "lizqwerscott/mcp.el"
+                 :build (:not elpaca--check-version))
   :after gptel
   :config
   (setq mcp-hub-servers
@@ -11350,7 +11350,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (with-eval-after-load 'eww
     (bind-keys :map 'eww-mode-map
                ("s-a" . annas-archive-download-file)))
-  
+
   :custom
   (annas-archive-included-file-types '("pdf"))
   (annas-archive-use-fast-download-links t)

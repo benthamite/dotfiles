@@ -8212,6 +8212,25 @@ This package evolved out of gptel-extras.
      "create_repository" "search_repositories" "create_or_update_file"))
 
   (gptel-extras-make-tool-presets
+   tools-home-assistant
+   "Home Assistant tools"
+   '("GetLiveContext" "movie_mode_restore_lights" "movie_mode" "todo_get_items"
+     "HassListCompleteItem" "HassListAddItem" "HassSetVolume" "HassMediaPrevious"
+     "HassMediaNext" "HassMediaPause" "HassMediaUnpause"
+     "HassClimateSetTemperature" "HassLightSet" "HassCancelAllTimers"
+     "HassTurnOff" "HassTurnOn"))
+
+  (gptel-extras-make-tool-presets
+   tools-emacs
+   "Emacs tools"
+   '("execute_emacs_lisp_code" "generate_emacs_lisp_code"))
+
+  (gptel-extras-make-tool-presets
+   tools-filesystem
+   "filesystem tools"
+   '("read_file" "list_directory" "create_file" "create_directory"))
+
+  (gptel-extras-make-tool-presets
    tools-slack
    "Slack-related tools"
    '("slack_get_user_profile" "slack_get_users" "slack_get_thread_replies"))

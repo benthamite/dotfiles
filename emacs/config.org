@@ -8378,7 +8378,7 @@ This package evolved out of gptel-extras.
           ("fetch" . (:command "uvx" :args ("mcp-server-fetch")))
           ("filesystem" . (:command "npx"
                                     :args ("-y" "@modelcontextprotocol/server-filesystem"
-                                           ,paths-dir-tlon-repos)))
+                                           ,(expand-file-name "~"))))
           ("git" . (:command "npx"
                              :args ("-y" "@cyanheads/git-mcp-server")))
           ("github-tlon-ai" .

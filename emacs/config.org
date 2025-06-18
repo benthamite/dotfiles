@@ -8205,14 +8205,7 @@ This package evolved out of gptel-extras.
   (gptel-extras-make-tool-presets
    tools-web-search
    "web search tools"
-   '("get_pull_request_reviews" "get_pull_request_comments"
-     "update_pull_request_branch" "get_pull_request_status"
-     "get_pull_request_files" "merge_pull_request" "create_pull_request_review"
-     "list_pull_requests" "get_pull_request" "get_issue" "search_users"
-     "search_issues" "search_code" "add_issue_comment" "update_issue"
-     "list_issues" "list_commits" "create_branch" "fork_repository"
-     "create_pull_request" "create_issue" "push_files" "get_file_contents"
-     "create_repository" "search_repositories" "create_or_update_file"))
+   '("search" "fetch_content" "brave_web_search" "brave_local_search"))
 
   (gptel-extras-make-tool-presets
    tools-home-assistant

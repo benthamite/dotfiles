@@ -666,6 +666,7 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
       "https://github.com/emacsmirror/nongnu_elpa")
 
 (toggle-debug-on-error) ; uncomment when debugging
+(setq elpaca-lock-file "lockfile.el")
 #+end_src
 
 ** use-package

@@ -383,6 +383,8 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#semext][semext]]
   - [[#mcp][mcp]]
   - [[#dall-e-shell][dall-e-shell]]
+  - [[#llm][llm]]
+  - [[#magit-gptcommit][magit-gptcommit]]
 - [[#org-mode][org-mode]]
   - [[#org][org]]
   - [[#org-extras][org-extras]]
@@ -8455,6 +8457,43 @@ This package evolved out of gptel-extras.
   :demand t
   :custom
   (dall-e-shell-openai-key (auth-source-pass-get "key" (concat "tlon/core/openai.com/" tlon-email-shared))))
+#+end_src
+
+** llm
+:PROPERTIES:
+:ID:       6D49D977-CD85-413E-8C19-884361746678
+:END:
+
+/[[https://github.com/ahyatt/llm][llm]] provides a common interface for LLMs./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package llm
+  :custom
+  (llm-warn-on-nonfree nil))
+#+end_src
+
+** magit-gptcommit
+:PROPERTIES:
+:ID:       DFF89B96-95F6-4EDD-A3C2-3152928ED787
+:END:
+
+/[[https://github.com/douo/magit-gptcommit][magit-gptcommit]] generates git commit messages on Magit using LLM providers./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package magit-gptcommit
+  :after magit paths
+  :demand t
+  :init
+  (require 'llm-claude)
+
+  :custom
+  (magit-gptcommit-llm-provider
+   (make-llm-claude
+    :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))
+    :chat-model "claude-3-5-haiku-20241022"))
+
+  :config
+  (magit-gptcommit-status-buffer-setup))
 #+end_src
 
 * org-mode

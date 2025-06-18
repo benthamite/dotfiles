@@ -8435,7 +8435,8 @@ This package evolved out of gptel-extras.
 										     "ha-mcp"
 										     "chrome/home-assistant.io/stafforini"))))))))
 
-  (mcp-hub-start-all-server))
+  (mcp-hub-start-all-server)
+  (run-with-timer 30 nil #'gptel-mcp-connect))
 #+end_src
 
 ** dall-e-shell

@@ -8174,7 +8174,7 @@ This package evolved out of gptel-extras.
   :custom
   ;; since these models take a while, we trigger a growl-like alert when they
   ;; finish, in case we want to do something else in the meantime
-  (gptel-extras-alert-when-finished '(o3-mini o1))
+  (gptel-extras-alert-when-finished '(o3 o1))
 
   :config
   ;; the `gptel-extras-make-tool-presets' macro creates two sets of tools:

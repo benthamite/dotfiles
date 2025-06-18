@@ -4,6 +4,44 @@
 
 This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository. It is meant to be read primarily by members of the Tlön team, but it may be of interest to others as well.
 
+* Version 7.1.8 on 2025-06-18
+
+** Major AI/LLM Integration Overhaul
+*** gptel
+- Added comprehensive preset system for different tool configurations (github, web-search, slack, etc.)
+- Integration with MCP (Model Context Protocol) for tool connectivity
+
+*** gptel-extras
+- Added ~gptel-extras-make-tool-presets~ macro for creating tool preset pairs (base + additive)
+
+*** MCP Integration
+- **New Package**: Added ~mcp~ package for Model Context Protocol support  
+- Configured multiple MCP servers: GitHub, file system, web search, Slack, Home Assistant
+- Dynamic server configuration based on system and network context
+- Automated server startup and connection management
+
+*** Additional AI Tools
+- **New Package**: Added ~codel~ for additional LLM functionality
+- **Restored**: ~llm~ and ~magit-gptcommit~ packages (previously removed)
+
+** Project Management & GitHub Integration
+*** forge-extras
+- **Major Enhancement**: Added comprehensive GitHub project management functions. This is primarily meant to be integragated with =tlon-forg= but can be used independently.
+
+** Configuration & Infrastructure
+*** Code Quality
+- Migrated from ~setq~ to ~setopt~ throughout configuration
+
+*** Package Management
+- Enhanced ~browse-url-extras~ with external browser opening
+- Improved ~simple-extras~ with network connectivity detection
+
+** User Experience
+*** Key Binding Updates
+- Modified gptel transient key bindings (=M-a=, =M-k= for MCP tools)
+- Enhanced xwidget integration with external browser opening
+- Better integration across web browsing contexts
+
 * Version 7.1.7 on 2025-05-30
 
 This version only includes changes to =forge-extras=, which are integrated into the associated =tlon= package.

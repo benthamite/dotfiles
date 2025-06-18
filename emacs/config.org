@@ -8015,6 +8015,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   :custom
   (gptel-default-mode 'org-mode)
   (gptel-track-media t)
+  (gptel-use-tools nil) ; we enable tools explicitly via presets
   (gptel-max-tokens 10000)
   (gptel-include-reasoning nil)
   (gptel-api-key (auth-source-pass-get "emacs" (concat "tlon/core/openai.com/" tlon-email-shared)))

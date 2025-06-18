@@ -907,7 +907,7 @@
 		  ("lisp/*.el" "docs/*.texi" ".dir-locals.el") :source "MELPA"
 		  :protocol https :inherit t :depth treeless :host github
 		  :branch "main" :build (:not elpaca--check-version) :ref
-		  "f97750c08e334273797dea66eba7ebbb8d7f3113"))
+		  "11c931b3682839e8a79f16bb70809b88f9debf7d"))
  (forge-extras :source "elpaca-menu-lock-file" :recipe
 	       (:source nil :protocol https :inherit t :depth nil :host github
 			:repo "benthamite/dotfiles" :files
@@ -1152,7 +1152,7 @@
  (init :source "elpaca-menu-lock-file" :recipe
        (:source nil :protocol https :inherit t :depth nil :host github :repo
 		"benthamite/init" :wait t :package "init" :ref
-		"f7b28649a77b0631c6a4377a4b45815b492ba31b"))
+		"c7cef7b0b885ea533a9c637101fcd60722626241"))
  (isearch-extras :source "elpaca-menu-lock-file" :recipe
 		 (:source nil :protocol https :inherit t :depth nil :host github
 			  :repo "benthamite/dotfiles" :files

@@ -554,5 +554,16 @@ won't work because it needs the function to be selected."
   (unless gptel-mode
     (user-error "Not in a `gptel' buffer")))
 
+;;;###autoload
+(defun gptel-extras-warn-when-context ()
+  "Prompt for confirmation to proceed when `gptel' context is not empty."
+  (unless (or (null gptel-context--alist)
+	      (y-or-n-p "The `gptel' context is not empty. Proceed? "))
+    (let ((message "Aborted"))
+      (when (y-or-n-p "Clear the `gptel' context? ")
+	(gptel-context-remove-all)
+	(setq message (concat message " (context cleared)")))
+      (user-error message))))
+
 (provide 'gptel-extras)
 ;;; gptel-extras.el ends here

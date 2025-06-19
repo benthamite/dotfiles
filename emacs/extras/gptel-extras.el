@@ -503,7 +503,9 @@ If MODEL and BACKEND are nil, use the default model and backend."
 Opens the search results in a browser using `gptel-extras-search-prefix'.
 Creates a new gptel buffer, sets the model and backend according to
 `gptel-extras-search-model' buffer-locally, and sends the QUERY to that model."
-  (interactive "sSearch query: ")
+  (interactive (list (progn
+		       (gptel-extras-warn-when-context)
+		       (read-string "Search query: "))))
   (let ((browse-url-browser-function 'browse-url-chrome))
     (browse-url (concat gptel-extras-search-prefix (url-hexify-string query))))
   (gptel-extras-run-query query

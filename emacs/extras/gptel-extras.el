@@ -451,19 +451,20 @@ DESCRIPTION is a string describing the tools (e.g., \"web search tools\")."
          (additive-symbol (intern (concat name-str "+")))
          (base-desc (concat "Set tools to " description))
          (additive-desc (concat "Add " description " to existing tools"))
-         (actual-tools (if (and (consp tools)
-                                (eq (car tools) 'quote)
-                                (consp (cdr tools))
-                                (listp (cadr tools)))
-                           (cadr tools)
-                         tools)))
+	 (gptel-use-tools t)
+	 (actual-tools (if (and (consp tools)
+				(eq (car tools) 'quote)
+				(consp (cdr tools))
+				(listp (cadr tools)))
+			   (cadr tools)
+			 tools)))
     `(progn
        (gptel-make-preset ',base-symbol
-         :description ,base-desc
-         :tools ',actual-tools)
+	 :description ,base-desc
+	 :tools ',actual-tools)
        (gptel-make-preset ',additive-symbol
-         :description ,additive-desc
-         :tools '(:append ,@actual-tools)))))
+	 :description ,additive-desc
+	 :tools '(:append ,@actual-tools)))))
 
 ;;;;; Misc
 

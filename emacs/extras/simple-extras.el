@@ -974,5 +974,19 @@ take a single argument, the name of the function being called."
     (define-key newmap key command)
     (use-local-map newmap)))
 
+(defun simple-extras-set-python-virtual-environment ()
+  "Set up a Python virtual environment in the current git repository."
+  (interactive)
+  (let ((default-directory (or (locate-dominating-file default-directory ".git")
+			       default-directory)))
+    (unless default-directory
+      (user-error "Not in a git repository"))
+    (let* ((repo-name (file-name-nondirectory (directory-file-name default-directory)))
+	   (venv-dir (expand-file-name repo-name))
+	   (venv-activate-script (expand-file-name "bin/activate" venv-dir)))
+      (unless (file-exists-p venv-activate-script)
+	(shell-command (format "python -m venv %s" venv-dir))
+	(message "Virtual environment created at %s" venv-dir)))))
+
 (provide 'simple-extras)
 ;;; simple-extras.el ends here

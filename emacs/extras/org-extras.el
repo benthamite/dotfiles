@@ -953,48 +953,67 @@ empty headings, which trigger an `org-roam' warning."
     ("k f" "Pimsleur French"      (lambda () (interactive) (org-roam-extras-id-goto "68167050-004A-4A58-9637-F2B1AB1518CB")))]])
 
 (transient-define-prefix org-extras-tlon-menu ()
-  "Menu for Tlön projects."
-  [["Tlön"
-    ("t t" "tlon"              (lambda () (interactive) (org-roam-extras-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A")))
-    ("t e" "tlon.el"        (lambda () (interactive) (org-roam-extras-id-goto "E38478D6-1540-4496-83F3-43C964567A15")))
-    ("t i" "tlon inbox"        (lambda () (interactive) (org-roam-extras-id-goto "E9C77367-DED8-4D59-B08C-E6E1CCDDEC3A")))]
-   ["Babel"
-    ("b c" "babel"             (lambda () (interactive) (org-roam-extras-id-goto "DFE45995-7935-4F19-80DA-FB9C11FE9E24")))
-    ("b s" "babel-es"          (lambda () (interactive) (org-roam-extras-id-goto "A2347582-CF81-497E-81C9-CF82E56D8312")))
-    ("b r" "babel-refs"        (lambda () (interactive) (org-roam-extras-id-goto "06C5E072-99F2-4A1F-A87E-0E05E330E111")))]
-   ["Uqbar"
-    ("q q" "uqbar-common"      (lambda () (interactive) (org-roam-extras-id-goto "5BB257FF-5E68-49D1-813B-9D08C5D0ACF5")))
-    ("q s" "uqbar-es"          (lambda () (interactive) (org-roam-extras-id-goto "EF190A03-0037-430A-B8A1-414738AEAEA4")))
-    ("q t" "uqbar-it"          (lambda () (interactive) (org-roam-extras-id-goto "124B8358-88C8-49CC-9C4D-6B6919BF64BE")))
-    ("q r" "uqbar-fr"          (lambda () (interactive) (org-roam-extras-id-goto "8FDA9155-C270-4FB0-AA2A-DA87BED19BE0")))]
-   ["utilitarianism"
-    ("u n" "utilitarianism-en" (lambda () (interactive) (org-roam-extras-id-goto "F80849CB-F04A-4EDF-B71B-F98277D3F462")))]
-   ["Longtermism"
-    ("l s" "longtermism-es"    (lambda () (interactive) (org-roam-extras-id-goto "2514AA39-CFBF-4E5A-B18E-147497E31C8F")))]
-   ["Radio Altruismo Eficaz"
-    ("r" "rae"                 (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))]
-   ["Misc"
-    "EA International"
-    ("i" "ea.international"    (lambda () (interactive) (org-roam-extras-id-goto "AF3FEF60-7624-4C3C-9A48-1FB531D1D635")))
-    "EA News"
-    ("n" "ean-issues"          (lambda () (interactive) (org-roam-extras-id-goto "A2710AA8-BEEB-412D-9FE0-8AF856E4464C")))
-    "La Bisagra"
+  "Menu for Tlön files."
+  [["Languages"
+    ("SPC b s" "bs"            (lambda () (interactive) (org-roam-extras-id-goto "895B24BF-EDC0-4506-9D41-2B6D0A5A437D")))
+    ("SPC c n" "cn"            (lambda () (interactive) (org-roam-extras-id-goto "1EBB6807-3578-4F67-B640-9703D1B5C432")))
+    ("SPC c s" "cs"            (lambda () (interactive) (org-roam-extras-id-goto "1BA08F2A-5898-4622-AF41-B45CCAE342F0")))
+    ("SPC d a" "da"            (lambda () (interactive) (org-roam-extras-id-goto "3ABB8AF0-7F72-43D1-BAE9-1F2FE2E95C9C")))
+    ("SPC d e" "de"            (lambda () (interactive) (org-roam-extras-id-goto "3F0A20BF-729F-4426-B853-C143D6B19876")))
+    ("SPC f a" "fa"            (lambda () (interactive) (org-roam-extras-id-goto "AD71E2B0-FAF9-49B9-9289-73887A7BF36D")))
+    ("SPC f r" "fr"            (lambda () (interactive) (org-roam-extras-id-goto "8FDA9155-C270-4FB0-AA2A-DA87BED19BE0")))
+    ("SPC h e" "he"            (lambda () (interactive) (org-roam-extras-id-goto "E5BC7714-6E29-4CC5-BEEB-0603C984E1DD")))
+    ("SPC h i" "hi"            (lambda () (interactive) (org-roam-extras-id-goto "496610E8-6497-4C55-A0EF-D0E3D113DC51")))
+    ("SPC h r" "hr"            (lambda () (interactive) (org-roam-extras-id-goto "FF49DDD0-8D85-4DED-871D-8A276E175946")))
+    ("SPC i t" "it"            (lambda () (interactive) (org-roam-extras-id-goto "124B8358-88C8-49CC-9C4D-6B6919BF64BE")))
+    ("SPC j a" "ja"            (lambda () (interactive) (org-roam-extras-id-goto "3645B3CB-D259-471F-A197-883E04377C81")))
+    ("SPC k o" "ko"            (lambda () (interactive) (org-roam-extras-id-goto "8A37E0EE-8A47-4E88-961E-0286FA2F20B9")))
+    ("SPC n o" "no"            (lambda () (interactive) (org-roam-extras-id-goto "0CE1516A-67BC-4162-933F-7C2DDBE2FB53")))
+    ("SPC p l" "pl"            (lambda () (interactive) (org-roam-extras-id-goto "9AF20CBE-3CFC-4DE4-A4B4-1C697276C425")))
+    ("SPC p t" "pt"            (lambda () (interactive) (org-roam-extras-id-goto "FC8462F9-B209-489C-AF86-FE8F45180B10")))
+    ("SPC r u" "ru"            (lambda () (interactive) (org-roam-extras-id-goto "76B10E36-EF44-45BE-A782-CDB8512E0202")))
+    ("SPC s r" "sr"            (lambda () (interactive) (org-roam-extras-id-goto "7240D520-389F-40C8-88CA-9FA583122655")))
+    ("SPC s v" "sv"            (lambda () (interactive) (org-roam-extras-id-goto "29B39D8D-F74B-4674-A278-24F6F920AB5E")))
+    ("SPC t r" "tr"            (lambda () (interactive) (org-roam-extras-id-goto "355F1918-CE57-412C-B0A0-A24D62265F0E")))
+    ("SPC v i" "vi"            (lambda () (interactive) (org-roam-extras-id-goto "46CF9050-B03E-411A-A862-CA29B939DB74")))
+    ("SPC z h" "zh"            (lambda () (interactive) (org-roam-extras-id-goto "0CB49A7D-A753-4FD4-95A4-EEFDA1F704D4")))]
+   ["Projects"
+    ("7" "ai-2027"             (lambda () (interactive) (org-roam-extras-id-goto "11138461-DFB5-47BC-8EC1-C433318823E3")))
+    ("8 p" "80k-podcast"       (lambda () (interactive) (org-roam-extras-id-goto "8E02D103-3CE9-4560-80D1-2F13BD60E6A9")))
+    ("8 w" "80k-website"       (lambda () (interactive) (org-roam-extras-id-goto "3827DBF0-9627-476D-A7A7-C467F426C9BC")))
+    ("a" "aea"                 (lambda () (interactive) (org-roam-extras-id-goto "DF0A99D4-75E4-43D4-A05E-76831A35B313")))
+    ("o" "altruismoeficaz.org" (lambda () (interactive) (org-roam-extras-id-goto "4E6A0948-5BD4-46DE-B4B0-347410E9A815")))
     ("s" "bisagra"             (lambda () (interactive) (org-roam-extras-id-goto "CE8A5497-1BF9-4340-9853-5ADA4605ECB5")))
-    "Boletín"
-    ("a" "boletin"             (lambda () (interactive) (org-roam-extras-id-goto "989E6696-2672-47FE-855B-00DA806B7A56")))
-    "GWWC"
-    ("g" "gwwc"                (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))]
-   [""
-    "Meetings"
-    ("m f" "fede"              (lambda () (interactive) (org-roam-extras-id-goto "56CBB3F8-8E75-4298-99B3-899365EB75E0")))
-    ("m l" "leo"               (lambda () (interactive) (org-roam-extras-id-goto "51610BEB-7583-4C84-8FC2-A3B28CA79FAB")))
-    ("m g" "group"             (lambda () (interactive) (org-roam-extras-id-goto "BE68100E-753D-408B-9B31-2D58A457A70B")))
-    ""
-    "Comms"
-    ("c x" "Check inbox"       (lambda () (interactive) (org-roam-extras-id-goto "A2555D4E-AC86-4986-AF7E-778D6E78D47E")))
-    ("c i" "Check issues"      (lambda () (interactive) (org-roam-extras-id-goto "03B164B5-89FC-4611-A2B9-6E5D3AE7C1B1")))
-    ("c e" "Check email"       (lambda () (interactive) (org-roam-extras-id-goto "EA0B83B2-8A4A-417A-8318-56B4EDC75FF5")))
-    ("c t" "Check telegram"    (lambda () (interactive) (org-roam-extras-id-goto "DF643B0F-1956-44AB-90DD-749D849C285D")))]])
+    ("b" "boletin"             (lambda () (interactive) (org-roam-extras-id-goto "989E6696-2672-47FE-855B-00DA806B7A56")))
+    ("i" "ea.inernational"     (lambda () (interactive) (org-roam-extras-id-goto "AF3FEF60-7624-4C3C-9A48-1FB531D1D635")))
+    ("n" "ea.news"             (lambda () (interactive) (org-roam-extras-id-goto "A2710AA8-BEEB-412D-9FE0-8AF856E4464C")))
+    ("g" "giving-what-we-can"  (lambda () (interactive) (org-roam-extras-id-goto "BA0985E0-13A4-4C01-9924-03559E100CF0")))
+    ("L" "largoplacismo"       (lambda () (interactive) (org-roam-extras-id-goto "2514AA39-CFBF-4E5A-B18E-147497E31C8F")))
+    ("l" "tlon.el"             (lambda () (interactive) (org-roam-extras-id-goto "E38478D6-1540-4496-83F3-43C964567A15")))
+    ("r" "rational-animations" (lambda () (interactive) (org-roam-extras-id-goto "9D87ED72-2A2C-416B-9BE4-EF7C2A8F2326")))
+    ("t" "tlon.site"           (lambda () (interactive) (org-roam-extras-id-goto "25713E6F-934C-44E2-AFCD-9E9956AF1C56")))
+    ("u" "utilitarianism"      (lambda () (interactive) (org-roam-extras-id-goto "F80849CB-F04A-4EDF-B71B-F98277D3F462")))]
+   ["Other"
+    ;; ("" "translation-impact"  (lambda () (interactive) (org-roam-extras-id-goto "F3F1EBCB-C0BA-47DF-9592-5E61B8ED9371")))
+    ;; ("" "master-plan"         (lambda () (interactive) (org-roam-extras-id-goto "fa135b36-4fae-4651-9f7c-0e5591850545")))
+    ;; ("" "misc"                (lambda () (interactive) (org-roam-extras-id-goto "B158443B-3F42-4A21-8E37-003E5B3DB912")))
+    ;; ("" "open-phil-report"    (lambda () (interactive) (org-roam-extras-id-goto "2ECB4A4A-44AC-4126-8194-27F52A13AFB1")))
+    ;; ("" "report"              (lambda () (interactive) (org-roam-extras-id-goto "87C458F3-2A4A-4EBA-8094-BF685B1FE237")))
+    ;; ("" "sandbox"             (lambda () (interactive) (org-roam-extras-id-goto "CA41DDE5-BA03-419E-A3C9-ED46F14F4C8D")))
+    ;; ("" "seo"                 (lambda () (interactive) (org-roam-extras-id-goto "C282BC69-179F-401F-828C-E910B564CC69")))
+    ;; ("" "seo-principles"      (lambda () (interactive) (org-roam-extras-id-goto "EF19D3B5-933F-4131-BB87-97A572E3531B")))
+    ;; ("" "strategy"            (lambda () (interactive) (org-roam-extras-id-goto "FB346A98-5DFB-404E-B0BA-6CB228C01213")))
+    ;; ("" "tlon"            (lambda () (interactive) (org-roam-extras-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A")))
+    ;; ("" "tlon-generic"            (lambda () (interactive) (org-roam-extras-id-goto "A3A5B7DF-34D4-4EB4-AA0F-EFBB88F30FF2")))
+    ;; ("" "tlon-inbox"            (lambda () (interactive) (org-roam-extras-id-goto "E9C77367-DED8-4D59-B08C-E6E1CCDDEC3A")))
+    ;; ("" "tlon-roadmap"            (lambda () (interactive) (org-roam-extras-id-goto "0DFC8456-E336-4C6A-869C-8F0DA2B36ADF")))
+    ;; ("" "uqbar"            (lambda () (interactive) (org-roam-extras-id-goto "91B333EE-DC83-4589-8EC1-4E08B7E6DD9F")))
+    ;; ("" "uqbar-common"            (lambda () (interactive) (org-roam-extras-id-goto "5BB257FF-5E68-49D1-813B-9D08C5D0ACF5")))
+    ;; ("" "uqbar-en"            (lambda () (interactive) (org-roam-extras-id-goto "C623C1E8-423D-42E2-ADC0-D6295F2C65F5")))
+    ;; ("" "uqbar-es"            (lambda () (interactive) (org-roam-extras-id-goto "EF190A03-0037-430A-B8A1-414738AEAEA4")))
+    ;; ("" "uqbar-fr"            (lambda () (interactive) (org-roam-extras-id-goto "5686C9A6-3057-4912-A6DC-9BA7582FCEFF")))
+    ;; ("" "uqbar-tr"            (lambda () (interactive) (org-roam-extras-id-goto "6A50CEBB-22D1-4CB9-A9BB-F677E6944AF9")))
+    ]])
 
 ;;;###autoload (autoload 'org-extras-config-dispatch "org-extras" nil t)
 (transient-define-prefix org-extras-config-dispatch ()

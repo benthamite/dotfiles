@@ -14200,6 +14200,13 @@ For personal reference, these are the most recent Emacs installations (in revers
 
 (After installing, you may need to create a symlink to the =Emacs.app= folder in  =/opt/homebrew/Cellar/emacs-plus@30/30.1/Emacs.app=, replacing =30.1= with the actual version number.)
 
+[2025-06-27 Fri]:
+
+#+begin_src shell :tangle no
+brew tap d12frosted/emacs-plus
+brew install emacs-plus@30 --with-dbus --with-debug --with-xwidgets --with-imagemagick --with-spacemacs-icon
+#+end_src
+
 [2024-10-09 Wed]:
 
 #+begin_src shell :tangle no

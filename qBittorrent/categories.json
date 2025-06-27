@@ -1,0 +1,17 @@
+{
+    "Audiobook": {
+        "save_path": "/Users/pablostafforini/My Drive/Audiobooks"
+    },
+    "Movies": {
+        "save_path": "/Users/pablostafforini/Movies"
+    },
+    "Other": {
+        "save_path": "/Users/pablostafforini/Movies-Other"
+    },
+    "Seed": {
+        "save_path": "/Users/pablostafforini/Documents/Temporary torrent downloads/Seed"
+    },
+    "TV": {
+        "save_path": "/Users/pablostafforini/Movies-TV"
+    }
+}

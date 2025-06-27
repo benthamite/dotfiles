@@ -353,6 +353,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#haskell-mode][haskell-mode]]
   - [[#python][python]]
   - [[#pyenv-mode][pyenv-mode]]
+  - [[#pet][pet]]
   - [[#emacs-ipython-notebook][emacs-ipython-notebook]]
   - [[#go][go]]
   - [[#applescript-mode][applescript-mode]]
@@ -7686,6 +7687,19 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   :after python
   :init
   (add-to-list 'exec-path "~/.pyenv/bin"))
+#+end_src
+
+** pet
+:PROPERTIES:
+:ID:       43F4649C-E469-4E9B-ACC4-3DC912EFFE54
+:END:
+
+/[[https://github.com/wyuenho/emacs-pet][pet]] tracks down the correct Python tooling executables from Python virtual environments./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package pet
+  :config
+  (add-hook 'python-base-mode-hook 'pet-mode -10))
 #+end_src
 
 ** emacs-ipython-notebook

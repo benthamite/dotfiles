@@ -9,6 +9,20 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** pyvenv
+:PROPERTIES:
+:ID:       2553445B-D90D-499F-82AE-E7897FA4A286
+:END:
+
+/[[https://github.com/jorgenschaefer/pyvenv][pyvenv]] is a Python virtual environment interface for Emacs./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package pyvenv
+  :after python
+  :config
+  (pyvenv-mode 1))
+#+end_src
+
 ** consult-web
 :PROPERTIES:
 :ID:       899872DF-AFE2-4F35-853A-24CD7935B703

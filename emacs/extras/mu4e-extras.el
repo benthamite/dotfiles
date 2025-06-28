@@ -115,7 +115,7 @@ and re-mark them as read after synchronization."
 ;;;;;;; Sent
 
 (defun mu4e-extras-add-sent-to-mark-as-read-queue ()
-  "At the sent message to the queue of messages to mark as read upon resync.
+  "Add the sent message to the queue of messages to mark as read upon resync.
 When `mu4e' sends an email with Gmail, Gmail automatically saves a copy in the
 \"Sent\" folder, so the local copy is deleted (as specified by
 `mu4e-sent-messages-behavior'). However, the saved copy is treated as a new,

@@ -101,7 +101,7 @@ The list of queued messages is stored in `mu4e-extras-mark-as-read-queue'."
 
 ;; this is throwing an error:
 ;; Error running timer ‘mu4e-extras-reapply-read-status’: (user-error #("[mu4e] Cannot handle command while indexing, please retry later."
-;; (add-hook 'mu4e-update-pre-hook #'mu4e-extras-reapply-read-status-set-timer)
+(add-hook 'mu4e-update-pre-hook #'mu4e-extras-reapply-read-status-set-timer)
 
 ;;;;;;; Refiled
 
@@ -416,6 +416,15 @@ right before the index but currently there is no hook for that."
                     (eq old-cleanup mu4e-index-cleanup)))
       (message "`mu4e-extras-set-index-params' idle:%s lazy:%s cleanup:%s"
                idle mu4e-index-lazy-check mu4e-index-cleanup))))
+
+;; TODO: this should once daily remove the `refile' label from all messages and
+;; sync all mail (so that the archive is up to date)
+(defun mu4e-extras-archive-refiled ()
+  "Archive messages with the \"refile\" label."
+  (let ((mu4e-get-mail-command "sh $HOME/bin/mbsync-parallel include-gmail-all"))
+    (setopt mu4e-index-lazy-check nil
+	    mu4e-index-cleanup t)
+    (mu4e-update-index)))
 
 ;;;;; Patches
 

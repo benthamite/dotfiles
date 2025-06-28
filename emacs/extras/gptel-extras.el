@@ -468,7 +468,10 @@ Each conversation is saved as a separate Org mode file in
           (insert (format "* %s\n\n" title))
           (let ((root-id (gptel-extras--find-chatgpt-root-id mapping)))
             (when root-id
-              (let ((current-id (car (gethash "children" (gethash root-id mapping)))))
+              (let* ((root-node (gethash root-id mapping))
+                     (children (gethash "children" root-node))
+                     (current-id (when (and children (> (length children) 0))
+                                   (aref children 0))))
                 (while current-id
                   (let* ((node (gethash current-id mapping))
                          (message (gethash "message" node)))
@@ -477,14 +480,16 @@ Each conversation is saved as a separate Org mode file in
                              (role (gethash "role" author))
                              (content (gethash "content" message))
                              (parts (gethash "parts" content)))
-                        (when (and parts (car parts) (not (string-empty-p (car parts))))
+                        (when (and parts (> (length parts) 0) (not (string-empty-p (aref parts 0))))
                           (pcase role
                             ("user"
-                             (insert (format "*** %s\n\n" (car parts))))
+                             (insert (format "*** %s\n\n" (aref parts 0))))
                             ("assistant"
                              (when (string= (gethash "content_type" content) "text")
-                               (insert (format "%s\n\n" (car parts)))))))))
-                    (setq current-id (car (gethash "children" node))))))))
+                               (insert (format "%s\n\n" (aref parts 0)))))))))
+                    (let ((node-children (gethash "children" node)))
+                      (setq current-id (when (and node-children (> (length node-children) 0))
+                                         (aref node-children 0)))))))))
           (write-file filename)
           (message "Imported '%s' to %s" title filename))))))
 

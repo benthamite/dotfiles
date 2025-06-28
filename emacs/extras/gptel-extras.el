@@ -457,8 +457,8 @@ Each conversation is saved as a separate Org mode file in
   (let ((json-object-type 'hash-table)
         (conversations (json-read-file json-file)))
     (dotimes (i (length conversations))
-      (let ((conv (aref conversations i)))
-      (let* ((title (gethash "title" conv))
+      (let* ((conv (aref conversations i))
+             (title (gethash "title" conv))
              (mapping (gethash "mapping" conv))
              (filename (file-name-concat
                         gptel-extras-chatgpt-import-dir
@@ -492,7 +492,7 @@ Each conversation is saved as a separate Org mode file in
                       (setq current-id (when (and node-children (> (length node-children) 0))
                                          (aref node-children 0)))))))))
           (write-file filename)
-          (message "Imported '%s' to %s" title filename)))))))
+          (message "Imported '%s' to %s" title filename))))))
 
 (defun gptel-extras--find-chatgpt-root-id (mapping)
   "Return the root ID from a ChatGPT conversation MAPPING."

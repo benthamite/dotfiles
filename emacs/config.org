@@ -11821,6 +11821,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
   (mu4e-view-mode-hook . mu4e-extras-set-face-locally)
   (mu4e-update-pre-hook . mu4e-extras-set-index-params)
   (mu4e-update-pre-hook . mu4e-extras-reapply-read-status-set-timer)
+  (message-sent-hook . mu4e-extras-add-sent-to-mark-as-read-queue)
 
   :bind
   (:map mu4e-main-mode-map

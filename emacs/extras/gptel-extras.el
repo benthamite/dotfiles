@@ -79,6 +79,12 @@ directory-local sorting is set via a the `.dir-locals.el' file in the directory.
   :type 'directory
   :group 'gptel-extras)
 
+(defcustom gptel-extras-chatgpt-import-dir
+  (file-name-concat paths-dir-notes "chatgpt/")
+  "The directory where to save the imported ChatGPT conversations."
+  :type 'directory
+  :group 'gptel-extras)
+
 (defcustom gptel-extras-alert-when-finished '()
   "List of models for which an alert is displayed when the response is inserted.
 If t, always display an alert. If nil, never display an alert."
@@ -437,6 +443,58 @@ The files added is controlled by the user options
     (setq gptel-extras-add-conventions-to-context (not state)
 	  gptel-extras-add-repo-map-to-context (not state))
     (message (concat (if state "Diabled" "Enabled") " Aider files."))))
+
+;;;;; ChatGPT Import
+
+;;;###autoload
+(defun gptel-extras-import-chatgpt-conversations (json-file)
+  "Import ChatGPT conversations from JSON-FILE.
+Each conversation is saved as a separate Org mode file in
+`gptel-extras-chatgpt-import-dir'."
+  (interactive "fImport ChatGPT conversations from file: ")
+  (require 'json)
+  (require 'simple-extras)
+  (let ((conversations (json-read-file json-file :object-type 'hash-table)))
+    (dolist (conv conversations)
+      (let* ((title (gethash "title" conv))
+             (mapping (gethash "mapping" conv))
+             (filename (file-name-concat
+                        gptel-extras-chatgpt-import-dir
+                        (format "%s.org" (simple-extras-slugify title)))))
+        (with-temp-buffer
+          (org-mode)
+          (insert (format "#+title: %s\n\n" title))
+          (insert (format "* %s\n\n" title))
+          (let ((root-id (gptel-extras--find-chatgpt-root-id mapping)))
+            (when root-id
+              (let ((current-id (car (gethash "children" (gethash root-id mapping)))))
+                (while current-id
+                  (let* ((node (gethash current-id mapping))
+                         (message (gethash "message" node)))
+                    (when message
+                      (let* ((author (gethash "author" message))
+                             (role (gethash "role" author))
+                             (content (gethash "content" message))
+                             (parts (gethash "parts" content)))
+                        (when (and parts (car parts) (not (string-empty-p (car parts))))
+                          (pcase role
+                            ("user"
+                             (insert (format "*** %s\n\n" (car parts))))
+                            ("assistant"
+                             (when (string= (gethash "content_type" content) "text")
+                               (insert (format "%s\n\n" (car parts)))))))))
+                    (setq current-id (car (gethash "children" node))))))))
+          (write-file filename)
+          (message "Imported '%s' to %s" title filename))))))
+
+(defun gptel-extras--find-chatgpt-root-id (mapping)
+  "Return the root ID from a ChatGPT conversation MAPPING."
+  (let (root-id)
+    (maphash (lambda (id node)
+               (when (null (gethash "parent" node))
+                 (setq root-id id)))
+             mapping)
+    root-id))
 
 ;;;;; Tools
 

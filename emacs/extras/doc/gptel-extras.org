@@ -72,6 +72,9 @@ The main features include:
 #+vindex: gptel-extras-dir
 ~gptel-extras-dir~: The directory where `gptel` conversation buffers are automatically saved by ~gptel-extras-save-buffer~. Default: `~/Documents/notes/gptel/`.
 
+#+vindex: gptel-extras-chatgpt-import-dir
+~gptel-extras-chatgpt-import-dir~: The directory where ChatGPT conversation files are saved by the ~gptel-extras-import-chatgpt-conversations~ command. Default: `~/Documents/notes/chatgpt/`.
+
 #+vindex: gptel-extras-alert-when-finished
 ~gptel-extras-alert-when-finished~: Controls when to display an alert message after `gptel` finishes inserting a response. Can be `t` (always), `nil` (never), or a list of model symbols (e.g., `'(gemini-pro)`). Default is `nil`.
 
@@ -123,6 +126,14 @@ The command ~gptel-extras-summarize-commit-diffs~ takes the active region in a `
 
 #+findex: gptel-extras-kill-buffer-then-reopen-file
 ~gptel-extras-kill-buffer-then-reopen-file~: Saves the current `gptel` buffer, kills it, and then reopens the file it was visiting. Intended as a workaround for potential issues where `gptel` becomes unresponsive.
+
+** ChatGPT Import
+:PROPERTIES:
+:CUSTOM_ID: h:chatgpt-import
+:END:
+
+#+findex: gptel-extras-import-chatgpt-conversations
+The command ~gptel-extras-import-chatgpt-conversations~ prompts for a JSON file containing ChatGPT conversations (as exported from the ChatGPT website). It then iterates through each conversation in the file, creating a new Org mode file for each one in the directory specified by ~gptel-extras-chatgpt-import-dir~. The filename is a slugified version of the conversation title. Inside each file, user prompts are formatted as level-3 headings, and the corresponding assistant responses are placed as text beneath them.
 
 ** Miscellaneous Commands
 :PROPERTIES:
@@ -212,6 +223,7 @@ This function is added as `:around` advice to `gptel-curl-get-response`. If the 
 :CUSTOM_ID: h:function-index
 :END:
 
+- =gptel-extras-import-chatgpt-conversations=: [[h:chatgpt-import][ChatGPT Import]]
 - =gptel-extras-search-and-ask-model=: [[h:misc-commands][Miscellaneous Commands]]
 
 ** Variable index
@@ -219,3 +231,5 @@ This function is added as `:around` advice to `gptel-curl-get-response`. If the 
 :INDEX: vr
 :CUSTOM_ID: h:variable-index
 :END:
+
+- =gptel-extras-chatgpt-import-dir=: [[h:misc-options][Miscellaneous Options]]

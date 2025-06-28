@@ -11813,6 +11813,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
   (mu4e-mark-execute-pre-hook . mu4e-extras-gmail-fix-flags)
   (mu4e-view-mode-hook . mu4e-extras-set-face-locally)
   (mu4e-update-pre-hook . mu4e-extras-set-index-params)
+  (mu4e-update-pre-hook . mu4e-extras-reapply-read-status-set-timer)
 
   :bind
   (:map mu4e-main-mode-map

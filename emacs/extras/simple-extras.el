@@ -717,16 +717,21 @@ FORMS are evaluated with point restored to its original position."
 
 ;;;;; Conversion
 
-(defun simple-extras-pandoc-convert (language &optional non-html)
-  "Convert the contents of the system clipboard to target LANGUAGE using Pandoc.
+(defun simple-extras-pandoc-convert (language &optional non-html string)
+  "Convert the contents of STRING to target LANGUAGE using Pandoc.
+If STRING is non-nil and non-empty, convert STRING directly.
+Otherwise, if STRING is nil or empty, use the system clipboard.
 Convert from HTML if the clipboard contains HTML, and from NON-HTML otherwise.
-Both LANGUAGE and NON-HTML are specified using the Pandoc name for that
-language."
-  (let* ((command (format "%%s | pandoc --wrap=none -f %%s -t %s" language))
-	 (output (shell-command-to-string (format command "pbv public.html" "html"))))
-    (when (string-match-p "Could not access pasteboard contents" output)
-      (setq output (shell-command-to-string (format command "pbpaste" non-html))))
-    output))
+Both LANGUAGE and NON-HTML are specified using the Pandoc name for that language."
+  (let* ((command (format "pandoc --wrap=none -f %%s -t %s" language))
+         (input (if (and string (not (string= string ""))) ; use STRING if given and not empty
+                    (format "echo %s" (shell-quote-argument string))
+                  "pbpaste"))
+         (output (shell-command-to-string (format command "html"))))
+    (if (and (not (and string (not (string= string ""))))
+             (string-match-p "Could not access pasteboard contents" output))
+        (setq output (shell-command-to-string (format command (or non-html "plain"))))
+      output)))
 
 ;;;;; Asciify
 

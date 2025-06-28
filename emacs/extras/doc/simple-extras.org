@@ -251,7 +251,7 @@ Specifies the directory where auto-save files for new, non-file-visiting buffers
 + ~simple-extras-remove-trailing-slash~: Removes a trailing slash from a string.
 + ~simple-extras-simplify-url~: Removes `http(s)://`, `www.`, and trailing slash from a URL string.
 + ~simple-extras-strip-url~: Replaces the URL at point with its simplified version.
-+ ~simple-extras-pandoc-convert~: Converts clipboard content between formats using Pandoc.
++ ~simple-extras-pandoc-convert~: Converts a string or clipboard content between formats using Pandoc.
 + ~simple-extras-asciify-string~: Returns a string with accents removed.
 + ~simple-extras-slugify~: Converts a string to a URL-friendly slug.
 + ~simple-extras-slug-hyphenate~: Helper for slugify; replaces spaces/underscores with hyphens.

@@ -11801,7 +11801,6 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
 :ID:       A131F743-C780-4D66-9F1A-D3F63F92DE0B
 :END:
 
-
 /[[file:extras/mu4e-extras.el][mu4e-extras]] collects my extensions for =mu4e=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)

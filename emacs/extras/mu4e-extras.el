@@ -91,17 +91,13 @@ the sender only."
   "Reapply `read' status to all messages in queue.
 The list of queued messages is stored in `mu4e-extras-mark-as-read-queue'."
   (dolist (message-id mu4e-extras-mark-as-read-queue)
-    (mu4e--server-move message-id nil "+S"))  ;; `+S' = seen
+    (mu4e--server-move message-id nil "+S-u"))  ;; `+S-u' = mark as seen
   (setq mu4e-extras-mark-as-read-queue '()))
 
 (defun mu4e-extras-reapply-read-status-set-timer ()
   "Set a timer to reapply `read' status to all tracked messages."
   (when mu4e-extras-mark-as-read-queue
     (run-with-timer 30 nil #'mu4e-extras-reapply-read-status)))
-
-;; this is throwing an error:
-;; Error running timer ‘mu4e-extras-reapply-read-status’: (user-error #("[mu4e] Cannot handle command while indexing, please retry later."
-(add-hook 'mu4e-update-pre-hook #'mu4e-extras-reapply-read-status-set-timer)
 
 ;;;;;;; Refiled
 

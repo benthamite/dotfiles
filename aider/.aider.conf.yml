@@ -2,8 +2,8 @@
 # edit-format: diff-fenced
 model: gemini/gemini-2.5-pro-preview-06-05
 edit-format: diff-fenced
-thinking-tokens: 32k
-check-model-accepts-settings: false
+# thinking-tokens: 32k
+# check-model-accepts-settings: false
 # model: o3
 # editor-model: gpt-4.1
 # editor-edit-format: editor-diff

@@ -10,8 +10,18 @@ sync_channel() {
 
 export -f sync_channel
 
-# Generate a list of channels to sync, excluding 'gmail-all'
-channels=$(grep '^Channel ' ~/.mbsyncrc | awk '{print $2}' | grep -v '^gmail-all$' | sort -u)
+# Check if the first argument is 'include-gmail-all'
+include_gmail_all=false
+if [ "$1" == "include-gmail-all" ]; then
+    include_gmail_all=true
+fi
+
+# Generate a list of channels to sync
+if [ "$include_gmail_all" = true ]; then
+    channels=$(grep '^Channel ' ~/.mbsyncrc | awk '{print $2}' | sort -u)
+else
+    channels=$(grep '^Channel ' ~/.mbsyncrc | awk '{print $2}' | grep -v '^gmail-all$' | sort -u)
+fi
 
 # Use GNU parallel to run the sync in parallel
 echo "$channels" | parallel --will-cite sync_channel

@@ -725,9 +725,11 @@ specified using the Pandoc name for that language."
   (if content
       (with-temp-buffer
         (insert content)
-        (call-process-shell-command
-         (format "pandoc --wrap=none -f %s -t %s" non-html language)
-         (current-buffer) t))
+        (call-process-region (point-min) (point-max) "pandoc" t t nil
+                             "--wrap=none"
+                             "-f" non-html
+                             "-t" language)
+        (buffer-string))
     (let* ((command (format "%%s | pandoc --wrap=none -f %%s -t %s" language))
            (output (shell-command-to-string (format command "pbv public.html" "html"))))
       (when (string-match-p "Could not access pasteboard contents" output)

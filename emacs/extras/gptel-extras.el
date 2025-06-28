@@ -448,63 +448,82 @@ The files added is controlled by the user options
 
 ;;;###autoload
 (defun gptel-extras-import-chatgpt-conversations (json-file)
-  "Import ChatGPT conversations from JSON-FILE.
-Each conversation is saved as a separate Org mode file in
-`gptel-extras-chatgpt-import-dir'."
+  "Import ChatGPT conversations from JSON-FILE into Org files.
+This command imports the text part of ChatGPT conversations only, ignoring
+media, metadata and other non-textual parts. The conversations are saved in
+`gptel-extras-chatgpt-import-dir' as Org files, with the title of each
+conversation as the file name. The title is slugified to ensure it is a valid
+file name."
   (interactive "fImport ChatGPT conversations from file: ")
-  (require 'json)
-  (require 'simple-extras)
   (unless (file-exists-p gptel-extras-chatgpt-import-dir)
     (make-directory gptel-extras-chatgpt-import-dir t))
   (let ((json-object-type 'hash-table)
-        (json-array-type 'list)
-        (conversations (json-read-file json-file)))
-    (dotimes (i (length conversations))
-      (let* ((conv (aref conversations i))
-             (title (gethash "title" conv))
-             (mapping (gethash "mapping" conv))
-             (filename (file-name-concat
-                        gptel-extras-chatgpt-import-dir
-                        (format "%s.org" (simple-extras-slugify title)))))
-        (with-temp-buffer
-          (org-mode)
-          (insert (format "#+title: %s\n\n" title))
-          (insert (format "* %s\n\n" title))
-          (let ((root-id (gptel-extras--find-chatgpt-root-id mapping)))
-            (when root-id
-              (let* ((root-node (gethash root-id mapping))
-                     (children (gethash "children" root-node))
-                     (current-id (when (and children (> (length children) 0))
-                                   (aref children 0))))
-                (while current-id
-                  (let* ((node (gethash current-id mapping))
-                         (message (gethash "message" node)))
-                    (when message
-                      (let* ((author (gethash "author" message))
-                             (role (gethash "role" author))
-                             (content (gethash "content" message))
-                             (parts (gethash "parts" content)))
-                        (when (and parts (> (length parts) 0) (not (string-empty-p (aref parts 0))))
-                          (pcase role
-                            ("user"
-                             (insert (format "*** %s\n\n" (aref parts 0))))
-                            ("assistant"
-                             (when (string= (gethash "content_type" content) "text")
-                               (insert (format "%s\n\n" (aref parts 0)))))))))
-                    (let ((node-children (gethash "children" node)))
-                      (setq current-id (when (and node-children (> (length node-children) 0))
-                                         (aref node-children 0)))))))))
-          (write-file filename)
-          (message "Imported '%s' to %s" title filename))))))
+        (json-array-type  'list))
+    (let ((conversations (json-read-file json-file)))
+      (dotimes (i (length conversations))
+        (let* ((conv      (elt conversations i))
+               (title     (or (gethash "title" conv) "Untitled"))
+               (mapping   (gethash "mapping" conv))
+               (file-name (concat gptel-extras-chatgpt-import-dir
+                                  (simple-extras-slugify title) ".org"))
+               (messages  '()))
+          ;; Collect message nodes
+          (maphash
+           (lambda (_ node)
+             (let ((msg (gethash "message" node)))
+               (when (and msg
+                          (gethash "content" msg)
+                          (member (gethash "role" (gethash "author" msg))
+                                  '("user" "assistant")))
+                 (push msg messages))))
+           mapping)
+          ;; Sort safely by timestamp
+          (setq messages
+                (sort messages
+                      (lambda (a b)
+                        (< (or (gethash "create_time" a) most-positive-fixnum)
+                           (or (gethash "create_time" b) most-positive-fixnum)))))
+          ;; Write to file
+          (with-temp-buffer
+            (insert (format "#+title: %s\n\n" title))
+            (dolist (msg messages)
+              (let* ((role (gethash "role" (gethash "author" msg)))
+                     (content (gethash "content" msg))
+                     (parts (and content (gethash "parts" content)))
+                     (texts (seq-filter #'identity
+                                        (gptel-extras--extract-parts-text parts))))
+                (when (and role texts)
+                  (insert (format "* %s\n\n%s\n\n"
+                                  (capitalize role)
+                                  (org-extras-convert-markdown-to-org
+                                   (mapconcat #'identity texts "\n\n")))))))
+            (write-region (point-min) (point-max) file-name)
+            (message "Imported '%s' to %s" title file-name)))))))
 
-(defun gptel-extras--find-chatgpt-root-id (mapping)
-  "Return the root ID from a ChatGPT conversation MAPPING."
-  (let (root-id)
-    (maphash (lambda (id node)
-               (when (null (gethash "parent" node))
-                 (setq root-id id)))
-             mapping)
-    root-id))
+(declare-function simple-extras-pandoc-convert "simple-extras")
+(defun org-extras-convert-markdown-to-org (markdown)
+  "Convert MARKDOWN string to Org using Pandoc and postprocess cleanup."
+  (let ((output (simple-extras-pandoc-convert "org" "markdown" markdown)))
+    (with-temp-buffer
+      (insert output)
+      (dolist (regexp '(("^\\\\\\\\" . "")
+                        ("\\\\\\\\$" . "")
+                        (" " . " ")))
+        (goto-char (point-min))
+        (while (re-search-forward (car regexp) nil t)
+          (replace-match (cdr regexp) nil nil)))
+      (buffer-string))))
+
+(defun gptel-extras--extract-parts-text (parts)
+  "Extract text strings from a list of PARTS (which may be strings or hash-tables)."
+  (mapcar (lambda (p)
+            (cond
+             ((stringp p) p)
+             ((and (hash-table-p p)
+                   (gethash "text" p))
+              (gethash "text" p))
+             (t nil)))
+          parts))
 
 ;;;;; Tools
 

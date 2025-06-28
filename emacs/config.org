@@ -4727,21 +4727,6 @@ CLOCK: [2021-05-16 Sun 08:30]--[2021-05-16 Sun 08:55] =>  0:25
    ("C-H-s-l" . avy-goto-word-1-below)))
 #+end_src
 
-*** TODO [#5] See if I can implement my idea of passing avy any Emacs command
-:PROPERTIES:
-:Effort:   1:30
-:ID:       425A2281-B1D2-49FE-AE34-3C9F6C916FB1
-:END:
-:LOGBOOK:
-CLOCK: [2021-11-29 Mon 23:24]--[2021-11-29 Mon 23:45] =>  0:21
-CLOCK: [2021-11-25 Thu 19:05]--[2021-11-25 Thu 19:21] =>  0:16
-:END:
-https://karthinks.com/software/avy-can-do-anything/
-
-Maybe the way to do this is by creating a =pass-to-avy= generic function, which itself allows the user to select a command via its key bindings and passes it the word selected via avy.
-
-[2021-11-29 Mon 23:37] Should create commands to delete/copy/kill words/sentences/paragraphs/sexp/lines/region
-
 ** avy-extras
 :PROPERTIES:
 :ID:       E8AFD4F9-439F-48F6-8C60-149CB87B5FEA
@@ -4988,10 +4973,6 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
   (require 'plstore))
 #+end_src
 
-*** TODO [#4] Revise org-gcal capture template to offer list of participants
-:PROPERTIES:
-:ID:       3CB2429F-32FC-4CD8-A417-DEB58C0F2C1E
-:END:
 ** org-gcal-extras
 :PROPERTIES:
 :ID:       BBED8E2E-2A29-4465-926A-22D531E6DBE7
@@ -5306,12 +5287,6 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
 #+end_src
 
 To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridging Islands in Emacs: re-builder and query-replace-regexp | Karthinks]]
-
-*** TODO [#5] Add advice for other relevant commands
-:PROPERTIES:
-:Effort:   0:30
-:ID:       C1131D3A-4E66-48E5-9353-C7E785391DFA
-:END:
 
 ** isearch-extras
 :PROPERTIES:
@@ -7193,14 +7168,6 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
         ("A-u" . pdf-view-midnight-minor-mode)))
 #+end_src
 
-*** TODO [#5] Sync PDF page position across devices
-:PROPERTIES:
-:ID:       E8789D51-DF91-4EC3-9D07-6B948C980A85
-:END:
-:LOGBOOK:
-CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
-:END:
-
 ** pdf-tools-extras
 :PROPERTIES:
 :ID:       C4B53EDC-372F-42B2-924E-FE48647B67AE
@@ -7450,13 +7417,6 @@ CLOCK: [2024-06-30 Sun 10:15]--[2024-06-30 Sun 12:05] =>  1:50
               ("s-d" . eval-defun)
               ("s-i" . instrument-defun)))
 #+end_src
-
-*** TODO [#6] Learn to use all relevant sexp commands
-:PROPERTIES:
-:Effort:   0:30
-:ID:       89FDC8BC-DD5B-4616-8E73-37EDD9C088C1
-:END:
-Some are mentioned [[https://stackoverflow.com/questions/4304925/why-is-it-customary-to-put-many-closing-parentheses-on-one-line-in-lisp-based-la][here]].
 
 ** lisp-mode
 :PROPERTIES:
@@ -8126,13 +8086,6 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
    ("A-C-s-r" . gptel-context-previous)
    ("A-C-s-f" . gptel-context-next)))
 #+end_src
-
-*** TODO [#5] Check out these =gptel= extensions
-:PROPERTIES:
-:ID:       D10F728E-9AC8-4389-BB55-952F1F5E8470
-:END:
-
-https://github.com/meain/dotfiles/blob/master/emacs/.config/emacs/init.el#L4525
 
 ** gptel-plus
 :PROPERTIES:
@@ -9366,12 +9319,6 @@ CLOCK: [2021-03-11 Thu 09:41]--[2021-03-11 Thu 10:00] =>  0:19
         ("s-a" . org-archive-subtree-default)))
 #+end_src
 
-*** TODO [#6] Process archives ~org/archive~
-:PROPERTIES:
-:ID:       855BC5BD-2A50-4DB8-BD91-4E0F6ECD50D6
-:Effort:   1:00
-:END:
-
 ** org-archive-hierarchically
 :PROPERTIES:
 :ID:       27C3C7F9-C040-4844-AC5A-762BBC26C18F
@@ -10112,15 +10059,6 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
   (org-contacts-files `(,(file-name-concat paths-dir-tlon-repos "babel-core/contacts.org"))))
 #+end_src
 
-*** MAYBE [#6] Migrate from ~bbdb~
-:PROPERTIES:
-:ID:       7762DE20-118C-49AF-9D47-CDDFDF846BD8
-:END:
-- [ ] Cleanup ~bbdb~ so that only contacts worth having a dedicated file remain.
-- [ ] Export ~bbdb~ contacts as ~org~ properties.
-- [ ] Add each property to the relevant contact file, creating one if necessary.
-- [ ] Set =org-contacts-files= to =(directory-files paths-dir-people t "^[^.][^/]*$")=.
-
 ** org-vcard
 :PROPERTIES:
 :ID:       6747452D-3E69-48C9-A179-062D76C0406D
@@ -10795,11 +10733,6 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
         ("A-C-s-r" . bibtex-previous-entry)
         ("A-C-s-f" . bibtex-next-entry)))
 #+end_src
-
-*** TODO [#5] Move ratings from org headings to bibtex
-:PROPERTIES:
-:ID:       18A96B99-EAD2-4C1E-94C2-619903A52898
-:END:
 
 *** TODO [#6] Standardize author names in bibtex file
 :PROPERTIES:
@@ -11754,16 +11687,6 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
    ("c" . nil)))
 #+end_src
 
-*** TODO [#3] Debug why emails sent by me are not marked as read in Gmail
-:PROPERTIES:
-:ID:       2534A378-53D8-4FCF-A710-817A883CF2B5
-:END:
-:LOGBOOK:
-CLOCK: [2024-05-14 Tue 16:19]--[2024-05-14 Tue 17:15] =>  0:56
-:END:
-
-I think this is because Gmail keeps a copy of the sent emails and mu4e deletes the local copy. So presumably the Gmail copy is never marked as read, because I never end up reading it.
-
 *** resources
 :PROPERTIES:
 :ID:       A7472C4E-FF72-4CBE-A9E2-E3C3F0AB0B38
@@ -11972,13 +11895,6 @@ I use this package to compose messages and to reply to messages composed in HTML
         ("s-t" . message-goto-to)
         ("s-A-l" . org-extras-url-dwim)))
 #+end_src
-
-*** TODO [#5] Figure out how to make ~org-msg~ preserve formatting of quoted emails
-:PROPERTIES:
-:ID:       E379BBD3-8C33-47F2-8CCF-FB15BFAF14DD
-:Effort:   0:30
-:END:
-I.e. the message quoted when on replies to, or forwards, an existing email.
 
 *** TODO [#5] Figure out how to include LaTeX/Mathjax
 :PROPERTIES:
@@ -12620,22 +12536,6 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
 *** TODO [#5] Integrate eww Chrome, Firefox history
 :PROPERTIES:
 :ID:       2C3DB6DF-B599-49DF-AD30-41C77D2326D7
-:END:
-
-*** TODO [#6] Create command to background open in ~eww~
-:PROPERTIES:
-:ID:       52CAC919-6942-466F-AA47-4FF86F7F13AE
-:END:
-
-*** TODO [#6] Create command to create PDF of URL
-:PROPERTIES:
-:ID:       19C5F99D-E00D-4552-8B6C-81150C61DF2F
-:Effort:   0:25
-:END:
-:LOGBOOK:
-CLOCK: [2022-07-25 Mon 13:51]--[2022-07-25 Mon 14:01] =>  0:10
-CLOCK: [2022-07-19 Tue 21:36]--[2022-07-19 Tue 22:31] =>  0:55
-CLOCK: [2022-07-19 Tue 20:49]--[2022-07-19 Tue 21:05] =>  0:16
 :END:
 
 ** eww-extras

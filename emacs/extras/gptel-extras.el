@@ -457,7 +457,7 @@ Each conversation is saved as a separate Org mode file in
   (unless (file-exists-p gptel-extras-chatgpt-import-dir)
     (make-directory gptel-extras-chatgpt-import-dir t))
   (let ((json-object-type 'hash-table)
-        (json-array-type 'vector)
+        (json-array-type 'list)
         (conversations (json-read-file json-file)))
     (dotimes (i (length conversations))
       (let* ((conv (aref conversations i))

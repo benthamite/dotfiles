@@ -725,9 +725,9 @@ Convert from HTML if the clipboard contains HTML, and from NON-HTML otherwise.
 Both LANGUAGE and NON-HTML are specified using the Pandoc name for that language."
   (let* ((command (format "pandoc --wrap=none -f %%s -t %s" language))
          (input (if (and string (not (string= string ""))) ; use STRING if given and not empty
-                    (format "echo %s" (shell-quote-argument string))
-                  "pbpaste"))
-         (output (shell-command-to-string (format command input))))
+                    string
+                  (shell-command-to-string "pbpaste")))
+         (output (shell-command-to-string (format command "markdown" input))))
     (if (and (not (and string (not (string= string ""))))
              (string-match-p "Could not access pasteboard contents" output))
         (setq output (shell-command-to-string (format command (or non-html "plain"))))

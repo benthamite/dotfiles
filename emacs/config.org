@@ -11642,8 +11642,9 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
                  :depth nil)
   :defer 10
   :custom
-  ;; (mu4e-debug t) ; uncomment when debugging
-  (mu4e-index-update-error-warning nil) ; set to `t' when debugging
+  ;; uncomment thw two user options below when debugging
+  ;; (mu4e-debug t)
+  ;; (mu4e-index-update-error-warning )
   (mu4e-split-view 'single-window)
   (mu4e-headers-show-target nil)
   (mu4e-get-mail-command "sh $HOME/bin/mbsync-parallel")

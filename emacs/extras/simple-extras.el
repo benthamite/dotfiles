@@ -720,8 +720,9 @@ FORMS are evaluated with point restored to its original position."
 ;;;###autoload
 (defun simple-extras-pandoc-convert (target &optional source content)
   "Convert CONTENT from SOURCE to TARGET using Pandoc.
-If SOURCE is nil, use HTML. If CONTENT is nil, use the system clipboard. Both
-TARGET and SOURCE are specified using the Pandoc name for that target."
+If SOURCE is nil, use HTML. If CONTENT is nil, use the system clipboard. Use
+Pandoc name for both SOURCE (https://pandoc.org/MANUAL.html#option--from) and
+TARGET (https://pandoc.org/MANUAL.html#option--to)."
   (if content
       (with-temp-buffer
         (insert content)

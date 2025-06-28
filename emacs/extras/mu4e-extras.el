@@ -124,9 +124,6 @@ function marks the saved copy as read."
   (when-let* ((message-id (message-fetch-field "Message-ID")))
     (add-to-list 'mu4e-extras-mark-as-read-queue message-id)))
 
-;; TODO: this doesn’t seem to be working properly; investigate
-;; (add-hook 'message-sent-hook #'mu4e-extras-add-sent-to-mark-as-read-queue)
-
 ;;;;; Setup
 
 (defun mu4e-extras-set-shortcuts ()

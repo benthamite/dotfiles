@@ -266,7 +266,8 @@ use the default."
 (defun zotra-extras-add-multiple-urls-from-file (file bibfile)
   "Prompt the user to select a FILE with a list of URLs and add them to BIBFILE."
   (interactive (list (read-file-name "File with URLs (one URL per line): " paths-dir-downloads
-				     zotra-extras-add-multiple-urls-from-file nil nil)))
+				     zotra-extras-add-multiple-urls-from-file nil nil)
+		     (zotra-extras-set-bibfile)))
   (let ((urls (delete-dups (files-extras-lines-to-list file))))
     (zotra-extras-add-multiple-urls urls bibfile)))
 

@@ -79,7 +79,11 @@ The command ~zotra-extras-set-bibfile~ prompts the user to select a bibliography
 :END:
 
 #+findex: zotra-extras-add-multiple-urls-from-file
-The command ~zotra-extras-add-multiple-urls-from-file~ prompts the user for a file containing a list of URLs (one per line). It then iterates through the URLs, adding an entry for each one to the bibliography specified by =tlon-file-fluid= using =zotra-add-entry=. After adding all entries, it opens the bibliography in Ebib and sorts it by timestamp.
+The command ~zotra-extras-add-multiple-urls-from-file~ prompts the user for a
+file containing a list of URLs (one per line) and a bibliography file. It then
+iterates through the URLs, adding an entry for each one to the selected
+bibliography using =zotra-add-entry=. After adding all entries, it opens the
+bibliography in Ebib and sorts it by timestamp.
 
 * Org Protocol Handler
 :PROPERTIES:

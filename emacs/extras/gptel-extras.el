@@ -636,6 +636,23 @@ If no matches are found, returns nil."
              (results (seq-subseq matches start end)))
         (mapcar (lambda (res) (cons res (gethash res candidates))) results)))))
 
+(gptel-make-tool
+ :function #'gptel-extras-citar-search
+ :name "search_bibliography"
+ :description "Search the user's bibliography for a given string. Returns a list of matching entries, with pagination support. Each entry is a pair of [formatted citation, citation key]."
+ :args (list '(:name "search-string"
+               :type string
+               :description "The string to search for in the bibliography.")
+             '(:name "limit"
+               :type integer
+               :optional t
+               :description "The maximum number of results to return.")
+             '(:name "offset"
+               :type integer
+               :optional t
+               :description "The starting position in the list of matches for pagination."))
+ :category "bibtex")
+
 ;;;;; Misc
 
 ;;;###autoload

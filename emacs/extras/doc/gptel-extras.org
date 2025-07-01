@@ -155,6 +155,14 @@ The command ~gptel-extras-import-chatgpt-conversations~ prompts for a JSON file 
 #+findex: gptel-extras-search-and-ask-model
 ~gptel-extras-search-and-ask-model~: Prompts the user for a search query. It then opens the default web browser to search for the query using ~gptel-extras-search-prefix~. Simultaneously, it creates a new `gptel` buffer named after the query, sets the model and backend buffer-locally according to ~gptel-extras-search-model~, and sends the same query as a prompt to that model.
 
+** BibTeX tools
+:PROPERTIES:
+:CUSTOM_ID: h:bibtex-tools
+:END:
+
+#+findex: search_bibliography
+The tool ~search_bibliography~ allows an AI to search the user's bibliography. It takes a search string and optional limit and offset parameters for pagination. It returns a list of matching entries, where each entry is a pair containing the formatted citation and the citation key. This tool is intended for use by `gptel`'s tool-use feature.
+
 * Configuration Functions
 :PROPERTIES:
 :CUSTOM_ID: h:configuration-functions-gptel
@@ -225,6 +233,7 @@ This function is added as `:around` advice to `gptel-curl-get-response`. If the 
 
 - =gptel-extras-import-chatgpt-conversations=: [[h:chatgpt-import][ChatGPT Import]]
 - =gptel-extras-search-and-ask-model=: [[h:misc-commands][Miscellaneous Commands]]
+- =search_bibliography=: [[h:bibtex-tools][BibTeX tools]]
 
 ** Variable index
 :PROPERTIES:

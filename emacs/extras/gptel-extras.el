@@ -528,6 +528,8 @@ file name."
 
 ;;;;; Tools
 
+;;;;;; Presets
+
 (defmacro gptel-extras-make-tool-presets (name description tools)
   "Create two gptel presets for TOOLS with NAME and DESCRIPTION.
 Create a base preset named NAME that sets the tools to TOOLS, and an additive
@@ -553,6 +555,86 @@ DESCRIPTION is a string describing the tools (e.g., \"web search tools\")."
        (gptel-make-preset ',additive-symbol
 	 :description ,additive-desc
 	 :tools '(:append ,@actual-tools)))))
+
+;;;;;; Filesystem tools
+
+;; https://github.com/karthink/gptel/wiki/Tools-collection#edit_file
+
+(defun gptel-extras-tool-edit-file (file-path file-edits)
+  "In FILE-PATH, apply FILE-EDITS with pattern matching and replacing."
+  (if (and file-path (not (string= file-path "")) file-edits)
+      (with-current-buffer (get-buffer-create "*edit-file*")
+        (erase-buffer)
+        (insert-file-contents (expand-file-name file-path))
+        (let ((inhibit-read-only t)
+              (case-fold-search nil)
+              (file-name (expand-file-name file-path))
+              (edit-success nil))
+          ;; apply changes
+          (dolist (file-edit (seq-into file-edits 'list))
+            (when-let ((line-number (plist-get file-edit :line_number))
+                       (old-string (plist-get file-edit :old_string))
+                       (new-string (plist-get file-edit :new_string))
+                       (is-valid-old-string (not (string= old-string ""))))
+              (goto-char (point-min))
+              (forward-line (1- line-number))
+              (when (search-forward old-string nil t)
+                (replace-match new-string t t)
+                (setq edit-success t))))
+          ;; return result to gptel
+          (if edit-success
+              (progn
+                ;; show diffs
+                (ediff-buffers (find-file-noselect file-name) (current-buffer))
+                (format "Successfully edited %s" file-name))
+            (format "Failed to edited %s" file-name))))
+    (format "Failed to edited %s" file-path)))
+
+(gptel-make-tool
+ :function #'gptel-extras-tool-edit-file
+ :name "edit_file"
+ :description "Edit file with a list of edits, each edit contains a line-number,
+a old-string and a new-string, new-string will replace the old-string at the specified line."
+ :args (list '(:name "file-path"
+                     :type string
+                     :description "The full path of the file to edit")
+             '(:name "file-edits"
+                     :type array
+                     :items (:type object
+                                   :properties
+                                   (:line_number
+                                    (:type integer :description "The line number of the file where edit starts.")
+                                    :old_string
+                                    (:type string :description "The old-string to be replaced.")
+                                    :new_string
+                                    (:type string :description "The new-string to replace old-string.")))
+                     :description "The list of edits to apply on the file"))
+ :category "filesystem")
+
+;;;;;; BibTeX tools
+
+(defun gptel-extras-citar-search (search-string &optional limit offset)
+  "Search bibliography for SEARCH-STRING and return matching results.
+
+This is a non-interactive search function intended for programmatic use.
+
+SEARCH-STRING is the string to search for.
+LIMIT, if non-nil, is the maximum number of results to return.
+OFFSET, if non-nil, is the starting position in the list of matches.
+
+Returns a list of pairs (FORMATTED-STRING . CITE-KEY). FORMATTED-STRING is
+the human-readable representation of a search result. CITE-KEY is the
+corresponding citation key.
+
+If no matches are found, returns nil."
+  (let* ((candidates (or (citar--format-candidates)
+                         (user-error "No bibliography set")))
+         (matches (all-completions search-string candidates)))
+    (when matches
+      (let* ((start (or offset 0))
+             (end (when limit (+ start limit)))
+             (results (seq-subseq matches start end)))
+        (mapcar (lambda (res) (cons res (gethash res candidates))) results)))))
 
 ;;;;; Misc
 

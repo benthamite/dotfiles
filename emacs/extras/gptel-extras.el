@@ -629,9 +629,10 @@ corresponding citation key.
 If no matches are found, returns nil."
   (let* ((candidates (or (citar--format-candidates)
                          (user-error "No bibliography set")))
-         (matches (let ((found '()))
+         (matches (let ((found '())
+                        (case-fold-search t))
                     (maphash (lambda (k _v)
-                               (when (string-search-ignore-case search-string k)
+                               (when (string-match (regexp-quote search-string) k)
                                  (push k found)))
                              candidates)
                     (nreverse found))))

@@ -735,7 +735,7 @@ If no matches are found, returns nil."
                         (terms (split-string search-string nil t)))
                     (maphash (lambda (k _v)
                                (when (cl-every (lambda (term)
-                                                 (string-match-p (regexp-quote term) k))
+                                                 (string-match-p (concat "\\b" (regexp-quote term) "\\b") k))
                                                terms)
                                  (push k found)))
                              candidates)
@@ -752,7 +752,7 @@ If no matches are found, returns nil."
 (gptel-make-tool
  :function #'gptel-extras-citar-search
  :name "search_bibliography"
- :description "Search the user's bibliography. The search string is split into space-separated terms, and the search returns entries that match all terms. Returns a list of matching entries, with pagination support. Each entry is a pair of [formatted citation, citation key]. To narrow down results, consider using the title of the work, if you know it. If you want to search for an author, use the last name only, since the search tool does not support full names. The search is case-insensitive."
+ :description "Search the user's bibliography. The search string is split into space-separated terms, and the search returns entries that match all terms as whole words. Returns a list of matching entries, with pagination support. Each entry is a pair of [formatted citation, citation key]. To narrow down results, consider using the title of the work, if you know it. If you want to search for an author, use the last name only, since the search tool does not support full names. The search is case-insensitive."
  :args (list '(:name "search-string"
                :type string
                :description "One or more space-separated terms to search for in the bibliography.")

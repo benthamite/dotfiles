@@ -558,58 +558,158 @@ DESCRIPTION is a string describing the tools (e.g., \"web search tools\")."
 
 ;;;;;; Filesystem tools
 
-;; https://github.com/karthink/gptel/wiki/Tools-collection#edit_file
+;; https://github.com/munen/emacs.d?tab=readme-ov-file#edit_file
+(defun gptel-extras-edit-file (file-path &optional file-edits)
+  "Edit FILE-PATH by applying FILE-EDITS using fuzzy string matching.
 
-(defun gptel-extras-tool-edit-file (file-path file-edits)
-  "In FILE-PATH, apply FILE-EDITS with pattern matching and replacing."
+This function directly modifies the file on disk without user confirmation. Each
+edit in FILE-EDITS should specify:
+
+- `:old_string': the string to find and replace (fuzzy matched)
+
+- `:new_string': the replacement string
+
+EDITING RULES:
+
+- The `old_string' is matched using fuzzy search throughout the file.
+
+- If multiple matches exist, only the first occurrence is replaced.
+
+- Include enough context in `old_string' to uniquely identify the location.
+
+- Whitespace differences are normalized during matching.
+
+- Keep edits focused on the specific change requested.
+
+Returns a success/failure message indicating whether edits were applied."
   (if (and file-path (not (string= file-path "")) file-edits)
       (with-current-buffer (get-buffer-create "*edit-file*")
         (erase-buffer)
         (insert-file-contents (expand-file-name file-path))
         (let ((inhibit-read-only t)
-              (case-fold-search nil)
-              (file-name (expand-file-name file-path))
-              (edit-success nil))
-          ;; apply changes
+              (target-file-name (expand-file-name file-path))
+              (edit-success nil)
+              (applied-edits 0)
+              (total-edits (length file-edits)))
+          ;; Apply changes
           (dolist (file-edit (seq-into file-edits 'list))
-            (when-let ((line-number (plist-get file-edit :line_number))
-                       (old-string (plist-get file-edit :old_string))
+            (when-let ((old-string (plist-get file-edit :old_string))
                        (new-string (plist-get file-edit :new_string))
                        (is-valid-old-string (not (string= old-string ""))))
               (goto-char (point-min))
-              (forward-line (1- line-number))
-              (when (search-forward old-string nil t)
-                (replace-match new-string t t)
-                (setq edit-success t))))
-          ;; return result to gptel
+              ;; Try exact match first
+              (if (search-forward old-string nil t)
+                  (progn
+                    (replace-match new-string t t)
+                    (setq edit-success t)
+                    (setq applied-edits (1+ applied-edits)))
+                ;; If exact match fails, try fuzzy match
+                (goto-char (point-min))
+                (when (gptel-extras-fuzzy-search old-string)
+                  (replace-match new-string t t)
+                  (setq edit-success t)
+                  (setq applied-edits (1+ applied-edits))))))
+          ;; Return result
           (if edit-success
               (progn
-                ;; show diffs
-                (ediff-buffers (find-file-noselect file-name) (current-buffer))
-                (format "Successfully edited %s" file-name))
-            (format "Failed to edited %s" file-name))))
-    (format "Failed to edited %s" file-path)))
+                (write-file target-file-name nil)
+                (kill-buffer (current-buffer))
+                (format "Successfully edited and saved %s (%d/%d edits applied)"
+                        target-file-name applied-edits total-edits))
+            (progn
+              (kill-buffer (current-buffer))
+              (format "Failed to apply edits to %s. No matching strings found." target-file-name)))))
+    (format "Failed to edit %s (invalid path or no edits provided)." file-path)))
+
+(defun gptel-extras-normalize-whitespace (string)
+  "Normalize whitespace in STRING for fuzzy matching.
+Converts multiple whitespace characters to single spaces and trims."
+  (string-trim (replace-regexp-in-string "[ \t\n\r]+" " " string)))
+
+(defun gptel-extras-fuzzy-search (target-string)
+  "Search for TARGET-STRING using fuzzy matching.
+Returns t if found and positions point after the match, nil otherwise.
+Tries multiple matching strategies in order of preference."
+  (let ((normalized-target (gptel-extras-normalize-whitespace target-string))
+        (case-fold-search nil))
+    (or
+     ;; Strategy 1: Normalized whitespace matching
+     (progn
+       (goto-char (point-min))
+       (let ((found nil))
+         (while (and (not found) (not (eobp)))
+           (let* ((line-start (line-beginning-position))
+                  (line-end (line-end-position))
+                  (line-text (buffer-substring-no-properties line-start line-end))
+                  (normalized-line (gptel-extras-normalize-whitespace line-text)))
+             (when (string-match-p (regexp-quote normalized-target) normalized-line)
+               ;; Found a match, now find the actual position in the original text
+               (goto-char line-start)
+               (when (re-search-forward
+                      (gptel-extras-create-fuzzy-regex target-string)
+                      line-end t)
+                 (setq found t)))
+             (unless found (forward-line 1))))
+         found))
+     ;; Strategy 2: Case-insensitive search
+     (progn
+       (goto-char (point-min))
+       (let ((case-fold-search t))
+         (search-forward target-string nil t)))
+     ;; Strategy 3: Regex-based flexible matching
+     (progn
+       (goto-char (point-min))
+       (re-search-forward (gptel-extras-create-flexible-regex target-string) nil t)))))
+
+(defun gptel-extras-create-fuzzy-regex (string)
+  "Create a regex pattern for fuzzy matching STRING.
+Allows flexible whitespace matching between words."
+  (let ((escaped (regexp-quote string)))
+    ;; Replace escaped whitespace with flexible whitespace pattern
+    (replace-regexp-in-string
+     "\\\\[ \t\n\r]+"
+     "[ \t\n\r]+"
+     escaped)))
+
+(defun gptel-extras-create-flexible-regex (string)
+  "Create a very flexible regex pattern for STRING.
+Allows optional whitespace between characters and words."
+  (let* ((chars (string-to-list string))
+         (pattern-parts '()))
+    (dolist (char chars)
+      (cond
+       ((memq char '(?\s ?\t ?\n ?\r))
+        ;; For whitespace, allow flexible matching
+        (push "[ \t\n\r]*" pattern-parts))
+       (t
+        ;; For regular characters, escape and add optional whitespace after
+        (push (concat (regexp-quote (char-to-string char)) "[ \t\n\r]*")
+              pattern-parts))))
+    (concat "\\(" (string-join (reverse pattern-parts) "") "\\)")))
 
 (gptel-make-tool
- :function #'gptel-extras-tool-edit-file
+ :function #'gptel-extras-edit-file
  :name "edit_file"
- :description "Edit file with a list of edits, each edit contains a line-number,
-a old-string and a new-string, new-string will replace the old-string at the specified line."
+ :description "Edits a file by applying fuzzy string matching changes. This is a primary method for file modification.
+
+If this tool fails, try 'apply_diff'. As a last resort, use 'replace_file_contents'.
+This tool modifies the file directly on disk without user confirmation.
+
+Each edit requires an old string to find (fuzzy matched) and a new string to replace it with."
  :args (list '(:name "file-path"
                      :type string
-                     :description "The full path of the file to edit")
+                     :description "The full path of the file to edit.")
              '(:name "file-edits"
                      :type array
                      :items (:type object
                                    :properties
-                                   (:line_number
-                                    (:type integer :description "The line number of the file where edit starts.")
-                                    :old_string
-                                    (:type string :description "The old-string to be replaced.")
+                                   (:old_string
+                                    (:type string :description "The exact string to be replaced (will be fuzzy matched if exact match fails).")
                                     :new_string
-                                    (:type string :description "The new-string to replace old-string.")))
-                     :description "The list of edits to apply on the file"))
- :category "filesystem")
+                                    (:type string :description "The new string to replace old_string.")))
+                     :description "A list of edits to apply to the file. Each edit must contain old_string and new_string."))
+ :category "filesystem"
+ :include t)
 
 ;;;;;; BibTeX tools
 

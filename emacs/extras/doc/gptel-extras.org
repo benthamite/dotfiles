@@ -166,7 +166,7 @@ ISBN, or DOI to a specified BibTeX file. It takes an identifier and a file path.
 This tool is intended for use by `gptel`'s tool-use feature.
 
 #+findex: search_bibliography
-The tool ~search_bibliography~ allows an AI to search the user's bibliography. It takes a search string and optional limit and offset parameters for pagination. The `limit` parameter defaults to 10; use -1 to retrieve all results. It returns a list of matching entries, where each entry is a pair containing the formatted citation and the citation key. This tool is intended for use by `gptel`'s tool-use feature.
+The tool ~search_bibliography~ allows an AI to search the user's bibliography. It takes one or more space-separated search terms and optional limit and offset parameters for pagination. The search returns entries that match all terms. The `limit` parameter defaults to 10; use -1 to retrieve all results. It returns a list of matching entries, where each entry is a pair containing the formatted citation and the citation key. This tool is intended for use by `gptel`'s tool-use feature.
 
 * Configuration Functions
 :PROPERTIES:

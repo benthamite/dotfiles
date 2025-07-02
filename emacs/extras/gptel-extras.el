@@ -749,7 +749,7 @@ If no matches are found, returns nil."
 (gptel-make-tool
  :function #'gptel-extras-citar-search
  :name "search_bibliography"
- :description "Search the user's bibliography for a given string. Returns a list of matching entries, with pagination support. Each entry is a pair of [formatted citation, citation key]."
+ :description "Search the user's bibliography for a given string. Returns a list of matching entries, with pagination support. Each entry is a pair of [formatted citation, citation key]. To narrow down results, consider using the title of the work, if you know it. If you want to search for an author, use the last name only, since the search tool does not support full names. The search is case-insensitive."
  :args (list '(:name "search-string"
                :type string
                :description "The string to search for in the bibliography.")

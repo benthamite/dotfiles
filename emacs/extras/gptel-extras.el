@@ -752,18 +752,18 @@ If no matches are found, returns nil."
 (gptel-make-tool
  :function #'gptel-extras-citar-search
  :name "search_bibliography"
- :description "Search the user's bibliography. The search string is split into space-separated terms, and the search returns entries that match all terms as whole words. Returns a list of matching entries, with pagination support. Each entry is a pair of [formatted citation, citation key]. To narrow down results, consider using the title of the work, if you know it. If you want to search for an author, use the last name only, since the search tool does not support full names. The search is case-insensitive."
+ :description "Search the user's bibliography. The search string is split into space-separated terms, and the search returns entries that match all terms as whole words. Returns a list of matching entries, with pagination support. Each entry is a pair of [formatted citation, citation key]. To narrow down results, consider using the title of the work, if you know it, or combining multiple fields (such as 'ord 2020' for all works by Ord published in 2020). If you want to search for an author, use the last name only, since the search tool does not support full names. The search is case-insensitive."
  :args (list '(:name "search-string"
-               :type string
-               :description "One or more space-separated terms to search for in the bibliography.")
+		     :type string
+		     :description "One or more space-separated terms to search for in the bibliography.")
              '(:name "limit"
-               :type integer
-               :optional t
-               :description "The maximum number of results to return. Defaults to 10. Use -1 for no limit.")
+		     :type integer
+		     :optional t
+		     :description "The maximum number of results to return. Defaults to 10. Use -1 for no limit.")
              '(:name "offset"
-               :type integer
-               :optional t
-               :description "The starting position in the list of matches for pagination."))
+		     :type integer
+		     :optional t
+		     :description "The starting position in the list of matches for pagination."))
  :category "bibtex")
 
 (declare-function zotra-extras-add-entry "zotra-extras")

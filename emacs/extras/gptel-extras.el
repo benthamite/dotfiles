@@ -744,7 +744,7 @@ If no matches are found, returns nil."
              (start (or offset 0))
              (end (when limit (+ start limit)))
              (results (seq-subseq matches start end)))
-        (mapcar (lambda (res) (cons res (gethash res candidates))) results)))))
+        (mapcar (lambda (res) (cons (substring-no-properties res) (gethash res candidates))) results)))))
 
 (gptel-make-tool
  :function #'gptel-extras-citar-search

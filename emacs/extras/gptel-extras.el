@@ -763,7 +763,7 @@ If no matches are found, returns nil."
 (defun gptel-extras-add-bib-entry (identifier bibfile)
   "Add bibliographic entry for IDENTIFIER to BIBFILE.
 IDENTIFIER can be a URL, ISBN, or DOI. This function calls
-`zotra-extras-add-entry' with `nil' as the second argument and `t' as the fourth
+`zotra-extras-add-entry' with nil as the second argument and t as the fourth
 argument."
   (zotra-extras-add-entry identifier nil bibfile t))
 

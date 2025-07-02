@@ -742,7 +742,7 @@ If no matches are found, returns nil."
                           ((and (numberp limit) (= limit -1)) nil)
                           (t limit)))
              (start (or offset 0))
-             (end (when limit (+ start limit)))
+             (end (when limit (min (+ start limit) (length matches))))
              (results (seq-subseq matches start end)))
         (mapcar (lambda (res) (cons (substring-no-properties res) (gethash res candidates))) results)))))
 

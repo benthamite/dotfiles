@@ -719,7 +719,8 @@ Each edit requires an old string to find (fuzzy matched) and a new string to rep
 This is a non-interactive search function intended for programmatic use.
 
 SEARCH-STRING is the string to search for.
-LIMIT, if non-nil, is the maximum number of results to return.
+LIMIT, if non-nil, is the maximum number of results to return. Defaults to 10.
+Use -1 for no limit.
 OFFSET, if non-nil, is the starting position in the list of matches.
 
 Returns a list of pairs (FORMATTED-STRING . CITE-KEY). FORMATTED-STRING is
@@ -737,7 +738,10 @@ If no matches are found, returns nil."
                              candidates)
                     (nreverse found))))
     (when matches
-      (let* ((start (or offset 0))
+      (let* ((limit (cond ((null limit) 10)
+                          ((and (numberp limit) (= limit -1)) nil)
+                          (t limit)))
+             (start (or offset 0))
              (end (when limit (+ start limit)))
              (results (seq-subseq matches start end)))
         (mapcar (lambda (res) (cons res (gethash res candidates))) results)))))
@@ -752,7 +756,7 @@ If no matches are found, returns nil."
              '(:name "limit"
                :type integer
                :optional t
-               :description "The maximum number of results to return.")
+               :description "The maximum number of results to return. Defaults to 10. Use -1 for no limit.")
              '(:name "offset"
                :type integer
                :optional t

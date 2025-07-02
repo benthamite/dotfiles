@@ -160,6 +160,9 @@ The command ~gptel-extras-import-chatgpt-conversations~ prompts for a JSON file 
 :CUSTOM_ID: h:bibtex-tools
 :END:
 
+#+findex: get_bib_entry
+The tool ~get_bib_entry~ allows an AI to get the bibliographic details of a URL, ISBN or DOI. It takes a single identifier and returns the bibliographic data from Zotero. This tool is intended for use by `gptel`'s tool-use feature.
+
 #+findex: search_bibliography
 The tool ~search_bibliography~ allows an AI to search the user's bibliography. It takes a search string and optional limit and offset parameters for pagination. It returns a list of matching entries, where each entry is a pair containing the formatted citation and the citation key. This tool is intended for use by `gptel`'s tool-use feature.
 
@@ -231,6 +234,7 @@ This function is added as `:around` advice to `gptel-curl-get-response`. If the 
 :CUSTOM_ID: h:function-index
 :END:
 
+- =get_bib_entry=: [[h:bibtex-tools][BibTeX tools]]
 - =gptel-extras-import-chatgpt-conversations=: [[h:chatgpt-import][ChatGPT Import]]
 - =gptel-extras-search-and-ask-model=: [[h:misc-commands][Miscellaneous Commands]]
 - =search_bibliography=: [[h:bibtex-tools][BibTeX tools]]

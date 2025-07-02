@@ -766,13 +766,15 @@ If no matches are found, returns nil."
 		     :description "The starting position in the list of matches for pagination."))
  :category "bibtex")
 
+(defvar zotra-extras-most-recent-bibkey)
 (declare-function zotra-extras-add-entry "zotra-extras")
 (defun gptel-extras-add-bib-entry (identifier bibfile)
-  "Add bibliographic entry for IDENTIFIER to BIBFILE.
+  "Add bibliographic entry for IDENTIFIER to BIBFILE and return the entry’s bibkey.
 IDENTIFIER can be a URL, ISBN, or DOI. This function calls
 `zotra-extras-add-entry' with nil as the second argument and t as the fourth
 argument."
-  (zotra-extras-add-entry identifier nil bibfile t))
+  (zotra-extras-add-entry identifier nil bibfile t)
+  zotra-extras-most-recent-bibkey)
 
 (gptel-make-tool
  :function #'gptel-extras-add-bib-entry

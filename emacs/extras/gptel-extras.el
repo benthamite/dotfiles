@@ -759,6 +759,21 @@ If no matches are found, returns nil."
                :description "The starting position in the list of matches for pagination."))
  :category "bibtex")
 
+(declare-function zotra-get-entry "zotra")
+(defun gptel-extras-get-bib-entry (identifier)
+  "Get bibliographic details for IDENTIFIER (URL, ISBN, or DOI).
+This function calls `zotra-get-entry' with \"zotero\" as the second argument."
+  (zotra-get-entry identifier "zotero"))
+
+(gptel-make-tool
+ :function #'gptel-extras-get-bib-entry
+ :name "get_bib_entry"
+ :description "Get bibliographic details for a URL, ISBN, or DOI from Zotero."
+ :args (list '(:name "identifier"
+               :type string
+               :description "The URL, ISBN, or DOI of the item to look up."))
+ :category "bibtex")
+
 ;;;;; Misc
 
 ;;;###autoload

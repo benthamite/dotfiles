@@ -759,19 +759,24 @@ If no matches are found, returns nil."
                :description "The starting position in the list of matches for pagination."))
  :category "bibtex")
 
-(declare-function zotra-get-entry "zotra")
-(defun gptel-extras-get-bib-entry (identifier)
-  "Get bibliographic details for IDENTIFIER (URL, ISBN, or DOI).
-This function calls `zotra-get-entry' with \"zotero\" as the second argument."
-  (zotra-get-entry identifier "zotero"))
+(declare-function zotra-extras-add-entry "zotra-extras")
+(defun gptel-extras-add-bib-entry (identifier bibfile)
+  "Add bibliographic entry for IDENTIFIER to BIBFILE.
+IDENTIFIER can be a URL, ISBN, or DOI. This function calls
+`zotra-extras-add-entry' with `nil' as the second argument and `t' as the fourth
+argument."
+  (zotra-extras-add-entry identifier nil bibfile t))
 
 (gptel-make-tool
- :function #'gptel-extras-get-bib-entry
- :name "get_bib_entry"
- :description "Get bibliographic details for a URL, ISBN, or DOI from Zotero."
+ :function #'gptel-extras-add-bib-entry
+ :name "add_bib_entry"
+ :description "Adds a bibliographic entry for a URL, ISBN, or DOI to a BibTeX file."
  :args (list '(:name "identifier"
                :type string
-               :description "The URL, ISBN, or DOI of the item to look up."))
+               :description "The URL, ISBN, or DOI of the item to add.")
+             '(:name "bibfile"
+               :type string
+               :description "The path to the BibTeX file to add the entry to."))
  :category "bibtex")
 
 ;;;;; Misc

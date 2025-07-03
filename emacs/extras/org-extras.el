@@ -994,6 +994,7 @@ empty headings, which trigger an `org-roam' warning."
     ("t" "tlon.site"           (lambda () (interactive) (org-roam-extras-id-goto "25713E6F-934C-44E2-AFCD-9E9956AF1C56")))
     ("u" "utilitarianism"      (lambda () (interactive) (org-roam-extras-id-goto "F80849CB-F04A-4EDF-B71B-F98277D3F462")))]
    ["Other"
+    ("RET" "tlon-inbox"            (lambda () (interactive) (org-roam-extras-id-goto "E9C77367-DED8-4D59-B08C-E6E1CCDDEC3A")))
     ;; ("" "translation-impact"  (lambda () (interactive) (org-roam-extras-id-goto "F3F1EBCB-C0BA-47DF-9592-5E61B8ED9371")))
     ;; ("" "master-plan"         (lambda () (interactive) (org-roam-extras-id-goto "fa135b36-4fae-4651-9f7c-0e5591850545")))
     ;; ("" "misc"                (lambda () (interactive) (org-roam-extras-id-goto "B158443B-3F42-4A21-8E37-003E5B3DB912")))
@@ -1005,7 +1006,6 @@ empty headings, which trigger an `org-roam' warning."
     ;; ("" "strategy"            (lambda () (interactive) (org-roam-extras-id-goto "FB346A98-5DFB-404E-B0BA-6CB228C01213")))
     ;; ("" "tlon"            (lambda () (interactive) (org-roam-extras-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A")))
     ;; ("" "tlon-generic"            (lambda () (interactive) (org-roam-extras-id-goto "A3A5B7DF-34D4-4EB4-AA0F-EFBB88F30FF2")))
-    ;; ("" "tlon-inbox"            (lambda () (interactive) (org-roam-extras-id-goto "E9C77367-DED8-4D59-B08C-E6E1CCDDEC3A")))
     ;; ("" "tlon-roadmap"            (lambda () (interactive) (org-roam-extras-id-goto "0DFC8456-E336-4C6A-869C-8F0DA2B36ADF")))
     ;; ("" "uqbar"            (lambda () (interactive) (org-roam-extras-id-goto "91B333EE-DC83-4589-8EC1-4E08B7E6DD9F")))
     ;; ("" "uqbar-common"            (lambda () (interactive) (org-roam-extras-id-goto "5BB257FF-5E68-49D1-813B-9D08C5D0ACF5")))

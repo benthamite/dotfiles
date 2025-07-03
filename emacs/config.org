@@ -6284,7 +6284,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   ((text-mode-hook prog-mode-hook conf-mode-hook) . jinx-mode)
 
   :bind
-  (("M-p" . jinx-correct))
+  (("M-p" . jinx-correct)))
 #+end_src
 
 ** jinx-extras

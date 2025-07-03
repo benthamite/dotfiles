@@ -6284,8 +6284,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   ((text-mode-hook prog-mode-hook conf-mode-hook) . jinx-mode)
 
   :bind
-  (("M-p" . jinx-correct)
-   ("A-M-p" . jinx-extras-toggle-languages)))
+  (("M-p" . jinx-correct))
 #+end_src
 
 ** jinx-extras
@@ -6298,7 +6297,10 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package jinx-extras
-  :after jinx)
+  :after jinx
+  
+  :bind
+  (("A-M-p" . jinx-extras-toggle-languages)))
 #+end_src
 
 ** flycheck

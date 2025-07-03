@@ -8181,6 +8181,11 @@ This package evolved out of gptel-extras.
    '("read_file" "edit_file" "create_file" "list_directory" "create_directory"))
 
   (gptel-extras-make-tool-presets
+   tools-buffer
+   "buffer tools"
+   '("edit_buffer" "view_buffer"))
+  
+  (gptel-extras-make-tool-presets
    tools-slack-ea-translations
    "Slack-related tools"
    '("slack_get_user_profile" "slack_get_users" "slack_get_thread_replies" "slack_get_channel_history"

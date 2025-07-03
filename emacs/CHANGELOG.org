@@ -4,6 +4,45 @@
 
 This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository. It is meant to be read primarily by members of the Tlön team, but it may be of interest to others as well.
 
+* Version 7.1.9 on 2025-07-03
+** gptel
+- A new command, =gptel-extras-import-chatgpt-conversations=, has been added to import ChatGPT JSON exports into Org files. This includes improved parsing and conversion of Markdown content to Org format.
+- A utility function, =gptel-extras-warn-when-context=, now prompts for confirmation before executing a command if the =gptel= context is not empty, preventing accidental context usage.
+- The =edit_file= tool has been significantly enhanced, replacing its previous line-number-based logic with a more robust fuzzy string matching system for applying changes.
+- The =search_bibliography= tool has been heavily refactored. It now supports multi-term, whole-word search, has a default result limit of 10, and its documentation is much clearer for the model to use.
+- The =get_bib_entry= tool has been replaced by =add_bib_entry=, which now adds an entry directly to a specified BibTeX file and returns the new entry's key.
+- Tool presets have been updated: "brave" tools were removed from web search, =edit_file= was added to the filesystem preset, and a new "buffer tools" preset (=edit_buffer=, =view_buffer=) was introduced. The Slack tool preset was also expanded.
+- The filesystem MCP server is now configured to work from the root directory (/), expanding its operational scope.
+
+** simple-extras
+- The =simple-extras-pandoc-convert= function has been refactored. It now correctly handles direct string input in addition to clipboard content, and its arguments have been clarified for better usability.
+- A new command, =simple-extras-set-python-virtual-environment=, has been added to create Python virtual environments within the root of the current git repository.
+
+** zotra-extras
+- The command =zotra-extras-add-multiple-urls-from-file= has been fixed to correctly prompt for a target BibTeX file, resolving a "wrong number of arguments" error.
+
+** Python Environment
+- Switched from =pyvenv= to the =pet= package for managing Python virtual environments. =pet= is now configured to activate automatically in Python modes.
+
+** mu4e
+- A new command =mu4e-extras-archive-refiled= was added to archive messages that have been labeled for refiling.
+- An issue that prevented the 'read' status from being correctly reapplied to emails after a sync has been fixed.
+- Minor code quality improvements and configuration cleanup were performed, including moving hooks to the main config file.
+
+** org-extras
+- The =org-extras-tlon-menu= transient menu (=H-l=) has been significantly updated with a new layout that organizes targets by language and project, and includes many new destinations.
+
+** org-pomodoro
+- The default pomodoro and break lengths have been updated to follow the "Prof. Arguelles method" (14-minute work, 1-minute break).
+
+** Aider
+- The default AI model has been updated to a newer Gemini version. The configuration was also adjusted to manage "thinking tokens" and disable the thinking process by default to control costs and performance.
+
+** Miscellaneous
+- *mbsync*: The =mbsync-parallel= script now includes a =include-gmail-all= option to allow for a full sync when needed.
+- *mpv*: The configuration has been updated to use the default OSC script instead of the custom =uosc= script. Millisecond display in the OSD is now enabled.
+- *qBittorrent*: The configuration has been updated to use a JSON file for managing download categories and their respective save paths.
+
 * Version 7.1.8 on 2025-06-18
 
 ** Major AI/LLM Integration Overhaul

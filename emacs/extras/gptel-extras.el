@@ -713,6 +713,7 @@ Each edit requires an old string to find (fuzzy matched) and a new string to rep
 
 ;;;;;; BibTeX tools
 
+(declare-function citar--format-candidates "citar")
 (defun gptel-extras-citar-search (search-string &optional limit offset)
   "Search bibliography for SEARCH-STRING and return matching results.
 

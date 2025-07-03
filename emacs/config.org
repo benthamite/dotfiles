@@ -8178,7 +8178,7 @@ This package evolved out of gptel-extras.
   (gptel-extras-make-tool-presets
    tools-filesystem
    "filesystem tools"
-   '("read_file" "list_directory" "create_file" "create_directory"))
+   '("read_file" "edit_file" "create_file" "list_directory" "create_directory"))
 
   (gptel-extras-make-tool-presets
    tools-slack-ea-translations

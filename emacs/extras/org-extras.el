@@ -68,6 +68,13 @@ the function `vulpea-agenda-files-update')."
   :type '(repeat string)
   :group 'org-extras)
 
+(defcustom org-extras-id-auto-add-level-1-dirs
+  (list (file-name-concat paths-dir-notes "gptel/")
+	(file-name-concat paths-dir-notes "chatgpt/"))
+  "IDs should be added to level-1 headings in files in these directories."
+  :type '(repeat directory)
+  :group 'org-extras)
+
 (defcustom org-extras-bbdb-anniversaries-heading
   "2CE5A4E6-842C-4350-ADD0-13D5FC101A20"
   "Heading in `calendar.org' that contains the BBDB anniversaries.
@@ -655,7 +662,9 @@ To exclude directories, files or headings, customize
 `org-extras-id-auto-add-excluded-files',
 `org-extras-id-auto-add-excluded-headings'. You can also exclude individual
 files by setting the value of the file-local variable
-`org-extras-id-auto-add-exclude-file' to t."
+`org-extras-id-auto-add-exclude-file' to t, and can make the function add IDs to
+only level-1 headings in files in specified directories by customizing
+`org-extras-id-auto-add-level-1-dirs'."
   (when-let* ((file (buffer-file-name))
               (dir (file-name-directory file)))
     (when (and (derived-mode-p 'org-mode)
@@ -665,10 +674,9 @@ files by setting the value of the file-local variable
 	       (not (member dir org-extras-id-auto-add-excluded-directories))
 	       (not (member file org-extras-id-auto-add-excluded-files))
 	       (not (member (org-get-heading) org-extras-id-auto-add-excluded-headings)))
-      (require 'gptel-extras)
       (org-map-entries #'org-id-get-create
 		       ;; parametrize this
-		       (when (member dir `(,gptel-extras-dir))
+		       (when (member dir org-extras-id-auto-add-level-1-dirs)
 			 "LEVEL=1")))))
 
 (defun org-extras-id-update-id-locations ()

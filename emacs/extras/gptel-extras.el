@@ -487,6 +487,7 @@ file name."
           ;; Write to file
           (with-temp-buffer
             (insert (format "#+title: %s\n\n" title))
+            (insert (format "* %s\n" title))
             (dolist (msg messages)
               (let* ((role (gethash "role" (gethash "author" msg)))
                      (content (gethash "content" msg))
@@ -494,7 +495,7 @@ file name."
                      (texts (seq-filter #'identity
                                         (gptel-extras--extract-parts-text parts))))
                 (when (and role texts)
-                  (insert (format "* %s\n\n%s\n\n"
+                  (insert (format "** %s\n\n%s\n\n"
                                   (capitalize role)
                                   (org-extras-convert-markdown-to-org
                                    (mapconcat #'identity texts "\n\n")))))))

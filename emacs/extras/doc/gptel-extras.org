@@ -133,7 +133,7 @@ The command ~gptel-extras-summarize-commit-diffs~ takes the active region in a `
 :END:
 
 #+findex: gptel-extras-import-chatgpt-conversations
-The command ~gptel-extras-import-chatgpt-conversations~ prompts for a JSON file containing ChatGPT conversations (as exported from the ChatGPT website). It then iterates through each conversation in the file, creating a new Org mode file for each one in the directory specified by ~gptel-extras-chatgpt-import-dir~. The filename is a slugified version of the conversation title. Inside each file, user prompts are formatted as level-3 headings, and the corresponding assistant responses are placed as text beneath them.
+The command ~gptel-extras-import-chatgpt-conversations~ prompts for a JSON file containing ChatGPT conversations (as exported from the ChatGPT website). It then iterates through each conversation in the file, creating a new Org mode file for each one in the directory specified by ~gptel-extras-chatgpt-import-dir~. The filename is a slugified version of the conversation title. Inside each file, the conversation title is used for a level-1 heading, under which user prompts and assistant responses are formatted as level-2 headings.
 
 ** Miscellaneous Commands
 :PROPERTIES:

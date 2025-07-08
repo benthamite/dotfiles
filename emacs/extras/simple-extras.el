@@ -993,7 +993,8 @@ take a single argument, the name of the function being called."
     (let* ((repo-name (file-name-nondirectory (directory-file-name default-directory)))
 	   (venv-dir (expand-file-name repo-name))
 	   (venv-activate-script (expand-file-name "bin/activate" venv-dir)))
-      (unless (file-exists-p venv-activate-script)
+      (if (file-exists-p venv-activate-script)
+	  (message "Virtual environment already exists at %s" venv-dir)
 	(shell-command (format "python -m venv %s" venv-dir))
 	(message "Virtual environment created at %s" venv-dir)))))
 

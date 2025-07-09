@@ -203,6 +203,8 @@ FILE is the file to attach and KEY is the BibTeX key of the associated entry."
   (when callback
     (funcall callback file key)))
 
+;;;;; Data dirs
+
 ;;;###autoload
 (defun eww-extras-chrome-copy-data-dirs ()
   "Make copies of the Chrome data directory asynchronously.
@@ -262,6 +264,8 @@ should be fast."
 	       ("html" eww-extras-chrome-data-dir-copy-html))))
     (message "Deleting `%s'..." dir)
     (delete-directory dir t)))
+
+;;;;; URL to HTML, PDF
 
 (defun eww-extras-url-to-html (&optional url callback)
   "Generate HTML of URL, then run CALLBACK function."

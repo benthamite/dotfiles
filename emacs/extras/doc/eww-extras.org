@@ -90,7 +90,7 @@ The command ~eww-extras-browse-file~ opens a local file in EWW. It prompts for t
 :END:
 
 #+findex: eww-extras-chrome-copy-data-dirs
-~eww-extras-chrome-copy-data-dirs~: Creates/updates two separate copies of the user's Chrome profile data directory (specified by ~eww-extras-chrome-data-dir~) into temporary locations (~eww-extras-chrome-data-dir-copy-pdf~ and ~eww-extras-chrome-data-dir-copy-html~). This is necessary because headless Chrome instances need profile data (for cookies, logins) but cannot access the main profile if Chrome is running. Running this command ensures the copies exist and are reasonably up-to-date. *Requires Chrome to be closed and may take time on the first run.* Uses =rsync=.
+~eww-extras-chrome-copy-data-dirs~: Creates/updates two separate copies of the user's Chrome profile data directory (specified by ~eww-extras-chrome-data-dir~) into temporary locations (~eww-extras-chrome-data-dir-copy-pdf~ and ~eww-extras-chrome-data-dir-copy-html~). This is necessary because headless Chrome instances need profile data (for cookies, logins) but cannot access the main profile if Chrome is running. Running this command ensures the copies exist and are reasonably up-to-date. *Requires Chrome to be closed.* This command runs asynchronously and may take time on the first run. Uses =rsync=.
 
 #+findex: eww-extras-chrome-delete-data-dirs
 ~eww-extras-chrome-delete-data-dirs~: Deletes the two copied Chrome data directories created by the previous command. Prompts for confirmation.

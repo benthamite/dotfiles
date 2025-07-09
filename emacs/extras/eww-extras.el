@@ -205,23 +205,48 @@ FILE is the file to attach and KEY is the BibTeX key of the associated entry."
 
 ;;;###autoload
 (defun eww-extras-chrome-copy-data-dirs ()
-  "Make copies of the Chrome data directory.
+  "Make copies of the Chrome data directory asynchronously.
 This command needs to be run to make two copies of the Chrome data directory,
 and then every once in a while to keep those copies updated. The initial copy
 may take a while if the data directory is very big, but subsequent updates
 should be fast."
   (interactive)
-  (when (y-or-n-p "Make sure you have closed all instances of Chrome, and that `eww-extras-chrome-data-dir' and `eww-extras-chrome-data-dir-copy' point to the right directories. If you are running this command for the first time—i.e. if there is currently no copy of the Chrome data directory in your system—note that Emacs will become unresponsive for a few minutes. Proceed? ")
+  (when (y-or-n-p "Make sure you have closed all instances of Chrome, and that `eww-extras-chrome-data-dir' and `eww-extras-chrome-data-dir-copy' point to the right directories. This command runs asynchronously in the background. Proceed? ")
     (unless (string-empty-p (shell-command-to-string "pgrep -l \"Google Chrome\""))
       (user-error "Chrome is running. Close all instances of Chrome and try again"))
     (message "Copying Chrome data directory to `%s'..." eww-extras-chrome-data-dir-copy-pdf)
-    (shell-command (format eww-extras-rsync-command
-			   eww-extras-chrome-data-dir
-			   eww-extras-chrome-data-dir-copy-pdf))
-    (eww-extras-chrome-delete-data-dir "html")
-    (message "Copying Chrome data directory to `%s'..." eww-extras-chrome-data-dir-copy-html)
-    (copy-directory eww-extras-chrome-data-dir-copy-pdf eww-extras-chrome-data-dir-copy-html nil t t)
-    (message "Done.")))
+    (let ((process (start-process-shell-command
+                    "eww-extras-rsync-pdf"
+                    "*eww-extras-copy-data-dirs*"
+                    (format eww-extras-rsync-command
+                            eww-extras-chrome-data-dir
+                            eww-extras-chrome-data-dir-copy-pdf))))
+      (set-process-sentinel process #'eww-extras-chrome-copy-data-dirs--sentinel-1))))
+
+(defun eww-extras-chrome-copy-data-dirs--sentinel-1 (process event)
+  "First sentinel for `eww-extras-chrome-copy-data-dirs'."
+  (if (and (memq (process-status process) '(exit signal))
+           (zerop (process-exit-status process)))
+      (progn
+        (message "Finished copying to `%s'. Now copying to `%s'..."
+                 eww-extras-chrome-data-dir-copy-pdf
+                 eww-extras-chrome-data-dir-copy-html)
+        (eww-extras-chrome-delete-data-dir "html")
+        (let ((proc (start-process-shell-command
+                     "eww-extras-rsync-html"
+                     "*eww-extras-copy-data-dirs*"
+                     (format eww-extras-rsync-command
+                             eww-extras-chrome-data-dir-copy-pdf
+                             eww-extras-chrome-data-dir-copy-html))))
+          (set-process-sentinel proc #'eww-extras-chrome-copy-data-dirs--sentinel-2)))
+    (message "Error copying to %s: %s" eww-extras-chrome-data-dir-copy-pdf event)))
+
+(defun eww-extras-chrome-copy-data-dirs--sentinel-2 (process event)
+  "Second sentinel for `eww-extras-chrome-copy-data-dirs'."
+  (if (and (memq (process-status process) '(exit signal))
+           (zerop (process-exit-status process)))
+      (message "Done copying Chrome data directories.")
+    (message "Error copying to %s: %s" eww-extras-chrome-data-dir-copy-html event)))
 
 (defun eww-extras-chrome-delete-data-dirs ()
   "Delete the copy of the Chrome data directory."

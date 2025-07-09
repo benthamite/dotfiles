@@ -226,7 +226,8 @@ should be fast."
       (set-process-sentinel process #'eww-extras-chrome-copy-data-dirs--sentinel-1))))
 
 (defun eww-extras-chrome-copy-data-dirs--sentinel-1 (process event)
-  "First sentinel for `eww-extras-chrome-copy-data-dirs'."
+  "First sentinel for `eww-extras-chrome-copy-data-dirs'.
+PROCESS is the process object and EVENT is the event string."
   (if (and (memq (process-status process) '(exit signal))
            (zerop (process-exit-status process)))
       (progn
@@ -244,7 +245,8 @@ should be fast."
     (message "Error copying to %s: %s" eww-extras-chrome-data-dir-copy-pdf event)))
 
 (defun eww-extras-chrome-copy-data-dirs--sentinel-2 (process event)
-  "Second sentinel for `eww-extras-chrome-copy-data-dirs'."
+  "Second sentinel for `eww-extras-chrome-copy-data-dirs'.
+PROCESS is the process object and EVENT is the event string."
   (if (and (memq (process-status process) '(exit signal))
            (zerop (process-exit-status process)))
       (message "Done copying Chrome data directories.")

@@ -118,10 +118,8 @@ tasks."
         (if (or (vulpea-extras-project-p) (vulpea-extras-anniversary-p))
             (setq tags (cons "project" tags))
           (setq tags (remove "project" tags)))
-
         ;; cleanup duplicates
         (setq tags (seq-uniq tags))
-
         ;; update tags if changed
         (when (or (seq-difference tags original-tags)
                   (seq-difference original-tags tags))
@@ -136,8 +134,6 @@ tasks."
          (delete-dups (append
 		       (org-agenda-files)
 		       (vulpea-extras-project-files)
-		       ;; include files modified in past three days,
-		       ;; provided number of such files less than 1000
 		       (org-roam-extras-recent 2 500)))
          org-extras-agenda-files-excluded)))
 

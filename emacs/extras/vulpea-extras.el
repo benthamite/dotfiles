@@ -38,15 +38,15 @@
   :group 'vulpea)
 
 (defcustom vulpea-extras-excluded-directories
-  '()
-  "Directories containing files to exclude from list of projects."
+  (list
+   paths-dir-dropbox-tlon-fede
+   paths-dir-dropbox-tlon-leo)
+  "Directories to exclude from list of projects, recursively."
   :type '(repeat directory)
   :group 'vulpea-extras)
 
 (defcustom vulpea-extras-excluded-files
-  (list
-   paths-file-tlon-tareas-leo
-   paths-file-tlon-tareas-fede)
+  '()
   "Files to exclude from list of projects."
   :type '(repeat file)
   :group 'vulpea-extras)

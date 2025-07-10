@@ -539,11 +539,7 @@ Interactive use:
   - To specify KEY or OPEN programmatically, call non-interactively.
 ;; TODO: Handle abstract setting, PDF metadata, and OCR for the target KEY,
 ;; especially in asynchronous contexts or when KEY is not the current entry."
-  (interactive
-   (list (if current-prefix-arg 'most-recent nil) ; FILE
-         nil ; KEY (defaults to current entry)
-         nil ; OPEN
-         ))
+  (interactive (list (if current-prefix-arg 'most-recent nil) nil nil))
   (let ((target-key (or key (ebib--get-key-at-point))))
     (unless target-key
       (user-error "No BibTeX key provided or found at point for attaching file"))

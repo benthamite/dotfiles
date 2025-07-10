@@ -59,7 +59,7 @@ TODO entries marked as done are ignored, meaning the this
 function returns nil if current buffer contains only completed
 tasks."
   (when (and (derived-mode-p 'org-mode)
-             ;; exclude dirs
+             ;; exclude dirs recursively
              (not (vulpea-extras-file-in-excluded-directory-p (buffer-file-name)))
              ;; exclude files
              (not (member (buffer-file-name) vulpea-extras-excluded-files)))

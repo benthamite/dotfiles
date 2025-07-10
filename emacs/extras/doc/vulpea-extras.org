@@ -43,7 +43,10 @@ These variables allow customization of which files are considered for project st
 :END:
 
 #+vindex: vulpea-extras-excluded-directories
-A list of directory paths. Org files within these directories will be ignored by ~vulpea-extras-project-p~ and thus will not be automatically tagged as projects or necessarily included in the agenda based on project status.
+A list of directory paths. Org files within these directories and their
+subdirectories will be ignored by ~vulpea-extras-project-p~ and thus will not be
+automatically tagged as projects or necessarily included in the agenda based on
+project status.
 
 ** ~vulpea-extras-excluded-files~
 :PROPERTIES:

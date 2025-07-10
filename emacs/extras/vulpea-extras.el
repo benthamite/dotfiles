@@ -60,8 +60,7 @@ function returns nil if current buffer contains only completed
 tasks."
   (when (and (derived-mode-p 'org-mode)
              ;; exclude dirs
-             (not (member (file-name-directory (buffer-file-name))
-                          vulpea-extras-excluded-directories))
+             (not (vulpea-extras-file-in-excluded-directory-p (buffer-file-name)))
              ;; exclude files
              (not (member (buffer-file-name) vulpea-extras-excluded-files)))
     (org-element-map
@@ -83,6 +82,11 @@ tasks."
 		 (org-element-property :deadline headline)))))))
       nil
       'first-match)))
+
+(defun vulpea-extras-file-in-excluded-directory-p (file)
+  "Return non-nil if FILE is in one of `vulpea-extras-excluded-directories`."
+  (seq-some (lambda (dir) (file-in-directory-p file dir))
+            vulpea-extras-excluded-directories))
 
 (defun vulpea-extras-anniversary-p ()
   "Return non-nil if current buffer has an anniversary."

@@ -587,7 +587,7 @@ Interactive use:
 
 (defun ebib-extras-attach-most-recent-file ()
   "Attach the most recent file from `paths-dir-downloads' to the current entry.
-This is a convenience wrapper around `(ebib-extras-attach-file 'most-recent)'."
+This is a convenience wrapper around `ebib-extras-attach-file'."
   (interactive)
   (ebib-extras-attach-file 'most-recent))
 
@@ -739,7 +739,7 @@ called with a prefix argument), OCR is forced even if text is already present."
 (defun ebib-extras-get-or-set-language ()
   "Return the language of the current entry, prompting to set it if needed.
 Determines the appropriate field access functions based on `major-mode'
-(`ebib-entry-mode' or `bibtex-mode'). If the \"langid\" field is empty or
+\\=(`ebib-entry-mode' or `bibtex-mode'). If the \"langid\" field is empty or
 contains an invalid language (checked against `tlon-languages-properties'),
 prompts the user to select a language using `completing-read' and sets the
 field. Returns the (potentially newly set) language."
@@ -960,7 +960,7 @@ If point is on field `title', perform ACTION based on its value.
 Else perform ACTION based on the value of its identifier (`doi'
 or `isbn').
 
-Action can be `search' or 'download'."
+Action can be `search' or `download'."
   (let* ((supertype (ebib-extras-get-supertype))
 	 (query (ebib-extras-get-query-field))
 	 (fun (intern (format "ebib-extras-%s-%s-by-%s" action supertype query))))
@@ -1466,7 +1466,7 @@ Fetching is done using `bib'."
 
 (defun ebib-extras-move-entry (direction)
   "Move to the previous or next entry in the current database.
-DIRECTION can be `prev' or 'next'."
+DIRECTION can be `prev' or `next'."
   (let ((fun (pcase direction
 	       ('prev #'ebib-prev-entry)
 	       ('next #'ebib-next-entry))))

@@ -37,7 +37,7 @@
 ;;;; User options
 
 (defgroup ebib-extras ()
-  "Provide extensions for `ebib`, the Emacs BibTeX database manager."
+  "Provide extensions for `ebib', the Emacs BibTeX database manager."
   :group 'ebib)
 
 (defcustom ebib-extras-download-use-vpn nil
@@ -95,7 +95,7 @@ avoid frequent writes.")
 (defun ebib-extras-open-or-switch ()
   "Open Ebib in an appropriate window or switch to it if already open.
 This function splits the current window if necessary and selects a target window
-(typically the second or third) before invoking `ebib'."
+\\=(typically the second or third) before invoking `ebib'."
   (interactive)
   (window-extras-split-if-unsplit)
   (if (> (frame-width) window-extras-frame-split-width-threshold)
@@ -222,7 +222,7 @@ is copied. This is a wrapper around `ebib-copy-field-contents'."
 (defun ebib-extras-get-file (extension)
   "Return the path of the file with EXTENSION in the entry at point.
 The function determines the correct way to get field values based on the current
-major mode (`ebib-entry-mode` or `bibtex-mode`). A file path is returned if a
+major mode (`ebib-entry-mode' or `bibtex-mode'). A file path is returned if a
 file with the given EXTENSION is uniquely found in the \"file\" field of the
 entry. Returns nil otherwise."
   (let ((get-field (pcase major-mode
@@ -239,7 +239,7 @@ entry. Returns nil otherwise."
 
 (defun ebib-extras-get-text-file ()
   "Return the path of the first text file found for the entry at point.
-It iterates through `ebib-extras-valid-text-file-extensions` and returns the
+It iterates through `ebib-extras-valid-text-file-extensions' and returns the
 first file matching an extension found via `ebib-extras-get-file'."
   (catch 'tag
     (dolist (extension ebib-extras-valid-text-file-extensions)
@@ -248,8 +248,8 @@ first file matching an extension found via `ebib-extras-get-file'."
 
 (defun ebib-extras-open-file (extension)
   "Open the file with EXTENSION associated with the entry at point.
-A file will be opened using `find-file` if it uniquely exists (found via
-`ebib-extras-get-file`). Otherwise, a user error is signaled.
+A file will be opened using `find-file' if it uniquely exists (found via
+`ebib-extras-get-file'). Otherwise, a user error is signaled.
 EXTENSION is a string representing the file extension."
   (interactive "sFile extension: ")
   (if-let* ((file-name (ebib-extras-get-file extension)))
@@ -258,8 +258,8 @@ EXTENSION is a string representing the file extension."
 
 (defun ebib-extras-open-file-externally (extension)
   "Open the file with EXTENSION for the entry at point externally.
-The file is opened via `shell-command` with \"open\" if it uniquely exists
-(found via `ebib-extras-get-file`). Otherwise, a user error is signaled.
+The file is opened via `shell-command' with \"open\" if it uniquely exists
+\\=(found via `ebib-extras-get-file'). Otherwise, a user error is signaled.
 EXTENSION is a string representing the file extension."
   (interactive "sFile extension: ")
   (if-let* ((file-name (expand-file-name (ebib-extras-get-file extension))))
@@ -292,12 +292,12 @@ EXTENSION is a string representing the file extension."
   (ebib-extras-open-file-externally "pdf"))
 
 (defun ebib-extras-open-webm-file ()
-  "Open the WebM video file for the entry at point externally, if it uniquely exists."
+  "Open WebM video file for the entry at point externally, if it uniquely exists."
   (interactive)
   (ebib-extras-open-file-externally "webm"))
 
 (defun ebib-extras-open-mp3-file ()
-  "Open the MP3 audio file for the entry at point externally, if it uniquely exists."
+  "Open MP3 audio file for the entry at point externally, if it uniquely exists."
   (interactive)
   (ebib-extras-open-file-externally "mp3"))
 
@@ -321,8 +321,8 @@ The original HTML buffer is killed after rendering in EWW."
 (defun ebib-extras-open-file-dwim ()
   "Open an associated file for the entry at point \\(Do What I Mean).
 If the entry has multiple files, it uses the preference ordering defined in
-`ebib-extras-valid-file-extensions` and calls the corresponding
-`ebib-extras-open-EXT-file` function for the first one found."
+`ebib-extras-valid-file-extensions' and calls the corresponding
+`ebib-extras-open-EXT-file' function for the first one found."
   (interactive)
   (if-let* ((extension
 	    (catch 'tag
@@ -336,8 +336,8 @@ If the entry has multiple files, it uses the preference ordering defined in
 
 (defun ebib-extras-rename-files ()
   "Rename attached files for the entry at point to match its BibTeX key.
-Files listed in the \"file\" field are renamed to `KEY.extension` and moved to
-the appropriate directory based on `ebib-extras--extension-directories`.
+Files listed in the \"file\" field are renamed to `KEY.extension' and moved to
+the appropriate directory based on `ebib-extras--extension-directories'.
 The \"file\" field is updated with the new paths. The entry's key must be valid."
   (interactive)
   (ebib--execute-when
@@ -383,7 +383,7 @@ entry's key, a user error is signaled."
 
 (defun ebib-extras--rename-and-abbreviate-file (directory key &optional extension)
   "Construct a new file path in DIRECTORY, named after KEY, with EXTENSION.
-The DIRECTORY path is abbreviated using `abbreviate-file-name`. If EXTENSION is
+The DIRECTORY path is abbreviated using `abbreviate-file-name'. If EXTENSION is
 non-nil, it's appended to KEY. This function primarily constructs the target
 path for renaming/moving files."
   (file-name-concat
@@ -395,13 +395,13 @@ path for renaming/moving files."
 
 (defun ebib-extras-key-is-valid-p (&optional key)
   "Return t if KEY (or current entry's key) is a valid BibTeX key.
-Validity is checked against `ebib-extras-valid-key-regexp`."
+Validity is checked against `ebib-extras-valid-key-regexp'."
   (let ((key (or key (ebib--get-key-at-point))))
     (string-match ebib-extras-valid-key-regexp key)))
 
 (defun ebib-extras-check-valid-key (&optional key)
   "Check that KEY (or current entry's key) is a valid BibTeX entry key.
-If the key is not valid according to `ebib-extras-key-is-valid-p`, signal a
+If the key is not valid according to `ebib-extras-key-is-valid-p', signal a
 user error prompting to regenerate it."
   (let ((key (or key (ebib--get-key-at-point))))
     (unless (ebib-extras-key-is-valid-p key)
@@ -410,7 +410,7 @@ user error prompting to regenerate it."
 (defun ebib-extras--extension-directories (extension)
   "Return the library directory associated with file EXTENSION.
 Known extensions are \"pdf\", \"html\", and others listed in
-`ebib-extras-valid-file-extensions` (which map to `paths-dir-media-library`).
+`ebib-extras-valid-file-extensions' (which map to `paths-dir-media-library').
 Signals an error for unknown extensions."
   (cond ((string= extension "pdf")
 	 paths-dir-pdf-library)
@@ -442,9 +442,9 @@ Validity is determined by looking up the file's base name as a key using
     (stringp (tlon-bibliography-lookup "=key=" slug))))
 
 (defun ebib-extras-list-invalid-files (&optional dirs)
-  "Populate `ebib-extras-invalid-files` with files from DIRS with invalid names.
+  "Populate `ebib-extras-invalid-files' with files from DIRS with invalid names.
 Invalid names are those whose base name isn't a known BibTeX key. If DIRS is
-nil, searches `paths-dir-pdf-library` and potentially others commented out in
+nil, searches `paths-dir-pdf-library' and potentially others commented out in
 the original code. This can be slow. DIRS should be a list of directory paths."
   (interactive "P") ; Allow prefix for optional DIRS, or prompt.
   (let* ((dirs (or (if (listp dirs) dirs nil) ; Handle prefix arg for DIRS
@@ -465,9 +465,9 @@ the original code. This can be slow. DIRS should be a list of directory paths."
 
 (defun ebib-extras-rename-invalid-file (file)
   "Rename an invalid FILE to match its corresponding BibTeX key.
-Removes FILE from `ebib-extras-invalid-files`. Looks up the BibTeX key
+Removes FILE from `ebib-extras-invalid-files'. Looks up the BibTeX key
 associated with FILE, opens the entry in Ebib, and calls
-`ebib-extras-rename-files` if the entry is not cross-referenced."
+`ebib-extras-rename-files' if the entry is not cross-referenced."
   (setq ebib-extras-invalid-files (delete file ebib-extras-invalid-files))
   (when-let* ((key (tlon-bibliography-lookup "file" (file-name-nondirectory file) "=key=" t))
 	      (bibfile (ebib-extras-get-file-of-key key)))
@@ -477,9 +477,9 @@ associated with FILE, opens the entry in Ebib, and calls
       (ebib-extras-rename-files))))
 
 (defun ebib-extras-rename-next-invalid-file ()
-  "Rename the next file from `ebib-extras-invalid-files`.
-This function processes the *first* file in `ebib-extras-invalid-files` by
-calling `ebib-extras-rename-invalid-file`. The processed file is removed from
+  "Rename the next file from `ebib-extras-invalid-files'.
+This function processes the *first* file in `ebib-extras-invalid-files' by
+calling `ebib-extras-rename-invalid-file'. The processed file is removed from
 the list. Call this repeatedly to process all invalid files one by one."
   (interactive)
   (when ebib-extras-invalid-files
@@ -525,8 +525,8 @@ It attempts to fetch the abstract using `tlon-get-abstract-with-or-without-ai'."
 ;;;###autoload
 (defun ebib-extras-attach-file (&optional file key open)
   "Attach FILE to the BibTeX entry specified by KEY.
-If FILE is a string, attach that file. If FILE is the symbol `most-recent` (or
-any symbol), attach the newest file from `paths-dir-downloads`. If FILE is nil,
+If FILE is a string, attach that file. If FILE is the symbol `most-recent' (or
+any symbol), attach the newest file from `paths-dir-downloads'. If FILE is nil,
 prompt the user for a file to attach.
 KEY defaults to the key of the entry at point. The key must be valid.
 The file is renamed to match KEY, moved to the appropriate library directory,
@@ -567,7 +567,7 @@ Interactive use:
 				(throw 'found extension))))
 			  (file-name-concat initial-folder target-key)
 			initial-folder))))
-		  ((and file (symbolp file)) ; `most-recent` or any symbol
+		  ((and file (symbolp file)) ; `most-recent' or any symbol
 		   (files-extras-newest-file paths-dir-downloads))
 		  (t file))) ; FILE is a string
 	   (extension (file-name-extension file-to-attach))
@@ -587,7 +587,7 @@ Interactive use:
 
 (defun ebib-extras-attach-most-recent-file ()
   "Attach the most recent file from `paths-dir-downloads' to the current entry.
-This is a convenience wrapper around `(ebib-extras-attach-file 'most-recent)`."
+This is a convenience wrapper around `(ebib-extras-attach-file 'most-recent)'."
   (interactive)
   (ebib-extras-attach-file 'most-recent))
 
@@ -597,8 +597,8 @@ This is a convenience wrapper around `(ebib-extras-attach-file 'most-recent)`."
 (defun ebib-extras-url-to-file-attach (type &optional key)
   "Generate a file of TYPE (e.g., \"pdf\", \"html\") from the URL of entry KEY.
 The generated file is then attached to the entry. If KEY is nil, uses the entry
-at point. Uses `eww-extras-url-to-file` for generation and
-`ebib-extras-attach-file-to-entry` as a callback for attachment.
+at point. Uses `eww-extras-url-to-file' for generation and
+`ebib-extras-attach-file-to-entry' as a callback for attachment.
 TYPE is a string. KEY is an optional BibTeX key string."
   (let ((target-key (or key (ebib--get-key-at-point))))
     (when-let* ((url (ebib-extras-get-field "url" target-key)))
@@ -609,7 +609,7 @@ TYPE is a string. KEY is an optional BibTeX key string."
 (defun ebib-extras-url-to-pdf-attach (&optional key)
   "Generate a PDF from the URL of entry KEY and attach it.
 If KEY is nil, uses the entry at point. This is a wrapper around
-`ebib-extras-url-to-file-attach` with TYPE \"pdf\".
+`ebib-extras-url-to-file-attach' with TYPE \"pdf\".
 KEY is an optional BibTeX key string, passed interactively as nil."
   (interactive (list nil))
   (ebib-extras-url-to-file-attach "pdf" key))
@@ -617,7 +617,7 @@ KEY is an optional BibTeX key string, passed interactively as nil."
 (defun ebib-extras-url-to-html-attach (&optional key)
   "Generate an HTML file from the URL of entry KEY and attach it.
 If KEY is nil, uses the entry at point. This is a wrapper around
-`ebib-extras-url-to-file-attach` with TYPE \"html\".
+`ebib-extras-url-to-file-attach' with TYPE \"html\".
 KEY is an optional BibTeX key string, passed interactively as nil."
   (interactive (list nil))
   (ebib-extras-url-to-file-attach "html" key))
@@ -625,8 +625,8 @@ KEY is an optional BibTeX key string, passed interactively as nil."
 (defvar eww-extras-download-subtitles) ; Should be declared if special
 (defun ebib-extras-url-to-srt-attach (&optional key)
   "Download SRT subtitles for the URL of the entry with KEY.
-If KEY is nil, uses the entry at point. Downloads to `paths-dir-downloads` using
-a shell command formatted by `eww-extras-download-subtitles`.
+If KEY is nil, uses the entry at point. Downloads to `paths-dir-downloads' using
+a shell command formatted by `eww-extras-download-subtitles'.
 Attachment of the downloaded SRT file must be done manually.
 KEY is an optional BibTeX key string, passed interactively as nil."
   (interactive (list nil))
@@ -640,9 +640,9 @@ KEY is an optional BibTeX key string, passed interactively as nil."
 (defun ebib-extras-book-attach (&optional key)
   "Attempt to download and attach a PDF for the book-type entry with KEY.
 If KEY is nil, uses the entry at point. It uses the entry's ISBN or title (if a
-book-like type) to search and download via `annas-archive-download`. A hook is
-added to `annas-archive-post-download-hook` to automatically attach the
-downloaded file using `ebib-extras-attach-file` if the download was internal;
+book-like type) to search and download via `annas-archive-download'. A hook is
+added to `annas-archive-post-download-hook' to automatically attach the
+downloaded file using `ebib-extras-attach-file' if the download was internal;
 otherwise, it messages to attach manually.
 KEY is an optional BibTeX key string, passed interactively as nil."
   (interactive (list nil))
@@ -653,7 +653,7 @@ KEY is an optional BibTeX key string, passed interactively as nil."
 			  (and (member type ebib-extras-book-like-entry-types)
 			       (ebib-extras-get-field "title" target-key))))))
       ;; Use a hook to capture the key and call attach-file when download finishes.
-      ;; This hook (`annas-archive-post-download-hook`) receives (url path) if
+      ;; This hook (`annas-archive-post-download-hook') receives (url path) if
       ;; downloaded via eww, or just (url) if downloaded externally.
       ;; Use cl-labels to define a function that can refer to itself for removal.
       (cl-labels ((attach-and-remove-hook (url &optional path)
@@ -672,7 +672,7 @@ KEY is an optional BibTeX key string, passed interactively as nil."
 (defun ebib-extras-doi-attach (&optional key)
   "Attempt to download and attach a PDF for the entry with KEY using its DOI.
 If KEY is nil, uses the entry at point. It retrieves the DOI, then uses
-`scihub-download` with `ebib-extras-attach-file-to-entry` as a callback for
+`scihub-download' with `ebib-extras-attach-file-to-entry' as a callback for
 attachment.
 KEY is an optional BibTeX key string, passed interactively as nil."
   (interactive (list nil))
@@ -685,7 +685,7 @@ KEY is an optional BibTeX key string, passed interactively as nil."
 (defun ebib-extras-attach-file-to-entry (&optional file key)
   "Attach FILE to the BibTeX entry with KEY.
 This function is primarily intended as a callback for asynchronous downloaders.
-It calls `ebib-extras-attach-file` and messages success.
+It calls `ebib-extras-attach-file' and messages success.
 FILE is the path to the file. KEY is the BibTeX key string."
   ;; Do not switch buffers here, pass the key directly to attach-file
   (ebib-extras-attach-file file key)
@@ -697,11 +697,11 @@ FILE is the path to the file. KEY is the BibTeX key string."
 If KEY is nil, uses the entry at point. If a file is already attached (i.e.,
 the \"file\" field is non-empty), it attempts to set the abstract. Otherwise, it
 tries to attach files based on available identifiers and entry type:
-- DOI: Uses `ebib-extras-doi-attach`.
-- ISBN or book-like type: Uses `ebib-extras-book-attach`.
-- Video URL: Uses `ebib-extras-url-to-srt-attach` (for subtitles).
-- Online type with URL: Uses `ebib-extras-url-to-pdf-attach` and
-  `ebib-extras-url-to-html-attach`.
+- DOI: Uses `ebib-extras-doi-attach'.
+- ISBN or book-like type: Uses `ebib-extras-book-attach'.
+- Video URL: Uses `ebib-extras-url-to-srt-attach' (for subtitles).
+- Online type with URL: Uses `ebib-extras-url-to-pdf-attach' and
+  `ebib-extras-url-to-html-attach'.
 KEY is an optional BibTeX key string, passed interactively as nil.
 ;; TODO: Ensure `ebib-extras-set-abstract' works correctly for TARGET-KEY if
 ;; it's not the currently displayed Ebib entry."
@@ -728,7 +728,7 @@ KEY is an optional BibTeX key string, passed interactively as nil.
 (defvar tlon-languages-properties) ; Should be declared if special
 (defun ebib-extras-ocr-pdf (&optional force)
   "Perform OCR on the PDF file associated with the current Ebib entry.
-This function calls `files-extras-ocr-pdf`. If FORCE is non-nil (e.g., when
+This function calls `files-extras-ocr-pdf'. If FORCE is non-nil (e.g., when
 called with a prefix argument), OCR is forced even if text is already present."
   (interactive "P")
   (files-extras-ocr-pdf force))
@@ -738,10 +738,10 @@ called with a prefix argument), OCR is forced even if text is already present."
 (declare-function bibtex-set-field "bibtex-extras")
 (defun ebib-extras-get-or-set-language ()
   "Return the language of the current entry, prompting to set it if needed.
-Determines the appropriate field access functions based on `major-mode`
-(`ebib-entry-mode` or `bibtex-mode`). If the \"langid\" field is empty or
-contains an invalid language (checked against `tlon-languages-properties`),
-prompts the user to select a language using `completing-read` and sets the
+Determines the appropriate field access functions based on `major-mode'
+(`ebib-entry-mode' or `bibtex-mode'). If the \"langid\" field is empty or
+contains an invalid language (checked against `tlon-languages-properties'),
+prompts the user to select a language using `completing-read' and sets the
 field. Returns the (potentially newly set) language."
   (cl-destructuring-bind (get-field set-field)
       (pcase major-mode
@@ -960,7 +960,7 @@ If point is on field `title', perform ACTION based on its value.
 Else perform ACTION based on the value of its identifier (`doi'
 or `isbn').
 
-Action can be `search' or `download'."
+Action can be `search' or 'download'."
   (let* ((supertype (ebib-extras-get-supertype))
 	 (query (ebib-extras-get-query-field))
 	 (fun (intern (format "ebib-extras-%s-%s-by-%s" action supertype query))))
@@ -1117,7 +1117,7 @@ The list of article download functions is specified by
 (defun ebib-extras-download-video (id)
   "Download video with id ID using `yt-dlp'."
   (unless (executable-find "yt-dlp")
-    (user-error "Please install `yt-dlp' (e.g. `brew install yt-dlp')"))
+    (user-error "Please install `yt-dlp' (e.g. 'brew install yt-dlp')"))
   (ebib--execute-when
     (entries
      (let* ((key (ebib--get-key-at-point))
@@ -1466,7 +1466,7 @@ Fetching is done using `bib'."
 
 (defun ebib-extras-move-entry (direction)
   "Move to the previous or next entry in the current database.
-DIRECTION can be `prev' or `next'."
+DIRECTION can be `prev' or 'next'."
   (let ((fun (pcase direction
 	       ('prev #'ebib-prev-entry)
 	       ('next #'ebib-next-entry))))
@@ -1536,9 +1536,9 @@ DIRECTION can be `prev' or `next'."
   "Set the metadata of the PDF associated with the current entry."
   (interactive)
   (unless (executable-find "exiftool")
-    (user-error "Please install `exiftool' (e.g. `brew install exiftool'"))
+    (user-error "Please install `exiftool' (e.g. 'brew install exiftool'"))
   (unless (derived-mode-p 'ebib-entry-mode 'bibtex-mode)
-    (user-error "Not in `ebib-entry-mode' or `bibtex-mode'"))
+    (user-error "Not in `ebib-entry-mode' or 'bibtex-mode'"))
   (when-let* ((get-field (pcase major-mode
 			  ('ebib-entry-mode #'ebib-extras-get-field)
 			  ('bibtex-mode #'bibtex-extras-get-field)))
@@ -1684,7 +1684,7 @@ error."
     (default
      (beep))))
 
-;; [hack] hitting `RET' in `ebib-index-mode' always edits the entry at point
+;; [hack] hitting `RET' in 'ebib-index-mode' always edits the entry at point
 (el-patch-defun ebib-edit-entry ()
   "Edit the current BibTeX entry."
   (interactive)

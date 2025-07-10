@@ -490,9 +490,14 @@ the list. Call this repeatedly to process all invalid files one by one."
 (defun ebib-extras-process-entry ()
   "Process the BibTeX entry at point comprehensively.
 This function performs several actions:
+
 1. Generates a BibTeX key if the current one is invalid or if prompted.
-2. Sets or confirms the entry's language using `ebib-extras-get-or-set-language'.
+
+2. Sets or confirms the entry's language using
+`ebib-extras-get-or-set-language'.
+
 3. Attaches relevant files using `ebib-extras-attach-files'.
+
 It assumes that fields like `type', `author', `date', and `title' are correctly set."
   (interactive)
   (let (entry-key)
@@ -695,7 +700,7 @@ tries to attach files based on available identifiers and entry type:
 - Online type with URL: Uses `ebib-extras-url-to-pdf-attach` and
   `ebib-extras-url-to-html-attach`.
 KEY is an optional BibTeX key string, passed interactively as nil.
-;; TODO: Ensure `ebib-extras-set-abstract` works correctly for TARGET-KEY if
+;; TODO: Ensure `ebib-extras-set-abstract' works correctly for TARGET-KEY if
 ;; it's not the currently displayed Ebib entry."
   (interactive (list nil))
   (let ((target-key (or key (ebib--get-key-at-point))))

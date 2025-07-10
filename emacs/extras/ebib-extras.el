@@ -257,7 +257,7 @@ EXTENSION is a string representing the file extension."
     (user-error (format "No (unique) `%s' file found" extension))))
 
 (defun ebib-extras-open-file-externally (extension)
-  "Open the file with EXTENSION for the entry at point using an external program.
+  "Open the file with EXTENSION for the entry at point externally.
 The file is opened via `shell-command` with \"open\" if it uniquely exists
 (found via `ebib-extras-get-file`). Otherwise, a user error is signaled.
 EXTENSION is a string representing the file extension."
@@ -319,7 +319,7 @@ The original HTML buffer is killed after rendering in EWW."
   (ebib-extras-open-file-externally "html"))
 
 (defun ebib-extras-open-file-dwim ()
-  "Open an associated file for the entry at point (Do What I Mean).
+  "Open an associated file for the entry at point \\(Do What I Mean).
 If the entry has multiple files, it uses the preference ordering defined in
 `ebib-extras-valid-file-extensions` and calls the corresponding
 `ebib-extras-open-EXT-file` function for the first one found."
@@ -337,8 +337,8 @@ If the entry has multiple files, it uses the preference ordering defined in
 (defun ebib-extras-rename-files ()
   "Rename attached files for the entry at point to match its BibTeX key.
 Files listed in the \"file\" field are renamed to `KEY.extension` and moved to
-the appropriate directory based on `ebib-extras--extension-directories`. The
-\"file\" field is updated with the new paths. The entry's key must be valid."
+the appropriate directory based on `ebib-extras--extension-directories`.
+The \"file\" field is updated with the new paths. The entry's key must be valid."
   (interactive)
   (ebib--execute-when
     (entries
@@ -367,8 +367,8 @@ the appropriate directory based on `ebib-extras--extension-directories`. The
 
 (defun ebib-extras-validate-file-stem ()
   "Check that the stem of each attached file equals the entry's unique key.
-If any file's base name (without extension) does not match the current entry's
-key, a user error is signaled."
+If any file's base name (without extension) does not match the current
+entry's key, a user error is signaled."
   (when-let* ((files (ebib-extras-get-field "file")))
     (when (catch 'tag
 	    (mapc
@@ -429,8 +429,9 @@ Signals an error for unknown extensions."
 ;; processing. Repeat until all files are renamed.
 
 (defvar ebib-extras-invalid-files nil
-  "List of files with invalid names found by `ebib-extras-list-invalid-files'.
-An invalid file is one whose base name does not correspond to a known BibTeX key.")
+  "List of invalidly named files found by `ebib-extras-list-invalid-files'.
+An invalid file is one whose base name does not correspond to a known BibTeX
+key.")
 
 (autoload 'tlon-bibliography-lookup "tlon-tex")
 (defun ebib-extras-file-is-valid-p (file)
@@ -498,7 +499,8 @@ This function performs several actions:
 
 3. Attaches relevant files using `ebib-extras-attach-files'.
 
-It assumes that fields like `type', `author', `date', and `title' are correctly set."
+It assumes that fields like `type', `author', `date', and `title' are
+correctly set."
   (interactive)
   (let (entry-key)
     (when (or (not (ebib-extras-key-is-valid-p))
@@ -532,7 +534,8 @@ and its path is added to the entry's \"file\" field.
 If OPEN is non-nil and the attached file is a PDF, it is opened.
 Interactive use:
   - With no prefix: prompts for file, uses current entry's key.
-  - With C-u prefix: FILE is 'most-recent, uses current entry's key.
+  - With \\[universal-argument] prefix: FILE is `most-recent', uses current
+    entry's key.
   - To specify KEY or OPEN programmatically, call non-interactively.
 ;; TODO: Handle abstract setting, PDF metadata, and OCR for the target KEY,
 ;; especially in asynchronous contexts or when KEY is not the current entry."
@@ -584,7 +587,7 @@ Interactive use:
 
 (defun ebib-extras-attach-most-recent-file ()
   "Attach the most recent file from `paths-dir-downloads' to the current entry.
-This is a convenience wrapper around `(ebib-extras-attach-file 'most-recent)'."
+This is a convenience wrapper around `(ebib-extras-attach-file 'most-recent)`."
   (interactive)
   (ebib-extras-attach-file 'most-recent))
 
@@ -1654,7 +1657,7 @@ be added to the entry.  Note that for a timestamp to be added,
 `ebib-db-set-entry'.
 
 If storing the entry was successful, return the key under which
-the entry is actually stored (which, if IF-EXISTS is `uniquify',
+the entry is actually stored \\(which, if IF-EXISTS is `uniquify',
 may differ from ENTRY-KEY); otherwise return nil.  Depending on
 the value of IF-EXISTS, storing an entry may also result in an
 error."

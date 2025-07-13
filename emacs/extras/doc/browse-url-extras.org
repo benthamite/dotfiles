@@ -21,11 +21,11 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Configuration files to list domains for specific browsers.
-+ Functions to automatically set up ~browse-url-handlers~ based on these files.
-+ An interactive command to add the domain of the current URL (or from the kill ring) to one of the external browser lists.
-+ A command to open the file at point in Dired using the external default browser.
-+ A command to open a URL externally in the background (specifically using Firefox on macOS).
+- Configuration files to list domains for specific browsers.
+- Functions to automatically set up ~browse-url-handlers~ based on these files.
+- An interactive command to add the domain of the current URL (or from the kill ring) to one of the external browser lists.
+- A command to open the file at point in Dired using the external default browser.
+- A command to open a URL externally in the background (specifically using Firefox on macOS).
 
 * User Options
 :PROPERTIES:
@@ -42,7 +42,7 @@ This section details the user-configurable variables provided by =browse-url-ext
 #+vindex: browse-url-extras-browse-url-default-file
 Specifies the path to a plain text file containing a list of domains (one per line) that should be opened using the system's default browser (via ~browse-url-default-browser~).
 
-The default path points to =etc/browse-url-default.txt= within the user's Emacs configuration directory (assuming a `paths` setup).
+The default path points to =etc/browse-url-default.txt= within the user's Emacs configuration directory (assuming a =paths= setup).
 
 ** ~browse-url-extras-browse-url-firefox-file~
 :PROPERTIES:

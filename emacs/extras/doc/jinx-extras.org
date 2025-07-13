@@ -21,8 +21,8 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Automatically adding corrected misspellings as text-mode abbreviations.
-+ A command to quickly toggle between configured Jinx languages (e.g., English and Spanish).
+- Automatically adding corrected misspellings as text-mode abbreviations.
+- A command to quickly toggle between configured Jinx languages (e.g., English and Spanish).
 
 * Enhanced Functionality
 :PROPERTIES:
@@ -35,7 +35,7 @@ The main features include:
 :END:
 
 #+findex: jinx-extras--add-to-abbrev
-The internal function ~jinx-extras--add-to-abbrev~ is added as `:before` advice to the Jinx internal function ~jinx--correct-replace~.
+The internal function ~jinx-extras--add-to-abbrev~ is added as =:before= advice to the Jinx internal function ~jinx--correct-replace~.
 
 When the user selects a correction for a misspelled word using Jinx:
 1. This advice function runs *before* the replacement happens.

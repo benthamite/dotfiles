@@ -23,10 +23,10 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Automatically detecting if an Org Roam note qualifies as a "project" file.
-+ Automatically adding or removing a "project" tag to files based on their status.
-+ Dynamically updating =org-agenda-files= to include project files and recently modified notes before the agenda is generated.
-+ Customizable exclusion lists for directories and specific files.
+- Automatically detecting if an Org Roam note qualifies as a "project" file.
+- Automatically adding or removing a "project" tag to files based on their status.
+- Dynamically updating =org-agenda-files= to include project files and recently modified notes before the agenda is generated.
+- Customizable exclusion lists for directories and specific files.
 
 * Configuration Variables
 :PROPERTIES:
@@ -85,7 +85,7 @@ The function ~vulpea-extras-agenda-files-update~ dynamically updates the global 
 1. Files currently in =org-agenda-files=.
 2. Files identified as projects via the "project" tag (queried using ~vulpea-extras-project-files~).
 3. Recently modified Org Roam files (using ~org-roam-extras-recent~, limited by days and count).
-It then removes duplicates and any files listed in the user-defined variable =org-extras-agenda-files-excluded=. This function is added as `:before` advice to the =org-agenda= command.
+It then removes duplicates and any files listed in the user-defined variable =org-extras-agenda-files-excluded=. This function is added as =:before= advice to the =org-agenda= command.
 
 * Helper Functions
 :PROPERTIES:
@@ -95,14 +95,14 @@ It then removes duplicates and any files listed in the user-defined variable =or
 
 These functions provide the core logic used by the configuration functions.
 
-+ ~vulpea-extras-project-p~: Determines if the current Org mode buffer represents a project. It returns non-nil if the buffer contains at least one headline that:
+- ~vulpea-extras-project-p~: Determines if the current Org mode buffer represents a project. It returns non-nil if the buffer contains at least one headline that:
   - Is not archived (does not have the "ARCHIVE" tag, respecting inheritance).
   - Is a TODO item (type 'todo').
   - OR is not DONE and has a SCHEDULED or DEADLINE property.
   It respects the ~vulpea-extras-excluded-directories~ and ~vulpea-extras-excluded-files~ variables.
-+ ~vulpea-extras-anniversary-p~: Returns non-nil if the current Org mode buffer contains an Org anniversary expression (e.g., =%%(org-anniversary ...)=).
-+ ~vulpea-extras-project-files~: Queries the Org Roam database to return a unique list of file paths that have the "project" tag associated with any node within them.
-+ ~vulpea-extras-buffer-p~: Returns non-nil if the current buffer's file name is located within the =org-roam-directory=.
+- ~vulpea-extras-anniversary-p~: Returns non-nil if the current Org mode buffer contains an Org anniversary expression (e.g., =%%(org-anniversary ...)=).
+- ~vulpea-extras-project-files~: Queries the Org Roam database to return a unique list of file paths that have the "project" tag associated with any node within them.
+- ~vulpea-extras-buffer-p~: Returns non-nil if the current buffer's file name is located within the =org-roam-directory=.
 
 * Advised Functions
 :PROPERTIES:
@@ -117,7 +117,7 @@ These functions provide the core logic used by the configuration functions.
 :END:
 
 #+findex: org-agenda
-The standard =org-agenda= command is advised `:before` by ~vulpea-extras-agenda-files-update~. This ensures that the =org-agenda-files= list is up-to-date with project files and recent notes immediately before the agenda view is constructed.
+The standard =org-agenda= command is advised =:before= by ~vulpea-extras-agenda-files-update~. This ensures that the =org-agenda-files= list is up-to-date with project files and recent notes immediately before the agenda view is constructed.
 
 * Indices
 :PROPERTIES:

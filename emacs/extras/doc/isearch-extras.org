@@ -21,10 +21,10 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Commands to exit isearch at the opposite end of the match or copy the current match to the kill ring.
-+ A command to yank text from the kill ring literally into the search string.
-+ Advice to automatically use the active region as the initial search string.
-+ Integration commands to transfer the current search term to =consult-line= or =project-find-regexp=.
+- Commands to exit isearch at the opposite end of the match or copy the current match to the kill ring.
+- A command to yank text from the kill ring literally into the search string.
+- Advice to automatically use the active region as the initial search string.
+- Integration commands to transfer the current search term to =consult-line= or =project-find-regexp=.
 
 * Commands Available During Isearch
 :PROPERTIES:
@@ -84,7 +84,7 @@ The command ~isearch-extras-project-search~ takes the current isearch string, up
 :END:
 
 #+findex: isearch-extras-use-selection
-The function ~isearch-extras-use-selection~ is designed to be added as `:around` advice to isearch commands like =isearch-forward= and =isearch-backward=.
+The function ~isearch-extras-use-selection~ is designed to be added as =:around= advice to isearch commands like =isearch-forward= and =isearch-backward=.
 
 If a region is active when the advised isearch command is invoked, this function:
 1. Takes the text within the active region.

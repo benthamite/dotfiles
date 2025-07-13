@@ -21,8 +21,8 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ A function to format the Org Pomodoro timer display in the modeline, including the current pomodoro count.
-+ A patch to silence the notification message when a pomodoro is killed prematurely.
+- A function to format the Org Pomodoro timer display in the modeline, including the current pomodoro count.
+- A patch to silence the notification message when a pomodoro is killed prematurely.
 
 * Configuration Functions
 :PROPERTIES:
@@ -35,7 +35,7 @@ The main features include:
 :END:
 
 #+findex: org-extras-pomodoro-format-timer
-The function ~org-extras-pomodoro-format-timer~ updates the ~org-pomodoro-format~ variable, which controls how the timer is displayed in the modeline. This function sets the format to include a tomato emoji (🍅), the remaining time (%s), and the current pomodoro count (from =org-pomodoro-count=), separated by a pipe symbol. Example: `🍅 24:15|3`.
+The function ~org-extras-pomodoro-format-timer~ updates the ~org-pomodoro-format~ variable, which controls how the timer is displayed in the modeline. This function sets the format to include a tomato emoji (🍅), the remaining time (%s), and the current pomodoro count (from =org-pomodoro-count=), separated by a pipe symbol. Example: =🍅 24:15|3=.
 
 This function is intended to be called when setting up =org-pomodoro=, potentially via advice or a hook if needed, to ensure the pomodoro count is dynamically included in the format string.
 

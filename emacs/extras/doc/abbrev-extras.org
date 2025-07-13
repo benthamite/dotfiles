@@ -21,10 +21,10 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ An interactive command to add abbreviations specific to a chosen major mode.
-+ Automatic creation of the necessary abbrev table for the mode if it doesn't exist.
-+ An option to automatically save the abbrev definitions to the user's abbrev file after adding a new one.
-+ An interactive command to manually save the abbrev definitions.
+- An interactive command to add abbreviations specific to a chosen major mode.
+- Automatic creation of the necessary abbrev table for the mode if it doesn't exist.
+- An option to automatically save the abbrev definitions to the user's abbrev file after adding a new one.
+- An interactive command to manually save the abbrev definitions.
 
 * User Options
 :PROPERTIES:
@@ -89,9 +89,9 @@ This is essentially a wrapper around the built-in ~write-abbrev-file~ command, p
 
 These functions are used internally by the main commands but are not typically called directly by the user.
 
-+ ~abbrev-extras-get-sorted-modes~: Returns a sorted list of symbols representing available major modes. Used to provide completion candidates for the mode prompt in ~abbrev-extras-add-mode-abbrev~.
-+ ~abbrev-extras-add-abbrev-to-table~: Defines a given abbrev and expansion in a specified abbrev table symbol.
-+ ~abbrev-extras-maybe-create-abbrev-table~: Creates an abbrev table variable if it is not already bound.
+- ~abbrev-extras-get-sorted-modes~: Returns a sorted list of symbols representing available major modes. Used to provide completion candidates for the mode prompt in ~abbrev-extras-add-mode-abbrev~.
+- ~abbrev-extras-add-abbrev-to-table~: Defines a given abbrev and expansion in a specified abbrev table symbol.
+- ~abbrev-extras-maybe-create-abbrev-table~: Creates an abbrev table variable if it is not already bound.
 
 * Indices
 :PROPERTIES:

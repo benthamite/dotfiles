@@ -21,9 +21,9 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Patches to modify =org-ref= functions:
+- Patches to modify =org-ref= functions:
   + Remove automatic filling (line wrapping) after sorting BibTeX entry fields.
-  + Remove the redundant `Year` field often added by ISBN-to-BibTeX services.
+  + Remove the redundant =Year= field often added by ISBN-to-BibTeX services.
 
 * Patched Functions
 :PROPERTIES:
@@ -48,7 +48,7 @@ The original ~org-ref-sort-bibtex-entry~ command sorts the fields within a BibTe
 :END:
 
 #+findex: isbn-to-bibtex
-The ~isbn-to-bibtex~ command (from =org-ref-isbn=) fetches BibTeX data for a given ISBN from an external source (like www.ebook.de). Often, these sources include both a `date` field and a separate `Year` field, which is redundant. This patch modifies ~isbn-to-bibtex~ to remove any line starting with `Year =` from the fetched BibTeX entry string *before* inserting it into the bibliography file and cleaning it. This prevents the redundant `Year` field from being added.
+The ~isbn-to-bibtex~ command (from =org-ref-isbn=) fetches BibTeX data for a given ISBN from an external source (like www.ebook.de). Often, these sources include both a =date= field and a separate =Year= field, which is redundant. This patch modifies ~isbn-to-bibtex~ to remove any line starting with =Year == from the fetched BibTeX entry string *before* inserting it into the bibliography file and cleaning it. This prevents the redundant =Year= field from being added.
 
 * Indices
 :PROPERTIES:

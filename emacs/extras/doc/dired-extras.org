@@ -21,17 +21,17 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Commands for copying file names (absolute, relative, sans extension).
-+ Marking specific file types (e.g., screenshots).
-+ Enhanced navigation commands (up directory reusing buffer).
-+ Integration with macOS trash utility for "Put Back" functionality (via patch in =files-extras.el=).
-+ Commands for fast deletion (bypassing trash).
-+ File duplication command.
-+ Enhanced sorting toggle command.
-+ Integration with Image Dired (viewing, copying names).
-+ Integration with Gnus Dired for attaching files to emails (patched for modern mail modes).
-+ Enhanced `dired-hide-details-mode` toggle.
-+ Transient dispatch menus for quick directory navigation and package file access.
+- Commands for copying file names (absolute, relative, sans extension).
+- Marking specific file types (e.g., screenshots).
+- Enhanced navigation commands (up directory reusing buffer).
+- Integration with macOS trash utility for "Put Back" functionality (via patch in =files-extras.el=).
+- Commands for fast deletion (bypassing trash).
+- File duplication command.
+- Enhanced sorting toggle command.
+- Integration with Image Dired (viewing, copying names).
+- Integration with Gnus Dired for attaching files to emails (patched for modern mail modes).
+- Enhanced =dired-hide-details-mode= toggle.
+- Transient dispatch menus for quick directory navigation and package file access.
 
 * Commands
 :PROPERTIES:
@@ -76,7 +76,7 @@ The main features include:
 :END:
 
 #+findex: dired-extras-copy-to-remote-docs-directory
-~dired-extras-copy-to-remote-docs-directory~: Copies the marked files (or file at point) to a hardcoded remote server path (`stafforini.com/docs`) using =scp=. It then copies the presumed public URL of the *last* copied file to the kill ring. *Note:* This command contains hardcoded server details and requires appropriate SSH setup.
+~dired-extras-copy-to-remote-docs-directory~: Copies the marked files (or file at point) to a hardcoded remote server path (=stafforini.com/docs=) using =scp=. It then copies the presumed public URL of the *last* copied file to the kill ring. *Note:* This command contains hardcoded server details and requires appropriate SSH setup.
 
 ** Fast Delete (No Trash)
 :PROPERTIES:
@@ -140,13 +140,13 @@ The main features include:
 :CUSTOM_ID: h:patched-functions-advice
 :END:
 
-** Use `trash` Utility (macOS)
+** Use =trash= Utility (macOS)
 :PROPERTIES:
 :CUSTOM_ID: h:files-extras-system-move-file-to-trash
 :END:
 
 #+findex: files-extras-system-move-file-to-trash
-(Defined in =files-extras.el= but relevant here) The function ~system-move-file-to-trash~ is advised/overridden by ~files-extras-system-move-file-to-trash~. This replacement uses the external =trash= command-line utility (requires installation, e.g., via `brew install trash`) to move files to the trash on macOS. This method preserves macOS's "Put Back" functionality, which the default Emacs mechanism might not.
+(Defined in =files-extras.el= but relevant here) The function ~system-move-file-to-trash~ is advised/overridden by ~files-extras-system-move-file-to-trash~. This replacement uses the external =trash= command-line utility (requires installation, e.g., via =brew install trash=) to move files to the trash on macOS. This method preserves macOS's "Put Back" functionality, which the default Emacs mechanism might not.
 
 ** Quiet Deletion Confirmation
 :PROPERTIES:
@@ -154,7 +154,7 @@ The main features include:
 :END:
 
 #+findex: dired-extras-clean-up-after-deletion-quietly
-The function =dired-clean-up-after-deletion= is advised `:around` by ~dired-extras-clean-up-after-deletion-quietly~. This advice temporarily modifies =y-or-n-p= to automatically answer "yes" to prompts specifically asking about killing Dired buffers after file deletion, effectively suppressing these confirmation prompts.
+The function =dired-clean-up-after-deletion= is advised =:around= by ~dired-extras-clean-up-after-deletion-quietly~. This advice temporarily modifies =y-or-n-p= to automatically answer "yes" to prompts specifically asking about killing Dired buffers after file deletion, effectively suppressing these confirmation prompts.
 
 ** Gnus Dired Mail Buffers Patch
 :PROPERTIES:

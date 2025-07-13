@@ -17,23 +17,23 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=files-extras.el= provides a wide range of extensions for general file and buffer manipulation in Emacs. It enhances built-in commands, adds new convenience functions, integrates with external tools (like `trash`, `ocrmypdf`), and offers custom transient menus.
+=files-extras.el= provides a wide range of extensions for general file and buffer manipulation in Emacs. It enhances built-in commands, adds new convenience functions, integrates with external tools (like =trash=, =ocrmypdf=), and offers custom transient menus.
 
 The main features include:
 
-+ **File Deletion:** Overrides `system-move-file-to-trash` to use the external `trash` utility (macOS) for "Put Back" functionality.
-+ **Buffer Management:** Commands to save/revert, bury the scratch buffer instead of killing, create new empty buffers, switch to alternate buffers, kill buffers smartly, and revert all file buffers.
-+ **File/Path Utilities:** Get newest file in a directory (excluding macOS clutter), switch to most recent buffer in a specific mode, set buffer-local keys, get file stem, check if point is on last line, copy current path, copy file contents.
-+ **External Tools Integration:**
-  + OCR PDF files using `ocrmypdf`.
+- **File Deletion:** Overrides =system-move-file-to-trash= to use the external =trash= utility (macOS) for "Put Back" functionality.
+- **Buffer Management:** Commands to save/revert, bury the scratch buffer instead of killing, create new empty buffers, switch to alternate buffers, kill buffers smartly, and revert all file buffers.
+- **File/Path Utilities:** Get newest file in a directory (excluding macOS clutter), switch to most recent buffer in a specific mode, set buffer-local keys, get file stem, check if point is on last line, copy current path, copy file contents.
+- **External Tools Integration:**
+  + OCR PDF files using =ocrmypdf=.
   + Download and install "Bypass Paywalls" browser extensions.
-+ **File Recovery:** Command to recover all auto-saved files after a crash, alert when auto-save data is detected for the current file.
-+ **Diffing:** Command to diff the current buffer against its saved file.
-+ **Directory Locals:** Option to walk `.dir-locals.el` upward for chained evaluation (currently commented out).
-+ **Image Conversion:** Command to convert the current image buffer to PDF using `convert`.
-+ **Package Management:** Commands to open Elpaca package files or specific "extras" files.
-+ **Transient Menus:** Dispatchers for quickly opening common configuration files, project files, and package files.
-+ **Misc:** DWIM copy command, remove extra blank lines, open Grammarly editor.
+- **File Recovery:** Command to recover all auto-saved files after a crash, alert when auto-save data is detected for the current file.
+- **Diffing:** Command to diff the current buffer against its saved file.
+- **Directory Locals:** Option to walk =.dir-locals.el= upward for chained evaluation (currently commented out).
+- **Image Conversion:** Command to convert the current image buffer to PDF using =convert=.
+- **Package Management:** Commands to open Elpaca package files or specific "extras" files.
+- **Transient Menus:** Dispatchers for quickly opening common configuration files, project files, and package files.
+- **Misc:** DWIM copy command, remove extra blank lines, open Grammarly editor.
 
 * User Options
 :PROPERTIES:
@@ -54,7 +54,7 @@ Specifies the major mode (symbol) to activate in new buffers created by ~files-e
 :END:
 
 #+vindex: files-extras-walk-dir-locals-upward
-If non-nil, advice for `hack-dir-local-variables` (currently commented out) would evaluate `.dir-locals.el` files starting from the current directory and moving upwards, effectively chaining their settings. Default is nil.
+If non-nil, advice for =hack-dir-local-variables= (currently commented out) would evaluate =.dir-locals.el= files starting from the current directory and moving upwards, effectively chaining their settings. Default is nil.
 
 * Commands
 :PROPERTIES:
@@ -77,9 +77,9 @@ If non-nil, advice for `hack-dir-local-variables` (currently commented out) woul
 #+findex: files-extras-save-all-buffers
 ~files-extras-save-all-buffers~: Saves all file-visiting buffers without prompting.
 #+findex: files-extras-save-buffer-no-hooks
-~files-extras-save-buffer-no-hooks~: Saves the current buffer without running `before-save-hook` or `after-save-hook`.
+~files-extras-save-buffer-no-hooks~: Saves the current buffer without running =before-save-hook= or =after-save-hook=.
 #+findex: files-extras-switch-to-alternate-buffer
-~files-extras-switch-to-alternate-buffer~: Switches to the most recently visited buffer in the current window (respecting frame's `buffer-predicate`).
+~files-extras-switch-to-alternate-buffer~: Switches to the most recently visited buffer in the current window (respecting frame's =buffer-predicate=).
 #+findex: files-extras-kill-this-buffer
 ~files-extras-kill-this-buffer~: Kills the current buffer.
 #+findex: file-extras-kill-other-buffer
@@ -95,11 +95,11 @@ If non-nil, advice for `hack-dir-local-variables` (currently commented out) woul
 #+findex: files-extras-show-buffer-name
 ~files-extras-show-buffer-name~: Displays the full path of the current buffer's file in the echo area and copies it to the kill ring.
 #+findex: files-extras-recover-all-files
-~files-extras-recover-all-files~: Attempts to recover all files found in the auto-save directory. Useful after a crash when `recover-session` might not work. Runs `diff-buffer-with-file` after each recovery attempt.
+~files-extras-recover-all-files~: Attempts to recover all files found in the auto-save directory. Useful after a crash when =recover-session= might not work. Runs =diff-buffer-with-file= after each recovery attempt.
 #+findex: files-extras-diff-buffer-with-file
-~files-extras-diff-buffer-with-file~: Runs `diff-buffer-with-file` using unified diff format (`-u`). Also added as `:after` advice to `recover-this-file`.
+~files-extras-diff-buffer-with-file~: Runs =diff-buffer-with-file= using unified diff format (=-u=). Also added as =:after= advice to =recover-this-file=.
 #+findex: files-extras-copy-current-path
-~files-extras-copy-current-path~: Copies the current buffer's file path or `default-directory` to the kill ring.
+~files-extras-copy-current-path~: Copies the current buffer's file path or =default-directory= to the kill ring.
 #+findex: file-extras-copy-contents
 ~file-extras-copy-contents~: Copies the entire content of a specified file (or file at point/current buffer's file) to the kill ring.
 #+findex: files-extras-buffer-local-set-key
@@ -117,7 +117,7 @@ If non-nil, advice for `hack-dir-local-variables` (currently commented out) woul
 :END:
 
 #+findex: files-extras-ocr-pdf
-~files-extras-ocr-pdf~: Runs `ocrmypdf` on a PDF file (at point in Dired, current buffer, or associated with Ebib entry). Prompts for language. Handles forcing OCR and provides feedback via messages.
+~files-extras-ocr-pdf~: Runs =ocrmypdf= on a PDF file (at point in Dired, current buffer, or associated with Ebib entry). Prompts for language. Handles forcing OCR and provides feedback via messages.
 #+findex: files-extras-download-bypass-paywalls-chrome
 ~files-extras-download-bypass-paywalls-chrome~: Downloads the "Bypass Paywalls Clean" Chrome extension zip, extracts it, and opens both the Chrome extensions page and the extracted folder for manual installation.
 #+findex: files-extras-download-bypass-paywalls-firefox
@@ -131,7 +131,7 @@ If non-nil, advice for `hack-dir-local-variables` (currently commented out) woul
 #+findex: files-extras-open-elpaca-package
 ~files-extras-open-elpaca-package~: Opens the main Elisp file for a specified Elpaca-managed package.
 #+findex: files-extras-open-extras-package
-~files-extras-open-extras-package~: Prompts (with completion) for an "extras" file within the `emacs/extras/` directory and opens it.
+~files-extras-open-extras-package~: Prompts (with completion) for an "extras" file within the =emacs/extras/= directory and opens it.
 
 ** Transient Dispatch Menus
 :PROPERTIES:
@@ -141,7 +141,7 @@ If non-nil, advice for `hack-dir-local-variables` (currently commented out) woul
 #+findex: files-extras-dispatch
 ~files-extras-dispatch~: Transient menu for quickly opening common configuration files (inbox, agenda, config, feeds, ledger, notes, etc.).
 #+findex: files-extras-packages-dispatch
-~files-extras-packages-dispatch~: Transient menu (part of `files-extras-dispatch`) for opening personal Elpaca package files.
+~files-extras-packages-dispatch~: Transient menu (part of =files-extras-dispatch=) for opening personal Elpaca package files.
 
 * Configuration Functions
 :PROPERTIES:
@@ -150,8 +150,8 @@ If non-nil, advice for `hack-dir-local-variables` (currently commented out) woul
 
 *(Includes functions for internal use, configuration, or programmatic access)*
 
-+ ~files-extras-bury-scratch-buffer~: Hook function for `kill-buffer-query-functions` to bury the scratch buffer instead of killing it.
-+ ~files-extras-auto-save-alert~: Hook function for `find-file-hook` to alert the user if auto-save data exists for the opened file.
+- ~files-extras-bury-scratch-buffer~: Hook function for =kill-buffer-query-functions= to bury the scratch buffer instead of killing it.
+- ~files-extras-auto-save-alert~: Hook function for =find-file-hook= to alert the user if auto-save data exists for the opened file.
 
 * Utility Functions
 :PROPERTIES:
@@ -160,20 +160,20 @@ If non-nil, advice for `hack-dir-local-variables` (currently commented out) woul
 
 *(Includes functions for internal use, configuration, or programmatic access)*
 
-+ ~files-extras-read-file~: Prompts for a file path with context-aware default.
-+ ~files-extras-get-alternate-buffer~: Returns the buffer name for ~files-extras-switch-to-alternate-buffer~.
-+ ~files-extras-newest-file~: Returns the path of the most recently modified file in a directory, ignoring `.DS_Store` and `.localized`.
-+ ~files-extras-switch-to-most-recent-buffer-in-mode~: Switches to the most recent buffer matching a given major MODE.
-+ ~files-extras-ocr-pdf-process-filter~: Process filter for `ocrmypdf` output, displaying relevant messages.
-+ ~files-extras-get-stem-of-current-buffer~: Returns the filename base (without extension) of the current buffer's file.
-+ ~file-extras-bollp~: Returns t if point is at the beginning of the last line.
-+ ~files-extras-open-buffer-files~: Returns a list of `.org` files currently open in buffers.
-+ ~files-extras-walk-dir-locals-file~ (advice, commented out): Would modify `hack-dir-local-variables` to evaluate `.dir-locals.el` upwards.
-+ ~files-extras-get-current-dir-lowercased~: Returns the base name of the current directory, lowercased, with hyphens replaced by underscores.
-+ ~files-extras-lines-to-list~: Reads a file and returns its lines as a list of strings.
-+ ~files-extras-list-to-lines~: Writes a list of strings to a file, one element per line.
-+ ~files-extras-buffer-file-name~: Returns the name of the file the buffer is visiting, handling potential `git-dirs` path adjustments.
-+ ~files-extras-get-nth-directory~: Returns the Nth directory component of a PATH.
+- ~files-extras-read-file~: Prompts for a file path with context-aware default.
+- ~files-extras-get-alternate-buffer~: Returns the buffer name for ~files-extras-switch-to-alternate-buffer~.
+- ~files-extras-newest-file~: Returns the path of the most recently modified file in a directory, ignoring =.DS_Store= and =.localized=.
+- ~files-extras-switch-to-most-recent-buffer-in-mode~: Switches to the most recent buffer matching a given major MODE.
+- ~files-extras-ocr-pdf-process-filter~: Process filter for =ocrmypdf= output, displaying relevant messages.
+- ~files-extras-get-stem-of-current-buffer~: Returns the filename base (without extension) of the current buffer's file.
+- ~file-extras-bollp~: Returns t if point is at the beginning of the last line.
+- ~files-extras-open-buffer-files~: Returns a list of =.org= files currently open in buffers.
+- ~files-extras-walk-dir-locals-file~ (advice, commented out): Would modify =hack-dir-local-variables= to evaluate =.dir-locals.el= upwards.
+- ~files-extras-get-current-dir-lowercased~: Returns the base name of the current directory, lowercased, with hyphens replaced by underscores.
+- ~files-extras-lines-to-list~: Reads a file and returns its lines as a list of strings.
+- ~files-extras-list-to-lines~: Writes a list of strings to a file, one element per line.
+- ~files-extras-buffer-file-name~: Returns the name of the file the buffer is visiting, handling potential =git-dirs= path adjustments.
+- ~files-extras-get-nth-directory~: Returns the Nth directory component of a PATH.
 
 * Patched Functions / Advice
 :PROPERTIES:
@@ -182,13 +182,13 @@ If non-nil, advice for `hack-dir-local-variables` (currently commented out) woul
 
 =files-extras.el= advises or overrides several built-in functions:
 
-+ ~system-move-file-to-trash~: Overridden by ~files-extras-system-move-file-to-trash~ to use the external `trash` utility on macOS.
-+ `kill-buffer-query-functions`: Hooked by ~files-extras-bury-scratch-buffer~ to prevent killing the scratch buffer.
-+ `find-file-hook`: Hooked by ~files-extras-auto-save-alert~ to check for auto-save data.
-+ `recover-this-file`: Advised `:after` by ~files-extras-diff-buffer-with-file~ to show diff after recovery.
-+ `make-auto-save-file-name`: Advised `:around` by ~files-extras-make-hashed-auto-save-file-name-a~ to use hashed names for non-file buffers.
-+ `make-backup-file-name-1`: Advised `:around` by ~files-extras-make-hashed-backup-file-name-a~ to use hashed names for backups in specified directories.
-+ `hack-dir-local-variables`: Advised `:around` by ~files-extras-walk-dir-locals-file~ (commented out) to change evaluation order.
+- ~system-move-file-to-trash~: Overridden by ~files-extras-system-move-file-to-trash~ to use the external =trash= utility on macOS.
+- =kill-buffer-query-functions=: Hooked by ~files-extras-bury-scratch-buffer~ to prevent killing the scratch buffer.
+- =find-file-hook=: Hooked by ~files-extras-auto-save-alert~ to check for auto-save data.
+- =recover-this-file=: Advised =:after= by ~files-extras-diff-buffer-with-file~ to show diff after recovery.
+- =make-auto-save-file-name=: Advised =:around= by ~files-extras-make-hashed-auto-save-file-name-a~ to use hashed names for non-file buffers.
+- =make-backup-file-name-1=: Advised =:around= by ~files-extras-make-hashed-backup-file-name-a~ to use hashed names for backups in specified directories.
+- =hack-dir-local-variables=: Advised =:around= by ~files-extras-walk-dir-locals-file~ (commented out) to change evaluation order.
 
 * Indices
 :PROPERTIES:

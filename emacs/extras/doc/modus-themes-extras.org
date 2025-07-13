@@ -21,8 +21,8 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Conditional theme loading based on the Emacs distribution (Emacs Mac port vs. Emacs Plus) and system appearance.
-+ Functions to apply specific face customizations, particularly for parenthesis highlighting.
+- Conditional theme loading based on the Emacs distribution (Emacs Mac port vs. Emacs Plus) and system appearance.
+- Functions to apply specific face customizations, particularly for parenthesis highlighting.
 
 * Conditional Theme Loading
 :PROPERTIES:
@@ -47,7 +47,7 @@ This function checks the Emacs distribution using ~simple-extras-get-emacs-distr
 :END:
 
 #+findex: modus-themes-extras-load-theme-emacs-mac
-This function is specific to the Emacs Mac port. It checks the current system appearance using `mac-application-state`.
+This function is specific to the Emacs Mac port. It checks the current system appearance using =mac-application-state=.
 - If the appearance is "NSAppearanceNameAqua" (light mode), it loads the Modus Operandi theme.
 - If the appearance is "NSAppearanceNameDarkAqua" (dark mode), it loads the Modus Vivendi theme.
 
@@ -57,7 +57,7 @@ This function is specific to the Emacs Mac port. It checks the current system ap
 :END:
 
 #+findex: modus-themes-extras-load-theme-emacs-plus
-This function is designed for the `ns-system-appearance-change-functions` hook in Emacs Plus. It receives the new system appearance ('light or 'dark) as an argument.
+This function is designed for the =ns-system-appearance-change-functions= hook in Emacs Plus. It receives the new system appearance ('light or 'dark) as an argument.
 - If the appearance is 'light, it loads Modus Operandi.
 - If the appearance is 'dark, it loads Modus Vivendi.
 
@@ -72,7 +72,7 @@ This function is designed for the `ns-system-appearance-change-functions` hook i
 :END:
 
 #+findex: modus-themes-extras-highlight-parentheses
-The function ~modus-themes-extras-highlight-parentheses~ sets the colors used by the `highlight-parentheses-mode`. It uses the `modus-themes-with-colors` macro to access the theme's color palette and sets the `highlight-parentheses-background-colors` and `highlight-parentheses-colors` variables to specific intense background and foreground colors from the Modus themes palette (cyan, magenta, green, yellow). This ensures the parenthesis highlighting matches the active Modus theme.
+The function ~modus-themes-extras-highlight-parentheses~ sets the colors used by the =highlight-parentheses-mode=. It uses the =modus-themes-with-colors= macro to access the theme's color palette and sets the =highlight-parentheses-background-colors= and =highlight-parentheses-colors= variables to specific intense background and foreground colors from the Modus themes palette (cyan, magenta, green, yellow). This ensures the parenthesis highlighting matches the active Modus theme.
 
 ** Set Extra Faces (Placeholder)
 :PROPERTIES:
@@ -80,7 +80,7 @@ The function ~modus-themes-extras-highlight-parentheses~ sets the colors used by
 :END:
 
 #+findex: modus-themes-extras-set-faces
-The function ~modus-themes-extras-set-faces~ is currently defined as an empty function. Its docstring serves as a placeholder and example, showing how a user could add further theme-specific face customizations within this function, potentially checking the value of `custom-enabled-themes` to apply different settings for Modus Operandi versus Modus Vivendi.
+The function ~modus-themes-extras-set-faces~ is currently defined as an empty function. Its docstring serves as a placeholder and example, showing how a user could add further theme-specific face customizations within this function, potentially checking the value of =custom-enabled-themes= to apply different settings for Modus Operandi versus Modus Vivendi.
 
 * Indices
 :PROPERTIES:

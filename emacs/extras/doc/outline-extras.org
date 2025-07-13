@@ -21,7 +21,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Commands to promote or demote the current heading while keeping the point on the heading line.
+- Commands to promote or demote the current heading while keeping the point on the heading line.
 
 * Commands
 :PROPERTIES:

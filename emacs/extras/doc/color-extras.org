@@ -21,12 +21,12 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Parsing HEX and HSL color strings.
-+ Functions to detect HEX or HSL color values at point.
-+ Commands to convert colors between HEX and HSL formats (either at point or throughout a buffer).
-+ Functions for internal color space conversions (HEX to RGB, RGB to HSL, HSL to HEX).
-+ A command to calculate the WCAG contrast ratio between colors.
-+ Integration with =embark= to provide color-specific actions.
+- Parsing HEX and HSL color strings.
+- Functions to detect HEX or HSL color values at point.
+- Commands to convert colors between HEX and HSL formats (either at point or throughout a buffer).
+- Functions for internal color space conversions (HEX to RGB, RGB to HSL, HSL to HEX).
+- A command to calculate the WCAG contrast ratio between colors.
+- Integration with =embark= to provide color-specific actions.
 
 * Variables
 :PROPERTIES:
@@ -94,37 +94,37 @@ These functions provide helper functionalities for parsing, formatting, and conv
 :CUSTOM_ID: h:parsing-detection
 :END:
 
-+ ~color-extras-parse-color~: Parses a COLOR string. Returns the HEX string (without #) if it's HEX. Returns a list of three numbers (H, S, L scaled 0-100) if it's HSL. Can optionally return the HSL list as a formatted string.
-+ ~color-extras-looking-at-rgb~: Returns the 6-digit HEX string at point (without #) if found, else nil.
-+ ~color-extras-looking-at-hsl-scaled~: Returns the HSL color at point as a list `(H S L)` (scaled 0-100) or as a formatted string if optional STRING argument is non-nil. Returns nil if no HSL color is found.
-+ ~color-extras-looking-at-color~: Returns the HEX string or HSL list/string found at point, preferring HEX.
+- ~color-extras-parse-color~: Parses a COLOR string. Returns the HEX string (without #) if it's HEX. Returns a list of three numbers (H, S, L scaled 0-100) if it's HSL. Can optionally return the HSL list as a formatted string.
+- ~color-extras-looking-at-rgb~: Returns the 6-digit HEX string at point (without #) if found, else nil.
+- ~color-extras-looking-at-hsl-scaled~: Returns the HSL color at point as a list =(H S L)= (scaled 0-100) or as a formatted string if optional STRING argument is non-nil. Returns nil if no HSL color is found.
+- ~color-extras-looking-at-color~: Returns the HEX string or HSL list/string found at point, preferring HEX.
 
 ** HSL Formatting and Splitting
 :PROPERTIES:
 :CUSTOM_ID: h:hsl-formatting
 :END:
 
-+ ~color-extras-hsl-split~: Extracts the H, S, L numeric values from the current regexp match data (assuming a match for =color-extras-hsl-scaled-pattern=) and returns them as a list `(H S L)`.
-+ ~color-extras-hsl-to-string~: Converts an HSL list `(H S L)` (scaled 0-100) into a formatted string "H, S%, L%".
-+ ~color-extras-format-hsl~: Takes an HSL list `(H S L)` and returns either the list itself or the formatted string version based on the optional STRING argument.
+- ~color-extras-hsl-split~: Extracts the H, S, L numeric values from the current regexp match data (assuming a match for =color-extras-hsl-scaled-pattern=) and returns them as a list =(H S L)=.
+- ~color-extras-hsl-to-string~: Converts an HSL list =(H S L)= (scaled 0-100) into a formatted string "H, S%, L%".
+- ~color-extras-format-hsl~: Takes an HSL list =(H S L)= and returns either the list itself or the formatted string version based on the optional STRING argument.
 
 ** Color Space Conversions
 :PROPERTIES:
 :CUSTOM_ID: h:color-space-conversions
 :END:
 
-+ ~color-extras-hex-to-rgb~: Converts a HEX color string (e.g., "#RRGGBB", "#RGB") to a list of three RGB floats `(R G B)` (scaled 0.0-1.0). Handles 3, 4, 6, and 8-digit hex codes (ignoring alpha for 4/8 digits).
-+ ~color-extras-rgb-to-hex~: Converts three RGB integers `(R G B)` (scaled 0-255) to a 6-digit HEX string (e.g., "#RRGGBB").
-+ ~color-extras-hex-to-hsl~: Converts a HEX string to an HSL list `(H S L)`. If optional RESCALE is non-nil, returns values scaled 0-360 for H and 0-100 for S, L. Otherwise, returns values scaled 0.0-1.0.
-+ ~color-extras-hsl-to-hex~: Converts an HSL list `(H S L)` to a HEX string. If optional RESCALE is non-nil, assumes input values are scaled (0-360 for H, 0-100 for S, L). Otherwise, assumes input values are scaled 0.0-1.0.
+- ~color-extras-hex-to-rgb~: Converts a HEX color string (e.g., "#RRGGBB", "#RGB") to a list of three RGB floats =(R G B)= (scaled 0.0-1.0). Handles 3, 4, 6, and 8-digit hex codes (ignoring alpha for 4/8 digits).
+- ~color-extras-rgb-to-hex~: Converts three RGB integers =(R G B)= (scaled 0-255) to a 6-digit HEX string (e.g., "#RRGGBB").
+- ~color-extras-hex-to-hsl~: Converts a HEX string to an HSL list =(H S L)=. If optional RESCALE is non-nil, returns values scaled 0-360 for H and 0-100 for S, L. Otherwise, returns values scaled 0.0-1.0.
+- ~color-extras-hsl-to-hex~: Converts an HSL list =(H S L)= to a HEX string. If optional RESCALE is non-nil, assumes input values are scaled (0-360 for H, 0-100 for S, L). Otherwise, assumes input values are scaled 0.0-1.0.
 
 ** Internal Rescaling Helpers
 :PROPERTIES:
 :CUSTOM_ID: h:rescaling-helpers
 :END:
 
-+ ~color-extras-hsl-rescale~: Rescales HSL values between the 0.0-1.0 range and the scaled range (0-360 for H, 0-100 for S, L) based on the OPERATION (`*` or `/`).
-+ ~color-extras-hsl-maybe-rescale~: Calls ~color-extras-hsl-rescale~ only if the RESCALE argument is non-nil.
+- ~color-extras-hsl-rescale~: Rescales HSL values between the 0.0-1.0 range and the scaled range (0-360 for H, 0-100 for S, L) based on the OPERATION (=*= or =/=).
+- ~color-extras-hsl-maybe-rescale~: Calls ~color-extras-hsl-rescale~ only if the RESCALE argument is non-nil.
 
 * Embark Integration
 :PROPERTIES:
@@ -133,8 +133,8 @@ These functions provide helper functionalities for parsing, formatting, and conv
 
 =color-extras.el= integrates with the =embark= package to provide contextual actions for color values.
 
-+ ~color-extras-embark-color-finder~: A function designed for =embark-target-finders=. It identifies HEX or HSL color strings at point and returns them with the category =color=.
-+ ~color-extras-embark-map~: A keymap associated with the =color= category. It binds:
+- ~color-extras-embark-color-finder~: A function designed for =embark-target-finders=. It identifies HEX or HSL color strings at point and returns them with the category =color=.
+- ~color-extras-embark-map~: A keymap associated with the =color= category. It binds:
   + =c= to ~color-extras-convert~ (convert color format).
   + =w= to =embark-copy-as-kill= (copy the color string).
 

@@ -21,11 +21,11 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Switching to the most recently used window (including the minibuffer).
-+ Automatically splitting the frame if it's unsplit, potentially into three windows based on width.
-+ Commands to swap buffers between windows or move a buffer to an adjacent window (left/right).
-+ Switching focus to the minibuffer window when active.
-+ Selecting the leftmost or rightmost window in a frame.
+- Switching to the most recently used window (including the minibuffer).
+- Automatically splitting the frame if it's unsplit, potentially into three windows based on width.
+- Commands to swap buffers between windows or move a buffer to an adjacent window (left/right).
+- Switching focus to the minibuffer window when active.
+- Selecting the leftmost or rightmost window in a frame.
 
 * Configuration Variables
 :PROPERTIES:
@@ -110,12 +110,12 @@ The command ~window-extras-select-side-window~ prompts the user to enter "left" 
 
 These functions provide helper functionalities used by other commands or for programmatic use.
 
-+ ~window-extras-get-last-window~: Returns the window object representing the most recently selected window in the current frame, potentially including the minibuffer.
-+ ~window-extras-buffer-move~: Moves the current buffer to a specified TARGET-WINDOW, replacing the buffer in the current window with the alternate buffer (obtained via =files-extras-get-alternate-buffer=). If TARGET-WINDOW is nil or the same as the last/current window, it uses the last window as the target. It handles splitting if necessary and ensures the moved buffer is removed from the source window's history.
-+ ~window-extras--move-or-swap~: The core internal function implementing the logic for both moving and swapping buffers between windows. It determines the source and target windows and uses =set-window-buffer= to place the correct buffers.
-+ ~window-extras--remove-buffer-from-window-history~: Removes a specific BUFFER from a WINDOW's previous and next buffer lists to prevent it from reappearing unexpectedly after being moved or killed.
-+ ~window-extras--get-target-and-source-windows~: Determines the appropriate target and source window objects based on the desired TARGET-WINDOW and the currently selected window.
-+ ~window-extras-frame-is-maximized-p~: Returns non-nil if the current frame's pixel dimensions match the display's pixel dimensions, indicating it is maximized.
+- ~window-extras-get-last-window~: Returns the window object representing the most recently selected window in the current frame, potentially including the minibuffer.
+- ~window-extras-buffer-move~: Moves the current buffer to a specified TARGET-WINDOW, replacing the buffer in the current window with the alternate buffer (obtained via =files-extras-get-alternate-buffer=). If TARGET-WINDOW is nil or the same as the last/current window, it uses the last window as the target. It handles splitting if necessary and ensures the moved buffer is removed from the source window's history.
+- ~window-extras--move-or-swap~: The core internal function implementing the logic for both moving and swapping buffers between windows. It determines the source and target windows and uses =set-window-buffer= to place the correct buffers.
+- ~window-extras--remove-buffer-from-window-history~: Removes a specific BUFFER from a WINDOW's previous and next buffer lists to prevent it from reappearing unexpectedly after being moved or killed.
+- ~window-extras--get-target-and-source-windows~: Determines the appropriate target and source window objects based on the desired TARGET-WINDOW and the currently selected window.
+- ~window-extras-frame-is-maximized-p~: Returns non-nil if the current frame's pixel dimensions match the display's pixel dimensions, indicating it is maximized.
 
 * Indices
 :PROPERTIES:

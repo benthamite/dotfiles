@@ -21,9 +21,9 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ A command to copy text from the kill ring directly into a specified register.
-+ Functions to associate single character keys with specific buffers for quick switching.
-+ A transient dispatch menu (`register-extras-dispatch`) providing access to various register-related commands.
+- A command to copy text from the kill ring directly into a specified register.
+- Functions to associate single character keys with specific buffers for quick switching.
+- A transient dispatch menu (=register-extras-dispatch=) providing access to various register-related commands.
 
 * Commands
 :PROPERTIES:
@@ -39,9 +39,9 @@ The main features include:
 
 #+findex: register-extras-kill-to-register
 The command ~register-extras-kill-to-register~ allows the user to copy an item from the kill ring into a specified register.
-1. It prompts the user to select an item from the kill ring using `read-from-kill-ring`.
-2. It prompts the user to select a target register using `register-read-with-preview`.
-3. It stores the selected text into the chosen register using `set-register`.
+1. It prompts the user to select an item from the kill ring using =read-from-kill-ring=.
+2. It prompts the user to select a target register using =register-read-with-preview=.
+3. It stores the selected text into the chosen register using =set-register=.
 
 ** Associate Key with Current Buffer
 :PROPERTIES:
@@ -49,7 +49,7 @@ The command ~register-extras-kill-to-register~ allows the user to copy an item f
 :END:
 
 #+findex: register-extras-buffer-to-register
-The command ~register-extras-buffer-to-register~ associates a single character key with the current buffer. It prompts the user for a character (KEY). It then updates the internal alist ~register-extras-keys-alist~, removing any previous association for that key and adding a new pair `(KEY . current-buffer)`. This allows for quick buffer switching using ~register-extras-jump-to-buffer~.
+The command ~register-extras-buffer-to-register~ associates a single character key with the current buffer. It prompts the user for a character (KEY). It then updates the internal alist ~register-extras-keys-alist~, removing any previous association for that key and adding a new pair =(KEY . current-buffer)=. This allows for quick buffer switching using ~register-extras-jump-to-buffer~.
 
 ** Jump to Buffer Associated with Key
 :PROPERTIES:
@@ -57,7 +57,7 @@ The command ~register-extras-buffer-to-register~ associates a single character k
 :END:
 
 #+findex: register-extras-jump-to-buffer
-The command ~register-extras-jump-to-buffer~ prompts the user for a character key. It looks up the key in the ~register-extras-keys-alist~. If a live buffer is associated with that key, it switches to that buffer using `switch-to-buffer`. If no association exists or the buffer is dead, it displays a message.
+The command ~register-extras-jump-to-buffer~ prompts the user for a character key. It looks up the key in the ~register-extras-keys-alist~. If a live buffer is associated with that key, it switches to that buffer using =switch-to-buffer=. If no association exists or the buffer is dead, it displays a message.
 
 ** Register Dispatch Menu
 :PROPERTIES:
@@ -72,7 +72,7 @@ The command ~register-extras-dispatch~ presents a transient menu (using =transie
 :CUSTOM_ID: h:internal-variables
 :END:
 
-+ ~register-extras-keys-alist~: An internal alist storing the mapping between character keys and buffers, used by ~register-extras-buffer-to-register~ and ~register-extras-jump-to-buffer~.
+- ~register-extras-keys-alist~: An internal alist storing the mapping between character keys and buffers, used by ~register-extras-buffer-to-register~ and ~register-extras-jump-to-buffer~.
 
 * Indices
 :PROPERTIES:

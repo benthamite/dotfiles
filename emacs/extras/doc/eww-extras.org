@@ -21,13 +21,13 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Commands to generate PDF or HTML files from a URL using headless Chrome.
-+ Command to download subtitles (SRT) using =yt-dlp=.
-+ Automatic application of =eww-readable= mode, with configurable exceptions based on URL patterns stored in a file.
-+ Command to add the current domain to the readability exceptions list.
-+ Vimium-like commands for editing the current URL, opening kill ring content, and navigating the URL hierarchy (up/root).
-+ Integration to handle YouTube URLs by fetching transcripts and opening the video in an external player (MPV).
-+ Command to add the current EWW page URL to a bibliography using =zotra-extras=.
+- Commands to generate PDF or HTML files from a URL using headless Chrome.
+- Command to download subtitles (SRT) using =yt-dlp=.
+- Automatic application of =eww-readable= mode, with configurable exceptions based on URL patterns stored in a file.
+- Command to add the current domain to the readability exceptions list.
+- Vimium-like commands for editing the current URL, opening kill ring content, and navigating the URL hierarchy (up/root).
+- Integration to handle YouTube URLs by fetching transcripts and opening the video in an external player (MPV).
+- Command to add the current EWW page URL to a bibliography using =zotra-extras=.
 
 * User Options
 :PROPERTIES:
@@ -115,10 +115,10 @@ The command ~eww-extras-browse-file~ opens a local file in EWW. It prompts for t
 ~eww-extras-open-with-recent-kill-ring~: Opens the URL currently at the top of the kill ring in EWW. With prefix arg, opens in a new EWW buffer.
 
 #+findex: eww-extras-go-up-url-hierarchy
-~eww-extras-go-up-url-hierarchy~: Navigates one level up in the current URL's path hierarchy (e.g., from `example.com/a/b/c` to `example.com/a/b`).
+~eww-extras-go-up-url-hierarchy~: Navigates one level up in the current URL's path hierarchy (e.g., from =example.com/a/b/c= to =example.com/a/b=).
 
 #+findex: eww-extras-go-to-root-url-hierarchy
-~eww-extras-go-to-root-url-hierarchy~: Navigates to the root domain of the current URL (e.g., from `example.com/a/b/c` to `example.com`).
+~eww-extras-go-to-root-url-hierarchy~: Navigates to the root domain of the current URL (e.g., from =example.com/a/b/c= to =example.com=).
 
 ** Integration Commands
 :PROPERTIES:
@@ -162,11 +162,11 @@ This function is intended to be used as a handler in =browse-url-handlers= for Y
 :CUSTOM_ID: h:internal-functions
 :END:
 
-+ ~eww-extras-url-to-file~: Core logic for generating PDF/HTML files using headless Chrome. Handles process creation and sentinel setup.
-+ ~eww-extras-url-to-file-make-command~: Constructs the shell command string for headless Chrome based on the desired output TYPE (pdf/html).
-+ ~eww-extras-url-to-file-sentinel~: Process sentinel function that checks the exit status of the Chrome process and runs the CALLBACK if successful or if the file was created despite errors.
-+ ~eww-extras-run-callback~: Helper to safely execute the optional CALLBACK function after file generation.
-+ ~eww-extras-chrome-delete-data-dir~: Helper to delete one of the copied Chrome data directories.
+- ~eww-extras-url-to-file~: Core logic for generating PDF/HTML files using headless Chrome. Handles process creation and sentinel setup.
+- ~eww-extras-url-to-file-make-command~: Constructs the shell command string for headless Chrome based on the desired output TYPE (pdf/html).
+- ~eww-extras-url-to-file-sentinel~: Process sentinel function that checks the exit status of the Chrome process and runs the CALLBACK if successful or if the file was created despite errors.
+- ~eww-extras-run-callback~: Helper to safely execute the optional CALLBACK function after file generation.
+- ~eww-extras-chrome-delete-data-dir~: Helper to delete one of the copied Chrome data directories.
 
 * Indices
 :PROPERTIES:

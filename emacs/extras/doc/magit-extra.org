@@ -21,14 +21,14 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Commands to stage, commit, and push changes in one step, optionally for a single file or across multiple repositories.
-+ A function to convert Git remote URLs to HTTP URLs.
-+ Helper functions to get information about the file(s) being committed, including associated Org headings.
-+ A command to check out Git tags across the main repository and all submodules simultaneously.
-+ A function to warn the user if a specified repository is dirty (has uncommitted changes).
-+ A customized Magit dispatch transient menu.
-+ A command to finish a =with-editor= commit session and immediately push.
-+ A transient suffix command to update all submodules recursively.
+- Commands to stage, commit, and push changes in one step, optionally for a single file or across multiple repositories.
+- A function to convert Git remote URLs to HTTP URLs.
+- Helper functions to get information about the file(s) being committed, including associated Org headings.
+- A command to check out Git tags across the main repository and all submodules simultaneously.
+- A function to warn the user if a specified repository is dirty (has uncommitted changes).
+- A customized Magit dispatch transient menu.
+- A command to finish a =with-editor= commit session and immediately push.
+- A transient suffix command to update all submodules recursively.
 
 * Commands
 :PROPERTIES:
@@ -125,12 +125,12 @@ The transient suffix ~magit-extras-pull-all-submodules~ is defined for use withi
 
 These functions provide utility for other commands or for direct use in Elisp.
 
-+ ~magit-extras-parse-url~: Converts a Git remote URL (potentially in SSH format like =git@github.com:user/repo.git=) into an HTTPS URL (=https://github.com/user/repo=). Handles existing HTTP(S) URLs correctly.
-+ ~magit-extras-move-point-to-start~: A simple utility to move the point to the beginning of the buffer after a short delay (0.3 seconds).
-+ ~magit-extras-get-commit-file~: Intended for use during a commit process (e.g., from a hook). It attempts to find the name of the file being committed from the Magit status buffer section "Changes to be committed". It can return the path relative to the repository root (default), the full absolute path (if PATH is 'full), or just the filename (if PATH is 'sans-dir). Returns the first file if multiple are staged.
-+ ~magit-extras-get-commit-heading~: Attempts to find the Org mode heading associated with the code being committed. It gets the full path of the file being committed using ~magit-extras-get-commit-file~, switches to the previous window (assuming the commit process started from an Org buffer), visits the file being committed at the diff location, and then retrieves the Org heading item using =org-entry-get nil "ITEM"=.
-+ ~magit-extras-get-unstaged-files~: Returns a list of files that have unstaged changes in the current repository using =git diff --name-only --diff-filter=d=.
-+ ~magit-extras-track-file~: Stages the specified FILE using =git add=.
+- ~magit-extras-parse-url~: Converts a Git remote URL (potentially in SSH format like =git@github.com:user/repo.git=) into an HTTPS URL (=https://github.com/user/repo=). Handles existing HTTP(S) URLs correctly.
+- ~magit-extras-move-point-to-start~: A simple utility to move the point to the beginning of the buffer after a short delay (0.3 seconds).
+- ~magit-extras-get-commit-file~: Intended for use during a commit process (e.g., from a hook). It attempts to find the name of the file being committed from the Magit status buffer section "Changes to be committed". It can return the path relative to the repository root (default), the full absolute path (if PATH is 'full), or just the filename (if PATH is 'sans-dir). Returns the first file if multiple are staged.
+- ~magit-extras-get-commit-heading~: Attempts to find the Org mode heading associated with the code being committed. It gets the full path of the file being committed using ~magit-extras-get-commit-file~, switches to the previous window (assuming the commit process started from an Org buffer), visits the file being committed at the diff location, and then retrieves the Org heading item using =org-entry-get nil "ITEM"=.
+- ~magit-extras-get-unstaged-files~: Returns a list of files that have unstaged changes in the current repository using =git diff --name-only --diff-filter=d=.
+- ~magit-extras-track-file~: Stages the specified FILE using =git add=.
 
 * Indices
 :PROPERTIES:

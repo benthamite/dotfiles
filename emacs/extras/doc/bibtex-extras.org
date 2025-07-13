@@ -21,15 +21,15 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ A list of valid BibLaTeX fields for reference or completion.
-+ Functions to get the key or a specific field value from the current BibTeX entry.
-+ Functions to add, update, or append values to fields within an entry.
-+ A command to convert the "titleaddon" field (often used by Zotero) to the standard "journaltitle" field.
-+ A command to kill (delete) a specific field from the current entry.
-+ A command to move the current entry to a different bibliography file.
-+ A command to open the current BibTeX entry directly in =ebib=.
-+ Helper functions for sorting BibTeX entries based on specific criteria (e.g., presence of crossref).
-+ Functions for attaching files downloaded via other packages (like =zotra= or =eww=) to the correct BibTeX entry.
+- A list of valid BibLaTeX fields for reference or completion.
+- Functions to get the key or a specific field value from the current BibTeX entry.
+- Functions to add, update, or append values to fields within an entry.
+- A command to convert the "titleaddon" field (often used by Zotero) to the standard "journaltitle" field.
+- A command to kill (delete) a specific field from the current entry.
+- A command to move the current entry to a different bibliography file.
+- A command to open the current BibTeX entry directly in =ebib=.
+- Helper functions for sorting BibTeX entries based on specific criteria (e.g., presence of crossref).
+- Functions for attaching files downloaded via other packages (like =zotra= or =eww=) to the correct BibTeX entry.
 
 * Variables
 :PROPERTIES:
@@ -98,16 +98,16 @@ The command ~bibtex-extras-set-field~ allows interactively setting the value of 
 
 These functions provide helper functionalities used by other commands or for programmatic use.
 
-+ ~bibtex-extras-get-key~: Returns the BibTeX key (e.g., "Author2024") of the entry at point.
-+ ~bibtex-extras-add-or-update-field~: Adds a FIELD with VALUE if it doesn't exist, or updates the existing FIELD with VALUE.
-+ ~bibtex-extras-append-to-field~: Appends VALUE to the existing content of FIELD, using an optional DELIMITER (defaults to ";"). If the field doesn't exist, it creates it with VALUE.
-+ ~bibtex-extras-get-entry-as-string~: Returns the entire BibTeX entry at point (or specified by KEY) as a string. Can optionally return only the value of a specific FIELD within that entry.
-+ ~bibtex-extras-get-field~: Returns the value of a specified FIELD within the current entry, cleaning up whitespace.
-+ ~bibtex-extras-get-field-name~: Returns the name of the BibTeX field at point.
-+ ~bibtex-extras-get-field-in-string~: Extracts the value of a FIELD from a given BibTeX entry STRING.
-+ ~bibtex-extras-entry-sorter~: Helper function for sorting; returns a list containing the entry key and whether it has a "crossref" field. Used by ~bibtex-extras-lessp~.
-+ ~bibtex-extras-lessp~: Predicate function for sorting BibTeX entries. It prioritizes entries with a "crossref" field (sorting them reverse-alphabetically by key) and then sorts remaining entries alphabetically by key. This mimics Ebib's sorting behavior.
-+ ~bibtex-extras-attach-file-to-entry~: Attaches a FILE to the BibTeX entry whose key matches the base name of the FILE within a specified BIBTEX-FILE. Used as a callback for download functions.
+- ~bibtex-extras-get-key~: Returns the BibTeX key (e.g., "Author2024") of the entry at point.
+- ~bibtex-extras-add-or-update-field~: Adds a FIELD with VALUE if it doesn't exist, or updates the existing FIELD with VALUE.
+- ~bibtex-extras-append-to-field~: Appends VALUE to the existing content of FIELD, using an optional DELIMITER (defaults to ";"). If the field doesn't exist, it creates it with VALUE.
+- ~bibtex-extras-get-entry-as-string~: Returns the entire BibTeX entry at point (or specified by KEY) as a string. Can optionally return only the value of a specific FIELD within that entry.
+- ~bibtex-extras-get-field~: Returns the value of a specified FIELD within the current entry, cleaning up whitespace.
+- ~bibtex-extras-get-field-name~: Returns the name of the BibTeX field at point.
+- ~bibtex-extras-get-field-in-string~: Extracts the value of a FIELD from a given BibTeX entry STRING.
+- ~bibtex-extras-entry-sorter~: Helper function for sorting; returns a list containing the entry key and whether it has a "crossref" field. Used by ~bibtex-extras-lessp~.
+- ~bibtex-extras-lessp~: Predicate function for sorting BibTeX entries. It prioritizes entries with a "crossref" field (sorting them reverse-alphabetically by key) and then sorts remaining entries alphabetically by key. This mimics Ebib's sorting behavior.
+- ~bibtex-extras-attach-file-to-entry~: Attaches a FILE to the BibTeX entry whose key matches the base name of the FILE within a specified BIBTEX-FILE. Used as a callback for download functions.
 
 * Patched Functions
 :PROPERTIES:

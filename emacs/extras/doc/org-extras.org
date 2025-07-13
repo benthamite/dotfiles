@@ -222,7 +222,7 @@ A regexp (string). If the heading being clocked into matches this regexp, the us
 #+findex: org-extras-id-process-next-duplicate
 ~org-extras-id-process-next-duplicate~: From the =*Duplicate Org IDs*= buffer, this command opens the file corresponding to the first entry, copies the associated ID to the kill ring, and removes the line from the buffer. If the buffer becomes empty, it is automatically closed.
 #+findex: org-extras-id-update-id-locations
-~org-extras-id-update-id-locations~: Updates the Org ID location cache by scanning agenda files, archives, open Org files, files in =org-directory=, and =org-id-extra-files=.
+~org-extras-id-update-id-locations~: Updates the Org ID location cache by scanning agenda files, archives, open Org files, files in =org-directory=, and =org-id-extra-files=. If any duplicate IDs are found during the scan, it automatically calls =org-extras-id-find-duplicate-ids= to present them in a separate buffer for review.
 
 ** List Handling
 :PROPERTIES:

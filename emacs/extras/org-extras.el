@@ -713,20 +713,26 @@ to display them in a dedicated buffer."
 ;;;;;; process duplicate ids
 
 (defun org-extras-id-find-duplicate-ids ()
-  "Scan *Messages* buffer for duplicate IDs and display them in a new buffer."
+  "Scan *Messages* buffer for duplicate IDs and display them in a new buffer.
+It assumes that a \"Duplicate ID\" line is associated with the file from the
+most recent preceding \"Finding ID locations\" line."
   (interactive)
   (let ((results '())
+        (current-file nil)
         (messages-buf (get-buffer "*Messages*")))
     (if (not messages-buf)
         (user-error "Buffer *Messages* does not exist")
       (with-current-buffer messages-buf
         (goto-char (point-min))
-        (while (re-search-forward "^Duplicate ID \"\\([^\"]+\\)\"" nil t)
-          (let ((id (match-string 1)))
-            (forward-line 1)
-            (when (looking-at "Finding ID locations .*?: \\(.*\\)$")
-              (let ((file (match-string 1)))
-                (push (format "%s: %s" file id) results)))))))
+        (while (not (eobp))
+          (cond
+           ((looking-at "Finding ID locations .*?: \\(.*\\)$")
+            (setq current-file (match-string 1)))
+           ((looking-at "^Duplicate ID \"\\([^\"]+\\)\"")
+            (when current-file
+              (let ((id (match-string 1)))
+                (push (format "%s: %s" current-file id) results)))))
+          (forward-line 1))))
     (if results
         (with-current-buffer (get-buffer-create "*Duplicate Org IDs*")
           (let ((inhibit-read-only t))

@@ -745,11 +745,13 @@ most recent preceding \"Finding ID locations\" line."
       (message "No duplicate IDs found in *Messages* buffer."))))
 
 (declare-function simple-extras-local-set-key "simple-extras")
+(declare-function simple-extras-visible-mode-enhanced "simple-extras")
 (defun org-extras-id-process-next-duplicate ()
   "Process the next duplicate ID from the *Duplicate Org IDs* buffer.
 This command opens the file associated with the first duplicate ID entry,
-copies the ID to the kill ring, and removes the entry from the buffer.
-If the buffer becomes empty, it is killed."
+widens the buffer, calls `simple-extras-visible-mode-enhanced', copies the ID to
+the kill ring, and removes the entry from the buffer. If the buffer becomes
+empty, it is killed."
   (interactive)
   (if-let ((buf (get-buffer "*Duplicate Org IDs*")))
       (with-current-buffer buf
@@ -764,6 +766,8 @@ If the buffer becomes empty, it is killed."
                   (let ((file (match-string 1 line))
                         (id (match-string 2 line)))
                     (find-file file)
+                    (widen)
+                    (simple-extras-visible-mode-enhanced)
                     (kill-new id)
                     (with-current-buffer buf
                       (delete-region (line-beginning-position) (1+ (line-end-position)))

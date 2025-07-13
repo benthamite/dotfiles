@@ -765,7 +765,6 @@ If the buffer becomes empty, it is killed."
                         (id (match-string 2 line)))
                     (find-file file)
                     (kill-new id)
-                    (message "Copied ID %s to kill ring." id)
                     (with-current-buffer buf
                       (delete-region (line-beginning-position) (1+ (line-end-position)))
                       (if (eobp)

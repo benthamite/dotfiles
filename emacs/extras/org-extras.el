@@ -679,12 +679,25 @@ only level-1 headings in files in specified directories by customizing
 		       (when (member dir org-extras-id-auto-add-level-1-dirs)
 			 "LEVEL=1")))))
 
+(defun org-extras--id-update-warning-handler (level message &rest args)
+  "Run `org-extras-id-find-duplicate-ids' when duplicate IDs are found.
+This function is intended to be used as an advice for `display-warning' when
+running `org-id-update-id-locations'. It checks if the warning LEVEL is `emacs'
+and if the MESSAGE contains \"duplicate IDs found\"."
+  (when (and (eq level 'emacs)
+             (string-match-p "duplicate IDs found" (apply #'format message args)))
+    (org-extras-id-find-duplicate-ids)))
+
 (defun org-extras-id-update-id-locations ()
-  "Scan relevant files for IDs.
+  "Scan relevant files for IDs and process duplicates.
 Store the relation between files and corresponding IDs. This will
 scan all agenda files, all associated archives, all open Org
 files, recursively all files in `org-directory', and all files in
-`org-id-extra-files'."
+`org-id-extra-files'.
+
+If `org-id-update-id-locations' reports duplicate IDs, this
+command will automatically call `org-extras-id-find-duplicate-ids'
+to display them in a dedicated buffer."
   (interactive)
   (let* ((all-files (directory-files-recursively org-directory ".org$\\|.org.gpg$"))
          ;; Filter out files in .Trash directories and files with carriage returns in their names.
@@ -692,7 +705,10 @@ files, recursively all files in `org-directory', and all files in
                                        (and (not (string-match-p "/\\.Trash/" f))
                                             (not (string-match-p "\r" (file-name-nondirectory f)))))
                                      all-files)))
-    (org-id-update-id-locations filtered-files)))
+    (advice-add 'display-warning :after #'org-extras--id-update-warning-handler)
+    (unwind-protect
+        (org-id-update-id-locations filtered-files)
+      (advice-remove 'display-warning #'org-extras--id-update-warning-handler))))
 
 ;;;;;; process duplicate ids
 

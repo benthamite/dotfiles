@@ -694,6 +694,34 @@ files, recursively all files in `org-directory', and all files in
                                      all-files)))
     (org-id-update-id-locations filtered-files)))
 
+;;;;;; process duplicate ids
+
+(defun org-extras-id-find-duplicate-ids ()
+  "Scan *Messages* buffer for duplicate IDs and display them in a new buffer."
+  (interactive)
+  (let ((results '())
+        (messages-buf (get-buffer "*Messages*")))
+    (if (not messages-buf)
+        (user-error "Buffer *Messages* does not exist")
+      (with-current-buffer messages-buf
+        (goto-char (point-min))
+        (while (re-search-forward "^Duplicate ID \"\\([^\"]+\\)\"" nil t)
+          (let ((id (match-string 1)))
+            (forward-line 1)
+            (when (looking-at "Finding ID locations .*?: \\(.*\\)$")
+              (let ((file (match-string 1)))
+                (push (format "%s: %s" file id) results)))))))
+    (if results
+        (with-current-buffer (get-buffer-create "*Duplicate Org IDs*")
+          (let ((inhibit-read-only t))
+            (erase-buffer)
+            (insert (string-join (reverse results) "\n"))
+            (goto-char (point-min))
+            (simple-extras-local-set-key (kbd "SPC") #'org-extras-id-process-next-duplicate)
+            (setq buffer-read-only t))
+          (display-buffer (current-buffer)))
+      (message "No duplicate IDs found in *Messages* buffer."))))
+
 (declare-function simple-extras-local-set-key "simple-extras")
 (defun org-extras-id-process-next-duplicate ()
   "Process the next duplicate ID from the *Duplicate Org IDs* buffer.
@@ -722,32 +750,6 @@ If the buffer becomes empty, it is killed."
                           (kill-buffer (current-buffer)))))
                 (user-error "Cannot parse line: %s" line))))))
     (user-error "Buffer *Duplicate Org IDs* does not exist")))
-
-(defun org-extras-id-find-duplicate-ids ()
-  "Scan *Messages* buffer for duplicate IDs and display them in a new buffer."
-  (interactive)
-  (let ((results '())
-        (messages-buf (get-buffer "*Messages*")))
-    (if (not messages-buf)
-        (user-error "Buffer *Messages* does not exist")
-      (with-current-buffer messages-buf
-        (goto-char (point-min))
-        (while (re-search-forward "^Duplicate ID \"\\([^\"]+\\)\"" nil t)
-          (let ((id (match-string 1)))
-            (forward-line 1)
-            (when (looking-at "Finding ID locations .*?: \\(.*\\)$")
-              (let ((file (match-string 1)))
-                (push (format "%s: %s" file id) results)))))))
-    (if results
-        (with-current-buffer (get-buffer-create "*Duplicate Org IDs*")
-          (let ((inhibit-read-only t))
-            (erase-buffer)
-            (insert (string-join (reverse results) "\n"))
-            (goto-char (point-min))
-            (simple-extras-local-set-key (kbd "SPC") #'org-extras-id-process-next-duplicate)
-            (setq buffer-read-only t))
-          (display-buffer (current-buffer)))
-      (message "No duplicate IDs found in *Messages* buffer."))))
 
 ;;;;; org-list
 

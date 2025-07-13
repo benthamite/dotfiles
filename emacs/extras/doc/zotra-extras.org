@@ -21,13 +21,13 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ An enhanced command to add entries, with options for specifying the bibliography file, retrying with a different backend on error, and automatically opening the new entry in =ebib=.
-+ Integration with =ebib= and =ebib-extras= to open, sort, and process newly added entries.
-+ Optional integration with the =mullvad= package to fetch data from IMDb using a specific geographic location.
-+ An Org protocol handler for adding entries directly from external applications (e.g., browsers).
-+ A command to add multiple entries from a file containing a list of URLs.
-+ A utility function to fetch a specific field from a bibliographic entry without adding the full entry.
-+ Functions for cleaning up newly added BibTeX entries (fixing octal sequences, cleaning URLs, setting timestamps).
+- An enhanced command to add entries, with options for specifying the bibliography file, retrying with a different backend on error, and automatically opening the new entry in =ebib=.
+- Integration with =ebib= and =ebib-extras= to open, sort, and process newly added entries.
+- Optional integration with the =mullvad= package to fetch data from IMDb using a specific geographic location.
+- An Org protocol handler for adding entries directly from external applications (e.g., browsers).
+- A command to add multiple entries from a file containing a list of URLs.
+- A utility function to fetch a specific field from a bibliographic entry without adding the full entry.
+- Functions for cleaning up newly added BibTeX entries (fixing octal sequences, cleaning URLs, setting timestamps).
 
 * User Options
 :PROPERTIES:
@@ -122,10 +122,10 @@ The function ~zotra-extras-fetch-field~ retrieves the value of a specific FIELD 
 
 These functions are used internally by the main commands but are not typically called directly by the user.
 
-+ ~zotra-extras--add-and-maybe-open~: Helper called by ~zotra-extras-add-entry~. Calls =zotra-add-entry= and then ~zotra-extras-open-in-ebib~.
-+ ~zotra-extras-open-in-ebib~: Manages opening the newly added entry in Ebib, switching to the correct database, reloading it, finding the key, sorting, and prompting the user to process the entry (using =ebib-extras-process-entry=).
-+ ~zotra-extras-after-add-process-bibtex~: Intended to be called after adding an entry (likely via advice or hooks, though not explicitly shown). Performs cleanup tasks on the BibTeX entry in the current buffer: converts "titleaddon" to "journaltitle", adds a timestamp, fixes octal sequences, cleans the entry using =org-ref=, replaces URLs using =tlon-cleanup=, and updates ~zotra-extras-most-recent-bibkey~.
-+ ~zotra-extras-fix-octal-sequences~: Replaces specific octal escape sequences found in Zotero-exported BibTeX with their corresponding UTF-8 characters.
+- ~zotra-extras--add-and-maybe-open~: Helper called by ~zotra-extras-add-entry~. Calls =zotra-add-entry= and then ~zotra-extras-open-in-ebib~.
+- ~zotra-extras-open-in-ebib~: Manages opening the newly added entry in Ebib, switching to the correct database, reloading it, finding the key, sorting, and prompting the user to process the entry (using =ebib-extras-process-entry=).
+- ~zotra-extras-after-add-process-bibtex~: Intended to be called after adding an entry (likely via advice or hooks, though not explicitly shown). Performs cleanup tasks on the BibTeX entry in the current buffer: converts "titleaddon" to "journaltitle", adds a timestamp, fixes octal sequences, cleans the entry using =org-ref=, replaces URLs using =tlon-cleanup=, and updates ~zotra-extras-most-recent-bibkey~.
+- ~zotra-extras-fix-octal-sequences~: Replaces specific octal escape sequences found in Zotero-exported BibTeX with their corresponding UTF-8 characters.
 
 * Indices
 :PROPERTIES:

@@ -21,10 +21,10 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Conditional link opening in =mu4e= based on the HTML renderer being used (=w3m= or other).
-+ Commands to open links in =eww= using the secondary browser or in a new buffer.
-+ A command to open links specifically within =org-roam-mode= buffers.
-+ Handling for opening links selected via =ace-link= in external applications or new buffers.
+- Conditional link opening in =mu4e= based on the HTML renderer being used (=w3m= or other).
+- Commands to open links in =eww= using the secondary browser or in a new buffer.
+- A command to open links specifically within =org-roam-mode= buffers.
+- Handling for opening links selected via =ace-link= in external applications or new buffers.
 
 * Commands
 :PROPERTIES:
@@ -77,8 +77,8 @@ The command ~ace-link-extras-org-roam~ is specifically designed for =org-roam-mo
 
 These functions are used internally by the main commands but are not typically called directly by the user.
 
-+ ~ace-link-extras-w3m-get-url~: Called by ~ace-link-extras-mu4e~ when using =w3m= renderer. It uses =avy= to select a link collected by ~ace-link--w3m-collect~ and returns the URL string associated with the selected link's text properties.
-+ ~ace-link-extras--org-roam-action~: Called by ~ace-link-extras-org-roam~ after a link is selected. It takes the point (PT) returned by =avy=, moves the cursor there, and then calls =org-roam-preview-visit= interactively to navigate to the link target within the Org Roam context.
+- ~ace-link-extras-w3m-get-url~: Called by ~ace-link-extras-mu4e~ when using =w3m= renderer. It uses =avy= to select a link collected by ~ace-link--w3m-collect~ and returns the URL string associated with the selected link's text properties.
+- ~ace-link-extras--org-roam-action~: Called by ~ace-link-extras-org-roam~ after a link is selected. It takes the point (PT) returned by =avy=, moves the cursor there, and then calls =org-roam-preview-visit= interactively to navigate to the link target within the Org Roam context.
 
 * Patched Functions (Informational)
 :PROPERTIES:

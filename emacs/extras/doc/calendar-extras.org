@@ -21,11 +21,11 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Fetching geolocation data (latitude, longitude, city name) based on the user's IP address.
-+ Setting calendar location variables based on fetched or predefined geolocation data.
-+ A command to insert the date of the last day of the previous month.
-+ A command to display the Org agenda using =calfw='s block view.
-+ A utility function to generate a list of dates within a specified range.
+- Fetching geolocation data (latitude, longitude, city name) based on the user's IP address.
+- Setting calendar location variables based on fetched or predefined geolocation data.
+- A command to insert the date of the last day of the previous month.
+- A command to display the Org agenda using =calfw='s block view.
+- A utility function to generate a list of dates within a specified range.
 
 * User Options
 :PROPERTIES:

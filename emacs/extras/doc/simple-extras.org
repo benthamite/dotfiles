@@ -21,18 +21,18 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ **Enhanced Editing:**
+- **Enhanced Editing:**
   + Delete/Copy variants of kill commands (word, line, sentence, paragraph, sexp, zap-to-char) that *do not* modify the kill ring.
   + Kill/Delete/Copy commands for the "whole" text object at point (word, line, etc.).
   + Backward variants for transposition commands (chars, words, lines, sentences, paragraphs, sexps).
   + Smart kill/delete/copy commands that operate on the region if active, or the current line otherwise.
   + Yanking commands: yank and pop kill ring, paste without properties.
-+ **Navigation & Modes:**
-  + Enhanced `exchange-point-and-mark` with modified behavior in transient mark mode.
-  + Enhanced `visible-mode` toggle affecting related modes (Dired, Org).
-  + Enhanced `visual-line-mode` toggle managing `truncate-lines`.
-  + DWIM `keyboard-quit` command.
-+ **Utilities:**
+- **Navigation & Modes:**
+  + Enhanced =exchange-point-and-mark= with modified behavior in transient mark mode.
+  + Enhanced =visible-mode= toggle affecting related modes (Dired, Org).
+  + Enhanced =visual-line-mode= toggle managing =truncate-lines=.
+  + DWIM =keyboard-quit= command.
+- **Utilities:**
   + Word counting (region or clipboard).
   + DWIM indentation (region, Org block, or buffer).
   + DWIM narrowing/widening.
@@ -43,9 +43,9 @@ The main features include:
   + Detecting Emacs distribution (mac port, emacs-plus).
   + Getting quoted string at point.
   + Setting buffer-local keys.
-+ **Auto-Save:** Enabling auto-save for new untitled buffers, using a dedicated directory and hashed filenames for these auto-saves.
-+ **Advice Management:** Function to remove all advice from a symbol.
-+ **Sorting:** Command to sort S-expressions in a region.
+- **Auto-Save:** Enabling auto-save for new untitled buffers, using a dedicated directory and hashed filenames for these auto-saves.
+- **Advice Management:** Function to remove all advice from a symbol.
+- **Sorting:** Command to sort S-expressions in a region.
 
 * User Options
 :PROPERTIES:
@@ -58,7 +58,7 @@ The main features include:
 :END:
 
 #+vindex: simple-extras-new-buffer-auto-save-dir
-Specifies the directory where auto-save files for new, non-file-visiting buffers (e.g., "untitled") should be stored. Ensures the directory exists. Default: `~/.cache/emacs/var/auto-save/new-buffers/` (using `no-littering`).
+Specifies the directory where auto-save files for new, non-file-visiting buffers (e.g., "untitled") should be stored. Ensures the directory exists. Default: =~/.cache/emacs/var/auto-save/new-buffers/= (using =no-littering=).
 
 * Commands
 :PROPERTIES:
@@ -72,7 +72,7 @@ Specifies the directory where auto-save files for new, non-file-visiting buffers
 :CUSTOM_ID: h:editing-commands-simple
 :END:
 
-*(Note: These commands perform deletion or copying *without* adding the text to the kill ring, unlike standard `kill-*` commands.)*
+*(Note: These commands perform deletion or copying *without* adding the text to the kill ring, unlike standard =kill-*= commands.)*
 
 #+findex: simple-extras-delete-word
 ~simple-extras-delete-word~: Deletes forward word(s).
@@ -186,11 +186,11 @@ Specifies the directory where auto-save files for new, non-file-visiting buffers
 #+findex: simple-extras-count-words-dwim
 ~simple-extras-count-words-dwim~: Counts words in the active region, or in the clipboard content if no region is active. Copies the count to the kill ring and messages the user.
 #+findex: simple-extras-indent-dwim
-~simple-extras-indent-dwim~: Indents the active region, or the current Org source block, or the entire buffer, whichever applies first. Runs `whitespace-cleanup` afterwards.
+~simple-extras-indent-dwim~: Indents the active region, or the current Org source block, or the entire buffer, whichever applies first. Runs =whitespace-cleanup= afterwards.
 #+findex: simple-extras-narrow-or-widen-dwim
 ~simple-extras-narrow-or-widen-dwim~: Widens if the buffer is narrowed. Otherwise, narrows to the active region, Org source block, Org subtree, Ledger transaction, or defun, whichever applies first.
 #+findex: simple-extras-keyboard-quit-dwim
-~simple-extras-keyboard-quit-dwim~: Context-aware quit command (deactivates region, closes completions, aborts minibuffer, or calls `keyboard-quit`).
+~simple-extras-keyboard-quit-dwim~: Context-aware quit command (deactivates region, closes completions, aborts minibuffer, or calls =keyboard-quit=).
 
 ** Editing Commands (Transposition)
 :PROPERTIES:
@@ -216,11 +216,11 @@ Specifies the directory where auto-save files for new, non-file-visiting buffers
 :END:
 
 #+findex: simple-extras-exchange-point-and-mark
-~simple-extras-exchange-point-and-mark~: Like `exchange-point-and-mark`, but with slightly modified behavior regarding mark activation when transient mark mode is on but inactive.
+~simple-extras-exchange-point-and-mark~: Like =exchange-point-and-mark=, but with slightly modified behavior regarding mark activation when transient mark mode is on but inactive.
 #+findex: simple-extras-visible-mode-enhanced
-~simple-extras-visible-mode-enhanced~: Toggles `visible-mode` and related modes (`dired-hide-details-mode`, `dired-omit-mode`, `org-tidy-mode`, `org-extras-inline-images`, `org-modern-mode`) together.
+~simple-extras-visible-mode-enhanced~: Toggles =visible-mode= and related modes (=dired-hide-details-mode=, =dired-omit-mode=, =org-tidy-mode=, =org-extras-inline-images=, =org-modern-mode=) together.
 #+findex: simple-extras-visual-line-mode-enhanced
-~simple-extras-visual-line-mode-enhanced~: Toggles `visual-line-mode` and sets `truncate-lines` appropriately.
+~simple-extras-visual-line-mode-enhanced~: Toggles =visual-line-mode= and sets =truncate-lines= appropriately.
 #+findex: simple-extras-fill-or-unfill-paragraph
 ~simple-extras-fill-or-unfill-paragraph~: Fills the current paragraph; if called again immediately, unfills it (sets fill-column to max).
 #+findex: simple-extras-asciify-text
@@ -241,31 +241,31 @@ Specifies the directory where auto-save files for new, non-file-visiting buffers
 
 *(Includes functions for internal use, configuration, or programmatic access)*
 
-+ ~simple-extras-delete-instead-of-kill~ (macro): Executes BODY, temporarily replacing `kill-region` with `delete-region`.
-+ ~simple-extras-copy-instead-of-kill~ (macro): Executes BODY, temporarily replacing `kill-region` with `kill-ring-save`.
-+ ~simple-extras-kill-whole-thing~: Kills the `thing-at-point` of the specified THING type.
-+ ~simple-extras-visible-mode-enhanced-dired~, ~simple-extras-visible-mode-enhanced-org~: Helpers for ~simple-extras-visible-mode-enhanced~ to toggle related modes.
-+ ~files-extras-read-file~: Prompts for a file path with context-aware default.
-+ ~simple-extras-save-excursion~ (macro): Like `save-excursion`, but ensures the original buffer is restored even if switched during execution.
-+ ~simple-extras-get-url-at-point~: Tries to find and return a URL string near point.
-+ ~simple-extras-remove-trailing-slash~: Removes a trailing slash from a string.
-+ ~simple-extras-simplify-url~: Removes `http(s)://`, `www.`, and trailing slash from a URL string.
-+ ~simple-extras-strip-url~: Replaces the URL at point with its simplified version.
-+ ~simple-extras-pandoc-convert~: Converts a string or clipboard content between formats using Pandoc.
-+ ~simple-extras-asciify-string~: Returns a string with accents removed.
-+ ~simple-extras-slugify~: Converts a string to a URL-friendly slug.
-+ ~simple-extras-slug-hyphenate~: Helper for slugify; replaces spaces/underscores with hyphens.
-+ ~simple-extras-is-new-buffer-p~: Checks if the current buffer is an "untitled" buffer.
-+ ~simple-extras-new-buffer-enable-auto-save~: Hook function to enable auto-save for new buffers.
-+ ~simple-extras-new-buffer-auto-save-dir~ (advice): Modifies `auto-save-mode` to use a specific directory for untitled buffer auto-saves.
-+ ~simple-extras-init-disable-funs~: Disables specified functions after a timer delay.
-+ ~simple-extras-advice-remove-all~: Removes all advice from a function symbol.
-+ ~simple-extras-get-next-element~: Gets the next element in a list cyclically.
-+ ~simple-extras-call-verbosely~: Calls a function and messages its name.
-+ ~simple-extras-get-emacs-distro~: Detects the Emacs distribution (mac port or emacs-plus).
-+ ~simple-extras-string-at-point~: Returns the quoted string at point.
-+ ~simple-extras-local-set-key~: Sets a buffer-local key binding (duplicate of `files-extras-buffer-local-set-key`?).
-+ ~simple-extras-string-is-url-p~: Checks if a string looks like a valid URL using `url-generic-parse-url`.
+- ~simple-extras-delete-instead-of-kill~ (macro): Executes BODY, temporarily replacing =kill-region= with =delete-region=.
+- ~simple-extras-copy-instead-of-kill~ (macro): Executes BODY, temporarily replacing =kill-region= with =kill-ring-save=.
+- ~simple-extras-kill-whole-thing~: Kills the =thing-at-point= of the specified THING type.
+- ~simple-extras-visible-mode-enhanced-dired~, ~simple-extras-visible-mode-enhanced-org~: Helpers for ~simple-extras-visible-mode-enhanced~ to toggle related modes.
+- ~files-extras-read-file~: Prompts for a file path with context-aware default.
+- ~simple-extras-save-excursion~ (macro): Like =save-excursion=, but ensures the original buffer is restored even if switched during execution.
+- ~simple-extras-get-url-at-point~: Tries to find and return a URL string near point.
+- ~simple-extras-remove-trailing-slash~: Removes a trailing slash from a string.
+- ~simple-extras-simplify-url~: Removes =http(s)://=, =www.=, and trailing slash from a URL string.
+- ~simple-extras-strip-url~: Replaces the URL at point with its simplified version.
+- ~simple-extras-pandoc-convert~: Converts a string or clipboard content between formats using Pandoc.
+- ~simple-extras-asciify-string~: Returns a string with accents removed.
+- ~simple-extras-slugify~: Converts a string to a URL-friendly slug.
+- ~simple-extras-slug-hyphenate~: Helper for slugify; replaces spaces/underscores with hyphens.
+- ~simple-extras-is-new-buffer-p~: Checks if the current buffer is an "untitled" buffer.
+- ~simple-extras-new-buffer-enable-auto-save~: Hook function to enable auto-save for new buffers.
+- ~simple-extras-new-buffer-auto-save-dir~ (advice): Modifies =auto-save-mode= to use a specific directory for untitled buffer auto-saves.
+- ~simple-extras-init-disable-funs~: Disables specified functions after a timer delay.
+- ~simple-extras-advice-remove-all~: Removes all advice from a function symbol.
+- ~simple-extras-get-next-element~: Gets the next element in a list cyclically.
+- ~simple-extras-call-verbosely~: Calls a function and messages its name.
+- ~simple-extras-get-emacs-distro~: Detects the Emacs distribution (mac port or emacs-plus).
+- ~simple-extras-string-at-point~: Returns the quoted string at point.
+- ~simple-extras-local-set-key~: Sets a buffer-local key binding (duplicate of =files-extras-buffer-local-set-key=?).
+- ~simple-extras-string-is-url-p~: Checks if a string looks like a valid URL using =url-generic-parse-url=.
 
 * Indices
 :PROPERTIES:

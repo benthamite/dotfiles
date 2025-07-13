@@ -21,13 +21,13 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Opening feed entry links in =eww= with readability mode enabled.
-+ Commands to mark all entries as read or copy the current entry's link.
-+ Toggling the display of read entries or filtering by specific tags (e.g., "wiki").
-+ Integration with =zotra= to add the current entry to a bibliography.
-+ A command to update feeds even when Elfeed buffers are not open.
-+ A "follow mode" similar to =org-agenda-follow-mode= for the Elfeed search buffer.
-+ Disabling undo in the Elfeed search buffer.
+- Opening feed entry links in =eww= with readability mode enabled.
+- Commands to mark all entries as read or copy the current entry's link.
+- Toggling the display of read entries or filtering by specific tags (e.g., "wiki").
+- Integration with =zotra= to add the current entry to a bibliography.
+- A command to update feeds even when Elfeed buffers are not open.
+- A "follow mode" similar to =org-agenda-follow-mode= for the Elfeed search buffer.
+- Disabling undo in the Elfeed search buffer.
 
 * Commands
 :PROPERTIES:
@@ -123,8 +123,8 @@ The command ~elfeed-extras-follow-previous~ moves the cursor up one line in the 
 :CUSTOM_ID: h:follow-mode-internal
 :END:
 
-+ ~elfeed-extras-display-buffer~: Helper function to display a buffer in the "other" window without selecting it, using ~pop-to-buffer~ with a specific action.
-+ ~elfeed-extras-follow-entry~: The core logic for follow mode. Moves the cursor by LINES, recenters, calls ~elfeed-search-show-entry~ to display the content, and then selects the previous window (the search buffer) again.
+- ~elfeed-extras-display-buffer~: Helper function to display a buffer in the "other" window without selecting it, using ~pop-to-buffer~ with a specific action.
+- ~elfeed-extras-follow-entry~: The core logic for follow mode. Moves the cursor by LINES, recenters, calls ~elfeed-search-show-entry~ to display the content, and then selects the previous window (the search buffer) again.
 
 * Configuration Functions
 :PROPERTIES:
@@ -144,8 +144,8 @@ The function ~elfeed-extras-disable-undo~ is intended to be added to ~elfeed-sea
 :CUSTOM_ID: h:internal-variables
 :END:
 
-+ ~elfeed-extras-toggle-read-entries~: Boolean flag tracking the state for ~elfeed-extras-toggle-read-entries~.
-+ ~elfeed-extras-toggle-wiki-entries~: Boolean flag tracking the state for ~elfeed-extras-toggle-wiki-entries~.
+- ~elfeed-extras-toggle-read-entries~: Boolean flag tracking the state for ~elfeed-extras-toggle-read-entries~.
+- ~elfeed-extras-toggle-wiki-entries~: Boolean flag tracking the state for ~elfeed-extras-toggle-wiki-entries~.
 
 * Indices
 :PROPERTIES:

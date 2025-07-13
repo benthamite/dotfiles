@@ -21,8 +21,8 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Conditional activation of =copilot-mode= based on buffer properties (read-only status) and major mode.
-+ A command to restart the Copilot minor mode, intended as a workaround for potential issues.
+- Conditional activation of =copilot-mode= based on buffer properties (read-only status) and major mode.
+- A command to restart the Copilot minor mode, intended as a workaround for potential issues.
 
 * User Options
 :PROPERTIES:
@@ -115,8 +115,8 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Conditional activation of =corfu-mode= in the minibuffer, avoiding conflicts with =vertico=.
-+ A command to transfer the current Corfu completion session to the minibuffer using =consult-completion-in-region=.
+- Conditional activation of =corfu-mode= in the minibuffer, avoiding conflicts with =vertico=.
+- A command to transfer the current Corfu completion session to the minibuffer using =consult-completion-in-region=.
 
 * Configuration Functions
 :PROPERTIES:
@@ -192,11 +192,11 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Custom modeline segments to display:
+- Custom modeline segments to display:
   + Org Roam backlink count.
   + Tlön split mode status.
   + AI context file count (from =gptel=).
-+ Enhanced handling of GitHub notifications fetched by Doom Modeline, automatically pulling Forge notifications when the count changes.
+- Enhanced handling of GitHub notifications fetched by Doom Modeline, automatically pulling Forge notifications when the count changes.
 
 * User Options
 :PROPERTIES:
@@ -280,7 +280,7 @@ If the count has changed *and* is greater than zero, it automatically calls ~for
 :CUSTOM_ID: h:internal-variables
 :END:
 
-+ ~doom-modeline-extras-github-last-count~: Stores the previous GitHub notification count to detect changes.
+- ~doom-modeline-extras-github-last-count~: Stores the previous GitHub notification count to detect changes.
 
 * Indices
 :PROPERTIES:

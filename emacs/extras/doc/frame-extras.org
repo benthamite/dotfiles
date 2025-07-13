@@ -21,9 +21,9 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Commands to maximize the current frame or resize it to occupy the left or right half of the screen.
-+ A command to restore the visibility of the window divider face.
-+ A command (macOS specific) to restore focus to the Emacs application.
+- Commands to maximize the current frame or resize it to occupy the left or right half of the screen.
+- A command to restore the visibility of the window divider face.
+- A command (macOS specific) to restore focus to the Emacs application.
 
 * Variables
 :PROPERTIES:
@@ -51,7 +51,7 @@ This variable stores the width (in columns) of the frame after it has been maxim
 :END:
 
 #+findex: frame-extras-maximize-frame
-The command ~frame-extras-maximize-frame~ maximizes the current Emacs frame to fill the screen. It first ensures the frame is not in fullscreen mode (`fullscreen` parameter set to `nil`) and then sets the `fullscreen` parameter to `'maximized`. It includes a small delay (`sleep-for 0.01`) before capturing the frame width to ensure the window manager has finished resizing, storing the result in ~frame-extras-maximized-frame-width~.
+The command ~frame-extras-maximize-frame~ maximizes the current Emacs frame to fill the screen. It first ensures the frame is not in fullscreen mode (=fullscreen= parameter set to =nil=) and then sets the =fullscreen= parameter to ='maximized=. It includes a small delay (=sleep-for 0.01=) before capturing the frame width to ensure the window manager has finished resizing, storing the result in ~frame-extras-maximized-frame-width~.
 
 ** Resize Frame to Left Half
 :PROPERTIES:
@@ -67,7 +67,7 @@ The command ~frame-extras-left-half~ first maximizes the frame using ~frame-extr
 :END:
 
 #+findex: frame-extras-right-half
-The command ~frame-extras-right-half~ first resizes the frame to the left half using ~frame-extras-left-half~ and then moves the frame's position horizontally so that its left edge aligns with the calculated midpoint of the screen (using `frame-pixel-width` which now reflects the half-width).
+The command ~frame-extras-right-half~ first resizes the frame to the left half using ~frame-extras-left-half~ and then moves the frame's position horizontally so that its left edge aligns with the calculated midpoint of the screen (using =frame-pixel-width= which now reflects the half-width).
 
 ** Restore Window Divider Visibility
 :PROPERTIES:
@@ -75,7 +75,7 @@ The command ~frame-extras-right-half~ first resizes the frame to the left half u
 :END:
 
 #+findex: frame-extras-restore-window-divider
-The command ~frame-extras-restore-window-divider~ resets the `window-divider` face to its default attributes using `custom-set-faces`. This is useful if the divider has been made invisible or customized in a way the user wants to undo.
+The command ~frame-extras-restore-window-divider~ resets the =window-divider= face to its default attributes using =custom-set-faces=. This is useful if the divider has been made invisible or customized in a way the user wants to undo.
 
 ** Restore Focus to Emacs (macOS)
 :PROPERTIES:
@@ -83,7 +83,7 @@ The command ~frame-extras-restore-window-divider~ resets the `window-divider` fa
 :END:
 
 #+findex: frame-extras-restore-focus
-The command ~frame-extras-restore-focus~ uses AppleScript (`do-applescript`) to tell the "Emacs" application to activate. This brings the Emacs application to the foreground and gives it input focus on macOS.
+The command ~frame-extras-restore-focus~ uses AppleScript (=do-applescript=) to tell the "Emacs" application to activate. This brings the Emacs application to the foreground and gives it input focus on macOS.
 
 * Indices
 :PROPERTIES:

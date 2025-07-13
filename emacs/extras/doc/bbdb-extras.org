@@ -21,12 +21,12 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ A command to export the current BBDB record as a vCard file and open it with the system's default application (e.g., macOS Contacts).
-+ Patches to modify default BBDB behaviors:
+- A command to export the current BBDB record as a vCard file and open it with the system's default application (e.g., macOS Contacts).
+- Patches to modify default BBDB behaviors:
   + Open URLs directly without confirmation.
   + Prevent splitting windows when displaying the BBDB buffer.
   + Delete fields or records without confirmation.
-+ Commands for quick record creation, prompting only for the name.
+- Commands for quick record creation, prompting only for the name.
 
 * Commands
 :PROPERTIES:
@@ -89,7 +89,7 @@ The original ~bbdb-pop-up-window~ function, which normally displays the =*BBDB*=
 
 These functions are used internally by the main commands but are not typically called directly by the user.
 
-+ ~bbdb-extras-read-record-quick~: Helper function for ~bbdb-extras-create-quick~. Reads only the name for a new BBDB record.
+- ~bbdb-extras-read-record-quick~: Helper function for ~bbdb-extras-create-quick~. Reads only the name for a new BBDB record.
 
 * Indices
 :PROPERTIES:

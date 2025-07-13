@@ -21,10 +21,10 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ User options to define separate plain text and HTML signatures for personal and work contexts.
-+ A command to copy the current message body (excluding headers and signature) to the kill ring.
-+ A command to copy the message body and open it in the Grammarly web editor.
-+ An enhanced command to position the point optimally for starting composition.
+- User options to define separate plain text and HTML signatures for personal and work contexts.
+- A command to copy the current message body (excluding headers and signature) to the kill ring.
+- A command to copy the message body and open it in the Grammarly web editor.
+- An enhanced command to position the point optimally for starting composition.
 
 * User Options
 :PROPERTIES:
@@ -80,7 +80,7 @@ Defines the signature string for work emails composed in Org mode. Defaults to t
 :END:
 
 #+findex: org-msg-extras-kill-message
-The command ~org-msg-extras-kill-message~ copies the main body of the current email message to the Emacs kill ring. It excludes the header section (up to the `:END:` marker) and the signature block (identified by `#+begin_signature`).
+The command ~org-msg-extras-kill-message~ copies the main body of the current email message to the Emacs kill ring. It excludes the header section (up to the =:END:= marker) and the signature block (identified by =#+begin_signature=).
 
 ** Open Message in Grammarly
 :PROPERTIES:
@@ -99,7 +99,7 @@ The command ~org-msg-extras-open-in-grammarly~ first copies the message body usi
 The command ~org-msg-extras-begin-compose~ provides a slightly modified way to position the point to start writing the email body, compared to the standard =org-msg-goto-body=.
 1. It moves the point to the beginning of the buffer.
 2. If a signature is defined in =org-msg-signature=, it searches forward for it and places the point just before the signature.
-3. If no signature is found, it searches past the Org property drawer (`:PROPERTIES: ... :END:`) and inserts a newline if necessary.
+3. If no signature is found, it searches past the Org property drawer (=:PROPERTIES: ... :END:=) and inserts a newline if necessary.
 4. It then calls ~simple-extras-visible-mode-enhanced -1~ (presumably defined elsewhere) which likely adjusts the visibility or folding state for composing.
 
 * Indices

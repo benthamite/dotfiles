@@ -21,65 +21,65 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Dispatchers for different matching styles triggered by suffix characters:
-  + `~`: Flex matching (`orderless-flex`)
-  + `,`: Initialism matching (`orderless-initialism`)
-  + `;`: Literal prefix matching (`orderless-prefixes`)
-  + `!`: Exclusion matching (`orderless-without-literal`)
+- Dispatchers for different matching styles triggered by suffix characters:
+  + =~=: Flex matching (=orderless-flex=)
+  + =,=: Initialism matching (=orderless-initialism=)
+  + =;=: Literal prefix matching (=orderless-prefixes=)
+  + =!=: Exclusion matching (=orderless-without-literal=)
 
 * Orderless Dispatchers
 :PROPERTIES:
 :CUSTOM_ID: h:orderless-dispatchers
 :END:
 
-These functions are designed to be added to the `orderless-dispatchers` list in your Emacs configuration. They allow activating different matching strategies for specific parts of your search query by appending a special character.
+These functions are designed to be added to the =orderless-dispatchers= list in your Emacs configuration. They allow activating different matching strategies for specific parts of your search query by appending a special character.
 
-** Flex Matching Dispatcher (`~`)
+** Flex Matching Dispatcher (=~=)
 :PROPERTIES:
 :CUSTOM_ID: h:orderless-extras-flex-dispatcher
 :END:
 
 #+findex: orderless-extras-flex-dispatcher
-The function ~orderless-extras-flex-dispatcher~ checks if a component (PATTERN) in the Orderless query ends with a tilde (`~`). If it does, it returns a style definition `(orderless-flex . "component_without_tilde")`, instructing Orderless to use flexible matching (typically fuzzy matching) for that specific component.
+The function ~orderless-extras-flex-dispatcher~ checks if a component (PATTERN) in the Orderless query ends with a tilde (=~=). If it does, it returns a style definition =(orderless-flex . "component_without_tilde")=, instructing Orderless to use flexible matching (typically fuzzy matching) for that specific component.
 
-Example: `file some~ na` would match `file` literally and `na` literally, but `some` would be matched flexibly against candidates.
+Example: =file some~ na= would match =file= literally and =na= literally, but =some= would be matched flexibly against candidates.
 
-** Initialism Matching Dispatcher (`,`)
+** Initialism Matching Dispatcher (=,=)
 :PROPERTIES:
 :CUSTOM_ID: h:orderless-extras-initialism-dispatcher
 :END:
 
 #+findex: orderless-extras-initialism-dispatcher
-The function ~orderless-extras-initialism-dispatcher~ checks if a component (PATTERN) ends with a comma (`,`). If it does, it returns `(orderless-initialism . "component_without_comma")`, instructing Orderless to match the component as an initialism (e.g., `ffap` matching `find-file-at-point`).
+The function ~orderless-extras-initialism-dispatcher~ checks if a component (PATTERN) ends with a comma (=,=). If it does, it returns =(orderless-initialism . "component_without_comma")=, instructing Orderless to match the component as an initialism (e.g., =ffap= matching =find-file-at-point=).
 
-Example: `find ffap,` would match `find` literally and `ffap` as an initialism.
+Example: =find ffap,= would match =find= literally and =ffap= as an initialism.
 
-** Literal Prefixes Dispatcher (`;`)
+** Literal Prefixes Dispatcher (=;=)
 :PROPERTIES:
 :CUSTOM_ID: h:orderless-extras-prefixes-dispatcher
 :END:
 
 #+findex: orderless-extras-prefixes-dispatcher
-The function ~orderless-extras-prefixes-dispatcher~ checks if a component (PATTERN) ends with a semicolon (`;`). If it does, it returns `(orderless-prefixes . "component_without_semicolon")`, instructing Orderless to match the component only as a literal prefix of the candidate.
+The function ~orderless-extras-prefixes-dispatcher~ checks if a component (PATTERN) ends with a semicolon (=;=). If it does, it returns =(orderless-prefixes . "component_without_semicolon")=, instructing Orderless to match the component only as a literal prefix of the candidate.
 
-Example: `org export;` would match candidates starting literally with `org` and `export`, but `export` would not match if it appeared elsewhere in the candidate string.
+Example: =org export;= would match candidates starting literally with =org= and =export=, but =export= would not match if it appeared elsewhere in the candidate string.
 
-** Exclusion Matching Dispatcher (`!`)
+** Exclusion Matching Dispatcher (=!=)
 :PROPERTIES:
 :CUSTOM_ID: h:orderless-extras-exclusion-dispatcher
 :END:
 
 #+findex: orderless-extras-exclusion-dispatcher
-The function ~orderless-extras-exclusion-dispatcher~ checks if a component (PATTERN) ends with an exclamation mark (`!`). If it does, it returns `(orderless-without-literal . "component_without_exclamation")`, instructing Orderless to *exclude* any candidates that contain the literal component (without the `!`).
+The function ~orderless-extras-exclusion-dispatcher~ checks if a component (PATTERN) ends with an exclamation mark (=!=). If it does, it returns =(orderless-without-literal . "component_without_exclamation")=, instructing Orderless to *exclude* any candidates that contain the literal component (without the =!=).
 
-Example: `file !tmp` would match candidates containing `file` but *not* containing `tmp`.
+Example: =file !tmp= would match candidates containing =file= but *not* containing =tmp=.
 
 * Configuration Example
 :PROPERTIES:
 :CUSTOM_ID: h:configuration-example
 :END:
 
-To use these dispatchers, add them to the `orderless-dispatchers` list:
+To use these dispatchers, add them to the =orderless-dispatchers= list:
 
 #+begin_src emacs-lisp
 (setq orderless-dispatchers

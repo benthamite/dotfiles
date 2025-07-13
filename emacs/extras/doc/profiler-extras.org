@@ -21,8 +21,8 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ A command to toggle the CPU and memory profiler on and off, automatically generating a report when stopped.
-+ A command to expand all sub-entries under the entry at point in a profiler report buffer.
+- A command to toggle the CPU and memory profiler on and off, automatically generating a report when stopped.
+- A command to expand all sub-entries under the entry at point in a profiler report buffer.
 
 * Commands
 :PROPERTIES:
@@ -48,14 +48,14 @@ It updates the internal toggle variable accordingly.
 :END:
 
 #+findex: profiler-extras-profiler-report-toggle-entry-global
-When executed within a profiler report buffer (`*Profiler Report*`), the command ~profiler-extras-profiler-report-toggle-entry-global~ expands or collapses *all* levels of sub-entries under the profiler entry at the current point. It achieves this by calling the standard =profiler-report-toggle-entry= command with a prefix argument of `(4)`, which typically signifies a recursive or global toggle action in such contexts.
+When executed within a profiler report buffer (=*Profiler Report*=), the command ~profiler-extras-profiler-report-toggle-entry-global~ expands or collapses *all* levels of sub-entries under the profiler entry at the current point. It achieves this by calling the standard =profiler-report-toggle-entry= command with a prefix argument of =(4)=, which typically signifies a recursive or global toggle action in such contexts.
 
 * Internal Variables
 :PROPERTIES:
 :CUSTOM_ID: h:internal-variables
 :END:
 
-+ ~profiler-extras-profiler-toggle~: A boolean flag used internally by ~profiler-extras-profiler-toggle~ to track whether the profiler is currently considered active by the toggle command.
+- ~profiler-extras-profiler-toggle~: A boolean flag used internally by ~profiler-extras-profiler-toggle~ to track whether the profiler is currently considered active by the toggle command.
 
 * Indices
 :PROPERTIES:

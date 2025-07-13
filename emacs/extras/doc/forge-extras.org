@@ -21,14 +21,14 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Storing Org links for multiple selected commits in =magit-status= buffers.
-+ A command to browse the GitHub notification inbox.
-+ A DWIM (Do What I Mean) command to toggle the state (open/closed) of the issue/PR at point.
-+ Automatic pulling of Forge notifications when the GitHub notification count (from =doom-modeline=) changes.
-+ Synchronization of read status between Forge and GitHub by briefly opening the issue/PR URL in Safari (macOS specific).
-+ Commands to track Git repositories in Forge, pulling all topics.
-+ Commands to navigate between posts (messages) within a Forge topic buffer.
-+ A command to copy the body of the message at point to the kill ring.
+- Storing Org links for multiple selected commits in =magit-status= buffers.
+- A command to browse the GitHub notification inbox.
+- A DWIM (Do What I Mean) command to toggle the state (open/closed) of the issue/PR at point.
+- Automatic pulling of Forge notifications when the GitHub notification count (from =doom-modeline=) changes.
+- Synchronization of read status between Forge and GitHub by briefly opening the issue/PR URL in Safari (macOS specific).
+- Commands to track Git repositories in Forge, pulling all topics.
+- Commands to navigate between posts (messages) within a Forge topic buffer.
+- A command to copy the body of the message at point to the kill ring.
 
 * Commands
 :PROPERTIES:
@@ -113,9 +113,9 @@ The command ~forge-extras-set-project-status~ allows you to set the status of th
 - It prompts for a status from a predefined list (configured via ~forge-extras-status-option-ids-alist~).
 - If the issue is not already part of the target GitHub Project (configured by ~forge-extras-project-owner~ and ~forge-extras-project-number~), it will prompt the user whether to add it.
 - The changes are made by interacting with the GitHub GraphQL API.
-- After a successful update, if in a `forge-topic-mode` buffer, it attempts to refresh the topic.
+- After a successful update, if in a =forge-topic-mode= buffer, it attempts to refresh the topic.
 
-This functionality relies on the `gh` command-line tool being installed and authenticated.
+This functionality relies on the =gh= command-line tool being installed and authenticated.
 
 ** Set GitHub Project Estimate
 :PROPERTIES:
@@ -129,9 +129,9 @@ The command ~forge-extras-set-project-estimate~ allows you to set a numerical es
 - The specific "Estimate" field to update is identified by its Node ID stored in ~forge-extras-estimate-field-node-id~.
 - If the issue is not already part of the target GitHub Project, it will prompt the user whether to add it.
 - The changes are made by interacting with the GitHub GraphQL API.
-- After a successful update, if in a `forge-topic-mode` buffer, it attempts to refresh the topic.
+- After a successful update, if in a =forge-topic-mode= buffer, it attempts to refresh the topic.
 
-This functionality relies on the `gh` command-line tool being installed and authenticated, and requires ~forge-extras-estimate-field-node-id~ to be correctly configured.
+This functionality relies on the =gh= command-line tool being installed and authenticated, and requires ~forge-extras-estimate-field-node-id~ to be correctly configured.
 
 ** Get GitHub Project Field IDs
 :PROPERTIES:
@@ -143,7 +143,7 @@ The command ~forge-extras-get-project-field-ids~ fetches and displays all field 
 - It requires ~forge-extras-project-node-id~ to be set beforehand.
 - The results are displayed in a new buffer named =*GitHub Project Fields*=.
 - This command is crucial for finding the correct Node IDs to set for ~forge-extras-status-field-node-id~ and ~forge-extras-estimate-field-node-id~.
-- It relies on the `gh` command-line tool being installed and authenticated.
+- It relies on the =gh= command-line tool being installed and authenticated.
 
 ** List Project Issues by Repository (Ordered)
 :PROPERTIES:
@@ -168,9 +168,9 @@ The command ~forge-extras-list-project-items-ordered~ fetches all issues and pul
 - Behavior with prefix arguments (interactive calls):
   - *Without a prefix argument*: Excludes closed/merged items, fetches fresh data, and displays results in a new buffer named =*All Project Items (Ordered by Board)*=.
   - *With any prefix argument* (e.g., =C-u M-x forge-extras-list-project-items-ordered=): Includes closed/merged items in the fresh fetch, and does *not* display the results buffer.
-- Programmatic calls can pass an optional boolean `use-cache-p` as the third argument.
-  - If `use-cache-p` is true and the cache (~forge-extras--cached-project-items~) is populated, the cached data is used. In this case, the `include-closed-p` argument of the current call does not re-filter the cached items; it only applies if a fresh fetch is performed (e.g., if cache was empty).
-  - If `use-cache-p` is false (default for interactive calls) or the cache is empty, fresh data is fetched from GitHub.
+- Programmatic calls can pass an optional boolean =use-cache-p= as the third argument.
+  - If =use-cache-p= is true and the cache (~forge-extras--cached-project-items~) is populated, the cached data is used. In this case, the =include-closed-p= argument of the current call does not re-filter the cached items; it only applies if a fresh fetch is performed (e.g., if cache was empty).
+  - If =use-cache-p= is false (default for interactive calls) or the cache is empty, fresh data is fetched from GitHub.
 - When fetching, it does not filter by repository, listing items from all repositories present in the project.
 - When fetching, the items are listed in the order they appear on the project board.
 - The command returns the list of items (fetched or cached) as Elisp plists.
@@ -216,7 +216,7 @@ To use the GitHub Project integration features like setting status or estimate, 
 1. *Find your Project's Node ID*:
    - Go to your GitHub Project (e.g., https://github.com/orgs/YOUR_ORG/projects/YOUR_PROJECT_NUMBER).
    - The Project's Node ID is not directly visible in the URL for "Projects (beta)" or "ProjectsV2".
-   - One way to get it is using the `gh` CLI:
+   - One way to get it is using the =gh= CLI:
      #+begin_src sh
      gh api graphql -f query='query{organization(login: "YOUR_ORG"){projectV2(number: YOUR_PROJECT_NUMBER){id}}}'
      #+end_src
@@ -239,19 +239,19 @@ You can set these variables using ~M-x customize-group RET forge-extras-projects
 
 *** Custom Variables
 
-+ ~forge-extras-project-owner~: The GitHub owner (organization or user) for the target project (default: "tlon-team"). This is used by some functions but ~forge-extras-project-node-id~ is generally preferred for newer project features.
+- ~forge-extras-project-owner~: The GitHub owner (organization or user) for the target project (default: "tlon-team"). This is used by some functions but ~forge-extras-project-node-id~ is generally preferred for newer project features.
 #+vindex: forge-extras-project-owner
-+ ~forge-extras-project-number~: The GitHub Project number (default: 9). This is used by some functions but ~forge-extras-project-node-id~ is generally preferred for newer project features.
+- ~forge-extras-project-number~: The GitHub Project number (default: 9). This is used by some functions but ~forge-extras-project-node-id~ is generally preferred for newer project features.
 #+vindex: forge-extras-project-number
-+ ~forge-extras-project-node-id~: The GraphQL Node ID of the target GitHub Project. This is essential for most project-related commands. See the setup guide above for how to obtain this.
+- ~forge-extras-project-node-id~: The GraphQL Node ID of the target GitHub Project. This is essential for most project-related commands. See the setup guide above for how to obtain this.
 #+vindex: forge-extras-project-node-id
-+ ~forge-extras-estimate-field-node-id~: The GraphQL Node ID of the "Estimate" (or equivalent numeric) field within the target project. This must be configured by the user. Use ~M-x forge-extras-get-project-field-ids~ to find the correct ID after setting ~forge-extras-project-node-id~.
+- ~forge-extras-estimate-field-node-id~: The GraphQL Node ID of the "Estimate" (or equivalent numeric) field within the target project. This must be configured by the user. Use ~M-x forge-extras-get-project-field-ids~ to find the correct ID after setting ~forge-extras-project-node-id~.
 #+vindex: forge-extras-estimate-field-node-id
-+ ~forge-extras-status-field-node-id~: The GraphQL Node ID of the "Status" field within the target project. Use ~M-x forge-extras-get-project-field-ids~ to find the correct ID after setting ~forge-extras-project-node-id~.
+- ~forge-extras-status-field-node-id~: The GraphQL Node ID of the "Status" field within the target project. Use ~M-x forge-extras-get-project-field-ids~ to find the correct ID after setting ~forge-extras-project-node-id~.
 #+vindex: forge-extras-status-field-node-id
-+ ~forge-extras-status-option-ids-alist~: An alist mapping human-readable status names (e.g., "Doing", "Next") to their corresponding GraphQL Option IDs for the "Status" field in the target project. This list is used for prompting the user. Finding these Option IDs requires manual API inspection (see setup guide).
+- ~forge-extras-status-option-ids-alist~: An alist mapping human-readable status names (e.g., "Doing", "Next") to their corresponding GraphQL Option IDs for the "Status" field in the target project. This list is used for prompting the user. Finding these Option IDs requires manual API inspection (see setup guide).
 #+vindex: forge-extras-status-option-ids-alist
-+ ~forge-extras-issue-link-repositories~: A list of GitHub repository identifiers (e.g., "owner/repo") from which to fetch issues for the ~forge-extras-insert-issue-markdown-link~ command.
+- ~forge-extras-issue-link-repositories~: A list of GitHub repository identifiers (e.g., "owner/repo") from which to fetch issues for the ~forge-extras-insert-issue-markdown-link~ command.
 #+vindex: forge-extras-issue-link-repositories
 
 * Enhanced Functionality
@@ -277,7 +277,7 @@ The function ~forge-extras-sync-read-status~ attempts to mark a Forge notificati
 
 It works by:
 1. Getting the URL of the issue/PR at point.
-2. Constructing an AppleScript command (using ~forge-extras-safari-script-format-string~) that tells Safari to open the URL in a new tab, wait briefly (5 seconds), attempt to check the document's `readyState` using JavaScript, and then close the tab if loading seems complete.
+2. Constructing an AppleScript command (using ~forge-extras-safari-script-format-string~) that tells Safari to open the URL in a new tab, wait briefly (5 seconds), attempt to check the document's =readyState= using JavaScript, and then close the tab if loading seems complete.
 3. Executing this AppleScript asynchronously using ~forge-extras-async-shell-command-to-string~.
 4. When the script finishes, it calls the callback ~forge-extras-update-github-counter~.
 
@@ -291,11 +291,11 @@ The callback function ~forge-extras-update-github-counter~ first checks if the A
 :CUSTOM_ID: h:internal-functions
 :END:
 
-+ ~forge--goto-message~: Core logic for navigating between posts, used by ~forge-next-message~ and ~forge-previous-message~.
-+ ~forge-extras-track-repo-all-topics~: Helper function to add/update a repository in Forge and pull all its topics.
-+ ~forge-extras-async-shell-command-to-string~: Executes a shell command asynchronously and calls a callback with the output.
-+ ~forge-extras-safari-github-logged-in-p~: Checks if the user appears logged into GitHub in Safari by checking the Safari window title (heuristic).
-+ ~forge-extras-safari-ensure-javascript-enabled~: Checks AppleScript output for errors related to JavaScript execution permissions in Safari.
+- ~forge--goto-message~: Core logic for navigating between posts, used by ~forge-next-message~ and ~forge-previous-message~.
+- ~forge-extras-track-repo-all-topics~: Helper function to add/update a repository in Forge and pull all its topics.
+- ~forge-extras-async-shell-command-to-string~: Executes a shell command asynchronously and calls a callback with the output.
+- ~forge-extras-safari-github-logged-in-p~: Checks if the user appears logged into GitHub in Safari by checking the Safari window title (heuristic).
+- ~forge-extras-safari-ensure-javascript-enabled~: Checks AppleScript output for errors related to JavaScript execution permissions in Safari.
 
 * Indices
 :PROPERTIES:

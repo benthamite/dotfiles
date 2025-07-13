@@ -21,10 +21,10 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Commands to open or navigate to BibTeX entries selected via =citar= within =ebib= or the source =.bib= file.
-+ A command to move a BibTeX entry to a specific bibliography file (intended for a "Tlön" workflow).
-+ Custom indicator definitions using =nerd-icons= for files, links, notes, and cited status within the =citar= selection UI.
-+ A command to manually update the =citar= cache for all configured bibliographies.
+- Commands to open or navigate to BibTeX entries selected via =citar= within =ebib= or the source =.bib= file.
+- A command to move a BibTeX entry to a specific bibliography file (intended for a "Tlön" workflow).
+- Custom indicator definitions using =nerd-icons= for files, links, notes, and cited status within the =citar= selection UI.
+- A command to manually update the =citar= cache for all configured bibliographies.
 
 * Commands
 :PROPERTIES:
@@ -73,16 +73,16 @@ The command ~citar-extras-update-bibliographies~ manually triggers an update of 
 =citar-extras.el= defines several custom indicators for use with the =citar-indicators= variable. These indicators use icons from the =nerd-icons= package to provide visual cues in the =citar= selection UI.
 
 #+vindex: citar-extras-indicator-files-icons
-+ ~citar-extras-indicator-files-icons~: Displays a green file icon (nf-fa-file_o) if the entry has associated files (=citar-has-files=).
+- ~citar-extras-indicator-files-icons~: Displays a green file icon (nf-fa-file_o) if the entry has associated files (=citar-has-files=).
 
 #+vindex: citar-extras-indicator-links-icons
-+ ~citar-extras-indicator-links-icons~: Displays an orange link icon (nf-fa-link) if the entry has associated links (=citar-has-links=).
+- ~citar-extras-indicator-links-icons~: Displays an orange link icon (nf-fa-link) if the entry has associated links (=citar-has-links=).
 
 #+vindex: citar-extras-indicator-notes-icons
-+ ~citar-extras-indicator-notes-icons~: Displays a blue note icon (nf-cod-note) if the entry has associated notes (=citar-has-notes=).
+- ~citar-extras-indicator-notes-icons~: Displays a blue note icon (nf-cod-note) if the entry has associated notes (=citar-has-notes=).
 
 #+vindex: citar-extras-indicator-cited-icons
-+ ~citar-extras-indicator-cited-icons~: Displays a green circle icon (nf-fa-circle_o) if the entry is cited in the current document (=citar-is-cited=).
+- ~citar-extras-indicator-cited-icons~: Displays a green circle icon (nf-fa-circle_o) if the entry is cited in the current document (=citar-is-cited=).
 
 These can be added to the ~citar-indicators~ list in your configuration, for example:
 #+begin_src emacs-lisp

@@ -21,11 +21,11 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Functions to set face attributes individually or in batches.
-+ A mechanism to store and reapply a collection of custom face settings.
-+ User options to define standard fonts and heights for fixed-pitch, variable-pitch, and various Org mode elements.
-+ A custom face definition for the `display-time` modeline element.
-+ An enhanced `describe-face` command that temporarily disables `hl-line-mode`.
+- Functions to set face attributes individually or in batches.
+- A mechanism to store and reapply a collection of custom face settings.
+- User options to define standard fonts and heights for fixed-pitch, variable-pitch, and various Org mode elements.
+- A custom face definition for the =display-time= modeline element.
+- An enhanced =describe-face= command that temporarily disables =hl-line-mode=.
 
 * User Options
 :PROPERTIES:
@@ -40,9 +40,9 @@ This section details the user-configurable variables provided by =faces-extras.e
 :END:
 
 #+vindex: faces-extras-variable-pitch-font
-+ ~faces-extras-variable-pitch-font~: Specifies the font family name for variable-pitch text (Default: "Source Serif Pro").
+- ~faces-extras-variable-pitch-font~: Specifies the font family name for variable-pitch text (Default: "Source Serif Pro").
 #+vindex: faces-extras-fixed-pitch-font
-+ ~faces-extras-fixed-pitch-font~: Specifies the font family name for fixed-pitch text (Default: "SauceCodePro Nerd Font").
+- ~faces-extras-fixed-pitch-font~: Specifies the font family name for fixed-pitch text (Default: "SauceCodePro Nerd Font").
 
 ** Height Definitions
 :PROPERTIES:
@@ -52,23 +52,23 @@ This section details the user-configurable variables provided by =faces-extras.e
 These options define relative heights for various text elements, typically used when setting custom face attributes. Heights are usually relative to the base font size (e.g., 1.0 means the same height, 0.8 means 80% of the base height).
 
 #+vindex: faces-extras-fixed-pitch-size
-+ ~faces-extras-fixed-pitch-size~: Absolute size (in tenths of a point) for fixed-pitch faces (Default: 120).
+- ~faces-extras-fixed-pitch-size~: Absolute size (in tenths of a point) for fixed-pitch faces (Default: 120).
 #+vindex: faces-extras-fixed-pitch-height
-+ ~faces-extras-fixed-pitch-height~: Relative height for fixed-pitch faces (Default: 0.8).
+- ~faces-extras-fixed-pitch-height~: Relative height for fixed-pitch faces (Default: 0.8).
 #+vindex: faces-extras-variable-pitch-height
-+ ~faces-extras-variable-pitch-height~: Relative height for variable-pitch faces (Default: 1.4).
+- ~faces-extras-variable-pitch-height~: Relative height for variable-pitch faces (Default: 1.4).
 #+vindex: faces-extras-org-level-height
-+ ~faces-extras-org-level-height~: Relative height for Org heading level faces (Default: 0.9).
+- ~faces-extras-org-level-height~: Relative height for Org heading level faces (Default: 0.9).
 #+vindex: faces-extras-org-block-height
-+ ~faces-extras-org-block-height~: Relative height for the `org-block` face (Default: 0.8).
+- ~faces-extras-org-block-height~: Relative height for the =org-block= face (Default: 0.8).
 #+vindex: faces-extras-org-code-height
-+ ~faces-extras-org-code-height~: Relative height for the `org-code` face (Default: 1.0).
+- ~faces-extras-org-code-height~: Relative height for the =org-code= face (Default: 1.0).
 #+vindex: faces-extras-org-date-height
-+ ~faces-extras-org-date-height~: Relative height for the `org-date` face (Default: 0.9).
+- ~faces-extras-org-date-height~: Relative height for the =org-date= face (Default: 0.9).
 #+vindex: faces-extras-org-tag-height
-+ ~faces-extras-org-tag-height~: Relative height for the `org-tag` face (Default: 0.9).
+- ~faces-extras-org-tag-height~: Relative height for the =org-tag= face (Default: 0.9).
 #+vindex: faces-extras-org-property-value-height
-+ ~faces-extras-org-property-value-height~: Relative height for the `org-property-value` face (Default: 0.8).
+- ~faces-extras-org-property-value-height~: Relative height for the =org-property-value= face (Default: 0.8).
 
 * Functions for Setting Face Attributes
 :PROPERTIES:
@@ -83,7 +83,7 @@ These functions provide programmatic ways to modify face appearances.
 :END:
 
 #+findex: faces-extras-set-face-attribute
-The function ~faces-extras-set-face-attribute~ takes a single attribute definition (a list where the car is the face symbol and the cdr is a list of attribute-value pairs) and applies it using `set-face-attribute`. It handles evaluating symbols or functions within the attribute values before applying them.
+The function ~faces-extras-set-face-attribute~ takes a single attribute definition (a list where the car is the face symbol and the cdr is a list of attribute-value pairs) and applies it using =set-face-attribute=. It handles evaluating symbols or functions within the attribute values before applying them.
 
 Example:
 #+begin_src emacs-lisp
@@ -129,7 +129,7 @@ The command ~faces-extras-set-custom-face-attributes~ iterates through the list 
 :END:
 
 #+defface: faces-extras-display-time
-The face ~faces-extras-display-time~ is defined to inherit from `bold`. It is intended for use with the `display-time-string` when displayed in the modeline or tab bar, providing a distinct appearance for the time.
+The face ~faces-extras-display-time~ is defined to inherit from =bold=. It is intended for use with the =display-time-string= when displayed in the modeline or tab bar, providing a distinct appearance for the time.
 
 * Commands
 :PROPERTIES:
@@ -142,14 +142,14 @@ The face ~faces-extras-display-time~ is defined to inherit from `bold`. It is in
 :END:
 
 #+findex: faces-extras-describe-face
-The command ~faces-extras-describe-face~ acts as a wrapper around the standard `describe-face` command. It automatically determines the face at the current point and calls `describe-face` for that face. Crucially, before calling `describe-face`, it temporarily disables both buffer-local `hl-line-mode` and `global-hl-line-mode` (if active). After `describe-face` finishes, it restores the original state of these modes. This prevents the highlighting from `hl-line-mode` from interfering with the display of the face being described in the `*Help*` buffer.
+The command ~faces-extras-describe-face~ acts as a wrapper around the standard =describe-face= command. It automatically determines the face at the current point and calls =describe-face= for that face. Crucially, before calling =describe-face=, it temporarily disables both buffer-local =hl-line-mode= and =global-hl-line-mode= (if active). After =describe-face= finishes, it restores the original state of these modes. This prevents the highlighting from =hl-line-mode= from interfering with the display of the face being described in the =*Help*= buffer.
 
 * Internal Variables
 :PROPERTIES:
 :CUSTOM_ID: h:internal-variables
 :END:
 
-+ ~faces-extras-custom-face-attributes~: Stores the list of custom face attributes added via ~faces-extras-set-and-store-face-attributes~.
+- ~faces-extras-custom-face-attributes~: Stores the list of custom face attributes added via ~faces-extras-set-and-store-face-attributes~.
 
 * Indices
 :PROPERTIES:

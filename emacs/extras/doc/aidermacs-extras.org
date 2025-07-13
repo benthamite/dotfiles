@@ -21,8 +21,8 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Commands to copy portions of the Aider chat history to the kill ring.
-+ A function to confirm before killing an Aidermacs buffer with a running process.
+- Commands to copy portions of the Aider chat history to the kill ring.
+- A function to confirm before killing an Aidermacs buffer with a running process.
 
 * Commands
 :PROPERTIES:

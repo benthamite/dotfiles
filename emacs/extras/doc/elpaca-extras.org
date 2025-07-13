@@ -21,8 +21,8 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ A command to reload a package's features after it has been updated.
-+ A command that combines updating a package and then automatically reloading it.
+- A command to reload a package's features after it has been updated.
+- A command that combines updating a package and then automatically reloading it.
 
 * Commands
 :PROPERTIES:

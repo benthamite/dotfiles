@@ -21,14 +21,14 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Automatic application of `pdf-view-midnight-minor-mode` based on the active Modus theme.
-+ A command to toggle `writeroom-mode` specifically for PDF viewing.
-+ A command to open the current PDF externally, potentially at the current page (macOS specific).
-+ Commands to count words in the PDF or copy its entire text content.
-+ A command to delete the current PDF file and kill its buffer.
-+ An enhanced annotation command that copies the highlighted text after creating the annotation.
-+ A command to open the corresponding BibTeX entry in =ebib= based on the PDF filename.
-+ Experimental support for word selection via double-click (currently noted as potentially problematic).
+- Automatic application of =pdf-view-midnight-minor-mode= based on the active Modus theme.
+- A command to toggle =writeroom-mode= specifically for PDF viewing.
+- A command to open the current PDF externally, potentially at the current page (macOS specific).
+- Commands to count words in the PDF or copy its entire text content.
+- A command to delete the current PDF file and kill its buffer.
+- An enhanced annotation command that copies the highlighted text after creating the annotation.
+- A command to open the corresponding BibTeX entry in =ebib= based on the PDF filename.
+- Experimental support for word selection via double-click (currently noted as potentially problematic).
 
 * Commands
 :PROPERTIES:
@@ -43,7 +43,7 @@ The main features include:
 :END:
 
 #+findex: pdf-tools-extras-toggle-writeroom
-The command ~pdf-tools-extras-toggle-writeroom~ toggles =writeroom-mode= on or off. It specifically sets the `writeroom-width` to 120 columns before toggling and calls `pdf-view-fit-height-to-window` afterwards to adjust the PDF view.
+The command ~pdf-tools-extras-toggle-writeroom~ toggles =writeroom-mode= on or off. It specifically sets the =writeroom-width= to 120 columns before toggling and calls =pdf-view-fit-height-to-window= afterwards to adjust the PDF view.
 
 ** Open PDF Externally
 :PROPERTIES:
@@ -52,8 +52,8 @@ The command ~pdf-tools-extras-toggle-writeroom~ toggles =writeroom-mode= on or o
 
 #+findex: pdf-tools-extras-open-externally
 The command ~pdf-tools-extras-open-externally~ opens the current PDF file using an external application.
-- On macOS, it checks for the existence of a script named `opentopage` in `~/bin`. If found, it uses this script to open the PDF in the default viewer *at the current page*.
-- Otherwise (or on other systems), it uses the standard `open` command (or equivalent) to open the PDF file in the default application, starting from the first page.
+- On macOS, it checks for the existence of a script named =opentopage= in =~/bin=. If found, it uses this script to open the PDF in the default viewer *at the current page*.
+- Otherwise (or on other systems), it uses the standard =open= command (or equivalent) to open the PDF file in the default application, starting from the first page.
 
 ** Count Words in PDF
 :PROPERTIES:
@@ -61,7 +61,7 @@ The command ~pdf-tools-extras-open-externally~ opens the current PDF file using 
 :END:
 
 #+findex: pdf-tools-extras-count-words
-The command ~pdf-tools-extras-count-words~ counts the total number of words in the current PDF document. It uses the external command `pdftotext <file> - | wc -w` to perform the count, copies the resulting number to the kill ring, and displays it in the echo area.
+The command ~pdf-tools-extras-count-words~ counts the total number of words in the current PDF document. It uses the external command =pdftotext <file> - | wc -w= to perform the count, copies the resulting number to the kill ring, and displays it in the echo area.
 
 ** Copy PDF Content (DWIM)
 :PROPERTIES:
@@ -71,7 +71,7 @@ The command ~pdf-tools-extras-count-words~ counts the total number of words in t
 #+findex: pdf-tools-extras-copy-dwim
 The command ~pdf-tools-extras-copy-dwim~ (Do What I Mean) copies text from the PDF to the kill ring:
 - If a region is currently active in the PDF view (selected with the mouse or keyboard), it copies only the selected text using =pdf-view-kill-ring-save=.
-- If no region is active, it extracts the *entire text content* of the PDF using ~tlon-convert-pdf~ (presumably a custom function calling `pdftotext`), attempts to rejoin words broken across lines, and copies the result to the kill ring. It messages the user that the entire text was copied.
+- If no region is active, it extracts the *entire text content* of the PDF using ~tlon-convert-pdf~ (presumably a custom function calling =pdftotext=), attempts to rejoin words broken across lines, and copies the result to the kill ring. It messages the user that the entire text was copied.
 
 ** Delete PDF File
 :PROPERTIES:
@@ -95,7 +95,7 @@ The command ~pdf-annot-extras-add-highlight-markup-annotation~ enhances the stan
 :END:
 
 #+findex: pdf-tools-extras-open-in-ebib
-The command ~pdf-tools-extras-open-in-ebib~ attempts to open the BibTeX entry associated with the current PDF in =ebib=. It assumes that the PDF file is named after its corresponding BibTeX key (e.g., `Author2023Title.pdf` corresponds to the key `Author2023Title`). It extracts the base name of the PDF file and calls ~ebib-extras-open-key~ (presumably defined elsewhere) with that key.
+The command ~pdf-tools-extras-open-in-ebib~ attempts to open the BibTeX entry associated with the current PDF in =ebib=. It assumes that the PDF file is named after its corresponding BibTeX key (e.g., =Author2023Title.pdf= corresponds to the key =Author2023Title=). It extracts the base name of the PDF file and calls ~ebib-extras-open-key~ (presumably defined elsewhere) with that key.
 
 * Configuration Functions
 :PROPERTIES:
@@ -109,8 +109,8 @@ The command ~pdf-tools-extras-open-in-ebib~ attempts to open the BibTeX entry as
 
 #+findex: pdf-tools-extras-apply-theme
 The function ~pdf-tools-extras-apply-theme~ checks the currently active Modus theme (using ~modus-themes--current-theme~).
-- If the dark theme (`modus-vivendi`) is active, it enables `pdf-view-midnight-minor-mode` (which inverts PDF colors for better viewing on dark backgrounds).
-- If the light theme (`modus-operandi`) is active, it disables `pdf-view-midnight-minor-mode`.
+- If the dark theme (=modus-vivendi=) is active, it enables =pdf-view-midnight-minor-mode= (which inverts PDF colors for better viewing on dark backgrounds).
+- If the light theme (=modus-operandi=) is active, it disables =pdf-view-midnight-minor-mode=.
 This function is intended to be called automatically when the theme changes, ensuring the PDF view matches the overall Emacs theme.
 
 * Experimental Features
@@ -123,9 +123,9 @@ This function is intended to be called automatically when the theme changes, ens
 :CUSTOM_ID: h:word-selection-double-click
 :END:
 
-The file includes code defining a minor mode (`pdf-tools-extras-sel-mode`) and a mouse binding (`pdf-tools-extras-sel-mouse`) intended to allow selecting the word under the mouse cursor with a double-click ([double-mouse-1]) and copying it to the kill ring.
+The file includes code defining a minor mode (=pdf-tools-extras-sel-mode=) and a mouse binding (=pdf-tools-extras-sel-mouse=) intended to allow selecting the word under the mouse cursor with a double-click ([double-mouse-1]) and copying it to the kill ring.
 
-*Note:* As indicated by comments in the source code, this feature is currently considered experimental and potentially unreliable, as double-clicking might select more than just the intended word. It might be superseded by future developments in `pdf-tools` itself.
+*Note:* As indicated by comments in the source code, this feature is currently considered experimental and potentially unreliable, as double-clicking might select more than just the intended word. It might be superseded by future developments in =pdf-tools= itself.
 
 * Indices
 :PROPERTIES:

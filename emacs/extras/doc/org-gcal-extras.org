@@ -21,9 +21,9 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ A command to open the Google Calendar event corresponding to the Org entry at point in a web browser.
-+ A transient menu (`org-gcal-extras-menu`) for quick access to fetch, sync, post, open, delete, and setup commands.
-+ Patches to modify how =org-gcal= reads timestamps (preferring DEADLINE over SCHEDULED) and how it updates Org entries (inserting description as body text, using DEADLINE instead of SCHEDULED).
+- A command to open the Google Calendar event corresponding to the Org entry at point in a web browser.
+- A transient menu (=org-gcal-extras-menu=) for quick access to fetch, sync, post, open, delete, and setup commands.
+- Patches to modify how =org-gcal= reads timestamps (preferring DEADLINE over SCHEDULED) and how it updates Org entries (inserting description as body text, using DEADLINE instead of SCHEDULED).
 
 * Commands
 :PROPERTIES:

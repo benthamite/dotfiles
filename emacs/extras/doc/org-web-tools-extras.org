@@ -21,8 +21,8 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ A function to insert an Org link for a URL found in the kill ring (clipboard), suitable for Org Capture.
-+ A function to fetch the title of a web page at a given URL and return it, cleaned for use in Org links.
+- A function to insert an Org link for a URL found in the kill ring (clipboard), suitable for Org Capture.
+- A function to fetch the title of a web page at a given URL and return it, cleaned for use in Org links.
 
 * Functions
 :PROPERTIES:
@@ -37,7 +37,7 @@ The main features include:
 :END:
 
 #+findex: org-web-tools-extras-insert-link-for-clipboard-url
-The function ~org-web-tools-extras-insert-link-for-clipboard-url~ is a wrapper around the internal =org-web-tools--org-link-for-url= function. It first retrieves the first URL found in the kill ring (using =org-web-tools--get-first-url=) and then passes this URL to =org-web-tools--org-link-for-url= to fetch the page title and insert a fully formatted Org link (`[[url][title]]`) at the current point.
+The function ~org-web-tools-extras-insert-link-for-clipboard-url~ is a wrapper around the internal =org-web-tools--org-link-for-url= function. It first retrieves the first URL found in the kill ring (using =org-web-tools--get-first-url=) and then passes this URL to =org-web-tools--org-link-for-url= to fetch the page title and insert a fully formatted Org link (=[[url][title]]=) at the current point.
 
 This function is specifically designed to be easily callable from an Org Capture template, allowing automatic link creation based on a URL previously copied to the clipboard.
 
@@ -47,11 +47,11 @@ This function is specifically designed to be easily callable from an Org Capture
 :END:
 
 #+findex: org-web-tools-extras-org-title-for-url
-The function ~org-web-tools-extras-org-title-for-url~ fetches the HTML content of a given URL, extracts the content of the `<title>` tag, cleans it up (using =org-web-tools--cleanup-title=), and returns the cleaned title string.
+The function ~org-web-tools-extras-org-title-for-url~ fetches the HTML content of a given URL, extracts the content of the =<title>= tag, cleans it up (using =org-web-tools--cleanup-title=), and returns the cleaned title string.
 
 - If the URL argument is not provided, it defaults to fetching the first URL from the kill ring.
 - It uses the =plz= library (presumably configured elsewhere) to fetch the URL content and =libxml-parse-html-region= to parse the HTML.
-- If fetching or parsing fails, or if the page has no `<title>` tag, it returns the fallback string "Downloaded webpage".
+- If fetching or parsing fails, or if the page has no =<title>= tag, it returns the fallback string "Downloaded webpage".
 
 This function can be used to programmatically get titles for URLs for various purposes within Emacs Lisp.
 

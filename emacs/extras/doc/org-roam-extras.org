@@ -21,18 +21,18 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ Configurable lists for excluding specific directories and files from Org Roam's database.
-+ A command to create new Org Roam notes, prompting for type (generic, person, project-specific) to determine directory and initial tags.
-+ A command to convert the current Org heading and its content into a new Org Roam note file.
-+ An enhanced node-finding command that ensures the buffer is widened before searching.
-+ A specialized node-finding command (`org-roam-extras-node-find-special`) that filters nodes based on priority, TODO state, absence of dates, and optional tags/directories, presenting them sorted by priority.
-+ Functions to calculate and display the backlink count for the current node, potentially integrating with modeline packages like `doom-modeline`.
-+ Automatic display of the Org Roam backlink buffer when opening a file with backlinks (configurable).
-+ A helper function to query Org Roam nodes tagged as "person".
-+ A utility function to list Org Roam files modified within a specified number of days.
-+ A helper function to remove file-level properties ("ROAM_REFS", "ID") during Org Capture finalization for specific templates.
-+ An enhanced command to jump to an Org ID, ensuring the buffer is widened first.
-+ A patch to potentially mitigate database locking issues by adding a small delay before querying.
+- Configurable lists for excluding specific directories and files from Org Roam's database.
+- A command to create new Org Roam notes, prompting for type (generic, person, project-specific) to determine directory and initial tags.
+- A command to convert the current Org heading and its content into a new Org Roam note file.
+- An enhanced node-finding command that ensures the buffer is widened before searching.
+- A specialized node-finding command (=org-roam-extras-node-find-special=) that filters nodes based on priority, TODO state, absence of dates, and optional tags/directories, presenting them sorted by priority.
+- Functions to calculate and display the backlink count for the current node, potentially integrating with modeline packages like =doom-modeline=.
+- Automatic display of the Org Roam backlink buffer when opening a file with backlinks (configurable).
+- A helper function to query Org Roam nodes tagged as "person".
+- A utility function to list Org Roam files modified within a specified number of days.
+- A helper function to remove file-level properties ("ROAM_REFS", "ID") during Org Capture finalization for specific templates.
+- An enhanced command to jump to an Org ID, ensuring the buffer is widened first.
+- A patch to potentially mitigate database locking issues by adding a small delay before querying.
 
 * User Options
 :PROPERTIES:
@@ -45,7 +45,7 @@ The main features include:
 :END:
 
 #+vindex: org-roam-extras-excluded-dirs
-A list of directory paths (strings) that should be excluded when Org Roam scans for notes (used via the standard `org-roam-file-exclude-regexp`).
+A list of directory paths (strings) that should be excluded when Org Roam scans for notes (used via the standard =org-roam-file-exclude-regexp=).
 
 ** ~org-roam-extras-excluded-files~
 :PROPERTIES:
@@ -53,7 +53,7 @@ A list of directory paths (strings) that should be excluded when Org Roam scans 
 :END:
 
 #+vindex: org-roam-extras-excluded-files
-A list of filenames or patterns (strings) that should be excluded when Org Roam scans for notes (used via `org-roam-file-exclude-regexp`).
+A list of filenames or patterns (strings) that should be excluded when Org Roam scans for notes (used via =org-roam-file-exclude-regexp=).
 
 ** ~org-roam-extras-auto-show-backlink-buffer~
 :PROPERTIES:
@@ -61,7 +61,7 @@ A list of filenames or patterns (strings) that should be excluded when Org Roam 
 :END:
 
 #+vindex: org-roam-extras-auto-show-backlink-buffer
-If non-nil, the Org Roam buffer (`org-roam-buffer`) will be automatically displayed when a file containing backlinks is opened (via `org-roam-extras-show-backlink-buffer` hooked to `find-file-hook`). Default is nil.
+If non-nil, the Org Roam buffer (=org-roam-buffer=) will be automatically displayed when a file containing backlinks is opened (via =org-roam-extras-show-backlink-buffer= hooked to =find-file-hook=). Default is nil.
 
 * Commands
 :PROPERTIES:
@@ -76,7 +76,7 @@ If non-nil, the Org Roam buffer (`org-roam-buffer`) will be automatically displa
 :END:
 
 #+findex: org-roam-extras-new-note
-The command ~org-roam-extras-new-note~ creates a new Org Roam note. It prompts the user to select a note type ("generic", "person", "Borges", "tango", "tlon-notes"). Based on the type, it determines the target directory (e.g., `paths-dir-notes`, `paths-dir-people`) and initial tags. It then prompts for the note name (title), creates the file using a slugified version of the name, inserts the `#+title:` and an initial heading, sets the tags, creates an Org ID, narrows to the new entry, and places point at the end.
+The command ~org-roam-extras-new-note~ creates a new Org Roam note. It prompts the user to select a note type ("generic", "person", "Borges", "tango", "tlon-notes"). Based on the type, it determines the target directory (e.g., =paths-dir-notes=, =paths-dir-people=) and initial tags. It then prompts for the note name (title), creates the file using a slugified version of the name, inserts the =#+title:= and an initial heading, sets the tags, creates an Org ID, narrows to the new entry, and places point at the end.
 
 ** Convert Heading to Note
 :PROPERTIES:
@@ -84,7 +84,7 @@ The command ~org-roam-extras-new-note~ creates a new Org Roam note. It prompts t
 :END:
 
 #+findex: org-roam-extras-convert-heading-to-note
-The command ~org-roam-extras-convert-heading-to-note~ extracts the current Org heading and its content (including subheadings), prompts for a new note name (defaulting to the current heading title), creates a new Org Roam file in the *current* directory with that name, pastes the extracted content into the new file, sets the `#+title:`, and adjusts the top-level heading in the new file. The original heading and content are killed from the source buffer.
+The command ~org-roam-extras-convert-heading-to-note~ extracts the current Org heading and its content (including subheadings), prompts for a new note name (defaulting to the current heading title), creates a new Org Roam file in the *current* directory with that name, pastes the extracted content into the new file, sets the =#+title:=, and adjusts the top-level heading in the new file. The original heading and content are killed from the source buffer.
 
 ** Find Node (Enhanced)
 :PROPERTIES:
@@ -92,7 +92,7 @@ The command ~org-roam-extras-convert-heading-to-note~ extracts the current Org h
 :END:
 
 #+findex: org-roam-extras-node-find
-The command ~org-roam-extras-node-find~ acts like `org-roam-node-find` but ensures the buffer is widened and all headings are visible before invoking the node finder. It also recenters the buffer after jumping.
+The command ~org-roam-extras-node-find~ acts like =org-roam-node-find= but ensures the buffer is widened and all headings are visible before invoking the node finder. It also recenters the buffer after jumping.
 
 ** Find Special Node (Filtered & Sorted)
 :PROPERTIES:
@@ -100,11 +100,11 @@ The command ~org-roam-extras-node-find~ acts like `org-roam-node-find` but ensur
 :END:
 
 #+findex: org-roam-extras-node-find-special
-The command ~org-roam-extras-node-find-special~ provides a filtered and sorted list of Org Roam nodes for selection via `consult--read`. It selects nodes that:
-- Have a priority (`#+priority:`).
+The command ~org-roam-extras-node-find-special~ provides a filtered and sorted list of Org Roam nodes for selection via =consult--read=. It selects nodes that:
+- Have a priority (=#+priority:=).
 - Have either no TODO state or the state "TODO".
 - Do *not* have a SCHEDULED or DEADLINE timestamp.
-It can optionally filter further by tag or directory (prompting the user if called with `t` or a prefix arg, or using provided :tag/:dir specifier). The results are presented sorted by priority (ascending, A->C) and jumping to the selected node uses `org-id-goto`.
+It can optionally filter further by tag or directory (prompting the user if called with =t= or a prefix arg, or using provided :tag/:dir specifier). The results are presented sorted by priority (ascending, A->C) and jumping to the selected node uses =org-id-goto=.
 
 ** Select Tag
 :PROPERTIES:
@@ -112,7 +112,7 @@ It can optionally filter further by tag or directory (prompting the user if call
 :END:
 
 #+findex: org-roam-extras-node-select-tag
-The command ~org-roam-extras-node-select-tag~ prompts the user (using `consult--read`) to select a tag from the list of all tags present in the Org Roam database. Returns the selected tag string. Used by `org-roam-extras-node-find-special`.
+The command ~org-roam-extras-node-select-tag~ prompts the user (using =consult--read=) to select a tag from the list of all tags present in the Org Roam database. Returns the selected tag string. Used by =org-roam-extras-node-find-special=.
 
 ** Go to ID (Enhanced)
 :PROPERTIES:
@@ -120,7 +120,7 @@ The command ~org-roam-extras-node-select-tag~ prompts the user (using `consult--
 :END:
 
 #+findex: org-roam-extras-id-goto
-The command ~org-roam-extras-id-goto~ takes an Org ID and jumps to its location using `org-roam-id-open`. It ensures the buffer is widened both before and after the jump, which can be helpful if the target is in a currently narrowed buffer.
+The command ~org-roam-extras-id-goto~ takes an Org ID and jumps to its location using =org-roam-id-open=. It ensures the buffer is widened both before and after the jump, which can be helpful if the target is in a currently narrowed buffer.
 
 * Configuration Functions
 :PROPERTIES:
@@ -133,10 +133,10 @@ The command ~org-roam-extras-id-goto~ takes an Org ID and jumps to its location 
 :END:
 
 #+findex: org-roam-extras-update-backlink-count
-~org-roam-extras-update-backlink-count~: Calculates the number of backlinks for the current node ID and stores it in the buffer-local variable `org-roam-extras-current-backlink-count`.
+~org-roam-extras-update-backlink-count~: Calculates the number of backlinks for the current node ID and stores it in the buffer-local variable =org-roam-extras-current-backlink-count=.
 
 #+findex: org-roam-extras-update-modeline
-~org-roam-extras-update-modeline~: Calls `org-roam-extras-update-backlink-count` and then forces a modeline update (specifically calling `doom-modeline-update-buffer-file-name`). Intended to be hooked (e.g., to `buffer-list-update-hook`) to keep the modeline backlink count fresh.
+~org-roam-extras-update-modeline~: Calls =org-roam-extras-update-backlink-count= and then forces a modeline update (specifically calling =doom-modeline-update-buffer-file-name=). Intended to be hooked (e.g., to =buffer-list-update-hook=) to keep the modeline backlink count fresh.
 
 ** Show Backlink Buffer Automatically
 :PROPERTIES:
@@ -144,7 +144,7 @@ The command ~org-roam-extras-id-goto~ takes an Org ID and jumps to its location 
 :END:
 
 #+findex: org-roam-extras-show-backlink-buffer
-~org-roam-extras-show-backlink-buffer~: Intended for `find-file-hook`. If `org-roam-extras-auto-show-backlink-buffer` is non-nil and the Org Roam buffer isn't already visible, it displays the Org Roam buffer and refreshes its content.
+~org-roam-extras-show-backlink-buffer~: Intended for =find-file-hook=. If =org-roam-extras-auto-show-backlink-buffer= is non-nil and the Org Roam buffer isn't already visible, it displays the Org Roam buffer and refreshes its content.
 
 ** Capture Hook Function
 :PROPERTIES:
@@ -152,18 +152,18 @@ The command ~org-roam-extras-id-goto~ takes an Org ID and jumps to its location 
 :END:
 
 #+findex: org-roam-extras-remove-file-level-properties
-~org-roam-extras-remove-file-level-properties~: Intended for `org-capture-before-finalize-hook`. If the capture template key is "r", it removes any file-level "ID" and "ROAM_REFS" properties from the captured entry and ensures the first heading gets an ID.
+~org-roam-extras-remove-file-level-properties~: Intended for =org-capture-before-finalize-hook=. If the capture template key is "r", it removes any file-level "ID" and "ROAM_REFS" properties from the captured entry and ensures the first heading gets an ID.
 
 * Utility Functions
 :PROPERTIES:
 :CUSTOM_ID: h:utility-functions-roam
 :END:
 
-+ ~org-roam-extras-get-note-properties~: Helper for `org-roam-extras-new-note`; prompts for note type and returns `(list DIR TAGS)`.
-+ ~org-roam-extras-create-file-for-note~: Helper for `org-roam-extras-new-note`; creates the file with slugified name in the target directory.
-+ ~org-roam-extras-backlink-count~: Returns the number of backlinks for the node ID at point.
-+ ~org-roam-extras-get-people~: Queries the database for nodes in the "people" directory with level 1 headings, returning a list of `(title id)` pairs.
-+ ~org-roam-extras-recent~: Returns a list of Org Roam files modified within the last DAYS.
+- ~org-roam-extras-get-note-properties~: Helper for =org-roam-extras-new-note=; prompts for note type and returns =(list DIR TAGS)=.
+- ~org-roam-extras-create-file-for-note~: Helper for =org-roam-extras-new-note=; creates the file with slugified name in the target directory.
+- ~org-roam-extras-backlink-count~: Returns the number of backlinks for the node ID at point.
+- ~org-roam-extras-get-people~: Queries the database for nodes in the "people" directory with level 1 headings, returning a list of =(title id)= pairs.
+- ~org-roam-extras-recent~: Returns a list of Org Roam files modified within the last DAYS.
 
 * Patched Functions
 :PROPERTIES:
@@ -175,7 +175,7 @@ The command ~org-roam-extras-id-goto~ takes an Org ID and jumps to its location 
 :CUSTOM_ID: h:org-roam-db-query-patch
 :END:
 
-The function ~org-roam-db-query~ is patched using =el-patch= to insert a very small delay (`sleep-for 0.01`) before executing the database query. This is likely an attempt to mitigate potential SQLite database locking issues that can occur with rapid queries, although its effectiveness might vary.
+The function ~org-roam-db-query~ is patched using =el-patch= to insert a very small delay (=sleep-for 0.01=) before executing the database query. This is likely an attempt to mitigate potential SQLite database locking issues that can occur with rapid queries, although its effectiveness might vary.
 
 * Indices
 :PROPERTIES:

@@ -21,15 +21,15 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ An enhanced command (~telega-extras-switch-to~) to switch to Telega buffers with cycling behavior.
-+ Capturing messages with Org Capture.
-+ Commands to quickly view archive or main chat lists.
-+ Sending marked files from Dired as attachments.
-+ Attaching the most recent file from the downloads directory.
-+ A "smart enter" command that acts contextually on URLs, buttons, or sends the message.
-+ Commands to transcribe audio messages, optionally sharing the transcript automatically.
-+ Commands to download message attachments.
-+ Functions and a transient menu to quickly open specific chats or topics defined in a custom variable.
+- An enhanced command (~telega-extras-switch-to~) to switch to Telega buffers with cycling behavior.
+- Capturing messages with Org Capture.
+- Commands to quickly view archive or main chat lists.
+- Sending marked files from Dired as attachments.
+- Attaching the most recent file from the downloads directory.
+- A "smart enter" command that acts contextually on URLs, buttons, or sends the message.
+- Commands to transcribe audio messages, optionally sharing the transcript automatically.
+- Commands to download message attachments.
+- Functions and a transient menu to quickly open specific chats or topics defined in a custom variable.
 
 * User Options
 :PROPERTIES:
@@ -44,7 +44,7 @@ This section details the user-configurable variables provided by =telega-extras.
 :END:
 
 #+vindex: telega-extras-auto-share-audio-transcript
-If non-nil, automatically attempt to share the transcript as a reply after successfully transcribing an audio message sent by the user using ~telega-extras-transcribe-audio~. Defaults to `nil`.
+If non-nil, automatically attempt to share the transcript as a reply after successfully transcribing an audio message sent by the user using ~telega-extras-transcribe-audio~. Defaults to =nil=.
 
 ** ~telega-extras-chats~
 :PROPERTIES:
@@ -52,7 +52,7 @@ If non-nil, automatically attempt to share the transcript as a reply after succe
 :END:
 
 #+vindex: telega-extras-chats
-A plist storing information about specific Telegram chats and their topics, used by ~telega-extras-open-chat~ and the ~telega-extras-menu~. The structure should follow the type specification: a plist containing chat names (strings) mapping to chat IDs (integers) and optionally a nested plist of topic names (strings) mapping to topic IDs (integers). Defaults to `nil`. See the source code docstring for a detailed example structure.
+A plist storing information about specific Telegram chats and their topics, used by ~telega-extras-open-chat~ and the ~telega-extras-menu~. The structure should follow the type specification: a plist containing chat names (strings) mapping to chat IDs (integers) and optionally a nested plist of topic names (strings) mapping to topic IDs (integers). Defaults to =nil=. See the source code docstring for a detailed example structure.
 
 * Commands
 :PROPERTIES:
@@ -73,7 +73,7 @@ The command ~telega-extras-switch-to~ provides an enhanced way to navigate Teleg
 - If the current buffer is a Telega chat buffer:
   - If the point is not at the end, it moves the point to the end.
   - If the point is already at the end, it kills the chat buffer and switches to the Telega root buffer.
-- If the current buffer is the Telega root buffer (`*Telega Root*`):
+- If the current buffer is the Telega root buffer (=*Telega Root*=):
   - If the active filter is 'archive':
     - If the point is at the top (line 3), it resets the filters (showing 'main').
     - Otherwise, it moves the point to the top (line 3).
@@ -87,7 +87,7 @@ The command ~telega-extras-switch-to~ provides an enhanced way to navigate Teleg
 :END:
 
 #+findex: telega-extras-chat-org-capture
-The command ~telega-extras-chat-org-capture~ captures the Telega message at point into an Org mode note using `org-capture`. It first stores an Org link to the message using `org-store-link` and then invokes `org-capture` with the "n" template key (assuming this template is configured to use the stored link).
+The command ~telega-extras-chat-org-capture~ captures the Telega message at point into an Org mode note using =org-capture=. It first stores an Org link to the message using =org-store-link= and then invokes =org-capture= with the "n" template key (assuming this template is configured to use the stored link).
 
 ** View Archive/Main Chat List
 :PROPERTIES:
@@ -111,7 +111,7 @@ When executed in a Dired buffer, the command ~telega-extras-dired-attach-send~ s
 2. It prompts the user to select a destination chat using =telega-completing-read-chat=.
 3. It switches to the selected chat buffer.
 4. For each marked file, it determines the appropriate attachment type (audio, video, photo, or generic file) using ~telega-extras-dired-attach-func~ based on the file extension.
-5. It calls the corresponding `telega-chatbuf-attach-*` function for each file.
+5. It calls the corresponding =telega-chatbuf-attach-*= function for each file.
 
 ** Attach Most Recent Download
 :PROPERTIES:
@@ -119,7 +119,7 @@ When executed in a Dired buffer, the command ~telega-extras-dired-attach-send~ s
 :END:
 
 #+findex: telega-extras-chatbuf-attach-most-recent-file
-The command ~telega-extras-chatbuf-attach-most-recent-file~ finds the most recently modified file in the downloads directory (specified by `paths-dir-downloads`, presumably defined elsewhere, using ~files-extras-newest-file~) and attaches it to the current Telega chat buffer using =telega-chatbuf-attach-file=.
+The command ~telega-extras-chatbuf-attach-most-recent-file~ finds the most recently modified file in the downloads directory (specified by =paths-dir-downloads=, presumably defined elsewhere, using ~files-extras-newest-file~) and attaches it to the current Telega chat buffer using =telega-chatbuf-attach-file=.
 
 ** Smart Enter
 :PROPERTIES:
@@ -161,25 +161,25 @@ The command ~telega-extras-menu~ displays a transient menu allowing the user to 
 :CUSTOM_ID: h:helper-functions
 :END:
 
-+ ~telega-extras-dired-attach-func~: Determines the correct `telega-chatbuf-attach-*` function based on a file's extension.
-+ ~telega-extras-message-has-audio-p~: Checks if a Telega message is a voice note.
-+ ~telega-extras-maybe-share-audio-transcript~: Sets up timers to periodically check for and share a transcript if auto-sharing is enabled.
-+ ~telega-extras-get-audio-transcript~: Retrieves the transcript text from a message object if speech recognition is complete.
-+ ~telega-extras-maybe-get-audio-transcript~: Checks if a transcript is ready and calls processing/sharing functions. Called by the timer.
-+ ~telega-extras-post-audio-transcript~: Formats and sends the transcript as a reply to the original audio message.
-+ ~telega-extras-cancel-timer-when-active~: Safely cancels a timer if it's active.
-+ ~telega-extras-cancel-audio-timers~: Cancels both the transcript check timer and the timeout timer.
-+ ~telega-extras-open-chat~: Opens a specific chat and optionally navigates to a topic based on names defined in ~telega-extras-chats~.
-+ ~telega-extras-get-id~: Looks up the numerical chat ID and optionally topic ID based on names provided from ~telega-extras-chats~.
-+ ~telega-extras-get-last-topic-message~: Retrieves the last message object within a specific topic thread.
+- ~telega-extras-dired-attach-func~: Determines the correct =telega-chatbuf-attach-*= function based on a file's extension.
+- ~telega-extras-message-has-audio-p~: Checks if a Telega message is a voice note.
+- ~telega-extras-maybe-share-audio-transcript~: Sets up timers to periodically check for and share a transcript if auto-sharing is enabled.
+- ~telega-extras-get-audio-transcript~: Retrieves the transcript text from a message object if speech recognition is complete.
+- ~telega-extras-maybe-get-audio-transcript~: Checks if a transcript is ready and calls processing/sharing functions. Called by the timer.
+- ~telega-extras-post-audio-transcript~: Formats and sends the transcript as a reply to the original audio message.
+- ~telega-extras-cancel-timer-when-active~: Safely cancels a timer if it's active.
+- ~telega-extras-cancel-audio-timers~: Cancels both the transcript check timer and the timeout timer.
+- ~telega-extras-open-chat~: Opens a specific chat and optionally navigates to a topic based on names defined in ~telega-extras-chats~.
+- ~telega-extras-get-id~: Looks up the numerical chat ID and optionally topic ID based on names provided from ~telega-extras-chats~.
+- ~telega-extras-get-last-topic-message~: Retrieves the last message object within a specific topic thread.
 
 * Internal Variables
 :PROPERTIES:
 :CUSTOM_ID: h:internal-variables
 :END:
 
-+ ~telega-extras-audio-transcript-timer~: Holds the timer object for periodically checking transcript status.
-+ ~telega-extras-audio-transcript-timeout-timer~: Holds the timer object for cancelling the transcript check after a timeout.
+- ~telega-extras-audio-transcript-timer~: Holds the timer object for periodically checking transcript status.
+- ~telega-extras-audio-transcript-timeout-timer~: Holds the timer object for cancelling the transcript check after a timeout.
 
 * Indices
 :PROPERTIES:

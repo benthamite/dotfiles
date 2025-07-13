@@ -17,19 +17,19 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=mu4e-extras.el= provides extensions for =mu4e=, the Emacs email client based on the `mu` indexer. These extensions focus on streamlining common actions (refiling, trashing, moving), managing read status synchronization issues with Gmail, integrating with Org capture, handling multiple email contexts (personal/work), and providing convenience commands.
+=mu4e-extras.el= provides extensions for =mu4e=, the Emacs email client based on the =mu= indexer. These extensions focus on streamlining common actions (refiling, trashing, moving), managing read status synchronization issues with Gmail, integrating with Org capture, handling multiple email contexts (personal/work), and providing convenience commands.
 
 The main features include:
 
-+ Commands to refile, trash, or move messages without confirmation prompts.
-+ A mechanism to track messages marked as read and refiled, and automatically re-mark them as read after synchronization to counteract a Gmail issue.
-+ Similar mechanism to mark sent messages as read after synchronization.
-+ Commands to update all mail (including Gmail's "All Mail") and reindex the `mu` database.
-+ Integration with Org capture to capture a message and optionally refile it.
-+ Commands to open the current message in the Gmail web interface or compose a new message externally.
-+ Configuration helpers for setting up `mu4e-maildir-shortcuts` and multiple `mu4e-contexts` (e.g., for personal vs. work accounts with different signatures and HTML/plain text handling).
-+ A command to copy numeric amounts found in email subjects.
-+ Patches to modify default `mu4e` behavior (e.g., URL handling).
+- Commands to refile, trash, or move messages without confirmation prompts.
+- A mechanism to track messages marked as read and refiled, and automatically re-mark them as read after synchronization to counteract a Gmail issue.
+- Similar mechanism to mark sent messages as read after synchronization.
+- Commands to update all mail (including Gmail's "All Mail") and reindex the =mu= database.
+- Integration with Org capture to capture a message and optionally refile it.
+- Commands to open the current message in the Gmail web interface or compose a new message externally.
+- Configuration helpers for setting up =mu4e-maildir-shortcuts= and multiple =mu4e-contexts= (e.g., for personal vs. work accounts with different signatures and HTML/plain text handling).
+- A command to copy numeric amounts found in email subjects.
+- Patches to modify default =mu4e= behavior (e.g., URL handling).
 
 * User Options
 :PROPERTIES:
@@ -70,7 +70,7 @@ Controls the default behavior for replying when there are multiple recipients.
 - =prompt=: Ask the user whether to "Reply to all".
 - =t=: Always "Reply to all".
 - =nil=: Always reply only to the sender.
-Used by ~mu4e-extras-compose-reply~. Default is `prompt`.
+Used by ~mu4e-extras-compose-reply~. Default is =prompt=.
 
 * Commands
 :PROPERTIES:
@@ -113,13 +113,13 @@ Used by ~mu4e-extras-compose-reply~. Default is `prompt`.
 :END:
 
 #+findex: mu4e-extras-init
-~mu4e-extras-init~: Quits mu4e if running, then runs `mu init` asynchronously to initialize the database.
+~mu4e-extras-init~: Quits mu4e if running, then runs =mu init= asynchronously to initialize the database.
 #+findex: mu4e-extras-update-all-mail-and-index
-~mu4e-extras-update-all-mail-and-index~: Runs `mbsync gmail-all` (fetching all mail, including archives) and then indexes using `mu index`. Can run in background with prefix arg.
+~mu4e-extras-update-all-mail-and-index~: Runs =mbsync gmail-all= (fetching all mail, including archives) and then indexes using =mu index=. Can run in background with prefix arg.
 #+findex: mu4e-extras-check-all-mail
 ~mu4e-extras-check-all-mail~: Same as ~mu4e-extras-update-all-mail-and-index~ but always runs in the background. Intended for less frequent, full syncs.
 #+findex: mu4e-extras-reindex-db
-~mu4e-extras-reindex-db~: Attempts to kill any running `mu` process and then runs `mu index`.
+~mu4e-extras-reindex-db~: Attempts to kill any running =mu= process and then runs =mu index=.
 
 ** Composition and Viewing
 :PROPERTIES:
@@ -127,7 +127,7 @@ Used by ~mu4e-extras-compose-reply~. Default is `prompt`.
 :END:
 
 #+findex: mu4e-extras-compose-reply
-~mu4e-extras-compose-reply~: Initiates a reply to the message at point. If the sender is the user, calls `mu4e-compose-supersede`. If there are multiple recipients, behavior depends on ~mu4e-extras-wide-reply~ (prompt, always wide, or always narrow).
+~mu4e-extras-compose-reply~: Initiates a reply to the message at point. If the sender is the user, calls =mu4e-compose-supersede=. If there are multiple recipients, behavior depends on ~mu4e-extras-wide-reply~ (prompt, always wide, or always narrow).
 #+findex: mu4e-extras-compose-new-externally
 ~mu4e-extras-compose-new-externally~: Opens the Gmail web interface in the default browser, directly on the compose screen.
 #+findex: mu4e-extras-view-in-gmail
@@ -139,7 +139,7 @@ Used by ~mu4e-extras-compose-reply~. Default is `prompt`.
 :END:
 
 #+findex: mu4e-extras-view-org-capture
-~mu4e-extras-view-org-capture~: Captures the current message (view or headers buffer) using `org-capture`. Uses template key "e" by default, but respects `[org-capture key: KEY]` in the message body. With prefix arg, captures without refiling; otherwise, refiles the message after capture using ~mu4e-extras-view-refile~.
+~mu4e-extras-view-org-capture~: Captures the current message (view or headers buffer) using =org-capture=. Uses template key "e" by default, but respects =[org-capture key: KEY]= in the message body. With prefix arg, captures without refiling; otherwise, refiles the message after capture using ~mu4e-extras-view-refile~.
 #+findex: mu4e-extras-copy-number-in-title
 ~mu4e-extras-copy-number-in-title~: Attempts to find and copy a number (potentially with commas/periods as separators) from the subject line of the message at point to the kill ring.
 
@@ -156,7 +156,7 @@ These functions are intended for use in Emacs configuration files.
 :END:
 
 #+findex: mu4e-extras-gmail-fix-flags
-Intended for use with `mu4e-change-filenames-when-moving`. Translates standard mu4e marks (trash, refile, flag, unflag) into Gmail-specific flag changes (e.g., adding `+\Trash`, `+\Starred`).
+Intended for use with =mu4e-change-filenames-when-moving=. Translates standard mu4e marks (trash, refile, flag, unflag) into Gmail-specific flag changes (e.g., adding =+\Trash=, =+\Starred=).
 
 ** ~mu4e-extras-reapply-read-status~
 :PROPERTIES:
@@ -164,7 +164,7 @@ Intended for use with `mu4e-change-filenames-when-moving`. Translates standard m
 :END:
 
 #+findex: mu4e-extras-reapply-read-status
-Iterates through the message IDs stored in ~mu4e-extras-mark-as-read-queue~ and marks them as seen (`+S`) using `mu4e--server-move`. Clears the queue afterwards. Intended to be called after mail synchronization.
+Iterates through the message IDs stored in ~mu4e-extras-mark-as-read-queue~ and marks them as seen (=+S=) using =mu4e--server-move=. Clears the queue afterwards. Intended to be called after mail synchronization.
 
 ** ~mu4e-extras-reapply-read-status-set-timer~
 :PROPERTIES:
@@ -172,7 +172,7 @@ Iterates through the message IDs stored in ~mu4e-extras-mark-as-read-queue~ and 
 :END:
 
 #+findex: mu4e-extras-reapply-read-status-set-timer
-Sets a 30-second timer to call ~mu4e-extras-reapply-read-status~ if the queue is not empty. Intended to be hooked into `mu4e-update-pre-hook` (though commentary notes potential issues).
+Sets a 30-second timer to call ~mu4e-extras-reapply-read-status~ if the queue is not empty. Intended to be hooked into =mu4e-update-pre-hook= (though commentary notes potential issues).
 
 ** ~mu4e-extras-add-sent-to-mark-as-read-queue~
 :PROPERTIES:
@@ -180,7 +180,7 @@ Sets a 30-second timer to call ~mu4e-extras-reapply-read-status~ if the queue is
 :END:
 
 #+findex: mu4e-extras-add-sent-to-mark-as-read-queue
-Intended for `message-sent-hook`. Adds the Message-ID of the sent message to the ~mu4e-extras-mark-as-read-queue~ so it can be marked as read after syncing.
+Intended for =message-sent-hook=. Adds the Message-ID of the sent message to the ~mu4e-extras-mark-as-read-queue~ so it can be marked as read after syncing.
 
 ** ~mu4e-extras-set-shortcuts~
 :PROPERTIES:
@@ -188,7 +188,7 @@ Intended for `message-sent-hook`. Adds the Message-ID of the sent message to the
 :END:
 
 #+findex: mu4e-extras-set-shortcuts
-Adds predefined shortcuts for the inbox and daily folders (defined by user options) to `mu4e-maildir-shortcuts`.
+Adds predefined shortcuts for the inbox and daily folders (defined by user options) to =mu4e-maildir-shortcuts=.
 
 ** ~mu4e-extras-set-face-locally~
 :PROPERTIES:
@@ -196,7 +196,7 @@ Adds predefined shortcuts for the inbox and daily folders (defined by user optio
 :END:
 
 #+findex: mu4e-extras-set-face-locally
-Intended for `mu4e-view-mode-hook`. Remaps the `shr-text` face to have a smaller height (0.9) locally in view buffers.
+Intended for =mu4e-view-mode-hook=. Remaps the =shr-text= face to have a smaller height (0.9) locally in view buffers.
 
 ** ~mu4e-extras-set-contexts~
 :PROPERTIES:
@@ -204,7 +204,7 @@ Intended for `mu4e-view-mode-hook`. Remaps the `shr-text` face to have a smaller
 :END:
 
 #+findex: mu4e-extras-set-contexts
-Defines and sets `mu4e-contexts` for personal and work accounts, distinguishing between HTML and plain text composition. Associates different email addresses and Org Msg signatures with each context. Uses helper functions like ~mu4e-extras-msg-is-personal-p~ and ~mu4e-extras-msg-is-html-p~ for matching.
+Defines and sets =mu4e-contexts= for personal and work accounts, distinguishing between HTML and plain text composition. Associates different email addresses and Org Msg signatures with each context. Uses helper functions like ~mu4e-extras-msg-is-personal-p~ and ~mu4e-extras-msg-is-html-p~ for matching.
 
 ** ~mu4e-extras-set-index-params~
 :PROPERTIES:
@@ -212,16 +212,16 @@ Defines and sets `mu4e-contexts` for personal and work accounts, distinguishing 
 :END:
 
 #+findex: mu4e-extras-set-index-params
-Adjusts `mu4e-index-lazy-check` and `mu4e-index-cleanup` based on Emacs idle time. If idle time is long, assumes user is away and performs a more thorough index (lazy check off, cleanup on). If idle time is short, assumes user is active and performs a faster index (lazy check on, cleanup off). Intended to be called before indexing (e.g., via a hook if available, or timer).
+Adjusts =mu4e-index-lazy-check= and =mu4e-index-cleanup= based on Emacs idle time. If idle time is long, assumes user is away and performs a more thorough index (lazy check off, cleanup on). If idle time is short, assumes user is active and performs a faster index (lazy check on, cleanup off). Intended to be called before indexing (e.g., via a hook if available, or timer).
 
 * Internal Helper Functions
 :PROPERTIES:
 :CUSTOM_ID: h:internal-helpers
 :END:
 
-+ ~mu4e-extras-msg-is-personal-p~: Checks if a message's :to field matches personal email addresses.
-+ ~mu4e-extras-msg-is-work-p~: Checks if a message's :to or :reply-to field matches work email addresses or groups.
-+ ~mu4e-extras-msg-is-html-p~: Checks if a message contains a "text/html" part.
+- ~mu4e-extras-msg-is-personal-p~: Checks if a message's :to field matches personal email addresses.
+- ~mu4e-extras-msg-is-work-p~: Checks if a message's :to or :reply-to field matches work email addresses or groups.
+- ~mu4e-extras-msg-is-html-p~: Checks if a message contains a "text/html" part.
 
 * Patched Functions
 :PROPERTIES:

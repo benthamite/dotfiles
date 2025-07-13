@@ -17,15 +17,15 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=pass-extras.el= provides extensions for the =pass= package (interfacing with the `pass` Unix password manager). These extensions focus on interacting with password entries, managing keys, generating passwords, and integrating with `git-crypt`.
+=pass-extras.el= provides extensions for the =pass= package (interfacing with the =pass= Unix password manager). These extensions focus on interacting with password entries, managing keys, generating passwords, and integrating with =git-crypt=.
 
 The main features include:
 
-+ A command to open the URL associated with the password entry at point while copying the password to the clipboard.
-+ A command to insert a new password entry using a generated password (without symbols).
-+ Commands to store an external key file into `pass` or export a `pass` entry to a file.
-+ A command to unlock a `git-crypt` repository using a key stored in `pass`.
-+ A command to generate various types of passwords (simple, strong, numeric, phonetic, words, custom) and copy the result to the clipboard with automatic clearing.
+- A command to open the URL associated with the password entry at point while copying the password to the clipboard.
+- A command to insert a new password entry using a generated password (without symbols).
+- Commands to store an external key file into =pass= or export a =pass= entry to a file.
+- A command to unlock a =git-crypt= repository using a key stored in =pass=.
+- A command to generate various types of passwords (simple, strong, numeric, phonetic, words, custom) and copy the result to the clipboard with automatic clearing.
 
 * Commands
 :PROPERTIES:
@@ -62,8 +62,8 @@ The command ~pass-extras-insert-generated-no-symbols~ provides a way to add a ne
 #+findex: pass-extras-store-key
 The command ~pass-extras-store-key~ imports the contents of an external key file into the password store as a multiline entry. It prompts the user for:
 1. The path to the key file (FILE).
-2. The name of the `pass` entry (ENTRY) to store the key under (with completion).
-It then uses a shell command (`cat <file> | pass insert --multiline <entry>`) to perform the import.
+2. The name of the =pass= entry (ENTRY) to store the key under (with completion).
+It then uses a shell command (=cat <file> | pass insert --multiline <entry>=) to perform the import.
 
 ** Export Pass Entry to File
 :PROPERTIES:
@@ -71,10 +71,10 @@ It then uses a shell command (`cat <file> | pass insert --multiline <entry>`) to
 :END:
 
 #+findex: pass-extras-export-key
-The command ~pass-extras-export-key~ exports the contents of a `pass` entry to an external file. It prompts the user for:
-1. The name of the `pass` entry (ENTRY) to export (with completion).
+The command ~pass-extras-export-key~ exports the contents of a =pass= entry to an external file. It prompts the user for:
+1. The name of the =pass= entry (ENTRY) to export (with completion).
 2. The path to the file (FILE) where the entry should be saved.
-It uses a shell command (`pass <entry> > <file>`) to perform the export and messages the user upon completion.
+It uses a shell command (=pass <entry> > <file>=) to perform the export and messages the user upon completion.
 
 ** Unlock Git Crypt Repository
 :PROPERTIES:
@@ -82,10 +82,10 @@ It uses a shell command (`pass <entry> > <file>`) to perform the export and mess
 :END:
 
 #+findex: pass-extras-git-crypt-unlock
-The command ~pass-extras-git-crypt-unlock~ attempts to unlock a `git-crypt` encrypted repository using a key stored in `pass`. It prompts the user for:
+The command ~pass-extras-git-crypt-unlock~ attempts to unlock a =git-crypt= encrypted repository using a key stored in =pass=. It prompts the user for:
 1. The path to the repository (REPO), defaulting to the current directory.
-2. The name of the `pass` entry (ENTRY) containing the `git-crypt` key (with completion).
-It then executes `git-crypt unlock <(pass <entry>)` within the repository's directory using `call-process-shell-command`. It messages the user about success or failure (e.g., if the repository is dirty).
+2. The name of the =pass= entry (ENTRY) containing the =git-crypt= key (with completion).
+It then executes =git-crypt unlock <(pass <entry>)= within the repository's directory using =call-process-shell-command=. It messages the user about success or failure (e.g., if the repository is dirty).
 
 ** Generate and Copy Password
 :PROPERTIES:

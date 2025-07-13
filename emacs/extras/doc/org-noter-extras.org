@@ -21,11 +21,11 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ A command to clean up newly created highlight annotations, replacing the generic heading with a custom title and quoting the extracted text.
-+ A command to append the content of the current annotation to the previous one.
-+ Functions to remove leftover hyphens from text extracted from PDFs.
-+ A command to adjust page numbers in annotation headings based on a calculated offset between PDF pages and book/article pages.
-+ Commands to navigate between notes without switching focus to the PDF buffer.
+- A command to clean up newly created highlight annotations, replacing the generic heading with a custom title and quoting the extracted text.
+- A command to append the content of the current annotation to the previous one.
+- Functions to remove leftover hyphens from text extracted from PDFs.
+- A command to adjust page numbers in annotation headings based on a calculated offset between PDF pages and book/article pages.
+- Commands to navigate between notes without switching focus to the PDF buffer.
 
 * Variables
 :PROPERTIES:
@@ -38,7 +38,7 @@ The main features include:
 :END:
 
 #+vindex: org-noter-extras-dehyphenate-hyphens
-A list of strings representing hyphen characters that should be removed by the ~org-noter-extras-dehyphenate~ function when cleaning up extracted text. Defaults to `("-" "¬")`.
+A list of strings representing hyphen characters that should be removed by the ~org-noter-extras-dehyphenate~ function when cleaning up extracted text. Defaults to =("-" "¬")=.
 
 ** ~org-noter-highlight-heading-regexp~
 :PROPERTIES:
@@ -46,7 +46,7 @@ A list of strings representing hyphen characters that should be removed by the ~
 :END:
 
 #+vindex: org-noter-highlight-heading-regexp
-A regular expression used to identify the default heading format created by `org-noter` for highlight annotations ("Highlight on page X"). Used by ~org-noter-extras-cleanup-annotation~ and ~org-noter-get-annotation-contents~. Defaults to `"Highlight on page \\(.*\\)"`.
+A regular expression used to identify the default heading format created by =org-noter= for highlight annotations ("Highlight on page X"). Used by ~org-noter-extras-cleanup-annotation~ and ~org-noter-get-annotation-contents~. Defaults to ="Highlight on page \\(.*\\)"=.
 
 * Commands
 :PROPERTIES:
@@ -71,7 +71,7 @@ The command ~org-noter-extras-cleanup-annotation~ refines a newly created Org No
 7. Extracts the page number (X) from the generic heading.
 8. Edits the heading to use the custom TITLE provided by the user and the extracted page number (formatted as "TITLE, p. X").
 9. Narrows to the updated heading's subtree.
-10. Inserts the extracted annotation content, wrapped in an Org quote block (`#+begin_quote ... #+end_quote`).
+10. Inserts the extracted annotation content, wrapped in an Org quote block (=#+begin_quote ... #+end_quote=).
 11. Cleans up potential extra newlines.
 12. Moves to the next heading and unfolds the modified subtree.
 
@@ -84,8 +84,8 @@ The command ~org-noter-extras-cleanup-annotation~ refines a newly created Org No
 The command ~org-noter-extras-append-to-previous-annotation~ merges the content of the current annotation note into the previous one.
 1. It extracts the text content of the current annotation using ~org-noter-get-annotation-contents~.
 2. It cuts the current annotation subtree.
-3. It searches backward for the end of the previous annotation's quote block (`#+end_quote`).
-4. It inserts the extracted content just before the `#+end_quote` marker of the previous annotation, effectively appending it.
+3. It searches backward for the end of the previous annotation's quote block (=#+end_quote=).
+4. It inserts the extracted content just before the =#+end_quote= marker of the previous annotation, effectively appending it.
 
 ** Dehyphenate Text
 :PROPERTIES:
@@ -93,7 +93,7 @@ The command ~org-noter-extras-append-to-previous-annotation~ merges the content 
 :END:
 
 #+findex: org-noter-extras-dehyphenate
-The command ~org-noter-extras-dehyphenate~ removes leftover hyphens that often occur at line breaks when text is extracted from PDFs. It operates on the current paragraph, or the active region if one exists. It searches for patterns like `[alpha]<hyphen> [alpha]` (where `<hyphen>` is one of the characters in ~org-noter-extras-dehyphenate-hyphens~) and replaces them with `[alpha][alpha]`, effectively joining the hyphenated word parts. This command might be intended to be run automatically via a hook (see TODO in source code).
+The command ~org-noter-extras-dehyphenate~ removes leftover hyphens that often occur at line breaks when text is extracted from PDFs. It operates on the current paragraph, or the active region if one exists. It searches for patterns like =[alpha]<hyphen> [alpha]= (where =<hyphen>= is one of the characters in ~org-noter-extras-dehyphenate-hyphens~) and replaces them with =[alpha][alpha]=, effectively joining the hyphenated word parts. This command might be intended to be run automatically via a hook (see TODO in source code).
 
 ** Apply Highlight Page Offset
 :PROPERTIES:
@@ -117,10 +117,10 @@ The command ~org-noter-extras-set-hyphen~ allows the user to interactively chang
 :END:
 
 #+findex: org-noter-extras-sync-next-note
-The command ~org-noter-extras-sync-next-note~ calls the standard =org-noter-sync-next-note= but immediately switches focus back to the Org notes window using `other-window 1`. This prevents the default behavior of shifting focus to the PDF document buffer.
+The command ~org-noter-extras-sync-next-note~ calls the standard =org-noter-sync-next-note= but immediately switches focus back to the Org notes window using =other-window 1=. This prevents the default behavior of shifting focus to the PDF document buffer.
 
 #+findex: org-noter-extras-sync-prev-note
-The command ~org-noter-extras-sync-prev-note~ calls the standard =org-noter-sync-prev-note= but immediately switches focus back to the Org notes window using `other-window 1`.
+The command ~org-noter-extras-sync-prev-note~ calls the standard =org-noter-sync-prev-note= but immediately switches focus back to the Org notes window using =other-window 1=.
 
 * Helper Functions
 :PROPERTIES:
@@ -133,7 +133,7 @@ The command ~org-noter-extras-sync-prev-note~ calls the standard =org-noter-sync
 :END:
 
 #+findex: org-noter-get-annotation-contents
-The function ~org-noter-get-annotation-contents~ extracts and cleans the text content from the current Org Noter annotation subtree. It handles finding the start of the content (after metadata or the "Contents" heading), narrows to the content region, fills the text to remove excessive line breaks (using a very large `fill-column`), runs ~org-noter-extras-dehyphenate~ to fix hyphenation, and returns the cleaned text.
+The function ~org-noter-get-annotation-contents~ extracts and cleans the text content from the current Org Noter annotation subtree. It handles finding the start of the content (after metadata or the "Contents" heading), narrows to the content region, fills the text to remove excessive line breaks (using a very large =fill-column=), runs ~org-noter-extras-dehyphenate~ to fix hyphenation, and returns the cleaned text.
 
 * Indices
 :PROPERTIES:

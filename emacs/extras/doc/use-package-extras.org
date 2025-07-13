@@ -21,22 +21,22 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ A `use-feature` macro, similar to `use-package` but ensuring the package is not automatically installed (`:ensure nil`).
-+ A `lambda!` macro for creating simple interactive lambda functions.
-+ A function to display Emacs startup time and garbage collection count.
+- A =use-feature= macro, similar to =use-package= but ensuring the package is not automatically installed (=:ensure nil=).
+- A =lambda!= macro for creating simple interactive lambda functions.
+- A function to display Emacs startup time and garbage collection count.
 
 * Macros
 :PROPERTIES:
 :CUSTOM_ID: h:macros
 :END:
 
-** `use-feature` Macro
+** =use-feature= Macro
 :PROPERTIES:
 :CUSTOM_ID: h:use-feature
 :END:
 
 #+findex: use-feature
-The macro ~use-feature~ acts as a wrapper around the standard =use-package= macro. It takes the same NAME and ARGS as =use-package= but automatically inserts `:ensure nil` into the arguments.
+The macro ~use-feature~ acts as a wrapper around the standard =use-package= macro. It takes the same NAME and ARGS as =use-package= but automatically inserts =:ensure nil= into the arguments.
 
 *Usage:*
 #+begin_src emacs-lisp
@@ -57,15 +57,15 @@ This is equivalent to:
   (my-package-mode 1))
 #+end_src
 
-*Rationale:* This macro is useful in configurations where package installation is handled separately (e.g., by `elpaca` or another package manager) and the user wants to ensure `use-package` declarations only configure already installed packages without attempting to install them again.
+*Rationale:* This macro is useful in configurations where package installation is handled separately (e.g., by =elpaca= or another package manager) and the user wants to ensure =use-package= declarations only configure already installed packages without attempting to install them again.
 
-** `lambda!` Macro
+** =lambda!= Macro
 :PROPERTIES:
 :CUSTOM_ID: h:lambda!
 :END:
 
 #+findex: lambda!
-The macro ~lambda!~ provides a shorthand for creating simple interactive lambda functions. It wraps the provided BODY forms within `(lambda () (interactive) ... )`.
+The macro ~lambda!~ provides a shorthand for creating simple interactive lambda functions. It wraps the provided BODY forms within =(lambda () (interactive) ... )=.
 
 *Usage:*
 #+begin_src emacs-lisp
@@ -90,7 +90,7 @@ This is useful for creating quick interactive commands, often used in key bindin
 :END:
 
 #+findex: use-package-extras-display-startup-time
-The function ~use-package-extras-display-startup-time~ calculates and displays the time Emacs took to initialize and the number of garbage collections performed during startup. It uses the standard Emacs variables `after-init-time`, `before-init-time`, and `gcs-done` to compute these values and formats them into a message displayed in the echo area (e.g., "Emacs loaded in 0.52 seconds with 5 garbage collections."). This function is typically added to the `emacs-startup-hook`.
+The function ~use-package-extras-display-startup-time~ calculates and displays the time Emacs took to initialize and the number of garbage collections performed during startup. It uses the standard Emacs variables =after-init-time=, =before-init-time=, and =gcs-done= to compute these values and formats them into a message displayed in the echo area (e.g., "Emacs loaded in 0.52 seconds with 5 garbage collections."). This function is typically added to the =emacs-startup-hook=.
 
 * Indices
 :PROPERTIES:

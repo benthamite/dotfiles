@@ -21,10 +21,10 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main features include:
 
-+ A command to toggle multiline searching for =consult-ripgrep=.
-+ Commands to run =consult-locate= scoped to the current directory, optionally matching only file names.
-+ A command to run =consult-ripgrep= scoped to the current directory.
-+ An enhanced command to jump to Org headings using =consult-org-heading= with automatic widening and unfolding.
+- A command to toggle multiline searching for =consult-ripgrep=.
+- Commands to run =consult-locate= scoped to the current directory, optionally matching only file names.
+- A command to run =consult-ripgrep= scoped to the current directory.
+- An enhanced command to jump to Org headings using =consult-org-heading= with automatic widening and unfolding.
 
 * Commands
 :PROPERTIES:

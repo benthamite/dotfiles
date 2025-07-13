@@ -217,6 +217,8 @@ A regexp (string). If the heading being clocked into matches this regexp, the us
 :CUSTOM_ID: h:id-management
 :END:
 
+#+findex: org-extras-id-find-duplicate-ids
+~org-extras-id-find-duplicate-ids~: Scans the `*Messages*` buffer for duplicate ID warnings (as produced by `org-id-update-id-locations`), collects the IDs and their associated file paths, and presents them in a new, read-only `*Duplicate Org IDs*` buffer. This allows for quick navigation to files containing duplicate IDs.
 #+findex: org-extras-id-update-id-locations
 ~org-extras-id-update-id-locations~: Updates the Org ID location cache by scanning agenda files, archives, open Org files, files in `org-directory`, and `org-id-extra-files`.
 

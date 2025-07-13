@@ -301,6 +301,7 @@ Optional FILTER-SPEC can be:
 
 ;;;;; Get people
 
+;;;###autoload
 (defun org-roam-extras-get-people ()
   "Query title and ID of level-1 headings in files within the people directory."
   (org-roam-db-query

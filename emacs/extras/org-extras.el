@@ -694,6 +694,35 @@ files, recursively all files in `org-directory', and all files in
                                      all-files)))
     (org-id-update-id-locations filtered-files)))
 
+(declare-function simple-extras-local-set-key "simple-extras")
+(defun org-extras-id-process-next-duplicate ()
+  "Process the next duplicate ID from the *Duplicate Org IDs* buffer.
+This command opens the file associated with the first duplicate ID entry,
+copies the ID to the kill ring, and removes the entry from the buffer.
+If the buffer becomes empty, it is killed."
+  (interactive)
+  (if-let ((buf (get-buffer "*Duplicate Org IDs*")))
+      (with-current-buffer buf
+        (let ((inhibit-read-only t))
+          (goto-char (point-min))
+          (if (eobp)
+              (progn
+                (kill-buffer (current-buffer))
+                (message "No more duplicate IDs to process."))
+            (let ((line (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
+              (if (string-match "^\\(.*\\): \\(\\S-+\\)$" line)
+                  (let ((file (match-string 1 line))
+                        (id (match-string 2 line)))
+                    (find-file file)
+                    (kill-new id)
+                    (message "Copied ID %s to kill ring." id)
+                    (with-current-buffer buf
+                      (delete-region (line-beginning-position) (1+ (line-end-position)))
+                      (if (eobp)
+                          (kill-buffer (current-buffer)))))
+                (user-error "Cannot parse line: %s" line))))))
+    (user-error "Buffer *Duplicate Org IDs* does not exist")))
+
 (defun org-extras-id-find-duplicate-ids ()
   "Scan *Messages* buffer for duplicate IDs and display them in a new buffer."
   (interactive)
@@ -715,6 +744,7 @@ files, recursively all files in `org-directory', and all files in
             (erase-buffer)
             (insert (string-join (reverse results) "\n"))
             (goto-char (point-min))
+            (simple-extras-local-set-key (kbd "SPC") #'org-extras-id-process-next-duplicate)
             (setq buffer-read-only t))
           (display-buffer (current-buffer)))
       (message "No duplicate IDs found in *Messages* buffer."))))

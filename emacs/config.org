@@ -6298,7 +6298,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package jinx-extras
   :after jinx
-  
+
   :bind
   (("A-M-p" . jinx-extras-toggle-languages)))
 #+end_src
@@ -8182,7 +8182,7 @@ This package evolved out of gptel-extras.
    tools-buffer
    "buffer tools"
    '("edit_buffer" "view_buffer"))
-  
+
   (gptel-extras-make-tool-presets
    tools-slack-ea-translations
    "Slack-related tools"
@@ -8361,17 +8361,17 @@ This package evolved out of gptel-extras.
           ("sequential-thinking" . (:command "npx"
                                              :args ("-y" "@modelcontextprotocol/server-sequential-thinking")))
           ("slack-ea-translations" . (:command "npx"
-					       :args ("-y" "@modelcontextprotocol/server-slack")
-					       :env (:SLACK_BOT_TOKEN ,(auth-source-pass-get
-									"bot-token"
-									"tlon/core/slack.com/ea-translations")
-								      :SLACK_TEAM_ID "T04EYQYHG74")))
-	  ;; ("slack-ae-racionalidad" . (:command "npx"
-					       ;; :args ("-y" "@modelcontextprotocol/server-slack")
-					       ;; :env (:SLACK_BOT_TOKEN ,(auth-source-pass-get
-									;; "bot-token"
-									;; "tlon/core/slack.com/ae-racionalidad")
-								      ;; :SLACK_TEAM_ID "CA0JVRT5K")))
+                                               :args ("-y" "@modelcontextprotocol/server-slack")
+                                               :env (:SLACK_BOT_TOKEN ,(auth-source-pass-get
+                                                                        "bot-token"
+                                                                        "tlon/core/slack.com/ea-translations")
+                                                                      :SLACK_TEAM_ID "T04EYQYHG74")))
+          ;; ("slack-ae-racionalidad" . (:command "npx"
+                                               ;; :args ("-y" "@modelcontextprotocol/server-slack")
+                                               ;; :env (:SLACK_BOT_TOKEN ,(auth-source-pass-get
+                                                                        ;; "bot-token"
+                                                                        ;; "tlon/core/slack.com/ae-racionalidad")
+                                                                      ;; :SLACK_TEAM_ID "CA0JVRT5K")))
                                                                       ))
 
   (when (string= (system-name) "Pablos-MacBook-Pro.local")
@@ -8393,17 +8393,17 @@ This package evolved out of gptel-extras.
   (when (simple-extras-connected-to-network-p "Pablo-mesh")
     (setq mcp-hub-servers
           (append mcp-hub-servers
-		  `(("home-assistant" . (:command "mcp-proxy"
-						  :env (:SSE_URL "http://homeassistant.local:8123/mcp_server/sse"
-								 :API_ACCESS_TOKEN ,(auth-source-pass-get
-										     "ha-mcp"
-										     "chrome/home-assistant.io/stafforini"))))))))
+                  `(("home-assistant" . (:command "mcp-proxy"
+                                                  :env (:SSE_URL "http://homeassistant.local:8123/mcp_server/sse"
+                                                                 :API_ACCESS_TOKEN ,(auth-source-pass-get
+                                                                                     "ha-mcp"
+                                                                                     "chrome/home-assistant.io/stafforini"))))))))
 
   (mcp-hub-start-all-server)
   (run-with-timer 15 nil (lambda ()
-			   "Connect to all MCP servers after they have started, but do not activate any tools."
-			   (gptel-mcp-connect)
-			   (gptel--apply-preset 'tools-clear))))
+                           "Connect to all MCP servers after they have started, but do not activate any tools."
+                           (gptel-mcp-connect)
+                           (gptel--apply-preset 'tools-clear))))
 #+end_src
 
 ** dall-e-shell

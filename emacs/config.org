@@ -436,6 +436,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#elgantt][elgantt]]
   - [[#org-pomodoro][org-pomodoro]]
   - [[#org-pomodoro-extras][org-pomodoro-extras]]
+  - [[#org-percentile][org-percentile]]
 - [[#note-taking][note-taking]]
   - [[#org-roam][org-roam]]
   - [[#org-roam-extras][org-roam-extras]]
@@ -10278,6 +10279,31 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package org-pomodoro-extras
   :after org-pomodoro)
+#+end_src
+
+** org-percentile
+:PROPERTIES:
+:ID:       A3454BA6-5E4E-4FA7-9465-52A410A6F5C8
+:END:
+:LOGBOOK:
+CLOCK: [2025-07-05 Sat 12:41]--[2025-07-05 Sat 12:41] =>  0:00
+CLOCK: [2025-07-05 Sat 12:39]--[2025-07-05 Sat 12:39] =>  0:00
+CLOCK: [2025-07-05 Sat 12:39]--[2025-07-05 Sat 12:39] =>  0:00
+CLOCK: [2025-07-05 Sat 11:54]--[2025-07-05 Sat 11:54] =>  0:00
+:END:
+
+/[[https://github.com/benthamite/org-percentile][org-percentile]] is a productivity tool that let’s you compete with your past self./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package org-percentile
+  :ensure (:host github
+		 :repo "benthamite/org-percentile")
+  :after org-clock
+  :custom
+  (org-percentile-data-file (file-name-concat paths-dir-dropbox "misc/org-percentile-data.el"))
+
+  :config
+  (org-percentile-mode))
 #+end_src
 
 * note-taking

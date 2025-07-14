@@ -8056,17 +8056,15 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
     :key (auth-source-pass-get "emacs" (concat "tlon/core/x.ai/" tlon-email-shared))
     :endpoint "/v1/chat/completions"
     :stream t
-    :models '((grok-2-latest
-               :context-window 131.072
-               :input-cost 2
-               :output-cost 10
-               :cutoff-date "2024-07"
+    :models '((grok-4-latest
+               :context-window 256000
+               :input-cost 3
+               :output-cost 15
                :description "Latest Grok model")
-              (grok-2-vision-latest
-               :context-window 32.768
+              (grok-4-vision-latest
+               :context-window 256000
                :input-cost 2
                :output-cost 10
-               :cutoff-date "2024-07"
                :description "Latest Grok vision model")))
 
   (gptel-make-preset 'tools-clear

@@ -39,9 +39,6 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
 :TOC:      :include all :depth 3 :force ((nothing)) :ignore ((nothing)) :local ((nothing))
 :ID:       536D7BF2-AA0D-43D7-8865-601DFB6BB8E6
 :END:
-:LOGBOOK:
-CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
-:END:
 :CONTENTS:
 - [[#exordium][exordium]]
 - [[#table-of-contents][table of contents]]

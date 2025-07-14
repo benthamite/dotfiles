@@ -14265,7 +14265,7 @@ Literate configuration
 - [[https://emacs.sJtackexchange.com/questions/3143/can-i-use-org-mode-to-structure-my-emacs-or-other-el-configuration-file][elisp - Can I use org-mode to structure my .emacs or other .el configuration file? - Emacs Stack Exchange]]
 
 Some useful config files:
-- [[https://github.com/stsquad/my-emacs-stuff][Alex Bennée]]. 
+- [[https://github.com/stsquad/my-emacs-stuff][Alex Bennée]].
 - [[https://zzamboni.org/post/my-emacs-configuration-with-commentary/][Diego Zamboni]]
 - [[https://jamiecollinson.com/blog/my-emacs-config/][Jamie Collinson]]
 - [[https://github.com/jethrokuan/dots/blob/master/.doom.d/config.el][Jethro Kuan]]. Creator or ~org-roam~ and author of some great posts on note-taking. Not literal.

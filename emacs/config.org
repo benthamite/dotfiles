@@ -6942,7 +6942,7 @@ https://gitlab.com/chrisberkhout/pricehist
   :bind
   (("M-j" . tlon-node-find)
    ("H-r" . tlon-dispatch)
-   ("H-?" . tlon-md-insert-mdx-cite)
+   ("H-?" . tlon-mdx-insert-cite)
    ("A-C-p" . tlon-grep)))
 #+end_src
 

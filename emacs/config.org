@@ -364,6 +364,7 @@ CLOCK: [2021-08-02 Mon 21:28]--[2021-08-02 Mon 21:29] =>  0:01
   - [[#shut-up][shut-up]]
   - [[#puni][puni]]
   - [[#hl-todo][hl-todo]]
+  - [[#consult-todo][consult-todo]]
   - [[#project][project]]
   - [[#hideshow][hideshow]]
   - [[#aggressive-indent][aggressive-indent]]
@@ -7805,6 +7806,19 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
   :ensure (:build (:not elpaca--check-version))
   :hook
   (find-file-mode . global-hl-todo-mode))
+** consult-todo
+:PROPERTIES:
+:ID:       096737D3-C07A-4484-9B32-FACE5C7CCE7A
+:END:
+
+/[[https://github.com/eki3z/consult-todo][consult-todo]] uses =consult= to navigate =hl-todo= keywords./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package consult-todo
+  :after hl-todo
+  :bind
+  (:map prog-mode-map
+	("s-t" . consult-todo)))
 #+end_src
 
 ** project

@@ -10272,6 +10272,9 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
 :ID:       6D8C1A4B-3131-4175-AB23-4C3DDA311872
 :END:
 
+
+/[[file:extras/org-pomodoro-extras.el][org-pomodoro-extras]] collects my extensions for =org-pomodoro=./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package org-pomodoro-extras
   :after org-pomodoro)

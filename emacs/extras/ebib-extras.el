@@ -1653,7 +1653,7 @@ be added to the entry.  Note that for a timestamp to be added,
 `ebib-db-set-entry'.
 
 If storing the entry was successful, return the key under which
-the entry is actually stored \\(which, if IF-EXISTS is `uniquify',
+the entry is actually stored (which, if IF-EXISTS is `uniquify',
 may differ from ENTRY-KEY); otherwise return nil.  Depending on
 the value of IF-EXISTS, storing an entry may also result in an
 error."

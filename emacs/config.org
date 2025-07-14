@@ -10256,7 +10256,9 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
   :hook
   (org-pomodoro-started-hook . org-extras-pomodoro-format-timer)
   (org-pomodoro-started-hook . tab-bar-extras-disable-all-notifications)
+  (org-pomodoro-started-hook . org-extras-narrow-to-entry-and-children)
   (org-pomodoro-finished-hook . tab-bar-extras-enable-all-notifications)
+  (org-pomodoro-finished-hook . widen)
 
   :bind
   (("H-I" . org-pomodoro)

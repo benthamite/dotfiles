@@ -1050,6 +1050,7 @@ empty headings, which trigger an `org-roam' warning."
     ("SPC c s" "cs"            (lambda () (interactive) (org-roam-extras-id-goto "1BA08F2A-5898-4622-AF41-B45CCAE342F0")))
     ("SPC d a" "da"            (lambda () (interactive) (org-roam-extras-id-goto "3ABB8AF0-7F72-43D1-BAE9-1F2FE2E95C9C")))
     ("SPC d e" "de"            (lambda () (interactive) (org-roam-extras-id-goto "3F0A20BF-729F-4426-B853-C143D6B19876")))
+    ("SPC e s" "es"            (lambda () (interactive) (org-roam-extras-id-goto "B79A2066-17B6-4543-A6BF-4F60F643A1AC")))
     ("SPC f a" "fa"            (lambda () (interactive) (org-roam-extras-id-goto "AD71E2B0-FAF9-49B9-9289-73887A7BF36D")))
     ("SPC f r" "fr"            (lambda () (interactive) (org-roam-extras-id-goto "8FDA9155-C270-4FB0-AA2A-DA87BED19BE0")))
     ("SPC h e" "he"            (lambda () (interactive) (org-roam-extras-id-goto "E5BC7714-6E29-4CC5-BEEB-0603C984E1DD")))

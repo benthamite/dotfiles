@@ -66,20 +66,6 @@
   )
 #+end_src
 
-** tlon-babel
-:PROPERTIES:
-:ID:       73031860-40D4-4D45-B270-58213D055F8D
-:END:
-
-#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
-(setq tlon-babel-todos-jobs-id "19FDA2D4-C33C-48DB-8C48-546816F095EB")
-(setq tlon-babel-todos-generic-id "3311BBC7-41EF-4FA5-AC91-627ECD0AAC29")
-(setq paths-files-bibliography-all
-      `(,@paths-files-bibliography-personal
-        ,@tlon-babel-bibliography-files))
-(tlon-babel-init)
-#+end_src
-
 ** org-capture
 :PROPERTIES:
 :ID:       D2052656-45F1-4FA1-AAB7-D001395AE789
@@ -156,10 +142,10 @@
                        (id "C5C5EF82-E7FC-461E-B7BE-FE921CEE9158")
                        "* %?\n\n" :empty-lines 1 :prepend t :jump-to-captured t)
                       ("tbJ" "Tlön: BAE: Create new job (via org-capture)" entry
-                       (id ,tlon-babel-todos-jobs-id)
+                       (id ,paths-tlon-babel-todos-jobs-id)
                        "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :jump-to-captured t)
                       ("tbG" "Tlön: BAE: Create new todo from GitHub (via org-capture)" entry
-                       (id ,tlon-babel-todos-generic-id)
+                       (id ,paths-tlon-babel-todos-generic-id)
                        "** TODO [#5] %c" :immediate-finish t :empty-lines 1 :prepend t :jump-to-captured t)))
     (push template org-capture-templates))
 
@@ -231,10 +217,8 @@
   )
 
 
-(global-set-key (kbd "H-;") 'hydra-org-work/body)
+(global-set-key (kbd "H-;") 'org-extras-work-dispatch)
 (put 'scroll-left 'disabled nil)
-
-
 #+end_src
 
 ** modus-themes-extras
@@ -271,6 +255,24 @@
 
 #+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
 (setq telega-server-libs-prefix "/Users/cartago/source/td/tdlib")
+#+end_src
+
+** citar
+:PROPERTIES:
+:ID:       54D18706-0226-479A-A482-FD3E5AADFA47
+:END:
+
+#+begin_src emacs-lisp :tangle (print tlon-init-file-late-init)
+(setq citar-citeproc-csl-styles-dir paths-dir-personal-csl-styles)
+#+end_src
+
+** tlon-init
+:PROPERTIES:
+:ID:       A38AB01A-19E7-4F42-BF0C-20207882BB67
+:END:
+
+#+begin_src emacs-lisp  :tangle (print tlon-init-file-late-init)
+(run-hooks 'tlon-init-post-init-hook)
 #+end_src
 
 * tangle flags
@@ -316,7 +318,9 @@
  (paths-dir-dropbox . (file-name-concat (expand-file-name "~") "Library/CloudStorage/Dropbox/"))
  (paths-dir-google-drive . (file-name-concat (expand-file-name "~") "Google Drive/"))
  (paths-dir-downloads . (file-name-concat (expand-file-name "~") "Downloads/"))
- (paths-dir-source . (file-name-concat (expand-file-name "~") "source/"))
+ (paths-dir-external-repos . (file-name-concat (expand-file-name "~") "source/"))
+ (paths-dir-tlon-repos . (file-name-concat paths-dir-dropbox "repos/"))
+ (paths-dir-babel-refs . (file-name-concat paths-dir-tlon-repos "babel-refs/"))
  (paths-dir-tlon-biblioteca-altruismo-eficaz . (file-name-concat (expand-file-name "~") "source/biblioteca-altruismo-eficaz/"))
  (paths-dir-emacs .   user-emacs-directory)
  (paths-dir-google-drive . (file-name-concat (expand-file-name "~") "google drive/"))
@@ -334,19 +338,16 @@
  (paths-dir-personal-bibliography . (file-name-concat (expand-file-name "~") "source/bibliography/"))
  (paths-dir-personal-csl-styles . (file-name-concat paths-dir-personal-bibliography "styles/"))
  (paths-dir-personal-csl-locales . (file-name-concat paths-dir-personal-bibliography "locales/"))
- (paths-dir-csl-styles . (file-name-concat paths-dir-dropbox "repos/babel/ref/styles/"))
- (paths-dir-csl-locales . (file-name-concat paths-dir-dropbox "repos/babel/ref/locales/"))
  (paths-dir-blog . "")
  (paths-dir-journal . "")
  (paths-dir-wiki . "")
  (paths-dir-wiki-entries . "")
  (paths-dir-wiki-references . "")
  (paths-dir-dotfiles . (file-name-concat (expand-file-name "~") "source/dotfiles/"))
- (paths-dir-extras . (file-name-concat tlon-init-dir-dotemacs "extras/"))
  (paths-dir-karabiner . "")
  (paths-dir-bibliographic-notes .  (file-name-concat paths-dir-dropbox "bibliographic-notes/"))
- (paths-dir-yasnippets . (file-name-concat tlon-init-dir-dotemacs "yasnippets/"))
- (paths-dir-abbrev . (file-name-concat tlon-init-dir-dotemacs "abbrev/"))
+ (paths-dir-yasnippets . (file-name-concat paths-dir-dotemacs "yasnippets/"))
+ (paths-dir-abbrev . (file-name-concat paths-dir-dotemacs "abbrev/"))
  (paths-dir-private . (file-name-concat paths-dir-dropbox "private/"))
  (paths-dir-ledger . (file-name-concat paths-dir-dropbox "ledger/"))
  (paths-dir-notes . "")
@@ -401,8 +402,8 @@
  (paths-file-feeds-pablo . "")
  (paths-file-tlon-feeds . (file-name-concat paths-dir-dropbox-tlon-core "feeds.org"))
  (paths-file-anki . "")
- (paths-file-init . (file-name-concat tlon-init-dir-dotemacs "init.el"))
- (paths-file-config . (file-name-concat tlon-init-dir-dotemacs "config.org"))
+ (paths-file-init . (file-name-concat paths-dir-dotemacs "init.el"))
+ (paths-file-config . (file-name-concat paths-dir-dotemacs "config.org"))
  (paths-file-karabiner . "")
  (paths-file-karabiner-edn . "")
  (paths-file-wiki-notes . (file-name-concat paths-dir-wiki "wiki-notes.org"))
@@ -418,7 +419,7 @@
  (paths-file-orb-noter-template . (file-name-concat paths-dir-personal-bibliography "orb-noter-template.org"))
  (paths-file-orb-capture-template . (file-name-concat paths-dir-bibliographic-notes "${citekey}.org"))
  (paths-file-bookmarks . (file-name-concat paths-dir-dropbox "bookmarks"))
- (paths-file-variables . (file-name-concat tlon-init-dir-dotemacs "variables.el"))
+ (paths-file-variables . (file-name-concat paths-dir-dotemacs "variables.el"))
  (paths-file-ledger . (file-name-concat paths-dir-dropbox-tlon-leo "journal.ledger"))
  (paths-file-ledger-db . (file-name-concat paths-dir-ledger ".pricedb"))
  (paths-file-metaculus . (file-name-concat paths-dir-notes "metaculus.org"))
@@ -438,11 +439,8 @@
  (paths-file-personal-bibliography-new . (file-name-concat paths-dir-personal-bibliography "new.bib"))
  (paths-files-bibliography-personal . `(,paths-file-personal-bibliography-new
                                         ,paths-file-personal-bibliography-old))
- )
-#+end_src
-
-#+begin_src emacs-lisp
-(run-hooks 'tlon-init-post-init-hook)
+ (paths-tlon-babel-todos-jobs-id . "19FDA2D4-C33C-48DB-8C48-546816F095EB")
+ (paths-tlon-babel-todos-generic-id . "3311BBC7-41EF-4FA5-AC91-627ECD0AAC29"))
 #+end_src
 
 * local variables

@@ -7615,8 +7615,6 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
    'org-babel-load-languages
    '((python . t)))
 
-  (remove-hook 'python-mode-hook #'yasnippet-snippets--fixed-indent) ; some package (`elpy'?) is adding this
-
   :bind (:map python-mode-map
               ("C-c p" . run-python)
               ("s-l" . python-shell-send-file)

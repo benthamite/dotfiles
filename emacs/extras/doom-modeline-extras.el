@@ -71,6 +71,7 @@
 
 ;;;;;; org-roam
 
+;; FIXME (2025-07-16): this stopped working
 (defvar org-roam-extras-current-backlink-count)
 (doom-modeline-def-segment org-roam-backlinks
   (when (and (derived-mode-p 'org-mode)

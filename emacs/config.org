@@ -10372,40 +10372,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
    (concat "${hierarchy:160} "
            (propertize "${tags:20}" 'face 'org-tag)))
   ;; exclude selected headings based on other criteria
-  (org-roam-db-node-include-function
-   (lambda ()
-     (if (or
-          ;; exclude based on tags
-          (member "noid" (org-get-tags))
-          (member "ARCHIVE" (org-get-tags))
-          ;; exclude based on heading names
-          (member (org-get-heading) '("Local variables"
-                                      "COMMENT Local variables"
-                                      "TODO Local variables"
-                                      "Evaluation"
-                                      "History"
-                                      "Further reading"
-                                      "External links"
-                                      "Related entries"
-                                      "Archive :ARCHIVE:"))
-          ;; exclude buffers when in list of special dirs and org
-          ;; heading at point is of level higher than 1 (i.e.
-          ;; don't create unnecessary IDs for article
-          ;; subsections)
-          (and
-           ;; dir condition
-           (member
-            (file-name-directory (buffer-file-name))
-            (mapcar #'file-name-as-directory
-                    ;; List of special dirs
-                    (list
-                     paths-dir-journal
-                     (file-name-concat paths-dir-dropbox ".Trash"))))
-           ;; heading condition
-           (> (org-current-level) 1))
-          )
-         nil
-       t)))
+  (org-roam-db-node-include-function #'org-roam-extras-node-include-function)
 
   :config
   ;; adapted from

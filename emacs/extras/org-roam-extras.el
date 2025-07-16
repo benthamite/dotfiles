@@ -72,6 +72,44 @@
 
 ;;;; Functions
 
+;;;;; Include function
+
+(defun org-roam-extras-node-include-function ()
+  "Return t iff point is on a valid node."
+  (if (or
+       ;; exclude based on tags
+       (member "noid" (org-get-tags))
+       (member "ARCHIVE" (org-get-tags))
+       ;; exclude based on heading names
+       (member (org-get-heading) '("Local variables"
+                                   "COMMENT Local variables"
+                                   "TODO Local variables"
+                                   "Evaluation"
+                                   "History"
+                                   "Further reading"
+                                   "External links"
+                                   "Related entries"
+                                   "Archive :ARCHIVE:"))
+       ;; exclude buffers when in list of special dirs and org
+       ;; heading at point is of level higher than 1 (i.e.
+       ;; don't create unnecessary IDs for article
+       ;; subsections)
+       (and
+        ;; dir condition
+        (member
+         (file-name-directory (buffer-file-name))
+         (mapcar #'file-name-as-directory
+                 ;; List of special dirs
+                 (list
+                  paths-dir-journal
+                  (file-name-concat paths-dir-dropbox ".Trash")
+                  (file-name-concat paths-dir-notes "gptel"))))
+        ;; heading condition
+        (> (org-current-level) 1))
+       )
+      nil
+    t))
+
 ;;;;; Note management
 
 (defun org-roam-extras-new-note ()

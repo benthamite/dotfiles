@@ -1,0 +1,36 @@
+# -*- mode: snippet -*-
+# name: installation
+# key: ins
+# contributor: Pablo Stafforini
+# --
+* Installation
+
+** Manual
+
+Clone this repository to your Emacs load path and add this to your =init.el= file:
+
+#+begin_src emacs-lisp
+(require '$1)
+#+end_src
+
+** With =use-pacakge=
+If you use =use-pacakge=, add this your =init.el= file:
+
+#+begin_src emacs-lisp
+;; with vc
+(use-package $1
+  :vc (:url "https://github.com/benthamite/$1"))
+
+;; with elpaca
+(use-package $1
+  :ensure (:host github :repo "benthamite/$1"))
+
+;; with straight
+(use-package $1
+  :straight (:host github :repo "benthamite/$1"))
+
+;; with quelpa
+(use-package $1
+  :quelpa ($1 :fetcher github :repo "benthamite/$1"))
+#+end_src
+

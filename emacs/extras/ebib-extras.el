@@ -229,13 +229,17 @@ entry. Returns nil otherwise."
 		     ('ebib-entry-mode #'ebib-extras-get-field)
 		     ('bibtex-mode #'bibtex-extras-get-field))))
     (when-let* ((files (funcall get-field "file")))
-      (catch 'tag
-	(mapc
-	 (lambda (file)
-	   (when (equal (file-name-extension file) extension)
-	     (throw 'tag (expand-file-name file))))
-	 (ebib--split-files files))
-	nil))))
+      (ebib-extras-get-file-in-string files extension))))
+
+(defun ebib-extras-get-file-in-string (files extension)
+  "Return the path of the file with EXTENSION in FILES."
+  (catch 'tag
+    (mapc
+     (lambda (file)
+       (when (equal (file-name-extension file) extension)
+	 (throw 'tag (expand-file-name file))))
+     (ebib--split-files files))
+    nil))
 
 (defun ebib-extras-get-text-file ()
   "Return the path of the first text file found for the entry at point.

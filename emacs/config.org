@@ -1004,7 +1004,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature server
-  :defer 5
+  :defer 30
   :config
   (unless (server-running-p)
     (server-start)))
@@ -1458,6 +1458,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature diff-mode
+  :defer t
   :bind
   (:map diff-mode-map
    ("M-o" . nil)))
@@ -2345,7 +2346,7 @@ Note that the loading of ~color~ cannot be deferred, since it is required by ~pu
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package color-extras
   :after color
-  :defer 10)
+  :defer 30)
 #+end_src
 
 ** rainbow-mode
@@ -2594,7 +2595,6 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package breadcrumb
-  :defer 3
   :custom
   (breadcrumb-project-max-length 0.5)
   (breadcrumb-project-crumb-separator "/")
@@ -2673,7 +2673,6 @@ Note that the icons need to be installed via =nerd-icons-install-fonts=. If you 
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature pixel-scroll
-  :defer 5
   :config
   (pixel-scroll-precision-mode))
 #+end_src
@@ -2750,7 +2749,6 @@ I have [[https://emacs.stackexchange.com/questions/72417/face-properties-fail-to
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature jit-lock
-  :defer 10
   :custom
   (jit-lock-chunk-size
         (* (window-max-chars-per-line) (window-body-height) 2)))
@@ -3617,7 +3615,6 @@ CLOCK: [2021-06-25 Fri 21:18]--[2021-06-25 Fri 21:19] =>  0:01
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature goto-addr
-  :defer 7
   :config
   (global-goto-address-mode))
 #+end_src
@@ -3670,6 +3667,7 @@ CLOCK: [2021-07-30 Fri 21:16]--[2021-07-30 Fri 21:31] =>  0:15
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature bookmark
+  :defer t
   :custom
   (bookmark-default-file paths-file-bookmarks) ; Set location of bookmarks file
   (bookmark-save-flag 1)) ; Save bookmarks after each entry
@@ -5755,7 +5753,6 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature which-key
-  :defer 5
   :custom
   (which-key-idle-delay 0)
 
@@ -6531,7 +6528,7 @@ I use it in combination with the [[https://ghosttext.fregante.com/][Ghost Text]]
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package atomic-chrome
-  :defer 10
+  :defer 30
   :custom
   (atomic-chrome-default-major-mode 'markdown-mode)
   (atomic-chrome-url-major-mode-alist
@@ -6698,7 +6695,6 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package mediawiki
   :after atomic-chrome
-  :defer 5
   :bind
   (:map mediawiki-mode-map
         ("s-k" . mediawiki-insert-link)))
@@ -7473,6 +7469,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature backtrace
+  :defer t
   :custom
   (backtrace-line-length nil))
 #+end_src
@@ -7657,6 +7654,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package pet
+  :after python
   :config
   (add-hook 'python-base-mode-hook 'pet-mode -10))
 #+end_src
@@ -9887,7 +9885,6 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature org-element
   :after org
-  :defer 3
   :custom
   ;; set to nil to temporarily disable cache and avoid `org-element-cache' errors
   (org-element-use-cache t))
@@ -9949,7 +9946,7 @@ Allows reset of checkboxes in recurring tasks. This works only on headings that 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature org-checklist
   :after org-contrib
-  :defer 3)
+  :defer 30)
 #+end_src
 
 ** org-make-toc
@@ -9965,7 +9962,7 @@ CLOCK: [2023-02-26 Sun 13:15]--[2023-02-26 Sun 13:28] =>  0:13
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-make-toc
   :after org
-  :defer 5)
+  :defer 30)
 #+end_src
 
 ** org2blog
@@ -10191,7 +10188,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
   :ensure (:host github
                  :repo "yantar92/org-autosort")
   :after org
-  :defer 7)
+  :defer 30)
 #+end_src
 
 ** ox-clip
@@ -11387,7 +11384,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 (use-package scihub
   :ensure (:host github
            :repo "benthamite/scihub")
-  :defer 15)
+  :defer 30)
 #+end_src
 
 * email
@@ -11593,7 +11590,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
                  :pre-build (("./autogen.sh") ("ninja" "-C" "build"))
                  :build (:not elpaca--compile-info)
                  :depth nil)
-  :defer 10
+  :defer 30
   :custom
   ;; uncomment thw two user options below when debugging
   ;; (mu4e-debug t)
@@ -12370,7 +12367,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature browse-url
-  :defer 3
+  :defer 30
   :custom
   (browse-url-browser-function 'eww-browse-url)
   (browse-url-firefox-program "/Applications/Firefox.app/Contents/MacOS/firefox")
@@ -13498,7 +13495,7 @@ Requires configuration. Disabled for the time being.
   :ensure (:host github
                  :repo "sachac/subed"
                  :files ("subed/*.el"))
-
+  :defer t
   :config
   (defun subed-export-transcript ()
     "Export a clean transcript of the current subtitle buffer to a file.
@@ -13625,7 +13622,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature midnight
-  :defer 5
+  :defer 30
   :custom
   (clean-buffer-list-kill-never-buffer-names
    '("*mu4e-headers*"
@@ -13789,7 +13786,7 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package activity-watch-mode
-  :defer 5
+  :defer 30
   :config
   (require 'magit)
   (global-activity-watch-mode)
@@ -13882,7 +13879,8 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package polymarket
   :ensure (:host github
-                 :repo "benthamite/polymarket"))
+		 :repo "benthamite/polymarket")
+  :defer t)
 #+end_src
 
 ** kelly

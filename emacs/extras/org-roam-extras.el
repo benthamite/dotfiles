@@ -31,6 +31,7 @@
 (require 'el-patch)
 (require 'org-extras)
 (require 'org-roam)
+(require 'paths)
 
 ;;;; User options
 

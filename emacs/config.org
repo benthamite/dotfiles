@@ -180,7 +180,7 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
 - [[#registers--bookmarks][registers & bookmarks]]
   - [[#register][register]]
   - [[#register-extras][register-extras]]
-  - [[#bookmarks][bookmarks]]
+  - [[#bookmark][bookmark]]
 - [[#files--buffers][files & buffers]]
   - [[#files][files]]
   - [[#files-extras][files-extras]]
@@ -3663,7 +3663,7 @@ CLOCK: [2021-07-30 Fri 21:16]--[2021-07-30 Fri 21:31] =>  0:15
   ("C-r" . register-extras-dispatch))
 #+end_src
 
-** bookmarks
+** bookmark
 :PROPERTIES:
 :ID:       943D5DC0-7F0E-449C-8D21-089E051F1027
 :END:

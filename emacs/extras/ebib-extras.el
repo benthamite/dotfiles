@@ -514,11 +514,16 @@ correctly set."
     (ebib-extras-get-or-set-language)
     (ebib-extras-attach-files entry-key)))
 
-(defun ebib-extras-set-abstract ()
-  "Set the abstract for the entry at point if it's currently empty.
-It attempts to fetch the abstract using `tlon-get-abstract-with-or-without-ai'."
+(defun ebib-extras-set-abstract (&optional key)
+  "Set the abstract for KEY if it's currently empty.
+If KEY is nil, use the current entry's key.
+
+Attempt to fetch the abstract using `tlon-get-abstract-with-or-without-ai'."
   (interactive)
-  (unless (ebib-extras-get-field "abstract")
+  (ebib-extras-open-key key)
+  (unless (if key
+	      (bibtex-extras-get-entry-as-string key "abstract")
+	    (ebib-extras-get-field "abstract"))
     (tlon-get-abstract-with-or-without-ai)))
 
 ;;;;; attach downloads

@@ -74,6 +74,7 @@
 
 ;;;;; Include function
 
+;;;###autoload
 (defun org-roam-extras-node-include-function ()
   "Return t iff point is on a valid node."
   (if (or

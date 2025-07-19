@@ -238,7 +238,7 @@ instead.
 The search is performed across all files in `bibtex-files', or restricted to
 FILES if non-nil."
   (when key
-    (let ((bibtex-files files))
+    (let ((bibtex-files (or files bibtex-files)))
       (bibtex-search-entry key 'global)))
   (save-excursion
     (save-restriction

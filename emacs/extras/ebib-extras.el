@@ -1562,11 +1562,10 @@ If KEY is nil, use the entry at point."
 	   (author-arg (format "-Author=\"%s\" " author-string))
 	   (title-arg (format "-Title=\"%s\" " title)))
       (when (or author-arg title-arg)
-	(shell-command (concat "exiftool -overwrite_original "
-			       (when author-arg author-arg)
-			       (when title-arg title-arg)
-			       (shell-quote-argument file-absolute))))
-      (message "Set metadata for PDF file `%s'" file))))
+	(message (shell-command-to-string (concat "exiftool -overwrite_original "
+						  (when author-arg author-arg)
+						  (when title-arg title-arg)
+						  (shell-quote-argument file-absolute))))))))
 
 (defun ebib-extras-get-authors-list (authors)
   "Split AUTHORS into a list of authors, reversing the first and last names.

@@ -1537,19 +1537,23 @@ DIRECTION can be `prev' or `next'."
 
 ;;;;; pdf metadata
 
-(defun ebib-extras-set-pdf-metadata ()
-  "Set the metadata of the PDF associated with the current entry."
+(defun ebib-extras-set-pdf-metadata (&optional key)
+  "Set the metadata of the PDF associated with KEY.
+If KEY is nil, use the entry at point."
   (interactive)
   (unless (executable-find "exiftool")
     (user-error "Please install `exiftool' (e.g. 'brew install exiftool'"))
   (unless (derived-mode-p 'ebib-entry-mode 'bibtex-mode)
     (user-error "Not in `ebib-entry-mode' or 'bibtex-mode'"))
   (when-let* ((get-field (pcase major-mode
-			  ('ebib-entry-mode #'ebib-extras-get-field)
-			  ('bibtex-mode #'bibtex-extras-get-field)))
-	     (file (ebib-extras-get-file "pdf"))
-	     (author (or (funcall get-field "author")
-			 (funcall get-field "editor"))))
+			   ('ebib-entry-mode #'ebib-extras-get-field)
+			   ('bibtex-mode #'bibtex-extras-get-field)))
+	      (file (if key
+			(let ((files (bibtex-extras-get-entry-as-string key "file" )))
+			  (ebib-extras-get-file-in-string files "pdf"))
+		      (ebib-extras-get-file "pdf")))
+	      (author (or (funcall get-field "author")
+			  (funcall get-field "editor"))))
     (let* ((file-absolute (expand-file-name file))
 	   (author-list (ebib-extras-get-authors-list author))
 	   (author-string (ebib-extras-unbrace

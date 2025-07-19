@@ -584,10 +584,10 @@ Interactive use:
 				  (file-name-nondirectory file-name))))
 	(rename-file file-to-attach file-name t))
       (ebib-extras--update-file-field-contents target-key file-name)
-      ;; (ebib-extras-set-abstract target-key) ; Needs context adjustment
+      (ebib-extras-set-abstract target-key)
       (when (and (string= (file-name-extension file-name) "pdf") open)
-	;; (ebib-extras-set-pdf-metadata target-key) ; Needs context adjustment
-	;; (ebib-extras-ocr-pdf target-key) ; Needs context adjustment
+	(ebib-extras-set-pdf-metadata target-key)
+	(ebib-extras-ocr-pdf target-key)
 	(ebib-extras-open-pdf-file)))))
 
 (defun ebib-extras-attach-most-recent-file ()

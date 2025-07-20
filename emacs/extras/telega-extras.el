@@ -117,6 +117,20 @@ archive buffer."
   (telega-filters-reset)
   (telega-filters-push '(main)))
 
+(defun telega-extras-smart-enter ()
+  "Take the appropriate action for the thing at point.
+If the point is on a URL, open it in the browser. If the point is on a
+button, push it. Otherwise, send the message at point."
+  (interactive)
+  (cond ((thing-at-point 'url)
+	 (browse-url-at-point))
+	((button-at (point))
+	 (push-button))
+	(t
+	 (telega-chatbuf-input-send nil))))
+
+;;;;; Attach files
+
 (defun telega-extras-dired-attach-func (file)
   "Identify msg type for FILE."
   (let ((file-ext (file-name-extension file)))
@@ -151,17 +165,14 @@ archive buffer."
       (telega-chatbuf-attach-file file)
     (user-error (format "No files found in %s" paths-dir-downloads))))
 
-(defun telega-extras-smart-enter ()
-  "Take the appropriate action for the thing at point.
-If the point is on a URL, open it in the browser. If the point is on a
-button, push it. Otherwise, send the message at point."
+;;;;; Download file
+
+(defun telega-extras-download-file (&optional message)
+  "Download the file for MESSAGE.
+If MESSAGE is nil, use the message at point."
   (interactive)
-  (cond ((thing-at-point 'url)
-	 (browse-url-at-point))
-	((button-at (point))
-	 (push-button))
-	(t
-	 (telega-chatbuf-input-send nil))))
+  (let* ((message (or message (telega-msg-at))))
+    (telega-msg-save message)))
 
 ;;;;; Transcribe audio
 
@@ -225,15 +236,6 @@ If MESSAGE is nil, use the message at point."
   (telega-extras-cancel-timer-when-active 'telega-extras-audio-transcript-timer)
   (telega-extras-cancel-timer-when-active 'telega-extras-audio-transcript-timeout-timer))
 
-;;;;; Download file
-
-(defun telega-extras-download-file (&optional message)
-  "Download the file for MESSAGE.
-If MESSAGE is nil, use the message at point."
-  (interactive)
-  (let* ((message (or message (telega-msg-at))))
-    (telega-msg-save message)))
-
 ;;;;; Open chats & topics
 
 (defun telega-extras-open-chat (chat &optional topic)
@@ -267,6 +269,8 @@ If TOPIC is non-nil, return the associated topic ID"
   (let* ((chat (telega-chat-get chat-id))
 	 (topic (telega-topic-get chat topic-id)))
     (plist-get topic :last_message)))
+
+;;;;; Menu
 
 (transient-define-prefix telega-extras-menu ()
   "`telega-extras' menu."

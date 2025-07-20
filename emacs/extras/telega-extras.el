@@ -270,6 +270,13 @@ If TOPIC is non-nil, return the associated topic ID"
 	 (topic (telega-topic-get chat topic-id)))
     (plist-get topic :last_message)))
 
+;;;;; Tab-bar integration
+
+(declare-function tab-bar-extras-quick-reset "tab-bar-extras")
+(defun telega-extras-reset-tab-bar ()
+  "Reset the tab shortly after Telega is loaded to show its element correctly."
+  (run-with-timer 1 nil #'tab-bar-extras-quick-reset))
+
 ;;;;; Menu
 
 (transient-define-prefix telega-extras-menu ()

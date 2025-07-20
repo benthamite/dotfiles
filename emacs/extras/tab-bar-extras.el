@@ -144,6 +144,7 @@ separator would remain even when the elements are absent.")
 (defvar calendar-extras-location-name)
 (declare-function calendar-extras-set-geolocation "calendar-extras")
 (declare-function display-wttr "display-wttr")
+;;;###autoload
 (defun tab-bar-extras-reset (&optional quick)
   "Reset the tab bar.
 This resets the clock, refreshes the Tab Bar and its color, and updates the
@@ -160,6 +161,7 @@ reset functions."
   (when (and tab-bar-extras-reset-wttr (bound-and-true-p display-wttr-mode))
     (display-wttr)))
 
+;;;###autoload
 (defun tab-bar-extras-quick-reset ()
   "Reset the tab bar quickly."
   (interactive)

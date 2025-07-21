@@ -1165,7 +1165,7 @@
  (init :source "elpaca-menu-lock-file" :recipe
        (:source nil :protocol https :inherit t :depth nil :host github :repo
 		"benthamite/init" :wait t :package "init" :ref
-		"6dff6c0625246c05992917b60c622a9631593664"))
+		"b44552aed8d95f63e8c1998124b46996b24b8a61"))
  (isearch-extras :source "elpaca-menu-lock-file" :recipe
 		 (:source nil :protocol https :inherit t :depth nil :host github
 			  :repo "benthamite/dotfiles" :files

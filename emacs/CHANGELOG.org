@@ -4,6 +4,46 @@
 
 This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository. It is meant to be read primarily by members of the Tlön team, but it may be of interest to others as well.
 
+* Version 7.1.10 on 2025-07-21
+** Package Management & Core Configuration
+
+*** Use Package & Configuration Structure
+- Revised package deferral strategies for better performance (server, breadcrumb, pixel-scroll, etc.)
+
+** AI Integration & Language Models
+
+*** GPtel
+- Updated xAI models (now using ~grok-4-latest~ and ~grok-4-vision-latest~)
+- Added comprehensive Model Context Protocol (MCP) integration with multiple servers:
+  - Sequential thinking, Slack integration, buffer/view tools
+  - Home Assistant integration for local network users
+  - Automatic server startup and connection management
+- Enhanced repository map and conventions file integration for better AI context
+- Added BibTeX tools for AI model interaction
+- Improved conversation management with automatic buffer saving
+
+*** Chat Import & Conversation Management
+- Added ~gptel-extras-import-chatgpt-conversations~ to import ChatGPT conversations from JSON exports
+
+** Bibliography & Reference Management
+
+*** Ebib & BibTeX
+- Enhanced file attachment system with automatic PDF metadata setting and OCR
+- Added support for multiple file formats and intelligent file type detection
+- Improved abstract setting and PDF processing workflows
+- Fixed various docstring issues and compiler warnings
+
+*** Zotra Integration
+- Enhanced bibliography entry addition with better error handling
+- Improved integration with Ebib for automatic entry processing
+
+** Text Processing & Editing
+
+*** Simple Extras
+- Added Python virtual environment creation functionality
+- Enhanced text processing and conversion utilities
+
+
 * Version 7.1.9 on 2025-07-03
 ** gptel
 - A new command, =gptel-extras-import-chatgpt-conversations=, has been added to import ChatGPT JSON exports into Org files. This includes improved parsing and conversion of Markdown content to Org format.

@@ -588,7 +588,7 @@
 				     "README*" "*-pkg.el"))
 			  :source "MELPA" :protocol https :inherit t :depth
 			  treeless :build (:not elpaca--check-version) :ref
-			  "2660460b23fac0eb3275783f93e22fc0014521cd"))
+			  "5d9f6a8246a68e0923668305060452908dc8b962"))
  (doom-modeline-extras :source "elpaca-menu-lock-file" :recipe
 		       (:source nil :protocol https :inherit t :depth nil :host
 				github :repo "benthamite/dotfiles" :files

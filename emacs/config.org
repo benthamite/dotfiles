@@ -12030,10 +12030,6 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
 
   :hook
   (telega-chat-mode-hook . (lambda () (setq default-directory paths-dir-downloads)))
-  (telega-load-hook
-   . (lambda ()
-       "Reset the tab shortly after Telega is loaded to show its element correctly."
-       (run-with-timer 1 nil #'tab-bar-extras-quick-reset)))
 
   :bind
   (:map telega-chat-mode-map
@@ -12133,6 +12129,7 @@ To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a termi
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package telega-extras
   :hook
+  (telega-load-hook . telega-extras-reset-tab-bar)
   (telega-chat-post-message-hook . telega-extras-transcribe-audio)
 
   :bind

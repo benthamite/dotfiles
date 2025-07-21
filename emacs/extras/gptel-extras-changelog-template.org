@@ -6,7 +6,7 @@ This document summarizes the changes pertaining to my Emacs configuration in eac
 
 * Version 6.4.0 on 2024-05-02
 ** chatgpt-shell
-- This new package complements ~gptel~, as it provides support for DALL-E.
+- This new package complements =gptel=, as it provides support for DALL-E.
 
 ** color-extras
 - Added a few functions to convert between color formats (not tested).
@@ -15,93 +15,93 @@ This document summarizes the changes pertaining to my Emacs configuration in eac
 - Added new package.Note that it requires extensive configuration, and many search engines won’t work unless you set up your own API keys.
   
 ** copilot
-- ~copilot~ is now enabled in both programming modes and text modes (previously it was only enabled in the former). To disable them in text modes, ~(remove-hook 'text-mode-hook #'copilot-extras-enable-conditionally)~.
+- =copilot= is now enabled in both programming modes and text modes (previously it was only enabled in the former). To disable them in text modes, =(remove-hook 'text-mode-hook #'copilot-extras-enable-conditionally)=.
 
 ** dired
-- ~dired-extras-hide-details-mode-enhanced~ (~-~) replaces ~dired-hide-details-mode~. This command toggles ~dired-hide-details-mode~, ~dired-omit-mode~ and ~dired-du-mode~. Intuitively, the idea is that dired displays either a minimalist view (the default) or a detailed view, which shows (1) details such as file ownership and permissions, (2) hidden files as well as various other files—such as backup files—that are otherwise not shown (configurable via ~dired-omit-files~), and (3) the recursive size of directories.
+- =dired-extras-hide-details-mode-enhanced= (=-=) replaces =dired-hide-details-mode=. This command toggles =dired-hide-details-mode=, =dired-omit-mode= and =dired-du-mode=. Intuitively, the idea is that dired displays either a minimalist view (the default) or a detailed view, which shows (1) details such as file ownership and permissions, (2) hidden files as well as various other files—such as backup files—that are otherwise not shown (configurable via =dired-omit-files=), and (3) the recursive size of directories.
 
 ** ebib-extras
-- Upon adding a new entry, the user will now be prompted to indicate whether the relevant bibliographic details are correct, so that the relevant ~ebib-extras~ command —~ebib-extras-process-entry~— can be run. This command then performs additional processing, including downloading and attaching HTML and PDF files of the entry for BibTeX entries of type ~online~. In the future, it will be configured to also download PDFs for BibTeX entries of type ~article~, search for books for BibTeX entries of type ~book~, and so on.
+- Upon adding a new entry, the user will now be prompted to indicate whether the relevant bibliographic details are correct, so that the relevant =ebib-extras= command —=ebib-extras-process-entry=— can be run. This command then performs additional processing, including downloading and attaching HTML and PDF files of the entry for BibTeX entries of type =online=. In the future, it will be configured to also download PDFs for BibTeX entries of type =article=, search for books for BibTeX entries of type =book=, and so on.
   
 ** elfeed-extras
-- added “follow mode” (analogous to ~org-agenda-follow-mode~): as point is moved through the ~elfeed~ search buffer with ~k~ and ~l~, the corresponding entry is shown in the other windows.
+- added “follow mode” (analogous to =org-agenda-follow-mode=): as point is moved through the =elfeed= search buffer with =k= and =l=, the corresponding entry is shown in the other windows.
 
 ** eww-extras
-- Revised the code in various ways to support authentication from Chrome headless sessions (and thus generate PDFs without the annoying cookie messages). See the user option ~eww-extras-chrome-data-dir-copy~.
+- Revised the code in various ways to support authentication from Chrome headless sessions (and thus generate PDFs without the annoying cookie messages). See the user option =eww-extras-chrome-data-dir-copy=.
   
 ** faces
-- The way of setting faces has been thoroughly revised. Instead of having a single function with the hard-coded values for all the faces, as we used to have, we configure the individual faces under the relevant packages. To configure the faces, we use the function ~faces-extras-set-and-store-face-attributes~, which takes a list of lists, each of which consists of a face name followed by one or more attrbitutes (a property-value pair). The function sets the face attributes, so that they become active at the time of evaluation, and stores them in a list, so that all faces previously set can be reset at once by invocation of the command ~faces-extras-set-custom-face-attributes~. This is useful when the face is set in reference to a variable whose value later changes, or varies across users.
+- The way of setting faces has been thoroughly revised. Instead of having a single function with the hard-coded values for all the faces, as we used to have, we configure the individual faces under the relevant packages. To configure the faces, we use the function =faces-extras-set-and-store-face-attributes=, which takes a list of lists, each of which consists of a face name followed by one or more attrbitutes (a property-value pair). The function sets the face attributes, so that they become active at the time of evaluation, and stores them in a list, so that all faces previously set can be reset at once by invocation of the command =faces-extras-set-custom-face-attributes=. This is useful when the face is set in reference to a variable whose value later changes, or varies across users.
 
 ** forge
-- The command ~forge-list-assigned-issues~ is now bound to ~s-s~ (“s” as in “self”).
+- The command =forge-list-assigned-issues= is now bound to =s-s= (“s” as in “self”).
   
 ** gptel-extras
 - The list of models now shows additional information such as number of tokens and date of last update.
-- The default model for all buffers is now ~"gpt-4-turbo"~—the most advanced OpenAI model as of this writing.
+- The default model for all buffers is now ="gpt-4-turbo"=—the most advanced OpenAI model as of this writing.
 
 ** image-dired 
-- The usual keys ~k~ and ~l~ now also work in this mode.
-- Images can now be opened externally with ~e~ (the same key binding to open external files elsewhere in ~dired~).
+- The usual keys =k= and =l= now also work in this mode.
+- Images can now be opened externally with =e= (the same key binding to open external files elsewhere in =dired=).
 
 ** mu4e-extras
-- Replaced the native ~mu4e-compose-reply~ with ~mu4e-extras-compose-reply~, which decides how to respond to messages with multiple recipients based on the value of the user option ~mu4e-extras-wide-reply~.
+- Replaced the native =mu4e-compose-reply= with =mu4e-extras-compose-reply=, which decides how to respond to messages with multiple recipients based on the value of the user option =mu4e-extras-wide-reply=.
   
 ** org-extras
-- Added the user option ~org-extras-clock-report-parameters~, for customizing clock reports.
+- Added the user option =org-extras-clock-report-parameters=, for customizing clock reports.
   
 ** rainbow-mode
 - Added package, for color testing.
 
 ** scratch buffers
-- The combination of the new packages ~prot-scratch~ and ~persistent-scratch~ now allows for the creation of persistent scratch buffers in any major mode (~C-n~). That is, these buffers will persist across Emacs sessions, avoiding the risk of accidentally losing their contents.
+- The combination of the new packages =prot-scratch= and =persistent-scratch= now allows for the creation of persistent scratch buffers in any major mode (=C-n=). That is, these buffers will persist across Emacs sessions, avoiding the risk of accidentally losing their contents.
 
 ** simple-extras
-- A common annoyance with Emacs is that the contents of new buffers, which do not yet visit a file, are forever lost if the buffer is killed. This situation is now addressed via a set of hooks and advices that make ~auto-save-mode~ automatically save the contents of any non-file-visiting buffers to the folder specified in ~simple-extras-new-buffer-auto-save-dir~. Note that the behavior of ~auto-save-mode~ in other buffers is not affected (e.g. if it is disabled, it will continue to be).
+- A common annoyance with Emacs is that the contents of new buffers, which do not yet visit a file, are forever lost if the buffer is killed. This situation is now addressed via a set of hooks and advices that make =auto-save-mode= automatically save the contents of any non-file-visiting buffers to the folder specified in =simple-extras-new-buffer-auto-save-dir=. Note that the behavior of =auto-save-mode= in other buffers is not affected (e.g. if it is disabled, it will continue to be).
 
 ** tlon-core
-- This package is now retired. All its functionality has been moved to ~tlon~. The plan for the future, to reduce confusion, is to always release Tlön-related functions as part of this package, except for ~tlon-init~, which remains.
+- This package is now retired. All its functionality has been moved to =tlon=. The plan for the future, to reduce confusion, is to always release Tlön-related functions as part of this package, except for =tlon-init=, which remains.
 
 * Version 6.3.0 on 2024-04-08
 ** dired-du
-New package. It displays the recursive size of directories. The package is configured to hide this information when ~dired-hide-details-mode~ is enabled, which it is by default. This mode is toggled with ~-~.
+New package. It displays the recursive size of directories. The package is configured to hide this information when =dired-hide-details-mode= is enabled, which it is by default. This mode is toggled with =-=.
 
 ** doom-modeline
-The new segments ~gptel~ and ~gptel-cost~ show the AI model active in the current buffer and the cost in US dollars of making a request at point, respectively. (A request sends the text from the beginning of the buffer to the point, unless some text is selected, in which case it sends the selection.) The latter segment is only active in the dedicated ~gptel~ buffer, for performance reasons. These elements can be disabled via the user options ~doom-modeline-extras-gptel~ and ~doom-modeline-extras-gptel-cost~.
+The new segments =gptel= and =gptel-cost= show the AI model active in the current buffer and the cost in US dollars of making a request at point, respectively. (A request sends the text from the beginning of the buffer to the point, unless some text is selected, in which case it sends the selection.) The latter segment is only active in the dedicated =gptel= buffer, for performance reasons. These elements can be disabled via the user options =doom-modeline-extras-gptel= and =doom-modeline-extras-gptel-cost=.
 
 ** elgrep
-Removed package. For ripgrep integration, we now use the ~consult~ package exclusively. (The issue whereby batch replacements to a buffer captured via embark (~H-;~) where sometimes not applied seems to have been resolved, so there is no longer need to use another package.)
+Removed package. For ripgrep integration, we now use the =consult= package exclusively. (The issue whereby batch replacements to a buffer captured via embark (=H-;=) where sometimes not applied seems to have been resolved, so there is no longer need to use another package.)
 
 ** emoji
-The command ~emoji-insert~ is now bound ~H-E~.
+The command =emoji-insert= is now bound =H-E=.
 
 ** gptel-extras
-~gptel-extras-model-config~ now displays information about each of the available models.
+=gptel-extras-model-config= now displays information about each of the available models.
 
-~gptel~ buffers can now be saved easily via the command ~gptel-extras-save-buffer~, which prompts for a name and saves it to its slugified version. The file is saved in ~gptel-extras-dir~, whose value can be changed by the user. I recommend saving these buffers as you may want to refer to them in the future, and it is trivial to do so.
+=gptel= buffers can now be saved easily via the command =gptel-extras-save-buffer=, which prompts for a name and saves it to its slugified version. The file is saved in =gptel-extras-dir=, whose value can be changed by the user. I recommend saving these buffers as you may want to refer to them in the future, and it is trivial to do so.
 
 ** org-appear
 New package. It toggles the visibility of hidden org mode element parts upon entering and leaving those elements.
 
 ** org-extras
-The command ~org-extras-paste-with-conversion~ has been improved and now works reliably. It converts the contents of the clipboard to ~org-mode~, from HTML if the clipboard contains HTML, and from Markdown otherwise. It is very useful for copying content outside Emacs—e.g. from GitHub—and pasting it in an ~org-mode~ buffer.
+The command =org-extras-paste-with-conversion= has been improved and now works reliably. It converts the contents of the clipboard to =org-mode=, from HTML if the clipboard contains HTML, and from Markdown otherwise. It is very useful for copying content outside Emacs—e.g. from GitHub—and pasting it in an =org-mode= buffer.
 
-The command ~org-extras-eww-copy-for-org-mode~ does something similar with content in an ~eww~ buffer.
+The command =org-extras-eww-copy-for-org-mode= does something similar with content in an =eww= buffer.
 
 ** pdf-tools-extras
-It is now possible to jump straight from a PDF in ~pdf-view-mode~ to the corresponding Ebib entry via the command ~pdf-tools-extras-open-in-ebib~ (~e~) (provided, of course, that the PDF has an associated entry)
+It is now possible to jump straight from a PDF in =pdf-view-mode= to the corresponding Ebib entry via the command =pdf-tools-extras-open-in-ebib= (=e=) (provided, of course, that the PDF has an associated entry)
 
 ** simple
-The command ~shell-command~ is now bound to ~H-e~.
+The command =shell-command= is now bound to =H-e=.
 
 ** telega-extras
-To transcribe the audio of the message at point, you can now use ~telega-extras-transcribe-audio~ (~b~).
+To transcribe the audio of the message at point, you can now use =telega-extras-transcribe-audio= (=b=).
 
 ** zotra-extras
-The process for adding new entries in Ebib with ~zotra-extas-add-entry~ (~a~) has changed somewhat, but it is still a work in progress, so it doesn’t seem worth documenting here. If you encounter any issues, please contact me.
+The process for adding new entries in Ebib with =zotra-extas-add-entry= (=a=) has changed somewhat, but it is still a work in progress, so it doesn’t seem worth documenting here. If you encounter any issues, please contact me.
 
 * Version 6.2.0 on 2024-03-09
 ** bibtex
-- The ~fluid.bib~ and ~stable.bib~ files are now auto-sorted with the same sorting criterion used by Ebib. This solves the problem whereby changes to one entry (such as adding an abstract) were diffed as being part of another entry, because the file was re-sorted before the changes were committed.
+- The =fluid.bib= and =stable.bib= files are now auto-sorted with the same sorting criterion used by Ebib. This solves the problem whereby changes to one entry (such as adding an abstract) were diffed as being part of another entry, because the file was re-sorted before the changes were committed.
 - Relevant commands:
 
 #+begin_src emacs-lisp
@@ -116,16 +116,16 @@ The process for adding new entries in Ebib with ~zotra-extas-add-entry~ (~a~) ha
 - Added this package that displays a narrow bar below the tab bar with context-specific information about the buffer. In file-visiting buffers, it will show the file path, sometimes followed by additional details, such as the heading(s) in org-mode or Markdown files. Since this information is now shown here, the modeline only shows the name of the buffer, since it would be redundant to show the full path there as well. This leaves more room to show other potentially relevant information, such as the encoding system and, as noted below, the name of the active AI model.
 
 ** consult-gh
-- A new package, ~consult-gh~ provides an interface to interact with GitHub repositories. The relevant commands may all be accessed from the “dispatcher”, via ~H-G~.
+- A new package, =consult-gh= provides an interface to interact with GitHub repositories. The relevant commands may all be accessed from the “dispatcher”, via =H-G=.
 ** doom-modeline
-- The modeline now shows the AI language model active in the buffer. Since ~gptel~ can be invoked from any buffer, I think it’s useful to know which model will be used. If you don’t want to see this information, just set ~doom-modeline-extras-gptel~ to ~nil~.
+- The modeline now shows the AI language model active in the buffer. Since =gptel= can be invoked from any buffer, I think it’s useful to know which model will be used. If you don’t want to see this information, just set =doom-modeline-extras-gptel= to =nil=.
 
 ** ebib
-- The commands to generate PDF (~s-p~) or HTML (~s-h~) files now directly attach the generated file to the appropriate entry, bypassing the need to do this manually. Note that these commands also work from bibtex and from eww, and have the same key bindings.
+- The commands to generate PDF (=s-p=) or HTML (=s-h=) files now directly attach the generated file to the appropriate entry, bypassing the need to do this manually. Note that these commands also work from bibtex and from eww, and have the same key bindings.
 
 ** eww
 - The shell command to create PDF files now incorporates an extra authentication argument that should prevent the messages to approve cookies from showing up in the document.
-- Following a YouTube will now open it in ~mpv~, if installed. This integration makes use of the package ~empv~, which also supports controlling the playback directly from Emacs (~A-p~ to see a list of commands).
+- Following a YouTube will now open it in =mpv=, if installed. This integration makes use of the package =empv=, which also supports controlling the playback directly from Emacs (=A-p= to see a list of commands).
 
 ** forge
 - When visiting an unread issue, the associated GitHub page will open silently in a Firefox browser. This should happen without any visual or performance effects. Recently Forge made a major update to its notifications functionality, and they now work out of the box. However, because of limitations of the GitHub API, two-way sync is not possible: although viewing an issue in GitHub will show it as read in Forge, the reverse is not the case.g I don't mind this much since I ignore the GitHub visited status, but the Firefox hack ensures that the two counts remain fully in sync. To disable this behavior, remove this advice:
@@ -152,47 +152,47 @@ The process for adding new entries in Ebib with ~zotra-extas-add-entry~ (~a~) ha
 These commands should work in all Forge-related buffers.
 
 ** gptel
-- I have configured this package to activate the Gemini backend in text-related modes (including ~bibtex-mode~) and the GPT-4 backend in programming-related modes. GPT-4 is much better for answering programming questions (at least questions about Emacs Lisp), but Gemini has a much higher token limit and is free. So we use it for tasks like generating summaries (and the quality for these taks is comparable to that of GPT-4).
+- I have configured this package to activate the Gemini backend in text-related modes (including =bibtex-mode=) and the GPT-4 backend in programming-related modes. GPT-4 is much better for answering programming questions (at least questions about Emacs Lisp), but Gemini has a much higher token limit and is free. So we use it for tasks like generating summaries (and the quality for these taks is comparable to that of GPT-4).
 - I have also added a third backend, Claude (from Anthropic), though I haven’t yet experimented with it.
-- The command ~gptel-extras-model-config~, bound to ~H-s-c~, can be used to switch to a different backend. This command will also prompt the user to select among a variety of "models" within a given backend. Note that some backends are much more expensive than others (as in ~10x more expensive). See these pages for details:
+- The command =gptel-extras-model-config=, bound to =H-s-c=, can be used to switch to a different backend. This command will also prompt the user to select among a variety of "models" within a given backend. Note that some backends are much more expensive than others (as in =10x more expensive). See these pages for details:
     - [[https://www.anthropic.com/api#pricing][Claude]]
     - [[https://openai.com/pricing][GPT-4]]
-- The main other relevant commands are ~gptel~ (~H-s-g~), ~gptel~ (~H-s-g~), ~gptel-abort~ (~H-s-a~) and ~gptel-send~ (~M-c~). See [[https://www.youtube.com/watch?v=bsRnh_brggM][this great video]] for details. 
+- The main other relevant commands are =gptel= (=H-s-g=), =gptel= (=H-s-g=), =gptel-abort= (=H-s-a=) and =gptel-send= (=M-c=). See [[https://www.youtube.com/watch?v=bsRnh_brggM][this great video]] for details. 
 
 ** isearch
-- The commands ~isearch-extras-consult-line~ (~C-l~) and ~isearch-extras-project-search~ (~C-p~) have been added.
-- ~avy-isearch~ is now bound to ~M-f~ (~avy~ and ~ace-link~ commands are generally bound to ~M-f~ or—in read-only files—to ~f~).
+- The commands =isearch-extras-consult-line= (=C-l=) and =isearch-extras-project-search= (=C-p=) have been added.
+- =avy-isearch= is now bound to =M-f= (=avy= and =ace-link= commands are generally bound to =M-f= or—in read-only files—to =f=).
 
 ** org
-- ~ox-clip-formatted-copy~ (~s-c~) had stopped working, but is now fixed. With this command, you can copy text in ~org-mode~ and paste it as Markdown (e.g. on GitHub) or as rendered HTML (e.g. on Slack).
+- =ox-clip-formatted-copy= (=s-c=) had stopped working, but is now fixed. With this command, you can copy text in =org-mode= and paste it as Markdown (e.g. on GitHub) or as rendered HTML (e.g. on Slack).
 
 ** tab-bar
-- A command now exists to hide (and unhide) GitHub and Telega notifications: ~tab-bar-extras-toggle-notifications~. Notifications are now also automatically hidden and unhidden when a Pomodoro session starts and ends.
+- A command now exists to hide (and unhide) GitHub and Telega notifications: =tab-bar-extras-toggle-notifications=. Notifications are now also automatically hidden and unhidden when a Pomodoro session starts and ends.
 
 ** vertico
-- The commands ~vertico-previous-group~ and ~vertico-next-group~ are bound to ~C-k~ and ~C-l~.
+- The commands =vertico-previous-group= and =vertico-next-group= are bound to =C-k= and =C-l=.
 
 * Version 6.1.0 on 2024-02-19
 ** activity-watch
-- The package was until now disabled after we detected a bug that interfered with ~recover-this-file~. This bug was fixed recently in a fix branch, so it is enabled again.
+- The package was until now disabled after we detected a bug that interfered with =recover-this-file=. This bug was fixed recently in a fix branch, so it is enabled again.
 
 ** bibtex
-- Set ~bibtex-field-indentation~ to 8, which is (I believe) the default value in =ebib=. This should avoid the situation where the indentation of the same BibTeX entry changes with subsequent commits.
+- Set =bibtex-field-indentation= to 8, which is (I believe) the default value in =ebib=. This should avoid the situation where the indentation of the same BibTeX entry changes with subsequent commits.
 
 ** bibtex-extras
 - Added functionality to validate languages in =landid= field.
 - Added various functions to get BibTeX fields, entries as strings.
 
 ** consult
-=s-j= is now globally bound to ~consult-imenu~. Previously, we used =s-j= in specific major modes (like =org-mode=) to bind to it commands with the relevant functionality (such as ~consult-org-heading~) . These bindings are preserved, but when no local binding is set, =s-j= now triggers ~consult-imenu~ as a fallback.
+=s-j= is now globally bound to =consult-imenu=. Previously, we used =s-j= in specific major modes (like =org-mode=) to bind to it commands with the relevant functionality (such as =consult-org-heading=) . These bindings are preserved, but when no local binding is set, =s-j= now triggers =consult-imenu= as a fallback.
 
 ** consult-yasnippet
 - Disabled previews to avoid accidentally triggering snippets that execute elisp code.
 
 ** ebib-extras
-- Added ~ebib-extras-previous-entry~ and ~ebib-extras-next-entry~, bound to =,= and =.=, respectively.
+- Added =ebib-extras-previous-entry= and =ebib-extras-next-entry=, bound to =,= and =.=, respectively.
 - Revised or refactor various functions.
-- Significantly revised ~ebib-extras-fetch-and-set-abstract~ , and created the associated ~ebib-extracts-abstract-cleanup~.
+- Significantly revised =ebib-extras-fetch-and-set-abstract= , and created the associated =ebib-extracts-abstract-cleanup=.
 
 ** edebug
 - Disabled maddening =#N== and =#N#= print syntax.
@@ -202,7 +202,7 @@ These commands should work in all Forge-related buffers.
 
 ** forge
 - Disabled my custom menu (aka “dispatcher”), restoring the forge native one. The native forge dispatcher has been much improved and I think it is now preferable to what we had before.
-- Unset custom ~s~ key bindings, bound to ~forge-search~. js
+- Unset custom =s= key bindings, bound to =forge-search=. js
 
 ** graveyard
 The following packages now rest in peace:
@@ -213,7 +213,7 @@ The following packages now rest in peace:
 See also the packages listed in the ‘icons’ section below.
 
 ** helpful
-- Unset custom ~C-k~ key binding, bound to ~helpful-key~. The command is now bound to the default binding for ~help-key~, ~C-h k~.
+- Unset custom =C-k= key binding, bound to =helpful-key=. The command is now bound to the default binding for =help-key=, =C-h k=.
 
 ** icons
 Removed =all-the-icons=, =all-the-icons-completion=, =all-the-icons-dired= and replaced them with =nerd-icons=, =nerd-icons-completion=, =nerd-icons-dired=.
@@ -233,19 +233,18 @@ brew tap homebrew/cask-fonts && brew install --cask font-symbols-only-nerd-font
 Because =nerd-icons= do not impose additional performance costs, they are now always shown in Dired, irrespective of directory size, whereas before they were shown only in directories containing fewer than a certain number of files.
 
 ** org-extras
-- Changed the ~org-extras-tlon-dispatch~ binding from =H-;= to =H-l=.
+- Changed the =org-extras-tlon-dispatch= binding from =H-;= to =H-l=.
 
 ** org-roam
 - Set a timer to update the database after 30 minutes of idleness. I recommend not changing this unless you really need to.
 
 ** vertico
-The keys =M-k= and =M-l= are now bound to ~vertico-previous-group~ and ~vertico-next-group~, respectively. These commands let you cycle between different sections of the completion candidates in the minibuffer. For example, in ~consult-buffer~ (~H-b~), you can cycle between the “Buffer”, “File”, and “Bookmark” sections.
+The keys =M-k= and =M-l= are now bound to =vertico-previous-group= and =vertico-next-group=, respectively. These commands let you cycle between different sections of the completion candidates in the minibuffer. For example, in =consult-buffer= (=H-b=), you can cycle between the “Buffer”, “File”, and “Bookmark” sections.
 
 ** Yasnippet
 
 - Created snippets to reference a commit (=tlon-reference-commit=) and an issue (=tlon-reference-issue=) from a Forge buffer. These snippets are expanded with =trc= and =tri=,  respectively.
 
-  
 # Local Variables:
 # org-extras-id-auto-add-exclude-file: t
 # End:

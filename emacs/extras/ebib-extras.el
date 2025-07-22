@@ -3,7 +3,7 @@
 ;; Author: Pablo Stafforini
 ;; Maintainer: Pablo Stafforini
 ;; Version: 0.2
-;; Package-Requires: ((el-patch "1.1") (ebib "2.0") (paths "0.1") (shut-up "0.3.1"))
+;; Package-Requires: ((annas-archive "0.1") (el-patch "1.1") (ebib "2.0") (paths "0.1") (shut-up "0.3.1"))
 
 ;; This file is not part of GNU Emacs
 

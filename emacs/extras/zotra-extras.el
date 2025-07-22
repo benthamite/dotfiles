@@ -144,6 +144,7 @@ DO-NOT-OPEN is non-nil, do not open the entry in Ebib after adding it."
   "Prompt the user to select a value for `org-cite-global-bibliography'."
   (completing-read "Bibfile" (list
                               tlon-file-fluid
+			      tlon-file-db
                               paths-file-personal-bibliography-new)))
 
 ;;;;; Ebib

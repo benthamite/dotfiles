@@ -347,6 +347,19 @@ sans its extension."
 	(ebib-extras-attach-file file key)
 	(message "Attached `%s' to %s" file key)))))
 
+;;;;; escape special chars
+
+;;;###autoload
+(defun bibtex-extras-escape-special-characters ()
+  "Escape special characters in the current BibTeX file."
+  (interactive)
+  (save-excursion
+    (dolist (char '("$" "%" "#" "&"))
+      (goto-char (point-min))
+      (while (re-search-forward (format "\\(\\(?:[^\\]\\|^\\)\\)\\(\\%s\\)" char) nil t)
+	(unless (member (bibtex-extras-get-field-name) '("url" "file"))
+	  (replace-match (format "\\1\\\\%s" char) nil nil))))))
+
 ;;;;; Patches
 
 ;; tweak function so that `bibtex-autokey-get-field' looks up `urldate' field

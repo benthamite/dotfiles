@@ -1293,7 +1293,7 @@ is created following the same schema as notes created with
      db-file
      '(change attribute-change)
      (lambda (_event)
-       (message "Reloading database...")
+       (message "Reloading database %s..." nth)
        (ebib-extras-reload-database-no-confirm db)))))
 
 ;;;###autoload

@@ -1082,6 +1082,7 @@ empty headings, which trigger an `org-roam' warning."
     ("L" "largoplacismo"       (lambda () (interactive) (org-roam-extras-id-goto "2514AA39-CFBF-4E5A-B18E-147497E31C8F")))
     ("l" "tlon.el"             (lambda () (interactive) (org-roam-extras-id-goto "E38478D6-1540-4496-83F3-43C964567A15")))
     ("r" "rational-animations" (lambda () (interactive) (org-roam-extras-id-goto "9D87ED72-2A2C-416B-9BE4-EF7C2A8F2326")))
+    ("s" "sandbox"             (lambda () (interactive) (org-roam-extras-id-goto "CA41DDE5-BA03-419E-A3C9-ED46F14F4C8D")))
     ("t" "tlon.team"           (lambda () (interactive) (org-roam-extras-id-goto "25713E6F-934C-44E2-AFCD-9E9956AF1C56")))
     ("u" "utilitarianism"      (lambda () (interactive) (org-roam-extras-id-goto "F80849CB-F04A-4EDF-B71B-F98277D3F462")))]
    ["Other"

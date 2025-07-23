@@ -1305,7 +1305,7 @@ Elements in this list are used to remove file-notify watches.")
 		 (file-notify-add-watch
 		  db-file
 		  '(change)
-		  #'ebib-extras--auto-reload-callback
+		  ebib-extras--auto-reload-callback
 		  nth db db-file))))
 
 (defun ebib-extras--auto-reload-callback (_event nth db db-file)

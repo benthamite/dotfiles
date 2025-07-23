@@ -1305,14 +1305,22 @@ Elements in this list are used to remove file-notify watches.")
 		 (file-notify-add-watch
 		  db-file
 		  '(change)
-		  (lambda (_event)
-		    (let ((now (current-time))
-			  (last-reload (gethash db-file ebib-extras-last-reload-times)))
-		      (when (or (not last-reload)
-				(> (time-to-seconds (time-subtract now last-reload)) 5))
-			(puthash db-file now ebib-extras-last-reload-times)
-			(message "Reloading database %s..." nth)
-			(ebib-extras-reload-database-no-confirm db))))))))
+		  #'ebib-extras--auto-reload-callback
+		  nth db db-file))))
+
+(defun ebib-extras--auto-reload-callback (_event nth db db-file)
+  "Callback for `file-notify-add-watch' in `ebib-extras-auto-reload-database'.
+This function is triggered on file changes. It checks if a reload is necessary
+based on a 5-second cooldown. _EVENT is the file notification event. NTH is the
+database index. DB is the ebib database object. DB-FILE is the path to the
+database file."
+  (let ((now (current-time))
+        (last-reload (gethash db-file ebib-extras-last-reload-times)))
+    (when (or (not last-reload)
+              (> (time-to-seconds (time-subtract now last-reload)) 5))
+      (puthash db-file now ebib-extras-last-reload-times)
+      (message "Reloading database %s..." nth)
+      (ebib-extras-reload-database-no-confirm db))))
 
 (declare-function file-notify-rm-watch "filenotify")
 (defun ebib-extras-remove-file-notify-watchers ()

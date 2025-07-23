@@ -1274,6 +1274,8 @@ is created following the same schema as notes created with
 ;; detects that the db has been modified. `ebib-extras-auto-reload-databases'
 ;; reloads a database from its file detects that the file has been modified.
 
+;;;;;; saving databases
+
 (defun ebib-extras-auto-save-databases ()
   "Check if any Ebib database has been modified and save it to its file if so."
   (dolist (db ebib--databases)
@@ -1283,22 +1285,37 @@ is created following the same schema as notes created with
 
 (ebib-extras-auto-save-databases)
 
+;;;;;; reloading databases
+
+(defvar ebib-extras-file-notify-descriptors nil
+  "List of file-notify descriptors for auto-reloading databases.
+Elements in this list are used to remove file-notify watches.")
+
 (autoload 'file-notify-add-watch "filenotify")
 ;;;###autoload
 (defun ebib-extras-auto-reload-database (nth)
   "Monitor the NTH db file for modifications and reload its Ebib db when so."
   (let* ((db (nth nth ebib--databases))
 	 (db-file (ebib-db-get-filename db)))
-    (file-notify-add-watch
-     db-file
-     '(change attribute-change)
-     (lambda (_event)
-       (message "Reloading database %s..." nth)
-       (ebib-extras-reload-database-no-confirm db)))))
+    (add-to-list 'ebib-extras-file-notify-descriptors
+		 (file-notify-add-watch
+		  db-file
+		  '(change)
+		  (lambda (_event)
+		    (message "Reloading database %s..." nth)
+		    (ebib-extras-reload-database-no-confirm db))))))
+
+(declare-function file-notify-rm-watch "filenotify")
+(defun ebib-extras-remove-file-notify-watchers ()
+  "Remove all file-notify watchers for Ebib databases."
+  (dolist (descriptor ebib-extras-file-notify-descriptors)
+    (file-notify-rm-watch descriptor))
+  (setq ebib-extras-file-notify-descriptors nil))
 
 ;;;###autoload
 (defun ebib-extras-auto-reload-databases ()
   "Monitor each db file for modifications and reload its Ebib db when so."
+  (ebib-extras-remove-file-notify-watchers)
   (dotimes (n (length ebib--databases))
     (ebib-extras-auto-reload-database n)))
 

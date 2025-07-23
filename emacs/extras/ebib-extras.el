@@ -115,7 +115,8 @@ true. It preserves the current entry key and updates buffers."
        (ebib-db-set-current-entry-key (ebib--get-key-at-point) db)
        (ebib--reload-database db)
        (ebib--set-modified nil db)
-       (message "Database reloaded")))
+       ;; (ebib--update-buffers) 
+       ))
     (default
      (beep))))
 
@@ -1308,9 +1309,10 @@ Elements in this list are used to remove file-notify watches.")
 (declare-function file-notify-rm-watch "filenotify")
 (defun ebib-extras-remove-file-notify-watchers ()
   "Remove all file-notify watchers for Ebib databases."
-  (dolist (descriptor ebib-extras-file-notify-descriptors)
-    (file-notify-rm-watch descriptor))
-  (setq ebib-extras-file-notify-descriptors nil))
+  (when ebib-extras-file-notify-descriptors
+    (dolist (descriptor ebib-extras-file-notify-descriptors)
+      (file-notify-rm-watch descriptor))
+    (setq ebib-extras-file-notify-descriptors nil)))
 
 ;;;###autoload
 (defun ebib-extras-auto-reload-databases ()

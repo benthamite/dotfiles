@@ -1082,11 +1082,11 @@ empty headings, which trigger an `org-roam' warning."
     ("L" "largoplacismo"       (lambda () (interactive) (org-roam-extras-id-goto "2514AA39-CFBF-4E5A-B18E-147497E31C8F")))
     ("l" "tlon.el"             (lambda () (interactive) (org-roam-extras-id-goto "E38478D6-1540-4496-83F3-43C964567A15")))
     ("r" "rational-animations" (lambda () (interactive) (org-roam-extras-id-goto "9D87ED72-2A2C-416B-9BE4-EF7C2A8F2326")))
-    ("s" "sandbox"             (lambda () (interactive) (org-roam-extras-id-goto "CA41DDE5-BA03-419E-A3C9-ED46F14F4C8D")))
     ("t" "tlon.team"           (lambda () (interactive) (org-roam-extras-id-goto "25713E6F-934C-44E2-AFCD-9E9956AF1C56")))
     ("u" "utilitarianism"      (lambda () (interactive) (org-roam-extras-id-goto "F80849CB-F04A-4EDF-B71B-F98277D3F462")))]
    ["Other"
     ("RET" "tlon-inbox"            (lambda () (interactive) (org-roam-extras-id-goto "E9C77367-DED8-4D59-B08C-E6E1CCDDEC3A")))
+    ("H-s" "sandbox"             (lambda () (interactive) (org-roam-extras-id-goto "CA41DDE5-BA03-419E-A3C9-ED46F14F4C8D")))
     ;; ("" "translation-impact"  (lambda () (interactive) (org-roam-extras-id-goto "F3F1EBCB-C0BA-47DF-9592-5E61B8ED9371")))
     ;; ("" "master-plan"         (lambda () (interactive) (org-roam-extras-id-goto "fa135b36-4fae-4651-9f7c-0e5591850545")))
     ;; ("" "misc"                (lambda () (interactive) (org-roam-extras-id-goto "B158443B-3F42-4A21-8E37-003E5B3DB912")))

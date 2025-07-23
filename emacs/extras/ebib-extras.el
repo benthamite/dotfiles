@@ -59,6 +59,9 @@ These states correspond to the criteria by which the Ebib index can be sorted.")
 This variable holds the active sorting criterion, taken from
 `ebib-extras-sort-states'.")
 
+(defvar ebib-extras-last-reload-times (make-hash-table :test 'equal)
+  "A hash table mapping database file paths to their last reload time.")
+
 ;; The variable ebib-extras-attach-file-key was removed as it's unreliable
 ;; in async contexts. The annas-archive package might need updating if it
 ;; still references this variable internally.
@@ -1303,8 +1306,13 @@ Elements in this list are used to remove file-notify watches.")
 		  db-file
 		  '(change)
 		  (lambda (_event)
-		    (message "Reloading database %s..." nth)
-		    (ebib-extras-reload-database-no-confirm db))))))
+		    (let ((now (current-time))
+			  (last-reload (gethash db-file ebib-extras-last-reload-times)))
+		      (when (or (not last-reload)
+				(> (time-to-seconds (time-subtract now last-reload)) 5))
+			(puthash db-file now ebib-extras-last-reload-times)
+			(message "Reloading database %s..." nth)
+			(ebib-extras-reload-database-no-confirm db))))))))
 
 (declare-function file-notify-rm-watch "filenotify")
 (defun ebib-extras-remove-file-notify-watchers ()

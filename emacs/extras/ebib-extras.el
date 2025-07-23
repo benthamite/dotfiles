@@ -1327,7 +1327,8 @@ is created following the same schema as notes created with
   `((,paths-file-personal-bibliography-new . 1)
     (,paths-file-personal-bibliography-old . 2)
     (,tlon-file-fluid . 3)
-    (,tlon-file-stable . 4))
+    (,tlon-file-stable . 4)
+    (,tlon-file-db . 5))
   "Association list of database files and their numbers.")
 
 ;;;###autoload

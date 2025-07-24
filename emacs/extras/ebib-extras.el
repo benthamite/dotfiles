@@ -1320,7 +1320,6 @@ file."
     (when (or (not last-reload)
               (> (time-to-seconds (time-subtract now last-reload)) 5))
       (puthash db-file now ebib-extras-last-reload-times)
-      (message "Reloading database %s..." nth)
       (ebib-extras-reload-database-no-confirm db))))
 
 (declare-function file-notify-rm-watch "filenotify")

@@ -1358,6 +1358,7 @@ file."
 ;;;;; <new section>
 
 (defvar tlon-file-stable)
+(defvar tlon-file-db)
 (defconst ebib-extras-db-numbers
   `((,paths-file-personal-bibliography-new . 1)
     (,paths-file-personal-bibliography-old . 2)

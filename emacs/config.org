@@ -8349,10 +8349,6 @@ This package evolved out of gptel-extras.
                                   :args ("-y" "@upstash/context7-mcp@latest")))
           ("ddg-search" . (:command "uvx"
                                     :args ("duckduckgo-mcp-server")))
-          ("emacs-mcp-server"
-           . (:command "emacs-mcp-server"  ; Now it's on PATH
-                       :env (:OPENAI_API_KEY
-                             ,(auth-source-pass-get "emacs" (concat "tlon/core/openai.com/" tlon-email-shared)))))
           ;; ("everything" . (:command "npx"
           ;; :args ("-y" "@modelcontextprotocol/server-everything")))
           ("fetch" . (:command "uvx" :args ("mcp-server-fetch")))
@@ -8389,12 +8385,12 @@ This package evolved out of gptel-extras.
                                                                         "tlon/core/slack.com/ea-translations")
                                                                       :SLACK_TEAM_ID "T04EYQYHG74")))
           ;; ("slack-ae-racionalidad" . (:command "npx"
-                                               ;; :args ("-y" "@modelcontextprotocol/server-slack")
-                                               ;; :env (:SLACK_BOT_TOKEN ,(auth-source-pass-get
-                                                                        ;; "bot-token"
-                                                                        ;; "tlon/core/slack.com/ae-racionalidad")
-                                                                      ;; :SLACK_TEAM_ID "CA0JVRT5K")))
-                                                                      ))
+          ;; :args ("-y" "@modelcontextprotocol/server-slack")
+          ;; :env (:SLACK_BOT_TOKEN ,(auth-source-pass-get
+          ;; "bot-token"
+          ;; "tlon/core/slack.com/ae-racionalidad")
+          ;; :SLACK_TEAM_ID "CA0JVRT5K")))
+          ))
 
   (when (string= (system-name) "Pablos-MacBook-Pro.local")
     (setq mcp-hub-servers

@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: pedidos-ya
+# key: py
+# contributor: Pablo Stafforini
+# --
+`(format-time-string "%Y-%m-%d")` Pedidos Ya
+    Expenses:Food:Takeaway                  $1.00 ARS ; $2
+    Assets:Mercado Pago  
+
+$0

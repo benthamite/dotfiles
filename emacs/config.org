@@ -3178,8 +3178,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
   (column-number-mode)
 
   :bind
-  (("C-A-e" . eval-expression)
-   ("C-e" . eval-last-sexp)
+  (("C-e" . eval-last-sexp)
    ("H-C" . kill-ring-save)
    ("H-m" . set-mark-command)
    ("H-Z" . undo-redo)

@@ -559,6 +559,8 @@ DESCRIPTION is a string describing the tools (e.g., \"web search tools\")."
 
 ;;;;;; Filesystem tools
 
+;;;;;;; edit_file
+
 ;; https://github.com/munen/emacs.d?tab=readme-ov-file#edit_file
 (defun gptel-extras-edit-file (file-path &optional file-edits)
   "Edit FILE-PATH by applying FILE-EDITS using fuzzy string matching.
@@ -709,6 +711,132 @@ Each edit requires an old string to find (fuzzy matched) and a new string to rep
                                     :new_string
                                     (:type string :description "The new string to replace old_string.")))
                      :description "A list of edits to apply to the file. Each edit must contain old_string and new_string."))
+ :category "filesystem"
+ :include t)
+
+;;;;;;; apply_diff
+
+;; https://github.com/munen/emacs.d?tab=readme-ov-file#apply_diff
+(gptel-make-tool
+ :name "apply_diff"
+ :description (concat
+               "Applies a diff (patch) to a file. This is a primary method for file modification. "
+               "If this tool fails, try 'edit_file'. As a last resort, use 'replace_file_contents'. "
+               "The diff must be in the unified format ('diff -u'). "
+               "Ensure file paths in the diff (e.g., '--- a/file', '+++ b/file') match the 'file_path' argument and 'patch_options'. "
+               "Common 'patch_options' include: '' (for exact/relative paths), "
+               "'-p0' (if diff paths are full), '-p1' (to strip one leading directory). "
+               "Default options are '-N' (ignore already applied patches).")
+ :args (list
+        '(:name "file_path"
+                :type string
+                :description "The path to the file that needs to be patched.")
+        '(:name "diff_content"
+                :type string
+                :description "The diff content in unified format (e.g., from 'diff -u').")
+        '(:name "patch_options"
+                :type string
+                :optional t
+                :description "Optional: Additional options for the 'patch' command (e.g., '-p1', '-p0', '-R'). Defaults to '-N'. Prepend other options if needed, e.g., '-p1 -N'.")
+        '(:name "working_dir"
+                :type string
+                :optional t
+                :description "Optional: The directory in which to interpret file_path and run patch. Defaults to the current buffer's directory if not specified."))
+ :category "filesystem"
+ :function
+ (lambda (file_path diff_content &optional patch_options working_dir)
+   (let ((original-default-directory default-directory)
+         (user-patch-options (if (and patch_options (not (string-empty-p patch_options)))
+                                 (split-string patch_options " " t)
+                               nil))
+         ;; Combine user options with -N, ensuring -N is there.
+         ;; If user provides -N or --forward, use their version. Otherwise, add -N.
+         (base-options '("-N"))
+         (effective-patch-options '()))
+
+     (if user-patch-options
+         (if (or (member "-N" user-patch-options) (member "--forward" user-patch-options))
+             (setq effective-patch-options user-patch-options)
+           (setq effective-patch-options (append user-patch-options base-options)))
+       (setq effective-patch-options base-options))
+
+     (let* ((out-buf-name (generate-new-buffer-name "*patch-stdout*"))
+            (err-buf-name (generate-new-buffer-name "*patch-stderr*"))
+            (target-file nil)
+            (exit-status -1) ; Initialize to a known non-zero value
+            (result-output "")
+            (result-error ""))
+       (unwind-protect
+           (progn
+             (when (and working_dir (not (string-empty-p working_dir)))
+               (setq default-directory (expand-file-name working_dir)))
+
+             (setq target-file (expand-file-name file_path))
+
+             (unless (file-exists-p target-file)
+               ;; Use error to signal failure, which gptel should catch.
+               (error "File to patch does not exist: %s" target-file))
+
+             (with-temp-message (format "Applying diff to: `%s` with options: %s" target-file effective-patch-options)
+               (with-temp-buffer
+                 (insert diff_content)
+                 (unless (eq (char-before (point-max)) ?\n)
+                   (goto-char (point-max))
+                   (insert "\n"))
+
+                 ;; Pass buffer *names* to call-process-region
+                 (setq exit-status (apply #'call-process-region
+                                          (point-min) (point-max)
+                                          "patch"       ; Command
+                                          nil           ; delete region (no)
+                                          (list out-buf-name err-buf-name) ; stdout/stderr buffer names
+                                          nil           ; display (no)
+                                          (append effective-patch-options (list target-file))))))
+
+             ;; Retrieve content from buffers using their names
+             (let ((stdout-buf (get-buffer out-buf-name))
+                   (stderr-buf (get-buffer err-buf-name)))
+               (when stdout-buf
+                 (with-current-buffer stdout-buf
+                   (setq result-output (buffer-string))))
+               (when stderr-buf
+                 (with-current-buffer stderr-buf
+                   (setq result-error (buffer-string)))))
+
+             (if (= exit-status 0)
+                 (format "Diff successfully applied to %s.\nPatch command options: %s\nPatch STDOUT:\n%s\nPatch STDERR:\n%s"
+                         target-file effective-patch-options result-output result-error)
+               ;; Signal an Elisp error, which gptel will catch and display.
+               ;; The arguments to 'error' become the error message.
+               (error "Failed to apply diff to %s (exit status %s).\nPatch command options: %s\nPatch STDOUT:\n%s\nPatch STDERR:\n%s"
+                      target-file exit-status effective-patch-options result-output result-error)))
+         ;; Cleanup clause of unwind-protect
+         (setq default-directory original-default-directory)
+         (let ((stdout-buf-obj (get-buffer out-buf-name))
+               (stderr-buf-obj (get-buffer err-buf-name)))
+           (when (buffer-live-p stdout-buf-obj) (kill-buffer stdout-buf-obj))
+           (when (buffer-live-p stderr-buf-obj) (kill-buffer stderr-buf-obj)))))))
+ :include t)
+
+;;;;;;; replace_file_contents
+
+;; https://github.com/munen/emacs.d?tab=readme-ov-file#misc
+(gptel-make-tool
+ :function (lambda (file_path new_content)
+             (with-temp-message (format "Replacing content in file: `%s`" file_path)
+               (let ((full-path (expand-file-name file_path)))
+                 (with-temp-file full-path
+                   (insert new_content))
+                 (format "Successfully replaced content in %s" full-path))))
+ :name "replace_file_contents"
+ :description "Replaces the entire content of a file. Use this tool ONLY as a last resort if both 'edit_file' and 'apply_diff' fail. It is highly token-inefficient as it requires sending the full file content. WARNING: This operation completely overwrites the target file."
+ :args (list
+        '(:name "file_path"
+                :type string
+                :description "The path to the file that needs to be replaced.")
+        '(:name "new_content"
+                :type string
+                :description "The new content for the file."))
  :category "filesystem"
  :include t)
 

@@ -4,6 +4,38 @@
 
 This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository. It is meant to be read primarily by members of the Tlön team, but it may be of interest to others as well.
 
+* Version 7.1.11 on 2025-07-24
+** Configuration Management Changes
+
+*** MCP (Model Context Protocol) Configuration
+- Moved =emacs-mcp-server= from main MCP servers list to personal tools section
+
+*** Aider Configuration  
+- Changed default model from Gemini 2.5 Pro to OpenAI's o3 model with high reasoning effort
+
+** Key Binding Updates
+
+*** Simple Key Bindings
+- Removed obsolete =C-A-e= binding for =eval-expression= (use =M-:= instead)
+
+** Bibliography and Database Management
+
+*** Ebib Configuration
+- Added =tlon-file-db= to the list of available databases (assigned number 5)
+- Enhanced database reloading to print which specific database is being reloaded
+
+*** Zotra Integration
+- Added =tlon-file-db= to available bibliography file selection options
+- Enhanced bibliography file selection in zotra-extras
+
+*** BibTeX Processing
+- Added new function =bibtex-extras-escape-special-characters= to properly escape special characters ($, %, #, &) in BibTeX files (imported from =tlon=)
+
+** Security and Authentication
+
+*** API Key Management
+- Updated OpenAI API key in shell environment variables (=.zshenv-secrets=)
+
 * Version 7.1.10 on 2025-07-21
 ** Package Management & Core Configuration
 

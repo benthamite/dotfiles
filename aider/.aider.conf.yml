@@ -11,10 +11,10 @@ model: o3
 reasoning-effort: high
 commit-prompt: |
   Generate a concise commit message following these rules:
-  - If the current project is `dotfiles` and the file(s) being committed are in `emacs/extras` or `emacs/extras/doc` (relative to that project), proceed as follows: (1) Begin with the name of the file being modified, sans its extension. For example, if the file is `emacs/extras/files-extras.el`, use `files-extras`. (2) Continue with ": " followed by a brief description of the change. The word after the colon should be in lowercase. For example, if you are refactoring a function in `emacs/extras/files-extras.el`, your commit message should look like this: `files-extras: refactor function name`.
-  - If the current project is `tlon` and the file(s) being committed are in that directory or in the `doc` subdirectory, proceed as follows: (1) Begin with the name of the file being modified, but instead of using the full file, only use the part between `tlon-` and `.el`. For example, if the file is `tlon-tts.el`, use `tts`. For documentation files, use what you would have used if you were writing a commit for the Elisp file being documented. For example, if the file is `tlon-tts.org`, use `tts`.
+  - If the current project is `dotfiles` and the file(s) being committed are in `emacs/extras` or `emacs/extras/doc` (relative to that project), proceed as follows: (1) Begin with the name of the file being modified, sans its extension. For example, if the file is `emacs/extras/files-extras.el`, use `files-extras`. (2) Continue with ": " followed by a brief description of the change. The word after the colon should be in lowercase. For example, if you are refactoring a function in `emacs/extras/files-extras.el`, your commit message should look like this: `files-extras: <succinct description of the refactoring>`.
+  - If the current project is `tlon` and the file(s) being committed are in that directory or in the `doc` subdirectory, proceed as follows: Begin with the name of the file being modified, but instead of using the full file, only use the part between `tlon-` and `.el`. For example, if the file is `tlon-tts.el`, use `tts`. For documentation files, use what you would have used if you were writing a commit for the Elisp file being documented. For example, if the file is `tlon-tts.org`, use `tts`.
   - Otherwise, just use standard commit rules.
-  - The commit should not be longer than 70 characters.
+  - In all cases, the commit should not be longer than 70 characters.
 auto-lint: true
 read:
   - ~/Dropbox/dotfiles/aider/global_conventions.md

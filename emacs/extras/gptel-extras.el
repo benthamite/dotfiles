@@ -450,7 +450,7 @@ The files added is controlled by the user options
 ;;;###autoload
 (defun gptel-extras-import-chatgpt-conversations (json-file &optional include-archived)
   "Import ChatGPT conversations from JSON-FILE into Org files.
-This command processes the `conversations.json' file included in the ChatGPT
+This command processes the \"conversations.json\" file included in the ChatGPT
 export, importing the text part of ChatGPT conversations only and ignoring
 media, metadata and other non-textual parts. The conversations are saved in
 `gptel-extras-chatgpt-import-dir' as Org files, with the title of each

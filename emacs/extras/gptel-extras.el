@@ -472,6 +472,8 @@ file name."
         (let* ((conv      (elt conversations i))
                (title     (or (gethash "title" conv) "Untitled"))
                (mapping   (gethash "mapping" conv))
+               (conv-id   (or (gethash "conversation_id" conv)
+                              (gethash "id" conv)))
                (file-name (concat gptel-extras-chatgpt-import-dir
                                   (simple-extras-slugify title) ".org"))
                (messages  '()))
@@ -495,6 +497,8 @@ file name."
           (with-temp-buffer
             (insert (format "#+title: %s\n\n" title))
             (insert (format "* %s\n" title))
+            (when conv-id
+              (insert (format "[[https://chatgpt.com/c/%s][Open in ChatGPT]]\n\n" conv-id)))
             (dolist (msg messages)
               (let* ((role (gethash "role" (gethash "author" msg)))
                      (content (gethash "content" msg))

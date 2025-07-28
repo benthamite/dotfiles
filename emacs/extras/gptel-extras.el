@@ -464,7 +464,9 @@ file name."
     (let* ((conversations (seq-filter
                            (lambda (conv)
                              (or include-archived
-                                 (not (gethash "is_archived" conv))))
+                                 ;; keep if flag is missing or explicitly json-false
+                                 (not (gethash "is_archived" conv))
+                                 (eq (gethash "is_archived" conv) json-false)))
                            (json-read-file json-file))))
       (dotimes (i (length conversations))
         (let* ((conv      (elt conversations i))

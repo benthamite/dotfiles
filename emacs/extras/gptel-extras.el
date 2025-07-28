@@ -512,7 +512,7 @@ file name."
                                   (org-extras-convert-markdown-to-org
                                    (mapconcat #'identity texts "\n\n")))))))
             (write-region (point-min) (point-max) file-name)
-            (message "Imported '%s' to %s" title file-name)))))))
+            (message "Imported '%s' to %s (%d/%d)" title file-name (1+ i) total)))))))
 
 (declare-function simple-extras-pandoc-convert "simple-extras")
 (defun org-extras-convert-markdown-to-org (markdown)

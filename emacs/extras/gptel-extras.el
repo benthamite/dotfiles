@@ -467,8 +467,9 @@ file name."
                                  ;; keep if flag is missing or explicitly json-false
                                  (not (gethash "is_archived" conv))
                                  (eq (gethash "is_archived" conv) json-false)))
-                           (json-read-file json-file))))
-      (dotimes (i (length conversations))
+                           (json-read-file json-file)))
+           (total (length conversations)))
+      (dotimes (i total)
         (let* ((conv      (elt conversations i))
                (title     (or (gethash "title" conv) "Untitled"))
                (mapping   (gethash "mapping" conv))

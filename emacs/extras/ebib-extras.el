@@ -1308,11 +1308,11 @@ Elements in this list are used to remove file-notify watches.")
 		  (lambda (event)
 		    (ebib-extras--auto-reload-callback event nth db db-file))))))
 
-(defun ebib-extras--auto-reload-callback (_event nth db db-file)
+(defun ebib-extras--auto-reload-callback (_event _nth db db-file)
   "Handle file change notifications for Ebib databases.
 This function is called from the callback in
 `ebib-extras-auto-reload-database'.  It checks if a reload is necessary based on
-a 5-second cooldown. _EVENT is the file notification event. NTH is the database
+a 5-second cooldown. _EVENT is the file notification event. _NTH is the database
 index. DB is the ebib database object. DB-FILE is the path to the database
 file."
   (let ((now (current-time))

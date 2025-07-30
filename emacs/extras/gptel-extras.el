@@ -455,20 +455,17 @@ export, importing the text part of ChatGPT conversations only and ignoring
 media, metadata and other non-textual parts. The conversations are saved in
 `gptel-extras-chatgpt-import-dir' as Org files, with the title of each
 conversation as the file name. The title is slugified to ensure it is a valid
-file name."
+file name.
+
+If INCLUDE-ARCHIVED is non-nil, or the command is called with a prefix argument,
+include archived conversations in the import."
   (interactive "fImport ChatGPT conversations from file: \nP")
   (unless (file-exists-p gptel-extras-chatgpt-import-dir)
     (make-directory gptel-extras-chatgpt-import-dir t))
   (let ((json-object-type 'hash-table)
         (json-array-type  'list))
-    (let* ((conversations (seq-filter
-                           (lambda (conv)
-                             (or include-archived
-                                 ;; keep if flag is missing or explicitly json-false
-                                 (not (gethash "is_archived" conv))
-                                 (eq (gethash "is_archived" conv) json-false)))
-                           (json-read-file json-file)))
-           (total (length conversations)))
+    (let* ((conversations (gptel-extras--filter-conversations json-file include-archived))
+	   (total (length conversations)))
       (dotimes (i total)
         (let* ((conv      (elt conversations i))
                (title     (or (gethash "title" conv) "Untitled"))
@@ -477,42 +474,64 @@ file name."
                               (gethash "id" conv)))
                (file-name (concat gptel-extras-chatgpt-import-dir
                                   (simple-extras-slugify title) ".org"))
-               (messages  '()))
-          ;; Collect message nodes
-          (maphash
-           (lambda (_ node)
-             (let ((msg (gethash "message" node)))
-               (when (and msg
-                          (gethash "content" msg)
-                          (member (gethash "role" (gethash "author" msg))
-                                  '("user" "assistant")))
-                 (push msg messages))))
-           mapping)
-          ;; Sort safely by timestamp
-          (setq messages
-                (sort messages
-                      (lambda (a b)
-                        (< (or (gethash "create_time" a) most-positive-fixnum)
-                           (or (gethash "create_time" b) most-positive-fixnum)))))
-          ;; Write to file
-          (with-temp-buffer
-            (insert (format "#+title: %s\n\n" title))
-            (insert (format "* %s\n" title))
-            (when conv-id
-              (insert (format "[[https://chatgpt.com/c/%s][Open in ChatGPT]]\n\n" conv-id)))
-            (dolist (msg messages)
-              (let* ((role (gethash "role" (gethash "author" msg)))
-                     (content (gethash "content" msg))
-                     (parts (and content (gethash "parts" content)))
-                     (texts (seq-filter #'identity
-                                        (gptel-extras--extract-parts-text parts))))
-                (when (and role texts)
-                  (insert (format "** %s\n\n%s\n\n"
-                                  (capitalize role)
-                                  (org-extras-convert-markdown-to-org
-                                   (mapconcat #'identity texts "\n\n")))))))
-            (write-region (point-min) (point-max) file-name)
-            (message "Imported '%s' to %s (%d/%d)" title file-name (1+ i) total)))))))
+               (messages  (gptel-extras--collect-message-nodes mapping)))
+          (setq messages (gptel-extras--sort-messages-by-timestamp messages))
+          (gptel-extras--write-conversation-to-file title conv-id messages file-name)
+	  (message "Imported \"%s\" to %s (%d/%d)" title file-name (1+ i) total))))))
+
+(defun gptel-extras--filter-conversations (json-file include-archived)
+  "Filter conversations in JSON-FILE based on INCLUDE-ARCHIVED flag.
+If INCLUDE-ARCHIVED is non-nil, include all conversations.
+Otherwise, exclude archived conversations."
+  (seq-filter
+   (lambda (conv)
+     (or include-archived
+         ;; keep if flag is missing or explicitly json-false
+         (not (gethash "is_archived" conv))
+         (eq (gethash "is_archived" conv) json-false)))
+   (json-read-file json-file)))
+
+;;;###autoload
+(defun gptel-extras--collect-message-nodes (mapping)
+  "Collect message nodes from MAPPING hash table."
+  (let ((messages '()))
+    (maphash
+     (lambda (_ node)
+       (let ((msg (gethash "message" node)))
+         (when (and msg
+                    (gethash "content" msg)
+                    (member (gethash "role" (gethash "author" msg))
+                            '("user" "assistant")))
+           (push msg messages))))
+     mapping)
+    messages))
+
+(defun gptel-extras--sort-messages-by-timestamp (messages)
+  "Sort MESSAGES safely by timestamp."
+  (sort messages
+        (lambda (a b)
+          (< (or (gethash "create_time" a) most-positive-fixnum)
+             (or (gethash "create_time" b) most-positive-fixnum)))))
+
+(defun gptel-extras--write-conversation-to-file (title conv-id messages file-name)
+  "Write conversation with TITLE, CONV-ID and MESSAGES to FILE-NAME."
+  (with-temp-buffer
+    (insert (format "#+title: %s\n\n" title))
+    (insert (format "* %s\n" title))
+    (when conv-id
+      (insert (format "[[https://chatgpt.com/c/%s][Open in ChatGPT]]\n\n" conv-id)))
+    (dolist (msg messages)
+      (let* ((role (gethash "role" (gethash "author" msg)))
+             (content (gethash "content" msg))
+             (parts (and content (gethash "parts" content)))
+             (texts (seq-filter #'identity
+                                (gptel-extras--extract-parts-text parts))))
+        (when (and role texts)
+          (insert (format "** %s\n\n%s\n\n"
+                          (capitalize role)
+                          (org-extras-convert-markdown-to-org
+                           (mapconcat #'identity texts "\n\n")))))))
+    (write-region (point-min) (point-max) file-name)))
 
 (declare-function simple-extras-pandoc-convert "simple-extras")
 (defun org-extras-convert-markdown-to-org (markdown)

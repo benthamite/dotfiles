@@ -441,7 +441,7 @@ Signals an error for unknown extensions."
 An invalid file is one whose base name does not correspond to a known BibTeX
 key.")
 
-(autoload 'tlon-bibliography-lookup "tlon-tex")
+(autoload 'tlon-bibliography-lookup "tlon-bib")
 (defun ebib-extras-file-is-valid-p (file)
   "Check if FILE has a valid base name (slug) corresponding to a BibTeX key.
 Validity is determined by looking up the file's base name as a key using

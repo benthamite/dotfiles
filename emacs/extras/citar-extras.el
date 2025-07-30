@@ -92,7 +92,7 @@
     (ebib))
   (ebib-extras-open-key citekey))
 
-(declare-function tlon-move-entry-to-fluid "tlon-tex")
+(declare-function tlon-move-entry-to-fluid "tlon-bib")
 (defun citar-extras-move-entry-to-tlon (citekey)
   "Move bibliographic entry associated with the CITEKEY to the Tlön bibliography."
   (interactive (list (citar-select-ref)))

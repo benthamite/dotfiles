@@ -688,8 +688,6 @@ CLOCK: [2023-08-24 Thu 12:20]--[2023-08-24 Thu 13:28] =>  1:08
 
 My Logitech MX Anywhere 3S mouse does not have a [[https://computer.howstuffworks.com/mouse11.htm][tilting wheel]], so I remap the side buttons to trigger the relevant tab navigation shortcuts when pressed while the shift key is held. Note that for these “extra” mouse buttons to be detected by Karabiner, you may need to enable the relevant device in the “Devices” section.
 
-[2025-05-24 Sat] Note that Logi Options is preventing Karabiner from detecting the side buttons (see [[https://www.reddit.com/r/Karabiner/comments/1jhbgs6/comment/mjbz8lb/][discussion]]) so the code block below has unfortunately no effect.
-
 #+begin_src clojure
 {:des "left_shift + side mouse buttons → navigate open tabs"
  :rules [

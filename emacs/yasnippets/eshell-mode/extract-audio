@@ -1,6 +1,0 @@
-# -*- mode: snippet -*-
-# name: extract-audio
-# key: ea
-# contributor: Pablo Stafforini
-# --
-ffmpeg -i "${1:video file}" -vn -c:a copy "${2:output.opus}"

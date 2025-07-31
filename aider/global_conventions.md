@@ -16,3 +16,4 @@
 - The first line of the docstring should be a summary of the function, and should consist of exactly one sentence.
 - Do not end an error message with a period.
 - Only add comments if they are really necessary to understand what the code does. Abstain from commenting every little thing you do—that is both unnecessary and annoying.
+- Do not try to byte-compile any Elisp files you modify.

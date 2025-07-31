@@ -3,7 +3,7 @@
   '(
     ("!?" "‽" nil :count 0)
     ("?!" "‽" nil :count 0)
-    ("atb" "All the best" nil :count 57)
+    ("atb" "All the best" nil :count 59)
     ("ty" "thank you" nil :count 1)
     ("xxx" "×" nil :count 1)
     ("¡¿" "⸘" nil :count 0)
@@ -1793,6 +1793,7 @@
     ("gameboy" "Game Boy" nil :count 1)
     ("ganerate" "generate" nil :count 1)
     ("ganster" "gangster" nil :count 1)
+    ("garage" "garaje" nil :count 0)
     ("garantee" "guarantee" nil :count 1)
     ("garanteed" "guaranteed" nil :count 1)
     ("garantees" "guarantees" nil :count 1)

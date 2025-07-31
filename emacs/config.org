@@ -10297,6 +10297,7 @@ CLOCK: [2025-07-05 Sat 11:54]--[2025-07-05 Sat 11:54] =>  0:00
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-percentile
+  :disabled
   :ensure (:host github
 		 :repo "benthamite/org-percentile")
   :after org-clock

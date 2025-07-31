@@ -4,6 +4,53 @@
 
 This document summarizes the changes pertaining to my Emacs configuration in each tagged commit of my dotfiles git repository. It is meant to be read primarily by members of the Tlön team, but it may be of interest to others as well.
 
+* Version 7.1.12 on 2025-07-31
+** Configuration Management Changes
+
+*** MCP (Model Context Protocol) Configuration
+- Moved =emacs-mcp-server= from main MCP servers list to personal tools section
+
+*** Aider Configuration  
+- Changed default model from Gemini 2.5 Pro to OpenAI's o3 model with high reasoning effort
+
+** Key Binding Updates
+
+*** Simple Key Bindings
+- Removed obsolete =C-A-e= binding for =eval-expression= (use =M-:= instead)
+
+** Bibliography and Database Management
+
+*** Ebib Configuration
+- Added =tlon-file-db= to the list of available databases (assigned number 5)
+- Enhanced database reloading to print which specific database is being reloaded
+- Implemented reload cooldown mechanism for auto-reload-database to prevent excessive reloading
+- Refactored auto-reload callback system with improved error handling and file notification management
+
+*** BibTeX Processing
+- Added new function =bibtex-extras-escape-special-characters= to properly escape special characters ($, %, #, &) in BibTeX files (imported from =tlon=)
+
+** GPTel Enhancements
+
+*** ChatGPT Conversation Import
+- Significantly improved =gptel-extras-import-chatgpt-conversations= function with better error handling and progress reporting
+- Added support for including archived conversations with prefix argument
+- Enhanced conversation filtering and processing with proper JSON handling
+- Added direct links to ChatGPT conversations in imported files
+- Refactored import functionality into smaller, focused functions for better maintainability
+
+*** MCP Tool Integration
+- Added comprehensive filesystem tools for AI interactions: =edit_file=, =apply_diff=, and =replace_file_contents=
+- Enhanced tool system with better categorization and documentation
+
+** Package Updates
+
+*** Aidermacs
+- Fixed compatibility issues by removing problematic hooks related to markdown syntax highlighting
+
+*** Org Percentile
+- Temporarily disabled package
+
+
 * Version 7.1.11 on 2025-07-24
 ** Configuration Management Changes
 

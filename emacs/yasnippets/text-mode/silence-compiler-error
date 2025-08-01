@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: silence-compiler-error
+# key: sce
+# contributor: Pablo Stafforini
+# --
+silence compiler error

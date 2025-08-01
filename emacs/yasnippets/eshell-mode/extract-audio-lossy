@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: extract-audio-lossy
+# key: eay
+# contributor: Pablo Stafforini
+# --
+ffmpeg -i "${1:video file}" -vn -c:a libopus "${2:output.opus}"

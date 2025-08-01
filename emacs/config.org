@@ -3899,6 +3899,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
 (use-feature autorevert
   :custom
   (auto-revert-use-notify nil) ; reddit.com/r/emacs/comments/mq2znn/comment/gugo0n4/
+  (auto-revert-verbose nil)
 
   :hook
   (find-file-hook . global-auto-revert-mode))

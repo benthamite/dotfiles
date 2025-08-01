@@ -10878,16 +10878,14 @@ CLOCK: [2021-07-14 Wed 21:56]--[2021-07-14 Wed 22:45] =>  0:49
   (orb-insert-interface 'citar-open-notes)
   (orb-note-actions-interface 'default)
   (orb-attached-file-extensions '("pdf"))
-
+  (org-roam-capture-templates
+   `(("r" "bibliography reference" plain
+      (file ,paths-file-orb-noter-template)
+      :if-new
+      (file ,paths-file-orb-capture-template)
+      :unnarrowed t :immediate-finish t :jump-to-captured t)))
+  
   :config
-  (add-to-list 'org-roam-capture-templates
-             `("r" "bibliography reference" plain
-               (file ,paths-file-orb-noter-template)
-               :if-new
-               (file ,paths-file-orb-capture-template)
-               :unnarrowed t :immediate-finish t :jump-to-captured t)
-             t)
-
   (dolist (keyword '("year" "title" "url" "keywords"))
     (add-to-list 'orb-preformat-keywords keyword))
   (org-roam-bibtex-mode))

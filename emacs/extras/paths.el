@@ -817,7 +817,7 @@ This includes personal files and `tlon' files."
   :group 'paths)
 
 (defcustom paths-tlon-todos-jobs-id
-  "F99006B0-3AFC-47A0-98C5-89FB86ADCDFB"
+  "E9C77367-DED8-4D59-B08C-E6E1CCDDEC3A"
   "ID of the user-specific `org-mode' heading where job TODOs are stored.
 A job TODO is a TODO for a translation job."
   :type 'string

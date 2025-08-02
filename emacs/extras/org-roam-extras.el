@@ -439,7 +439,7 @@ is case-insensitive."
               (replace-match (format "[[id:%s][%s]]" id desc) t t))))
         (when changed
           (save-buffer))
-        changed)))
+        changed))))
 
 ;;;###autoload
 (defun org-roam-extras-get-id-of-title (title &optional nocase)

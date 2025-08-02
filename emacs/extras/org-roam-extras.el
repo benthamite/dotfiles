@@ -392,6 +392,66 @@ Optionally, return such list only if its length is less than LIMIT."
   (widen)
   (org-roam-id-open id nil))
 
+;;;;; Link replacement
+
+;;;###autoload
+(defun org-roam-extras-replace-star-links-with-id (dir &optional nocase)
+  "Walk through every *.org file inside DIR and turn links of the form
+ 
+     [[*Title][Description]]
+ 
+into
+ 
+     [[id:UUID][Description]]
+ 
+where UUID is the Org-ID of the node whose title is exactly TITLE.
+When NOCASE (\\[universal-argument]) is non-nil the title match is
+case-insensitive.
+
+The command is completely automatic – it visits the file, performs the
+substitutions, and saves the buffer when something changed."
+  (interactive "DDirectory with Org files: \nP")
+  (dolist (file (directory-files dir t "\\.org\\'"))
+    (message "Processing %s" file)
+    (with-current-buffer (find-file-noselect file)
+      (save-excursion
+        (goto-char (point-min))
+        (let ((case-fold-search nocase)
+              (changed nil))
+          ;; Match [[*Title][Desc]]
+          (while (re-search-forward
+                  "\\[\\[\\*\\([^][[:cntrl:]]+?\\)\\]\\[\\([^][]*?\\)\\]\\]" nil t)
+            (let* ((title (match-string-no-properties 1))
+                   (desc  (match-string-no-properties 2))
+                   ;; ask org-roam for the id, ignore errors (no / or > 1 match)
+                   (id    (ignore-errors
+                            (org-roam-extras-get-id-of-title title nocase))))
+              (when id
+                (setq changed t)
+                (replace-match (format "[[id:%s][%s]]" id desc) t t))))
+          (when changed
+            (save-buffer)
+            (message "Updated %s" file)))))))
+
+;;;###autoload
+(defun org-roam-extras-get-id-of-title (title &optional nocase)
+  "Return the Org-ID of the node whose TITLE matches exactly.
+When NOCASE is non-nil, ignoring case.
+
+If no node (or more than one node) has exactly that TITLE an error
+is signalled."
+  (let* ((rows (org-roam-db-query
+                (vconcat
+                 [:select [id] :from nodes :where (= title $s1)]
+                 (when nocase [:collate NOCASE]))
+                title)))
+    (cond
+     ((null rows)
+      (user-error "No node with title “%s”" title))
+     ((> (length rows) 1)
+      (user-error "Multiple nodes share the title “%s”" title))
+     (t (caar rows)))))
+
 ;;;;; Patched functions
 
 (el-patch-defun org-roam-db-query (sql &rest args)

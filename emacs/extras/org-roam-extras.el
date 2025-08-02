@@ -440,10 +440,14 @@ is case-insensitive."
                  (id (ignore-errors
                        (org-roam-extras-get-id-of-title title nocase dirs))))
             (when id
-              (push (list (match-beginning 0)
-                          (match-end 0)
-                          (format "[[id:%s][%s]]" id desc))
-                    matches))))
+              ;; Store match bounds as markers so subsequent buffer edits do not
+              ;; invalidate the recorded positions.
+              (let ((beg (copy-marker (match-beginning 0)))   ; start marker
+                    (end (copy-marker (match-end 0) t)))      ; end marker
+                (push (list beg
+                            end
+                            (format "[[id:%s][%s]]" id desc))
+                      matches)))))
         ;; Perform the recorded replacements using the stored markers.
         ;; Sort from the end of buffer to the beginning so that deletions made
         ;; later do not affect the marker positions of earlier ones.

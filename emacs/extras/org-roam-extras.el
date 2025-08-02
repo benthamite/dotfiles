@@ -425,31 +425,34 @@ Return non-nil when FILE was modified.  When NOCASE is non-nil the title match
 is case-insensitive."
   (with-current-buffer (find-file-noselect file)
     (save-excursion
-      ;; Scan from the end towards the beginning to avoid positional drift after
-      ;; each edit, which occasionally caused replacements to land in the wrong
-      ;; place.
-      (goto-char (point-max))
+      ;; Collect all matches first to avoid positional drift that can still
+      ;; yield `args-out-of-range' when editing the buffer while iterating.
+      (widen)
+      (goto-char (point-min))
       (let ((case-fold-search nocase)
+            (matches '())
             (changed nil))
-        ;; Match [[*Title][Desc]]
-        (while (re-search-backward
+        ;; Record every match with its bounds and replacement text.
+        (while (re-search-forward
                 "\\[\\[\\*\\([^][[:cntrl:]]+?\\)\\]\\[\\([^][]*?\\)\\]\\]" nil t)
           (let* ((title (match-string-no-properties 1))
                  (desc  (match-string-no-properties 2))
-                 ;; Ask org-roam for the ID, ignore errors (no or >1 match)
                  (id (ignore-errors
                        (org-roam-extras-get-id-of-title title nocase dirs))))
             (when id
-              (setq changed t)
-              ;; Perform the replacement manually to avoid `args-out-of-range'
-              ;; errors that `replace-match' can raise after earlier edits in
-              ;; the same buffer.
-              (let* ((beg (match-beginning 0))
-                     (end (match-end 0))
-                     (replacement (format "[[id:%s][%s]]" id desc)))
-                (delete-region beg end)
-                (goto-char beg)
-                (insert replacement)))))
+              (push (list (match-beginning 0)
+                          (match-end 0)
+                          (format "[[id:%s][%s]]" id desc))
+                    matches))))
+        ;; Replace from the end of the buffer so earlier positions stay valid.
+        (dolist (m (sort matches (lambda (a b) (> (car a) (car b)))))
+          (let ((beg (nth 0 m))
+                (end (nth 1 m))
+                (replacement (nth 2 m)))
+            (setq changed t)
+            (goto-char beg)
+            (delete-region beg end)
+            (insert replacement)))
         (when changed
           (save-buffer))
         changed))))

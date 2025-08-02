@@ -1402,7 +1402,12 @@ If applicable, open external website to set rating there as well."
     ;; TODO: open rating websites based on supertype
     (pcase supertype
       ("book" (ebib-extras-search-goodreads title))
-      ("film" (ebib-extras-search-imdb title) (ebib-extras-search-letterboxd title)))
+      ("film"
+       (let ((url (ebib-extras-get-field "url")))
+         (if (and url (string-match "imdb\\.com" url))
+             (browse-url url)
+           (ebib-extras-search-imdb title)))
+       (ebib-extras-search-letterboxd title)))
     (ebib-set-field-value "rating" rating (ebib--get-key-at-point) ebib--cur-db 'overwrite)
     (ebib-extras-update-entry-buffer db)))
 

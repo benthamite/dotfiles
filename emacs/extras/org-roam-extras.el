@@ -33,20 +33,6 @@
 (require 'org-roam)
 (require 'cl-lib)
 (require 'seq)
-
-(defun org-roam-extras--point-in-property-drawer-p ()
-  "Return non-nil if point is inside an Org property drawer.
-
-The check looks for the closest preceding “:PROPERTIES:” line and the
-corresponding “:END:” line that follows it, and verifies POS lies
-between them."
-  (save-excursion
-    (let ((pos (point)))
-      (when (re-search-backward "^\\s-*:\\(PROPERTIES\\):\\s-*$" nil t)
-        (let ((start (match-beginning 0)))
-          (when (re-search-forward "^\\s-*:END:\\s-*$" nil t)
-            (let ((end (match-end 0)))
-              (and (<= start pos) (< pos end))))))))
 (require 'paths)
 
 ;;;; User options
@@ -488,6 +474,19 @@ is case-insensitive."
         (when changed
           (save-buffer))
         changed))))
+
+(defun org-roam-extras--point-in-property-drawer-p ()
+  "Return non-nil if point is inside an Org property drawer.
+The check looks for the closest preceding “:PROPERTIES:” line and the
+corresponding “:END:” line that follows it, and verifies POS lies
+between them."
+  (save-excursion
+    (let ((pos (point)))
+      (when (re-search-backward "^\\s-*:\\(PROPERTIES\\):\\s-*$" nil t)
+        (let ((start (match-beginning 0)))
+          (when (re-search-forward "^\\s-*:END:\\s-*$" nil t)
+            (let ((end (match-end 0)))
+              (and (<= start pos) (< pos end)))))))))
 
 ;;;###autoload
 (defun org-roam-extras-get-id-of-title (title &optional nocase dirs)

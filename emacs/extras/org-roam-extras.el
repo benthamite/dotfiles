@@ -433,7 +433,7 @@ is case-insensitive."
       (let ((case-fold-search nocase)
             (changed nil))
         (while (re-search-backward
-                "\\[\\[\\*\\([^][[:cntrl:]]+?\\)\\]\\[\\([^][]*?\\)\\]\\]" nil t)
+                "\\[\\[\\*\\([^][[:cntrl:]]+?\\)\\]\\[\\([^][[:cntrl:]]*?\\)\\]\\]" nil t)
           ;; Skip matches inside a property drawer.
           (unless (org-roam-extras--point-in-property-drawer-p)
             (let* ((title (match-string-no-properties 1))

@@ -425,52 +425,30 @@ Return non-nil when FILE was modified.  When NOCASE is non-nil the title match
 is case-insensitive."
   (with-current-buffer (find-file-noselect file)
     (save-excursion
-      ;; Collect all matches first to avoid positional drift that can still
-      ;; yield `args-out-of-range' when editing the buffer while iterating.
       (widen)
-      (goto-char (point-min))
+      ;; Scan the buffer from end to beginning, replacing links on the fly.
+      ;; Doing the edits in-place while moving backwards eliminates the
+      ;; positional-drift problems that showed up with earlier approaches.
+      (goto-char (point-max))
       (let ((case-fold-search nocase)
-            (matches '())
             (changed nil))
-        ;; Record every match with its bounds and replacement text.
-        (while (re-search-forward
+        (while (re-search-backward
                 "\\[\\[\\*\\([^][[:cntrl:]]+?\\)\\]\\[\\([^][]*?\\)\\]\\]" nil t)
-          (let* ((title (match-string-no-properties 1))
-                 (desc  (match-string-no-properties 2))
-                 (id (ignore-errors
-                       (org-roam-extras-get-id-of-title title nocase dirs))))
-            (when (and id
-                       (not (org-roam-extras--point-in-property-drawer-p)))
-              ;; Store match bounds as markers so subsequent buffer edits do not
-              ;; invalidate the recorded positions.
-              (let ((beg (copy-marker (match-beginning 0)))   ; start marker
-                    (end (copy-marker (match-end 0) t)))      ; end marker
-                (push (list beg
-                            end
-                            (format "[[id:%s][%s]]" id desc))
-                      matches)))))
-        ;; Perform the recorded replacements using the stored markers.
-        ;; Sort from the end of buffer to the beginning so that deletions made
-        ;; later do not affect the marker positions of earlier ones.
-        (dolist (m (sort matches
-                         (lambda (a b)
-                           (> (marker-position (car a))
-                              (marker-position (car b))))))
-          (let* ((beg (marker-position (nth 0 m)))
-                 (end (marker-position (nth 1 m)))
-                 (replacement (nth 2 m)))
-            (when (and beg end (<= end (point-max)))
-              (setq changed t)
-              (goto-char beg)
-              ;; Wrap in a safety check to avoid args-out-of-range.
-              (condition-case nil
+          ;; Skip matches inside a property drawer.
+          (unless (org-roam-extras--point-in-property-drawer-p)
+            (let* ((title (match-string-no-properties 1))
+                   (desc  (match-string-no-properties 2))
+                   (id (ignore-errors
+                         (org-roam-extras-get-id-of-title title nocase dirs))))
+              (when id
+                (setq changed t)
+                (let* ((beg (match-beginning 0))
+                       (end (match-end 0))
+                       (replacement (format "[[id:%s][%s]]" id desc)))
+                  ;; Replace manually to keep match data consistent.
+                  (goto-char beg)
                   (delete-region beg end)
-                (args-out-of-range (setq changed nil)))
-              (insert replacement))))
-        ;; Clean up markers to avoid memory leaks.
-        (dolist (m matches)
-          (set-marker (nth 0 m) nil)
-          (set-marker (nth 1 m) nil))
+                  (insert replacement))))))
         (when changed
           (save-buffer))
         changed))))

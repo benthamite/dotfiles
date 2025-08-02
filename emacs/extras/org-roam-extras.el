@@ -438,18 +438,15 @@ is case-insensitive."
                        (org-roam-extras-get-id-of-title title nocase dirs))))
             (when id
               (setq changed t)
-              (let ((replacement (format "[[id:%s][%s]]" id desc)))
-                (condition-case err
-                    (replace-match replacement t t)
-                  (args-out-of-range
-                   ;; Fallback when match data becomes inconsistent after earlier
-                   ;; substitutions within the same buffer.  Delete the original
-                   ;; link manually and insert the replacement to keep going.
-                   (let ((beg (match-beginning 0))
-                         (end (match-end 0)))
-                     (delete-region beg end)
-                     (goto-char beg)
-                     (insert replacement))))))))
+              ;; Perform the replacement manually to avoid `args-out-of-range'
+              ;; errors that `replace-match' can raise after earlier edits in
+              ;; the same buffer.
+              (let* ((beg (match-beginning 0))
+                     (end (match-end 0))
+                     (replacement (format "[[id:%s][%s]]" id desc)))
+                (delete-region beg end)
+                (goto-char beg)
+                (insert replacement)))))
         (when changed
           (save-buffer))
         changed))))

@@ -31,6 +31,8 @@
 (require 'el-patch)
 (require 'org-extras)
 (require 'org-roam)
+(require 'cl-lib)
+(require 'seq)
 (require 'paths)
 
 ;;;; User options

@@ -2265,6 +2265,7 @@
     ("journies" "journeys" nil :count 1)
     ("jstu" "just" nil :count 1)
     ("jsut" "just" nil :count 1)
+    ("jsutified" "justified" nil :count 0)
     ("juadaism" "Judaism" nil :count 1)
     ("juadism" "Judaism" nil :count 1)
     ("judical" "judicial" nil :count 1)

@@ -1494,22 +1494,24 @@ Fetching is done using `bib'."
       (ebib-extras-fetch-id-or-url)))
 
 (defun ebib-extras-browse-url-or-doi ()
-  "Browse the Letterboxd URL, generic URL, or DOI of the entry at point.
-If the entry contains a `letterboxd' field, build the full URL
-using `bib-letterboxd-url' and open it.  Otherwise fall back to
-the `url' or `doi' fields, in that order."
+  "Browse the entry’s URL and, if available, also open its Letterboxd page.
+The `url' field is always opened when present.  When a
+`letterboxd' slug exists, its full URL (built with
+`bib-letterboxd-url') is opened in *addition* to the generic URL.
+If no `url' exists, fall back to the `doi' field."
   (interactive)
-  (let ((lbx-slug (ebib-extras-get-field "letterboxd")))
-    (cond
-     ((and lbx-slug (not (string-empty-p lbx-slug)))
-      ;; ensure `bib-letterboxd-url' is available
+  (let* ((lbx-slug (ebib-extras-get-field "letterboxd"))
+         (url      (ebib-extras-get-field "url"))
+         (doi      (ebib-extras-get-field "doi")))
+    ;; Open Letterboxd first, if we have a slug
+    (when (and lbx-slug (not (string-empty-p lbx-slug)))
       (require 'bib nil t)
       (browse-url (format bib-letterboxd-url lbx-slug)))
-     ((ebib-extras-get-field "url")
-      (ebib-browse-url))
-     ((ebib-extras-get-field "doi")
-      (ebib-browse-doi))
-     (t (user-error "No Letterboxd slug, URL, or DOI found")))))
+    ;; Always try to open the URL; fall back to DOI when missing
+    (cond
+     (url (ebib-browse-url))
+     (doi (ebib-browse-doi))
+     (t  (user-error "No URL, DOI, or Letterboxd slug found")))))
 
 (defun ebib-extras-set-id (&optional id)
   "Add an ID to the current entry, if missing."

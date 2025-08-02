@@ -453,7 +453,8 @@ is case-insensitive."
                  (desc  (match-string-no-properties 2))
                  (id (ignore-errors
                        (org-roam-extras-get-id-of-title title nocase dirs))))
-            (when id
+            (when (and id
+                       (not (org-roam-extras--point-in-property-drawer-p)))
               ;; Store match bounds as markers so subsequent buffer edits do not
               ;; invalidate the recorded positions.
               (let ((beg (copy-marker (match-beginning 0)))   ; start marker

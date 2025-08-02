@@ -18,3 +18,5 @@ commit-prompt: |
 auto-lint: true
 read:
   - ~/Dropbox/dotfiles/aider/global_conventions.md
+attribute-co-authored-by: false
+attribute-committer: false

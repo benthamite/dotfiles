@@ -444,15 +444,28 @@ is case-insensitive."
                           (match-end 0)
                           (format "[[id:%s][%s]]" id desc))
                     matches))))
-        ;; Replace from the end of the buffer so earlier positions stay valid.
-        (dolist (m (sort matches (lambda (a b) (> (car a) (car b)))))
-          (let ((beg (nth 0 m))
-                (end (nth 1 m))
-                (replacement (nth 2 m)))
-            (setq changed t)
-            (goto-char beg)
-            (delete-region beg end)
-            (insert replacement)))
+        ;; Perform the recorded replacements using the stored markers.
+        ;; Sort from the end of buffer to the beginning so that deletions made
+        ;; later do not affect the marker positions of earlier ones.
+        (dolist (m (sort matches
+                         (lambda (a b)
+                           (> (marker-position (car a))
+                              (marker-position (car b))))))
+          (let* ((beg (marker-position (nth 0 m)))
+                 (end (marker-position (nth 1 m)))
+                 (replacement (nth 2 m)))
+            (when (and beg end (<= end (point-max)))
+              (setq changed t)
+              (goto-char beg)
+              ;; Wrap in a safety check to avoid args-out-of-range.
+              (condition-case nil
+                  (delete-region beg end)
+                (args-out-of-range (setq changed nil)))
+              (insert replacement))))
+        ;; Clean up markers to avoid memory leaks.
+        (dolist (m matches)
+          (set-marker (nth 0 m) nil)
+          (set-marker (nth 1 m) nil))
         (when changed
           (save-buffer))
         changed))))

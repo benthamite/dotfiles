@@ -425,11 +425,14 @@ Return non-nil when FILE was modified.  When NOCASE is non-nil the title match
 is case-insensitive."
   (with-current-buffer (find-file-noselect file)
     (save-excursion
-      (goto-char (point-min))
+      ;; Scan from the end towards the beginning to avoid positional drift after
+      ;; each edit, which occasionally caused replacements to land in the wrong
+      ;; place.
+      (goto-char (point-max))
       (let ((case-fold-search nocase)
             (changed nil))
         ;; Match [[*Title][Desc]]
-        (while (re-search-forward
+        (while (re-search-backward
                 "\\[\\[\\*\\([^][[:cntrl:]]+?\\)\\]\\[\\([^][]*?\\)\\]\\]" nil t)
           (let* ((title (match-string-no-properties 1))
                  (desc  (match-string-no-properties 2))

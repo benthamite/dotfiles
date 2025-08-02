@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'subr-x)
 (require 'el-patch)
 (require 'ebib)
 (require 'paths)
@@ -1403,11 +1404,21 @@ If applicable, open external website to set rating there as well."
     (pcase supertype
       ("book" (ebib-extras-search-goodreads title))
       ("film"
+       ;; IMDb – open stored URL when available, otherwise search
        (let ((url (ebib-extras-get-field "url")))
          (if (and url (string-match "imdb\\.com" url))
              (browse-url url)
            (ebib-extras-search-imdb title)))
-       (ebib-extras-search-letterboxd title)))
+       ;; Letterboxd – open stored slug or fetch it, store, then open
+       (let ((lbx-slug (ebib-extras-get-field "letterboxd")))
+         (if (and lbx-slug (not (string-empty-p lbx-slug)))
+             (browse-url (format bib-letterboxd-url lbx-slug))
+           (let ((slug (bib-search-letterboxd title)))
+             (when slug
+               (ebib-set-field-value "letterboxd" slug (ebib--get-key-at-point)
+                                     ebib--cur-db 'overwrite)
+               (ebib-extras-update-entry-buffer ebib--cur-db)
+               (browse-url (format bib-letterboxd-url slug))))))))
     (ebib-set-field-value "rating" rating (ebib--get-key-at-point) ebib--cur-db 'overwrite)
     (ebib-extras-update-entry-buffer db)))
 

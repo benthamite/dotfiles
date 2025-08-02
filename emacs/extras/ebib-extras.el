@@ -1390,6 +1390,7 @@ file."
 (declare-function ebib-extras-search-goodreads "ebib-extras")
 (declare-function ebib-extras-search-imdb "ebib-extras")
 (declare-function ebib-extras-search-letterboxd "ebib-extras")
+(declare-function bib-search-letterboxd "bib")
 (defun ebib-extras-set-rating ()
   "Set rating of current entry.
 If applicable, open external website to set rating there as well."

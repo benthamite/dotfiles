@@ -413,25 +413,33 @@ substitutions, and saves the buffer when something changed."
   (interactive "DDirectory with Org files: \nP")
   (dolist (file (directory-files dir t "\\.org\\'"))
     (message "Processing %s" file)
-    (with-current-buffer (find-file-noselect file)
-      (save-excursion
-        (goto-char (point-min))
-        (let ((case-fold-search nocase)
-              (changed nil))
-          ;; Match [[*Title][Desc]]
-          (while (re-search-forward
-                  "\\[\\[\\*\\([^][[:cntrl:]]+?\\)\\]\\[\\([^][]*?\\)\\]\\]" nil t)
-            (let* ((title (match-string-no-properties 1))
-                   (desc  (match-string-no-properties 2))
-                   ;; ask org-roam for the id, ignore errors (no / or > 1 match)
-                   (id    (ignore-errors
-                            (org-roam-extras-get-id-of-title title nocase))))
-              (when id
-                (setq changed t)
-                (replace-match (format "[[id:%s][%s]]" id desc) t t))))
-          (when changed
-            (save-buffer)
-            (message "Updated %s" file)))))))
+    (when (org-roam-extras--replace-star-links-with-id-in-file file nocase)
+      (message "Updated %s" file))))
+
+;;;###autoload
+(defun org-roam-extras--replace-star-links-with-id-in-file (file &optional nocase)
+  "Replace [[*Title][Desc]] links with [[id:UUID][Desc]] in FILE.
+Return non-nil when FILE was modified.  When NOCASE is non-nil the title match
+is case-insensitive."
+  (with-current-buffer (find-file-noselect file)
+    (save-excursion
+      (goto-char (point-min))
+      (let ((case-fold-search nocase)
+            (changed nil))
+        ;; Match [[*Title][Desc]]
+        (while (re-search-forward
+                "\\[\\[\\*\\([^][[:cntrl:]]+?\\)\\]\\[\\([^][]*?\\)\\]\\]" nil t)
+          (let* ((title (match-string-no-properties 1))
+                 (desc  (match-string-no-properties 2))
+                 ;; Ask org-roam for the ID, ignore errors (no or >1 match)
+                 (id (ignore-errors
+                       (org-roam-extras-get-id-of-title title nocase))))
+            (when id
+              (setq changed t)
+              (replace-match (format "[[id:%s][%s]]" id desc) t t))))
+        (when changed
+          (save-buffer))
+        changed)))
 
 ;;;###autoload
 (defun org-roam-extras-get-id-of-title (title &optional nocase)

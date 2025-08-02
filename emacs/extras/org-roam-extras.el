@@ -444,17 +444,34 @@ is case-insensitive."
         changed))))
 
 ;;;###autoload
-(defun org-roam-extras-get-id-of-title (title &optional nocase)
+(defun org-roam-extras-get-id-of-title (title &optional nocase dirs)
   "Return the Org-ID of the node whose TITLE matches exactly.
-When NOCASE is non-nil, ignoring case.
 
-If no node (or more than one node) has exactly that TITLE an error
-is signalled."
+When NOCASE is non-nil the title comparison is case-insensitive.
+If DIRS is a list of directories, only nodes whose source file
+resides inside one of those directories (or their subdirectories)
+are considered.
+
+An error is signalled when no node (or more than one node)
+satisfies these criteria."
   (let* ((rows (org-roam-db-query
                 (vconcat
-                 [:select [id] :from nodes :where (= title $s1)]
+                 [:select [id file] :from nodes :where (= title $s1)]
                  (when nocase [:collate NOCASE]))
                 title)))
+    ;; Restrict to rows whose file is under one of DIRS, if given
+    (when dirs
+      (setq rows
+            (cl-remove-if-not
+             (lambda (row)
+               (let ((file (cadr row)))
+                 (seq-some
+                  (lambda (dir)
+                    (string-prefix-p
+                     (file-name-as-directory (file-truename dir))
+                     (file-truename file)))
+                  dirs)))
+             rows)))
     (cond
      ((null rows)
       (user-error "No node with title “%s”" title))

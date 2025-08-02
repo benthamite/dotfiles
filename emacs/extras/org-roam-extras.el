@@ -397,7 +397,7 @@ Optionally, return such list only if its length is less than LIMIT."
 ;;;;; Link replacement
 
 ;;;###autoload
-(defun org-roam-extras-replace-star-links-with-id (dir &optional nocase)
+(defun org-roam-extras-replace-star-links-with-id (dir &optional nocase dirs)
   "Walk through every *.org file inside DIR and turn links of the form
  
      [[*Title][Description]]
@@ -415,11 +415,11 @@ substitutions, and saves the buffer when something changed."
   (interactive "DDirectory with Org files: \nP")
   (dolist (file (directory-files dir t "\\.org\\'"))
     (message "Processing %s" file)
-    (when (org-roam-extras--replace-star-links-with-id-in-file file nocase)
+    (when (org-roam-extras--replace-star-links-with-id-in-file file nocase dirs)
       (message "Updated %s" file))))
 
 ;;;###autoload
-(defun org-roam-extras--replace-star-links-with-id-in-file (file &optional nocase)
+(defun org-roam-extras--replace-star-links-with-id-in-file (file &optional nocase dirs)
   "Replace [[*Title][Desc]] links with [[id:UUID][Desc]] in FILE.
 Return non-nil when FILE was modified.  When NOCASE is non-nil the title match
 is case-insensitive."
@@ -435,7 +435,7 @@ is case-insensitive."
                  (desc  (match-string-no-properties 2))
                  ;; Ask org-roam for the ID, ignore errors (no or >1 match)
                  (id (ignore-errors
-                       (org-roam-extras-get-id-of-title title nocase))))
+                       (org-roam-extras-get-id-of-title title nocase dirs))))
             (when id
               (setq changed t)
               (replace-match (format "[[id:%s][%s]]" id desc) t t))))

@@ -438,7 +438,18 @@ is case-insensitive."
                        (org-roam-extras-get-id-of-title title nocase dirs))))
             (when id
               (setq changed t)
-              (replace-match (format "[[id:%s][%s]]" id desc) t t))))
+              (let ((replacement (format "[[id:%s][%s]]" id desc)))
+                (condition-case err
+                    (replace-match replacement t t)
+                  (args-out-of-range
+                   ;; Fallback when match data becomes inconsistent after earlier
+                   ;; substitutions within the same buffer.  Delete the original
+                   ;; link manually and insert the replacement to keep going.
+                   (let ((beg (match-beginning 0))
+                         (end (match-end 0)))
+                     (delete-region beg end)
+                     (goto-char beg)
+                     (insert replacement))))))))
         (when changed
           (save-buffer))
         changed))))
@@ -461,6 +472,8 @@ satisfies these criteria."
                 title)))
     ;; Restrict to rows whose file is under one of DIRS, if given
     (when dirs
+      ;; Accept a single directory string as well as a list.
+      (setq dirs (if (listp dirs) dirs (list dirs)))
       (setq rows
             (cl-remove-if-not
              (lambda (row)

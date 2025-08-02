@@ -31,6 +31,7 @@
 (require 'el-patch)
 (require 'org-extras)
 (require 'org-roam)
+(require 'org-element)
 (require 'cl-lib)
 (require 'seq)
 (require 'paths)
@@ -426,45 +427,47 @@ is case-insensitive."
   (with-current-buffer (find-file-noselect file)
     (save-excursion
       (widen)
-      ;; Scan the buffer from end to beginning, replacing links on the fly.
-      ;; Doing the edits in-place while moving backwards eliminates the
-      ;; positional-drift problems that showed up with earlier approaches.
-      (goto-char (point-max))
-      (let ((case-fold-search nocase)
-            (changed nil))
-        (while (re-search-backward
-                "\\[\\[\\*\\([^][[:cntrl:]]+?\\)\\]\\[\\([^][[:cntrl:]]*?\\)\\]\\]" nil t)
-          ;; Skip matches inside a property drawer.
-          (unless (org-roam-extras--point-in-property-drawer-p)
-            (let* ((title (match-string-no-properties 1))
-                   (desc  (match-string-no-properties 2))
-                   (id (ignore-errors
-                         (org-roam-extras-get-id-of-title title nocase dirs))))
-              (when id
-                (setq changed t)
-                (let* ((beg (match-beginning 0))
-                       (end (match-end 0))
-                       (replacement (format "[[id:%s][%s]]" id desc)))
-                  ;; Replace manually to keep match data consistent.
-                  (goto-char beg)
-                  (delete-region beg end)
-                  (insert replacement))))))
+      ;; Use org-element to robustly locate internal star links and perform
+      ;; replacements.  This avoids the positional drift and malformed edits
+      ;; seen with ad-hoc regex scans.
+      (let* ((parse-tree (org-element-parse-buffer))
+             (matches '())
+             (changed nil)
+             (case-fold-search nocase))
+        ;; Collect every [[*Title][Desc]] link together with its bounds.
+        (org-element-map parse-tree 'link
+          (lambda (lnk)
+            (let* ((type (org-element-property :type lnk))
+                   (path (org-element-property :path lnk)))
+              (when (and (or (null type) (string= type "fuzzy"))
+                         (string-prefix-p "*" path))
+                (let* ((title (substring path 1))      ; drop leading “*”
+                       (desc  (if-let ((cb (org-element-property :contents-begin lnk)))
+                                   (string-trim
+                                    (buffer-substring-no-properties
+                                     cb (org-element-property :contents-end lnk)))
+                                 title))
+                       (id    (ignore-errors
+                                (org-roam-extras-get-id-of-title title nocase dirs))))
+                  (when id
+                    (push (list (org-element-property :begin lnk)
+                                (org-element-property :end   lnk)
+                                (format "[[id:%s][%s]]" id desc))
+                          matches)))))))
+        ;; Perform the edits from the end of the buffer forward so recorded
+        ;; positions remain valid.
+        (dolist (m (sort matches (lambda (a b) (> (car a) (car b)))))
+          (let ((beg (nth 0 m))
+                (end (nth 1 m))
+                (replacement (nth 2 m)))
+            (setq changed t)
+            (goto-char beg)
+            (delete-region beg end)
+            (insert replacement)))
         (when changed
           (save-buffer))
         changed))))
 
-(defun org-roam-extras--point-in-property-drawer-p ()
-  "Return non-nil if point is inside an Org property drawer.
-The check looks for the closest preceding “:PROPERTIES:” line and the
-corresponding “:END:” line that follows it, and verifies POS lies
-between them."
-  (save-excursion
-    (let ((pos (point)))
-      (when (re-search-backward "^\\s-*:\\(PROPERTIES\\):\\s-*$" nil t)
-        (let ((start (match-beginning 0)))
-          (when (re-search-forward "^\\s-*:END:\\s-*$" nil t)
-            (let ((end (match-end 0)))
-              (and (<= start pos) (< pos end)))))))))
 
 ;;;###autoload
 (defun org-roam-extras-get-id-of-title (title &optional nocase dirs)

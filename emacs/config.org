@@ -8396,16 +8396,18 @@ This package evolved out of gptel-extras.
   (when (string= (system-name) "Pablos-MacBook-Pro.local")
     (setq mcp-hub-servers
           (append mcp-hub-servers
-                  `(("github-benthamite-owner-benthamite" .
+                  `(("anki" . (:command "npx"
+					:args ("--yes" "anki-mcp-server")))
+		    ("github-benthamite-owner-benthamite" .
                      (:command "npx"
-                               :args ("-y" "@modelcontextprotocol/server-github")
-                               :env (:GITHUB_PERSONAL_ACCESS_TOKEN
+			       :args ("-y" "@modelcontextprotocol/server-github")
+			       :env (:GITHUB_PERSONAL_ACCESS_TOKEN
                                      ,(auth-source-pass-get "github-mcp-owner-benthamite"
                                                             (concat "chrome/github.com/benthamite")))))
                     ("github-benthamite-owner-tlon-team" .
                      (:command "npx"
-                               :args ("-y" "@modelcontextprotocol/server-github")
-                               :env (:GITHUB_PERSONAL_ACCESS_TOKEN
+			       :args ("-y" "@modelcontextprotocol/server-github")
+			       :env (:GITHUB_PERSONAL_ACCESS_TOKEN
                                      ,(auth-source-pass-get "github-mcp-owner-tlon-team"
                                                             (concat "chrome/github.com/benthamite")))))
 		    ("emacs-mcp-server"

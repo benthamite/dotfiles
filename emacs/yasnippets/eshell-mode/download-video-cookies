@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: download-video-cookies
+# key: dvc
+# contributor: Pablo Stafforini
+# --
+yt-dlp $1  --cookies-from-browser chrome --cookies cookies.txt

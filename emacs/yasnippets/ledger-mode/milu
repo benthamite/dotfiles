@@ -4,7 +4,7 @@
 # contributor: Pablo Stafforini
 # --
 `(format-time-string "%Y-%m-%d")` Milu
-    Expenses:Housing:Maid                  16$1,500.00 ARS ; maid
+    Expenses:Housing:Maid                  18$1,000.00 ARS ; maid
     Assets:Mercado Pago
 
 $0

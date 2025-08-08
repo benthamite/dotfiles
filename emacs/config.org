@@ -378,6 +378,7 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#codel][codel]]
   - [[#aidermacs][aidermacs]]
   - [[#aidermacs-extras][aidermacs-extras]]
+  - [[#ob-aider][ob-aider]]
   - [[#semext][semext]]
   - [[#mcp][mcp]]
   - [[#dall-e-shell][dall-e-shell]]
@@ -8303,6 +8304,25 @@ This package evolved out of gptel-extras.
 
   :bind
   (("H-s-." . aidermacs-extras-run-in-current-dir)))
+#+end_src
+
+** ob-aider
+:PROPERTIES:
+:ID:       649ADA70-0137-41F4-8C75-0851D9313AE3
+:END:
+
+/[[https://github.com/localredhead/ob-aider.el][ob-aider]] is an Org Babel library for sending prompts to an already running Aider.el or Aidermacs buffer directly from Org mode source blocks./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package ob-aider
+  :ensure (:host github
+		 :repo "localredhead/ob-aider.el")
+  :after org
+  :config
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   (append org-babel-load-languages
+           '((aider . t)))))
 #+end_src
 
 ** semext

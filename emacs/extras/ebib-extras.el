@@ -1320,7 +1320,7 @@ file."
   (let ((now (current-time))
         (last-reload (gethash db-file ebib-extras-last-reload-times)))
     (when (or (not last-reload)
-              (> (time-to-seconds (time-subtract now last-reload)) 5))
+              (> (time-to-seconds (time-subtract now last-reload)) 10))
       (puthash db-file now ebib-extras-last-reload-times)
       (ebib-extras-reload-database-no-confirm db))))
 

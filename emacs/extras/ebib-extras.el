@@ -658,22 +658,23 @@ KEY is an optional BibTeX key string, passed interactively as nil."
   (interactive (list nil))
   (let ((target-key (or key (ebib--get-key-at-point))))
     ;; Use target-key when getting fields
-    (when-let* ((id (or (ebib-extras-get-isbn target-key)
-			(let ((type (ebib-extras-get-field "=type=" target-key)))
-			  (and (member type ebib-extras-book-like-entry-types)
-			       (ebib-extras-get-field "title" target-key))))))
+    (when-let* ((id (read-string "Search string: "
+				 (or (ebib-extras-get-isbn target-key)
+				     (let ((type (ebib-extras-get-field "=type=" target-key)))
+				       (and (member type ebib-extras-book-like-entry-types)
+					    (ebib-extras-get-field "title" target-key)))))))
       ;; Use a hook to capture the key and call attach-file when download finishes.
       ;; This hook (`annas-archive-post-download-hook') receives (url path) if
       ;; downloaded via eww, or just (url) if downloaded externally.
       ;; Use cl-labels to define a function that can refer to itself for removal.
       (cl-labels ((attach-and-remove-hook (url &optional path)
-                   (if path
-                       (progn
-                         (message "Annas Archive download finished for %s, attaching file %s" target-key path)
-                         (ebib-extras-attach-file path target-key))
-                     (message "Annas Archive download initiated externally for %s (URL: %s). Attach file manually." target-key url))
-                   ;; Remove this specific function instance from the hook after it runs.
-                   (remove-hook 'annas-archive-post-download-hook #'attach-and-remove-hook)))
+                    (if path
+			(progn
+                          (message "Annas Archive download finished for %s, attaching file %s" target-key path)
+                          (ebib-extras-attach-file path target-key))
+                      (message "Annas Archive download initiated externally for %s (URL: %s). Attach file manually." target-key url))
+                    ;; Remove this specific function instance from the hook after it runs.
+                    (remove-hook 'annas-archive-post-download-hook #'attach-and-remove-hook)))
         ;; Use the actual hook name from annas-archive.el
         ;; Add hook globally (nil) instead of locally (t), append=nil (add to front)
         (add-hook 'annas-archive-post-download-hook #'attach-and-remove-hook nil nil)

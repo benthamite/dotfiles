@@ -86,15 +86,21 @@ If PKG is nil, prompt for it."
   (let (on-update-finish)
     (setq on-update-finish
           (lambda ()
-            (let ((pkg-data (elpaca-get pkg)))
-              (when (and pkg-data (eq (elpaca--status pkg-data) 'finished))
-                ;; Remove the callback before reloading.
-                (remove-hook 'elpaca--post-queues-hook on-update-finish)
-                (elpaca-extras-reload pkg)))))
-    ;; Install that callback into elpaca’s post–queues hook.
+            (elpaca-extras--update-finish-callback pkg on-update-finish)))
+    ;; Install that callback into elpaca's post–queues hook.
     (add-hook 'elpaca--post-queues-hook on-update-finish)
     ;; Trigger the update immediately.
     (elpaca-update pkg t)))
+
+(defun elpaca-extras--update-finish-callback (pkg callback)
+  "Helper function to handle package update completion.
+PKG is the package that was updated, CALLBACK is the function to remove from
+hooks."
+  (let ((pkg-data (elpaca-get pkg)))
+    (when (and pkg-data (eq (elpaca--status pkg-data) 'finished))
+      ;; Remove the callback before reloading.
+      (remove-hook 'elpaca--post-queues-hook callback)
+      (elpaca-extras-reload pkg))))
 
 (provide 'elpaca-extras)
 ;;; elpaca-extras.el ends here

@@ -87,7 +87,7 @@ If PKG is nil, prompt for it."
     (setq on-update-finish
           (lambda ()
             (elpaca-extras--update-finish-callback pkg on-update-finish)))
-    ;; Install that callback into elpaca's post–queues hook.
+    ;; Run the callback after Elpaca finalises its queues.
     (add-hook 'elpaca--post-queues-hook on-update-finish)
     ;; Trigger the update immediately.
     (elpaca-update pkg t)))

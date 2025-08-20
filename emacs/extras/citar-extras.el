@@ -102,7 +102,7 @@
 
 (declare-function ebib-extras-get-file-of-key "bibtex-extras")
 (defun citar-extras-goto-bibtex-entry (citekey)
-  "Goto the bibliographic entry associated with the CITEKEY in the bibtex file."
+  "Go to the bibliographic entry associated with the CITEKEY in the bibtex file."
   (interactive (list (citar-select-ref)))
   (if-let* ((file (ebib-extras-get-file-of-key citekey)))
       (progn

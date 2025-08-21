@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: watched-film
+# key: wf
+# contributor: Pablo Stafforini
+# --
+- Watched it at [[id:DB5EE625-66C1-4CFE-825B-586A71DD2996][Piedras 1700]] on `(org-extras-time-stamp-inactive-current-date)`.

@@ -7800,6 +7800,7 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package hl-todo
   :ensure (:build (:not elpaca--check-version))
+  :defer 30
   :config
   (setopt hl-todo-keyword-faces
 	  (append '(("WAITING" . "blue")

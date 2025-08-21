@@ -1,14 +1,21 @@
+### models (uncomment as appropriate)
+### see https://aider.chat/docs/leaderboards/
+
 # model: anthropic/claude-sonnet-4-20250514
 # edit-format: diff-fenced
+
 # model: gemini/gemini-2.5-flash-preview-05-20
+
 # model: gemini
 # edit-format: diff-fenced
 # weak-model: flash
 # thinking-tokens: 32k
 # check-model-accepts-settings: false
-# aider --model o3 --reasoning-effort high
+
 model: o3
-reasoning-effort: high
+# reasoning-effort: high
+
+### other settings
 commit-prompt: |
   Generate a concise commit message following these rules:
   - If the current project is `dotfiles` and the file(s) being committed are in `emacs/extras` or `emacs/extras/doc` (relative to that project), proceed as follows: (1) Begin with the name of the file being modified, sans its extension. For example, if the file is `emacs/extras/files-extras.el`, use `files-extras`. (2) Continue with ": " followed by a brief description of the change. The word after the colon should be in lowercase. For example, if you are refactoring a function in `emacs/extras/files-extras.el`, your commit message should look like this: `files-extras: <succinct description of the refactoring>`.

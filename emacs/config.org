@@ -374,6 +374,7 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#gptel-plus][gptel-plus]]
   - [[#gptel-extras][gptel-extras]]
   - [[#gptel-quick][gptel-quick]]
+  - [[#ragmacs][ragmacs]]
   - [[#llm-tool-collection][llm-tool-collection]]
   - [[#codel][codel]]
   - [[#aidermacs][aidermacs]]
@@ -8226,6 +8227,20 @@ This package evolved out of gptel-extras.
   :ensure (:host github :repo "karthink/gptel-quick")
   :bind
   ("H-s-u" . gptel-quick))
+#+end_src
+
+** ragmacs
+:PROPERTIES:
+:ID:       73A214D0-E75C-438A-B9BC-5D69EE04B7E8
+:END:
+
+/[[https://github.com/positron-solutions/ragmacs][ragmacs]] is a collection of gptel tools for querying Emacs./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package ragmacs
+  :ensure (:host github
+		 :repo "positron-solutions/ragmacs")
+  :defer t)
 #+end_src
 
 ** llm-tool-collection

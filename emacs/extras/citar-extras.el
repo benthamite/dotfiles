@@ -112,12 +112,26 @@
         (re-search-forward (format "@.*?{%s" citekey)))
     (user-error "No entry found for %s" citekey)))
 
+;;;;; Cache management
+
 ;;;###autoload
-(defun citar-extras-update-bibliographies ()
-  "Update the bibliographies in the cache."
+(defun citar-extras-refresh-bibliography (file &optional force)
+  "Refresh the Citar cache for bibliography FILE.
+FILE is the path to a bibliography file.  When FORCE is non-nil,
+the cache is rebuilt even if Citar thinks it is current.
+
+Interactively, prompt for FILE."
+  (interactive "fBibliography file: ")
+  (citar-cache--get-bibliography (file-truename file) force))
+
+;;;###autoload
+(defun citar-extras-refresh-all-bibliographies (&optional force)
+  "Refresh the Citar cache for all bibliography files.
+When FORCE is non-nil, the cache is rebuilt even if Citar thinks it is current."
+  (interactive "P")
   (when-let* ((bibs (citar--bibliographies)))
     (dolist (bib bibs)
-      (citar-cache--update-bibliography bib))))
+      (citar-extras-refresh-bibliography bib force))))
 
 (provide 'citar-extras)
 ;;; citar-extras.el ends here

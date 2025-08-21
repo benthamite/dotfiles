@@ -7912,6 +7912,24 @@ CLOCK: [2022-06-19 Sun 07:14]--[2022-06-19 Sun 07:31] =>  0:17
             (not (string= "" oneline))
             (concat "  |  " (propertize oneline 'face 'italic))))))
 
+  ;; reddit.com/r/emacs/comments/1l9y7de/showing_org_mode_link_at_point_in_echo_area/
+  ;; this is natively supported in Emacs 31
+  (defun org-display-link-info-at-point ()
+    "Display the link info in the echo area when the cursor is on an Org mode link."
+    (when-let* ((is-face-at-point 'org-link)
+                (link-info (get-text-property (point) 'help-echo)))
+      ;; This will show the link in the echo area without it being logged in
+      ;; the Messages buffer.
+      (let ((message-log-max nil)) (message "%s" link-info))))
+  
+  (dolist (h '(org-mode-hook org-agenda-mode-hook))
+    (add-hook h (lambda () (add-hook 'post-command-hook #'org-display-link-info-at-point nil 'local))))
+
+  (defun is-face-at-point (face)
+    "Returns non-nil if given FACE is applied at text at the current point."
+    (let ((face-at-point (get-text-property (point) 'face)))
+      (or (eq face-at-point face) (and (listp face-at-point) (memq face face-at-point)))))
+
   (global-eldoc-mode))
 #+end_src
 

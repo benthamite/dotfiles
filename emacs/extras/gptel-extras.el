@@ -65,6 +65,14 @@ changes."
   :type 'boolean
   :group 'gptel-extras)
 
+;;;;; mu4e
+
+(defcustom gptel-extras-mu4e-draft-reply-prompt
+  (format "Attached is an email thread. Please draft an appropriate message on my behalf (my name is %s) based on it. If you see a partial draft in the attached buffer, it means I already started it myself, so I want you to finish it. This draft may or may not contain additional instructions for you to follow. Include only the body of the draft reply, skipping the subject and headers. Do not include my name at the end, since a signature is always automatically appended." user-full-name)
+  "Prompt to use for drafting a reply to the current message."
+  :type 'string
+  :group 'gptel-extras)
+
 ;;;;; Misc
 
 (defcustom gptel-extras-gemini-mullvad-disconnect-after 1
@@ -942,12 +950,33 @@ argument."
  :name "add_bib_entry"
  :description "Adds a bibliographic entry for a URL, ISBN, or DOI to a BibTeX file."
  :args (list '(:name "identifier"
-               :type string
-               :description "The URL, ISBN, or DOI of the item to add.")
+		     :type string
+		     :description "The URL, ISBN, or DOI of the item to add.")
              '(:name "bibfile"
-               :type string
-               :description "The path to the BibTeX file to add the entry to."))
+		     :type string
+		     :description "The path to the BibTeX file to add the entry to."))
  :category "bibtex")
+
+;;;;; mu4e
+
+(declare-function org-msg-extras-begin-compose "org-msg-extras")
+;;;###autoload
+(defun gptel-extras-mu4e-draft-reply (&optional edit-prompt)
+  "Draft a reply to the current message and insert it at point.
+Use `gptel-extras-mu4e-draft-reply-prompt' as the prompt, If EDIT-PROMPT is
+non-nil, or the command is called with a prefix argument, allow the user to edit
+this prompt."
+  (interactive "P")
+  (unless (bound-and-true-p mu4e-compose-parent-message)
+    (user-error "You do not currently appear to be replying to a message"))
+  (gptel-extras-warn-when-context)
+  (gptel-extras-add-buffer)
+  (let ((prompt (if edit-prompt
+		    (read-string "Prompt: " gptel-extras-mu4e-draft-reply-prompt)
+		  gptel-extras-mu4e-draft-reply-prompt)))
+    (gptel-request prompt
+      :transforms (cons 'gptel--transform-add-context gptel-prompt-transform-functions))
+    (gptel-context-remove-all)))
 
 ;;;;; Misc
 
@@ -1038,6 +1067,20 @@ won't work because it needs the function to be selected."
   "Throw an error unless `gptel-mode' is non-nil in the current buffer."
   (unless gptel-mode
     (user-error "Not in a `gptel' buffer")))
+
+;;;###autoload
+(defun gptel-extras-add-buffer (&optional buffer)
+  "Add entire BUFFER to gptel context.
+When called interactively, add the current buffer.  If BUFFER is
+non-nil, it should be a buffer object whose whole contents will be
+added as a single context chunk."
+  (interactive)
+  (let ((buf (or buffer (current-buffer))))
+    (gptel-context--add-region buf
+                               (with-current-buffer buf (point-min))
+                               (with-current-buffer buf (point-max))
+                               t)
+    (message "Buffer '%s' added as context." (buffer-name buf))))
 
 ;;;###autoload
 (defun gptel-extras-warn-when-context ()

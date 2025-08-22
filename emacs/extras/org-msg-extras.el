@@ -86,6 +86,7 @@
   (browse-url "https://app.grammarly.com/ddocs/2264307164"))
 
 (declare-function simple-extras-visible-mode-enhanced "simple-extras")
+;;;###autoload
 (defun org-msg-extras-begin-compose ()
   "Move point to start composing an email.
 This is a slightly tweaked version of `org-msg-goto-body'."

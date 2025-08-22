@@ -236,6 +236,22 @@ otherwise.."
   (interactive)
   (browse-url "https://mail.google.com/mail/u/0/#inbox?compose=new"))
 
+;;;;;; Message files
+
+(defun mu4e-extras-get-message-file ()
+  "Return the path to the message at point.
+If no message is found, return nil."
+  (when-let* ((message (condition-case nil
+			   (or mu4e-compose-parent-message (mu4e-message-at-point))
+			 (error nil))))
+    (mu4e-message-field message :path)))
+
+(defun mu4e-extras-open-message-file ()
+  "Open the current message's file in Dired."
+  (interactive)
+  (when-let* ((path (mu4e-extras-get-message-file)))
+    (dired-jump nil path)))
+
 ;;;;;; Misc
 
 ;;;###autoload

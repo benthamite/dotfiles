@@ -537,69 +537,81 @@ Attempt to fetch the abstract using `tlon-get-abstract-with-or-without-ai'."
 (declare-function bibtex-extras-get-key "bibex-extras")
 (declare-function tlon-get-abstract-with-or-without-ai "tlon-ai")
 ;;;###autoload
-(defun ebib-extras-attach-file (&optional file key open)
-  "Attach FILE to the BibTeX entry specified by KEY.
-If FILE is a string, attach that file. If FILE is the symbol `most-recent' (or
-any symbol), attach the newest file from `paths-dir-downloads'. If FILE is nil,
-prompt the user for a file to attach.
-KEY defaults to the key of the entry at point. The key must be valid.
-The file is renamed to match KEY, moved to the appropriate library directory,
-and its path is added to the entry's \"file\" field.
-If OPEN is non-nil and the attached file is a PDF, it is opened.
-Interactive use:
-  - With no prefix: prompts for file, uses current entry's key.
-  - With \\[universal-argument] prefix: FILE is `most-recent', uses current
-    entry's key.
-  - To specify KEY or OPEN programmatically, call non-interactively.
-;; TODO: Handle abstract setting, PDF metadata, and OCR for the target KEY,
-;; especially in asynchronous contexts or when KEY is not the current entry."
-  (interactive (list (if current-prefix-arg 'most-recent nil) nil nil))
-  (let ((target-key (or key (ebib--get-key-at-point))))
-    (unless target-key
-      (user-error "No BibTeX key provided or found at point for attaching file"))
-    (ebib-extras-check-valid-key target-key)
-    (let* ((file-to-attach
-	    (cond ((not file) ; Prompting interactively
-		   (let ((initial-folder
-			  (completing-read "Select folder: "
-					   (list
-					    paths-dir-downloads
-					    paths-dir-pdf-library
-					    paths-dir-html-library
-					    paths-dir-media-library))))
-		     (read-file-name
-		      "File to attach: "
-		      (if (catch 'found ; Default to key-based file if it exists
-			    (dolist (extension ebib-extras-valid-file-extensions)
-			      (when (file-regular-p (file-name-concat
-						     initial-folder
-						     (file-name-with-extension target-key extension)))
-				(throw 'found extension))))
-			  (file-name-concat initial-folder target-key)
-			initial-folder))))
-		  ((and file (symbolp file)) ; `most-recent' or any symbol
-		   (files-extras-newest-file paths-dir-downloads))
-		  (t file))) ; FILE is a string
-	   (extension (file-name-extension file-to-attach))
-	   (destination-folder (ebib-extras--extension-directories extension))
-	   (file-name (ebib-extras--rename-and-abbreviate-file
-		       destination-folder target-key extension)))
-      (when (or (not (file-regular-p file-name))
-		(y-or-n-p (format "File %s exists. Overwrite? "
-				  (file-name-nondirectory file-name))))
-	(rename-file file-to-attach file-name t))
-      (ebib-extras--update-file-field-contents target-key file-name)
-      (ebib-extras-set-abstract target-key)
-      (when (and (string= (file-name-extension file-name) "pdf") open)
-	(ebib-extras-set-pdf-metadata target-key)
-	(ebib-extras-ocr-pdf target-key)
-	(ebib-extras-open-pdf-file)))))
+(defun ebib-extras-attach-file (&optional file key postprocess)
+  "Attach FILE to BibTeX entry KEY and update the \"file\" field.
+
+When called interactively POSTPROCESS is non-nil so that, if the
+attached file is a PDF, metadata is written, OCR is attempted and
+the PDF is opened.  Programmatic callers can control this
+behaviour by the value of POSTPROCESS.
+
+FILE can be:
+
+  • a pathname string to attach  
+  • the symbol `most-recent' to attach the newest file in
+    `paths-dir-downloads'  
+  • nil, in which case the user is prompted for the file.
+
+KEY defaults to the entry at point.  The file is renamed to
+KEY.EXT, moved to the appropriate library directory and the
+\"file\" field is updated."
+  (interactive (list (if current-prefix-arg 'most-recent nil)
+                     nil
+                     t))
+  (let* ((key   (ebib-extras--af-resolve-key key))
+         (src   (ebib-extras--af-resolve-file file key))
+         (dest  (ebib-extras--af-install-file src key)))
+    (ebib-extras--update-file-field-contents key dest)
+    (ebib-extras-set-abstract key)
+    (when (and postprocess (string= (file-name-extension dest) "pdf"))
+      (ebib-extras--af-postprocess-pdf key))))
+
+;;;; helper functions for `ebib-extras-attach-file'
+
+(defun ebib-extras--af-resolve-key (key)
+  "Return a valid KEY, defaulting to the entry at point."
+  (let ((resolved (or key (ebib--get-key-at-point))))
+    (ebib-extras-check-valid-key resolved)
+    resolved))
+
+(defun ebib-extras--af-resolve-file (file key)
+  "Return the absolute path of FILE to attach for KEY."
+  (cond
+   ((and file (stringp file)) file)
+   ((and file (symbolp file)) (files-extras-newest-file paths-dir-downloads))
+   (t (ebib-extras--af-prompt-for-file key))))
+
+(defun ebib-extras--af-prompt-for-file (key)
+  "Prompt the user for a file, defaulting to one named after KEY."
+  (let* ((folders (list paths-dir-downloads
+                        paths-dir-pdf-library
+                        paths-dir-html-library
+                        paths-dir-media-library))
+         (initial (completing-read "Select folder: " folders nil t))
+         (default (file-name-concat initial key)))
+    (read-file-name "File to attach: " initial default)))
+
+(defun ebib-extras--af-install-file (src key)
+  "Move SRC into the appropriate library dir and return the new path."
+  (let* ((ext  (file-name-extension src))
+         (dest-dir (ebib-extras--extension-directories ext))
+         (dest (ebib-extras--rename-and-abbreviate-file dest-dir key ext)))
+    (when (or (not (file-regular-p dest))
+              (y-or-n-p (format "File %s exists. Overwrite? "
+                                (file-name-nondirectory dest))))
+      (rename-file src dest t))
+    dest))
+
+(defun ebib-extras--af-postprocess-pdf (key)
+  "Write metadata, OCR and open the PDF attached to KEY."
+  (ebib-extras-set-pdf-metadata key)
+  (ebib-extras-ocr-pdf key)
+  (ebib-extras-open-pdf-file))
 
 (defun ebib-extras-attach-most-recent-file ()
-  "Attach the most recent file from `paths-dir-downloads' to the current entry.
-This is a convenience wrapper around `ebib-extras-attach-file'."
+  "Attach the most recent download to the current entry and post-process it."
   (interactive)
-  (ebib-extras-attach-file 'most-recent))
+  (ebib-extras-attach-file 'most-recent nil t))
 
 ;;;;; File attachment
 

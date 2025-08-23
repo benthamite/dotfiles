@@ -1,0 +1,44 @@
+layout:
+  qmk_keyboard: corne_rotated
+  layout_name: LAYOUT_split_3x5_3
+layers:
+  DEF:
+    - [{h: apps, t: Q}, W, E, R, T, {h: mouse/screenshots, t: Y}, U, I, O, {h: diacrit, t: P}]
+    - [A, S, D, {h: chars, t: F}, G, H, {h: del, t: J}, {h: site, t: K}, L, {h: sym, t: ";"}]
+    - [{h: nav, t: Z}, X, C, {h: numbers, t: V}, {h: media/windows, t: B}, N, {h: math, t: M}, {h: transp, t: ","}, {h: key manipulation, t: .}, /]
+    - {h: l-opt,   t: Esc}
+    - {h: l-shift,  t: Enter}
+    - {h: l-command,   t: togle-win}
+    - {h: l-ctrl,   t: toggle-app}
+    - {h: mod, t: Space}
+    - {h: l-option,   t: Tab}
+  SYM:
+    - ["!", "@", "#", "$", "%", "\\", "7", "8", "9", ","]
+    - ["+", "=", "_", "-", "^", "0", "4", "5", "6", "."]
+    - [null, null, "¿", "*", "&", ";", "1", "2", "3", "/"]
+    - {t: Gui}
+    - Space
+    - {t: Bspace, h: FUN}
+    - {type: held}
+    - Shift
+    - {t: Alt}
+  NAV:
+    - ["Win Close", "Tab Prev", "Tab Next", "Tab Close", "Vol Up", Home, "Page Down", "Page Up", End, null]
+    - [Ctrl, Gui, Alt, {h: Shift, t: Tab}, "Vol Down", Left, Down, Up, Right, Calc]
+    - [null, "Win Prev", "Win Next", "Paste", "Play Pause", Insert, Delete, Prev, Next, null]
+    - {t: Gui}
+    - Ctrl
+    - {type: held}
+    - {t: Space, h: FUN}
+    - Shift
+    - {t: Alt}
+  FUN:
+    - [F1, F2, F3, F4, F5, "Caps Lock", null, DEF, CLM, GME]
+    - [F6, F7, F8, F9, F10, BT1, BT2, BT3, BT4, BT5]
+    - [null, "Desk Prev", "Desk Next", F11, F12, "Out USB", "Out BLE", "Print Scrn", "Pause Break", "BT CLR"]
+    - {t: Boot}
+    - Reset
+    - {type: held}
+    - {type: held}
+    - Reset
+    - {t: Boot}

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: drop-all
+# key: da
+# contributor: Pablo Stafforini
+# --
+/drop *

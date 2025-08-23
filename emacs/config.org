@@ -8161,6 +8161,10 @@ This package evolved out of gptel-extras.
   :init
   (advice-add 'gptel :after #'gptel-extras-save-buffer)
 
+  (with-eval-after-load 'org-msg
+    (bind-keys :map org-msg-edit-mode-map
+	       ("s-r" . gptel-extras-mu4e-draft-reply)))
+  
   :custom
   ;; since these models take a while, we trigger a growl-like alert when they
   ;; finish, in case we want to do something else in the meantime

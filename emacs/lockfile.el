@@ -97,7 +97,7 @@
 		(:source nil :protocol https :inherit t :depth treeless :host
 			 github :repo "benthamite/annas-archive" :package
 			 "annas-archive" :ref
-			 "df4707c11877dc57b3c0d5d2a4c7db39bab7fb58"))
+			 "32f2b73c65ab2002999cfe265b4995efb4b2f79e"))
  (applescript-mode :source "elpaca-menu-lock-file" :recipe
 		   (:package "applescript-mode" :fetcher github :repo
 			     "emacsorphanage/applescript-mode" :files

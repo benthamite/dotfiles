@@ -8472,11 +8472,12 @@ This package evolved out of gptel-extras.
 			       :env (:GITHUB_PERSONAL_ACCESS_TOKEN
 				     ,(auth-source-pass-get "github-mcp-owner-tlon-team"
 							    (concat "chrome/github.com/benthamite")))))
-		    ("emacs-mcp-server"
-		     . (:command "emacs-mcp-server"  ; Now it's on PATH
-				 :env (:OPENAI_API_KEY
-				       ,(auth-source-pass-get "gptel"
-							      (concat "tlon/core/openai.com/" tlon-email-shared)))))))))
+		    ;; ("emacs-mcp-server"
+		    ;; . (:command "emacs-mcp-server"  ; Now it's on PATH
+		    ;; :env (:OPENAI_API_KEY
+		    ;; ,(auth-source-pass-get "gptel"
+		    ;; (concat "tlon/core/openai.com/" tlon-email-shared)))))
+		    ))))
 
   (when (simple-extras-connected-to-network-p "Pablo-mesh")
     (setq mcp-hub-servers

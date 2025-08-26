@@ -57,7 +57,7 @@ function mdfind() {
 }
 
 # mu alias
-alias muinit="cd ~; mu init --maildir=$HOME/Mail --my-address=$PERSONAL_EMAIL --my-address=$PERSONAL_GMAIL --my-address=$WORK_EMAIL --my-address=$UNI_EMAIL; mu index"
+alias muinit="cd ~; mu init --maildir=$HOME/Mail --personal-address=$PERSONAL_EMAIL --personal-address=$PERSONAL_GMAIL --personal-address=$WORK_EMAIL --personal-address=$UNI_EMAIL; mu index"
 
 # Emacs aliases
 alias emacsk="pkill -SIGUSR2 Emacs"

@@ -739,7 +739,9 @@ NAME and ARGS as in `use-package'."
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package elpaca-extras
   :ensure (:wait t)
-  :after use-package-extras)
+  :after use-package-extras
+  :custom
+  (elpaca-extras-write-lock-file-excluded '(tlon)))
 #+end_src
 
 * foundational

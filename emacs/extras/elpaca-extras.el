@@ -30,6 +30,16 @@
 
 (require 'elpaca)
 
+;;;; Variables
+
+(defgroup elpaca-extras ()
+  "Extensions for `elpaca'."
+  :group 'elpaca)
+
+(defcustom elpaca-extras-write-lock-file-excluded nil
+  "List of package identifiers that must never be written to a lock file."
+  :type '(repeat symbol))
+
 ;;;; Functions
 
 ;; github.com/progfolio/elpaca/issues/250
@@ -101,6 +111,24 @@ hooks."
       ;; Remove the callback before reloading.
       (remove-hook 'elpaca--post-queues-hook callback)
       (elpaca-extras-reload pkg))))
+
+;;;;; Lock file
+
+;;;###autoload
+(defun elpaca-extras-write-lock-file-excluding (path &optional elpacas)
+  "Write a lock file to PATH, excluding selected packages.
+The list of exclusions is defined in `elpaca-extras-write-lock-file-excluded'.
+PATH is the destination file.
+
+ELPACAS, when non-nil, should be a queue-like list as accepted by
+`elpaca-write-lock-file'.  When it is nil the current queue is used."
+  (interactive "FWrite lock-file to: ")
+  (let* ((elpacas (or elpacas (elpaca--queued)))
+         (filtered (cl-remove-if
+                    (lambda (cell)
+                      (memq (car cell) elpaca-extras-write-lock-file-excluded))
+                    elpacas)))
+    (elpaca-write-lock-file path filtered)))
 
 (provide 'elpaca-extras)
 ;;; elpaca-extras.el ends here

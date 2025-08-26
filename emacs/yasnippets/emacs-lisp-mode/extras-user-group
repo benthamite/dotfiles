@@ -5,4 +5,4 @@
 # --
 (defgroup $1-extras ()
   "Extensions for `$1'."
-  :group '$1-extras)
+  :group '$1)

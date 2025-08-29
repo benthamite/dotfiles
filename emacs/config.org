@@ -263,6 +263,7 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#marginalia][marginalia]]
   - [[#orderless][orderless]]
   - [[#orderless-extras][orderless-extras]]
+  - [[#affe][affe]]
   - [[#nerd-icons-completion][nerd-icons-completion]]
   - [[#ido][ido]]
   - [[#which-key][which-key]]
@@ -5707,6 +5708,30 @@ CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
                                  orderless-extras-initialism-dispatcher
                                  orderless-extras-prefixes-dispatcher
                                  orderless-extras-exclusion-dispatcher)))
+#+end_src
+
+** affe
+:PROPERTIES:
+:ID:       E66ADC13-2388-445D-B767-A972304485B5
+:END:
+
+/[[https://github.com/minad/affe][affe]] is an Asynchronous Fuzzy Finder for Emacs./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package affe
+  :demand t
+  :custom
+  ;; https://github.com/minad/affe?tab=readme-ov-file#installation-and-configuration
+  (affe-regexp-compiler #'affe-orderless-regexp-compiler)
+
+  :config
+  (defun affe-orderless-regexp-compiler (input _type _ignorecase)
+    (setq input (cdr (orderless-compile input)))
+    (cons input (apply-partially #'orderless--highlight input t)))
+
+  :bind
+  (("H-P" . affe-grep)
+   ("H-K" . affe-find)))
 #+end_src
 
 ** nerd-icons-completion

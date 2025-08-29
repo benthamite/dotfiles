@@ -655,12 +655,9 @@ Returns a success/failure message indicating whether edits were applied."
           (if edit-success
               (progn
                 (write-file target-file-name nil)
-                (kill-buffer (current-buffer))
                 (format "Successfully edited and saved %s (%d/%d edits applied)"
                         target-file-name applied-edits total-edits))
-            (progn
-              (kill-buffer (current-buffer))
-              (format "Failed to apply edits to %s. No matching strings found." target-file-name)))))
+            (format "Failed to apply edits to %s. No matching strings found." target-file-name))))
     (format "Failed to edit %s (invalid path or no edits provided)." file-path)))
 
 (defun gptel-extras-normalize-whitespace (string)
@@ -841,7 +838,6 @@ Each edit requires an old string to find (fuzzy matched) and a new string to rep
                (when stderr-buf
                  (with-current-buffer stderr-buf
                    (setq result-error (buffer-string)))))
-
              (if (= exit-status 0)
                  (format "Diff successfully applied to %s.\nPatch command options: %s\nPatch STDOUT:\n%s\nPatch STDERR:\n%s"
                          target-file effective-patch-options result-output result-error)
@@ -850,11 +846,7 @@ Each edit requires an old string to find (fuzzy matched) and a new string to rep
                (error "Failed to apply diff to %s (exit status %s).\nPatch command options: %s\nPatch STDOUT:\n%s\nPatch STDERR:\n%s"
                       target-file exit-status effective-patch-options result-output result-error)))
          ;; Cleanup clause of unwind-protect
-         (setq default-directory original-default-directory)
-         (let ((stdout-buf-obj (get-buffer out-buf-name))
-               (stderr-buf-obj (get-buffer err-buf-name)))
-           (when (buffer-live-p stdout-buf-obj) (kill-buffer stdout-buf-obj))
-           (when (buffer-live-p stderr-buf-obj) (kill-buffer stderr-buf-obj)))))))
+         (setq default-directory original-default-directory)))))
  :include t)
 
 ;;;;;;; replace_file_contents

@@ -95,10 +95,15 @@ This is a slightly tweaked version of `org-msg-goto-body'."
   (if org-msg-signature
       (when (search-forward org-msg-signature nil t)
 	(goto-char (match-beginning 0)))
-    (while (re-search-forward org-property-re nil t)
-      (forward-line))
+    (org-msg-extras-end-of-meta-data)
     (newline)
     (simple-extras-visible-mode-enhanced -1)))
+
+;;;###autoload
+(defun org-msg-extras-end-of-meta-data ()
+  "If point is on the meta data section, move it past it."
+  (while (re-search-forward org-property-re nil t)
+    (forward-line)))
 
 (provide 'org-msg-extras)
 ;;; org-msg-extras.el ends here

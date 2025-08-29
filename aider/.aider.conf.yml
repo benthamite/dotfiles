@@ -13,7 +13,7 @@
 # check-model-accepts-settings: false
 
 model: o3
-# reasoning-effort: high
+reasoning-effort: high
 
 ### other settings
 commit-prompt: |

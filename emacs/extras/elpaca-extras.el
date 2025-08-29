@@ -110,7 +110,8 @@ hooks."
     (when (and pkg-data (eq (elpaca--status pkg-data) 'finished))
       ;; Remove the callback before reloading.
       (remove-hook 'elpaca--post-queues-hook callback)
-      (elpaca-extras-reload pkg))))
+      (elpaca-extras-reload pkg))
+    (message "If the update fails:\n1. M-x find-library RET %S\n2. M-x magit-pull RET p (ensure repo is clean)\n3. M-x elpaca-extras-reload." pkg)))
 
 ;;;;; Lock file
 

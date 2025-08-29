@@ -959,7 +959,7 @@ argument."
 
 ;;;;; mu4e
 
-(declare-function org-msg-extras-begin-compose "org-msg-extras")
+(declare-function org-msg-extras-end-of-meta-data "org-msg-extras")
 ;;;###autoload
 (defun gptel-extras-mu4e-draft-reply (&optional edit-prompt)
   "Draft a reply to the current message and insert it at point.
@@ -971,12 +971,14 @@ this prompt."
     (user-error "You do not currently appear to be replying to a message"))
   (gptel-extras-warn-when-context)
   (gptel-extras-add-buffer)
-  (let ((prompt (if edit-prompt
-		    (read-string "Prompt: " gptel-extras-mu4e-draft-reply-prompt)
-		  gptel-extras-mu4e-draft-reply-prompt)))
-    (gptel-request prompt
-      :transforms (cons 'gptel--transform-add-context gptel-prompt-transform-functions))
-    (gptel-context-remove-all)))
+  (save-excursion
+    (org-msg-extras-end-of-meta-data)
+    (let ((prompt (if edit-prompt
+		      (read-string "Prompt: " gptel-extras-mu4e-draft-reply-prompt)
+		    gptel-extras-mu4e-draft-reply-prompt)))
+      (gptel-request prompt
+	:transforms (cons 'gptel--transform-add-context gptel-prompt-transform-functions))
+      (gptel-context-remove-all))))
 
 ;;;;; Misc
 

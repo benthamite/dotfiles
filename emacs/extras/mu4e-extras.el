@@ -252,6 +252,21 @@ If no message is found, return nil."
   (when-let* ((path (mu4e-extras-get-message-file)))
     (dired-jump nil path)))
 
+;;;;;; Gmail
+
+(defun mu4e-extras-open-gmail ()
+  "Open Gmail in a browser."
+  (interactive)
+  (browse-url "https://mail.google.com/mail/u/0/#inbox"))
+
+(defun mu4e-extras-view-in-gmail ()
+  "Open Gmail in a browser and view message at point in it."
+  (interactive)
+  (let* ((id (url-hexify-string
+	      (plist-get (mu4e-message-at-point) :message-id)))
+	 (url (concat "https://mail.google.com/mail/u/0/#search/rfc822msgid%3A" id)))
+    (browse-url url)))
+
 ;;;;;; Misc
 
 ;;;###autoload
@@ -280,14 +295,6 @@ If ARG is non-nil, do not refile the message after capturing it."
 	(unless arg
 	  (mu4e-extras-view-refile)))
     (user-error "Not in mu4e-view-mode")))
-
-(defun mu4e-extras-view-in-gmail ()
-  "Open Gmail in a browser and view message at point in it."
-  (interactive)
-  (let* ((id (url-hexify-string
-	      (plist-get (mu4e-message-at-point) :message-id)))
-	 (url (concat "https://mail.google.com/mail/u/0/#search/rfc822msgid%3A" id)))
-    (browse-url url)))
 
 ;; github.com/djcb/mu/issues/2198
 ;; djcbsoftware.nl/code/mu/mu4e/Retrieving-mail.html

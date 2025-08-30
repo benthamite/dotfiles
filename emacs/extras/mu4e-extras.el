@@ -254,17 +254,21 @@ If no message is found, return nil."
 
 ;;;;;; Gmail
 
+(defconst mu4e-extras-gmail-base
+  "https://mail.google.com/mail/u/0/"
+  "Base URL for Gmail.")
+
 (defun mu4e-extras-open-gmail ()
   "Open Gmail in a browser."
   (interactive)
-  (browse-url "https://mail.google.com/mail/u/0/#inbox"))
+  (browse-url (concat mu4e-extras-gmail-base "#inbox")))
 
 (defun mu4e-extras-view-in-gmail ()
   "Open Gmail in a browser and view message at point in it."
   (interactive)
   (let* ((id (url-hexify-string
 	      (plist-get (mu4e-message-at-point) :message-id)))
-	 (url (concat "https://mail.google.com/mail/u/0/#search/rfc822msgid%3A" id)))
+	 (url (concat mu4e-extras-gmail-base "#search/rfc822msgid%3A" id)))
     (browse-url url)))
 
 ;;;;;; Misc

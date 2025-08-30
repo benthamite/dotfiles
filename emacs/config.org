@@ -11873,7 +11873,8 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
         ("e" . mu4e-extras-headers-refile)
         ("E" . mu4e-extras-headers-mark-read-and-refile)
         ("v" . mu4e-extras-headers-move)
-        ("x" . mu4e-extras-mark-execute-all-no-confirm)
+        ("x" . mu4e-extras-open-gmail)
+        ("X" . mu4e-extras-mark-execute-all-no-confirm)
         :map mu4e-view-mode-map
         ("o" . mu4e-extras-view-org-capture)
         ("r" . mu4e-extras-compose-reply)

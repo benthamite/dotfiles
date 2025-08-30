@@ -266,8 +266,7 @@ If no message is found, return nil."
 (defun mu4e-extras-view-in-gmail ()
   "Open Gmail in a browser and view message at point in it."
   (interactive)
-  (let* ((id (url-hexify-string
-	      (plist-get (mu4e-message-at-point) :message-id)))
+  (let* ((id (url-hexify-string (plist-get (mu4e-message-at-point) :message-id)))
 	 (url (concat mu4e-extras-gmail-base "#search/rfc822msgid%3A" id)))
     (browse-url url)))
 

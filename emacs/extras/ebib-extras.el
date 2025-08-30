@@ -1432,7 +1432,8 @@ If applicable, open external website to set rating there as well."
                                      ebib--cur-db 'overwrite)
                (ebib-extras-update-entry-buffer ebib--cur-db)
                (browse-url (format bib-letterboxd-url slug))))))))
-    (ebib-set-field-value "rating" rating (ebib--get-key-at-point) ebib--cur-db 'overwrite)
+    (when rating
+      (ebib-set-field-value "rating" rating (ebib--get-key-at-point) ebib--cur-db 'overwrite))
     (ebib-extras-update-entry-buffer db)))
 
 ;; TODO: find way to do this without moving point
@@ -1443,12 +1444,22 @@ If applicable, open external website to set rating there as well."
   (ebib--set-modified t db t nil))
 
 (defun ebib-extras-choose-rating ()
-  "Prompt for a rating from 1 to 10 and return the choice."
-  (let* ((ratings '(?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9 ?0))
-	 (rating (char-to-string (read-char-choice "Rating (1–10): " ratings))))
-    (when (string= rating "0")
-      (setq rating "10"))
-    rating))
+  "Prompt for a rating from 1 to 10 and return it, or nil if skipped.
+The user can press RET with no input to leave the rating unchanged."
+  (let ((prompt "Rating (1–10, RET to skip): "))
+    (catch 'done
+      (while t
+        (let ((ch (read-char prompt)))
+          (cond
+           ;; digits 1–9 or 0 (=10)
+           ((member ch '(?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9 ?0))
+            (let ((rating (if (= ch ?0) "10" (char-to-string ch))))
+              (throw 'done rating)))
+           ;; RET / newline – skip
+           ((member ch '(?\r ?\n))
+            (throw 'done nil))
+           ;; anything else – warn and reprompt
+           (t (message "Invalid rating. Press 1–10 or RET to skip."))))))))
 
 (defun ebib-extras-no-translation-found ()
   "Log a note indicating that no translation for this work was found."

@@ -1628,33 +1628,53 @@ DIRECTION can be `prev' or `next'."
 
 (defun ebib-extras-set-pdf-metadata (&optional key)
   "Set the metadata of the PDF associated with KEY.
-If KEY is nil, use the entry at point."
+If KEY is nil, use the entry at point.
+
+This implementation uses `pdftk-java' (or `pdftk' if available)
+to update the Author and Title fields in-place."
   (interactive)
-  (unless (executable-find "exiftool")
-    (user-error "Please install `exiftool' (e.g. 'brew install exiftool'"))
-  (unless (derived-mode-p 'ebib-entry-mode 'bibtex-mode)
-    (user-error "Not in `ebib-entry-mode' or 'bibtex-mode'"))
-  (when-let* ((get-field (pcase major-mode
-			   ('ebib-entry-mode #'ebib-extras-get-field)
-			   ('bibtex-mode #'bibtex-extras-get-field)))
-	      (file (if key
-			(let ((files (bibtex-extras-get-entry-as-string key "file")))
-			  (ebib-extras-get-file-in-string files "pdf"))
-		      (ebib-extras-get-file "pdf")))
-	      (author (or (funcall get-field "author")
-			  (funcall get-field "editor"))))
-    (let* ((file-absolute (expand-file-name file))
-	   (author-list (ebib-extras-get-authors-list author))
-	   (author-string (ebib-extras-unbrace
-			   (ebib-extras-format-authors author-list ", " most-positive-fixnum)))
-	   (title (ebib-extras-unbrace (funcall get-field  "title")))
-	   (author-arg (format "-Author=\"%s\" " author-string))
-	   (title-arg (format "-Title=\"%s\" " title)))
-      (when (or author-arg title-arg)
-	(message (shell-command-to-string (concat "exiftool -overwrite_original "
-						  (when author-arg author-arg)
-						  (when title-arg title-arg)
-						  (shell-quote-argument file-absolute))))))))
+  (let ((pdftk-cmd (or (executable-find "pdftk")
+                       (executable-find "pdftk-java"))))
+    (unless pdftk-cmd
+      (user-error "Please install `pdftk-java` (e.g. 'brew install pdftk-java')"))
+    (unless (derived-mode-p 'ebib-entry-mode 'bibtex-mode)
+      (user-error "Not in `ebib-entry-mode' or 'bibtex-mode'"))
+    (when-let* ((get-field (pcase major-mode
+                             ('ebib-entry-mode #'ebib-extras-get-field)
+                             ('bibtex-mode   #'bibtex-extras-get-field)))
+                (file (if key
+                          (let ((files (bibtex-extras-get-entry-as-string key "file")))
+                            (ebib-extras-get-file-in-string files "pdf"))
+                        (ebib-extras-get-file "pdf")))
+                (author (or (funcall get-field "author")
+                            (funcall get-field "editor"))))
+      (let* ((file-absolute (expand-file-name file))
+             (author-list   (ebib-extras-get-authors-list author))
+             (author-string (ebib-extras-unbrace
+                             (ebib-extras-format-authors author-list ", " most-positive-fixnum)))
+             (title         (ebib-extras-unbrace (funcall get-field "title")))
+             (info-file     (make-temp-file "ebib-extras-pdftk-info"))
+             (output-file   (make-temp-file "ebib-extras-pdftk-output" nil ".pdf")))
+        ;; build the pdftk metadata file
+        (with-temp-file info-file
+          (when title
+            (insert "InfoBegin\nInfoKey: Title\nInfoValue: " title "\n"))
+          (when author-string
+            (insert "InfoBegin\nInfoKey: Author\nInfoValue: " author-string "\n"))
+          (insert "\n"))
+        ;; run pdftk and replace the original pdf
+        (let ((cmd (format "%s %s update_info_utf8 %s output %s"
+                           pdftk-cmd
+                           (shell-quote-argument file-absolute)
+                           (shell-quote-argument info-file)
+                           (shell-quote-argument output-file))))
+          (let ((exit-code (shell-command cmd)))
+            (if (zerop exit-code)
+                (progn
+                  (rename-file output-file file-absolute t)
+                  (delete-file info-file)
+                  (message "Updated PDF metadata using pdftk-java"))
+              (message "Failed to update PDF metadata using pdftk-java"))))))))
 
 (defun ebib-extras-get-authors-list (authors)
   "Split AUTHORS into a list of authors, reversing the first and last names.

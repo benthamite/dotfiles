@@ -683,7 +683,7 @@ KEY is an optional BibTeX key string, passed interactively as nil."
                     (if path
 			(progn
                           (message "Annas Archive download finished for %s, attaching file %s" target-key path)
-                          (ebib-extras-attach-file path target-key))
+                          (ebib-extras-attach-file path target-key t))
                       (message "Annas Archive download initiated externally for %s (URL: %s). Attach file manually." target-key url))
                     ;; Remove this specific function instance from the hook after it runs.
                     (remove-hook 'annas-archive-post-download-hook #'attach-and-remove-hook)))
@@ -1638,7 +1638,7 @@ If KEY is nil, use the entry at point."
 			   ('ebib-entry-mode #'ebib-extras-get-field)
 			   ('bibtex-mode #'bibtex-extras-get-field)))
 	      (file (if key
-			(let ((files (bibtex-extras-get-entry-as-string key "file" )))
+			(let ((files (bibtex-extras-get-entry-as-string key "file")))
 			  (ebib-extras-get-file-in-string files "pdf"))
 		      (ebib-extras-get-file "pdf")))
 	      (author (or (funcall get-field "author")

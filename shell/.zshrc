@@ -74,3 +74,5 @@ export NODE_EXTRA_CA_CERTS="$HOME/Library/Application Support/mkcert/rootCA.pem"
 # Docker
 export DOCKER_BUILDKIT=1
 export COMPOSE_BAKE=1
+
+export PATH="/opt/homebrew/opt/postgresql@17/bin:$PATH"

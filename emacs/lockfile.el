@@ -789,15 +789,6 @@
 		    :files (:defaults "data" "images") :source "MELPA" :protocol
 		    https :inherit t :depth treeless :ref
 		    "1b726412f19896abf5e4857d4c32220e33400b55"))
- (empv :source "elpaca-menu-lock-file" :recipe
-       (:package "empv" :fetcher github :repo "isamert/empv.el" :files
-		 ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo" "doc/dir"
-		  "doc/*.info" "doc/*.texi" "doc/*.texinfo" "lisp/*.el"
-		  "docs/dir" "docs/*.info" "docs/*.texi" "docs/*.texinfo"
-		  (:exclude ".dir-locals.el" "test.el" "tests.el" "*-test.el"
-			    "*-tests.el" "LICENSE" "README*" "*-pkg.el"))
-		 :source "MELPA" :protocol https :inherit t :depth treeless
-		 :host github :ref "54a3167a66555318948d88f5ae4fd9a50d00334f"))
  (emsg-blame :source "elpaca-menu-lock-file" :recipe
 	     (:source nil :protocol https :inherit t :depth treeless :host
 		      github :repo "ISouthRain/emsg-blame" :package "emsg-blame"
@@ -2283,11 +2274,11 @@
 		:source "MELPA" :protocol https :inherit t :depth treeless :ref
 		"4c31dff3f7871c2fd27c9914cc54737bff98f339"))
  (plz :source "elpaca-menu-lock-file"
-   :recipe
-   (:package "plz" :repo ("https://github.com/alphapapa/plz.el.git" . "plz")
-	     :files ("*" (:exclude ".git" "LICENSE")) :source "GNU ELPA"
-	     :protocol https :inherit t :depth treeless :ref
-	     "e2d07838e3b64ee5ebe59d4c3c9011adefb7b58e"))
+      :recipe
+      (:package "plz" :repo ("https://github.com/alphapapa/plz.el.git" . "plz")
+		:files ("*" (:exclude ".git" "LICENSE")) :source "GNU ELPA"
+		:protocol https :inherit t :depth treeless :ref
+		"e2d07838e3b64ee5ebe59d4c3c9011adefb7b58e"))
  (plz-event-source :source "elpaca-menu-lock-file" :recipe
 		   (:package "plz-event-source" :repo
 			     ("https://github.com/r0man/plz-event-source"
@@ -2853,15 +2844,15 @@
 		  :source "MELPA" :protocol https :inherit t :depth treeless
 		  :ref "c5455e866e8a5f7eab6a7263e2057aff5f1118b9"))
  (with-editor :source "elpaca-menu-lock-file"
-   :recipe
-   (:package "with-editor" :fetcher github :repo "magit/with-editor" :files
-	     ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo" "doc/dir"
-	      "doc/*.info" "doc/*.texi" "doc/*.texinfo" "lisp/*.el" "docs/dir"
-	      "docs/*.info" "docs/*.texi" "docs/*.texinfo"
-	      (:exclude ".dir-locals.el" "test.el" "tests.el" "*-test.el"
-			"*-tests.el" "LICENSE" "README*" "*-pkg.el"))
-	     :source "MELPA" :protocol https :inherit t :depth treeless :ref
-	     "7787e19764c1089390584ac17a80129ef9afaa14"))
+	      :recipe
+	      (:package "with-editor" :fetcher github :repo "magit/with-editor" :files
+			("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo" "doc/dir"
+			 "doc/*.info" "doc/*.texi" "doc/*.texinfo" "lisp/*.el" "docs/dir"
+			 "docs/*.info" "docs/*.texi" "docs/*.texinfo"
+			 (:exclude ".dir-locals.el" "test.el" "tests.el" "*-test.el"
+				   "*-tests.el" "LICENSE" "README*" "*-pkg.el"))
+			:source "MELPA" :protocol https :inherit t :depth treeless :ref
+			"7787e19764c1089390584ac17a80129ef9afaa14"))
  (writegood-mode :source "elpaca-menu-lock-file" :recipe
 		 (:package "writegood-mode" :repo "bnbeckwith/writegood-mode"
 			   :fetcher github :files

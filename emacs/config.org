@@ -8467,19 +8467,18 @@ This package evolved out of gptel-extras.
 				   :args ("-y" "@modelcontextprotocol/server-puppeteer")))
 	  ("sequential-thinking" . (:command "npx"
 					     :args ("-y" "@modelcontextprotocol/server-sequential-thinking")))
+	  ("slack-ae-racionalidad" . (:command "npx"
+					       :args ("-y" "@modelcontextprotocol/server-slack")
+					       :env (:SLACK_BOT_TOKEN ,(auth-source-pass-get
+									"bot-token"
+									"tlon/core/slack.com/ae-racionalidad")
+								      :SLACK_TEAM_ID "T04EYQYHG74")))
 	  ("slack-ea-translations" . (:command "npx"
 					       :args ("-y" "@modelcontextprotocol/server-slack")
 					       :env (:SLACK_BOT_TOKEN ,(auth-source-pass-get
 									"bot-token"
 									"tlon/core/slack.com/ea-translations")
-								      :SLACK_TEAM_ID "T04EYQYHG74")))
-	  ;; ("slack-ae-racionalidad" . (:command "npx"
-	  ;; :args ("-y" "@modelcontextprotocol/server-slack")
-	  ;; :env (:SLACK_BOT_TOKEN ,(auth-source-pass-get
-	  ;; "bot-token"
-	  ;; "tlon/core/slack.com/ae-racionalidad")
-	  ;; :SLACK_TEAM_ID "CA0JVRT5K")))
-	  ))
+								      :SLACK_TEAM_ID "CA0JVRT5K")))))
 
   (when (string= (system-name) "Pablos-MacBook-Pro.local")
     (setq mcp-hub-servers

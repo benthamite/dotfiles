@@ -11,6 +11,9 @@
     "Seed": {
         "save_path": "/Users/pablostafforini/Documents/Temporary torrent downloads/Seed"
     },
+    "Seed-TV": {
+        "save_path": "/Users/pablostafforini/Movies-TV"
+    },
     "Seeding-Movies": {
         "save_path": "/Users/pablostafforini/Movies"
     },

@@ -9,6 +9,23 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** reveal-in-osx-finder
+:PROPERTIES:
+:ID:       5BA0A794-59F0-471D-AD81-4C281095BF48
+:END:
+
+/[[https://github.com/kaz-yos/reveal-in-osx-finder][reveal-in-osx-finder]] lets you open the file at point or the current file-visiting buffer in OS X Finder./
+
+[2025-09-03 Wed] No longer needed since I can do the same with =browse-url-extras-of-dired-file-externally=.
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package reveal-in-osx-finder
+  :after dired
+  :demand t
+  :bind (:map dired-mode-map
+              ("/" . reveal-in-osx-finder)))
+#+end_src
+
 ** pyvenv
 :PROPERTIES:
 :ID:       2553445B-D90D-499F-82AE-E7897FA4A286

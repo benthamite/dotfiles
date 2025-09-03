@@ -1,6 +1,8 @@
 ### models (uncomment as appropriate)
 ### see https://aider.chat/docs/leaderboards/
 
+model: openai/gpt-5
+
 # model: anthropic/claude-sonnet-4-20250514
 # edit-format: diff-fenced
 
@@ -12,8 +14,8 @@
 # thinking-tokens: 32k
 # check-model-accepts-settings: false
 
-model: o3
-reasoning-effort: high
+# model: o3
+# reasoning-effort: high
 
 ### other settings
 commit-prompt: |

@@ -205,6 +205,7 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#persistent-scratch][persistent-scratch]]
   - [[#executable][executable]]
   - [[#uniquify][uniquify]]
+  - [[#reveal-in-osx-finder][reveal-in-osx-finder]]
   - [[#tramp][tramp]]
   - [[#pandoc-mode][pandoc-mode]]
 - [[#windows--frames][windows & frames]]
@@ -4342,6 +4343,21 @@ I use this package in combination with =prot-scratch= (see above) to persist scr
 (use-feature uniquify
   :custom
   (uniquify-buffer-name-style 'forward))
+#+end_src
+
+** reveal-in-osx-finder
+:PROPERTIES:
+:ID:       5BA0A794-59F0-471D-AD81-4C281095BF48
+:END:
+
+/[[https://github.com/kaz-yos/reveal-in-osx-finder][reveal-in-osx-finder]] lets you open the file at point or the current file-visiting buffer in OS X Finder./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package reveal-in-osx-finder
+  :after dired
+  :demand t
+  :bind (:map dired-mode-map
+              ("/" . reveal-in-osx-finder)))
 #+end_src
 
 ** tramp

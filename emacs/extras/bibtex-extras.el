@@ -349,12 +349,16 @@ sans its extension."
 
 ;;;;; escape special chars
 
+(defconst bibtex-extras-escaped-characters
+  '("$" "%" "#" "&")
+  "List of characters to escape in BibTeX entries.")
+
 ;;;###autoload
 (defun bibtex-extras-escape-special-characters ()
   "Escape special characters in the current BibTeX file."
   (interactive)
   (save-excursion
-    (dolist (char '("$" "%" "#" "&"))
+    (dolist (char bibtex-extras-escaped-characters)
       (goto-char (point-min))
       (while (re-search-forward (format "\\(\\(?:[^\\]\\|^\\)\\)\\(\\%s\\)" char) nil t)
 	(unless (member (bibtex-extras-get-field-name) '("url" "file"))

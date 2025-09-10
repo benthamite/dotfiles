@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: yt-dlp
+# key: yt
+# contributor: Pablo Stafforini
+# --
+yt-dlp $1

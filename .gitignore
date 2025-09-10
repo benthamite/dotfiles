@@ -10,4 +10,4 @@ shell/.zshrc.local
 repo-map.md
 
 ## ai-marketplace-monitor
-ai-marketplace-monitor/cache.db
+ai-marketplace-monitor/cache.db*

@@ -78,11 +78,13 @@ search_phrases = 'almanaque fate'
 
 [user.me]
 notify_with = 'telegram'
-# pushbullet_token = '${PUSHBULLET_TOKEN}'
 
 [notification.telegram]
 telegram_token = '${TELEGRAM_TOKEN}'
 telegram_chat_id = '829560208'
+
+[notification.pushbullet]
+pushbullet_token = '${PUSHBULLET_TOKEN}'
 
 # AI Configuration
 [ai.openai]

@@ -3,4 +3,4 @@
 # key: as
 # contributor: Pablo Stafforini
 # --
-auto_subtitle '`(current-kill 0)`' -o subtitled/ --language ${1:$$(yas-completing-read "Language: " '("en" "es" "fr" "pt" "de" "it"))} --model ${2:$$(yas-completing-read "Model: " '("small" "medium" "large" "tiny" "tiny.en" "base" "base.en" "small.en" "medium.en"))} --output_dir '`(file-name-directory (current-kill 0))`' --srt_only true --output_srt true `(when (y-or-n-p "Translate subtitles to English? ") "--task translate")`
+subsai "$1" --model-configs '{"model_type": "large"}' -tsl en$2 -ttl es$3

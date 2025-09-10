@@ -1,0 +1,90 @@
+[marketplace.facebook]
+search_city = 'buenos aires'
+radius = 50
+language = 'es'
+search_interval = '30m'  # Check every 30 minutes
+username = '${FACEBOOK_USERNAME}'
+password = '${FACEBOOK_PASSWORD}'
+
+[item.sillonfrances]
+search_phrases = ['sillón', 'sillones', 'sofá', 'sofás']
+keywords = ['francés', 'franceses', 'luis']
+description = 'Estoy buscando un juego de sillones antiguos estilo luis XV o XVI. Idealmente, debe ser un sillón de dos cuerpos y dos sillones de un cuerpo. Pero el más grande de los sillones puede ser de tres cuerpos. Me interesan dos tipos de sillones: o bien tapizados a nuevo, o bien para retapizar, en este último caso asumiendo que el precio sea suficientemente bajo. Si son tapizados a nuevo, el color ideal es verde (especialmente verde inglés) o rojo; si son para retapizar, el color no importa. En este último caso, tampoco importa el estado del tapizado. Ten en cuenta que si la publicación dice que es gratis o que cuesta $1, es solo porque no quieren publicar el precio; no lo consideres un punto a favor.'
+rating = 4
+
+[item.sillonfrancesreclinable]
+search_phrases = 'Sillón francés reclinable'
+description = 'Estoy buscando un sillón reclinable antiguo, estilo francés.'
+# rating = 4
+
+[item.aranaimperio]
+search_phrases = 'Araña imperio'
+description = 'Estoy buscando una o dos arañas imperio. Ten en cuenta que si la publicación dice que es gratis o que cuesta $1, es solo porque no quieren publicar el precio; no lo consideres como un punto a favor.'
+keywords = 'imperio'
+# rating = 3
+
+[item.puertaentrada]
+search_phrases = 'Puerta de entrada antigua'
+description = 'Estoy buscando una puerta antigua de aproximadamente 82 cm de ancho por 273 de alto. La puerta debe incluir marco. (Mis medidas no incluyen el marco: es decir, la puerta sin marco debe tener unos 82 × 273 cm.) Ten en cuenta que si la publicación dice que es gratis o que cuesta $1, es solo porque no quieren publicar el precio; no lo consideres como un punto a favor.'
+rating = 4
+
+[item.banqueta]
+search_phrases = 'banqueta'
+description = 'Encuentra una banqueta de estilo francés, idealmente con capitoné.'
+rating = 4
+
+[item.espejo]
+search_phrases = 'espejo'
+keywords = ['francés', 'antiguo']
+description = 'Por favor encuentra un espejo grande, de unos 1.20 m de ancho y unos 2 m de alto. Debe ser de estilo francés. Idealmente, con vidrios biselados, pero no es indispensable.'
+rating = 4
+
+[item.piano]
+search_phrases = 'piano de cola'
+description = 'Estoy buscando un piano de cola alemán, cuyo precio de venta sea significativamente inferior al precio de mercado por un piano de esa marca, antigüedad y estado de conservación. Intenta determinar cuál es el precio del piano en el mercado internacional y compáralo con el precio al que se vende en el anuncio. Cuanto mayor sea la discrepancia, más debes recomendarlo. Si en el anuncio no figura el precio, ignóralo.'
+rating = 4
+
+[item.libros]
+search_phrases = ['lote de libros']
+description = '''
+Soy un librero y coleccionista de libros, y estoy interesado en identificar lotes o colecciones que contengan material de mi interés. Estoy particularmente interesado en publicaciones en las siguientes categorías:
+- Libros que integran el canon occidental moderno (Dante, Cervantes, Descartes, Kant, Leibniz, Montaigne, Johnson, etc.), ya sea en ediciones antiguas del siglo 19 o ediciones críticas contemporáneas.
+- Clásicos grecolatinos (por ejemplo, Loeb Classical Library, otras ediciones bilingües, traducciones clásicas como la de Benjamin Jowett de los diálogos de Platón, etc.)
+- Libros de referencia canónicos (por ejemplo, la Encyclopedia Britannica, especialmente la undécima edición de 1911, el Oxford English Dictionary, el Dictionary of National Biography, etc.)
+- Libros de texto académicos, especialmente libros que se usan actualmente en cursos de grado o posgrado en universidades europeas o norteamericanas.
+- Biografías notables (por ejemplo, la biografía de Lyndon Johnson de Robert Caro en cuatro volúmenes).
+- Libros de Borges, especialmente material difícil de conseguir.
+- Primeras ediciones.
+
+Cuánto más libros de mi interés tenga un lote en una o más de estas categorías, más me interesa. Idealmente, querría comprar una biblioteca entera (de cientos o miles de libros), pero un lote de unos pocos libros particularmente atractivos también me interesa.
+
+Por lo general, no estoy interesado en libros de tapa blanda, pero esta no es una regla estricta: por ejemplo, una primera edición de Borges me interesa en cualquier encuadernación. La colección de clásicos de Aguilar, especialmente las ediciones de los años 50 y 60, son técnicamente de tapa blanda, aunque se trata de una encuadernación en piel que es particularmente atractiva.
+
+En todos los casos, estoy interesado solamente en libros en su lengua original, salvo que se trate de languas no europeas que yo no domine.
+
+Excluir anuncios que sean: 
+- Libros sueltos (a menos que sean raros o valiosos). 
+- Libros dañados con páginas perdidas.
+- Libros con páginas subrayadas en tinta.
+- Ibros digitales/electrónicos. 
+- Revistas o publicaciones periódicas.
+'''
+rating = 4
+# keywords = []
+# antikeywords = ['saldo']
+
+[item.almanaque]
+search_phrases = 'almanaque fate'
+
+[user.me]
+notify_with = 'telegram'
+# pushbullet_token = '${PUSHBULLET_TOKEN}'
+
+[notification.telegram]
+telegram_token = '7863524514:AAE9VtJQLCGj1sD3Iyox3sqhOK2V3R-DjWg'
+telegram_chat_id = '829560208'
+
+# AI Configuration
+[ai.openai]
+api_key = '${OPENAI_API_KEY}'
+model = "gpt-4o-mini"

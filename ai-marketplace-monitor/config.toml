@@ -81,7 +81,7 @@ notify_with = 'telegram'
 # pushbullet_token = '${PUSHBULLET_TOKEN}'
 
 [notification.telegram]
-telegram_token = '7863524514:AAE9VtJQLCGj1sD3Iyox3sqhOK2V3R-DjWg'
+telegram_token = '${TELEGRAM_TOKEN}'
 telegram_chat_id = '829560208'
 
 # AI Configuration

@@ -10337,8 +10337,8 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
 (use-package org-pomodoro
   :after org org-agenda
   :custom
-  (org-pomodoro-length 14)
-  (org-pomodoro-short-break-length 1)
+  (org-pomodoro-length 26)
+  (org-pomodoro-short-break-length 4)
   (org-pomodoro-long-break-length org-pomodoro-short-break-length)
   (org-pomodoro-finished-sound "/System/Library/Sounds/Blow.aiff")
   (org-pomodoro-long-break-sound org-pomodoro-finished-sound)

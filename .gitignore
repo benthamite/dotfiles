@@ -8,3 +8,6 @@ shell/.zshrc.local
 .aider*
 !.aider.conf.yml
 repo-map.md
+
+## ai-marketplace-monitor
+ai-marketplace-monitor/cache.db

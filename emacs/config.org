@@ -11466,7 +11466,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   :custom
   (annas-archive-included-file-types '("pdf"))
   (annas-archive-use-fast-download-links t)
-  (annas-archive-use-eww t))
+  (annas-archive-use-eww t)
   (annas-archive-title-column-width 130))
 #+end_src
 

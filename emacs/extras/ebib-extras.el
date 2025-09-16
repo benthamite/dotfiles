@@ -119,7 +119,7 @@ true. It preserves the current entry key and updates buffers."
        (ebib-db-set-current-entry-key (ebib--get-key-at-point) db)
        (ebib--reload-database db)
        (ebib--set-modified nil db)
-       ;; (ebib--update-buffers) 
+       ;; (ebib--update-buffers)
        ))
     (default
      (beep))))
@@ -547,9 +547,9 @@ behaviour by the value of POSTPROCESS.
 
 FILE can be:
 
-  • a pathname string to attach  
+  • a pathname string to attach
   • the symbol `most-recent' to attach the newest file in
-    `paths-dir-downloads'  
+    `paths-dir-downloads'
   • nil, in which case the user is prompted for the file.
 
 KEY defaults to the entry at point.  The file is renamed to
@@ -592,7 +592,7 @@ KEY.EXT, moved to the appropriate library directory and the
     (read-file-name "File to attach: " initial default)))
 
 (defun ebib-extras--af-install-file (src key)
-  "Move SRC into the appropriate library dir and return the new path."
+  "Move and rename the file at SRC to the appropriate library for KEY."
   (let* ((ext  (file-name-extension src))
          (dest-dir (ebib-extras--extension-directories ext))
          (dest (ebib-extras--rename-and-abbreviate-file dest-dir key ext)))
@@ -939,7 +939,7 @@ Used by the `ebib-extras-generate-search-commands' macro.")
 	 (query (url-hexify-string query)))
     (browse-url (concat prefix query suffix))))
 
-(declare-function mullvad-connect-to-website "mullvad")
+(defvar zotra-backend)
 (defun ebib-extras--search-multi (query functions)
   "Search for QUERY with each function in FUNCTIONS."
   (dolist (fun functions)
@@ -1405,6 +1405,7 @@ file."
 (declare-function ebib-extras-search-imdb "ebib-extras")
 (declare-function ebib-extras-search-letterboxd "ebib-extras")
 (declare-function bib-search-letterboxd "bib")
+(defvar bib-letterboxd-url)
 (defun ebib-extras-set-rating ()
   "Set rating of current entry.
 If applicable, open external website to set rating there as well."

@@ -605,7 +605,7 @@ KEY.EXT, moved to the appropriate library directory and the
 (defun ebib-extras--af-postprocess-pdf (key)
   "Write metadata, OCR and open the PDF attached to KEY."
   (ebib-extras-set-pdf-metadata key)
-  (ebib-extras-ocr-pdf key)
+  (ebib-extras-ocr-pdf)
   (ebib-extras-open-pdf-file))
 
 (defun ebib-extras-attach-most-recent-file ()

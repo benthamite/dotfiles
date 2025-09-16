@@ -936,11 +936,11 @@ Used by the `ebib-extras-generate-search-commands' macro.")
 (defvar zotra-backend)
 (defun ebib-extras--search-multi (query functions)
   "Search for QUERY with each function in FUNCTIONS."
-  (dolist (fun functions)
-    (when (and ebib-extras-download-use-vpn
-	       (string-match "-download-" (symbol-name fun)))
-      (mullvad-connect-to-website "Library Genesis" 5))
-    (funcall fun query)))
+  (let (zotra-backend)
+    (dolist (fun functions)
+      ;; (when (string-match "-download-" (symbol-name fun))
+      ;; (setq zotra-backend 'citoid))
+      (funcall fun query))))
 
 (defun ebib-extras-search-dwim ()
   "Run a search on the current entry based on the field at point.

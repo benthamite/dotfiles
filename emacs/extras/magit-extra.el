@@ -150,7 +150,7 @@ If REPO-PATH is nil, use the current repository."
      :sentinel
      (lambda (_ event)
        (unless (string= event "finished\n")
-	 (message "Error Fetching %s" repo))))))
+	 (message "[magit-extra-async-pull] Error Fetching %s" repo))))))
 
 ;;;;; pull all submodules
 

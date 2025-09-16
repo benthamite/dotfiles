@@ -108,7 +108,7 @@ tasks."
               :where (like tag (quote "%\"project\"%"))]))))
 
 (defun vulpea-extras-project-update-tag ()
-  "Update PROJECT tag in the current buffer."
+  "Update \"PROJECT\" tag in the current buffer."
   (when (and (not (active-minibuffer-window))
              (vulpea-extras-buffer-p))
     (save-excursion

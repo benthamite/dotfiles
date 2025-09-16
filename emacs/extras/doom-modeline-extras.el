@@ -69,6 +69,12 @@
 	     (bound-and-true-p tlon-split-mode))
     (concat "split" (doom-modeline-spc))))
 
+(doom-modeline-def-segment tlon-paragraph
+  (when (and (featurep 'tlon-paragraphs)
+             (bound-and-true-p tlon-paragraphs-mode-line-mode)
+             (fboundp 'tlon-paragraphs-mode-line-string))
+    (tlon-paragraphs-mode-line-string)))
+
 ;;;;;; org-roam
 
 ;; FIXME (2025-07-16): this stopped working

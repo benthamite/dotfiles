@@ -277,12 +277,28 @@ FILES if non-nil."
 
 ;;;;; setters
 
-(defun bibtex-extras-set-field ()
-  "Set FIELD to VALUE, creating it if necessary."
-  (interactive)
-  (let* ((field (completing-read "Field: " bibtex-extras-biblatex-fields))
-	 (value (read-string "Value: " (bibtex-extras-get-field field))))
-    (bibtex-set-field field (substring-no-properties value))))
+(defun bibtex-extras-set-field (field value &optional nodelim)
+  "Set FIELD to VALUE in bibtex file, creating it if it does not exist.
+Optional argument NODELIM see `bibtex-make-field'.
+
+This function was adapted from `bibtex-set-field' in `doi-utils.el'."
+  (interactive "sfield: \nsvalue: ")
+  (bibtex-beginning-of-entry)
+  (let ((found))
+    (if (setq found (bibtex-search-forward-field field t))
+	(when value
+	  (goto-char (cadr found))
+          (bibtex-kill-field)
+          (bibtex-make-field field nil nil nodelim)
+          (backward-char)
+          (insert value))
+      (bibtex-beginning-of-entry)
+      (forward-line) (beginning-of-line)
+      (bibtex-next-field nil)
+      (forward-char)
+      (bibtex-make-field field nil nil nodelim)
+      (backward-char)
+      (insert value))))
 
 ;;;;; sorting of bibtex buffer
 

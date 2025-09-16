@@ -41,12 +41,6 @@
   "Provide extensions for `ebib', the Emacs BibTeX database manager."
   :group 'ebib)
 
-(defcustom ebib-extras-download-use-vpn nil
-  "Determine whether to use a VPN when downloading content.
-If non-nil, functions that download content might attempt to use a VPN."
-  :type 'boolean
-  :group 'ebib-extras)
-
 ;;;; Variables
 
 (defconst ebib-extras-sort-states

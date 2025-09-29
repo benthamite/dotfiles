@@ -8513,10 +8513,7 @@ This package evolved out of gptel-extras.
 										     "chrome/home-assistant.io/stafforini"))))))))
 
   (mcp-hub-start-all-server)
-  (run-with-timer 15 nil (lambda ()
-			   "Connect to all MCP servers after they have started, but do not activate any tools."
-			   (gptel-mcp-connect)
-			   (gptel--apply-preset 'tools-clear))))
+  (run-with-timer 15 nil #'gptel-extras-connect-to-all-servers))
 #+end_src
 
 ** dall-e-shell

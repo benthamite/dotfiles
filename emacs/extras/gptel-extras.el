@@ -596,6 +596,13 @@ DESCRIPTION is a string describing the tools (e.g., \"web search tools\")."
 	 :description ,additive-desc
 	 :tools '(:append ,@actual-tools)))))
 
+(declare-function gptel-mcp-connect "gptel-integrations")
+;;;###autoload
+(defun gptel-extras-connect-to-all-servers ()
+  "Connect to all MCP servers, but do not activate any tools."
+  (gptel-mcp-connect)
+  (gptel--apply-preset 'tools-clear))
+
 ;;;;;; Filesystem tools
 
 ;;;;;;; edit_file

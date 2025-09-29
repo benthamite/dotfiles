@@ -101,16 +101,19 @@
     (tlon-move-entry-to-fluid)))
 
 (declare-function ebib-extras-get-file-of-key "bibtex-extras")
-(defun citar-extras-goto-bibtex-entry (citekey)
-  "Go to the bibliographic entry associated with the CITEKEY in the bibtex file."
-  (interactive (list (citar-select-ref)))
-  (if-let* ((file (ebib-extras-get-file-of-key citekey)))
-      (progn
-        (find-file file)
-        (widen)
-        (goto-char (point-min))
-        (re-search-forward (format "@.*?{%s" citekey)))
-    (user-error "No entry found for %s" citekey)))
+(defun citar-extras-goto-bibtex-entry (&optional citekey)
+  "Go to the bibliographic entry associated with the CITEKEY, and return it.
+If CITEKEY is nil, prompt for it."
+  (interactive)
+  (let ((citekey (or citekey (citar-select-ref))))
+    (if-let* ((file (ebib-extras-get-file-of-key citekey)))
+	(progn
+          (find-file file)
+          (widen)
+          (goto-char (point-min))
+          (re-search-forward (format "@.*?{%s" citekey)))
+      (user-error "No entry found for %s" citekey))
+    citekey))
 
 ;;;;; Cache management
 

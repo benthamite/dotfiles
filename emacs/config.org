@@ -11683,7 +11683,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
                  :main "mu4e/mu4e.el"
                  :pre-build (("./autogen.sh") ("ninja" "-C" "build"))
                  :build (:not elpaca--compile-info)
-                 :ref "bed7e6b" ; v.1.12.12
+                 :ref "1a501281" ; v.1.12.13
                  :depth nil)
   :defer 30
   :custom

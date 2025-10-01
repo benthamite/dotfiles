@@ -1793,7 +1793,6 @@
     ("gameboy" "Game Boy" nil :count 1)
     ("ganerate" "generate" nil :count 1)
     ("ganster" "gangster" nil :count 1)
-    ("garage" "garaje" nil :count 0)
     ("garantee" "guarantee" nil :count 1)
     ("garanteed" "guaranteed" nil :count 1)
     ("garantees" "guarantees" nil :count 1)

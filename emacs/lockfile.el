@@ -198,7 +198,7 @@
  (bib :source "elpaca-menu-lock-file" :recipe
       (:source nil :protocol https :inherit t :depth nil :host github :repo
 	       "benthamite/bib" :package "bib" :ref
-	       "9b927eb75331f07557f395954eba1f29a4c3b4a3"))
+	       "cf7a6beed477bc4d85a57fc3814303f18fc52fb9"))
  (biblio :source "elpaca-menu-lock-file" :recipe
 	 (:package "biblio" :repo "cpitclaudel/biblio.el" :fetcher github :files
 		   (:defaults (:exclude "biblio-core.el")) :source "MELPA"

@@ -1176,9 +1176,10 @@ The list of article download functions is specified by
 If called interactively, open the entry. Otherwise, return it as a string."
   (interactive)
   (when-let* ((file (ebib-db-get-filename ebib--cur-db))
-	     (key (ebib--get-key-at-point))
-	     (fun (if (called-interactively-p 'any) #'find-file #'find-file-noselect)))
+	      (key (ebib--get-key-at-point))
+	      (fun (if (called-interactively-p 'any) #'find-file #'find-file-noselect)))
     (with-current-buffer (funcall fun file)
+      (widen)
       (bibtex-search-entry key)
       (unless (called-interactively-p 'any) (bibtex-extras-get-entry-as-string)))))
 

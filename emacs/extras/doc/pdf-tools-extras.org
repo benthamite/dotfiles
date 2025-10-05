@@ -108,7 +108,7 @@ The command ~pdf-tools-extras-open-in-ebib~ attempts to open the BibTeX entry as
 :END:
 
 #+findex: pdf-tools-extras-apply-theme
-The function ~pdf-tools-extras-apply-theme~ checks the currently active Modus theme (using ~modus-themes--current-theme~).
+The function ~pdf-tools-extras-apply-theme~ checks the currently active Modus theme.
 - If the dark theme (=modus-vivendi=) is active, it enables =pdf-view-midnight-minor-mode= (which inverts PDF colors for better viewing on dark backgrounds).
 - If the light theme (=modus-operandi=) is active, it disables =pdf-view-midnight-minor-mode=.
 This function is intended to be called automatically when the theme changes, ensuring the PDF view matches the overall Emacs theme.

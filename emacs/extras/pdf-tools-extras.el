@@ -74,12 +74,16 @@ point and copies it to `kill-ring'."
 
 ;;;;; Misc
 
-(declare-function modus-themes--current-theme "modus-themes")
+(declare-function modus-themes-get-current-theme "modus-themes")
 (defun pdf-tools-extras-apply-theme ()
-  "Activate `pdf-tools' midnight mode if dark theme is active."
-  (if (eq (modus-themes--current-theme) 'modus-vivendi)
-      (pdf-view-midnight-minor-mode)
-    (pdf-view-midnight-minor-mode -1)))
+  "Activate `pdf-tools' midnight mode if the active Modus theme is dark."
+  (let* ((theme (when (fboundp 'modus-themes-get-current-theme)
+                  (modus-themes-get-current-theme)))
+         (background (when theme
+                       (plist-get (get theme 'theme-properties) :background-mode))))
+    (if (eq background 'dark)
+        (pdf-view-midnight-minor-mode 1)
+      (pdf-view-midnight-minor-mode -1))))
 
 ;; gist.github.com/politza/3f46785742e6e12ba0d1a849f853d0b9#file-scroll-other-window-el
 (defvar writeroom-width)

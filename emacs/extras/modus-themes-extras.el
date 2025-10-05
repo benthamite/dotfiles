@@ -59,17 +59,16 @@
 
 (defvar highlight-parentheses-colors)
 (defvar highlight-parentheses-background-colors)
-(defun modus-themes-extras-highlight-parentheses ()
+(defun modus-themes-extras-highlight-parentheses (&rest _)
   "Highlight parentheses in the current buffer."
-  (modus-themes-with-colors
-    (setq highlight-parentheses-background-colors (list bg-cyan-intense
-							bg-magenta-intense
-							bg-green-intense
-							bg-yellow-intense)
-	  highlight-parentheses-colors (list cyan
-					     magenta
-					     green
-					     yellow))))
+  (let* ((bg-keys '(bg-cyan-intense bg-magenta-intense bg-green-intense bg-yellow-intense))
+         (fg-keys '(cyan magenta green yellow))
+         (bg (mapcar (lambda (k) (modus-themes-get-color-value k :overrides)) bg-keys))
+         (fg (mapcar (lambda (k) (modus-themes-get-color-value k :overrides)) fg-keys)))
+    (setq highlight-parentheses-background-colors bg
+          highlight-parentheses-colors fg)
+    (when (fboundp 'global-highlight-parentheses-mode)
+      (global-highlight-parentheses-mode 1))))
 
 (defun modus-themes-extras-set-faces ()
   "Set extra faces for the `modus' themes.

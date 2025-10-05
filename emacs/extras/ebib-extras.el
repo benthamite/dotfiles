@@ -1171,17 +1171,17 @@ The list of article download functions is specified by
     (default (beep))))
 
 (declare-function bibtex-extras-get-entry-as-string "bibtex-extras")
-(defun ebib-extras-get-or-open-entry ()
-  "Get or open the BibTeX entry, depending on how the function was called.
-If called interactively, open the entry. Otherwise, return it as a string."
-  (interactive)
+(defun ebib-extras-get-or-open-entry (&optional interactive-p)
+  "Get or open the BibTeX entry at point.
+If INTERACTIVE-P is non-nil, open the entry. Otherwise, return it as a string."
+  (interactive "p")
   (when-let* ((file (ebib-db-get-filename ebib--cur-db))
 	      (key (ebib--get-key-at-point))
-	      (fun (if (called-interactively-p 'any) #'find-file #'find-file-noselect)))
+	      (fun (if interactive-p #'find-file #'find-file-noselect)))
     (with-current-buffer (funcall fun file)
       (widen)
       (bibtex-search-entry key)
-      (unless (called-interactively-p 'any) (bibtex-extras-get-entry-as-string)))))
+      (unless interactive-p (bibtex-extras-get-entry-as-string)))))
 
 ;;;###autoload
 (defun ebib-extras-get-file-of-key (key)

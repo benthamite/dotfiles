@@ -10663,6 +10663,7 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
   (org-noter-always-create-frame nil)
   (org-noter-separate-notes-from-heading t)
   (org-noter-kill-frame-at-session-end nil)
+  (org-noter-use-indirect-buffer nil)
 
   :config
   (push paths-file-orb-noter-template org-extras-id-auto-add-excluded-files)

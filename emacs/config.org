@@ -1809,8 +1809,6 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :bind
   (:map forge-post-mode-map
         ("s-c" . forge-post-submit)
-        ;; :map forge-issue-list-mode-map
-        ;; ("n" . forge-dispatch)
         :map forge-issue-mode-map
         ("s-a" . forge-topic-set-assignees)
         ("s-d" . forge-delete-comment)

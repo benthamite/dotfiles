@@ -3,7 +3,7 @@
 # key: sa
 # contributor: Pablo Stafforini
 # --
-`(format-time-string "%Y-%m-%d")` X Hora
+`(format-time-string "%Y-%m-%d")` Food Time
 Expenses:Food:Takeaway                 $1.00 ARS ; $3 salads
 Assets:${2:$$(yas-choose-value '("Cash" "Ualá" "Mercado Pago"))}
 

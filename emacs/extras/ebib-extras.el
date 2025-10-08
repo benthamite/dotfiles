@@ -368,6 +368,31 @@ The \"file\" field is updated with the new paths. The entry's key must be valid.
     (default
      (beep))))
 
+(defun ebib-extras-dedup-file-field ()
+  "Remove duplicate paths from the \"file\" field of the current entry.
+Duplicates are determined by exact string match after trimming whitespace.
+The original order of first occurrences is preserved."
+  (interactive)
+  (ebib--execute-when
+    (entries
+     (let* ((field "file")
+            (files (ebib-extras-get-field field)))
+       (unless (or (null files) (string-empty-p files))
+         (let* ((parts (mapcar #'string-trim (ebib--split-files files)))
+                (unique (cl-delete-duplicates (copy-sequence parts) :test #'string-equal)))
+	   (unless (= (length parts) (length unique))
+	     (let ((key (ebib--get-key-at-point)))
+	       (ebib-delete-field-contents field t)
+	       (dolist (f unique)
+                 (ebib-set-field-value field f key ebib--cur-db ";"))
+	       (ebib--redisplay-field field)
+	       (ebib--redisplay-index-item field)
+	       (message "Removed %d duplicate%s"
+                        (- (length parts) (length unique))
+                        (if (> (- (length parts) (length unique)) 1) "s" ""))))))))
+    (default
+     (beep))))
+
 (defun ebib-extras-validate-file-stem ()
   "Check that the stem of each attached file equals the entry's unique key.
 If any file's base name (without extension) does not match the current
@@ -558,7 +583,8 @@ KEY.EXT, moved to the appropriate library directory and the
     (ebib-extras--update-file-field-contents key dest)
     (ebib-extras-set-abstract key)
     (when (and postprocess (string= (file-name-extension dest) "pdf"))
-      (ebib-extras--af-postprocess-pdf key))))
+      (ebib-extras--af-postprocess-pdf key)
+      (ebib-extras-dedup-file-field))))
 
 ;;;; helper functions for `ebib-extras-attach-file'
 

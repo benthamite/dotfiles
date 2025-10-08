@@ -1099,8 +1099,9 @@ empty headings, which trigger an `org-roam' warning."
     ;; ("" "tlon"            (lambda () (interactive) (org-roam-extras-id-goto "843EE71C-4D50-4C2F-82E6-0C0AA928C72A")))
     ;; ("" "tlon-generic"            (lambda () (interactive) (org-roam-extras-id-goto "A3A5B7DF-34D4-4EB4-AA0F-EFBB88F30FF2")))
     ;; ("" "tlon-roadmap"            (lambda () (interactive) (org-roam-extras-id-goto "0DFC8456-E336-4C6A-869C-8F0DA2B36ADF")))
-    ;; ("" "uqbar"            (lambda () (interactive) (org-roam-extras-id-goto "91B333EE-DC83-4589-8EC1-4E08B7E6DD9F")))
-    ;; ("" "uqbar-common"            (lambda () (interactive) (org-roam-extras-id-goto "5BB257FF-5E68-49D1-813B-9D08C5D0ACF5")))
+    ""
+    ("q q" "uqbar"            (lambda () (interactive) (org-roam-extras-id-goto "91B333EE-DC83-4589-8EC1-4E08B7E6DD9F")))
+    ("q c" "uqbar-common"            (lambda () (interactive) (org-roam-extras-id-goto "5BB257FF-5E68-49D1-813B-9D08C5D0ACF5")))
     ;; ("" "uqbar-en"            (lambda () (interactive) (org-roam-extras-id-goto "C623C1E8-423D-42E2-ADC0-D6295F2C65F5")))
     ;; ("" "uqbar-es"            (lambda () (interactive) (org-roam-extras-id-goto "EF190A03-0037-430A-B8A1-414738AEAEA4")))
     ;; ("" "uqbar-fr"            (lambda () (interactive) (org-roam-extras-id-goto "5686C9A6-3057-4912-A6DC-9BA7582FCEFF")))

@@ -6689,6 +6689,10 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature xwidget
+  :config
+  ;; do not prompt user when attempting to kill xwidget buffer
+  (remove-hook 'kill-buffer-query-functions #'xwidget-kill-buffer-query-function)
+  
   :bind
   (:map xwidget-webkit-mode-map
         ("," . xwidget-webkit-scroll-down)

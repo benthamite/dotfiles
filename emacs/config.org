@@ -3745,6 +3745,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   (make-backup-files nil)
   (version-control 'never)
   (auto-save-visited-interval 1)
+  (require-final-newline t)
 
   :config
   (setq kill-buffer-query-functions nil) ; not a customizable variable

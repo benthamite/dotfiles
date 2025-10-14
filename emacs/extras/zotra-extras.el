@@ -139,6 +139,7 @@ DO-NOT-OPEN is non-nil, do not open the entry in Ebib after adding it."
 ;;;;; Bibfile
 
 (defvar tlon-file-fluid)
+(defvar tlon-file-db)
 ;;;###autoload
 (defun zotra-extras-set-bibfile ()
   "Prompt the user to select a value for `org-cite-global-bibliography'."

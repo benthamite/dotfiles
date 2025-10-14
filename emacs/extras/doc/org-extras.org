@@ -65,7 +65,7 @@ A list of directory paths (strings) where ~org-extras-id-auto-add-ids-to-heading
 :END:
 
 #+vindex: org-extras-id-auto-add-excluded-files
-A list of file paths or patterns (strings) to exclude from automatic ID addition by ~org-extras-id-auto-add-ids-to-headings-in-file~.
+A list of file paths or patterns (strings) to exclude from automatic ID addition by ~org-extras-id-auto-add-ids-to-headings-in-file~. If set to t, disables automatic ID addition for all files.
 
 ** ~org-extras-id-auto-add-excluded-headings~
 :PROPERTIES:

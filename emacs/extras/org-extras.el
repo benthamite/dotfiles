@@ -56,8 +56,11 @@ the function `vulpea-agenda-files-update')."
 
 (defcustom org-extras-id-auto-add-excluded-files
   (list paths-file-orb-noter-template)
-  "Files to exclude from `org-extras-id-auto-add-ids-to-headings-in-file'."
-  :type '(repeat file)
+  "Files to exclude from `org-extras-id-auto-add-ids-to-headings-in-file'.
+If non-nil and non-list, e.g., t, treat as “exclude all files” to disable the
+automatic addition of IDs globally."
+  :type '(choice (const :tag "Exclude all files (disable globally)" t)
+                 (repeat file))
   :group 'org-extras)
 
 (defcustom org-extras-id-auto-add-excluded-headings
@@ -672,7 +675,9 @@ only level-1 headings in files in specified directories by customizing
 	       (not buffer-read-only)
 	       (not org-extras-id-auto-add-exclude-file)
 	       (not (member dir org-extras-id-auto-add-excluded-directories))
-	       (not (member file org-extras-id-auto-add-excluded-files))
+	       (not (or (eq org-extras-id-auto-add-excluded-files t)
+			(and (listp org-extras-id-auto-add-excluded-files)
+			     (member file org-extras-id-auto-add-excluded-files))))
 	       (not (member (org-get-heading) org-extras-id-auto-add-excluded-headings)))
       (org-map-entries #'org-id-get-create
 		       ;; parametrize this

@@ -688,7 +688,8 @@ only level-1 headings in files in specified directories by customizing
   "Run `org-extras-id-find-duplicate-ids' when duplicate IDs are found.
 This function is intended to be used as an advice for `display-warning' when
 running `org-id-update-id-locations'. It checks if the warning LEVEL is `emacs'
-and if the MESSAGE contains \"duplicate IDs found\"."
+and if the MESSAGE contains \"duplicate IDs found\". ARGS are additional
+arguments passed to the format function."
   (when (and (eq level 'emacs)
              (string-match-p "duplicate IDs found" (apply #'format message args)))
     (org-extras-id-find-duplicate-ids)))

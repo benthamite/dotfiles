@@ -3,4 +3,4 @@
 # key: rb
 # contributor: Pablo Stafforini
 # --
-/read `(expand-file-name "~/Downloads/backtrace.el")`
+/read-only `(expand-file-name "~/Downloads/backtrace.el")`

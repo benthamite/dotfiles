@@ -3746,6 +3746,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   (version-control 'never)
   (auto-save-visited-interval 1)
   (require-final-newline t)
+  (revert-without-query '(".*"))
 
   :config
   (setq kill-buffer-query-functions nil) ; not a customizable variable

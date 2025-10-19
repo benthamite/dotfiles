@@ -451,7 +451,7 @@ The files added is controlled by the user options
   (let ((state gptel-extras-add-conventions-to-context))
     (setq gptel-extras-add-conventions-to-context (not state)
 	  gptel-extras-add-repo-map-to-context (not state))
-    (message (concat (if state "Diabled" "Enabled") " Aider files."))))
+    (message (concat (if state "Disabled" "Enabled") " Aider files."))))
 
 ;;;;; ChatGPT Import
 
@@ -581,20 +581,21 @@ DESCRIPTION is a string describing the tools (e.g., \"web search tools\")."
          (additive-symbol (intern (concat name-str "+")))
          (base-desc (concat "Set tools to " description))
          (additive-desc (concat "Add " description " to existing tools"))
-	 (gptel-use-tools t)
 	 (actual-tools (if (and (consp tools)
 				(eq (car tools) 'quote)
 				(consp (cdr tools))
 				(listp (cadr tools)))
 			   (cadr tools)
-			 tools)))
+			 tools))
+         (normalized-tools (mapcar (lambda (t) (if (symbolp t) (symbol-name t) t))
+				   actual-tools)))
     `(progn
        (gptel-make-preset ',base-symbol
 	 :description ,base-desc
-	 :tools ',actual-tools)
+	 :tools ',normalized-tools)
        (gptel-make-preset ',additive-symbol
 	 :description ,additive-desc
-	 :tools '(:append ,@actual-tools)))))
+	 :tools ',(list :append normalized-tools)))))
 
 (declare-function gptel-mcp-connect "gptel-integrations")
 ;;;###autoload
@@ -602,6 +603,46 @@ DESCRIPTION is a string describing the tools (e.g., \"web search tools\")."
   "Connect to all MCP servers, but do not activate any tools."
   (gptel-mcp-connect)
   (gptel--apply-preset 'tools-clear))
+
+;;;;;; Robustify gptel :append specs
+
+(defun gptel-extras--modify-value-append-fix (orig-fn original new-spec)
+  "Around advice for `gptel--modify-value' to normalize :append specs.
+
+If ORIGINAL is a list and NEW-SPEC provides :append followed by one or
+more non-keyword atoms (strings/symbols) that are not wrapped in a list,
+wrap them into a list. Also coalesce multiple consecutive non-keyword
+values after :append into a single list. This avoids treating tool
+names as string appends, which would error."
+  (let ((fixed-spec new-spec))
+    (when (and (consp new-spec) (keywordp (car new-spec)))
+      (let ((tail new-spec)
+            (result '()))
+        (while tail
+          (let ((key (pop tail)))
+            (if (eq key :append)
+                (let (vals)
+                  ;; Collect all consecutive non-keyword values after :append
+                  (while (and tail (not (keywordp (car tail))))
+                    (push (pop tail) vals))
+                  (setq vals (nreverse vals))
+                  ;; Use single value if only one provided, else the list
+                  (let ((value (cond
+                                ((null vals) nil)
+                                ((= (length vals) 1) (car vals))
+                                (t vals))))
+                    ;; If appending onto a list, ensure VALUE is a list
+                    (when (and (listp original) (not (listp value)))
+                      (setq value (list value)))
+                    (push :append result)
+                    (push value result)))
+              ;; Pass other keys through unchanged
+              (push key result)
+              (when tail (push (pop tail) result)))))
+        (setq fixed-spec (nreverse result))))
+    (funcall orig-fn original fixed-spec)))
+
+(advice-add 'gptel--modify-value :around #'gptel-extras--modify-value-append-fix)
 
 ;;;;;; Filesystem tools
 

@@ -423,7 +423,7 @@ Uses cached version if available and not stale."
   "Remove the repository map from the gptel context."
   (interactive)
   (when-let ((buffer (get-buffer (gptel-extras-get-repo-map-buffer-name))))
-    (setq gptel-context--alist (assq-delete-all buffer gptel-context--alist))))
+    (setq gptel-context (assq-delete-all buffer gptel-context))))
 
 (defun gptel-extras-invalidate-repo-map-cache (&optional repo)
   "Invalidate the repository map cache for REPO.
@@ -587,7 +587,7 @@ DESCRIPTION is a string describing the tools (e.g., \"web search tools\")."
 				(listp (cadr tools)))
 			   (cadr tools)
 			 tools))
-         (normalized-tools (mapcar (lambda (t) (if (symbolp t) (symbol-name t) t))
+         (normalized-tools (mapcar (lambda (tool) (if (symbolp tool) (symbol-name tool) tool))
 				   actual-tools)))
     `(progn
        (gptel-make-preset ',base-symbol
@@ -608,12 +608,14 @@ DESCRIPTION is a string describing the tools (e.g., \"web search tools\")."
 
 (defun gptel-extras--modify-value-append-fix (orig-fn original new-spec)
   "Around advice for `gptel--modify-value' to normalize :append specs.
-
 If ORIGINAL is a list and NEW-SPEC provides :append followed by one or
 more non-keyword atoms (strings/symbols) that are not wrapped in a list,
 wrap them into a list. Also coalesce multiple consecutive non-keyword
 values after :append into a single list. This avoids treating tool
-names as string appends, which would error."
+names as string appends, which would error.
+
+ORIG-FN is the original function being advised. NEW-SPEC is the modification
+specification plist."
   (let ((fixed-spec new-spec))
     (when (and (consp new-spec) (keywordp (car new-spec)))
       (let ((tail new-spec)
@@ -1127,7 +1129,7 @@ added as a single context chunk."
 ;;;###autoload
 (defun gptel-extras-warn-when-context ()
   "Prompt for confirmation to proceed when `gptel' context is not empty."
-  (unless (or (null gptel-context--alist)
+  (unless (or (null gptel-context)
 	      (y-or-n-p "The `gptel' context is not empty. Proceed? "))
     (let ((message "Aborted"))
       (when (y-or-n-p "Clear the `gptel' context? ")

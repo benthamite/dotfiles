@@ -57,7 +57,7 @@
 
     ;;these are the other fields in the entry, and we sort them alphabetically.
     (setq other-fields
-	  (sort (-remove (lambda(x) (member x field-order)) entry-fields)
+	  (sort (cl-remove-if (lambda(x) (member x field-order)) entry-fields)
 		'string<))
 
     (save-restriction
@@ -97,12 +97,12 @@ in the file. Data comes from www.ebook.de."
      (cond
       ;; If region is active and it starts with a number, we use it
       ((and  (region-active-p)
-	     (s-match "^[0-9]" (buffer-substring (region-beginning) (region-end))))
+	     (org-ref--string-match "^[0-9]" (buffer-substring (region-beginning) (region-end))))
        (buffer-substring (region-beginning) (region-end)))
       ;; if first entry in kill ring starts with a number assume it is an isbn
       ;; and use it as the guess
       ((stringp (car kill-ring))
-       (when (s-match "^[0-9]" (car kill-ring))
+       (when (org-ref--string-match "^[0-9]" (car kill-ring))
 	 (car kill-ring)))
       ;; type or paste it in
       (t

@@ -3,7 +3,7 @@
   '(
     ("!?" "‽" nil :count 0)
     ("?!" "‽" nil :count 0)
-    ("atb" "All the best" nil :count 63)
+    ("atb" "All the best" nil :count 64)
     ("ty" "thank you" nil :count 1)
     ("xxx" "×" nil :count 1)
     ("¡¿" "⸘" nil :count 0)
@@ -2530,6 +2530,7 @@
     ("monickers" "monikers" nil :count 1)
     ("monolite" "monolithic" nil :count 1)
     ("monserrat" "Montserrat" nil :count 1)
+    ("monstruous" "monstrous" nil :count 0)
     ("montains" "mountains" nil :count 1)
     ("montanous" "mountainous" nil :count 1)
     ("montnana" "Montana" nil :count 1)

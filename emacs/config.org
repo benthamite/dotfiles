@@ -10486,6 +10486,9 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
           " > "))
        (propertize (org-roam-node-title node) 'face 'org-level-3))))
 
+  (with-eval-after-load 'org-roam-bibtex
+    (setopt org-roam-mode-sections (append org-roam-mode-sections '(orb-section-reference orb-section-abstract))))
+
   (add-to-list 'completion-at-point-functions #'org-roam-complete-link-at-point)
 
   ;; include transcluded links in `org-roam' backlinks

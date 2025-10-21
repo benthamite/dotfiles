@@ -12095,10 +12095,21 @@ CLOCK: [2021-04-06 Tue 18:05]--[2021-04-06 Tue 18:34] =>  0:29
 
 To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a terminal, then =M-x telega-server-build=.
 
+If you need to install an earlier version than =HEAD=, you’ll need to build from source:
+
+1. Clone the repo: =git clone https://github.com/tdlib/td.git=
+2. Navigate to the =td= directory: =cd td=
+3. Checkout the desired version: =git checkout <version_tag>=
+4. Create a build directory: =mkdir build && cd build && cmake ../=
+5. Build the library: =make -jN=, replacing =N= by the number of cores to be used for the compilation.
+6. Install the library: =make install=
+
+Then set =telega-server-libs-prefix= to =/usr/local/lib=.
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package telega
   :init
-  (setopt telega-server-libs-prefix "/opt/homebrew")
+  (setopt telega-server-libs-prefix "/usr/local/lib")
 
   :custom
   (telega-chat-input-markups '("org"))

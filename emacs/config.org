@@ -8047,6 +8047,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (gptel-track-media t)
   (gptel-max-tokens 10000)
   (gptel-stream t)
+  (gptel-confirm-tool-calls nil)
   (gptel-api-key (auth-source-pass-get "gptel" (concat "tlon/core/openai.com/" tlon-email-shared)))
 
   :config

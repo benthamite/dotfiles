@@ -5001,8 +5001,8 @@ The original package is no longer maintained. A [[https://github.com/haji-ali/em
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package calfw
-  :ensure (:host github
-                 :repo "benthamite/emacs-calfw")
+  ;; :ensure (:host github
+                 ;; :repo "benthamite/emacs-calfw")
   :after org-agenda)
 #+end_src
 

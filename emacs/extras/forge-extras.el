@@ -130,9 +130,12 @@ If ISSUE is nil, use the issue at point or in the current buffer."
 Do not update if `elfeed' is in the process of being updated, since this causes
 problems."
   (unless (bound-and-true-p elfeed-extras-auto-update-in-process)
-    (shut-up
-      (with-no-warnings
-	(forge-pull-notifications)))))
+    (condition-case err
+        (shut-up
+          (with-no-warnings
+            (forge-pull-notifications)))
+      (error
+       (forge-extras-message-debug "Skipping notifications due to error: %S" err)))))
 
 ;;;;; sync read status
 

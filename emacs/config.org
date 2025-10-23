@@ -5719,7 +5719,6 @@ CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package affe
-  :demand t
   :custom
   ;; https://github.com/minad/affe?tab=readme-ov-file#installation-and-configuration
   (affe-regexp-compiler #'affe-orderless-regexp-compiler)

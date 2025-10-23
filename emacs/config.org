@@ -5014,7 +5014,7 @@ The original package is no longer maintained. A [[https://github.com/haji-ali/em
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package calfw-org
-  :after calfw)
+  :after calfw org)
 #+end_src
 
 ** calfw-blocks

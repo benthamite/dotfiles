@@ -5022,7 +5022,7 @@ The original package is no longer maintained. A [[https://github.com/haji-ali/em
 :ID:       03DD73DD-6347-4D30-B103-A61718459C41
 :END:
 
-/[[https://github.com/ml729/calfw-blocks][calfw-blocks]] provides visual enhancements for calfw./
+/[[https://github.com/benthamite/calfw-blocks][calfw-blocks]] provides visual enhancements for calfw./
 
 The original package appears to no longer be maintained, so I have created my own fork.
 

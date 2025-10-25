@@ -97,7 +97,7 @@ heading in a quote."
 	    (goto-char (point-max))
 	    (insert (concat org-noter-quote-begin content org-noter-quote-end))
 	    (goto-char (point-min))
-	    (re-search-forward (concat "\n" (regexp-quote org-noter-quote-end)) 'noerror)
+	    (re-search-forward (concat "\n" (regexp-quote org-noter-quote-end)) nil 'noerror)
 	    (replace-match org-noter-quote-end)))
 	(org-next-visible-heading 1)
 	(org-fold-show-subtree)))))

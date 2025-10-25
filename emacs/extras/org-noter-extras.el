@@ -158,5 +158,55 @@ tends to be higher than the book page number."
   (org-noter-sync-prev-note)
   (other-window 1))
 
+(defun org-noter-extras-merge-contents-with-next ()
+  "Merge the Contents of the current annotation with the next one.
+With point on a \"Highlight on page N\" heading, replace it with
+\"Highlight on pages N–M\", append the next annotation's Contents to the
+current one, then delete the next annotation subtree."
+  (interactive)
+  (save-excursion
+    (org-back-to-heading)
+    (let* ((top-title (org-get-heading t t t t))
+	   (top-position (point))
+	   (goto-top (lambda () (widen) (goto-char top-position))))
+      (unless (string-match org-noter-highlight-heading-regexp top-title)
+	(user-error "Point must be on a \"Highlight on page\" heading"))
+      (let* ((page-a (match-string 1 top-title))
+	     (content-a (org-noter-get-annotation-contents)))
+	(funcall goto-top)
+	(org-forward-heading-same-level 1 t)
+	(when (= top-position (point))
+	  (user-error "There is no next annotation at the same level"))
+	(let* ((next-heading (org-get-heading t t t t)))
+	  (unless (string-match org-noter-highlight-heading-regexp next-heading)
+	    (user-error "Next heading is not a \"Highlight on page\" heading"))
+	  (let* ((page-b (match-string 1 next-heading))
+		 (content-b (org-noter-get-annotation-contents)))
+	    (funcall goto-top)
+	    (org-edit-headline (format "Highlight on pages %s–%s" page-a page-b))
+	    (org-noter-extras--replace-contents-body (concat content-a " " content-b))
+	    (let ((pos2 (point)))
+	      (org-forward-heading-same-level 1 t)
+	      (when (= pos2 (point))
+		(user-error "Unexpected error locating next annotation for deletion")))
+	    (org-cut-subtree)
+	    (org-fold-show-subtree)))))))
+
+(defun org-noter-extras--replace-contents-body (text)
+  "Replace body of the Contents subheading under current heading with TEXT."
+  (save-excursion
+    (org-back-to-heading)
+    (let ((this-level (org-outline-level)))
+      (org-next-visible-heading 1)
+      (unless (= (org-outline-level) (1+ this-level))
+        (user-error "Contents subheading not found"))
+      (unless (string-match-p "\\`Contents\\'" (org-get-heading t t t t))
+        (user-error "Contents subheading not found"))
+      (org-narrow-to-subtree)
+      (org-end-of-meta-data t)
+      (delete-region (point) (point-max))
+      (insert text)
+      (widen))))
+
 (provide 'org-noter-extras)
 ;;; org-noter-extras.el ends here

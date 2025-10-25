@@ -87,6 +87,20 @@ The command ~org-noter-extras-append-to-previous-annotation~ merges the content 
 3. It searches backward for the end of the previous annotation's quote block (=#+end_quote=).
 4. It inserts the extracted content just before the =#+end_quote= marker of the previous annotation, effectively appending it.
 
+** Merge Contents With Next
+:PROPERTIES:
+:CUSTOM_ID: h:org-noter-extras-merge-contents-with-next
+:END:
+
+#+findex: org-noter-extras-merge-contents-with-next
+The command ~org-noter-extras-merge-contents-with-next~ merges the text in the
+=Contents= subheading of the current annotation with the text in the =Contents=
+subheading of the next annotation at the same outline level. It updates the
+current heading from "Highlight on page N" to "Highlight on pages N–M" (using an
+en dash) where M is the next annotation's page number, appends the next
+annotation's contents to the current one, and deletes the next annotation
+subtree. The properties of the current annotation are preserved.
+
 ** Dehyphenate Text
 :PROPERTIES:
 :CUSTOM_ID: h:org-noter-extras-dehyphenate

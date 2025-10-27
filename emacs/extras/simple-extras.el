@@ -805,11 +805,19 @@ Optionally, remove accents in region from BEGIN to END."
 ;; adapted from `denote'
 ;;;###autoload
 (defun simple-extras-slugify (string)
-  "Convert STRING into slug."
-  (downcase
-   (simple-extras-slug-hyphenate
-    (simple-extras-asciify-string
-     (replace-regexp-in-string "[][{}!@#$%^&*()+'\"?,\\\\\|;:~`‘’“”/=]*" "" string)))))
+  "Convert STRING into slug.
+When called interactively, prompt for STRING, copy the slug to the
+kill ring, and echo it in the minibuffer."
+  (interactive "sString to slugify: ")
+  (let ((slug
+         (downcase
+          (simple-extras-slug-hyphenate
+           (simple-extras-asciify-string
+            (replace-regexp-in-string "[][{}!@#$%^&*()+'\"?,\\\\\|;:~`‘’“”/=]*" "" string))))))
+    (when (called-interactively-p 'any)
+      (kill-new slug)
+      (message "%s" slug))
+    slug))
 
 ;;;###autoload
 (defun simple-extras-slugify-clipboard ()

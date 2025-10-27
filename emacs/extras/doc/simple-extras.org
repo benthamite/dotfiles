@@ -253,7 +253,9 @@ Specifies the directory where auto-save files for new, non-file-visiting buffers
 - ~simple-extras-strip-url~: Replaces the URL at point with its simplified version.
 - ~simple-extras-pandoc-convert~: Converts a string or clipboard content between formats using Pandoc.
 - ~simple-extras-asciify-string~: Returns a string with accents removed.
-- ~simple-extras-slugify~: Converts a string to a URL-friendly slug.
+- ~simple-extras-slugify~: Converts a string to a URL-friendly slug. When
+  called interactively, prompts for input, copies the slug to the kill ring, and
+  echoes it.
 - ~simple-extras-slug-hyphenate~: Helper for slugify; replaces spaces/underscores with hyphens.
 - ~simple-extras-is-new-buffer-p~: Checks if the current buffer is an "untitled" buffer.
 - ~simple-extras-new-buffer-enable-auto-save~: Hook function to enable auto-save for new buffers.

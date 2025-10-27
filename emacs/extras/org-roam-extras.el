@@ -376,16 +376,13 @@ Optionally, return such list only if its length is less than LIMIT."
       file-list)))
 
 (defun org-roam-extras-remove-file-level-properties ()
-  "Remove `ROAM_REFS' and `ID' properties from file-level drawer."
+  "Remove `ID' properties from file-level drawer."
   (when (string= "r" (plist-get org-capture-plist :key))
     (goto-char (point-min))
     (unless (org-get-heading)
-      ;; Take action with file-level properties only.
       (org-delete-property "ID")
-      (org-delete-property "ROAM_REFS")
       (org-extras-jump-to-first-heading)
       (org-id-get-create))))
-
 
 ;;;###autoload
 (defun org-roam-extras-id-goto (id)

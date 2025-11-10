@@ -165,14 +165,16 @@ If REPO-PATH is nil, use the current repository."
 
 ;;;;; confirm when pushing
 
-(define-advice magit-push-current-to-pushremote
-    (:before (_args) guard-production)
+(defun magit-extras--guard-production (&rest _args)
   "Warn before pushing to production branches."
-  (when-let ((branch (magit-get-upstream-branch)))
-    (when (string-match-p "production" branch)
-      (unless (yes-or-no-p
-               (format "WARNING: Push to '%s'? " branch))
+  (when-let ((branch (or (ignore-errors (magit-get-push-branch))
+                         (magit-get-upstream-branch))))
+    (when (and branch (string-match-p "production" branch))
+      (unless (yes-or-no-p (format "WARNING: Push to '%s'? " branch))
         (user-error "Push cancelled")))))
+
+(advice-add 'magit-push-current-to-pushremote :before #'magit-extras--guard-production)
+(advice-add 'magit-push-current-to-upstream   :before #'magit-extras--guard-production)
 
 ;;;;; transient
 

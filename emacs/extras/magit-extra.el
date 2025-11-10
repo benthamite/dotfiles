@@ -163,6 +163,17 @@ If REPO-PATH is nil, use the current repository."
 
 (advice-add 'magit-pull :after #'magit-extras-pull-including-submodules)
 
+;;;;; confirm when pushing
+
+(define-advice magit-push-current-to-pushremote
+    (:before (_args) guard-production)
+  "Warn before pushing to production branches."
+  (when-let ((branch (magit-get-upstream-branch)))
+    (when (string-match-p "production" branch)
+      (unless (yes-or-no-p
+               (format "WARNING: Push to '%s'? " branch))
+        (user-error "Push cancelled")))))
+
 ;;;;; transient
 
 (defun magit-extras-get-unstaged-files ()

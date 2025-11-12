@@ -10467,10 +10467,10 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
   (org-roam-directory paths-dir-org-roam)
   (org-roam-node-display-template
    (concat "${title:*} "
-           (propertize "${tags:10}" 'face 'org-tag)))
+	   (propertize "${tags:10}" 'face 'org-tag)))
   (org-roam-node-display-template
    (concat "${hierarchy:160} "
-           (propertize "${tags:20}" 'face 'org-tag)))
+	   (propertize "${tags:20}" 'face 'org-tag)))
   ;; exclude selected headings based on other criteria
   (org-roam-db-node-include-function #'org-roam-extras-node-include-function)
 
@@ -10481,16 +10481,16 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
     (let ((level (org-roam-node-level node)))
       (concat
        (when (> level 0)
-         (concat
-          (propertize (org-roam-node-file-title node) 'face 'org-level-1)
-          " > "))
+	 (concat
+	  (propertize (org-roam-node-file-title node) 'face 'org-level-1)
+	  " > "))
        ;; This is a hacky propertization because it doesn't color the
        ;; intermediate headings differently, but doing that slowed
        ;; down the function too much.
        (when (> level 1)
-         (concat
-          (propertize (string-join (org-roam-node-olp node) " > ") 'face 'org-level-2)
-          " > "))
+	 (concat
+	  (propertize (string-join (org-roam-node-olp node) " > ") 'face 'org-level-2)
+	  " > "))
        (propertize (org-roam-node-title node) 'face 'org-level-3))))
 
   (with-eval-after-load 'org-roam-bibtex

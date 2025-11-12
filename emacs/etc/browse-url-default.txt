@@ -9,6 +9,7 @@ airtable.com
 airwander.com
 algolia.com
 alignmentforum.com
+altruismeefficace.net
 altruismoefficace.net
 altruismoeficaz.net
 amazon.
@@ -52,6 +53,7 @@ doi.org
 domains.google.com
 drive.google.com
 dropbox.com
+eakorea.org
 easy.jet
 ebay.com
 ecoveritas.es
@@ -73,6 +75,7 @@ holafly.com
 houzz.com
 hsluv.org
 igmchicago.org
+ihsanfaal.org
 imdb.com
 imgur.com
 ingebrigtsen.no
@@ -148,6 +151,7 @@ swapcard.com
 tangotimetravel.be
 tangotunes.com
 teatrocolon.org.ar
+thinkific.com
 tradingview.com
 tramitesadistancia.gob.ar
 traveltrolley.co.uk

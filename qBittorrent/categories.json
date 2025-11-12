@@ -17,6 +17,9 @@
     "Seeding-Movies": {
         "save_path": "/Users/pablostafforini/Movies"
     },
+    "Shorts": {
+        "save_path": "/Users/pablostafforini/Movies-Short"
+    },
     "TV": {
         "save_path": "/Users/pablostafforini/Movies-TV"
     }

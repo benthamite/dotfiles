@@ -3,8 +3,8 @@
 # key: ai
 # contributor: Pablo Stafforini
 # --
-`(format-time-string "%Y-%m-%d")` Airbnb
+`(format-time-string "%Y-%m-%d")`$2 Airbnb
     Income:Rent                                 -$1 USD
     Assets:Wise
 
-$2
+$0

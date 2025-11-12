@@ -10505,15 +10505,15 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
   (org-roam-db-autosync-mode -1)
   (run-with-idle-timer (* 20 60) t #'org-roam-db-sync)
 
-  :hook
-  (org-roam-capture-new-node-hook . orb--insert-captured-ref-h)
-  (org-roam-capture-new-node-hook . org-roam-capture--insert-captured-ref-h)
+  ;; https://github.com/org-roam/org-roam/issues/2550#issuecomment-3451456331
+  (with-eval-after-load 'org-roam-capture
+    (setq org-roam-capture-new-node-hook nil))
 
   :bind
   (:map org-mode-map
-        ("s-i" . org-roam-node-insert)
-        :map org-roam-mode-map
-        ("f" . ace-link-org)))
+	("s-i" . org-roam-node-insert)
+	:map org-roam-mode-map
+	("f" . ace-link-org)))
 #+end_src
 
 ** org-roam-extras
@@ -10986,11 +10986,13 @@ CLOCK: [2021-07-14 Wed 21:56]--[2021-07-14 Wed 22:45] =>  0:49
       :if-new
       (file ,paths-file-orb-capture-template)
       :unnarrowed t :immediate-finish t :jump-to-captured t)))
-  
+
   :config
   (dolist (keyword '("year" "title" "url" "keywords"))
     (add-to-list 'orb-preformat-keywords keyword))
-  (org-roam-bibtex-mode))
+  (org-roam-bibtex-mode)
+  ;; https://github.com/org-roam/org-roam/issues/2550#issuecomment-3451456331
+  (setq org-roam-capture-new-node-hook nil))
 #+end_src
 
 ** citar

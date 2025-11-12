@@ -6550,26 +6550,34 @@ CLOCK: [2021-02-11 Thu 20:46]--[2021-02-11 Thu 20:54] =>  0:08
 CLOCK: [2021-02-11 Thu 19:59]--[2021-02-11 Thu 20:02] =>  0:03
 :END:
 
-/[[https://github.com/alpha22jp/atomic-chrome][atomic chrome]] enables editing of browser input fields in Emacs./
+/[[https://github.com/KarimAziev/atomic-chrome][atomic chrome]] enables editing of browser input fields in Emacs./
 
-I use it in combination with the [[https://ghosttext.fregante.com/][Ghost Text]] browser extension.
+I use a fork that is better maintained, together with the associated [[https://github.com/KarimAziev/chrome-emacs][Chrome Emacs]] browser extension.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package atomic-chrome
-  :defer 30
+  ;; :defer 30
+  :demand t
+  :ensure (atomic-chrome
+	   :repo "KarimAziev/atomic-chrome"
+	   :type git
+	   :host github)
+  :commands (atomic-chrome-start-server)
   :custom
+  (atomic-chrome-buffer-open-style 'frame)
   (atomic-chrome-default-major-mode 'markdown-mode)
   (atomic-chrome-url-major-mode-alist
    '(("github\\.com" . gfm-mode)
      ("wikipedia\\.org" . mediawiki-mode)
      ("timelines\\.issarice\\.com" . mediawiki-mode)))
-
+  
   :config
+  (setq-default atomic-chrome-extension-type-list '(atomic-chrome))
   (atomic-chrome-start-server)
 
   :bind
   (:map atomic-chrome-edit-mode-map
-        ("s-c" . atomic-chrome-close-current-buffer)))
+	("s-c" . atomic-chrome-close-current-buffer)))
 #+end_src
 
 ** markdown-mode

@@ -165,6 +165,7 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#outline][outline]]
   - [[#outline-extras][outline-extras]]
   - [[#outli][outli]]
+  - [[#thingatpt][thingatpt]]
   - [[#abbrev][abbrev]]
   - [[#abbrev-extras][abbrev-extras]]
   - [[#yasnippet][yasnippet]]
@@ -3362,6 +3363,20 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
   :hook emacs-lisp-mode-hook)
 #+end_src
 
+** thingatpt
+:PROPERTIES:
+:ID:       EBF1F423-911C-470B-940A-EC8586481BC5
+:END:
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-feature thingatpt
+  :init
+  ;; we redefine `thing-at-point-url-path-regexp' to support Japanese URLs
+  ;; *after* `goto-addr' is loaded, so that `goto-address-url-regexp', which is
+  ;; defined in reference to that user option, inherits the redefinition
+  (with-eval-after-load 'goto-addr
+    (thing-at-point-url-path-regexp "[^]\t\n \"'<>[^`{}、。！？]*[^]\t\n \"'<>[^`{}.,;、。！？]+")))
+#+end_src
 ** abbrev
 :PROPERTIES:
 :ID:       2D69896F-CF17-4D0C-BEFE-E7C473FB1C2B

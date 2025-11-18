@@ -952,6 +952,7 @@ CLOCK: [2023-04-30 Sun 11:59]--[2023-04-30 Sun 12:07] =>  0:08
 {:des "q-mode (apps)"
  :rules [:q-mode
          [:b [:open "/Applications/qBitTorrent.app"]]
+         [:c [:open "/Applications/Audacity.app"]]
          [:d [:open "/System/Library/CoreServices/Finder.app"]]
          [:e [:open "/Applications/Emacs.app"]]
          [:f [:open "/Applications/Firefox.app"]]

@@ -481,6 +481,7 @@
 {:des "q-mode (apps)"
  :rules [:q-mode
          [:b [:open "/Applications/qBitTorrent.app"]]
+         [:c [:open "/Applications/Audacity.app"]]
          [:d [:open "/System/Library/CoreServices/Finder.app"]]
          [:e [:open "/Applications/Emacs.app"]]
          [:f [:open "/Applications/Firefox.app"]]

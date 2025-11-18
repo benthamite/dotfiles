@@ -302,6 +302,7 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#consult-flycheck][consult-flycheck]]
   - [[#flycheck-ledger][flycheck-ledger]]
   - [[#flycheck-languagetool][flycheck-languagetool]]
+  - [[#flymake-mdl][flymake-mdl]]
   - [[#lsp-mode][lsp-mode]]
   - [[#grammarly][grammarly]]
   - [[#lsp-grammarly][lsp-grammarly]]
@@ -6460,6 +6461,19 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 :END:
 
 See [[id:CBEE980E-2D38-4D73-A806-FF824EE5305C][Claude discussion]].
+
+** flymake-mdl
+:PROPERTIES:
+:ID:       5B033B8B-5D04-415F-9F92-182CB3AA3C69
+:END:
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package flymake-mdl
+  :ensure (:host github
+		 :repo "MicahElliott/flymake-mdl")
+  :demand t
+  )
+#+end_src
 
 ** lsp-mode
 :PROPERTIES:

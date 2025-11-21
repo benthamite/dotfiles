@@ -3312,7 +3312,6 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
 :ID:       8BC3FF58-62AD-43E9-87A0-B886F20B428A
 :END:
 
-
 /[[file:extras/outline-extras.el][outline-extras]] collects my extensions for =outline=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)

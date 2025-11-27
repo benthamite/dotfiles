@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: monotributo
+# key: mt
+# contributor: Pablo Stafforini
+# --
+`(format-time-string "%Y-%m-%d")` ARCA
+    Expenses:Taxes                         $1 ARS ; monotributo
+    Assets:Mercado Pago  
+
+$0

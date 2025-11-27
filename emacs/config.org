@@ -8022,7 +8022,8 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
 (use-package copilot
   :ensure (:host github
                  :repo "copilot-emacs/copilot.el"
-                 :files ("dist" "*.el"))
+                 :files ("dist" "*.el")
+                 :build (:not elpaca--check-version))                 
   :after jsonrpc
   :custom
   (copilot-max-char -1)

@@ -12151,7 +12151,7 @@ If you need to install an earlier version than =HEAD=, you’ll need to build fr
 5. Build the library: =make -jN=, replacing =N= by the number of cores to be used for the compilation.
 6. Install the library: =make install=
 
-Then set =telega-server-libs-prefix= to =/usr/local/lib=.
+Then change the value of =telega-server-libs-prefix= from =/opt/homebrew= to =/usr/local/lib=.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package telega

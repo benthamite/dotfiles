@@ -4,6 +4,10 @@ emacs/variables.el
 emacs/init-pablo.el
 shell/.zshrc.local
 
+## emacs
+emacs/node_modules/
+emacs/logs/
+
 ## aider
 .aider*
 !.aider.conf.yml

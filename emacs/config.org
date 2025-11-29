@@ -12178,6 +12178,7 @@ Then change the value of =telega-server-libs-prefix= from =/opt/homebrew= to =/u
   (telega-webpage-fill-column 110)
   (telega-photo-size-limits `(8 3 ,(* 55 1.5) ,(* 12 1.5)))
   (telega-webpage-photo-size-limits `(55 10 ,(* 110 1.5) ,(* 20 1.5)))
+  (telega-mode-line-format nil)
 
   :config
   (with-eval-after-load 'savehist

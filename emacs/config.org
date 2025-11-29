@@ -12151,7 +12151,7 @@ Then set =telega-server-libs-prefix= to =/usr/local/lib=.
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package telega
   :init
-  (setopt telega-server-libs-prefix "/usr/local/lib")
+  (setopt telega-server-libs-prefix "/opt/homebrew")
 
   :custom
   (telega-chat-input-markups '("org"))

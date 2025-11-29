@@ -488,6 +488,7 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#telega-dired-dwim][telega-dired-dwim]]
   - [[#telega-extras][telega-extras]]
   - [[#ol-telega][ol-telega]]
+  - [[#wasabi][wasabi]]
   - [[#ement][ement]]
   - [[#erc][erc]]
   - [[#circe][circe]]
@@ -2862,6 +2863,10 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
     (bind-keys :map special-mode-map
                ("k" . previous-line)
                ("l" . next-line)))
+  (with-eval-after-load 'wasabi
+    (bind-keys :map wasabi-mode-map
+	       ("k" . previous-line)
+	       ("l" . next-line)))
 
   :bind
   (("A-C-s-m" . move-beginning-of-line)
@@ -12317,6 +12322,18 @@ Then set =telega-server-libs-prefix= to =/usr/local/lib=.
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature ol-telega
   :after telega)
+#+end_src
+
+** wasabi
+:PROPERTIES:
+:ID:       6D2A5268-FC77-401E-A425-EC6F5961ED3B
+:END:
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package wasabi
+  :demand t
+  :ensure (:host github
+                 :repo "xenodium/wasabi"))
 #+end_src
 
 ** ement

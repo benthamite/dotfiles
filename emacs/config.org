@@ -439,6 +439,7 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#org-pomodoro][org-pomodoro]]
   - [[#org-pomodoro-extras][org-pomodoro-extras]]
   - [[#org-percentile][org-percentile]]
+  - [[#anki-editor][anki-editor]]
 - [[#note-taking][note-taking]]
   - [[#org-roam][org-roam]]
   - [[#org-roam-extras][org-roam-extras]]
@@ -10437,6 +10438,21 @@ CLOCK: [2025-07-05 Sat 11:54]--[2025-07-05 Sat 11:54] =>  0:00
 
   :config
   (org-percentile-mode))
+#+end_src
+
+** anki-editor
+:PROPERTIES:
+:ID:       ADC317A1-3867-4F73-8399-220203190E2E
+:END:
+
+/[[https://github.com/anki-editor/anki-editor][anki-editor]] is a minor mode for making Anki cards with Org Mode./
+
+The [[https://github.com/louietan/anki-editor][original package]] is abandoned, but there is an actively maintained [[https://github.com/anki-editor/anki-editor][fork]].
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package anki-editor
+  :ensure (:host GitHub
+		 :repo anki-editor/anki-editor))
 #+end_src
 
 * note-taking

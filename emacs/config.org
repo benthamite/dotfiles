@@ -10451,8 +10451,8 @@ The [[https://github.com/louietan/anki-editor][original package]] is abandoned, 
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package anki-editor
-  :ensure (:host GitHub
-		 :repo anki-editor/anki-editor))
+  :ensure (:host github
+		 :repo "anki-editor/anki-editor"))
 #+end_src
 
 * note-taking

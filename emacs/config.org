@@ -6594,9 +6594,7 @@ I use a fork that is better maintained, together with the associated [[https://g
 (use-package atomic-chrome
   ;; :defer 30
   :demand t
-  :ensure (atomic-chrome
-	   :repo "KarimAziev/atomic-chrome"
-	   :type git
+  :ensure (:repo "KarimAziev/atomic-chrome"
 	   :host github)
   :commands (atomic-chrome-start-server)
   :custom

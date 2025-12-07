@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: seul
+# key: seul
+# contributor: Pablo Stafforini
+# --
+`(format-time-string "%Y-%m-%d")` Seúl
+    Expenses:Donation                       9,500$1.00 ARS ; monthly subscription
+    Assets:Mercado Pago
+
+$0

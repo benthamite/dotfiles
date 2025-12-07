@@ -440,6 +440,7 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#org-pomodoro-extras][org-pomodoro-extras]]
   - [[#org-percentile][org-percentile]]
   - [[#anki-editor][anki-editor]]
+  - [[#ankiorg][ankiorg]]
 - [[#note-taking][note-taking]]
   - [[#org-roam][org-roam]]
   - [[#org-roam-extras][org-roam-extras]]
@@ -10453,6 +10454,24 @@ The [[https://github.com/louietan/anki-editor][original package]] is abandoned, 
 (use-package anki-editor
   :ensure (:host github
 		 :repo "anki-editor/anki-editor"))
+#+end_src
+
+** ankiorg
+:PROPERTIES:
+:ID:       B43CB28A-9B8C-4304-AC76-4174ED2D479C
+:END:
+
+/[[https://github.com/orgtre/ankiorg][ankiorg]] is an anki-editor add-on which pulls Anki notes to Org./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package ankiorg
+  :ensure (:host github :repo "orgtre/ankiorg")
+  :custom
+  (ankiorg-sql-database
+   (file-name-concat no-littering-var-directory "ankiorg/collection.anki2"))
+  (ankiorg-media-directory
+   no-littering-var-directory "ankiorg/img")
+   (ankiorg-pick-deck-all-directly t))
 #+end_src
 
 * note-taking

@@ -9047,10 +9047,11 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
         (run-with-idle-timer (* 10 60) nil #'org-extras-agenda-switch-to-agenda-current-day))
 
   :custom
-  (org-extras-id-auto-add-excluded-directories `(,paths-dir-dropbox-tlon-leo
-                                                 ,(file-name-concat paths-dir-dropbox-tlon-leo "gptel/")
-                                                 ,paths-dir-dropbox-tlon-fede
-                                                 ,(file-name-concat paths-dir-dropbox-tlon-fede "archive/")))
+  (org-extras-id-auto-add-excluded-directories (list paths-dir-anki
+						     paths-dir-dropbox-tlon-leo
+						     paths-dir-dropbox-tlon-fede
+						     (file-name-concat paths-dir-dropbox-tlon-leo "gptel/")
+						     (file-name-concat paths-dir-dropbox-tlon-fede "archive/"))) 
 
   (org-extras-agenda-files-excluded (list paths-file-tlon-tareas-leo
                                           paths-file-tlon-tareas-fede))

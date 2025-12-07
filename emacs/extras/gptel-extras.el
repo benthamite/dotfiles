@@ -117,7 +117,7 @@ If t, always display an alert. If nil, never display an alert."
 ;;;; Variables
 
 (defconst gptel-extras-changelog-file
-  (file-name-concat paths-dir-dotemacs "extras/gptel-extras-changelog-template.org")
+  (file-name-concat paths-dir-dotemacs "extras/etc/gptel-extras-changelog-template.org")
   "The file with the changelog template for `gptel-extras-summarize-commit-diffs'.")
 
 ;;;; Functions

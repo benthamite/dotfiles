@@ -9,6 +9,25 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** semext
+:PROPERTIES:
+:ID:       CEB2A11F-3C30-4E80-B59B-9B54C50C0AA4
+:END:
+
+/[[https://github.com/ahyatt/semext][semext]] provides LLM-powered semantic versions of various Emacs commands./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package semext
+  :disabled t
+  :ensure (:host github
+                 :repo "ahyatt/semext")
+  :init
+
+  (setopt semext-provider (make-llm-gemini
+                           :key (auth-source-pass-get 'secret (concat "tlon/core/aistudio.google.com/" tlon-email-shared))
+                           :chat-model "gemini-2.5-pro-preview-03-25")))
+#+end_src
+
 ** pyvenv
 :PROPERTIES:
 :ID:       2553445B-D90D-499F-82AE-E7897FA4A286

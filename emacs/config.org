@@ -438,8 +438,6 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#org-pomodoro][org-pomodoro]]
   - [[#org-pomodoro-extras][org-pomodoro-extras]]
   - [[#org-percentile][org-percentile]]
-  - [[#anki-editor][anki-editor]]
-  - [[#ankiorg][ankiorg]]
 - [[#note-taking][note-taking]]
   - [[#org-roam][org-roam]]
   - [[#org-roam-extras][org-roam-extras]]
@@ -449,6 +447,10 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#vulpea-extras][vulpea-extras]]
   - [[#org-noter][org-noter]]
   - [[#org-noter-extras][org-noter-extras]]
+- [[#spaced-repetition][spaced-repetition]]
+  - [[#anki-editor][anki-editor]]
+  - [[#anki-editor-extras][anki-editor-extras]]
+  - [[#ankiorg][ankiorg]]
 - [[#reference--citation][reference & citation]]
   - [[#oc][oc]]
   - [[#oc-csl][oc-csl]]
@@ -10422,39 +10424,6 @@ CLOCK: [2025-07-05 Sat 11:54]--[2025-07-05 Sat 11:54] =>  0:00
   (org-percentile-mode))
 #+end_src
 
-** anki-editor
-:PROPERTIES:
-:ID:       ADC317A1-3867-4F73-8399-220203190E2E
-:END:
-
-/[[https://github.com/anki-editor/anki-editor][anki-editor]] is a minor mode for making Anki cards with Org Mode./
-
-The [[https://github.com/louietan/anki-editor][original package]] is abandoned, but there is an actively maintained [[https://github.com/anki-editor/anki-editor][fork]].
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package anki-editor
-  :ensure (:host github
-		 :repo "anki-editor/anki-editor"))
-#+end_src
-
-** ankiorg
-:PROPERTIES:
-:ID:       B43CB28A-9B8C-4304-AC76-4174ED2D479C
-:END:
-
-/[[https://github.com/orgtre/ankiorg][ankiorg]] is an anki-editor add-on which pulls Anki notes to Org./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package ankiorg
-  :ensure (:host github :repo "orgtre/ankiorg")
-  :custom
-  (ankiorg-sql-database
-   (file-name-concat no-littering-var-directory "ankiorg/collection.anki2"))
-  (ankiorg-media-directory
-   no-littering-var-directory "ankiorg/img")
-   (ankiorg-pick-deck-all-directly t))
-#+end_src
-
 * note-taking
 :PROPERTIES:
 :ID:       EC6700D7-C65D-4430-8DAC-57772B423D69
@@ -10761,6 +10730,52 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
    ("s-k" . org-noter-extras-sync-prev-note)
    ("s-l" . org-noter-extras-sync-next-note)
    ("s-o" . org-noter-extras-highlight-offset)))
+#+end_src
+
+* spaced-repetition
+:PROPERTIES:
+:ID:       7D12596F-7CF6-43B4-B3E8-E25214535DFA
+:END:
+** anki-editor
+:PROPERTIES:
+:ID:       ADC317A1-3867-4F73-8399-220203190E2E
+:END:
+
+/[[https://github.com/anki-editor/anki-editor][anki-editor]] is a minor mode for making Anki cards with Org Mode./
+
+The [[https://github.com/louietan/anki-editor][original package]] is abandoned, but there is an actively maintained [[https://github.com/anki-editor/anki-editor][fork]].
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package anki-editor
+  :ensure (:host github
+		 :repo "anki-editor/anki-editor")
+  :defer t)
+#+end_src
+
+** anki-editor-extras
+:PROPERTIES:
+:ID:       16C923D7-0A7E-4EA6-B06E-EB02A04C81C8
+:END:
+
+
+** ankiorg
+:PROPERTIES:
+:ID:       B43CB28A-9B8C-4304-AC76-4174ED2D479C
+:END:
+
+/[[https://github.com/orgtre/ankiorg][ankiorg]] is an anki-editor add-on which pulls Anki notes to Org./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package ankiorg
+  :ensure (:host github :repo "orgtre/ankiorg")
+  :demand t
+  :after anki-editor
+  :custom
+  (ankiorg-sql-database
+   (file-name-concat no-littering-var-directory "ankiorg/collection.anki2"))
+  (ankiorg-media-directory
+   no-littering-var-directory "ankiorg/img")
+   (ankiorg-pick-deck-all-directly t))
 #+end_src
 
 * reference & citation

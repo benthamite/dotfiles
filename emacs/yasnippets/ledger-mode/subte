@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: subte
+# key: subte
+# contributor: Pablo Stafforini
+# --
+`(format-time-string "%Y-%m-%d")` Emova
+Expenses:Transportation:Metro  1,206.00$1 ARS
+Assets:Mercado Pago
+$0

@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: bus
+# key: bus
+# contributor: Pablo Stafforini
+# --
+`(format-time-string "%Y-%m-%d")` Sube
+Expenses:Transportation:Bus  ${3:$$(yas-choose-value '("551.24" "593.70"))} ARS
+Assets:Mercado Pago

@@ -383,7 +383,6 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#aidermacs][aidermacs]]
   - [[#aidermacs-extras][aidermacs-extras]]
   - [[#ob-aider][ob-aider]]
-  - [[#semext][semext]]
   - [[#mcp][mcp]]
   - [[#dall-e-shell][dall-e-shell]]
   - [[#llm][llm]]
@@ -8438,25 +8437,6 @@ This package evolved out of gptel-extras.
    'org-babel-load-languages
    (append org-babel-load-languages
            '((aider . t)))))
-#+end_src
-
-** semext
-:PROPERTIES:
-:ID:       CEB2A11F-3C30-4E80-B59B-9B54C50C0AA4
-:END:
-
-/[[https://github.com/ahyatt/semext][semext]] provides LLM-powered semantic versions of various Emacs commands./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package semext
-  :disabled t
-  :ensure (:host github
-                 :repo "ahyatt/semext")
-  :init
-
-  (setopt semext-provider (make-llm-gemini
-                           :key (auth-source-pass-get 'secret (concat "tlon/core/aistudio.google.com/" tlon-email-shared))
-                           :chat-model "gemini-2.5-pro-preview-03-25")))
 #+end_src
 
 ** mcp

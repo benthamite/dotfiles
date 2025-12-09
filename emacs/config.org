@@ -6595,11 +6595,9 @@ I use a fork that is better maintained, together with the associated [[https://g
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package atomic-chrome
-  ;; :defer 30
-  :demand t
   :ensure (:repo "KarimAziev/atomic-chrome"
 	   :host github)
-  :commands (atomic-chrome-start-server)
+  :defer 30
   :custom
   (atomic-chrome-default-major-mode 'markdown-mode)
   (atomic-chrome-url-major-mode-alist

@@ -12363,9 +12363,9 @@ Then change the value of =telega-server-libs-prefix= from =/opt/homebrew= to =/u
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package wasabi
-  :demand t
   :ensure (:host github
-                 :repo "xenodium/wasabi"))
+                 :repo "xenodium/wasabi")
+  :defer t)
 #+end_src
 
 ** ement

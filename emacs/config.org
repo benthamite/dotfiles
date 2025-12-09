@@ -8433,7 +8433,7 @@ This package evolved out of gptel-extras.
 (use-package ob-aider
   :ensure (:host github
 		 :repo "localredhead/ob-aider.el")
-  :after org
+  :after org aidermacs
   :config
   (org-babel-do-load-languages
    'org-babel-load-languages

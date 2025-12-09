@@ -12358,6 +12358,9 @@ Then change the value of =telega-server-libs-prefix= from =/opt/homebrew= to =/u
 :ID:       6D2A5268-FC77-401E-A425-EC6F5961ED3B
 :END:
 
+
+/[[https://github.com/xenodium/wasabi/][wasabi]] is a WhatsApp Emacs client powered by wuzapi and whatsmeow./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package wasabi
   :demand t

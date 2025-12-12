@@ -77,7 +77,7 @@
 		  (cl-loop for (f . v) in entry concat
 			   (when (string= f field)
 			     (format "%s = %s,\n" f v))))
-		(-uniq other-fields) "\n")
+		(delete-dups other-fields) "\n")
 	       "\n}"))
       (bibtex-search-entry key)
       (el-patch-remove (bibtex-fill-entry))
@@ -132,7 +132,7 @@ in the file. Data comes from www.ebook.de."
 		(org-ref-isbn-clean-bibtex-entry)
 		(org-ref-clean-bibtex-entry)
 		(bibtex-fill-entry)
-		(s-trim (buffer-string))))
+		(string-trim (buffer-string))))
       (save-buffer))))
 
 (provide 'org-ref-extras)

@@ -13114,6 +13114,9 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (defengine Crossref
     "https://search.crossref.org/?q=%s"
     :keybinding "c r")
+  (defengine MercadoLibreUsed
+    "https://listado.mercadolibre.com.ar/%s_ITEM*CONDITION_2230581_NoIndex_True#applied_filter_id%3DITEM_CONDITION%26applied_filter_name%3DCondici%C3%B3n%26applied_filter_order%3D10%26applied_value_id%3D2230581%26applied_value_name%3DUsado%26applied_value_order%3D2%26applied_value_results%3D9%26is_custom%3Dfalse"
+    :keybinding "c r")
   (defengine DOI
     "https://doi.org/%s"
     :keybinding "d o")
@@ -13216,6 +13219,9 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   (defengine IMDb-Composer
     "http://www.imdb.com/filmosearch?explore=title_type&role=%s&ref_=filmo_ref_job_typ&sort=user_rating"
     :keybinding "i c")
+  (defengine IberLibroArgentina
+    "https://www.iberlibro.com/servlet/SearchResults?bi=0&bx=off&cm_sp=SearchF-_-Advs-_-Result&cty=ar&ds=20&kn=%s&prc=USD&recentlyadded=all&rgn=ww&rollup=on&sortby=20&xdesc=off&xpod=off"
+    :keybinding "i r")
   (defengine Internet-Archive
     "https://archive.org/search.php?query=%s"
     :keybinding "v v")

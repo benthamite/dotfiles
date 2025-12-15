@@ -5748,6 +5748,7 @@ CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
   :custom
   ;; https://github.com/minad/affe?tab=readme-ov-file#installation-and-configuration
   (affe-regexp-compiler #'affe-orderless-regexp-compiler)
+  (affe-count 100)
 
   :config
   (defun affe-orderless-regexp-compiler (input _type _ignorecase)

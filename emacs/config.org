@@ -9026,7 +9026,8 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
 						     paths-dir-dropbox-tlon-leo
 						     paths-dir-dropbox-tlon-fede
 						     (file-name-concat paths-dir-dropbox-tlon-leo "gptel/")
-						     (file-name-concat paths-dir-dropbox-tlon-fede "archive/"))) 
+						     (file-name-concat paths-dir-dropbox-tlon-fede "archive/")
+						     (file-name-concat paths-dir-dropbox-tlon-core "legal/contracts/"))) 
 
   (org-extras-agenda-files-excluded (list paths-file-tlon-tareas-leo
                                           paths-file-tlon-tareas-fede))
@@ -9036,10 +9037,10 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
 
   :config
   (setopt org-extras-agenda-files-excluded
-        (append org-extras-agenda-files-excluded
-                ;; files in `paths-dir-inactive' sans ., .., hidden files and subdirectories
-                (seq-filter (lambda (f) (not (file-directory-p f)))
-                            (directory-files paths-dir-inactive t "^[^.][^/]*$"))))
+          (append org-extras-agenda-files-excluded
+                  ;; files in `paths-dir-inactive' sans ., .., hidden files and subdirectories
+                  (seq-filter (lambda (f) (not (file-directory-p f)))
+                              (directory-files paths-dir-inactive t "^[^.][^/]*$"))))
 
   (quote (:link t :maxlevel 5 :fileskip0 t :narrow 70 :formula % :indent t :formatter org-extras-clocktable-sorter))
 

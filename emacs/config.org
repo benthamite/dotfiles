@@ -8455,13 +8455,7 @@ This package evolved out of gptel-extras.
   :after gptel
   :config
   (setq mcp-hub-servers
-	`(("brave-search" . (:command "npx"
-				      :args ("-y" "@modelcontextprotocol/server-brave-search")
-				      :env (:BRAVE_API_KEY
-					    ,(auth-source-pass-get "consult-mu"
-								   (concat "chrome/brave.com/"
-									   (getenv "PERSONAL_GMAIL"))))))
-	  ("context7" . (:command "npx"
+	`(("context7" . (:command "npx"
 				  :args ("-y" "@upstash/context7-mcp@latest")))
 	  ("ddg-search" . (:command "uvx"
 				    :args ("duckduckgo-mcp-server")))

@@ -1137,5 +1137,76 @@ added as a single context chunk."
 	(setq message (concat message " (context cleared)")))
       (user-error message))))
 
+;;;;; Anki plot summaries
+
+(declare-function ebib-extras-get-field "ebib-extras")
+(declare-function ebib-extras-key-is-valid-p "ebib-extras")
+;;;###autoload
+(defun gptel-extras-insert-film-plot-summary ()
+  "Insert a one-paragraph plot summary for the film referenced by the current file.
+When the current buffer is in `org-mode', this command uses the base file name
+\\=(without extension) as a BibTeX key. If the key is valid per
+`ebib-extras-key-is-valid-p', fetch the entry title via
+`ebib-extras-get-field' and request a plot summary from gptel. The summary is
+inserted at the end of the buffer under a level-2 heading \"Plot summary\"."
+  (interactive)
+  (unless (derived-mode-p 'org-mode)
+    (user-error "Not in an `org-mode' buffer"))
+  (unless (buffer-file-name)
+    (user-error "Current buffer is not visiting a file"))
+  (let* ((key (file-name-base (buffer-file-name))))
+    (if (ebib-extras-key-is-valid-p key)
+	(gptel-extras--insert-plot-summary-for-key key)
+      (user-error "Invalid BibTeX key: %s" key))))
+
+(defun gptel-extras--insert-plot-summary-for-key (key)
+  "Insert a one-paragraph plot summary for the film with BibTeX KEY."
+  (let* ((title (ebib-extras-get-field "title" key))
+	 (date (ebib-extras-get-field "date" key))
+	 (year (and date (substring date 0 4)))
+	 (title-with-year (if year
+			      (format "%s (%s)" title year)
+			    title))
+	 (author (ebib-extras-get-field "author" key))
+	 (directors (gptel-extras--ankify-film-directors author))
+	 (anki-front (format "What is the plot of %s (%s, %s)?" title directors year)))
+    (unless title
+      (user-error "Cannot determine title for BibTeX key %s" key))
+    (unless year
+      (user-error "Cannot determine year for BibTeX key %s" key))
+    (unless directors
+      (user-error "Cannot determine director last name(s) for BibTeX key %s" key))
+    (save-excursion
+      (goto-char (point-max))
+      (unless (bolp)
+	(insert "\n"))
+      (insert "\n** Plot summary\n:PROPERTIES:\n:ANKI_FORMAT: nil\n:ANKI_DECK: Main::Started::Plot summaries\n:ANKI_NOTE_TYPE: Basic\n:ANKI_TAGS: film anki-editor\n:ANKI_FIELD_FRONT: " anki-front "\n:END:\n\n")
+      (gptel-request
+	  (format "Write a single-paragraph summary of the film's plot.\n\nTitle: %s\n\nConstraints:\n- One paragraph only.\n- Since the summary is for my personal reference, to remind myself of the plot of film’s I’ve seen, the summary can include spoilers.\n- Do not use bullet points.\n- Do not include a heading, title, or any prefatory text; output only the paragraph.\n -Do not mention the film’s title in the summary."
+		  title-with-year)
+	:buffer (current-buffer)
+	:position (point)
+	:in-place t))))
+
+(defun gptel-extras--ankify-film-directors (author-field)
+  "Return formatted director last names from AUTHOR-FIELD.
+AUTHOR-FIELD is expected to be a string of one or more directors, each in the
+form \"LAST, FIRST\", separated by semicolons."
+  (let* ((authors (split-string (or author-field "") ";" t "[ \t\n\r]+"))
+	 (last-names (delq nil
+			   (mapcar (lambda (a)
+				     (let* ((a (string-trim a))
+					    (parts (split-string a "," t "[ \t\n\r]+")))
+				       (car parts)))
+				   authors))))
+    (pcase (length last-names)
+      (0 nil)
+      (1 (car last-names))
+      (2 (format "%s & %s" (nth 0 last-names) (nth 1 last-names)))
+      (_ (format "%s, %s & %s"
+		 (mapconcat #'identity (butlast last-names 2) ", ")
+		 (nth (- (length last-names) 2) last-names)
+		 (car (last last-names)))))))
+
 (provide 'gptel-extras)
 ;;; gptel-extras.el ends here

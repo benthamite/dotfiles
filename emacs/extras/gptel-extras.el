@@ -1141,6 +1141,7 @@ added as a single context chunk."
 
 (declare-function ebib-extras-get-field "ebib-extras")
 (declare-function ebib-extras-key-is-valid-p "ebib-extras")
+(declare-function anki-editor-push-note-at-point "anki-editor")
 ;;;###autoload
 (defun gptel-extras-insert-film-plot-summary ()
   "Insert a one-paragraph plot summary for the film referenced by the current file.
@@ -1148,7 +1149,9 @@ When the current buffer is in `org-mode', this command uses the base file name
 \\=(without extension) as a BibTeX key. If the key is valid per
 `ebib-extras-key-is-valid-p', fetch the entry title via
 `ebib-extras-get-field' and request a plot summary from gptel. The summary is
-inserted at the end of the buffer under a level-2 heading \"Plot summary\"."
+inserted at the end of the buffer under a level-2 heading \"Plot summary\".
+
+After inserting the summary, prompt to optionally push the note to Anki."
   (interactive)
   (unless (derived-mode-p 'org-mode)
     (user-error "Not in an `org-mode' buffer"))
@@ -1160,7 +1163,8 @@ inserted at the end of the buffer under a level-2 heading \"Plot summary\"."
       (user-error "Invalid BibTeX key: %s" key))))
 
 (defun gptel-extras--insert-plot-summary-for-key (key)
-  "Insert a one-paragraph plot summary for the film with BibTeX KEY."
+  "Insert a one-paragraph plot summary for the film with BibTeX KEY.
+After inserting, ask whether to push the note to Anki."
   (let* ((title (ebib-extras-get-field "title" key))
 	 (date (ebib-extras-get-field "date" key))
 	 (year (and date (substring date 0 4)))
@@ -1186,7 +1190,12 @@ inserted at the end of the buffer under a level-2 heading \"Plot summary\"."
 		  title-with-year)
 	:buffer (current-buffer)
 	:position (point)
-	:in-place t))))
+	:in-place t))
+    (when (y-or-n-p "Push plot summary note to Anki now? ")
+      (save-excursion
+        (goto-char (point-max))
+        (org-back-to-heading t)
+        (anki-editor-push-note-at-point)))))
 
 (defun gptel-extras--ankify-film-directors (author-field)
   "Return formatted director last names from AUTHOR-FIELD.

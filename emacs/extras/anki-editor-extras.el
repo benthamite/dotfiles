@@ -94,7 +94,9 @@ After inserting, ask whether to push the note to Anki."
 			    title))
 	 (author (ebib-extras-get-field "author" key))
 	 (directors (anki-editor-extras--ankify-film-directors author))
-	 (anki-front (format "What is the plot of %s (%s, %s)?" title directors year)))
+	 (anki-front (format "What is the plot of %s (%s, %s)?" title directors year))
+	 (request-buffer (current-buffer))
+	 (request-position (point-marker)))
     (unless title
       (user-error "Cannot determine title for BibTeX key %s" key))
     (unless year
@@ -106,17 +108,30 @@ After inserting, ask whether to push the note to Anki."
       (unless (bolp)
 	(insert "\n"))
       (insert "\n** Plot summary\n:PROPERTIES:\n:ANKI_FORMAT: nil\n:ANKI_DECK: Main::Started::Plot summaries\n:ANKI_NOTE_TYPE: Basic\n:ANKI_TAGS: film anki-editor\n:ANKI_FIELD_FRONT: " anki-front "\n:END:\n\n")
+      (set-marker request-position (point) request-buffer)
       (gptel-request
 	  (format "Write a single-paragraph summary of the film's plot.\n\nTitle: %s\n\nConstraints:\n- One paragraph only.\n- Since the summary is for my personal reference, to remind myself of the plot of film’s I’ve seen, the summary can include spoilers.\n- Do not use bullet points.\n- Do not include a heading, title, or any prefatory text; output only the paragraph.\n -Do not mention the film’s title in the summary."
 		  title-with-year)
-	:buffer (current-buffer)
-	:position (point)
-	:in-place t))
-    (when (y-or-n-p "Push plot summary note to Anki now? ")
-      (save-excursion
-        (goto-char (point-max))
-        (org-back-to-heading t)
-        (anki-editor-push-note-at-point)))))
+	:buffer request-buffer
+	:position request-position
+	:in-place t
+	:callback
+	(lambda (response info)
+	  (when (eq response 'abort)
+	    (set-marker request-position nil)
+	    (message "Aborted plot summary request")
+	    (cl-return-from anki-editor-extras--insert-plot-summary-for-key nil))
+	  (when (and (null response) (plist-get info :status))
+	    (set-marker request-position nil)
+	    (user-error "Failed to fetch plot summary: %s" (plist-get info :status)))
+	  (when (eq response t)
+	    (set-marker request-position nil)
+	    (with-current-buffer request-buffer
+	      (save-excursion
+		(goto-char (point-max))
+		(org-back-to-heading t)
+		(when (y-or-n-p "Push plot summary note to Anki now? ")
+		  (anki-editor-push-note-at-point))))))))))
 
 (defun anki-editor-extras--ankify-film-directors (author-field)
   "Return formatted director last names from AUTHOR-FIELD.

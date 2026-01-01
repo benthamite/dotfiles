@@ -131,7 +131,8 @@ After inserting, ask whether to push the note to Anki."
 		(goto-char (point-max))
 		(org-back-to-heading t)
 		(when (y-or-n-p "Push plot summary note to Anki now? ")
-		  (anki-editor-push-note-at-point))))))))))
+		  (anki-editor-push-note-at-point)
+		  (anki-editor-extras-set-card-position (org-entry-get nil "ANKI_NOTE_ID") 1))))))))))
 
 (defun anki-editor-extras--ankify-film-directors (author-field)
   "Return formatted director last names from AUTHOR-FIELD.

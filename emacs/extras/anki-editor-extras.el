@@ -54,8 +54,8 @@ CARD-ID and POSITION must be integers (or numeric strings).  POSITION is
     (anki-editor-api-call-result
      'setSpecificValueOfCard
      :card cid
-     :keys ["due"]
-     :newValues [pos])))
+     :keys (vconcat '("due"))
+     :newValues (vector pos))))
 
 ;;;;; plot summaries
 

@@ -41,7 +41,7 @@
 
 (defgroup forge-extras ()
   "Extensions for `forge'."
-  :group 'forge-extras)
+  :group 'forge)
 
 (defcustom forge-extras-project-owner nil
   "The GitHub owner (organization or user) for the target project."

@@ -33,7 +33,7 @@
 
 (defgroup aidermacs-extras ()
   "Extensions for `aidermacs'."
-  :group 'aidermacs-extras)
+  :group 'aidermacs)
 
 ;;;; Functions
 

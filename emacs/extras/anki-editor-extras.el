@@ -44,7 +44,9 @@
 (defun anki-editor-extras-set-card-position (card-id position)
   "Set CARD-ID's new-card position to POSITION via AnkiConnect.
 CARD-ID and POSITION must be integers (or numeric strings).  POSITION is
-1-indexed, matching Anki's `due' position for new cards."
+1-indexed, matching Anki's `due' position for new cards. For example:
+
+\\=(anki-editor-extras-set-card-position 1764877783576 1)"
   (let ((cid (if (stringp card-id) (string-to-number card-id) card-id))
         (pos (if (stringp position) (string-to-number position) position)))
     (unless (and (integerp cid) (> cid 0))

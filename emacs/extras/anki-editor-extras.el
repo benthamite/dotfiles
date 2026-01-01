@@ -38,8 +38,24 @@
 
 ;;;; Functions
 
-;;;;; set position
+;;;;; set card position
 
+;;;###autoload
+(defun anki-editor-extras-set-card-position (card-id position)
+  "Set CARD-ID's new-card position to POSITION via AnkiConnect.
+CARD-ID and POSITION must be integers (or numeric strings).  POSITION is
+1-indexed, matching Anki's `due' position for new cards."
+  (let ((cid (if (stringp card-id) (string-to-number card-id) card-id))
+        (pos (if (stringp position) (string-to-number position) position)))
+    (unless (and (integerp cid) (> cid 0))
+      (user-error "Invalid card id: %S" card-id))
+    (unless (and (integerp pos) (> pos 0))
+      (user-error "Invalid position: %S" position))
+    (anki-editor-api-call-result
+     'setSpecificValueOfCard
+     :card cid
+     :keys ["due"]
+     :newValues [pos])))
 
 ;;;;; plot summaries
 

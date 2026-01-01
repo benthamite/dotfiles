@@ -28,6 +28,7 @@
 ;;; Code:
 
 (require 'anki-editor)
+(require 'cl-lib)
 (require 'gptel)
 
 ;;;; User options
@@ -48,7 +49,7 @@ CARD-ID and POSITION must be integers (or numeric strings).  POSITION is
 
 \\=(anki-editor-extras-set-card-position 1764877783576 1)"
   (let ((cid (if (stringp card-id) (string-to-number card-id) card-id))
-        (pos (if (stringp position) (string-to-number position) position)))
+	(pos (if (stringp position) (string-to-number position) position)))
     (unless (and (integerp cid) (> cid 0))
       (user-error "Invalid card id: %S" card-id))
     (unless (and (integerp pos) (> pos 0))
@@ -86,6 +87,23 @@ After inserting the summary, prompt to optionally push the note to Anki."
 (defun anki-editor-extras--insert-plot-summary-for-key (key)
   "Insert a one-paragraph plot summary for the film with BibTeX KEY.
 After inserting, ask whether to push the note to Anki."
+  (let* ((request (anki-editor-extras--plot-summary-request-for-key key))
+	 (request-buffer (current-buffer))
+	 (request-position (point-marker)))
+    (anki-editor-extras--insert-plot-summary-note-skeleton request)
+    (set-marker request-position (point) request-buffer)
+    (gptel-request
+	(anki-editor-extras--plot-summary-prompt request)
+      :buffer request-buffer
+      :position request-position
+      :in-place t
+      :callback (anki-editor-extras--plot-summary-callback
+		 request-buffer request-position))))
+
+(defun anki-editor-extras--plot-summary-request-for-key (key)
+  "Build a plot-summary request plist for BibTeX KEY.
+The returned plist contains :title, :year, :title-with-year, and
+:anki-front."
   (let* ((title (ebib-extras-get-field "title" key))
 	 (date (ebib-extras-get-field "date" key))
 	 (year (and date (substring date 0 4)))
@@ -94,45 +112,57 @@ After inserting, ask whether to push the note to Anki."
 			    title))
 	 (author (ebib-extras-get-field "author" key))
 	 (directors (anki-editor-extras--ankify-film-directors author))
-	 (anki-front (format "What is the plot of %s (%s, %s)?" title directors year))
-	 (request-buffer (current-buffer))
-	 (request-position (point-marker)))
+	 (anki-front (format "What is the plot of %s (%s, %s)?" title directors year)))
     (unless title
       (user-error "Cannot determine title for BibTeX key %s" key))
     (unless year
       (user-error "Cannot determine year for BibTeX key %s" key))
     (unless directors
       (user-error "Cannot determine director last name(s) for BibTeX key %s" key))
-    (save-excursion
-      (goto-char (point-max))
-      (unless (bolp)
-	(insert "\n"))
-      (insert "\n** Plot summary\n:PROPERTIES:\n:ANKI_FORMAT: nil\n:ANKI_DECK: Main::Started::Plot summaries\n:ANKI_NOTE_TYPE: Basic\n:ANKI_TAGS: film anki-editor\n:ANKI_FIELD_FRONT: " anki-front "\n:END:\n\n")
-      (set-marker request-position (point) request-buffer)
-      (gptel-request
-	  (format "Write a single-paragraph summary of the film's plot.\n\nTitle: %s\n\nConstraints:\n- One paragraph only.\n- Since the summary is for my personal reference, to remind myself of the plot of film’s I’ve seen, the summary can include spoilers.\n- Do not use bullet points.\n- Do not include a heading, title, or any prefatory text; output only the paragraph.\n -Do not mention the film’s title in the summary."
-		  title-with-year)
-	:buffer request-buffer
-	:position request-position
-	:in-place t
-	:callback
-	(lambda (response info)
-	  (when (eq response 'abort)
-	    (set-marker request-position nil)
-	    (message "Aborted plot summary request")
-	    (cl-return-from anki-editor-extras--insert-plot-summary-for-key nil))
-	  (when (and (null response) (plist-get info :status))
-	    (set-marker request-position nil)
-	    (user-error "Failed to fetch plot summary: %s" (plist-get info :status)))
-	  (when (eq response t)
-	    (set-marker request-position nil)
-	    (with-current-buffer request-buffer
-	      (save-excursion
-		(goto-char (point-max))
-		(org-back-to-heading t)
-		(when (y-or-n-p "Push plot summary note to Anki now? ")
-		  (anki-editor-push-note-at-point)
-		  (anki-editor-extras-set-card-position (org-entry-get nil "ANKI_NOTE_ID") 1))))))))))
+    (list :title title
+	  :year year
+	  :title-with-year title-with-year
+	  :anki-front anki-front)))
+
+(defun anki-editor-extras--insert-plot-summary-note-skeleton (request)
+  "Insert the plot summary note skeleton described by REQUEST.
+REQUEST is a plist created by
+`anki-editor-extras--plot-summary-request-for-key'."
+  (save-excursion
+    (goto-char (point-max))
+    (unless (bolp)
+      (insert "\n"))
+    (insert "\n** Plot summary\n:PROPERTIES:\n:ANKI_FORMAT: nil\n:ANKI_DECK: Main::Started::Plot summaries\n:ANKI_NOTE_TYPE: Basic\n:ANKI_TAGS: film anki-editor\n:ANKI_FIELD_FRONT: "
+	    (plist-get request :anki-front)
+	    "\n:END:\n\n")))
+
+(defun anki-editor-extras--plot-summary-prompt (request)
+  "Return a gptel prompt string for REQUEST.
+REQUEST is a plist created by
+`anki-editor-extras--plot-summary-request-for-key'."
+  (format "Write a single-paragraph summary of the film's plot.\n\nTitle: %s\n\nConstraints:\n- One paragraph only.\n- Since the summary is for my personal reference, to remind myself of the plot of film’s I’ve seen, the summary can include spoilers.\n- Do not use bullet points.\n- Do not include a heading, title, or any prefatory text; output only the paragraph.\n -Do not mention the film’s title in the summary."
+	  (plist-get request :title-with-year)))
+
+(defun anki-editor-extras--plot-summary-callback (request-buffer request-position)
+  "Return a gptel callback for inserting plot summary and optionally pushing.
+REQUEST-BUFFER is the buffer where the note is being inserted.
+REQUEST-POSITION is a marker pointing at the insertion position."
+  (lambda (response info)
+    (when (eq response 'abort)
+      (set-marker request-position nil)
+      (message "Aborted plot summary request"))
+    (when (and (null response) (plist-get info :status))
+      (set-marker request-position nil)
+      (user-error "Failed to fetch plot summary: %s" (plist-get info :status)))
+    (when (eq response t)
+      (set-marker request-position nil)
+      (with-current-buffer request-buffer
+	(save-excursion
+	  (goto-char (point-max))
+	  (org-back-to-heading t)
+	  (when (y-or-n-p "Push plot summary note to Anki now? ")
+	    (anki-editor-push-note-at-point)
+	    (anki-editor-extras-set-card-position (org-entry-get nil "ANKI_NOTE_ID") 1)))))))
 
 (defun anki-editor-extras--ankify-film-directors (author-field)
   "Return formatted director last names from AUTHOR-FIELD.

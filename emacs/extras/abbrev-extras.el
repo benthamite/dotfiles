@@ -33,7 +33,7 @@
 
 (defgroup abbrev-extras ()
   "Extensions for `abbrev'."
-  :group 'abbrev-extras)
+  :group 'abbrev)
 
 (defcustom abbrev-extras-write-file-p t
   "Whether to write abbrevs to file after adding a new abbrev."

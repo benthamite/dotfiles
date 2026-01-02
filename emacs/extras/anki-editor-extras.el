@@ -161,8 +161,14 @@ REQUEST-POSITION is a marker pointing at the insertion position."
 	  (goto-char (point-max))
 	  (org-back-to-heading t)
 	  (when (y-or-n-p "Push plot summary note to Anki now? ")
-	    (anki-editor-push-note-at-point)
-	    (anki-editor-extras-set-card-position (org-entry-get nil "ANKI_NOTE_ID") 1)))))))
+	    (anki-editor-extras-push-plot-summary)))))))
+
+;;;###autoload
+(defun anki-editor-extras-push-plot-summary ()
+  "Push the Anki note at point and set its new-card position to 1."
+  (interactive)
+  (anki-editor-push-note-at-point)
+  (anki-editor-extras-set-card-position (org-entry-get nil "ANKI_NOTE_ID") 1))
 
 (defun anki-editor-extras--ankify-film-directors (author-field)
   "Return formatted director last names from AUTHOR-FIELD.

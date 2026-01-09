@@ -9807,7 +9807,9 @@ Hugo should be able to export ~org-cite~ citations.
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package ox-hugo
   :after org ox
-  :defer t)
+  :demand t
+  :custom
+  (org-hugo-default-section-directory "posts"))
 #+end_src
 
 ** ox-pandoc

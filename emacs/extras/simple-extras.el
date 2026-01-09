@@ -802,7 +802,6 @@ Optionally, remove accents in region from BEGIN to END."
 
 ;;;;; Slugify
 
-;; adapted from `denote'
 ;;;###autoload
 (defun simple-extras-slugify (string)
   "Convert STRING into slug.
@@ -813,11 +812,22 @@ kill ring, and echo it in the minibuffer."
          (downcase
           (simple-extras-slug-hyphenate
            (simple-extras-asciify-string
-            (replace-regexp-in-string "[][{}!@#$%^&*()+'\"?,\\\\\|;:~`‘’“”/=]*" "" string))))))
+            (simple-extras--strip-unicode-punctuation string))))))
     (when (called-interactively-p 'any)
       (kill-new slug)
       (message "%s" slug))
     slug))
+
+(defun simple-extras--strip-unicode-punctuation (string)
+  "Replace Unicode punctuation in STRING with spaces."
+  (apply #'string
+         (mapcar (lambda (ch)
+                   (let ((cat (get-char-code-property ch 'general-category)))
+                     (if (and (symbolp cat)
+                              (string-prefix-p "P" (symbol-name cat)))
+                         ?\s
+                       ch)))
+                 (string-to-list string))))
 
 ;;;###autoload
 (defun simple-extras-slugify-clipboard ()

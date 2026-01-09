@@ -1,6 +1,6 @@
 {
     "Audiobook": {
-        "save_path": "/Users/pablostafforini/My Drive/Audiobooks"
+        "save_path": "/Users/pablostafforini/Library/CloudStorage/Dropbox/audiobooks"
     },
     "Movies": {
         "save_path": "/Users/pablostafforini/Movies"
@@ -8,11 +8,11 @@
     "Other": {
         "save_path": "/Users/pablostafforini/Movies-Other"
     },
-    "Seed": {
-        "save_path": "/Users/pablostafforini/Documents/Temporary torrent downloads/Seed"
-    },
     "Seed-TV": {
         "save_path": "/Users/pablostafforini/Movies-TV"
+    },
+    "Seeding": {
+        "save_path": "/Users/pablostafforini/Seeding"
     },
     "Seeding-Movies": {
         "save_path": "/Users/pablostafforini/Movies"

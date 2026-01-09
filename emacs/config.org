@@ -9030,6 +9030,7 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
   (org-extras-id-auto-add-excluded-directories (list paths-dir-anki
 						     paths-dir-dropbox-tlon-leo
 						     paths-dir-dropbox-tlon-fede
+						     paths-dir-android
 						     (file-name-concat paths-dir-dropbox-tlon-leo "gptel/")
 						     (file-name-concat paths-dir-dropbox-tlon-fede "archive/")
 						     (file-name-concat paths-dir-dropbox-tlon-core "legal/contracts/"))) 

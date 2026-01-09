@@ -10753,6 +10753,11 @@ The [[https://github.com/louietan/anki-editor][original package]] is abandoned, 
   :ensure (:host github
 		 :repo "anki-editor/anki-editor")
   :defer t)
+  :custom
+  ;; https://github.com/anki-editor/anki-editor/issues/116
+  (anki-editor-export-note-fields-on-push nil)
+  (anki-editor-org-tags-as-anki-tags nil)
+
 #+end_src
 
 ** anki-editor-extras

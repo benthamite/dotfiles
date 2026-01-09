@@ -6873,6 +6873,9 @@ To populate the database of historical prices:
               "%(binary) --date-format '%Y-%m-%d' --unround -f %(ledger-file) reg %(account)")))
     (add-to-list 'ledger-reports report))
 
+  :hook
+  (ledger-reconcile-mode-hook . (lambda () (mouse-wheel-mode -1)))
+  
   :bind
   (:map ledger-mode-map
         ("A-C-s-f" . ledger-navigate-next-xact-or-directive)

@@ -6771,7 +6771,9 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
 (use-package mediawiki
   :bind
   (:map mediawiki-mode-map
-        ("s-k" . mediawiki-insert-link)))
+        ("s-k" . mediawiki-insert-link)
+	("A-C-s-r" . mediawiki-prev-header)
+        ("A-C-s-f" . mediawiki-next-header)))
 #+end_src
 
 ** gdrive

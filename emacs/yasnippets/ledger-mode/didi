@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: didi
+# key: didi
+# contributor: Pablo Stafforini
+# --
+`(format-time-string "%Y-%m-%d")` Didi
+Expenses:Transportation:Taxi  $1 ARS ; taxi $2
+Assets:Mercado Pago
+
+$0

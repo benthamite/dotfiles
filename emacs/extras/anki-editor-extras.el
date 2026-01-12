@@ -49,47 +49,70 @@
 ORIG-FN is the original function being advised.
 ARGS are the arguments passed to the original function.
 
-This ensures that for Basic notes we always produce exactly two fields
-(\"Front\" and \"Back\"), even if Org/Anki field mapping would otherwise
-fail."
-  (anki-editor--patch-basic-note
-   (apply orig-fn args)))
+This addresses a common setup where the Anki model named \"Basic\" has
+additional fields (e.g. \"Meta\"), but the Org entry uses a simple
+heading + body without \"** Front\" / \"** Back\" subheadings."
+  (condition-case err
+      (apply orig-fn args)
+    (user-error
+     (if (anki-editor-extras--missing-fields-error-p err)
+         (anki-editor-extras--note-at-point-basic-heading-body)
+       (signal (car err) (cdr err))))))
 
-(defun anki-editor--patch-basic-note (note)
-  "Rewrite NOTE fields for \"Basic\" notes to ensure a valid mapping.
+(defun anki-editor-extras--missing-fields-error-p (err)
+  "Return non-nil if ERR is the \"more than two fields missing\" error.
+ERR is the condition data provided by `condition-case'."
+  (let ((msg (cadr err)))
+    (and (stringp msg)
+         (string-match-p
+          (regexp-quote "Cannot map note fields: more than two fields missing")
+          msg))))
 
-For Basic notes, anki-editor expects exactly two fields: \"Front\" and
-\"Back\".  If the user uses properties like ANKI_FIELD_FRONT and/or body
-text instead of \"** Front\" / \"** Back\" subheadings, mapping can fail
-with: \"Cannot map note fields: more than two fields missing\".
+(defun anki-editor-extras--note-at-point-basic-heading-body ()
+  "Build a Basic note at point using heading for Front and body for Back.
+This is a fallback used when `anki-editor-note-at-point' fails because
+the \"Basic\" Anki model has more than two fields (e.g. \"Meta\") but the
+current Org entry has no subheading fields.  It uses:
 
-NOTE is an `anki-editor-note' struct."
-  (let ((model (anki-editor-note-model note)))
-    (when (and (stringp model) (string= model "Basic"))
-      (with-current-buffer (marker-buffer (anki-editor-note-marker note))
-        (save-excursion
-          (goto-char (anki-editor-note-marker note))
-          (let* ((heading (substring-no-properties (org-get-heading t t t t)))
-                 (front-prop (org-entry-get nil "ANKI_FIELD_FRONT"))
-                 (front (cond ((and (stringp front-prop)
-                                    (not (string-blank-p front-prop)))
-                               front-prop)
-                              ((and (stringp heading)
-                                    (not (string-blank-p heading)))
-                               heading)
-                              (t nil)))
-                 (body (anki-editor--note-contents-before-subheading))
-                 (back (and (stringp body)
-                            (not (string-blank-p (string-trim body)))
-                            body)))
-            (unless front
-              (user-error "Cannot determine Front for Basic note at point"))
-            (unless back
-              (user-error "Cannot determine Back for Basic note at point"))
-            (setf (anki-editor-note-fields note)
-                  (list (cons "Front" front)
-                        (cons "Back" back)))))))
-    note))
+- Front: the Org heading text.
+- Back: the content before any subheading.
+
+Any additional model fields are set to empty strings."
+  (anki-editor--with-collection-data-updated
+    (let* ((deck (org-entry-get-with-inheritance anki-editor-prop-deck))
+           (note-id (org-entry-get nil anki-editor-prop-note-id))
+           (hash (org-entry-get nil anki-editor-prop-note-hash))
+           (note-type (or (org-entry-get nil anki-editor-prop-note-type)
+                          anki-editor-default-note-type))
+           (tags (cl-set-difference (anki-editor--get-tags)
+                                    anki-editor-ignored-org-tags
+                                    :test #'string=))
+           (heading (substring-no-properties (org-get-heading t t t t)))
+           (body (anki-editor--note-contents-before-subheading))
+           (model-fields (alist-get
+                          note-type anki-editor--model-fields
+                          nil nil #'string=)))
+      (unless (and (stringp note-type) (string= note-type "Basic"))
+        (user-error "Basic fallback invoked for non-Basic note type: %S" note-type))
+      (unless deck (user-error "Missing deck"))
+      (unless model-fields
+        (user-error "Could not get model fields for note type: %S" note-type))
+      (unless (and (stringp heading) (not (string-blank-p heading)))
+        (user-error "Cannot determine Front for Basic note at point"))
+      (unless (and (stringp body) (not (string-blank-p (string-trim body))))
+        (user-error "Cannot determine Back for Basic note at point"))
+      (make-anki-editor-note
+       :id note-id
+       :model note-type
+       :deck deck
+       :tags tags
+       :fields (cl-loop for f in model-fields
+                        collect (cons f (pcase f
+                                          ("Front" heading)
+                                          ("Back" body)
+                                          (_ ""))))
+       :hash hash
+       :marker (point-marker)))))
 
 (advice-add 'anki-editor-note-at-point :around #'anki-editor-note-at-point-a)
 

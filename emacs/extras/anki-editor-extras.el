@@ -39,6 +39,35 @@
 
 ;;;; Functions
 
+;;;;; patch
+
+;; https://github.com/anki-editor/anki-editor/issues/117
+(defun anki-editor-note-at-point-a (orig-fn &rest args)
+  "Advice around `anki-editor-note-at-point' to patch Basic field mapping.
+ORIG-FN is the original function being advised.
+ARGS are the arguments passed to the original function."
+  (anki-editor--patch-basic-front-property-back-body
+   (apply orig-fn args)))
+
+(defun anki-editor--patch-basic-front-property-back-body (note)
+  "Rewrite NOTE fields so ANKI_FIELD_FRONT becomes Front and body becomes Back.
+NOTE is an `anki-editor-note' struct."
+  (let* ((model (anki-editor-note-model note)))
+    (when (and (stringp model) (string= model "Basic"))
+      (with-current-buffer (marker-buffer (anki-editor-note-marker note))
+	(save-excursion
+	  (goto-char (anki-editor-note-marker note))
+	  (let* ((front-prop (org-entry-get nil "ANKI_FIELD_FRONT"))
+		 (body (anki-editor--note-contents-before-subheading)))
+	    (when (and (stringp front-prop) (not (string-blank-p front-prop))
+                       (stringp body) (not (string-blank-p body)))
+              (setf (anki-editor-note-fields note)
+		    (list (cons "Front" front-prop)
+			  (cons "Back" body)))))))))
+  note)
+
+(advice-add 'anki-editor-note-at-point :around #'anki-editor-note-at-point-a)
+
 ;;;;; set card position
 
 ;;;###autoload

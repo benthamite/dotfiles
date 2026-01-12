@@ -30,6 +30,8 @@
 (require 'anki-editor)
 (require 'cl-lib)
 (require 'gptel)
+(require 'org)
+(require 'subr-x)
 
 ;;;; User options
 
@@ -45,26 +47,49 @@
 (defun anki-editor-note-at-point-a (orig-fn &rest args)
   "Advice around `anki-editor-note-at-point' to patch Basic field mapping.
 ORIG-FN is the original function being advised.
-ARGS are the arguments passed to the original function."
-  (anki-editor--patch-basic-front-property-back-body
+ARGS are the arguments passed to the original function.
+
+This ensures that for Basic notes we always produce exactly two fields
+(\"Front\" and \"Back\"), even if Org/Anki field mapping would otherwise
+fail."
+  (anki-editor--patch-basic-note
    (apply orig-fn args)))
 
-(defun anki-editor--patch-basic-front-property-back-body (note)
-  "Rewrite NOTE fields so ANKI_FIELD_FRONT becomes Front and body becomes Back.
+(defun anki-editor--patch-basic-note (note)
+  "Rewrite NOTE fields for \"Basic\" notes to ensure a valid mapping.
+
+For Basic notes, anki-editor expects exactly two fields: \"Front\" and
+\"Back\".  If the user uses properties like ANKI_FIELD_FRONT and/or body
+text instead of \"** Front\" / \"** Back\" subheadings, mapping can fail
+with: \"Cannot map note fields: more than two fields missing\".
+
 NOTE is an `anki-editor-note' struct."
-  (let* ((model (anki-editor-note-model note)))
+  (let ((model (anki-editor-note-model note)))
     (when (and (stringp model) (string= model "Basic"))
       (with-current-buffer (marker-buffer (anki-editor-note-marker note))
-	(save-excursion
-	  (goto-char (anki-editor-note-marker note))
-	  (let* ((front-prop (org-entry-get nil "ANKI_FIELD_FRONT"))
-		 (body (anki-editor--note-contents-before-subheading)))
-	    (when (and (stringp front-prop) (not (string-blank-p front-prop))
-                       (stringp body) (not (string-blank-p body)))
-              (setf (anki-editor-note-fields note)
-		    (list (cons "Front" front-prop)
-			  (cons "Back" body)))))))))
-  note)
+        (save-excursion
+          (goto-char (anki-editor-note-marker note))
+          (let* ((heading (substring-no-properties (org-get-heading t t t t)))
+                 (front-prop (org-entry-get nil "ANKI_FIELD_FRONT"))
+                 (front (cond ((and (stringp front-prop)
+                                    (not (string-blank-p front-prop)))
+                               front-prop)
+                              ((and (stringp heading)
+                                    (not (string-blank-p heading)))
+                               heading)
+                              (t nil)))
+                 (body (anki-editor--note-contents-before-subheading))
+                 (back (and (stringp body)
+                            (not (string-blank-p (string-trim body)))
+                            body)))
+            (unless front
+              (user-error "Cannot determine Front for Basic note at point"))
+            (unless back
+              (user-error "Cannot determine Back for Basic note at point"))
+            (setf (anki-editor-note-fields note)
+                  (list (cons "Front" front)
+                        (cons "Back" back)))))))
+    note))
 
 (advice-add 'anki-editor-note-at-point :around #'anki-editor-note-at-point-a)
 

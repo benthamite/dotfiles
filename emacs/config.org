@@ -9292,20 +9292,20 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
   (org-default-notes-file paths-file-inbox-desktop)
   (org-capture-templates
    `(("." "Todo" entry
-      (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
+      (id "B3C12507-6A83-42F6-9FFA-9A45F5C8F278")
       "** TODO %?\n" :empty-lines 1)
      ;; djcbsoftware.nl/code/mu/mu4e/Org_002dmode-links.html
      ("e" "Email" entry
-      (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
+      (id "B3C12507-6A83-42F6-9FFA-9A45F5C8F278")
       "** TODO Follow up with %:fromname on %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
      ("n" "Telegram" entry
-      (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
+      (id "B3C12507-6A83-42F6-9FFA-9A45F5C8F278")
       "** TODO Follow up with %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
      ("r" "Calendar" entry
       (file ,paths-file-calendar)
       "* TODO [#5] %^ \nDEADLINE: %^T" :empty-lines 1 :immediate-finish t)
      ("s" "Slack" entry
-      (id "4388B4D0-3830-48E0-A118-C3195B62F0D1")
+      (id "B3C12507-6A83-42F6-9FFA-9A45F5C8F278")
       "** TODO Follow up %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
      ("t" "Tlön inbox " entry
       (id "E9C77367-DED8-4D59-B08C-E6E1CCDDEC3A")

@@ -558,7 +558,6 @@ Attempt to fetch the abstract using `tlon-get-abstract-with-or-without-ai'."
 ;;;###autoload
 (defun ebib-extras-attach-file (&optional file key postprocess)
   "Attach FILE to BibTeX entry KEY and update the \"file\" field.
-
 When called interactively POSTPROCESS is non-nil so that, if the
 attached file is a PDF, metadata is written, OCR is attempted and
 the PDF is opened.  Programmatic callers can control this

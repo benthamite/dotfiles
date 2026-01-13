@@ -46,6 +46,7 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#async][async]]
   - [[#prot-common][prot-common]]
   - [[#prot-simple][prot-simple]]
+  - [[#bug-hunter][bug-hunter]]
   - [[#misc][misc]]
 - [[#performance][performance]]
   - [[#profiler][profiler]]
@@ -1064,6 +1065,18 @@ Remember that every piece of Elisp that I write is for my own educational and re
   :bind
   (("M-s-=" . prot-simple-insert-date)
    ("A-C-H-j" . prot-simple-mark-sexp)))
+#+end_src
+
+** bug-hunter
+:PROPERTIES:
+:ID:       99AEB81C-6099-4E25-AF5B-F60A02E62607
+:END:
+
+
+/[[https://elpa.gnu.org/packages/bug-hunter.html][bug-hunter]] interactively bisects and debugs your init file./
+
+#+begin_src emacs-lisp
+(use-package bug-hunter)
 #+end_src
 
 ** misc

@@ -41,6 +41,15 @@
   "Provide extensions for `ebib', the Emacs BibTeX database manager."
   :group 'ebib)
 
+(defcustom ebib-extras-attach-existing-file-action 'prompt
+  "Control what to do when attaching a file that already exists.
+If nil, abort. If `overwrite', attach without prompting. If `prompt' (the
+default) or any other non-nil value, prompt before overwriting."
+  :type '(choice (const :tag "Abort when the file exists" nil)
+                 (const :tag "Overwrite without prompting" overwrite)
+                 (other :tag "Prompt before overwriting"))
+  :group 'ebib-extras)
+
 ;;;; Variables
 
 (defconst ebib-extras-sort-states
@@ -615,11 +624,20 @@ KEY.EXT, moved to the appropriate library directory and the
   (let* ((ext  (file-name-extension src))
          (dest-dir (ebib-extras--extension-directories ext))
          (dest (ebib-extras--rename-and-abbreviate-file dest-dir key ext)))
-    (when (or (not (file-regular-p dest))
-              (y-or-n-p (format "File %s exists. Overwrite? "
-                                (file-name-nondirectory dest))))
-      (rename-file src dest t))
-    dest))
+    (if (file-regular-p dest)
+	(pcase ebib-extras-attach-existing-file-action
+	  ('nil
+	   (user-error "File %s exists; aborting" (file-name-nondirectory dest)))
+	  ('overwrite
+	   (rename-file src dest t)
+	   dest)
+	  (_
+	   (when (y-or-n-p (format "File %s exists. Overwrite? "
+				   (file-name-nondirectory dest)))
+             (rename-file src dest t))
+	   dest))
+      (rename-file src dest t)
+      dest)))
 
 (defun ebib-extras--af-postprocess-pdf (key)
   "Write metadata, OCR and open the PDF attached to KEY."

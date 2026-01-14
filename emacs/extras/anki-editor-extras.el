@@ -233,15 +233,23 @@ REQUEST-POSITION is a marker pointing at the insertion position."
       (set-marker request-position nil)
       (user-error "Failed to fetch plot summary: %s" (plist-get info :status)))
      ((stringp response)
-      (with-current-buffer request-buffer
-	(save-excursion
-	  (goto-char request-position)
-	  (insert (string-trim-right response))
-	  (unless (bolp) (insert "\n"))
-	  (org-back-to-heading t)
-	  (when (y-or-n-p "Push plot summary note to Anki now? ")
-	    (anki-editor-extras-push-plot-summary)))))
+      (anki-editor-extras--insert-plot-summary-and-maybe-push
+       request-buffer request-position response))
      (t nil))))
+
+(defun anki-editor-extras--insert-plot-summary-and-maybe-push (request-buffer request-position response)
+  "Insert RESPONSE at REQUEST-POSITION in REQUEST-BUFFER and optionally push.
+REQUEST-BUFFER is the buffer where the note is being inserted.
+REQUEST-POSITION is a marker pointing at the insertion position.
+RESPONSE is the plot summary text to insert."
+  (with-current-buffer request-buffer
+    (save-excursion
+      (goto-char request-position)
+      (insert (string-trim-right response))
+      (unless (bolp) (insert "\n"))
+      (org-back-to-heading t)
+      (when (y-or-n-p "Push plot summary note to Anki now? ")
+        (anki-editor-extras-push-plot-summary)))))
 
 ;;;###autoload
 (defun anki-editor-extras-push-plot-summary ()

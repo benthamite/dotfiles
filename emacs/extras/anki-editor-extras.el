@@ -166,9 +166,11 @@ After inserting the summary, prompt to optionally push the note to Anki."
 After inserting, ask whether to push the note to Anki."
   (let* ((request (anki-editor-extras--plot-summary-request-for-key key))
 	 (request-buffer (current-buffer))
-	 (request-position (point-marker)))
-    (anki-editor-extras--insert-plot-summary-note-skeleton request)
-    (set-marker request-position (point) request-buffer)
+	 (request-position (copy-marker (point-max) t)))
+    (with-current-buffer request-buffer
+      (save-excursion
+	(anki-editor-extras--insert-plot-summary-note-skeleton request)
+	(set-marker request-position (point) request-buffer)))
     (gptel-request
 	(anki-editor-extras--plot-summary-prompt request)
       :buffer request-buffer
@@ -205,13 +207,11 @@ The returned plist contains :title, :year, :title-with-year, and
   "Insert the plot summary note skeleton described by REQUEST.
 REQUEST is a plist created by
 `anki-editor-extras--plot-summary-request-for-key'."
-  (save-excursion
-    (goto-char (point-max))
-    (unless (bolp)
-      (insert "\n"))
-    (insert "\n** Plot summary\n:PROPERTIES:\n:ANKI_FORMAT: nil\n:ANKI_DECK: Main::Started::Plot summaries\n:ANKI_NOTE_TYPE: Basic\n:ANKI_TAGS: film anki-editor\n:ANKI_FIELD_FRONT: "
-	    (plist-get request :anki-front)
-	    "\n:END:\n\n")))
+  (goto-char (point-max))
+  (unless (bolp) (insert "\n"))
+  (insert "\n** Plot summary\n:PROPERTIES:\n:ANKI_FORMAT: nil\n:ANKI_DECK: Main::Started::Plot summaries\n:ANKI_NOTE_TYPE: Basic\n:ANKI_TAGS: film anki-editor\n:ANKI_FIELD_FRONT: "
+	  (plist-get request :anki-front)
+	  "\n:END:\n\n"))
 
 (defun anki-editor-extras--plot-summary-prompt (request)
   "Return a gptel prompt string for REQUEST.
@@ -225,20 +225,23 @@ REQUEST is a plist created by
 REQUEST-BUFFER is the buffer where the note is being inserted.
 REQUEST-POSITION is a marker pointing at the insertion position."
   (lambda (response info)
-    (when (eq response 'abort)
+    (cond
+     ((eq response 'abort)
       (set-marker request-position nil)
       (message "Aborted plot summary request"))
-    (when (and (null response) (plist-get info :status))
+     ((and (null response) (plist-get info :status))
       (set-marker request-position nil)
       (user-error "Failed to fetch plot summary: %s" (plist-get info :status)))
-    (when (eq response t)
-      (set-marker request-position nil)
+     ((stringp response)
       (with-current-buffer request-buffer
 	(save-excursion
-	  (goto-char (point-max))
+	  (goto-char request-position)
+	  (insert (string-trim-right response))
+	  (unless (bolp) (insert "\n"))
 	  (org-back-to-heading t)
 	  (when (y-or-n-p "Push plot summary note to Anki now? ")
-	    (anki-editor-extras-push-plot-summary)))))))
+	    (anki-editor-extras-push-plot-summary)))))
+     (t nil))))
 
 ;;;###autoload
 (defun anki-editor-extras-push-plot-summary ()

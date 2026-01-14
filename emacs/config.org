@@ -1076,7 +1076,8 @@ Remember that every piece of Elisp that I write is for my own educational and re
 /[[https://elpa.gnu.org/packages/bug-hunter.html][bug-hunter]] interactively bisects and debugs your init file./
 
 #+begin_src emacs-lisp
-(use-package bug-hunter)
+(use-package bug-hunter
+  :defer t)
 #+end_src
 
 ** misc

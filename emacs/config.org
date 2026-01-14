@@ -11401,6 +11401,9 @@ The macro below generates the commands correctly. But attempting to define key b
   :init
   (advice-add 'ebib-init :after #'ebib-extras-auto-reload-databases)
 
+  :custom
+  (ebib-extras-attach-existing-file-action 'overwrite)
+  
   :hook
   (ebib-add-entry . ebib-extras-create-list-of-existing-authors)
 

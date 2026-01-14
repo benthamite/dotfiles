@@ -10756,6 +10756,13 @@ The [[https://github.com/louietan/anki-editor][original package]] is abandoned, 
 :ID:       16C923D7-0A7E-4EA6-B06E-EB02A04C81C8
 :END:
 
+/[[file:extras/anki-editor-extras.el][anki-editor-extras]] collects my extensions for =anki-editor=./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-personal-package anki-editor-extras
+  :after anki-editor
+  :demand t)
+#+end_src
 
 ** ankiorg
 :PROPERTIES:

@@ -110,7 +110,9 @@ tasks."
 (defun vulpea-extras-project-update-tag ()
   "Update \"PROJECT\" tag in the current buffer."
   (when (and (not (active-minibuffer-window))
-             (vulpea-extras-buffer-p))
+             (vulpea-extras-buffer-p)
+             (not (and (fboundp 'track-changes-inconsistent-state-p)
+		       (track-changes-inconsistent-state-p))))
     (save-excursion
       (goto-char (point-min))
       (let* ((tags (vulpea-buffer-tags-get))
@@ -118,9 +120,7 @@ tasks."
         (if (or (vulpea-extras-project-p) (vulpea-extras-anniversary-p))
             (setq tags (cons "project" tags))
           (setq tags (remove "project" tags)))
-        ;; cleanup duplicates
         (setq tags (seq-uniq tags))
-        ;; update tags if changed
         (when (or (seq-difference tags original-tags)
                   (seq-difference original-tags tags))
           (apply #'vulpea-buffer-tags-set tags))))))

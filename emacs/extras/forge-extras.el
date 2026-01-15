@@ -524,7 +524,7 @@ REPOSITORIES should be a list of \"owner/repo\" strings."
       }
     }
   }
-}'"
+}"
   "Raw GraphQL query string to get project fields for an issue.
 This string is intended to be formatted with owner name, repository name,
 and issue number.")

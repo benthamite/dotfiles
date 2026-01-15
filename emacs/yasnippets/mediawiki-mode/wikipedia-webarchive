@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: wikipedia-webarchive
+# key: ww
+# contributor: Pablo Stafforini
+# --
+{{webarchive |url=$1 |date=$2}}

@@ -674,6 +674,8 @@ only level-1 headings in files in specified directories by customizing
 	       (string-match paths-dir-org file)
 	       (not buffer-read-only)
 	       (not org-extras-id-auto-add-exclude-file)
+	       (not (and (fboundp 'track-changes-inconsistent-state-p)
+			 (track-changes-inconsistent-state-p)))
 	       (not (member dir org-extras-id-auto-add-excluded-directories))
 	       (not (or (eq org-extras-id-auto-add-excluded-files t)
 			(and (listp org-extras-id-auto-add-excluded-files)

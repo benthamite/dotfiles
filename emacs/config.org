@@ -365,6 +365,7 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#aidermacs-extras][aidermacs-extras]]
   - [[#ob-aider][ob-aider]]
   - [[#claude-code][claude-code]]
+  - [[#monet][monet]]
   - [[#mcp][mcp]]
   - [[#dall-e-shell][dall-e-shell]]
   - [[#llm][llm]]
@@ -8484,6 +8485,21 @@ This package evolved out of gptel-extras.
 
   :hook
   (claude-code-process-environment-functions . monet-start-server-function))
+#+end_src
+
+** monet
+:PROPERTIES:
+:ID:       CEC68940-F806-43C7-BC2E-121AA2BC3A0E
+:END:
+
+/[[https://github.com/stevemolitor/monet][monet]] implements the Claude Code IDE protocol, to allow Claude to interact with the Emacs environment through a WebSocket connection./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package monet
+  :ensure (:host github
+		 :repo "stevemolitor/monet")
+  :after claude-code
+  :demand t)
 #+end_src
 
 ** mcp

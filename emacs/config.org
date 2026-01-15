@@ -364,6 +364,7 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#aidermacs][aidermacs]]
   - [[#aidermacs-extras][aidermacs-extras]]
   - [[#ob-aider][ob-aider]]
+  - [[#claude-code][claude-code]]
   - [[#mcp][mcp]]
   - [[#dall-e-shell][dall-e-shell]]
   - [[#llm][llm]]
@@ -8451,6 +8452,38 @@ This package evolved out of gptel-extras.
    'org-babel-load-languages
    (append org-babel-load-languages
            '((aider . t)))))
+#+end_src
+
+** claude-code
+:PROPERTIES:
+:ID:       E5B0E2C8-B66A-438A-9177-847FD480438E
+:END:
+
+
+/[[https://github.com/stevemolitor/claude-code.el][claude-code]] is an Emacs client for Claude Code./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package claude-code
+  :ensure (:host github
+		 :repo "stevemolitor/claude-code.el" :branch "main"
+                 :files ("*.el" (:exclude "images/*")))
+  :custom
+  (claude-code-display-window-fn (lambda (_buffer) (claude-code-switch-to-buffer) nil))
+  
+  :config
+  (monet-mode 1)
+  (claude-code-mode)
+
+  :bind
+  (("C-c d" . claude-code-transient)
+   (:repeat-map my-claude-code-map
+		("M" . claude-code-cycle-mode)))
+
+  :bind-keymap
+  ("C-c c" . claude-code-command-map) ;; or your preferred key
+
+  :hook
+  (claude-code-process-environment-functions . monet-start-server-function))
 #+end_src
 
 ** mcp

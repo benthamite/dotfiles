@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: aidermacs-read-only
+# key: aro
+# contributor: Pablo Stafforini
+# --
+/read-only 

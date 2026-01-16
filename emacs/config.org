@@ -5735,6 +5735,15 @@ CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
 
 /[[file:extras/orderless-extras.el][orderless-extras]] collects my extensions for =orderless=./
 
+I define the following style dispatchers to extend =orderless= functionality:
+
+| Suffix | Matching Style            | Example | Description                            |
+|--------+---------------------------+---------+----------------------------------------|
+| ~      | orderless-flex            | abc~    | Flex/fuzzy matching                    |
+| ,      | orderless-initialism      | abc,    | Match initials (e.g., "abc" → "a-b-c") |
+| ;      | orderless-prefixes        | abc;    | Match word prefixes                    |
+| !      | orderless-without-literal | !abc    | Exclude matches containing pattern     |
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package orderless-extras
   :after orderless

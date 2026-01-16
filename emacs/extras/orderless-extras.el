@@ -54,7 +54,7 @@ PATTERN is the string to match."
   "Exclusion dispatcher using `!' as suffix.
 PATTERN is the string to match."
   (when (string-suffix-p "!" pattern)
-    `(orderless-without-literal . ,(substring pattern 1))))
+    `(orderless-without-literal . ,(substring pattern 0 -1))))
 
 (provide 'orderless-extras)
 ;;; orderless-extras.el ends here

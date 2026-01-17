@@ -142,6 +142,7 @@ tasks."
 (defun vulpea-extras-buffer-p ()
   "Return non-nil if the currently visited buffer is a note."
   (and buffer-file-name
+       (boundp 'org-roam-directory)
        (string-prefix-p
         (expand-file-name (file-name-as-directory org-roam-directory))
         (file-name-directory buffer-file-name))))

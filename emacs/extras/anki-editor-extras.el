@@ -252,11 +252,48 @@ RESPONSE is the plot summary text to insert."
         (anki-editor-extras-push-plot-summary)))))
 
 ;;;###autoload
-(defun anki-editor-extras-push-plot-summary ()
-  "Push the Anki note at point and set its new-card position to 1."
-  (interactive)
+(defun anki-editor-extras-set-note-card-positions (note-id &optional start-position)
+  "Set NOTE-ID's cards to new-card positions START-POSITION..n via AnkiConnect.
+NOTE-ID must be an integer (or numeric string).  The note's card ids are
+retrieved via `notesInfo'.  START-POSITION defaults to 1.  Positions are
+1-indexed, matching Anki's `due' position for new cards.
+
+For a note with n cards, this sets due positions:
+
+START-POSITION, START-POSITION+1, ..., START-POSITION+(n-1)."
+  (let* ((nid (if (stringp note-id) (string-to-number note-id) note-id))
+         (start (if (null start-position)
+                    1
+                  (if (stringp start-position)
+                      (string-to-number start-position)
+                    start-position))))
+    (unless (and (integerp nid) (> nid 0))
+      (user-error "Invalid note id: %S" note-id))
+    (unless (and (integerp start) (> start 0))
+      (user-error "Invalid start position: %S" start-position))
+    (let* ((info (anki-editor-api-call-result 'notesInfo :notes (list nid)))
+           (note (car info))
+           (cards (alist-get 'cards note)))
+      (unless note
+        (user-error "Could not retrieve note info for nid: %S" nid))
+      (unless (and (listp cards) cards)
+        (user-error "No cards found for nid: %S" nid))
+      (setq cards (sort (copy-sequence cards) #'<))
+      (cl-loop for cid in cards
+               for pos from start
+               do (anki-editor-extras-set-card-position cid pos))
+      cards)))
+
+;;;###autoload
+(defun anki-editor-extras-push-plot-summary (&optional start-position)
+  "Push the Anki note at point and set its cards' new-card positions.
+START-POSITION defaults to 1.  For a note with n cards, set due positions
+to START-POSITION..START-POSITION+(n-1)."
+  (interactive "P")
   (anki-editor-push-note-at-point)
-  (anki-editor-extras-set-card-position (org-entry-get nil "ANKI_NOTE_ID") 1))
+  (anki-editor-extras-set-note-card-positions
+   (org-entry-get nil "ANKI_NOTE_ID")
+   (or start-position 1)))
 
 (defun anki-editor-extras--ankify-film-directors (author-field)
   "Return formatted director last names from AUTHOR-FIELD.

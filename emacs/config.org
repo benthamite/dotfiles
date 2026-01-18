@@ -14399,7 +14399,6 @@ CLOCK: [2021-04-12 Mon 13:20]--[2021-04-12 Mon 13:46] =>  0:26
 :ID:       60B7A58C-A79A-4EEF-A91D-EECC85CFA173
 :END:
 - If you use ~use-package~, the command =use-package-report= displays a table showing the impact of each package on load times.
-- You may also want to try [[https://www.emacswiki.org/emacs/ProfileDotEmacs][profile-dotemacs]].
 
 ** installation
 :PROPERTIES:

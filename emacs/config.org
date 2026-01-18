@@ -364,6 +364,7 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#aidermacs][aidermacs]]
   - [[#aidermacs-extras][aidermacs-extras]]
   - [[#ob-aider][ob-aider]]
+  - [[#agent-shell][agent-shell]]
   - [[#claude-code][claude-code]]
   - [[#monet][monet]]
   - [[#mcp][mcp]]
@@ -8462,6 +8463,24 @@ This package evolved out of gptel-extras.
    'org-babel-load-languages
    (append org-babel-load-languages
            '((aider . t)))))
+#+end_src
+
+** agent-shell
+:PROPERTIES:
+:ID:       3C5E8B30-4FAF-480E-84F9-DE4A48BFEA88
+:END:
+
+/[[https://github.com/xenodium/agent-shell][agent-shell]] provides a native Emacs buffer to interact with LLM agents powered by ACP./
+
+The author provides a good overview of the package in [[https://www.youtube.com/watch?v=R2Ucr3amgGg][this video]].
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package agent-shell
+    :defer t
+    :ensure-system-package
+    ;; Add agent installation configs here
+    ((claude . "brew install claude-code")
+     (claude-code-acp . "npm install -g @zed-industries/claude-code-acp")))
 #+end_src
 
 ** claude-code

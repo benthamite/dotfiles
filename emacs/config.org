@@ -8672,7 +8672,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (magit-gptcommit-llm-provider
    (make-llm-claude
     :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))
-    :chat-model "claude-3-5-haiku-20241022"))
+    :chat-model "claude-haiku-4-5-20251001"))
 
   :config
   (magit-gptcommit-status-buffer-setup))

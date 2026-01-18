@@ -14377,7 +14377,6 @@ I set key bindings in the following ways:
 :LOGBOOK:
 CLOCK: [2021-04-12 Mon 13:20]--[2021-04-12 Mon 13:46] =>  0:26
 :END:
-- Run =bug-hunter-init-file= (from the [[id:0C19171B-8DFA-4E06-9E17-45C1F9158C28][elisp-bug-hunter]] package) and select "automatic error detection" (~e~).
 - Run =emacs -q= or =emacs --debug-init=.
 - Cut suspected sections of the org file (=org-cut-subtree=), tangle immediately afterwards, then undo the changes. This will generate an init file without the code blocks included in the removed sections, while leaving the literal org file intact.
 - Use =magit-log-buffer-file= or =git-timemachine= to explore previous versions of your config file.
@@ -14387,7 +14386,6 @@ CLOCK: [2021-04-12 Mon 13:20]--[2021-04-12 Mon 13:46] =>  0:26
 - Bisect the init file until you locate the culprit.
   - Run =bug-hunter-init-file= and select "bisect interactively" (~i~).
 - If Emacs becomes unresponsive, run =pkill -USR2 Emacs= in a terminal. Emacs will likely trigger a backtrace, which you can inspect to diagnose the issue.
-- You may want to periodically save a stable init file so that you can temporarily use Emacs with all your customizations while debugging your current init file (instead of having to use an external editor or a non-customized Emacs). Say you call this stable file ~stable.el~. Then you can tell Emacs to load this file on startup file with ~emacs -q -l ~/stable.el~.
 - Use =edebug-defun=. See [[https://org-roam.discourse.group/t/need-help-getting-noter-pdfs-and-org-roam-bibtex-to-work/794/45?u=pablo][this discussion]].
 - For org-related issues (e.g. tangling the config file), use =org-lint=, which checks the current buffer for syntax mistakes.
 - For more ideas, see:

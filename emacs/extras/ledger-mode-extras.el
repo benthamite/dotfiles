@@ -30,6 +30,7 @@
 
 (require 'ledger-mode)
 (require 'paths)
+(require 'seq)
 
 ;;;; Variables
 
@@ -303,6 +304,110 @@ DAYS can be positive or negative."
   "Decrease the date of transaction at point by one day."
   (interactive)
   (ledger-mode-extras-increase-date -1))
+
+
+;;;;; Import Wise Airbnb payouts
+
+;;;###autoload
+(defun ledger-mode-extras-import-wise-clipboard-airbnb ()
+  "Import Airbnb payouts from the clipboard into `paths-file-ledger'.
+The clipboard text is meant to be copied from selecting the relevant
+transactions on the Wise website, and its format is expected to contain repeated
+blocks like:
+
+  16 January
+  Completed
+  16 January 2026
+  AIRBNB 4977
+  + 200.79 USD
+
+Sometimes the first \"16 January\" line is missing. Also, some transactions
+contain repeated date lines (e.g., a group header date and a transaction date).
+To avoid duplicates, this command anchors parsing on amount lines and finds the
+nearest preceding full date line (\"DD Month YYYY\") for each amount.
+
+Only blocks with a positive amount are imported. Blocks with a negative
+amount are ignored."
+  (interactive)
+  (let* ((text (current-kill 0 t))
+         (lines (split-string text "\n" t "[ \t\r]+"))
+         (count 0)
+         (skipped 0)
+         (i 0))
+    (unless (seq-some (lambda (s) (ledger-mode-extras--wise-amount-line-p s)) lines)
+      (user-error "Clipboard does not look like a Wise export"))
+    (while (< i (length lines))
+      (let ((line (nth i lines)))
+        (if (not (ledger-mode-extras--wise-amount-line-p line))
+            (setq i (1+ i))
+          (let* ((date-line (ledger-mode-extras--find-prev-wise-date-line lines i))
+                 (amount (ledger-mode-extras--parse-wise-positive-amount line)))
+            (cond
+             ((null date-line)
+              (setq i (1+ i)))
+             ((null amount)
+              (setq skipped (1+ skipped))
+              (setq i (1+ i)))
+             (t
+              (ledger-mode-extras--insert-airbnb-wise-payout
+               (ledger-mode-extras--parse-wise-date date-line)
+               amount)
+              (setq count (1+ count))
+              (setq i (1+ i))))))))
+    (message "Inserted %d Airbnb transaction(s)%s"
+             count
+             (if (> skipped 0) (format ", skipped %d negative amount(s)" skipped) ""))))
+
+(defun ledger-mode-extras--parse-wise-date (string)
+  "Parse STRING like \"16 January 2026\" into YYYY-MM-DD."
+  (let ((time (date-to-time string)))
+    (format-time-string "%Y-%m-%d" time)))
+
+(defun ledger-mode-extras--parse-wise-positive-amount (string)
+  "Parse STRING like \"+ 200.79 USD\" and return the amount as a number.
+Return nil if STRING represents a negative amount."
+  (when (string-match "\\`\\+\\s-*\\([0-9]+\\(?:\\.[0-9]+\\)?\\)\\s-+USD\\'" (string-trim string))
+    (string-to-number (match-string 1 (string-trim string)))))
+
+(defun ledger-mode-extras--wise-date-line-p (string)
+  "Return non-nil if STRING seems like a Wise date line with a year."
+  (string-match-p "\\`[0-9]\\{1,2\\}\\s-+\\(?:January\\|February\\|March\\|April\\|May\\|June\\|July\\|August\\|September\\|October\\|November\\|December\\)\\s-+[0-9]\\{4\\}\\'" (string-trim string)))
+
+(defun ledger-mode-extras--wise-amount-line-p (string)
+  "Return non-nil if STRING seems like a Wise amount line."
+  (string-match-p "\\`[+-]\\s-*[0-9]+\\(?:\\.[0-9]+\\)?\\s-+USD\\'" (string-trim string)))
+
+(defun ledger-mode-extras--find-prev-wise-date-line (lines index)
+  "Find the previous full date line in LINES before INDEX.
+Return the date string, or nil if not found."
+  (let ((i (1- index)))
+    (while (and (>= i 0)
+                (not (ledger-mode-extras--wise-date-line-p (nth i lines))))
+      (setq i (1- i)))
+    (when (>= i 0)
+      (nth i lines))))
+
+(defun ledger-mode-extras--find-next-wise-amount-line (lines start)
+  "Return the next Wise amount line in LINES starting at START, or nil."
+  (let ((i start)
+        (re "\\`[+-]\\s-*[0-9]+\\(?:\\.[0-9]+\\)?\\s-+USD\\'"))
+    (while (and (< i (length lines))
+                (not (string-match-p re (string-trim (nth i lines)))))
+      (setq i (1+ i)))
+    (when (< i (length lines))
+      (nth i lines))))
+
+(defun ledger-mode-extras--insert-airbnb-wise-payout (date amount)
+  "Insert an Airbnb Wise payout transaction for DATE and AMOUNT.
+AMOUNT is a positive number in USD."
+  (with-current-buffer (find-file-noselect paths-file-ledger)
+    (goto-char (point-max))
+    (insert (format "%s Airbnb\n" date))
+    (insert (format "    Income:Rent                              -%.2f USD\n" amount))
+    (insert "    Assets:Wise\n\n")
+    (save-excursion
+      (forward-line -3)
+      (ledger-post-align-xact (point)))))
 
 (provide 'ledger-mode-extras)
 ;;; ledger-mode-extras.el ends here

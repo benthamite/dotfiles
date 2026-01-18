@@ -51,13 +51,21 @@ ARGS are the arguments passed to the original function.
 
 This addresses a common setup where the Anki model named \"Basic\" has
 additional fields (e.g. \"Meta\"), but the Org entry uses a simple
-heading + body without \"** Front\" / \"** Back\" subheadings."
-  (condition-case err
-      (apply orig-fn args)
-    (user-error
-     (if (anki-editor-extras--missing-fields-error-p err)
-         (anki-editor-extras--note-at-point-basic-heading-body)
-       (signal (car err) (cdr err))))))
+heading + body without \"** Front\" / \"** Back\" subheadings.
+
+If `ANKI_FIELD_FRONT' is set on the entry, always use it as the Front
+field and map the entry body to Back."
+  (let ((front-prop (org-entry-get-with-inheritance
+                     (concat anki-editor-prop-field-prefix "FRONT"))))
+    (if (and (stringp front-prop)
+             (not (string-blank-p (string-trim front-prop))))
+        (anki-editor-extras--note-at-point-basic-heading-body)
+      (condition-case err
+          (apply orig-fn args)
+        (user-error
+         (if (anki-editor-extras--missing-fields-error-p err)
+             (anki-editor-extras--note-at-point-basic-heading-body)
+           (signal (car err) (cdr err))))))))
 
 (defun anki-editor-extras--missing-fields-error-p (err)
   "Return non-nil if ERR is the \"more than two fields missing\" error.
@@ -69,12 +77,12 @@ ERR is the condition data provided by `condition-case'."
           msg))))
 
 (defun anki-editor-extras--note-at-point-basic-heading-body ()
-  "Build a Basic note at point using heading for Front and body for Back.
+  "Build a Basic note at point using Front property or heading and body for Back.
 This is a fallback used when `anki-editor-note-at-point' fails because
 the \"Basic\" Anki model has more than two fields (e.g. \"Meta\") but the
-current Org entry has no subheading fields.  It uses:
+current Org entry has no subheading fields.
 
-- Front: the Org heading text.
+- Front: `ANKI_FIELD_FRONT' property if set, otherwise the Org heading.
 - Back: the content before any subheading.
 
 Any additional model fields are set to empty strings."
@@ -88,16 +96,21 @@ Any additional model fields are set to empty strings."
                                     anki-editor-ignored-org-tags
                                     :test #'string=))
            (heading (substring-no-properties (org-get-heading t t t t)))
+           (front-prop (org-entry-get-with-inheritance
+                        (concat anki-editor-prop-field-prefix "FRONT")))
+           (front (if (and (stringp front-prop)
+                           (not (string-blank-p (string-trim front-prop))))
+                      front-prop
+                    heading))
            (body (anki-editor--note-contents-before-subheading))
-           (model-fields (alist-get
-                          note-type anki-editor--model-fields
-                          nil nil #'string=)))
+           (model-fields (alist-get note-type anki-editor--model-fields
+                                    nil nil #'string=)))
       (unless (and (stringp note-type) (string= note-type "Basic"))
         (user-error "Basic fallback invoked for non-Basic note type: %S" note-type))
       (unless deck (user-error "Missing deck"))
       (unless model-fields
         (user-error "Could not get model fields for note type: %S" note-type))
-      (unless (and (stringp heading) (not (string-blank-p heading)))
+      (unless (and (stringp front) (not (string-blank-p (string-trim front))))
         (user-error "Cannot determine Front for Basic note at point"))
       (unless (and (stringp body) (not (string-blank-p (string-trim body))))
         (user-error "Cannot determine Back for Basic note at point"))
@@ -108,7 +121,7 @@ Any additional model fields are set to empty strings."
        :tags tags
        :fields (cl-loop for f in model-fields
                         collect (cons f (pcase f
-                                          ("Front" heading)
+                                          ("Front" front)
                                           ("Back" body)
                                           (_ ""))))
        :hash hash

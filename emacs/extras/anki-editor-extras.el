@@ -229,7 +229,7 @@ REQUEST is a plist created by
   "Return a gptel prompt string for REQUEST.
 REQUEST is a plist created by
 `anki-editor-extras--plot-summary-request-for-key'."
-  (format "Write a single-paragraph summary of the film's plot.\n\nTitle: %s\n\nConstraints:\n- One paragraph only.\n- Since the summary is for my personal reference, to remind myself of the plot of film’s I’ve seen, the summary can include spoilers.\n- Do not use bullet points.\n- Do not include a heading, title, or any prefatory text; output only the paragraph.\n -Do not mention the film’s title in the summary."
+  (format "Write a single-paragraph summary of the film's plot.\n\nTitle: %s\n\nConstraints:\n- One paragraph only.\n- Since the summary is for my personal reference, to remind myself of the plot of film’s I’ve seen, the summary can include spoilers.\n- Do not use bullet points.\n- Do not include a heading, title, or any prefatory text; output only the paragraph.\n -Do not mention the film’s title in the summary.\n- Do not make the summaries longer than 100 words or so."
 	  (plist-get request :title-with-year)))
 
 (defun anki-editor-extras--plot-summary-callback (request-buffer request-position)

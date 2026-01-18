@@ -208,8 +208,7 @@ The returned plist contains :title, :year, :title-with-year, and
 REQUEST is a plist created by
 `anki-editor-extras--plot-summary-request-for-key'."
   (goto-char (point-max))
-  (unless (bolp) (insert "\n"))
-  (insert "\n** Plot summary\n:PROPERTIES:\n:ANKI_FORMAT: nil\n:ANKI_DECK: Main::Started::Plot summaries\n:ANKI_NOTE_TYPE: Basic\n:ANKI_TAGS: film anki-editor\n:ANKI_FIELD_FRONT: "
+  (insert "** Plot summary\n:PROPERTIES:\n:ANKI_FORMAT: nil\n:ANKI_DECK: Main::Started::Plot summaries\n:ANKI_NOTE_TYPE: Basic\n:ANKI_TAGS: film anki-editor\n:ANKI_FIELD_FRONT: "
 	  (plist-get request :anki-front)
 	  "\n:END:\n\n"))
 

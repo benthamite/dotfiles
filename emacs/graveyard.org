@@ -50,6 +50,38 @@ CLOCK: [2023-04-08 Sat 14:54]--[2023-04-08 Sat 16:25] =>  1:31
   (grammarly-password (auth-source-pass-get 'secret (concat "tlon/core/grammarly.com/" tlon-email-shared))))
 #+end_src
 
+** lsp-grammarly
+:PROPERTIES:
+:ID:       2D0C20F1-1CE6-45F9-AA4B-46FB02DD0271
+:END:
+:LOGBOOK:
+CLOCK: [2022-09-29 Thu 18:50]--[2022-09-29 Thu 21:20] =>  2:30
+CLOCK: [2021-11-27 Sat 21:56]--[2021-11-27 Sat 22:48] =>  0:52
+CLOCK: [2021-11-27 Sat 19:44]--[2021-11-27 Sat 20:17] =>  0:33
+CLOCK: [2021-11-27 Sat 19:23]--[2021-11-27 Sat 19:26] =>  0:03
+CLOCK: [2021-11-27 Sat 19:09]--[2021-11-27 Sat 19:23] =>  0:14
+:END:
+
+/[[https://github.com/emacs-grammarly/lsp-grammarly][lsp-grammarly]] provides ~lsp-mode~ support for Grammarly./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package lsp-grammarly
+  :after lsp-mode grammarly
+  :custom
+  (lsp-grammarly-suggestions-split-infinitive nil)
+  (lsp-grammarly-suggestions-preposition-at-the-end-of-sentence nil)
+  ;; 🙄
+  (lsp-grammarly-suggestions-possibly-biased-language-age-related nil)
+  (lsp-grammarly-suggestions-possibly-biased-language-disability-related nil)
+  (lsp-grammarly-suggestions-possibly-biased-language-family-related nil)
+  (lsp-grammarly-suggestions-possibly-biased-language-gender-related nil)
+  (lsp-grammarly-suggestions-possibly-biased-language-human-rights nil)
+  (lsp-grammarly-suggestions-possibly-biased-language-human-rights-related nil)
+  (lsp-grammarly-suggestions-possibly-biased-language-lgbtqia-related nil)
+  (lsp-grammarly-suggestions-possibly-biased-language-race-ethnicity-related nil)
+  (lsp-grammarly-suggestions-possibly-politically-incorrect-language nil))
+#+end_src
+
 ** semext
 :PROPERTIES:
 :ID:       CEB2A11F-3C30-4E80-B59B-9B54C50C0AA4

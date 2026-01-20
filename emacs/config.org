@@ -284,7 +284,6 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#flycheck-ledger][flycheck-ledger]]
   - [[#flycheck-languagetool][flycheck-languagetool]]
   - [[#flymake-mdl][flymake-mdl]]
-  - [[#lsp-mode][lsp-mode]]
   - [[#grammarly][grammarly]]
   - [[#lsp-grammarly][lsp-grammarly]]
 - [[#prose][prose]]
@@ -6503,29 +6502,6 @@ See [[id:CBEE980E-2D38-4D73-A806-FF824EE5305C][Claude discussion]].
 		 :repo "MicahElliott/flymake-mdl")
   :demand t
   )
-#+end_src
-
-** lsp-mode
-:PROPERTIES:
-:ID:       E9D2E6CA-5256-4776-801F-13281BD390C9
-:END:
-/[[https://github.com/emacs-lsp/lsp-mode][lsp-mode]] is an Emacs client/library for the Language Server Protocol./
-
-I only use =lsp= with =lsp-grammarly=. (There are versions of Grammarly for =flycheck= and =flyspell=, but they do not support premium plans.)
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package lsp-mode
-  :custom
-  (lsp-warn-no-matched-clients nil)
-  (lsp-headerline-breadcrumb-enable nil)
-  (lsp-auto-guess-root t) ; disable annoying prompt to import project
-  (lsp-modeline-diagnostics-enable nil)
-
-  :hook
-  (lsp-mode . lsp-enable-which-key-integration)
-
-  :bind
-  ("A-H-g" . (lambda () (interactive) (if lsp-mode (lsp-disconnect) (lsp)))))
 #+end_src
 
 ** grammarly

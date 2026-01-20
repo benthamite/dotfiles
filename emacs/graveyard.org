@@ -9,6 +9,29 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** lsp-mode
+:PROPERTIES:
+:ID:       E9D2E6CA-5256-4776-801F-13281BD390C9
+:END:
+/[[https://github.com/emacs-lsp/lsp-mode][lsp-mode]] is an Emacs client/library for the Language Server Protocol./
+
+I only use =lsp= with =lsp-grammarly=. (There are versions of Grammarly for =flycheck= and =flyspell=, but they do not support premium plans.)
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package lsp-mode
+  :custom
+  (lsp-warn-no-matched-clients nil)
+  (lsp-headerline-breadcrumb-enable nil)
+  (lsp-auto-guess-root t) ; disable annoying prompt to import project
+  (lsp-modeline-diagnostics-enable nil)
+
+  :hook
+  (lsp-mode . lsp-enable-which-key-integration)
+
+  :bind
+  ("A-H-g" . (lambda () (interactive) (if lsp-mode (lsp-disconnect) (lsp)))))
+#+end_src
+
 ** semext
 :PROPERTIES:
 :ID:       CEB2A11F-3C30-4E80-B59B-9B54C50C0AA4

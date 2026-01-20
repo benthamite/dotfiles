@@ -32,6 +32,24 @@ I only use =lsp= with =lsp-grammarly=. (There are versions of Grammarly for =fly
   ("A-H-g" . (lambda () (interactive) (if lsp-mode (lsp-disconnect) (lsp)))))
 #+end_src
 
+** grammarly
+:PROPERTIES:
+:ID:       C87EAC5F-7831-469C-96FB-603397C51925
+:END:
+:LOGBOOK:
+CLOCK: [2023-04-08 Sat 14:54]--[2023-04-08 Sat 16:25] =>  1:31
+:END:
+
+/[[https://github.com/emacs-grammarly/grammarly][grammarly]] is an API interface for [[https://www.grammarly.com/][Grammarly]]./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package grammarly
+  :after tlon
+  :custom
+  (grammarly-username tlon-email-shared)
+  (grammarly-password (auth-source-pass-get 'secret (concat "tlon/core/grammarly.com/" tlon-email-shared))))
+#+end_src
+
 ** semext
 :PROPERTIES:
 :ID:       CEB2A11F-3C30-4E80-B59B-9B54C50C0AA4

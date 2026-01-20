@@ -284,7 +284,6 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#flycheck-ledger][flycheck-ledger]]
   - [[#flycheck-languagetool][flycheck-languagetool]]
   - [[#flymake-mdl][flymake-mdl]]
-  - [[#grammarly][grammarly]]
   - [[#lsp-grammarly][lsp-grammarly]]
 - [[#prose][prose]]
   - [[#text-mode][text-mode]]
@@ -6502,25 +6501,6 @@ See [[id:CBEE980E-2D38-4D73-A806-FF824EE5305C][Claude discussion]].
 		 :repo "MicahElliott/flymake-mdl")
   :demand t
   )
-#+end_src
-
-** grammarly
-:PROPERTIES:
-:ID:       C87EAC5F-7831-469C-96FB-603397C51925
-:END:
-:LOGBOOK:
-CLOCK: [2023-04-08 Sat 14:54]--[2023-04-08 Sat 16:25] =>  1:31
-:END:
-
-/[[https://github.com/emacs-grammarly/grammarly][grammarly]] is an API interface for [[https://www.grammarly.com/][Grammarly]]./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package grammarly
-  :after tlon
-  :defer t
-  :custom
-  (grammarly-username tlon-email-shared)
-  (grammarly-password (auth-source-pass-get 'secret (concat "tlon/core/grammarly.com/" tlon-email-shared))))
 #+end_src
 
 ** lsp-grammarly

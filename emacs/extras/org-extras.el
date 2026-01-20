@@ -950,7 +950,7 @@ keep the structure of the Org file."
 (defun org-extras-confirm-babel-evaluate (lang _)
   "Confirm function before evaluating code block.
 LANG is the language of the code block."
-  (not (member lang '("python" "emacs-lisp"))))
+  (member lang '("python" "emacs-lisp")))
 
 (defun org-extras-babel-tangle ()
   "Widen buffer, save its contents, and tangle file."

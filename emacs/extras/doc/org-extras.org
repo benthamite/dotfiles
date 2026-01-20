@@ -99,6 +99,15 @@ A format string used by ~org-extras-clock-report-insert~ to generate the =#+BEGI
 #+vindex: org-extras-clock-in-add-participants-exclude
 A regexp (string). If the heading being clocked into matches this regexp, the user will *not* be prompted to add participants by the ~org-extras-clock-in-add-participants~ advice.
 
+** ~org-extras-confirm-babel-evaluate-languages~
+:PROPERTIES:
+:CUSTOM_ID: h:org-extras-confirm-babel-evaluate-languages
+:END:
+
+#+vindex: org-extras-confirm-babel-evaluate-languages
+A list of Org Babel language names (strings) for which
+~org-extras-confirm-babel-evaluate~ will *not* prompt for confirmation.
+
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands

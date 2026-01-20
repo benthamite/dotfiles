@@ -97,6 +97,12 @@ The first %s is the scope of the report, and the second %s is the range."
   :type 'regexp
   :group 'org-extras)
 
+(defcustom org-extras-confirm-babel-evaluate-languages '("emacs-lisp" "python")
+  "Languages that do not require confirmation when their code blocks are evaluated.
+Each element should be a string, as used by Org Babel (e.g., \"python\")."
+  :type '(repeat string)
+  :group 'org-extras)
+
 ;;;; Variables
 
 (defvar-local org-extras-id-auto-add-exclude-file nil
@@ -950,7 +956,7 @@ keep the structure of the Org file."
 (defun org-extras-confirm-babel-evaluate (lang _)
   "Confirm function before evaluating code block.
 LANG is the language of the code block."
-  (member lang '("python" "emacs-lisp")))
+  (member lang org-extras-confirm-babel-evaluate-languages))
 
 (defun org-extras-babel-tangle ()
   "Widen buffer, save its contents, and tangle file."

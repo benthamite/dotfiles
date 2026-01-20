@@ -6716,7 +6716,7 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package mediawiki
-  :ensure (:tag "2.4.3") ; otherwise can't authenticate; https://github.com/hexmode/mediawiki-el/issues/48
+  ;; :ensure (:tag "2.4.3") ; otherwise can't authenticate; https://github.com/hexmode/mediawiki-el/issues/48
   :bind
   (:map mediawiki-mode-map
         ("s-k" . mediawiki-insert-link)

@@ -6448,6 +6448,10 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   (setopt flycheck-languagetool-server-jar
         (expand-file-name (file-name-concat paths-dir-external-repos "LanguageTool/languagetool-server.jar")))
 
+  :custom
+  (flycheck-languagetool-check-params
+   '(("level" . "picky")))
+   
   :config
   ;; the package doesn't provide a general way of disabling a rule, but as an
   ;; imperfect workaround we extend the list of rules to ignore when

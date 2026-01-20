@@ -122,36 +122,52 @@ A list of Org Babel language names (strings) for which
 
 #+findex: org-extras-copy-heading-contents
 ~org-extras-copy-heading-contents~: Copies the text content of the heading at point (excluding subheadings) to the kill ring.
+
 #+findex: org-extras-copy-heading-name
 ~org-extras-copy-heading-name~: Copies the heading title itself (without stars, TODO keywords, tags) to the kill ring.
+
 #+findex: org-extras-count-words
 ~org-extras-count-words~: Counts words in the active region or the current subtree (excluding metadata and subheadings). Copies the count to the kill ring and messages the user.
+
 #+findex: org-extras-goto-beginning-of-heading-text
 ~org-extras-goto-beginning-of-heading-text~: Moves point to the start of the heading text, after stars, TODO keyword, and priority.
+
 #+findex: org-extras-inline-images
 ~org-extras-inline-images~: Toggles the display of inline images in the buffer. Accepts prefix arg for explicit enable/disable.
+
 #+findex: org-extras-insert-subheading
 ~org-extras-insert-subheading~: Inserts a new demoted heading at the end of the current entry's body, but *before* any existing subheadings.
+
 #+findex: org-extras-insert-todo-subheading-after-body
 ~org-extras-insert-todo-subheading-after-body~: Inserts a new demoted TODO heading at the very end of the current entry's body.
+
 #+findex: org-extras-jump-to-first-heading
 ~org-extras-jump-to-first-heading~: Moves point to the beginning of the first heading in the buffer.
+
 #+findex: org-extras-link-get-description-at-point
 ~org-extras-link-get-description-at-point~: Copies the description part of the Org link at point to the kill ring.
+
 #+findex: org-extras-link-get-link-at-point
 ~org-extras-link-get-link-at-point~: Copies the full Org link syntax =[[url][desc]]= at point to the kill ring.
+
 #+findex: org-extras-link-get-url-at-point
 ~org-extras-link-get-url-at-point~: Copies the URL part of the Org link at point to the kill ring.
+
 #+findex: org-extras-paste-image
 ~org-extras-paste-image~: Pastes an image from the system clipboard into the Org buffer. Saves the image to a uniquely named file in =paths-dir-org-images=, inserts a file link, prompts for a caption, and displays inline images. Requires =pngpaste= utility.
+
 #+findex: org-extras-paste-with-conversion
 ~org-extras-paste-with-conversion~: Pastes clipboard content, converting it from HTML or Markdown to Org format using Pandoc.
+
 #+findex: org-extras-remove-link
 ~org-extras-remove-link~: Replaces the Org link at point with its description (or URL if description is empty).
+
 #+findex: org-extras-set-todo-properties
 ~org-extras-set-todo-properties~: Interactively sets the priority (=org-priority=) and effort (=org-set-effort=) for the heading at point.
+
 #+findex: org-extras-super-return
 ~org-extras-super-return~: If point is on a link, opens it using =eww= (by temporarily setting =browse-url-browser-function=). Otherwise, likely performs a standard RET action (though the code doesn't explicitly show the fallback).
+
 #+findex: org-extras-url-dwim
 ~org-extras-url-dwim~: Copies the URL at point (either plain text URL or Org link target) to the kill ring.
 
@@ -162,18 +178,25 @@ A list of Org Babel language names (strings) for which
 
 #+findex: org-extras-agenda-done-and-next
 ~org-extras-agenda-done-and-next~: Marks the agenda item at point as DONE, switches back to the agenda buffer, and moves to the next line. (Marked as a temporary command in comments).
+
 #+findex: org-extras-agenda-goto-and-start-clock
 ~org-extras-agenda-goto-and-start-clock~: In the agenda buffer, jumps to the source location of the entry at point and clocks it in.
+
 #+findex: org-extras-agenda-postpone-and-next
 ~org-extras-agenda-postpone-and-next~: Postpones the agenda item at point by one day and moves to the next line.
+
 #+findex: org-extras-agenda-switch-to-agenda-current-day
 ~org-extras-agenda-switch-to-agenda-current-day~: Switches to the Org Agenda buffer for the current day, opening it in the left window (using window number 1 via =winum=) and creating the agenda view if necessary.
+
 #+findex: org-extras-agenda-switch-to-dwim
 ~org-extras-agenda-switch-to-dwim~: If point is on an agenda log line, jumps to the corresponding clock entry in the source file. Otherwise, jumps to the heading of the agenda item at point.
+
 #+findex: org-extras-agenda-toggle-anniversaries
 ~org-extras-agenda-toggle-anniversaries~: Toggles the display of BBDB anniversaries in the agenda by commenting/uncommenting the =%%(org-bbdb-anniversaries-future 1)= line under the heading specified by =org-extras-bbdb-anniversaries-heading=. Refreshes the agenda unless =just-enable= arg is non-nil.
+
 #+findex: org-extras-agenda-toggle-log-mode
 ~org-extras-agenda-toggle-log-mode~: Toggles =org-agenda-log-mode= to show/hide clockcheck items.
+
 #+findex: org-extras-unhighlight
 ~org-extras-unhighlight~: Calls =org-unhighlight= interactively to remove agenda highlighting.
 
@@ -184,20 +207,28 @@ A list of Org Babel language names (strings) for which
 
 #+findex: org-extras-add-participants
 ~org-extras-add-participants~: Prompts (with completion using Org Roam "person" nodes) for participants and inserts them as a linked list (e.g., "Participants: [[id:ID1][Name1]], [[id:ID2][Name2]]") after the heading's metadata.
+
 #+findex: org-extras-clock-report-insert
 ~org-extras-clock-report-insert~: Prompts for start date, end date, and scope (agenda, file, subtree), then inserts a =clocktable= dynamic block with the specified parameters and updates it.
+
 #+findex: org-extras-delete-headings-without-logbook
 ~org-extras-delete-headings-without-logbook~: Deletes all headings in the current buffer that do *not* contain a =:LOGBOOK:= drawer. Prompts for confirmation.
+
 #+findex: org-extras-jump-to-latest-clock-entry
 ~org-extras-jump-to-latest-clock-entry~: Shows the logbook for the current heading and jumps to the start time of the most recent CLOCK entry.
+
 #+findex: org-extras-new-clock-entry-today
 ~org-extras-new-clock-entry-today~: Inserts a new CLOCK entry under the current heading with today's date, prompting for start and end times. Evaluates the time range afterwards.
+
 #+findex: org-extras-time-stamp-active-current-date
 ~org-extras-time-stamp-active-current-date~: Inserts an active Org timestamp =<YYYY-MM-DD Day>= for the current date.
+
 #+findex: org-extras-time-stamp-active-current-time
 ~org-extras-time-stamp-active-current-time~: Inserts an active Org timestamp =<YYYY-MM-DD Day HH:MM>= for the current time.
+
 #+findex: org-extras-time-stamp-inactive-current-date
 ~org-extras-time-stamp-inactive-current-date~: Inserts an inactive Org timestamp =[YYYY-MM-DD Day]= for the current date.
+
 #+findex: org-extras-time-stamp-inactive-current-time
 ~org-extras-time-stamp-inactive-current-time~: Inserts an inactive Org timestamp =[YYYY-MM-DD Day HH:MM]= for the current time.
 
@@ -208,16 +239,22 @@ A list of Org Babel language names (strings) for which
 
 #+findex: org-extras-cycle-global
 ~org-extras-cycle-global~: Cycles global visibility like =org-cycle-global= but also ensures archived subtrees remain hidden.
+
 #+findex: org-extras-fold-show-all-headings
 ~org-extras-fold-show-all-headings~: Shows all heading content in the buffer, keeping archived subtrees hidden.
+
 #+findex: org-extras-narrow-to-entry-and-children
 ~org-extras-narrow-to-entry-and-children~: Narrows the buffer to the current subtree (entry and all children) and ensures content is visible while drawers are hidden.
+
 #+findex: org-extras-narrow-to-entry-no-children
 ~org-extras-narrow-to-entry-no-children~: Narrows the buffer to the current entry's heading and body text *only*, excluding any subheadings.
+
 #+findex: org-extras-show-logbook
 ~org-extras-show-logbook~: Forces all logbook drawers to become visible (removes overlays added by =org-cycle-hide-drawers= or similar).
+
 #+findex: org-extras-show-properties
 ~org-extras-show-properties~: Forces all property drawers to become visible (removes overlays added by =org-hide-properties-hide=).
+
 #+findex: org-extras-show-subtree-hide-drawers
 ~org-extras-show-subtree-hide-drawers~: Shows the current entry and its children, but hides drawers within them.
 
@@ -228,8 +265,10 @@ A list of Org Babel language names (strings) for which
 
 #+findex: org-extras-id-find-duplicate-ids
 ~org-extras-id-find-duplicate-ids~: Scans the =*Messages*= buffer for duplicate ID warnings (as produced by =org-id-update-id-locations=), collects the IDs and their associated file paths, and presents them in a new, read-only =*Duplicate Org IDs*= buffer. This allows for quick navigation to files containing duplicate IDs. In this buffer, pressing =SPC= executes =org-extras-id-process-next-duplicate=.
+
 #+findex: org-extras-id-process-next-duplicate
 ~org-extras-id-process-next-duplicate~: From the =*Duplicate Org IDs*= buffer, this command opens the file corresponding to the first entry, widens the buffer, calls =simple-extras-visible-mode-enhanced= to make it easier to find the duplicate ID, copies the ID to the kill ring, and removes the line from the buffer. If the buffer becomes empty, it is automatically closed.
+
 #+findex: org-extras-id-update-id-locations
 ~org-extras-id-update-id-locations~: Updates the Org ID location cache by scanning agenda files, archives, open Org files, files in =org-directory=, and =org-id-extra-files=. If any duplicate IDs are found during the scan, it automatically calls =org-extras-id-find-duplicate-ids= to present them in a separate buffer for review.
 
@@ -240,6 +279,7 @@ A list of Org Babel language names (strings) for which
 
 #+findex: org-extras-mark-checkbox-complete-and-move-to-next-item
 ~org-extras-mark-checkbox-complete-and-move-to-next-item~: Toggles the checkbox state at point (like =C-c C-c=) and then moves to the beginning of the next list item.
+
 #+findex: org-extras-reset-checkbox-state-subtree
 ~org-extras-reset-checkbox-state-subtree~: Resets all checkboxes in the current subtree to incomplete (=[ ]=) and ensures the subtree is visible.
 
@@ -250,8 +290,10 @@ A list of Org Babel language names (strings) for which
 
 #+findex: org-extras-refile-and-archive
 ~org-extras-refile-and-archive~: Refiles the current subtree (prompts for target), then archives the *original* subtree location to its archive sibling.
+
 #+findex: org-extras-refile-goto-latest
 ~org-extras-refile-goto-latest~: Jumps to the location of the most recently refiled item (using =org-refile='s internal marker).
+
 #+findex: org-extras-refile-regenerate-cache
 ~org-extras-refile-regenerate-cache~: Clears and regenerates the =org-refile= target cache.
 
@@ -262,6 +304,7 @@ A list of Org Babel language names (strings) for which
 
 #+findex: org-extras-babel-tangle
 ~org-extras-babel-tangle~: Widens the buffer, saves it, and then tangles it using =org-babel-tangle=.
+
 #+findex: org-extras-crypt-dwim
 ~org-extras-crypt-dwim~: If point is on a clock line, evaluates the time range. Otherwise, decrypts the current entry using =org-decrypt-entry=.
 
@@ -272,6 +315,7 @@ A list of Org Babel language names (strings) for which
 
 #+findex: org-extras-sort-links
 ~org-extras-sort-links~: Sorts a list of Org links within the current paragraph, prompting for the SEPARATOR used between links.
+
 #+findex: org-extras-sort-keywords
 ~org-extras-sort-keywords~: Sorts a list of Org links separated by " • " (specifically intended for keyword lists).
 
@@ -290,8 +334,10 @@ A list of Org Babel language names (strings) for which
 
 #+findex: org-extras-config-dispatch
 ~org-extras-config-dispatch~: Transient menu for jumping to specific headings within the main =config.org= file.
+
 #+findex: org-extras-personal-menu
 ~org-extras-personal-menu~: Transient menu for jumping to specific Org Roam nodes related to personal projects (finance, Anki, YouTube, etc.).
+
 #+findex: org-extras-tlon-menu
 ~org-extras-tlon-menu~: Transient menu for jumping to specific Org Roam nodes related to "Tlön" projects (Babel, Uqbar, Utilitarianism, meetings, comms, etc.).
 

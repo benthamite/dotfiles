@@ -8,14 +8,14 @@
     "Other": {
         "save_path": "/Users/pablostafforini/Movies-Other"
     },
-    "Seed-TV": {
-        "save_path": "/Users/pablostafforini/Movies-TV"
-    },
     "Seeding": {
         "save_path": "/Users/pablostafforini/Seeding"
     },
     "Seeding-Movies": {
         "save_path": "/Users/pablostafforini/Movies"
+    },
+    "Seeding-Other": {
+        "save_path": "/Users/pablostafforini/Movies-Other"
     },
     "Shorts": {
         "save_path": "/Users/pablostafforini/Movies-Short"

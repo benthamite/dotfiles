@@ -352,8 +352,8 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#copilot][copilot]]
   - [[#copilot-extras][copilot-extras]]
   - [[#gptel][gptel]]
-  - [[#gptel-plus][gptel-plus]]
   - [[#gptel-extras][gptel-extras]]
+  - [[#gptel-plus][gptel-plus]]
   - [[#gptel-quick][gptel-quick]]
   - [[#ragmacs][ragmacs]]
   - [[#llm-tool-collection][llm-tool-collection]]
@@ -8152,29 +8152,6 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
    ("A-C-s-f" . gptel-context-next)))
 #+end_src
 
-** gptel-plus
-:PROPERTIES:
-:ID:       2843FB0D-7653-4BB5-ABBF-73D4D1D18C68
-:END:
-
-/[[https://github.com/benthamite/gptel-plus][gptel-plus]] is a collection of enhancements for gptel./
-
-This package evolved out of gptel-extras.
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package gptel-plus
-  :ensure (:host github
-                 :repo "benthamite/gptel-plus")
-
-  :hook
-  (org-mode-hook . gptel-plus-enable-gptel-in-org)
-  (markdown-mode-hook . gptel-plus-enable-gptel-in-markdown)
-
-  :bind
-  (:map gptel-mode-map
-        ("s-l" . gptel-plus-list-context-files)))
-#+end_src
-
 ** gptel-extras
 :PROPERTIES:
 :ID:       AEA2E978-0321-4F3D-B3EB-14CDA505A9D9
@@ -8265,6 +8242,31 @@ This package evolved out of gptel-extras.
   (("H-s-c" . gptel-extras-goto-end-and-send)
    ("H-s-o" . gptel-extras-toggle-major-mode)
    ("H-s-s" . gptel-extras-search-and-ask-model)))
+#+end_src
+
+** gptel-plus
+:PROPERTIES:
+:ID:       2843FB0D-7653-4BB5-ABBF-73D4D1D18C68
+:END:
+
+/[[https://github.com/benthamite/gptel-plus][gptel-plus]] is a collection of enhancements for gptel./
+
+This package evolved out of =gptel-extras=.
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package gptel-plus
+  :ensure (:host github
+                 :repo "benthamite/gptel-plus")
+  :after gptel-extras
+  :demand t
+
+  :hook
+  (org-mode-hook . gptel-plus-enable-gptel-in-org)
+  (markdown-mode-hook . gptel-plus-enable-gptel-in-markdown)
+
+  :bind
+  (:map gptel-mode-map
+        ("s-l" . gptel-plus-list-context-files)))
 #+end_src
 
 ** gptel-quick

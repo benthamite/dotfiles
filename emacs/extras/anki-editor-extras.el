@@ -150,6 +150,121 @@ CARD-ID and POSITION must be integers (or numeric strings).  POSITION is
      :keys (vconcat '("due"))
      :newValues (vector pos))))
 
+;;;;; process duplicates
+
+;;;###autoload
+(defun anki-editor-extras-duplicates-process ()
+  "Process duplicate-tagged notes and suspend real duplicates.
+This runs the Emacs-automatable part of the workflow:
+
+1. Remove `duplicate' from notes already tagged `real-duplicate'.
+2. Remove `duplicate' from notes already tagged `no-duplicate'.
+3. Review remaining `tag:duplicate' notes, tagging each as real or not.
+4. Suspend all cards of notes tagged `real-duplicate'."
+  (interactive)
+  (anki-editor-extras-duplicates-cleanup)
+  (anki-editor-extras-review-duplicates)
+  (anki-editor-extras-suspend-real-duplicates))
+
+;;;###autoload
+(defun anki-editor-extras-remove-tag (tag)
+  "Remove TAG from all notes that have it."
+  (interactive "sTag to remove: ")
+  (let* ((note-ids (anki-editor-api-call-result 'findNotes :query (format "tag:%s" tag))))
+    (if (null note-ids)
+	(message "No notes found with tag '%s'" tag)
+      (anki-editor-api-call-result 'removeTags
+                                   :notes note-ids
+                                   :tags tag)
+      (message "Removed '%s' tag from %d note(s)" tag (length note-ids)))))
+
+;;;###autoload
+(defun anki-editor-extras-duplicates-reset ()
+  "Reset the duplicates workflow by removing the `duplicate' tag everywhere."
+  (interactive)
+  (anki-editor-extras-remove-tag "duplicate"))
+
+(defun anki-editor-extras--find-notes (query)
+  "Return note ids matching QUERY via AnkiConnect.
+QUERY is an Anki search string."
+  (anki-editor-api-call-result 'findNotes :query query))
+
+(defun anki-editor-extras--notes->card-ids (note-ids)
+  "Return card ids for NOTE-IDS via AnkiConnect.
+NOTE-IDS must be a list of note ids."
+  (let ((info (anki-editor-api-call-result 'notesInfo :notes note-ids)))
+    (cl-loop for note in info
+             append (alist-get 'cards note))))
+
+(defun anki-editor-extras-remove-tag-from-query (tag query)
+  "Remove TAG from all notes matching QUERY.
+TAG is a string tag name.
+QUERY is an Anki search string."
+  (let ((note-ids (anki-editor-extras--find-notes query)))
+    (if (null note-ids)
+        (message "No notes found for query: %s" query)
+      (anki-editor-api-call-result 'removeTags :notes note-ids :tags tag)
+      (message "Removed tag '%s' from %d note(s)" tag (length note-ids)))))
+
+(defun anki-editor-extras--gui-browse-note (note-id)
+  "Open Anki browser focused on NOTE-ID."
+  (anki-editor-api-call-result 'guiBrowse :query (format "nid:%s" note-id)))
+
+;;;###autoload
+(defun anki-editor-extras-duplicates-cleanup ()
+  "Remove `duplicate' tag from notes already classified as real/no duplicates."
+  (interactive)
+  (anki-editor-extras-remove-tag-from-query
+   "duplicate" "tag:duplicate tag:real-duplicate")
+  (anki-editor-extras-remove-tag-from-query
+   "duplicate" "tag:duplicate tag:no-duplicate"))
+
+;;;###autoload
+(defun anki-editor-extras-suspend-real-duplicates ()
+  "Suspend all cards of notes tagged `real-duplicate'."
+  (interactive)
+  (anki-editor-extras-suspend-cards-by-query "tag:real-duplicate"))
+
+;;;###autoload
+(defun anki-editor-extras-review-duplicates ()
+  "Classify notes tagged `duplicate' as real or not duplicates.
+For each note, open it in Anki's browser and prompt:
+
+- r: tag as real-duplicate, remove duplicate
+- n: tag as no-duplicate, remove duplicate
+- s: skip
+- q: quit"
+  (interactive)
+  (let ((note-ids (anki-editor-extras--find-notes "tag:duplicate")))
+    (unless note-ids
+      (user-error "No notes found with tag:duplicate"))
+    (catch 'anki-editor-extras--review-duplicates-quit
+      (cl-loop for nid in note-ids
+               for remaining downfrom (length note-ids) to 1
+               do (anki-editor-extras--gui-browse-note nid)
+               do (pcase (read-key (format "nid:%s (%d remaining)  (r)eal  (n)ot  (s)kip  (q)uit: " nid remaining))
+                    (?r (anki-editor-api-call-result 'addTags :notes (list nid) :tags "real-duplicate")
+                        (anki-editor-api-call-result 'removeTags :notes (list nid) :tags "duplicate"))
+                    (?n (anki-editor-api-call-result 'addTags :notes (list nid) :tags "no-duplicate")
+                        (anki-editor-api-call-result 'removeTags :notes (list nid) :tags "duplicate"))
+                    (?s nil)
+                    (?q (throw 'anki-editor-extras--review-duplicates-quit nil))
+                    (_ (message "Unknown key; skipping")))))))
+
+(defun anki-editor-extras-suspend-cards-by-query (query)
+  "Suspend all cards belonging to notes matching QUERY.
+QUERY is an Anki search string."
+  (let ((note-ids (anki-editor-extras--find-notes query)))
+    (if (null note-ids)
+        (message "No notes found for query: %s" query)
+      (let ((card-ids (anki-editor-extras--notes->card-ids note-ids)))
+        (unless (and (listp card-ids) card-ids)
+          (user-error "No cards found for query: %s" query))
+        (anki-editor-api-call-result 'suspend :cards card-ids)
+        (message "Suspended %d card(s) from %d note(s)"
+                 (length card-ids)
+                 (length note-ids))))))
+
 ;;;;; plot summaries
 
 (declare-function ebib-extras-get-field "ebib-extras")

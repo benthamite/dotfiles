@@ -39,6 +39,13 @@
   "Extensions for `anki-editor'."
   :group 'anki-editor)
 
+(defcustom anki-editor-extras-duplicates-field "Front"
+  "Field name used to identify duplicates.
+This should match the field you select in Anki's \"Notes → Find duplicates\"
+dialog, for example \"Front\"."
+  :type 'string
+  :group 'anki-editor-extras)
+
 ;;;; Functions
 
 ;;;;; patch

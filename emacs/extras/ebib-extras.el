@@ -115,17 +115,18 @@ This function splits the current window if necessary and selects a target window
   "Reload the Ebib database DB from disk without asking for confirmation.
 If the database is modified, it will still prompt unless `yes-or-no-p' returns
 true. It preserves the current entry key and updates buffers."
-  (ebib--execute-when
-    (entries
-     (unless (and (ebib-db-modified-p db)
-		  (not (yes-or-no-p "Database modified.  Really reload from file? ")))
-       (ebib-db-set-current-entry-key (ebib--get-key-at-point) db)
-       (ebib--reload-database db)
-       (ebib--set-modified nil db)
-       ;; (ebib--update-buffers)
-       ))
-    (default
-     (beep))))
+  (when-let* ((filename (ebib-db-get-filename db)))
+    (ebib--execute-when
+      (entries
+       (unless (and (ebib-db-modified-p db)
+		    (not (yes-or-no-p "Database modified.  Really reload from file? ")))
+	 (ebib-db-set-current-entry-key (ebib--get-key-at-point) db)
+	 (ebib--reload-database db)
+	 (ebib--set-modified nil db)
+	 ;; (ebib--update-buffers)
+	 ))
+      (default
+       (beep)))))
 
 (defconst ebib-extras-isbn-p
   "\\(ISBN-*\\(1[03]\\)* *\\(: \\)?\\)*\\(\\([0-9Xx][ -]*\\)\\{13\\}\\|\\([0-9Xx][ -]*\\)\\{10\\}\\)"
@@ -1375,8 +1376,10 @@ index. DB is the ebib database object. DB-FILE is the path to the database
 file."
   (let ((now (current-time))
         (last-reload (gethash db-file ebib-extras-last-reload-times)))
-    (when (or (not last-reload)
-              (> (time-to-seconds (time-subtract now last-reload)) 10))
+    (when (and (ebib-db-get-filename db)
+               (buffer-live-p (ebib-db-get-buffer db))
+               (or (not last-reload)
+                   (> (time-to-seconds (time-subtract now last-reload)) 10)))
       (puthash db-file now ebib-extras-last-reload-times)
       (ebib-extras-reload-database-no-confirm db))))
 

@@ -5123,10 +5123,7 @@ The original package appears to no longer be maintained, so I have created my ow
 (use-package tmr
   :config
   (when (eq system-type 'darwin)
-    (setopt tmr-sound-file "/System/Library/Sounds/Blow.aiff"))
-
-  :bind
-  ("A-t" . tmr))
+    (setopt tmr-sound-file "/System/Library/Sounds/Blow.aiff")))
 #+end_src
 
 ** display-wttr

@@ -1518,18 +1518,6 @@
 		:source "MELPA" :protocol https :inherit t :depth treeless :host
 		github :build (:not elpaca--check-version) :ref
 		"125e0a4478ff1404880ea4e593f5e4ff0122cb83"))
- (mediawiki :source "elpaca-menu-lock-file" :recipe
-	    (:package "mediawiki" :repo "hexmode/mediawiki-el" :fetcher github
-		      :files
-		      ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo"
-		       "doc/dir" "doc/*.info" "doc/*.texi" "doc/*.texinfo"
-		       "lisp/*.el" "docs/dir" "docs/*.info" "docs/*.texi"
-		       "docs/*.texinfo"
-		       (:exclude ".dir-locals.el" "test.el" "tests.el"
-				 "*-test.el" "*-tests.el" "LICENSE" "README*"
-				 "*-pkg.el"))
-		      :source "MELPA" :protocol https :inherit t :depth treeless
-		      :ref "0e31867d879beb7076dd58eb8c34370d1264a407"))
  (mercado-libre :source "elpaca-menu-lock-file" :recipe
 		(:source nil :protocol https :inherit t :depth treeless :host
 			 github :repo "benthamite/mercado-libre" :package
@@ -1882,17 +1870,6 @@
 			     :host github :repo "jdtsmith/org-modern-indent"
 			     :package "org-modern-indent" :ref
 			     "ebf9a8e571db523dc6e4cd9ed80d0e0626983ae4"))
- (org-msg :source "elpaca-menu-lock-file" :recipe
-	  (:package "org-msg" :repo "jeremy-compostella/org-msg" :fetcher github
-		    :files
-		    ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo"
-		     "doc/dir" "doc/*.info" "doc/*.texi" "doc/*.texinfo"
-		     "lisp/*.el" "docs/dir" "docs/*.info" "docs/*.texi"
-		     "docs/*.texinfo"
-		     (:exclude ".dir-locals.el" "test.el" "tests.el" "*-test.el"
-			       "*-tests.el" "LICENSE" "README*" "*-pkg.el"))
-		    :source "MELPA" :protocol https :inherit t :depth treeless
-		    :ref "327768e2c38020f6ea44730e71f2a62f3f0ce3bd"))
  (org-msg-extras :source "elpaca-menu-lock-file" :recipe
 		 (:source nil :protocol https :inherit t :depth nil :host github
 			  :repo "benthamite/dotfiles" :files

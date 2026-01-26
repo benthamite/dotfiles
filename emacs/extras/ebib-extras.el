@@ -731,16 +731,24 @@ KEY is an optional BibTeX key string, passed interactively as nil."
 
 (defun ebib-extras-doi-attach (&optional key)
   "Attempt to download and attach a PDF for the entry with KEY using its DOI.
-If KEY is nil, uses the entry at point. It retrieves the DOI, then uses
-`scihub-download' with `ebib-extras-attach-file-to-entry' as a callback for
-attachment.
-KEY is an optional BibTeX key string, passed interactively as nil."
+If KEY is nil, use the entry at point. The DOI is downloaded via
+`annas-archive-download' and the resulting file is attached via
+`annas-archive-post-download-hook'."
   (interactive (list nil))
   (let ((target-key (or key (ebib--get-key-at-point))))
     (when-let* ((doi (ebib-extras-get-field "doi" target-key)))
-      (scihub-download doi
-                       (lambda (file &optional _status)
-                         (ebib-extras-attach-file-to-entry file target-key))))))
+      (cl-labels ((attach-and-remove-hook (url &optional path)
+                    (if path
+			(progn
+			  (message "Annas Archive download finished for %s, attaching file %s"
+				   target-key path)
+			  (ebib-extras-attach-file path target-key t))
+		      (message "Annas Archive download initiated externally for %s (URL: %s)"
+			       target-key url))
+                    (remove-hook 'annas-archive-post-download-hook
+				 #'attach-and-remove-hook)))
+	(add-hook 'annas-archive-post-download-hook #'attach-and-remove-hook nil nil)
+	(annas-archive-download doi)))))
 
 (defun ebib-extras-attach-file-to-entry (&optional file key)
   "Attach FILE to the BibTeX entry with KEY.
@@ -751,7 +759,6 @@ FILE is the path to the file. KEY is the BibTeX key string."
   (ebib-extras-attach-file file key)
   (message "Attached `%s' to %s" file key))
 
-(declare-function annas-archive-download "annas-archive")
 (defun ebib-extras-attach-files (&optional key)
   "Attach files appropriate for the entry with KEY (Do What I Mean).
 If KEY is nil, uses the entry at point. If a file is already attached (i.e.,
@@ -1095,7 +1102,6 @@ The list of film search functions is specified by
     (default
      (beep))))
 
-(declare-function scihub-is-doi-p "scihub")
 (defun ebib-extras-search-by-identifier ()
   "Search for a book or article by the ISBN or DOI of the entry at point."
   (interactive)
@@ -1105,7 +1111,7 @@ The list of film search functions is specified by
 		(read-string "Enter ISBN or DOI: "))))
     (cond ((ebib-extras-isbn-p id)
 	   (ebib-extras-search-book id))
-	  ((scihub-is-doi-p id)
+	  ((annas-archive--doi-p id)
 	   (ebib-extras-search-article id))
 	  (t
 	   (user-error "Identifier does not appear to be an ISBN or DOI")))))
@@ -1153,7 +1159,7 @@ The list of article download functions is specified by
     (default
      (beep))))
 
-(declare-function scihub-download "scihub")
+(declare-function annas-archive-download "annas-archive")
 (declare-function eww-extras-url-to-pdf "eww-extras")
 (defun ebib-extras-download-pdf ()
   "Download and attach a PDF of the work at point based on its DOI, URL or ISBN."
@@ -1162,7 +1168,7 @@ The list of article download functions is specified by
 		     ('ebib-entry-mode #'ebib-extras-get-field)
 		     ('bibtex-mode #'bibtex-extras-get-field))))
     (or (when-let* ((doi (funcall get-field "doi")))
-	  (scihub-download doi))
+	  (annas-archive-download doi))
 	(when-let* ((url (funcall get-field "url")))
 	  (eww-extras-url-to-pdf url))
 	(when-let* ((isbn (ebib-extras-get-isbn)))

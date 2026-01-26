@@ -3535,6 +3535,7 @@
     ("saxaphone" "saxophone" nil :count 1)
     ("scaleable" "scalable" nil :count 1)
     ("scandanavia" "Scandinavia" nil :count 1)
+    ("scandinavian" "Scandinavian" nil :count 0)
     ("scaricity" "scarcity" nil :count 1)
     ("scavanged" "scavenged" nil :count 1)
     ("schedual" "schedule" nil :count 1)

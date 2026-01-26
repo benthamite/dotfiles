@@ -6713,6 +6713,12 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package mediawiki
   ;; :ensure (:tag "2.4.3") ; otherwise can't authenticate; https://github.com/hexmode/mediawiki-el/issues/48
+  :custom
+  (mediawiki-site-alist `(("Wikipedia"
+			   "https://en.wikipedia.org/w/"
+			   "Sir Paul"
+			   ,(auth-source-pass-get 'secret "chrome/auth.wikimedia.org/Sir_Paul") ""
+			   :description "English Wikipedia" :first-page "Main Page")))
   :bind
   (:map mediawiki-mode-map
         ("s-k" . mediawiki-insert-link)

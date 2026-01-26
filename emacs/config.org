@@ -455,7 +455,6 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#zotra][zotra]]
   - [[#zotra-extras][zotra-extras]]
   - [[#annas-archive][annas-archive]]
-  - [[#scihub][scihub]]
 - [[#email][email]]
   - [[#simple][simple]]
   - [[#sendmail][sendmail]]
@@ -11576,20 +11575,6 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (annas-archive-use-fast-download-links t)
   (annas-archive-use-eww t)
   (annas-archive-title-column-width 130))
-#+end_src
-
-** scihub
-:PROPERTIES:
-:ID:       C8F5B1DC-15F3-4D3A-9363-A32AEE1D34D4
-:END:
-
-/[[https://github.com/benthamite/scihub][scihub]] supports the downloading of files from SciHub./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package scihub
-  :ensure (:host github
-           :repo "benthamite/scihub")
-  :defer 30)
 #+end_src
 
 * email

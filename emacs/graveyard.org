@@ -9,6 +9,20 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** scihub
+:PROPERTIES:
+:ID:       C8F5B1DC-15F3-4D3A-9363-A32AEE1D34D4
+:END:
+
+/[[https://github.com/benthamite/scihub][scihub]] supports the downloading of files from SciHub./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package scihub
+  :ensure (:host github
+           :repo "benthamite/scihub")
+  :defer 30)
+#+end_src
+
 ** lsp-mode
 :PROPERTIES:
 :ID:       E9D2E6CA-5256-4776-801F-13281BD390C9

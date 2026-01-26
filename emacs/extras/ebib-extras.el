@@ -47,7 +47,7 @@ If nil, abort. If `overwrite', attach without prompting. If `prompt' (the
 default) or any other non-nil value, prompt before overwriting."
   :type '(choice (const :tag "Abort when the file exists" nil)
                  (const :tag "Overwrite without prompting" overwrite)
-                 (other :tag "Prompt before overwriting"))
+                 (const :tag "Prompt before overwriting" prompt))
   :group 'ebib-extras)
 
 ;;;; Variables

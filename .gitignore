@@ -19,3 +19,6 @@ ai-marketplace-monitor.log*
 
 ## agent-shell
 .agent-shell
+
+## claude
+.claude

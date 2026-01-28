@@ -8365,18 +8365,19 @@ This package evolved out of =gptel-extras=.
   (aidermacs-show-diff-after-change nil)
   ;; for thinking mode, add "--thinking-tokens" "16k" to `aidermacs-extra-args'
 
-  :config
+  :init
   ;; https://github.com/MatthewZMD/aidermacs/issues/141#issuecomment-2924207029
-  (remove-hook 'syntax-propertize-extend-region-functions
-               #'markdown-syntax-propertize-extend-region t)
-  (remove-hook 'jit-lock-after-change-extend-region-functions
-               #'markdown-font-lock-extend-region-function t)
-  
+  (with-eval-after-load 'aidermacs-backend-comint
+    (remove-hook 'syntax-propertize-extend-region-functions
+		 #'markdown-syntax-propertize-extend-region t)
+    (remove-hook 'jit-lock-after-change-extend-region-functions
+		 #'markdown-font-lock-extend-region-function t))
+
   :bind (("C-c a" . aidermacs-transient-menu)
-         :map aidermacs-comint-mode-map
-         ("S-<return>" . comint-send-input)
-         ("s-c" . comint-send-input)
-         ("<return>" . comint-accumulate)))
+	 :map aidermacs-comint-mode-map
+	 ("S-<return>" . comint-send-input)
+	 ("s-c" . comint-send-input)
+	 ("<return>" . comint-accumulate)))
 #+end_src
 
 ** aidermacs-extras

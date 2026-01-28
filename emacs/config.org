@@ -293,6 +293,7 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#xwidget][xwidget]]
   - [[#edit-indirect][edit-indirect]]
   - [[#mediawiki][mediawiki]]
+  - [[#wikipedia][wikipedia]]
   - [[#gdrive][gdrive]]
   - [[#ledger-mode][ledger-mode]]
   - [[#ledger-mode-extras][ledger-mode-extras]]
@@ -6724,6 +6725,22 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
         ("s-k" . mediawiki-insert-link)
 	("A-C-s-r" . mediawiki-prev-header)
         ("A-C-s-f" . mediawiki-next-header)))
+#+end_src
+
+** wikipedia
+:PROPERTIES:
+:ID:       2212CFC8-2147-4921-A607-029CB66D6DF5
+:END:
+
+/[[https://github.com/benthamite/wikipedia][wikipedia]] is an Emacs interface for Wikipedia, with a focus on fast editing workflows, review tools, and optional local/offline browsing of watched pages./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package wikipedia
+  :ensure (:host github
+                 :repo "benthamite/wikipedia"
+                 :depth nil)
+  :after mediawiki
+  :demand t)
 #+end_src
 
 ** gdrive

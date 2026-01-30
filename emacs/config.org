@@ -5130,6 +5130,7 @@ The original package appears to no longer be maintained, so I have created my ow
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package tmr
+  :defer t
   :config
   (when (eq system-type 'darwin)
     (setopt tmr-sound-file "/System/Library/Sounds/Blow.aiff")))

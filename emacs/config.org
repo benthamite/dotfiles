@@ -6158,7 +6158,6 @@ CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
   (("A-H-M-s-h" . kmacro-end-or-call-macro) ; = H-h, to circumvent OSX mapping
    ("H-H" . kmacro-start-macro-or-insert-counter)
    ("A-C-H-s-h" . kmacro-set-counter)
-   ("A-h" . name-last-kbd-macro)
    ("M-h" . kmacro-edit-macro)
    ("M-A-h" . kmacro-bind-to-key)))
 #+end_src

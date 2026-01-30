@@ -998,7 +998,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature server
-  :defer 30
+  :demand t
   :config
   (unless (server-running-p)
     (server-start)))

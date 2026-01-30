@@ -7755,8 +7755,12 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package pet
   :after python
-  :config
-  (add-hook 'python-base-mode-hook 'pet-mode -10))
+  :defer t
+  ;; Disabled by default because it causes slowdown when opening Python files
+  ;; Uncomment the line below to enable pet-mode automatically
+  ;; :config
+  ;; (add-hook 'python-base-mode-hook 'pet-mode -10)
+  )
 #+end_src
 
 ** emacs-ipython-notebook

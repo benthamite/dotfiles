@@ -276,6 +276,7 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#eshell-syntax-highlighting][eshell-syntax-highlighting]]
   - [[#dwim-shell-command][dwim-shell-command]]
   - [[#eat][eat]]
+  - [[#vterm][vterm]]
 - [[#spelling--grammar][spelling & grammar]]
   - [[#jinx][jinx]]
   - [[#jinx-extras][jinx-extras]]
@@ -6323,6 +6324,30 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   :hook
   (eshell-load-hook . eat-eshell-mode)
   (eshell-load-hook . eat-eshell-visual-command-mode))
+#+end_src
+
+** vterm
+:PROPERTIES:
+:ID:       AD71DE89-9F39-4A5E-B862-03906E250726
+:END:
+
+/[[https://github.com/akermu/emacs-libvterm][vterm]] is another terminal emulator./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package vterm
+  :defer t
+  :custom
+  ;; Allow more keys to be passed through to Emacs
+  (vterm-keymap-exceptions '("C-c" "C-x" "C-u" "C-g" "C-h" "C-l" "M-x" "M-o" "C-y" "M-y"))
+  
+  :config
+  ;; Make sure clipboard paste works
+  (define-key vterm-mode-map (kbd "C-y") #'vterm-yank)
+  (define-key vterm-mode-map (kbd "M-y") #'vterm-yank-pop)
+  
+  ;; These should be handled by the terminal
+  (define-key vterm-mode-map (kbd "<backspace>") #'vterm-send-backspace)
+  (define-key vterm-mode-map (kbd "DEL") #'vterm-send-backspace))
 #+end_src
 
 * spelling & grammar

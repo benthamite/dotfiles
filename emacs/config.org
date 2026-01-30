@@ -509,7 +509,7 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#empv][empv]]
   - [[#tango-wiki][tango-wiki]]
   - [[#ytdl][ytdl]]
-  - [[#emacs-speech-input][emacs-speech-input]]
+  - [[#esi-dictate][esi-dictate]]
   - [[#read-aloud][read-aloud]]
   - [[#read-aloud-extras][read-aloud-extras]]
   - [[#subed][subed]]
@@ -13718,30 +13718,35 @@ Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dl
    ("D" . ytdl--delete-item-at-point)))
 #+end_src
 
-** emacs-speech-input
+** esi-dictate
 :PROPERTIES:
 :ID:       F4DA377D-3A7D-4DC8-A35E-A8BB684EE32D
 :END:
 
+/[[https://git.sr.ht/~lepisma/emacs-speech-input][esi-dictate]] is a set of packages for speech and voice inputs in Emacs./
 
-Requires configuration. Disabled for the time being.
+*Setup*:
+1. Install Python dependencies: ~pip install 'deepgram-sdk>=3.0,<4.0' pyaudio~. Note: the ~dg.py~ script requires SDK v3.x; v5.x has a completely different API and will not work.
+2. Download ~dg.py~ from the repo and place it in your PATH (e.g., =~/.local/bin/dg.py=), then make it executable: ~chmod +x ~/.local/bin/dg.py~
+
+*Usage*: ~M-x esi-dictate-start~ to begin dictation, ~C-g~ to stop.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package emacs-speech-input
+(use-package esi-dictate
   :ensure (:host github
-                 :repo "lepisma/emacs-speech-input")
-  :disabled
-  :config
-  (require 'gptel)
-  (setq llm-warn-on-nonfree nil)
-
+		 :repo "lepisma/emacs-speech-input")
+  :after llm
+  :defer t
   :custom
-  ;; TODO: use Tlon API key
-  (esi-dictate-dg-api-key (auth-source-pass-get "key" (concat "chrome/deepgram.com/" (getenv "PERSONAL_EMAIL"))))
-  (esi-dictate-llm-provider (make-llm-openai :key gptel-api-key :chat-model "gpt-4o-mini"))
+  (esi-dictate-llm-provider (make-llm-openai
+			     :key (auth-source-pass-get "gptel" (concat "tlon/core/openai.com/" tlon-email-shared))
+			     :chat-model "gpt-4o-mini"))
 
-  :bind (:map esi-dictate-mode-map
-              ("C-g" . esi-dictate-stop))
+  (esi-dictate-dg-api-key (auth-source-pass-get "key" (concat "chrome/deepgram.com/" (getenv "PERSONAL_EMAIL"))))
+
+  :bind (("A-h" . esi-dictate-start)
+	 :map esi-dictate-mode-map
+	 ("C-g" . esi-dictate-stop))
   :hook
   (esi-dictate-speech-final . esi-dictate-fix-context))
 #+end_src

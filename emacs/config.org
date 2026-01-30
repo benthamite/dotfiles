@@ -7987,8 +7987,11 @@ CLOCK: [2021-11-01 Mon 12:09]--[2021-11-01 Mon 12:10] =>  0:01
   (elpy-rpc-python-command "python3")
   (elpy-rpc-virtualenv-path 'current)
 
-  :config
-  (elpy-enable))
+  ;; Disabled by default because it causes slowdown when opening Python files
+  ;; To enable elpy features, run M-x elpy-enable or uncomment the lines below
+  ;; :config
+  ;; (elpy-enable)
+  )
 #+end_src
 
 ** eldoc

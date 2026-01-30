@@ -8489,7 +8489,11 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :ensure-system-package
   ((claude . "brew install claude-code")
    (claude-code-acp . "npm install -g @zed-industries/claude-code-acp"))
-
+  
+  :custom
+  (agent-shell-anthropic-authentication
+   (agent-shell-anthropic-make-authentication :login t))
+   
   :bind
   ("A-t" . agent-shell-anthropic-start-claude-code))
 #+end_src

@@ -47,6 +47,7 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#prot-common][prot-common]]
   - [[#prot-simple][prot-simple]]
   - [[#bug-hunter][bug-hunter]]
+  - [[#inheritenv][inheritenv]]
   - [[#misc][misc]]
 - [[#performance][performance]]
   - [[#profiler][profiler]]
@@ -189,7 +190,6 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#reveal-in-osx-finder][reveal-in-osx-finder]]
   - [[#tramp][tramp]]
   - [[#pandoc-mode][pandoc-mode]]
-  - [[#inherit-env][inherit-env]]
 - [[#windows--frames][windows & frames]]
   - [[#window][window]]
   - [[#window-extras][window-extras]]
@@ -1078,6 +1078,19 @@ Remember that every piece of Elisp that I write is for my own educational and re
 
 #+begin_src emacs-lisp
 (use-package bug-hunter
+  :defer t)
+#+end_src
+
+** inheritenv
+:PROPERTIES:
+:ID:       40FDF355-604D-4189-A839-68DB8A27837E
+:END:
+
+/[[https://github.com/purcell/inheritenv][inheritenv]] allows temp buffers to inherit buffer-local environment variables./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package inheritenv
+  :ensure (:host github :repo "purcell/inheritenv")
   :defer t)
 #+end_src
 
@@ -4462,19 +4475,6 @@ CLOCK: [2022-08-20 Sat 18:11]--[2022-08-20 Sat 18:32] =>  0:21
 :PROPERTIES:
 :ID:       3C4F154F-6600-4DF0-826F-0EB031146BA2
 :END:
-
-** inherit-env
-:PROPERTIES:
-:ID:       62178B8C-63B3-408C-90AF-6FE0C0BE96E4
-:END:
-
-/[[https://github.com/purcell/inheritenv][inherit-env]] makes Emacs temp buffers inherit buffer-local environment variables./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package inheritenv
-  :ensure (:host github
-		 :repo "purcell/inheritenv"))
-#+end_src
 
 * windows & frames
 :PROPERTIES:

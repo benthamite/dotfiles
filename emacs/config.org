@@ -6324,6 +6324,23 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
                          ("terminfo/65" "terminfo/65/*")
                          ("integration" "integration/*")
                          (:exclude ".dir-locals.el" "*-tests.el")))
+  :custom
+  ;; Use semi-char mode for better key handling
+  (eat-term-name "xterm-256color")
+  
+  :config
+  ;; Make sure clipboard operations work in eat
+  ;; FIXME: this is not working
+  (with-eval-after-load 'eat
+    ;; Add custom key to non-bound keys so Emacs handles it instead of terminal
+    (add-to-list 'eat-semi-char-non-bound-keys [C-H-M-s]
+		 (add-to-list 'eat-semi-char-non-bound-keys [H-v]
+			      ))
+    ;; Bind the custom key to delete-backward-char
+    (bind-keys :map eat-mode-map
+               ("C-H-M-s" . delete-backward-char)
+               ("H-v" . yank)))
+  
   :hook
   (eshell-load-hook . eat-eshell-mode)
   (eshell-load-hook . eat-eshell-visual-command-mode))

@@ -7659,6 +7659,8 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   (python-shell-interpreter "/Users/pablostafforini/.pyenv/shims/python3")
   (org-babel-python-command "/Users/pablostafforini/.pyenv/shims/python3")
   (flycheck-python-pycompile-executable "/Users/pablostafforini/.pyenv/shims/python3")
+  (python-indent-offset 4)  ; Set default to suppress warning message
+  (python-indent-guess-indent-offset nil)  ; Don't try to guess indent
 
   :config
   (org-babel-do-load-languages

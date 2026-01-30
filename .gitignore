@@ -9,16 +9,8 @@ emacs/node_modules/
 emacs/logs/
 
 ## aider
-.aider*
 !.aider.conf.yml
-repo-map.md
 
 ## ai-marketplace-monitor
 ai-marketplace-monitor/cache.db*
 ai-marketplace-monitor.log*
-
-## agent-shell
-.agent-shell
-
-## claude
-.claude

@@ -6313,7 +6313,8 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 :END:
 
 
-/[[https://codeberg.org/akib/emacs-eat][eat]] provides a visual command line for eshell./
+/[[https://codeberg.org/akib/emacs-eat][eat]] is a terminal emulator./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package eat
   :ensure (:host codeberg

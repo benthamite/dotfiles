@@ -2092,7 +2092,9 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature faces
   :config
-  (setq ns-use-thin-smoothing t))
+  (setq ns-use-thin-smoothing t)
+  ;; to prevent misalignment in vtable
+  (set-face-attribute 'header-line nil :box nil))
 #+end_src
 
 - [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]

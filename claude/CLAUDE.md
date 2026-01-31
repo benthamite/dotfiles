@@ -5,13 +5,14 @@
 - Respond in the same language as the prompt. If I prompt you in e.g. English, respond in English.
 - When trying to guess something that could be learned from documentation you don't have access to, try to obtain that documentation, or else ask me to find it for you.
 - Use sentence case instead of title case whenever possible.
+- If you create temporary files or code, make sure to delete them afterwards.
 
 ## Filesystem organization
 
 ### Emacs
 
 - My emacs configuration is stored in ~/Library/CloudStorage/Dropbox/dotfiles/emacs/config.org
-- This is a “literate” config: the resulting Elisp files are tangled into the relevant Emacs profile. These profiles are in ~/.config/emacs-profiles/. I almost always use the most recent profile, which you can infer from the version number (e.g., 7.1.29 is more recent than 6.9.3). If there are two profiles with the same version number, one of them will have “-target” appended to its name; that is the one I use. For example, the Elisp files of my literate config for the profile 7.1.29-target are tangled into ~/.config/emacs-profiles/7.1.29-target/.
+- This is a “literate” config: the resulting Elisp files are tangled into the relevant Emacs profile. (To see the profile active in the current session, inspect the variable `user-emacs-directory`.)
 - The Emacs packages (both external ones and my own) are located in the ‘elpaca/repos/’ directory of the relevant profile. For example, for the profile 7.1.29-target, they are located at ~/.config/emacs-profiles/7.1.29-target/elpaca/repos/.
 
 ### Projects

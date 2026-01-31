@@ -21,6 +21,10 @@
 - My non-Emacs projects are stored in ~/Library/CloudStorage/Dropbox/repos/.
 - Note that a non-Emacs project may have a companion Emacs package. For example, the tango-wiki project is stored at ~/Library/CloudStorage/Dropbox/repos/tango-wiki, but the Emacs package tango-wiki-mode is stored at ~/.config/emacs-profiles/<profile>/elpaca/repos/tango-wiki-mode.
 
+## Version control
+
+- By default, and unless I specify otherwise, commit all the changes you make. You may skip this rule if you are making changes for testing purposes only, or if committing is otherwise not appropriate. But in general I prefer to have a record of all changes, because that makes it easier to review them later, and to revert them if necessary.
+
 ## Programming languages
 
 ### Emacs Lisp

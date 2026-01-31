@@ -57,7 +57,7 @@
   (let ((ssid (string-trim
                (shell-command-to-string
                 (pcase system-type
-                  ('darwin "networksetup -getairportnetwork en0 | cut -d: -f2")
+                  ('darwin "ipconfig getsummary en0 | awk -F': ' '/^ *SSID/ {print $2}'")
                   ('gnu/linux "iwgetid -r")
                   (_ ""))))))
     (string= ssid network)))

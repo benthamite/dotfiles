@@ -8638,8 +8638,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 										     "ha-mcp"
 										     "chrome/home-assistant.io/stafforini"))))))))
 
-  (mcp-hub-start-all-server)
-  (run-with-timer 15 nil #'gptel-extras-connect-to-all-servers))
+  (mcp-hub-start-all-server #'gptel-extras-connect-to-all-servers))
 #+end_src
 
 ** dall-e-shell

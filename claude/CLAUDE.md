@@ -12,8 +12,9 @@
 ### Emacs
 
 - My emacs configuration is stored in ~/Library/CloudStorage/Dropbox/dotfiles/emacs/config.org
-- This is a “literate” config: the resulting Elisp files are tangled into the relevant Emacs profile. (To see the profile active in the current session, inspect the variable `user-emacs-directory`.)
-- The Emacs packages (both external ones and my own) are located in the ‘elpaca/repos/’ directory of the relevant profile. For example, for the profile 7.1.29-target, they are located at ~/.config/emacs-profiles/7.1.29-target/elpaca/repos/.
+- This is a "literate" config: the resulting Elisp files are tangled into the relevant Emacs profile.
+- **To find the active Emacs profile directory, run: `emacsclient -e "user-emacs-directory"`**
+- The Emacs packages (both external ones and my own) are located in the 'elpaca/repos/' subdirectory of the active profile.
 
 ### Projects
 

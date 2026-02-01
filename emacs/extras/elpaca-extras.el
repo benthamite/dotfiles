@@ -97,22 +97,21 @@ If PKG is nil, prompt for it."
     (setq on-update-finish
           (lambda ()
             (elpaca-extras--update-finish-callback pkg on-update-finish)))
+    ;; Run the callback after Elpaca finalises its queues.
     (add-hook 'elpaca--post-queues-hook on-update-finish)
+    ;; Trigger the update immediately.
     (elpaca-update pkg t)))
 
 (defun elpaca-extras--update-finish-callback (pkg callback)
-  "Handle package update completion for PKG.
-CALLBACK is the function to remove from hooks once processing is complete."
-  (when-let* ((pkg-data (elpaca-get pkg))
-              (status (elpaca--status pkg-data)))
-    (when (memq status '(finished failed blocked))
+  "Helper function to handle package update completion.
+PKG is the package that was updated, CALLBACK is the function to remove from
+hooks."
+  (let ((pkg-data (elpaca-get pkg)))
+    (when (and pkg-data (eq (elpaca--status pkg-data) 'finished))
+      ;; Remove the callback before reloading.
       (remove-hook 'elpaca--post-queues-hook callback)
-      (pcase status
-        ('finished
-         (elpaca-extras-reload pkg))
-        ((or 'failed 'blocked)
-         (message "Update of `%s' %s. To retry manually:\n1. M-x find-library RET %s\n2. M-x magit-pull RET p (ensure repo is clean)\n3. M-x elpaca-extras-reload"
-                  pkg status pkg))))))
+      (elpaca-extras-reload pkg))
+    (message "If the update fails:\n1. M-x find-library RET %S\n2. M-x magit-pull RET p (ensure repo is clean)\n3. M-x elpaca-extras-reload." pkg)))
 
 ;;;;; Lock file
 

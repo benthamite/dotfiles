@@ -93,14 +93,27 @@ using this command."
   "Update PKG and reload its features.
 If PKG is nil, prompt for it."
   (interactive (list (elpaca--read-queued "Update and reload package: ")))
+  (elpaca-extras--build-and-reload pkg #'elpaca-update "Updated"))
+
+;;;###autoload
+(defun elpaca-extras-rebuild-and-reload (&optional pkg)
+  "Rebuild PKG and reload its features.
+If PKG is nil, prompt for it."
+  (interactive (list (elpaca--read-queued "Rebuild and reload package: ")))
+  (elpaca-extras--build-and-reload pkg #'elpaca-rebuild "Rebuilt"))
+
+(defun elpaca-extras--build-and-reload (pkg build-fn verb)
+  "Build PKG using BUILD-FN, then reload.
+VERB is a past-tense verb for the success message (e.g., \"Updated\")."
   (letrec ((callback
             (lambda ()
-              (elpaca-extras--handle-update-complete pkg callback))))
+              (elpaca-extras--handle-build-complete pkg callback verb))))
     (add-hook 'elpaca-post-queue-hook callback)
-    (elpaca-update pkg t)))
+    (funcall build-fn pkg t)))
 
-(defun elpaca-extras--handle-update-complete (pkg callback)
-  "Handle update completion for PKG, removing CALLBACK from hook."
+(defun elpaca-extras--handle-build-complete (pkg callback verb)
+  "Handle build completion for PKG, removing CALLBACK from hook.
+VERB is a past-tense verb for the success message."
   (let* ((e (elpaca-get pkg))
          (status (and e (elpaca--status e))))
     (when (memq status '(finished failed))
@@ -108,9 +121,9 @@ If PKG is nil, prompt for it."
       (pcase status
         ('finished
          (elpaca-extras-reload pkg)
-         (message "Updated and reloaded: %s" pkg))
+         (message "%s and reloaded: %s" verb pkg))
         ('failed
-         (message "Update failed for %s. Check *elpaca-log* for details" pkg))))))
+         (message "Build failed for %s. Check *elpaca-log* for details" pkg))))))
 
 ;;;;; Lock file
 

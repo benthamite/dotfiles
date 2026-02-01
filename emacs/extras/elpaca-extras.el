@@ -93,25 +93,24 @@ using this command."
   "Update PKG and reload its features.
 If PKG is nil, prompt for it."
   (interactive (list (elpaca--read-queued "Update and reload package: ")))
-  (let (on-update-finish)
-    (setq on-update-finish
-          (lambda ()
-            (elpaca-extras--update-finish-callback pkg on-update-finish)))
-    ;; Run the callback after Elpaca finalises its queues.
-    (add-hook 'elpaca--post-queues-hook on-update-finish)
-    ;; Trigger the update immediately.
+  (letrec ((callback
+            (lambda ()
+              (elpaca-extras--handle-update-complete pkg callback))))
+    (add-hook 'elpaca-post-queue-hook callback)
     (elpaca-update pkg t)))
 
-(defun elpaca-extras--update-finish-callback (pkg callback)
-  "Helper function to handle package update completion.
-PKG is the package that was updated, CALLBACK is the function to remove from
-hooks."
-  (let ((pkg-data (elpaca-get pkg)))
-    (when (and pkg-data (eq (elpaca--status pkg-data) 'finished))
-      ;; Remove the callback before reloading.
-      (remove-hook 'elpaca--post-queues-hook callback)
-      (elpaca-extras-reload pkg))
-    (message "If the update fails:\n1. M-x find-library RET %S\n2. M-x magit-pull RET p (ensure repo is clean)\n3. M-x elpaca-extras-reload." pkg)))
+(defun elpaca-extras--handle-update-complete (pkg callback)
+  "Handle update completion for PKG, removing CALLBACK from hook."
+  (let* ((e (elpaca-get pkg))
+         (status (and e (elpaca--status e))))
+    (when (memq status '(finished failed))
+      (remove-hook 'elpaca-post-queue-hook callback)
+      (pcase status
+        ('finished
+         (elpaca-extras-reload pkg)
+         (message "Updated and reloaded: %s" pkg))
+        ('failed
+         (message "Update failed for %s. Check *elpaca-log* for details" pkg))))))
 
 ;;;;; Lock file
 

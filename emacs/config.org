@@ -6359,16 +6359,43 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   :defer t
   :custom
   ;; Allow more keys to be passed through to Emacs
-  (vterm-keymap-exceptions '("C-c" "C-x" "C-u" "C-g" "C-h" "C-l" "M-x" "M-o" "C-y" "M-y"))
-  
+  (vterm-keymap-exceptions '("C-c" "C-x" "C-u" "C-g" "C-h" "C-l" "M-x" "M-o" "C-y" "M-y"
+                             "C-H-M-s" "C-H-M-q" "C-H-M-r" "C-H-M-v"
+                             "A-C-s-p" "A-C-s-u"))
+
   :config
-  ;; Make sure clipboard paste works
-  (define-key vterm-mode-map (kbd "C-y") #'vterm-yank)
-  (define-key vterm-mode-map (kbd "M-y") #'vterm-yank-pop)
-  
-  ;; These should be handled by the terminal
-  (define-key vterm-mode-map (kbd "<backspace>") #'vterm-send-backspace)
-  (define-key vterm-mode-map (kbd "DEL") #'vterm-send-backspace))
+  (defun vterm-send-forward-word ()
+    "Send forward-word to the terminal."
+    (interactive)
+    (vterm-send-key "f" nil t nil))
+
+  (defun vterm-send-backward-word ()
+    "Send backward-word to the terminal."
+    (interactive)
+    (vterm-send-key "b" nil t nil))
+
+  (defun vterm-send-kill-word ()
+    "Send kill-word to the terminal."
+    (interactive)
+    (vterm-send-key "d" nil t nil))
+
+  (defun vterm-send-kill-line ()
+    "Send kill-line to the terminal."
+    (interactive)
+    (vterm-send-key "k" nil nil t))
+
+  :bind
+  (:map vterm-mode-map
+        ("C-y" . vterm-yank)
+        ("M-y" . vterm-yank-pop)
+        ("<backspace>" . vterm-send-backspace)
+        ("DEL" . vterm-send-backspace)
+        ("C-H-M-s" . vterm-send-backspace)
+        ("C-H-M-q" . vterm-send-meta-backspace)
+        ("C-H-M-r" . vterm-send-kill-word)
+        ("C-H-M-v" . vterm-send-kill-line)
+        ("A-C-s-p" . vterm-send-forward-word)
+        ("A-C-s-u" . vterm-send-backward-word)))
 #+end_src
 
 * spelling & grammar
@@ -8495,7 +8522,10 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :custom
   (agent-shell-anthropic-authentication
    (agent-shell-anthropic-make-authentication :login t))
-   
+
+  (agent-shell-anthropic-claude-environment
+   '("MAX_THINKING_TOKENS=20000"))
+  
   :bind
   ("A-t" . agent-shell-anthropic-start-claude-code))
 #+end_src
@@ -8515,7 +8545,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
                  :files ("*.el" (:exclude "images/*")))
   :custom
   (claude-code-display-window-fn (lambda (_buffer) (claude-code-switch-to-buffer) nil))
-  (claude-code-terminal-backend 'eat)
+  (claude-code-terminal-backend 'vterm)
   
   :config
   (monet-mode 1)

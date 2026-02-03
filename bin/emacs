@@ -1,10 +1,5 @@
 #!/bin/bash
-# Wrapper to launch Emacs.app without glib library conflicts
-
-# Point to Emacs's bundled libraries to avoid conflicts with Homebrew's glib
-export DYLD_FALLBACK_LIBRARY_PATH="/Applications/Emacs.app/Contents/Frameworks"
-unset DYLD_LIBRARY_PATH
-unset DYLD_INSERT_LIBRARIES
+# Wrapper to launch Emacs.app with profile support and suppress glib warning
 
 EMACS_BIN="/Applications/Emacs.app/Contents/MacOS/Emacs"
 PROFILES_DIR="$HOME/.config/emacs-profiles"
@@ -25,9 +20,14 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Build the command - launch binary directly so environment variables take effect
+# Filter out the GNotificationCenterDelegate warning from stderr
+filter_stderr() {
+    grep -v "Class GNotificationCenterDelegate is implemented in both"
+}
+
+# Launch Emacs, filtering the duplicate class warning
 if [[ -n "$PROFILE" ]]; then
-    exec "$EMACS_BIN" --init-directory="$PROFILES_DIR/$PROFILE" "${ARGS[@]}"
+    "$EMACS_BIN" --init-directory="$PROFILES_DIR/$PROFILE" "${ARGS[@]}" 2> >(filter_stderr >&2)
 else
-    exec "$EMACS_BIN" "${ARGS[@]}"
+    "$EMACS_BIN" "${ARGS[@]}" 2> >(filter_stderr >&2)
 fi

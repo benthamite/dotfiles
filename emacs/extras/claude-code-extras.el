@@ -37,6 +37,11 @@
   "Extensions for `claude-code'."
   :group 'claude-code)
 
+(defcustom claude-code-extras-protect-buffers t
+  "When non-nil, prompt for confirmation before killing claude-code buffers."
+  :type 'boolean
+  :group 'claude-code-extras)
+
 (defcustom claude-code-extras-log-directory
   (expand-file-name "claude-logs" paths-dir-notes)
   "Directory where Claude conversation logs are saved."
@@ -94,6 +99,16 @@
              claude-code-extras--log-timer)
     (cancel-timer claude-code-extras--log-timer)
     (claude-code-extras--save-log (current-buffer))))
+
+(defun claude-code-extras-protect-buffer ()
+  "Prompt for confirmation before killing claude-code buffers.
+Returns t if the buffer should be killed, nil otherwise. Intended for use
+in `kill-buffer-query-functions'."
+  (or (not claude-code-extras-protect-buffers)
+      (not (claude-code--buffer-p (current-buffer)))
+      (yes-or-no-p "Kill claude-code buffer? ")))
+
+(add-hook 'kill-buffer-query-functions #'claude-code-extras-protect-buffer)
 
 (provide 'claude-code-extras)
 ;;; claude-code-extras.el ends here

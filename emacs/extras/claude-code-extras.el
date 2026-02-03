@@ -37,12 +37,16 @@
   "Extensions for `claude-code'."
   :group 'claude-code)
 
-(defvar claude-code-extras-log-directory
+(defcustom claude-code-extras-log-directory
   (expand-file-name "claude-logs" paths-dir-notes)
-  "Directory where Claude conversation logs are saved.")
+  "Directory where Claude conversation logs are saved."
+  :type 'directory
+  :group 'claude-code-extras)
 
-(defvar claude-code-extras-log-interval 30
-  "Interval in seconds between automatic log saves.")
+(defcustom claude-code-extras-log-interval 30
+  "Interval in seconds between automatic log saves."
+  :type 'integer
+  :group 'claude-code-extras)
 
 (defvar-local claude-code-extras--log-file nil
   "Log file path for the current Claude buffer.")

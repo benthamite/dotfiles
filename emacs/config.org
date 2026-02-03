@@ -8568,7 +8568,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 :PROPERTIES:
 :ID:       8966D143-A3B0-4778-8E32-7EFE527219BD
 :END:
-/[[file:extras/claude-code-extras.el][claude-code-extras]] collects my extensions for =claude=./
+/[[file:extras/claude-code-extras.el][claude-code-extras]] collects my extensions for =claude-code=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package claude-code-extras

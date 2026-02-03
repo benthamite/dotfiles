@@ -1,0 +1,33 @@
+#!/bin/bash
+# Wrapper to launch Emacs.app without glib library conflicts
+
+# Point to Emacs's bundled libraries to avoid conflicts with Homebrew's glib
+export DYLD_FALLBACK_LIBRARY_PATH="/Applications/Emacs.app/Contents/Frameworks"
+unset DYLD_LIBRARY_PATH
+unset DYLD_INSERT_LIBRARIES
+
+EMACS_BIN="/Applications/Emacs.app/Contents/MacOS/Emacs"
+PROFILES_DIR="$HOME/.config/emacs-profiles"
+PROFILE=""
+ARGS=()
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -p|--profile)
+            PROFILE="$2"
+            shift 2
+            ;;
+        *)
+            ARGS+=("$1")
+            shift
+            ;;
+    esac
+done
+
+# Build the command - launch binary directly so environment variables take effect
+if [[ -n "$PROFILE" ]]; then
+    exec "$EMACS_BIN" --init-directory="$PROFILES_DIR/$PROFILE" "${ARGS[@]}"
+else
+    exec "$EMACS_BIN" "${ARGS[@]}"
+fi

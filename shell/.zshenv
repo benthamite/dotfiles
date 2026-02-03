@@ -1,7 +1,16 @@
 # Basic PATH setup
 export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 export PATH="$HOME/bin:$HOME/.local/bin:$PATH"
-export PATH="/opt/homebrew/opt/node/bin:$PATH"
+
+# Tool paths
+export PATH="/opt/homebrew/opt/postgresql@17/bin:$PATH"
+export PATH="/Library/TeX/texbin:$PATH"
+export PATH="$HOME/.gem/bin:$PATH"
+export PATH="$HOME/source/emms/src:$PATH"
+export PATH="$HOME/source/gdcv:$PATH"
+export GOPATH="$HOME/go"
+export PATH="$GOPATH/bin:$PATH"
+export GEM_HOME="$HOME/.gem"
 
 # Essential environment variables
 export DOTFILES="$HOME/Library/CloudStorage/Dropbox/dotfiles"

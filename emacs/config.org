@@ -365,6 +365,7 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#ob-aider][ob-aider]]
   - [[#agent-shell][agent-shell]]
   - [[#claude-code][claude-code]]
+  - [[#claude-code-extras][claude-code-extras]]
   - [[#monet][monet]]
   - [[#mcp][mcp]]
   - [[#dall-e-shell][dall-e-shell]]
@@ -8561,6 +8562,21 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 
   :hook
   (claude-code-process-environment-functions . monet-start-server-function))
+#+end_src
+
+** claude-code-extras
+:PROPERTIES:
+:ID:       8966D143-A3B0-4778-8E32-7EFE527219BD
+:END:
+/[[file:extras/claude-code-extras.el][claude-code-extras]] collects my extensions for =claude=./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-personal-package claude-code-extras
+  :after claude-code
+  :demand t
+  :hook
+  (claude-code-start-hook . claude-code-extras-start-logging)
+  (kill-buffer-hook . claude-code-extras-stop-logging))
 #+end_src
 
 ** monet

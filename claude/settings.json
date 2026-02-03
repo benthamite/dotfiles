@@ -1,4 +1,18 @@
 {
   "includeCoAuthoredBy": false,
-  "model": "opus"
+  "model": "opus",
+  "permissions": {
+    "allow": [
+      "Bash",
+      "Read",
+      "Edit",
+      "Write",
+      "WebFetch",
+      "WebSearch",
+      "Task",
+      "Glob",
+      "Grep",
+      "NotebookEdit"
+    ]
+  }
 }

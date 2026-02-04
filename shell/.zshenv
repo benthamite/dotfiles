@@ -2,6 +2,10 @@
 export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 export PATH="$HOME/bin:$HOME/.local/bin:$PATH"
 
+# nvm node (before /opt/homebrew/bin to override Homebrew node)
+export NVM_DIR="$HOME/.nvm"
+export PATH="$NVM_DIR/versions/node/v20.18.2/bin:$PATH"
+
 # Tool paths
 export PATH="/opt/homebrew/opt/postgresql@17/bin:$PATH"
 export PATH="/Library/TeX/texbin:$PATH"

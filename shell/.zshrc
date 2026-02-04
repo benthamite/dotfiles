@@ -1,6 +1,4 @@
-# nvm setup with lazy loading
-export NVM_DIR="$HOME/.nvm"
-
+# nvm lazy loading (NVM_DIR and default node path are in .zshenv)
 load_nvm() {
     [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && . "/opt/homebrew/opt/nvm/nvm.sh"
     [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && . "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"

@@ -457,6 +457,16 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
 
 ;;;;; org-capture
 
+(defun org-extras--inhibit-modification-hooks (orig-fun &rest args)
+  "Call ORIG-FUN with ARGS while inhibiting modification hooks.
+This prevents `track-changes' assertion failures in Emacs 30+ when buffers have
+stale change-tracking state."
+  (let ((inhibit-modification-hooks t))
+    (apply orig-fun args)))
+
+(advice-add 'org-capture-place-template :around #'org-extras--inhibit-modification-hooks)
+(advice-add 'org-capture-finalize :around #'org-extras--inhibit-modification-hooks)
+
 (defvar org-capture-plist)
 (declare-function org-web-tools-insert-link-for-url "org-web-tools")
 (declare-function org-extras-web-tools--org-title-for-url "org-web-tools")

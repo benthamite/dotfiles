@@ -34,6 +34,14 @@
 
 ;;;; Functions
 
+(defun org-gcal-extras--inhibit-modification-hooks (orig-fun &rest args)
+  "Call ORIG-FUN with ARGS while inhibiting modification hooks.
+This prevents `track-changes' assertion failures in Emacs 30+."
+  (let ((inhibit-modification-hooks t))
+    (apply orig-fun args)))
+
+(advice-add 'org-gcal--update-entry :around #'org-gcal-extras--inhibit-modification-hooks)
+
 ;;;###autoload
 (defun org-gcal-extras-open-at-point ()
   "Open the event at point in a Google Calendar."

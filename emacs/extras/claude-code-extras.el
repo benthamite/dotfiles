@@ -78,9 +78,20 @@
   "Save the conversation log for BUFFER."
   (when (buffer-live-p buffer)
     (with-current-buffer buffer
+      (when (claude-code-extras--conversation-cleared-p buffer)
+        (setq claude-code-extras--log-file nil))
       (let ((log-file (claude-code-extras--get-log-file buffer)))
         (make-directory claude-code-extras-log-directory t)
         (write-region (point-min) (point-max) log-file nil 'quiet)))))
+
+(defun claude-code-extras--conversation-cleared-p (buffer)
+  "Return non-nil if the conversation in BUFFER was cleared.
+A conversation is considered cleared when the log file exists and
+is larger than the current buffer content."
+  (when-let* ((log-file claude-code-extras--log-file)
+              ((file-exists-p log-file)))
+    (> (file-attribute-size (file-attributes log-file))
+       (buffer-size buffer))))
 
 (defun claude-code-extras-start-logging ()
   "Start periodic logging for the current Claude buffer."

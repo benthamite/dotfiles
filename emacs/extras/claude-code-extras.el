@@ -53,6 +53,15 @@
   :type 'integer
   :group 'claude-code-extras)
 
+(defcustom claude-code-extras-sigwinch-delay 0.5
+  "Delay in seconds before sending SIGWINCH to fix vterm rendering.
+After Claude Code starts in a vterm buffer, the TUI may render
+incorrectly due to a race condition in terminal size negotiation.
+Sending SIGWINCH forces the TUI to re-query terminal dimensions
+and redraw."
+  :type 'number
+  :group 'claude-code-extras)
+
 (defvar-local claude-code-extras--log-file nil
   "Log file path for the current Claude buffer.")
 
@@ -118,6 +127,26 @@ in `kill-buffer-query-functions'."
   (or (not claude-code-extras-protect-buffers)
       (not (claude-code--buffer-p (current-buffer)))
       (yes-or-no-p "Kill claude-code buffer? ")))
+
+(defun claude-code-extras-fix-vterm-rendering ()
+  "Send SIGWINCH to fix vterm rendering after startup.
+Works around a race condition where Claude Code's TUI queries
+terminal dimensions before the vterm window is fully laid out,
+resulting in a garbled banner."
+  (when-let* ((proc (get-buffer-process (current-buffer)))
+              ((eq claude-code-terminal-backend 'vterm)))
+    (claude-code-extras--send-sigwinch-after-delay (current-buffer))))
+
+(defun claude-code-extras--send-sigwinch-after-delay (buffer)
+  "Send SIGWINCH to the process in BUFFER after a short delay."
+  (run-at-time claude-code-extras-sigwinch-delay nil
+               #'claude-code-extras--send-sigwinch buffer))
+
+(defun claude-code-extras--send-sigwinch (buffer)
+  "Send SIGWINCH to the process in BUFFER."
+  (when (buffer-live-p buffer)
+    (when-let* ((proc (get-buffer-process buffer)))
+      (signal-process proc 'SIGWINCH))))
 
 (add-hook 'kill-buffer-query-functions #'claude-code-extras-protect-buffer)
 

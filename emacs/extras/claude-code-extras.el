@@ -96,11 +96,12 @@ and redraw."
 (defun claude-code-extras--conversation-cleared-p (buffer)
   "Return non-nil if the conversation in BUFFER was cleared.
 A conversation is considered cleared when the log file exists and
-is larger than the current buffer content."
+is at least twice as large as the current BUFFER content,
+distinguishing genuine clears from minor terminal fluctuations."
   (when-let* ((log-file claude-code-extras--log-file)
               ((file-exists-p log-file)))
     (> (file-attribute-size (file-attributes log-file))
-       (buffer-size buffer))))
+       (* 2 (buffer-size buffer)))))
 
 (defun claude-code-extras-start-logging ()
   "Start periodic logging for the current Claude buffer."

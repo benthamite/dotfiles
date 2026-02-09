@@ -1,4 +1,7 @@
-# nvm lazy loading (NVM_DIR and default node path are in .zshenv)
+# nvm lazy loading (NVM_DIR is in .zshenv; path must also be set here
+# because macOS path_helper in /etc/zprofile reorders PATH after .zshenv)
+export PATH="$NVM_DIR/versions/node/v20.18.2/bin:$PATH"
+
 load_nvm() {
     [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && . "/opt/homebrew/opt/nvm/nvm.sh"
     [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && . "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"

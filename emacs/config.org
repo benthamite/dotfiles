@@ -9703,7 +9703,16 @@ CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
   ;; of org-agenda or org-roam.
   (org-id-extra-files (list
                        paths-file-tlon-tareas-leo
-                       paths-file-tlon-tareas-fede)))
+                       paths-file-tlon-tareas-fede))
+  :config
+  (defun org-id-ensure-locations-hash-table (&rest _)
+    "Ensure `org-id-locations' is a hash table.
+If `org-id-update-id-locations' is interrupted between building the
+alist and converting it to a hash table, `org-id-locations' can be
+left as an alist, causing `puthash' errors in `org-id-add-location'."
+    (when (and org-id-locations (not (hash-table-p org-id-locations)))
+      (setq org-id-locations (org-id-alist-to-hash org-id-locations))))
+  (advice-add 'org-id-add-location :before #'org-id-ensure-locations-hash-table))
 #+end_src
 
 ** org-list

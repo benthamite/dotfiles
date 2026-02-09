@@ -34,11 +34,23 @@
 
 ;;;; Functions
 
+(defun org-gcal-extras--reset-element-cache ()
+  "Reset the org-element cache if active in the current buffer."
+  (when (and (derived-mode-p 'org-mode)
+	     (fboundp 'org-element--cache-active-p)
+	     (org-element--cache-active-p))
+    (org-element-cache-reset)))
+
 (defun org-gcal-extras--inhibit-modification-hooks (orig-fun &rest args)
   "Call ORIG-FUN with ARGS while inhibiting modification hooks.
-This prevents `track-changes' assertion failures in Emacs 30+."
+This prevents `track-changes' assertion failures in Emacs 30+.
+Also resets the org-element cache before and after to prevent
+emergency exits from stale cache state in async contexts."
   (let ((inhibit-modification-hooks t))
-    (apply orig-fun args)))
+    (org-gcal-extras--reset-element-cache)
+    (unwind-protect
+	(apply orig-fun args)
+      (org-gcal-extras--reset-element-cache))))
 
 (advice-add 'org-gcal--update-entry :around #'org-gcal-extras--inhibit-modification-hooks)
 

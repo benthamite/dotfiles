@@ -8526,10 +8526,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
    (agent-shell-anthropic-make-authentication :login t))
 
   (agent-shell-anthropic-claude-environment
-   '("MAX_THINKING_TOKENS=20000"))
-  
-  :bind
-  ("A-t" . agent-shell-anthropic-start-claude-code))
+   '("MAX_THINKING_TOKENS=20000")))
 #+end_src
 
 ** claude-code
@@ -8544,17 +8541,18 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 (use-package claude-code
   :ensure (:host github
 		 :repo "stevemolitor/claude-code.el" :branch "main"
-                 :files ("*.el" (:exclude "images/*")))
+		 :files ("*.el" (:exclude "images/*")))
   :custom
   (claude-code-display-window-fn (lambda (_buffer) (claude-code-switch-to-buffer) nil))
   (claude-code-terminal-backend 'vterm)
-  
+
   :config
   (monet-mode 1)
   (claude-code-mode)
 
   :bind
-  (("C-c d" . claude-code-transient)
+  (("A-t" . claude-code)
+   ("C-c d" . claude-code-transient)
    (:repeat-map my-claude-code-map
 		("M" . claude-code-cycle-mode)))
 
@@ -9714,6 +9712,7 @@ alist and converting it to a hash table, `org-id-locations' can be
 left as an alist, causing `puthash' errors in `org-id-add-location'."
     (when (and org-id-locations (not (hash-table-p org-id-locations)))
       (setq org-id-locations (org-id-alist-to-hash org-id-locations))))
+  
   (advice-add 'org-id-add-location :before #'org-id-ensure-locations-hash-table))
 #+end_src
 

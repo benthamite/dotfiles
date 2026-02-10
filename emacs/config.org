@@ -6819,7 +6819,9 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
                  :repo "benthamite/wikipedia"
                  :depth nil)
   :after mediawiki
-  :demand t)
+  :demand t
+  :bind
+  (("A-p" . wikipedia-transient)))
 #+end_src
 
 ** gdrive
@@ -13756,10 +13758,7 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
   (empv-invidious-instance "https://invidious.fdn.fr/api/v1")
 
   :config
-  (add-to-list 'empv-mpv-args "--ytdl-format=best") ; github.com/isamert/empv.el#viewing-youtube-videos
-
-  :bind-keymap
-  ("A-p" . empv-map))
+  (add-to-list 'empv-mpv-args "--ytdl-format=best")) ; github.com/isamert/empv.el#viewing-youtube-videos
 #+end_src
 
 ** tango-wiki

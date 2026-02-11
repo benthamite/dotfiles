@@ -73,7 +73,8 @@ and redraw."
 (defconst claude-code-extras--statusline-script
   (expand-file-name "etc/claude-code-statusline.sh"
                     (file-name-directory
-                     (or load-file-name buffer-file-name)))
+                     (file-truename
+                      (or load-file-name buffer-file-name))))
   "Absolute path to the statusline shell script.")
 
 (defvar-local claude-code-extras--log-file nil

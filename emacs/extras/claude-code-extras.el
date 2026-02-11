@@ -170,6 +170,28 @@ resulting in a garbled banner."
     (when-let* ((proc (get-buffer-process buffer)))
       (signal-process proc 'SIGWINCH))))
 
+;;;;; Smart start
+
+(defun claude-code-extras-start-or-switch ()
+  "Start a new Claude session or switch to an existing one.
+If no sessions are active, start a new one.  If sessions exist,
+offer to switch to one of them or create a new session."
+  (interactive)
+  (let ((buffers (claude-code--find-all-claude-buffers)))
+    (if (null buffers)
+        (claude-code)
+      (claude-code-extras--prompt-start-or-switch buffers))))
+
+(defun claude-code-extras--prompt-start-or-switch (buffers)
+  "Prompt to switch to one of BUFFERS or start a new session."
+  (let* ((choices (claude-code--buffers-to-choices buffers))
+         (new-label "[new session]")
+         (all-choices (append (mapcar #'car choices) (list new-label)))
+         (selection (completing-read "Claude session: " all-choices nil t)))
+    (if (string= selection new-label)
+        (claude-code)
+      (pop-to-buffer (cdr (assoc selection choices))))))
+
 ;;;;; Status polling
 
 (defun claude-code-extras-start-status-polling ()

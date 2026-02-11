@@ -8551,10 +8551,9 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (claude-code-mode)
 
   :bind
-  (("A-t" . claude-code)
-   ("C-c d" . claude-code-transient)
-   (:repeat-map my-claude-code-map
-		("M" . claude-code-cycle-mode)))
+  ("C-c d" . claude-code-transient)
+  (:repeat-map my-claude-code-map
+	       ("M" . claude-code-cycle-mode))
 
   :bind-keymap
   ("C-c c" . claude-code-command-map) ;; or your preferred key
@@ -8578,7 +8577,10 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (claude-code-start-hook . claude-code-extras-start-status-polling)
   (claude-code-start-hook . claude-code-extras-set-modeline)
   (kill-buffer-hook . claude-code-extras-stop-logging)
-  (kill-buffer-hook . claude-code-extras-stop-status-polling))
+  (kill-buffer-hook . claude-code-extras-stop-status-polling)
+
+  :bind
+  (("A-t" . claude-code-extras-start-or-switch)))
 #+end_src
 
 ** monet

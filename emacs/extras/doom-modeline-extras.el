@@ -153,10 +153,12 @@
     (concat " | " (format "$%.2f" cost))))
 
 (defun doom-modeline-extras--format-context-percent (pct)
-  "Format context usage PCT with color coding and separator."
+  "Format context usage PCT with color coding and separator.
+Uses %%%% to produce a literal %% in the mode-line, since %%
+is a mode-line escape character."
   (when (and (numberp pct) (> pct 0))
     (concat " | "
-            (propertize (format "%d%%" pct)
+            (propertize (format "%d%%%%" pct)
                         'face (doom-modeline-extras--context-face pct)))))
 
 (defun doom-modeline-extras--context-face (pct)

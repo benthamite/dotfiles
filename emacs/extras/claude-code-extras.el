@@ -266,28 +266,29 @@ or hyphen with an underscore, mirroring the shell script's
 Adds the entry pointing to the bundled shell script if absent."
   (let ((settings-file (expand-file-name "~/.claude/settings.json")))
     (when (file-exists-p settings-file)
-      (let* ((json-string (with-temp-buffer
-                            (insert-file-contents settings-file)
-                            (buffer-string)))
-             (settings (json-parse-string json-string
-                                          :object-type 'plist
-                                          :null-object :null
-                                          :false-object :false)))
-        (unless (plist-get settings :statusLine)
-          (claude-code-extras--write-statusline-config
-           settings settings-file))))))
+      (with-temp-buffer
+        (insert-file-contents settings-file)
+        (unless (claude-code-extras--has-statusline-key-p)
+          (claude-code-extras--insert-statusline-entry settings-file))))))
 
-(defun claude-code-extras--write-statusline-config (settings file)
-  "Write SETTINGS with a `statusLine' entry to FILE."
-  (plist-put settings :statusLine
-             `(:type "command"
-               :command ,claude-code-extras--statusline-script
-               :padding 0))
-  (with-temp-file file
-    (insert (json-serialize settings
-                            :pretty t
-                            :null-object :null
-                            :false-object :false))))
+(defun claude-code-extras--has-statusline-key-p ()
+  "Return non-nil if the current buffer contains a `statusLine' JSON key."
+  (goto-char (point-min))
+  (search-forward "\"statusLine\"" nil t))
+
+(defun claude-code-extras--insert-statusline-entry (file)
+  "Insert a `statusLine' entry into the JSON settings FILE.
+Finds the last `}' and inserts the entry before it."
+  (goto-char (point-max))
+  (search-backward "}")
+  (insert ",\n    \"statusLine\": {\n"
+          "        \"type\": \"command\",\n"
+          "        \"command\": \""
+          claude-code-extras--statusline-script
+          "\",\n"
+          "        \"padding\": 0\n"
+          "    }\n")
+  (write-region (point-min) (point-max) file nil 'quiet))
 
 (claude-code-extras-ensure-statusline-config)
 

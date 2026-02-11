@@ -2537,10 +2537,6 @@ Here’s a screenshot illustrating the modeline and tab bar in action (click to 
     '(bar window-number modals buffer-default-directory remote-host buffer-position)
     '(compilation misc-info irc mu4e gnus github minor-modes input-method major-mode process time))
 
-  (doom-modeline-def-modeline 'claude-code
-    '(bar claude-code-status)
-    '(misc-info major-mode process time))
-
   (doom-modeline-mode))
 #+end_src
 

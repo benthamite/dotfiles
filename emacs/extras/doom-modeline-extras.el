@@ -165,6 +165,12 @@
    ((>= pct 60) 'doom-modeline-warning)
    (t 'doom-modeline-info)))
 
+;;;;; Modeline definitions
+
+(doom-modeline-def-modeline 'claude-code
+  '(bar claude-code-status)
+  '(misc-info major-mode process time))
+
 ;;;;; GitHub notifications
 
 (declare-function forge-pull-notifications "forge-commands")

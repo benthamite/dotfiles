@@ -15,6 +15,7 @@
 - This is a "literate" config: the resulting Elisp files are tangled into the relevant Emacs profile.
 - **To find the active Emacs profile directory, run: `emacsclient -e "user-emacs-directory"`**
 - The Emacs packages (both external ones and my own) are located in the 'elpaca/repos/' subdirectory of the active profile.
+- **Important**: config.org must always be edited at its canonical Dropbox path above, not at the copy in the profile's elpaca/repos/dotfiles/. The Elisp extras files (e.g. `emacs/extras/*.el`) should be edited in the profile's elpaca/repos/dotfiles/ directory (the git working tree).
 
 ### Projects
 

@@ -61,6 +61,22 @@
   :type 'boolean
   :group 'doom-modeline)
 
+(defcustom doom-modeline-extras-claude-code-api-plan nil
+  "Whether using an API plan for Claude Code.
+When nil (the default), assumes a subscription plan (Free, Pro,
+or Max) and displays the cost with strikethrough to indicate no
+charge.  When non-nil, displays the cost normally."
+  :type 'boolean
+  :group 'doom-modeline)
+
+;;;; Faces
+
+(defface doom-modeline-extras-cost-free
+  '((t :inherit doom-modeline :strike-through t))
+  "Face for cost display on non-API (subscription) plans.
+Uses strikethrough to indicate the cost is not actually charged."
+  :group 'doom-modeline-extras)
+
 ;;;; Functions
 
 ;;;;; Modeline segments
@@ -148,9 +164,15 @@
    (t (format "%d" n))))
 
 (defun doom-modeline-extras--format-cost (cost)
-  "Format COST as a dollar amount with separator."
+  "Format COST as a dollar amount with separator.
+On subscription plans, applies strikethrough to indicate no charge."
   (when (and (numberp cost) (> cost 0))
-    (concat " | " (format "$%.2f" cost))))
+    (let ((text (format "$%.2f" cost)))
+      (concat " | "
+              (if doom-modeline-extras-claude-code-api-plan
+                  text
+                (propertize text
+                            'face 'doom-modeline-extras-cost-free))))))
 
 (defun doom-modeline-extras--format-context-percent (pct)
   "Format context usage PCT with color coding and separator.

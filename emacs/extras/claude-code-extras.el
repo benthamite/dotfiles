@@ -268,7 +268,10 @@ Adds the entry pointing to the bundled shell script if absent."
       (let* ((json-string (with-temp-buffer
                             (insert-file-contents settings-file)
                             (buffer-string)))
-             (settings (json-parse-string json-string :object-type 'plist)))
+             (settings (json-parse-string json-string
+                                          :object-type 'plist
+                                          :null-object :null
+                                          :false-object :false)))
         (unless (plist-get settings :statusLine)
           (claude-code-extras--write-statusline-config
            settings settings-file))))))
@@ -280,7 +283,10 @@ Adds the entry pointing to the bundled shell script if absent."
                :command ,claude-code-extras--statusline-script
                :padding 0))
   (with-temp-file file
-    (insert (json-serialize settings :pretty t))))
+    (insert (json-serialize settings
+                            :pretty t
+                            :null-object :null
+                            :false-object :false))))
 
 (claude-code-extras-ensure-statusline-config)
 

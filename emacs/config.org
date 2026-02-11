@@ -2537,6 +2537,10 @@ Here’s a screenshot illustrating the modeline and tab bar in action (click to 
     '(bar window-number modals buffer-default-directory remote-host buffer-position)
     '(compilation misc-info irc mu4e gnus github minor-modes input-method major-mode process time))
 
+  (doom-modeline-def-modeline 'claude-code
+    '(bar claude-code-status)
+    '(misc-info major-mode process time))
+
   (doom-modeline-mode))
 #+end_src
 
@@ -8575,7 +8579,10 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :demand t
   :hook
   (claude-code-start-hook . claude-code-extras-start-logging)
-  (kill-buffer-hook . claude-code-extras-stop-logging))
+  (claude-code-start-hook . claude-code-extras-start-status-polling)
+  (claude-code-start-hook . claude-code-extras-set-modeline)
+  (kill-buffer-hook . claude-code-extras-stop-logging)
+  (kill-buffer-hook . claude-code-extras-stop-status-polling))
 #+end_src
 
 ** monet

@@ -56,6 +56,11 @@
   :type 'boolean
   :group 'doom-modeline)
 
+(defcustom doom-modeline-extras-claude-code t
+  "Whether to display Claude Code status in the modeline."
+  :type 'boolean
+  :group 'doom-modeline)
+
 ;;;; Functions
 
 ;;;;; Modeline segments
@@ -97,6 +102,69 @@
       (concat (doom-modeline-spc)
               (format "✨(%s)" count)))))
   
+;;;;;; Claude Code status
+
+(declare-function claude-code--buffer-p "claude-code")
+(declare-function claude-code-extras-status-model "claude-code-extras")
+(declare-function claude-code-extras-status-cost "claude-code-extras")
+(declare-function claude-code-extras-status-context-percent "claude-code-extras")
+(declare-function claude-code-extras-status-token-count "claude-code-extras")
+(defvar claude-code-extras--status-data)
+
+(doom-modeline-def-segment claude-code-status
+  "Display Claude Code session status: model, tokens, cost, context%."
+  (when (and doom-modeline-extras-claude-code
+             (fboundp 'claude-code--buffer-p)
+             (claude-code--buffer-p (current-buffer))
+             (bound-and-true-p claude-code-extras--status-data))
+    (doom-modeline-extras--format-claude-status)))
+
+(defun doom-modeline-extras--format-claude-status ()
+  "Assemble the Claude Code modeline string from status data."
+  (let ((model (claude-code-extras-status-model))
+        (tokens (claude-code-extras-status-token-count))
+        (cost (claude-code-extras-status-cost))
+        (pct (claude-code-extras-status-context-percent)))
+    (when model
+      (concat
+       (doom-modeline-spc)
+       (propertize (or model "?") 'face 'doom-modeline-buffer-major-mode)
+       (doom-modeline-extras--format-tokens tokens)
+       (doom-modeline-extras--format-cost cost)
+       (doom-modeline-extras--format-context-percent pct)
+       (doom-modeline-spc)))))
+
+(defun doom-modeline-extras--format-tokens (tokens)
+  "Format TOKENS as a human-readable string with separator."
+  (when (and tokens (> tokens 0))
+    (concat " | " (doom-modeline-extras--humanize-tokens tokens))))
+
+(defun doom-modeline-extras--humanize-tokens (n)
+  "Format token count N in a compact human-readable form."
+  (cond
+   ((>= n 1000000) (format "%.1fM" (/ n 1000000.0)))
+   ((>= n 1000) (format "%.1fk" (/ n 1000.0)))
+   (t (format "%d" n))))
+
+(defun doom-modeline-extras--format-cost (cost)
+  "Format COST as a dollar amount with separator."
+  (when (and cost (> cost 0))
+    (concat " | " (format "$%.2f" cost))))
+
+(defun doom-modeline-extras--format-context-percent (pct)
+  "Format context usage PCT with color coding and separator."
+  (when (and pct (> pct 0))
+    (concat " | "
+            (propertize (format "%d%%" pct)
+                        'face (doom-modeline-extras--context-face pct)))))
+
+(defun doom-modeline-extras--context-face (pct)
+  "Return the face for context usage percentage PCT."
+  (cond
+   ((>= pct 80) 'doom-modeline-urgent)
+   ((>= pct 60) 'doom-modeline-warning)
+   (t 'doom-modeline-info)))
+
 ;;;;; GitHub notifications
 
 (declare-function forge-pull-notifications "forge-commands")

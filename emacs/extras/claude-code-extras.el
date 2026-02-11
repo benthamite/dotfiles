@@ -62,11 +62,31 @@ and redraw."
   :type 'number
   :group 'claude-code-extras)
 
+(defcustom claude-code-extras-status-interval 5
+  "Interval in seconds between status file polls."
+  :type 'integer
+  :group 'claude-code-extras)
+
+(defconst claude-code-extras--status-directory "/tmp/claude-code-status/"
+  "Directory where the statusline script writes JSON status files.")
+
+(defconst claude-code-extras--statusline-script
+  (expand-file-name "etc/claude-code-statusline.sh"
+                    (file-name-directory
+                     (or load-file-name buffer-file-name)))
+  "Absolute path to the statusline shell script.")
+
 (defvar-local claude-code-extras--log-file nil
   "Log file path for the current Claude buffer.")
 
 (defvar-local claude-code-extras--log-timer nil
   "Timer for periodic logging in the current Claude buffer.")
+
+(defvar-local claude-code-extras--status-data nil
+  "Parsed status plist for the current Claude buffer.")
+
+(defvar-local claude-code-extras--status-timer nil
+  "Timer for periodic status polling in the current Claude buffer.")
 
 ;;;; Functions
 
@@ -148,6 +168,121 @@ resulting in a garbled banner."
   (when (buffer-live-p buffer)
     (when-let* ((proc (get-buffer-process buffer)))
       (signal-process proc 'SIGWINCH))))
+
+;;;;; Status polling
+
+(defun claude-code-extras-start-status-polling ()
+  "Start polling the status file for the current Claude buffer."
+  (when (claude-code--buffer-p (current-buffer))
+    (setq claude-code-extras--status-timer
+          (run-with-timer
+           claude-code-extras-status-interval
+           claude-code-extras-status-interval
+           #'claude-code-extras--read-status
+           (current-buffer)))))
+
+(defun claude-code-extras-stop-status-polling ()
+  "Stop status polling and clean up the status file."
+  (when (and (claude-code--buffer-p (current-buffer))
+             claude-code-extras--status-timer)
+    (cancel-timer claude-code-extras--status-timer)
+    (claude-code-extras--cleanup-status-file)))
+
+(defun claude-code-extras--read-status (buffer)
+  "Read and parse the status file for BUFFER."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (when-let* ((data (claude-code-extras--parse-status-file)))
+        (setq claude-code-extras--status-data data)))))
+
+(defun claude-code-extras--parse-status-file ()
+  "Parse the status JSON file for the current buffer.
+Returns a plist, or nil if the file is missing or malformed."
+  (let ((file (claude-code-extras--status-file)))
+    (when (file-exists-p file)
+      (condition-case nil
+          (json-parse-string
+           (with-temp-buffer
+             (insert-file-contents file)
+             (buffer-string))
+           :object-type 'plist)
+        (json-parse-error nil)))))
+
+(defun claude-code-extras--status-file ()
+  "Return the status file path for the current buffer."
+  (expand-file-name
+   (concat (claude-code-extras--sanitize-buffer-name) ".json")
+   claude-code-extras--status-directory))
+
+(defun claude-code-extras--sanitize-buffer-name ()
+  "Sanitize the current buffer name for use as a filename.
+Replaces every character that is not alphanumeric, underscore,
+or hyphen with an underscore, mirroring the shell script's
+`tr -c' invocation."
+  (replace-regexp-in-string "[^a-zA-Z0-9_-]" "_" (buffer-name)))
+
+(defun claude-code-extras--cleanup-status-file ()
+  "Delete the status file for the current buffer."
+  (let ((file (claude-code-extras--status-file)))
+    (when (file-exists-p file)
+      (delete-file file))))
+
+;;;;; Status accessors
+
+(defun claude-code-extras-status-model ()
+  "Return the model display name from the status data."
+  (when-let* ((model (plist-get claude-code-extras--status-data :model)))
+    (plist-get model :display_name)))
+
+(defun claude-code-extras-status-cost ()
+  "Return the total session cost in USD from the status data."
+  (when-let* ((cost (plist-get claude-code-extras--status-data :cost)))
+    (plist-get cost :total_cost_usd)))
+
+(defun claude-code-extras-status-context-percent ()
+  "Return the context window usage percentage from the status data."
+  (when-let* ((ctx (plist-get claude-code-extras--status-data :context_window)))
+    (plist-get ctx :used_percentage)))
+
+(defun claude-code-extras-status-token-count ()
+  "Return the total input token count from the status data."
+  (when-let* ((ctx (plist-get claude-code-extras--status-data :context_window)))
+    (plist-get ctx :total_input_tokens)))
+
+;;;;; Modeline
+
+(declare-function doom-modeline-set-modeline "doom-modeline-core")
+
+(defun claude-code-extras-set-modeline ()
+  "Set the doom-modeline to the `claude-code' modeline for this buffer."
+  (when (claude-code--buffer-p (current-buffer))
+    (doom-modeline-set-modeline 'claude-code)))
+
+;;;;; Auto-setup
+
+(defun claude-code-extras-ensure-statusline-config ()
+  "Ensure `~/.claude/settings.json' has a `statusLine' entry.
+Adds the entry pointing to the bundled shell script if absent."
+  (let ((settings-file (expand-file-name "~/.claude/settings.json")))
+    (when (file-exists-p settings-file)
+      (let* ((json-string (with-temp-buffer
+                            (insert-file-contents settings-file)
+                            (buffer-string)))
+             (settings (json-parse-string json-string :object-type 'plist)))
+        (unless (plist-get settings :statusLine)
+          (claude-code-extras--write-statusline-config
+           settings settings-file))))))
+
+(defun claude-code-extras--write-statusline-config (settings file)
+  "Write SETTINGS with a `statusLine' entry to FILE."
+  (plist-put settings :statusLine
+             `(:type "command"
+               :command ,claude-code-extras--statusline-script
+               :padding 0))
+  (with-temp-file file
+    (insert (json-serialize settings :pretty t))))
+
+(claude-code-extras-ensure-statusline-config)
 
 (add-hook 'kill-buffer-query-functions #'claude-code-extras-protect-buffer)
 

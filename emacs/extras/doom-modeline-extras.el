@@ -115,9 +115,10 @@
   "Display Claude Code session status: model, tokens, cost, context%."
   (when (and doom-modeline-extras-claude-code
              (fboundp 'claude-code--buffer-p)
-             (claude-code--buffer-p (current-buffer))
-             (bound-and-true-p claude-code-extras--status-data))
-    (doom-modeline-extras--format-claude-status)))
+             (claude-code--buffer-p (current-buffer)))
+    (if (bound-and-true-p claude-code-extras--status-data)
+        (doom-modeline-extras--format-claude-status)
+      (concat (doom-modeline-spc) "Claude Code" (doom-modeline-spc)))))
 
 (defun doom-modeline-extras--format-claude-status ()
   "Assemble the Claude Code modeline string from status data."
@@ -125,18 +126,18 @@
         (tokens (claude-code-extras-status-token-count))
         (cost (claude-code-extras-status-cost))
         (pct (claude-code-extras-status-context-percent)))
-    (when model
-      (concat
-       (doom-modeline-spc)
-       (propertize (or model "?") 'face 'doom-modeline-buffer-major-mode)
-       (doom-modeline-extras--format-tokens tokens)
-       (doom-modeline-extras--format-cost cost)
-       (doom-modeline-extras--format-context-percent pct)
-       (doom-modeline-spc)))))
+    (concat
+     (doom-modeline-spc)
+     (propertize (or model "Claude Code")
+                 'face 'doom-modeline-buffer-major-mode)
+     (doom-modeline-extras--format-tokens tokens)
+     (doom-modeline-extras--format-cost cost)
+     (doom-modeline-extras--format-context-percent pct)
+     (doom-modeline-spc))))
 
 (defun doom-modeline-extras--format-tokens (tokens)
   "Format TOKENS as a human-readable string with separator."
-  (when (and tokens (> tokens 0))
+  (when (and (numberp tokens) (> tokens 0))
     (concat " | " (doom-modeline-extras--humanize-tokens tokens))))
 
 (defun doom-modeline-extras--humanize-tokens (n)
@@ -148,12 +149,12 @@
 
 (defun doom-modeline-extras--format-cost (cost)
   "Format COST as a dollar amount with separator."
-  (when (and cost (> cost 0))
+  (when (and (numberp cost) (> cost 0))
     (concat " | " (format "$%.2f" cost))))
 
 (defun doom-modeline-extras--format-context-percent (pct)
   "Format context usage PCT with color coding and separator."
-  (when (and pct (> pct 0))
+  (when (and (numberp pct) (> pct 0))
     (concat " | "
             (propertize (format "%d%%" pct)
                         'face (doom-modeline-extras--context-face pct)))))

@@ -255,8 +255,11 @@ or hyphen with an underscore, mirroring the shell script's
 (declare-function doom-modeline-set-modeline "doom-modeline-core")
 
 (defun claude-code-extras-set-modeline ()
-  "Set the doom-modeline to the `claude-code' modeline for this buffer."
+  "Set the doom-modeline to the `claude-code' modeline for this buffer.
+Also starts status polling if it is not already active."
   (when (claude-code--buffer-p (current-buffer))
+    (unless claude-code-extras--status-timer
+      (claude-code-extras-start-status-polling))
     (doom-modeline-set-modeline 'claude-code)))
 
 ;;;;; Auto-setup

@@ -18,4 +18,10 @@
 	    "NotebookEdit"
 	]
     }
+,
+    "statusLine": {
+        "type": "command",
+        "command": "~/.config/emacs-profiles/7.1.29-target/elpaca/repos/dotfiles/emacs/extras/etc/claude-code-statusline.sh",
+        "padding": 0
+    }
 }

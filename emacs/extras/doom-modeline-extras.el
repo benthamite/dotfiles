@@ -125,6 +125,11 @@ Uses strikethrough to indicate the cost is not actually charged."
 (declare-function claude-code-extras-status-cost "claude-code-extras")
 (declare-function claude-code-extras-status-context-percent "claude-code-extras")
 (declare-function claude-code-extras-status-token-count "claude-code-extras")
+(declare-function claude-code-extras-status-lines-added "claude-code-extras")
+(declare-function claude-code-extras-status-lines-removed "claude-code-extras")
+(declare-function claude-code-extras-status-duration-ms "claude-code-extras")
+(declare-function claude-code-extras-status-cache-read-tokens "claude-code-extras")
+(declare-function claude-code-extras-status-cache-total-tokens "claude-code-extras")
 (defvar claude-code-extras--status-data)
 
 (doom-modeline-def-segment claude-code-status
@@ -141,7 +146,12 @@ Uses strikethrough to indicate the cost is not actually charged."
   (let ((model (claude-code-extras-status-model))
         (tokens (claude-code-extras-status-token-count))
         (cost (claude-code-extras-status-cost))
-        (pct (claude-code-extras-status-context-percent)))
+        (pct (claude-code-extras-status-context-percent))
+        (added (claude-code-extras-status-lines-added))
+        (removed (claude-code-extras-status-lines-removed))
+        (duration (claude-code-extras-status-duration-ms))
+        (cache-read (claude-code-extras-status-cache-read-tokens))
+        (cache-total (claude-code-extras-status-cache-total-tokens)))
     (concat
      (doom-modeline-spc)
      (propertize (or model "Claude Code")
@@ -149,6 +159,9 @@ Uses strikethrough to indicate the cost is not actually charged."
      (doom-modeline-extras--format-tokens tokens)
      (doom-modeline-extras--format-cost cost)
      (doom-modeline-extras--format-context-percent pct)
+     (doom-modeline-extras--format-lines-changed added removed)
+     (doom-modeline-extras--format-duration duration)
+     (doom-modeline-extras--format-cache-efficiency cache-read cache-total)
      (doom-modeline-spc))))
 
 (defun doom-modeline-extras--format-tokens (tokens)
@@ -189,6 +202,44 @@ is a mode-line escape character."
    ((>= pct 80) 'doom-modeline-urgent)
    ((>= pct 60) 'doom-modeline-warning)
    (t 'doom-modeline-info)))
+
+(defun doom-modeline-extras--format-lines-changed (added removed)
+  "Format ADDED and REMOVED line counts as a +N/-M string with separator."
+  (when (and (numberp added) (numberp removed)
+             (> (+ added removed) 0))
+    (concat " | "
+            (propertize (format "+%d" added) 'face 'doom-modeline-info)
+            "/"
+            (propertize (format "-%d" removed) 'face 'doom-modeline-urgent))))
+
+(defun doom-modeline-extras--format-duration (ms)
+  "Format duration MS (in milliseconds) as a human-readable string."
+  (when (and (numberp ms) (> ms 0))
+    (concat " | " (doom-modeline-extras--humanize-duration ms))))
+
+(defun doom-modeline-extras--humanize-duration (ms)
+  "Format MS milliseconds in a compact human-readable form."
+  (let ((secs (/ ms 1000)))
+    (cond
+     ((>= secs 3600) (format "%dh%dm" (/ secs 3600) (/ (mod secs 3600) 60)))
+     ((>= secs 60) (format "%dm%ds" (/ secs 60) (mod secs 60)))
+     (t (format "%ds" secs)))))
+
+(defun doom-modeline-extras--format-cache-efficiency (cache-read cache-total)
+  "Format cache efficiency as a percentage from CACHE-READ and CACHE-TOTAL."
+  (when (and (numberp cache-read) (numberp cache-total) (> cache-total 0))
+    (let ((pct (/ (* 100 cache-read) cache-total)))
+      (when (> pct 0)
+        (concat " | "
+                (propertize (format "cache %d%%%%" pct)
+                            'face (doom-modeline-extras--cache-face pct)))))))
+
+(defun doom-modeline-extras--cache-face (pct)
+  "Return the face for cache efficiency percentage PCT."
+  (cond
+   ((>= pct 80) 'doom-modeline-info)
+   ((>= pct 50) 'doom-modeline-warning)
+   (t 'doom-modeline-urgent)))
 
 ;;;;; Modeline definitions
 

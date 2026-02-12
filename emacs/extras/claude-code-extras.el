@@ -62,10 +62,41 @@ and redraw."
   :type 'number
   :group 'claude-code-extras)
 
+(defcustom claude-code-extras-alert-style 'both
+  "Style of alert when Claude finishes responding.
+Only takes effect when `claude-code-extras-alert-on-ready' is
+non-nil in the current buffer."
+  :type '(choice (const :tag "Visual notification only" visual)
+                 (const :tag "Sound only" sound)
+                 (const :tag "Both visual and sound" both))
+  :group 'claude-code-extras)
+
+(defcustom claude-code-extras-alert-sound
+  "/System/Library/Sounds/Glass.aiff"
+  "Path to the sound file played when Claude finishes responding.
+Only used when `claude-code-extras-alert-style' is `sound' or
+`both'."
+  :type 'file
+  :group 'claude-code-extras)
+
+(defvar-local claude-code-extras-alert-on-ready nil
+  "When non-nil, alert the user when Claude finishes responding.
+This variable is buffer-local, so each Claude session can have
+its own notification setting.  Toggle with
+`claude-code-extras-toggle-alert'.")
+
 (defcustom claude-code-extras-status-interval 5
   "Interval in seconds between status file polls."
   :type 'integer
   :group 'claude-code-extras)
+
+(defconst claude-code-extras--hook-wrapper
+  (expand-file-name
+   "bin/claude-code-hook-wrapper"
+   (expand-file-name "../../repos/claude-code"
+                     (file-name-directory
+                      (locate-library "claude-code"))))
+  "Absolute path to the claude-code hook wrapper script.")
 
 (defconst claude-code-extras--status-directory "/tmp/claude-code-status/"
   "Directory where the statusline script writes JSON status files.")
@@ -304,6 +335,70 @@ CACHE_READ_INPUT_TOKENS."
           (read (or (plist-get usage :cache_read_input_tokens) 0)))
       (+ input creation read))))
 
+;;;;; Alert
+
+(declare-function alert "alert")
+
+(defun claude-code-extras-notify (title message)
+  "Notification function combining modeline pulse with optional alert.
+TITLE is the notification title.  MESSAGE is the notification
+body.  When `claude-code-extras-alert-on-ready' is non-nil,
+dispatch to the style configured in
+`claude-code-extras-alert-style'."
+  (claude-code-default-notification title message)
+  (when claude-code-extras-alert-on-ready
+    (claude-code-extras--alert-visual title message)
+    (claude-code-extras--alert-sound)))
+
+(defun claude-code-extras--alert-visual (title message)
+  "Show a visual notification with TITLE and MESSAGE.
+Only fires when `claude-code-extras-alert-style' is `visual' or
+`both'."
+  (when (memq claude-code-extras-alert-style '(visual both))
+    (alert message :title title)))
+
+(defun claude-code-extras--alert-sound ()
+  "Play the configured alert sound.
+Only fires when `claude-code-extras-alert-style' is `sound' or
+`both'."
+  (when (memq claude-code-extras-alert-style '(sound both))
+    (when-let* ((sound claude-code-extras-alert-sound)
+                ((file-exists-p sound)))
+      (start-process "claude-code-alert-sound" nil "afplay" sound))))
+
+(defun claude-code-extras--handle-stop (message)
+  "Handle a stop event from the Claude Code CLI.
+MESSAGE is a plist with :type, :buffer-name, :json-data, and
+:args.  Only acts on `stop' events."
+  (when (eq (plist-get message :type) 'stop)
+    (when-let* ((buf (get-buffer (plist-get message :buffer-name))))
+      (with-current-buffer buf
+        (let ((name (claude-code-extras--session-name (buffer-name))))
+          (claude-code-extras-notify
+           "Claude ready"
+           (format "%s: waiting for your response" name)))))
+    nil))
+
+(defun claude-code-extras--session-name (buffer-name)
+  "Extract the project name from BUFFER-NAME.
+Given \"*claude:~/path/to/project/:default*\", return
+\"project\"."
+  (if (string-match "/\\([^/]+\\)/:[^*]+\\*\\'" buffer-name)
+      (match-string 1 buffer-name)
+    buffer-name))
+
+(defun claude-code-extras-toggle-alert ()
+  "Toggle OS notifications for the current Claude session."
+  (interactive)
+  (setq claude-code-extras-alert-on-ready
+        (not claude-code-extras-alert-on-ready))
+  (message "Claude alert notifications %s"
+           (if claude-code-extras-alert-on-ready "enabled" "disabled")))
+
+(defun claude-code-extras-alert-indicator ()
+  "Return a bell icon reflecting the current alert state."
+  (if claude-code-extras-alert-on-ready "🔔" "🔕"))
+
 ;;;;; Modeline
 
 (declare-function doom-modeline-set-modeline "doom-modeline-core")
@@ -347,8 +442,74 @@ Finds the last `}' and inserts the entry before it."
           "    }\n")
   (write-region (point-min) (point-max) file nil 'quiet))
 
-(claude-code-extras-ensure-statusline-config)
+(defun claude-code-extras-ensure-stop-hook-config ()
+  "Ensure `~/.claude/settings.json' has a `Stop' hook.
+Adds the hook entry pointing to the bundled wrapper script if
+absent."
+  (let ((settings-file (expand-file-name "~/.claude/settings.json")))
+    (when (file-exists-p settings-file)
+      (with-temp-buffer
+        (insert-file-contents settings-file)
+        (unless (claude-code-extras--has-stop-hook-p)
+          (claude-code-extras--insert-stop-hook settings-file))))))
 
+(defun claude-code-extras--has-stop-hook-p ()
+  "Return non-nil if the current buffer has a `Stop' hook."
+  (goto-char (point-min))
+  (search-forward "\"Stop\"" nil t))
+
+(defun claude-code-extras--insert-stop-hook (file)
+  "Insert a `Stop' hook entry into the JSON settings FILE.
+Adds a `hooks' object if none exists, or appends to the existing
+one."
+  (goto-char (point-min))
+  (if (search-forward "\"hooks\"" nil t)
+      (claude-code-extras--append-to-existing-hooks)
+    (claude-code-extras--insert-new-hooks-section))
+  (write-region (point-min) (point-max) file nil 'quiet))
+
+(defun claude-code-extras--append-to-existing-hooks ()
+  "Append a `Stop' entry to the existing `hooks' object."
+  (search-forward "{")
+  (insert "\n        \"Stop\": [\n"
+          "            {\n"
+          "                \"matcher\": \"\",\n"
+          "                \"hooks\": [\n"
+          "                    {\n"
+          "                        \"type\": \"command\",\n"
+          "                        \"command\": \""
+          claude-code-extras--hook-wrapper
+          " stop\"\n"
+          "                    }\n"
+          "                ]\n"
+          "            }\n"
+          "        ],"))
+
+(defun claude-code-extras--insert-new-hooks-section ()
+  "Insert a new `hooks' section with a `Stop' entry."
+  (goto-char (point-max))
+  (search-backward "}")
+  (insert ",\n    \"hooks\": {\n"
+          "        \"Stop\": [\n"
+          "            {\n"
+          "                \"matcher\": \"\",\n"
+          "                \"hooks\": [\n"
+          "                    {\n"
+          "                        \"type\": \"command\",\n"
+          "                        \"command\": \""
+          claude-code-extras--hook-wrapper
+          " stop\"\n"
+          "                    }\n"
+          "                ]\n"
+          "            }\n"
+          "        ]\n"
+          "    }\n"))
+
+(claude-code-extras-ensure-statusline-config)
+(claude-code-extras-ensure-stop-hook-config)
+
+(setq claude-code-notification-function #'claude-code-extras-notify)
+(add-hook 'claude-code-event-hook #'claude-code-extras--handle-stop)
 (add-hook 'kill-buffer-query-functions #'claude-code-extras-protect-buffer)
 
 (provide 'claude-code-extras)

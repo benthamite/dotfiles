@@ -130,6 +130,7 @@ Uses strikethrough to indicate the cost is not actually charged."
 (declare-function claude-code-extras-status-duration-ms "claude-code-extras")
 (declare-function claude-code-extras-status-cache-read-tokens "claude-code-extras")
 (declare-function claude-code-extras-status-cache-total-tokens "claude-code-extras")
+(declare-function claude-code-extras-alert-indicator "claude-code-extras")
 (defvar claude-code-extras--status-data)
 
 (doom-modeline-def-segment claude-code-status
@@ -162,6 +163,7 @@ Uses strikethrough to indicate the cost is not actually charged."
      (doom-modeline-extras--format-lines-changed added removed)
      (doom-modeline-extras--format-duration duration)
      (doom-modeline-extras--format-cache-efficiency cache-read cache-total)
+     " " (claude-code-extras-alert-indicator)
      (doom-modeline-spc))))
 
 (defun doom-modeline-extras--format-tokens (tokens)

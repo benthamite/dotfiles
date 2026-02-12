@@ -121,7 +121,6 @@ Uses strikethrough to indicate the cost is not actually charged."
 ;;;;;; Claude Code status
 
 (declare-function claude-code--buffer-p "claude-code")
-(declare-function claude-code-extras-status-model "claude-code-extras")
 (declare-function claude-code-extras-status-cost "claude-code-extras")
 (declare-function claude-code-extras-status-context-percent "claude-code-extras")
 (declare-function claude-code-extras-status-token-count "claude-code-extras")
@@ -131,6 +130,7 @@ Uses strikethrough to indicate the cost is not actually charged."
 (declare-function claude-code-extras-status-cache-read-tokens "claude-code-extras")
 (declare-function claude-code-extras-status-cache-total-tokens "claude-code-extras")
 (declare-function claude-code-extras-alert-indicator "claude-code-extras")
+(declare-function claude-code-extras--session-name "claude-code-extras")
 (defvar claude-code-extras--status-data)
 
 (doom-modeline-def-segment claude-code-status
@@ -140,12 +140,13 @@ Uses strikethrough to indicate the cost is not actually charged."
              (claude-code--buffer-p (current-buffer)))
     (if (bound-and-true-p claude-code-extras--status-data)
         (doom-modeline-extras--format-claude-status)
-      (concat (doom-modeline-spc) "Claude Code" (doom-modeline-spc)))))
+      (concat (doom-modeline-spc)
+              (claude-code-extras--session-name (buffer-name))
+              (doom-modeline-spc)))))
 
 (defun doom-modeline-extras--format-claude-status ()
   "Assemble the Claude Code modeline string from status data."
-  (let ((model (claude-code-extras-status-model))
-        (tokens (claude-code-extras-status-token-count))
+  (let ((tokens (claude-code-extras-status-token-count))
         (cost (claude-code-extras-status-cost))
         (pct (claude-code-extras-status-context-percent))
         (added (claude-code-extras-status-lines-added))
@@ -155,7 +156,7 @@ Uses strikethrough to indicate the cost is not actually charged."
         (cache-total (claude-code-extras-status-cache-total-tokens)))
     (concat
      (doom-modeline-spc)
-     (propertize (or model "Claude Code")
+     (propertize (claude-code-extras--session-name (buffer-name))
                  'face 'doom-modeline-buffer-major-mode)
      (doom-modeline-extras--format-tokens tokens)
      (doom-modeline-extras--format-cost cost)

@@ -376,7 +376,8 @@ After renaming, the remote URL is updated in the Git configuration."
                         new-name))
          (old-split-dir (file-name-concat paths-dir-split-git old-name))
          (new-split-dir (file-name-concat paths-dir-split-git new-name))
-         (has-split (file-exists-p old-split-dir)))
+         (has-split (file-exists-p old-split-dir))
+         (parent-dir (file-name-directory (directory-file-name old-main-dir))))
     (when (file-exists-p new-main-dir)
       (user-error "Directory `%s' already exists" new-main-dir))
     (when (and has-split (file-exists-p new-split-dir))
@@ -384,7 +385,8 @@ After renaming, the remote URL is updated in the Git configuration."
     (vc-extras--rename-local-repo old-main-dir new-main-dir)
     (when has-split
       (vc-extras--rename-split-repo old-split-dir new-split-dir new-main-dir))
-    (vc-extras--rename-remote-repo old-name new-name account)
+    (let ((default-directory parent-dir))
+      (vc-extras--rename-remote-repo old-name new-name account))
     (vc-extras--update-remote-url new-main-dir new-name account)
     (message "Renamed repo from `%s' to `%s'" old-name new-name)))
 

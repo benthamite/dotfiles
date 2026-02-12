@@ -164,7 +164,7 @@ Uses strikethrough to indicate the cost is not actually charged."
      (doom-modeline-extras--format-lines-changed added removed)
      (doom-modeline-extras--format-duration duration)
      (doom-modeline-extras--format-cache-efficiency cache-read cache-total)
-     " " (claude-code-extras-alert-indicator)
+     " | " (claude-code-extras-alert-indicator)
      (doom-modeline-spc))))
 
 (defun doom-modeline-extras--format-tokens (tokens)

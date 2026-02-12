@@ -20,6 +20,7 @@ emacs --batch \
   -L "$ELPACA/builds/s" \
   -L "$ELPACA/builds/f" \
   -L "$ELPACA/builds/transient" \
+  -L "$ELPACA/builds/cond-let" \
   --eval "(setq load-prefer-newer t)" \
   --eval "(require 'claude-code-extras)" \
   --eval "(require 'doom-modeline-extras)" \

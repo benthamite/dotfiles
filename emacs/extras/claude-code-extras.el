@@ -204,6 +204,7 @@ resulting in a garbled banner."
 
 ;;;;; Smart start
 
+;;;###autoload
 (defun claude-code-extras-start-or-switch ()
   "Start a new Claude session or switch to an existing one.
 If no sessions are active, start a new one.  If sessions exist,

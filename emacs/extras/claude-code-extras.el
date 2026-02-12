@@ -5,7 +5,7 @@
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/claude-code-extras.el
 ;; Version: 0.1
-;; Package-Requires: ((claude-code "0.1") (paths "0.1"))
+;; Package-Requires: ((claude-code "0.1") (consult "1.0") (paths "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -29,6 +29,7 @@
 ;;; Code:
 
 (require 'claude-code)
+(require 'consult)
 (require 'paths)
 
 ;;;; Variables
@@ -79,11 +80,11 @@ Only used when `claude-code-extras-alert-style' is `sound' or
   :type 'file
   :group 'claude-code-extras)
 
-(defvar-local claude-code-extras-alert-on-ready nil
+(defcustom claude-code-extras-alert-on-ready nil
   "When non-nil, alert the user when Claude finishes responding.
-This variable is buffer-local, so each Claude session can have
-its own notification setting.  Toggle with
-`claude-code-extras-toggle-alert'.")
+Toggle with `claude-code-extras-toggle-alert'."
+  :type 'boolean
+  :group 'claude-code-extras)
 
 (defcustom claude-code-extras-status-interval 5
   "Interval in seconds between status file polls."
@@ -215,13 +216,76 @@ offer to switch to one of them or create a new session."
 
 (defun claude-code-extras--prompt-start-or-switch (buffers)
   "Prompt to switch to one of BUFFERS or start a new session."
-  (let* ((choices (claude-code--buffers-to-choices buffers))
+  (let* ((choices (claude-code-extras--buffers-to-choices buffers))
          (new-label "[new session]")
          (all-choices (append (mapcar #'car choices) (list new-label)))
-         (selection (completing-read "Claude session: " all-choices nil t)))
+         (selection (consult--read
+                     all-choices
+                     :prompt "Claude session: "
+                     :require-match t
+                     :sort nil
+                     :state (claude-code-extras--buffer-preview-state choices))))
     (if (string= selection new-label)
         (claude-code)
-      (pop-to-buffer (cdr (assoc selection choices))))))
+      (switch-to-buffer (cdr (assoc selection choices))))))
+
+(defun claude-code-extras--buffers-to-choices (buffers)
+  "Convert BUFFERS to an alist of (display-name . buffer) pairs.
+Use the project name as display name, appending the instance name
+only when multiple sessions share the same project."
+  (let* ((names (mapcar #'claude-code-extras--buffer-session-name buffers))
+         (duplicates (claude-code-extras--find-duplicate-names names)))
+    (cl-mapcar
+     (lambda (buf name)
+       (cons (if (member name duplicates)
+                 (claude-code-extras--qualified-session-name (buffer-name buf))
+               name)
+             buf))
+     buffers names)))
+
+(defun claude-code-extras--buffer-session-name (buffer)
+  "Return the session name for BUFFER."
+  (claude-code-extras--session-name (buffer-name buffer)))
+
+(defun claude-code-extras--find-duplicate-names (names)
+  "Return the list of NAMES that appear more than once."
+  (let (seen dups)
+    (dolist (name names dups)
+      (if (member name seen)
+          (cl-pushnew name dups :test #'string=)
+        (push name seen)))))
+
+(defun claude-code-extras--qualified-session-name (buffer-name)
+  "Return a qualified session name from BUFFER-NAME.
+Given \"*claude:~/path/to/project/:instance*\", return
+\"project:instance\"."
+  (let ((project (claude-code-extras--session-name buffer-name))
+        (instance (claude-code--extract-instance-name-from-buffer-name
+                   buffer-name)))
+    (if instance
+        (format "%s:%s" project instance)
+      project)))
+
+(defun claude-code-extras--buffer-preview-state (choices)
+  "Return a preview state function for CHOICES.
+CHOICES is an alist of (display-name . buffer) pairs."
+  (let ((orig-buf (window-buffer (consult--original-window)))
+        selected)
+    (lambda (action cand)
+      (pcase action
+        ('return (setq selected t))
+        ('exit
+         (when (and (not selected) (buffer-live-p orig-buf))
+           (set-window-buffer (consult--original-window) orig-buf)))
+        ('preview
+         (claude-code-extras--preview-buffer cand choices))))))
+
+(defun claude-code-extras--preview-buffer (cand choices)
+  "Show the buffer for CAND from CHOICES in the original window."
+  (when-let* ((cand)
+              (buf (cdr (assoc cand choices)))
+              ((buffer-live-p buf)))
+    (set-window-buffer (consult--original-window) buf)))
 
 ;;;;; Status polling
 
@@ -424,7 +488,7 @@ Adds the entry pointing to the bundled shell script if absent."
           (claude-code-extras--insert-statusline-entry settings-file))))))
 
 (defun claude-code-extras--has-statusline-key-p ()
-  "Return non-nil if the current buffer contains a `statusLine' JSON key."
+  "Return non-nil if the current buffer has a `statusLine' JSON key."
   (goto-char (point-min))
   (search-forward "\"statusLine\"" nil t))
 
@@ -507,6 +571,13 @@ one."
 
 (claude-code-extras-ensure-statusline-config)
 (claude-code-extras-ensure-stop-hook-config)
+
+;; Work around upstream bug: `claude-code--adjust-window-size-advice' crashes
+;; when `claude-code--window-widths' is nil or void during redisplay.
+(defvar claude-code--window-widths nil)
+(unless (hash-table-p claude-code--window-widths)
+  (setq claude-code--window-widths
+        (make-hash-table :test 'eq :weakness 'key)))
 
 (setq claude-code-notification-function #'claude-code-extras-notify)
 (add-hook 'claude-code-event-hook #'claude-code-extras--handle-stop)

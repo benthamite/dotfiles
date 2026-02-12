@@ -74,7 +74,7 @@ the `trash' utility. Deleting files in this way supports the \"Put Back\"
 functionality in macOS."
   (unless (executable-find "trash")
     (user-error "`trash' not found; please install it (e.g. `brew install trash')"))
-  (shell-command (concat "trash -vF \"" filename "\""
+  (shell-command (concat "trash -v \"" filename "\""
 			 "| sed -e 's/^/Trashed: /'")
 		 nil ;; Name of output buffer
 		 "*Trash Error Buffer*"))

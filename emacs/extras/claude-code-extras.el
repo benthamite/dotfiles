@@ -272,6 +272,38 @@ or hyphen with an underscore, mirroring the shell script's
   (when-let* ((ctx (plist-get claude-code-extras--status-data :context_window)))
     (plist-get ctx :total_input_tokens)))
 
+(defun claude-code-extras-status-lines-added ()
+  "Return the total lines added from the status data."
+  (when-let* ((cost (plist-get claude-code-extras--status-data :cost)))
+    (plist-get cost :total_lines_added)))
+
+(defun claude-code-extras-status-lines-removed ()
+  "Return the total lines removed from the status data."
+  (when-let* ((cost (plist-get claude-code-extras--status-data :cost)))
+    (plist-get cost :total_lines_removed)))
+
+(defun claude-code-extras-status-duration-ms ()
+  "Return the total session duration in milliseconds from the status data."
+  (when-let* ((cost (plist-get claude-code-extras--status-data :cost)))
+    (plist-get cost :total_duration_ms)))
+
+(defun claude-code-extras-status-cache-read-tokens ()
+  "Return the cache read input token count from the status data."
+  (when-let* ((ctx (plist-get claude-code-extras--status-data :context_window))
+              (usage (plist-get ctx :current_usage)))
+    (plist-get usage :cache_read_input_tokens)))
+
+(defun claude-code-extras-status-cache-total-tokens ()
+  "Return the total input tokens for the current turn from the status data.
+This is the sum of INPUT_TOKENS, CACHE_CREATION_INPUT_TOKENS, and
+CACHE_READ_INPUT_TOKENS."
+  (when-let* ((ctx (plist-get claude-code-extras--status-data :context_window))
+              (usage (plist-get ctx :current_usage)))
+    (let ((input (or (plist-get usage :input_tokens) 0))
+          (creation (or (plist-get usage :cache_creation_input_tokens) 0))
+          (read (or (plist-get usage :cache_read_input_tokens) 0)))
+      (+ input creation read))))
+
 ;;;;; Modeline
 
 (declare-function doom-modeline-set-modeline "doom-modeline-core")

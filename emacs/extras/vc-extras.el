@@ -344,6 +344,79 @@ If the repository has submodules, move their `.git' directories, too."
     (call-process "git" nil nil nil "submodule" "sync" "--recursive")
     (call-process "git" nil nil nil "submodule" "update" "--init" "--recursive")))
 
+;;;;; Rename
+
+;;;###autoload
+(defun vc-extras-rename-repo (&optional old-name new-name account)
+  "Rename repository OLD-NAME to NEW-NAME in ACCOUNT.
+If OLD-NAME is nil, prompt for one from local repositories. If NEW-NAME is nil,
+prompt for it. If ACCOUNT is nil, determine it from local candidates.
+
+This function renames:
+- The local repository directory
+- The remote GitHub repository (if it exists)
+- The split Git directory (if it exists)
+
+After renaming, the remote URL is updated in the Git configuration."
+  (interactive)
+  (let* ((candidates (unless old-name (vc-extras-list-local-candidates account)))
+         (old-name (or old-name
+                       (completing-read "Repo to rename: " (mapcar #'car candidates) nil t)))
+         (new-name (or new-name
+                       (read-string (format "Rename `%s' to: " old-name))))
+         (account (or account
+                      (vc-extras-get-account-of-name old-name)
+                      (completing-read "Account: "
+                                       (mapcar (lambda (profile)
+                                                 (plist-get profile :account))
+                                               vc-extras-profiles))))
+         (old-main-dir (vc-extras-resolve-repo-dir old-name account candidates))
+         (new-main-dir (file-name-concat
+                        (file-name-directory (directory-file-name old-main-dir))
+                        new-name))
+         (old-split-dir (file-name-concat paths-dir-split-git old-name))
+         (new-split-dir (file-name-concat paths-dir-split-git new-name))
+         (has-split (file-exists-p old-split-dir)))
+    (when (file-exists-p new-main-dir)
+      (user-error "Directory `%s' already exists" new-main-dir))
+    (when (and has-split (file-exists-p new-split-dir))
+      (user-error "Split directory `%s' already exists" new-split-dir))
+    (vc-extras--rename-local-repo old-main-dir new-main-dir)
+    (when has-split
+      (vc-extras--rename-split-repo old-split-dir new-split-dir new-main-dir))
+    (vc-extras--rename-remote-repo old-name new-name account)
+    (vc-extras--update-remote-url new-main-dir new-name account)
+    (message "Renamed repo from `%s' to `%s'" old-name new-name)))
+
+(defun vc-extras--rename-local-repo (old-dir new-dir)
+  "Rename the local repository directory from OLD-DIR to NEW-DIR."
+  (unless (file-exists-p old-dir)
+    (user-error "Repository directory `%s' does not exist" old-dir))
+  (rename-file old-dir new-dir))
+
+(defun vc-extras--rename-split-repo (old-split-dir new-split-dir new-main-dir)
+  "Rename split git directory from OLD-SPLIT-DIR to NEW-SPLIT-DIR.
+Updates the .git file pointer in NEW-MAIN-DIR to point to the new location."
+  (rename-file old-split-dir new-split-dir)
+  (let ((git-file (file-name-concat new-main-dir ".git")))
+    (vc-extras--create-git-pointer new-split-dir git-file)))
+
+(defun vc-extras--rename-remote-repo (old-name new-name account)
+  "Rename the remote GitHub repository from OLD-NAME to NEW-NAME in ACCOUNT."
+  (vc-extras-ensure-gh-exists)
+  (let* ((result (shell-command-to-string
+                  (format "%s api repos/%s/%s -X PATCH -f name=%s"
+                          vc-extras-gh-executable account old-name new-name)))
+         (error-p (string-match-p "error\\|not found" result)))
+    (when error-p
+      (message "Warning: Failed to rename remote repo: %s" result))))
+
+(defun vc-extras--update-remote-url (repo-dir new-name account)
+  "Update the remote URL in REPO-DIR to reflect NEW-NAME and ACCOUNT."
+  (let ((default-directory repo-dir)
+        (new-url (vc-extras-get-github-remote new-name account)))
+    (call-process "git" nil nil nil "remote" "set-url" "origin" new-url)))
+
 ;;;;; Delete
 
 ;;;###autoload
@@ -494,6 +567,7 @@ the cdr is ACCOUNT."
 									 (vc-extras-clone-repo))))
     ""
     ("s" "Split local repo"                         vc-extras-split-local-repo)
+    ("r" "Rename repo"                              vc-extras-rename-repo)
     ("d" "Delete local repo"                        vc-extras-delete-local-repo)
     ""
     ("a" "Check authentication status"              vc-extras-check-gh-authenticated)]])

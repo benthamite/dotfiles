@@ -6814,8 +6814,7 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
   :ensure (:host github
                  :repo "benthamite/wikipedia"
                  :depth nil)
-  :after mediawiki
-  :demand t
+  :defer t
   :custom
   (wikipedia-draft-directory (file-name-concat paths-dir-dropbox "wikipedia"))
   

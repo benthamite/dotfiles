@@ -8528,6 +8528,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :custom
   (claude-code-display-window-fn (lambda (_buffer) (claude-code-switch-to-buffer) nil))
   (claude-code-terminal-backend 'eat)
+  (claude-code-optimize-window-resize nil)
 
   :config
   (monet-mode 1)

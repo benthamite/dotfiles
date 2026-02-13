@@ -208,6 +208,7 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#calendar][calendar]]
   - [[#calendar-extras][calendar-extras]]
   - [[#holidays][holidays]]
+  - [[#institution-calendar][institution-calendar]]
   - [[#org-gcal][org-gcal]]
   - [[#org-gcal-extras][org-gcal-extras]]
   - [[#calfw][calfw]]
@@ -4959,6 +4960,21 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
   (dolist (holiday '((holiday-float 6 0 3 "Father's Day")
                      (holiday-float 5 0 2 "Mother's Day")))
     (delete holiday holiday-general-holidays)))
+#+end_src
+
+** institution-calendar
+:PROPERTIES:
+:ID:       DC127655-02C2-4079-94C4-6E240791CB67
+:END:
+
+/[[https://github.com/protesilaos/institution-calendar][institution-calendar]] augments the =calendar= buffer to include Oxford/Calendar term indicators./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package institution-calendar
+  :ensure (:host github
+                 :repo "protesilaos/institution-calendar")
+  :config
+  (institution-calendar-mode))
 #+end_src
 
 ** org-gcal

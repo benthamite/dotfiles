@@ -1,5 +1,14 @@
 # dotfiles conventions
 
+## Working trees
+
+This repo has two working trees on the same machine:
+
+- **Dropbox/dotfiles** (`~/Library/CloudStorage/Dropbox/dotfiles/`): the primary location for non-Elisp files, including `emacs/config.org`.
+- **Elpaca repos** (`~/.config/emacs-profiles/<profile>/elpaca/repos/dotfiles/`): the location Emacs loads Elisp from, including the `emacs/extras/*.el` files.
+
+Both point to the same Git repo, so changes only need to be committed once in the appropriate working tree. Edit each file in its canonical location: `config.org` in Dropbox/dotfiles, Elisp extras in the elpaca repos directory.
+
 ## Testing
 
 To test loading Emacs extras in batch mode with all dependencies:

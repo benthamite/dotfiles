@@ -37,7 +37,7 @@ emacs --batch \
   2>&1
 ```
 
-The `load-prefer-newer t` setting is important because elpaca may have outdated `.elc` files that don't reflect recent source changes. Source files in `extras/` are loaded from the repos directory; all other dependencies use the builds directory to avoid chasing transitive dependencies.
+The `load-prefer-newer t` setting is important because elpaca may have outdated `.elc` files that don't reflect recent source changes.
 
 If a dependency is missing, find it with `ls $ELPACA/builds/ | grep NAME` and add another `-L` flag.
 

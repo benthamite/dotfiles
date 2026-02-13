@@ -8539,6 +8539,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (claude-code-mode)
 
   :bind
+  ("A-t" . claude-code-extras-start-or-switch)
   ("C-c d" . claude-code-transient)
   (:repeat-map my-claude-code-map
 	       ("M" . claude-code-cycle-mode))

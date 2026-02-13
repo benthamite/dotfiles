@@ -6792,6 +6792,9 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
                  :depth nil)
   :after mediawiki
   :demand t
+  :custom
+  (wikipedia-draft-directory (file-name-concat paths-dir-notes "wikipedia"))
+  
   :bind
   (("A-p" . wikipedia-transient)))
 #+end_src

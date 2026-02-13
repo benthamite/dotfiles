@@ -231,20 +231,35 @@ offer to switch to one of them or create a new session."
 (defun claude-code-extras--buffers-to-choices (buffers)
   "Convert BUFFERS to an alist of (display-name . buffer) pairs.
 Use the project name as display name, appending the instance name
-only when multiple sessions share the same project."
+only when multiple sessions share the same project.  If names
+still collide after qualification, append a numeric suffix."
   (let* ((names (mapcar #'claude-code-extras--buffer-session-name buffers))
-         (duplicates (claude-code-extras--find-duplicate-names names)))
-    (cl-mapcar
-     (lambda (buf name)
-       (cons (if (member name duplicates)
-                 (claude-code-extras--qualified-session-name (buffer-name buf))
-               name)
-             buf))
-     buffers names)))
+         (duplicates (claude-code-extras--find-duplicate-names names))
+         (qualified (cl-mapcar
+                     (lambda (buf name)
+                       (if (member name duplicates)
+                           (claude-code-extras--qualified-session-name
+                            (buffer-name buf))
+                         name))
+                     buffers names)))
+    (cl-mapcar #'cons
+               (claude-code-extras--deduplicate-names qualified)
+               buffers)))
 
 (defun claude-code-extras--buffer-session-name (buffer)
   "Return the session name for BUFFER."
   (claude-code-extras--session-name (buffer-name buffer)))
+
+(defun claude-code-extras--deduplicate-names (names)
+  "Add numeric suffixes to duplicate entries in NAMES.
+The first occurrence keeps its original name; subsequent
+duplicates get \" (2)\", \" (3)\", etc."
+  (let ((counts (make-hash-table :test 'equal)))
+    (mapcar (lambda (name)
+              (let ((n (1+ (or (gethash name counts) 0))))
+                (puthash name n counts)
+                (if (= n 1) name (format "%s (%d)" name n))))
+            names)))
 
 (defun claude-code-extras--find-duplicate-names (names)
   "Return the list of NAMES that appear more than once."

@@ -6355,45 +6355,19 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package vterm
-  :defer t
-  :custom
-  ;; Allow more keys to be passed through to Emacs
-  (vterm-keymap-exceptions '("A-C-s-p" "A-C-s-u" "C-H-M-q" "C-H-M-r" "C-H-M-s" "C-H-M-v" "C-c" "C-g" "C-h" "C-l" "C-u" "C-x" "C-y" "H-z" "M-o" "M-x" "M-y"))
+  :defer t)
+#+end_src
 
+*** vterm-extras
+
+/[[file:extras/vterm-extras.el][vterm-extras]] collects my extensions for =vterm=./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-personal-package vterm-extras
+  :after vterm
+  :demand t
   :config
-  (defun vterm-send-forward-word ()
-    "Send forward-word to the terminal."
-    (interactive)
-    (vterm-send-key "f" nil t nil))
-
-  (defun vterm-send-backward-word ()
-    "Send backward-word to the terminal."
-    (interactive)
-    (vterm-send-key "b" nil t nil))
-
-  (defun vterm-send-kill-word ()
-    "Send kill-word to the terminal."
-    (interactive)
-    (vterm-send-key "d" nil t nil))
-
-  (defun vterm-send-kill-line ()
-    "Send kill-line to the terminal."
-    (interactive)
-    (vterm-send-key "k" nil nil t))
-
-  :bind
-  (:map vterm-mode-map
-	("<backspace>" . vterm-send-backspace)
-	("A-C-s-p" . vterm-send-forward-word)
-	("A-C-s-u" . vterm-send-backward-word)
-	("C-H-M-q" . vterm-send-meta-backspace)
-	("C-H-M-r" . vterm-send-kill-word)
-	("C-H-M-s" . vterm-send-backspace)
-	("C-H-M-v" . vterm-send-kill-line)
-	("C-y" . vterm-yank)
-	("DEL" . vterm-send-backspace)
-	("H-z" . vterm-undo)
-	("M-y" . vterm-yank-pop)))
+  (vterm-extras-setup-keymap))
 #+end_src
 
 * spelling & grammar

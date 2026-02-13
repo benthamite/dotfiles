@@ -159,7 +159,7 @@ Uses strikethrough to indicate the cost is not actually charged."
     (concat
      (doom-modeline-spc)
      (propertize (claude-code-extras--session-name (buffer-name))
-                 'face 'doom-modeline-buffer-major-mode)
+                 'face '(bold doom-modeline-buffer-major-mode))
      (doom-modeline-extras--format-model model)
      (doom-modeline-extras--format-tokens tokens)
      (doom-modeline-extras--format-cost cost)

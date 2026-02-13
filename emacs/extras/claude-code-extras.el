@@ -120,6 +120,10 @@ Toggle with `claude-code-extras-toggle-alert'."
 (defvar-local claude-code-extras--status-timer nil
   "Timer for periodic status polling in the current Claude buffer.")
 
+(defvar eat-terminal)
+(defvar eat--synchronize-scroll-function)
+(declare-function eat-term-display-cursor "eat" (terminal))
+
 ;;;; Functions
 
 (defun claude-code-extras--get-log-file (buffer)
@@ -489,6 +493,55 @@ Also starts status polling if it is not already active."
       (claude-code-extras-start-status-polling))
     (doom-modeline-set-modeline 'claude-code)))
 
+;;;;; Eat scroll synchronization
+
+(defun claude-code-extras-eat-synchronize-scroll (windows)
+  "Synchronize scrolling and point between terminal and WINDOWS.
+WINDOWS is a list of windows.  WINDOWS may also contain the
+special symbol `buffer', in which case the point of current
+buffer is set.
+Respects user scrolling: when a window has been scrolled away
+from the terminal cursor (making the window point non-visible),
+that window is left untouched until the user scrolls back."
+  (dolist (window windows)
+    (if (eq window 'buffer)
+        (claude-code-extras--eat-sync-buffer-point)
+      (when (not buffer-read-only)
+        (claude-code-extras--eat-sync-window window)))))
+
+(defun claude-code-extras--eat-sync-buffer-point ()
+  "Update buffer point to follow the terminal cursor.
+Skip the update when the selected window displays this buffer
+and the user has scrolled point off-screen, since `goto-char'
+would trigger auto-scrolling during the next redisplay."
+  (let ((sel-win (selected-window)))
+    (when (or (not (eq (window-buffer sel-win) (current-buffer)))
+              (pos-visible-in-window-p (point) sel-win))
+      (goto-char (eat-term-display-cursor eat-terminal)))))
+
+(defun claude-code-extras--eat-sync-window (window)
+  "Synchronize WINDOW to follow the terminal cursor.
+Skip the update when the user has scrolled WINDOW away from the
+terminal output area."
+  (when (pos-visible-in-window-p (window-point window) window)
+    (let ((cursor-pos (eat-term-display-cursor eat-terminal)))
+      (set-window-point window cursor-pos)
+      (cond
+       ((>= cursor-pos (- (point-max) 2))
+        (with-selected-window window
+          (goto-char cursor-pos)
+          (recenter -1)))
+       ((not (pos-visible-in-window-p cursor-pos window))
+        (with-selected-window window
+          (goto-char cursor-pos)
+          (recenter)))))))
+
+(defun claude-code-extras-setup-eat-scroll ()
+  "Override the eat scroll sync function to respect user scrolling."
+  (when (eq claude-code-terminal-backend 'eat)
+    (setq-local eat--synchronize-scroll-function
+                #'claude-code-extras-eat-synchronize-scroll)))
+
 ;;;;; Auto-setup
 
 (defun claude-code-extras-ensure-statusline-config ()
@@ -596,6 +649,7 @@ one."
 (setq claude-code-notification-function #'claude-code-extras-notify)
 (add-hook 'claude-code-event-hook #'claude-code-extras--handle-stop)
 (add-hook 'kill-buffer-query-functions #'claude-code-extras-protect-buffer)
+(add-hook 'claude-code-start-hook #'claude-code-extras-setup-eat-scroll)
 
 (provide 'claude-code-extras)
 ;;; claude-code-extras.el ends here

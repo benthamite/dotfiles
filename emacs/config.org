@@ -8609,7 +8609,8 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 					   ,(expand-file-name "~")
 					   "/tmp")))
 	  ("git" . (:command "npx"
-			     :args ("-y" "@cyanheads/git-mcp-server")))
+			     :args ("-y" "@cyanheads/git-mcp-server")
+			     :env (:LOGS_DIR "/tmp/git-mcp-server/")))
 	  ("github-tlon-ai" .
 	   (:command "npx"
 		     :args ("-y" "@modelcontextprotocol/server-github")

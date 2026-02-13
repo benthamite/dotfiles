@@ -6771,6 +6771,8 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
 			   "Sir Paul"
 			   ,(auth-source-pass-get 'secret "chrome/auth.wikimedia.org/Sir_Paul") ""
 			   :description "English Wikipedia" :first-page "Main Page")))
+  (mediawiki-draft-data-file (file-name-concat paths-dir-notes "drafts.wiki"))
+  
   :bind
   (:map mediawiki-mode-map
         ("s-k" . mediawiki-insert-link)

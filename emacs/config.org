@@ -6335,6 +6335,9 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 #+end_src
 
 *** eat-extras
+:PROPERTIES:
+:ID:       2E64815B-CB74-4D99-9884-AB7B97D1B0DB
+:END:
 
 /[[file:extras/eat-extras.el][eat-extras]] collects my extensions for =eat=./
 
@@ -6359,6 +6362,9 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 #+end_src
 
 *** vterm-extras
+:PROPERTIES:
+:ID:       04F93CF5-C6E7-46A4-BEEE-AC8900D649E2
+:END:
 
 /[[file:extras/vterm-extras.el][vterm-extras]] collects my extensions for =vterm=./
 

@@ -6846,16 +6846,6 @@ The file should contain one search query per line."
       (gdrive-mark-results results))))
 #+end_src
 
-*** TODO [#5] Write command to create new Google Doc in chosen folder
-:PROPERTIES:
-:Effort:   0:30
-:ID:       4D8E953E-44F4-4546-8BF9-08D8983CA699
-:END:
-:LOGBOOK:
-CLOCK: [2024-04-23 Tue 09:54]--[2024-04-23 Tue 10:05] =>  0:11
-CLOCK: [2022-05-19 Thu 20:30]--[2022-05-19 Thu 20:33] =>  0:03
-:END:
-
 ** ledger-mode
 :PROPERTIES:
 :ID:       6C259EFC-0CF9-4CD7-A8C5-B29B66E98776
@@ -7184,7 +7174,6 @@ CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
   (dictionary-server "dict.org")
   (dictionary-use-single-buffer t))
 #+end_src
-
 
 *** TODO [#6] Set local server
 :PROPERTIES:

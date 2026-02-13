@@ -44,22 +44,22 @@
 ;;;; Functions
 
 (defun vterm-extras-send-forward-word ()
-  "Send forward-word to the terminal."
+  "Send `forward-word' to the terminal."
   (interactive)
   (vterm-send-key "f" nil t nil))
 
 (defun vterm-extras-send-backward-word ()
-  "Send backward-word to the terminal."
+  "Send `backward-word' to the terminal."
   (interactive)
   (vterm-send-key "b" nil t nil))
 
 (defun vterm-extras-send-kill-word ()
-  "Send kill-word to the terminal."
+  "Send `kill-word' to the terminal."
   (interactive)
   (vterm-send-key "d" nil t nil))
 
 (defun vterm-extras-send-kill-line ()
-  "Send kill-line to the terminal."
+  "Send `kill-line' to the terminal."
   (interactive)
   (vterm-send-key "k" nil nil t))
 

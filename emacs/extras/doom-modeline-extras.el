@@ -121,6 +121,7 @@ Uses strikethrough to indicate the cost is not actually charged."
 ;;;;;; Claude Code status
 
 (declare-function claude-code--buffer-p "claude-code")
+(declare-function claude-code-extras-status-model "claude-code-extras")
 (declare-function claude-code-extras-status-cost "claude-code-extras")
 (declare-function claude-code-extras-status-context-percent "claude-code-extras")
 (declare-function claude-code-extras-status-token-count "claude-code-extras")
@@ -146,7 +147,8 @@ Uses strikethrough to indicate the cost is not actually charged."
 
 (defun doom-modeline-extras--format-claude-status ()
   "Assemble the Claude Code modeline string from status data."
-  (let ((tokens (claude-code-extras-status-token-count))
+  (let ((model (claude-code-extras-status-model))
+        (tokens (claude-code-extras-status-token-count))
         (cost (claude-code-extras-status-cost))
         (pct (claude-code-extras-status-context-percent))
         (added (claude-code-extras-status-lines-added))
@@ -158,6 +160,7 @@ Uses strikethrough to indicate the cost is not actually charged."
      (doom-modeline-spc)
      (propertize (claude-code-extras--session-name (buffer-name))
                  'face 'doom-modeline-buffer-major-mode)
+     (doom-modeline-extras--format-model model)
      (doom-modeline-extras--format-tokens tokens)
      (doom-modeline-extras--format-cost cost)
      (doom-modeline-extras--format-context-percent pct)
@@ -166,6 +169,11 @@ Uses strikethrough to indicate the cost is not actually charged."
      (doom-modeline-extras--format-cache-efficiency cache-read cache-total)
      " | " (claude-code-extras-alert-indicator)
      (doom-modeline-spc))))
+
+(defun doom-modeline-extras--format-model (model)
+  "Format MODEL name with separator."
+  (when model
+    (concat " | " model)))
 
 (defun doom-modeline-extras--format-tokens (tokens)
   "Format TOKENS as a human-readable string with separator."

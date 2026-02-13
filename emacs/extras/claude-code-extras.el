@@ -619,6 +619,11 @@ one."
 (setq claude-code-notification-function #'claude-code-extras-notify)
 (add-hook 'claude-code-event-hook #'claude-code-extras--handle-stop)
 (add-hook 'kill-buffer-query-functions #'claude-code-extras-protect-buffer)
+(add-hook 'claude-code-start-hook #'claude-code-extras-start-logging)
+(add-hook 'claude-code-start-hook #'claude-code-extras-start-status-polling)
+(add-hook 'claude-code-start-hook #'claude-code-extras-set-modeline)
+(add-hook 'kill-buffer-hook #'claude-code-extras-stop-logging)
+(add-hook 'kill-buffer-hook #'claude-code-extras-stop-status-polling)
 
 (provide 'claude-code-extras)
 ;;; claude-code-extras.el ends here

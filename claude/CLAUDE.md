@@ -24,19 +24,5 @@
 
 ## Version control
 
-- By default, commit all changes unless I specify otherwise or the changes are for testing purposes only.
-
-## Programming languages
-
-### Emacs Lisp
-
-- Write atomic, focused functions. When tempted to add a comment explaining code, refactor it into a function with a clear intention, so that the comment is no longer necessary. Functions should generally be only a few lines long.
-- Never insert empty lines within a function.
-- Put helper functions *after* the function that calls them, not before.
-- Docstrings should document all arguments, capitalized.
-- Fill all docstrings to 80 characters.
-- The first line of the docstring should be a single-sentence summary.
-- When writing multiline docstrings, do not leave a newline between the first and second lines.
-- Do not end error messages with a period.
-- Only add comments if truly necessary to understand the code. Avoid commenting every detail.
-- Never create "fallbacks" to handle problems silently: always choose errors over silent unexpected behavior.
+- By default, commit all changes, unless I specify otherwise or the changes are temporary.
+- Do not mix unrelated changes in the same commit; if you need to make multiple unrelated changes, split them into separate commits.

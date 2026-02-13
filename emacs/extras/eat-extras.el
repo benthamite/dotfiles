@@ -61,16 +61,13 @@
   (eat-term-send-string eat-terminal "\eb"))
 
 (defun eat-extras-send-kill-word ()
-  "Send `kill-word' to the terminal, saving killed text to the kill ring."
+  "Send `kill-word' to the terminal."
   (interactive)
-  (eat-extras-kill-ring-save-region
-   (point) (save-excursion (forward-word) (point)))
   (eat-term-send-string eat-terminal "\ed"))
 
 (defun eat-extras-send-kill-line ()
-  "Send `kill-line' to the terminal, saving killed text to the kill ring."
+  "Send `kill-line' to the terminal."
   (interactive)
-  (eat-extras-kill-ring-save-region (point) (line-end-position))
   (eat-term-send-string eat-terminal "\C-k"))
 
 (defun eat-extras-send-backspace ()
@@ -79,22 +76,14 @@
   (eat-term-send-string eat-terminal "\x7f"))
 
 (defun eat-extras-send-meta-backspace ()
-  "Send `backward-kill-word' to the terminal, saving killed text to the kill ring."
+  "Send `backward-kill-word' to the terminal."
   (interactive)
-  (eat-extras-kill-ring-save-region
-   (save-excursion (backward-word) (point)) (point))
   (eat-term-send-string eat-terminal "\e\x7f"))
 
 (defun eat-extras-send-undo ()
   "Send undo to the terminal."
   (interactive)
   (eat-term-send-string eat-terminal "\C-_"))
-
-(defun eat-extras-kill-ring-save-region (beg end)
-  "Save text between BEG and END to the kill ring if non-empty."
-  (let ((text (buffer-substring-no-properties beg end)))
-    (when (> (length text) 0)
-      (kill-new text))))
 
 (defun eat-extras-setup-semi-char-mode-map ()
   "Configure semi-char mode map with custom navigation key bindings."

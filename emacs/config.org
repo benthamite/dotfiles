@@ -8560,16 +8560,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package claude-code-extras
   :after claude-code
-  :demand t
-  :hook
-  (claude-code-start-hook . claude-code-extras-start-logging)
-  (claude-code-start-hook . claude-code-extras-start-status-polling)
-  (claude-code-start-hook . claude-code-extras-set-modeline)
-  (kill-buffer-hook . claude-code-extras-stop-logging)
-  (kill-buffer-hook . claude-code-extras-stop-status-polling)
-
-  :bind
-  (("A-t" . claude-code-extras-start-or-switch)))
+  :demand t)
 #+end_src
 
 ** monet

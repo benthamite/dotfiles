@@ -121,7 +121,6 @@ Toggle with `claude-code-extras-toggle-alert'."
   "Timer for periodic status polling in the current Claude buffer.")
 
 (defvar eat-terminal)
-(defvar eat--synchronize-scroll-function)
 (declare-function eat-term-display-cursor "eat" (terminal))
 
 ;;;; Functions
@@ -458,8 +457,28 @@ MESSAGE is a plist with :type, :buffer-name, :json-data, and
         (let ((name (claude-code-extras--session-name (buffer-name))))
           (claude-code-extras-notify
            "Claude ready"
-           (format "%s: waiting for your response" name)))))
-    nil))
+           (format "%s: waiting for your response" name)))
+        (claude-code-extras--scroll-to-bottom buf))))
+  nil)
+
+(defun claude-code-extras--scroll-to-bottom (buffer)
+  "Scroll BUFFER and its windows to the terminal cursor.
+Move point and all windows showing BUFFER to the eat terminal
+cursor, keeping the cursor line at the bottom of each window."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (when (bound-and-true-p eat-terminal)
+        (let ((cursor-pos (eat-term-display-cursor eat-terminal)))
+          (goto-char cursor-pos)
+          (claude-code-extras--scroll-windows-to cursor-pos))))))
+
+(defun claude-code-extras--scroll-windows-to (pos)
+  "Set window-point to POS and recenter in all windows showing this buffer."
+  (dolist (window (get-buffer-window-list nil nil t))
+    (set-window-point window pos)
+    (with-selected-window window
+      (goto-char pos)
+      (recenter -1))))
 
 (defun claude-code-extras--session-name (buffer-name)
   "Extract the project name from BUFFER-NAME.
@@ -492,55 +511,6 @@ Also starts status polling if it is not already active."
     (unless claude-code-extras--status-timer
       (claude-code-extras-start-status-polling))
     (doom-modeline-set-modeline 'claude-code)))
-
-;;;;; Eat scroll synchronization
-
-(defun claude-code-extras-eat-synchronize-scroll (windows)
-  "Synchronize scrolling and point between terminal and WINDOWS.
-WINDOWS is a list of windows.  WINDOWS may also contain the
-special symbol `buffer', in which case the point of current
-buffer is set.
-Respects user scrolling: when a window has been scrolled away
-from the terminal cursor (making the window point non-visible),
-that window is left untouched until the user scrolls back."
-  (dolist (window windows)
-    (if (eq window 'buffer)
-        (claude-code-extras--eat-sync-buffer-point)
-      (when (not buffer-read-only)
-        (claude-code-extras--eat-sync-window window)))))
-
-(defun claude-code-extras--eat-sync-buffer-point ()
-  "Update buffer point to follow the terminal cursor.
-Skip the update when the selected window displays this buffer
-and the user has scrolled point off-screen, since `goto-char'
-would trigger auto-scrolling during the next redisplay."
-  (let ((sel-win (selected-window)))
-    (when (or (not (eq (window-buffer sel-win) (current-buffer)))
-              (pos-visible-in-window-p (point) sel-win))
-      (goto-char (eat-term-display-cursor eat-terminal)))))
-
-(defun claude-code-extras--eat-sync-window (window)
-  "Synchronize WINDOW to follow the terminal cursor.
-Skip the update when the user has scrolled WINDOW away from the
-terminal output area."
-  (when (pos-visible-in-window-p (window-point window) window)
-    (let ((cursor-pos (eat-term-display-cursor eat-terminal)))
-      (set-window-point window cursor-pos)
-      (cond
-       ((>= cursor-pos (- (point-max) 2))
-        (with-selected-window window
-          (goto-char cursor-pos)
-          (recenter -1)))
-       ((not (pos-visible-in-window-p cursor-pos window))
-        (with-selected-window window
-          (goto-char cursor-pos)
-          (recenter)))))))
-
-(defun claude-code-extras-setup-eat-scroll ()
-  "Override the eat scroll sync function to respect user scrolling."
-  (when (eq claude-code-terminal-backend 'eat)
-    (setq-local eat--synchronize-scroll-function
-                #'claude-code-extras-eat-synchronize-scroll)))
 
 ;;;;; Auto-setup
 
@@ -649,7 +619,6 @@ one."
 (setq claude-code-notification-function #'claude-code-extras-notify)
 (add-hook 'claude-code-event-hook #'claude-code-extras--handle-stop)
 (add-hook 'kill-buffer-query-functions #'claude-code-extras-protect-buffer)
-(add-hook 'claude-code-start-hook #'claude-code-extras-setup-eat-scroll)
 
 (provide 'claude-code-extras)
 ;;; claude-code-extras.el ends here

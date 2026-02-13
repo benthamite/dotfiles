@@ -55,11 +55,10 @@
   :group 'claude-code-extras)
 
 (defcustom claude-code-extras-sigwinch-delay 0.5
-  "Delay in seconds before sending SIGWINCH to fix vterm rendering.
-After Claude Code starts in a vterm buffer, the TUI may render
-incorrectly due to a race condition in terminal size negotiation.
-Sending SIGWINCH forces the TUI to re-query terminal dimensions
-and redraw."
+  "Delay in seconds before sending SIGWINCH to fix terminal rendering.
+After Claude Code starts, the TUI may render incorrectly due to a
+race condition in terminal size negotiation.  Sending SIGWINCH
+forces the TUI to re-query terminal dimensions and redraw."
   :type 'number
   :group 'claude-code-extras)
 
@@ -182,13 +181,12 @@ in `kill-buffer-query-functions'."
       (not (claude-code--buffer-p (current-buffer)))
       (yes-or-no-p "Kill claude-code buffer? ")))
 
-(defun claude-code-extras-fix-vterm-rendering ()
-  "Send SIGWINCH to fix vterm rendering after startup.
+(defun claude-code-extras-fix-rendering ()
+  "Send SIGWINCH to fix terminal rendering after startup.
 Works around a race condition where Claude Code's TUI queries
-terminal dimensions before the vterm window is fully laid out,
+terminal dimensions before the terminal window is fully laid out,
 resulting in a garbled banner."
-  (when-let* ((proc (get-buffer-process (current-buffer)))
-              ((eq claude-code-terminal-backend 'vterm)))
+  (when-let* ((proc (get-buffer-process (current-buffer))))
     (claude-code-extras--send-sigwinch-after-delay (current-buffer))))
 
 (defun claude-code-extras--send-sigwinch-after-delay (buffer)

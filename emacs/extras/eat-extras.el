@@ -51,24 +51,24 @@
 ;;;; Functions
 
 (defun eat-extras-send-forward-word ()
-  "Send forward-word to the terminal."
+  "Send `forward-word' to the terminal."
   (interactive)
   (eat-term-send-string eat-terminal "\ef"))
 
 (defun eat-extras-send-backward-word ()
-  "Send backward-word to the terminal."
+  "Send `backward-word' to the terminal."
   (interactive)
   (eat-term-send-string eat-terminal "\eb"))
 
 (defun eat-extras-send-kill-word ()
-  "Send kill-word to the terminal, saving killed text to the kill ring."
+  "Send `kill-word' to the terminal, saving killed text to the kill ring."
   (interactive)
   (eat-extras-kill-ring-save-region
    (point) (save-excursion (forward-word) (point)))
   (eat-term-send-string eat-terminal "\ed"))
 
 (defun eat-extras-send-kill-line ()
-  "Send kill-line to the terminal, saving killed text to the kill ring."
+  "Send `kill-line' to the terminal, saving killed text to the kill ring."
   (interactive)
   (eat-extras-kill-ring-save-region (point) (line-end-position))
   (eat-term-send-string eat-terminal "\C-k"))
@@ -79,7 +79,7 @@
   (eat-term-send-string eat-terminal "\x7f"))
 
 (defun eat-extras-send-meta-backspace ()
-  "Send backward-kill-word to the terminal, saving killed text to the kill ring."
+  "Send `backward-kill-word' to the terminal, saving killed text to the kill ring."
   (interactive)
   (eat-extras-kill-ring-save-region
    (save-excursion (backward-word) (point)) (point))

@@ -6548,13 +6548,6 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
     org-msg-edit-mode-hook) . flycheck-languagetool-enable))
 #+end_src
 
-*** TODO [#7] Submit patch for persistent error
-:PROPERTIES:
-:ID:       74AC88E6-2752-44AE-A1F8-D3FE2BA2AE68
-:END:
-
-See [[id:CBEE980E-2D38-4D73-A806-FF824EE5305C][Claude discussion]].
-
 ** flymake-mdl
 :PROPERTIES:
 :ID:       5B033B8B-5D04-415F-9F92-182CB3AA3C69
@@ -7181,13 +7174,6 @@ CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
   (dictionary-server "dict.org")
   (dictionary-use-single-buffer t))
 #+end_src
-
-*** TODO [#6] Set local server
-:PROPERTIES:
-:ID:       3C3B9F22-E8AF-4F94-8A7E-A613A47A765B
-:END:
-
-See ~dictionary-in-emacs.org~ in ~gptel~ notes directory.
 
 * docs
 :PROPERTIES:
@@ -9129,12 +9115,6 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
         ("M-f" . ace-link-org)))
 #+end_src
 
-*** DONE [#4] Create function to compute the total number of TODOs and hours in effort estimates
-:PROPERTIES:
-:Effort:   2:00
-:ID:       FCC486F6-7391-4EA3-9087-6BC3D5AB72B3
-:END:
-
 ** org-extras
 :PROPERTIES:
 :ID:       4DE04276-B164-441D-ADCA-017346C525D6
@@ -9515,7 +9495,7 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
    ("H-o" . org-clock-out)))
 #+end_src
 
-*** TODO [#6] Find a way to restore the org-clock when refreshing the tab bar
+*** DONE [#6] Find a way to restore the org-clock when refreshing the tab bar
 :PROPERTIES:
 :ID:       91C2D236-79B7-470A-B667-D200CCA92A9D
 :END:
@@ -11270,14 +11250,6 @@ We defer-load the package to activate the timer that in turn updates the bibliog
    ("i" . citar-extras-open-in-ebib)))
 #+end_src
 
-*** DONE [#6] Tweak note creation function so that it adds a tag with the work type
-:PROPERTIES:
-:ID:       FB459DDE-BFDD-4740-9FFA-7AFFB74A38D1
-:END:
-Having headings tagged with the type of work they are notes of allows me to query the org-roam db specifically for notes of a particular type.
-
-Already implemented via the =orb-noter-template.org= capture template, which includes =:%^{entry-type}:= as a tag in the heading.
-
 ** citar-extras
 :PROPERTIES:
 :ID:       6CC7F660-F6E6-4605-AA42-B495FF090B5D
@@ -11484,11 +11456,6 @@ We defer-load the package to activate the timer that in turn updates the bibliog
 #+end_src
 
 The macro below generates the commands correctly. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
-
-*** TODO [#6] Modify my custom ebib formulas so that they use native uniquify
-:PROPERTIES:
-:ID:       BA7B5845-B148-43B6-BE50-C1CBF89478BB
-:END:
 
 *** resources
 :PROPERTIES:
@@ -12212,12 +12179,6 @@ I use this package to compose messages and to reply to messages composed in HTML
         ("s-A-l" . org-extras-url-dwim)))
 #+end_src
 
-*** DONE [#5] Figure out how to include LaTeX/Mathjax
-:PROPERTIES:
-:Effort:   0:30
-:ID:       E128A0A2-DA3E-4435-ADBF-472E7268678D
-:END:
-
 ** org-msg-extras
 :PROPERTIES:
 :ID:       672D77D8-E9AA-4A66-A16A-EAB54E0238E6
@@ -12873,11 +12834,6 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
    ("s-c" . org-extras-eww-copy-for-org-mode)))
 #+end_src
 
-*** TODO [#5] Integrate eww Chrome, Firefox history
-:PROPERTIES:
-:ID:       2C3DB6DF-B599-49DF-AD30-41C77D2326D7
-:END:
-
 ** eww-extras
 :PROPERTIES:
 :ID:       69B35912-79CB-4611-8E43-7C8A5BC82B55
@@ -13040,25 +12996,6 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
    (";" . elfeed-show-next)
    ("x" . elfeed-show-visit)))
 #+end_src
-
-*** TODO [#6] Revise key bindings
-:PROPERTIES:
-:ID:       2CDFD8A4-5D9B-4300-A5B2-D621146F8B3F
-:END:
-This is what I have, but no longer reflects my workflow:
-
-| key   | command                              | behavior                      |
-|-------+--------------------------------------+-------------------------------|
-| RET   | =eww-follow-link '(4)=                 | open link at point in Chrome  |
-| S-RET | =eww-follow-link=                      | open link at point in eww     |
-| x     | =elfeed-show-visit=                    | open link of buffer in Chrome |
-| v     | =elfeed-extras-show-visit-in-eww=      | open link of buffer in eww    |
-| c     | =elfeed-kill-link-url-at-point=        | copy link at point            |
-| w     | =elfeed-extras-kill-link-url-of-entry= | copy link of buffer           |
-| f     | =ace-link-eww '(4)=                    | open link selected in Chrome  |
-| F     | =ace-link-eww=                         | open link selected in eww     |
-
-These key bindings produce the same behavior in eww.
 
 ** elfeed-extras
 :PROPERTIES:

@@ -17,19 +17,18 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=window-extras.el= provides extensions for Emacs' built-in window management capabilities (=window.el=). These extensions focus on switching between windows, intelligently splitting windows, moving buffers between windows, and interacting with the minibuffer window.
+=window-extras.el= extends Emacs' built-in ~window.el~ with commands for switching between windows, moving buffers across windows, and intelligently splitting frames. Emacs' default window management commands are powerful but sometimes cumbersome for common workflows like toggling between two windows or moving a buffer to an adjacent window without losing context.
 
-The main features include:
+The main capabilities are:
 
-- Switching to the most recently used window (including the minibuffer).
-- Automatically splitting the frame if it's unsplit, potentially into three windows based on width.
-- Commands to swap buffers between windows or move a buffer to an adjacent window (left/right).
-- Switching focus to the minibuffer window when active.
-- Selecting the leftmost or rightmost window in a frame.
+- *Switching to the last window.* A quick toggle between the current and most recently used window, including the minibuffer ([[#h:switch-to-last-window][Switching to the last window]]).
+- *Intelligent splitting.* Automatically splitting frames into two or three windows based on frame width ([[#h:split-if-unsplit][Splitting]]).
+- *Buffer movement.* Moving the current buffer to an adjacent window or swapping buffers between windows ([[#h:buffer-movement][Buffer movement]]).
+- *Minibuffer and side window access.* Jumping to the active minibuffer or selecting the leftmost/rightmost window ([[#h:special-windows][Special window access]]).
 
-* Configuration Variables
+* User options
 :PROPERTIES:
-:CUSTOM_ID: h:configuration-variables
+:CUSTOM_ID: h:user-options
 :END:
 
 ** ~window-extras-frame-split-width-threshold~
@@ -38,84 +37,82 @@ The main features include:
 :END:
 
 #+vindex: window-extras-frame-split-width-threshold
-An integer specifying the minimum frame width (in columns) required for the command ~window-extras-split-if-unsplit~ to split the frame into three windows instead of two. Defaults to 350.
+The user option ~window-extras-frame-split-width-threshold~ specifies the minimum frame width (in columns) at which ~window-extras-split-if-unsplit~ ([[#h:split-if-unsplit][Splitting]]) will create a three-window layout instead of a two-window layout. On wide displays, three side-by-side windows can be more productive than two very wide ones.
+
+The default value is ~350~. The type is an integer. You might lower this value if you use a smaller font or increase it for larger fonts.
 
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
 :END:
 
-=window-extras.el= provides the following interactive commands:
-
-** Switch to Last Window
+** Switching to the last window
 :PROPERTIES:
-:CUSTOM_ID: h:window-extras-switch-to-last-window
+:CUSTOM_ID: h:switch-to-last-window
 :END:
 
 #+findex: window-extras-switch-to-last-window
-The command ~window-extras-switch-to-last-window~ selects the most recently selected window in the current frame. This includes the minibuffer window if it was the last one selected and is currently active. It uses ~window-extras-get-last-window~ internally.
+A common workflow involves editing in one window, briefly switching to another for reference, and then wanting to return. The command ~window-extras-switch-to-last-window~ selects the most recently used window in the current frame, providing a quick toggle between two windows without relying on directional movement or window numbers.
 
-** Split if Unsplit
+If the minibuffer was the last selected window and is currently active, the command will switch to it. This makes it easy to return to an ongoing minibuffer session after checking something in a file buffer. If no other window exists, the command signals an error.
+
+Internally, the command uses ~window-extras-get-last-window~ to determine the target window ([[#h:utility-functions][Utility functions]]).
+
+** Splitting
 :PROPERTIES:
-:CUSTOM_ID: h:window-extras-split-if-unsplit
+:CUSTOM_ID: h:split-if-unsplit
 :END:
 
 #+findex: window-extras-split-if-unsplit
-The command ~window-extras-split-if-unsplit~ checks if the current frame contains only one window. If so, it splits the window horizontally using =split-window-right=. If the frame's width exceeds ~window-extras-frame-split-width-threshold~ and there are only two windows after the initial split, it splits again to create a third window and then balances the window sizes using =balance-windows=.
+The command ~window-extras-split-if-unsplit~ ensures the frame has at least two windows. If the frame contains only one window, it splits horizontally with ~split-window-right~. If the resulting frame width exceeds ~window-extras-frame-split-width-threshold~ ([[#h:window-extras-frame-split-width-threshold][User options]]) and there are still only two windows, it splits again to create a third and balances all window sizes.
 
-** Swap Buffers
+This command is called internally by the buffer movement commands ([[#h:buffer-movement][Buffer movement]]) to ensure there is always a target window available.
+
+** Buffer movement
 :PROPERTIES:
-:CUSTOM_ID: h:window-extras-buffer-swap
+:CUSTOM_ID: h:buffer-movement
 :END:
 
 #+findex: window-extras-buffer-swap
-The command ~window-extras-buffer-swap~ swaps the buffer displayed in the current window with the buffer displayed in the most recently selected window (obtained via ~window-extras-get-last-window~). If there is only one window, it first calls ~window-extras-split-if-unsplit~ to create another window.
-
-** Move Buffer Right
-:PROPERTIES:
-:CUSTOM_ID: h:window-extras-buffer-move-right
-:END:
-
 #+findex: window-extras-buffer-move-right
-The command ~window-extras-buffer-move-right~ moves the current buffer to the window immediately to the right. If no window exists to the right, it creates one by splitting the current window vertically. The buffer previously in the target window (or the alternate buffer if a new window was created) is moved to the current window. It uses ~window-extras-buffer-move~ internally.
-
-** Move Buffer Left
-:PROPERTIES:
-:CUSTOM_ID: h:window-extras-buffer-move-left
-:END:
-
 #+findex: window-extras-buffer-move-left
-The command ~window-extras-buffer-move-left~ moves the current buffer to the window immediately to the left. If no window exists to the left, it creates one by splitting the current window vertically (using =split-window-right=, but focus logic ensures the left window is the target). The buffer previously in the target window (or the alternate buffer if a new window was created) is moved to the current window. It uses ~window-extras-buffer-move~ internally.
+The command ~window-extras-buffer-swap~ exchanges the buffer in the current window with the buffer in the most recently used window. If there is only one window, it first splits the frame via ~window-extras-split-if-unsplit~ ([[#h:split-if-unsplit][Splitting]]). This is useful when you realize two buffers would be more productive in each other's position.
 
-** Switch to Minibuffer Window
+The command ~window-extras-buffer-move-right~ moves the current buffer to the window immediately to the right, replacing the current window's buffer with the alternate buffer (from =files-extras.el=). If no window exists to the right, it creates one by splitting. Focus follows the buffer to the right window.
+
+The command ~window-extras-buffer-move-left~ does the same leftward. When there is only one window, it splits the frame and leaves focus on the left window (which now shows the alternate buffer, with the original buffer having moved right). This difference from ~window-extras-buffer-move-right~ ensures that the user's focus matches the expected position.
+
+All three commands use the internal function ~window-extras--move-or-swap~ for the actual buffer placement and ~window-extras--remove-buffer-from-window-history~ to clean up the source window's buffer history, preventing the moved buffer from reappearing unexpectedly.
+
+** Special window access
 :PROPERTIES:
-:CUSTOM_ID: h:window-extras-switch-to-minibuffer-window
+:CUSTOM_ID: h:special-windows
 :END:
 
 #+findex: window-extras-switch-to-minibuffer-window
-The command ~window-extras-switch-to-minibuffer-window~ checks if the minibuffer window is currently active. If it is, this command selects the minibuffer window and sets the input focus to its frame.
+#+findex: window-extras-select-side-window
+The command ~window-extras-switch-to-minibuffer-window~ switches focus to the active minibuffer window. This is useful when a minibuffer prompt is waiting for input but you have navigated away from it. If no minibuffer is active, the command does nothing.
 
-** Select Side Window
+The command ~window-extras-select-side-window~ prompts for a side (="left"= or ="right"=) and selects the window furthest in that direction, ignoring the minibuffer. This provides a quick way to jump to the edge of a multi-window layout without counting windows.
+
+* Functions
 :PROPERTIES:
-:CUSTOM_ID: h:window-extras-select-side-window
+:CUSTOM_ID: h:functions
 :END:
 
-#+findex: window-extras-select-side-window
-The command ~window-extras-select-side-window~ prompts the user to enter "left" or "right". It then selects the window that is furthest to the specified side within the current frame, ignoring the minibuffer.
-
-* Utility Functions
+** Utility functions
 :PROPERTIES:
 :CUSTOM_ID: h:utility-functions
 :END:
 
-These functions provide helper functionalities used by other commands or for programmatic use.
+#+findex: window-extras-get-last-window
+#+findex: window-extras-buffer-move
+#+findex: window-extras-frame-is-maximized-p
+The function ~window-extras-get-last-window~ returns the most recently selected window in the current frame. If the minibuffer is active and the current buffer is not a minibuffer, it returns the minibuffer window. Otherwise, it uses ~get-mru-window~ to find the most recently used non-current window. This function underpins ~window-extras-switch-to-last-window~ ([[#h:switch-to-last-window][Switching to the last window]]) and the buffer movement commands.
 
-- ~window-extras-get-last-window~: Returns the window object representing the most recently selected window in the current frame, potentially including the minibuffer.
-- ~window-extras-buffer-move~: Moves the current buffer to a specified TARGET-WINDOW, replacing the buffer in the current window with the alternate buffer (obtained via =files-extras-get-alternate-buffer=). If TARGET-WINDOW is nil or the same as the last/current window, it uses the last window as the target. It handles splitting if necessary and ensures the moved buffer is removed from the source window's history.
-- ~window-extras--move-or-swap~: The core internal function implementing the logic for both moving and swapping buffers between windows. It determines the source and target windows and uses =set-window-buffer= to place the correct buffers.
-- ~window-extras--remove-buffer-from-window-history~: Removes a specific BUFFER from a WINDOW's previous and next buffer lists to prevent it from reappearing unexpectedly after being moved or killed.
-- ~window-extras--get-target-and-source-windows~: Determines the appropriate target and source window objects based on the desired TARGET-WINDOW and the currently selected window.
-- ~window-extras-frame-is-maximized-p~: Returns non-nil if the current frame's pixel dimensions match the display's pixel dimensions, indicating it is maximized.
+The function ~window-extras-buffer-move~ moves the current buffer to a specified TARGET-WINDOW, replacing the current window's buffer with the alternate buffer from ~files-extras-get-alternate-buffer~. It handles window creation and history cleanup. It is used by ~window-extras-buffer-move-right~ and ~window-extras-buffer-move-left~ ([[#h:buffer-movement][Buffer movement]]).
+
+The predicate ~window-extras-frame-is-maximized-p~ returns non-nil when the current frame's pixel dimensions match the display's pixel dimensions, indicating that the frame occupies the full screen.
 
 * Indices
 :PROPERTIES:

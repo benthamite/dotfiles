@@ -1,91 +1,131 @@
-#+title: ace-link-extras: Extensions for ace-link
+#+title: avy-extras: Extensions for avy
 #+author: Pablo Stafforini
 #+email: pablo@stafforini.com
 #+language: en
 #+options: ':t toc:t author:t email:t num:t
 #+startup: content
-#+export_file_name: ace-link-extras.info
-#+texinfo_filename: ace-link-extras.info
+#+export_file_name: avy-extras.info
+#+texinfo_filename: avy-extras.info
 #+texinfo_dir_category: Emacs misc features
-#+texinfo_dir_title: Ace Link Extras: (ace-link-extras)
-#+texinfo_dir_desc: Extensions for ace-link
+#+texinfo_dir_title: Avy Extras: (avy-extras)
+#+texinfo_dir_desc: Extensions for avy
 
-This manual describes the features and customization options for the Emacs Lisp file =ace-link-extras.el=.
+This manual describes the features and customization options for the Emacs Lisp file =avy-extras.el=.
 
 * Overview
 :PROPERTIES:
 :CUSTOM_ID: h:overview
 :END:
 
-=ace-link-extras.el= provides extensions for the =ace-link= package, which allows jumping to links in various contexts using =avy=. These extensions tailor =ace-link='s behavior for specific modes like =mu4e=, =eww=, and =org-roam=, and provide additional actions.
+=avy-extras.el= extends =avy=, the package that lets you jump to visible text in Emacs buffers using short character sequences. While =avy= provides general-purpose jumping commands, it does not include line-scoped word jumping, end-of-line targeting, or mode-specific "jump and act" commands.
 
-The main features include:
+This package provides three groups of extensions:
 
-- Conditional link opening in =mu4e= based on the HTML renderer being used (=w3m= or other).
-- Commands to open links in =eww= using the secondary browser or in a new buffer.
-- A command to open links specifically within =org-roam-mode= buffers.
-- Handling for opening links selected via =ace-link= in external applications or new buffers.
+- Word-jumping commands restricted to the current visual line, with variants for the whole line, behind point, or ahead of point ([[#h:word-jumping-in-line][Word jumping in line]]).
+- End-of-line jumping commands for lines above or below the cursor ([[#h:end-of-line-jumping][End-of-line jumping]]).
+- Mode-specific commands that combine ~avy-goto-line~ with an action in Dired, Ebib, mu4e, Telega, and Elfeed ([[#h:mode-specific-jumping][Mode-specific jumping]]).
+- Character-based jumping commands inspired by Vim's =f= motion, with repeatable search via timeout ([[#h:character-jumping][Character jumping]]).
+
+The package depends on =el-patch= and =use-package-extras=.
+
+* User options
+:PROPERTIES:
+:CUSTOM_ID: h:user-options
+:END:
+
+** ~avy-extras-goto-char-timeout~
+:PROPERTIES:
+:CUSTOM_ID: h:avy-extras-goto-char-timeout
+:END:
+
+#+vindex: avy-extras-goto-char-timeout
+The user option ~avy-extras-goto-char-timeout~ controls how long the character jumping commands ([[#h:character-jumping][Character jumping]]) wait for a repeated keypress before exiting. If the same key is not pressed within this number of seconds, the search stops and the next keypress is treated as a normal command.
+
+The default value is ~1~ (one second). A higher value gives you more time to decide whether to continue jumping; a lower value makes the command feel snappier but requires faster key presses.
+
+The type is a number (integer or float).
 
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
 :END:
 
-=ace-link-extras.el= provides the following interactive commands:
-
-** Open link in mu4e conditionally
+** Word jumping in line
 :PROPERTIES:
-:CUSTOM_ID: h:ace-link-extras-mu4e
+:CUSTOM_ID: h:word-jumping-in-line
 :END:
 
-#+findex: ace-link-extras-mu4e
-The command ~ace-link-extras-mu4e~ opens a visible link within a =mu4e-view-mode= buffer. Its behavior adapts based on the value of the variable ~mm-text-html-renderer~:
+#+findex: avy-extras-goto-word-in-line
+#+findex: avy-extras-goto-word-in-line-behind
+#+findex: avy-extras-goto-word-in-line-ahead
+When editing prose or code, you often want to jump to a nearby word on the same line without being overwhelmed by candidates from the entire visible window. Three commands restrict ~avy-goto-word-0~ to the current visual line:
 
-- If ~mm-text-html-renderer~ is set to =w3m=, it uses ~ace-link--w3m-collect~ to gather URLs. It then extracts the selected URL using ~ace-link-extras-w3m-get-url~ and opens it using the standard ~browse-url~ function (respecting ~browse-url-handlers~).
-- Otherwise, it falls back to the default ~ace-link-mu4e~ behavior.
+- ~avy-extras-goto-word-in-line~ offers candidates across the entire visual line, from its beginning to its end.
+- ~avy-extras-goto-word-in-line-behind~ offers candidates only between the beginning of the visual line and point. This is useful when you need to jump backward to fix a typo earlier on the same line.
+- ~avy-extras-goto-word-in-line-ahead~ offers candidates only between point and the end of the visual line.
 
-This allows users who render HTML emails with =w3m= to still open links in their preferred browser (like =eww= or an external one) rather than being forced to use =w3m= for browsing.
+All three commands use ~avy-goto-word-0~ internally, so they respect your =avy= style and key settings.
 
-** Open link in EWW externally
+** End-of-line jumping
 :PROPERTIES:
-:CUSTOM_ID: h:ace-link-extras-eww-externally
+:CUSTOM_ID: h:end-of-line-jumping
 :END:
 
-#+findex: ace-link-extras-eww-externally
-The command ~ace-link-extras-eww-externally~ uses =ace-link-eww= to select a link in an =eww= buffer and then opens it using the browser specified by ~browse-url-secondary-browser-function~. This is achieved by passing a prefix argument of =(4)= to ~ace-link-eww~ internally.
+#+findex: avy-extras-goto-end-of-line-above
+#+findex: avy-extras-goto-end-of-line-below
+Sometimes you want to append text at the end of a nearby line. These commands combine ~avy-goto-line-above~ or ~avy-goto-line-below~ with a subsequent ~end-of-line~ call:
 
-** Open link in EWW in a new buffer
+- ~avy-extras-goto-end-of-line-above~ jumps to a visible line above the cursor and moves point to its end.
+- ~avy-extras-goto-end-of-line-below~ jumps to a visible line below the cursor and moves point to its end.
+
+Both accept optional OFFSET and BOTTOM-UP arguments, which control the distance between the closest avy candidate and the cursor and the display order of candidates, respectively.
+
+** Mode-specific jumping
 :PROPERTIES:
-:CUSTOM_ID: h:ace-link-extras-eww-new-buffer
+:CUSTOM_ID: h:mode-specific-jumping
 :END:
 
-#+findex: ace-link-extras-eww-new-buffer
-The command ~ace-link-extras-eww-new-buffer~ uses =ace-link-eww= to select a link in an =eww= buffer and then opens it in a new =eww= buffer. This is achieved by passing a prefix argument of =(16)= to ~ace-link-eww~ internally.
+#+findex: avy-extras-dired-find-file
+#+findex: avy-extras-ebib-view-entry
+#+findex: avy-extras-headers-view-message
+#+findex: avy-extras-telega-view-message
+#+findex: avy-extras-elfeed-search-show-entry
+Several Emacs modes display lists of items (files, bibliography entries, email messages, chat messages, feed entries) where you select an item by moving to its line and pressing a key. These commands combine line selection and action into a single step:
 
-** Open link in Org Roam
+- ~avy-extras-dired-find-file~ jumps to a line in a Dired buffer and visits the file or directory on that line (via ~dired-find-alternate-file~, which reuses the current buffer).
+- ~avy-extras-ebib-view-entry~ jumps to a line in an Ebib index buffer and opens the entry for editing (via ~ebib-edit-entry~).
+- ~avy-extras-headers-view-message~ jumps to a line in a mu4e headers buffer and views the message (via ~mu4e-headers-view-message~).
+- ~avy-extras-telega-view-message~ jumps to a line in a Telega chat list and opens the chat (via ~push-button~).
+- ~avy-extras-elfeed-search-show-entry~ jumps to a line in an Elfeed search buffer and displays the entry (via ~elfeed-search-show-entry~).
+
+** Character jumping
 :PROPERTIES:
-:CUSTOM_ID: h:ace-link-extras-org-roam
+:CUSTOM_ID: h:character-jumping
 :END:
 
-#+findex: ace-link-extras-org-roam
-The command ~ace-link-extras-org-roam~ is specifically designed for =org-roam-mode= buffers. It uses =ace-link-org= to collect and select an Org link within the buffer. Once a link is selected via =avy=, it calls ~ace-link-extras--org-roam-action~ to visit the target, potentially using =org-roam-preview-visit=.
+#+findex: avy-extras-goto-char-forward
+#+findex: avy-extras-goto-char-backward
+These commands provide Vim-style =f= and =F= motions: they prompt for a character and immediately jump to its first occurrence in the specified direction. Unlike =avy-goto-char=, which displays overlay hints for all visible occurrences, these commands jump directly to the nearest match and then allow you to repeat the jump by pressing the same key again.
 
-* Internal Functions (for reference)
+- ~avy-extras-goto-char-forward~ prompts for a character and jumps forward to its first occurrence. Pressing the same character again within the timeout period ([[#h:avy-extras-goto-char-timeout][~avy-extras-goto-char-timeout~]]) advances to the next occurrence. Pressing a different key or waiting for the timeout exits the search and processes the key normally.
+- ~avy-extras-goto-char-backward~ works the same way but searches backward.
+
+The last character used is stored in the variable ~avy-extras-last-char~.
+
+* Functions
 :PROPERTIES:
-:CUSTOM_ID: h:internal-functions
+:CUSTOM_ID: h:functions
 :END:
 
-These functions are used internally by the main commands but are not typically called directly by the user.
-
-- ~ace-link-extras-w3m-get-url~: Called by ~ace-link-extras-mu4e~ when using =w3m= renderer. It uses =avy= to select a link collected by ~ace-link--w3m-collect~ and returns the URL string associated with the selected link's text properties.
-- ~ace-link-extras--org-roam-action~: Called by ~ace-link-extras-org-roam~ after a link is selected. It takes the point (PT) returned by =avy=, moves the cursor there, and then calls =org-roam-preview-visit= interactively to navigate to the link target within the Org Roam context.
-
-* Patched Functions (Informational)
+** Region marking action
 :PROPERTIES:
-:CUSTOM_ID: h:patched-functions
+:CUSTOM_ID: h:region-marking
 :END:
 
-The file contains commented-out code attempting to patch ~ace-link--mu4e-action~. The goal was likely to update calls to potentially obsolete =mu4e= functions. However, as noted in the comments within the code, the patch was deemed unnecessary or problematic and is currently inactive.
+#+findex: avy-extras-action-mark-to-char
+The function ~avy-extras-action-mark-to-char~ is an avy action function that activates the mark and moves point to the selected position, effectively creating a region from the original point to the avy target. This is useful as a custom avy action for selecting text between two positions.
+
+This function is adapted from Karthink's "Avy can do anything" guide.
 
 * Indices
 :PROPERTIES:

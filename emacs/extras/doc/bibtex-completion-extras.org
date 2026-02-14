@@ -17,26 +17,49 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=bibtex-completion-extras.el= provides a minor extension for the =bibtex-completion= package, which facilitates inserting citations and bibliographies. The primary purpose of this extension is to disable the automatic file-watching feature of =bibtex-completion=.
+=bibtex-completion-extras.el= provides a targeted extension for the
+=bibtex-completion= package, which underlies bibliography completion
+interfaces such as =ivy-bibtex= and =helm-bibtex=.  It depends on
+=el-patch= for modifying the initialization function.
 
-* Patched Functions
+The sole purpose of this package is to disable the automatic file
+watching that =bibtex-completion= sets up during initialization.  By
+default, =bibtex-completion= uses ~file-notify-add-watch~ to monitor
+bibliography files and automatically reload them when changes are
+detected.  This can cause performance issues with large bibliography
+files or on systems where file notification events are frequent.
+
+By removing the file-watching code, this package trades automatic
+reloading for manual control.  The bibliography data can still be
+refreshed on demand by calling ~bibtex-completion-clear-cache~ followed
+by any completion command, or simply by restarting Emacs.
+
+* Patched functions
 :PROPERTIES:
 :CUSTOM_ID: h:patched-functions
 :END:
 
-=bibtex-completion-extras.el= modifies the behavior of one standard =bibtex-completion= function using =el-patch=:
-
-** Disable File Watching in Initialization
+** Initialization without file watching
 :PROPERTIES:
-:CUSTOM_ID: h:bibtex-completion-init-patch
+:CUSTOM_ID: h:init-patch
 :END:
 
 #+findex: bibtex-completion-init
-The original ~bibtex-completion-init~ function is patched to remove the code responsible for setting up file watches on the bibliography files specified in ~bibtex-completion-bibliography~.
+The function ~bibtex-completion-init~ is patched using =el-patch= to
+remove the block of code that sets up file watches on bibliography
+files.  The original function iterates over all files returned by
+~bibtex-completion-normalize-bibliography~, verifies they exist, and
+adds a ~file-notify-add-watch~ for each one.  The patched version skips
+this entire loop.
 
-The original function would normally add watches using ~file-notify-add-watch~ to automatically reload the bibliography data when the underlying BibTeX files change. This patch disables that behavior.
+The rest of the initialization---removing old watch descriptors and
+pre-calculating display format widths---is preserved unchanged.  This
+means existing watches from a previous initialization are still cleaned
+up properly, and the completion display continues to work as expected.
 
-*Rationale:* Disabling file watching might be desirable in setups where bibliography files are large or numerous, and the overhead of file watching is noticeable, or if the user prefers to manually refresh the bibliography data when needed.
+The patch is applied at load time using =el-patch-defun=.  If you later
+need to re-enable file watching, you can call the original function via
+=el-patch-unpatch= or simply unload this package.
 
 * Indices
 :PROPERTIES:

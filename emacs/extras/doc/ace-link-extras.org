@@ -17,75 +17,64 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=ace-link-extras.el= provides extensions for the =ace-link= package, which allows jumping to links in various contexts using =avy=. These extensions tailor =ace-link='s behavior for specific modes like =mu4e=, =eww=, and =org-roam=, and provide additional actions.
+=ace-link-extras.el= extends =ace-link=, the package that uses =avy= to let you jump to and open visible links with a few keystrokes. While =ace-link= provides mode-specific commands for common contexts (Org, EWW, Info, etc.), it does not handle all the ways links may appear---for example, HTML emails rendered by =w3m=, or the backlink sidebar of =org-roam=.
 
-The main features include:
+This package adds commands for four contexts:
 
-- Conditional link opening in =mu4e= based on the HTML renderer being used (=w3m= or other).
-- Commands to open links in =eww= using the secondary browser or in a new buffer.
-- A command to open links specifically within =org-roam-mode= buffers.
-- Handling for opening links selected via =ace-link= in external applications or new buffers.
+- Opening links in =mu4e= message buffers, with special handling for the =w3m= HTML renderer ([[#h:mu4e-link-opening][mu4e link opening]]).
+- Opening EWW links in an external browser or a new buffer ([[#h:eww-link-actions][EWW link actions]]).
+- Following links in =org-roam-mode= backlink buffers ([[#h:org-roam-link-following][Org-roam link following]]).
 
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
 :END:
 
-=ace-link-extras.el= provides the following interactive commands:
-
-** Open link in mu4e conditionally
+** mu4e link opening
 :PROPERTIES:
-:CUSTOM_ID: h:ace-link-extras-mu4e
+:CUSTOM_ID: h:mu4e-link-opening
 :END:
 
 #+findex: ace-link-extras-mu4e
-The command ~ace-link-extras-mu4e~ opens a visible link within a =mu4e-view-mode= buffer. Its behavior adapts based on the value of the variable ~mm-text-html-renderer~:
+When reading email in =mu4e-view-mode=, the standard ~ace-link-mu4e~ command works well for most HTML renderers. However, if ~mm-text-html-renderer~ is set to ~w3m~, the link collection mechanism differs: links are stored as =w3m= text properties rather than =shr= overlays.
 
-- If ~mm-text-html-renderer~ is set to =w3m=, it uses ~ace-link--w3m-collect~ to gather URLs. It then extracts the selected URL using ~ace-link-extras-w3m-get-url~ and opens it using the standard ~browse-url~ function (respecting ~browse-url-handlers~).
-- Otherwise, it falls back to the default ~ace-link-mu4e~ behavior.
+The command ~ace-link-extras-mu4e~ detects which renderer is active and adapts accordingly. When =w3m= is the renderer, it collects links using ~ace-link--w3m-collect~, lets you select one via =avy=, and then opens the selected URL with ~browse-url~. This means the link is opened according to your ~browse-url-handlers~ configuration (which may route it to =eww=, Chrome, Firefox, or another browser) rather than being opened inside =w3m= itself.
 
-This allows users who render HTML emails with =w3m= to still open links in their preferred browser (like =eww= or an external one) rather than being forced to use =w3m= for browsing.
+When any other renderer is active, the command falls back to the standard ~ace-link-mu4e~ behavior.
 
-** Open link in EWW externally
+** EWW link actions
 :PROPERTIES:
-:CUSTOM_ID: h:ace-link-extras-eww-externally
+:CUSTOM_ID: h:eww-link-actions
 :END:
 
 #+findex: ace-link-extras-eww-externally
-The command ~ace-link-extras-eww-externally~ uses =ace-link-eww= to select a link in an =eww= buffer and then opens it using the browser specified by ~browse-url-secondary-browser-function~. This is achieved by passing a prefix argument of =(4)= to ~ace-link-eww~ internally.
-
-** Open link in EWW in a new buffer
-:PROPERTIES:
-:CUSTOM_ID: h:ace-link-extras-eww-new-buffer
-:END:
-
 #+findex: ace-link-extras-eww-new-buffer
-The command ~ace-link-extras-eww-new-buffer~ uses =ace-link-eww= to select a link in an =eww= buffer and then opens it in a new =eww= buffer. This is achieved by passing a prefix argument of =(16)= to ~ace-link-eww~ internally.
+The standard ~ace-link-eww~ command opens the selected link in the current =eww= buffer. Two additional commands provide alternative targets:
 
-** Open link in Org Roam
+- ~ace-link-extras-eww-externally~ opens the selected link using the browser specified by ~browse-url-secondary-browser-function~. Internally, it passes a prefix argument of =(4)= to ~ace-link-eww~. Use this when you want to view a page in a full graphical browser without leaving your =eww= session.
+
+- ~ace-link-extras-eww-new-buffer~ opens the selected link in a new =eww= buffer, preserving the current page. Internally, it passes a prefix argument of =(16)= to ~ace-link-eww~. This is useful when you want to keep multiple pages open for comparison.
+
+** Org-roam link following
 :PROPERTIES:
-:CUSTOM_ID: h:ace-link-extras-org-roam
+:CUSTOM_ID: h:org-roam-link-following
 :END:
 
 #+findex: ace-link-extras-org-roam
-The command ~ace-link-extras-org-roam~ is specifically designed for =org-roam-mode= buffers. It uses =ace-link-org= to collect and select an Org link within the buffer. Once a link is selected via =avy=, it calls ~ace-link-extras--org-roam-action~ to visit the target, potentially using =org-roam-preview-visit=.
+The =org-roam= backlink sidebar (=org-roam-mode= buffers) displays Org links that are not in a standard Org buffer, so ~ace-link-org~ alone does not handle the navigation correctly. The command ~ace-link-extras-org-roam~ uses ~ace-link--org-collect~ to gather link positions and =avy= to let you select one, then calls ~org-roam-preview-visit~ to navigate to the linked node.
 
-* Internal Functions (for reference)
+* Functions
 :PROPERTIES:
-:CUSTOM_ID: h:internal-functions
+:CUSTOM_ID: h:functions
 :END:
 
-These functions are used internally by the main commands but are not typically called directly by the user.
-
-- ~ace-link-extras-w3m-get-url~: Called by ~ace-link-extras-mu4e~ when using =w3m= renderer. It uses =avy= to select a link collected by ~ace-link--w3m-collect~ and returns the URL string associated with the selected link's text properties.
-- ~ace-link-extras--org-roam-action~: Called by ~ace-link-extras-org-roam~ after a link is selected. It takes the point (PT) returned by =avy=, moves the cursor there, and then calls =org-roam-preview-visit= interactively to navigate to the link target within the Org Roam context.
-
-* Patched Functions (Informational)
+** Link extraction
 :PROPERTIES:
-:CUSTOM_ID: h:patched-functions
+:CUSTOM_ID: h:link-extraction
 :END:
 
-The file contains commented-out code attempting to patch ~ace-link--mu4e-action~. The goal was likely to update calls to potentially obsolete =mu4e= functions. However, as noted in the comments within the code, the patch was deemed unnecessary or problematic and is currently inactive.
+#+findex: ace-link-extras-w3m-get-url
+The function ~ace-link-extras-w3m-get-url~ extracts a URL from a =w3m=-rendered buffer. It uses =avy= to let you select a link from those collected by ~ace-link--w3m-collect~, then returns the URL string from the =w3m-href-anchor= text property at the selected position. This function is called internally by ~ace-link-extras-mu4e~ ([[#h:mu4e-link-opening][mu4e link opening]]).
 
 * Indices
 :PROPERTIES:

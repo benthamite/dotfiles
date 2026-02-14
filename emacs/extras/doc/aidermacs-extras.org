@@ -17,74 +17,110 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=aidermacs-extras.el= provides extensions for the =aidermacs= package, which integrates the Aider AI coding assistant with Emacs. These extensions focus on interacting with the Aider chat history file (=.aider.chat.history.md=) and managing the Aidermacs process.
+=aidermacs-extras.el= extends the =aidermacs= package, which
+integrates the Aider AI coding assistant into Emacs.  While
+=aidermacs= itself handles running Aider sessions and sending prompts,
+this extension focuses on the surrounding workflow: extracting useful
+information from the chat history, managing the Aider process
+lifecycle, and launching Aider sessions with sensible defaults.
 
-The main features include:
+The main capabilities are:
 
-- Commands to copy portions of the Aider chat history to the kill ring.
-- A function to confirm before killing an Aidermacs buffer with a running process.
+- Copying recent or selected portions of the Aider chat history to the
+  kill ring for reference or sharing ([[#h:chat-history][Chat history commands]]).
+- Preventing accidental termination of active Aider sessions
+  ([[#h:process-management][Process management]]).
+- Saving the repository map to a file for inspection
+  ([[#h:repository-map][Repository map]]).
+- Launching Aider in the current directory with the current file
+  pre-loaded ([[#h:launching-aider][Launching Aider]]).
 
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
 :END:
 
-=aidermacs-extras.el= provides the following interactive commands:
-
-** Copy Recent Chat History
+** Chat history
 :PROPERTIES:
-:CUSTOM_ID: h:aidermacs-extras-copy-recent-history-to-kill-ring
+:CUSTOM_ID: h:chat-history
 :END:
 
 #+findex: aidermacs-extras-copy-recent-history-to-kill-ring
-The command ~aidermacs-extras-copy-recent-history-to-kill-ring~ copies the last N lines of the =.aider.chat.history.md= file (located in the project root) to the Emacs kill ring.
+After a long Aider session you may want to review or share the most
+recent exchanges.  The command
+~aidermacs-extras-copy-recent-history-to-kill-ring~ copies the last N
+lines of the =.aider.chat.history.md= file (located in the project
+root) to the kill ring.  By default N is 1000; with a prefix argument
+(e.g., =C-u 500=) you can specify a different count.
 
-By default, it copies the last 1000 lines. With an optional prefix argument (e.g., =C-u 500=), the user can specify the number of lines to copy.
-
-This command uses the external =tail= command for efficiency, avoiding loading potentially large history files into an Emacs buffer. It messages the user if the history file is not found or if the copy was successful.
-
-** Copy Prompt Region from History
-:PROPERTIES:
-:CUSTOM_ID: h:aidermacs-extras-copy-prompt-region
-:END:
+The command uses the external =tail= utility rather than loading the
+file into an Emacs buffer, which keeps it fast even when the history
+file is very large.
 
 #+findex: aidermacs-extras-copy-prompt-region
-The command ~aidermacs-extras-copy-prompt-region~ allows the user to copy a specific section of the Aider chat history buffer, defined by selecting start and end prompt blocks.
+When you need a specific stretch of the conversation rather than the
+tail end, use ~aidermacs-extras-copy-prompt-region~.  This command
+scans the current buffer---expected to be the
+=.aider.chat.history.md= file---for Aider prompt blocks (lines
+beginning with =#### =) and prompts you to select a start block and
+an end block via minibuffer completion.
 
-Aider prompt blocks are identified by lines starting with =#### =. The command works as follows:
+The copied region spans from the beginning of the start block to the
+beginning of the block /after/ the end block (or to the end of the
+buffer if the end block is the last one).  Pressing =RET= without
+selecting an end block copies everything from the start block to the
+end of the buffer.  The text is placed in the kill ring.
 
-1.  It scans the current buffer (expected to be the =.aider.chat.history.md= file) and identifies all prompt blocks.
-2.  It prompts the user (using minibuffer completion) to select the *first line* of the desired *start* prompt block.
-3.  It prompts the user (using minibuffer completion) to select the *first line* of the desired *end* prompt block.
-    - If the user presses =RET= at the end prompt without selecting anything, the copy region extends to the end of the buffer.
-4.  It copies the text from the beginning of the selected start prompt block up to the beginning of the prompt block *immediately following* the selected end prompt block (or to the end of the buffer if the selected end block was the last one, or if the user pressed =RET= for the end prompt).
-5.  The copied text is placed in the kill ring.
-
-This command is useful for extracting specific interactions or sections from a long chat history.
-
-* Configuration Functions
+** Repository map
 :PROPERTIES:
-:CUSTOM_ID: h:configuration-functions
+:CUSTOM_ID: h:repository-map
 :END:
 
-These functions are intended for use in Emacs configuration, typically added to hooks or advice.
+#+findex: aidermacs-extras-save-repo-map
+The command ~aidermacs-extras-save-repo-map~ runs
+=aider --show-repo-map= and writes the output to =repo-map.md= in the
+project root.  This gives you a static snapshot of the repository
+structure that Aider sees, which can be useful for debugging context
+issues.  When the optional ASYNC argument is non-nil, the command runs
+asynchronously.
 
-** Confirm Killing Aidermacs Buffer
+** Launching Aider
 :PROPERTIES:
-:CUSTOM_ID: h:aidermacs-extras-confirm-kill-buffer
+:CUSTOM_ID: h:launching-aider
+:END:
+
+#+findex: aidermacs-extras-run-in-current-dir
+The command ~aidermacs-extras-run-in-current-dir~ starts an Aider
+session in the current ~default-directory~.  If invoked from a buffer
+that visits a file, the command automatically adds that file to the
+Aider session with the =--file= flag.  It also looks for an
+associated help file (via ~files-extras-get-help-file~ from
+=files-extras.el=) and, if one exists, adds it as well.  This saves
+you from having to manually specify files after launching Aider.
+
+* Functions
+:PROPERTIES:
+:CUSTOM_ID: h:functions
+:END:
+
+** Process management
+:PROPERTIES:
+:CUSTOM_ID: h:process-management
 :END:
 
 #+findex: aidermacs-extras-confirm-kill-buffer
-The function ~aidermacs-extras-confirm-kill-buffer~ is designed to be added to the ~kill-buffer-query-functions~ hook.
+The function ~aidermacs-extras-confirm-kill-buffer~ is designed to be
+added to ~kill-buffer-query-functions~.  When you attempt to kill a
+buffer, it checks whether the buffer is a =comint-mode= buffer whose
+name starts with =*aidermacs= and which has a running process.  If all
+three conditions hold, the function prompts for confirmation before
+allowing the kill.  This prevents accidental termination of an active
+Aider session---a mistake that would lose the current conversation
+state.
 
-When the user attempts to kill a buffer:
-1. It checks if the buffer's major mode is =comint-mode=.
-2. It checks if there is a running process associated with the buffer (using =term-check-proc=).
-3. It checks if the buffer name matches the pattern =\\*aidermacs*=.
-
-If all these conditions are true, it prompts the user with "Buffer has a running process. Kill anyway? ". If the user answers no (or cancels), the function returns nil, preventing the buffer from being killed. Otherwise (if the user answers yes, or if any of the initial checks fail), it returns t, allowing the buffer kill operation to proceed.
-
-This prevents accidental termination of an active Aider session.
+If the buffer is not an Aidermacs buffer or has no running process,
+the function returns ~t~ immediately and the kill proceeds without
+interruption.
 
 * Indices
 :PROPERTIES:

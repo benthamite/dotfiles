@@ -17,38 +17,39 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=org-ref-extras.el= provides extensions for the =org-ref= package, which enhances Org mode's capabilities for managing citations and bibliographies. These extensions modify the behavior of existing =org-ref= functions, primarily related to cleaning and formatting BibTeX entries obtained from external sources like ISBN lookups.
+=org-ref-extras.el= extends =org-ref=, the comprehensive citation and bibliography management package for Org mode. Rather than adding new commands, this package focuses exclusively on patching existing =org-ref= functions to fix behaviors that interfere with a particular BibTeX formatting workflow.
 
-The main features include:
+The package uses =el-patch= to make two targeted modifications:
 
-- Patches to modify =org-ref= functions:
-  + Remove automatic filling (line wrapping) after sorting BibTeX entry fields.
-  + Remove the redundant =Year= field often added by ISBN-to-BibTeX services.
+- *Disable automatic filling after sorting.* The standard ~org-ref-sort-bibtex-entry~ command calls ~bibtex-fill-entry~ after sorting, which wraps long field values. This patch removes that call, preserving the original line structure of field values ([[#h:sort-entry-patch][Sorting without filling]]).
+- *Remove redundant Year field from ISBN imports.* The ~isbn-to-bibtex~ command fetches BibTeX data from =www.ebook.de=, which often includes both a =date= and a =Year= field. The patch strips the redundant =Year= line before inserting the entry ([[#h:isbn-patch][ISBN import cleanup]]).
 
-* Patched Functions
+The package depends on =org-ref= (including =org-ref-isbn=) and =el-patch=.
+
+* Patched functions
 :PROPERTIES:
 :CUSTOM_ID: h:patched-functions
 :END:
 
-=org-ref-extras.el= modifies the behavior of standard =org-ref= and related functions using =el-patch=:
-
-** Disable Filling After Sorting BibTeX Entry
+** Sorting without filling
 :PROPERTIES:
-:CUSTOM_ID: h:org-ref-sort-bibtex-entry-patch
+:CUSTOM_ID: h:sort-entry-patch
 :END:
 
 #+findex: org-ref-sort-bibtex-entry
-The original ~org-ref-sort-bibtex-entry~ command sorts the fields within a BibTeX entry according to the order defined in ~org-ref-bibtex-sort-order~ and then calls =bibtex-fill-entry= to format and wrap the lines. This patch removes the call to =bibtex-fill-entry=, preventing the automatic line wrapping after sorting. The entry cleaning step (=bibtex-clean-entry=) remains.
+The command ~org-ref-sort-bibtex-entry~ reorders the fields within a BibTeX entry according to the precedence defined in ~org-ref-bibtex-sort-order~. In the upstream version, after sorting the fields the command calls ~bibtex-fill-entry~, which reformats every field value by wrapping long lines to fit within a fixed column width. This automatic filling can be undesirable when you want to preserve the exact formatting of field values, especially for entries with long URLs or titles that are more readable on a single line.
 
-*Rationale:* Users might prefer to control line wrapping manually or use other formatting tools, finding the automatic filling disruptive.
+The =el-patch= in =org-ref-extras.el= removes the ~bibtex-fill-entry~ call while keeping the rest of the sorting and cleaning logic intact. The entry is still cleaned by ~bibtex-clean-entry~ after sorting, which validates the entry structure without altering line breaks within field values.
 
-** Remove Redundant Year Field from ISBN Lookup
+** ISBN import cleanup
 :PROPERTIES:
-:CUSTOM_ID: h:isbn-to-bibtex-patch
+:CUSTOM_ID: h:isbn-patch
 :END:
 
 #+findex: isbn-to-bibtex
-The ~isbn-to-bibtex~ command (from =org-ref-isbn=) fetches BibTeX data for a given ISBN from an external source (like www.ebook.de). Often, these sources include both a =date= field and a separate =Year= field, which is redundant. This patch modifies ~isbn-to-bibtex~ to remove any line starting with =Year == from the fetched BibTeX entry string *before* inserting it into the bibliography file and cleaning it. This prevents the redundant =Year= field from being added.
+The command ~isbn-to-bibtex~ (from =org-ref-isbn=) fetches a BibTeX entry for a given ISBN from the =www.ebook.de= service and inserts it into a bibliography file. The fetched data frequently includes a =Year= field alongside a =date= field, creating redundancy that can confuse BibTeX processors or produce duplicate information in formatted citations.
+
+The =el-patch= in =org-ref-extras.el= adds a post-processing step that removes any line matching =Year =...= from the fetched entry string before it is inserted into the bibliography and cleaned. This ensures that only the =date= field (which is the preferred field in modern BibLaTeX usage) survives the import process. The rest of the import workflow --- including ISBN prompting from the region or kill ring, entry cleaning via ~org-ref-isbn-clean-bibtex-entry~ and ~org-ref-clean-bibtex-entry~, and saving the file --- remains unchanged.
 
 * Indices
 :PROPERTIES:

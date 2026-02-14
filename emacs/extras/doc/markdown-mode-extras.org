@@ -1,4 +1,4 @@
-#+title: markdown-mode-extras: Extensions for Markdown Mode
+#+title: markdown-mode-extras: Extensions for Markdown mode
 #+author: Pablo Stafforini
 #+email: pablo@stafforini.com
 #+language: en
@@ -8,7 +8,7 @@
 #+texinfo_filename: markdown-mode-extras.info
 #+texinfo_dir_category: Emacs misc features
 #+texinfo_dir_title: Markdown Mode Extras: (markdown-mode-extras)
-#+texinfo_dir_desc: Extensions for Markdown Mode
+#+texinfo_dir_desc: Extensions for Markdown mode
 
 This manual describes the features and customization options for the Emacs Lisp file =markdown-mode-extras.el=.
 
@@ -17,82 +17,117 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=markdown-mode-extras.el= provides extensions for Emacs' =markdown-mode=, focusing on interoperability with Org mode, section manipulation, link handling, and clipboard integration using Pandoc.
+=markdown-mode-extras.el= extends =markdown-mode= with commands for
+clipboard conversion, section manipulation, and link editing.  Much of
+the package revolves around interoperability between Markdown and Org
+mode, using Pandoc as the conversion engine.  If you frequently copy
+content between Org and Markdown files, or paste formatted text from
+the web into a Markdown buffer, these commands save considerable
+manual reformatting.
 
-The main features include:
+The main capabilities are:
 
-- A command to paste clipboard content, converting between Org and Markdown formats using Pandoc.
-- Functions to get or copy the content of a specific Markdown section.
-- Commands to manipulate Markdown links at point (delete link, remove URL while keeping description).
-- A command to paste clipboard content, converting from HTML or Org to Markdown using Pandoc.
+- *Clipboard conversion*: paste clipboard content while converting
+  between Org, Markdown, and HTML formats via Pandoc
+  ([[#h:clipboard-conversion][Clipboard conversion]]).
+- *Section operations*: extract or copy the body of the current
+  Markdown section ([[#h:section-operations][Section operations]]).
+- *Link editing*: strip the URL from a Markdown link, keeping only the
+  description text ([[#h:link-editing][Link editing]]).
 
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
 :END:
 
-=markdown-mode-extras.el= provides the following interactive commands:
-
-** Paste Org/Markdown with Conversion (DWIM)
+** Clipboard conversion
 :PROPERTIES:
-:CUSTOM_ID: h:markdown-mode-extras-org-paste-dwim
+:CUSTOM_ID: h:clipboard-conversion
 :END:
 
 #+findex: markdown-mode-extras-org-paste-dwim
-The command ~markdown-mode-extras-org-paste-dwim~ (Do What I Mean) converts clipboard content between Org mode and Markdown format using Pandoc, depending on the current buffer's major mode.
-- If the current buffer is in =markdown-mode=, it assumes the clipboard contains Org syntax and converts it *to* Markdown before pasting.
-- If the current buffer is in =org-mode=, it assumes the clipboard contains Markdown and converts it *to* Org syntax before pasting.
-It uses shell commands to pipe clipboard content (=pbv= on macOS, =xclip= otherwise) through Pandoc (=pandoc -f <source> -t <target>=). It also performs minor cleanup on the Pandoc output (removing leading =\\= and fixing spacing around ===).
+The command ~markdown-mode-extras-org-paste-dwim~ converts clipboard
+content between Org and Markdown based on the current major mode.  In
+a =markdown-mode= buffer it assumes the clipboard holds Org syntax and
+converts to Markdown; in an =org-mode= buffer it does the reverse.
+The conversion is performed by piping the system clipboard (=pbv= on
+macOS, =xclip= elsewhere) through Pandoc with =--wrap=none=.  A few
+post-processing cleanups are applied to the Pandoc output before
+yanking.
 
-** Copy Markdown Section
+#+findex: markdown-mode-extras-paste-with-conversion
+When you copy formatted text from a web page or other rich-text
+source, ~markdown-mode-extras-paste-with-conversion~ converts the
+clipboard to GitHub-Flavored Markdown (=gfm-raw_html=) and inserts the
+result.  It uses ~simple-extras-pandoc-convert~ from =simple-extras.el=
+to detect whether the clipboard contains HTML or Org and to choose the
+appropriate Pandoc input format.  For the reverse process (copying
+Markdown as formatted HTML), see ~ox-clip-formatted-copy~.
+
+** Section operations
 :PROPERTIES:
-:CUSTOM_ID: h:markdown-mode-extras-copy-section
+:CUSTOM_ID: h:section-operations
 :END:
 
 #+findex: markdown-mode-extras-copy-section
-The command ~markdown-mode-extras-copy-section~ copies the content of the Markdown section at point to the kill ring. A "section" is defined as the text under a Markdown heading (=^#+ ...=) up to the next heading of the same or higher level. It uses ~markdown-mode-extras-get-section~ internally. An optional argument SECTION (not available interactively) allows specifying a section title to copy instead of the current one.
+The command ~markdown-mode-extras-copy-section~ copies the body of the
+Markdown section at point to the kill ring and echoes it.  A "section"
+is the text between a heading (=^#+ ...=) and the next heading of the
+same or higher level.  If called with a non-nil SECTION argument
+(available only from Lisp), the command searches for the named section
+instead of using the one at point.
 
-** Remove URL from Link
+Internally, the command calls ~markdown-mode-extras-get-section~
+([[#h:get-section][Getting section content]]).
+
+** Link editing
 :PROPERTIES:
-:CUSTOM_ID: h:markdown-mode-extras-remove-url-in-link
+:CUSTOM_ID: h:link-editing
 :END:
 
 #+findex: markdown-mode-extras-remove-url-in-link
-The command ~markdown-mode-extras-remove-url-in-link~ modifies the Markdown link at point (=[description](url)=).
-- By default, it removes the URL part (=(url)=) and the surrounding square brackets, leaving only the link description text.
-- If called with a prefix argument (ARG), it removes the link structure but then prompts the user for a *new* URL and re-inserts the link with the original description and the new URL.
-It uses the helper function ~markdown-mode-extras-delete-link~.
+When editing a Markdown document you sometimes want to unlink text
+while keeping the description.  The command
+~markdown-mode-extras-remove-url-in-link~ does exactly that: with
+point inside a Markdown link (=[description](url)=), it removes the
+link markup and leaves only the description text.
 
-** Paste with Conversion (from HTML/Org)
+With a prefix argument, the command instead prompts for a /new/ URL
+and re-inserts the link with the original description and the
+replacement URL.  This is handy for updating broken or outdated links.
+
+The command uses ~markdown-mode-extras-delete-link~
+([[#h:delete-link][Deleting a link]]) to remove the original link structure.
+
+* Functions
 :PROPERTIES:
-:CUSTOM_ID: h:markdown-mode-extras-paste-with-conversion
+:CUSTOM_ID: h:functions
 :END:
 
-#+findex: markdown-mode-extras-paste-with-conversion
-The command ~markdown-mode-extras-paste-with-conversion~ converts clipboard content *to* Markdown format using Pandoc and inserts it. It attempts to detect whether the clipboard contains HTML or Org mode syntax and uses the appropriate Pandoc input format (=-f html= or =-f org=). The target format is GitHub Flavored Markdown (=-t gfm-raw_html=). It relies on the ~simple-extras-pandoc-convert~ function (presumably defined elsewhere).
-
-* Helper Functions
+** Getting section content
 :PROPERTIES:
-:CUSTOM_ID: h:helper-functions
-:END:
-
-These functions are used internally by the commands.
-
-** Get Markdown Section Content
-:PROPERTIES:
-:CUSTOM_ID: h:markdown-mode-extras-get-section
+:CUSTOM_ID: h:get-section
 :END:
 
 #+findex: markdown-mode-extras-get-section
-The function ~markdown-mode-extras-get-section~ returns the text content of a Markdown section as a string. If the optional argument SECTION (a string representing the heading text) is provided, it searches for that section. Otherwise, it finds the section containing the current point. It navigates using Markdown outline commands (=markdown-outline-previous=, =markdown-outline-next=) to determine the section boundaries.
+The function ~markdown-mode-extras-get-section~ returns the body of a
+Markdown section as a string.  If the optional SECTION argument (a
+heading title) is provided, the function searches the buffer for that
+heading; otherwise it uses the section containing point.  Section
+boundaries are determined by ~markdown-outline-previous~ and
+~markdown-outline-next~.
 
-** Delete Link at Point
+** Deleting a link
 :PROPERTIES:
-:CUSTOM_ID: h:markdown-mode-extras-delete-link
+:CUSTOM_ID: h:delete-link
 :END:
 
 #+findex: markdown-mode-extras-delete-link
-The function ~markdown-mode-extras-delete-link~ finds the Markdown link at the current point (using =markdown-link-at-pos=), deletes the entire link syntax (=[description](url)=) from the buffer, and returns the link's description text.
+The function ~markdown-mode-extras-delete-link~ removes the entire
+Markdown link at point (=[description](url)=) from the buffer and
+returns the link's description text.  It uses ~markdown-link-at-pos~
+to locate the link boundaries.  This function is used by
+~markdown-mode-extras-remove-url-in-link~ ([[#h:link-editing][Link editing]]).
 
 * Indices
 :PROPERTIES:

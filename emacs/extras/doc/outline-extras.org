@@ -1,4 +1,4 @@
-#+title: outline-extras: Extensions for Outline Mode
+#+title: outline-extras: Extensions for outline
 #+author: Pablo Stafforini
 #+email: pablo@stafforini.com
 #+language: en
@@ -8,7 +8,7 @@
 #+texinfo_filename: outline-extras.info
 #+texinfo_dir_category: Emacs misc features
 #+texinfo_dir_title: Outline Extras: (outline-extras)
-#+texinfo_dir_desc: Extensions for Outline Mode
+#+texinfo_dir_desc: Extensions for outline
 
 This manual describes the features and customization options for the Emacs Lisp file =outline-extras.el=.
 
@@ -17,34 +17,27 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=outline-extras.el= provides minor extensions for Emacs' built-in =outline-mode= and modes derived from it (like =org-mode=). These extensions offer slightly modified commands for promoting and demoting headings.
+=outline-extras.el= extends the built-in =outline= library with improved heading promotion and demotion commands. The built-in ~outline-promote~ and ~outline-demote~ commands, when called with a prefix argument, operate on the entire subtree but leave point at an unintuitive position afterward. The commands in this package wrap those operations so that point reliably returns to the heading line you just modified, making repeated promotions and demotions smoother.
 
-The main features include:
-
-- Commands to promote or demote the current heading while keeping the point on the heading line.
+The package requires only =outline= itself and works in any buffer where =outline-minor-mode= or a derived mode (such as =org-mode=) is active.
 
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
 :END:
 
-=outline-extras.el= provides the following interactive commands:
-
-** Promote Heading (Keep Point)
+** Promoting and demoting headings
 :PROPERTIES:
-:CUSTOM_ID: h:outline-extras-promote-heading
+:CUSTOM_ID: h:promoting-and-demoting-headings
 :END:
 
 #+findex: outline-extras-promote-heading
-The command ~outline-extras-promote-heading~ promotes the current outline heading (e.g., decreases its level in Org mode) by calling the standard =outline-promote= command with a prefix argument of 4 (which typically corresponds to promoting by one level). Crucially, after promoting, it calls =outline-previous-heading= to move the point back to the heading line that was just promoted. This differs from the standard =outline-promote= which might leave the point at the beginning of the line below the heading.
-
-** Demote Heading (Keep Point)
-:PROPERTIES:
-:CUSTOM_ID: h:outline-extras-demote-heading
-:END:
-
 #+findex: outline-extras-demote-heading
-The command ~outline-extras-demote-heading~ demotes the current outline heading (e.g., increases its level in Org mode) by calling the standard =outline-demote= command with a prefix argument of 4. Similar to ~outline-extras-promote-heading~, it then calls =outline-previous-heading= to move the point back to the heading line that was just demoted, keeping the focus on the modified heading.
+When restructuring a document you often need to promote or demote a heading together with its subtree. The built-in commands ~outline-promote~ and ~outline-demote~ accept a prefix argument of ~C-u~ to operate on the entire subtree, but after the operation point may land on the line below the heading rather than on the heading itself. This is disorienting when you want to perform several adjustments in sequence.
+
+The command ~outline-extras-promote-heading~ promotes the current heading and its subtree by one level, then moves point back to the heading line. Similarly, ~outline-extras-demote-heading~ demotes the heading and its subtree by one level and repositions point on the heading. Both commands achieve this by calling the underlying =outline-promote= or =outline-demote= with a prefix argument of 4 and then invoking ~outline-previous-heading~ to correct the cursor position.
+
+These commands are most useful when bound to convenient keys so that you can rapidly restructure an outline without losing your place.
 
 * Indices
 :PROPERTIES:

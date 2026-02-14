@@ -1,4 +1,4 @@
-#+title: abbrev-extras: Extensions for Emacs Abbreviations
+#+title: abbrev-extras: Extensions for abbrev
 #+author: Pablo Stafforini
 #+email: pablo@stafforini.com
 #+language: en
@@ -8,7 +8,7 @@
 #+texinfo_filename: abbrev-extras.info
 #+texinfo_dir_category: Emacs misc features
 #+texinfo_dir_title: Abbrev Extras: (abbrev-extras)
-#+texinfo_dir_desc: Extensions for Emacs Abbreviations
+#+texinfo_dir_desc: Extensions for abbrev
 
 This manual describes the features and customization options for the Emacs Lisp file =abbrev-extras.el=.
 
@@ -17,81 +17,78 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=abbrev-extras.el= provides extensions for Emacs' built-in abbreviation facility (=abbrev.el=). Its primary goal is to simplify the process of adding mode-specific abbreviations interactively.
+=abbrev-extras.el= extends Emacs' built-in abbreviation facility (=abbrev.el=). The standard =add-mode-abbrev= command requires you to be in the target major mode and to have the expansion text in the buffer. This can be inconvenient when you want to define abbreviations for modes you are not currently using or when the expansion is not present in any buffer.
 
-The main features include:
+This package provides an interactive command that lets you select any major mode from a completing-read prompt and type both the abbreviation and its expansion as strings ([[#h:adding-abbreviations][Adding abbreviations]]). It also handles creating the abbrev table if it does not yet exist, and optionally persists the definitions to disk automatically ([[#h:abbrev-extras-write-file-p][~abbrev-extras-write-file-p~]]).
 
-- An interactive command to add abbreviations specific to a chosen major mode.
-- Automatic creation of the necessary abbrev table for the mode if it doesn't exist.
-- An option to automatically save the abbrev definitions to the user's abbrev file after adding a new one.
-- An interactive command to manually save the abbrev definitions.
-
-* User Options
+* User options
 :PROPERTIES:
 :CUSTOM_ID: h:user-options
 :END:
 
-This section details the user-configurable variables provided by =abbrev-extras.el=.
-
-** The ~abbrev-extras-write-file-p~ option
+** ~abbrev-extras-write-file-p~
 :PROPERTIES:
 :CUSTOM_ID: h:abbrev-extras-write-file-p
 :END:
 
 #+vindex: abbrev-extras-write-file-p
-The user option ~abbrev-extras-write-file-p~ controls whether the abbrev definitions are automatically written to the file specified by the standard Emacs variable ~abbrev-file-name~ after a new mode-specific abbrev is added using the ~abbrev-extras-add-mode-abbrev~ command.
+The user option ~abbrev-extras-write-file-p~ controls whether abbreviation definitions are automatically saved to ~abbrev-file-name~ after adding a new mode-specific abbreviation with ~abbrev-extras-add-mode-abbrev~ ([[#h:adding-abbreviations][Adding abbreviations]]).
 
-- If non-nil (the default), the abbrevs are saved automatically.
-- If nil, the abbrevs are only defined in the current Emacs session and need to be saved manually (e.g., using ~M-x write-abbrev-file~ or ~M-x abbrev-extras-write-abbrevs~).
+The default value is ~t~, meaning abbreviations are saved immediately. Set this to ~nil~ if you prefer to accumulate changes in memory and save manually with ~abbrev-extras-write-abbrevs~ ([[#h:writing-abbreviations][Writing abbreviations]]).
+
+The type is a boolean.
 
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
 :END:
 
-=abbrev-extras.el= provides the following interactive commands:
-
-** Add a mode-specific abbrev
+** Adding abbreviations
 :PROPERTIES:
-:CUSTOM_ID: h:abbrev-extras-add-mode-abbrev
+:CUSTOM_ID: h:adding-abbreviations
 :END:
 
 #+findex: abbrev-extras-add-mode-abbrev
-The command ~abbrev-extras-add-mode-abbrev~ allows the user to interactively define a new abbreviation that is specific to a particular major mode.
+The command ~abbrev-extras-add-mode-abbrev~ lets you define a mode-specific abbreviation in three steps. It prompts for:
 
-When invoked, it prompts the user for:
+1. A major mode, with completion over all functions ending in =-mode=.
+2. The abbreviation string (the short form you will type).
+3. The expansion string (the text it should expand to).
 
-1.  *Major mode:* Uses minibuffer completion to select the major mode for which the abbrev should be active. The list of candidates includes all defined functions ending in "-mode".
-2.  *Abbrev:* The abbreviation string itself (the short form).
-3.  *Expansion:* The string the abbrev should expand to (the long form).
+The command determines the correct abbrev table name by appending =-abbrev-table= to the selected mode name (for example, ~org-mode-abbrev-table~ for ~org-mode~). If that table does not yet exist, it is created automatically. The abbreviation is then defined using ~define-abbrev~.
 
-Internally, this command performs the following actions:
+When ~abbrev-extras-write-file-p~ is non-nil ([[#h:abbrev-extras-write-file-p][~abbrev-extras-write-file-p~]]), the full set of abbreviation definitions is written to ~abbrev-file-name~ immediately after adding the new entry.
 
-- It determines the correct abbrev table symbol for the selected mode (e.g., =org-mode-abbrev-table= for =org-mode=).
-- It ensures that the abbrev table exists, creating it if necessary using ~abbrev-extras-maybe-create-abbrev-table~.
-- It defines the abbreviation in the specified table using the standard ~define-abbrev~ function via the helper ~abbrev-extras-add-abbrev-to-table~.
-- If the user option ~abbrev-extras-write-file-p~ is non-nil, it automatically saves all abbrev definitions to the ~abbrev-file-name~ using ~abbrev-extras-write-abbrevs~.
-
-** Write abbrevs to file
+** Writing abbreviations
 :PROPERTIES:
-:CUSTOM_ID: h:abbrev-extras-write-abbrevs
+:CUSTOM_ID: h:writing-abbreviations
 :END:
 
 #+findex: abbrev-extras-write-abbrevs
-The command ~abbrev-extras-write-abbrevs~ provides a way to manually save all defined abbrevs (both global and mode-specific) to the file specified by the standard Emacs variable ~abbrev-file-name~.
+The command ~abbrev-extras-write-abbrevs~ saves all abbreviation definitions (both global and mode-specific) to the file specified by ~abbrev-file-name~. This is a thin wrapper around ~write-abbrev-file~ that also displays a confirmation message.
 
-This is essentially a wrapper around the built-in ~write-abbrev-file~ command, providing a potentially more discoverable command name within the =abbrev-extras=*= namespace. It is particularly useful when ~abbrev-extras-write-file-p~ is set to nil.
+Use this command when ~abbrev-extras-write-file-p~ is set to ~nil~ and you want to persist your accumulated changes, or at any time to ensure the abbrev file is up to date.
 
-* Internal Functions (for reference)
+* Functions
 :PROPERTIES:
-:CUSTOM_ID: h:internal-functions
+:CUSTOM_ID: h:functions
 :END:
 
-These functions are used internally by the main commands but are not typically called directly by the user.
+** Abbreviation table management
+:PROPERTIES:
+:CUSTOM_ID: h:table-management
+:END:
 
-- ~abbrev-extras-get-sorted-modes~: Returns a sorted list of symbols representing available major modes. Used to provide completion candidates for the mode prompt in ~abbrev-extras-add-mode-abbrev~.
-- ~abbrev-extras-add-abbrev-to-table~: Defines a given abbrev and expansion in a specified abbrev table symbol.
-- ~abbrev-extras-maybe-create-abbrev-table~: Creates an abbrev table variable if it is not already bound.
+#+findex: abbrev-extras-get-sorted-modes
+#+findex: abbrev-extras-add-abbrev-to-table
+#+findex: abbrev-extras-maybe-create-abbrev-table
+Three helper functions support the main command:
+
+- ~abbrev-extras-get-sorted-modes~ scans the obarray for all functions whose names end in =-mode= and returns a sorted list of their names. This provides the completion candidates for ~abbrev-extras-add-mode-abbrev~ ([[#h:adding-abbreviations][Adding abbreviations]]).
+
+- ~abbrev-extras-add-abbrev-to-table~ defines an abbreviation in a given table, creating the table first if needed via ~abbrev-extras-maybe-create-abbrev-table~.
+
+- ~abbrev-extras-maybe-create-abbrev-table~ checks whether a table symbol is bound and, if not, creates an empty abbrev table for it using ~define-abbrev-table~.
 
 * Indices
 :PROPERTIES:

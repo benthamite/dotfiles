@@ -1,4 +1,4 @@
-#+title: kmacro-extras: Extensions for Keyboard Macros
+#+title: kmacro-extras: Extensions for keyboard macros
 #+author: Pablo Stafforini
 #+email: pablo@stafforini.com
 #+language: en
@@ -8,7 +8,7 @@
 #+texinfo_filename: kmacro-extras.info
 #+texinfo_dir_category: Emacs misc features
 #+texinfo_dir_title: Kmacro Extras: (kmacro-extras)
-#+texinfo_dir_desc: Extensions for Keyboard Macros
+#+texinfo_dir_desc: Extensions for keyboard macros
 
 This manual describes the features and customization options for the Emacs Lisp file =kmacro-extras.el=.
 
@@ -17,31 +17,39 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=kmacro-extras.el= provides extensions for Emacs' built-in keyboard macro functionality (=kmacro.el=). It currently offers a command to toggle the format of the keyboard macro counter between numeric and alphabetical.
-
-The main features include:
-
-- A command to switch the keyboard macro counter format (=kmacro-counter-format=) and reset the counter value accordingly.
+=kmacro-extras.el= extends Emacs' built-in keyboard macro system
+(=kmacro.el=).  The stock macro counter can insert sequential numbers
+(1, 2, 3, ...) during macro execution, but switching to alphabetical
+sequences (a, b, c, ...) requires manually changing the counter format
+and resetting the counter value---two separate operations that are easy
+to forget.  This package wraps both steps into a single toggle command.
 
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
 :END:
 
-=kmacro-extras.el= provides the following interactive command:
-
-** Toggle Counter Format (Numeric/Alphabetical)
+** Toggling the counter format
 :PROPERTIES:
-:CUSTOM_ID: h:kmacro-extras-counter-toggle-alpha-number
+:CUSTOM_ID: h:counter-toggle
 :END:
 
 #+findex: kmacro-extras-counter-toggle-alpha-number
-The command ~kmacro-extras-counter-toggle-alpha-number~ switches the format used for inserting the keyboard macro counter (via =kmacro-insert-counter= or =F3= during macro execution).
+The command ~kmacro-extras-counter-toggle-alpha-number~ switches the
+keyboard macro counter between numeric and alphabetical mode:
 
-- If the current format (=kmacro-counter-format=) is numeric ("%d"), it changes the format to alphabetical ("%c") and resets the counter (=kmacro-set-counter=) to 97 (the ASCII value for 'a'). It messages "Set to alphabetical".
-- If the current format is alphabetical ("%c"), it changes the format back to numeric ("%d") and resets the counter to 1. It messages "Set to numeric".
+- When the current format is numeric (=%d=), the command sets the
+  format to =%c= (character) and resets the counter to 97, the ASCII
+  code for =a=.  Subsequent insertions via ~kmacro-insert-counter~
+  will produce =a=, =b=, =c=, and so on.
+- When the current format is alphabetical (=%c=), the command sets it
+  back to =%d= and resets the counter to 1.
 
-This allows users to easily switch between inserting numbers (1, 2, 3...) and letters (a, b, c...) using the macro counter.
+This is especially handy when you need to label items with letters in
+one macro and switch back to numbers for the next, without
+interrupting your editing flow.  A confirmation message (="Set to
+alphabetical"= or ="Set to numeric"=) is displayed in the echo area
+after each toggle.
 
 * Indices
 :PROPERTIES:

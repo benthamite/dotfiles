@@ -1,4 +1,4 @@
-#+title: doom-modeline-extras: Extensions for Doom Modeline
+#+title: doom-modeline-extras: Extensions for doom-modeline
 #+author: Pablo Stafforini
 #+email: pablo@stafforini.com
 #+language: en
@@ -8,7 +8,7 @@
 #+texinfo_filename: doom-modeline-extras.info
 #+texinfo_dir_category: Emacs misc features
 #+texinfo_dir_title: Doom Modeline Extras: (doom-modeline-extras)
-#+texinfo_dir_desc: Extensions for Doom Modeline
+#+texinfo_dir_desc: Extensions for doom-modeline
 
 This manual describes the features and customization options for the Emacs Lisp file =doom-modeline-extras.el=.
 
@@ -17,99 +17,219 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=doom-modeline-extras.el= provides extensions for the =doom-modeline= package, adding custom segments and enhancing existing functionality, particularly related to notifications.
+=doom-modeline-extras.el= extends the =doom-modeline= package with
+custom modeline segments, a dedicated modeline layout for Claude Code
+sessions, and enhanced handling of GitHub notifications.
 
-The main features include:
+The package defines several modeline segments that surface contextual
+information not provided by the standard =doom-modeline= segments:
 
-- Custom modeline segments to display:
-  + Org Roam backlink count.
-  + Tlön split mode status.
-  + AI context file count (from =gptel=).
-- Enhanced handling of GitHub notifications fetched by Doom Modeline, automatically pulling Forge notifications when the count changes.
+- A *Claude Code status* segment that displays the session name, model,
+  token count, cost, context usage percentage, lines changed, duration,
+  and cache efficiency for active Claude Code sessions.
+- An *AI context* segment showing how many files are currently in the
+  =gptel= context.
+- An *Org Roam backlinks* segment displaying the backlink count for the
+  current node.
+- A *Tlon split mode* segment indicating when ~tlon-split-mode~ is active.
+- A *Tlon paragraph* segment showing paragraph-level information from
+  ~tlon-paragraphs-mode-line-mode~.
 
-* User Options
+On the notifications side, the package hooks into Doom Modeline's GitHub
+notification fetching to automatically pull Forge notifications when new
+GitHub notifications arrive.
+
+* User options
 :PROPERTIES:
 :CUSTOM_ID: h:user-options
 :END:
 
-This section details the user-configurable variables provided by =doom-modeline-extras.el=. These options control the visibility of the custom segments.
-
-** ~doom-modeline-extras-org-roam~
+** Segment visibility
 :PROPERTIES:
-:CUSTOM_ID: h:doom-modeline-extras-org-roam
+:CUSTOM_ID: h:segment-visibility
 :END:
 
 #+vindex: doom-modeline-extras-org-roam
-If non-nil (the default), display the Org Roam backlink count segment (=org-roam-backlinks=) in the modeline when in =org-mode= and the backlink count variable (=org-roam-extras-current-backlink-count=) is available.
-
-** ~doom-modeline-extras-tlon-split~
-:PROPERTIES:
-:CUSTOM_ID: h:doom-modeline-extras-tlon-split
-:END:
-
 #+vindex: doom-modeline-extras-tlon-split
-If non-nil (the default), display the Tlön split mode segment (=tlon-split=) in the modeline when =tlon-split-mode= is active.
+#+vindex: doom-modeline-extras-ai-context
+#+vindex: doom-modeline-extras-claude-code
+The user option ~doom-modeline-extras-org-roam~ controls whether the Org
+Roam backlink count segment is displayed.  When non-~nil~ (the default),
+the backlink count appears in the modeline while visiting an Org mode
+buffer that has backlinks.  Set it to ~nil~ to hide this segment.
 
-** ~doom-modeline-extras-ai-context~
+The user option ~doom-modeline-extras-tlon-split~ controls whether the
+Tlon split mode indicator is shown.  The default value is ~t~.  When
+~tlon-split-mode~ is active and this option is non-~nil~, the word
+"split" appears in the modeline.
+
+The user option ~doom-modeline-extras-ai-context~ controls whether the
+AI context file count is displayed.  The default value is ~t~.  When
+non-~nil~ and there are files in the ~gptel-context--alist~, the count
+appears as a sparkle icon with a number.
+
+The user option ~doom-modeline-extras-claude-code~ controls whether the
+Claude Code status segment is displayed in Claude Code buffers.  The
+default value is ~t~.
+
+** Claude Code cost display
 :PROPERTIES:
-:CUSTOM_ID: h:doom-modeline-extras-ai-context
+:CUSTOM_ID: h:claude-code-cost
 :END:
 
-#+vindex: doom-modeline-extras-ai-context
-If non-nil (the default), display the AI context file count segment (=ai-context=) in the modeline when the =gptel= context list (=gptel-context--alist=) is not empty.
+#+vindex: doom-modeline-extras-claude-code-api-plan
+The user option ~doom-modeline-extras-claude-code-api-plan~ determines
+how session costs are rendered in the Claude Code modeline segment.
+When ~nil~ (the default), the package assumes a subscription plan (Free,
+Pro, or Max) and displays the cost with a strikethrough face to indicate
+that the amount is not actually charged.  When non-~nil~, it assumes an
+API plan and displays the cost normally, since the user is paying per
+token.
 
-* Modeline Segments
+The boolean type accepts ~t~ or ~nil~.  You should set this to ~t~ if
+you are using the Claude API directly rather than a subscription plan.
+
+* Modeline segments
 :PROPERTIES:
 :CUSTOM_ID: h:modeline-segments
 :END:
 
-=doom-modeline-extras.el= defines the following custom segments using ~doom-modeline-def-segment~. These can be added to the ~doom-modeline-segments~ list in your configuration.
+The segments described below are defined using
+~doom-modeline-def-segment~ and can be included in custom modeline
+layouts.
 
-** Tlön Split Mode Segment
+** Claude Code status
 :PROPERTIES:
-:CUSTOM_ID: h:tlon-split-segment
+:CUSTOM_ID: h:claude-code-status
 :END:
 
-#+vindex: tlon-split
-Displays the literal string "split" followed by a space when =tlon-split-mode= is active and ~doom-modeline-extras-tlon-split~ is non-nil.
+#+findex: doom-modeline-extras--format-claude-status
+The ~claude-code-status~ segment is the most feature-rich segment in
+this package.  It activates only in buffers recognized as Claude Code
+sessions (via ~claude-code--buffer-p~).  When session status data is
+available, it displays multiple pipe-separated fields:
 
-** Org Roam Backlinks Segment
+- *Session name*: shown in bold, extracted from the buffer name.
+- *Model*: the Claude model in use (e.g., "opus", "sonnet").
+- *Token count*: formatted compactly (e.g., "12.3k", "1.5M").
+- *Cost*: shown as a dollar amount, optionally with strikethrough on
+  subscription plans ([[#h:claude-code-cost][Claude Code cost display]]).
+- *Context usage*: shown as a percentage with color coding---green below
+  60%, yellow at 60-79%, red at 80% and above.
+- *Lines changed*: a +N/-M display with green for additions and red for
+  deletions.
+- *Duration*: elapsed session time in a compact format (e.g., "5m23s").
+- *Cache efficiency*: the ratio of cache-read tokens to total tokens,
+  color-coded (green above 80%, yellow 50-79%, red below 50%).
+- *Alert indicator*: from ~claude-code-extras-alert-indicator~.
+
+Before status data arrives, the segment displays only the session name.
+
+The formatting is handled by several internal helper functions:
+~doom-modeline-extras--format-model~,
+~doom-modeline-extras--format-tokens~,
+~doom-modeline-extras--format-cost~,
+~doom-modeline-extras--format-context-percent~,
+~doom-modeline-extras--format-lines-changed~,
+~doom-modeline-extras--format-duration~, and
+~doom-modeline-extras--format-cache-efficiency~.
+
+** Tlon segments
+:PROPERTIES:
+:CUSTOM_ID: h:tlon-segments
+:END:
+
+The ~tlon-split~ segment displays the literal string "split" when
+~tlon-split-mode~ is active and ~doom-modeline-extras-tlon-split~ is
+non-~nil~.
+
+The ~tlon-paragraph~ segment displays paragraph information from
+~tlon-paragraphs-mode-line-string~ when ~tlon-paragraphs-mode-line-mode~
+is active.
+
+** Org Roam backlinks
 :PROPERTIES:
 :CUSTOM_ID: h:org-roam-backlinks-segment
 :END:
 
-#+vindex: org-roam-backlinks
-Displays the Org Roam backlink count, formatted as "⟲(COUNT)", when in =org-mode=, ~doom-modeline-extras-org-roam~ is non-nil, and the variable =org-roam-extras-current-backlink-count= (presumably defined elsewhere) holds the count.
+The ~org-roam-backlinks~ segment displays the backlink count for the
+current Org Roam node.  It reads the buffer-local variable
+~org-roam-extras-current-backlink-count~ (managed by
+=org-roam-extras.el=) and formats the count as a recycling symbol with a
+count in parentheses.  The segment appears only in ~org-mode~ buffers
+when ~doom-modeline-extras-org-roam~ is non-~nil~.
 
-** AI Context Segment
+** AI context
 :PROPERTIES:
 :CUSTOM_ID: h:ai-context-segment
 :END:
 
-#+vindex: ai-context
-Displays the number of files currently in the =gptel= AI context list (=gptel-context--alist=), formatted as "✨(COUNT)", when ~doom-modeline-extras-ai-context~ is non-nil and the count is greater than zero.
+The ~ai-context~ segment displays the number of files currently in the
+=gptel= AI context list (~gptel-context--alist~).  It appears only when
+~doom-modeline-extras-ai-context~ is non-~nil~ and the context is
+non-empty.
 
-* Enhanced Functionality
+* Modeline definitions
 :PROPERTIES:
-:CUSTOM_ID: h:enhanced-functionality
+:CUSTOM_ID: h:modeline-definitions
 :END:
 
-** GitHub Notification Handling
+The package defines a ~claude-code~ modeline layout using
+~doom-modeline-def-modeline~.  This layout places the ~claude-code-status~
+segment on the left side (alongside the bar segment) and ~misc-info~,
+~major-mode~, ~process~, and ~time~ on the right.  It is intended for
+use in Claude Code session buffers to give a comprehensive at-a-glance
+view of the session state.
+
+* Functions
 :PROPERTIES:
-:CUSTOM_ID: h:github-notification-handling
+:CUSTOM_ID: h:functions
+:END:
+
+** GitHub notification handling
+:PROPERTIES:
+:CUSTOM_ID: h:github-notifications
 :END:
 
 #+findex: doom-modeline-extras-handle-github-notifications
-The function ~doom-modeline-extras-handle-github-notifications~ is added to the ~doom-modeline-after-github-fetch-notification-hook~. It compares the newly fetched GitHub notification count (=doom-modeline--github-notification-number=) with the previously stored count (=doom-modeline-extras-github-last-count=).
+The function ~doom-modeline-extras-handle-github-notifications~ is
+added to ~doom-modeline-after-github-fetch-notification-hook~.  After
+Doom Modeline fetches the GitHub notification count, this function
+compares the new count against the previously stored count in the
+variable ~doom-modeline-extras-github-last-count~.
 
-If the count has changed *and* is greater than zero, it automatically calls ~forge-pull-notifications~ (from the =forge= package) to fetch detailed notifications and messages the user. It then updates the stored count. This provides tighter integration between Doom Modeline's basic notification count and Forge's detailed notification management.
+When the count has changed and is greater than zero, the function calls
+~forge-pull-notifications~ from the =forge= package to retrieve full
+notification details.  It then updates the stored count.  This provides
+a bridge between Doom Modeline's lightweight notification polling and
+Forge's detailed notification management.
 
-* Internal Variables
+** Formatting helpers
 :PROPERTIES:
-:CUSTOM_ID: h:internal-variables
+:CUSTOM_ID: h:formatting-helpers
 :END:
 
-- ~doom-modeline-extras-github-last-count~: Stores the previous GitHub notification count to detect changes.
+#+findex: doom-modeline-extras--humanize-tokens
+#+findex: doom-modeline-extras--humanize-duration
+#+findex: doom-modeline-extras--context-face
+#+findex: doom-modeline-extras--cache-face
+The function ~doom-modeline-extras--humanize-tokens~ formats a token
+count into a compact string using "k" and "M" suffixes.  For example,
+1500 becomes "1.5k" and 2000000 becomes "2.0M".
+
+The function ~doom-modeline-extras--humanize-duration~ formats
+milliseconds into a compact time string.  For example, 125000 becomes
+"2m5s" and 7200000 becomes "2h0m".
+
+The function ~doom-modeline-extras--context-face~ returns a face based
+on context usage percentage: ~doom-modeline-info~ below 60%,
+~doom-modeline-warning~ between 60% and 79%, and ~doom-modeline-urgent~
+at 80% or above.
+
+The function ~doom-modeline-extras--cache-face~ returns a face based on
+cache hit percentage, using the inverse scale: ~doom-modeline-info~ at
+80% or above, ~doom-modeline-warning~ between 50% and 79%, and
+~doom-modeline-urgent~ below 50%.
 
 * Indices
 :PROPERTIES:

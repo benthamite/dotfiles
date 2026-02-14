@@ -17,135 +17,101 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=elfeed-extras.el= provides extensions for the =elfeed= RSS/Atom feed reader package. These extensions enhance entry viewing, management, filtering, and integration with other tools like =eww= and =zotra=. It also introduces a "follow mode" for automatically displaying entries as the cursor moves in the search buffer.
+=elfeed-extras.el= extends =elfeed=, the Emacs RSS/Atom feed reader, with convenience commands for reading, filtering, and managing feed entries. The package depends on =elfeed= and =elfeed-show=.
 
-The main features include:
+The extensions address several common workflows:
 
-- Opening feed entry links in =eww= with readability mode enabled.
-- Commands to mark all entries as read or copy the current entry's link.
-- Toggling the display of read entries or filtering by specific tags (e.g., "wiki").
-- Integration with =zotra= to add the current entry to a bibliography.
-- A command to update feeds even when Elfeed buffers are not open.
-- A "follow mode" similar to =org-agenda-follow-mode= for the Elfeed search buffer.
-- Disabling undo in the Elfeed search buffer.
+- *Reading in EWW.* Opening feed entries in the built-in EWW browser with automatic readability mode, providing a cleaner reading experience than many raw web pages ([[#h:reading-entries][Reading entries]]).
+- *Entry management.* Marking all entries as read, copying entry URLs, and adding entries to a bibliography via =zotra= ([[#h:entry-management][Entry management]]).
+- *Filtering.* Toggling between showing all entries and only unread ones, or filtering by specific tags like "wiki" ([[#h:filtering][Filtering]]).
+- *Background updates.* Updating feeds even when Elfeed buffers are not open ([[#h:background-update][Background update]]).
+- *Follow mode.* Automatically displaying entries as you move through the search buffer, similar to ~org-agenda-follow-mode~ ([[#h:follow-mode][Follow mode]]).
 
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
 :END:
 
-=elfeed-extras.el= provides the following interactive commands:
-
-** Show Entry in EWW (Readable)
+** Reading entries
 :PROPERTIES:
-:CUSTOM_ID: h:elfeed-extras-show-visit-in-eww
+:CUSTOM_ID: h:reading-entries
 :END:
 
 #+findex: elfeed-extras-show-visit-in-eww
-The command ~elfeed-extras-show-visit-in-eww~ opens the link associated with the current Elfeed entry (either in the =*elfeed-show*= buffer or the selected entry in the =*elfeed-search*= buffer) using the =eww= browser. Crucially, it adds a hook (~eww-after-render-hook~) to automatically enable =eww-readable= mode once the page loads, attempting to simplify the page layout for better reading.
+Some feed entries are best read directly on the original website rather than in Elfeed's show buffer, but external browsers take you out of Emacs. The command ~elfeed-extras-show-visit-in-eww~ opens the current entry's link in EWW and automatically enables ~eww-readable~ mode once the page finishes loading. This strips away navigation, ads, and other clutter.
 
-** Mark All as Read
+The command works in both ~elfeed-show-mode~ (using the displayed entry) and ~elfeed-search-mode~ (using the selected entry). Note that readability mode depends on the website's HTML structure and may not produce good results on all sites. This function is borrowed from Protesilaos Stavrou.
+
+#+findex: elfeed-extras-jump-to-next-link
+When reading a long entry with multiple hyperlinks, ~elfeed-extras-jump-to-next-link~ moves point to the next link in the entry and recenters the view. This makes it easy to scan through links without scrolling manually.
+
+** Entry management
 :PROPERTIES:
-:CUSTOM_ID: h:elfeed-extras-mark-all-as-read
+:CUSTOM_ID: h:entry-management
 :END:
 
 #+findex: elfeed-extras-mark-all-as-read
-The command ~elfeed-extras-mark-all-as-read~ marks all entries currently displayed in the =*elfeed-search*= buffer as read by selecting the entire buffer and calling ~elfeed-search-untag-all-unread~.
-
-** Kill Link URL of Entry
-:PROPERTIES:
-:CUSTOM_ID: h:elfeed-extras-kill-link-url-of-entry
-:END:
+When you want to start fresh, ~elfeed-extras-mark-all-as-read~ selects all entries in the search buffer and removes the =unread= tag from all of them. This is a bulk operation that affects every currently displayed entry.
 
 #+findex: elfeed-extras-kill-link-url-of-entry
-When executed in an =*elfeed-show*= buffer, the command ~elfeed-extras-kill-link-url-of-entry~ copies the URL (link) of the currently displayed entry to the Emacs kill ring.
+The command ~elfeed-extras-kill-link-url-of-entry~ copies the URL of the entry displayed in the show buffer to the kill ring. A confirmation message is printed in the echo area. This is useful when you want to share or save a link without opening it externally.
 
-** Toggle Read Entries Display
+#+findex: elfeed-extras-add-entry
+If you use a BibTeX workflow, ~elfeed-extras-add-entry~ passes the current entry's URL to ~zotra-extras-add-entry~ (from =zotra-extras.el=), which handles adding it to your bibliography and downloading associated files. This command is only active in ~elfeed-show-mode~.
+
+** Filtering
 :PROPERTIES:
-:CUSTOM_ID: h:elfeed-extras-toggle-read-entries
+:CUSTOM_ID: h:filtering
 :END:
 
 #+findex: elfeed-extras-toggle-read-entries
-The command ~elfeed-extras-toggle-read-entries~ toggles the filter in the =*elfeed-search*= buffer between showing all entries and showing only unread entries (=+unread=). It uses the internal variable ~elfeed-extras-toggle-read-entries~ to keep track of the current state.
-
-** Toggle Wiki Entries Display
-:PROPERTIES:
-:CUSTOM_ID: h:elfeed-extras-toggle-wiki-entries
-:END:
+By default, Elfeed shows only unread entries. The command ~elfeed-extras-toggle-read-entries~ toggles between showing all entries (including read ones) and showing only unread entries. It maintains its state in the variable ~elfeed-extras-toggle-read-entries~.
 
 #+findex: elfeed-extras-toggle-wiki-entries
-The command ~elfeed-extras-toggle-wiki-entries~ toggles the filter in the =*elfeed-search*= buffer between showing only unread entries tagged "wiki" (=+unread +wiki=) and showing all unread entries *except* those tagged "wiki" (=+unread -wiki=). It uses the internal variable ~elfeed-extras-toggle-wiki-entries~ to keep track of the current state.
+For feeds that include wiki-tagged entries, ~elfeed-extras-toggle-wiki-entries~ switches between showing only unread wiki entries (=+unread +wiki=) and showing all unread entries except wiki entries (=+unread -wiki=). This is useful when you want to focus on a specific category of content. The state is tracked in the variable ~elfeed-extras-toggle-wiki-entries~.
 
-** Add Entry to Zotra
+** Background update
 :PROPERTIES:
-:CUSTOM_ID: h:elfeed-extras-add-entry
-:END:
-
-#+findex: elfeed-extras-add-entry
-When executed in an =*elfeed-show*= buffer, the command ~elfeed-extras-add-entry~ takes the link of the current entry and passes it to ~zotra-extras-add-entry~ (presumably a function defined elsewhere for adding entries to a Zotero/BibTeX bibliography).
-
-** Jump to Next Link in Entry
-:PROPERTIES:
-:CUSTOM_ID: h:elfeed-extras-jump-to-next-link
-:END:
-
-#+findex: elfeed-extras-jump-to-next-link
-When executed in an =*elfeed-show*= buffer, the command ~elfeed-extras-jump-to-next-link~ moves the point to the next hyperlink within the entry's content and recenters the view.
-
-** Update Feeds (Background)
-:PROPERTIES:
-:CUSTOM_ID: h:elfeed-extras-update
+:CUSTOM_ID: h:background-update
 :END:
 
 #+findex: elfeed-extras-update
-The command ~elfeed-extras-update~ initiates an update of all configured Elfeed feeds. Unlike the standard ~elfeed-update~, this command ensures the Elfeed database is loaded (=elfeed-db-ensure=) first, allowing it to be called even when no Elfeed buffers are currently open. The update process runs in the background.
+The standard ~elfeed-update~ command requires Elfeed to be open. The function ~elfeed-extras-update~ first ensures the database is loaded with ~elfeed-db-ensure~ and then triggers the update, allowing it to run from timers, hooks, or scripts without requiring an open Elfeed buffer. A message confirms that the update has started.
 
-* Follow Mode
+* Follow mode
 :PROPERTIES:
 :CUSTOM_ID: h:follow-mode
 :END:
 
-Inspired by =org-agenda-follow-mode=, this feature automatically displays the Elfeed entry corresponding to the line the cursor is on in the =*elfeed-search*= buffer in another window.
-
-** Commands for Follow Mode
-:PROPERTIES:
-:CUSTOM_ID: h:follow-mode-commands
-:END:
-
 #+findex: elfeed-extras-follow-next
-The command ~elfeed-extras-follow-next~ moves the cursor down one line in the =*elfeed-search*= buffer and displays the entry for that line in the other window using ~elfeed-extras-follow-entry~.
-
 #+findex: elfeed-extras-follow-previous
-The command ~elfeed-extras-follow-previous~ moves the cursor up one line in the =*elfeed-search*= buffer and displays the entry for that line in the other window using ~elfeed-extras-follow-entry~.
+Inspired by ~org-agenda-follow-mode~, this feature automatically displays entries as you move through the Elfeed search buffer. Rather than selecting an entry to read it, you simply move the cursor and the entry appears in the other window.
 
-** Internal Follow Mode Functions
+The command ~elfeed-extras-follow-next~ moves the cursor down one line and displays the corresponding entry. The command ~elfeed-extras-follow-previous~ does the same upward. After displaying the entry, focus returns to the search buffer so you can continue browsing.
+
+These commands use the internal helper ~elfeed-extras-follow-entry~ for the core logic and ~elfeed-extras-display-buffer~ for displaying the entry buffer without stealing focus.
+
+* Functions
 :PROPERTIES:
-:CUSTOM_ID: h:follow-mode-internal
+:CUSTOM_ID: h:functions
 :END:
 
-- ~elfeed-extras-display-buffer~: Helper function to display a buffer in the "other" window without selecting it, using ~pop-to-buffer~ with a specific action.
-- ~elfeed-extras-follow-entry~: The core logic for follow mode. Moves the cursor by LINES, recenters, calls ~elfeed-search-show-entry~ to display the content, and then selects the previous window (the search buffer) again.
-
-* Configuration Functions
+** Filtering and display helpers
 :PROPERTIES:
-:CUSTOM_ID: h:configuration-functions
+:CUSTOM_ID: h:filtering-helpers
 :END:
 
-** Disable Undo in Search Buffer
-:PROPERTIES:
-:CUSTOM_ID: h:elfeed-extras-disable-undo
-:END:
-
+#+findex: elfeed-extras-filter-tags
+#+findex: elfeed-extras-display-buffer
+#+findex: elfeed-extras-follow-entry
 #+findex: elfeed-extras-disable-undo
-The function ~elfeed-extras-disable-undo~ is intended to be added to ~elfeed-search-mode-hook~. It sets the buffer-local ~buffer-undo-list~ to nil, effectively disabling the undo functionality within the =*elfeed-search*= buffer. This can be useful to save memory or prevent accidental undos in a buffer that is primarily for navigation and viewing.
+The function ~elfeed-extras-filter-tags~ applies a filter string to the search buffer via ~elfeed-search-set-filter~ and displays a message indicating the active filter.
 
-* Internal Variables
-:PROPERTIES:
-:CUSTOM_ID: h:internal-variables
-:END:
+The function ~elfeed-extras-display-buffer~ shows a buffer in the other window without selecting it, using ~pop-to-buffer~. It is used internally by the follow mode commands ([[#h:follow-mode][Follow mode]]).
 
-- ~elfeed-extras-toggle-read-entries~: Boolean flag tracking the state for ~elfeed-extras-toggle-read-entries~.
-- ~elfeed-extras-toggle-wiki-entries~: Boolean flag tracking the state for ~elfeed-extras-toggle-wiki-entries~.
+The function ~elfeed-extras-follow-entry~ implements the core follow mode logic: it moves by LINES, recenters, displays the entry, and returns focus to the search buffer.
+
+The function ~elfeed-extras-disable-undo~ sets ~buffer-undo-list~ to ~nil~ in the Elfeed search buffer, disabling undo tracking to save memory. It is intended for use in ~elfeed-search-mode-hook~.
 
 * Indices
 :PROPERTIES:

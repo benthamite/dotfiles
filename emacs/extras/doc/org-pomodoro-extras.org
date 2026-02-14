@@ -1,4 +1,4 @@
-#+title: org-pomodoro-extras: Extensions for Org Pomodoro
+#+title: org-pomodoro-extras: Extensions for org-pomodoro
 #+author: Pablo Stafforini
 #+email: pablo@stafforini.com
 #+language: en
@@ -8,7 +8,7 @@
 #+texinfo_filename: org-pomodoro-extras.info
 #+texinfo_dir_category: Emacs misc features
 #+texinfo_dir_title: Org Pomodoro Extras: (org-pomodoro-extras)
-#+texinfo_dir_desc: Extensions for Org Pomodoro
+#+texinfo_dir_desc: Extensions for org-pomodoro
 
 This manual describes the features and customization options for the Emacs Lisp file =org-pomodoro-extras.el=.
 
@@ -17,42 +17,37 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=org-pomodoro-extras.el= provides extensions for the =org-pomodoro= package, which integrates the Pomodoro Technique with Org mode tasks. These extensions focus on customizing the modeline display and modifying notification messages.
+=org-pomodoro-extras.el= extends =org-pomodoro=, the Emacs implementation of the Pomodoro Technique integrated with Org mode task clocking. The standard =org-pomodoro= package provides timers for work intervals (pomodoros) and breaks, but its modeline display and notification messages are not always ideal.
 
-The main features include:
+This package addresses two specific annoyances:
 
-- A function to format the Org Pomodoro timer display in the modeline, including the current pomodoro count.
-- A patch to silence the notification message when a pomodoro is killed prematurely.
+- The default modeline format does not show how many pomodoros have been completed in the current session. The function ~org-extras-pomodoro-format-timer~ enriches the display with a pomodoro count ([[#h:timer-formatting][Timer formatting]]).
+- When a pomodoro is killed prematurely, the original notification includes a humorous but distracting message. A patch silences this in favor of a clean, empty notification body ([[#h:killed-notification][Silencing the killed notification]]).
 
-* Configuration Functions
+The package depends on =el-patch= for modifying built-in behavior.
+
+* Functions
 :PROPERTIES:
-:CUSTOM_ID: h:configuration-functions
+:CUSTOM_ID: h:functions
 :END:
 
-** Format Pomodoro Timer for Modeline
+** Timer formatting
 :PROPERTIES:
-:CUSTOM_ID: h:org-extras-pomodoro-format-timer
+:CUSTOM_ID: h:timer-formatting
 :END:
 
 #+findex: org-extras-pomodoro-format-timer
-The function ~org-extras-pomodoro-format-timer~ updates the ~org-pomodoro-format~ variable, which controls how the timer is displayed in the modeline. This function sets the format to include a tomato emoji (🍅), the remaining time (%s), and the current pomodoro count (from =org-pomodoro-count=), separated by a pipe symbol. Example: =🍅 24:15|3=.
+The function ~org-extras-pomodoro-format-timer~ updates the variable ~org-pomodoro-format~ to include both the remaining time and the current pomodoro count. The resulting modeline display looks like =🍅 24:15|3=, where =24:15= is the time remaining and =3= is the number of pomodoros completed so far.
 
-This function is intended to be called when setting up =org-pomodoro=, potentially via advice or a hook if needed, to ensure the pomodoro count is dynamically included in the format string.
+This function is intended to be called as advice on ~org-pomodoro~ itself, so that the count is refreshed each time a new pomodoro starts. Without this, the count shown in the modeline would be stale.
 
-* Patched Functions
+** Silencing the killed notification
 :PROPERTIES:
-:CUSTOM_ID: h:patched-functions
-:END:
-
-=org-pomodoro-extras.el= modifies the behavior of one standard =org-pomodoro= function using =el-patch=:
-
-** Silence "Pomodoro Killed" Notification Message
-:PROPERTIES:
-:CUSTOM_ID: h:org-pomodoro-killed-patch
+:CUSTOM_ID: h:killed-notification
 :END:
 
 #+findex: org-pomodoro-killed
-The original ~org-pomodoro-killed~ function is patched to change the notification message displayed when a pomodoro timer is stopped before completion. The original message ("One does not simply kill a pomodoro!") is replaced with a simpler "Pomodoro killed." message. The rest of the function's behavior (resetting the timer, playing sounds, handling Org clocking, running hooks) remains unchanged.
+The function ~org-pomodoro-killed~ is patched via =el-patch= to replace the original notification body ("One does not simply kill a pomodoro!") with an empty string. The notification title ("Pomodoro killed.") is preserved. All other behavior of the original function---resetting the timer, playing the killed sound, handling Org clock state, and running ~org-pomodoro-killed-hook~---remains unchanged.
 
 * Indices
 :PROPERTIES:

@@ -8277,7 +8277,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (gptel-extras-make-tool-presets
    tools-web-search
    "web search tools"
-   '("search" "fetch_content"))
+   '("search" "fetch_content" "fetch_url"))
 
   (gptel-extras-make-tool-presets
    tools-home-assistant
@@ -8578,6 +8578,8 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 	  ;; ("everything" . (:command "npx"
 	  ;; :args ("-y" "@modelcontextprotocol/server-everything")))
 	  ("fetch" . (:command "uvx" :args ("mcp-server-fetch")))
+	  ("fetcher" . (:command "npx"
+			:args ("-y" "fetcher-mcp")))
 	  ("filesystem" . (:command "npx"
 				    :args ("-y" "@modelcontextprotocol/server-filesystem"
 					   ,(expand-file-name "~")

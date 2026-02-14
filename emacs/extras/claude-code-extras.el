@@ -490,7 +490,7 @@ cursor, keeping the cursor line at the bottom of each window."
           (claude-code-extras--scroll-windows-to cursor-pos))))))
 
 (defun claude-code-extras--scroll-windows-to (pos)
-  "Set window-point to POS and recenter in all windows showing this buffer."
+  "Set `window-point' to POS and recenter in all windows showing this buffer."
   (dolist (window (get-buffer-window-list nil nil t))
     (set-window-point window pos)
     (with-selected-window window

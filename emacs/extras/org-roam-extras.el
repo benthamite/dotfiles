@@ -504,6 +504,37 @@ satisfies these criteria."
       (user-error "Multiple nodes share the title “%s”" title))
      (t (caar rows)))))
 
+;;;;; Statistics
+
+(defun org-roam-extras-count-todos-and-efforts ()
+  "Count open TODO headings and sum their effort estimates in the org-roam database."
+  (interactive)
+  (let* ((done-keywords (or (with-temp-buffer
+			      (delay-mode-hooks (org-mode))
+			      org-done-keywords)
+			    '("DONE" "CANCELLED" "DELEGATED")))
+	 (rows (org-roam-db-query
+		[:select [todo properties] :from nodes
+		 :where (notnull todo)]))
+	 (todo-count 0)
+	 (total-minutes 0))
+    (dolist (row rows)
+      (let* ((todo (nth 0 row))
+	     (props (nth 1 row))
+	     (effort (cdr (assoc "EFFORT" props))))
+	(unless (member todo done-keywords)
+	  (cl-incf todo-count)
+	  (when effort
+	    (cl-incf total-minutes (org-duration-to-minutes effort))))))
+    (let* ((hours (floor total-minutes 60))
+	   (mins (mod (floor total-minutes) 60))
+	   (msg (format "Org-roam has %d open TODO%s with %d:%02d in effort estimates."
+			todo-count
+			(if (= todo-count 1) "" "s")
+			hours mins)))
+      (message msg)
+      msg)))
+
 ;;;;; Patched functions
 
 (el-patch-defun org-roam-db-query (sql &rest args)

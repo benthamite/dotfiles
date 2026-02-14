@@ -6520,19 +6520,10 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
   :custom
   (flycheck-languagetool-check-params
-   '(("level" . "picky")))
-   
-  :config
-  ;; the package doesn't provide a general way of disabling a rule, but as an
-  ;; imperfect workaround we extend the list of rules to ignore when
-  ;; spell-checking is active; this works well for rules in prose buffers, since
-  ;; I normally have spell-checking enabled there.
-  (dolist (rule '("ARROWS"
-                  "WHITESPACE_RULE"
-                  "DATE_NEW_YEAR" ; throws warning with every org-clock line
-                  ))
-    (add-to-list 'flycheck-languagetool--spelling-rules rule))
+   '(("level" . "picky")
+     ("disabledRules" . "ARROWS,DASH_RULE,DATE_NEW_YEAR,WHITESPACE_RULE")))
 
+  :config
   (defun flycheck-languagetool-enable ()
     "Enable `flycheck-languagetool' in selected buffers."
     (unless (derived-mode-p 'forge-post-mode

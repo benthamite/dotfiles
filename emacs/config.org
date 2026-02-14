@@ -6531,6 +6531,17 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
                             'org-msg-edit-mode)
       (flycheck-select-checker 'languagetool)))
 
+  (defun flycheck-languagetool-toggle ()
+    "Toggle the LanguageTool checker in the current buffer."
+    (interactive)
+    (if (eq flycheck-checker 'languagetool)
+        (progn
+          (setq-local flycheck-checker nil)
+          (flycheck-buffer)
+          (message "LanguageTool disabled"))
+      (flycheck-select-checker 'languagetool)
+      (message "LanguageTool enabled")))
+
   :hook
   ((markdown-mode-hook
     org-mode-hook

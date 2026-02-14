@@ -1,0 +1,171 @@
+#+title: anki-editor-extras: Extensions for anki-editor
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: anki-editor-extras.info
+#+texinfo_filename: anki-editor-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Anki Editor Extras: (anki-editor-extras)
+#+texinfo_dir_desc: Extensions for anki-editor
+
+This manual describes the features and customization options for the Emacs Lisp file =anki-editor-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=anki-editor-extras.el= extends =anki-editor=, the Emacs package for creating and managing Anki flashcards from Org mode. While =anki-editor= handles the core workflow of defining notes as Org headings and pushing them to Anki via AnkiConnect, this extras package addresses several gaps in that workflow.
+
+The package provides three main areas of functionality:
+
+- *Duplicate management.* When Anki flags duplicate notes, the package offers an interactive workflow to review each flagged note, classify it as a real or false duplicate, and suspend the confirmed duplicates ([[#h:duplicate-management][Duplicate management]]).
+- *Film plot summaries.* For users who maintain a bibliographic database with =ebib=, the package can generate AI-written plot summaries for films, insert them as Org headings with the correct Anki properties, and push them to Anki in a single step ([[#h:plot-summaries][Plot summaries]]).
+- *Card positioning.* The package provides commands to set the =due= position of new cards, controlling where they appear in the review queue ([[#h:card-positioning][Card positioning]]).
+
+Additionally, the package patches =anki-editor-note-at-point= to handle a common edge case where the "Basic" Anki model has extra fields (e.g. "Meta") that cause the default field-mapping logic to fail ([[#h:basic-note-patch][Basic note patch]]).
+
+The package depends on =anki-editor=, =gptel= (for AI-generated plot summaries), and =ebib-extras= (for BibTeX metadata lookups).
+
+* User options
+:PROPERTIES:
+:CUSTOM_ID: h:user-options
+:END:
+
+** ~anki-editor-extras-duplicates-field~
+:PROPERTIES:
+:CUSTOM_ID: h:anki-editor-extras-duplicates-field
+:END:
+
+#+vindex: anki-editor-extras-duplicates-field
+The user option ~anki-editor-extras-duplicates-field~ specifies which Anki note field is used to identify duplicates. This should match the field you select in Anki's "Notes -> Find duplicates" dialog. For example, if you check for duplicates based on the front side of your cards, set this to ="Front"=.
+
+The default value is the string ="Front"=. You would change this if your primary note type uses a different field name for the content you want to deduplicate against.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+** Duplicate management
+:PROPERTIES:
+:CUSTOM_ID: h:duplicate-management
+:END:
+
+#+findex: anki-editor-extras-duplicates-process
+#+findex: anki-editor-extras-duplicates-cleanup
+#+findex: anki-editor-extras-review-duplicates
+#+findex: anki-editor-extras-suspend-real-duplicates
+#+findex: anki-editor-extras-duplicates-reset
+#+findex: anki-editor-extras-remove-tag
+The duplicate management workflow addresses the common problem of accumulating duplicate notes in Anki. After running Anki's built-in "Find duplicates" feature (which tags flagged notes with =duplicate=), you can use these commands to process the results from within Emacs.
+
+The command ~anki-editor-extras-duplicates-process~ orchestrates the full workflow in three stages: it first cleans up notes that have already been classified ([[#h:cleanup][Cleanup]]), then presents each remaining duplicate for interactive review ([[#h:review][Review]]), and finally suspends all confirmed duplicates ([[#h:suspension][Suspension]]).
+
+*** Cleanup
+:PROPERTIES:
+:CUSTOM_ID: h:cleanup
+:END:
+
+The command ~anki-editor-extras-duplicates-cleanup~ removes the =duplicate= tag from notes that have already been classified. Specifically, it strips =duplicate= from notes tagged both =duplicate= and =real-duplicate=, and from notes tagged both =duplicate= and =no-duplicate=. This ensures that previously reviewed notes do not appear again in the review step.
+
+*** Review
+:PROPERTIES:
+:CUSTOM_ID: h:review
+:END:
+
+The command ~anki-editor-extras-review-duplicates~ iterates over all notes still tagged =duplicate= and opens each one in Anki's browser for inspection. For each note, you are prompted with a single-key interface:
+
+- =r=: tag as =real-duplicate= and remove =duplicate=.
+- =n=: tag as =no-duplicate= and remove =duplicate=.
+- =s=: skip this note without changing its tags.
+- =q=: quit the review loop.
+
+The prompt displays the note ID and how many notes remain, so you can gauge progress.
+
+*** Suspension
+:PROPERTIES:
+:CUSTOM_ID: h:suspension
+:END:
+
+The command ~anki-editor-extras-suspend-real-duplicates~ suspends all cards belonging to notes tagged =real-duplicate=. This removes confirmed duplicates from your review queue without deleting them, so they can be unsuspended later if needed.
+
+*** Resetting and removing tags
+:PROPERTIES:
+:CUSTOM_ID: h:resetting-tags
+:END:
+
+The command ~anki-editor-extras-duplicates-reset~ removes the =duplicate= tag from all notes that have it. This is useful when you want to start the duplicate-detection process from scratch.
+
+The command ~anki-editor-extras-remove-tag~ prompts for a tag name and removes it from every note in your Anki collection that carries it. This is a general-purpose utility not limited to the duplicate workflow.
+
+** Plot summaries
+:PROPERTIES:
+:CUSTOM_ID: h:plot-summaries
+:END:
+
+#+findex: anki-editor-extras-insert-film-plot-summary
+#+findex: anki-editor-extras-push-plot-summary
+The plot summary commands integrate =anki-editor= with =gptel= and =ebib= to generate Anki flashcards for films. The intended workflow is: you visit an Org file whose base name is a BibTeX key for a film, invoke the command, and it creates a complete Anki note with an AI-generated plot summary.
+
+The command ~anki-editor-extras-insert-film-plot-summary~ uses the current buffer's file name (without extension) as a BibTeX key. It looks up the film's title, year, and director(s) via =ebib-extras=, then sends a prompt to =gptel= requesting a concise one-paragraph plot summary. The summary is inserted at the end of the buffer under a level-2 heading with all the necessary Anki properties (deck, note type, tags, and front field) pre-filled. After insertion, the command prompts whether to push the note to Anki immediately.
+
+The command ~anki-editor-extras-push-plot-summary~ pushes the Anki note at point and sets its cards' new-card positions starting from a given position. With a prefix argument, you can specify the starting position; otherwise it defaults to 1. This is useful for controlling where the new card appears in your review queue ([[#h:card-positioning][Card positioning]]).
+
+** Card positioning
+:PROPERTIES:
+:CUSTOM_ID: h:card-positioning
+:END:
+
+#+findex: anki-editor-extras-set-card-position
+#+findex: anki-editor-extras-set-note-card-positions
+Anki assigns each new card a =due= position that determines its order in the new-card queue. The command ~anki-editor-extras-set-card-position~ sets a single card's position via AnkiConnect. Both CARD-ID and POSITION can be integers or numeric strings; POSITION is 1-indexed.
+
+The command ~anki-editor-extras-set-note-card-positions~ operates on all cards belonging to a given note. It retrieves the note's card IDs, sorts them, and assigns consecutive positions starting from START-POSITION (which defaults to 1). For a note with three cards and a start position of 5, the cards receive positions 5, 6, and 7.
+
+* Functions
+:PROPERTIES:
+:CUSTOM_ID: h:functions
+:END:
+
+** Basic note patch
+:PROPERTIES:
+:CUSTOM_ID: h:basic-note-patch
+:END:
+
+#+findex: anki-editor-note-at-point-a
+The function ~anki-editor-note-at-point-a~ is an =:around= advice on ~anki-editor-note-at-point~ that handles a common failure mode. When the "Basic" Anki model has additional fields beyond "Front" and "Back" (e.g. a "Meta" field), the default implementation raises an error because it cannot map the extra fields to Org subheadings.
+
+The advice intercepts this error and falls back to a simpler mapping: the Org heading (or the =ANKI_FIELD_FRONT= property, if set) becomes the "Front" field, the entry body becomes the "Back" field, and any additional model fields are set to empty strings. If the =ANKI_FIELD_FRONT= property is present and non-blank, it always takes precedence, bypassing the error entirely.
+
+This patch is applied automatically when the package is loaded.
+
+** Tag and card operations
+:PROPERTIES:
+:CUSTOM_ID: h:tag-card-operations
+:END:
+
+#+findex: anki-editor-extras-remove-tag-from-query
+#+findex: anki-editor-extras-suspend-cards-by-query
+The function ~anki-editor-extras-remove-tag-from-query~ removes a given tag from all notes matching an Anki search query. It is used internally by the cleanup step of the duplicate workflow ([[#h:cleanup][Cleanup]]) but can be called programmatically for other bulk tag operations.
+
+The function ~anki-editor-extras-suspend-cards-by-query~ suspends all cards belonging to notes that match an Anki search query. It first retrieves the matching note IDs, then looks up their card IDs, and finally issues a suspend call via AnkiConnect. It reports how many cards and notes were affected.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

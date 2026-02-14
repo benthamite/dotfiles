@@ -1,0 +1,98 @@
+#+title: eat-extras: Extensions for eat
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: eat-extras.info
+#+texinfo_filename: eat-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Eat Extras: (eat-extras)
+#+texinfo_dir_desc: Extensions for eat terminal emulator
+
+This manual describes the features and customization options for the Emacs Lisp file =eat-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=eat-extras.el= extends =eat= (Emulate A Terminal), the Emacs terminal emulator that runs inside regular buffers. The extensions focus on two concerns: sending editing keystrokes that Eat's semi-char mode does not handle by default, and configuring the semi-char mode keymap to coexist with standard Emacs key bindings.
+
+Eat's semi-char mode intercepts most keystrokes and forwards them to the terminal process, which is desirable for full terminal interaction. However, certain Emacs prefix keys (=C-x=, =C-h=, =M-x=, etc.) and custom navigation bindings need to remain available. This package defines the set of keys to exclude from terminal capture and provides the setup function that applies them ([[#h:keymap-setup][Keymap setup]]).
+
+The package also provides interactive commands that send specific editing operations (word movement, word killing, line killing, backspace, undo) to the terminal by writing the appropriate escape sequences directly to the Eat terminal ([[#h:terminal-editing-commands][Terminal editing commands]]). These commands are designed to be bound to custom key sequences in semi-char mode, giving you the same editing fluency you have in regular Emacs buffers.
+
+* Variables
+:PROPERTIES:
+:CUSTOM_ID: h:variables
+:END:
+
+** Keys excluded from terminal capture
+:PROPERTIES:
+:CUSTOM_ID: h:non-bound-keys
+:END:
+
+#+vindex: eat-extras-non-bound-keys
+The variable ~eat-extras-non-bound-keys~ is a list of key vectors to exclude from terminal capture in semi-char mode. These keys will not be forwarded to the terminal process, leaving them available for their normal Emacs bindings. The list includes standard Emacs prefix keys (=C-g=, =C-h=, =C-x=, =M-x=, etc.) and the custom modifier combinations used for terminal editing commands ([[#h:terminal-editing-commands][Terminal editing commands]]).
+
+#+vindex: eat-extras-emacs-passthrough-keys
+The variable ~eat-extras-emacs-passthrough-keys~ is a list of key description strings (in =kbd= format) for standard Emacs prefix keys that should be explicitly released from terminal capture. While ~eat-extras-non-bound-keys~ prevents Eat from claiming these keys, this variable ensures that their bindings are set to ~nil~ in the semi-char mode map, so they fall through to the global map.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+** Terminal editing commands
+:PROPERTIES:
+:CUSTOM_ID: h:terminal-editing-commands
+:END:
+
+#+findex: eat-extras-send-forward-word
+#+findex: eat-extras-send-backward-word
+#+findex: eat-extras-send-kill-word
+#+findex: eat-extras-send-kill-line
+#+findex: eat-extras-send-backspace
+#+findex: eat-extras-send-meta-backspace
+#+findex: eat-extras-send-undo
+These commands send specific editing operations to the terminal by writing escape sequences or control characters directly to the Eat terminal object. They are interactive so they can be bound to keys in the semi-char mode map.
+
+The word movement commands ~eat-extras-send-forward-word~ and ~eat-extras-send-backward-word~ send =ESC f= and =ESC b= respectively, which most shells interpret as forward-word and backward-word.
+
+The deletion commands ~eat-extras-send-kill-word~ and ~eat-extras-send-meta-backspace~ send =ESC d= (kill word forward) and =ESC DEL= (kill word backward). The command ~eat-extras-send-kill-line~ sends =C-k= to kill from the cursor to the end of the line. The command ~eat-extras-send-backspace~ sends the =DEL= character (=0x7f=).
+
+The command ~eat-extras-send-undo~ sends =C-_=, which triggers undo in most shells that support it (e.g. Bash, Zsh with default bindings).
+
+* Functions
+:PROPERTIES:
+:CUSTOM_ID: h:functions
+:END:
+
+** Keymap setup
+:PROPERTIES:
+:CUSTOM_ID: h:keymap-setup
+:END:
+
+#+findex: eat-extras-setup-semi-char-mode-map
+#+findex: eat-extras-sync-semi-char-mode-map
+The function ~eat-extras-setup-semi-char-mode-map~ configures the semi-char mode keymap in three steps. First, it adds the entries from ~eat-extras-non-bound-keys~ to Eat's own exclusion list and calls ~eat-update-semi-char-mode-map~ to regenerate the map. Second, it explicitly unbinds the keys listed in ~eat-extras-emacs-passthrough-keys~ so they fall through to the global map. Third, it binds the custom key sequences to the terminal editing commands ([[#h:terminal-editing-commands][Terminal editing commands]]). Finally, it calls ~eat-extras-sync-semi-char-mode-map~ to ensure the live keymap is updated.
+
+The function ~eat-extras-sync-semi-char-mode-map~ patches a subtle issue: when ~eat-update-semi-char-mode-map~ replaces the keymap object via ~setq~, the entry in ~minor-mode-map-alist~ still points to the old object. This function updates the alist entry in place so the new bindings take effect immediately in all existing Eat buffers.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

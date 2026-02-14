@@ -1,0 +1,109 @@
+#+title: vterm-extras: Extensions for vterm
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: vterm-extras.info
+#+texinfo_filename: vterm-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Vterm Extras: (vterm-extras)
+#+texinfo_dir_desc: Extensions for vterm terminal emulator
+
+This manual describes the features and customization options for the Emacs Lisp file =vterm-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=vterm-extras.el= extends =vterm=, the fully-featured terminal emulator based on =libvterm=. Like its counterpart =eat-extras.el= for the Eat terminal emulator, this package focuses on two concerns: sending editing keystrokes to the terminal process, and configuring which keys remain available for Emacs use versus being captured by the terminal.
+
+Vterm's design intercepts nearly all keystrokes and sends them to the underlying terminal process. While this is ideal for running full TUI applications, it means that standard Emacs prefix keys and custom editing bindings need explicit exemption. This package defines the set of excepted keys ([[#h:keymap-exceptions][Keymap exceptions]]) and provides the setup function that applies them along with custom key bindings ([[#h:keymap-setup][Keymap setup]]).
+
+The package also provides interactive commands for word-level navigation and editing within the terminal ([[#h:terminal-editing-commands][Terminal editing commands]]), complementing the commands already provided by =vterm= itself (such as ~vterm-send-backspace~ and ~vterm-send-meta-backspace~).
+
+* Variables
+:PROPERTIES:
+:CUSTOM_ID: h:variables
+:END:
+
+** Keymap exceptions
+:PROPERTIES:
+:CUSTOM_ID: h:keymap-exceptions
+:END:
+
+#+vindex: vterm-extras-keymap-exceptions
+The variable ~vterm-extras-keymap-exceptions~ is a list of key description strings that should not be captured by the terminal. These keys remain available for their standard Emacs functions. The list includes common prefix keys (=C-c=, =C-g=, =C-h=, =C-x=, =M-x=, etc.), yank keys (=C-y=, =M-y=), and the custom modifier combinations used for the terminal editing commands ([[#h:terminal-editing-commands][Terminal editing commands]]).
+
+During keymap setup, this list is assigned to ~vterm-keymap-exceptions~, which vterm uses when generating its mode map.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+** Terminal editing commands
+:PROPERTIES:
+:CUSTOM_ID: h:terminal-editing-commands
+:END:
+
+#+findex: vterm-extras-send-forward-word
+#+findex: vterm-extras-send-backward-word
+#+findex: vterm-extras-send-kill-word
+#+findex: vterm-extras-send-kill-line
+These commands send specific editing operations to the vterm terminal process via ~vterm-send-key~. They are interactive so they can be bound to keys in the vterm mode map.
+
+The word movement commands ~vterm-extras-send-forward-word~ and ~vterm-extras-send-backward-word~ send =Meta-f= and =Meta-b= respectively, which most shells interpret as forward-word and backward-word.
+
+The deletion commands ~vterm-extras-send-kill-word~ sends =Meta-d= (kill word forward). The command ~vterm-extras-send-kill-line~ sends =C-k= to kill from the cursor to the end of the line.
+
+Note that =vterm= already provides ~vterm-send-backspace~, ~vterm-send-meta-backspace~, ~vterm-yank~, ~vterm-yank-pop~, and ~vterm-undo~, so this package does not duplicate those. The keymap setup function binds them alongside the extras commands ([[#h:keymap-setup][Keymap setup]]).
+
+* Functions
+:PROPERTIES:
+:CUSTOM_ID: h:functions
+:END:
+
+** Keymap setup
+:PROPERTIES:
+:CUSTOM_ID: h:keymap-setup
+:END:
+
+#+findex: vterm-extras-setup-keymap
+The function ~vterm-extras-setup-keymap~ configures the vterm mode map in two steps. First, it sets ~vterm-keymap-exceptions~ to the value of ~vterm-extras-keymap-exceptions~ ([[#h:keymap-exceptions][Keymap exceptions]]), which tells vterm which keys to leave alone when generating its keymap. Second, it binds both the extras commands and several built-in vterm commands to their designated key sequences.
+
+The resulting bindings are:
+
+| Key          | Command                            |
+|--------------+------------------------------------|
+| =A-C-s-p=    | ~vterm-extras-send-forward-word~   |
+| =A-C-s-u=    | ~vterm-extras-send-backward-word~  |
+| =C-H-M-q=    | ~vterm-send-meta-backspace~        |
+| =C-H-M-r=    | ~vterm-extras-send-kill-word~      |
+| =C-H-M-s=    | ~vterm-send-backspace~             |
+| =C-H-M-v=    | ~vterm-extras-send-kill-line~      |
+| =<backspace>= | ~vterm-send-backspace~            |
+| =DEL=        | ~vterm-send-backspace~             |
+| =C-y=        | ~vterm-yank~                       |
+| =M-y=        | ~vterm-yank-pop~                   |
+| =H-z=        | ~vterm-undo~                       |
+
+These bindings mirror the corresponding key assignments in =eat-extras.el= ([[#h:overview][Overview]]), providing a consistent editing experience across both terminal emulators.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

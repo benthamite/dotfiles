@@ -1,0 +1,58 @@
+#+title: ediff-extras: Extensions for ediff
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: ediff-extras.info
+#+texinfo_filename: ediff-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Ediff Extras: (ediff-extras)
+#+texinfo_dir_desc: Extensions for ediff
+
+This manual describes the features and customization options for the Emacs Lisp file =ediff-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=ediff-extras.el= extends =ediff=, the built-in Emacs facility for interactive difference merging. By default, when you quit an Ediff session, the comparison buffers (buffer A, buffer B, and optionally buffer C) remain open, cluttering the buffer list. This small package adds a cleanup hook that automatically kills all Ediff-related buffers upon quitting, keeping the buffer list tidy.
+
+The cleanup function is added to ~ediff-quit-hook~ when the package is loaded, so no additional configuration is required.
+
+* Functions
+:PROPERTIES:
+:CUSTOM_ID: h:functions
+:END:
+
+** Buffer cleanup on quit
+:PROPERTIES:
+:CUSTOM_ID: h:buffer-cleanup
+:END:
+
+#+findex: ediff-extras-cleanup-buffers
+The function ~ediff-extras-cleanup-buffers~ kills all buffers associated with the current Ediff session: buffer A, buffer B, buffer C (if it exists in a three-way comparison), and the Ediff control buffer. It checks that each buffer is live before attempting to kill it, so it handles partial sessions gracefully.
+
+This function is automatically added to ~ediff-quit-hook~ when the package is loaded. If you prefer to keep the comparison buffers around after quitting, you can remove it:
+
+#+begin_src emacs-lisp
+(remove-hook 'ediff-quit-hook 'ediff-extras-cleanup-buffers)
+#+end_src
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

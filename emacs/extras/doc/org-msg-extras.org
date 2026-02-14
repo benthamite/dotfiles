@@ -17,90 +17,68 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=org-msg-extras.el= provides extensions for the =org-msg= package, which allows composing emails using Org mode syntax. These extensions focus on signature management, interaction with external tools (Grammarly), and refining the composing experience.
+=org-msg-extras.el= extends =org-msg=, the package that enables composing rich HTML emails using Org mode syntax. While =org-msg= handles the core composition and export workflow, =org-msg-extras.el= adds convenience features around the edges: managing multiple email signatures for different contexts, copying message bodies for external grammar checking, and improving the initial cursor placement when composing.
 
-The main features include:
+The package provides three categories of functionality:
 
-- User options to define separate plain text and HTML signatures for personal and work contexts.
-- A command to copy the current message body (excluding headers and signature) to the kill ring.
-- A command to copy the message body and open it in the Grammarly web editor.
-- An enhanced command to position the point optimally for starting composition.
+- *Signature management.* User options for defining separate plain text and HTML signatures for personal and work email accounts ([[#h:user-options][User options]]).
+- *Message body operations.* Commands to copy the email body to the kill ring or to an external grammar checker ([[#h:message-body-operations][Message body operations]]).
+- *Composition helpers.* Commands that position the cursor and adjust buffer state for a smoother composing experience ([[#h:composition-helpers][Composition helpers]]).
 
-* User Options
+The package depends on =org-msg= and =org-extras=.
+
+* User options
 :PROPERTIES:
 :CUSTOM_ID: h:user-options
 :END:
 
-This section details the user-configurable variables provided by =org-msg-extras.el= for defining email signatures.
-
-** ~org-msg-extras-personal-plain-text-signature~
+** Email signatures
 :PROPERTIES:
-:CUSTOM_ID: h:org-msg-extras-personal-plain-text-signature
+:CUSTOM_ID: h:email-signatures
 :END:
 
 #+vindex: org-msg-extras-personal-plain-text-signature
-Defines the signature string to be used for personal emails composed in plain text. Defaults to "\n--\nPablo\n".
-
-** ~org-msg-extras-personal-html-signature~
-:PROPERTIES:
-:CUSTOM_ID: h:org-msg-extras-personal-html-signature
-:END:
-
 #+vindex: org-msg-extras-personal-html-signature
-Defines the signature string to be used for personal emails composed in Org mode (intended for HTML export). Defaults to an Org signature block: "\n#+begin_signature\n--\n*Pablo*\n#+end_signature".
-
-** ~org-msg-extras-work-plain-text-signature~
-:PROPERTIES:
-:CUSTOM_ID: h:org-msg-extras-work-plain-text-signature
-:END:
-
 #+vindex: org-msg-extras-work-plain-text-signature
-Defines the signature string for work emails composed in plain text. Defaults to the value of ~org-msg-extras-personal-plain-text-signature~.
-
-** ~org-msg-extras-work-html-signature~
-:PROPERTIES:
-:CUSTOM_ID: h:org-msg-extras-work-html-signature
-:END:
-
 #+vindex: org-msg-extras-work-html-signature
-Defines the signature string for work emails composed in Org mode. Defaults to the value of ~org-msg-extras-personal-html-signature~.
+=org-msg-extras.el= provides four user options for defining email signatures, covering two contexts (personal and work) and two formats (plain text and HTML/Org).
 
-*Note:* The actual insertion of these signatures into emails needs to be handled separately, likely by configuring =org-msg= or the underlying mail user agent (e.g., =mu4e=) to use these variables based on context (e.g., sending account).
+The user option ~org-msg-extras-personal-plain-text-signature~ holds the signature for personal emails sent in plain text format. Its default value is ="\n--\nPablo\n"=, a minimal signature preceded by the conventional =--= separator. The type is a string.
+
+The user option ~org-msg-extras-personal-html-signature~ holds the signature for personal emails composed in Org mode (which =org-msg= exports to HTML). Its default value is ="\n#+begin_signature\n--\n*Pablo*\n#+end_signature"=, using the Org signature block syntax that =org-msg= recognizes. The type is a string.
+
+The user option ~org-msg-extras-work-plain-text-signature~ holds the signature for work emails in plain text. By default it is set to the same value as ~org-msg-extras-personal-plain-text-signature~, so you only need to customize it if your work signature differs from your personal one. The type is a string.
+
+The user option ~org-msg-extras-work-html-signature~ holds the signature for work emails in Org/HTML format. By default it is set to the same value as ~org-msg-extras-personal-html-signature~. The type is a string.
+
+These variables are not automatically inserted into messages by =org-msg-extras.el= itself. You should configure your mail user agent or =org-msg= setup to reference the appropriate variable based on the sending account. For example, you might set ~org-msg-signature~ dynamically in a hook based on which email account is active.
 
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
 :END:
 
-=org-msg-extras.el= provides the following interactive commands, intended for use within an =org-msg-edit-mode= buffer:
-
-** Kill Message Body
+** Message body operations
 :PROPERTIES:
-:CUSTOM_ID: h:org-msg-extras-kill-message
+:CUSTOM_ID: h:message-body-operations
 :END:
 
 #+findex: org-msg-extras-kill-message
-The command ~org-msg-extras-kill-message~ copies the main body of the current email message to the Emacs kill ring. It excludes the header section (up to the =:END:= marker) and the signature block (identified by =#+begin_signature=).
-
-** Open Message in Grammarly
-:PROPERTIES:
-:CUSTOM_ID: h:org-msg-extras-open-in-grammarly
-:END:
-
 #+findex: org-msg-extras-open-in-grammarly
-The command ~org-msg-extras-open-in-grammarly~ first copies the message body using ~org-msg-extras-kill-message~ and then opens a specific Grammarly document URL (hardcoded as https://app.grammarly.com/ddocs/2264307164) in the default browser using =browse-url=. The intention is likely to paste the copied text into the Grammarly editor for checking.
+When composing an email in =org-msg-edit-mode=, you may want to extract the message body for use elsewhere. The command ~org-msg-extras-kill-message~ copies the body of the current email to the Emacs kill ring, excluding the header section (everything up to and including the =:END:= line of the properties drawer) and the signature block (starting at =#+begin_signature=). If the current buffer is not in ~org-msg-edit-mode~, the command signals a user error.
 
-** Begin Composition (Enhanced)
+The command ~org-msg-extras-open-in-grammarly~ builds on ~org-msg-extras-kill-message~ by first copying the message body to the kill ring and then opening the Grammarly web editor in the default browser. You can then paste the message body into Grammarly for grammar and style checking. This provides a workaround for cases where the Grammarly Emacs integration is not working reliably.
+
+** Composition helpers
 :PROPERTIES:
-:CUSTOM_ID: h:org-msg-extras-begin-compose
+:CUSTOM_ID: h:composition-helpers
 :END:
 
 #+findex: org-msg-extras-begin-compose
-The command ~org-msg-extras-begin-compose~ provides a slightly modified way to position the point to start writing the email body, compared to the standard =org-msg-goto-body=.
-1. It moves the point to the beginning of the buffer.
-2. If a signature is defined in =org-msg-signature=, it searches forward for it and places the point just before the signature.
-3. If no signature is found, it searches past the Org property drawer (=:PROPERTIES: ... :END:=) and inserts a newline if necessary.
-4. It then calls ~simple-extras-visible-mode-enhanced -1~ (presumably defined elsewhere) which likely adjusts the visibility or folding state for composing.
+#+findex: org-msg-extras-end-of-meta-data
+When you begin composing an email in =org-msg=, the cursor may be positioned in the header area or after the signature, requiring manual navigation to the body. The command ~org-msg-extras-begin-compose~ moves point to the optimal position for starting to type the message body. If ~org-msg-signature~ is set, the command places point just before the signature. Otherwise, it calls ~org-msg-extras-end-of-meta-data~ to skip past the properties drawer and inserts a newline. It also calls ~simple-extras-visible-mode-enhanced~ to adjust buffer visibility for composing.
+
+The command ~org-msg-extras-end-of-meta-data~ is a helper that advances point past consecutive Org property lines (lines matching ~org-property-re~). It is used internally by ~org-msg-extras-begin-compose~ to skip the meta-data section at the top of the =org-msg= buffer ([[#h:composition-helpers][Composition helpers]]).
 
 * Indices
 :PROPERTIES:

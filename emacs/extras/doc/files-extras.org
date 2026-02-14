@@ -1,4 +1,4 @@
-#+title: files-extras: Extensions for File and Buffer Handling
+#+title: files-extras: Extensions for file and buffer handling
 #+author: Pablo Stafforini
 #+email: pablo@stafforini.com
 #+language: en
@@ -8,7 +8,7 @@
 #+texinfo_filename: files-extras.info
 #+texinfo_dir_category: Emacs misc features
 #+texinfo_dir_title: Files Extras: (files-extras)
-#+texinfo_dir_desc: Extensions for File and Buffer Handling
+#+texinfo_dir_desc: Extensions for file and buffer handling
 
 This manual describes the features and customization options for the Emacs Lisp file =files-extras.el=.
 
@@ -17,25 +17,30 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=files-extras.el= provides a wide range of extensions for general file and buffer manipulation in Emacs. It enhances built-in commands, adds new convenience functions, integrates with external tools (like =trash=, =ocrmypdf=), and offers custom transient menus.
+=files-extras.el= extends the built-in =files.el= library with a broad
+set of commands and utilities for managing files and buffers in Emacs.
+It depends on the =paths= package for directory and file path constants
+and on =transient= for quick-access dispatch menus.
 
-The main features include:
+The package addresses several common pain points in daily Emacs usage.
+On macOS, it overrides the default trash mechanism to use the external
+=trash= utility, which preserves Finder's "Put Back" functionality.  It
+adds safeguards around the scratch buffer, preventing accidental kills
+by burying it instead.  It also provides an alert system for auto-save
+data, ensuring that recovery notifications are not silently missed.
 
-- **File Deletion:** Overrides =system-move-file-to-trash= to use the external =trash= utility (macOS) for "Put Back" functionality.
-- **Buffer Management:** Commands to save/revert, bury the scratch buffer instead of killing, create new empty buffers, switch to alternate buffers, kill buffers smartly, and revert all file buffers.
-- **File/Path Utilities:** Get newest file in a directory (excluding macOS clutter), switch to most recent buffer in a specific mode, set buffer-local keys, get file stem, check if point is on last line, copy current path, copy file contents.
-- **External Tools Integration:**
-  + OCR PDF files using =ocrmypdf=.
-  + Download and install "Bypass Paywalls" browser extensions.
-- **File Recovery:** Command to recover all auto-saved files after a crash, alert when auto-save data is detected for the current file.
-- **Diffing:** Command to diff the current buffer against its saved file.
-- **Directory Locals:** Option to walk =.dir-locals.el= upward for chained evaluation (currently commented out).
-- **Image Conversion:** Command to convert the current image buffer to PDF using =convert=.
-- **Package Management:** Commands to open Elpaca package files or specific "extras" files.
-- **Transient Menus:** Dispatchers for quickly opening common configuration files, project files, and package files.
-- **Misc:** DWIM copy command, remove extra blank lines, open Grammarly editor.
+Beyond buffer management, the package integrates with external tools.
+The ~files-extras-ocr-pdf~ command drives =ocrmypdf= to add a text
+layer to scanned PDFs, supporting language selection and forced re-OCR.
+A pair of commands automates downloading and installing the Bypass
+Paywalls browser extensions for Chrome and Firefox.
 
-* User Options
+The package also offers two transient dispatch menus: one for jumping to
+frequently used files (inbox, config, agenda, ledger, etc.) and one for
+opening personal Elpaca-managed packages.  These menus provide a
+keyboard-driven launcher for the files you access most often.
+
+* User options
 :PROPERTIES:
 :CUSTOM_ID: h:user-options
 :END:
@@ -46,149 +51,406 @@ The main features include:
 :END:
 
 #+vindex: files-extras-new-empty-buffer-major-mode
-Specifies the major mode (symbol) to activate in new buffers created by ~files-extras-new-empty-buffer~. Default is =org-mode=.
+The user option ~files-extras-new-empty-buffer-major-mode~ specifies the
+major mode to activate when creating a new empty buffer with
+~files-extras-new-empty-buffer~ ([[#h:creating-buffers][Creating buffers]]).
 
-** ~files-extras-walk-dir-locals-upward~
-:PROPERTIES:
-:CUSTOM_ID: h:files-extras-walk-dir-locals-upward
-:END:
-
-#+vindex: files-extras-walk-dir-locals-upward
-If non-nil, advice for =hack-dir-local-variables= (currently commented out) would evaluate =.dir-locals.el= files starting from the current directory and moving upwards, effectively chaining their settings. Default is nil.
+The default value is ~org-mode~.  It accepts any symbol naming a valid
+major mode function.  If set to ~nil~, the new buffer will use
+~fundamental-mode~.  You might change this to ~markdown-mode~ or
+~text-mode~ if you prefer a different default for scratch-like buffers.
 
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
 :END:
 
-=files-extras.el= provides numerous interactive commands:
-
-** Buffer and File Management
+** Saving and reverting
 :PROPERTIES:
-:CUSTOM_ID: h:buffer-file-management
+:CUSTOM_ID: h:saving-and-reverting
 :END:
 
 #+findex: files-extras-save-and-revert-buffer
-~files-extras-save-and-revert-buffer~: Saves the current buffer, then reverts it from the file on disk.
-#+findex: files-extras-new-empty-buffer
-~files-extras-new-empty-buffer~: Creates a new buffer named "untitled<n>" with the major mode specified by ~files-extras-new-empty-buffer-major-mode~.
-#+findex: files-extras-new-buffer-in-current-mode
-~files-extras-new-buffer-in-current-mode~: Creates a new buffer with the same major mode as the current buffer. Handles shell/eshell modes specially.
 #+findex: files-extras-save-all-buffers
-~files-extras-save-all-buffers~: Saves all file-visiting buffers without prompting.
 #+findex: files-extras-save-buffer-no-hooks
-~files-extras-save-buffer-no-hooks~: Saves the current buffer without running =before-save-hook= or =after-save-hook=.
-#+findex: files-extras-switch-to-alternate-buffer
-~files-extras-switch-to-alternate-buffer~: Switches to the most recently visited buffer in the current window (respecting frame's =buffer-predicate=).
-#+findex: files-extras-kill-this-buffer
-~files-extras-kill-this-buffer~: Kills the current buffer.
-#+findex: file-extras-kill-other-buffer
-~file-extras-kill-other-buffer~: Kills the buffer displayed in the other window.
-#+findex: files-extras-kill-this-buffer-switch-to-other-window
-~files-extras-kill-this-buffer-switch-to-other-window~: Kills the current buffer and switches focus to the other window.
-#+findex: files-extras-kill-all-file-visiting-buffers
-~files-extras-kill-all-file-visiting-buffers~: Kills all buffers that are visiting files, optionally excluding specific files.
-#+findex: files-extras-bury-buffer-switch-to-other-window
-~files-extras-bury-buffer-switch-to-other-window~: Buries the current buffer and switches focus to the other window.
 #+findex: files-extras-revert-all-file-buffers
-~files-extras-revert-all-file-buffers~: Reverts all unmodified file-visiting buffers without confirmation. Kills buffers whose files no longer exist or are unreadable.
-#+findex: files-extras-show-buffer-name
-~files-extras-show-buffer-name~: Displays the full path of the current buffer's file in the echo area and copies it to the kill ring.
-#+findex: files-extras-recover-all-files
-~files-extras-recover-all-files~: Attempts to recover all files found in the auto-save directory. Useful after a crash when =recover-session= might not work. Runs =diff-buffer-with-file= after each recovery attempt.
-#+findex: files-extras-diff-buffer-with-file
-~files-extras-diff-buffer-with-file~: Runs =diff-buffer-with-file= using unified diff format (=-u=). Also added as =:after= advice to =recover-this-file=.
-#+findex: files-extras-copy-current-path
-~files-extras-copy-current-path~: Copies the current buffer's file path or =default-directory= to the kill ring.
-#+findex: file-extras-copy-contents
-~file-extras-copy-contents~: Copies the entire content of a specified file (or file at point/current buffer's file) to the kill ring.
-#+findex: files-extras-buffer-local-set-key
-~files-extras-buffer-local-set-key~: Interactively binds a KEY to a COMMAND locally in the current buffer.
-#+findex: file-extras-copy-as-kill-dwim
-~file-extras-copy-as-kill-dwim~: Copies the relevant string based on context (e.g., symbol name from helpful buffer) to the kill ring.
-#+findex: file-extras-remove-extra-blank-lines
-~file-extras-remove-extra-blank-lines~: Removes consecutive blank lines, leaving only single blank lines.
-#+findex: file-extras-grammarly-open-in-external-editor
-~file-extras-grammarly-open-in-external-editor~: Opens a specific Grammarly document URL in the default browser.
+The command ~files-extras-save-and-revert-buffer~ saves the current
+buffer and immediately reverts it from disk.  This is useful when an
+external process has modified the file and you want to ensure the buffer
+reflects both your unsaved changes and the file's current state on disk.
 
-** External Tools and Integration
+The command ~files-extras-save-all-buffers~ saves all file-visiting
+buffers without prompting for confirmation.  It passes a prefix argument
+of 4 to ~save-some-buffers~, which bypasses the per-buffer confirmation
+that the default behavior would require.
+
+The command ~files-extras-save-buffer-no-hooks~ saves the current buffer
+while temporarily disabling both ~before-save-hook~ and
+~after-save-hook~.  This is useful when hooks perform operations (such
+as formatting or linting) that you want to skip for a particular save.
+
+The command ~files-extras-revert-all-file-buffers~ refreshes every open
+file buffer without confirmation.  Buffers with unsaved modifications
+are left untouched, but buffers whose underlying files are no longer
+readable are killed.  A summary message is displayed when the process
+completes.
+
+** Creating buffers
 :PROPERTIES:
-:CUSTOM_ID: h:external-tools
+:CUSTOM_ID: h:creating-buffers
+:END:
+
+#+findex: files-extras-new-empty-buffer
+#+findex: files-extras-new-buffer-in-current-mode
+The command ~files-extras-new-empty-buffer~ creates a new buffer named
+=untitled<n>= and activates the major mode specified by the user option
+~files-extras-new-empty-buffer-major-mode~ ([[#h:files-extras-new-empty-buffer-major-mode][files-extras-new-empty-buffer-major-mode]]).
+The buffer is marked so that ~save-some-buffers~ will offer to save it.
+
+The command ~files-extras-new-buffer-in-current-mode~ creates a new
+buffer with the same major mode as the current one.  For ~shell-mode~ and
+~eshell-mode~, it calls the appropriate shell launcher instead of simply
+setting the mode, ensuring a proper process is attached.
+
+** Switching buffers
+:PROPERTIES:
+:CUSTOM_ID: h:switching-buffers
+:END:
+
+#+findex: files-extras-switch-to-alternate-buffer
+The command ~files-extras-switch-to-alternate-buffer~ switches to the
+most recently used buffer in the current window, functioning as a quick
+toggle between two buffers.  It respects the frame's ~buffer-predicate~
+parameter, so it will skip buffers that the frame is configured to
+ignore.  Internally it uses ~files-extras-get-alternate-buffer~ to
+determine the target ([[#h:buffer-information][Buffer information]]).
+
+** Killing and burying buffers
+:PROPERTIES:
+:CUSTOM_ID: h:killing-and-burying
+:END:
+
+#+findex: files-extras-kill-this-buffer
+#+findex: file-extras-kill-other-buffer
+#+findex: files-extras-kill-this-buffer-switch-to-other-window
+#+findex: files-extras-kill-all-file-visiting-buffers
+#+findex: files-extras-bury-buffer-switch-to-other-window
+The command ~files-extras-kill-this-buffer~ kills the current buffer.
+This is a more reliable alternative to the built-in ~kill-this-buffer~,
+which can sometimes stop working due to menu-bar assumptions.
+
+The command ~file-extras-kill-other-buffer~ kills the buffer displayed in
+the other window without changing the current window's focus.
+
+The command ~files-extras-kill-this-buffer-switch-to-other-window~ kills
+the current buffer and then switches to the last used window via
+~window-extras-switch-to-last-window~ (from =window-extras.el=).  This
+is useful when you finish reviewing a buffer and want to return to your
+previous editing context in a single action.
+
+The command ~files-extras-kill-all-file-visiting-buffers~ kills every
+buffer that is visiting a file.  It accepts an optional EXCLUDED-FILES
+list (for programmatic use) to preserve specific buffers.
+
+The command ~files-extras-bury-buffer-switch-to-other-window~ buries the
+current buffer and switches to the last used window.  This is a softer
+alternative to killing: the buffer remains available but is moved to the
+bottom of the buffer list.
+
+** Evaluating code
+:PROPERTIES:
+:CUSTOM_ID: h:evaluating-code
+:END:
+
+#+findex: files-extras-eval-region-or-buffer
+The command ~files-extras-eval-region-or-buffer~ evaluates the active
+region if one is selected, otherwise evaluates the entire buffer.  This
+provides a single keybinding for both common evaluation workflows.
+
+** Copying paths and contents
+:PROPERTIES:
+:CUSTOM_ID: h:copying-paths-and-contents
+:END:
+
+#+findex: files-extras-show-buffer-name
+#+findex: files-extras-copy-current-path
+#+findex: file-extras-copy-contents
+#+findex: file-extras-copy-as-kill-dwim
+The command ~files-extras-show-buffer-name~ displays the buffer name in
+the echo area and copies it to the kill ring.
+
+The command ~files-extras-copy-current-path~ copies the full path of the
+current buffer's file (or ~default-directory~ if the buffer is not
+visiting a file) to the kill ring.
+
+The command ~file-extras-copy-contents~ copies the entire contents of a
+file to the kill ring.  When called interactively, it uses the file at
+point in Dired, the current buffer's file, or prompts for a file.
+
+The command ~file-extras-copy-as-kill-dwim~ copies a context-appropriate
+string to the kill ring.  Currently, in a ~helpful-mode~ buffer, it
+extracts the symbol name from the buffer title and kills the buffer.
+
+** OCR for PDF files
+:PROPERTIES:
+:CUSTOM_ID: h:ocr-pdf
 :END:
 
 #+findex: files-extras-ocr-pdf
-~files-extras-ocr-pdf~: Runs =ocrmypdf= on a PDF file (at point in Dired, current buffer, or associated with Ebib entry). Prompts for language. Handles forcing OCR and provides feedback via messages.
-#+findex: files-extras-download-bypass-paywalls-chrome
-~files-extras-download-bypass-paywalls-chrome~: Downloads the "Bypass Paywalls Clean" Chrome extension zip, extracts it, and opens both the Chrome extensions page and the extracted folder for manual installation.
-#+findex: files-extras-download-bypass-paywalls-firefox
-~files-extras-download-bypass-paywalls-firefox~: Downloads the "Bypass Paywalls Clean" Firefox extension XPI file and opens both the Firefox extensions page and the downloads folder containing the XPI for manual installation.
+The command ~files-extras-ocr-pdf~ applies optical character recognition
+to a PDF file using the external =ocrmypdf= tool (which must be
+installed separately, e.g., via =brew install ocrmypdf=).
 
-** Package Management (Elpaca)
+The command determines the file to OCR from context: the file at point
+in Dired, the file visited in ~pdf-view-mode~, or the file associated
+with the current Ebib or BibTeX entry.  It prompts for the language of
+the document, using either Ebib's language field or a general language
+selector.
+
+With a prefix argument, the command forces OCR even if the PDF already
+contains a text layer.  Without the prefix argument, =ocrmypdf= will
+skip files that have already been processed and report accordingly.
+
+The process runs asynchronously.  Status messages are displayed as the
+OCR proceeds, with duplicate messages suppressed.  The process filter
+~files-extras-ocr-pdf-process-filter~ translates raw =ocrmypdf= output
+into user-friendly messages ([[#h:process-support][Process support]]).
+
+** File recovery and diffing
+:PROPERTIES:
+:CUSTOM_ID: h:file-recovery
+:END:
+
+#+findex: files-extras-recover-all-files
+#+findex: files-extras-diff-buffer-with-file
+The command ~files-extras-recover-all-files~ recovers all files that have
+auto-save data in the Emacs auto-save directory.  This is useful after a
+crash when ~recover-session~ fails because no session file was created.
+After each recovery attempt, it runs ~files-extras-diff-buffer-with-file~
+to show the differences.
+
+The command ~files-extras-diff-buffer-with-file~ runs a unified diff
+(=-u=) comparing the current buffer against the file on disk.  This
+command is also automatically called after ~recover-this-file~ via
+=:after= advice, so you always see what changed.
+
+** Image conversion
+:PROPERTIES:
+:CUSTOM_ID: h:image-conversion
+:END:
+
+#+findex: files-extras-convert-image-to-pdf
+The command ~files-extras-convert-image-to-pdf~ converts the image file
+visited by the current buffer to PDF using the =convert= tool
+(ImageMagick).  The resulting PDF is placed in the same directory with
+the same base name.
+
+** Removing blank lines
+:PROPERTIES:
+:CUSTOM_ID: h:removing-blank-lines
+:END:
+
+#+findex: file-extras-remove-extra-blank-lines
+The command ~file-extras-remove-extra-blank-lines~ collapses consecutive
+runs of blank lines into a single blank line throughout the current
+buffer.
+
+** Bypass paywalls extensions
+:PROPERTIES:
+:CUSTOM_ID: h:bypass-paywalls
+:END:
+
+#+findex: files-extras-download-bypass-paywalls-chrome
+#+findex: files-extras-download-bypass-paywalls-firefox
+The command ~files-extras-download-bypass-paywalls-chrome~ downloads the
+Bypass Paywalls Chrome Clean extension as a zip file, extracts it, opens
+the Chrome extensions management page (via a Keyboard Maestro macro),
+and opens the extracted folder in Finder.  The user then drags the
+folder onto the extensions page to complete installation.
+
+The command ~files-extras-download-bypass-paywalls-firefox~ performs the
+equivalent operation for Firefox, downloading an XPI file and opening
+the Firefox extensions page for manual installation.
+
+Both commands verify that the download URL is reachable before
+proceeding and will signal an error if it is not.
+
+** Opening external editors
+:PROPERTIES:
+:CUSTOM_ID: h:external-editors
+:END:
+
+#+findex: file-extras-grammarly-open-in-external-editor
+The command ~file-extras-grammarly-open-in-external-editor~ opens
+Grammarly's web-based external editor in the default browser.
+
+** Buffer-local key bindings
+:PROPERTIES:
+:CUSTOM_ID: h:buffer-local-keys
+:END:
+
+#+findex: files-extras-buffer-local-set-key
+The command ~files-extras-buffer-local-set-key~ interactively binds a
+key sequence to a command in the current buffer only.  It creates a new
+sparse keymap with the current local map as its parent, adds the
+binding, and installs the new map.  This is useful for one-off bindings
+in specific buffers without affecting the global or mode-level keymap.
+
+** Transient dispatch menus
+:PROPERTIES:
+:CUSTOM_ID: h:transient-dispatch
+:END:
+
+#+findex: files-extras-dispatch
+#+findex: files-extras-packages-dispatch
+The command ~files-extras-dispatch~ presents a transient menu for
+jumping to frequently used files: inbox (mobile and desktop), agenda,
+config, feeds, notes, scratch, calendar, ledger, and others.  Each
+entry opens the corresponding file or buffer with a single keystroke.
+
+The command ~files-extras-packages-dispatch~ presents a transient menu
+for opening personal Elpaca-managed package files, organized into
+"Tlon" and "Personal" groups.  It is accessible from the main dispatch
+menu via the =p= key.
+
+* Functions
+:PROPERTIES:
+:CUSTOM_ID: h:functions
+:END:
+
+** Buffer information
+:PROPERTIES:
+:CUSTOM_ID: h:buffer-information
+:END:
+
+#+findex: files-extras-get-alternate-buffer
+#+findex: files-extras-get-stem-of-current-buffer
+#+findex: files-extras-buffer-file-name
+#+findex: files-extras-open-buffer-files
+#+findex: file-extras-bollp
+The function ~files-extras-get-alternate-buffer~ returns the most
+recently used buffer in the current window, respecting the frame's
+~buffer-predicate~.  It is used internally by
+~files-extras-switch-to-alternate-buffer~ ([[#h:switching-buffers][Switching buffers]]).
+
+The function ~files-extras-get-stem-of-current-buffer~ returns the base
+name (without extension or directory) of the current buffer's file.
+
+The function ~files-extras-buffer-file-name~ returns the file name of
+the current buffer, adjusting paths that go through the =git-dirs=
+directory structure to point to their canonical locations.
+
+The function ~files-extras-open-buffer-files~ returns a list of all
+=.org= files currently open in Emacs buffers.
+
+The function ~file-extras-bollp~ returns ~t~ if point is at the
+beginning of the last line in the buffer.
+
+** File operations
+:PROPERTIES:
+:CUSTOM_ID: h:file-operations
+:END:
+
+#+findex: files-extras-read-file
+#+findex: files-extras-newest-file
+#+findex: files-extras-lines-to-list
+#+findex: files-extras-list-to-lines
+#+findex: files-extras-get-help-file
+#+findex: files-extras-get-nth-directory
+#+findex: files-extras-get-current-dir-lowercased
+The function ~files-extras-read-file~ prompts for a file path with a
+context-aware default: the file at point in Dired, the current buffer's
+file, or an explicit FILE argument.
+
+The function ~files-extras-newest-file~ returns the path of the most
+recently modified file in a directory, excluding =.DS_Store= and
+=.localized= files (common macOS clutter).
+
+The function ~files-extras-lines-to-list~ reads a file and returns its
+lines as a list of strings.  The function ~files-extras-list-to-lines~
+performs the inverse operation, writing a list to a file with one element
+per line.
+
+The function ~files-extras-get-help-file~ searches for a documentation
+file (=.org= or =.md=) corresponding to the given source file, looking
+in =doc/= and =docs/= subdirectories.
+
+The function ~files-extras-get-nth-directory~ extracts the Nth path
+component from a directory path.
+
+The function ~files-extras-get-current-dir-lowercased~ returns the base
+name of the current directory, lowercased, with hyphens replaced by
+underscores.
+
+** Mode and buffer switching
+:PROPERTIES:
+:CUSTOM_ID: h:mode-switching
+:END:
+
+#+findex: files-extras-switch-to-most-recent-buffer-in-mode
+The function ~files-extras-switch-to-most-recent-buffer-in-mode~
+switches to the most recently used buffer whose major mode derives from
+the given MODE.
+
+** Package management
 :PROPERTIES:
 :CUSTOM_ID: h:package-management
 :END:
 
 #+findex: files-extras-open-elpaca-package
-~files-extras-open-elpaca-package~: Opens the main Elisp file for a specified Elpaca-managed package.
 #+findex: files-extras-open-extras-package
-~files-extras-open-extras-package~: Prompts (with completion) for an "extras" file within the =emacs/extras/= directory and opens it.
+The function ~files-extras-open-elpaca-package~ opens the main Elisp
+file for a named Elpaca-managed package by constructing the path within
+the Elpaca repos directory.
 
-** Transient Dispatch Menus
+The function ~files-extras-open-extras-package~ prompts (with
+completion) for a file in the =emacs/extras/= directory and opens it.
+It is used by the ~files-extras-dispatch~ menu.
+
+** Process support
 :PROPERTIES:
-:CUSTOM_ID: h:transient-dispatch-menus
+:CUSTOM_ID: h:process-support
 :END:
 
-#+findex: files-extras-dispatch
-~files-extras-dispatch~: Transient menu for quickly opening common configuration files (inbox, agenda, config, feeds, ledger, notes, etc.).
-#+findex: files-extras-packages-dispatch
-~files-extras-packages-dispatch~: Transient menu (part of =files-extras-dispatch=) for opening personal Elpaca package files.
+#+findex: files-extras-ocr-pdf-process-filter
+The function ~files-extras-ocr-pdf-process-filter~ is a process filter
+for =ocrmypdf= output.  It translates raw process output into
+human-readable status messages and suppresses duplicates.  For example,
+it informs the user when OCR has already been performed and a prefix
+argument is needed to force re-processing.
 
-* Configuration Functions
+** Trash and auto-save support
 :PROPERTIES:
-:CUSTOM_ID: h:configuration-functions
+:CUSTOM_ID: h:trash-and-autosave
 :END:
 
-*(Includes functions for internal use, configuration, or programmatic access)*
+#+findex: files-extras-system-move-file-to-trash
+#+findex: files-extras-bury-scratch-buffer
+#+findex: files-extras-auto-save-alert
+#+findex: files-extras-make-hashed-auto-save-file-name-a
+#+findex: files-extras-make-hashed-backup-file-name-a
+The function ~files-extras-system-move-file-to-trash~ overrides
+~system-move-file-to-trash~ (via =:override= advice) to use the
+external =trash= utility on macOS.  This preserves Finder's "Put Back"
+functionality, which the default Emacs trash implementation does not
+support.
 
-- ~files-extras-bury-scratch-buffer~: Hook function for =kill-buffer-query-functions= to bury the scratch buffer instead of killing it.
-- ~files-extras-auto-save-alert~: Hook function for =find-file-hook= to alert the user if auto-save data exists for the opened file.
+The function ~files-extras-bury-scratch-buffer~ is added to
+~kill-buffer-query-functions~.  It intercepts attempts to kill the
+=*scratch*= buffer and buries it instead, returning ~nil~ to prevent the
+kill.
 
-* Utility Functions
-:PROPERTIES:
-:CUSTOM_ID: h:utility-functions
-:END:
+The function ~files-extras-auto-save-alert~ is added to
+~find-file-hook~.  When auto-save data is newer than the visited file,
+it triggers a high-severity alert (via the =alert= package) to ensure
+the notification is not missed.
 
-*(Includes functions for internal use, configuration, or programmatic access)*
-
-- ~files-extras-read-file~: Prompts for a file path with context-aware default.
-- ~files-extras-get-alternate-buffer~: Returns the buffer name for ~files-extras-switch-to-alternate-buffer~.
-- ~files-extras-newest-file~: Returns the path of the most recently modified file in a directory, ignoring =.DS_Store= and =.localized=.
-- ~files-extras-switch-to-most-recent-buffer-in-mode~: Switches to the most recent buffer matching a given major MODE.
-- ~files-extras-ocr-pdf-process-filter~: Process filter for =ocrmypdf= output, displaying relevant messages.
-- ~files-extras-get-stem-of-current-buffer~: Returns the filename base (without extension) of the current buffer's file.
-- ~file-extras-bollp~: Returns t if point is at the beginning of the last line.
-- ~files-extras-open-buffer-files~: Returns a list of =.org= files currently open in buffers.
-- ~files-extras-walk-dir-locals-file~ (advice, commented out): Would modify =hack-dir-local-variables= to evaluate =.dir-locals.el= upwards.
-- ~files-extras-get-current-dir-lowercased~: Returns the base name of the current directory, lowercased, with hyphens replaced by underscores.
-- ~files-extras-lines-to-list~: Reads a file and returns its lines as a list of strings.
-- ~files-extras-list-to-lines~: Writes a list of strings to a file, one element per line.
-- ~files-extras-buffer-file-name~: Returns the name of the file the buffer is visiting, handling potential =git-dirs= path adjustments.
-- ~files-extras-get-nth-directory~: Returns the Nth directory component of a PATH.
-
-* Patched Functions / Advice
-:PROPERTIES:
-:CUSTOM_ID: h:patched-functions-advice-files
-:END:
-
-=files-extras.el= advises or overrides several built-in functions:
-
-- ~system-move-file-to-trash~: Overridden by ~files-extras-system-move-file-to-trash~ to use the external =trash= utility on macOS.
-- =kill-buffer-query-functions=: Hooked by ~files-extras-bury-scratch-buffer~ to prevent killing the scratch buffer.
-- =find-file-hook=: Hooked by ~files-extras-auto-save-alert~ to check for auto-save data.
-- =recover-this-file=: Advised =:after= by ~files-extras-diff-buffer-with-file~ to show diff after recovery.
-- =make-auto-save-file-name=: Advised =:around= by ~files-extras-make-hashed-auto-save-file-name-a~ to use hashed names for non-file buffers.
-- =make-backup-file-name-1=: Advised =:around= by ~files-extras-make-hashed-backup-file-name-a~ to use hashed names for backups in specified directories.
-- =hack-dir-local-variables=: Advised =:around= by ~files-extras-walk-dir-locals-file~ (commented out) to change evaluation order.
+The function ~files-extras-make-hashed-auto-save-file-name-a~ advises
+~make-auto-save-file-name~ (=:around=) to hash the buffer file name,
+preventing excessively long auto-save file paths.  Similarly,
+~files-extras-make-hashed-backup-file-name-a~ advises
+~make-backup-file-name-1~ to hash backup file names in directories
+specified by ~backup-directory-alist~.
 
 * Indices
 :PROPERTIES:

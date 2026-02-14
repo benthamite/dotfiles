@@ -17,111 +17,247 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=bibtex-extras.el= provides extensions for Emacs' built-in =bibtex-mode=. These extensions focus on manipulating BibTeX entries and fields, integrating with =ebib=, and providing helper functions for common tasks like getting entry keys or fields.
+=bibtex-extras.el= extends Emacs' built-in =bibtex-mode= with functions
+for manipulating BibTeX entries and fields, integrating with the =ebib=
+bibliography manager, and automating common tasks in a BibLaTeX
+workflow.  It depends on =ebib= for database operations and =el-patch=
+for patching built-in BibTeX functions.
 
-The main features include:
+The package provides a comprehensive set of getter and setter functions
+for BibTeX fields, making it easy to read, write, and modify field
+values programmatically.  These functions are used by other packages in
+the extras ecosystem (such as =ebib-extras.el= and =eww-extras.el=) as
+building blocks for higher-level operations.
 
-- A list of valid BibLaTeX fields for reference or completion.
-- Functions to get the key or a specific field value from the current BibTeX entry.
-- Functions to add, update, or append values to fields within an entry.
-- A command to convert the "titleaddon" field (often used by Zotero) to the standard "journaltitle" field.
-- A command to kill (delete) a specific field from the current entry.
-- A command to move the current entry to a different bibliography file.
-- A command to open the current BibTeX entry directly in =ebib=.
-- Helper functions for sorting BibTeX entries based on specific criteria (e.g., presence of crossref).
-- Functions for attaching files downloaded via other packages (like =zotra= or =eww=) to the correct BibTeX entry.
+For daily use, the package offers commands to open the current entry in
+Ebib, move entries between bibliography files, convert misnamed fields
+(e.g., Zotero's "titleaddon" to the standard "journaltitle"), attach
+downloaded files to entries, and escape special characters in BibTeX
+files.
 
-* Variables
-:PROPERTIES:
-:CUSTOM_ID: h:variables
-:END:
+The package also includes a custom sorting predicate that replicates
+Ebib's sorting behavior, ensuring consistent ordering regardless of
+whether the buffer is sorted by =bibtex-mode= or =ebib=.
 
-** ~bibtex-extras-biblatex-fields~
-:PROPERTIES:
-:CUSTOM_ID: h:bibtex-extras-biblatex-fields
-:END:
-
-#+vindex: bibtex-extras-biblatex-fields
-A constant list containing strings of valid field names according to the BibLaTeX standard. This can be used for completion or validation purposes.
+Two =el-patch= modifications adjust built-in behavior: one adds
+"urldate" to the year lookup fields for automatic key generation, and
+the other changes the page-dashes formatter to add a missing en-dash
+rather than remove an existing one.
 
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
 :END:
 
-=bibtex-extras.el= provides the following interactive commands:
-
-** Convert titleaddon to journaltitle
+** Opening entries in Ebib
 :PROPERTIES:
-:CUSTOM_ID: h:bibtex-extras-convert-titleaddon-to-journaltitle
-:END:
-
-#+findex: bibtex-extras-convert-titleaddon-to-journaltitle
-The command ~bibtex-extras-convert-titleaddon-to-journaltitle~ searches for a field named "titleaddon" within the current BibTeX entry (narrowed view) and replaces the field name with "journaltitle". This is useful for correcting entries imported from tools like Zotero that might use "titleaddon" for the publication venue instead of the standard "journaltitle".
-
-** Kill Field
-:PROPERTIES:
-:CUSTOM_ID: h:bibtex-extras-kill-field
-:END:
-
-#+findex: bibtex-extras-kill-field
-The command ~bibtex-extras-kill-field~ prompts the user for a field name (with completion using =bibtex-read-field-name=) and then deletes that field and its value from the current BibTeX entry.
-
-** Move Entry
-:PROPERTIES:
-:CUSTOM_ID: h:bibtex-extras-move-entry
-:END:
-
-#+findex: bibtex-extras-move-entry
-The command ~bibtex-extras-move-entry~ moves the BibTeX entry specified by KEY to a TARGET bibliography file. It prompts the user for both KEY and TARGET file. It finds the source file of the KEY (using =ebib-extras-get-file-of-key=), kills the entry from the source buffer, saves it, then yanks the entry into the target buffer, saves it, and messages the user. It requires =ebib= to be active to locate the source file.
-
-** Open in Ebib
-:PROPERTIES:
-:CUSTOM_ID: h:bibtex-extras-open-in-ebib
+:CUSTOM_ID: h:opening-in-ebib
 :END:
 
 #+findex: bibtex-extras-open-in-ebib
-The command ~bibtex-extras-open-in-ebib~ opens the BibTeX entry at point in the =ebib= interface. It retrieves the current entry's key, saves the current buffer, ensures the corresponding database is loaded and up-to-date in =ebib=, switches to the =ebib= entry buffer for that key, and displays it.
+The command ~bibtex-extras-open-in-ebib~ opens the BibTeX entry at point
+in the Ebib interface.  It saves the current buffer, reloads the
+corresponding Ebib database to reflect any recent edits, switches to
+the entry in Ebib, and displays the entry buffer.
 
-** Set Field
+This is useful when you are editing a BibTeX file directly and want to
+switch to Ebib's richer interface for operations like viewing associated
+files, editing fields with completion, or navigating cross-references.
+
+** Setting fields interactively
 :PROPERTIES:
-:CUSTOM_ID: h:bibtex-extras-set-field
+:CUSTOM_ID: h:setting-fields
 :END:
 
 #+findex: bibtex-extras-set-field
-The command ~bibtex-extras-set-field~ allows interactively setting the value of a field in the current BibTeX entry. It prompts for the FIELD name (with completion using ~bibtex-extras-biblatex-fields~) and the VALUE (pre-filling with the current value if the field exists). It then uses =bibtex-set-field= to update the entry.
+The command ~bibtex-extras-set-field~ prompts for a field name and a
+value, then sets that field in the current entry.  If the field already
+exists, it replaces the value; if it does not, it creates the field.
+This command was adapted from ~bibtex-set-field~ in =doi-utils.el=.
 
-* Utility Functions
+** Attaching files from URLs
 :PROPERTIES:
-:CUSTOM_ID: h:utility-functions
+:CUSTOM_ID: h:attaching-files
 :END:
 
-These functions provide helper functionalities used by other commands or for programmatic use.
+#+findex: bibtex-extras-url-to-pdf-attach
+#+findex: bibtex-extras-url-to-html-attach
+The command ~bibtex-extras-url-to-pdf-attach~ generates a PDF from the
+URL field of the current BibTeX entry (using ~eww-extras-url-to-file~
+from =eww-extras.el=) and attaches the resulting file to the entry.
+This provides a one-step workflow for archiving web resources alongside
+their bibliographic records.
 
-- ~bibtex-extras-get-key~: Returns the BibTeX key (e.g., "Author2024") of the entry at point.
-- ~bibtex-extras-add-or-update-field~: Adds a FIELD with VALUE if it doesn't exist, or updates the existing FIELD with VALUE.
-- ~bibtex-extras-append-to-field~: Appends VALUE to the existing content of FIELD, using an optional DELIMITER (defaults to ";"). If the field doesn't exist, it creates it with VALUE.
-- ~bibtex-extras-get-entry-as-string~: Returns the entire BibTeX entry at point (or specified by KEY) as a string. Can optionally return only the value of a specific FIELD within that entry.
-- ~bibtex-extras-get-field~: Returns the value of a specified FIELD within the current entry, cleaning up whitespace.
-- ~bibtex-extras-get-field-name~: Returns the name of the BibTeX field at point.
-- ~bibtex-extras-get-field-in-string~: Extracts the value of a FIELD from a given BibTeX entry STRING.
-- ~bibtex-extras-entry-sorter~: Helper function for sorting; returns a list containing the entry key and whether it has a "crossref" field. Used by ~bibtex-extras-lessp~.
-- ~bibtex-extras-lessp~: Predicate function for sorting BibTeX entries. It prioritizes entries with a "crossref" field (sorting them reverse-alphabetically by key) and then sorts remaining entries alphabetically by key. This mimics Ebib's sorting behavior.
-- ~bibtex-extras-attach-file-to-entry~: Attaches a FILE to the BibTeX entry whose key matches the base name of the FILE within a specified BIBTEX-FILE. Used as a callback for download functions.
+The command ~bibtex-extras-url-to-html-attach~ performs the equivalent
+operation for HTML files.  Both commands require the entry to have a
+"url" field.
 
-* Patched Functions
+** Escaping special characters
+:PROPERTIES:
+:CUSTOM_ID: h:escaping-characters
+:END:
+
+#+findex: bibtex-extras-escape-special-characters
+The command ~bibtex-extras-escape-special-characters~ scans the current
+BibTeX file and escapes unescaped special characters (=$=, =%=, =#=,
+=&=) by prepending a backslash.  It skips the "url" and "file" fields,
+where these characters are legitimate.
+
+This is useful after importing entries from external sources that may
+not properly escape LaTeX-special characters.
+
+* Functions
+:PROPERTIES:
+:CUSTOM_ID: h:functions
+:END:
+
+** Getting entry and field data
+:PROPERTIES:
+:CUSTOM_ID: h:getters
+:END:
+
+#+findex: bibtex-extras-get-key
+#+findex: bibtex-extras-get-field
+#+findex: bibtex-extras-get-field-name
+#+findex: bibtex-extras-get-field-in-string
+#+findex: bibtex-extras-get-entry-as-string
+The function ~bibtex-extras-get-key~ returns the citation key of the
+BibTeX entry at point (e.g., "Author2024").  It narrows to the entry
+and extracts the key from the entry header.
+
+The function ~bibtex-extras-get-field~ returns the value of a named
+field in the current entry.  Whitespace (newlines, tabs, multiple
+spaces) within the value is normalized to single spaces.  It returns
+~nil~ if the field is empty or absent.
+
+The function ~bibtex-extras-get-field-name~ returns the name of the
+BibTeX field at point.  This is useful for context-dependent operations.
+
+The function ~bibtex-extras-get-field-in-string~ extracts a field value
+from a BibTeX entry represented as a string.  It creates a temporary
+buffer, inserts the string, and delegates to ~bibtex-extras-get-field~.
+
+The function ~bibtex-extras-get-entry-as-string~ returns the complete
+BibTeX entry at point (or a specified KEY) as a string.  When an
+optional FIELD argument is provided, it returns only that field's value.
+The search can be restricted to specific FILES or defaults to
+~bibtex-files~.
+
+** Setting and modifying fields
+:PROPERTIES:
+:CUSTOM_ID: h:setters
+:END:
+
+#+findex: bibtex-extras-add-or-update-field
+#+findex: bibtex-extras-append-to-field
+#+findex: bibtex-extras-kill-field
+#+findex: bibtex-extras-convert-titleaddon-to-journaltitle
+The function ~bibtex-extras-add-or-update-field~ creates a field with
+the given value if it does not exist, or updates its value if it does.
+It combines ~bibtex-make-field~ and ~bibtex-set-field~ into a single
+operation.
+
+The function ~bibtex-extras-append-to-field~ appends a value to an
+existing field, using a configurable delimiter (defaulting to ";").  If
+the field is empty, it sets the value directly.  This is useful for
+fields like "keywords" that accumulate multiple values.
+
+The function ~bibtex-extras-kill-field~ removes a named field from the
+current entry entirely.
+
+The function ~bibtex-extras-convert-titleaddon-to-journaltitle~ renames
+the "titleaddon" field to "journaltitle" in the current entry.  This
+corrects a common issue with entries imported via the Zotero translation
+server, which records the online publication venue in "titleaddon"
+rather than the standard BibLaTeX "journaltitle" field.
+
+** Moving entries
+:PROPERTIES:
+:CUSTOM_ID: h:moving-entries
+:END:
+
+#+findex: bibtex-extras-move-entry
+The function ~bibtex-extras-move-entry~ moves a BibTeX entry identified
+by KEY from its current bibliography file to a TARGET file.  It locates
+the source file using ~ebib-extras-get-file-of-key~, kills the entry
+from the source buffer, and yanks it at the end of the target buffer,
+saving both.  Ebib must be open for the source file lookup to work.
+
+** Attaching files to entries
+:PROPERTIES:
+:CUSTOM_ID: h:attaching-to-entries
+:END:
+
+#+findex: bibtex-extras-url-to-file-attach
+#+findex: bibtex-extras-attach-file-to-entry
+The function ~bibtex-extras-url-to-file-attach~ generates a file of the
+specified type from the entry's URL field and attaches it using a
+callback.  It is the shared implementation behind
+~bibtex-extras-url-to-pdf-attach~ and ~bibtex-extras-url-to-html-attach~
+([[#h:attaching-files][Attaching files from URLs]]).
+
+The function ~bibtex-extras-attach-file-to-entry~ attaches a file to
+the BibTeX entry whose key matches the file's base name.  It is used as
+a callback by the URL-to-file download functions.
+
+** Sorting entries
+:PROPERTIES:
+:CUSTOM_ID: h:sorting-entries
+:END:
+
+#+findex: bibtex-extras-entry-sorter
+#+findex: bibtex-extras-lessp
+The function ~bibtex-extras-entry-sorter~ returns a list containing the
+entry key and a flag indicating whether the entry has a "crossref"
+field.  It is used by ~bibtex-maintain-sorted-entries~ as the key
+extraction function.
+
+The function ~bibtex-extras-lessp~ is the comparison predicate for
+sorting BibTeX entries.  Entries with a "crossref" field are placed
+before others and sorted in reverse alphabetical order by key.  All
+remaining entries are sorted alphabetically.  This replicates Ebib's
+sorting behavior, ensuring that sorting by either tool produces the same
+result.
+
+** Miscellaneous helpers
+:PROPERTIES:
+:CUSTOM_ID: h:misc-helpers
+:END:
+
+#+findex: bibtex-extras-replace-element-by-name
+The function ~bibtex-extras-replace-element-by-name~ replaces an
+element in a list whose ~car~ matches a target name with a new element.
+It modifies the list in place.
+
+* Patched functions
 :PROPERTIES:
 :CUSTOM_ID: h:patched-functions
 :END:
 
-=bibtex-extras.el= modifies one core =bibtex-mode= function using =el-patch=:
-
-** ~bibtex-autokey-get-year~
+** Year field lookup
 :PROPERTIES:
-:CUSTOM_ID: h:bibtex-autokey-get-year-patch
+:CUSTOM_ID: h:year-field-patch
 :END:
 
-The function ~bibtex-autokey-get-year~ is patched to include "urldate" in the list of fields it checks when trying to determine the year for generating an automatic key. This allows keys to be generated based on the URL access date if the "date" or "year" fields are missing.
+#+findex: bibtex-autokey-get-year
+The function ~bibtex-autokey-get-year~ is patched using =el-patch= to
+include "urldate" in the list of fields checked when determining the
+year for automatic key generation.  The standard function checks only
+"date" and "year"; the patch adds "urldate" as a fallback.  This allows
+BibTeX to generate keys for online resources that have only an access
+date.
+
+** Page dash formatting
+:PROPERTIES:
+:CUSTOM_ID: h:page-dash-patch
+:END:
+
+#+findex: bibtex-format-entry
+The function ~bibtex-format-entry~ is patched to change the page-dash
+behavior.  The standard function normalizes page ranges to a single dash
+(e.g., "1--10" becomes "1-10").  The patched version does the opposite:
+it ensures page ranges use an en-dash (e.g., "1-10" becomes "1--10"),
+which is the correct BibLaTeX convention for page ranges.
 
 * Indices
 :PROPERTIES:

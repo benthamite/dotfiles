@@ -1,4 +1,4 @@
-#+title: consult-extras: Extensions for Consult
+#+title: consult-extras: Extensions for consult
 #+author: Pablo Stafforini
 #+email: pablo@stafforini.com
 #+language: en
@@ -8,7 +8,7 @@
 #+texinfo_filename: consult-extras.info
 #+texinfo_dir_category: Emacs misc features
 #+texinfo_dir_title: Consult Extras: (consult-extras)
-#+texinfo_dir_desc: Extensions for Consult
+#+texinfo_dir_desc: Extensions for consult
 
 This manual describes the features and customization options for the Emacs Lisp file =consult-extras.el=.
 
@@ -17,61 +17,59 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=consult-extras.el= provides extensions for the =consult= package, which offers enhanced searching and previewing capabilities within Emacs. These extensions add specialized search commands and integrate =consult= with Org mode headings.
+=consult-extras.el= extends =consult=, the package that provides enhanced search and navigation commands built on Emacs' completing-read interface. While =consult= ships with powerful commands like ~consult-ripgrep~ and ~consult-locate~, it does not include directory-scoped variants or a way to toggle multiline matching on the fly.
 
-The main features include:
+This package fills those gaps with two groups of commands:
 
-- A command to toggle multiline searching for =consult-ripgrep=.
-- Commands to run =consult-locate= scoped to the current directory, optionally matching only file names.
-- A command to run =consult-ripgrep= scoped to the current directory.
-- An enhanced command to jump to Org headings using =consult-org-heading= with automatic widening and unfolding.
+- Directory-scoped search commands that restrict =consult-ripgrep= and =consult-locate= to the current directory, avoiding the need to specify a search root each time ([[#h:directory-scoped-search][Directory-scoped search]]).
+- An enhanced Org heading navigation command that widens the buffer and unfolds all headings before jumping, ensuring consistent results regardless of the buffer's visibility state ([[#h:org-heading-navigation][Org heading navigation]]).
+
+The package also provides a toggle for multiline ripgrep search ([[#h:multiline-toggle][Multiline toggle]]).
+
+It depends on the =paths= package for directory path definitions.
 
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
 :END:
 
-=consult-extras.el= provides the following interactive commands:
-
-** Toggle Multiline Ripgrep Search
+** Multiline toggle
 :PROPERTIES:
-:CUSTOM_ID: h:consult-extras-toggle-multiline
+:CUSTOM_ID: h:multiline-toggle
 :END:
 
 #+findex: consult-extras-toggle-multiline
-The command ~consult-extras-toggle-multiline~ toggles the multiline search flags (=--multiline --multiline-dotall=) for =consult-ripgrep=. It modifies the ~consult-ripgrep-args~ variable by appending or removing these flags. This allows users to quickly switch between single-line and multiline searching when using =consult-ripgrep=.
+By default, ~consult-ripgrep~ searches line by line. When you need to find patterns that span multiple lines---such as a function signature followed by a specific body expression---the command ~consult-extras-toggle-multiline~ appends the =--multiline --multiline-dotall= flags to ~consult-ripgrep-args~. Calling it again removes the flags, restoring single-line behavior.
 
-** Locate Files in Current Directory
+This is a toggle command: it modifies the global value of ~consult-ripgrep-args~, so the change persists until toggled back or until Emacs is restarted.
+
+** Directory-scoped search
 :PROPERTIES:
-:CUSTOM_ID: h:consult-extras-locate-current
+:CUSTOM_ID: h:directory-scoped-search
 :END:
 
 #+findex: consult-extras-locate-current
-The command ~consult-extras-locate-current~ runs =consult-locate= but restricts the search scope to the current directory (=default-directory=). It achieves this by temporarily setting ~consult-locate-args~ to use =mdfind-wrapper= (presumably a custom script) with the =-onlyin= option pointing to the current directory.
-
-** Locate File Names in Current Directory
-:PROPERTIES:
-:CUSTOM_ID: h:consult-extras-locate-file-current
-:END:
-
 #+findex: consult-extras-locate-file-current
-Similar to ~consult-extras-locate-current~, this command runs =consult-locate= restricted to the current directory. However, it also adds the =-name= flag to =mdfind-wrapper=, instructing it to match only against file names, not their contents.
-
-** Ripgrep in Current Directory
-:PROPERTIES:
-:CUSTOM_ID: h:consult-extras-ripgrep-current
-:END:
-
 #+findex: consult-extras-ripgrep-current
-The command ~consult-extras-ripgrep-current~ provides a shortcut to run =consult-ripgrep= specifically within the current directory (=default-directory=).
+Three commands restrict standard =consult= search commands to the current directory (~default-directory~):
 
-** Enhanced Org Heading Jump
+- ~consult-extras-locate-current~ runs ~consult-locate~ scoped to the current directory. On macOS, it uses =mdfind-wrapper= with the =-onlyin= flag to restrict Spotlight's search scope. This is useful when you want to find a file somewhere within the current project tree without searching the entire filesystem.
+
+- ~consult-extras-locate-file-current~ works like ~consult-extras-locate-current~ but adds the =-name= flag, so it matches only against file names rather than file contents or metadata. Use this when you know part of the filename but not its exact location within the directory tree.
+
+- ~consult-extras-ripgrep-current~ runs ~consult-ripgrep~ in the current directory. This is a convenience wrapper that passes ~default-directory~ as the search root, saving you from having to specify it interactively.
+
+** Org heading navigation
 :PROPERTIES:
-:CUSTOM_ID: h:consult-extras-org-heading
+:CUSTOM_ID: h:org-heading-navigation
 :END:
 
 #+findex: consult-extras-org-heading
-The command ~consult-extras-org-heading~ enhances the standard =consult-org-heading= command. Before calling =consult-org-heading=, it ensures the buffer is widened (using =widen=) and all headings are unfolded (using ~org-extras-fold-show-all-headings~). After the jump, it recenters the view. This provides a more consistent experience when jumping to Org headings, ensuring the target heading is always visible. It accepts the same optional MATCH and SCOPE arguments as =consult-org-heading=.
+When working in a large Org file with many folded subtrees and narrowed regions, jumping to a heading with the standard ~consult-org-heading~ can produce unexpected results: narrowed-away headings are invisible, and folded content may not be reachable.
+
+The command ~consult-extras-org-heading~ addresses this by widening the buffer and unfolding all headings (via ~org-extras-fold-show-all-headings~ from =org-extras.el=) before calling ~consult-org-heading~. After the jump, it recenters the display so the target heading appears near the top of the window.
+
+It accepts the same optional MATCH and SCOPE arguments as ~consult-org-heading~, so it can be used as a drop-in replacement.
 
 * Indices
 :PROPERTIES:

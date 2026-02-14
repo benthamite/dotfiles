@@ -1,4 +1,4 @@
-#+title: orderless-extras: Extensions for Orderless
+#+title: orderless-extras: Extensions for orderless
 #+author: Pablo Stafforini
 #+email: pablo@stafforini.com
 #+language: en
@@ -8,7 +8,7 @@
 #+texinfo_filename: orderless-extras.info
 #+texinfo_dir_category: Emacs misc features
 #+texinfo_dir_title: Orderless Extras: (orderless-extras)
-#+texinfo_dir_desc: Extensions for Orderless
+#+texinfo_dir_desc: Extensions for orderless
 
 This manual describes the features and customization options for the Emacs Lisp file =orderless-extras.el=.
 
@@ -17,78 +17,71 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=orderless-extras.el= provides custom dispatch functions for the =orderless= completion style. Orderless allows matching completion candidates based on space-separated components in any order. These dispatchers add special suffix characters to trigger alternative matching styles (flex matching, initialism, literal prefixes, exclusion) for individual components within an Orderless query.
+=orderless-extras.el= extends =orderless=, the completion style that matches candidates against space-separated components in any order. While =orderless= ships with several matching styles (literal, regexp, flex, initialism, and others), activating a particular style for a single component within a query requires a dispatcher function.
 
-The main features include:
+This package provides four dispatchers, each triggered by appending a suffix character to a search component:
 
-- Dispatchers for different matching styles triggered by suffix characters:
-  + =~=: Flex matching (=orderless-flex=)
-  + =,=: Initialism matching (=orderless-initialism=)
-  + =;=: Literal prefix matching (=orderless-prefixes=)
-  + =!=: Exclusion matching (=orderless-without-literal=)
+| Suffix | Style                          | Section                                 |
+|--------+--------------------------------+-----------------------------------------|
+| =~=    | ~orderless-flex~               | [[#h:flex-dispatcher][Flex matching]]   |
+| =,=    | ~orderless-initialism~         | [[#h:initialism-dispatcher][Initialism]] |
+| =;=    | ~orderless-prefixes~           | [[#h:prefixes-dispatcher][Prefixes]]     |
+| =!=    | ~orderless-without-literal~    | [[#h:exclusion-dispatcher][Exclusion]]    |
 
-* Orderless Dispatchers
-:PROPERTIES:
-:CUSTOM_ID: h:orderless-dispatchers
-:END:
-
-These functions are designed to be added to the =orderless-dispatchers= list in your Emacs configuration. They allow activating different matching strategies for specific parts of your search query by appending a special character.
-
-** Flex Matching Dispatcher (=~=)
-:PROPERTIES:
-:CUSTOM_ID: h:orderless-extras-flex-dispatcher
-:END:
-
-#+findex: orderless-extras-flex-dispatcher
-The function ~orderless-extras-flex-dispatcher~ checks if a component (PATTERN) in the Orderless query ends with a tilde (=~=). If it does, it returns a style definition =(orderless-flex . "component_without_tilde")=, instructing Orderless to use flexible matching (typically fuzzy matching) for that specific component.
-
-Example: =file some~ na= would match =file= literally and =na= literally, but =some= would be matched flexibly against candidates.
-
-** Initialism Matching Dispatcher (=,=)
-:PROPERTIES:
-:CUSTOM_ID: h:orderless-extras-initialism-dispatcher
-:END:
-
-#+findex: orderless-extras-initialism-dispatcher
-The function ~orderless-extras-initialism-dispatcher~ checks if a component (PATTERN) ends with a comma (=,=). If it does, it returns =(orderless-initialism . "component_without_comma")=, instructing Orderless to match the component as an initialism (e.g., =ffap= matching =find-file-at-point=).
-
-Example: =find ffap,= would match =find= literally and =ffap= as an initialism.
-
-** Literal Prefixes Dispatcher (=;=)
-:PROPERTIES:
-:CUSTOM_ID: h:orderless-extras-prefixes-dispatcher
-:END:
-
-#+findex: orderless-extras-prefixes-dispatcher
-The function ~orderless-extras-prefixes-dispatcher~ checks if a component (PATTERN) ends with a semicolon (=;=). If it does, it returns =(orderless-prefixes . "component_without_semicolon")=, instructing Orderless to match the component only as a literal prefix of the candidate.
-
-Example: =org export;= would match candidates starting literally with =org= and =export=, but =export= would not match if it appeared elsewhere in the candidate string.
-
-** Exclusion Matching Dispatcher (=!=)
-:PROPERTIES:
-:CUSTOM_ID: h:orderless-extras-exclusion-dispatcher
-:END:
-
-#+findex: orderless-extras-exclusion-dispatcher
-The function ~orderless-extras-exclusion-dispatcher~ checks if a component (PATTERN) ends with an exclamation mark (=!=). If it does, it returns =(orderless-without-literal . "component_without_exclamation")=, instructing Orderless to *exclude* any candidates that contain the literal component (without the =!=).
-
-Example: =file !tmp= would match candidates containing =file= but *not* containing =tmp=.
-
-* Configuration Example
-:PROPERTIES:
-:CUSTOM_ID: h:configuration-example
-:END:
-
-To use these dispatchers, add them to the =orderless-dispatchers= list:
+To use these dispatchers, add them to the ~orderless-style-dispatchers~ list:
 
 #+begin_src emacs-lisp
-(setq orderless-dispatchers
+(setq orderless-style-dispatchers
       '(orderless-extras-flex-dispatcher
         orderless-extras-initialism-dispatcher
         orderless-extras-prefixes-dispatcher
         orderless-extras-exclusion-dispatcher))
-;; Optionally add other dispatchers like orderless-literal or orderless-regexp
 #+end_src
+
+* Functions
+:PROPERTIES:
+:CUSTOM_ID: h:functions
+:END:
+
+** Flex matching
+:PROPERTIES:
+:CUSTOM_ID: h:flex-dispatcher
+:END:
+
+#+findex: orderless-extras-flex-dispatcher
+The function ~orderless-extras-flex-dispatcher~ activates ~orderless-flex~ matching for any component that ends with a tilde (=~=). Flex matching allows characters to appear in order but not necessarily adjacent, which is useful when you remember the overall shape of a name but not its exact spelling.
+
+For example, in the query =file sme~ na=, the component =sme~= would flexibly match candidates containing =s=, =m=, and =e= in that order (such as "some"), while =file= and =na= would use the default matching style.
+
+** Initialism
+:PROPERTIES:
+:CUSTOM_ID: h:initialism-dispatcher
+:END:
+
+#+findex: orderless-extras-initialism-dispatcher
+The function ~orderless-extras-initialism-dispatcher~ activates ~orderless-initialism~ matching for any component that ends with a comma (=,=). Initialism matching treats each character in the component as the first letter of a word, which is particularly effective for long hyphenated Emacs symbol names.
+
+For example, =ffap,= would match ~find-file-at-point~ because =f=, =f=, =a=, and =p= are the initials of each word.
+
+** Prefixes
+:PROPERTIES:
+:CUSTOM_ID: h:prefixes-dispatcher
+:END:
+
+#+findex: orderless-extras-prefixes-dispatcher
+The function ~orderless-extras-prefixes-dispatcher~ activates ~orderless-prefixes~ matching for any component that ends with a semicolon (=;=). Prefix matching requires each character group (separated by word boundaries) in the component to appear at the beginning of corresponding words in the candidate.
+
+For example, =or-ex;= would match =orderless-extras= because =or= is a prefix of =orderless= and =ex= is a prefix of =extras=. It would not match a candidate where =ex= appeared in the middle of a word.
+
+** Exclusion
+:PROPERTIES:
+:CUSTOM_ID: h:exclusion-dispatcher
+:END:
+
+#+findex: orderless-extras-exclusion-dispatcher
+The function ~orderless-extras-exclusion-dispatcher~ activates ~orderless-without-literal~ matching for any component that ends with an exclamation mark (=!=). This excludes any candidate that contains the literal text of the component (minus the trailing =!=).
+
+For example, the query =file tmp!= would match candidates containing =file= but exclude any that also contain =tmp=. This is useful for filtering out noise from a broad search.
 
 * Indices
 :PROPERTIES:

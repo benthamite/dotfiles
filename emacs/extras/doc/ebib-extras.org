@@ -1,4 +1,4 @@
-#+title: ebib-extras: Extensions for Ebib
+#+title: ebib-extras: Extensions for ebib
 #+author: Pablo Stafforini
 #+email: pablo@stafforini.com
 #+language: en
@@ -8,7 +8,7 @@
 #+texinfo_filename: ebib-extras.info
 #+texinfo_dir_category: Emacs misc features
 #+texinfo_dir_title: Ebib Extras: (ebib-extras)
-#+texinfo_dir_desc: Extensions for Ebib
+#+texinfo_dir_desc: Extensions for ebib
 
 This manual describes the features and customization options for the Emacs Lisp file =ebib-extras.el=.
 
@@ -17,289 +17,735 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=ebib-extras.el= provides extensions for =ebib=, the Emacs BibTeX database manager. These extensions enhance file handling, entry processing, searching, sorting, interaction with external tools (like Sci-Hub, Annas Archive, Zotero), and provide various convenience commands.
+=ebib-extras.el= extends =ebib=, the Emacs BibTeX database manager, with a comprehensive set of commands for managing bibliographic entries and their associated files. Where =ebib= provides a solid foundation for editing BibTeX databases, =ebib-extras.el= adds the workflows that tie an entry to the broader research ecosystem: downloading PDFs by DOI or ISBN, attaching and renaming files to match entry keys, searching for works on external websites, setting ratings, writing PDF metadata, and keeping databases automatically saved and reloaded.
 
-The main features include:
+The package depends on several external packages and tools. =el-patch= is used to modify core =ebib= functions for better window management and timestamp handling. =annas-archive= provides book downloading via Anna's Archive. =paths= supplies the directory and file path constants that the library relies on. =shut-up= suppresses noisy messages during batch operations. Additional optional integrations include =eww-extras= for URL-to-file conversion, =zotra-extras= for fetching field values via Zotero translators, =files-extras= for OCR, =citar= for note management, and the =bib= package for identifier lookups.
 
-- Commands to open Ebib, reload databases without confirmation, and manage window layout.
-- Functions to retrieve specific fields (ISBN, file paths, language) from entries.
-- Commands to open associated files (PDF, HTML, Markdown, SRT, VTT, media) internally or externally.
-- A DWIM command to open the most relevant associated file.
-- Commands to rename attached files based on the entry key and validate existing file names.
-- Functions for finding and renaming files with invalid names (based on key lookup).
-- A command to process entries: generate keys, set language, download/attach files, generate abstracts.
-- Commands to attach files (newest download, specific file, generated from URL/DOI/ISBN).
-- Integration with external tools:
-  + Annas Archive and Sci-Hub for downloading PDFs based on ISBN/DOI.
-  + Zotero (via =zotra-extras=) for fetching abstracts and field values.
-  + =yt-dlp= for downloading videos/subtitles.
-  + =exiftool= for setting PDF metadata.
-  + =ocrmypdf= for OCRing attached PDFs.
-- Commands to search for entries on various external websites (Library Genesis, Amazon, WorldCat, Google Scholar, etc.).
-- Commands to set entry ratings and notes.
-- Enhanced navigation commands (next/previous entry).
-- Integration with =citar= to open associated notes.
-- Automatic saving and reloading mechanisms for specific database files.
-- Functions for sorting the Ebib index buffer by different criteria (Timestamp, Author, Title).
-- A command to duplicate the current entry.
+The capabilities of the package can be organized into several thematic areas:
 
-* User Options
+- *File handling and attachment.* Commands to open, attach, rename, and validate files associated with entries ([[#h:file-handling][File handling and attachment]]).
+- *Entry processing.* A unified workflow for generating keys, setting languages, and attaching files to newly created entries ([[#h:entry-processing][Entry processing and field manipulation]]).
+- *External searching.* DWIM search commands that open browser tabs on Library Genesis, Google Scholar, Goodreads, IMDb, and many other websites ([[#h:external-searching][External searching]]).
+- *Downloading.* Commands that download PDFs, HTML files, subtitles, and videos from various sources and attach them to entries ([[#h:downloading][Downloading and attaching from external sources]]).
+- *Database management.* Automatic saving, reloading, sorting, and navigation ([[#h:database-management][Database management]]).
+- *Patched functions.* Modifications to core =ebib= functions using =el-patch= ([[#h:patched-functions][Patched functions]]).
+
+* User options
 :PROPERTIES:
 :CUSTOM_ID: h:user-options
 :END:
 
-** ~ebib-extras-download-use-vpn~
+** ~ebib-extras-attach-existing-file-action~
 :PROPERTIES:
-:CUSTOM_ID: h:ebib-extras-download-use-vpn
+:CUSTOM_ID: h:ebib-extras-attach-existing-file-action
 :END:
 
-#+vindex: ebib-extras-download-use-vpn
-If non-nil, functions that download content (like ~ebib-extras-download-book~) might attempt to use a VPN (integration details not fully shown, likely relies on other packages like =mullvad=). Default is nil.
+#+vindex: ebib-extras-attach-existing-file-action
+The user option ~ebib-extras-attach-existing-file-action~ controls what happens when ~ebib-extras-attach-file~ tries to install a file into a library directory where a file with the same name already exists ([[#h:attaching-files][Attaching files]]). This situation arises when you re-download a PDF or when two entries happen to share a key before one of them is regenerated.
+
+The option accepts one of three values:
+
+- ~nil~: abort the operation immediately and signal an error.
+- ~overwrite~: overwrite the existing file without prompting.
+- ~prompt~ (the default): ask the user whether to overwrite.
+
+The type is a choice between these three constants. In most workflows, the default value of ~prompt~ provides a good balance between safety and convenience. You may want to change it to ~overwrite~ if you frequently re-download files and trust that the newer version is always preferable, or to ~nil~ if you want strict protection against accidental overwrites.
 
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
 :END:
 
-=ebib-extras.el= provides numerous interactive commands, primarily intended for use within Ebib buffers (=ebib-index-mode=, =ebib-entry-mode=) or BibTeX buffers (=bibtex-mode=).
+The commands in =ebib-extras.el= are designed primarily for use within Ebib buffers (~ebib-index-mode~ and ~ebib-entry-mode~), though several also work in ~bibtex-mode~ buffers. Many commands are context-sensitive, adapting their behavior based on the current entry type (book, article, or film) or the field at point.
 
-** Ebib Management
-:PROPERTIES:
-:CUSTOM_ID: h:ebib-management
-:END:
-
-#+findex: ebib-extras-open-or-switch
-~ebib-extras-open-or-switch~: Opens Ebib, splitting the window if necessary, or switches to the Ebib window if already open.
-
-#+findex: ebib-extras-reload-all-databases
-~ebib-extras-reload-all-databases~: Reloads all Ebib databases from their files, but only if no database buffer is currently modified. Intended to be called periodically (e.g., by an idle timer).
-
-#+findex: ebib-extras-sort
-~ebib-extras-sort~: Sorts the Ebib index buffer by Timestamp, Author, or Title, cycling through these states on successive calls.
-
-#+findex: ebib-extras-end-of-index-buffer
-~ebib-extras-end-of-index-buffer~: Moves point to the last entry line in the Ebib index buffer.
-
-#+findex: ebib-extras-duplicate-entry
-~ebib-extras-duplicate-entry~: Duplicates the entry at point, prompting for the target bibliography file, generating a unique key if needed, and opening the new entry in Ebib.
-
-** Entry Processing and Field Manipulation
-:PROPERTIES:
-:CUSTOM_ID: h:entry-processing
-:END:
-
-#+findex: ebib-extras-copy-current-field-contents
-~ebib-extras-copy-current-field-contents~: Copies the value of the field at point (resolving crossrefs) to the kill ring.
-
-#+findex: ebib-extras-rename-files
-~ebib-extras-rename-files~: Renames all files listed in the "file" field of the entry at point to match the entry's key (e.g., =Author2024.pdf=). Moves files to appropriate library directories based on extension (PDF, HTML, media).
-
-#+findex: ebib-extras-process-entry
-~ebib-extras-process-entry~: Performs a sequence of actions on the entry at point: generates key if invalid or prompted, sets language, translates abstract (via =tlon-deepl-translate-abstract=), and attaches relevant files (via ~ebib-extras-attach-files~).
-
-#+findex: ebib-extras-set-abstract
-~ebib-extras-set-abstract~: Sets the "abstract" field for the entry at point, attempting to fetch it using external tools (via =tlon-get-abstract-with-or-without-ai=) if the field is empty.
-
-#+findex: ebib-extras-get-or-set-language
-~ebib-extras-get-or-set-language~: Returns the language ("langid" field) of the current entry. If the field is empty or invalid, prompts the user to select a language (using completion based on =tlon-languages-properties=) and sets the field.
-
-#+findex: ebib-extras-sentence-case
-~ebib-extras-sentence-case~: Converts the value of the field at point to sentence case (lowercase with first word capitalized), attempting to preserve LaTeX commands and braced words.
-
-#+findex: ebib-extras-set-rating
-~ebib-extras-set-rating~: Prompts the user for a rating (1-10) and sets the "rating" field. May also open external websites (Goodreads, IMDb, Letterboxd) based on entry type to set the rating there.
-
-#+findex: ebib-extras-no-translation-found
-~ebib-extras-no-translation-found~: Adds a note to the "note" field indicating that no translation was found, including the current date.
-
-#+findex: ebib-extras-set-id
-~ebib-extras-set-id~: Adds an identifier (ISBN for books, DOI for articles, URL for films) to the current entry if the corresponding field is empty. Attempts to fetch the identifier using external tools if not provided.
-
-#+findex: ebib-extras-update-field
-~ebib-extras-update-field~: Updates the FIELD at point (or prompted FIELD) by fetching its value using Zotero translators (via =zotra-extras-fetch-field=) based on the entry's existing DOI/ISBN/URL.
-
-#+findex: ebib-extras-fetch-keywords
-~ebib-extras-fetch-keywords~: Fetches keywords for the entry at point using Zotero translators (via =zotra-extras-fetch-field-value=) and updates the "keywords" field.
-
-#+findex: ebib-extras-export-keywords
-~ebib-extras-export-keywords~: Extracts keywords from the "keywords" field, removes the field from the BibTeX entry, opens the associated Org note (via ~ebib-extras-citar-open-notes~), inserts the keywords as a bulleted list under a "keywords" subheading, linkifies them if corresponding Org Roam nodes exist, and sorts the list.
-
-** File Handling and Attachment
+** File handling and attachment
 :PROPERTIES:
 :CUSTOM_ID: h:file-handling
 :END:
 
-#+findex: ebib-extras-open-file-dwim
-~ebib-extras-open-file-dwim~: Opens the associated file for the entry at point. If multiple files exist, it prioritizes based on the order in ~ebib-extras-valid-file-extensions~ (PDF, HTML, WEBM, etc.) and opens the first one found.
+*** Opening associated files
+:PROPERTIES:
+:CUSTOM_ID: h:opening-files
+:END:
 
+#+findex: ebib-extras-open-file-dwim
 #+findex: ebib-extras-open-pdf-file
-~ebib-extras-open-pdf-file~: Opens the PDF file associated with the entry.
 #+findex: ebib-extras-open-md-file
-~ebib-extras-open-md-file~: Opens the Markdown file.
 #+findex: ebib-extras-open-srt-file
-~ebib-extras-open-srt-file~: Opens the SRT subtitle file.
 #+findex: ebib-extras-open-vtt-file
-~ebib-extras-open-vtt-file~: Opens the VTT subtitle file.
 #+findex: ebib-extras-open-webm-file
-~ebib-extras-open-webm-file~: Opens the WEBM video file externally.
 #+findex: ebib-extras-open-mp3-file
-~ebib-extras-open-mp3-file~: Opens the MP3 audio file externally.
 #+findex: ebib-extras-open-html-file
-~ebib-extras-open-html-file~: Opens the HTML file, renders it in =eww=, and kills the original HTML buffer.
 #+findex: ebib-extras-open-pdf-file-externally
-~ebib-extras-open-pdf-file-externally~: Opens the PDF file using the system's default external application.
 #+findex: ebib-extras-open-html-file-externally
-~ebib-extras-open-html-file-externally~: Opens the HTML file using the system's default external application.
+#+findex: ebib-extras-open-file
+#+findex: ebib-extras-open-file-externally
+A BibTeX entry often has several files attached to it---a PDF of the paper, an HTML snapshot, subtitle files for a video, or media files. The command ~ebib-extras-open-file-dwim~ provides a single entry point for opening whichever file is most relevant. It walks through the preference order defined in ~ebib-extras-valid-file-extensions~ (by default: PDF, HTML, WebM, FLAC, MP3, Markdown, SRT, VTT) and opens the first file it finds by calling the corresponding type-specific open command ([[#h:file-extension-constants][File extension constants]]).
+
+For cases where you know exactly which file type you want, the package provides dedicated commands:
+
+- ~ebib-extras-open-pdf-file~ opens the PDF in Emacs using ~find-file~.
+- ~ebib-extras-open-md-file~ opens the Markdown file in Emacs.
+- ~ebib-extras-open-srt-file~ opens the SRT subtitle file in Emacs.
+- ~ebib-extras-open-vtt-file~ opens the VTT subtitle file in Emacs.
+- ~ebib-extras-open-html-file~ opens the HTML file, renders it in =eww=, and kills the raw HTML buffer afterward.
+- ~ebib-extras-open-webm-file~ opens the WebM video file using the system's external application (via =open=).
+- ~ebib-extras-open-mp3-file~ opens the MP3 audio file externally.
+- ~ebib-extras-open-pdf-file-externally~ opens the PDF using the system's default external PDF viewer.
+- ~ebib-extras-open-html-file-externally~ opens the HTML file in the system's default browser.
+
+The lower-level commands ~ebib-extras-open-file~ and ~ebib-extras-open-file-externally~ accept an extension as argument and are used by the type-specific wrappers above. They rely on ~ebib-extras-get-file~ to locate the file path from the entry's =file= field ([[#h:file-retrieval][File retrieval]]).
+
+If no file with the requested extension is found, all of these commands signal a user error.
+
+*** Attaching files
+:PROPERTIES:
+:CUSTOM_ID: h:attaching-files
+:END:
 
 #+findex: ebib-extras-attach-file
-~ebib-extras-attach-file~: Attaches a file to an entry. Prompts for the file (defaulting to newest in Downloads or a file matching the key), prompts for the entry KEY (defaulting to current entry), renames the file to match the key, moves it to the appropriate library directory, updates the "file" field, sets the abstract, optionally sets PDF metadata and OCRs, and optionally opens the attached file.
-
 #+findex: ebib-extras-attach-most-recent-file
-~ebib-extras-attach-most-recent-file~: Attaches the most recently downloaded file (from =paths-dir-downloads=) to the current entry.
+The command ~ebib-extras-attach-file~ is the primary way to attach a file to a BibTeX entry. It accepts three optional arguments: FILE, KEY, and POSTPROCESS. When called interactively, KEY defaults to the entry at point and POSTPROCESS is non-nil. The FILE argument determines where the source file comes from:
 
-#+findex: ebib-extras-url-to-pdf-attach
-~ebib-extras-url-to-pdf-attach~: Generates a PDF from the URL in the entry's "url" field (using headless Chrome via =eww-extras=) and attaches it.
-#+findex: ebib-extras-url-to-html-attach
-~ebib-extras-url-to-html-attach~: Generates an HTML file from the URL in the entry's "url" field (using headless Chrome via =eww-extras=) and attaches it.
-#+findex: ebib-extras-url-to-srt-attach
-~ebib-extras-url-to-srt-attach~: Downloads subtitles (SRT) for the URL in the entry's "url" field using =yt-dlp=. *Note:* Requires manual attachment after download.
+- If FILE is ~nil~ (the default when called interactively without a prefix argument), the user is prompted to select a file, with completion over the downloads, PDF library, HTML library, and media library directories.
+- If FILE is the symbol ~most-recent~ (activated by calling with a prefix argument, =C-u=), the newest file in the downloads directory is used automatically.
+- If FILE is a string, it is treated as the file path directly.
 
-#+findex: ebib-extras-book-attach
-~ebib-extras-book-attach~: Attempts to download a PDF for a book entry using Annas Archive (via =annas-archive-download=) based on its ISBN or title. If the download is performed using =eww= (see =annas-archive-use-eww=), the downloaded file is automatically attached. Otherwise, manual attachment is required.
-#+findex: ebib-extras-doi-attach
-~ebib-extras-doi-attach~: Attempts to download a PDF for an article entry using Sci-Hub (via =scihub-download=) based on its DOI, and then attaches it.
-#+findex: ebib-extras-attach-files
-~ebib-extras-attach-files~: DWIM command to attach the most relevant file based on entry type and available identifiers (DOI, ISBN, URL). Calls the appropriate download/attach function (DOI, book, video subtitles, URL-to-PDF/HTML). If a file already exists, it just tries to set the abstract.
+The file is renamed to =KEY.EXT= and moved to the appropriate library directory based on its extension ([[#h:file-retrieval][File retrieval]]). The entry's =file= field is then updated. The command also calls ~ebib-extras-set-abstract~ to populate the abstract if it is empty ([[#h:entry-processing][Entry processing and field manipulation]]). When POSTPROCESS is non-nil and the attached file is a PDF, the command additionally writes PDF metadata ([[#h:pdf-metadata][PDF metadata]]), performs OCR, and opens the file.
 
-#+findex: ebib-extras-ocr-pdf
-~ebib-extras-ocr-pdf~: Performs OCR on the PDF file associated with the current entry using =ocrmypdf=. Prompts for language if needed. With prefix arg, forces OCR even if text is already detected.
+The behavior when a file with the same name already exists at the destination is controlled by ~ebib-extras-attach-existing-file-action~ ([[#h:ebib-extras-attach-existing-file-action][~ebib-extras-attach-existing-file-action~]]).
 
-#+findex: ebib-extras-set-pdf-metadata
-~ebib-extras-set-pdf-metadata~: Sets the Author and Title metadata fields in the associated PDF file using =exiftool= based on the BibTeX entry's corresponding fields.
+The convenience command ~ebib-extras-attach-most-recent-file~ calls ~ebib-extras-attach-file~ with the ~most-recent~ symbol, attaching the newest file from the downloads directory and post-processing it. This is useful after downloading a file from a browser.
 
-** External Searching
+*** Renaming and validating files
 :PROPERTIES:
-:CUSTOM_ID: h:external-searching
+:CUSTOM_ID: h:renaming-files
 :END:
 
-#+findex: ebib-extras-search-dwim
-~ebib-extras-search-dwim~: Performs searches on external websites based on the entry type (book, article, film) and the field at point (title or identifier). Calls the appropriate specific search function (e.g., ~ebib-extras-search-book-by-title~).
+#+findex: ebib-extras-rename-files
+#+findex: ebib-extras-dedup-file-field
+#+findex: ebib-extras-validate-file-stem
+The command ~ebib-extras-rename-files~ renames all files listed in the =file= field of the entry at point so that each file's base name matches the entry's BibTeX key. For example, if the entry key is =Author2024Title= and the =file= field contains =some-random-name.pdf=, the file is renamed to =Author2024Title.pdf= and moved to the appropriate library directory. The entry must have a valid key ([[#h:key-validation][Key validation]]); otherwise, a user error is signaled.
 
-#+findex: ebib-extras-search-book-by-title
-~ebib-extras-search-book-by-title~: Searches for the book's title on websites defined in ~ebib-extras-search-book-functions~.
-#+findex: ebib-extras-search-article-by-title
-~ebib-extras-search-article-by-title~: Searches for the article's title on websites defined in ~ebib-extras-search-article-functions~.
-#+findex: ebib-extras-search-film-by-title
-~ebib-extras-search-film-by-title~: Searches for the film's title on websites defined in ~ebib-extras-search-film-functions~.
-#+findex: ebib-extras-search-by-identifier
-~ebib-extras-search-by-identifier~: Searches for the entry based on its ISBN or DOI using the appropriate book or article search functions.
+The command ~ebib-extras-dedup-file-field~ removes duplicate file paths from the =file= field of the current entry. Duplicates are detected by exact string comparison after trimming whitespace. The original order of first occurrences is preserved. This is useful after repeated attachment operations that may have added the same path more than once.
 
-*(Note: Several specific search commands like =ebib-extras-search-goodreads=, =ebib-extras-search-google-scholar=, etc., are generated automatically by =ebib-extras-generate-search-commands= based on constants like =ebib-extras-goodreads=.)*
+The function ~ebib-extras-validate-file-stem~ (not interactive) checks that every file listed in the =file= field has a base name matching the entry's key. If any file does not match, a user error is signaled. This is used as a validation step in other workflows.
 
-** Downloading from External Sites
-:PROPERTIES:
-:CUSTOM_ID: h:external-downloading
-:END:
-
-#+findex: ebib-extras-download-book-by-title
-~ebib-extras-download-book-by-title~: Searches for the book's title on websites defined in ~ebib-extras-download-book-functions~ (likely focused on download sites like Library Genesis).
-#+findex: ebib-extras-download-article-by-title
-~ebib-extras-download-article-by-title~: Searches for the article's title on websites defined in ~ebib-extras-download-article-functions~.
-#+findex: ebib-extras-download-pdf
-~ebib-extras-download-pdf~: Attempts to download a PDF based on DOI (Sci-Hub), URL (eww-extras), or ISBN (book download functions).
-
-*(Note: Specific download commands like =ebib-extras-download-library-genesis= might exist if generated, similar to search commands.)*
-
-** Navigation and Integration
-:PROPERTIES:
-:CUSTOM_ID: h:navigation-integration
-:END:
-
-#+findex: ebib-extras-next-entry
-~ebib-extras-next-entry~: Moves to the next entry in the Ebib index or entry buffer.
-#+findex: ebib-extras-prev-entry
-~ebib-extras-prev-entry~: Moves to the previous entry.
-
-#+findex: ebib-extras-citar-open-notes
-~ebib-extras-citar-open-notes~: Opens the Org note associated with the current entry using =citar-open-notes=. Replaces the native =ebib-popup-note= to ensure notes are created using Citar's schema if they don't exist.
-
-** Invalid File Management
+*** Managing invalid files
 :PROPERTIES:
 :CUSTOM_ID: h:invalid-files
 :END:
 
 #+findex: ebib-extras-list-invalid-files
-~ebib-extras-list-invalid-files~: Scans library directories (PDF, HTML, media) and populates the variable =ebib-extras-invalid-files= with files whose base names do not correspond to a known BibTeX key (checked via =tlon-bibliography-lookup=). *Note:* This can be slow.
-
 #+findex: ebib-extras-rename-next-invalid-file
-~ebib-extras-rename-next-invalid-file~: Takes the next file from the =ebib-extras-invalid-files= list, finds its corresponding BibTeX entry (using the filename via =tlon-bibliography-lookup=), opens the entry in Ebib, and calls ~ebib-extras-rename-files~ to correct the filename based on the key. Removes the file from the list.
+Over time, library directories can accumulate files whose names do not correspond to any known BibTeX key. The command ~ebib-extras-list-invalid-files~ scans the PDF, HTML, and media library directories and populates the variable ~ebib-extras-invalid-files~ with all files whose base names fail a lookup against the bibliography via ~tlon-bibliography-lookup~. This operation can be slow for large libraries because it checks every file.
 
-* Utility Functions
+Once the list is populated, the command ~ebib-extras-rename-next-invalid-file~ processes the first file in the list: it finds the corresponding BibTeX entry (using the filename to look up the key), opens the entry in Ebib, and calls ~ebib-extras-rename-files~ to correct the filename. The file is removed from ~ebib-extras-invalid-files~ after processing. Call this command repeatedly to work through the entire list of invalid files.
+
+** Entry processing and field manipulation
 :PROPERTIES:
-:CUSTOM_ID: h:utility-functions
+:CUSTOM_ID: h:entry-processing
 :END:
 
-These functions provide helper functionalities used by other commands or for programmatic use.
+*** Processing entries
+:PROPERTIES:
+:CUSTOM_ID: h:processing-entries
+:END:
 
-- ~ebib-extras-reload-database-no-confirm~: Reloads a specific Ebib database DB without prompting for confirmation.
-- ~ebib-extras-isbn-p~: Checks if a STRING matches the ISBN pattern.
-- ~ebib-extras-get-isbn~: Extracts and cleans the ISBN from the "isbn" field of the current entry.
-- ~ebib-extras-video-p~: Checks if a STRING matches known video URL patterns (YouTube).
-- ~ebib-extras--update-file-field-contents~: Adds FILE-NAME to the "file" field of entry KEY if not already present.
-- ~ebib-extras-get-file~: Returns the path of the first file associated with the current entry that has the specified EXTENSION.
-- ~ebib-extras-get-text-file~: Returns the path of the first associated text file (HTML, PDF, SRT, VTT).
-- ~ebib-extras-open-file~: Opens the file with EXTENSION associated with the current entry.
-- ~ebib-extras-open-file-externally~: Opens the file with EXTENSION using the system's default external application.
-- ~ebib-extras-validate-file-stem~: Checks if the base name of attached files matches the entry key. Signals an error if not.
-- ~ebib-extras--rename-and-abbreviate-file~: Constructs the full, potentially abbreviated path for a file based on its target DIRECTORY, entry KEY, and optional EXTENSION.
-- ~ebib-extras-key-is-valid-p~: Checks if a KEY conforms to the pattern in ~ebib-extras-valid-key-regexp~.
-- ~ebib-extras-check-valid-key~: Signals an error if the KEY is not valid.
-- ~ebib-extras--extension-directories~: Returns the appropriate library directory path based on a file EXTENSION.
-- ~ebib-extras-file-is-valid-p~: Checks if a FILE's base name corresponds to a known BibTeX key. Used by invalid file management.
-- ~ebib-extras-rename-invalid-file~: Helper for ~ebib-extras-rename-next-invalid-file~; performs the lookup and rename for a single invalid FILE.
-- ~ebib-extras-attach-file-to-entry~: Callback function used by downloaders; opens the entry for KEY and calls ~ebib-extras-attach-file~.
-- ~ebib-extras-get-supertype~: Determines if the entry type corresponds to "book", "article", or "film".
-- ~ebib-extras-get-query-field~: Determines whether to use the "title" or an identifier ("doi", "isbn") for external searches based on the field at point.
-- ~ebib-extras--search-or-download~: Core logic for DWIM search/download commands.
-- ~ebib-extras--search-multi~: Helper to run multiple search/download functions for a QUERY.
-- ~ebib-extras--get-title-at-point~: Gets the title from either "title" or "booktitle" field.
-- ~ebib-extras-search~: Opens a URL constructed from a SEARCH-ENGINE definition and a QUERY.
-- ~ebib-extras-generate-search-commands~: Macro (implicitly used) to define specific search commands (like ~ebib-extras-search-goodreads~) based on constants.
-- ~ebib-extras-download-video~: Downloads a video using =yt-dlp= based on ID, renames it to match the key, and updates the "file" field.
-- ~ebib-extras-get-authors-list~: Parses the "author" field string into a list of author names, handling "Last, First" and "{Corporate Name}" formats.
-- ~ebib-extras-format-authors~: Formats a list of authors into a string with optional SEPARATOR and MAX number of authors (adding "et al" if exceeded).
-- ~ebib-extras-unbrace~: Removes *all* curly braces from a string (unlike =ebib-unbrace= which only removes outermost).
-- ~ebib-extras-get-field~: Wrapper around =ebib-get-field-value= with default arguments and whitespace cleaning.
-- ~ebib-extras-get-id-or-url~: Returns the first available identifier (DOI, ISBN, URL) from the current entry.
-- ~ebib-extras-fetch-id-or-url~: Attempts to fetch an identifier using external tools (via =bib= package functions) if none exists in the entry.
-- ~ebib-extras-get-or-fetch-id-or-url~: Combines getting and fetching the identifier/URL.
-- ~ebib-extras-browse-url-or-doi~: Opens the URL or DOI link associated with the entry.
-- ~ebib-extras-bibtex-command~: Executes a BibTeX mode COMMAND on the current entry within its source file.
-- ~ebib-extras-move-entry~: Core logic for moving between entries.
-- ~ebib-extras-set-field~: Core logic for setting a field value.
-- ~ebib-extras-update-entry-buffer~: Helper to refresh the Ebib entry buffer display.
-- ~ebib-extras-choose-rating~: Prompts for a rating character (1-9, 0 for 10) and returns it as a string.
-- ~ebib-extras-get-file-of-key~: Finds the =.bib= file containing the entry for KEY across all Ebib databases.
-- ~ebib-extras-open-key~: Opens the entry for KEY in Ebib, finding its file first.
-- ~ebib-extras-auto-save-databases~: Function intended for a timer; saves any modified Ebib databases listed in ~ebib-extras-auto-save-files~.
-- ~ebib-extras-auto-reload-databases~: Sets up file-notify watches to automatically reload databases listed in ~ebib-extras-auto-save-files~ when their files change.
-- ~ebib-extras-no-db-modified-p~: Checks if any Ebib database buffer is marked as modified.
-- ~ebib-extras-get-db-number~: Returns a predefined number associated with a database FILE path (used for switching databases).
-- ~ebib-extras-create-list-of-existing-authors~: Populates =ebib-extras-existing-authors= with all authors from the current database.
-- ~ebib-extras-check-author-exists~: Checks if the author in the current entry exists in the pre-populated =ebib-extras-existing-authors= list.
+#+findex: ebib-extras-process-entry
+The command ~ebib-extras-process-entry~ provides a unified workflow for preparing a newly created or imported BibTeX entry. It performs the following steps in sequence:
 
-* Patched Functions
+1. If the entry's key is invalid (does not match ~ebib-extras-valid-key-regexp~), it regenerates the key via ~ebib-generate-autokey~. If the key is already valid, it asks whether to regenerate it anyway.
+2. It sets or confirms the entry's language by calling ~ebib-extras-get-or-set-language~ ([[#h:language-handling][Language handling]]).
+3. It calls ~ebib-extras-attach-files~ to download and attach the appropriate files based on available identifiers ([[#h:downloading][Downloading and attaching from external sources]]).
+
+This command assumes that the entry's type, author, date, and title fields are already correctly set.
+
+*** Setting and fetching field values
+:PROPERTIES:
+:CUSTOM_ID: h:field-manipulation
+:END:
+
+#+findex: ebib-extras-copy-current-field-contents
+#+findex: ebib-extras-sentence-case
+#+findex: ebib-extras-update-field
+#+findex: ebib-extras-set-abstract
+#+findex: ebib-extras-set-id
+#+findex: ebib-extras-no-translation-found
+The command ~ebib-extras-copy-current-field-contents~ copies the value of the field at point to the kill ring. If the field's value comes from a cross-referenced entry, the resolved value is copied. This is a wrapper around ~ebib-copy-field-contents~ that automatically determines the current field.
+
+The command ~ebib-extras-sentence-case~ converts the value of the field at point to sentence case: all words are lowercased except the first, which is capitalized. Words containing LaTeX commands (=$=, ={=, =}=, =\=) are left untouched. This is useful for normalizing titles that were imported in title case.
+
+The command ~ebib-extras-update-field~ fetches a fresh value for the field at point (or a specified field) from external sources using Zotero translators (via ~zotra-extras-get-field~). The lookup is based on the entry's existing DOI, ISBN, or URL ([[#h:identifier-retrieval][Identifier retrieval]]). The fetched value overwrites the current field contents.
+
+The command ~ebib-extras-set-abstract~ populates the =abstract= field for the entry at point (or a specified key) if it is currently empty. It uses ~tlon-get-abstract-with-or-without-ai~ to attempt fetching the abstract from external sources or generating it with AI.
+
+The command ~ebib-extras-set-id~ adds an identifier to the current entry when the appropriate field is empty. The field is chosen based on the entry's supertype: =isbn= for books, =doi= for articles, =url= for films. If no ID is provided interactively, it attempts to fetch one using ~ebib-extras-fetch-id-or-url~ ([[#h:identifier-retrieval][Identifier retrieval]]).
+
+The command ~ebib-extras-no-translation-found~ sets the =note= field to a message indicating that no translation was found, including the current date. It signals a user error if the =note= field is already non-empty.
+
+*** Language handling
+:PROPERTIES:
+:CUSTOM_ID: h:language-handling
+:END:
+
+#+findex: ebib-extras-get-or-set-language
+The command ~ebib-extras-get-or-set-language~ returns the language of the current entry from the =langid= field. If the field is empty or contains an invalid language (one not found in ~tlon-languages-properties~), it prompts the user to select a language using ~completing-read~, defaulting to =english=, and sets the field. The command adapts its behavior based on the current major mode: it uses ~ebib-extras-get-field~ and ~ebib-extras-set-field~ in ~ebib-entry-mode~, and ~bibtex-extras-get-field~ and ~bibtex-set-field~ in ~bibtex-mode~.
+
+*** Keywords
+:PROPERTIES:
+:CUSTOM_ID: h:keywords
+:END:
+
+#+findex: ebib-extras-fetch-keywords
+#+findex: ebib-extras-export-keywords
+The command ~ebib-extras-fetch-keywords~ fetches keywords for the entry at point using ~ebib-extras-fetch-field-value~ and updates the =keywords= field. This relies on external tools (via Zotero translators) to supply keyword data.
+
+The command ~ebib-extras-export-keywords~ moves keywords from the BibTeX entry into the associated Org note file. It extracts the comma-separated keywords from the =keywords= field, removes the field from the BibTeX entry, opens the associated note (via ~ebib-extras-citar-open-notes~, see [[#h:notes-integration][Notes integration]]), creates a =keywords= subheading, inserts the keywords as linkified elements (using ~org-extras-linkify-elements~), and sorts them alphabetically (using ~org-extras-sort-keywords~).
+
+*** Ratings and notes
+:PROPERTIES:
+:CUSTOM_ID: h:ratings
+:END:
+
+#+findex: ebib-extras-set-rating
+#+findex: ebib-extras-no-translation-found
+The command ~ebib-extras-set-rating~ prompts for a rating (1--10, where pressing =0= means 10) and stores it in the =rating= field. In addition to updating the BibTeX entry, it opens external rating websites based on the entry's supertype:
+
+- For books, it opens Goodreads with the entry's title.
+- For films, it opens the entry's stored IMDb URL (or searches IMDb if no URL is stored) and opens Letterboxd (using a stored slug or fetching one via ~bib-search-letterboxd~). If a Letterboxd slug is fetched, it is stored in the =letterboxd= field for future use.
+
+Pressing =RET= without entering a digit skips the rating without modifying the field.
+
+** External searching
+:PROPERTIES:
+:CUSTOM_ID: h:external-searching
+:END:
+
+*** DWIM search
+:PROPERTIES:
+:CUSTOM_ID: h:dwim-search
+:END:
+
+#+findex: ebib-extras-search-dwim
+The command ~ebib-extras-search-dwim~ performs context-sensitive searches. It examines the entry's supertype (book, article, or film) and the field at point to decide what to search for and where:
+
+- If the field at point is =title=, it searches by title using the appropriate set of search functions for the supertype.
+- If the field at point is anything else, it searches by identifier (DOI or ISBN).
+
+The dispatch is handled by ~ebib-extras--search-or-download~, which constructs the correct function name dynamically (e.g., ~ebib-extras-search-book-by-title~).
+
+*** Searching by title
+:PROPERTIES:
+:CUSTOM_ID: h:search-by-title
+:END:
+
+#+findex: ebib-extras-search-book-by-title
+#+findex: ebib-extras-search-article-by-title
+#+findex: ebib-extras-search-film-by-title
+Each of these commands retrieves the entry's title and opens search results on multiple websites simultaneously:
+
+- ~ebib-extras-search-book-by-title~ searches on Goodreads, HathiTrust, University of California Berkeley library, Internet Archive, Library Genesis, and Amazon. The list of functions is defined in ~ebib-extras-search-book-functions~ ([[#h:search-constants][Search engine constants]]).
+- ~ebib-extras-search-article-by-title~ searches on Connected Papers and Google Scholar, as defined in ~ebib-extras-search-article-functions~.
+- ~ebib-extras-search-film-by-title~ searches on IMDb, Letterboxd, and Metacritic, as defined in ~ebib-extras-search-film-functions~.
+
+For book entries, the title is retrieved from either the =title= or =booktitle= field (whichever is non-empty). If the title is empty, a user error is signaled.
+
+*** Searching by identifier
+:PROPERTIES:
+:CUSTOM_ID: h:search-by-identifier
+:END:
+
+#+findex: ebib-extras-search-by-identifier
+The command ~ebib-extras-search-by-identifier~ searches for the entry using its ISBN or DOI. It first checks the =isbn= field (via ~ebib-extras-get-isbn~), then falls back to the =doi= field, and finally prompts the user for a manual identifier. If the identifier looks like an ISBN, it calls ~ebib-extras-search-book~; if it looks like a DOI (via ~annas-archive--doi-p~), it calls ~ebib-extras-search-article~.
+
+The aliases ~ebib-extras-search-book-by-identifier~ and ~ebib-extras-search-article-by-identifier~ both point to this command. The alias ~ebib-extras-search-film-by-identifier~ points to ~ebib-extras-search-film-by-title~ because films have no standard identifier.
+
+*** Generated search commands
+:PROPERTIES:
+:CUSTOM_ID: h:generated-search-commands
+:END:
+
+#+findex: ebib-extras-generate-search-commands
+#+findex: ebib-extras-search
+Individual search commands for each search engine (e.g., ~ebib-extras-search-goodreads~, ~ebib-extras-search-google-scholar~, ~ebib-extras-search-library-genesis~) are generated automatically by ~ebib-extras-generate-search-commands~. This function iterates over ~ebib-extras-search-engines~ and creates a command for each one. Each generated command accepts an optional QUERY argument; when called interactively, it prompts for the search string. The generated commands call ~ebib-extras-search~, which constructs a URL from the search engine's prefix, the URL-encoded query, and the engine's suffix, and opens it in the browser.
+
+The search engines are defined as constants ([[#h:search-constants][Search engine constants]]), each a list of three elements: a human-readable name, a URL prefix, and a URL suffix.
+
+** Downloading and attaching from external sources
+:PROPERTIES:
+:CUSTOM_ID: h:downloading
+:END:
+
+*** DWIM attachment
+:PROPERTIES:
+:CUSTOM_ID: h:dwim-attachment
+:END:
+
+#+findex: ebib-extras-attach-files
+The command ~ebib-extras-attach-files~ is a DWIM command that tries to download and attach the most appropriate file for the entry at point (or a specified key). If the =file= field is already non-empty, it simply calls ~ebib-extras-set-abstract~ to fill in the abstract. Otherwise, it checks for available identifiers and entry type in the following order:
+
+1. If a DOI is available, it calls ~ebib-extras-doi-attach~.
+2. If an ISBN is available or the entry type is book-like, it calls ~ebib-extras-book-attach~.
+3. If the URL matches a known video website (YouTube), it calls ~ebib-extras-url-to-srt-attach~ to download subtitles.
+4. If the entry type contains "online" and a URL is available, it calls both ~ebib-extras-url-to-pdf-attach~ and ~ebib-extras-url-to-html-attach~.
+
+*** DOI and book attachment
+:PROPERTIES:
+:CUSTOM_ID: h:doi-book-attachment
+:END:
+
+#+findex: ebib-extras-doi-attach
+#+findex: ebib-extras-book-attach
+The command ~ebib-extras-doi-attach~ downloads a PDF using the entry's DOI via ~annas-archive-download~. It sets up a one-shot hook on ~annas-archive-post-download-hook~ to automatically attach the downloaded file once the download completes.
+
+The command ~ebib-extras-book-attach~ searches for and downloads a book by ISBN or title via ~annas-archive-download~. It prompts the user with a search string pre-filled from the entry's ISBN (if available) or title (for book-like entry types). Like ~ebib-extras-doi-attach~, it uses a one-shot hook on ~annas-archive-post-download-hook~ to attach the file when the download finishes. If the download was initiated externally (not through =eww=), it displays a message asking the user to attach the file manually.
+
+*** URL-based file generation
+:PROPERTIES:
+:CUSTOM_ID: h:url-file-generation
+:END:
+
+#+findex: ebib-extras-url-to-pdf-attach
+#+findex: ebib-extras-url-to-html-attach
+#+findex: ebib-extras-url-to-srt-attach
+The command ~ebib-extras-url-to-pdf-attach~ generates a PDF from the URL in the entry's =url= field using ~eww-extras-url-to-file~ and attaches it to the entry once the conversion completes (via callback).
+
+The command ~ebib-extras-url-to-html-attach~ works the same way but generates an HTML file instead.
+
+The command ~ebib-extras-url-to-srt-attach~ downloads subtitles for the URL in the entry's =url= field using an external command (formatted by ~eww-extras-download-subtitles~, typically =yt-dlp=). The subtitles are downloaded to the downloads directory, but unlike the other commands in this group, the resulting file must be attached manually.
+
+*** Downloading PDFs and videos
+:PROPERTIES:
+:CUSTOM_ID: h:download-pdf-video
+:END:
+
+#+findex: ebib-extras-download-pdf
+#+findex: ebib-extras-download-video
+The command ~ebib-extras-download-pdf~ attempts to download a PDF of the work at point by trying multiple strategies in order: first by DOI (via ~annas-archive-download~), then by URL (via ~eww-extras-url-to-pdf~), and finally by ISBN (via ~ebib-extras-download-book~). It works in both ~ebib-entry-mode~ and ~bibtex-mode~.
+
+The command ~ebib-extras-download-video~ downloads a video using =yt-dlp=. It requires =yt-dlp= to be installed (signals a user error otherwise). The video is saved to the media library directory with the entry's key as the filename (with =.webm= extension), and the =file= field is updated. The download runs asynchronously via ~async-shell-command~.
+
+*** Downloading by title
+:PROPERTIES:
+:CUSTOM_ID: h:download-by-title
+:END:
+
+#+findex: ebib-extras-download-book-by-title
+#+findex: ebib-extras-download-article-by-title
+The command ~ebib-extras-download-book-by-title~ opens the entry's title on multiple download-oriented websites defined in ~ebib-extras-download-book-functions~, which includes Goodreads, HathiTrust, UC Berkeley library, Internet Archive, Library Genesis, Audible, and Audiobook Bay.
+
+The command ~ebib-extras-download-article-by-title~ opens the entry's title on websites defined in ~ebib-extras-download-article-functions~. The aliases ~ebib-extras-download-film-by-title~ and ~ebib-extras-download-film-by-identifier~ both point to ~ebib-extras-search-film-by-title~ because there is no separate download path for films.
+
+** Database management
+:PROPERTIES:
+:CUSTOM_ID: h:database-management
+:END:
+
+*** Opening and switching
+:PROPERTIES:
+:CUSTOM_ID: h:opening-switching
+:END:
+
+#+findex: ebib-extras-open-or-switch
+The command ~ebib-extras-open-or-switch~ opens Ebib in an appropriate window layout. It first splits the frame if it is currently unsplit (using ~window-extras-split-if-unsplit~), then selects the second or third window (depending on frame width relative to ~window-extras-frame-split-width-threshold~), and invokes ~ebib~. If Ebib is already open, it switches to the existing Ebib window.
+
+*** Sorting
+:PROPERTIES:
+:CUSTOM_ID: h:sorting
+:END:
+
+#+findex: ebib-extras-sort
+The command ~ebib-extras-sort~ sorts the Ebib index buffer by a specified criterion, or cycles through the available criteria on successive calls. The sort states are defined in ~ebib-extras-sort-states~ (by default: Timestamp, Author, Title). When sorting by Timestamp, the order is descending (newest first); for all other criteria, the order is ascending.
+
+The current sort state is tracked in the variable ~ebib-extras-sort-state~, and each invocation advances to the next state in the cycle.
+
+*** Navigation
+:PROPERTIES:
+:CUSTOM_ID: h:navigation
+:END:
+
+#+findex: ebib-extras-next-entry
+#+findex: ebib-extras-prev-entry
+#+findex: ebib-extras-end-of-index-buffer
+The commands ~ebib-extras-next-entry~ and ~ebib-extras-prev-entry~ move to the next or previous entry in the current database. They work in both ~ebib-index-mode~ and ~ebib-entry-mode~. When used in ~ebib-entry-mode~, they switch to the index buffer, move to the adjacent entry, and then re-open the entry buffer---effectively navigating between entries without leaving the entry view.
+
+The command ~ebib-extras-end-of-index-buffer~ moves point to the last entry line in the Ebib index buffer. It is only active when the current buffer is in ~ebib-index-mode~.
+
+*** Duplicating entries
+:PROPERTIES:
+:CUSTOM_ID: h:duplicating
+:END:
+
+#+findex: ebib-extras-duplicate-entry
+The command ~ebib-extras-duplicate-entry~ creates a copy of the entry at point. It prompts for the target bibliography file (via ~zotra-extras-set-bibfile~), generates a unique key if ~ebib-uniquify-keys~ is non-nil, inserts the formatted entry into the target file, updates the timestamp, reloads the database, and opens the new entry in Ebib. The index is sorted by Timestamp (descending) so the new entry appears at the top.
+
+*** Saving and reloading databases
+:PROPERTIES:
+:CUSTOM_ID: h:saving-reloading
+:END:
+
+#+findex: ebib-extras-auto-save-databases
+#+findex: ebib-extras-auto-reload-databases
+#+findex: ebib-extras-auto-reload-database
+#+findex: ebib-extras-reload-all-databases
+#+findex: ebib-extras-reload-database-no-confirm
+#+findex: ebib-extras-remove-file-notify-watchers
+The function ~ebib-extras-auto-save-databases~ checks all Ebib databases for modifications and saves any that have been changed. It re-schedules itself via ~run-with-timer~ to run again after one second, creating a continuous auto-save loop. This function is called automatically when the file is loaded.
+
+The command ~ebib-extras-auto-reload-databases~ sets up file-notify watchers on all database files so that when a file changes on disk (e.g., from an external edit or a sync), the corresponding Ebib database is automatically reloaded. It first removes any existing watchers (via ~ebib-extras-remove-file-notify-watchers~) and then establishes a new watcher for each database using ~ebib-extras-auto-reload-database~.
+
+The reload callback includes a 10-second cooldown per database file (tracked in ~ebib-extras-last-reload-times~) to prevent rapid consecutive reloads from file sync systems like Dropbox.
+
+The command ~ebib-extras-reload-all-databases~ reloads all databases at once, but only if no database buffer is currently modified (checked via ~ebib-extras-no-db-modified-p~). It initializes Ebib if it has not been initialized yet. This is useful for forced reloads after bulk edits.
+
+The function ~ebib-extras-reload-database-no-confirm~ reloads a single database without prompting for confirmation (unless the database has unsaved modifications, in which case it does prompt). It preserves the current entry key and is used internally by the auto-reload mechanism.
+
+*** Browsing URLs and DOIs
+:PROPERTIES:
+:CUSTOM_ID: h:browsing
+:END:
+
+#+findex: ebib-extras-browse-url-or-doi
+The command ~ebib-extras-browse-url-or-doi~ opens the entry's URL in the browser. If the entry has a =letterboxd= field with a slug, it also opens the Letterboxd page (using ~bib-letterboxd-url~ as the URL template). If no =url= field is present, it falls back to the =doi= field (calling ~ebib-browse-doi~). If neither is available, it signals a user error.
+
+*** Looking up entries and opening in Ebib
+:PROPERTIES:
+:CUSTOM_ID: h:key-lookup
+:END:
+
+#+findex: ebib-extras-get-or-open-entry
+#+findex: ebib-extras-open-key
+#+findex: ebib-extras-get-file-of-key
+The command ~ebib-extras-get-or-open-entry~ opens the BibTeX source file for the current entry and positions point on the entry. When called interactively (with INTERACTIVE-P non-nil), it visits the file in a buffer. When called programmatically, it returns the entry as a string (via ~bibtex-extras-get-entry-as-string~) without displaying the buffer.
+
+The command ~ebib-extras-open-key~ opens the entry for a given KEY in Ebib. It first locates the bibliography file containing the key (via ~ebib-extras-get-file-of-key~), then invokes ~ebib~ with the file and key, and opens the entry buffer. This is used internally to navigate to specific entries from other contexts.
+
+The function ~ebib-extras-get-file-of-key~ searches all loaded Ebib databases (as listed in ~paths-files-bibliography-all~) for the given KEY and returns the filename of the database that contains it. It signals a user error if Ebib has not been launched yet.
+
+*** Author checking
+:PROPERTIES:
+:CUSTOM_ID: h:author-checking
+:END:
+
+#+findex: ebib-extras-check-author-exists
+#+findex: ebib-extras-create-list-of-existing-authors
+The command ~ebib-extras-check-author-exists~ checks whether the =author= field of the current entry matches any author already present in the database. This is useful for spotting variant spellings or new authors. It relies on ~ebib-extras-existing-authors~, which must first be populated by calling ~ebib-extras-create-list-of-existing-authors~. That function uses ~ebib--create-author/editor-collection~ to build the list from the current database.
+
+** Notes integration
+:PROPERTIES:
+:CUSTOM_ID: h:notes-integration
+:END:
+
+#+findex: ebib-extras-citar-open-notes
+The command ~ebib-extras-citar-open-notes~ opens the Org note associated with the current entry using ~citar-open-notes~. This replaces the native ~ebib-popup-note~ command. The key difference is that when a note does not already exist, it is created following the same schema as notes created through =citar=, ensuring consistency in note file naming and metadata across the bibliography.
+
+** PDF metadata
+:PROPERTIES:
+:CUSTOM_ID: h:pdf-metadata
+:END:
+
+#+findex: ebib-extras-set-pdf-metadata
+#+findex: ebib-extras-ocr-pdf
+The command ~ebib-extras-set-pdf-metadata~ writes Author and Title metadata into the PDF file associated with the current entry (or a specified key). It uses =pdftk-java= (or =pdftk= if available) to update the metadata in place. The author names are extracted and formatted from the BibTeX =author= (or =editor=) field using ~ebib-extras-get-authors-list~ and ~ebib-extras-format-authors~ ([[#h:author-formatting][Author formatting]]). The command signals a user error if =pdftk-java= is not installed.
+
+The command ~ebib-extras-ocr-pdf~ performs OCR on the PDF file associated with the current entry using ~files-extras-ocr-pdf~. When called with a prefix argument (=C-u=), OCR is forced even if text is already present in the PDF.
+
+** Identifier retrieval
+:PROPERTIES:
+:CUSTOM_ID: h:identifier-retrieval
+:END:
+
+#+findex: ebib-extras-get-id-or-url
+#+findex: ebib-extras-fetch-id-or-url
+#+findex: ebib-extras-get-or-fetch-id-or-url
+The function ~ebib-extras-get-id-or-url~ returns the first available identifier from the current entry, checking the =doi=, =isbn=, and =url= fields in that order. It adapts to both ~ebib-entry-mode~ and ~bibtex-mode~.
+
+The function ~ebib-extras-fetch-id-or-url~ attempts to fetch an identifier from external sources when none is available in the entry. It dispatches based on the entry's supertype: for books, it calls ~bib-search-isbn~; for articles, ~bib-search-crossref~; for films, ~bib-search-imdb~ (after translating the title to English). If the supertype is unrecognized, it falls back to the =url= field.
+
+The function ~ebib-extras-get-or-fetch-id-or-url~ combines both: it first tries to get an existing identifier, and if that fails, it fetches one.
+
+* Functions
+:PROPERTIES:
+:CUSTOM_ID: h:functions
+:END:
+
+This section documents public non-interactive functions that are useful for customization, hooks, or understanding the architecture of the package.
+
+** File retrieval
+:PROPERTIES:
+:CUSTOM_ID: h:file-retrieval
+:END:
+
+#+findex: ebib-extras-get-file
+#+findex: ebib-extras-get-file-in-string
+#+findex: ebib-extras-get-text-file
+The function ~ebib-extras-get-file~ returns the path of the file with a given EXTENSION from the =file= field of the entry at point. It adapts to the current major mode (~ebib-entry-mode~ or ~bibtex-mode~) to determine the correct field-access function. Returns ~nil~ if no matching file is found.
+
+The function ~ebib-extras-get-file-in-string~ is the lower-level helper that searches a semicolon-separated file string for a file with the given EXTENSION.
+
+The function ~ebib-extras-get-text-file~ returns the path of the first text file found for the entry at point, iterating through ~ebib-extras-valid-text-file-extensions~ (HTML, PDF, SRT, VTT) in order ([[#h:file-extension-constants][File extension constants]]).
+
+** Key validation
+:PROPERTIES:
+:CUSTOM_ID: h:key-validation
+:END:
+
+#+findex: ebib-extras-key-is-valid-p
+#+findex: ebib-extras-check-valid-key
+The function ~ebib-extras-key-is-valid-p~ returns ~t~ if the given KEY (or the entry at point) matches ~ebib-extras-valid-key-regexp~ ([[#h:valid-key-regexp][~ebib-extras-valid-key-regexp~]]). The pattern requires alphanumeric characters, four consecutive digits (a year), and additional alphanumeric characters.
+
+The function ~ebib-extras-check-valid-key~ signals a user error if the key is invalid, prompting the user to regenerate it. This is used as a guard in commands like ~ebib-extras-attach-file~ and ~ebib-extras-rename-files~.
+
+** ISBN and entry type detection
+:PROPERTIES:
+:CUSTOM_ID: h:isbn-detection
+:END:
+
+#+findex: ebib-extras-isbn-p
+#+findex: ebib-extras-get-isbn
+#+findex: ebib-extras-video-p
+#+findex: ebib-extras-get-supertype
+The function ~ebib-extras-isbn-p~ returns ~t~ if a STRING matches the ISBN pattern (10 or 13 digits, with optional hyphens and the "ISBN" prefix). The pattern is defined in the constant ~ebib-extras-isbn-p~ (the constant and the function share the same name).
+
+The function ~ebib-extras-get-isbn~ extracts the ISBN from the entry with a given KEY (or the entry at point), strips hyphens, and returns only the first ISBN if multiple are listed.
+
+The function ~ebib-extras-video-p~ returns ~t~ if a STRING matches a YouTube URL pattern.
+
+The function ~ebib-extras-get-supertype~ determines the broad category of the current entry based on its type: =book= for book-like types (as listed in ~ebib-extras-book-like-entry-types~), =article= for article-like types, or =film= for film-like types ([[#h:entry-type-constants][Entry type constants]]).
+
+** Author formatting
+:PROPERTIES:
+:CUSTOM_ID: h:author-formatting
+:END:
+
+#+findex: ebib-extras-get-authors-list
+#+findex: ebib-extras-format-authors
+#+findex: ebib-extras-unbrace
+The function ~ebib-extras-get-authors-list~ splits an AUTHORS string (in BibTeX =and=-separated format) into a list of individual author names. Names in "Last, First" format are reversed to "First Last". Names enclosed in braces (e.g., corporate authors like ={World Health Organization}=) are left intact but the braces are removed.
+
+The function ~ebib-extras-format-authors~ joins a list of author names into a single string. It accepts an optional SEPARATOR (defaulting to =" & "=) and a MAX number of authors (defaulting to 3). When the number of authors exceeds MAX, only the first author is listed, followed by =" et al"=.
+
+The function ~ebib-extras-unbrace~ removes all curly braces from a string. Unlike ~ebib-unbrace~, which removes only the outermost pair of braces, this function removes every brace in the string.
+
+** Field access helpers
+:PROPERTIES:
+:CUSTOM_ID: h:field-access
+:END:
+
+#+findex: ebib-extras-get-field
+#+findex: ebib-extras-set-field
+#+findex: ebib-extras-update-entry-buffer
+The function ~ebib-extras-get-field~ is a convenience wrapper around ~ebib-get-field-value~. It returns the value of FIELD for the entry with KEY (or the entry at point), with sensible defaults: errors are suppressed, braces are removed, cross-references are resolved, and line breaks and extra whitespace are collapsed to single spaces.
+
+The function ~ebib-extras-set-field~ sets the value of FIELD to VALUE for the entry at point. It preserves the bracing status of the original field contents and updates the entry buffer display afterward.
+
+The function ~ebib-extras-update-entry-buffer~ refreshes the Ebib entry buffer display after field modifications. It calls ~ebib--update-entry-buffer~, clears the buffer's modified flag, and marks the database as modified.
+
+** Database utilities
+:PROPERTIES:
+:CUSTOM_ID: h:database-utilities
+:END:
+
+#+findex: ebib-extras-get-db-number
+#+findex: ebib-extras-no-db-modified-p
+The function ~ebib-extras-get-db-number~ returns the predefined number associated with a database FILE path, as defined in ~ebib-extras-db-numbers~ ([[#h:db-numbers][~ebib-extras-db-numbers~]]). This is useful for commands that switch between databases by number.
+
+The function ~ebib-extras-no-db-modified-p~ returns ~t~ if no Ebib database buffer is currently marked as modified. It is used as a guard by ~ebib-extras-reload-all-databases~ to prevent reloading while unsaved changes exist ([[#h:saving-reloading][Saving and reloading databases]]).
+
+* Variables and constants
+:PROPERTIES:
+:CUSTOM_ID: h:variables
+:END:
+
+This section documents the public variables and constants defined by the package. Internal variables (those with a =--= prefix) are omitted.
+
+** Sort states
+:PROPERTIES:
+:CUSTOM_ID: h:sort-states
+:END:
+
+#+vindex: ebib-extras-sort-states
+#+vindex: ebib-extras-sort-state
+The constant ~ebib-extras-sort-states~ defines the available sorting criteria for the Ebib index buffer as a list of symbols: ~(Timestamp Author Title)~.
+
+The variable ~ebib-extras-sort-state~ holds the current sorting criterion and is advanced to the next state each time ~ebib-extras-sort~ is called ([[#h:sorting][Sorting]]).
+
+** Entry type constants
+:PROPERTIES:
+:CUSTOM_ID: h:entry-type-constants
+:END:
+
+#+vindex: ebib-extras-book-like-entry-types
+#+vindex: ebib-extras-article-like-entry-types
+#+vindex: ebib-extras-film-like-entry-types
+The constant ~ebib-extras-book-like-entry-types~ lists BibTeX entry types considered as books or book-like entities: =book=, =collection=, =mvbook=, =inbook=, =incollection=, =bookinbook=, and =suppbook= (both lowercase and capitalized forms). This list is used by ~ebib-extras-get-supertype~ and by commands that dispatch based on entry type ([[#h:isbn-detection][ISBN and entry type detection]]).
+
+The constant ~ebib-extras-article-like-entry-types~ lists entry types considered as articles: =article= (both cases).
+
+The constant ~ebib-extras-film-like-entry-types~ lists entry types considered as films: =movie=, =video=, and =tvepisode= (both cases).
+
+** File extension constants
+:PROPERTIES:
+:CUSTOM_ID: h:file-extension-constants
+:END:
+
+#+vindex: ebib-extras-valid-file-extensions
+#+vindex: ebib-extras-valid-text-file-extensions
+The constant ~ebib-extras-valid-file-extensions~ defines the preference order for opening files: =("pdf" "html" "webm" "flac" "mp3" "md" "srt" "vtt")=. This is used by ~ebib-extras-open-file-dwim~ to determine which file to open when multiple are attached ([[#h:opening-files][Opening associated files]]).
+
+The constant ~ebib-extras-valid-text-file-extensions~ defines extensions considered as text files: =("html" "pdf" "srt" "vtt")=. This is used by ~ebib-extras-get-text-file~ to find the first text file associated with an entry ([[#h:file-retrieval][File retrieval]]).
+
+** Key validation pattern
+:PROPERTIES:
+:CUSTOM_ID: h:valid-key-regexp
+:END:
+
+#+vindex: ebib-extras-valid-key-regexp
+The constant ~ebib-extras-valid-key-regexp~ defines the regular expression that valid BibTeX keys must match: alphanumeric characters and underscores/hyphens, at least two characters, followed by exactly four digits (a year), followed by at least two more alphanumeric characters. This pattern is used by ~ebib-extras-key-is-valid-p~ ([[#h:key-validation][Key validation]]).
+
+** Search engine constants
+:PROPERTIES:
+:CUSTOM_ID: h:search-constants
+:END:
+
+#+vindex: ebib-extras-library-genesis
+#+vindex: ebib-extras-amazon
+#+vindex: ebib-extras-worldcat
+#+vindex: ebib-extras-internet-archive
+#+vindex: ebib-extras-university-of-toronto
+#+vindex: ebib-extras-university-of-california-berkeley
+#+vindex: ebib-extras-hathitrust
+#+vindex: ebib-extras-connected-papers
+#+vindex: ebib-extras-google-scholar
+#+vindex: ebib-extras-wikipedia
+#+vindex: ebib-extras-goodreads
+#+vindex: ebib-extras-audible
+#+vindex: ebib-extras-audiobookbay
+#+vindex: ebib-extras-imdb
+#+vindex: ebib-extras-letterboxd
+#+vindex: ebib-extras-metacritic
+#+vindex: ebib-extras-search-engines
+Each search engine is defined as a constant containing a three-element list: a human-readable name, a URL prefix, and a URL suffix. The following engines are defined:
+
+- ~ebib-extras-library-genesis~: Library Genesis (=libgen.li=).
+- ~ebib-extras-amazon~: Amazon (=smile.amazon.com=).
+- ~ebib-extras-worldcat~: WorldCat.
+- ~ebib-extras-internet-archive~: Internet Archive (=archive.org=).
+- ~ebib-extras-university-of-toronto~: University of Toronto library search.
+- ~ebib-extras-university-of-california-berkeley~: UC Berkeley library search.
+- ~ebib-extras-hathitrust~: HathiTrust.
+- ~ebib-extras-connected-papers~: Connected Papers.
+- ~ebib-extras-google-scholar~: Google Scholar.
+- ~ebib-extras-wikipedia~: Wikipedia.
+- ~ebib-extras-goodreads~: Goodreads.
+- ~ebib-extras-audible~: Audible.
+- ~ebib-extras-audiobookbay~: Audiobook Bay.
+- ~ebib-extras-imdb~: IMDb.
+- ~ebib-extras-letterboxd~: Letterboxd.
+- ~ebib-extras-metacritic~: Metacritic.
+
+The variable ~ebib-extras-search-engines~ is populated at load time by collecting all unique engine symbols from the various search and download function lists.
+
+** Search and download function lists
+:PROPERTIES:
+:CUSTOM_ID: h:search-download-lists
+:END:
+
+#+vindex: ebib-extras-search-book-functions
+#+vindex: ebib-extras-download-book-functions
+#+vindex: ebib-extras-search-article-functions
+#+vindex: ebib-extras-download-article-functions
+#+vindex: ebib-extras-search-film-functions
+#+vindex: ebib-extras-download-film-functions
+These constants define which search commands are invoked for each supertype when searching or downloading:
+
+- ~ebib-extras-search-book-functions~: Goodreads, HathiTrust, UC Berkeley, Internet Archive, Library Genesis, Amazon.
+- ~ebib-extras-download-book-functions~: the same as search-book but with Amazon replaced by Audible and Audiobook Bay.
+- ~ebib-extras-search-article-functions~: Connected Papers, Google Scholar.
+- ~ebib-extras-download-article-functions~: same as search-article-functions (note: this is the symbol reference, not a copy).
+- ~ebib-extras-search-film-functions~: IMDb, Letterboxd, Metacritic.
+- ~ebib-extras-download-film-functions~: same as search-film-functions.
+
+** Database constants
+:PROPERTIES:
+:CUSTOM_ID: h:db-numbers
+:END:
+
+#+vindex: ebib-extras-db-numbers
+#+vindex: ebib-extras-auto-save-files
+The constant ~ebib-extras-db-numbers~ is an association list mapping database file paths to their numeric identifiers. It associates the personal bibliography files and Tlon project files with numbers 1 through 5.
+
+The constant ~ebib-extras-auto-save-files~ lists database files that should participate in auto-saving. By default, it includes the new personal bibliography and the Tlon fluid bibliography. Larger files containing older entries are excluded to avoid frequent writes.
+
+** Invalid file tracking
+:PROPERTIES:
+:CUSTOM_ID: h:invalid-file-tracking
+:END:
+
+#+vindex: ebib-extras-invalid-files
+#+vindex: ebib-extras-file-notify-descriptors
+#+vindex: ebib-extras-last-reload-times
+The variable ~ebib-extras-invalid-files~ holds the list of invalidly named files found by ~ebib-extras-list-invalid-files~ ([[#h:invalid-files][Managing invalid files]]). Each element is a file path whose base name does not correspond to a known BibTeX key.
+
+The variable ~ebib-extras-file-notify-descriptors~ holds the list of active file-notify descriptors for auto-reloading databases. These are used by ~ebib-extras-remove-file-notify-watchers~ to clean up watchers.
+
+The variable ~ebib-extras-last-reload-times~ is a hash table mapping database file paths to their last reload time, used for the cooldown mechanism in the auto-reload callback ([[#h:saving-reloading][Saving and reloading databases]]).
+
+** Author tracking
+:PROPERTIES:
+:CUSTOM_ID: h:author-tracking
+:END:
+
+#+vindex: ebib-extras-existing-authors
+The variable ~ebib-extras-existing-authors~ holds the list of all authors in the current database, populated by ~ebib-extras-create-list-of-existing-authors~. It is used by ~ebib-extras-check-author-exists~ to verify that an author already appears in the database ([[#h:author-checking][Author checking]]).
+
+* Patched functions
 :PROPERTIES:
 :CUSTOM_ID: h:patched-functions
 :END:
 
-=ebib-extras.el= modifies several core =ebib= functions using =el-patch=:
+=ebib-extras.el= modifies several core =ebib= functions using =el-patch=. These patches address specific usability issues and edge cases in the default behavior.
 
-- ~ebib--setup-windows~: Modified to prevent unnecessary vertical window splits when opening Ebib, aiming for a less disruptive layout.
-- ~ebib--store-entry~: Modified to pass the "GMT" timezone argument to =format-time-string= when creating timestamps, ensuring consistency.
-- ~ebib-reload-current-database~: Modified to use =save-window-excursion= when updating buffers after reload, preventing point from jumping unexpectedly.
-- ~ebib-edit-entry~: Modified with a hack to ensure the correct entry is selected before editing, potentially addressing an edge case where point might be on the header line.
-- ~ebib-copy-field-contents~: Modified to copy the absolute, true path when the field contains a filename, instead of the potentially abbreviated path stored in the field.
+** ~ebib--setup-windows~
+:PROPERTIES:
+:CUSTOM_ID: h:patch-setup-windows
+:END:
+
+#+findex: ebib--setup-windows
+The patch to ~ebib--setup-windows~ prevents unnecessary vertical window splits when opening Ebib. In the original implementation, Ebib always splits the selected window to show both the index and entry buffers. The patched version reuses the selected window for the entry buffer instead of splitting, resulting in a less disruptive layout. The patch also removes the dedication of the index window, allowing it to be reused by other commands.
+
+** ~ebib--store-entry~
+:PROPERTIES:
+:CUSTOM_ID: h:patch-store-entry
+:END:
+
+#+findex: ebib--store-entry
+The patch to ~ebib--store-entry~ adds a ="GMT"= timezone argument to the ~format-time-string~ call when creating timestamps. This ensures that all timestamps in the bibliography are recorded in UTC, providing consistency regardless of the user's local timezone.
+
+** ~ebib-reload-current-database~
+:PROPERTIES:
+:CUSTOM_ID: h:patch-reload-database
+:END:
+
+#+findex: ebib-reload-current-database
+The patch to ~ebib-reload-current-database~ wraps the buffer update step in ~save-window-excursion~, preventing point from jumping to an unexpected position after reloading. Without this patch, the window configuration can shift when =ebib= updates its buffers.
+
+** ~ebib-edit-entry~
+:PROPERTIES:
+:CUSTOM_ID: h:patch-edit-entry
+:END:
+
+#+findex: ebib-edit-entry
+The patch to ~ebib-edit-entry~ adds a workaround for an edge case where pressing =RET= in ~ebib-index-mode~ with point on the first line of the buffer would fail to select the correct entry. The patch moves point to the next entry and back (or to the previous entry and back) to force the selection to update before calling ~ebib--edit-entry-internal~.
+
+** ~ebib-copy-field-contents~
+:PROPERTIES:
+:CUSTOM_ID: h:patch-copy-field
+:END:
+
+#+findex: ebib-copy-field-contents
+The patch to ~ebib-copy-field-contents~ changes the behavior when the field contains a file path. Instead of copying the potentially abbreviated path stored in the =file= field, the patched version expands it to the absolute, true file path (using ~file-truename~) before copying to the kill ring. Non-file values are copied unchanged.
 
 * Indices
 :PROPERTIES:

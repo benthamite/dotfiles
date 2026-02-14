@@ -17,115 +17,126 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=zotra-extras.el= provides extensions for the =zotra= package, which fetches bibliographic data using Zotero translators. These extensions enhance the process of adding entries, integrate with =ebib= for viewing and managing entries, handle potential backend errors, provide an Org protocol handler, and offer utilities for batch processing and data fetching.
+=zotra-extras.el= extends =zotra=, the Emacs package that fetches bibliographic metadata using Zotero translation servers. While =zotra= provides the core fetching mechanism, =zotra-extras.el= wraps it in a richer workflow that integrates with =ebib= for entry management, supports VPN routing for geo-restricted sources, and handles common error conditions gracefully.
 
-The main features include:
+The package provides the following capabilities:
 
-- An enhanced command to add entries, with options for specifying the bibliography file, retrying with a different backend on error, and automatically opening the new entry in =ebib=.
-- Integration with =ebib= and =ebib-extras= to open, sort, and process newly added entries.
-- Optional integration with the =mullvad= package to fetch data from IMDb using a specific geographic location.
-- An Org protocol handler for adding entries directly from external applications (e.g., browsers).
-- A command to add multiple entries from a file containing a list of URLs.
-- A utility function to fetch a specific field from a bibliographic entry without adding the full entry.
-- Functions for cleaning up newly added BibTeX entries (fixing octal sequences, cleaning URLs, setting timestamps).
+- *Enhanced entry addition.* An improved version of ~zotra-add-entry~ that auto-detects URLs from Elfeed and EWW buffers, falls back to an alternative backend on server errors, and automatically opens the new entry in =ebib= for review and processing ([[#h:adding-entries][Adding entries]]).
+- *Batch processing.* A command to add multiple bibliographic entries from a file containing one URL per line ([[#h:batch-processing][Batch processing]]).
+- *VPN integration.* Optional routing of IMDb requests through Mullvad VPN to control the geographic origin of fetched metadata ([[#h:zotra-extras-use-mullvad-p][VPN for IMDb]]).
+- *Org protocol handler.* A protocol handler that enables adding entries directly from a web browser ([[#h:org-protocol][Org protocol handler]]).
+- *BibTeX cleanup.* Post-processing functions that fix octal encoding artifacts, set timestamps, and clean up newly imported entries ([[#h:bibtex-cleanup][BibTeX cleanup]]).
+- *Field fetching.* A utility function to retrieve a single bibliographic field for a URL without adding the full entry ([[#h:fetching-fields][Fetching fields]]).
 
-* User Options
+The package depends on =zotra= and =paths=, and optionally integrates with =ebib=, =ebib-extras=, =mullvad=, =org-ref=, and =tlon=.
+
+* User options
 :PROPERTIES:
 :CUSTOM_ID: h:user-options
 :END:
 
-This section details the user-configurable variables provided by =zotra-extras.el=.
-
-** ~zotra-extras-use-mullvad-p~
+** VPN for IMDb
 :PROPERTIES:
 :CUSTOM_ID: h:zotra-extras-use-mullvad-p
 :END:
 
 #+vindex: zotra-extras-use-mullvad-p
-If non-nil, the command ~zotra-extras-add-entry~ will attempt to connect to a specific Mullvad VPN server associated with the city defined for "IMDb" in ~mullvad-websites-and-cities~ before fetching data. This is useful for ensuring IMDb data is fetched in a specific language (e.g., English by connecting via New York). Requires the =mullvad= package and appropriate configuration of its variables. Default is nil.
+The Internet Movie Database (IMDb) returns metadata that may vary based on the geographic location of the request. The user option ~zotra-extras-use-mullvad-p~ controls whether ~zotra-extras-add-entry~ routes IMDb requests through a specific Mullvad VPN server to ensure consistent results (for example, fetching English-language metadata by connecting through New York).
+
+When set to non-nil, and when the URL or search string passed to ~zotra-extras-add-entry~ matches =imdb.com=, the command calls ~mullvad-connect-to-website~ with the ="IMDb"= website identifier before fetching data. This requires the =mullvad= package and appropriate configuration of ~mullvad-websites-and-cities~ and ~mullvad-cities-and-servers~. Specifically, ~mullvad-websites-and-cities~ must contain a cons cell like =("IMDb" . "New York")= and ~mullvad-cities-and-servers~ must map that city to a server like =("New York" . "us-nyc-wg-601")=.
+
+The default value is ~nil~, meaning all requests use the direct internet connection.
 
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
 :END:
 
-=zotra-extras.el= provides the following interactive commands:
-
-** Add Bibliographic Entry (Enhanced)
+** Adding entries
 :PROPERTIES:
-:CUSTOM_ID: h:zotra-extras-add-entry
+:CUSTOM_ID: h:adding-entries
 :END:
 
 #+findex: zotra-extras-add-entry
-The command ~zotra-extras-add-entry~ is an enhanced version of =zotra-add-entry=. It prompts for a URL or search string and optionally a bibliography file (BIBFILE).
-Key enhancements include:
-- If BIBFILE is nil, it prompts the user to select one using ~zotra-extras-set-bibfile~, storing the choice in ~zotra-extras-most-recent-bibfile~.
-- If ~zotra-extras-use-mullvad-p~ is non-nil *and* the URL or search string matches "imdb.com", it attempts to connect via Mullvad before fetching data (see ~zotra-extras-use-mullvad-p~).
-- It automatically extracts URLs from the current buffer if in =elfeed-show-mode= or =eww-mode=.
-- If the default Zotra backend fails with a specific JSON parse error ("Internal Server Error"), it prompts the user whether to retry using the =citoid= backend.
-- After successfully adding the entry using =zotra-add-entry=, it calls ~zotra-extras-open-in-ebib~ to display and process the new entry in Ebib.
+The command ~zotra-extras-add-entry~ is the primary entry point for importing bibliographic metadata. It improves on the standard ~zotra-add-entry~ in several ways:
 
-** Set Bibliography File
+- *URL auto-detection.* When invoked from an =elfeed-show-mode= buffer, it copies the current entry's URL to the kill ring. In =eww-mode=, it copies the current page URL. In other modes, it pre-fills the prompt with the most recent kill ring entry.
+- *Bibliography file selection.* If no BIBFILE argument is provided, it prompts the user to choose one via ~zotra-extras-set-bibfile~ ([[#h:bibliography-file-selection][Bibliography file selection]]) and stores the choice in the variable ~zotra-extras-most-recent-bibfile~.
+- *VPN routing.* When ~zotra-extras-use-mullvad-p~ is non-nil and the URL matches =imdb.com=, the command connects through Mullvad VPN before fetching ([[#h:zotra-extras-use-mullvad-p][VPN for IMDb]]).
+- *Backend fallback.* If the primary =zotra= backend fails with a JSON parse error indicating an internal server error, the command automatically retries with the =citoid= backend.
+- *Ebib integration.* After successfully adding the entry, it opens the new entry in =ebib= for review, unless the optional DO-NOT-OPEN argument is non-nil.
+
+The optional arguments URL-OR-SEARCH-STRING, ENTRY-FORMAT, BIBFILE, and DO-NOT-OPEN can be supplied programmatically for non-interactive use.
+
+** Bibliography file selection
 :PROPERTIES:
-:CUSTOM_ID: h:zotra-extras-set-bibfile
+:CUSTOM_ID: h:bibliography-file-selection
 :END:
 
 #+findex: zotra-extras-set-bibfile
-The command ~zotra-extras-set-bibfile~ prompts the user to select a bibliography file using minibuffer completion. The candidates are hardcoded as the variables =tlon-file-fluid= and =paths-file-personal-bibliography-new= (presumably defined elsewhere). The selected file path is returned. This is used by ~zotra-extras-add-entry~ when no specific bibfile is provided.
+The command ~zotra-extras-set-bibfile~ prompts the user to choose a bibliography file from a predefined list of candidates: ~tlon-file-fluid~, ~tlon-file-db~, and ~paths-file-personal-bibliography-new~. The selected file path is returned. This command is called by ~zotra-extras-add-entry~ when no bibliography file is specified ([[#h:adding-entries][Adding entries]]).
 
-** Add Multiple URLs from File
+** Batch processing
 :PROPERTIES:
-:CUSTOM_ID: h:zotra-extras-add-multiple-urls-from-file
+:CUSTOM_ID: h:batch-processing
 :END:
 
 #+findex: zotra-extras-add-multiple-urls-from-file
-The command ~zotra-extras-add-multiple-urls-from-file~ prompts the user for a
-file containing a list of URLs (one per line) and a bibliography file. It then
-iterates through the URLs, adding an entry for each one to the selected
-bibliography using =zotra-add-entry=. After adding all entries, it opens the
-bibliography in Ebib and sorts it by timestamp.
+When you need to import many entries at once, the command ~zotra-extras-add-multiple-urls-from-file~ reads a file containing one URL per line and adds a bibliographic entry for each URL to a chosen bibliography file. Interactively, it prompts for both the file path (defaulting to the downloads directory) and the target bibliography via ~zotra-extras-set-bibfile~. Duplicate URLs in the file are removed before processing.
 
-* Org Protocol Handler
+Each entry is added without opening it in =ebib= individually, avoiding repeated window switching. After all entries have been processed, the command opens the bibliography in =ebib= and sorts by timestamp so the newly added entries appear together.
+
+The constant ~zotra-extras-add-multiple-urls-from-file~ (the variable, not the command) holds the default file path for the URL list, set to =zotra-add-multiple-urls.txt= in the downloads directory.
+
+* Functions
+:PROPERTIES:
+:CUSTOM_ID: h:functions
+:END:
+
+** Ebib post-processing
+:PROPERTIES:
+:CUSTOM_ID: h:ebib-post-processing
+:END:
+
+#+findex: zotra-extras-open-in-ebib
+The function ~zotra-extras-open-in-ebib~ handles the workflow of opening a newly added entry in =ebib=. It launches =ebib= if needed, switches to the correct database, reloads it, sorts entries by timestamp, navigates to the new entry, saves the database (to persist the sorted order), and prompts the user to verify that the entry type and key are correct before invoking ~ebib-extras-process-entry~ for further processing.
+
+** BibTeX cleanup
+:PROPERTIES:
+:CUSTOM_ID: h:bibtex-cleanup
+:END:
+
+#+findex: zotra-extras-after-add-process-bibtex
+#+findex: zotra-extras-fix-octal-sequences
+The function ~zotra-extras-after-add-process-bibtex~ performs several cleanup steps on a newly added BibTeX entry in the current buffer. It converts =titleaddon= fields to =journaltitle=, sets a =timestamp= field using the =ebib= timestamp format, fixes octal encoding sequences, cleans the entry using ~org-ref-clean-bibtex-entry~, replaces EAF URLs via ~tlon-cleanup-eaf-replace-urls~, and records the entry key in ~zotra-extras-most-recent-bibkey~.
+
+The function ~zotra-extras-fix-octal-sequences~ addresses a specific issue where Zotero-imported BibTeX entries contain octal escape sequences (such as =\302\267= for a middle dot) that Emacs does not decode automatically. The function iterates over a range of possible octal sequences and replaces each one with its corresponding UTF-8 character.
+
+** Fetching fields
+:PROPERTIES:
+:CUSTOM_ID: h:fetching-fields
+:END:
+
+#+findex: zotra-extras-fetch-field
+The function ~zotra-extras-fetch-field~ retrieves the value of a single FIELD (such as ="title"= or ="author"=) from the bibliographic metadata for a given URL-OR-SEARCH-STRING, without adding the full entry to any bibliography file. It fetches the raw BibTeX data via ~zotra-get-entry-1~, parses it in a temporary buffer using =bibtex-mode=, and extracts the requested field. Optional arguments allow suppressing errors (IGNORE-ERRORS) and setting a custom TIMEOUT. This function is useful when you need metadata for programmatic purposes without side effects.
+
+** Org protocol handler
 :PROPERTIES:
 :CUSTOM_ID: h:org-protocol
 :END:
 
-=zotra-extras.el= registers an Org protocol handler for the "zotra" protocol.
-
-** ~zotra-extras-protocol~
-:PROPERTIES:
-:CUSTOM_ID: h:zotra-extras-protocol
-:END:
-
 #+findex: zotra-extras-protocol
-The function ~zotra-extras-protocol~ handles =org-protocol://zotra?...= requests. It extracts the URL, optional bibfile, and optional format from the request INFO plist and calls ~zotra-extras-add-entry~ with these parameters. This allows adding entries to a bibliography directly from external applications like web browsers via bookmarklets or extensions.
+The function ~zotra-extras-protocol~ handles =org-protocol://zotra?...= requests, enabling you to add bibliographic entries directly from a web browser via a bookmarklet or browser extension. The INFO plist may contain =:url=, =:bibfile=, =:format=, and =:title= keys. The function extracts these and delegates to ~zotra-extras-add-entry~ ([[#h:adding-entries][Adding entries]]).
 
-* Utility Functions
+The protocol is registered automatically when the package is loaded, adding an entry to ~org-protocol-protocol-alist~.
+
+** Adding multiple URLs
 :PROPERTIES:
-:CUSTOM_ID: h:utility-functions
+:CUSTOM_ID: h:adding-multiple-urls
 :END:
 
-These functions provide helper functionalities.
-
-** Fetch Specific Field
-:PROPERTIES:
-:CUSTOM_ID: h:zotra-extras-fetch-field
-:END:
-
-#+findex: zotra-extras-fetch-field
-The function ~zotra-extras-fetch-field~ retrieves the value of a specific FIELD (e.g., "title", "author") for a given URL-OR-SEARCH-STRING without adding the full entry to a bibliography. It uses =zotra-get-entry-1= internally to fetch the raw BibTeX data, parses it in a temporary buffer, and extracts the requested field's value. Optional arguments allow ignoring errors during fetching and setting a custom timeout.
-
-* Internal Functions (for reference)
-:PROPERTIES:
-:CUSTOM_ID: h:internal-functions
-:END:
-
-These functions are used internally by the main commands but are not typically called directly by the user.
-
-- ~zotra-extras--add-and-maybe-open~: Helper called by ~zotra-extras-add-entry~. Calls =zotra-add-entry= and then ~zotra-extras-open-in-ebib~.
-- ~zotra-extras-open-in-ebib~: Manages opening the newly added entry in Ebib, switching to the correct database, reloading it, finding the key, sorting, and prompting the user to process the entry (using =ebib-extras-process-entry=).
-- ~zotra-extras-after-add-process-bibtex~: Intended to be called after adding an entry (likely via advice or hooks, though not explicitly shown). Performs cleanup tasks on the BibTeX entry in the current buffer: converts "titleaddon" to "journaltitle", adds a timestamp, fixes octal sequences, cleans the entry using =org-ref=, replaces URLs using =tlon-cleanup=, and updates ~zotra-extras-most-recent-bibkey~.
-- ~zotra-extras-fix-octal-sequences~: Replaces specific octal escape sequences found in Zotero-exported BibTeX with their corresponding UTF-8 characters.
+#+findex: zotra-extras-add-multiple-urls
+The function ~zotra-extras-add-multiple-urls~ is the non-interactive workhorse behind ~zotra-extras-add-multiple-urls-from-file~ ([[#h:batch-processing][Batch processing]]). It accepts a list of URLS and a BIBFILE, saves all open =ebib= databases, then iterates through the URLs calling ~zotra-extras-add-entry~ for each with DO-NOT-OPEN set. After all entries are added, it opens the bibliography in =ebib= and sorts by timestamp.
 
 * Indices
 :PROPERTIES:

@@ -17,66 +17,79 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=org-gcal-extras.el= provides extensions for the =org-gcal= package, which synchronizes Org mode entries with Google Calendar events. These extensions add commands for opening events in the Google Calendar web interface and provide a transient menu for common =org-gcal= operations. It also includes patches to modify the default behavior of how event times and descriptions are handled during synchronization.
+=org-gcal-extras.el= extends =org-gcal=, the package that synchronizes Org mode entries with Google Calendar events. The upstream package stores event timestamps as =SCHEDULED= properties and places descriptions inside a dedicated =:org-gcal:= drawer. This layout may not suit every workflow---for instance, if you use deadlines rather than scheduled dates for calendar events, or if you prefer event descriptions to live in the heading body rather than a drawer.
 
-The main features include:
+The package provides three categories of functionality:
 
-- A command to open the Google Calendar event corresponding to the Org entry at point in a web browser.
-- A transient menu (=org-gcal-extras-menu=) for quick access to fetch, sync, post, open, delete, and setup commands.
-- Patches to modify how =org-gcal= reads timestamps (preferring DEADLINE over SCHEDULED) and how it updates Org entries (inserting description as body text, using DEADLINE instead of SCHEDULED).
+- *Commands.* A command to open the Google Calendar event at point in a web browser, and a transient menu that groups all common =org-gcal= operations into a single dispatch interface ([[#h:commands][Commands]]).
+- *Compatibility fixes.* Advice that prevents ~track-changes~ assertion failures and stale org-element cache errors during asynchronous synchronization on Emacs 30 and later ([[#h:compatibility-fixes][Compatibility fixes]]).
+- *Patched synchronization behavior.* =el-patch= modifications that change how =org-gcal= reads and writes event data: using =DEADLINE= instead of =SCHEDULED=, placing descriptions in the heading body, and removing the =:org-gcal:= drawer ([[#h:patched-functions][Patched functions]]).
+
+The package depends on =org-gcal=, =el-patch=, and =transient=.
 
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
 :END:
 
-=org-gcal-extras.el= provides the following interactive commands:
-
-** Open Event in Google Calendar
+** Opening events in Google Calendar
 :PROPERTIES:
-:CUSTOM_ID: h:org-gcal-extras-open-at-point
+:CUSTOM_ID: h:open-at-point
 :END:
 
 #+findex: org-gcal-extras-open-at-point
-The command ~org-gcal-extras-open-at-point~ retrieves the Google Calendar event ID stored in the "entry-id" property of the Org heading at point. It then constructs the corresponding Google Calendar edit URL and opens it in the default web browser using =browse-url=. If no "entry-id" property is found, it signals a user error.
+When reviewing synchronized calendar events in Org mode, you may want to edit an event in the Google Calendar web interface directly. The command ~org-gcal-extras-open-at-point~ reads the =entry-id= property from the Org heading at point, constructs the corresponding Google Calendar edit URL (encoding the event ID in base64), and opens it in the default web browser via ~browse-url~. If the heading has no =entry-id= property, the command signals a user error.
 
-** Org Gcal Extras Menu
+** Transient menu
 :PROPERTIES:
-:CUSTOM_ID: h:org-gcal-extras-menu
+:CUSTOM_ID: h:transient-menu
 :END:
 
 #+findex: org-gcal-extras-menu
-The command ~org-gcal-extras-menu~ displays a transient menu (using the =transient= package) that provides quick access to common =org-gcal= commands grouped logically:
-- *Fetch:* Fetch all (=org-gcal-fetch=), Fetch buffer (=org-gcal-fetch-buffer=).
-- *Sync:* Sync all (=org-gcal-sync=), Sync buffer (=org-gcal-sync-buffer=).
-- *Act:* Post entry at point (=org-gcal-post-at-point=), Open event at point in browser (=org-gcal-extras-open-at-point=), Delete event at point (=org-gcal-delete-at-point=).
-- *Setup:* Unlock sync (=org-gcal--sync-unlock=), Clear token (=org-gcal-sync-tokens-clear=), Toggle debug (=org-gcal-toggle-debug=), Reload secret (=org-gcal-reload-client-id-secret=).
+The =org-gcal= package provides many commands but no built-in dispatch interface. The command ~org-gcal-extras-menu~ defines a transient menu that groups all common operations into four columns:
 
-* Patched Functions
+- *Fetch:* ~org-gcal-fetch~ (fetch all calendars) and ~org-gcal-fetch-buffer~ (fetch only the current buffer's calendar).
+- *Sync:* ~org-gcal-sync~ (sync all calendars) and ~org-gcal-sync-buffer~ (sync only the current buffer).
+- *Act:* ~org-gcal-post-at-point~ (push local changes for the event at point), ~org-gcal-extras-open-at-point~ (open in browser, [[#h:open-at-point][Opening events in Google Calendar]]), and ~org-gcal-delete-at-point~ (delete the event).
+- *Setup:* ~org-gcal--sync-unlock~ (release a stuck sync lock), ~org-gcal-sync-tokens-clear~ (clear stored sync tokens), ~org-gcal-toggle-debug~ (toggle debug logging), and ~org-gcal-reload-client-id-secret~ (reload OAuth credentials).
+
+This menu is defined with ~transient-define-prefix~ and can be bound to a convenient key for quick access.
+
+* Compatibility fixes
 :PROPERTIES:
-:CUSTOM_ID: h:patched-functions-org-gcal
+:CUSTOM_ID: h:compatibility-fixes
 :END:
 
-=org-gcal-extras.el= modifies core =org-gcal= functions using =el-patch=:
+Emacs 30 introduced the ~track-changes~ facility, which can trigger assertion failures when =org-gcal= modifies buffers asynchronously during synchronization. Additionally, the org-element cache may enter a stale state during these async updates, causing "emergency" cache resets and subsequent errors.
 
-** ~org-gcal--get-time-and-desc~ Patch
+=org-gcal-extras.el= addresses both issues with an =:around= advice on ~org-gcal--update-entry~ that wraps the original function in two protective measures: it sets ~inhibit-modification-hooks~ to ~t~ during the update (preventing ~track-changes~ assertions), and it resets the org-element cache both before and after the update (preventing stale cache errors). These fixes are applied automatically when the package is loaded.
+
+* Patched functions
 :PROPERTIES:
-:CUSTOM_ID: h:org-gcal--get-time-and-desc-patch
+:CUSTOM_ID: h:patched-functions
 :END:
 
-The internal function ~org-gcal--get-time-and-desc~ is patched to change the preference for reading timestamps from Org entries. The original function prefers the =SCHEDULED= property. The patched version prefers the =DEADLINE= property over =SCHEDULED= when determining the start/end times for an event to be synced *to* Google Calendar. It still falls back to timestamps found within the =:org-gcal:= drawer if neither property exists.
-
-** ~org-gcal--update-entry~ Patch
+** Reading event timestamps
 :PROPERTIES:
-:CUSTOM_ID: h:org-gcal--update-entry-patch
+:CUSTOM_ID: h:get-time-and-desc-patch
 :END:
 
-The internal function ~org-gcal--update-entry~ is patched to modify how Google Calendar event details are written back into an Org entry during synchronization:
-- It removes the creation of the =:ORG-GCAL:= drawer entirely.
-- Instead of putting the event description inside the drawer, it inserts the description directly into the body of the Org heading.
-- It sets the event's date/time using the =DEADLINE= property instead of the =SCHEDULED= property. If a =DEADLINE= already exists, it updates it; otherwise, it creates a new =DEADLINE=.
+The internal function ~org-gcal--get-time-and-desc~ determines the start and end times of an event by reading Org heading properties. The upstream version prefers the =SCHEDULED= property; the =el-patch= in =org-gcal-extras.el= changes this to prefer the =DEADLINE= property instead. If neither property is present, the function falls back to timestamps found within the =:org-gcal:= drawer, as in the original. This change ensures that when events are pushed back to Google Calendar, the deadline-based timestamps are used.
 
-These patches aim to integrate Google Calendar events more naturally into an Org workflow that primarily uses deadlines and keeps descriptive text within the main heading body.
+** Writing event data
+:PROPERTIES:
+:CUSTOM_ID: h:update-entry-patch
+:END:
+
+The internal function ~org-gcal--update-entry~ writes Google Calendar event data into an Org heading during synchronization. The upstream version creates an =:org-gcal:= drawer, writes the event timestamp and description inside it, and uses the =SCHEDULED= property for the event date.
+
+The =el-patch= in =org-gcal-extras.el= makes three changes to this behavior:
+
+1. The =:org-gcal:= drawer is not created. There is no =:ORG-GCAL:= / =:END:= wrapper around the event content.
+2. The event description is inserted directly into the heading body (after the properties drawer), making it visible without opening a drawer.
+3. The event date is set using ~org-deadline~ instead of ~org-schedule~, so the timestamp appears as a =DEADLINE= property rather than a =SCHEDULED= property.
+
+Together with the timestamp reading patch ([[#h:get-time-and-desc-patch][Reading event timestamps]]), these changes create a consistent workflow where Google Calendar events use deadlines throughout the round-trip synchronization.
 
 * Indices
 :PROPERTIES:

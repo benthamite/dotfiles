@@ -17,136 +17,120 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=bbdb-extras.el= provides extensions for the BBDB (Insidious Big Brother Database) package, an Emacs-based contact manager. These extensions focus on exporting contacts, modifying interaction behaviors, and simplifying record creation.
+=bbdb-extras.el= extends BBDB (the Insidious Big Brother Database),
+Emacs' contact management system.  The stock BBDB interface requires
+several prompts to create a record and asks for confirmation before
+routine actions such as opening a URL or deleting a field.  This
+package streamlines those interactions and adds the ability to export
+contacts to the system address book.
 
-The main features include:
+The extensions fall into three areas:
 
-- A command to export the current BBDB record as a vCard file and open it with the system's default application (e.g., macOS Contacts).
-- Patches to modify default BBDB behaviors:
-  + Open URLs directly without confirmation.
-  + Prevent splitting windows when displaying the BBDB buffer.
-  + Delete fields or records without confirmation.
-- Commands for quick record creation, prompting only for the name.
+- *Quick record creation*: create a new contact by providing only a
+  name, skipping the prompts for email, phone, and other fields
+  ([[#h:quick-record-creation][Quick record creation]]).
+- *Export*: send the current BBDB record to macOS Contacts as a vCard
+  ([[#h:export-vcard][Exporting to vCard]]).
+- *Patched behaviors*: open URLs without confirmation and display the
+  BBDB buffer without splitting windows ([[#h:patched-functions][Patched functions]]).
 
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
 :END:
 
-=bbdb-extras.el= provides the following interactive commands:
-
-** Export vCard
+** Quick record creation
 :PROPERTIES:
-:CUSTOM_ID: h:bbdb-extras-export-vcard
-:END:
-
-#+findex: bbdb-extras-export-vcard
-The command ~bbdb-extras-export-vcard~ exports the BBDB record currently being viewed to a temporary vCard (=.vcf=) file. It then uses the system's =open= command (on macOS) to open this file with the default application associated with vCards, typically the system's Contacts application. This allows for easy transfer of BBDB contact information to other applications.
-
-** Quick Create Record
-:PROPERTIES:
-:CUSTOM_ID: h:bbdb-extras-create-quick
+:CUSTOM_ID: h:quick-record-creation
 :END:
 
 #+findex: bbdb-extras-create-quick
-The command ~bbdb-extras-create-quick~ provides a faster way to create a new BBDB record by prompting *only* for the contact's name. It uses ~bbdb-extras-read-record-quick~ internally to get the name and then adds the new, minimal record to the database and displays it.
+When you just need to jot down someone's name without filling in every
+field, use ~bbdb-extras-create-quick~.  It prompts only for the
+contact's first and last name, creates a minimal BBDB record, and
+displays it.  This replaces the standard ~bbdb-create-internal~
+workflow, which asks for email, phone, address, and notes.
 
-** Delete Field or Record Without Confirmation
+Internally the command delegates to ~bbdb-extras-read-record-quick~
+([[#h:read-record-quick][Reading a quick record]]), which handles the name prompt and
+validation.
+
+** Exporting to vCard
 :PROPERTIES:
-:CUSTOM_ID: h:bbdb-extras-delete-field-or-record-no-confirm
+:CUSTOM_ID: h:export-vcard
+:END:
+
+#+findex: bbdb-extras-export-vcard
+The command ~bbdb-extras-export-vcard~ exports the BBDB record at
+point to a temporary =.vcf= file and opens it with the system's
+default handler (=open= on macOS), which is typically the Contacts
+application.  This provides a quick path from BBDB to the system
+address book without manual copy-pasting.  It relies on the
+=bbdb-vcard= package for the actual vCard serialization.
+
+** Deleting without confirmation
+:PROPERTIES:
+:CUSTOM_ID: h:delete-no-confirm
 :END:
 
 #+findex: bbdb-extras-delete-field-or-record-no-confirm
-The command ~bbdb-extras-delete-field-or-record-no-confirm~ deletes the field or record at point without asking for confirmation. This overrides the default behavior of ~bbdb-delete-field-or-record~ which normally prompts the user before deletion. Use with caution.
+By default, ~bbdb-delete-field-or-record~ asks for confirmation before
+every deletion.  If you find this disruptive---especially during bulk
+cleanup---the command
+~bbdb-extras-delete-field-or-record-no-confirm~ performs the same
+deletion but bypasses the confirmation prompt.  Use with care, as the
+action is not undoable.
 
-* Patched Functions
+* Functions
+:PROPERTIES:
+:CUSTOM_ID: h:functions
+:END:
+
+** Reading a quick record
+:PROPERTIES:
+:CUSTOM_ID: h:read-record-quick
+:END:
+
+#+findex: bbdb-extras-read-record-quick
+The function ~bbdb-extras-read-record-quick~ creates an empty BBDB
+record and populates only its first and last name fields via
+~bbdb-read-name~.  The optional FIRST-AND-LAST argument controls the
+reading mode (see the ~bbdb-read-name~ docstring for details).  This
+function is used by ~bbdb-extras-create-quick~
+([[#h:quick-record-creation][Quick record creation]]).
+
+* Patched functions
 :PROPERTIES:
 :CUSTOM_ID: h:patched-functions
 :END:
 
-=bbdb-extras.el= modifies the behavior of some standard BBDB functions using advice:
+=bbdb-extras.el= overrides two standard BBDB functions via ~advice-add~
+with =:override=.
 
-** Browse URL Directly
+** Browsing URLs directly
 :PROPERTIES:
-:CUSTOM_ID: h:bbdb-extras-browse-url
+:CUSTOM_ID: h:browse-url
 :END:
 
 #+findex: bbdb-extras-browse-url
-The original ~bbdb-browse-url~ command is overridden by ~bbdb-extras-browse-url~. The modified version opens the URL found in the =url= field of the selected BBDB record(s) directly using ~browse-url~, without prompting for confirmation first.
+The function ~bbdb-extras-browse-url~ replaces ~bbdb-browse-url~.  The
+stock version asks the user to confirm before opening each URL; the
+patched version opens the URL in the =url= field directly with
+~browse-url~.  A prefix argument WHICH (starting from 0) selects which
+URL to open when the field contains multiple entries.
 
-** Prevent Window Splitting
+** Displaying the BBDB buffer
 :PROPERTIES:
-:CUSTOM_ID: h:bbdb-extras-pop-up-window
+:CUSTOM_ID: h:pop-up-window
 :END:
 
 #+findex: bbdb-extras-pop-up-window
-The original ~bbdb-pop-up-window~ function, which normally displays the =*BBDB*= buffer by splitting the largest window, is overridden by ~bbdb-extras-pop-up-window~. The modified version prevents this window splitting behavior, instead displaying the =*BBDB*= buffer in an existing window or simply selecting the window if it's already visible. This aims to provide a less disruptive user experience.
-
-* Internal Functions (for reference)
-:PROPERTIES:
-:CUSTOM_ID: h:internal-functions
-:END:
-
-These functions are used internally by the main commands but are not typically called directly by the user.
-
-- ~bbdb-extras-read-record-quick~: Helper function for ~bbdb-extras-create-quick~. Reads only the name for a new BBDB record.
-
-* Indices
-:PROPERTIES:
-:CUSTOM_ID: h:indices
-:END:
-
-** Function index
-:PROPERTIES:
-:INDEX: fn
-:CUSTOM_ID: h:function-index
-:END:
-
-** Variable index
-:PROPERTIES:
-:INDEX: vr
-:CUSTOM_ID: h:variable-index
-:END:
-
-#+title: bibtex-completion-extras: Extensions for bibtex-completion
-#+author: Pablo Stafforini
-#+email: pablo@stafforini.com
-#+language: en
-#+options: ':t toc:t author:t email:t num:t
-#+startup: content
-#+export_file_name: bibtex-completion-extras.info
-#+texinfo_filename: bibtex-completion-extras.info
-#+texinfo_dir_category: Emacs misc features
-#+texinfo_dir_title: BibTeX Completion Extras: (bibtex-completion-extras)
-#+texinfo_dir_desc: Extensions for bibtex-completion
-
-This manual describes the features and customization options for the Emacs Lisp file =bibtex-completion-extras.el=.
-
-* Overview
-:PROPERTIES:
-:CUSTOM_ID: h:overview
-:END:
-
-=bibtex-completion-extras.el= provides a minor extension for the =bibtex-completion= package, which facilitates inserting citations and bibliographies. The primary purpose of this extension is to disable the automatic file-watching feature of =bibtex-completion=.
-
-* Patched Functions
-:PROPERTIES:
-:CUSTOM_ID: h:patched-functions
-:END:
-
-=bibtex-completion-extras.el= modifies the behavior of one standard =bibtex-completion= function using =el-patch=:
-
-** Disable File Watching in Initialization
-:PROPERTIES:
-:CUSTOM_ID: h:bibtex-completion-init-patch
-:END:
-
-#+findex: bibtex-completion-init
-The original ~bibtex-completion-init~ function is patched to remove the code responsible for setting up file watches on the bibliography files specified in ~bibtex-completion-bibliography~.
-
-The original function would normally add watches using ~file-notify-add-watch~ to automatically reload the bibliography data when the underlying BibTeX files change. This patch disables that behavior.
-
-*Rationale:* Disabling file watching might be desirable in setups where bibliography files are large or numerous, and the overhead of file watching is noticeable, or if the user prefers to manually refresh the bibliography data when needed.
+The function ~bbdb-extras-pop-up-window~ replaces ~bbdb-pop-up-window~.
+The stock version splits the largest window to show the =*BBDB*=
+buffer, which can be disruptive in tiled layouts.  The patched version
+reuses an existing window instead of splitting, providing a less
+intrusive display.  If the =*BBDB*= buffer is already visible, the
+function simply selects its window when SELECT is non-nil.
 
 * Indices
 :PROPERTIES:

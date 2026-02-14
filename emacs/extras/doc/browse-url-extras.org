@@ -17,22 +17,20 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=browse-url-extras.el= provides extensions for Emacs' built-in =browse-url= functionality, allowing for more fine-grained control over how URLs are opened. It enables defining lists of domains that should be opened with specific browsers (default system browser or Firefox) instead of Emacs' internal browser (like =eww=).
+=browse-url-extras.el= extends Emacs' built-in =browse-url= library with fine-grained control over which browser opens which URLs. By default, Emacs sends all URLs to the same browser function, but many users prefer to open certain domains in their system browser or in Firefox while keeping everything else in EWW. This package makes that easy by reading domain lists from plain text files and configuring ~browse-url-handlers~ accordingly.
 
-The main features include:
+The package depends on =browse-url=, =eww=, =paths=, =f=, and =s=.
 
-- Configuration files to list domains for specific browsers.
-- Functions to automatically set up ~browse-url-handlers~ based on these files.
-- An interactive command to add the domain of the current URL (or from the kill ring) to one of the external browser lists.
-- A command to open the file at point in Dired using the external default browser.
-- A command to open a URL externally in the background (specifically using Firefox on macOS).
+The main capabilities are:
 
-* User Options
+- *Per-domain browser routing.* Maintaining lists of domains that should open in the default system browser or in Firefox, loaded from configuration files ([[#h:browser-routing][Browser routing]]).
+- *Interactive domain management.* Adding the current page's domain to an external browser list with a single command ([[#h:add-domain][Adding domains]]).
+- *External browsing.* Opening the current EWW or xwidget-webkit URL in an external browser, or opening URLs in the background ([[#h:external-browsing][External browsing]]).
+
+* User options
 :PROPERTIES:
 :CUSTOM_ID: h:user-options
 :END:
-
-This section details the user-configurable variables provided by =browse-url-extras.el=.
 
 ** ~browse-url-extras-browse-url-default-file~
 :PROPERTIES:
@@ -40,9 +38,9 @@ This section details the user-configurable variables provided by =browse-url-ext
 :END:
 
 #+vindex: browse-url-extras-browse-url-default-file
-Specifies the path to a plain text file containing a list of domains (one per line) that should be opened using the system's default browser (via ~browse-url-default-browser~).
+The user option ~browse-url-extras-browse-url-default-file~ specifies the path to a plain text file listing domains (one per line) that should be opened with the system's default browser via ~browse-url-default-browser~. When you encounter a domain that EWW handles poorly, you can add it to this file.
 
-The default path points to =etc/browse-url-default.txt= within the user's Emacs configuration directory (assuming a =paths= setup).
+The default value points to =etc/browse-url-default.txt= in the Emacs configuration directory (via ~paths-dir-dotemacs~). The type is a file path.
 
 ** ~browse-url-extras-browse-url-firefox-file~
 :PROPERTIES:
@@ -50,82 +48,64 @@ The default path points to =etc/browse-url-default.txt= within the user's Emacs 
 :END:
 
 #+vindex: browse-url-extras-browse-url-firefox-file
-Specifies the path to a plain text file containing a list of domains (one per line) that should be opened specifically with Firefox (via ~browse-url-firefox~).
+The user option ~browse-url-extras-browse-url-firefox-file~ specifies the path to a plain text file listing domains that should be opened specifically in Firefox via ~browse-url-firefox~. This is useful for domains that require Firefox-specific features or extensions.
 
-The default path points to =etc/browse-url-firefox.txt= within the user's Emacs configuration directory.
+The default value points to =etc/browse-url-firefox.txt= in the Emacs configuration directory. The type is a file path.
 
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
 :END:
 
-=browse-url-extras.el= provides the following interactive commands:
-
-** Open Dired File Externally
+** Browser routing
 :PROPERTIES:
-:CUSTOM_ID: h:browse-url-extras-of-dired-file-externally
-:END:
-
-#+findex: browse-url-extras-of-dired-file-externally
-The command ~browse-url-extras-of-dired-file-externally~ is intended for use within a Dired buffer. It opens the file at the current point using the system's default external browser. It achieves this by temporarily setting ~browse-url-browser-function~ to ~browse-url-default-browser~ and then calling the standard ~browse-url-of-dired-file~ command.
-
-** Add Domain to External Browser List
-:PROPERTIES:
-:CUSTOM_ID: h:browse-url-extras-add-domain-to-open-externally
-:END:
-
-#+findex: browse-url-extras-add-domain-to-open-externally
-The command ~browse-url-extras-add-domain-to-open-externally~ interactively adds a domain to one of the external browser lists.
-
-1.  It determines a candidate domain, prioritizing the current URL if in an =eww= buffer, or checking the first item in the kill ring for a valid URL.
-2.  It prompts the user for the domain to add, using the candidate domain (if found) as the initial input.
-3.  By default, it adds the entered domain to the file specified by ~browse-url-extras-browse-url-default-file~.
-4.  If called with a prefix argument (ARG), it adds the domain to the file specified by ~browse-url-extras-browse-url-firefox-file~ instead.
-5.  After adding the domain to the appropriate file (cleaning duplicates and sorting), it re-runs ~browse-url-extras-set-domains-to-open-externally~ to update the active ~browse-url-handlers~.
-6.  Finally, it attempts to browse the original URL (if one was detected initially).
-
-** Open URL Externally in Background (macOS Firefox)
-:PROPERTIES:
-:CUSTOM_ID: h:browse-url-open-externally-in-background
-:END:
-
-#+findex: browse-url-open-externally-in-background
-The command ~browse-url-open-externally-in-background~ prompts for a URL (or takes one as an argument) and opens it using the external Firefox application on macOS, specifically instructing it to open in the background using the =open -a Firefox --background <url>= shell command.
-
-* Configuration Functions
-:PROPERTIES:
-:CUSTOM_ID: h:configuration-functions
-:END:
-
-These functions are primarily intended for setup and internal use.
-
-** Set Browser Handlers from File
-:PROPERTIES:
-:CUSTOM_ID: h:browse-url-extras-set-handler
-:END:
-
-#+findex: browse-url-extras-set-handler
-The function ~browse-url-extras-set-handler~ takes a file path (URLS-FILE) and a browse function (HANDLER) as arguments. It reads the specified file, treating each line as a domain, and adds entries to the global ~browse-url-handlers~ list. Each entry maps a regular expression (quoting the domain) to the provided HANDLER function.
-
-** Set All External Domains
-:PROPERTIES:
-:CUSTOM_ID: h:browse-url-extras-set-domains-to-open-externally
+:CUSTOM_ID: h:browser-routing
 :END:
 
 #+findex: browse-url-extras-set-domains-to-open-externally
-The command ~browse-url-extras-set-domains-to-open-externally~ initializes or resets the URL handling configuration. It clears the existing ~browse-url-handlers~ and then calls ~browse-url-extras-set-handler~ twice:
-1.  Once for the ~browse-url-extras-browse-url-default-file~ with the ~browse-url-default-browser~ handler.
-2.  Once for the ~browse-url-extras-browse-url-firefox-file~ with the ~browse-url-firefox~ handler.
+The command ~browse-url-extras-set-domains-to-open-externally~ reads the domain lists from ~browse-url-extras-browse-url-default-file~ and ~browse-url-extras-browse-url-firefox-file~ ([[#h:user-options][User options]]) and configures ~browse-url-handlers~ so that matching URLs are routed to the appropriate external browser. It clears any existing handlers before rebuilding the list.
 
-This function is called automatically when =browse-url-extras.el= is loaded and after adding a new domain using ~browse-url-extras-add-domain-to-open-externally~.
+This command is called automatically when =browse-url-extras.el= is loaded and after adding a new domain with ~browse-url-extras-add-domain-to-open-externally~ ([[#h:add-domain][Adding domains]]).
 
-** Write URL to File
+** Adding domains
 :PROPERTIES:
-:CUSTOM_ID: h:browse-url-extras-write-url-to-file
+:CUSTOM_ID: h:add-domain
 :END:
 
+#+findex: browse-url-extras-add-domain-to-open-externally
+The command ~browse-url-extras-add-domain-to-open-externally~ provides a convenient way to add a domain to one of the external browser lists without leaving Emacs. It determines a candidate domain by checking the current EWW URL or the first item in the kill ring, then prompts for confirmation or editing.
+
+By default, the domain is added to the default browser list (~browse-url-extras-browse-url-default-file~). With a prefix argument, it is added to the Firefox list (~browse-url-extras-browse-url-firefox-file~) instead. After writing the domain to the file, the command refreshes ~browse-url-handlers~ via ~browse-url-extras-set-domains-to-open-externally~ ([[#h:browser-routing][Browser routing]]) and opens the original URL in the newly configured browser.
+
+** External browsing
+:PROPERTIES:
+:CUSTOM_ID: h:external-browsing
+:END:
+
+#+findex: browse-url-extras-of-dired-file-externally
+#+findex: browse-extras-browse-url-externally
+#+findex: browse-url-open-externally-in-background
+The command ~browse-url-extras-of-dired-file-externally~ opens the file at point in a Dired buffer using the system's default external browser. It temporarily overrides ~browse-url-browser-function~ with ~browse-url-default-browser~ and delegates to the standard ~browse-url-of-dired-file~. This is useful for HTML files that you want to view in a real browser rather than EWW.
+
+The command ~browse-extras-browse-url-externally~ opens the URL of the current EWW page or xwidget-webkit session in an external browser, using the function specified by ~browse-url-secondary-browser-function~. You can also pass a URL argument directly. This is handy when you are reading a page in EWW and realize it requires a full browser for JavaScript-heavy content or forms.
+
+The command ~browse-url-open-externally-in-background~ opens a URL in Firefox on macOS without bringing it to the foreground, using the =open -a Firefox --background= shell command. When called interactively, it prompts for a URL. This is useful for queuing pages to read later without disrupting your current workflow.
+
+* Functions
+:PROPERTIES:
+:CUSTOM_ID: h:functions
+:END:
+
+** Configuration helpers
+:PROPERTIES:
+:CUSTOM_ID: h:configuration-helpers
+:END:
+
+#+findex: browse-url-extras-set-handler
 #+findex: browse-url-extras-write-url-to-file
-The function ~browse-url-extras-write-url-to-file~ takes a URL (domain) string and a file path (FILE) as arguments. It appends the URL to the specified file, removes blank lines and duplicates, sorts the lines alphabetically, and saves the buffer. This is used by ~browse-url-extras-add-domain-to-open-externally~ to maintain the domain lists.
+The function ~browse-url-extras-set-handler~ reads a URLS-FILE (one domain per line) and adds entries to ~browse-url-handlers~ mapping each domain (as a quoted regexp) to the specified HANDLER function. It is called by ~browse-url-extras-set-domains-to-open-externally~ ([[#h:browser-routing][Browser routing]]) for each browser configuration file.
+
+The function ~browse-url-extras-write-url-to-file~ appends a URL string to a FILE, then cleans up the file by removing blank lines, eliminating duplicates, and sorting alphabetically. It is used by ~browse-url-extras-add-domain-to-open-externally~ ([[#h:add-domain][Adding domains]]) to maintain tidy domain lists.
 
 * Indices
 :PROPERTIES:

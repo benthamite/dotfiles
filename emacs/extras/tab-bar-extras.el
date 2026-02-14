@@ -153,6 +153,7 @@ reset functions."
   (interactive)
   (display-time) ; in case clock gets stuck
   (tab-bar-extras-set-global-mode-string)
+  (tab-bar-extras-restore-org-clock)
   (unless quick
     (when (featurep 'calendar-extras)
       (when calendar-extras-use-geolocation
@@ -179,6 +180,15 @@ The condition is included to prevent the currently clocked task from
 disappearing when the Tab Bar is reset."
   (unless (bound-and-true-p org-clock-current-task)
     (tab-bar-extras-reset)))
+
+(declare-function org-clock-update-mode-line "org-clock")
+(defun tab-bar-extras-restore-org-clock ()
+  "Restore `org-clock' display in `global-mode-string' if a clock is running."
+  (when (bound-and-true-p org-clock-current-task)
+    (unless (memq 'org-mode-line-string global-mode-string)
+      (setq global-mode-string
+	    (append global-mode-string '(org-mode-line-string))))
+    (org-clock-update-mode-line)))
 
 ;;;;; notifications
 

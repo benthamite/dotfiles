@@ -11658,6 +11658,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
                ("s-a" . annas-archive-download-file)))
 
   :custom
+  (annas-archive-secret-key (auth-source-pass-get 'secret "tlon/core/annas-archive"))
   (annas-archive-included-file-types '("pdf"))
   (annas-archive-use-fast-download-links t)
   (annas-archive-use-eww t)

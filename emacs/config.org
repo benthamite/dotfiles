@@ -204,6 +204,7 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#writeroom-mode][writeroom-mode]]
   - [[#ace-link][ace-link]]
   - [[#ace-link-extras][ace-link-extras]]
+  - [[#winpulse][winpulse]]
 - [[#date--time][date & time]]
   - [[#calendar][calendar]]
   - [[#calendar-extras][calendar-extras]]
@@ -4870,6 +4871,20 @@ CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package ace-link-extras
   :after ace-link)
+#+end_src
+
+** winpulse
+:PROPERTIES:
+:ID:       5A1A6855-98FD-4909-8026-07EC64F63D9F
+:END:
+
+/[[https://github.com/xenodium/winpulse][winpulse]] briefly highlights focused Emacs windows./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package winpulse
+  :ensure (:host github :repo "xenodium/winpulse")
+  :config
+  (winpulse-mode))
 #+end_src
 
 * date & time

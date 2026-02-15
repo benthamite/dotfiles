@@ -6531,7 +6531,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   :custom
   (flycheck-languagetool-check-params
    '(("level" . "picky")
-     ("disabledRules" . "ARROWS,DASH_RULE,DATE_NEW_YEAR,WHITESPACE_RULE")))
+     ("disabledRules" . "ARROWS,DASH_RULE,DATE_NEW_YEAR,EN_QUOTES,GITHUB,WHITESPACE_RULE")))
 
   :config
   (defun flycheck-languagetool-enable ()

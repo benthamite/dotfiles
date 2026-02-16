@@ -13,6 +13,11 @@
 - **Deletion:** use `trash` instead of `rm -rf` (hook-enforced).
 - **Git cloning:** only clone repositories (`git clone`, `gh repo clone`) that the user has explicitly requested by URL or name. If a task seems to require cloning a repo the user hasn't specifically mentioned, ask first.
 
+## Coding
+
+- If you detect a bug, always try to fix its root cause, rather than patch its symptoms. For example, if the search functionality of a website we are building shows duplicate results, do not add a deduplication filter; instead, investigate why the search is returning duplicates in the first place.
+- Similarly, never rely on “fallbacks”: if you need to use a fallback, that means the primary approach is not working reliably. Make the primary approach robust, or replace it with a superior alternative.
+
 ## Agents
 
 - Make liberal use of subagents and agent teams.

@@ -723,7 +723,7 @@ If `org-id-update-id-locations' reports duplicate IDs, this
 command will automatically call `org-extras-id-find-duplicate-ids'
 to display them in a dedicated buffer."
   (interactive)
-  (let* ((all-files (directory-files-recursively org-directory ".org$\\|.org.gpg$"))
+  (let* ((all-files (directory-files-recursively org-directory "\\.org$"))
          ;; Filter out files in .Trash directories and files with carriage returns in their names.
          (filtered-files (seq-filter (lambda (f)
                                        (and (not (string-match-p "/\\.Trash/" f))
@@ -731,7 +731,9 @@ to display them in a dedicated buffer."
                                      all-files)))
     (advice-add 'display-warning :after #'org-extras--id-update-warning-handler)
     (unwind-protect
-        (org-id-update-id-locations filtered-files)
+        (condition-case err
+            (org-id-update-id-locations filtered-files)
+          (error (message "org-extras-id-update-id-locations: %s" (error-message-string err))))
       (advice-remove 'display-warning #'org-extras--id-update-warning-handler))))
 
 ;;;;;; process duplicate ids

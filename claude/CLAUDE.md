@@ -1,4 +1,4 @@
-# CLAUDE.md
+# Global conventions
 
 ## General
 

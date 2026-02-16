@@ -27,6 +27,25 @@
 
 ;;; Code:
 
+;; Define the kill-buffer guard before any `require' calls.  This function uses
+;; only built-in Emacs primitives; placing it here prevents a recursive load
+;; loop that otherwise occurs when `(require 'aidermacs)' triggers loading vterm,
+;; which prompts `y-or-n-p', which loads helpful -> cc-defs, which kills an
+;; internal temp buffer, which fires `kill-buffer-query-functions', which would
+;; try to autoload this file again if the function weren't already defined.
+(defun aidermacs-extras-confirm-kill-buffer ()
+  "Query before killing an Aidermacs buffer with a running process.
+Return t if the buffer can be killed (i.e., if it's not an
+aidermacs comint buffer with a process, or if the user confirms
+the kill). Return nil if the user decides not to kill the
+buffer."
+  (if (and (derived-mode-p 'comint-mode)
+           (buffer-name)
+           (string-prefix-p "*aidermacs" (buffer-name))
+           (get-buffer-process (current-buffer)))
+      (yes-or-no-p "Are you sure you want to kill this Aidermacs buffer? ")
+    t))
+
 (require 'aidermacs)
 
 ;;;; User options
@@ -57,19 +76,6 @@ file in Emacs for better performance with large files."
             (kill-new output)
             (message "Copied last %d lines of chat history to kill ring" line-count)))
       (message "Chat history file not found: %s" history-file))))
-
-(defun aidermacs-extras-confirm-kill-buffer ()
-  "Query before killing an Aidermacs buffer with a running process.
-Return t if the buffer can be killed (i.e., if it's not an
-aidermacs comint buffer with a process, or if the user confirms
-the kill). Return nil if the user decides not to kill the
-buffer."
-  (if (and (derived-mode-p 'comint-mode)
-           (buffer-name)
-           (string-prefix-p "*aidermacs" (buffer-name))
-           (get-buffer-process (current-buffer)))
-      (yes-or-no-p "Are you sure you want to kill this Aidermacs buffer? ")
-    t))
 
 (defun aidermacs-extras-copy-prompt-region ()
   "Copy a region of the Aider history buffer based on user prompt blocks.

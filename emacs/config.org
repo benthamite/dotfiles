@@ -13666,6 +13666,7 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
 (use-package empv
   :ensure (:host github
                  :repo "isamert/empv.el")
+  :defer t
   :custom
   (empv-audio-dir paths-dir-music-tango)
   (empv-invidious-instance "https://invidious.fdn.fr/api/v1")

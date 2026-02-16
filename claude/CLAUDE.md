@@ -1,4 +1,4 @@
-# Global conventions
+# CLAUDE.md
 
 ## General
 
@@ -8,7 +8,13 @@
 - Use sentence case instead of title case whenever possible.
 - If you create temporary files or code, make sure to delete them afterwards.
 
+## Safety
+
+- **Deletion:** use `trash` instead of `rm -rf` (hook-enforced).
+- **Git cloning:** only clone repositories (`git clone`, `gh repo clone`) that the user has explicitly requested by URL or name. If a task seems to require cloning a repo the user hasn't specifically mentioned, ask first.
+
 ## Agents
+
 - Make liberal use of subagents and agent teams.
 - When spawning subagents or teams, always use the most advanced model available (as of 2026-02-14, that means Claude Opus 4.6).
 - In general, I value performance above speed, so prefer more powerful models even if they are slower.

@@ -35,11 +35,6 @@
 
 ;;;; Variables
 
-(defconst dired-extras-screenshot-regexp
-  "Screenshot [[:digit:]]\\{4\\}-[[:digit:]]\\{2\\}-[[:digit:]]\\{2\\} at [[:digit:]]\\{2\\}\\.[[:digit:]]\\{2\\}\\.[[:digit:]]\\{2\\}\\.[[:alpha:]]+"
-  "Regexp matching macOS screenshot filenames.
-Matches the pattern `Screenshot YYYY-MM-DD at HH.MM.SS.EXT'.")
-
 (defvar dired-extras-show-dotfiles-p nil
   "Whether to show dot files in Dired.")
 
@@ -50,33 +45,11 @@ Matches the pattern `Screenshot YYYY-MM-DD at HH.MM.SS.EXT'.")
   (interactive)
   (kill-new (file-name-sans-extension (dired-copy-filename-as-kill))))
 
+(defvar files-extras-screenshot-regexp)
 (defun dired-extras-mark-screenshots ()
   "Mark all screenshot files."
   (interactive)
-  (dired-mark-files-regexp dired-extras-screenshot-regexp))
-
-(defun dired-extras--screenshot-directory ()
-  "Return the macOS screenshot save directory."
-  (let ((dir (string-trim
-              (shell-command-to-string
-               "defaults read com.apple.screencapture location 2>/dev/null"))))
-    (if (and (not (string-empty-p dir)) (file-directory-p dir))
-        (file-name-as-directory dir)
-      (file-name-as-directory "~/Desktop"))))
-
-;;;###autoload
-(defun dired-extras-copy-most-recent-screenshot ()
-  "Copy the path of the most recent screenshot to the kill ring.
-The screenshot directory is read from the macOS `com.apple.screencapture'
-defaults, falling back to `~/Desktop'."
-  (interactive)
-  (let* ((dir (dired-extras--screenshot-directory))
-         (files (directory-files dir t dired-extras-screenshot-regexp)))
-    (if files
-        (let ((newest (car (last files))))
-          (kill-new newest)
-          (message "Copied: %s" newest))
-      (user-error "No screenshots found in %s" dir))))
+  (dired-mark-files-regexp files-extras-screenshot-regexp))
 
 (defun dired-extras-up-directory-reuse ()
   "Like `dired-up-directory, but reuse current buffer."

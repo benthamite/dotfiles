@@ -34,6 +34,11 @@
 
 ;;;; Variables
 
+(defconst files-extras-screenshot-regexp
+  "Screenshot [[:digit:]]\\{4\\}-[[:digit:]]\\{2\\}-[[:digit:]]\\{2\\} at [[:digit:]]\\{2\\}\\.[[:digit:]]\\{2\\}\\.[[:digit:]]\\{2\\}\\.[[:alpha:]]+"
+  "Regexp matching macOS screenshot filenames.
+Matches the pattern `Screenshot YYYY-MM-DD at HH.MM.SS.EXT'.")
+
 (defconst file-extras-bypass-paywalls-chrome-zip-file
   "bypass-paywalls-chrome-clean-master.zip"
   "Name of the Bypass Paywalls Chrome Clean `zip' file.")
@@ -58,6 +63,11 @@
 (defgroup files-extras ()
   "Extensions for `files'."
   :group 'files)
+
+(defcustom files-extras-screenshot-directory paths-dir-downloads
+  "Directory where macOS saves screenshots."
+  :type 'directory
+  :group 'files-extras)
 
 (defcustom files-extras-new-empty-buffer-major-mode 'org-mode
   "Major mode to use for new empty buffers."
@@ -258,6 +268,19 @@ files which do not exist any more or are no longer readable will be killed."
     (sort
      (directory-files-and-attributes path 'full nil t)
      #'(lambda (x y) (time-less-p (nth 5 y) (nth 5 x)))))))
+
+;;;###autoload
+(defun files-extras-copy-most-recent-screenshot ()
+  "Copy the path of the most recent screenshot to the kill ring.
+The screenshot directory is specified by `files-extras-screenshot-directory'."
+  (interactive)
+  (let* ((dir (file-name-as-directory files-extras-screenshot-directory))
+         (files (directory-files dir t files-extras-screenshot-regexp)))
+    (if files
+        (let ((newest (car (last files))))
+          (kill-new newest)
+          (message "Copied: %s" newest))
+      (user-error "No screenshots found in %s" dir))))
 
 (defun files-extras-switch-to-most-recent-buffer-in-mode (mode)
   "Switch to the most recent buffer in major mode MODE."

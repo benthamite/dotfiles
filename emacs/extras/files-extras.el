@@ -39,23 +39,23 @@
   "Regexp matching macOS screenshot filenames.
 Matches the pattern `Screenshot YYYY-MM-DD at HH.MM.SS.EXT'.")
 
-(defconst file-extras-bypass-paywalls-chrome-zip-file
+(defconst files-extras-bypass-paywalls-chrome-zip-file
   "bypass-paywalls-chrome-clean-master.zip"
   "Name of the Bypass Paywalls Chrome Clean `zip' file.")
 
-(defconst file-extras-bypass-paywalls-chrome-zip-url
+(defconst files-extras-bypass-paywalls-chrome-zip-url
   (format
    "https://gitflic.ru/project/magnolia1234/bpc_uploads/blob/raw?file=%s"
-   file-extras-bypass-paywalls-chrome-zip-file)
+   files-extras-bypass-paywalls-chrome-zip-file)
   "URL for the Bypass Paywalls Chrome Clean `zip' file.")
 
-(defconst file-extras-bypass-paywalls-firefox-xpi-file
+(defconst files-extras-bypass-paywalls-firefox-xpi-file
   "bypass_paywalls_clean-latest.xpi"
   "Name of the Bypass Paywalls Firefox Clean `xpi' file.")
 
-(defconst file-extras-bypass-paywalls-firefox-xpi-url
+(defconst files-extras-bypass-paywalls-firefox-xpi-url
   (format "https://gitflic.ru/project/magnolia1234/bpc_uploads/blob/raw?file=%s"
-	  file-extras-bypass-paywalls-firefox-xpi-file)
+	  files-extras-bypass-paywalls-firefox-xpi-file)
   "URL for the Bypass Paywalls Firefox Clean `xpi' file.")
 
 ;;;; User options
@@ -191,7 +191,7 @@ functionality in macOS."
   (interactive)
   (kill-buffer (current-buffer)))
 
-(defun file-extras-kill-other-buffer ()
+(defun files-extras-kill-other-buffer ()
   "Kill the buffer in the other window."
   (interactive)
   (save-window-excursion
@@ -382,7 +382,7 @@ This function gets STRING when PROCESS produces output."
   (when-let* ((file-name buffer-file-name))
     (file-name-base file-name)))
 
-(defun file-extras-bollp ()
+(defun files-extras-bollp ()
   "Return t if point is at the beginning of the last line."
   (let ((beginning-of-last-line
 	 (save-excursion
@@ -433,7 +433,7 @@ more intrusive alert."
     (message "Copied `%s'" path)))
 
 ;;;###autoload
-(defun file-extras-copy-contents (&optional file)
+(defun files-extras-copy-contents (&optional file)
   "Copy the contents of FILE to the kill ring.
 If FILE is nil, use the file at point if in Dired mode, the file visited by the
 current buffer, or prompt the user for a file, in that order."
@@ -542,7 +542,7 @@ OLD-FUN and ARGS are arguments passed to the original function."
 
 ;; TODO: Expand for other modes
 ;;;###autoload
-(defun file-extras-copy-as-kill-dwim ()
+(defun files-extras-copy-as-kill-dwim ()
   "Copy the relevant string in the current buffer, depending on its mode.
 - In a `helpful-mode' buffer, get the name of the symbol whose docstring the
 current helpful buffer displays, then kill the buffer."
@@ -551,12 +551,12 @@ current helpful buffer displays, then kill the buffer."
     ('helpful-mode (kill-new (replace-regexp-in-string "\\(\\*helpful .*: \\)\\(.*\\)\\(\\*\\)" "\\2" (buffer-name)))
 		   (files-extras-kill-this-buffer-switch-to-other-window))))
 
-(defun file-extras-grammarly-open-in-external-editor ()
+(defun files-extras-grammarly-open-in-external-editor ()
   "Open Grammarly's external editor."
   (interactive)
   (browse-url "https://app.grammarly.com/ddocs/1929393566"))
 
-(defun file-extras-remove-extra-blank-lines ()
+(defun files-extras-remove-extra-blank-lines ()
   "Remove extra blank lines from the current buffer."
   (interactive)
   (save-excursion
@@ -598,9 +598,9 @@ If N is nil, default to 0 (the first directory)."
 After running the command, both the extensions page and the local folder will
 open. To install the extension, drag the latter onto the former."
   (interactive)
-  (let* ((url file-extras-bypass-paywalls-chrome-zip-url)
-	 (file (file-name-concat paths-dir-downloads file-extras-bypass-paywalls-chrome-zip-file))
-	 (base (file-name-base file-extras-bypass-paywalls-chrome-zip-file))
+  (let* ((url files-extras-bypass-paywalls-chrome-zip-url)
+	 (file (file-name-concat paths-dir-downloads files-extras-bypass-paywalls-chrome-zip-file))
+	 (base (file-name-base files-extras-bypass-paywalls-chrome-zip-file))
 	 (dir (file-name-concat paths-dir-downloads base))
 	 (dir-in-dir (file-name-concat dir (file-name-as-directory base))))
     (unless (url-file-exists-p url)
@@ -617,13 +617,13 @@ After running the command, both the Firefox extensions page and
 the `bypass-paywalls-firefox-clean-master' folder will open.
 To install the extension, drag the latter onto the former."
   (interactive)
-  (unless (url-file-exists-p file-extras-bypass-paywalls-firefox-xpi-url)
-    (user-error "URL `%s' does not exist" file-extras-bypass-paywalls-firefox-xpi-url))
+  (unless (url-file-exists-p files-extras-bypass-paywalls-firefox-xpi-url)
+    (user-error "URL `%s' does not exist" files-extras-bypass-paywalls-firefox-xpi-url))
   (let ((default-directory paths-dir-downloads))
-    (url-copy-file file-extras-bypass-paywalls-firefox-xpi-url
-		   file-extras-bypass-paywalls-firefox-xpi-file)
+    (url-copy-file files-extras-bypass-paywalls-firefox-xpi-url
+		   files-extras-bypass-paywalls-firefox-xpi-file)
     (macos-run-keyboard-maestro-script "67A6BCE5-AB24-4696-AFCF-C135193158D7" "Open Firefox extensions")
-    (macos-open-in-finder file-extras-bypass-paywalls-firefox-xpi-file)))
+    (macos-open-in-finder files-extras-bypass-paywalls-firefox-xpi-file)))
 
 ;;;;; List <> lines
 

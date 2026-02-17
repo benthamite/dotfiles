@@ -131,7 +131,7 @@ determine the target ([[#h:buffer-information][Buffer information]]).
 :END:
 
 #+findex: files-extras-kill-this-buffer
-#+findex: file-extras-kill-other-buffer
+#+findex: files-extras-kill-other-buffer
 #+findex: files-extras-kill-this-buffer-switch-to-other-window
 #+findex: files-extras-kill-all-file-visiting-buffers
 #+findex: files-extras-bury-buffer-switch-to-other-window
@@ -139,7 +139,7 @@ The command ~files-extras-kill-this-buffer~ kills the current buffer.
 This is a more reliable alternative to the built-in ~kill-this-buffer~,
 which can sometimes stop working due to menu-bar assumptions.
 
-The command ~file-extras-kill-other-buffer~ kills the buffer displayed in
+The command ~files-extras-kill-other-buffer~ kills the buffer displayed in
 the other window without changing the current window's focus.
 
 The command ~files-extras-kill-this-buffer-switch-to-other-window~ kills
@@ -174,8 +174,8 @@ provides a single keybinding for both common evaluation workflows.
 
 #+findex: files-extras-show-buffer-name
 #+findex: files-extras-copy-current-path
-#+findex: file-extras-copy-contents
-#+findex: file-extras-copy-as-kill-dwim
+#+findex: files-extras-copy-contents
+#+findex: files-extras-copy-as-kill-dwim
 The command ~files-extras-show-buffer-name~ displays the buffer name in
 the echo area and copies it to the kill ring.
 
@@ -183,11 +183,11 @@ The command ~files-extras-copy-current-path~ copies the full path of the
 current buffer's file (or ~default-directory~ if the buffer is not
 visiting a file) to the kill ring.
 
-The command ~file-extras-copy-contents~ copies the entire contents of a
+The command ~files-extras-copy-contents~ copies the entire contents of a
 file to the kill ring.  When called interactively, it uses the file at
 point in Dired, the current buffer's file, or prompts for a file.
 
-The command ~file-extras-copy-as-kill-dwim~ copies a context-appropriate
+The command ~files-extras-copy-as-kill-dwim~ copies a context-appropriate
 string to the kill ring.  Currently, in a ~helpful-mode~ buffer, it
 extracts the symbol name from the buffer title and kills the buffer.
 
@@ -250,8 +250,8 @@ the same base name.
 :CUSTOM_ID: h:removing-blank-lines
 :END:
 
-#+findex: file-extras-remove-extra-blank-lines
-The command ~file-extras-remove-extra-blank-lines~ collapses consecutive
+#+findex: files-extras-remove-extra-blank-lines
+The command ~files-extras-remove-extra-blank-lines~ collapses consecutive
 runs of blank lines into a single blank line throughout the current
 buffer.
 
@@ -280,8 +280,8 @@ proceeding and will signal an error if it is not.
 :CUSTOM_ID: h:external-editors
 :END:
 
-#+findex: file-extras-grammarly-open-in-external-editor
-The command ~file-extras-grammarly-open-in-external-editor~ opens
+#+findex: files-extras-grammarly-open-in-external-editor
+The command ~files-extras-grammarly-open-in-external-editor~ opens
 Grammarly's web-based external editor in the default browser.
 
 ** Buffer-local key bindings
@@ -327,7 +327,7 @@ menu via the =p= key.
 #+findex: files-extras-get-stem-of-current-buffer
 #+findex: files-extras-buffer-file-name
 #+findex: files-extras-open-buffer-files
-#+findex: file-extras-bollp
+#+findex: files-extras-bollp
 The function ~files-extras-get-alternate-buffer~ returns the most
 recently used buffer in the current window, respecting the frame's
 ~buffer-predicate~.  It is used internally by
@@ -343,7 +343,7 @@ directory structure to point to their canonical locations.
 The function ~files-extras-open-buffer-files~ returns a list of all
 =.org= files currently open in Emacs buffers.
 
-The function ~file-extras-bollp~ returns ~t~ if point is at the
+The function ~files-extras-bollp~ returns ~t~ if point is at the
 beginning of the last line in the buffer.
 
 ** File operations

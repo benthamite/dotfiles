@@ -768,7 +768,7 @@ tries to attach files based on available identifiers and entry type:
 - DOI: Uses `ebib-extras-doi-attach'.
 - ISBN or book-like type: Uses `ebib-extras-book-attach'.
 - Video URL: Uses `ebib-extras-url-to-srt-attach' (for subtitles).
-- Online type with URL: Uses `ebib-extras-url-to-pdf-attach' and
+- Online or article type with URL: Uses `ebib-extras-url-to-pdf-attach' and
   `ebib-extras-url-to-html-attach'.
 KEY is an optional BibTeX key string, passed interactively as nil.
 ;; TODO: Ensure `ebib-extras-set-abstract' works correctly for TARGET-KEY if
@@ -786,7 +786,7 @@ KEY is an optional BibTeX key string, passed interactively as nil.
               ((and url (cl-some (lambda (regexp) (string-match regexp url))
                                  ebib-extras-video-websites))
                (ebib-extras-url-to-srt-attach target-key))
-              ((and url (string-match "online" type)) ; Assuming "online" is a type
+              ((and url (member type '("online" "article")))
                (ebib-extras-url-to-pdf-attach target-key)
                (ebib-extras-url-to-html-attach target-key)))))))
 

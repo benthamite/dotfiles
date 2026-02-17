@@ -57,9 +57,18 @@ not push to remote."
     (magit-extras-midnight-update directory)))
 
 (defun magit-extras-midnight-update (directory)
-  "Update repo in DIRECTORY with `midnight'."
+  "Update repo in DIRECTORY with `midnight'.
+Unlike `magit-extras-stage-commit-and-push', this uses synchronous git
+operations to avoid process sentinel issues when `default-directory' changes
+between the start and completion of async processes."
   (let ((default-directory directory))
-    (magit-extras-stage-commit-and-push "Midnight update")))
+    (when (and (file-directory-p directory)
+               (magit-toplevel))
+      (when (or (magit-anything-staged-p)
+                (magit-anything-unstaged-p))
+        (magit-stage-modified t)
+        (magit-call-git "commit" "-m" "Midnight update"))
+      (magit-call-git "push"))))
 
 ;; gist.github.com/dotemacs/9a0433341e75e01461c9
 (defun magit-extras-parse-url (url)

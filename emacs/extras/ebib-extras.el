@@ -178,7 +178,8 @@ in the field, no change is made. The database is marked as modified."
       (unless (and file-field-contents
 		   (catch 'file-exists
 		     (dolist (file (ebib--split-files file-field-contents))
-		       (when (string= (string-trim file) file-name)
+		       (when (string= (expand-file-name (string-trim file))
+				      (expand-file-name file-name))
 			 (throw 'file-exists file)))))
 	(ebib-set-field-value field file-name key db ";")
 	(ebib--set-modified t db)
@@ -380,7 +381,7 @@ The \"file\" field is updated with the new paths. The entry's key must be valid.
 
 (defun ebib-extras-dedup-file-field ()
   "Remove duplicate paths from the \"file\" field of the current entry.
-Duplicates are determined by exact string match after trimming whitespace.
+Duplicates are determined by comparing expanded (absolute) paths.
 The original order of first occurrences is preserved."
   (interactive)
   (ebib--execute-when
@@ -389,7 +390,10 @@ The original order of first occurrences is preserved."
             (files (ebib-extras-get-field field)))
        (unless (or (null files) (string-empty-p files))
          (let* ((parts (mapcar #'string-trim (ebib--split-files files)))
-                (unique (cl-delete-duplicates (copy-sequence parts) :test #'string-equal)))
+                (unique (cl-delete-duplicates (copy-sequence parts)
+                          :test (lambda (a b)
+                                  (string= (expand-file-name a)
+                                           (expand-file-name b))))))
 	   (unless (= (length parts) (length unique))
 	     (let ((key (ebib--get-key-at-point)))
 	       (ebib-delete-field-contents field t)
@@ -592,8 +596,10 @@ KEY.EXT, moved to the appropriate library directory and the
     (ebib-extras--update-file-field-contents key dest)
     (ebib-extras-set-abstract key)
     (when (and postprocess (string= (file-name-extension dest) "pdf"))
-      (ebib-extras--af-postprocess-pdf key)
-      (ebib-extras-dedup-file-field))))
+      ;; Dedup before postprocess: postprocess opens the PDF and switches to
+      ;; `pdf-view-mode', after which `ebib--execute-when' in dedup would fail.
+      (ebib-extras-dedup-file-field)
+      (ebib-extras--af-postprocess-pdf key))))
 
 ;;;; helper functions for `ebib-extras-attach-file'
 
@@ -640,11 +646,15 @@ KEY.EXT, moved to the appropriate library directory and the
       (rename-file src dest t)
       dest)))
 
+(defvar pdf-view-mode-hook)
 (defun ebib-extras--af-postprocess-pdf (key)
   "Write metadata, OCR and open the PDF attached to KEY."
   (ebib-extras-set-pdf-metadata key)
   (ebib-extras-ocr-pdf)
-  (ebib-extras-open-pdf-file))
+  ;; Suppress `pdf-view-restore-mode' because the newly attached PDF may have a
+  ;; different page count than the file it replaced, causing "No such page" errors.
+  (let ((pdf-view-mode-hook (remq 'pdf-view-restore-mode-conditionally pdf-view-mode-hook)))
+    (ebib-extras-open-pdf-file)))
 
 (defun ebib-extras-attach-most-recent-file ()
   "Attach the most recent download to the current entry and post-process it."

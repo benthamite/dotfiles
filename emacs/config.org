@@ -6467,6 +6467,8 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   (flycheck-indication-mode nil)
   (flycheck-display-errors-delay 0.5)
   (flycheck-checker-error-threshold 10000)
+  ;; org-lint runs synchronously in-process; it freezes Emacs on large org files
+  (flycheck-disabled-checkers '(org-lint))
   ;; https://github.com/skeeto/elfeed/pull/448#issuecomment-1120336279
   (flycheck-global-modes '(not . (elfeed-search-mode)))
 

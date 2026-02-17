@@ -397,6 +397,7 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
   - [[#ox-html][ox-html]]
   - [[#ox-latex][ox-latex]]
   - [[#ox-hugo][ox-hugo]]
+  - [[#stafforini][stafforini]]
   - [[#ox-pandoc][ox-pandoc]]
   - [[#ox-gfm][ox-gfm]]
   - [[#ob][ob]]
@@ -9952,6 +9953,19 @@ Hugo should be able to export ~org-cite~ citations.
   (org-cite-register-processor 'hugo-cite-noop
     :export-citation (lambda (_citation _style _backend _info) "")
     :export-bibliography (lambda (_keys _files _style _props _backend _info) "")))
+#+end_src
+
+** stafforini
+:PROPERTIES:
+:ID:       20531D06-05B0-446B-A363-0319C934BCB9
+:END:
+
+/[[https://github.com/benthamite/stafforini.el][stafforini]] is a private package that provides Emacs commands for building and previewing my personal site./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package stafforini
+  :ensure (:host github :repo "benthamite/stafforini.el")
+  :demand t)
 #+end_src
 
 ** ox-pandoc

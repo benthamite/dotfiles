@@ -20,7 +20,7 @@ To test loading Emacs extras in batch mode with all dependencies:
 ```bash
 ELPACA=/Users/pablostafforini/.config/emacs-profiles/7.1.29-target/elpaca
 emacs --batch \
-  -L "$ELPACA/repos/dotfiles/emacs/extras" \
+  -L "$PWD/emacs/extras" \
   -L "$ELPACA/builds/claude-code" \
   -L "$ELPACA/builds/doom-modeline" \
   -L "$ELPACA/builds/compat" \
@@ -40,6 +40,8 @@ emacs --batch \
   --eval "(message \"Result: %S\" (YOUR-TEST-EXPRESSION-HERE))" \
   2>&1
 ```
+
+**Important:** `$PWD/emacs/extras` loads the extras from the current working tree (where you edit files). `$ELPACA/builds/*` loads pre-built dependencies from a (possibly different) elpaca profile. Do not use `$ELPACA/repos/dotfiles/emacs/extras` for the extras under test—that may point to a stale copy in another profile.
 
 The `load-prefer-newer t` setting is important because elpaca may have outdated `.elc` files that don't reflect recent source changes.
 

@@ -9920,7 +9920,38 @@ Hugo should be able to export ~org-cite~ citations.
   :after org ox
   :demand t
   :custom
-  (org-hugo-default-section-directory "posts"))
+  (org-hugo-default-section-directory "posts")
+  :config
+  ;; Register citation processors for stafforini.com Hugo export.
+  ;; Activated per-directory via .dir-locals.el.
+
+  ;; For notes: convert [cite:@Key] to {{< cite "Key" >}} shortcodes
+  (org-cite-register-processor 'hugo-cite
+    :export-citation
+    (lambda (citation _style _backend _info)
+      (let* ((refs (org-cite-get-references citation))
+             (parts
+              (mapcar
+               (lambda (ref)
+                 (let* ((key (org-element-property :key ref))
+                        (suffix (org-element-property :suffix ref))
+                        (suffix-str (if suffix
+                                        (string-trim (org-element-interpret-data suffix))
+                                      "")))
+                   (if (string-empty-p suffix-str)
+                       (format "{{< cite \"%s\" >}}" key)
+                     (format "{{< cite \"%s\" \"%s\" >}}"
+                             key
+                             (replace-regexp-in-string "\"" "\\\\\"" suffix-str)))))
+               refs)))
+        (mapconcat #'identity parts ", ")))
+    :export-bibliography
+    (lambda (_keys _files _style _props _backend _info) ""))
+
+  ;; For quotes: suppress citations entirely (handled by work pages)
+  (org-cite-register-processor 'hugo-cite-noop
+    :export-citation (lambda (_citation _style _backend _info) "")
+    :export-bibliography (lambda (_keys _files _style _props _backend _info) "")))
 #+end_src
 
 ** ox-pandoc

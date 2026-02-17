@@ -69,6 +69,21 @@ charge.  When non-nil, displays the cost normally."
   :type 'boolean
   :group 'doom-modeline)
 
+(defcustom doom-modeline-extras-claude-code-tokens nil
+  "Whether to display token count in the Claude Code modeline."
+  :type 'boolean
+  :group 'doom-modeline)
+
+(defcustom doom-modeline-extras-claude-code-lines-changed nil
+  "Whether to display lines added/removed in the Claude Code modeline."
+  :type 'boolean
+  :group 'doom-modeline)
+
+(defcustom doom-modeline-extras-claude-code-cache-efficiency nil
+  "Whether to display cache efficiency in the Claude Code modeline."
+  :type 'boolean
+  :group 'doom-modeline)
+
 ;;;; Faces
 
 (defface doom-modeline-extras-cost-free
@@ -161,12 +176,15 @@ Uses strikethrough to indicate the cost is not actually charged."
      (propertize (claude-code-extras--session-name (buffer-name))
                  'face '(bold doom-modeline-buffer-major-mode))
      (doom-modeline-extras--format-model model)
-     (doom-modeline-extras--format-tokens tokens)
+     (when doom-modeline-extras-claude-code-tokens
+       (doom-modeline-extras--format-tokens tokens))
      (doom-modeline-extras--format-cost cost)
      (doom-modeline-extras--format-context-percent pct)
-     (doom-modeline-extras--format-lines-changed added removed)
+     (when doom-modeline-extras-claude-code-lines-changed
+       (doom-modeline-extras--format-lines-changed added removed))
      (doom-modeline-extras--format-duration duration)
-     (doom-modeline-extras--format-cache-efficiency cache-read cache-total)
+     (when doom-modeline-extras-claude-code-cache-efficiency
+       (doom-modeline-extras--format-cache-efficiency cache-read cache-total))
      " | " (claude-code-extras-alert-indicator)
      (doom-modeline-spc))))
 

@@ -421,7 +421,7 @@ This version only includes changes to =forge-extras=, which are integrated into 
 - Refactored the auto-update mechanism to use =run-with-idle-timer= directly in the config instead of a dedicated function and variables.
 
 ** embark
-- Added a keybinding =H-c= in the =embark-file-map= to invoke =file-extras-copy-contents=.
+- Added a keybinding =H-c= in the =embark-file-map= to invoke =files-extras-copy-contents=.
 
 ** flycheck
 - Configured =flycheck-temp-prefix= to place temporary files in the standard =temporary-file-directory= instead of the project root.

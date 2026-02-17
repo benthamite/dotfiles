@@ -3922,9 +3922,9 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
                ("q" . files-extras-kill-this-buffer-switch-to-other-window)))
   (with-eval-after-load 'markdown-mode
     (bind-keys :map markdown-mode-map
-               ("s-g" . file-extras-grammarly-open-in-external-editor)
+               ("s-g" . files-extras-grammarly-open-in-external-editor)
                :map gfm-mode-map
-               ("s-g" . file-extras-grammarly-open-in-external-editor))))
+               ("s-g" . files-extras-grammarly-open-in-external-editor))))
 #+end_src
 
 ** locate
@@ -5587,7 +5587,7 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
    :map embark-identifier-map
    ("i" . citar-extras-open-in-ebib)
    :map embark-file-map
-   ("H-c" . file-extras-copy-contents)))
+   ("H-c" . files-extras-copy-contents)))
 #+end_src
 
 ** consult
@@ -6062,7 +6062,7 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
    ("C-h ." . helpful-at-point)
    :map helpful-mode-map
    ("f" . ace-link-help)
-   ("w" . file-extras-copy-as-kill-dwim)))
+   ("w" . files-extras-copy-as-kill-dwim)))
 #+end_src
 
 ** info

@@ -8556,7 +8556,9 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package claude-code-extras
   :after claude-code
-  :demand t)
+  :demand t
+  :custom
+  (claude-code-extras-alert-on-ready t))
 #+end_src
 
 ** monet

@@ -874,7 +874,9 @@ NAME and ARGS as in `use-package'."
   (mac-function-modifier 'none)
   (mac-right-option-modifier 'none)
   (mac-right-control-modifier 'super)
-  (mac-right-command-modifier 'alt))
+  (mac-right-command-modifier 'alt)
+  ;; ns-use-proxy-icon set to t causes Emacs to freeze
+  (ns-use-proxy-icon nil))
 #+end_src
 
 ** iso-transl

@@ -364,7 +364,7 @@ CLOCK: [2021-07-16 Fri 21:54]--[2021-07-16 Fri 22:04] =>  0:10
 
 #+begin_src clojure
  :devices {
-          :corne [{:vendor_id 7504}]
+          :corne [{:vendor_id 7504} {:vendor_id 18003}]
           :moonlander [{:vendor_id 12951}]
           }
 #+end_src

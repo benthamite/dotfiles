@@ -419,22 +419,20 @@ takes just a couple of seconds."
 ;; https://github.com/djcb/mu/issues/2778#issuecomment-2485462344
 (defun mu4e-extras-set-index-params ()
   "Set the index parameters for the current update.
-This is dependant on if I'm active (hence wanting a quick update) or
+This is dependent on if I'm active (hence wanting a quick update) or
 away (in which case it can take its time). Ideally we would do this
-right before the index but currently there is no hook for that."
+right before the index but currently there is no hook for that.
+`mu4e-index-cleanup' is always t to avoid stale index errors when
+mbsync removes files between index runs."
   (let ((idle (time-convert (current-idle-time) 'integer))
-        (old-lazy mu4e-index-lazy-check)
-        (old-cleanup mu4e-index-cleanup))
+        (old-lazy mu4e-index-lazy-check))
     (if (and (current-idle-time)
              (> idle mu4e-update-interval))
-	(setopt mu4e-index-lazy-check nil
-		mu4e-index-cleanup t)
-      (setopt mu4e-index-lazy-check t
-              mu4e-index-cleanup nil))
-    (when (not (and (eq old-lazy mu4e-index-lazy-check)
-                    (eq old-cleanup mu4e-index-cleanup)))
-      (message "`mu4e-extras-set-index-params' idle:%s lazy:%s cleanup:%s"
-               idle mu4e-index-lazy-check mu4e-index-cleanup))))
+	(setopt mu4e-index-lazy-check nil)
+      (setopt mu4e-index-lazy-check t))
+    (when (not (eq old-lazy mu4e-index-lazy-check))
+      (message "`mu4e-extras-set-index-params' idle:%s lazy:%s"
+               idle mu4e-index-lazy-check))))
 
 ;; TODO: this should once daily remove the `refile' label from all messages and
 ;; sync all mail (so that the archive is up to date)

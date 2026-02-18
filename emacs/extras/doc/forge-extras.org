@@ -256,6 +256,21 @@ obtain the GitHub thread ID, then issues the API call asynchronously
 via ~forge--rest~.  On success, it refreshes the notification count in
 Doom Modeline (if ~doom-modeline-github~ is enabled).
 
+#+findex: forge-extras-sync-unread-from-github
+The complementary function ~forge-extras-sync-unread-from-github~
+handles the reverse direction: it ensures that notifications marked as
+unread on GitHub's web interface are also shown as unread in Forge.
+This is needed because marking a notification as unread on GitHub does
+not update its ~updated_at~ timestamp, so Forge's incremental pull
+(which uses a ~since~ filter based on that timestamp) skips those
+notifications entirely.
+
+The function is installed as ~:after~ advice on
+~forge--ghub-update-notifications~, so it runs automatically at the end
+of every ~forge-pull-notifications~ call.  It queries the GitHub REST
+API for currently-unread notifications via the =gh= CLI, then sets the
+local topic status to ~unread~ for any that Forge missed.
+
 ** Tracking repositories
 :PROPERTIES:
 :CUSTOM_ID: h:track-repository

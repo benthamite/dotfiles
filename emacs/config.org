@@ -1948,7 +1948,6 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
   :config
   (advice-add 'orgit-store-link :override #'forge-extras-orgit-store-link)
-  ;; hack: to mark the topic as read, we browse it in the background
   (advice-add 'forge-visit-this-topic :before #'forge-extras-sync-read-status)
 
   (run-with-idle-timer 30 t #'forge-extras-pull-notifications)

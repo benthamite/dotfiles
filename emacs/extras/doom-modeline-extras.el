@@ -146,8 +146,24 @@ Uses strikethrough to indicate the cost is not actually charged."
 (declare-function claude-code-extras-status-cache-read-tokens "claude-code-extras")
 (declare-function claude-code-extras-status-cache-total-tokens "claude-code-extras")
 (declare-function claude-code-extras-alert-indicator "claude-code-extras")
+(declare-function claude-code-extras-toggle-alert "claude-code-extras")
 (declare-function claude-code-extras--session-name "claude-code-extras")
 (defvar claude-code-extras--status-data)
+(defvar claude-code-extras-alert-on-ready)
+
+(defun doom-modeline-extras--toggle-alert-click (event)
+  "Toggle Claude Code alert from a mouse click EVENT in the modeline."
+  (interactive "e")
+  (with-selected-window (posn-window (event-start event))
+    (claude-code-extras-toggle-alert)
+    (force-mode-line-update)))
+
+(defvar doom-modeline-extras--alert-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [mode-line mouse-1] #'doom-modeline-extras--toggle-alert-click)
+    (define-key map [tab-bar mouse-1] #'doom-modeline-extras--toggle-alert-click)
+    map)
+  "Keymap for clicking the alert indicator in the modeline.")
 
 (doom-modeline-def-segment claude-code-status
   "Display Claude Code session status: model, tokens, cost, context%."
@@ -174,7 +190,8 @@ Uses strikethrough to indicate the cost is not actually charged."
     (concat
      (doom-modeline-spc)
      (propertize (claude-code-extras--session-name (buffer-name))
-                 'face '(bold doom-modeline-buffer-major-mode))
+                 'face '(bold doom-modeline-buffer-major-mode)
+                 'help-echo "Claude Code session")
      (doom-modeline-extras--format-model model)
      (when doom-modeline-extras-claude-code-tokens
        (doom-modeline-extras--format-tokens tokens))
@@ -185,18 +202,28 @@ Uses strikethrough to indicate the cost is not actually charged."
      (doom-modeline-extras--format-duration duration)
      (when doom-modeline-extras-claude-code-cache-efficiency
        (doom-modeline-extras--format-cache-efficiency cache-read cache-total))
-     " | " (claude-code-extras-alert-indicator)
+     " | " (doom-modeline-extras--format-alert-indicator)
      (doom-modeline-spc))))
+
+(defun doom-modeline-extras--format-alert-indicator ()
+  "Format the alert indicator with click action and tooltip."
+  (propertize (claude-code-extras-alert-indicator)
+              'help-echo (format "Alert notifications: %s\nmouse-1: Toggle"
+                                 (if claude-code-extras-alert-on-ready
+                                     "enabled" "disabled"))
+              'mouse-face 'doom-modeline-highlight
+              'local-map doom-modeline-extras--alert-map))
 
 (defun doom-modeline-extras--format-model (model)
   "Format MODEL name with separator."
   (when model
-    (concat " | " model)))
+    (concat " | " (propertize model 'help-echo "Model"))))
 
 (defun doom-modeline-extras--format-tokens (tokens)
   "Format TOKENS as a human-readable string with separator."
   (when (and (numberp tokens) (> tokens 0))
-    (concat " | " (doom-modeline-extras--humanize-tokens tokens))))
+    (concat " | " (propertize (doom-modeline-extras--humanize-tokens tokens)
+                               'help-echo (format "Input tokens: %d" tokens)))))
 
 (defun doom-modeline-extras--humanize-tokens (n)
   "Format token count N in a compact human-readable form."
@@ -209,11 +236,15 @@ Uses strikethrough to indicate the cost is not actually charged."
   "Format COST as a dollar amount with separator.
 On subscription plans, applies strikethrough to indicate no charge."
   (when (and (numberp cost) (> cost 0))
-    (let ((text (format "$%.2f" cost)))
+    (let ((text (format "$%.2f" cost))
+          (tip (if doom-modeline-extras-claude-code-api-plan
+                   "Session cost (API plan)"
+                 "Session cost (subscription, not charged)")))
       (concat " | "
               (if doom-modeline-extras-claude-code-api-plan
-                  text
+                  (propertize text 'help-echo tip)
                 (propertize text
+                            'help-echo tip
                             'face 'doom-modeline-extras-cost-free))))))
 
 (defun doom-modeline-extras--format-context-percent (pct)
@@ -223,7 +254,8 @@ is a mode-line escape character."
   (when (and (numberp pct) (> pct 0))
     (concat " | "
             (propertize (format "%d%%%%" pct)
-                        'face (doom-modeline-extras--context-face pct)))))
+                        'face (doom-modeline-extras--context-face pct)
+                        'help-echo "Context window usage"))))
 
 (defun doom-modeline-extras--context-face (pct)
   "Return the face for context usage percentage PCT."
@@ -236,15 +268,21 @@ is a mode-line escape character."
   "Format ADDED and REMOVED line counts as a +N/-M string with separator."
   (when (and (numberp added) (numberp removed)
              (> (+ added removed) 0))
-    (concat " | "
-            (propertize (format "+%d" added) 'face 'doom-modeline-info)
-            "/"
-            (propertize (format "-%d" removed) 'face 'doom-modeline-urgent))))
+    (let ((tip (format "Lines added: %d, lines removed: %d" added removed)))
+      (concat " | "
+              (propertize (format "+%d" added)
+                          'face 'doom-modeline-info
+                          'help-echo tip)
+              (propertize "/" 'help-echo tip)
+              (propertize (format "-%d" removed)
+                          'face 'doom-modeline-urgent
+                          'help-echo tip)))))
 
 (defun doom-modeline-extras--format-duration (ms)
   "Format duration MS (in milliseconds) as a human-readable string."
   (when (and (numberp ms) (> ms 0))
-    (concat " | " (doom-modeline-extras--humanize-duration ms))))
+    (concat " | " (propertize (doom-modeline-extras--humanize-duration ms)
+                               'help-echo "Session duration"))))
 
 (defun doom-modeline-extras--humanize-duration (ms)
   "Format MS milliseconds in a compact human-readable form."
@@ -261,7 +299,8 @@ is a mode-line escape character."
       (when (> pct 0)
         (concat " | "
                 (propertize (format "cache %d%%%%" pct)
-                            'face (doom-modeline-extras--cache-face pct)))))))
+                            'face (doom-modeline-extras--cache-face pct)
+                            'help-echo "Cache efficiency"))))))
 
 (defun doom-modeline-extras--cache-face (pct)
   "Return the face for cache efficiency percentage PCT."

@@ -45,9 +45,13 @@
 
 (defun copilot-extras-enable-conditionally ()
   "Enable `copilot' except in read-only modes or excluded modes.
-The list of excluded modes is defined in `copilot-extras-excluded-modes'."
+The list of excluded modes is defined in `copilot-extras-excluded-modes'.
+Also skip enabling when called from a non-interactive context (e.g. a timer),
+since starting the copilot server in such contexts can trigger errors that
+freeze Emacs."
   (unless (or buffer-read-only
-	      (memq major-mode copilot-extras-excluded-modes))
+	      (memq major-mode copilot-extras-excluded-modes)
+	      (null this-command))
     (copilot-mode)))
 
 (defun copilot-extras-restart-copilot ()

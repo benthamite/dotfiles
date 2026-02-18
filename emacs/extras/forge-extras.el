@@ -165,6 +165,64 @@ API to mark its thread as read."
                     "Failed to mark notification thread %s as read on GitHub"
                     thread-id)))))
 
+;;;;; Sync unread status from GitHub
+
+(defun forge-extras-sync-unread-from-github (_notifs _topics initial-pull)
+  "Sync unread notification status from GitHub after storing notifications.
+On GitHub, marking a notification as unread does not update its
+`updated_at' timestamp.  Forge's `since' filter then skips it during
+the normal pull.  This function makes a supplementary REST API call to
+fetch currently-unread notifications and marks the corresponding local
+topics as unread.
+INITIAL-PULL is non-nil on the first pull and is skipped since all
+notifications are already fetched in that case."
+  (unless initial-pull
+    (condition-case err
+        (when (executable-find "gh")
+          (let (notifications)
+            (with-temp-buffer
+              (when (zerop (call-process "gh" nil t nil
+                                         "api" "/notifications"))
+                (goto-char (point-min))
+                (setq notifications
+                      (let ((json-array-type 'list)
+                            (json-object-type 'alist)
+                            (json-key-type 'symbol))
+                        (ignore-errors (json-read))))))
+            (when (consp notifications)
+              (let ((synced 0))
+                (closql-with-transaction (forge-db)
+                  (dolist (data notifications)
+                    (let-alist data
+                      (when (and .subject.url
+                                 (string-match "[^/]*\\'" .subject.url))
+                        (let* ((raw-type (intern (downcase (or .subject.type ""))))
+                               (type (if (eq raw-type 'pullrequest) 'pullreq raw-type))
+                               (number (string-to-number
+                                        (match-string 0 .subject.url))))
+                          (when (and (memq type '(issue pullreq))
+                                     (> number 0))
+                            (when-let*
+                                ((repo (ignore-errors
+                                         (forge-get-repository
+                                          (list "github.com"
+                                                .repository.owner.login
+                                                .repository.name))))
+                                 (topic (ignore-errors
+                                          (forge-get-topic repo number))))
+                              (unless (eq (oref topic status) 'unread)
+                                (oset topic status 'unread)
+                                (cl-incf synced)))))))))
+                (when (> synced 0)
+                  (forge-extras-message-debug
+                   "Synced %d unread notification(s) from GitHub" synced))))))
+      (error
+       (forge-extras-message-debug
+        "forge-extras-sync-unread-from-github: %S" err)))))
+
+(advice-add 'forge--ghub-update-notifications :after
+            #'forge-extras-sync-unread-from-github)
+
 ;;;;; Track repos
 
 (declare-function magit-status "magit-status")

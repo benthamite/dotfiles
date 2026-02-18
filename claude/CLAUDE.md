@@ -36,5 +36,5 @@ My dotfiles are in `~/Library/CloudStorage/Dropbox/dotfiles/`. Many files and di
 
 ## Version control
 
-- By default, commit all changes, unless I specify otherwise or the changes are temporary.
+- **Important**: commit all changes you make immediately, unless I specify otherwise or the changes are temporary.
 - Do not mix unrelated changes in the same commit; if you need to make multiple unrelated changes, split them into separate commits.

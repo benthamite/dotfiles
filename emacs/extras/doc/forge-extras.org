@@ -29,7 +29,7 @@ The package addresses two broad areas:
   issue state, navigating between posts in a topic buffer, copying
   message bodies, storing Org links for selected commits, tracking new
   repositories in the Forge database, and keeping notification read
-  status in sync between Emacs and GitHub via Safari on macOS
+  status in sync between Emacs and GitHub via the REST API
   ([[#h:notification-and-read-status][Notification and read-status synchronization]]).
 
 - *GitHub Projects v2 integration.*  A suite of commands that interact
@@ -245,27 +245,16 @@ than direct interactive invocation.
 
 #+findex: forge-extras-sync-read-status
 When you visit a topic in Forge, GitHub may still show it as unread
-because Forge does not open the page in a browser.  The function
-~forge-extras-sync-read-status~ bridges this gap on macOS by briefly
-opening the topic's URL in a Safari tab via AppleScript, waiting for the
-page to load, and then closing the tab.  This causes GitHub to mark the
-notification as read.
+because Forge only updates local notification state, not GitHub's.  The
+function ~forge-extras-sync-read-status~ bridges this gap by calling the
+GitHub REST API (~PATCH /notifications/threads/{thread-id}~) to mark
+the notification thread as read.
 
 The function only acts when the topic at point has an ~unread~ status in
-Forge.  After the Safari tab is closed, it calls
-~forge-extras-update-github-counter~ to refresh the notification count
-in Doom Modeline (if ~doom-modeline-github~ is enabled).
-
-*Requirements and caveats:*
-
-- This mechanism is macOS-specific and requires Safari.
-- JavaScript from Apple Events must be enabled in Safari (Safari >
-  Settings > Developer > "Allow JavaScript from Apple Events").
-- The function uses a fixed five-second delay, which may not suffice on
-  slow connections.
-- The user must be logged into GitHub in Safari.  The helper function
-  ~forge-extras-safari-github-logged-in-p~ provides a heuristic check
-  for this.
+Forge.  It looks up the corresponding ~forge-notification~ object to
+obtain the GitHub thread ID, then issues the API call asynchronously
+via ~forge--rest~.  On success, it refreshes the notification count in
+Doom Modeline (if ~doom-modeline-github~ is enabled).
 
 ** Tracking repositories
 :PROPERTIES:
@@ -550,37 +539,6 @@ The fetched (or cached) items are always stored in
 
 This section documents public non-interactive functions that are useful
 for customization, hooks, or extending the package.
-
-** Notification helpers
-:PROPERTIES:
-:CUSTOM_ID: h:notification-helpers
-:END:
-
-#+findex: forge-extras-update-github-counter
-The function ~forge-extras-update-github-counter~ is the callback
-invoked after Safari finishes loading a topic page during read-status
-synchronization ([[#h:notification-and-read-status][Notification and read-status synchronization]]).
-It checks whether the AppleScript output indicates a JavaScript
-permissions problem and, if not, refreshes the Doom Modeline GitHub
-notification counter.
-
-#+findex: forge-extras-async-shell-command-to-string
-The function ~forge-extras-async-shell-command-to-string~ runs a shell
-COMMAND in the background and calls CALLBACK with the output string when
-the process finishes.  It is a general-purpose utility used internally by
-the Safari-based read-status mechanism.
-
-#+findex: forge-extras-safari-github-logged-in-p
-The function ~forge-extras-safari-github-logged-in-p~ uses AppleScript
-to check the title of the frontmost Safari document for a keyword that
-indicates the user is logged into GitHub.  It provides a heuristic
-check, not a definitive one.
-
-#+findex: forge-extras-safari-ensure-javascript-enabled
-The function ~forge-extras-safari-ensure-javascript-enabled~ examines
-the OUTPUT of an AppleScript invocation and signals an error with
-detailed instructions if it detects that JavaScript from Apple Events is
-not enabled in Safari.
 
 ** Repository tracking
 :PROPERTIES:

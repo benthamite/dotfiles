@@ -139,74 +139,31 @@ problems."
 
 ;;;;; sync read status
 
-(defconst forge-extras-safari-script-format-string
-  "osascript -e 'tell application \"Safari\"
-                 tell window 1
-                   set beforeCount to count of tabs
-                   make new tab with properties {URL:\"%s\"}
-                   delay 5
-                   try
-                     set loadState to do JavaScript \"document.readyState\" in tab (beforeCount + 1)
-                     if loadState is \"complete\" then
-                       close tab (beforeCount + 1)
-                       return \"Tab loaded and closed\"
-                     end if
-                   on error errMsg
-                     return \"Error: \" & errMsg
-                   end try
-                 end tell
-               end tell'"
-  "The AppleScript to open a new tab in Safari and run JavaScript.")
-
 (autoload 'doom-modeline--github-fetch-notifications "doom-modeline-segments")
 (defun forge-extras-sync-read-status (&optional _)
-  "Ensure that the read status of the issue at point in Forge matches GitHub's."
-  (let* ((issue (forge-current-topic))
-         (url (forge-get-url issue)))
-    (when (eq (oref issue status) 'unread)
-      (forge-extras-async-shell-command-to-string
-       (format forge-extras-safari-script-format-string url)
-       #'forge-extras-update-github-counter))))
-
-(defun forge-extras-update-github-counter (output)
-  "Update the GitHub notification counter after the Safari page is loaded.
-OUTPUT is the output of the AppleScript script; it is used to check whether
-JavaScript is enabled in Safari, which is needed for the command to run
-successfully."
-  (forge-extras-safari-ensure-javascript-enabled output)
-  (when (bound-and-true-p doom-modeline-github)
-    (doom-modeline--github-fetch-notifications)))
-
-(defun forge-extras-async-shell-command-to-string (command callback)
-  "Execute shell command COMMAND asynchronously in the background.
-Call CALLBACK with the resulting output when done."
-  (let ((output-buffer (generate-new-buffer "*Async Shell Command*")))
-    (set-process-sentinel
-     (start-process "Shell" output-buffer shell-file-name shell-command-switch command)
-     (lambda (process _signal)
-       (when (memq (process-status process) '(exit signal))
-         (let ((output (with-current-buffer output-buffer
-                         (buffer-string))))
-           (funcall callback output)
-           (kill-buffer output-buffer)))))))
-
-(defun forge-extras-safari-github-logged-in-p ()
-  "Check if user is logged in to GitHub in Safari."
-  (let ((output (shell-command-to-string
-		 "osascript -e 'tell application \"Safari\" to get name of document 1'")))
-    (forge-extras-safari-ensure-javascript-enabled output)
-    ;; we search for a word that only shows up if the user is logged in
-    (numberp (string-match-p "issue" output))))
-
-(defun forge-extras-safari-ensure-javascript-enabled (output)
-  "Ensure that JavaScript is enabled in Safari.
-OUTPUT is the output of the shell command that calls the AppleScript."
-  (when (string-match-p "allow javascript from apple events" output)
-    (error "For this function to work, JavaScript from Apple Events must be enabled in
-Safari. This can be done by going to Safari > Preferences > Advanced, ticking
-the box labelled \"Show features for web developers\", and then going to Safari
-> Preferences > Developer and ticking the box labeled \"Allow JavaScript from
-Apple Events\"")))
+  "Mark the notification at point as read on GitHub via the REST API.
+When the topic at point has an `unread' status, call the GitHub notifications
+API to mark its thread as read."
+  (when-let* ((topic (forge-current-topic))
+              ((eq (oref topic status) 'unread))
+              ;; Query the notification table directly because
+              ;; `forge-get-notification' looks up by topic number,
+              ;; but the table stores the full topic id.
+              (thread-id (caar (forge-sql
+                                [:select [thread-id] :from notification
+                                 :where (= topic $s1)]
+                                (oref topic id))))
+              (repo (forge-get-repository topic)))
+    (forge--rest repo "PATCH"
+      (format "/notifications/threads/%s" thread-id)
+      nil
+      :callback (lambda (&rest _)
+                  (when (bound-and-true-p doom-modeline-github)
+                    (doom-modeline--github-fetch-notifications)))
+      :errorback (lambda (&rest _)
+                   (forge-extras-message-debug
+                    "Failed to mark notification thread %s as read on GitHub"
+                    thread-id)))))
 
 ;;;;; Track repos
 

@@ -369,8 +369,14 @@ number. Disable the mode if ARG is a negative number."
   (let ((agenda "*Org Agenda(a)*"))
     (if (get-buffer agenda)
 	(switch-to-buffer agenda)
-      (find-file paths-file-config) ; hack to avoid the ‘not in org-mode’ error
+      (find-file paths-file-config) ; hack to avoid the 'not in org-mode' error
       (org-extras-agenda-toggle-anniversaries t)
+      ;; Reset element caches to prevent "Invalid search bound" errors
+      ;; from stale caches (e.g. after external file modifications by
+      ;; Dropbox sync).
+      (dolist (buf (org-buffer-list 'files))
+        (with-current-buffer buf
+          (org-element-cache-reset)))
       (org-agenda nil "a"))))
 
 (defun org-extras-agenda-goto-and-start-clock ()

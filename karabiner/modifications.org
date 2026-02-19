@@ -1027,7 +1027,7 @@ Hold =K= in Chrome to trigger [[https://www.keyboardmaestro.com/][Keyboard Maest
 :ID:       3AF73C77-5381-4DED-A7DC-6034A2C107A9
 :END:
 
-Hold =M= for mathematical operators: === (=e=), =+= (=p=), =≠= (=q=), =÷= (=d=), =±= (=o=), =×= (=x=), =≤= (=,=), =≥= (=.=).
+Hold =M= for mathematical operators: === (=e=), =+= (=p=), =≠= (=q=), =÷= (=d=), =±= (=o=), =×= (=x=), =≤= (=,=), =≥= (=.=), =≈= (=a=), =∞= (=i=), =−= (=s=), =·= (=t=), =°= (=g=), =√= (=r=), =π= (=c=).
 
 [[/images/keyboard/m-mode.svg]]
 
@@ -1042,6 +1042,13 @@ Hold =M= for mathematical operators: === (=e=), =+= (=p=), =≠= (=q=), =÷= (=d
          [:x [:insert "×"]]
          [:comma :≤]
          [:period :≥]
+         [:a [:insert "≈"]]
+         [:i [:insert "∞"]]
+         [:s [:insert "−"]]
+         [:t [:insert "·"]]
+         [:g [:insert "°"]]
+         [:r [:insert "√"]]
+         [:c [:insert "π"]]
          ]}
 #+end_src
 

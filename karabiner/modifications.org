@@ -591,20 +591,6 @@ The remaining simlayers (=k=, =m=, =p=, =q=, =v=, =y=, =;=) don't use Emacs modi
 
 The =spacebar= key also has a combination effect outside Emacs: pressing =left_command= + =spacebar= triggers =⌘`= (move focus to next window of the current app—e.g. the next browser window if more than one window is open).
 
-*** =caps_lock=
-:PROPERTIES:
-:ID:       95768E0F-B63F-46E6-BA1B-89ADB31D8776
-:END:
-
-Disabled. The caps lock key has no function.
-
-#+begin_src clojure
-{:des "Disable caps_lock"
- :rules [
-         [:caps_lock :vk_none]
-         ]}
-#+end_src
-
 *** =left_control=
 :PROPERTIES:
 :ID:       8DEEEE4C-4227-44A3-AEFE-0D41412F89C5
@@ -810,7 +796,7 @@ CLOCK: [2023-08-26 Sat 10:53]--[2023-08-26 Sat 12:31] =>  1:38
 
 Hold =k= to type characters from various European languages and typographic symbols (eth, thorn, sharp s, guillemets, interrobang, etc.).
 
-[[/images/keyboard/f-mode.svg]]
+[[/images/keyboard/k-mode.svg]]
 
 #+begin_src clojure
 {:des "k-mode (special chars)"

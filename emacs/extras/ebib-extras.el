@@ -66,10 +66,6 @@ This variable holds the active sorting criterion, taken from
 (defvar ebib-extras-last-reload-times (make-hash-table :test 'equal)
   "A hash table mapping database file paths to their last reload time.")
 
-;; The variable ebib-extras-attach-file-key was removed as it's unreliable
-;; in async contexts. The annas-archive package might need updating if it
-;; still references this variable internally.
-
 (defconst ebib-extras-valid-key-regexp
   "^[_[:alnum:]-]\\{2,\\}[[:digit:]]\\{4\\}[_[:alnum:]]\\{2,\\}$"
   "Regular expression defining the structure of valid BibTeX keys.")
@@ -78,19 +74,6 @@ This variable holds the active sorting criterion, taken from
   '("pdf" "html" "webm" "flac" "mp3" "md" "srt" "vtt")
   "List of valid file extensions used by `ebib-extras-open-file-dwim'.
 This list defines the preference order when opening files.")
-
-(defconst ebib-extras-valid-text-file-extensions
-  '("html" "pdf" "srt" "vtt")
-  "List of valid file extensions considered as text files.
-Used by `ebib-extras-get-text-file'.")
-
-(defvar tlon-file-fluid) ; Assuming this is defined elsewhere or is a placeholder
-(defconst ebib-extras-auto-save-files
-  `(,paths-file-personal-bibliography-new
-    ,tlon-file-fluid)
-  "List of database files that should be auto-saved.
-The large files containing older bibliographic entries are typically excluded to
-avoid frequent writes.")
 
 ;;;; Functions
 
@@ -151,14 +134,6 @@ first part (if multiple ISBNs are listed) is returned."
                        (substring-no-properties
                         isbn))
             " ")))))
-
-(defun ebib-extras-video-p (string)
-  "Return t if STRING appears to be a video URL from supported sites.
-Currently, this checks for YouTube URLs.
-;; TODO: Add more video sites."
-  (string-match
-   "https?://\\(www\\.\\)?\\(youtube\\.com/watch\\?v=\\|youtu.be/\\)\\([a-zA-Z0-9_-]+\\)"
-   string))
 
 (defun ebib-extras--update-file-field-contents (key file-name)
   "Update the `file' field of entry KEY with FILE-NAME.
@@ -250,15 +225,6 @@ entry. Returns nil otherwise."
 	 (throw 'tag (expand-file-name file))))
      (ebib--split-files files))
     nil))
-
-(defun ebib-extras-get-text-file ()
-  "Return the path of the first text file found for the entry at point.
-It iterates through `ebib-extras-valid-text-file-extensions' and returns the
-first file matching an extension found via `ebib-extras-get-file'."
-  (catch 'tag
-    (dolist (extension ebib-extras-valid-text-file-extensions)
-      (when-let* ((file (ebib-extras-get-file extension)))
-	(throw 'tag file)))))
 
 (defun ebib-extras-open-file (extension)
   "Open the file with EXTENSION associated with the entry at point.
@@ -406,22 +372,6 @@ The original order of first occurrences is preserved."
                         (if (> (- (length parts) (length unique)) 1) "s" ""))))))))
     (default
      (beep))))
-
-(defun ebib-extras-validate-file-stem ()
-  "Check that the stem of each attached file equals the entry's unique key.
-If any file's base name (without extension) does not match the current
-entry's key, a user error is signaled."
-  (when-let* ((files (ebib-extras-get-field "file")))
-    (when (catch 'tag
-	    (mapc
-	     (lambda (file)
-	       (unless (equal
-			(file-name-base file)
-			(ebib--get-key-at-point))
-		 (throw 'tag file)))
-	     (ebib--split-files files))
-	    nil)
-      (user-error "Invalid file stem"))))
 
 (defun ebib-extras--rename-and-abbreviate-file (directory key &optional extension)
   "Construct a new file path in DIRECTORY, named after KEY, with EXTENSION.
@@ -844,11 +794,6 @@ field. Returns the (potentially newly set) language."
     "https://smile.amazon.com/s?k="
     "&i=stripbooks"))
 
-(defconst ebib-extras-worldcat
-  '("Worldcat"
-    "https://www.worldcat.org/search?q="
-    "&itemType=book&limit=50&offset=1"))
-
 (defconst ebib-extras-internet-archive
   '("Internet Archive"
     "https://archive.org/search.php?query="
@@ -878,11 +823,6 @@ field. Returns the (potentially newly set) language."
   '("Google Scholar"
     "https://scholar.google.com/scholar?q="
     ""))
-
-(defconst ebib-extras-wikipedia
-  '("Google Scholar"
-    "http://en.wikipedia.org/w/index.php?title=Special%3ASearch&profile=default&search="
-    "&fulltext=Search"))
 
 (defconst ebib-extras-goodreads
   '("Goodreads"
@@ -941,7 +881,8 @@ field. Returns the (potentially newly set) language."
   "List of functions that search for articles.")
 
 (defconst ebib-extras-download-article-functions
-  '(ebib-extras-search-article-functions)
+  '(ebib-extras-search-connected-papers
+    ebib-extras-search-google-scholar)
   "List of functions that download articles.")
 
 (defconst ebib-extras-search-film-functions
@@ -1170,65 +1111,11 @@ The list of article download functions is specified by
     (default
      (beep))))
 
-(declare-function annas-archive-download "annas-archive")
-(declare-function eww-extras-url-to-pdf "eww-extras")
-(defun ebib-extras-download-pdf ()
-  "Download and attach a PDF of the work at point based on its DOI, URL or ISBN."
-  (interactive)
-  (let ((get-field (pcase major-mode
-		     ('ebib-entry-mode #'ebib-extras-get-field)
-		     ('bibtex-mode #'bibtex-extras-get-field))))
-    (or (when-let* ((doi (funcall get-field "doi")))
-	  (annas-archive-download doi))
-	(when-let* ((url (funcall get-field "url")))
-	  (eww-extras-url-to-pdf url))
-	(when-let* ((isbn (ebib-extras-get-isbn)))
-	  (ebib-extras-download-book isbn)))))
-
 ;; all we want is to search for a film, and there is no film
 ;; identifier, so we map all functions to
 ;; `ebib-extras-search-film-by-title'
 (defalias 'ebib-extras-download-film-by-title 'ebib-extras-search-film-by-title)
 (defalias 'ebib-extras-download-film-by-identifier 'ebib-extras-search-film-by-title)
-
-(defun ebib-extras-download-video (id)
-  "Download video with id ID using `yt-dlp'."
-  (unless (executable-find "yt-dlp")
-    (user-error "Please install `yt-dlp' (e.g. 'brew install yt-dlp')"))
-  (ebib--execute-when
-    (entries
-     (let* ((key (ebib--get-key-at-point))
-	    (file-name
-	     (ebib-extras--rename-and-abbreviate-file
-	      paths-dir-media-library key "webm")))
-       (async-shell-command (format "yt-dlp --output '%s' '%s'" file-name id))
-       (message (format "Downloading video from '%s'" (substring-no-properties id)))
-       (ebib-extras--update-file-field-contents key file-name)))
-    (default
-     (beep))))
-
-(defun ebib-extras-sentence-case ()
-  "Convert the current field to sentence case."
-  (interactive)
-  (ebib--execute-when
-    (entries
-     (let* ((field (ebib--current-field))
-            (value (ebib-extras-get-field field))
-            (words (split-string value)))
-       (setq words
-             (mapcar (lambda (word)
-                       (if (string-match "\\$\\|{\\|}\\|\\\\" word)
-                           word
-                         (downcase word)))
-                     words))
-       (setf (car words) (capitalize (car words)))
-       (setq value (mapconcat 'identity words " "))
-       (ebib-set-field-value field value (ebib--get-key-at-point) ebib--cur-db 'overwrite 'unbraced)
-       (ebib--store-multiline-text (current-buffer))
-       (ebib--redisplay-field field)
-       (ebib--redisplay-index-item field)
-       (ebib-save-current-database nil)))
-    (default (beep))))
 
 (declare-function bibtex-extras-get-entry-as-string "bibtex-extras")
 (defun ebib-extras-get-or-open-entry (&optional interactive-p)
@@ -1408,26 +1295,9 @@ file."
   (dotimes (n (length ebib--databases))
     (ebib-extras-auto-reload-database n)))
 
-(defun ebib-extras-no-db-modified-p ()
-  "Return t iff no databases are modified."
-  (null (cl-some #'ebib-db-modified-p ebib--databases)))
-
-;;;###autoload
-(defun ebib-extras-reload-all-databases ()
-  "Reload all databases, if none are modified."
-  (unless ebib--initialized
-    (ebib-init)
-    (setq ebib--needs-update t)
-    (ebib-check-notes-config))
-  (when (ebib-extras-no-db-modified-p)
-    (ebib-db-set-current-entry-key (ebib--get-key-at-point) ebib--cur-db)
-    (dolist (db ebib--databases)
-      (ebib--reload-database db)
-      (ebib--set-modified nil db))
-    (ebib--update-buffers)))
-
 ;;;;; <new section>
 
+(defvar tlon-file-fluid)
 (defvar tlon-file-stable)
 (defvar tlon-file-db)
 (defconst ebib-extras-db-numbers
@@ -1449,14 +1319,6 @@ file."
 (defun ebib-extras-create-list-of-existing-authors ()
   "Create a list of all authors in the current database."
   (setq ebib-extras-existing-authors (ebib--create-author/editor-collection)))
-
-(defun ebib-extras-check-author-exists ()
-  "Check if the author of the given entry exists in the current database."
-  (interactive)
-  (let* ((author-to-check (ebib-extras-get-field "author")))
-    (if (member author-to-check ebib-extras-existing-authors)
-	(message "Author found in the database!")
-      (message "Warning: Author not found in the database!"))))
 
 (declare-function ebib-extras-search-goodreads "ebib-extras")
 (declare-function ebib-extras-search-imdb "ebib-extras")
@@ -1544,7 +1406,7 @@ sensible defaults and remove line breaks and empty spaces."
   "Get the ID or URL of the entry at point."
   (let ((get-field (pcase major-mode
 		     ('ebib-entry-mode #'ebib-extras-get-field)
-		     ('bibtex-mode #' (bibtex-extras-get-field)))))
+		     ('bibtex-mode #'bibtex-extras-get-field))))
     (when-let* ((id-or-url (catch 'found
 			    (dolist (field '("doi" "isbn" "url"))
 			      (when-let* ((value (funcall get-field field)))
@@ -1560,7 +1422,7 @@ sensible defaults and remove line breaks and empty spaces."
 Fetching is done using `bib'."
   (let* ((get-field (pcase major-mode
 		      ('ebib-entry-mode #'ebib-extras-get-field)
-		      ('bibtex-mode #' (bibtex-extras-get-field))))
+		      ('bibtex-mode #'bibtex-extras-get-field)))
 	 (title (funcall get-field "title"))
 	 (author (funcall get-field "author")))
     (pcase (ebib-extras-get-supertype)
@@ -1569,11 +1431,6 @@ Fetching is done using `bib'."
       ("film" (bib-search-imdb
 	       (bib-translate-title-to-english title)))
       (_ (funcall get-field "url")))))
-
-(defun ebib-extras-get-or-fetch-id-or-url ()
-  "Get the ID or URL of the entry at point, or fetch it if missing."
-  (or (ebib-extras-get-id-or-url)
-      (ebib-extras-fetch-id-or-url)))
 
 (defun ebib-extras-browse-url-or-doi ()
   "Browse the entry’s URL and, if available, also open its Letterboxd page.
@@ -1609,12 +1466,6 @@ If no `url' exists, fall back to the `doi' field."
       (user-error "ID field is not empty"))
     (ebib-set-field-value field id key db)
     (ebib-extras-update-entry-buffer db)))
-
-(defun ebib-extras-bibtex-command (command)
-  "Execute a `bibtex' COMMAND with point on the current entry."
-  (when-let* ((file (ebib-db-get-filename ebib--cur-db)))
-    (with-current-buffer (find-file-noselect file)
-      (funcall command))))
 
 (defun ebib-extras-move-entry (direction)
   "Move to the previous or next entry in the current database.
@@ -1654,33 +1505,6 @@ DIRECTION can be `prev' or `next'."
   "Fetch keywords for the entry at point and put them in the associated org file."
   (interactive)
   (ebib-extras-fetch-field-value "keywords"))
-
-(declare-function org-extras-sort-keywords "org-extras")
-(declare-function org-extras-insert-subheading "org-extras")
-(declare-function org-extras-linkify-elements "org-extras")
-(defun ebib-extras-export-keywords ()
-  "Export keywords in entry at point to its associated note file."
-  (interactive)
-  (when-let* ((key (ebib--get-key-at-point))
-	      (field "keywords")
-	      ;; unfill field contents
-	      (keywords-raw (replace-regexp-in-string
-			     "\n                  "
-			     " "
-			     (ebib-extras-get-field field)))
-	      ;; turn into bullet-separated links
-	      (keywords (org-extras-linkify-elements
-			 (split-string keywords-raw ", "))))
-    (ebib-db-remove-field-value field key ebib--cur-db)
-    (ebib--redisplay-field field)
-    (ebib--redisplay-index-item field)
-    (ebib--set-modified t ebib--cur-db (seq-filter (lambda (dependent)
-						     (ebib-db-has-key key dependent))
-						   (ebib--list-dependents ebib--cur-db)))
-    (ebib-extras-citar-open-notes)
-    (org-extras-insert-subheading)
-    (insert (concat field "\n" keywords))
-    (org-extras-sort-keywords)))
 
 ;;;;; pdf metadata
 
@@ -1760,19 +1584,6 @@ exceeded, only the first author will be listed, followed by \" et al\"."
     (if (> (length authors) max)
 	(format "%s et al" (car authors))
       (mapconcat 'identity authors separator))))
-
-(autoload 'zotra-extras-get-field "zotra-extras")
-(defun ebib-extras-update-field (&optional field keep-braces)
-  "Update FIELD in entry at point.
-If FIELD is nil, update the field at point. If KEEP-BRACES is non-nil, do not
-remove braces from the field value."
-  (interactive)
-  (when-let* ((id-or-url (ebib-extras-get-id-or-url))
-	      (field (or field (ebib--current-field)))
-	      (value (zotra-extras-get-field field id-or-url keep-braces)))
-    (ebib-set-field-value
-     field value (ebib--get-key-at-point) ebib--cur-db 'overwrite)
-    (ebib-extras-update-entry-buffer ebib--cur-db)))
 
 (defun ebib-extras-unbrace (string)
   "Remove braces from STRING.

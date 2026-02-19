@@ -1,0 +1,14 @@
+layout:
+  qmk_keyboard: corne_rotated
+  layout_name: LAYOUT_split_3x5_3
+layers:
+  period-mode:
+    - ["QCOq", "A-C-H-W", "A-C-H-E", "A-C-H-R", "A-C-H-T", "A-C-H-Y", "A-C-H-U", "A-C-H-I", "A-C-H-O", "A-C-H-P"]
+    - ["A-C-H-A", "A-C-H-S", "A-C-H-D", "A-C-H-F", "A-C-H-G", "A-C-H-H", "A-C-H-J", "A-C-H-K", "A-C-H-L", "A-C-H-;"]
+    - ["A-C-H-Z", "A-C-H-X", "A-C-H-C", "A-C-H-V", "A-C-H-B", "A-C-H-N", "A-C-H-M", "A-C-H-,", {type: held}, "A-C-H-/"]
+    - null
+    - null
+    - null
+    - "A-C-H-Space"
+    - null
+    - null

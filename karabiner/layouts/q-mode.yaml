@@ -1,0 +1,14 @@
+layout:
+  qmk_keyboard: corne_rotated
+  layout_name: LAYOUT_split_3x5_3
+layers:
+  q-mode:
+    - [{type: held}, "HoudahSpot", "Emacs", "Karabiner", "Terminal", "Spotify", null, "Anki", "Zoom", "Beeper"]
+    - [null, "Slack", "Finder", "Firefox", "GoldenDict", "Chrome", "System Pre", "KM", "DeepL", null]
+    - [null, "Plex", "Audacity", "mpv", "qBitTorrent", null, "Media Ctr", "Home", "Tor", "Safari"]
+    - null
+    - null
+    - null
+    - null
+    - null
+    - null

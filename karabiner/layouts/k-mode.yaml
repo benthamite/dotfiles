@@ -1,0 +1,14 @@
+layout:
+  qmk_keyboard: corne_rotated
+  layout_name: LAYOUT_split_3x5_3
+layers:
+  k-mode:
+    - [null, "KM", "KM", "KM", "KM", "KM", "KM", "KM", "KM", "KM"]
+    - ["KM", "KM", "KM", "KM", "KM", "KM", "KM", {type: held}, "KM", "KM"]
+    - ["KM", "KM", "KM", "KM", "KM", "KM", "KM", "KM", "KM", "KM"]
+    - null
+    - null
+    - null
+    - null
+    - null
+    - null

@@ -1,0 +1,14 @@
+layout:
+  qmk_keyboard: corne_rotated
+  layout_name: LAYOUT_split_3x5_3
+layers:
+  f-mode:
+    - ["œ", null, "...", "€", "þ", null, "•", "!", "ø", "£"]
+    - [null, "ß", "ð", {type: held}, null, null, "⸘", "‽", null, null]
+    - [null, null, null, null, null, null, null, "«", "»", "?"]
+    - null
+    - null
+    - null
+    - null
+    - null
+    - null

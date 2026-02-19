@@ -1,0 +1,14 @@
+layout:
+  qmk_keyboard: corne_rotated
+  layout_name: LAYOUT_split_3x5_3
+layers:
+  base:
+    - [{t: "Q", h: "apps"}, "W", "E", "R", "T", {t: "Y", h: "mouse"}, "U", "I", "O", {t: "P", h: "diacrit"}]
+    - ["A", "S", "D", {t: "F", h: "chars"}, "G", "H", {t: "J", h: "del"}, {t: "K", h: "site"}, "L", {t: ";", h: "sym"}]
+    - [{t: "Z", h: "nav"}, {t: "X", h: "avy"}, "C", {t: "V", h: "numbers"}, {t: "B", h: "media"}, "N", {t: "M", h: "math"}, {t: ",", h: "transp"}, {t: ".", h: "manip"}, {t: "/", h: "org/app"}]
+    - {t: "Esc", h: "Meta"}
+    - {t: "Enter", h: "Shift"}
+    - {t: "Win", h: "Hyper"}
+    - {t: "Space", h: "Ctrl"}
+    - {t: "App", h: "Super"}
+    - {t: "Tab", h: "Alt"}

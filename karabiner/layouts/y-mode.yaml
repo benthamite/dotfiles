@@ -1,0 +1,14 @@
+layout:
+  qmk_keyboard: corne_rotated
+  layout_name: LAYOUT_split_3x5_3
+layers:
+  y-mode:
+    - ["Left++", "Up++", "Down++", "Right++", null, {type: held}, null, null, null, null]
+    - ["Left", "Up", "Down", "Right", null, null, null, null, null, null]
+    - ["Save picture", null, "Save picture", "Copy picture", "Screenshot", null, null, null, null, null]
+    - null
+    - null
+    - null
+    - null
+    - "RClick"
+    - null

@@ -317,6 +317,8 @@ CLOCK: [2021-07-16 Fri 21:54]--[2021-07-16 Fri 22:04] =>  0:10
       :± {:key :!ESequal_sign}
       :≤ {:key :!Ecomma}
       :≥ {:key :!Eperiod}
+      :° {:key :!ES8}
+      :· {:key :!ES9}
       }
 #+end_src
 
@@ -1007,6 +1009,8 @@ Hold =K= in Chrome to trigger [[https://www.keyboardmaestro.com/][Keyboard Maest
 
 Hold =M= for mathematical operators: === (=e=), =+= (=p=), =≠= (=q=), =÷= (=d=), =±= (=o=), =×= (=x=), =≤= (=,=), =≥= (=.=), =≈= (=a=), =∞= (=i=), =−= (=s=), =·= (=t=), =°= (=g=), =√= (=r=), =π= (=c=).
 
+Some of these characters (===, =+=, =≠=, =÷=, =±=, =≤=, =≥=, =°=, =·=) have native Option+key shortcuts on the ABC Extended input source. The rest (=×=, =≈=, =∞=, =−=, =√=, =π=) are inserted via a shell command that copies the character to the clipboard and pastes it with =⌘V=. This means that using them will overwrite whatever is currently on the clipboard.
+
 [[/images/keyboard/m-mode.svg]]
 
 #+begin_src clojure
@@ -1023,8 +1027,8 @@ Hold =M= for mathematical operators: === (=e=), =+= (=p=), =≠= (=q=), =÷= (=d
          [:a [:insert "≈"]]
          [:i [:insert "∞"]]
          [:s [:insert "−"]]
-         [:t [:insert "·"]]
-         [:g [:insert "°"]]
+         [:t :·]
+         [:g :°]
          [:r [:insert "√"]]
          [:c [:insert "π"]]
          ]}

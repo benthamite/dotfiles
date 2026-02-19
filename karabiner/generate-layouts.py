@@ -73,6 +73,7 @@ TOS_CHARS = {
     "€": "€", "ß": "ß", "þ": "þ", "•": "•", "¿": "?", "«": "«", "»": "»",
     # math (non-ASCII tos names)
     "=": "=", "+": "+", "≠": "≠", "÷": "÷", "±": "±", "≤": "≤", "≥": "≥",
+    "°": "°", "·": "·",
     # diacritics (ASCII tos names)
     "macron": "Macron", "breve": "Breve", "cedilla": "Cedilla",
     "accute_accent": "Acute", "undercomma": "Comma", "underbar": "Bar",

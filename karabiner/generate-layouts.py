@@ -60,6 +60,9 @@ SIMLAYER_TRIGGERS = {
     "semicolon-mode": "semicolon", "slash-mode": "slash",
 }
 
+# Simlayers that only activate in Emacs (have :condi :emacs)
+EMACS_ONLY = {"x-mode", "comma-mode"}
+
 # :tos character aliases -> display character
 TOS_CHARS = {
     # special chars (non-ASCII tos names)
@@ -518,7 +521,12 @@ def main():
         print(f"\nGenerating {simlayer_name}...")
         rules = blocks[simlayer_name]
         keys = build_layer_keys(simlayer_name, rules)
-        yaml_content = build_yaml_content(simlayer_name, keys)
+        display_name = (
+            f"{simlayer_name} (Emacs only)"
+            if simlayer_name in EMACS_ONLY
+            else simlayer_name
+        )
+        yaml_content = build_yaml_content(display_name, keys)
         yaml_path = write_yaml(simlayer_name, yaml_content, LAYOUTS_DIR)
         svg_path = os.path.join(LAYOUTS_DIR, f"{simlayer_name}.svg")
         if run_keymap_draw(yaml_path, svg_path):

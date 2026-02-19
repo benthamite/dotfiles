@@ -1,10 +1,6 @@
 #+PROPERTY: header-args :tangle (print paths-file-karabiner-edn)
-#+TITLE: My keyboard setup
+#+TITLE: Pablo's Karabiner modifications
 #+AUTHOR: Pablo Stafforini
-#+hugo_base_dir: ~/Library/CloudStorage/Dropbox/repos/stafforini.com/
-#+hugo_section: notes
-#+hugo_slug: my-keyboard-setup
-#+EXPORT_EXCLUDE_TAGS: noexport
 :PROPERTIES:
 :TOC:      ignore
 :ARCH:      ignore

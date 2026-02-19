@@ -103,6 +103,8 @@
       :± {:key :!ESequal_sign}
       :≤ {:key :!Ecomma}
       :≥ {:key :!Eperiod}
+      :° {:key :!ES8}
+      :· {:key :!ES9}
       }
 
 :modifiers {
@@ -173,14 +175,12 @@
          }
 
 :layers {
-         :k-mode {:key :quote :condi :chrome}
          }
 
 :simlayers {
             :b-mode {:key :b}
             :f-mode {:key :f}
             :j-mode {:key :j}
-            :k-mode {:key :k}
             :m-mode {:key :m}
             :p-mode {:key :p}
             :q-mode {:key :q}
@@ -195,7 +195,6 @@
             }
 
 :templates {:alfred "osascript -e 'tell application \"Alfred 4\" to run trigger \"%s\" in workflow \"%s\" with argument \"%s\"'"
-            :km "osascript -e 'tell application \"Keyboard Maestro Engine\" to do script \"%s\"'"
             :open "open \"%s\""
             :insert "~/Library/CloudStorage/Dropbox/dotfiles/bin/char_input \"%s\""
             }
@@ -239,7 +238,7 @@
          [:##left_command :H- :emacs {:alone {:modi :C-H- :key :0}}]
          ]}
 
-{:des "Outsie Emacs: left_command → other tab (alone) | ⌘ (held)"
+{:des "Outside Emacs: left_command → other tab (alone) | ⌘ (held)"
  :rules [
          [:##left_command :⌘ :!emacs {:alone {:modi :⌘⌃ :key :0}}]
          ]}
@@ -296,7 +295,7 @@
          [:##right_option :s- :emacs {:alone :tab}]
          ]}
 
-{:des "outside Emacs: right_option → other window (alone) | ⌥ (held)"
+{:des "Outside Emacs: right_option → other window (alone) | ⌥ (held)"
  :rules [
          [:##right_option :⌥ :!emacs {:alone :tab}]
          ]}
@@ -402,43 +401,6 @@
          [:!Ws {:modi :C-H-M-s- :key :s} :emacs]
          ]}
 
-{:des "k-mode (website-specific)"
- :rules [:k-mode
-         [:a [:km "Local website a"]]
-         [:b [:km "Local website b"]]
-         [:c [:km "Local website c"]]
-         [:d [:km "Local website d"]]
-         [:e [:km "Local website e"]]
-         [:f [:km "Local website f"]]
-         [:g [:km "Local website g"]]
-         [:h [:km "Local website h"]]
-         [:i [:km "Local website i"]]
-         [:j [:km "Local website j"]]
-         [:l [:km "Local website l"]]
-         [:!Sl [:km "Local website Sl"]]
-         [:!Cl [:km "Local website Cl"]]
-         [:!CSl [:km "Local website CSl"]]
-         [:m [:km "Local website m"]]
-         [:n [:km "Local website n"]]
-         [:o [:km "Local website o"]]
-         [:p [:km "Local website p"]]
-         [:r [:km "Local website r"]]
-         [:s [:km "Local website s"]]
-         [:t [:km "Local website t"]]
-         [:u [:km "Local website u"]]
-         [:y [:km "Local website y"]]
-         [:z [:km "Local website z"]]
-         [:x [:km "Local website x"]]
-         [:v [:km "Local website v"]]
-         [:w [:km "Local website w"]]
-         [:semicolon [:km "Local website semicolon"]]
-         [:comma [:km "Local website comma"]]
-         [:period [:km "Local website period"]]
-         [:slash [:km "Local website slash"]]
-         [:return_or_enter [:km "Local website return_or_enter"]]
-         ;; [:spacebar [:km "Local website spacebar"]]
-         ]}
-
 {:des "m-mode (math symbols)"
  :rules [:m-mode
          [:e :=]
@@ -452,8 +414,8 @@
          [:a [:insert "≈"]]
          [:i [:insert "∞"]]
          [:s [:insert "−"]]
-         [:t [:insert "·"]]
-         [:g [:insert "°"]]
+         [:t :·]
+         [:g :°]
          [:r [:insert "√"]]
          [:c [:insert "π"]]
          ]}
@@ -492,8 +454,7 @@
          [:g [:open "/Applications/GoldenDict-ng.app"]]
          [:h [:open "/Applications/Google Chrome.app"]]
          [:i [:open "/Applications/Anki.app"]]
-         [:j [:km "open: System Preferences"]]
-         [:k [:open "/Applications/Keyboard Maestro.app"]]
+         [:j [:open "/System/Applications/System Settings.app"]]
          [:l [:open "/Applications/DeepL.app"]]
          [:m [:open "/Applications/Media Center 29.app"]]
          [:o [:open "/Applications/zoom.us.app"]]
@@ -774,47 +735,6 @@
          [:x {:modi :C-H-M-s- :key :x} :emacs]
          [:y {:modi :C-H-M-s- :key :y} :emacs]
          [:period {:modi :C-H-M-s- :key :period} :emacs]
-         [:a [:km "Local app a"] :!emacs]
-         [:b [:km "Local app b"] :!emacs]
-         [:c [:km "Local app c"] :!emacs]
-         [:d [:km "Local app d"] :!emacs]
-         [:e [:km "Local app e"] :!emacs]
-         [:f [:km "Local app f"] :!emacs]
-         [:g [:km "Local app g"] :!emacs]
-         [:h [:km "Local app h"] :!emacs]
-         [:i [:km "Local app i"] :!emacs]
-         [:j [:km "Local app j"] :!emacs]
-         [:k [:km "Local app k"] :!emacs]
-         [:l [:km "Local app l"] :!emacs]
-         [:m [:km "Local app m"] :!emacs]
-         [:n [:km "Local app n"] :!emacs]
-         [:o [:km "Local app o"] :!emacs]
-         [:p [:km "Local app p"] :!emacs]
-         [:q [:km "Local app q"] :!emacs]
-         [:r [:km "Local app r"] :!emacs]
-         [:s [:km "Local app s"] :!emacs]
-         [:t [:km "Local app t"] :!emacs]
-         [:u [:km "Local app u"] :!emacs]
-         [:v [:km "Local app v"] :!emacs]
-         [:w [:km "Local app w"] :!emacs]
-         [:x [:km "Local app x"] :!emacs]
-         [:y [:km "Local app y"] :!emacs]
-         [:z [:km "Local app z"] :!emacs]
-         [:0 [:km "Local app 0"] :!emacs]
-         [:1 [:km "Local app 1"] :!emacs]
-         [:2 [:km "Local app 2"] :!emacs]
-         [:3 [:km "Local app 3"] :!emacs]
-         [:4 [:km "Local app 4"] :!emacs]
-         [:5 [:km "Local app 5"] :!emacs]
-         [:6 [:km "Local app 6"] :!emacs]
-         [:7 [:km "Local app 7"] :!emacs]
-         [:8 [:km "Local app 8"] :!emacs]
-         [:9 [:km "Local app 9"] :!emacs]
-         [:semicolon [:km "Local app semicolon"] :!emacs]
-         [:comma [:km "Local app comma"] :!emacs]
-         [:period [:km "Local app period"] :!emacs]
-         [:return_or_enter [:km "Local app return_or_enter"] :!emacs]
-         [:spacebar [:km "Local app spacebar"] :!emacs]
          ]}
 
 ]}

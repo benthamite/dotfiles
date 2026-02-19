@@ -3,9 +3,9 @@ layout:
   layout_name: LAYOUT_split_3x5_3
 layers:
   m-mode:
-    - ["!=", null, "=", null, null, null, null, null, "±", "+"]
+    - ["≠", null, "=", null, null, null, null, null, "±", "+"]
     - [null, null, "÷", null, null, null, null, null, null, null]
-    - [null, "×", null, null, null, null, {type: held}, "<=", ">=", null]
+    - [null, "×", null, null, null, null, {type: held}, "≤", "≥", null]
     - null
     - null
     - null

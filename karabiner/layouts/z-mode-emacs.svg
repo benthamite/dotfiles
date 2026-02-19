@@ -132,62 +132,90 @@ path.combo {
 </g>
 <g transform="translate(84, 35)" class="key keypos-1">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">A-C-s-W</text>
+<text x="0" y="0" class="key tap">
+<tspan x="0" dy="-0.6em">Defun</tspan><tspan x="0" dy="1.2em">start</tspan>
+</text>
 </g>
 <g transform="translate(140, 28)" class="key keypos-2">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">A-C-s-E</text>
+<text x="0" y="0" class="key tap">
+<tspan x="0" dy="-0.6em">Sexp</tspan><tspan x="0" dy="1.2em">←</tspan>
+</text>
 </g>
 <g transform="translate(196, 35)" class="key keypos-3">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">A-C-s-R</text>
+<text x="0" y="0" class="key tap">
+<tspan x="0" dy="-0.6em">Prev</tspan><tspan x="0" dy="1.2em">section</tspan>
+</text>
 </g>
 <g transform="translate(252, 42)" class="key keypos-4">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">A-C-s-T</text>
+<text x="0" y="0" class="key tap">
+<tspan x="0" dy="-0.6em">Scroll</tspan><tspan x="0" dy="1.2em">other</tspan>
+</text>
 </g>
 <g transform="translate(476, 42)" class="key keypos-5">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">A-C-s-Y</text>
+<text x="0" y="0" class="key tap">
+<tspan x="0" dy="-0.6em">Page</tspan><tspan x="0" dy="1.2em">↑</tspan>
+</text>
 </g>
 <g transform="translate(532, 35)" class="key keypos-6">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">A-C-s-U</text>
+<text x="0" y="0" class="key tap">
+<tspan x="0" dy="-0.6em">Word</tspan><tspan x="0" dy="1.2em">←</tspan>
+</text>
 </g>
 <g transform="translate(588, 28)" class="key keypos-7">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">A-C-s-I</text>
+<text x="0" y="0" class="key tap">
+<tspan x="0" dy="-0.6em" style="font-size: 88%">Sentence</tspan><tspan x="0" dy="1.2em" style="font-size: 88%">←</tspan>
+</text>
 </g>
 <g transform="translate(644, 35)" class="key keypos-8">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">A-C-s-O</text>
+<text x="0" y="0" class="key tap">
+<tspan x="0" dy="-0.6em" style="font-size: 88%">Sentence</tspan><tspan x="0" dy="1.2em" style="font-size: 88%">→</tspan>
+</text>
 </g>
 <g transform="translate(700, 49)" class="key keypos-9">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">A-C-s-P</text>
+<text x="0" y="0" class="key tap">
+<tspan x="0" dy="-0.6em">Word</tspan><tspan x="0" dy="1.2em">→</tspan>
+</text>
 </g>
 <g transform="translate(28, 105)" class="key keypos-10">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
 </g>
 <g transform="translate(84, 91)" class="key keypos-11">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">A-C-s-S</text>
+<text x="0" y="0" class="key tap">
+<tspan x="0" dy="-0.6em">Defun</tspan><tspan x="0" dy="1.2em">end</tspan>
+</text>
 </g>
 <g transform="translate(140, 84)" class="key keypos-12">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">WTQ</text>
+<text x="0" y="0" class="key tap">
+<tspan x="0" dy="-0.6em">Sexp</tspan><tspan x="0" dy="1.2em">→</tspan>
+</text>
 </g>
 <g transform="translate(196, 91)" class="key keypos-13">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">A-C-s-F</text>
+<text x="0" y="0" class="key tap">
+<tspan x="0" dy="-0.6em">Next</tspan><tspan x="0" dy="1.2em">section</tspan>
+</text>
 </g>
 <g transform="translate(252, 98)" class="key keypos-14">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">A-C-s-G</text>
+<text x="0" y="0" class="key tap">
+<tspan x="0" dy="-0.6em">Scroll</tspan><tspan x="0" dy="1.2em">other</tspan>
+</text>
 </g>
 <g transform="translate(476, 98)" class="key keypos-15">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">A-C-s-H</text>
+<text x="0" y="0" class="key tap">
+<tspan x="0" dy="-0.6em">Page</tspan><tspan x="0" dy="1.2em">↓</tspan>
+</text>
 </g>
 <g transform="translate(532, 91)" class="key keypos-16">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
@@ -210,39 +238,46 @@ path.combo {
 </g>
 <g transform="translate(84, 147)" class="key keypos-21">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">A-C-s-X</text>
 </g>
 <g transform="translate(140, 140)" class="key keypos-22">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">A-C-s-C</text>
 </g>
 <g transform="translate(196, 147)" class="key keypos-23">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">A-C-s-V</text>
 </g>
 <g transform="translate(252, 154)" class="key keypos-24">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">A-C-s-B</text>
+<text x="0" y="0" class="key tap">
+<tspan x="0" dy="-0.6em">Other</tspan><tspan x="0" dy="1.2em">buffer</tspan>
+</text>
 </g>
 <g transform="translate(476, 154)" class="key keypos-25">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">A-C-s-N</text>
+<text x="0" y="0" class="key tap">First</text>
 </g>
 <g transform="translate(532, 147)" class="key keypos-26">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">A-C-s-M</text>
+<text x="0" y="0" class="key tap">
+<tspan x="0" dy="-0.6em">Line</tspan><tspan x="0" dy="1.2em">start</tspan>
+</text>
 </g>
 <g transform="translate(588, 140)" class="key keypos-27">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">A-C-s-,</text>
+<text x="0" y="0" class="key tap">
+<tspan x="0" dy="-0.6em" style="font-size: 78%">Paragraph</tspan><tspan x="0" dy="1.2em" style="font-size: 78%">←</tspan>
+</text>
 </g>
 <g transform="translate(644, 147)" class="key keypos-28">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">A-C-s-.</text>
+<text x="0" y="0" class="key tap">
+<tspan x="0" dy="-0.6em" style="font-size: 78%">Paragraph</tspan><tspan x="0" dy="1.2em" style="font-size: 78%">→</tspan>
+</text>
 </g>
 <g transform="translate(700, 161)" class="key keypos-29">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
-<text x="0" y="0" class="key tap">A-C-s-/</text>
+<text x="0" y="0" class="key tap">
+<tspan x="0" dy="-0.6em">Line</tspan><tspan x="0" dy="1.2em">end</tspan>
+</text>
 </g>
 <g transform="translate(168, 205)" class="key keypos-30">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
@@ -256,13 +291,13 @@ path.combo {
 <g transform="translate(433, 224) rotate(-30.0)" class="key keypos-33">
 <rect rx="6" ry="6" x="-26" y="-40" width="52" height="80" class="key"/>
 <text x="0" y="0" class="key tap">
-<tspan x="0" dy="-0.6em">A-C-s-</tspan><tspan x="0" dy="1.2em">Space</tspan>
+<tspan x="0" dy="-0.6em">Alt</tspan><tspan x="0" dy="1.2em">buffer</tspan>
 </text>
 </g>
 <g transform="translate(498, 213) rotate(-15.0)" class="key keypos-34">
 <rect rx="6" ry="6" x="-26" y="-26" width="52" height="52" class="key"/>
 <text x="0" y="0" class="key tap">
-<tspan x="0" dy="-0.6em">A-C-s-</tspan><tspan x="0" dy="1.2em">Tab</tspan>
+<tspan x="0" dy="-0.6em">Doc</tspan><tspan x="0" dy="1.2em">end</tspan>
 </text>
 </g>
 <g transform="translate(560, 205)" class="key keypos-35">

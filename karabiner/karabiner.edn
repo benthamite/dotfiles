@@ -234,11 +234,6 @@
          [:!Sright_command {:modi :⇧ :key :return_or_enter}]
          ]}
 
-{:des "left_option + right_command → ⇧ + enter"
- :rules [
-         [:!Sright_command {:modi :⇧ :key :return_or_enter}]
-         ]}
-
 {:des "Emacs: left_command → other window (alone) | H- (held)"
  :rules [
          [:##left_command :H- :emacs {:alone {:modi :C-H- :key :0}}]
@@ -454,6 +449,13 @@
          [:x [:insert "×"]]
          [:comma :≤]
          [:period :≥]
+         [:a [:insert "≈"]]
+         [:i [:insert "∞"]]
+         [:s [:insert "−"]]
+         [:t [:insert "·"]]
+         [:g [:insert "°"]]
+         [:r [:insert "√"]]
+         [:c [:insert "π"]]
          ]}
 
 {:des "p-mode (diacritics)"

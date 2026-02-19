@@ -3,9 +3,9 @@ layout:
   layout_name: LAYOUT_split_3x5_3
 layers:
   slash-mode (Emacs):
-    - ["C-H-M-s-Q", "C-H-M-s-W", "C-H-M-s-E", "C-H-M-s-R", "C-H-M-s-T", "C-H-M-s-Y", "C-H-M-s-U", "C-H-M-s-I", "C-H-M-s-O", "C-H-M-s-P"]
-    - ["C-H-M-s-A", "C-H-M-s-S", "C-H-M-s-D", "C-H-M-s-F", "C-H-M-s-G", "C-H-M-s-H", "C-H-M-s-J", null, null, null]
-    - ["C-H-M-s-Z", "C-H-M-s-X", "C-H-M-s-C", "C-H-M-s-V", "C-H-M-s-B", "C-H-M-s-N", "C-H-M-s-M", null, "C-H-M-s-.", {type: held}]
+    - ["Promote", "Shift meta ↑", "Shift meta ↓", "Demote", null, null, null, null, null, null]
+    - ["Promote", "Move subtree", "Move subtree", "Demote", null, null, null, null, null, null]
+    - ["Shift ←", "Shift ↑", "Shift ↓", "Shift →", null, null, null, null, null, {type: held}]
     - null
     - null
     - null

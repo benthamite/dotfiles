@@ -816,9 +816,7 @@ CLOCK: [2023-08-26 Sat 10:53]--[2023-08-26 Sat 12:31] =>  1:38
 - ~h~  and ~n~ control dictation and narration, respectively.
   - The keyboard shortcuts need to be set under Settings > Keyboard > Dictation > Shortcut (for dictation) and Settings > Accessibility > Spoken content > Speak selection (for narration).
 
-[[/images/keyboard/b-mode-emacs.svg]]
-
-[[/images/keyboard/b-mode-macos.svg]]
+[[/images/keyboard/b-mode.svg]]
 
 #+begin_src clojure
 {:des "b-mode (media controls, window sizing)"
@@ -902,52 +900,52 @@ Hold =J= for deletion commands. Outside Emacs, the keys map to standard macOS ed
 #+begin_src clojure
 {:des "j-mode (deletion)"
  :rules [:j-mode
-         [:a {:modi :C-H-M- :key :a} :emacs]
+         [:a {:modi :C-H-M- :key :a} :emacs] ; sexp ←
          [:!Wa {:modi :C-H-M-s- :key :a} :emacs]
          [:!WQa {:modi :A-C-H-M-s- :key :a} :emacs]
-         [:s {:modi :C-H-M- :key :s} :emacs]
+         [:s {:modi :C-H-M- :key :s} :emacs] ; char ←
          [:s :delete_or_backspace :!emacs]
-         [:d {:modi :C-H-M- :key :d} :emacs]
+         [:d {:modi :C-H-M- :key :d} :emacs] ; char →
          [:d :delete_forward :!emacs]
-         [:f {:modi :C-H-M- :key :f} :emacs]
+         [:f {:modi :C-H-M- :key :f} :emacs] ; sexp →
          [:!Wf {:modi :C-H-M-s- :key :f} :emacs]
          [:!WQf {:modi :A-C-H-M-s- :key :f} :emacs]
-         [:q {:modi :C-H-M- :key :q} :emacs]
+         [:q {:modi :C-H-M- :key :q} :emacs] ; word ←
          [:!Wq {:modi :C-H-M-s- :key :q} :emacs]
          [:!WQq {:modi :A-C-H-M-s- :key :q} :emacs]
-         [:q {:modi :⌥ :key :delete_or_backspace} :!emacs]
-         [:w {:modi :C-H-M- :key :w} :emacs]
+         [:q {:modi :⌥ :key :delete_or_backspace} :!emacs] ; word ←
+         [:w {:modi :C-H-M- :key :w} :emacs] ; sentence ←
          [:!Ww {:modi :C-H-M-s- :key :w} :emacs]
          [:!WQw {:modi :A-C-H-M-s- :key :w} :emacs]
-         [:w {:modi :⌘ :key :delete_or_backspace} :!emacs]
-         [:e {:modi :C-H-M- :key :e} :emacs]
+         [:w {:modi :⌘ :key :delete_or_backspace} :!emacs] ; to line start
+         [:e {:modi :C-H-M- :key :e} :emacs] ; sentence →
          [:!We {:modi :C-H-M-s- :key :e} :emacs]
          [:!WQe {:modi :A-C-H-M-s- :key :e} :emacs]
-         [:e {:modi :⌃ :key :k} :!emacs]
-         [:r {:modi :C-H-M- :key :r} :emacs]
+         [:e {:modi :⌃ :key :k} :!emacs] ; to line end
+         [:r {:modi :C-H-M- :key :r} :emacs] ; word →
          [:!Wr {:modi :C-H-M-s- :key :r} :emacs]
          [:!WQr {:modi :A-C-H-M-s- :key :r} :emacs]
-         [:r {:modi :⌥ :key :delete_forward} :!emacs]
-         [:z {:modi :C-H-M- :key :z} :emacs]
+         [:r {:modi :⌥ :key :delete_forward} :!emacs] ; word →
+         [:z {:modi :C-H-M- :key :z} :emacs] ; line ←
          [:!Wz {:modi :C-H-M-s- :key :z} :emacs]
          [:!WQz {:modi :A-C-H-M-s- :key :z} :emacs]
-         [:z {:modi :⌘ :key :delete_or_backspace} :!emacs]
-         [:x {:modi :C-H-M- :key :x} :emacs]
+         [:z {:modi :⌘ :key :delete_or_backspace} :!emacs] ; to line start
+         [:x {:modi :C-H-M- :key :x} :emacs] ; paragraph ←
          [:!Wx {:modi :C-H-M-s- :key :x} :emacs]
          [:!WQx {:modi :A-C-H-M-s- :key :x} :emacs]
-         [:x {:modi :⌘⌥ :key :left_arrow} :!emacs]
-         [:c {:modi :C-H-M- :key :c} :emacs]
+         [:x {:modi :⌘⌥ :key :left_arrow} :!emacs] ; select to line start
+         [:c {:modi :C-H-M- :key :c} :emacs] ; paragraph →
          [:!Wc {:modi :C-H-M-s- :key :c} :emacs]
          [:!WQc {:modi :A-C-H-M-s- :key :c} :emacs]
-         [:c {:modi :⌘⌥ :key :right_arrow} :!emacs]
-         [:v {:modi :C-H-M- :key :v} :emacs]
+         [:c {:modi :⌘⌥ :key :right_arrow} :!emacs] ; select to line end
+         [:v {:modi :C-H-M- :key :v} :emacs] ; line →
          [:!Wv {:modi :C-H-M-s- :key :v} :emacs]
          [:!WQv {:modi :A-C-H-M-s- :key :v} :emacs]
-         [:v {:modi :⌘ :key :delete_forward} :!emacs]
-         [:b {:modi :C-H-M- :key :b} :emacs]
-         [:t {:modi :C-H-M- :key :t} :emacs]
+         [:v {:modi :⌘ :key :delete_forward} :!emacs] ; line →
+         [:b {:modi :C-H-M- :key :b} :emacs] ; strip thing
+         [:t {:modi :C-H-M- :key :t} :emacs] ; beginning of buffer
          [:t :home :!emacs]
-         [:g {:modi :C-H-M- :key :g} :emacs]
+         [:g {:modi :C-H-M- :key :g} :emacs] ; append next kill
          [:g :end :!emacs]
          [:!Wd {:modi :C-H-M-s- :key :d} :emacs]
          [:!Ws {:modi :C-H-M-s- :key :s} :emacs]
@@ -1193,27 +1191,27 @@ Hold =X= + any letter to trigger [[https://github.com/abo-abo/avy][Avy]] jump co
          [:e [{:modi :C-H-s- :key :e}]]
          [:f [{:modi :C-H-s- :key :f}]]
          [:g [{:modi :C-H-s- :key :g}]]
-         [:h [{:modi :C-H-s- :key :h}]]
+         [:h [{:modi :C-H-s- :key :h}]] ; contract
          [:i [{:modi :C-H-s- :key :i}]]
-         [:j [{:modi :C-H-s- :key :j}]]
-         [:k [{:modi :C-H-s- :key :k}]]
-         [:l [{:modi :C-H-s- :key :l}]]
-         [:m [{:modi :C-H-s- :key :m}]]
-         [:n [{:modi :C-H-s- :key :n}]]
+         [:j [{:modi :C-H-s- :key :j}]] ; char ←
+         [:k [{:modi :C-H-s- :key :k}]] ; word ↑
+         [:l [{:modi :C-H-s- :key :l}]] ; word ↓
+         [:m [{:modi :C-H-s- :key :m}]] ; line ↑
+         [:n [{:modi :C-H-s- :key :n}]] ; expand
          [:o [{:modi :C-H-s- :key :o}]]
-         [:p [{:modi :C-H-s- :key :p}]]
+         [:p [{:modi :C-H-s- :key :p}]] ; word in line →
          [:q [{:modi :C-H-s- :key :q}]]
          [:r [{:modi :C-H-s- :key :r}]]
          [:s [{:modi :C-H-s- :key :s}]]
          [:t [{:modi :C-H-s- :key :t}]]
-         [:u [{:modi :C-H-s- :key :u}]]
+         [:u [{:modi :C-H-s- :key :u}]] ; word in line ←
          [:v [{:modi :C-H-s- :key :v}]]
          [:w [{:modi :C-H-s- :key :w}]]
          [:y [{:modi :C-H-s- :key :y}]]
          [:z [{:modi :C-H-s- :key :z}]]
-         [:semicolon [{:modi :C-H-s- :key :semicolon}]]
-         [:comma [{:modi :C-H-s- :key :comma}]]
-         [:period [{:modi :C-H-s- :key :period}]]
+         [:semicolon [{:modi :C-H-s- :key :semicolon}]] ; char →
+         [:comma [{:modi :C-H-s- :key :comma}]] ; EOL ↑
+         [:period [{:modi :C-H-s- :key :period}]] ; EOL ↓
          [:slash [{:modi :C-H-s- :key :slash}]]
          [:spacebar [{:modi :C-H-s- :key :spacebar}]]
          [:return_or_enter [{:modi :C-H-s- :key :return_or_enter}]]
@@ -1290,55 +1288,55 @@ Beyond the arrow keys, =y=/=h= provide page up/down and =m=/=/= provide home/end
 #+begin_src clojure
 {:des "z-mode (navigation)"
  :rules [:z-mode
-         [:b {:modi :A-C-s- :key :b} :emacs]
+         [:b {:modi :A-C-s- :key :b} :emacs] ; other buffer
          [:c {:modi :A-C-s- :key :c}]
-         [:d {:modi :A-H-M-s- :key :d} :emacs] ; WTQ intercepted by OSX
-         [:e {:modi :A-C-s- :key :e} :emacs]
+         [:d {:modi :A-H-M-s- :key :d} :emacs] ; sexp →
+         [:e {:modi :A-C-s- :key :e} :emacs] ; sexp ←
          [:f [{:modi :⌘⌃ :key :n} {:modi :⌘⌃ :key :h}] :chrome] ; Google Docs next heading
-         [:f {:modi :A-C-s- :key :f}]
-         [:g {:modi :A-C-s- :key :g} :emacs]
-         [:h {:modi :A-C-s- :key :h} :emacs]
+         [:f {:modi :A-C-s- :key :f}] ; next section
+         [:g {:modi :A-C-s- :key :g} :emacs] ; scroll other ↓
+         [:h {:modi :A-C-s- :key :h} :emacs] ; page ↓
          [:##h :page_down]
-         [:i {:modi :A-C-s- :key :i} :emacs]
-         [:##i {:modi :⌥ :key :up_arrow}]
+         [:i {:modi :A-C-s- :key :i} :emacs] ; sentence ←
+         [:##i {:modi :⌥ :key :up_arrow}] ; paragraph ←
          [:j :left_arrow]
          [:##j :left_arrow]
          [:k :up_arrow]
          [:##k :up_arrow]
          [:l :down_arrow]
          [:##l :down_arrow]
-         [:m {:modi :A-C-s- :key :m} :emacs]
-         [:##m {:modi :⌘ :key :left_arrow}]
-         [:n {:modi :A-C-s- :key :n} :emacs]
-         [:o {:modi :A-C-s- :key :o} :emacs]
-         [:##o {:modi :⌥ :key :down_arrow}]
-         [:p {:modi :A-C-s- :key :p} :emacs]
-         [:##p {:modi :⌥ :key :right_arrow}]
+         [:m {:modi :A-C-s- :key :m} :emacs] ; line start
+         [:##m {:modi :⌘ :key :left_arrow}] ; line start
+         [:n {:modi :A-C-s- :key :n} :emacs] ; first heading
+         [:o {:modi :A-C-s- :key :o} :emacs] ; sentence →
+         [:##o {:modi :⌥ :key :down_arrow}] ; paragraph →
+         [:p {:modi :A-C-s- :key :p} :emacs] ; word →
+         [:##p {:modi :⌥ :key :right_arrow}] ; word →
          [:r [{:modi :⌘⌃ :key :p} {:modi :⌘⌃ :key :h}] :chrome] ; Google Docs previous heading
-         [:r {:modi :A-C-s- :key :r} :emacs]
-         [:s {:modi :A-C-s- :key :s} :emacs]
-         [:t {:modi :A-C-s- :key :t} :emacs]
-         [:u {:modi :A-C-s- :key :u} :emacs]
-         [:##u {:modi :⌥ :key :left_arrow}]
+         [:r {:modi :A-C-s- :key :r} :emacs] ; prev section
+         [:s {:modi :A-C-s- :key :s} :emacs] ; defun end
+         [:t {:modi :A-C-s- :key :t} :emacs] ; scroll other ↑
+         [:u {:modi :A-C-s- :key :u} :emacs] ; word ←
+         [:##u {:modi :⌥ :key :left_arrow}] ; word ←
          [:v {:modi :A-C-s- :key :v} :emacs]
-         [:w {:modi :A-C-s- :key :w} :emacs]
+         [:w {:modi :A-C-s- :key :w} :emacs] ; defun start
          [:x {:modi :A-C-s- :key :x}]
-         [:y {:modi :A-C-s- :key :y} :emacs]
+         [:y {:modi :A-C-s- :key :y} :emacs] ; page ↑
          [:##y :page_up]
-         [:spacebar {:modi :A-C-s- :key :spacebar} :emacs]
+         [:spacebar {:modi :A-C-s- :key :spacebar} :emacs] ; alt buffer
          [:spacebar {:modi :⌘ :key :up_arrow} :chrome] ; in Chrome, move to top
          [:spacebar :home]
-         [:comma {:modi :A-C-s- :key :comma} :emacs]
-         [:##comma {:modi :⌘ :key :up_arrow}]
-         [:period {:modi :A-C-s- :key :period} :emacs]
-         [:##period {:modi :⌘ :key :down_arrow}]
-         [:right_command {:modi :A-C-s- :key :tab} :emacs]
+         [:comma {:modi :A-C-s- :key :comma} :emacs] ; paragraph ←
+         [:##comma {:modi :⌘ :key :up_arrow}] ; doc start
+         [:period {:modi :A-C-s- :key :period} :emacs] ; paragraph →
+         [:##period {:modi :⌘ :key :down_arrow}] ; doc end
+         [:right_command {:modi :A-C-s- :key :tab} :emacs] ; doc end
          [:right_command {:modi :⌘ :key :down_arrow} :chrome] ; in Chrome, move to bottom
          [:right_command :end]
          [:semicolon :right_arrow]
          [:##semicolon :right_arrow]
-         [:slash {:modi :A-C-s- :key :slash} :emacs]
-         [:##slash {:modi :⌘ :key :right_arrow}]
+         [:slash {:modi :A-C-s- :key :slash} :emacs] ; line end
+         [:##slash {:modi :⌘ :key :right_arrow}] ; line end
          [:tab {:modi :A-C-s- :key :tab} :emacs]
          ;; [:##tab :home]
          ]}
@@ -1356,12 +1354,12 @@ Hold =,= + a letter to trigger transposition commands in Emacs (transpose charac
 #+begin_src clojure
 {:des "comma-mode (transposition)"
  :rules [:comma-mode
-         [:a {:modi :A-H-M- :key :a}]
+         [:a {:modi :A-H-M- :key :a}] ; sexps ←
          [:b {:modi :A-H-M- :key :b}]
-         [:c {:modi :A-H-M- :key :c}]
-         [:d {:modi :A-H-M- :key :d}]
-         [:e {:modi :A-H-M- :key :e}]
-         [:f {:modi :A-H-M- :key :f}]
+         [:c {:modi :A-H-M- :key :c}] ; paragraphs
+         [:d {:modi :A-H-M- :key :d}] ; chars
+         [:e {:modi :A-H-M- :key :e}] ; sentences
+         [:f {:modi :A-H-M- :key :f}] ; sexps
          [:g {:modi :A-H-M- :key :g}]
          [:h {:modi :A-H-M- :key :h}]
          [:i {:modi :A-H-M- :key :i}]
@@ -1370,16 +1368,16 @@ Hold =,= + a letter to trigger transposition commands in Emacs (transpose charac
          [:n {:modi :A-H-M- :key :n}]
          [:o {:modi :A-H-M- :key :o}]
          [:p {:modi :A-H-M- :key :p}]
-         [:q {:modi :A-H-M- :key :q}]
-         [:r {:modi :A-H-M- :key :r}]
-         [:s {:modi :A-H-M- :key :s}]
-         [:t {:modi :A-H-M- :key :t}]
+         [:q {:modi :A-H-M- :key :q}] ; words ←
+         [:r {:modi :A-H-M- :key :r}] ; words
+         [:s {:modi :A-H-M- :key :s}] ; chars ←
+         [:t {:modi :A-H-M- :key :t}] ; org element
          [:u {:modi :A-H-M- :key :u}]
-         [:v {:modi :A-H-M- :key :v}]
-         [:w {:modi :A-H-M- :key :w}]
-         [:x {:modi :A-H-M- :key :x}]
+         [:v {:modi :A-H-M- :key :v}] ; lines
+         [:w {:modi :A-H-M- :key :w}] ; sentences ←
+         [:x {:modi :A-H-M- :key :x}] ; paragraphs ←
          [:y {:modi :A-H-M- :key :y}]
-         [:z {:modi :A-H-M- :key :z}]
+         [:z {:modi :A-H-M- :key :z}] ; lines ←
          [:semicolon {:modi :A-H-M- :key :semicolon}]
          [:period {:modi :A-H-M- :key :period}]
          [:slash {:modi :A-H-M- :key :slash}]
@@ -1405,17 +1403,17 @@ Hold =.= + a letter to trigger text manipulation commands (sorting, aligning, ca
 #+begin_src clojure
 {:des "period-mode (manipulation)"
  :rules [:period-mode
-         [:a {:modi :A-C-H- :key :a}]
+         [:a {:modi :A-C-H- :key :a}] ; copy sexp
          [:b {:modi :A-C-H- :key :b}]
          [:c {:modi :A-C-H- :key :c}]
          [:d {:modi :A-C-H- :key :d}]
          [:e {:modi :A-C-H- :key :e}]
-         [:f {:modi :A-C-H- :key :f}]
+         [:f {:modi :A-C-H- :key :f}] ; delete sexp
          [:g {:modi :A-C-H- :key :g}]
          [:h {:modi :A-C-H- :key :h}]
          [:i {:modi :A-C-H- :key :i}]
-         [:j {:modi :A-C-H- :key :j}]
-         [:k {:modi :A-C-H- :key :k}]
+         [:j {:modi :A-C-H- :key :j}] ; mark sexp
+         [:k {:modi :A-C-H- :key :k}] ; mark around
          [:l {:modi :A-C-H- :key :l}]
          [:m {:modi :A-C-H- :key :m}]
          [:n {:modi :A-C-H- :key :n}]
@@ -1424,7 +1422,7 @@ Hold =.= + a letter to trigger text manipulation commands (sorting, aligning, ca
          [:q {:modi :A-H-M-s- :key :9}] ; QCOq triggers ⌘⌃Q (lock screen)
          [:r {:modi :A-C-H- :key :r}]
          [:s {:modi :A-C-H- :key :s}]
-         [:t {:modi :A-C-H- :key :t}]
+         [:t {:modi :A-C-H- :key :t}] ; copy section
          [:u {:modi :A-C-H- :key :u}]
          [:v {:modi :A-C-H- :key :v}]
          [:w {:modi :A-C-H- :key :w}]
@@ -1504,12 +1502,12 @@ Hold =/= in Emacs to access Org-mode commands via the =C-H-M-s-= modifier prefix
 #+begin_src clojure
 {:des "slash simlyaer → org-mode (Emacs) | app-specific macros (outside Emacs)"
  :rules [:slash-mode
-         [:a {:modi :C-H-M-s- :key :a} :emacs]
+         [:a {:modi :C-H-M-s- :key :a} :emacs] ; promote heading
          [:b {:modi :C-H-M-s- :key :b} :emacs]
-         [:c {:modi :C-H-M-s- :key :c} :emacs]
-         [:d {:modi :C-H-M-s- :key :d} :emacs]
-         [:e {:modi :C-H-M-s- :key :e} :emacs]
-         [:f {:modi :C-H-M-s- :key :f} :emacs]
+         [:c {:modi :C-H-M-s- :key :c} :emacs] ; shift ↓
+         [:d {:modi :C-H-M-s- :key :d} :emacs] ; move subtree ↓
+         [:e {:modi :C-H-M-s- :key :e} :emacs] ; shift meta ↓
+         [:f {:modi :C-H-M-s- :key :f} :emacs] ; demote heading
          [:g {:modi :C-H-M-s- :key :g} :emacs]
          [:h {:modi :C-H-M-s- :key :h} :emacs]
          [:i {:modi :C-H-M-s- :key :i} :emacs]
@@ -1518,15 +1516,15 @@ Hold =/= in Emacs to access Org-mode commands via the =C-H-M-s-= modifier prefix
          [:n {:modi :C-H-M-s- :key :n} :emacs]
          [:o {:modi :C-H-M-s- :key :o} :emacs]
          [:p {:modi :C-H-M-s- :key :p} :emacs]
-         [:q {:modi :C-H-M-s- :key :q} :emacs]
-         [:r {:modi :C-H-M-s- :key :r} :emacs]
-         [:s {:modi :C-H-M-s- :key :s} :emacs]
+         [:q {:modi :C-H-M-s- :key :q} :emacs] ; promote subtree
+         [:r {:modi :C-H-M-s- :key :r} :emacs] ; demote subtree
+         [:s {:modi :C-H-M-s- :key :s} :emacs] ; move subtree ↑
          [:t {:modi :C-H-M-s- :key :t} :emacs]
          [:u {:modi :C-H-M-s- :key :u} :emacs]
-         [:v {:modi :C-H-M-s- :key :v} :emacs]
-         [:w {:modi :C-H-M-s- :key :w} :emacs]
-         [:z {:modi :C-H-M-s- :key :z} :emacs]
-         [:x {:modi :C-H-M-s- :key :x} :emacs]
+         [:v {:modi :C-H-M-s- :key :v} :emacs] ; shift →
+         [:w {:modi :C-H-M-s- :key :w} :emacs] ; shift meta ↑
+         [:z {:modi :C-H-M-s- :key :z} :emacs] ; shift ←
+         [:x {:modi :C-H-M-s- :key :x} :emacs] ; shift ↑
          [:y {:modi :C-H-M-s- :key :y} :emacs]
          [:period {:modi :C-H-M-s- :key :period} :emacs]
          [:a [:km "Local app a"] :!emacs]

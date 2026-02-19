@@ -1575,16 +1575,6 @@ This setup trades a steep learning curve for an extremely compact and efficient 
 - *Context-aware behavior.* The same physical key does different things in Emacs vs. other apps. This lets me have Emacs-native deletion, navigation, and transposition commands alongside standard macOS shortcuts.
 - *Six Emacs modifiers from six thumb keys.* By mapping all six Emacs modifier keys to physical keys, I have a keybinding space large enough to support thousands of unique commands.
 
-The Corne default layer at a glance, with simlayer annotations:
-
-#+begin_example
-    apps:Q   W   E   R   T  |  mouse:Y   U   I   O  diacrit:P
-         A   S   D  char:F   G  |       H  del:J  site:K   L  sym:;
-     nav:Z   X   C  num:V  media:B  |       N  math:M  trsp:,  manip:.   /
-
-         Esc     Enter    toggle-win | toggle-app  Space     Tab
-        (Ctrl)  (Shift)  (Command)  | (Control)  (mod)    (Option)
-#+end_example
 
 * Appendices                                                      :noexport:
 :PROPERTIES:

@@ -798,6 +798,8 @@ end using terms from
          [:d :ð]
          [:e :…]
          [:i :¡]
+         [:j [:insert "⸘"]]
+         [:k [:insert "‽"]]
          [:o :ø]
          [:p :£]
          [:q :œ]

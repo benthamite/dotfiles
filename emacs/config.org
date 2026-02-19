@@ -13025,40 +13025,6 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
   :config
   (setq-default elfeed-search-filter "@15-days-ago +unread")
 
-  ;; Fix double-consolidation bug in elfeed-curl: when the queue is
-  ;; re-consolidated, already-consolidated entries (with list URLs) got
-  ;; their URLs wrapped in another layer of lists, causing
-  ;; `start-process' to receive lists where it expects strings.
-  ;; Upstream: https://github.com/skeeto/elfeed/pull/555
-  (defun elfeed-curl--queue-consolidate (queue-in)
-    "Group compatible requests together and return a new queue.
-Compatible means the requests have the same protocol, domain,
-port, headers, method, and body, allowing them to be used safely
-in the same curl invocation."
-    (let ((table (make-hash-table :test 'equal))
-          (keys ())
-          (queue-out ()))
-      (dolist (entry queue-in)
-        (cl-destructuring-bind (url _ headers method data) entry
-          (let* ((key (elfeed-curl--request-key url headers method data)))
-            (if key
-                (progn
-                  (push key keys)
-                  (push entry (gethash key table nil)))
-              ;; Already consolidated (url is a list) -- pass through as-is
-              (push entry queue-out)))))
-      (dolist (key (nreverse keys))
-        (let ((entry (gethash key table)))
-          (when entry
-            (let ((rotated (list (nreverse (cl-mapcar #'car entry))
-                                 (nreverse (cl-mapcar #'cadr entry))
-                                 (cl-caddar entry)
-                                 (elt (car entry) 3)
-                                 (elt (car entry) 4))))
-              (push rotated queue-out)
-              (setf (gethash key table) nil)))))
-      (nreverse queue-out)))
-
   :hook
   (elfeed-show-mode-hook . visual-line-mode)
   (elfeed-search-mode-hook . (lambda ()

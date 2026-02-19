@@ -633,6 +633,33 @@ one."
   (setq claude-code--window-widths
         (make-hash-table :test 'eq :weakness 'key)))
 
+;; Fix upstream scroll function: `(recenter)' centers the cursor mid-window,
+;; which makes the view jump upward when there is scrollback above.  Using
+;; `(recenter -1)' keeps the cursor at the bottom, matching terminal behavior.
+(advice-add 'claude-code--eat-synchronize-scroll :override
+            #'claude-code-extras--eat-synchronize-scroll)
+
+(defun claude-code-extras--eat-synchronize-scroll (windows)
+  "Keep the terminal cursor at the bottom of WINDOWS.
+Like `claude-code--eat-synchronize-scroll' but uses (recenter -1)
+instead of (recenter) when the cursor is not visible, preventing
+the view from jumping to the middle of the buffer."
+  (dolist (window windows)
+    (if (eq window 'buffer)
+        (goto-char (eat-term-display-cursor eat-terminal))
+      (when (not buffer-read-only)
+        (let ((cursor-pos (eat-term-display-cursor eat-terminal)))
+          (set-window-point window cursor-pos)
+          (cond
+           ((>= cursor-pos (- (point-max) 2))
+            (with-selected-window window
+              (goto-char cursor-pos)
+              (recenter -1)))
+           ((not (pos-visible-in-window-p cursor-pos window))
+            (with-selected-window window
+              (goto-char cursor-pos)
+              (recenter -1)))))))))
+
 (setq claude-code-notification-function #'claude-code-extras-notify)
 (add-hook 'claude-code-event-hook #'claude-code-extras--handle-stop)
 (add-hook 'kill-buffer-query-functions #'claude-code-extras-protect-buffer)

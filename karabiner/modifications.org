@@ -823,6 +823,8 @@ Simlayers are the most distinctive feature of this setup. A simlayer activates w
 
 I have 15 simlayers, each triggered by a different home-row or common key (see [[*Simlayers][simlayer definitions]]).
 
+[[/images/keyboard/base.svg]]
+
 *** b-mode
 :PROPERTIES:
 :ID:       8C32B75E-1455-444F-B5F6-83DC8263D558
@@ -837,6 +839,8 @@ CLOCK: [2023-08-26 Sat 10:53]--[2023-08-26 Sat 12:31] =>  1:38
 - The right-hand bottom row keys control volume.
 - ~h~  and ~n~ control dictation and narration, respectively.
   - The keyboard shortcuts need to be set under Settings > Keyboard > Dictation > Shortcut (for dictation) and Settings > Accessibility > Spoken content > Speak selection (for narration).
+
+[[/images/keyboard/b-mode.svg]]
 
 #+begin_src clojure
 {:des "b-mode (media controls, window sizing)"
@@ -879,6 +883,8 @@ end using terms from
 
 Hold =F= to type characters from various European languages and typographic symbols (eth, thorn, sharp s, guillemets, interrobang, etc.).
 
+[[/images/keyboard/f-mode.svg]]
+
 #+begin_src clojure
 {:des "f-mode (special chars)"
  :rules [:f-mode
@@ -910,6 +916,8 @@ CLOCK: [2021-12-01 Wed 17:12]--[2021-12-01 Wed 17:27] =>  0:15
 :END:
 
 Hold =J= for deletion commands. Outside Emacs, the keys map to standard macOS editing shortcuts (e.g. =s= for backspace, =d= for delete forward, =q= for delete word backward, =w= for delete to line start, =e= for delete to line end). In Emacs, each key triggers a dedicated deletion function via the =C-H-M-= modifier prefix, covering characters, words, sentences, sexps, and more. Additional variants with the =s-= modifier provide "delete and copy" behavior.
+
+[[/images/keyboard/j-mode.svg]]
 
 #+begin_src clojure
 {:des "j-mode (deletion)"
@@ -973,6 +981,8 @@ Hold =J= for deletion commands. Outside Emacs, the keys map to standard macOS ed
 
 Hold =K= in Chrome to trigger [[https://www.keyboardmaestro.com/][Keyboard Maestro]] macros for the currently active website. Each letter maps to a different action, customized per site.
 
+[[/images/keyboard/k-mode.svg]]
+
 #+begin_src clojure
 {:des "k-mode (website-specific)"
  :rules [:k-mode
@@ -1019,6 +1029,8 @@ Hold =K= in Chrome to trigger [[https://www.keyboardmaestro.com/][Keyboard Maest
 
 Hold =M= for mathematical operators: === (=e=), =+= (=p=), =≠= (=q=), =÷= (=d=), =±= (=o=), =×= (=x=), =≤= (=,=), =≥= (=.=).
 
+[[/images/keyboard/m-mode.svg]]
+
 #+begin_src clojure
 {:des "m-mode (math symbols)"
  :rules [:m-mode
@@ -1047,6 +1059,8 @@ E.g. "me" sometimes inserts =
 :END:
 
 Hold =P= to add a diacritical mark to the next character you type. This uses macOS's "ABC - Extended" input source. For example, typing =P= + =e= then =e= produces é; typing =P= + =u= then =o= produces ö.
+
+[[/images/keyboard/p-mode.svg]]
 
 #+begin_src clojure
 {:des "p-mode (diacritics)"
@@ -1083,6 +1097,8 @@ CLOCK: [2023-04-30 Sun 11:59]--[2023-04-30 Sun 12:07] =>  0:08
 :END:
 
 Hold =Q= + press a letter to open an application. 20+ applications are mapped. The letter choices are mnemonic where possible (e.g. =e= for Emacs, =f= for Firefox, =t= for Terminal).
+
+[[/images/keyboard/q-mode.svg]]
 
 #+begin_src clojure
 {:des "q-mode (apps)"
@@ -1126,6 +1142,8 @@ Hold =V= to turn the right hand into a numpad. This is one of the most-used siml
         j=4  k=5  l=6
         m=1  ,=2  .=3  p=0  ;=.
 #+end_example
+
+[[/images/keyboard/v-mode.svg]]
 
 #+begin_src clojure
 {:des "v-mode (numbers)"
@@ -1180,6 +1198,8 @@ CLOCK: [2021-03-01 Mon 11:46]--[2021-03-01 Mon 12:05] =>  0:19
 
 Hold =X= + any letter to trigger [[https://github.com/abo-abo/avy][Avy]] jump commands in Emacs (this simlayer is Emacs-only). Each key maps to a unique Avy command via the =C-H-s-= modifier prefix, providing instant, keyboard-driven navigation to any visible position in the buffer.
 
+[[/images/keyboard/x-mode.svg]]
+
 #+begin_src clojure
 {:des "x-mode (avy)"
  :rules [:x-mode
@@ -1224,6 +1244,8 @@ Hold =X= + any letter to trigger [[https://github.com/abo-abo/avy][Avy]] jump co
 :END:
 
 Hold =Y= to move the mouse cursor with the keyboard (=a=/=f= for left/right, =s=/=d= for up/down, =q=/=r= and =w=/=e= for larger jumps) or take screenshots (=z= for full screen, =c= for selected area, =v= to copy selected area to clipboard). =Enter= and =Space= act as left and right click.
+
+[[/images/keyboard/y-mode.svg]]
 
 #+begin_src clojure
 {:des "y-mode (mouse, screenshots)"
@@ -1275,6 +1297,8 @@ Hold =Z= for cursor movement. Outside Emacs, this provides arrow keys (=j=/=k=/=
 [2021-03-23 Tue 09:18] I've added ~##~ to ~u~ and ~p~. This allows for the use of shift. Not sure if this addition will have any unexpected side effects, so testing it on these two words only. If everything looks fine in a few days, you can extend this modification to all other relevant letters.
 
 [2021-03-25 Thu 08:30] Next task is to create corresponding versions of many of the motion key mappings that move the screen rather than the cursor.
+
+[[/images/keyboard/z-mode.svg]]
 
 #+begin_src clojure
 {:des "z-mode (navigation)"
@@ -1340,6 +1364,8 @@ Hold =Z= for cursor movement. Outside Emacs, this provides arrow keys (=j=/=k=/=
 
 Hold =,= + a letter to trigger transposition commands in Emacs (transpose characters, words, lines, sentences, paragraphs, sexps, etc.) via the =A-H-M-= modifier prefix. This simlayer is Emacs-only.
 
+[[/images/keyboard/comma-mode.svg]]
+
 #+begin_src clojure
 {:des "comma-mode (transposition)"
  :rules [:comma-mode
@@ -1386,6 +1412,8 @@ CLOCK: [2021-06-22 Tue 11:28]--[2021-06-22 Tue 11:41] =>  0:13
 :END:
 
 Hold =.= + a letter to trigger text manipulation commands (sorting, aligning, casing, commenting, etc.) via the =A-C-H-= modifier prefix.
+
+[[/images/keyboard/period-mode.svg]]
 
 #+begin_src clojure
 {:des "period-mode (manipulation)"
@@ -1435,8 +1463,8 @@ CLOCK: [2022-04-12 Tue 13:41]--[2022-04-12 Tue 13:43] =>  0:02
 
 Hold =;= for symbols that would normally require Shift + number row (e.g. =!@#$%^&*=), as well as brackets, braces, quotes, backtick, tilde, en-dash, and em-dash. This eliminates the need for a number row to access these characters.
 
-- Insert image of key layout
-- Explain "logic" behind layout (e.g. single quotes, double quotes, and dashes as triplets in successive lines)
+
+[[/images/keyboard/semicolon-mode.svg]]
 
 #+begin_src clojure
 {:des "semicolon (symbols)"
@@ -1481,6 +1509,8 @@ CLOCK: [2021-06-03 Thu 20:44]--[2021-06-03 Thu 21:06] =>  0:22
 :END:
 
 Hold =/= in Emacs to access Org-mode commands via the =C-H-M-s-= modifier prefix. Outside Emacs, the same keys trigger [[https://www.keyboardmaestro.com/][Keyboard Maestro]] macros specific to the active application.
+
+[[/images/keyboard/slash-mode.svg]]
 
 #+begin_src clojure
 {:des "slash simlyaer → org-mode (Emacs) | app-specific macros (outside Emacs)"

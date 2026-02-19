@@ -1,0 +1,14 @@
+layout:
+  qmk_keyboard: corne_rotated
+  layout_name: LAYOUT_split_3x5_3
+layers:
+  j-mode:
+    - ["C-H-M-Q", "C-H-M-W", "C-H-M-E", "C-H-M-R", "C-H-M-T", null, null, null, null, null]
+    - ["C-H-M-A", "C-H-M-S", "C-H-M-D", "C-H-M-F", "C-H-M-G", null, {type: held}, null, null, null]
+    - ["C-H-M-Z", "C-H-M-X", "C-H-M-C", "C-H-M-V", "C-H-M-B", null, null, null, null, null]
+    - null
+    - null
+    - null
+    - null
+    - null
+    - null

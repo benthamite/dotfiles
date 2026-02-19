@@ -1,0 +1,14 @@
+layout:
+  qmk_keyboard: corne_rotated
+  layout_name: LAYOUT_split_3x5_3
+layers:
+  p-mode:
+    - [null, "Underdot", "Acute", "Grave", null, "Circ", "Umlaut", "Horn", null, {type: held}]
+    - ["Macron", null, null, null, "Comma", "Bar", "Dbl acute", "Ring", "Stroke", null]
+    - ["Hook", "Overdot", "Cedilla", "Caron", "Breve", "Tilde", "Ogonek", null, null, null]
+    - null
+    - null
+    - null
+    - null
+    - null
+    - null

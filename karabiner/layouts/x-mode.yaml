@@ -2,7 +2,7 @@ layout:
   qmk_keyboard: corne_rotated
   layout_name: LAYOUT_split_3x5_3
 layers:
-  x-mode:
+  x-mode (Emacs only):
     - ["C-H-s-Q", "C-H-s-W", "C-H-s-E", "C-H-s-R", "C-H-s-T", "C-H-s-Y", "C-H-s-U", "C-H-s-I", "C-H-s-O", "C-H-s-P"]
     - ["C-H-s-A", "C-H-s-S", "C-H-s-D", "C-H-s-F", "C-H-s-G", "C-H-s-H", "C-H-s-J", "C-H-s-K", "C-H-s-L", "C-H-s-;"]
     - ["C-H-s-Z", {type: held}, "C-H-s-C", "C-H-s-V", "C-H-s-B", "C-H-s-N", "C-H-s-M", "C-H-s-,", "C-H-s-.", "C-H-s-/"]

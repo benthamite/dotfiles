@@ -193,14 +193,14 @@ Uses strikethrough to indicate the cost is not actually charged."
                  'face '(bold doom-modeline-buffer-major-mode)
                  'help-echo "Claude Code session")
      (doom-modeline-extras--format-model model)
-     (when doom-modeline-extras-claude-code-tokens
+     (when (bound-and-true-p doom-modeline-extras-claude-code-tokens)
        (doom-modeline-extras--format-tokens tokens))
      (doom-modeline-extras--format-cost cost)
      (doom-modeline-extras--format-context-percent pct)
-     (when doom-modeline-extras-claude-code-lines-changed
+     (when (bound-and-true-p doom-modeline-extras-claude-code-lines-changed)
        (doom-modeline-extras--format-lines-changed added removed))
      (doom-modeline-extras--format-duration duration)
-     (when doom-modeline-extras-claude-code-cache-efficiency
+     (when (bound-and-true-p doom-modeline-extras-claude-code-cache-efficiency)
        (doom-modeline-extras--format-cache-efficiency cache-read cache-total))
      " | " (doom-modeline-extras--format-alert-indicator)
      (doom-modeline-spc))))

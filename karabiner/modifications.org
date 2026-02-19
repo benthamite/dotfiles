@@ -16,12 +16,12 @@ CLOCK: [2022-07-01 Fri 11:06]--[2022-07-01 Fri 11:24] =>  0:18
 CLOCK: [2021-02-28 Sun 19:56]--[2021-02-28 Sun 20:00] =>  0:04
 :END:
 
-This is a [[https://en.wikipedia.org/wiki/Literate_programming][literate]] configuration for my keyboard setup: a pair of split mechanical keyboards combined with an extensive software remapping layer on macOS. The system gives me access to symbols, diacritics, navigation, deletion commands, app launching, media controls, and more---all without leaving the home row.
+This is a [[https://en.wikipedia.org/wiki/Literate_programming][literate]] configuration for my keyboard setup: a pair of split mechanical keyboards combined with an extensive software remapping layer on macOS. The system gives me access to symbols, diacritics, navigation, deletion commands, app launching, media controls, and more—all without leaving the home row.
 
 The configuration has two layers:
 
 1. *Keyboard firmware* (QMK): maps the thumb keys to specific modifier keycodes (see [[*Firmware configuration][firmware configuration]]). Everything else on the keyboard stays as standard QWERTY.
-2. *Karabiner + Goku*: handles all the complex behavior---dual-function keys (tap vs. hold), simlayers, app-specific rules, Unicode character input, and deep Emacs integration.
+2. *Karabiner + Goku*: handles all the complex behavior—dual-function keys (tap vs. hold), simlayers, app-specific rules, Unicode character input, and deep Emacs integration.
 
 This separation keeps the firmware simple and portable: the same Karabiner configuration works with both of my keyboards, and could work with any keyboard that sends the right modifier keycodes from its thumb keys.
 
@@ -32,7 +32,7 @@ This separation keeps the firmware simple and portable: the same Karabiner confi
 
 I alternate between two split keyboards:
 
-- *[[https://github.com/foostan/crkbd][Corne]]* (crkbd): a 3x5+3 split keyboard---three rows of five keys per side, plus three thumb keys per side. 36 keys total.
+- *[[https://github.com/foostan/crkbd][Corne]]* (crkbd): a 3x5+3 split keyboard—three rows of five keys per side, plus three thumb keys per side. 36 keys total.
 - *[[https://www.zsa.io/moonlander][ZSA Moonlander]]*: a larger split keyboard with a full alpha block, number row, and a thumb cluster. I use only the alpha keys and thumb cluster; the rest is inert.
 
 Both run [[https://qmk.fm/][QMK]] firmware. The Corne uses the =corne_rotated= variant with the =LAYOUT_split_3x5_3= matrix.
@@ -540,15 +540,14 @@ Every thumb key has two roles: one when tapped, another when held. These roles c
 :ID:       E4CDE386-93AA-4AC9-B6BE-965A9339CDFC
 :END:
 
-| Thumb key       | Tap                           | Hold | Emacs modifier  |
-|-----------------+-------------------------------+------+-----------------|
-| =left_control=  | =C-g= (quit)                  | =M-= | Meta            |
-| =left_option=   | =RET= (toggle windows)        | =S-= | Shift           |
-| =left_command=  | =C-H-0= Switch to last window  | =H-= | Hyper           |
-| =spacebar=      | =⌘Tab= (switch apps)         | =C-= | Control         |
-| =right_command= | =SPC=                         | =A-= | Alt (in combos) |
-| =right_option=  | =TAB=                         | =s-= | Super           |
-#+TBLFM: $2=C-H-0= Switch to last window
+| Thumb key       | Tap                             | Hold | Emacs modifier |
+|-----------------+---------------------------------+------+----------------|
+| =left_control=  | =C-g= (quit)                    | =M-= | Meta           |
+| =left_option=   | =RET= (toggle windows)          | =S-= | Shift          |
+| =left_command=  | Switch to last window (=C-H-0=) | =H-= | Hyper          |
+| =spacebar=      | =⌘Tab= (switch apps)            | =C-= | Control        |
+| =right_command= | Spacebar                        | =A-= | Alt (in combos)|
+| =right_option=  | =Tab=                           | =s-= | Super          |
 
 The =right_command= key is special: on its own it always sends spacebar (both tapped and held), but when held simultaneously with another thumb key, it activates the =A-= (Alt) modifier in Emacs. The five combinations are:
 
@@ -574,7 +573,7 @@ The simlayers extend this further. Each simlayer key, when held, maps to a speci
 | =.=          | =A-C-H-=       | Text manipulation     |
 | =/=          | =C-H-M-s-=     | Org-mode commands     |
 
-The remaining simlayers (=k=, =m=, =p=, =q=, =v=, =y=, =;=) don't use Emacs modifier prefixes---they insert characters directly or control the mouse.
+The remaining simlayers (=k=, =m=, =p=, =q=, =v=, =y=, =;=) don't use Emacs modifier prefixes—they insert characters directly or control the mouse.
 
 **** Outside Emacs
 :PROPERTIES:
@@ -597,6 +596,8 @@ The =spacebar= key also has a combination effect outside Emacs: pressing =left_c
 :ID:       95768E0F-B63F-46E6-BA1B-89ADB31D8776
 :END:
 
+Disabled. The caps lock key has no function.
+
 #+begin_src clojure
 {:des "Disable caps_lock"
  :rules [
@@ -612,17 +613,11 @@ The =spacebar= key also has a combination effect outside Emacs: pressing =left_c
 Tapped: =C-g= (quit) in Emacs, =Escape= outside. Held: =M-= (Meta) in Emacs, =Option= outside. Two special rules intercept =⌘h= and =⌘⌥h= (which macOS normally uses to hide windows) and remap them to Emacs-compatible modifier chords.
 
 #+begin_src clojure
-{:des "Emacs: left_control → C-g (alone) M- (held)"
+{:des "left_control → C-g/Escape (alone) | M-/⌥ (held)"
  :rules [
          [:!Ch {:modi :A-H-M-s- :key :h} :emacs]
          [:!CQh {:modi :A-C-H-s- :key :h} :emacs]
          [:##left_control :M- [:!steam :emacs] {:alone {:modi :C- :key :g}}]
-         ]}
-#+end_src
-
-#+begin_src clojure
-{:des "Outside Emacs: left_control → escape (alone) | ⌥ (held)"
- :rules [
          [:##left_control :⌥ [:!steam :!emacs] {:alone :escape}]
          ]}
 #+end_src
@@ -635,22 +630,10 @@ Tapped: =C-g= (quit) in Emacs, =Escape= outside. Held: =M-= (Meta) in Emacs, =Op
 Tapped: =return= (which I bind to toggling between recent windows or tabs). Held: =S-= (Shift) in Emacs, =Shift= outside. Since this key now serves double duty as both Shift and Return, the combination =Shift+Return= is no longer directly available. A workaround binds =left_option= + =right_command= (i.e. Shift + spacebar) to =Shift+Enter=.
 
 #+begin_src clojure
-{:des "Emacs: left_option → toggle tabs/windows (alone) | S- (held)"
+{:des "left_option → RET (alone) | S-/⇧ (held)"
  :rules [
          [:##left_option :S- :emacs {:alone :return_or_enter}]
-         ]}
-#+end_src
-
-#+begin_src clojure
-{:des "Outside Emacs: left_option → toggle tabs/windows (alone) | ⇧ (held)"
- :rules [
          [:##left_option :⇧ :!emacs {:alone :return_or_enter}]
-         ]}
-#+end_src
-
-#+begin_src clojure
-{:des "left_option + right_command → ⇧ + enter"
- :rules [
          [:!Sright_command {:modi :⇧ :key :return_or_enter}]
          ]}
 #+end_src
@@ -660,18 +643,12 @@ Tapped: =return= (which I bind to toggling between recent windows or tabs). Held
 :ID:       3E65030B-931E-42C3-AFD3-06A6D55ECE6F
 :END:
 
-When tapped, the ~left_command~ key toggles between the two most recent windows (in Emacs) or tabs (in a browser). In Emacs, I do this by binding ~C-H-0~ to my custom command ~window-extras-switch-to-last-window~. In Chrome, I do this by installing the extensions [[https://chrome.google.com/webstore/detail/clut-cycle-last-used-tabs/cobieddmkhhnbeldhncnfcgcaccmehgn][CLUT]] (Chrome) and [[https://addons.mozilla.org/en-US/firefox/addon/last-tab/?utm_source=addons.mozilla.org&utm_medium=referral&utm_content=search][Last Tab]] (Firefox) and configuring ~⌘⌃0~ as the keyboard shortcut for each.
+When tapped, toggles between the two most recent windows (in Emacs) or tabs (in a browser). In Emacs, =C-H-0= is bound to ~window-extras-switch-to-last-window~. In Chrome and Firefox, I use the [[https://chrome.google.com/webstore/detail/clut-cycle-last-used-tabs/cobieddmkhhnbeldhncnfcgcaccmehgn][CLUT]] and [[https://addons.mozilla.org/en-US/firefox/addon/last-tab/?utm_source=addons.mozilla.org&utm_medium=referral&utm_content=search][Last Tab]] extensions with =⌘⌃0= as the shortcut.
 
 #+begin_src clojure
-{:des "Emacs: left_command → other window (alone) | H- (held)"
+{:des "left_command → other window/tab (alone) | H-/⌘ (held)"
  :rules [
          [:##left_command :H- :emacs {:alone {:modi :C-H- :key :0}}]
-         ]}
-#+end_src
-
-#+begin_src clojure
-{:des "Outside Emacs: left_command → other tab (alone) | ⌘ (held)"
- :rules [
          [:##left_command :⌘ :!emacs {:alone {:modi :⌘⌃ :key :0}}]
          ]}
 #+end_src
@@ -684,19 +661,13 @@ When tapped, the ~left_command~ key toggles between the two most recent windows 
 CLOCK: [2023-08-04 Fri 23:09]--[2023-08-04 Fri 23:25] =>  0:16
 :END:
 
-The spacebar triggers =Control= when held and toggles between apps when tapped. In addition, if the spacebar is tapped while the command key is held, it will toggle instead between buffers (in Emacs) or windows (outside Emacs).
+Tapped: =⌘Tab= (switch apps). Held: =C-= (Control) in Emacs, =⌃= outside. When tapped while the command key is held, toggles between buffers (in Emacs) or moves focus to the next window (outside Emacs).
 
 #+begin_src clojure
-{:des "Emacs: spacebar → C- (held) | ⌘tab (alone)"
+{:des "spacebar → ⌘Tab (alone) | C-/⌃ (held)"
  :rules [
          [:!Cspacebar {:modi :A-H-M-s- :key :spacebar} :emacs]
          [:##spacebar :C- :emacs {:alone {:modi :⌘ :key :tab}}]
-         ]}
-#+end_src
-
-#+begin_src clojure
-{:des "Outside Emacs: spacebar → ⌃ (held) | ⌘tab (alone)"
- :rules [
          [:!Cspacebar {:modi :⌘ :key :grave_accent_and_tilde} :!emacs]
          [:##spacebar :⌃ :!emacs {:alone {:modi :⌘ :key :tab}}]
          ]}
@@ -712,51 +683,20 @@ The spacebar triggers =Control= when held and toggles between apps when tapped. 
 On its own, =right_command= always sends spacebar---both tapped and held, both in and outside Emacs. Its special role is as a modifier /combiner/: when held simultaneously with another thumb key in Emacs, it activates the =A-= (Alt) modifier, creating two-modifier chords. This is what gives me access to the sixth Emacs modifier without a dedicated physical key for it.
 
 #+begin_src clojure
-{:des "Emacs: right_command + left_command → A-H- (held) "
-:rules [
-        [[:right_command :left_command] :A-H- :emacs {:alone {:modi :A- :key :spacebar}}]
-        ]}
-#+end_src
-
-#+begin_src clojure
-{:des "Emacs: right_command + left_shift → A-"
-:rules [
-        [[:right_command :left_option] :A- :emacs]
-        ]}
-#+end_src
-
-#+begin_src clojure
-{:des "Emacs: right_command + spacebar → A-C-"
-:rules [
-        [[:right_command :spacebar] :A-C- :emacs]
-        ]}
-#+end_src
-
-#+begin_src clojure
-{:des "Emacs: right_command + left_control → A-M-"
-:rules [
-        [[:right_command :left_control] :A-M- :emacs]
-        ]}
-#+end_src
-
-#+begin_src clojure
-{:des "Emacs: right_command + right_option → A-s-"
-:rules [
-        [[:right_command :right_option] :A-s- :emacs]
-        ]}
-#+end_src
-
-#+begin_src clojure
-{:des "Emacs: right_command → spacebar"
+{:des "right_command modifier combinations"
  :rules [
-         [:##right_command :spacebar :emacs]
+         [[:right_command :left_command] :A-H- :emacs {:alone {:modi :A- :key :spacebar}}]
+         [[:right_command :left_option] :A- :emacs]
+         [[:right_command :spacebar] :A-C- :emacs]
+         [[:right_command :left_control] :A-M- :emacs]
+         [[:right_command :right_option] :A-s- :emacs]
          ]}
 #+end_src
 
 #+begin_src clojure
-{:des "Outside Emacs: right_command → spacebar"
+{:des "right_command → spacebar"
  :rules [
-         [:##right_command :spacebar :!emacs]
+         [:##right_command :spacebar]
          ]}
 #+end_src
 
@@ -768,15 +708,9 @@ On its own, =right_command= always sends spacebar---both tapped and held, both i
 Tapped: =Tab=. Held: =s-= (Super) in Emacs, =Option= outside.
 
 #+begin_src clojure
-{:des "Emacs: right_option → other window (alone) | s- (held)"
+{:des "right_option → Tab (alone) | s-/⌥ (held)"
  :rules [
          [:##right_option :s- :emacs {:alone :tab}]
-         ]}
-#+end_src
-
-#+begin_src clojure
-{:des "Outside Emacs: right_option → other window (alone) | ⌥ (held)"
- :rules [
          [:##right_option :⌥ :!emacs {:alone :tab}]
          ]}
 #+end_src
@@ -806,7 +740,7 @@ Note that for these “extra” mouse buttons to be detected by Karabiner, you m
 :ID:       348C5A9E-09EC-4E0C-B03F-4C347B016E36
 :END:
 
-Simlayers are the most distinctive feature of this setup. A simlayer activates when you hold down a specific key and press another key simultaneously. Unlike traditional layers that require a dedicated layer-switch key, simlayers let any regular typing key double as a layer trigger---the key still types its letter on a normal tap, but holding it down and pressing a second key activates the layer.
+Simlayers are the most distinctive feature of this setup. A simlayer activates when you hold down a specific key and press another key simultaneously. Unlike traditional layers that require a dedicated layer-switch key, simlayers let any regular typing key double as a layer trigger—the key still types its letter on a normal tap, but holding it down and pressing a second key activates the layer.
 
 I have 14 simlayers, each triggered by a different home-row or common key. The letter keys used as triggers are chosen from the least frequent letters in English, minimizing accidental activations during normal typing:
 
@@ -1064,7 +998,7 @@ Hold =q= to open an application. 20+ applications are mapped. The letter choices
 :ID:       A9B31157-4AC5-4F7A-9181-0AE8B8539B5F
 :END:
 
-Hold =v= to turn the right hand into a numpad. This is one of the most-used simlayers---on a 36-key keyboard with no number row, this is how I type numbers.
+Hold =v= to turn the right hand into a numpad. This is one of the most-used simlayers—on a 36-key keyboard with no number row, this is how I type numbers.
 
 [[/images/keyboard/v-mode.svg]]
 
@@ -1214,7 +1148,7 @@ CLOCK: [2021-03-09 Tue 17:25]--[2021-03-09 Tue 17:47] =>  0:22
 CLOCK: [2021-03-01 Mon 11:46]--[2021-03-01 Mon 12:05] =>  0:19
 :END:
 
-Hold =z= for cursor movement. The four arrow keys sit on the home row: =j= (left), =k= (up), =l= (down), =;= (right). This is inspired by Vim's =h-j-k-l=, with two modifications. First, the cluster is shifted one key to the right so that it aligns with the natural resting position of the four fingers. Second, up and down are swapped: =k= is up and =l= is down, placing up next to left and down next to right. This grouping works better for movement commands that can be conceptualized as either horizontal or vertical---for example, "sentence backward" is both "up" and "left," while "sentence forward" is both "down" and "right."
+Hold =z= for cursor movement. The four arrow keys sit on the home row: =j= (left), =k= (up), =l= (down), =;= (right). This is inspired by Vim's =h-j-k-l=, with two modifications. First, the cluster is shifted one key to the right so that it aligns with the natural resting position of the four fingers. Second, up and down are swapped: =k= is up and =l= is down, placing up next to left and down next to right. This grouping works better for movement commands that can be conceptualized as either horizontal or vertical—for example, "sentence backward" is both "up" and "left," while "sentence forward" is both "down" and "right."
 
 Beyond the arrow keys, =y= and =h= provide page up/down and =m= and =/= provide home/end. In Emacs, the keys trigger custom navigation commands via the =A-C-s-= modifier prefix, enabling more granular movement (by paragraph, sentence, defun, etc.). The =##= prefix on some keys allows shift to be held for selection.
 

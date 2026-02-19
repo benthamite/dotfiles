@@ -63,6 +63,9 @@ SIMLAYER_TRIGGERS = {
 # Simlayers that only activate in Emacs (have :condi :emacs)
 EMACS_ONLY = {"x-mode", "comma-mode"}
 
+# Simlayers with different behavior in Emacs vs outside Emacs
+DUAL_BEHAVIOR = {"b-mode", "j-mode", "z-mode", "slash-mode"}
+
 # :tos character aliases -> display character
 TOS_CHARS = {
     # special chars (non-ASCII tos names)
@@ -361,8 +364,12 @@ def make_label(action, comment=None):
     return "?"
 
 
-def build_layer_keys(simlayer_name, rules):
-    """Build a 36-element key list for keymap-drawer YAML."""
+def build_layer_keys(simlayer_name, rules, context=None):
+    """Build a 36-element key list for keymap-drawer YAML.
+
+    context: None (default, prefer Emacs rules), "emacs" (only Emacs +
+    unconditional), or "macos" (only !emacs + unconditional).
+    """
     key_labels = {}
     hash_labels = {}  # ## prefixed rules (lower priority)
     for rule_str in rules:
@@ -371,8 +378,14 @@ def build_layer_keys(simlayer_name, rules):
             continue
         trigger_key, action, condition, comment, is_hash = parsed
 
-        # Skip non-Emacs fallbacks if we already have a primary rule
-        if condition == "!emacs" and trigger_key in key_labels:
+        # Context filtering for dual-behavior modes
+        if context == "emacs" and condition == "!emacs":
+            continue
+        if context == "macos" and condition == "emacs":
+            continue
+
+        # Default behavior: skip non-Emacs fallbacks if we already have a rule
+        if context is None and condition == "!emacs" and trigger_key in key_labels:
             continue
         # Skip app-specific rules (Chrome, etc.)
         if condition in ("chrome", "firefox", "safari"):
@@ -518,19 +531,33 @@ def main():
 
     # Generate simlayer SVGs
     for simlayer_name in sorted(blocks.keys()):
-        print(f"\nGenerating {simlayer_name}...")
         rules = blocks[simlayer_name]
-        keys = build_layer_keys(simlayer_name, rules)
-        display_name = (
-            f"{simlayer_name} (Emacs only)"
-            if simlayer_name in EMACS_ONLY
-            else simlayer_name
-        )
-        yaml_content = build_yaml_content(display_name, keys)
-        yaml_path = write_yaml(simlayer_name, yaml_content, LAYOUTS_DIR)
-        svg_path = os.path.join(LAYOUTS_DIR, f"{simlayer_name}.svg")
-        if run_keymap_draw(yaml_path, svg_path):
-            print(f"  -> {svg_path}")
+
+        if simlayer_name in DUAL_BEHAVIOR:
+            # Generate two SVGs: Emacs and macOS
+            for ctx, suffix in (("emacs", "Emacs"), ("macos", "macOS")):
+                file_stem = f"{simlayer_name}-{ctx}"
+                print(f"\nGenerating {file_stem}...")
+                keys = build_layer_keys(simlayer_name, rules, context=ctx)
+                display_name = f"{simlayer_name} ({suffix})"
+                yaml_content = build_yaml_content(display_name, keys)
+                yaml_path = write_yaml(file_stem, yaml_content, LAYOUTS_DIR)
+                svg_path = os.path.join(LAYOUTS_DIR, f"{file_stem}.svg")
+                if run_keymap_draw(yaml_path, svg_path):
+                    print(f"  -> {svg_path}")
+        else:
+            print(f"\nGenerating {simlayer_name}...")
+            keys = build_layer_keys(simlayer_name, rules)
+            display_name = (
+                f"{simlayer_name} (Emacs only)"
+                if simlayer_name in EMACS_ONLY
+                else simlayer_name
+            )
+            yaml_content = build_yaml_content(display_name, keys)
+            yaml_path = write_yaml(simlayer_name, yaml_content, LAYOUTS_DIR)
+            svg_path = os.path.join(LAYOUTS_DIR, f"{simlayer_name}.svg")
+            if run_keymap_draw(yaml_path, svg_path):
+                print(f"  -> {svg_path}")
 
     # Copy SVGs to Hugo static dir
     print(f"\nCopying SVGs to {HUGO_IMG_DIR}...")

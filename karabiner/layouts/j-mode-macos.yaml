@@ -1,0 +1,14 @@
+layout:
+  qmk_keyboard: corne_rotated
+  layout_name: LAYOUT_split_3x5_3
+layers:
+  j-mode (macOS):
+    - ["⌥Bksp", "⌘Bksp", "⌃K", "⌥Del", "Home", null, null, null, null, null]
+    - [null, "Bksp", "Del", null, "End", null, {type: held}, null, null, null]
+    - ["⌘Bksp", "⌘⌥Left", "⌘⌥Right", "⌘Del", null, null, null, null, null, null]
+    - null
+    - null
+    - null
+    - null
+    - null
+    - null

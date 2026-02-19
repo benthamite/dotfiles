@@ -1,0 +1,14 @@
+layout:
+  qmk_keyboard: corne_rotated
+  layout_name: LAYOUT_split_3x5_3
+layers:
+  slash-mode (macOS):
+    - ["KM", "KM", "KM", "KM", "KM", "KM", "KM", "KM", "KM", "KM"]
+    - ["KM", "KM", "KM", "KM", "KM", "KM", "KM", "KM", "KM", "KM"]
+    - ["KM", "KM", "KM", "KM", "KM", "KM", "KM", "KM", "KM", {type: held}]
+    - null
+    - null
+    - null
+    - "KM"
+    - null
+    - null

@@ -13029,7 +13029,7 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
   ;; re-consolidated, already-consolidated entries (with list URLs) got
   ;; their URLs wrapped in another layer of lists, causing
   ;; `start-process' to receive lists where it expects strings.
-  ;; Upstream: https://github.com/skeeto/elfeed/issues/530
+  ;; Upstream: https://github.com/skeeto/elfeed/pull/555
   (defun elfeed-curl--queue-consolidate (queue-in)
     "Group compatible requests together and return a new queue.
 Compatible means the requests have the same protocol, domain,

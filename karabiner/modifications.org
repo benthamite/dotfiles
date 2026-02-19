@@ -578,6 +578,22 @@ The =right_command= key is special: on its own it always sends spacebar (both ta
 
 With six independent Emacs modifiers (=A-=, =C-=, =H-=, =M-=, =S-=, =s-=), I have a vast keybinding space. Multi-modifier combinations like =A-C-H-M-s-= (all five non-Shift modifiers at once) are possible and used in practice, giving me access to thousands of unique Emacs bindings from a 36-key keyboard.
 
+The simlayers extend this further. Each simlayer key, when held, maps to a specific multi-modifier combination in Emacs. For example, holding =,= activates the =A-H-M-= prefix, so =,= + =s= sends =A-H-M-s= (bound to =simple-extras-transpose-chars-backward=). This turns each simlayer into a dedicated command palette:
+
+| Simlayer key | Emacs modifier | Function              |
+|--------------+----------------+-----------------------|
+| =B=          | =C-H-=         | Window sizing         |
+| =J=          | =C-H-M-=       | Deletion              |
+| =X=          | =C-H-s-=       | Avy jump              |
+| =Z=          | =A-C-s-=       | Cursor movement       |
+| =,=          | =A-H-M-=       | Transposition         |
+| =.=          | =A-C-H-=       | Text manipulation     |
+| =/=          | =C-H-M-s-=     | Org-mode commands     |
+
+Some simlayers additionally use =s-= as a variant modifier. For instance, in =J= (deletion), adding =s-= (via =right_option=) triggers "delete and copy" variants: =J= + =s= sends =C-H-M-s= (delete char backward), but =J= + =right_option= + =s= sends =C-H-M-s-s= (delete char backward and copy to kill ring).
+
+The remaining simlayers (=F=, =K=, =M=, =P=, =Q=, =V=, =Y=, =;=) don't use Emacs modifier prefixes---they insert characters directly, trigger Keyboard Maestro macros, or control the mouse.
+
 **** Outside Emacs
 
 | Thumb key       | Tap                               | Hold    |
@@ -608,6 +624,8 @@ The =spacebar= key also has a combination effect outside Emacs: pressing =left_c
 :ID:       8DEEEE4C-4227-44A3-AEFE-0D41412F89C5
 :END:
 
+Tapped: =C-g= (quit) in Emacs, =Escape= outside. Held: =M-= (Meta) in Emacs, =Option= outside. Two special rules intercept =Cmd-h= and =Cmd-Opt-h= (which macOS normally uses to hide windows) and remap them to Emacs-compatible modifier chords.
+
 #+begin_src clojure
 {:des "Emacs: left_control → C-g (alone) M- (held)"
  :rules [
@@ -629,6 +647,8 @@ The =spacebar= key also has a combination effect outside Emacs: pressing =left_c
 :ID:       814FE647-3B6D-4B2E-AF96-1DF871FB9568
 :END:
 
+Tapped: =return= (which I bind to toggling between recent windows or tabs). Held: =S-= (Shift) in Emacs, =Shift= outside. Since this key now serves double duty as both Shift and Return, the combination =Shift+Return= is no longer directly available. A workaround binds =left_option= + =right_command= (i.e. Shift + spacebar) to =Shift+Enter=.
+
 #+begin_src clojure
 {:des "Emacs: left_option → toggle tabs/windows (alone) | S- (held)"
  :rules [
@@ -642,17 +662,6 @@ The =spacebar= key also has a combination effect outside Emacs: pressing =left_c
          [:##left_option :⇧ :!emacs {:alone :return_or_enter}]
          ]}
 #+end_src
-
-Since the same key now triggers  ~shift~ and ~return~, we can no longer trigger ~shift~ + ~return~. So we define a special binding to trigger this key event via ~shift~ + ~spacebar~ (the latter is triggered by ~right_command~, as defined in a section below).
-
-#+begin_src clojure
-{:des "left_option + right_command → ⇧ + enter"
- :rules [
-         [:!Sright_command {:modi :⇧ :key :return_or_enter}]
-         ]}
-#+end_src
-
-Since the same key now triggers  ~shift~ and ~return~, we can no longer trigger ~shift~ + ~return~. So we define a special binding to trigger this key event via ~shift~ + ~spacebar~ (the latter is triggered by ~right_command~, as defined in a section below).
 
 #+begin_src clojure
 {:des "left_option + right_command → ⇧ + enter"
@@ -715,6 +724,8 @@ The spacebar triggers ~control~ when held and toggles between apps when tapped. 
 :ctime:    20231001165003
 :END:
 
+On its own, =right_command= always sends spacebar---both tapped and held, both in and outside Emacs. Its special role is as a modifier /combiner/: when held simultaneously with another thumb key in Emacs, it activates the =A-= (Alt) modifier, creating two-modifier chords. This is what gives me access to the sixth Emacs modifier without a dedicated physical key for it.
+
 #+begin_src clojure
 {:des "Emacs: right_command + left_command → A-H- (held) "
 :rules [
@@ -768,6 +779,8 @@ The spacebar triggers ~control~ when held and toggles between apps when tapped. 
 :PROPERTIES:
 :ID:       E35A6F0B-BD09-4160-BC74-E1B8090C70AD
 :END:
+
+Tapped: =Tab=. Held: =s-= (Super) in Emacs, =Option= outside. In deletion and navigation simlayers, holding =right_option= adds the =s-= modifier to create variant commands (e.g. "delete and copy" instead of "delete").
 
 #+begin_src clojure
 {:des "Emacs: right_option → other window (alone) | s- (held)"

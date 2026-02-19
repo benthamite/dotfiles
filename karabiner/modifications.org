@@ -536,7 +536,7 @@ Every thumb key has two roles: one when tapped, another when held. These roles c
 | =left_control=  | =C-g= (quit)                    | =M-= | Meta           |
 | =left_option=   | =RET= (toggle windows)          | =S-= | Shift          |
 | =left_command=  | Switch to last window (=C-H-0=) | =H-= | Hyper          |
-| =spacebar=      | =Cmd-Tab= (switch apps)         | =C-= | Control        |
+| =spacebar=      | =⌘Tab= (switch apps)            | =C-= | Control        |
 | =right_command= | Spacebar                        | =A-= | Alt (in combos)|
 | =right_option=  | =Tab=                           | =s-= | Super          |
 
@@ -572,14 +572,14 @@ The remaining simlayers (=F=, =K=, =M=, =P=, =Q=, =V=, =Y=, =;=) don't use Emacs
 
 | Thumb key       | Tap                               | Hold    |
 |-----------------+-----------------------------------+---------|
-| =left_control=  | =Escape=                          | =Opt=   |
-| =left_option=   | =Enter= (toggle tabs)             | =Shift= |
-| =left_command=  | Switch to last tab (=Cmd-Ctrl-0=) | =Cmd=   |
-| =spacebar=      | =Cmd-Tab= (switch apps)           | =Ctrl=  |
-| =right_command= | Spacebar                          | ---     |
-| =right_option=  | =Tab=                             | =Opt=   |
+| =left_control=  | =Escape=                    | =⌥=  |
+| =left_option=   | =Enter= (toggle tabs)       | =⇧=  |
+| =left_command=  | Switch to last tab (=⌘⌃0=) | =⌘=  |
+| =spacebar=      | =⌘Tab= (switch apps)        | =⌃=  |
+| =right_command= | Spacebar                    | ---   |
+| =right_option=  | =Tab=                       | =⌥=  |
 
-The =spacebar= key also has a combination effect outside Emacs: pressing =left_command= + =spacebar= triggers =Cmd-`= (move focus to next window).
+The =spacebar= key also has a combination effect outside Emacs: pressing =left_command= + =spacebar= triggers =⌘`= (move focus to next window).
 
 *** caps_lock
 :PROPERTIES:
@@ -598,7 +598,7 @@ The =spacebar= key also has a combination effect outside Emacs: pressing =left_c
 :ID:       8DEEEE4C-4227-44A3-AEFE-0D41412F89C5
 :END:
 
-Tapped: =C-g= (quit) in Emacs, =Escape= outside. Held: =M-= (Meta) in Emacs, =Option= outside. Two special rules intercept =Cmd-h= and =Cmd-Opt-h= (which macOS normally uses to hide windows) and remap them to Emacs-compatible modifier chords.
+Tapped: =C-g= (quit) in Emacs, =Escape= outside. Held: =M-= (Meta) in Emacs, =Option= outside. Two special rules intercept =⌘h= and =⌘⌥h= (which macOS normally uses to hide windows) and remap them to Emacs-compatible modifier chords.
 
 #+begin_src clojure
 {:des "Emacs: left_control → C-g (alone) M- (held)"
@@ -659,7 +659,7 @@ When tapped, the ~left_command~ key toggles between the two most recent windows 
 #+end_src
 
 #+begin_src clojure
-{:des "Outsie Emacs: left_command → other tab (alone) | ⌘ (held)"
+{:des "Outside Emacs: left_command → other tab (alone) | ⌘ (held)"
  :rules [
          [:##left_command :⌘ :!emacs {:alone {:modi :⌘⌃ :key :0}}]
          ]}
@@ -673,7 +673,7 @@ When tapped, the ~left_command~ key toggles between the two most recent windows 
 CLOCK: [2023-08-04 Fri 23:09]--[2023-08-04 Fri 23:25] =>  0:16
 :END:
 
-The spacebar triggers ~control~ when held and toggles between apps when tapped. In addition, if the spacebar is tapped while the command key is held, it will toggle instead between buffers (in Emacs) or windows (outside Emacs).
+The spacebar triggers =Control= when held and toggles between apps when tapped. In addition, if the spacebar is tapped while the command key is held, it will toggle instead between buffers (in Emacs) or windows (outside Emacs).
 
 #+begin_src clojure
 {:des "Emacs: spacebar → C- (held) | ⌘tab (alone)"
@@ -764,7 +764,7 @@ Tapped: =Tab=. Held: =s-= (Super) in Emacs, =Option= outside. In deletion and na
 #+end_src
 
 #+begin_src clojure
-{:des "outside Emacs: right_option → other window (alone) | ⌥ (held)"
+{:des "Outside Emacs: right_option → other window (alone) | ⌥ (held)"
  :rules [
          [:##right_option :⌥ :!emacs {:alone :tab}]
          ]}

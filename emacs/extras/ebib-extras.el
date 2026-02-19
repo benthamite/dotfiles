@@ -196,6 +196,47 @@ Used to identify video URLs, e.g., for subtitle download logic.")
 Includes both lowercase and capitalized versions of types like \"movie\",
 \"video\", etc.")
 
+(defconst ebib-extras-crossref-child-entry-types
+  (let ((lowercase '("incollection" "inbook" "bookinbook"
+		     "inproceedings" "inreference" "suppbook" "suppcollection")))
+    (append lowercase (mapcar (lambda (entry)
+				(concat (upcase (substring entry 0 1))
+					(substring entry 1)))
+			      lowercase)))
+  "List of BibTeX entry types that should use `crossref' to inherit parent fields.
+Includes both lowercase and capitalized versions.")
+
+(defconst ebib-extras-crossref-inherited-fields
+  '("booktitle" "editor" "publisher" "location" "date" "isbn")
+  "List of fields inherited via `crossref' that should not be hardcoded in child entries.")
+
+(defun ebib-extras-check-crossref (&optional key)
+  "Check that KEY uses `crossref' if it is a child entry type.
+If KEY is nil, use the current entry.  Signal a `user-error' if
+the entry is a child type (e.g. `incollection') that hardcodes
+parent-level fields instead of using `crossref'."
+  (let* ((key (or key (ebib--get-key-at-point)))
+	 (type (ebib-extras-get-field "=type=" key)))
+    (when (member type ebib-extras-crossref-child-entry-types)
+      (if (ebib-extras-get-field "crossref" key)
+	  ;; Has crossref: warn about any leftover inherited fields.
+	  (let ((leftover (cl-remove-if-not
+			   (lambda (field)
+			     (ebib-extras-get-field field key))
+			   ebib-extras-crossref-inherited-fields)))
+	    (when leftover
+	      (user-error "Entry `%s' has `crossref' but still contains inherited fields: %s"
+			  key (string-join leftover ", "))))
+	;; No crossref: warn about hardcoded parent fields.
+	(let ((hardcoded (cl-remove-if-not
+			  (lambda (field)
+			    (ebib-extras-get-field field key))
+			  ebib-extras-crossref-inherited-fields)))
+	  (when hardcoded
+	    (user-error "Entry `%s' is of type `%s' and should use `crossref' \
+instead of hardcoding %s"
+			key type (string-join hardcoded ", "))))))))
+
 (defun ebib-extras-copy-current-field-contents ()
   "Copy the contents of the current field at point to the kill ring.
 If the field contains a value from a cross-referenced entry, that resolved value
@@ -491,6 +532,9 @@ This function performs several actions:
 
 3. Attaches relevant files using `ebib-extras-attach-files'.
 
+4. Checks that child entry types (e.g. `incollection') use `crossref'
+instead of hardcoding parent-level fields.
+
 It assumes that fields like `type', `author', `date', and `title' are
 correctly set."
   (interactive)
@@ -500,7 +544,8 @@ correctly set."
       (ebib-generate-autokey))
     (setq entry-key (ebib--get-key-at-point))
     (ebib-extras-get-or-set-language)
-    (ebib-extras-attach-files entry-key)))
+    (ebib-extras-attach-files entry-key)
+    (ebib-extras-check-crossref entry-key)))
 
 (defun ebib-extras-set-abstract (&optional key)
   "Set the abstract for KEY if it's currently empty.

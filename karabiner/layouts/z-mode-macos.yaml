@@ -3,9 +3,9 @@ layout:
   layout_name: LAYOUT_split_3x5_3
 layers:
   z-mode (macOS):
-    - [null, null, null, null, null, "PgUp", "⌥Left", "⌥Up", "⌥Down", "⌥Right"]
-    - [null, null, null, "A-C-s-F", null, "PgDn", "Left", "Up", "Down", "Right"]
-    - [{type: held}, "A-C-s-X", "A-C-s-C", null, null, null, "⌘Left", "⌘Up", "⌘Down", "⌘Right"]
+    - [null, null, null, null, null, "PgUp", "Word ←", "Paragraph ←", "Paragraph →", "Word →"]
+    - [null, null, null, "Next section", null, "PgDn", "Left", "Up", "Down", "Right"]
+    - [{type: held}, null, null, null, null, null, "Line start", "Doc start", "Doc end", "Line end"]
     - null
     - null
     - null

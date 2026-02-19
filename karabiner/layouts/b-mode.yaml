@@ -2,10 +2,10 @@ layout:
   qmk_keyboard: corne_rotated
   layout_name: LAYOUT_split_3x5_3
 layers:
-  b-mode (macOS):
+  b-mode:
     - [null, null, null, null, null, null, "Left half", "Maximize", "Center", "Right half"]
-    - [null, null, null, null, null, "Dictation", "Rew", "Play", null, "FF"]
-    - [null, "Copy picture", null, null, {type: held}, "Narration", "Mute", "Vol+", "Vol-", null]
+    - [null, null, null, null, "Toggle langs", "Dictation", "Rew", "Play", null, "FF"]
+    - [null, "Copy picture", "Connect to", null, {type: held}, "Narration", "Mute", "Vol+", "Vol-", null]
     - null
     - null
     - null

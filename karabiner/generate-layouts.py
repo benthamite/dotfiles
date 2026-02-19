@@ -64,7 +64,7 @@ SIMLAYER_TRIGGERS = {
 EMACS_ONLY = {"x-mode", "comma-mode"}
 
 # Simlayers with different behavior in Emacs vs outside Emacs
-DUAL_BEHAVIOR = {"b-mode", "j-mode", "z-mode", "slash-mode"}
+DUAL_BEHAVIOR = {"j-mode", "z-mode", "slash-mode"}
 
 # :tos character aliases -> display character
 TOS_CHARS = {
@@ -343,6 +343,10 @@ def make_label(action, comment=None):
             return shorten_comment(comment)
         modi = action["modi"]
         key = action["key"]
+        # Suppress raw keybinding for Emacs-style modifier prefixes
+        # (e.g. C-H-M-, A-C-s-) when no comment describes the function
+        if "-" in modi:
+            return None
         key_label = KEY_DISPLAY.get(key, key.upper() if len(key) == 1 else key)
         return f"{modi}{key_label}"
 

@@ -3,12 +3,12 @@ layout:
   layout_name: LAYOUT_split_3x5_3
 layers:
   comma-mode (Emacs only):
-    - ["A-H-M-Q", "A-H-M-W", "A-H-M-E", "A-H-M-R", "A-H-M-T", "A-H-M-Y", "A-H-M-U", "A-H-M-I", "A-H-M-O", "A-H-M-P"]
-    - ["A-H-M-A", "A-H-M-S", "A-H-M-D", "A-H-M-F", "A-H-M-G", "A-H-M-H", "A-H-M-J", null, "A-H-M-L", "A-H-M-;"]
-    - ["A-H-M-Z", "A-H-M-X", "A-H-M-C", "A-H-M-V", "A-H-M-B", "A-H-M-N", null, {type: held}, "A-H-M-.", "A-H-M-/"]
+    - ["Words ←", "Sentences ←", "Sentences", "Words", "Org element", null, null, null, null, null]
+    - ["Sexps ←", "Chars ←", "Chars", "Sexps", null, null, null, null, null, null]
+    - ["Lines ←", "Paragraphs ←", "Paragraphs", "Lines", null, null, null, {type: held}, null, null]
     - null
     - null
     - null
-    - "A-H-M-Space"
+    - null
     - null
     - null

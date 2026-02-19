@@ -1137,12 +1137,6 @@ Hold =Q= + press a letter to open an application. 20+ applications are mapped. T
 
 Hold =V= to turn the right hand into a numpad. This is one of the most-used simlayers---on a 36-key keyboard with no number row, this is how I type numbers.
 
-#+begin_example
-        u=7  i=8  o=9
-        j=4  k=5  l=6
-        m=1  ,=2  .=3  p=0  ;=.
-#+end_example
-
 [[/images/keyboard/v-mode.svg]]
 
 #+begin_src clojure

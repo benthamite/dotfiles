@@ -238,28 +238,40 @@ INFO is a plist with the following keys:
 
 ;;;;; Misc
 
+(defcustom zotra-extras-excluded-domains '("imdb.com")
+  "Domains from which `zotra-extras-fetch-field' should not fetch.
+Sites like IMDB yield only runtime strings (e.g. \"1h 35m | R\") rather
+than real bibliographic data for fields like \"abstract\"."
+  :type '(repeat string)
+  :group 'zotra-extras)
+
 (defun zotra-extras-fetch-field (field url-or-search-string &optional ignore-errors timeout)
   "Get FIELD value in bibliographic entry for URL-OR-SEARCH-STRING.
 If IGNORE-ERRORS is non-nil, handle error thrown by `zotra-get-entry-1'
 gracefully. IF TIMEOUT is non-nil, give up after that many seconds; otherwise,
-use the default."
-  (let* ((query-result (zotra-query-url-or-search-string url-or-search-string))
-	 (data (car query-result))
-	 (endpoint (cdr query-result))
-	 (zotra-url-retrieve-timeout (or timeout zotra-url-retrieve-timeout))
-	 (entry (if ignore-errors
-                    (condition-case nil
-			(zotra-get-entry-1 data zotra-default-entry-format endpoint)
-		      (error nil))
-                  (zotra-get-entry-1 data zotra-default-entry-format endpoint))))
-    (when entry
-      (with-temp-buffer
-        (insert entry)
-        (bibtex-mode)
-        (let ((value (bibtex-autokey-get-field field)))
-          (if (string-empty-p value)
-              nil
-            value))))))
+use the default.  URLs matching a domain in `zotra-extras-excluded-domains' are
+skipped."
+  (if (seq-some (lambda (domain)
+		  (string-match-p (regexp-quote domain) url-or-search-string))
+		zotra-extras-excluded-domains)
+      (progn (message "Skipping excluded domain in %s" url-or-search-string) nil)
+    (let* ((query-result (zotra-query-url-or-search-string url-or-search-string))
+	   (data (car query-result))
+	   (endpoint (cdr query-result))
+	   (zotra-url-retrieve-timeout (or timeout zotra-url-retrieve-timeout))
+	   (entry (if ignore-errors
+                      (condition-case nil
+			  (zotra-get-entry-1 data zotra-default-entry-format endpoint)
+			(error nil))
+                    (zotra-get-entry-1 data zotra-default-entry-format endpoint))))
+      (when entry
+	(with-temp-buffer
+          (insert entry)
+          (bibtex-mode)
+          (let ((value (bibtex-autokey-get-field field)))
+            (if (string-empty-p value)
+		nil
+              value)))))))
 
 (declare-function ebib-save-all-databases "ebib")
 (declare-function ebib-extras-sort "ebib-extras")

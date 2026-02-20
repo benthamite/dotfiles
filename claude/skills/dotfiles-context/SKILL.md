@@ -13,12 +13,22 @@ The dotfiles repo has two working trees on the same machine:
 
 Both point to the same Git repo, so changes only need to be committed once in the appropriate working tree. Edit each file in its canonical location: `config.org` in Dropbox/dotfiles, Elisp extras in the elpaca repos directory.
 
+# Elpaca profile
+
+The current elpaca profile name is stored in the Elisp variable `init-current-profile`. Query it with:
+
+```bash
+emacsclient -e 'init-current-profile'
+```
+
+Always use this to resolve the active profile path (`~/.config/emacs-profiles/<profile>/elpaca/`) rather than hardcoding a profile name, since it changes over time.
+
 # Testing Emacs extras
 
 To test loading Emacs extras in batch mode with all dependencies:
 
 ```bash
-ELPACA=/Users/pablostafforini/.config/emacs-profiles/7.1.29-target/elpaca
+ELPACA=/Users/pablostafforini/.config/emacs-profiles/$(emacsclient -e 'init-current-profile' | tr -d '"')/elpaca
 emacs --batch \
   -L "$PWD/emacs/extras" \
   -L "$ELPACA/builds/claude-code" \

@@ -10067,19 +10067,12 @@ Note to self: Typescript syntax highlighting works fine, but calling ~org-edit-s
           (:hlines . "no")
           (:tangle . "no")))
 
-  (setq org-babel-default-header-args:typescript
-        '((:mode . typescript-ts-mode)))
-
   (org-babel-do-load-languages
    'org-babel-load-languages
    '((emacs-lisp . t)
      (shell . t)
      (python . t)
-     (R . t)
-     (typescript . t)))
-
-  (add-to-list 'major-mode-remap-alist '(typescript-mode . typescript-ts-mode))
-  (defalias 'typescript-mode 'typescript-ts-mode)
+     (R . t)))
 
   (dolist (cons (list (cons "j" 'org-babel-next-src-block)
                       (cons "k" 'org-babel-previous-src-block)
@@ -10098,7 +10091,13 @@ Note to self: Typescript syntax highlighting works fine, but calling ~org-edit-s
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package ob-typescript
-  :after ob)
+  :after ob
+  :config
+  (setq org-babel-default-header-args:typescript
+        '((:mode . typescript-ts-mode)))
+  (add-to-list 'org-babel-load-languages '(typescript . t))
+  (add-to-list 'major-mode-remap-alist '(typescript-mode . typescript-ts-mode))
+  (defalias 'typescript-mode 'typescript-ts-mode))
 #+end_src
 
 ** org-tempo

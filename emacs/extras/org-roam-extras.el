@@ -537,20 +537,6 @@ satisfies these criteria."
 
 ;;;;; Patched functions
 
-(el-patch-defun org-roam-db--upgrade-maybe (db version)
-  "Upgrades the database schema for DB, if VERSION is old."
-  (el-patch-add
-   (unless version
-     (setq version org-roam-db-version)))
-  (emacsql-with-transaction db
-    'ignore
-    (if (< version org-roam-db-version)
-        (progn
-          (org-roam-message (format "Upgrading the Org-roam database from version %d to version %d"
-                                    version org-roam-db-version))
-          (org-roam-db-sync t))))
-  version)
-
 (el-patch-defun org-roam-db-query (sql &rest args)
   "Run SQL query on Org-roam database with ARGS.
 SQL can be either the emacsql vector representation, or a string."

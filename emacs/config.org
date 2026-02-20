@@ -115,6 +115,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#faces-extras][faces-extras]]
   - [[#org-modern][org-modern]]
   - [[#org-modern-indent][org-modern-indent]]
+  - [[#org-indent-pixel][org-indent-pixel]]
   - [[#org-tidy][org-tidy]]
   - [[#org-appear][org-appear]]
   - [[#face-remap][face-remap]]
@@ -2204,6 +2205,82 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
                  :repo "jdtsmith/org-modern-indent")
   :after org-modern
   :hook org-mode-hook)
+#+end_src
+
+** org-indent-pixel
+
+/Fix misaligned wrapped lines in ~variable-pitch-mode~ by replacing the space-based ~wrap-prefix~ from ~org-indent-mode~ with pixel-accurate specifications. Without this, list item continuation lines are progressively misaligned at deeper nesting levels because proportional-font spaces have different widths than the fixed-pitch spaces used in the wrap prefix./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(defvar-local org-indent-pixel--space-width nil
+  "Cached pixel width of one space in the `org-indent' face.")
+
+(defun org-indent-pixel--set-wrap-prefix (start end)
+  "Replace space-based `wrap-prefix' with pixel-based for START..END.
+Compute the pixel width of the line-prefix plus the buffer content
+before the text, then set `wrap-prefix' to a pixel specification
+matching that width.  Only act on lines where `wrap-prefix' is longer
+than `line-prefix' (i.e., list items and their continuation lines)."
+  (when-let* ((win (get-buffer-window)))
+    (let* ((space-w (or org-indent-pixel--space-width
+                        (setq org-indent-pixel--space-width
+                              (string-pixel-width
+                               (propertize " " 'face 'org-indent)))))
+           (inhibit-modification-hooks t))
+      (save-excursion
+        (goto-char start)
+        (beginning-of-line)
+        (while (< (point) end)
+          (let ((wp (get-text-property (point) 'wrap-prefix))
+                (lp (get-text-property (point) 'line-prefix)))
+            (when (and (stringp wp) (> (length wp) 0)
+                       (stringp lp) (> (length wp) (length lp)))
+              (let* ((bol (line-beginning-position))
+                     (eol (line-end-position))
+                     (lp-px (* (length lp) space-w))
+                     (text-pos
+                      (save-excursion
+                        (goto-char bol)
+                        (let ((indent-end
+                               (progn (skip-chars-forward " \t")
+                                      (point))))
+                          (if (looking-at
+                               "\\(?:[-+*]\\|[0-9]+[.)]\\)[ \t]")
+                              (progn
+                                (move-to-column
+                                 (org-list-item-body-column eol))
+                                (point))
+                            indent-end))))
+                     (buf-px
+                      (if (> text-pos bol)
+                          (car (window-text-pixel-size
+                                win bol (min text-pos eol)))
+                        0))
+                     (total-px (+ lp-px buf-px)))
+                (when (> total-px 0)
+                  (put-text-property
+                   bol (min (1+ bol) eol)
+                   'wrap-prefix `(space :width (,total-px)))))))
+          (forward-line 1))))))
+
+(define-minor-mode org-indent-pixel-mode
+  "Pixel-accurate wrap-prefix for variable-pitch org buffers.
+Replace the space-based `wrap-prefix' from `org-indent-mode' with pixel
+specifications for proper list wrapping alignment."
+  :lighter nil
+  (if org-indent-pixel-mode
+      (progn
+        (setq org-indent-pixel--space-width nil)
+        (jit-lock-register #'org-indent-pixel--set-wrap-prefix))
+    (jit-lock-unregister #'org-indent-pixel--set-wrap-prefix)
+    (font-lock-flush)))
+
+(defun org-indent-pixel--maybe-activate ()
+  "Activate `org-indent-pixel-mode' when conditions are met."
+  (when (and org-indent-mode buffer-face-mode)
+    (org-indent-pixel-mode 1)))
+
+(add-hook 'org-mode-hook #'org-indent-pixel--maybe-activate 90)
 #+end_src
 
 ** org-tidy

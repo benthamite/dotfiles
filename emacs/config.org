@@ -2236,6 +2236,7 @@ than `line-prefix' (i.e., list items and their continuation lines)."
             (when (and (stringp wp) (> (length wp) 0)
                        (stringp lp) (> (length wp) (length lp)))
               (let* ((bol (line-beginning-position))
+                     (next-bol (line-beginning-position 2))
                      (eol (line-end-position))
                      (lp-px (* (length lp) space-w))
                      (text-pos
@@ -2259,7 +2260,7 @@ than `line-prefix' (i.e., list items and their continuation lines)."
                      (total-px (+ lp-px buf-px)))
                 (when (> total-px 0)
                   (put-text-property
-                   bol (min (1+ bol) eol)
+                   bol (min next-bol (point-max))
                    'wrap-prefix `(space :width (,total-px)))))))
           (forward-line 1))))))
 
@@ -2281,6 +2282,7 @@ specifications for proper list wrapping alignment."
     (org-indent-pixel-mode 1)))
 
 (add-hook 'org-mode-hook #'org-indent-pixel--maybe-activate 90)
+(add-hook 'buffer-face-mode-hook #'org-indent-pixel--maybe-activate)
 #+end_src
 
 ** org-tidy

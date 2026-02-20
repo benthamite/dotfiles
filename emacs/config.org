@@ -2213,7 +2213,7 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-indent-pixel
-  :elpaca (:host github :repo "benthamite/org-indent-pixel")
+  :ensure (:host github :repo "benthamite/org-indent-pixel")
   :init
   (org-indent-pixel-setup))
 #+end_src

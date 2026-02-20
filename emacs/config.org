@@ -2208,6 +2208,9 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
 #+end_src
 
 ** org-indent-pixel
+:PROPERTIES:
+:ID:       AB8B85E9-8521-4F0B-B4FC-F27F3EEF392B
+:END:
 
 /Fix misaligned wrapped lines in ~variable-pitch-mode~ by replacing the space-based ~wrap-prefix~ from ~org-indent-mode~ with pixel-accurate specifications. Without this, list item continuation lines are progressively misaligned at deeper nesting levels because proportional-font spaces have different widths than the fixed-pitch spaces used in the wrap prefix./
 

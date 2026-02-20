@@ -43,9 +43,11 @@
 
 (defun org-gcal-extras--inhibit-modification-hooks (orig-fun &rest args)
   "Call ORIG-FUN with ARGS while inhibiting modification hooks.
-This prevents `track-changes' assertion failures in Emacs 30+.
+This prevents `org-modern-indent' and `track-changes' from triggering
+`org-element-at-point' during buffer modifications, which can fail with
+\"Invalid search bound\" errors in async contexts (e.g. timer-based sync).
 Also resets the org-element cache before and after to prevent
-emergency exits from stale cache state in async contexts."
+emergency exits from stale cache state."
   (let ((inhibit-modification-hooks t))
     (org-gcal-extras--reset-element-cache)
     (unwind-protect
@@ -53,6 +55,7 @@ emergency exits from stale cache state in async contexts."
       (org-gcal-extras--reset-element-cache))))
 
 (advice-add 'org-gcal--update-entry :around #'org-gcal-extras--inhibit-modification-hooks)
+(advice-add 'org-gcal--sync-handle-events :around #'org-gcal-extras--inhibit-modification-hooks)
 
 (defun org-gcal-extras--strip-html (string)
   "Strip HTML tags and decode entities in STRING."

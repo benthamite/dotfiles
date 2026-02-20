@@ -14,3 +14,4 @@ user-invocable: false
 - Do not end error messages with a period.
 - Only add comments if truly necessary to understand the code. Avoid commenting every detail.
 - Never create "fallbacks" to handle problems silently: always choose errors over silent unexpected behavior.
+- Whenever possible, test things end-to-end. You can use emacsclient for this.

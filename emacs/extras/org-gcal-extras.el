@@ -57,32 +57,6 @@ emergency exits from stale cache state."
 (advice-add 'org-gcal--update-entry :around #'org-gcal-extras--inhibit-modification-hooks)
 (advice-add 'org-gcal--sync-handle-events :around #'org-gcal-extras--inhibit-modification-hooks)
 
-(defun org-gcal-extras--strip-html (string)
-  "Strip HTML tags and decode entities in STRING."
-  (thread-last string
-    (replace-regexp-in-string "<br[^>]*>" "\n")
-    (replace-regexp-in-string "<li[^>]*>" "\n- ")
-    (replace-regexp-in-string "<[^>]+>" "")
-    (replace-regexp-in-string "&amp;" "&")
-    (replace-regexp-in-string "&lt;" "<")
-    (replace-regexp-in-string "&gt;" ">")
-    (replace-regexp-in-string "&nbsp;" " ")
-    (replace-regexp-in-string "&quot;" "\"")
-    (replace-regexp-in-string "&#39;" "'")
-    (replace-regexp-in-string "\n\\{3,\\}" "\n\n")
-    (string-trim)))
-
-(defun org-gcal-extras--strip-html-description (args)
-  "Strip HTML tags from the event description in ARGS.
-ARGS is the argument list for `org-gcal--update-entry':
-\(CALENDAR-ID EVENT &optional UPDATE-MODE)."
-  (let ((event (cadr args)))
-    (when-let* ((desc (plist-get event :description)))
-      (plist-put event :description (org-gcal-extras--strip-html desc))))
-  args)
-
-(advice-add 'org-gcal--update-entry :filter-args #'org-gcal-extras--strip-html-description)
-
 ;;;###autoload
 (defun org-gcal-extras-open-at-point ()
   "Open the event at point in a Google Calendar."
@@ -205,7 +179,8 @@ heading."
     (unless (org-at-heading-p)
       (user-error "Must be on Org-mode heading."))
     (let* ((smry  (plist-get event :summary))
-	   (desc  (plist-get event :description))
+	   (desc  (when-let* ((d (plist-get event :description)))
+		    (org-gcal--strip-html d)))
 	   (loc   (plist-get event :location))
 	   (source (plist-get event :source))
 	   (transparency   (plist-get event :transparency))

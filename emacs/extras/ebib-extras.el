@@ -75,6 +75,11 @@ This variable holds the active sorting criterion, taken from
   "List of valid file extensions used by `ebib-extras-open-file-dwim'.
 This list defines the preference order when opening files.")
 
+(defconst ebib-extras-valid-text-file-extensions
+  '("html" "pdf" "srt" "vtt")
+  "List of valid file extensions considered as text files.
+Used by `ebib-extras-get-text-file'.")
+
 ;;;; Functions
 
 (defvar window-extras-frame-split-width-threshold)
@@ -266,6 +271,15 @@ entry. Returns nil otherwise."
 	 (throw 'tag (expand-file-name file))))
      (ebib--split-files files))
     nil))
+
+(defun ebib-extras-get-text-file ()
+  "Return the path of the first text file found for the entry at point.
+It iterates through `ebib-extras-valid-text-file-extensions' and returns the
+first file matching an extension found via `ebib-extras-get-file'."
+  (catch 'tag
+    (dolist (extension ebib-extras-valid-text-file-extensions)
+      (when-let* ((file (ebib-extras-get-file extension)))
+	(throw 'tag file)))))
 
 (defun ebib-extras-open-file (extension)
   "Open the file with EXTENSION associated with the entry at point.

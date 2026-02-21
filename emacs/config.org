@@ -227,7 +227,6 @@ The extras come with their own manuals and user options: everything is documente
   - [[#writeroom-mode][writeroom-mode]]
   - [[#ace-link][ace-link]]
   - [[#ace-link-extras][ace-link-extras]]
-  - [[#winpulse][winpulse]]
 - [[#date--time][date & time]]
   - [[#calendar][calendar]]
   - [[#calendar-extras][calendar-extras]]
@@ -2217,6 +2216,7 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-indent-pixel
   :ensure (:host github :repo "benthamite/org-indent-pixel")
+  :after org-indent
   :init
   (org-indent-pixel-setup))
 #+end_src
@@ -4912,20 +4912,6 @@ CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
   :after ace-link)
 #+end_src
 
-** winpulse
-:PROPERTIES:
-:ID:       5A1A6855-98FD-4909-8026-07EC64F63D9F
-:END:
-
-/[[https://github.com/xenodium/winpulse][winpulse]] briefly highlights focused Emacs windows./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package winpulse
-  :ensure (:host github :repo "xenodium/winpulse")
-  :config
-  (winpulse-mode))
-#+end_src
-
 * date & time
 :PROPERTIES:
 :ID:       CE84D144-875A-492E-B6A1-6E71CBEACCD7
@@ -5021,7 +5007,8 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package institution-calendar
   :ensure (:host github
-                 :repo "protesilaos/institution-calendar")
+		 :repo "protesilaos/institution-calendar")
+  :defer t
   :config
   (institution-calendar-mode))
 #+end_src
@@ -8764,6 +8751,15 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (magit-gptcommit-status-buffer-setup))
 #+end_src
 
+** pangram
+
+/[[https://github.com/benthamite/pangram][pangram]] detects AI-generated content using the Pangram Labs API./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package pangram
+  :ensure (:host github :repo "benthamite/pangram"))
+#+end_src
+
 * org-mode
 :PROPERTIES:
 :ID:       0E2FD90A-8A8A-4625-ABEA-D82DD3CC88A0
@@ -10005,7 +10001,7 @@ Hugo should be able to export ~org-cite~ citations.
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package stafforini
   :ensure (:host github :repo "benthamite/stafforini.el")
-  :demand t)
+  :defer t)
 #+end_src
 
 ** ox-pandoc

@@ -395,6 +395,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#dall-e-shell][dall-e-shell]]
   - [[#llm][llm]]
   - [[#magit-gptcommit][magit-gptcommit]]
+  - [[#pangram][pangram]]
 - [[#org-mode][org-mode]]
   - [[#org][org]]
   - [[#org-extras][org-extras]]
@@ -8757,7 +8758,8 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package pangram
-  :ensure (:host github :repo "benthamite/pangram"))
+  :ensure (:host github :repo "benthamite/pangram")
+  :defer t)
 #+end_src
 
 * org-mode

@@ -8754,6 +8754,9 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 #+end_src
 
 ** pangram
+:PROPERTIES:
+:ID:       59853F89-EAC9-4EFF-84F0-1253D858D317
+:END:
 
 /[[https://github.com/benthamite/pangram][pangram]] detects AI-generated content using the Pangram Labs API./
 

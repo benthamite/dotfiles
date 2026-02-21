@@ -300,6 +300,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#eshell-syntax-highlighting][eshell-syntax-highlighting]]
   - [[#dwim-shell-command][dwim-shell-command]]
   - [[#eat][eat]]
+  - [[#eat-extras][eat-extras]]
   - [[#vterm][vterm]]
 - [[#spelling--grammar][spelling & grammar]]
   - [[#jinx][jinx]]
@@ -6387,7 +6388,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   (eshell-load-hook . eat-eshell-visual-command-mode))
 #+end_src
 
-*** eat-extras
+** eat-extras
 :PROPERTIES:
 :ID:       2E64815B-CB74-4D99-9884-AB7B97D1B0DB
 :END:

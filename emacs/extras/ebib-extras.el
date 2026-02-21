@@ -264,13 +264,14 @@ entry. Returns nil otherwise."
 
 (defun ebib-extras-get-file-in-string (files extension)
   "Return the path of the file with EXTENSION in FILES."
-  (catch 'tag
-    (mapc
-     (lambda (file)
-       (when (equal (file-name-extension file) extension)
-	 (throw 'tag (expand-file-name file))))
-     (ebib--split-files files))
-    nil))
+  (when files
+    (catch 'tag
+      (mapc
+       (lambda (file)
+         (when (equal (file-name-extension file) extension)
+	   (throw 'tag (expand-file-name file))))
+       (ebib--split-files files))
+      nil)))
 
 (defun ebib-extras-get-text-file ()
   "Return the path of the first text file found for the entry at point.
@@ -1584,7 +1585,9 @@ to update the Author and Title fields in-place."
                              ('ebib-entry-mode #'ebib-extras-get-field)
                              ('bibtex-mode   #'bibtex-extras-get-field)))
                 (file (if key
-                          (let ((files (bibtex-extras-get-entry-as-string key "file")))
+                          (when-let* ((files (pcase major-mode
+                                               ('ebib-entry-mode (ebib-extras-get-field "file" key))
+                                               ('bibtex-mode (bibtex-extras-get-entry-as-string key "file")))))
                             (ebib-extras-get-file-in-string files "pdf"))
                         (ebib-extras-get-file "pdf")))
                 (author (or (funcall get-field "author")

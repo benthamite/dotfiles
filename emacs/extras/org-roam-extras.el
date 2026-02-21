@@ -515,7 +515,7 @@ satisfies these criteria."
 			    '("DONE" "CANCELLED" "DELEGATED")))
 	 (rows (org-roam-db-query
 		[:select [todo properties] :from nodes
-		 :where (notnull todo)]))
+			 :where (notnull todo)]))
 	 (todo-count 0)
 	 (total-minutes 0))
     (dolist (row rows)
@@ -534,14 +534,6 @@ satisfies these criteria."
 			hours mins)))
       (message msg)
       msg)))
-
-;;;;; Patched functions
-
-(el-patch-defun org-roam-db-query (sql &rest args)
-  "Run SQL query on Org-roam database with ARGS.
-SQL can be either the emacsql vector representation, or a string."
-  (el-patch-add (sleep-for 0.01))
-  (apply #'emacsql (org-roam-db) sql args))
 
 (provide 'org-roam-extras)
 ;;; org-roam-extras.el ends here

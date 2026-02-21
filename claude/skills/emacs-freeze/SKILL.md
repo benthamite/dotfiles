@@ -38,9 +38,10 @@ Report:
 
 1. **What is frozen**: the specific Elisp function/package consuming all the time, and what it's doing (infinite recursion, blocked I/O, runaway computation, etc.).
 2. **Why**: the root cause if identifiable (e.g., corrupt org-element cache, network timeout, regexp backtracking).
-3. **How to recover now**:
+3. **How to recover now** — present options in escalating order and **always warn the user about data-loss risk before suggesting any kill command**:
    - If Emacs can still process signals: `kill -SIGUSR2 <PID>` to toggle `debug-on-quit`, then `C-g` in Emacs.
-   - If fully unresponsive: `kill <PID>` (SIGTERM) to let it attempt a graceful shutdown, or `kill -9 <PID>` as a last resort.
+   - If that doesn't work: `kill <PID>` (SIGTERM) to let Emacs attempt a graceful shutdown. Warn the user that SIGTERM may not save unsaved buffers if the main thread is blocked in C code.
+   - **Last resort only — never run this without explicit user confirmation**: `kill -9 <PID>` (SIGKILL). **This will terminate Emacs immediately with no chance to save unsaved buffers or run shutdown hooks. Any unsaved changes will be lost.** Do NOT include this command in a code block the user might copy-paste without reading. Always present it as a clearly separated warning and ask the user to confirm before proceeding.
 4. **How to prevent recurrence**: specific configuration changes, package updates, or workarounds. Reference the user's `config.org` if the relevant package is configured there.
 
 ### 5. Clean up

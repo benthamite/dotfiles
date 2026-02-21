@@ -9,6 +9,20 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** winpulse
+:PROPERTIES:
+:ID:       5A1A6855-98FD-4909-8026-07EC64F63D9F
+:END:
+
+/[[https://github.com/xenodium/winpulse][winpulse]] briefly highlights focused Emacs windows./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package winpulse
+  :ensure (:host github :repo "xenodium/winpulse")
+  :config
+  (winpulse-mode))
+#+end_src
+
 ** scihub
 :PROPERTIES:
 :ID:       C8F5B1DC-15F3-4D3A-9363-A32AEE1D34D4

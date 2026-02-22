@@ -1,0 +1,57 @@
+# Dropbox ignore rules
+# This file only works at the root of the Dropbox folder.
+# It stays local and does not sync across devices.
+# Rules only apply to NEW files; existing files need manual removal.
+
+# Node.js
+**/node_modules/
+**/.next/
+**/.nuxt/
+**/.cache/
+**/.eslintcache
+**/.yarn/
+**/.pnpm-store/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/*.tsbuildinfo
+
+# Python
+**/__pycache__/
+**/.venv/
+**/.venv*/
+**/venv/
+**/*.egg-info/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/*.pyc
+
+# Aider
+**/.aider.tags.cache*/
+
+# Browser automation (Playwright/Puppeteer)
+**/.browser-data*/
+
+# Build output (scoped to repos/)
+**/repos/**/dist/
+**/repos/**/build/
+**/repos/**/out/
+**/repos/**/public/pagefind/
+**/repos/**/static/pagefind/
+
+# Deployment caches
+**/.netlify/
+**/.vercel/
+**/.serverless/
+
+# IDE
+**/.idea/
+**/.vscode/
+
+# OS metadata
+**/.DS_Store
+**/Thumbs.db
+
+# Hugo
+**/.hugo_build.lock

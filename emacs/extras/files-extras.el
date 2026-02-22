@@ -674,8 +674,8 @@ To install the extension, drag the latter onto the former."
 (transient-define-prefix files-extras-dispatch ()
   "Dispatcher for files."
   ["Files"
-   ("." "inbox-mobile"      (lambda () (interactive) (find-file paths-file-inbox-mobile)))
-   ("," "inbox-desktop"     (lambda () (interactive) (find-file paths-file-inbox-desktop)))
+   ("," "inbox-mobile"      (lambda () (interactive) (find-file paths-file-inbox-mobile)))
+   ("." "inbox-desktop"     (lambda () (interactive) (find-file paths-file-inbox-desktop)))
    ("a" "agenda"            org-extras-agenda-switch-to-agenda-current-day)
    ("c" "config"            (lambda () (interactive) (find-file paths-file-config)))
    ("e" "extras"            (lambda () (interactive) (files-extras-open-extras-package)))

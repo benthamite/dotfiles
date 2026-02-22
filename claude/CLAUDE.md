@@ -11,6 +11,7 @@
 
 ## Safety
 
+- **Emacs:** never kill an active Emacs session. Always ask for explicit confirmation before sending any signal to the Emacs process.
 - **Deletion:** use `trash` instead of `rm -rf` (hook-enforced).
 - **Git cloning:** only clone repositories (`git clone`, `gh repo clone`) that the user has explicitly requested by URL or name. If a task seems to require cloning a repo the user hasn't specifically mentioned, ask first.
 

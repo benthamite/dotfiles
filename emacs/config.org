@@ -10706,7 +10706,12 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 
   ;; I disable autosync for performance reasons, but still keep the db in sync via an idle timer
   (org-roam-db-autosync-mode -1)
-  (run-with-idle-timer (* 20 60) t #'org-roam-db-sync)
+  (run-with-idle-timer (* 20 60) t
+   (lambda ()
+     (condition-case err
+         (org-roam-db-sync)
+       (file-error
+        (message "org-roam-db-sync: skipped due to file error: %S" err)))))
 
   ;; https://github.com/org-roam/org-roam/issues/2550#issuecomment-3451456331
   (with-eval-after-load 'org-roam-capture

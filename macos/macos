@@ -18,7 +18,7 @@ echo 'Disable the sound effects on boot'
 defaults write com.apple.PowerChime ChimeOnAllHardware -bool false;killall PowerChime
 echo 'Disable the Chime Sound Effect on Power Cable Connect'
 
-defaults write com.apple.systemsound “com.apple.sound.uiaudio.enabled” -int 0
+defaults write com.apple.systemsound "com.apple.sound.uiaudio.enabled" -int 0
 echo 'Disable screenshot sound'
 
 defaults write -g NSAutomaticWindowAnimationsEnabled -bool false
@@ -66,6 +66,9 @@ echo 'Disable automatic capitalization'
 defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 70 '<dict><key>enabled</key><false/></dict>'
 echo 'disable word definition'
 
+defaults write com.apple.speech.synthesis.general.prefs TimeAnnouncementPrefs -dict-add TimeAnnouncementsEnabled -bool false
+echo 'Disable announce the time'
+
 defaults write NSGlobalDomain AppleKeyboardUIMode -int 3
 echo 'Enable full keyboard access for all controls (e.g. enable Tab in modal dialogs)'
 
@@ -111,6 +114,9 @@ echo 'Save screenshots in PNG format (other options: BMP, GIF, JPG, PDF, TIFF)'
 
 defaults write com.apple.screencapture disable-shadow -bool true
 echo 'Disable screenshot shadow effect'
+
+sysadminctl -screenLock 5 -password -
+echo 'Require a password after screen saver begins or display is turned off for 5 seconds'
 
 defaults write com.apple.finder QuitMenuItem -bool true
 echo 'In Finder, allow quitting via ⌘ + Q; doing so will also hide desktop icons'
@@ -275,6 +281,9 @@ echo 'Sort Activity Monitor results by CPU usage'
 defaults write com.apple.TextEdit RichText -int 0
 echo 'Use plain text mode for new TextEdit documents'
 
+defaults write com.apple.TextEdit NSShowAppCentricOpenPanelInsteadOfUntitledFile -bool false
+echo 'Create an untitled document at launch'
+
 defaults write com.apple.TextEdit PlainTextEncoding -int 4
 defaults write com.apple.TextEdit PlainTextEncodingForWrite -int 4
 echo 'Open and save files as UTF-8 in TextEdit'
@@ -313,6 +322,3 @@ echo 'Prevent Photos from opening automatically when devices are plugged in'
 defaults write com.google.Chrome PMPrintingExpandedStateForPrint2 -bool true
 defaults write com.google.Chrome.canary PMPrintingExpandedStateForPrint2 -bool true
 echo 'Expand the print dialog by default'
-
-defaults write org.m0k.transmission WarningDonate -bool false
-echo 'Hide Transmission app donate message'

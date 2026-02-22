@@ -117,6 +117,10 @@ echo 'Disable automatic capitalization'
 
 defaults write com.apple.symbolichotkeys AppleSymbolicHotKeys -dict-add 70 '<dict><key>enabled</key><false/></dict>'
 echo 'disable word definition'
+
+defaults write com.apple.speech.synthesis.general.prefs TimeAnnouncementPrefs -dict TimeAnnouncementsEnabled -bool false TimeAnnouncementsIntervalIdentifier -string "EveryHourInterval"
+killall -u $(whoami) cfprefsd
+echo 'Disable announce the time'
 #+end_src
 
 * Trackpad, mouse, keyboard, Bluetooth accessories, and input

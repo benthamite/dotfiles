@@ -1463,7 +1463,17 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
   :custom
   (vc-handled-backends '(Git))
   (vc-follow-symlinks t) ; don't ask for confirmation when opening symlinked file
-  (vc-make-backup-files nil)) ; do not backup version controlled files
+  (vc-make-backup-files nil) ; do not backup version controlled files
+  ;; Disable VC in Dropbox cloud storage directories.  `vc-git' runs
+  ;; synchronous `git' subprocesses via `call-process', which can hang
+  ;; indefinitely when Dropbox's virtual filesystem stalls on I/O
+  ;; (e.g. smart sync resolving a cloud-only file).  This blocks the
+  ;; main thread since there is no timeout on the read.
+  (vc-ignore-dir-regexp
+   (format "%s\\|%s"
+           vc-ignore-dir-regexp
+           "Library/CloudStorage/Dropbox/")))
+
 #+end_src
 
 ** vc-extras

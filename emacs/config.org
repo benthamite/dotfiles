@@ -384,7 +384,6 @@ The extras come with their own manuals and user options: everything is documente
   - [[#gptel-quick][gptel-quick]]
   - [[#ragmacs][ragmacs]]
   - [[#llm-tool-collection][llm-tool-collection]]
-  - [[#codel][codel]]
   - [[#aidermacs][aidermacs]]
   - [[#aidermacs-extras][aidermacs-extras]]
   - [[#ob-aider][ob-aider]]
@@ -8435,22 +8434,6 @@ This package evolved out of =gptel-extras=.
           (llm-tool-collection-get-all)))
 #+end_src
 
-** codel
-:PROPERTIES:
-:ID:       349C4CE5-0091-42EC-BDD0-F5DBB200BC88
-:END:
-
-/[[https://github.com/ultronozm/codel.el][codel]] is another collection of llm tools./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package codel
-  :ensure (:host github
-                 :repo "ultronozm/codel.el")
-  :after gptel
-  :config
-  (codel-setup-gptel))
-#+end_src
-
 ** aidermacs
 :PROPERTIES:
 :ID:       29E4D020-70BF-408C-A8AC-D40E411F2F42
@@ -10007,7 +9990,8 @@ Hugo should be able to export ~org-cite~ citations.
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package stafforini
   :ensure (:host github :repo "benthamite/stafforini.el")
-  :defer t)
+  :defer t
+  :bind (("A-H-s" . stafforini-menu)))
 #+end_src
 
 ** ox-pandoc

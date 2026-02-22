@@ -390,6 +390,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#agent-shell][agent-shell]]
   - [[#claude-code][claude-code]]
   - [[#claude-code-extras][claude-code-extras]]
+  - [[#claude-log][claude-log]]
   - [[#monet][monet]]
   - [[#mcp][mcp]]
   - [[#dall-e-shell][dall-e-shell]]
@@ -1473,7 +1474,6 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
    (format "%s\\|%s"
            vc-ignore-dir-regexp
            "Library/CloudStorage/Dropbox/")))
-
 #+end_src
 
 ** vc-extras
@@ -3529,6 +3529,18 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
    (format "# -*- mode: snippet -*-\n# name: $1\n# key: $2\n# contributor: %s\n# --\n$0" user-full-name))
 
   :config
+  ;; Dropbox's file provider can leave snippet files as online-only
+  ;; placeholders, causing `file-error' "Operation canceled" when
+  ;; yasnippet tries to read them.  Catch the error so that loading
+  ;; one unavailable file does not prevent the mode from activating.
+  (advice-add 'yas--load-directory-2 :around
+              (lambda (fn &rest args)
+                (condition-case err
+                    (apply fn args)
+                  (file-error
+                   (message "yasnippet: skipping unreadable directory %s: %s"
+                            (car args) (error-message-string err))))))
+
   (yas-global-mode)
 
   :hook
@@ -8579,6 +8591,22 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :demand t
   :custom
   (claude-code-extras-alert-on-ready t))
+#+end_src
+
+** claude-log
+:PROPERTIES:
+:ID:       E60F4A47-F939-4D66-8AF4-B460E15D40F0
+:END:
+
+
+/[[https://github.com/benthamite/claude-log][claude-log]] exports Claude Code conversation logs in Markdown format./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package claude-log
+  :ensure (:host github
+		 :repo "benthamite/claude-log")
+  :after claude-code
+  :demand t)
 #+end_src
 
 ** monet

@@ -9365,6 +9365,16 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
                 "Narrow to the entry and its children after jumping to it."
                 (org-extras-narrow-to-entry-and-children)))
 
+  (advice-add 'org-get-agenda-file-buffer :around
+              (lambda (fn file)
+                "Skip agenda files that can't be opened (e.g. Dropbox online-only placeholders)."
+                (condition-case err
+                    (funcall fn file)
+                  (error
+                   (message "org-agenda: skipping unreadable file %s: %s"
+                            file (error-message-string err))
+                   nil))))
+
   (advice-add 'org-habit-toggle-display-in-agenda :around
               (lambda (orig-fun &rest args)
                 "Prevent `org-modern-mode' interference with org habits."

@@ -33,7 +33,7 @@ This configuration is an Org document that tangles to an Emacs Lisp init file. I
 		   :files ("emacs/extras/org-extras.el")))
 #+end_src
 
-The extras come with their own manuals and user options: everything is documented and customizable.
+The extras come with their own manuals and user options: everything is documented and customizable. To read the manual for a given extras package, type =M-x info-display-manual RET= and enter the package name (e.g. =org-extras=). You can also browse all available manuals with =C-h i= and look under the "Emacs misc features" category.
 
 * table of contents
 :PROPERTIES:
@@ -731,6 +731,26 @@ NAME and ARGS as in `use-package'."
        ,@args)))
 
 (elpaca-wait)
+#+end_src
+
+** dotfiles-docs
+
+This build-only package generates Info manuals from the Org documentation in =emacs/extras/doc/=. The =:pre-build= step exports each Org file to Texinfo (=.texi=), and elpaca's built-in pipeline compiles the Texinfo to Info, generates a =dir= entry, and adds the resulting directory to Emacs's Info path.
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(elpaca (dotfiles-docs :host github
+                       :repo "benthamite/dotfiles"
+                       :files ("emacs/extras/doc/*.texi")
+                       :main nil
+                       :pre-build ((require 'ox-texinfo)
+                                   (dolist (f (directory-files "emacs/extras/doc" t "\\.org$"))
+                                     (with-current-buffer (find-file-noselect f)
+                                       (org-texinfo-export-to-texinfo))))
+                       :build (:not elpaca--byte-compile
+                                    elpaca--generate-autoloads-async
+                                    elpaca--activate-package
+                                    elpaca--queue-dependencies)
+                       :depth nil))
 #+end_src
 
 ** use-package-extras

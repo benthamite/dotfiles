@@ -9982,6 +9982,8 @@ CLOCK: [2021-07-25 Sun 13:14]--[2021-07-25 Sun 13:18] =>  0:04
   (org-export-with-toc nil) ; do not include table of contents
   (org-export-with-title nil) ; do not include title
   (org-export-headline-levels 4) ; include up to level 4 headlines
+  (org-export-with-tasks nil) ; exclude headings with TODO keywords
+  (org-export-with-todo-keywords nil) ; do not render TODO keywords in headings
   (org-export-preserve-breaks t) ; respect single breaks when exporting
   ;; (org-export-with-author nil "do not include author")
   ;; (org-export-with-date nil "do not include export date")

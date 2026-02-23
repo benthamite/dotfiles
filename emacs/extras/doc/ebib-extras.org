@@ -124,9 +124,12 @@ The convenience command ~ebib-extras-attach-most-recent-file~ calls ~ebib-extras
 
 #+findex: ebib-extras-rename-files
 #+findex: ebib-extras-dedup-file-field
+#+findex: ebib-extras-validate-file-stem
 The command ~ebib-extras-rename-files~ renames all files listed in the =file= field of the entry at point so that each file's base name matches the entry's BibTeX key. For example, if the entry key is =Author2024Title= and the =file= field contains =some-random-name.pdf=, the file is renamed to =Author2024Title.pdf= and moved to the appropriate library directory. The entry must have a valid key ([[#h:key-validation][Key validation]]); otherwise, a user error is signaled.
 
 The command ~ebib-extras-dedup-file-field~ removes duplicate file paths from the =file= field of the current entry. Duplicates are detected by exact string comparison after trimming whitespace. The original order of first occurrences is preserved. This is useful after repeated attachment operations that may have added the same path more than once.
+
+The function ~ebib-extras-validate-file-stem~ (not interactive) checks that every file listed in the =file= field has a base name matching the entry's key. If any file does not match, a user error is signaled. This is used as a validation step in other workflows.
 
 *** Managing invalid files
 :PROPERTIES:
@@ -164,11 +167,14 @@ This command assumes that the entry's type, author, date, and title fields are a
 :END:
 
 #+findex: ebib-extras-copy-current-field-contents
+#+findex: ebib-extras-sentence-case
 #+findex: ebib-extras-update-field
 #+findex: ebib-extras-set-abstract
 #+findex: ebib-extras-set-id
 #+findex: ebib-extras-no-translation-found
 The command ~ebib-extras-copy-current-field-contents~ copies the value of the field at point to the kill ring. If the field's value comes from a cross-referenced entry, the resolved value is copied. This is a wrapper around ~ebib-copy-field-contents~ that automatically determines the current field.
+
+The command ~ebib-extras-sentence-case~ converts the value of the field at point to sentence case: all words are lowercased except the first, which is capitalized. Words containing LaTeX commands (=$=, ={=, =}=, =\=) are left untouched. This is useful for normalizing titles that were imported in title case.
 
 The command ~ebib-extras-update-field~ fetches a fresh value for the field at point (or a specified field) from external sources using Zotero translators (via ~zotra-extras-get-field~). The lookup is based on the entry's existing DOI, ISBN, or URL ([[#h:identifier-retrieval][Identifier retrieval]]). The fetched value overwrites the current field contents.
 
@@ -192,7 +198,10 @@ The command ~ebib-extras-get-or-set-language~ returns the language of the curren
 :END:
 
 #+findex: ebib-extras-fetch-keywords
+#+findex: ebib-extras-export-keywords
 The command ~ebib-extras-fetch-keywords~ fetches keywords for the entry at point using ~ebib-extras-fetch-field-value~ and updates the =keywords= field. This relies on external tools (via Zotero translators) to supply keyword data.
+
+The command ~ebib-extras-export-keywords~ moves keywords from the BibTeX entry into the associated Org note file. It extracts the comma-separated keywords from the =keywords= field, removes the field from the BibTeX entry, opens the associated note (via ~ebib-extras-citar-open-notes~, see [[#h:notes-integration][Notes integration]]), creates a =keywords= subheading, inserts the keywords as linkified elements (using ~org-extras-linkify-elements~), and sorts them alphabetically (using ~org-extras-sort-keywords~).
 
 *** Ratings and notes
 :PROPERTIES:
@@ -306,6 +315,17 @@ The command ~ebib-extras-url-to-html-attach~ works the same way but generates an
 
 The command ~ebib-extras-url-to-srt-attach~ downloads subtitles for the URL in the entry's =url= field using an external command (formatted by ~eww-extras-download-subtitles~, typically =yt-dlp=). The subtitles are downloaded to the downloads directory, but unlike the other commands in this group, the resulting file must be attached manually.
 
+*** Downloading PDFs and videos
+:PROPERTIES:
+:CUSTOM_ID: h:download-pdf-video
+:END:
+
+#+findex: ebib-extras-download-pdf
+#+findex: ebib-extras-download-video
+The command ~ebib-extras-download-pdf~ attempts to download a PDF of the work at point by trying multiple strategies in order: first by DOI (via ~annas-archive-download~), then by URL (via ~eww-extras-url-to-pdf~), and finally by ISBN (via ~ebib-extras-download-book~). It works in both ~ebib-entry-mode~ and ~bibtex-mode~.
+
+The command ~ebib-extras-download-video~ downloads a video using =yt-dlp=. It requires =yt-dlp= to be installed (signals a user error otherwise). The video is saved to the media library directory with the entry's key as the filename (with =.webm= extension), and the =file= field is updated. The download runs asynchronously via ~async-shell-command~.
+
 *** Downloading by title
 :PROPERTIES:
 :CUSTOM_ID: h:download-by-title
@@ -368,6 +388,7 @@ The command ~ebib-extras-duplicate-entry~ creates a copy of the entry at point. 
 #+findex: ebib-extras-auto-save-databases
 #+findex: ebib-extras-auto-reload-databases
 #+findex: ebib-extras-auto-reload-database
+#+findex: ebib-extras-reload-all-databases
 #+findex: ebib-extras-reload-database-no-confirm
 #+findex: ebib-extras-remove-file-notify-watchers
 The function ~ebib-extras-auto-save-databases~ checks all Ebib databases for modifications and saves any that have been changed. It re-schedules itself via ~run-with-timer~ to run again after one second, creating a continuous auto-save loop. This function is called automatically when the file is loaded.
@@ -375,6 +396,8 @@ The function ~ebib-extras-auto-save-databases~ checks all Ebib databases for mod
 The command ~ebib-extras-auto-reload-databases~ sets up file-notify watchers on all database files so that when a file changes on disk (e.g., from an external edit or a sync), the corresponding Ebib database is automatically reloaded. It first removes any existing watchers (via ~ebib-extras-remove-file-notify-watchers~) and then establishes a new watcher for each database using ~ebib-extras-auto-reload-database~.
 
 The reload callback includes a 10-second cooldown per database file (tracked in ~ebib-extras-last-reload-times~) to prevent rapid consecutive reloads from file sync systems like Dropbox.
+
+The command ~ebib-extras-reload-all-databases~ reloads all databases at once, but only if no database buffer is currently modified (checked via ~ebib-extras-no-db-modified-p~). It initializes Ebib if it has not been initialized yet. This is useful for forced reloads after bulk edits.
 
 The function ~ebib-extras-reload-database-no-confirm~ reloads a single database without prompting for confirmation (unless the database has unsaved modifications, in which case it does prompt). It preserves the current entry key and is used internally by the auto-reload mechanism.
 
@@ -399,6 +422,15 @@ The command ~ebib-extras-get-or-open-entry~ opens the BibTeX source file for the
 The command ~ebib-extras-open-key~ opens the entry for a given KEY in Ebib. It first locates the bibliography file containing the key (via ~ebib-extras-get-file-of-key~), then invokes ~ebib~ with the file and key, and opens the entry buffer. This is used internally to navigate to specific entries from other contexts.
 
 The function ~ebib-extras-get-file-of-key~ searches all loaded Ebib databases (as listed in ~paths-files-bibliography-all~) for the given KEY and returns the filename of the database that contains it. It signals a user error if Ebib has not been launched yet.
+
+*** Author checking
+:PROPERTIES:
+:CUSTOM_ID: h:author-checking
+:END:
+
+#+findex: ebib-extras-check-author-exists
+#+findex: ebib-extras-create-list-of-existing-authors
+The command ~ebib-extras-check-author-exists~ checks whether the =author= field of the current entry matches any author already present in the database. This is useful for spotting variant spellings or new authors. It relies on ~ebib-extras-existing-authors~, which must first be populated by calling ~ebib-extras-create-list-of-existing-authors~. That function uses ~ebib--create-author/editor-collection~ to build the list from the current database.
 
 ** Notes integration
 :PROPERTIES:
@@ -426,9 +458,12 @@ The command ~ebib-extras-ocr-pdf~ performs OCR on the PDF file associated with t
 
 #+findex: ebib-extras-get-id-or-url
 #+findex: ebib-extras-fetch-id-or-url
+#+findex: ebib-extras-get-or-fetch-id-or-url
 The function ~ebib-extras-get-id-or-url~ returns the first available identifier from the current entry, checking the =doi=, =isbn=, and =url= fields in that order. It adapts to both ~ebib-entry-mode~ and ~bibtex-mode~.
 
 The function ~ebib-extras-fetch-id-or-url~ attempts to fetch an identifier from external sources when none is available in the entry. It dispatches based on the entry's supertype: for books, it calls ~bib-search-isbn~; for articles, ~bib-search-crossref~; for films, ~bib-search-imdb~ (after translating the title to English). If the supertype is unrecognized, it falls back to the =url= field.
+
+The function ~ebib-extras-get-or-fetch-id-or-url~ combines both: it first tries to get an existing identifier, and if that fails, it fetches one.
 
 * Functions
 :PROPERTIES:
@@ -469,10 +504,13 @@ The function ~ebib-extras-check-valid-key~ signals a user error if the key is in
 
 #+findex: ebib-extras-isbn-p
 #+findex: ebib-extras-get-isbn
+#+findex: ebib-extras-video-p
 #+findex: ebib-extras-get-supertype
 The function ~ebib-extras-isbn-p~ returns ~t~ if a STRING matches the ISBN pattern (10 or 13 digits, with optional hyphens and the "ISBN" prefix). The pattern is defined in the constant ~ebib-extras-isbn-p~ (the constant and the function share the same name).
 
 The function ~ebib-extras-get-isbn~ extracts the ISBN from the entry with a given KEY (or the entry at point), strips hyphens, and returns only the first ISBN if multiple are listed.
+
+The function ~ebib-extras-video-p~ returns ~t~ if a STRING matches a YouTube URL pattern.
 
 The function ~ebib-extras-get-supertype~ determines the broad category of the current entry based on its type: =book= for book-like types (as listed in ~ebib-extras-book-like-entry-types~), =article= for article-like types, or =film= for film-like types ([[#h:entry-type-constants][Entry type constants]]).
 
@@ -510,7 +548,10 @@ The function ~ebib-extras-update-entry-buffer~ refreshes the Ebib entry buffer d
 :END:
 
 #+findex: ebib-extras-get-db-number
+#+findex: ebib-extras-no-db-modified-p
 The function ~ebib-extras-get-db-number~ returns the predefined number associated with a database FILE path, as defined in ~ebib-extras-db-numbers~ ([[#h:db-numbers][~ebib-extras-db-numbers~]]). This is useful for commands that switch between databases by number.
+
+The function ~ebib-extras-no-db-modified-p~ returns ~t~ if no Ebib database buffer is currently marked as modified. It is used as a guard by ~ebib-extras-reload-all-databases~ to prevent reloading while unsaved changes exist ([[#h:saving-reloading][Saving and reloading databases]]).
 
 * Variables and constants
 :PROPERTIES:
@@ -570,12 +611,14 @@ The constant ~ebib-extras-valid-key-regexp~ defines the regular expression that 
 
 #+vindex: ebib-extras-library-genesis
 #+vindex: ebib-extras-amazon
+#+vindex: ebib-extras-worldcat
 #+vindex: ebib-extras-internet-archive
 #+vindex: ebib-extras-university-of-toronto
 #+vindex: ebib-extras-university-of-california-berkeley
 #+vindex: ebib-extras-hathitrust
 #+vindex: ebib-extras-connected-papers
 #+vindex: ebib-extras-google-scholar
+#+vindex: ebib-extras-wikipedia
 #+vindex: ebib-extras-goodreads
 #+vindex: ebib-extras-audible
 #+vindex: ebib-extras-audiobookbay
@@ -587,12 +630,14 @@ Each search engine is defined as a constant containing a three-element list: a h
 
 - ~ebib-extras-library-genesis~: Library Genesis (=libgen.li=).
 - ~ebib-extras-amazon~: Amazon (=smile.amazon.com=).
+- ~ebib-extras-worldcat~: WorldCat.
 - ~ebib-extras-internet-archive~: Internet Archive (=archive.org=).
 - ~ebib-extras-university-of-toronto~: University of Toronto library search.
 - ~ebib-extras-university-of-california-berkeley~: UC Berkeley library search.
 - ~ebib-extras-hathitrust~: HathiTrust.
 - ~ebib-extras-connected-papers~: Connected Papers.
 - ~ebib-extras-google-scholar~: Google Scholar.
+- ~ebib-extras-wikipedia~: Wikipedia.
 - ~ebib-extras-goodreads~: Goodreads.
 - ~ebib-extras-audible~: Audible.
 - ~ebib-extras-audiobookbay~: Audiobook Bay.
@@ -618,7 +663,7 @@ These constants define which search commands are invoked for each supertype when
 - ~ebib-extras-search-book-functions~: Goodreads, HathiTrust, UC Berkeley, Internet Archive, Library Genesis, Amazon.
 - ~ebib-extras-download-book-functions~: the same as search-book but with Amazon replaced by Audible and Audiobook Bay.
 - ~ebib-extras-search-article-functions~: Connected Papers, Google Scholar.
-- ~ebib-extras-download-article-functions~: Connected Papers, Google Scholar.
+- ~ebib-extras-download-article-functions~: same as search-article-functions (note: this is the symbol reference, not a copy).
 - ~ebib-extras-search-film-functions~: IMDb, Letterboxd, Metacritic.
 - ~ebib-extras-download-film-functions~: same as search-film-functions.
 
@@ -628,7 +673,10 @@ These constants define which search commands are invoked for each supertype when
 :END:
 
 #+vindex: ebib-extras-db-numbers
+#+vindex: ebib-extras-auto-save-files
 The constant ~ebib-extras-db-numbers~ is an association list mapping database file paths to their numeric identifiers. It associates the personal bibliography files and Tlon project files with numbers 1 through 5.
+
+The constant ~ebib-extras-auto-save-files~ lists database files that should participate in auto-saving. By default, it includes the new personal bibliography and the Tlon fluid bibliography. Larger files containing older entries are excluded to avoid frequent writes.
 
 ** Invalid file tracking
 :PROPERTIES:
@@ -650,7 +698,7 @@ The variable ~ebib-extras-last-reload-times~ is a hash table mapping database fi
 :END:
 
 #+vindex: ebib-extras-existing-authors
-The variable ~ebib-extras-existing-authors~ holds the list of all authors in the current database, populated by ~ebib-extras-create-list-of-existing-authors~.
+The variable ~ebib-extras-existing-authors~ holds the list of all authors in the current database, populated by ~ebib-extras-create-list-of-existing-authors~. It is used by ~ebib-extras-check-author-exists~ to verify that an author already appears in the database ([[#h:author-checking][Author checking]]).
 
 * Patched functions
 :PROPERTIES:

@@ -1,0 +1,201 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename bbdb-extras.info
+@settitle bbdb-extras: Extensions for BBDB
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* BBDB Extras: (bbdb-extras). Extensions for the Insidious Big Brother Database.
+@end direntry
+
+@finalout
+@titlepage
+@title bbdb-extras: Extensions for BBDB
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top bbdb-extras: Extensions for BBDB
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{bbdb-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Commands::
+* Functions::
+* Patched functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Commands
+
+* Quick record creation::
+* Exporting to vCard::
+* Deleting without confirmation::
+
+Functions
+
+* Reading a quick record::
+
+Patched functions
+
+* Browsing URLs directly::
+* Displaying the BBDB buffer::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{bbdb-extras.el} extends BBDB (the Insidious Big Brother Database),
+Emacs' contact management system.  The stock BBDB interface requires
+several prompts to create a record and asks for confirmation before
+routine actions such as opening a URL or deleting a field.  This
+package streamlines those interactions and adds the ability to export
+contacts to the system address book.
+
+The extensions fall into three areas:
+
+@itemize
+@item
+@strong{Quick record creation}: create a new contact by providing only a
+name, skipping the prompts for email, phone, and other fields
+(@ref{Quick record creation}).
+@item
+@strong{Export}: send the current BBDB record to macOS Contacts as a vCard
+(@ref{Exporting to vCard}).
+@item
+@strong{Patched behaviors}: open URLs without confirmation and display the
+BBDB buffer without splitting windows (@ref{Patched functions}).
+@end itemize
+
+@node Commands
+@chapter Commands
+
+@menu
+* Quick record creation::
+* Exporting to vCard::
+* Deleting without confirmation::
+@end menu
+
+@node Quick record creation
+@section Quick record creation
+
+@findex bbdb-extras-create-quick
+When you just need to jot down someone's name without filling in every
+field, use @code{bbdb-extras-create-quick}.  It prompts only for the
+contact's first and last name, creates a minimal BBDB record, and
+displays it.  This replaces the standard @code{bbdb-create-internal}
+workflow, which asks for email, phone, address, and notes.
+
+Internally the command delegates to @code{bbdb-extras-read-record-quick}
+(@ref{Reading a quick record}), which handles the name prompt and
+validation.
+
+@node Exporting to vCard
+@section Exporting to vCard
+
+@findex bbdb-extras-export-vcard
+The command @code{bbdb-extras-export-vcard} exports the BBDB record at
+point to a temporary @samp{.vcf} file and opens it with the system's
+default handler (@samp{open} on macOS), which is typically the Contacts
+application.  This provides a quick path from BBDB to the system
+address book without manual copy-pasting.  It relies on the
+@samp{bbdb-vcard} package for the actual vCard serialization.
+
+@node Deleting without confirmation
+@section Deleting without confirmation
+
+@findex bbdb-extras-delete-field-or-record-no-confirm
+By default, @code{bbdb-delete-field-or-record} asks for confirmation before
+every deletion.  If you find this disruptive---especially during bulk
+cleanup---the command
+@code{bbdb-extras-delete-field-or-record-no-confirm} performs the same
+deletion but bypasses the confirmation prompt.  Use with care, as the
+action is not undoable.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Reading a quick record::
+@end menu
+
+@node Reading a quick record
+@section Reading a quick record
+
+@findex bbdb-extras-read-record-quick
+The function @code{bbdb-extras-read-record-quick} creates an empty BBDB
+record and populates only its first and last name fields via
+@code{bbdb-read-name}.  The optional FIRST-AND-LAST argument controls the
+reading mode (see the @code{bbdb-read-name} docstring for details).  This
+function is used by @code{bbdb-extras-create-quick}
+(@ref{Quick record creation}).
+
+@node Patched functions
+@chapter Patched functions
+
+@samp{bbdb-extras.el} overrides two standard BBDB functions via @code{advice-add}
+with @samp{:override}.
+
+@menu
+* Browsing URLs directly::
+* Displaying the BBDB buffer::
+@end menu
+
+@node Browsing URLs directly
+@section Browsing URLs directly
+
+@findex bbdb-extras-browse-url
+The function @code{bbdb-extras-browse-url} replaces @code{bbdb-browse-url}.  The
+stock version asks the user to confirm before opening each URL; the
+patched version opens the URL in the @samp{url} field directly with
+@code{browse-url}.  A prefix argument WHICH (starting from 0) selects which
+URL to open when the field contains multiple entries.
+
+@node Displaying the BBDB buffer
+@section Displaying the BBDB buffer
+
+@findex bbdb-extras-pop-up-window
+The function @code{bbdb-extras-pop-up-window} replaces @code{bbdb-pop-up-window}.
+The stock version splits the largest window to show the @samp{*BBDB*}
+buffer, which can be disruptive in tiled layouts.  The patched version
+reuses an existing window instead of splitting, providing a less
+intrusive display.  If the @samp{*BBDB*} buffer is already visible, the
+function simply selects its window when SELECT is non-nil.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

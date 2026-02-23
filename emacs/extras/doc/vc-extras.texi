@@ -1,0 +1,388 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename vc-extras.info
+@settitle vc-extras: Extensions for version control
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* VC Extras: (vc-extras). Extensions for version control.
+@end direntry
+
+@finalout
+@titlepage
+@title vc-extras: Extensions for version control
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top vc-extras: Extensions for version control
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{vc-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Commands::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* GitHub account configuration::
+* Profile system::
+* Git directory splitting::
+
+Commands
+
+* Creating repositories::
+* Cloning repositories::
+* Renaming repositories::
+* Deleting local repositories::
+* Splitting the git directory::
+* Checking authentication::
+* Stripping diff markers::
+* Transient menu::
+
+Functions
+
+* Repository information::
+* GitHub CLI operations::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{vc-extras.el} extends Emacs' built-in @samp{vc.el} with commands for
+managing GitHub repositories through the @samp{gh} CLI tool.  It depends on
+the @samp{paths} package for directory constants and on @samp{transient} for its
+command menu.
+
+The package provides a complete repository lifecycle from within Emacs:
+creating repositories on GitHub, cloning them locally (with submodule
+support), renaming them (both locally and on GitHub), and deleting local
+copies.  It supports multiple GitHub accounts through a profile system
+that associates each account with a local directory, so cloned
+repositories automatically land in the right place.
+
+A distinctive feature is the ability to ``split'' the @samp{.git} directory out
+of the repository's working tree into a centralized location.  This is
+useful when the working tree resides in a synced folder (such as
+Dropbox) and you want to avoid syncing the often-large @samp{.git} directory.
+The splitting replaces the @samp{.git} directory with a small text file
+containing a @samp{gitdir:} pointer, a mechanism natively supported by Git.
+
+All major operations are accessible through the @code{vc-extras-menu}
+transient (@ref{Transient menu}).
+
+@node User options
+@chapter User options
+
+@menu
+* GitHub account configuration::
+* Profile system::
+* Git directory splitting::
+@end menu
+
+@node GitHub account configuration
+@section GitHub account configuration
+
+@vindex vc-extras-gh-executable
+@vindex vc-extras-github-account-personal
+@vindex vc-extras-github-account-work
+@vindex vc-extras-personal-repo-dir
+@vindex vc-extras-work-repo-dir
+The user option @code{vc-extras-gh-executable} specifies the path to the
+@samp{gh} CLI executable.  It defaults to the result of @code{executable-find}, so
+it is typically auto-detected.  If @samp{gh} is not in your @samp{PATH}, set this
+to the full path.
+
+The user option @code{vc-extras-github-account-personal} specifies the GitHub
+username for the personal profile.  The default value is @samp{"benthamite"}.
+
+The user option @code{vc-extras-github-account-work} specifies the GitHub
+username or organization name for the work profile.  The default value
+is @samp{"tlon-team"}.
+
+The user option @code{vc-extras-personal-repo-dir} specifies the local
+directory where personal repositories are stored.  It defaults to the
+value of @code{paths-dir-personal-repos}.
+
+The user option @code{vc-extras-work-repo-dir} specifies the local directory
+where work repositories are stored.  It defaults to the value of
+@code{paths-dir-tlon-repos}.
+
+@node Profile system
+@section Profile system
+
+@vindex vc-extras-profiles
+The user option @code{vc-extras-profiles} defines a list of GitHub profiles.
+Each profile is a property list with three keys: @code{:name} (a symbol like
+@code{personal} or @code{work}), @code{:account} (the GitHub username string), and
+@code{:dir} (the local directory path for repositories belonging to that
+account).
+
+The profile system drives most of the package's behavior.  When cloning
+a repository, the account determines the target directory.  When
+listing local repositories for deletion or renaming, all profile
+directories are searched.  The default value defines two profiles
+matching the personal and work accounts described above.
+
+@node Git directory splitting
+@section Git directory splitting
+
+@vindex vc-extras-split-repo
+The user option @code{vc-extras-split-repo} controls whether the @samp{.git}
+directory should be moved to a separate centralized location when
+cloning a repository (@ref{Splitting the git directory}).
+
+The accepted values are:
+
+@itemize
+@item
+@code{nil}: never split.
+@item
+@code{prompt} (the default): ask the user each time.
+@item
+@code{t} (or any other non-@code{nil} value): always split.
+@end itemize
+
+This option only affects the behavior of @code{vc-extras-clone-repo}.  You
+can always split an existing repository manually with
+@code{vc-extras-split-local-repo}.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Creating repositories::
+* Cloning repositories::
+* Renaming repositories::
+* Deleting local repositories::
+* Splitting the git directory::
+* Checking authentication::
+* Stripping diff markers::
+* Transient menu::
+@end menu
+
+@node Creating repositories
+@section Creating repositories
+
+@findex vc-extras-create-repo
+The command @code{vc-extras-create-repo} creates a new repository on GitHub
+using the @samp{gh} CLI@.  It prompts for a name, an account (from the
+profiles in @code{vc-extras-profiles}), a description, and whether the
+repository should be private.  After creation, it offers to clone the
+new repository locally using @code{vc-extras-clone-repo}
+(@ref{Cloning repositories}).
+
+@node Cloning repositories
+@section Cloning repositories
+
+@findex vc-extras-clone-repo
+The command @code{vc-extras-clone-repo} clones a GitHub repository into the
+local directory associated with the repository's account.  When called
+without arguments, it fetches the list of repositories from GitHub (via
+@samp{gh repo list}) and presents them for completion.
+
+The clone uses @samp{git clone --recurse-submodules} to ensure submodules
+are initialized.  After cloning, the command:
+
+@enumerate
+@item
+Initializes and updates submodules, then checks out the default
+branch (@samp{main} or @samp{master}) in each submodule.
+@item
+Optionally splits the @samp{.git} directory based on the
+@code{vc-extras-split-repo} user option (@ref{Git directory splitting}).
+@item
+Optionally prompts to add the repository to Forge (via
+@code{forge-extras-track-repository}), unless the NO-FORGE argument is
+non-@code{nil}.
+@end enumerate
+
+With a prefix argument, the command prompts for the parent directory
+instead of using the account's default directory.
+
+The clone runs asynchronously and reports progress via messages.
+
+@node Renaming repositories
+@section Renaming repositories
+
+@findex vc-extras-rename-repo
+The command @code{vc-extras-rename-repo} renames a repository both locally
+and on GitHub.  It prompts for the repository to rename (with
+completion from local repositories), the new name, and the account if
+it cannot be determined automatically.
+
+The command performs four operations:
+
+@enumerate
+@item
+Renames the local directory.
+@item
+Renames the split @samp{.git} directory (if one exists) and updates the
+@samp{.git} pointer file.
+@item
+Renames the repository on GitHub via the @samp{gh} API@.
+@item
+Updates the Git remote URL in the local configuration.
+@end enumerate
+
+If any step fails (e.g., the remote rename returns an error), the
+command reports a warning but continues with the remaining steps.
+
+@node Deleting local repositories
+@section Deleting local repositories
+
+@findex vc-extras-delete-local-repo
+The command @code{vc-extras-delete-local-repo} deletes a local Git
+repository.  It prompts for the repository name with completion from
+all local Git repositories found in the profile directories.
+
+The command deletes both the main repository directory (if it exists and
+is a Git repository) and the corresponding split @samp{.git} directory in
+@code{paths-dir-split-git} (if it exists).  A message lists the directories
+that were actually deleted.
+
+@node Splitting the git directory
+@section Splitting the git directory
+
+@findex vc-extras-split-local-repo
+The command @code{vc-extras-split-local-repo} moves the @samp{.git} directory
+from a repository to a centralized location under @code{paths-dir-split-git}
+and replaces it with a @samp{.git} file containing a @samp{gitdir:} pointer.
+This is useful when the working tree is in a synced folder (e.g.,
+Dropbox) and you want to avoid syncing the potentially large @samp{.git}
+directory.
+
+If the repository has submodules, the command also updates their @samp{.git}
+pointer files and runs @code{git submodule sync --recursive} to ensure
+everything remains consistent.
+
+@node Checking authentication
+@section Checking authentication
+
+@findex vc-extras-check-gh-authenticated
+The command @code{vc-extras-check-gh-authenticated} verifies that the @samp{gh}
+CLI is properly authenticated by running @samp{gh auth status}.  It displays
+a success message or signals an error with instructions to authenticate.
+
+@node Stripping diff markers
+@section Stripping diff markers
+
+@findex vc-extras-strip-diff-markers
+The command @code{vc-extras-strip-diff-markers} removes leading @samp{+} or @samp{-}
+characters from each line in the active region.  This is useful when you
+paste diff output into a buffer and want to clean it up into plain text.
+
+@node Transient menu
+@section Transient menu
+
+@findex vc-extras-menu
+The command @code{vc-extras-menu} presents a transient menu providing quick
+access to all major @samp{vc-extras} commands: creating, cloning (with and
+without directory confirmation), splitting, renaming, deleting, and
+checking authentication status.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Repository information::
+* GitHub CLI operations::
+@end menu
+
+@node Repository information
+@section Repository information
+
+@findex vc-extras-is-git-dir-p
+@findex vc-extras-has-submodules-p
+@findex vc-extras-get-github-remote
+@findex vc-extras-get-account-of-name
+@findex vc-extras-get-account-prop
+@findex vc-extras-get-repo-dir
+@findex vc-extras-resolve-repo-dir
+@findex vc-extras-list-local-candidates
+The function @code{vc-extras-is-git-dir-p} returns non-@code{nil} if a directory
+is recognized as a Git repository by @code{vc-responsible-backend}.
+
+The function @code{vc-extras-has-submodules-p} checks whether a @samp{.gitmodules}
+file exists in a directory, indicating that the repository has
+submodules.
+
+The function @code{vc-extras-get-github-remote} constructs the HTTPS GitHub
+remote URL for a repository name and account.
+
+The function @code{vc-extras-get-account-of-name} determines which GitHub
+account owns a repository by querying @samp{gh repo list} for each profile.
+
+The function @code{vc-extras-get-account-prop} retrieves a property (such as
+@code{:dir}) for a given account from @code{vc-extras-profiles}.
+
+The function @code{vc-extras-get-repo-dir} constructs the local path for a
+repository, optionally pointing to the @samp{.git} or split @samp{.git}
+directory.
+
+The function @code{vc-extras-resolve-repo-dir} looks up a repository's local
+directory from a candidates alist or constructs it from the account.
+
+The function @code{vc-extras-list-local-candidates} returns an alist of
+@samp{(NAME . DIR)} pairs for all local Git repositories found in the profile
+directories.
+
+@node GitHub CLI operations
+@section GitHub CLI operations
+
+@findex vc-extras-gh-create-repo
+@findex vc-extras-ensure-gh-exists
+@findex vc-extras-gh-list-repos
+@findex vc-extras-gh-list-repos-in-account
+@findex vc-extras-gh-list-repos-in-all-accounts
+The function @code{vc-extras-gh-create-repo} executes the @samp{gh repo create}
+command with the given name, account, description, and visibility.
+
+The function @code{vc-extras-ensure-gh-exists} signals an error if @samp{gh} is
+not installed.
+
+The function @code{vc-extras-gh-list-repos} lists repositories for a
+specific account or all accounts.  It delegates to
+@code{vc-extras-gh-list-repos-in-account} and
+@code{vc-extras-gh-list-repos-in-all-accounts}.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

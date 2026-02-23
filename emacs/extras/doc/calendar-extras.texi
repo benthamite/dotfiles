@@ -1,0 +1,208 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename calendar-extras.info
+@settitle calendar-extras: Extensions for Emacs calendar
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Calendar Extras: (calendar-extras). Extensions for Emacs calendar.
+@end direntry
+
+@finalout
+@titlepage
+@title calendar-extras: Extensions for Emacs calendar
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top calendar-extras: Extensions for Emacs calendar
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{calendar-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Commands::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* Geolocation settings::
+
+Commands
+
+* Geolocation::
+* Date utilities::
+* Block agenda::
+
+Functions
+
+* Fetching geolocation data::
+* Enumerating date ranges::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{calendar-extras.el} extends Emacs' built-in @code{calendar} library with
+geolocation awareness, date utilities, and visual agenda display.  The
+package exists because the stock calendar has no facility for
+automatically determining the user's location, and common date
+arithmetic tasks---such as finding the last day of the previous month
+or enumerating every date in a range---require boilerplate that is
+better factored into reusable helpers.
+
+The geolocation subsystem (@ref{Geolocation}) fetches latitude, longitude,
+and city name from an IP-based service and stores them for use by
+sunrise/sunset calculations and other location-dependent features.
+
+The date utilities (@ref{Date utilities}) cover inserting formatted dates and
+generating date ranges.  A separate command (@ref{Block agenda}) displays
+the current day's Org agenda in the @samp{calfw} visual time-block view.
+
+@node User options
+@chapter User options
+
+@menu
+* Geolocation settings::
+@end menu
+
+@node Geolocation settings
+@section Geolocation settings
+
+@vindex calendar-extras-location-name
+The user option @code{calendar-extras-location-name} stores the name of the
+current location as a string.  You can set it manually, or let
+@code{calendar-extras-set-geolocation} populate it automatically from an IP
+lookup (@ref{Geolocation}).  The default value is an empty string.
+
+@vindex calendar-extras-personal-geolocation
+The user option @code{calendar-extras-personal-geolocation} holds an alist
+of geolocation data.  Each key is a city name (a string) and each
+value is a plist with @samp{:latitude} (float), @samp{:longitude} (float), and
+@samp{:timezone} (string).  Like @code{calendar-extras-location-name}, this
+option is typically set by @code{calendar-extras-set-geolocation} rather
+than by hand.  The default value is an empty list.
+
+@vindex calendar-extras-use-geolocation
+The user option @code{calendar-extras-use-geolocation} is a boolean that
+controls whether geolocation features are active.  When non-nil,
+@code{calendar-extras-set-geolocation} can automatically determine and set
+location-related variables.  The default value is @code{nil}.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Geolocation::
+* Date utilities::
+* Block agenda::
+@end menu
+
+@node Geolocation
+@section Geolocation
+
+@findex calendar-extras-set-geolocation
+When you move to a different city and want calendar computations
+(sunrise/sunset, holidays) to reflect your new location, invoke
+@code{calendar-extras-set-geolocation}.  The command calls the Geoapify
+API---using an API key retrieved from @samp{auth-source-pass} under the
+entry @samp{tlon/core/api.geoapify.com}---to look up your latitude,
+longitude, and city name from your IP address.  It then writes the
+result into @code{calendar-extras-personal-geolocation} and
+@code{calendar-extras-location-name} and confirms the update in the echo
+area.
+
+Internally, the command delegates the HTTP request to
+@code{calendar-extras-get-geolocation} (@ref{Fetching geolocation data}).
+
+@node Date utilities
+@section Date utilities
+
+@findex calendar-extras-time-last-day-of-last-month
+Bookkeeping and reporting tasks often need the last day of the
+previous month.  The command @code{calendar-extras-time-last-day-of-last-month}
+computes that date and inserts it at point in @samp{YYYY-MM-DD} format.  It
+handles the January boundary correctly, rolling back to December of
+the previous year when necessary.
+
+@node Block agenda
+@section Block agenda
+
+@findex calendar-extras-calfw-block-agenda
+If you use the @samp{calfw} (Calendar Framework) package and prefer a
+visual, time-blocked view of your day, the command
+@code{calendar-extras-calfw-block-agenda} opens a @samp{calfw} buffer in
+@samp{block-day} view, sourcing its contents from Org agenda items.  This
+provides an at-a-glance alternative to the standard Org agenda
+dispatcher.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Fetching geolocation data::
+* Enumerating date ranges::
+@end menu
+
+@node Fetching geolocation data
+@section Fetching geolocation data
+
+@findex calendar-extras-get-geolocation
+The function @code{calendar-extras-get-geolocation} performs the HTTP
+request to the Geoapify API and parses the JSON response.  It returns
+a plist with keys @samp{:lat}, @samp{:lon}, and @samp{:city}.  This function
+requires an API key configured via @samp{auth-source-pass}.  It is used by
+@code{calendar-extras-set-geolocation} (@ref{Geolocation}) and can also be called
+programmatically when you need raw geolocation data without updating
+the user options.
+
+@node Enumerating date ranges
+@section Enumerating date ranges
+
+@findex calendar-extras-get-dates-in-range
+The function @code{calendar-extras-get-dates-in-range} takes two date
+strings (START-DATE and END-DATE, in a format understood by
+@code{date-to-time}, such as @samp{YYYY-MM-DD}) and returns a list of all dates
+between them, inclusive, each formatted as @samp{YYYY-MM-DD}.  This is
+useful for generating sequences of dates in scripts or batch
+operations.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

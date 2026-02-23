@@ -1,0 +1,130 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename org2blog-extras.info
+@settitle org2blog-extras: Extensions for org2blog
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* org2blog Extras: (org2blog-extras). Extensions for org2blog.
+@end direntry
+
+@finalout
+@titlepage
+@title org2blog-extras: Extensions for org2blog
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top org2blog-extras: Extensions for org2blog
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{org2blog-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Commands::
+* Advice::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Commands
+
+* Tag migration::
+
+Advice
+
+* Conditional publishing confirmation::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{org2blog-extras.el} extends @samp{org2blog}, the package that publishes Org mode content to WordPress blogs. The upstream package provides commands for creating, editing, and publishing posts and pages, but its tag handling and confirmation prompts may not suit every workflow.
+
+This package makes two targeted improvements:
+
+@itemize
+@item
+@strong{Tag migration.} A command to convert standard Org heading tags into the @samp{POST_TAGS} property that @samp{org2blog} uses for WordPress tag assignment (@ref{Tag migration}).
+@item
+@strong{Smarter confirmation.} Advice that makes the publishing confirmation prompt appear only for new posts (those without a @samp{post-id}), skipping it for updates to already-published content (@ref{Conditional publishing confirmation}).
+@end itemize
+
+The package depends on @samp{org2blog}.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Tag migration::
+@end menu
+
+@node Tag migration
+@section Tag migration
+
+@findex org2blog-extras-move-tags-to-drawer
+WordPress assigns tags to posts through the @samp{POST_TAGS} property in the Org heading's property drawer, but you may already have tags defined in the standard Org tag format (@samp{:tag1:tag2:} at the end of the heading line). The command @code{org2blog-extras-move-tags-to-drawer} scans the current buffer for headings with Org tags, converts them to a comma-separated string, and stores the result in the @samp{POST_TAGS} property.
+
+For example, a heading like @samp{* My Post :emacs:org:} would gain a property @samp{POST_TAGS} with the value @samp{"emacs, org"}. The command processes all headings in the buffer from the current position forward, so you should typically invoke it with point at the beginning of the buffer.
+
+Note that this command does not remove the original Org tags from the heading line. You may want to remove them manually after running the command if they are no longer needed.
+
+@node Advice
+@chapter Advice
+
+@menu
+* Conditional publishing confirmation::
+@end menu
+
+@node Conditional publishing confirmation
+@section Conditional publishing confirmation
+
+@findex org2blog-extras-subtree-publish-save
+The @samp{org2blog} variable @code{org2blog/wp-confirm-post}, when set to @code{t}, causes every publishing operation to prompt for confirmation. This is a useful safety net for new posts, but it becomes tedious when you are iterating on an already-published post or page.
+
+The function @code{org2blog-extras-subtree-publish-save} is installed as @samp{:around} advice on both @code{org2blog-subtree-post-save} and @code{org2blog-subtree-page-save}. It checks whether the current post or page has a @samp{post-id} property (indicating it has been published before):
+
+@itemize
+@item
+If a @samp{post-id} exists, the original publishing function is called directly without any confirmation prompt. This makes rapid updates frictionless.
+@item
+If no @samp{post-id} exists, the advice prompts with ``Post has no ID@. Proceed anyway?'' before allowing publication. This prevents accidental creation of new posts.
+@end itemize
+
+This advice is applied automatically when @samp{org2blog-extras.el} is loaded. It replaces the blanket confirmation with a context-sensitive check that protects against unintended first publications while streamlining updates.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

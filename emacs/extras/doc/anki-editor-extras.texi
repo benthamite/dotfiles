@@ -1,0 +1,234 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename anki-editor-extras.info
+@settitle anki-editor-extras: Extensions for anki-editor
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Anki Editor Extras: (anki-editor-extras). Extensions for anki-editor.
+@end direntry
+
+@finalout
+@titlepage
+@title anki-editor-extras: Extensions for anki-editor
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top anki-editor-extras: Extensions for anki-editor
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{anki-editor-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Commands::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* @code{anki-editor-extras-duplicates-field}::
+
+Commands
+
+* Duplicate management::
+* Plot summaries::
+* Card positioning::
+
+Duplicate management
+
+* Cleanup::
+* Review::
+* Suspension::
+* Resetting and removing tags::
+
+Functions
+
+* Basic note patch::
+* Tag and card operations::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{anki-editor-extras.el} extends @samp{anki-editor}, the Emacs package for creating and managing Anki flashcards from Org mode. While @samp{anki-editor} handles the core workflow of defining notes as Org headings and pushing them to Anki via AnkiConnect, this extras package addresses several gaps in that workflow.
+
+The package provides three main areas of functionality:
+
+@itemize
+@item
+@strong{Duplicate management.} When Anki flags duplicate notes, the package offers an interactive workflow to review each flagged note, classify it as a real or false duplicate, and suspend the confirmed duplicates (@ref{Duplicate management}).
+@item
+@strong{Film plot summaries.} For users who maintain a bibliographic database with @samp{ebib}, the package can generate AI-written plot summaries for films, insert them as Org headings with the correct Anki properties, and push them to Anki in a single step (@ref{Plot summaries}).
+@item
+@strong{Card positioning.} The package provides commands to set the @samp{due} position of new cards, controlling where they appear in the review queue (@ref{Card positioning}).
+@end itemize
+
+Additionally, the package patches @samp{anki-editor-note-at-point} to handle a common edge case where the ``Basic'' Anki model has extra fields (e.g. ``Meta'') that cause the default field-mapping logic to fail (@ref{Basic note patch}).
+
+The package depends on @samp{anki-editor}, @samp{gptel} (for AI-generated plot summaries), and @samp{ebib-extras} (for Bib@TeX{} metadata lookups).
+
+@node User options
+@chapter User options
+
+@menu
+* @code{anki-editor-extras-duplicates-field}::
+@end menu
+
+@node @code{anki-editor-extras-duplicates-field}
+@section @code{anki-editor-extras-duplicates-field}
+
+@vindex anki-editor-extras-duplicates-field
+The user option @code{anki-editor-extras-duplicates-field} specifies which Anki note field is used to identify duplicates. This should match the field you select in Anki's ``Notes -> Find duplicates'' dialog. For example, if you check for duplicates based on the front side of your cards, set this to @samp{"Front"}.
+
+The default value is the string @samp{"Front"}. You would change this if your primary note type uses a different field name for the content you want to deduplicate against.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Duplicate management::
+* Plot summaries::
+* Card positioning::
+@end menu
+
+@node Duplicate management
+@section Duplicate management
+
+@findex anki-editor-extras-duplicates-process
+@findex anki-editor-extras-duplicates-cleanup
+@findex anki-editor-extras-review-duplicates
+@findex anki-editor-extras-suspend-real-duplicates
+@findex anki-editor-extras-duplicates-reset
+@findex anki-editor-extras-remove-tag
+The duplicate management workflow addresses the common problem of accumulating duplicate notes in Anki. After running Anki's built-in ``Find duplicates'' feature (which tags flagged notes with @samp{duplicate}), you can use these commands to process the results from within Emacs.
+
+The command @code{anki-editor-extras-duplicates-process} orchestrates the full workflow in three stages: it first cleans up notes that have already been classified (@ref{Cleanup}), then presents each remaining duplicate for interactive review (@ref{Review}), and finally suspends all confirmed duplicates (@ref{Suspension}).
+
+@menu
+* Cleanup::
+* Review::
+* Suspension::
+* Resetting and removing tags::
+@end menu
+
+@node Cleanup
+@subsection Cleanup
+
+The command @code{anki-editor-extras-duplicates-cleanup} removes the @samp{duplicate} tag from notes that have already been classified. Specifically, it strips @samp{duplicate} from notes tagged both @samp{duplicate} and @samp{real-duplicate}, and from notes tagged both @samp{duplicate} and @samp{no-duplicate}. This ensures that previously reviewed notes do not appear again in the review step.
+
+@node Review
+@subsection Review
+
+The command @code{anki-editor-extras-review-duplicates} iterates over all notes still tagged @samp{duplicate} and opens each one in Anki's browser for inspection. For each note, you are prompted with a single-key interface:
+
+@itemize
+@item
+@samp{r}: tag as @samp{real-duplicate} and remove @samp{duplicate}.
+@item
+@samp{n}: tag as @samp{no-duplicate} and remove @samp{duplicate}.
+@item
+@samp{s}: skip this note without changing its tags.
+@item
+@samp{q}: quit the review loop.
+@end itemize
+
+The prompt displays the note ID and how many notes remain, so you can gauge progress.
+
+@node Suspension
+@subsection Suspension
+
+The command @code{anki-editor-extras-suspend-real-duplicates} suspends all cards belonging to notes tagged @samp{real-duplicate}. This removes confirmed duplicates from your review queue without deleting them, so they can be unsuspended later if needed.
+
+@node Resetting and removing tags
+@subsection Resetting and removing tags
+
+The command @code{anki-editor-extras-duplicates-reset} removes the @samp{duplicate} tag from all notes that have it. This is useful when you want to start the duplicate-detection process from scratch.
+
+The command @code{anki-editor-extras-remove-tag} prompts for a tag name and removes it from every note in your Anki collection that carries it. This is a general-purpose utility not limited to the duplicate workflow.
+
+@node Plot summaries
+@section Plot summaries
+
+@findex anki-editor-extras-insert-film-plot-summary
+@findex anki-editor-extras-push-plot-summary
+The plot summary commands integrate @samp{anki-editor} with @samp{gptel} and @samp{ebib} to generate Anki flashcards for films. The intended workflow is: you visit an Org file whose base name is a Bib@TeX{} key for a film, invoke the command, and it creates a complete Anki note with an AI-generated plot summary.
+
+The command @code{anki-editor-extras-insert-film-plot-summary} uses the current buffer's file name (without extension) as a Bib@TeX{} key. It looks up the film's title, year, and director(s) via @samp{ebib-extras}, then sends a prompt to @samp{gptel} requesting a concise one-paragraph plot summary. The summary is inserted at the end of the buffer under a level-2 heading with all the necessary Anki properties (deck, note type, tags, and front field) pre-filled. After insertion, the command prompts whether to push the note to Anki immediately.
+
+The command @code{anki-editor-extras-push-plot-summary} pushes the Anki note at point and sets its cards' new-card positions starting from a given position. With a prefix argument, you can specify the starting position; otherwise it defaults to 1. This is useful for controlling where the new card appears in your review queue (@ref{Card positioning}).
+
+@node Card positioning
+@section Card positioning
+
+@findex anki-editor-extras-set-card-position
+@findex anki-editor-extras-set-note-card-positions
+Anki assigns each new card a @samp{due} position that determines its order in the new-card queue. The command @code{anki-editor-extras-set-card-position} sets a single card's position via AnkiConnect. Both CARD-ID and POSITION can be integers or numeric strings; POSITION is 1-indexed.
+
+The command @code{anki-editor-extras-set-note-card-positions} operates on all cards belonging to a given note. It retrieves the note's card IDs, sorts them, and assigns consecutive positions starting from START-POSITION (which defaults to 1). For a note with three cards and a start position of 5, the cards receive positions 5, 6, and 7.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Basic note patch::
+* Tag and card operations::
+@end menu
+
+@node Basic note patch
+@section Basic note patch
+
+@findex anki-editor-note-at-point-a
+The function @code{anki-editor-note-at-point-a} is an @samp{:around} advice on @code{anki-editor-note-at-point} that handles a common failure mode. When the ``Basic'' Anki model has additional fields beyond ``Front'' and ``Back'' (e.g. a ``Meta'' field), the default implementation raises an error because it cannot map the extra fields to Org subheadings.
+
+The advice intercepts this error and falls back to a simpler mapping: the Org heading (or the @samp{ANKI_FIELD_FRONT} property, if set) becomes the ``Front'' field, the entry body becomes the ``Back'' field, and any additional model fields are set to empty strings. If the @samp{ANKI_FIELD_FRONT} property is present and non-blank, it always takes precedence, bypassing the error entirely.
+
+This patch is applied automatically when the package is loaded.
+
+@node Tag and card operations
+@section Tag and card operations
+
+@findex anki-editor-extras-remove-tag-from-query
+@findex anki-editor-extras-suspend-cards-by-query
+The function @code{anki-editor-extras-remove-tag-from-query} removes a given tag from all notes matching an Anki search query. It is used internally by the cleanup step of the duplicate workflow (@ref{Cleanup}) but can be called programmatically for other bulk tag operations.
+
+The function @code{anki-editor-extras-suspend-cards-by-query} suspends all cards belonging to notes that match an Anki search query. It first retrieves the matching note IDs, then looks up their card IDs, and finally issues a suspend call via AnkiConnect. It reports how many cards and notes were affected.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

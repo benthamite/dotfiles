@@ -1,0 +1,164 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename abbrev-extras.info
+@settitle abbrev-extras: Extensions for abbrev
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Abbrev Extras: (abbrev-extras). Extensions for abbrev.
+@end direntry
+
+@finalout
+@titlepage
+@title abbrev-extras: Extensions for abbrev
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top abbrev-extras: Extensions for abbrev
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{abbrev-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Commands::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* @code{abbrev-extras-write-file-p}::
+
+Commands
+
+* Adding abbreviations::
+* Writing abbreviations::
+
+Functions
+
+* Abbreviation table management::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{abbrev-extras.el} extends Emacs' built-in abbreviation facility (@samp{abbrev.el}). The standard @samp{add-mode-abbrev} command requires you to be in the target major mode and to have the expansion text in the buffer. This can be inconvenient when you want to define abbreviations for modes you are not currently using or when the expansion is not present in any buffer.
+
+This package provides an interactive command that lets you select any major mode from a completing-read prompt and type both the abbreviation and its expansion as strings (@ref{Adding abbreviations}). It also handles creating the abbrev table if it does not yet exist, and optionally persists the definitions to disk automatically (@ref{@code{abbrev-extras-write-file-p}}).
+
+@node User options
+@chapter User options
+
+@menu
+* @code{abbrev-extras-write-file-p}::
+@end menu
+
+@node @code{abbrev-extras-write-file-p}
+@section @code{abbrev-extras-write-file-p}
+
+@vindex abbrev-extras-write-file-p
+The user option @code{abbrev-extras-write-file-p} controls whether abbreviation definitions are automatically saved to @code{abbrev-file-name} after adding a new mode-specific abbreviation with @code{abbrev-extras-add-mode-abbrev} (@ref{Adding abbreviations}).
+
+The default value is @code{t}, meaning abbreviations are saved immediately. Set this to @code{nil} if you prefer to accumulate changes in memory and save manually with @code{abbrev-extras-write-abbrevs} (@ref{Writing abbreviations}).
+
+The type is a boolean.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Adding abbreviations::
+* Writing abbreviations::
+@end menu
+
+@node Adding abbreviations
+@section Adding abbreviations
+
+@findex abbrev-extras-add-mode-abbrev
+The command @code{abbrev-extras-add-mode-abbrev} lets you define a mode-specific abbreviation in three steps. It prompts for:
+
+@enumerate
+@item
+A major mode, with completion over all functions ending in @samp{-mode}.
+@item
+The abbreviation string (the short form you will type).
+@item
+The expansion string (the text it should expand to).
+@end enumerate
+
+The command determines the correct abbrev table name by appending @samp{-abbrev-table} to the selected mode name (for example, @code{org-mode-abbrev-table} for @code{org-mode}). If that table does not yet exist, it is created automatically. The abbreviation is then defined using @code{define-abbrev}.
+
+When @code{abbrev-extras-write-file-p} is non-nil (@ref{@code{abbrev-extras-write-file-p}}), the full set of abbreviation definitions is written to @code{abbrev-file-name} immediately after adding the new entry.
+
+@node Writing abbreviations
+@section Writing abbreviations
+
+@findex abbrev-extras-write-abbrevs
+The command @code{abbrev-extras-write-abbrevs} saves all abbreviation definitions (both global and mode-specific) to the file specified by @code{abbrev-file-name}. This is a thin wrapper around @code{write-abbrev-file} that also displays a confirmation message.
+
+Use this command when @code{abbrev-extras-write-file-p} is set to @code{nil} and you want to persist your accumulated changes, or at any time to ensure the abbrev file is up to date.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Abbreviation table management::
+@end menu
+
+@node Abbreviation table management
+@section Abbreviation table management
+
+@findex abbrev-extras-get-sorted-modes
+@findex abbrev-extras-add-abbrev-to-table
+@findex abbrev-extras-maybe-create-abbrev-table
+Three helper functions support the main command:
+
+@itemize
+@item
+@code{abbrev-extras-get-sorted-modes} scans the obarray for all functions whose names end in @samp{-mode} and returns a sorted list of their names. This provides the completion candidates for @code{abbrev-extras-add-mode-abbrev} (@ref{Adding abbreviations}).
+
+@item
+@code{abbrev-extras-add-abbrev-to-table} defines an abbreviation in a given table, creating the table first if needed via @code{abbrev-extras-maybe-create-abbrev-table}.
+
+@item
+@code{abbrev-extras-maybe-create-abbrev-table} checks whether a table symbol is bound and, if not, creates an empty abbrev table for it using @code{define-abbrev-table}.
+@end itemize
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

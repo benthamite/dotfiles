@@ -1,0 +1,109 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename org-ref-extras.info
+@settitle org-ref-extras: Extensions for Org Ref
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Org Ref Extras: (org-ref-extras). Extensions for Org Ref.
+@end direntry
+
+@finalout
+@titlepage
+@title org-ref-extras: Extensions for Org Ref
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top org-ref-extras: Extensions for Org Ref
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{org-ref-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Patched functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Patched functions
+
+* Sorting without filling::
+* ISBN import cleanup::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{org-ref-extras.el} extends @samp{org-ref}, the comprehensive citation and bibliography management package for Org mode. Rather than adding new commands, this package focuses exclusively on patching existing @samp{org-ref} functions to fix behaviors that interfere with a particular Bib@TeX{} formatting workflow.
+
+The package uses @samp{el-patch} to make two targeted modifications:
+
+@itemize
+@item
+@strong{Disable automatic filling after sorting.} The standard @code{org-ref-sort-bibtex-entry} command calls @code{bibtex-fill-entry} after sorting, which wraps long field values. This patch removes that call, preserving the original line structure of field values (@ref{Sorting without filling}).
+@item
+@strong{Remove redundant Year field from ISBN imports.} The @code{isbn-to-bibtex} command fetches Bib@TeX{} data from @samp{www.ebook.de}, which often includes both a @samp{date} and a @samp{Year} field. The patch strips the redundant @samp{Year} line before inserting the entry (@ref{ISBN import cleanup}).
+@end itemize
+
+The package depends on @samp{org-ref} (including @samp{org-ref-isbn}) and @samp{el-patch}.
+
+@node Patched functions
+@chapter Patched functions
+
+@menu
+* Sorting without filling::
+* ISBN import cleanup::
+@end menu
+
+@node Sorting without filling
+@section Sorting without filling
+
+@findex org-ref-sort-bibtex-entry
+The command @code{org-ref-sort-bibtex-entry} reorders the fields within a Bib@TeX{} entry according to the precedence defined in @code{org-ref-bibtex-sort-order}. In the upstream version, after sorting the fields the command calls @code{bibtex-fill-entry}, which reformats every field value by wrapping long lines to fit within a fixed column width. This automatic filling can be undesirable when you want to preserve the exact formatting of field values, especially for entries with long URLs or titles that are more readable on a single line.
+
+The @samp{el-patch} in @samp{org-ref-extras.el} removes the @code{bibtex-fill-entry} call while keeping the rest of the sorting and cleaning logic intact. The entry is still cleaned by @code{bibtex-clean-entry} after sorting, which validates the entry structure without altering line breaks within field values.
+
+@node ISBN import cleanup
+@section ISBN import cleanup
+
+@findex isbn-to-bibtex
+The command @code{isbn-to-bibtex} (from @samp{org-ref-isbn}) fetches a Bib@TeX{} entry for a given ISBN from the @samp{www.ebook.de} service and inserts it into a bibliography file. The fetched data frequently includes a @samp{Year} field alongside a @samp{date} field, creating redundancy that can confuse Bib@TeX{} processors or produce duplicate information in formatted citations.
+
+The @samp{el-patch} in @samp{org-ref-extras.el} adds a post-processing step that removes any line matching @samp{Year =...} from the fetched entry string before it is inserted into the bibliography and cleaned. This ensures that only the @samp{date} field (which is the preferred field in modern Bib@LaTeX{} usage) survives the import process. The rest of the import workflow --- including ISBN prompting from the region or kill ring, entry cleaning via @code{org-ref-isbn-clean-bibtex-entry} and @code{org-ref-clean-bibtex-entry}, and saving the file --- remains unchanged.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

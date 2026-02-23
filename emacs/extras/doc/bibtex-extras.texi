@@ -1,0 +1,323 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename bibtex-extras.info
+@settitle bibtex-extras: Extensions for Bib@TeX{} mode
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* BibTeX Extras: (bibtex-extras). Extensions for BibTeX mode.
+@end direntry
+
+@finalout
+@titlepage
+@title bibtex-extras: Extensions for Bib@TeX{} mode
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top bibtex-extras: Extensions for Bib@TeX{} mode
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{bibtex-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Commands::
+* Functions::
+* Patched functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Commands
+
+* Opening entries in Ebib::
+* Setting fields interactively::
+* Attaching files from URLs::
+* Escaping special characters::
+
+Functions
+
+* Getting entry and field data::
+* Setting and modifying fields::
+* Moving entries::
+* Attaching files to entries::
+* Sorting entries::
+* Miscellaneous helpers::
+
+Patched functions
+
+* Year field lookup::
+* Page dash formatting::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{bibtex-extras.el} extends Emacs' built-in @samp{bibtex-mode} with functions
+for manipulating Bib@TeX{} entries and fields, integrating with the @samp{ebib}
+bibliography manager, and automating common tasks in a Bib@LaTeX{}
+workflow.  It depends on @samp{ebib} for database operations and @samp{el-patch}
+for patching built-in Bib@TeX{} functions.
+
+The package provides a comprehensive set of getter and setter functions
+for Bib@TeX{} fields, making it easy to read, write, and modify field
+values programmatically.  These functions are used by other packages in
+the extras ecosystem (such as @samp{ebib-extras.el} and @samp{eww-extras.el}) as
+building blocks for higher-level operations.
+
+For daily use, the package offers commands to open the current entry in
+Ebib, move entries between bibliography files, convert misnamed fields
+(e.g., Zotero's ``titleaddon'' to the standard ``journaltitle''), attach
+downloaded files to entries, and escape special characters in Bib@TeX{}
+files.
+
+The package also includes a custom sorting predicate that replicates
+Ebib's sorting behavior, ensuring consistent ordering regardless of
+whether the buffer is sorted by @samp{bibtex-mode} or @samp{ebib}.
+
+Two @samp{el-patch} modifications adjust built-in behavior: one adds
+``urldate'' to the year lookup fields for automatic key generation, and
+the other changes the page-dashes formatter to add a missing en-dash
+rather than remove an existing one.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Opening entries in Ebib::
+* Setting fields interactively::
+* Attaching files from URLs::
+* Escaping special characters::
+@end menu
+
+@node Opening entries in Ebib
+@section Opening entries in Ebib
+
+@findex bibtex-extras-open-in-ebib
+The command @code{bibtex-extras-open-in-ebib} opens the Bib@TeX{} entry at point
+in the Ebib interface.  It saves the current buffer, reloads the
+corresponding Ebib database to reflect any recent edits, switches to
+the entry in Ebib, and displays the entry buffer.
+
+This is useful when you are editing a Bib@TeX{} file directly and want to
+switch to Ebib's richer interface for operations like viewing associated
+files, editing fields with completion, or navigating cross-references.
+
+@node Setting fields interactively
+@section Setting fields interactively
+
+@findex bibtex-extras-set-field
+The command @code{bibtex-extras-set-field} prompts for a field name and a
+value, then sets that field in the current entry.  If the field already
+exists, it replaces the value; if it does not, it creates the field.
+This command was adapted from @code{bibtex-set-field} in @samp{doi-utils.el}.
+
+@node Attaching files from URLs
+@section Attaching files from URLs
+
+@findex bibtex-extras-url-to-pdf-attach
+@findex bibtex-extras-url-to-html-attach
+The command @code{bibtex-extras-url-to-pdf-attach} generates a PDF from the
+URL field of the current Bib@TeX{} entry (using @code{eww-extras-url-to-file}
+from @samp{eww-extras.el}) and attaches the resulting file to the entry.
+This provides a one-step workflow for archiving web resources alongside
+their bibliographic records.
+
+The command @code{bibtex-extras-url-to-html-attach} performs the equivalent
+operation for HTML files.  Both commands require the entry to have a
+``url'' field.
+
+@node Escaping special characters
+@section Escaping special characters
+
+@findex bibtex-extras-escape-special-characters
+The command @code{bibtex-extras-escape-special-characters} scans the current
+Bib@TeX{} file and escapes unescaped special characters (@samp{$}, @samp{%}, @samp{#},
+@samp{&}) by prepending a backslash.  It skips the ``url'' and ``file'' fields,
+where these characters are legitimate.
+
+This is useful after importing entries from external sources that may
+not properly escape @LaTeX{}-special characters.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Getting entry and field data::
+* Setting and modifying fields::
+* Moving entries::
+* Attaching files to entries::
+* Sorting entries::
+* Miscellaneous helpers::
+@end menu
+
+@node Getting entry and field data
+@section Getting entry and field data
+
+@findex bibtex-extras-get-key
+@findex bibtex-extras-get-field
+@findex bibtex-extras-get-field-name
+@findex bibtex-extras-get-field-in-string
+@findex bibtex-extras-get-entry-as-string
+The function @code{bibtex-extras-get-key} returns the citation key of the
+Bib@TeX{} entry at point (e.g., ``Author2024'').  It narrows to the entry
+and extracts the key from the entry header.
+
+The function @code{bibtex-extras-get-field} returns the value of a named
+field in the current entry.  Whitespace (newlines, tabs, multiple
+spaces) within the value is normalized to single spaces.  It returns
+@code{nil} if the field is empty or absent.
+
+The function @code{bibtex-extras-get-field-name} returns the name of the
+Bib@TeX{} field at point.  This is useful for context-dependent operations.
+
+The function @code{bibtex-extras-get-field-in-string} extracts a field value
+from a Bib@TeX{} entry represented as a string.  It creates a temporary
+buffer, inserts the string, and delegates to @code{bibtex-extras-get-field}.
+
+The function @code{bibtex-extras-get-entry-as-string} returns the complete
+Bib@TeX{} entry at point (or a specified KEY) as a string.  When an
+optional FIELD argument is provided, it returns only that field's value.
+The search can be restricted to specific FILES or defaults to
+@code{bibtex-files}.
+
+@node Setting and modifying fields
+@section Setting and modifying fields
+
+@findex bibtex-extras-add-or-update-field
+@findex bibtex-extras-append-to-field
+@findex bibtex-extras-kill-field
+@findex bibtex-extras-convert-titleaddon-to-journaltitle
+The function @code{bibtex-extras-add-or-update-field} creates a field with
+the given value if it does not exist, or updates its value if it does.
+It combines @code{bibtex-make-field} and @code{bibtex-set-field} into a single
+operation.
+
+The function @code{bibtex-extras-append-to-field} appends a value to an
+existing field, using a configurable delimiter (defaulting to ``;'').  If
+the field is empty, it sets the value directly.  This is useful for
+fields like ``keywords'' that accumulate multiple values.
+
+The function @code{bibtex-extras-kill-field} removes a named field from the
+current entry entirely.
+
+The function @code{bibtex-extras-convert-titleaddon-to-journaltitle} renames
+the ``titleaddon'' field to ``journaltitle'' in the current entry.  This
+corrects a common issue with entries imported via the Zotero translation
+server, which records the online publication venue in ``titleaddon''
+rather than the standard Bib@LaTeX{} ``journaltitle'' field.
+
+@node Moving entries
+@section Moving entries
+
+@findex bibtex-extras-move-entry
+The function @code{bibtex-extras-move-entry} moves a Bib@TeX{} entry identified
+by KEY from its current bibliography file to a TARGET file.  It locates
+the source file using @code{ebib-extras-get-file-of-key}, kills the entry
+from the source buffer, and yanks it at the end of the target buffer,
+saving both.  Ebib must be open for the source file lookup to work.
+
+@node Attaching files to entries
+@section Attaching files to entries
+
+@findex bibtex-extras-url-to-file-attach
+@findex bibtex-extras-attach-file-to-entry
+The function @code{bibtex-extras-url-to-file-attach} generates a file of the
+specified type from the entry's URL field and attaches it using a
+callback.  It is the shared implementation behind
+@code{bibtex-extras-url-to-pdf-attach} and @code{bibtex-extras-url-to-html-attach}
+(@ref{Attaching files from URLs}).
+
+The function @code{bibtex-extras-attach-file-to-entry} attaches a file to
+the Bib@TeX{} entry whose key matches the file's base name.  It is used as
+a callback by the URL-to-file download functions.
+
+@node Sorting entries
+@section Sorting entries
+
+@findex bibtex-extras-entry-sorter
+@findex bibtex-extras-lessp
+The function @code{bibtex-extras-entry-sorter} returns a list containing the
+entry key and a flag indicating whether the entry has a ``crossref''
+field.  It is used by @code{bibtex-maintain-sorted-entries} as the key
+extraction function.
+
+The function @code{bibtex-extras-lessp} is the comparison predicate for
+sorting Bib@TeX{} entries.  Entries with a ``crossref'' field are placed
+before others and sorted in reverse alphabetical order by key.  All
+remaining entries are sorted alphabetically.  This replicates Ebib's
+sorting behavior, ensuring that sorting by either tool produces the same
+result.
+
+@node Miscellaneous helpers
+@section Miscellaneous helpers
+
+@findex bibtex-extras-replace-element-by-name
+The function @code{bibtex-extras-replace-element-by-name} replaces an
+element in a list whose @code{car} matches a target name with a new element.
+It modifies the list in place.
+
+@node Patched functions
+@chapter Patched functions
+
+@menu
+* Year field lookup::
+* Page dash formatting::
+@end menu
+
+@node Year field lookup
+@section Year field lookup
+
+@findex bibtex-autokey-get-year
+The function @code{bibtex-autokey-get-year} is patched using @samp{el-patch} to
+include ``urldate'' in the list of fields checked when determining the
+year for automatic key generation.  The standard function checks only
+``date'' and ``year''; the patch adds ``urldate'' as a fallback.  This allows
+Bib@TeX{} to generate keys for online resources that have only an access
+date.
+
+@node Page dash formatting
+@section Page dash formatting
+
+@findex bibtex-format-entry
+The function @code{bibtex-format-entry} is patched to change the page-dash
+behavior.  The standard function normalizes page ranges to a single dash
+(e.g., ``1--10'' becomes ``1-10'').  The patched version does the opposite:
+it ensures page ranges use an en-dash (e.g., ``1-10'' becomes ``1--10''),
+which is the correct Bib@LaTeX{} convention for page ranges.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

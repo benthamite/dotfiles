@@ -1,0 +1,151 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename elpaca-extras.info
+@settitle elpaca-extras: Extensions for Elpaca
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Elpaca Extras: (elpaca-extras). Extensions for Elpaca.
+@end direntry
+
+@finalout
+@titlepage
+@title elpaca-extras: Extensions for Elpaca
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top elpaca-extras: Extensions for Elpaca
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{elpaca-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Commands::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* @code{elpaca-extras-write-lock-file-excluded}::
+
+Commands
+
+* Reload::
+* Update and reload::
+* Rebuild and reload::
+* Lock file management::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{elpaca-extras.el} extends the @samp{elpaca} package manager with commands that make it easier to iterate on packages without restarting Emacs. When you update or rebuild a package, its old definitions remain loaded in the running session. These extensions automate the tedious process of unloading stale features and reloading the updated versions, and they also provide filtered lock-file writing.
+
+The main capabilities are:
+
+@itemize
+@item
+@strong{Reload after update.} A command that updates a package and automatically reloads its features once the build finishes (@ref{Update and reload}).
+@item
+@strong{Reload after rebuild.} The same workflow for package rebuilds (@ref{Rebuild and reload}).
+@item
+@strong{Manual reload.} A standalone reload command for when you have made local edits to a package's source (@ref{Reload}).
+@item
+@strong{Filtered lock files.} Writing Elpaca lock files while excluding specific packages (@ref{Lock file management}).
+@end itemize
+
+@node User options
+@chapter User options
+
+@menu
+* @code{elpaca-extras-write-lock-file-excluded}::
+@end menu
+
+@node @code{elpaca-extras-write-lock-file-excluded}
+@section @code{elpaca-extras-write-lock-file-excluded}
+
+@vindex elpaca-extras-write-lock-file-excluded
+The user option @code{elpaca-extras-write-lock-file-excluded} specifies a list of package identifiers (symbols) that should be omitted when writing a lock file with @code{elpaca-extras-write-lock-file-excluding} (@ref{Lock file management}). This is useful for packages that are installed from local sources or that you do not want pinned to a specific revision.
+
+The default value is @code{nil} (no exclusions). The type is a list of symbols.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Reload::
+* Update and reload::
+* Rebuild and reload::
+* Lock file management::
+@end menu
+
+@node Reload
+@section Reload
+
+@findex elpaca-extras-reload
+After making local edits to an installed package or after a manual rebuild, the old feature definitions remain active in the running Emacs session. The command @code{elpaca-extras-reload} unloads and reloads the features provided by a specified package.
+
+It works by scanning the package's installation directory for @samp{.el} files, extracting the feature names from their @code{provide} forms, forcefully unloading those features, and then requiring them again. By default, only features that were already loaded are reloaded. With a prefix argument, all features provided by the package are loaded regardless of their previous state.
+
+@strong{Important:} because @code{unload-feature} is called with the @code{force} flag, any data stored in the package's symbols will be lost. If the package saves state on deactivation or Emacs exit, you should trigger that save before reloading.
+
+@node Update and reload
+@section Update and reload
+
+@findex elpaca-extras-update-and-reload
+The command @code{elpaca-extras-update-and-reload} combines updating a package via Elpaca with an automatic reload. It prompts for a queued package, triggers @code{elpaca-update}, and installs a temporary hook on @code{elpaca-post-queue-hook} to detect when the build finishes. If the build succeeds, it calls @code{elpaca-extras-reload} (@ref{Reload}) and reports the result. If the build fails, it directs you to the @samp{*elpaca-log*} buffer for details.
+
+This provides a convenient single-step workflow: update, build, unload old definitions, and load the new ones.
+
+@node Rebuild and reload
+@section Rebuild and reload
+
+@findex elpaca-extras-rebuild-and-reload
+The command @code{elpaca-extras-rebuild-and-reload} is analogous to @code{elpaca-extras-update-and-reload} (@ref{Update and reload}) but uses @code{elpaca-rebuild} instead of @code{elpaca-update}. This is useful when you have made local source changes and want to rebuild the package from those changes rather than fetching upstream updates.
+
+@node Lock file management
+@section Lock file management
+
+@findex elpaca-extras-write-lock-file-excluding
+The command @code{elpaca-extras-write-lock-file-excluding} writes an Elpaca lock file to the specified PATH while filtering out packages listed in @code{elpaca-extras-write-lock-file-excluded} (@ref{@code{elpaca-extras-write-lock-file-excluded}, , User options}). When called interactively, it prompts for the output file path.
+
+The optional ELPACAS argument accepts a queue-like list as used by @code{elpaca-write-lock-file}. When nil, the current queue is used. This makes it possible to call the function programmatically with a custom package set.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

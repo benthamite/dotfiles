@@ -1,0 +1,141 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename jinx-extras.info
+@settitle jinx-extras: Extensions for Jinx
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Jinx Extras: (jinx-extras). Extensions for Jinx.
+@end direntry
+
+@finalout
+@titlepage
+@title jinx-extras: Extensions for Jinx
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top jinx-extras: Extensions for Jinx
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{jinx-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Commands::
+* Enhanced functionality::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Commands
+
+* Toggling languages::
+
+Enhanced functionality
+
+* Abbreviation learning::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{jinx-extras.el} extends the @samp{jinx} package, a fast spell-checking
+framework that uses external checkers such as Hunspell or Aspell.
+While Jinx handles detection and correction of misspellings, this
+extension adds two conveniences that the base package does not provide:
+
+@itemize
+@item
+@strong{Abbreviation learning}: every time you correct a misspelling
+through Jinx, the typo/correction pair is saved as a
+@code{text-mode-abbrev-table} entry so that Emacs will auto-correct the
+same typo in the future (@ref{Abbreviation learning}).
+@item
+@strong{Language toggling}: a single command to switch Jinx between English
+and Spanish, useful for bilingual writers
+(@ref{Toggling languages}).
+@end itemize
+
+@node Commands
+@chapter Commands
+
+@menu
+* Toggling languages::
+@end menu
+
+@node Toggling languages
+@section Toggling languages
+
+@findex jinx-extras-toggle-languages
+If you regularly write in two languages, switching Jinx's dictionary
+each time can be tedious.  The command @code{jinx-extras-toggle-languages}
+checks the current value of @code{jinx-languages}: if it is @samp{"en"}, the
+command switches to @samp{"es"} (Spanish), and vice versa.  It calls the
+standard @code{jinx-languages} function to apply the change so that the
+buffer is re-checked immediately.
+
+This command assumes a bilingual English/Spanish workflow.  If you work
+with different languages, you would need to adjust the toggle targets
+in the source.
+
+@node Enhanced functionality
+@chapter Enhanced functionality
+
+@menu
+* Abbreviation learning::
+@end menu
+
+@node Abbreviation learning
+@section Abbreviation learning
+
+When you correct a misspelled word through Jinx's correction
+interface, @samp{jinx-extras.el} automatically defines an abbreviation in
+@code{text-mode-abbrev-table} mapping the misspelled word to its
+correction.  From that point on, typing the same misspelling in any
+@code{text-mode}-derived buffer triggers automatic expansion to the correct
+word (provided @code{abbrev-mode} is active).
+
+This is implemented via @samp{:before} advice on the internal Jinx
+function @code{jinx--correct-replace}.  The advice extracts the original
+misspelled text from the Jinx overlay, pairs it with the selected
+correction, and calls @code{define-abbrev}.  A confirmation message is
+displayed in the echo area for each new abbreviation.
+
+Over time this builds a personalized typo-correction dictionary that
+speeds up writing without any manual configuration.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

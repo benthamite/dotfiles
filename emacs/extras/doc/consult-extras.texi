@@ -1,0 +1,134 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename consult-extras.info
+@settitle consult-extras: Extensions for consult
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Consult Extras: (consult-extras). Extensions for consult.
+@end direntry
+
+@finalout
+@titlepage
+@title consult-extras: Extensions for consult
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top consult-extras: Extensions for consult
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{consult-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Commands::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Commands
+
+* Multiline toggle::
+* Directory-scoped search::
+* Org heading navigation::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{consult-extras.el} extends @samp{consult}, the package that provides enhanced search and navigation commands built on Emacs' completing-read interface. While @samp{consult} ships with powerful commands like @code{consult-ripgrep} and @code{consult-locate}, it does not include directory-scoped variants or a way to toggle multiline matching on the fly.
+
+This package fills those gaps with two groups of commands:
+
+@itemize
+@item
+Directory-scoped search commands that restrict @samp{consult-ripgrep} and @samp{consult-locate} to the current directory, avoiding the need to specify a search root each time (@ref{Directory-scoped search}).
+@item
+An enhanced Org heading navigation command that widens the buffer and unfolds all headings before jumping, ensuring consistent results regardless of the buffer's visibility state (@ref{Org heading navigation}).
+@end itemize
+
+The package also provides a toggle for multiline ripgrep search (@ref{Multiline toggle}).
+
+It depends on the @samp{paths} package for directory path definitions.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Multiline toggle::
+* Directory-scoped search::
+* Org heading navigation::
+@end menu
+
+@node Multiline toggle
+@section Multiline toggle
+
+@findex consult-extras-toggle-multiline
+By default, @code{consult-ripgrep} searches line by line. When you need to find patterns that span multiple lines---such as a function signature followed by a specific body expression---the command @code{consult-extras-toggle-multiline} appends the @samp{--multiline --multiline-dotall} flags to @code{consult-ripgrep-args}. Calling it again removes the flags, restoring single-line behavior.
+
+This is a toggle command: it modifies the global value of @code{consult-ripgrep-args}, so the change persists until toggled back or until Emacs is restarted.
+
+@node Directory-scoped search
+@section Directory-scoped search
+
+@findex consult-extras-locate-current
+@findex consult-extras-locate-file-current
+@findex consult-extras-ripgrep-current
+Three commands restrict standard @samp{consult} search commands to the current directory (@code{default-directory}):
+
+@itemize
+@item
+@code{consult-extras-locate-current} runs @code{consult-locate} scoped to the current directory. On macOS, it uses @samp{mdfind-wrapper} with the @samp{-onlyin} flag to restrict Spotlight's search scope. This is useful when you want to find a file somewhere within the current project tree without searching the entire filesystem.
+
+@item
+@code{consult-extras-locate-file-current} works like @code{consult-extras-locate-current} but adds the @samp{-name} flag, so it matches only against file names rather than file contents or metadata. Use this when you know part of the filename but not its exact location within the directory tree.
+
+@item
+@code{consult-extras-ripgrep-current} runs @code{consult-ripgrep} in the current directory. This is a convenience wrapper that passes @code{default-directory} as the search root, saving you from having to specify it interactively.
+@end itemize
+
+@node Org heading navigation
+@section Org heading navigation
+
+@findex consult-extras-org-heading
+When working in a large Org file with many folded subtrees and narrowed regions, jumping to a heading with the standard @code{consult-org-heading} can produce unexpected results: narrowed-away headings are invisible, and folded content may not be reachable.
+
+The command @code{consult-extras-org-heading} addresses this by widening the buffer and unfolding all headings (via @code{org-extras-fold-show-all-headings} from @samp{org-extras.el}) before calling @code{consult-org-heading}. After the jump, it recenters the display so the target heading appears near the top of the window.
+
+It accepts the same optional MATCH and SCOPE arguments as @code{consult-org-heading}, so it can be used as a drop-in replacement.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

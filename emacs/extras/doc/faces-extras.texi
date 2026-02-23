@@ -1,0 +1,203 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename faces-extras.info
+@settitle faces-extras: Extensions for Emacs faces
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Faces Extras: (faces-extras). Extensions for Emacs faces.
+@end direntry
+
+@finalout
+@titlepage
+@title faces-extras: Extensions for Emacs faces
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top faces-extras: Extensions for Emacs faces
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{faces-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Commands::
+* Custom faces::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* Font definitions::
+* Height definitions::
+
+Commands
+
+* Setting face attributes::
+* Describing faces::
+
+Custom faces
+
+* Display time face::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{faces-extras.el} extends Emacs' built-in @samp{faces} library with a system for programmatically managing face attributes. Emacs faces control the visual appearance of text---fonts, colors, heights, and styles---but configuring them in bulk requires repetitive calls to @code{set-face-attribute}. This package provides a higher-level interface that can apply face settings individually or in batches, store them for later reapplication (for example, after a theme change), and evaluate dynamic values at apply-time.
+
+The package also defines user options for common font and height settings used across fixed-pitch, variable-pitch, and Org mode elements, making it easy to adjust typographic parameters from a single location.
+
+The main capabilities are:
+
+@itemize
+@item
+@strong{Batch face attribute management.} Functions to set, store, and reapply collections of face attributes (@ref{Setting face attributes}).
+@item
+@strong{Font and height configuration.} User options for fixed-pitch and variable-pitch fonts, plus Org-specific height adjustments (@ref{Font definitions} and @ref{Height definitions}).
+@item
+@strong{Enhanced face inspection.} A describe-face variant that disables @code{hl-line-mode} to avoid interference (@ref{Describing faces}).
+@item
+@strong{Custom face definitions.} A face for the display-time string in the mode line or tab bar (@ref{Display time face}).
+@end itemize
+
+@node User options
+@chapter User options
+
+@menu
+* Font definitions::
+* Height definitions::
+@end menu
+
+@node Font definitions
+@section Font definitions
+
+@vindex faces-extras-variable-pitch-font
+The user option @code{faces-extras-variable-pitch-font} specifies the font family for variable-pitch text. You might change this if you prefer a different serif or sans-serif font for prose-heavy buffers such as Org mode or EWW@.
+
+The default value is @samp{"Source Serif Pro"}. The type is a string.
+
+@vindex faces-extras-fixed-pitch-font
+The user option @code{faces-extras-fixed-pitch-font} specifies the font family for fixed-pitch text. This is the monospace font used in code buffers, Org source blocks, and similar contexts.
+
+The default value is @samp{"SauceCodePro Nerd Font"}. The type is a string.
+
+@node Height definitions
+@section Height definitions
+
+These options define sizes and relative heights for various text elements. Heights are expressed as floating-point multipliers relative to the base font size (e.g., @code{0.8} means 80% of the default height).
+
+@vindex faces-extras-fixed-pitch-size
+The user option @code{faces-extras-fixed-pitch-size} specifies the absolute size (in tenths of a point) for fixed-pitch faces. A value of @code{120} corresponds to a 12-point font. The type is an integer. The default value is @code{120}.
+
+@vindex faces-extras-fixed-pitch-height
+The user option @code{faces-extras-fixed-pitch-height} specifies the relative height for fixed-pitch faces. This is typically used when fixed-pitch text appears alongside variable-pitch text and needs to be smaller to maintain visual harmony. The type is a number. The default value is @code{0.8}.
+
+@vindex faces-extras-variable-pitch-height
+The user option @code{faces-extras-variable-pitch-height} specifies the relative height for variable-pitch faces. A value greater than @code{1.0} makes variable-pitch text larger than the default, which can improve readability for prose. The type is a number. The default value is @code{1.4}.
+
+@vindex faces-extras-org-level-height
+The user option @code{faces-extras-org-level-height} controls the relative height for @code{org-level-*} heading faces. The type is a number. The default value is @code{0.9}.
+
+@vindex faces-extras-org-block-height
+The user option @code{faces-extras-org-block-height} controls the relative height for the @code{org-block} face, which applies to source blocks and other block elements in Org. The type is a number. The default value is @code{0.8}.
+
+@vindex faces-extras-org-code-height
+The user option @code{faces-extras-org-code-height} controls the relative height for the @code{org-code} face. The type is a number. The default value is @code{1.0}.
+
+@vindex faces-extras-org-date-height
+The user option @code{faces-extras-org-date-height} controls the relative height for the @code{org-date} face. The type is a number. The default value is @code{0.9}.
+
+@vindex faces-extras-org-tag-height
+The user option @code{faces-extras-org-tag-height} controls the relative height for the @code{org-tag} face. The type is a number. The default value is @code{0.9}.
+
+@vindex faces-extras-org-property-value-height
+The user option @code{faces-extras-org-property-value-height} controls the relative height for the @code{org-property-value} face. The type is a number. The default value is @code{0.8}.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Setting face attributes::
+* Describing faces::
+@end menu
+
+@node Setting face attributes
+@section Setting face attributes
+
+@findex faces-extras-set-face-attribute
+@findex faces-extras-set-face-attributes
+@findex faces-extras-set-and-store-face-attributes
+@findex faces-extras-set-custom-face-attributes
+The package provides a layered system for applying face attributes. At the lowest level, @code{faces-extras-set-face-attribute} takes a single attribute specification---a list whose @code{car} is the face symbol and whose @code{cdr} is a property list of attribute-value pairs---and applies it via @code{set-face-attribute}. Crucially, it evaluates any symbols or functions in the value positions before applying them, so you can use variable names or lambdas as attribute values:
+
+@lisp
+(faces-extras-set-face-attribute '(default :height faces-extras-fixed-pitch-size))
+@end lisp
+
+The function @code{faces-extras-set-face-attributes} takes a list of such specifications and applies them all.
+
+For persistent management, @code{faces-extras-set-and-store-face-attributes} both applies the attributes immediately and appends them to the variable @code{faces-extras-custom-face-attributes}. List-valued attributes are automatically wrapped in lambdas for deferred evaluation. This means you can accumulate face settings from different parts of your configuration and reapply them all at once.
+
+The command @code{faces-extras-set-custom-face-attributes} reapplies all stored attributes from @code{faces-extras-custom-face-attributes}. This is useful after a theme change or frame creation, when faces may have been reset. You can add it to a theme-loading hook:
+
+@lisp
+(add-hook 'modus-themes-after-load-theme-hook
+          #'faces-extras-set-custom-face-attributes)
+@end lisp
+
+@node Describing faces
+@section Describing faces
+
+@findex faces-extras-describe-face
+The built-in @code{describe-face} command can be misleading when @code{hl-line-mode} is active, because the highlight overlay adds attributes that obscure the face you are trying to inspect. The command @code{faces-extras-describe-face} temporarily disables both buffer-local @code{hl-line-mode} and @code{global-hl-line-mode}, calls @code{describe-face} with the face at point, and then restores the original mode state. This gives you an accurate reading of the face without manual toggling.
+
+@node Custom faces
+@chapter Custom faces
+
+@menu
+* Display time face::
+@end menu
+
+@node Display time face
+@section Display time face
+
+The face @code{faces-extras-display-time} inherits from @code{bold} and is intended for the @code{display-time-string} when shown in the mode line or tab bar. It is used by the time element in @samp{tab-bar-extras.el} (@ref{Display time face}) to give the clock a visually distinct appearance.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

@@ -1,0 +1,143 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename register-extras.info
+@settitle register-extras: Extensions for Emacs registers
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Register Extras: (register-extras). Extensions for Emacs registers.
+@end direntry
+
+@finalout
+@titlepage
+@title register-extras: Extensions for Emacs registers
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top register-extras: Extensions for Emacs registers
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{register-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Commands::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Commands
+
+* Kill ring to register::
+* Buffer registers::
+* Transient menu::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{register-extras.el} extends the built-in Emacs register system (@samp{register.el}) with additional storage operations and a unified transient menu. Emacs registers are single-character slots that can hold text, numbers, positions, window configurations, and more, but the standard commands are scattered and easy to forget. This package adds:
+
+@itemize
+@item
+A command to store text directly from the kill ring into a register (@ref{Kill ring to register}).
+@item
+A lightweight buffer-register system for quick switching between buffers by single-character keys (@ref{Buffer registers}).
+@item
+A transient dispatch menu that groups all register operations in one place (@ref{Transient menu}).
+@end itemize
+
+The package depends on @samp{register} and @samp{transient}.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Kill ring to register::
+* Buffer registers::
+* Transient menu::
+@end menu
+
+@node Kill ring to register
+@section Kill ring to register
+
+@findex register-extras-kill-to-register
+The built-in @code{copy-to-register} stores the current region, but sometimes you want to store a previously killed piece of text without first yanking and re-selecting it. The command @code{register-extras-kill-to-register} prompts you to choose an item from the kill ring (via @code{read-from-kill-ring}) and then a target register (via @code{register-read-with-preview}), and stores the chosen text in that register with @code{set-register}. This saves the round-trip of yanking, selecting, and copying to a register.
+
+@node Buffer registers
+@section Buffer registers
+
+@findex register-extras-buffer-to-register
+@findex register-extras-jump-to-buffer
+While Emacs registers can store buffer positions, there is no built-in way to bind a single character to a buffer for instant switching. The command @code{register-extras-buffer-to-register} prompts for a character and associates it with the current buffer in an internal alist (@code{register-extras-keys-alist}). Any previous association for that character is replaced.
+
+The companion command @code{register-extras-jump-to-buffer} prompts for a character and switches to the buffer associated with it. If the buffer has been killed since the association was made, a message is displayed instead.
+
+These two commands provide a lightweight alternative to bookmarks or tab-bar tabs when you want to toggle rapidly between a small set of buffers during a focused work session.
+
+@node Transient menu
+@section Transient menu
+
+@findex register-extras-dispatch
+The command @code{register-extras-dispatch} presents a transient menu that organizes all register-related operations by content type. The menu groups include:
+
+@itemize
+@item
+@strong{region}: append, copy, and prepend to register.
+@item
+@strong{number}: store and increment.
+@item
+@strong{kill ring}: store via @code{register-extras-kill-to-register} (@ref{Kill ring to register}).
+@item
+@strong{kmacro}: store and execute.
+@item
+@strong{rectangle}: copy to register.
+@item
+@strong{window/frame config}: store frame, window, or all-windows configuration.
+@item
+@strong{navigation}: jump to register and store point.
+@item
+@strong{buffer}: jump and store via the buffer-register commands (@ref{Buffer registers}).
+@item
+@strong{display}: consult (via @samp{consult-register}), list, and view registers.
+@item
+@strong{insert}: insert register contents.
+@end itemize
+
+This menu provides a single entry point for the full range of register operations, removing the need to remember individual key bindings for each command.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

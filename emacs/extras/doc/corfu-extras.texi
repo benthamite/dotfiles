@@ -1,0 +1,119 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename corfu-extras.info
+@settitle corfu-extras: Extensions for corfu
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Corfu Extras: (corfu-extras). Extensions for corfu.
+@end direntry
+
+@finalout
+@titlepage
+@title corfu-extras: Extensions for corfu
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top corfu-extras: Extensions for corfu
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{corfu-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Functions::
+* Commands::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Functions
+
+* Minibuffer activation::
+
+Commands
+
+* Transferring completion to the minibuffer::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{corfu-extras.el} extends @samp{corfu}, the lightweight completion-overlay package for Emacs. Corfu displays completion candidates in a popup at point, but two common workflow needs are not covered out of the box:
+
+@itemize
+@item
+Enabling Corfu in the minibuffer without conflicting with @samp{vertico}, which also operates there (@ref{Minibuffer activation}).
+@item
+Transferring a Corfu completion session to the minibuffer for richer interaction via @samp{consult} (@ref{Transferring completion to the minibuffer}).
+@end itemize
+
+This package provides one function and one command addressing these needs. The transfer command requires the @samp{consult} package.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Minibuffer activation::
+@end menu
+
+@node Minibuffer activation
+@section Minibuffer activation
+
+@findex corfu-extras-enable-always-in-minibuffer
+When both Corfu and Vertico are installed, enabling Corfu unconditionally in the minibuffer would cause conflicts: both packages would attempt to display candidates simultaneously. The function @code{corfu-extras-enable-always-in-minibuffer} solves this by checking whether Vertico is active (via the internal variable @code{vertico--input}) before enabling @code{corfu-mode}.
+
+This function is designed to be added to @code{minibuffer-setup-hook}. With it in place, Corfu provides completions in prompts like @samp{M-:} (@code{eval-expression}) and @samp{M-!} (@code{shell-command}), while Vertico remains in charge during @samp{M-x}, @code{find-file}, and other standard completing-read prompts.
+
+This approach is adapted from Protesilaos Stavrou's configuration.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Transferring completion to the minibuffer::
+@end menu
+
+@node Transferring completion to the minibuffer
+@section Transferring completion to the minibuffer
+
+@findex corfu-extras-move-to-minibuffer
+Sometimes the Corfu popup is too constrained for the task at hand: you may want to filter candidates further, preview them, or use Consult's narrowing features. The command @code{corfu-extras-move-to-minibuffer} transfers the active Corfu completion session to the minibuffer by calling @code{consult-completion-in-region}. The completion boundaries, table, predicate, and extra properties are all preserved.
+
+This command is automatically added to @code{corfu-continue-commands}, which means invoking it does not dismiss the Corfu popup prematurely. You can bind it to a key in @code{corfu-map} for convenient access while the popup is visible.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

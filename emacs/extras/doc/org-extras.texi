@@ -1,0 +1,1308 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename org-extras.info
+@settitle org-extras: Extensions for Org mode
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Org Extras: (org-extras). Extensions for Org mode.
+@end direntry
+
+@finalout
+@titlepage
+@title org-extras: Extensions for Org mode
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top org-extras: Extensions for Org mode
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{org-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Commands::
+* Functions::
+* Variables::
+* Patched functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* Agenda file exclusions::
+* Automatic ID exclusions::
+* BBDB anniversaries heading::
+* Clock report parameters::
+* Participant exclusion regexp::
+* Babel evaluation languages::
+
+Commands
+
+* Editing and navigation::
+* Agenda management::
+* Clocking and timestamps::
+* Folding, cycling, and narrowing: Folding cycling and narrowing. 
+* ID management::
+* List handling::
+* Refiling::
+* Links and sorting::
+* Babel and encryption::
+* External integration::
+* Transient menus::
+
+Editing and navigation
+
+* Setting TODO properties::
+* Copying URLs and links::
+* Removing links::
+* Inserting subheadings::
+* Copying heading contents and names::
+* Counting words::
+* Jumping to the first heading::
+* Opening links in EWW::
+* Pasting clipboard content as Org::
+* Pasting images from the clipboard::
+* Toggling inline images::
+
+Agenda management
+
+* Switching to today's agenda::
+* Going to an agenda item and clocking in::
+* Marking done and postponing::
+* DWIM switching from agenda::
+* Toggling anniversaries::
+* Toggling log mode::
+* Removing agenda highlighting::
+
+Clocking and timestamps
+
+* Inserting clock entries::
+* Inserting timestamps::
+* Jumping to clock entries::
+* Clock reports::
+* Deleting headings without logbooks::
+* Meeting participants::
+
+Folding, cycling, and narrowing
+
+* Global cycling::
+* Showing all headings::
+* Showing drawers::
+* Narrowing to entries::
+
+ID management
+
+* Automatic ID addition::
+* Updating ID locations::
+* Finding duplicate IDs::
+* Processing duplicate IDs::
+
+Refiling
+
+* Jumping to the latest refiled item::
+* Refiling and archiving::
+* Regenerating the refile cache::
+
+Links and sorting
+
+* Sorting links::
+* Copying EWW content as Org::
+
+Babel and encryption
+
+* Tangling::
+* Decryption and clock evaluation::
+
+External integration
+
+* Importing from Google Drive::
+* Removing trailing headings::
+
+Functions
+
+* Link helpers::
+* Heading content helpers::
+* Productivity tracking::
+* Image filename generation::
+* Capture hook function::
+* Clocktable sorting::
+* Heading navigation::
+* Subtree display helpers::
+* Babel evaluation::
+* Refiling helpers::
+* Linkifying elements::
+* Participant checking::
+* ID update warning handler::
+
+Patched functions
+
+* Clock resolution scope::
+* Agenda file checking::
+* Citation insertion::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{org-extras.el} extends Emacs' built-in Org mode with a substantial
+collection of commands and helper functions that address gaps in
+day-to-day Org workflows.  Where Org mode provides the foundation for
+outlining, task management, clocking, and document authoring,
+@samp{org-extras.el} adds convenience commands, DWIM behaviors, and
+integration glue that make those workflows smoother and more
+keyboard-driven.
+
+The package depends on @samp{el-patch} (for patching several upstream Org
+functions), @samp{paths} (for resolving common directory and file paths), and
+@samp{transient} (for the navigation menus).  Several commands also rely on
+external tools such as @samp{org-roam}, @samp{pandoc}, @samp{pngpaste}, and @samp{gdrive}.
+
+The extensions can be grouped into several thematic areas:
+
+@itemize
+@item
+@strong{Editing and navigation.}  Commands for copying heading names and
+contents, inserting subheadings, counting words, extracting and
+manipulating links, pasting clipboard content as Org markup or images,
+and toggling inline image display (@ref{Editing and navigation}).
+
+@item
+@strong{Agenda management.}  Commands for switching to the daily agenda view,
+clocking in from the agenda, marking items done or postponed, toggling
+anniversary display, and DWIM switching between agenda log lines and
+source files (@ref{Agenda management}).
+
+@item
+@strong{Clocking and timestamps.}  Commands for inserting clock entries and
+timestamps, jumping to the latest clock entry, inserting clock
+reports, sorting clock tables, deleting headings without logbooks, and
+automatically adding meeting participants when clocking in
+(@ref{Clocking and timestamps}).
+
+@item
+@strong{Capture hooks.}  A comprehensive hook function that performs
+context-dependent actions when finalizing Org capture templates
+(@ref{Capture hook function, , Capture hooks}).
+
+@item
+@strong{Folding, cycling, and narrowing.}  Enhanced global cycling that hides
+archives, commands to show properties and logbooks, and narrowing
+commands that respect subtree structure (@ref{Folding cycling and narrowing, , Folding@comma{} cycling@comma{} and narrowing}).
+
+@item
+@strong{ID management.}  Automatic addition of Org IDs to headings with
+fine-grained exclusion controls, updating ID locations across the Org
+directory, and a workflow for finding and resolving duplicate IDs
+(@ref{ID management}).
+
+@item
+@strong{Refiling.}  Commands for jumping to the last refiled item, refiling
+and archiving in a single step, refiling to specific positions, and
+regenerating the refile cache (@ref{Refiling}).
+
+@item
+@strong{Links and sorting.}  Sorting lists of Org links, linkifying plain
+text against Org Roam nodes, and copying EWW buffer content with Org
+formatting (@ref{Links and sorting}).
+
+@item
+@strong{Babel and encryption.}  A confirmation function for selective code
+block evaluation, a tangle command, and a DWIM command that handles
+both decryption and clock-line evaluation (@ref{Babel and encryption}).
+
+@item
+@strong{External integration.}  Importing Google Docs via Pandoc, removing
+trailing empty headings in automated note directories
+(@ref{External integration}).
+
+@item
+@strong{Transient menus.}  Quick-access menus for personal projects, Tlon
+projects, and @samp{config.org} sections (@ref{Transient menus}).
+
+@item
+@strong{Patched functions.}  Upstream Org functions patched via @samp{el-patch} to
+improve clock resolution, agenda file handling, and citation insertion
+(@ref{Patched functions}).
+@end itemize
+
+@node User options
+@chapter User options
+
+@menu
+* Agenda file exclusions::
+* Automatic ID exclusions::
+* BBDB anniversaries heading::
+* Clock report parameters::
+* Participant exclusion regexp::
+* Babel evaluation languages::
+@end menu
+
+@node Agenda file exclusions
+@section Agenda file exclusions
+
+@vindex org-extras-agenda-files-excluded
+The user option @code{org-extras-agenda-files-excluded} holds a list of file
+paths to exclude from Org Agenda generation.  Some files lack the
+@samp{property} tag that would normally prevent them from appearing in the
+agenda, yet they may still be included if they have been modified
+recently (for example, via @code{vulpea-agenda-files-update}).  Adding them
+to this list ensures that their TODOs and time logs do not clutter the
+agenda view.
+
+The default value is @code{nil} (no files excluded).  The type is a list of
+file paths.
+
+@node Automatic ID exclusions
+@section Automatic ID exclusions
+
+@vindex org-extras-id-auto-add-excluded-directories
+@vindex org-extras-id-auto-add-excluded-files
+@vindex org-extras-id-auto-add-excluded-headings
+@vindex org-extras-id-auto-add-level-1-dirs
+The automatic ID machinery (@ref{ID management}) respects four user
+options that control where and how IDs are added.
+
+The user option @code{org-extras-id-auto-add-excluded-directories} is a list
+of directory paths.  Files inside these directories will be skipped when
+@code{org-extras-id-auto-add-ids-to-headings-in-file} runs.  The default
+value is @code{nil}.
+
+The user option @code{org-extras-id-auto-add-excluded-files} is either a list
+of file paths to skip, or @code{t} to disable automatic ID addition globally.
+Its default value is a list containing @code{paths-file-orb-noter-template}.
+When set to a non-nil, non-list value such as @code{t}, the function treats
+it as ``exclude all files''.
+
+The user option @code{org-extras-id-auto-add-excluded-headings} is a list of
+heading titles (strings) that should never receive an automatic ID@.  The
+default value is @samp{("Local variables" "COMMENT Local variables" "TODO
+Local variables")}.
+
+The user option @code{org-extras-id-auto-add-level-1-dirs} is a list of
+directory paths.  For files in these directories, only level-1 headings
+receive automatic IDs, rather than headings at all levels.  The default
+value includes the @samp{gptel/} and @samp{chatgpt/} subdirectories under the
+notes directory.
+
+@node BBDB anniversaries heading
+@section BBDB anniversaries heading
+
+@vindex org-extras-bbdb-anniversaries-heading
+The user option @code{org-extras-bbdb-anniversaries-heading} specifies the
+Org ID of the heading in @samp{calendar.org} that contains the BBDB
+anniversary sexp.  The command @code{org-extras-agenda-toggle-anniversaries}
+uses this ID to locate and comment or uncomment the anniversary line
+(@ref{Toggling anniversaries}).
+
+The default value is the string
+@samp{"2CE5A4E6-842C-4350-ADD0-13D5FC101A20"}.  Set it to @code{nil} to disable
+the toggle functionality entirely.
+
+@node Clock report parameters
+@section Clock report parameters
+
+@vindex org-extras-clock-report-parameters
+The user option @code{org-extras-clock-report-parameters} is a format string
+used by @code{org-extras-clock-report-insert} to generate the
+@samp{#+BEGIN: clocktable} dynamic block (@ref{Clock reports}).  It
+contains two @samp{%s} placeholders: the first for the scope (@samp{agenda},
+@samp{file}, or @samp{subtree}), the second for the date range parameters.
+
+The default value is:
+
+@example
+#+BEGIN: clocktable :scope %s :maxlevel 9 :narrow 500! :fileskip0 t %s
+#+END:
+@end example
+
+You might change this to adjust the maximum heading level, column width,
+or to add additional clocktable parameters.
+
+@node Participant exclusion regexp
+@section Participant exclusion regexp
+
+@vindex org-extras-clock-in-add-participants-exclude
+The user option @code{org-extras-clock-in-add-participants-exclude} is a
+regexp.  When clocking into a heading whose title matches this regexp,
+the automatic participant prompt is suppressed (@ref{Meeting participants}).
+This is useful for recurring calendar entries (such as personal focus
+blocks) where prompting for participants would be a nuisance.
+
+The default value is @code{nil} (no exclusions).  The type is a regexp
+string.
+
+@node Babel evaluation languages
+@section Babel evaluation languages
+
+@vindex org-extras-confirm-babel-evaluate-languages
+The user option @code{org-extras-confirm-babel-evaluate-languages} is a list
+of Org Babel language names (strings) for which code block evaluation
+proceeds without confirmation.  The function
+@code{org-extras-confirm-babel-evaluate} checks this list and returns
+non-nil for languages it contains, which tells Org that no confirmation
+prompt is needed (@ref{Babel and encryption}).
+
+The default value is @samp{("emacs-lisp" "python")}.  Add additional
+language names (such as @samp{"shell"} or @samp{"ruby"}) if you trust their
+evaluation in your workflow.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Editing and navigation::
+* Agenda management::
+* Clocking and timestamps::
+* Folding, cycling, and narrowing: Folding cycling and narrowing. 
+* ID management::
+* List handling::
+* Refiling::
+* Links and sorting::
+* Babel and encryption::
+* External integration::
+* Transient menus::
+@end menu
+
+@node Editing and navigation
+@section Editing and navigation
+
+@menu
+* Setting TODO properties::
+* Copying URLs and links::
+* Removing links::
+* Inserting subheadings::
+* Copying heading contents and names::
+* Counting words::
+* Jumping to the first heading::
+* Opening links in EWW::
+* Pasting clipboard content as Org::
+* Pasting images from the clipboard::
+* Toggling inline images::
+@end menu
+
+@node Setting TODO properties
+@subsection Setting TODO properties
+
+@findex org-extras-set-todo-properties
+When triaging tasks, it is common to assign both a priority and an
+effort estimate in quick succession.  The command
+@code{org-extras-set-todo-properties} calls @code{org-priority} followed by
+@code{org-set-effort}, saving a keystroke sequence.
+
+@node Copying URLs and links
+@subsection Copying URLs and links
+
+@findex org-extras-url-dwim
+@findex org-extras-link-get-link-at-point
+@findex org-extras-link-get-url-at-point
+@findex org-extras-link-get-description-at-point
+Org buffers frequently contain both plain URLs and bracketed Org links,
+and one often needs to extract a piece of a link for use elsewhere.  The
+command @code{org-extras-url-dwim} copies the URL at point to the kill ring,
+handling both plain URLs (detected via @code{thing-at-point-url-at-point})
+and the target of an Org bracket link.
+
+For more targeted extraction, three additional commands operate on
+bracket links: @code{org-extras-link-get-link-at-point} copies the full
+bracket link syntax, @code{org-extras-link-get-url-at-point} copies only the
+URL portion, and @code{org-extras-link-get-description-at-point} copies only
+the description portion.  All three use @code{org-extras-link-get-thing-at-point}
+internally (@ref{Link helpers}).
+
+@node Removing links
+@subsection Removing links
+
+@findex org-extras-remove-link
+The command @code{org-extras-remove-link} replaces an Org bracket link at
+point with its description text, or with its URL if the link has no
+description.  This is handy when you want to keep the display text but
+strip the hyperlink markup.
+
+@node Inserting subheadings
+@subsection Inserting subheadings
+
+@findex org-extras-insert-todo-subheading-after-body
+@findex org-extras-insert-subheading
+Org provides @code{org-insert-heading} and @code{org-insert-todo-heading}, but
+inserting a subheading at exactly the right position often requires
+several manual steps.  The command
+@code{org-extras-insert-todo-subheading-after-body} narrows to the current
+subtree, hides its children, moves to the end, and inserts a demoted
+TODO heading.  The result is a new TODO subheading at the very end of
+the current entry.
+
+The command @code{org-extras-insert-subheading} is similar but inserts a
+plain (non-TODO) subheading.  It places the new heading after the
+current entry's body but before any existing subheadings, which is
+useful when you want to add prose subsections above the task list.
+
+@node Copying heading contents and names
+@subsection Copying heading contents and names
+
+@findex org-extras-copy-heading-contents
+@findex org-extras-copy-heading-name
+The command @code{org-extras-copy-heading-contents} copies the body text of
+the heading at point (excluding the heading line itself and any child
+subtrees) to the kill ring.  It uses @code{org-extras-get-heading-contents}
+internally (@ref{Heading content helpers}).  If the heading has no body
+text, a message is displayed instead.
+
+The command @code{org-extras-copy-heading-name} copies the heading title
+(without stars, TODO keyword, priority, or tags) to the kill ring.
+
+@node Counting words
+@subsection Counting words
+
+@findex org-extras-count-words
+The command @code{org-extras-count-words} counts words in the active region
+if one exists, falling back to counting words across the entire current
+subtree (including child entries) when no region is active.  In subtree
+mode, it skips metadata at the beginning of each entry.  The word count
+is copied to the kill ring and a summary message is displayed showing
+lines, words, and characters.
+
+@node Jumping to the first heading
+@subsection Jumping to the first heading
+
+@findex org-extras-jump-to-first-heading
+The command @code{org-extras-jump-to-first-heading} widens the buffer and
+moves point to the first visible Org heading.  Several other functions
+in this package call it internally (for example,
+@code{org-extras-capture-before-finalize-hook-function}).
+
+@node Opening links in EWW
+@subsection Opening links in EWW
+
+@findex org-extras-super-return
+The command @code{org-extras-super-return} opens the Org link at point using
+EWW rather than the default system browser.  It temporarily binds
+@code{browse-url-browser-function} to @code{eww-browse-url} and clears
+@code{browse-url-handlers} before calling @code{org-open-at-point}.  This is
+useful when you want to preview a web page without leaving Emacs.
+
+@node Pasting clipboard content as Org
+@subsection Pasting clipboard content as Org
+
+@findex org-extras-paste-with-conversion
+The command @code{org-extras-paste-with-conversion} converts the contents of
+the system clipboard to Org mode format using Pandoc and inserts the
+result at point.  If the clipboard contains HTML, it converts from HTML;
+otherwise it converts from Markdown.  The command also cleans up stray
+backslashes and non-breaking spaces that Pandoc sometimes produces.
+
+Internally it calls @code{simple-extras-pandoc-convert} from @samp{simple-extras.el}.
+For the reverse operation (copying Org as formatted HTML), see
+@code{ox-clip-formatted-copy}.  For the Markdown equivalent, see
+@code{markdown-mode-extras-paste-with-conversion} in @samp{markdown-mode-extras.el}.
+
+@node Pasting images from the clipboard
+@subsection Pasting images from the clipboard
+
+@findex org-extras-paste-image
+The command @code{org-extras-paste-image} saves the current clipboard image
+to a file and inserts an Org file link at point.  It requires the
+@samp{pngpaste} utility (installable via @samp{brew install pngpaste} on macOS).
+
+The image is saved under @code{paths-dir-org-images} with a filename derived
+from the current heading's Org ID and an incrementing counter to avoid
+collisions.  After saving, the command prompts for an optional caption
+and then calls @code{org-display-inline-images} to render the image inline.
+
+@node Toggling inline images
+@subsection Toggling inline images
+
+@findex org-extras-inline-images
+The command @code{org-extras-inline-images} toggles the display of inline
+images in the current buffer.  When called interactively without a
+prefix argument, it checks whether any inline image overlays already
+exist: if they do, it removes them; otherwise it displays all images.
+
+A numeric prefix argument provides explicit control: a negative value
+removes images, while a positive value (or @code{nil} from Lisp) displays
+them.  The symbol @code{toggle} may also be passed from Lisp for the
+toggling behavior.
+
+@node Agenda management
+@section Agenda management
+
+@menu
+* Switching to today's agenda::
+* Going to an agenda item and clocking in::
+* Marking done and postponing::
+* DWIM switching from agenda::
+* Toggling anniversaries::
+* Toggling log mode::
+* Removing agenda highlighting::
+@end menu
+
+@node Switching to today's agenda
+@subsection Switching to today's agenda
+
+@findex org-extras-agenda-switch-to-agenda-current-day
+The command @code{org-extras-agenda-switch-to-agenda-current-day} opens (or
+switches to) the daily agenda in the left window of the frame.  It
+calls @code{window-extras-split-if-unsplit} from @samp{window-extras.el} to
+ensure the frame is split, then selects window 1 via @samp{winum}.  If the
+agenda buffer already exists, it simply switches to it; otherwise it
+creates a new agenda view, first enabling anniversary display
+(@ref{Toggling anniversaries}).
+
+@node Going to an agenda item and clocking in
+@subsection Going to an agenda item and clocking in
+
+@findex org-extras-agenda-goto-and-start-clock
+The command @code{org-extras-agenda-goto-and-start-clock} navigates from the
+Org agenda buffer to the source heading of the item at point and starts
+the clock there.  It validates the agenda marker and offers to refresh
+the agenda if the marker is stale.  This command must be called from an
+@code{org-agenda-mode} buffer.
+
+@node Marking done and postponing
+@subsection Marking done and postponing
+
+@findex org-extras-agenda-done-and-next
+@findex org-extras-agenda-postpone-and-next
+Two quick-action commands streamline common agenda operations.  The
+command @code{org-extras-agenda-done-and-next} marks the item at point as
+DONE and advances to the next line.  The command
+@code{org-extras-agenda-postpone-and-next} pushes the scheduled date forward
+by one day and advances to the next line.  Both are designed for rapid
+triage of agenda items.
+
+@node DWIM switching from agenda
+@subsection DWIM switching from agenda
+
+@findex org-extras-agenda-switch-to-dwim
+The command @code{org-extras-agenda-switch-to-dwim} adapts its behavior based
+on whether the agenda is showing log entries.  When
+@code{org-agenda-show-log} is active, it calls
+@code{org-clock-convenience-goto-ts} to jump to the clock timestamp in the
+source file.  When log mode is off, it calls @code{org-agenda-switch-to} to
+open the heading directly.
+
+@node Toggling anniversaries
+@subsection Toggling anniversaries
+
+@findex org-extras-agenda-toggle-anniversaries
+The command @code{org-extras-agenda-toggle-anniversaries} shows or hides BBDB
+birthday entries in the agenda.  It works by navigating to the heading
+specified by @code{org-extras-bbdb-anniversaries-heading}
+(@ref{BBDB anniversaries heading}) and toggling the
+@samp{%%(org-bbdb-anniversaries-future 1)} sexp line: if the line is present
+it is deleted, and if it is absent it is inserted.  Unless the optional
+JUST-ENABLE argument is non-nil, the agenda is refreshed afterwards.
+
+This approach of commenting out the diary sexp is the only reliable way
+to temporarily suppress anniversaries in the weekly/daily agenda view.
+
+@node Toggling log mode
+@subsection Toggling log mode
+
+@findex org-extras-agenda-toggle-log-mode
+The command @code{org-extras-agenda-toggle-log-mode} toggles
+@code{org-agenda-log-mode} in clock-check mode, which shows or hides clock
+entries in the agenda.
+
+@node Removing agenda highlighting
+@subsection Removing agenda highlighting
+
+@findex org-extras-unhighlight
+The command @code{org-extras-unhighlight} is a thin interactive wrapper
+around @code{org-unhighlight}, which removes search highlighting from the
+agenda buffer.
+
+@node Clocking and timestamps
+@section Clocking and timestamps
+
+@menu
+* Inserting clock entries::
+* Inserting timestamps::
+* Jumping to clock entries::
+* Clock reports::
+* Deleting headings without logbooks::
+* Meeting participants::
+@end menu
+
+@node Inserting clock entries
+@subsection Inserting clock entries
+
+@findex org-extras-new-clock-entry-today
+The command @code{org-extras-new-clock-entry-today} inserts a new CLOCK line
+under the current heading with today's date.  It prompts for a begin
+time and an end time (as strings such as @samp{"09:00"}), then jumps to the
+latest existing clock entry via @code{org-extras-jump-to-latest-clock-entry}
+(@ref{Jumping to clock entries}), opens a line above it, inserts the
+formatted clock range, and evaluates the time range to compute the
+duration.
+
+@node Inserting timestamps
+@subsection Inserting timestamps
+
+@findex org-extras-time-stamp-active-current-time
+@findex org-extras-time-stamp-inactive-current-time
+@findex org-extras-time-stamp-active-current-date
+@findex org-extras-time-stamp-inactive-current-date
+Four commands insert timestamps with the current date or date-and-time:
+
+@itemize
+@item
+@code{org-extras-time-stamp-active-current-time} inserts an active
+timestamp with date and time, e.g. @samp{<2025-01-15 Wed 14:30>}.
+@item
+@code{org-extras-time-stamp-inactive-current-time} inserts an inactive
+timestamp with date and time, e.g. @samp{[2025-01-15 Wed 14:30]}.
+@item
+@code{org-extras-time-stamp-active-current-date} inserts an active
+timestamp with date only, e.g. @samp{<2025-01-15 Wed>}.
+@item
+@code{org-extras-time-stamp-inactive-current-date} inserts an inactive
+timestamp with date only, e.g. @samp{[2025-01-15 Wed]}.
+@end itemize
+
+These are convenient when you need a timestamp at the current moment
+without being prompted by the Org date picker.
+
+@node Jumping to clock entries
+@subsection Jumping to clock entries
+
+@findex org-extras-jump-to-latest-clock-entry
+The command @code{org-extras-jump-to-latest-clock-entry} enables
+@code{visible-mode}, shows the logbook drawer via @code{org-extras-show-logbook}
+(@ref{Showing drawers}), moves back to the current heading, and then
+searches forward for the first CLOCK line.  Since clock entries are
+stored in reverse chronological order, this effectively jumps to the
+most recent clock entry.
+
+@node Clock reports
+@subsection Clock reports
+
+@findex org-extras-clock-report-insert
+The command @code{org-extras-clock-report-insert} prompts for a start date,
+an end date, and a scope (@samp{agenda}, @samp{file}, or @samp{subtree}), then
+inserts a clocktable dynamic block using the format string in
+@code{org-extras-clock-report-parameters} (@ref{Clock report parameters}).
+If the start and end dates are the same, a @samp{:block} parameter is used;
+otherwise @samp{:tstart} and @samp{:tend} are used.  The clocktable is updated
+immediately after insertion.
+
+@node Deleting headings without logbooks
+@subsection Deleting headings without logbooks
+
+@findex org-extras-delete-headings-without-logbook
+The command @code{org-extras-delete-headings-without-logbook} removes every
+heading in the current buffer that does not contain a @samp{:LOGBOOK:}
+drawer.  It prompts for confirmation before proceeding.  This is useful
+for cleaning up files where only clocked entries are of interest.
+
+@node Meeting participants
+@subsection Meeting participants
+
+@findex org-extras-add-participants
+@findex org-extras-clock-in-add-participants
+When clocking into a calendar event (a heading with a @samp{calendar-id}
+property), it is useful to record who attended.  The function
+@code{org-extras-clock-in-add-participants} is installed as @samp{:after} advice
+on @code{org-clock-in}.  When the heading has a @samp{calendar-id} property and
+does not already list participants (checked via
+@code{org-extras-heading-has-participans-p}), it calls
+@code{org-extras-add-participants}.  Headings matching the regexp in
+@code{org-extras-clock-in-add-participants-exclude} are skipped
+(@ref{Participant exclusion regexp}).
+
+The command @code{org-extras-add-participants} can also be called
+interactively.  It presents a @code{completing-read-multiple} prompt
+populated with ``person'' nodes from Org Roam (via
+@code{org-roam-extras-get-people} in @samp{org-roam-extras.el}), formats the
+selected names as Org ID links, and inserts a ``Participants: @dots{}'' line
+after the heading's metadata.
+
+@node Folding cycling and narrowing
+@section Folding, cycling, and narrowing
+
+@menu
+* Global cycling::
+* Showing all headings::
+* Showing drawers::
+* Narrowing to entries::
+@end menu
+
+@node Global cycling
+@subsection Global cycling
+
+@findex org-extras-cycle-global
+The command @code{org-extras-cycle-global} calls @code{org-cycle-global} and then
+hides archived subtrees via @code{org-cycle-hide-archived-subtrees}.  Without
+this, global cycling would reveal archived content that is normally meant
+to stay hidden.  An optional prefix argument ARG works the same way as
+in @code{org-cycle-global}: @samp{C-u} switches to startup visibility, a numeric
+prefix shows all headlines up to that level.
+
+@node Showing all headings
+@subsection Showing all headings
+
+@findex org-extras-fold-show-all-headings
+The function @code{org-extras-fold-show-all-headings} expands all headings in
+the buffer (using @code{org-fold-show-all} with the @samp{headings} argument)
+while keeping archived subtrees hidden.  This is not an interactive
+command but is designed to be called from hooks or other functions.
+
+@node Showing drawers
+@subsection Showing drawers
+
+@findex org-extras-show-properties
+@findex org-extras-show-logbook
+The command @code{org-extras-show-properties} removes all overlays that hide
+property drawers (those with the @samp{hidden-prop-drawer} property),
+making them visible again.  It also updates the toggle state to
+@samp{shown}.
+
+The command @code{org-extras-show-logbook} does the same for logbook drawers
+(overlays with the @samp{hidden-logbook-drawer} property).  Both commands are
+useful after running packages that hide these drawers by default.
+
+@node Narrowing to entries
+@subsection Narrowing to entries
+
+@findex org-extras-narrow-to-entry-and-children
+@findex org-extras-narrow-to-entry-no-children
+The command @code{org-extras-narrow-to-entry-and-children} narrows the buffer
+to the current subtree and then shows the entry and its children while
+hiding drawers (via @code{org-extras-show-subtree-hide-drawers}).  This gives
+a focused view of the heading and all its descendants.
+
+The command @code{org-extras-narrow-to-entry-no-children} narrows the buffer
+to the current entry only, excluding any subheadings.  The narrowed
+region extends from the beginning of the subtree to the next visible
+heading.
+
+@node ID management
+@section ID management
+
+@menu
+* Automatic ID addition::
+* Updating ID locations::
+* Finding duplicate IDs::
+* Processing duplicate IDs::
+@end menu
+
+@node Automatic ID addition
+@subsection Automatic ID addition
+
+@findex org-extras-id-auto-add-ids-to-headings-in-file
+The function @code{org-extras-id-auto-add-ids-to-headings-in-file} is
+intended to run from a hook (such as @code{before-save-hook}).  It adds Org
+IDs to all headings in the current file that lack them, subject to
+several exclusion conditions:
+
+@itemize
+@item
+The file must be in @code{org-mode} and within @code{paths-dir-org}.
+@item
+The buffer must not be read-only.
+@item
+The buffer-local variable @code{org-extras-id-auto-add-exclude-file} must
+be @code{nil} (@ref{Variables}).
+@item
+The file must not be inside a directory listed in
+@code{org-extras-id-auto-add-excluded-directories}.
+@item
+The file must not match @code{org-extras-id-auto-add-excluded-files}.
+@item
+The current heading must not match
+@code{org-extras-id-auto-add-excluded-headings}.
+@item
+For files in directories listed in
+@code{org-extras-id-auto-add-level-1-dirs}, only level-1 headings receive
+IDs.
+@end itemize
+
+See @ref{Automatic ID exclusions} for details on configuring
+these options.
+
+@node Updating ID locations
+@subsection Updating ID locations
+
+@findex org-extras-id-update-id-locations
+The command @code{org-extras-id-update-id-locations} scans all @samp{.org} and
+@samp{.org.gpg} files under @code{org-directory} (excluding those in @samp{.Trash}
+directories or with carriage returns in their names) and updates the ID
+location database via @code{org-id-update-id-locations}.  If the scan
+reports duplicate IDs, the command automatically calls
+@code{org-extras-id-find-duplicate-ids} (@ref{Finding duplicate IDs}) so
+that you can review and resolve them.
+
+Internally, it temporarily advises @code{display-warning} to intercept
+``duplicate IDs found'' messages and trigger the duplicate-ID workflow.
+
+@node Finding duplicate IDs
+@subsection Finding duplicate IDs
+
+@findex org-extras-id-find-duplicate-ids
+The command @code{org-extras-id-find-duplicate-ids} parses the @samp{*Messages*}
+buffer for ``Duplicate ID'' warnings produced by
+@code{org-id-update-id-locations} and presents the results in a dedicated
+read-only @samp{*Duplicate Org IDs*} buffer.  Each line shows a file path
+followed by the duplicate ID@.  In this buffer, pressing @samp{SPC} calls
+@code{org-extras-id-process-next-duplicate} to process the next entry.
+
+@node Processing duplicate IDs
+@subsection Processing duplicate IDs
+
+@findex org-extras-id-process-next-duplicate
+The command @code{org-extras-id-process-next-duplicate} is meant to be used
+from the @samp{*Duplicate Org IDs*} buffer.  It reads the first line, opens
+the associated file, widens the buffer, enables
+@code{simple-extras-visible-mode-enhanced} to help locate the duplicate,
+copies the ID to the kill ring, and removes the processed line from the
+buffer.  When all entries have been processed, the buffer is killed
+automatically.
+
+@node List handling
+@section List handling
+
+@findex org-extras-mark-checkbox-complete-and-move-to-next-item
+@findex org-extras-reset-checkbox-state-subtree
+The command @code{org-extras-mark-checkbox-complete-and-move-to-next-item}
+toggles the checkbox state at point (equivalent to @samp{C-c C-c}) and then
+moves to the next list item.  This enables rapid checkbox processing
+with a single repeated keystroke.
+
+The command @code{org-extras-reset-checkbox-state-subtree} resets all
+checkboxes in the current subtree to their unchecked state, then cycles
+the subtree visibility twice to ensure a clean display without exposed
+property drawers.
+
+@node Refiling
+@section Refiling
+
+@menu
+* Jumping to the latest refiled item::
+* Refiling and archiving::
+* Regenerating the refile cache::
+@end menu
+
+@node Jumping to the latest refiled item
+@subsection Jumping to the latest refiled item
+
+@findex org-extras-refile-goto-latest
+The command @code{org-extras-refile-goto-latest} widens the buffer and calls
+@code{org-refile} with a double prefix argument (@samp{C-u C-u}), which jumps to
+the location of the most recently refiled item.  This is helpful when
+you refile something and immediately want to continue working on it in
+its new location.
+
+@node Refiling and archiving
+@subsection Refiling and archiving
+
+@findex org-extras-refile-and-archive
+The command @code{org-extras-refile-and-archive} performs two operations in
+sequence: it refiles the current subtree (prompting for a target as
+usual), then navigates to the refiled heading and archives it to its
+archive sibling.  This is useful when an item has been completed and
+should be both relocated and archived in one step.
+
+@node Regenerating the refile cache
+@subsection Regenerating the refile cache
+
+@findex org-extras-refile-regenerate-cache
+The command @code{org-extras-refile-regenerate-cache} clears the existing
+@code{org-refile} target cache and rebuilds it from scratch.  This is needed
+when refile targets have changed (files added, headings renamed) and the
+cached completions are stale.
+
+@node Links and sorting
+@section Links and sorting
+
+@menu
+* Sorting links::
+* Copying EWW content as Org::
+@end menu
+
+@node Sorting links
+@subsection Sorting links
+
+@findex org-extras-sort-links
+@findex org-extras-sort-keywords
+The command @code{org-extras-sort-links} sorts a paragraph of Org links
+alphabetically.  It prompts for the separator string used between links
+(for example, @samp{", "} or @samp{" | "}), splits the paragraph text on that
+separator, sorts the resulting elements using @code{org-sort-list}, and
+reassembles them.
+
+The command @code{org-extras-sort-keywords} is a convenience wrapper that
+calls @code{org-extras-sort-links} with the separator @samp{" . "} (bullet
+separator), which is the convention used for keyword lists.
+
+@node Copying EWW content as Org
+@subsection Copying EWW content as Org
+
+@findex org-extras-eww-copy-for-org-mode
+The command @code{org-extras-eww-copy-for-org-mode} copies the content of an
+EWW buffer (or the active region within it) to the kill ring, converting
+HTML formatting to Org syntax.  Links become Org bracket links, bold
+text is wrapped in @samp{*asterisks*}, italic text in @samp{/slashes/}, and HTML
+bullet characters are replaced with Org list markers (@samp{-}).
+
+This is an enhanced version of @code{org-eww-copy-for-org-mode} from the
+@samp{ol-eww} library.
+
+@node Babel and encryption
+@section Babel and encryption
+
+@menu
+* Tangling::
+* Decryption and clock evaluation::
+@end menu
+
+@node Tangling
+@subsection Tangling
+
+@findex org-extras-babel-tangle
+The command @code{org-extras-babel-tangle} widens the buffer, saves it, and
+then tangles all source blocks via @code{org-babel-tangle}.  Widening first
+ensures that narrowed buffers are tangled completely.
+
+@node Decryption and clock evaluation
+@subsection Decryption and clock evaluation
+
+@findex org-extras-crypt-dwim
+The command @code{org-extras-crypt-dwim} inspects the Org element at point.
+If point is on a clock line, it evaluates the time range (computing the
+duration).  Otherwise, it decrypts the current entry via
+@code{org-decrypt-entry}.  This DWIM behavior avoids the need for separate
+key bindings for these two contextually distinct actions.  The command
+signals an error if invoked outside an Org mode buffer.
+
+@node External integration
+@section External integration
+
+@menu
+* Importing from Google Drive::
+* Removing trailing headings::
+@end menu
+
+@node Importing from Google Drive
+@subsection Importing from Google Drive
+
+@findex org-extras-import-from-google-drive
+The command @code{org-extras-import-from-google-drive} prompts for a Google
+Doc ID, downloads the document as a @samp{.docx} file using the @samp{gdrive} CLI
+tool, and converts it to Org format using Pandoc.  Both output files are
+saved in the downloads directory (@code{paths-dir-downloads}).  To find the
+Doc ID, run @samp{gdrive list} in a terminal.
+
+@node Removing trailing headings
+@subsection Removing trailing headings
+
+@findex org-extras-remove-trailing-heading
+The command @code{org-extras-remove-trailing-heading} removes the last
+heading in the buffer if it is empty (has no heading text).  This is
+intended for use as a hook function (for example, via a directory-local
+variable) in directories such as @samp{gptel} notes, where automated
+processes sometimes create spurious empty headings that trigger warnings
+from @code{org-roam}.
+
+@node Transient menus
+@section Transient menus
+
+@findex org-extras-personal-menu
+@findex org-extras-tlon-menu
+@findex org-extras-config-dispatch
+@samp{org-extras.el} provides three transient menus for quick navigation to
+frequently visited Org Roam nodes and configuration sections.
+
+The command @code{org-extras-personal-menu} opens a menu of personal projects
+and recurring tasks, including entries for email, finance, Anki,
+YouTube, and language study.  Each menu item navigates to a specific Org
+Roam node by ID@.
+
+The command @code{org-extras-tlon-menu} opens a menu organized into three
+columns: languages (with two-letter language codes as keys), projects
+(such as @samp{aea}, @samp{boletin}, @samp{utilitarianism}), and other items.  This
+is designed for navigating the Tlon project ecosystem.
+
+The command @code{org-extras-config-dispatch} opens a menu for jumping to
+sections within the main @samp{config.org} file.  It includes entries for
+major configuration areas (Calc, Dired, Elfeed, Files, Display, and so
+on) as well as Org-specific subsections (org-agenda, org-capture,
+org-roam, and others).
+
+@node Functions
+@chapter Functions
+
+@menu
+* Link helpers::
+* Heading content helpers::
+* Productivity tracking::
+* Image filename generation::
+* Capture hook function::
+* Clocktable sorting::
+* Heading navigation::
+* Subtree display helpers::
+* Babel evaluation::
+* Refiling helpers::
+* Linkifying elements::
+* Participant checking::
+* ID update warning handler::
+@end menu
+
+@node Link helpers
+@section Link helpers
+
+@findex org-extras-link-get-thing-at-point
+The function @code{org-extras-link-get-thing-at-point} is the shared
+implementation behind the link extraction commands (@ref{Copying URLs and links, , Copying URLs and
+links}).  It takes a numeric ARG: 0 for the full bracket link syntax,
+1 for the URL, and 2 for the description.  When point is inside an Org
+bracket link, it extracts the requested component and adds it to the
+kill ring.
+
+@node Heading content helpers
+@section Heading content helpers
+
+@findex org-extras-get-heading-contents
+The function @code{org-extras-get-heading-contents} returns the body text of
+the heading at point as a string, excluding the heading line and any
+child subtrees.  If point is before the first heading, it displays a
+message and returns @code{nil}.  It uses @code{org-agenda-get-some-entry-text}
+with @code{most-positive-fixnum} as the line limit to retrieve the full body
+text.
+
+@node Productivity tracking
+@section Productivity tracking
+
+@findex org-extras-count-lines-with-expression
+@findex org-extras-productivity-of-the-day
+The function @code{org-extras-count-lines-with-expression} counts lines in a
+string S that match a regexp EXP@.  It is used internally by
+@code{org-extras-productivity-of-the-day}.
+
+The function @code{org-extras-productivity-of-the-day} computes how many TODO
+lines were added and removed across all agenda files since midnight,
+using @samp{git log} to analyze the diffs.  It returns a cons cell of
+@samp{(added . removed)} counts.
+
+@node Image filename generation
+@section Image filename generation
+
+@findex org-extras-make-image-filename
+The function @code{org-extras-make-image-filename} generates a unique
+filename for pasted images (@ref{Pasting images from the clipboard}).  It
+concatenates @code{paths-dir-org-images}, the current heading's Org ID
+(creating one if necessary), and a zero-padded counter suffix (e.g.,
+@samp{-001.png}).
+
+@node Capture hook function
+@section Capture hook function
+
+@findex org-extras-capture-before-finalize-hook-function
+The function @code{org-extras-capture-before-finalize-hook-function} is
+designed for @code{org-capture-before-finalize-hook}.  It dispatches on the
+capture template key (from @code{org-capture-plist}) and performs
+template-specific actions:
+
+@itemize
+@item
+@samp{"l"}: aligns tags and changes the dictionary to English.
+@item
+@samp{"la"}: switches to the alternate buffer, adjusts Org Roam tags
+(removing ``unprocessed'', ``empty'', etc., adding ``leo''), and inserts a
+formatted reference.
+@item
+@samp{"le"}: similar to @samp{"la"} but inserts a rename reference.
+@item
+@samp{"s"}: converts an @samp{emacs-slack} link to an external Slack URL@.
+@item
+@samp{"tmt"}: inserts a web link for the URL on the kill ring.
+@item
+@samp{"v"}: demotes the captured heading.
+@item
+@samp{"y"}: downloads a YouTube video from the URL on the kill ring.
+@end itemize
+
+@node Clocktable sorting
+@section Clocktable sorting
+
+@findex org-extras-clocktable-sorter
+The function @code{org-extras-clocktable-sorter} is suitable as a value for
+@code{org-clock-clocktable-formatter}.  It sorts clock table entries by
+duration in descending order (longest first) before passing them to the
+default formatter @code{org-clocktable-write-default}.  The function
+signature @samp{(ipos tables params)} matches what the clocktable formatting
+machinery expects.
+
+@node Heading navigation
+@section Heading navigation
+
+@findex org-extras-goto-beginning-of-heading-text
+The function @code{org-extras-goto-beginning-of-heading-text} moves point to
+the beginning of the headline text, after the stars, TODO keyword, and
+priority cookie (if present).  It uses @code{org-special-ctrl-a/e} to
+leverage Org's built-in smart movement and also handles the edge case
+where a heading consists of a TODO status followed by a single trailing
+space.
+
+@node Subtree display helpers
+@section Subtree display helpers
+
+@findex org-extras-show-subtree-hide-drawers
+The function @code{org-extras-show-subtree-hide-drawers} hides the entire
+subtree, then shows the entry and its children.  This sequence results
+in the heading body and child headings being visible while drawers
+remain folded.  It is used internally by
+@code{org-extras-narrow-to-entry-and-children} (@ref{Narrowing to entries}).
+
+@node Babel evaluation
+@section Babel evaluation
+
+@findex org-extras-confirm-babel-evaluate
+The function @code{org-extras-confirm-babel-evaluate} is suitable as a value
+for @code{org-confirm-babel-evaluate}.  It receives the language name LANG
+and returns non-nil when the language is a member of
+@code{org-extras-confirm-babel-evaluate-languages} (@ref{Babel evaluation languages, , Babel evaluation
+languages}), indicating that no confirmation is needed for that
+language.
+
+@node Refiling helpers
+@section Refiling helpers
+
+@findex org-extras-refile-at-position
+@findex org-extras-refile-to
+The function @code{org-extras-refile-at-position} refiles the current subtree
+to a specific character POSITION in the current buffer's file.  It calls
+@code{org-refile} with a constructed target list.
+
+The function @code{org-extras-refile-to} refiles the current subtree to a
+specific HEADING in a given FILE@.  It first finds the heading's position
+using @code{org-find-exact-headline-in-buffer} and then calls @code{org-refile}.
+
+@node Linkifying elements
+@section Linkifying elements
+
+@findex org-extras-linkify-elements
+The function @code{org-extras-linkify-elements} takes a list of STRINGS and
+looks up each one in the Org Roam node database.  For strings that match
+a node title (case-insensitively), it returns an Org ID link; for
+strings with no matching node, it returns the original string unchanged.
+The results are joined with SEPARATOR (defaulting to @samp{" . "}).
+
+@node Participant checking
+@section Participant checking
+
+@findex org-extras-heading-has-participans-p
+The function @code{org-extras-heading-has-participans-p} returns @code{t} if the
+current heading already has a line beginning with the participants
+introducer string.  It is used by @code{org-extras-clock-in-add-participants}
+to avoid adding duplicate participant lines (@ref{Meeting participants}).
+
+@node ID update warning handler
+@section ID update warning handler
+
+@findex org-extras--id-update-warning-handler
+The function @code{org-extras--id-update-warning-handler} is installed as
+advice on @code{display-warning} during @code{org-extras-id-update-id-locations}
+(@ref{Updating ID locations}).  When it detects a warning at level
+@code{emacs} containing the string ``duplicate IDs found'', it calls
+@code{org-extras-id-find-duplicate-ids} to present the duplicates for review.
+
+@node Variables
+@chapter Variables
+
+@vindex org-extras-id-auto-add-exclude-file
+The buffer-local variable @code{org-extras-id-auto-add-exclude-file}
+provides a per-file override for the automatic ID addition machinery
+(@ref{Automatic ID addition}).  When set to a non-nil value (typically
+via a file-local variable), it prevents
+@code{org-extras-id-auto-add-ids-to-headings-in-file} from adding IDs in
+that buffer, regardless of other exclusion settings.  The default value
+is @code{nil}.
+
+@vindex org-extras-agenda-switch-to-agenda-current-day-timer
+The variable @code{org-extras-agenda-switch-to-agenda-current-day-timer}
+holds a timer object (or @code{nil}) that can be used to schedule periodic
+switches to the current day's agenda view.
+
+@vindex org-extras-particiants-introducer
+The constant @code{org-extras-particiants-introducer} holds the string
+@samp{"Participants: "} that prefixes the list of meeting participants
+inserted by @code{org-extras-add-participants} (@ref{Meeting participants}).
+
+@node Patched functions
+@chapter Patched functions
+
+@samp{org-extras.el} uses @samp{el-patch} to modify three upstream Org functions.
+
+@menu
+* Clock resolution scope::
+* Agenda file checking::
+* Citation insertion::
+@end menu
+
+@node Clock resolution scope
+@section Clock resolution scope
+
+@findex org-resolve-clocks
+The function @code{org-resolve-clocks} is patched to use @code{org-agenda-files}
+instead of @code{org-files-list} when searching for open clocks to resolve.
+This limits the search scope to agenda files rather than all known Org
+files, which avoids scanning irrelevant files and reduces the chance of
+encountering stale clocks in archived or rarely opened files.
+
+@node Agenda file checking
+@section Agenda file checking
+
+@findex org-check-agenda-file
+The function @code{org-check-agenda-file} is patched to silently remove
+non-existent files from the agenda file list instead of repeatedly
+prompting the user.  The upstream version asks ``[R]emove from list or
+[A]bort?'' for each missing file, which becomes tedious when multiple
+files are missing.
+
+@node Citation insertion
+@section Citation insertion
+
+@findex org-cite-insert
+The function @code{org-cite-insert} is patched to remove the
+@code{org-cite--allowed-p} guard, allowing the command to be invoked in
+contexts where citation insertion would normally be disallowed.  This is
+useful because even when a citation cannot be inserted, invoking the
+command can trigger contextual actions via @samp{embark}.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

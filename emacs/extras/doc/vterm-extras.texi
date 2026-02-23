@@ -1,0 +1,168 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename vterm-extras.info
+@settitle vterm-extras: Extensions for vterm
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Vterm Extras: (vterm-extras). Extensions for vterm terminal emulator.
+@end direntry
+
+@finalout
+@titlepage
+@title vterm-extras: Extensions for vterm
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top vterm-extras: Extensions for vterm
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{vterm-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Variables::
+* Commands::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Variables
+
+* Keymap exceptions::
+
+Commands
+
+* Terminal editing commands::
+
+Functions
+
+* Keymap setup::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{vterm-extras.el} extends @samp{vterm}, the fully-featured terminal emulator based on @samp{libvterm}. Like its counterpart @samp{eat-extras.el} for the Eat terminal emulator, this package focuses on two concerns: sending editing keystrokes to the terminal process, and configuring which keys remain available for Emacs use versus being captured by the terminal.
+
+Vterm's design intercepts nearly all keystrokes and sends them to the underlying terminal process. While this is ideal for running full TUI applications, it means that standard Emacs prefix keys and custom editing bindings need explicit exemption. This package defines the set of excepted keys (@ref{Keymap exceptions}) and provides the setup function that applies them along with custom key bindings (@ref{Keymap setup}).
+
+The package also provides interactive commands for word-level navigation and editing within the terminal (@ref{Terminal editing commands}), complementing the commands already provided by @samp{vterm} itself (such as @code{vterm-send-backspace} and @code{vterm-send-meta-backspace}).
+
+@node Variables
+@chapter Variables
+
+@menu
+* Keymap exceptions::
+@end menu
+
+@node Keymap exceptions
+@section Keymap exceptions
+
+@vindex vterm-extras-keymap-exceptions
+The variable @code{vterm-extras-keymap-exceptions} is a list of key description strings that should not be captured by the terminal. These keys remain available for their standard Emacs functions. The list includes common prefix keys (@samp{C-c}, @samp{C-g}, @samp{C-h}, @samp{C-x}, @samp{M-x}, etc.), yank keys (@samp{C-y}, @samp{M-y}), and the custom modifier combinations used for the terminal editing commands (@ref{Terminal editing commands}).
+
+During keymap setup, this list is assigned to @code{vterm-keymap-exceptions}, which vterm uses when generating its mode map.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Terminal editing commands::
+@end menu
+
+@node Terminal editing commands
+@section Terminal editing commands
+
+@findex vterm-extras-send-forward-word
+@findex vterm-extras-send-backward-word
+@findex vterm-extras-send-kill-word
+@findex vterm-extras-send-kill-line
+These commands send specific editing operations to the vterm terminal process via @code{vterm-send-key}. They are interactive so they can be bound to keys in the vterm mode map.
+
+The word movement commands @code{vterm-extras-send-forward-word} and @code{vterm-extras-send-backward-word} send @samp{Meta-f} and @samp{Meta-b} respectively, which most shells interpret as forward-word and backward-word.
+
+The deletion commands @code{vterm-extras-send-kill-word} sends @samp{Meta-d} (kill word forward). The command @code{vterm-extras-send-kill-line} sends @samp{C-k} to kill from the cursor to the end of the line.
+
+Note that @samp{vterm} already provides @code{vterm-send-backspace}, @code{vterm-send-meta-backspace}, @code{vterm-yank}, @code{vterm-yank-pop}, and @code{vterm-undo}, so this package does not duplicate those. The keymap setup function binds them alongside the extras commands (@ref{Keymap setup}).
+
+@node Functions
+@chapter Functions
+
+@menu
+* Keymap setup::
+@end menu
+
+@node Keymap setup
+@section Keymap setup
+
+@findex vterm-extras-setup-keymap
+The function @code{vterm-extras-setup-keymap} configures the vterm mode map in two steps. First, it sets @code{vterm-keymap-exceptions} to the value of @code{vterm-extras-keymap-exceptions} (@ref{Keymap exceptions}), which tells vterm which keys to leave alone when generating its keymap. Second, it binds both the extras commands and several built-in vterm commands to their designated key sequences.
+
+The resulting bindings are:
+
+@multitable {aaaaaaaaaaaaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}
+@headitem Key
+@tab Command
+@item @samp{A-C-s-p}
+@tab @code{vterm-extras-send-forward-word}
+@item @samp{A-C-s-u}
+@tab @code{vterm-extras-send-backward-word}
+@item @samp{C-H-M-q}
+@tab @code{vterm-send-meta-backspace}
+@item @samp{C-H-M-r}
+@tab @code{vterm-extras-send-kill-word}
+@item @samp{C-H-M-s}
+@tab @code{vterm-send-backspace}
+@item @samp{C-H-M-v}
+@tab @code{vterm-extras-send-kill-line}
+@item @samp{<backspace>}
+@tab @code{vterm-send-backspace}
+@item @samp{DEL}
+@tab @code{vterm-send-backspace}
+@item @samp{C-y}
+@tab @code{vterm-yank}
+@item @samp{M-y}
+@tab @code{vterm-yank-pop}
+@item @samp{H-z}
+@tab @code{vterm-undo}
+@end multitable
+
+These bindings mirror the corresponding key assignments in @samp{eat-extras.el} (@ref{Overview}), providing a consistent editing experience across both terminal emulators.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

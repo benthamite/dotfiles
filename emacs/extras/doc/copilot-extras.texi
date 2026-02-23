@@ -1,0 +1,152 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename copilot-extras.info
+@settitle copilot-extras: Extensions for Copilot
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Copilot Extras: (copilot-extras). Extensions for Copilot.
+@end direntry
+
+@finalout
+@titlepage
+@title copilot-extras: Extensions for Copilot
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top copilot-extras: Extensions for Copilot
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{copilot-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* @code{copilot-extras-excluded-modes}::
+
+Functions
+
+* Conditional activation::
+* Restarting Copilot::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{copilot-extras.el} extends the @samp{copilot.el} package, which
+integrates GitHub Copilot into Emacs.  The stock @samp{copilot-mode} is a
+simple on/off toggle with no built-in awareness of buffer context.
+This extension adds two pieces of missing functionality:
+
+@itemize
+@item
+@strong{Conditional activation}: enable Copilot automatically in
+programming buffers while skipping read-only buffers and
+user-specified modes (@ref{Conditional activation}).
+@item
+@strong{Restart workaround}: quickly cycle @samp{copilot-mode} off and on when
+the process stops responding (@ref{Restarting Copilot}).
+@end itemize
+
+@node User options
+@chapter User options
+
+@menu
+* @code{copilot-extras-excluded-modes}::
+@end menu
+
+@node @code{copilot-extras-excluded-modes}
+@section @code{copilot-extras-excluded-modes}
+
+@vindex copilot-extras-excluded-modes
+The user option @code{copilot-extras-excluded-modes} is a list of major
+mode symbols in which @samp{copilot-mode} should @emph{not} be activated by
+@code{copilot-extras-enable-conditionally}
+(@ref{Conditional activation}).  You might add modes where inline
+completions are distracting or conflict with other tools---for
+example, terminal emulators, shell prompts, or documentation browsers.
+
+The type is a list of symbols.  The default value is an empty list
+@code{()}, meaning no modes are excluded beyond the read-only check.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Conditional activation::
+* Restarting Copilot::
+@end menu
+
+@node Conditional activation
+@section Conditional activation
+
+@findex copilot-extras-enable-conditionally
+The function @code{copilot-extras-enable-conditionally} is designed to be
+added to a hook such as @code{prog-mode-hook} or @code{text-mode-hook}.  It
+activates @samp{copilot-mode} in the current buffer @emph{unless} either of the
+following is true:
+
+@enumerate
+@item
+The buffer is read-only (@code{buffer-read-only} is non-nil).
+@item
+The buffer's major mode appears in
+@code{copilot-extras-excluded-modes} (@ref{@code{copilot-extras-excluded-modes}}).
+@end enumerate
+
+This provides a convenient ``enable everywhere except@dots{}'' policy without
+requiring per-mode hook configuration.
+
+@node Restarting Copilot
+@section Restarting Copilot
+
+@findex copilot-extras-restart-copilot
+The function @code{copilot-extras-restart-copilot} quickly disables and
+re-enables @samp{copilot-mode} in the current buffer, with a brief pause
+between the two operations.  This is a workaround for situations where
+the Copilot process stops providing suggestions.  The function only
+acts when @samp{copilot-mode} is already active, so it is safe to call
+unconditionally---for instance, from a periodic timer.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

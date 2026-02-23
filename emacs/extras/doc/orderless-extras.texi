@@ -1,0 +1,148 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename orderless-extras.info
+@settitle orderless-extras: Extensions for orderless
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Orderless Extras: (orderless-extras). Extensions for orderless.
+@end direntry
+
+@finalout
+@titlepage
+@title orderless-extras: Extensions for orderless
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top orderless-extras: Extensions for orderless
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{orderless-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Functions
+
+* Flex matching::
+* Initialism::
+* Prefixes::
+* Exclusion::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{orderless-extras.el} extends @samp{orderless}, the completion style that matches candidates against space-separated components in any order. While @samp{orderless} ships with several matching styles (literal, regexp, flex, initialism, and others), activating a particular style for a single component within a query requires a dispatcher function.
+
+This package provides four dispatchers, each triggered by appending a suffix character to a search component:
+
+@multitable {aaaaaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}
+@headitem Suffix
+@tab Style
+@tab Section
+@item @samp{~}
+@tab @code{orderless-flex}
+@tab @ref{Flex matching}
+@item @samp{,}
+@tab @code{orderless-initialism}
+@tab @ref{Initialism}
+@item @samp{;}
+@tab @code{orderless-prefixes}
+@tab @ref{Prefixes}
+@item @samp{!}
+@tab @code{orderless-without-literal}
+@tab @ref{Exclusion}
+@end multitable
+
+To use these dispatchers, add them to the @code{orderless-style-dispatchers} list:
+
+@lisp
+(setq orderless-style-dispatchers
+      '(orderless-extras-flex-dispatcher
+        orderless-extras-initialism-dispatcher
+        orderless-extras-prefixes-dispatcher
+        orderless-extras-exclusion-dispatcher))
+@end lisp
+
+@node Functions
+@chapter Functions
+
+@menu
+* Flex matching::
+* Initialism::
+* Prefixes::
+* Exclusion::
+@end menu
+
+@node Flex matching
+@section Flex matching
+
+@findex orderless-extras-flex-dispatcher
+The function @code{orderless-extras-flex-dispatcher} activates @code{orderless-flex} matching for any component that ends with a tilde (@samp{~}). Flex matching allows characters to appear in order but not necessarily adjacent, which is useful when you remember the overall shape of a name but not its exact spelling.
+
+For example, in the query @samp{file sme~ na}, the component @samp{sme~} would flexibly match candidates containing @samp{s}, @samp{m}, and @samp{e} in that order (such as ``some''), while @samp{file} and @samp{na} would use the default matching style.
+
+@node Initialism
+@section Initialism
+
+@findex orderless-extras-initialism-dispatcher
+The function @code{orderless-extras-initialism-dispatcher} activates @code{orderless-initialism} matching for any component that ends with a comma (@samp{,}). Initialism matching treats each character in the component as the first letter of a word, which is particularly effective for long hyphenated Emacs symbol names.
+
+For example, @samp{ffap,} would match @code{find-file-at-point} because @samp{f}, @samp{f}, @samp{a}, and @samp{p} are the initials of each word.
+
+@node Prefixes
+@section Prefixes
+
+@findex orderless-extras-prefixes-dispatcher
+The function @code{orderless-extras-prefixes-dispatcher} activates @code{orderless-prefixes} matching for any component that ends with a semicolon (@samp{;}). Prefix matching requires each character group (separated by word boundaries) in the component to appear at the beginning of corresponding words in the candidate.
+
+For example, @samp{or-ex;} would match @samp{orderless-extras} because @samp{or} is a prefix of @samp{orderless} and @samp{ex} is a prefix of @samp{extras}. It would not match a candidate where @samp{ex} appeared in the middle of a word.
+
+@node Exclusion
+@section Exclusion
+
+@findex orderless-extras-exclusion-dispatcher
+The function @code{orderless-extras-exclusion-dispatcher} activates @code{orderless-without-literal} matching for any component that ends with an exclamation mark (@samp{!}). This excludes any candidate that contains the literal text of the component (minus the trailing @samp{!}).
+
+For example, the query @samp{file tmp!} would match candidates containing @samp{file} but exclude any that also contain @samp{tmp}. This is useful for filtering out noise from a broad search.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

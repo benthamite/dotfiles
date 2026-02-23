@@ -1,0 +1,412 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename org-roam-extras.info
+@settitle org-roam-extras: Extensions for org-roam
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Org Roam Extras: (org-roam-extras). Extensions for org-roam.
+@end direntry
+
+@finalout
+@titlepage
+@title org-roam-extras: Extensions for org-roam
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top org-roam-extras: Extensions for org-roam
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{org-roam-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Commands::
+* Functions::
+* Patched functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* Exclusion lists::
+* Backlink buffer display::
+
+Commands
+
+* Creating notes::
+* Finding nodes::
+* Navigating to nodes::
+* Replacing star links with ID links::
+
+Functions
+
+* Node inclusion::
+* Backlink tracking::
+* Backlink display::
+* People directory::
+* Note creation helpers::
+* Link utilities::
+* Capture support::
+* Recent files::
+
+Patched functions
+
+* Database query delay::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{org-roam-extras.el} extends the @samp{org-roam} package, a personal
+knowledge management system for Emacs based on Zettelkasten principles.
+It depends on @samp{el-patch} for patching the database query function,
+@samp{org-extras} for heading manipulation utilities, and @samp{paths} for
+directory constants.
+
+The package adds several capabilities on top of the standard @samp{org-roam}
+interface.  It provides a configurable node inclusion function that
+filters out headings tagged with ``noid'' or ``ARCHIVE'', certain
+conventional heading names (like ``Local variables'' or ``Further reading''),
+and sub-headings in specific directories such as journal entries.  This
+keeps the Org Roam database focused on substantive notes.
+
+For note creation, the package offers a workflow that prompts for a note
+type (generic, person, or project-specific), determines the appropriate
+directory and tags, creates a slugified file, and sets up the initial
+structure.  A complementary command converts existing headings into
+standalone notes.
+
+The package enhances node finding with a specialized command that
+queries the Org Roam database for prioritized nodes, optionally filtered
+by tag or directory.  This surfaces actionable items sorted by priority,
+skipping nodes that already have scheduled dates or deadlines.
+
+Backlink tracking is supported through functions that count backlinks
+and update the modeline (integrating with @samp{doom-modeline-extras.el}).
+An option to automatically display the backlink buffer when opening a
+file with backlinks is also available.
+
+A set of commands for replacing internal @code{[[*Title]]} links with proper
+@code{[[id:UUID]]} links automates the conversion of legacy link formats
+within entire directories of Org files.
+
+A patch adds a small delay before Org Roam database queries to mitigate
+potential SQLite locking issues that can occur with rapid successive
+queries.
+
+@node User options
+@chapter User options
+
+@menu
+* Exclusion lists::
+* Backlink buffer display::
+@end menu
+
+@node Exclusion lists
+@section Exclusion lists
+
+@vindex org-roam-extras-excluded-dirs
+@vindex org-roam-extras-excluded-files
+The user option @code{org-roam-extras-excluded-dirs} specifies a list of
+directory paths to exclude from Org Roam's file scanning.  Files within
+these directories will not be indexed.  The default value includes
+inactive, archive, and collaborator-specific directories.  Add
+directories here when they contain Org files that should not appear in
+Org Roam queries.
+
+The user option @code{org-roam-extras-excluded-files} specifies a list of
+file names or patterns to exclude from Org Roam.  Entries can be literal
+file names or regular expression patterns.  The default includes
+template files, old data files, and Dropbox conflict copies.  Both
+options feed into @code{org-roam-file-exclude-regexp}.
+
+@node Backlink buffer display
+@section Backlink buffer display
+
+@vindex org-roam-extras-auto-show-backlink-buffer
+The user option @code{org-roam-extras-auto-show-backlink-buffer} controls
+whether the Org Roam backlink buffer is automatically displayed when
+opening a file that has backlinks.  The default value is @code{nil}, meaning
+the backlink buffer is not shown automatically.  Set it to @code{t} if you
+want the backlink buffer to appear whenever you visit a note with
+incoming links.
+
+When enabled, @code{org-roam-extras-show-backlink-buffer} (@ref{Backlink display})
+should be added to @code{find-file-hook}.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Creating notes::
+* Finding nodes::
+* Navigating to nodes::
+* Replacing star links with ID links::
+@end menu
+
+@node Creating notes
+@section Creating notes
+
+@findex org-roam-extras-new-note
+@findex org-roam-extras-convert-heading-to-note
+The command @code{org-roam-extras-new-note} creates a new Org Roam note
+through a guided workflow.  It first prompts the user to select a note
+type: ``generic'', ``person'', ``Borges'', ``tango'', or ``tlon-notes''.  The
+type determines the target directory (e.g., @code{paths-dir-notes} for
+generic, @code{paths-dir-people} for person) and the initial tags.
+
+After selecting the type, it prompts for the note name, creates a file
+with a slugified version of that name (via @code{simple-extras-slugify}),
+inserts the @samp{#+title:} line and an initial heading, sets the tags,
+creates an Org ID, narrows to the new entry, and places point at the end
+of the buffer.
+
+The command @code{org-roam-extras-convert-heading-to-note} extracts the
+current Org heading and its subtree from the source buffer, prompts for
+a note name (defaulting to the heading title), and creates a new file in
+the current directory.  The heading content is moved into the new file,
+which gets a @samp{#+title:} line and an adjusted top-level heading.  The
+original heading is removed from the source buffer.
+
+@node Finding nodes
+@section Finding nodes
+
+@findex org-roam-extras-node-find
+@findex org-roam-extras-node-find-special
+@findex org-roam-extras-node-select-tag
+The command @code{org-roam-extras-node-find} acts as an enhanced wrapper
+around @code{org-roam-node-find}.  Before invoking the finder, it widens the
+buffer and shows all headings (via @code{org-extras-fold-show-all-headings}).
+After jumping to the selected node, it recenters the buffer.
+
+The command @code{org-roam-extras-node-find-special} provides a filtered view
+of Org Roam nodes.  It queries the database for nodes that have a
+priority, have either no TODO state or the state ``TODO'', and do not have
+a SCHEDULED or DEADLINE timestamp.  The results are presented sorted by
+priority (ascending, so @samp{#A} appears first).
+
+The command accepts an optional FILTER-SPEC argument:
+
+@itemize
+@item
+@code{nil}: no additional filter.
+@item
+@code{t} or a prefix argument: prompt the user to filter by tag or
+directory.
+@item
+@code{(:tag TAG)}: filter by a specific tag.
+@item
+@code{(:dir DIRECTORY)}: filter by a specific directory.
+@end itemize
+
+Selection uses @code{consult--read} for a completing-read interface with
+previews.  Jumping to the selected node uses @code{org-id-goto}.
+
+The command @code{org-roam-extras-node-select-tag} prompts for a tag from all
+tags present in the Org Roam database.  It is used internally by
+@code{org-roam-extras-node-find-special} when filtering by tag.
+
+@node Navigating to nodes
+@section Navigating to nodes
+
+@findex org-roam-extras-id-goto
+The command @code{org-roam-extras-id-goto} jumps to the location of an Org
+ID@.  It widens the buffer both before and after the jump, which handles
+the case where the target is in a currently narrowed buffer.  The jump
+is performed twice (via @code{org-roam-id-open}) to ensure the correct
+position is reached even when narrowing interferes.
+
+@node Replacing star links with ID links
+@section Replacing star links with ID links
+
+@findex org-roam-extras-replace-star-links-with-id
+The command @code{org-roam-extras-replace-star-links-with-id} walks through
+every @samp{.org} file in a given directory and converts links of the form
+@code{[[*Title][Description]]} into @code{[[id:UUID][Description]]}, where UUID is
+the Org ID of the node whose title matches.
+
+The command is fully automatic: it visits each file, performs the
+substitutions (using @code{org-element-map} for robust parsing), and saves
+any modified buffers.  When called with a prefix argument (NOCASE), the
+title matching is case-insensitive.  An optional DIRS argument restricts
+the ID lookup to nodes within specific directories.
+
+Internally, the command uses
+@code{org-roam-extras--replace-star-links-with-id-in-file} to process each
+file and @code{org-roam-extras-get-id-of-title} to resolve titles to IDs
+(@ref{Link utilities}).
+
+@node Functions
+@chapter Functions
+
+@menu
+* Node inclusion::
+* Backlink tracking::
+* Backlink display::
+* People directory::
+* Note creation helpers::
+* Link utilities::
+* Capture support::
+* Recent files::
+@end menu
+
+@node Node inclusion
+@section Node inclusion
+
+@findex org-roam-extras-node-include-function
+The function @code{org-roam-extras-node-include-function} is intended for
+@code{org-roam-node-include}.  It returns @code{t} for headings that should
+receive an Org ID and be included in the Org Roam database, and @code{nil}
+for those that should be excluded.
+
+Exclusion criteria include:
+
+@itemize
+@item
+Headings tagged with ``noid'' or ``ARCHIVE''.
+@item
+Headings with specific conventional names such as ``Local variables'',
+``Evaluation'', ``History'', ``Further reading'', ``External links'', and
+``Related entries''.
+@item
+Sub-headings (level > 1) in specific directories such as the journal,
+Trash, and gptel directories.
+@end itemize
+
+@node Backlink tracking
+@section Backlink tracking
+
+@findex org-roam-extras-backlink-count
+@findex org-roam-extras-update-backlink-count
+@findex org-roam-extras-update-modeline
+The function @code{org-roam-extras-backlink-count} queries the Org Roam
+database for the number of backlinks pointing to the node at point.  It
+returns @code{nil} if the buffer is not in @code{org-mode} or if no node ID is
+found.
+
+The function @code{org-roam-extras-update-backlink-count} calls
+@code{org-roam-extras-backlink-count} and stores the result in the
+buffer-local variable @code{org-roam-extras-current-backlink-count}.
+
+The function @code{org-roam-extras-update-modeline} updates the backlink
+count and forces a modeline refresh by calling
+@code{doom-modeline-update-buffer-file-name}.  It is intended for hooks like
+@code{buffer-list-update-hook} to keep the modeline backlink count current.
+
+@node Backlink display
+@section Backlink display
+
+@findex org-roam-extras-show-backlink-buffer
+The function @code{org-roam-extras-show-backlink-buffer} displays the Org
+Roam buffer when visiting a file with backlinks, provided
+@code{org-roam-extras-auto-show-backlink-buffer} is non-@code{nil} (@ref{Backlink buffer display}).  It checks whether the Org Roam buffer is already
+visible and only displays it if it is not.
+
+@node People directory
+@section People directory
+
+@findex org-roam-extras-get-people
+The function @code{org-roam-extras-get-people} queries the Org Roam database
+for level-1 headings in files within the people directory
+(@code{paths-dir-people}).  It returns a list of @samp{(title id)} pairs, useful
+for building completion interfaces or reports about contacts.
+
+@node Note creation helpers
+@section Note creation helpers
+
+@findex org-roam-extras-get-note-properties
+@findex org-roam-extras-create-file-for-note
+The function @code{org-roam-extras-get-note-properties} prompts the user to
+select a note type and returns a list of @samp{(DIR TAGS)} appropriate for
+that type.  It is used by @code{org-roam-extras-new-note}
+(@ref{Creating notes}).
+
+The function @code{org-roam-extras-create-file-for-note} creates a file with
+a slugified name in the specified directory (defaulting to
+@code{paths-dir-notes}).  It signals an error if the file already exists.
+
+@node Link utilities
+@section Link utilities
+
+@findex org-roam-extras-get-id-of-title
+The function @code{org-roam-extras-get-id-of-title} returns the Org ID of the
+node whose title matches exactly.  When NOCASE is non-@code{nil}, the
+comparison is case-insensitive.  When DIRS is provided (as a list of
+directory paths or a single path), only nodes within those directories
+are considered.  An error is signaled if no node or multiple nodes match
+the title.
+
+@node Capture support
+@section Capture support
+
+@findex org-roam-extras-remove-file-level-properties
+The function @code{org-roam-extras-remove-file-level-properties} is intended
+for @code{org-capture-before-finalize-hook}.  When the capture template key
+is @samp{"r"}, it removes the file-level ``ID'' property and ensures the first
+heading receives an Org ID instead.
+
+@node Recent files
+@section Recent files
+
+@findex org-roam-extras-recent
+The function @code{org-roam-extras-recent} returns a list of Org Roam files
+modified within the last DAYS@.  An optional LIMIT argument causes the
+function to return the list only if its length is below the limit,
+returning @code{nil} otherwise.  The function excludes files matching
+@code{org-roam-file-exclude-regexp}.
+
+@node Patched functions
+@chapter Patched functions
+
+@menu
+* Database query delay::
+@end menu
+
+@node Database query delay
+@section Database query delay
+
+@findex org-roam-db-query
+The function @code{org-roam-db-query} is patched using @samp{el-patch} to insert
+a 10-millisecond delay (@code{sleep-for 0.01}) before executing each database
+query.  This is a workaround for potential SQLite database locking issues
+that can arise when rapid successive queries are made, particularly
+during bulk operations like indexing or link replacement.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

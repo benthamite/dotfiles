@@ -1,0 +1,115 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename bibtex-completion-extras.info
+@settitle bibtex-completion-extras: Extensions for bibtex-completion
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* BibTeX Completion Extras: (bibtex-completion-extras). Extensions for bibtex-completion.
+@end direntry
+
+@finalout
+@titlepage
+@title bibtex-completion-extras: Extensions for bibtex-completion
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top bibtex-completion-extras: Extensions for bibtex-completion
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{bibtex-completion-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Patched functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Patched functions
+
+* Initialization without file watching::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{bibtex-completion-extras.el} provides a targeted extension for the
+@samp{bibtex-completion} package, which underlies bibliography completion
+interfaces such as @samp{ivy-bibtex} and @samp{helm-bibtex}.  It depends on
+@samp{el-patch} for modifying the initialization function.
+
+The sole purpose of this package is to disable the automatic file
+watching that @samp{bibtex-completion} sets up during initialization.  By
+default, @samp{bibtex-completion} uses @code{file-notify-add-watch} to monitor
+bibliography files and automatically reload them when changes are
+detected.  This can cause performance issues with large bibliography
+files or on systems where file notification events are frequent.
+
+By removing the file-watching code, this package trades automatic
+reloading for manual control.  The bibliography data can still be
+refreshed on demand by calling @code{bibtex-completion-clear-cache} followed
+by any completion command, or simply by restarting Emacs.
+
+@node Patched functions
+@chapter Patched functions
+
+@menu
+* Initialization without file watching::
+@end menu
+
+@node Initialization without file watching
+@section Initialization without file watching
+
+@findex bibtex-completion-init
+The function @code{bibtex-completion-init} is patched using @samp{el-patch} to
+remove the block of code that sets up file watches on bibliography
+files.  The original function iterates over all files returned by
+@code{bibtex-completion-normalize-bibliography}, verifies they exist, and
+adds a @code{file-notify-add-watch} for each one.  The patched version skips
+this entire loop.
+
+The rest of the initialization---removing old watch descriptors and
+pre-calculating display format widths---is preserved unchanged.  This
+means existing watches from a previous initialization are still cleaned
+up properly, and the completion display continues to work as expected.
+
+The patch is applied at load time using @samp{el-patch-defun}.  If you later
+need to re-enable file watching, you can call the original function via
+@samp{el-patch-unpatch} or simply unload this package.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

@@ -1,0 +1,177 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename vulpea-extras.info
+@settitle vulpea-extras: Extensions for vulpea
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Vulpea Extras: (vulpea-extras). Extensions for vulpea.
+@end direntry
+
+@finalout
+@titlepage
+@title vulpea-extras: Extensions for vulpea
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top vulpea-extras: Extensions for vulpea
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{vulpea-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* Excluding directories::
+* Excluding files::
+
+Functions
+
+* Project detection::
+* Updating the project tag::
+* Updating agenda files::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{vulpea-extras.el} extends the @samp{vulpea} package, a helper library for note-taking with Org Roam. Org Roam excels at linking and retrieving notes, but it does not automatically track which notes contain actionable items. This package bridges that gap by:
+
+@itemize
+@item
+Detecting whether an Org Roam note qualifies as a ``project'' based on its content---TODO items, scheduled headings, deadlines, or anniversaries (@ref{Project detection}).
+@item
+Automatically tagging files with a @samp{"project"} tag when they meet the criteria, and removing the tag when they no longer do (@ref{Updating the project tag}).
+@item
+Dynamically updating @code{org-agenda-files} before each agenda invocation to include project files and recently modified notes, ensuring your agenda always reflects the current state of your knowledge base (@ref{Updating agenda files}).
+@end itemize
+
+The package depends on @samp{paths} and @samp{vulpea}, and integrates with @samp{org-roam} and @samp{org-roam-extras.el}.
+
+@node User options
+@chapter User options
+
+@menu
+* Excluding directories::
+* Excluding files::
+@end menu
+
+@node Excluding directories
+@section Excluding directories
+
+@vindex vulpea-extras-excluded-directories
+The user option @code{vulpea-extras-excluded-directories} specifies a list of directory paths whose contents should be excluded from project detection. Any Org file located within one of these directories or their subdirectories will be ignored by @code{vulpea-extras-project-p}, meaning it will never receive the @samp{"project"} tag automatically. The default value contains two directories defined via the @samp{paths} package. You might want to add directories that contain reference material or archival notes that should not appear in your agenda.
+
+The type is a list of directory paths (@code{(repeat directory)}).
+
+@node Excluding files
+@section Excluding files
+
+@vindex vulpea-extras-excluded-files
+The user option @code{vulpea-extras-excluded-files} specifies individual file paths to exclude from project detection. This is useful when a specific file contains TODO items or deadlines but should not be treated as a project for agenda purposes. The default value is an empty list.
+
+The type is a list of file paths (@code{(repeat file)}).
+
+@node Functions
+@chapter Functions
+
+@menu
+* Project detection::
+* Updating the project tag::
+* Updating agenda files::
+@end menu
+
+@node Project detection
+@section Project detection
+
+@findex vulpea-extras-project-p
+The function @code{vulpea-extras-project-p} determines whether the current buffer qualifies as a project. It returns non-@code{nil} if the buffer is in @code{org-mode}, is not in an excluded directory or file (@ref{Excluding directories}, @ref{Excluding files}), and contains at least one headline that satisfies any of the following conditions:
+
+@itemize
+@item
+It is a TODO item (its @code{:todo-type} is @code{todo}) and it is not archived.
+@item
+It is not done and has a @code{SCHEDULED} or @code{DEADLINE} property, and it is not archived.
+@end itemize
+
+The function respects tag inheritance when checking for the @samp{ARCHIVE} tag. Completed tasks are deliberately excluded so that files containing only finished work are not flagged as active projects.
+
+@findex vulpea-extras-anniversary-p
+The function @code{vulpea-extras-anniversary-p} returns non-@code{nil} if the current Org buffer contains an anniversary expression (@samp{%%(org-anniversary ...)}). Files with anniversaries are treated as projects for tagging purposes, ensuring that recurring personal dates appear in the agenda.
+
+@findex vulpea-extras-buffer-p
+The function @code{vulpea-extras-buffer-p} returns non-@code{nil} if the current buffer's file is located within @code{org-roam-directory}. This is used as a guard to ensure that project-detection logic runs only on Org Roam files.
+
+@node Updating the project tag
+@section Updating the project tag
+
+@findex vulpea-extras-project-update-tag
+The function @code{vulpea-extras-project-update-tag} inspects the current buffer and adds the @samp{"project"} tag if the buffer qualifies as a project (via @code{vulpea-extras-project-p} or @code{vulpea-extras-anniversary-p}), or removes it if the buffer no longer qualifies. It uses @code{vulpea-buffer-tags-set} to modify the tags and only writes changes when the tag set has actually changed, avoiding unnecessary file modifications.
+
+This function is designed to be added to a hook such as @code{before-save-hook} for Org Roam files. It includes guards against running in the minibuffer or when the buffer is in an inconsistent state (checked via @code{track-changes-inconsistent-state-p} when available).
+
+@node Updating agenda files
+@section Updating agenda files
+
+@findex vulpea-extras-agenda-files-update
+The function @code{vulpea-extras-agenda-files-update} dynamically rebuilds @code{org-agenda-files} by combining three sources:
+
+@enumerate
+@item
+The current value of @code{org-agenda-files}.
+@item
+All files tagged with @samp{"project"} in the Org Roam database (queried via @code{vulpea-extras-project-files}).
+@item
+Recently modified Org Roam files (retrieved via @code{org-roam-extras-recent} from @samp{org-roam-extras.el}, limited to the last 2 days and 500 files).
+@end enumerate
+
+After merging these lists and removing duplicates, it subtracts any files listed in @code{org-extras-agenda-files-excluded}. This function is installed as @samp{:before} advice on @code{org-agenda}, so the agenda file list is always fresh when you open the agenda.
+
+@findex vulpea-extras-project-files
+The function @code{vulpea-extras-project-files} queries the Org Roam database for all files that contain a node tagged with @samp{"project"}. It returns a deduplicated list of file paths. This is the function that connects the automatic tagging system (@ref{Updating the project tag}) to the agenda file list.
+
+@findex vulpea-extras-file-in-excluded-directory-p
+The function @code{vulpea-extras-file-in-excluded-directory-p} checks whether a given file resides in one of the directories listed in @code{vulpea-extras-excluded-directories} (@ref{Excluding directories}). It is used internally by @code{vulpea-extras-project-p} to filter out files that should not be considered for project status.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

@@ -1,0 +1,165 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename org-gcal-extras.info
+@settitle org-gcal-extras: Extensions for org-gcal
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Org Gcal Extras: (org-gcal-extras). Extensions for org-gcal.
+@end direntry
+
+@finalout
+@titlepage
+@title org-gcal-extras: Extensions for org-gcal
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top org-gcal-extras: Extensions for org-gcal
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{org-gcal-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Commands::
+* Compatibility fixes::
+* Patched functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Commands
+
+* Opening events in Google Calendar::
+* Transient menu::
+
+Patched functions
+
+* Reading event timestamps::
+* Writing event data::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{org-gcal-extras.el} extends @samp{org-gcal}, the package that synchronizes Org mode entries with Google Calendar events. The upstream package stores event timestamps as @samp{SCHEDULED} properties and places descriptions inside a dedicated @samp{:org-gcal:} drawer. This layout may not suit every workflow---for instance, if you use deadlines rather than scheduled dates for calendar events, or if you prefer event descriptions to live in the heading body rather than a drawer.
+
+The package provides three categories of functionality:
+
+@itemize
+@item
+@strong{Commands.} A command to open the Google Calendar event at point in a web browser, and a transient menu that groups all common @samp{org-gcal} operations into a single dispatch interface (@ref{Commands}).
+@item
+@strong{Compatibility fixes.} Advice that prevents @code{track-changes} assertion failures and stale org-element cache errors during asynchronous synchronization on Emacs 30 and later (@ref{Compatibility fixes}).
+@item
+@strong{Patched synchronization behavior.} @samp{el-patch} modifications that change how @samp{org-gcal} reads and writes event data: using @samp{DEADLINE} instead of @samp{SCHEDULED}, placing descriptions in the heading body, and removing the @samp{:org-gcal:} drawer (@ref{Patched functions}).
+@end itemize
+
+The package depends on @samp{org-gcal}, @samp{el-patch}, and @samp{transient}.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Opening events in Google Calendar::
+* Transient menu::
+@end menu
+
+@node Opening events in Google Calendar
+@section Opening events in Google Calendar
+
+@findex org-gcal-extras-open-at-point
+When reviewing synchronized calendar events in Org mode, you may want to edit an event in the Google Calendar web interface directly. The command @code{org-gcal-extras-open-at-point} reads the @samp{entry-id} property from the Org heading at point, constructs the corresponding Google Calendar edit URL (encoding the event ID in base64), and opens it in the default web browser via @code{browse-url}. If the heading has no @samp{entry-id} property, the command signals a user error.
+
+@node Transient menu
+@section Transient menu
+
+@findex org-gcal-extras-menu
+The @samp{org-gcal} package provides many commands but no built-in dispatch interface. The command @code{org-gcal-extras-menu} defines a transient menu that groups all common operations into four columns:
+
+@itemize
+@item
+@strong{Fetch:} @code{org-gcal-fetch} (fetch all calendars) and @code{org-gcal-fetch-buffer} (fetch only the current buffer's calendar).
+@item
+@strong{Sync:} @code{org-gcal-sync} (sync all calendars) and @code{org-gcal-sync-buffer} (sync only the current buffer).
+@item
+@strong{Act:} @code{org-gcal-post-at-point} (push local changes for the event at point), @code{org-gcal-extras-open-at-point} (open in browser, @ref{Opening events in Google Calendar}), and @code{org-gcal-delete-at-point} (delete the event).
+@item
+@strong{Setup:} @code{org-gcal--sync-unlock} (release a stuck sync lock), @code{org-gcal-sync-tokens-clear} (clear stored sync tokens), @code{org-gcal-toggle-debug} (toggle debug logging), and @code{org-gcal-reload-client-id-secret} (reload OAuth credentials).
+@end itemize
+
+This menu is defined with @code{transient-define-prefix} and can be bound to a convenient key for quick access.
+
+@node Compatibility fixes
+@chapter Compatibility fixes
+
+Emacs 30 introduced the @code{track-changes} facility, which can trigger assertion failures when @samp{org-gcal} modifies buffers asynchronously during synchronization. Additionally, the org-element cache may enter a stale state during these async updates, causing ``emergency'' cache resets and subsequent errors.
+
+@samp{org-gcal-extras.el} addresses both issues with an @samp{:around} advice on @code{org-gcal--update-entry} that wraps the original function in two protective measures: it sets @code{inhibit-modification-hooks} to @code{t} during the update (preventing @code{track-changes} assertions), and it resets the org-element cache both before and after the update (preventing stale cache errors). These fixes are applied automatically when the package is loaded.
+
+@node Patched functions
+@chapter Patched functions
+
+@menu
+* Reading event timestamps::
+* Writing event data::
+@end menu
+
+@node Reading event timestamps
+@section Reading event timestamps
+
+The internal function @code{org-gcal--get-time-and-desc} determines the start and end times of an event by reading Org heading properties. The upstream version prefers the @samp{SCHEDULED} property; the @samp{el-patch} in @samp{org-gcal-extras.el} changes this to prefer the @samp{DEADLINE} property instead. If neither property is present, the function falls back to timestamps found within the @samp{:org-gcal:} drawer, as in the original. This change ensures that when events are pushed back to Google Calendar, the deadline-based timestamps are used.
+
+@node Writing event data
+@section Writing event data
+
+The internal function @code{org-gcal--update-entry} writes Google Calendar event data into an Org heading during synchronization. The upstream version creates an @samp{:org-gcal:} drawer, writes the event timestamp and description inside it, and uses the @samp{SCHEDULED} property for the event date.
+
+The @samp{el-patch} in @samp{org-gcal-extras.el} makes three changes to this behavior:
+
+@enumerate
+@item
+The @samp{:org-gcal:} drawer is not created. There is no @samp{:ORG-GCAL:} / @samp{:END:} wrapper around the event content.
+@item
+The event description is inserted directly into the heading body (after the properties drawer), making it visible without opening a drawer.
+@item
+The event date is set using @code{org-deadline} instead of @code{org-schedule}, so the timestamp appears as a @samp{DEADLINE} property rather than a @samp{SCHEDULED} property.
+@end enumerate
+
+Together with the timestamp reading patch (@ref{Reading event timestamps}), these changes create a consistent workflow where Google Calendar events use deadlines throughout the round-trip synchronization.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

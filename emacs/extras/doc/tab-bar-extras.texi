@@ -1,0 +1,243 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename tab-bar-extras.info
+@settitle tab-bar-extras: Extensions for Emacs tab bar
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Tab Bar Extras: (tab-bar-extras). Extensions for Emacs tab bar.
+@end direntry
+
+@finalout
+@titlepage
+@title tab-bar-extras: Extensions for Emacs tab bar
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top tab-bar-extras: Extensions for Emacs tab bar
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{tab-bar-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Tab bar elements::
+* Commands::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* @code{tab-bar-extras-global-mode-string}::
+* @code{tab-bar-extras-reset-wttr}::
+
+Tab bar elements
+
+* Basic elements::
+* System status elements::
+* Notification elements::
+
+Commands
+
+* Resetting the tab bar::
+* Notification management::
+
+Functions
+
+* Helper functions::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{tab-bar-extras.el} extends Emacs' built-in @code{tab-bar-mode} with a rich set of display elements and notification controls for the tab bar's global area (the right-hand side where @code{global-mode-string} is shown). Instead of relying on the mode line for status information, this package moves time, battery, notifications, and other indicators into the tab bar, freeing the mode line for buffer-specific details.
+
+The package integrates with several external packages including @samp{doom-modeline} (for GitHub notifications and debug status), @samp{telega} (for Telegram notifications), @samp{org-pomodoro} (for timer display), @samp{display-wttr} (for weather), and @samp{calendar-extras} (for geolocation).
+
+The main capabilities are:
+
+@itemize
+@item
+@strong{Tab bar elements.} A collection of display elements for time, battery, Emacs profile, notifications, and more (@ref{Tab bar elements}).
+@item
+@strong{Reset and refresh.} Commands to reset the tab bar display, update geolocation and weather, and restart the clock (@ref{Resetting the tab bar}).
+@item
+@strong{Notification management.} Commands to toggle the visibility of GitHub and Telega notifications individually or globally (@ref{Notification management}).
+@end itemize
+
+@node User options
+@chapter User options
+
+@menu
+* @code{tab-bar-extras-global-mode-string}::
+* @code{tab-bar-extras-reset-wttr}::
+@end menu
+
+@node @code{tab-bar-extras-global-mode-string}
+@section @code{tab-bar-extras-global-mode-string}
+
+@vindex tab-bar-extras-global-mode-string
+The user option @code{tab-bar-extras-global-mode-string} defines the list of elements displayed in the tab bar's global area. It should be set to a list containing the desired element constants and @code{:eval} forms from the tab bar elements section (@ref{Tab bar elements}). The @code{tab-bar-extras-reset} command (@ref{Resetting the tab bar}) applies this value to @code{global-mode-string}.
+
+The default value is @code{nil}. The type is an alist.
+
+@node @code{tab-bar-extras-reset-wttr}
+@section @code{tab-bar-extras-reset-wttr}
+
+@vindex tab-bar-extras-reset-wttr
+When set to non-nil, the @code{tab-bar-extras-reset} command (@ref{Resetting the tab bar}) will refresh weather information by calling @code{display-wttr}, provided that @code{display-wttr-mode} is active. Set this to @code{nil} if you do not use the @samp{display-wttr} package or do not want weather refreshed on each reset.
+
+The default value is @code{t}. The type is a boolean.
+
+@node Tab bar elements
+@chapter Tab bar elements
+
+The package defines a set of constants and evaluated forms that represent individual display elements. You compose these into the @code{tab-bar-extras-global-mode-string} list to build your tab bar layout.
+
+@menu
+* Basic elements::
+* System status elements::
+* Notification elements::
+@end menu
+
+@node Basic elements
+@section Basic elements
+
+@vindex tab-bar-extras-prefix-element
+@vindex tab-bar-extras-separator-element
+@vindex tab-bar-extras-time-element
+@vindex tab-bar-extras-emacs-profile-element
+The constant @code{tab-bar-extras-prefix-element} is a single space, used as the leading separator at the start of the global area.
+
+The constant @code{tab-bar-extras-separator-element} is the string @samp{" | "}, used to separate adjacent elements. Note that conditional elements like the Telega and GitHub notifications include their own leading separator so that it disappears when the element is hidden.
+
+The constant @code{tab-bar-extras-time-element} displays the current time from @code{display-time-string}, styled with the @code{faces-extras-display-time} face (from @samp{faces-extras.el}). To change the time format, customize @code{display-time-format}.
+
+The constant @code{tab-bar-extras-emacs-profile-element} displays the base name of @code{user-emacs-directory}, providing a quick indicator of which Emacs profile is active.
+
+@node System status elements
+@section System status elements
+
+@vindex tab-bar-extras-battery-element
+@vindex tab-bar-extras-debug-element
+The constant @code{tab-bar-extras-battery-element} displays battery status using @code{battery-status-function}. It shows a plug icon when charging and a battery icon otherwise, followed by the charge percentage.
+
+The constant @code{tab-bar-extras-debug-element} displays active debugger states (DAP, Edebug, @code{debug-on-error}, @code{debug-on-quit}) using Doom Modeline helper functions. It only appears when at least one debug mode is active, preceded by a separator.
+
+@node Notification elements
+@section Notification elements
+
+@vindex tab-bar-extras-telega-element
+@vindex tab-bar-extras-github-element
+@vindex tab-bar-extras-pomodoro-element
+@vindex tab-bar-extras-notification-status-element
+The constant @code{tab-bar-extras-telega-element} displays the Telega unread message count from @code{telega-mode-line-string}. It is only visible when @code{tab-bar-extras-telega-notifications-enabled} is non-nil, the Telega server is live, and there are unread messages (@ref{Notification management}).
+
+The constant @code{tab-bar-extras-github-element} displays the GitHub notification count from @code{doom-modeline--github-notification-number}, using Doom Modeline icons and faces. It requires @code{doom-modeline-github} to be non-nil and is controlled by @code{tab-bar-extras-github-notifications-enabled} (@ref{Notification management}). Counts above 99 are displayed as ``99+''.
+
+The constant @code{tab-bar-extras-pomodoro-element} ensures the @code{org-pomodoro-mode-line} element is present in @code{global-mode-string}, adding it if missing. This keeps the Pomodoro timer visible in the tab bar.
+
+The constant @code{tab-bar-extras-notification-status-element} displays a muted bell icon followed by a separator when @code{tab-bar-extras-notifications-enabled} is @code{nil}, serving as a visual reminder that notifications are suppressed.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Resetting the tab bar::
+* Notification management::
+@end menu
+
+@node Resetting the tab bar
+@section Resetting the tab bar
+
+@findex tab-bar-extras-reset
+@findex tab-bar-extras-quick-reset
+Over time, the tab bar display can become stale---the clock might freeze, weather data might be outdated, or the global mode string might have been modified by another package. The command @code{tab-bar-extras-reset} performs a full refresh:
+
+@enumerate
+@item
+It restarts the clock with @code{display-time}.
+@item
+It reapplies @code{tab-bar-extras-global-mode-string} to @code{global-mode-string}.
+@item
+Unless the QUICK argument is non-nil, it updates geolocation via @code{calendar-extras-set-geolocation} (if @samp{calendar-extras} is loaded and @code{calendar-extras-use-geolocation} is set) and sets the weather location accordingly.
+@item
+If @code{tab-bar-extras-reset-wttr} is non-nil and @code{display-wttr-mode} is active, it refreshes the weather display.
+@end enumerate
+
+The command @code{tab-bar-extras-quick-reset} calls @code{tab-bar-extras-reset} with QUICK set to @code{t}, skipping the geolocation and weather steps for a faster refresh.
+
+@findex tab-bar-extras-reset-unless-clock
+The function @code{tab-bar-extras-reset-unless-clock} calls @code{tab-bar-extras-reset} only when @code{org-clock} is not currently running. This is intended for use in periodic timers: resetting the tab bar would remove the clocked task display, so this function avoids that disruption.
+
+@node Notification management
+@section Notification management
+
+@findex tab-bar-extras-toggle-notifications
+@findex tab-bar-extras-enable-all-notifications
+@findex tab-bar-extras-disable-all-notifications
+@findex tab-bar-extras-toggle-telega-notifications
+@findex tab-bar-extras-toggle-github-notifications
+The command @code{tab-bar-extras-toggle-notifications} toggles all notification elements on or off. It calls the individual toggle functions for GitHub and Telega and updates the master flag @code{tab-bar-extras-notifications-enabled}. An optional ACTION argument (@code{'enable} or @code{'disable}) forces a specific state instead of toggling.
+
+For convenience, @code{tab-bar-extras-enable-all-notifications} and @code{tab-bar-extras-disable-all-notifications} call @code{tab-bar-extras-toggle-notifications} with the corresponding action. These are useful in focus-mode hooks or do-not-disturb workflows.
+
+The functions @code{tab-bar-extras-toggle-telega-notifications} and @code{tab-bar-extras-toggle-github-notifications} control their respective notification elements individually. Each accepts an optional ACTION argument. They update the variables @code{tab-bar-extras-telega-notifications-enabled} and @code{tab-bar-extras-github-notifications-enabled} and display a confirmation message.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Helper functions::
+@end menu
+
+@node Helper functions
+@section Helper functions
+
+@findex tab-bar-extras-set-global-mode-string
+@findex tab-bar-extras-toggle-individual-notifications
+@findex tab-bar-extras-get-state
+The function @code{tab-bar-extras-set-global-mode-string} sets @code{global-mode-string} to the value of @code{tab-bar-extras-global-mode-string} (@ref{@code{tab-bar-extras-global-mode-string}, , User options}). Messages are suppressed during this operation.
+
+The function @code{tab-bar-extras-toggle-individual-notifications} is the shared implementation behind @code{tab-bar-extras-toggle-telega-notifications} and @code{tab-bar-extras-toggle-github-notifications} (@ref{Notification management}). It updates the given variable and displays a status message.
+
+The function @code{tab-bar-extras-get-state} determines the new boolean state based on an ACTION argument (@code{'enable} returns @code{t}, @code{'disable} returns @code{nil}) or the current value of VAR (toggling it). It is used internally by the notification toggle functions.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

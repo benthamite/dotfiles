@@ -1,0 +1,217 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename avy-extras.info
+@settitle avy-extras: Extensions for avy
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Avy Extras: (avy-extras). Extensions for avy.
+@end direntry
+
+@finalout
+@titlepage
+@title avy-extras: Extensions for avy
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top avy-extras: Extensions for avy
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{avy-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Commands::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* @code{avy-extras-goto-char-timeout}::
+
+Commands
+
+* Word jumping in line::
+* End-of-line jumping::
+* Mode-specific jumping::
+* Character jumping::
+
+Functions
+
+* Region marking action::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{avy-extras.el} extends @samp{avy}, the package that lets you jump to visible text in Emacs buffers using short character sequences. While @samp{avy} provides general-purpose jumping commands, it does not include line-scoped word jumping, end-of-line targeting, or mode-specific ``jump and act'' commands.
+
+This package provides three groups of extensions:
+
+@itemize
+@item
+Word-jumping commands restricted to the current visual line, with variants for the whole line, behind point, or ahead of point (@ref{Word jumping in line}).
+@item
+End-of-line jumping commands for lines above or below the cursor (@ref{End-of-line jumping}).
+@item
+Mode-specific commands that combine @code{avy-goto-line} with an action in Dired, Ebib, mu4e, Telega, and Elfeed (@ref{Mode-specific jumping}).
+@item
+Character-based jumping commands inspired by Vim's @samp{f} motion, with repeatable search via timeout (@ref{Character jumping}).
+@end itemize
+
+The package depends on @samp{el-patch} and @samp{use-package-extras}.
+
+@node User options
+@chapter User options
+
+@menu
+* @code{avy-extras-goto-char-timeout}::
+@end menu
+
+@node @code{avy-extras-goto-char-timeout}
+@section @code{avy-extras-goto-char-timeout}
+
+@vindex avy-extras-goto-char-timeout
+The user option @code{avy-extras-goto-char-timeout} controls how long the character jumping commands (@ref{Character jumping}) wait for a repeated keypress before exiting. If the same key is not pressed within this number of seconds, the search stops and the next keypress is treated as a normal command.
+
+The default value is @code{1} (one second). A higher value gives you more time to decide whether to continue jumping; a lower value makes the command feel snappier but requires faster key presses.
+
+The type is a number (integer or float).
+
+@node Commands
+@chapter Commands
+
+@menu
+* Word jumping in line::
+* End-of-line jumping::
+* Mode-specific jumping::
+* Character jumping::
+@end menu
+
+@node Word jumping in line
+@section Word jumping in line
+
+@findex avy-extras-goto-word-in-line
+@findex avy-extras-goto-word-in-line-behind
+@findex avy-extras-goto-word-in-line-ahead
+When editing prose or code, you often want to jump to a nearby word on the same line without being overwhelmed by candidates from the entire visible window. Three commands restrict @code{avy-goto-word-0} to the current visual line:
+
+@itemize
+@item
+@code{avy-extras-goto-word-in-line} offers candidates across the entire visual line, from its beginning to its end.
+@item
+@code{avy-extras-goto-word-in-line-behind} offers candidates only between the beginning of the visual line and point. This is useful when you need to jump backward to fix a typo earlier on the same line.
+@item
+@code{avy-extras-goto-word-in-line-ahead} offers candidates only between point and the end of the visual line.
+@end itemize
+
+All three commands use @code{avy-goto-word-0} internally, so they respect your @samp{avy} style and key settings.
+
+@node End-of-line jumping
+@section End-of-line jumping
+
+@findex avy-extras-goto-end-of-line-above
+@findex avy-extras-goto-end-of-line-below
+Sometimes you want to append text at the end of a nearby line. These commands combine @code{avy-goto-line-above} or @code{avy-goto-line-below} with a subsequent @code{end-of-line} call:
+
+@itemize
+@item
+@code{avy-extras-goto-end-of-line-above} jumps to a visible line above the cursor and moves point to its end.
+@item
+@code{avy-extras-goto-end-of-line-below} jumps to a visible line below the cursor and moves point to its end.
+@end itemize
+
+Both accept optional OFFSET and BOTTOM-UP arguments, which control the distance between the closest avy candidate and the cursor and the display order of candidates, respectively.
+
+@node Mode-specific jumping
+@section Mode-specific jumping
+
+@findex avy-extras-dired-find-file
+@findex avy-extras-ebib-view-entry
+@findex avy-extras-headers-view-message
+@findex avy-extras-telega-view-message
+@findex avy-extras-elfeed-search-show-entry
+Several Emacs modes display lists of items (files, bibliography entries, email messages, chat messages, feed entries) where you select an item by moving to its line and pressing a key. These commands combine line selection and action into a single step:
+
+@itemize
+@item
+@code{avy-extras-dired-find-file} jumps to a line in a Dired buffer and visits the file or directory on that line (via @code{dired-find-alternate-file}, which reuses the current buffer).
+@item
+@code{avy-extras-ebib-view-entry} jumps to a line in an Ebib index buffer and opens the entry for editing (via @code{ebib-edit-entry}).
+@item
+@code{avy-extras-headers-view-message} jumps to a line in a mu4e headers buffer and views the message (via @code{mu4e-headers-view-message}).
+@item
+@code{avy-extras-telega-view-message} jumps to a line in a Telega chat list and opens the chat (via @code{push-button}).
+@item
+@code{avy-extras-elfeed-search-show-entry} jumps to a line in an Elfeed search buffer and displays the entry (via @code{elfeed-search-show-entry}).
+@end itemize
+
+@node Character jumping
+@section Character jumping
+
+@findex avy-extras-goto-char-forward
+@findex avy-extras-goto-char-backward
+These commands provide Vim-style @samp{f} and @samp{F} motions: they prompt for a character and immediately jump to its first occurrence in the specified direction. Unlike @samp{avy-goto-char}, which displays overlay hints for all visible occurrences, these commands jump directly to the nearest match and then allow you to repeat the jump by pressing the same key again.
+
+@itemize
+@item
+@code{avy-extras-goto-char-forward} prompts for a character and jumps forward to its first occurrence. Pressing the same character again within the timeout period (@ref{@code{avy-extras-goto-char-timeout}}) advances to the next occurrence. Pressing a different key or waiting for the timeout exits the search and processes the key normally.
+@item
+@code{avy-extras-goto-char-backward} works the same way but searches backward.
+@end itemize
+
+The last character used is stored in the variable @code{avy-extras-last-char}.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Region marking action::
+@end menu
+
+@node Region marking action
+@section Region marking action
+
+@findex avy-extras-action-mark-to-char
+The function @code{avy-extras-action-mark-to-char} is an avy action function that activates the mark and moves point to the selected position, effectively creating a region from the original point to the avy target. This is useful as a custom avy action for selecting text between two positions.
+
+This function is adapted from Karthink's ``Avy can do anything'' guide.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

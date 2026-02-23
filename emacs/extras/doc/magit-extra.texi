@@ -1,0 +1,221 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename magit-extra.info
+@settitle magit-extra: Extensions for Magit
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Magit Extra: (magit-extra). Extensions for Magit.
+@end direntry
+
+@finalout
+@titlepage
+@title magit-extra: Extensions for Magit
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top magit-extra: Extensions for Magit
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{magit-extra.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Commands::
+* Repository maintenance::
+* Transient suffixes::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Commands
+
+* Stage, commit, and push: Stage commit and push. 
+* Tag and submodule checkout::
+* Dirty repository detection::
+* Dispatch menu::
+
+Repository maintenance
+
+* Asynchronous pull::
+* Automatic submodule pull::
+* Production branch guard::
+
+Functions
+
+* URL and file helpers::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{magit-extra.el} extends @samp{magit}, the popular Git interface for Emacs, with convenience commands and workflow automation. The package depends on @samp{magit} and @samp{paths}.
+
+The extensions fall into several categories:
+
+@itemize
+@item
+@strong{Streamlined commit workflows.} Commands that stage, commit, and push in a single step, reducing the friction of routine Git operations (@ref{Stage commit and push, , Stage@comma{} commit@comma{} and push}).
+@item
+@strong{Repository maintenance.} Batch updates across multiple repositories and automatic submodule management (@ref{Repository maintenance}).
+@item
+@strong{Safety guards.} Dirty-repository warnings and confirmation prompts before pushing to production branches (@ref{Dirty repository detection}).
+@item
+@strong{Asynchronous operations.} Background pulling for repositories that need periodic synchronization (@ref{Asynchronous pull}).
+@item
+@strong{Customized dispatch menu.} A modified Magit dispatch transient that overrides the default, providing a tailored command palette (@ref{Dispatch menu}).
+@item
+@strong{Submodule transient suffixes.} Additional entries for the Magit submodule transient menu (@ref{Transient suffixes}).
+@end itemize
+
+@node Commands
+@chapter Commands
+
+@menu
+* Stage, commit, and push: Stage commit and push. 
+* Tag and submodule checkout::
+* Dirty repository detection::
+* Dispatch menu::
+@end menu
+
+@node Stage commit and push
+@section Stage, commit, and push
+
+@findex magit-extras-stage-commit-and-push
+The most common Git workflow---stage modifications, write a commit message, and push---typically requires several separate steps in Magit. The command @code{magit-extras-stage-commit-and-push} collapses this into a single action. When called interactively, it first displays the unstaged diff for review, then prompts for a commit message.
+
+The command accepts two optional arguments. When FILE is non-nil, only that file is staged rather than all modified files. When NO-PUSH is non-nil, the push step is skipped, which is useful when you want to batch several commits before pushing. The command is adapted from a workflow by Sacha Chua.
+
+@findex magit-extras-stage-commit-and-push-all-repos
+For users who maintain multiple Git repositories, @code{magit-extras-stage-commit-and-push-all-repos} iterates over all directories listed in @code{paths-dir-all-repos} and performs a ``midnight update'' on each one. This is intended for automated, periodic synchronization---for example, from a timer or a shutdown hook. Each repository receives a commit with the message ``Midnight update''.
+
+@findex magit-extras-with-editor-finish-and-push
+When composing a commit message in a @samp{with-editor} buffer, you may want to finalize and push immediately. The command @code{magit-extras-with-editor-finish-and-push} calls @code{with-editor-finish} to complete the editing session and then invokes @code{magit-push-current-to-pushremote} to push the new commit.
+
+@node Tag and submodule checkout
+@section Tag and submodule checkout
+
+@findex magit-extras-checkout-tag-with-submodules
+Projects that use Git submodules often need to check out a specific tag consistently across the main repository and all submodules. The command @code{magit-extras-checkout-tag-with-submodules} prompts for a tag (or the ``main'' branch) via @code{completing-read} and then performs a force checkout.
+
+When ``main'' is selected, the command checks out the @samp{main} branch in every submodule recursively and pulls the latest changes. When a tag is selected, it resets all submodules to match the commit recorded in the superproject and reinitializes them. This distinction ensures that tag checkouts produce a deterministic state while branch checkouts pull the latest upstream changes.
+
+@node Dirty repository detection
+@section Dirty repository detection
+
+@findex magit-extras-warn-if-repo-is-dirty
+@findex magit-extras-repo-is-dirty-p
+Before performing automated operations on a repository, it is often wise to verify that it has no uncommitted changes. The command @code{magit-extras-warn-if-repo-is-dirty} checks whether the repository at REPO-PATH (or the current repository if nil) has any modifications and emits an alert via the @samp{alert} package if so.
+
+The predicate @code{magit-extras-repo-is-dirty-p} performs the underlying check using @code{magit-anything-modified-p}. It returns @code{t} when the directory exists, is a Git repository, and contains uncommitted changes. Both functions are useful in hooks or timers that perform automated Git operations.
+
+@node Dispatch menu
+@section Dispatch menu
+
+@findex magit-extras-dispatch
+The function @code{magit-extras-dispatch} defines a customized transient prefix that replaces the default @code{magit-dispatch} via @samp{advice-add}. The layout largely mirrors the standard Magit dispatch but includes the Forge dispatch under @samp{n} and a push binding under @samp{.}, among other adjustments. The menu is organized into three groups: transient and DWIM commands, applying changes (visible only in Magit buffers), and essential commands.
+
+Because this function overrides @code{magit-dispatch}, invoking the standard Magit dispatch keybinding will display this custom menu.
+
+@node Repository maintenance
+@chapter Repository maintenance
+
+@menu
+* Asynchronous pull::
+* Automatic submodule pull::
+* Production branch guard::
+@end menu
+
+@node Asynchronous pull
+@section Asynchronous pull
+
+@findex magit-extra-async-pull
+The function @code{magit-extra-async-pull} starts a background @samp{git pull} process for REPO without blocking Emacs. It creates an asynchronous process and reports errors via @code{message} if the pull does not finish cleanly. This is useful for keeping repositories synchronized in the background, for instance from a timer or init hook.
+
+@node Automatic submodule pull
+@section Automatic submodule pull
+
+@findex magit-extras-pull-including-submodules
+The function @code{magit-extras-pull-including-submodules} is installed as @samp{:after} advice on @code{magit-pull}. Whenever you pull in a repository that contains a @samp{.gitmodules} file, this function automatically updates all submodules recursively by calling @code{magit-extras-pull-all-submodules}. This saves you from having to remember to update submodules manually after each pull.
+
+@node Production branch guard
+@section Production branch guard
+
+Accidentally pushing to a production branch can have serious consequences. The internal function @code{magit-extras--guard-production} is installed as @samp{:before} advice on both @code{magit-push-current-to-pushremote} and @code{magit-push-current-to-upstream}. When the target branch name contains the string ``production'', the function prompts for confirmation with @code{yes-or-no-p} before allowing the push to proceed. If the user declines, the push is cancelled with a @code{user-error}.
+
+@node Transient suffixes
+@chapter Transient suffixes
+
+@findex magit-extras-update-all-submodules
+@findex magit-extras-pull-all-submodules
+The package defines two transient suffix commands intended for inclusion in Magit's submodule transient menu:
+
+The suffix @code{magit-extras-update-all-submodules} runs @samp{git submodule update --init} with optional @samp{--recursive} arguments. This initializes any uninitialized submodules and checks out the exact commit recorded in the superproject. It does @emph{not} pull the latest changes from the submodule remotes, making it suitable for reproducing a known state.
+
+The suffix @code{magit-extras-pull-all-submodules} runs @samp{git submodule foreach --recursive git pull}, which fetches and merges the latest changes from each submodule's default upstream branch. Unlike @code{magit-extras-update-all-submodules}, this updates submodules to their latest development state regardless of what the superproject records.
+
+Both suffixes accept the standard @code{magit-submodule-arguments} for the @samp{--recursive} flag and run asynchronously.
+
+@node Functions
+@chapter Functions
+
+@menu
+* URL and file helpers::
+@end menu
+
+@node URL and file helpers
+@section URL and file helpers
+
+@findex magit-extras-parse-url
+@findex magit-extras-get-commit-file
+@findex magit-extras-get-commit-heading
+@findex magit-extras-get-unstaged-files
+@findex magit-extras-track-file
+@findex magit-extras-move-point-to-start
+@findex magit-extras-midnight-update
+The function @code{magit-extras-parse-url} converts a Git remote URL in SSH format (e.g., @samp{git@@github.com:user/repo.git}) into an HTTPS URL@. It passes HTTP URLs through unchanged.
+
+The function @code{magit-extras-get-commit-file} extracts the name of the first file listed under ``Changes to be committed'' in the current buffer. It accepts an optional PATH argument: @code{'full} returns the absolute path, @code{'sans-dir} returns only the filename, and @code{nil} (the default) returns the path relative to the repository root.
+
+The function @code{magit-extras-get-commit-heading} retrieves the Org mode heading associated with the code being committed. It uses @code{magit-extras-get-commit-file} to find the file, visits it in the previous window, and extracts the heading via @code{org-entry-get}. This is useful for generating commit messages from Org structure.
+
+The function @code{magit-extras-get-unstaged-files} returns a list of unstaged file names using @samp{git diff --name-only --diff-filter=d}. The function @code{magit-extras-track-file} stages a single file with @samp{git add}. The function @code{magit-extras-move-point-to-start} moves point to the beginning of the buffer after a brief delay, which can be useful in Magit hooks.
+
+The function @code{magit-extras-midnight-update} performs a stage-commit-push cycle in the given DIRECTORY with the commit message ``Midnight update''. It is called by @code{magit-extras-stage-commit-and-push-all-repos} (@ref{Stage commit and push, , Stage@comma{} commit@comma{} and push}).
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

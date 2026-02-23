@@ -1,0 +1,217 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename zotra-extras.info
+@settitle zotra-extras: Extensions for Zotra
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Zotra Extras: (zotra-extras). Extensions for Zotra.
+@end direntry
+
+@finalout
+@titlepage
+@title zotra-extras: Extensions for Zotra
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top zotra-extras: Extensions for Zotra
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{zotra-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Commands::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* VPN for IMDb::
+
+Commands
+
+* Adding entries::
+* Bibliography file selection::
+* Batch processing::
+
+Functions
+
+* Ebib post-processing::
+* Bib@TeX{} cleanup::
+* Fetching fields::
+* Org protocol handler::
+* Adding multiple URLs::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{zotra-extras.el} extends @samp{zotra}, the Emacs package that fetches bibliographic metadata using Zotero translation servers. While @samp{zotra} provides the core fetching mechanism, @samp{zotra-extras.el} wraps it in a richer workflow that integrates with @samp{ebib} for entry management, supports VPN routing for geo-restricted sources, and handles common error conditions gracefully.
+
+The package provides the following capabilities:
+
+@itemize
+@item
+@strong{Enhanced entry addition.} An improved version of @code{zotra-add-entry} that auto-detects URLs from Elfeed and EWW buffers, falls back to an alternative backend on server errors, and automatically opens the new entry in @samp{ebib} for review and processing (@ref{Adding entries}).
+@item
+@strong{Batch processing.} A command to add multiple bibliographic entries from a file containing one URL per line (@ref{Batch processing}).
+@item
+@strong{VPN integration.} Optional routing of IMDb requests through Mullvad VPN to control the geographic origin of fetched metadata (@ref{VPN for IMDb}).
+@item
+@strong{Org protocol handler.} A protocol handler that enables adding entries directly from a web browser (@ref{Org protocol handler}).
+@item
+@strong{Bib@TeX{} cleanup.} Post-processing functions that fix octal encoding artifacts, set timestamps, and clean up newly imported entries (@ref{Bib@TeX{} cleanup}).
+@item
+@strong{Field fetching.} A utility function to retrieve a single bibliographic field for a URL without adding the full entry (@ref{Fetching fields}).
+@end itemize
+
+The package depends on @samp{zotra} and @samp{paths}, and optionally integrates with @samp{ebib}, @samp{ebib-extras}, @samp{mullvad}, @samp{org-ref}, and @samp{tlon}.
+
+@node User options
+@chapter User options
+
+@menu
+* VPN for IMDb::
+@end menu
+
+@node VPN for IMDb
+@section VPN for IMDb
+
+@vindex zotra-extras-use-mullvad-p
+The Internet Movie Database (IMDb) returns metadata that may vary based on the geographic location of the request. The user option @code{zotra-extras-use-mullvad-p} controls whether @code{zotra-extras-add-entry} routes IMDb requests through a specific Mullvad VPN server to ensure consistent results (for example, fetching English-language metadata by connecting through New York).
+
+When set to non-nil, and when the URL or search string passed to @code{zotra-extras-add-entry} matches @samp{imdb.com}, the command calls @code{mullvad-connect-to-website} with the @samp{"IMDb"} website identifier before fetching data. This requires the @samp{mullvad} package and appropriate configuration of @code{mullvad-websites-and-cities} and @code{mullvad-cities-and-servers}. Specifically, @code{mullvad-websites-and-cities} must contain a cons cell like @samp{("IMDb" . "New York")} and @code{mullvad-cities-and-servers} must map that city to a server like @samp{("New York" . "us-nyc-wg-601")}.
+
+The default value is @code{nil}, meaning all requests use the direct internet connection.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Adding entries::
+* Bibliography file selection::
+* Batch processing::
+@end menu
+
+@node Adding entries
+@section Adding entries
+
+@findex zotra-extras-add-entry
+The command @code{zotra-extras-add-entry} is the primary entry point for importing bibliographic metadata. It improves on the standard @code{zotra-add-entry} in several ways:
+
+@itemize
+@item
+@strong{URL auto-detection.} When invoked from an @samp{elfeed-show-mode} buffer, it copies the current entry's URL to the kill ring. In @samp{eww-mode}, it copies the current page URL@. In other modes, it pre-fills the prompt with the most recent kill ring entry.
+@item
+@strong{Bibliography file selection.} If no BIBFILE argument is provided, it prompts the user to choose one via @code{zotra-extras-set-bibfile} (@ref{Bibliography file selection}) and stores the choice in the variable @code{zotra-extras-most-recent-bibfile}.
+@item
+@strong{VPN routing.} When @code{zotra-extras-use-mullvad-p} is non-nil and the URL matches @samp{imdb.com}, the command connects through Mullvad VPN before fetching (@ref{VPN for IMDb}).
+@item
+@strong{Backend fallback.} If the primary @samp{zotra} backend fails with a JSON parse error indicating an internal server error, the command automatically retries with the @samp{citoid} backend.
+@item
+@strong{Ebib integration.} After successfully adding the entry, it opens the new entry in @samp{ebib} for review, unless the optional DO-NOT-OPEN argument is non-nil.
+@end itemize
+
+The optional arguments URL-OR-SEARCH-STRING, ENTRY-FORMAT, BIBFILE, and DO-NOT-OPEN can be supplied programmatically for non-interactive use.
+
+@node Bibliography file selection
+@section Bibliography file selection
+
+@findex zotra-extras-set-bibfile
+The command @code{zotra-extras-set-bibfile} prompts the user to choose a bibliography file from a predefined list of candidates: @code{tlon-file-fluid}, @code{tlon-file-db}, and @code{paths-file-personal-bibliography-new}. The selected file path is returned. This command is called by @code{zotra-extras-add-entry} when no bibliography file is specified (@ref{Adding entries}).
+
+@node Batch processing
+@section Batch processing
+
+@findex zotra-extras-add-multiple-urls-from-file
+When you need to import many entries at once, the command @code{zotra-extras-add-multiple-urls-from-file} reads a file containing one URL per line and adds a bibliographic entry for each URL to a chosen bibliography file. Interactively, it prompts for both the file path (defaulting to the downloads directory) and the target bibliography via @code{zotra-extras-set-bibfile}. Duplicate URLs in the file are removed before processing.
+
+Each entry is added without opening it in @samp{ebib} individually, avoiding repeated window switching. After all entries have been processed, the command opens the bibliography in @samp{ebib} and sorts by timestamp so the newly added entries appear together.
+
+The constant @code{zotra-extras-add-multiple-urls-from-file} (the variable, not the command) holds the default file path for the URL list, set to @samp{zotra-add-multiple-urls.txt} in the downloads directory.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Ebib post-processing::
+* Bib@TeX{} cleanup::
+* Fetching fields::
+* Org protocol handler::
+* Adding multiple URLs::
+@end menu
+
+@node Ebib post-processing
+@section Ebib post-processing
+
+@findex zotra-extras-open-in-ebib
+The function @code{zotra-extras-open-in-ebib} handles the workflow of opening a newly added entry in @samp{ebib}. It launches @samp{ebib} if needed, switches to the correct database, reloads it, sorts entries by timestamp, navigates to the new entry, saves the database (to persist the sorted order), and prompts the user to verify that the entry type and key are correct before invoking @code{ebib-extras-process-entry} for further processing.
+
+@node Bib@TeX{} cleanup
+@section Bib@TeX{} cleanup
+
+@findex zotra-extras-after-add-process-bibtex
+@findex zotra-extras-fix-octal-sequences
+The function @code{zotra-extras-after-add-process-bibtex} performs several cleanup steps on a newly added Bib@TeX{} entry in the current buffer. It converts @samp{titleaddon} fields to @samp{journaltitle}, sets a @samp{timestamp} field using the @samp{ebib} timestamp format, fixes octal encoding sequences, cleans the entry using @code{org-ref-clean-bibtex-entry}, replaces EAF URLs via @code{tlon-cleanup-eaf-replace-urls}, and records the entry key in @code{zotra-extras-most-recent-bibkey}.
+
+The function @code{zotra-extras-fix-octal-sequences} addresses a specific issue where Zotero-imported Bib@TeX{} entries contain octal escape sequences (such as @samp{\302\267} for a middle dot) that Emacs does not decode automatically. The function iterates over a range of possible octal sequences and replaces each one with its corresponding UTF-8 character.
+
+@node Fetching fields
+@section Fetching fields
+
+@findex zotra-extras-fetch-field
+The function @code{zotra-extras-fetch-field} retrieves the value of a single FIELD (such as @samp{"title"} or @samp{"author"}) from the bibliographic metadata for a given URL-OR-SEARCH-STRING, without adding the full entry to any bibliography file. It fetches the raw Bib@TeX{} data via @code{zotra-get-entry-1}, parses it in a temporary buffer using @samp{bibtex-mode}, and extracts the requested field. Optional arguments allow suppressing errors (IGNORE-ERRORS) and setting a custom TIMEOUT@. This function is useful when you need metadata for programmatic purposes without side effects.
+
+@node Org protocol handler
+@section Org protocol handler
+
+@findex zotra-extras-protocol
+The function @code{zotra-extras-protocol} handles @samp{org-protocol://zotra?...} requests, enabling you to add bibliographic entries directly from a web browser via a bookmarklet or browser extension. The INFO plist may contain @samp{:url}, @samp{:bibfile}, @samp{:format}, and @samp{:title} keys. The function extracts these and delegates to @code{zotra-extras-add-entry} (@ref{Adding entries}).
+
+The protocol is registered automatically when the package is loaded, adding an entry to @code{org-protocol-protocol-alist}.
+
+@node Adding multiple URLs
+@section Adding multiple URLs
+
+@findex zotra-extras-add-multiple-urls
+The function @code{zotra-extras-add-multiple-urls} is the non-interactive workhorse behind @code{zotra-extras-add-multiple-urls-from-file} (@ref{Batch processing}). It accepts a list of URLS and a BIBFILE, saves all open @samp{ebib} databases, then iterates through the URLs calling @code{zotra-extras-add-entry} for each with DO-NOT-OPEN set. After all entries are added, it opens the bibliography in @samp{ebib} and sorts by timestamp.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

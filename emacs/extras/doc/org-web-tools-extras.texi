@@ -1,0 +1,115 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename org-web-tools-extras.info
+@settitle org-web-tools-extras: Extensions for org-web-tools
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Org Web Tools Extras: (org-web-tools-extras). Extensions for org-web-tools.
+@end direntry
+
+@finalout
+@titlepage
+@title org-web-tools-extras: Extensions for org-web-tools
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top org-web-tools-extras: Extensions for org-web-tools
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{org-web-tools-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Functions
+
+* Inserting a link from the clipboard::
+* Extracting a page title::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{org-web-tools-extras.el} extends @samp{org-web-tools}, the package that provides utilities for interacting with web content within Org mode. The upstream package offers commands for inserting Org-formatted links and reading web pages, but some of these are designed for interactive use and do not integrate smoothly with programmatic contexts such as Org Capture templates.
+
+@samp{org-web-tools-extras.el} addresses this gap with two focused functions:
+
+@itemize
+@item
+@strong{Link insertion from the kill ring.} A function that fetches the title for a URL found in the kill ring and returns a formatted Org link, suitable for use in Org Capture templates (@ref{Inserting a link from the clipboard}).
+@item
+@strong{Title extraction.} A function that fetches and returns just the title of a web page at a given URL, using the @samp{plz} HTTP library for retrieval (@ref{Extracting a page title}).
+@end itemize
+
+The package depends on @samp{org-web-tools} and @samp{paths}.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Inserting a link from the clipboard::
+* Extracting a page title::
+@end menu
+
+@node Inserting a link from the clipboard
+@section Inserting a link from the clipboard
+
+@findex org-web-tools-extras-insert-link-for-clipboard-url
+The function @code{org-web-tools-extras-insert-link-for-clipboard-url} retrieves the first URL from the kill ring (using @code{org-web-tools--get-first-url}), fetches the page title for that URL, and returns a fully formatted Org link in the form @samp{[[url][title]]}. It delegates the actual link construction to the internal @code{org-web-tools--org-link-for-url} function.
+
+This function is designed to be called from an Org Capture template. When you copy a URL in a browser and invoke an Org Capture template that uses this function, it automatically creates a properly formatted link without requiring you to type the title manually. For example, you might use it in a capture template like this:
+
+@lisp
+(setq org-capture-templates
+      '(("l" "Link" entry (file "~/links.org")
+         "* %(org-web-tools-extras-insert-link-for-clipboard-url)\n")))
+@end lisp
+
+@node Extracting a page title
+@section Extracting a page title
+
+@findex org-web-tools-extras-org-title-for-url
+The function @code{org-web-tools-extras-org-title-for-url} fetches the HTML content of a given URL, extracts the @samp{<title>} element, and returns the cleaned title string. It uses the @samp{plz} library to perform the HTTP request and @code{libxml-parse-html-region} to parse the HTML DOM@.
+
+If the URL argument is omitted, the function defaults to the first URL found in the kill ring, making it convenient for quick programmatic lookups. If the HTTP request fails, the HTML cannot be parsed, or the page has no @samp{<title>} element, the function returns the fallback string @samp{"Downloaded webpage"} rather than signaling an error. Title cleanup is performed by @code{org-web-tools--cleanup-title}, which strips extraneous whitespace and normalizes the string for use in Org links.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

@@ -23,6 +23,10 @@ emacsclient -e 'init-current-profile'
 
 Always use this to resolve the active profile path (`~/.config/emacs-profiles/<profile>/elpaca/`) rather than hardcoding a profile name, since it changes over time.
 
+# Making changes
+
+If you make a change to an extras Elisp file, please also update the corresponding org file in the `doc` subdirectroy. For example, if you modify `emacs/extras/claude-code-extras.el`, also update `emacs/extras/doc/claude-code-extras.org`.
+
 # Testing Emacs extras
 
 To test loading Emacs extras in batch mode with all dependencies:

@@ -17,6 +17,7 @@
       "NotebookEdit"
     ]
   },
+  "model": "opus",
   "hooks": {
     "Stop": [
       {

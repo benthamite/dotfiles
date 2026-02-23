@@ -857,8 +857,6 @@ leading and trailing hyphen."
   (when (simple-extras-is-new-buffer-p)
     (auto-save-mode 1)))
 
-(add-hook 'buffer-list-update-hook #'simple-extras-new-buffer-enable-auto-save)
-
 (defun simple-extras-new-buffer-auto-save-dir (orig-func &rest args)
   "Use a standard location for auto-save files for non-file-visiting buffers.
 ORIG-FUNC is the original function being advised. ARGS are the arguments passed
@@ -867,8 +865,6 @@ to it."
       (let ((default-directory simple-extras-new-buffer-auto-save-dir))
 	(apply orig-func args))
     (apply orig-func args)))
-
-(advice-add 'auto-save-mode :around #'simple-extras-new-buffer-auto-save-dir)
 
 ;;;;; sort
 

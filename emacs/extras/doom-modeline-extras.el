@@ -327,8 +327,6 @@ a forge notification pull to keep forge in sync."
       (forge-extras-pull-notifications)))
   (setq doom-modeline-extras-github-last-count doom-modeline--github-notification-number))
 
-(add-hook 'doom-modeline-after-github-fetch-notification-hook #'doom-modeline-extras-handle-github-notifications)
-
 (autoload 'doom-modeline--github-fetch-notifications "doom-modeline-segments")
 (defun doom-modeline-extras-refresh-github-after-forge (&rest _)
   "Refresh the doom-modeline GitHub count after forge pulls notifications.
@@ -336,9 +334,6 @@ This ensures the tab-bar count updates immediately when notifications
 are pulled via forge, rather than waiting for the next timer cycle."
   (when (bound-and-true-p doom-modeline-github)
     (doom-modeline--github-fetch-notifications)))
-
-(advice-add 'forge--ghub-update-notifications :after
-            #'doom-modeline-extras-refresh-github-after-forge)
 
 (provide 'doom-modeline-extras)
 ;;; doom-modeline-extras.el ends here

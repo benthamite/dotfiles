@@ -137,8 +137,6 @@ tasks."
 		       (org-roam-extras-recent 2 500)))
          org-extras-agenda-files-excluded)))
 
-(advice-add 'org-agenda :before #'vulpea-extras-agenda-files-update)
-
 (defun vulpea-extras-buffer-p ()
   "Return non-nil if the currently visited buffer is a note."
   (and buffer-file-name

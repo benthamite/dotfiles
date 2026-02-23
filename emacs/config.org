@@ -33,7 +33,7 @@ This configuration is an Org document that tangles to an Emacs Lisp init file. I
 		   :files ("emacs/extras/org-extras.el")))
 #+end_src
 
-The extras come with their own manuals and user options: everything is documented and customizable. To read the manual for a given extras package, type =M-x info-display-manual RET= and enter the package name (e.g. =org-extras=). You can also browse all available manuals with =C-h i= and look under the "Emacs misc features" category.
+The extras come with their own manuals and user options: everything is documented and customizable. To read the manual for a given extras package, type =M-x info-display-manual RET= (or =C-h R=) and enter the package name (e.g. =org-extras=). You can also browse all available manuals with =M-x info RET= (=C-h i=).
 
 * table of contents
 :PROPERTIES:
@@ -47,6 +47,7 @@ The extras come with their own manuals and user options: everything is documente
 - [[#package-management][package management]]
   - [[#elpaca][elpaca]]
   - [[#use-package][use-package]]
+  - [[#dotfiles-docs][dotfiles-docs]]
   - [[#use-package-extras][use-package-extras]]
   - [[#elpaca-extras][elpaca-extras]]
 - [[#foundational][foundational]]
@@ -3896,6 +3897,14 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
     (add-to-list 'savehist-additional-variables 'file-name-history))
 
   (add-to-list 'auto-mode-alist '("\\.mdx\\'" . markdown-mode))
+
+  (add-to-list 'safe-local-eval-forms
+               '(add-hook 'after-save-hook
+                          (lambda ()
+                            (require 'ox-texinfo)
+                            (let ((inhibit-message t))
+                              (org-texinfo-export-to-texinfo)))
+                          nil t))
 
   :bind
   (("M--" . not-modified)
@@ -12449,6 +12458,7 @@ Then change the value of =telega-server-libs-prefix= from =/opt/homebrew= to =/u
   (telega-photo-size-limits `(8 3 ,(* 55 1.5) ,(* 12 1.5)))
   (telega-webpage-photo-size-limits `(55 10 ,(* 110 1.5) ,(* 20 1.5)))
   (telega-mode-line-format nil)
+  (telega-vvnote-play-speeds '(1 1.5 2)
 
   :config
   (with-eval-after-load 'savehist

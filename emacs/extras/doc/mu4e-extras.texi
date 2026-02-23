@@ -1,0 +1,445 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename mu4e-extras.info
+@settitle mu4e-extras: Extensions for mu4e
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Mu4e Extras: (mu4e-extras). Extensions for mu4e.
+@end direntry
+
+@finalout
+@titlepage
+@title mu4e-extras: Extensions for mu4e
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top mu4e-extras: Extensions for mu4e
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{mu4e-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Commands::
+* Functions::
+* Patched functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* Folder configuration::
+* Reply behavior::
+
+Commands
+
+* Refiling, trashing, and moving without confirmation: Refiling trashing and moving without confirmation. 
+* Marking as read and refiling::
+* Initializing and updating mail::
+* Composing messages::
+* Viewing messages in Gmail::
+* Message file operations::
+* Org capture integration::
+* Copying information::
+
+Functions
+
+* Read status management::
+* Gmail flag correction::
+* Setup helpers::
+* Archiving refiled messages::
+* Context matching::
+* Message file access::
+
+Patched functions
+
+* Single-URL auto-selection::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{mu4e-extras.el} extends @samp{mu4e}, the Emacs email client powered by the
+@samp{mu} indexer, with commands and configuration helpers tailored to a
+Gmail-based workflow.  It depends on @samp{el-patch} for patching internal
+@samp{mu4e} functions and on @samp{mu4e} itself.
+
+The package solves several practical problems that arise when using
+@samp{mu4e} with Gmail via @samp{mbsync}.  Gmail's IMAP behavior can reset the
+read status of refiled and sent messages after synchronization.  This
+package tracks such messages in a queue and re-applies the read flag
+after each sync cycle, preventing the annoying appearance of
+already-read messages as unread.
+
+For daily email processing, the package provides one-step refile, trash,
+and move commands that skip the confirmation prompt.  This removes
+friction from the most common email actions in both headers and view
+modes.
+
+The package also handles multiple email contexts (personal vs. work,
+HTML vs. plain text), sets up maildir shortcuts, integrates with Org
+capture for processing actionable emails, and provides commands for
+opening messages in Gmail's web interface.  A patch to
+@code{mu4e--view-get-urls-num} removes the unnecessary prompt when a message
+contains only a single URL@.
+
+@node User options
+@chapter User options
+
+@menu
+* Folder configuration::
+* Reply behavior::
+@end menu
+
+@node Folder configuration
+@section Folder configuration
+
+@vindex mu4e-extras-inbox-folder
+@vindex mu4e-extras-daily-folder
+@vindex mu4e-extras-newsletters-folder
+The user option @code{mu4e-extras-inbox-folder} specifies the maildir path
+for the main inbox folder.  It is used by @code{mu4e-extras-set-shortcuts} to
+configure maildir shortcuts (@ref{Setup helpers}).  The default value is an
+empty string; you must set this to match your maildir layout (e.g.,
+@samp{"/gmail/Inbox"}).
+
+The user option @code{mu4e-extras-daily-folder} specifies the maildir path
+for a ``daily'' folder, also used by @code{mu4e-extras-set-shortcuts}.  The
+default value is an empty string.
+
+The user option @code{mu4e-extras-newsletters-folder} specifies the maildir
+path for a newsletters folder.  The default value is an empty string.
+This option is available for use in custom configurations but is not
+referenced by any default function in the package.
+
+@node Reply behavior
+@section Reply behavior
+
+@vindex mu4e-extras-wide-reply
+The user option @code{mu4e-extras-wide-reply} controls the default behavior
+when replying to messages with multiple recipients.  It accepts three
+values:
+
+@itemize
+@item
+@code{prompt} (the default): ask the user whether to reply to all.
+@item
+@code{t}: always reply to all recipients.
+@item
+@code{nil}: always reply only to the sender.
+@end itemize
+
+This option is consulted by @code{mu4e-extras-compose-reply}
+(@ref{Composing messages}).  When the original message has only a single
+recipient (excluding the sender), the option has no effect and a normal
+reply is always used.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Refiling, trashing, and moving without confirmation: Refiling trashing and moving without confirmation. 
+* Marking as read and refiling::
+* Initializing and updating mail::
+* Composing messages::
+* Viewing messages in Gmail::
+* Message file operations::
+* Org capture integration::
+* Copying information::
+@end menu
+
+@node Refiling trashing and moving without confirmation
+@section Refiling, trashing, and moving without confirmation
+
+@findex mu4e-extras-headers-refile
+@findex mu4e-extras-view-refile
+@findex mu4e-extras-headers-trash
+@findex mu4e-extras-view-trash
+@findex mu4e-extras-headers-move
+@findex mu4e-extras-view-move
+@findex mu4e-extras-mark-execute-all-no-confirm
+The standard @samp{mu4e} mark-and-execute workflow requires an explicit
+confirmation step.  The commands in this section bypass that
+confirmation, performing the action immediately on the message at point.
+
+The commands @code{mu4e-extras-headers-refile} and @code{mu4e-extras-view-refile}
+refile the message at point in headers mode and view mode respectively.
+Similarly, @code{mu4e-extras-headers-trash} and @code{mu4e-extras-view-trash}
+trash the message, while @code{mu4e-extras-headers-move} and
+@code{mu4e-extras-view-move} prompt for a target folder and move the message
+immediately.
+
+The command @code{mu4e-extras-mark-execute-all-no-confirm} executes all
+pending marks in the current buffer without asking for confirmation.
+
+@node Marking as read and refiling
+@section Marking as read and refiling
+
+@findex mu4e-extras-headers-mark-read-and-refile
+The command @code{mu4e-extras-headers-mark-read-and-refile} combines two
+actions: it marks the message at point as read and refiles it.  The
+message's ID is added to an internal queue so that its read status can
+be re-applied after the next Gmail synchronization (@ref{Read status management}).
+
+This command exists because Gmail's IMAP implementation sometimes resets
+the read flag on refiled messages during synchronization.  By queuing
+the message, the package ensures the flag is restored automatically.
+
+@node Initializing and updating mail
+@section Initializing and updating mail
+
+@findex mu4e-extras-init
+@findex mu4e-extras-update-all-mail-and-index
+@findex mu4e-extras-check-all-mail
+@findex mu4e-extras-reindex-db
+The command @code{mu4e-extras-init} reinitializes the @samp{mu} database.  It
+stops any running mail update, quits @samp{mu4e}, and then runs the @samp{muinit}
+script asynchronously.  Use this when the database is corrupted or after
+major configuration changes.
+
+The command @code{mu4e-extras-update-all-mail-and-index} runs @samp{mbsync gmail-all}
+to fetch all mail including the Gmail archive, then indexes with @samp{mu}.
+With a prefix argument, it runs in the background; otherwise, it shows
+a progress window.
+
+The command @code{mu4e-extras-check-all-mail} performs the same operation as
+@code{mu4e-extras-update-all-mail-and-index} but always runs in the
+background.  It is intended for periodic full syncs that can take longer.
+
+The command @code{mu4e-extras-reindex-db} kills any running @samp{mu} process and
+then runs @samp{mu index} to rebuild the index.
+
+@node Composing messages
+@section Composing messages
+
+@findex mu4e-extras-compose-reply
+@findex mu4e-extras-compose-new-externally
+The command @code{mu4e-extras-compose-reply} initiates a reply to the message
+at point.  If the sender is the current user, it calls
+@code{mu4e-compose-supersede} to edit the sent message.  When there are
+multiple recipients, the behavior depends on the @code{mu4e-extras-wide-reply}
+user option (@ref{Reply behavior}).
+
+The command @code{mu4e-extras-compose-new-externally} opens Gmail's compose
+screen in the default web browser, bypassing @samp{mu4e} entirely.
+
+@node Viewing messages in Gmail
+@section Viewing messages in Gmail
+
+@findex mu4e-extras-open-gmail
+@findex mu4e-extras-view-in-gmail
+The command @code{mu4e-extras-open-gmail} opens the Gmail inbox in the
+default web browser.
+
+The command @code{mu4e-extras-view-in-gmail} opens the message at point in
+Gmail by searching for its RFC 822 message ID@.  This is useful when you
+need to perform an action that @samp{mu4e} does not support, such as viewing
+the full HTML rendering or accessing Gmail-specific features.
+
+@node Message file operations
+@section Message file operations
+
+@findex mu4e-extras-open-message-file
+The command @code{mu4e-extras-open-message-file} opens the file on disk that
+stores the current message.  It uses @code{dired-jump} to display the file
+in its parent directory in Dired mode.  This is useful for inspecting
+raw message files or managing mail storage.
+
+@node Org capture integration
+@section Org capture integration
+
+@findex mu4e-extras-view-org-capture
+The command @code{mu4e-extras-view-org-capture} captures the message at point
+using @samp{org-capture}.  By default it uses the template key @samp{"e"}, but if
+the message body contains the string @samp{[org-capture key: KEY]}, it uses
+KEY instead.  This allows automated email workflows to specify which
+capture template should process the message.
+
+Without a prefix argument, the message is refiled after capture (via
+@code{mu4e-extras-view-refile}).  With a prefix argument, the message is
+captured but not refiled, leaving it in the inbox.
+
+This command works in both @code{mu4e-view-mode} and @code{mu4e-headers-mode}.
+
+@node Copying information
+@section Copying information
+
+@findex mu4e-extras-copy-number-in-title
+The command @code{mu4e-extras-copy-number-in-title} extracts a numeric value
+from the subject line of the message at point and copies it to the kill
+ring.  This is useful for quickly capturing amounts from transactional
+emails (e.g., invoices, receipts) without opening the message.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Read status management::
+* Gmail flag correction::
+* Setup helpers::
+* Archiving refiled messages::
+* Context matching::
+* Message file access::
+@end menu
+
+@node Read status management
+@section Read status management
+
+@findex mu4e-extras-reapply-read-status
+@findex mu4e-extras-reapply-read-status-set-timer
+@findex mu4e-extras-add-refiled-to-mark-as-read-queue
+@findex mu4e-extras-add-sent-to-mark-as-read-queue
+@vindex mu4e-extras-mark-as-read-queue
+The variable @code{mu4e-extras-mark-as-read-queue} holds a list of message
+IDs that need to be re-marked as read after the next Gmail
+synchronization.  Messages are added to this queue by two functions:
+
+The function @code{mu4e-extras-add-refiled-to-mark-as-read-queue} adds the
+current message to the queue, refiles it, and executes all marks.  It is
+called by @code{mu4e-extras-headers-mark-read-and-refile}
+(@ref{Marking as read and refiling}).
+
+The function @code{mu4e-extras-add-sent-to-mark-as-read-queue} adds the sent
+message's ID to the queue.  It is intended for @code{message-sent-hook}.
+Gmail automatically saves a copy of sent messages, and the synced-back
+copy appears as unread; this function ensures it is marked as read.
+
+The function @code{mu4e-extras-reapply-read-status} iterates through the
+queue and marks each message as seen using @code{mu4e--server-move} with the
+@samp{+S-u} flags.  It then clears the queue.
+
+The function @code{mu4e-extras-reapply-read-status-set-timer} sets a
+30-second timer to call @code{mu4e-extras-reapply-read-status} if the queue
+is not empty.  This delay allows the synchronization to complete before
+re-applying the read status.
+
+@node Gmail flag correction
+@section Gmail flag correction
+
+@findex mu4e-extras-gmail-fix-flags
+The function @code{mu4e-extras-gmail-fix-flags} translates standard @samp{mu4e}
+marks into Gmail-specific label changes.  For each mark and message
+pair, it applies the appropriate tag operations: removing @samp{\Inbox} and
+adding @samp{\Trash} for trash, removing @samp{\Inbox} and adding @samp{\Refiled} for
+refile, and toggling @samp{\Starred} for flag/unflag.
+
+@node Setup helpers
+@section Setup helpers
+
+@findex mu4e-extras-set-shortcuts
+@findex mu4e-extras-set-face-locally
+@findex mu4e-extras-set-contexts
+@findex mu4e-extras-set-index-params
+The function @code{mu4e-extras-set-shortcuts} adds predefined entries to
+@code{mu4e-maildir-shortcuts} for the inbox and daily folders.
+
+The function @code{mu4e-extras-set-face-locally} remaps the @code{shr-text} face
+to a smaller height (0.9) in @code{mu4e-view-mode} buffers.  This is
+intended for @code{mu4e-view-mode-hook} to improve the readability of HTML
+emails rendered with @samp{shr}.
+
+The function @code{mu4e-extras-set-contexts} defines and sets
+@code{mu4e-contexts} for four combinations: personal HTML, personal plain
+text, work HTML, and work plain text.  Each context uses environment
+variables (@samp{PERSONAL_GMAIL}, @samp{WORK_EMAIL}) for email addresses and
+references Org Msg signature variables from @samp{org-msg-extras.el}.  The
+plain text contexts disable @code{org-msg-mode} on entry and re-enable it on
+leave.
+
+The function @code{mu4e-extras-set-index-params} adjusts indexing parameters
+(@code{mu4e-index-lazy-check} and @code{mu4e-index-cleanup}) based on Emacs idle
+time.  When the user has been idle for longer than
+@code{mu4e-update-interval}, it assumes the user is away and performs a
+thorough index (lazy check off, cleanup on).  When idle time is short,
+it performs a fast index (lazy check on, cleanup off).
+
+@node Archiving refiled messages
+@section Archiving refiled messages
+
+@findex mu4e-extras-archive-refiled
+The function @code{mu4e-extras-archive-refiled} archives messages that have
+the ``refile'' label by running a full mail sync with @samp{mbsync gmail-all}
+and performing a thorough index.  This is intended for periodic cleanup
+to keep the archive up to date.
+
+@node Context matching
+@section Context matching
+
+@findex mu4e-extras-msg-is-personal-p
+@findex mu4e-extras-msg-is-work-p
+@findex mu4e-extras-msg-is-html-p
+The function @code{mu4e-extras-msg-is-personal-p} returns non-@code{nil} if the
+message's @samp{:to} field matches either the personal Gmail address or the
+personal email address (from environment variables).
+
+The function @code{mu4e-extras-msg-is-work-p} returns non-@code{nil} if the
+message's @samp{:to} field matches the work email address or if the
+@samp{:reply-to} field matches the team's Google Group.
+
+The function @code{mu4e-extras-msg-is-html-p} returns non-@code{nil} if the
+message contains a @samp{text/html} MIME part, as determined by parsing the
+raw message file.
+
+@node Message file access
+@section Message file access
+
+@findex mu4e-extras-get-message-file
+The function @code{mu4e-extras-get-message-file} returns the filesystem path
+of the message at point.  It checks @code{mu4e-compose-parent-message} first
+(for use during composition) and falls back to @code{mu4e-message-at-point}.
+
+@node Patched functions
+@chapter Patched functions
+
+@menu
+* Single-URL auto-selection::
+@end menu
+
+@node Single-URL auto-selection
+@section Single-URL auto-selection
+
+@findex mu4e--view-get-urls-num
+The function @code{mu4e--view-get-urls-num} is patched using @samp{el-patch} to
+automatically select the URL when a message contains exactly one link.
+The standard behavior would prompt the user to enter the number ``1'',
+which is unnecessary.  When there are multiple URLs, the original
+prompting behavior is preserved.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

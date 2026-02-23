@@ -1,0 +1,279 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename color-extras.info
+@settitle color-extras: Extensions for color handling
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Color Extras: (color-extras). Extensions for color handling.
+@end direntry
+
+@finalout
+@titlepage
+@title color-extras: Extensions for color handling
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top color-extras: Extensions for color handling
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{color-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Variables::
+* Commands::
+* Functions::
+* Embark integration::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Variables
+
+* Regular expression patterns::
+
+Commands
+
+* Conversion::
+* Contrast analysis::
+
+Functions
+
+* Parsing and detection::
+* HSL formatting::
+* Color space conversions::
+* Rescaling helpers::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{color-extras.el} extends Emacs' built-in @code{color} library with
+practical tools for working with color values in everyday editing.
+Theme authors, CSS developers, and anyone who manipulates color codes
+in source files will find it useful.
+
+The package provides three main capabilities:
+
+@itemize
+@item
+@strong{Conversion} between hexadecimal (HEX) and Hue-Saturation-Luminance
+(HSL) color representations, either for the color at point or for
+every color in a buffer (@ref{Conversion, , Conversion commands}).
+@item
+@strong{Contrast analysis} against white, black, and an optional reference
+color, following the WCAG contrast ratio standard
+(@ref{Contrast analysis}).
+@item
+@strong{Embark integration} that lets you act on any HEX or HSL color
+string with a single keystroke (@ref{Embark integration}).
+@end itemize
+
+Internally, the package relies on Emacs' built-in @code{color-rgb-to-hsl}
+and @code{color-hsl-to-rgb} for the mathematical conversions and on the
+@samp{ct} package for contrast ratio computation.
+
+@node Variables
+@chapter Variables
+
+@menu
+* Regular expression patterns::
+@end menu
+
+@node Regular expression patterns
+@section Regular expression patterns
+
+@vindex color-extras-hex-pattern
+The constant @code{color-extras-hex-pattern} is a regular expression that
+matches a six-digit hexadecimal RGB color string, with or without a
+leading @samp{#}.  The first capture group contains the six hex digits.
+This pattern is used throughout the package to detect HEX colors at
+point and in buffer-wide searches (@ref{Conversion, , Conversion commands}).
+
+@vindex color-extras-hsl-scaled-pattern
+The constant @code{color-extras-hsl-scaled-pattern} is a regular expression
+that matches an HSL color written as three comma-separated numbers
+(e.g., @samp{210, 50%, 40%}).  Hue ranges from 0 to 360; saturation and
+luminance range from 0 to 100 and may include trailing @samp{%}  signs.
+The three capture groups correspond to hue, saturation, and luminance.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Conversion::
+* Contrast analysis::
+@end menu
+
+@node Conversion
+@section Conversion
+
+@findex color-extras-convert
+When you need to switch a color between HEX and HSL notation, place
+point on the color value and call @code{color-extras-convert}.  If the
+color at point is HEX (e.g., @samp{#ff0000}), the command converts it to
+HSL (e.g., @samp{0, 100%, 50%}); if it is HSL, the command produces HEX@.
+The converted value is saved to the kill ring and reported in the echo
+area, so you can immediately yank it wherever you need it.  If no
+recognizable color is found at point, the command prompts for one.
+
+@findex color-extras-convert-all
+To convert every color in a file at once, use
+@code{color-extras-convert-all}.  It prompts for the target format---either
+@samp{"hex"} or @samp{"hsl"}---and replaces all colors matching the @emph{opposite}
+format throughout the buffer.  For example, choosing @samp{"hex"} finds all
+HSL strings and rewrites them as HEX values.  An optional FILE
+argument lets you operate on a file other than the current buffer.
+
+@node Contrast analysis
+@section Contrast analysis
+
+@findex color-extras-contrast
+Verifying that foreground and background colors meet accessibility
+guidelines is a frequent need.  The command @code{color-extras-contrast}
+computes the WCAG contrast ratio between a primary color and both
+white (@samp{#ffffff}) and black (@samp{#000000}), displaying the results in the
+echo area.  If you supply an optional second color, the command also
+reports the contrast ratio between the two.
+
+The primary color defaults to the color at point; if none is found,
+the command prompts for one.  The second color is always prompted for
+and may be left blank.  This command requires the @samp{ct} package for its
+@code{ct-contrast-ratio} function.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Parsing and detection::
+* HSL formatting::
+* Color space conversions::
+* Rescaling helpers::
+@end menu
+
+@node Parsing and detection
+@section Parsing and detection
+
+@findex color-extras-parse-color
+@findex color-extras-looking-at-rgb
+@findex color-extras-looking-at-hsl-scaled
+@findex color-extras-looking-at-color
+The function @code{color-extras-parse-color} accepts a color string and
+returns either a HEX string (without the leading @samp{#}) or an HSL list
+of three numbers, depending on which pattern matches.  Pass a non-nil
+STRING argument to get the HSL result as a formatted string instead of
+a list.
+
+Three companion functions detect colors at point:
+@code{color-extras-looking-at-rgb} returns the six-digit HEX string (or
+@code{nil}), @code{color-extras-looking-at-hsl-scaled} returns the HSL color as
+a list or formatted string, and @code{color-extras-looking-at-color} tries
+HEX first and falls back to HSL@.  These are the building blocks used
+by the interactive commands (@ref{Conversion}).
+
+@node HSL formatting
+@section HSL formatting
+
+@findex color-extras-hsl-split
+@findex color-extras-hsl-to-string
+@findex color-extras-format-hsl
+The function @code{color-extras-hsl-split} extracts hue, saturation, and
+luminance from the current regexp match data (assuming a match against
+@code{color-extras-hsl-scaled-pattern}) and returns them as a list of three
+numbers.  @code{color-extras-hsl-to-string} takes such a list and formats
+it as @samp{"H, S%, L%"}, rounding each component to the nearest integer.
+@code{color-extras-format-hsl} is a convenience wrapper that returns either
+the list or the string form depending on its STRING argument.
+
+@node Color space conversions
+@section Color space conversions
+
+@findex color-extras-hex-to-hsl
+@findex color-extras-hsl-to-hex
+@findex color-extras-hex-to-rgb
+@findex color-extras-rgb-to-hex
+These four functions form the conversion core of the package.
+
+@code{color-extras-hex-to-rgb} converts a HEX string (supporting 3-, 4-,
+6-, and 8-digit forms) to a list of three RGB floats in the range
+0.0--1.0.  @code{color-extras-rgb-to-hex} does the reverse, accepting
+three integers in the range 0--255 and returning a @samp{#RRGGBB} string.
+
+@code{color-extras-hex-to-hsl} converts a HEX string to an HSL list.  When
+the optional RESCALE argument is non-nil, hue is scaled to 0--360 and
+saturation and luminance to 0--100; otherwise all three values are in
+the 0.0--1.0 range.  @code{color-extras-hsl-to-hex} performs the inverse
+transformation, with the same RESCALE convention.
+
+@node Rescaling helpers
+@section Rescaling helpers
+
+@findex color-extras-hsl-rescale
+@findex color-extras-hsl-maybe-rescale
+The function @code{color-extras-hsl-rescale} converts HSL values between
+the normalized (0.0--1.0) and scaled (0--360 / 0--100) ranges.  The
+OPERATION argument should be @code{*} (to go from normalized to scaled) or
+@code{/} (to go from scaled to normalized).
+@code{color-extras-hsl-maybe-rescale} is a conditional wrapper that only
+rescales when its RESCALE argument is non-nil.
+
+@node Embark integration
+@chapter Embark integration
+
+@findex color-extras-embark-color-finder
+When the @samp{embark} package is loaded, @samp{color-extras.el} registers a
+target finder, @code{color-extras-embark-color-finder}, that recognizes HEX
+and HSL color strings at point and tags them with the @code{color}
+category.
+
+A dedicated keymap, @code{color-extras-embark-map}, is associated with this
+category.  It provides two actions:
+
+@table @asis
+@item @samp{c}
+@code{color-extras-convert} --- convert between HEX and HSL
+(@ref{Conversion}).
+@item @samp{w}
+@code{embark-copy-as-kill} --- copy the color string to the kill
+ring.
+@end table
+
+This means you can invoke @samp{embark-act} with point on any color value
+and immediately convert it or copy it.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

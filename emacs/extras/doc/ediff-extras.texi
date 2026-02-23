@@ -1,0 +1,94 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename ediff-extras.info
+@settitle ediff-extras: Extensions for ediff
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Ediff Extras: (ediff-extras). Extensions for ediff.
+@end direntry
+
+@finalout
+@titlepage
+@title ediff-extras: Extensions for ediff
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top ediff-extras: Extensions for ediff
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{ediff-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Functions
+
+* Buffer cleanup on quit::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{ediff-extras.el} extends @samp{ediff}, the built-in Emacs facility for interactive difference merging. By default, when you quit an Ediff session, the comparison buffers (buffer A, buffer B, and optionally buffer C) remain open, cluttering the buffer list. This small package adds a cleanup hook that automatically kills all Ediff-related buffers upon quitting, keeping the buffer list tidy.
+
+The cleanup function is added to @code{ediff-quit-hook} when the package is loaded, so no additional configuration is required.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Buffer cleanup on quit::
+@end menu
+
+@node Buffer cleanup on quit
+@section Buffer cleanup on quit
+
+@findex ediff-extras-cleanup-buffers
+The function @code{ediff-extras-cleanup-buffers} kills all buffers associated with the current Ediff session: buffer A, buffer B, buffer C (if it exists in a three-way comparison), and the Ediff control buffer. It checks that each buffer is live before attempting to kill it, so it handles partial sessions gracefully.
+
+This function is automatically added to @code{ediff-quit-hook} when the package is loaded. If you prefer to keep the comparison buffers around after quitting, you can remove it:
+
+@lisp
+(remove-hook 'ediff-quit-hook 'ediff-extras-cleanup-buffers)
+@end lisp
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

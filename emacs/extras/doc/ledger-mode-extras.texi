@@ -1,0 +1,343 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename ledger-mode-extras.info
+@settitle ledger-mode-extras: Extensions for ledger-mode
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Ledger Mode Extras: (ledger-mode-extras). Extensions for ledger-mode.
+@end direntry
+
+@finalout
+@titlepage
+@title ledger-mode-extras: Extensions for ledger-mode
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top ledger-mode-extras: Extensions for ledger-mode
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{ledger-mode-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Commands::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* @code{ledger-mode-extras-currencies}::
+
+Commands
+
+* Importing transactions::
+* Navigation and editing::
+* Date manipulation::
+* Reporting::
+* Price updates::
+* Sorting::
+
+Functions
+
+* Transaction insertion::
+* Date conversion::
+* Core helpers::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{ledger-mode-extras.el} extends @samp{ledger-mode}, the Emacs major mode
+for editing plain-text accounting files compatible with the Ledger
+command-line tool.  The stock mode covers basic editing and reporting,
+but leaves several common workflows---importing transactions from
+brokerages, adjusting transaction dates, sorting in reverse
+chronological order, and fetching commodity prices---to the user.
+This package fills those gaps.
+
+The extensions are organized around six workflows:
+
+@itemize
+@item
+@strong{Importing transactions} from CSV exports (Polymarket, Interactive
+Brokers) and from the system clipboard (Wise Airbnb payouts)
+(@ref{Importing transactions}).
+@item
+@strong{Navigation and editing}: creating entries, aligning amounts,
+copying or killing transactions, and narrowing to a single
+transaction (@ref{Navigation and editing}).
+@item
+@strong{Date manipulation}: incrementing or decrementing the date of the
+transaction at point (@ref{Date manipulation}).
+@item
+@strong{Reports}: running common Ledger reports with a single command
+(@ref{Reporting}).
+@item
+@strong{Price updates}: fetching commodity and cryptocurrency prices via
+external Python scripts (@ref{Price updates}).
+@item
+@strong{Sorting}: sorting transactions chronologically or reverse-
+chronologically, for a region or the whole buffer
+(@ref{Sorting}).
+@end itemize
+
+The package depends on @samp{ledger-mode} and @samp{paths} (for file path
+variables such as @code{paths-file-ledger} and @code{paths-dir-ledger}).
+
+@node User options
+@chapter User options
+
+@menu
+* @code{ledger-mode-extras-currencies}::
+@end menu
+
+@node @code{ledger-mode-extras-currencies}
+@section @code{ledger-mode-extras-currencies}
+
+@vindex ledger-mode-extras-currencies
+The user option @code{ledger-mode-extras-currencies} is a list of currency
+symbols (strings) for which price information should be fetched.  This
+list is consumed by the external Python scripts invoked by the price
+update commands (@ref{Price updates}).  The type is a list of strings.  The
+default value is an empty list.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Importing transactions::
+* Navigation and editing::
+* Date manipulation::
+* Reporting::
+* Price updates::
+* Sorting::
+@end menu
+
+@node Importing transactions
+@section Importing transactions
+
+@findex ledger-extras-import-polymarket
+The command @code{ledger-extras-import-polymarket} reads a CSV file exported
+from Polymarket's transaction history and inserts the corresponding
+Ledger transactions at the end of the ledger file.  It prompts for the
+CSV file path (defaulting to the downloads directory) and, for each
+new token encountered, asks for a short symbol to use in the ledger.
+Only ``Buy'' and ``Sell'' rows are processed; other transaction types
+signal an error.
+
+@strong{Note:} as of early 2025 the Polymarket export functionality appears
+broken.  The docstring recommends recording balance changes as capital
+gains instead.
+
+@findex ledger-extras-import-interactive-brokers
+The command @code{ledger-extras-import-interactive-brokers} reads a CSV file
+exported from Interactive Brokers' Flex Queries (trade history) and
+inserts the corresponding Ledger transactions.  IBKR dates are in
+@samp{YYYYMMDD} format and are converted to @samp{YYYY-MM-DD}.  The CSV may
+contain summary lines that aggregate multiple trades into one row;
+these must be removed manually before import.
+
+@findex ledger-mode-extras-import-wise-clipboard-airbnb
+The command @code{ledger-mode-extras-import-wise-clipboard-airbnb} imports
+Airbnb payout transactions from the system clipboard.  The expected
+clipboard format is the text you get by selecting and copying
+transactions on the Wise website.  The command parses the clipboard
+for amount lines (@samp{+ NNN.NN USD}) and their nearest preceding full
+date lines (@samp{DD Month YYYY}), then inserts a Ledger transaction for
+each positive amount.  Negative amounts are silently skipped.
+
+A typical clipboard block looks like:
+
+@example
+16 January
+Completed
+16 January 2026
+AIRBNB 4977
++ 200.79 USD
+@end example
+
+The command reports how many transactions were inserted and how many
+negative amounts were skipped.
+
+@node Navigation and editing
+@section Navigation and editing
+
+@findex ledger-mode-extras-new-entry-below
+The command @code{ledger-mode-extras-new-entry-below} positions point below
+the current transaction, ready for typing a new entry.  It aligns the
+current line, moves to the next transaction, and opens a line above
+it (via @code{crux-smart-open-line-above}).
+
+@findex ledger-mode-extras-align-and-next
+The command @code{ledger-mode-extras-align-and-next} aligns the amounts in
+the current transaction using @code{ledger-post-align-xact} and then
+advances point to the beginning of the next transaction or directive.
+This is useful as a ``save and move on'' action during data entry.
+
+@findex ledger-mode-extras-kill-transaction-at-point
+@findex ledger-mode-extras-copy-transaction-at-point
+The commands @code{ledger-mode-extras-kill-transaction-at-point} and
+@code{ledger-mode-extras-copy-transaction-at-point} kill (cut) or copy the
+entire transaction at point to the kill ring, respectively.  Both
+delegate to @code{ledger-mode-extras-copy-or-kill-transaction-at-point}.
+
+@findex ledger-mode-extras-narrow-to-xact
+The command @code{ledger-mode-extras-narrow-to-xact} narrows the buffer to
+show only the current transaction.  Use @samp{C-x n w} (@code{widen}) to
+restore the full view.  This is helpful when you want to focus on a
+single transaction without visual clutter.
+
+@node Date manipulation
+@section Date manipulation
+
+@findex ledger-mode-extras-increase-date-by-one-day
+@findex ledger-mode-extras-decrease-date-by-one-day
+When a transaction was recorded on the wrong date, the commands
+@code{ledger-mode-extras-increase-date-by-one-day} and
+@code{ledger-mode-extras-decrease-date-by-one-day} adjust the date of the
+transaction at point by plus or minus one day.  They temporarily
+narrow to the transaction, parse the existing date, compute the new
+date, and replace it in place.  Both commands delegate to
+@code{ledger-mode-extras-increase-date}, which accepts an arbitrary number
+of days.
+
+@node Reporting
+@section Reporting
+
+@findex ledger-mode-extras-report-account
+@findex ledger-mode-extras-report-net-worth
+@findex ledger-mode-extras-report-net-worth-USD
+These commands run named reports from @code{ledger-reports} without
+requiring you to navigate the report menu:
+
+@itemize
+@item
+@code{ledger-mode-extras-report-account} runs the @samp{"account"} report.
+@item
+@code{ledger-mode-extras-report-net-worth} runs the @samp{"net worth"} report.
+@item
+@code{ledger-mode-extras-report-net-worth-USD} runs the @samp{"net worth (USD)"}
+report.
+@end itemize
+
+Each calls @code{ledger-report} with the appropriate report name.
+
+@node Price updates
+@section Price updates
+
+@findex ledger-mode-extras-update-commodities
+The command @code{ledger-mode-extras-update-commodities} runs the external
+Python script @samp{commodities.py} (located in @code{paths-dir-ledger})
+asynchronously.  This script fetches current prices for the
+commodities tracked in your ledger.
+
+@findex ledger-mode-extras-update-coin-prices
+The command @code{ledger-mode-extras-update-coin-prices} runs the external
+Python script @samp{coinprices.py} (located in
+@samp{paths-dir-ledger/coinprices/}) asynchronously and appends its output
+to the price database file (@code{paths-file-ledger-db}).
+
+@node Sorting
+@section Sorting
+
+@findex ledger-mode-extras-sort-region-or-buffer
+@findex ledger-mode-extras-sort-region-or-buffer-reversed
+The commands @code{ledger-mode-extras-sort-region-or-buffer} and
+@code{ledger-mode-extras-sort-region-or-buffer-reversed} are the primary
+sorting entry points.  If a region is active, they sort the
+transactions within it; otherwise they sort the entire buffer.  The
+first sorts in chronological order (oldest first, delegating to
+@code{ledger-sort-region} or @code{ledger-sort-buffer}); the second sorts in
+reverse chronological order (newest first).
+
+@findex ledger-mode-extras-sort-region-reversed
+@findex ledger-mode-extras-sort-buffer-reversed
+The lower-level commands @code{ledger-mode-extras-sort-region-reversed} and
+@code{ledger-mode-extras-sort-buffer-reversed} perform reverse-chronological
+sorting on an explicit region or the whole buffer, respectively.  They
+are called by the ``or-buffer'' variants above and can also be used
+directly.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Transaction insertion::
+* Date conversion::
+* Core helpers::
+@end menu
+
+@node Transaction insertion
+@section Transaction insertion
+
+@findex ledger-mode-extras-insert-transaction
+The function @code{ledger-mode-extras-insert-transaction} takes a list of
+FIELDS (payee, date, account, quantity, token-symbol, price, and
+optional fees) and appends a formatted Ledger transaction to FILE
+(defaulting to @code{paths-file-ledger}).  After inserting the transaction
+lines it calls @code{ledger-mode-extras-align-and-next}
+(@ref{Navigation and editing}) to align the amounts.  This function is
+used by the import commands (@ref{Importing transactions}).
+
+@node Date conversion
+@section Date conversion
+
+@findex ledger-extras-convert-interactive-brokers-date
+The function @code{ledger-extras-convert-interactive-brokers-date} converts
+an Interactive Brokers date string in @samp{YYYYMMDD} format to the
+standard @samp{YYYY-MM-DD} format used in Ledger files.
+
+@node Core helpers
+@section Core helpers
+
+@findex ledger-mode-extras-copy-or-kill-transaction-at-point
+@findex ledger-mode-extras-increase-date
+The function @code{ledger-mode-extras-copy-or-kill-transaction-at-point}
+is the shared implementation behind the kill and copy commands
+(@ref{Navigation and editing}).  It accepts an ACTION argument (@code{copy} or
+@code{kill}) and operates on the transaction at point.
+
+The function @code{ledger-mode-extras-increase-date} adjusts the date of
+the transaction at point by a given number of DAYS (positive or
+negative).  It is used by the one-day increment and decrement commands
+(@ref{Date manipulation}).
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

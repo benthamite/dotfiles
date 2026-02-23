@@ -1,0 +1,289 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename claude-code-extras.info
+@settitle claude-code-extras: Extensions for claude-code
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Claude Code Extras: (claude-code-extras). Extensions for claude-code.
+@end direntry
+
+@finalout
+@titlepage
+@title claude-code-extras: Extensions for claude-code
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top claude-code-extras: Extensions for claude-code
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{claude-code-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Commands::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* Buffer protection::
+* Logging options::
+* Terminal rendering::
+* Alert options::
+* Status polling options::
+
+Commands
+
+* Session switching::
+* Toggling alerts::
+
+Functions
+
+* Logging::
+* Buffer lifecycle::
+* Status polling::
+* Status accessors::
+* Alerts::
+* Modeline integration::
+* Auto-setup::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{claude-code-extras.el} extends @samp{claude-code}, the Emacs package that runs Claude Code sessions inside an Eat terminal buffer. While @samp{claude-code} provides the core session management and terminal integration, this extras package layers on several quality-of-life features that make extended Claude sessions more manageable.
+
+The package provides five main areas of functionality:
+
+@itemize
+@item
+@strong{Session switching.} A Consult-powered interface for starting new Claude sessions or switching between existing ones, with live buffer previews (@ref{Session switching}).
+@item
+@strong{Conversation logging.} Automatic periodic saving of terminal buffer contents to timestamped log files, with detection of conversation clears (@ref{Logging}).
+@item
+@strong{Status polling.} Integration with a statusline script that exports session metadata (model name, cost, context usage, token counts) as JSON, polled periodically and exposed through accessor functions (@ref{Status polling}).
+@item
+@strong{Alerts.} Configurable OS notifications (visual, audible, or both) when Claude finishes responding, triggered by a hook-based stop event (@ref{Alerts}).
+@item
+@strong{Buffer lifecycle.} Kill protection for active sessions, automatic buffer cleanup on process exit, and a SIGWINCH workaround for terminal rendering glitches (@ref{Buffer lifecycle}).
+@end itemize
+
+The package depends on @samp{claude-code}, @samp{consult} (for the session switcher), and @samp{paths} (for the log directory default).
+
+@node User options
+@chapter User options
+
+@menu
+* Buffer protection::
+* Logging options::
+* Terminal rendering::
+* Alert options::
+* Status polling options::
+@end menu
+
+@node Buffer protection
+@section Buffer protection
+
+@vindex claude-code-extras-protect-buffers
+The user option @code{claude-code-extras-protect-buffers} controls whether killing a Claude Code buffer requires confirmation. When set to non-@code{nil} (the default), any attempt to kill a buffer with a live Claude process triggers a @samp{yes-or-no-p} prompt. This prevents accidental loss of an active session. When the process has already exited (e.g. via the @samp{/exit} command inside Claude), the prompt is skipped.
+
+The default value is @code{t}. Set it to @code{nil} if you prefer to kill Claude buffers without confirmation.
+
+@node Logging options
+@section Logging options
+
+@vindex claude-code-extras-log-directory
+@vindex claude-code-extras-log-interval
+The user option @code{claude-code-extras-log-directory} specifies the directory where conversation logs are saved. Each Claude session gets its own timestamped log file. The default value is the @samp{claude-logs} subdirectory under @code{paths-dir-notes} (@ref{Overview}). You would change this if you want logs stored elsewhere in your filesystem.
+
+The user option @code{claude-code-extras-log-interval} controls how often (in seconds) the buffer contents are saved to disk. The default is 30, meaning the log file is updated every 30 seconds while the session is active. Lower values provide more granular recovery in case of a crash; higher values reduce disk I/O@.
+
+@node Terminal rendering
+@section Terminal rendering
+
+@vindex claude-code-extras-sigwinch-delay
+The user option @code{claude-code-extras-sigwinch-delay} specifies the delay (in seconds) before sending a @samp{SIGWINCH} signal to the Claude process after startup. This works around a race condition where the TUI queries terminal dimensions before the Eat terminal window is fully laid out, resulting in a garbled banner. The default value is @samp{0.5}. Increase it if you still see rendering artifacts on slower machines.
+
+@node Alert options
+@section Alert options
+
+@vindex claude-code-extras-alert-on-ready
+@vindex claude-code-extras-alert-style
+@vindex claude-code-extras-alert-sound
+The user option @code{claude-code-extras-alert-on-ready} controls whether the user is notified when Claude finishes responding. The default is @code{nil} (no alerts). Toggle it interactively with @code{claude-code-extras-toggle-alert} (@ref{Toggling alerts}).
+
+The user option @code{claude-code-extras-alert-style} determines the type of notification. It accepts one of three values: @code{visual} (an OS notification via the @samp{alert} package), @code{sound} (an audio alert), or @code{both} (the default when alerts are enabled). This option only takes effect when @code{claude-code-extras-alert-on-ready} is non-@code{nil}.
+
+The user option @code{claude-code-extras-alert-sound} specifies the path to the sound file played for audible alerts. The default is @samp{/System/Library/Sounds/Glass.aiff}, a macOS system sound. Change this to any audio file that @samp{afplay} can handle.
+
+@node Status polling options
+@section Status polling options
+
+@vindex claude-code-extras-status-interval
+The user option @code{claude-code-extras-status-interval} sets the polling frequency (in seconds) for reading the status JSON file. The default is 5. Lower values give more responsive modeline updates; higher values reduce filesystem polling overhead.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Session switching::
+* Toggling alerts::
+@end menu
+
+@node Session switching
+@section Session switching
+
+@findex claude-code-extras-start-or-switch
+The command @code{claude-code-extras-start-or-switch} is the main entry point for working with Claude sessions. When no Claude sessions are active, it starts a new one by calling @code{claude-code}. When one or more sessions exist, it opens a Consult selection interface listing all active sessions plus a ``[new session]'' option.
+
+Sessions are displayed by project name (extracted from the buffer name). When multiple sessions share the same project, the instance name is appended for disambiguation (e.g. ``project:instance''). The interface provides live buffer previews as you navigate the candidates, so you can see the current state of each session before switching.
+
+@node Toggling alerts
+@section Toggling alerts
+
+@findex claude-code-extras-toggle-alert
+The command @code{claude-code-extras-toggle-alert} toggles the buffer-local value of @code{claude-code-extras-alert-on-ready} and reports the new state. This is useful during long-running operations: enable alerts before submitting a complex prompt, then disable them when you return to interactive use. The alert style and sound are configured via the user options described in @ref{Alert options}.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Logging::
+* Buffer lifecycle::
+* Status polling::
+* Status accessors::
+* Alerts::
+* Modeline integration::
+* Auto-setup::
+@end menu
+
+@node Logging
+@section Logging
+
+@findex claude-code-extras-start-logging
+@findex claude-code-extras-stop-logging
+The function @code{claude-code-extras-start-logging} begins periodic saving of the current Claude buffer to a log file. It is added to @code{claude-code-start-hook} automatically. The log file name combines a sanitized version of the buffer name with a timestamp (e.g. @samp{_claude_project_default__2025-06-15_14-30-00.txt}). If the conversation is cleared (detected when the existing log file is more than twice the current buffer size), a new log file is started.
+
+The function @code{claude-code-extras-stop-logging} cancels the timer and performs a final save. It is added to @code{kill-buffer-hook} automatically.
+
+@node Buffer lifecycle
+@section Buffer lifecycle
+
+@findex claude-code-extras-protect-buffer
+@findex claude-code-extras-setup-kill-on-exit
+@findex claude-code-extras-fix-rendering
+The function @code{claude-code-extras-protect-buffer} is a @code{kill-buffer-query-functions} member that prompts for confirmation before killing Claude buffers with live processes. It respects the @code{claude-code-extras-protect-buffers} user option (@ref{Buffer protection}).
+
+The function @code{claude-code-extras-setup-kill-on-exit} wraps the process sentinel so that the buffer is automatically killed when the Claude process exits. This keeps the buffer list clean after normal session termination via @samp{/exit}.
+
+The function @code{claude-code-extras-fix-rendering} sends a @samp{SIGWINCH} signal to the Claude process after the delay specified by @code{claude-code-extras-sigwinch-delay} (@ref{Terminal rendering}). This forces the TUI to re-query terminal dimensions and redraw correctly.
+
+@node Status polling
+@section Status polling
+
+@findex claude-code-extras-start-status-polling
+@findex claude-code-extras-stop-status-polling
+The function @code{claude-code-extras-start-status-polling} begins periodic reading of the JSON status file written by the bundled statusline shell script. The parsed data is stored in the buffer-local variable @code{claude-code-extras--status-data} as a plist.
+
+The function @code{claude-code-extras-stop-status-polling} cancels the timer and deletes the status file.
+
+@node Status accessors
+@section Status accessors
+
+@findex claude-code-extras-status-model
+@findex claude-code-extras-status-cost
+@findex claude-code-extras-status-context-percent
+@findex claude-code-extras-status-token-count
+@findex claude-code-extras-status-lines-added
+@findex claude-code-extras-status-lines-removed
+@findex claude-code-extras-status-duration-ms
+@findex claude-code-extras-status-cache-read-tokens
+@findex claude-code-extras-status-cache-total-tokens
+The status accessor functions extract specific values from the parsed status data. Each returns @code{nil} if the status data is unavailable or the relevant key is missing.
+
+@itemize
+@item
+@code{claude-code-extras-status-model} returns the model display name (e.g. ``Claude Opus 4.6'').
+@item
+@code{claude-code-extras-status-cost} returns the total session cost in USD@.
+@item
+@code{claude-code-extras-status-context-percent} returns the context window usage as a percentage.
+@item
+@code{claude-code-extras-status-token-count} returns the total input token count.
+@item
+@code{claude-code-extras-status-lines-added} and @code{claude-code-extras-status-lines-removed} return line-change statistics.
+@item
+@code{claude-code-extras-status-duration-ms} returns the total session duration in milliseconds.
+@item
+@code{claude-code-extras-status-cache-read-tokens} returns the cache read input token count for the current turn.
+@item
+@code{claude-code-extras-status-cache-total-tokens} returns the sum of all input token categories (input, cache creation, and cache read) for the current turn.
+@end itemize
+
+These functions are designed to be called from modeline constructors (e.g. @samp{doom-modeline-extras.el}) to display live session statistics.
+
+@node Alerts
+@section Alerts
+
+@findex claude-code-extras-notify
+@findex claude-code-extras-alert-indicator
+The function @code{claude-code-extras-notify} is the notification callback installed as @code{claude-code-notification-function}. It always calls the default notification (a modeline pulse), and when @code{claude-code-extras-alert-on-ready} is non-@code{nil}, it additionally dispatches visual and/or audible alerts according to @code{claude-code-extras-alert-style} (@ref{Alert options}).
+
+The function @code{claude-code-extras-alert-indicator} returns a bell icon string reflecting the current alert state. It is intended for use in modeline segments or header lines to give a visual indication of whether alerts are active.
+
+@node Modeline integration
+@section Modeline integration
+
+@findex claude-code-extras-set-modeline
+The function @code{claude-code-extras-set-modeline} activates the @samp{claude-code} doom-modeline segment for the current buffer. It also starts status polling if it is not already active (@ref{Status polling}). This function is added to @code{claude-code-start-hook} automatically.
+
+@node Auto-setup
+@section Auto-setup
+
+@findex claude-code-extras-ensure-statusline-config
+@findex claude-code-extras-ensure-stop-hook-config
+The function @code{claude-code-extras-ensure-statusline-config} checks @samp{~/.claude/settings.json} for a @samp{statusLine} entry and adds one if absent, pointing to the bundled shell script. This ensures that the status JSON file is written for every Claude session without manual configuration.
+
+The function @code{claude-code-extras-ensure-stop-hook-config} similarly checks for a @samp{Stop} hook entry and adds one if absent, pointing to the bundled hook wrapper script. This enables the stop-event detection that powers the alert system (@ref{Alerts}).
+
+Both functions run automatically when the package is loaded.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

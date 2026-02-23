@@ -1,0 +1,587 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename gptel-extras.info
+@settitle gptel-extras: Extensions for gptel
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Gptel Extras: (gptel-extras). Extensions for gptel.
+@end direntry
+
+@finalout
+@titlepage
+@title gptel-extras: Extensions for gptel
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top gptel-extras: Extensions for gptel
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{gptel-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Commands::
+* Functions::
+* Tools::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* Aider context options::
+* Email drafting options::
+* Search options::
+* Gemini and VPN options::
+* Directory options::
+* Alert options::
+
+Commands
+
+* Commit summarization::
+* Aider context management::
+* Conversation management::
+* ChatGPT import::
+* Email drafting with mu4e::
+* Search integration::
+* General convenience commands::
+
+Aider context management
+
+* Showing and managing the repository map::
+* Toggling automatic context injection::
+
+Conversation management
+
+* Continuing in a new buffer::
+* Saving buffers::
+* Recovering from unresponsive sessions::
+
+General convenience commands
+
+* Setting backend and model::
+* Toggling default major mode::
+* Navigating and sending::
+* Rewriting function definitions::
+* Fixing garbled characters::
+* Adding a buffer as context::
+* Context warning::
+* Connecting to MCP servers::
+
+Functions
+
+* Automatic context injection::
+* Post-response hooks::
+* Model-specific workarounds::
+* Running queries programmatically::
+* Repository identification::
+* Preset macro::
+
+Tools
+
+* Filesystem tools::
+* Bib@TeX{} tools::
+* Robustifying tool presets::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{gptel-extras.el} extends @samp{gptel}, the Emacs package that integrates various Large Language Models---ChatGPT, Gemini, Claude, Perplexity, local models, and others---into Emacs buffers. While @samp{gptel} provides the core infrastructure for sending prompts and receiving responses, @samp{gptel-extras.el} adds workflows and conveniences that make day-to-day use more productive.
+
+The package depends on @samp{gptel} (version 0.7.1 or later) and @samp{paths} (for directory path resolution).
+
+The extensions fall into several thematic areas:
+
+@itemize
+@item
+@strong{Aider-style context management.} Commands for generating a repository map (via the external @samp{aider} tool), caching it with configurable time-to-live and git-aware invalidation, and automatically injecting both the map and a project conventions file into the @samp{gptel} context before each request (@ref{Aider context management}).
+
+@item
+@strong{Conversation management.} Automatic saving of new @samp{gptel} buffers to a dedicated directory, continuation of conversations across linked buffers, and a workaround for unresponsive @samp{gptel} sessions (@ref{Conversation management}).
+
+@item
+@strong{ChatGPT import.} Bulk import of conversations exported from ChatGPT into Org files (@ref{ChatGPT import}).
+
+@item
+@strong{Commit summarization.} Sending selected commit diffs from a Magit log buffer to an LLM for changelog-style summaries (@ref{Commit summarization}).
+
+@item
+@strong{Search integration.} A command that simultaneously opens a web search and queries a configured AI model (e.g., Perplexity Sonar) with the same query (@ref{Search integration}).
+
+@item
+@strong{Email drafting.} Integration with @samp{mu4e} and @samp{org-msg} for LLM-assisted email reply drafting (@ref{Email drafting with mu4e}).
+
+@item
+@strong{Gptel tools.} A collection of tools---filesystem editing, bibliography search, and entry addition---that @samp{gptel} can invoke via its tool-use feature, plus a macro for defining tool presets (@ref{Tools}).
+
+@item
+@strong{Model-specific workarounds.} Automatic Mullvad VPN activation for Gemini requests and a command for fixing garbled characters in LLM output (@ref{Model-specific workarounds}).
+
+@item
+@strong{General convenience commands.} Toggling default major mode, navigating to the end of a buffer before sending, rewriting function definitions via Embark, and more (@ref{General convenience commands}).
+@end itemize
+
+@node User options
+@chapter User options
+
+@menu
+* Aider context options::
+* Email drafting options::
+* Search options::
+* Gemini and VPN options::
+* Directory options::
+* Alert options::
+@end menu
+
+@node Aider context options
+@section Aider context options
+
+@vindex gptel-extras-add-repo-map-to-context
+The user option @code{gptel-extras-add-repo-map-to-context} controls whether the repository map is automatically added to the @samp{gptel} context before every request sent via @code{gptel-send}. When non-nil, the function @code{gptel-extras-add-context-files} generates (or retrieves from cache) the repository map and injects it into the context (@ref{Automatic context injection}).
+
+The default value is @code{nil}. Enable this option when you are using @samp{gptel} for coding tasks within a project and want the LLM to have an overview of the codebase structure, similar to Aider's built-in repo map feature.
+
+This is a boolean option.
+
+@vindex gptel-extras-add-conventions-to-context
+The user option @code{gptel-extras-add-conventions-to-context} controls whether a @samp{conventions.md} file from the project root is automatically added to the @samp{gptel} context before every request. When non-nil, @code{gptel-extras-add-context-files} calls @code{gptel-extras-add-conventions-to-context} to include this file (@ref{Automatic context injection}).
+
+The default value is @code{nil}. Enable this option if your project has a @samp{conventions.md} file documenting coding standards and you want the LLM to respect them.
+
+This is a boolean option.
+
+@vindex gptel-extras-repo-map-cache-ttl
+The user option @code{gptel-extras-repo-map-cache-ttl} specifies the time-to-live for cached repository maps, in seconds. After this duration, the cached map is considered stale and will be regenerated on the next request.
+
+The default value is @code{3600} (one hour). Increase this value for large, stable repositories where the structure rarely changes; decrease it for rapidly evolving codebases.
+
+This is an integer option.
+
+@vindex gptel-extras-repo-map-invalidate-on-git-changes
+The user option @code{gptel-extras-repo-map-invalidate-on-git-changes} controls whether the repository map cache is invalidated when the git HEAD reference changes, regardless of the TTL@. When non-nil, any new commit, branch switch, or rebase that alters HEAD triggers regeneration of the map.
+
+The default value is @code{t}. Disable this option only if you want the map to persist strictly based on the TTL, ignoring git activity.
+
+This is a boolean option.
+
+@node Email drafting options
+@section Email drafting options
+
+@vindex gptel-extras-mu4e-draft-reply-prompt
+The user option @code{gptel-extras-mu4e-draft-reply-prompt} specifies the prompt sent to the LLM when drafting an email reply with @code{gptel-extras-mu4e-draft-reply} (@ref{Email drafting with mu4e}). The prompt instructs the model to draft a message based on the attached email thread, complete any partial draft already present, and produce only the body text (no headers or signature).
+
+The default value includes the user's full name (from @code{user-full-name}) to help the LLM identify the sender. Customize this option to adjust the drafting instructions, tone, or language.
+
+This is a string option.
+
+@node Search options
+@section Search options
+
+@vindex gptel-extras-search-model
+The user option @code{gptel-extras-search-model} specifies the backend and model to use for the AI component of @code{gptel-extras-search-and-ask-model} (@ref{Search integration}). The value is a cons cell of the form @samp{(BACKEND . MODEL)}, where @samp{BACKEND} is a string naming a @samp{gptel} backend and @samp{MODEL} is a symbol identifying the model.
+
+The default value is @samp{("Perplexity" . sonar)}. Change this option if you prefer a different search-oriented model or if the Perplexity backend is not configured.
+
+@vindex gptel-extras-search-prefix
+The user option @code{gptel-extras-search-prefix} specifies the URL prefix for the web search opened by @code{gptel-extras-search-and-ask-model}. The query string is appended (URL-encoded) to this prefix.
+
+The default value is @samp{"https://www.google.com/search?q}"=. Change this to use a different search engine (e.g., DuckDuckGo, Bing).
+
+This is a string option.
+
+@node Gemini and VPN options
+@section Gemini and VPN options
+
+@vindex gptel-extras-gemini-mullvad-disconnect-after
+The user option @code{gptel-extras-gemini-mullvad-disconnect-after} specifies the number of minutes after which the Mullvad VPN connection, activated for a Gemini request, is automatically disconnected (@ref{Model-specific workarounds}).
+
+The default value is @code{1}. Increase this if your Gemini requests take longer than one minute to complete.
+
+This is an integer option.
+
+@node Directory options
+@section Directory options
+
+@vindex gptel-extras-dir
+The user option @code{gptel-extras-dir} specifies the directory where @samp{gptel} conversation buffers are automatically saved by @code{gptel-extras-save-buffer} (@ref{Saving buffers}). The directory is sorted chronologically via a @samp{.dir-locals.el} file, since the typical use case is to locate a recently modified conversation.
+
+The default value is derived from @code{paths-dir-notes} with @samp{gptel/} appended. Change this if you store your notes elsewhere.
+
+This is a directory option.
+
+@vindex gptel-extras-chatgpt-import-dir
+The user option @code{gptel-extras-chatgpt-import-dir} specifies the directory where imported ChatGPT conversations are saved by @code{gptel-extras-import-chatgpt-conversations} (@ref{ChatGPT import}).
+
+The default value is derived from @code{paths-dir-notes} with @samp{chatgpt/} appended.
+
+This is a directory option.
+
+@node Alert options
+@section Alert options
+
+@vindex gptel-extras-alert-when-finished
+The user option @code{gptel-extras-alert-when-finished} controls whether an alert is displayed after @samp{gptel} finishes inserting a response. It accepts three types of values:
+
+@itemize
+@item
+@code{t}: always display an alert.
+@item
+@code{nil}: never display an alert.
+@item
+A list of model symbols (e.g., @code{(gemini-pro claude-opus-4-6)}): display an alert only when the response comes from one of the listed models.
+@end itemize
+
+The default value is @code{nil}. This is useful when using slow models where you might switch to another task while waiting for the response. The alert relies on the @samp{alert} package.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Commit summarization::
+* Aider context management::
+* Conversation management::
+* ChatGPT import::
+* Email drafting with mu4e::
+* Search integration::
+* General convenience commands::
+@end menu
+
+@node Commit summarization
+@section Commit summarization
+
+@findex gptel-extras-summarize-commit-diffs
+When reviewing a series of commits in a @samp{magit-log-mode} buffer, you may want a quick, high-level summary of what changed. The command @code{gptel-extras-summarize-commit-diffs} takes the active region in the log buffer, extracts the diffs for all commits within that region, and sends them to the LLM with a prompt requesting an Org-mode-formatted changelog summary.
+
+The summary is displayed in a dedicated @samp{*Commit Summary*} buffer. The prompt is structured using the template in @code{gptel-extras-changelog-file}, which helps the LLM produce output organized by package or feature.
+
+With a prefix argument (@samp{C-u}), the command includes full diff content with unified context rather than the default three-line unified diff. This can help the LLM understand broader context around each change.
+
+This command must be invoked from a @samp{magit-log-mode} buffer with an active region spanning the commits of interest.
+
+@node Aider context management
+@section Aider context management
+
+These commands manage the repository map and conventions file that provide project-level context to the LLM@. The repository map is generated by the external @samp{aider} tool (@samp{aider --show-repo-map}) and cached in memory with configurable TTL and git-aware invalidation (@ref{Aider context options}).
+
+@menu
+* Showing and managing the repository map::
+* Toggling automatic context injection::
+@end menu
+
+@node Showing and managing the repository map
+@subsection Showing and managing the repository map
+
+@findex gptel-extras-show-repo-map
+The command @code{gptel-extras-show-repo-map} generates (or retrieves from cache) the repository map for the current project and displays it in a dedicated buffer named @samp{*Repo Map: PROJECT-NAME*}. Use this to inspect the map before deciding whether to include it in the context.
+
+@findex gptel-extras-add-repo-map-to-context
+The command @code{gptel-extras-add-repo-map-to-context} generates the repository map, removes any previously added map from the @samp{gptel} context, and then adds the current map with explanatory preamble text. The preamble instructs the LLM to use the map for understanding project structure and to request relevant files.
+
+@findex gptel-extras-add-conventions-to-context
+The command @code{gptel-extras-add-conventions-to-context} adds the @samp{conventions.md} file from the current project root to the @samp{gptel} context. The project root is determined by @code{gptel-extras-get-repo} (@ref{Functions}).
+
+@findex gptel-extras-remove-repo-map-from-context
+The command @code{gptel-extras-remove-repo-map-from-context} removes the repository map buffer from the @samp{gptel} context without deleting the buffer itself.
+
+@findex gptel-extras-invalidate-repo-map-cache
+The command @code{gptel-extras-invalidate-repo-map-cache} removes the cached repository map for the current project, forcing regeneration on the next request. This is useful after large structural changes that the git-aware invalidation might not capture (e.g., adding many new files without committing).
+
+@node Toggling automatic context injection
+@subsection Toggling automatic context injection
+
+@findex gptel-extras-toggle-aider-files
+The command @code{gptel-extras-toggle-aider-files} toggles both @code{gptel-extras-add-repo-map-to-context} and @code{gptel-extras-add-conventions-to-context} simultaneously. If both are currently disabled, they are enabled, and vice versa. This provides a quick way to switch between coding mode (with full project context) and general conversation mode (without it).
+
+@node Conversation management
+@section Conversation management
+
+@menu
+* Continuing in a new buffer::
+* Saving buffers::
+* Recovering from unresponsive sessions::
+@end menu
+
+@node Continuing in a new buffer
+@subsection Continuing in a new buffer
+
+@findex gptel-extras-continue-in-new-buffer
+Long conversations can become unwieldy and expensive to process. The command @code{gptel-extras-continue-in-new-buffer} creates a new @samp{gptel} buffer whose heading is derived from the current buffer's top-level heading, with a number appended or incremented (e.g., ``My topic'' becomes ``My topic 2'', ``My topic 2'' becomes ``My topic 3'').
+
+The command also inserts a ``Continued here'' link (using Org IDs) at the end of the original buffer, so you can easily navigate between parts of the conversation. The current buffer must have @code{gptel-mode} active.
+
+@node Saving buffers
+@subsection Saving buffers
+
+@findex gptel-extras-save-buffer
+The function @code{gptel-extras-save-buffer} is designed as @samp{:after} advice on the main @code{gptel} function. When @samp{gptel} is called interactively to create a new buffer (rather than reusing an existing file), this function automatically saves the buffer to @code{gptel-extras-dir} (@ref{Directory options}). The filename is a slugified version of the buffer name with the appropriate extension (@samp{.org} or @samp{.md} depending on the major mode).
+
+In Org mode, the function also inserts the buffer name as a level-1 heading at the top. During the initial save, @code{gptel--save-state} is temporarily removed from @code{before-save-hook} to avoid errors from the incomplete gptel state at that early stage.
+
+@node Recovering from unresponsive sessions
+@subsection Recovering from unresponsive sessions
+
+@findex gptel-extras-kill-buffer-then-reopen-file
+Occasionally, @samp{gptel} may stop processing requests in a buffer for unclear reasons. The command @code{gptel-extras-kill-buffer-then-reopen-file} works around this by saving the buffer, killing it, and reopening the file. In Org mode buffers, it also unfolds all headings after reopening.
+
+This command can be added to @code{gptel-post-response-functions} for automatic recovery, or invoked manually with @samp{M-x gptel-extras-kill-buffer-then-reopen-file}.
+
+@node ChatGPT import
+@section ChatGPT import
+
+@findex gptel-extras-import-chatgpt-conversations
+The command @code{gptel-extras-import-chatgpt-conversations} processes the @samp{conversations.json} file included in a ChatGPT data export. It creates one Org file per conversation in @code{gptel-extras-chatgpt-import-dir} (@ref{Directory options}), using a slugified version of the conversation title as the filename.
+
+Each file contains the conversation title as a level-1 heading, with user and assistant messages as level-2 headings beneath it. Markdown content from ChatGPT is converted to Org syntax via Pandoc (using @code{org-extras-convert-markdown-to-org}). A link to the original conversation on the ChatGPT website is included when the conversation ID is available.
+
+With a prefix argument (@samp{C-u}), archived conversations are included in the import. By default, archived conversations are skipped.
+
+@node Email drafting with mu4e
+@section Email drafting with mu4e
+
+@findex gptel-extras-mu4e-draft-reply
+The command @code{gptel-extras-mu4e-draft-reply} uses the LLM to draft a reply to the email currently being composed in @samp{mu4e} (via @samp{org-msg}). The command adds the entire current buffer as context, positions the cursor after the email headers, and sends the prompt defined in @code{gptel-extras-mu4e-draft-reply-prompt} (@ref{Email drafting options}).
+
+If you have already started writing a partial draft, the LLM will attempt to complete it. The prompt instructs the model to produce only the body text, without headers or signature.
+
+With a prefix argument (@samp{C-u}), the command lets you edit the prompt before sending it, which is useful for providing additional instructions (e.g., requesting a particular tone).
+
+Before sending, the command calls @code{gptel-extras-warn-when-context} (@ref{Context warning}) to alert you if there is existing context that might interfere. After the request is sent, all context is removed.
+
+@node Search integration
+@section Search integration
+
+@findex gptel-extras-search-and-ask-model
+The command @code{gptel-extras-search-and-ask-model} prompts for a search query, then performs two actions in parallel:
+
+@enumerate
+@item
+Opens the query in a web browser using @code{gptel-extras-search-prefix} (@ref{Search options}).
+@item
+Creates a new @samp{gptel} buffer, sets the backend and model to @code{gptel-extras-search-model} buffer-locally, and sends the query as a prompt.
+@end enumerate
+
+This is useful for quick research where you want both traditional web results and an AI-generated answer. The command calls @code{gptel-extras-warn-when-context} before proceeding (@ref{Context warning}).
+
+@node General convenience commands
+@section General convenience commands
+
+@menu
+* Setting backend and model::
+* Toggling default major mode::
+* Navigating and sending::
+* Rewriting function definitions::
+* Fixing garbled characters::
+* Adding a buffer as context::
+* Context warning::
+* Connecting to MCP servers::
+@end menu
+
+@node Setting backend and model
+@subsection Setting backend and model
+
+@findex gptel-extras-set-backend-and-model
+The command @code{gptel-extras-set-backend-and-model} sets @code{gptel-backend} and @code{gptel-model} buffer-locally in the current Org buffer. When called from Lisp, pass the backend name as a string and the model as a symbol. If either argument is nil, the current global value is used.
+
+This is primarily a helper used by other commands such as @code{gptel-extras-run-query} (@ref{Functions}) and @code{gptel-extras-search-and-ask-model} (@ref{Search integration}).
+
+@node Toggling default major mode
+@subsection Toggling default major mode
+
+@findex gptel-extras-toggle-major-mode
+The command @code{gptel-extras-toggle-major-mode} toggles @code{gptel-default-mode} between @code{org-mode} and @code{markdown-mode}. New @samp{gptel} buffers will use whichever mode is active after the toggle. This does not affect existing buffers.
+
+@node Navigating and sending
+@subsection Navigating and sending
+
+@findex gptel-extras-goto-end-and-send
+The command @code{gptel-extras-goto-end-and-send} moves point to the end of the current buffer and then calls @code{gptel-send}. This is convenient when you have typed a prompt somewhere in the middle of a buffer and want to ensure the full conversation is sent from the end.
+
+@node Rewriting function definitions
+@subsection Rewriting function definitions
+
+@findex gptel-extras-rewrite-defun
+The command @code{gptel-extras-rewrite-defun} marks the function definition at point (using @code{mark-defun}) and then invokes @code{gptel-rewrite} on the selected region. This is intended for use with @samp{embark}: binding @code{gptel-rewrite} directly to an Embark action would not work because it requires an active region.
+
+If point is not on a function definition, the command signals an error.
+
+@node Fixing garbled characters
+@subsection Fixing garbled characters
+
+@findex gptel-extras-fix-garbled-chars
+The command @code{gptel-extras-fix-garbled-chars} replaces @samp{let/} with @samp{let*} and @samp{=(} with @samp{`(} from point to the end of the buffer. These substitutions fix common encoding artifacts that some LLMs introduce when generating Emacs Lisp code.
+
+@node Adding a buffer as context
+@subsection Adding a buffer as context
+
+@findex gptel-extras-add-buffer
+The command @code{gptel-extras-add-buffer} adds the entire contents of a buffer to the @samp{gptel} context. When called interactively, it adds the current buffer. When called from Lisp, pass a buffer object as the argument.
+
+This is useful when you want the LLM to consider the full content of a file or buffer without manually selecting a region. It is used internally by @code{gptel-extras-mu4e-draft-reply} (@ref{Email drafting with mu4e}).
+
+@node Context warning
+@subsection Context warning
+
+@findex gptel-extras-warn-when-context
+The command @code{gptel-extras-warn-when-context} checks whether the @samp{gptel} context is non-empty and, if so, prompts for confirmation before proceeding. If the user declines, the command offers to clear the context entirely. This prevents accidentally sending a request with stale or irrelevant context.
+
+This function is called by @code{gptel-extras-mu4e-draft-reply} (@ref{Email drafting with mu4e}) and @code{gptel-extras-search-and-ask-model} (@ref{Search integration}).
+
+@node Connecting to MCP servers
+@subsection Connecting to MCP servers
+
+@findex gptel-extras-connect-to-all-servers
+The command @code{gptel-extras-connect-to-all-servers} connects to all configured MCP (Model Context Protocol) servers via @code{gptel-mcp-connect}, then immediately applies the @samp{tools-clear} preset to deactivate all tools. This is useful during initialization: it establishes the server connections so that tools are available on demand, without activating any tools by default.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Automatic context injection::
+* Post-response hooks::
+* Model-specific workarounds::
+* Running queries programmatically::
+* Repository identification::
+* Preset macro::
+@end menu
+
+@node Automatic context injection
+@section Automatic context injection
+
+@findex gptel-extras-add-context-files
+The function @code{gptel-extras-add-context-files} is added as @samp{:before} advice on @code{gptel-send}. Before every request, it checks the user options @code{gptel-extras-add-repo-map-to-context} and @code{gptel-extras-add-conventions-to-context} (@ref{Aider context options}) and, when enabled, calls the corresponding commands to inject context.
+
+@node Post-response hooks
+@section Post-response hooks
+
+@findex gptel-extras-alert-when-finished
+The function @code{gptel-extras-alert-when-finished} is added to @code{gptel-post-response-functions}. After @samp{gptel} inserts a response, it checks @code{gptel-extras-alert-when-finished} (@ref{Alert options}) and, if the condition is met, displays an alert via the @samp{alert} package.
+
+@findex gptel-extras-generate-latex-previews
+The function @code{gptel-extras-generate-latex-previews} is intended for @code{gptel-post-response-functions}. When the current buffer is in Org mode and its @code{default-directory} matches @code{gptel-extras-dir}, the function generates @LaTeX{} previews by calling @code{org-latex-preview}. This provides automatic rendering of mathematical notation in @samp{gptel} conversation files.
+
+@node Model-specific workarounds
+@section Model-specific workarounds
+
+@findex gptel-extras-set-mullvad
+The function @code{gptel-extras-set-mullvad} is added as @samp{:around} advice on @code{gptel-curl-get-response}. When @code{gptel-model} is @code{gemini-pro}, it activates a Mullvad VPN connection (via @code{mullvad-connect-to-website}) before the request is sent, with an automatic disconnect timer set to @code{gptel-extras-gemini-mullvad-disconnect-after} minutes (@ref{Gemini and VPN options}). This bypasses location restrictions that Gemini imposes in certain regions.
+
+The VPN connection is made silently (no user prompt). The @samp{mullvad} package must be installed and configured separately.
+
+@node Running queries programmatically
+@section Running queries programmatically
+
+@findex gptel-extras-run-query
+The function @code{gptel-extras-run-query} creates a new @samp{gptel} buffer from a query string, optionally setting a specific backend and model. It is used internally by @code{gptel-extras-search-and-ask-model} (@ref{Search integration}) and can be called from Lisp for any programmatic query dispatch.
+
+The buffer name is a slugified version of the query with the appropriate file extension. If @samp{BACKEND} or @samp{MODEL} are nil, the global defaults are used.
+
+@node Repository identification
+@section Repository identification
+
+@findex gptel-extras-get-repo
+The function @code{gptel-extras-get-repo} determines the repository path for the current request. In Org mode, it checks the @samp{GPTEL_REPO} property at the document level; if not set, it prompts the user and stores the selection. In other modes, it uses @code{project-root} if a project is detected, falling back to a directory prompt.
+
+@findex gptel-extras-get-repo-map
+The function @code{gptel-extras-get-repo-map} returns the repository map for the current project, using the cached version if it is still valid (checked via @code{gptel-extras-repo-map-cache-valid-p}). When the cache is stale or empty, it calls @samp{aider --show-repo-map} to generate a fresh map and stores it along with the current timestamp and git HEAD reference.
+
+@node Preset macro
+@section Preset macro
+
+@findex gptel-extras-make-tool-presets
+The macro @code{gptel-extras-make-tool-presets} creates two @samp{gptel} presets for a given set of tools: a base preset that sets the active tools to exactly the specified list, and an additive preset (with @samp{+} appended to the name) that appends the tools to whatever tools are already active. This is useful for defining reusable tool configurations.
+
+For example:
+
+@lisp
+(gptel-extras-make-tool-presets tools-web-search
+  "web search tools"
+  '(web_search browse_url))
+@end lisp
+
+This creates presets named @samp{tools-web-search} (sets tools to the two specified) and @samp{tools-web-search+} (adds them to existing tools).
+
+@node Tools
+@chapter Tools
+
+@samp{gptel-extras.el} registers several tools that @samp{gptel} can invoke via its tool-use feature. These tools allow the LLM to interact with the filesystem and bibliography.
+
+@menu
+* Filesystem tools::
+* Bib@TeX{} tools::
+* Robustifying tool presets::
+@end menu
+
+@node Filesystem tools
+@section Filesystem tools
+
+Three filesystem tools are provided, forming a fallback chain for file modification:
+
+@findex gptel-extras-edit-file
+@enumerate
+@item
+@strong{edit@math{_file}} (@code{gptel-extras-edit-file}): The primary file editing tool. It applies a list of edits to a file, where each edit specifies an @code{:old_string} to find and a @code{:new_string} to replace it with. The tool first attempts an exact match; if that fails, it uses fuzzy matching with normalized whitespace, case-insensitive search, and flexible regex strategies.
+
+@item
+@strong{apply@math{_diff}}: Applies a unified diff (patch) to a file using the external @samp{patch} command. Useful when the LLM generates changes in diff format. Supports configurable patch options (@samp{-p0}, @samp{-p1}, etc.).
+
+@item
+@strong{replace@math{_file}@math{_contents}}: Replaces the entire content of a file. This is the last resort, as it requires sending the full file content and is therefore token-inefficient.
+@end enumerate
+
+All three tools modify files directly on disk without user confirmation.
+
+@node Bib@TeX{} tools
+@section Bib@TeX{} tools
+
+@findex gptel-extras-citar-search
+The tool @strong{search@math{_bibliography}} (@code{gptel-extras-citar-search}) searches the user's bibliography via @samp{citar}. It splits the search string into space-separated terms and returns entries matching all terms as whole words. The search is case-insensitive and supports pagination via @samp{limit} and @samp{offset} parameters.
+
+Each result is a pair of @samp{(FORMATTED-CITATION . CITE-KEY)}. The default limit is 10 results; use -1 for no limit.
+
+@findex gptel-extras-add-bib-entry
+The tool @strong{add@math{_bib}@math{_entry}} (@code{gptel-extras-add-bib-entry}) adds a bibliographic entry for a URL, ISBN, or DOI to a specified Bib@TeX{} file. It delegates to @code{zotra-extras-add-entry} from @samp{zotra-extras.el} and returns the citation key of the newly added entry.
+
+@node Robustifying tool presets
+@section Robustifying tool presets
+
+@findex gptel-extras--modify-value-append-fix
+The function @code{gptel-extras--modify-value-append-fix} is added as @samp{:around} advice on @code{gptel--modify-value}. It normalizes @samp{:append} specifications in preset plists so that tool names (strings or symbols) are properly wrapped in a list when appending to an existing list value. Without this fix, appending tool names could be misinterpreted as string appends, causing errors.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

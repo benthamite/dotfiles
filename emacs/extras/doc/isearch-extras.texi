@@ -1,0 +1,149 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename isearch-extras.info
+@settitle isearch-extras: Extensions for isearch
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Isearch Extras: (isearch-extras). Extensions for isearch.
+@end direntry
+
+@finalout
+@titlepage
+@title isearch-extras: Extensions for isearch
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top isearch-extras: Extensions for isearch
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{isearch-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Commands::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Commands
+
+* Match actions::
+* Search escalation::
+
+Functions
+
+* Region as initial input::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{isearch-extras.el} extends Emacs' built-in incremental search facility (@samp{isearch}). While isearch is one of the most frequently used Emacs features, its default command set lacks several useful actions: exiting at the other end of the match, copying the match to the kill ring, yanking text literally, and escalating a search to broader scopes.
+
+This package provides two groups of extensions:
+
+@itemize
+@item
+Commands for use during an active isearch session, bound in @code{isearch-mode-map}, that add new actions at the point of the match (@ref{Match actions}) or transfer the search to another tool (@ref{Search escalation}).
+@item
+An advice function that uses the active region as the initial search string when starting isearch (@ref{Region as initial input}).
+@end itemize
+
+@node Commands
+@chapter Commands
+
+@menu
+* Match actions::
+* Search escalation::
+@end menu
+
+@node Match actions
+@section Match actions
+
+@findex isearch-extras-exit-other-end
+@findex isearch-extras-copy-match
+@findex isearch-extras-yank-kill-literally
+Three commands provide additional actions you can take on the current isearch match:
+
+@itemize
+@item
+@code{isearch-extras-exit-other-end} exits the search and moves point to the opposite end of the match. Normally, isearch leaves point at the end of the match when searching forward, or at the beginning when searching backward. This command inverts that behavior, which is useful when you want to edit the text just before a match found by a forward search.
+
+@item
+@code{isearch-extras-copy-match} copies the text of the current match to the kill ring and exits the search. The copied region spans from point to @code{isearch-other-end}, so it captures exactly the matched text. This is convenient when you want to use the match as a template for replacement or insertion elsewhere.
+
+@item
+@code{isearch-extras-yank-kill-literally} inserts the most recent kill ring entry into the isearch prompt as literal text, without interpreting regexp metacharacters. The standard isearch yank commands may treat the yanked text as a pattern; this command avoids that by processing each character through @code{isearch-text-char-description}.
+@end itemize
+
+@node Search escalation
+@section Search escalation
+
+@findex isearch-extras-consult-line
+@findex isearch-extras-project-search
+Two commands let you seamlessly escalate an in-buffer isearch to a broader search scope:
+
+@itemize
+@item
+@code{isearch-extras-consult-line} transfers the current search string to @code{consult-line} from the @samp{consult} package. It saves the search string to the isearch ring, exits the isearch session, and immediately starts @code{consult-line} with the same query (regexp-quoted if the search was not already in regexp mode). This is useful when you realize mid-search that you want to see all matches at once with preview.
+
+@item
+@code{isearch-extras-project-search} transfers the current search string to @code{project-find-regexp}. Like @code{isearch-extras-consult-line}, it saves the string, exits isearch, and immediately starts a project-wide search. This lets you escalate from ``searching in this buffer'' to ``searching in all project files'' without retyping the query.
+@end itemize
+
+Both commands preserve the isearch ring so the query remains available for future searches.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Region as initial input::
+@end menu
+
+@node Region as initial input
+@section Region as initial input
+
+@findex isearch-extras-use-selection
+The function @code{isearch-extras-use-selection} is designed to be added as @samp{:around} advice on @code{isearch-forward} and @code{isearch-backward}. When a region is active at the time isearch is invoked, this function takes the selected text, adds it to the isearch ring, deactivates the mark, and then starts the search with an immediate repeat in the appropriate direction. The effect is that the selected text becomes the search string and point moves to the next (or previous) occurrence.
+
+When no region is active, the function delegates to the original isearch command with no changes.
+
+This provides a quick workflow: select a word or phrase, press @samp{C-s}, and immediately jump to the next occurrence without any additional input.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

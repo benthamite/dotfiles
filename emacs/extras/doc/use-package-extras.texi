@@ -1,0 +1,149 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename use-package-extras.info
+@settitle use-package-extras: Extensions for use-package
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* use-package Extras: (use-package-extras). Extensions for use-package.
+@end direntry
+
+@finalout
+@titlepage
+@title use-package-extras: Extensions for use-package
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top use-package-extras: Extensions for use-package
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{use-package-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Macros::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Macros
+
+* Declaring built-in or externally managed packages::
+* Creating interactive lambdas::
+
+Functions
+
+* Displaying startup time::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{use-package-extras.el} provides helper macros and a utility function that simplify Emacs configuration when using the @samp{use-package} macro. In configurations where package installation is handled by an external manager such as @samp{elpaca}, you often want @samp{use-package} declarations to configure packages without attempting to install them. This package provides a dedicated macro for that pattern, along with a shorthand for interactive lambdas and a startup-time reporter.
+
+The package depends on @samp{use-package}.
+
+@node Macros
+@chapter Macros
+
+@menu
+* Declaring built-in or externally managed packages::
+* Creating interactive lambdas::
+@end menu
+
+@node Declaring built-in or externally managed packages
+@section Declaring built-in or externally managed packages
+
+@findex use-feature
+When your Emacs configuration uses an external package manager (such as @samp{elpaca}) that handles installation separately, every @samp{use-package} declaration for an already-installed package needs @samp{:ensure nil} to prevent @samp{use-package} from trying to install it again. The macro @code{use-feature} wraps @code{use-package} and automatically injects @samp{:ensure nil}, so you can write:
+
+@lisp
+(use-feature my-package
+  :init
+  (setq my-package-variable t)
+  :config
+  (my-package-mode 1))
+@end lisp
+
+This is equivalent to:
+
+@lisp
+(use-package my-package
+  :ensure nil
+  :init
+  (setq my-package-variable t)
+  :config
+  (my-package-mode 1))
+@end lisp
+
+The macro accepts the same NAME and ARGS as @code{use-package}. It is also useful for configuring built-in Emacs features that do not need installation at all.
+
+@node Creating interactive lambdas
+@section Creating interactive lambdas
+
+@findex lambda!
+The macro @code{lambda!} provides a concise way to create anonymous interactive functions. It wraps the provided BODY forms in @code{(lambda () (interactive) ...)}, saving you from writing the boilerplate each time. For example:
+
+@lisp
+(lambda! (message "Hello!"))
+@end lisp
+
+expands to:
+
+@lisp
+(lambda () (interactive) (message "Hello!"))
+@end lisp
+
+This is particularly convenient in key-binding definitions and hook setups where a full @code{defun} would be excessive.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Displaying startup time::
+@end menu
+
+@node Displaying startup time
+@section Displaying startup time
+
+@findex use-package-extras-display-startup-time
+The function @code{use-package-extras-display-startup-time} calculates and displays how long Emacs took to initialize and how many garbage collections occurred during startup. It computes the elapsed time from @code{before-init-time} to @code{after-init-time} and reads the @code{gcs-done} variable, then formats the result into a message like ``Emacs loaded in 0.52 seconds with 5 garbage collections.''
+
+This function is typically added to @code{emacs-startup-hook} so the information appears in the echo area once initialization is complete. It provides a quick way to monitor whether configuration changes are affecting startup performance.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

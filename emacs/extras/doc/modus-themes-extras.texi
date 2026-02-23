@@ -1,0 +1,157 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename modus-themes-extras.info
+@settitle modus-themes-extras: Extensions for Modus Themes
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Modus Themes Extras: (modus-themes-extras). Extensions for Modus Themes.
+@end direntry
+
+@finalout
+@titlepage
+@title modus-themes-extras: Extensions for Modus Themes
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top modus-themes-extras: Extensions for Modus Themes
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{modus-themes-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Conditional theme loading::
+* Theme customizations::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Conditional theme loading
+
+* Emacs Mac port::
+* Emacs Plus::
+
+Theme customizations
+
+* Parenthesis highlighting::
+* Extra face customization::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{modus-themes-extras.el} extends the @samp{modus-themes} package (Modus Operandi and Modus Vivendi) with automatic theme switching based on the operating system's appearance setting. On macOS, both the Emacs Mac port and Emacs Plus provide mechanisms to detect whether the system is in light or dark mode; this package uses those mechanisms to load the appropriate Modus theme without manual intervention.
+
+The package also provides theme-aware face customizations, particularly for the @samp{highlight-parentheses} package, ensuring that parenthesis highlighting colors stay consistent with the active Modus theme.
+
+The main capabilities are:
+
+@itemize
+@item
+@strong{Automatic theme switching.} Detecting the system appearance and loading Modus Operandi (light) or Modus Vivendi (dark) accordingly, with support for both Emacs Mac and Emacs Plus distributions (@ref{Conditional theme loading}).
+@item
+@strong{Theme-aware face customization.} Setting parenthesis highlighting colors from the Modus palette (@ref{Theme customizations}).
+@end itemize
+
+@node Conditional theme loading
+@chapter Conditional theme loading
+
+@findex modus-themes-extras-load-theme-conditionally
+The function @code{modus-themes-extras-load-theme-conditionally} is the main entry point for automatic theme switching. It queries the Emacs distribution using @code{simple-extras-get-emacs-distro} (from @samp{simple-extras.el}) and sets up the appropriate mechanism:
+
+@itemize
+@item
+For the @strong{Emacs Mac port} (@code{'emacs-mac}), it immediately calls @code{modus-themes-extras-load-theme-emacs-mac} to read the current system appearance and load the matching theme.
+@item
+For @strong{Emacs Plus} (@code{'emacs-plus}), it adds @code{modus-themes-extras-load-theme-emacs-plus} to the @code{ns-system-appearance-change-functions} hook, which Emacs Plus calls whenever the system appearance changes. This means the theme updates automatically when you toggle dark mode in System Settings.
+@end itemize
+
+You would typically call this function once during initialization:
+
+@lisp
+(modus-themes-extras-load-theme-conditionally)
+@end lisp
+
+@menu
+* Emacs Mac port::
+* Emacs Plus::
+@end menu
+
+@node Emacs Mac port
+@section Emacs Mac port
+
+@findex modus-themes-extras-load-theme-emacs-mac
+The command @code{modus-themes-extras-load-theme-emacs-mac} reads the current appearance from the @samp{mac-application-state} function. When the appearance is @samp{"NSAppearanceNameAqua"} (light mode), it loads @code{modus-operandi}. When it is @samp{"NSAppearanceNameDarkAqua"} (dark mode), it loads @code{modus-vivendi}. This command can also be called interactively to force a theme refresh.
+
+@node Emacs Plus
+@section Emacs Plus
+
+@findex modus-themes-extras-load-theme-emacs-plus
+The function @code{modus-themes-extras-load-theme-emacs-plus} is designed for the @code{ns-system-appearance-change-functions} hook in Emacs Plus. It receives the new appearance as a symbol (@code{'light} or @code{'dark}) and loads the corresponding Modus theme. Because this function is triggered by the hook, the theme switch happens automatically whenever the system appearance changes.
+
+@node Theme customizations
+@chapter Theme customizations
+
+@menu
+* Parenthesis highlighting::
+* Extra face customization::
+@end menu
+
+@node Parenthesis highlighting
+@section Parenthesis highlighting
+
+@findex modus-themes-extras-highlight-parentheses
+The function @code{modus-themes-extras-highlight-parentheses} configures the @samp{highlight-parentheses} package to use colors from the active Modus theme. It retrieves intense background colors (cyan, magenta, green, yellow) and their corresponding foreground colors from the Modus palette via @code{modus-themes-get-color-value} and sets @code{highlight-parentheses-background-colors} and @code{highlight-parentheses-colors} accordingly.
+
+If @code{global-highlight-parentheses-mode} is available, the function also enables it. This function is suitable for use in the @code{modus-themes-after-load-theme-hook} or any theme-switching hook to keep parenthesis colors synchronized with the active theme.
+
+@node Extra face customization
+@section Extra face customization
+
+@findex modus-themes-extras-set-faces
+The function @code{modus-themes-extras-set-faces} is provided as a hook point for additional theme-specific face customizations. Its body is currently empty, but its docstring shows how to add conditional face settings based on the active theme:
+
+@lisp
+(if (eq 'modus-operandi (car custom-enabled-themes))
+    (set-face-attribute 'hl-sentence nil :background "#bfefff")
+  (set-face-attribute 'hl-sentence nil :background "#004065"))
+@end lisp
+
+You can add such expressions to this function and call it from a theme-loading hook to apply per-theme face adjustments.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

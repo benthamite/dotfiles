@@ -1,0 +1,494 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename paths.info
+@settitle paths: Personal path definitions
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Paths: (paths).       Personal path definitions for Emacs.
+@end direntry
+
+@finalout
+@titlepage
+@title paths: Personal path definitions
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top paths: Personal path definitions
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{paths.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* Directory paths::
+* File paths::
+* Other identifiers::
+
+Directory paths
+
+* Core directories::
+* Dropbox directories::
+* Emacs configuration directories::
+* Google Drive directories::
+* Repository directories::
+* CSL directories::
+* Tlon Dropbox and Google Drive directories::
+* Org directories::
+
+File paths
+
+* Org files::
+* Bibliography files::
+* Ledger files::
+* Feed and task files::
+* Template files::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{paths.el} provides a centralized registry of filesystem paths used across the Emacs configuration. Rather than scattering hard-coded paths through dozens of packages, this file defines every important directory and file location as a @code{defcustom} variable. Other packages reference these variables (e.g. @code{paths-dir-notes}, @code{paths-file-config}) instead of constructing paths themselves.
+
+This approach has two advantages. First, it makes the configuration portable: when the filesystem layout changes (a new machine, a different Dropbox location, or a different user account), only the variables in @samp{paths.el} need updating. Second, it provides discoverability: all known directories and files are visible in one place, with their relationships made explicit through nesting (e.g. @code{paths-dir-music-tango} is defined relative to @code{paths-dir-music}, which is relative to @code{paths-dir-google-drive}).
+
+The variables are organized into three groups: directories (@ref{Directory paths}), files (@ref{File paths}), and other identifiers (@ref{Other identifiers}).
+
+@node User options
+@chapter User options
+
+@menu
+* Directory paths::
+* File paths::
+* Other identifiers::
+@end menu
+
+@node Directory paths
+@section Directory paths
+
+The directory variables define the filesystem tree used by the Emacs configuration. They form a hierarchy where child directories are constructed from parent variables using @code{file-name-concat}, so changing a parent automatically adjusts all children.
+
+@menu
+* Core directories::
+* Dropbox directories::
+* Emacs configuration directories::
+* Google Drive directories::
+* Repository directories::
+* CSL directories::
+* Tlon Dropbox and Google Drive directories::
+* Org directories::
+@end menu
+
+@node Core directories
+@subsection Core directories
+
+@vindex paths-dir-root
+@vindex paths-dir-downloads
+@vindex paths-dir-system-apps
+@vindex paths-dir-dropbox
+@vindex paths-dir-google-drive
+@vindex paths-dir-emacs
+@vindex paths-dir-emacs-profiles
+The following variables define the top-level directories from which most other paths derive:
+
+@itemize
+@item
+@code{paths-dir-root} (default: @samp{"/"}): the filesystem root.
+@item
+@code{paths-dir-downloads} (default: @samp{~/Downloads/}): the system downloads directory.
+@item
+@code{paths-dir-system-apps} (default: @samp{/Applications/}): the macOS applications directory.
+@item
+@code{paths-dir-dropbox} (default: @samp{~/Library/CloudStorage/Dropbox/}): the Dropbox sync directory. Many personal data directories are children of this path.
+@item
+@code{paths-dir-google-drive} (default: @samp{~/My Drive/}): the Google Drive sync directory. Library and media directories are children of this path.
+@item
+@code{paths-dir-emacs} (default: @code{user-emacs-directory}): the Emacs configuration directory.
+@item
+@code{paths-dir-emacs-profiles} (default: @samp{~/.config/emacs-profiles/}): the directory containing multiple Emacs profiles.
+@end itemize
+
+@node Dropbox directories
+@subsection Dropbox directories
+
+@vindex paths-dir-dotfiles
+@vindex paths-dir-dotemacs
+@vindex paths-dir-notes
+@vindex paths-dir-journal
+@vindex paths-dir-wiki
+@vindex paths-dir-wiki-entries
+@vindex paths-dir-wiki-references
+@vindex paths-dir-blog
+@vindex paths-dir-anki
+@vindex paths-dir-archive
+@vindex paths-dir-inactive
+@vindex paths-dir-android
+@vindex paths-dir-bbdb
+@vindex paths-dir-people
+@vindex paths-dir-ledger
+@vindex paths-dir-bibliographic-notes
+@vindex paths-dir-private
+@vindex paths-dir-websites
+@vindex paths-dir-personal-bibliography
+@vindex paths-dir-PW
+These directories are children of @code{paths-dir-dropbox} and contain personal data:
+
+@itemize
+@item
+@code{paths-dir-dotfiles}: the dotfiles repository (default: @samp{Dropbox/dotfiles/}).
+@item
+@code{paths-dir-dotemacs}: the Emacs subdirectory within dotfiles. Its default is user-dependent, resolved at load time based on the @samp{$HOME} environment variable.
+@item
+@code{paths-dir-notes}, @code{paths-dir-journal}, @code{paths-dir-wiki}: directories for Org notes, journal entries, and wiki content.
+@item
+@code{paths-dir-wiki-entries} and @code{paths-dir-wiki-references}: subdirectories of the wiki.
+@item
+@code{paths-dir-blog}: the blog directory.
+@item
+@code{paths-dir-anki}: the Anki-related Org files.
+@item
+@code{paths-dir-archive} and @code{paths-dir-inactive}: directories for archived and inactive content.
+@item
+@code{paths-dir-android}: files synced with an Android device.
+@item
+@code{paths-dir-bbdb}, @code{paths-dir-people}: contact databases.
+@item
+@code{paths-dir-ledger}: plain-text accounting files.
+@item
+@code{paths-dir-bibliographic-notes}: notes attached to bibliographic entries.
+@item
+@code{paths-dir-private}: private dotfiles not committed to the public repo.
+@item
+@code{paths-dir-websites}: website source files.
+@item
+@code{paths-dir-personal-bibliography}: Bib@TeX{} bibliography files and related resources.
+@item
+@code{paths-dir-PW}: the PW project directory.
+@end itemize
+
+@node Emacs configuration directories
+@subsection Emacs configuration directories
+
+@vindex paths-dir-karabiner
+@vindex paths-dir-yasnippets
+@vindex paths-dir-yasnippets-private
+@vindex paths-dir-abbrev
+@vindex paths-dir-emacs-var
+@vindex paths-dir-emacs-local
+@vindex paths-dir-init-default
+These directories hold Emacs configuration artifacts:
+
+@itemize
+@item
+@code{paths-dir-karabiner}: Karabiner dotfiles (child of @code{paths-dir-dotfiles}).
+@item
+@code{paths-dir-yasnippets} and @code{paths-dir-yasnippets-private}: snippet collections (children of @code{paths-dir-dotemacs}).
+@item
+@code{paths-dir-abbrev}: abbreviation definitions (child of @code{paths-dir-dotemacs}).
+@item
+@code{paths-dir-emacs-var} and @code{paths-dir-emacs-local}: runtime data directories (children of @code{paths-dir-emacs}).
+@item
+@code{paths-dir-init-default}: default target for tangled init files (default: the @samp{develop/} profile under @code{paths-dir-emacs-profiles}).
+@end itemize
+
+@node Google Drive directories
+@subsection Google Drive directories
+
+@vindex paths-dir-pdf-library
+@vindex paths-dir-html-library
+@vindex paths-dir-media-library
+@vindex paths-dir-music
+@vindex paths-dir-movies
+@vindex paths-dir-finance
+@vindex paths-dir-audiobooks
+@vindex paths-dir-org-images
+These directories are children of @code{paths-dir-google-drive} and contain media and library content:
+
+@itemize
+@item
+@code{paths-dir-pdf-library}, @code{paths-dir-html-library}, @code{paths-dir-media-library}: document and media libraries.
+@item
+@code{paths-dir-music}: the root music directory, with children @code{paths-dir-music-tango}, @code{paths-dir-music-popular}, @code{paths-dir-music-classical}, and @code{paths-dir-music-to-sort} for genre subdirectories.
+@item
+@code{paths-dir-movies}: the movies directory (default: @samp{~/movies/}).
+@item
+@code{paths-dir-finance}: financial documents.
+@item
+@code{paths-dir-audiobooks}: audiobook files.
+@item
+@code{paths-dir-org-images}: images embedded in Org files.
+@end itemize
+
+@vindex paths-dir-music-tango
+@vindex paths-dir-music-popular
+@vindex paths-dir-music-classical
+@vindex paths-dir-music-to-sort
+
+@node Repository directories
+@subsection Repository directories
+
+@vindex paths-dir-external-repos
+@vindex paths-dir-tlon-repos
+@vindex paths-dir-personal-repos
+@vindex paths-dir-tlon-todos
+@vindex paths-dir-tlon-docs
+@vindex paths-dir-babel-refs
+@vindex paths-dir-translation-server
+@vindex paths-dir-split-git
+@vindex paths-dir-all-repos
+These directories organize Git repositories by provenance:
+
+@itemize
+@item
+@code{paths-dir-external-repos} (default: @samp{~/source/}): third-party repositories.
+@item
+@code{paths-dir-tlon-repos} and @code{paths-dir-personal-repos} (both default to @samp{Dropbox/repos/}): organization and personal repositories.
+@item
+@code{paths-dir-tlon-todos}: Org files for organization task tracking.
+@item
+@code{paths-dir-tlon-docs}, @code{paths-dir-babel-refs}, @code{paths-dir-translation-server}: specific repositories.
+@item
+@code{paths-dir-split-git} (default: @samp{~/git-dirs/}): bare @samp{.git} directories for split-worktree repos.
+@item
+@code{paths-dir-all-repos}: a list aggregating several personal data directories for use in search and agenda commands.
+@end itemize
+
+@node CSL directories
+@subsection CSL directories
+
+@vindex paths-dir-personal-csl-styles
+@vindex paths-dir-personal-csl-locales
+@vindex paths-dir-tlon-csl-styles
+@vindex paths-dir-tlon-csl-locales
+These directories hold Citation Style Language resources, used by @samp{citeproc-el} and related bibliography tools:
+
+@itemize
+@item
+@code{paths-dir-personal-csl-styles} and @code{paths-dir-personal-csl-locales}: personal CSL files (children of @code{paths-dir-personal-bibliography}).
+@item
+@code{paths-dir-tlon-csl-styles} and @code{paths-dir-tlon-csl-locales}: organization CSL files (children of @code{paths-dir-babel-refs}).
+@end itemize
+
+@node Tlon Dropbox and Google Drive directories
+@subsection Tlon Dropbox and Google Drive directories
+
+@vindex paths-dir-dropbox-tlon
+@vindex paths-dir-dropbox-tlon-core
+@vindex paths-dir-dropbox-tlon-leo
+@vindex paths-dir-dropbox-tlon-fede
+@vindex paths-dir-dropbox-tlon-pablo
+@vindex paths-dir-dropbox-tlon-ledger
+@vindex paths-dir-dropbox-tlon-pass
+@vindex paths-dir-google-drive-tlon
+@vindex paths-dir-google-drive-tlon-leo
+@vindex paths-dir-google-drive-tlon-core
+@vindex paths-dir-google-drive-tlon-fede
+These directories organize shared team resources across Dropbox and Google Drive. Each team member has a personal subdirectory, and shared resources (ledger, pass) live under the @samp{core} subdirectory.
+
+The Dropbox tree includes per-project directories for various organization projects:
+
+@vindex paths-dir-dropbox-tlon-EAN
+@vindex paths-dir-dropbox-tlon-FM
+@vindex paths-dir-dropbox-tlon-GPE
+@vindex paths-dir-dropbox-tlon-HEAR
+@vindex paths-dir-dropbox-tlon-LBDLH
+@vindex paths-dir-dropbox-tlon-LP
+@vindex paths-dir-dropbox-tlon-RAE
+@vindex paths-dir-dropbox-tlon-RCG
+
+The Google Drive tree mirrors this structure:
+
+@vindex paths-dir-google-drive-tlon-EAN
+@vindex paths-dir-google-drive-tlon-FM
+@vindex paths-dir-google-drive-tlon-GPE
+@vindex paths-dir-google-drive-tlon-HEAR
+@vindex paths-dir-google-drive-tlon-LBDLH
+@vindex paths-dir-google-drive-tlon-LP
+@vindex paths-dir-google-drive-tlon-RAE
+@vindex paths-dir-google-drive-tlon-RCG
+
+@node Org directories
+@subsection Org directories
+
+@vindex paths-dir-org
+@vindex paths-dir-org-roam
+The variable @code{paths-dir-org} specifies the root directory for Org files, intended to be used as the value of @code{org-directory}. The default is @code{paths-dir-dropbox}.
+
+The variable @code{paths-dir-org-roam} specifies the Org-roam directory, intended for @code{org-roam-directory}. The default is the same as @code{paths-dir-org}.
+
+@node File paths
+@section File paths
+
+@menu
+* Org files::
+* Bibliography files::
+* Ledger files::
+* Feed and task files::
+* Template files::
+@end menu
+
+@node Org files
+@subsection Org files
+
+@vindex paths-file-notes
+@vindex paths-file-inbox-desktop
+@vindex paths-file-inbox-mobile
+@vindex paths-file-calendar
+@vindex paths-file-feeds-pablo
+@vindex paths-file-anki
+@vindex paths-file-config
+@vindex paths-file-karabiner
+@vindex paths-file-wiki-notes
+@vindex paths-file-wiki-published
+@vindex paths-file-wiki-help
+@vindex paths-file-quotes
+@vindex paths-file-films
+@vindex paths-file-metaculus
+@vindex paths-file-fm
+@vindex paths-file-ean
+@vindex paths-file-work
+@vindex paths-file-tlon
+These variables point to individual Org files used for task management, knowledge capture, and project tracking. Notable entries include:
+
+@itemize
+@item
+@code{paths-file-notes} (@samp{notes/notes.org}): the main notes file.
+@item
+@code{paths-file-inbox-desktop} and @code{paths-file-inbox-mobile}: capture inboxes for desktop and mobile.
+@item
+@code{paths-file-calendar} (@samp{android/calendar.org}): the calendar file synced with a mobile device.
+@item
+@code{paths-file-anki} (@samp{anki/main.org}): the Anki flashcard source file.
+@item
+@code{paths-file-config} (@samp{emacs/config.org}): the literate Emacs configuration.
+@item
+@code{paths-file-karabiner}: the Karabiner keyboard customization file in Org format.
+@item
+@code{paths-file-work}: the work dashboard.
+@end itemize
+
+@node Bibliography files
+@subsection Bibliography files
+
+@vindex paths-file-personal-bibliography-old
+@vindex paths-file-personal-bibliography-new
+@vindex paths-files-bibliography-personal
+@vindex paths-files-bibliography-all
+The bibliography variables define Bib@TeX{} database files:
+
+@itemize
+@item
+@code{paths-file-personal-bibliography-new} (@samp{new.bib}) and @code{paths-file-personal-bibliography-old} (@samp{old.bib}): the active and legacy bibliography files.
+@item
+@code{paths-files-bibliography-personal}: a list containing both personal bibliography files, suitable for passing to @samp{ebib} or @samp{citar}.
+@item
+@code{paths-files-bibliography-all}: a list of all bibliography files, including both personal and organization files. Defaults to an empty list; organization packages append their files at load time.
+@end itemize
+
+@node Ledger files
+@subsection Ledger files
+
+@vindex paths-file-ledger
+@vindex paths-file-ledger-db
+@vindex paths-file-tlon-ledger
+@vindex paths-file-tlon-ledger-schedule-file
+The ledger variables point to plain-text accounting files:
+
+@itemize
+@item
+@code{paths-file-ledger}: the personal ledger journal file.
+@item
+@code{paths-file-ledger-db}: the ledger price database.
+@item
+@code{paths-file-tlon-ledger}: the organization ledger journal.
+@item
+@code{paths-file-tlon-ledger-schedule-file}: the organization ledger scheduler.
+@end itemize
+
+@node Feed and task files
+@subsection Feed and task files
+
+@vindex paths-file-tlon-feeds
+@vindex paths-file-tlon-tareas-leo
+@vindex paths-file-tlon-tareas-fede
+@vindex paths-file-org2blog
+These variables point to RSS feed definitions and team task files:
+
+@itemize
+@item
+@code{paths-file-tlon-feeds}: the organization feeds file.
+@item
+@code{paths-file-tlon-tareas-leo} and @code{paths-file-tlon-tareas-fede}: per-person task files.
+@item
+@code{paths-file-org2blog}: the org2blog configuration file.
+@end itemize
+
+@node Template files
+@subsection Template files
+
+@vindex paths-file-orb-noter-template
+@vindex paths-file-orb-capture-template
+@vindex paths-file-bookmarks
+@vindex paths-file-init-tangle-flags-sans-directory
+These variables point to template and configuration files:
+
+@itemize
+@item
+@code{paths-file-orb-noter-template}: the Org-noter template for bibliographic notes.
+@item
+@code{paths-file-orb-capture-template}: the Org-roam-bibtex capture template. Uses @samp{$@{citekey@}} as a placeholder in the filename.
+@item
+@code{paths-file-bookmarks}: the Emacs bookmarks file.
+@item
+@code{paths-file-init-tangle-flags-sans-directory}: the filename (without directory) for user-specific tangle flags (default: @samp{tangle-flags-pablo.el}).
+@end itemize
+
+@node Other identifiers
+@section Other identifiers
+
+@vindex paths-tlon-todos-generic-id
+@vindex paths-tlon-todos-jobs-id
+The variable @code{paths-tlon-todos-generic-id} holds the Org ID of the heading where generic (non-translation-job) TODOs are stored. The variable @code{paths-tlon-todos-jobs-id} holds the Org ID of the heading where translation job TODOs are stored. Both are UUIDs used by @code{org-id-goto} and related functions to jump directly to the right location.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

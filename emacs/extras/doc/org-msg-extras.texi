@@ -1,0 +1,144 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename org-msg-extras.info
+@settitle org-msg-extras: Extensions for org-msg
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Org Msg Extras: (org-msg-extras). Extensions for org-msg.
+@end direntry
+
+@finalout
+@titlepage
+@title org-msg-extras: Extensions for org-msg
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top org-msg-extras: Extensions for org-msg
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{org-msg-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Commands::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* Email signatures::
+
+Commands
+
+* Message body operations::
+* Composition helpers::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{org-msg-extras.el} extends @samp{org-msg}, the package that enables composing rich HTML emails using Org mode syntax. While @samp{org-msg} handles the core composition and export workflow, @samp{org-msg-extras.el} adds convenience features around the edges: managing multiple email signatures for different contexts, copying message bodies for external grammar checking, and improving the initial cursor placement when composing.
+
+The package provides three categories of functionality:
+
+@itemize
+@item
+@strong{Signature management.} User options for defining separate plain text and HTML signatures for personal and work email accounts (@ref{User options}).
+@item
+@strong{Message body operations.} Commands to copy the email body to the kill ring or to an external grammar checker (@ref{Message body operations}).
+@item
+@strong{Composition helpers.} Commands that position the cursor and adjust buffer state for a smoother composing experience (@ref{Composition helpers}).
+@end itemize
+
+The package depends on @samp{org-msg} and @samp{org-extras}.
+
+@node User options
+@chapter User options
+
+@menu
+* Email signatures::
+@end menu
+
+@node Email signatures
+@section Email signatures
+
+@vindex org-msg-extras-personal-plain-text-signature
+@vindex org-msg-extras-personal-html-signature
+@vindex org-msg-extras-work-plain-text-signature
+@vindex org-msg-extras-work-html-signature
+@samp{org-msg-extras.el} provides four user options for defining email signatures, covering two contexts (personal and work) and two formats (plain text and HTML/Org).
+
+The user option @code{org-msg-extras-personal-plain-text-signature} holds the signature for personal emails sent in plain text format. Its default value is @samp{"\n--\nPablo\n"}, a minimal signature preceded by the conventional @samp{--} separator. The type is a string.
+
+The user option @code{org-msg-extras-personal-html-signature} holds the signature for personal emails composed in Org mode (which @samp{org-msg} exports to HTML). Its default value is @samp{"\n#+begin_signature\n--\n*Pablo*\n#+end_signature"}, using the Org signature block syntax that @samp{org-msg} recognizes. The type is a string.
+
+The user option @code{org-msg-extras-work-plain-text-signature} holds the signature for work emails in plain text. By default it is set to the same value as @code{org-msg-extras-personal-plain-text-signature}, so you only need to customize it if your work signature differs from your personal one. The type is a string.
+
+The user option @code{org-msg-extras-work-html-signature} holds the signature for work emails in Org/HTML format. By default it is set to the same value as @code{org-msg-extras-personal-html-signature}. The type is a string.
+
+These variables are not automatically inserted into messages by @samp{org-msg-extras.el} itself. You should configure your mail user agent or @samp{org-msg} setup to reference the appropriate variable based on the sending account. For example, you might set @code{org-msg-signature} dynamically in a hook based on which email account is active.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Message body operations::
+* Composition helpers::
+@end menu
+
+@node Message body operations
+@section Message body operations
+
+@findex org-msg-extras-kill-message
+@findex org-msg-extras-open-in-grammarly
+When composing an email in @samp{org-msg-edit-mode}, you may want to extract the message body for use elsewhere. The command @code{org-msg-extras-kill-message} copies the body of the current email to the Emacs kill ring, excluding the header section (everything up to and including the @samp{:END:} line of the properties drawer) and the signature block (starting at @samp{#+begin_signature}). If the current buffer is not in @code{org-msg-edit-mode}, the command signals a user error.
+
+The command @code{org-msg-extras-open-in-grammarly} builds on @code{org-msg-extras-kill-message} by first copying the message body to the kill ring and then opening the Grammarly web editor in the default browser. You can then paste the message body into Grammarly for grammar and style checking. This provides a workaround for cases where the Grammarly Emacs integration is not working reliably.
+
+@node Composition helpers
+@section Composition helpers
+
+@findex org-msg-extras-begin-compose
+@findex org-msg-extras-end-of-meta-data
+When you begin composing an email in @samp{org-msg}, the cursor may be positioned in the header area or after the signature, requiring manual navigation to the body. The command @code{org-msg-extras-begin-compose} moves point to the optimal position for starting to type the message body. If @code{org-msg-signature} is set, the command places point just before the signature. Otherwise, it calls @code{org-msg-extras-end-of-meta-data} to skip past the properties drawer and inserts a newline. It also calls @code{simple-extras-visible-mode-enhanced} to adjust buffer visibility for composing.
+
+The command @code{org-msg-extras-end-of-meta-data} is a helper that advances point past consecutive Org property lines (lines matching @code{org-property-re}). It is used internally by @code{org-msg-extras-begin-compose} to skip the meta-data section at the top of the @samp{org-msg} buffer (@ref{Composition helpers}).
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

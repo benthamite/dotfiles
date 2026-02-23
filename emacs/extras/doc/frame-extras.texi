@@ -1,0 +1,121 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename frame-extras.info
+@settitle frame-extras: Extensions for Emacs frames
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Frame Extras: (frame-extras). Extensions for Emacs frames.
+@end direntry
+
+@finalout
+@titlepage
+@title frame-extras: Extensions for Emacs frames
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top frame-extras: Extensions for Emacs frames
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{frame-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Commands::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Commands
+
+* Frame sizing and positioning::
+* Restoration utilities::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{frame-extras.el} extends Emacs' built-in @code{frame} library with commands for resizing and positioning frames on macOS@. While Emacs can maximize frames natively, it does not provide convenient commands for half-screen layouts---a common arrangement when you want Emacs on one side and another application on the other. This package fills that gap.
+
+The package also includes utilities for restoring the window divider face and returning focus to Emacs from other macOS applications.
+
+The main capabilities are:
+
+@itemize
+@item
+@strong{Frame sizing.} Commands to maximize the frame or resize it to the left or right half of the screen (@ref{Frame sizing and positioning}).
+@item
+@strong{Focus and visual restoration.} Restoring focus to Emacs via AppleScript and resetting the window divider face (@ref{Restoration utilities}).
+@end itemize
+
+@node Commands
+@chapter Commands
+
+@menu
+* Frame sizing and positioning::
+* Restoration utilities::
+@end menu
+
+@node Frame sizing and positioning
+@section Frame sizing and positioning
+
+@findex frame-extras-maximize-frame
+@findex frame-extras-left-half
+@findex frame-extras-right-half
+The command @code{frame-extras-maximize-frame} maximizes the current frame to fill the screen. It works by clearing any fullscreen state and then setting the @code{fullscreen} frame parameter to @code{'maximized}. After a brief delay (to allow the window manager to finish resizing), it records the frame width in @code{frame-extras-maximized-frame-width} for use by the half-screen commands.
+
+The command @code{frame-extras-left-half} resizes the frame to occupy the left half of the screen. It first calls @code{frame-extras-maximize-frame} to determine the full screen width, then sets the frame width to half of @code{frame-extras-maximized-frame-width}. The frame remains anchored at the left edge of the screen.
+
+The command @code{frame-extras-right-half} resizes the frame to the right half. It calls @code{frame-extras-left-half} to set the correct width, then repositions the frame so that its left edge aligns with the screen midpoint. Together, @code{frame-extras-left-half} and @code{frame-extras-right-half} provide a quick way to set up a side-by-side layout.
+
+@node Restoration utilities
+@section Restoration utilities
+
+@findex frame-extras-restore-window-divider
+@findex frame-extras-restore-focus
+The command @code{frame-extras-restore-window-divider} resets the @code{window-divider} face to its default attributes using @code{custom-set-faces}. This is useful if the divider has been made invisible by a theme or customization and you want to restore its visibility.
+
+The command @code{frame-extras-restore-focus} uses AppleScript (via @code{do-applescript}) to bring the Emacs application to the foreground and give it input focus on macOS@. This is helpful after an external process has stolen focus, for example after running a shell command that opens another application.
+
+@node Functions
+@chapter Functions
+
+@vindex frame-extras-maximized-frame-width
+The variable @code{frame-extras-maximized-frame-width} stores the width (in columns) of the frame after maximization. It defaults to @code{244} but is updated dynamically each time @code{frame-extras-maximize-frame} is called (@ref{Frame sizing and positioning}). The half-screen commands use this value to calculate the correct width for a half-width frame.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

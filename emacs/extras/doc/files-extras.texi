@@ -1,0 +1,516 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename files-extras.info
+@settitle files-extras: Extensions for file and buffer handling
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Files Extras: (files-extras). Extensions for file and buffer handling.
+@end direntry
+
+@finalout
+@titlepage
+@title files-extras: Extensions for file and buffer handling
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top files-extras: Extensions for file and buffer handling
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{files-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Commands::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* @code{files-extras-new-empty-buffer-major-mode}::
+
+Commands
+
+* Saving and reverting::
+* Creating buffers::
+* Switching buffers::
+* Killing and burying buffers::
+* Evaluating code::
+* Copying paths and contents::
+* OCR for PDF files::
+* File recovery and diffing::
+* Image conversion::
+* Removing blank lines::
+* Bypass paywalls extensions::
+* Opening external editors::
+* Buffer-local key bindings::
+* Transient dispatch menus::
+
+Functions
+
+* Buffer information::
+* File operations::
+* Mode and buffer switching::
+* Package management::
+* Process support::
+* Trash and auto-save support::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{files-extras.el} extends the built-in @samp{files.el} library with a broad
+set of commands and utilities for managing files and buffers in Emacs.
+It depends on the @samp{paths} package for directory and file path constants
+and on @samp{transient} for quick-access dispatch menus.
+
+The package addresses several common pain points in daily Emacs usage.
+On macOS, it overrides the default trash mechanism to use the external
+@samp{trash} utility, which preserves Finder's ``Put Back'' functionality.  It
+adds safeguards around the scratch buffer, preventing accidental kills
+by burying it instead.  It also provides an alert system for auto-save
+data, ensuring that recovery notifications are not silently missed.
+
+Beyond buffer management, the package integrates with external tools.
+The @code{files-extras-ocr-pdf} command drives @samp{ocrmypdf} to add a text
+layer to scanned PDFs, supporting language selection and forced re-OCR@.
+A pair of commands automates downloading and installing the Bypass
+Paywalls browser extensions for Chrome and Firefox.
+
+The package also offers two transient dispatch menus: one for jumping to
+frequently used files (inbox, config, agenda, ledger, etc.) and one for
+opening personal Elpaca-managed packages.  These menus provide a
+keyboard-driven launcher for the files you access most often.
+
+@node User options
+@chapter User options
+
+@menu
+* @code{files-extras-new-empty-buffer-major-mode}::
+@end menu
+
+@node @code{files-extras-new-empty-buffer-major-mode}
+@section @code{files-extras-new-empty-buffer-major-mode}
+
+@vindex files-extras-new-empty-buffer-major-mode
+The user option @code{files-extras-new-empty-buffer-major-mode} specifies the
+major mode to activate when creating a new empty buffer with
+@code{files-extras-new-empty-buffer} (@ref{Creating buffers}).
+
+The default value is @code{org-mode}.  It accepts any symbol naming a valid
+major mode function.  If set to @code{nil}, the new buffer will use
+@code{fundamental-mode}.  You might change this to @code{markdown-mode} or
+@code{text-mode} if you prefer a different default for scratch-like buffers.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Saving and reverting::
+* Creating buffers::
+* Switching buffers::
+* Killing and burying buffers::
+* Evaluating code::
+* Copying paths and contents::
+* OCR for PDF files::
+* File recovery and diffing::
+* Image conversion::
+* Removing blank lines::
+* Bypass paywalls extensions::
+* Opening external editors::
+* Buffer-local key bindings::
+* Transient dispatch menus::
+@end menu
+
+@node Saving and reverting
+@section Saving and reverting
+
+@findex files-extras-save-and-revert-buffer
+@findex files-extras-save-all-buffers
+@findex files-extras-save-buffer-no-hooks
+@findex files-extras-revert-all-file-buffers
+The command @code{files-extras-save-and-revert-buffer} saves the current
+buffer and immediately reverts it from disk.  This is useful when an
+external process has modified the file and you want to ensure the buffer
+reflects both your unsaved changes and the file's current state on disk.
+
+The command @code{files-extras-save-all-buffers} saves all file-visiting
+buffers without prompting for confirmation.  It passes a prefix argument
+of 4 to @code{save-some-buffers}, which bypasses the per-buffer confirmation
+that the default behavior would require.
+
+The command @code{files-extras-save-buffer-no-hooks} saves the current buffer
+while temporarily disabling both @code{before-save-hook} and
+@code{after-save-hook}.  This is useful when hooks perform operations (such
+as formatting or linting) that you want to skip for a particular save.
+
+The command @code{files-extras-revert-all-file-buffers} refreshes every open
+file buffer without confirmation.  Buffers with unsaved modifications
+are left untouched, but buffers whose underlying files are no longer
+readable are killed.  A summary message is displayed when the process
+completes.
+
+@node Creating buffers
+@section Creating buffers
+
+@findex files-extras-new-empty-buffer
+@findex files-extras-new-buffer-in-current-mode
+The command @code{files-extras-new-empty-buffer} creates a new buffer named
+@samp{untitled<n>} and activates the major mode specified by the user option
+@code{files-extras-new-empty-buffer-major-mode} (@ref{@code{files-extras-new-empty-buffer-major-mode}, , files-extras-new-empty-buffer-major-mode}).
+The buffer is marked so that @code{save-some-buffers} will offer to save it.
+
+The command @code{files-extras-new-buffer-in-current-mode} creates a new
+buffer with the same major mode as the current one.  For @code{shell-mode} and
+@code{eshell-mode}, it calls the appropriate shell launcher instead of simply
+setting the mode, ensuring a proper process is attached.
+
+@node Switching buffers
+@section Switching buffers
+
+@findex files-extras-switch-to-alternate-buffer
+The command @code{files-extras-switch-to-alternate-buffer} switches to the
+most recently used buffer in the current window, functioning as a quick
+toggle between two buffers.  It respects the frame's @code{buffer-predicate}
+parameter, so it will skip buffers that the frame is configured to
+ignore.  Internally it uses @code{files-extras-get-alternate-buffer} to
+determine the target (@ref{Buffer information}).
+
+@node Killing and burying buffers
+@section Killing and burying buffers
+
+@findex files-extras-kill-this-buffer
+@findex files-extras-kill-other-buffer
+@findex files-extras-kill-this-buffer-switch-to-other-window
+@findex files-extras-kill-all-file-visiting-buffers
+@findex files-extras-bury-buffer-switch-to-other-window
+The command @code{files-extras-kill-this-buffer} kills the current buffer.
+This is a more reliable alternative to the built-in @code{kill-this-buffer},
+which can sometimes stop working due to menu-bar assumptions.
+
+The command @code{files-extras-kill-other-buffer} kills the buffer displayed in
+the other window without changing the current window's focus.
+
+The command @code{files-extras-kill-this-buffer-switch-to-other-window} kills
+the current buffer and then switches to the last used window via
+@code{window-extras-switch-to-last-window} (from @samp{window-extras.el}).  This
+is useful when you finish reviewing a buffer and want to return to your
+previous editing context in a single action.
+
+The command @code{files-extras-kill-all-file-visiting-buffers} kills every
+buffer that is visiting a file.  It accepts an optional EXCLUDED-FILES
+list (for programmatic use) to preserve specific buffers.
+
+The command @code{files-extras-bury-buffer-switch-to-other-window} buries the
+current buffer and switches to the last used window.  This is a softer
+alternative to killing: the buffer remains available but is moved to the
+bottom of the buffer list.
+
+@node Evaluating code
+@section Evaluating code
+
+@findex files-extras-eval-region-or-buffer
+The command @code{files-extras-eval-region-or-buffer} evaluates the active
+region if one is selected, otherwise evaluates the entire buffer.  This
+provides a single keybinding for both common evaluation workflows.
+
+@node Copying paths and contents
+@section Copying paths and contents
+
+@findex files-extras-show-buffer-name
+@findex files-extras-copy-current-path
+@findex files-extras-copy-contents
+@findex files-extras-copy-as-kill-dwim
+The command @code{files-extras-show-buffer-name} displays the buffer name in
+the echo area and copies it to the kill ring.
+
+The command @code{files-extras-copy-current-path} copies the full path of the
+current buffer's file (or @code{default-directory} if the buffer is not
+visiting a file) to the kill ring.
+
+The command @code{files-extras-copy-contents} copies the entire contents of a
+file to the kill ring.  When called interactively, it uses the file at
+point in Dired, the current buffer's file, or prompts for a file.
+
+The command @code{files-extras-copy-as-kill-dwim} copies a context-appropriate
+string to the kill ring.  Currently, in a @code{helpful-mode} buffer, it
+extracts the symbol name from the buffer title and kills the buffer.
+
+@node OCR for PDF files
+@section OCR for PDF files
+
+@findex files-extras-ocr-pdf
+The command @code{files-extras-ocr-pdf} applies optical character recognition
+to a PDF file using the external @samp{ocrmypdf} tool (which must be
+installed separately, e.g., via @samp{brew install ocrmypdf}).
+
+The command determines the file to OCR from context: the file at point
+in Dired, the file visited in @code{pdf-view-mode}, or the file associated
+with the current Ebib or Bib@TeX{} entry.  It prompts for the language of
+the document, using either Ebib's language field or a general language
+selector.
+
+With a prefix argument, the command forces OCR even if the PDF already
+contains a text layer.  Without the prefix argument, @samp{ocrmypdf} will
+skip files that have already been processed and report accordingly.
+
+The process runs asynchronously.  Status messages are displayed as the
+OCR proceeds, with duplicate messages suppressed.  The process filter
+@code{files-extras-ocr-pdf-process-filter} translates raw @samp{ocrmypdf} output
+into user-friendly messages (@ref{Process support}).
+
+@node File recovery and diffing
+@section File recovery and diffing
+
+@findex files-extras-recover-all-files
+@findex files-extras-diff-buffer-with-file
+The command @code{files-extras-recover-all-files} recovers all files that have
+auto-save data in the Emacs auto-save directory.  This is useful after a
+crash when @code{recover-session} fails because no session file was created.
+After each recovery attempt, it runs @code{files-extras-diff-buffer-with-file}
+to show the differences.
+
+The command @code{files-extras-diff-buffer-with-file} runs a unified diff
+(@samp{-u}) comparing the current buffer against the file on disk.  This
+command is also automatically called after @code{recover-this-file} via
+@samp{:after} advice, so you always see what changed.
+
+@node Image conversion
+@section Image conversion
+
+@findex files-extras-convert-image-to-pdf
+The command @code{files-extras-convert-image-to-pdf} converts the image file
+visited by the current buffer to PDF using the @samp{convert} tool
+(ImageMagick).  The resulting PDF is placed in the same directory with
+the same base name.
+
+@node Removing blank lines
+@section Removing blank lines
+
+@findex files-extras-remove-extra-blank-lines
+The command @code{files-extras-remove-extra-blank-lines} collapses consecutive
+runs of blank lines into a single blank line throughout the current
+buffer.
+
+@node Bypass paywalls extensions
+@section Bypass paywalls extensions
+
+@findex files-extras-download-bypass-paywalls-chrome
+@findex files-extras-download-bypass-paywalls-firefox
+The command @code{files-extras-download-bypass-paywalls-chrome} downloads the
+Bypass Paywalls Chrome Clean extension as a zip file, extracts it, opens
+the Chrome extensions management page (via a Keyboard Maestro macro),
+and opens the extracted folder in Finder.  The user then drags the
+folder onto the extensions page to complete installation.
+
+The command @code{files-extras-download-bypass-paywalls-firefox} performs the
+equivalent operation for Firefox, downloading an XPI file and opening
+the Firefox extensions page for manual installation.
+
+Both commands verify that the download URL is reachable before
+proceeding and will signal an error if it is not.
+
+@node Opening external editors
+@section Opening external editors
+
+@findex files-extras-grammarly-open-in-external-editor
+The command @code{files-extras-grammarly-open-in-external-editor} opens
+Grammarly's web-based external editor in the default browser.
+
+@node Buffer-local key bindings
+@section Buffer-local key bindings
+
+@findex files-extras-buffer-local-set-key
+The command @code{files-extras-buffer-local-set-key} interactively binds a
+key sequence to a command in the current buffer only.  It creates a new
+sparse keymap with the current local map as its parent, adds the
+binding, and installs the new map.  This is useful for one-off bindings
+in specific buffers without affecting the global or mode-level keymap.
+
+@node Transient dispatch menus
+@section Transient dispatch menus
+
+@findex files-extras-dispatch
+@findex files-extras-packages-dispatch
+The command @code{files-extras-dispatch} presents a transient menu for
+jumping to frequently used files: inbox (mobile and desktop), agenda,
+config, feeds, notes, scratch, calendar, ledger, and others.  Each
+entry opens the corresponding file or buffer with a single keystroke.
+
+The command @code{files-extras-packages-dispatch} presents a transient menu
+for opening personal Elpaca-managed package files, organized into
+``Tlon'' and ``Personal'' groups.  It is accessible from the main dispatch
+menu via the @samp{p} key.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Buffer information::
+* File operations::
+* Mode and buffer switching::
+* Package management::
+* Process support::
+* Trash and auto-save support::
+@end menu
+
+@node Buffer information
+@section Buffer information
+
+@findex files-extras-get-alternate-buffer
+@findex files-extras-get-stem-of-current-buffer
+@findex files-extras-buffer-file-name
+@findex files-extras-open-buffer-files
+@findex files-extras-bollp
+The function @code{files-extras-get-alternate-buffer} returns the most
+recently used buffer in the current window, respecting the frame's
+@code{buffer-predicate}.  It is used internally by
+@code{files-extras-switch-to-alternate-buffer} (@ref{Switching buffers}).
+
+The function @code{files-extras-get-stem-of-current-buffer} returns the base
+name (without extension or directory) of the current buffer's file.
+
+The function @code{files-extras-buffer-file-name} returns the file name of
+the current buffer, adjusting paths that go through the @samp{git-dirs}
+directory structure to point to their canonical locations.
+
+The function @code{files-extras-open-buffer-files} returns a list of all
+@samp{.org} files currently open in Emacs buffers.
+
+The function @code{files-extras-bollp} returns @code{t} if point is at the
+beginning of the last line in the buffer.
+
+@node File operations
+@section File operations
+
+@findex files-extras-read-file
+@findex files-extras-newest-file
+@findex files-extras-lines-to-list
+@findex files-extras-list-to-lines
+@findex files-extras-get-help-file
+@findex files-extras-get-nth-directory
+@findex files-extras-get-current-dir-lowercased
+The function @code{files-extras-read-file} prompts for a file path with a
+context-aware default: the file at point in Dired, the current buffer's
+file, or an explicit FILE argument.
+
+The function @code{files-extras-newest-file} returns the path of the most
+recently modified file in a directory, excluding @samp{.DS_Store} and
+@samp{.localized} files (common macOS clutter).
+
+The function @code{files-extras-lines-to-list} reads a file and returns its
+lines as a list of strings.  The function @code{files-extras-list-to-lines}
+performs the inverse operation, writing a list to a file with one element
+per line.
+
+The function @code{files-extras-get-help-file} searches for a documentation
+file (@samp{.org} or @samp{.md}) corresponding to the given source file, looking
+in @samp{doc/} and @samp{docs/} subdirectories.
+
+The function @code{files-extras-get-nth-directory} extracts the Nth path
+component from a directory path.
+
+The function @code{files-extras-get-current-dir-lowercased} returns the base
+name of the current directory, lowercased, with hyphens replaced by
+underscores.
+
+@node Mode and buffer switching
+@section Mode and buffer switching
+
+@findex files-extras-switch-to-most-recent-buffer-in-mode
+The function @code{files-extras-switch-to-most-recent-buffer-in-mode}
+switches to the most recently used buffer whose major mode derives from
+the given MODE@.
+
+@node Package management
+@section Package management
+
+@findex files-extras-open-elpaca-package
+@findex files-extras-open-extras-package
+The function @code{files-extras-open-elpaca-package} opens the main Elisp
+file for a named Elpaca-managed package by constructing the path within
+the Elpaca repos directory.
+
+The function @code{files-extras-open-extras-package} prompts (with
+completion) for a file in the @samp{emacs/extras/} directory and opens it.
+It is used by the @code{files-extras-dispatch} menu.
+
+@node Process support
+@section Process support
+
+@findex files-extras-ocr-pdf-process-filter
+The function @code{files-extras-ocr-pdf-process-filter} is a process filter
+for @samp{ocrmypdf} output.  It translates raw process output into
+human-readable status messages and suppresses duplicates.  For example,
+it informs the user when OCR has already been performed and a prefix
+argument is needed to force re-processing.
+
+@node Trash and auto-save support
+@section Trash and auto-save support
+
+@findex files-extras-system-move-file-to-trash
+@findex files-extras-bury-scratch-buffer
+@findex files-extras-auto-save-alert
+@findex files-extras-make-hashed-auto-save-file-name-a
+@findex files-extras-make-hashed-backup-file-name-a
+The function @code{files-extras-system-move-file-to-trash} overrides
+@code{system-move-file-to-trash} (via @samp{:override} advice) to use the
+external @samp{trash} utility on macOS@.  This preserves Finder's ``Put Back''
+functionality, which the default Emacs trash implementation does not
+support.
+
+The function @code{files-extras-bury-scratch-buffer} is added to
+@code{kill-buffer-query-functions}.  It intercepts attempts to kill the
+@samp{*scratch*} buffer and buries it instead, returning @code{nil} to prevent the
+kill.
+
+The function @code{files-extras-auto-save-alert} is added to
+@code{find-file-hook}.  When auto-save data is newer than the visited file,
+it triggers a high-severity alert (via the @samp{alert} package) to ensure
+the notification is not missed.
+
+The function @code{files-extras-make-hashed-auto-save-file-name-a} advises
+@code{make-auto-save-file-name} (@samp{:around}) to hash the buffer file name,
+preventing excessively long auto-save file paths.  Similarly,
+@code{files-extras-make-hashed-backup-file-name-a} advises
+@code{make-backup-file-name-1} to hash backup file names in directories
+specified by @code{backup-directory-alist}.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

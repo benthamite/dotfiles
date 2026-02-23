@@ -1,0 +1,184 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename window-extras.info
+@settitle window-extras: Extensions for window.el
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Window Extras: (window-extras). Extensions for Emacs window management.
+@end direntry
+
+@finalout
+@titlepage
+@title window-extras: Extensions for window.el
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top window-extras: Extensions for window.el
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{window-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Commands::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* @code{window-extras-frame-split-width-threshold}::
+
+Commands
+
+* Switching to the last window::
+* Splitting::
+* Buffer movement::
+* Special window access::
+
+Functions
+
+* Utility functions::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{window-extras.el} extends Emacs' built-in @code{window.el} with commands for switching between windows, moving buffers across windows, and intelligently splitting frames. Emacs' default window management commands are powerful but sometimes cumbersome for common workflows like toggling between two windows or moving a buffer to an adjacent window without losing context.
+
+The main capabilities are:
+
+@itemize
+@item
+@strong{Switching to the last window.} A quick toggle between the current and most recently used window, including the minibuffer (@ref{Switching to the last window}).
+@item
+@strong{Intelligent splitting.} Automatically splitting frames into two or three windows based on frame width (@ref{Splitting}).
+@item
+@strong{Buffer movement.} Moving the current buffer to an adjacent window or swapping buffers between windows (@ref{Buffer movement}).
+@item
+@strong{Minibuffer and side window access.} Jumping to the active minibuffer or selecting the leftmost/rightmost window (@ref{Special window access}).
+@end itemize
+
+@node User options
+@chapter User options
+
+@menu
+* @code{window-extras-frame-split-width-threshold}::
+@end menu
+
+@node @code{window-extras-frame-split-width-threshold}
+@section @code{window-extras-frame-split-width-threshold}
+
+@vindex window-extras-frame-split-width-threshold
+The user option @code{window-extras-frame-split-width-threshold} specifies the minimum frame width (in columns) at which @code{window-extras-split-if-unsplit} (@ref{Splitting}) will create a three-window layout instead of a two-window layout. On wide displays, three side-by-side windows can be more productive than two very wide ones.
+
+The default value is @code{350}. The type is an integer. You might lower this value if you use a smaller font or increase it for larger fonts.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Switching to the last window::
+* Splitting::
+* Buffer movement::
+* Special window access::
+@end menu
+
+@node Switching to the last window
+@section Switching to the last window
+
+@findex window-extras-switch-to-last-window
+A common workflow involves editing in one window, briefly switching to another for reference, and then wanting to return. The command @code{window-extras-switch-to-last-window} selects the most recently used window in the current frame, providing a quick toggle between two windows without relying on directional movement or window numbers.
+
+If the minibuffer was the last selected window and is currently active, the command will switch to it. This makes it easy to return to an ongoing minibuffer session after checking something in a file buffer. If no other window exists, the command signals an error.
+
+Internally, the command uses @code{window-extras-get-last-window} to determine the target window (@ref{Utility functions}).
+
+@node Splitting
+@section Splitting
+
+@findex window-extras-split-if-unsplit
+The command @code{window-extras-split-if-unsplit} ensures the frame has at least two windows. If the frame contains only one window, it splits horizontally with @code{split-window-right}. If the resulting frame width exceeds @code{window-extras-frame-split-width-threshold} (@ref{@code{window-extras-frame-split-width-threshold}, , User options}) and there are still only two windows, it splits again to create a third and balances all window sizes.
+
+This command is called internally by the buffer movement commands (@ref{Buffer movement}) to ensure there is always a target window available.
+
+@node Buffer movement
+@section Buffer movement
+
+@findex window-extras-buffer-swap
+@findex window-extras-buffer-move-right
+@findex window-extras-buffer-move-left
+The command @code{window-extras-buffer-swap} exchanges the buffer in the current window with the buffer in the most recently used window. If there is only one window, it first splits the frame via @code{window-extras-split-if-unsplit} (@ref{Splitting}). This is useful when you realize two buffers would be more productive in each other's position.
+
+The command @code{window-extras-buffer-move-right} moves the current buffer to the window immediately to the right, replacing the current window's buffer with the alternate buffer (from @samp{files-extras.el}). If no window exists to the right, it creates one by splitting. Focus follows the buffer to the right window.
+
+The command @code{window-extras-buffer-move-left} does the same leftward. When there is only one window, it splits the frame and leaves focus on the left window (which now shows the alternate buffer, with the original buffer having moved right). This difference from @code{window-extras-buffer-move-right} ensures that the user's focus matches the expected position.
+
+All three commands use the internal function @code{window-extras--move-or-swap} for the actual buffer placement and @code{window-extras--remove-buffer-from-window-history} to clean up the source window's buffer history, preventing the moved buffer from reappearing unexpectedly.
+
+@node Special window access
+@section Special window access
+
+@findex window-extras-switch-to-minibuffer-window
+@findex window-extras-select-side-window
+The command @code{window-extras-switch-to-minibuffer-window} switches focus to the active minibuffer window. This is useful when a minibuffer prompt is waiting for input but you have navigated away from it. If no minibuffer is active, the command does nothing.
+
+The command @code{window-extras-select-side-window} prompts for a side (@samp{"left"} or @samp{"right"}) and selects the window furthest in that direction, ignoring the minibuffer. This provides a quick way to jump to the edge of a multi-window layout without counting windows.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Utility functions::
+@end menu
+
+@node Utility functions
+@section Utility functions
+
+@findex window-extras-get-last-window
+@findex window-extras-buffer-move
+@findex window-extras-frame-is-maximized-p
+The function @code{window-extras-get-last-window} returns the most recently selected window in the current frame. If the minibuffer is active and the current buffer is not a minibuffer, it returns the minibuffer window. Otherwise, it uses @code{get-mru-window} to find the most recently used non-current window. This function underpins @code{window-extras-switch-to-last-window} (@ref{Switching to the last window}) and the buffer movement commands.
+
+The function @code{window-extras-buffer-move} moves the current buffer to a specified TARGET-WINDOW, replacing the current window's buffer with the alternate buffer from @code{files-extras-get-alternate-buffer}. It handles window creation and history cleanup. It is used by @code{window-extras-buffer-move-right} and @code{window-extras-buffer-move-left} (@ref{Buffer movement}).
+
+The predicate @code{window-extras-frame-is-maximized-p} returns non-nil when the current frame's pixel dimensions match the display's pixel dimensions, indicating that the frame occupies the full screen.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

@@ -1,0 +1,312 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename doom-modeline-extras.info
+@settitle doom-modeline-extras: Extensions for doom-modeline
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Doom Modeline Extras: (doom-modeline-extras). Extensions for doom-modeline.
+@end direntry
+
+@finalout
+@titlepage
+@title doom-modeline-extras: Extensions for doom-modeline
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top doom-modeline-extras: Extensions for doom-modeline
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{doom-modeline-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Modeline segments::
+* Modeline definitions::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* Segment visibility::
+* Claude Code cost display::
+
+Modeline segments
+
+* Claude Code status::
+* Tlon segments::
+* Org Roam backlinks::
+* AI context::
+
+Functions
+
+* GitHub notification handling::
+* Formatting helpers::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{doom-modeline-extras.el} extends the @samp{doom-modeline} package with
+custom modeline segments, a dedicated modeline layout for Claude Code
+sessions, and enhanced handling of GitHub notifications.
+
+The package defines several modeline segments that surface contextual
+information not provided by the standard @samp{doom-modeline} segments:
+
+@itemize
+@item
+A @strong{Claude Code status} segment that displays the session name, model,
+token count, cost, context usage percentage, lines changed, duration,
+and cache efficiency for active Claude Code sessions.
+@item
+An @strong{AI context} segment showing how many files are currently in the
+@samp{gptel} context.
+@item
+An @strong{Org Roam backlinks} segment displaying the backlink count for the
+current node.
+@item
+A @strong{Tlon split mode} segment indicating when @code{tlon-split-mode} is active.
+@item
+A @strong{Tlon paragraph} segment showing paragraph-level information from
+@code{tlon-paragraphs-mode-line-mode}.
+@end itemize
+
+On the notifications side, the package hooks into Doom Modeline's GitHub
+notification fetching to automatically pull Forge notifications when new
+GitHub notifications arrive.
+
+@node User options
+@chapter User options
+
+@menu
+* Segment visibility::
+* Claude Code cost display::
+@end menu
+
+@node Segment visibility
+@section Segment visibility
+
+@vindex doom-modeline-extras-org-roam
+@vindex doom-modeline-extras-tlon-split
+@vindex doom-modeline-extras-ai-context
+@vindex doom-modeline-extras-claude-code
+The user option @code{doom-modeline-extras-org-roam} controls whether the Org
+Roam backlink count segment is displayed.  When non-@code{nil} (the default),
+the backlink count appears in the modeline while visiting an Org mode
+buffer that has backlinks.  Set it to @code{nil} to hide this segment.
+
+The user option @code{doom-modeline-extras-tlon-split} controls whether the
+Tlon split mode indicator is shown.  The default value is @code{t}.  When
+@code{tlon-split-mode} is active and this option is non-@code{nil}, the word
+``split'' appears in the modeline.
+
+The user option @code{doom-modeline-extras-ai-context} controls whether the
+AI context file count is displayed.  The default value is @code{t}.  When
+non-@code{nil} and there are files in the @code{gptel-context--alist}, the count
+appears as a sparkle icon with a number.
+
+The user option @code{doom-modeline-extras-claude-code} controls whether the
+Claude Code status segment is displayed in Claude Code buffers.  The
+default value is @code{t}.
+
+@node Claude Code cost display
+@section Claude Code cost display
+
+@vindex doom-modeline-extras-claude-code-api-plan
+The user option @code{doom-modeline-extras-claude-code-api-plan} determines
+how session costs are rendered in the Claude Code modeline segment.
+When @code{nil} (the default), the package assumes a subscription plan (Free,
+Pro, or Max) and displays the cost with a strikethrough face to indicate
+that the amount is not actually charged.  When non-@code{nil}, it assumes an
+API plan and displays the cost normally, since the user is paying per
+token.
+
+The boolean type accepts @code{t} or @code{nil}.  You should set this to @code{t} if
+you are using the Claude API directly rather than a subscription plan.
+
+@node Modeline segments
+@chapter Modeline segments
+
+The segments described below are defined using
+@code{doom-modeline-def-segment} and can be included in custom modeline
+layouts.
+
+@menu
+* Claude Code status::
+* Tlon segments::
+* Org Roam backlinks::
+* AI context::
+@end menu
+
+@node Claude Code status
+@section Claude Code status
+
+@findex doom-modeline-extras--format-claude-status
+The @code{claude-code-status} segment is the most feature-rich segment in
+this package.  It activates only in buffers recognized as Claude Code
+sessions (via @code{claude-code--buffer-p}).  When session status data is
+available, it displays multiple pipe-separated fields:
+
+@itemize
+@item
+@strong{Session name}: shown in bold, extracted from the buffer name.
+@item
+@strong{Model}: the Claude model in use (e.g., ``opus'', ``sonnet'').
+@item
+@strong{Token count}: formatted compactly (e.g., ``12.3k'', ``1.5M'').
+@item
+@strong{Cost}: shown as a dollar amount, optionally with strikethrough on
+subscription plans (@ref{Claude Code cost display}).
+@item
+@strong{Context usage}: shown as a percentage with color coding---green below
+60%, yellow at 60-79%, red at 80% and above.
+@item
+@strong{Lines changed}: a +N/-M display with green for additions and red for
+deletions.
+@item
+@strong{Duration}: elapsed session time in a compact format (e.g., ``5m23s'').
+@item
+@strong{Cache efficiency}: the ratio of cache-read tokens to total tokens,
+color-coded (green above 80%, yellow 50-79%, red below 50%).
+@item
+@strong{Alert indicator}: from @code{claude-code-extras-alert-indicator}.
+@end itemize
+
+Before status data arrives, the segment displays only the session name.
+
+The formatting is handled by several internal helper functions:
+@code{doom-modeline-extras--format-model},
+@code{doom-modeline-extras--format-tokens},
+@code{doom-modeline-extras--format-cost},
+@code{doom-modeline-extras--format-context-percent},
+@code{doom-modeline-extras--format-lines-changed},
+@code{doom-modeline-extras--format-duration}, and
+@code{doom-modeline-extras--format-cache-efficiency}.
+
+@node Tlon segments
+@section Tlon segments
+
+The @code{tlon-split} segment displays the literal string ``split'' when
+@code{tlon-split-mode} is active and @code{doom-modeline-extras-tlon-split} is
+non-@code{nil}.
+
+The @code{tlon-paragraph} segment displays paragraph information from
+@code{tlon-paragraphs-mode-line-string} when @code{tlon-paragraphs-mode-line-mode}
+is active.
+
+@node Org Roam backlinks
+@section Org Roam backlinks
+
+The @code{org-roam-backlinks} segment displays the backlink count for the
+current Org Roam node.  It reads the buffer-local variable
+@code{org-roam-extras-current-backlink-count} (managed by
+@samp{org-roam-extras.el}) and formats the count as a recycling symbol with a
+count in parentheses.  The segment appears only in @code{org-mode} buffers
+when @code{doom-modeline-extras-org-roam} is non-@code{nil}.
+
+@node AI context
+@section AI context
+
+The @code{ai-context} segment displays the number of files currently in the
+@samp{gptel} AI context list (@code{gptel-context--alist}).  It appears only when
+@code{doom-modeline-extras-ai-context} is non-@code{nil} and the context is
+non-empty.
+
+@node Modeline definitions
+@chapter Modeline definitions
+
+The package defines a @code{claude-code} modeline layout using
+@code{doom-modeline-def-modeline}.  This layout places the @code{claude-code-status}
+segment on the left side (alongside the bar segment) and @code{misc-info},
+@code{major-mode}, @code{process}, and @code{time} on the right.  It is intended for
+use in Claude Code session buffers to give a comprehensive at-a-glance
+view of the session state.
+
+@node Functions
+@chapter Functions
+
+@menu
+* GitHub notification handling::
+* Formatting helpers::
+@end menu
+
+@node GitHub notification handling
+@section GitHub notification handling
+
+@findex doom-modeline-extras-handle-github-notifications
+The function @code{doom-modeline-extras-handle-github-notifications} is
+added to @code{doom-modeline-after-github-fetch-notification-hook}.  After
+Doom Modeline fetches the GitHub notification count, this function
+compares the new count against the previously stored count in the
+variable @code{doom-modeline-extras-github-last-count}.
+
+When the count has changed and is greater than zero, the function calls
+@code{forge-pull-notifications} from the @samp{forge} package to retrieve full
+notification details.  It then updates the stored count.  This provides
+a bridge between Doom Modeline's lightweight notification polling and
+Forge's detailed notification management.
+
+@node Formatting helpers
+@section Formatting helpers
+
+@findex doom-modeline-extras--humanize-tokens
+@findex doom-modeline-extras--humanize-duration
+@findex doom-modeline-extras--context-face
+@findex doom-modeline-extras--cache-face
+The function @code{doom-modeline-extras--humanize-tokens} formats a token
+count into a compact string using ``k'' and ``M'' suffixes.  For example,
+1500 becomes ``1.5k'' and 2000000 becomes ``2.0M''.
+
+The function @code{doom-modeline-extras--humanize-duration} formats
+milliseconds into a compact time string.  For example, 125000 becomes
+``2m5s'' and 7200000 becomes ``2h0m''.
+
+The function @code{doom-modeline-extras--context-face} returns a face based
+on context usage percentage: @code{doom-modeline-info} below 60%,
+@code{doom-modeline-warning} between 60% and 79%, and @code{doom-modeline-urgent}
+at 80% or above.
+
+The function @code{doom-modeline-extras--cache-face} returns a face based on
+cache hit percentage, using the inverse scale: @code{doom-modeline-info} at
+80% or above, @code{doom-modeline-warning} between 50% and 79%, and
+@code{doom-modeline-urgent} below 50%.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

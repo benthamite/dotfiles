@@ -1,0 +1,146 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename pass-extras.info
+@settitle pass-extras: Extensions for pass
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Pass Extras: (pass-extras). Extensions for pass.
+@end direntry
+
+@finalout
+@titlepage
+@title pass-extras: Extensions for pass
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top pass-extras: Extensions for pass
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{pass-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Commands::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Commands
+
+* Browsing entries::
+* Generating passwords::
+* Key management::
+* Git-crypt integration::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{pass-extras.el} extends the @samp{pass} package, which provides an Emacs interface to the Unix @samp{pass} password manager. While @samp{pass} already offers browsing and copying of password entries, this package adds several capabilities that streamline common workflows:
+
+@itemize
+@item
+Opening the URL associated with a password entry while simultaneously copying the password to the clipboard (@ref{Browsing entries}).
+@item
+Generating passwords of various types and copying them to the clipboard with automatic clearing (@ref{Generating passwords}).
+@item
+Storing external key files into the password store and exporting entries back out (@ref{Key management}).
+@item
+Unlocking @samp{git-crypt} repositories using keys stored in @samp{pass} (@ref{Git-crypt integration}).
+@end itemize
+
+The package depends on @samp{pass} and @samp{password-generator}.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Browsing entries::
+* Generating passwords::
+* Key management::
+* Git-crypt integration::
+@end menu
+
+@node Browsing entries
+@section Browsing entries
+
+@findex pass-extras-open-at-point
+When you are reviewing your password entries in a @samp{pass-mode} buffer, you may want to log in to the associated website. The command @code{pass-extras-open-at-point} combines two steps into one: it copies the password of the entry at point to the kill ring (via @code{pass-copy}) and then opens the URL stored in the entry's @samp{password-store-url-field} in your default browser. If the entry does not contain a URL field, the command signals an error.
+
+@findex pass-extras-insert-generated-no-symbols
+The command @code{pass-extras-insert-generated-no-symbols} creates a new password store entry with a randomly generated password that contains only alphanumeric characters (no special symbols). It delegates to @code{password-store-generate-no-symbols} for the actual generation and then refreshes the @samp{pass-mode} buffer so the new entry appears immediately.
+
+@node Generating passwords
+@section Generating passwords
+
+@findex pass-extras-generate-password
+Sometimes you need a password without creating a new entry in the store, for instance when filling a form in a browser or registering for a service you do not intend to save. The command @code{pass-extras-generate-password} prompts you to choose a password type from several categories provided by the @samp{password-generator} package:
+
+@itemize
+@item
+Simple (alphanumeric)
+@item
+Strong (with special characters)
+@item
+Numeric (PIN)
+@item
+Phonetic (memorable)
+@item
+Words (correct horse battery style)
+@item
+Custom (your own alphabet)
+@end itemize
+
+The generated password is copied to the kill ring and will be automatically cleared after the number of seconds specified by @code{password-store-time-before-clipboard-restore}, just like a regular @samp{pass} copy operation. This ensures that generated passwords do not linger in the clipboard.
+
+@node Key management
+@section Key management
+
+@findex pass-extras-store-key
+@findex pass-extras-export-key
+Cryptographic key files (SSH keys, GPG keys, API tokens stored in files) can be imported into the password store for safekeeping. The command @code{pass-extras-store-key} prompts for a key file and a target entry name, then pipes the file contents into @samp{pass insert --multiline} to store them as a multiline entry. Completion is offered for existing entry names.
+
+The reverse operation is provided by @code{pass-extras-export-key}, which prompts for an existing entry (with completion requiring a match) and a destination file path, then writes the entry contents to that file. This is useful when you need to restore a key file on a new machine.
+
+@node Git-crypt integration
+@section Git-crypt integration
+
+@findex pass-extras-git-crypt-unlock
+If you store @samp{git-crypt} symmetric keys in @samp{pass}, the command @code{pass-extras-git-crypt-unlock} can unlock a repository without ever writing the key to disk. It prompts for a @samp{pass} entry containing the key (with completion) and runs @samp{git-crypt unlock} with process substitution so the key is fed directly from @samp{pass} into @samp{git-crypt}. The command operates in the current @code{default-directory} unless an optional REPO argument is provided programmatically. It reports success or failure in the echo area.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

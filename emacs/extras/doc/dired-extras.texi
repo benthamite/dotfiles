@@ -1,0 +1,240 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename dired-extras.info
+@settitle dired-extras: Extensions for Dired
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Dired Extras: (dired-extras). Extensions for Dired.
+@end direntry
+
+@finalout
+@titlepage
+@title dired-extras: Extensions for Dired
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top dired-extras: Extensions for Dired
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{dired-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Commands::
+* Transient menus::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Commands
+
+* Copying filenames::
+* File operations::
+* Navigation and sorting::
+* Image Dired integration::
+* Hide details::
+
+Functions
+
+* Quiet deletion cleanup::
+* Gnus Dired patch::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{dired-extras.el} extends Dired, Emacs' built-in directory editor, with a collection of file operations, navigation improvements, and integrations with other packages. While Dired is already powerful, certain common tasks---copying filenames in various formats, quickly navigating to frequently used directories, managing screenshots, duplicating files---require custom commands.
+
+This package provides:
+
+@itemize
+@item
+Commands for copying filenames to the kill ring in several formats: sans extension, absolute path, or context-sensitive based on the current detail level (@ref{Copying filenames}).
+@item
+File marking, deletion, and duplication commands (@ref{File operations}).
+@item
+Enhanced navigation and sorting (@ref{Navigation and sorting}).
+@item
+Image handling commands via Image Dired (@ref{Image Dired integration}).
+@item
+An enhanced detail-hiding toggle (@ref{Hide details}).
+@item
+A transient dispatch menu for quick access to frequently used directories (@ref{Transient menus, , Transient dispatch}).
+@item
+A patch for @code{gnus-dired-mail-buffers} to support modern mail composition modes (@ref{Gnus Dired patch}).
+@end itemize
+
+The package depends on @samp{el-patch}, @samp{paths}, @samp{shut-up}, and @samp{transient}.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Copying filenames::
+* File operations::
+* Navigation and sorting::
+* Image Dired integration::
+* Hide details::
+@end menu
+
+@node Copying filenames
+@section Copying filenames
+
+@findex dired-extras-copy-filename-as-kill-sans-extension
+@findex dired-extras-copy-filename-as-kill-absolute
+@findex dired-extras-copy-filename-as-kill-dwim
+@findex dired-extras-image-copy-filename-as-kill-absolute
+Dired's built-in @code{dired-copy-filename-as-kill} copies the filename at point, but the format is not always what you need. Four commands cover common variations:
+
+@itemize
+@item
+@code{dired-extras-copy-filename-as-kill-sans-extension} copies the filename at point without its file extension. This is handy when you need the base name for renaming, referencing, or constructing a related filename.
+
+@item
+@code{dired-extras-copy-filename-as-kill-absolute} copies the full absolute path of the marked files (or the file at point). Internally, it passes the prefix argument @samp{(0)} to @code{dired-copy-filename-as-kill}.
+
+@item
+@code{dired-extras-copy-filename-as-kill-dwim} adapts its behavior to the current display state. When @code{dired-hide-details-mode} is active, it copies base filenames (without directory components); otherwise, it copies full paths. The filenames are joined with newlines, making them easy to paste into a shell or document.
+
+@item
+@code{dired-extras-image-copy-filename-as-kill-absolute} works in Image Dired buffers, copying the absolute path of the marked image file (or the one at point) to the kill ring.
+@end itemize
+
+@node File operations
+@section File operations
+
+@findex dired-extras-mark-screenshots
+@findex dired-extras-do-delete-fast
+@findex dired-extras-duplicate-this-file
+@findex dired-extras-copy-to-remote-docs-directory
+Several commands streamline common file operations:
+
+@itemize
+@item
+@code{dired-extras-mark-screenshots} marks all files matching the macOS screenshot naming pattern (@samp{Screenshot YYYY-MM-DD at HH.MM.SS.png}). This is useful for quickly selecting screenshots for bulk operations such as moving, renaming, or deleting.
+
+@item
+@code{dired-extras-do-delete-fast} deletes marked files (or the file at point) without moving them to the system trash. It temporarily overrides @code{system-move-file-to-trash} before calling @code{dired-do-delete}. Use this when deleting large numbers of files where the overhead of the trash utility is unwanted.
+
+@item
+@code{dired-extras-duplicate-this-file} creates a copy of the file at point in the same directory, appending @samp{[N]} before the extension where N is the first available integer (e.g., @samp{report.pdf} becomes @samp{report[1].pdf}). The Dired buffer is reverted afterward to show the new file.
+
+@item
+@code{dired-extras-copy-to-remote-docs-directory} copies marked files to a remote server (@samp{stafforini.com/docs}) via @samp{scp} and copies the public URL of the last file to the kill ring. This command contains hardcoded server details and requires appropriate SSH configuration.
+@end itemize
+
+@node Navigation and sorting
+@section Navigation and sorting
+
+@findex dired-extras-up-directory-reuse
+@findex dired-extras-sort-toggle-dwim
+Two commands improve Dired navigation:
+
+@itemize
+@item
+@code{dired-extras-up-directory-reuse} navigates to the parent directory by calling @code{find-alternate-file} with @samp{".."}, reusing the current Dired buffer instead of opening a new one. This keeps the buffer list clean when browsing directory trees.
+
+@item
+@code{dired-extras-sort-toggle-dwim} toggles the sorting method (typically between name and date) and refreshes the buffer. If point is on the first file when sorting is toggled, it remains on the first file afterward; otherwise, it follows the file that was at point. With a prefix argument, it calls @code{dired-sort-toggle-or-edit} to let you edit the listing switches directly.
+@end itemize
+
+@node Image Dired integration
+@section Image Dired integration
+
+@findex dired-extras-image-dired-current-directory
+@findex dired-extras-copy-image
+Two commands integrate Dired with image viewing:
+
+@itemize
+@item
+@code{dired-extras-image-dired-current-directory} opens all images in the current Dired directory in Image Dired, calling @code{image-dired-show-all-from-dir}.
+
+@item
+@code{dired-extras-copy-image} copies the image in the current @samp{image-mode} buffer to the system clipboard using macOS AppleScript. It sets the clipboard to the POSIX file path of the current buffer. This is macOS-specific.
+@end itemize
+
+@node Hide details
+@section Hide details
+
+@findex dired-extras-hide-details-mode-enhanced
+The command @code{dired-extras-hide-details-mode-enhanced} toggles both @code{dired-hide-details-mode} and @code{dired-omit-mode} simultaneously. This provides a consistent ``clean'' and ``full'' view: in clean mode, file details and omitted files (such as dotfiles) are both hidden; in full mode, everything is visible.
+
+It accepts an optional ARG following the standard toggle convention: when called interactively it toggles, a positive number enables the clean view, and a negative number disables it.
+
+@node Transient menus
+@chapter Transient menus
+
+@findex dired-extras-dispatch
+The command @code{dired-extras-dispatch} opens a transient menu providing quick access to frequently used directories. The menu is organized into columns:
+
+@itemize
+@item
+@strong{Dired folders}: personal directories such as bibliography, dotfiles, Emacs config, notes, downloads, repos, and various library locations.
+@item
+@strong{Music}: subdirectories for classical, popular, tango, and unsorted music.
+@item
+@strong{Special}: context-sensitive entries like the file at point, root, home, and the current buffer's directory (via @code{dired-jump}).
+@item
+@strong{Tlon: Google Drive} and @strong{Tlon: Dropbox}: project-specific directories for various Tlon publications and team members.
+@end itemize
+
+Directory paths are drawn from variables defined in the @samp{paths} package.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Quiet deletion cleanup::
+* Gnus Dired patch::
+@end menu
+
+@node Quiet deletion cleanup
+@section Quiet deletion cleanup
+
+@findex dired-extras-clean-up-after-deletion-quietly
+@findex dired-extras-y-or-n-p-just-yes
+When Dired deletes a file, it may prompt to kill the associated buffer. The function @code{dired-extras-clean-up-after-deletion-quietly} is installed as @samp{:around} advice on @code{dired-clean-up-after-deletion} to suppress these prompts. It temporarily wraps @code{y-or-n-p} with @code{dired-extras-y-or-n-p-just-yes}, which returns @code{t} for any prompt starting with ``Kill Dired buffer'' or ``Kill buffer of'', and delegates to the original function otherwise.
+
+@node Gnus Dired patch
+@section Gnus Dired patch
+
+@findex gnus-dired-mail-buffers
+The function @code{gnus-dired-mail-buffers} (from @samp{gnus-dired}) is patched via @samp{el-patch} to use @code{derived-mode-p} instead of checking for an exact major mode match. The original implementation only recognizes buffers in @code{mail-mode} or those returned by @code{message-buffers}, which means @code{mu4e-compose-mode} and other derived mail modes are not detected. The patch makes @code{gnus-dired-attach} work correctly from any mail composition buffer that derives from @code{mail-mode}.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

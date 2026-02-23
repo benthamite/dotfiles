@@ -1,0 +1,98 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename profiler-extras.info
+@settitle profiler-extras: Extensions for the Emacs profiler
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Profiler Extras: (profiler-extras). Extensions for the Emacs profiler.
+@end direntry
+
+@finalout
+@titlepage
+@title profiler-extras: Extensions for the Emacs profiler
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top profiler-extras: Extensions for the Emacs profiler
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{profiler-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Commands::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Commands
+
+* Toggling the profiler::
+* Expanding report entries::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{profiler-extras.el} extends the built-in Emacs profiler (@samp{profiler.el}) with convenience commands that reduce the number of steps needed for common profiling workflows. The standard profiler requires separate invocations to start, stop, and generate a report. This package provides a single toggle command that manages the entire cycle, as well as a command for quickly expanding all sub-entries in a profiler report.
+
+The package requires only the built-in @samp{profiler} library.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Toggling the profiler::
+* Expanding report entries::
+@end menu
+
+@node Toggling the profiler
+@section Toggling the profiler
+
+@findex profiler-extras-profiler-toggle
+Profiling in Emacs normally involves calling @code{profiler-start}, reproducing the behavior you want to measure, then calling @code{profiler-stop} and @code{profiler-report} separately. The command @code{profiler-extras-profiler-toggle} collapses this into a single toggle. On the first invocation it starts the profiler for both CPU and memory (@samp{cpu+mem}). On the second invocation it generates the profiler report and stops the profiler. An internal variable tracks the toggle state.
+
+A typical workflow is to bind this command to a convenient key, press it once to begin profiling, perform the operations you want to measure, and press it again to see the results.
+
+@node Expanding report entries
+@section Expanding report entries
+
+@findex profiler-extras-profiler-report-toggle-entry-global
+When examining a profiler report, you often want to see the full call tree beneath a particular entry. The built-in @code{profiler-report-toggle-entry} expands one level at a time, which can be tedious for deep call stacks. The command @code{profiler-extras-profiler-report-toggle-entry-global} calls @code{profiler-report-toggle-entry} with a prefix argument of 4, which recursively expands all sub-entries below the entry at point. This lets you quickly inspect the complete call hierarchy without repeated toggling.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

@@ -1,0 +1,345 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename eww-extras.info
+@settitle eww-extras: Extensions for EWW
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* EWW Extras: (eww-extras). Extensions for EWW.
+@end direntry
+
+@finalout
+@titlepage
+@title eww-extras: Extensions for EWW
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top eww-extras: Extensions for EWW
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{eww-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Commands::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* Readability exceptions::
+* Chrome data directory::
+
+Commands
+
+* Browsing local files::
+* Generating files from URLs::
+* Chrome data management::
+* Adding readability exceptions::
+* Vimium-like navigation::
+* Switching renderers::
+* Bibliography integration::
+
+Functions
+
+* Readability management::
+* YouTube handling::
+* File generation internals::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{eww-extras.el} extends EWW (Emacs Web Wowser), the built-in Emacs web
+browser, with capabilities for generating files from web pages, managing
+readability mode, navigating URL hierarchies, and integrating with other
+packages.  It depends on the @samp{paths} package for directory constants.
+
+The most substantial feature is the ability to generate PDF and HTML
+files from any URL using headless Chrome.  This requires Chrome to be
+installed and uses copies of the user's Chrome profile data for
+authentication, enabling downloads from sites that require login.  The
+generated files are placed in the downloads directory and can optionally
+trigger a callback function (e.g., to attach the file to a Bib@TeX{}
+entry).
+
+The package also enhances EWW's readability mode.  By default, every
+page rendered in EWW is automatically converted to its ``readable'' form
+(stripping navigation, ads, and other clutter).  A file-backed exception
+list allows excluding specific domains where readability mode produces
+poor results.  Adding exceptions is a single command away.
+
+For navigation, the package provides Vimium-style commands: editing the
+current URL, opening kill ring content, and moving up or to the root of
+the URL hierarchy.  It also provides commands for switching between EWW
+and xwidget-webkit for different rendering needs.
+
+Integration with other packages includes handling YouTube URLs via
+@samp{elfeed-tube} (for transcript extraction) and @samp{mpv} (for video
+playback), and adding the current page to a bibliography via
+@samp{zotra-extras}.
+
+@node User options
+@chapter User options
+
+@menu
+* Readability exceptions::
+* Chrome data directory::
+@end menu
+
+@node Readability exceptions
+@section Readability exceptions
+
+@vindex eww-extras-readable-exceptions
+@vindex eww-extras-readable-exceptions-file
+The user option @code{eww-extras-readable-exceptions} holds a list of URL
+patterns (strings treated as regular expressions) for which
+@code{eww-readable} should not be automatically applied.  The default value
+is an empty list.  This variable is populated at load time from the file
+specified by @code{eww-extras-readable-exceptions-file} and updated whenever
+you add a new exception via
+@code{eww-extras-add-domain-to-readable-exceptions}
+(@ref{Adding readability exceptions}).
+
+The user option @code{eww-extras-readable-exceptions-file} specifies the
+path to the file containing readability exception patterns, one per
+line.  The default value is @samp{etc/eww-readable-exceptions.txt} within
+the Emacs configuration directory (via @code{paths-dir-dotemacs}).  You would
+change this if you want to store the exceptions file elsewhere.
+
+@node Chrome data directory
+@section Chrome data directory
+
+@vindex eww-extras-chrome-data-dir
+The user option @code{eww-extras-chrome-data-dir} specifies the path to the
+main Google Chrome profile directory.  The default value is
+@samp{~/Library/Application Support/Google/Chrome/}.  This directory is used
+as the source when creating profile copies for headless Chrome sessions
+(@ref{Chrome data management}).  You should only change this if Chrome stores
+its data in a non-standard location.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Browsing local files::
+* Generating files from URLs::
+* Chrome data management::
+* Adding readability exceptions::
+* Vimium-like navigation::
+* Switching renderers::
+* Bibliography integration::
+@end menu
+
+@node Browsing local files
+@section Browsing local files
+
+@findex eww-extras-browse-file
+The command @code{eww-extras-browse-file} opens a local file in EWW@.  It
+tries several sources for the file path: an explicit FILE argument, the
+filename at point, the current buffer's file, or a prompt.  This is
+useful for previewing local HTML files or documents in the EWW renderer.
+
+@node Generating files from URLs
+@section Generating files from URLs
+
+@findex eww-extras-url-to-pdf
+@findex eww-extras-url-to-html
+The command @code{eww-extras-url-to-pdf} generates a PDF file from a URL
+using headless Chrome's print-to-PDF feature.  The URL is determined
+from context (the current EWW page, kill ring, or a prompt).  The output
+file is saved to the downloads directory (@code{paths-dir-downloads}) with a
+name derived from the Bib@TeX{} key (if called from Ebib or Bib@TeX{} mode)
+or the buffer name.
+
+The command @code{eww-extras-url-to-html} generates an HTML file from a URL
+using headless Chrome's DOM dump feature.  When called from a
+bibliographic context, the file name is based on the Bib@TeX{} key;
+otherwise, it uses a slugified version of the page title.
+
+Both commands accept an optional CALLBACK function that is called with
+the output file path and Bib@TeX{} key upon completion.  This enables
+workflows like automatically attaching the generated file to a Bib@TeX{}
+entry.
+
+The commands require Chrome profile copies to exist for authentication.
+Use @code{eww-extras-chrome-copy-data-dirs} to create or update them
+(@ref{Chrome data management}).  The processes run asynchronously; check the
+@samp{*eww-extras download file process*} buffer for detailed output.
+
+@node Chrome data management
+@section Chrome data management
+
+@findex eww-extras-chrome-copy-data-dirs
+@findex eww-extras-chrome-delete-data-dirs
+The command @code{eww-extras-chrome-copy-data-dirs} creates or updates two
+copies of the Chrome profile directory.  Two copies are needed to allow
+simultaneous PDF and HTML generation (one headless Chrome instance per
+copy).  The copies use @samp{rsync} for efficiency: the first run may take a
+while, but subsequent updates are fast.
+
+Chrome must be completely closed before running this command, because
+headless Chrome cannot access a profile that is locked by a running
+instance.  The command verifies this and signals an error if Chrome is
+still running.
+
+The command @code{eww-extras-chrome-delete-data-dirs} deletes both profile
+copies after prompting for confirmation.  This can free substantial disk
+space.
+
+@node Adding readability exceptions
+@section Adding readability exceptions
+
+@findex eww-extras-add-domain-to-readable-exceptions
+The command @code{eww-extras-add-domain-to-readable-exceptions} prompts for a
+domain pattern and adds it to the readability exceptions file.  The
+domain of the current EWW page (or a URL in the kill ring) is offered as
+the default input.  After adding the exception, it reloads the
+exceptions list and refreshes the current page.
+
+This command provides a quick way to permanently opt out of readability
+mode for sites where it strips important content.
+
+@node Vimium-like navigation
+@section Vimium-like navigation
+
+@findex eww-extras-edit-current-url
+@findex eww-extras-open-with-recent-kill-ring
+@findex eww-extras-go-up-url-hierarchy
+@findex eww-extras-go-to-root-url-hierarchy
+The command @code{eww-extras-edit-current-url} pre-fills the minibuffer with
+the current EWW URL and lets you edit it or enter a new search query.
+With a prefix argument, the result opens in a new EWW buffer.
+
+The command @code{eww-extras-open-with-recent-kill-ring} opens the most
+recent kill ring entry as a URL in EWW@.  With a prefix argument, it
+opens in a new EWW buffer.
+
+The command @code{eww-extras-go-up-url-hierarchy} navigates one level up in
+the URL path.  For example, from @samp{example.com/a/b/c} it navigates to
+@samp{example.com/a/b}.
+
+The command @code{eww-extras-go-to-root-url-hierarchy} navigates to the root
+domain of the current URL, stripping all path components.
+
+@node Switching renderers
+@section Switching renderers
+
+@findex eww-extras-open-with-xwidget
+@findex eww-extras-open-with-eww
+The command @code{eww-extras-open-with-xwidget} opens the current EWW page
+in xwidget-webkit, providing a full WebKit rendering.  This is useful
+when EWW's text-mode rendering is insufficient for a page's layout.
+The command must be called from an EWW buffer.
+
+The command @code{eww-extras-open-with-eww} performs the reverse operation:
+it takes the URL from the current xwidget-webkit session and opens it
+in EWW@.  This is useful when you want EWW's readability mode or
+text-based navigation for a page you are viewing in xwidget-webkit.
+
+@node Bibliography integration
+@section Bibliography integration
+
+@findex eww-extras-add-entry
+The command @code{eww-extras-add-entry} adds the current EWW page's URL to a
+bibliography file using @code{zotra-extras-add-entry}.  This command is
+available only in @code{eww-mode} buffers.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Readability management::
+* YouTube handling::
+* File generation internals::
+@end menu
+
+@node Readability management
+@section Readability management
+
+@findex eww-extras-readable-autoview
+@findex eww-extras-set-readable-exceptions-from-file
+The function @code{eww-extras-readable-autoview} is added to
+@code{eww-after-render-hook}.  It automatically calls @code{eww-readable} unless
+the current URL matches a pattern in @code{eww-extras-readable-exceptions} or
+the page has no source content to process.
+
+The function @code{eww-extras-set-readable-exceptions-from-file} reads the
+exception patterns from @code{eww-extras-readable-exceptions-file} and
+populates the @code{eww-extras-readable-exceptions} variable.  It is called
+automatically at load time and after adding a new exception.
+
+@node YouTube handling
+@section YouTube handling
+
+@findex eww-extras-browse-youtube
+The function @code{eww-extras-browse-youtube} is designed as a handler for
+YouTube URLs (e.g., in @code{browse-url-handlers}).  When called with a
+YouTube URL, it kills the current EWW buffer, ensures the external
+video player is running (defaulting to @samp{mpv}), and fetches the video
+transcript using @code{elfeed-tube-fetch}.  This provides a workflow where
+you read the transcript in Emacs while watching the video in an external
+player.
+
+@node File generation internals
+@section File generation internals
+
+@findex eww-extras-url-to-file
+@findex eww-extras-url-to-file-make-command
+@findex eww-extras-url-to-file-sentinel
+@findex eww-extras-run-callback
+The function @code{eww-extras-url-to-file} is the core logic shared by
+@code{eww-extras-url-to-pdf} and @code{eww-extras-url-to-html}.  It determines
+the URL and output file name from context, constructs and starts the
+headless Chrome process, and sets up the process sentinel.
+
+The function @code{eww-extras-url-to-file-make-command} builds the shell
+command for headless Chrome, including GPU disabling flags and a
+15-second timeout.
+
+The function @code{eww-extras-url-to-file-sentinel} creates a process
+sentinel that checks the exit status.  It runs the callback on success,
+or if the file was created despite a non-zero exit status (which can
+happen with certain Chrome warnings).
+
+The function @code{eww-extras-run-callback} safely executes the optional
+callback function with the output file and Bib@TeX{} key as arguments.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

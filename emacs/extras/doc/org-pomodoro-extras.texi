@@ -1,0 +1,107 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename org-pomodoro-extras.info
+@settitle org-pomodoro-extras: Extensions for org-pomodoro
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Org Pomodoro Extras: (org-pomodoro-extras). Extensions for org-pomodoro.
+@end direntry
+
+@finalout
+@titlepage
+@title org-pomodoro-extras: Extensions for org-pomodoro
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top org-pomodoro-extras: Extensions for org-pomodoro
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{org-pomodoro-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Functions
+
+* Timer formatting::
+* Silencing the killed notification::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{org-pomodoro-extras.el} extends @samp{org-pomodoro}, the Emacs implementation of the Pomodoro Technique integrated with Org mode task clocking. The standard @samp{org-pomodoro} package provides timers for work intervals (pomodoros) and breaks, but its modeline display and notification messages are not always ideal.
+
+This package addresses two specific annoyances:
+
+@itemize
+@item
+The default modeline format does not show how many pomodoros have been completed in the current session. The function @code{org-extras-pomodoro-format-timer} enriches the display with a pomodoro count (@ref{Timer formatting}).
+@item
+When a pomodoro is killed prematurely, the original notification includes a humorous but distracting message. A patch silences this in favor of a clean, empty notification body (@ref{Silencing the killed notification}).
+@end itemize
+
+The package depends on @samp{el-patch} for modifying built-in behavior.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Timer formatting::
+* Silencing the killed notification::
+@end menu
+
+@node Timer formatting
+@section Timer formatting
+
+@findex org-extras-pomodoro-format-timer
+The function @code{org-extras-pomodoro-format-timer} updates the variable @code{org-pomodoro-format} to include both the remaining time and the current pomodoro count. The resulting modeline display looks like @samp{🍅 24:15|3}, where @samp{24:15} is the time remaining and @samp{3} is the number of pomodoros completed so far.
+
+This function is intended to be called as advice on @code{org-pomodoro} itself, so that the count is refreshed each time a new pomodoro starts. Without this, the count shown in the modeline would be stale.
+
+@node Silencing the killed notification
+@section Silencing the killed notification
+
+@findex org-pomodoro-killed
+The function @code{org-pomodoro-killed} is patched via @samp{el-patch} to replace the original notification body (``One does not simply kill a pomodoro!'') with an empty string. The notification title (``Pomodoro killed.'') is preserved. All other behavior of the original function---resetting the timer, playing the killed sound, handling Org clock state, and running @code{org-pomodoro-killed-hook}---remains unchanged.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

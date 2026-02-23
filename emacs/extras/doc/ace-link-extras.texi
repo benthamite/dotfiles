@@ -1,0 +1,144 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename ace-link-extras.info
+@settitle ace-link-extras: Extensions for ace-link
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Ace Link Extras: (ace-link-extras). Extensions for ace-link.
+@end direntry
+
+@finalout
+@titlepage
+@title ace-link-extras: Extensions for ace-link
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top ace-link-extras: Extensions for ace-link
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{ace-link-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Commands::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Commands
+
+* mu4e link opening::
+* EWW link actions::
+* Org-roam link following::
+
+Functions
+
+* Link extraction::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{ace-link-extras.el} extends @samp{ace-link}, the package that uses @samp{avy} to let you jump to and open visible links with a few keystrokes. While @samp{ace-link} provides mode-specific commands for common contexts (Org, EWW, Info, etc.), it does not handle all the ways links may appear---for example, HTML emails rendered by @samp{w3m}, or the backlink sidebar of @samp{org-roam}.
+
+This package adds commands for four contexts:
+
+@itemize
+@item
+Opening links in @samp{mu4e} message buffers, with special handling for the @samp{w3m} HTML renderer (@ref{mu4e link opening}).
+@item
+Opening EWW links in an external browser or a new buffer (@ref{EWW link actions}).
+@item
+Following links in @samp{org-roam-mode} backlink buffers (@ref{Org-roam link following}).
+@end itemize
+
+@node Commands
+@chapter Commands
+
+@menu
+* mu4e link opening::
+* EWW link actions::
+* Org-roam link following::
+@end menu
+
+@node mu4e link opening
+@section mu4e link opening
+
+@findex ace-link-extras-mu4e
+When reading email in @samp{mu4e-view-mode}, the standard @code{ace-link-mu4e} command works well for most HTML renderers. However, if @code{mm-text-html-renderer} is set to @code{w3m}, the link collection mechanism differs: links are stored as @samp{w3m} text properties rather than @samp{shr} overlays.
+
+The command @code{ace-link-extras-mu4e} detects which renderer is active and adapts accordingly. When @samp{w3m} is the renderer, it collects links using @code{ace-link--w3m-collect}, lets you select one via @samp{avy}, and then opens the selected URL with @code{browse-url}. This means the link is opened according to your @code{browse-url-handlers} configuration (which may route it to @samp{eww}, Chrome, Firefox, or another browser) rather than being opened inside @samp{w3m} itself.
+
+When any other renderer is active, the command falls back to the standard @code{ace-link-mu4e} behavior.
+
+@node EWW link actions
+@section EWW link actions
+
+@findex ace-link-extras-eww-externally
+@findex ace-link-extras-eww-new-buffer
+The standard @code{ace-link-eww} command opens the selected link in the current @samp{eww} buffer. Two additional commands provide alternative targets:
+
+@itemize
+@item
+@code{ace-link-extras-eww-externally} opens the selected link using the browser specified by @code{browse-url-secondary-browser-function}. Internally, it passes a prefix argument of @samp{(4)} to @code{ace-link-eww}. Use this when you want to view a page in a full graphical browser without leaving your @samp{eww} session.
+
+@item
+@code{ace-link-extras-eww-new-buffer} opens the selected link in a new @samp{eww} buffer, preserving the current page. Internally, it passes a prefix argument of @samp{(16)} to @code{ace-link-eww}. This is useful when you want to keep multiple pages open for comparison.
+@end itemize
+
+@node Org-roam link following
+@section Org-roam link following
+
+@findex ace-link-extras-org-roam
+The @samp{org-roam} backlink sidebar (@samp{org-roam-mode} buffers) displays Org links that are not in a standard Org buffer, so @code{ace-link-org} alone does not handle the navigation correctly. The command @code{ace-link-extras-org-roam} uses @code{ace-link--org-collect} to gather link positions and @samp{avy} to let you select one, then calls @code{org-roam-preview-visit} to navigate to the linked node.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Link extraction::
+@end menu
+
+@node Link extraction
+@section Link extraction
+
+@findex ace-link-extras-w3m-get-url
+The function @code{ace-link-extras-w3m-get-url} extracts a URL from a @samp{w3m}-rendered buffer. It uses @samp{avy} to let you select a link from those collected by @code{ace-link--w3m-collect}, then returns the URL string from the @samp{w3m-href-anchor} text property at the selected position. This function is called internally by @code{ace-link-extras-mu4e} (@ref{mu4e link opening}).
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

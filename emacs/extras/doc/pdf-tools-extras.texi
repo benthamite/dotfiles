@@ -1,0 +1,162 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename pdf-tools-extras.info
+@settitle pdf-tools-extras: Extensions for pdf-tools
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* PDF Tools Extras: (pdf-tools-extras). Extensions for pdf-tools.
+@end direntry
+
+@finalout
+@titlepage
+@title pdf-tools-extras: Extensions for pdf-tools
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top pdf-tools-extras: Extensions for pdf-tools
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{pdf-tools-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Commands::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Commands
+
+* Text operations::
+* External interaction::
+* Ebib integration::
+
+Functions
+
+* Theme integration::
+* Word selection::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{pdf-tools-extras.el} extends the @samp{pdf-tools} package with commands and functions that improve everyday PDF workflows in Emacs. The built-in @samp{pdf-tools} is excellent for viewing and annotating PDFs, but certain operations---opening a PDF in an external viewer at the current page, extracting all text, adapting the display to the active theme---require additional code. This package fills those gaps.
+
+The main areas of functionality are:
+
+@itemize
+@item
+Theme integration: automatically toggling midnight mode to match the active Modus theme (@ref{Theme integration}).
+@item
+Text operations: counting words, copying text with DWIM behavior, and enhanced highlight annotations (@ref{Text operations}).
+@item
+External interaction: opening the PDF in an external viewer at the current page, toggling @samp{writeroom-mode}, deleting the file (@ref{External interaction}).
+@item
+Ebib integration: jumping from a PDF to the corresponding Bib@TeX{} entry (@ref{Ebib integration}).
+@item
+Experimental word selection via double-click (@ref{Word selection}).
+@end itemize
+
+The package depends on @samp{pdf-tools} and optionally integrates with @samp{modus-themes}, @samp{writeroom-mode}, and @samp{ebib-extras.el}.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Text operations::
+* External interaction::
+* Ebib integration::
+@end menu
+
+@node Text operations
+@section Text operations
+
+@findex pdf-tools-extras-count-words
+When you need a quick word count for a PDF, the command @code{pdf-tools-extras-count-words} extracts the text with the external @samp{pdftotext} utility, pipes it through @samp{wc -w}, copies the result to the kill ring, and displays it in the echo area. This is handy for checking the length of a paper or report without leaving Emacs.
+
+@findex pdf-tools-extras-copy-dwim
+The command @code{pdf-tools-extras-copy-dwim} copies PDF text to the kill ring with do-what-I-mean behavior. If a region is active (selected with the mouse or keyboard in the PDF view), it copies only the selected text via @code{pdf-view-kill-ring-save}. If no region is active, it extracts the entire document text using @code{tlon-convert-pdf}, joins lines that were broken mid-sentence, and copies the result. A message confirms that the full text was copied.
+
+@findex pdf-annot-extras-add-highlight-markup-annotation
+Highlighting a passage in a PDF and then separately copying the text is a two-step operation in vanilla @samp{pdf-tools}. The command @code{pdf-annot-extras-add-highlight-markup-annotation} combines both steps: it creates a highlight annotation on the active region and simultaneously copies the highlighted text to the kill ring. It accepts optional COLOR and PROPERTY-ALIST arguments, just like the underlying @code{pdf-annot-add-markup-annotation}.
+
+@node External interaction
+@section External interaction
+
+@findex pdf-tools-extras-open-externally
+Sometimes you need to view a PDF in a dedicated external application, for example to use features not available in Emacs. The command @code{pdf-tools-extras-open-externally} opens the current PDF in the system's default viewer. On macOS, if the @samp{opentopage} script is installed in @samp{~/bin}, the PDF opens at the current page. Otherwise it falls back to a plain @samp{open} command.
+
+@findex pdf-tools-extras-toggle-writeroom
+For distraction-free reading, @code{pdf-tools-extras-toggle-writeroom} toggles @samp{writeroom-mode} with a fixed width of 120 columns and then calls @code{pdf-view-fit-height-to-window} to adjust the PDF display. This provides a clean reading environment without the need to manually configure @samp{writeroom-mode} settings.
+
+@findex pdf-tools-extras-delete
+The command @code{pdf-tools-extras-delete} permanently deletes the PDF file underlying the current buffer. It asks for confirmation with @code{yes-or-no-p} before proceeding. If confirmed, it deletes the file and kills the buffer. Use this when triaging downloaded papers that you do not wish to keep.
+
+@node Ebib integration
+@section Ebib integration
+
+@findex pdf-tools-extras-open-in-ebib
+If your PDF files are named after Bib@TeX{} keys (e.g., @samp{Smith2023.pdf} corresponds to the key @samp{Smith2023}), the command @code{pdf-tools-extras-open-in-ebib} extracts the base name of the current PDF and calls @code{ebib-extras-open-key} to jump to that entry in @samp{ebib}. It signals an error if the current buffer is not in @code{pdf-view-mode}. See @samp{ebib-extras.el} for the entry-opening logic.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Theme integration::
+* Word selection::
+@end menu
+
+@node Theme integration
+@section Theme integration
+
+@findex pdf-tools-extras-apply-theme
+Reading a bright-white PDF in a dark Emacs theme is unpleasant, and @samp{pdf-tools} provides @code{pdf-view-midnight-minor-mode} to invert colors. The function @code{pdf-tools-extras-apply-theme} inspects the currently active Modus theme and enables midnight mode if the theme has a dark background, or disables it for a light background. This function is intended to be called from a theme-change hook so that PDFs automatically adapt when you switch themes.
+
+Internally, it calls @code{modus-themes-get-current-theme} and reads the @samp{:background-mode} property from the theme's metadata to determine whether the theme is dark or light.
+
+@node Word selection
+@section Word selection
+
+@vindex pdf-tools-extras-sel-mode-map
+@findex pdf-tools-extras-sel-mouse
+The file includes an experimental minor mode @code{pdf-tools-extras-sel-mode} that binds double-click (@samp{[double-mouse-1]}) to @code{pdf-tools-extras-sel-mouse}. This command selects the word under the mouse cursor in the PDF and copies it to the kill ring using @code{pdf-info-getselection} and @code{pdf-info-gettext} with the @samp{'word} selection granularity.
+
+As noted in the source code, this feature is experimental: double-clicking sometimes selects more text than the intended word, and upstream @samp{pdf-tools} may eventually incorporate similar functionality. The mode is enabled globally at load time.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

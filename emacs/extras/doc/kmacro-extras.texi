@@ -1,0 +1,109 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename kmacro-extras.info
+@settitle kmacro-extras: Extensions for keyboard macros
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Kmacro Extras: (kmacro-extras). Extensions for keyboard macros.
+@end direntry
+
+@finalout
+@titlepage
+@title kmacro-extras: Extensions for keyboard macros
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top kmacro-extras: Extensions for keyboard macros
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{kmacro-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Commands::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Commands
+
+* Toggling the counter format::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{kmacro-extras.el} extends Emacs' built-in keyboard macro system
+(@samp{kmacro.el}).  The stock macro counter can insert sequential numbers
+(1, 2, 3, @dots{}) during macro execution, but switching to alphabetical
+sequences (a, b, c, @dots{}) requires manually changing the counter format
+and resetting the counter value---two separate operations that are easy
+to forget.  This package wraps both steps into a single toggle command.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Toggling the counter format::
+@end menu
+
+@node Toggling the counter format
+@section Toggling the counter format
+
+@findex kmacro-extras-counter-toggle-alpha-number
+The command @code{kmacro-extras-counter-toggle-alpha-number} switches the
+keyboard macro counter between numeric and alphabetical mode:
+
+@itemize
+@item
+When the current format is numeric (@samp{%d}), the command sets the
+format to @samp{%c} (character) and resets the counter to 97, the ASCII
+code for @samp{a}.  Subsequent insertions via @code{kmacro-insert-counter}
+will produce @samp{a}, @samp{b}, @samp{c}, and so on.
+@item
+When the current format is alphabetical (@samp{%c}), the command sets it
+back to @samp{%d} and resets the counter to 1.
+@end itemize
+
+This is especially handy when you need to label items with letters in
+one macro and switch back to numbers for the next, without
+interrupting your editing flow.  A confirmation message (@samp{"Set to
+alphabetical"} or @samp{"Set to numeric"}) is displayed in the echo area
+after each toggle.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

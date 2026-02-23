@@ -1,0 +1,176 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename browse-url-extras.info
+@settitle browse-url-extras: Extensions for browse-url
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Browse URL Extras: (browse-url-extras). Extensions for browse-url.
+@end direntry
+
+@finalout
+@titlepage
+@title browse-url-extras: Extensions for browse-url
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top browse-url-extras: Extensions for browse-url
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{browse-url-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Commands::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* @code{browse-url-extras-browse-url-default-file}::
+* @code{browse-url-extras-browse-url-firefox-file}::
+
+Commands
+
+* Browser routing::
+* Adding domains::
+* External browsing::
+
+Functions
+
+* Configuration helpers::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{browse-url-extras.el} extends Emacs' built-in @samp{browse-url} library with fine-grained control over which browser opens which URLs. By default, Emacs sends all URLs to the same browser function, but many users prefer to open certain domains in their system browser or in Firefox while keeping everything else in EWW@. This package makes that easy by reading domain lists from plain text files and configuring @code{browse-url-handlers} accordingly.
+
+The package depends on @samp{browse-url}, @samp{eww}, @samp{paths}, @samp{f}, and @samp{s}.
+
+The main capabilities are:
+
+@itemize
+@item
+@strong{Per-domain browser routing.} Maintaining lists of domains that should open in the default system browser or in Firefox, loaded from configuration files (@ref{Browser routing}).
+@item
+@strong{Interactive domain management.} Adding the current page's domain to an external browser list with a single command (@ref{Adding domains}).
+@item
+@strong{External browsing.} Opening the current EWW or xwidget-webkit URL in an external browser, or opening URLs in the background (@ref{External browsing}).
+@end itemize
+
+@node User options
+@chapter User options
+
+@menu
+* @code{browse-url-extras-browse-url-default-file}::
+* @code{browse-url-extras-browse-url-firefox-file}::
+@end menu
+
+@node @code{browse-url-extras-browse-url-default-file}
+@section @code{browse-url-extras-browse-url-default-file}
+
+@vindex browse-url-extras-browse-url-default-file
+The user option @code{browse-url-extras-browse-url-default-file} specifies the path to a plain text file listing domains (one per line) that should be opened with the system's default browser via @code{browse-url-default-browser}. When you encounter a domain that EWW handles poorly, you can add it to this file.
+
+The default value points to @samp{etc/browse-url-default.txt} in the Emacs configuration directory (via @code{paths-dir-dotemacs}). The type is a file path.
+
+@node @code{browse-url-extras-browse-url-firefox-file}
+@section @code{browse-url-extras-browse-url-firefox-file}
+
+@vindex browse-url-extras-browse-url-firefox-file
+The user option @code{browse-url-extras-browse-url-firefox-file} specifies the path to a plain text file listing domains that should be opened specifically in Firefox via @code{browse-url-firefox}. This is useful for domains that require Firefox-specific features or extensions.
+
+The default value points to @samp{etc/browse-url-firefox.txt} in the Emacs configuration directory. The type is a file path.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Browser routing::
+* Adding domains::
+* External browsing::
+@end menu
+
+@node Browser routing
+@section Browser routing
+
+@findex browse-url-extras-set-domains-to-open-externally
+The command @code{browse-url-extras-set-domains-to-open-externally} reads the domain lists from @code{browse-url-extras-browse-url-default-file} and @code{browse-url-extras-browse-url-firefox-file} (@ref{User options}) and configures @code{browse-url-handlers} so that matching URLs are routed to the appropriate external browser. It clears any existing handlers before rebuilding the list.
+
+This command is called automatically when @samp{browse-url-extras.el} is loaded and after adding a new domain with @code{browse-url-extras-add-domain-to-open-externally} (@ref{Adding domains}).
+
+@node Adding domains
+@section Adding domains
+
+@findex browse-url-extras-add-domain-to-open-externally
+The command @code{browse-url-extras-add-domain-to-open-externally} provides a convenient way to add a domain to one of the external browser lists without leaving Emacs. It determines a candidate domain by checking the current EWW URL or the first item in the kill ring, then prompts for confirmation or editing.
+
+By default, the domain is added to the default browser list (@code{browse-url-extras-browse-url-default-file}). With a prefix argument, it is added to the Firefox list (@code{browse-url-extras-browse-url-firefox-file}) instead. After writing the domain to the file, the command refreshes @code{browse-url-handlers} via @code{browse-url-extras-set-domains-to-open-externally} (@ref{Browser routing}) and opens the original URL in the newly configured browser.
+
+@node External browsing
+@section External browsing
+
+@findex browse-url-extras-of-dired-file-externally
+@findex browse-extras-browse-url-externally
+@findex browse-url-open-externally-in-background
+The command @code{browse-url-extras-of-dired-file-externally} opens the file at point in a Dired buffer using the system's default external browser. It temporarily overrides @code{browse-url-browser-function} with @code{browse-url-default-browser} and delegates to the standard @code{browse-url-of-dired-file}. This is useful for HTML files that you want to view in a real browser rather than EWW@.
+
+The command @code{browse-extras-browse-url-externally} opens the URL of the current EWW page or xwidget-webkit session in an external browser, using the function specified by @code{browse-url-secondary-browser-function}. You can also pass a URL argument directly. This is handy when you are reading a page in EWW and realize it requires a full browser for JavaScript-heavy content or forms.
+
+The command @code{browse-url-open-externally-in-background} opens a URL in Firefox on macOS without bringing it to the foreground, using the @samp{open -a Firefox --background} shell command. When called interactively, it prompts for a URL@. This is useful for queuing pages to read later without disrupting your current workflow.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Configuration helpers::
+@end menu
+
+@node Configuration helpers
+@section Configuration helpers
+
+@findex browse-url-extras-set-handler
+@findex browse-url-extras-write-url-to-file
+The function @code{browse-url-extras-set-handler} reads a URLS-FILE (one domain per line) and adds entries to @code{browse-url-handlers} mapping each domain (as a quoted regexp) to the specified HANDLER function. It is called by @code{browse-url-extras-set-domains-to-open-externally} (@ref{Browser routing}) for each browser configuration file.
+
+The function @code{browse-url-extras-write-url-to-file} appends a URL string to a FILE, then cleans up the file by removing blank lines, eliminating duplicates, and sorting alphabetically. It is used by @code{browse-url-extras-add-domain-to-open-externally} (@ref{Adding domains}) to maintain tidy domain lists.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

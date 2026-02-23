@@ -1,0 +1,249 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename telega-extras.info
+@settitle telega-extras: Extensions for telega
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Telega Extras: (telega-extras). Extensions for telega.
+@end direntry
+
+@finalout
+@titlepage
+@title telega-extras: Extensions for telega
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top telega-extras: Extensions for telega
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{telega-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Commands::
+* Functions::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* Auto-sharing audio transcripts::
+* Chat configuration::
+
+Commands
+
+* Switching to telega::
+* Smart enter::
+* Viewing archive and main chat lists::
+* Org capture integration::
+* Sending files from Dired::
+* Downloading attachments::
+* Audio transcription::
+* Chat and topic navigation::
+
+Functions
+
+* Tab-bar integration::
+* Chat and topic lookup::
+* Audio transcript helpers::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{telega-extras.el} extends the @samp{telega} package, an Emacs client for the Telegram messaging service. While @samp{telega} provides a comprehensive Telegram interface, this package adds convenience commands and integrations that streamline daily messaging workflows:
+
+@itemize
+@item
+An intelligent buffer-switching command that cycles through chat, root, and archive buffers (@ref{Switching to telega}).
+@item
+Context-sensitive actions on URLs, buttons, and message input (@ref{Smart enter}).
+@item
+Capturing Telegram messages into Org mode (@ref{Org capture integration}).
+@item
+Sending files from Dired as Telegram attachments with automatic type detection (@ref{Sending files from Dired}).
+@item
+Audio message transcription with optional automatic sharing (@ref{Audio transcription}).
+@item
+Quick access to predefined chats and topics via a transient menu (@ref{Chat and topic navigation}).
+@end itemize
+
+The package depends on @samp{paths} and @samp{telega}.
+
+@node User options
+@chapter User options
+
+@menu
+* Auto-sharing audio transcripts::
+* Chat configuration::
+@end menu
+
+@node Auto-sharing audio transcripts
+@section Auto-sharing audio transcripts
+
+@vindex telega-extras-auto-share-audio-transcript
+The user option @code{telega-extras-auto-share-audio-transcript} controls whether the transcript of a voice note is automatically posted as a reply after transcription. When set to non-@code{nil}, and when the transcribed message was sent by you, the transcript is shared as a reply once it becomes available. The default value is @code{nil}, meaning transcripts are obtained but not automatically shared.
+
+This option only takes effect when using @code{telega-extras-transcribe-audio} (@ref{Audio transcription}).
+
+@node Chat configuration
+@section Chat configuration
+
+@vindex telega-extras-chats
+The user option @code{telega-extras-chats} stores a plist describing Telegram chats and their topics. Each chat entry includes a name (string), an ID (integer), and optionally a nested plist of topics with their own names and IDs. This data is used by @code{telega-extras-open-chat} and the transient menu (@ref{Chat and topic navigation}) to navigate directly to specific chats or topic threads.
+
+The default value is @code{nil}. You should populate this option with the chats you access most frequently. The chat and topic IDs can be obtained from the Telegram API or from @samp{telega} itself.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Switching to telega::
+* Smart enter::
+* Viewing archive and main chat lists::
+* Org capture integration::
+* Sending files from Dired::
+* Downloading attachments::
+* Audio transcription::
+* Chat and topic navigation::
+@end menu
+
+@node Switching to telega
+@section Switching to telega
+
+@findex telega-extras-switch-to
+The command @code{telega-extras-switch-to} provides an intelligent way to navigate the various @samp{telega} buffers with a single key binding. Its behavior depends on the current context:
+
+@itemize
+@item
+If no @samp{telega} buffer exists, it starts @samp{telega}.
+@item
+If a @samp{telega} buffer exists but is not the current buffer, it switches to it.
+@item
+If the current buffer is a chat buffer and point is not at the end, it moves point to the end (to see the latest messages). If point is already at the end, it kills the chat buffer and returns to the root buffer.
+@item
+If the current buffer is the root buffer showing the archive, repeated invocations move point to the top and then reset the filter back to the main view.
+@item
+If the current buffer is the root buffer showing the main view, it moves point to the top.
+@end itemize
+
+This cycling behavior means a single key binding is sufficient for all common navigation between @samp{telega} buffers.
+
+@node Smart enter
+@section Smart enter
+
+@findex telega-extras-smart-enter
+The command @code{telega-extras-smart-enter} performs a context-dependent action in a @samp{telega} chat buffer. If point is on a URL, it opens the URL with @code{browse-url-at-point}. If point is on a button, it activates the button with @code{push-button}. Otherwise, it sends the content of the input area as a message via @code{telega-chatbuf-input-send}. This provides a unified ``do the right thing'' key binding for the most common actions in a chat buffer.
+
+@node Viewing archive and main chat lists
+@section Viewing archive and main chat lists
+
+@findex telega-extras-view-archive
+@findex telega-extras-view-main
+The command @code{telega-extras-view-archive} resets the active filters in the @samp{telega} root buffer and applies the @samp{archive} filter, showing only archived chats. The command @code{telega-extras-view-main} does the same but applies the @samp{main} filter, restoring the default view. These commands provide direct access to the two primary chat lists without navigating through @samp{telega}'s filter interface.
+
+@node Org capture integration
+@section Org capture integration
+
+@findex telega-extras-chat-org-capture
+The command @code{telega-extras-chat-org-capture} captures the Telegram message at point into an Org mode note. It first stores an Org link to the message with @code{org-store-link} and then invokes @code{org-capture} with the @samp{"n"} template key. This assumes you have an Org capture template bound to @samp{"n"} that is configured to use the stored link. The command is useful for saving important messages or action items from conversations into your Org workflow.
+
+@node Sending files from Dired
+@section Sending files from Dired
+
+@findex telega-extras-dired-attach-send
+When you have files marked in a Dired buffer that you want to send via Telegram, the command @code{telega-extras-dired-attach-send} handles the entire process. It retrieves the marked files, prompts you to select a destination chat, and attaches each file using the appropriate @samp{telega} attachment function based on the file extension: audio files (@samp{.mp3}, @samp{.flac}) are attached as audio, video files (@samp{.mp4}, @samp{.mkv}) as video, images as photos, and everything else as generic files.
+
+@findex telega-extras-chatbuf-attach-most-recent-file
+The command @code{telega-extras-chatbuf-attach-most-recent-file} is a convenience for the common case of wanting to send the most recently downloaded file. It finds the newest file in the downloads directory (specified by @code{paths-dir-downloads}, using @code{files-extras-newest-file} from @samp{files-extras.el}) and attaches it to the current chat buffer. If the downloads directory is empty, it signals an error.
+
+@node Downloading attachments
+@section Downloading attachments
+
+@findex telega-extras-download-file
+The command @code{telega-extras-download-file} downloads the file attachment from the message at point (or from an optionally provided MESSAGE argument) using @code{telega-msg-save}. This provides a quick way to save an attachment without navigating through @samp{telega}'s menu system.
+
+@node Audio transcription
+@section Audio transcription
+
+@findex telega-extras-transcribe-audio
+The command @code{telega-extras-transcribe-audio} initiates speech recognition for a voice note message. It checks that the message at point (or the provided MESSAGE argument) is indeed a voice note, then calls the internal @code{telega--recognizeSpeech} function to request transcription from Telegram's servers.
+
+If @code{telega-extras-auto-share-audio-transcript} is non-@code{nil} and the message was sent by the current user, the command also sets up a polling mechanism that checks every 5 seconds (for up to 60 seconds) whether the transcript has become available. Once ready, the transcript is automatically posted as a reply to the original voice note (@ref{Auto-sharing audio transcripts}).
+
+@node Chat and topic navigation
+@section Chat and topic navigation
+
+@findex telega-extras-menu
+The command @code{telega-extras-menu} displays a transient menu for quickly opening predefined chats and topics. The menu entries are derived from the @code{telega-extras-chats} user option (@ref{Chat configuration}). Selecting an item calls @code{telega-extras-open-chat}, which starts @samp{telega} if needed, navigates to the specified chat, and optionally opens a topic thread within it.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Tab-bar integration::
+* Chat and topic lookup::
+* Audio transcript helpers::
+@end menu
+
+@node Tab-bar integration
+@section Tab-bar integration
+
+@findex telega-extras-reset-tab-bar
+The function @code{telega-extras-reset-tab-bar} schedules a tab-bar reset (via @code{tab-bar-extras-quick-reset} from @samp{tab-bar-extras.el}) one second after it is called. This is intended to be run after @samp{telega} loads, because @samp{telega} may add elements to the tab bar that require a refresh to display correctly.
+
+@node Chat and topic lookup
+@section Chat and topic lookup
+
+@findex telega-extras-open-chat
+@findex telega-extras-get-id
+@findex telega-extras-get-last-topic-message
+The function @code{telega-extras-open-chat} opens a chat by name and optionally navigates to a topic within it. It looks up the chat and topic IDs from @code{telega-extras-chats} using @code{telega-extras-get-id}, then either opens the topic thread (via @code{telega-msg-open-thread-or-topic}) or the chat directly (via @code{telega-chat-with}).
+
+The function @code{telega-extras-get-id} translates chat and topic names into their numerical IDs by querying the @code{telega-extras-chats} plist. The function @code{telega-extras-get-last-topic-message} retrieves the last message in a given topic thread, which is needed to open the thread view.
+
+@node Audio transcript helpers
+@section Audio transcript helpers
+
+@findex telega-extras-get-audio-transcript
+@findex telega-extras-post-audio-transcript
+The function @code{telega-extras-get-audio-transcript} extracts the transcript text from a voice note message if speech recognition has completed. The function @code{telega-extras-post-audio-transcript} formats a transcript and sends it as a reply to the original message. These functions support the transcription workflow described in @ref{Audio transcription}.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

@@ -1,0 +1,148 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename citar-extras.info
+@settitle citar-extras: Extensions for Citar
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Citar Extras: (citar-extras). Extensions for Citar.
+@end direntry
+
+@finalout
+@titlepage
+@title citar-extras: Extensions for Citar
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top citar-extras: Extensions for Citar
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{citar-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Commands::
+* Visual indicators::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Commands
+
+* Ebib integration::
+* Cache management::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{citar-extras.el} extends @samp{citar}, the modern bibliography management interface for Emacs built on top of the @code{completing-read} API@. Where @samp{citar} focuses on selecting and acting on citation keys, @samp{citar-extras.el} bridges the gap between the @samp{citar} selection interface and other bibliography tools, particularly @samp{ebib}.
+
+The package provides three categories of functionality:
+
+@itemize
+@item
+@strong{Ebib integration.} Commands to open a bibliographic entry selected via the @samp{citar} completion UI directly in @samp{ebib}, or to navigate to its raw Bib@TeX{} definition in the source @samp{.bib} file (@ref{Ebib integration}).
+@item
+@strong{Cache management.} Commands to refresh the @samp{citar} bibliography cache for one or all configured bibliography files, which is useful after external edits to @samp{.bib} files (@ref{Cache management}).
+@item
+@strong{Visual indicators.} Custom indicator variables using @samp{nerd-icons} that display file, link, note, and citation status icons in the @samp{citar} selection UI (@ref{Visual indicators}).
+@end itemize
+
+The package depends on @samp{citar} and @samp{paths}.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Ebib integration::
+* Cache management::
+@end menu
+
+@node Ebib integration
+@section Ebib integration
+
+@findex citar-extras-open-in-ebib
+@findex citar-extras-goto-bibtex-entry
+@findex citar-extras-move-entry-to-tlon
+The @samp{citar} interface provides a convenient way to search for and select bibliographic entries, but its built-in actions may not cover every workflow. The commands in this section let you use @samp{citar} as the selection front-end and then hand off to @samp{ebib} or the raw Bib@TeX{} file for further work.
+
+The command @code{citar-extras-open-in-ebib} prompts for a citation key using the @samp{citar} completion interface and opens the corresponding entry in @samp{ebib}. If @samp{ebib} is not already running, it starts it first. This is useful when you want to inspect or edit the full metadata of an entry in the rich @samp{ebib} interface after locating it through @samp{citar}.
+
+The command @code{citar-extras-goto-bibtex-entry} navigates directly to the Bib@TeX{} source definition of a selected entry. It determines which @samp{.bib} file contains the entry (using @code{ebib-extras-get-file-of-key} from @samp{bibtex-extras.el}), opens that file, and places point at the beginning of the entry. When called interactively without an argument, it prompts for a citation key. This command is helpful when you need to manually inspect or edit the raw Bib@TeX{} markup.
+
+The command @code{citar-extras-move-entry-to-tlon} selects a citation key via @samp{citar}, navigates to its Bib@TeX{} definition (using @code{citar-extras-goto-bibtex-entry}), and then calls @code{tlon-move-entry-to-fluid} to move the entry to the Tlon project bibliography. This supports a workflow where entries are triaged from a personal bibliography into a shared project collection.
+
+@node Cache management
+@section Cache management
+
+@findex citar-extras-refresh-bibliography
+@findex citar-extras-refresh-all-bibliographies
+The @samp{citar} package maintains an internal cache of parsed bibliography data for fast completion. When bibliography files are modified outside Emacs or by other tools, the cache may become stale. The commands in this section let you explicitly refresh it.
+
+The command @code{citar-extras-refresh-bibliography} refreshes the @samp{citar} cache for a single bibliography file. Interactively, it prompts for the file path. When called with a prefix argument (FORCE non-nil), the cache is rebuilt unconditionally, even if @samp{citar} believes it is up to date.
+
+The command @code{citar-extras-refresh-all-bibliographies} refreshes the cache for every bibliography file returned by @code{citar--bibliographies}. It accepts an optional FORCE prefix argument that is passed through to @code{citar-extras-refresh-bibliography} for each file (@ref{Cache management}).
+
+@node Visual indicators
+@chapter Visual indicators
+
+@vindex citar-extras-indicator-files-icons
+@vindex citar-extras-indicator-links-icons
+@vindex citar-extras-indicator-notes-icons
+@vindex citar-extras-indicator-cited-icons
+The @samp{citar} package supports displaying small indicator icons next to each candidate in the completion interface, showing at a glance whether an entry has associated files, links, notes, or is cited in the current document. @samp{citar-extras.el} defines four indicator variables that use icons from the @samp{nerd-icons} package, replacing the default plain-text indicators with visually distinctive glyphs.
+
+The variable @code{citar-extras-indicator-files-icons} displays a green file icon (@samp{nf-fa-file_o}) for entries that have associated files, as determined by @code{citar-has-files}.
+
+The variable @code{citar-extras-indicator-links-icons} displays an orange link icon (@samp{nf-fa-link}) for entries that have associated links, as determined by @code{citar-has-links}.
+
+The variable @code{citar-extras-indicator-notes-icons} displays a blue note icon (@samp{nf-cod-note}) for entries that have associated notes, as determined by @code{citar-has-notes}.
+
+The variable @code{citar-extras-indicator-cited-icons} displays a green circle icon (@samp{nf-fa-circle_o}) for entries that are cited in the current document, as determined by @code{citar-is-cited}.
+
+To use these indicators, set @code{citar-indicators} in your configuration:
+
+@lisp
+(setq citar-indicators
+      (list citar-extras-indicator-files-icons
+            citar-extras-indicator-links-icons
+            citar-extras-indicator-notes-icons
+            citar-extras-indicator-cited-icons))
+@end lisp
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

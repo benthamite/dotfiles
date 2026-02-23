@@ -16,24 +16,26 @@ I am not a programmer, let alone an Elisp hacker. My background is in the humani
 This configuration is an Org document that tangles to an Emacs Lisp init file. It is organized into thematic sections—package management, version control, display, text manipulation, and so on—each of which groups related package declarations together. In addition to built-in features and external packages, it loads dozens of “extras” files: personal Elisp libraries stored in the =emacs/extras/= directory and named after the package they extend (e.g. =org-extras=, =elfeed-extras=, =gptel-extras=). These files are loaded via the =use-personal-package= macro, a thin wrapper around =use-package= that fetches the corresponding file from this dotfiles repository. They let me keep custom commands, advices, and hooks close to the packages they relate to, without cluttering the main configuration file. For example, instead of piling dozens of custom =org-mode= commands and hooks into the =org= section of this file, I place them in =emacs/extras/org-extras.el= and load that file with a single =(use-personal-package org-extras)= declaration here. This structure also allows anyone to try out my configuration selectively and straightforwardly. Thus, if you’d like to install my =org= extensions, you can just add one of the following recipes to your own config (depending on which package manager or Emacs version you use):
 
 #+begin_src emacs-lisp :tangle no
-;; with vc (requires Emacs 30.1 or higher)
-(use-package org-extras
-  :vc (:url "https://github.com/benthamite/dotfiles"
-	    :lisp-dir "emacs/extras"
-	    :rev :newest))
-
 ;; with elpaca
 (use-package org-extras
   :ensure (:host github :repo "benthamite/dotfiles"
-		 :files ("emacs/extras/org-extras.el")))
+		 :files ("emacs/extras/org-extras.el"
+			 "emacs/extras/doc/org-extras.texi")))
 
 ;; with straight
 (use-package org-extras
   :straight (:host github :repo "benthamite/dotfiles"
-		   :files ("emacs/extras/org-extras.el")))
+		   :files ("emacs/extras/org-extras.el"
+			   "emacs/extras/doc/org-extras.texi")))
+
+;; with vc (requires Emacs 30.1 or higher; no Info manual)
+(use-package org-extras
+  :vc (:url "https://github.com/benthamite/dotfiles"
+	    :lisp-dir "emacs/extras"
+	    :rev :newest))
 #+end_src
 
-The extras come with their own manuals and user options: everything is documented and customizable. To read the manual for a given extras package, type =M-x info-display-manual RET= (or =C-h R=) and enter the package name (e.g. =org-extras=). You can also browse all available manuals with =M-x info RET= (=C-h i=).
+The extras come with their own manuals and user options: everything is documented and customizable. When installed via elpaca or straight, each package's Info manual is built and registered automatically. To read a manual, type =M-x info-display-manual RET= (or =C-h R=) and enter the package name (e.g. =org-extras=). You can also browse all available manuals with =M-x info RET= (=C-h i=). (The =:vc= recipe does not currently build Info manuals due to a limitation in =package-vc=.)
 
 * table of contents
 :PROPERTIES:
@@ -47,7 +49,6 @@ The extras come with their own manuals and user options: everything is documente
 - [[#package-management][package management]]
   - [[#elpaca][elpaca]]
   - [[#use-package][use-package]]
-  - [[#dotfiles-docs][dotfiles-docs]]
   - [[#use-package-extras][use-package-extras]]
   - [[#elpaca-extras][elpaca-extras]]
 - [[#foundational][foundational]]
@@ -722,36 +723,20 @@ CLOCK: [2021-04-03 Sat 19:35]--[2021-04-03 Sat 20:18] =>  0:43
     "Like `use-package' but to load personal packages.
 NAME and ARGS as in `use-package'."
     (declare (indent defun))
-    `(use-package ,name
-       :ensure (:host github
-                      :repo "benthamite/dotfiles"
-                      :files ,(list (file-name-concat
-                                     "emacs/extras"
-                                     (file-name-with-extension (symbol-name (eval `(quote ,name))) "el")))
-                      :depth nil)
-       ,@args)))
+    (let ((name-str (symbol-name (eval `(quote ,name)))))
+      `(use-package ,name
+         :ensure (:host github
+                        :repo "benthamite/dotfiles"
+                        :files ,(list (file-name-concat
+                                       "emacs/extras"
+                                       (file-name-with-extension name-str "el"))
+                                      (file-name-concat
+                                       "emacs/extras/doc"
+                                       (file-name-with-extension name-str "texi")))
+                        :depth nil)
+         ,@args))))
 
 (elpaca-wait)
-#+end_src
-
-** dotfiles-docs
-
-This build-only package generates Info manuals from the Org documentation in =emacs/extras/doc/=. The =:pre-build= step exports each Org file to Texinfo (=.texi=), and elpaca's built-in pipeline compiles the Texinfo to Info, generates a =dir= entry, and adds the resulting directory to Emacs's Info path.
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(elpaca (dotfiles-docs :host github
-                       :repo "benthamite/dotfiles"
-                       :files ("emacs/extras/doc/*.texi")
-                       :main nil
-                       :pre-build ((require 'ox-texinfo)
-                                   (dolist (f (directory-files "emacs/extras/doc" t "\\.org$"))
-                                     (with-current-buffer (find-file-noselect f)
-                                       (org-texinfo-export-to-texinfo))))
-                       :build (:not elpaca--byte-compile
-                                    elpaca--generate-autoloads-async
-                                    elpaca--activate-package
-                                    elpaca--queue-dependencies)
-                       :depth nil))
 #+end_src
 
 ** use-package-extras

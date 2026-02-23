@@ -664,7 +664,8 @@ This should be the path you set `org-roam-directory' to."
 
 (defcustom paths-files-bibliography-personal
   `(,paths-file-personal-bibliography-new
-    ,paths-file-personal-bibliography-old)
+    ,paths-file-personal-bibliography-old
+    "/Users/pablostafforini/Library/CloudStorage/Dropbox/bibliography/migration.bib")
   "List of personal bibliography files."
   :type '(repeat file)
   :group 'paths)

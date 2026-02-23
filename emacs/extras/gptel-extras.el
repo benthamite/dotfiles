@@ -194,8 +194,6 @@ Use to circumvent Gemini’s location restrictions."
 				'silently))
   (apply orig-fun args))
 
-(advice-add 'gptel-curl-get-response :around #'gptel-extras-set-mullvad)
-
 ;;;;; Save buffer
 
 (declare-function simple-extras-slugify "simple-extras")
@@ -268,8 +266,6 @@ To enable this feature, customize `gptel-extras-alert-when-finished'."
   (when (or (eq gptel-extras-alert-when-finished t)
             (memq gptel-model gptel-extras-alert-when-finished))
     (alert "Response inserted" :title "gptel")))
-
-(add-hook 'gptel-post-response-functions #'gptel-extras-alert-when-finished)
 
 ;;;;; Continue in new buffer
 
@@ -442,8 +438,6 @@ The files added is controlled by the user options
     (gptel-extras-add-repo-map-to-context))
   (when gptel-extras-add-conventions-to-context
     (gptel-extras-add-conventions-to-context)))
-
-(advice-add 'gptel-send :before #'gptel-extras-add-context-files)
 
 (defun gptel-extras-toggle-aider-files ()
   "Toggle inclusion or exclusion of Aider files."
@@ -643,8 +637,6 @@ specification plist."
               (when tail (push (pop tail) result)))))
         (setq fixed-spec (nreverse result))))
     (funcall orig-fn original fixed-spec)))
-
-(advice-add 'gptel--modify-value :around #'gptel-extras--modify-value-append-fix)
 
 ;;;;;; Filesystem tools
 

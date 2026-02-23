@@ -36,7 +36,5 @@
     (when (and (bufferp buf) (buffer-live-p buf))
       (kill-buffer buf))))
 
-(add-hook 'ediff-quit-hook 'ediff-extras-cleanup-buffers)
-
 (provide 'ediff-extras)
 ;;; ediff-extras.el ends here

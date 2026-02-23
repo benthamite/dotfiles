@@ -89,8 +89,6 @@ functionality in macOS."
 		 nil ;; Name of output buffer
 		 "*Trash Error Buffer*"))
 
-(advice-add 'system-move-file-to-trash :override #'files-extras-system-move-file-to-trash)
-
 (defun files-extras-save-and-revert-buffer ()
   "Save buffer, then revert it."
   (interactive)
@@ -103,8 +101,6 @@ functionality in macOS."
       t
     (bury-buffer)
     nil))
-
-(add-hook 'kill-buffer-query-functions #'files-extras-bury-scratch-buffer)
 
 ;; Adapted from `spacemacs/new-empty-buffer'.
 (autoload 'dired-get-filename "dired")
@@ -423,8 +419,6 @@ more intrusive alert."
   (let ((diff-switches "-u")) ;; unified diff
     (diff-buffer-with-file (current-buffer))))
 
-(advice-add 'recover-this-file :after #'files-extras-diff-buffer-with-file)
-
 (defun files-extras-copy-current-path ()
   "Copy the path of the current buffer to the kill ring."
   (interactive)
@@ -448,8 +442,6 @@ current buffer, or prompt the user for a file, in that order."
     (kill-new contents)
     (message "Copied contents of \"%s\" to the kill ring." file)))
 
-(add-hook 'find-file-hook #'files-extras-auto-save-alert)
-
 ;; reddit.com/r/emacs/comments/t07e7e/comment/hy88bum/?utm_source=reddit&utm_medium=web2x&context=3
 (defun files-extras-make-hashed-auto-save-file-name-a (fn)
   "Compress the `auto-save' file name so paths don't get too long.
@@ -461,8 +453,6 @@ FN is an argument in the adviced function."
 	     buffer-file-name
 	   (sha1 buffer-file-name))))
     (funcall fn)))
-
-(advice-add #'make-auto-save-file-name :around #'files-extras-make-hashed-auto-save-file-name-a)
 
 (defun files-extras-make-hashed-backup-file-name-a (fn file)
   "A few places use the backup file name so paths don't get too long.
@@ -480,8 +470,6 @@ FN and FILE are arguments in the adviced function."
 	  file
 	(expand-file-name (sha1 (file-name-nondirectory file))
 			  (file-name-directory file))))))
-
-(advice-add #'make-backup-file-name-1 :around #'files-extras-make-hashed-backup-file-name-a)
 
 (defun files-extras-open-buffer-files ()
   "Return the list of files currently open in Emacs."

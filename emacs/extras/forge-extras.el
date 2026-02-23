@@ -220,9 +220,6 @@ notifications are already fetched in that case."
        (forge-extras-message-debug
         "forge-extras-sync-unread-from-github: %S" err)))))
 
-(advice-add 'forge--ghub-update-notifications :after
-            #'forge-extras-sync-unread-from-github)
-
 ;;;;; Track repos
 
 (declare-function magit-status "magit-status")

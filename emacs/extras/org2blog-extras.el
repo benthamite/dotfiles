@@ -55,9 +55,6 @@ ORIG-FUN is the original function.  ARGS are the arguments."
     (when (y-or-n-p "Post has no ID. Proceed anyway? ")
       (apply orig-fun args))))
 
-(advice-add 'org2blog-subtree-post-save :around #'org2blog-extras-subtree-publish-save)
-(advice-add 'org2blog-subtree-page-save :around #'org2blog-extras-subtree-publish-save)
-
 (provide 'org2blog-extras)
 ;;; org2blog-extras.el ends here
 

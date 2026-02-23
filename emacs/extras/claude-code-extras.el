@@ -636,9 +636,6 @@ one."
 ;; Fix upstream scroll function: `(recenter)' centers the cursor mid-window,
 ;; which makes the view jump upward when there is scrollback above.  Using
 ;; `(recenter -1)' keeps the cursor at the bottom, matching terminal behavior.
-(advice-add 'claude-code--eat-synchronize-scroll :override
-            #'claude-code-extras--eat-synchronize-scroll)
-
 (defun claude-code-extras--eat-synchronize-scroll (windows)
   "Keep the terminal cursor at the bottom of WINDOWS.
 Like `claude-code--eat-synchronize-scroll' but uses (recenter -1)
@@ -659,16 +656,6 @@ the view from jumping to the middle of the buffer."
             (with-selected-window window
               (goto-char cursor-pos)
               (recenter -1)))))))))
-
-(setq claude-code-notification-function #'claude-code-extras-notify)
-(add-hook 'claude-code-event-hook #'claude-code-extras--handle-stop)
-(add-hook 'kill-buffer-query-functions #'claude-code-extras-protect-buffer)
-(add-hook 'claude-code-start-hook #'claude-code-extras-setup-kill-on-exit)
-(add-hook 'claude-code-start-hook #'claude-code-extras-start-logging)
-(add-hook 'claude-code-start-hook #'claude-code-extras-start-status-polling)
-(add-hook 'claude-code-start-hook #'claude-code-extras-set-modeline)
-(add-hook 'kill-buffer-hook #'claude-code-extras-stop-logging)
-(add-hook 'kill-buffer-hook #'claude-code-extras-stop-status-polling)
 
 (provide 'claude-code-extras)
 ;;; claude-code-extras.el ends here

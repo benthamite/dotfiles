@@ -11099,7 +11099,8 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
   :after oc
   :defer t
   :custom
-  (org-cite-csl-styles-dir paths-dir-tlon-csl-styles))
+  (org-cite-csl-styles-dir paths-dir-tlon-csl-styles)
+  (org-cite-csl-locales-dir paths-dir-tlon-csl-locales))
 #+end_src
 
 ** citeproc

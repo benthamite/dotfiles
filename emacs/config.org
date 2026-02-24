@@ -11086,7 +11086,7 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
   (org-cite-follow-processor 'citar) ; `org-open-at-point' integration
   (org-cite-activate-processor 'citar) ;
   (org-cite-export-processors
-   '((t . (csl "long.csl")))))
+   '((t . (csl "long-template.csl")))))
 #+end_src
 
 ** oc-csl

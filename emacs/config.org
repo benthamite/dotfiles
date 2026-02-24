@@ -619,7 +619,7 @@ The contents of this code block are tangled to the ~early-init.el~ file.
 :ID:       0A714FC1-D562-4E41-A000-D5F369EBEBBD
 :END:
 
-** elpaca
+** =elpaca=
 :PROPERTIES:
 :ID:       9CF1D7BB-62B0-4F7C-BB5A-A695BFD4D58D
 :END:
@@ -690,7 +690,7 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
 (setq elpaca-lock-file (file-name-concat (file-name-directory (directory-file-name elpaca-directory)) "lockfile.el"))
 #+end_src
 
-** use-package
+** =use-package=
 :PROPERTIES:
 :ID:       C53EA5F9-B256-480E-9BCB-7AD2D0D5DDC2
 :END:
@@ -739,7 +739,7 @@ NAME and ARGS as in `use-package'."
 (elpaca-wait)
 #+end_src
 
-** use-package-extras
+** =use-package-extras=
 :PROPERTIES:
 :ID:       A1D2F9BE-0983-4CE8-89C2-6727149F3268
 :END:
@@ -753,7 +753,7 @@ NAME and ARGS as in `use-package'."
   (init-post-init-hook . use-package-extras-display-startup-time))
 #+end_src
 
-** elpaca-extras
+** =elpaca-extras=
 :PROPERTIES:
 :ID:       9A6A90C2-ACB6-4899-B38C-1C483A4FFE06
 :END:
@@ -772,7 +772,7 @@ NAME and ARGS as in `use-package'."
 :PROPERTIES:
 :ID:       B2CADEA2-F8B7-4E8E-8FB0-D6B59658933D
 :END:
-** gcmh
+** =gcmh=
 :PROPERTIES:
 :ID:       A8BBF291-D5CE-4FF2-B80C-B69570AD129D
 :END:
@@ -785,7 +785,7 @@ NAME and ARGS as in `use-package'."
   (gcmh-mode))
 #+end_src
 
-** seq
+** =seq=
 :PROPERTIES:
 :ID:       FD3A9A18-BDB8-4D52-9F5C-8E040FA042A2
 :END:
@@ -807,7 +807,7 @@ NAME and ARGS as in `use-package'."
   :ensure `(seq :build ,(elpaca-seq-build-steps)))
 #+end_src
 
-** paths
+** =paths=
 :PROPERTIES:
 :ID:       9D90809B-4CCF-4058-BB8B-396CF12B6E3F
 :END:
@@ -818,7 +818,7 @@ NAME and ARGS as in `use-package'."
 (use-personal-package paths)
 #+end_src
 
-** transient
+** =transient=
 :PROPERTIES:
 :ID:       E21AC33E-D108-4860-997C-A4982569005E
 :END:
@@ -841,7 +841,7 @@ NAME and ARGS as in `use-package'."
         ("M-q" . transient-quit-one)))
 #+end_src
 
-** init
+** =init=
 :PROPERTIES:
 :ID:       BCE74006-DDB4-4AF5-AAFA-D44BC6AF55A7
 :END:
@@ -863,7 +863,7 @@ NAME and ARGS as in `use-package'."
   ("A-n" . init-menu))
 #+end_src
 
-** no-littering
+** =no-littering=
 :PROPERTIES:
 :ID:       21B40C49-BBD2-4E04-871B-BB578C92F71B
 :END:
@@ -888,7 +888,7 @@ NAME and ARGS as in `use-package'."
         `((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
 #+end_src
 
-** ns-win
+** =ns-win=
 :PROPERTIES:
 :ID:       3411777E-E554-4EF3-9389-63242D4F3072
 :END:
@@ -909,7 +909,7 @@ NAME and ARGS as in `use-package'."
   (ns-use-proxy-icon nil))
 #+end_src
 
-** iso-transl
+** =iso-transl=
 :PROPERTIES:
 :ID:       0A62A6C8-D3D8-4960-A809-35B60A479D2B
 :END:
@@ -930,7 +930,7 @@ NAME and ARGS as in `use-package'."
     (keymap-unset key-translation-map (concat "A-" char))))
 #+end_src
 
-** el-patch
+** =el-patch=
 :PROPERTIES:
 :ID:       554FC4A9-4993-495F-A154-DBC01A11747D
 :END:
@@ -945,7 +945,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 (use-package el-patch)
 #+end_src
 
-** casual
+** =casual=
 :PROPERTIES:
 :ID:       53C5FB12-8D49-44D6-84B2-9D43F9201761
 :END:
@@ -963,7 +963,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
                ("C-o" . casual-calc-tmenu))))
 #+end_src
 
-** warnings
+** =warnings=
 :PROPERTIES:
 :ID:       C8FB5BC6-6895-4D63-86A8-E49D6BB3001C
 :END:
@@ -982,7 +982,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
                             (yasnippet backquote-change))))
 #+end_src
 
-** comp
+** =comp=
 :PROPERTIES:
 :ID:       191AB5FC-F979-4B71-84A0-D8FC108CEBD3
 :END:
@@ -995,7 +995,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
   (native-comp-async-report-warnings-errors nil))
 #+end_src
 
-** bytecomp
+** =bytecomp=
 :PROPERTIES:
 :ID:       630FB32E-8D10-47C5-98EB-B436C6CF97D9
 :END:
@@ -1008,7 +1008,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
   (byte-compile-warnings '(cl-functions)))
 #+end_src
 
-** startup
+** =startup=
 :PROPERTIES:
 :ID:       853A9EBB-356D-428E-AC94-F14BBDA78FB4
 :END:
@@ -1025,7 +1025,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
   (frame-resize-pixelwise t))
 #+end_src
 
-** server
+** =server=
 :PROPERTIES:
 :ID:       8514378A-0BA2-4A8E-971F-10C07ED4D38A
 :END:
@@ -1040,7 +1040,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
     (server-start)))
 #+end_src
 
-** async
+** =async=
 :PROPERTIES:
 :ID:       B37674EC-9F35-4425-A587-F8D1944894EA
 :END:
@@ -1052,12 +1052,12 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
   :defer t)
 #+end_src
 
-** prot-common
+** =prot-common=
 :PROPERTIES:
 :ID:       300DFB2C-878E-4F21-833C-327C9DFDC01B
 :END:
 
-[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-common.el][prot-common]] /is a set of functions used by Protesilaos Stavrou's unreleased "packages"./
+@@hugo:*@@[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-common.el][prot-common]] is a set of functions used by Protesilaos Stavrou's unreleased "packages".@@hugo:*@@
 
 Note Prot's clarification:
 
@@ -1075,12 +1075,12 @@ Remember that every piece of Elisp that I write is for my own educational and re
            :files ("emacs/.emacs.d/prot-lisp/prot-common.el")))
 #+end_src
 
-** prot-simple
+** =prot-simple=
 :PROPERTIES:
 :ID:       6C67743E-7250-4BC5-B496-2D969EF2D015
 :END:
 
-[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-simple.el][prot-simple]] /is a set of common commands used by Protesilaos Stavrou's unreleased "packages"./
+@@hugo:*@@[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-simple.el][prot-simple]] is a set of common commands used by Protesilaos Stavrou's unreleased "packages".@@hugo:*@@
 
 Note Prot's clarification:
 
@@ -1106,7 +1106,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
    ("A-C-H-j" . prot-simple-mark-sexp)))
 #+end_src
 
-** bug-hunter
+** =bug-hunter=
 :PROPERTIES:
 :ID:       99AEB81C-6099-4E25-AF5B-F60A02E62607
 :END:
@@ -1119,7 +1119,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
   :defer t)
 #+end_src
 
-** inheritenv
+** =inheritenv=
 :PROPERTIES:
 :ID:       40FDF355-604D-4189-A839-68DB8A27837E
 :END:
@@ -1132,7 +1132,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
   :defer t)
 #+end_src
 
-** misc
+** =misc=
 :PROPERTIES:
 :ID:       72D2BA33-0E12-4893-B790-B132CE2F9404
 :END:
@@ -1201,7 +1201,7 @@ CLOCK: [2021-10-03 Sun 18:50]--[2021-10-03 Sun 19:05] =>  0:15
 CLOCK: [2021-04-05 Mon 21:50]--[2021-04-05 Mon 22:15] =>  0:25
 :END:
 
-** profiler
+** =profiler=
 :PROPERTIES:
 :ID:       82CFBDD5-12E8-46EC-ADF8-2769E59B5DD8
 :END:
@@ -1214,7 +1214,7 @@ CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
   :defer t)
 #+end_src
 
-** profiler-extras
+** =profiler-extras=
 :PROPERTIES:
 :ID:       21CE8D7E-377F-49AD-A864-D7926F462D4E
 :END:
@@ -1229,7 +1229,7 @@ CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
    ("<backtab>" . profiler-extras-profiler-report-toggle-entry-global)))
 #+end_src
 
-** so-long
+** =so-long=
 :PROPERTIES:
 :ID:       F738DFB0-AA9C-47B5-9D3B-DC22EF83D357
 :END:
@@ -1245,7 +1245,7 @@ CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
   (find-file-hook . global-so-long-mode))
 #+end_src
 
-** misc.
+** =misc.=
 :PROPERTIES:
 :ID:       1EA302FA-D0A2-470C-82C2-47FCA4E04FAF
 :END:
@@ -1271,7 +1271,7 @@ Partly borrowed from [[https://gitlab.com/protesilaos/dotfiles/-/blob/350ca3144c
 :LOGBOOK:
 :END:
 
-** plstore
+** =plstore=
 :PROPERTIES:
 :ID:       5257E611-7953-4898-B743-25803EC7D9B4
 :END:
@@ -1287,7 +1287,7 @@ This feature is required by =org-gcal=. We create a new GPG key to use with =org
   (add-to-list 'plstore-encrypt-to "A7C6A908CD1254A8B4051D3DCDBBB523C9627A26"))
 #+end_src
 
-** epg-config
+** =epg-config=
 :PROPERTIES:
 :ID:       012F15A3-7717-4B09-9F43-74DA6F5F7C1A
 :END:
@@ -1301,7 +1301,7 @@ This feature is required by =org-gcal=. We create a new GPG key to use with =org
   (epg-gpg-program "/opt/homebrew/bin/gpg"))
 #+end_src
 
-** auth-source
+** =auth-source=
 :PROPERTIES:
 :ID:       291F9998-9940-4249-A048-92B5F2A2895E
 :END:
@@ -1323,7 +1323,7 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
   (auth-sources '(macos-keychain-internet macos-keychain-generic)))
 #+end_src
 
-** oauth2-auto
+** =oauth2-auto=
 :PROPERTIES:
 :ID:       C7B36982-D472-4248-8C61-B7EB0ED6ACF6
 :END:
@@ -1340,7 +1340,7 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
   (oauth2-auto-plstore (no-littering-expand-var-file-name "oauth2-auto.plist")))
 #+end_src
 
-** pass
+** =pass=
 :PROPERTIES:
 :ID:       518D3C1F-AFD6-4B72-8980-CAD10BBAEDDE
 :END:
@@ -1380,7 +1380,7 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
    ("s-s" . server-edit)))
 #+end_src
 
-** pass-extras
+** =pass-extras=
 :PROPERTIES:
 :ID:       524FE3D7-EA5B-408E-A338-68E633528632
 :END:
@@ -1397,7 +1397,7 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
         ("I" . pass-extras-insert-generated-no-symbols)))
 #+end_src
 
-** password-store-otp
+** =password-store-otp=
 :PROPERTIES:
 :ID:       761A0B71-DA6A-42A1-8137-F4C857F029F0
 :END:
@@ -1410,7 +1410,7 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
   :after pass)
 #+end_src
 
-** auth-source-pass
+** =auth-source-pass=
 :PROPERTIES:
 :ID:       00772E1B-A97C-46B5-8DE9-77462AAE0189
 :END:
@@ -1433,7 +1433,7 @@ CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
   (doom-modeline-before-github-fetch-notification-hook . auth-source-pass-enable))
 #+end_src
 
-** password-generator
+** =password-generator=
 :PROPERTIES:
 :ID:       D1CAD413-7307-49C4-86BC-48EF397C083C
 :END:
@@ -1454,7 +1454,7 @@ CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
 :LOGBOOK:
 :END:
 
-** vc
+** =vc=
 :PROPERTIES:
 :ID:       B9E38DFD-09DC-4DB2-B710-44DB6F00D9DC
 :END:
@@ -1482,7 +1482,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
            "Library/CloudStorage/Dropbox/")))
 #+end_src
 
-** vc-extras
+** =vc-extras=
 :PROPERTIES:
 :ID:       A7254905-0FBE-4F8F-8D93-1A5D1FA95BB9
 :END:
@@ -1499,7 +1499,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
   ("A-v" . vc-extras-menu))
 #+end_src
 
-** log-edit
+** =log-edit=
 :PROPERTIES:
 :ID:       FABAB5ED-7883-4F95-B3A2-3EB8F07DD33F
 :END:
@@ -1514,7 +1514,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
     (add-to-list 'savehist-additional-variables 'log-edit-comment-ring)))
 #+end_src
 
-** diff-mode
+** =diff-mode=
 :PROPERTIES:
 :ID:       33F1D5AA-3DA7-43EC-8ACD-0D8360445459
 :END:
@@ -1529,7 +1529,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
    ("M-o" . nil)))
 #+end_src
 
-** ediff
+** =ediff=
 :PROPERTIES:
 :ID:       987C9066-28ED-4B5A-944C-A90681182264
 :END:
@@ -1553,7 +1553,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
   (("A-d" . ediff)))
 #+end_src
 
-** ediff-extras
+** =ediff-extras=
 :PROPERTIES:
 :ID:       BFD82441-5547-45C5-AD36-E5DE9FDD4898
 :END:
@@ -1566,7 +1566,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
   :demand t)
 #+end_src
 
-** smerge
+** =smerge=
 :PROPERTIES:
 :ID:       FE85CC7E-E2A0-4494-8D1E-A64A4C40013E
 :END:
@@ -1585,7 +1585,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
         ("s-c" . smerge-keep-current)))
 #+end_src
 
-** gh
+** =gh=
 :PROPERTIES:
 :ID:       8FCB87B4-2396-4A9A-8638-AEA8A5818252
 :END:
@@ -1596,7 +1596,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
   :defer t) ; github.com/progfolio/elpaca/issues/229
 #+end_src
 
-** closql
+** =closql=
 :PROPERTIES:
 :ID:       917EA2B7-565D-4BC9-94BF-2BE6F1D9B9BC
 :END:
@@ -1608,7 +1608,7 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
   :defer t)
 #+end_src
 
-** magit
+** =magit=
 :PROPERTIES:
 :ID:       B662CE1B-3F94-486E-A3DE-052775035960
 :END:
@@ -1695,7 +1695,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
 - https://tvraman.github.io/emacspeak/blog/github-quick-workflow.html
 - [[https://prathamesh.tech/2019/06/21/creating-pull-requests-from-emacs/][Creating pull requests from emacs]]
 
-** magit-extra
+** =magit-extra=
 :PROPERTIES:
 :ID:       DFB5D4F4-0BF8-4C1F-8C3C-1A3992387CBC
 :END:
@@ -1716,7 +1716,7 @@ Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magi
   ("s-p" . magit-extras-with-editor-finish-and-push))
 #+end_src
 
-** magit-todos
+** =magit-todos=
 :PROPERTIES:
 :ID:       63750AFE-71E9-4BFA-A127-F3FAA5BD5954
 :END:
@@ -1744,7 +1744,7 @@ Running with --debug will show why files are being skipped.
   (magit-todos-mode))
 #+end_src
 
-** with-editor
+** =with-editor=
 :PROPERTIES:
 :ID:       48431AA9-2ABE-403C-9E91-68066B24CB26
 :END:
@@ -1758,7 +1758,7 @@ Running with --debug will show why files are being skipped.
          ("C-c C-c" . with-editor-finish)))
 #+end_src
 
-** ghub
+** =ghub=
 :PROPERTIES:
 :ID:       C557A862-9EC7-406C-98E1-C248F7D579F5
 :END:
@@ -1776,7 +1776,7 @@ Running with --debug will show why files are being skipped.
   (require 'pass))
 #+end_src
 
-** forge
+** =forge=
 :PROPERTIES:
 :ID:       F6F60AE4-9FEA-4179-922C-CC649BC752A4
 :END:
@@ -1910,7 +1910,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
         ("s-t" . forge-topic-set-title)))
 #+end_src
 
-** orgit
+** =orgit=
 :PROPERTIES:
 :ID:       92DF0F69-73D6-4234-B227-02D0DE120F46
 :END:
@@ -1923,7 +1923,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :defer t)
 #+end_src
 
-** orgit-forge
+** =orgit-forge=
 :PROPERTIES:
 :ID:       8D2CFDBF-4DD1-412C-A9F0-0D9393156A11
 :END:
@@ -1936,7 +1936,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :ensure (:build (:not elpaca--check-version)))
 #+end_src
 
-** forge-search
+** =forge-search=
 :PROPERTIES:
 :ID:       1E83FDA2-3529-4189-8F5D-6B3388A45AE4
 :END:
@@ -1955,7 +1955,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
         ("A-C-s-f" . magit-section-forward-sibling)))
 #+end_src
 
-** forge-extras
+** =forge-extras=
 :PROPERTIES:
 :ID:       B74712E7-2A8C-4D17-8FD4-C854C88D3D72
 :END:
@@ -2004,7 +2004,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
         ("s-x" . forge-extras-state-set-dwim)))
 #+end_src
 
-** emacs-pr-review
+** =emacs-pr-review=
 :PROPERTIES:
 :ID:       56FB9BF0-5E8A-4D4E-8D1A-DDD2AE2A8B4C
 :END:
@@ -2018,7 +2018,7 @@ See [[https://gitlab.com/magus/mes/-/blob/8615353ec007bd66209ee1ae3badddd26d3a3d
   :after forge)
 #+end_src
 
-** git-auto-commit-mode
+** =git-auto-commit-mode=
 :PROPERTIES:
 :ID:       FCB4DDAC-CD47-48CE-BA0F-96C0574C458A
 :END:
@@ -2035,7 +2035,7 @@ See [[https://gitlab.com/magus/mes/-/blob/8615353ec007bd66209ee1ae3badddd26d3a3d
   (setq-default gac-automatically-add-new-files-p t))
 #+end_src
 
-** emsg-blame
+** =emsg-blame=
 :PROPERTIES:
 :ID:       CF62CF9F-66EC-4E1D-81C4-ECCB85AD5BCE
 :END:
@@ -2097,7 +2097,7 @@ CLOCK: [2021-03-28 Sun 19:21]--[2021-03-28 Sun 19:35] =>  0:14
 (setq-default line-spacing 2)
 #+end_src
 
-** fringe
+** =fringe=
 :PROPERTIES:
 :ID:       A0748A82-CE1C-4700-95E1-610B6CA7F8E0
 :END:
@@ -2118,7 +2118,7 @@ CLOCK: [2021-03-28 Sun 19:21]--[2021-03-28 Sun 19:35] =>  0:14
                   (unknown . question-mark))))
 #+end_src
 
-** faces
+** =faces=
 :PROPERTIES:
 :ID:       168A61B0-4580-443D-B04F-78F08EFA0458
 :END:
@@ -2144,7 +2144,7 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 - [[https://out-of-cheese-error.netlify.app/spacemacs-config][An Annotated Spacemacs - For an org-mode workflow ·]]
 - [[https://zzamboni.org/post/beautifying-org-mode-in-emacs/][- zzamboni.org | Beautifying Org Mode in Emacs]]
 
-** faces-extras
+** =faces-extras=
 :PROPERTIES:
 :ID:       9478C42B-7864-4F53-BD17-5EBEC2A55DB8
 :END:
@@ -2169,7 +2169,7 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
   ("C-h C-f" . faces-extras-describe-face))
 #+end_src
 
-** org-modern
+** =org-modern=
 :PROPERTIES:
 :ID:       FB673B28-FB6D-48EE-97B8-1E9C5D9F32FD
 :END:
@@ -2208,7 +2208,7 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
   (global-org-modern-mode))
 #+end_src
 
-** org-modern-indent
+** =org-modern-indent=
 :PROPERTIES:
 :ID:       740E3E7F-BF38-484E-BBD6-BF9AEC978612
 :END:
@@ -2223,7 +2223,7 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
   :hook org-mode-hook)
 #+end_src
 
-** org-indent-pixel
+** =org-indent-pixel=
 :PROPERTIES:
 :ID:       AB8B85E9-8521-4F0B-B4FC-F27F3EEF392B
 :END:
@@ -2238,7 +2238,7 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
   (org-indent-pixel-setup))
 #+end_src
 
-** org-tidy
+** =org-tidy=
 :PROPERTIES:
 :ID:       04545CB2-85AE-472E-BAB7-9013189598E7
 :END:
@@ -2258,7 +2258,7 @@ CLOCK: [2023-11-05 Sun 13:34]--[2023-11-05 Sun 13:59] =>  0:25
   :hook org-mode-hook)
 #+end_src
 
-** org-appear
+** =org-appear=
 :PROPERTIES:
 :ID:       9F84EE2C-F5E7-4935-912E-5D286B897C19
 :END:
@@ -2271,7 +2271,7 @@ CLOCK: [2023-11-05 Sun 13:34]--[2023-11-05 Sun 13:59] =>  0:25
   :hook org-mode-hook)
 #+end_src
 
-** face-remap
+** =face-remap=
 :PROPERTIES:
 :ID:       A999E839-CB99-4BC3-BB40-962B17683EDE
 :END:
@@ -2294,7 +2294,7 @@ CLOCK: [2023-11-05 Sun 13:34]--[2023-11-05 Sun 13:59] =>  0:25
         ("-" . text-scale-decrease)))
 #+end_src
 
-** modus-themes
+** =modus-themes=
 :PROPERTIES:
 :ID:       95665A5E-A88C-4DCA-BDDD-84DC436A1E80
 :END:
@@ -2334,7 +2334,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
   ("A-u" . modus-themes-toggle))
 #+end_src
 
-** modus-themes-extras
+** =modus-themes-extras=
 :PROPERTIES:
 :ID:       9EB47A74-CEFE-4929-B990-F88A57D57A1D
 :END:
@@ -2356,7 +2356,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
   (modus-themes-after-load-theme-hook . modus-themes-extras-set-faces))
 #+end_src
 
-** highlight-parentheses
+** =highlight-parentheses=
 :PROPERTIES:
 :ID:       2B0F192C-2147-4CF6-AE69-73C1D85FEB77
 :END:
@@ -2378,7 +2378,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
   (minibuffer-setup-hook . highlight-parentheses-minibuffer-setup))
 #+end_src
 
-** spacious-padding
+** =spacious-padding=
 :PROPERTIES:
 :ID:       7CEDA166-BA43-49E6-99EB-0F24766398F6
 :END:
@@ -2395,7 +2395,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
   (spacious-padding-mode))
 #+end_src
 
-** emoji
+** =emoji=
 :PROPERTIES:
 :ID:       6B52C1E5-898C-48C6-AB4C-4BFDE8C5A0B5
 :END:
@@ -2408,7 +2408,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
   ("H-E" . emoji-search))
 #+end_src
 
-** color
+** =color=
 :PROPERTIES:
 :ID:       83EC4A72-3E64-403B-9196-339DD0EB202E
 :END:
@@ -2419,7 +2419,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 (use-feature color)
 #+end_src
 
-** color-extras
+** =color-extras=
 :PROPERTIES:
 :ID:       0873C089-B832-4EB2-BAFF-2D3CF0268AE4
 :END:
@@ -2434,7 +2434,7 @@ Note that the loading of ~color~ cannot be deferred, since it is required by ~pu
   :defer 30)
 #+end_src
 
-** rainbow-mode
+** =rainbow-mode=
 :PROPERTIES:
 :ID:       9FCB7FE9-D305-4658-922E-72C4D9F4C4A2
 :END:
@@ -2449,7 +2449,7 @@ Note that the loading of ~color~ cannot be deferred, since it is required by ~pu
   (rainbow-x-colors nil))
 #+end_src
 
-** ct
+** =ct=
 :PROPERTIES:
 :ID:       7C288815-B02D-4386-888B-0FC350E90C1E
 :END:
@@ -2462,7 +2462,7 @@ Note that the loading of ~color~ cannot be deferred, since it is required by ~pu
   :after color-extras)
 #+end_src
 
-** hsluv
+** =hsluv=
 :PROPERTIES:
 :ID:       F35ACEE0-5AB8-4643-A3E2-A2E9ED7B9CB9
 :END:
@@ -2475,7 +2475,7 @@ Note that the loading of ~color~ cannot be deferred, since it is required by ~pu
   :after color-extras)
 #+end_src
 
-** image
+** =image=
 :PROPERTIES:
 :ID:       E1A616FF-7D93-4AB4-AD44-44FB6550FD2E
 :END:
@@ -2495,7 +2495,7 @@ Note that the loading of ~color~ cannot be deferred, since it is required by ~pu
         ("-" . image-decrease-size)))
 #+end_src
 
-** image-mode
+** =image-mode=
 :PROPERTIES:
 :ID:       DE1E96EB-4F0B-4C8C-8827-C436B8EAB43F
 :END:
@@ -2507,7 +2507,7 @@ Note that the loading of ~color~ cannot be deferred, since it is required by ~pu
         ("c" . dired-extras-copy-image)))
 #+end_src
 
-** paren
+** =paren=
 :PROPERTIES:
 :ID:       E39A1AC5-7BF7-4995-B116-BB6323C7605F
 :END:
@@ -2524,7 +2524,7 @@ Note that the loading of ~color~ cannot be deferred, since it is required by ~pu
   (show-paren-mode))
 #+end_src
 
-** doom-modeline
+** =doom-modeline=
 :PROPERTIES:
 :ID:       C3D90EBC-EB70-440E-9718-A2832FF9F077
 :END:
@@ -2567,7 +2567,7 @@ Here’s a screenshot illustrating the modeline and tab bar in action (click to 
     (remove-hook (car cons) (cdr cons))))
 #+end_src
 
-** doom-modeline-extras
+** =doom-modeline-extras=
 :PROPERTIES:
 :ID:       AA94A6D8-DD39-415C-9E34-5793F44B9FF9
 :END:
@@ -2598,7 +2598,7 @@ Here’s a screenshot illustrating the modeline and tab bar in action (click to 
   (doom-modeline-mode))
 #+end_src
 
-** tab-bar
+** =tab-bar=
 :PROPERTIES:
 :ID:       F8B7C324-C5CF-4DBD-A527-92101BDA70AB
 :END:
@@ -2635,7 +2635,7 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
        (tab-bar-mode))))
 #+end_src
 
-** tab-bar-extras
+** =tab-bar-extras=
 :PROPERTIES:
 :ID:       97CCF169-9F3B-40A4-BB81-220DDE6DB1DB
 :END:
@@ -2671,7 +2671,7 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
        (run-with-timer 1 nil #'tab-bar-extras-quick-reset))))
 #+end_src
 
-** breadcrumb
+** =breadcrumb=
 :PROPERTIES:
 :ID:       483A0D4F-B273-449C-BCB0-E8703AC45FC5
 :END:
@@ -2690,7 +2690,7 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
   (breadcrumb-mode))
 #+end_src
 
-** battery
+** =battery=
 :PROPERTIES:
 :ID:       6507FA19-D87D-41B9-AC04-598E87370416
 :END:
@@ -2702,7 +2702,7 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
   (display-battery-mode))
 #+end_src
 
-** nerd-icons
+** =nerd-icons=
 :PROPERTIES:
 :ID:       0C470436-3327-4B81-89DA-005449893FF4
 :END:
@@ -2716,7 +2716,7 @@ Note that the icons need to be installed via =nerd-icons-install-fonts=. If you 
   :defer t)
 #+end_src
 
-** menu-bar
+** =menu-bar=
 :PROPERTIES:
 :ID:       08F1FCC3-7287-43B6-B455-C2D4377848E7
 :END:
@@ -2727,7 +2727,7 @@ Note that the icons need to be installed via =nerd-icons-install-fonts=. If you 
   (menu-bar-mode -1))
 #+end_src
 
-** tool-bar
+** =tool-bar=
 :PROPERTIES:
 :ID:       EBE7677A-4C70-4312-816A-E9F8E5999078
 :END:
@@ -2738,7 +2738,7 @@ Note that the icons need to be installed via =nerd-icons-install-fonts=. If you 
   (tool-bar-mode -1))
 #+end_src
 
-** scroll-bar
+** =scroll-bar=
 :PROPERTIES:
 :ID:       0AE186DB-0FC3-4B1B-B38E-7597B97A8DBA
 :END:
@@ -2749,7 +2749,7 @@ Note that the icons need to be installed via =nerd-icons-install-fonts=. If you 
   (scroll-bar-mode -1))
 #+end_src
 
-** pixel-scroll
+** =pixel-scroll=
 :PROPERTIES:
 :ID:       167D3771-8128-4601-A9FE-F22B4D62CDA5
 :END:
@@ -2762,7 +2762,7 @@ Note that the icons need to be installed via =nerd-icons-install-fonts=. If you 
   (pixel-scroll-precision-mode))
 #+end_src
 
-** delsel
+** =delsel=
 :PROPERTIES:
 :ID:       6473F2BF-059F-464B-859E-B8DA91B81DE2
 :END:
@@ -2775,7 +2775,7 @@ Note that the icons need to be installed via =nerd-icons-install-fonts=. If you 
   (delete-selection-mode))
 #+end_src
 
-** hl-line
+** =hl-line=
 :PROPERTIES:
 :ID:       EBCFE2FC-27B4-4C30-9D2A-A841B34271F7
 :END:
@@ -2787,7 +2787,7 @@ Note that the icons need to be installed via =nerd-icons-install-fonts=. If you 
   (ledger-reconcile-mode-hook . hl-line-mode))
 #+end_src
 
-** lin
+** =lin=
 :PROPERTIES:
 :ID:       FA8149A2-9984-4C39-AA81-120317615E86
 :END:
@@ -2822,7 +2822,7 @@ CLOCK: [2022-09-12 Mon 16:21]--[2022-09-12 Mon 16:30] =>  0:09
   (init-post-init-hook . lin-global-mode))
 #+end_src
 
-** jit-lock
+** =jit-lock=
 :PROPERTIES:
 :ID:       66598B06-4BB1-4E7C-AE36-7CE81E4CBF5A
 :END:
@@ -2850,7 +2850,7 @@ CLOCK: [2022-07-11 Mon 12:37]--[2022-07-11 Mon 12:43] =>  0:06
 CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
 :END:
 
-** words
+** =words=
 :PROPERTIES:
 :ID:       3493B00B-C36E-406F-B681-F145FD1684B2
 :END:
@@ -2862,7 +2862,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
    ("A-C-s-u" . backward-word)))
 #+end_src
 
-** lines
+** =lines=
 :PROPERTIES:
 :ID:       73DC1518-87FD-48D7-9EE5-C863126905AD
 :END:
@@ -2952,7 +2952,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
    ("A-C-s-/" . move-end-of-line)))
 #+end_src
 
-** sentences
+** =sentences=
 :PROPERTIES:
 :ID:       9BCDE791-E716-4CFE-AED3-4E4E4874DDDE
 :END:
@@ -2964,7 +2964,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
    ("A-C-s-o" . forward-sentence)))
 #+end_src
 
-** paragraphs
+** =paragraphs=
 :PROPERTIES:
 :ID:       E10CAF75-4C0C-4910-856F-39707E30A565
 :END:
@@ -2976,7 +2976,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
    ("A-C-s-." . forward-paragraph)))
 #+end_src
 
-** sexps
+** =sexps=
 :PROPERTIES:
 :ID:       DF16B7CC-E0CF-4062-A0C2-93CBE83F619C
 :END:
@@ -2989,7 +2989,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
    ))
 #+end_src
 
-** defuns
+** =defuns=
 :PROPERTIES:
 :ID:       868B32C0-52FC-4131-9191-DD43BEAABCEA
 :END:
@@ -3001,7 +3001,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
    ("A-C-s-s" . end-of-defun)))
 #+end_src
 
-** buffers
+** =buffers=
 :PROPERTIES:
 :ID:       E71DE3A8-E941-4864-8224-2326C22E3AEB
 :END:
@@ -3031,7 +3031,7 @@ CLOCK: [2021-04-03 Sat 18:54]--[2021-04-03 Sat 18:55] =>  0:01
 CLOCK: [2021-03-22 Mon 20:56]--[2021-03-22 Mon 21:16] =>  0:20
 :END:
 
-** simple
+** =simple=
 :PROPERTIES:
 :ID:       E2461097-8125-471E-A987-139F0D3EBEAA
 :END:
@@ -3073,7 +3073,7 @@ CLOCK: [2021-03-22 Mon 20:56]--[2021-03-22 Mon 21:16] =>  0:20
    ("s-C" . nil)))
 #+end_src
 
-** simple-extras
+** =simple-extras=
 :PROPERTIES:
 :ID:       791A7EFE-DE33-4E5D-A99B-22CA63C31ACA
 :END:
@@ -3163,7 +3163,7 @@ CLOCK: [2021-05-29 Sat 19:02]--[2021-05-29 Sat 19:52] =>  0:50
    ("C-w" . simple-extras-narrow-or-widen-dwim)))
 #+end_src
 
-** paragraphs
+** =paragraphs=
 :PROPERTIES:
 :ID:       2B3DDC12-D660-47EF-BA22-8B1419A5F5D2
 :END:
@@ -3239,7 +3239,7 @@ CLOCK: [2021-05-29 Sat 22:17]--[2021-05-29 Sat 23:00] =>  0:43
 :ID:       D06BE38F-DFC1-47DC-8F2C-FE2F1A437227
 :END:
 
-** simple
+** =simple=
 :PROPERTIES:
 :ID:       D3A1830F-6A23-4DD3-99D3-2E582B79EA35
 :END:
@@ -3278,7 +3278,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
    ("H-z" . undo-only)))
 #+end_src
 
-** rect
+** =rect=
 :PROPERTIES:
 :ID:       CAA53E10-D4A2-41F4-8B5F-77649D125E54
 :END:
@@ -3288,7 +3288,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
   :bind ("C-x r w" . copy-rectangle-as-kill))
 #+end_src
 
-** repeat
+** =repeat=
 :PROPERTIES:
 :ID:       000730A4-2F70-4842-BD3E-2B843875D6EB
 :END:
@@ -3300,7 +3300,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
    ("A-M-r" . repeat-complex-command)))
 #+end_src
 
-** view
+** =view=
 :PROPERTIES:
 :ID:       796E696E-E797-4EDF-B4AC-2436507A1EFC
 :END:
@@ -3311,7 +3311,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
   ("M-A-v" . view-mode))
 #+end_src
 
-** sort
+** =sort=
 :PROPERTIES:
 :ID:       64011AE8-B6DF-413B-A8CD-EF4E133272BD
 :END:
@@ -3325,7 +3325,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
   ("C-t" . sort-lines))
 #+end_src
 
-** vundo
+** =vundo=
 :PROPERTIES:
 :ID:       616AD0A8-0098-4147-927E-E2A47B18A65E
 :END:
@@ -3348,7 +3348,7 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
    ("l" . vundo-next)))
 #+end_src
 
-** outline
+** =outline=
 :PROPERTIES:
 :ID:       286464A9-EB12-4351-A980-D9D837BDEABB
 :END:
@@ -3391,7 +3391,7 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
         ("C-H-M-s-r" . outline-demote)))
 #+end_src
 
-** outline-extras
+** =outline-extras=
 :PROPERTIES:
 :ID:       8BC3FF58-62AD-43E9-87A0-B886F20B428A
 :END:
@@ -3403,7 +3403,7 @@ CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
   :after outline)
 #+end_src
 
-** outli
+** =outli=
 :PROPERTIES:
 :ID:       FEACA323-B5F2-4DBB-890C-41EA39E6794B
 :END:
@@ -3447,7 +3447,7 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
   :hook emacs-lisp-mode-hook)
 #+end_src
 
-** thingatpt
+** =thingatpt=
 :PROPERTIES:
 :ID:       EBF1F423-911C-470B-940A-EC8586481BC5
 :END:
@@ -3464,7 +3464,7 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
     (setq thing-at-point-url-path-regexp "[^]\t\n \"'<>[^`{}、。！？]*[^]\t\n \"'<>[^`{}.,;、。！？]+")))
 #+end_src
 
-** abbrev
+** =abbrev=
 :PROPERTIES:
 :ID:       2D69896F-CF17-4D0C-BEFE-E7C473FB1C2B
 :END:
@@ -3482,7 +3482,7 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
   (abbrev-table-put text-mode-abbrev-table :case-fixed t))
 #+end_src
 
-** abbrev-extras
+** =abbrev-extras=
 :PROPERTIES:
 :ID:       50BEF838-0ECD-42E1-9B26-A17FB4E44EA3
 :END:
@@ -3494,7 +3494,7 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
   :after abbrev)
 #+end_src
 
-** yasnippet
+** =yasnippet=
 :PROPERTIES:
 :ID:       6405B8E7-6612-4D71-8C2C-A51F8808F4C6
 :END:
@@ -3556,7 +3556,7 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
   ("C-y" . yas-new-snippet))
 #+end_src
 
-** yasnippet-snippets
+** =yasnippet-snippets=
 :PROPERTIES:
 :ID:       E3499A47-009A-4A52-9134-2067C79FFBC8
 :END:
@@ -3568,7 +3568,7 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
   :after yasnippet)
 #+end_src
 
-** expand-region
+** =expand-region=
 :PROPERTIES:
 :ID:       8C9AE82C-9B5D-44D7-8FEE-1738032AD3C0
 :END:
@@ -3586,7 +3586,7 @@ CLOCK: [2021-06-03 Thu 15:47]--[2021-06-03 Thu 16:04] =>  0:17
    ("C-H-s-h" . er/contract-region)))
 #+end_src
 
-** newcomment
+** =newcomment=
 :PROPERTIES:
 :ID:       C079E18F-8A96-4A3E-8024-C0F9E29CD182
 :END:
@@ -3597,7 +3597,7 @@ CLOCK: [2021-06-03 Thu 15:47]--[2021-06-03 Thu 16:04] =>  0:17
   ("M-/" . comment-line))
 #+end_src
 
-** skeleton
+** =skeleton=
 :PROPERTIES:
 :ID:       FCF33E87-02CA-4244-9220-D7E6CEE7F7EF
 :END:
@@ -3645,7 +3645,7 @@ The code block below specifies how certain characters should be paired either gl
    ("`" . skeleton-pair-insert-maybe)))
 #+end_src
 
-** crux
+** =crux=
 :PROPERTIES:
 :ID:       B7CD0E70-E601-4EEC-B51F-82F94ECA32BA
 :END:
@@ -3670,7 +3670,7 @@ CLOCK: [2021-06-25 Fri 21:17]--[2021-06-25 Fri 21:18] =>  0:01
    ("A-H-l" . crux-duplicate-current-line-or-region)))
 #+end_src
 
-** button
+** =button=
 :PROPERTIES:
 :ID:       38C9C0A7-5979-4656-879D-F71638FCF40D
 :END:
@@ -3687,7 +3687,7 @@ CLOCK: [2021-06-25 Fri 21:17]--[2021-06-25 Fri 21:18] =>  0:01
    ("M-RET" . push-button)))
 #+end_src
 
-** back-button
+** =back-button=
 :PROPERTIES:
 :ID:       59041577-18F8-4336-80FF-4CC8C7AA7814
 :END:
@@ -3706,7 +3706,7 @@ CLOCK: [2021-06-25 Fri 21:17]--[2021-06-25 Fri 21:18] =>  0:01
    ("H->" . back-button-global-forward)))
 #+end_src
 
-** goto-last-change
+** =goto-last-change=
 :PROPERTIES:
 :ID:       DD6DA81B-89B8-4881-A901-200A8CAF1974
 :END:
@@ -3722,7 +3722,7 @@ CLOCK: [2021-06-25 Fri 21:18]--[2021-06-25 Fri 21:19] =>  0:01
   ("C-z" . goto-last-change))
 #+end_src
 
-** goto-addr
+** =goto-addr=
 :PROPERTIES:
 :ID:       29DA9B62-C7A6-4B53-B49C-BE2C47D0F3AF
 :END:
@@ -3744,7 +3744,7 @@ CLOCK: [2021-07-29 Thu 16:15]--[2021-07-29 Thu 16:23] =>  0:08
 CLOCK: [2021-04-05 Mon 15:34]--[2021-04-05 Mon 15:35] =>  0:01
 :END:
 
-** register
+** =register=
 :PROPERTIES:
 :ID:       893A2A5B-707A-4C9A-9E25-414DC663F2CD
 :END:
@@ -3763,7 +3763,7 @@ CLOCK: [2021-07-30 Fri 21:16]--[2021-07-30 Fri 21:31] =>  0:15
     (add-to-list 'savehist-additional-variables 'register-alist)))
 #+end_src
 
-** register-extras
+** =register-extras=
 :PROPERTIES:
 :ID:       A2DCE7E0-6094-45FC-B5BE-AF3A0351D3CC
 :END:
@@ -3776,7 +3776,7 @@ CLOCK: [2021-07-30 Fri 21:16]--[2021-07-30 Fri 21:31] =>  0:15
   ("C-r" . register-extras-dispatch))
 #+end_src
 
-** bookmark
+** =bookmark=
 :PROPERTIES:
 :ID:       943D5DC0-7F0E-449C-8D21-089E051F1027
 :END:
@@ -3826,7 +3826,7 @@ CLOCK: [2021-03-22 Mon 21:49]--[2021-03-22 Mon 22:38] =>  0:49
 CLOCK: [2021-04-09 Fri 11:49]--[2021-04-09 Fri 11:49] =>  0:00
 :END:
 
-** files
+** =files=
 :PROPERTIES:
 :ID:       A7E824CC-5E71-4B12-A99B-D4C09CE164FF
 :END:
@@ -3901,7 +3901,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
    ("H-C-A-g" . keyboard-escape-quit))) ; ESC ESC ESC
 #+end_src
 
-** files-extras
+** =files-extras=
 :PROPERTIES:
 :ID:       DA1D9D59-0EE4-439E-BCC9-5A7C316794A2
 :END:
@@ -4003,7 +4003,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
                ("s-g" . files-extras-grammarly-open-in-external-editor))))
 #+end_src
 
-** locate
+** =locate=
 :PROPERTIES:
 :ID:       A0784673-AFD3-4111-AF83-C018CB12C897
 :END:
@@ -4015,7 +4015,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   (locate-command "mdfind")) ; use the OSX Spotlight backend
 #+end_src
 
-** autorevert
+** =autorevert=
 :PROPERTIES:
 :ID:       B4DE3D43-3085-4FA5-9DA4-1148CF49400C
 :END:
@@ -4032,7 +4032,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   (find-file-hook . global-auto-revert-mode))
 #+end_src
 
-** dired
+** =dired=
 :PROPERTIES:
 :ID:       617F5323-6518-4751-948B-3E8032D93130
 :END:
@@ -4119,7 +4119,7 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
         ("C-o" . nil)))
 #+end_src
 
-** dired-x
+** =dired-x=
 :PROPERTIES:
 :ID:       43A42081-7B3A-460D-A47D-52EE95202050
 :END:
@@ -4141,7 +4141,7 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
   (dired-mode-hook . dired-omit-mode))
 #+end_src
 
-** dired-extras
+** =dired-extras=
 :PROPERTIES:
 :ID:       DDF9A650-13A5-4C47-B2C5-6B376B75998D
 :END:
@@ -4168,7 +4168,7 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
    ("s-r" . dired-extras-copy-to-remote-docs-directory)))
 #+end_src
 
-** dired-aux
+** =dired-aux=
 :PROPERTIES:
 :ID:       F41AFC26-002A-4152-9FC7-E9AD92DF5BBA
 :END:
@@ -4180,7 +4180,7 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
   (push '("\\.rar\\'" "" "unar") dired-compress-file-suffixes)) ; with `unar' installed, `Z' uncompresses `rar' files
 #+end_src
 
-** dired-git-info
+** =dired-git-info=
 :PROPERTIES:
 :ID:       0A10074E-2431-4088-A3BB-8DF74A9FEEE5
 :END:
@@ -4199,7 +4199,7 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
         ("b" . dired-git-info-mode)))
 #+end_src
 
-** dired-du
+** =dired-du=
 :PROPERTIES:
 :ID:       22FCD9F4-A3EE-4605-BDB0-E90FC8471B21
 :END:
@@ -4219,7 +4219,7 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
         ("'" . dired-du-mode)))
 #+end_src
 
-** image-dired
+** =image-dired=
 :PROPERTIES:
 :ID:       E07C1115-1881-4D5F-8B88-613DA4FD38A8
 :END:
@@ -4241,7 +4241,7 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
         ("I" . dired-extras-image-dired-current-directory)))
 #+end_src
 
-** nerd-icons-dired
+** =nerd-icons-dired=
 :PROPERTIES:
 :ID:       C3F3F430-4DAE-4C77-907A-84B385CC3CCB
 :END:
@@ -4255,7 +4255,7 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
   (dired-mode-hook . nerd-icons-dired-mode))
 #+end_src
 
-** wdired
+** =wdired=
 :PROPERTIES:
 :ID:       B892CCBB-FB26-48A6-97BE-EF37CE8FB332
 :END:
@@ -4271,7 +4271,7 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
    ("<return>" . wdired-finish-edit)))
 #+end_src
 
-** gnus-dired
+** =gnus-dired=
 :PROPERTIES:
 :ID:       8AD56019-FF0A-407F-B610-F9F2F4DE1B90
 :END:
@@ -4297,7 +4297,7 @@ I use =mu4e= (see below) rather than =gnus= to handle email. However, a specific
         ("s-a" . gnus-dired-attach)))
 #+end_src
 
-** dired-hacks
+** =dired-hacks=
 :PROPERTIES:
 :ID:       C3E2CA62-26C4-4681-81D8-4326BE474717
 :END:
@@ -4326,7 +4326,7 @@ CLOCK: [2021-04-06 Tue 22:25]--[2021-04-06 Tue 22:35] =>  0:10
    ("<backtab>" . dired-subtree-cycle)))
 #+end_src
 
-** dired-quick-sort
+** =dired-quick-sort=
 :PROPERTIES:
 :ID:       9BF30679-50B1-4F78-BD6A-0DEF565D22A4
 :END:
@@ -4344,7 +4344,7 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
         ("T" . hydra-dired-quick-sort/body)))
 #+end_src
 
-** peep-dired
+** =peep-dired=
 :PROPERTIES:
 :ID:       B0502885-D248-47E7-BE4F-54F597EBD390
 :END:
@@ -4359,7 +4359,7 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
         ("F" . peep-dired)))
 #+end_src
 
-** minibuffer
+** =minibuffer=
 :PROPERTIES:
 :ID:       40F49ECD-7225-4AD2-9E07-16C5A5857FFF
 :END:
@@ -4384,7 +4384,7 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
         ("M-p" . nil)))
 #+end_src
 
-** ibuffer
+** =ibuffer=
 :PROPERTIES:
 :ID:       11E1F107-4D7A-40DE-AA8E-9D995A10A351
 :END:
@@ -4396,12 +4396,12 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
    ("k" . ibuffer-do-delete)))
 #+end_src
 
-** prot-scratch
+** =prot-scratch=
 :PROPERTIES:
 :ID:       FF8B73D7-0A56-44FE-8F66-DDD18C9D5CE1
 :END:
 
-[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-scratch.el][prot-scratch]] /supports scratch buffers for an editable major mode of choice./
+@@hugo:*@@[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-scratch.el][prot-scratch]] supports scratch buffers for an editable major mode of choice.@@hugo:*@@
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package prot-scratch
@@ -4418,7 +4418,7 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
   ("C-n" . prot-scratch-buffer))
 #+end_src
 
-** persistent-scratch
+** =persistent-scratch=
 :PROPERTIES:
 :ID:       ACB8DF75-3FC0-4780-A587-B173E4366F62
 :END:
@@ -4438,7 +4438,7 @@ I use this package in combination with =prot-scratch= (see above) to persist scr
   (persistent-scratch-setup-default))
 #+end_src
 
-** executable
+** =executable=
 :PROPERTIES:
 :ID:       0838A480-2BBF-4AAE-8DC0-FBED8D7E9B9E
 :END:
@@ -4453,7 +4453,7 @@ I use this package in combination with =prot-scratch= (see above) to persist scr
   (after-save-hook . executable-make-buffer-file-executable-if-script-p))
 #+end_src
 
-** uniquify
+** =uniquify=
 :PROPERTIES:
 :ID:       295BE204-62D9-4003-AFB0-06F6D817AE4C
 :END:
@@ -4467,7 +4467,7 @@ I use this package in combination with =prot-scratch= (see above) to persist scr
   (uniquify-buffer-name-style 'forward))
 #+end_src
 
-** reveal-in-osx-finder
+** =reveal-in-osx-finder=
 :PROPERTIES:
 :ID:       5BA0A794-59F0-471D-AD81-4C281095BF48
 :END:
@@ -4482,7 +4482,7 @@ I use this package in combination with =prot-scratch= (see above) to persist scr
               ("/" . reveal-in-osx-finder)))
 #+end_src
 
-** tramp
+** =tramp=
 :PROPERTIES:
 :ID:       23FDB037-73C2-4AE1-A887-437C996F78D2
 :END:
@@ -4542,7 +4542,7 @@ CLOCK: [2022-08-20 Sat 18:11]--[2022-08-20 Sat 18:32] =>  0:21
                      "direct-async-process" t)))
 #+end_src
 
-** pandoc-mode
+** =pandoc-mode=
 :PROPERTIES:
 :ID:       8EBA8303-EA43-4FB2-BB9D-1734F40DDB77
 :END:
@@ -4571,7 +4571,7 @@ CLOCK: [2021-04-05 Mon 12:51]--[2021-04-05 Mon 13:17] =>  0:26
 CLOCK: [2021-03-30 Tue 09:32]--[2021-03-30 Tue 09:36] =>  0:04
 :END:
 
-** window
+** =window=
 :PROPERTIES:
 :ID:       614546C0-75B2-4E44-9447-923DF5CF4AC3
 :END:
@@ -4642,7 +4642,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
    ("A-C-s-t" . scroll-other-window-down)))
 #+end_src
 
-** window-extras
+** =window-extras=
 :PROPERTIES:
 :ID:       E29EF401-C8A5-4B57-8CB4-C2C8B386F446
 :END:
@@ -4661,7 +4661,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
    ("A-M-–" . window-extras-buffer-swap))) ; `emacs-plus'
 #+end_src
 
-** frame
+** =frame=
 :PROPERTIES:
 :ID:       3ADE4889-B4BE-4733-ABE3-BECCD4F9A73D
 :END:
@@ -4685,7 +4685,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
    ("M-W" . delete-frame)))
 #+end_src
 
-** frame-extras
+** =frame-extras=
 :PROPERTIES:
 :ID:       488EF2B1-CCAC-4B91-A927-F89F71BCDAD3
 :END:
@@ -4710,7 +4710,7 @@ CLOCK: [2024-08-26 Mon 21:09]--[2024-08-26 Mon 21:29] =>  0:20
    ("C-H-P" . frame-extras-right-half)))
 #+end_src
 
-** posframe
+** =posframe=
 :PROPERTIES:
 :ID:       8D0FB41B-09C9-4F31-AB8B-3481B151C03E
 :END:
@@ -4721,7 +4721,7 @@ CLOCK: [2024-08-26 Mon 21:09]--[2024-08-26 Mon 21:29] =>  0:20
 (use-package posframe)
 #+end_src
 
-** winum
+** =winum=
 :PROPERTIES:
 :ID:       90677099-6D75-4BA3-B490-0C325A17A55F
 :END:
@@ -4746,7 +4746,7 @@ CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
    ("C-/" . winum-select-window-4)))
 #+end_src
 
-** winner
+** =winner=
 :PROPERTIES:
 :ID:       598E0C53-2797-41B5-A53D-C229D4F69A76
 :END:
@@ -4766,7 +4766,7 @@ CLOCK: [2021-10-03 Sun 18:45]--[2021-12-30 Thu 12:11] => 2105:26
   ("H-W" . winner-undo))
 #+end_src
 
-** popper
+** =popper=
 :PROPERTIES:
 :ID:       4DAF7C68-4A91-4E42-967C-F721148C95CA
 :END:
@@ -4803,7 +4803,7 @@ CLOCK: [2024-08-28 Wed 09:31]--[2024-08-28 Wed 11:38] =>  2:07
    ("C-H-o" . popper-cycle)))
 #+end_src
 
-** avy
+** =avy=
 :PROPERTIES:
 :ID:       D83A1681-A3F0-4C70-9986-F01275320585
 :END:
@@ -4846,7 +4846,7 @@ CLOCK: [2021-05-16 Sun 08:30]--[2021-05-16 Sun 08:55] =>  0:25
    ("C-H-s-l" . avy-goto-word-1-below)))
 #+end_src
 
-** avy-extras
+** =avy-extras=
 :PROPERTIES:
 :ID:       E8AFD4F9-439F-48F6-8C60-149CB87B5FEA
 :END:
@@ -4865,7 +4865,7 @@ CLOCK: [2021-05-16 Sun 08:30]--[2021-05-16 Sun 08:55] =>  0:25
    ("C-H-s-;" . avy-extras-goto-char-forward)))
 #+end_src
 
-** writeroom-mode
+** =writeroom-mode=
 :PROPERTIES:
 :ID:       AD1CE3FE-8897-4593-BD37-FEA38630611A
 :END:
@@ -4914,7 +4914,7 @@ CLOCK: [2021-03-30 Tue 21:45]--[2021-03-30 Tue 22:02] =>  0:17
   ("H-u" . writeroom-mode))
 #+end_src
 
-** ace-link
+** =ace-link=
 :PROPERTIES:
 :ID:       F1C54CDB-1E70-41D1-8FAB-A45598C5021A
 :END:
@@ -4937,7 +4937,7 @@ CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
   :defer t)
 #+end_src
 
-** ace-link-extras
+** =ace-link-extras=
 :PROPERTIES:
 :ID:       BD522C3E-92F7-4D61-A697-8186F01E2BE7
 :END:
@@ -4963,7 +4963,7 @@ CLOCK: [2021-03-28 Sun 12:35]--[2021-03-28 Sun 13:01] =>  0:26
 CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
 :END:
 
-** calendar
+** =calendar=
 :PROPERTIES:
 :ID:       4F3AEDB7-C357-40BA-B670-DE392FAF8F7A
 :END:
@@ -5004,7 +5004,7 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
    ("=" . calendar-count-days-region)))
 #+end_src
 
-** calendar-extras
+** =calendar-extras=
 :PROPERTIES:
 :ID:       746F8B0D-5817-4FCC-9DA5-C198CE632F92
 :END:
@@ -5018,7 +5018,7 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
   (calendar-extras-use-geolocation t))
 #+end_src
 
-** holidays
+** =holidays=
 :PROPERTIES:
 :ID:       08F898A1-71C0-4BF4-B6E8-5D6649DB230C
 :END:
@@ -5034,7 +5034,7 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
     (delete holiday holiday-general-holidays)))
 #+end_src
 
-** institution-calendar
+** =institution-calendar=
 :PROPERTIES:
 :ID:       DC127655-02C2-4079-94C4-6E240791CB67
 :END:
@@ -5050,7 +5050,7 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
   (institution-calendar-mode))
 #+end_src
 
-** org-gcal
+** =org-gcal=
 :PROPERTIES:
 :ID:       9E8AEF97-2E1A-489E-929A-CE5789EABFB9
 :org-gcal-managed: org
@@ -5108,7 +5108,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
   (require 'plstore))
 #+end_src
 
-** org-gcal-extras
+** =org-gcal-extras=
 :PROPERTIES:
 :ID:       BBED8E2E-2A29-4465-926A-22D531E6DBE7
 :END:
@@ -5120,7 +5120,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
   :demand t)
 #+end_src
 
-** calfw
+** =calfw=
 :PROPERTIES:
 :ID:       05F8BF13-CF3A-43D7-8959-D19E0C7EB092
 :END:
@@ -5139,7 +5139,7 @@ The original package is no longer maintained. A [[https://github.com/haji-ali/em
   :after org-agenda)
 #+end_src
 
-** calfw-org
+** =calfw-org=
 :PROPERTIES:
 :ID:       67CD7ECA-260B-4E09-B56B-6A39BAB78D5A
 :END:
@@ -5150,7 +5150,7 @@ The original package is no longer maintained. A [[https://github.com/haji-ali/em
   :after calfw org)
 #+end_src
 
-** calfw-blocks
+** =calfw-blocks=
 :PROPERTIES:
 :ID:       03DD73DD-6347-4D30-B103-A61718459C41
 :END:
@@ -5167,7 +5167,7 @@ The original package appears to no longer be maintained, so I have created my ow
   :after calfw)
 #+end_src
 
-** time
+** =time=
 :PROPERTIES:
 :ID:       88CCE9CB-8284-4C8B-8264-A1E54E299941
 :END:
@@ -5201,7 +5201,7 @@ The original package appears to no longer be maintained, so I have created my ow
   ("M-A-t" . world-clock))
 #+end_src
 
-** timer-list
+** =timer-list=
 :PROPERTIES:
 :ID:       5B9F0580-D100-4F53-8B99-7BEAE7E233A5
 :END:
@@ -5213,7 +5213,7 @@ The original package appears to no longer be maintained, so I have created my ow
   (put 'list-timers 'disabled nil))
 #+end_src
 
-** tmr
+** =tmr=
 :PROPERTIES:
 :ID:       87D2EB00-727C-4CA3-85F1-B8D82D37B48D
 :END:
@@ -5228,7 +5228,7 @@ The original package appears to no longer be maintained, so I have created my ow
     (setopt tmr-sound-file "/System/Library/Sounds/Blow.aiff")))
 #+end_src
 
-** display-wttr
+** =display-wttr=
 :PROPERTIES:
 :ID:       E1DB2097-7273-4FAC-BA84-67D46815FC45
 :END:
@@ -5252,7 +5252,7 @@ The original package appears to no longer be maintained, so I have created my ow
 :ID:       20B0D7AB-5B27-4D80-A9D8-DAAAFCB27651
 :END:
 
-** savehist
+** =savehist=
 :PROPERTIES:
 :ID:       D411AA79-C8FE-4E03-B06E-1BED5B7688BC
 :END:
@@ -5269,7 +5269,7 @@ The original package appears to no longer be maintained, so I have created my ow
   (savehist-mode))
 #+end_src
 
-** simple
+** =simple=
 :PROPERTIES:
 :ID:       C7BA09A3-635F-4F31-A17A-F94F3B024522
 :END:
@@ -5288,7 +5288,7 @@ The original package appears to no longer be maintained, so I have created my ow
       (add-to-list 'savehist-additional-variables var))))
 #+end_src
 
-** saveplace
+** =saveplace=
 :PROPERTIES:
 :ID:       8DE4A4B7-4B96-445F-BC1F-B10BBF181F53
 :END:
@@ -5301,7 +5301,7 @@ The original package appears to no longer be maintained, so I have created my ow
   (save-place-mode))
 #+end_src
 
-** session
+** =session=
 :PROPERTIES:
 :ID:       F4D1CD7C-0BA9-4D20-8D99-399331682D1B
 :END:
@@ -5320,7 +5320,7 @@ The original package appears to no longer be maintained, so I have created my ow
   (elpaca-after-init-hook . session-initialize))
 #+end_src
 
-** recentf
+** =recentf=
 :PROPERTIES:
 :ID:       C22F4A07-A237-498A-999D-F841F3B10074
 :END:
@@ -5351,7 +5351,7 @@ CLOCK: [2021-04-04 Sun 19:29]--[2021-04-04 Sun 19:40] =>  0:11
 CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
 :END:
 
-** elgrep
+** =elgrep=
 :PROPERTIES:
 :ID:       783E764B-7E5D-4CFB-9DE7-D87C5BF51518
 :END:
@@ -5366,7 +5366,7 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
         ("s-c" . elgrep-save)))
 #+end_src
 
-** isearch
+** =isearch=
 :PROPERTIES:
 :ID:       4B274841-062C-4511-8FF3-C850BAB05905
 :END:
@@ -5421,7 +5421,7 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
 
 To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridging Islands in Emacs: re-builder and query-replace-regexp | Karthinks]]
 
-** isearch-extras
+** =isearch-extras=
 :PROPERTIES:
 :ID:       6992A0D9-FF6A-4BF7-95C9-B3E3B25CD44C
 :END:
@@ -5443,7 +5443,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
         ("C-H-v" . isearch-extras-yank-kill-literally)))
 #+end_src
 
-** replace
+** =replace=
 :PROPERTIES:
 :ID:       DC08C217-5005-4A65-986B-85EA876ECB6D
 :END:
@@ -5460,7 +5460,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
    ("C-H-s" . query-replace-regexp)))
 #+end_src
 
-** substitute
+** =substitute=
 :PROPERTIES:
 :ID:       CDB7BD03-86D2-4780-871E-205F20EFA367
 :END:
@@ -5480,7 +5480,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
    ("A-H-d" . substitute-target-in-defun)))
 #+end_src
 
-** imenu
+** =imenu=
 :PROPERTIES:
 :ID:       CC1F3F93-2446-4399-A14D-9DCB6753D26B
 :END:
@@ -5494,7 +5494,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
   (org-imenu-depth 3))
 #+end_src
 
-** pcre2el
+** =pcre2el=
 :PROPERTIES:
 :ID:       1E9DDAD1-9663-432D-8882-A875227AB6B2
 :END:
@@ -5506,7 +5506,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
   :defer t)
 #+end_src
 
-** wgrep
+** =wgrep=
 :PROPERTIES:
 :ID:       928E0F8E-569F-4DCA-9F29-C0623C2973C7
 :END:
@@ -5542,7 +5542,7 @@ CLOCK: [2021-06-10 Thu 12:43]--[2021-06-10 Thu 12:49] =>  0:06
 
 For an introduction to minibuffer completion, I recommend [[https://www.youtube.com/watch?v=d3aaxOqwHhI][this video]] by Protesilaos Stavrou. For a comprehensive overview of both minibuffer completion and completion at point, I recommend [[https://www.youtube.com/watch?v=fnE0lXoe7Y0][this video]] by Andrew Tropin.
 
-** bindings
+** =bindings=
 :PROPERTIES:
 :ID:       7591FA5E-C016-47FF-9389-C833AB2F1A14
 :END:
@@ -5555,7 +5555,7 @@ For an introduction to minibuffer completion, I recommend [[https://www.youtube.
   ("<C-i>" . complete-symbol))
 #+end_src
 
-** vertico
+** =vertico=
 :PROPERTIES:
 :ID:       970043EC-39A9-46AE-9CC9-1F5F2175BF70
 :END:
@@ -5609,7 +5609,7 @@ CLOCK: [2022-06-21 Tue 20:10]--[2022-06-21 Tue 20:57] =>  0:47
         ("C-H-M-w" . vertico-directory-up)))
 #+end_src
 
-** embark
+** =embark=
 :PROPERTIES:
 :ID:       19A4F21C-2169-4529-92E4-68E3A584DDAC
 :END:
@@ -5653,7 +5653,7 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
    ("H-c" . files-extras-copy-contents)))
 #+end_src
 
-** consult
+** =consult=
 :PROPERTIES:
 :ID:       C6144D48-2E3C-4033-AD6E-5D7EE175D9E1
 :END:
@@ -5708,7 +5708,7 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
    ("H-V" . consult-yank-pop)))
 #+end_src
 
-** consult-extras
+** =consult-extras=
 :PROPERTIES:
 :ID:       163D3CB3-B2D9-44DB-9728-E2F5CA7600A8
 :END:
@@ -5724,7 +5724,7 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
    ("H-p" . consult-extras-ripgrep-current)))
 #+end_src
 
-** consult-dir
+** =consult-dir=
 :PROPERTIES:
 :ID:       3250EBD7-513E-439F-972F-B43C8214AC46
 :END:
@@ -5742,7 +5742,7 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
         ("H-d" . consult-dir)))
 #+end_src
 
-** consult-git-log-grep
+** =consult-git-log-grep=
 :PROPERTIES:
 :ID:       BA613BB1-A3CF-4C47-973A-6B54091B3C0E
 :END:
@@ -5755,7 +5755,7 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
   :defer t)
 #+end_src
 
-** consult-yasnippet
+** =consult-yasnippet=
 :PROPERTIES:
 :ID:       437A790A-467F-46CB-9EE3-25AA91D43D89
 :END:
@@ -5778,7 +5778,7 @@ CLOCK: [2022-06-27 Mon 20:12]--[2022-06-27 Mon 20:16] =>  0:04
   ("C-H-y" . consult-yasnippet))
 #+end_src
 
-** embark-consult
+** =embark-consult=
 :PROPERTIES:
 :ID:       C7BDCA9D-F507-4C25-9AF8-1EBB86D99A61
 :END:
@@ -5795,7 +5795,7 @@ CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
   (embark-collect-mode-hook . consult-preview-at-point-mode))
 #+end_src
 
-** marginalia
+** =marginalia=
 :PROPERTIES:
 :ID:       C1B0678E-7334-4AF3-B1FE-9D63DFB6BE68
 :END:
@@ -5808,7 +5808,7 @@ CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
   (marginalia-mode))
 #+end_src
 
-** orderless
+** =orderless=
 :PROPERTIES:
 :ID:       D0A453D1-784F-49E4-B238-ED009AF84EDB
 :END:
@@ -5823,7 +5823,7 @@ CLOCK: [2022-07-19 Tue 18:17]--[2022-07-19 Tue 18:35] =>  0:18
   (orderless-matching-styles '(orderless-regexp)))
 #+end_src
 
-** orderless-extras
+** =orderless-extras=
 :PROPERTIES:
 :ID:       2B2BED63-EC35-4DD6-B6A4-DC8E06817290
 :END:
@@ -5850,7 +5850,7 @@ I define the following style dispatchers to extend =orderless= functionality:
                                  orderless-extras-exclusion-dispatcher)))
 #+end_src
 
-** affe
+** =affe=
 :PROPERTIES:
 :ID:       E66ADC13-2388-445D-B767-A972304485B5
 :END:
@@ -5874,7 +5874,7 @@ I define the following style dispatchers to extend =orderless= functionality:
    ("H-K" . affe-find)))
 #+end_src
 
-** nerd-icons-completion
+** =nerd-icons-completion=
 :PROPERTIES:
 :ID:       1a127c06-43b5-435b-a4e5-becc61997794
 :END:
@@ -5891,7 +5891,7 @@ I define the following style dispatchers to extend =orderless= functionality:
   (marginalia-mode-hook . nerd-icons-completion-marginalia-setup))
 #+end_src
 
-** ido
+** =ido=
 :PROPERTIES:
 :ID:       458A26BD-1601-41D9-BC7E-7630466BC374
 :END:
@@ -5913,7 +5913,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
         ("i" . ido-find-file)))
 #+end_src
 
-** which-key
+** =which-key=
 :PROPERTIES:
 :ID:       7781DC87-0D61-4482-91EE-6D2E1F8E122D
 :END:
@@ -5939,7 +5939,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 | [[id:35370B0F-9EBD-433F-B59C-576EE8A69772][corfu]]   | completion at point UI      |
 | [[id:5A103245-9DC3-4D95-96D7-2161F6CCD0B1][cape]]    | completion at point backend |
 
-** corfu
+** =corfu=
 :PROPERTIES:
 :ID:       35370B0F-9EBD-433F-B59C-576EE8A69772
 :END:
@@ -5987,7 +5987,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
         ("RET" . corfu-complete)))
 #+end_src
 
-** corfu-extras
+** =corfu-extras=
 :PROPERTIES:
 :ID:       061EBAB9-2846-4922-BBAF-C29E11FAA476
 :END:
@@ -6005,7 +6005,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
         ("M-m" . corfu-extras-move-to-minibuffer)))
 #+end_src
 
-** cape
+** =cape=
 :PROPERTIES:
 :ID:       5A103245-9DC3-4D95-96D7-2161F6CCD0B1
 :END:
@@ -6030,7 +6030,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
   ((text-mode-hook prog-mode-hook) . cape-enable-completions))
 #+end_src
 
-** corg
+** =corg=
 :PROPERTIES:
 :ID:       4E7EF83E-6E4B-4F17-B0F6-B018C8BA8A08
 :END:
@@ -6056,7 +6056,7 @@ CLOCK: [2021-05-21 Fri 17:13]--[2021-05-21 Fri 17:47] =>  0:34
 CLOCK: [2021-05-21 Fri 16:52]--[2021-05-21 Fri 17:04] =>  0:12
 :END:
 
-** help
+** =help=
 :PROPERTIES:
 :ID:       B4F00E3C-2682-486D-B05A-E983ACC82D09
 :END:
@@ -6079,7 +6079,7 @@ CLOCK: [2021-05-21 Fri 16:52]--[2021-05-21 Fri 17:04] =>  0:12
    ([?\C-i] . [C-i])))
 #+end_src
 
-** help-at-pt
+** =help-at-pt=
 :PROPERTIES:
 :ID:       263F5A59-1B63-47BC-B77B-8165FBBE3E75
 :END:
@@ -6094,7 +6094,7 @@ CLOCK: [2021-05-21 Fri 16:52]--[2021-05-21 Fri 17:04] =>  0:12
   (help-at-pt-set-timer)) ; set timer, thus enabling local help
 #+end_src
 
-** helpful
+** =helpful=
 :PROPERTIES:
 :ID:       6DCDFA24-4561-43CD-9D82-7C870A1044D1
 :END:
@@ -6128,7 +6128,7 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
    ("w" . files-extras-copy-as-kill-dwim)))
 #+end_src
 
-** info
+** =info=
 :PROPERTIES:
 :ID:       28966DB8-E893-4AEA-A7BD-8C18B8A97592
 :END:
@@ -6150,7 +6150,7 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
         ("s-j" . Info-menu)))
 #+end_src
 
-** man
+** =man=
 :PROPERTIES:
 :ID:       5621ACF8-E2E1-41DE-8994-F26DF80C5246
 :END:
@@ -6162,7 +6162,7 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
         ("f" . ace-link-man)))
 #+end_src
 
-** woman
+** =woman=
 :PROPERTIES:
 :ID:       421D3C11-CDD5-44B7-9262-10FD172F1094
 :END:
@@ -6174,7 +6174,7 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
         ("f" . ace-link-woman)))
 #+end_src
 
-** shortdoc
+** =shortdoc=
 :PROPERTIES:
 :ID:       5422C312-C976-4C9E-AE27-9D1771F8127C
 :END:
@@ -6187,7 +6187,7 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
   ("C-h u" . shortdoc-display-group))
 #+end_src
 
-** find-func
+** =find-func=
 :PROPERTIES:
 :ID:       CCC22544-B620-4C24-A419-1C153AF2A9E8
 :END:
@@ -6200,7 +6200,7 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
   ("M-L" . find-library))
 #+end_src
 
-** elisp-refs
+** =elisp-refs=
 :PROPERTIES:
 :ID:       238DF78B-035A-48B1-8F8F-E9E7F1D4BC67
 :END:
@@ -6211,7 +6211,7 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
               ("f" . ace-link-help)))
 #+end_src
 
-** elisp-demos
+** =elisp-demos=
 :PROPERTIES:
 :ID:       DCEBBA6C-04D4-4168-9FCB-772876C36E37
 :END:
@@ -6230,7 +6230,7 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
 :ID:       ADB25EC1-6E97-4057-AEBD-FB7B7E4503CF
 :END:
 
-** kmacro
+** =kmacro=
 :PROPERTIES:
 :ID:       92DE0CE6-CA2B-4D43-84D1-EE2B5B068197
 :END:
@@ -6254,7 +6254,7 @@ CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
    ("M-A-h" . kmacro-bind-to-key)))
 #+end_src
 
-** kmacro-extras
+** =kmacro-extras=
 :PROPERTIES:
 :ID:       13CB9BBA-95F7-446A-A6DB-924C5F62C1C4
 :END:
@@ -6273,7 +6273,7 @@ CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
 :ID:       C97337A7-A91F-49DA-9F33-6556937E7AFC
 :END:
 
-** simple
+** =simple=
 :PROPERTIES:
 :ID:       A34DA7F2-47E4-400E-B2C8-167BCAEA73E7
 :END:
@@ -6285,7 +6285,7 @@ CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
   (async-shell-command-buffer 'new-buffer)) ; don't ask for confirmation before running command in a new buffer
 #+end_src
 
-** shell
+** =shell=
 :PROPERTIES:
 :ID:       231A8710-B820-4761-ABF8-5BE648908CD1
 :END:
@@ -6315,7 +6315,7 @@ CLOCK: [2022-09-02 Fri 18:00]--[2022-09-02 Fri 18:07] =>  0:07
    ("M-l" . comint-next-input)))
 #+end_src
 
-** eshell
+** =eshell=
 :PROPERTIES:
 :ID:       ABD03BEF-8E02-43AF-A137-AE9F9906704C
 :END:
@@ -6357,7 +6357,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
    ("M-n" . nil)))
 #+end_src
 
-** em-hist
+** =em-hist=
 :PROPERTIES:
 :ID:       692C4FF8-FD07-4D35-A9B3-A87F0E9A1B53
 :END:
@@ -6370,7 +6370,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   (eshell-save-history-on-exit t))
 #+end_src
 
-** eshell-syntax-highlighting
+** =eshell-syntax-highlighting=
 :PROPERTIES:
 :ID:       960266D6-7B07-436B-B25E-F59FBDCB818A
 :END:
@@ -6384,7 +6384,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   (eshell-mode-hook . eshell-syntax-highlighting-global-mode))
 #+end_src
 
-** dwim-shell-command
+** =dwim-shell-command=
 :PROPERTIES:
 :ID:       89FC07FE-AB08-4C9C-B999-73D176458C64
 :END:
@@ -6398,7 +6398,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   :defer t)
 #+end_src
 
-** eat
+** =eat=
 :PROPERTIES:
 :ID:       80E53FAD-1669-408C-A45D-9232C2D51924
 :END:
@@ -6423,7 +6423,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   (eshell-load-hook . eat-eshell-visual-command-mode))
 #+end_src
 
-** eat-extras
+** =eat-extras=
 :PROPERTIES:
 :ID:       2E64815B-CB74-4D99-9884-AB7B97D1B0DB
 :END:
@@ -6438,7 +6438,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   (eat-extras-setup-semi-char-mode-map))
 #+end_src
 
-** vterm
+** =vterm=
 :PROPERTIES:
 :ID:       AD71DE89-9F39-4A5E-B862-03906E250726
 :END:
@@ -6450,7 +6450,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   :defer t)
 #+end_src
 
-*** vterm-extras
+*** =vterm-extras=
 :PROPERTIES:
 :ID:       04F93CF5-C6E7-46A4-BEEE-AC8900D649E2
 :END:
@@ -6470,7 +6470,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 :ID:       CC425FA6-7E2B-45EC-82DD-6D4402C3BE5C
 :END:
 
-** jinx
+** =jinx=
 :PROPERTIES:
 :ID:       23D402FB-7C7D-454B-9895-B147F0C9950D
 :END:
@@ -6497,7 +6497,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   (("M-p" . jinx-correct)))
 #+end_src
 
-** jinx-extras
+** =jinx-extras=
 :PROPERTIES:
 :ID:       7C91CA35-275E-446A-ACE8-1214310479BB
 :END:
@@ -6513,7 +6513,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   (("A-M-p" . jinx-extras-toggle-languages)))
 #+end_src
 
-** flycheck
+** =flycheck=
 :PROPERTIES:
 :ID:       E407F295-B534-4195-A98C-10A131F391D9
 :END:
@@ -6555,7 +6555,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   ("M-k" . flycheck-next-error))
 #+end_src
 
-** consult-flycheck
+** =consult-flycheck=
 :PROPERTIES:
 :ID:       C205D49D-F578-416E-8047-FC7633D6E4D3
 :END:
@@ -6567,7 +6567,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   :after consult flyckeck)
 #+end_src
 
-** flycheck-ledger
+** =flycheck-ledger=
 :PROPERTIES:
 :ID:       35BCB962-B49F-43D9-A7E8-269CE61EF6C8
 :END:
@@ -6579,7 +6579,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   :after flycheck ledger-mode)
 #+end_src
 
-** flycheck-languagetool
+** =flycheck-languagetool=
 :PROPERTIES:
 :ID:       761BF4F2-8821-42A6-852C-4C87A248EF90
 :END:
@@ -6628,7 +6628,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
     org-msg-edit-mode-hook) . flycheck-languagetool-enable))
 #+end_src
 
-** flymake-mdl
+** =flymake-mdl=
 :PROPERTIES:
 :ID:       5B033B8B-5D04-415F-9F92-182CB3AA3C69
 :END:
@@ -6646,7 +6646,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 :ID:       9C33C68A-B82E-4898-B967-337B7D0619EE
 :END:
 
-** text-mode
+** =text-mode=
 :PROPERTIES:
 :ID:       0C671548-8B32-43D6-9F28-88A6B7E3AA06
 :END:
@@ -6660,7 +6660,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
                       (remove-hook 'completion-at-point-functions #'ispell-completion-at-point t))))
 #+end_src
 
-** atomic-chrome
+** =atomic-chrome=
 :PROPERTIES:
 :ID:       D7CE2507-FDB5-44E9-A129-C18E17590476
 :END:
@@ -6697,7 +6697,7 @@ I use a fork that is better maintained, together with the associated [[https://g
 	("s-c" . atomic-chrome-close-current-buffer)))
 #+end_src
 
-** markdown-mode
+** =markdown-mode=
 :PROPERTIES:
 :ID:       3E05C5A3-B0E2-4800-B497-5AA1F6B39116
 :END:
@@ -6756,7 +6756,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
         ("s-p" . markdown-preview)))
 #+end_src
 
-** markdown-mode-extras
+** =markdown-mode-extras=
 :PROPERTIES:
 :ID:       856FDF94-95B6-49EB-A6D5-B95F0A53384A
 :END:
@@ -6782,7 +6782,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
         ("H-s-v" . markdown-mode-extras-org-paste-dwim)))
 #+end_src
 
-** grip-mode
+** =grip-mode=
 :PROPERTIES:
 :ID:       5F437CCD-14C3-4120-B77E-3E1C7C891819
 :END:
@@ -6805,7 +6805,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
   (require 'xwidget))
 #+end_src
 
-** xwidget
+** =xwidget=
 :PROPERTIES:
 :ID:       DA6275F2-F3A2-482E-B7A8-34633775F430
 :END:
@@ -6826,7 +6826,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
         (";" . xwidget-webkit-scroll-bottom)))
 #+end_src
 
-** edit-indirect
+** =edit-indirect=
 :PROPERTIES:
 :ID:       5660F943-C895-4847-A538-0FA11445420C
 :END:
@@ -6842,7 +6842,7 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
               ("s-z" . edit-indirect-commit)))
 #+end_src
 
-** mediawiki
+** =mediawiki=
 :PROPERTIES:
 :ID:       721F42DA-7E97-4C9A-9DBF-8A841DDE99A9
 :END:
@@ -6867,7 +6867,7 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
         ("A-C-s-f" . mediawiki-next-header)))
 #+end_src
 
-** wikipedia
+** =wikipedia=
 :PROPERTIES:
 :ID:       2212CFC8-2147-4921-A607-029CB66D6DF5
 :END:
@@ -6887,7 +6887,7 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
   (("A-p" . wikipedia-transient)))
 #+end_src
 
-** gdrive
+** =gdrive=
 :PROPERTIES:
 :ID:       CC5C7599-DFA7-48A8-8BA0-3DABE8A3171E
 :END:
@@ -6926,7 +6926,7 @@ The file should contain one search query per line."
       (gdrive-mark-results results))))
 #+end_src
 
-** ledger-mode
+** =ledger-mode=
 :PROPERTIES:
 :ID:       6C259EFC-0CF9-4CD7-A8C5-B29B66E98776
 :END:
@@ -7032,7 +7032,7 @@ https://gitlab.com/chrisberkhout/pricehist
 :END:
 1. [[https://felixcrux.com/blog/ledger-practices-create-a-ledgerrc][create a ~.ledgerrc~ file]]
 
-** ledger-mode-extras
+** =ledger-mode-extras=
 :PROPERTIES:
 :ID:       3FC5A39F-AEA9-4D54-AB55-836F58DA8103
 :END:
@@ -7065,7 +7065,7 @@ https://gitlab.com/chrisberkhout/pricehist
 :ID:       1A1D70D3-DBB4-4EEC-A83E-15FD4348ED94
 :END:
 
-** tlon
+** =tlon=
 :PROPERTIES:
 :ID:       5EDD6F28-3299-4D90-83E1-C7476176277D
 :END:
@@ -7122,7 +7122,7 @@ https://gitlab.com/chrisberkhout/pricehist
    ("A-C-p" . tlon-grep)))
 #+end_src
 
-** go-translate
+** =go-translate=
 :PROPERTIES:
 :ID:       543F613A-F3B8-426C-8505-48782483FBEC
 :END:
@@ -7174,7 +7174,7 @@ https://gitlab.com/chrisberkhout/pricehist
     )))
 #+end_src
 
-** powerthesaurus
+** =powerthesaurus=
 :PROPERTIES:
 :ID:       81CC0280-A8A5-4C8F-BF05-D324EB917DCD
 :END:
@@ -7187,7 +7187,7 @@ https://gitlab.com/chrisberkhout/pricehist
   ("H-y" . powerthesaurus-transient))
 #+end_src
 
-** goldendict-ng
+** =goldendict-ng=
 :PROPERTIES:
 :ID:       32143368-5DE3-44F5-A35B-05F157DEC2A5
 :END:
@@ -7218,7 +7218,7 @@ CLOCK: [2021-11-24 Wed 15:26]--[2021-11-24 Wed 16:24] =>  0:58
   ("A-y" . goldendict-ng-search))
 #+end_src
 
-** reverso
+** =reverso=
 :PROPERTIES:
 :ID:       F3063A73-ED50-42BD-8ABD-8D7FC68758FD
 :END:
@@ -7240,7 +7240,7 @@ CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
   ("H-Y" . reverso))
 #+end_src
 
-** dictionary
+** =dictionary=
 :PROPERTIES:
 :ID:       9D2123AF-FA64-465A-B7C1-6FCBFB786F02
 :END:
@@ -7260,7 +7260,7 @@ CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
 :ID:       6C0D0737-734E-4EAB-8A3F-138EF990B967
 :END:
 
-** pdf-tools
+** =pdf-tools=
 :PROPERTIES:
 :ID:       B4272338-4DCA-44FC-9330-804CC88BF189
 :END:
@@ -7337,7 +7337,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
         ("A-u" . pdf-view-midnight-minor-mode)))
 #+end_src
 
-** pdf-tools-extras
+** =pdf-tools-extras=
 :PROPERTIES:
 :ID:       C4B53EDC-372F-42B2-924E-FE48647B67AE
 :END:
@@ -7378,7 +7378,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
               ("x" . pdf-tools-extras-open-externally)))
 #+end_src
 
-** pdf-tools-pages
+** =pdf-tools-pages=
 :PROPERTIES:
 :ID:       45E2FBF2-8C01-4BA5-82EA-E9BB2F322D6F
 :END:
@@ -7412,7 +7412,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
               ("X" . pdf-tools-pages-extract-selected-pages)))
 #+end_src
 
-** scroll-other-window
+** =scroll-other-window=
 :PROPERTIES:
 :ID:       4F29AAB8-CC48-4216-B309-2C26337FE12B
 :END:
@@ -7433,7 +7433,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
         ("A-C-s-t" . sow-scroll-other-window)))
 #+end_src
 
-** pdf-view-restore
+** =pdf-view-restore=
 :PROPERTIES:
 :ID:       159A7ABF-5D9C-46C3-BAA2-C1E486682875
 :END:
@@ -7454,7 +7454,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
   (pdf-view-mode-hook . pdf-view-restore-mode-conditionally))
 #+end_src
 
-** moon-reader
+** =moon-reader=
 :PROPERTIES:
 :ID:       CA54B97C-0948-4E28-AB29-392052D306AC
 :END:
@@ -7470,7 +7470,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
   (moon-reader-cache-directory (file-name-concat paths-dir-google-drive "Apps/Books/.Moon+/Cache/")))
 #+end_src
 
-** org-pdftools
+** =org-pdftools=
 :PROPERTIES:
 :ID:       028468CA-0334-45AE-A476-028D9A300065
 :END:
@@ -7485,7 +7485,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
   (org-mode-hook . org-pdftools-setup-link))
 #+end_src
 
-** nov
+** =nov=
 :PROPERTIES:
 :ID:       CA54F4D1-2562-483A-BBD0-67A039E0F2FC
 :END:
@@ -7497,7 +7497,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
   :defer t)
 #+end_src
 
-** djvu
+** =djvu=
 :PROPERTIES:
 :ID:       CB96565F-C0FF-454C-A1F1-E986BC45EDDE
 :END:
@@ -7514,7 +7514,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 :ID:       35CB9C38-D0FE-458A-9F77-EC6702B2D976
 :END:
 
-** prog-mode
+** =prog-mode=
 :PROPERTIES:
 :ID:       A8700D18-574A-4093-938C-5707589DBB41
 :END:
@@ -7543,7 +7543,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
    ("s-c" . exit-recursive-edit)))
 #+end_src
 
-** treesit
+** =treesit=
 :PROPERTIES:
 :ID:       804E391D-E9FC-4135-824B-EA31B3D00705
 :END:
@@ -7565,7 +7565,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
     (treesit-install-language-grammar 'tsx)))
 #+end_src
 
-** elisp-mode
+** =elisp-mode=
 :PROPERTIES:
 :ID:       24475DE5-E129-4832-BAE5-C22D846C251E
 :END:
@@ -7588,7 +7588,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
               ("s-i" . instrument-defun)))
 #+end_src
 
-** lisp-mode
+** =lisp-mode=
 :PROPERTIES:
 :ID:       E6608F6D-CC63-4A0B-A6B5-D012D3065801
 :END:
@@ -7600,7 +7600,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
   (emacs-lisp-docstring-fill-column nil))
 #+end_src
 
-** curl-to-elisp
+** =curl-to-elisp=
 :PROPERTIES:
 :ID:       7B9D14E2-752E-4705-A438-78DA6663083A
 :END:
@@ -7611,7 +7611,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
   :defer t)
 #+end_src
 
-** f
+** =f=
 :PROPERTIES:
 :ID:       4FD6758A-4021-4B05-BD36-BB09C2063C93
 :END:
@@ -7623,7 +7623,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
   :defer t)
 #+end_src
 
-** s
+** =s=
 :PROPERTIES:
 :ID:       127B298B-BD3E-42BD-8032-D20B29075DA0
 :END:
@@ -7635,7 +7635,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
   :defer t)
 #+end_src
 
-** backtrace
+** =backtrace=
 :PROPERTIES:
 :ID:       B69F718B-9BAE-4EAD-99DE-2C8C1E98CCA3
 :END:
@@ -7647,7 +7647,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
   (backtrace-line-length nil))
 #+end_src
 
-** debug
+** =debug=
 :PROPERTIES:
 :ID:       AACCFE88-084B-4428-82DB-7C695D9624C4
 :END:
@@ -7677,7 +7677,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
         ("s" . debug-save-backtrace)))
 #+end_src
 
-** edebug
+** =edebug=
 :PROPERTIES:
 :ID:       021794F3-1663-449D-B4B7-41C6F3A72083
 :END:
@@ -7700,7 +7700,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
         ("M-s-d" . edebug-defun)))
 #+end_src
 
-** macrostep
+** =macrostep=
 :PROPERTIES:
 :ID:       8AE42CAA-5B62-4B1C-9C7C-DFD72AC5B3CD
 :END:
@@ -7714,7 +7714,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   :defer t)
 #+end_src
 
-** js
+** =js=
 :PROPERTIES:
 :ID:       E41E357F-B912-4CC2-9279-1DE400A1BDB4
 :END:
@@ -7733,7 +7733,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
         ("M-." . window-extras-buffer-move-right)))
 #+end_src
 
-** js2-mode
+** =js2-mode=
 :PROPERTIES:
 :ID:       14639C64-720D-4105-B31B-3A84A447D19F
 :END:
@@ -7745,7 +7745,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   :defer t)
 #+end_src
 
-** clojure
+** =clojure=
 :PROPERTIES:
 :ID:       A9508F41-E82B-4E6C-9304-53981A8F0C27
 :END:
@@ -7757,7 +7757,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   :defer t)
 #+end_src
 
-** haskell-mode
+** =haskell-mode=
 :PROPERTIES:
 :ID:       44EB7072-5108-416F-8567-5D6BE7AD23D0
 :END:
@@ -7768,7 +7768,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   :defer t)
 #+end_src
 
-** python
+** =python=
 :PROPERTIES:
 :ID:       D00C20E4-925A-41E1-95BD-5BF8BA03637C
 :END:
@@ -7805,7 +7805,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
               ("s-e" . python-shell-send-statement)))
 #+end_src
 
-** pyenv-mode
+** =pyenv-mode=
 :PROPERTIES:
 :ID:       1D91CD1E-F1E6-4D69-AA42-83C81DC09D57
 :END:
@@ -7820,7 +7820,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   (add-to-list 'exec-path "~/.pyenv/bin"))
 #+end_src
 
-** pet
+** =pet=
 :PROPERTIES:
 :ID:       43F4649C-E469-4E9B-ACC4-3DC912EFFE54
 :END:
@@ -7838,7 +7838,7 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   )
 #+end_src
 
-** emacs-ipython-notebook
+** =emacs-ipython-notebook=
 :PROPERTIES:
 :ID:       3F0CEFB0-2983-4659-AB1F-6936AD8BF0FC
 :END:
@@ -7853,7 +7853,7 @@ This needs to be configured.
   :defer t)
 #+end_src
 
-** go
+** =go=
 :PROPERTIES:
 :ID:       248AB3F6-2BA7-4DD0-8DFE-FFA79762BC73
 :END:
@@ -7865,7 +7865,7 @@ This needs to be configured.
   :defer t)
 #+end_src
 
-** applescript-mode
+** =applescript-mode=
 :PROPERTIES:
 :ID:       6F36A349-196D-40A8-9338-61DB3C86D760
 :END:
@@ -7877,7 +7877,7 @@ This needs to be configured.
   :defer t)
 #+end_src
 
-** json-mode
+** =json-mode=
 :PROPERTIES:
 :ID:       7B4A0E63-4509-4BC0-AE08-08F517911959
 :END:
@@ -7892,7 +7892,7 @@ This needs to be configured.
         ("RET" . nil)))
 #+end_src
 
-** csv-mode
+** =csv-mode=
 :PROPERTIES:
 :ID:       44D557E4-026E-425C-B1C9-B26F4B6197E4
 :END:
@@ -7904,7 +7904,7 @@ This needs to be configured.
   :defer t)
 #+end_src
 
-** yaml
+** =yaml=
 :PROPERTIES:
 :ID:       9DD1BC24-7AFE-406B-9C1C-7BC66BD241F3
 :END:
@@ -7917,7 +7917,7 @@ This needs to be configured.
   :defer t)
 #+end_src
 
-** yaml-mode
+** =yaml-mode=
 :PROPERTIES:
 :ID:       1D83E6E8-B7DC-4D40-A9B4-A93EFDC9FF0C
 :END:
@@ -7928,7 +7928,7 @@ This needs to be configured.
 (use-package yaml-mode)
 #+end_src
 
-** shut-up
+** =shut-up=
 :PROPERTIES:
 :ID:       54AE6A1C-1A30-4C24-B5BA-7CE39F0B10D9
 :END:
@@ -7940,7 +7940,7 @@ This needs to be configured.
 (use-package shut-up)
 #+end_src
 
-** puni
+** =puni=
 :PROPERTIES:
 :ID:       27705B8C-C2F7-4BE1-9510-8BE0993EAB4A
 :END:
@@ -7967,7 +7967,7 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
    ("A-C-H-k" . puni-mark-sexp-around-point)))
 #+end_src
 
-** hl-todo
+** =hl-todo=
 :PROPERTIES:
 :ID:       2AE50002-CF55-4BF1-AC96-967F128A6718
 :END:
@@ -7988,7 +7988,7 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
   (global-hl-todo-mode))
 #+end_src
 
-** consult-todo
+** =consult-todo=
 :PROPERTIES:
 :ID:       096737D3-C07A-4484-9B32-FACE5C7CCE7A
 :END:
@@ -8003,7 +8003,7 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
 	("s-t" . consult-todo)))
 #+end_src
 
-** project
+** =project=
 :PROPERTIES:
 :ID:       A8E52422-BB0D-410B-A497-64BB2AC5576D
 :END:
@@ -8017,7 +8017,7 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
    ("s-r" . project-query-replace-regexp)))
 #+end_src
 
-** hideshow
+** =hideshow=
 :PROPERTIES:
 :ID:       8E6459FA-9978-42F8-9DAC-C4D7FB385F97
 :END:
@@ -8030,7 +8030,7 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
   (prog-mode-hook . hs-minor-mode))
 #+end_src
 
-** aggressive-indent
+** =aggressive-indent=
 :PROPERTIES:
 :ID:       94B7795A-09C3-4627-934D-1F4AEB14F7C0
 :END:
@@ -8044,7 +8044,7 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
   (add-to-list 'aggressive-indent-excluded-modes 'snippet-mode))
 #+end_src
 
-** elpy
+** =elpy=
 :PROPERTIES:
 :ID:       E96C6026-AEFA-42A1-930E-863EA3FF651E
 :END:
@@ -8069,7 +8069,7 @@ CLOCK: [2021-11-01 Mon 12:09]--[2021-11-01 Mon 12:10] =>  0:01
   )
 #+end_src
 
-** eldoc
+** =eldoc=
 :PROPERTIES:
 :ID:       6DF08967-7BC0-4DA6-9E19-63B903675EF1
 :END:
@@ -8122,7 +8122,7 @@ CLOCK: [2022-06-19 Sun 07:14]--[2022-06-19 Sun 07:31] =>  0:17
 
 There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/item?id=35254389][here]] for a partial list.
 
-** copilot
+** =copilot=
 :PROPERTIES:
 :ID:       2064FE34-0301-4E33-AB51-FE4921CA0E16
 :END:
@@ -8155,7 +8155,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
         ("M-;" . copilot-accept-completion-by-word)))
 #+end_src
 
-** copilot-extras
+** =copilot-extras=
 :PROPERTIES:
 :ID:       AB88D95E-3D6F-4B70-850F-F1B7E13AF1AD
 :END:
@@ -8174,7 +8174,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   ((prog-mode-hook text-mode-hook) . copilot-extras-enable-conditionally))
 #+end_src
 
-** gptel
+** =gptel=
 :PROPERTIES:
 :ID:       B84D396B-D1FD-4718-9002-58DEB1BB85E1
 :END:
@@ -8306,7 +8306,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
    ("A-C-s-f" . gptel-context-next)))
 #+end_src
 
-** gptel-extras
+** =gptel-extras=
 :PROPERTIES:
 :ID:       AEA2E978-0321-4F3D-B3EB-14CDA505A9D9
 :END:
@@ -8398,7 +8398,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
    ("H-s-s" . gptel-extras-search-and-ask-model)))
 #+end_src
 
-** gptel-plus
+** =gptel-plus=
 :PROPERTIES:
 :ID:       2843FB0D-7653-4BB5-ABBF-73D4D1D18C68
 :END:
@@ -8423,7 +8423,7 @@ This package evolved out of =gptel-extras=.
         ("s-l" . gptel-plus-list-context-files)))
 #+end_src
 
-** gptel-quick
+** =gptel-quick=
 :PROPERTIES:
 :ID:       A3F028E6-A888-4F50-88DE-64897689B6D3
 :END:
@@ -8437,7 +8437,7 @@ This package evolved out of =gptel-extras=.
   ("H-s-u" . gptel-quick))
 #+end_src
 
-** ragmacs
+** =ragmacs=
 :PROPERTIES:
 :ID:       73A214D0-E75C-438A-B9BC-5D69EE04B7E8
 :END:
@@ -8452,7 +8452,7 @@ This package evolved out of =gptel-extras=.
   :defer t)
 #+end_src
 
-** llm-tool-collection
+** =llm-tool-collection=
 :PROPERTIES:
 :ID:       382BA84D-0C8C-43FD-9419-9A892653EF2B
 :END:
@@ -8470,7 +8470,7 @@ This package evolved out of =gptel-extras=.
           (llm-tool-collection-get-all)))
 #+end_src
 
-** aidermacs
+** =aidermacs=
 :PROPERTIES:
 :ID:       29E4D020-70BF-408C-A8AC-D40E411F2F42
 :END:
@@ -8499,7 +8499,7 @@ This package evolved out of =gptel-extras=.
 	 ("<return>" . comint-accumulate)))
 #+end_src
 
-** aidermacs-extras
+** =aidermacs-extras=
 :PROPERTIES:
 :ID:       B4534C3F-D95D-45DF-B3D8-552747784B42
 :END:
@@ -8515,7 +8515,7 @@ This package evolved out of =gptel-extras=.
   (("H-s-." . aidermacs-extras-run-in-current-dir)))
 #+end_src
 
-** ob-aider
+** =ob-aider=
 :PROPERTIES:
 :ID:       649ADA70-0137-41F4-8C75-0851D9313AE3
 :END:
@@ -8534,7 +8534,7 @@ This package evolved out of =gptel-extras=.
            '((aider . t)))))
 #+end_src
 
-** agent-shell
+** =agent-shell=
 :PROPERTIES:
 :ID:       3C5E8B30-4FAF-480E-84F9-DE4A48BFEA88
 :END:
@@ -8558,7 +8558,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
    '("MAX_THINKING_TOKENS=20000")))
 #+end_src
 
-** claude-code
+** =claude-code=
 :PROPERTIES:
 :ID:       E5B0E2C8-B66A-438A-9177-847FD480438E
 :END:
@@ -8593,7 +8593,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (claude-code-process-environment-functions . monet-start-server-function))
 #+end_src
 
-** claude-code-extras
+** =claude-code-extras=
 :PROPERTIES:
 :ID:       8966D143-A3B0-4778-8E32-7EFE527219BD
 :END:
@@ -8607,7 +8607,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (claude-code-extras-alert-on-ready t))
 #+end_src
 
-** claude-log
+** =claude-log=
 :PROPERTIES:
 :ID:       E60F4A47-F939-4D66-8AF4-B460E15D40F0
 :END:
@@ -8623,7 +8623,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :demand t)
 #+end_src
 
-** monet
+** =monet=
 :PROPERTIES:
 :ID:       CEC68940-F806-43C7-BC2E-121AA2BC3A0E
 :END:
@@ -8638,7 +8638,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :demand t)
 #+end_src
 
-** mcp
+** =mcp=
 :PROPERTIES:
 :ID:       edd16d61-f4ae-4b00-a631-28235d1f5d5b
 :END:
@@ -8736,7 +8736,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (mcp-hub-start-all-server #'gptel-extras-connect-to-all-servers))
 #+end_src
 
-** dall-e-shell
+** =dall-e-shell=
 :PROPERTIES:
 :ID:       635C8C3D-5614-433C-B3A3-81384F13273D
 :END:
@@ -8751,7 +8751,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (dall-e-shell-openai-key (auth-source-pass-get "gptel" (concat "tlon/core/openai.com/" tlon-email-shared))))
 #+end_src
 
-** llm
+** =llm=
 :PROPERTIES:
 :ID:       6D49D977-CD85-413E-8C19-884361746678
 :END:
@@ -8764,7 +8764,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (llm-warn-on-nonfree nil))
 #+end_src
 
-** magit-gptcommit
+** =magit-gptcommit=
 :PROPERTIES:
 :ID:       DFF89B96-95F6-4EDD-A3C2-3152928ED787
 :END:
@@ -8788,7 +8788,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (magit-gptcommit-status-buffer-setup))
 #+end_src
 
-** pangram
+** =pangram=
 :PROPERTIES:
 :ID:       59853F89-EAC9-4EFF-84F0-1253D858D317
 :END:
@@ -9040,7 +9040,7 @@ CLOCK: [2021-07-16 Fri 09:44]--[2021-07-16 Fri 09:45] =>  0:01
 CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
 :END:
 
-** org
+** =org=
 :PROPERTIES:
 :ID:       268B60E4-708C-4372-A59D-5DD876E493CA
 :END:
@@ -9212,7 +9212,7 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
         ("M-f" . ace-link-org)))
 #+end_src
 
-** org-extras
+** =org-extras=
 :PROPERTIES:
 :ID:       4DE04276-B164-441D-ADCA-017346C525D6
 :END:
@@ -9277,7 +9277,7 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
    ("s-A-l" . org-extras-url-dwim)))
 #+end_src
 
-** org-agenda
+** =org-agenda=
 :PROPERTIES:
 :ID:       E03F4142-C90D-4550-8990-15391E27AD77
 :END:
@@ -9462,7 +9462,7 @@ the file list so that only openable files reach the original function."
    ("z" . org-agenda-undo)))
 #+end_src
 
-** org-capture
+** =org-capture=
 :PROPERTIES:
 :ID:       14F93A83-0BE7-42E3-891E-F6806192296B
 :END:
@@ -9561,7 +9561,7 @@ Links to check out:
   - [[https://helpdeskheadesk.net/org-capture-template-2/][My Org Capture Templates - Part 2 emacs: · The Art of Not Asking Why]]
   - [[https://helpdeskheadesk.net/org-capture-template-3/][My Org Capture Templates - Part 3 emacs:css: · The Art of Not Asking Why]]
 
-** org-clock
+** =org-clock=
 :PROPERTIES:
 :ID:       90E8B1CE-433C-4B2B-8AA2-844506EAC031
 :END:
@@ -9611,7 +9611,7 @@ CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
    ("H-o" . org-clock-out)))
 #+end_src
 
-** org-clock-convenience
+** =org-clock-convenience=
 :PROPERTIES:
 :ID:       1DB11C80-DE47-42EA-851A-4D35398C1005
 :END:
@@ -9627,7 +9627,7 @@ CLOCK: [2023-03-18 Sat 13:14]--[2023-03-18 Sat 13:27] =>  0:13
   :defer t)
 #+end_src
 
-** org-clock-split
+** =org-clock-split=
 :PROPERTIES:
 :ID:       594F8AE4-9AE7-4D7D-A504-E75C5139BB5D
 :END:
@@ -9644,7 +9644,7 @@ I’m using a fork that fixes some functionality that broke when org changed =or
   :defer t)
 #+end_src
 
-** org-cycle
+** =org-cycle=
 :PROPERTIES:
 :ID:       AAB14053-B232-4627-8C1D-635FAE417A98
 :END:
@@ -9656,7 +9656,7 @@ I’m using a fork that fixes some functionality that broke when org changed =or
   (org-cycle-emulate-tab nil)) ; TAB always cycles, even if point not on a heading
 #+end_src
 
-** org-archive
+** =org-archive=
 :PROPERTIES:
 :ID:       354B22B6-B3BD-409D-B04F-051D4AD87959
 :END:
@@ -9678,7 +9678,7 @@ CLOCK: [2021-03-11 Thu 09:41]--[2021-03-11 Thu 10:00] =>  0:19
         ("s-a" . org-archive-subtree-default)))
 #+end_src
 
-** org-archive-hierarchically
+** =org-archive-hierarchically=
 :PROPERTIES:
 :ID:       27C3C7F9-C040-4844-AC5A-762BBC26C18F
 :END:
@@ -9697,7 +9697,7 @@ I normally archive subtrees with =org-archive-to-archive-sibling=, but use =org-
   :defer t)
 #+end_src
 
-** org-fold
+** =org-fold=
 :PROPERTIES:
 :ID:       DCBF8A9B-D230-4D51-B861-B85AA4405D25
 :END:
@@ -9712,7 +9712,7 @@ CLOCK: [2021-03-15 Mon 14:51]--[2021-03-15 Mon 15:07] =>  0:16
   (org-fold-catch-invisible-edits 'smart))
 #+end_src
 
-** org-faces
+** =org-faces=
 :PROPERTIES:
 :ID:       1A295AA4-31BD-4B2E-828B-5B3443AD8D35
 :END:
@@ -9751,7 +9751,7 @@ CLOCK: [2021-03-15 Mon 14:51]--[2021-03-15 Mon 15:07] =>  0:16
      (org-quote :family faces-extras-variable-pitch-font :height faces-extras-variable-pitch-height))))
 #+end_src
 
-** org-id
+** =org-id=
 :PROPERTIES:
 :ID:       51E91355-66E0-479C-B616-116EF261F930
 :END:
@@ -9785,7 +9785,7 @@ left as an alist, causing `puthash' errors in `org-id-add-location'."
   (advice-add 'org-id-add-location :before #'org-id-ensure-locations-hash-table))
 #+end_src
 
-** org-list
+** =org-list=
 :PROPERTIES:
 :ID:       DD345C01-CEAC-4CEC-A8D5-89C16A0182CB
 :END:
@@ -9798,7 +9798,7 @@ left as an alist, causing `puthash' errors in `org-id-add-location'."
   (org-list-indent-offset 2))
 #+end_src
 
-** org-refile
+** =org-refile=
 :PROPERTIES:
 :ID:       3FAE7C0D-FB22-4175-A0A4-FFA392539743
 :REFILE_TARGET_FILE: config.org
@@ -9836,7 +9836,7 @@ CLOCK: [2021-02-24 Wed 06:47]--[2021-02-24 Wed 07:30] =>  0:43
   (run-with-idle-timer (* 60 30) t #'org-extras-refile-regenerate-cache))
 #+end_src
 
-** org-keys
+** =org-keys=
 :PROPERTIES:
 :ID:       19FC2EEB-7C71-43C1-97E6-52913C31CCDE
 :END:
@@ -9904,7 +9904,7 @@ Enable speed keys. To trigger a speed key, point must be at the very beginning o
      ("g" . (org-agenda)))))
 #+end_src
 
-** ol
+** =ol=
 :PROPERTIES:
 :ID:       6BA48DB9-1861-40A3-9811-1B5D9F0E350E
 :END:
@@ -9920,7 +9920,7 @@ Enable speed keys. To trigger a speed key, point must be at the very beginning o
   ("H-L" . org-store-link))
 #+end_src
 
-** ol-bbdb
+** =ol-bbdb=
 :PROPERTIES:
 :ID:       B1A25249-1E67-498D-8A68-0E4BDB3D0A2B
 :END:
@@ -9932,7 +9932,7 @@ Enable speed keys. To trigger a speed key, point must be at the very beginning o
   (org-bbdb-anniversary-field 'birthday))
 #+end_src
 
-** org-protocol
+** =org-protocol=
 :PROPERTIES:
 :ID:       03387678-63D2-4B72-AD25-6F6F16992D5C
 :END:
@@ -9948,7 +9948,7 @@ CLOCK: [2022-07-16 Sat 21:15]--[2022-07-17 Sun 10:49] => 13:34
   :after org)
 #+end_src
 
-** ox
+** =ox=
 :PROPERTIES:
 :ID:       A3639B32-E7EE-4119-876B-729DF18FD314
 :END:
@@ -9976,7 +9976,7 @@ CLOCK: [2021-07-25 Sun 13:14]--[2021-07-25 Sun 13:18] =>  0:04
   (org-export-show-temporary-export-buffer nil)) ; bury temporary export buffers generated by `org-msg'
 #+end_src
 
-** ox-html
+** =ox-html=
 :PROPERTIES:
 :ID:       799486FA-374D-40ED-953A-36C09D7E15B6
 :END:
@@ -9988,7 +9988,7 @@ CLOCK: [2021-07-25 Sun 13:14]--[2021-07-25 Sun 13:18] =>  0:04
   (org-html-postamble nil)) ; the three lines above unnecessary when this set to nil
 #+end_src
 
-** ox-latex
+** =ox-latex=
 :PROPERTIES:
 :ID:       0D6DD227-A1C0-44B4-BD75-0C94F03D6FBE
 :END:
@@ -10002,7 +10002,7 @@ CLOCK: [2021-07-25 Sun 13:14]--[2021-07-25 Sun 13:18] =>  0:04
                                   ("lof" "lot" "tex" "aux" "idx" "log" "out" "toc" "nav" "snm" "vrb" "dvi" "fdb_latexmk" "blg" "brf" "fls" "entoc" "ps" "spl" "bbl" "pygtex" "pygstyle"))))
 #+end_src
 
-** ox-hugo
+** =ox-hugo=
 :PROPERTIES:
 :ID:       1E9E8DC4-83B7-44CA-B467-BA7428DDF812
 :END:
@@ -10053,7 +10053,7 @@ Hugo should be able to export ~org-cite~ citations.
     :export-bibliography (lambda (_keys _files _style _props _backend _info) "")))
 #+end_src
 
-** stafforini
+** =stafforini=
 :PROPERTIES:
 :ID:       20531D06-05B0-446B-A363-0319C934BCB9
 :END:
@@ -10067,7 +10067,7 @@ Hugo should be able to export ~org-cite~ citations.
   :bind (("A-H-s" . stafforini-menu)))
 #+end_src
 
-** ox-pandoc
+** =ox-pandoc=
 :PROPERTIES:
 :ID:       C16B02FA-64E6-423B-9596-B3B023C93B21
 :END:
@@ -10080,7 +10080,7 @@ Hugo should be able to export ~org-cite~ citations.
   :defer t)
 #+end_src
 
-** ox-gfm
+** =ox-gfm=
 :PROPERTIES:
 :ID:       E0D2A0D0-4442-482C-B076-36CD8BB3F062
 :END:
@@ -10093,7 +10093,7 @@ Hugo should be able to export ~org-cite~ citations.
   :defer t)
 #+end_src
 
-** ob
+** =ob=
 :PROPERTIES:
 :ID:       A19E8C93-0435-4D02-AF4F-8213212D2386
 :END:
@@ -10143,7 +10143,7 @@ Note to self: Typescript syntax highlighting works fine, but calling ~org-edit-s
     (add-to-list 'org-babel-key-bindings cons)))
 #+end_src
 
-** ob-typescript
+** =ob-typescript=
 :PROPERTIES:
 :ID:       7025014B-468D-4BDA-93B3-65980E6EC324
 :END:
@@ -10162,7 +10162,7 @@ Note to self: Typescript syntax highlighting works fine, but calling ~org-edit-s
   (defalias 'typescript-mode 'typescript-ts-mode))
 #+end_src
 
-** org-tempo
+** =org-tempo=
 :PROPERTIES:
 :ID:       E60D2631-F68D-4510-B857-B5880232D384
 :END:
@@ -10174,7 +10174,7 @@ Note to self: Typescript syntax highlighting works fine, but calling ~org-edit-s
   :after org)
 #+end_src
 
-** org-src
+** =org-src=
 :PROPERTIES:
 :ID:       5D173B55-ED72-495C-80EE-39063BAB0550
 :END:
@@ -10195,7 +10195,7 @@ Note to self: Typescript syntax highlighting works fine, but calling ~org-edit-s
    ("s-z" . org-edit-src-exit)))
 #+end_src
 
-** org-table
+** =org-table=
 :PROPERTIES:
 :ID:       6DB39CB9-0939-41CD-B3A4-4FC478F24077
 :END:
@@ -10208,7 +10208,7 @@ Note to self: Typescript syntax highlighting works fine, but calling ~org-edit-s
    ("s-c" . org-table-fedit-finish)))
 #+end_src
 
-** orgtbl-edit
+** =orgtbl-edit=
 :PROPERTIES:
 :ID:       7C3382D2-F7B4-4F1B-854E-BB60D568E299
 :END:
@@ -10223,7 +10223,7 @@ Note to self: Typescript syntax highlighting works fine, but calling ~org-edit-s
   :defer t)
 #+end_src
 
-** orgtbl-join
+** =orgtbl-join=
 :PROPERTIES:
 :ID:       91A9FFF0-BEB8-4C0D-9D78-B2F190C5AA8F
 :END:
@@ -10234,7 +10234,7 @@ Note to self: Typescript syntax highlighting works fine, but calling ~org-edit-s
   :defer t)
 #+end_src
 
-** org-crypt
+** =org-crypt=
 :PROPERTIES:
 :ID:       3C8E083B-55A1-4B55-A30A-BD9C4BE1D1D0
 :END:
@@ -10258,7 +10258,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   (org-crypt-use-before-save-magic))
 #+end_src
 
-** org-element
+** =org-element=
 :PROPERTIES:
 :ID:       79B7B36E-D824-4D67-BBAC-E4E4D8FA628F
 :END:
@@ -10271,7 +10271,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   (org-element-use-cache t))
 #+end_src
 
-** org-lint
+** =org-lint=
 :PROPERTIES:
 :ID:       43E5754F-7EB8-4FB7-8A92-B57D8BA2AF81
 :END:
@@ -10282,7 +10282,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   :defer t)
 #+end_src
 
-** org-habit
+** =org-habit=
 :PROPERTIES:
 :ID:       A4EE67E0-498C-4CE0-BBB2-E7F24DA6AD69
 :END:
@@ -10300,7 +10300,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   (org-habit-show-habits-only-for-today nil))
 #+end_src
 
-** org-contrib
+** =org-contrib=
 :PROPERTIES:
 :ID:       F2DD9900-5926-4FE1-A8DC-C398CFE80378
 :END:
@@ -10312,7 +10312,7 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   :after org)
 #+end_src
 
-** org-checklist
+** =org-checklist=
 :PROPERTIES:
 :ID:       1ABA68C3-187B-457C-9992-4C4BBEB45C18
 :END:
@@ -10330,7 +10330,7 @@ Allows reset of checkboxes in recurring tasks. This works only on headings that 
   :defer 30)
 #+end_src
 
-** org-make-toc
+** =org-make-toc=
 :PROPERTIES:
 :ID:       5BAB49C3-DB85-4CB1-9CF7-5FD72AFB4608
 :END:
@@ -10346,7 +10346,7 @@ CLOCK: [2023-02-26 Sun 13:15]--[2023-02-26 Sun 13:28] =>  0:13
   :defer 30)
 #+end_src
 
-** org2blog
+** =org2blog=
 :PROPERTIES:
 :ID:       56AD66CB-240C-4BAA-918B-CCD63BD518C4
 :END:
@@ -10394,7 +10394,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
   ("A-o" . org2blog-user-interface))
 #+end_src
 
-** org2blog-extras
+** =org2blog-extras=
 :PROPERTIES:
 :ID:       189C41F8-D0BF-40CC-A4AD-96C7F4A76E4D
 :END:
@@ -10407,7 +10407,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
   :after org2blog)
 #+end_src
 
-** org-journal
+** =org-journal=
 :PROPERTIES:
 :ID:       16DB534E-D606-4510-84ED-6C6640780E7A
 :END:
@@ -10443,7 +10443,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 :ID:       67333293-EE6D-4936-8C88-07F5AE193B81
 :END:
 
-** org-contacts
+** =org-contacts=
 :PROPERTIES:
 :ID:       63430292-5227-42B5-ABDC-4630C719E9D1
 :END:
@@ -10459,7 +10459,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
   (org-contacts-files `(,(file-name-concat paths-dir-tlon-repos "babel-core/contacts.org"))))
 #+end_src
 
-** org-vcard
+** =org-vcard=
 :PROPERTIES:
 :ID:       6747452D-3E69-48C9-A179-062D76C0406D
 :END:
@@ -10556,7 +10556,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
                   (funcall orig-fun direction content destination)))))
 #+end_src
 
-** org-autosort
+** =org-autosort=
 :PROPERTIES:
 :ID:       1BC53647-A492-4EA3-A9A5-352C71119629
 :END:
@@ -10571,7 +10571,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
   :defer 30)
 #+end_src
 
-** ox-clip
+** =ox-clip=
 :PROPERTIES:
 :ID:       E2D54031-28E4-4F96-A3D1-0E06D1B1A17E
 :END:
@@ -10589,7 +10589,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
      ("Markdown" . "pandoc --wrap=none -f html -t \"markdown+hard_line_breaks\" - | grep -v \"^:::\" | sed 's/{#.*}//g' | pbcopy"))))
 #+end_src
 
-** elgantt
+** =elgantt=
 :PROPERTIES:
 :ID:       22FCE4B1-4A51-4DF5-8BAF-2AC6E837DEE3
 :END:
@@ -10604,7 +10604,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
   :defer t)
 #+end_src
 
-** org-pomodoro
+** =org-pomodoro=
 :PROPERTIES:
 :ID:       107BED3A-947F-4D35-A382-2C20C1C37AED
 :END:
@@ -10642,7 +10642,7 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
 
 - check: https://gist.github.com/bravosierrasierra/1d98a89a7bcb618ef70c6c4a92af1a96#file-org-pomodoro-plus
 
-** org-pomodoro-extras
+** =org-pomodoro-extras=
 :PROPERTIES:
 :ID:       6D8C1A4B-3131-4175-AB23-4C3DDA311872
 :END:
@@ -10655,7 +10655,7 @@ CLOCK: [2022-03-31 Thu 17:25]--[2022-03-31 Thu 17:30] =>  0:05
   :after org-pomodoro)
 #+end_src
 
-** org-percentile
+** =org-percentile=
 :PROPERTIES:
 :ID:       A3454BA6-5E4E-4FA7-9465-52A410A6F5C8
 :END:
@@ -10686,7 +10686,7 @@ CLOCK: [2025-07-05 Sat 11:54]--[2025-07-05 Sat 11:54] =>  0:00
 :ID:       EC6700D7-C65D-4430-8DAC-57772B423D69
 :END:
 
-** org-roam
+** =org-roam=
 :PROPERTIES:
 :ID:       2F2E4C1E-4D9B-4A28-B08F-B381E83CFE17
 :END:
@@ -10797,7 +10797,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 	("f" . ace-link-org)))
 #+end_src
 
-** org-roam-extras
+** =org-roam-extras=
 :PROPERTIES:
 :ID:       44F722DC-C324-4A86-85A1-F103812B2A6A
 :END:
@@ -10831,7 +10831,7 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
    ("H-J" . org-roam-extras-node-find-special)))
 #+end_src
 
-** org-roam-ui
+** =org-roam-ui=
 :PROPERTIES:
 :ID:       BAEADCA3-68C6-4B59-A45A-7A1C11C6F6BB
 :END:
@@ -10856,7 +10856,7 @@ CLOCK: [2021-08-02 Mon 22:29]--[2021-08-02 Mon 22:29] =>  0:00
   (org-roam-ui-open-on-start nil))
 #+end_src
 
-** org-transclusion
+** =org-transclusion=
 :PROPERTIES:
 :ID:       8D8E5E44-248E-485F-9C74-E1D7A8A19D15
 :END:
@@ -10885,7 +10885,7 @@ CLOCK: [2021-08-02 Mon 22:29]--[2021-08-02 Mon 22:29] =>  0:00
                  'face-override-spec))
 #+end_src
 
-** vulpea
+** =vulpea=
 :PROPERTIES:
 :ID:       697CE296-FAA8-4485-94D8-B1321B59226F
 :END:
@@ -10910,7 +10910,7 @@ I use this package to define a dynamic agenda, as explained and illustrated [[ht
   :after org org-roam)
 #+end_src
 
-** vulpea-extras
+** =vulpea-extras=
 :PROPERTIES:
 :ID:       466CED55-6DCA-4D17-83C7-B2FE9C2B0A69
 :END:
@@ -10924,7 +10924,7 @@ I use this package to define a dynamic agenda, as explained and illustrated [[ht
   ((find-file-hook before-save-hook) . vulpea-extras-project-update-tag))
 #+end_src
 
-** org-noter
+** =org-noter=
 :PROPERTIES:
 :ID:       A1BA5ED1-BF56-4C33-81F8-19D2AFC7F6D7
 :END:
@@ -10973,7 +10973,7 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 - To check: https://org-roam.discourse.group/t/org-roam-bibtex-in-a-sub-directory/649/5
 - https://notes.andymatuschak.org/About_these_notes
 
-** org-noter-extras
+** =org-noter-extras=
 :PROPERTIES:
 :ID:       3E324D44-27D5-4FA4-9D2F-2FFC6A4021DE
 :END:
@@ -10998,7 +10998,7 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 :PROPERTIES:
 :ID:       7D12596F-7CF6-43B4-B3E8-E25214535DFA
 :END:
-** anki-editor
+** =anki-editor=
 :PROPERTIES:
 :ID:       ADC317A1-3867-4F73-8399-220203190E2E
 :END:
@@ -11018,7 +11018,7 @@ The [[https://github.com/louietan/anki-editor][original package]] is abandoned, 
   (anki-editor-org-tags-as-anki-tags nil))
 #+end_src
 
-** anki-editor-extras
+** =anki-editor-extras=
 :PROPERTIES:
 :ID:       16C923D7-0A7E-4EA6-B06E-EB02A04C81C8
 :END:
@@ -11031,7 +11031,7 @@ The [[https://github.com/louietan/anki-editor][original package]] is abandoned, 
   :demand t)
 #+end_src
 
-** ankiorg
+** =ankiorg=
 :PROPERTIES:
 :ID:       B43CB28A-9B8C-4304-AC76-4174ED2D479C
 :END:
@@ -11067,7 +11067,7 @@ I split my bibliographies into two categories: personal and work. The files prov
 
 Each of these packages requires =tlon=, since the latter must load for =paths-files-bibliography-all= to be set.
 
-** oc
+** =oc=
 :PROPERTIES:
 :ID:       8AF25840-AC38-4FF7-A45F-F01B96C5DF5A
 :END:
@@ -11089,7 +11089,7 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
    '((t . (csl "long-template.csl")))))
 #+end_src
 
-** oc-csl
+** =oc-csl=
 :PROPERTIES:
 :ID:       72710244-0369-4C12-8B83-0674EE0E11D5
 :END:
@@ -11103,7 +11103,7 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
   (org-cite-csl-locales-dir paths-dir-tlon-csl-locales))
 #+end_src
 
-** citeproc
+** =citeproc=
 :PROPERTIES:
 :ID:       2BB202FC-87DE-4563-B059-01680F8A2CB6
 :END:
@@ -11119,7 +11119,7 @@ CLOCK: [2022-06-24 Fri 12:23]--[2022-06-24 Fri 12:31] =>  0:08
   :defer t)
 #+end_src
 
-** bibtex
+** =bibtex=
 :PROPERTIES:
 :ID:       42191633-D2A1-4EDB-903F-3965ECB61510
 :END:
@@ -11205,7 +11205,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 :ID:       8B243BA8-8CA1-4E6F-82CA-5CD950D8C498
 :END:
 
-** bibtex-extras
+** =bibtex-extras=
 :PROPERTIES:
 :ID:       31E4CEF9-8CF3-4921-A108-3C60A7191F8F
 :END:
@@ -11249,7 +11249,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
         ("s-t" . bibtex-extras-move-entry-to-tlon)))
 #+end_src
 
-** bibtex-completion
+** =bibtex-completion=
 :PROPERTIES:
 :ID:       DCD9D75D-7814-49D8-A3E0-33846D5A08FD
 :END:
@@ -11285,7 +11285,7 @@ The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-b
   (require 'tlon)) ; see explanatory note under ‘reference & citation’
 #+end_src
 
-** bibtex-completion-extras
+** =bibtex-completion-extras=
 :PROPERTIES:
 :ID:       E7420E36-9396-48A5-9FD2-6A4CA4610324
 :END:
@@ -11295,7 +11295,7 @@ The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-b
   :after bibtex-completion)
 #+end_src
 
-** org-roam-bibtex
+** =org-roam-bibtex=
 :PROPERTIES:
 :ID:       EC73B84D-530E-4179-BB67-F19110A543DF
 :END:
@@ -11334,7 +11334,7 @@ CLOCK: [2021-07-14 Wed 21:56]--[2021-07-14 Wed 22:45] =>  0:49
   (setq org-roam-capture-new-node-hook nil))
 #+end_src
 
-** citar
+** =citar=
 :PROPERTIES:
 :ID:       67AB4C5F-2425-4D31-9590-9D13790B4C97
 :END:
@@ -11411,7 +11411,7 @@ We defer-load the package to activate the timer that in turn updates the bibliog
    ("i" . citar-extras-open-in-ebib)))
 #+end_src
 
-** citar-extras
+** =citar-extras=
 :PROPERTIES:
 :ID:       6CC7F660-F6E6-4605-AA42-B495FF090B5D
 :END:
@@ -11430,7 +11430,7 @@ We defer-load the package to activate the timer that in turn updates the bibliog
               citar-extras-indicator-cited-icons)))
 #+end_src
 
-** citar-citeproc
+** =citar-citeproc=
 :PROPERTIES:
 :ID:       8CE6DBC7-E180-4E6D-B6E2-8D1E2756E765
 :END:
@@ -11445,7 +11445,7 @@ We defer-load the package to activate the timer that in turn updates the bibliog
   (citar-citeproc-csl-locales-dir paths-dir-tlon-csl-locales))
 #+end_src
 
-** citar-embark
+** =citar-embark=
 :PROPERTIES:
 :ID:       846EEC59-E022-41B7-96D3-4B379F8F91D4
 :END:
@@ -11459,7 +11459,7 @@ We defer-load the package to activate the timer that in turn updates the bibliog
   (citar-embark-mode))
 #+end_src
 
-** citar-org-roam
+** =citar-org-roam=
 :PROPERTIES:
 :ID:       894C33F7-BB88-403B-92EA-260DD73B4B23
 :END:
@@ -11473,7 +11473,7 @@ We defer-load the package to activate the timer that in turn updates the bibliog
   :after citar org-roam)
 #+end_src
 
-** org-ref
+** =org-ref=
 :PROPERTIES:
 :ID:       1FC5528A-9F5A-4A9D-B168-5A1F51110455
 :END:
@@ -11498,7 +11498,7 @@ I use this package only to run the cleanup function ~org-ref-clean-bibtex-entry~
     (delete fun org-ref-clean-bibtex-entry-hook)))
 #+end_src
 
-** org-ref-extras
+** =org-ref-extras=
 :PROPERTIES:
 :ID:       D4CF6E94-9BE5-4121-88F0-C8D3251B9EFE
 :END:
@@ -11511,7 +11511,7 @@ I use this package only to run the cleanup function ~org-ref-clean-bibtex-entry~
   :after org-ref)
 #+end_src
 
-** ebib
+** =ebib=
 :PROPERTIES:
 :ID:       A744824B-1FE1-4721-8318-1FDDE3758A7A
 :END:
@@ -11625,7 +11625,7 @@ The macro below generates the commands correctly. But attempting to define key b
 
 [[https://juanjose.garciaripoll.com/blog/ebib-biblio-interface/index.html][eBib-Biblio interface, aka. Mendeley for Emacs]]
 
-** ebib-utils
+** =ebib-utils=
 :PROPERTIES:
 :ID:       2CB38F99-1429-40CC-AF6D-466354D8ACF2
 :END:
@@ -11644,7 +11644,7 @@ The macro below generates the commands correctly. But attempting to define key b
   (add-to-list 'ebib-hidden-fields "year")) ; hide others
 #+end_src
 
-** ebib-extras
+** =ebib-extras=
 :PROPERTIES:
 :ID:       9E86F42E-2F41-4BB7-ABC5-1C929DBD5C06
 :END:
@@ -11705,7 +11705,7 @@ The macro below generates the commands correctly. But attempting to define key b
    ("s-r" . ebib-extras-rename-files)))
 #+end_src
 
-** bib
+** =bib=
 :PROPERTIES:
 :ID:       D3DE21CB-388A-48A0-A7EB-E79DD48D5E81
 :END:
@@ -11730,7 +11730,7 @@ The macro below generates the commands correctly. But attempting to define key b
         ("t" . bib-zotra-add-entry-from-title)))
 #+end_src
 
-** zotra
+** =zotra=
 :PROPERTIES:
 :ID:       815B8CEA-D36D-4E47-B728-D86FEFB736DF
 :END:
@@ -11760,7 +11760,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   (zotra-local-server-directory (file-name-concat paths-dir-external-repos "zotra-server/")))
 #+end_src
 
-** zotra-extras
+** =zotra-extras=
 :PROPERTIES:
 :ID:       29BBF8F1-FC6D-4AFE-AEE4-6C01BB4AAA5F
 :END:
@@ -11783,7 +11783,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
         ("a" . zotra-extras-add-entry)))
 #+end_src
 
-** annas-archive
+** =annas-archive=
 :PROPERTIES:
 :ID:       00D40112-A109-4F89-9540-DEDCDB358023
 :END:
@@ -11821,7 +11821,7 @@ CLOCK: [2021-04-08 Thu 10:10]--[2021-04-08 Thu 10:52] =>  0:42
 CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 :END:
 
-** simple
+** =simple=
 :PROPERTIES:
 :ID:       509B1DFA-E776-4BF5-8231-4A5984FD0150
 :END:
@@ -11833,7 +11833,7 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
   (read-mail-command 'mu4e))
 #+end_src
 
-** sendmail
+** =sendmail=
 :PROPERTIES:
 :ID:       25BB02C1-B537-4D2F-AF95-3B1217A58E6D
 :END:
@@ -11847,7 +11847,7 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
   (send-mail-function 'smtpmail-send-it))
 #+end_src
 
-** smtpmail
+** =smtpmail=
 :PROPERTIES:
 :ID:       F05AFA09-978B-441D-B947-0DBEA4DBC7BF
 :END:
@@ -11863,7 +11863,7 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
   (smtpmail-smtp-service 587))
 #+end_src
 
-** message
+** =message=
 :PROPERTIES:
 :ID:       67208BCE-6FFD-48B2-A5AD-7B72BAF31692
 :END:
@@ -11908,7 +11908,7 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
         ("s-A-s" . message-send)))
 #+end_src
 
-** mml
+** =mml=
 :PROPERTIES:
 :ID:       2A87061B-BE45-443B-AB2C-893A69C20003
 :END:
@@ -11920,7 +11920,7 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
   :defer t)
 #+end_src
 
-** mu4e
+** =mu4e=
 :PROPERTIES:
 :ID:       1B568415-F030-437B-921C-B4A65B370A6E
 :END:
@@ -12158,7 +12158,7 @@ https://mu-discuss.narkive.com/mxM4AVIW/how-to-debug-non-zero-exit-code
 
 If you encounter problems with mu and Straight, see [[https://github.com/raxod502/straight.el/issues/491#issuecomment-760150634][this thread]].
 
-** mu4e-extras
+** =mu4e-extras=
 :PROPERTIES:
 :ID:       A131F743-C780-4D66-9F1A-D3F63F92DE0B
 :END:
@@ -12209,7 +12209,7 @@ If you encounter problems with mu and Straight, see [[https://github.com/raxod50
         ("v" . mu4e-extras-view-move)))
 #+end_src
 
-** org-msg
+** =org-msg=
 :PROPERTIES:
 :ID:       DADEABFE-0E73-4E8F-9973-771FFEF55B60
 :END:
@@ -12336,7 +12336,7 @@ I use this package to compose messages and to reply to messages composed in HTML
         ("s-A-l" . org-extras-url-dwim)))
 #+end_src
 
-** org-msg-extras
+** =org-msg-extras=
 :PROPERTIES:
 :ID:       672D77D8-E9AA-4A66-A16A-EAB54E0238E6
 :END:
@@ -12361,7 +12361,7 @@ I use this package to compose messages and to reply to messages composed in HTML
 :LOGBOOK:
 :END:
 
-** telega
+** =telega=
 :PROPERTIES:
 :ID:       E5B6D1B4-6225-4F69-8522-F8405127E1DE
 :END:
@@ -12519,7 +12519,7 @@ Then change the value of =telega-server-libs-prefix= from =/opt/homebrew= to =/u
         ("x" . telega-webpage-browse-url)))
 #+end_src
 
-** telega-mnz
+** =telega-mnz=
 :PROPERTIES:
 :ID:       473F7E47-4980-4A4A-8EC7-C008DB30BA22
 :END:
@@ -12537,7 +12537,7 @@ Then change the value of =telega-server-libs-prefix= from =/opt/homebrew= to =/u
   (telega-load-hook . global-telega-mnz-mode))
 #+end_src
 
-** telega-dired-dwim
+** =telega-dired-dwim=
 :PROPERTIES:
 :ID:       F38952F5-975A-4868-9E6B-BC74CA491BE2
 :END:
@@ -12549,7 +12549,7 @@ Then change the value of =telega-server-libs-prefix= from =/opt/homebrew= to =/u
   :after telega dired)
 #+end_src
 
-** telega-extras
+** =telega-extras=
 :PROPERTIES:
 :ID:       C7D90E9B-3503-4BFA-A736-89803A9DA664
 :END:
@@ -12581,7 +12581,7 @@ Then change the value of =telega-server-libs-prefix= from =/opt/homebrew= to =/u
    ("o" . telega-extras-chat-org-capture)))
 #+end_src
 
-** ol-telega
+** =ol-telega=
 :PROPERTIES:
 :ID:       E973DAC8-E1DE-4B94-80C6-CF80BD0F0836
 :END:
@@ -12593,7 +12593,7 @@ Then change the value of =telega-server-libs-prefix= from =/opt/homebrew= to =/u
   :after telega)
 #+end_src
 
-** wasabi
+** =wasabi=
 :PROPERTIES:
 :ID:       6D2A5268-FC77-401E-A425-EC6F5961ED3B
 :END:
@@ -12608,7 +12608,7 @@ Then change the value of =telega-server-libs-prefix= from =/opt/homebrew= to =/u
   :defer t)
 #+end_src
 
-** ement
+** =ement=
 :PROPERTIES:
 :ID:       AF0C2ADB-E9C0-4C37-8C3D-5674351ED170
 :END:
@@ -12620,7 +12620,7 @@ Then change the value of =telega-server-libs-prefix= from =/opt/homebrew= to =/u
 
 I installed ~ement~ in the hopes that I would be able to send Signal and WhatsApp messages from Emacs. I tried the [[https://github.com/alphapapa/ement.el/blob/6412c8aaae29ee79ccfb44582001c12d147cd5a6/e2ee.org#two-way-verification][two way verification]] method but calling ~panctl~ results in a ~dbus~-related error, and I was unable to make ~dubs~ work. Some discussion [[https://www.reddit.com/r/emacs/comments/1crerbh/comment/l40aszc/][here]] (see also [[https://www.reddit.com/r/emacs/comments/1crerbh/comment/l40prh2/][this comment]]).
 
-** erc
+** =erc=
 :PROPERTIES:
 :ID:       4FB5ECDA-2DB5-40F5-8BBE-6B0D4B51524D
 :END:
@@ -12651,7 +12651,7 @@ CLOCK: [2021-06-02 Wed 12:02]--[2021-06-02 Wed 12:39] =>  0:37
   (add-to-list 'erc-modules 'spelling))
 #+end_src
 
-** circe
+** =circe=
 :PROPERTIES:
 :ID:       B5B892BD-A0E2-4D54-977E-58C1CF3CC248
 :END:
@@ -12666,7 +12666,7 @@ CLOCK: [2021-10-07 Thu 14:31]--[2021-10-07 Thu 15:23] =>  0:52
   :defer t)
 #+end_src
 
-** slack
+** =slack=
 :PROPERTIES:
 :ID:       DEC2C46C-8837-4676-B495-BB2BA91D9681
 :END:
@@ -12770,7 +12770,7 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
    ("s-m" . slack-message-embed-mention)))
 #+end_src
 
-** ol-emacs-slack
+** =ol-emacs-slack=
 :PROPERTIES:
 :ID:       5F9F6EF6-55A5-4DD4-BB81-BBA16266364B
 :END:
@@ -12797,7 +12797,7 @@ CLOCK: [2021-05-18 Tue 18:26]--[2021-05-18 Tue 18:54] =>  0:28
 - [[http://www.howardism.org/Technical/Emacs/browsing-in-emacs.html][Emacs-focused Web Browsing]]
 - [[https://protesilaos.com/codelog/2021-03-25-emacs-eww/][EWW and my extras (text-based Emacs web browser) | Protesilaos Stavrou]]
 
-** browse-url
+** =browse-url=
 :PROPERTIES:
 :ID:       0373B505-A028-4537-871F-3CCC2E5EADB1
 :END:
@@ -12816,7 +12816,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
   (browse-url-chrome-program "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"))
 #+end_src
 
-** browse-url-extras
+** =browse-url-extras=
 :PROPERTIES:
 :ID:       15B6192C-652C-47FC-8477-0B701129E89F
 :END:
@@ -12832,7 +12832,7 @@ CLOCK: [2023-04-08 Sat 17:14]--[2023-04-08 Sat 17:45] =>  0:31
   :after browse-url)
 #+end_src
 
-** shr
+** =shr=
 :PROPERTIES:
 :ID:       3E08CE1B-E73A-4440-A545-D2D3480D951B
 :END:
@@ -12864,7 +12864,7 @@ CLOCK: [2021-08-11 Wed 14:04]--[2021-08-11 Wed 14:09] =>  0:05
      (shr-h2 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height))))
 #+end_src
 
-** html
+** =html=
 :PROPERTIES:
 :ID:       A3D835EE-B96F-4FAE-B372-DA8687A26B2A
 :END:
@@ -12875,7 +12875,7 @@ CLOCK: [2021-08-11 Wed 14:04]--[2021-08-11 Wed 14:09] =>  0:05
               ("s-w" . eww-extras-browse-file)))
 #+end_src
 
-** mhtml
+** =mhtml=
 :PROPERTIES:
 :ID:       ED6F68F1-BE77-47CF-B2E7-1A5E1910E491
 :END:
@@ -12890,7 +12890,7 @@ CLOCK: [2021-08-11 Wed 14:04]--[2021-08-11 Wed 14:09] =>  0:05
         ("s-w" . eww-extras-browse-file)))
 #+end_src
 
-** shr-tag-pre-highlight
+** =shr-tag-pre-highlight=
 :PROPERTIES:
 :ID:       8956AD37-95A4-4A73-9287-9F70A406E9AF
 :END:
@@ -12908,7 +12908,7 @@ CLOCK: [2021-11-19 Fri 12:33]--[2021-11-19 Fri 12:35] =>  0:02
                '(pre . shr-tag-pre-highlight)))
 #+end_src
 
-** shr-heading
+** =shr-heading=
 :PROPERTIES:
 :ID:       CF3431E0-E5B0-41C3-924A-1C96AD3BB46F
 :END:
@@ -12927,7 +12927,7 @@ Discussion [[https://www.reddit.com/r/emacs/comments/u234pn/comment/i4i3gqg/?utm
   (eww-mode-hook . shr-heading-setup-imenu))
 #+end_src
 
-** eww
+** =eww=
 :PROPERTIES:
 :ID:       E9E3FE6F-5580-4D21-90D8-6B0E595C10F7
 :END:
@@ -12992,7 +12992,7 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
    ("s-c" . org-extras-eww-copy-for-org-mode)))
 #+end_src
 
-** eww-extras
+** =eww-extras=
 :PROPERTIES:
 :ID:       69B35912-79CB-4611-8E43-7C8A5BC82B55
 :END:
@@ -13022,12 +13022,12 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
         ("x" . eww-extras-open-with-eww)))
 #+end_src
 
-** prot-eww
+** =prot-eww=
 :PROPERTIES:
 :ID:       C83AED09-FA8C-46CE-91E0-13A7D49D7B8A
 :END:
 
-[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-eww.el][prot-eww]] /is a set of ~eww~ extensions from Protesilaos Stavrou's personal configuration./
+@@hugo:*@@[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-eww.el][prot-eww]] is a set of ~eww~ extensions from Protesilaos Stavrou's personal configuration.@@hugo:*@@
 
 Note Prot's clarification:
 
@@ -13050,7 +13050,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
         ("A-M-f" . prot-eww-jump-to-url-on-page)))
 #+end_src
 
-** w3m
+** =w3m=
 :PROPERTIES:
 :ID:       986E4522-7EE1-477A-89EB-08855BCBECEE
 :END:
@@ -13077,7 +13077,7 @@ I only use ~w3m~ to browse HTML email messages with ~mu4e~. For web browsing, I 
         ("<return>" . w3m-view-url-with-browse-url)))
 #+end_src
 
-** elfeed
+** =elfeed=
 :PROPERTIES:
 :ID:       FF5DDBC3-ABB6-48A9-9B47-BC9A18F532D5
 :END:
@@ -13155,7 +13155,7 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
    ("x" . elfeed-show-visit)))
 #+end_src
 
-** elfeed-extras
+** =elfeed-extras=
 :PROPERTIES:
 :ID:       57DE6F0B-9245-4E39-A747-6C2A6714B02A
 :END:
@@ -13188,7 +13188,7 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
         ("w" . elfeed-extras-kill-link-url-of-entry)))
 #+end_src
 
-** elfeed-org
+** =elfeed-org=
 :PROPERTIES:
 :ID:       DF954E99-17CB-4698-934E-53E038C654EF
 :END:
@@ -13205,7 +13205,7 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
   (elfeed-org))
 #+end_src
 
-** elfeed-tube
+** =elfeed-tube=
 :PROPERTIES:
 :ID:       410603F9-0FE3-4C31-BCB4-F85A9052263C
 :END:
@@ -13231,7 +13231,7 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
    ("." . elfeed-tube-mpv-where)))
 #+end_src
 
-** elfeed-tube-mpv
+** =elfeed-tube-mpv=
 :PROPERTIES:
 :ID:       0ADC0E03-67F8-446F-AF26-5CBBE16F2BBD
 :END:
@@ -13245,7 +13245,7 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
   (elfeed-tube-save-indicator t))
 #+end_src
 
-** engine-mode
+** =engine-mode=
 :PROPERTIES:
 :ID:       437B98FC-3667-43C4-9EF6-470E23FE7561
 :END:
@@ -13615,7 +13615,7 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   :hook minibuffer-setup-hook)
 #+end_src
 
-** org-download
+** =org-download=
 :PROPERTIES:
 :ID:       A9F101D1-4130-4297-A2B3-203B15AA408B
 :END:
@@ -13632,7 +13632,7 @@ CLOCK: [2021-06-23 Wed 11:43]--[2021-06-23 Wed 11:51] =>  0:08
   ("H-s-v" . org-download-clipboard))
 #+end_src
 
-** org-web-tools
+** =org-web-tools=
 :PROPERTIES:
 :ID:       F139F57B-7CBB-49C9-A061-B827B25DB3DA
 :END:
@@ -13649,7 +13649,7 @@ CLOCK: [2021-10-01 Fri 21:10]--[2021-10-01 Fri 21:51] =>  0:41
   :defer t)
 #+end_src
 
-** org-web-tools-extras
+** =org-web-tools-extras=
 :PROPERTIES:
 :ID:       544201E3-BFB5-4398-AECC-EDD45410C064
 :END:
@@ -13662,7 +13662,7 @@ CLOCK: [2021-10-01 Fri 21:10]--[2021-10-01 Fri 21:51] =>  0:41
   :after org-web-tools)
 #+end_src
 
-** request
+** =request=
 :PROPERTIES:
 :ID:       4B7C17EE-0346-4059-AFF1-24DD7A609ADE
 :END:
@@ -13674,7 +13674,7 @@ CLOCK: [2021-10-01 Fri 21:10]--[2021-10-01 Fri 21:51] =>  0:41
   :defer t)
 #+end_src
 
-** deferred
+** =deferred=
 :PROPERTIES:
 :ID:       A19273DD-3802-4594-A700-237F4134740A
 :END:
@@ -13686,7 +13686,7 @@ CLOCK: [2021-10-01 Fri 21:10]--[2021-10-01 Fri 21:51] =>  0:41
   :defer t)
 #+end_src
 
-** graphql-mode
+** =graphql-mode=
 :PROPERTIES:
 :ID:       4B9A26D9-EA9B-420B-A8B2-060AAF19D4E4
 :END:
@@ -13698,7 +13698,7 @@ CLOCK: [2021-10-01 Fri 21:10]--[2021-10-01 Fri 21:51] =>  0:41
   :defer t)
 #+end_src
 
-** mullvad
+** =mullvad=
 :PROPERTIES:
 :ID:       F932B1C7-4BC0-45AB-A736-3E4DC4FBA09E
 :END:
@@ -13748,7 +13748,7 @@ CLOCK: [2022-09-29 Thu 15:39]--[2022-09-29 Thu 16:26] =>  0:47
 :ID:       358E28B5-0274-43A0-AE9C-AA004B4775E5
 :END:
 
-** EMMS
+** =EMMS=
 :PROPERTIES:
 :ID:       3B176388-5D13-478F-8E13-9C8C93AB9D10
 :END:
@@ -13800,7 +13800,7 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
 
 [[https://sqrtminusone.xyz/posts/2021-09-07-emms/][My EMMS and elfeed setup]]
 
-** empv
+** =empv=
 :PROPERTIES:
 :ID:       A26317BD-B76E-4A0A-9DA1-ED4CC9F4416F
 :END:
@@ -13821,7 +13821,7 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
   (add-to-list 'empv-mpv-args "--ytdl-format=best")) ; github.com/isamert/empv.el#viewing-youtube-videos
 #+end_src
 
-** tango-wiki
+** =tango-wiki=
 :PROPERTIES:
 :ID:       8184F453-9B02-4EEE-9F25-3D9E5E5B8E97
 :END:
@@ -13834,7 +13834,7 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
   :defer t)
 #+end_src
 
-** ytdl
+** =ytdl=
 :PROPERTIES:
 :ID:       26EEEF20-5CDC-4855-A03D-AFEBB784D637
 :END:
@@ -13862,7 +13862,7 @@ Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dl
    ("D" . ytdl--delete-item-at-point)))
 #+end_src
 
-** esi-dictate
+** =esi-dictate=
 :PROPERTIES:
 :ID:       F4DA377D-3A7D-4DC8-A35E-A8BB684EE32D
 :END:
@@ -13895,7 +13895,7 @@ Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dl
   (esi-dictate-speech-final . esi-dictate-fix-context))
 #+end_src
 
-** read-aloud
+** =read-aloud=
 :PROPERTIES:
 :ID:       71DBC03A-D68C-4E5D-B495-55DE31F6DC2F
 :END:
@@ -13914,7 +13914,7 @@ Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dl
   ("C-H-r" . read-aloud-this))
 #+end_src
 
-** read-aloud-extras
+** =read-aloud-extras=
 :PROPERTIES:
 :ID:       AA0F6FA2-2226-47C3-AE3F-7C8A1D542A17
 :END:
@@ -13924,7 +13924,7 @@ Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dl
   :after read-aloud)
 #+end_src
 
-** subed
+** =subed=
 :PROPERTIES:
 :ID:       2FE4816E-F6F8-452A-9417-345FE4E01014
 :END:
@@ -13972,7 +13972,7 @@ result to a user-specified file."
 :ID:       EB8682EE-77BC-4D88-AA87-5ECB804C8B53
 :END:
 
-** calc
+** =calc=
 :PROPERTIES:
 :ID:       50FAD2F3-E501-408E-A9A2-8358FAA87C1C
 :END:
@@ -13992,7 +13992,7 @@ result to a user-specified file."
    ("C-k" . nil)))
 #+end_src
 
-** calc-ext
+** =calc-ext=
 :PROPERTIES:
 :ID:       34F23DCB-0B05-4CFB-95F3-F5CC392B538D
 :END:
@@ -14006,7 +14006,7 @@ result to a user-specified file."
               ("C-k" . nil)))
 #+end_src
 
-** alert
+** =alert=
 :PROPERTIES:
 :ID:       694AAC2E-669E-40D4-9794-5E352D77734C
 :END:
@@ -14039,7 +14039,7 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
     (alert-message-notify info)))
 #+end_src
 
-** midnight
+** =midnight=
 :PROPERTIES:
 :ID:       C6B68696-DCCC-4143-A0BC-E5EEE249AACF
 :END:
@@ -14095,7 +14095,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
                                fun "Midnight hook now calling `%s'..."))))
 #+end_src
 
-** bbdb
+** =bbdb=
 :PROPERTIES:
 :ID:       0537BBF6-FD95-44A5-9327-1024A3D106EB
 :END:
@@ -14138,7 +14138,7 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
    ("M-d" . nil)))
 #+end_src
 
-** bbdb-extras
+** =bbdb-extras=
 :PROPERTIES:
 :ID:       07EA04A6-65BE-4AF9-A945-99095D719815
 :END:
@@ -14154,7 +14154,7 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
               ("n" . bbdb-extras-create-quick)))
 #+end_src
 
-** bbdb-vcard
+** =bbdb-vcard=
 :PROPERTIES:
 :ID:       EB0B93F7-30F0-4C6D-A638-CD67C307CB62
 :END:
@@ -14169,7 +14169,7 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
   (bbdb-vcard-media-directory "media"))
 #+end_src
 
-** macos
+** =macos=
 :PROPERTIES:
 :ID:       E8C33B31-BFDD-45BF-ABDB-6F60353653CF
 :END:
@@ -14194,7 +14194,7 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
    ("C-M-s-g" . macos-set-dication-language)))
 #+end_src
 
-** keycast
+** =keycast=
 :PROPERTIES:
 :ID:       8D51F4B0-7443-420B-919F-7AA9B0EC0CE9
 :END:
@@ -14216,7 +14216,7 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
     (add-to-list 'global-mode-string '("" keycast-mode-line))))
 #+end_src
 
-** activity-watch-mode
+** =activity-watch-mode=
 :PROPERTIES:
 :ID:       809139BE-A8AF-40A7-BF1A-899839313729
 :END:
@@ -14272,7 +14272,7 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
     (activity-watch-disable-on-remote-files)))
 #+end_src
 
-** custom
+** =custom=
 :PROPERTIES:
 :ID:       7C328D33-DCFE-4E47-8B58-7C27E7F7C1DB
 :END:
@@ -14288,7 +14288,7 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
         ("f" . ace-link-custom)))
 #+end_src
 
-** mercado-libre
+** =mercado-libre=
 :PROPERTIES:
 :ID:       EE7E910B-F443-44F7-87F1-5E44137DDB9E
 :END:
@@ -14308,7 +14308,7 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
    (file-name-concat paths-dir-dropbox "Apps/Mercado Libre/mercado-libre-listings.el")))
 #+end_src
 
-** polymarket
+** =polymarket=
 :PROPERTIES:
 :ID:       735A9793-ABDB-4251-AA0B-237D7F2D7788
 :END:
@@ -14324,7 +14324,7 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
   :defer t)
 #+end_src
 
-** kelly
+** =kelly=
 :PROPERTIES:
 :ID:       259863E9-6C12-4C58-B959-30C27C3D6BDF
 :END:
@@ -14341,7 +14341,7 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
   (kelly-b-parameter-type 'probability))
 #+end_src
 
-** fatebook
+** =fatebook=
 :PROPERTIES:
 :ID:       6668B610-6BAD-40AD-823B-7E96EFBB23CB
 :END:
@@ -14358,7 +14358,7 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
   (fatebook-api-key-function (lambda () (auth-source-pass-get "api" "chrome/fatebook.io"))))
 #+end_src
 
-** tetris
+** =tetris=
 :PROPERTIES:
 :ID:       F4C5A232-7788-4240-9CE2-B6761C905786
 :END:
@@ -14383,7 +14383,7 @@ And finally, the section you've all been waiting for.
 CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
 :END:
 
-** keyboard-maestro
+** =keyboard-maestro=
 :PROPERTIES:
 :ID:       1776C0C3-CEEC-4DED-B609-4DF0DF83B0C2
 :END:

@@ -1057,7 +1057,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 :ID:       300DFB2C-878E-4F21-833C-327C9DFDC01B
 :END:
 
-/[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-common.el][prot-common]] is a set of functions used by Protesilaos Stavrou's unreleased "packages"./
+[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-common.el][prot-common]] /is a set of functions used by Protesilaos Stavrou's unreleased "packages"./
 
 Note Prot's clarification:
 
@@ -1080,7 +1080,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
 :ID:       6C67743E-7250-4BC5-B496-2D969EF2D015
 :END:
 
-/[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-simple.el][prot-simple]] is a set of common commands used by Protesilaos Stavrou's unreleased "packages"./
+[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-simple.el][prot-simple]] /is a set of common commands used by Protesilaos Stavrou's unreleased "packages"./
 
 Note Prot's clarification:
 
@@ -4401,7 +4401,7 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
 :ID:       FF8B73D7-0A56-44FE-8F66-DDD18C9D5CE1
 :END:
 
-/[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-scratch.el][prot-scratch]] supports scratch buffers for an editable major mode of choice./
+[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-scratch.el][prot-scratch]] /supports scratch buffers for an editable major mode of choice./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package prot-scratch
@@ -12445,7 +12445,7 @@ Then change the value of =telega-server-libs-prefix= from =/opt/homebrew= to =/u
   (telega-photo-size-limits `(8 3 ,(* 55 1.5) ,(* 12 1.5)))
   (telega-webpage-photo-size-limits `(55 10 ,(* 110 1.5) ,(* 20 1.5)))
   (telega-mode-line-format nil)
-  (telega-vvnote-play-speeds '(1 1.5 2)
+  (telega-vvnote-play-speeds '(1 1.5 2))
 
   :config
   (with-eval-after-load 'savehist
@@ -13026,7 +13026,7 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
 :ID:       C83AED09-FA8C-46CE-91E0-13A7D49D7B8A
 :END:
 
-/[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-eww.el][prot-eww]] is a set of ~eww~ extensions from Protesilaos Stavrou's personal configuration./
+[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-eww.el][prot-eww]] /is a set of ~eww~ extensions from Protesilaos Stavrou's personal configuration./
 
 Note Prot's clarification:
 
@@ -13714,6 +13714,7 @@ CLOCK: [2022-09-29 Thu 15:39]--[2022-09-29 Thu 16:26] =>  0:47
   :ensure (mullvad
            :host github
            :repo "benthamite/mullvad")
+  :demand t         
   :custom
   (mullvad-durations '(1 5 10 30 60 120))
 

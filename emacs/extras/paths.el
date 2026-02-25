@@ -192,7 +192,7 @@
   :group 'paths)
 
 (defcustom paths-dir-dotfiles
-  (file-name-concat paths-dir-dropbox "dotfiles/")
+  (file-name-concat paths-dir-google-drive "dotfiles/")
   "Path to the dotfiles directory."
   :type 'directory
   :group 'paths)

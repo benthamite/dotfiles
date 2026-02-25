@@ -144,7 +144,7 @@
   :group 'paths)
 
 (defcustom paths-dir-anki
-  (file-name-concat paths-dir-dropbox "anki/")
+  (file-name-concat paths-dir-google-drive "anki/")
   "Path to the Anki directory."
   :type 'directory
   :group 'paths)
@@ -204,14 +204,14 @@
   :group 'paths)
 
 (defcustom paths-dir-bibliographic-notes
-  (file-name-concat paths-dir-dropbox "bibliographic-notes/")
+  (file-name-concat paths-dir-google-drive "bibliographic-notes/")
   "Path to the bibliographic notes directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-dotemacs
   (let ((dir (pcase (getenv "HOME")
-	       ("/Users/pablostafforini" "Library/CloudStorage/Dropbox/dotfiles/emacs/")
+	       ("/Users/pablostafforini" "My Drive/dotfiles/emacs/")
 	       ("/Users/fede" "source/dotfiles/emacs/")
 	       ("/Users/cartago" "source/dotfiles/emacs/")
 	       (_ (user-error "Home directory does not match that of a known user")))))
@@ -245,7 +245,7 @@
   :group 'paths)
 
 (defcustom paths-dir-ledger
-  (file-name-concat paths-dir-dropbox "ledger/")
+  (file-name-concat paths-dir-google-drive "ledger/")
   "Path to the ledger directory."
   :type 'directory
   :group 'paths)
@@ -257,19 +257,19 @@
   :group 'paths)
 
 (defcustom paths-dir-people
-  (file-name-concat paths-dir-dropbox "people/")
+  (file-name-concat paths-dir-google-drive "people/")
   "Path to the people directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-android
-  (file-name-concat paths-dir-dropbox "android/")
+  (file-name-concat paths-dir-google-drive "android/")
   "Path to the Android directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-bbdb
-  (file-name-concat paths-dir-dropbox "bbdb/")
+  (file-name-concat paths-dir-google-drive "bbdb/")
   "Path to the BBDB directory."
   :type 'directory
   :group 'paths)
@@ -304,7 +304,7 @@ value."
   :group 'paths)
 
 (defcustom paths-dir-tlon-todos
-  (file-name-concat paths-dir-dropbox "tlon-notes/")
+  (file-name-concat paths-dir-google-drive "tlon-notes/")
   "Path to the Tlön todos directory."
   :type 'directory
   :group 'paths)
@@ -534,13 +534,13 @@ This should be the path you set `org-roam-directory' to."
   :group 'paths)
 
 (defcustom paths-dir-websites
-  (file-name-concat paths-dir-dropbox "websites/")
+  (file-name-concat paths-dir-google-drive "websites/")
   "Path to the `websites' directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-personal-bibliography
-  (file-name-concat paths-dir-dropbox "bibliography/")
+  (file-name-concat paths-dir-google-drive "bibliography/")
   "Path to the `bibliography' directory."
   :type 'directory
   :group 'paths)

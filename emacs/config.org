@@ -5206,6 +5206,8 @@ The original package appears to no longer be maintained, so I have created my ow
 :ID:       5B9F0580-D100-4F53-8B99-7BEAE7E233A5
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/emacs-lisp/timer-list.el][timer-list]] lists active timers in a tabulated buffer./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature timer-list
   :config
@@ -5273,6 +5275,8 @@ The original package appears to no longer be maintained, so I have created my ow
 :PROPERTIES:
 :ID:       C7BA09A3-635F-4F31-A17A-F94F3B024522
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/simple.el][simple]] registers additional variables for persistence across sessions via savehist./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature simple
@@ -5371,6 +5375,8 @@ CLOCK: [2021-03-17 Wed 16:40]--[2021-03-17 Wed 16:43] =>  0:03
 :ID:       4B274841-062C-4511-8FF3-C850BAB05905
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/isearch.el][isearch]] provides incremental search./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature isearch
   :custom
@@ -5447,6 +5453,8 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 :PROPERTIES:
 :ID:       DC08C217-5005-4A65-986B-85EA876ECB6D
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/replace.el][replace]] provides search-and-replace commands./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature replace
@@ -6061,6 +6069,8 @@ CLOCK: [2021-05-21 Fri 16:52]--[2021-05-21 Fri 17:04] =>  0:12
 :ID:       B4F00E3C-2682-486D-B05A-E983ACC82D09
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/help.el][help]] is the built-in help system./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature help
   :custom
@@ -6083,6 +6093,8 @@ CLOCK: [2021-05-21 Fri 16:52]--[2021-05-21 Fri 17:04] =>  0:12
 :PROPERTIES:
 :ID:       263F5A59-1B63-47BC-B77B-8165FBBE3E75
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/help-at-pt.el][help-at-pt]] displays local help based on text properties at point./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature help-at-pt
@@ -6133,6 +6145,8 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
 :ID:       28966DB8-E893-4AEA-A7BD-8C18B8A97592
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/info.el][info]] is the Info documentation browser./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature info
   :config
@@ -6155,6 +6169,8 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
 :ID:       5621ACF8-E2E1-41DE-8994-F26DF80C5246
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/man.el][man]] is a manual page viewer./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature man
   :bind
@@ -6166,6 +6182,8 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
 :PROPERTIES:
 :ID:       421D3C11-CDD5-44B7-9262-10FD172F1094
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/woman.el][woman]] browses manual pages without the man command./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature woman
@@ -6205,6 +6223,8 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
 :ID:       238DF78B-035A-48B1-8F8F-E9E7F1D4BC67
 :END:
 
+/[[https://github.com/Wilfred/elisp-refs][elisp-refs]] finds references to functions, macros and variables in Elisp files./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature elisp-refs
   :bind (:map elisp-refs-mode-map
@@ -6237,6 +6257,8 @@ CLOCK: [2021-04-04 Sun 22:14]--[2021-04-04 Sun 22:33] =>  0:19
 :LOGBOOK:
 CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/kmacro.el][kmacro]] provides a simplified interface for keyboard macros./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature kmacro
@@ -6278,6 +6300,8 @@ CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
 :ID:       A34DA7F2-47E4-400E-B2C8-167BCAEA73E7
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/simple.el][simple]] configures shell command behaviour for interactive use./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature simple
   :custom
@@ -6292,6 +6316,8 @@ CLOCK: [2021-07-25 Sun 17:58]--[2021-07-25 Sun 18:03] =>  0:05
 :LOGBOOK:
 CLOCK: [2022-09-02 Fri 18:00]--[2022-09-02 Fri 18:07] =>  0:07
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/shell.el][shell]] provides a shell-mode interface for inferior shell processes./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature shell
@@ -6329,6 +6355,8 @@ CLOCK: [2021-04-15 Thu 21:10]--[2021-04-15 Thu 21:30] =>  0:20
 CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/eshell/eshell.el][eshell]] is the Emacs shell, a shell implemented entirely in Emacs Lisp./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature eshell
   :after simple
@@ -6361,6 +6389,8 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 :PROPERTIES:
 :ID:       692C4FF8-FD07-4D35-A9B3-A87F0E9A1B53
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/eshell/em-hist.el][em-hist]] provides history management for eshell./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature em-hist
@@ -6633,6 +6663,8 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 :ID:       5B033B8B-5D04-415F-9F92-182CB3AA3C69
 :END:
 
+/[[https://github.com/MicahElliott/flymake-mdl][flymake-mdl]] provides a flymake backend for markdownlint./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package flymake-mdl
   :ensure (:host github
@@ -6650,6 +6682,8 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 :PROPERTIES:
 :ID:       0C671548-8B32-43D6-9F28-88A6B7E3AA06
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/textmodes/text-mode.el][text-mode]] is the major mode for editing plain text./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature text-mode

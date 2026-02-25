@@ -150,31 +150,31 @@
   :group 'paths)
 
 (defcustom paths-dir-archive
-  (file-name-concat paths-dir-dropbox "archive/")
+  (file-name-concat paths-dir-google-drive "archive/")
   "Path to the archive directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-inactive
-  (file-name-concat paths-dir-dropbox "inactive/")
+  (file-name-concat paths-dir-google-drive "inactive/")
   "Path to the inactive directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-blog
-  (file-name-concat paths-dir-dropbox "blog/")
+  (file-name-concat paths-dir-google-drive "blog/")
   "Path to the blog directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-journal
-  (file-name-concat paths-dir-dropbox "journal/")
+  (file-name-concat paths-dir-google-drive "journal/")
   "Path to the journal directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-wiki
-  (file-name-concat paths-dir-dropbox "wiki/")
+  (file-name-concat paths-dir-google-drive "wiki/")
   "Path to the wiki directory."
   :type 'directory
   :group 'paths)
@@ -334,7 +334,7 @@ value."
   :group 'paths)
 
 (defcustom paths-dir-PW
-  (file-name-concat paths-dir-dropbox "PW/")
+  (file-name-concat paths-dir-google-drive "PW/")
   "Path to the PW Dropbox directory."
   :type 'directory
   :group 'paths)
@@ -736,7 +736,7 @@ This includes personal files and `tlon' files."
   :group 'paths)
 
 (defcustom paths-file-bookmarks
-  (file-name-concat paths-dir-dropbox "bookmarks")
+  (file-name-concat paths-dir-google-drive "bookmarks")
   "Path to the bookmarks file."
   :type 'file
   :group 'paths)

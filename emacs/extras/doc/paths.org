@@ -82,9 +82,9 @@ The following variables define the top-level directories from which most other p
 #+vindex: paths-dir-websites
 #+vindex: paths-dir-personal-bibliography
 #+vindex: paths-dir-PW
-These directories are mostly children of ~paths-dir-dropbox~ and contain personal data. Two exceptions: ~paths-dir-dotfiles~ derives from ~paths-dir-google-drive~, and ~paths-dir-dotemacs~ derives from ~paths-dir-dotfiles~.
+These directories are children of ~paths-dir-dropbox~ and contain personal data:
 
-- ~paths-dir-dotfiles~: the dotfiles repository (default: =My Drive/dotfiles/=). Child of ~paths-dir-google-drive~.
+- ~paths-dir-dotfiles~: the dotfiles repository (default: =Dropbox/dotfiles/=).
 - ~paths-dir-dotemacs~: the Emacs subdirectory within dotfiles. Its default is user-dependent, resolved at load time based on the =$HOME= environment variable.
 - ~paths-dir-notes~, ~paths-dir-journal~, ~paths-dir-wiki~: directories for Org notes, journal entries, and wiki content.
 - ~paths-dir-wiki-entries~ and ~paths-dir-wiki-references~: subdirectories of the wiki.

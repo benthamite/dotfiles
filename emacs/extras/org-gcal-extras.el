@@ -54,6 +54,9 @@ emergency exits from stale cache state."
 	(apply orig-fun args)
       (org-gcal-extras--reset-element-cache))))
 
+(advice-add 'org-gcal--update-entry :around #'org-gcal-extras--inhibit-modification-hooks)
+(advice-add 'org-gcal--sync-handle-events :around #'org-gcal-extras--inhibit-modification-hooks)
+
 ;;;###autoload
 (defun org-gcal-extras-open-at-point ()
   "Open the event at point in a Google Calendar."

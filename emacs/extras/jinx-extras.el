@@ -42,6 +42,8 @@ The misspelled word is taken from OVERLAY.  WORD is the corrected word."
     (message "Abbrev: %s -> %s" abbrev word)
     (define-abbrev text-mode-abbrev-table abbrev word)))
 
+(advice-add 'jinx--correct-replace :before #'jinx-extras--add-to-abbrev)
+
 (defun jinx-extras-toggle-languages ()
   "Toggle between English and Spanish."
   (interactive)

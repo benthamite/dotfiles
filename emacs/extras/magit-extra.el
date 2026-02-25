@@ -170,6 +170,8 @@ If REPO-PATH is nil, use the current repository."
       (message "Magit: Updating submodules...")
       (magit-extras-pull-all-submodules (magit-submodule-arguments "--recursive")))))
 
+(advice-add 'magit-pull :after #'magit-extras-pull-including-submodules)
+
 ;;;;; confirm when pushing
 
 (defun magit-extras--guard-production (&rest _args)
@@ -179,6 +181,9 @@ If REPO-PATH is nil, use the current repository."
     (when (and branch (string-match-p "production" branch))
       (unless (yes-or-no-p (format "WARNING: Push to '%s'? " branch))
         (user-error "Push cancelled")))))
+
+(advice-add 'magit-push-current-to-pushremote :before #'magit-extras--guard-production)
+(advice-add 'magit-push-current-to-upstream   :before #'magit-extras--guard-production)
 
 ;;;;; transient
 
@@ -284,6 +289,8 @@ If REPO-PATH is nil, use the current repository."
     ("<return>" "visit thing at point"     magit-visit-thing)]
    [("C-x m"    "show all key bindings"    describe-mode)
     ("C-x i"    "show Info manual"         magit-info)]])
+
+(advice-add 'magit-dispatch :override #'magit-extras-dispatch)
 
 (defun magit-extras-with-editor-finish-and-push ()
   "Finish editing and push commit."

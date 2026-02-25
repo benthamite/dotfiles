@@ -133,6 +133,9 @@ Any additional model fields are set to empty strings."
                                           (_ ""))))
        :hash hash
        :marker (point-marker)))))
+
+(advice-add 'anki-editor-note-at-point :around #'anki-editor-note-at-point-a)
+
 ;;;;; set card position
 
 ;;;###autoload

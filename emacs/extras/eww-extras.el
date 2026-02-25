@@ -297,6 +297,8 @@ The exceptions are listed in `eww-extras-readable-exceptions'."
                     (not (plist-get eww-data :source)))
           (eww-readable))))))
 
+(add-hook 'eww-after-render-hook #'eww-extras-readable-autoview)
+
 (autoload 'ffap-url-p "ffap")
 (autoload 'browse-url-extras-write-url-to-file "browse-url-extras")
 (defun eww-extras-add-domain-to-readable-exceptions ()

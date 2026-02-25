@@ -470,6 +470,9 @@ stale change-tracking state."
   (let ((inhibit-modification-hooks t))
     (apply orig-fun args)))
 
+(advice-add 'org-capture-place-template :around #'org-extras--inhibit-modification-hooks)
+(advice-add 'org-capture-finalize :around #'org-extras--inhibit-modification-hooks)
+
 (defvar org-capture-plist)
 (declare-function org-web-tools-insert-link-for-url "org-web-tools")
 (declare-function org-extras-web-tools--org-title-for-url "org-web-tools")
@@ -641,6 +644,8 @@ IPOS, TABLES and PARAMS are required by the formatter function."
   (save-excursion
     (org-end-of-meta-data 'full)
     (looking-at org-extras-particiants-introducer)))
+
+(advice-add 'org-clock-in :after #'org-extras-clock-in-add-participants)
 
 ;;;;; org-cycle
 

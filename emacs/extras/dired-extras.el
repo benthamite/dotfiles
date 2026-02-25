@@ -100,6 +100,9 @@ arguments passed to OLD-FUN."
   (unwind-protect (apply old-fun r)
     (advice-remove 'y-or-n-p #'dired-extras-y-or-n-p-just-yes)))
 
+(advice-add 'dired-clean-up-after-deletion
+            :around #'dired-extras-clean-up-after-deletion-quietly)
+
 (defun dired-extras-do-delete-fast (&optional arg)
   "Delete all marked (or next ARG) files, without using the `trash' utility.
 This command let's you delete large numbers of files quickly, at the expense of

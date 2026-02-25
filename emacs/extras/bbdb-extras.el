@@ -93,6 +93,8 @@ Default is the first URL."
         (unless (string= "" url)
           (browse-url url))))))
 
+(advice-add 'bbdb-browse-url :override #'bbdb-extras-browse-url)
+
 ;; do not split windows
 (defun bbdb-extras-pop-up-window (&optional select horiz-p)
   "Display *BBDB* buffer by popping up a new window.
@@ -161,6 +163,8 @@ then the window will be split horizontally rather than vertically."
 		      (set-window-prev-buffers window nil)
 		      (display-buffer-record-window 'window window buffer)))
 	       (if select (select-window window))))))))
+
+(advice-add 'bbdb-pop-up-window :override #'bbdb-extras-pop-up-window)
 
 (provide 'bbdb-extras)
 ;;; bbdb-extras.el ends here

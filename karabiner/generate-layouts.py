@@ -15,7 +15,7 @@ MODIFICATIONS_ORG = os.path.join(SCRIPT_DIR, "modifications.org")
 LAYOUTS_DIR = os.path.join(SCRIPT_DIR, "layouts")
 HUGO_IMG_DIR = os.path.join(
     os.path.expanduser("~"),
-    "Library/CloudStorage/Dropbox/repos/stafforini.com/static/images/keyboard",
+    "My Drive/repos/stafforini.com/static/images/keyboard",
 )
 
 # The 36 physical positions of the Corne 3x5+3 layout, in the order

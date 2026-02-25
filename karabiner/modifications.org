@@ -757,11 +757,7 @@ The remaining four simlayers use punctuation keys: =,= (transposition), =.= (tex
 CLOCK: [2023-08-26 Sat 10:53]--[2023-08-26 Sat 12:31] =>  1:38
 :END:
 
-- The right-hand top row keys control window placement, via Emacs Lisp commands in Emacs, or via [[https://github.com/rxhanson/Rectangle][Rectangle]] otherwise.
-- The right-hand home row keys control playback.
-- The right-hand bottom row keys control volume.
-- ~h~  and ~n~ control dictation and narration, respectively.
-  - The keyboard shortcuts need to be set under Settings > Keyboard > Dictation > Shortcut (for dictation) and Settings > Accessibility > Spoken content > Speak selection (for narration).
+Hold =b= for media controls and window sizing. The right-hand top row keys control window placement (via Emacs Lisp commands in Emacs, or via [[https://github.com/rxhanson/Rectangle][Rectangle]] otherwise), the home row keys control playback, and the bottom row keys control volume. =h= and =n= control dictation and narration, respectively (the keyboard shortcuts need to be set under Settings > Keyboard > Dictation > Shortcut for dictation, and Settings > Accessibility > Spoken content > Speak selection for narration).
 
 [[/images/keyboard/b-mode.svg]]
 

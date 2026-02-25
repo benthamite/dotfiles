@@ -210,15 +210,14 @@
   :group 'paths)
 
 (defcustom paths-dir-dotemacs
-  (let ((dir (pcase (getenv "HOME")
-	       ("/Users/pablostafforini" (file-name-concat paths-dir-dotfiles "emacs/"))
-	       ("/Users/fede" (file-name-concat (getenv "HOME") "source/dotfiles/emacs/"))
-	       ("/Users/cartago" (file-name-concat (getenv "HOME") "source/dotfiles/emacs/"))
-	       (_ (user-error "Home directory does not match that of a known user")))))
-    dir)
-  "Path to the \"emacs\" directory in Pablo’s \"dotfiles\" repo."
-  :type ‘directory
-  :group ‘paths)
+  (pcase (getenv "HOME")
+    ("/Users/pablostafforini" (file-name-concat paths-dir-dotfiles "emacs/"))
+    ("/Users/fede" (file-name-concat (getenv "HOME") "source/dotfiles/emacs/"))
+    ("/Users/cartago" (file-name-concat (getenv "HOME") "source/dotfiles/emacs/"))
+    (_ (user-error "Home directory does not match that of a known user")))
+  "Path to the \"emacs\" directory in Pablo's \"dotfiles\" repo."
+  :type 'directory
+  :group 'paths)
 
 (defcustom paths-dir-yasnippets
   (file-name-concat paths-dir-dotemacs "yasnippets/")

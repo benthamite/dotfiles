@@ -17,7 +17,7 @@ export PATH="$GOPATH/bin:$PATH"
 export GEM_HOME="$HOME/.gem"
 
 # Essential environment variables
-export DOTFILES="$HOME/Library/CloudStorage/Dropbox/dotfiles"
+export DOTFILES="$HOME/My Drive/dotfiles"
 export EDITOR="emacsclient -nw"
 export VISUAL="$EDITOR"
 

@@ -154,11 +154,11 @@ The following variables define the top-level directories from which most other p
 @vindex paths-dir-websites
 @vindex paths-dir-personal-bibliography
 @vindex paths-dir-PW
-These directories are children of @code{paths-dir-dropbox} and contain personal data:
+These directories are mostly children of @code{paths-dir-dropbox} and contain personal data. Two exceptions: @code{paths-dir-dotfiles} derives from @code{paths-dir-google-drive}, and @code{paths-dir-dotemacs} derives from @code{paths-dir-dotfiles}.
 
 @itemize
 @item
-@code{paths-dir-dotfiles}: the dotfiles repository (default: @samp{Dropbox/dotfiles/}).
+@code{paths-dir-dotfiles}: the dotfiles repository (default: @samp{My Drive/dotfiles/}). Child of @code{paths-dir-google-drive}.
 @item
 @code{paths-dir-dotemacs}: the Emacs subdirectory within dotfiles. Its default is user-dependent, resolved at load time based on the @samp{$HOME} environment variable.
 @item

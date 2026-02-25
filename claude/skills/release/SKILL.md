@@ -15,11 +15,12 @@ annas-archive bib claude-log gptel-plus kelly mullvad org-indent-pixel pangram p
 
 ## Semver normalization rules
 
-All versions MUST be 3-part semver (`MAJOR.MINOR.PATCH`).
+When comparing versions, normalize to 3-part semver (`MAJOR.MINOR.PATCH`):
 
-- If a tag or header has only 2 parts (e.g., `0.1`), treat it as `0.1.0`.
-- When writing a new version (header or tag), always use 3 parts.
+- If a tag or header has only 2 parts (e.g., `0.1`), treat it as `0.1.0` for comparison purposes.
 - A tag `0.1` and a header `0.1.0` are considered a **match** after normalization.
+
+When writing a new version (header or tag), **match the format the repo already uses**. If the most recent tag is 2-part (e.g., `0.3`), create a 2-part tag. If 3-part (e.g., `0.1.0`), create a 3-part tag. The header format should likewise match the repo's convention.
 
 ## Mode selection
 
@@ -76,9 +77,10 @@ Present a summary table:
 
 Then group results into three sections:
 
-1. **Version mismatches** — tag and header disagree (even after normalization). These need manual resolution before releasing.
-2. **Ready to release** — versions match, unreleased commit count > 0.
-3. **Up to date** — versions match, unreleased commit count = 0.
+1. **Version mismatches (header behind tag)** — header version is lower than tag after normalization. These are genuinely broken and need manual resolution.
+2. **Ready to release (pre-bumped)** — header version is ahead of tag. The header was already bumped in anticipation of the next release. These can be released using the header version directly (the release skill handles this automatically). Note: even if the compare API reports 0 unreleased commits, the header bump itself indicates intent to release — include these here, not in "up to date".
+3. **Ready to release** — versions match, unreleased commit count > 0.
+4. **Up to date** — versions match, unreleased commit count = 0.
 
 ---
 
@@ -130,12 +132,15 @@ If there are **zero** commits since the last tag, stop — there is nothing to r
 
 ### 6. Check version header vs tag
 
-Read the `Version:` header from the main `.el` file. Normalize both to 3-part semver. If they do not match:
+Read the `Version:` header from the main `.el` file. Normalize both to 3-part semver and compare:
 
-- Report the mismatch clearly.
-- **Do not proceed with the release.** Tell the user the header and tag must agree on the current version before bumping to a new one. Offer to fix the header to match the tag if appropriate.
+- **Header == tag**: normal flow. Proceed to step 7 to classify commits and suggest a bump.
+- **Header > tag** (pre-bumped): the header was already bumped in anticipation of this release. Use the header version as the release version. **Skip step 7** (the user already chose the version). Proceed to step 8 to draft release notes.
+- **Header < tag**: this is genuinely broken — the header is behind the tag. **Stop and flag the issue.** Do not proceed. Offer to update the header to match the tag.
 
 ### 7. Classify commits and suggest bump
+
+*(Skip this step if the header was pre-bumped in step 6.)*
 
 Read each commit since the last tag. Classify into:
 
@@ -171,9 +176,10 @@ Present a full summary:
 
 - Package name
 - Current version (from tag)
-- New version (proposed bump)
+- New version (proposed bump, or pre-bumped header version)
+- Whether the header was pre-bumped (if so, note that the header update and version-bump commit will be skipped)
 - Release notes draft
-- Actions that will be taken: update header, commit, tag, push, create GitHub release
+- Actions that will be taken: update header + commit (unless pre-bumped), tag, push, create GitHub release
 
 **Wait for explicit user confirmation before proceeding.** Do not take any public/irreversible action until the user says yes. If the user wants changes, revise and re-present.
 
@@ -181,13 +187,13 @@ Present a full summary:
 
 Only after confirmation:
 
-1. **Update the `Version:` header** in the main `.el` file to the new version:
+1. **Update the `Version:` header** in the main `.el` file to the new version (skip if pre-bumped):
 
    ```bash
    # Use the Edit tool — do not use sed
    ```
 
-2. **Commit**:
+2. **Commit** (skip if pre-bumped — the header is already at the right version):
 
    ```bash
    git add PACKAGE.el

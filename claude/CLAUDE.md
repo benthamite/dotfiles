@@ -18,7 +18,7 @@
 ## Coding
 
 - If you detect a bug, always try to fix its root cause, rather than patch its symptoms. For example, if the search functionality of a website we are building shows duplicate results, do not add a deduplication filter; instead, investigate why the search is returning duplicates in the first place.
-- Similarly, never rely on “fallbacks”: if you need to use a fallback, that means the primary approach is not working reliably. Make the primary approach robust, or replace it with a superior alternative.
+- Similarly, never rely on silent fallbacks: if you need to use a fallback, that means the primary approach is not working reliably. Make the primary approach robust, or replace it with a superior alternative. The fallback is a precarious patch, which also makes it more difficult to diagnose the actual phenomenon.
 
 ## Agents
 

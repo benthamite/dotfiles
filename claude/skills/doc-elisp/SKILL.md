@@ -199,6 +199,27 @@ Internal (`--` prefixed) functions should NOT be documented.
 - Refer to Emacs commands in the standard way when mentioning interactive invocation: =M-x command-name=.
 - When a command has a noteworthy implementation detail (e.g., uses `el-patch`, calls an external process, depends on a specific mode), mention it briefly — the reader should know what's happening under the hood without reading the source.
 
+## Texinfo auto-export
+
+After creating or updating the `.org` documentation file, ensure the package repository has a `.dir-locals.el` that automatically exports to Texinfo on every save. If `.dir-locals.el` already exists, add the `org-mode` entry to it; if it doesn't exist, create it.
+
+The required content:
+
+```elisp
+((org-mode . ((eval . (add-hook 'after-save-hook
+                                (lambda ()
+                                  (require 'ox-texinfo)
+                                  (let ((inhibit-message t))
+                                    (org-texinfo-export-to-texinfo)))
+                                nil t)))))
+```
+
+This hook runs `org-texinfo-export-to-texinfo` silently whenever an Org file in the repository is saved, producing a `.texi` file alongside the `.org` source. The `inhibit-message` binding suppresses the "Exporting..." messages.
+
+If the repository already has a `.dir-locals.el` with this hook, no action is needed. If it has a `.dir-locals.el` without this hook, merge the `org-mode` entry into the existing alist.
+
+Commit the `.dir-locals.el` change separately from the documentation commit (e.g., "Add .dir-locals.el for auto Texinfo export on save").
+
 ## Example
 
 Here is an example of a well-documented command section, showing the expected level of detail and style:

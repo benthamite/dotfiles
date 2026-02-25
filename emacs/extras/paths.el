@@ -514,7 +514,7 @@ value."
   :group 'paths)
 
 (defcustom paths-dir-org
-  paths-dir-dropbox
+  paths-dir-google-drive
   "Path to the directory containing your org files.
 This should be the path you set `org-directory' to."
   :type 'directory

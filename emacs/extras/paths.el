@@ -192,7 +192,7 @@
   :group 'paths)
 
 (defcustom paths-dir-dotfiles
-  (file-name-concat paths-dir-google-drive "dotfiles/")
+  (file-name-concat paths-dir-dropbox "dotfiles/")
   "Path to the dotfiles directory."
   :type 'directory
   :group 'paths)
@@ -210,11 +210,12 @@
   :group 'paths)
 
 (defcustom paths-dir-dotemacs
-  (pcase (getenv "HOME")
-    ("/Users/pablostafforini" (file-name-concat paths-dir-dotfiles "emacs/"))
-    ("/Users/fede" (file-name-concat (getenv "HOME") "source/dotfiles/emacs/"))
-    ("/Users/cartago" (file-name-concat (getenv "HOME") "source/dotfiles/emacs/"))
-    (_ (user-error "Home directory does not match that of a known user")))
+  (let ((dir (pcase (getenv "HOME")
+	       ("/Users/pablostafforini" "Library/CloudStorage/Dropbox/dotfiles/emacs/")
+	       ("/Users/fede" "source/dotfiles/emacs/")
+	       ("/Users/cartago" "source/dotfiles/emacs/")
+	       (_ (user-error "Home directory does not match that of a known user")))))
+    (file-name-concat (getenv "HOME") dir))
   "Path to the \"emacs\" directory in Pablo’s \"dotfiles\" repo."
   :type 'directory
   :group 'paths)
@@ -250,7 +251,7 @@
   :group 'paths)
 
 (defcustom paths-dir-notes
-  (file-name-concat paths-dir-dropbox "notes/")
+  (file-name-concat paths-dir-google-drive "notes/")
   "Path to the notes directory."
   :type 'directory
   :group 'paths)
@@ -663,8 +664,7 @@ This should be the path you set `org-roam-directory' to."
 
 (defcustom paths-files-bibliography-personal
   `(,paths-file-personal-bibliography-new
-    ,paths-file-personal-bibliography-old
-    "/Users/pablostafforini/Library/CloudStorage/Dropbox/bibliography/migration.bib")
+    ,paths-file-personal-bibliography-old)
   "List of personal bibliography files."
   :type '(repeat file)
   :group 'paths)

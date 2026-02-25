@@ -82,9 +82,9 @@ The following variables define the top-level directories from which most other p
 #+vindex: paths-dir-websites
 #+vindex: paths-dir-personal-bibliography
 #+vindex: paths-dir-PW
-These directories are mostly children of ~paths-dir-dropbox~ and contain personal data. Two exceptions: ~paths-dir-dotfiles~ derives from ~paths-dir-google-drive~, and ~paths-dir-dotemacs~ derives from ~paths-dir-dotfiles~.
+These directories are children of ~paths-dir-dropbox~ and contain personal data:
 
-- ~paths-dir-dotfiles~: the dotfiles repository (default: =My Drive/dotfiles/=). Child of ~paths-dir-google-drive~.
+- ~paths-dir-dotfiles~: the dotfiles repository (default: =Dropbox/dotfiles/=).
 - ~paths-dir-dotemacs~: the Emacs subdirectory within dotfiles. Its default is user-dependent, resolved at load time based on the =$HOME= environment variable.
 - ~paths-dir-notes~, ~paths-dir-journal~, ~paths-dir-wiki~: directories for Org notes, journal entries, and wiki content.
 - ~paths-dir-wiki-entries~ and ~paths-dir-wiki-references~: subdirectories of the wiki.
@@ -164,7 +164,7 @@ These directories are children of ~paths-dir-google-drive~ and contain media and
 These directories organize Git repositories by provenance:
 
 - ~paths-dir-external-repos~ (default: =~/source/=): third-party repositories.
-- ~paths-dir-tlon-repos~ and ~paths-dir-personal-repos~ (both default to =Dropbox/repos/=): organization and personal repositories.
+- ~paths-dir-tlon-repos~ and ~paths-dir-personal-repos~ (both default to =My Drive/repos/=): organization and personal repositories.
 - ~paths-dir-tlon-todos~: Org files for organization task tracking.
 - ~paths-dir-tlon-docs~, ~paths-dir-babel-refs~, ~paths-dir-translation-server~: specific repositories.
 - ~paths-dir-split-git~ (default: =~/git-dirs/=): bare =.git= directories for split-worktree repos.

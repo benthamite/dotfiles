@@ -30,11 +30,11 @@
 
 ### Dotfiles
 
-My dotfiles are in `~/My Drive/dotfiles/`. Many files and directories in `~` are symlinked to this location.
+My dotfiles are in `~/Library/CloudStorage/Dropbox/dotfiles/`. Many files and directories in `~` are symlinked to this location.
 
 ### Projects
 
-- My projects are stored in `~/Library/CloudStorage/Dropbox/repos/`.
+- My projects are stored in `~/My Drive/repos/`.
 
 ## Version control
 

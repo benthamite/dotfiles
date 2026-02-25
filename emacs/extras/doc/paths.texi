@@ -265,7 +265,7 @@ These directories organize Git repositories by provenance:
 @item
 @code{paths-dir-external-repos} (default: @samp{~/source/}): third-party repositories.
 @item
-@code{paths-dir-tlon-repos} and @code{paths-dir-personal-repos} (both default to @samp{Dropbox/repos/}): organization and personal repositories.
+@code{paths-dir-tlon-repos} and @code{paths-dir-personal-repos} (both default to @samp{My Drive/repos/}): organization and personal repositories.
 @item
 @code{paths-dir-tlon-todos}: Org files for organization task tracking.
 @item

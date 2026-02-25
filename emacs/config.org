@@ -1013,6 +1013,8 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 :ID:       853A9EBB-356D-428E-AC94-F14BBDA78FB4
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/startup.el][startup]] processes Emacs shell arguments and controls startup behavior./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature emacs
   :custom
@@ -1057,7 +1059,7 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 :ID:       300DFB2C-878E-4F21-833C-327C9DFDC01B
 :END:
 
-@@hugo:*@@[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-common.el][prot-common]] is a set of functions used by Protesilaos Stavrou's unreleased "packages".@@hugo:*@@
+/[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-common.el][prot-common]] is a set of functions used by Protesilaos Stavrou's unreleased "packages"./
 
 Note Prot's clarification:
 
@@ -1080,7 +1082,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
 :ID:       6C67743E-7250-4BC5-B496-2D969EF2D015
 :END:
 
-@@hugo:*@@[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-simple.el][prot-simple]] is a set of common commands used by Protesilaos Stavrou's unreleased "packages".@@hugo:*@@
+/[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-simple.el][prot-simple]] is a set of common commands used by Protesilaos Stavrou's unreleased "packages"./
 
 Note Prot's clarification:
 
@@ -1148,6 +1150,8 @@ CLOCK: [2021-04-08 Thu 07:27]--[2021-04-08 Thu 08:13] =>  0:46
 CLOCK: [2021-04-06 Tue 19:57]--[2021-04-06 Tue 20:03] =>  0:06
 :END:
 
+/Miscellaneous settings: default directory, short answers, message log, bell, cursor width, and UTF-8 encoding./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature emacs
   :custom
@@ -1209,6 +1213,8 @@ CLOCK: [2021-04-05 Mon 21:50]--[2021-04-05 Mon 22:15] =>  0:25
 CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/profiler.el][profiler]] provides UI and helper functions for the Emacs profiler./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature profiler
   :defer t)
@@ -1249,6 +1255,8 @@ CLOCK: [2021-11-14 Sun 10:39]--[2021-11-14 Sun 10:56] =>  0:17
 :PROPERTIES:
 :ID:       1EA302FA-D0A2-470C-82C2-47FCA4E04FAF
 :END:
+
+/Performance-related settings: bidirectional display, font caches, fontification skipping, and process output buffer size./
 
 Partly borrowed from [[https://gitlab.com/protesilaos/dotfiles/-/blob/350ca3144c5ee868056619b9d6351fca0d6b131e/emacs/.emacs.d/emacs-init.org][Prot]].
 
@@ -1534,6 +1542,8 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 :ID:       987C9066-28ED-4B5A-944C-A90681182264
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/vc/ediff.el][ediff]] is a comprehensive visual interface to diff and patch./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature ediff
   :custom
@@ -1571,6 +1581,8 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 :ID:       FE85CC7E-E2A0-4494-8D1E-A64A4C40013E
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/vc/smerge-mode.el][smerge-mode]] is a minor mode for resolving diff3 conflicts./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature smerge-mode
   :bind
@@ -1590,6 +1602,8 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 :ID:       8FCB87B4-2396-4A9A-8638-AEA8A5818252
 :END:
 
+/[[https://github.com/sigma/gh.el][gh]] is a GitHub API library for Emacs./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package gh
   :ensure (:version (lambda (_) "2.29"))
@@ -1600,6 +1614,8 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
 :PROPERTIES:
 :ID:       917EA2B7-565D-4BC9-94BF-2BE6F1D9B9BC
 :END:
+
+/[[https://github.com/magit/closql][closql]] stores EIEIO objects using EmacSQL./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package closql
@@ -2102,6 +2118,8 @@ CLOCK: [2021-03-28 Sun 19:21]--[2021-03-28 Sun 19:35] =>  0:14
 :ID:       A0748A82-CE1C-4700-95E1-610B6CA7F8E0
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/fringe.el][fringe]] controls the thin strips at the edges of windows used for indicators./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature fringe
   :config
@@ -2132,6 +2150,8 @@ CLOCK: [2021-03-28 Sun 21:05]--[2021-03-28 Sun 21:21] =>  0:16
 CLOCK: [2021-02-27 Sat 18:27]--[2021-02-27 Sat 18:32] =>  0:05
 CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/faces.el][faces]] provides face definition and manipulation./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature faces
@@ -2480,6 +2500,8 @@ Note that the loading of ~color~ cannot be deferred, since it is required by ~pu
 :ID:       E1A616FF-7D93-4AB4-AD44-44FB6550FD2E
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/image.el][image]] provides image-manipulation functions./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature image
   :after image-mode
@@ -2499,6 +2521,8 @@ Note that the loading of ~color~ cannot be deferred, since it is required by ~pu
 :PROPERTIES:
 :ID:       DE1E96EB-4F0B-4C8C-8827-C436B8EAB43F
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/image-mode.el][image-mode]] is a major mode for viewing images./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature image-mode
@@ -2695,6 +2719,8 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
 :ID:       6507FA19-D87D-41B9-AC04-598E87370416
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/battery.el][battery]] displays battery status information./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature battery
   :defer t
@@ -2721,6 +2747,8 @@ Note that the icons need to be installed via =nerd-icons-install-fonts=. If you 
 :ID:       08F1FCC3-7287-43B6-B455-C2D4377848E7
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/menu-bar.el][menu-bar]] defines the menu bar./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature menu-bar
   :config
@@ -2732,6 +2760,8 @@ Note that the icons need to be installed via =nerd-icons-install-fonts=. If you 
 :ID:       EBE7677A-4C70-4312-816A-E9F8E5999078
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/tool-bar.el][tool-bar]] provides the tool bar./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature tool-bar
   :config
@@ -2742,6 +2772,8 @@ Note that the icons need to be installed via =nerd-icons-install-fonts=. If you 
 :PROPERTIES:
 :ID:       0AE186DB-0FC3-4B1B-B38E-7597B97A8DBA
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/scroll-bar.el][scroll-bar]] handles window scroll bars./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature scroll-bar
@@ -2779,6 +2811,8 @@ Note that the icons need to be installed via =nerd-icons-install-fonts=. If you 
 :PROPERTIES:
 :ID:       EBCFE2FC-27B4-4C30-9D2A-A841B34271F7
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/hl-line.el][hl-line]] highlights the current line./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature hl-line
@@ -2855,6 +2889,8 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
 :ID:       3493B00B-C36E-406F-B681-F145FD1684B2
 :END:
 
+/Keybindings for word-level movement./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature simple
   :bind
@@ -2866,6 +2902,8 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
 :PROPERTIES:
 :ID:       73DC1518-87FD-48D7-9EE5-C863126905AD
 :END:
+
+/Keybindings for line-level movement./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature simple
@@ -2957,6 +2995,8 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
 :ID:       9BCDE791-E716-4CFE-AED3-4E4E4874DDDE
 :END:
 
+/Keybindings for sentence-level movement./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature emacs
   :bind
@@ -2969,6 +3009,8 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
 :ID:       E10CAF75-4C0C-4910-856F-39707E30A565
 :END:
 
+/Keybindings for paragraph-level movement./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature emacs
   :bind
@@ -2980,6 +3022,8 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
 :PROPERTIES:
 :ID:       DF16B7CC-E0CF-4062-A0C2-93CBE83F619C
 :END:
+
+/Keybindings for sexp-level movement./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature emacs
@@ -2994,6 +3038,8 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
 :ID:       868B32C0-52FC-4131-9191-DD43BEAABCEA
 :END:
 
+/Keybindings for defun-level movement./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature emacs
   :bind
@@ -3005,6 +3051,8 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
 :PROPERTIES:
 :ID:       E71DE3A8-E941-4864-8224-2326C22E3AEB
 :END:
+
+/Keybindings for buffer-level movement./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature simple
@@ -3035,6 +3083,8 @@ CLOCK: [2021-03-22 Mon 20:56]--[2021-03-22 Mon 21:16] =>  0:20
 :PROPERTIES:
 :ID:       E2461097-8125-471E-A987-139F0D3EBEAA
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/simple.el][simple]] configures the kill ring, transposing, and text manipulation commands./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature simple
@@ -3172,6 +3222,8 @@ CLOCK: [2021-06-05 Sat 13:07]--[2021-06-05 Sat 13:10] =>  0:03
 CLOCK: [2021-05-29 Sat 22:17]--[2021-05-29 Sat 23:00] =>  0:43
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/textmodes/paragraphs.el][paragraphs]] configures paragraph manipulation, including sentence-end and paragraph keybindings./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature emacs
   :demand t
@@ -3247,6 +3299,8 @@ CLOCK: [2021-05-29 Sat 22:17]--[2021-05-29 Sat 23:00] =>  0:43
 CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/simple.el][simple]] configures general editing behavior, including selection, indentation, and case conversion./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature simple
   :custom
@@ -3283,6 +3337,8 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
 :ID:       CAA53E10-D4A2-41F4-8B5F-77649D125E54
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/rect.el][rect]] provides commands for operating on rectangular regions of text./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature rect
   :bind ("C-x r w" . copy-rectangle-as-kill))
@@ -3292,6 +3348,8 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
 :PROPERTIES:
 :ID:       000730A4-2F70-4842-BD3E-2B843875D6EB
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/repeat.el][repeat]] provides commands for repeating the previous command./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature repeat
@@ -3305,6 +3363,8 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
 :ID:       796E696E-E797-4EDF-B4AC-2436507A1EFC
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/view.el][view]] provides a minor mode for viewing files without editing them./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature view
   :bind
@@ -3315,6 +3375,8 @@ CLOCK: [2021-09-29 Wed 08:57]--[2023-11-16 Thu 19:08] => 18683:11
 :PROPERTIES:
 :ID:       64011AE8-B6DF-413B-A8CD-EF4E133272BD
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/sort.el][sort]] provides commands for sorting text in a buffer./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature sort
@@ -3360,6 +3422,8 @@ CLOCK: [2021-03-28 Sun 08:40]--[2021-03-28 Sun 10:35] =>  1:55
 CLOCK: [2021-03-27 Sat 18:01]--[2021-03-27 Sat 19:53] =>  1:52
 CLOCK: [2021-06-06 Sun 13:00]--[2021-06-06 Sun 13:19] =>  0:19
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/outline.el][outline]] provides selective display of portions of a buffer./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature outline
@@ -3468,6 +3532,8 @@ CLOCK: [2023-09-23 Sat 13:07]--[2023-09-23 Sat 13:36] =>  0:29
 :PROPERTIES:
 :ID:       2D69896F-CF17-4D0C-BEFE-E7C473FB1C2B
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/abbrev.el][abbrev]] provides automatic expansion of abbreviations as you type./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature abbrev
@@ -3590,6 +3656,8 @@ CLOCK: [2021-06-03 Thu 15:47]--[2021-06-03 Thu 16:04] =>  0:17
 :PROPERTIES:
 :ID:       C079E18F-8A96-4A3E-8024-C0F9E29CD182
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/newcomment.el][newcomment]] provides commands for commenting and uncommenting code./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature newcomment
@@ -3781,6 +3849,8 @@ CLOCK: [2021-07-30 Fri 21:16]--[2021-07-30 Fri 21:31] =>  0:15
 :ID:       943D5DC0-7F0E-449C-8D21-089E051F1027
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/bookmark.el][bookmark]] provides a system for recording and jumping to named positions in files./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature bookmark
   :defer t
@@ -3839,6 +3909,8 @@ CLOCK: [2021-07-24 Sat 20:41]--[2021-07-24 Sat 20:46] =>  0:05
 CLOCK: [2021-07-01 Thu 20:45]--[2021-07-01 Thu 20:55] =>  0:10
 CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/files.el][files]] provides core commands for visiting, saving, and managing files./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature files
@@ -4008,6 +4080,8 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
 :ID:       A0784673-AFD3-4111-AF83-C018CB12C897
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/locate.el][locate]] provides an interface for finding files using a locate database./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature locate
   :after consult
@@ -4127,6 +4201,8 @@ CLOCK: [2021-03-27 Sat 21:33]--[2021-03-27 Sat 21:50] =>  0:17
 CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/dired-x.el][dired-x]] provides extra Dired functionality./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature dired-x
   :custom
@@ -4172,6 +4248,8 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
 :PROPERTIES:
 :ID:       F41AFC26-002A-4152-9FC7-E9AD92DF5BBA
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/dired-aux.el][dired-aux]] provides auxiliary Dired functions for file operations like compression and diffing./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature dired-aux
@@ -4224,6 +4302,8 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
 :ID:       E07C1115-1881-4D5F-8B88-613DA4FD38A8
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/image-dired.el][image-dired]] provides image viewing and thumbnail management in Dired./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature image-dired
   :after dired
@@ -4259,6 +4339,8 @@ CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
 :PROPERTIES:
 :ID:       B892CCBB-FB26-48A6-97BE-EF37CE8FB332
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/wdired.el][wdired]] makes Dired buffers editable for renaming files and changing permissions./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature wdired
@@ -4364,6 +4446,8 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
 :ID:       40F49ECD-7225-4AD2-9E07-16C5A5857FFF
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/minibuffer.el][minibuffer]] provides minibuffer completion and input facilities./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature minibuffer
   :custom
@@ -4389,6 +4473,8 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
 :ID:       11E1F107-4D7A-40DE-AA8E-9D995A10A351
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/ibuffer.el][ibuffer]] provides an advanced, interactive buffer list./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature ibuffer
   :bind
@@ -4401,7 +4487,7 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
 :ID:       FF8B73D7-0A56-44FE-8F66-DDD18C9D5CE1
 :END:
 
-@@hugo:*@@[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-scratch.el][prot-scratch]] supports scratch buffers for an editable major mode of choice.@@hugo:*@@
+/[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-scratch.el][prot-scratch]] supports scratch buffers for an editable major mode of choice./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package prot-scratch
@@ -4583,6 +4669,8 @@ CLOCK: [2022-09-08 Thu 15:47]--[2022-09-08 Thu 17:04] =>  1:17
 CLOCK: [2022-09-02 Fri 18:13]--[2022-09-02 Fri 21:20] =>  3:07
 CLOCK: [2022-07-21 Thu 21:24]--[2022-07-21 Thu 22:45] =>  1:21
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/window.el][window]] provides commands for displaying buffers, scrolling, and managing window layout./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature window
@@ -6932,6 +7020,8 @@ CLOCK: [2021-12-03 Fri 23:10]--[2021-12-04 Sat 01:01] =>  1:51
 CLOCK: [2021-12-03 Fri 22:21]--[2021-12-03 Fri 23:02] =>  0:41
 :END:
 
+/[[https://github.com/benthamite/gdrive][gdrive]] is an interface to Google Drive./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package gdrive
   :ensure (:host github
@@ -7553,6 +7643,8 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 :ID:       A8700D18-574A-4093-938C-5707589DBB41
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/progmodes/prog-mode.el][prog-mode]] is the base major mode for programming language modes./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature prog-mode
   :init
@@ -7604,6 +7696,8 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 :ID:       24475DE5-E129-4832-BAE5-C22D846C251E
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/progmodes/elisp-mode.el][elisp-mode]] is the major mode for editing Emacs Lisp./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature elisp-mode
   :init
@@ -7626,6 +7720,8 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 :PROPERTIES:
 :ID:       E6608F6D-CC63-4A0B-A6B5-D012D3065801
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/emacs-lisp/lisp-mode.el][lisp-mode]] is the major mode for editing Lisp code./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature lisp-mode
@@ -7674,6 +7770,8 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 :ID:       B69F718B-9BAE-4EAD-99DE-2C8C1E98CCA3
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/emacs-lisp/backtrace.el][backtrace]] provides generic facilities for displaying backtraces./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature backtrace
   :defer t
@@ -7685,6 +7783,8 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 :PROPERTIES:
 :ID:       AACCFE88-084B-4428-82DB-7C695D9624C4
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/emacs-lisp/debug.el][debug]] is the Emacs Lisp debugger./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature debug
@@ -7715,6 +7815,8 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 :PROPERTIES:
 :ID:       021794F3-1663-449D-B4B7-41C6F3A72083
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/emacs-lisp/edebug.el][edebug]] is a source-level debugger for Emacs Lisp./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature edebug
@@ -7806,6 +7908,8 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
 :PROPERTIES:
 :ID:       D00C20E4-925A-41E1-95BD-5BF8BA03637C
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/progmodes/python.el][python]] is the major mode for editing Python./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature python
@@ -7916,7 +8020,7 @@ This needs to be configured.
 :ID:       7B4A0E63-4509-4BC0-AE08-08F517911959
 :END:
 
-/[[https://github.com/json-emacs/json-mode][json-mode]]/ is major mode for editing JSON files.
+/[[https://github.com/json-emacs/json-mode][json-mode]] is a major mode for editing JSON files./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package json-mode
@@ -11155,6 +11259,8 @@ CLOCK: [2021-07-26 Mon 15:14]--[2021-07-26 Mon 15:56] =>  0:42
 CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/oc.el][oc]] is Org mode's built-in citation handling library./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature oc
   :after org el-patch
@@ -11171,6 +11277,8 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
 :PROPERTIES:
 :ID:       72710244-0369-4C12-8B83-0674EE0E11D5
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/oc-csl.el][oc-csl]] is a CSL citation processor for Org mode's citation system./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature oc-csl
@@ -11367,6 +11475,8 @@ The package is required by [[id:EC73B84D-530E-4179-BB67-F19110A543DF][org-roam-b
 :PROPERTIES:
 :ID:       E7420E36-9396-48A5-9FD2-6A4CA4610324
 :END:
+
+/[[file:extras/bibtex-completion-extras.el][bibtex-completion-extras]] collects my extensions for =bibtex-completion=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package bibtex-completion-extras
@@ -11708,6 +11818,8 @@ The macro below generates the commands correctly. But attempting to define key b
 :ID:       2CB38F99-1429-40CC-AF6D-466354D8ACF2
 :END:
 
+/ebib-utils provides internal utility functions for [[https://github.com/joostkremers/ebib][ebib]]./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature ebib-utils
   :after ebib
@@ -11787,6 +11899,8 @@ The macro below generates the commands correctly. But attempting to define key b
 :PROPERTIES:
 :ID:       D3DE21CB-388A-48A0-A7EB-E79DD48D5E81
 :END:
+
+/[[https://github.com/benthamite/bib][bib]] fetches bibliographic metadata from various APIs./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package bib
@@ -11904,6 +12018,8 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 :ID:       509B1DFA-E776-4BF5-8231-4A5984FD0150
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/simple.el][simple]] configures the mail user agent./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature simple
   :custom
@@ -11929,6 +12045,8 @@ CLOCK: [2021-04-05 Mon 21:03]--[2021-04-05 Mon 21:42] =>  0:39
 :PROPERTIES:
 :ID:       F05AFA09-978B-441D-B947-0DBEA4DBC7BF
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/mail/smtpmail.el][smtpmail]] provides SMTP mail sending support./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature smtpmail
@@ -12691,6 +12809,8 @@ Then change the value of =telega-server-libs-prefix= from =/opt/homebrew= to =/u
 :ID:       AF0C2ADB-E9C0-4C37-8C3D-5674351ED170
 :END:
 
+/[[https://github.com/alphapapa/ement.el][ement]] is a Matrix client for Emacs./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package ement
   :disabled)
@@ -12947,6 +13067,8 @@ CLOCK: [2021-08-11 Wed 14:04]--[2021-08-11 Wed 14:09] =>  0:05
 :ID:       A3D835EE-B96F-4FAE-B372-DA8687A26B2A
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/textmodes/sgml-mode.el][html]] provides a major mode for editing HTML files./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature html
   :bind (:map html-mode-map
@@ -13105,7 +13227,7 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
 :ID:       C83AED09-FA8C-46CE-91E0-13A7D49D7B8A
 :END:
 
-@@hugo:*@@[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-eww.el][prot-eww]] is a set of ~eww~ extensions from Protesilaos Stavrou's personal configuration.@@hugo:*@@
+/[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-eww.el][prot-eww]] is a set of ~eww~ extensions from Protesilaos Stavrou's personal configuration./
 
 Note Prot's clarification:
 
@@ -13904,6 +14026,7 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
 :ID:       8184F453-9B02-4EEE-9F25-3D9E5E5B8E97
 :END:
 
+/[[https://github.com/benthamite/tango-wiki.el][tango-wiki]] is a package for browsing and editing a tango encyclopaedia./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package tango-wiki
@@ -13996,6 +14119,8 @@ Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dl
 :PROPERTIES:
 :ID:       AA0F6FA2-2226-47C3-AE3F-7C8A1D542A17
 :END:
+
+/[[file:extras/read-aloud-extras.el][read-aloud-extras]] collects my extensions for =read-aloud=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package read-aloud-extras
@@ -14355,6 +14480,8 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
 :ID:       7C328D33-DCFE-4E47-8B58-7C27E7F7C1DB
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/custom.el][custom]] provides the Customize interface for user options and themes./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature custom
   :custom
@@ -14391,7 +14518,7 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
 :ID:       735A9793-ABDB-4251-AA0B-237D7F2D7788
 :END:
 
-/[[https://github.com/benthamite/polymarket][polymarket]]/ is a package to fetch and place trades on Polymarket, a popular prediction market.
+/[[https://github.com/benthamite/polymarket][polymarket]] is a package to fetch and place trades on Polymarket, a popular prediction market./
 
 (This package is not currently public.)
 
@@ -14441,6 +14568,8 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
 :ID:       F4C5A232-7788-4240-9CE2-B6761C905786
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/play/tetris.el][tetris]] is an implementation of the classic Tetris game for Emacs./
+
 And finally, the section you've all been waiting for.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
@@ -14465,6 +14594,8 @@ CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
 :PROPERTIES:
 :ID:       1776C0C3-CEEC-4DED-B609-4DF0DF83B0C2
 :END:
+
+/Keybindings for triggering Emacs commands from [[https://www.keyboardmaestro.com/][Keyboard Maestro]]./
 
 These bindings allow Keyboard Maestro to trigger various Emacs processes.
 

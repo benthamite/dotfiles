@@ -13,9 +13,9 @@ Scan all Emacs extras packages, identify those with missing or outdated document
 
 ## File locations
 
-- **Source files**: `~/Library/CloudStorage/Dropbox/dotfiles/emacs/extras/*.el`
-- **Doc files**: `~/Library/CloudStorage/Dropbox/dotfiles/emacs/extras/doc/*.org`
-- **Emacs config** (for sample configurations): `~/Library/CloudStorage/Dropbox/dotfiles/emacs/config.org`
+- **Source files**: `~/My Drive/dotfiles/emacs/extras/*.el`
+- **Doc files**: `~/My Drive/dotfiles/emacs/extras/doc/*.org`
+- **Emacs config** (for sample configurations): `~/My Drive/dotfiles/emacs/config.org`
 
 Each `.el` file should have a corresponding `.org` file in `doc/` with the same base name (e.g., `ebib-extras.el` → `doc/ebib-extras.org`).
 

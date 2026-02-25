@@ -1485,9 +1485,10 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
   ;; (e.g. smart sync resolving a cloud-only file).  This blocks the
   ;; main thread since there is no timeout on the read.
   (vc-ignore-dir-regexp
-   (format "%s\\|%s"
+   (format "%s\\|%s\\|%s"
            vc-ignore-dir-regexp
-           "Library/CloudStorage/Dropbox/")))
+           "Library/CloudStorage/Dropbox/"
+           "My Drive/")))
 #+end_src
 
 ** =vc-extras=

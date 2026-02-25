@@ -1,6 +1,6 @@
 #+title: Pablo's macOS defaults
 #+author: Pablo Stafforini
-#+PROPERTY: header-args :tangle ~/Dropbox/dotfiles/macos/macos
+#+PROPERTY: header-args :tangle ~/My Drive/dotfiles/macos/macos
 :PROPERTIES:
 :TOC:      ignore
 :END:

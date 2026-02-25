@@ -30,6 +30,6 @@ commit-prompt: |
   - In all cases, the commit should not be longer than 70 characters.
 auto-lint: true
 read:
-  - ~/Dropbox/dotfiles/aider/global_conventions.md
+  - ~/My Drive/dotfiles/aider/global_conventions.md
 attribute-co-authored-by: false
 attribute-committer: false

@@ -30,7 +30,7 @@
 
 ### Dotfiles
 
-My dotfiles are in `~/Library/CloudStorage/Dropbox/dotfiles/`. Many files and directories in `~` are symlinked to this location.
+My dotfiles are in `~/My Drive/dotfiles/`. Many files and directories in `~` are symlinked to this location.
 
 ### Projects
 

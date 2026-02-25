@@ -9322,6 +9322,8 @@ CLOCK: [2021-03-07 Sun 16:07]--[2021-03-07 Sun 16:41] =>  0:34
 CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/org-agenda.el][org-agenda]] provides agenda views for org tasks and appointments./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature org-agenda
   :after org
@@ -9504,6 +9506,8 @@ CLOCK: [2021-02-19 Fri 11:11]--[2021-02-19 Fri 11:21] =>  0:10
 CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/org-capture.el][org-capture]] provides rapid note-taking and task capture./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature org-capture
   :custom
@@ -9588,6 +9592,8 @@ CLOCK: [2021-03-29 Mon 20:57]--[2021-03-29 Mon 21:13] =>  0:16
 CLOCK: [2021-03-28 Sun 20:32]--[2021-03-28 Sun 21:01] =>  0:29
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/org-clock.el][org-clock]] implements clocking time spent on tasks./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature org-clock
   :after org
@@ -9649,6 +9655,8 @@ I’m using a fork that fixes some functionality that broke when org changed =or
 :ID:       AAB14053-B232-4627-8C1D-635FAE417A98
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/org-cycle.el][org-cycle]] controls visibility cycling of org outlines./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature org-cycle
   :after org
@@ -9665,6 +9673,8 @@ CLOCK: [2021-07-22 Thu 12:12]--[2021-07-22 Thu 12:23] =>  0:11
 CLOCK: [2021-04-24 Sat 13:10]--[2021-04-24 Sat 13:14] =>  0:04
 CLOCK: [2021-03-11 Thu 09:41]--[2021-03-11 Thu 10:00] =>  0:19
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/org-archive.el][org-archive]] archives org subtrees./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature org-archive
@@ -9705,6 +9715,8 @@ I normally archive subtrees with =org-archive-to-archive-sibling=, but use =org-
 CLOCK: [2021-03-15 Mon 14:51]--[2021-03-15 Mon 15:07] =>  0:16
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/org-fold.el][org-fold]] manages visibility and folding of org outlines./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature org-fold
   :after org
@@ -9716,6 +9728,8 @@ CLOCK: [2021-03-15 Mon 14:51]--[2021-03-15 Mon 15:07] =>  0:16
 :PROPERTIES:
 :ID:       1A295AA4-31BD-4B2E-828B-5B3443AD8D35
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/org-faces.el][org-faces]] defines faces for org-mode./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature org-faces
@@ -9761,6 +9775,8 @@ CLOCK: [2023-03-09 Thu 20:07]--[2023-03-09 Thu 20:19] =>  0:12
 CLOCK: [2022-08-29 Mon 17:28]--[2022-08-29 Mon 17:43] =>  0:15
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/org-id.el][org-id]] manages globally unique IDs for org entries./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature org-id
   :after org
@@ -9789,6 +9805,8 @@ left as an alist, causing `puthash' errors in `org-id-add-location'."
 :PROPERTIES:
 :ID:       DD345C01-CEAC-4CEC-A8D5-89C16A0182CB
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/org-list.el][org-list]] handles plain lists in org-mode./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature org-list
@@ -9857,6 +9875,8 @@ CLOCK: [2021-04-04 Sun 12:05]--[2021-04-04 Sun 12:25] =>  0:20
 CLOCK: [2021-03-23 Tue 12:13]--[2021-03-23 Tue 12:21] =>  0:08
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/org-keys.el][org-keys]] manages speed keys and key bindings for org-mode./
+
 Enable speed keys. To trigger a speed key, point must be at the very beginning of an org headline. Type '?' for a list of keys.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
@@ -9909,6 +9929,8 @@ Enable speed keys. To trigger a speed key, point must be at the very beginning o
 :ID:       6BA48DB9-1861-40A3-9811-1B5D9F0E350E
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/ol.el][ol]] implements the org link framework./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature ol
   :after org
@@ -9924,6 +9946,8 @@ Enable speed keys. To trigger a speed key, point must be at the very beginning o
 :PROPERTIES:
 :ID:       B1A25249-1E67-498D-8A68-0E4BDB3D0A2B
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/ol-bbdb.el][ol-bbdb]] provides support for links to BBDB records in org-mode./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature ol-bbdb
@@ -9941,6 +9965,8 @@ CLOCK: [2022-07-17 Sun 11:51]--[2022-07-17 Sun 11:55] =>  0:04
 CLOCK: [2022-07-16 Sat 21:15]--[2022-07-17 Sun 10:49] => 13:34
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/org-protocol.el][org-protocol]] intercepts calls from emacsclient to trigger custom actions./
+
 [[https://www.orgroam.com/manual.html#Mac-OS][This section of the org-roam manual]] describes how to set up ~org-protocol~ on macOS. Note that [[https://bitbucket.org/mituharu/emacs-mac/][emacs-mac]] supports ~org-protocol~ out of the box and doesn't require turning on the Emacs server.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
@@ -9955,6 +9981,8 @@ CLOCK: [2022-07-16 Sat 21:15]--[2022-07-17 Sun 10:49] => 13:34
 :LOGBOOK:
 CLOCK: [2021-07-25 Sun 13:14]--[2021-07-25 Sun 13:18] =>  0:04
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/ox.el][ox]] is the generic export engine for org-mode./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature ox
@@ -9981,6 +10009,8 @@ CLOCK: [2021-07-25 Sun 13:14]--[2021-07-25 Sun 13:18] =>  0:04
 :ID:       799486FA-374D-40ED-953A-36C09D7E15B6
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/ox-html.el][ox-html]] is the HTML back-end for the org export engine./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature ox-html
   :after org ox
@@ -9992,6 +10022,8 @@ CLOCK: [2021-07-25 Sun 13:14]--[2021-07-25 Sun 13:18] =>  0:04
 :PROPERTIES:
 :ID:       0D6DD227-A1C0-44B4-BD75-0C94F03D6FBE
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/ox-latex.el][ox-latex]] is the LaTeX back-end for the org export engine./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature ox-latex
@@ -10179,7 +10211,7 @@ Note to self: Typescript syntax highlighting works fine, but calling ~org-edit-s
 :ID:       5D173B55-ED72-495C-80EE-39063BAB0550
 :END:
 
-
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/org-src.el][org-src]] manages source code blocks in org-mode./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature org-src
@@ -10199,6 +10231,8 @@ Note to self: Typescript syntax highlighting works fine, but calling ~org-edit-s
 :PROPERTIES:
 :ID:       6DB39CB9-0939-41CD-B3A4-4FC478F24077
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/org-table.el][org-table]] is the plain-text table editor for org-mode./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature org-table
@@ -10227,6 +10261,8 @@ Note to self: Typescript syntax highlighting works fine, but calling ~org-edit-s
 :PROPERTIES:
 :ID:       91A9FFF0-BEB8-4C0D-9D78-B2F190C5AA8F
 :END:
+
+/[[https://github.com/tbanel/orgtbljoin][orgtbl-join]] joins two org tables on a common column./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package orgtbl-join
@@ -10263,6 +10299,8 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
 :ID:       79B7B36E-D824-4D67-BBAC-E4E4D8FA628F
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/org-element.el][org-element]] implements a parser and an API for org syntax./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature org-element
   :after org
@@ -10276,6 +10314,8 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
 :ID:       43E5754F-7EB8-4FB7-8A92-B57D8BA2AF81
 :END:
 
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/org-lint.el][org-lint]] checks org files for common errors./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature org-lint
   :after org
@@ -10286,6 +10326,8 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
 :PROPERTIES:
 :ID:       A4EE67E0-498C-4CE0-BBB2-E7F24DA6AD69
 :END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/org-habit.el][org-habit]] tracks habits and displays consistency graphs in the agenda./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature org-habit
@@ -10321,6 +10363,8 @@ CLOCK: [2021-07-12 Mon 15:33]--[2021-07-12 Mon 16:00] =>  0:27
 CLOCK: [2021-06-22 Tue 21:39]--[2021-06-23 Wed 00:21] =>  2:42
 CLOCK: [2021-04-20 Tue 23:28]--[2021-04-20 Tue 23:44] =>  0:16
 :END:
+
+/[[https://git.sr.ht/~bzg/org-contrib/tree/main/item/lisp/org-checklist.el][org-checklist]] resets checkboxes in repeating org entries./
 
 Allows reset of checkboxes in recurring tasks. This works only on headings that have the property ~RESET_CHECK_BOXES~ set to ~t~. You can set the property of a heading by invoking the command =org-set-property= with point on that heading or immediately under it.
 

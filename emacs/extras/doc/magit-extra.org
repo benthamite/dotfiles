@@ -144,7 +144,7 @@ The function ~magit-extras-parse-url~ converts a Git remote URL in SSH format (e
 
 The function ~magit-extras-get-commit-file~ extracts the name of the first file listed under "Changes to be committed" in the current buffer. It accepts an optional PATH argument: ~'full~ returns the absolute path, ~'sans-dir~ returns only the filename, and ~nil~ (the default) returns the path relative to the repository root.
 
-The function ~magit-extras-get-commit-heading~ retrieves the Org mode heading associated with the code being committed. It uses ~magit-extras-get-commit-file~ to find the file, visits it in the previous window, and extracts the heading via ~org-entry-get~. This is useful for generating commit messages from Org structure.
+The function ~magit-extras-get-commit-heading~ retrieves the Org mode heading associated with the code being committed. It parses the diff in the commit buffer to find the first changed line number, visits the file at that line, and returns the enclosing heading via ~org-entry-get~. This is useful for generating commit messages from Org structure.
 
 The function ~magit-extras-get-unstaged-files~ returns a list of unstaged file names using =git diff --name-only --diff-filter=d=. The function ~magit-extras-track-file~ stages a single file with =git add=. The function ~magit-extras-move-point-to-start~ moves point to the beginning of the buffer after a brief delay, which can be useful in Magit hooks.
 

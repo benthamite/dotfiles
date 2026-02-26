@@ -5,7 +5,7 @@
 # --
 (use-package $1
   :ensure nil
-  :load-path "/Users/pablostafforini/Library/CloudStorage/Dropbox/dotfiles/emacs/lisp/"
+  :load-path "/Users/pablostafforini/My Drive/dotfiles/emacs/extras/"
   :after $2
   :demand t$3
   :config

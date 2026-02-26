@@ -10,7 +10,7 @@ Create or update an org-mode note. The user's message will specify both the titl
 
 ## Notes directory
 
-`/Users/pablostafforini/Library/CloudStorage/Dropbox/notes/`
+`/Users/pablostafforini/My Drive/notes/`
 
 ## Procedure
 

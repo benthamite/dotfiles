@@ -41,3 +41,4 @@ My dotfiles are in `~/My Drive/dotfiles/`. Many files and directories in `~` are
 
 - **Important**: commit all changes you make immediately, unless I specify otherwise or the changes are temporary.
 - Do not mix unrelated changes in the same commit; if you need to make multiple unrelated changes, split them into separate commits.
+- Commit message format: `<scope>: <description>`, where `<scope>` is a short identifier for the area of change (package name, tool, or subsystem) and `<description>` is a lowercase imperative phrase with no trailing period. Examples: `org-roam-extras: handle nil db version in upgrade check`, `karabiner: swap ¿ and ¡ key mappings in k-mode`, `claude: add emacs-freeze skill for diagnosing frozen Emacs`.

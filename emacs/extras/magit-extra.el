@@ -102,18 +102,23 @@ return instead the full path; if PATH is `sans-dir', return the filename only."
 (autoload 'org-entry-get "org")
 (defun magit-extras-get-commit-heading ()
   "Get the `org-mode' heading above the code to be committed.
-Parse the diff in the commit buffer to find the first changed line, then return
-the Org heading enclosing that line in the committed file."
-  (let* ((file (magit-extras-get-commit-file 'full))
-	 (line (save-excursion
+Get the staged diff via git to find the first changed line, then return the Org
+heading enclosing that line in the committed file."
+  (let* ((relative (magit-extras-get-commit-file))
+	 (full (file-name-concat (magit-toplevel) relative))
+	 (line (with-temp-buffer
+		 (magit-git-insert "diff" "--cached" "--unified=0" "--" relative)
 		 (goto-char (point-min))
 		 (when (re-search-forward "^@@ -[0-9,]+ \\+\\([0-9]+\\)" nil t)
 		   (string-to-number (match-string 1))))))
-    (with-current-buffer (find-file-noselect file)
+    (unless line
+      (user-error "No staged hunks found for %s" relative))
+    (with-current-buffer (find-file-noselect full)
       (save-excursion
 	(goto-char (point-min))
-	(when line (forward-line (1- line)))
-	(org-entry-get nil "ITEM")))))
+	(forward-line (1- line))
+	(when-let* ((heading (org-entry-get nil "ITEM")))
+	  (replace-regexp-in-string "\\([*/_=~+]\\)\\(.+?\\)\\1" "\\2" heading))))))
 
 ;;;###autoload
 (defun magit-extras-checkout-tag-with-submodules ()

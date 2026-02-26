@@ -2290,19 +2290,7 @@ CLOCK: [2023-11-05 Sun 13:34]--[2023-11-05 Sun 13:59] =>  0:25
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-appear
   :after org
-  :hook org-mode-hook
-  :config
-  (define-advice org-appear--post-cmd (:around (fn) handle-cache-error)
-    "Catch `org-element--cache' emergency exits and reset the cache.
-Without this, a corrupt cache causes `org-appear--post-cmd' to error on
-every post-command-hook invocation, making the buffer unusable."
-    (condition-case err
-        (funcall fn)
-      (error
-       (if (string-match-p "org-element--cache" (error-message-string err))
-           (when (derived-mode-p 'org-mode)
-             (org-element-cache-reset))
-         (signal (car err) (cdr err)))))))
+  :hook org-mode-hook)
 #+end_src
 
 ** =face-remap=
@@ -10435,7 +10423,23 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   :after org
   :custom
   ;; set to nil to temporarily disable cache and avoid `org-element-cache' errors
-  (org-element-use-cache t))
+  (org-element-use-cache t)
+
+  :config
+  (define-advice org-element-at-point (:around (fn &rest args) recover-from-cache-error)
+    "On cache emergency exit, reset the cache and retry once.
+External file modifications (e.g. Google Drive sync) can corrupt the
+org-element cache.  Without this advice every caller of
+`org-element-at-point'—including `org-appear', `org-capture', and
+fontification—hits the error repeatedly."
+    (condition-case err
+        (apply fn args)
+      (error
+       (if (string-match-p "org-element--cache" (error-message-string err))
+           (progn
+             (org-element-cache-reset)
+             (apply fn args))
+         (signal (car err) (cdr err)))))))
 #+end_src
 
 ** =org-lint=

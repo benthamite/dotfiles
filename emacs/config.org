@@ -2290,7 +2290,19 @@ CLOCK: [2023-11-05 Sun 13:34]--[2023-11-05 Sun 13:59] =>  0:25
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-appear
   :after org
-  :hook org-mode-hook)
+  :hook org-mode-hook
+  :config
+  (define-advice org-appear--post-cmd (:around (fn) handle-cache-error)
+    "Catch `org-element--cache' emergency exits and reset the cache.
+Without this, a corrupt cache causes `org-appear--post-cmd' to error on
+every post-command-hook invocation, making the buffer unusable."
+    (condition-case err
+        (funcall fn)
+      (error
+       (if (string-match-p "org-element--cache" (error-message-string err))
+           (when (derived-mode-p 'org-mode)
+             (org-element-cache-reset))
+         (signal (car err) (cdr err)))))))
 #+end_src
 
 ** =face-remap=

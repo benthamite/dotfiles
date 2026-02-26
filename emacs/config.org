@@ -304,6 +304,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#eat][eat]]
   - [[#eat-extras][eat-extras]]
   - [[#vterm][vterm]]
+  - [[#vterm-extras][vterm-extras]]
 - [[#spelling--grammar][spelling & grammar]]
   - [[#jinx][jinx]]
   - [[#jinx-extras][jinx-extras]]
@@ -6569,7 +6570,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   :defer t)
 #+end_src
 
-*** =vterm-extras=
+** =vterm-extras=
 :PROPERTIES:
 :ID:       04F93CF5-C6E7-46A4-BEEE-AC8900D649E2
 :END:

@@ -10208,7 +10208,7 @@ Hugo should be able to export ~org-cite~ citations.
 :ID:       20531D06-05B0-446B-A363-0319C934BCB9
 :END:
 
-/[[https://github.com/benthamite/stafforini.el][stafforini]] is a private package that provides Emacs commands for building and previewing my personal site./
+/[[https://github.com/benthamite/stafforini.el][stafforini]] is a private package that provides Emacs commands for building and previewing my personal site, built with Hugo./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package stafforini

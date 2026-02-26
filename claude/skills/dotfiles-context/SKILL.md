@@ -34,31 +34,18 @@ To test loading Emacs extras in batch mode with all dependencies:
 ```bash
 ELPACA=/Users/pablostafforini/.config/emacs-profiles/$(emacsclient -e 'init-current-profile' | tr -d '"')/elpaca
 emacs --batch \
-  -L "$PWD/emacs/extras" \
-  -L "$ELPACA/builds/claude-code" \
-  -L "$ELPACA/builds/doom-modeline" \
-  -L "$ELPACA/builds/compat" \
-  -L "$ELPACA/builds/nerd-icons" \
-  -L "$ELPACA/builds/shrink-path" \
-  -L "$ELPACA/builds/paths" \
-  -L "$ELPACA/builds/eat" \
-  -L "$ELPACA/builds/inheritenv" \
-  -L "$ELPACA/builds/dash" \
-  -L "$ELPACA/builds/s" \
-  -L "$ELPACA/builds/f" \
-  -L "$ELPACA/builds/transient" \
-  -L "$ELPACA/builds/cond-let" \
-  --eval "(setq load-prefer-newer t)" \
-  --eval "(require 'claude-code-extras)" \
-  --eval "(require 'doom-modeline-extras)" \
+  --eval "(dolist (dir (file-expand-wildcards \"$ELPACA/builds/*/\")) (add-to-list 'load-path dir))" \
+  --eval "(push \"$PWD/emacs/extras\" load-path)" \
+  --eval "(require 'YOUR-PACKAGE)" \
   --eval "(message \"Result: %S\" (YOUR-TEST-EXPRESSION-HERE))" \
   2>&1
 ```
 
-**Important:** `$PWD/emacs/extras` loads the extras from the current working tree (where you edit files). `$ELPACA/builds/*` loads pre-built dependencies from a (possibly different) elpaca profile. Do not use `$ELPACA/repos/dotfiles/emacs/extras` for the extras under test—that may point to a stale copy in another profile.
+**How the load-path is set up:**
 
-The `load-prefer-newer t` setting is important because elpaca may have outdated `.elc` files that don't reflect recent source changes.
+1. All elpaca build directories are prepended to `load-path` (overriding system packages like `transient` with elpaca's versions).
+2. `$PWD/emacs/extras` is pushed to the very front, so extras under test always load from the working tree source `.el` files, not stale `.elc` from elpaca builds.
 
-If a dependency is missing, find it with `ls $ELPACA/builds/ | grep NAME` and add another `-L` flag.
+**Do not use `load-prefer-newer`** — it causes version mismatches between elpaca dependencies (e.g. magit's `.elc` expecting a transient API that differs from transient's `.el` source). The load-path ordering above already ensures the correct files are loaded.
 
 For interactive testing against the running Emacs session, use `emacsclient -e '(EXPRESSION)'`.

@@ -19,6 +19,30 @@
   },
   "model": "opus",
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/My Drive/dotfiles/claude/hooks/require-elisp-test-before-commit.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/My Drive/dotfiles/claude/hooks/track-elisp-test.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "matcher": "",

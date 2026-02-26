@@ -100,15 +100,20 @@ return instead the full path; if PATH is `sans-dir', return the filename only."
 	(_ file)))))
 
 (autoload 'org-entry-get "org")
-(declare-function window-extras-switch-to-last-window "window-extras")
 (defun magit-extras-get-commit-heading ()
-  "Get the `org-mode' heading above the code to be committed."
-  (let ((file (magit-extras-get-commit-file 'full)))
-    (save-window-excursion
-      (window-extras-switch-to-last-window)
-      (magit-section-forward-sibling)
-      (magit-diff-visit-file file)
-      (org-entry-get nil "ITEM"))))
+  "Get the `org-mode' heading above the code to be committed.
+Parse the diff in the commit buffer to find the first changed line, then return
+the Org heading enclosing that line in the committed file."
+  (let* ((file (magit-extras-get-commit-file 'full))
+	 (line (save-excursion
+		 (goto-char (point-min))
+		 (when (re-search-forward "^@@ -[0-9,]+ \\+\\([0-9]+\\)" nil t)
+		   (string-to-number (match-string 1))))))
+    (with-current-buffer (find-file-noselect file)
+      (save-excursion
+	(goto-char (point-min))
+	(when line (forward-line (1- line)))
+	(org-entry-get nil "ITEM")))))
 
 ;;;###autoload
 (defun magit-extras-checkout-tag-with-submodules ()

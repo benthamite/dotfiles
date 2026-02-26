@@ -6759,8 +6759,8 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 (use-package flymake-mdl
   :ensure (:host github
 		 :repo "MicahElliott/flymake-mdl")
-  :demand t
-  )
+  :after markdown-mode
+  :demand t)
 #+end_src
 
 * prose

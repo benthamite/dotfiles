@@ -7136,28 +7136,6 @@ To populate the database of historical prices:
         ("q" . ledger-reconcile-quit)))
 #+end_src
 
-*** resources
-:PROPERTIES:
-:ID:       FD6B578E-9794-4C38-A2F3-5A877ED2C4C8
-:END:
-
-https://gitlab.com/chrisberkhout/pricehist
-
-- [[https://devhints.io/ledger][Ledger CLI cheatsheet]]
-- [[https://github.com/davidkeegan/dklrt][GitHub - davidkeegan/dklrt: Ledger Recurring Transactiions.]]
-- [[https://rolfschr.github.io/gswl-book/latest.html][Getting Started With Ledger - August 28, 2019 201f047]]
-- [[https://emacs.cafe/ledger/emacs/ynab/budgeting/2018/06/12/elbank-ynab.html][Using Ledger for YNAB-like envelope budgeting]]
-- [[https://www.reddit.com/r/emacs/comments/8x4xtt/tip_how_i_use_ledger_to_track_my_money/][TIP: How I use ledger to track my money : emacs]]
-- [[https://news.ycombinator.com/item?id=7708777][The reasons why I tried and failed with ledger: - I never quite understood how t... | Hacker News]]
-- [[https://github.com/marbu/ledger-bank-import][GitHub - marbu/ledger-bank-import: convert bank csv files into ledger-cli file format]]
-- [[https://felixcrux.com/blog/ledger-practices][Ledger Practices - Felix Crux]]
-
-*** how to start from scratch
-:PROPERTIES:
-:ID:       49D7A193-157E-4A10-9C33-98727FC191BF
-:END:
-1. [[https://felixcrux.com/blog/ledger-practices-create-a-ledgerrc][create a ~.ledgerrc~ file]]
-
 ** =ledger-mode-extras=
 :PROPERTIES:
 :ID:       3FC5A39F-AEA9-4D54-AB55-836F58DA8103

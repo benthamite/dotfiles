@@ -10426,14 +10426,11 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   (org-element-use-cache t)
 
   :config
-  (define-advice org-element-at-point (:around (fn &rest args) recover-from-cache-error)
-    "Let the built-in cache error recovery work with `debug-on-error'.
-`org-element-at-point' already handles cache emergency exits internally
-\(reset and retry), but it uses `condition-case-unless-debug', which
-becomes a no-op when `debug-on-error' is non-nil.  Temporarily binding
-`debug-on-error' to nil restores the intended recovery behavior."
-    (let ((debug-on-error nil))
-      (apply fn args))))
+  ;; `org-capture' creates an indirect buffer with `clone', which copies
+  ;; the base buffer's cache.  The cloned cache is immediately stale
+  ;; because the capture buffer is narrowed and has the template inserted.
+  ;; Reset it so the cache is rebuilt from scratch in the capture buffer.
+  (add-hook 'org-capture-mode-hook #'org-element-cache-reset))
 #+end_src
 
 ** =org-lint=

@@ -10438,7 +10438,7 @@ fontification—hits the error repeatedly."
        (if (string-match-p "org-element--cache" (error-message-string err))
            (progn
              (org-element-cache-reset)
-             (apply fn args))
+             nil)
          (signal (car err) (cdr err)))))))
 #+end_src
 

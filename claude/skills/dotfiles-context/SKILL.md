@@ -16,3 +16,7 @@ Both point to the same Git repo, so changes only need to be committed once in th
 # Making changes
 
 If you make a change to an extras Elisp file, please also update the corresponding org file in the `doc` subdirectory. For example, if you modify `emacs/extras/claude-code-extras.el`, also update `emacs/extras/doc/claude-code-extras.org`.
+
+# Version control
+
+- Commit message format: `<scope>: <description>`, where `<scope>` is a short identifier for the area of change (package name, tool, or subsystem) and `<description>` is a lowercase imperative phrase with no trailing period. Examples: `org-roam-extras: handle nil db version in upgrade check`, `karabiner: swap ¿ and ¡ key mappings in k-mode`, `claude: add emacs-freeze skill for diagnosing frozen Emacs`.

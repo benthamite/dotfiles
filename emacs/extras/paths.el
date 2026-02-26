@@ -335,7 +335,7 @@ value."
 
 (defcustom paths-dir-PW
   (file-name-concat paths-dir-google-drive "PW/")
-  "Path to the PW Dropbox directory."
+  "Path to the PW directory."
   :type 'directory
   :group 'paths)
 

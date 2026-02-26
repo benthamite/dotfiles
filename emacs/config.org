@@ -10430,7 +10430,19 @@ CLOCK: [2021-03-18 Thu 18:49]--[2021-03-18 Thu 18:51] =>  0:02
   ;; the base buffer's cache.  The cloned cache is immediately stale
   ;; because the capture buffer is narrowed and has the template inserted.
   ;; Reset it so the cache is rebuilt from scratch in the capture buffer.
-  (add-hook 'org-capture-mode-hook #'org-element-cache-reset))
+  (add-hook 'org-capture-mode-hook #'org-element-cache-reset)
+
+  ;; `org-element-at-point' wraps its cache recovery code in
+  ;; `condition-case-unless-debug', which is disabled when
+  ;; `debug-on-error' is non-nil.  This causes every cache error—stale
+  ;; entries, invalid search bounds, missing parents—to enter the
+  ;; debugger instead of being handled by Org's built-in reset-and-retry
+  ;; logic.  Temporarily binding `debug-on-error' to nil lets the
+  ;; existing recovery work while preserving the debugger for all other
+  ;; code.
+  (define-advice org-element-at-point (:around (fn &rest args) let-cache-recovery-work)
+    (let ((debug-on-error nil))
+      (apply fn args))))
 #+end_src
 
 ** =org-lint=

@@ -84,18 +84,18 @@ between the start and completion of async processes."
   (run-at-time 0.3 nil #'(lambda () (goto-char (point-min)))))
 
 ;; TODO: check if there is a better way to do this
-(declare-function files-extras-buffer-file-name "files-extras")
 (defun magit-extras-get-commit-file (&optional path)
   "Get file to commit.
 If more than one file is being committed, get the first one. By default, the
 path of file returned is relative to the current repository. If PATH is `full',
 return instead the full path; if PATH is `sans-dir', return the filename only."
   (save-excursion
-    (re-search-forward "Changes to be committed:\n#.*?:.  \\(.*/?.*\\)$" nil t)
+    (goto-char (point-min))
+    (unless (re-search-forward "Changes to be committed:\n#.*?:.  \\(.*/?.*\\)$" nil t)
+      (user-error "No staged file found in the current buffer"))
     (let ((file (match-string-no-properties 1)))
       (pcase path
-	('full (let ((repo (file-name-directory (directory-file-name (files-extras-buffer-file-name)))))
-		 (file-name-concat repo file)))
+	('full (file-name-concat (magit-toplevel) file))
 	('sans-dir (file-name-nondirectory file))
 	(_ file)))))
 

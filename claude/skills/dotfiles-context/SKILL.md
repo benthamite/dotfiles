@@ -1,6 +1,6 @@
 ---
 name: dotfiles-context
-description: Dotfiles worktree structure and Emacs extras testing instructions. Use when working with dotfiles, Emacs extras, elpaca repos, or testing Elisp packages.
+description: Dotfiles worktree structure and extras documentation instructions. Use when working with dotfiles or Emacs extras doc files.
 user-invocable: false
 ---
 
@@ -13,39 +13,6 @@ The dotfiles repo has two working trees on the same machine:
 
 Both point to the same Git repo, so changes only need to be committed once in the appropriate working tree. Edit each file in its canonical location: `config.org` in Google Drive/dotfiles, Elisp extras in the elpaca repos directory.
 
-# Elpaca profile
-
-The current elpaca profile name is stored in the Elisp variable `init-current-profile`. Query it with:
-
-```bash
-emacsclient -e 'init-current-profile'
-```
-
-Always use this to resolve the active profile path (`~/.config/emacs-profiles/<profile>/elpaca/`) rather than hardcoding a profile name, since it changes over time.
-
 # Making changes
 
-If you make a change to an extras Elisp file, please also update the corresponding org file in the `doc` subdirectroy. For example, if you modify `emacs/extras/claude-code-extras.el`, also update `emacs/extras/doc/claude-code-extras.org`.
-
-# Testing Emacs extras
-
-To test loading Emacs extras in batch mode with all dependencies:
-
-```bash
-ELPACA=/Users/pablostafforini/.config/emacs-profiles/$(emacsclient -e 'init-current-profile' | tr -d '"')/elpaca
-emacs --batch \
-  --eval "(dolist (dir (file-expand-wildcards \"$ELPACA/builds/*/\")) (add-to-list 'load-path dir))" \
-  --eval "(push \"$PWD/emacs/extras\" load-path)" \
-  --eval "(require 'YOUR-PACKAGE)" \
-  --eval "(message \"Result: %S\" (YOUR-TEST-EXPRESSION-HERE))" \
-  2>&1
-```
-
-**How the load-path is set up:**
-
-1. All elpaca build directories are prepended to `load-path` (overriding system packages like `transient` with elpaca's versions).
-2. `$PWD/emacs/extras` is pushed to the very front, so extras under test always load from the working tree source `.el` files, not stale `.elc` from elpaca builds.
-
-**Do not use `load-prefer-newer`** — it causes version mismatches between elpaca dependencies (e.g. magit's `.elc` expecting a transient API that differs from transient's `.el` source). The load-path ordering above already ensures the correct files are loaded.
-
-For interactive testing against the running Emacs session, use `emacsclient -e '(EXPRESSION)'`.
+If you make a change to an extras Elisp file, please also update the corresponding org file in the `doc` subdirectory. For example, if you modify `emacs/extras/claude-code-extras.el`, also update `emacs/extras/doc/claude-code-extras.org`.

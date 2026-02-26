@@ -7274,8 +7274,7 @@ To populate the database of historical prices:
 
     :splitter ; optional, used to split text into several parts, and the translation result will be a list.
 
-    (gts-paragraph-splitter)
-    )))
+    (gts-paragraph-splitter))))
 #+end_src
 
 ** =powerthesaurus=

@@ -41,6 +41,16 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/My Drive/dotfiles/claude/hooks/symlink-project-memory.sh",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "Stop": [

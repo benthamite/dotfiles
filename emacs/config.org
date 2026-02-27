@@ -740,23 +740,40 @@ NAME and ARGS as in `use-package'."
 (elpaca-wait)
 #+end_src
 
-Because =use-personal-package= declares each extras file with an =:ensure= recipe pointing at this GitHub repository, =elpaca= treats them like any other package: it clones the repo into its own =elpaca/repos/dotfiles/= directory and builds the relevant files from there. This means the dotfiles end up in two separate local clones—the primary one in my main dotfiles location (where all edits are made) and the elpaca-managed one under =elpaca/repos/dotfiles/= (which Emacs loads from). To keep them in sync, a =post-commit= hook in the primary clone's gitdir automatically propagates each commit to the elpaca clone:
+Because =use-personal-package= declares each extras file with an =:ensure= recipe pointing at this GitHub repository, =elpaca= treats them like any other package: it clones the repo into its own =elpaca/repos/dotfiles/= directory and builds the relevant files from there. This means the dotfiles end up in two separate local clones—the primary one in my main dotfiles location (where all edits are made) and the elpaca-managed one under =elpaca/repos/dotfiles/= (which Emacs loads from). To keep them in sync, three git hooks in the primary clone's gitdir automatically propagate changes to the elpaca clone. The =post-commit= hook handles normal commits, the =post-rewrite= hook handles rebases and amends, and both delegate to a shared =sync-elpaca-clone.sh= script. All three files live in the gitdir's =hooks/= directory (e.g. =~/git-dirs/dotfiles/hooks/=) and must be executable.
+
+=hooks/sync-elpaca-clone.sh=:
 
 #+begin_src shell :tangle no
 #!/bin/sh
-# Propagate commits to the elpaca repos clone of dotfiles.
+# Propagate the current state of master to the elpaca repos clone.
 # Requires a running Emacs to resolve the active profile path.
+# Called by post-commit and post-rewrite hooks.
 PROFILE=$(emacsclient -e 'init-current-profile' 2>/dev/null | tr -d '"')
 ELPACA_DOTFILES="$HOME/.config/emacs-profiles/$PROFILE/elpaca/repos/dotfiles"
 if [ -d "$ELPACA_DOTFILES/.git" ]; then
     GITDIR="$GIT_DIR"
-    # The parent git-commit process sets GIT_DIR, GIT_INDEX_FILE, and
+    # The parent git process sets GIT_DIR, GIT_INDEX_FILE, and
     # GIT_WORK_TREE pointing at the Google Drive clone.  Unsetting them
     # is essential so that git commands target the elpaca clone.
     unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE
     git -C "$ELPACA_DOTFILES" fetch "$GITDIR" master 2>&1 &&
     git -C "$ELPACA_DOTFILES" reset --hard FETCH_HEAD 2>&1
 fi
+#+end_src
+
+=hooks/post-commit=:
+
+#+begin_src shell :tangle no
+#!/bin/sh
+exec "$(dirname "$0")/sync-elpaca-clone.sh"
+#+end_src
+
+=hooks/post-rewrite=:
+
+#+begin_src shell :tangle no
+#!/bin/sh
+exec "$(dirname "$0")/sync-elpaca-clone.sh"
 #+end_src
 
 ** =use-package-extras=

@@ -5190,7 +5190,6 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
   (org-gcal-up-days 1)
   (org-gcal-down-days 7)
   (org-gcal-auto-archive nil)
-  (org-gcal-org-timestamp-property :deadline)
 
   :config
   ;; see the relevant section in this config file for more details on how to set

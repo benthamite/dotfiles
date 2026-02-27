@@ -533,7 +533,7 @@ OLD-FUN and ARGS are arguments passed to the original function."
 
 (defun files-extras-open-extras-package ()
   "Prompt the user to select an `extras' package and open it."
-  (let* ((dir (file-name-concat elpaca-repos-directory "dotfiles/emacs/extras/"))
+  (let* ((dir (file-name-concat paths-dir-dotemacs "extras/"))
 	 (files (directory-files dir t directory-files-no-dot-files-regexp))
 	 (file-names (mapcar #'file-name-nondirectory files))
 	 (selection (completing-read "Package: " file-names nil t))

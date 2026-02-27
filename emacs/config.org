@@ -740,16 +740,18 @@ NAME and ARGS as in `use-package'."
 (elpaca-wait)
 #+end_src
 
-Because =use-personal-package= declares each extras file with an =:ensure= recipe pointing at this GitHub repository, =elpaca= treats them like any other package: it clones the repo into its own =elpaca/repos/dotfiles/= directory and builds the relevant files from there. This means the dotfiles end up in two separate local clones—the primary one in my main dotfiles location (where all edits are made) and the elpaca-managed one under =elpaca/repos/dotfiles/= (which Emacs loads from). To keep them in sync, three git hooks in the primary clone's gitdir automatically propagate changes to the elpaca clone. The =post-commit= hook handles normal commits, the =post-rewrite= hook handles rebases and amends, and both delegate to a shared =sync-elpaca-clone.sh= script. All three files live in the gitdir's =hooks/= directory (e.g. =~/git-dirs/dotfiles/hooks/=) and must be executable.
+Because =use-personal-package= declares each extras file with an =:ensure= recipe pointing at this GitHub repository, =elpaca= treats them like any other package: it clones the repo into its own =elpaca/repos/dotfiles/= directory and builds the relevant files from there. This means the dotfiles end up in two separate local clones—the primary one in my main dotfiles location (where all edits are made) and the elpaca-managed one under =elpaca/repos/dotfiles/= (which Emacs loads from). To keep them in sync, three git hooks in the primary clone's gitdir automatically propagate changes to the elpaca clone. The =post-commit= hook handles normal commits, the =post-rewrite= hook handles rebases and amends, and both delegate to a shared =sync-elpaca-clone.sh= script. All three files live in the gitdir's =hooks/= directory (e.g. =~/git-dirs/dotfiles/hooks/=) and must be executable. The script reads the active profile name from a cache file (=~/.config/emacs-profiles/.current-profile=) that Emacs writes at startup, rather than calling =emacsclient=, to avoid deadlocking when the hook is triggered by a synchronous git process inside Emacs (e.g. =magit-commit-squash=).
 
 =hooks/sync-elpaca-clone.sh=:
 
 #+begin_src shell :tangle no
 #!/bin/sh
 # Propagate the current state of master to the elpaca repos clone.
-# Requires a running Emacs to resolve the active profile path.
+# Reads the active profile from a cache file written by Emacs at startup,
+# avoiding emacsclient calls that deadlock when git is spawned synchronously
+# by Emacs.
 # Called by post-commit and post-rewrite hooks.
-PROFILE=$(emacsclient -e 'init-current-profile' 2>/dev/null | tr -d '"')
+PROFILE=$(cat "$HOME/.config/emacs-profiles/.current-profile" 2>/dev/null)
 ELPACA_DOTFILES="$HOME/.config/emacs-profiles/$PROFILE/elpaca/repos/dotfiles"
 if [ -d "$ELPACA_DOTFILES/.git" ]; then
     GITDIR="$GIT_DIR"
@@ -895,6 +897,15 @@ exec "$(dirname "$0")/sync-elpaca-clone.sh"
   :demand t
   :config
   (init-startup)
+
+  ;; Cache the profile name to a file so that git hooks can read it
+  ;; without calling emacsclient (which deadlocks when the hook is
+  ;; spawned by a synchronous git process inside Emacs).
+  (with-temp-file (file-name-concat
+                   (file-name-directory
+                    (directory-file-name user-emacs-directory))
+                   ".current-profile")
+    (insert init-current-profile))
 
   :bind
   ("A-n" . init-menu))

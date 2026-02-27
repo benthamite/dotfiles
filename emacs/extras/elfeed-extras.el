@@ -86,6 +86,9 @@ poorly-designed websites."
   (setq elfeed-extras-toggle-wiki-entries (not elfeed-extras-toggle-wiki-entries)))
 
 (declare-function zotra-extras-add-entry "zotra-extras")
+(declare-function rmh-elfeed-org-process "elfeed-org")
+(defvar rmh-elfeed-org-files)
+(defvar rmh-elfeed-org-tree-id)
 (defun elfeed-extras-add-entry ()
   "Add current URL to bibfile and generate associated PDF and HTML files."
   (interactive)
@@ -103,6 +106,8 @@ poorly-designed websites."
   "Update all feeds in `elfeed-feeds'.
 Unlike `elfeed-update', this function will update the database even if `elfeed'
 isn’t open."
+  (when (fboundp 'rmh-elfeed-org-process)
+    (rmh-elfeed-org-process rmh-elfeed-org-files rmh-elfeed-org-tree-id))
   (elfeed-db-ensure)
   (elfeed-update)
   (message "Elfeed update started in background."))

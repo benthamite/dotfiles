@@ -98,6 +98,7 @@ poorly-designed websites."
   (elfeed-show-next-link)
   (recenter))
 
+;;;###autoload
 (defun elfeed-extras-update ()
   "Update all feeds in `elfeed-feeds'.
 Unlike `elfeed-update', this function will update the database even if `elfeed'

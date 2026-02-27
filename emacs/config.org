@@ -13,7 +13,7 @@
 
 I am not a programmer, let alone an Elisp hacker. My background is in the humanities. It is only a slight exaggeration to say that, before I started using Emacs in 2020, I didn't know the difference between a function and a variable. You have been forewarned.
 
-This configuration is an Org document that tangles to an Emacs Lisp init file. It is organized into thematic sections—package management, version control, display, text manipulation, and so on—each of which groups related package declarations together. In addition to built-in features and external packages, it loads dozens of “extras” files: personal Elisp libraries stored in the =emacs/extras/= directory and named after the package they extend (e.g. =org-extras=, =elfeed-extras=, =gptel-extras=). These files are loaded via the =use-personal-package= macro, a thin wrapper around =use-package= that fetches the corresponding file from this dotfiles repository. They let me keep custom commands, advices, and hooks close to the packages they relate to, without cluttering the main configuration file. For example, instead of piling dozens of custom =org-mode= commands and hooks into the =org= section of this file, I place them in =emacs/extras/org-extras.el= and load that file with a single =(use-personal-package org-extras)= declaration here. This structure also allows anyone to try out my configuration selectively and straightforwardly. Thus, if you’d like to install my =org= extensions, you can just add one of the following recipes to your own config (depending on which package manager or Emacs version you use):
+This configuration is an Org document that tangles to an Emacs Lisp init file. It is organized into thematic sections—package management, version control, display, text manipulation, and so on—each of which groups related package declarations together. In addition to built-in features and external packages, it loads dozens of “extras” files: personal Elisp libraries stored in the =emacs/extras/= directory and named after the package they extend (e.g., =org-extras=, =elfeed-extras=, =gptel-extras=). These files are loaded via the =use-personal-package= macro, a thin wrapper around =use-package= that fetches the corresponding file from this dotfiles repository. They let me keep custom commands, advices, and hooks close to the packages they relate to, without cluttering the main configuration file. For example, instead of piling dozens of custom =org-mode= commands and hooks into the =org= section of this file, I place them in =emacs/extras/org-extras.el= and load that file with a single =(use-personal-package org-extras)= declaration here. This structure also allows anyone to try out my configuration selectively and straightforwardly. Thus, if you’d like to install my =org= extensions, you can just add one of the following recipes to your own config (depending on which package manager or Emacs version you use):
 
 #+begin_src emacs-lisp :tangle no
 ;; with elpaca
@@ -738,6 +738,25 @@ NAME and ARGS as in `use-package'."
          ,@args))))
 
 (elpaca-wait)
+#+end_src
+
+Because =use-personal-package= declares each extras file with an =:ensure= recipe pointing at this GitHub repository, =elpaca= treats them like any other package: it clones the repo into its own =elpaca/repos/dotfiles/= directory and builds the relevant files from there. This means the dotfiles end up in two separate local clones—the primary one in my main dotfiles location (where all edits are made) and the elpaca-managed one under =elpaca/repos/dotfiles/= (which Emacs loads from). To keep them in sync, a =post-commit= hook in the primary clone's gitdir automatically propagates each commit to the elpaca clone:
+
+#+begin_src shell :tangle no
+#!/bin/sh
+# Propagate commits to the elpaca repos clone of dotfiles.
+# Requires a running Emacs to resolve the active profile path.
+PROFILE=$(emacsclient -e 'init-current-profile' 2>/dev/null | tr -d '"')
+ELPACA_DOTFILES="$HOME/.config/emacs-profiles/$PROFILE/elpaca/repos/dotfiles"
+if [ -d "$ELPACA_DOTFILES/.git" ]; then
+    GITDIR="$GIT_DIR"
+    # The parent git-commit process sets GIT_DIR, GIT_INDEX_FILE, and
+    # GIT_WORK_TREE pointing at the Google Drive clone.  Unsetting them
+    # is essential so that git commands target the elpaca clone.
+    unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE
+    git -C "$ELPACA_DOTFILES" fetch "$GITDIR" master 2>&1 &&
+    git -C "$ELPACA_DOTFILES" reset --hard FETCH_HEAD 2>&1
+fi
 #+end_src
 
 ** =use-package-extras=

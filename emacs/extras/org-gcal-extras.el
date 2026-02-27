@@ -67,8 +67,8 @@ emergency exits from stale cache state."
 	"https://calendar.google.com/calendar/u/0/r/eventedit/"
 	(replace-regexp-in-string "\n" ""
 				  (base64-encode-string
-				   (replace-regexp-in-string "/" " " id))))))
-  (user-error "No id found"))
+				   (replace-regexp-in-string "/" " " id)))))
+    (user-error "No id found")))
 
 ;;;###autoload (autoload 'org-gcal-extras-menu "org-gcal-extras" nil t)
 (transient-define-prefix org-gcal-extras-menu ()
@@ -180,7 +180,9 @@ heading."
       (user-error "Must be on Org-mode heading."))
     (let* ((smry  (plist-get event :summary))
 	   (desc  (when-let* ((d (plist-get event :description)))
-		    (org-gcal--strip-html d)))
+		    (if (org-gcal--strip-html-p calendar-id)
+			(org-gcal--strip-html d)
+		      d)))
 	   (loc   (plist-get event :location))
 	   (source (plist-get event :source))
 	   (transparency   (plist-get event :transparency))
@@ -236,7 +238,7 @@ heading."
 			   (plist-get source :url)))
 	   (t
 	    (org-entry-put (point) "link"
-			   (org-link-make-string
+			   (org-gcal--make-link-string
 			    (plist-get source :url)
 			    (plist-get source :title)))))))
       (when transparency (org-entry-put (point) "TRANSPARENCY" transparency))

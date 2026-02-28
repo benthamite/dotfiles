@@ -10230,23 +10230,26 @@ Hugo should be able to export ~org-cite~ citations.
   ;; Register citation processors for stafforini.com Hugo export.
   ;; Activated per-directory via .dir-locals.el.
 
-  ;; For notes: convert [cite:@Key] to {{< cite "Key" >}} shortcodes
+  ;; For notes: convert [cite:@Key] to {{< cite "Key" >}} shortcodes.
+  ;; Style /t or /short emits a short (title-only) citation: {{< cite "-Key" >}}
   (org-cite-register-processor 'hugo-cite
     :export-citation
-    (lambda (citation _style _backend _info)
+    (lambda (citation style _backend _info)
       (let* ((refs (org-cite-get-references citation))
+             (short (member (car style) '("t" "short")))
              (parts
               (mapcar
                (lambda (ref)
                  (let* ((key (org-element-property :key ref))
+                        (cite-key (if short (concat "-" key) key))
                         (suffix (org-element-property :suffix ref))
                         (suffix-str (if suffix
                                         (string-trim (org-element-interpret-data suffix))
                                       "")))
                    (if (string-empty-p suffix-str)
-                       (format "{{< cite \"%s\" >}}" key)
+                       (format "{{< cite \"%s\" >}}" cite-key)
                      (format "{{< cite \"%s\" \"%s\" >}}"
-                             key
+                             cite-key
                              (replace-regexp-in-string "\"" "\\\\\"" suffix-str)))))
                refs)))
         (mapconcat #'identity parts ", ")))

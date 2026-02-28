@@ -21,6 +21,9 @@ export DOTFILES="$HOME/My Drive/dotfiles"
 export EDITOR="emacsclient -nw"
 export VISUAL="$EDITOR"
 
+# Prevent Python from writing __pycache__ bytecode to disk
+export PYTHONDONTWRITEBYTECODE=1
+
 # Compiler flags
 export LDFLAGS="-L/opt/homebrew/opt/sqlite/lib"
 export CPPFLAGS="-I/opt/homebrew/opt/sqlite/include"

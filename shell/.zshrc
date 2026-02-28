@@ -5,6 +5,16 @@ export PATH="$NVM_DIR/versions/node/v20.18.2/bin:$PATH"
 load_nvm() {
     [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && . "/opt/homebrew/opt/nvm/nvm.sh"
     [ -s "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm" ] && . "/opt/homebrew/opt/nvm/etc/bash_completion.d/nvm"
+    # After nvm loads, define persistent npm wrapper to relocate
+    # node_modules out of Google Drive after install
+    npm() {
+        command npm "$@"
+        local ret=$?
+        if [[ $ret -eq 0 && ("$1" == "install" || "$1" == "i" || "$1" == "ci") ]]; then
+            _gdrive_relocate_node_modules
+        fi
+        return $ret
+    }
 }
 
 nvm() {
@@ -29,6 +39,24 @@ npx() {
     unset -f nvm node npm npx
     load_nvm
     npx "$@"
+}
+
+# Relocate node_modules out of Google Drive after npm install.
+# npm always replaces symlinks with real directories during install,
+# so we move node_modules to a cache dir and symlink back afterwards.
+_gdrive_relocate_node_modules() {
+    local drive_prefix="$HOME/My Drive"
+    [[ "$PWD" != "$drive_prefix"* ]] && return 0
+    [[ ! -d node_modules || -L node_modules ]] && return 0
+
+    local project_id="${PWD#$drive_prefix/}"
+    project_id="${project_id//\//-}"
+    local cache_dir="$HOME/.cache/node_modules/$project_id"
+
+    [[ -d "$cache_dir" ]] && trash "$cache_dir" 2>/dev/null
+    mv node_modules "$cache_dir"
+    ln -s "$cache_dir" node_modules
+    echo "node_modules relocated to $cache_dir (outside Google Drive)"
 }
 
 # pyenv setup with lazy loading

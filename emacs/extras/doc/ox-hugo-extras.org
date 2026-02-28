@@ -1,0 +1,66 @@
+#+title: ox-hugo-extras: Extensions for ox-hugo
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: ox-hugo-extras.info
+#+texinfo_filename: ox-hugo-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Ox Hugo Extras: (ox-hugo-extras)
+#+texinfo_dir_desc: Extensions for ox-hugo
+
+This manual describes the features and customization options for the Emacs Lisp file =ox-hugo-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=ox-hugo-extras.el= extends =ox-hugo=, the Org mode exporter back-end for Hugo, by registering custom org-cite export processors for the stafforini.com build pipeline. These processors convert Org citations into Hugo shortcodes or suppress them entirely, depending on the content type being exported.
+
+The package provides two org-cite processors:
+
+- *hugo-cite.* Converts =[cite:@Key]= references into ={\{< cite "Key" >}\}= Hugo shortcodes, with support for a short citation style that emits title-only citations ([[#h:hugo-cite-processor][The hugo-cite processor]]).
+- *hugo-cite-noop.* Suppresses all citations and bibliographies, used for quote pages where citations are handled by work pages ([[#h:hugo-cite-noop-processor][The hugo-cite-noop processor]]).
+
+Both processors are activated per-directory via =.dir-locals.el= settings. The package depends on =ox-hugo= and =oc= (org-cite).
+
+* The hugo-cite processor
+:PROPERTIES:
+:CUSTOM_ID: h:hugo-cite-processor
+:END:
+
+The =hugo-cite= processor is the primary citation handler for notes exported to stafforini.com. It converts each =[cite:@Key]= reference into a ={\{< cite "Key" >}\}= Hugo shortcode that the site's citation rendering pipeline resolves at build time.
+
+When a citation includes a suffix (such as a page number), the processor emits a two-argument shortcode: ={\{< cite "Key" "p. 42" >}\}=. Multiple references within a single citation are joined with commas.
+
+The processor supports a short citation style, activated by the =/t= or =/short= style modifiers (e.g. =[cite/t:@Key]=). In short mode, the cite key is prefixed with a hyphen (={\{< cite "-Key" >}\}=), which signals the Hugo shortcode to render only the work title without author information.
+
+The bibliography export handler is a no-op, since the site generates bibliographic data separately.
+
+* The hugo-cite-noop processor
+:PROPERTIES:
+:CUSTOM_ID: h:hugo-cite-noop-processor
+:END:
+
+The =hugo-cite-noop= processor suppresses all citation output. Both the citation and bibliography export handlers return empty strings.
+
+This processor is used for quote pages, where citation information is handled by the parent work page rather than inline in the quote content. It is typically activated via =.dir-locals.el= in the quotes source directory.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

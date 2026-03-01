@@ -470,6 +470,7 @@ The extras come with their own manuals and user options: everything is documente
 - [[#reference--citation][reference & citation]]
   - [[#oc][oc]]
   - [[#oc-csl][oc-csl]]
+  - [[#org-footnote][org-footnote]]
   - [[#citeproc][citeproc]]
   - [[#bibtex][bibtex]]
   - [[#bibtex-extras][bibtex-extras]]
@@ -11325,6 +11326,20 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
   :custom
   (org-cite-csl-styles-dir paths-dir-tlon-csl-styles)
   (org-cite-csl-locales-dir paths-dir-tlon-csl-locales))
+#+end_src
+
+** =org-footnote=
+:PROPERTIES:
+:ID:       605C9F07-AD90-4C6E-9C8A-1CF736AE3590
+:END:
+
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/org-footnote.el][org-footnote]] provides footnote support in org-mode./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-feature org-footnote
+  :defer t
+  :custom
+  (org-footnote-auto-adjust t))
 #+end_src
 
 ** =citeproc=

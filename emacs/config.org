@@ -691,7 +691,8 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
       "https://github.com/emacsmirror/nongnu_elpa")
 
 (toggle-debug-on-error) ; uncomment when debugging
-(setq elpaca-lock-file (file-name-concat (file-name-directory (directory-file-name elpaca-directory)) "lockfile.el"))
+(setq elpaca-lock-file
+      (file-name-concat (file-name-directory (directory-file-name elpaca-directory)) "lockfile.el"))
 #+end_src
 
 ** =use-package=
@@ -743,7 +744,7 @@ NAME and ARGS as in `use-package'."
 (elpaca-wait)
 #+end_src
 
-Because =use-personal-package= declares each extras file with an =:ensure= recipe pointing at this GitHub repository, =elpaca= treats them like any other package: it clones the repo into its own =elpaca/repos/dotfiles/= directory and builds the relevant files from there. This means the dotfiles end up in two separate local clones—the primary one in my main dotfiles location (where all edits are made) and the elpaca-managed one under =elpaca/repos/dotfiles/= (which Emacs loads from). To keep them in sync, three git hooks in the primary clone's gitdir automatically propagate changes to the elpaca clone. The =post-commit= hook handles normal commits, the =post-rewrite= hook handles rebases and amends, and both delegate to a shared =sync-elpaca-clone.sh= script. All three files live in the gitdir's =hooks/= directory (e.g. =~/git-dirs/dotfiles/hooks/=) and must be executable. The script reads the active profile name from a cache file (=~/.config/emacs-profiles/.current-profile=) that Emacs writes at startup, rather than calling =emacsclient=, to avoid deadlocking when the hook is triggered by a synchronous git process inside Emacs (e.g. =magit-commit-squash=).
+Because =use-personal-package= declares each extras file with an =:ensure= recipe pointing at this GitHub repository, =elpaca= treats them like any other package: it clones the repo into its own =elpaca/repos/dotfiles/= directory and builds the relevant files from there. This means the dotfiles end up in two separate local clones—the primary one in my main dotfiles location (where all edits are made) and the elpaca-managed one under =elpaca/repos/dotfiles/= (which Emacs loads from). To keep them in sync, three git hooks in the primary clone's gitdir automatically propagate changes to the elpaca clone. The =post-commit= hook handles normal commits, the =post-rewrite= hook handles rebases and amends, and both delegate to a shared =sync-elpaca-clone.sh= script. All three files live in the gitdir's =hooks/= directory and must be executable. The script reads the active profile name from a cache file (=~/.config/emacs-profiles/.current-profile=) that Emacs writes at startup, rather than calling =emacsclient=, to avoid deadlocking when the hook is triggered by a synchronous git process inside Emacs (e.g., =magit-commit-squash=).
 
 =hooks/sync-elpaca-clone.sh=:
 
@@ -977,7 +978,8 @@ exec "$(dirname "$0")/sync-elpaca-clone.sh"
     (keymap-global-unset (concat "s-" (char-to-string char))))
 
   ;; unset some `Alt' key bindings in `key-translation-map'
-  (dolist (char '("SPC" "!" "$" "+" "-" "<" ">" "?" "a" "c" "m" "o" "u" "x" "C" "L" "P" "R" "S" "T" "Y" "[" "]" "{" "|" "}"))
+  (dolist (char '("SPC" "!" "$" "+" "-" "<" ">" "?" "a" "c" "m" "o" "u"
+		  "x" "C" "L" "P" "R" "S" "T" "Y" "[" "]" "{" "|" "}"))
     (keymap-unset key-translation-map (concat "A-" char))))
 #+end_src
 
@@ -1790,13 +1792,6 @@ Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magi
 :END:
 
 /[[https://github.com/alphapapa/magit-todos][magit-todos]] displays TODOs present in project files in the Magit status buffer./
-
-[2024-09-25 Wed] Disabling until I fix/diagnose this issue:
-
-#+begin_src
-error in process sentinel: magit-todos--async-when-done: Process "magit-todos--scan-with-rg" failed with exit code 2.  Output:"rg: No files were searched, which means ripgrep probably applied a filter you didn't expect.
-Running with --debug will show why files are being skipped.
-#+end_src
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package magit-todos
@@ -2628,7 +2623,8 @@ Here’s a screenshot illustrating the modeline and tab bar in action (click to 
   :custom
   (doom-modeline-time nil) ; we display time (and date) in the tab bar
   (doom-modeline-buffer-name t)
-  (doom-modeline-buffer-file-name-style 'file-name) ; we display the full path in the header line via `breadcrumb'
+  ;; we display the full path in the header line via `breadcrumb'
+  (doom-modeline-buffer-file-name-style 'file-name)
   (doom-modeline-check-simple-format t)
   (doom-modeline-total-line-number t)
   (doom-modeline-position-column-line-format '(" %c %l"))
@@ -2737,8 +2733,8 @@ CLOCK: [2023-11-26 Sun 09:51]--[2023-11-26 Sun 10:39] =>  0:48
           ,tab-bar-extras-github-element
           ,tab-bar-extras-pomodoro-element
           ,tab-bar-extras-debug-element
-          ,tab-bar-extras-separator-element ; we add a separator at the end because `wttr' appends itself after it
-          ))
+          ;; we add a separator at the end because `wttr' appends itself after it
+          ,tab-bar-extras-separator-element))
 
   :hook
   (init-post-init-hook
@@ -4307,7 +4303,8 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
 (use-feature dired-aux
   :after dired-x
   :config
-  (push '("\\.rar\\'" "" "unar") dired-compress-file-suffixes)) ; with `unar' installed, `Z' uncompresses `rar' files
+  ;; with `unar' installed, `Z' uncompresses `rar' files
+  (push '("\\.rar\\'" "" "unar") dired-compress-file-suffixes))
 #+end_src
 
 ** =dired-git-info=
@@ -5043,25 +5040,26 @@ CLOCK: [2021-03-30 Tue 21:45]--[2021-03-30 Tue 22:02] =>  0:17
 (use-package writeroom-mode
   :custom
   (writeroom-global-effects '(writeroom-set-fullscreen
-                              writeroom-set-alpha
-                              writeroom-set-menu-bar-lines
-                              writeroom-set-tool-bar-lines
-                              writeroom-set-vertical-scroll-bars
-                              writeroom-set-bottom-divider-width
-                              (lambda (arg) (tab-bar-mode (* -1 arg)))))
+			      writeroom-set-alpha
+			      writeroom-set-menu-bar-lines
+			      writeroom-set-tool-bar-lines
+			      writeroom-set-vertical-scroll-bars
+			      writeroom-set-bottom-divider-width
+			      (lambda (arg) (tab-bar-mode (* -1 arg)))))
   (writeroom-restore-window-config t) ; upon leaving `writeroom mode', restore pre-existing number of windows
   (writeroom-major-modes '(org-mode
-                           elfeed-search-mode
-                           elfeed-show-mode
-                           eww-mode
-                           eww-buffers-mode)) ; major modes activated in global-writeroom-mode
+			   elfeed-search-mode
+			   elfeed-show-mode
+			   eww-mode
+			   eww-buffers-mode)) ; major modes activated in global-writeroom-mode
   (writeroom-fullscreen-effect 'maximized) ; disables annoying fullscreen transition effect on macos
   (writeroom-maximize-window t)
 
   :config
-  (advice-add 'writeroom-mode :before (lambda (&rest args)
-                                        "Set `writeroom-width' to the width of the window in which it is invoked."
-                                        (setopt writeroom-width (window-total-width))))
+  (advice-add 'writeroom-mode
+	      :before (lambda (&rest args)
+			"Set `writeroom-width' to the width of the window in which it is invoked."
+			(setopt writeroom-width (window-total-width))))
 
   :bind
   ("H-u" . writeroom-mode))

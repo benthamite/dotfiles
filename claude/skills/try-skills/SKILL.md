@@ -30,7 +30,7 @@ Source: https://github.com/HartreeWorks/skills
 | 4  | day-tracker              | HartreeWorks/skill--day-tracker                 | revisit | Consider designing a custom screenshot-based activity tracker inspired by this |
 | 5  | proofread                | HartreeWorks/skill--proofread                   | keep    | Both aspell and Gemini engines work; fixed URL-encoding bug for paths with spaces |
 | 6  | project-management       | HartreeWorks/skill--project-management          | revisit | Consider designing a custom project scaffolding system inspired by this |
-| 7  | schedule-task            | HartreeWorks/skill--schedule-task               | untried |       |
+| 7  | schedule-task            | HartreeWorks/skill--schedule-task               | revisit | Useful once there are recurring autonomous Claude tasks to schedule |
 | 8  | send-email               | HartreeWorks/skill--send-email                  | untried |       |
 | 9  | slack                    | HartreeWorks/skill--slack                       | untried |       |
 | 10 | summarise-granola        | HartreeWorks/skill--summarise-granola           | untried |       |

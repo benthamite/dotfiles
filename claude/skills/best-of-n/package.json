@@ -1,0 +1,28 @@
+{
+  "name": "best-of-n",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Best-of-N sampling: query each model N times, pick the best response, then synthesise across models",
+  "type": "module",
+  "scripts": {
+    "query": "npx tsx scripts/bon-query.ts",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.35",
+    "@ai-sdk/google": "^3.0.20",
+    "@ai-sdk/openai": "^3.0.25",
+    "@ai-sdk/xai": "^3.0.46",
+    "ai": "^6.0.68",
+    "commander": "^12.0.0",
+    "dotenv": "^16.0.0",
+    "marked": "^17.0.1",
+    "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}

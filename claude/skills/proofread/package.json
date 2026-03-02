@@ -1,0 +1,21 @@
+{
+  "name": "proofread",
+  "version": "1.0.0",
+  "description": "AI-powered proofreading skill using Gemini Flash",
+  "type": "module",
+  "scripts": {
+    "proofread": "tsx scripts/proofread.ts",
+    "apply": "tsx scripts/apply-suggestions.ts"
+  },
+  "dependencies": {
+    "@ai-sdk/google": "^1.0.0",
+    "ai": "^4.0.0",
+    "dotenv": "^16.4.0",
+    "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}

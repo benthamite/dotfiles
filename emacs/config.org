@@ -8681,7 +8681,7 @@ This package evolved out of =gptel-extras=.
 :ID:       B4534C3F-D95D-45DF-B3D8-552747784B42
 :END:
 
-/[[file:extras/a-extras.el][aidermacs-extras]] collects my extensions for =aidermacs=./
+/[[file:extras/aidermacs-extras.el][aidermacs-extras]] collects my extensions for =aidermacs=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package aidermacs-extras

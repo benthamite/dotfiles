@@ -1,6 +1,7 @@
 ---
 name: interpretability-audit
 description: Audit a codebase for intent transparency and readability. Use when the user wants to check if code is understandable, if intentions are clear, or if there are obscurities a reader would struggle with.
+argument-hint: [dir]
 ---
 
 # Interpretability audit

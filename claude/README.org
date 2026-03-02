@@ -1,0 +1,132 @@
+#+title: Claude Code configuration
+#+author: Pablo Stafforini
+
+* Overview
+
+This directory contains my [[https://docs.anthropic.com/en/docs/claude-code][Claude Code]] configuration: settings, hooks, and custom skills. Claude Code is a CLI-based coding agent; I use it exclusively from the terminal.
+
+The =~/.claude/= directory symlinks its core files here, so changes are version-controlled:
+
+- =~/.claude/settings.json= → =claude/settings.json=
+- =~/.claude/settings.local.json= → =claude/settings.local.json=
+- =~/.claude/CLAUDE.md= → =claude/CLAUDE.md=
+- =~/.claude/skills/= → =claude/skills/=
+
+* Configuration
+
+** settings.json
+
+- *Model*: Claude Opus 4.6 (I prefer performance over speed).
+- *Agent teams*: enabled.
+- *Plugins*: Slack MCP plugin.
+- *Allowed tools*: Bash, Read, Edit, Write, WebFetch, WebSearch, Task, Glob, Grep, NotebookEdit.
+
+** settings.local.json
+
+Machine-specific tool whitelists, such as Homebrew, MPV, AppleScript, and various MCP tools.
+
+** CLAUDE.md
+
+Project-level instructions referencing the =dotfiles-context= skill. The global =~/.claude/CLAUDE.md= (symlinked here) defines conventions that apply across all projects:
+
+- Fix root causes, not symptoms; no silent fallbacks.
+- Verify fixes before declaring them done.
+- Commit all changes immediately; never mix unrelated changes.
+- Use subagents and teams liberally; prefer the most powerful model.
+- Use =trash= instead of =rm -rf=; never kill Emacs without confirmation.
+
+* Hooks
+
+Three hooks enforce workflow invariants.
+
+** require-elisp-test-before-commit.sh (PreToolUse)
+
+Blocks =git commit= when Elisp files (=*.el= or =emacs/config.org=) are staged but no test has been run in the current session. Forces the agent to run =emacs --batch= before committing.
+
+** track-elisp-test.sh (PostToolUse)
+
+Creates a marker file (=/tmp/claude-elisp-tested-{SESSION_ID}=) whenever =emacs --batch= runs. This marker is what the pre-commit hook checks for. The marker is consumed (deleted) after a successful commit, so each commit requires a fresh test.
+
+** symlink-project-memory.sh (PostToolUse)
+
+On the first Edit or Write in a project, moves Claude Code's memory directory from its default location (=~/.claude/projects/<encoded-path>/memory/=) into the project's =.claude/memory/= directory, replacing the original with a symlink. This keeps memory local and version-controllable.
+
+* Skills
+
+Skills are reusable prompt modules stored in =skills/<name>/SKILL.md=. Some are user-invocable (triggered by typing =/<name>=), others provide context that Claude loads automatically when relevant.
+
+** Context skills
+
+These are not invoked directly. They supply background knowledge when Claude works in this repo.
+
+*** dotfiles-context
+
+Describes the dual-worktree structure (Google Drive for non-Elisp files, elpaca repos for Elisp), how to resolve the active elpaca profile, the batch-testing recipe, and the commit message format (=<scope>: <description>=).
+
+*** elisp-conventions
+
+Emacs Lisp coding standards: atomic functions, helper placement, docstring format, no silent fallbacks, and testing patterns.
+
+** Development skills
+
+*** code-audit
+
+Audits code for bugs, security issues, error handling gaps, and correctness problems. Categorizes findings as critical, bugs, fragile, or minor, with specific line numbers.
+
+*** interpretability-audit
+
+Audits code for intent transparency: magic values, misleading names, missing rationale comments, undocumented conventions.
+
+*** test-suite
+
+Creates comprehensive test suites. Performs reconnaissance on the tech stack, then generates tests prioritized by criticality: data integrity and input boundaries first, business logic and integrations second, regressions and configuration third.
+
+*** verify-pr
+
+Six-step PR verification: byte-compile/type-check/lint, run tests, review commits, check upstream alignment, verify file hygiene, and check CI results.
+
+** Documentation skills
+
+*** doc-elisp
+
+Creates or updates documentation for any Elisp package, following the Denote manual style: org-mode with PROPERTIES drawers, Texinfo index entries, and cross-references.
+
+*** doc-extras
+
+Scans all =emacs/extras/*.el= files, identifies missing or outdated documentation, and generates docs in parallel using subagents.
+
+*** org-note
+
+Creates or updates org-mode notes in my notes directory (=~/My Drive/notes/=), with proper slugified filenames and org IDs.
+
+** Release and operations skills
+
+*** release
+
+Cuts releases for my Emacs packages (10 supported). Validates the repo, classifies commits since the last tag, suggests a semver bump, and drafts release notes. Also has an audit mode that scans all packages for version mismatches or unreleased commits.
+
+*** emacs-freeze
+
+Diagnoses a frozen Emacs process: samples the stack, decodes native-comp symbols, identifies the hot path, and suggests recovery options (SIGUSR2, SIGTERM, or SIGKILL with appropriate warnings).
+
+** Multi-model and research skills
+
+*** best-of-n
+
+Queries multiple AI models with temperature-varied sampling. For each model, generates N responses and selects the best one (using Gemini 3 Flash as judge). Then synthesizes across models using Claude Opus 4.6 with extended thinking. Has a brainstorm mode that merges unique ideas instead of picking one winner. Presets: Quick (4 models x 3), Intense (7 x 5), Ultra (7 x 6).
+
+*** proofread
+
+Proofreads documents using either aspell (fast, spelling-only) or an LLM (Gemini Flash, with configurable depth: mechanical, light style, or comprehensive). Auto-applies safe corrections and flags style suggestions for interactive review. Uses British English conventions.
+
+** Security skills
+
+*** audit-mac-app
+
+Eight-phase security audit of macOS applications: trust verification, permission analysis, app type detection, code extraction (with Electron-specific checks for nodeIntegration, contextIsolation, etc.), network endpoint scanning, and binary analysis. Generates a markdown report with severity ratings.
+
+** Meta skills
+
+*** try-skills
+
+Evaluates third-party skills from the [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository one at a time. Installs each skill, tests it, and records the verdict. Status so far: 3 kept (best-of-n, proofread, audit-mac-app), 23 skipped, 5 flagged for future revisit.

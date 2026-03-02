@@ -45,7 +45,7 @@ Source: https://github.com/HartreeWorks/skills
 | 19 | french-tutor             | HartreeWorks/skill--french-tutor                | skipped | Language-specific; requires mochi-srs |
 | 20 | lesswrong-and-ea-forum   | HartreeWorks/claude-skill--lesswrong-and-ea-forum | skipped | Digest feature not compelling enough; can query forums ad-hoc |
 | 21 | mochi-srs                | HartreeWorks/skill--mochi-srs                   | skipped | Requires Mochi API key |
-| 22 | audit-mac-app            | HartreeWorks/skill--audit-mac-app               | keep    | Works well; tested on Discord; uses only macOS built-ins |
+| 22 | audit-mac-app            | HartreeWorks/skill--audit-mac-app               | keep    | Shell script using macOS built-ins + npx asar; tested on Discord; 7-phase audit with severity ratings |
 | 23 | secure-mcp-install       | HartreeWorks/skill--secure-mcp-install          | skipped | Meta-tool for installing MCP servers |
 | 24 | save-conversation        | HartreeWorks/skill--save-conversation           | skipped | Lightweight but not needed currently |
 | 25 | save-for-later           | HartreeWorks/skill--save-for-later              | skipped | Session resume registry; not needed currently |

@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__acp__Edit",
+      "Bash(uvx duckduckgo-mcp-server:*)",
+      "Bash(mpv:*)",
+      "Bash(brew install:*)",
+      "Bash(SwitchAudioSource -a)",
+      "Bash(SwitchAudioSource -s \"MacBook Pro Speakers\")",
+      "Bash(osascript:*)",
+      "Bash(pip3 install:*)",
+      "Bash(nanodlna list:*)"
+    ]
+  }
+}

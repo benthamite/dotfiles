@@ -7,7 +7,7 @@ description: Try third-party skills one by one. Use when the user says "/try-ski
 
 ## Instructions for Claude
 
-Read this file at the start of the session. Pick the next untried skill from the list below. Install it, then invoke it with a realistic test. Wait for the user to evaluate. After their decision, update this file: change the status to `keep` or `removed` and add a brief note. Then move on to the next skill, or stop if the user wants to.
+Read this file at the start of the session. Pick the next untried skill from the list below. Install it, then invoke it with a realistic test. Wait for the user to evaluate. After their decision, update this file: change the status to `keep`, `removed`, or `revisit` and add a brief note. Use `revisit` when the skill is interesting but not ready to install — e.g., worth designing a custom version inspired by it. Then move on to the next skill, or stop if the user wants to.
 
 Only install and test one skill per turn. Wait for the user to confirm before moving to the next.
 
@@ -26,8 +26,8 @@ Source: https://github.com/HartreeWorks/skills
 |----|--------------------------|-------------------------------------------------|---------|-------|
 | 1  | ask-many-models          | HartreeWorks/skill--ask-many-models             | removed | Broken CLI, removed from repo |
 | 2  | best-of-n               | HartreeWorks/skill--best-of-n                   | keep    | Works with Gemini + Anthropic keys; no xAI key so Grok fails gracefully |
-| 3  | chief-of-staff           | HartreeWorks/skill--chief-of-staff              | untried |       |
-| 4  | day-tracker              | HartreeWorks/skill--day-tracker                 | untried |       |
+| 3  | chief-of-staff           | HartreeWorks/skill--chief-of-staff              | revisit | Consider designing a custom daily briefing system inspired by this |
+| 4  | day-tracker              | HartreeWorks/skill--day-tracker                 | revisit | Consider designing a custom screenshot-based activity tracker inspired by this |
 | 5  | proofread                | HartreeWorks/skill--proofread                   | untried |       |
 | 6  | project-management       | HartreeWorks/skill--project-management          | untried |       |
 | 7  | schedule-task            | HartreeWorks/skill--schedule-task               | untried |       |

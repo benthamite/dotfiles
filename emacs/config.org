@@ -2932,7 +2932,7 @@ CLOCK: [2022-07-11 Mon 12:37]--[2022-07-11 Mon 12:43] =>  0:06
 CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
 :END:
 
-** =words=
+** words
 :PROPERTIES:
 :ID:       3493B00B-C36E-406F-B681-F145FD1684B2
 :END:
@@ -2946,7 +2946,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
    ("A-C-s-u" . backward-word)))
 #+end_src
 
-** =lines=
+** lines
 :PROPERTIES:
 :ID:       73DC1518-87FD-48D7-9EE5-C863126905AD
 :END:
@@ -3038,7 +3038,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
    ("A-C-s-/" . move-end-of-line)))
 #+end_src
 
-** =sentences=
+** sentences
 :PROPERTIES:
 :ID:       9BCDE791-E716-4CFE-AED3-4E4E4874DDDE
 :END:
@@ -3052,7 +3052,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
    ("A-C-s-o" . forward-sentence)))
 #+end_src
 
-** =paragraphs=
+** paragraphs
 :PROPERTIES:
 :ID:       E10CAF75-4C0C-4910-856F-39707E30A565
 :END:
@@ -3066,7 +3066,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
    ("A-C-s-." . forward-paragraph)))
 #+end_src
 
-** =sexps=
+** sexps
 :PROPERTIES:
 :ID:       DF16B7CC-E0CF-4062-A0C2-93CBE83F619C
 :END:
@@ -3081,7 +3081,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
    ))
 #+end_src
 
-** =defuns=
+** defuns
 :PROPERTIES:
 :ID:       868B32C0-52FC-4131-9191-DD43BEAABCEA
 :END:
@@ -3095,7 +3095,7 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
    ("A-C-s-s" . end-of-defun)))
 #+end_src
 
-** =buffers=
+** buffers
 :PROPERTIES:
 :ID:       E71DE3A8-E941-4864-8224-2326C22E3AEB
 :END:

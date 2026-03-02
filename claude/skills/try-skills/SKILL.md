@@ -43,9 +43,9 @@ Source: https://github.com/HartreeWorks/skills
 | 17 | youtube-download         | HartreeWorks/skill--youtube-download            | skipped | Simple yt-dlp wrapper |
 | 18 | youtube-transcribe       | HartreeWorks/skill--youtube-transcribe          | skipped | Requires yt-dlp + transcribe-audio |
 | 19 | french-tutor             | HartreeWorks/skill--french-tutor                | skipped | Language-specific; requires mochi-srs |
-| 20 | lesswrong-and-ea-forum   | HartreeWorks/claude-skill--lesswrong-and-ea-forum | untried |       |
+| 20 | lesswrong-and-ea-forum   | HartreeWorks/claude-skill--lesswrong-and-ea-forum | keep    | Search and read work; no auth needed for read-only; --forum flag goes before subcommand |
 | 21 | mochi-srs                | HartreeWorks/skill--mochi-srs                   | skipped | Requires Mochi API key |
-| 22 | audit-mac-app            | HartreeWorks/skill--audit-mac-app               | untried |       |
+| 22 | audit-mac-app            | HartreeWorks/skill--audit-mac-app               | keep    | Works well; tested on Discord; uses only macOS built-ins |
 | 23 | secure-mcp-install       | HartreeWorks/skill--secure-mcp-install          | skipped | Meta-tool for installing MCP servers |
 | 24 | save-conversation        | HartreeWorks/skill--save-conversation           | skipped | Lightweight but not needed currently |
 | 25 | save-for-later           | HartreeWorks/skill--save-for-later              | skipped | Session resume registry; not needed currently |

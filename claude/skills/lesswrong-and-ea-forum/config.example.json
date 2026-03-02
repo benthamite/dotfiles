@@ -1,0 +1,30 @@
+{
+  "auth": {
+    "lesswrong": null,
+    "eaforum": null
+  },
+  "subscriptions": [
+    {
+      "type": "user",
+      "forum": "lesswrong",
+      "slug": "daniel-kokotajlo"
+    },
+    {
+      "type": "user",
+      "forum": "eaforum",
+      "slug": "habryka"
+    },
+    {
+      "type": "topic",
+      "forum": "lesswrong",
+      "slug": "ai-safety"
+    },
+    {
+      "type": "topic",
+      "forum": "alignmentforum",
+      "slug": "alignment"
+    }
+  ],
+  "digest_days": 7,
+  "output_dir": "digests"
+}

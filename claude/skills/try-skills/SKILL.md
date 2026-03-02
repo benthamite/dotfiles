@@ -33,7 +33,7 @@ Source: https://github.com/HartreeWorks/skills
 | 7  | schedule-task            | HartreeWorks/skill--schedule-task               | revisit | Useful once there are recurring autonomous Claude tasks to schedule |
 | 8  | send-email               | HartreeWorks/skill--send-email                  | skipped | Requires Gmail OAuth setup; hardcoded author details |
 | 9  | slack                    | HartreeWorks/skill--slack                       | skipped | Redundant; already have official Slack MCP plugin |
-| 10 | summarise-granola        | HartreeWorks/skill--summarise-granola           | untried |       |
+| 10 | summarise-granola        | HartreeWorks/skill--summarise-granola           | skipped | Granola-specific; deeply tied to author's project/email workflow |
 | 11 | download-twitter-video   | HartreeWorks/skill--download-twitter-video      | untried |       |
 | 12 | make-image               | HartreeWorks/skill--make-image                  | untried |       |
 | 13 | transcribe-audio         | HartreeWorks/skill--transcribe-audio            | untried |       |

@@ -27,6 +27,7 @@ Read the spec file.
 Read the spec file and interview the user in detail using the `AskUserQuestion` tool about literally anything: technical implementation, UI & UX, concerns, tradeoffs, edge cases, error handling, data models, API design, testing strategy, deployment, performance, security, accessibility, and anything else that is relevant. Make sure the questions are not obvious — ask probing, substantive questions that surface hidden complexity and unstated assumptions.
 
 Guidelines for the interview:
+
 - Ask 1-2 questions at a time to keep the conversation focused
 - Build on previous answers — each round should go deeper
 - Cover both high-level architecture and low-level implementation details

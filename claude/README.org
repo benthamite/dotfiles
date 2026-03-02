@@ -97,6 +97,12 @@ Audits code for bugs, security issues, error handling gaps, and correctness prob
 
 Audits code for intent transparency: magic values, misleading names, missing rationale comments, undocumented conventions.
 
+*** build
+:PROPERTIES:
+:END:
+
+Spec-based build workflow inspired by [[https://x.com/trq212/status/2005315275026260309][Thariq Shaukat's method]]. Reads =spec.md= in the current project and interviews the user in depth using =AskUserQuestion= to flesh out every aspect: technical implementation, UI/UX, tradeoffs, edge cases, security, and more. The questions are deliberately non-obvious, probing hidden complexity and unstated assumptions. Once the interview is complete, writes the detailed spec back to the file. Optionally executes the spec in the same session or defers to a fresh one.
+
 *** test-suite
 :PROPERTIES:
 :ID:       057FB141-D07F-4BD4-B880-912B67275263

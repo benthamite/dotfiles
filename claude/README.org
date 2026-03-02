@@ -2,8 +2,11 @@
 #+author: Pablo Stafforini
 
 * Overview
+:PROPERTIES:
+:ID:       FC7EF2FA-CDB3-43C0-9EFC-545DEA807191
+:END:
 
-This directory contains my [[https://docs.anthropic.com/en/docs/claude-code][Claude Code]] configuration: settings, hooks, and custom skills. Claude Code is a CLI-based coding agent; I use it exclusively from the terminal.
+This directory contains my [[https://docs.anthropic.com/en/docs/claude-code][Claude Code]] configuration: settings, hooks, and custom skills. Claude Code is a CLI-based coding agent; I use it exclusively from the terminal. Indeed, these days I hardly do anything other than using Claude Code.
 
 The =~/.claude/= directory symlinks its core files here, so changes are version-controlled:
 
@@ -13,8 +16,14 @@ The =~/.claude/= directory symlinks its core files here, so changes are version-
 - =~/.claude/skills/= → =claude/skills/=
 
 * Configuration
+:PROPERTIES:
+:ID:       48F2354B-E7A4-43D1-A5AD-856EB82225E3
+:END:
 
 ** settings.json
+:PROPERTIES:
+:ID:       C60E07A6-7A22-4272-8875-45FE9B44F185
+:END:
 
 - *Model*: Claude Opus 4.6 (I prefer performance over speed).
 - *Agent teams*: enabled.
@@ -22,10 +31,16 @@ The =~/.claude/= directory symlinks its core files here, so changes are version-
 - *Allowed tools*: Bash, Read, Edit, Write, WebFetch, WebSearch, Task, Glob, Grep, NotebookEdit.
 
 ** settings.local.json
+:PROPERTIES:
+:ID:       709B6F3F-F5B6-44F1-AA4E-1D2BE510FC1E
+:END:
 
 Machine-specific tool whitelists, such as Homebrew, MPV, AppleScript, and various MCP tools.
 
 ** CLAUDE.md
+:PROPERTIES:
+:ID:       9B404E8C-F109-4188-9F3E-1F1A9A64A37D
+:END:
 
 Project-level instructions referencing the =dotfiles-context= skill. The global =~/.claude/CLAUDE.md= (symlinked here) defines conventions that apply across all projects:
 
@@ -35,98 +50,180 @@ Project-level instructions referencing the =dotfiles-context= skill. The global 
 - Use subagents and teams liberally; prefer the most powerful model.
 - Use =trash= instead of =rm -rf=; never kill Emacs without confirmation.
 
-* Hooks
-
-Three hooks enforce workflow invariants.
-
-** require-elisp-test-before-commit.sh (PreToolUse)
-
-Blocks =git commit= when Elisp files (=*.el= or =emacs/config.org=) are staged but no test has been run in the current session. Forces the agent to run =emacs --batch= before committing.
-
-** track-elisp-test.sh (PostToolUse)
-
-Creates a marker file (=/tmp/claude-elisp-tested-{SESSION_ID}=) whenever =emacs --batch= runs. This marker is what the pre-commit hook checks for. The marker is consumed (deleted) after a successful commit, so each commit requires a fresh test.
-
-** symlink-project-memory.sh (PostToolUse)
-
-On the first Edit or Write in a project, moves Claude Code's memory directory from its default location (=~/.claude/projects/<encoded-path>/memory/=) into the project's =.claude/memory/= directory, replacing the original with a symlink. This keeps memory local and version-controllable.
-
 * Skills
+:PROPERTIES:
+:ID:       05017294-32AE-4465-9254-13C1BA5662CA
+:END:
 
 Skills are reusable prompt modules stored in =skills/<name>/SKILL.md=. Some are user-invocable (triggered by typing =/<name>=), others provide context that Claude loads automatically when relevant.
 
 ** Context skills
+:PROPERTIES:
+:ID:       E1337818-A431-4C45-9239-BCEE76BEB3AE
+:END:
 
 These are not invoked directly. They supply background knowledge when Claude works in this repo.
 
 *** dotfiles-context
+:PROPERTIES:
+:ID:       3AB926D5-2116-4864-93F2-B6D33CE832C5
+:END:
 
 Describes the dual-worktree structure (Google Drive for non-Elisp files, elpaca repos for Elisp), how to resolve the active elpaca profile, the batch-testing recipe, and the commit message format (=<scope>: <description>=).
 
 *** elisp-conventions
+:PROPERTIES:
+:ID:       EBC619A2-2402-43B0-8FBA-8A68EE29BB7D
+:END:
 
 Emacs Lisp coding standards: atomic functions, helper placement, docstring format, no silent fallbacks, and testing patterns.
 
 ** Development skills
+:PROPERTIES:
+:ID:       71770F84-ED6B-4F0B-B121-1F23CBCEB769
+:END:
 
 *** code-audit
+:PROPERTIES:
+:ID:       D3121B68-8480-41B2-835B-97E85BB7DE29
+:END:
 
 Audits code for bugs, security issues, error handling gaps, and correctness problems. Categorizes findings as critical, bugs, fragile, or minor, with specific line numbers.
 
 *** interpretability-audit
+:PROPERTIES:
+:ID:       800B3CAA-A993-4929-BB4A-7467A56FA70C
+:END:
 
 Audits code for intent transparency: magic values, misleading names, missing rationale comments, undocumented conventions.
 
 *** test-suite
+:PROPERTIES:
+:ID:       057FB141-D07F-4BD4-B880-912B67275263
+:END:
 
 Creates comprehensive test suites. Performs reconnaissance on the tech stack, then generates tests prioritized by criticality: data integrity and input boundaries first, business logic and integrations second, regressions and configuration third.
 
 *** verify-pr
+:PROPERTIES:
+:ID:       03187E6C-B3E2-47EB-821B-68121F4F883F
+:END:
 
-Six-step PR verification: byte-compile/type-check/lint, run tests, review commits, check upstream alignment, verify file hygiene, and check CI results.
+Six-step PR verification: byte-compile/type-check/lint, run tests, review commits, check upstream alignment, verify file hygiene, and check CI results. I run it before submitting or merging any PR.
 
 ** Documentation skills
+:PROPERTIES:
+:ID:       7BAA2662-D24F-42B2-A865-5442B2F2E1B1
+:END:
 
 *** doc-elisp
+:PROPERTIES:
+:ID:       32BB20B4-C967-4FB4-9EF6-674F87BF9023
+:END:
 
 Creates or updates documentation for any Elisp package, following the Denote manual style: org-mode with PROPERTIES drawers, Texinfo index entries, and cross-references.
 
 *** doc-extras
+:PROPERTIES:
+:ID:       C70171D9-4A5C-45BE-9F74-D7AE244336EF
+:END:
 
 Scans all =emacs/extras/*.el= files, identifies missing or outdated documentation, and generates docs in parallel using subagents.
 
 *** org-note
+:PROPERTIES:
+:ID:       F859475D-8BEF-46B7-9417-3F8462826BA9
+:END:
 
 Creates or updates org-mode notes in my notes directory (=~/My Drive/notes/=), with proper slugified filenames and org IDs.
 
 ** Release and operations skills
+:PROPERTIES:
+:ID:       F49B76EA-C29B-45D6-AD8D-D3E47DB4073E
+:END:
 
 *** release
+:PROPERTIES:
+:ID:       10DF729B-32D5-48E0-A150-9F5D18F799AF
+:END:
 
 Cuts releases for my Emacs packages (10 supported). Validates the repo, classifies commits since the last tag, suggests a semver bump, and drafts release notes. Also has an audit mode that scans all packages for version mismatches or unreleased commits.
 
 *** emacs-freeze
+:PROPERTIES:
+:ID:       5ED7EB34-774B-489C-95C5-27C8131CE048
+:END:
 
 Diagnoses a frozen Emacs process: samples the stack, decodes native-comp symbols, identifies the hot path, and suggests recovery options (SIGUSR2, SIGTERM, or SIGKILL with appropriate warnings).
 
 ** Multi-model and research skills
+:PROPERTIES:
+:ID:       8BF704E6-F252-4E27-846A-0B2F9C52B62C
+:END:
 
 *** best-of-n
+:PROPERTIES:
+:ID:       76E6E656-8DCE-4433-B9AA-1F6D0ACDB3B0
+:END:
 
 Queries multiple AI models with temperature-varied sampling. For each model, generates N responses and selects the best one (using Gemini 3 Flash as judge). Then synthesizes across models using Claude Opus 4.6 with extended thinking. Has a brainstorm mode that merges unique ideas instead of picking one winner. Presets: Quick (4 models x 3), Intense (7 x 5), Ultra (7 x 6).
 
 *** proofread
+:PROPERTIES:
+:ID:       D9EC1B04-5470-4EF9-8C4C-FEDFB2333128
+:END:
 
 Proofreads documents using either aspell (fast, spelling-only) or an LLM (Gemini Flash, with configurable depth: mechanical, light style, or comprehensive). Auto-applies safe corrections and flags style suggestions for interactive review. Uses British English conventions.
 
 ** Security skills
+:PROPERTIES:
+:ID:       503D6D12-1566-44FB-8BFA-408034BBB7D2
+:END:
 
 *** audit-mac-app
+:PROPERTIES:
+:ID:       0266B51A-276F-40DB-85F9-DDFBDF19E71D
+:END:
 
 Eight-phase security audit of macOS applications: trust verification, permission analysis, app type detection, code extraction (with Electron-specific checks for nodeIntegration, contextIsolation, etc.), network endpoint scanning, and binary analysis. Generates a markdown report with severity ratings.
 
 ** Meta skills
+:PROPERTIES:
+:ID:       57A97EB8-103B-4D7E-9BB2-BA9AE81C177C
+:END:
 
 *** try-skills
+:PROPERTIES:
+:ID:       C9B601B2-393A-4098-B04B-82630F737520
+:END:
 
-Evaluates third-party skills from the [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository one at a time. Installs each skill, tests it, and records the verdict. Status so far: 3 kept (best-of-n, proofread, audit-mac-app), 23 skipped, 5 flagged for future revisit.
+Evaluates third-party skills from the [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository, one at a time. (The repository is maintained by my friend [[https://pjh.is/][Peter Hartree]], a Claude Code power user.) Installs each skill, tests it, and records the verdict. Status so far: 3 kept (best-of-n, proofread, audit-mac-app), 23 skipped, 5 flagged for future revisit.
+
+* Hooks
+:PROPERTIES:
+:ID:       4D862953-7E8A-4154-BC16-919ED6B092A5
+:END:
+
+Three hooks enforce workflow invariants.
+
+** require-elisp-test-before-commit.sh (PreToolUse)
+:PROPERTIES:
+:ID:       4E0CDC5D-C436-4701-AC99-E29F950318B4
+:END:
+
+Blocks =git commit= when Elisp files (=*.el= or =emacs/config.org=) are staged but no test has been run in the current session. Forces the agent to run =emacs --batch= before committing.
+
+** track-elisp-test.sh (PostToolUse)
+:PROPERTIES:
+:ID:       85C6B926-9F3F-431A-9650-F504CEE12B4A
+:END:
+
+Creates a marker file (=/tmp/claude-elisp-tested-{SESSION_ID}=) whenever =emacs --batch= runs. This marker is what the pre-commit hook checks for. The marker is consumed (deleted) after a successful commit, so each commit requires a fresh test.
+
+** symlink-project-memory.sh (PostToolUse)
+:PROPERTIES:
+:ID:       086B58F4-949F-4C88-B855-687EAD5F3B63
+:END:
+
+On the first Edit or Write in a project, moves Claude Code's memory directory from its default location (=~/.claude/projects/<encoded-path>/memory/=) into the project's =.claude/memory/= directory, replacing the original with a symlink. This keeps memory local and version-controllable.
+

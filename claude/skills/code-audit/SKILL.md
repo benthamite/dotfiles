@@ -1,6 +1,7 @@
 ---
 name: code-audit
 description: Audit code for bugs, security issues, error handling gaps, and correctness problems. Use when the user wants to find actual defects rather than readability issues.
+argument-hint: [dir]
 ---
 
 # Code audit

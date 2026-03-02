@@ -35,23 +35,23 @@ Source: https://github.com/HartreeWorks/skills
 | 9  | slack                    | HartreeWorks/skill--slack                       | skipped | Redundant; already have official Slack MCP plugin |
 | 10 | summarise-granola        | HartreeWorks/skill--summarise-granola           | skipped | Granola-specific; deeply tied to author's project/email workflow |
 | 11 | download-twitter-video   | HartreeWorks/skill--download-twitter-video      | skipped | Simple yt-dlp wrapper; can do this ad-hoc |
-| 12 | make-image               | HartreeWorks/skill--make-image                  | untried |       |
-| 13 | transcribe-audio         | HartreeWorks/skill--transcribe-audio            | untried |       |
-| 14 | transcribe-call          | HartreeWorks/skill--transcribe-call             | untried |       |
-| 15 | transcribe-twitter-video | HartreeWorks/skill--transcribe-twitter-video    | untried |       |
-| 16 | twitter                  | HartreeWorks/skill--twitter                     | untried |       |
-| 17 | youtube-download         | HartreeWorks/skill--youtube-download            | untried |       |
-| 18 | youtube-transcribe       | HartreeWorks/skill--youtube-transcribe          | untried |       |
-| 19 | french-tutor             | HartreeWorks/skill--french-tutor                | untried |       |
+| 12 | make-image               | HartreeWorks/skill--make-image                  | skipped | Niche; requires Krea API key |
+| 13 | transcribe-audio         | HartreeWorks/skill--transcribe-audio            | skipped | Requires parakeet-mlx, fluidaudio, ffmpeg |
+| 14 | transcribe-call          | HartreeWorks/skill--transcribe-call             | skipped | Requires BlackHole virtual audio driver + transcribe-audio |
+| 15 | transcribe-twitter-video | HartreeWorks/skill--transcribe-twitter-video    | skipped | Thin wrapper over yt-dlp + transcribe-audio |
+| 16 | twitter                  | HartreeWorks/skill--twitter                     | skipped | Requires bird CLI + X auth cookies |
+| 17 | youtube-download         | HartreeWorks/skill--youtube-download            | skipped | Simple yt-dlp wrapper |
+| 18 | youtube-transcribe       | HartreeWorks/skill--youtube-transcribe          | skipped | Requires yt-dlp + transcribe-audio |
+| 19 | french-tutor             | HartreeWorks/skill--french-tutor                | skipped | Language-specific; requires mochi-srs |
 | 20 | lesswrong-and-ea-forum   | HartreeWorks/claude-skill--lesswrong-and-ea-forum | untried |       |
-| 21 | mochi-srs                | HartreeWorks/skill--mochi-srs                   | untried |       |
+| 21 | mochi-srs                | HartreeWorks/skill--mochi-srs                   | skipped | Requires Mochi API key |
 | 22 | audit-mac-app            | HartreeWorks/skill--audit-mac-app               | untried |       |
-| 23 | secure-mcp-install       | HartreeWorks/skill--secure-mcp-install          | untried |       |
-| 24 | save-conversation        | HartreeWorks/skill--save-conversation           | untried |       |
-| 25 | save-for-later           | HartreeWorks/skill--save-for-later              | untried |       |
-| 26 | share-command            | HartreeWorks/skill--share-command               | untried |       |
-| 27 | share-plugin             | HartreeWorks/skill--share-plugin                | untried |       |
-| 28 | share-scripts            | HartreeWorks/skill--share-scripts               | untried |       |
-| 29 | share-skill              | HartreeWorks/skill--share-skill                 | untried |       |
-| 30 | sync-skill-to-claude-desktop | HartreeWorks/skill--sync-skill-to-claude-desktop | untried |       |
-| 31 | update-skills            | HartreeWorks/skill--update-skills               | untried |       |
+| 23 | secure-mcp-install       | HartreeWorks/skill--secure-mcp-install          | skipped | Meta-tool for installing MCP servers |
+| 24 | save-conversation        | HartreeWorks/skill--save-conversation           | skipped | Lightweight but not needed currently |
+| 25 | save-for-later           | HartreeWorks/skill--save-for-later              | skipped | Session resume registry; not needed currently |
+| 26 | share-command            | HartreeWorks/skill--share-command               | skipped | Author-specific publishing tool |
+| 27 | share-plugin             | HartreeWorks/skill--share-plugin                | skipped | Author-specific publishing tool |
+| 28 | share-scripts            | HartreeWorks/skill--share-scripts               | skipped | Author-specific publishing tool |
+| 29 | share-skill              | HartreeWorks/skill--share-skill                 | skipped | Author-specific publishing tool |
+| 30 | sync-skill-to-claude-desktop | HartreeWorks/skill--sync-skill-to-claude-desktop | skipped | Niche bridging tool for Claude Desktop |
+| 31 | update-skills            | HartreeWorks/skill--update-skills               | skipped | Only useful with submodule-based skills |

@@ -28,7 +28,7 @@ Source: https://github.com/HartreeWorks/skills
 | 2  | best-of-n               | HartreeWorks/skill--best-of-n                   | keep    | Works with Gemini + Anthropic keys; no xAI key so Grok fails gracefully |
 | 3  | chief-of-staff           | HartreeWorks/skill--chief-of-staff              | revisit | Consider designing a custom daily briefing system inspired by this |
 | 4  | day-tracker              | HartreeWorks/skill--day-tracker                 | revisit | Consider designing a custom screenshot-based activity tracker inspired by this |
-| 5  | proofread                | HartreeWorks/skill--proofread                   | untried |       |
+| 5  | proofread                | HartreeWorks/skill--proofread                   | keep    | Both aspell and Gemini engines work; fixed URL-encoding bug for paths with spaces |
 | 6  | project-management       | HartreeWorks/skill--project-management          | untried |       |
 | 7  | schedule-task            | HartreeWorks/skill--schedule-task               | untried |       |
 | 8  | send-email               | HartreeWorks/skill--send-email                  | untried |       |

@@ -461,17 +461,26 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
   (interactive)
   (org-agenda-log-mode 'clockcheck))
 
+;;;;; track-changes workaround (Emacs 30+)
+
+;; In Emacs 30+, `org-fold' manipulates text properties in ways that leave
+;; `track-changes' internal state inconsistent, triggering assertion failures
+;; during normal editing in org buffers.  Rather than inhibiting modification
+;; hooks (which makes things worse by causing track-changes to miss changes),
+;; we catch the assertion errors at their source.
+(defun org-extras--suppress-track-changes-assertion (orig-fun &rest args)
+  "Call ORIG-FUN with ARGS, suppressing `track-changes' assertion errors.
+In Emacs 30+, `org-fold' can leave `track-changes' in an inconsistent state,
+causing assertion failures during normal editing.  Suppress these to prevent
+them from interrupting the user."
+  (condition-case nil
+      (apply orig-fun args)
+    (cl-assertion-failed nil)))
+
+(advice-add 'track-changes--before :around #'org-extras--suppress-track-changes-assertion)
+(advice-add 'track-changes--after :around #'org-extras--suppress-track-changes-assertion)
+
 ;;;;; org-capture
-
-(defun org-extras--inhibit-modification-hooks (orig-fun &rest args)
-  "Call ORIG-FUN with ARGS while inhibiting modification hooks.
-This prevents `track-changes' assertion failures in Emacs 30+ when buffers have
-stale change-tracking state."
-  (let ((inhibit-modification-hooks t))
-    (apply orig-fun args)))
-
-(advice-add 'org-capture-place-template :around #'org-extras--inhibit-modification-hooks)
-(advice-add 'org-capture-finalize :around #'org-extras--inhibit-modification-hooks)
 
 (defvar org-capture-plist)
 (declare-function org-web-tools-insert-link-for-url "org-web-tools")

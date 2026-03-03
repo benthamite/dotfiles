@@ -229,6 +229,8 @@ Completions are truncated to a single line via =:around= advice on ~copilot--set
 
 A predicate is added to ~copilot-disable-predicates~ that suppresses completions while ~buffer-read-only~ is non-nil.
 
+4. *TAB acceptance.*  Eat's semi-char-mode keymap binds TAB to ~eat-self-input~, which takes priority over copilot's keymap overlay.  A buffer-local minor mode (~claude-code-extras--copilot-keys-mode~) overrides TAB so that it accepts the visible completion when one exists, and falls through to ~eat-self-input~ otherwise.
+
 The function ~claude-code-extras-teardown-copilot~ clears the buffer-local Copilot integration flag and cancels any pending change timer when the buffer is killed. It is added to ~kill-buffer-hook~ automatically.
 
 ** Auto-setup

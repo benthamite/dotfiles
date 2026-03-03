@@ -90,6 +90,13 @@ Toggle with `claude-code-extras-toggle-alert'."
   :type 'integer
   :group 'claude-code-extras)
 
+(defcustom claude-code-extras-copilot-enabled nil
+  "When non-nil, enable `copilot-mode' in Claude Code buffers.
+Copilot's ghost-text prose completions are shown while typing
+prompts and accepted text is sent to the terminal correctly."
+  :type 'boolean
+  :group 'claude-code-extras)
+
 (defconst claude-code-extras--hook-wrapper
   (expand-file-name
    "bin/claude-code-hook-wrapper"
@@ -120,8 +127,22 @@ Toggle with `claude-code-extras-toggle-alert'."
 (defvar-local claude-code-extras--status-timer nil
   "Timer for periodic status polling in the current Claude buffer.")
 
+(defvar-local claude-code-extras--copilot-active nil
+  "Non-nil when Copilot integration is active in the current buffer.")
+
 (defvar eat-terminal)
 (declare-function eat-term-display-cursor "eat" (terminal))
+(declare-function eat-term-send-string "eat" (terminal string))
+
+(defvar copilot--overlay)
+(defvar copilot--connection)
+(defvar copilot-major-mode-alist)
+(defvar copilot-disable-predicates)
+(declare-function copilot-mode "copilot")
+(declare-function copilot-clear-overlay "copilot")
+(declare-function copilot--overlay-visible "copilot")
+(declare-function jsonrpc-notify "jsonrpc")
+(declare-function jsonrpc-async-request "jsonrpc")
 
 ;;;; Functions
 
@@ -529,6 +550,75 @@ Also starts status polling if it is not already active."
       (claude-code-extras-start-status-polling))
     (doom-modeline-set-modeline 'claude-code)))
 
+;;;;; Copilot integration
+
+(defun claude-code-extras-setup-copilot ()
+  "Set up Copilot integration in the current Claude Code buffer.
+Guards on `claude-code-extras-copilot-enabled',
+`claude-code--buffer-p', `eat-terminal', and the availability of
+the `copilot' package."
+  (when (and claude-code-extras-copilot-enabled
+             (claude-code--buffer-p (current-buffer))
+             (bound-and-true-p eat-terminal)
+             (require 'copilot nil t))
+    (cl-pushnew '("eat" . "plaintext") copilot-major-mode-alist :test #'equal)
+    (setq-local copilot-disable-predicates
+                (cons (lambda () buffer-read-only)
+                      copilot-disable-predicates))
+    (advice-add 'copilot-accept-completion :around
+                #'claude-code-extras--copilot-accept-around)
+    (setq claude-code-extras--copilot-active t)
+    (copilot-mode 1)))
+
+(defun claude-code-extras--copilot-accept-around (orig-fn &optional transform-fn)
+  "Around advice for `copilot-accept-completion' in eat buffers.
+When in a Claude Code eat buffer, extract the completion, send
+telemetry, and inject text via the terminal instead of using
+`delete-region'/`insert'.  Otherwise, call ORIG-FN with
+TRANSFORM-FN unchanged."
+  (if (and (bound-and-true-p eat-terminal)
+           claude-code-extras--copilot-active)
+      (when (copilot--overlay-visible)
+        (let* ((completion (overlay-get copilot--overlay 'completion))
+               (command (overlay-get copilot--overlay 'command))
+               (full-insert-text (overlay-get copilot--overlay 'full-insert-text))
+               (t-completion (funcall (or transform-fn #'identity) completion))
+               (is-partial (and (string-prefix-p t-completion completion)
+                                (not (string-equal t-completion completion)))))
+          (claude-code-extras--copilot-send-telemetry
+           is-partial command full-insert-text completion t-completion)
+          (copilot-clear-overlay t)
+          (let ((text (replace-regexp-in-string "\n" "\e\r" t-completion)))
+            (eat-term-send-string eat-terminal text))
+          t))
+    (funcall orig-fn transform-fn)))
+
+(defun claude-code-extras--copilot-send-telemetry
+    (is-partial command full-insert-text completion t-completion)
+  "Send Copilot telemetry for acceptance.
+IS-PARTIAL is non-nil for partial acceptance.  COMMAND is the LSP
+command from the overlay.  FULL-INSERT-TEXT is the original full
+suggestion.  COMPLETION is the remaining completion text.
+T-COMPLETION is the transformed (accepted) portion."
+  (when (and command (bound-and-true-p copilot--connection))
+    (condition-case nil
+        (if is-partial
+            (let* ((prefix-len (- (length full-insert-text) (length completion)))
+                   (accepted-length (+ prefix-len (length t-completion))))
+              (jsonrpc-notify copilot--connection
+                              'textDocument/didPartiallyAcceptCompletion
+                              (list :item (list :command command)
+                                    :acceptedLength accepted-length)))
+          (jsonrpc-async-request copilot--connection
+                                 'workspace/executeCommand command
+                                 :success-fn #'ignore))
+      (error nil))))
+
+(defun claude-code-extras-teardown-copilot ()
+  "Clean up Copilot integration in the current Claude Code buffer."
+  (when claude-code-extras--copilot-active
+    (setq claude-code-extras--copilot-active nil)))
+
 ;;;;; Auto-setup
 
 (defun claude-code-extras-ensure-statusline-config ()
@@ -669,6 +759,8 @@ the view from jumping to the middle of the buffer."
 (add-hook 'claude-code-start-hook #'claude-code-extras-set-modeline)
 (add-hook 'kill-buffer-hook #'claude-code-extras-stop-logging)
 (add-hook 'kill-buffer-hook #'claude-code-extras-stop-status-polling)
+(add-hook 'claude-code-start-hook #'claude-code-extras-setup-copilot)
+(add-hook 'kill-buffer-hook #'claude-code-extras-teardown-copilot)
 
 (provide 'claude-code-extras)
 ;;; claude-code-extras.el ends here

@@ -151,7 +151,8 @@ prompts and accepted text is sent to the terminal correctly."
 (declare-function copilot--get-uri "copilot")
 (declare-function copilot--get-source "copilot")
 (declare-function copilot--connection-alivep "copilot")
-(declare-function copilot--display-overlay-completion "copilot")
+(declare-function copilot--post-command "copilot")
+(declare-function copilot--set-overlay-text "copilot")
 (declare-function track-changes-unregister "track-changes")
 (declare-function jsonrpc-notify "jsonrpc")
 (declare-function jsonrpc-async-request "jsonrpc")
@@ -590,8 +591,8 @@ the `copilot' package."
                       copilot-disable-predicates))
     (advice-add 'copilot-accept-completion :around
                 #'claude-code-extras--copilot-accept-around)
-    (advice-add 'copilot--display-overlay-completion :filter-args
-                #'claude-code-extras--copilot-truncate-completion)
+    (advice-add 'copilot--set-overlay-text :around
+                #'claude-code-extras--copilot-set-overlay-text)
     (add-hook 'post-command-hook
               #'claude-code-extras--copilot-post-command nil t)
     (setq claude-code-extras--copilot-active t)
@@ -603,7 +604,12 @@ the `copilot' package."
     ;; Unregister it since we do our own full-document sync.
     (when (bound-and-true-p copilot--track-changes-id)
       (track-changes-unregister copilot--track-changes-id)
-      (setq copilot--track-changes-id nil))))
+      (setq copilot--track-changes-id nil))
+    ;; Copilot's own `post-command-hook' handler calls
+    ;; `copilot-complete' without syncing the document, which would
+    ;; use stale content.  Remove it and rely on our handler that
+    ;; syncs before requesting completions.
+    (remove-hook 'post-command-hook #'copilot--post-command t)))
 
 (defun claude-code-extras--copilot-language-id (orig-fn)
   "Return \"plaintext\" in Claude Code eat buffers.
@@ -614,18 +620,22 @@ recognize."
       "plaintext"
     (funcall orig-fn)))
 
-(defun claude-code-extras--copilot-truncate-completion (args)
-  "Truncate copilot completion to first line in eat buffers.
-ARGS is the argument list for
-`copilot--display-overlay-completion': (COMPLETION COMMAND
-FULL-INSERT-TEXT START END).  Multi-line completions would extend
-past the TUI input area and look like terminal output, so we
-truncate to the first line."
+(defun claude-code-extras--copilot-set-overlay-text (orig-fn ov completion)
+  "Clip the copilot overlay to the remaining terminal columns.
+ORIG-FN is `copilot--set-overlay-text'.  OV is the overlay.
+COMPLETION is the completion text.  In eat buffers, the overlay's
+`after-string' must not wrap past the line end, otherwise it
+pushes TUI chrome down and disrupts the terminal layout.  This
+advice truncates the completion to the first line and clips it to
+the remaining space on the current terminal line."
   (if claude-code-extras--copilot-active
-      (cl-destructuring-bind (completion command full-insert-text start end) args
-        (let ((first-line (car (split-string completion "\n"))))
-          (list first-line command full-insert-text start end)))
-    args))
+      (let* ((first-line (car (split-string completion "\n")))
+             (remaining (max 0 (- (window-width) (current-column) 1)))
+             (clipped (if (> (length first-line) remaining)
+                         (substring first-line 0 remaining)
+                       first-line)))
+        (funcall orig-fn ov clipped))
+    (funcall orig-fn ov completion)))
 
 (defun claude-code-extras--copilot-accept-around (orig-fn &optional transform-fn)
   "Around advice for `copilot-accept-completion' in eat buffers.
@@ -702,6 +712,7 @@ consulted."
   (when (and claude-code-extras--copilot-active
              (bound-and-true-p copilot-mode)
              (not buffer-read-only))
+    (copilot-clear-overlay)
     (when (timerp claude-code-extras--copilot-change-timer)
       (cancel-timer claude-code-extras--copilot-change-timer))
     (let ((buf (current-buffer)))
@@ -713,8 +724,22 @@ consulted."
                  (with-current-buffer buf
                    (setq claude-code-extras--copilot-change-timer nil)
                    (when copilot-mode
-                     (claude-code-extras--copilot-sync-document)
-                     (copilot-complete))))))))))
+                     (claude-code-extras--copilot-complete-at-prompt))))))))))
+
+(defun claude-code-extras--copilot-complete-at-prompt ()
+  "Sync the document and request completion at the TUI prompt.
+Claude Code's TUI repositions the terminal cursor for rendering,
+so `point' often lands on a status-bar or border line rather than
+the input prompt.  This function searches backward for the `❯'
+prompt marker and moves point to the end of the user's text on
+that line before syncing and requesting completions."
+  (save-excursion
+    (goto-char (point-max))
+    (when (re-search-backward "^❯[[:space:]]" nil t)
+      (end-of-line)
+      (skip-chars-backward " \t")
+      (claude-code-extras--copilot-sync-document)
+      (copilot-complete))))
 
 (defun claude-code-extras-teardown-copilot ()
   "Clean up Copilot integration in the current Claude Code buffer."

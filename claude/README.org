@@ -143,6 +143,10 @@ Scans all =emacs/extras/*.el= files, identifies missing or outdated documentatio
 
 Creates or updates org-mode notes in my notes directory (=~/My Drive/notes/=), with proper slugified filenames and org IDs.
 
+*** add-to-emacs-packages
+
+Registers an Emacs package in =my-emacs-packages.org= and creates an accompanying documentation note with =#+INCLUDE= directives pointing to the package's readme. Determines the package name from the argument or the current directory, inserts the entry in alphabetical order, and generates org IDs for both the note and the list entry.
+
 ** Release and operations skills
 :PROPERTIES:
 :ID:       F49B76EA-C29B-45D6-AD8D-D3E47DB4073E

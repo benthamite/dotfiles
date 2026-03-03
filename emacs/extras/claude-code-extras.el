@@ -153,7 +153,6 @@ prompts and accepted text is sent to the terminal correctly."
 (declare-function copilot--connection-alivep "copilot")
 (declare-function copilot--post-command "copilot")
 (declare-function copilot--show-completion "copilot")
-(declare-function copilot--display-overlay-completion "copilot")
 (declare-function copilot--set-overlay-text "copilot")
 (declare-function track-changes-unregister "track-changes")
 (declare-function jsonrpc-notify "jsonrpc")
@@ -595,8 +594,6 @@ the `copilot' package."
                 #'claude-code-extras--copilot-accept-around)
     (advice-add 'copilot--show-completion :around
                 #'claude-code-extras--copilot-show-completion)
-    (advice-add 'copilot--display-overlay-completion :around
-                #'claude-code-extras--copilot-display-overlay)
     (advice-add 'copilot--set-overlay-text :around
                 #'claude-code-extras--copilot-set-overlay-text)
     (add-hook 'post-command-hook
@@ -627,31 +624,32 @@ recognize."
     (funcall orig-fn)))
 
 (defun claude-code-extras--copilot-show-completion (orig-fn completion-data)
-  "Move point to the overlay after `copilot--show-completion' returns.
+  "Relocate the copilot overlay to the TUI prompt line.
 ORIG-FN is `copilot--show-completion'.  COMPLETION-DATA is the
-server response.  The original function wraps its work in
-`save-excursion', which restores point to wherever eat had it
-\(typically a TUI status bar).  This advice moves point to the
-overlay position afterward so the Emacs cursor appears at the
-ghost text rather than on an unrelated line."
-  (funcall orig-fn completion-data)
-  (when (and claude-code-extras--copilot-active
-             (copilot--overlay-visible))
-    (goto-char (overlay-start copilot--overlay))))
-
-(defun claude-code-extras--copilot-display-overlay
-    (orig-fn completion command full-insert-text start end)
-  "Move point to START before displaying the copilot overlay.
-ORIG-FN is `copilot--display-overlay-completion'.  COMPLETION,
-COMMAND, FULL-INSERT-TEXT, START, and END are passed through.
-In eat buffers, point may be on a TUI status-bar or border line
-rather than at the prompt.  This advice repositions point to
-START so the overlay is placed at the correct buffer position."
-  (if claude-code-extras--copilot-active
-      (progn
-        (goto-char start)
-        (funcall orig-fn completion command full-insert-text start end))
-    (funcall orig-fn completion command full-insert-text start end)))
+server response.  In eat buffers the line numbers in the server's
+range drift because the buffer changes between sync and response,
+so the overlay often ends up on a TUI chrome line.  This advice
+lets the original function create the overlay, then moves it to
+the prompt and re-renders the ghost text at the correct position.
+Finally it moves point there so the Emacs cursor sits at the
+ghost text boundary."
+  (if (not claude-code-extras--copilot-active)
+      (funcall orig-fn completion-data)
+    (funcall orig-fn completion-data)
+    (when (copilot--overlay-visible)
+      (let ((completion (overlay-get copilot--overlay 'completion))
+            (prompt-end
+             (save-excursion
+               (goto-char (point-max))
+               (when (re-search-backward "^❯[[:space:]]" nil t)
+                 (end-of-line)
+                 (skip-chars-backward " \t")
+                 (point)))))
+        (when (and completion prompt-end)
+          (goto-char prompt-end)
+          (overlay-put copilot--overlay 'tail-length 0)
+          (copilot--set-overlay-text copilot--overlay completion)
+          (overlay-put copilot--overlay 'completion-start prompt-end))))))
 
 (defun claude-code-extras--copilot-set-overlay-text (orig-fn ov completion)
   "Clip the copilot overlay to the remaining terminal columns.

@@ -130,17 +130,26 @@ prompts and accepted text is sent to the terminal correctly."
 (defvar-local claude-code-extras--copilot-active nil
   "Non-nil when Copilot integration is active in the current buffer.")
 
+(defvar-local claude-code-extras--copilot-change-timer nil
+  "Debounce timer for triggering Copilot after eat buffer changes.")
+
 (defvar eat-terminal)
 (declare-function eat-term-display-cursor "eat" (terminal))
 (declare-function eat-term-send-string "eat" (terminal string))
 
+(defvar copilot-mode)
 (defvar copilot--overlay)
 (defvar copilot--connection)
-(defvar copilot-major-mode-alist)
+(defvar copilot--opened-buffers)
 (defvar copilot-disable-predicates)
 (declare-function copilot-mode "copilot")
+(declare-function copilot-complete "copilot")
 (declare-function copilot-clear-overlay "copilot")
 (declare-function copilot--overlay-visible "copilot")
+(declare-function copilot--get-language-id "copilot")
+(declare-function copilot--get-uri "copilot")
+(declare-function copilot--on-doc-close "copilot")
+(declare-function copilot--on-doc-focus "copilot")
 (declare-function jsonrpc-notify "jsonrpc")
 (declare-function jsonrpc-async-request "jsonrpc")
 
@@ -561,14 +570,42 @@ the `copilot' package."
              (claude-code--buffer-p (current-buffer))
              (bound-and-true-p eat-terminal)
              (require 'copilot nil t))
-    (cl-pushnew '("eat" . "plaintext") copilot-major-mode-alist :test #'equal)
+    (advice-add 'copilot--get-language-id :around
+                #'claude-code-extras--copilot-language-id)
+    (advice-add 'copilot--get-uri :around
+                #'claude-code-extras--copilot-uri)
     (setq-local copilot-disable-predicates
                 (cons (lambda () buffer-read-only)
                       copilot-disable-predicates))
     (advice-add 'copilot-accept-completion :around
                 #'claude-code-extras--copilot-accept-around)
+    (add-hook 'after-change-functions
+              #'claude-code-extras--copilot-after-change nil t)
     (setq claude-code-extras--copilot-active t)
     (copilot-mode 1)))
+
+(defun claude-code-extras--copilot-language-id (orig-fn)
+  "Return \"plaintext\" in Claude Code eat buffers.
+ORIG-FN is `copilot--get-language-id'.  The default language ID
+for `eat-mode' is \"eat\", which the Copilot server does not
+recognize."
+  (if claude-code-extras--copilot-active
+      "plaintext"
+    (funcall orig-fn)))
+
+(defun claude-code-extras--copilot-uri (orig-fn)
+  "Return a file-like URI for Claude Code eat buffers.
+ORIG-FN is `copilot--get-uri'.  The Copilot server ignores
+virtual buffer URIs (`file:///buffer/...'), so we provide a
+temporary file path unique to each buffer."
+  (if claude-code-extras--copilot-active
+      (concat "file://"
+              (expand-file-name
+               (concat "claude-code-"
+                       (claude-code-extras--sanitize-buffer-name)
+                       ".txt")
+               temporary-file-directory))
+    (funcall orig-fn)))
 
 (defun claude-code-extras--copilot-accept-around (orig-fn &optional transform-fn)
   "Around advice for `copilot-accept-completion' in eat buffers.
@@ -614,9 +651,32 @@ T-COMPLETION is the transformed (accepted) portion."
                                  :success-fn #'ignore))
       (error nil))))
 
+(defun claude-code-extras--copilot-after-change (&rest _)
+  "Schedule a debounced `copilot-complete' after eat buffer changes.
+In eat-mode, buffer modifications from terminal echo arrive
+asynchronously after the command finishes, so copilot's normal
+`post-command-hook' trigger fires too early.  This function
+bridges the gap by requesting completions after the echo lands."
+  (when (and claude-code-extras--copilot-active
+             (bound-and-true-p copilot-mode)
+             (not buffer-read-only))
+    (when (timerp claude-code-extras--copilot-change-timer)
+      (cancel-timer claude-code-extras--copilot-change-timer))
+    (let ((buf (current-buffer)))
+      (setq claude-code-extras--copilot-change-timer
+            (run-with-idle-timer
+             0 nil
+             (lambda ()
+               (when (and (buffer-live-p buf)
+                          (eq (current-buffer) buf)
+                          copilot-mode)
+                 (copilot-complete))))))))
+
 (defun claude-code-extras-teardown-copilot ()
   "Clean up Copilot integration in the current Claude Code buffer."
   (when claude-code-extras--copilot-active
+    (when (timerp claude-code-extras--copilot-change-timer)
+      (cancel-timer claude-code-extras--copilot-change-timer))
     (setq claude-code-extras--copilot-active nil)))
 
 ;;;;; Auto-setup

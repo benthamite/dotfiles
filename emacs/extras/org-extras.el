@@ -472,10 +472,12 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
   "Call ORIG-FUN with ARGS, suppressing `track-changes' assertion errors.
 In Emacs 30+, `org-fold' can leave `track-changes' in an inconsistent state,
 causing assertion failures during normal editing.  Suppress these to prevent
-them from interrupting the user."
-  (condition-case nil
-      (apply orig-fun args)
-    (cl-assertion-failed nil)))
+them from interrupting the user.  We bind `debug-on-error' to nil so the
+debugger does not intercept the error before `condition-case' can handle it."
+  (let ((debug-on-error nil))
+    (condition-case nil
+        (apply orig-fun args)
+      (cl-assertion-failed nil))))
 
 (advice-add 'track-changes--before :around #'org-extras--suppress-track-changes-assertion)
 (advice-add 'track-changes--after :around #'org-extras--suppress-track-changes-assertion)

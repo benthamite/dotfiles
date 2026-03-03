@@ -152,6 +152,7 @@ prompts and accepted text is sent to the terminal correctly."
 (declare-function copilot--get-source "copilot")
 (declare-function copilot--connection-alivep "copilot")
 (declare-function copilot--post-command "copilot")
+(declare-function copilot--display-overlay-completion "copilot")
 (declare-function copilot--set-overlay-text "copilot")
 (declare-function track-changes-unregister "track-changes")
 (declare-function jsonrpc-notify "jsonrpc")
@@ -591,6 +592,8 @@ the `copilot' package."
                       copilot-disable-predicates))
     (advice-add 'copilot-accept-completion :around
                 #'claude-code-extras--copilot-accept-around)
+    (advice-add 'copilot--display-overlay-completion :around
+                #'claude-code-extras--copilot-display-overlay)
     (advice-add 'copilot--set-overlay-text :around
                 #'claude-code-extras--copilot-set-overlay-text)
     (add-hook 'post-command-hook
@@ -619,6 +622,20 @@ recognize."
   (if claude-code-extras--copilot-active
       "plaintext"
     (funcall orig-fn)))
+
+(defun claude-code-extras--copilot-display-overlay
+    (orig-fn completion command full-insert-text start end)
+  "Move point to START before displaying the copilot overlay.
+ORIG-FN is `copilot--display-overlay-completion'.  COMPLETION,
+COMMAND, FULL-INSERT-TEXT, START, and END are passed through.
+In eat buffers, point may be on a TUI status-bar or border line
+rather than at the prompt.  This advice repositions point to
+START so the overlay is placed at the correct buffer position."
+  (if claude-code-extras--copilot-active
+      (progn
+        (goto-char start)
+        (funcall orig-fn completion command full-insert-text start end))
+    (funcall orig-fn completion command full-insert-text start end)))
 
 (defun claude-code-extras--copilot-set-overlay-text (orig-fn ov completion)
   "Clip the copilot overlay to the remaining terminal columns.

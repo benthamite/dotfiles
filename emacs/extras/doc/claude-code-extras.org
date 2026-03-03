@@ -223,6 +223,8 @@ Additionally, the setup installs a ~post-command-hook~ handler that schedules a 
 
 Copilot's ~track-changes~ handler is unregistered after ~copilot-mode~ enables, since it cannot function in Eat buffers and would otherwise cause "Recovering from confusing calls to before/after-change-functions" errors.  Copilot's own ~post-command-hook~ handler (~copilot--post-command~) is also removed, since it would call ~copilot-complete~ without syncing the document first.
 
+An =:around= advice on ~copilot--display-overlay-completion~ repositions point to the computed start position before the overlay is created, ensuring the overlay appears inline at the prompt rather than wherever the eat cursor happens to be (which may be on a status bar or border line due to asynchronous TUI rendering).
+
 Completions are truncated to a single line via =:around= advice on ~copilot--set-overlay-text~, preventing ghost text from extending past the TUI input area into the terminal chrome below.
 
 A predicate is added to ~copilot-disable-predicates~ that suppresses completions while ~buffer-read-only~ is non-nil.

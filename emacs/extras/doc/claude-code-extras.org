@@ -19,13 +19,14 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 =claude-code-extras.el= extends =claude-code=, the Emacs package that runs Claude Code sessions inside an Eat terminal buffer. While =claude-code= provides the core session management and terminal integration, this extras package layers on several quality-of-life features that make extended Claude sessions more manageable.
 
-The package provides five main areas of functionality:
+The package provides six main areas of functionality:
 
 - *Session switching.* A Consult-powered interface for starting new Claude sessions or switching between existing ones, with live buffer previews ([[#h:session-switching][Session switching]]).
 - *Conversation logging.* Automatic periodic saving of terminal buffer contents to timestamped log files, with detection of conversation clears ([[#h:logging][Logging]]).
 - *Status polling.* Integration with a statusline script that exports session metadata (model name, cost, context usage, token counts) as JSON, polled periodically and exposed through accessor functions ([[#h:status-polling][Status polling]]).
 - *Alerts.* Configurable OS notifications (visual, audible, or both) when Claude finishes responding, triggered by a hook-based stop event ([[#h:alerts][Alerts]]).
 - *Buffer lifecycle.* Kill protection for active sessions, automatic buffer cleanup on process exit, and a SIGWINCH workaround for terminal rendering glitches ([[#h:buffer-lifecycle][Buffer lifecycle]]).
+- *Copilot integration.* An adapter that enables Copilot ghost-text prose completions while typing prompts in Claude Code buffers, routing accepted text through the terminal emulator ([[#h:copilot-integration][Copilot integration]]).
 
 The package depends on =claude-code=, =consult= (for the session switcher), and =paths= (for the log directory default).
 
@@ -76,6 +77,14 @@ The user option ~claude-code-extras-alert-on-ready~ controls whether the user is
 The user option ~claude-code-extras-alert-style~ determines the type of notification. It accepts one of three values: ~visual~ (an OS notification via the =alert= package), ~sound~ (an audio alert), or ~both~ (the default when alerts are enabled). This option only takes effect when ~claude-code-extras-alert-on-ready~ is non-~nil~.
 
 The user option ~claude-code-extras-alert-sound~ specifies the path to the sound file played for audible alerts. The default is =/System/Library/Sounds/Glass.aiff=, a macOS system sound. Change this to any audio file that =afplay= can handle.
+
+** Copilot options
+:PROPERTIES:
+:CUSTOM_ID: h:copilot-options
+:END:
+
+#+vindex: claude-code-extras-copilot-enabled
+The user option ~claude-code-extras-copilot-enabled~ controls whether Copilot ghost-text completions are enabled in Claude Code buffers. The default is ~nil~ (disabled). When set to non-~nil~, ~copilot-mode~ is automatically activated in new Claude Code buffers, and an adapter routes accepted completions through the Eat terminal emulator instead of inserting them directly into the buffer. Completions are suppressed while Claude is responding (i.e. when the buffer is read-only). The =copilot= package must be installed for this feature to work; if it is not available, the setup is silently skipped.
 
 ** Status polling options
 :PROPERTIES:
@@ -194,6 +203,17 @@ The function ~claude-code-extras-alert-indicator~ returns a bell icon string ref
 
 #+findex: claude-code-extras-set-modeline
 The function ~claude-code-extras-set-modeline~ activates the =claude-code= doom-modeline segment for the current buffer. It also starts status polling if it is not already active ([[#h:status-polling][Status polling]]). This function is added to ~claude-code-start-hook~ automatically.
+
+** Copilot integration
+:PROPERTIES:
+:CUSTOM_ID: h:copilot-integration
+:END:
+
+#+findex: claude-code-extras-setup-copilot
+#+findex: claude-code-extras-teardown-copilot
+The function ~claude-code-extras-setup-copilot~ enables Copilot in the current Claude Code buffer. It is added to ~claude-code-start-hook~ automatically and guards on ~claude-code-extras-copilot-enabled~ ([[#h:copilot-options][Copilot options]]), the presence of an Eat terminal, and the availability of the =copilot= package. When all conditions are met, it registers =eat-mode= as a plaintext language for the Copilot server, adds a predicate that suppresses completions while the buffer is read-only (i.e. while Claude is responding), installs around advice on ~copilot-accept-completion~ to route accepted text through ~eat-term-send-string~ instead of ~insert~, and enables ~copilot-mode~. Newlines in accepted completions are converted to Alt+Enter sequences so that Claude Code's TUI treats them as multi-line input rather than prompt submission. The advice also sends the appropriate Copilot telemetry for both full and partial acceptance.
+
+The function ~claude-code-extras-teardown-copilot~ clears the buffer-local Copilot integration flag when the buffer is killed. It is added to ~kill-buffer-hook~ automatically.
 
 ** Auto-setup
 :PROPERTIES:

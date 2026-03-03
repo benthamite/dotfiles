@@ -4,14 +4,11 @@ description: Dotfiles worktree structure and extras documentation instructions. 
 user-invocable: false
 ---
 
-# Dotfiles worktree structure
+# Dotfiles repository
 
-The dotfiles repo has two working trees on the same machine:
+The canonical location for all dotfiles, including Elisp extras, is **Google Drive/dotfiles** (`~/My Drive/dotfiles/`). All edits and commits should be made here.
 
-- **Google Drive/dotfiles** (`~/My Drive/dotfiles/`): the primary location for non-Elisp files, including `emacs/config.org`.
-- **Elpaca repos** (`~/.config/emacs-profiles/<profile>/elpaca/repos/dotfiles/`): the location Emacs loads Elisp from, including the `emacs/extras/*.el` files.
-
-Both point to the same Git repo, so changes only need to be committed once in the appropriate working tree. Edit each file in its canonical location: `config.org` in Google Drive/dotfiles, Elisp extras in the elpaca repos directory.
+Elpaca keeps a separate clone at `~/.config/emacs-profiles/<profile>/elpaca/repos/dotfiles/` for loading Elisp, but do **not** commit there. The elpaca clone syncs from the Google Drive repo automatically.
 
 # Elpaca profile
 

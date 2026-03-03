@@ -69,7 +69,7 @@ These are not invoked directly. They supply background knowledge when Claude wor
 :ID:       3AB926D5-2116-4864-93F2-B6D33CE832C5
 :END:
 
-Describes the dual-worktree structure (Google Drive for non-Elisp files, elpaca repos for Elisp), how to resolve the active elpaca profile, the batch-testing recipe, and the commit message format (=<scope>: <description>=).
+Describes the repository layout (all edits and commits in Google Drive/dotfiles; the elpaca clone syncs automatically), how to resolve the active elpaca profile, the batch-testing recipe, and the commit message format (=<scope>: <description>=).
 
 *** elisp-conventions
 :PROPERTIES:

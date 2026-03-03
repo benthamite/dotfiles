@@ -140,7 +140,7 @@ prompts and accepted text is sent to the terminal correctly."
 (defvar copilot-mode)
 (defvar copilot--overlay)
 (defvar copilot--connection)
-(defvar copilot--opened-buffers)
+(defvar copilot--doc-version)
 (defvar copilot-disable-predicates)
 (declare-function copilot-mode "copilot")
 (declare-function copilot-complete "copilot")
@@ -148,8 +148,8 @@ prompts and accepted text is sent to the terminal correctly."
 (declare-function copilot--overlay-visible "copilot")
 (declare-function copilot--get-language-id "copilot")
 (declare-function copilot--get-uri "copilot")
-(declare-function copilot--on-doc-close "copilot")
-(declare-function copilot--on-doc-focus "copilot")
+(declare-function copilot--get-source "copilot")
+(declare-function copilot--connection-alivep "copilot")
 (declare-function jsonrpc-notify "jsonrpc")
 (declare-function jsonrpc-async-request "jsonrpc")
 
@@ -572,15 +572,23 @@ the `copilot' package."
              (require 'copilot nil t))
     (advice-add 'copilot--get-language-id :around
                 #'claude-code-extras--copilot-language-id)
-    (advice-add 'copilot--get-uri :around
-                #'claude-code-extras--copilot-uri)
+    ;; The copilot server ignores virtual buffer URIs.  Setting
+    ;; buffer-file-name makes copilot--get-uri return a file URI
+    ;; natively, so didOpen uses the same URI as inlineCompletion.
+    (setq buffer-file-name
+          (expand-file-name
+           (concat "claude-code-"
+                   (claude-code-extras--sanitize-buffer-name)
+                   ".txt")
+           temporary-file-directory))
+    (setq buffer-auto-save-file-name nil)
     (setq-local copilot-disable-predicates
                 (cons (lambda () buffer-read-only)
                       copilot-disable-predicates))
     (advice-add 'copilot-accept-completion :around
                 #'claude-code-extras--copilot-accept-around)
-    (add-hook 'after-change-functions
-              #'claude-code-extras--copilot-after-change nil t)
+    (add-hook 'post-command-hook
+              #'claude-code-extras--copilot-post-command nil t)
     (setq claude-code-extras--copilot-active t)
     (copilot-mode 1)))
 
@@ -591,20 +599,6 @@ for `eat-mode' is \"eat\", which the Copilot server does not
 recognize."
   (if claude-code-extras--copilot-active
       "plaintext"
-    (funcall orig-fn)))
-
-(defun claude-code-extras--copilot-uri (orig-fn)
-  "Return a file-like URI for Claude Code eat buffers.
-ORIG-FN is `copilot--get-uri'.  The Copilot server ignores
-virtual buffer URIs (`file:///buffer/...'), so we provide a
-temporary file path unique to each buffer."
-  (if claude-code-extras--copilot-active
-      (concat "file://"
-              (expand-file-name
-               (concat "claude-code-"
-                       (claude-code-extras--sanitize-buffer-name)
-                       ".txt")
-               temporary-file-directory))
     (funcall orig-fn)))
 
 (defun claude-code-extras--copilot-accept-around (orig-fn &optional transform-fn)
@@ -651,12 +645,34 @@ T-COMPLETION is the transformed (accepted) portion."
                                  :success-fn #'ignore))
       (error nil))))
 
-(defun claude-code-extras--copilot-after-change (&rest _)
-  "Schedule a debounced `copilot-complete' after eat buffer changes.
-In eat-mode, buffer modifications from terminal echo arrive
-asynchronously after the command finishes, so copilot's normal
-`post-command-hook' trigger fires too early.  This function
-bridges the gap by requesting completions after the echo lands."
+(defun claude-code-extras--copilot-sync-document ()
+  "Send a full-document `textDocument/didChange' to the Copilot server.
+Eat's process filter runs with `inhibit-modification-hooks' bound
+to t, so `track-changes' never detects buffer modifications and
+the server's document becomes stale.  This function works around
+the problem by sending the entire buffer contents as a single
+replacement change, keeping the server in sync."
+  (when (and (bound-and-true-p copilot--connection)
+             (copilot--connection-alivep))
+    (cl-incf copilot--doc-version)
+    (jsonrpc-notify
+     copilot--connection
+     'textDocument/didChange
+     (list :textDocument (list :uri (copilot--get-uri)
+                               :version copilot--doc-version)
+           :contentChanges
+           (vector (list :text (copilot--get-source)))))))
+
+(defun claude-code-extras--copilot-post-command ()
+  "Schedule a debounced `copilot-complete' after user input.
+Eat's process filter runs with `inhibit-modification-hooks' bound
+to t, so neither `after-change-functions' nor `track-changes'
+detect buffer modifications (making copilot's normal
+`post-command-hook' trigger ineffective).  This function replaces
+copilot's trigger by scheduling a document sync and completion
+request after a short delay, giving the terminal echo time to
+arrive and update the buffer before the Copilot server is
+consulted."
   (when (and claude-code-extras--copilot-active
              (bound-and-true-p copilot-mode)
              (not buffer-read-only))
@@ -664,13 +680,15 @@ bridges the gap by requesting completions after the echo lands."
       (cancel-timer claude-code-extras--copilot-change-timer))
     (let ((buf (current-buffer)))
       (setq claude-code-extras--copilot-change-timer
-            (run-with-idle-timer
-             0 nil
+            (run-with-timer
+             0.3 nil
              (lambda ()
-               (when (and (buffer-live-p buf)
-                          (eq (current-buffer) buf)
-                          copilot-mode)
-                 (copilot-complete))))))))
+               (when (buffer-live-p buf)
+                 (with-current-buffer buf
+                   (setq claude-code-extras--copilot-change-timer nil)
+                   (when copilot-mode
+                     (claude-code-extras--copilot-sync-document)
+                     (copilot-complete))))))))))
 
 (defun claude-code-extras-teardown-copilot ()
   "Clean up Copilot integration in the current Claude Code buffer."

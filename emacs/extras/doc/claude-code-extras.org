@@ -221,6 +221,10 @@ The function ~claude-code-extras-setup-copilot~ enables Copilot in the current C
 
 Additionally, the setup installs a ~post-command-hook~ handler that schedules a debounced document sync and completion request after each user command.  Two issues make copilot's built-in triggers ineffective in Eat buffers: (a) Eat's process filter runs with ~inhibit-modification-hooks~ bound to t, so neither ~after-change-functions~ nor ~track-changes~ (which copilot uses for incremental document sync) detect buffer modifications; (b) the terminal echo from a keystroke arrives asynchronously after ~post-command-hook~ has already fired.  The handler works around both problems by waiting 0.3 seconds for the echo to land, then sending a full-document ~textDocument/didChange~ notification to the Copilot server before requesting completions.
 
+Copilot's ~track-changes~ handler is unregistered after ~copilot-mode~ enables, since it cannot function in Eat buffers and would otherwise cause "Recovering from confusing calls to before/after-change-functions" errors.
+
+Completions are truncated to a single line via =:filter-args= advice on ~copilot--display-overlay-completion~, preventing ghost text from extending past the TUI input area into the terminal chrome below.
+
 A predicate is added to ~copilot-disable-predicates~ that suppresses completions while ~buffer-read-only~ is non-nil.
 
 The function ~claude-code-extras-teardown-copilot~ clears the buffer-local Copilot integration flag and cancels any pending change timer when the buffer is killed. It is added to ~kill-buffer-hook~ automatically.

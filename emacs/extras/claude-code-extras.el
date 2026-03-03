@@ -134,6 +134,7 @@ prompts and accepted text is sent to the terminal correctly."
   "Debounce timer for triggering Copilot after eat buffer changes.")
 
 (defvar eat-terminal)
+(declare-function eat-self-input "eat" (n &optional e))
 (declare-function eat-term-display-cursor "eat" (terminal))
 (declare-function eat-term-send-string "eat" (terminal string))
 
@@ -144,6 +145,7 @@ prompts and accepted text is sent to the terminal correctly."
 (defvar copilot--track-changes-id)
 (defvar copilot-disable-predicates)
 (declare-function copilot-mode "copilot")
+(declare-function copilot-accept-completion "copilot")
 (declare-function copilot-complete "copilot")
 (declare-function copilot-clear-overlay "copilot")
 (declare-function copilot--overlay-visible "copilot")
@@ -598,6 +600,12 @@ the `copilot' package."
                 #'claude-code-extras--copilot-set-overlay-text)
     (add-hook 'post-command-hook
               #'claude-code-extras--copilot-post-command nil t)
+    ;; Eat's semi-char-mode keymap binds TAB to `eat-self-input'.
+    ;; Since it is a minor-mode keymap, it takes priority over
+    ;; copilot's keymap overlay (which also requires point to be
+    ;; within its range).  Use a minor mode activated after eat to
+    ;; get higher priority in `minor-mode-map-alist'.
+    (claude-code-extras--copilot-keys-mode 1)
     (setq claude-code-extras--copilot-active t)
     (copilot-mode 1)
     ;; Copilot registers a `track-changes' handler when the mode
@@ -613,6 +621,24 @@ the `copilot' package."
     ;; use stale content.  Remove it and rely on our handler that
     ;; syncs before requesting completions.
     (remove-hook 'post-command-hook #'copilot--post-command t)))
+
+(defvar claude-code-extras--copilot-keys-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "TAB") #'claude-code-extras--copilot-tab)
+    (define-key map [tab] #'claude-code-extras--copilot-tab)
+    map)
+  "Keymap for `claude-code-extras--copilot-keys-mode'.")
+
+(define-minor-mode claude-code-extras--copilot-keys-mode
+  "Minor mode providing Copilot keybindings in Claude Code buffers."
+  :keymap claude-code-extras--copilot-keys-mode-map)
+
+(defun claude-code-extras--copilot-tab ()
+  "Accept a Copilot completion if visible, otherwise send TAB to eat."
+  (interactive)
+  (if (copilot--overlay-visible)
+      (copilot-accept-completion)
+    (eat-self-input 1 ?\t)))
 
 (defun claude-code-extras--copilot-language-id (orig-fn)
   "Return \"plaintext\" in Claude Code eat buffers.

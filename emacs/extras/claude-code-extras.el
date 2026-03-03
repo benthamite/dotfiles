@@ -637,19 +637,38 @@ ghost text boundary."
       (funcall orig-fn completion-data)
     (funcall orig-fn completion-data)
     (when (copilot--overlay-visible)
-      (let ((completion (overlay-get copilot--overlay 'completion))
-            (prompt-end
+      (let ((prompt-bol
              (save-excursion
                (goto-char (point-max))
                (when (re-search-backward "^❯[[:space:]]" nil t)
-                 (end-of-line)
-                 (skip-chars-backward " \t")
                  (point)))))
-        (when (and completion prompt-end)
-          (goto-char prompt-end)
-          (overlay-put copilot--overlay 'tail-length 0)
-          (copilot--set-overlay-text copilot--overlay completion)
-          (overlay-put copilot--overlay 'completion-start prompt-end))))))
+        (when prompt-bol
+          (let* ((prompt-eol (save-excursion (goto-char prompt-bol)
+                                             (line-end-position)))
+                 (line-text (buffer-substring-no-properties
+                             prompt-bol prompt-eol))
+                 (insert-text (plist-get completion-data :insertText))
+                 (prefix-len
+                  (when insert-text
+                    (let ((i 0)
+                          (max-i (min (length line-text)
+                                      (length insert-text))))
+                      (while (and (< i max-i)
+                                  (= (aref line-text i)
+                                     (aref insert-text i)))
+                        (cl-incf i))
+                      i)))
+                 (completion
+                  (when (and prefix-len
+                             (< prefix-len (length insert-text)))
+                    (substring insert-text prefix-len)))
+                 (insert-pos (+ prompt-bol (or prefix-len 0))))
+            (when (and completion (not (string-empty-p completion)))
+              (goto-char insert-pos)
+              (overlay-put copilot--overlay 'tail-length 0)
+              (copilot--set-overlay-text copilot--overlay completion)
+              (overlay-put copilot--overlay 'completion completion)
+              (overlay-put copilot--overlay 'completion-start insert-pos))))))))
 
 (defun claude-code-extras--copilot-set-overlay-text (orig-fn ov completion)
   "Clip the copilot overlay to the remaining terminal columns.
@@ -665,7 +684,8 @@ the remaining space on the current terminal line."
              (clipped (if (> (length first-line) remaining)
                          (substring first-line 0 remaining)
                        first-line)))
-        (funcall orig-fn ov clipped))
+        (unless (string-empty-p clipped)
+          (funcall orig-fn ov clipped)))
     (funcall orig-fn ov completion)))
 
 (defun claude-code-extras--copilot-accept-around (orig-fn &optional transform-fn)

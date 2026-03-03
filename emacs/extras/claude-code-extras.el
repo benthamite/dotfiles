@@ -141,6 +141,7 @@ prompts and accepted text is sent to the terminal correctly."
 (defvar copilot--overlay)
 (defvar copilot--connection)
 (defvar copilot--doc-version)
+(defvar copilot--track-changes-id)
 (defvar copilot-disable-predicates)
 (declare-function copilot-mode "copilot")
 (declare-function copilot-complete "copilot")
@@ -150,6 +151,8 @@ prompts and accepted text is sent to the terminal correctly."
 (declare-function copilot--get-uri "copilot")
 (declare-function copilot--get-source "copilot")
 (declare-function copilot--connection-alivep "copilot")
+(declare-function copilot--display-overlay-completion "copilot")
+(declare-function track-changes-unregister "track-changes")
 (declare-function jsonrpc-notify "jsonrpc")
 (declare-function jsonrpc-async-request "jsonrpc")
 
@@ -587,10 +590,20 @@ the `copilot' package."
                       copilot-disable-predicates))
     (advice-add 'copilot-accept-completion :around
                 #'claude-code-extras--copilot-accept-around)
+    (advice-add 'copilot--display-overlay-completion :filter-args
+                #'claude-code-extras--copilot-truncate-completion)
     (add-hook 'post-command-hook
               #'claude-code-extras--copilot-post-command nil t)
     (setq claude-code-extras--copilot-active t)
-    (copilot-mode 1)))
+    (copilot-mode 1)
+    ;; Copilot registers a `track-changes' handler when the mode
+    ;; enables, but eat's `inhibit-modification-hooks' prevents
+    ;; track-changes from working and causes "Recovering from
+    ;; confusing calls to before/after-change-functions" errors.
+    ;; Unregister it since we do our own full-document sync.
+    (when (bound-and-true-p copilot--track-changes-id)
+      (track-changes-unregister copilot--track-changes-id)
+      (setq copilot--track-changes-id nil))))
 
 (defun claude-code-extras--copilot-language-id (orig-fn)
   "Return \"plaintext\" in Claude Code eat buffers.
@@ -600,6 +613,19 @@ recognize."
   (if claude-code-extras--copilot-active
       "plaintext"
     (funcall orig-fn)))
+
+(defun claude-code-extras--copilot-truncate-completion (args)
+  "Truncate copilot completion to first line in eat buffers.
+ARGS is the argument list for
+`copilot--display-overlay-completion': (COMPLETION COMMAND
+FULL-INSERT-TEXT START END).  Multi-line completions would extend
+past the TUI input area and look like terminal output, so we
+truncate to the first line."
+  (if claude-code-extras--copilot-active
+      (cl-destructuring-bind (completion command full-insert-text start end) args
+        (let ((first-line (car (split-string completion "\n"))))
+          (list first-line command full-insert-text start end)))
+    args))
 
 (defun claude-code-extras--copilot-accept-around (orig-fn &optional transform-fn)
   "Around advice for `copilot-accept-completion' in eat buffers.

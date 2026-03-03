@@ -9719,7 +9719,6 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
 
   :hook
   (org-capture-before-finalize-hook . org-extras-capture-before-finalize-hook-function)
-  (org-capture-before-prepare-hook . org-extras-capture-prepare-finalize-hook-function)
 
   :bind
   (("H-t" . org-capture)

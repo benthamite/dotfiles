@@ -329,11 +329,11 @@ The extras come with their own manuals and user options: everything is documente
   - [[#ledger-mode-extras][ledger-mode-extras]]
 - [[#dictionaries--translation][dictionaries & translation]]
   - [[#tlon][tlon]]
+  - [[#johnson][johnson]]
   - [[#go-translate][go-translate]]
   - [[#powerthesaurus][powerthesaurus]]
   - [[#reverso][reverso]]
   - [[#dictionary][dictionary]]
-  - [[#johnson][johnson]]
 - [[#docs][docs]]
   - [[#pdf-tools][pdf-tools]]
   - [[#pdf-tools-extras][pdf-tools-extras]]
@@ -7286,6 +7286,24 @@ To populate the database of historical prices:
    ("A-C-p" . tlon-grep)))
 #+end_src
 
+** =johnson=
+:PROPERTIES:
+:ID:       C31FE8EE-1687-4090-B82F-52B3A9821838
+:END:
+
+/[[https://github.com/benthamite/johnson][johnson]] is a multi-format dictionary UI for Emacs, providing the functionality of programs such as GoldenDict./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package johnson
+  :ensure (:host github
+		 :repo "benthamite/johnson")
+  :custom
+  (johnson-dictionary-directories '("/Users/pablostafforini/My Drive/Dictionaries/"))
+  
+  :bind
+  ("A-j" . johnson-lookup))
+#+end_src
+
 ** =go-translate=
 :PROPERTIES:
 :ID:       543F613A-F3B8-426C-8505-48782483FBEC
@@ -7385,24 +7403,6 @@ CLOCK: [2022-08-31 Wed 23:01]--[2022-08-31 Wed 23:11] =>  0:10
   :custom
   (dictionary-server "dict.org")
   (dictionary-use-single-buffer t))
-#+end_src
-
-** =johnson=
-:PROPERTIES:
-:ID:       C31FE8EE-1687-4090-B82F-52B3A9821838
-:END:
-
-/[[https://github.com/benthamite/johnson][johnson]] is a multi-format dictionary UI for Emacs, providing the functionality of programs such as GoldenDict./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package johnson
-  :ensure (:host github
-		 :repo "benthamite/johnson")
-  :custom
-  (johnson-dictionary-directories '("/Users/pablostafforini/My Drive/Dictionaries/"))
-  
-  :bind
-  ("A-j" . johnson-lookup))
 #+end_src
 
 * docs

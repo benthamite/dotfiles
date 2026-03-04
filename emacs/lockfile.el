@@ -2815,10 +2815,10 @@
 			       "*-tests.el" "LICENSE" "README*" "*-pkg.el"))
 		    :source "MELPA" :protocol https :inherit t :depth treeless
 		    :ref "fcd37147121fabdf003a70279cf86fbe08cfac6f"))
- (tango-wiki :source "elpaca-menu-lock-file" :recipe
+ (tangodb :source "elpaca-menu-lock-file" :recipe
 	     (:source nil :protocol https :inherit t :depth treeless :host
-		      github :repo "benthamite/tango-wiki.el" :package
-		      "tango-wiki" :ref
+		      github :repo "benthamite/tangodb.el" :package
+		      "tangodb" :ref
 		      "855d594dcc7346a91f6df0af45c876bfbfc37eb2"))
  (telega :source "elpaca-menu-lock-file" :recipe
 	 (:package "telega" :fetcher github :repo "zevlg/telega.el" :files

@@ -331,7 +331,6 @@ The extras come with their own manuals and user options: everything is documente
   - [[#tlon][tlon]]
   - [[#go-translate][go-translate]]
   - [[#powerthesaurus][powerthesaurus]]
-  - [[#goldendict-ng][goldendict-ng]]
   - [[#reverso][reverso]]
   - [[#dictionary][dictionary]]
   - [[#johnson][johnson]]
@@ -7349,37 +7348,6 @@ To populate the database of historical prices:
 (use-package powerthesaurus
   :bind
   ("H-y" . powerthesaurus-transient))
-#+end_src
-
-** =goldendict-ng=
-:PROPERTIES:
-:ID:       32143368-5DE3-44F5-A35B-05F157DEC2A5
-:END:
-:LOGBOOK:
-CLOCK: [2023-11-09 Thu 14:32]--[2023-11-09 Thu 15:00] =>  0:28
-CLOCK: [2021-11-24 Wed 15:26]--[2021-11-24 Wed 16:24] =>  0:58
-:END:
-
-/[[https://github.com/benthamite/goldendict-ng][goldendict-ng]] integrates [[https://github.com/xiaoyifang/goldendict-ng][GoldenDict]] with Emacs./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package goldendict-ng
-  :ensure (:host github
-           :repo "benthamite/goldendict-ng")
-  :custom
-  (goldendict-ng-executable "/Applications/GoldenDict.app/Contents/MacOS/GoldenDict")
-  (goldendict-ng-groups '(("es-es" . "es")
-                               ("es-en" . "es")
-                               ("en-en" . "en")
-                               ("en-es" . "en")
-                               ("fr-es" . "fr")))
-  (goldendict-ng-groups-enforce t)
-  (goldendict-ng-narrow-groups-to-matching-languages t)
-  (goldendict-ng-auto-select-sole-candidate t)
-  (goldendict-ng-count-all-group-in-auto-selection nil)
-
-  :bind
-  ("A-y" . goldendict-ng-search))
 #+end_src
 
 ** =reverso=

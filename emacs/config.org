@@ -8768,7 +8768,8 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :after claude-code
   :demand t
   :custom
-  (claude-code-extras-alert-on-ready t))
+  (claude-code-extras-alert-on-ready t)
+  (claude-code-extras-copilot-enabled nil))
 #+end_src
 
 ** =claude-log=

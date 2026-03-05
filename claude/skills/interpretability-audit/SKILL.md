@@ -1,12 +1,14 @@
 ---
 name: interpretability-audit
 description: Audit a codebase for intent transparency and readability. Use when the user wants to check if code is understandable, if intentions are clear, or if there are obscurities a reader would struggle with.
-argument-hint: [dir]
+argument-hint: [--accept] [dir]
 ---
 
 # Interpretability audit
 
 Review $ARGUMENTS for clarity and intent transparency. The goal is NOT to find bugs, security issues, or style violations — it's to identify places where a reader (like yourself) would struggle to understand what the code is doing or why.
+
+If `--accept` is present in `$ARGUMENTS`, after completing the audit, immediately address **all** high-impact clarity issues without asking for confirmation. Byte-compile and run tests after applying all changes. Commit the result.
 
 Use subagents to explore the codebase in parallel where appropriate (e.g., one for backend, one for frontend). Read actual code — don't guess from file names.
 

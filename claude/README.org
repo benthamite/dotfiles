@@ -88,14 +88,18 @@ Emacs Lisp coding standards: atomic functions, helper placement, docstring forma
 :ID:       D3121B68-8480-41B2-835B-97E85BB7DE29
 :END:
 
-Audits code for bugs, security issues, error handling gaps, and correctness problems. Categorizes findings as critical, bugs, fragile, or minor, with specific line numbers.
+Audits code for bugs, security issues, error handling gaps, and correctness problems. Categorizes findings as critical, bugs, fragile, or minor, with specific line numbers. Pass =--accept= to auto-fix all findings.
+
+*** design-audit
+
+Audits code for architectural quality: unnecessary complexity, missing or wrong abstractions, duplication, and refactoring opportunities. Pass =--accept= to auto-refactor high-impact findings.
 
 *** interpretability-audit
 :PROPERTIES:
 :ID:       800B3CAA-A993-4929-BB4A-7467A56FA70C
 :END:
 
-Audits code for intent transparency: magic values, misleading names, missing rationale comments, undocumented conventions.
+Audits code for intent transparency: magic values, misleading names, missing rationale comments, undocumented conventions. Pass =--accept= to auto-fix high-impact clarity issues.
 
 *** build
 :PROPERTIES:
@@ -157,7 +161,11 @@ Registers an Emacs package in =my-emacs-packages.org= and creates an accompanyin
 :ID:       10DF729B-32D5-48E0-A150-9F5D18F799AF
 :END:
 
-Cuts releases for my Emacs packages (10 supported). Validates the repo, classifies commits since the last tag, suggests a semver bump, and drafts release notes. Also has an audit mode that scans all packages for version mismatches or unreleased commits.
+Cuts releases for my Emacs packages (10 supported). Validates the repo, classifies commits since the last tag, suggests a semver bump, and drafts release notes. Also has an audit mode that scans all packages for version mismatches or unreleased commits. Pass =--accept= to skip the confirmation gate.
+
+*** triage-issues
+
+Scans, prioritizes, and batch-resolves open GitHub issues for =tlon-team/tlon.el=. Fetches issues, ranks by complexity, presents batches for review, fixes them with parallel subagents, closes on GitHub as =tlon-ai=, and archives the corresponding org headings.
 
 *** emacs-freeze
 :PROPERTIES:

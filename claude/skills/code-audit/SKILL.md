@@ -1,14 +1,14 @@
 ---
 name: code-audit
 description: Audit code for bugs, security issues, error handling gaps, and correctness problems. Use when the user wants to find actual defects rather than readability issues.
-argument-hint: [--fix] [dir]
+argument-hint: [--accept] [dir]
 ---
 
 # Code audit
 
 Review $ARGUMENTS for correctness, security, and robustness issues. The goal is to find **actual or potential defects** — things that could cause wrong behavior, data loss, security vulnerabilities, or silent failures.
 
-If `--fix` is present in `$ARGUMENTS`, after completing the audit, immediately fix **all** findings (critical, bugs, fragile, and minor) without asking for confirmation. Byte-compile and run tests after applying all fixes. Commit the result.
+If `--accept` is present in `$ARGUMENTS`, after completing the audit, immediately fix **all** findings (critical, bugs, fragile, and minor) without asking for confirmation. Byte-compile and run tests after applying all fixes. Commit the result.
 
 Use subagents to explore the codebase in parallel where appropriate. Read actual code — don't guess from file names.
 

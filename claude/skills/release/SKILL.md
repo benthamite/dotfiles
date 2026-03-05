@@ -29,6 +29,8 @@ Parse `$ARGUMENTS` to determine the mode:
 - `--audit` → audit mode
 - Anything else (a package name, or empty if inside a package repo) → release mode
 
+If `--accept` is present in `$ARGUMENTS`, skip the confirmation gate (step 9) and proceed directly to executing the release. All other steps (including presenting the summary and release notes) still run normally — `--accept` only removes the wait for user confirmation.
+
 ---
 
 ## Audit mode (`/release --audit`)
@@ -181,7 +183,7 @@ Present a full summary:
 - Release notes draft
 - Actions that will be taken: update header + commit (unless pre-bumped), tag, push, create GitHub release
 
-**Wait for explicit user confirmation before proceeding.** Do not take any public/irreversible action until the user says yes. If the user wants changes, revise and re-present.
+**Wait for explicit user confirmation before proceeding** (unless `--accept` was passed, in which case skip straight to step 10). Do not take any public/irreversible action until the user says yes. If the user wants changes, revise and re-present.
 
 ### 10. Execute the release
 

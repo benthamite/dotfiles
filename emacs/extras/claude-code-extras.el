@@ -134,6 +134,7 @@ prompts and accepted text is sent to the terminal correctly."
   "Debounce timer for triggering Copilot after eat buffer changes.")
 
 (defvar eat-terminal)
+(declare-function json-pretty-print-buffer "json" ())
 (declare-function eat-self-input "eat" (n &optional e))
 (declare-function eat-term-display-cursor "eat" (terminal))
 (declare-function eat-term-send-string "eat" (terminal string))
@@ -825,6 +826,69 @@ that line before syncing and requesting completions."
       (cancel-timer claude-code-extras--copilot-change-timer))
     (setq claude-code-extras--copilot-active nil)))
 
+;;;;; Theme sync
+
+(defvar claude-code-extras--last-synced-theme nil
+  "The last theme value synced to Claude Code settings.")
+
+(defun claude-code-extras--emacs-theme ()
+  "Return \"light\" or \"dark\" based on the current frame background mode."
+  (if (eq (frame-parameter nil 'background-mode) 'dark) "dark" "light"))
+
+(defun claude-code-extras--sync-theme-to-settings ()
+  "Update the `theme' key in `~/.claude/settings.json' to match Emacs.
+Only writes the file when the theme value actually changes."
+  (let* ((theme (claude-code-extras--emacs-theme))
+         (settings-file (expand-file-name "~/.claude/settings.json"))
+         (settings (condition-case nil
+                       (json-parse-string
+                        (with-temp-buffer
+                          (insert-file-contents settings-file)
+                          (buffer-string))
+                        :object-type 'hash-table)
+                     (error (make-hash-table :test 'equal))))
+         (current (gethash "theme" settings)))
+    (unless (equal current theme)
+      (puthash "theme" theme settings)
+      (make-directory (file-name-directory settings-file) t)
+      (with-temp-file settings-file
+        (insert (json-serialize settings))
+        (json-pretty-print-buffer)))))
+
+(defun claude-code-extras--send-theme-to-buffer (buffer theme)
+  "Send `/theme' to BUFFER and select THEME.
+THEME is \"light\" or \"dark\".  Sends the slash command, waits
+for the picker to render, navigates to the correct option, and
+confirms.  The picker lists Dark first and Light second."
+  (with-current-buffer buffer
+    (claude-code--term-send-string
+     claude-code-terminal-backend "/theme\r")
+    (let ((buf buffer))
+      (run-at-time
+       1.0 nil
+       (lambda ()
+         (when (buffer-live-p buf)
+           (with-current-buffer buf
+             (when (string= theme "light")
+               (claude-code--term-send-string
+                claude-code-terminal-backend "\e[B"))
+             (claude-code--term-send-string
+              claude-code-terminal-backend "\r"))))))))
+
+(defun claude-code-extras-sync-theme (&rest _)
+  "Sync Claude Code theme with the current Emacs background mode.
+Updates `~/.claude/settings.json' for new sessions and sends
+`/theme' to all running sessions when the background mode
+changes."
+  (let ((theme (claude-code-extras--emacs-theme)))
+    (unless (equal theme claude-code-extras--last-synced-theme)
+      (setq claude-code-extras--last-synced-theme theme)
+      (claude-code-extras--sync-theme-to-settings)
+      (dolist (buf (claude-code--find-all-claude-buffers))
+        (when (and (buffer-live-p buf)
+                   (process-live-p (get-buffer-process buf)))
+          (claude-code-extras--send-theme-to-buffer buf theme))))))
+
 ;;;;; Auto-setup
 
 (defun claude-code-extras-ensure-statusline-config ()
@@ -967,6 +1031,8 @@ the view from jumping to the middle of the buffer."
 (add-hook 'kill-buffer-hook #'claude-code-extras-stop-status-polling)
 (add-hook 'claude-code-start-hook #'claude-code-extras-setup-copilot)
 (add-hook 'kill-buffer-hook #'claude-code-extras-teardown-copilot)
+(add-hook 'enable-theme-functions #'claude-code-extras-sync-theme)
+(add-hook 'claude-code-start-hook #'claude-code-extras--sync-theme-to-settings)
 
 (provide 'claude-code-extras)
 ;;; claude-code-extras.el ends here

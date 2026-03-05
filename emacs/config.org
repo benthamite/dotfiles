@@ -2953,6 +2953,10 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
     (bind-keys :map Info-mode-map
                ("k" . previous-line)
                ("l" . next-line)))
+  (with-eval-after-load 'johnson
+    (bind-keys :map 'johnson-mode-map
+	       ("k" . previous-line)
+	       ("l" . next-line)))
   (with-eval-after-load 'ledger-reconcile
     (bind-keys :map ledger-reconcile-mode-map
                ("k" . previous-line)
@@ -7254,7 +7258,11 @@ To populate the database of historical prices:
   (johnson-dictionary-directories '("/Users/pablostafforini/My Drive/Dictionaries/"))
   
   :bind
-  ("A-j" . johnson-lookup))
+  (("A-j" . johnson-lookup)
+   :map johnson-mode-map
+   ("," . johnson-prev-section)
+   ("." . johnson-next-section)
+   ("f" . johnson-ace-link)))
 #+end_src
 
 ** =go-translate=

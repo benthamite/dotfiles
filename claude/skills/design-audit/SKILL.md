@@ -1,14 +1,14 @@
 ---
 name: design-audit
 description: Audit code for suboptimal architecture, unnecessary complexity, missing or wrong abstractions, duplication, and refactoring opportunities. Use when the user wants to improve code structure rather than find bugs or readability issues.
-argument-hint: [--fix] [dir]
+argument-hint: [--accept] [dir]
 ---
 
 # Design audit
 
 Review $ARGUMENTS for architectural quality and structural soundness. The goal is to find code that **works correctly and reads clearly** but is structured in a way that makes it harder to maintain, extend, or reason about than it needs to be.
 
-If `--fix` is present in `$ARGUMENTS`, after completing the audit, immediately refactor **all** findings rated as high or medium impact without asking for confirmation. Byte-compile and run tests after applying all changes. Commit the result.
+If `--accept` is present in `$ARGUMENTS`, after completing the audit, immediately refactor **all** findings rated as high or medium impact without asking for confirmation. Byte-compile and run tests after applying all changes. Commit the result.
 
 Use subagents to explore the codebase in parallel where appropriate. Read actual code — don't guess from file names.
 

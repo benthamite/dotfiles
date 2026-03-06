@@ -17,7 +17,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=eat-extras.el= extends =eat= (Emulate A Terminal), the Emacs terminal emulator that runs inside regular buffers. The extensions focus on two concerns: sending editing keystrokes that Eat's semi-char mode does not handle by default, and configuring the semi-char mode keymap to coexist with standard Emacs key bindings.
+=eat-extras.el= extends =eat= (Emulate A Terminal), the Emacs terminal emulator that runs inside regular buffers. The extensions focus on three concerns: sending editing keystrokes that Eat's semi-char mode does not handle by default, configuring the semi-char mode keymap to coexist with standard Emacs key bindings, and preventing freeze-inducing marker accumulation in long-lived terminal buffers ([[#h:marker-cleanup][Marker cleanup]]).
 
 Eat's semi-char mode intercepts most keystrokes and forwards them to the terminal process, which is desirable for full terminal interaction. However, certain Emacs prefix keys (=C-x=, =C-h=, =M-x=, etc.) and custom navigation bindings need to remain available. This package defines the set of keys to exclude from terminal capture and provides the setup function that applies them ([[#h:keymap-setup][Keymap setup]]).
 
@@ -79,6 +79,24 @@ The command ~eat-extras-send-undo~ sends =C-_=, which triggers undo in most shel
 The function ~eat-extras-setup-semi-char-mode-map~ configures the semi-char mode keymap in three steps. First, it adds the entries from ~eat-extras-non-bound-keys~ to Eat's own exclusion list and calls ~eat-update-semi-char-mode-map~ to regenerate the map. Second, it explicitly unbinds the keys listed in ~eat-extras-emacs-passthrough-keys~ so they fall through to the global map. Third, it binds the custom key sequences to the terminal editing commands ([[#h:terminal-editing-commands][Terminal editing commands]]). Finally, it calls ~eat-extras-sync-semi-char-mode-map~ to ensure the live keymap is updated.
 
 The function ~eat-extras-sync-semi-char-mode-map~ patches a subtle issue: when ~eat-update-semi-char-mode-map~ replaces the keymap object via ~setq~, the entry in ~minor-mode-map-alist~ still points to the old object. This function updates the alist entry in place so the new bindings take effect immediately in all existing Eat buffers.
+
+** Marker cleanup
+:PROPERTIES:
+:CUSTOM_ID: h:marker-cleanup
+:END:
+
+#+findex: eat-extras-cleanup-markers
+#+findex: eat-extras-start-marker-cleanup-timer
+#+findex: eat-extras-stop-marker-cleanup-timer
+When Eat truncates scrollback via ~delete-region~, Emacs does not destroy the markers that pointed into the deleted text---it relocates them to ~point-min~. Over time, thousands of orphaned markers accumulate, and every subsequent insertion must iterate through all of them (the C function ~adjust_markers_for_insert~ is O(n) in marker count). This eventually pegs the CPU at 100% and freezes Emacs.
+
+The function ~eat-extras-cleanup-markers~ checks all eat buffers and, when insertion time exceeds ~eat-extras-marker-cleanup-threshold~, frees the orphaned markers. It works by swapping the buffer text into a temporary buffer via ~buffer-swap-text~, reinserting only the text (without markers) into the original buffer, and killing the temporary buffer along with all its markers.
+
+The function ~eat-extras-start-marker-cleanup-timer~ starts a periodic timer (interval controlled by ~eat-extras-marker-cleanup-interval~, default 60 seconds) that calls ~eat-extras-cleanup-markers~. The function ~eat-extras-stop-marker-cleanup-timer~ cancels it.
+
+#+vindex: eat-extras-marker-cleanup-interval
+#+vindex: eat-extras-marker-cleanup-threshold
+The user option ~eat-extras-marker-cleanup-interval~ controls how often the watchdog checks eat buffers (default: 60 seconds). The user option ~eat-extras-marker-cleanup-threshold~ sets the insertion-time threshold that triggers cleanup (default: 0.01 seconds per character).
 
 * Indices
 :PROPERTIES:

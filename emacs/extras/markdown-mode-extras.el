@@ -75,7 +75,7 @@ If SECTION is nil, copy the current section."
   (interactive)
   (let ((section (markdown-mode-extras-get-section section)))
     (kill-new section)
-    (message section)))
+    (message "%s" section)))
 
 (defun markdown-mode-extras-delete-link ()
   "Delete link at point and return its name."

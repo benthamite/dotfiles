@@ -135,6 +135,12 @@ prompts and accepted text is sent to the terminal correctly."
 
 (defvar eat-terminal)
 (declare-function json-pretty-print-buffer "json" ())
+(declare-function org-map-entries "org" (func &optional match scope &rest skip))
+(declare-function org-get-todo-state "org" ())
+(declare-function org-get-heading "org" (&optional no-tags no-todo no-priority no-comment))
+(declare-function org-end-of-meta-data "org" (&optional full))
+(declare-function org-entry-is-done-p "org" ())
+(declare-function outline-next-heading "outline" ())
 (declare-function eat-self-input "eat" (n &optional e))
 (declare-function eat-term-display-cursor "eat" (terminal))
 (declare-function eat-term-send-string "eat" (terminal string))
@@ -839,6 +845,244 @@ that line before syncing and requesting completions."
     (when (timerp claude-code-extras--copilot-change-timer)
       (cancel-timer claude-code-extras--copilot-change-timer))
     (setq claude-code-extras--copilot-active nil)))
+
+;;;;; Batch TODO processing
+
+(defcustom claude-code-extras-batch-allowed-tools
+  '("Bash" "Read" "Write" "Edit" "Glob" "Grep" "WebFetch" "WebSearch")
+  "Tools to auto-allow via `--allowedTools' for batch TODO processing."
+  :type '(repeat string)
+  :group 'claude-code-extras)
+
+(defcustom claude-code-extras-batch-max-turns 10
+  "Maximum agentic turns per TODO when running batch processing."
+  :type 'integer
+  :group 'claude-code-extras)
+
+(defcustom claude-code-extras-batch-system-prompt nil
+  "Optional system prompt appended via `--append-system-prompt'.
+When non-nil, passed to each `claude -p' invocation."
+  :type '(choice (const :tag "None" nil) string)
+  :group 'claude-code-extras)
+
+(defcustom claude-code-extras-batch-model nil
+  "Optional model override via `--model' for batch TODO processing.
+When non-nil, passed to each `claude -p' invocation."
+  :type '(choice (const :tag "Default" nil) string)
+  :group 'claude-code-extras)
+
+(defvar claude-code-extras--batch-queue nil
+  "Remaining TODO entries to process.")
+
+(defvar claude-code-extras--batch-results nil
+  "Accumulated results from batch processing.")
+
+(defvar claude-code-extras--batch-log-dir nil
+  "Log directory for the current batch run.")
+
+(defvar claude-code-extras--batch-working-dir nil
+  "Working directory for the current batch run.")
+
+(defvar claude-code-extras--batch-start-time nil
+  "Start time of the current batch run.")
+
+(defun claude-code-extras--batch-collect-todos (scope)
+  "Collect TODO entries from the current org buffer according to SCOPE.
+SCOPE is one of `buffer', `subtree', or `region'.
+Returns a list of plists with :title and :body keys."
+  (let ((entries '()))
+    (org-map-entries
+     (lambda ()
+       (when (and (org-get-todo-state)
+                  (not (org-entry-is-done-p)))
+         (let* ((title (org-get-heading t t t t))
+                (body-start (save-excursion
+                              (org-end-of-meta-data t)
+                              (point)))
+                (body-end (save-excursion
+                            (outline-next-heading)
+                            (or (point) (point-max))))
+                (body (string-trim
+                       (buffer-substring-no-properties body-start body-end))))
+           (push (list :title title :body body) entries))))
+     nil
+     (pcase scope
+       ('buffer nil)
+       ('subtree 'tree)
+       ('region 'region)))
+    (nreverse entries)))
+
+(defun claude-code-extras--batch-format-prompt (entry)
+  "Format ENTRY plist as a prompt string for `claude -p'.
+Combines :title and :body, using title alone when body is empty."
+  (let ((title (plist-get entry :title))
+        (body (plist-get entry :body)))
+    (if (or (null body) (string-empty-p body))
+        title
+      (concat title "\n\n" body))))
+
+(defun claude-code-extras-batch-todos ()
+  "Process org TODO entries sequentially via `claude -p'.
+Prompts for scope (buffer, subtree, or region), a working
+directory, then runs each TODO as a non-interactive Claude
+session.  Results are logged to timestamped files and displayed
+in a summary buffer when all entries have been processed."
+  (interactive)
+  (unless (derived-mode-p 'org-mode)
+    (user-error "Must be called from an org-mode buffer"))
+  (let* ((scope (intern (completing-read "Scope: " '("buffer" "subtree" "region")
+                                         nil t)))
+         (entries (claude-code-extras--batch-collect-todos scope)))
+    (when (null entries)
+      (user-error "No TODO entries found in %s" scope))
+    (let ((dir (project-prompt-project-dir)))
+      (when (yes-or-no-p
+             (format "Process %d TODO(s) in %s?" (length entries) dir))
+        (claude-code-extras--batch-start entries dir)))))
+
+(defun claude-code-extras--batch-start (entries dir)
+  "Start batch processing of ENTRIES in working directory DIR."
+  (let ((log-dir (expand-file-name
+                  (format-time-string "batch_%Y-%m-%d_%H-%M-%S")
+                  claude-code-extras-log-directory)))
+    (make-directory log-dir t)
+    (setq claude-code-extras--batch-queue entries
+          claude-code-extras--batch-results nil
+          claude-code-extras--batch-log-dir log-dir
+          claude-code-extras--batch-working-dir dir
+          claude-code-extras--batch-start-time (current-time))
+    (message "Batch processing %d TODO(s)..." (length entries))
+    (claude-code-extras--batch-run-next)))
+
+(defun claude-code-extras--batch-run-next ()
+  "Process the next entry in the batch queue.
+When the queue is empty, display the summary buffer."
+  (if (null claude-code-extras--batch-queue)
+      (claude-code-extras--batch-finish)
+    (let* ((entry (pop claude-code-extras--batch-queue))
+           (index (1+ (length claude-code-extras--batch-results)))
+           (title (plist-get entry :title))
+           (prompt (claude-code-extras--batch-format-prompt entry))
+           (log-file (expand-file-name
+                      (format "%02d_%s.json"
+                              index
+                              (replace-regexp-in-string
+                               "[^a-zA-Z0-9_-]" "-"
+                               (truncate-string-to-width title 50)))
+                      claude-code-extras--batch-log-dir))
+           (args (claude-code-extras--batch-build-args prompt))
+           (env (cl-remove-if
+                 (lambda (s) (string-prefix-p "CLAUDE_CODE" s))
+                 process-environment))
+           (start-time (current-time))
+           (output-buf (generate-new-buffer " *claude-batch-output*")))
+      (message "Batch [%d/%d]: %s"
+               index
+               (+ index (length claude-code-extras--batch-queue))
+               title)
+      (let ((process-environment env)
+            (default-directory claude-code-extras--batch-working-dir))
+        (make-process
+         :name (format "claude-batch-%d" index)
+         :buffer output-buf
+         :command args
+         :sentinel
+         (lambda (proc _event)
+           (when (memq (process-status proc) '(exit signal))
+             (let* ((exit-code (process-exit-status proc))
+                    (raw (with-current-buffer (process-buffer proc)
+                           (buffer-string)))
+                    (duration (float-time
+                              (time-subtract (current-time) start-time)))
+                    (json-data (condition-case nil
+                                   (json-parse-string raw :object-type 'plist)
+                                 (error nil)))
+                    (cost (and json-data
+                               (plist-get json-data :cost_usd)))
+                    (result-text
+                     (and json-data
+                          (let ((r (plist-get json-data :result)))
+                            (cond
+                             ((stringp r) r)
+                             ((and (vectorp r) (> (length r) 0))
+                              (mapconcat
+                               (lambda (block)
+                                 (or (plist-get block :text) ""))
+                               r "\n"))
+                             (t nil))))))
+               (with-temp-file log-file
+                 (insert raw))
+               (push (list :title title
+                           :index index
+                           :exit-code exit-code
+                           :duration duration
+                           :cost (or cost 0)
+                           :result-text (or result-text raw)
+                           :log-file log-file)
+                     claude-code-extras--batch-results)
+               (kill-buffer (process-buffer proc))
+               (claude-code-extras--batch-run-next)))))))))
+
+(defun claude-code-extras--batch-build-args (prompt)
+  "Build the command-line argument list for `claude -p' with PROMPT."
+  (let ((args (list claude-code-program
+                    "-p" prompt
+                    "--output-format" "json"
+                    "--max-turns" (number-to-string
+                                  claude-code-extras-batch-max-turns))))
+    (when claude-code-extras-batch-allowed-tools
+      (setq args (append args (list "--allowedTools"
+                                    (string-join
+                                     claude-code-extras-batch-allowed-tools
+                                     ",")))))
+    (when claude-code-extras-batch-system-prompt
+      (setq args (append args (list "--append-system-prompt"
+                                    claude-code-extras-batch-system-prompt))))
+    (when claude-code-extras-batch-model
+      (setq args (append args (list "--model"
+                                    claude-code-extras-batch-model))))
+    args))
+
+(defun claude-code-extras--batch-finish ()
+  "Display the batch processing summary buffer."
+  (let* ((results (sort claude-code-extras--batch-results
+                        (lambda (a b)
+                          (< (plist-get a :index) (plist-get b :index)))))
+         (total (length results))
+         (successes (cl-count 0 results :key (lambda (r) (plist-get r :exit-code))))
+         (failures (- total successes))
+         (total-cost (cl-reduce #'+ results :key (lambda (r) (plist-get r :cost))))
+         (total-time (float-time
+                      (time-subtract (current-time)
+                                     claude-code-extras--batch-start-time)))
+         (buf (get-buffer-create "*Claude Batch Results*")))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert (format "#+title: Batch results — %s\n\n"
+                        (format-time-string "%Y-%m-%d %H:%M:%S"
+                                           claude-code-extras--batch-start-time)))
+        (insert (format "- Total: %d | Success: %d | Failed: %d\n" total successes failures))
+        (insert (format "- Cost: $%.4f\n" total-cost))
+        (insert (format "- Time: %.1f seconds\n" total-time))
+        (insert (format "- Logs: [[file:%s]]\n\n" claude-code-extras--batch-log-dir))
+        (dolist (result results)
+          (let ((status (if (= 0 (plist-get result :exit-code)) "DONE" "FAIL")))
+            (insert (format "* %s %s\n" status (plist-get result :title)))
+            (insert (format ":PROPERTIES:\n:COST: $%.4f\n:DURATION: %.1fs\n:END:\n\n"
+                            (plist-get result :cost)
+                            (plist-get result :duration)))
+            (insert (format "Log: [[file:%s]]\n\n" (plist-get result :log-file)))
+            (insert "#+begin_example\n")
+            (insert (or (plist-get result :result-text) "(no output)"))
+            (unless (string-suffix-p "\n" (or (plist-get result :result-text) ""))
+              (insert "\n"))
+            (insert "#+end_example\n\n"))))
+      (org-mode)
+      (goto-char (point-min)))
+    (pop-to-buffer buf)
+    (message "Batch complete: %d/%d succeeded (%.1fs, $%.4f)"
+             successes total total-time total-cost)))
 
 ;;;;; Theme sync
 

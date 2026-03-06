@@ -858,24 +858,29 @@ Only writes the file when the theme value actually changes."
 (defun claude-code-extras--send-theme-to-buffer (buffer theme)
   "Send `/theme' to BUFFER and select THEME.
 
-THEME is \"light\" or \"dark\".  Sends the slash command followed
-by the navigation keystrokes with a short delay, so the picker is
-dismissed almost immediately after rendering.  The picker cursor
-starts on the currently active theme, so we arrow up for dark
-\(from light) or down for light (from dark)."
+THEME is \"light\" or \"dark\".  Sends the slash command, waits
+for the picker to render, then navigates to the correct option
+and confirms.  The picker cursor starts on the currently active
+theme, so we arrow up for dark (from light) or down for light
+\(from dark)."
   (with-current-buffer buffer
     (claude-code--term-send-string
-     claude-code-terminal-backend "/theme\r")
+     claude-code-terminal-backend "/theme")
+    (sit-for 0.1)
+    (claude-code--term-send-string
+     claude-code-terminal-backend (kbd "RET"))
     (let ((buf buffer)
           (navigate (if (string= theme "light") "\e[B" "\e[A")))
       (run-at-time
-       0.3 nil
+       0.5 nil
        (lambda ()
          (when (buffer-live-p buf)
            (with-current-buffer buf
              (claude-code--term-send-string
-              claude-code-terminal-backend
-              (concat navigate "\r")))))))))
+              claude-code-terminal-backend navigate)
+             (sit-for 0.1)
+             (claude-code--term-send-string
+              claude-code-terminal-backend (kbd "RET")))))))))
 
 (defun claude-code-extras-sync-theme (&rest _)
   "Sync Claude Code theme with the current Emacs background mode.

@@ -48,3 +48,21 @@ emacs --batch \
 **Do not use `load-prefer-newer`** — it causes version mismatches between elpaca dependencies (e.g. magit's `.elc` expecting a transient API that differs from transient's `.el` source). The load-path ordering above already ensures the correct files are loaded.
 
 For interactive testing against the running Emacs session, use `emacsclient -e '(EXPRESSION)'`.
+
+# Rebuilding elpaca packages after changes
+
+After changing an extras `.el` file, always rebuild the `.elc` and reload in the running session yourself — never ask the user to do it. Steps:
+
+```bash
+ELPACA=/Users/pablostafforini/.config/emacs-profiles/$(emacsclient -e 'init-current-profile' | tr -d '"')/elpaca
+# Byte-compile from the repo source
+emacs --batch \
+  --eval "(dolist (dir (file-expand-wildcards \"$ELPACA/builds/*/\")) (add-to-list 'load-path dir))" \
+  --eval "(push \"$PWD/emacs/extras\" load-path)" \
+  --eval "(byte-compile-file \"$ELPACA/repos/dotfiles/emacs/extras/PACKAGE.el\")" \
+  2>&1
+# Copy the .elc to the builds directory
+cp "$ELPACA/repos/dotfiles/emacs/extras/PACKAGE.elc" "$ELPACA/builds/PACKAGE/PACKAGE.elc"
+# Reload in the running session
+emacsclient -e '(load-file "$ELPACA/repos/dotfiles/emacs/extras/PACKAGE.el")'
+```

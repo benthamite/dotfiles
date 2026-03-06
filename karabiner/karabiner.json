@@ -288,7 +288,7 @@
           "type" : "basic"
         } ]
       }, {
-        "description" : "outside Emacs, right_control → toggle Emacs/Chrome (alone) | righ_command + right_control (held)",
+        "description" : "outside Emacs, right_control → toggle Emacs/Chrome (alone) | right_command + right_control (held)",
         "manipulators" : [ {
           "to_if_alone" : [ {
             "key_code" : "f18"
@@ -20510,7 +20510,7 @@
           "type" : "basic"
         } ]
       }, {
-        "description" : "slash simlyaer → files (Emacs) | app-specific macros (outside Emacs)",
+        "description" : "slash simlayer → files (Emacs) | app-specific macros (outside Emacs)",
         "manipulators" : [ {
           "from" : {
             "key_code" : "a"

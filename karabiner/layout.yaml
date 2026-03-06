@@ -8,7 +8,7 @@ layers:
     - [{h: nav, t: Z}, X, C, {h: numbers, t: V}, {h: media/windows, t: B}, N, {h: math, t: M}, {h: transp, t: ","}, {h: key manipulation, t: .}, /]
     - {h: l-opt,   t: Esc}
     - {h: l-shift,  t: Enter}
-    - {h: l-command,   t: togle-win}
+    - {h: l-command,   t: toggle-win}
     - {h: l-ctrl,   t: toggle-app}
     - {h: mod, t: Space}
     - {h: l-option,   t: Tab}

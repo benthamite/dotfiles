@@ -35,14 +35,14 @@
 (defun org2blog-extras-move-tags-to-drawer ()
   "Convert `org-mode' tags to values of the property `POST_TAGS' in an org drawer."
   (interactive)
-  (while (re-search-forward "^\\* .*?:\\(.*\\):\n")
+  (while (re-search-forward "^\\* .*?:\\(.*\\):\n" nil t)
     (let ((tags (string-join
                  (split-string
                   (substring-no-properties
                    (match-string 1))
                   ":")
                  ", ")))
-      (org-set-property "POSG_TAGS" tags))))
+      (org-set-property "POST_TAGS" tags))))
 
 ;; setting `org2blog/wp-confirm-post' to t asks for confirmation
 ;; before publication, but I want to be asked only when the

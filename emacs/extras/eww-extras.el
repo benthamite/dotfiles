@@ -319,7 +319,8 @@ domain as the initial prompt input."
   (when (file-exists-p eww-extras-readable-exceptions-file)
     (with-temp-buffer
       (insert-file-contents eww-extras-readable-exceptions-file)
-      (setq eww-extras-readable-exceptions (split-string (regexp-quote (buffer-string)) "\n" t)))))
+      (setq eww-extras-readable-exceptions
+	    (mapcar #'regexp-quote (split-string (buffer-string) "\n" t))))))
 
 (eww-extras-set-readable-exceptions-from-file)
 

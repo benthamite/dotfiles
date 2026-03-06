@@ -211,15 +211,12 @@
   (should (equal (color-extras-parse-color "#abcdef") "#abcdef")))
 
 (ert-deftest color-extras-test-parse-color-hsl ()
-  "Parse-color returns parsed HSL for HSL input.
-Note: `color-extras-hsl-split' calls `match-string-no-properties'
-without passing the matched string, so it only works in a buffer
-context (e.g. after `thing-at-point-looking-at'), not after
-`string-match'.  This test verifies the bug is present."
-  ;; parse-color uses string-match, then hsl-split reads match data
-  ;; without the string arg -> tries to read from killed temp buffer.
-  (should-error (color-extras-parse-color "180, 50%, 75%")
-                :type 'args-out-of-range))
+  "Parse-color returns parsed HSL for HSL input."
+  (let ((result (color-extras-parse-color "180, 50%, 75%")))
+    (should (listp result))
+    (should (= (nth 0 result) 180))
+    (should (= (nth 1 result) 50))
+    (should (= (nth 2 result) 75))))
 
 (ert-deftest color-extras-test-parse-color-invalid ()
   "Parse-color signals error for invalid input."

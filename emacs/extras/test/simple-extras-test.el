@@ -381,5 +381,247 @@
       (should (equal (buffer-string) "test-kill"))
       (should (= (length kill-ring) (1- ring-length))))))
 
+;;;; Sort sexps
+
+(ert-deftest simple-extras-test-sort-sexps-alphabetical ()
+  "Sort-sexps sorts top-level sexps alphabetically by their printed form."
+  (with-temp-buffer
+    (emacs-lisp-mode)
+    (insert "(charlie)\n(alpha)\n(bravo)\n")
+    (simple-extras-sort-sexps (point-min) (point-max))
+    (should (equal (buffer-string) "(alpha)\n(bravo)\n(charlie)\n"))))
+
+(ert-deftest simple-extras-test-sort-sexps-already-sorted ()
+  "Sort-sexps is a no-op when sexps are already in order."
+  (with-temp-buffer
+    (emacs-lisp-mode)
+    (insert "(aaa)\n(bbb)\n(ccc)\n")
+    (let ((original (buffer-string)))
+      (simple-extras-sort-sexps (point-min) (point-max))
+      (should (equal (buffer-string) original)))))
+
+(ert-deftest simple-extras-test-sort-sexps-defuns ()
+  "Sort-sexps sorts defun forms by name."
+  (with-temp-buffer
+    (emacs-lisp-mode)
+    (insert "(defun zebra () nil)\n\n(defun alpha () nil)\n\n(defun middle () nil)\n")
+    (simple-extras-sort-sexps (point-min) (point-max))
+    (should (string-match-p
+             (rx "(defun alpha" (* anything) "(defun middle" (* anything) "(defun zebra")
+             (buffer-string)))))
+
+;;;; Keyboard quit DWIM
+
+(ert-deftest simple-extras-test-keyboard-quit-dwim-deactivates-region ()
+  "Keyboard-quit-dwim deactivates the region when it is active."
+  (with-temp-buffer
+    (insert "hello world")
+    (set-mark 1)
+    (goto-char 6)
+    (activate-mark)
+    (should (region-active-p))
+    (simple-extras-keyboard-quit-dwim)
+    (should-not (region-active-p))))
+
+;;;; Save excursion
+
+(ert-deftest simple-extras-test-save-excursion-restores-point ()
+  "Save-excursion restores point after forms that move it."
+  (with-temp-buffer
+    (insert "hello world")
+    (goto-char 3)
+    (simple-extras-save-excursion
+     (goto-char (point-max)))
+    (should (= (point) 3))))
+
+(ert-deftest simple-extras-test-save-excursion-restores-buffer ()
+  "Save-excursion restores the original buffer when forms switch buffers."
+  (with-temp-buffer
+    (let ((original-buffer (current-buffer)))
+      (insert "original")
+      (goto-char 4)
+      (simple-extras-save-excursion
+       (switch-to-buffer (get-buffer-create "*simple-extras-test-tmp*")))
+      (should (eq (current-buffer) original-buffer))
+      (should (= (point) 4))
+      (when (get-buffer "*simple-extras-test-tmp*")
+        (kill-buffer "*simple-extras-test-tmp*")))))
+
+(ert-deftest simple-extras-test-save-excursion-returns-value ()
+  "Save-excursion returns the value of the last form."
+  (with-temp-buffer
+    (insert "hello")
+    (goto-char 1)
+    (let ((result (simple-extras-save-excursion
+                   (goto-char (point-max))
+                   42)))
+      (should (= result 42)))))
+
+;;;; Get Emacs distro
+
+(ert-deftest simple-extras-test-get-emacs-distro-emacs-mac ()
+  "Get-emacs-distro returns emacs-mac when mac hook is bound."
+  (let ((result (cl-letf (((symbol-function 'boundp)
+                            (lambda (sym)
+                              (eq sym 'mac-effective-appearance-change-hook))))
+                  (simple-extras-get-emacs-distro))))
+    (should (eq result 'emacs-mac))))
+
+(ert-deftest simple-extras-test-get-emacs-distro-emacs-plus ()
+  "Get-emacs-distro returns emacs-plus when ns functions variable is bound."
+  ;; Temporarily make the mac hook unbound and ns variable bound
+  (let ((had-mac (boundp 'mac-effective-appearance-change-hook))
+        (had-ns (boundp 'ns-system-appearance-change-functions)))
+    (unwind-protect
+        (progn
+          (when (boundp 'mac-effective-appearance-change-hook)
+            (makunbound 'mac-effective-appearance-change-hook))
+          (unless (boundp 'ns-system-appearance-change-functions)
+            (set 'ns-system-appearance-change-functions nil))
+          (should (eq (simple-extras-get-emacs-distro) 'emacs-plus)))
+      ;; Restore original state
+      (if had-mac
+          (unless (boundp 'mac-effective-appearance-change-hook)
+            (set 'mac-effective-appearance-change-hook nil))
+        (when (boundp 'mac-effective-appearance-change-hook)
+          (makunbound 'mac-effective-appearance-change-hook)))
+      (if had-ns
+          (unless (boundp 'ns-system-appearance-change-functions)
+            (set 'ns-system-appearance-change-functions nil))
+        (when (boundp 'ns-system-appearance-change-functions)
+          (makunbound 'ns-system-appearance-change-functions))))))
+
+(ert-deftest simple-extras-test-get-emacs-distro-nil ()
+  "Get-emacs-distro returns nil when neither variable is bound."
+  (let ((had-mac (boundp 'mac-effective-appearance-change-hook))
+        (had-ns (boundp 'ns-system-appearance-change-functions)))
+    (unwind-protect
+        (progn
+          (when (boundp 'mac-effective-appearance-change-hook)
+            (makunbound 'mac-effective-appearance-change-hook))
+          (when (boundp 'ns-system-appearance-change-functions)
+            (makunbound 'ns-system-appearance-change-functions))
+          (should (eq (simple-extras-get-emacs-distro) nil)))
+      ;; Restore original state
+      (if had-mac
+          (unless (boundp 'mac-effective-appearance-change-hook)
+            (set 'mac-effective-appearance-change-hook nil)))
+      (if had-ns
+          (unless (boundp 'ns-system-appearance-change-functions)
+            (set 'ns-system-appearance-change-functions nil))))))
+
+;;;; Pandoc convert
+
+(ert-deftest simple-extras-test-pandoc-convert-content-html-to-plain ()
+  "Pandoc-convert converts HTML content to plain text."
+  (skip-unless (executable-find "pandoc"))
+  (let ((result (simple-extras-pandoc-convert "plain" "html" "<p>Hello <em>world</em></p>")))
+    (should (string-match-p "Hello" result))
+    (should (string-match-p "world" result))))
+
+(ert-deftest simple-extras-test-pandoc-convert-content-markdown-to-html ()
+  "Pandoc-convert converts Markdown content to HTML."
+  (skip-unless (executable-find "pandoc"))
+  (let ((result (simple-extras-pandoc-convert "html" "markdown" "**bold** text")))
+    (should (string-match-p "<strong>bold</strong>" result))
+    (should (string-match-p "text" result))))
+
+(ert-deftest simple-extras-test-pandoc-convert-content-preserves-structure ()
+  "Pandoc-convert preserves list structure when converting."
+  (skip-unless (executable-find "pandoc"))
+  (let ((result (simple-extras-pandoc-convert "markdown" "html"
+                                              "<ul><li>one</li><li>two</li></ul>")))
+    (should (string-match-p "one" result))
+    (should (string-match-p "two" result))))
+
+;;;; Count words DWIM
+
+(ert-deftest simple-extras-test-count-words-dwim-region ()
+  "Count-words-dwim counts words in active region and saves count to kill ring."
+  (with-temp-buffer
+    (insert "one two three four five")
+    (set-mark 1)
+    (goto-char (point-max))
+    (activate-mark)
+    (simple-extras-count-words-dwim)
+    (should (equal (car kill-ring) "5"))))
+
+(ert-deftest simple-extras-test-count-words-dwim-partial-region ()
+  "Count-words-dwim counts words in a partial region."
+  (with-temp-buffer
+    (insert "one two three four five")
+    (set-mark 1)
+    (goto-char 8) ; after "one two"
+    (activate-mark)
+    (simple-extras-count-words-dwim)
+    (should (equal (car kill-ring) "2"))))
+
+;;;; Get URL at point
+
+(ert-deftest simple-extras-test-get-url-at-point-http ()
+  "Get-url-at-point extracts HTTP URL from buffer text."
+  (with-temp-buffer
+    (require 'url-parse)
+    (insert "Visit http://example.com/path for info")
+    (goto-char 10) ; inside the URL
+    (should (equal (simple-extras-get-url-at-point) "http://example.com/path"))))
+
+(ert-deftest simple-extras-test-get-url-at-point-https ()
+  "Get-url-at-point extracts HTTPS URL from buffer text."
+  (with-temp-buffer
+    (require 'url-parse)
+    (insert "See https://example.com for details")
+    (goto-char 8) ; inside the URL
+    (should (equal (simple-extras-get-url-at-point) "https://example.com"))))
+
+(ert-deftest simple-extras-test-get-url-at-point-no-url ()
+  "Get-url-at-point returns nil when no URL is at point."
+  (with-temp-buffer
+    (require 'url-parse)
+    (insert "just some plain text here")
+    (goto-char 10)
+    (should (null (simple-extras-get-url-at-point)))))
+
+(ert-deftest simple-extras-test-get-url-at-point-www-prefix ()
+  "Get-url-at-point adds http:// to www-prefixed URLs."
+  (with-temp-buffer
+    (require 'url-parse)
+    (insert "Go to www.example.com now")
+    (goto-char 10) ; inside the URL
+    (should (equal (simple-extras-get-url-at-point) "http://www.example.com"))))
+
+;;;; Narrow or widen DWIM
+
+(ert-deftest simple-extras-test-narrow-or-widen-dwim-widens-when-narrowed ()
+  "Narrow-or-widen-dwim widens a narrowed buffer."
+  (with-temp-buffer
+    (insert "line one\nline two\nline three\n")
+    (narrow-to-region 1 9)
+    (should (buffer-narrowed-p))
+    (simple-extras-narrow-or-widen-dwim)
+    (should-not (buffer-narrowed-p))))
+
+(ert-deftest simple-extras-test-narrow-or-widen-dwim-narrows-to-region ()
+  "Narrow-or-widen-dwim narrows to active region."
+  (with-temp-buffer
+    (insert "line one\nline two\nline three\n")
+    (set-mark 1)
+    (goto-char 9)
+    (activate-mark)
+    (simple-extras-narrow-or-widen-dwim)
+    (should (buffer-narrowed-p))
+    (should (equal (buffer-string) "line one"))))
+
+(ert-deftest simple-extras-test-narrow-or-widen-dwim-narrows-to-defun ()
+  "Narrow-or-widen-dwim narrows to defun in emacs-lisp-mode."
+  (with-temp-buffer
+    (emacs-lisp-mode)
+    (insert "(defun foo ()\n  nil)\n\n(defun bar ()\n  t)\n")
+    (goto-char 5) ; inside first defun
+    (simple-extras-narrow-or-widen-dwim)
+    (should (buffer-narrowed-p))
+    (should (string-match-p "defun foo" (buffer-string)))
+    (should-not (string-match-p "defun bar" (buffer-string)))))
+
 (provide 'simple-extras-test)
 ;;; simple-extras-test.el ends here

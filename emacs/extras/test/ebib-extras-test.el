@@ -227,5 +227,43 @@
   (should (member "incollection" ebib-extras-book-like-entry-types))
   (should (member "Incollection" ebib-extras-book-like-entry-types)))
 
+;;;; ebib-extras--extension-directories
+
+(ert-deftest ebib-extras-test-extension-directories-pdf ()
+  "Return the PDF library directory for the \"pdf\" extension."
+  (let ((paths-dir-pdf-library "/test/pdf-library/"))
+    (should (equal (ebib-extras--extension-directories "pdf")
+                   "/test/pdf-library/"))))
+
+(ert-deftest ebib-extras-test-extension-directories-html ()
+  "Return the HTML library directory for the \"html\" extension."
+  (let ((paths-dir-html-library "/test/html-library/"))
+    (should (equal (ebib-extras--extension-directories "html")
+                   "/test/html-library/"))))
+
+(ert-deftest ebib-extras-test-extension-directories-valid-media-extension ()
+  "Return the media library directory for extensions in valid-file-extensions."
+  (let ((paths-dir-media-library "/test/media-library/"))
+    (should (equal (ebib-extras--extension-directories "mp3")
+                   "/test/media-library/"))
+    (should (equal (ebib-extras--extension-directories "webm")
+                   "/test/media-library/"))))
+
+(ert-deftest ebib-extras-test-extension-directories-unknown-extension ()
+  "Signal a user-error for an unknown file extension."
+  (should-error (ebib-extras--extension-directories "xyz")
+                :type 'user-error))
+
+;;;; ebib-extras-check-valid-key
+
+(ert-deftest ebib-extras-test-check-valid-key-valid ()
+  "Do not signal an error for a valid BibTeX key."
+  (should-not (ebib-extras-check-valid-key "smith2023cognition")))
+
+(ert-deftest ebib-extras-test-check-valid-key-invalid ()
+  "Signal user-error for an invalid BibTeX key."
+  (should-error (ebib-extras-check-valid-key "bad")
+                :type 'user-error))
+
 (provide 'ebib-extras-test)
 ;;; ebib-extras-test.el ends here

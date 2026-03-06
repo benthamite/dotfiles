@@ -1,2 +1,2 @@
 #!/bin/bash
-osascript $HOME/Library/Scripts/inputCharacter.scpt "$1"
+osascript "$HOME/Library/Scripts/inputCharacter.scpt" "$1"

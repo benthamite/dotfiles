@@ -17,9 +17,9 @@ TMP=$(mktemp /tmp/XXXXXX-small.pdf)
 
 nice -n 20 timeout 10m ocrmypdf --skip-text --optimize 3 --jbig2-lossy "$PDF" "$TMP" &> /dev/null || true
 
-ORIGINAL=$(wc --bytes < "$PDF")
-SMALL=$(   wc --bytes < "$TMP")
-RATIO=$(echo "$ORIGINAL / $SMALL" | bc --mathlib)
+ORIGINAL=$(wc -c < "$PDF")
+SMALL=$(   wc -c < "$TMP")
+RATIO=$(echo "$ORIGINAL / $SMALL" | bc -l)
 echo "$PDF : from $ORIGINAL to $SMALL ($RATIO)"
 
 if (( SMALL < 4096 )); then
@@ -27,7 +27,7 @@ if (( SMALL < 4096 )); then
     exit 1
 fi
 
-if (( $(echo "$RATIO > 1.5" | bc --mathlib) ));
+if (( $(echo "$RATIO > 1.5" | bc -l) ));
 then
     # overwrite original with compressed
     exiftool -TagsFromFile "$PDF" "$TMP" || true # copy over all the metadata that ocrmypdf/Ghostscript erases by default: <https://ocrmypdf.readthedocs.io/en/latest/introduction.html#limitations>
@@ -36,8 +36,12 @@ else
     # Perhaps we didn't ocrmypdf because it didn't save space, but we may want to for OCR anyway.
     # Here, we *force* OCR on PDFs which have no or suspiciously little text (<50 words per page on average):
     PAGES=$(exiftool -quiet -printFormat '$PageCount' -PageCount "$PDF")
-    WORDS=$(pdftotext "$PDF" - | wc --words)
-    TOOSMALL=$((WORDS / PAGES < 50))
+    if [[ -z "$PAGES" || "$PAGES" -eq 0 ]]; then
+        TOOSMALL=0
+    else
+        WORDS=$(pdftotext "$PDF" - | wc -w)
+        TOOSMALL=$((WORDS / PAGES < 50))
+    fi
     if [[ $TOOSMALL == 1 ]]; then
         echo "Forcing OCR: $1 : $WORDS • $PAGES • $((WORDS / PAGES)) • $TOOSMALL"
         echo "----"

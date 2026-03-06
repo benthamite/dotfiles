@@ -21,7 +21,7 @@
 
 if [ $# -eq 0 ]; then
     echo "Usage: $0 [version of gnupg to install - e.g. '1.20.4_1']"
-    kill -INT $$
+    exit 1
 fi
 
 # show what is installed currently via brew
@@ -45,11 +45,11 @@ gpg --version || true
 # the cluster version (1.20)
 brew search gnupg
 
-pushd $(brew --repo homebrew/core)
+pushd "$(brew --repo homebrew/core)"
 
 echo "Target gnupg version number: $1"
 # Assuming the only regex-special characters in the version number will be ".", just escape those using sed
-VERSION_ARG_AS_REGEX=$(echo $1 | sed "s/\./\\\./g")
+VERSION_ARG_AS_REGEX=$(echo "$1" | sed "s/\./\\\./g")
 echo "VERSION_ARG_AS_REGEX: $VERSION_ARG_AS_REGEX"
 
 # Extract the commit id matching the specified version from the git commit logs.
@@ -65,7 +65,7 @@ brew unpin gnupg
 # Find a combination of unlink, link, etc. that will avoid re-downloading.
 brew uninstall --ignore-dependencies gnupg
 
-git checkout -b gnupg-$1 $COMMIT_ID_FOR_VERSION
+git checkout -b "gnupg-$1" "$COMMIT_ID_FOR_VERSION"
 
 export HOMEBREW_NO_AUTO_UPDATE=1
 
@@ -87,7 +87,7 @@ gpg --version || true
 
 # Restore brew's git local clone status to master branch so it functions normally for other stuff again
 git checkout master
-git branch -d gnupg-$1
+git branch -d "gnupg-$1"
 
 # Clean up cached files related to installing the specific version of gnupg
 brew cleanup gnupg

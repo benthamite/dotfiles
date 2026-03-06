@@ -1,2 +1,2 @@
 #! /opt/homebrew/bin/zsh
-emacsclient -a '' $*
+emacsclient -a '' "$@"

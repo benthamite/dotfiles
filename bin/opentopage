@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if ! [[ "$2" =~ ^[0-9]+$ ]]; then
+    printf "Error: Page number must be a positive integer\n" >&2
+    exit 1
+fi
+
 if [[ -z $2 ]]; then
     [[ -z $1 ]] && printf "\n Missing Filename..."
     printf "\n Missing Page Number...\n\n"

@@ -53,7 +53,7 @@ If color is HSL, return it as a list of three numbers, unless STRING is non-nil.
    ((string-match color-extras-hex-pattern color)
     (match-string-no-properties 1 color))
    ((string-match color-extras-hsl-scaled-pattern color)
-    (let ((list (color-extras-hsl-split)))
+    (let ((list (color-extras-hsl-split color)))
       (color-extras-format-hsl list string)))
    (t (error "Invalid color: %s" color))))
 
@@ -121,11 +121,14 @@ the current file."
 
 ;;;;;; HSL internal conversion
 
-(defun color-extras-hsl-split ()
-  "Split HSL values from the current match into a list of numbers."
-  (let ((hue (string-to-number (match-string-no-properties 1)))
-        (saturation (string-to-number (match-string-no-properties 2)))
-        (luminance (string-to-number (match-string-no-properties 3))))
+(defun color-extras-hsl-split (&optional string)
+  "Split HSL values from the current match into a list of numbers.
+If STRING is non-nil, read match data from STRING (for use after
+`string-match').  Otherwise, read from the current buffer (for use
+after `thing-at-point-looking-at' or `re-search-forward')."
+  (let ((hue (string-to-number (match-string-no-properties 1 string)))
+        (saturation (string-to-number (match-string-no-properties 2 string)))
+        (luminance (string-to-number (match-string-no-properties 3 string))))
     (list hue saturation luminance)))
 
 (defun color-extras-hsl-to-string (hsl)

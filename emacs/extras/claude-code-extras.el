@@ -338,6 +338,20 @@ Given \"*claude:~/path/to/project/:instance*\", return
         (format "%s:%s" project instance)
       project)))
 
+(defun claude-code-extras-display-name (&optional buffer)
+  "Return the display name for BUFFER's modeline.
+Use the project name alone when it is unique among active Claude
+sessions, or \"project:instance\" when multiple sessions share
+the same project."
+  (let* ((buf (or buffer (current-buffer)))
+         (name (claude-code-extras--buffer-session-name buf))
+         (others (cl-remove buf (claude-code--find-all-claude-buffers)))
+         (sibling-names (mapcar #'claude-code-extras--buffer-session-name
+                                others)))
+    (if (member name sibling-names)
+        (claude-code-extras--qualified-session-name (buffer-name buf))
+      name)))
+
 (defun claude-code-extras--buffer-preview-state (choices)
   "Return a preview state function for CHOICES.
 CHOICES is an alist of (display-name . buffer) pairs."

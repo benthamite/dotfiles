@@ -46,7 +46,7 @@
   "Load `modus' theme that matches system appearance."
   (interactive)
   (pcase (plist-get (mac-application-state) :appearance)
-    ("NSAppearanceNameAqua" (modus-themes-load-theme 'modus-operand))
+    ("NSAppearanceNameAqua" (modus-themes-load-theme 'modus-operandi))
     ("NSAppearanceNameDarkAqua" (modus-themes-load-theme 'modus-vivendi))))
 
 (defun modus-themes-extras-load-theme-emacs-plus (appearance)

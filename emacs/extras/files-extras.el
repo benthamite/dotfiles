@@ -84,10 +84,9 @@ the `trash' utility. Deleting files in this way supports the \"Put Back\"
 functionality in macOS."
   (unless (executable-find "trash")
     (user-error "`trash' not found; please install it (e.g. `brew install trash')"))
-  (shell-command (concat "trash -v \"" filename "\""
-			 "| sed -e 's/^/Trashed: /'")
-		 nil ;; Name of output buffer
-		 "*Trash Error Buffer*"))
+  (shell-command (format "trash -v %s | sed -e 's/^/Trashed: /'"
+			 (shell-quote-argument filename))
+		 nil "*Trash Error Buffer*"))
 
 (advice-add 'system-move-file-to-trash :override #'files-extras-system-move-file-to-trash)
 
@@ -520,7 +519,9 @@ OLD-FUN and ARGS are arguments passed to the original function."
   "Convert image at point to PDF."
   (interactive)
   (let ((file (buffer-file-name)))
-    (shell-command (format "convert '%s' '%s.pdf'" file (file-name-sans-extension file)))
+    (shell-command (format "convert %s %s"
+			   (shell-quote-argument file)
+			   (shell-quote-argument (concat (file-name-sans-extension file) ".pdf"))))
     (message "Converted image to PDF.")))
 
 (defvar elpaca-repos-directory)

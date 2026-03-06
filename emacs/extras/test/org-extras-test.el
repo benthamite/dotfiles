@@ -104,5 +104,147 @@
     (org-extras-remove-link)
     (should (equal (buffer-string) "no link here"))))
 
+;;;; link-get-thing-at-point / link-get-url-at-point / link-get-description-at-point
+
+(ert-deftest org-extras-test-link-get-url-at-point-extracts-url ()
+  "Extract URL from an org link at point via kill ring."
+  (with-temp-buffer
+    (org-mode)
+    (insert "[[https://example.com][description]]")
+    (goto-char 5) ; inside the link
+    (org-extras-link-get-url-at-point)
+    (should (equal (current-kill 0) "https://example.com"))))
+
+(ert-deftest org-extras-test-link-get-url-at-point-adds-to-kill-ring ()
+  "Verify the extracted URL is added to the kill ring."
+  (with-temp-buffer
+    (org-mode)
+    (insert "[[https://example.com][click here]]")
+    (goto-char 5)
+    (org-extras-link-get-url-at-point)
+    (should (equal (current-kill 0) "https://example.com"))))
+
+(ert-deftest org-extras-test-link-get-description-at-point-extracts-description ()
+  "Extract description from an org link at point via kill ring."
+  (with-temp-buffer
+    (org-mode)
+    (insert "[[https://example.com][My Description]]")
+    (goto-char 5)
+    (org-extras-link-get-description-at-point)
+    (should (equal (current-kill 0) "My Description"))))
+
+(ert-deftest org-extras-test-link-get-url-at-point-no-link ()
+  "Return nil when point is not on an org link."
+  (with-temp-buffer
+    (org-mode)
+    (insert "just plain text")
+    (goto-char 5)
+    (should-not (org-extras-link-get-url-at-point))))
+
+(ert-deftest org-extras-test-link-get-url-at-point-no-description ()
+  "Extract URL from a link without a description via kill ring."
+  (with-temp-buffer
+    (org-mode)
+    (insert "[[https://example.com]]")
+    (goto-char 5)
+    (org-extras-link-get-url-at-point)
+    (should (equal (current-kill 0) "https://example.com"))))
+
+(ert-deftest org-extras-test-link-get-link-at-point-extracts-full-link ()
+  "Extract the full link syntax from an org link at point via kill ring."
+  (with-temp-buffer
+    (org-mode)
+    (insert "[[https://example.com][desc]]")
+    (goto-char 5)
+    (org-extras-link-get-link-at-point)
+    (let ((result (current-kill 0)))
+      (should (string-match-p "https://example.com" result))
+      (should (string-match-p "desc" result)))))
+
+;;;; get-heading-contents
+
+(ert-deftest org-extras-test-get-heading-contents-returns-body ()
+  "Extract body text from an org heading, excluding sub-headings."
+  (with-temp-buffer
+    (org-mode)
+    (insert "* Heading\nBody text line one\nBody text line two\n** Sub-heading\nSub content\n")
+    (goto-char (point-min))
+    (let ((contents (org-extras-get-heading-contents)))
+      (should (string-match-p "Body text line one" contents))
+      (should-not (string-match-p "Sub content" contents)))))
+
+(ert-deftest org-extras-test-get-heading-contents-empty-heading ()
+  "Return empty string for a heading with no body text."
+  (with-temp-buffer
+    (org-mode)
+    (insert "* Heading\n** Sub-heading\n")
+    (goto-char (point-min))
+    (let ((contents (org-extras-get-heading-contents)))
+      (should (stringp contents))
+      (should (string= contents "")))))
+
+(ert-deftest org-extras-test-get-heading-contents-from-inside-body ()
+  "Extract body text when point is inside the heading body, not on the heading."
+  (with-temp-buffer
+    (org-mode)
+    (insert "* Heading\nBody text here\n** Sub-heading\n")
+    (goto-char (point-min))
+    (forward-line 1) ; point is on "Body text here"
+    (let ((contents (org-extras-get-heading-contents)))
+      (should (string-match-p "Body text here" contents)))))
+
+(ert-deftest org-extras-test-get-heading-contents-before-first-heading ()
+  "Return a message when point is before the first heading."
+  (with-temp-buffer
+    (org-mode)
+    (insert "Some preamble\n* Heading\nBody\n")
+    (goto-char (point-min))
+    (should (equal (org-extras-get-heading-contents)
+                   "Not in or on an org heading"))))
+
+;;;; copy-heading-name
+
+(ert-deftest org-extras-test-copy-heading-name-copies-to-kill-ring ()
+  "Copy the current heading name to the kill ring."
+  (with-temp-buffer
+    (org-mode)
+    (insert "* My Important Heading\nSome body\n")
+    (goto-char (point-min))
+    (org-extras-copy-heading-name)
+    (should (equal (current-kill 0) "My Important Heading"))))
+
+(ert-deftest org-extras-test-copy-heading-name-with-todo ()
+  "Copy heading name excluding TODO keyword."
+  (with-temp-buffer
+    (org-mode)
+    (insert "* TODO My Task\nSome body\n")
+    (goto-char (point-min))
+    (org-extras-copy-heading-name)
+    (should (equal (current-kill 0) "My Task"))))
+
+;;;; suppress-track-changes-assertion
+
+(ert-deftest org-extras-test-suppress-track-changes-assertion-normal-function ()
+  "Allow normal function calls through without interference."
+  (let ((result (org-extras--suppress-track-changes-assertion
+                 (lambda (x y) (+ x y))
+                 3 4)))
+    (should (equal result 7))))
+
+(ert-deftest org-extras-test-suppress-track-changes-assertion-suppresses-assertion ()
+  "Suppress cl-assertion-failed errors and return nil."
+  (let ((result (org-extras--suppress-track-changes-assertion
+                 (lambda ()
+                   (signal 'cl-assertion-failed '(nil)))
+                 )))
+    (should-not result)))
+
+(ert-deftest org-extras-test-suppress-track-changes-assertion-propagates-other-errors ()
+  "Do not suppress errors other than cl-assertion-failed."
+  (should-error
+   (org-extras--suppress-track-changes-assertion
+    (lambda () (error "Some other error")))
+   :type 'error))
+
 (provide 'org-extras-test)
 ;;; org-extras-test.el ends here

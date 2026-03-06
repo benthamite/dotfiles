@@ -260,5 +260,153 @@ which `file-name-as-directory' converts to \"./\"."
     (setq buffer-file-name "/tmp/test.el")
     (should-not (member "/tmp/test.el" (files-extras-open-buffer-files)))))
 
+;;;; Newest file
+
+(ert-deftest files-extras-test-newest-file-returns-most-recent ()
+  "Return the newest file in a directory with multiple files."
+  (let ((tmp-dir (make-temp-file "test-newest" t)))
+    (unwind-protect
+        (let ((file1 (file-name-concat tmp-dir "old.txt"))
+              (file2 (file-name-concat tmp-dir "new.txt")))
+          (with-temp-file file1 (insert "old"))
+          ;; Ensure file2 has a later modification time
+          (sleep-for 1)
+          (with-temp-file file2 (insert "new"))
+          (should (equal (files-extras-newest-file tmp-dir) file2)))
+      (delete-directory tmp-dir t))))
+
+(ert-deftest files-extras-test-newest-file-excludes-ds-store ()
+  "Exclude .DS_Store files even if they are the newest."
+  (let ((tmp-dir (make-temp-file "test-newest" t)))
+    (unwind-protect
+        (let ((file1 (file-name-concat tmp-dir "real.txt"))
+              (ds-store (file-name-concat tmp-dir ".DS_Store")))
+          (with-temp-file file1 (insert "content"))
+          (sleep-for 1)
+          (with-temp-file ds-store (insert ""))
+          (should (equal (files-extras-newest-file tmp-dir) file1)))
+      (delete-directory tmp-dir t))))
+
+(ert-deftest files-extras-test-newest-file-excludes-localized ()
+  "Exclude .localized files even if they are the newest."
+  (let ((tmp-dir (make-temp-file "test-newest" t)))
+    (unwind-protect
+        (let ((file1 (file-name-concat tmp-dir "real.txt"))
+              (localized (file-name-concat tmp-dir ".localized")))
+          (with-temp-file file1 (insert "content"))
+          (sleep-for 1)
+          (with-temp-file localized (insert ""))
+          (should (equal (files-extras-newest-file tmp-dir) file1)))
+      (delete-directory tmp-dir t))))
+
+(ert-deftest files-extras-test-newest-file-excludes-directories ()
+  "Exclude subdirectories from the result."
+  (let ((tmp-dir (make-temp-file "test-newest" t)))
+    (unwind-protect
+        (let ((file1 (file-name-concat tmp-dir "file.txt"))
+              (subdir (file-name-concat tmp-dir "subdir")))
+          (with-temp-file file1 (insert "content"))
+          (make-directory subdir)
+          (should (equal (files-extras-newest-file tmp-dir) file1)))
+      (delete-directory tmp-dir t))))
+
+;;;; Copy current path
+
+(ert-deftest files-extras-test-copy-current-path-file-buffer ()
+  "Copy buffer-file-name to kill ring for a file-visiting buffer."
+  (with-temp-buffer
+    (setq buffer-file-name "/tmp/test-copy-path.el")
+    (files-extras-copy-current-path)
+    (should (equal (current-kill 0) "/tmp/test-copy-path.el"))))
+
+(ert-deftest files-extras-test-copy-current-path-non-file-buffer ()
+  "Copy default-directory to kill ring for a non-file buffer."
+  (with-temp-buffer
+    (let ((default-directory "/tmp/some-dir/"))
+      (files-extras-copy-current-path)
+      (should (equal (current-kill 0) "/tmp/some-dir/")))))
+
+;;;; Kill all file-visiting buffers
+
+(ert-deftest files-extras-test-kill-all-file-visiting-buffers-kills-file-buffers ()
+  "Kill buffers visiting files."
+  (let* ((tmp1 (make-temp-file "test-kill1"))
+         (tmp2 (make-temp-file "test-kill2"))
+         (buf1 (find-file-noselect tmp1))
+         (buf2 (find-file-noselect tmp2)))
+    (unwind-protect
+        (progn
+          (should (buffer-live-p buf1))
+          (should (buffer-live-p buf2))
+          (files-extras-kill-all-file-visiting-buffers)
+          (should-not (buffer-live-p buf1))
+          (should-not (buffer-live-p buf2)))
+      ;; Clean up in case test fails
+      (when (buffer-live-p buf1) (kill-buffer buf1))
+      (when (buffer-live-p buf2) (kill-buffer buf2))
+      (delete-file tmp1)
+      (delete-file tmp2))))
+
+(ert-deftest files-extras-test-kill-all-file-visiting-buffers-respects-exclusions ()
+  "Do not kill buffers visiting excluded files."
+  (let* ((tmp1 (make-temp-file "test-kill1"))
+         (tmp2 (make-temp-file "test-kill2"))
+         (buf1 (find-file-noselect tmp1))
+         (buf2 (find-file-noselect tmp2)))
+    (unwind-protect
+        (progn
+          (files-extras-kill-all-file-visiting-buffers
+           (list (buffer-file-name buf1)))
+          (should (buffer-live-p buf1))
+          (should-not (buffer-live-p buf2)))
+      (when (buffer-live-p buf1) (kill-buffer buf1))
+      (when (buffer-live-p buf2) (kill-buffer buf2))
+      (delete-file tmp1)
+      (delete-file tmp2))))
+
+(ert-deftest files-extras-test-kill-all-file-visiting-buffers-ignores-non-file-buffers ()
+  "Do not kill buffers that are not visiting files."
+  (let ((tmp-buf (generate-new-buffer "test-non-file")))
+    (unwind-protect
+        (progn
+          (files-extras-kill-all-file-visiting-buffers)
+          (should (buffer-live-p tmp-buf)))
+      (when (buffer-live-p tmp-buf) (kill-buffer tmp-buf)))))
+
+;;;; New empty buffer
+
+(ert-deftest files-extras-test-new-empty-buffer-creates-buffer ()
+  "Create a new buffer named untitled."
+  (let ((files-extras-new-empty-buffer-major-mode nil)
+        (buf nil))
+    (unwind-protect
+        (progn
+          (setq buf (files-extras-new-empty-buffer))
+          (should (buffer-live-p buf))
+          (should (string-match-p "untitled" (buffer-name buf))))
+      (when (and buf (buffer-live-p buf)) (kill-buffer buf)))))
+
+(ert-deftest files-extras-test-new-empty-buffer-sets-major-mode ()
+  "Set the configured major mode on the new buffer."
+  (let ((files-extras-new-empty-buffer-major-mode 'text-mode)
+        (buf nil))
+    (unwind-protect
+        (progn
+          (setq buf (files-extras-new-empty-buffer))
+          (with-current-buffer buf
+            (should (eq major-mode 'text-mode))))
+      (when (and buf (buffer-live-p buf)) (kill-buffer buf)))))
+
+(ert-deftest files-extras-test-new-empty-buffer-offers-save ()
+  "Set buffer-offer-save to t on the new buffer."
+  (let ((files-extras-new-empty-buffer-major-mode nil)
+        (buf nil))
+    (unwind-protect
+        (progn
+          (setq buf (files-extras-new-empty-buffer))
+          (with-current-buffer buf
+            (should (eq buffer-offer-save t))))
+      (when (and buf (buffer-live-p buf)) (kill-buffer buf)))))
+
 (provide 'files-extras-test)
 ;;; files-extras-test.el ends here

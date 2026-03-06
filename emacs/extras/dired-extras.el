@@ -108,7 +108,7 @@ arguments passed to OLD-FUN."
 This command let's you delete large numbers of files quickly, at the expense of
 losing the `put back' option."
   (interactive)
-  (cl-letf (((symbol-function 'system-move-file-to-trash) nil))
+  (let ((delete-by-moving-to-trash nil))
     (dired-do-delete arg)))
 
 ;; emacs.stackexchange.com/a/60663/32089

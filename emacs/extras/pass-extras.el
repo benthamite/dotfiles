@@ -61,14 +61,14 @@ user input."
   "Store a key in FILE as an ENTRY in `pass'."
   (interactive (list (read-file-name "Key file: ")
 		     (completing-read "Entry: " (password-store-list))))
-  (shell-command (format "cat %s | pass insert --multiline %s" file entry)))
+  (shell-command (format "cat %s | pass insert --multiline %s" (shell-quote-argument file) (shell-quote-argument entry))))
 
 ;;;###autoload
 (defun pass-extras-export-key (entry file)
   "Export `pass' ENTRY to FILE."
   (interactive (list (completing-read "Entry: " (password-store-list) nil 'match)
 		     (read-file-name "Export to: ")))
-  (shell-command (format "pass %s > %s" entry file))
+  (shell-command (format "pass %s > %s" (shell-quote-argument entry) (shell-quote-argument file)))
   (message "Key exported to `%s'" file))
 
 (autoload 'password-store-list "password-store")
@@ -78,7 +78,7 @@ user input."
   (interactive)
   (let* ((default-directory (or repo default-directory))
 	 (entry (or entry (completing-read "Key: " (password-store-list) nil 'match)))
-	 (output (call-process-shell-command (format "git-crypt unlock <(pass %s)" entry))))
+	 (output (call-process-shell-command (format "git-crypt unlock <(pass %s)" (shell-quote-argument entry)))))
     (if (zerop output)
 	(message "Unlocked repository `%s'" default-directory)
       (message "Error unlocking repository `%s'. Perhaps the repo is dirty?" default-directory))))

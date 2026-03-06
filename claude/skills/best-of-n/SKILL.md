@@ -47,7 +47,7 @@ Mapping user selection to CLI:
 First, fetch available presets and models (defined in `models.json`):
 
 ```bash
-cd /Users/ph/.claude/skills/best-of-n && yarn query presets 2>/dev/null
+cd ~/.claude/skills/best-of-n && yarn query presets 2>/dev/null
 ```
 
 Present the non-brainstorm presets as a numbered menu, plus a "Pick models" option. Add "(Recommended)" to the quick preset. Wait for user input.
@@ -57,7 +57,7 @@ Deep research and browser models are automatically excluded—they don't benefit
 If the user selects **Pick models**, fetch the eligible model list:
 
 ```bash
-cd /Users/ph/.claude/skills/best-of-n && yarn query models 2>/dev/null
+cd ~/.claude/skills/best-of-n && yarn query models 2>/dev/null
 ```
 
 Show the output and ask the user to enter model IDs (comma-separated).
@@ -79,7 +79,7 @@ Generate a slug from the prompt (lowercase, non-alphanumeric to hyphens, max 50 
 For brainstorming prompts, add `--brainstorm` to merge all unique ideas across samples instead of picking one best response per model.
 
 ```bash
-cd /Users/ph/.claude/skills/best-of-n && yarn query \
+cd ~/.claude/skills/best-of-n && yarn query \
   --preset <preset-name> \
   --num-samples <n> \
   --temperature <temp> \
@@ -91,7 +91,7 @@ cd /Users/ph/.claude/skills/best-of-n && yarn query \
 Or with explicit models:
 
 ```bash
-cd /Users/ph/.claude/skills/best-of-n && yarn query \
+cd ~/.claude/skills/best-of-n && yarn query \
   --models "<model-id-1>,<model-id-2>,..." \
   --num-samples <n> \
   --temperature <temp> \
@@ -133,7 +133,7 @@ Prompt → [Model₁ × N] → Per-model comparison → Best₁ ─┐
 ## Direct script invocation
 
 ```bash
-cd /Users/ph/.claude/skills/best-of-n
+cd ~/.claude/skills/best-of-n
 
 # Basic usage
 yarn query "What are the pros and cons of TypeScript?"

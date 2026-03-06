@@ -498,8 +498,12 @@ included."
 If PRIVATE is non-nil, make it a private repository."
   (shell-command-to-string
    (format
-    "%s repo create %s/%s %s --description \"%s\""
-    vc-extras-gh-executable account name (if private "--private" "--public") description)))
+    "%s repo create %s/%s %s --description %s"
+    vc-extras-gh-executable
+    (shell-quote-argument account)
+    (shell-quote-argument name)
+    (if private "--private" "--public")
+    (shell-quote-argument description))))
 
 (defun vc-extras-ensure-gh-exists ()
   "Check that `gh' exists, else signal an error."

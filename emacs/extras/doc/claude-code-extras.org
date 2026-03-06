@@ -19,7 +19,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 =claude-code-extras.el= extends =claude-code=, the Emacs package that runs Claude Code sessions inside an Eat terminal buffer. While =claude-code= provides the core session management and terminal integration, this extras package layers on several quality-of-life features that make extended Claude sessions more manageable.
 
-The package provides six main areas of functionality:
+The package provides seven main areas of functionality:
 
 - *Session switching.* A Consult-powered interface for starting new Claude sessions or switching between existing ones, with live buffer previews ([[#h:session-switching][Session switching]]).
 - *Conversation logging.* Automatic periodic saving of terminal buffer contents to timestamped log files, with detection of conversation clears ([[#h:logging][Logging]]).
@@ -27,6 +27,7 @@ The package provides six main areas of functionality:
 - *Alerts.* Configurable OS notifications (visual, audible, or both) when Claude finishes responding, triggered by a hook-based stop event ([[#h:alerts][Alerts]]).
 - *Buffer lifecycle.* Kill protection for active sessions, automatic buffer cleanup on process exit, and a SIGWINCH workaround for terminal rendering glitches ([[#h:buffer-lifecycle][Buffer lifecycle]]).
 - *Copilot integration.* An adapter that enables Copilot ghost-text prose completions while typing prompts in Claude Code buffers, routing accepted text through the terminal emulator ([[#h:copilot-integration][Copilot integration]]).
+- *Batch TODO processing.* Sequential execution of org TODO entries via =claude -p= in non-interactive mode, with logged results and a summary buffer ([[#h:batch-todo-processing][Batch TODO processing]]).
 
 The package depends on =claude-code=, =consult= (for the session switcher), and =paths= (for the log directory default).
 
@@ -86,6 +87,23 @@ The user option ~claude-code-extras-alert-sound~ specifies the path to the sound
 #+vindex: claude-code-extras-copilot-enabled
 The user option ~claude-code-extras-copilot-enabled~ controls whether Copilot ghost-text completions are enabled in Claude Code buffers. The default is ~nil~ (disabled). When set to non-~nil~, ~copilot-mode~ is automatically activated in new Claude Code buffers, and an adapter routes accepted completions through the Eat terminal emulator instead of inserting them directly into the buffer. Completions are suppressed while Claude is responding (i.e. when the buffer is read-only). The =copilot= package must be installed for this feature to work; if it is not available, the setup is silently skipped.
 
+** Batch TODO processing options
+:PROPERTIES:
+:CUSTOM_ID: h:batch-todo-options
+:END:
+
+#+vindex: claude-code-extras-batch-allowed-tools
+#+vindex: claude-code-extras-batch-max-turns
+#+vindex: claude-code-extras-batch-system-prompt
+#+vindex: claude-code-extras-batch-model
+The user option ~claude-code-extras-batch-allowed-tools~ specifies which tools are auto-allowed via =--allowedTools= when running batch TODO processing. The default includes =Bash=, =Read=, =Write=, =Edit=, =Glob=, =Grep=, =WebFetch=, and =WebSearch=. Adjust this list to restrict or expand what Claude can do autonomously during batch runs.
+
+The user option ~claude-code-extras-batch-max-turns~ controls the maximum number of agentic turns per TODO entry. The default is 10. Increase it for complex tasks that require many tool calls; decrease it to bound execution time.
+
+The user option ~claude-code-extras-batch-system-prompt~ specifies an optional system prompt appended via =--append-system-prompt= to each =claude -p= invocation. The default is ~nil~ (no extra system prompt).
+
+The user option ~claude-code-extras-batch-model~ specifies an optional model override via =--model=. The default is ~nil~ (use Claude's default model).
+
 ** Status polling options
 :PROPERTIES:
 :CUSTOM_ID: h:status-polling-options
@@ -116,6 +134,24 @@ Sessions are displayed by project name (extracted from the buffer name). When mu
 
 #+findex: claude-code-extras-toggle-alert
 The command ~claude-code-extras-toggle-alert~ toggles the buffer-local value of ~claude-code-extras-alert-on-ready~ and reports the new state. This is useful during long-running operations: enable alerts before submitting a complex prompt, then disable them when you return to interactive use. The alert style and sound are configured via the user options described in [[#h:alert-options][Alert options]].
+
+** Batch TODO processing
+:PROPERTIES:
+:CUSTOM_ID: h:batch-todo-processing
+:END:
+
+#+findex: claude-code-extras-batch-todos
+The command ~claude-code-extras-batch-todos~ processes org TODO entries sequentially via =claude -p= in non-interactive mode. It must be called from an org-mode buffer. The command prompts for:
+
+1. *Scope*: =buffer= (all TODOs in the file), =subtree= (TODOs under the current heading), or =region= (TODOs in the active region).
+2. *Working directory*: selected via ~project-prompt-project-dir~ from the known projects list.
+3. *Confirmation*: shows the count and target directory before proceeding.
+
+Each TODO's heading becomes the prompt (with body text appended if present). Entries are processed sequentially — each =claude -p= invocation must finish before the next starts. Errors do not abort the batch; each failure is recorded and processing continues.
+
+Results are saved as JSON log files in a timestamped subdirectory under ~claude-code-extras-log-directory~ ([[#h:logging-options][Logging options]]). When all entries have been processed, a =*Claude Batch Results*= summary buffer is displayed in org-mode with per-entry status, cost, duration, log file links, and Claude's response text.
+
+The command respects ~claude-code-extras-batch-allowed-tools~, ~claude-code-extras-batch-max-turns~, ~claude-code-extras-batch-system-prompt~, and ~claude-code-extras-batch-model~ ([[#h:batch-todo-options][Batch TODO processing options]]).
 
 * Functions
 :PROPERTIES:
@@ -232,6 +268,29 @@ A predicate is added to ~copilot-disable-predicates~ that suppresses completions
 4. *TAB acceptance.*  Eat's semi-char-mode keymap binds TAB to ~eat-self-input~, which takes priority over copilot's keymap overlay.  A buffer-local minor mode (~claude-code-extras--copilot-keys-mode~) overrides TAB so that it accepts the visible completion when one exists, and falls through to ~eat-self-input~ otherwise.
 
 The function ~claude-code-extras-teardown-copilot~ clears the buffer-local Copilot integration flag and cancels any pending change timer when the buffer is killed. It is added to ~kill-buffer-hook~ automatically.
+
+** Batch TODO internals
+:PROPERTIES:
+:CUSTOM_ID: h:batch-todo-internals
+:END:
+
+#+findex: claude-code-extras--batch-collect-todos
+#+findex: claude-code-extras--batch-format-prompt
+#+findex: claude-code-extras--batch-start
+#+findex: claude-code-extras--batch-run-next
+#+findex: claude-code-extras--batch-build-args
+#+findex: claude-code-extras--batch-finish
+The function ~claude-code-extras--batch-collect-todos~ uses ~org-map-entries~ to find entries with a TODO state in the given scope. For each entry, it extracts the heading text (without TODO keyword, priority, tags, or comment) and the body text (excluding property drawers and child subtrees).
+
+The function ~claude-code-extras--batch-format-prompt~ combines an entry's title and body into a single prompt string. If the body is empty, the title alone is used.
+
+The function ~claude-code-extras--batch-start~ initializes the processing state, creates a timestamped log subdirectory, and kicks off the async chain.
+
+The function ~claude-code-extras--batch-run-next~ pops the next entry from the queue and spawns a =claude -p= process via ~make-process~. The prompt is passed as a positional argument (no shell escaping needed). Any =CLAUDE_CODE= environment variables are stripped from ~process-environment~ to prevent nested-session errors. When the process finishes, its sentinel parses the JSON output, saves it to a log file, records the result, and calls ~claude-code-extras--batch-run-next~ again.
+
+The function ~claude-code-extras--batch-build-args~ assembles the command-line arguments for =claude -p=, incorporating the configured allowed tools, max turns, system prompt, and model override.
+
+The function ~claude-code-extras--batch-finish~ constructs and displays the =*Claude Batch Results*= summary buffer with aggregate statistics and per-entry details.
 
 ** Auto-setup
 :PROPERTIES:

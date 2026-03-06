@@ -15,7 +15,7 @@ if [[ -z "$PROFILE" ]]; then
     echo "Warning: could not determine elpaca profile, trying without elpaca deps" >&2
     ELPACA=""
 else
-    ELPACA="/Users/pablostafforini/.config/emacs-profiles/${PROFILE}/elpaca"
+    ELPACA="$HOME/.config/emacs-profiles/${PROFILE}/elpaca"
 fi
 
 # Collect test files

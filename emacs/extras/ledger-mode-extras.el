@@ -366,8 +366,9 @@ amount are ignored."
 (defun ledger-mode-extras--parse-wise-positive-amount (string)
   "Parse STRING like \"+ 200.79 USD\" and return the amount as a number.
 Return nil if STRING represents a negative amount."
-  (when (string-match "\\`\\+\\s-*\\([0-9]+\\(?:\\.[0-9]+\\)?\\)\\s-+USD\\'" (string-trim string))
-    (string-to-number (match-string 1 (string-trim string)))))
+  (let ((trimmed (string-trim string)))
+    (when (string-match "\\`\\+\\s-*\\([0-9]+\\(?:\\.[0-9]+\\)?\\)\\s-+USD\\'" trimmed)
+      (string-to-number (match-string 1 trimmed)))))
 
 (defun ledger-mode-extras--wise-date-line-p (string)
   "Return non-nil if STRING seems like a Wise date line with a year."

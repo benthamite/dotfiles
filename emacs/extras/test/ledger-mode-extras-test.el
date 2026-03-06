@@ -73,14 +73,9 @@
   (should (null (ledger-mode-extras--parse-wise-positive-amount "- 200.79 USD"))))
 
 (ert-deftest ledger-mode-extras-test-parse-wise-positive-amount-whitespace ()
-  "Parse Wise positive amount handles leading/trailing whitespace.
-Note: the function calls `string-trim' twice independently, so
-`match-string' receives a different string object than `string-match'.
-This causes an error when whitespace is present.  In practice the
-caller's `split-string' already trims whitespace, so this path is not
-reached.  This test documents the current behavior."
-  (should-error (ledger-mode-extras--parse-wise-positive-amount "  + 50.00 USD  ")
-                :type 'wrong-type-argument))
+  "Parse Wise positive amount handles leading/trailing whitespace."
+  (should (= (ledger-mode-extras--parse-wise-positive-amount "  + 50.00 USD  ")
+             50.0)))
 
 (ert-deftest ledger-mode-extras-test-parse-wise-positive-amount-no-space ()
   "Parse Wise positive amount handles no space after +."

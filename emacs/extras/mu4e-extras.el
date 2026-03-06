@@ -424,9 +424,10 @@ away (in which case it can take its time). Ideally we would do this
 right before the index but currently there is no hook for that.
 `mu4e-index-cleanup' is always t to avoid stale index errors when
 mbsync removes files between index runs."
-  (let ((idle (time-convert (current-idle-time) 'integer))
-        (old-lazy mu4e-index-lazy-check))
-    (if (and (current-idle-time)
+  (let* ((raw-idle (current-idle-time))
+	 (idle (if raw-idle (time-convert raw-idle 'integer) 0))
+         (old-lazy mu4e-index-lazy-check))
+    (if (and raw-idle
              (> idle mu4e-update-interval))
 	(setopt mu4e-index-lazy-check nil)
       (setopt mu4e-index-lazy-check t))

@@ -101,7 +101,7 @@ With argument ARG, do this that many times."
 (defun simple-extras-copy-word (&optional arg)
   "Like `kill-word', but copies instead of killing.
 With argument ARG, do this that many times."
-  (interactive "P")
+  (interactive "p")
   (simple-extras-copy-instead-of-kill (kill-word arg)))
 
 ;; The macro wasn't working for `backward-kill-word', so using a custom function.
@@ -1004,11 +1004,11 @@ take a single argument, the name of the function being called."
 (defun simple-extras-set-python-virtual-environment ()
   "Set up a Python virtual environment in the current git repository."
   (interactive)
-  (let ((default-directory (or (locate-dominating-file default-directory ".git")
-			       default-directory)))
-    (unless default-directory
+  (let ((git-root (locate-dominating-file default-directory ".git")))
+    (unless git-root
       (user-error "Not in a git repository"))
-    (let* ((repo-name (file-name-nondirectory (directory-file-name default-directory)))
+    (let* ((default-directory git-root)
+	   (repo-name (file-name-nondirectory (directory-file-name default-directory)))
 	   (venv-dir (expand-file-name repo-name))
 	   (venv-activate-script (expand-file-name "bin/activate" venv-dir)))
       (if (file-exists-p venv-activate-script)

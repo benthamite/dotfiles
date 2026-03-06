@@ -290,7 +290,7 @@ use `ox-clip-formatted-copy'."
 	(while (file-exists-p (org-extras-make-image-filename counter))
 	  (setq counter (1+ counter)))
 	(let ((filename (org-extras-make-image-filename counter)))
-	  (call-process-shell-command (format "pngpaste '%s'" filename))
+	  (call-process-shell-command (format "pngpaste %s" (shell-quote-argument filename)))
 	  (let ((caption (read-string "Caption: ")))
 	    (unless (string-empty-p caption)
 	      (insert (format "#+CAPTION: %s \n" caption))))
@@ -341,9 +341,9 @@ number. Disable the mode if ARG is a negative number."
      (let* ((folder (file-name-directory it))
 	    (file (file-name-nondirectory it))
 	    (base-cmd (concat "cd "
-			      folder
+			      (shell-quote-argument folder)
 			      "; git log --since=midnight -p "
-			      file
+			      (shell-quote-argument file)
 			      "| grep TODO"))
 	    (changed (shell-command-to-string base-cmd))
 	    (added (org-extras-count-lines-with-expression changed "^\\+"))
@@ -547,7 +547,7 @@ debugger does not intercept the error before `condition-case' can handle it."
   (org-extras-jump-to-latest-clock-entry)
   (crux-smart-open-line-above)
   (let ((today (format-time-string "%Y-%m-%d %a" (current-time))))
-    (insert "CLOCK: [%s %s]--[%s %s]" today begin today end))
+    (insert (format "CLOCK: [%s %s]--[%s %s]" today begin today end)))
   (org-evaluate-time-range))
 
 (defun org-extras-time-stamp-active-current-time ()
@@ -1056,10 +1056,10 @@ To see a list of Google Docs and their respective IDs, run
 	 (output (concat doc-name ".org")))
     ;; download Google Doc as docx
     (shell-command
-     (format "gdrive export --mime application/vnd.openxmlformats-officedocument.wordprocessingml.document %s" doc-id))
+     (format "gdrive export --mime application/vnd.openxmlformats-officedocument.wordprocessingml.document %s" (shell-quote-argument doc-id)))
     ;; export docx to org-mode
     (shell-command
-     (format "pandoc -s '%s' -o '%s'" input output))))
+     (format "pandoc -s %s -o %s" (shell-quote-argument input) (shell-quote-argument output)))))
 
 (defun org-extras-remove-trailing-heading ()
   "Remove empty heading at the end of current buffer.

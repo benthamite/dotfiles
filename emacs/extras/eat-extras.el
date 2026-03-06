@@ -36,21 +36,6 @@
   "Extensions for `eat'."
   :group 'eat)
 
-(defcustom eat-extras-marker-cleanup-interval 60
-  "Seconds between marker-cleanup checks in eat buffers."
-  :type 'natnum
-  :group 'eat-extras)
-
-(defcustom eat-extras-marker-cleanup-threshold 0.01
-  "Insertion time in seconds that triggers marker cleanup.
-When a single character insertion in an eat buffer takes longer than
-this threshold, the buffer is cleaned up to free orphaned markers."
-  :type 'float
-  :group 'eat-extras)
-
-(defvar eat-extras--marker-cleanup-timer nil
-  "Timer for periodic eat buffer marker cleanup.")
-
 (defvar eat-extras-non-bound-keys
   '([?\C-g] [?\C-h] [?\C-l] [?\C-u] [?\C-x]
     [?\M-o] [?\M-x]
@@ -125,75 +110,6 @@ but `minor-mode-map-alist' still references the old one."
   (let ((entry (assq 'eat--semi-char-mode minor-mode-map-alist)))
     (when entry
       (setcdr entry eat-semi-char-mode-map))))
-
-;;;;; Marker cleanup
-
-(defun eat-extras--insertion-time (buffer)
-  "Measure the time of a single character insertion in BUFFER."
-  (with-current-buffer buffer
-    (let ((inhibit-read-only t)
-          (inhibit-modification-hooks t)
-          (buffer-undo-list t)
-          (start (float-time)))
-      (save-excursion
-        (goto-char (point-max))
-        (insert "X")
-        (delete-char -1))
-      (- (float-time) start))))
-
-(defun eat-extras--cleanup-buffer (buffer)
-  "Free orphaned markers in BUFFER by swapping buffer text.
-Creates a temporary buffer, swaps text contents (transferring all
-markers to the temp buffer), copies back only the text, then kills
-the temp buffer along with the orphaned markers."
-  (with-current-buffer buffer
-    (let* ((text (buffer-substring-no-properties (point-min) (point-max)))
-           (pt (point))
-           (temp (generate-new-buffer " *eat-cleanup*")))
-      (buffer-swap-text temp)
-      ;; Now BUFFER has temp's clean (empty) text with no markers.
-      ;; Reinsert the content.
-      (let ((inhibit-read-only t)
-            (inhibit-modification-hooks t)
-            (buffer-undo-list t))
-        (insert text)
-        (goto-char (min pt (point-max))))
-      ;; Kill temp buffer, which holds all the orphaned markers.
-      (kill-buffer temp)
-      ;; Re-initialize the eat terminal display to update its markers.
-      (when (and (boundp 'eat-terminal) eat-terminal)
-        (eat-term-resize eat-terminal
-                         (eat-term-parameter eat-terminal 'width)
-                         (eat-term-parameter eat-terminal 'height))
-        (eat-term-redisplay eat-terminal)))))
-
-(defun eat-extras-cleanup-markers ()
-  "Check all eat buffers and clean up those with degraded insertion performance."
-  (dolist (buf (buffer-list))
-    (when (and (buffer-live-p buf)
-               (eq (buffer-local-value 'major-mode buf) 'eat-mode)
-               (> (buffer-size buf) 0))
-      (condition-case nil
-          (let ((time (eat-extras--insertion-time buf)))
-            (when (> time eat-extras-marker-cleanup-threshold)
-              (message "eat-extras: cleaning up markers in %s (insertion: %.3fs)"
-                       (buffer-name buf) time)
-              (eat-extras--cleanup-buffer buf)))
-        (error nil)))))
-
-(defun eat-extras-start-marker-cleanup-timer ()
-  "Start the periodic marker cleanup timer for eat buffers."
-  (eat-extras-stop-marker-cleanup-timer)
-  (setq eat-extras--marker-cleanup-timer
-        (run-with-timer eat-extras-marker-cleanup-interval
-                        eat-extras-marker-cleanup-interval
-                        #'eat-extras-cleanup-markers)))
-
-(defun eat-extras-stop-marker-cleanup-timer ()
-  "Stop the periodic marker cleanup timer."
-  (when eat-extras--marker-cleanup-timer
-    (cancel-timer eat-extras--marker-cleanup-timer)
-    (setq eat-extras--marker-cleanup-timer nil)))
 
 (provide 'eat-extras)
 ;;; eat-extras.el ends here

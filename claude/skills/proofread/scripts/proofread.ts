@@ -383,8 +383,8 @@ async function spellcheck(filePath: string): Promise<ProofreadResult> {
     try {
       // Run aspell on the line
       const result = execSync(
-        `echo "${cleanLine.replace(/"/g, '\\"')}" | aspell -a --lang=en_GB 2>/dev/null`,
-        { encoding: "utf-8", maxBuffer: 1024 * 1024 }
+        `aspell -a --lang=en_GB 2>/dev/null`,
+        { input: cleanLine + '\n', encoding: "utf-8", maxBuffer: 1024 * 1024 }
       );
 
       // Parse aspell output

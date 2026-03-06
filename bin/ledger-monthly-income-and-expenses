@@ -1,11 +1,15 @@
 #!/bin/sh
 
-if [-z "$LEDGER_TERM" ]; then
+if [ -z "$LEDGER_TERM" ]; then
   LEDGER_TERM="qt size 1280,720 persist"
 fi
 
-ledger --file ~/My\ Drive/ledger/journal.ledger -j reg ^Income -M --collapse --plot-amount-format="%(format_date(date, \"%Y-%m-%d\")) %(abs(quantity(scrub(display_amount))))\n" > ledgeroutput1.tmp
-ledger --file ~/My\ Drive/ledger/journal.ledger -j reg ^Expenses -M --collapse > ledgeroutput2.tmp
+TMP1=$(mktemp)
+TMP2=$(mktemp)
+trap 'rm -f "$TMP1" "$TMP2"' EXIT
+
+ledger --file ~/My\ Drive/ledger/journal.ledger -j reg ^Income -M --collapse --plot-amount-format="%(format_date(date, \"%Y-%m-%d\")) %(abs(quantity(scrub(display_amount))))\n" > "$TMP1"
+ledger --file ~/My\ Drive/ledger/journal.ledger -j reg ^Expenses -M --collapse > "$TMP2"
 
 (cat <<EOF) | gnuplot
   set terminal $LEDGER_TERM
@@ -18,7 +22,5 @@ ledger --file ~/My\ Drive/ledger/journal.ledger -j reg ^Expenses -M --collapse >
   set grid ytics
   set title "Monthly Income and Expenses"
   set ylabel "Amount"
-  plot "ledgeroutput1.tmp" using 2:xticlabels(strftime('%b', strptime('%Y-%m-%d', strcol(1)))) title "Income" linecolor rgb "light-salmon", '' using 0:2:2 with labels left font "Courier,8" rotate by 15 offset -4,0.5 textcolor linestyle 0 notitle, "ledgeroutput2.tmp" using 2 title "Expenses" linecolor rgb "light-green", '' using 0:2:2 with labels left font "Courier,8" rotate by 15 offset 0,0.5 textcolor linestyle 0 notitle
+  plot "$TMP1" using 2:xticlabels(strftime('%b', strptime('%Y-%m-%d', strcol(1)))) title "Income" linecolor rgb "light-salmon", '' using 0:2:2 with labels left font "Courier,8" rotate by 15 offset -4,0.5 textcolor linestyle 0 notitle, "$TMP2" using 2 title "Expenses" linecolor rgb "light-green", '' using 0:2:2 with labels left font "Courier,8" rotate by 15 offset 0,0.5 textcolor linestyle 0 notitle
 EOF
-
-rm ledgeroutput*.tmp

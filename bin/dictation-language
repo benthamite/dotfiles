@@ -1,19 +1,20 @@
 #!/bin/bash
 
-k="com.apple.speech.recognition.AppleSpeechRecognition.prefs DictationIMNetworkBasedLocaleIdentifier"
+domain="com.apple.speech.recognition.AppleSpeechRecognition.prefs"
+key="DictationIMNetworkBasedLocaleIdentifier"
 
-if [ "$(defaults read $k)" != "de_DE" ]
+if [ "$(defaults read "$domain" "$key")" != "de_DE" ]
 then
-    defaults write $k "de_DE"
+    defaults write "$domain" "$key" "de_DE"
     defaults write com.apple.assistant "Session Language" "de_DE"
 
     killall -HUP DictationIM
 
--- Somehow I need to do twice the keyboard shortcut to start the dictation. This is the first one.
+# Somehow I need to do twice the keyboard shortcut to start the dictation. This is the first one.
 osascript -e 'tell app "System Events" to key code {63,63}'
 
 fi
 
 
--- second one
+# second one
 osascript -e 'tell app "System Events" to key code {63,63}'

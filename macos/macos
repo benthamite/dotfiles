@@ -48,7 +48,7 @@ echo 'Fast opening and closing windows and popovers'
 defaults write NSGlobalDomain NSWindowResizeTimes 0.001
 echo 'Sped up dialogue boxes'
 
-sudo spctl - master-disable
+sudo spctl --master-disable
 echo 'Allow apps downloaded from "Anywhere" allowed to be opened.'
 
 defaults write com.apple.CrashReporter DialogType none
@@ -91,7 +91,7 @@ defaults write NSGlobalDomain AppleMeasurementUnits -string "Centimeters"
 defaults write NSGlobalDomain AppleMetricUnits -bool true
 echo 'Set language and text formats'
 
-sudo systemsetup -settimezone " America/Mexico_City" > /dev/null
+sudo systemsetup -settimezone "America/Mexico_City" > /dev/null
 echo 'Set the timezone; see `sudo systemsetup -listtimezones` for other values'
 # America/Argentina/Buenos_Aires
 # Europe/London
@@ -259,7 +259,7 @@ echo 'Don’t show recent applications in Dock'
 #defaults write com.apple.dock showLaunchpadGestureEnabled -int 0
 echo 'Disable the Launchpad gesture (pinch with thumb and three fingers)'
 
-find "${HOME}/Library/Application Support/Dock" -name "*-*.db" -maxdepth 1 -delete
+find "${HOME}/Library/Application Support/Dock" -maxdepth 1 -name "*-*.db" -delete
 echo 'Reset Launchpad, but keep the desktop wallpaper intact'
 
 defaults write com.apple.dock no-bouncing -bool TRUE

@@ -146,7 +146,7 @@ If FILE is nil, read the file visited by the current buffer."
       (erase-buffer)
       (insert contents)
       (let ((fill-column (point-max)))
-	(fill-region (point) (point-max)))
+	(fill-region (point-min) (point-max)))
       (goto-char (point-min))
       (read-aloud-buf)
       ;; make buffer current

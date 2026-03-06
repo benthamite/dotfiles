@@ -2654,8 +2654,8 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
    . (lambda ()
        "Set and store the tab bar attributes, then activate the tab bar."
        (faces-extras-set-and-store-face-attributes
-        '((tab-bar :background (face-background 'mode-line)
-                   :box `(:line-width 6 :color ,(face-attribute 'mode-line :background) :style nil))))
+        '((tab-bar :background (face-background 'mode-line-active)
+                   :box `(:line-width 6 :color ,(face-attribute 'mode-line-active :background) :style nil))))
        (tab-bar-mode))))
 #+end_src
 

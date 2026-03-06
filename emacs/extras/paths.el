@@ -351,68 +351,68 @@ value."
   :type 'directory
   :group 'paths)
 
-(defcustom paths-dir-google-drive-tlon
+(defcustom paths-dir-google-drive-tlon-babel
   (file-name-concat paths-dir-google-drive-tlon "babel/")
   "Path to the Babel Google Drive directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-google-drive-tlon-EAN
-  (file-name-concat paths-dir-google-drive-tlon "EAN/")
+  (file-name-concat paths-dir-google-drive-tlon-babel "EAN/")
   "Path to the EAN Google Drive directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-google-drive-tlon-FM
-  (file-name-concat paths-dir-google-drive-tlon "FM/")
+  (file-name-concat paths-dir-google-drive-tlon-babel "FM/")
   "Path to the FM Google Drive directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-google-drive-tlon-GPE
-  (file-name-concat paths-dir-google-drive-tlon "GPE/")
+  (file-name-concat paths-dir-google-drive-tlon-babel "GPE/")
   "Path to the GPE Google Drive directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-google-drive-tlon-HEAR
-  (file-name-concat paths-dir-google-drive-tlon "HEAR/")
+  (file-name-concat paths-dir-google-drive-tlon-babel "HEAR/")
   "Path to the HEAR Google Drive directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-google-drive-tlon-LBDLH
-  (file-name-concat paths-dir-google-drive-tlon "LBDLH/")
+  (file-name-concat paths-dir-google-drive-tlon-babel "LBDLH/")
   "Path to the LBDLH Google Drive directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-google-drive-tlon-LP
-  (file-name-concat paths-dir-google-drive-tlon "LP/")
+  (file-name-concat paths-dir-google-drive-tlon-babel "LP/")
   "Path to the LP Google Drive directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-google-drive-tlon-RAE
-  (file-name-concat paths-dir-google-drive-tlon "RAE/")
+  (file-name-concat paths-dir-google-drive-tlon-babel "RAE/")
   "Path to the RAE Google Drive directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-google-drive-tlon-RCG
-  (file-name-concat paths-dir-google-drive-tlon "RCG/")
+  (file-name-concat paths-dir-google-drive-tlon-babel "RCG/")
   "Path to the RCG Google Drive directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-google-drive-tlon-core
-  (file-name-concat paths-dir-google-drive-tlon "core/")
+  (file-name-concat paths-dir-google-drive-tlon-babel "core/")
   "Path to the Core Google Drive directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-google-drive-tlon-fede
-  (file-name-concat paths-dir-google-drive-tlon "fede/")
+  (file-name-concat paths-dir-google-drive-tlon-babel "fede/")
   "Path to the Fede Google Drive directory."
   :type 'directory
   :group 'paths)
@@ -459,56 +459,56 @@ value."
   :type 'directory
   :group 'paths)
 
-(defcustom paths-dir-dropbox-tlon
+(defcustom paths-dir-dropbox-tlon-babel
   (file-name-concat paths-dir-dropbox-tlon "babel/")
   "Path to the Babel Dropbox directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-dropbox-tlon-EAN
-  (file-name-concat paths-dir-dropbox-tlon "EAN/")
+  (file-name-concat paths-dir-dropbox-tlon-babel "EAN/")
   "Path to the EAN Dropbox directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-dropbox-tlon-FM
-  (file-name-concat paths-dir-dropbox-tlon "FM/")
+  (file-name-concat paths-dir-dropbox-tlon-babel "FM/")
   "Path to the FM Dropbox directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-dropbox-tlon-GPE
-  (file-name-concat paths-dir-dropbox-tlon "GPE/")
+  (file-name-concat paths-dir-dropbox-tlon-babel "GPE/")
   "Path to the GPE Dropbox directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-dropbox-tlon-HEAR
-  (file-name-concat paths-dir-dropbox-tlon "HEAR/")
+  (file-name-concat paths-dir-dropbox-tlon-babel "HEAR/")
   "Path to the HEAR Dropbox directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-dropbox-tlon-LBDLH
-  (file-name-concat paths-dir-dropbox-tlon "LBDLH/")
+  (file-name-concat paths-dir-dropbox-tlon-babel "LBDLH/")
   "Path to the LBDLH Dropbox directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-dropbox-tlon-LP
-  (file-name-concat paths-dir-dropbox-tlon "LP/")
+  (file-name-concat paths-dir-dropbox-tlon-babel "LP/")
   "Path to the LP Dropbox directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-dropbox-tlon-RAE
-  (file-name-concat paths-dir-dropbox-tlon "RAE/")
+  (file-name-concat paths-dir-dropbox-tlon-babel "RAE/")
   "Path to the RAE Dropbox directory."
   :type 'directory
   :group 'paths)
 
 (defcustom paths-dir-dropbox-tlon-RCG
-  (file-name-concat paths-dir-dropbox-tlon "RCG/")
+  (file-name-concat paths-dir-dropbox-tlon-babel "RCG/")
   "Path to the RCG Dropbox directory."
   :type 'directory
   :group 'paths)

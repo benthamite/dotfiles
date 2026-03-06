@@ -110,14 +110,14 @@ the current file."
 		   ("hex" color-extras-hsl-scaled-pattern)
 		   ("hsl" color-extras-hex-pattern))))
     (save-excursion
-      (with-current-buffer (find-file-noselect file))
-      (goto-char (point-min))
-      (while (re-search-forward pattern nil t)
-	(replace-match
-	 (pcase format
-	   ("hex" (apply #'color-extras-hsl-to-hex (append (color-extras-hsl-split) '(t))))
-	   ("hsl" (color-extras-hsl-to-string
-		   (color-extras-hex-to-hsl (match-string-no-properties 1) t)))))))))
+      (with-current-buffer (find-file-noselect file)
+	(goto-char (point-min))
+	(while (re-search-forward pattern nil t)
+	  (replace-match
+	   (pcase format
+	     ("hex" (apply #'color-extras-hsl-to-hex (append (color-extras-hsl-split) '(t))))
+	     ("hsl" (color-extras-hsl-to-string
+		     (color-extras-hex-to-hsl (match-string-no-properties 1) t))))))))))
 
 ;;;;;; HSL internal conversion
 

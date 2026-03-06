@@ -36,7 +36,7 @@
   "Extensions for `org-noter'."
   :group 'org-noter)
 
-(defconst org-noter-extras-dehyphenate-hyphens '("-" "¬")
+(defvar org-noter-extras-dehyphenate-hyphens '("-" "¬")
   "Hyphen to be removed by dehyphenation functions.")
 
 (defconst org-noter-highlight-heading-regexp "Highlight on page[s]? \\(.*\\)"

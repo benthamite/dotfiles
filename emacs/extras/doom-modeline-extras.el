@@ -148,6 +148,7 @@ Uses strikethrough to indicate the cost is not actually charged."
 (declare-function claude-code-extras-alert-indicator "claude-code-extras")
 (declare-function claude-code-extras-toggle-alert "claude-code-extras")
 (declare-function claude-code-extras--session-name "claude-code-extras")
+(declare-function claude-code-extras-display-name "claude-code-extras")
 (defvar claude-code-extras--status-data)
 (defvar claude-code-extras-alert-on-ready)
 
@@ -173,7 +174,7 @@ Uses strikethrough to indicate the cost is not actually charged."
     (if (bound-and-true-p claude-code-extras--status-data)
         (doom-modeline-extras--format-claude-status)
       (concat (doom-modeline-spc)
-              (claude-code-extras--session-name (buffer-name))
+              (claude-code-extras-display-name)
               (doom-modeline-spc)))))
 
 (defun doom-modeline-extras--format-claude-status ()
@@ -189,7 +190,7 @@ Uses strikethrough to indicate the cost is not actually charged."
         (cache-total (claude-code-extras-status-cache-total-tokens)))
     (concat
      (doom-modeline-spc)
-     (propertize (claude-code-extras--session-name (buffer-name))
+     (propertize (claude-code-extras-display-name)
                  'face '(bold doom-modeline-buffer-major-mode)
                  'help-echo "Claude Code session")
      (doom-modeline-extras--format-model model)

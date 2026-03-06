@@ -923,21 +923,25 @@ Combines :title and :body, using title alone when body is empty."
 
 (defun claude-code-extras-batch-todos ()
   "Process org TODO entries sequentially via `claude -p'.
-Prompts for scope (buffer, subtree, or region), a working
+Infers scope automatically: region if active, subtree if the
+buffer is narrowed, buffer otherwise.  Prompts for a working
 directory, then runs each TODO as a non-interactive Claude
 session.  Results are logged to timestamped files and displayed
 in a summary buffer when all entries have been processed."
   (interactive)
   (unless (derived-mode-p 'org-mode)
     (user-error "Must be called from an org-mode buffer"))
-  (let* ((scope (intern (completing-read "Scope: " '("buffer" "subtree" "region")
-                                         nil t)))
+  (let* ((scope (cond
+                 ((use-region-p) 'region)
+                 ((buffer-narrowed-p) 'subtree)
+                 (t 'buffer)))
          (entries (claude-code-extras--batch-collect-todos scope)))
     (when (null entries)
       (user-error "No TODO entries found in %s" scope))
     (let ((dir (project-prompt-project-dir)))
-      (when (yes-or-no-p
-             (format "Process %d TODO(s) in %s?" (length entries) dir))
+      (when (or (eq scope 'region)
+                (yes-or-no-p
+                 (format "Process %d TODO(s) in %s?" (length entries) dir)))
         (claude-code-extras--batch-start entries dir)))))
 
 (defun claude-code-extras--batch-start (entries dir)

@@ -141,11 +141,7 @@ The command ~claude-code-extras-toggle-alert~ toggles the buffer-local value of 
 :END:
 
 #+findex: claude-code-extras-batch-todos
-The command ~claude-code-extras-batch-todos~ processes org TODO entries sequentially via =claude -p= in non-interactive mode. It must be called from an org-mode buffer. The command prompts for:
-
-1. *Scope*: =buffer= (all TODOs in the file), =subtree= (TODOs under the current heading), or =region= (TODOs in the active region).
-2. *Working directory*: selected via ~project-prompt-project-dir~ from the known projects list.
-3. *Confirmation*: shows the count and target directory before proceeding.
+The command ~claude-code-extras-batch-todos~ processes org TODO entries sequentially via =claude -p= in non-interactive mode. It must be called from an org-mode buffer. Scope is inferred automatically: =region= if the region is active, =subtree= if the buffer is narrowed, =buffer= otherwise. The command then prompts for a working directory via ~project-prompt-project-dir~. A confirmation prompt is shown unless the scope is =region= (where the explicit selection already signals intent).
 
 Each TODO's heading becomes the prompt (with body text appended if present). Entries are processed sequentially — each =claude -p= invocation must finish before the next starts. Errors do not abort the batch; each failure is recorded and processing continues.
 

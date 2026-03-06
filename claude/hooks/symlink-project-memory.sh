@@ -31,7 +31,7 @@ mkdir -p "$project_memory"
 # Move existing files (if any) into the project directory
 if [[ -d "$memory_dir" ]]; then
   find "$memory_dir" -maxdepth 1 -type f -exec mv {} "$project_memory/" \;
-  rm -rf "$memory_dir"
+  rmdir "$memory_dir" 2>/dev/null || trash "$memory_dir"
 fi
 
 # Create symlink

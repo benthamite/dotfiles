@@ -9,11 +9,11 @@ set -euo pipefail
 
 INPUT=$(cat)
 
-COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
-SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty')
+COMMAND=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')
+SESSION_ID=$(printf '%s' "$INPUT" | jq -r '.session_id // empty')
 
 # Only intercept git commit commands
-if ! echo "$COMMAND" | grep -qE '^\s*git\s+commit\b'; then
+if ! echo "$COMMAND" | grep -qE '\bgit\s+commit\b'; then
   exit 0
 fi
 

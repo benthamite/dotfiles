@@ -25,7 +25,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/My Drive/dotfiles/claude/hooks/require-elisp-test-before-commit.sh",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/require-elisp-test-before-commit.sh",
             "timeout": 10
           }
         ]
@@ -37,7 +37,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/My Drive/dotfiles/claude/hooks/track-elisp-test.sh",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/track-elisp-test.sh",
             "timeout": 5
           }
         ]
@@ -47,7 +47,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/My Drive/dotfiles/claude/hooks/symlink-project-memory.sh",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/symlink-project-memory.sh",
             "timeout": 5
           }
         ]
@@ -59,7 +59,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.config/emacs-profiles/7.1.29-target/elpaca/repos/claude-code/bin/claude-code-hook-wrapper stop"
+            "command": "~/.config/emacs-profiles/7.1.30-target/elpaca/repos/claude-code/bin/claude-code-hook-wrapper stop"
           }
         ]
       }
@@ -67,7 +67,7 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "~/.config/emacs-profiles/7.1.29-target/elpaca/repos/dotfiles/emacs/extras/etc/claude-code-statusline.sh",
+    "command": "~/.config/emacs-profiles/7.1.30-target/elpaca/repos/dotfiles/emacs/extras/etc/claude-code-statusline.sh",
     "padding": 0
   },
   "enabledPlugins": {

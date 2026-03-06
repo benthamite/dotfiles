@@ -8,8 +8,8 @@ set -euo pipefail
 
 INPUT=$(cat)
 
-COMMAND=$(echo "$INPUT" | jq -r '.tool_input.command // empty')
-SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty')
+COMMAND=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')
+SESSION_ID=$(printf '%s' "$INPUT" | jq -r '.session_id // empty')
 
 # Check if the command used emacs --batch (the standard Elisp testing method)
 if echo "$COMMAND" | grep -qE 'emacs\s+--batch'; then

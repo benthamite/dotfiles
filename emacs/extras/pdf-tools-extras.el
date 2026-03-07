@@ -30,6 +30,11 @@
 
 (require 'pdf-tools)
 
+;;;; Variables
+
+(defvar pdf-tools-extras-pdftotext-executable "pdftotext"
+  "Path to the `pdftotext' executable.")
+
 ;;;; Functions
 
 ;;;;; Word selection with double-click
@@ -71,6 +76,31 @@ point and copies it to `kill-ring'."
     (kill-new (pdf-info-gettext page (list x y x y) 'word))))
 
 (pdf-tools-extras-sel-mode 1)
+
+;;;;; PDF conversion
+
+(defun pdf-tools-extras--run-pdftotext (source output &optional extra-args)
+  "Run pdftotext on SOURCE, writing to OUTPUT.
+OUTPUT is either a file path or \"-\" for stdout.  EXTRA-ARGS is an
+optional list of additional argument strings (e.g. margin flags).
+Signals an error if pdftotext is not found."
+  (unless (executable-find "pdftotext")
+    (user-error "`pdftotext' not found; install it with `brew install poppler'"))
+  (let ((cmd (mapconcat #'shell-quote-argument
+                        (append (list pdf-tools-extras-pdftotext-executable)
+                                extra-args
+                                (list (expand-file-name source) output))
+                        " ")))
+    (shell-command-to-string cmd)))
+
+(defun pdf-tools-extras-convert-pdf (source &optional destination)
+  "Convert PDF in SOURCE to text.
+If DESTINATION is non-nil, write the text to that file path.
+Otherwise, return the text as a string."
+  (pdf-tools-extras--run-pdftotext source
+                                    (if destination
+                                        (expand-file-name destination)
+                                      "-")))
 
 ;;;;; Misc
 
@@ -114,13 +144,12 @@ If `opentopage' script is available, open to current page."
      (format "pdftotext '%s' - | wc -w" (buffer-file-name)))))
   (message (format "This PDF has %s words." (current-kill 0))))
 
-(declare-function tlon-convert-pdf "tlon-import")
 (defun pdf-tools-extras-copy-dwim ()
   "Copy PDF contents to kill ring, or region if selected."
   (interactive)
   (if (region-active-p)
       (pdf-view-kill-ring-save)
-    (let ((string (string-trim (tlon-convert-pdf (buffer-file-name)))))
+    (let ((string (string-trim (pdf-tools-extras-convert-pdf (buffer-file-name)))))
       (kill-new (replace-regexp-in-string "\\([^\n]\\)\n\\([^\n]\\)" "\\1 \\2" string))
       (message "Copied all text in PDF to kill ring."))))
 

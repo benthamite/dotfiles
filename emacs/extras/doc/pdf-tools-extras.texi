@@ -44,6 +44,7 @@ Commands
 
 Functions
 
+* PDF conversion::
 * Theme integration::
 * Word selection::
 
@@ -63,6 +64,8 @@ Indices
 The main areas of functionality are:
 
 @itemize
+@item
+PDF conversion: extracting text from PDFs via @samp{pdftotext} (@ref{PDF conversion}).
 @item
 Theme integration: automatically toggling midnight mode to match the active Modus theme (@ref{Theme integration}).
 @item
@@ -93,7 +96,7 @@ The package depends on @samp{pdf-tools} and optionally integrates with @samp{mod
 When you need a quick word count for a PDF, the command @code{pdf-tools-extras-count-words} extracts the text with the external @samp{pdftotext} utility, pipes it through @samp{wc -w}, copies the result to the kill ring, and displays it in the echo area. This is handy for checking the length of a paper or report without leaving Emacs.
 
 @findex pdf-tools-extras-copy-dwim
-The command @code{pdf-tools-extras-copy-dwim} copies PDF text to the kill ring with do-what-I-mean behavior. If a region is active (selected with the mouse or keyboard in the PDF view), it copies only the selected text via @code{pdf-view-kill-ring-save}. If no region is active, it extracts the entire document text using @code{tlon-convert-pdf}, joins lines that were broken mid-sentence, and copies the result. A message confirms that the full text was copied.
+The command @code{pdf-tools-extras-copy-dwim} copies PDF text to the kill ring with do-what-I-mean behavior. If a region is active (selected with the mouse or keyboard in the PDF view), it copies only the selected text via @code{pdf-view-kill-ring-save}. If no region is active, it extracts the entire document text using @code{pdf-tools-extras-convert-pdf}, joins lines that were broken mid-sentence, and copies the result. A message confirms that the full text was copied.
 
 @findex pdf-annot-extras-add-highlight-markup-annotation
 Highlighting a passage in a PDF and then separately copying the text is a two-step operation in vanilla @samp{pdf-tools}. The command @code{pdf-annot-extras-add-highlight-markup-annotation} combines both steps: it creates a highlight annotation on the active region and simultaneously copies the highlighted text to the kill ring. It accepts optional COLOR and PROPERTY-ALIST arguments, just like the underlying @code{pdf-annot-add-markup-annotation}.
@@ -120,9 +123,22 @@ If your PDF files are named after Bib@TeX{} keys (e.g., @samp{Smith2023.pdf} cor
 @chapter Functions
 
 @menu
+* PDF conversion::
 * Theme integration::
 * Word selection::
 @end menu
+
+@node PDF conversion
+@section PDF conversion
+
+@vindex pdf-tools-extras-pdftotext-executable
+The variable @code{pdf-tools-extras-pdftotext-executable} holds the path to the @samp{pdftotext} executable (default @samp{"pdftotext"}). Customize it if the executable is installed in a non-standard location.
+
+@findex pdf-tools-extras-convert-pdf
+The function @code{pdf-tools-extras-convert-pdf} converts a PDF file to plain text. It accepts a SOURCE file path and an optional DESTINATION. When DESTINATION is non-nil, the text is written to that file; otherwise, the text is returned as a string. This is the main entry point for PDF text extraction and is used by other packages such as @samp{read-aloud-extras.el}.
+
+@findex pdf-tools-extras--run-pdftotext
+Internally, @code{pdf-tools-extras--run-pdftotext} runs the @samp{pdftotext} executable on a SOURCE file, writing to OUTPUT (a file path or @samp{"-"} for stdout). It accepts an optional EXTRA-ARGS list for additional flags such as margin settings. It signals an error if @samp{pdftotext} is not installed.
 
 @node Theme integration
 @section Theme integration

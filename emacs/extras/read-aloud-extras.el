@@ -132,7 +132,7 @@
 
 ;;;;; Read file
 
-(autoload 'tlon-convert-pdf "tlon-import")
+(autoload 'pdf-tools-extras-convert-pdf "pdf-tools-extras")
 (defun read-aloud-extras-read-file (&optional file)
   "Read the contents of FILE aloud.
 If FILE is nil, read the file visited by the current buffer."
@@ -140,7 +140,7 @@ If FILE is nil, read the file visited by the current buffer."
   (let* ((file (or file (buffer-file-name)))
 	 (extension (file-name-extension file))
 	 (contents (pcase extension
-		     ("pdf" (tlon-convert-pdf file))
+		     ("pdf" (pdf-tools-extras-convert-pdf file))
 		     (_ (buffer-string)))))
     (with-current-buffer (get-buffer-create "*read-aloud*")
       (erase-buffer)

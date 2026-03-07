@@ -21,6 +21,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The main areas of functionality are:
 
+- PDF conversion: extracting text from PDFs via =pdftotext= ([[#h:pdf-conversion][PDF conversion]]).
 - Theme integration: automatically toggling midnight mode to match the active Modus theme ([[#h:theme-integration][Theme integration]]).
 - Text operations: counting words, copying text with DWIM behavior, and enhanced highlight annotations ([[#h:text-operations][Text operations]]).
 - External interaction: opening the PDF in an external viewer at the current page, toggling =writeroom-mode=, deleting the file ([[#h:external-interaction][External interaction]]).
@@ -43,7 +44,7 @@ The package depends on =pdf-tools= and optionally integrates with =modus-themes=
 When you need a quick word count for a PDF, the command ~pdf-tools-extras-count-words~ extracts the text with the external =pdftotext= utility, pipes it through =wc -w=, copies the result to the kill ring, and displays it in the echo area. This is handy for checking the length of a paper or report without leaving Emacs.
 
 #+findex: pdf-tools-extras-copy-dwim
-The command ~pdf-tools-extras-copy-dwim~ copies PDF text to the kill ring with do-what-I-mean behavior. If a region is active (selected with the mouse or keyboard in the PDF view), it copies only the selected text via ~pdf-view-kill-ring-save~. If no region is active, it extracts the entire document text using ~tlon-convert-pdf~, joins lines that were broken mid-sentence, and copies the result. A message confirms that the full text was copied.
+The command ~pdf-tools-extras-copy-dwim~ copies PDF text to the kill ring with do-what-I-mean behavior. If a region is active (selected with the mouse or keyboard in the PDF view), it copies only the selected text via ~pdf-view-kill-ring-save~. If no region is active, it extracts the entire document text using ~pdf-tools-extras-convert-pdf~, joins lines that were broken mid-sentence, and copies the result. A message confirms that the full text was copied.
 
 #+findex: pdf-annot-extras-add-highlight-markup-annotation
 Highlighting a passage in a PDF and then separately copying the text is a two-step operation in vanilla =pdf-tools=. The command ~pdf-annot-extras-add-highlight-markup-annotation~ combines both steps: it creates a highlight annotation on the active region and simultaneously copies the highlighted text to the kill ring. It accepts optional COLOR and PROPERTY-ALIST arguments, just like the underlying ~pdf-annot-add-markup-annotation~.
@@ -74,6 +75,20 @@ If your PDF files are named after BibTeX keys (e.g., =Smith2023.pdf= corresponds
 :PROPERTIES:
 :CUSTOM_ID: h:functions
 :END:
+
+** PDF conversion
+:PROPERTIES:
+:CUSTOM_ID: h:pdf-conversion
+:END:
+
+#+vindex: pdf-tools-extras-pdftotext-executable
+The variable ~pdf-tools-extras-pdftotext-executable~ holds the path to the =pdftotext= executable (default ="pdftotext"=). Customize it if the executable is installed in a non-standard location.
+
+#+findex: pdf-tools-extras-convert-pdf
+The function ~pdf-tools-extras-convert-pdf~ converts a PDF file to plain text. It accepts a SOURCE file path and an optional DESTINATION. When DESTINATION is non-nil, the text is written to that file; otherwise, the text is returned as a string. This is the main entry point for PDF text extraction and is used by other packages such as =read-aloud-extras.el=.
+
+#+findex: pdf-tools-extras--run-pdftotext
+Internally, ~pdf-tools-extras--run-pdftotext~ runs the =pdftotext= executable on a SOURCE file, writing to OUTPUT (a file path or ="-"= for stdout). It accepts an optional EXTRA-ARGS list for additional flags such as margin settings. It signals an error if =pdftotext= is not installed.
 
 ** Theme integration
 :PROPERTIES:

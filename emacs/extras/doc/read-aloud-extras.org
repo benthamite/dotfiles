@@ -87,7 +87,7 @@ This command currently supports only the =say= engine. Invoking it with a differ
 #+findex: read-aloud-extras-read-file
 The command ~read-aloud-extras-read-file~ reads the entire content of a file aloud. If called without an argument, it reads the file visited by the current buffer. You can also pass a FILE argument programmatically.
 
-For PDF files, the command extracts the text using ~tlon-convert-pdf~ before reading. For all other file types, it reads the buffer contents directly. The extracted or read text is placed in a dedicated =*read-aloud*= buffer, filled to remove excessive line breaks, and then read from the beginning with ~read-aloud-buf~. The =*read-aloud*= buffer is displayed so you can follow along.
+For PDF files, the command extracts the text using ~pdf-tools-extras-convert-pdf~ before reading. For all other file types, it reads the buffer contents directly. The extracted or read text is placed in a dedicated =*read-aloud*= buffer, filled to remove excessive line breaks, and then read from the beginning with ~read-aloud-buf~. The =*read-aloud*= buffer is displayed so you can follow along.
 
 * Patched functions
 :PROPERTIES:

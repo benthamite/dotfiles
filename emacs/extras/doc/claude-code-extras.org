@@ -19,7 +19,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 =claude-code-extras.el= extends =claude-code=, the Emacs package that runs Claude Code sessions inside an Eat terminal buffer. While =claude-code= provides the core session management and terminal integration, this extras package layers on several quality-of-life features that make extended Claude sessions more manageable.
 
-The package provides seven main areas of functionality:
+The package provides eight main areas of functionality:
 
 - *Session switching.* A Consult-powered interface for starting new Claude sessions or switching between existing ones, with live buffer previews ([[#h:session-switching][Session switching]]).
 - *Conversation logging.* Automatic periodic saving of terminal buffer contents to timestamped log files, with detection of conversation clears ([[#h:logging][Logging]]).
@@ -28,6 +28,7 @@ The package provides seven main areas of functionality:
 - *Buffer lifecycle.* Kill protection for active sessions, automatic buffer cleanup on process exit, and a SIGWINCH workaround for terminal rendering glitches ([[#h:buffer-lifecycle][Buffer lifecycle]]).
 - *Copilot integration.* An adapter that enables Copilot ghost-text prose completions while typing prompts in Claude Code buffers, routing accepted text through the terminal emulator ([[#h:copilot-integration][Copilot integration]]).
 - *Batch TODO processing.* Sequential execution of org TODO entries via =claude -p= in non-interactive mode, with logged results and a summary buffer ([[#h:batch-todo-processing][Batch TODO processing]]).
+- *Project audit.* One-command comprehensive audit that sequentially runs code, design, and interpretability audit skills with auto-fix on the current project ([[#h:project-audit][Project audit]]).
 
 The package depends on =claude-code=, =consult= (for the session switcher), and =paths= (for the log directory default).
 
@@ -104,6 +105,14 @@ The user option ~claude-code-extras-batch-system-prompt~ specifies an optional s
 
 The user option ~claude-code-extras-batch-model~ specifies an optional model override via =--model=. The default is ~nil~ (use Claude's default model).
 
+** Project audit options
+:PROPERTIES:
+:CUSTOM_ID: h:project-audit-options
+:END:
+
+#+vindex: claude-code-extras-audit-skills
+The user option ~claude-code-extras-audit-skills~ specifies the list of skills to run when performing a project audit via ~claude-code-extras-audit-project~. Each entry is a skill name with a leading slash. The default value is ~("/code-audit" "/design-audit" "/interpretability-audit")~. Each skill is invoked with =--accept=, which instructs it to auto-fix all findings without prompting. Customize this list to add, remove, or reorder audit passes.
+
 ** Status polling options
 :PROPERTIES:
 :CUSTOM_ID: h:status-polling-options
@@ -148,6 +157,16 @@ Each TODO's heading becomes the prompt (with body text appended if present). Ent
 Results are saved as JSON log files in a timestamped subdirectory under ~claude-code-extras-log-directory~ ([[#h:logging-options][Logging options]]). When all entries have been processed, a =*Claude Batch Results*= summary buffer is displayed in org-mode with per-entry status, cost, duration, log file links, and Claude's response text.
 
 The command respects ~claude-code-extras-batch-allowed-tools~, ~claude-code-extras-batch-max-turns~, ~claude-code-extras-batch-system-prompt~, and ~claude-code-extras-batch-model~ ([[#h:batch-todo-options][Batch TODO processing options]]).
+
+** Project audit
+:PROPERTIES:
+:CUSTOM_ID: h:project-audit
+:END:
+
+#+findex: claude-code-extras-audit-project
+The command ~claude-code-extras-audit-project~ runs a comprehensive audit of the current project. It determines the project root via ~project-current~, then sequentially invokes each skill in ~claude-code-extras-audit-skills~ ([[#h:project-audit-options][Project audit options]]) with =--accept=, each as a separate non-interactive =claude -p= session. This means each audit starts with a fresh context window.
+
+The command reuses the batch processing infrastructure ([[#h:batch-todo-internals][Batch TODO internals]]), so results are logged and displayed in the same =*Claude Batch Results*= summary buffer with per-audit status, cost, duration, and output. The batch options (~claude-code-extras-batch-max-turns~, ~claude-code-extras-batch-model~, etc.) apply to audit runs as well.
 
 * Functions
 :PROPERTIES:

@@ -658,6 +658,47 @@ IPOS, TABLES and PARAMS are required by the formatter function."
 
 (advice-add 'org-clock-in :after #'org-extras-clock-in-add-participants)
 
+;;;;; font-lock
+
+(defun org-extras-fontify-nested-src-blocks (limit)
+  "Fontify source blocks nested inside other Org blocks.
+`org-fontify-meta-lines-and-blocks-1' skips inner blocks when
+processing an outer block such as #+begin_details, because it
+marks the entire outer block body with `font-lock-fontified'.
+This function finds #+begin_src lines that lack the
+`org-block-begin-line' face and fontifies them."
+  (let ((case-fold-search t))
+    (while (re-search-forward "^[ \t]*\\(#\\+begin_src\\)\\(?: \\(\\S-+\\)\\)?" limit t)
+      (unless (eq (get-text-property (match-beginning 1) 'face) 'org-block-begin-line)
+        (let* ((lang (or (match-string-no-properties 2) ""))
+               (beg (match-beginning 0))
+               (bol-after (line-beginning-position 2))
+               (end-of-beginline (match-end 0)))
+          (when (re-search-forward
+                 (concat "^[ \t]*#\\+end_src\\b")
+                 nil t)
+            (let* ((beg-of-endline (match-beginning 0))
+                   (end-of-endline (match-end 0))
+                   (block-end beg-of-endline))
+              (with-silent-modifications
+                (add-text-properties
+                 beg end-of-endline
+                 '(font-lock-fontified t font-lock-multiline t))
+                (when org-src-fontify-natively
+                  (save-match-data
+                    (org-src-font-lock-fontify-block lang bol-after block-end))
+                  (add-text-properties bol-after block-end '(src-block t)))
+                (add-text-properties
+                 beg (if org-fontify-whole-block-delimiter-line bol-after end-of-beginline)
+                 '(face org-block-begin-line))
+                (add-text-properties
+                 beg-of-endline
+                 (if org-fontify-whole-block-delimiter-line
+                     (min (point-max) (1+ end-of-endline))
+                   (min (point-max) end-of-endline))
+                 '(face org-block-end-line)))))))))
+  nil)
+
 ;;;;; org-cycle
 
 (defun org-extras-cycle-global (&optional arg)

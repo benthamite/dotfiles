@@ -583,6 +583,30 @@ populated with "person" nodes from Org Roam (via
 selected names as Org ID links, and inserts a "Participants: ..." line
 after the heading's metadata.
 
+** Font-lock
+:PROPERTIES:
+:CUSTOM_ID: h:font-lock
+:END:
+
+*** Nested source block fontification
+:PROPERTIES:
+:CUSTOM_ID: h:nested-src-block-fontification
+:END:
+
+#+findex: org-extras-fontify-nested-src-blocks
+Org's built-in fontification function
+~org-fontify-meta-lines-and-blocks-1~ processes each
+~#+begin_...#+end_~ pair as a single unit.  When a source block is
+nested inside another block (e.g. ~#+begin_details~), the outer block
+is fontified first and its entire body is marked with
+~font-lock-fontified~, causing the inner ~#+begin_src~ to be skipped.
+The function ~org-extras-fontify-nested-src-blocks~ is added to
+~font-lock-keywords~ (via ~font-lock-add-keywords~) and runs after the
+standard Org keywords.  It finds ~#+begin_src~ lines that were not
+fontified with the ~org-block-begin-line~ face and applies the expected
+source-block fontification, including native syntax highlighting when
+~org-src-fontify-natively~ is non-nil.
+
 ** Folding, cycling, and narrowing
 :PROPERTIES:
 :CUSTOM_ID: h:folding-cycling-narrowing

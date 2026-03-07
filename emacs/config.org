@@ -10244,6 +10244,7 @@ Note to self: Typescript syntax highlighting works fine, but calling ~org-edit-s
   :defer t
   :custom
   (org-confirm-babel-evaluate 'org-extras-confirm-babel-evaluate)
+  (org-export-use-babel nil)
 
   :config
   ;; enable lexical binding in code blocks

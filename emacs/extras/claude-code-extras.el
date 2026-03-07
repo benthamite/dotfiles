@@ -1007,61 +1007,78 @@ When the queue is empty, display the summary buffer."
          :sentinel
          (lambda (proc _event)
            (when (memq (process-status proc) '(exit signal))
-             (let* ((exit-code (process-exit-status proc))
-                    (raw (with-current-buffer (process-buffer proc)
-                           (buffer-string)))
-                    (duration (float-time
-                              (time-subtract (current-time) start-time)))
-                    (json-data
-                     (condition-case nil
-                         (let ((end (cl-position ?} raw :from-end t)))
-                           (when end
-                             (json-parse-string
-                              (substring raw 0 (1+ end))
-                              :object-type 'plist)))
-                       (error nil)))
-                    (cost (and json-data
-                               (or (plist-get json-data :total_cost_usd)
-                                   (plist-get json-data :cost_usd))))
-                    (result-text
-                     (cond
-                      ((null json-data) nil)
-                      ((stringp (plist-get json-data :result))
-                       (plist-get json-data :result))
-                      ((and (vectorp (plist-get json-data :result))
-                            (> (length (plist-get json-data :result)) 0))
-                       (mapconcat
-                        (lambda (block)
-                          (or (plist-get block :text) ""))
-                        (plist-get json-data :result) "\n"))
-                      (t
-                       (format (concat "No result text returned.\n"
-                                       "Session: %s | Turns: %s | "
-                                       "Reason: %s\n"
-                                       "Resume with: claude --resume %s")
-                               (or (plist-get json-data :session_id) "?")
-                               (or (plist-get json-data :num_turns) "?")
-                               (or (plist-get json-data :subtype) "unknown")
-                               (or (plist-get json-data :session_id) "?"))))))
-               (with-temp-file log-file
-                 (insert raw))
-               (push (list :title title
-                           :index index
-                           :exit-code exit-code
-                           :duration duration
-                           :cost (or cost 0)
-                           :result-text (or result-text
-                                           "(failed to parse output)")
-                           :log-file log-file)
-                     claude-code-extras--batch-results)
-               (kill-buffer (process-buffer proc))
-               (claude-code-extras--batch-run-next)))))))))
+             (condition-case sentinel-err
+                 (let* ((exit-code (process-exit-status proc))
+                        (raw (with-current-buffer (process-buffer proc)
+                               (buffer-string)))
+                        (duration (float-time
+                                  (time-subtract (current-time) start-time)))
+                        (parsed
+                         (claude-code-extras--batch-parse-stream-json raw))
+                        (cost (plist-get parsed :cost))
+                        (result-text (plist-get parsed :text)))
+                   (with-temp-file log-file
+                     (insert raw))
+                   (push (list :title title
+                               :index index
+                               :exit-code exit-code
+                               :duration duration
+                               :cost (or cost 0)
+                               :result-text (or result-text
+                                               "(failed to parse output)")
+                               :log-file log-file)
+                         claude-code-extras--batch-results)
+                   (kill-buffer (process-buffer proc)))
+               (error
+                (push (list :title title :index index :exit-code -1
+                            :duration (float-time
+                                       (time-subtract (current-time)
+                                                      start-time))
+                            :cost 0
+                            :result-text (format "Sentinel error: %S"
+                                                 sentinel-err)
+                            :log-file log-file)
+                      claude-code-extras--batch-results)
+                (ignore-errors (kill-buffer (process-buffer proc)))))
+             (claude-code-extras--batch-run-next))))))))
+
+(defun claude-code-extras--batch-parse-stream-json (raw)
+  "Parse stream-json output RAW into a plist.
+Returns (:text ASSISTANT-TEXT :cost COST :session-id ID
+         :num-turns N :subtype TYPE)."
+  (let (texts cost session-id num-turns subtype)
+    (dolist (line (split-string raw "\n" t))
+      (condition-case nil
+          (let ((obj (json-parse-string line :object-type 'plist)))
+            (pcase (plist-get obj :type)
+              ("assistant"
+               (let ((content (plist-get (plist-get obj :message) :content)))
+                 (when (vectorp content)
+                   (seq-doseq (block content)
+                     (when (equal (plist-get block :type) "text")
+                       (push (plist-get block :text) texts))))))
+              ("result"
+               (setq cost (or (plist-get obj :total_cost_usd)
+                              (plist-get obj :cost_usd) 0)
+                     session-id (plist-get obj :session_id)
+                     num-turns (plist-get obj :num_turns)
+                     subtype (plist-get obj :subtype)))))
+        (error nil)))
+    (list :text (if texts
+                    (string-join (nreverse texts) "\n\n")
+                  (format (concat "No assistant text captured.\n"
+                                  "Session: %s | Turns: %s | Reason: %s\n"
+                                  "Resume with: claude --resume %s")
+                          (or session-id "?") (or num-turns "?")
+                          (or subtype "unknown") (or session-id "?")))
+          :cost (or cost 0)
+          :session-id session-id)))
 
 (defun claude-code-extras--batch-build-args (prompt)
   "Build the command-line argument list for `claude -p' with PROMPT."
   (let ((args (list claude-code-program
                     "-p" prompt
-                    "--output-format" "json"
+                    "--output-format" "stream-json"
                     "--max-turns" (number-to-string
                                   claude-code-extras-batch-max-turns))))
     (when claude-code-extras-batch-allowed-tools

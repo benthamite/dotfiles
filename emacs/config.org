@@ -6553,7 +6553,6 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
                          (:exclude ".dir-locals.el" "*-tests.el")))
   :custom
   (eat-term-name "xterm-256color")
-  (eat-term-scrollback-size 8192)
 
   :hook
   (eshell-load-hook . eat-eshell-mode)

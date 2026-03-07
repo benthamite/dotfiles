@@ -38,14 +38,14 @@
 
 (defvar eat-extras-non-bound-keys
   '([?\C-g] [?\C-h] [?\C-l] [?\C-u] [?\C-x]
-    [?\M-o] [?\M-x]
+    [?\M-L] [?\M-o] [?\M-x]
     [A-C-s-p] [A-C-s-u]
     [C-H-M-q] [C-H-M-r] [C-H-M-s] [C-H-M-v]
     [H-v] [H-z])
   "Keys to exclude from terminal capture in semi-char mode.")
 
 (defvar eat-extras-emacs-passthrough-keys
-  '("C-g" "C-h" "C-l" "C-u" "C-x" "M-o" "M-x")
+  '("C-g" "C-h" "C-l" "C-u" "C-x" "M-L" "M-o" "M-x")
   "Standard Emacs prefix keys to release from terminal capture.")
 
 ;;;; Functions

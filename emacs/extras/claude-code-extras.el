@@ -854,7 +854,7 @@ that line before syncing and requesting completions."
   :type '(repeat string)
   :group 'claude-code-extras)
 
-(defcustom claude-code-extras-batch-max-turns 10
+(defcustom claude-code-extras-batch-max-turns 30
   "Maximum agentic turns per TODO when running batch processing."
   :type 'integer
   :group 'claude-code-extras)
@@ -1012,22 +1012,37 @@ When the queue is empty, display the summary buffer."
                            (buffer-string)))
                     (duration (float-time
                               (time-subtract (current-time) start-time)))
-                    (json-data (condition-case nil
-                                   (json-parse-string raw :object-type 'plist)
-                                 (error nil)))
+                    (json-data
+                     (condition-case nil
+                         (let ((end (cl-position ?} raw :from-end t)))
+                           (when end
+                             (json-parse-string
+                              (substring raw 0 (1+ end))
+                              :object-type 'plist)))
+                       (error nil)))
                     (cost (and json-data
-                               (plist-get json-data :cost_usd)))
+                               (or (plist-get json-data :total_cost_usd)
+                                   (plist-get json-data :cost_usd))))
                     (result-text
-                     (and json-data
-                          (let ((r (plist-get json-data :result)))
-                            (cond
-                             ((stringp r) r)
-                             ((and (vectorp r) (> (length r) 0))
-                              (mapconcat
-                               (lambda (block)
-                                 (or (plist-get block :text) ""))
-                               r "\n"))
-                             (t nil))))))
+                     (cond
+                      ((null json-data) nil)
+                      ((stringp (plist-get json-data :result))
+                       (plist-get json-data :result))
+                      ((and (vectorp (plist-get json-data :result))
+                            (> (length (plist-get json-data :result)) 0))
+                       (mapconcat
+                        (lambda (block)
+                          (or (plist-get block :text) ""))
+                        (plist-get json-data :result) "\n"))
+                      (t
+                       (format (concat "No result text returned.\n"
+                                       "Session: %s | Turns: %s | "
+                                       "Reason: %s\n"
+                                       "Resume with: claude --resume %s")
+                               (or (plist-get json-data :session_id) "?")
+                               (or (plist-get json-data :num_turns) "?")
+                               (or (plist-get json-data :subtype) "unknown")
+                               (or (plist-get json-data :session_id) "?"))))))
                (with-temp-file log-file
                  (insert raw))
                (push (list :title title
@@ -1035,7 +1050,8 @@ When the queue is empty, display the summary buffer."
                            :exit-code exit-code
                            :duration duration
                            :cost (or cost 0)
-                           :result-text (or result-text raw)
+                           :result-text (or result-text
+                                           "(failed to parse output)")
                            :log-file log-file)
                      claude-code-extras--batch-results)
                (kill-buffer (process-buffer proc))

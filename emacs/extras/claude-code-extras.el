@@ -54,6 +54,13 @@
   :type 'integer
   :group 'claude-code-extras)
 
+(defcustom claude-code-extras-sync-theme nil
+  "Whether to sync the Claude Code theme with the current Emacs theme.
+When non-nil, updates `~/.claude/settings.json' and sends `/theme' to all
+running Claude Code sessions whenever `enable-theme-functions' fires."
+  :type 'boolean
+  :group 'claude-code-extras)
+
 (defcustom claude-code-extras-sigwinch-delay 0.5
   "Delay in seconds before sending SIGWINCH to fix terminal rendering.
 After Claude Code starts, the TUI may render incorrectly due to a
@@ -1234,14 +1241,15 @@ theme, so we arrow up for dark (from light) or down for light
 Updates `~/.claude/settings.json' for new sessions and sends
 `/theme' to all running sessions when the background mode
 changes."
-  (let ((theme (claude-code-extras--emacs-theme)))
-    (unless (equal theme claude-code-extras--last-synced-theme)
-      (setq claude-code-extras--last-synced-theme theme)
-      (claude-code-extras--sync-theme-to-settings)
-      (dolist (buf (claude-code--find-all-claude-buffers))
-        (when (and (buffer-live-p buf)
-                   (process-live-p (get-buffer-process buf)))
-          (claude-code-extras--send-theme-to-buffer buf theme))))))
+  (when claude-code-extras-sync-theme
+    (let ((theme (claude-code-extras--emacs-theme)))
+      (unless (equal theme claude-code-extras--last-synced-theme)
+        (setq claude-code-extras--last-synced-theme theme)
+        (claude-code-extras--sync-theme-to-settings)
+        (dolist (buf (claude-code--find-all-claude-buffers))
+          (when (and (buffer-live-p buf)
+                     (process-live-p (get-buffer-process buf)))
+            (claude-code-extras--send-theme-to-buffer buf theme)))))))
 
 ;;;;; Auto-setup
 
@@ -1393,7 +1401,7 @@ the view from jumping to the middle of the buffer."
 (add-hook 'claude-code-start-hook #'claude-code-extras-setup-copilot)
 (add-hook 'kill-buffer-hook #'claude-code-extras-teardown-copilot)
 (add-hook 'enable-theme-functions #'claude-code-extras-sync-theme)
-(add-hook 'claude-code-start-hook #'claude-code-extras--sync-theme-to-settings)
+(add-hook 'claude-code-start-hook #'claude-code-extras-sync-theme)
 
 (provide 'claude-code-extras)
 ;;; claude-code-extras.el ends here

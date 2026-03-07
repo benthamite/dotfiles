@@ -121,6 +121,7 @@ The command ~dired-extras-dispatch~ opens a transient menu providing quick acces
 - *Dired folders*: personal directories such as bibliography, dotfiles, Emacs config, notes, downloads, repos, and various library locations.
 - *Music*: subdirectories for classical, popular, tango, and unsorted music.
 - *Special*: context-sensitive entries like the file at point, root, home, and the current buffer's directory (via ~dired-jump~).
+- *Projects*: personal project repositories (consensus-trader, stafforini.com, tangodb), constructed from ~paths-dir-personal-repos~.
 - *Tlon: Google Drive* and *Tlon: Dropbox*: project-specific directories for various Tlon publications and team members.
 
 Directory paths are drawn from variables defined in the =paths= package.

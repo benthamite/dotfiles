@@ -892,20 +892,8 @@ New directories entered by the user are automatically added to this list."
   :type '(repeat directory)
   :group 'claude-code-extras)
 
-(defvar claude-code-extras--batch-queue nil
-  "Remaining TODO entries to process.")
-
-(defvar claude-code-extras--batch-results nil
-  "Accumulated results from batch processing.")
-
-(defvar claude-code-extras--batch-log-dir nil
-  "Log directory for the current batch run.")
-
-(defvar claude-code-extras--batch-working-dir nil
-  "Working directory for the current batch run.")
-
-(defvar claude-code-extras--batch-start-time nil
-  "Start time of the current batch run.")
+;; Batch state is passed as a plist through closures to support
+;; parallel runs.  Keys: :queue :results :log-dir :working-dir :start-time
 
 (defun claude-code-extras--batch-collect-todos (scope)
   "Collect TODO entries from the current org buffer according to SCOPE.
@@ -967,25 +955,27 @@ in a summary buffer when all entries have been processed."
 
 (defun claude-code-extras--batch-start (entries dir)
   "Start batch processing of ENTRIES in working directory DIR."
-  (let ((log-dir (expand-file-name
-                  (format-time-string "batch_%Y-%m-%d_%H-%M-%S")
-                  claude-code-extras-log-directory)))
+  (let* ((log-dir (expand-file-name
+                   (format-time-string "batch_%Y-%m-%d_%H-%M-%S")
+                   claude-code-extras-log-directory))
+         (state (list :queue entries
+                      :results nil
+                      :log-dir log-dir
+                      :working-dir dir
+                      :start-time (current-time))))
     (make-directory log-dir t)
-    (setq claude-code-extras--batch-queue entries
-          claude-code-extras--batch-results nil
-          claude-code-extras--batch-log-dir log-dir
-          claude-code-extras--batch-working-dir dir
-          claude-code-extras--batch-start-time (current-time))
     (message "Batch processing %d TODO(s)..." (length entries))
-    (claude-code-extras--batch-run-next)))
+    (claude-code-extras--batch-run-next state)))
 
-(defun claude-code-extras--batch-run-next ()
-  "Process the next entry in the batch queue.
-When the queue is empty, display the summary buffer."
-  (if (null claude-code-extras--batch-queue)
-      (claude-code-extras--batch-finish)
-    (let* ((entry (pop claude-code-extras--batch-queue))
-           (index (1+ (length claude-code-extras--batch-results)))
+(defun claude-code-extras--batch-run-next (state)
+  "Process the next entry in the batch queue in STATE.
+STATE is a plist with keys :queue :results :log-dir :working-dir
+:start-time.  When the queue is empty, display the summary buffer."
+  (if (null (plist-get state :queue))
+      (claude-code-extras--batch-finish state)
+    (let* ((queue (plist-get state :queue))
+           (entry (car queue))
+           (index (1+ (length (plist-get state :results))))
            (title (plist-get entry :title))
            (prompt (claude-code-extras--batch-format-prompt entry))
            (log-file (expand-file-name
@@ -994,19 +984,20 @@ When the queue is empty, display the summary buffer."
                               (replace-regexp-in-string
                                "[^a-zA-Z0-9_-]" "-"
                                (truncate-string-to-width title 50)))
-                      claude-code-extras--batch-log-dir))
+                      (plist-get state :log-dir)))
            (args (claude-code-extras--batch-build-args prompt))
            (env (cl-remove-if
                  (lambda (s) (string-prefix-p "CLAUDE_CODE" s))
                  process-environment))
            (start-time (current-time))
            (output-buf (generate-new-buffer " *claude-batch-output*")))
+      (plist-put state :queue (cdr queue))
       (message "Batch [%d/%d]: %s"
                index
-               (+ index (length claude-code-extras--batch-queue))
+               (+ index (length (plist-get state :queue)))
                title)
       (let ((process-environment env)
-            (default-directory claude-code-extras--batch-working-dir))
+            (default-directory (plist-get state :working-dir)))
         (make-process
          :name (format "claude-batch-%d" index)
          :buffer output-buf
@@ -1026,28 +1017,30 @@ When the queue is empty, display the summary buffer."
                         (result-text (plist-get parsed :text)))
                    (with-temp-file log-file
                      (insert raw))
-                   (push (list :title title
-                               :index index
-                               :exit-code exit-code
-                               :duration duration
-                               :cost (or cost 0)
-                               :result-text (or result-text
-                                               "(failed to parse output)")
-                               :log-file log-file)
-                         claude-code-extras--batch-results)
+                   (plist-put state :results
+                              (cons (list :title title
+                                          :index index
+                                          :exit-code exit-code
+                                          :duration duration
+                                          :cost (or cost 0)
+                                          :result-text (or result-text
+                                                          "(failed to parse output)")
+                                          :log-file log-file)
+                                    (plist-get state :results)))
                    (kill-buffer (process-buffer proc)))
                (error
-                (push (list :title title :index index :exit-code -1
-                            :duration (float-time
-                                       (time-subtract (current-time)
-                                                      start-time))
-                            :cost 0
-                            :result-text (format "Sentinel error: %S"
-                                                 sentinel-err)
-                            :log-file log-file)
-                      claude-code-extras--batch-results)
+                (plist-put state :results
+                           (cons (list :title title :index index :exit-code -1
+                                       :duration (float-time
+                                                  (time-subtract (current-time)
+                                                                 start-time))
+                                       :cost 0
+                                       :result-text (format "Sentinel error: %S"
+                                                            sentinel-err)
+                                       :log-file log-file)
+                                 (plist-get state :results)))
                 (ignore-errors (kill-buffer (process-buffer proc)))))
-             (claude-code-extras--batch-run-next))))))))
+             (claude-code-extras--batch-run-next state))))))))
 
 (defun claude-code-extras--batch-parse-stream-json (raw)
   "Parse stream-json output RAW into a plist.
@@ -1102,29 +1095,28 @@ Returns (:text ASSISTANT-TEXT :cost COST :session-id ID
                                     claude-code-extras-batch-model))))
     args))
 
-(defun claude-code-extras--batch-finish ()
-  "Display the batch processing summary buffer."
-  (let* ((results (sort claude-code-extras--batch-results
+(defun claude-code-extras--batch-finish (state)
+  "Display the batch processing summary buffer for STATE."
+  (let* ((results (sort (plist-get state :results)
                         (lambda (a b)
                           (< (plist-get a :index) (plist-get b :index)))))
          (total (length results))
          (successes (cl-count 0 results :key (lambda (r) (plist-get r :exit-code))))
          (failures (- total successes))
          (total-cost (cl-reduce #'+ results :key (lambda (r) (plist-get r :cost))))
+         (start-time (plist-get state :start-time))
          (total-time (float-time
-                      (time-subtract (current-time)
-                                     claude-code-extras--batch-start-time)))
+                      (time-subtract (current-time) start-time)))
          (buf (get-buffer-create "*Claude Batch Results*")))
     (with-current-buffer buf
       (let ((inhibit-read-only t))
         (erase-buffer)
         (insert (format "#+title: Batch results — %s\n\n"
-                        (format-time-string "%Y-%m-%d %H:%M:%S"
-                                           claude-code-extras--batch-start-time)))
+                        (format-time-string "%Y-%m-%d %H:%M:%S" start-time)))
         (insert (format "- Total: %d | Success: %d | Failed: %d\n" total successes failures))
         (insert (format "- Cost: $%.4f\n" total-cost))
         (insert (format "- Time: %.1f seconds\n" total-time))
-        (insert (format "- Logs: [[file:%s]]\n\n" claude-code-extras--batch-log-dir))
+        (insert (format "- Logs: [[file:%s]]\n\n" (plist-get state :log-dir)))
         (dolist (result results)
           (let ((status (if (= 0 (plist-get result :exit-code)) "DONE" "FAIL")))
             (insert (format "* %s %s\n" status (plist-get result :title)))

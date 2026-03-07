@@ -699,6 +699,14 @@ This function finds #+begin_src lines that lack the
                  '(face org-block-end-line)))))))))
   nil)
 
+(defun org-extras-enable-nested-src-block-fontification ()
+  "Enable fontification of source blocks nested inside other blocks.
+Adds `org-extras-fontify-nested-src-blocks' to the buffer-local
+`font-lock-keywords' and triggers refontification."
+  (font-lock-add-keywords nil '((org-extras-fontify-nested-src-blocks)) 'append)
+  (when font-lock-mode
+    (font-lock-flush)))
+
 ;;;;; org-cycle
 
 (defun org-extras-cycle-global (&optional arg)

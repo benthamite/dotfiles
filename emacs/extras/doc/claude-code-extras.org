@@ -66,6 +66,9 @@ The user option ~claude-code-extras-log-interval~ controls how often (in seconds
 #+vindex: claude-code-extras-sigwinch-delay
 The user option ~claude-code-extras-sigwinch-delay~ specifies the delay (in seconds) before sending a =SIGWINCH= signal to the Claude process after startup. This works around a race condition where the TUI queries terminal dimensions before the Eat terminal window is fully laid out, resulting in a garbled banner. The default value is =0.5=. Increase it if you still see rendering artifacts on slower machines.
 
+#+findex: claude-code-extras-disable-scrollback-truncation
+The function ~claude-code-extras-disable-scrollback-truncation~ sets ~eat-term-scrollback-size~ to =nil= in Claude Code buffers. Eat's default scrollback limit of 8192 lines causes early output to be silently discarded in long sessions. This function is added to ~claude-code-start-hook~ automatically.
+
 ** Alert options
 :PROPERTIES:
 :CUSTOM_ID: h:alert-options

@@ -871,6 +871,14 @@ When non-nil, passed to each `claude -p' invocation."
   :type '(choice (const :tag "Default" nil) string)
   :group 'claude-code-extras)
 
+(defcustom claude-code-extras-audit-skills
+  '("/code-audit" "/design-audit" "/interpretability-audit")
+  "Skills to run when performing an integral project audit.
+Each entry is a skill name (with leading slash) that will be
+invoked with `--accept'."
+  :type '(repeat string)
+  :group 'claude-code-extras)
+
 (defvar claude-code-extras--batch-queue nil
   "Remaining TODO entries to process.")
 
@@ -1087,6 +1095,24 @@ When the queue is empty, display the summary buffer."
     (pop-to-buffer buf)
     (message "Batch complete: %d/%d succeeded (%.1fs, $%.4f)"
              successes total total-time total-cost)))
+
+;;;;; Project audit
+
+(defun claude-code-extras-audit-project ()
+  "Run a comprehensive audit of the current project.
+Sequentially invokes each skill in `claude-code-extras-audit-skills'
+with `--accept', each in a separate non-interactive Claude session.
+Results are displayed in a summary buffer when all audits complete."
+  (interactive)
+  (let* ((project (project-current t))
+         (dir (project-root project))
+         (entries (mapcar (lambda (skill)
+                            (list :title (format "%s --accept" skill)
+                                  :body ""))
+                          claude-code-extras-audit-skills)))
+    (when (yes-or-no-p
+           (format "Run %d audit(s) on %s?" (length entries) dir))
+      (claude-code-extras--batch-start entries dir))))
 
 ;;;;; Theme sync
 

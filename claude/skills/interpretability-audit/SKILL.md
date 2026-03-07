@@ -8,7 +8,7 @@ argument-hint: [--accept] [dir]
 
 Review $ARGUMENTS for clarity and intent transparency. The goal is NOT to find bugs, security issues, or style violations — it's to identify places where a reader (like yourself) would struggle to understand what the code is doing or why.
 
-If `--accept` is present in `$ARGUMENTS`, after completing the audit, immediately address **all** high-impact clarity issues without asking for confirmation. Byte-compile and run tests after applying all changes. Commit the result.
+If `--accept` is present in `$ARGUMENTS`, after completing the audit, immediately address **all** findings (high, medium, and low impact) without asking for confirmation. Byte-compile and run tests after applying all changes. Commit the result.
 
 Use subagents to explore the codebase in parallel where appropriate (e.g., one for backend, one for frontend). Read actual code — don't guess from file names.
 

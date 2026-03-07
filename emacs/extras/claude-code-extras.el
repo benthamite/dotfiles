@@ -1086,6 +1086,7 @@ Returns (:text ASSISTANT-TEXT :cost COST :session-id ID
   (let ((args (list claude-code-program
                     "-p" prompt
                     "--output-format" "stream-json"
+                    "--verbose"
                     "--max-turns" (number-to-string
                                   claude-code-extras-batch-max-turns))))
     (when claude-code-extras-batch-allowed-tools

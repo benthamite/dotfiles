@@ -1347,6 +1347,12 @@ one."
   (setq claude-code--window-widths
         (make-hash-table :test 'eq :weakness 'key)))
 
+(defun claude-code-extras-disable-scrollback-truncation ()
+  "Disable eat scrollback truncation in Claude Code buffers.
+The default `eat-term-scrollback-size' of 8192 lines causes the
+buffer to be truncated, losing earlier output."
+  (setq-local eat-term-scrollback-size nil))
+
 ;; Fix upstream scroll function: `(recenter)' centers the cursor mid-window,
 ;; which makes the view jump upward when there is scrollback above.  Using
 ;; `(recenter -1)' keeps the cursor at the bottom, matching terminal behavior.
@@ -1383,6 +1389,7 @@ the view from jumping to the middle of the buffer."
 (add-hook 'claude-code-start-hook #'claude-code-extras-set-modeline)
 (add-hook 'kill-buffer-hook #'claude-code-extras-stop-logging)
 (add-hook 'kill-buffer-hook #'claude-code-extras-stop-status-polling)
+(add-hook 'claude-code-start-hook #'claude-code-extras-disable-scrollback-truncation)
 (add-hook 'claude-code-start-hook #'claude-code-extras-setup-copilot)
 (add-hook 'kill-buffer-hook #'claude-code-extras-teardown-copilot)
 (add-hook 'enable-theme-functions #'claude-code-extras-sync-theme)

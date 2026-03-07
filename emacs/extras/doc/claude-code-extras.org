@@ -113,6 +113,9 @@ The user option ~claude-code-extras-batch-model~ specifies an optional model ove
 #+vindex: claude-code-extras-audit-skills
 The user option ~claude-code-extras-audit-skills~ specifies the list of skills to run when performing a project audit via ~claude-code-extras-audit-project~. Each entry is a skill name with a leading slash. The default value is ~("/code-audit" "/design-audit" "/interpretability-audit")~. Each skill is invoked with =--accept=, which instructs it to auto-fix all findings without prompting. Customize this list to add, remove, or reorder audit passes.
 
+#+vindex: claude-code-extras-audit-project-directories
+The user option ~claude-code-extras-audit-project-directories~ specifies the directories available for selection when running ~claude-code-extras-audit-project~. When the user enters a directory not already in this list, it is automatically appended and persisted via ~customize-save-variable~, so it will appear as a candidate in future invocations.
+
 ** Status polling options
 :PROPERTIES:
 :CUSTOM_ID: h:status-polling-options
@@ -164,7 +167,7 @@ The command respects ~claude-code-extras-batch-allowed-tools~, ~claude-code-extr
 :END:
 
 #+findex: claude-code-extras-audit-project
-The command ~claude-code-extras-audit-project~ runs a comprehensive audit of the current project. It determines the project root via ~project-current~, then sequentially invokes each skill in ~claude-code-extras-audit-skills~ ([[#h:project-audit-options][Project audit options]]) with =--accept=, each as a separate non-interactive =claude -p= session. This means each audit starts with a fresh context window.
+The command ~claude-code-extras-audit-project~ runs a comprehensive audit of a project. It prompts the user to select a directory from ~claude-code-extras-audit-project-directories~ ([[#h:project-audit-options][Project audit options]]) or enter a new one. New directories are automatically added to the list for future use. It then sequentially invokes each skill in ~claude-code-extras-audit-skills~ ([[#h:project-audit-options][Project audit options]]) with =--accept=, each as a separate non-interactive =claude -p= session. This means each audit starts with a fresh context window.
 
 The command reuses the batch processing infrastructure ([[#h:batch-todo-internals][Batch TODO internals]]), so results are logged and displayed in the same =*Claude Batch Results*= summary buffer with per-audit status, cost, duration, and output. The batch options (~claude-code-extras-batch-max-turns~, ~claude-code-extras-batch-model~, etc.) apply to audit runs as well.
 

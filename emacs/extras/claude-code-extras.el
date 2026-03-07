@@ -879,6 +879,12 @@ invoked with `--accept'."
   :type '(repeat string)
   :group 'claude-code-extras)
 
+(defcustom claude-code-extras-audit-project-directories nil
+  "Directories available for selection in `claude-code-extras-audit-project'.
+New directories entered by the user are automatically added to this list."
+  :type '(repeat directory)
+  :group 'claude-code-extras)
+
 (defvar claude-code-extras--batch-queue nil
   "Remaining TODO entries to process.")
 
@@ -1099,13 +1105,15 @@ When the queue is empty, display the summary buffer."
 ;;;;; Project audit
 
 (defun claude-code-extras-audit-project ()
-  "Run a comprehensive audit of the current project.
+  "Run a comprehensive audit of a project.
+Prompt the user to select a project directory from
+`claude-code-extras-audit-project-directories' or enter a new one.
+New directories are persisted to the list for future use.
 Sequentially invokes each skill in `claude-code-extras-audit-skills'
 with `--accept', each in a separate non-interactive Claude session.
 Results are displayed in a summary buffer when all audits complete."
   (interactive)
-  (let* ((project (project-current t))
-         (dir (project-root project))
+  (let* ((dir (claude-code-extras--read-audit-project-directory))
          (entries (mapcar (lambda (skill)
                             (list :title (format "%s --accept" skill)
                                   :body ""))
@@ -1113,6 +1121,24 @@ Results are displayed in a summary buffer when all audits complete."
     (when (yes-or-no-p
            (format "Run %d audit(s) on %s?" (length entries) dir))
       (claude-code-extras--batch-start entries dir))))
+
+(defun claude-code-extras--read-audit-project-directory ()
+  "Prompt the user for a project directory, with completion.
+Offer `claude-code-extras-audit-project-directories' as candidates but allow
+free input.  When the entered directory is not already in the list, add it and
+persist via `customize-save-variable'."
+  (let* ((candidates (mapcar #'abbreviate-file-name
+                             claude-code-extras-audit-project-directories))
+         (input (completing-read "Project directory: " candidates nil nil))
+         (dir (file-truename (expand-file-name input))))
+    (unless (file-directory-p dir)
+      (user-error "Not a directory: %s" dir))
+    (unless (member dir (mapcar #'file-truename
+                                claude-code-extras-audit-project-directories))
+      (customize-save-variable 'claude-code-extras-audit-project-directories
+                               (append claude-code-extras-audit-project-directories
+                                       (list dir))))
+    dir))
 
 ;;;;; Theme sync
 

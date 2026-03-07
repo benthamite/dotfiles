@@ -8,7 +8,7 @@ argument-hint: [--accept] [dir]
 
 Review $ARGUMENTS for architectural quality and structural soundness. The goal is to find code that **works correctly and reads clearly** but is structured in a way that makes it harder to maintain, extend, or reason about than it needs to be.
 
-If `--accept` is present in `$ARGUMENTS`, after completing the audit, immediately refactor **all** findings rated as high or medium impact without asking for confirmation. Byte-compile and run tests after applying all changes. Commit the result.
+If `--accept` is present in `$ARGUMENTS`, after completing the audit, immediately refactor **all** findings (high, medium, and low impact) without asking for confirmation. Byte-compile and run tests after applying all changes. Commit the result.
 
 Use subagents to explore the codebase in parallel where appropriate. Read actual code — don't guess from file names.
 

@@ -69,6 +69,14 @@ The user option ~claude-code-extras-sigwinch-delay~ specifies the delay (in seco
 #+findex: claude-code-extras-disable-scrollback-truncation
 The function ~claude-code-extras-disable-scrollback-truncation~ sets ~eat-term-scrollback-size~ to =nil= in Claude Code buffers. Eat's default scrollback limit of 8192 lines causes early output to be silently discarded in long sessions. This function is added to ~claude-code-start-hook~ automatically.
 
+** Theme sync
+:PROPERTIES:
+:CUSTOM_ID: h:theme-sync-option
+:END:
+
+#+vindex: claude-code-extras-sync-theme
+The user option ~claude-code-extras-sync-theme~ controls whether the Claude Code theme is kept in sync with the current Emacs theme. When non-~nil~, changing the Emacs theme (via ~enable-theme-functions~) updates =~/.claude/settings.json= and sends ~/theme~ to all running Claude Code sessions so they switch between light and dark mode automatically. The default value is ~nil~ (disabled).
+
 ** Alert options
 :PROPERTIES:
 :CUSTOM_ID: h:alert-options

@@ -216,7 +216,7 @@ number."
     ("i" "Anki" (lambda () (interactive) (dired paths-dir-anki)))
     ("n" "Notes" (lambda () (interactive) (dired paths-dir-notes)))
     ("o" "Google Drive" (lambda () (interactive) (dired paths-dir-google-drive)))
-    ("p" "People" (lambda () (interactive) (dired paths-dir-people)))
+    ("P" "People" (lambda () (interactive) (dired paths-dir-people)))
     ("r" "Repos" (lambda () (interactive) (dired paths-dir-personal-repos)))
     ("s" "Source" (lambda () (interactive) (dired paths-dir-external-repos)))
     ("U" "Audiobooks" (lambda () (interactive) (dired paths-dir-audiobooks)))
@@ -236,6 +236,10 @@ number."
     ("SPC" "user" (lambda () (interactive) (dired "~/")))
     (";" "Current buffer" dired-jump)
     ("H-;" "Current buffer in other window" dired-jump-other-window)]
+   ["Projects"
+    ("p a" "consensus-trader" (lambda () (interactive) (dired (file-name-concat paths-dir-personal-repos "consensus-trader"))))
+    ("p b" "stafforini.com" (lambda () (interactive) (dired (file-name-concat paths-dir-personal-repos "stafforini.com"))))
+    ("p c" "tangodb" (lambda () (interactive) (dired (file-name-concat paths-dir-personal-repos "tangodb"))))]
    ["Tlön: Google Drive"
     ("t H-b" "Google Drive: Babel" (lambda () (interactive) (dired paths-dir-google-drive-tlon-babel)))
     ("t H-n" "Google Drive: EAN" (lambda () (interactive) (dired paths-dir-google-drive-tlon-EAN)))

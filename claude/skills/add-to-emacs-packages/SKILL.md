@@ -26,9 +26,14 @@ If `$ARGUMENTS` is provided, use it as the package name. Otherwise, infer the pa
 
 If neither yields a plausible Emacs package name, ask the user.
 
-### Step 2: Check for duplicates
+### Step 2: Check what already exists
 
-Read `my-emacs-packages.org` and verify the package is not already listed. If it is, inform the user and stop.
+Check **both** of the following:
+
+1. Whether the package is already listed in `my-emacs-packages.org`.
+2. Whether the package already has a card in the `benthamite/benthamite` GitHub profile README (check with `gh api repos/benthamite/benthamite/contents/README.md --jq .content | base64 -d | grep '<package>'`).
+
+If the package exists in **both** places, inform the user and stop. If it exists in only one, skip the steps for the place where it already exists and proceed with the remaining steps.
 
 ### Step 3: Locate the readme
 

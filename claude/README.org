@@ -114,7 +114,7 @@ Spec-based build workflow inspired by [[https://x.com/trq212/status/200531527502
 
 Creates comprehensive test suites. Performs reconnaissance on the tech stack, then generates tests prioritized by criticality: data integrity and input boundaries first, business logic and integrations second, regressions and configuration third.
 
-*** verify-pr
+*** pr-audit
 :PROPERTIES:
 :ID:       03187E6C-B3E2-47EB-821B-68121F4F883F
 :END:

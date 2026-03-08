@@ -160,7 +160,7 @@ If FILE is nil, use `paths-file-ledger'."
   (interactive)
   (ledger-report "net worth (USD)" nil))
 
-(defun mode-mode-extras-extras-report-net-worth-USD ()
+(defun ledger-mode-extras-report-payee ()
   "Run a `payee' report from `ledger-reports'."
   (interactive)
   (ledger-report "payee" nil))

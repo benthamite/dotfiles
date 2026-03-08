@@ -164,9 +164,10 @@ The default value is ~nil~. This is useful when using slow models where you migh
 :END:
 
 #+findex: gptel-extras-summarize-commit-diffs
+#+vindex: gptel-extras-changelog-file
 When reviewing a series of commits in a =magit-log-mode= buffer, you may want a quick, high-level summary of what changed. The command ~gptel-extras-summarize-commit-diffs~ takes the active region in the log buffer, extracts the diffs for all commits within that region, and sends them to the LLM with a prompt requesting an Org-mode-formatted changelog summary.
 
-The summary is displayed in a dedicated =*Commit Summary*= buffer. The prompt is structured using the template in ~gptel-extras-changelog-file~, which helps the LLM produce output organized by package or feature.
+The summary is displayed in a dedicated =*Commit Summary*= buffer. The prompt is structured using the template in the constant ~gptel-extras-changelog-file~ (which points to the changelog template file in the extras directory), helping the LLM produce output organized by package or feature.
 
 With a prefix argument (=C-u=), the command includes full diff content with unified context rather than the default three-line unified diff. This can help the LLM understand broader context around each change.
 
@@ -185,7 +186,8 @@ These commands manage the repository map and conventions file that provide proje
 :END:
 
 #+findex: gptel-extras-show-repo-map
-The command ~gptel-extras-show-repo-map~ generates (or retrieves from cache) the repository map for the current project and displays it in a dedicated buffer named =*Repo Map: PROJECT-NAME*=. Use this to inspect the map before deciding whether to include it in the context.
+#+vindex: gptel-extras-repo-map-buffer-name-formatter
+The command ~gptel-extras-show-repo-map~ generates (or retrieves from cache) the repository map for the current project and displays it in a dedicated buffer. The buffer name follows the format string ~gptel-extras-repo-map-buffer-name-formatter~ (default =*Repo Map: %s*=, where =%s= is the project name). Use this to inspect the map before deciding whether to include it in the context.
 
 #+findex: gptel-extras-add-repo-map-to-context
 The command ~gptel-extras-add-repo-map-to-context~ generates the repository map, removes any previously added map from the =gptel= context, and then adds the current map with explanatory preamble text. The preamble instructs the LLM to use the map for understanding project structure and to request relevant files.
@@ -285,16 +287,6 @@ This is useful for quick research where you want both traditional web results an
 :PROPERTIES:
 :CUSTOM_ID: h:misc-commands
 :END:
-
-*** Setting backend and model
-:PROPERTIES:
-:CUSTOM_ID: h:set-backend-and-model
-:END:
-
-#+findex: gptel-extras-set-backend-and-model
-The command ~gptel-extras-set-backend-and-model~ sets ~gptel-backend~ and ~gptel-model~ buffer-locally in the current Org buffer. When called from Lisp, pass the backend name as a string and the model as a symbol. If either argument is nil, the current global value is used.
-
-This is primarily a helper used by other commands such as ~gptel-extras-run-query~ ([[#h:functions][Functions]]) and ~gptel-extras-search-and-ask-model~ ([[#h:search][Search integration]]).
 
 *** Toggling default major mode
 :PROPERTIES:
@@ -401,6 +393,24 @@ The VPN connection is made silently (no user prompt). The =mullvad= package must
 The function ~gptel-extras-run-query~ creates a new =gptel= buffer from a query string, optionally setting a specific backend and model. It is used internally by ~gptel-extras-search-and-ask-model~ ([[#h:search][Search integration]]) and can be called from Lisp for any programmatic query dispatch.
 
 The buffer name is a slugified version of the query with the appropriate file extension. If =BACKEND= or =MODEL= are nil, the global defaults are used.
+
+** Setting backend and model
+:PROPERTIES:
+:CUSTOM_ID: h:set-backend-and-model
+:END:
+
+#+findex: gptel-extras-set-backend-and-model
+The function ~gptel-extras-set-backend-and-model~ sets ~gptel-backend~ and ~gptel-model~ buffer-locally in the current Org buffer. Pass the backend name as a string and the model as a symbol. If either argument is nil, the current global value is used.
+
+This is a helper function (not a command) used by ~gptel-extras-run-query~ ([[#h:run-query][Running queries programmatically]]) and ~gptel-extras-search-and-ask-model~ ([[#h:search][Search integration]]).
+
+** Buffer validation
+:PROPERTIES:
+:CUSTOM_ID: h:buffer-validation
+:END:
+
+#+findex: gptel-extras-ensure-gptel-mode
+The function ~gptel-extras-ensure-gptel-mode~ signals an error if ~gptel-mode~ is not active in the current buffer. It is used as a guard by commands such as ~gptel-extras-continue-in-new-buffer~ ([[#h:continue-in-new-buffer][Continuing in a new buffer]]) that require an active =gptel= session.
 
 ** Repository identification
 :PROPERTIES:

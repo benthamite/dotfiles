@@ -183,6 +183,11 @@ screen in the default web browser, bypassing =mu4e= entirely.
 
 #+findex: mu4e-extras-open-gmail
 #+findex: mu4e-extras-view-in-gmail
+#+vindex: mu4e-extras-gmail-base
+The constant ~mu4e-extras-gmail-base~ holds the base URL for Gmail
+(="https://mail.google.com/mail/u/0/"=).  It is used by the commands
+below.
+
 The command ~mu4e-extras-open-gmail~ opens the Gmail inbox in the
 default web browser.
 

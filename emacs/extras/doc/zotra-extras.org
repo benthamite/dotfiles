@@ -26,7 +26,7 @@ The package provides the following capabilities:
 - *VPN integration.* Optional routing of IMDb requests through Mullvad VPN to control the geographic origin of fetched metadata ([[#h:zotra-extras-use-mullvad-p][VPN for IMDb]]).
 - *Org protocol handler.* A protocol handler that enables adding entries directly from a web browser ([[#h:org-protocol][Org protocol handler]]).
 - *BibTeX cleanup.* Post-processing functions that fix octal encoding artifacts, set timestamps, and clean up newly imported entries ([[#h:bibtex-cleanup][BibTeX cleanup]]).
-- *Field fetching.* A utility function to retrieve a single bibliographic field for a URL without adding the full entry ([[#h:fetching-fields][Fetching fields]]).
+- *Field fetching.* A utility function to retrieve a single bibliographic field for a URL without adding the full entry, with support for skipping excluded domains ([[#h:fetching-fields][Fetching fields]]).
 
 The package depends on =zotra= and =paths=, and optionally integrates with =ebib=, =ebib-extras=, =mullvad=, =org-ref=, and =tlon=.
 
@@ -46,6 +46,45 @@ The Internet Movie Database (IMDb) returns metadata that may vary based on the g
 When set to non-nil, and when the URL or search string passed to ~zotra-extras-add-entry~ matches =imdb.com=, the command calls ~mullvad-connect-to-website~ with the ="IMDb"= website identifier before fetching data. This requires the =mullvad= package and appropriate configuration of ~mullvad-websites-and-cities~ and ~mullvad-cities-and-servers~. Specifically, ~mullvad-websites-and-cities~ must contain a cons cell like =("IMDb" . "New York")= and ~mullvad-cities-and-servers~ must map that city to a server like =("New York" . "us-nyc-wg-601")=.
 
 The default value is ~nil~, meaning all requests use the direct internet connection.
+
+** Excluding domains from field fetching
+:PROPERTIES:
+:CUSTOM_ID: h:excluded-domains
+:END:
+
+#+vindex: zotra-extras-excluded-domains
+Some websites return data that is not useful as bibliographic metadata. For example, IMDb pages yield only runtime strings (such as ="1h 35m | R"=) rather than real bibliographic data for fields like ="abstract"=. The user option ~zotra-extras-excluded-domains~ specifies a list of domain strings for which ~zotra-extras-fetch-field~ ([[#h:fetching-fields][Fetching fields]]) should not attempt to fetch data. If a URL matches any domain in this list, the function returns ~nil~ immediately and logs a message instead of making a network request.
+
+The default value is =("imdb.com")=. The type is a list of strings (~(repeat string)~).
+
+* Variables
+:PROPERTIES:
+:CUSTOM_ID: h:variables
+:END:
+
+** Most recent bibliography file
+:PROPERTIES:
+:CUSTOM_ID: h:most-recent-bibfile
+:END:
+
+#+vindex: zotra-extras-most-recent-bibfile
+The variable ~zotra-extras-most-recent-bibfile~ holds the path of the bibliography file used by the most recently added entry. It is set by ~zotra-extras-add-entry~ ([[#h:adding-entries][Adding entries]]) when the user selects a bibliography file, and is read by ~zotra-extras-open-in-ebib~ ([[#h:ebib-post-processing][Ebib post-processing]]) to switch to the correct =ebib= database. The initial value is ~nil~.
+
+** Most recent bibliography key
+:PROPERTIES:
+:CUSTOM_ID: h:most-recent-bibkey
+:END:
+
+#+vindex: zotra-extras-most-recent-bibkey
+The variable ~zotra-extras-most-recent-bibkey~ holds the BibTeX key of the most recently added entry. It is set by ~zotra-extras-after-add-process-bibtex~ ([[#h:bibtex-cleanup][BibTeX cleanup]]) after cleanup processing, and is read by the entry-opening workflow to navigate to the correct entry in =ebib=. The initial value is ~nil~.
+
+** Default URL list file
+:PROPERTIES:
+:CUSTOM_ID: h:add-multiple-urls-file-constant
+:END:
+
+#+vindex: zotra-extras-add-multiple-urls-from-file
+The constant ~zotra-extras-add-multiple-urls-from-file~ (the variable, not the command of the same name) holds the default file path for the URL list used by the command ~zotra-extras-add-multiple-urls-from-file~ ([[#h:batch-processing][Batch processing]]). Its value is =zotra-add-multiple-urls.txt= in the downloads directory (~paths-dir-downloads~).
 
 * Commands
 :PROPERTIES:

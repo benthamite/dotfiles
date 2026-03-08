@@ -71,19 +71,6 @@ buffer if the end block is the last one).  Pressing =RET= without
 selecting an end block copies everything from the start block to the
 end of the buffer.  The text is placed in the kill ring.
 
-** Repository map
-:PROPERTIES:
-:CUSTOM_ID: h:repository-map
-:END:
-
-#+findex: aidermacs-extras-save-repo-map
-The command ~aidermacs-extras-save-repo-map~ runs
-=aider --show-repo-map= and writes the output to =repo-map.md= in the
-project root.  This gives you a static snapshot of the repository
-structure that Aider sees, which can be useful for debugging context
-issues.  When the optional ASYNC argument is non-nil, the command runs
-asynchronously.
-
 ** Launching Aider
 :PROPERTIES:
 :CUSTOM_ID: h:launching-aider
@@ -121,6 +108,19 @@ state.
 If the buffer is not an Aidermacs buffer or has no running process,
 the function returns ~t~ immediately and the kill proceeds without
 interruption.
+
+** Repository map
+:PROPERTIES:
+:CUSTOM_ID: h:repository-map
+:END:
+
+#+findex: aidermacs-extras-save-repo-map
+The function ~aidermacs-extras-save-repo-map~ runs
+=aider --show-repo-map= and writes the output to =repo-map.md= in the
+project root.  This gives you a static snapshot of the repository
+structure that Aider sees, which can be useful for debugging context
+issues.  When the optional ASYNC argument is non-nil, the function runs
+asynchronously.
 
 * Indices
 :PROPERTIES:

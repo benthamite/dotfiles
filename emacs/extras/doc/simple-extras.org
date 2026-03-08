@@ -211,9 +211,11 @@ This refinement, inspired by [[https://spwhitton.name/blog/entry/transient-mark-
 :END:
 
 #+findex: simple-extras-visible-mode-enhanced
+#+findex: simple-extras-visible-mode-enhanced-dired
+#+findex: simple-extras-visible-mode-enhanced-org
 The command ~simple-extras-visible-mode-enhanced~ toggles ~visible-mode~ together with several related display modes, providing a single command to reveal or hide all visual embellishments at once. It accepts an optional prefix argument: positive to enable, negative to disable, or toggle if called interactively without an argument.
 
-When in a Dired buffer, it also toggles ~dired-hide-details-mode~ and ~dired-omit-mode~. When in an Org-mode buffer (including ~org-agenda-mode~ and ~org-msg-mode~), it toggles ~org-tidy-mode~ (if present in ~org-mode-hook~), inline images (via ~org-extras-inline-images~ from =org-extras.el=), and ~org-modern-mode~ (when available and not in the agenda). This is useful for quickly switching between a "clean" reading view and a "raw" editing view.
+When in a Dired buffer, it delegates to ~simple-extras-visible-mode-enhanced-dired~, which toggles ~dired-hide-details-mode~ and ~dired-omit-mode~. When in an Org-mode buffer (including ~org-agenda-mode~ and ~org-msg-mode~), it delegates to ~simple-extras-visible-mode-enhanced-org~, which toggles ~org-tidy-mode~ (if present in ~org-mode-hook~), inline images (via ~org-extras-inline-images~ from =org-extras.el=), and ~org-modern-mode~ (when available and not in the agenda). This is useful for quickly switching between a "clean" reading view and a "raw" editing view.
 
 ** Enhanced visual line mode
 :PROPERTIES:
@@ -294,18 +296,6 @@ The command ~simple-extras-strip-url~ simplifies the URL at point by removing th
 The command ~simple-extras-strip-thing-at-point~ is a DWIM wrapper that dispatches to the appropriate stripping function based on the thing at point. Currently, it only supports URLs (delegating to ~simple-extras-strip-url~) and collapses any surrounding whitespace afterward via ~just-one-space~. This command is designed to be extended with additional thing types in the future.
 
 Both commands rely on ~simple-extras-get-url-at-point~ to detect URLs and ~simple-extras-simplify-url~ to perform the simplification ([[#h:url-utilities][URL utilities]]).
-
-** Text conversion via Pandoc
-:PROPERTIES:
-:CUSTOM_ID: h:pandoc-convert
-:END:
-
-#+findex: simple-extras-pandoc-convert
-The command ~simple-extras-pandoc-convert~ converts text between formats using the external [[https://pandoc.org/][Pandoc]] tool. It accepts a TARGET format (using Pandoc's format names), an optional SOURCE format (defaulting to HTML), and optional CONTENT (defaulting to the system clipboard).
-
-When CONTENT is provided as a string, the conversion happens in a temporary buffer via ~call-process-region~. When CONTENT is ~nil~, the command reads from the system clipboard using =pbv= (for HTML content) or =pbpaste= (as a fallback), pipes it through Pandoc, and returns the result as a string. The =--wrap=none= flag is always passed to prevent Pandoc from inserting line breaks.
-
-This function is primarily used programmatically by other packages to convert clipboard HTML to Org or Markdown format.
 
 ** Asciifying text
 :PROPERTIES:
@@ -407,6 +397,18 @@ The function ~simple-extras-remove-trailing-slash~ strips a trailing slash from 
 The function ~simple-extras-get-url~ retrieves a URL from multiple sources: an explicit argument, the current buffer's mode (EWW, Ebib, or BibTeX), or a user prompt pre-filled with the current kill ring entry. This provides a convenient way for other commands to obtain a URL regardless of context.
 
 The function ~simple-extras-string-is-url-p~ checks whether a string is a valid URL by parsing it with ~url-generic-parse-url~ and verifying that both the scheme (~url-type~) and host (~url-host~) are present.
+
+** Text conversion via Pandoc
+:PROPERTIES:
+:CUSTOM_ID: h:pandoc-convert
+:END:
+
+#+findex: simple-extras-pandoc-convert
+The function ~simple-extras-pandoc-convert~ converts text between formats using the external [[https://pandoc.org/][Pandoc]] tool. It accepts a TARGET format (using Pandoc's format names), an optional SOURCE format (defaulting to HTML), and optional CONTENT (defaulting to the system clipboard).
+
+When CONTENT is provided as a string, the conversion happens in a temporary buffer via ~call-process-region~. When CONTENT is ~nil~, the function reads from the system clipboard using =pbv= (for HTML content) or =pbpaste= (as a fallback), pipes it through Pandoc, and returns the result as a string. The =--wrap=none= flag is always passed to prevent Pandoc from inserting line breaks.
+
+This function is primarily used programmatically by other packages to convert clipboard HTML to Org or Markdown format.
 
 ** Asciifying strings
 :PROPERTIES:

@@ -78,7 +78,8 @@ color at point is HEX (e.g., =#ff0000=), the command converts it to
 HSL (e.g., =0, 100%, 50%=); if it is HSL, the command produces HEX.
 The converted value is saved to the kill ring and reported in the echo
 area, so you can immediately yank it wherever you need it.  If no
-recognizable color is found at point, the command prompts for one.
+recognizable color is found at point, the command reports this in the
+echo area.  You can also pass a COLOR argument from Lisp code.
 
 #+findex: color-extras-convert-all
 To convert every color in a file at once, use
@@ -144,7 +145,10 @@ by the interactive commands ([[#h:conversion][Conversion]]).
 The function ~color-extras-hsl-split~ extracts hue, saturation, and
 luminance from the current regexp match data (assuming a match against
 ~color-extras-hsl-scaled-pattern~) and returns them as a list of three
-numbers.  ~color-extras-hsl-to-string~ takes such a list and formats
+numbers.  When the optional STRING argument is non-nil, match data is
+read from that string (for use after ~string-match~); otherwise, match
+data is read from the current buffer (for use after
+~thing-at-point-looking-at~ or ~re-search-forward~).  ~color-extras-hsl-to-string~ takes such a list and formats
 it as ="H, S%, L%"=, rounding each component to the nearest integer.
 ~color-extras-format-hsl~ is a convenience wrapper that returns either
 the list or the string form depending on its STRING argument.

@@ -45,7 +45,20 @@ keyboard-driven launcher for the files you access most often.
 :CUSTOM_ID: h:user-options
 :END:
 
-** ~files-extras-new-empty-buffer-major-mode~
+** Screenshot directory
+:PROPERTIES:
+:CUSTOM_ID: h:screenshot-directory
+:END:
+
+#+vindex: files-extras-screenshot-directory
+The user option ~files-extras-screenshot-directory~ specifies the
+directory where macOS saves screenshots.  The default value is the
+downloads directory (via ~paths-dir-downloads~).  This is used by
+~files-extras-copy-most-recent-screenshot~
+([[#h:copying-paths-and-contents][Copying paths and contents]]) to
+locate the most recent screenshot file.
+
+** New buffer major mode
 :PROPERTIES:
 :CUSTOM_ID: h:files-extras-new-empty-buffer-major-mode
 :END:
@@ -176,6 +189,7 @@ provides a single keybinding for both common evaluation workflows.
 #+findex: files-extras-copy-current-path
 #+findex: files-extras-copy-contents
 #+findex: files-extras-copy-as-kill-dwim
+#+findex: files-extras-copy-most-recent-screenshot
 The command ~files-extras-show-buffer-name~ displays the buffer name in
 the echo area and copies it to the kill ring.
 
@@ -190,6 +204,14 @@ point in Dired, the current buffer's file, or prompts for a file.
 The command ~files-extras-copy-as-kill-dwim~ copies a context-appropriate
 string to the kill ring.  Currently, in a ~helpful-mode~ buffer, it
 extracts the symbol name from the buffer title and kills the buffer.
+
+The command ~files-extras-copy-most-recent-screenshot~ finds the most
+recent screenshot in ~files-extras-screenshot-directory~
+([[#h:screenshot-directory][Screenshot directory]]) and copies its full
+path to the kill ring.  Screenshots are identified by matching the macOS
+screenshot naming pattern (=Screenshot YYYY-MM-DD at HH.MM.SS.EXT=).
+This is useful for quickly referencing a screenshot you just took,
+e.g., to attach it to an email or insert it into a document.
 
 ** OCR for PDF files
 :PROPERTIES:
@@ -418,6 +440,29 @@ for =ocrmypdf= output.  It translates raw process output into
 human-readable status messages and suppresses duplicates.  For example,
 it informs the user when OCR has already been performed and a prefix
 argument is needed to force re-processing.
+
+** Directory-local variable chaining
+:PROPERTIES:
+:CUSTOM_ID: h:dir-locals-chaining
+:END:
+
+#+findex: files-extras-walk-dir-locals-file
+#+vindex: files-extras-walk-dir-locals-upward
+The function ~files-extras-walk-dir-locals-file~ enables chaining of
+=.dir-locals.el= files from the current directory upward through the
+file system hierarchy.  By default, Emacs only applies the nearest
+=.dir-locals.el=; this function makes it possible to layer settings from
+multiple levels.
+
+The variable ~files-extras-walk-dir-locals-upward~ controls the order
+in which the chained files are evaluated.  When non-nil, evaluation
+proceeds from the current directory upward (most specific first);
+otherwise, evaluation proceeds from the top down.  The default value
+is ~nil~.
+
+This function is designed to be used as =:around= advice on
+~hack-dir-local-variables~.  The advice call is present in the source
+but commented out by default; uncomment it if you need this behavior.
 
 ** Trash and auto-save support
 :PROPERTIES:

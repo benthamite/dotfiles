@@ -89,6 +89,43 @@ token.
 The boolean type accepts ~t~ or ~nil~.  You should set this to ~t~ if
 you are using the Claude API directly rather than a subscription plan.
 
+** Claude Code detail toggles
+:PROPERTIES:
+:CUSTOM_ID: h:claude-code-detail-toggles
+:END:
+
+#+vindex: doom-modeline-extras-claude-code-tokens
+#+vindex: doom-modeline-extras-claude-code-lines-changed
+#+vindex: doom-modeline-extras-claude-code-cache-efficiency
+The Claude Code status segment can display several optional detail
+fields.  Each is controlled by a boolean user option that defaults to
+~nil~ (hidden).  Set any of them to ~t~ to include the corresponding
+information in the modeline.
+
+The user option ~doom-modeline-extras-claude-code-tokens~ controls
+whether the input token count is shown.  When non-~nil~, the segment
+displays a compact token count (e.g., "12.3k", "1.5M").
+
+The user option ~doom-modeline-extras-claude-code-lines-changed~
+controls whether lines added and removed are shown.  When non-~nil~,
+the segment displays a =+N/-M= indicator with color-coded faces.
+
+The user option ~doom-modeline-extras-claude-code-cache-efficiency~
+controls whether the cache hit ratio is shown.  When non-~nil~, the
+segment displays the percentage of cache-read tokens relative to total
+tokens, color-coded by efficiency.
+
+* Faces
+:PROPERTIES:
+:CUSTOM_ID: h:faces
+:END:
+
+#+vindex: doom-modeline-extras-cost-free
+The face ~doom-modeline-extras-cost-free~ is used to render the session
+cost on non-API (subscription) plans.  It inherits from
+~doom-modeline~ and adds a strikethrough attribute, visually indicating
+that the displayed cost is not actually charged to the user.
+
 * Modeline segments
 :PROPERTIES:
 :CUSTOM_ID: h:modeline-segments
@@ -192,6 +229,8 @@ view of the session state.
 :END:
 
 #+findex: doom-modeline-extras-handle-github-notifications
+#+findex: doom-modeline-extras-refresh-github-after-forge
+#+vindex: doom-modeline-extras-github-last-count
 The function ~doom-modeline-extras-handle-github-notifications~ is
 added to ~doom-modeline-after-github-fetch-notification-hook~.  After
 Doom Modeline fetches the GitHub notification count, this function
@@ -199,10 +238,16 @@ compares the new count against the previously stored count in the
 variable ~doom-modeline-extras-github-last-count~.
 
 When the count has changed and is greater than zero, the function calls
-~forge-pull-notifications~ from the =forge= package to retrieve full
-notification details.  It then updates the stored count.  This provides
-a bridge between Doom Modeline's lightweight notification polling and
-Forge's detailed notification management.
+~forge-extras-pull-notifications~ from the =forge-extras= package to
+retrieve full notification details.  It then updates the stored count.
+This provides a bridge between Doom Modeline's lightweight notification
+polling and Forge's detailed notification management.
+
+The function ~doom-modeline-extras-refresh-github-after-forge~ works in
+the opposite direction: it is installed as =:after= advice on
+~forge--ghub-update-notifications~ so that after Forge pulls
+notifications, the Doom Modeline GitHub count updates immediately
+rather than waiting for the next timer cycle.
 
 ** Formatting helpers
 :PROPERTIES:

@@ -107,9 +107,39 @@ Then generate an org ID for the newly inserted heading:
 emacsclient -e '(with-current-buffer (find-file-noselect "<packages-list-path>") (goto-char (point-min)) (search-forward "** =<package>=") (beginning-of-line) (org-id-get-create))'
 ```
 
-### Step 7: Commit
+### Step 7: Add the package to the GitHub profile README
 
-Create a single commit with both files:
+Clone the `benthamite/benthamite` repo (the GitHub profile README) into a temporary directory, add a card for the new package in the "Packages I've developed" section, commit, and push.
+
+```bash
+TMPDIR=$(mktemp -d)
+gh repo clone benthamite/benthamite "$TMPDIR/benthamite"
+```
+
+In `$TMPDIR/benthamite/README.md`, locate the `<!-- PACKAGES:END -->` comment (or, if absent, the closing `</p>` tag right before the end of the "Packages I've developed" section). Insert a new card **in alphabetical order** among the existing cards:
+
+```html
+  <a href="https://github.com/benthamite/<package>"><img width="400" src="https://github-readme-stats-fast.vercel.app/api/pin/?username=benthamite&repo=<package>&hide_border=true&theme=transparent" /></a>
+```
+
+Then commit and push:
+
+```bash
+cd "$TMPDIR/benthamite"
+git add README.md
+git commit -m "add <package>"
+git push
+```
+
+Finally, clean up the temporary directory:
+
+```bash
+rm -rf "$TMPDIR"
+```
+
+### Step 8: Commit the notes changes
+
+Create a single commit with both files in the notes repo:
 
 ```
 claude: add <package> to emacs packages list

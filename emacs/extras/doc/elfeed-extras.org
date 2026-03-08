@@ -27,6 +27,22 @@ The extensions address several common workflows:
 - *Background updates.* Updating feeds even when Elfeed buffers are not open ([[#h:background-update][Background update]]).
 - *Follow mode.* Automatically displaying entries as you move through the search buffer, similar to ~org-agenda-follow-mode~ ([[#h:follow-mode][Follow mode]]).
 
+* Variables
+:PROPERTIES:
+:CUSTOM_ID: h:variables
+:END:
+
+** Filter toggle state
+:PROPERTIES:
+:CUSTOM_ID: h:filter-toggle-state
+:END:
+
+#+vindex: elfeed-extras-toggle-read-entries
+The variable ~elfeed-extras-toggle-read-entries~ tracks the current state of the read/unread filter toggle. When non-nil (the default), the next invocation of the command ~elfeed-extras-toggle-read-entries~ ([[#h:filtering][Filtering]]) will show all entries; when nil, it will restrict the view to unread entries only.
+
+#+vindex: elfeed-extras-toggle-wiki-entries
+The variable ~elfeed-extras-toggle-wiki-entries~ tracks the current state of the wiki filter toggle. When non-nil (the default), the next invocation of the command ~elfeed-extras-toggle-wiki-entries~ ([[#h:filtering][Filtering]]) will show only unread wiki entries; when nil, it will show all unread entries except wiki entries.
+
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
@@ -65,18 +81,10 @@ If you use a BibTeX workflow, ~elfeed-extras-add-entry~ passes the current entry
 :END:
 
 #+findex: elfeed-extras-toggle-read-entries
-By default, Elfeed shows only unread entries. The command ~elfeed-extras-toggle-read-entries~ toggles between showing all entries (including read ones) and showing only unread entries. It maintains its state in the variable ~elfeed-extras-toggle-read-entries~.
+By default, Elfeed shows only unread entries. The command ~elfeed-extras-toggle-read-entries~ toggles between showing all entries (including read ones) and showing only unread entries. It maintains its state in the variable ~elfeed-extras-toggle-read-entries~ ([[#h:filter-toggle-state][Filter toggle state]]).
 
 #+findex: elfeed-extras-toggle-wiki-entries
-For feeds that include wiki-tagged entries, ~elfeed-extras-toggle-wiki-entries~ switches between showing only unread wiki entries (=+unread +wiki=) and showing all unread entries except wiki entries (=+unread -wiki=). This is useful when you want to focus on a specific category of content. The state is tracked in the variable ~elfeed-extras-toggle-wiki-entries~.
-
-** Background update
-:PROPERTIES:
-:CUSTOM_ID: h:background-update
-:END:
-
-#+findex: elfeed-extras-update
-The standard ~elfeed-update~ command requires Elfeed to be open. The function ~elfeed-extras-update~ first ensures the database is loaded with ~elfeed-db-ensure~ and then triggers the update, allowing it to run from timers, hooks, or scripts without requiring an open Elfeed buffer. A message confirms that the update has started.
+For feeds that include wiki-tagged entries, ~elfeed-extras-toggle-wiki-entries~ switches between showing only unread wiki entries (=+unread +wiki=) and showing all unread entries except wiki entries (=+unread -wiki=). This is useful when you want to focus on a specific category of content. The state is tracked in the variable ~elfeed-extras-toggle-wiki-entries~ ([[#h:filter-toggle-state][Filter toggle state]]).
 
 * Follow mode
 :PROPERTIES:
@@ -95,6 +103,14 @@ These commands use the internal helper ~elfeed-extras-follow-entry~ for the core
 :PROPERTIES:
 :CUSTOM_ID: h:functions
 :END:
+
+** Background update
+:PROPERTIES:
+:CUSTOM_ID: h:background-update
+:END:
+
+#+findex: elfeed-extras-update
+The standard ~elfeed-update~ command requires Elfeed to be open. The function ~elfeed-extras-update~ first processes ~elfeed-org~ feed definitions (if =elfeed-org= is available), then ensures the database is loaded with ~elfeed-db-ensure~, and finally triggers the update. This allows it to run from timers, hooks, or scripts without requiring an open Elfeed buffer. A message confirms that the update has started.
 
 ** Filtering and display helpers
 :PROPERTIES:

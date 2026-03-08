@@ -377,7 +377,10 @@ number. Disable the mode if ARG is a negative number."
       (dolist (buf (org-buffer-list 'files))
         (with-current-buffer buf
           (org-element-cache-reset)))
-      (org-agenda nil "a"))))
+      ;; Suppress `find-file-hook' (flycheck, doom-modeline, etc.) when
+      ;; opening agenda files; they are scanned, not edited interactively.
+      (let ((find-file-hook nil))
+        (org-agenda nil "a")))))
 
 (defun org-extras-agenda-goto-and-start-clock ()
   "Go to the Org entry for the item at point and start the clock there.

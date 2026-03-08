@@ -594,6 +594,7 @@ after the heading's metadata.
 :END:
 
 #+findex: org-extras-fontify-nested-src-blocks
+#+findex: org-extras-enable-nested-src-block-fontification
 Org's built-in fontification function
 ~org-fontify-meta-lines-and-blocks-1~ processes each
 ~#+begin_...#+end_~ pair as a single unit.  When a source block is
@@ -606,6 +607,12 @@ standard Org keywords.  It finds ~#+begin_src~ lines that were not
 fontified with the ~org-block-begin-line~ face and applies the expected
 source-block fontification, including native syntax highlighting when
 ~org-src-fontify-natively~ is non-nil.
+
+To activate this feature in your Org buffers, call
+~org-extras-enable-nested-src-block-fontification~.  It appends
+~org-extras-fontify-nested-src-blocks~ to the buffer-local
+~font-lock-keywords~ and triggers refontification.  A typical setup
+adds it to ~org-mode-hook~.
 
 ** Folding, cycling, and narrowing
 :PROPERTIES:
@@ -707,10 +714,10 @@ these options.
 :END:
 
 #+findex: org-extras-id-update-id-locations
-The command ~org-extras-id-update-id-locations~ scans all =.org= and
-=.org.gpg= files under ~org-directory~ (excluding those in =.Trash=
-directories or with carriage returns in their names) and updates the ID
-location database via ~org-id-update-id-locations~.  If the scan
+The command ~org-extras-id-update-id-locations~ scans all =.org= files
+under ~org-directory~ (excluding those in =.Trash= directories or with
+carriage returns in their names) and updates the ID location database
+via ~org-id-update-id-locations~.  If the scan
 reports duplicate IDs, the command automatically calls
 ~org-extras-id-find-duplicate-ids~ ([[#h:finding-duplicate-ids][Finding duplicate IDs]]) so
 that you can review and resolve them.

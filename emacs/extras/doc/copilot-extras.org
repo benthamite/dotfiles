@@ -62,12 +62,15 @@ The type is a list of symbols.  The default value is an empty list
 #+findex: copilot-extras-enable-conditionally
 The function ~copilot-extras-enable-conditionally~ is designed to be
 added to a hook such as ~prog-mode-hook~ or ~text-mode-hook~.  It
-activates =copilot-mode= in the current buffer /unless/ either of the
+activates =copilot-mode= in the current buffer /unless/ any of the
 following is true:
 
 1. The buffer is read-only (~buffer-read-only~ is non-nil).
 2. The buffer's major mode appears in
    ~copilot-extras-excluded-modes~ ([[#h:copilot-extras-excluded-modes][~copilot-extras-excluded-modes~]]).
+3. The function is called from a non-interactive context (i.e.,
+   ~this-command~ is ~nil~), such as a timer.  Starting the Copilot
+   server in such contexts can trigger errors that freeze Emacs.
 
 This provides a convenient "enable everywhere except..." policy without
 requiring per-mode hook configuration.

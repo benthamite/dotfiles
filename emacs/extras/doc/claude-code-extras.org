@@ -19,10 +19,9 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 =claude-code-extras.el= extends =claude-code=, the Emacs package that runs Claude Code sessions inside an Eat terminal buffer. While =claude-code= provides the core session management and terminal integration, this extras package layers on several quality-of-life features that make extended Claude sessions more manageable.
 
-The package provides eight main areas of functionality:
+The package provides seven main areas of functionality:
 
 - *Session switching.* A Consult-powered interface for starting new Claude sessions or switching between existing ones, with live buffer previews ([[#h:session-switching][Session switching]]).
-- *Conversation logging.* Automatic periodic saving of terminal buffer contents to timestamped log files, with detection of conversation clears ([[#h:logging][Logging]]).
 - *Status polling.* Integration with a statusline script that exports session metadata (model name, cost, context usage, token counts) as JSON, polled periodically and exposed through accessor functions ([[#h:status-polling][Status polling]]).
 - *Alerts.* Configurable OS notifications (visual, audible, or both) when Claude finishes responding, triggered by a hook-based stop event ([[#h:alerts][Alerts]]).
 - *Buffer lifecycle.* Kill protection for active sessions, automatic buffer cleanup on process exit, and a SIGWINCH workaround for terminal rendering glitches ([[#h:buffer-lifecycle][Buffer lifecycle]]).
@@ -30,7 +29,7 @@ The package provides eight main areas of functionality:
 - *Batch TODO processing.* Sequential execution of org TODO entries via =claude -p= in non-interactive mode, with logged results and a summary buffer ([[#h:batch-todo-processing][Batch TODO processing]]).
 - *Project audit.* One-command comprehensive audit that sequentially runs code, design, and interpretability audit skills with auto-fix on the current project ([[#h:project-audit][Project audit]]).
 
-The package depends on =claude-code=, =consult= (for the session switcher), and =paths= (for the log directory default).
+The package depends on =claude-code=, =consult= (for the session switcher), and =paths= (for the batch log directory default).
 
 * User options
 :PROPERTIES:
@@ -46,17 +45,6 @@ The package depends on =claude-code=, =consult= (for the session switcher), and 
 The user option ~claude-code-extras-protect-buffers~ controls whether killing a Claude Code buffer requires confirmation. When set to non-~nil~ (the default), any attempt to kill a buffer with a live Claude process triggers a =yes-or-no-p= prompt. This prevents accidental loss of an active session. When the process has already exited (e.g. via the =/exit= command inside Claude), the prompt is skipped.
 
 The default value is ~t~. Set it to ~nil~ if you prefer to kill Claude buffers without confirmation.
-
-** Logging options
-:PROPERTIES:
-:CUSTOM_ID: h:logging-options
-:END:
-
-#+vindex: claude-code-extras-log-directory
-#+vindex: claude-code-extras-log-interval
-The user option ~claude-code-extras-log-directory~ specifies the directory where conversation logs are saved. Each Claude session gets its own timestamped log file. The default value is the =claude-logs= subdirectory under ~paths-dir-notes~ ([[#h:overview][Overview]]). You would change this if you want logs stored elsewhere in your filesystem.
-
-The user option ~claude-code-extras-log-interval~ controls how often (in seconds) the buffer contents are saved to disk. The default is 30, meaning the log file is updated every 30 seconds while the session is active. Lower values provide more granular recovery in case of a crash; higher values reduce disk I/O.
 
 ** Terminal rendering
 :PROPERTIES:
@@ -103,6 +91,9 @@ The user option ~claude-code-extras-copilot-enabled~ controls whether Copilot gh
 :PROPERTIES:
 :CUSTOM_ID: h:batch-todo-options
 :END:
+
+#+vindex: claude-code-extras-log-directory
+The user option ~claude-code-extras-log-directory~ specifies the directory where batch processing output is saved. The default value is the =claude-logs= subdirectory under ~paths-dir-notes~.
 
 #+vindex: claude-code-extras-batch-allowed-tools
 #+vindex: claude-code-extras-batch-max-turns
@@ -168,7 +159,7 @@ The command ~claude-code-extras-batch-todos~ processes org TODO entries sequenti
 
 Each TODO's heading becomes the prompt (with body text appended if present). Entries are processed sequentially — each =claude -p= invocation must finish before the next starts. Errors do not abort the batch; each failure is recorded and processing continues.
 
-Results are saved as JSON log files in a timestamped subdirectory under ~claude-code-extras-log-directory~ ([[#h:logging-options][Logging options]]). When all entries have been processed, a =*Claude Batch Results*= summary buffer is displayed in org-mode with per-entry status, cost, duration, log file links, and Claude's response text.
+Results are saved as JSON log files in a timestamped subdirectory under ~claude-code-extras-log-directory~ ([[#h:batch-todo-options][Batch TODO processing options]]). When all entries have been processed, a =*Claude Batch Results*= summary buffer is displayed in org-mode with per-entry status, cost, duration, log file links, and Claude's response text.
 
 The command respects ~claude-code-extras-batch-allowed-tools~, ~claude-code-extras-batch-max-turns~, ~claude-code-extras-batch-system-prompt~, and ~claude-code-extras-batch-model~ ([[#h:batch-todo-options][Batch TODO processing options]]).
 
@@ -186,17 +177,6 @@ The command reuses the batch processing infrastructure ([[#h:batch-todo-internal
 :PROPERTIES:
 :CUSTOM_ID: h:functions
 :END:
-
-** Logging
-:PROPERTIES:
-:CUSTOM_ID: h:logging
-:END:
-
-#+findex: claude-code-extras-start-logging
-#+findex: claude-code-extras-stop-logging
-The function ~claude-code-extras-start-logging~ begins periodic saving of the current Claude buffer to a log file. It is added to ~claude-code-start-hook~ automatically. The log file name combines a sanitized version of the buffer name with a timestamp (e.g. =_claude_project_default__2025-06-15_14-30-00.txt=). If the conversation is cleared (detected when the existing log file is more than twice the current buffer size), a new log file is started.
-
-The function ~claude-code-extras-stop-logging~ cancels the timer and performs a final save. It is added to ~kill-buffer-hook~ automatically.
 
 ** Buffer lifecycle
 :PROPERTIES:

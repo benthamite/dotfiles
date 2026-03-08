@@ -49,11 +49,6 @@
   :type 'directory
   :group 'claude-code-extras)
 
-(defcustom claude-code-extras-log-interval 30
-  "Interval in seconds between automatic log saves."
-  :type 'integer
-  :group 'claude-code-extras)
-
 (defcustom claude-code-extras-sync-theme nil
   "Whether to sync the Claude Code theme with the current Emacs theme.
 When non-nil, updates `~/.claude/settings.json' and sends `/theme' to all
@@ -122,12 +117,6 @@ prompts and accepted text is sent to the terminal correctly."
                       (or load-file-name buffer-file-name))))
   "Absolute path to the statusline shell script.")
 
-(defvar-local claude-code-extras--log-file nil
-  "Log file path for the current Claude buffer.")
-
-(defvar-local claude-code-extras--log-timer nil
-  "Timer for periodic logging in the current Claude buffer.")
-
 (defvar-local claude-code-extras--status-data nil
   "Parsed status plist for the current Claude buffer.")
 
@@ -175,57 +164,6 @@ prompts and accepted text is sent to the terminal correctly."
 (declare-function jsonrpc-async-request "jsonrpc")
 
 ;;;; Functions
-
-(defun claude-code-extras--get-log-file (buffer)
-  "Get or create the log file path for BUFFER."
-  (with-current-buffer buffer
-    (or claude-code-extras--log-file
-        (setq claude-code-extras--log-file
-              (expand-file-name
-               (format "%s_%s.txt"
-                       (replace-regexp-in-string
-                        "[^a-zA-Z0-9_-]" "_"
-                        (buffer-name))
-                       (format-time-string "%Y-%m-%d_%H-%M-%S"))
-               claude-code-extras-log-directory)))))
-
-(defun claude-code-extras--save-log (buffer)
-  "Save the conversation log for BUFFER."
-  (when (buffer-live-p buffer)
-    (with-current-buffer buffer
-      (when (claude-code-extras--conversation-cleared-p buffer)
-        (setq claude-code-extras--log-file nil))
-      (let ((log-file (claude-code-extras--get-log-file buffer)))
-        (make-directory claude-code-extras-log-directory t)
-        (write-region (point-min) (point-max) log-file nil 'quiet)))))
-
-(defun claude-code-extras--conversation-cleared-p (buffer)
-  "Return non-nil if the conversation in BUFFER was cleared.
-A conversation is considered cleared when the log file exists and
-is at least twice as large as the current BUFFER content,
-distinguishing genuine clears from minor terminal fluctuations."
-  (when-let* ((log-file claude-code-extras--log-file)
-              ((file-exists-p log-file)))
-    (> (file-attribute-size (file-attributes log-file))
-       (* 2 (buffer-size buffer)))))
-
-(defun claude-code-extras-start-logging ()
-  "Start periodic logging for the current Claude buffer."
-  (when (claude-code--buffer-p (current-buffer))
-    (claude-code-extras--save-log (current-buffer))
-    (setq claude-code-extras--log-timer
-          (run-with-timer
-           claude-code-extras-log-interval
-           claude-code-extras-log-interval
-           #'claude-code-extras--save-log
-           (current-buffer)))))
-
-(defun claude-code-extras-stop-logging ()
-  "Stop logging and save final log for the current Claude buffer."
-  (when (and (claude-code--buffer-p (current-buffer))
-             claude-code-extras--log-timer)
-    (cancel-timer claude-code-extras--log-timer)
-    (claude-code-extras--save-log (current-buffer))))
 
 (defun claude-code-extras-protect-buffer ()
   "Prompt for confirmation before killing claude-code buffers.
@@ -1386,10 +1324,8 @@ the view from jumping to the middle of the buffer."
 (add-hook 'claude-code-event-hook #'claude-code-extras--handle-stop)
 (add-hook 'kill-buffer-query-functions #'claude-code-extras-protect-buffer)
 (add-hook 'claude-code-start-hook #'claude-code-extras-setup-kill-on-exit)
-(add-hook 'claude-code-start-hook #'claude-code-extras-start-logging)
 (add-hook 'claude-code-start-hook #'claude-code-extras-start-status-polling)
 (add-hook 'claude-code-start-hook #'claude-code-extras-set-modeline)
-(add-hook 'kill-buffer-hook #'claude-code-extras-stop-logging)
 (add-hook 'kill-buffer-hook #'claude-code-extras-stop-status-polling)
 (add-hook 'claude-code-start-hook #'claude-code-extras-disable-scrollback-truncation)
 (add-hook 'claude-code-start-hook #'claude-code-extras-setup-copilot)

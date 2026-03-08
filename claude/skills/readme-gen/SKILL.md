@@ -19,7 +19,9 @@ The current repository must contain at least one `.el` file with a valid package
 
 The repository must contain a `README.org` file that serves as the package manual (this is the convention established by the `doc-elisp` skill).
 
-If `README.org` is not found, abort with a message suggesting the user create one first (mention the `doc-elisp` skill).
+If `README.org` is not found but a case-variant exists (e.g. `readme.org`), rename it to `README.org` using `git mv` and commit the rename before proceeding.
+
+If no org manual exists at all, abort with a message suggesting the user create one first (mention the `doc-elisp` skill).
 
 ## Existing README.md
 
@@ -129,7 +131,7 @@ If the org manual contains a "Roadmap" section, a "Future plans" section, or a "
 
 If no roadmap content exists in the manual, omit this section.
 
-After generating the README, tell the user that if the manual contains a Roadmap section, they may want to remove it from the org file now that it lives in the README (but do NOT modify the org file automatically).
+After moving the roadmap content to the README, **remove the Roadmap section from the org manual** and commit the removal together with the README (or as a separate commit). Do not leave any trace of the roadmap in the manual — no empty section, no "see README" pointer, no commented-out content. Do not add any note in the README about the roadmap also being present in the manual.
 
 #### 8. Contributing and license (if applicable)
 

@@ -19,9 +19,8 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 =org-roam-extras.el= extends the =org-roam= package, a personal
 knowledge management system for Emacs based on Zettelkasten principles.
-It depends on =el-patch= for patching the database query function,
-=org-extras= for heading manipulation utilities, and =paths= for
-directory constants.
+It depends on =org-extras= for heading manipulation utilities and
+=paths= for directory constants.
 
 The package adds several capabilities on top of the standard =org-roam=
 interface.  It provides a configurable node inclusion function that
@@ -50,9 +49,8 @@ A set of commands for replacing internal ~[[*Title]]~ links with proper
 ~[[id:UUID]]~ links automates the conversion of legacy link formats
 within entire directories of Org files.
 
-A patch adds a small delay before Org Roam database queries to mitigate
-potential SQLite locking issues that can occur with rapid successive
-queries.
+Finally, a statistics command summarizes your open TODO items and their
+total effort estimates from the Org Roam database ([[#h:statistics][Statistics]]).
 
 * User options
 :PROPERTIES:
@@ -194,6 +192,21 @@ Internally, the command uses
 file and ~org-roam-extras-get-id-of-title~ to resolve titles to IDs
 ([[#h:link-utilities][Link utilities]]).
 
+** Statistics
+:PROPERTIES:
+:CUSTOM_ID: h:statistics
+:END:
+
+#+findex: org-roam-extras-count-todos-and-efforts
+The command ~org-roam-extras-count-todos-and-efforts~ queries the Org
+Roam database for all nodes with a TODO keyword and tallies those that
+are still open (i.e., not in a done state such as "DONE", "CANCELLED",
+or "DELEGATED").  It sums their effort estimates and reports the total
+count and effort in the echo area, formatted as hours and minutes.
+
+This gives you a quick overview of your outstanding workload across the
+entire Org Roam database without needing to visit individual files.
+
 * Functions
 :PROPERTIES:
 :CUSTOM_ID: h:functions
@@ -227,6 +240,7 @@ Exclusion criteria include:
 #+findex: org-roam-extras-backlink-count
 #+findex: org-roam-extras-update-backlink-count
 #+findex: org-roam-extras-update-modeline
+#+vindex: org-roam-extras-current-backlink-count
 The function ~org-roam-extras-backlink-count~ queries the Org Roam
 database for the number of backlinks pointing to the node at point.  It
 returns ~nil~ if the buffer is not in ~org-mode~ or if no node ID is
@@ -314,23 +328,6 @@ modified within the last DAYS.  An optional LIMIT argument causes the
 function to return the list only if its length is below the limit,
 returning ~nil~ otherwise.  The function excludes files matching
 ~org-roam-file-exclude-regexp~.
-
-* Patched functions
-:PROPERTIES:
-:CUSTOM_ID: h:patched-functions
-:END:
-
-** Database query delay
-:PROPERTIES:
-:CUSTOM_ID: h:db-query-patch
-:END:
-
-#+findex: org-roam-db-query
-The function ~org-roam-db-query~ is patched using =el-patch= to insert
-a 10-millisecond delay (~sleep-for 0.01~) before executing each database
-query.  This is a workaround for potential SQLite database locking issues
-that can arise when rapid successive queries are made, particularly
-during bulk operations like indexing or link replacement.
 
 * Indices
 :PROPERTIES:

@@ -987,7 +987,8 @@ STATE is a plist with keys :queue :results :log-dir :working-dir
                       (plist-get state :log-dir)))
            (args (claude-code-extras--batch-build-args prompt))
            (env (cl-remove-if
-                 (lambda (s) (string-prefix-p "CLAUDE_CODE" s))
+                 (lambda (s) (or (string-prefix-p "CLAUDE_CODE" s)
+                                 (string-prefix-p "ANTHROPIC_API_KEY=" s)))
                  process-environment))
            (start-time (current-time))
            (output-buf (generate-new-buffer " *claude-batch-output*")))

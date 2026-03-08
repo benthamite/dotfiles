@@ -52,14 +52,14 @@ The following variables define the top-level directories from which most other p
 - ~paths-dir-root~ (default: ="/"=): the filesystem root.
 - ~paths-dir-downloads~ (default: =~/Downloads/=): the system downloads directory.
 - ~paths-dir-system-apps~ (default: =/Applications/=): the macOS applications directory.
-- ~paths-dir-dropbox~ (default: =~/Library/CloudStorage/Dropbox/=): the Dropbox sync directory. Many personal data directories are children of this path.
-- ~paths-dir-google-drive~ (default: =~/My Drive/=): the Google Drive sync directory. Library and media directories are children of this path.
+- ~paths-dir-dropbox~ (default: =~/Library/CloudStorage/Dropbox/=): the Dropbox sync directory. Organization shared directories are children of this path.
+- ~paths-dir-google-drive~ (default: =~/My Drive/=): the Google Drive sync directory. Most personal data, library, and media directories are children of this path.
 - ~paths-dir-emacs~ (default: ~user-emacs-directory~): the Emacs configuration directory.
 - ~paths-dir-emacs-profiles~ (default: =~/.config/emacs-profiles/=): the directory containing multiple Emacs profiles.
 
-*** Dropbox directories
+*** Google Drive personal directories
 :PROPERTIES:
-:CUSTOM_ID: h:dropbox-directories
+:CUSTOM_ID: h:google-drive-personal-directories
 :END:
 
 #+vindex: paths-dir-dotfiles
@@ -82,9 +82,9 @@ The following variables define the top-level directories from which most other p
 #+vindex: paths-dir-websites
 #+vindex: paths-dir-personal-bibliography
 #+vindex: paths-dir-PW
-These directories are children of ~paths-dir-dropbox~ and contain personal data:
+These directories are children of ~paths-dir-google-drive~ and contain personal data:
 
-- ~paths-dir-dotfiles~: the dotfiles repository (default: =Dropbox/dotfiles/=).
+- ~paths-dir-dotfiles~: the dotfiles repository (default: =My Drive/dotfiles/=).
 - ~paths-dir-dotemacs~: the Emacs subdirectory within dotfiles. Its default is user-dependent, resolved at load time based on the =$HOME= environment variable.
 - ~paths-dir-notes~, ~paths-dir-journal~, ~paths-dir-wiki~: directories for Org notes, journal entries, and wiki content.
 - ~paths-dir-wiki-entries~ and ~paths-dir-wiki-references~: subdirectories of the wiki.
@@ -120,7 +120,7 @@ These directories hold Emacs configuration artifacts:
 - ~paths-dir-emacs-var~ and ~paths-dir-emacs-local~: runtime data directories (children of ~paths-dir-emacs~).
 - ~paths-dir-init-default~: default target for tangled init files (default: the =develop/= profile under ~paths-dir-emacs-profiles~).
 
-*** Google Drive directories
+*** Google Drive media and library directories
 :PROPERTIES:
 :CUSTOM_ID: h:google-drive-directories
 :END:
@@ -202,8 +202,9 @@ These directories hold Citation Style Language resources, used by =citeproc-el= 
 #+vindex: paths-dir-google-drive-tlon-fede
 These directories organize shared team resources across Dropbox and Google Drive. Each team member has a personal subdirectory, and shared resources (ledger, pass) live under the =core= subdirectory.
 
-The Dropbox tree includes per-project directories for various organization projects:
+The Dropbox tree includes ~paths-dir-dropbox-tlon-babel~ as the parent for per-project directories:
 
+#+vindex: paths-dir-dropbox-tlon-babel
 #+vindex: paths-dir-dropbox-tlon-EAN
 #+vindex: paths-dir-dropbox-tlon-FM
 #+vindex: paths-dir-dropbox-tlon-GPE
@@ -213,8 +214,9 @@ The Dropbox tree includes per-project directories for various organization proje
 #+vindex: paths-dir-dropbox-tlon-RAE
 #+vindex: paths-dir-dropbox-tlon-RCG
 
-The Google Drive tree mirrors this structure:
+The Google Drive tree mirrors this structure, with ~paths-dir-google-drive-tlon-babel~ as the parent:
 
+#+vindex: paths-dir-google-drive-tlon-babel
 #+vindex: paths-dir-google-drive-tlon-EAN
 #+vindex: paths-dir-google-drive-tlon-FM
 #+vindex: paths-dir-google-drive-tlon-GPE
@@ -231,7 +233,7 @@ The Google Drive tree mirrors this structure:
 
 #+vindex: paths-dir-org
 #+vindex: paths-dir-org-roam
-The variable ~paths-dir-org~ specifies the root directory for Org files, intended to be used as the value of ~org-directory~. The default is ~paths-dir-dropbox~.
+The variable ~paths-dir-org~ specifies the root directory for Org files, intended to be used as the value of ~org-directory~. The default is ~paths-dir-google-drive~.
 
 The variable ~paths-dir-org-roam~ specifies the Org-roam directory, intended for ~org-roam-directory~. The default is the same as ~paths-dir-org~.
 
@@ -253,6 +255,7 @@ The variable ~paths-dir-org-roam~ specifies the Org-roam directory, intended for
 #+vindex: paths-file-anki
 #+vindex: paths-file-config
 #+vindex: paths-file-karabiner
+#+vindex: paths-file-karabiner-edn
 #+vindex: paths-file-wiki-notes
 #+vindex: paths-file-wiki-published
 #+vindex: paths-file-wiki-help
@@ -271,6 +274,7 @@ These variables point to individual Org files used for task management, knowledg
 - ~paths-file-anki~ (=anki/main.org=): the Anki flashcard source file.
 - ~paths-file-config~ (=emacs/config.org=): the literate Emacs configuration.
 - ~paths-file-karabiner~: the Karabiner keyboard customization file in Org format.
+- ~paths-file-karabiner-edn~: the Karabiner configuration in EDN format (=karabiner.edn=).
 - ~paths-file-work~: the work dashboard.
 
 *** Bibliography files

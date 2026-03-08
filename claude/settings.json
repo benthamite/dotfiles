@@ -73,6 +73,6 @@
   "enabledPlugins": {
     "slack@claude-plugins-official": true
   },
-  "theme": "dark",
+  "theme": "light",
   "effortLevel": "high"
 }

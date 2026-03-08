@@ -7,7 +7,7 @@ description: Create or update documentation for an Emacs Lisp package following 
 
 Create or update an `.org` documentation file for an Emacs Lisp package, matching the style, rigor, and comprehensiveness of Protesilaos Stavrou's Denote manual.
 
-The manual is always `README.org` in the repository root. If the package spans multiple `.el` files (e.g., `foo.el`, `foo-db.el`, `foo-utils.el`), consolidate all public definitions from every file into the single `README.org` documentation file, organizing them thematically rather than by source file.
+The manual is always `README.org` in the repository root. If a case-variant exists instead (e.g. `readme.org`), rename it to `README.org` using `git mv` and commit the rename before proceeding. If the package spans multiple `.el` files (e.g., `foo.el`, `foo-db.el`, `foo-utils.el`), consolidate all public definitions from every file into the single `README.org` documentation file, organizing them thematically rather than by source file.
 
 ## Analyzing the source
 

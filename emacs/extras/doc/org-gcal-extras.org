@@ -60,9 +60,9 @@ This menu is defined with ~transient-define-prefix~ and can be bound to a conven
 :CUSTOM_ID: h:compatibility-fixes
 :END:
 
-Emacs 30 introduced the ~track-changes~ facility, which can trigger assertion failures when =org-gcal= modifies buffers asynchronously during synchronization. Additionally, the org-element cache may enter a stale state during these async updates, causing "emergency" cache resets and subsequent errors.
+Emacs 30 introduced the ~track-changes~ facility, which can trigger assertion failures when =org-gcal= modifies buffers asynchronously during synchronization. The =org-modern-indent= package can similarly trigger ~org-element-at-point~ during buffer modifications, leading to "Invalid search bound" errors in async contexts. Additionally, the org-element cache may enter a stale state during these async updates, causing "emergency" cache resets and subsequent errors.
 
-=org-gcal-extras.el= addresses both issues with an =:around= advice on ~org-gcal--update-entry~ that wraps the original function in two protective measures: it sets ~inhibit-modification-hooks~ to ~t~ during the update (preventing ~track-changes~ assertions), and it resets the org-element cache both before and after the update (preventing stale cache errors). These fixes are applied automatically when the package is loaded.
+=org-gcal-extras.el= addresses these issues with =:around= advice on both ~org-gcal--update-entry~ and ~org-gcal--sync-handle-events~. The advice wraps each original function in two protective measures: it sets ~inhibit-modification-hooks~ to ~t~ during the update (preventing ~track-changes~ and ~org-modern-indent~ from triggering ~org-element-at-point~), and it resets the org-element cache both before and after the update (preventing stale cache errors). These fixes are applied automatically when the package is loaded.
 
 * Patched functions
 :PROPERTIES:

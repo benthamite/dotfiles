@@ -38,8 +38,6 @@ Use a team of subagents to process all packages that need work (missing docs, ou
 
 ### 4. Commit changes
 
-After processing all packages, commit changes to git. Use separate commits:
-- One commit for all newly created doc files: `doc: create documentation for PACKAGE-1, PACKAGE-2, ...`
-- One commit for all updated doc files: `doc: update documentation for PACKAGE-1, PACKAGE-2, ...`
-
-If both categories are present, create both commits. If only one applies, create only that one.
+After processing all packages, commit changes to git. Use one commit per package:
+- For newly created docs: `PACKAGE: create documentation`
+- For updated docs: `PACKAGE: update documentation`

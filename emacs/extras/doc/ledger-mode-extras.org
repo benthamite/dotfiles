@@ -170,12 +170,15 @@ of days.
 #+findex: ledger-mode-extras-report-account
 #+findex: ledger-mode-extras-report-net-worth
 #+findex: ledger-mode-extras-report-net-worth-USD
+#+findex: ledger-mode-extras-report-payee
 These commands run named reports from ~ledger-reports~ without
 requiring you to navigate the report menu:
 
 - ~ledger-mode-extras-report-account~ runs the ="account"= report.
 - ~ledger-mode-extras-report-net-worth~ runs the ="net worth"= report.
 - ~ledger-mode-extras-report-net-worth-USD~ runs the ="net worth (USD)"=
+  report.
+- ~ledger-mode-extras-report-payee~ runs the ="payee"=
   report.
 
 Each calls ~ledger-report~ with the appropriate report name.

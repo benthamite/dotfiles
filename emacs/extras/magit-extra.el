@@ -31,6 +31,8 @@
 (require 'magit)
 (require 'paths)
 
+(declare-function magit-toplevel "magit-git")
+
 ;;;; Functions
 
 ;; adapted from Sacha Chua

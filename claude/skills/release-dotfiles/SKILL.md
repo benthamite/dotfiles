@@ -52,9 +52,9 @@ Do NOT clone the repo — the user must already be in it.
 
 ---
 
-## Step 1: Check all package repos are clean
+## Step 1: Check all package repos are clean and pushed
 
-For each package parsed from the org file, check its local elpaca clone for a clean working tree.
+For each package parsed from the org file, check its local elpaca clone for a clean working tree **and** no unpushed commits. The goal is to ensure no local changes are lost when switching to a new elpaca profile.
 
 ### Finding the elpaca directory
 
@@ -66,7 +66,7 @@ For each package name, look up its directory in `$ELPACA_REPOS`:
 
 ### Cleanliness check
 
-For each found directory:
+For each found directory, check both uncommitted changes and unpushed commits:
 
 ```bash
 git -C "$ELPACA_REPOS/<dir>" status --porcelain
@@ -74,21 +74,29 @@ git -C "$ELPACA_REPOS/<dir>" status --porcelain
 
 If the output is non-empty, the repo is **dirty**.
 
+```bash
+unpushed=$(git -C "$ELPACA_REPOS/<dir>" log --oneline @{u}..HEAD 2>/dev/null)
+rc=$?
+```
+
+If `rc` is non-zero, the branch has **no upstream configured** — warn but do not abort. If `rc` is zero and the output is non-empty, the repo has **unpushed commits**.
+
 ### Output
 
 Present a summary table:
 
 ```
-| Package          | Status |
-|------------------|--------|
-| annas-archive    | clean  |
-| bib              | dirty  |
+| Package          | Status                   |
+|------------------|--------------------------|
+| annas-archive    | clean                    |
+| bib              | dirty                    |
+| gdocs            | 14 unpushed              |
 | ledger-prices    | skipped (not in profile) |
 ```
 
-If **any** repo is dirty, **abort the release**. List the dirty repos and tell the user to commit or stash changes in each before retrying.
+If **any** repo is dirty or has unpushed commits, **abort the release**. List the affected repos and tell the user to commit/stash/push before retrying.
 
-If all repos are clean (or skipped), proceed to step 2.
+If all repos are clean and pushed (or skipped), proceed to step 2.
 
 ---
 

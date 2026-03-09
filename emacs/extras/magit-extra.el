@@ -66,7 +66,7 @@ between the start and completion of async processes."
                (magit-toplevel))
       (when (or (magit-anything-staged-p)
                 (magit-anything-unstaged-p))
-        (magit-stage-modified t)
+        (magit-call-git "add" "--all" ".")
         (magit-call-git "commit" "-m" "Midnight update"))
       (magit-call-git "push"))))
 

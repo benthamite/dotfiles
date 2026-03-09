@@ -8925,13 +8925,12 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :init
   (require 'llm-claude)
 
-  :custom
-  (magit-gptcommit-llm-provider
-   (make-llm-claude
-    :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))
-    :chat-model "claude-haiku-4-5-20251001"))
-
   :config
+  (require 'tlon-core)
+  (setq magit-gptcommit-llm-provider
+        (make-llm-claude
+         :key (auth-source-pass-get "key" (concat "tlon/core/anthropic.com/" tlon-email-shared))
+         :chat-model "claude-haiku-4-5-20251001"))
   (magit-gptcommit-status-buffer-setup))
 #+end_src
 

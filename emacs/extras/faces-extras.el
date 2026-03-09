@@ -101,8 +101,17 @@ These attributes can be set with `faces-extras-set-custom-face-attributes'.")
 ;;;;; Face attributes
 
 ;;;###autoload
+(defun faces-extras--unspecified-p (value)
+  "Return non-nil if VALUE is or contains `unspecified'."
+  (cond
+   ((eq value 'unspecified) t)
+   ((proper-list-p value) (seq-some #'faces-extras--unspecified-p value))))
+
 (defun faces-extras-set-face-attribute (attribute)
-  "Set a single face ATTRIBUTE."
+  "Set a single face ATTRIBUTE.
+Skip silently when any evaluated argument resolves to `unspecified',
+which can happen before the theme has loaded.  The caller is expected
+to retry later (e.g. via a theme-load hook)."
   (let* ((face (car attribute))
          (args (cdr attribute))
          (evaluated-args (mapcar (lambda (arg)
@@ -113,7 +122,8 @@ These attributes can be set with `faces-extras-set-custom-face-attributes'.")
 				     (symbol-value arg))
 				    (t arg)))
                                  args)))
-    (apply 'set-face-attribute face nil evaluated-args)))
+    (unless (seq-some #'faces-extras--unspecified-p evaluated-args)
+      (apply 'set-face-attribute face nil evaluated-args))))
 
 (defun faces-extras-set-face-attributes (attributes)
   "Set a list of face ATTRIBUTES."

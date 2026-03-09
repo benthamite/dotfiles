@@ -10246,11 +10246,13 @@ Note to self: Typescript syntax highlighting works fine, but calling ~org-edit-s
   :defer t
   :custom
   (org-confirm-babel-evaluate 'org-extras-confirm-babel-evaluate)
-  (org-export-use-babel nil)
+  (org-export-use-babel t)
 
   :config
   ;; enable lexical binding in code blocks
   (setcdr (assq :lexical org-babel-default-header-args:emacs-lisp) "no")
+  ;; Prevent code-block evaluation during export while preserving noweb expansion
+  (setf (alist-get :eval org-babel-default-header-args) "never-export")
   (setq org-babel-default-header-args:python
         '((:exports . "both")
           (:results . "replace output")

@@ -4662,6 +4662,9 @@ I load this explicitly because the version bundled with Emacs 30.2 (1.2) has a k
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package track-changes
+  ;; The default GNU ELPA recipe clones the full emacs-mirror/emacs repo.
+  ;; Use emacs-straight's lightweight mirror instead.
+  :ensure (:repo "https://github.com/emacs-straight/track-changes.git")
   :demand t)
 #+end_src
 

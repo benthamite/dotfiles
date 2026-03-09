@@ -465,6 +465,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#anki-editor][anki-editor]]
   - [[#anki-editor-extras][anki-editor-extras]]
   - [[#ankiorg][ankiorg]]
+  - [[#anki-noter][anki-noter]]
 - [[#reference--citation][reference & citation]]
   - [[#oc][oc]]
   - [[#oc-csl][oc-csl]]
@@ -11213,6 +11214,20 @@ The [[https://github.com/louietan/anki-editor][original package]] is abandoned, 
   (ankiorg-media-directory
    no-littering-var-directory "ankiorg/img")
    (ankiorg-pick-deck-all-directly t))
+#+end_src
+
+** =anki-noter=
+:PROPERTIES:
+:ID:       6E969B09-561B-464B-B363-6D9290907418
+:END:
+
+/[[https://github.com/benthamite/anki-noter][anki-noter]] AI-powered Anki notes generator./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package anki-noter
+  :ensure (:host github
+		 :repo "benthamite/anki-noter")
+  :defer t)
 #+end_src
 
 * reference & citation

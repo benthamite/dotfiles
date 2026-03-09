@@ -9,8 +9,16 @@ Cut a new release for an Emacs package on GitHub (benthamite/), or audit all pac
 
 ## Packages
 
+Do NOT hard-code a package list. Instead, read the **listed packages** (level-2 `=name=` headings, excluding the "Unlisted packages" section) from:
+
 ```
-annas-archive bib claude-log gptel-plus kelly mullvad org-indent-pixel pangram pdf-tools-pages stafforini.el
+~/My Drive/notes/pablos-miscellany/my-emacs-packages.org
+```
+
+Parse with:
+
+```bash
+grep -E '^\*\* =' ~/My\ Drive/notes/pablos-miscellany/my-emacs-packages.org | sed 's/^\*\* =//;s/=$//'
 ```
 
 ## Semver normalization rules
@@ -35,7 +43,7 @@ If `--accept` is present in `$ARGUMENTS`, skip the confirmation gate (step 9) an
 
 ## Audit mode (`/release --audit`)
 
-Scan all 10 packages **in parallel** using `gh api` exclusively — do NOT clone any repos.
+Scan all listed packages **in parallel** using `gh api` exclusively — do NOT clone any repos.
 
 ### For each package, run these in a single subagent:
 
@@ -62,8 +70,6 @@ Scan all 10 packages **in parallel** using `gh api` exclusively — do NOT clone
    ```bash
    gh api repos/benthamite/PACKAGE/contents/PACKAGE.el --jq '.content' | base64 -d | grep -m1 '^;; Version:'
    ```
-
-   For `stafforini.el`, the file is `stafforini.el`.
 
 4. **Normalize and compare**: apply the semver normalization rules above to both the tag and the header version. Flag any mismatch.
 

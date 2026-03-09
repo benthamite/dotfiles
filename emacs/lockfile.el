@@ -2090,7 +2090,8 @@
  (org-roam :source "elpaca-menu-lock-file" :recipe
 	   (:package "org-roam" :fetcher github :repo "benthamite/org-roam" :files
 		     (:defaults "extensions/*") :source "MELPA" :id org-roam
-		     :type git :protocol https :inherit t :depth treeless :ref
+		     :type git :protocol https :inherit t :depth treeless
+		     :branch "fix/handle-nil-db-version" :ref
 		     "0c94c89901a7d37ff2f9c618a7f991233040f913"))
  (org-roam-bibtex :source "elpaca-menu-lock-file" :recipe
 		  (:package "org-roam-bibtex" :fetcher github :repo

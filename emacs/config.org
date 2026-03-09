@@ -654,8 +654,9 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-sources-directory (expand-file-name "sources/" elpaca-directory))
-(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-                              :ref nil :depth 1 :inherit ignore
+;; Using benthamite fork until progfolio/elpaca#513 is merged (mono-repo deadlock fix).
+(defvar elpaca-order '(elpaca :repo "https://github.com/benthamite/elpaca.git"
+                              :ref "c57962b9bd13d84f71a5f661c8b576484bd3dba3" :depth 1 :inherit ignore
                               :files (:defaults "elpaca-test.el" (:exclude "extensions"))
                               :build (:not elpaca-activate)))
 (let* ((repo  (expand-file-name "elpaca/" elpaca-sources-directory))

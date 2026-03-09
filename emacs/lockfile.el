@@ -835,13 +835,13 @@
 			(:defaults (:exclude "elfeed-tube-mpv.el")) :source
 			"MELPA" :id elfeed-tube :type git :protocol https
 			:inherit t :depth treeless :ref
-			"65657a625fd4f3a3f29f22b61a5a8f88bc54e5a5"))
+			"65657a6b97058cac296eea9b9eb761c835548213"))
  (elfeed-tube-mpv :source "elpaca-menu-lock-file" :recipe
 		  (:package "elfeed-tube-mpv" :repo "benthamite/elfeed-tube"
 			    :fetcher github :files ("elfeed-tube-mpv.el")
 			    :source "MELPA" :id elfeed-tube-mpv :type git
 			    :protocol https :inherit t :depth treeless :ref
-			    "65657a625fd4f3a3f29f22b61a5a8f88bc54e5a5"))
+			    "65657a6b97058cac296eea9b9eb761c835548213"))
  (elgantt :source "elpaca-menu-lock-file" :recipe
 	  (:source nil :package "elgantt" :id elgantt :host github :repo
 		   "legalnonsense/elgantt" :type git :protocol https :inherit t
@@ -965,7 +965,7 @@
 	      (:source nil :package "esi-dictate" :id esi-dictate :host
 		       sourcehut :repo "lepisma/emacs-speech-input" :type git
 		       :protocol https :inherit t :depth treeless :ref
-		       "f3d523eb2d27f99ab2db06aa15a3a3f5e3de4ec0"))
+		       "f3d523e2ec4354bbe68e2c2a74fe3d65a5b4ac10"))
  (esxml :source "elpaca-menu-lock-file" :recipe
 	(:package "esxml" :fetcher github :repo "tali713/esxml" :files
 		  ("esxml.el" "esxml-query.el") :source "MELPA" :id esxml :type
@@ -2091,7 +2091,7 @@
 	   (:package "org-roam" :fetcher github :repo "benthamite/org-roam" :files
 		     (:defaults "extensions/*") :source "MELPA" :id org-roam
 		     :type git :protocol https :inherit t :depth treeless :ref
-		     "0c94c8904f28e2c3c2b81ba69db9d89d7a5a85f5"))
+		     "5c06471c3a11348342719fd9011486455adeb701"))
  (org-roam-bibtex :source "elpaca-menu-lock-file" :recipe
 		  (:package "org-roam-bibtex" :fetcher github :repo
 			    "org-roam/org-roam-bibtex" :files
@@ -2916,7 +2916,7 @@
 	     (:source nil :package "stafforini" :id stafforini :host github
 		      :repo "benthamite/stafforini.el" :type git :protocol https
 		      :inherit t :depth treeless :ref
-		      "d44b1bea90bda8b35ab3b5cdb3e2f9e9a4a22a0e"))
+		      "d44b1bea2e3a0d4b1430c8225a164e832a8cc5d2"))
  (string-inflection :source "elpaca-menu-lock-file" :recipe
 		    (:package "string-inflection" :fetcher github :repo
 			      "akicho8/string-inflection" :files

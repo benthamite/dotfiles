@@ -3074,6 +3074,8 @@
 		  ("CMakeLists.txt" "elisp.c" "elisp.h" "emacs-module.h" "etc"
 		   "utf8.c" "utf8.h" "vterm.el" "vterm-module.c"
 		   "vterm-module.h")
+		  :pre-build (("cmake" "-S" "." "-B" "build")
+			      ("cmake" "--build" "build"))
 		  :source "MELPA" :id vterm :type git :protocol https :inherit t
 		  :depth treeless :ref
 		  "a01a2894a1c1e81a39527835a9169e35b7ec5dec"))

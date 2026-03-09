@@ -7024,6 +7024,7 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
   :defer t
   :custom
   (wikipedia-draft-directory (file-name-concat paths-dir-dropbox "wikipedia"))
+  (wikipedia-ai-model 'gemini-flash-lite-latest)
   
   :bind
   (("A-p" . wikipedia-transient)))

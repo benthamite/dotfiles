@@ -529,6 +529,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#elfeed-org][elfeed-org]]
   - [[#elfeed-tube][elfeed-tube]]
   - [[#elfeed-tube-mpv][elfeed-tube-mpv]]
+  - [[#elfeed-ai][elfeed-ai]]
   - [[#engine-mode][engine-mode]]
   - [[#org-download][org-download]]
   - [[#org-web-tools][org-web-tools]]
@@ -13456,6 +13457,32 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
   :after elfeed-tube
   :custom
   (elfeed-tube-save-indicator t))
+#+end_src
+
+** =elfeed-ai=
+:PROPERTIES:
+:ID:       984BD8E7-12F5-4995-9182-457AFD1D54C2
+:END:
+
+/[[https://github.com/benthamite/elfeed-ai/][elfeed-ai]] provides AI-powered content curation for =elfeed=./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package elfeed-ai
+  :ensure (:host github
+		 :repo "benthamite/elfeed-ai")
+  :after elfeed
+  :demand t
+  :custom
+  (elfeed-ai-model 'gemini-flash-lite-latest)
+  (elfeed-ai-interest-profile (file-name-concat paths-dir-notes "my-reading-taste-profile-summary.org"))
+
+  :config
+  (elfeed-ai-mode)
+
+  :bind
+  (:map elfeed-search-mode-map
+	("a" . elfeed-ai-menu)
+	("t" . elfeed-ai-toggle-sort)))
 #+end_src
 
 ** =engine-mode=

@@ -764,14 +764,22 @@ Because =use-personal-package= declares each extras file with an =:ensure= recip
 
 #+begin_src shell :tangle no
 #!/bin/sh
-# Propagate the current state of master to the elpaca repos clone.
+# Propagate the current state of master to the elpaca dotfiles clone.
 # Reads the active profile from a cache file written by Emacs at startup,
 # avoiding emacsclient calls that deadlock when git is spawned synchronously
 # by Emacs.
 # Called by post-commit and post-rewrite hooks.
 PROFILE=$(cat "$HOME/.config/emacs-profiles/.current-profile" 2>/dev/null)
-ELPACA_DOTFILES="$HOME/.config/emacs-profiles/$PROFILE/elpaca/repos/dotfiles"
-if [ -d "$ELPACA_DOTFILES/.git" ]; then
+ELPACA_BASE="$HOME/.config/emacs-profiles/$PROFILE/elpaca"
+
+# Newer elpaca versions use sources/ instead of repos/
+if [ -d "$ELPACA_BASE/sources/dotfiles/.git" ]; then
+    ELPACA_DOTFILES="$ELPACA_BASE/sources/dotfiles"
+elif [ -d "$ELPACA_BASE/repos/dotfiles/.git" ]; then
+    ELPACA_DOTFILES="$ELPACA_BASE/repos/dotfiles"
+fi
+
+if [ -n "$ELPACA_DOTFILES" ]; then
     GITDIR="$GIT_DIR"
     # The parent git process sets GIT_DIR, GIT_INDEX_FILE, and
     # GIT_WORK_TREE pointing at the Google Drive clone.  Unsetting them

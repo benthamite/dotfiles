@@ -691,6 +691,9 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
 (elpaca `(,@elpaca-order))
 (elpaca-wait)
 
+;; Limit concurrent package operations to avoid GitHub rate-limiting on fresh deploys.
+(setq elpaca-queue-limit 20)
+
 (require 'elpaca-menu-elpa)
 (setf (alist-get 'packages-url (alist-get 'gnu elpaca-menu-elpas))
       "https://raw.githubusercontent.com/emacsmirror/gnu_elpa/refs/heads/main/elpa-packages"

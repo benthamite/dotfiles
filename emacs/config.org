@@ -5203,8 +5203,9 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-gcal
   :ensure (:host github
-                 :repo "kidd/org-gcal.el"
-                 :build (:not elpaca-check-version)) ; to prevent elnode version error
+                 :repo "benthamite/org-gcal.el"
+                 :branch "fix/strip-html-descriptions"
+                 :build (:not elpaca-check-version)) ; https://github.com/kidd/org-gcal.el/pull/276
   :after auth-source-pass org-agenda
   :custom
   (org-gcal-client-id (auth-source-pass-get "host" "auth-sources/org-gcal"))
@@ -6733,6 +6734,9 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package flycheck-languagetool
+  :ensure (:host github
+                 :repo "benthamite/flycheck-languagetool"
+                 :branch "fix/guard-stale-buffer-positions") ; https://github.com/emacs-languagetool/flycheck-languagetool/pull/40
   :after flycheck
   :init
   (setopt flycheck-languagetool-server-jar
@@ -10909,6 +10913,9 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-roam
+  :ensure (:host github
+                 :repo "benthamite/org-roam"
+                 :branch "fix/handle-nil-db-version") ; https://github.com/org-roam/org-roam/pull/2609
   :after org
   :custom
   (org-roam-directory paths-dir-org-roam)
@@ -13332,6 +13339,9 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package elfeed
+  :ensure (:host github
+                 :repo "benthamite/elfeed"
+                 :branch "debounce-search-update") ; https://github.com/skeeto/elfeed/pull/558
   :init
   (run-with-idle-timer (* 20 60) t #'elfeed-extras-update)
 
@@ -13433,6 +13443,8 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package elfeed-tube
+  :ensure (:host github
+                 :repo "benthamite/elfeed-tube") ; PRs #51, #52, #53
   :after elfeed
   :demand t
 

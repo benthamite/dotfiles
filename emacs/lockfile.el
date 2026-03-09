@@ -1329,7 +1329,7 @@
  (init :source "elpaca-menu-lock-file" :recipe
        (:source nil :package "init" :id init :host github :repo
 		"benthamite/init" :depth nil :wait t :type git :protocol https
-		:inherit t :ref "010e5ae99ddf8dc6042f510ac983d18aa3c4935d"))
+		:inherit t :ref "b97f7783afb53069b8848baa5745aef3fe32eecf"))
  (institution-calendar :source "elpaca-menu-lock-file" :recipe
 		       (:source nil :package "institution-calendar" :id
 				institution-calendar :host github :repo

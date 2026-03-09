@@ -441,8 +441,6 @@ The extras come with their own manuals and user options: everything is documente
   - [[#org-contrib][org-contrib]]
   - [[#org-checklist][org-checklist]]
   - [[#org-make-toc][org-make-toc]]
-  - [[#org2blog][org2blog]]
-  - [[#org2blog-extras][org2blog-extras]]
   - [[#org-journal][org-journal]]
   - [[#org-contacts][org-contacts]]
   - [[#org-vcard][org-vcard]]
@@ -10519,67 +10517,6 @@ CLOCK: [2023-02-26 Sun 13:15]--[2023-02-26 Sun 13:28] =>  0:13
 (use-package org-make-toc
   :after org
   :defer 30)
-#+end_src
-
-** =org2blog=
-:PROPERTIES:
-:ID:       56AD66CB-240C-4BAA-918B-CCD63BD518C4
-:END:
-:LOGBOOK:
-CLOCK: [2021-05-29 Sat 13:27]--[2021-05-29 Sat 13:49] =>  0:22
-CLOCK: [2021-05-29 Sat 12:08]--[2021-05-29 Sat 12:30] =>  0:22
-CLOCK: [2021-03-27 Sat 22:03]--[2021-03-27 Sat 22:12] =>  0:09
-CLOCK: [2021-03-18 Thu 21:57]--[2021-03-18 Thu 22:02] =>  0:05
-CLOCK: [2021-03-17 Wed 22:08]--[2021-03-17 Wed 22:23] =>  0:15
-CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
-:END:
-
-/[[https://github.com/org2blog/org2blog][org2blog]] lets you blog from Org mode to WordPress./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package org2blog
-  :after auth-source-pass
-  :custom
-  (org2blog/wp-blog-alist
-        `(("Pablo's website"
-           :url "https://www.stafforini.com/xmlrpc.php"
-           :username ,(auth-source-pass-get "user" "chrome/stafforini.com/wp-admin/admin")
-           :password ,(auth-source-pass-get 'secret "chrome/stafforini.com/wp-admin/admin"))
-          ("Pablo's miscellany"
-           :url "https://www.stafforini.com/blog/xmlrpc.php"
-           :username ,(auth-source-pass-get "user" "chrome/stafforini.com/blog/wp-admin/admin")
-           :password ,(auth-source-pass-get 'secret "chrome/stafforini.com/blog/wp-admin/admin"))
-          ("notatu dignum"
-           :url "https://www.stafforini.com/quotes/xmlrpc.php"
-           :username ,(auth-source-pass-get "user" "chrome/stafforini.com/quotes/wp-admin/admin")
-           :password ,(auth-source-pass-get 'secret "chrome/stafforini.com/quotes/wp-admin/admin"))
-          ("Puro compás"
-           :url "https://www.stafforini.com/tango/xmlrpc.php"
-           :username ,(auth-source-pass-get "user" "chrome/stafforini.com/tango/wp-admin/admin")
-           :password ,(auth-source-pass-get 'secret "chrome/stafforini.com/tango/wp-admin/admin"))
-          ("EA Quotes"
-           :url "https://eaquotes.net/xmlrpc.php"
-           :username ,(auth-source-pass-get "user" "tlon/EAQUOTES/eaquotes.net/wp_admin@eaquotes.net")
-           :password ,(auth-source-pass-get 'secret "tlon/EAQUOTES/eaquotes.net/wp_admin@eaquotes.net"))))
-
-  (org2blog/wp-show-post-in-browser 'show)
-  (org2blog/wp-track-posts (list paths-file-org2blog "Posts"))
-
-  :bind
-  ("A-o" . org2blog-user-interface))
-#+end_src
-
-** =org2blog-extras=
-:PROPERTIES:
-:ID:       189C41F8-D0BF-40CC-A4AD-96C7F4A76E4D
-:END:
-
-
-/[[file:extras/org2blog-extras.el][org2blog-extras]] collects my extensions for =org2blog=./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-personal-package org2blog-extras
-  :after org2blog)
 #+end_src
 
 ** =org-journal=

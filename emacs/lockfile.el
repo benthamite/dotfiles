@@ -2652,9 +2652,7 @@
       (:package "seq" :repo ("https://github.com/emacsmirror/gnu_elpa" . "seq")
 		:branch "externals/seq" :files ("*" (:exclude ".git")) :source
 		"GNU ELPA" :protocol https :inherit t :depth treeless :build
-		(elpaca--queue-dependencies elpaca--add-info-path
-					    elpaca-unload-seq
-					    elpaca--activate-package)
+		(:before elpaca-activate elpaca-unload-seq)
 		:ref "27a90793a13f149121180e864fa53d68b9eac0b3"))
  (session :source "elpaca-menu-lock-file" :recipe
 	  (:package "session" :fetcher github :repo "emacsattic/session" :files

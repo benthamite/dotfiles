@@ -39,7 +39,9 @@
   (pcase (simple-extras-get-emacs-distro)
     ('emacs-mac (modus-themes-extras-load-theme-emacs-mac))
     ('emacs-plus (add-hook 'ns-system-appearance-change-functions
-			   #'modus-themes-extras-load-theme-emacs-plus))))
+			   #'modus-themes-extras-load-theme-emacs-plus)
+		 (modus-themes-extras-load-theme-emacs-plus
+		  ns-system-appearance))))
 
 (declare-function mac-application-state nil)
 (defun modus-themes-extras-load-theme-emacs-mac ()

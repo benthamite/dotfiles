@@ -35,7 +35,7 @@ The main capabilities are:
 The function ~modus-themes-extras-load-theme-conditionally~ is the main entry point for automatic theme switching. It queries the Emacs distribution using ~simple-extras-get-emacs-distro~ (from =simple-extras.el=) and sets up the appropriate mechanism:
 
 - For the *Emacs Mac port* (~'emacs-mac~), it immediately calls ~modus-themes-extras-load-theme-emacs-mac~ to read the current system appearance and load the matching theme.
-- For *Emacs Plus* (~'emacs-plus~), it adds ~modus-themes-extras-load-theme-emacs-plus~ to the ~ns-system-appearance-change-functions~ hook, which Emacs Plus calls whenever the system appearance changes. This means the theme updates automatically when you toggle dark mode in System Settings.
+- For *Emacs Plus* (~'emacs-plus~), it adds ~modus-themes-extras-load-theme-emacs-plus~ to the ~ns-system-appearance-change-functions~ hook, which Emacs Plus calls whenever the system appearance changes, and also loads the theme immediately based on the current value of ~ns-system-appearance~. The immediate load ensures the theme is applied even when initialization runs after the hook's initial startup invocation (e.g. on a fresh profile build where elpaca takes time to compile packages).
 
 You would typically call this function once during initialization:
 

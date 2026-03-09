@@ -318,7 +318,7 @@ is a mode-line escape character."
 
 ;;;;; GitHub notifications
 
-(declare-function forge-extras-pull-notifications "forge-extras")
+(autoload 'forge-extras-pull-notifications "forge-extras")
 (defun doom-modeline-extras-handle-github-notifications (&rest _)
   "Handle GitHub notifications after they are fetched.
 When the GitHub notification count changes and is positive, trigger

@@ -1698,7 +1698,7 @@
 		:repo "djcb/mu" :main "mu4e/mu4e.el" :pre-build
 		(("./autogen.sh") ("ninja" "-C" "build")) :build
 		(:not elpaca-build-docs) :ref
-		"1a501281443eca6ccf7a7267a1c9c720bc6ccca1" :depth nil :type git
+		"1a501281443eca6ccf7a7267a1c9c720bc6ccca1" :depth treeless :type git
 		:protocol https :inherit t))
  (mu4e-extras :source "elpaca-menu-lock-file" :recipe
 	      (:source nil :package "mu4e-extras" :id mu4e-extras :host github

@@ -28,7 +28,16 @@
 
 ;;; Code:
 
-(require 'vterm)
+;; Load vterm only at runtime; the top-level `require' hangs in batch mode
+;; because vterm prompts to compile its native module via `y-or-n-p'.
+(declare-function vterm-send-key "vterm")
+(declare-function vterm-send-backspace "vterm")
+(declare-function vterm-send-meta-backspace "vterm")
+(declare-function vterm-yank "vterm")
+(declare-function vterm-yank-pop "vterm")
+(declare-function vterm-undo "vterm")
+(defvar vterm-keymap-exceptions)
+(defvar vterm-mode-map)
 
 ;;;; Variables
 

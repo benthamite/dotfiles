@@ -605,7 +605,7 @@ Then, I set some frame parameters to remove the title bar and maximize the frame
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally nil t)
 ;; recommended for straight/elpaca (github.com/radian-software/straight.el#getting-started)
-(setopt package-enable-at-startup nil)
+(setq package-enable-at-startup nil)
 
 (add-to-list 'default-frame-alist '(undecorated-round . t)) ; remove title bar
 (add-to-list 'initial-frame-alist '(fullscreen . maximized)) ; maximize frame on startup

@@ -880,7 +880,7 @@ exec "$(dirname "$0")/sync-elpaca-clone.sh"
   :ensure (:host github
                  :repo "magit/transient"
                  :branch "main" ; github.com/progfolio/elpaca/issues/342
-                 :build (:not elpaca--check-version))
+                 :build (:not elpaca-check-version))
   :after seq
   :custom
   (transient-default-level 7) ; magit.vc/manual/transient/Enabling-and-Disabling-Suffixes.html
@@ -1133,7 +1133,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
            :repo "protesilaos/dotfiles"
            :local-repo "prot-common"
            :main "emacs/.emacs.d/prot-lisp/prot-common.el"
-           :build (:not elpaca--check-version)
+           :build (:not elpaca-check-version)
            :files ("emacs/.emacs.d/prot-lisp/prot-common.el")))
 #+end_src
 
@@ -1156,7 +1156,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
            :repo "protesilaos/dotfiles"
            :local-repo "prot-simple"
            :main "emacs/.emacs.d/prot-lisp/prot-simple.el"
-           :build (:not elpaca--check-version)
+           :build (:not elpaca-check-version)
            :files ("emacs/.emacs.d/prot-lisp/prot-simple.el"))
   :after prot-common
   :custom
@@ -1704,7 +1704,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
   :ensure (:host github
                  :repo "magit/magit"
                  :branch "main"
-                 :build (:not elpaca--check-version))
+                 :build (:not elpaca-check-version))
   :custom
   (magit-commit-ask-to-stage 'stage)
   (magit-clone-set-remote.pushDefault t)
@@ -1804,7 +1804,7 @@ Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magi
 (use-package magit-todos
   :ensure (:host github
                  :repo "alphapapa/magit-todos"
-                 :build (:not elpaca--check-version))
+                 :build (:not elpaca-check-version))
   :disabled
   :after magit hl-todo
   :custom
@@ -1838,7 +1838,7 @@ Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magi
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package ghub
   :ensure (:host github
-                 :build (:not elpaca--check-version)
+                 :build (:not elpaca-check-version)
                  :repo "magit/ghub"
                  :branch "main")
   :defer t
@@ -1866,7 +1866,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
   :ensure (:host github
                  :repo "magit/forge"
                  :branch "main" ; github.com/progfolio/elpaca/issues/342
-                 :build (:not elpaca--check-version))
+                 :build (:not elpaca-check-version))
   :after magit ghub emacsql auth-source-pass
   :init
   (with-eval-after-load 'magit-status
@@ -1989,7 +1989,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package orgit
-  :ensure (:build (:not elpaca--check-version))
+  :ensure (:build (:not elpaca-check-version))
   :defer t)
 #+end_src
 
@@ -2003,7 +2003,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package orgit-forge
   :after org forge
-  :ensure (:build (:not elpaca--check-version)))
+  :ensure (:build (:not elpaca-check-version)))
 #+end_src
 
 ** =forge-search=
@@ -2579,7 +2579,7 @@ Here’s a screenshot illustrating the modeline and tab bar in action (click to 
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package doom-modeline
-  :ensure (:build (:not elpaca--check-version))
+  :ensure (:build (:not elpaca-check-version))
   :demand t
   :custom
   (doom-modeline-time nil) ; we display time (and date) in the tab bar
@@ -4509,7 +4509,7 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
                  :repo "protesilaos/dotfiles"
                  :local-repo "prot-scratch"
                  :main "emacs/.emacs.d/prot-lisp/prot-scratch.el"
-                 :build (:not elpaca--check-version)
+                 :build (:not elpaca-check-version)
                  :files ("emacs/.emacs.d/prot-lisp/prot-scratch.el"))
   :custom
   (prot-scratch-default-mode 'org-mode)
@@ -5204,7 +5204,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 (use-package org-gcal
   :ensure (:host github
                  :repo "kidd/org-gcal.el"
-                 :build (:not elpaca--check-version)) ; to prevent elnode version error
+                 :build (:not elpaca-check-version)) ; to prevent elnode version error
   :after auth-source-pass org-agenda
   :custom
   (org-gcal-client-id (auth-source-pass-get "host" "auth-sources/org-gcal"))
@@ -7599,7 +7599,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-pdftools
-  :ensure (:build (:not elpaca--check-version))
+  :ensure (:build (:not elpaca-check-version))
   :after org pdf-tools
   :hook
   (org-mode-hook . org-pdftools-setup-link))
@@ -8110,7 +8110,7 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package hl-todo
-  :ensure (:build (:not elpaca--check-version))
+  :ensure (:build (:not elpaca-check-version))
   :defer 30
   :config
   (setopt hl-todo-keyword-faces
@@ -8268,7 +8268,7 @@ There is an abundance of Emacs GPT packages. See [[https://news.ycombinator.com/
   :ensure (:host github
                  :repo "copilot-emacs/copilot.el"
                  :files ("dist" "*.el")
-                 :build (:not elpaca--check-version))
+                 :build (:not elpaca-check-version))
   :after (jsonrpc track-changes)
   :custom
   (copilot-max-char -1)
@@ -8582,7 +8582,7 @@ This package evolved out of =gptel-extras=.
 (use-package ragmacs
   :ensure (:host github
 		 :repo "positron-solutions/ragmacs"
-                 :build (:not elpaca--check-version))                 
+                 :build (:not elpaca-check-version))                 
   :defer t)
 #+end_src
 
@@ -8785,7 +8785,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 (use-package mcp
   :ensure (:host github
 		 :repo "lizqwerscott/mcp.el"
-		 :build (:not elpaca--check-version))
+		 :build (:not elpaca-check-version))
   :after gptel
   :config
   (setq mcp-hub-servers
@@ -10623,7 +10623,7 @@ CLOCK: [2021-03-17 Wed 20:34]--[2021-03-17 Wed 20:52] =>  0:18
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-contacts
-  :ensure (:build (:not elpaca--check-version))
+  :ensure (:build (:not elpaca-check-version))
   :after org tlon
   :defer t
   :custom
@@ -12223,7 +12223,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
                  :repo "djcb/mu"
                  :main "mu4e/mu4e.el"
                  :pre-build (("./autogen.sh") ("ninja" "-C" "build"))
-                 :build (:not elpaca--compile-info)
+                 :build (:not elpaca-build-docs)
                  :ref "1a501281" ; v.1.12.13
                  :depth nil)
   :defer 30
@@ -13259,7 +13259,7 @@ Remember that every piece of Elisp that I write is for my own educational and re
                  :repo "protesilaos/dotfiles"
                  :local-repo "prot-eww"
                  :main "emacs/.emacs.d/prot-lisp/prot-eww.el"
-                 :build (:not elpaca--check-version)
+                 :build (:not elpaca-check-version)
                  :files ("emacs/.emacs.d/prot-lisp/prot-eww.el"))
   :after eww prot-common
   :bind
@@ -14367,7 +14367,7 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
                  :pre-build (("./autogen.sh")
                              ("./configure")
                              ("make"))
-                 :build (:not elpaca--compile-info))
+                 :build (:not elpaca-build-docs))
 
   :custom
   (bbdb-file (file-name-concat paths-dir-bbdb "bbdn.el"))

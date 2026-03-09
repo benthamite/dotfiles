@@ -96,7 +96,7 @@ The user option ~faces-extras-org-property-value-height~ controls the relative h
 #+findex: faces-extras-set-face-attributes
 #+findex: faces-extras-set-and-store-face-attributes
 #+findex: faces-extras-set-custom-face-attributes
-The package provides a layered system for applying face attributes. At the lowest level, ~faces-extras-set-face-attribute~ takes a single attribute specification---a list whose ~car~ is the face symbol and whose ~cdr~ is a property list of attribute-value pairs---and applies it via ~set-face-attribute~. Crucially, it evaluates any symbols or functions in the value positions before applying them, so you can use variable names or lambdas as attribute values:
+The package provides a layered system for applying face attributes. At the lowest level, ~faces-extras-set-face-attribute~ takes a single attribute specification---a list whose ~car~ is the face symbol and whose ~cdr~ is a property list of attribute-value pairs---and applies it via ~set-face-attribute~. Crucially, it evaluates any symbols or functions in the value positions before applying them, so you can use variable names or lambdas as attribute values. If any evaluated value is or contains ~unspecified~ (which can happen before the theme has loaded), the call is skipped; the caller is expected to retry later via a theme-load hook:
 
 #+begin_src emacs-lisp
 (faces-extras-set-face-attribute '(default :height faces-extras-fixed-pitch-size))

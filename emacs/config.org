@@ -7269,7 +7269,7 @@ To populate the database of historical prices:
   (johnson-dictionary-directories '("/Users/pablostafforini/My Drive/Dictionaries/"))
   
   :bind
-  (("A-j" . johnson-lookup)
+  (("A-o" . johnson-lookup)
    :map johnson-mode-map
    ("," . johnson-prev-section)
    ("." . johnson-next-section)

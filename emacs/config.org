@@ -13328,7 +13328,7 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
 (use-package elfeed
   :init
   (run-with-idle-timer (* 20 60) t #'elfeed-extras-update)
-  
+
   :custom
   (elfeed-curl-timeout 5)
   (elfeed-curl-max-connections 4)
@@ -13340,33 +13340,34 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
   :hook
   (elfeed-show-mode-hook . visual-line-mode)
   (elfeed-search-mode-hook . (lambda ()
-                               "Disable undo in ‘*elfeed-search*’ buffer to avoid warnings."
-                               (buffer-disable-undo)))
+			       "Disable undo in ‘*elfeed-search*’ buffer to avoid warnings."
+			       (buffer-disable-undo)))
 
   :bind
   (("A-f" . elfeed)
    :map eww-mode-map
    ("c" . elfeed-kill-link-url-at-point)
    :map elfeed-search-mode-map
+   ("U" . elfeed-search-tag-all-unread)
    ("d" . elfeed-update)
    ("f" . avy-extras-elfeed-search-show-entry)
    ("j" . elfeed-unjam)
-   ("U" . elfeed-search-tag-all-unread)
    ("o" . elfeed-org)
+   ("s" . elfeed-search-live-filter)
    :map elfeed-show-mode-map
+   (";" . elfeed-show-next)
    ("<return>" . eww-follow-link)
-   ("S-<return>" . eww-follow-link)
-   ("A-C-s-r" . shr-heading-previous)
    ("A-C-s-f" . shr-heading-next)
-   ("q" . nil)
+   ("A-C-s-r" . shr-heading-previous)
+   ("F" . ace-link-extras-eww-new-buffer)
+   ("S-<return>" . eww-follow-link)
    ("a" . zotra-extras-add-entry)
    ("b" . nil)
    ("f" . ace-link-eww)
-   ("F" . ace-link-extras-eww-new-buffer)
-   ("s-f" . ace-link-extras-eww-externally)
-   ("q" . files-extras-kill-this-buffer)
    ("j" . elfeed-show-prev)
-   (";" . elfeed-show-next)
+   ("q" . files-extras-kill-this-buffer)
+   ("q" . nil)
+   ("s-f" . ace-link-extras-eww-externally)
    ("x" . elfeed-show-visit)))
 #+end_src
 

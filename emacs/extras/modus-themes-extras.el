@@ -27,7 +27,8 @@
 
 ;;; Code:
 
-(require 'modus-themes)
+(declare-function modus-themes-load-theme "modus-themes")
+(declare-function modus-themes-get-color-value "modus-themes")
 
 ;;;; Functions
 

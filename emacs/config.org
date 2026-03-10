@@ -2355,11 +2355,6 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 		 :repo "protesilaos/modus-themes")
   :after faces faces-extras simple-extras
   :demand t
-  :init
-  (with-eval-after-load 'modus-themes-extras
-    (setq modus-themes-to-toggle (list modus-themes-extras-light-theme
-				       modus-themes-extras-dark-theme)))
-
   :custom
   (modus-themes-mixed-fonts t)
 
@@ -2419,8 +2414,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
   :after modus-themes ef-themes
   :demand t
   :config
-  ;; do not set via :custom because `modus-themes-to-toggle' has restrictive :type
-  (setq modus-themes-extras-light-theme 'ef-maris-light)
+  (setq modus-themes-extras-light-theme 'modus-operandi-tinted)
   (setq modus-themes-extras-dark-theme 'ef-maris-dark)
   (init-override-code
    :modus-themes-load

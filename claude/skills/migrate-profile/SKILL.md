@@ -1,6 +1,7 @@
 ---
 name: migrate-profile
 description: Consolidate Claude Code project data across elpaca profile changes. Use `/migrate-profile [new-profile]` to migrate.
+argument-hint: "[new-profile]"
 ---
 
 # Profile migration

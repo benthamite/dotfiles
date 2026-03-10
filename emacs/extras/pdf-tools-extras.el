@@ -63,7 +63,8 @@
 	 (x (/ (car xy) (float (car size))))
          (y (/ (cdr xy) (float (cdr size))))
          (word (string-trim (pdf-info-gettext page (list x y x y) 'word))))
-    (setq pdf-view-active-region (pdf-info-getselection page (list x y x y) 'word))
+    (setq pdf-view-active-region
+          (cons page (pdf-info-getselection page (list x y x y) 'word)))
     (pdf-view-display-region pdf-view-active-region)
     (when (string-empty-p word)
       (user-error "No word found at click position"))

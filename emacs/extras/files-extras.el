@@ -703,7 +703,6 @@ To install the extension, drag the latter onto the former."
     ("b" "bib"              (lambda () (interactive )(files-extras-open-elpaca-package "bib")))
     ("d" "gdrive"           (lambda () (interactive )(files-extras-open-elpaca-package "gdrive")))
     ("f" "pdf-tools-pages"  (lambda () (interactive )(files-extras-open-elpaca-package "pdf-tools-pages")))
-    ("g" "goldendict-ng"    (lambda () (interactive )(files-extras-open-elpaca-package "goldendict-ng")))
     ("o" "macos"            (lambda () (interactive )(files-extras-open-elpaca-package "macos")))
     ("m" "mullvad"          (lambda () (interactive )(files-extras-open-elpaca-package "mullvad")))
     ("p" "pomodoro-centile" (lambda () (interactive ) (files-extras-open-elpaca-package "pomodoro-centile")))

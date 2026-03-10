@@ -46,6 +46,20 @@
 
 ;;;; Functions
 
+;;;;; Toggle
+
+(declare-function modus-themes-load-theme "modus-themes")
+(defun modus-themes-extras-toggle ()
+  "Toggle between the configured light and dark themes.
+The light and dark themes are read from
+`modus-themes-extras-light-theme' and
+`modus-themes-extras-dark-theme' at call time, so changes to
+those variables take effect immediately."
+  (interactive)
+  (if (eq (car custom-enabled-themes) modus-themes-extras-light-theme)
+      (modus-themes-load-theme modus-themes-extras-dark-theme)
+    (modus-themes-load-theme modus-themes-extras-light-theme)))
+
 ;;;;; Conditional theme loading
 
 (autoload 'simple-extras-get-emacs-distro "simple-extras")
@@ -58,7 +72,6 @@
 		 (modus-themes-extras-load-theme-emacs-plus
 		  ns-system-appearance))))
 
-(declare-function modus-themes-load-theme "modus-themes")
 (declare-function mac-application-state nil)
 (defun modus-themes-extras-load-theme-emacs-mac ()
   "Load `modus' theme that matches system appearance."

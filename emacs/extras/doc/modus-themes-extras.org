@@ -26,6 +26,7 @@ The package also provides theme-aware face customizations, particularly for the 
 The main capabilities are:
 
 - *Configurable theme pair.* Specifying which themes to use for light and dark mode ([[#h:variables][Variables]]).
+- *Manual toggle.* Toggling between the configured light and dark themes ([[#h:toggle][Toggle]]).
 - *Automatic theme switching.* Detecting the system appearance and loading the configured light or dark theme accordingly, with support for both Emacs Mac and Emacs Plus distributions ([[#h:conditional-theme-loading][Conditional theme loading]]).
 - *Theme-aware face customization.* Setting parenthesis highlighting colors from the Modus palette ([[#h:theme-customizations][Theme customizations]]).
 
@@ -46,6 +47,16 @@ Both accept any theme symbol. For example, to use ~ef-themes~:
 (setq modus-themes-extras-light-theme 'ef-maris-light)
 (setq modus-themes-extras-dark-theme 'ef-maris-dark)
 #+end_src
+
+* Toggle
+:PROPERTIES:
+:CUSTOM_ID: h:toggle
+:END:
+
+#+findex: modus-themes-extras-toggle
+The command ~modus-themes-extras-toggle~ toggles between the configured light and dark themes. It reads ~modus-themes-extras-light-theme~ and ~modus-themes-extras-dark-theme~ at call time, so changes to those variables take effect immediately without requiring any additional setup.
+
+This replaces the built-in ~modus-themes-toggle~ (which relies on the static ~modus-themes-to-toggle~ list) with a dynamic alternative that always respects the current values of the user options.
 
 * Conditional theme loading
 :PROPERTIES:

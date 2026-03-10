@@ -1074,14 +1074,16 @@ this prompt."
 		(if (null events)
 		    (message "No events found in email.")
 		  (when (y-or-n-p (format "Write %s to the calendar? " summary))
-		    (with-current-buffer (find-file-noselect paths-file-calendar)
-		      (goto-char (point-max))
-		      (dolist (event events)
-			(let ((title (alist-get 'title event))
-			      (timestamp (alist-get 'timestamp event)))
-			  (insert (format "\n* TODO [#5] %s\nDEADLINE: <%s>\n"
-					  title timestamp))))
-		      (save-buffer))
+		    (dolist (event events)
+		      (let* ((title (alist-get 'title event))
+			     (timestamp (alist-get 'timestamp event))
+			     (org-capture-templates
+			      `(("X" "Auto" entry
+				 (file ,paths-file-calendar)
+				 ,(format "* TODO [#5] %s\nDEADLINE: <%s>"
+					  title timestamp)
+				 :empty-lines 1 :immediate-finish t))))
+			(org-capture nil "X")))
 		    (message "Added %s to %s."
 			     summary (file-name-nondirectory paths-file-calendar)))))
 	    (error

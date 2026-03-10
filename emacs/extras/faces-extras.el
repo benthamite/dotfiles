@@ -102,7 +102,7 @@ These attributes can be set with `faces-extras-set-custom-face-attributes'.")
 
 ;;;###autoload
 (defun faces-extras--unspecified-p (value)
-  "Return non-nil if VALUE is or contains `unspecified'."
+  "Return non-nil if VALUE is or includes `unspecified'."
   (cond
    ((eq value 'unspecified) t)
    ((proper-list-p value) (seq-some #'faces-extras--unspecified-p value))))

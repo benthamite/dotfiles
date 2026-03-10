@@ -88,8 +88,9 @@ if [[ "$CI_MODE" == true ]]; then
                 failed_files+=("$name")
             else
                 # Load errors, missing deps, runtime errors during require
-                reason=$(echo "$output" | grep -m1 "Cannot open load file\|Required feature\|error:" | sed 's/.*: //' || echo "unknown")
-                echo "SKIP  $name ($reason)"
+                reason=$(echo "$output" | tail -3 | head -1)
+                echo "SKIP  $name"
+                echo "      $reason"
                 skipped=$((skipped + 1))
             fi
         fi

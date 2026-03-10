@@ -17,14 +17,35 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=modus-themes-extras.el= extends the =modus-themes= package (Modus Operandi and Modus Vivendi) with automatic theme switching based on the operating system's appearance setting. On macOS, both the Emacs Mac port and Emacs Plus provide mechanisms to detect whether the system is in light or dark mode; this package uses those mechanisms to load the appropriate Modus theme without manual intervention.
+=modus-themes-extras.el= extends the =modus-themes= package with automatic theme switching based on the operating system's appearance setting. On macOS, both the Emacs Mac port and Emacs Plus provide mechanisms to detect whether the system is in light or dark mode; this package uses those mechanisms to load the appropriate theme without manual intervention.
+
+The light and dark themes are configurable via ~modus-themes-extras-light-theme~ and ~modus-themes-extras-dark-theme~, defaulting to ~modus-operandi~ and ~modus-vivendi~ respectively. Any theme supported by ~modus-themes-load-theme~ can be used (including ~ef-themes~).
 
 The package also provides theme-aware face customizations, particularly for the =highlight-parentheses= package, ensuring that parenthesis highlighting colors stay consistent with the active Modus theme.
 
 The main capabilities are:
 
-- *Automatic theme switching.* Detecting the system appearance and loading Modus Operandi (light) or Modus Vivendi (dark) accordingly, with support for both Emacs Mac and Emacs Plus distributions ([[#h:conditional-theme-loading][Conditional theme loading]]).
+- *Configurable theme pair.* Specifying which themes to use for light and dark mode ([[#h:variables][Variables]]).
+- *Automatic theme switching.* Detecting the system appearance and loading the configured light or dark theme accordingly, with support for both Emacs Mac and Emacs Plus distributions ([[#h:conditional-theme-loading][Conditional theme loading]]).
 - *Theme-aware face customization.* Setting parenthesis highlighting colors from the Modus palette ([[#h:theme-customizations][Theme customizations]]).
+
+* Variables
+:PROPERTIES:
+:CUSTOM_ID: h:variables
+:END:
+
+#+vindex: modus-themes-extras-light-theme
+The user option ~modus-themes-extras-light-theme~ specifies the theme to load when the system is in light mode. It defaults to ~modus-operandi~.
+
+#+vindex: modus-themes-extras-dark-theme
+The user option ~modus-themes-extras-dark-theme~ specifies the theme to load when the system is in dark mode. It defaults to ~modus-vivendi~.
+
+Both accept any theme symbol. For example, to use ~ef-themes~:
+
+#+begin_src emacs-lisp
+(setq modus-themes-extras-light-theme 'ef-maris-light)
+(setq modus-themes-extras-dark-theme 'ef-maris-dark)
+#+end_src
 
 * Conditional theme loading
 :PROPERTIES:
@@ -49,7 +70,7 @@ You would typically call this function once during initialization:
 :END:
 
 #+findex: modus-themes-extras-load-theme-emacs-mac
-The command ~modus-themes-extras-load-theme-emacs-mac~ reads the current appearance from the =mac-application-state= function. When the appearance is ="NSAppearanceNameAqua"= (light mode), it loads ~modus-operandi~. When it is ="NSAppearanceNameDarkAqua"= (dark mode), it loads ~modus-vivendi~. This command can also be called interactively to force a theme refresh.
+The command ~modus-themes-extras-load-theme-emacs-mac~ reads the current appearance from the =mac-application-state= function. When the appearance is ="NSAppearanceNameAqua"= (light mode), it loads ~modus-themes-extras-light-theme~. When it is ="NSAppearanceNameDarkAqua"= (dark mode), it loads ~modus-themes-extras-dark-theme~. This command can also be called interactively to force a theme refresh.
 
 ** Emacs Plus
 :PROPERTIES:
@@ -57,7 +78,7 @@ The command ~modus-themes-extras-load-theme-emacs-mac~ reads the current appeara
 :END:
 
 #+findex: modus-themes-extras-load-theme-emacs-plus
-The function ~modus-themes-extras-load-theme-emacs-plus~ is designed for the ~ns-system-appearance-change-functions~ hook in Emacs Plus. It receives the new appearance as a symbol (~'light~ or ~'dark~) and loads the corresponding Modus theme. Because this function is triggered by the hook, the theme switch happens automatically whenever the system appearance changes.
+The function ~modus-themes-extras-load-theme-emacs-plus~ is designed for the ~ns-system-appearance-change-functions~ hook in Emacs Plus. It receives the new appearance as a symbol (~'light~ or ~'dark~) and loads the corresponding theme from ~modus-themes-extras-light-theme~ or ~modus-themes-extras-dark-theme~. Because this function is triggered by the hook, the theme switch happens automatically whenever the system appearance changes.
 
 * Theme customizations
 :PROPERTIES:
@@ -83,7 +104,7 @@ If ~global-highlight-parentheses-mode~ is available, the function also enables i
 The function ~modus-themes-extras-set-faces~ is provided as a hook point for additional theme-specific face customizations. Its body is currently empty, but its docstring shows how to add conditional face settings based on the active theme:
 
 #+begin_src emacs-lisp
-(if (eq 'modus-operandi (car custom-enabled-themes))
+(if (eq modus-themes-extras-light-theme (car custom-enabled-themes))
     (set-face-attribute 'hl-sentence nil :background "#bfefff")
   (set-face-attribute 'hl-sentence nil :background "#004065"))
 #+end_src

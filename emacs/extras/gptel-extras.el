@@ -1039,7 +1039,6 @@ this prompt."
 
 (declare-function mu4e-message-at-point "mu4e-message")
 (declare-function mu4e-message-field "mu4e-message")
-(defvar org-capture-templates)
 ;;;###autoload
 (defun gptel-extras-email-to-calendar ()
   "Extract events from the email at point and add them to the calendar."
@@ -1075,19 +1074,14 @@ this prompt."
 		(if (null events)
 		    (message "No events found in email.")
 		  (when (y-or-n-p (format "Write %s to the calendar? " summary))
-		    (let ((saved-templates org-capture-templates))
-		      (unwind-protect
-			  (dolist (event events)
-			    (let* ((title (alist-get 'title event))
-				   (timestamp (alist-get 'timestamp event)))
-			      (setq org-capture-templates
-				    `(("X" "Auto" entry
-				       (file ,paths-file-calendar)
-				       ,(format "* TODO [#5] %s\nDEADLINE: <%s>"
-						title timestamp)
-				       :empty-lines 1 :immediate-finish t)))
-			      (org-capture nil "X")))
-			(setq org-capture-templates saved-templates)))
+		    (with-current-buffer (find-file-noselect paths-file-calendar)
+		      (goto-char (point-max))
+		      (dolist (event events)
+			(let ((title (alist-get 'title event))
+			      (timestamp (alist-get 'timestamp event)))
+			  (insert (format "\n* TODO [#5] %s\nDEADLINE: <%s>\n"
+					  title timestamp))))
+		      (save-buffer))
 		    (message "Added %s to %s."
 			     summary (file-name-nondirectory paths-file-calendar)))))
 	    (error

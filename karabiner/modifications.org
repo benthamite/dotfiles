@@ -44,14 +44,14 @@ Both run [[https://qmk.fm/][QMK]] firmware. The Corne uses the =corne_rotated= v
 
 The firmware does almost nothing. The alpha keys are standard QWERTY, and the six thumb keys send modifier keycodes:
 
-| Position     | Keycode         | QMK equivalent |
-|--------------+-----------------+----------------|
-| Left outer   | =left_control=  | =KC_LCTL=      |
-| Left middle  | =left_option=   | =KC_LALT=      |
-| Left inner   | =left_command=  | =KC_LGUI=      |
-| Right inner  | =spacebar=      | =KC_SPC=       |
-| Right middle | =right_command= | =KC_RGUI=      |
-| Right outer  | =right_option=  | =KC_RALT=      |
+| Position     | Keycode         | VIA name    | QMK equivalent |
+|--------------+-----------------+-------------+----------------|
+| Left outer   | =left_control=  | Left Ctrl   | =KC_LCTL=      |
+| Left middle  | =left_option=   | Left Alt    | =KC_LALT=      |
+| Left inner   | =left_command=  | Left Win    | =KC_LGUI=      |
+| Right inner  | =spacebar=      | Space       | =KC_SPC=       |
+| Right middle | =right_command= | Right Win   | =KC_RGUI=      |
+| Right outer  | =right_option=  | Right Alt   | =KC_RALT=      |
 
 These keycodes don't do what their names suggest. They're just handles for Karabiner to intercept and redefine. The actual behavior of each key is determined entirely in software (see [[*individual bindings][individual bindings]]).
 
@@ -69,20 +69,20 @@ If you have a normal keyboard (no programmable thumb keys), skip to step 2.
 
 If you have a split or ergonomic keyboard with programmable thumb keys, use the keyboard's firmware to map the thumb keys as follows. The alpha keys should remain standard QWERTY; only the thumb keys need to be changed.
 
-| position     | keycode to send | QMK equivalent |
-|--------------+-----------------+----------------|
-| left outer   | ~left_control~    | ~KC_LCTL~        |
-| left middle  | ~left_option~     | ~KC_LALT~        |
-| left inner   | ~left_command~    | ~KC_LGUI~        |
-| right inner  | ~spacebar~        | ~KC_SPC~         |
-| right middle | ~right_command~   | ~KC_RGUI~        |
-| right outer  | ~right_option~    | ~KC_RALT~        |
+| position     | keycode to send | VIA name     | QMK equivalent |
+|--------------+-----------------+--------------+----------------|
+| left outer   | ~left_control~    | Left Ctrl    | ~KC_LCTL~        |
+| left middle  | ~left_option~     | Left Alt     | ~KC_LALT~        |
+| left inner   | ~left_command~    | Left Win     | ~KC_LGUI~        |
+| right inner  | ~spacebar~        | Space        | ~KC_SPC~         |
+| right middle | ~right_command~   | Right Win    | ~KC_RGUI~        |
+| right outer  | ~right_option~    | Right Alt    | ~KC_RALT~        |
 
 *Option A: VIA* (easiest, no install required):
 
 1. Open [[https://usevia.app][usevia.app]] in Chrome (requires WebHID support).
 2. Plug in the keyboard via USB. It should auto-detect; if not, your keyboard may need VIA support enabled in its firmware, or you may need to load a JSON definition file from the manufacturer.
-3. Click on each thumb key and assign the keycodes shown above (use KC_LCTL, KC_LALT, KC_LGUI, KC_SPC, KC_RGUI, KC_RALT).
+3. Click on each thumb key and assign the keycodes shown above. In VIA's keycode picker, they are labeled Left Ctrl, Left Alt, Left Win, Space, Right Win, and Right Alt.
 4. Changes take effect immediately—no compiling or flashing needed.
 5. For split keyboards, only one half needs to be connected via USB; the other half communicates via the TRRS cable.
 

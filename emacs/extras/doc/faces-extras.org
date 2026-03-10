@@ -71,7 +71,7 @@ The user option ~faces-extras-org-level-height~ controls the relative height for
 The user option ~faces-extras-org-block-height~ controls the relative height for the ~org-block~ face, which applies to source blocks and other block elements in Org. The type is a number. The default value is ~0.8~.
 
 #+vindex: faces-extras-org-code-height
-The user option ~faces-extras-org-code-height~ controls the relative height for the ~org-code~ face. The type is a number. The default value is ~1.0~.
+The user option ~faces-extras-org-code-height~ controls the relative height for the ~org-code~ face. The type is a number. The default value is ~1.2~.
 
 #+vindex: faces-extras-org-date-height
 The user option ~faces-extras-org-date-height~ controls the relative height for the ~org-date~ face. The type is a number. The default value is ~0.9~.

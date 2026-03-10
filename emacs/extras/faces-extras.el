@@ -76,7 +76,7 @@ These attributes can be set with `faces-extras-set-custom-face-attributes'.")
   :type 'number
   :group 'faces-extras)
 
-(defcustom faces-extras-org-code-height 1.0
+(defcustom faces-extras-org-code-height 1.2
   "Height of the font for `org-code' face."
   :type 'number
   :group 'faces-extras)

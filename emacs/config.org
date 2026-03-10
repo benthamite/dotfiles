@@ -13348,7 +13348,7 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
                  :repo "benthamite/elfeed"
                  :branch "debounce-search-update") ; https://github.com/skeeto/elfeed/pull/558
   :init
-  (run-with-idle-timer (* 20 60) t #'elfeed-extras-update)
+  (run-with-idle-timer (* 5 60) t #'elfeed-extras-update)
 
   :custom
   (elfeed-curl-timeout 5)

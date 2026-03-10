@@ -72,9 +72,10 @@ changes."
 - \"summary\": a brief description for user confirmation, e.g. \"4 flight-related events\", \"1 hotel reservation\", \"2 concert tickets\"
 - \"events\": an array of objects, each with:
   - \"title\": concise event title (e.g. \"Flight EZE→JFK (DL 114, H42AOO)\")
-  - \"timestamp\": org-mode format \"YYYY-MM-DD Day HH:MM\" (e.g. \"2026-03-14 Sat 22:25\")
+  - \"start\": start time as \"YYYY-MM-DD Day HH:MM\" (e.g. \"2026-03-14 Sat 22:25\")
+  - \"end\": end time as \"YYYY-MM-DD Day HH:MM\" (e.g. \"2026-03-15 Sun 08:25\")
 
-For flights, use departure time in the departure city's local timezone.
+For flights, start = departure (departure city timezone), end = arrival (arrival city timezone).
 Include flight numbers and booking references in titles when available.
 Use arrow notation (→) for routes.
 Return ONLY valid JSON, no markdown fences or other text."
@@ -1039,6 +1040,8 @@ this prompt."
 
 (declare-function mu4e-message-at-point "mu4e-message")
 (declare-function mu4e-message-field "mu4e-message")
+(declare-function org-gcal-post-at-point "org-gcal")
+(defvar org-gcal-fetch-file-alist)
 ;;;###autoload
 (defun gptel-extras-email-to-calendar ()
   "Extract events from the email at point and add them to the calendar."
@@ -1074,18 +1077,48 @@ this prompt."
 		(if (null events)
 		    (message "No events found in email.")
 		  (when (y-or-n-p (format "Write %s to the calendar? " summary))
-		    (with-current-buffer (find-file-noselect paths-file-calendar)
-		      (goto-char (point-max))
-		      (dolist (event events)
-			(let ((title (alist-get 'title event))
-			      (timestamp (alist-get 'timestamp event)))
-			  (insert (format "\n* TODO [#5] %s\nDEADLINE: <%s>\n"
-					  title timestamp))))
-		      (save-buffer))
+		    (let ((calendar-id (gptel-extras--calendar-id))
+			  (markers nil))
+		      (with-current-buffer (find-file-noselect paths-file-calendar)
+			(goto-char (point-max))
+			(dolist (event events)
+			  (let* ((title (alist-get 'title event))
+				 (start (alist-get 'start event))
+				 (end (alist-get 'end event))
+				 (deadline (gptel-extras--format-deadline start end)))
+			    (insert (format "\n* TODO [#5] %s\n" title))
+			    (insert (format "DEADLINE: %s\n" deadline))
+			    (insert ":PROPERTIES:\n")
+			    (insert (format ":calendar-id: %s\n" calendar-id))
+			    (insert ":END:\n"))
+			  (push (point-marker) markers))
+			(save-buffer)
+			(dolist (marker (nreverse markers))
+			  (goto-char marker)
+			  (org-back-to-heading t)
+			  (org-gcal-post-at-point)
+			  (set-marker marker nil))))
 		    (message "Added %s to %s."
 			     summary (file-name-nondirectory paths-file-calendar)))))
 	    (error
 	     (message "Failed to parse response: %s\nRaw: %s" err response))))))))
+
+(defun gptel-extras--calendar-id ()
+  "Return the calendar ID associated with the calendar file."
+  (or (car (cl-rassoc (expand-file-name paths-file-calendar)
+		      org-gcal-fetch-file-alist
+		      :test #'string=))
+      (caar org-gcal-fetch-file-alist)))
+
+(defun gptel-extras--format-deadline (start end)
+  "Format START and END as an org DEADLINE timestamp.
+START and END are strings like \"2026-03-14 Sat 22:25\"."
+  (let ((start-date (substring start 0 10))
+	(end-date (substring end 0 10))
+	(end-time (substring end 15)))
+    (if (string= start-date end-date)
+	(format "<%s-%s>" start end-time)
+      (format "<%s>--<%s>" start end))))
 
 ;;;;; Misc
 

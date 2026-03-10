@@ -894,20 +894,6 @@ exec "$(dirname "$0")/sync-elpaca-clone.sh"
                  :branch "main" ; github.com/progfolio/elpaca/issues/342
                  :build (:not elpaca-check-version))
   :after seq
-  :config
-  ;; `transient--describe-function' captures the help buffer via
-  ;; `temp-buffer-window-setup-hook', but `helpful' overrides
-  ;; `describe-function' without triggering that hook, leaving the
-  ;; captured buffer nil.  Fall back to the selected window's buffer.
-  (define-advice transient--describe-function (:override (fn) helpful-compat)
-    (let* ((buffer nil)
-           (help-window-select t)
-           (temp-buffer-window-setup-hook
-            (cons (lambda () (setq buffer (current-buffer)))
-                  temp-buffer-window-setup-hook)))
-      (describe-function fn)
-      (set-buffer (or buffer (window-buffer)))))
-
   :custom
   (transient-default-level 7) ; magit.vc/manual/transient/Enabling-and-Disabling-Suffixes.html
   (transient-save-history nil) ; the history file was throwing an error on startup

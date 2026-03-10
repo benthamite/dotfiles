@@ -62,15 +62,22 @@ done
 Some packages were renamed between profiles. Known renames (old → new):
 
 - `infovore` → `elfeed-ai`
+- `tango-wiki` → `tangodb`
 
 After grouping, merge any sources under old names into the new name's source list:
 
 ```bash
 # For each known rename: old_name → new_name
-if [[ -n "${sources_map[infovore]}" ]]; then
-  sources_map[elfeed-ai]+="${sources_map[infovore]}"
-  unset sources_map[infovore]
-fi
+for old_name in infovore tango-wiki; do
+  case "$old_name" in
+    infovore)    new_name="elfeed-ai" ;;
+    tango-wiki)  new_name="tangodb" ;;
+  esac
+  if [[ -n "${sources_map[$old_name]}" ]]; then
+    sources_map[$new_name]+="${sources_map[$old_name]}"
+    unset "sources_map[$old_name]"
+  fi
+done
 ```
 
 ## Find or create target directories
@@ -154,7 +161,7 @@ After successfully copying all data from a source directory, delete it:
 
 ```bash
 for SOURCE_ENCODED in ${sources_map[$pkg]}; do
-  rm -rf "$CLAUDE_PROJECTS/$SOURCE_ENCODED"
+  trash "$CLAUDE_PROJECTS/$SOURCE_ENCODED"
 done
 ```
 

@@ -152,8 +152,10 @@ are initialized.  After cloning, the command:
    ~forge-extras-track-repository~), unless the NO-FORGE argument is
    non-~nil~.
 
-With a prefix argument, the command prompts for the parent directory
-instead of using the account's default directory.
+With a prefix argument, the command prompts for the target clone
+directory.  The choices include the account's default directory, the
+current elpaca sources directory (if available), and an option to
+select any other directory.
 
 The clone runs asynchronously and reports progress via messages.
 

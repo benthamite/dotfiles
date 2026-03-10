@@ -56,8 +56,9 @@
 (autoload 's-split "s")
 (defun browse-url-extras-set-handler (urls-file handler)
   "Set the URL HANDLER from a URLS-FILE."
-  (dolist (url (s-split "\n" (f-read urls-file) t))
-    (push (cons (regexp-quote url) handler) browse-url-handlers)))
+  (when (file-exists-p urls-file)
+    (dolist (url (s-split "\n" (f-read urls-file) t))
+      (push (cons (regexp-quote url) handler) browse-url-handlers))))
 
 ;;;###autoload
 (defun browse-url-extras-set-domains-to-open-externally ()

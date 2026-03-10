@@ -46,7 +46,7 @@ These attributes can be set with `faces-extras-set-custom-face-attributes'.")
   :group 'faces-extras)
 
 (defcustom faces-extras-fixed-pitch-font
-  "SauceCodePro Nerd Font"
+  "Iosevka"
   "Font for fixed-pitch faces."
   :type 'string
   :group 'faces-extras)
@@ -56,7 +56,7 @@ These attributes can be set with `faces-extras-set-custom-face-attributes'.")
   :type 'integer
   :group 'faces-extras)
 
-(defcustom faces-extras-fixed-pitch-height 0.8
+(defcustom faces-extras-fixed-pitch-height 0.9
   "Height of the font for fixed pitch faces."
   :type 'number
   :group 'faces-extras)
@@ -76,7 +76,7 @@ These attributes can be set with `faces-extras-set-custom-face-attributes'.")
   :type 'number
   :group 'faces-extras)
 
-(defcustom faces-extras-org-code-height 1.2
+(defcustom faces-extras-org-code-height 1.0
   "Height of the font for `org-code' face."
   :type 'number
   :group 'faces-extras)

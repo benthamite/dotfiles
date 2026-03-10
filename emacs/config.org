@@ -7560,6 +7560,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 
   :hook
   (pdf-tools-enabled-hook . pdf-tools-extras-apply-theme)
+  (pdf-view-mode-hook . pdf-tools-extras-sel-mode)
 
   :bind (:map pdf-view-mode-map
               ("c" . pdf-tools-extras-copy-dwim)

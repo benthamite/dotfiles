@@ -26,9 +26,9 @@ The main areas of functionality are:
 - Text operations: counting words, copying text with DWIM behavior, and enhanced highlight annotations ([[#h:text-operations][Text operations]]).
 - External interaction: opening the PDF in an external viewer at the current page, toggling =writeroom-mode=, deleting the file ([[#h:external-interaction][External interaction]]).
 - Ebib integration: jumping from a PDF to the corresponding BibTeX entry ([[#h:ebib-integration][Ebib integration]]).
-- Experimental word selection via double-click ([[#h:word-selection][Word selection]]).
+- Word lookup via double-click ([[#h:word-lookup][Word lookup]]).
 
-The package depends on =pdf-tools= and optionally integrates with =modus-themes=, =writeroom-mode=, and =ebib-extras.el=.
+The package depends on =pdf-tools= and =johnson=, and optionally integrates with =modus-themes=, =writeroom-mode=, and =ebib-extras.el=.
 
 * Commands
 :PROPERTIES:
@@ -100,16 +100,14 @@ Reading a bright-white PDF in a dark Emacs theme is unpleasant, and =pdf-tools= 
 
 Internally, it calls ~modus-themes-get-current-theme~ and reads the =:background-mode= property from the theme's metadata to determine whether the theme is dark or light.
 
-** Word selection
+** Word lookup
 :PROPERTIES:
-:CUSTOM_ID: h:word-selection
+:CUSTOM_ID: h:word-lookup
 :END:
 
 #+vindex: pdf-tools-extras-sel-mode-map
-#+findex: pdf-tools-extras-sel-mouse
-The file includes an experimental minor mode ~pdf-tools-extras-sel-mode~ that binds double-click (=[double-mouse-1]=) to ~pdf-tools-extras-sel-mouse~. This command selects the word under the mouse cursor in the PDF and copies it to the kill ring using ~pdf-info-getselection~ and ~pdf-info-gettext~ with the ='word= selection granularity.
-
-As noted in the source code, this feature is experimental: double-clicking sometimes selects more text than the intended word, and upstream =pdf-tools= may eventually incorporate similar functionality. The mode is enabled globally at load time.
+#+findex: pdf-tools-extras-lookup-word-at-mouse
+The minor mode ~pdf-tools-extras-sel-mode~ binds double-click (=[double-mouse-1]=) to ~pdf-tools-extras-lookup-word-at-mouse~. This command selects the word under the mouse cursor in the PDF, highlights it, and looks it up with ~johnson-lookup~. If no word is found at the click position, it signals a user error.
 
 * Indices
 :PROPERTIES:

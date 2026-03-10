@@ -340,9 +340,9 @@ Return a list of issue plists."
 	 #'null
 	 (mapcar
           (lambda (issue)
-            (let ((num   (alist-get "number" issue))
-                  (title (alist-get "title"  issue))
-                  (url   (alist-get "url"    issue)))
+            (let ((num   (alist-get "number" issue nil nil #'equal))
+                  (title (alist-get "title"  issue nil nil #'equal))
+                  (url   (alist-get "url"    issue nil nil #'equal)))
               (when num
 		`(:repo ,repo-string  :number ,num  :title ,title  :url ,url))))
           raw-issues)))

@@ -123,7 +123,8 @@ VERB is a past-tense verb for the success message."
          (elpaca-extras-reload pkg)
          (message "%s and reloaded: %s" verb pkg))
         ('failed
-         (message "Build failed for %s. Check *elpaca-log* for details" pkg))))))
+         (message "Build failed for %s: %s" pkg
+                  (or (and e (nth 2 (car (elpaca<-log e)))) "unknown error")))))))
 
 ;;;;; Lock file
 

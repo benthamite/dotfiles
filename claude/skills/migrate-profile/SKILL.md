@@ -147,6 +147,18 @@ for SOURCE_ENCODED in ${sources_map[$pkg]}; do
 done
 ```
 
+### 4. Delete source directories
+
+After successfully copying all data from a source directory, delete it:
+
+```bash
+for SOURCE_ENCODED in ${sources_map[$pkg]}; do
+  rm -rf "$CLAUDE_PROJECTS/$SOURCE_ENCODED"
+done
+```
+
+This ensures old profile directories don't accumulate and makes it clear which packages have already been migrated.
+
 ## Execution
 
 1. **Dry run first**: before copying anything, present a summary table showing:
@@ -157,14 +169,14 @@ done
    - Memory files to copy (count)
    - Status: "will migrate", "already migrated" (all files exist in target), "skipped" (no source or no target)
 
-2. **Ask for confirmation** before proceeding with the actual copy.
+2. **Ask for confirmation** before proceeding with the actual copy and deletion.
 
-3. **Execute the copy** using the commands above.
+3. **Execute the migration** (copy then delete sources) using the commands above.
 
-4. **Post-migration summary**: report how many sessions and memory files were copied for each package, and any packages that were skipped.
+4. **Post-migration summary**: report how many sessions and memory files were copied for each package, how many source directories were deleted, and any packages that were skipped.
 
 ## Important notes
 
-- This is a **non-destructive merge**: existing data in the target is never overwritten.
-- Source data is **not deleted** after migration. The user can clean up old profile data manually if desired.
+- Existing data in the target is never overwritten — only new files are copied.
+- Source directories are deleted after their data is copied to the target.
 - All elpaca project directories are discovered automatically — no package list is needed.

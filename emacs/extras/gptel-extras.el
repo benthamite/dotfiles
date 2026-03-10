@@ -1041,7 +1041,21 @@ this prompt."
 (declare-function mu4e-message-at-point "mu4e-message")
 (declare-function mu4e-message-field "mu4e-message")
 (declare-function org-gcal-post-at-point "org-gcal")
+(declare-function org-gcal--get-time-and-desc "org-gcal")
 (defvar org-gcal-fetch-file-alist)
+
+(defun gptel-extras--ensure-org-gcal-patch ()
+  "Ensure the org-gcal DEADLINE patch is active.
+Native compilation can override `el-patch-defun' patches.
+Reload `org-gcal-extras' from source if the patch is not in effect."
+  (with-temp-buffer
+    (org-mode)
+    (insert "* t\nDEADLINE: <2026-01-01 Wed 10:00-11:00>\n")
+    (goto-char (point-min))
+    (when (equal '(:start nil :end nil :desc nil)
+		 (org-gcal--get-time-and-desc))
+      (load (locate-library "org-gcal-extras") nil t))))
+
 ;;;###autoload
 (defun gptel-extras-email-to-calendar ()
   "Extract events from the email at point and add them to the calendar."
@@ -1049,6 +1063,7 @@ this prompt."
   (unless (or (derived-mode-p 'mu4e-view-mode)
 	      (derived-mode-p 'mu4e-headers-mode))
     (user-error "Not in a mu4e buffer"))
+  (gptel-extras--ensure-org-gcal-patch)
   (let* ((msg (mu4e-message-at-point))
 	 (subject (or (mu4e-message-field msg :subject) ""))
 	 (body (or (mu4e-message-field msg :body-txt)

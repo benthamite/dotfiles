@@ -214,7 +214,7 @@
 	       ("/Users/pablostafforini" "My Drive/dotfiles/emacs/")
 	       ("/Users/fede" "source/dotfiles/emacs/")
 	       ("/Users/cartago" "source/dotfiles/emacs/")
-	       (_ (user-error "Home directory does not match that of a known user")))))
+	       (_ "dotfiles/emacs/"))))
     (file-name-concat (getenv "HOME") dir))
   "Path to the \"emacs\" directory in Pablo’s \"dotfiles\" repo."
   :type 'directory

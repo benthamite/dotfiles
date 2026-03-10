@@ -46,7 +46,7 @@ The default value is ="Source Serif Pro"=. The type is a string.
 #+vindex: faces-extras-fixed-pitch-font
 The user option ~faces-extras-fixed-pitch-font~ specifies the font family for fixed-pitch text. This is the monospace font used in code buffers, Org source blocks, and similar contexts.
 
-The default value is ="SauceCodePro Nerd Font"=. The type is a string.
+The default value is ="Iosevka"=. The type is a string.
 
 ** Height definitions
 :PROPERTIES:
@@ -59,7 +59,7 @@ These options define sizes and relative heights for various text elements. Heigh
 The user option ~faces-extras-fixed-pitch-size~ specifies the absolute size (in tenths of a point) for fixed-pitch faces. A value of ~120~ corresponds to a 12-point font. The type is an integer. The default value is ~120~.
 
 #+vindex: faces-extras-fixed-pitch-height
-The user option ~faces-extras-fixed-pitch-height~ specifies the relative height for fixed-pitch faces. This is typically used when fixed-pitch text appears alongside variable-pitch text and needs to be smaller to maintain visual harmony. The type is a number. The default value is ~0.8~.
+The user option ~faces-extras-fixed-pitch-height~ specifies the relative height for fixed-pitch faces. This is typically used when fixed-pitch text appears alongside variable-pitch text and needs to be smaller to maintain visual harmony. The type is a number. The default value is ~0.9~.
 
 #+vindex: faces-extras-variable-pitch-height
 The user option ~faces-extras-variable-pitch-height~ specifies the relative height for variable-pitch faces. A value greater than ~1.0~ makes variable-pitch text larger than the default, which can improve readability for prose. The type is a number. The default value is ~1.4~.
@@ -71,7 +71,7 @@ The user option ~faces-extras-org-level-height~ controls the relative height for
 The user option ~faces-extras-org-block-height~ controls the relative height for the ~org-block~ face, which applies to source blocks and other block elements in Org. The type is a number. The default value is ~0.8~.
 
 #+vindex: faces-extras-org-code-height
-The user option ~faces-extras-org-code-height~ controls the relative height for the ~org-code~ face. The type is a number. The default value is ~1.2~.
+The user option ~faces-extras-org-code-height~ controls the relative height for the ~org-code~ face. The type is a number. The default value is ~1.0~.
 
 #+vindex: faces-extras-org-date-height
 The user option ~faces-extras-org-date-height~ controls the relative height for the ~org-date~ face. The type is a number. The default value is ~0.9~.

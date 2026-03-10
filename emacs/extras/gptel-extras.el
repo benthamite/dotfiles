@@ -1064,7 +1064,10 @@ this prompt."
 	(if (not response)
 	    (message "gptel request failed: %s" (plist-get info :status))
 	  (condition-case err
-	      (let* ((data (json-parse-string response :object-type 'alist
+	      (let* ((json (if (string-match "```\\(?:json\\)?\n\\(\\(?:.\\|\n\\)*?\\)\n```" response)
+			       (match-string 1 response)
+			     response))
+		     (data (json-parse-string json :object-type 'alist
 					      :array-type 'list))
 		     (summary (alist-get 'summary data))
 		     (events (alist-get 'events data)))

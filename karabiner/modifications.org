@@ -37,6 +37,8 @@ I alternate between two split keyboards:
 
 Both run [[https://qmk.fm/][QMK]] firmware. The Corne uses the =corne_rotated= variant with the =LAYOUT_split_3x5_3= matrix.
 
+I use the same layout on the built-in MacBook keyboard. The six keys on the bottom row—left control, left option, left command, space, right command, and right option—correspond to the six thumb keys from left to right. No firmware configuration is needed: these keys already send the expected keycodes natively.
+
 ** Firmware configuration
 :PROPERTIES:
 :ID:       FE1AD105-7563-487B-860F-AD70C5138984
@@ -65,7 +67,7 @@ These keycodes don't do what their names suggest. They're just handles for Karab
 :ID:       8C35B9CB-FA59-4043-BC2D-B4B0463B91B7
 :END:
 
-If you have a normal keyboard (no programmable thumb keys), skip to step 2.
+If you have a normal keyboard (no programmable thumb keys), skip to step 2. The MacBook's built-in keyboard already sends the right keycodes from its bottom-row modifier keys, so no firmware step is needed.
 
 If you have a split or ergonomic keyboard with programmable thumb keys, use the keyboard's firmware to map the thumb keys as follows. The alpha keys should remain standard QWERTY; only the thumb keys need to be changed.
 

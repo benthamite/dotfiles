@@ -2262,6 +2262,8 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
   :after org-modern
   :hook org-mode-hook
   :config
+  ;; Remove the ╭│╰ bracket decoration; it renders with gaps in
+  ;; variable-pitch buffers because the line height exceeds the glyph height.
   (setq org-modern-indent-begin " "
         org-modern-indent-guide " "
         org-modern-indent-end   " "))

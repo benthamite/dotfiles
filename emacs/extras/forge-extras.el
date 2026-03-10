@@ -125,6 +125,17 @@ If ISSUE is nil, use the issue at point or in the current buffer."
       ('open (forge--set-topic-state repo issue 'completed))
       ('completed (forge--set-topic-state repo issue 'open)))))
 
+(defun forge-extras-massage-notification-gracefully (fn data githost)
+  "Advice around `forge--ghub-massage-notification' to skip unsupported types.
+GitHub may introduce new notification types (e.g. CheckSuite) that Forge does
+not yet handle.  Rather than erroring, return nil so `seq-keep' filters them."
+  (condition-case nil
+      (funcall fn data githost)
+    (error nil)))
+
+(advice-add 'forge--ghub-massage-notification :around
+            #'forge-extras-massage-notification-gracefully)
+
 (defun forge-extras-pull-notifications ()
   "Fetch notifications for all repositories from the current forge.
 Do not update if `elfeed' is in the process of being updated, since this causes

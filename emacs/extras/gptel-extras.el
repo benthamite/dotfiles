@@ -67,6 +67,21 @@ changes."
 
 ;;;;; mu4e
 
+(defcustom gptel-extras-email-to-calendar-system-prompt
+  "Extract events from the email below and return a JSON object with two keys:
+- \"summary\": a brief description for user confirmation, e.g. \"4 flight-related events\", \"1 hotel reservation\", \"2 concert tickets\"
+- \"events\": an array of objects, each with:
+  - \"title\": concise event title (e.g. \"Flight EZE→JFK (DL 114, H42AOO)\")
+  - \"timestamp\": org-mode format \"YYYY-MM-DD Day HH:MM\" (e.g. \"2026-03-14 Sat 22:25\")
+
+For flights, use departure time in the departure city's local timezone.
+Include flight numbers and booking references in titles when available.
+Use arrow notation (→) for routes.
+Return ONLY valid JSON, no markdown fences or other text."
+  "System prompt for extracting calendar events from emails."
+  :type 'string
+  :group 'gptel-extras)
+
 (defcustom gptel-extras-mu4e-draft-reply-prompt
   (format "Attached is an email thread. Please draft an appropriate message on my behalf (my name is %s) based on it. If you see a partial draft in the attached buffer, it means I already started it myself, so I want you to finish it. This draft may or may not contain additional instructions for you to follow. Include only the body of the draft reply, skipping the subject and headers. Do not include my name at the end, since a signature is always automatically appended." user-full-name)
   "Prompt to use for drafting a reply to the current message."
@@ -1021,6 +1036,51 @@ this prompt."
       (gptel-request prompt
 	:transforms (cons 'gptel--transform-add-context gptel-prompt-transform-functions))
       (gptel-context-remove-all))))
+
+(declare-function mu4e-message-at-point "mu4e-message")
+(declare-function mu4e-message-field "mu4e-message")
+;;;###autoload
+(defun gptel-extras-email-to-calendar ()
+  "Extract events from the email at point and add them to the calendar."
+  (interactive)
+  (unless (or (derived-mode-p 'mu4e-view-mode)
+	      (derived-mode-p 'mu4e-headers-mode))
+    (user-error "Not in a mu4e buffer"))
+  (let* ((msg (mu4e-message-at-point))
+	 (subject (or (mu4e-message-field msg :subject) ""))
+	 (body (or (mu4e-message-field msg :body-txt)
+		   (mu4e-message-field msg :body-html)
+		   "")))
+    (when (string-empty-p body)
+      (user-error "Email body is empty"))
+    (message "Extracting events from email...")
+    (gptel-request
+	(format "Subject: %s\n\n%s" subject body)
+      :system gptel-extras-email-to-calendar-system-prompt
+      :callback
+      (lambda (response info)
+	(if (not response)
+	    (message "gptel request failed: %s" (plist-get info :status))
+	  (condition-case err
+	      (let* ((data (json-parse-string response :object-type 'alist
+					      :array-type 'list))
+		     (summary (alist-get 'summary data))
+		     (events (alist-get 'events data)))
+		(if (null events)
+		    (message "No events found in email.")
+		  (when (y-or-n-p (format "Write %s to the calendar? " summary))
+		    (with-current-buffer (find-file-noselect paths-file-calendar)
+		      (goto-char (point-max))
+		      (dolist (event events)
+			(let ((title (alist-get 'title event))
+			      (timestamp (alist-get 'timestamp event)))
+			  (insert (format "\n* TODO [#5] %s\nDEADLINE: <%s>\n"
+					  title timestamp))))
+		      (save-buffer))
+		    (message "Added %s to %s."
+			     summary (file-name-nondirectory paths-file-calendar)))))
+	    (error
+	     (message "Failed to parse response: %s\nRaw: %s" err response))))))))
 
 ;;;;; Misc
 

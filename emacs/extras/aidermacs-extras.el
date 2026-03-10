@@ -1,6 +1,6 @@
 ;;; aidermacs-extras.el --- Extensions for aidermacs -*- lexical-binding: t -*-
 
-;; Copyright (C) 2025
+;; Copyright (C) 2026
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/aidermacs-extras.el

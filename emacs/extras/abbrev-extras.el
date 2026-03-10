@@ -1,6 +1,6 @@
 ;;; abbrev-extras.el --- Extensions for abbrev -*- lexical-binding: t -*-
 
-;; Copyright (C) 2025
+;; Copyright (C) 2026
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/abbrev-extras.el

@@ -1,6 +1,6 @@
 ;;; org-ref-extras.el --- Extensions for org-ref -*- lexical-binding: t -*-
 
-;; Copyright (C) 2025
+;; Copyright (C) 2026
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/org-ref-extras.el

@@ -1,6 +1,6 @@
 ;;; vc-extras.el --- Extensions for vc -*- lexical-binding: t -*-
 
-;; Copyright (C) 2025
+;; Copyright (C) 2026
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/vc-extras.el
@@ -143,7 +143,7 @@ With a prefix argument, the target parent directory is prompted."
     (when (file-exists-p clone-dir)
       (user-error "Directory `%s' already exists" clone-dir))
     (message "Asynchronously cloning repo %s..." name)
-    (let ((default-directory parent-dir))
+    (let ((default-directory (file-name-directory clone-dir)))
       (set-process-sentinel
        (start-process "git-clone" process-buffer
                       "git" "clone" "--recurse-submodules" remote
@@ -164,11 +164,23 @@ list)."
                       (user-error "If a repo is provided, account must be provided"))))
     (cons name account)))
 
+(defvar elpaca-directory)
 (defun vc-extras--prompt-target-directory (parent-dir name)
-  "Prompt for a PARENT-DIR and return a directory with NAME appended."
-  (let* ((custom-parent (read-directory-name "Parent directory: " parent-dir))
-         (target (file-name-concat custom-parent name)))
-    target))
+  "Prompt for a target directory and return a path with NAME appended.
+Offer PARENT-DIR (the account default), the elpaca sources directory, and
+a custom option."
+  (let* ((elpaca-sources (when (bound-and-true-p elpaca-directory)
+                           (file-name-concat elpaca-directory "sources")))
+         (choices `(("Account default" . ,parent-dir)
+                    ,@(when (and elpaca-sources (file-directory-p elpaca-sources))
+                        `(("Elpaca sources" . ,elpaca-sources)))
+                    ("Other…")))
+         (choice (completing-read
+                  (format "Clone `%s' into: " name)
+                  (mapcar #'car choices) nil t))
+         (target-parent (or (cdr (assoc choice choices))
+                            (read-directory-name "Parent directory: " parent-dir))))
+    (file-name-concat target-parent name)))
 
 (defun vc-extras--initialize-submodules (dir)
   "Initialize submodules of the repo at DIR.

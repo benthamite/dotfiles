@@ -1,6 +1,6 @@
 ;;; org2blog-extras.el --- Extensions for org2blog -*- lexical-binding: t -*-
 
-;; Copyright (C) 2025
+;; Copyright (C) 2026
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/org2blog-extras.el

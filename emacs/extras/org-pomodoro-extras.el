@@ -1,6 +1,6 @@
 ;;; org-pomodoro-extras.el --- Extensions for org-pomodoro -*- lexical-binding: t -*-
 
-;; Copyright (C) 2025
+;; Copyright (C) 2026
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/org-pomodoro-extras.el

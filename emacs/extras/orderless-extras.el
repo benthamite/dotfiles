@@ -1,6 +1,6 @@
 ;;; orderless-extras.el --- Extensions for orderless -*- lexical-binding: t -*-
 
-;; Copyright (C) 2025
+;; Copyright (C) 2026
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/orderless-extras.el

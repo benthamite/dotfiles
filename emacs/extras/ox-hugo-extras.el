@@ -1,6 +1,6 @@
 ;;; ox-hugo-extras.el --- Extensions for ox-hugo -*- lexical-binding: t -*-
 
-;; Copyright (C) 2025
+;; Copyright (C) 2026
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/ox-hugo-extras.el

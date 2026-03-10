@@ -1,6 +1,6 @@
 ;;; copilot-extras.el --- Extensions for copilot -*- lexical-binding: t -*-
 
-;; Copyright (C) 2025
+;; Copyright (C) 2026
 
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/copilot-extras.el

@@ -9923,7 +9923,6 @@ CLOCK: [2021-03-15 Mon 14:51]--[2021-03-15 Mon 15:07] =>  0:16
      (org-verbatim :family faces-extras-fixed-pitch-font :height faces-extras-org-code-height)
      (org-todo :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
      (org-archived :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
-     (org-verbatim :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
      (org-level-1 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
      (org-level-2 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
      (org-level-3 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)

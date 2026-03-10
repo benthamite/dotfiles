@@ -2208,7 +2208,7 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
   :bind
   ("C-h C-f" . faces-extras-describe-face))
 #+end_src
-
+ 
 ** =org-modern=
 :PROPERTIES:
 :ID:       FB673B28-FB6D-48EE-97B8-1E9C5D9F32FD
@@ -2260,7 +2260,11 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
   :ensure (:host github
                  :repo "jdtsmith/org-modern-indent")
   :after org-modern
-  :hook org-mode-hook)
+  :hook org-mode-hook
+  :config
+  (setq org-modern-indent-begin " "
+        org-modern-indent-guide " "
+        org-modern-indent-end   " "))
 #+end_src
 
 ** =org-indent-pixel=
@@ -2268,7 +2272,8 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
 :ID:       AB8B85E9-8521-4F0B-B4FC-F27F3EEF392B
 :END:
 
-/Fix misaligned wrapped lines in ~variable-pitch-mode~ by replacing the space-based ~wrap-prefix~ from ~org-indent-mode~ with pixel-accurate specifications. Without this, list item continuation lines are progressively misaligned at deeper nesting levels because proportional-font spaces have different widths than the fixed-pitch spaces used in the wrap prefix./
+
+/[[https://github.com/benthamite/org-indent-pixel][org-indent-pixel]] fixes misaligned wrapped lines in =variable-pitch-mode=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-indent-pixel

@@ -158,6 +158,12 @@ Generates or updates a =README.md= for an Emacs Lisp package from its org manual
 
 Creates or updates org-mode notes in my notes directory (=~/My Drive/notes/=), with proper slugified filenames and org IDs.
 
+*** transcribe-note
+:PROPERTIES:
+:END:
+
+Transcribes the most recent audio file in =~/Downloads/= using whisperx, then restructures the transcript into a well-organized org-mode note saved to =~/My Drive/notes/=. Accepts optional language code and filename arguments.
+
 *** add-to-emacs-packages
 :PROPERTIES:
 :ID:       E8FD1360-FDF6-46FE-940F-BD8A346AE4BF

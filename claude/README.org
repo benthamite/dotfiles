@@ -91,6 +91,9 @@ Emacs Lisp coding standards: atomic functions, helper placement, docstring forma
 Audits code for bugs, security issues, error handling gaps, and correctness problems. Categorizes findings as critical, bugs, fragile, or minor, with specific line numbers. Pass =--accept= to auto-fix all findings.
 
 *** design-audit
+:PROPERTIES:
+:ID:       F01330D3-C44B-415D-9107-C1E865FB0B63
+:END:
 
 Audits code for architectural quality: unnecessary complexity, missing or wrong abstractions, duplication, and refactoring opportunities. Pass =--accept= to auto-refactor high-impact findings.
 
@@ -103,6 +106,7 @@ Audits code for intent transparency: magic values, misleading names, missing rat
 
 *** build
 :PROPERTIES:
+:ID:       15574F2D-5827-48ED-8630-DFB3843EA3FB
 :END:
 
 Spec-based build workflow inspired by [[https://x.com/trq212/status/2005315275026260309][Thariq Shaukat's method]]. Reads =spec.md= in the current project and interviews the user in depth using =AskUserQuestion= to flesh out every aspect: technical implementation, UI/UX, tradeoffs, edge cases, security, and more. The questions are deliberately non-obvious, probing hidden complexity and unstated assumptions. Once the interview is complete, writes the detailed spec back to the file. Optionally executes the spec in the same session or defers to a fresh one.
@@ -140,6 +144,13 @@ Creates or updates documentation for any Elisp package, following the Denote man
 
 Scans all =emacs/extras/*.el= files, identifies missing or outdated documentation, and generates docs in parallel using subagents.
 
+*** readme-gen
+:PROPERTIES:
+:ID:       A3F5B8D1-7C42-4E9A-B6A1-2D8E4F9C0A73
+:END:
+
+Generates or updates a =README.md= for an Emacs Lisp package from its org manual. Verifies that the repo contains both a valid =.el= package and a =README.org= manual; if either is missing, aborts with guidance. Produces a structured markdown README (title, overview, screenshots, installation for package-vc/Elpaca/straight.el, quick start, documentation link) and optionally moves any roadmap content from the manual into the README.
+
 *** org-note
 :PROPERTIES:
 :ID:       F859475D-8BEF-46B7-9417-3F8462826BA9
@@ -148,6 +159,9 @@ Scans all =emacs/extras/*.el= files, identifies missing or outdated documentatio
 Creates or updates org-mode notes in my notes directory (=~/My Drive/notes/=), with proper slugified filenames and org IDs.
 
 *** add-to-emacs-packages
+:PROPERTIES:
+:ID:       E8FD1360-FDF6-46FE-940F-BD8A346AE4BF
+:END:
 
 Registers an Emacs package in =my-emacs-packages.org=, creates an accompanying documentation note with =#+INCLUDE= directives pointing to the package's readme, and adds a card to the =benthamite/benthamite= GitHub profile README. Determines the package name from the argument or the current directory, inserts entries in alphabetical order, and generates org IDs for both the note and the list entry. Checks both the packages list and the GitHub profile README, skipping whichever is already done.
 
@@ -164,10 +178,16 @@ Registers an Emacs package in =my-emacs-packages.org=, creates an accompanying d
 Cuts releases for my Emacs packages (read dynamically from =my-emacs-packages.org=). Validates the repo, classifies commits since the last tag, suggests a semver bump, and drafts release notes. Also has an audit mode that scans all packages for version mismatches or unreleased commits. Pass =--accept= to skip the confirmation gate.
 
 *** release-dotfiles
+:PROPERTIES:
+:ID:       49102EA7-4B49-4F93-8134-06FA7925AE55
+:END:
 
 Cuts releases for the dotfiles repo itself. Verifies that every personal package repo has a clean working tree in its local elpaca clone, checks the dotfiles working tree, classifies commits since the last tag, suggests a semver bump, drafts release notes, and creates a GitHub release. Pass =--accept= to skip the confirmation gate.
 
 *** triage-issues
+:PROPERTIES:
+:ID:       D1A897E8-29DC-4FFD-8D16-2AC792A4DA0F
+:END:
 
 Scans, prioritizes, and batch-resolves open GitHub issues for =tlon-team/tlon.el=. Fetches issues, ranks by complexity, presents batches for review, fixes them with parallel subagents, closes on GitHub as =tlon-ai=, and archives the corresponding org headings.
 
@@ -179,10 +199,16 @@ Scans, prioritizes, and batch-resolves open GitHub issues for =tlon-team/tlon.el
 Diagnoses a frozen Emacs process: samples the stack, decodes native-comp symbols, identifies the hot path, and suggests recovery options (SIGUSR2, SIGTERM, or SIGKILL with appropriate warnings).
 
 *** nosync
+:PROPERTIES:
+:ID:       BEEADA41-ECD4-457B-8A10-DA8D0C19984B
+:END:
 
 Applies the =.nosync= trick to a single directory: renames it with a =.nosync= suffix (which Google Drive skips), creates a symlink at the original path, and updates =.gitignore=. Use when Google Drive complains about a specific directory (e.g. =node_modules/.bin=).
 
 *** fix-drive-errors
+:PROPERTIES:
+:ID:       69244292-277A-4484-BC21-2AA9C8D588D9
+:END:
 
 Bulk version of =nosync=. Scans =~/My Drive/= for all directories causing sync errors (node_modules, build output, Python caches, large data dirs), applies =.nosync= to each, updates =.gitignore= files, then restarts Google Drive so it refreshes its error list. Use periodically or when the error list grows.
 
@@ -223,6 +249,9 @@ Eight-phase security audit of macOS applications: trust verification, permission
 :END:
 
 *** migrate-profile
+:PROPERTIES:
+:ID:       025A523A-F1AE-43F8-89DB-13FF2A5A98B1
+:END:
 
 Consolidates Claude Code project data (sessions, memory) across elpaca profile changes. Scans =~/.claude/projects/= for all directories matching the elpaca pattern, groups them by package name (extracted by splitting on =-elpaca-repos-= or =-elpaca-sources-=), and merges all old-profile entries into the current profile's directory. No explicit package list is needed. Handles known package renames (e.g. =infovore= → =elfeed-ai=). Non-destructive: never overwrites existing data.
 

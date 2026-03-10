@@ -26,7 +26,6 @@
     ("Howver" "However" nil :count 1)
     ("Hypohen" "Hyphen" nil :count 0)
     ("Malawi" "Malaui" nil :count 0)
-    ("Podcast" "Pódcast" nil :count 1)
     ("Super" "Súper" nil :count 0)
     ("abandonned" "abandoned" nil :count 2)
     ("abbout" "about" nil :count 1)

@@ -2383,6 +2383,8 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 :ID:       ABA9A4E3-ABDA-46C2-88E7-285DAFB05F79
 :END:
 
+/[[https://github.com/protesilaos/ef-themes][ef-themes]] is a collection of colorful and legible themes for Emacs./
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package ef-themes
   :ensure t

@@ -1,0 +1,42 @@
+name: Test Emacs extras
+
+on:
+  push:
+    paths:
+      - 'emacs/extras/**'
+  pull_request:
+    paths:
+      - 'emacs/extras/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        emacs-version: ['29.4']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: purcell/setup-emacs@master
+        with:
+          version: ${{ matrix.emacs-version }}
+
+      - name: Install MELPA packages
+        run: |
+          emacs --batch \
+            --eval "(require 'package)" \
+            --eval "(add-to-list 'package-archives '(\"melpa\" . \"https://melpa.org/packages/\") t)" \
+            --eval "(package-initialize)" \
+            --eval "(package-refresh-contents)" \
+            --eval "(dolist (pkg '(el-patch shut-up ebib magit forge consult
+                                  org-noter org-pomodoro read-aloud
+                                  ledger-mode gptel no-littering
+                                  doom-modeline orderless markdown-mode
+                                  vulpea anki-editor aidermacs zotra))
+                      (condition-case err
+                          (unless (package-installed-p pkg)
+                            (package-install pkg))
+                        (error (message \"Warning: could not install %s: %s\" pkg err))))"
+
+      - name: Run tests
+        run: bash emacs/extras/test/run-tests.sh --ci

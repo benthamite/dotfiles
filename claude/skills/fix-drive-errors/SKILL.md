@@ -71,16 +71,28 @@ Batch multiple `.nosync` entries per repo into a single commit.
 
 #### Step 4: Restart Google Drive
 
-Quit Google Drive and relaunch it so it refreshes its error list:
+Quit Google Drive, wait for it to fully exit, then relaunch:
 
 ```bash
-killall "Google Drive" && sleep 2 && open -a "Google Drive"
+killall "Google Drive"
 ```
 
-Wait a few seconds after relaunching, then confirm the process is running:
+Then poll until the process is gone (do NOT just sleep a fixed amount):
 
 ```bash
-pgrep -x "Google Drive" > /dev/null && echo "Google Drive restarted successfully"
+while pgrep -x "Google Drive" > /dev/null; do sleep 1; done
+```
+
+Once it has fully exited, relaunch:
+
+```bash
+open -a "Google Drive"
+```
+
+Wait a few seconds, then confirm the process is running:
+
+```bash
+sleep 5 && pgrep -x "Google Drive" > /dev/null && echo "Google Drive restarted successfully"
 ```
 
 #### Step 5: Report

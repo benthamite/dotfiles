@@ -38,7 +38,7 @@
   (interactive)
   (let* ((multiline-flags " --multiline --multiline-dotall")
          (new-value (if (string-match (concat "\\(.*?\\)" multiline-flags) consult-ripgrep-args)
-                        (match-string 1)
+                        (match-string 1 consult-ripgrep-args)
                       (concat consult-ripgrep-args multiline-flags))))
     (setq consult-ripgrep-args new-value)))
 

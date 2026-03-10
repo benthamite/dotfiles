@@ -16,6 +16,6 @@ ai-marketplace-monitor/cache.db*
 ai-marketplace-monitor.log*
 
 ## claude-code skills
-claude/skills/*/node_modules/
-claude/skills/*/node_modules.nosync/
+claude/skills/*/node_modules
+claude/skills/*/node_modules.nosync
 !CLAUDE.md

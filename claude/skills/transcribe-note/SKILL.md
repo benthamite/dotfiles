@@ -37,11 +37,7 @@ whisperx --model large-v3 --compute_type int8 --output_dir "$TMPDIR" --output_fo
 
 Read the resulting `.txt` file from `$TMPDIR`. Clean up the temporary directory afterwards.
 
-If whisperx fails, fall back to `whisper`:
-
-```bash
-whisper --model large-v3 --output_dir "$TMPDIR" --output_format txt [--language LANG] "AUDIO_FILE"
-```
+If whisperx fails, **do not fall back to whisper** (it runs on CPU without ctranslate2 and is extremely slow). Instead, diagnose the failure: spawn a subagent to investigate the error, identify the root cause (e.g. compute type incompatibility, broken ffmpeg linkage, missing libraries), and fix it. Then retry whisperx. Only proceed to step 3 once whisperx succeeds.
 
 ### 3. Ask the user for a title
 

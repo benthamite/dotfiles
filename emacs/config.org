@@ -9933,7 +9933,7 @@ CLOCK: [2021-03-15 Mon 14:51]--[2021-03-15 Mon 15:07] =>  0:16
      (org-date :family faces-extras-fixed-pitch-font :height faces-extras-org-date-height)
      (org-block :family faces-extras-fixed-pitch-font :height faces-extras-org-block-height)
      (org-block-begin-line :family faces-extras-fixed-pitch-font :height faces-extras-org-block-height)
-     (org-quote :family faces-extras-variable-pitch-font :height faces-extras-variable-pitch-height))))
+     (org-quote :family faces-extras-variable-pitch-font :height 1.0))))
 #+end_src
 
 ** =org-id=

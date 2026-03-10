@@ -4,9 +4,11 @@ on:
   push:
     paths:
       - 'emacs/extras/**'
+      - '.github/workflows/test-extras.yml'
   pull_request:
     paths:
       - 'emacs/extras/**'
+      - '.github/workflows/test-extras.yml'
 
 jobs:
   test:
@@ -32,11 +34,20 @@ jobs:
                                   org-noter org-pomodoro read-aloud
                                   ledger-mode gptel no-littering
                                   doom-modeline orderless markdown-mode
-                                  vulpea anki-editor aidermacs zotra))
+                                  vulpea anki-editor aidermacs zotra
+                                  f s inheritenv))
                       (condition-case err
                           (unless (package-installed-p pkg)
                             (package-install pkg))
                         (error (message \"Warning: could not install %s: %s\" pkg err))))"
 
+      - name: Clone non-MELPA packages
+        run: |
+          mkdir -p vendor
+          git clone --depth 1 https://github.com/benthamite/annas-archive.git vendor/annas-archive
+          git clone --depth 1 https://github.com/stevemolitor/claude-code.el.git vendor/claude-code
+
       - name: Run tests
+        env:
+          EXTRA_LOAD_PATHS: vendor/annas-archive:vendor/claude-code
         run: bash emacs/extras/test/run-tests.sh --ci

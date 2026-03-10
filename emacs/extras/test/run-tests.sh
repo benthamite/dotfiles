@@ -3,6 +3,8 @@
 # Usage: ./run-tests.sh [--ci] [test-file ...]
 # Without arguments, runs all *-test.el files in this directory.
 # --ci: run each test file in its own Emacs process (tolerates missing deps).
+# Environment:
+#   EXTRA_LOAD_PATHS: colon-separated list of directories to add to load-path.
 
 set -euo pipefail
 
@@ -51,6 +53,15 @@ COMMON_ARGS=(
     -l ert
 )
 
+# Add extra load paths from EXTRA_LOAD_PATHS env var (colon-separated)
+if [[ -n "${EXTRA_LOAD_PATHS:-}" ]]; then
+    IFS=':' read -ra extra_dirs <<< "$EXTRA_LOAD_PATHS"
+    for dir in "${extra_dirs[@]}"; do
+        abs_dir="$(cd "$dir" 2>/dev/null && pwd)" || continue
+        COMMON_ARGS+=(--eval "(push \"$abs_dir\" load-path)")
+    done
+fi
+
 # In CI mode, initialize package.el so MELPA-installed packages are available
 if [[ "$CI_MODE" == true ]]; then
     COMMON_ARGS+=(
@@ -88,7 +99,7 @@ if [[ "$CI_MODE" == true ]]; then
                 failed_files+=("$name")
             else
                 # Load errors, missing deps, runtime errors during require
-                reason=$(echo "$output" | tail -3 | head -1)
+                reason=$(echo "$output" | grep -m1 -E "Cannot open load file|user-error|Wrong type|error:" || echo "$output" | tail -5 | head -1)
                 echo "SKIP  $name"
                 echo "      $reason"
                 skipped=$((skipped + 1))

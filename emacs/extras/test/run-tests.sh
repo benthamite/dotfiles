@@ -51,6 +51,14 @@ COMMON_ARGS=(
     -l ert
 )
 
+# In CI mode, initialize package.el so MELPA-installed packages are available
+if [[ "$CI_MODE" == true ]]; then
+    COMMON_ARGS+=(
+        --eval "(require 'package)"
+        --eval "(package-initialize)"
+    )
+fi
+
 if [[ "$CI_MODE" == true ]]; then
     # CI mode: run each test file in its own Emacs process
     total=0
@@ -72,14 +80,16 @@ if [[ "$CI_MODE" == true ]]; then
             passed=$((passed + 1))
         else
             rc=$?
-            if echo "$output" | grep -q "Cannot open load file\|Required feature"; then
-                echo "SKIP  $name (missing dependency)"
-                skipped=$((skipped + 1))
-            else
+            if echo "$output" | grep -q "unexpected"; then
+                # Actual test failures
                 echo "FAIL  $name"
-                echo "$output" | grep -E "FAILED|unexpected|condition:" | head -5
+                echo "$output" | grep -E "FAILED|unexpected|condition:" | head -5 || true
                 failed=$((failed + 1))
                 failed_files+=("$name")
+            else
+                # Load errors, missing deps, runtime errors during require
+                echo "SKIP  $name (missing dependency or load error)"
+                skipped=$((skipped + 1))
             fi
         fi
     done

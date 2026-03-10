@@ -1050,6 +1050,8 @@ this prompt."
 	 (subject (or (mu4e-message-field msg :subject) ""))
 	 (body (or (mu4e-message-field msg :body-txt)
 		   (mu4e-message-field msg :body-html)
+		   (when (derived-mode-p 'mu4e-view-mode)
+		     (buffer-substring-no-properties (point-min) (point-max)))
 		   "")))
     (when (string-empty-p body)
       (user-error "Email body is empty"))

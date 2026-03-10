@@ -2243,7 +2243,7 @@ CLOCK: [2023-04-30 Sun 11:25]--[2023-04-30 Sun 11:40] =>  0:15
    '((org-modern-date-active :family faces-extras-fixed-pitch-font :height faces-extras-org-date-height)
      (org-modern-date-inactive :family faces-extras-fixed-pitch-font :height faces-extras-org-date-height)
      (org-modern-tag :family faces-extras-fixed-pitch-font :height faces-extras-org-tag-height)
-     (org-modern-label :family faces-extras-fixed-pitch-font :height 0.8)))
+     (org-modern-label :family faces-extras-fixed-pitch-font :height faces-extras-org-tag-height)))
 
   (global-org-modern-mode))
 #+end_src
@@ -6122,7 +6122,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 
   :config
   (faces-extras-set-and-store-face-attributes
-   '((corfu-default :family faces-extras-fixed-pitch-font :height 1)))
+   '((corfu-default :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-height)))
 
   (global-corfu-mode)
 
@@ -9902,7 +9902,7 @@ CLOCK: [2021-03-15 Mon 14:51]--[2021-03-15 Mon 15:07] =>  0:16
 :ID:       1A295AA4-31BD-4B2E-828B-5B3443AD8D35
 :END:
 
-/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/org-faces.el][org-faces]] defines faces for org-mode./
+/[[https://github.com/emacs-mirror/emacs/blob/master/lisp/org/org-faces.el][org-faces]] defines faces for =org-mode=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature org-faces
@@ -9918,9 +9918,8 @@ CLOCK: [2021-03-15 Mon 14:51]--[2021-03-15 Mon 15:07] =>  0:16
      (org-special-keyword :family faces-extras-fixed-pitch-font :height faces-extras-org-property-value-height)
      (org-meta-line :family faces-extras-fixed-pitch-font :height faces-extras-org-property-value-height)
      (org-tag :family faces-extras-fixed-pitch-font :height faces-extras-org-tag-height)
-     (org-document-title :family faces-extras-fixed-pitch-font :height 1.0)
+     (org-document-title :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-height)
      (org-code :family faces-extras-fixed-pitch-font :height faces-extras-org-code-height)
-     (org-verbatim :family faces-extras-fixed-pitch-font :height faces-extras-org-code-height)
      (org-todo :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
      (org-archived :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)
      (org-level-1 :family faces-extras-fixed-pitch-font :height faces-extras-org-level-height)

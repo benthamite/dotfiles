@@ -323,6 +323,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#edit-indirect][edit-indirect]]
   - [[#mediawiki][mediawiki]]
   - [[#wikipedia][wikipedia]]
+  - [[#gdocs][gdocs]]
   - [[#gdrive][gdrive]]
   - [[#ledger-mode][ledger-mode]]
   - [[#ledger-mode-extras][ledger-mode-extras]]
@@ -7092,6 +7093,19 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
   
   :bind
   (("A-p" . wikipedia-transient)))
+#+end_src
+
+** =gdocs=
+:PROPERTIES:
+:ID:       94BA7FA8-FA44-482E-AC39-0DDE98A65BDA
+:END:
+
+/[[https://github.com/benthamite/gdocs][gdocs]] provides Emacs integration with Google Docs/
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package gdocs
+  :ensure (:host github
+		 :repo "benthamite/gdocs"))
 #+end_src
 
 ** =gdrive=

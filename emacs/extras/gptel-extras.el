@@ -75,7 +75,8 @@ changes."
   - \"start\": start time as \"YYYY-MM-DD Day HH:MM\" (e.g. \"2026-03-14 Sat 22:25\")
   - \"end\": end time as \"YYYY-MM-DD Day HH:MM\" (e.g. \"2026-03-15 Sun 08:25\")
 
-For flights, start = departure (departure city timezone), end = arrival (arrival city timezone).
+IMPORTANT: Convert ALL times to the user's local timezone (specified at the end of this prompt).
+For flights, convert both departure and arrival times from their respective city timezones.
 Include flight numbers and booking references in titles when available.
 Use arrow notation (→) for routes.
 Return ONLY valid JSON, no markdown fences or other text."
@@ -1076,7 +1077,10 @@ Reload `org-gcal-extras' from source if the patch is not in effect."
     (message "Extracting events from email...")
     (gptel-request
 	(format "Subject: %s\n\n%s" subject body)
-      :system gptel-extras-email-to-calendar-system-prompt
+      :system (format "%s\n\nUser's local timezone: UTC%+d (%s)."
+		      gptel-extras-email-to-calendar-system-prompt
+		      (/ (car (current-time-zone)) 3600)
+		      (cadr (current-time-zone)))
       :callback
       (lambda (response info)
 	(if (not response)

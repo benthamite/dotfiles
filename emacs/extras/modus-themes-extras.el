@@ -27,8 +27,22 @@
 
 ;;; Code:
 
-(declare-function modus-themes-load-theme "modus-themes")
-(declare-function modus-themes-get-color-value "modus-themes")
+
+;;;; Variables
+
+(defgroup modus-themes-extras ()
+  "Extensions for `modus-themes'."
+  :group 'modus-themes)
+
+(defcustom modus-themes-extras-dark-theme 'modus-vivendi
+  "The `modus' theme to use in dark mode."
+  :type 'symbol
+  :group 'modus-themes-extras)
+
+(defcustom modus-themes-extras-light-theme 'modus-operandi
+  "The `modus' theme to use in light mode."
+  :type 'symbol
+  :group 'modus-themes-extras)
 
 ;;;; Functions
 
@@ -44,24 +58,26 @@
 		 (modus-themes-extras-load-theme-emacs-plus
 		  ns-system-appearance))))
 
+(declare-function modus-themes-load-theme "modus-themes")
 (declare-function mac-application-state nil)
 (defun modus-themes-extras-load-theme-emacs-mac ()
   "Load `modus' theme that matches system appearance."
   (interactive)
   (pcase (plist-get (mac-application-state) :appearance)
-    ("NSAppearanceNameAqua" (modus-themes-load-theme 'modus-operandi))
-    ("NSAppearanceNameDarkAqua" (modus-themes-load-theme 'modus-vivendi))))
+    ("NSAppearanceNameAqua" (modus-themes-load-theme modus-themes-extras-light-theme))
+    ("NSAppearanceNameDarkAqua" (modus-themes-load-theme modus-themes-extras-dark-theme))))
 
 (defun modus-themes-extras-load-theme-emacs-plus (appearance)
   "Load `modus' theme that matches system APPEARANCE."
   (pcase appearance
-    ('light (modus-themes-load-theme 'modus-operandi))
-    ('dark (modus-themes-load-theme 'modus-vivendi))))
+    ('light (modus-themes-load-theme modus-themes-extras-light-theme))
+    ('dark (modus-themes-load-theme modus-themes-extras-dark-theme))))
 
 ;;;;; Theme configuration
 
 (defvar highlight-parentheses-colors)
 (defvar highlight-parentheses-background-colors)
+(declare-function modus-themes-get-color-value "modus-themes")
 (defun modus-themes-extras-highlight-parentheses (&rest _)
   "Highlight parentheses in the current buffer."
   (let* ((bg-keys '(bg-cyan-intense bg-magenta-intense bg-green-intense bg-yellow-intense))
@@ -77,7 +93,7 @@
   "Set extra faces for the `modus' themes.
 You can set any additional faces like this:
 
-(if (eq 'modus-operandi (car custom-enabled-themes))
+(if (eq modus-themes-extras-light-theme (car custom-enabled-themes))
       (set-face-attribute 'hl-sentence nil :background \"#bfefff\")
     (set-face-attribute 'hl-sentence nil :background \"#004065\"))")
 

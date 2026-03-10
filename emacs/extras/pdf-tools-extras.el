@@ -5,7 +5,7 @@
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/pdf-tools-extras.el
 ;; Version: 0.2
-;; Package-Requires: ((pdf-tools "1.1"))
+;; Package-Requires: ((pdf-tools "1.1") (johnson "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -30,6 +30,8 @@
 
 (require 'pdf-tools)
 
+(declare-function johnson-lookup "johnson")
+
 ;;;; Variables
 
 (defvar pdf-tools-extras-pdftotext-executable "pdftotext"
@@ -37,45 +39,35 @@
 
 ;;;; Functions
 
-;;;;; Word selection with double-click
+;;;;; Word lookup with double-click
 
 ;; adapted from emacs.stackexchange.com/a/52463/32089
-;;
-;; not currently using this since it double-clicking a word usually selects
-;; several words and it's unclear how to fix it. also, some people seem to be
-;; working on incorporating this or similar functionality so I’d rather wait
-;; until that happens. I'm leaving this section here because I may decide to
-;; resume work on it if the package is not extended in the end.
-(defvar pdf-tools-extras-sel-mode-map nil
+
+(defvar pdf-tools-extras-sel-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [double-mouse-1] 'pdf-tools-extras-lookup-word-at-mouse)
+    map)
   "Keymap for `pdf-tools-extras-sel-mode'.")
 
-(setq pdf-tools-extras-sel-mode-map
-      (let ((map (make-sparse-keymap)))
-	(define-key map [double-mouse-1] 'pdf-tools-extras-sel-mouse)
-	(define-key map (kbd "<H-double-mouse-1>") 'goldendict-ng-search)
-	map))
-
 (define-minor-mode pdf-tools-extras-sel-mode
-  "Minor mode for selecting words in PDFs.
-\\<pdf-sel-mode-map>Just binding \\[pdf-tools-extras-sel-mouse] to
-`pdf-tools-extras-sel-mouse'. `pdf-tools-extras-sel-mouse' selects the text at
-point and copies it to `kill-ring'."
+  "Minor mode for looking up words in PDFs by double-clicking."
   :keymap pdf-tools-extras-sel-mode-map)
 
-(defun pdf-tools-extras-sel-mouse (ev)
-  "Select word at mouse event EV and copy it to `kill-ring'."
+(defun pdf-tools-extras-lookup-word-at-mouse (ev)
+  "Select word at mouse event EV and look it up with `johnson-lookup'."
   (interactive "@e")
   (let* ((posn (event-start ev))
 	 (xy (posn-object-x-y posn))
 	 (size (pdf-view-image-size))
 	 (page (pdf-view-current-page))
 	 (x (/ (car xy) (float (car size))))
-         (y (/ (cdr xy) (float (cdr size)))))
+         (y (/ (cdr xy) (float (cdr size))))
+         (word (string-trim (pdf-info-gettext page (list x y x y) 'word))))
     (setq pdf-view-active-region (pdf-info-getselection page (list x y x y) 'word))
     (pdf-view-display-region pdf-view-active-region)
-    (kill-new (pdf-info-gettext page (list x y x y) 'word))))
-
-(pdf-tools-extras-sel-mode 1)
+    (when (string-empty-p word)
+      (user-error "No word found at click position"))
+    (johnson-lookup word)))
 
 ;;;;; PDF conversion
 

@@ -238,6 +238,25 @@ This command is primarily intended for use in timers or hooks (for
 example, to refresh notifications periodically in the background) rather
 than direct interactive invocation.
 
+** Graceful handling of unsupported notification types
+:PROPERTIES:
+:CUSTOM_ID: h:massage-notification-gracefully
+:END:
+
+#+findex: forge-extras-massage-notification-gracefully
+GitHub occasionally introduces new notification types (such as
+CheckSuite) that Forge does not yet know how to parse.  When
+~forge--ghub-massage-notification~ encounters one of these, it signals
+an error, which aborts the entire notification pull.
+
+The function ~forge-extras-massage-notification-gracefully~ is installed
+as ~:around~ advice on ~forge--ghub-massage-notification~.  It wraps the
+original function in a ~condition-case~: if the call succeeds, its
+return value is passed through unchanged; if it signals an error, the
+advice returns ~nil~ instead.  Because ~forge-pull-notifications~ feeds
+the results through ~seq-keep~, a ~nil~ return causes the unsupported
+notification to be silently filtered out rather than crashing the pull.
+
 ** Notification and read-status synchronization
 :PROPERTIES:
 :CUSTOM_ID: h:notification-and-read-status

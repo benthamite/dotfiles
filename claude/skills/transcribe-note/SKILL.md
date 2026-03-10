@@ -19,7 +19,7 @@ Finds the most recent audio file in `~/Downloads`, transcribes it with whisperx,
 If a filename was given in the arguments, look for it in `~/Downloads/`. Otherwise, find the most recent file by modification time matching these extensions: `m4a`, `mp3`, `wav`, `ogg`, `flac`, `aac`, `opus`, `webm`, `mp4`, `wma`.
 
 ```bash
-ls -t ~/Downloads/*.{m4a,mp3,wav,ogg,flac,aac,opus,webm,mp4,wma} 2>/dev/null | head -1
+find ~/Downloads -maxdepth 1 -type f \( -name '*.m4a' -o -name '*.mp3' -o -name '*.wav' -o -name '*.ogg' -o -name '*.flac' -o -name '*.aac' -o -name '*.opus' -o -name '*.webm' -o -name '*.mp4' -o -name '*.wma' \) -print0 | xargs -0 ls -t 2>/dev/null | head -1
 ```
 
 If no audio file is found, tell the user and stop.
@@ -28,11 +28,11 @@ Print the filename and file size so the user can confirm the right file was foun
 
 ### 2. Transcribe with whisperx
 
-Run whisperx with the `large-v3` model, outputting plain text to a temporary directory:
+Run whisperx with the `large-v3` model and `int8` compute type (required on Apple Silicon CPU), outputting plain text to a temporary directory:
 
 ```bash
 TMPDIR=$(mktemp -d)
-whisperx --model large-v3 --output_dir "$TMPDIR" --output_format txt [--language LANG] "AUDIO_FILE"
+whisperx --model large-v3 --compute_type int8 --output_dir "$TMPDIR" --output_format txt [--language LANG] "AUDIO_FILE"
 ```
 
 Read the resulting `.txt` file from `$TMPDIR`. Clean up the temporary directory afterwards.

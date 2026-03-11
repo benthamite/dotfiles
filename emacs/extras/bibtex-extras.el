@@ -146,17 +146,9 @@
           (match-string-no-properties 1)
         (user-error "Not on a BibTeX entry")))))
 
-(autoload 'bibtex-set-field "doi-utils")
 (defun bibtex-extras-add-or-update-field (field value)
   "Add or update FIELD with VALUE in the current BibTeX entry."
-  (bibtex-beginning-of-entry)
-  ;; Check if FIELD exists
-  (unless (bibtex-search-forward-field field)
-    (bibtex-beginning-of-entry)
-    (bibtex-make-field field t t))
-  ;; Update the value of FIELD
-  (when (bibtex-autokey-get-field field)
-    (bibtex-set-field field value)))
+  (bibtex-extras-set-field field value))
 
 (defun bibtex-extras-convert-titleaddon-to-journaltitle ()
   "Convert field `titleaddon' to `journaltitle' in entry at point.

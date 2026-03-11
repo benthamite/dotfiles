@@ -120,7 +120,6 @@ The extras come with their own manuals and user options: everything is documente
   - [[#org-appear][org-appear]]
   - [[#face-remap][face-remap]]
   - [[#modus-themes][modus-themes]]
-  - [[#ef-themes][ef-themes]]
   - [[#modus-themes-extras][modus-themes-extras]]
   - [[#highlight-parentheses][highlight-parentheses]]
   - [[#spacious-padding][spacious-padding]]
@@ -2370,17 +2369,6 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
   (modus-themes-after-load-theme-hook . frame-extras-restore-window-divider))
 #+end_src
 
-** =ef-themes=
-:PROPERTIES:
-:ID:       ABA9A4E3-ABDA-46C2-88E7-285DAFB05F79
-:END:
-
-/[[https://github.com/protesilaos/ef-themes][ef-themes]] is a collection of colorful and legible themes for Emacs./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package ef-themes)
-#+end_src
-
 ** =modus-themes-extras=
 :PROPERTIES:
 :ID:       9EB47A74-CEFE-4929-B990-F88A57D57A1D
@@ -2391,7 +2379,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package modus-themes-extras
-  :after modus-themes ef-themes
+  :after modus-themes
   :demand t
   :custom
   (modus-themes-extras-light-theme 'modus-operandi-tinted)
@@ -7087,7 +7075,8 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package gdocs
   :ensure (:host github
-		 :repo "benthamite/gdocs"))
+		 :repo "benthamite/gdocs")
+  :defer t)
 #+end_src
 
 ** =gdrive=

@@ -63,9 +63,10 @@ preserved unless the new code changes their defaults."
   ;; This finds features in the currently installed version of PACKAGE, so if
   ;; it provided other features in an older version, those are not unloaded.
   (let* ((package-name (symbol-name package))
-         (package-dir (file-name-directory
-                       (locate-file package-name load-path (get-load-suffixes))))
-         (package-files (directory-files package-dir 'full (rx ".el" eos)))
+         (located (locate-file package-name load-path (get-load-suffixes)))
+         (package-dir (and located (file-name-directory located)))
+         (package-files (and package-dir
+                             (directory-files package-dir 'full (rx ".el" eos))))
          (package-features
           (cl-loop for file in package-files
                    when (with-temp-buffer
@@ -75,20 +76,23 @@ preserved unless the new code changes their defaults."
                             (cadadr (read (current-buffer)))))
                    collect it)))
     (unless allp
-      (setf package-features (seq-intersection package-features features)))
+      (setf package-features (seq-intersection package-features features))
+      ;; Always include the main feature: when the user explicitly
+      ;; rebuilds a package, the main module must be loaded even if
+      ;; it was only set up via autoloads and never fully loaded.
+      (cl-pushnew package package-features))
     ;; Load the main feature first so sub-modules find its variables.
     (when (memq package package-features)
       (setf package-features
             (cons package (delq package package-features))))
-    ;; Remove from `features' so `require' reloads each file.
-    ;; We avoid `unload-feature' because it unbinds variables from
-    ;; all files that declared them (via `defvar'), not just the file
-    ;; that defined them (via `defcustom').  In multi-file packages
-    ;; this makes shared variables void.
+    ;; Force-load each file via `load' rather than `require'.
+    ;; `require' is a no-op when the feature is in `features', and
+    ;; elpaca's rebuild can re-add features (via autoloads) before
+    ;; we get here.  `load' always evaluates the file.
     (dolist (feature package-features)
-      (setq features (delq feature features)))
-    (dolist (feature package-features)
-      (require feature))
+      (load (locate-file (symbol-name feature) load-path
+                         (get-load-suffixes))
+            nil 'nomessage))
     (when package-features
       (message "Reloaded: %s" (mapconcat #'symbol-name package-features " ")))))
 

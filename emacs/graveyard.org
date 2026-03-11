@@ -9,6 +9,17 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** =ef-themes=
+:PROPERTIES:
+:ID:       ABA9A4E3-ABDA-46C2-88E7-285DAFB05F79
+:END:
+
+/[[https://github.com/protesilaos/ef-themes][ef-themes]] is a collection of colorful and legible themes for Emacs./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package ef-themes)
+#+end_src
+
 ** =org2blog-extras=
 :PROPERTIES:
 :ID:       189C41F8-D0BF-40CC-A4AD-96C7F4A76E4D

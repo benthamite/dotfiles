@@ -891,8 +891,10 @@ in a summary buffer when all entries have been processed."
                  (format "Process %d TODO(s) in %s?" (length entries) dir)))
         (claude-code-extras--batch-start entries dir)))))
 
-(defun claude-code-extras--batch-start (entries dir)
-  "Start batch processing of ENTRIES in working directory DIR."
+(defun claude-code-extras--batch-start (entries dir &optional commit-after-each)
+  "Start batch processing of ENTRIES in working directory DIR.
+When COMMIT-AFTER-EACH is non-nil, automatically commit any uncommitted
+changes in DIR after each entry completes successfully."
   (let* ((log-dir (expand-file-name
                    (format-time-string "batch_%Y-%m-%d_%H-%M-%S")
                    claude-code-extras-log-directory))
@@ -900,7 +902,8 @@ in a summary buffer when all entries have been processed."
                       :results nil
                       :log-dir log-dir
                       :working-dir dir
-                      :start-time (current-time))))
+                      :start-time (current-time)
+                      :commit-after-each commit-after-each)))
     (make-directory log-dir t)
     (message "Batch processing %d TODO(s)..." (length entries))
     (claude-code-extras--batch-run-next state)))
@@ -966,7 +969,12 @@ STATE is a plist with keys :queue :results :log-dir :working-dir
                                                           "(failed to parse output)")
                                           :log-file log-file)
                                     (plist-get state :results)))
-                   (kill-buffer (process-buffer proc)))
+                   (kill-buffer (process-buffer proc))
+                   (when (and (zerop exit-code)
+                              (plist-get state :commit-after-each))
+                     (ignore-errors
+                       (claude-code-extras--batch-commit-changes
+                        state title))))
                (error
                 (plist-put state :results
                            (cons (list :title title :index index :exit-code -1
@@ -980,6 +988,20 @@ STATE is a plist with keys :queue :results :log-dir :working-dir
                                  (plist-get state :results)))
                 (ignore-errors (kill-buffer (process-buffer proc)))))
              (claude-code-extras--batch-run-next state))))))))
+
+(defun claude-code-extras--batch-commit-changes (state title)
+  "Commit any uncommitted changes in the working directory of STATE.
+TITLE is the entry title, used to derive the commit message scope."
+  (let ((default-directory (plist-get state :working-dir)))
+    (with-temp-buffer
+      (call-process "git" nil t nil "status" "--porcelain")
+      (when (> (buffer-size) 0)
+        (call-process "git" nil nil nil "add" "-A")
+        (let ((scope (replace-regexp-in-string
+                      "^/" ""
+                      (car (split-string title " ")))))
+          (call-process "git" nil nil nil "commit" "-m"
+                        (format "%s: apply audit recommendations" scope)))))))
 
 (defun claude-code-extras--batch-parse-stream-json (raw)
   "Parse stream-json output RAW into a plist.
@@ -1092,7 +1114,7 @@ Results are displayed in a summary buffer when all audits complete."
                           claude-code-extras-audit-skills)))
     (when (yes-or-no-p
            (format "Run %d audit(s) on %s?" (length entries) dir))
-      (claude-code-extras--batch-start entries dir))))
+      (claude-code-extras--batch-start entries dir t))))
 
 (defun claude-code-extras--read-audit-project-directory ()
   "Prompt the user for a project directory, with completion.

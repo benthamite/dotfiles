@@ -8545,7 +8545,18 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
   (gptel-extras-make-tool-presets
    tools-web-search
    "web search tools"
-   '("search" "fetch_content" "fetch_url"))
+   '("brave_web_search" "fetch_readable" "fetch_markdown"))
+
+  (gptel-make-preset 'web-search
+    :description "Web researcher: search, read pages, synthesize with sources"
+    :tools '("brave_web_search" "fetch_readable" "fetch_markdown")
+    :system "You have access to web search and page reading tools. When answering:
+
+1. Search the web with brave_web_search using well-crafted queries.
+2. Read the most promising results with fetch_readable (or fetch_markdown for non-article pages).
+3. Synthesize the information into a clear, concise answer.
+
+Cite sources with URLs. If initial results are insufficient, refine your queries and search again.")
 
   (gptel-extras-make-tool-presets
    tools-home-assistant

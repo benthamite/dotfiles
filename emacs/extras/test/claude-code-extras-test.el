@@ -137,6 +137,83 @@
                (lambda (_frame param) (alist-get param frame-params))))
       (should (equal (claude-code-extras--emacs-theme) "light")))))
 
+;;;; Theme sync busy/idle handling
+
+(ert-deftest claude-code-extras-test-sync-theme-queues-when-busy ()
+  "Queue theme for busy sessions instead of sending immediately."
+  (with-temp-buffer
+    (setq claude-code-extras--waiting-for-input nil)
+    (setq claude-code-extras--pending-theme nil)
+    (let ((claude-code-extras-sync-theme t)
+          (claude-code-extras--last-synced-theme nil)
+          (frame-params '((background-mode . dark)))
+          (sent nil))
+      (cl-letf (((symbol-function 'frame-parameter)
+                 (lambda (_frame param) (alist-get param frame-params)))
+                ((symbol-function 'claude-code--find-all-claude-buffers)
+                 (lambda () (list (current-buffer))))
+                ((symbol-function 'get-buffer-process)
+                 (lambda (_buf) t))
+                ((symbol-function 'process-live-p)
+                 (lambda (_proc) t))
+                ((symbol-function 'claude-code-extras--sync-theme-to-settings)
+                 #'ignore)
+                ((symbol-function 'claude-code-extras--send-theme-to-buffer)
+                 (lambda (_buf _theme) (setq sent t))))
+        (claude-code-extras-sync-theme)
+        (should-not sent)
+        (should (equal claude-code-extras--pending-theme "dark"))))))
+
+(ert-deftest claude-code-extras-test-sync-theme-sends-when-idle ()
+  "Send theme immediately for idle sessions."
+  (with-temp-buffer
+    (setq claude-code-extras--waiting-for-input t)
+    (setq claude-code-extras--pending-theme nil)
+    (let ((claude-code-extras-sync-theme t)
+          (claude-code-extras--last-synced-theme nil)
+          (frame-params '((background-mode . light)))
+          (sent-theme nil))
+      (cl-letf (((symbol-function 'frame-parameter)
+                 (lambda (_frame param) (alist-get param frame-params)))
+                ((symbol-function 'claude-code--find-all-claude-buffers)
+                 (lambda () (list (current-buffer))))
+                ((symbol-function 'get-buffer-process)
+                 (lambda (_buf) t))
+                ((symbol-function 'process-live-p)
+                 (lambda (_proc) t))
+                ((symbol-function 'claude-code-extras--sync-theme-to-settings)
+                 #'ignore)
+                ((symbol-function 'claude-code-extras--send-theme-to-buffer)
+                 (lambda (_buf theme) (setq sent-theme theme))))
+        (claude-code-extras-sync-theme)
+        (should (equal sent-theme "light"))))))
+
+(ert-deftest claude-code-extras-test-apply-pending-theme-on-stop ()
+  "Apply pending theme when the Stop hook fires."
+  (with-temp-buffer
+    (setq claude-code-extras--pending-theme "dark")
+    (let ((frame-params '((background-mode . dark)))
+          (sent nil))
+      (cl-letf (((symbol-function 'frame-parameter)
+                 (lambda (_frame param) (alist-get param frame-params)))
+                ((symbol-function 'claude-code-extras--send-theme-to-buffer)
+                 (lambda (_buf _theme) (setq sent t))))
+        (claude-code-extras--apply-pending-theme (current-buffer))
+        (should sent)))))
+
+(ert-deftest claude-code-extras-test-pending-theme-skipped-when-stale ()
+  "Skip pending theme if Emacs theme changed again since it was queued."
+  (with-temp-buffer
+    (setq claude-code-extras--pending-theme "light")
+    (let ((frame-params '((background-mode . dark)))
+          (sent nil))
+      (cl-letf (((symbol-function 'frame-parameter)
+                 (lambda (_frame param) (alist-get param frame-params)))
+                ((symbol-function 'claude-code-extras--send-theme-to-buffer)
+                 (lambda (_buf _theme) (setq sent t))))
+        (claude-code-extras--apply-pending-theme (current-buffer))
+        (should-not sent)))))
+
 ;;;; Batch format prompt
 
 (ert-deftest claude-code-extras-test-batch-format-prompt-title-only ()

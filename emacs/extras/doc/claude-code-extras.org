@@ -65,6 +65,8 @@ The function ~claude-code-extras-disable-scrollback-truncation~ sets ~eat-term-s
 #+vindex: claude-code-extras-sync-theme
 The user option ~claude-code-extras-sync-theme~ controls whether the Claude Code theme is kept in sync with the current Emacs theme. When non-~nil~, changing the Emacs theme (via ~enable-theme-functions~) updates =~/.claude/settings.json= and sends ~/theme~ to all running Claude Code sessions so they switch between light and dark mode automatically. The default value is ~nil~ (disabled).
 
+Sessions that are idle (waiting for user input) receive the ~/theme~ command immediately. Sessions where Claude is still generating a response queue the theme change and apply it automatically when the turn finishes (via the Stop hook).
+
 ** Alert options
 :PROPERTIES:
 :CUSTOM_ID: h:alert-options

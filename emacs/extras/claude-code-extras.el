@@ -123,6 +123,16 @@ prompts and accepted text is sent to the terminal correctly."
 (defvar-local claude-code-extras--status-timer nil
   "Timer for periodic status polling in the current Claude buffer.")
 
+(defvar-local claude-code-extras--waiting-for-input nil
+  "Non-nil when this Claude session is waiting for user input.
+Set to t by the Stop hook and cleared when input is sent to the
+session (e.g. a `/theme' command).")
+
+(defvar-local claude-code-extras--pending-theme nil
+  "Theme to apply when this Claude session becomes idle.
+Set by `claude-code-extras-sync-theme' when the session is busy;
+consumed by the Stop hook handler.")
+
 (defvar-local claude-code-extras--copilot-active nil
   "Non-nil when Copilot integration is active in the current buffer.")
 
@@ -474,11 +484,13 @@ MESSAGE is a plist with :type, :buffer-name, :json-data, and
   (when (eq (plist-get message :type) 'stop)
     (when-let* ((buf (get-buffer (plist-get message :buffer-name))))
       (with-current-buffer buf
+        (setq claude-code-extras--waiting-for-input t)
         (let ((name (claude-code-extras--session-name (buffer-name))))
           (claude-code-extras-notify
            "Claude ready"
            (format "%s: waiting for your response" name)))
-        (claude-code-extras--scroll-to-bottom buf))))
+        (claude-code-extras--scroll-to-bottom buf)
+        (claude-code-extras--apply-pending-theme buf))))
   nil)
 
 (defun claude-code-extras--scroll-to-bottom (buffer)
@@ -1172,6 +1184,8 @@ and confirms.  The picker cursor starts on the currently active
 theme, so we arrow up for dark (from light) or down for light
 \(from dark)."
   (with-current-buffer buffer
+    (setq claude-code-extras--waiting-for-input nil)
+    (setq claude-code-extras--pending-theme nil)
     (claude-code--term-send-string
      claude-code-terminal-backend "/theme")
     (sit-for 0.1)
@@ -1190,11 +1204,19 @@ theme, so we arrow up for dark (from light) or down for light
              (claude-code--term-send-string
               claude-code-terminal-backend (kbd "RET")))))))))
 
+(defun claude-code-extras--apply-pending-theme (buffer)
+  "Apply the pending theme to BUFFER, if any.
+Called from the Stop hook handler when Claude finishes a turn."
+  (when-let* ((theme (buffer-local-value 'claude-code-extras--pending-theme buffer)))
+    (when (string= theme (claude-code-extras--emacs-theme))
+      (claude-code-extras--send-theme-to-buffer buffer theme))))
+
 (defun claude-code-extras-sync-theme (&rest _)
   "Sync Claude Code theme with the current Emacs background mode.
 Updates `~/.claude/settings.json' for new sessions and sends
-`/theme' to all running sessions when the background mode
-changes."
+`/theme' to idle sessions immediately.  For busy sessions (where
+Claude is still generating), the theme is queued and applied
+automatically when Claude finishes its turn."
   (when claude-code-extras-sync-theme
     (let ((theme (claude-code-extras--emacs-theme)))
       (unless (equal theme claude-code-extras--last-synced-theme)
@@ -1203,7 +1225,10 @@ changes."
         (dolist (buf (claude-code--find-all-claude-buffers))
           (when (and (buffer-live-p buf)
                      (process-live-p (get-buffer-process buf)))
-            (claude-code-extras--send-theme-to-buffer buf theme)))))))
+            (if (buffer-local-value 'claude-code-extras--waiting-for-input buf)
+                (claude-code-extras--send-theme-to-buffer buf theme)
+              (with-current-buffer buf
+                (setq claude-code-extras--pending-theme theme)))))))))
 
 ;;;;; Auto-setup
 

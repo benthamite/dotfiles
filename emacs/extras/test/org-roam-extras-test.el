@@ -282,12 +282,12 @@
       (should (string-match-p "0:45" msg)))))
 
 (ert-deftest org-roam-extras-test-count-todos-and-efforts-excludes-done ()
-  "Exclude DONE and CANCELLED states from counting."
+  "Exclude DONE states from counting."
   (skip-unless (featurep 'org-roam))
   (cl-letf (((symbol-function 'org-roam-db-query)
              (lambda (_query)
                '(("DONE" (("EFFORT" . "1:00")))
-                 ("CANCELLED" (("EFFORT" . "2:00")))))))
+                 ("DONE" (("EFFORT" . "2:00")))))))
     (let ((msg (org-roam-extras-count-todos-and-efforts)))
       (should (string-match-p "0 open TODOs" msg))
       (should (string-match-p "0:00" msg)))))

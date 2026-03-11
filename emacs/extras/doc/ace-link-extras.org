@@ -42,6 +42,8 @@ The command ~ace-link-extras-mu4e~ detects which renderer is active and adapts a
 
 When any other renderer is active, the command falls back to the standard ~ace-link-mu4e~ behavior.
 
+Note: this package redefines the upstream function ~ace-link--mu4e-action~ to fix a compatibility issue with mu4e 1.12+, which renamed ~mu4e~view-browse-url-from-binding~ to ~mu4e--view-browse-url-from-binding~.
+
 ** EWW link actions
 :PROPERTIES:
 :CUSTOM_ID: h:eww-link-actions

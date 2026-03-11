@@ -92,27 +92,20 @@ specified by `browse-url-handlers')."
 
 ;;;;; Patched functions
 
-;; (declare-function shr-browse-url "shr")
-;; (declare-function mu4e--view-browse-url-from-binding "mu4e-view")
-;; (declare-function mu4e--view-open-attach-from-binding "mu4e-view")
-;; 2024-11-21 this patch tries to replace two obsolete functions with their
-;; replacements. however, the replacement for
-;; `mu4e~view-open-attach-from-binding' does not exist, and I wasn’t able to
-;; find the name of the actual replacement. Moreover, it seems that these
-;; conditions are never triggered, so there is no need to patch the function.
-;; commenting out for the time being; delete when I am reasonably confident that
-;; the patch is not needed.
+;; Upstream `ace-link--mu4e-action’ calls `mu4e~view-browse-url-from-binding’,
+;; which was renamed to `mu4e--view-browse-url-from-binding’ in mu4e 1.12.
+(declare-function shr-browse-url "shr")
+(declare-function mu4e--view-browse-url-from-binding "ext:mu4e-view")
 
-;; (el-patch-defun ace-link--mu4e-action (pt)
-;; "Open link at PT in a `mu4e-view' buffer."
-;; (when (number-or-marker-p pt)
-;; (goto-char (1+ pt))
-;; (cond ((get-text-property (point) 'shr-url)
-;; (shr-browse-url))
-;; ((get-text-property (point) 'mu4e-url)
-;; (el-patch-swap (mu4e--view-browse-url-from-binding) (mu4e--view-browse-url-from-binding)))
-;; ((get-text-property (point) 'mu4e-attnum)
-;; (el-patch-swap (mu4e--view-open-attach-from-binding) (mu4e--view-open-attach-from-binding))))))
+(defun ace-link--mu4e-action (pt)
+  "Open link at PT in a `mu4e-view’ buffer.
+Replaces the upstream definition to use the current mu4e function names."
+  (when (number-or-marker-p pt)
+    (goto-char (1+ pt))
+    (cond ((get-text-property (point) ‘shr-url)
+           (shr-browse-url))
+          ((get-text-property (point) ‘mu4e-url)
+           (mu4e--view-browse-url-from-binding)))))
 
 (provide 'ace-link-extras)
 ;;; ace-link-extras.el ends here

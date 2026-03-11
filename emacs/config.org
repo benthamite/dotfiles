@@ -8845,13 +8845,13 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (setq mcp-hub-servers
 	`(("context7" . (:command "npx"
 				  :args ("-y" "@upstash/context7-mcp@latest")))
-	  ("ddg-search" . (:command "uvx"
-				    :args ("duckduckgo-mcp-server")))
-	  ;; ("everything" . (:command "npx"
-	  ;; :args ("-y" "@modelcontextprotocol/server-everything")))
-	  ("fetch" . (:command "uvx" :args ("mcp-server-fetch")))
-	  ("fetcher" . (:command "npx"
-			:args ("-y" "fetcher-mcp")))
+	  ("brave-search" . (:command "npx"
+				      :args ("-y" "@brave/brave-search-mcp-server")
+				      :env (:BRAVE_API_KEY
+					    ,(auth-source-pass-get
+					      "key" (concat "chrome/brave.com/"
+							    (getenv "PERSONAL_EMAIL"))))))
+	  ("fetch" . (:command "npx" :args ("mcp-fetch-server")))
 	  ("filesystem" . (:command "npx"
 				    :args ("-y" "@modelcontextprotocol/server-filesystem"
 					   ,(expand-file-name "~")
@@ -8880,8 +8880,8 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 	  ;; :NEO4J_PASSWORD "demodemo")))
 	  ("memory" . (:command "npx"
 				:args ("-y" "@modelcontextprotocol/server-memory")))
-	  ("puppeteer" . (:command "npx"
-				   :args ("-y" "@modelcontextprotocol/server-puppeteer")))
+	  ("playwright" . (:command "npx"
+				    :args ("@playwright/mcp@latest" "--headless")))
 	  ("sequential-thinking" . (:command "npx"
 					     :args ("-y" "@modelcontextprotocol/server-sequential-thinking")))
 	  ("slack-ae-racionalidad" . (:command "npx"

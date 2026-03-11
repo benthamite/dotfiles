@@ -55,11 +55,23 @@ freeze Emacs."
     (copilot-mode)))
 
 (defun copilot-extras-restart-copilot ()
-  "Hack: ‘restart’ copilot periodically."
+  "Hack: `restart' copilot periodically."
   (when copilot-mode
     (copilot-mode -1)
     (sleep-for 0.001)
     (copilot-mode +1)))
+
+(defun copilot-extras-suppress-canceled-log (orig-fn level format &rest args)
+  "Suppress request-canceled errors in `copilot--log'."
+  (unless (and (eq level 'error)
+               (cl-some (lambda (arg)
+                          (and (listp arg)
+                               (plist-member arg :code)
+                               (equal (plist-get arg :code) -32800)))
+                        args))
+    (apply orig-fn level format args)))
+
+(advice-add 'copilot--log :around #'copilot-extras-suppress-canceled-log)
 
 (provide 'copilot-extras)
 ;;; copilot-extras.el ends here

@@ -72,11 +72,13 @@ changes."
 - \"summary\": a brief description for user confirmation, e.g. \"4 flight-related events\", \"1 hotel reservation\", \"2 concert tickets\"
 - \"events\": an array of objects, each with:
   - \"title\": concise event title (e.g. \"Flight EZE→JFK (DL 114, H42AOO)\")
-  - \"start\": start time as \"YYYY-MM-DD Day HH:MM\" (e.g. \"2026-03-14 Sat 22:25\")
-  - \"end\": end time as \"YYYY-MM-DD Day HH:MM\" (e.g. \"2026-03-15 Sun 08:25\")
+  - \"start\": ISO 8601 datetime WITHOUT offset (e.g. \"2026-03-14T22:25:00\")
+  - \"end\": ISO 8601 datetime WITHOUT offset (e.g. \"2026-03-15T08:25:00\")
+  - \"startTimeZone\": IANA timezone for start (e.g. \"America/Argentina/Buenos_Aires\")
+  - \"endTimeZone\": IANA timezone for end (e.g. \"America/New_York\")
 
-IMPORTANT: Convert ALL times to the user's local timezone (specified at the end of this prompt).
-For flights, convert both departure and arrival times from their respective city timezones.
+Use the LOCAL timezone of each location (e.g. for flights, departure city timezone
+for start, arrival city timezone for end).
 Include flight numbers and booking references in titles when available.
 Use arrow notation (→) for routes.
 Return ONLY valid JSON, no markdown fences or other text."
@@ -1041,30 +1043,17 @@ this prompt."
 
 (declare-function mu4e-message-at-point "mu4e-message")
 (declare-function mu4e-message-field "mu4e-message")
-(declare-function org-gcal-post-at-point "org-gcal")
-(declare-function org-gcal--get-time-and-desc "org-gcal")
-(defvar org-gcal-fetch-file-alist)
-
-(defun gptel-extras--ensure-org-gcal-patch ()
-  "Ensure the org-gcal DEADLINE patch is active.
-Native compilation can override `el-patch-defun' patches.
-Reload `org-gcal-extras' from source if the patch is not in effect."
-  (with-temp-buffer
-    (org-mode)
-    (insert "* t\nDEADLINE: <2026-01-01 Wed 10:00-11:00>\n")
-    (goto-char (point-min))
-    (when (equal '(:start nil :end nil :desc nil)
-		 (org-gcal--get-time-and-desc))
-      (load (locate-library "org-gcal-extras") nil t))))
+(declare-function mcp-call-tool "mcp")
+(defvar mcp-server-connections)
 
 ;;;###autoload
 (defun gptel-extras-email-to-calendar ()
-  "Extract events from the email at point and add them to the calendar."
+  "Extract events from the email at point and add them to Google Calendar.
+Uses the `google-calendar' MCP server to create events with per-field timezones."
   (interactive)
   (unless (or (derived-mode-p 'mu4e-view-mode)
 	      (derived-mode-p 'mu4e-headers-mode))
     (user-error "Not in a mu4e buffer"))
-  (gptel-extras--ensure-org-gcal-patch)
   (let* ((msg (mu4e-message-at-point))
 	 (subject (or (mu4e-message-field msg :subject) ""))
 	 (body (or (mu4e-message-field msg :body-txt)
@@ -1077,10 +1066,7 @@ Reload `org-gcal-extras' from source if the patch is not in effect."
     (message "Extracting events from email...")
     (gptel-request
 	(format "Subject: %s\n\n%s" subject body)
-      :system (format "%s\n\nUser's local timezone: UTC%+d (%s)."
-		      gptel-extras-email-to-calendar-system-prompt
-		      (/ (car (current-time-zone)) 3600)
-		      (cadr (current-time-zone)))
+      :system gptel-extras-email-to-calendar-system-prompt
       :callback
       (lambda (response info)
 	(if (not response)
@@ -1095,49 +1081,32 @@ Reload `org-gcal-extras' from source if the patch is not in effect."
 		     (events (alist-get 'events data)))
 		(if (null events)
 		    (message "No events found in email.")
-		  (when (y-or-n-p (format "Write %s to the calendar? " summary))
-		    (let ((calendar-id (gptel-extras--calendar-id))
-			  (markers nil))
-		      (with-current-buffer (find-file-noselect paths-file-calendar)
-			(goto-char (point-max))
-			(dolist (event events)
-			  (let* ((title (alist-get 'title event))
-				 (start (alist-get 'start event))
-				 (end (alist-get 'end event))
-				 (deadline (gptel-extras--format-deadline start end)))
-			    (insert (format "\n* TODO [#5] %s\n" title))
-			    (insert (format "DEADLINE: %s\n" deadline))
-			    (insert ":PROPERTIES:\n")
-			    (insert (format ":calendar-id: %s\n" calendar-id))
-			    (insert ":END:\n"))
-			  (push (point-marker) markers))
-			(save-buffer)
-			(dolist (marker (nreverse markers))
-			  (goto-char marker)
-			  (org-back-to-heading t)
-			  (org-gcal-post-at-point)
-			  (set-marker marker nil))))
-		    (message "Added %s to %s."
-			     summary (file-name-nondirectory paths-file-calendar)))))
+		  (when (y-or-n-p (format "Create %s in Google Calendar? " summary))
+		    (let ((connection (or (gethash "google-calendar" mcp-server-connections)
+					 (user-error "MCP server `google-calendar' not connected")))
+			  (calendar-id (getenv "PERSONAL_GMAIL"))
+			  (created 0))
+		      (dolist (event events)
+			(let* ((title (alist-get 'title event))
+			       (start (alist-get 'start event))
+			       (end (alist-get 'end event))
+			       (start-tz (alist-get 'startTimeZone event))
+			       (end-tz (alist-get 'endTimeZone event))
+			       (start-val (json-encode
+					   `((dateTime . ,start) (timeZone . ,start-tz))))
+			       (end-val (json-encode
+					 `((dateTime . ,end) (timeZone . ,end-tz)))))
+			  (mcp-call-tool
+			   connection "create-event"
+			   `(:calendarId ,calendar-id
+			     :summary ,title
+			     :start ,start-val
+			     :end ,end-val
+			     :sendUpdates "none"))
+			  (cl-incf created)))
+		      (message "Created %s in Google Calendar." summary)))))
 	    (error
 	     (message "Failed to parse response: %s\nRaw: %s" err response))))))))
-
-(defun gptel-extras--calendar-id ()
-  "Return the calendar ID associated with the calendar file."
-  (or (car (cl-rassoc (expand-file-name paths-file-calendar)
-		      org-gcal-fetch-file-alist
-		      :test #'string=))
-      (caar org-gcal-fetch-file-alist)))
-
-(defun gptel-extras--format-deadline (start end)
-  "Format START and END as an org DEADLINE timestamp.
-START and END are strings like \"2026-03-14 Sat 22:25\"."
-  (let ((start-date (substring start 0 10))
-	(end-date (substring end 0 10))
-	(end-time (substring end 15)))
-    (if (string= start-date end-date)
-	(format "<%s-%s>" start end-time)
-      (format "<%s>--<%s>" start end))))
 
 ;;;;; Misc
 

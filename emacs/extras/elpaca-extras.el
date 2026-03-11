@@ -53,11 +53,8 @@ package may provide multiple features, to reload it properly
 would require either restarting Emacs or manually unloading and
 reloading each loaded feature.  This automates that process.
 
-Note that this unloads all of the package's symbols before
-reloading.  Any data stored in those symbols will be lost, so if
-the package would normally save that data, e.g. when a mode is
-deactivated or when Emacs exits, the user should do so before
-using this command."
+New definitions overwrite old ones; existing variable values are
+preserved unless the new code changes their defaults."
   (interactive
    (list (let ((elpaca-overriding-prompt "Reload package: "))
            (elpaca--read-queued))
@@ -79,10 +76,17 @@ using this command."
                    collect it)))
     (unless allp
       (setf package-features (seq-intersection package-features features)))
+    ;; Load the main feature first so sub-modules find its variables.
+    (when (memq package package-features)
+      (setf package-features
+            (cons package (delq package package-features))))
+    ;; Remove from `features' so `require' reloads each file.
+    ;; We avoid `unload-feature' because it unbinds variables from
+    ;; all files that declared them (via `defvar'), not just the file
+    ;; that defined them (via `defcustom').  In multi-file packages
+    ;; this makes shared variables void.
     (dolist (feature package-features)
-      (ignore-errors
-        ;; Ignore error in case it's not loaded.
-        (unload-feature feature 'force)))
+      (setq features (delq feature features)))
     (dolist (feature package-features)
       (require feature))
     (when package-features

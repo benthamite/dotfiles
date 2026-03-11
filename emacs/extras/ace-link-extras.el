@@ -92,19 +92,19 @@ specified by `browse-url-handlers')."
 
 ;;;;; Patched functions
 
-;; Upstream `ace-link--mu4e-action’ calls `mu4e~view-browse-url-from-binding’,
-;; which was renamed to `mu4e--view-browse-url-from-binding’ in mu4e 1.12.
+;; Upstream `ace-link--mu4e-action' calls `mu4e~view-browse-url-from-binding',
+;; which was renamed to `mu4e--view-browse-url-from-binding' in mu4e 1.12.
 (declare-function shr-browse-url "shr")
 (declare-function mu4e--view-browse-url-from-binding "ext:mu4e-view")
 
 (defun ace-link--mu4e-action (pt)
-  "Open link at PT in a `mu4e-view’ buffer.
+  "Open link at PT in a `mu4e-view' buffer.
 Replaces the upstream definition to use the current mu4e function names."
   (when (number-or-marker-p pt)
     (goto-char (1+ pt))
-    (cond ((get-text-property (point) ‘shr-url)
+    (cond ((get-text-property (point) 'shr-url)
            (shr-browse-url))
-          ((get-text-property (point) ‘mu4e-url)
+          ((get-text-property (point) 'mu4e-url)
            (mu4e--view-browse-url-from-binding)))))
 
 (provide 'ace-link-extras)

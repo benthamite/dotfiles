@@ -60,6 +60,7 @@
 
 ;;;;; Misc
 
+;;;###autoload
 (defun frame-extras-restore-window-divider ()
   "Restore visibility of window divider."
   (custom-set-faces

@@ -4037,24 +4037,9 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
    ("A-H-v" . files-extras-internet-archive-dwim))
 
   :init
-  (with-eval-after-load 'dired
-    (bind-keys :map dired-mode-map
-               ("s-o" . files-extras-ocr-pdf)))
-  (with-eval-after-load 'pdf-view
-    (bind-keys :map pdf-view-mode-map
-               ("s-o" . files-extras-ocr-pdf)))
-  (with-eval-after-load 'ebib
-    (bind-keys :map ebib-entry-mode-map
-               ("v" . files-extras-internet-archive-dwim)
-               ("q" . files-extras-bury-buffer-switch-to-other-window)
-               :map ebib-index-mode-map
-               ("q" . files-extras-bury-buffer-switch-to-other-window)))
-  (with-eval-after-load 'simple
-    (bind-keys :map messages-buffer-mode-map
-               ("q" . files-extras-bury-buffer-switch-to-other-window)))
-  (with-eval-after-load 'telega
-    (bind-keys :map telega-root-mode-map
-               ("q" . files-extras-bury-buffer-switch-to-other-window)))
+  (with-eval-after-load 'Info
+    (bind-keys :map Info-mode-map
+               ("q" . files-extras-kill-this-buffer)))
   (with-eval-after-load 'apropos
     (bind-keys :map apropos-mode-map
                ("q" . files-extras-kill-this-buffer)))
@@ -4066,35 +4051,19 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
                ("q" . files-extras-kill-this-buffer)))
   (with-eval-after-load 'dired
     (bind-keys :map dired-mode-map
-               ("q" . files-extras-kill-this-buffer)))
-  (with-eval-after-load 'Info
-    (bind-keys :map Info-mode-map
-               ("q" . files-extras-kill-this-buffer)))
+               ("q" . files-extras-kill-this-buffer)
+	       ("s-o" . files-extras-ocr-pdf)))
+  (with-eval-after-load 'ebib
+    (bind-keys :map ebib-entry-mode-map
+               ("v" . files-extras-internet-archive-dwim)
+               ("q" . files-extras-bury-buffer-switch-to-other-window)
+               :map ebib-index-mode-map
+               ("q" . files-extras-bury-buffer-switch-to-other-window)))
+  (with-eval-after-load 'elfeed
+    (bind-keys :map elfeed-show-mode-map
+	       ("q" . files-extras-kill-this-buffer)))
   (with-eval-after-load 'finder
     (bind-keys :map finder-mode-map
-               ("q" . files-extras-kill-this-buffer)))
-  (with-eval-after-load 'ledger-reconcile
-    (bind-keys :map ledger-reconcile-mode-map
-               ("q" . files-extras-kill-this-buffer)))
-  (with-eval-after-load 'mu4e
-    (bind-keys :map mu4e-headers-mode-map
-               ("q" . files-extras-kill-this-buffer)))
-  (with-eval-after-load 'pass
-    (bind-keys :map pass-mode-map
-               ("q" . files-extras-kill-this-buffer)))
-  (with-eval-after-load 'slack
-    (bind-keys :map slack-message-buffer-mode-map
-               ("q" . files-extras-kill-this-buffer))
-    (bind-keys :map slack-thread-message-buffer-mode-map
-               ("q" . files-extras-kill-this-buffer)))
-  (with-eval-after-load 'special
-    (bind-keys :map special-mode-map
-               ("q" . files-extras-kill-this-buffer)))
-  (with-eval-after-load 'tetris
-    (bind-keys :map tetris-mode-map
-               ("q" . files-extras-kill-this-buffer)))
-  (with-eval-after-load 'view
-    (bind-keys :map view-mode-map
                ("q" . files-extras-kill-this-buffer)))
   ;; We typically enter these modes to lookup some information and
   ;; then return to the previous buffer, so we set `q' to switch to
@@ -4107,11 +4076,43 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
     (bind-keys :map helpful-mode-map
                ("Q" . files-extras-kill-this-buffer)
                ("q" . files-extras-kill-this-buffer-switch-to-other-window)))
+  (with-eval-after-load 'ledger-reconcile
+    (bind-keys :map ledger-reconcile-mode-map
+               ("q" . files-extras-kill-this-buffer)))
   (with-eval-after-load 'markdown-mode
     (bind-keys :map markdown-mode-map
                ("s-g" . files-extras-grammarly-open-in-external-editor)
                :map gfm-mode-map
-               ("s-g" . files-extras-grammarly-open-in-external-editor))))
+               ("s-g" . files-extras-grammarly-open-in-external-editor)))
+  (with-eval-after-load 'mu4e
+    (bind-keys :map mu4e-headers-mode-map
+               ("q" . files-extras-kill-this-buffer)))
+  (with-eval-after-load 'pass
+    (bind-keys :map pass-mode-map
+               ("q" . files-extras-kill-this-buffer)))
+  (with-eval-after-load 'pdf-view
+    (bind-keys :map pdf-view-mode-map
+               ("s-o" . files-extras-ocr-pdf)))
+  (with-eval-after-load 'simple
+    (bind-keys :map messages-buffer-mode-map
+               ("q" . files-extras-bury-buffer-switch-to-other-window)))
+  (with-eval-after-load 'slack
+    (bind-keys :map slack-message-buffer-mode-map
+               ("q" . files-extras-kill-this-buffer))
+    (bind-keys :map slack-thread-message-buffer-mode-map
+               ("q" . files-extras-kill-this-buffer)))
+  (with-eval-after-load 'special
+    (bind-keys :map special-mode-map
+               ("q" . files-extras-kill-this-buffer)))
+  (with-eval-after-load 'telega
+    (bind-keys :map telega-root-mode-map
+               ("q" . files-extras-bury-buffer-switch-to-other-window)))
+  (with-eval-after-load 'tetris
+    (bind-keys :map tetris-mode-map
+               ("q" . files-extras-kill-this-buffer)))
+  (with-eval-after-load 'view
+    (bind-keys :map view-mode-map
+               ("q" . files-extras-kill-this-buffer))))
 #+end_src
 
 ** =locate=
@@ -7067,8 +7068,10 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
                  :depth nil)
   :defer t
   :custom
-  (wikipedia-draft-directory (file-name-concat paths-dir-dropbox "wikipedia"))
+  (wikipedia-draft-directory (file-name-concat paths-dir-google-drive "wikipedia"))
   (wikipedia-ai-model 'gemini-flash-lite-latest)
+  (wikipedia-ai-review-auto t)
+  (wikipedia-watchlist-score-reason-auto t)
   
   :bind
   (("A-p" . wikipedia-transient)))
@@ -8856,6 +8859,10 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 	  ("git" . (:command "npx"
 			     :args ("-y" "@cyanheads/git-mcp-server")
 			     :env (:LOGS_DIR "/tmp/git-mcp-server/")))
+	  ("google-calendar" . (:command "npx"
+					 :args ("-y" "@cocal/google-calendar-mcp")
+					 :env (:GOOGLE_OAUTH_CREDENTIALS
+					       ,(expand-file-name "~/.config/google-calendar-mcp/gcp-oauth.keys.json"))))
 	  ("github-tlon-ai" .
 	   (:command "npx"
 		     :args ("-y" "@modelcontextprotocol/server-github")

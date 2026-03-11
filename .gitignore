@@ -5,6 +5,7 @@ emacs/init-pablo.el
 shell/.zshrc.local
 
 ## emacs
+*.elc
 emacs/node_modules/
 emacs/logs/
 

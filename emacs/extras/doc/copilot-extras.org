@@ -27,6 +27,9 @@ This extension adds two pieces of missing functionality:
   user-specified modes ([[#h:conditional-activation][Conditional activation]]).
 - *Restart workaround*: quickly cycle =copilot-mode= off and on when
   the process stops responding ([[#h:restart][Restarting Copilot]]).
+- *Noise suppression*: silence harmless "Request was canceled"
+  messages that Copilot logs whenever a completion request is
+  superseded ([[#h:suppress-canceled][Suppressing canceled-request noise]]).
 
 * User options
 :PROPERTIES:
@@ -87,6 +90,23 @@ between the two operations.  This is a workaround for situations where
 the Copilot process stops providing suggestions.  The function only
 acts when =copilot-mode= is already active, so it is safe to call
 unconditionally---for instance, from a periodic timer.
+
+** Suppressing canceled-request noise
+:PROPERTIES:
+:CUSTOM_ID: h:suppress-canceled
+:END:
+
+#+findex: copilot-extras-suppress-canceled-log
+The function ~copilot-extras-suppress-canceled-log~ is installed as
+=:around= advice on ~copilot--log~.  It intercepts log calls at the
+=error= level whose error object carries JSON-RPC code =-32800=
+("Request was canceled") and silently drops them.  All other log
+messages pass through unchanged.
+
+This eliminates the repeated =Copilot: textDocument/inlineCompletion
+failed= messages that appear in =*Messages*= during normal typing,
+where each new keystroke cancels the previous in-flight completion
+request.
 
 * Indices
 :PROPERTIES:

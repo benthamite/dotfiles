@@ -11,6 +11,18 @@
 ;;;; Dired attach function
 
 ;; Extracted from telega-extras-dired-attach-func for standalone testing.
+;; Uses `image-supported-file-p' when available and working, falling back
+;; to a simple extension check so the test passes on CI where Emacs may
+;; be built without image support.
+(defun telega-extras-test--image-file-p (file)
+  "Non-nil when FILE looks like a supported image.
+Try `image-supported-file-p' first; fall back to checking extensions."
+  (or (and (fboundp 'image-supported-file-p)
+           (ignore-errors (image-supported-file-p file)))
+      (member (file-name-extension file)
+              '("png" "jpg" "jpeg" "gif" "bmp" "xpm" "pbm" "xbm"
+                "tiff" "tif" "svg" "svgz" "webp"))))
+
 (defun telega-extras-test--dired-attach-func (file)
   "Identify msg type for FILE.  Extracted from telega-extras.el for testing."
   (let ((file-ext (file-name-extension file)))
@@ -18,7 +30,7 @@
            'telega-chatbuf-attach-audio)
           ((member file-ext '("mp4" "mkv"))
            'telega-chatbuf-attach-video)
-          ((image-supported-file-p file)
+          ((telega-extras-test--image-file-p file)
            'telega-chatbuf-attach-photo)
           (t
            'telega-chatbuf-attach-file))))

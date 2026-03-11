@@ -379,8 +379,12 @@ number. Disable the mode if ARG is a negative number."
           (org-element-cache-reset)))
       ;; Suppress `find-file-hook' (flycheck, doom-modeline, etc.) when
       ;; opening agenda files; they are scanned, not edited interactively.
+      ;; Also prevent `jinx-mode' from activating via `text-mode-hook',
+      ;; which causes `args-out-of-range' errors when its idle timer fires
+      ;; during `sit-for' in `after-find-file' before the buffer is ready.
       (let ((find-file-hook nil))
-        (org-agenda nil "a")))))
+        (cl-letf (((symbol-function 'jinx-mode) #'ignore))
+          (org-agenda nil "a"))))))
 
 (defun org-extras-agenda-goto-and-start-clock ()
   "Go to the Org entry for the item at point and start the clock there.

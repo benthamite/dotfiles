@@ -33,6 +33,9 @@ The date utilities ([[#h:date-utilities][Date utilities]]) cover inserting forma
 generating date ranges.  A separate command ([[#h:block-agenda][Block agenda]]) displays
 the current day's Org agenda in the =calfw= visual time-block view.
 
+The archive command ([[#h:archive][Archive]]) moves old calendar entries to an
+archive file, keeping the main calendar file manageable.
+
 * User options
 :PROPERTIES:
 :CUSTOM_ID: h:user-options
@@ -62,6 +65,18 @@ The user option ~calendar-extras-use-geolocation~ is a boolean that
 controls whether geolocation features are active.  When non-nil,
 ~calendar-extras-set-geolocation~ can automatically determine and set
 location-related variables.  The default value is ~nil~.
+
+** Archive settings
+:PROPERTIES:
+:CUSTOM_ID: h:archive-settings
+:END:
+
+#+vindex: calendar-extras-archive-age
+The user option ~calendar-extras-archive-age~ controls how many days
+old a calendar entry must be before
+~calendar-extras-archive-old-entries~ will move it to the archive
+file.  Age is measured from the entry's deadline date.  The default
+value is 30.
 
 * Commands
 :PROPERTIES:
@@ -111,6 +126,21 @@ visual, time-blocked view of your day, the command
 =block-day= view, sourcing its contents from Org agenda items.  This
 provides an at-a-glance alternative to the standard Org agenda
 dispatcher.
+
+** Archive
+:PROPERTIES:
+:CUSTOM_ID: h:archive
+:END:
+
+#+findex: calendar-extras-archive-old-entries
+Over time, the calendar file accumulates hundreds of past events.  The
+command ~calendar-extras-archive-old-entries~ scans
+~paths-file-calendar~ for top-level entries whose deadline is more than
+~calendar-extras-archive-age~ days in the past ([[#h:archive-settings][Archive settings]]) and
+moves them to =calendar.org= inside ~paths-dir-archive~.  The command
+reports how many entries were archived.
+
+Entries without a deadline are left in place.
 
 * Functions
 :PROPERTIES:

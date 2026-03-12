@@ -56,6 +56,14 @@ The value can be set manually. It can also be set via
   :type 'boolean
   :group 'calendar-extras)
 
+(defcustom calendar-extras-archive-age 30
+  "Number of days after which calendar entries are archived.
+Entries whose deadline is more than this many days in the past
+will be moved to the archive file by
+`calendar-extras-archive-old-entries'."
+  :type 'natnum
+  :group 'calendar-extras)
+
 ;;;; Functions
 ;;;;; Geolocation
 
@@ -131,6 +139,52 @@ If IP is non-nil, use the local IP address."
       (setq current (time-add current (days-to-time 1))))
     (push end-date result)  ; Include the end-date in the result
     (nreverse result)))
+
+;;;;; Archive
+
+;;;###autoload
+(defun calendar-extras-archive-old-entries ()
+  "Archive calendar entries older than `calendar-extras-archive-age' days.
+Move top-level entries from `paths-file-calendar' whose deadline
+is more than `calendar-extras-archive-age' days in the past to an
+archive file in `paths-dir-archive'."
+  (interactive)
+  (require 'org)
+  (require 'paths)
+  (let ((archive-file (file-name-concat paths-dir-archive "calendar.org"))
+	(cutoff (time-subtract (current-time)
+			       (days-to-time calendar-extras-archive-age)))
+	(archived 0)
+	entries-to-archive)
+    (with-current-buffer (find-file-noselect paths-file-calendar)
+      (org-with-wide-buffer
+       (goto-char (point-min))
+       (while (re-search-forward "^\\* " nil t)
+	 (beginning-of-line)
+	 (let* ((deadline (org-get-deadline-time (point)))
+		(subtree-end (save-excursion
+			       (org-end-of-subtree t t)
+			       (point))))
+	   (when (and deadline (time-less-p deadline cutoff))
+	     (push (cons (point) subtree-end) entries-to-archive))
+	   (goto-char subtree-end))))
+      ;; Delete in reverse order to preserve buffer positions.
+      (setq entries-to-archive
+	    (sort entries-to-archive (lambda (a b) (> (car a) (car b)))))
+      (dolist (entry entries-to-archive)
+	(let ((text (buffer-substring (car entry) (cdr entry))))
+	  (with-current-buffer (find-file-noselect archive-file)
+	    (goto-char (point-max))
+	    (unless (bolp) (insert "\n"))
+	    (insert text))
+	  (delete-region (car entry) (cdr entry))
+	  (setq archived (1+ archived))))
+      (save-buffer))
+    (when (> archived 0)
+      (with-current-buffer (find-file-noselect archive-file)
+	(save-buffer)))
+    (message "Archived %d %s" archived
+	     (if (= archived 1) "entry" "entries"))))
 
 (provide 'calendar-extras)
 

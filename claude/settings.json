@@ -74,5 +74,13 @@
     "slack@claude-plugins-official": true
   },
   "theme": "light",
-  "effortLevel": "high"
+  "effortLevel": "high",
+  "mcpServers": {
+    "home-assistant": {
+      "command": "mcp-proxy",
+      "env": {
+        "SSE_URL": "http://homeassistant.local:8123/mcp_server/sse"
+      }
+    }
+  }
 }

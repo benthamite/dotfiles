@@ -100,13 +100,13 @@ selection."
     ("R" "remove reaction" slack-message-remove-reaction)
     ("p" "pin" slack-message-pins-add)
     ("P" "unpin" slack-message-pins-remove)
-    ("n" "pins list" slack-room-pins-list)]]
-  [["File"
+    ("n" "pins list" slack-room-pins-list)]
+   ["File"
     ("f" "upload" slack-file-upload)
     ("F" "quick upload" slack-file-upload-quick)
     ("S" "upload snippet" slack-file-upload-snippet)
-    ("x" "download at point" slack-download-file-at-point)]
-   ["Search"
+    ("x" "download at point" slack-download-file-at-point)]]
+  [["Search"
     ("/" "messages" slack-search-from-messages)
     ("?" "files" slack-search-from-files)]
    ["Channel"
@@ -115,8 +115,8 @@ selection."
     ("v" "leave" slack-channel-leave)
     ("t" "set topic" slack-channel-set-topic)
     ("i" "info" slack-show-channel-info)
-    ("b" "bookmarks" slack-show-channel-bookmarks)]]
-  [["Team & connection"
+    ("b" "bookmarks" slack-show-channel-bookmarks)]
+   ["Team & connection"
     ("T" "change team" slack-change-current-team)
     ("o" "start" slack-extras-start-and-select)
     ("O" "stop" slack-extras-disconnect-all)

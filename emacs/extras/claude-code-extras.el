@@ -175,6 +175,26 @@ consumed by the Stop hook handler.")
 
 ;;;; Functions
 
+;;;;; C-g fix
+
+(defun claude-code-extras--send-escape-in-current-buffer (orig-fn)
+  "When already in a Claude buffer, send escape directly without prompting.
+ORIG-FN is `claude-code-send-escape'.  The upstream implementation uses
+`claude-code--with-buffer', which re-resolves the target buffer via
+`claude-code--get-or-prompt-for-buffer'.  When multiple sessions share
+the same project directory, that triggers a selection prompt—defeating
+the purpose of C-g as a quick interrupt.  This advice short-circuits
+the lookup: if the current buffer is already a Claude buffer, send the
+escape sequence directly to it."
+  (if (claude-code--buffer-p (current-buffer))
+      (claude-code--term-send-string claude-code-terminal-backend (kbd "ESC"))
+    (funcall orig-fn)))
+
+(advice-add 'claude-code-send-escape :around
+            #'claude-code-extras--send-escape-in-current-buffer)
+
+;;;;; Buffer protection
+
 (defun claude-code-extras-protect-buffer ()
   "Prompt for confirmation before killing claude-code buffers.
 Returns t if the buffer should be killed, nil otherwise.  Skips

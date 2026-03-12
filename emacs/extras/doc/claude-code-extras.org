@@ -24,7 +24,7 @@ The package provides seven main areas of functionality:
 - *Session switching.* A Consult-powered interface for starting new Claude sessions or switching between existing ones, with live buffer previews ([[#h:session-switching][Session switching]]).
 - *Status polling.* Integration with a statusline script that exports session metadata (model name, cost, context usage, token counts) as JSON, polled periodically and exposed through accessor functions ([[#h:status-polling][Status polling]]).
 - *Alerts.* Configurable OS notifications (visual, audible, or both) when Claude finishes responding, triggered by a hook-based stop event ([[#h:alerts][Alerts]]).
-- *Buffer lifecycle.* Kill protection for active sessions, automatic buffer cleanup on process exit, and a SIGWINCH workaround for terminal rendering glitches ([[#h:buffer-lifecycle][Buffer lifecycle]]).
+- *Buffer lifecycle.* Kill protection for active sessions, automatic buffer cleanup on process exit, a SIGWINCH workaround for terminal rendering glitches, and a fix for ~C-g~ escape handling with multiple sessions ([[#h:buffer-lifecycle][Buffer lifecycle]]).
 - *Copilot integration.* An adapter that enables Copilot ghost-text prose completions while typing prompts in Claude Code buffers, routing accepted text through the terminal emulator ([[#h:copilot-integration][Copilot integration]]).
 - *Batch TODO processing.* Sequential execution of org TODO entries via =claude -p= in non-interactive mode, with logged results and a summary buffer ([[#h:batch-todo-processing][Batch TODO processing]]).
 - *Project audit.* One-command comprehensive audit that sequentially runs code, design, and interpretability audit skills with auto-fix on the current project ([[#h:project-audit][Project audit]]).
@@ -195,6 +195,9 @@ The function ~claude-code-extras-protect-buffer~ is a ~kill-buffer-query-functio
 The function ~claude-code-extras-setup-kill-on-exit~ wraps the process sentinel so that the buffer is automatically killed when the Claude process exits. This keeps the buffer list clean after normal session termination via =/exit=.
 
 The function ~claude-code-extras-fix-rendering~ sends a =SIGWINCH= signal to the Claude process after the delay specified by ~claude-code-extras-sigwinch-delay~ ([[#h:terminal-rendering-option][Terminal rendering]]). This forces the TUI to re-query terminal dimensions and redraw correctly.
+
+#+findex: claude-code-extras--send-escape-in-current-buffer
+The function ~claude-code-extras--send-escape-in-current-buffer~ is an =:around= advice on ~claude-code-send-escape~ that fixes ~C-g~ behavior when multiple Claude sessions share the same project directory.  The upstream implementation uses ~claude-code--with-buffer~, which re-resolves the target buffer via ~claude-code--get-or-prompt-for-buffer~.  When multiple sessions exist for the same project, this triggers a selection prompt instead of sending the escape to the current buffer.  The advice short-circuits the lookup: if the current buffer is already a Claude buffer, it sends the escape sequence directly; otherwise it falls through to the original function.
 
 ** Status polling
 :PROPERTIES:

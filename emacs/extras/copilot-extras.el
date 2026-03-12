@@ -61,13 +61,23 @@ freeze Emacs."
     (sleep-for 0.001)
     (copilot-mode +1)))
 
+(defcustom copilot-extras-suppressed-error-codes '(-32800 -32602)
+  "JSON-RPC error codes to suppress in `copilot--log'.
+-32800 means the server canceled a superseded request (normal during typing).
+-32602 means the server does not recognize the document URI (transient mismatch)."
+  :type '(repeat integer)
+  :group 'copilot-extras)
+
 (defun copilot-extras-suppress-canceled-log (orig-fn level format &rest args)
-  "Suppress request-canceled errors in `copilot--log'."
+  "Suppress noisy errors in `copilot--log'.
+Drops error-level messages whose error object carries a JSON-RPC code
+listed in `copilot-extras-suppressed-error-codes'."
   (unless (and (eq level 'error)
                (cl-some (lambda (arg)
                           (and (listp arg)
                                (plist-member arg :code)
-                               (equal (plist-get arg :code) -32800)))
+                               (memq (plist-get arg :code)
+                                     copilot-extras-suppressed-error-codes)))
                         args))
     (apply orig-fn level format args)))
 

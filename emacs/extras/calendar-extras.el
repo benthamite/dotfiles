@@ -151,7 +151,7 @@ archive file in `paths-dir-archive'."
   (interactive)
   (require 'org)
   (require 'paths)
-  (let ((archive-file (file-name-concat paths-dir-archive "calendar.org"))
+  (let ((archive-file (file-name-concat paths-dir-archive "calendar.org_archive.org"))
 	(cutoff (time-subtract (current-time)
 			       (days-to-time calendar-extras-archive-age)))
 	(archived 0)

@@ -61,22 +61,19 @@ The command ~slack-extras-yank-code-block~ inserts the current kill ring entry w
 :END:
 
 #+findex: slack-extras-menu
-The command ~slack-extras-menu~ presents a transient menu that organizes Slack commands by workflow. The menu is arranged in three rows of columns:
+The command ~slack-extras-menu~ presents a transient menu that organizes Slack commands by workflow. The menu is arranged in two rows of four columns:
 
-*Row 1: core messaging*
+*Row 1: messaging*
 
 - *Navigate*: select channel (~c~), group (~g~), direct message (~m~), rooms (~u~), unread rooms (~U~), all threads (~a~).
 - *Message*: show or create thread (~d~), edit (~e~), delete (~D~), compose in buffer (~z~), share (~s~), copy link (~l~), quote and reply (~Q~).
 - *React & pin*: add reaction (~r~), remove reaction (~R~), pin (~p~), unpin (~P~), pins list (~n~).
-
-*Row 2: content and channels*
-
 - *File*: upload (~f~), quick upload (~F~), upload snippet (~S~), download at point (~x~).
+
+*Row 2: workspace*
+
 - *Search*: messages (~/~), files (~?~).
 - *Channel*: create (~C~), join (~j~), leave (~v~), set topic (~t~), info (~i~), bookmarks (~b~).
-
-*Row 3: administration*
-
 - *Team & connection*: change team (~T~), start (~o~), stop (~O~), set status (~+~), reset status (~-~).
 - *Misc*: stars (~*~), activity feed (~A~), scheduled messages (~M~), kill all buffers (~K~), open in browser (~w~), yank code block (~y~).
 

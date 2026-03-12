@@ -510,6 +510,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#erc][erc]]
   - [[#circe][circe]]
   - [[#slack][slack]]
+  - [[#slack-extras][slack-extras]]
   - [[#ol-emacs-slack][ol-emacs-slack]]
 - [[#web][web]]
   - [[#browse-url][browse-url]]
@@ -7076,7 +7077,11 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
 (use-package gdocs
   :ensure (:host github
 		 :repo "benthamite/gdocs")
-  :defer t)
+  :defer t
+  :custom
+  (gdocs-accounts
+   `(("personal" . ((client-id . ,(auth-source-pass-get "gdocs-client-id" "chrome/cloud.google.com"))
+                    (client-secret . ,(auth-source-pass-get "gdocs-client-secret" "chrome/cloud.google.com")))))))
 #+end_src
 
 ** =gdrive=
@@ -8793,6 +8798,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :demand t
   :custom
   (claude-code-extras-alert-on-ready t)
+  (claude-code-extras-sync-theme t)
   ;; copilot support is buggy; needs more work
   (claude-code-extras-copilot-enabled nil))
 #+end_src
@@ -12869,9 +12875,13 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package slack
+  :ensure (:host github
+             :repo "benthamite/emacs-slack"
+             :branch "fix/activity-feed-improvements")
   :custom
   (slack-file-dir paths-dir-downloads)
   (slack-prefer-current-team t)
+  (slack-buffer-emojify t)
 
   :config
   (defun slack-chat-org-capture ()
@@ -12881,67 +12891,68 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
 
   (require 'pass)
   (slack-register-team
-   :name "Altruismo eficaz y racionalidad"
-   :token (auth-source-pick-first-password
-           :host "altruismo-eficaz^token"
-           :user (concat (getenv "PERSONAL_GMAIL") "^token"))
-   :cookie (auth-source-pick-first-password
-            :host "altruismo-eficaz^cookie"
-            :user (concat (getenv "PERSONAL_GMAIL") "^cookie")))
-
-  (slack-register-team
-   :name "EA Translations"
-   :token (auth-source-pick-first-password
-           :host "ea-translationa^token"
-           :user (concat (getenv "PERSONAL_GMAIL") "^token"))
-   :cookie (auth-source-pick-first-password
-            :host "ea-translationa^cookie"
-            :user (concat (getenv "PERSONAL_GMAIL") "^cookie")))
+   :name "Epoch AI"
+   :token (auth-source-pass-get "token" "chrome/slack.com/epochai")
+   :cookie (auth-source-pass-get "cookie" "chrome/slack.com/epochai"))
 
   :hook
   (slack-buffer-mode-hook . (lambda () (setopt line-spacing nil)))
 
   :bind
-  (("A-k" . slack-channel-select)
-   :map slack-mode-map
-   ("s-a" . slack-all-threads)
-   ("s-c" . slack-channel-select)
-   ("s-g" . slack-group-select)
-   ("s-m" . slack-im-select)
-   ("H-s-t" . slack-change-current-team)
-   ("s-u" . slack-select-rooms)
-   ("H-s-u" . slack-select-unread-rooms)
-   :map slack-buffer-mode-map
-   ("s-a" . slack-all-threads)
-   ("s-c" . slack-channel-select)
-   ("s-g" . slack-group-select)
-   ("s-m" . slack-im-select)
-   ("H-s-t" . slack-change-current-team)
-   ("s-u" . slack-select-rooms)
-   ("H-s-u" . slack-select-unread-rooms) ; `slack-all-unreads' not working
-   :map slack-thread-message-buffer-mode-map
-   ("d" . slack-thread-show-or-create)
-   ("e" . slack-message-edit)
-   ("k" . slack-buffer-goto-prev-message)
-   ("l" . slack-buffer-goto-next-message)
-   ("o" . slack-chat-org-capture)
-   ("q" . files-extras-kill-other-buffer)
-   ("r" . slack-message-add-reaction)
-   ("R" . slack-message-remove-reaction)
-   ("z" . slack-message-write-another-buffer)
-   :map slack-message-buffer-mode-map
-   ("d" . slack-thread-show-or-create)
-   ("e" . slack-message-edit)
-   ("k" . slack-buffer-goto-prev-message)
-   ("l" . slack-buffer-goto-next-message)
-   ("o" . slack-chat-org-capture)
-   ("r" . slack-message-add-reaction)
-   ("R" . slack-message-remove-reaction)
-   ("z" . slack-message-write-another-buffer)
-   :map slack-message-compose-buffer-mode-map
-   ("s-c" . slack-message-send-from-buffer)
-   ("s-f" . slack-message-select-file)
-   ("s-m" . slack-message-embed-mention)))
+  (:map slack-mode-map
+	("s-a" . slack-all-threads)
+	("s-c" . slack-channel-select)
+	("s-g" . slack-group-select)
+	("s-m" . slack-im-select)
+	("H-s-t" . slack-change-current-team)
+	("s-u" . slack-select-rooms)
+	("H-s-u" . slack-select-unread-rooms)
+	:map slack-buffer-mode-map
+	("s-a" . slack-all-threads)
+	("s-c" . slack-channel-select)
+	("s-g" . slack-group-select)
+	("s-m" . slack-im-select)
+	("H-s-t" . slack-change-current-team)
+	("s-u" . slack-select-rooms)
+	("H-s-u" . slack-select-unread-rooms) ; `slack-all-unreads' not working
+	:map slack-thread-message-buffer-mode-map
+	("d" . slack-thread-show-or-create)
+	("e" . slack-message-edit)
+	("k" . slack-buffer-goto-prev-message)
+	("l" . slack-buffer-goto-next-message)
+	("o" . slack-chat-org-capture)
+	("q" . files-extras-kill-other-buffer)
+	("r" . slack-message-add-reaction)
+	("R" . slack-message-remove-reaction)
+	("z" . slack-message-write-another-buffer)
+	:map slack-message-buffer-mode-map
+	("d" . slack-thread-show-or-create)
+	("e" . slack-message-edit)
+	("k" . slack-buffer-goto-prev-message)
+	("l" . slack-buffer-goto-next-message)
+	("o" . slack-chat-org-capture)
+	("r" . slack-message-add-reaction)
+	("R" . slack-message-remove-reaction)
+	("z" . slack-message-write-another-buffer)
+	:map slack-message-compose-buffer-mode-map
+	("s-c" . slack-message-send-from-buffer)
+	("s-f" . slack-message-select-file)
+	("s-m" . slack-message-embed-mention)))
+#+end_src
+
+** =slack-extras=
+:PROPERTIES:
+:ID:       06263417-AF43-4334-84CF-B821EECBA6BE
+:END:
+/[[file:extras/slack-extras.el][slack-extras]] collects my extensions for =slack=./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-personal-package slack-extras
+  :after slack
+  :demand t
+    :init
+  (with-eval-after-load 'slack
+    (bind-keys ("A-k" . slack-extras-menu))))
 #+end_src
 
 ** =ol-emacs-slack=

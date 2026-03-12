@@ -19,12 +19,13 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 =claude-code-extras.el= extends =claude-code=, the Emacs package that runs Claude Code sessions inside an Eat terminal buffer. While =claude-code= provides the core session management and terminal integration, this extras package layers on several quality-of-life features that make extended Claude sessions more manageable.
 
-The package provides seven main areas of functionality:
+The package provides eight main areas of functionality:
 
 - *Session switching.* A Consult-powered interface for starting new Claude sessions or switching between existing ones, with live buffer previews ([[#h:session-switching][Session switching]]).
 - *Status polling.* Integration with a statusline script that exports session metadata (model name, cost, context usage, token counts) as JSON, polled periodically and exposed through accessor functions ([[#h:status-polling][Status polling]]).
 - *Alerts.* Configurable OS notifications (visual, audible, or both) when Claude finishes responding, triggered by a hook-based stop event ([[#h:alerts][Alerts]]).
 - *Buffer lifecycle.* Kill protection for active sessions, automatic buffer cleanup on process exit, a SIGWINCH workaround for terminal rendering glitches, and a fix for ~C-g~ escape handling with multiple sessions ([[#h:buffer-lifecycle][Buffer lifecycle]]).
+- *Snippet insertion.* An adapter for ~consult-yasnippet~ that bypasses its direct buffer manipulation (which fails in Eat terminal buffers) and instead sends expanded snippet text through the terminal emulator ([[#h:snippet-insertion][Snippet insertion]]).
 - *Copilot integration.* An adapter that enables Copilot ghost-text prose completions while typing prompts in Claude Code buffers, routing accepted text through the terminal emulator ([[#h:copilot-integration][Copilot integration]]).
 - *Batch TODO processing.* Sequential execution of org TODO entries via =claude -p= in non-interactive mode, with logged results and a summary buffer ([[#h:batch-todo-processing][Batch TODO processing]]).
 - *Project audit.* One-command comprehensive audit that sequentially runs code, design, and interpretability audit skills with auto-fix on the current project ([[#h:project-audit][Project audit]]).
@@ -255,6 +256,19 @@ The function ~claude-code-extras-alert-indicator~ returns a bell icon string ref
 
 #+findex: claude-code-extras-set-modeline
 The function ~claude-code-extras-set-modeline~ activates the =claude-code= doom-modeline segment for the current buffer. It also starts status polling if it is not already active ([[#h:status-polling][Status polling]]). This function is added to ~claude-code-start-hook~ automatically.
+
+** Snippet insertion
+:PROPERTIES:
+:CUSTOM_ID: h:snippet-insertion
+:END:
+
+#+findex: claude-code-extras--consult-yasnippet
+#+findex: claude-code-extras--expand-snippet-to-text
+The function ~claude-code-extras--consult-yasnippet~ is an =:around= advice on ~consult-yasnippet~ that makes snippet insertion work in Eat terminal buffers (such as Claude Code sessions).  The upstream ~consult-yasnippet~ captures buffer positions at invocation time and manipulates them on return (via ~delete-region~, ~insert~, and ~goto-char~) for preview cleanup.  In an Eat buffer the terminal emulator modifies the buffer asynchronously, so those positions become stale and cause =args-out-of-range= errors.
+
+The advice detects ~eat-mode~ and replaces the entire flow: it calls ~consult-yasnippet--candidates~ and ~consult--read~ without a =:state= function (no preview or buffer manipulation), then expands the selected template to plain text via ~claude-code-extras--expand-snippet-to-text~, which creates a temporary buffer, enables ~yas-minor-mode~, expands the snippet, commits all active snippet fields to their defaults, and returns the resulting string.  Newlines in the expanded text are converted to Alt+Enter sequences (~ESC CR~) so that Claude Code's TUI treats them as multi-line input.  The final text is sent through ~eat-term-send-string~.
+
+In non-Eat buffers the advice delegates to the original function unchanged.
 
 ** Copilot integration
 :PROPERTIES:

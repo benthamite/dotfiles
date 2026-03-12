@@ -151,6 +151,21 @@ consumed by the Stop hook handler.")
 (declare-function eat-term-display-cursor "eat" (terminal))
 (declare-function eat-term-send-string "eat" (terminal string))
 
+(declare-function map-values "map")
+(declare-function consult-yasnippet--candidates "consult-yasnippet")
+(declare-function consult-yasnippet--annotate "consult-yasnippet")
+(declare-function yas--template-content "yasnippet")
+(declare-function yas--template-expand-env "yasnippet")
+(declare-function yas--all-templates "yasnippet")
+(declare-function yas--get-snippet-tables "yasnippet")
+(declare-function yas-minor-mode "yasnippet")
+(declare-function yas-expand-snippet "yasnippet")
+(declare-function yas-active-snippets "yasnippet")
+(declare-function yas--commit-snippet "yasnippet")
+
+(defvar yas-prompt-functions)
+(defvar yas--tables)
+
 (defvar copilot-mode)
 (defvar copilot--overlay)
 (defvar copilot--connection)
@@ -192,6 +207,52 @@ escape sequence directly to it."
 
 (advice-add 'claude-code-send-escape :around
             #'claude-code-extras--send-escape-in-current-buffer)
+
+;;;;; Snippet insertion
+
+(defun claude-code-extras--expand-snippet-to-text (template)
+  "Expand yasnippet TEMPLATE to plain text in a temporary buffer."
+  (with-temp-buffer
+    (yas-minor-mode 1)
+    (let ((yas-prompt-functions '(yas-no-prompt)))
+      (yas-expand-snippet (yas--template-content template)
+                          nil nil
+                          (yas--template-expand-env template)))
+    (mapc #'yas--commit-snippet (yas-active-snippets))
+    (buffer-string)))
+
+(defun claude-code-extras--consult-yasnippet (orig-fn arg)
+  "In eat-mode buffers, send snippet content via the terminal.
+`consult-yasnippet' manipulates buffer contents directly for
+previews and cleanup, which fails in eat-mode because the
+terminal emulator manages the buffer.  This advice bypasses
+the problematic state function and sends the expanded snippet
+text through `eat-term-send-string' instead.
+ORIG-FN is `consult-yasnippet'; ARG is the prefix argument."
+  (if (not (derived-mode-p 'eat-mode))
+      (funcall orig-fn arg)
+    (let* ((candidates
+            (consult-yasnippet--candidates
+             (if arg
+                 (progn (require 'map)
+                        (yas--all-templates (map-values yas--tables)))
+               (yas--all-templates (yas--get-snippet-tables)))))
+           (template
+            (consult--read
+             candidates
+             :prompt "Choose a snippet: "
+             :annotate (consult-yasnippet--annotate candidates)
+             :lookup 'consult--lookup-cdr
+             :require-match t
+             :group 'consult--prefix-group
+             :category 'yasnippet)))
+      (when template
+        (let* ((expanded (claude-code-extras--expand-snippet-to-text template))
+               (text (replace-regexp-in-string "\n" "\e\r" expanded)))
+          (eat-term-send-string eat-terminal text))))))
+
+(advice-add 'consult-yasnippet :around
+            #'claude-code-extras--consult-yasnippet)
 
 ;;;;; Buffer protection
 

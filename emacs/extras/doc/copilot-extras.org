@@ -96,17 +96,22 @@ unconditionally---for instance, from a periodic timer.
 :CUSTOM_ID: h:suppress-canceled
 :END:
 
+#+vindex: copilot-extras-suppressed-error-codes
+The user option ~copilot-extras-suppressed-error-codes~ lists JSON-RPC
+error codes that should be silenced.  The default value is =(-32800
+-32602)=:
+
+- =-32800= ("Request was canceled"): the server canceled a superseded
+  request, which is normal during typing.
+- =-32602= ("Document for URI could not be found"): a transient URI
+  mismatch between the editor and the server.
+
 #+findex: copilot-extras-suppress-canceled-log
 The function ~copilot-extras-suppress-canceled-log~ is installed as
-=:around= advice on ~copilot--log~.  It intercepts log calls at the
-=error= level whose error object carries JSON-RPC code =-32800=
-("Request was canceled") and silently drops them.  All other log
-messages pass through unchanged.
-
-This eliminates the repeated =Copilot: textDocument/inlineCompletion
-failed= messages that appear in =*Messages*= during normal typing,
-where each new keystroke cancels the previous in-flight completion
-request.
+=:around= advice on ~copilot--log~.  It intercepts error-level log
+calls whose error object carries a code listed in
+~copilot-extras-suppressed-error-codes~ and silently drops them.  All
+other log messages pass through unchanged.
 
 * Indices
 :PROPERTIES:

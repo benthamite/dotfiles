@@ -1,0 +1,98 @@
+#+title: slack-extras: Extensions for Slack
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: slack-extras.info
+#+texinfo_filename: slack-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Slack Extras: (slack-extras)
+#+texinfo_dir_desc: Extensions for Slack
+
+This manual describes the features and customization options for the Emacs Lisp file =slack-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=slack-extras.el= extends the =emacs-slack= package with convenience commands and a unified transient menu that groups all common Slack operations in one place. The package provides:
+
+- A connect-and-select command that starts Slack if needed and immediately opens channel selection ([[#h:start-and-select][Start and select]]).
+- A command to disconnect all teams at once ([[#h:disconnect-all][Disconnect all]]).
+- A command to yank the kill ring as a code block in compose buffers ([[#h:yank-code-block][Yank code block]]).
+- A transient dispatch menu organizing Slack operations by workflow ([[#h:transient-menu][Transient menu]]).
+
+The package depends on =slack= and =transient=.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+** Start and select
+:PROPERTIES:
+:CUSTOM_ID: h:start-and-select
+:END:
+
+#+findex: slack-extras-start-and-select
+The command ~slack-extras-start-and-select~ checks whether all registered Slack teams are connected (by inspecting their websocket slots). If any team is disconnected, it calls ~slack-start~ to initiate the connection and prints a message. If all teams are already connected, it calls ~slack-channel-select~ directly. This provides a single entry point for the common workflow of opening Slack.
+
+** Disconnect all
+:PROPERTIES:
+:CUSTOM_ID: h:disconnect-all
+:END:
+
+#+findex: slack-extras-disconnect-all
+The command ~slack-extras-disconnect-all~ iterates over all registered teams and disconnects any that have an active websocket connection, then reports that all teams have been disconnected. This is a quick way to cleanly shut down all Slack connections.
+
+** Yank code block
+:PROPERTIES:
+:CUSTOM_ID: h:yank-code-block
+:END:
+
+#+findex: slack-extras-yank-code-block
+The command ~slack-extras-yank-code-block~ inserts the current kill ring entry wrapped in Slack triple-backtick code block markers. This is useful when composing messages in ~slack-message-compose-buffer-mode~ and you want to paste code.
+
+** Transient menu
+:PROPERTIES:
+:CUSTOM_ID: h:transient-menu
+:END:
+
+#+findex: slack-extras-menu
+The command ~slack-extras-menu~ presents a transient menu that organizes Slack commands by workflow. The menu is arranged in three rows of columns:
+
+*Row 1: core messaging*
+
+- *Navigate*: select channel (~c~), group (~g~), direct message (~m~), rooms (~u~), unread rooms (~U~), all threads (~a~).
+- *Message*: show or create thread (~d~), edit (~e~), delete (~D~), compose in buffer (~z~), share (~s~), copy link (~l~), quote and reply (~Q~).
+- *React & pin*: add reaction (~r~), remove reaction (~R~), pin (~p~), unpin (~P~), pins list (~n~).
+
+*Row 2: content and channels*
+
+- *File*: upload (~f~), quick upload (~F~), upload snippet (~S~), download at point (~x~).
+- *Search*: messages (~/~), files (~?~).
+- *Channel*: create (~C~), join (~j~), leave (~v~), set topic (~t~), info (~i~), bookmarks (~b~).
+
+*Row 3: administration*
+
+- *Team & connection*: change team (~T~), start (~o~), stop (~O~), set status (~+~), reset status (~-~).
+- *Misc*: stars (~*~), activity feed (~A~), scheduled messages (~M~), kill all buffers (~K~), open in browser (~w~), yank code block (~y~).
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

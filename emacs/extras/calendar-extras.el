@@ -157,17 +157,19 @@ archive file in `paths-dir-archive'."
 	(archived 0)
 	entries-to-archive)
     (with-current-buffer (find-file-noselect paths-file-calendar)
-      (org-with-wide-buffer
-       (goto-char (point-min))
-       (while (re-search-forward "^\\* " nil t)
-	 (beginning-of-line)
-	 (let* ((deadline (org-get-deadline-time (point)))
-		(subtree-end (save-excursion
-			       (org-end-of-subtree t t)
-			       (point))))
-	   (when (and deadline (time-less-p deadline cutoff))
-	     (push (cons (point) subtree-end) entries-to-archive))
-	   (goto-char subtree-end))))
+      (save-excursion
+	(save-restriction
+	  (widen)
+	  (goto-char (point-min))
+	  (while (re-search-forward "^\\* " nil t)
+	    (beginning-of-line)
+	    (let* ((deadline (org-get-deadline-time (point)))
+		   (subtree-end (save-excursion
+				  (org-end-of-subtree t t)
+				  (point))))
+	      (when (and deadline (time-less-p deadline cutoff))
+		(push (cons (point) subtree-end) entries-to-archive))
+	      (goto-char subtree-end)))))
       ;; Delete in reverse order to preserve buffer positions.
       (setq entries-to-archive
 	    (sort entries-to-archive (lambda (a b) (> (car a) (car b)))))

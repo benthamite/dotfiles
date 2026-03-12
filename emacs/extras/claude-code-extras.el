@@ -162,7 +162,9 @@ consumed by the Stop hook handler.")
 (declare-function yas-expand-snippet "yasnippet")
 (declare-function yas-active-snippets "yasnippet")
 (declare-function yas--commit-snippet "yasnippet")
+(declare-function yas--template-key "yasnippet")
 
+(defvar yas-minor-mode)
 (defvar yas-prompt-functions)
 (defvar yas--tables)
 
@@ -253,6 +255,69 @@ ORIG-FN is `consult-yasnippet'; ARG is the prefix argument."
 
 (advice-add 'consult-yasnippet :around
             #'claude-code-extras--consult-yasnippet)
+
+(defun claude-code-extras--try-expand-snippet-at-prompt ()
+  "Try to expand a yasnippet key at the eat terminal prompt.
+Search backward from `point-max' for the prompt marker, extract
+the user's input, and check whether it ends with a snippet key.
+If a match is found, send backspaces to erase the key and then
+send the expanded snippet text.  Return non-nil if a snippet was
+expanded."
+  (when (and (derived-mode-p 'eat-mode)
+             (bound-and-true-p eat-terminal)
+             (bound-and-true-p yas-minor-mode))
+    (save-excursion
+      (goto-char (point-max))
+      (when (re-search-backward "^❯[[:space:]]" nil t)
+        (let* ((prompt-start (match-end 0))
+               (prompt-end (progn (end-of-line) (point)))
+               (input (buffer-substring-no-properties prompt-start prompt-end))
+               (templates (yas--all-templates (yas--get-snippet-tables)))
+               (best-match nil)
+               (best-key nil))
+          (dolist (template templates)
+            (let ((key (yas--template-key template)))
+              (when (and key
+                         (> (length key) 0)
+                         (<= (length key) (length input))
+                         (string= key (substring input (- (length input) (length key))))
+                         (or (null best-key)
+                             (> (length key) (length best-key))))
+                (setq best-match template
+                      best-key key))))
+          (when best-match
+            (eat-term-send-string eat-terminal
+                                  (make-string (length best-key) ?\x7f))
+            (let* ((expanded (claude-code-extras--expand-snippet-to-text best-match))
+                   (text (replace-regexp-in-string "\n" "\e\r" expanded)))
+              (eat-term-send-string eat-terminal text))
+            t))))))
+
+(defun claude-code-extras--snippet-tab ()
+  "Try snippet expansion at prompt, otherwise send TAB to eat."
+  (interactive)
+  (unless (claude-code-extras--try-expand-snippet-at-prompt)
+    (eat-self-input 1 ?\t)))
+
+(defvar claude-code-extras--snippet-keys-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "TAB") #'claude-code-extras--snippet-tab)
+    (define-key map [tab] #'claude-code-extras--snippet-tab)
+    map)
+  "Keymap for `claude-code-extras--snippet-keys-mode'.")
+
+(define-minor-mode claude-code-extras--snippet-keys-mode
+  "Minor mode providing yasnippet TAB expansion in Claude Code buffers."
+  :keymap claude-code-extras--snippet-keys-mode-map)
+
+(defun claude-code-extras-setup-snippet-keys ()
+  "Enable yasnippet TAB expansion in the current Claude Code buffer.
+Only activates when Copilot is not enabled, since the Copilot TAB
+handler already chains through snippet expansion."
+  (when (and (claude-code--buffer-p (current-buffer))
+             (bound-and-true-p eat-terminal)
+             (not claude-code-extras-copilot-enabled))
+    (claude-code-extras--snippet-keys-mode 1)))
 
 ;;;;; Buffer protection
 
@@ -693,11 +758,15 @@ the `copilot' package."
   :keymap claude-code-extras--copilot-keys-mode-map)
 
 (defun claude-code-extras--copilot-tab ()
-  "Accept a Copilot completion if visible, otherwise send TAB to eat."
+  "Accept Copilot completion, try snippet expansion, or send TAB to eat."
   (interactive)
-  (if (copilot--overlay-visible)
-      (copilot-accept-completion)
-    (eat-self-input 1 ?\t)))
+  (cond
+   ((copilot--overlay-visible)
+    (copilot-accept-completion))
+   ((claude-code-extras--try-expand-snippet-at-prompt)
+    nil)
+   (t
+    (eat-self-input 1 ?\t))))
 
 (defun claude-code-extras--copilot-language-id (orig-fn)
   "Return \"plaintext\" in Claude Code eat buffers.
@@ -1456,6 +1525,7 @@ the view from jumping to the middle of the buffer."
 (add-hook 'claude-code-start-hook #'claude-code-extras-set-modeline)
 (add-hook 'kill-buffer-hook #'claude-code-extras-stop-status-polling)
 (add-hook 'claude-code-start-hook #'claude-code-extras-disable-scrollback-truncation)
+(add-hook 'claude-code-start-hook #'claude-code-extras-setup-snippet-keys)
 (add-hook 'claude-code-start-hook #'claude-code-extras-setup-copilot)
 (add-hook 'kill-buffer-hook #'claude-code-extras-teardown-copilot)
 (add-hook 'enable-theme-functions #'claude-code-extras-sync-theme)

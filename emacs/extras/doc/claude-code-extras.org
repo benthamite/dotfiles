@@ -270,6 +270,13 @@ The advice detects ~eat-mode~ and replaces the entire flow: it calls ~consult-ya
 
 In non-Eat buffers the advice delegates to the original function unchanged.
 
+#+findex: claude-code-extras--try-expand-snippet-at-prompt
+#+findex: claude-code-extras--snippet-tab
+#+findex: claude-code-extras-setup-snippet-keys
+The function ~claude-code-extras--try-expand-snippet-at-prompt~ enables TAB-triggered snippet expansion at the terminal prompt.  It searches backward from ~point-max~ for the =❯= prompt marker, extracts the user's input, and checks whether it ends with a yasnippet key.  When the input matches, the function sends DEL characters to erase the key from the terminal, then sends the expanded snippet text through ~eat-term-send-string~.  When multiple keys match, the longest one wins.
+
+The minor mode ~claude-code-extras--snippet-keys-mode~ overrides TAB in Claude Code buffers to call ~claude-code-extras--snippet-tab~, which tries snippet expansion first and falls through to ~eat-self-input~ otherwise.  The function ~claude-code-extras-setup-snippet-keys~ activates this mode from ~claude-code-start-hook~ when Copilot integration is disabled.  When Copilot is enabled, the Copilot TAB handler (~claude-code-extras--copilot-tab~) chains through snippet expansion before falling through to eat, so a separate mode is not needed.
+
 ** Copilot integration
 :PROPERTIES:
 :CUSTOM_ID: h:copilot-integration

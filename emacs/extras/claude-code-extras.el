@@ -271,7 +271,8 @@ expanded."
       (when (re-search-backward "^❯[[:space:]]" nil t)
         (let* ((prompt-start (match-end 0))
                (prompt-end (progn (end-of-line) (point)))
-               (input (buffer-substring-no-properties prompt-start prompt-end))
+               (input (string-trim-right
+                       (buffer-substring-no-properties prompt-start prompt-end)))
                (templates (yas--all-templates (yas--get-snippet-tables)))
                (best-match nil)
                (best-key nil))
@@ -293,7 +294,7 @@ expanded."
               (eat-term-send-string eat-terminal text))
             t))))))
 
-(defun claude-code-extras--snippet-tab ()
+(defun claude-code-extras-snippet-tab ()
   "Try snippet expansion at prompt, otherwise send TAB to eat."
   (interactive)
   (unless (claude-code-extras--try-expand-snippet-at-prompt)
@@ -301,8 +302,8 @@ expanded."
 
 (defvar claude-code-extras--snippet-keys-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "TAB") #'claude-code-extras--snippet-tab)
-    (define-key map [tab] #'claude-code-extras--snippet-tab)
+    (define-key map (kbd "TAB") #'claude-code-extras-snippet-tab)
+    (define-key map [tab] #'claude-code-extras-snippet-tab)
     map)
   "Keymap for `claude-code-extras--snippet-keys-mode'.")
 

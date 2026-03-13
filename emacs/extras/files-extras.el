@@ -679,6 +679,7 @@ To install the extension, drag the latter onto the former."
    ("." "inbox-desktop"     (lambda () (interactive) (find-file paths-file-inbox-desktop)))
    ("a" "agenda"            org-extras-agenda-switch-to-agenda-current-day)
    ("c" "config"            (lambda () (interactive) (find-file paths-file-config)))
+   ("d" "epoch-inbox"       (lambda () (interactive) (find-file paths-file-epoch-inbox)))
    ("e" "extras"            (lambda () (interactive) (files-extras-open-extras-package)))
    ("f" "feeds"             (lambda () (interactive) (find-file paths-file-feeds-pablo)))
    ("h" "tlon-ledger"       (lambda () (interactive) (find-file paths-file-tlon-ledger)))

@@ -9729,6 +9729,9 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
      ("s" "Slack" entry
       (id "B3C12507-6A83-42F6-9FFA-9A45F5C8F278")
       "** TODO Follow up %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
+     ("p" "Epoch inbox" entry
+      (file paths-file-epoch-inbox)
+      "** TODO %?\n" :empty-lines 1 :prepend t)
      ("t" "Tlön inbox " entry
       (id "E9C77367-DED8-4D59-B08C-E6E1CCDDEC3A")
       "** TODO %? \n" :empty-lines 1 :prepend t)
@@ -12876,8 +12879,9 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package slack
   :ensure (:host github
-             :repo "benthamite/emacs-slack"
-             :branch "fix/activity-feed-improvements")
+		 :repo "benthamite/emacs-slack")
+  :init
+  (bind-keys ("A-k" . slack-extras-menu))
   :custom
   (slack-file-dir paths-dir-downloads)
   (slack-prefer-current-team t)
@@ -12949,10 +12953,7 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package slack-extras
   :after slack
-  :demand t
-    :init
-  (with-eval-after-load 'slack
-    (bind-keys ("A-k" . slack-extras-menu))))
+  :demand t)
 #+end_src
 
 ** =ol-emacs-slack=

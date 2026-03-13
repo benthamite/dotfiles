@@ -148,7 +148,7 @@ If DIR is nil, use `paths-dir-notes'."
   "Prompt the user to select a note type and return its directory and tags."
   (let ((note-type (completing-read
 		    "Select note type: "
-		    '("generic" "person" "Borges" "tango" "tlon-notes")))
+		    '("generic" "person" "Epoch" "Borges" "tango" "tlon-notes")))
 	(tags)
 	(dir))
     (pcase note-type
@@ -158,6 +158,9 @@ If DIR is nil, use `paths-dir-notes'."
       ("person"
        (setq tags "person")
        (setq dir paths-dir-people))
+      ("Epoch"
+       (setq tags "note")
+       (setq dir paths-dir-epoch))
       ((or "Borges" "tango" "tlon-notes")
        (setq dir (file-name-concat paths-dir-dropbox note-type))))
     (list dir tags)))

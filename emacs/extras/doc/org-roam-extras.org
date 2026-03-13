@@ -107,9 +107,10 @@ should be added to ~find-file-hook~.
 #+findex: org-roam-extras-convert-heading-to-note
 The command ~org-roam-extras-new-note~ creates a new Org Roam note
 through a guided workflow.  It first prompts the user to select a note
-type: "generic", "person", "Borges", "tango", or "tlon-notes".  The
-type determines the target directory (e.g., ~paths-dir-notes~ for
-generic, ~paths-dir-people~ for person) and the initial tags.
+type: "generic", "person", "Epoch", "Borges", "tango", or "tlon-notes".
+The type determines the target directory (e.g., ~paths-dir-notes~ for
+generic, ~paths-dir-people~ for person, ~paths-dir-epoch~ for Epoch) and
+the initial tags.
 
 After selecting the type, it prompts for the note name, creates a file
 with a slugified version of that name (via ~simple-extras-slugify~),

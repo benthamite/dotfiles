@@ -125,8 +125,8 @@ prompts and accepted text is sent to the terminal correctly."
 
 (defvar-local claude-code-extras--waiting-for-input nil
   "Non-nil when this Claude session is waiting for user input.
-Set to t by the Stop hook and cleared when input is sent to the
-session (e.g. a `/theme' command).")
+Set to t by the Notification hook (idle_prompt) and cleared when
+input is sent to the session (e.g. a `/theme' command).")
 
 (defvar-local claude-code-extras--pending-theme nil
   "Theme to apply when this Claude session becomes idle.
@@ -624,18 +624,55 @@ Only fires when `claude-code-extras-alert-style' is `sound' or
                 ((file-exists-p sound)))
       (start-process "claude-code-alert-sound" nil "afplay" sound))))
 
+(defun claude-code-extras--notification-type (json-str)
+  "Extract the notification type from JSON-STR.
+Return a string like \"idle_prompt\" or \"permission_prompt\", or
+nil if the type cannot be determined."
+  (when json-str
+    (condition-case nil
+        (let ((parsed (json-parse-string json-str :object-type 'alist)))
+          (or (alist-get 'notification_type parsed)
+              (alist-get 'type parsed)))
+      (error nil))))
+
+(defun claude-code-extras--handle-notification (message)
+  "Handle a notification event from the Claude Code CLI.
+MESSAGE is a plist with :type, :buffer-name, :json-data, and
+:args.  Fires OS alerts for idle_prompt, permission_prompt, and
+elicitation_dialog notifications."
+  (when (eq (plist-get message :type) 'notification)
+    (when-let* ((buf (get-buffer (plist-get message :buffer-name))))
+      (with-current-buffer buf
+        (let* ((name (claude-code-extras--session-name (buffer-name)))
+               (ntype (claude-code-extras--notification-type
+                       (plist-get message :json-data))))
+          (pcase ntype
+            ("idle_prompt"
+             (setq claude-code-extras--waiting-for-input t)
+             (claude-code-extras-notify
+              "Claude ready"
+              (format "%s: waiting for your response" name)))
+            ("permission_prompt"
+             (claude-code-extras-notify
+              "Claude needs approval"
+              (format "%s: permission request pending" name)))
+            ("elicitation_dialog"
+             (claude-code-extras-notify
+              "Claude needs input"
+              (format "%s: waiting for your input" name)))
+            (_
+             (claude-code-extras-notify
+              "Claude Code"
+              (format "%s: needs your attention" name))))))))
+  nil)
+
 (defun claude-code-extras--handle-stop (message)
   "Handle a stop event from the Claude Code CLI.
 MESSAGE is a plist with :type, :buffer-name, :json-data, and
-:args.  Only acts on `stop' events."
+:args.  Scrolls to bottom and applies any pending theme."
   (when (eq (plist-get message :type) 'stop)
     (when-let* ((buf (get-buffer (plist-get message :buffer-name))))
       (with-current-buffer buf
-        (setq claude-code-extras--waiting-for-input t)
-        (let ((name (claude-code-extras--session-name (buffer-name))))
-          (claude-code-extras-notify
-           "Claude ready"
-           (format "%s: waiting for your response" name)))
         (claude-code-extras--scroll-to-bottom buf)
         (claude-code-extras--apply-pending-theme buf))))
   nil)
@@ -1518,7 +1555,8 @@ the view from jumping to the middle of the buffer."
               (goto-char cursor-pos)
               (recenter -1)))))))))
 
-(setq claude-code-notification-function #'claude-code-extras-notify)
+(setq claude-code-notification-function #'claude-code-default-notification)
+(add-hook 'claude-code-event-hook #'claude-code-extras--handle-notification)
 (add-hook 'claude-code-event-hook #'claude-code-extras--handle-stop)
 (add-hook 'kill-buffer-query-functions #'claude-code-extras-protect-buffer)
 (add-hook 'claude-code-start-hook #'claude-code-extras-setup-kill-on-exit)

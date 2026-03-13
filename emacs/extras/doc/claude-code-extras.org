@@ -23,7 +23,7 @@ The package provides eight main areas of functionality:
 
 - *Session switching.* A Consult-powered interface for starting new Claude sessions or switching between existing ones, with live buffer previews ([[#h:session-switching][Session switching]]).
 - *Status polling.* Integration with a statusline script that exports session metadata (model name, cost, context usage, token counts) as JSON, polled periodically and exposed through accessor functions ([[#h:status-polling][Status polling]]).
-- *Alerts.* Configurable OS notifications (visual, audible, or both) when Claude finishes responding, triggered by a hook-based stop event ([[#h:alerts][Alerts]]).
+- *Alerts.* Configurable OS notifications (visual, audible, or both) when Claude needs attention, triggered by the CLI's Notification hook event for idle prompts, permission requests, and elicitation dialogs ([[#h:alerts][Alerts]]).
 - *Buffer lifecycle.* Kill protection for active sessions, automatic buffer cleanup on process exit, a SIGWINCH workaround for terminal rendering glitches, and a fix for ~C-g~ escape handling with multiple sessions ([[#h:buffer-lifecycle][Buffer lifecycle]]).
 - *Snippet insertion.* An adapter for ~consult-yasnippet~ that bypasses its direct buffer manipulation (which fails in Eat terminal buffers) and instead sends expanded snippet text through the terminal emulator ([[#h:snippet-insertion][Snippet insertion]]).
 - *Copilot integration.* An adapter that enables Copilot ghost-text prose completions while typing prompts in Claude Code buffers, routing accepted text through the terminal emulator ([[#h:copilot-integration][Copilot integration]]).
@@ -76,7 +76,7 @@ Sessions that are idle (waiting for user input) receive the ~/theme~ command imm
 #+vindex: claude-code-extras-alert-on-ready
 #+vindex: claude-code-extras-alert-style
 #+vindex: claude-code-extras-alert-sound
-The user option ~claude-code-extras-alert-on-ready~ controls whether the user is notified when Claude finishes responding. The default is ~nil~ (no alerts). Toggle it interactively with ~claude-code-extras-toggle-alert~ ([[#h:alert-toggle][Toggling alerts]]).
+The user option ~claude-code-extras-alert-on-ready~ controls whether the user is notified when Claude needs attention. The default is ~nil~ (no alerts). Toggle it interactively with ~claude-code-extras-toggle-alert~ ([[#h:alert-toggle][Toggling alerts]]).
 
 The user option ~claude-code-extras-alert-style~ determines the type of notification. It accepts one of three values: ~visual~ (an OS notification via the =alert= package), ~sound~ (an audio alert), or ~both~ (the default when alerts are enabled). This option only takes effect when ~claude-code-extras-alert-on-ready~ is non-~nil~.
 
@@ -245,7 +245,10 @@ These functions are designed to be called from modeline constructors (e.g. =doom
 
 #+findex: claude-code-extras-notify
 #+findex: claude-code-extras-alert-indicator
-The function ~claude-code-extras-notify~ is the notification callback installed as ~claude-code-notification-function~. It always calls the default notification (a modeline pulse), and when ~claude-code-extras-alert-on-ready~ is non-~nil~, it additionally dispatches visual and/or audible alerts according to ~claude-code-extras-alert-style~ ([[#h:alert-options][Alert options]]).
+#+findex: claude-code-extras--handle-notification
+The function ~claude-code-extras--handle-notification~ is a ~claude-code-event-hook~ listener that handles =Notification= events from the CLI.  It parses the notification JSON to determine the type and dispatches alerts accordingly: =idle_prompt= (Claude finished and is waiting), =permission_prompt= (a tool needs approval), and =elicitation_dialog= (Claude is showing an input dialog).  For =idle_prompt=, it also sets ~claude-code-extras--waiting-for-input~ to ~t~.
+
+The function ~claude-code-extras-notify~ combines the default modeline pulse with optional OS alerts.  When ~claude-code-extras-alert-on-ready~ is non-~nil~, it dispatches visual and/or audible alerts according to ~claude-code-extras-alert-style~ ([[#h:alert-options][Alert options]]).  It is called by the notification handler rather than installed directly as ~claude-code-notification-function~ (which is set to the default modeline-only callback to avoid double-alerting from the terminal bell).
 
 The function ~claude-code-extras-alert-indicator~ returns a bell icon string reflecting the current alert state. It is intended for use in modeline segments or header lines to give a visual indication of whether alerts are active.
 
@@ -338,7 +341,7 @@ The function ~claude-code-extras--batch-finish~ constructs and displays the =*Cl
 #+findex: claude-code-extras-ensure-stop-hook-config
 The function ~claude-code-extras-ensure-statusline-config~ checks =~/.claude/settings.json= for a =statusLine= entry and adds one if absent, pointing to the bundled shell script. This ensures that the status JSON file is written for every Claude session without manual configuration.
 
-The function ~claude-code-extras-ensure-stop-hook-config~ similarly checks for a =Stop= hook entry and adds one if absent, pointing to the bundled hook wrapper script. This enables the stop-event detection that powers the alert system ([[#h:alerts][Alerts]]).
+The function ~claude-code-extras-ensure-stop-hook-config~ similarly checks for a =Stop= hook entry and adds one if absent, pointing to the bundled hook wrapper script. This enables the stop-event detection that powers scroll-to-bottom and pending theme application.
 
 Both functions run automatically when the package is loaded.
 

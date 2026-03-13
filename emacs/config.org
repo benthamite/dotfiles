@@ -6773,14 +6773,15 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   :config
   (defun flycheck-languagetool-enable ()
     "Enable `flycheck-languagetool' in selected buffers."
-    (unless (derived-mode-p 'forge-post-mode
-                            'gfm-mode
-                            'mhtml-mode
-                            'flycheck-error-message-mode
-                            'mu4e-compose-mode
-                            'mu4e-view-mode
-                            'org-journal-mode
-                            'org-msg-edit-mode)
+    (unless (or (derived-mode-p 'forge-post-mode
+                                'gfm-mode
+                                'mhtml-mode
+                                'flycheck-error-message-mode
+                                'mu4e-compose-mode
+                                'mu4e-view-mode
+                                'org-journal-mode
+                                'org-msg-edit-mode)
+                (not (file-directory-p default-directory)))
       (flycheck-select-checker 'languagetool)))
 
   (defun flycheck-languagetool-toggle ()

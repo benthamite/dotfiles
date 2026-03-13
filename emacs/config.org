@@ -9729,7 +9729,7 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
      ("s" "Slack" entry
       (id "B3C12507-6A83-42F6-9FFA-9A45F5C8F278")
       "** TODO Follow up %a\nSCHEDULED: %t\n\n%i" :immediate-finish t :empty-lines 1 :prepend t)
-     ("p" "Epoch inbox" entry
+     ("E" "Epoch inbox" entry
       (file paths-file-epoch-inbox)
       "** TODO %?\n" :empty-lines 1 :prepend t)
      ("t" "Tlön inbox " entry

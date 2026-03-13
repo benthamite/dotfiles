@@ -210,7 +210,7 @@ number."
   "Dispatcher for Dired."
   ["Dired folders"
    [("b" "bibliography" (lambda () (interactive) (dired paths-dir-personal-bibliography)))
-    ("c" "Epoch" (lambda () (interactive) (dired paths-dir-epoch)))
+    ("E" "Epoch" (lambda () (interactive) (dired paths-dir-epoch)))
     ("d" "dotfiles" (lambda () (interactive) (dired paths-dir-dotfiles)))
     ("e" "Emacs" (lambda () (interactive) (dired paths-dir-emacs)))
     ("g" "Gptel" (lambda () (interactive) (progn (require 'gptel-extras) (dired gptel-extras-dir))))

@@ -244,6 +244,12 @@
   :type 'directory
   :group 'paths)
 
+(defcustom paths-dir-epoch
+  (file-name-concat paths-dir-google-drive "Epoch/")
+  "Path to the Epoch directory."
+  :type 'directory
+  :group 'paths)
+
 (defcustom paths-dir-ledger
   (file-name-concat paths-dir-google-drive "ledger/")
   "Path to the ledger directory."
@@ -605,6 +611,12 @@ This should be the path you set `org-roam-directory' to."
 (defcustom paths-file-inbox-mobile
   (file-name-concat paths-dir-android "inbox-mobile.org")
   "Path to the mobile inbox file."
+  :type 'file
+  :group 'paths)
+
+(defcustom paths-file-epoch-inbox
+  (file-name-concat paths-dir-epoch "inbox.org")
+  "Path to the Epoch inbox file."
   :type 'file
   :group 'paths)
 

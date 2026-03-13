@@ -14,7 +14,15 @@
       "Task",
       "Glob",
       "Grep",
-      "NotebookEdit"
+      "NotebookEdit",
+      "mcp__slack-epochai__slack_read_channel",
+      "mcp__slack-epochai__slack_read_thread",
+      "mcp__slack-epochai__slack_read_user_profile",
+      "mcp__slack-epochai__slack_read_canvas",
+      "mcp__slack-epochai__slack_search_channels",
+      "mcp__slack-epochai__slack_search_public",
+      "mcp__slack-epochai__slack_search_public_and_private",
+      "mcp__slack-epochai__slack_search_users"
     ]
   },
   "model": "opus",
@@ -53,6 +61,17 @@
         ]
       }
     ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "osascript -e 'display notification \"Claude Code needs your attention\" with title \"Claude Code\"'"
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "matcher": "",
@@ -73,7 +92,7 @@
   "enabledPlugins": {
     "slack@claude-plugins-official": true
   },
-  "theme": "light",
+  "theme": "dark",
   "effortLevel": "high",
   "mcpServers": {
     "home-assistant": {

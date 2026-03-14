@@ -32,8 +32,6 @@ Ask the user two things:
 Synthesize the answers into:
 - `TOPIC_KEYWORDS`: a list of search queries for Phase 2 (if no seeds provided).
 - `RELEVANCE_CRITERIA`: a rubric for scoring accounts (what makes a 9 vs. a 5 vs. a skip). This replaces the generic scoring — tailor it to what the user actually wants.
-- `BIO_RELEVANT_REGEX`: keywords to look for in bios that suggest relevance.
-- `BIO_IRRELEVANT_REGEX`: keywords that suggest noise (company accounts, crypto spam, news aggregators, etc.).
 
 Confirm the criteria with the user before proceeding.
 
@@ -46,7 +44,7 @@ Confirm the criteria with the user before proceeding.
 1. Run 3-5 `search_tweets` calls using `TOPIC_KEYWORDS` with `result_type: "popular"` and `count: 20`.
 2. Extract unique authors from results, filtering out:
    - Accounts with <500 followers (too small to anchor discovery).
-   - Accounts whose bio matches `BIO_IRRELEVANT_REGEX`.
+   - Accounts whose bio or content is clearly irrelevant (use your judgment).
    - Reply-only results.
 3. For the top 5-8 authors by engagement, sample their tweets (`get_user_tweets`, count 20).
 4. Score each using `RELEVANCE_CRITERIA`. Any scoring 6+ become seeds.
@@ -79,15 +77,9 @@ promise_score = sum(score of each scored account that follows them)
 
 This score updates continuously — every time a new account is scored and its following list fetched, all promise scores are recalculated. This is what makes the scores "hot."
 
-#### 3d. Bio-filter candidates
+#### 3d. Evaluate candidates
 
-Before spending API calls to sample tweets, filter candidates:
-
-1. Check bio against `BIO_RELEVANT_REGEX` → likely relevant.
-2. Check bio against `BIO_IRRELEVANT_REGEX` → skip.
-3. If neither matches → ambiguous, lower priority but don't skip.
-
-Sort candidates: relevant-bio first, then by promise score descending.
+Before spending API calls to sample tweets, review the candidate list from `compute_promise_scores`. Use your own judgment to evaluate each candidate's bio, name, follower count, and who follows them. Prioritize candidates that look relevant to the topic and deprioritize those that are clearly off-topic (company accounts, spam, unrelated fields). Sort by your assessment of likely relevance, breaking ties by promise score.
 
 #### 3e. Profile top candidates
 
@@ -195,13 +187,11 @@ def extract_search_authors(filepath, exclude_set=None):
             print(f'  Bio: {data["bio"]}')
         print()
 
-def compute_promise_scores(following_files, scores, bio_relevant_re, bio_irrelevant_re):
-    """Compute hot promise scores from following lists with bio filtering.
+def compute_promise_scores(following_files, scores):
+    """Compute hot promise scores from following lists.
 
     following_files: dict of {username: filepath}
     scores: dict of {username: int_score}
-    bio_relevant_re: compiled regex for relevant bios
-    bio_irrelevant_re: compiled regex for irrelevant bios
     """
     all_following = {}
     for username, filepath in following_files.items():
@@ -245,28 +235,17 @@ def compute_promise_scores(following_files, scores, bio_relevant_re, bio_irrelev
     for username, data in promise.items():
         if len(data['followed_by']) < 2:
             continue
-        text = f"{data['name']} {data['bio']}"
-        if bio_irrelevant_re and bio_irrelevant_re.search(text):
-            rel = 'no'
-        elif bio_relevant_re and bio_relevant_re.search(text):
-            rel = 'YES'
-        else:
-            rel = '?'
-        data['relevance'] = rel
         data['username'] = username
         results.append(data)
 
-    def sort_key(d):
-        r = 2 if d['relevance'] == 'YES' else (1 if d['relevance'] == '?' else 0)
-        return (r, d['score'])
-    results.sort(key=sort_key, reverse=True)
+    results.sort(key=lambda d: d['score'], reverse=True)
 
-    print(f'{"":2} {"Username":20} {"Promise":>7} {"Flw":>8} {"Rel":>5}  {"Followed by":40}  Bio')
-    print('-' * 140)
+    print(f'{"":2} {"Username":20} {"Promise":>7} {"Flw":>8}  {"Followed by":40}  Bio')
+    print('-' * 130)
     for i, d in enumerate(results[:50]):
         fb = ', '.join(d['followed_by'])
         bio = d['bio'][:60].replace('\n', ' ')
-        print(f'{i+1:2}. @{d["username"]:19} {d["score"]:>7} {d["followers"]:>8,} {d["relevance"]:>5}  {fb:40}  {bio}')
+        print(f'{i+1:2}. @{d["username"]:19} {d["score"]:>7} {d["followers"]:>8,}  {fb:40}  {bio}')
 
 if __name__ == '__main__':
     cmd = sys.argv[1] if len(sys.argv) > 1 else ''
@@ -284,7 +263,7 @@ Call it via:
 - `python3 /tmp/twitter_discover_helpers.py following <file>` — extract following list
 - `python3 /tmp/twitter_discover_helpers.py search <file> [exclude_csv]` — extract search authors
 
-For `compute_promise_scores`, write a one-off Python snippet inline since it requires the current session's `scores` dict, `following_files` dict, and regex patterns.
+For `compute_promise_scores`, write a one-off Python snippet inline since it requires the current session's `scores` dict and `following_files` dict.
 
 ## Saving results
 
@@ -353,7 +332,7 @@ Flag to the user if costs are likely to exceed $2. At typical credit balances (1
 ## Key principles
 
 1. **Hot scores**: Always recompute promise scores after scoring a new account and fetching its following list. Never use stale scores.
-2. **Bio filter first**: Check bios before spending API calls on tweet sampling. This is the single biggest efficiency gain.
+2. **Evaluate bios first**: Read bios and context before spending API calls on tweet sampling. Use your judgment rather than regex — you can assess relevance more accurately than keyword matching.
 3. **Sequential API calls**: Avoid firing many parallel API calls to the same endpoint — rate limits will block you. 2-3 parallel calls are fine; 5+ are not.
 4. **Tailored criteria**: The scoring rubric must reflect what the user actually wants, not a generic "is this account good." A researcher and a marketer want very different things.
 5. **Transparent checkpoints**: Show the user what you found and let them steer. Don't run 50 API calls without checking in.

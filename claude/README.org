@@ -25,10 +25,8 @@ The =~/.claude/= directory symlinks its core files here, so changes are version-
 :ID:       C60E07A6-7A22-4272-8875-45FE9B44F185
 :END:
 
-- *Model*: Claude Opus 4.6 (I prefer performance over speed).
 - *Agent teams*: enabled.
-- *Plugins*: Slack MCP plugin.
-- *Allowed tools*: Bash, Read, Edit, Write, WebFetch, WebSearch, Task, Glob, Grep, NotebookEdit.
+- *Allowed tools*: Bash, Read, Edit, Write, WebFetch, WebSearch, Task, Glob, Grep, NotebookEdit, and all Slack MCP tools.
 
 ** settings.local.json
 :PROPERTIES:
@@ -279,7 +277,7 @@ Evaluates third-party skills from the [[https://github.com/HartreeWorks/skills][
 :ID:       4D862953-7E8A-4154-BC16-919ED6B092A5
 :END:
 
-Three hooks enforce workflow invariants.
+Five hook scripts handle workflow invariants and Emacs integration.
 
 ** require-elisp-test-before-commit.sh (PreToolUse)
 :PROPERTIES:
@@ -301,4 +299,16 @@ Creates a marker file (=/tmp/claude-elisp-tested-{SESSION_ID}=) whenever =emacs 
 :END:
 
 On the first Edit or Write in a project, moves Claude Code's memory directory from its default location (=~/.claude/projects/<encoded-path>/memory/=) into the project's =.claude/memory/= directory, replacing the original with a symlink. This keeps memory local and version-controllable.
+
+** elpaca-run.sh (utility)
+:PROPERTIES:
+:END:
+
+Resolves the active elpaca profile dynamically (via =emacsclient -e 'init-current-profile'=) and runs a script from the specified elpaca package. Searches both =repos/= and =sources/= directories to handle different elpaca layouts. Used by the Notification and Stop hooks to invoke =claude-code-hook-wrapper= without hardcoding the profile name.
+
+** claude-code-hook-wrapper (Notification, Stop)
+:PROPERTIES:
+:END:
+
+Invoked via =elpaca-run.sh= on Notification and Stop events. Delegates to the =claude-code= Emacs package's hook wrapper, which updates the Emacs-side state (e.g. mode-line indicators) in response to Claude Code lifecycle events.
 

@@ -2660,9 +2660,8 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
 (use-feature tab-bar
   :after faces-extras
   :custom
-  (tab-bar-format '(tab-bar-format-align-right
+  (tab-bar-format '(tab-bar-align-right
                     tab-bar-format-global))
-  (auto-resize-tab-bars nil)
 
   :config
   (setf mode-line-misc-info

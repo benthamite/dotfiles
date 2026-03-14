@@ -1554,25 +1554,36 @@ The default `eat-term-scrollback-size' of 8192 lines causes the
 buffer to be truncated, losing earlier output."
   (setq-local eat-term-scrollback-size nil))
 
-;; Fix upstream scroll function: always recenter with `(recenter -1)' to keep
-;; the cursor at the bottom.  The upstream conditional recenter skips windows
-;; when `pos-visible-in-window-p' returns stale results, causing window-start
-;; to drift to position 1 (top of buffer) during terminal redraws.
+;; Fix upstream scroll function.  Two problems:
+;;
+;; 1. `eat--synchronize-scroll-windows' only includes windows whose
+;;    `window-point' equals the terminal cursor.  When eat modifies the
+;;    buffer during a terminal redraw, Emacs can reset window-point to 1
+;;    for non-selected windows.  Once that happens the equality check
+;;    fails and the window is permanently excluded from sync.
+;;
+;; 2. The upstream conditional recenter (checking `pos-visible-in-window-p')
+;;    can miss recenters when display state is stale.
+;;
+;; We fix both by re-including any desynchronized windows and always
+;; recentering with `(recenter -1)'.
 (advice-add 'claude-code--eat-synchronize-scroll :override
             #'claude-code-extras--eat-synchronize-scroll)
 
 (defun claude-code-extras--eat-synchronize-scroll (windows)
   "Keep the terminal cursor at the bottom of WINDOWS.
-Like `claude-code--eat-synchronize-scroll' but always recenters with
-`(recenter -1)' to prevent the view from jumping to the top or middle
-of the buffer.  The upstream conditional recenter relied on
-`pos-visible-in-window-p', which can return stale results before
-redisplay, causing missed recenters and window-start drift."
-  (dolist (window windows)
-    (if (eq window 'buffer)
-        (goto-char (eat-term-display-cursor eat-terminal))
-      (when (not buffer-read-only)
-        (let ((cursor-pos (eat-term-display-cursor eat-terminal)))
+Re-include any windows showing this buffer that were excluded from
+WINDOWS because their point drifted from the cursor, then
+unconditionally recenter with `(recenter -1)'."
+  (when (not buffer-read-only)
+    (let ((cursor-pos (eat-term-display-cursor eat-terminal)))
+      ;; Re-include windows that fell out of sync (point != cursor).
+      (dolist (w (get-buffer-window-list nil nil t))
+        (unless (memq w windows)
+          (push w windows)))
+      (dolist (window windows)
+        (if (eq window 'buffer)
+            (goto-char cursor-pos)
           (set-window-point window cursor-pos)
           (with-selected-window window
             (goto-char cursor-pos)

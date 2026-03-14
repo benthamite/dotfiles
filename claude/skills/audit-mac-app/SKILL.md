@@ -5,6 +5,8 @@ description: This skill should be used when the user asks to audit a Mac app, ch
 
 # Mac App Security Audit
 
+> Adapted from [Peter Hartree](https://pjh.is/)'s [HartreeWorks/skills](https://github.com/HartreeWorks/skills) repository.
+
 This skill provides a systematic approach to auditing macOS applications before running them, with particular focus on apps requesting sensitive permissions (screen recording, camera, microphone, accessibility, etc.).
 
 ## When to Use This Skill

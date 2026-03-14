@@ -1554,32 +1554,29 @@ The default `eat-term-scrollback-size' of 8192 lines causes the
 buffer to be truncated, losing earlier output."
   (setq-local eat-term-scrollback-size nil))
 
-;; Fix upstream scroll function: `(recenter)' centers the cursor mid-window,
-;; which makes the view jump upward when there is scrollback above.  Using
-;; `(recenter -1)' keeps the cursor at the bottom, matching terminal behavior.
+;; Fix upstream scroll function: always recenter with `(recenter -1)' to keep
+;; the cursor at the bottom.  The upstream conditional recenter skips windows
+;; when `pos-visible-in-window-p' returns stale results, causing window-start
+;; to drift to position 1 (top of buffer) during terminal redraws.
 (advice-add 'claude-code--eat-synchronize-scroll :override
             #'claude-code-extras--eat-synchronize-scroll)
 
 (defun claude-code-extras--eat-synchronize-scroll (windows)
   "Keep the terminal cursor at the bottom of WINDOWS.
-Like `claude-code--eat-synchronize-scroll' but uses (recenter -1)
-instead of (recenter) when the cursor is not visible, preventing
-the view from jumping to the middle of the buffer."
+Like `claude-code--eat-synchronize-scroll' but always recenters with
+`(recenter -1)' to prevent the view from jumping to the top or middle
+of the buffer.  The upstream conditional recenter relied on
+`pos-visible-in-window-p', which can return stale results before
+redisplay, causing missed recenters and window-start drift."
   (dolist (window windows)
     (if (eq window 'buffer)
         (goto-char (eat-term-display-cursor eat-terminal))
       (when (not buffer-read-only)
         (let ((cursor-pos (eat-term-display-cursor eat-terminal)))
           (set-window-point window cursor-pos)
-          (cond
-           ((>= cursor-pos (- (point-max) 2))
-            (with-selected-window window
-              (goto-char cursor-pos)
-              (recenter -1)))
-           ((not (pos-visible-in-window-p cursor-pos window))
-            (with-selected-window window
-              (goto-char cursor-pos)
-              (recenter -1)))))))))
+          (with-selected-window window
+            (goto-char cursor-pos)
+            (recenter -1)))))))
 
 (setq claude-code-notification-function #'claude-code-default-notification)
 (add-hook 'claude-code-event-hook #'claude-code-extras--handle-notification)

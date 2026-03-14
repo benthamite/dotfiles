@@ -1,6 +1,6 @@
 ---
 name: twitter
-description: Read tweets, threads, user timelines, and search Twitter/X via twitterapi.io. Use when the user says "read tweet", "get tweet", "fetch tweet", "read thread", "user's tweets", "tweets from @handle", "search twitter", "twitter digest", "what's on twitter", or "save tweets".
+description: Read tweets, threads, user timelines, and search Twitter/X via twitterapi.io. Use when the user says "read tweet", "get tweet", "fetch tweet", "read thread", "user's tweets", "tweets from @handle", "search twitter", or "save tweets".
 user-invocable: true
 ---
 
@@ -79,17 +79,10 @@ URL: https://x.com/username/status/ID
 
 When saving a thread, concatenate all tweets in order in a single file with `---` separators.
 
-## Twitter digest
+## Related skills
 
-When the user asks for a "twitter digest" or "what's on twitter":
-
-1. Ask the user which accounts or topics they want to check, unless they've specified.
-2. For each account, call `get_user_tweets` with `count: 20`.
-3. For each topic, call `search_tweets` with `count: 20` and `result_type: "popular"`.
-4. Triage the results:
-   - **Notable**: high engagement, breaking news, important announcements, substantive threads.
-   - **Routine**: casual posts, low-signal retweets, promotional content. Skip these.
-5. Present the digest grouped by account/topic, showing only notable tweets. Include links.
+- `/twitter-digest` — curated digests from account lists with triage, last-run tracking, and `/loop` support.
+- `/twitter-discover` — graph-based discovery of high-value accounts in any niche.
 
 ## Pricing and rate limits
 

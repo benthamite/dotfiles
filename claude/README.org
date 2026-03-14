@@ -227,14 +227,14 @@ Bulk version of =nosync=. Scans =~/My Drive/= for all directories causing sync e
 :ID:       76E6E656-8DCE-4433-B9AA-1F6D0ACDB3B0
 :END:
 
-Queries multiple AI models with temperature-varied sampling. For each model, generates N responses and selects the best one (using Gemini 3 Flash as judge). Then synthesizes across models using Claude Opus 4.6 with extended thinking. Has a brainstorm mode that merges unique ideas instead of picking one winner. Presets: Quick (4 models x 3), Intense (7 x 5), Ultra (7 x 6).
+Adapted from [[https://pjh.is/][Peter Hartree]]'s [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository. Queries multiple AI models with temperature-varied sampling. For each model, generates N responses and selects the best one (using Gemini 3 Flash as judge). Then synthesizes across models using Claude Opus 4.6 with extended thinking. Has a brainstorm mode that merges unique ideas instead of picking one winner. Presets: Quick (4 models x 3), Intense (7 x 5), Ultra (7 x 6).
 
 *** proofread
 :PROPERTIES:
 :ID:       D9EC1B04-5470-4EF9-8C4C-FEDFB2333128
 :END:
 
-Proofreads documents using either aspell (fast, spelling-only) or an LLM (Gemini Flash, with configurable depth: mechanical, light style, or comprehensive). Auto-applies safe corrections and flags style suggestions for interactive review. Uses British English conventions.
+Adapted from [[https://pjh.is/][Peter Hartree]]'s [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository. Proofreads documents using either aspell (fast, spelling-only) or an LLM (Gemini Flash, with configurable depth: mechanical, light style, or comprehensive). Auto-applies safe corrections and flags style suggestions for interactive review. Uses British English conventions.
 
 ** Twitter and communication skills
 :PROPERTIES:
@@ -246,7 +246,7 @@ Proofreads documents using either aspell (fast, spelling-only) or an LLM (Gemini
 :ID:       F2720AF8-171F-4DF0-BA03-B16E2F923C2E
 :END:
 
-Reads and searches Twitter/X content via the =twitterapi-io= MCP server. Supports single tweet lookup, thread/reply retrieval, user timelines, keyword search, and user profile lookup. Saves tweets as markdown files with engagement stats and URLs. Includes detailed pricing and rate-limit guidance to keep API costs under control.
+Reads and searches Twitter/X content via the =twitterapi-io= MCP server. Supports single tweet lookup, thread/reply retrieval, user timelines, keyword search, and user profile lookup. Saves tweets as markdown files with engagement stats and URLs. Includes detailed pricing and rate-limit guidance to keep API costs under control. Cross-references =/twitter-digest= and =/twitter-discover= for higher-level workflows.
 
 *** twitter-digest
 :PROPERTIES:
@@ -279,7 +279,7 @@ Pulls all unread Slack messages via the =slack-epochai= MCP server, triages them
 :ID:       0266B51A-276F-40DB-85F9-DDFBDF19E71D
 :END:
 
-Eight-phase security audit of macOS applications: trust verification, permission analysis, app type detection, code extraction (with Electron-specific checks for nodeIntegration, contextIsolation, etc.), network endpoint scanning, and binary analysis. Generates a markdown report with severity ratings.
+Adapted from [[https://pjh.is/][Peter Hartree]]'s [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository. Eight-phase security audit of macOS applications: trust verification, permission analysis, app type detection, code extraction (with Electron-specific checks for nodeIntegration, contextIsolation, etc.), network endpoint scanning, and binary analysis. Generates a markdown report with severity ratings.
 
 ** Meta skills
 :PROPERTIES:

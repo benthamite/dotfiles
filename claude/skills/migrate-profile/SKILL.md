@@ -57,29 +57,6 @@ for dir in "$CLAUDE_PROJECTS"/-Users-pablostafforini--config-emacs-profiles-*-el
 done
 ```
 
-## Package renames
-
-Some packages were renamed between profiles. Known renames (old → new):
-
-- `infovore` → `elfeed-ai`
-- `tango-wiki` → `tangodb`
-
-After grouping, merge any sources under old names into the new name's source list:
-
-```bash
-# For each known rename: old_name → new_name
-for old_name in infovore tango-wiki; do
-  case "$old_name" in
-    infovore)    new_name="elfeed-ai" ;;
-    tango-wiki)  new_name="tangodb" ;;
-  esac
-  if [[ -n "${sources_map[$old_name]}" ]]; then
-    sources_map[$new_name]+="${sources_map[$old_name]}"
-    unset "sources_map[$old_name]"
-  fi
-done
-```
-
 ## Find or create target directories
 
 For each package that has sources but no existing target in `~/.claude/projects/`, check whether the package exists on disk under the new profile and construct the target path:
@@ -120,7 +97,7 @@ for SOURCE_ENCODED in ${sources_map[$pkg]}; do
     [ -f "$f" ] || continue
     base=$(basename "$f")
     if [ ! -f "$CLAUDE_PROJECTS/${targets[$pkg]}/$base" ]; then
-      cp "$f" "$CLAUDE_PROJECTS/${targets[$pkg]}/$base"
+      cp -p "$f" "$CLAUDE_PROJECTS/${targets[$pkg]}/$base"
     fi
   done
 
@@ -130,7 +107,7 @@ for SOURCE_ENCODED in ${sources_map[$pkg]}; do
     base=$(basename "$d")
     [ "$base" = "memory" ] && continue  # handle memory separately
     if [ ! -d "$CLAUDE_PROJECTS/${targets[$pkg]}/$base" ]; then
-      cp -R "$d" "$CLAUDE_PROJECTS/${targets[$pkg]}/$base"
+      cp -Rp "$d" "$CLAUDE_PROJECTS/${targets[$pkg]}/$base"
     fi
   done
 done
@@ -148,14 +125,38 @@ for SOURCE_ENCODED in ${sources_map[$pkg]}; do
       [ -f "$f" ] || continue
       base=$(basename "$f")
       if [ ! -f "$CLAUDE_PROJECTS/${targets[$pkg]}/memory/$base" ]; then
-        cp "$f" "$CLAUDE_PROJECTS/${targets[$pkg]}/memory/$base"
+        cp -p "$f" "$CLAUDE_PROJECTS/${targets[$pkg]}/memory/$base"
       fi
     done
   fi
 done
 ```
 
-### 4. Delete source directories
+### 4. Migrate project trust entries
+
+Project authorization (trust dialog acceptance, onboarding state, tool permissions, MCP config) is stored in `~/.claude.json` under a `projects` object, keyed by the **actual filesystem path** (e.g., `/Users/pablostafforini/.config/emacs-profiles/8.0.0-dev/elpaca/sources/gdocs`). This is separate from session data. Without migrating these entries, Claude Code will prompt the user to re-authorize every project.
+
+For each old-profile path in `~/.claude.json`, create a corresponding new-profile entry (if one doesn't already exist):
+
+```python
+import json
+
+with open(os.path.expanduser("~/.claude.json"), "r") as f:
+    data = json.load(f)
+
+projects = data.get("projects", {})
+for old_path in list(projects.keys()):
+    if OLD_PROFILE in old_path:
+        new_path = old_path.replace(OLD_PROFILE, NEW_PROFILE)
+        if new_path not in projects:
+            projects[new_path] = dict(projects[old_path])
+
+data["projects"] = projects
+with open(os.path.expanduser("~/.claude.json"), "w") as f:
+    json.dump(data, f, indent=2)
+```
+
+### 5. Delete source directories
 
 After successfully copying all data from a source directory, delete it:
 
@@ -175,13 +176,14 @@ This ensures old profile directories don't accumulate and makes it clear which p
    - Target directory (existing / will create / package missing from new profile)
    - Sessions to copy (count)
    - Memory files to copy (count)
+   - Trust entry in `~/.claude.json` (yes/no)
    - Status: "will migrate", "already migrated" (all files exist in target), "skipped" (no source or no target)
 
 2. **Ask for confirmation** before proceeding with the actual copy and deletion.
 
 3. **Execute the migration** (copy then delete sources) using the commands above.
 
-4. **Post-migration summary**: report how many sessions and memory files were copied for each package, how many source directories were deleted, and any packages that were skipped.
+4. **Post-migration summary**: report how many sessions and memory files were copied for each package, how many source directories were deleted, how many trust entries were migrated in `~/.claude.json`, and any packages that were skipped.
 
 ## Important notes
 

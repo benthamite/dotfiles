@@ -285,7 +285,7 @@ Eight-phase security audit of macOS applications: trust verification, permission
 :ID:       025A523A-F1AE-43F8-89DB-13FF2A5A98B1
 :END:
 
-Consolidates Claude Code project data (sessions, memory) across elpaca profile changes. Scans =~/.claude/projects/= for all directories matching the elpaca pattern, groups them by package name (extracted by splitting on =-elpaca-repos-= or =-elpaca-sources-=), and merges all old-profile entries into the current profile's directory. No explicit package list is needed. Handles known package renames (e.g. =infovore= → =elfeed-ai=). Non-destructive: never overwrites existing data.
+Consolidates Claude Code project data (sessions, memory, trust entries) across elpaca profile changes. Scans =~/.claude/projects/= for all directories matching the elpaca pattern, groups them by package name (extracted by splitting on =-elpaca-repos-= or =-elpaca-sources-=), and merges all old-profile entries into the current profile's directory. Also migrates project authorization entries in =~/.claude.json= so Claude Code doesn't re-prompt trust dialogs. No explicit package list is needed. Non-destructive: never overwrites existing data.
 
 *** automate
 :PROPERTIES:

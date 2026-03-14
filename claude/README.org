@@ -158,6 +158,7 @@ Creates or updates org-mode notes in my notes directory (=~/My Drive/notes/=), w
 
 *** transcribe-note
 :PROPERTIES:
+:ID:       56961BB0-30BB-44D1-BC8F-D74713517D4E
 :END:
 
 Transcribes the most recent audio file in =~/Downloads/= using whisperx, then restructures the transcript into a well-organized org-mode note saved to =~/My Drive/notes/=. Accepts optional language code and filename arguments.
@@ -237,28 +238,33 @@ Proofreads documents using either aspell (fast, spelling-only) or an LLM (Gemini
 
 ** Twitter and communication skills
 :PROPERTIES:
+:ID:       6E879560-81C4-4842-90F2-AC14D8E0A1CC
 :END:
 
 *** twitter
 :PROPERTIES:
+:ID:       F2720AF8-171F-4DF0-BA03-B16E2F923C2E
 :END:
 
 Reads and searches Twitter/X content via the =twitterapi-io= MCP server. Supports single tweet lookup, thread/reply retrieval, user timelines, keyword search, and user profile lookup. Saves tweets as markdown files with engagement stats and URLs. Includes detailed pricing and rate-limit guidance to keep API costs under control.
 
 *** twitter-digest
 :PROPERTIES:
+:ID:       F677671C-6C97-4BC6-B2F5-A4E0E2457C92
 :END:
 
 Fetches recent tweets from a named list of accounts, triages them against the list's description (used as a relevance rubric), and surfaces only notable content. Lists are stored in =~/.claude/skills/twitter-digest/lists/= and track the last-run timestamp to avoid re-surfacing old tweets. Pairs with =/loop= for periodic digests.
 
 *** twitter-discover
 :PROPERTIES:
+:ID:       D3FF4B1E-429E-4999-951C-FBFB30F1E488
 :END:
 
 Iterative, graph-based discovery of high-value Twitter accounts in any niche. Interviews the user for criteria, acquires seed accounts via search, then expands using a "hot promise score" algorithm: accounts followed by multiple high-scoring seeds are profiled next, with scores recomputed after each round. Presents tiered results (must-follow, strong, situational) at checkpoints and optionally exports to a =twitter-digest= list.
 
 *** slack-digest
 :PROPERTIES:
+:ID:       DF40872F-2CA3-4CAD-99F9-E684C175F772
 :END:
 
 Pulls all unread Slack messages via the =slack-epochai= MCP server, triages them into "action required" vs. "worth knowing" (discarding noise), and opens the digest as an org-mode buffer in Emacs with deep links back to Slack. Optionally marks all conversations as read after review.
@@ -289,6 +295,7 @@ Consolidates Claude Code project data (sessions, memory, trust entries) across e
 
 *** automate
 :PROPERTIES:
+:ID:       A1AC6915-C52E-4382-B1A6-731C697E736B
 :END:
 
 Meta-skill for AI workflow design. Given a description of something to automate, analyzes the requirements along dimensions like context source, tool access, multi-step reasoning, and Emacs integration, then recommends the right approach: a Claude Code skill, a gptel directive, a gptel tool, or a gptel command. After confirmation, builds it following the conventions of each approach.
@@ -330,18 +337,21 @@ On the first Edit or Write in a project, moves Claude Code's memory directory fr
 
 ** require-readme-update.sh (PreToolUse)
 :PROPERTIES:
+:ID:       F4D78958-4194-4DB3-9624-C04EC7790960
 :END:
 
 Blocks =git commit= when files in =claude/= (skills, hooks, settings, CLAUDE.md) are staged but =claude/README.org= is not. Ensures documentation stays in sync with configuration changes.
 
 ** elpaca-run.sh (utility)
 :PROPERTIES:
+:ID:       54F62C33-E882-4B75-A4F0-A8963E5AF345
 :END:
 
 Resolves the active elpaca profile dynamically (via =emacsclient -e 'init-current-profile'=) and runs a script from the specified elpaca package. Searches both =repos/= and =sources/= directories to handle different elpaca layouts. Used by the Notification and Stop hooks to invoke =claude-code-hook-wrapper= without hardcoding the profile name.
 
 ** claude-code-hook-wrapper (Notification, Stop)
 :PROPERTIES:
+:ID:       44E20BF0-9B6B-420E-858F-98CBF18D13F8
 :END:
 
 Invoked via =elpaca-run.sh= on Notification and Stop events. Delegates to the =claude-code= Emacs package's hook wrapper, which updates the Emacs-side state (e.g. mode-line indicators) in response to Claude Code lifecycle events.

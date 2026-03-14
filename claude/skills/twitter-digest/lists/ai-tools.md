@@ -1,0 +1,27 @@
+---
+name: ai-tools
+description: Practical AI tool workflows, tips, and tutorials from practitioners. Surface posts where someone shares how they actually use AI tools (Claude, GPT, Cursor, etc.) in their work — concrete setups, prompts, automations, integrations, and lessons learned. Skip product announcements, hype, personal posts, fundraising news, and retweets unless the RT itself contains a genuinely useful workflow or tip.
+---
+
+- @boringmarketer
+- @peterhartree
+- @Saboo_Shubham_
+- @simonw
+- @steipete
+- @itsolelehmann
+- @bentossell
+- @petergyang
+- @maddiedreese
+- @iannuttall
+- @_catwu
+- @dmwlff
+- @amirmxt
+- @eyaltoledano
+- @forgebitz
+- @NickADobos
+- @bcherny
+- @trq212
+- @rayfernando1337
+- @intellectronica
+- @chasing_next
+- @MattPRD

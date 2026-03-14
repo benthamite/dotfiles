@@ -5,6 +5,8 @@ description: This skill should be used when the user says "proofread", "spell ch
 
 # Proofread skill
 
+> Adapted from [Peter Hartree](https://pjh.is/)'s [HartreeWorks/skills](https://github.com/HartreeWorks/skills) repository.
+
 Proofreading for markdown documents using British English conventions. Two engines available:
 
 - **Spellcheck** (fast, deterministic): Uses aspell for spell-checking (~2 seconds)

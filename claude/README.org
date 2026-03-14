@@ -293,12 +293,12 @@ Consolidates Claude Code project data (sessions, memory, trust entries) across e
 
 Meta-skill for AI workflow design. Given a description of something to automate, analyzes the requirements along dimensions like context source, tool access, multi-step reasoning, and Emacs integration, then recommends the right approach: a Claude Code skill, a gptel directive, a gptel tool, or a gptel command. After confirmation, builds it following the conventions of each approach.
 
-*** try-skills
+*** try-hartree-skills
 :PROPERTIES:
 :ID:       C9B601B2-393A-4098-B04B-82630F737520
 :END:
 
-Evaluates third-party skills from the [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository, one at a time. (The repository is maintained by my friend [[https://pjh.is/][Peter Hartree]], a Claude Code power user.) Installs each skill, tests it, and records the verdict. Status so far: 3 kept (best-of-n, proofread, audit-mac-app), 23 skipped, 5 flagged for future revisit.
+Evaluates third-party skills from the [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository, one at a time. (The repository is maintained by my friend [[https://pjh.is/][Peter Hartree]], a Claude Code power user.) Installs each skill, tests it, and records the verdict.
 
 * Hooks
 :PROPERTIES:

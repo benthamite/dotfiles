@@ -6,6 +6,8 @@ argument-hint: <prompt>
 
 # Best-of-N query
 
+> Adapted from [Peter Hartree](https://pjh.is/)'s [HartreeWorks/skills](https://github.com/HartreeWorks/skills) repository.
+
 Query each AI model N times with temperature variation, pick the best response per model, then synthesise across models. This produces higher-quality input for the final synthesis at the cost of N× more API calls.
 
 ## When this skill is invoked

@@ -380,19 +380,45 @@ offer to switch to one of them or create a new session."
       (claude-code-extras--prompt-start-or-switch buffers))))
 
 (defun claude-code-extras--prompt-start-or-switch (buffers)
-  "Prompt to switch to one of BUFFERS or start a new session."
+  "Prompt to switch to one of BUFFERS or start a new session.
+Window-points of all windows showing BUFFERS are saved before
+entering `consult--read' and restored afterward, because Eat's
+scroll synchronization can reset them during the minibuffer
+session (triggered by window-resize events)."
   (let* ((choices (claude-code-extras--buffers-to-choices buffers))
          (new-label "[new session]")
          (all-choices (append (mapcar #'car choices) (list new-label)))
-         (selection (consult--read
-                     all-choices
-                     :prompt "Claude session: "
-                     :require-match t
-                     :sort nil
-                     :state (claude-code-extras--buffer-preview-state choices))))
+         (saved (claude-code-extras--save-claude-window-points
+                 buffers (selected-window)))
+         (selection (unwind-protect
+                        (consult--read
+                         all-choices
+                         :prompt "Claude session: "
+                         :require-match t
+                         :sort nil
+                         :state (claude-code-extras--buffer-preview-state choices))
+                      (claude-code-extras--restore-claude-window-points saved))))
     (if (string= selection new-label)
         (claude-code)
       (switch-to-buffer (cdr (assoc selection choices))))))
+
+(defun claude-code-extras--save-claude-window-points (buffers exclude-window)
+  "Save window-points for all windows showing any buffer in BUFFERS.
+EXCLUDE-WINDOW is omitted from the result.
+Each entry is (WINDOW BUFFER POINT)."
+  (let (result)
+    (dolist (buf buffers result)
+      (dolist (w (get-buffer-window-list buf nil t))
+        (unless (eq w exclude-window)
+          (push (list w buf (window-point w)) result))))))
+
+(defun claude-code-extras--restore-claude-window-points (saved)
+  "Restore window-points from SAVED.
+Each entry is (WINDOW BUFFER POINT).  Only restores if WINDOW is
+still live and still displays the same BUFFER."
+  (pcase-dolist (`(,w ,buf ,pt) saved)
+    (when (and (window-live-p w) (eq (window-buffer w) buf))
+      (set-window-point w pt))))
 
 (defun claude-code-extras--buffers-to-choices (buffers)
   "Convert BUFFERS to an alist of (display-name . buffer) pairs.

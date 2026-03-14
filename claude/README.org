@@ -235,6 +235,34 @@ Queries multiple AI models with temperature-varied sampling. For each model, gen
 
 Proofreads documents using either aspell (fast, spelling-only) or an LLM (Gemini Flash, with configurable depth: mechanical, light style, or comprehensive). Auto-applies safe corrections and flags style suggestions for interactive review. Uses British English conventions.
 
+** Twitter and communication skills
+:PROPERTIES:
+:END:
+
+*** twitter
+:PROPERTIES:
+:END:
+
+Reads and searches Twitter/X content via the =twitterapi-io= MCP server. Supports single tweet lookup, thread/reply retrieval, user timelines, keyword search, and user profile lookup. Saves tweets as markdown files with engagement stats and URLs. Includes detailed pricing and rate-limit guidance to keep API costs under control.
+
+*** twitter-digest
+:PROPERTIES:
+:END:
+
+Fetches recent tweets from a named list of accounts, triages them against the list's description (used as a relevance rubric), and surfaces only notable content. Lists are stored in =~/.claude/skills/twitter-digest/lists/= and track the last-run timestamp to avoid re-surfacing old tweets. Pairs with =/loop= for periodic digests.
+
+*** twitter-discover
+:PROPERTIES:
+:END:
+
+Iterative, graph-based discovery of high-value Twitter accounts in any niche. Interviews the user for criteria, acquires seed accounts via search, then expands using a "hot promise score" algorithm: accounts followed by multiple high-scoring seeds are profiled next, with scores recomputed after each round. Presents tiered results (must-follow, strong, situational) at checkpoints and optionally exports to a =twitter-digest= list.
+
+*** slack-digest
+:PROPERTIES:
+:END:
+
+Pulls all unread Slack messages via the =slack-epochai= MCP server, triages them into "action required" vs. "worth knowing" (discarding noise), and opens the digest as an org-mode buffer in Emacs with deep links back to Slack. Optionally marks all conversations as read after review.
+
 ** Security skills
 :PROPERTIES:
 :ID:       503D6D12-1566-44FB-8BFA-408034BBB7D2
@@ -277,7 +305,7 @@ Evaluates third-party skills from the [[https://github.com/HartreeWorks/skills][
 :ID:       4D862953-7E8A-4154-BC16-919ED6B092A5
 :END:
 
-Five hook scripts handle workflow invariants and Emacs integration.
+Six hook scripts handle workflow invariants and Emacs integration.
 
 ** require-elisp-test-before-commit.sh (PreToolUse)
 :PROPERTIES:
@@ -299,6 +327,12 @@ Creates a marker file (=/tmp/claude-elisp-tested-{SESSION_ID}=) whenever =emacs 
 :END:
 
 On the first Edit or Write in a project, moves Claude Code's memory directory from its default location (=~/.claude/projects/<encoded-path>/memory/=) into the project's =.claude/memory/= directory, replacing the original with a symlink. This keeps memory local and version-controllable.
+
+** require-readme-update.sh (PreToolUse)
+:PROPERTIES:
+:END:
+
+Blocks =git commit= when files in =claude/= (skills, hooks, settings, CLAUDE.md) are staged but =claude/README.org= is not. Ensures documentation stays in sync with configuration changes.
 
 ** elpaca-run.sh (utility)
 :PROPERTIES:

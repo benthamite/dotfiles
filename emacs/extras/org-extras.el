@@ -928,11 +928,14 @@ empty, it is killed."
   "Regenerate the `org-refile' cache."
   (interactive)
   (org-refile-cache-clear)
-  (with-temp-buffer
-    (org-mode)
-    (message "Regenerating cache...")
-    (org-refile-get-targets)
-    (message "Cache regenerated.")))
+  (condition-case err
+      (let ((inhibit-quit t))
+        (with-temp-buffer
+          (org-mode)
+          (message "Regenerating cache...")
+          (org-refile-get-targets)
+          (message "Cache regenerated.")))
+    (error (message "Refile cache regeneration failed: %S" (cdr err)))))
 
 ;;;;; ol
 

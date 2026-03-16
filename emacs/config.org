@@ -9781,13 +9781,39 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
      ;; github.com/alphapapa/org-protocol-capture-html#org-capture-template
      ("f" "Feed" entry
       (id "D70DFEBE-A5FD-4BA6-A054-49E7C8F6448A")
-      "*** [[%^{Feed URL}][%^{Name}]] %^g\n%?" :empty-lines 1)
+      "*** [[%^{Feed URL}][%^{Name}]] %(org-capture-feed-tags)\n%?" :empty-lines 1)
      ("w" "Web site" entry
       (file paths-file-downloads)
       "* %a :website:\n\n%U %?\n\n%:initial")))
 
+  :config
+  (defun org-capture-feed-tags ()
+    "Prompt for feed tags using `completing-read-multiple'."
+    (let* ((id "D70DFEBE-A5FD-4BA6-A054-49E7C8F6448A")
+           (file (org-id-find-id-file id))
+           (tags (when file
+                   (with-current-buffer (find-file-noselect file)
+                     (mapcar #'car (org-get-buffer-tags)))))
+           (selected (completing-read-multiple "Tags: " tags)))
+      (if selected
+          (concat ":" (string-join selected ":") ":")
+        "")))
+
+  (defun org-capture-feed-sort ()
+    "Sort feed entries under the Feeds heading alphabetically after capture."
+    (when (string= (plist-get org-capture-plist :key) "f")
+      (let ((marker (org-id-find "D70DFEBE-A5FD-4BA6-A054-49E7C8F6448A" 'marker)))
+        (when marker
+          (with-current-buffer (marker-buffer marker)
+            (save-excursion
+              (goto-char marker)
+              (org-sort-entries nil ?a))
+            (save-buffer))
+          (set-marker marker nil)))))
+
   :hook
   (org-capture-before-finalize-hook . org-extras-capture-before-finalize-hook-function)
+  (org-capture-after-finalize-hook . org-capture-feed-sort)
 
   :bind
   (("H-t" . org-capture)

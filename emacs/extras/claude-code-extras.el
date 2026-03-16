@@ -1437,12 +1437,16 @@ for the working directory."
   (interactive
    (let* ((skills (claude-code-extras--discover-skills))
           (_ (unless skills (user-error "No user-invocable skills found")))
+          (max-len (apply #'max (mapcar (lambda (s)
+                                          (length (plist-get s :name)))
+                                        skills)))
           (annotate (lambda (cand)
                       (when-let* ((skill (cl-find cand skills
                                                   :key (lambda (s) (plist-get s :name))
                                                   :test #'equal))
                                   (desc (plist-get skill :description)))
-                        (concat "  " (propertize desc 'face 'completions-annotations)))))
+                        (concat (make-string (- (+ max-len 2) (length cand)) ?\s)
+                                (propertize desc 'face 'completions-annotations)))))
           (name (completing-read
                  "Skill: "
                  (lambda (str pred action)

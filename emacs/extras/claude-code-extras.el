@@ -1448,11 +1448,12 @@ return nil."
 (defun claude-code-extras-run-skill (skill-name &optional arguments dir)
   "Run Claude Code skill SKILL-NAME non-interactively.
 ARGUMENTS is an optional string of arguments appended to the
-skill invocation.  DIR is the working directory for the process.
+skill invocation.  DIR is the working directory for the process;
+defaults to `default-directory'.
 
 Interactively, prompts for the skill with completion, then for
-arguments (if the skill declares an argument-hint), and finally
-for the working directory."
+arguments if the skill declares an argument-hint or
+argument-source."
   (interactive
    (let* ((skills (claude-code-extras--discover-skills))
           (_ (unless skills (user-error "No user-invocable skills found")))
@@ -1498,8 +1499,7 @@ for the working directory."
                  (hint
                   (let ((input (read-string (format "Arguments %s: " hint))))
                     (unless (string-empty-p input) input)))))
-          (dir (read-directory-name "Working directory: " nil nil t)))
-     (list name args dir)))
+     (list name args)))
   (let ((prompt (if (and arguments (not (string-empty-p arguments)))
                     (format "/%s %s" skill-name arguments)
                   (format "/%s" skill-name))))
@@ -1509,7 +1509,7 @@ for the working directory."
      :dir (or dir default-directory)
      :callback
      (lambda (result)
-       (claude-code-extras--skill-display-result skill-name result)))))
+       (claude-code-extras--skill-display-result skill-name result))))))
 
 ;;;;; Batch TODO processing
 

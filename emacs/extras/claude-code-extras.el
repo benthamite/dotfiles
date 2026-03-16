@@ -1498,8 +1498,8 @@ argument-source."
                  ;; No candidates but has a hint — free-form input
                  (hint
                   (let ((input (read-string (format "Arguments %s: " hint))))
-                    (unless (string-empty-p input) input)))))
-     (list name args)))
+                    (unless (string-empty-p input) input))))))
+     (list name args nil)))
   (let ((prompt (if (and arguments (not (string-empty-p arguments)))
                     (format "/%s %s" skill-name arguments)
                   (format "/%s" skill-name))))
@@ -1509,7 +1509,7 @@ argument-source."
      :dir (or dir default-directory)
      :callback
      (lambda (result)
-       (claude-code-extras--skill-display-result skill-name result))))))
+       (claude-code-extras--skill-display-result skill-name result)))))
 
 ;;;;; Batch TODO processing
 

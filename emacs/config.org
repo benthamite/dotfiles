@@ -707,7 +707,7 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
       (alist-get 'remote (alist-get 'nongnu elpaca-menu-elpas))
       "https://github.com/emacsmirror/nongnu_elpa")
 
-(toggle-debug-on-error) ; uncomment when debugging
+;; (toggle-debug-on-error) ; uncomment when debugging
 (setq elpaca-lock-file
       (file-name-concat (file-name-directory (directory-file-name elpaca-directory)) "lockfile.el"))
 #+end_src

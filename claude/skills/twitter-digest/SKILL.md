@@ -7,7 +7,7 @@ user-invocable: true
 
 # Twitter digest
 
-Fetch recent tweets from a named list of accounts, triage them against the list's criteria, and present a curated digest. Skips noise and surfaces only what matters.
+Fetch recent tweets from a named list of accounts, optionally triage them against the list's criteria, and present a digest. If the list has a `description`, it acts as a triage rubric to skip noise and surface only what matters. If the list has no `description`, all tweets are presented unfiltered.
 
 ## Lists
 
@@ -16,7 +16,7 @@ Lists are stored in `~/.claude/skills/twitter-digest/lists/`. Each list is a mar
 ```markdown
 ---
 name: <list-name>
-description: <what the user wants from this list — used as the triage rubric>
+description: <optional — what the user wants from this list, used as the triage rubric>
 ---
 
 - @username
@@ -24,13 +24,15 @@ description: <what the user wants from this list — used as the triage rubric>
 - @username
 ```
 
-The `description` field is critical — it tells you what to surface and what to skip. Examples:
-- "Practical AI tool workflows, tips, and tutorials. Skip product announcements, hype, personal posts, and retweets unless the RT itself is high-signal."
-- "AI safety research and policy developments. Skip casual takes and culture war commentary."
+The `description` field controls filtering:
+- **With description**: acts as a triage rubric — tweets are classified as notable or skip. Examples:
+  - "Practical AI tool workflows, tips, and tutorials. Skip product announcements, hype, personal posts, and retweets unless the RT itself is high-signal."
+  - "AI safety research and policy developments. Skip casual takes and culture war commentary."
+- **Without description**: no triage — all tweets from the list are presented chronologically. Useful for small, curated lists where you want to see everything.
 
 ### Managing lists
 
-- If invoked with no argument and no lists exist, ask the user to create one: what should it be called, what content they want from it, and which accounts to include.
+- If invoked with no argument and no lists exist, ask the user to create one: what should it be called, which accounts to include, and optionally what content they want from it (if they don't specify a filter/description, create an unfiltered list).
 - If invoked with no argument and exactly one list exists, use that list.
 - If invoked with no argument and multiple lists exist, ask which list to use.
 - If invoked with a list name that doesn't exist, offer to create it.
@@ -41,7 +43,7 @@ The `description` field is critical — it tells you what to surface and what to
 
 ### 1. Load the list
 
-Read the list file. Extract the account usernames and the description (triage rubric).
+Read the list file. Extract the account usernames and the description (triage rubric), if present. If the list has no `description`, note that this is an **unfiltered list** — steps 5 and 6 will be skipped.
 
 ### 2. Check last run
 
@@ -57,25 +59,31 @@ For each account in the list, call `mcp__twitterapi-io__get_user_tweets` with `c
 
 ### 4. Parse results
 
-Tool results come back as large JSON files. Use a Python one-liner or the helper script to extract tweet text, date, engagement stats, and author from each result file:
+Tool results come back as large JSON files saved to the tool-results directory. Use a Python one-liner or the helper script to extract tweet text, date, engagement stats, and author from each result file:
 
 ```bash
 python3 -c "
 import json, sys
 with open(sys.argv[1]) as f: raw = json.load(f)
 inner = json.loads(raw[0]['text']) if isinstance(raw, list) else raw
-for t in inner.get('tweets', []):
+for t in inner.get('data', {}).get('tweets', []):
     text = t.get('text','')[:300].replace('\n',' ')
-    date = t.get('createdAt','')[:16]
+    date = t.get('createdAt','')[:25]
     user = t.get('author',{}).get('userName','?')
     likes = t.get('likeCount',0)
     views = t.get('viewCount',0)
-    is_rt = 'RT @' in text[:4]
-    print(f'@{user}|{date}|{likes}|{views}|{\"RT\" if is_rt else \"OG\"}|{text}')
+    tid = t.get('id','')
+    is_rt = bool(t.get('retweetedTweet'))
+    rt_user = t.get('retweetedTweet',{}).get('author',{}).get('userName','') if is_rt else ''
+    print(f'@{user}|{date}|{likes}|{views}|{\"RT\" if is_rt else \"OG\"}|{tid}|{rt_user}|{text}')
 " "$FILE"
 ```
 
+Note: the tweet data is nested under `data.tweets` in the API response. Retweets have a `retweetedTweet` object containing the original tweet and its `author` — extract `retweetedTweet.author.userName` for the RT discovery step.
+
 ### 5. Triage
+
+**Skip this step if the list has no `description`** — all tweets pass through unfiltered.
 
 Using the list's `description` as your rubric, classify each tweet:
 
@@ -84,34 +92,72 @@ Using the list's `description` as your rubric, classify each tweet:
 
 Be aggressive about skipping. A good digest surfaces 5-15 tweets from 20 accounts, not 200.
 
-### 6. Present the digest
+### 6. Explore RT authors
 
-Format as a clean summary:
+**Skip this step if the list has no `description`** — RT exploration requires a rubric to evaluate discovered accounts against.
 
-```
-## Twitter digest: <list-name> — YYYY-MM-DD HH:MM
+When a tweet in the results is a retweet, treat the **original author** (the person being retweeted) as a discovery candidate:
 
-### Notable
+1. Collect all unique original authors from RTs that passed the cutoff filter.
+2. Exclude any that are already in the list.
+3. For each new author, call `mcp__twitterapi-io__get_user_tweets` with `count: 10` (same rate-limiting rules: max 3 in parallel).
+4. Triage their tweets against the same rubric. If any are notable, include them in the digest under a separate "Discovered accounts" section.
+5. After the digest, report these accounts so the user can decide whether to add them to the list permanently.
 
-**@username** (date)
+This turns every RT into a lightweight discovery signal — if a listed account amplifies someone, that person is probably worth a look.
+
+### 7. Present the digest
+
+Format the digest as an **org-mode** buffer:
+
+```org
+#+title: Twitter digest: <list-name> — YYYY-MM-DD HH:MM
+
+* Notable
+
+** @username (date)
 Tweet text (full or lightly trimmed)
-Likes: N | Views: N
-https://x.com/username/status/ID
+Likes: N | Views: N | Like rate: X.X%
+[[https://x.com/username/status/ID][View on X]]
 
-**@username** (date)
+** @username (date)
 ...
 
-### Accounts with nothing notable
-@user1, @user2, @user3 — nothing new matching your criteria.
+* Discovered accounts
+Accounts found via retweets from listed users. Consider adding them to the list.
+
+** @newuser (via RT from @listeduser)
+Tweet text
+Likes: N | Views: N | Like rate: X.X%
+[[https://x.com/newuser/status/ID][View on X]]
+
+* Accounts with nothing notable
+@user1, @user2, @user3 — nothing new matching criteria.
 ```
 
-Guidelines:
-- Order notable tweets by relevance to the rubric, not by engagement.
-- Include the tweet URL so the user can open it.
-- For the "nothing notable" section, just list the usernames in a single line.
-- If a tweet is part of a thread and the beginning is clearly missing context, note "(thread)" so the user knows to click through.
+**Unfiltered lists** (no `description`): use the same org format but replace the "Notable" heading with "All tweets", order tweets reverse-chronologically, and omit the "Discovered accounts" and "Accounts with nothing notable" sections entirely.
 
-### 7. Update last-run timestamp
+Guidelines:
+- **Filtered lists**: order notable tweets by relevance to the rubric, not by engagement.
+- **Unfiltered lists**: order all tweets reverse-chronologically.
+- Include the tweet URL as an org link so the user can open it from Emacs.
+- For the "nothing notable" section (filtered lists only), just list the usernames in a single line.
+- If a tweet is part of a thread and the beginning is clearly missing context, note "(thread)" so the user knows to click through.
+- Omit the "Discovered accounts" section if no RT authors produced notable tweets.
+
+### 8. Open in Emacs
+
+Write the digest to a temporary file and open it in Emacs:
+
+```bash
+TMPFILE=$(mktemp /tmp/twitter-digest-XXXXXX.org)
+# (write content to $TMPFILE)
+emacsclient -e "(progn (find-file \"$TMPFILE\") (goto-char (point-min)) (org-fold-show-all))"
+```
+
+Also print a brief summary to the terminal (number of notable tweets, number of discovered accounts) so the user gets immediate feedback even before switching to Emacs.
+
+### 9. Update last-run timestamp
 
 After presenting the digest, write the ISO timestamp of the most recent tweet seen to:
 
@@ -121,7 +167,7 @@ After presenting the digest, write the ISO timestamp of the most recent tweet se
 
 This ensures the next run only surfaces new tweets. Always do this, whether invoked manually or via `/loop`.
 
-### 8. Save the digest (optional)
+### 10. Save the digest (optional)
 
 If the user asks to save, write to `~/.claude/skills/twitter-digest/digests/<list-name>/YYYY-MM-DD-HHMM.md`.
 

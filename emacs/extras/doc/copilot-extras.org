@@ -74,6 +74,9 @@ following is true:
 3. The function is called from a non-interactive context (i.e.,
    ~this-command~ is ~nil~), such as a timer.  Starting the Copilot
    server in such contexts can trigger errors that freeze Emacs.
+4. The buffer is an Org capture buffer (~org-capture-mode~ is
+   active).  Copilot's change tracker can crash in these short-lived
+   buffers.
 
 This provides a convenient "enable everywhere except..." policy without
 requiring per-mode hook configuration.

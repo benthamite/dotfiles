@@ -129,16 +129,19 @@ or prompt the user for a file."
 (declare-function bibtex-extras-get-key "bibtex-extras")
 (declare-function ebib-extras-get-field "ebib-extras")
 ;;;###autoload
-(defun eww-extras-url-to-file (type &optional url callback)
+(defun eww-extras-url-to-file (type &optional url callback key)
   "Generate file of TYPE for URL and run CALLBACK function.
 CALLBACK is a function called when the process concludes. The function takes two
 arguments: the file to attach and the BibTeX key of the entry from which this
-function was called, if any."
+function was called, if any. KEY is an optional BibTeX key; when non-nil it is
+used as the filename stem and passed to the callback sentinel, bypassing the
+buffer-derived lookup."
   (let* ((url (simple-extras-get-url url))
-         (bibtex-key (pcase major-mode
-                       ('bibtex-mode (bibtex-extras-get-key))
-                       ((or 'ebib-entry-mode 'ebib-index-mode)
-                        (ebib-extras-get-field "=key="))))
+         (bibtex-key (or key
+                         (pcase major-mode
+                           ('bibtex-mode (bibtex-extras-get-key))
+                           ((or 'ebib-entry-mode 'ebib-index-mode)
+                            (ebib-extras-get-field "=key=")))))
          (title (pcase major-mode
                   ((or 'bibtex-mode 'ebib-entry-mode 'ebib-index-mode) bibtex-key)
                   (_ (pcase type

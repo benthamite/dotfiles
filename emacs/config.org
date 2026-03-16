@@ -18,20 +18,20 @@ This configuration is an Org document that tangles to an Emacs Lisp init file. I
 ;; with elpaca
 (use-package org-extras
   :ensure (:host github :repo "benthamite/dotfiles"
-		 :files ("emacs/extras/org-extras.el"
-			 "emacs/extras/doc/org-extras.texi")))
+                 :files ("emacs/extras/org-extras.el"
+                         "emacs/extras/doc/org-extras.texi")))
 
 ;; with straight
 (use-package org-extras
   :straight (:host github :repo "benthamite/dotfiles"
-		   :files ("emacs/extras/org-extras.el"
-			   "emacs/extras/doc/org-extras.texi")))
+                   :files ("emacs/extras/org-extras.el"
+                           "emacs/extras/doc/org-extras.texi")))
 
 ;; with vc (requires Emacs 30.1 or higher; no Info manual)
 (use-package org-extras
   :vc (:url "https://github.com/benthamite/dotfiles"
-	    :lisp-dir "emacs/extras"
-	    :rev :newest))
+            :lisp-dir "emacs/extras"
+            :rev :newest))
 #+end_src
 
 The extras come with their own manuals and user options: everything is documented and customizable. When installed via elpaca or straight, each package's Info manual is built and registered automatically. To read a manual, type =M-x info-display-manual RET= (or =C-h R=) and enter the package name (e.g. =org-extras=). You can also browse all available manuals with =M-x info RET= (=C-h i=). (The =:vc= recipe does not currently build Info manuals due to a limitation in =package-vc=.)
@@ -226,6 +226,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#avy][avy]]
   - [[#avy-extras][avy-extras]]
   - [[#writeroom-mode][writeroom-mode]]
+  - [[#logos][logos]]
   - [[#ace-link][ace-link]]
   - [[#ace-link-extras][ace-link-extras]]
 - [[#date--time][date & time]]
@@ -998,7 +999,7 @@ exec "$(dirname "$0")/sync-elpaca-clone.sh"
 
   ;; unset some `Alt' key bindings in `key-translation-map'
   (dolist (char '("SPC" "!" "$" "+" "-" "<" ">" "?" "a" "c" "m" "o" "u"
-		  "x" "C" "L" "P" "R" "S" "T" "Y" "[" "]" "{" "|" "}"))
+                  "x" "C" "L" "P" "R" "S" "T" "Y" "[" "]" "{" "|" "}"))
     (keymap-unset key-translation-map (concat "A-" char))))
 #+end_src
 
@@ -2200,7 +2201,7 @@ CLOCK: [2021-02-04 Thu 20:54]--[2021-02-04 Thu 20:59] =>  0:05
   :bind
   ("C-h C-f" . faces-extras-describe-face))
 #+end_src
- 
+
 ** =org-modern=
 :PROPERTIES:
 :ID:       FB673B28-FB6D-48EE-97B8-1E9C5D9F32FD
@@ -2351,7 +2352,7 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package modus-themes
   :ensure (:host github
-		 :repo "protesilaos/modus-themes")
+                 :repo "protesilaos/modus-themes")
   :after faces faces-extras simple-extras
   :demand t
   :custom
@@ -2359,11 +2360,11 @@ CLOCK: [2021-05-11 Tue 07:36]--[2021-05-11 Tue 07:54] =>  0:18
 
   :config
   (setopt modus-themes-common-palette-overrides
-	  `((fringe unspecified) ; hide the fringe
-	    (bg-prose-block-delimiter bg-inactive)
-	    (fg-prose-block-delimiter gray)
-	    ;; for the rest, use the predefined intense values
-	    ,@modus-themes-preset-overrides-intense))
+          `((fringe unspecified) ; hide the fringe
+            (bg-prose-block-delimiter bg-inactive)
+            (fg-prose-block-delimiter gray)
+            ;; for the rest, use the predefined intense values
+            ,@modus-themes-preset-overrides-intense))
 
   :hook
   (modus-themes-after-load-theme-hook . faces-extras-set-custom-face-attributes)
@@ -2977,8 +2978,8 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
                ("l" . next-line)))
   (with-eval-after-load 'johnson
     (bind-keys :map 'johnson-mode-map
-	       ("k" . previous-line)
-	       ("l" . next-line)))
+               ("k" . previous-line)
+               ("l" . next-line)))
   (with-eval-after-load 'ledger-reconcile
     (bind-keys :map ledger-reconcile-mode-map
                ("k" . previous-line)
@@ -3009,8 +3010,8 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
                ("l" . next-line)))
   (with-eval-after-load 'wasabi
     (bind-keys :map wasabi-mode-map
-	       ("k" . previous-line)
-	       ("l" . next-line)))
+               ("k" . previous-line)
+               ("l" . next-line)))
 
   :bind
   (("A-C-s-m" . move-beginning-of-line)
@@ -4040,7 +4041,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
   (with-eval-after-load 'dired
     (bind-keys :map dired-mode-map
                ("q" . files-extras-kill-this-buffer)
-	       ("s-o" . files-extras-ocr-pdf)))
+               ("s-o" . files-extras-ocr-pdf)))
   (with-eval-after-load 'ebib
     (bind-keys :map ebib-entry-mode-map
                ("v" . files-extras-internet-archive-dwim)
@@ -4049,7 +4050,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
                ("q" . files-extras-bury-buffer-switch-to-other-window)))
   (with-eval-after-load 'elfeed
     (bind-keys :map elfeed-show-mode-map
-	       ("q" . files-extras-kill-this-buffer)))
+               ("q" . files-extras-kill-this-buffer)))
   (with-eval-after-load 'finder
     (bind-keys :map finder-mode-map
                ("q" . files-extras-kill-this-buffer)))
@@ -5025,29 +5026,41 @@ CLOCK: [2021-03-30 Tue 21:45]--[2021-03-30 Tue 22:02] =>  0:17
 (use-package writeroom-mode
   :custom
   (writeroom-global-effects '(writeroom-set-fullscreen
-			      writeroom-set-alpha
-			      writeroom-set-menu-bar-lines
-			      writeroom-set-tool-bar-lines
-			      writeroom-set-vertical-scroll-bars
-			      writeroom-set-bottom-divider-width
-			      (lambda (arg) (tab-bar-mode (* -1 arg)))))
+                              writeroom-set-alpha
+                              writeroom-set-menu-bar-lines
+                              writeroom-set-tool-bar-lines
+                              writeroom-set-vertical-scroll-bars
+                              writeroom-set-bottom-divider-width
+                              (lambda (arg) (tab-bar-mode (* -1 arg)))))
   (writeroom-restore-window-config t) ; upon leaving `writeroom mode', restore pre-existing number of windows
   (writeroom-major-modes '(org-mode
-			   elfeed-search-mode
-			   elfeed-show-mode
-			   eww-mode
-			   eww-buffers-mode)) ; major modes activated in global-writeroom-mode
+                           elfeed-search-mode
+                           elfeed-show-mode
+                           eww-mode
+                           eww-buffers-mode)) ; major modes activated in global-writeroom-mode
   (writeroom-fullscreen-effect 'maximized) ; disables annoying fullscreen transition effect on macos
   (writeroom-maximize-window t)
 
   :config
   (advice-add 'writeroom-mode
-	      :before (lambda (&rest args)
-			"Set `writeroom-width' to the width of the window in which it is invoked."
-			(setopt writeroom-width (window-total-width))))
+              :before (lambda (&rest args)
+                        "Set `writeroom-width' to the width of the window in which it is invoked."
+                        (setopt writeroom-width (window-total-width))))
 
   :bind
   ("H-u" . writeroom-mode))
+#+end_src
+
+** logos
+:PROPERTIES:
+:ID:       C5AA50F1-5477-4380-A9E3-1C542CFBD686
+:END:
+
+/[[https://protesilaos.com/emacs/logos][logos]] provides a simple focus mode for reading, writing, and presentation./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package logos
+  :demand t)
 #+end_src
 
 ** =ace-link=
@@ -5180,7 +5193,7 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package institution-calendar
   :ensure (:host github
-		 :repo "protesilaos/institution-calendar")
+                 :repo "protesilaos/institution-calendar")
   :defer t
   :config
   (institution-calendar-mode))
@@ -6810,7 +6823,7 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package flymake-mdl
   :ensure (:host github
-		 :repo "MicahElliott/flymake-mdl")
+                 :repo "MicahElliott/flymake-mdl")
   :after markdown-mode
   :demand t)
 #+end_src
@@ -6854,7 +6867,7 @@ I use a fork that is better maintained, together with the associated [[https://g
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package atomic-chrome
   :ensure (:repo "KarimAziev/atomic-chrome"
-	   :host github)
+           :host github)
   :defer 30
   :custom
   (atomic-chrome-default-major-mode 'markdown-mode)
@@ -6863,14 +6876,14 @@ I use a fork that is better maintained, together with the associated [[https://g
    '(("github\\.com" . gfm-mode)
      ("wikipedia\\.org" . mediawiki-mode)
      ("timelines\\.issarice\\.com" . mediawiki-mode)))
-  
+
   :config
   (setq-default atomic-chrome-extension-type-list '(atomic-chrome))
   (atomic-chrome-start-server)
 
   :bind
   (:map atomic-chrome-edit-mode-map
-	("s-c" . atomic-chrome-close-current-buffer)))
+        ("s-c" . atomic-chrome-close-current-buffer)))
 #+end_src
 
 ** =markdown-mode=
@@ -6993,7 +7006,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
   :config
   ;; do not prompt user when attempting to kill xwidget buffer
   (remove-hook 'kill-buffer-query-functions #'xwidget-kill-buffer-query-function)
-  
+
   :bind
   (:map xwidget-webkit-mode-map
         ("," . xwidget-webkit-scroll-down)
@@ -7030,16 +7043,16 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
   ;; :ensure (:tag "2.4.3") ; otherwise can't authenticate; https://github.com/hexmode/mediawiki-el/issues/48
   :custom
   (mediawiki-site-alist `(("Wikipedia"
-			   "https://en.wikipedia.org/w/"
-			   "Sir Paul"
-			   ,(auth-source-pass-get 'secret "chrome/auth.wikimedia.org/Sir_Paul") ""
-			   :description "English Wikipedia" :first-page "Main Page")))
+                           "https://en.wikipedia.org/w/"
+                           "Sir Paul"
+                           ,(auth-source-pass-get 'secret "chrome/auth.wikimedia.org/Sir_Paul") ""
+                           :description "English Wikipedia" :first-page "Main Page")))
   (mediawiki-draft-data-file (file-name-concat paths-dir-notes "drafts.wiki"))
-  
+
   :bind
   (:map mediawiki-mode-map
         ("s-k" . mediawiki-insert-link)
-	("A-C-s-r" . mediawiki-prev-header)
+        ("A-C-s-r" . mediawiki-prev-header)
         ("A-C-s-f" . mediawiki-next-header)))
 #+end_src
 
@@ -7061,7 +7074,7 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
   (wikipedia-ai-model 'gemini-flash-lite-latest)
   (wikipedia-ai-review-auto t)
   (wikipedia-watchlist-score-reason-auto t)
-  
+
   :bind
   (("A-p" . wikipedia-transient)))
 #+end_src
@@ -7076,7 +7089,7 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package gdocs
   :ensure (:host github
-		 :repo "benthamite/gdocs")
+                 :repo "benthamite/gdocs")
   :defer t
   :custom
   (gdocs-accounts
@@ -7175,7 +7188,7 @@ To populate the database of historical prices:
 
   :hook
   (ledger-reconcile-mode-hook . (lambda () (mouse-wheel-mode -1)))
-  
+
   :bind
   (:map ledger-mode-map
         ("A-C-s-f" . ledger-navigate-next-xact-or-directive)
@@ -7309,10 +7322,10 @@ To populate the database of historical prices:
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package johnson
   :ensure (:host github
-		 :repo "benthamite/johnson")
+                 :repo "benthamite/johnson")
   :custom
   (johnson-dictionary-directories '("/Users/pablostafforini/My Drive/Dictionaries/"))
-  
+
   :bind
   (("A-o" . johnson-lookup)
    :map johnson-mode-map
@@ -7840,15 +7853,15 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
       (let* ((contents (buffer-string))
              (file (file-name-concat paths-dir-downloads "backtrace.el"))
              message)
-	(with-temp-buffer
+        (with-temp-buffer
           (insert contents)
           (write-region (point-min) (point-max) file)
           (setq message (format "Backtrace saved to \"%s\" (%s)"
-				(abbreviate-file-name file)
-				(file-size-human-readable (file-attribute-size (file-attributes file)))))
-	  (kill-new file))
-	(kill-buffer)
-	(message "%s" message))))
+                                (abbreviate-file-name file)
+                                (file-size-human-readable (file-attribute-size (file-attributes file)))))
+          (kill-new file))
+        (kill-buffer)
+        (message "%s" message))))
 
   :bind
   (:map debugger-mode-map
@@ -8162,11 +8175,11 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
   :defer 30
   :config
   (setopt hl-todo-keyword-faces
-	  (append '(("WAITING" . "blue")
-		    ("LATER" . "violet")
-		    ("SOMEDAY" . "brown")
-		    ("DELEGATED" . "gray"))))
-  
+          (append '(("WAITING" . "blue")
+                    ("LATER" . "violet")
+                    ("SOMEDAY" . "brown")
+                    ("DELEGATED" . "gray"))))
+
   (global-hl-todo-mode))
 #+end_src
 
@@ -8182,7 +8195,7 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
   :after hl-todo
   :bind
   (:map prog-mode-map
-	("s-t" . consult-todo)))
+        ("s-t" . consult-todo)))
 #+end_src
 
 ** =project=
@@ -8285,7 +8298,7 @@ CLOCK: [2022-06-19 Sun 07:14]--[2022-06-19 Sun 07:31] =>  0:17
       ;; This will show the link in the echo area without it being logged in
       ;; the Messages buffer.
       (let ((message-log-max nil)) (message "%s" link-info))))
-  
+
   (dolist (h '(org-mode-hook org-agenda-mode-hook))
     (add-hook h (lambda () (add-hook 'post-command-hook #'org-display-link-info-at-point nil 'local))))
 
@@ -8504,8 +8517,8 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
   (with-eval-after-load 'org-msg
     (bind-keys :map org-msg-edit-mode-map
-	       ("s-r" . gptel-extras-mu4e-draft-reply)))
-  
+               ("s-r" . gptel-extras-mu4e-draft-reply)))
+
   :custom
   ;; since these models take a while, we trigger a growl-like alert when they
   ;; finish, in case we want to do something else in the meantime
@@ -8640,8 +8653,8 @@ This package evolved out of =gptel-extras=.
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package ragmacs
   :ensure (:host github
-		 :repo "positron-solutions/ragmacs"
-                 :build (:not elpaca-check-version))                 
+                 :repo "positron-solutions/ragmacs"
+                 :build (:not elpaca-check-version))
   :defer t)
 #+end_src
 
@@ -8681,15 +8694,15 @@ This package evolved out of =gptel-extras=.
   ;; https://github.com/MatthewZMD/aidermacs/issues/141#issuecomment-2924207029
   (with-eval-after-load 'aidermacs-backend-comint
     (remove-hook 'syntax-propertize-extend-region-functions
-		 #'markdown-syntax-propertize-extend-region t)
+                 #'markdown-syntax-propertize-extend-region t)
     (remove-hook 'jit-lock-after-change-extend-region-functions
-		 #'markdown-font-lock-extend-region-function t))
+                 #'markdown-font-lock-extend-region-function t))
 
   :bind (("C-c a" . aidermacs-transient-menu)
-	 :map aidermacs-comint-mode-map
-	 ("S-<return>" . comint-send-input)
-	 ("s-c" . comint-send-input)
-	 ("<return>" . comint-accumulate)))
+         :map aidermacs-comint-mode-map
+         ("S-<return>" . comint-send-input)
+         ("s-c" . comint-send-input)
+         ("<return>" . comint-accumulate)))
 #+end_src
 
 ** =aidermacs-extras=
@@ -8718,7 +8731,7 @@ This package evolved out of =gptel-extras=.
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package ob-aider
   :ensure (:host github
-		 :repo "localredhead/ob-aider.el")
+                 :repo "localredhead/ob-aider.el")
   :after org aidermacs
   :config
   (org-babel-do-load-languages
@@ -8742,7 +8755,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :ensure-system-package
   ((claude . "brew install claude-code")
    (claude-code-acp . "npm install -g @zed-industries/claude-code-acp"))
-  
+
   :custom
   (agent-shell-anthropic-authentication
    (agent-shell-anthropic-make-authentication :login t))
@@ -8762,8 +8775,8 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package claude-code
   :ensure (:host github
-		 :repo "stevemolitor/claude-code.el" :branch "main"
-		 :files ("*.el" (:exclude "images/*")))
+                 :repo "stevemolitor/claude-code.el" :branch "main"
+                 :files ("*.el" (:exclude "images/*")))
   :custom
   (claude-code-display-window-fn (lambda (_buffer) (claude-code-switch-to-buffer) nil))
   (claude-code-terminal-backend 'eat)
@@ -8777,7 +8790,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   ("A-t" . claude-code-extras-start-or-switch)
   ("C-c d" . claude-code-transient)
   (:repeat-map my-claude-code-map
-	       ("M" . claude-code-cycle-mode))
+               ("M" . claude-code-cycle-mode))
 
   :bind-keymap
   ("C-c c" . claude-code-command-map)
@@ -8814,7 +8827,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package claude-log
   :ensure (:host github
-		 :repo "benthamite/claude-log")
+                 :repo "benthamite/claude-log")
   :after claude-code
   :demand t)
 #+end_src
@@ -8829,7 +8842,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package monet
   :ensure (:host github
-		 :repo "stevemolitor/monet")
+                 :repo "stevemolitor/monet")
   :after claude-code
   :demand t)
 #+end_src
@@ -8844,94 +8857,94 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package mcp
   :ensure (:host github
-		 :repo "lizqwerscott/mcp.el"
-		 :build (:not elpaca-check-version))
+                 :repo "lizqwerscott/mcp.el"
+                 :build (:not elpaca-check-version))
   :after gptel
   :config
   (setq mcp-hub-servers
-	`(("context7" . (:command "npx"
-				  :args ("-y" "@upstash/context7-mcp@latest")))
-	  ("brave-search" . (:command "npx"
-				      :args ("-y" "@brave/brave-search-mcp-server")
-				      :env (:BRAVE_API_KEY
-					    ,(auth-source-pass-get
-					      "key" (concat "chrome/brave.com/"
-							    (getenv "PERSONAL_EMAIL"))))))
-	  ("fetch" . (:command "npx" :args ("mcp-fetch-server")))
-	  ("filesystem" . (:command "npx"
-				    :args ("-y" "@modelcontextprotocol/server-filesystem"
-					   ,(expand-file-name "~")
-					   "/tmp")))
-	  ("git" . (:command "npx"
-			     :args ("-y" "@cyanheads/git-mcp-server")
-			     :env (:LOGS_DIR "/tmp/git-mcp-server/")))
-	  ("google-calendar" . (:command "npx"
-					 :args ("-y" "@cocal/google-calendar-mcp")
-					 :env (:GOOGLE_OAUTH_CREDENTIALS
-					       ,(expand-file-name "~/.config/google-calendar-mcp/gcp-oauth.keys.json"))))
-	  ("github-tlon-ai" .
-	   (:command "npx"
-		     :args ("-y" "@modelcontextprotocol/server-github")
-		     :env (:GITHUB_PERSONAL_ACCESS_TOKEN
-			   ,(auth-source-pass-get "github-mcp"
-						  (concat "tlon/core/github.com/tlon-ai")))))
-	  ;; ("graphiti-stdio" .
-	  ;; (:command "python"
-	  ;; :args ("-u" "-m" "graphiti_mcp_server" "--transport" "stdio")
-	  ;; :env (:OPENAI_API_KEY
-	  ;; ,(auth-source-pass-get "gptel"
-	  ;; (concat "tlon/core/openai.com/" tlon-email-shared))
-	  ;; :NEO4J_URI "bolt://localhost:7687"
-	  ;; :NEO4J_USER "neo4j"
-	  ;; :NEO4J_PASSWORD "demodemo")))
-	  ("memory" . (:command "npx"
-				:args ("-y" "@modelcontextprotocol/server-memory")))
-	  ("playwright" . (:command "npx"
-				    :args ("@playwright/mcp@latest" "--headless")))
-	  ("sequential-thinking" . (:command "npx"
-					     :args ("-y" "@modelcontextprotocol/server-sequential-thinking")))
-	  ("slack-ae-racionalidad" . (:command "npx"
-					       :args ("-y" "@modelcontextprotocol/server-slack")
-					       :env (:SLACK_BOT_TOKEN ,(auth-source-pass-get
-									"bot-token"
-									"tlon/core/slack.com/ae-racionalidad")
-								      :SLACK_TEAM_ID "T04EYQYHG74")))
-	  ("slack-ea-translations" . (:command "npx"
-					       :args ("-y" "@modelcontextprotocol/server-slack")
-					       :env (:SLACK_BOT_TOKEN ,(auth-source-pass-get
-									"bot-token"
-									"tlon/core/slack.com/ea-translations")
-								      :SLACK_TEAM_ID "CA0JVRT5K")))))
+        `(("context7" . (:command "npx"
+                                  :args ("-y" "@upstash/context7-mcp@latest")))
+          ("brave-search" . (:command "npx"
+                                      :args ("-y" "@brave/brave-search-mcp-server")
+                                      :env (:BRAVE_API_KEY
+                                            ,(auth-source-pass-get
+                                              "key" (concat "chrome/brave.com/"
+                                                            (getenv "PERSONAL_EMAIL"))))))
+          ("fetch" . (:command "npx" :args ("mcp-fetch-server")))
+          ("filesystem" . (:command "npx"
+                                    :args ("-y" "@modelcontextprotocol/server-filesystem"
+                                           ,(expand-file-name "~")
+                                           "/tmp")))
+          ("git" . (:command "npx"
+                             :args ("-y" "@cyanheads/git-mcp-server")
+                             :env (:LOGS_DIR "/tmp/git-mcp-server/")))
+          ("google-calendar" . (:command "npx"
+                                         :args ("-y" "@cocal/google-calendar-mcp")
+                                         :env (:GOOGLE_OAUTH_CREDENTIALS
+                                               ,(expand-file-name "~/.config/google-calendar-mcp/gcp-oauth.keys.json"))))
+          ("github-tlon-ai" .
+           (:command "npx"
+                     :args ("-y" "@modelcontextprotocol/server-github")
+                     :env (:GITHUB_PERSONAL_ACCESS_TOKEN
+                           ,(auth-source-pass-get "github-mcp"
+                                                  (concat "tlon/core/github.com/tlon-ai")))))
+          ;; ("graphiti-stdio" .
+          ;; (:command "python"
+          ;; :args ("-u" "-m" "graphiti_mcp_server" "--transport" "stdio")
+          ;; :env (:OPENAI_API_KEY
+          ;; ,(auth-source-pass-get "gptel"
+          ;; (concat "tlon/core/openai.com/" tlon-email-shared))
+          ;; :NEO4J_URI "bolt://localhost:7687"
+          ;; :NEO4J_USER "neo4j"
+          ;; :NEO4J_PASSWORD "demodemo")))
+          ("memory" . (:command "npx"
+                                :args ("-y" "@modelcontextprotocol/server-memory")))
+          ("playwright" . (:command "npx"
+                                    :args ("@playwright/mcp@latest" "--headless")))
+          ("sequential-thinking" . (:command "npx"
+                                             :args ("-y" "@modelcontextprotocol/server-sequential-thinking")))
+          ("slack-ae-racionalidad" . (:command "npx"
+                                               :args ("-y" "@modelcontextprotocol/server-slack")
+                                               :env (:SLACK_BOT_TOKEN ,(auth-source-pass-get
+                                                                        "bot-token"
+                                                                        "tlon/core/slack.com/ae-racionalidad")
+                                                                      :SLACK_TEAM_ID "T04EYQYHG74")))
+          ("slack-ea-translations" . (:command "npx"
+                                               :args ("-y" "@modelcontextprotocol/server-slack")
+                                               :env (:SLACK_BOT_TOKEN ,(auth-source-pass-get
+                                                                        "bot-token"
+                                                                        "tlon/core/slack.com/ea-translations")
+                                                                      :SLACK_TEAM_ID "CA0JVRT5K")))))
 
   (when (string= (system-name) "Pablos-MacBook-Pro.local")
     (setq mcp-hub-servers
-	  (append mcp-hub-servers
-		  `(("anki" . (:command "npx"
-					:args ("--yes" "anki-mcp-server")))
-		    ("emacs-mcp-server"
-		     . (:command "npx"
-				 :args ("-y" "@keegancsmith/emacs-mcp-server")))
-		    ("github-benthamite-owner-benthamite" .
-		     (:command "npx"
-			       :args ("-y" "@modelcontextprotocol/server-github")
-			       :env (:GITHUB_PERSONAL_ACCESS_TOKEN
-				     ,(auth-source-pass-get "github-mcp-owner-benthamite"
-							    (concat "chrome/github.com/benthamite")))))
-		    ("github-benthamite-owner-tlon-team" .
-		     (:command "npx"
-			       :args ("-y" "@modelcontextprotocol/server-github")
-			       :env (:GITHUB_PERSONAL_ACCESS_TOKEN
-				     ,(auth-source-pass-get "github-mcp-owner-tlon-team"
-							    (concat "chrome/github.com/benthamite")))))))))
+          (append mcp-hub-servers
+                  `(("anki" . (:command "npx"
+                                        :args ("--yes" "anki-mcp-server")))
+                    ("emacs-mcp-server"
+                     . (:command "npx"
+                                 :args ("-y" "@keegancsmith/emacs-mcp-server")))
+                    ("github-benthamite-owner-benthamite" .
+                     (:command "npx"
+                               :args ("-y" "@modelcontextprotocol/server-github")
+                               :env (:GITHUB_PERSONAL_ACCESS_TOKEN
+                                     ,(auth-source-pass-get "github-mcp-owner-benthamite"
+                                                            (concat "chrome/github.com/benthamite")))))
+                    ("github-benthamite-owner-tlon-team" .
+                     (:command "npx"
+                               :args ("-y" "@modelcontextprotocol/server-github")
+                               :env (:GITHUB_PERSONAL_ACCESS_TOKEN
+                                     ,(auth-source-pass-get "github-mcp-owner-tlon-team"
+                                                            (concat "chrome/github.com/benthamite")))))))))
 
   (when (simple-extras-connected-to-network-p "Pablo-mesh")
     (setq mcp-hub-servers
-	  (append mcp-hub-servers
-		  `(("home-assistant" . (:command "mcp-proxy"
-						  :env (:SSE_URL "http://homeassistant.local:8123/mcp_server/sse"
-								 :API_ACCESS_TOKEN ,(auth-source-pass-get
-										     "ha-mcp"
-										     "chrome/home-assistant.io/stafforini"))))))))
+          (append mcp-hub-servers
+                  `(("home-assistant" . (:command "mcp-proxy"
+                                                  :env (:SSE_URL "http://homeassistant.local:8123/mcp_server/sse"
+                                                                 :API_ACCESS_TOKEN ,(auth-source-pass-get
+                                                                                     "ha-mcp"
+                                                                                     "chrome/home-assistant.io/stafforini"))))))))
 
   (mcp-hub-start-all-server #'gptel-extras-connect-to-all-servers))
 #+end_src
@@ -9426,12 +9439,12 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
 
   :custom
   (org-extras-id-auto-add-excluded-directories (list paths-dir-anki
-						     paths-dir-dropbox-tlon-leo
-						     paths-dir-dropbox-tlon-fede
-						     paths-dir-android
-						     (file-name-concat paths-dir-dropbox-tlon-leo "gptel/")
-						     (file-name-concat paths-dir-dropbox-tlon-fede "archive/")
-						     (file-name-concat paths-dir-dropbox-tlon-core "legal/contracts/"))) 
+                                                     paths-dir-dropbox-tlon-leo
+                                                     paths-dir-dropbox-tlon-fede
+                                                     paths-dir-android
+                                                     (file-name-concat paths-dir-dropbox-tlon-leo "gptel/")
+                                                     (file-name-concat paths-dir-dropbox-tlon-fede "archive/")
+                                                     (file-name-concat paths-dir-dropbox-tlon-core "legal/contracts/")))
 
   (org-extras-agenda-files-excluded (list paths-file-tlon-tareas-leo
                                           paths-file-tlon-tareas-fede))
@@ -9739,6 +9752,9 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
       (id "319B1611-A5A6-42C8-923F-884A354333F9")
       "* %(org-web-tools-extras-youtube-dl (current-kill 0))\n[[%c][YouTube link]]" :empty-lines 1 :prepend t :immediate-finish t)
      ;; github.com/alphapapa/org-protocol-capture-html#org-capture-template
+     ("f" "Feed" entry
+      (id "D70DFEBE-A5FD-4BA6-A054-49E7C8F6448A")
+      "*** [[%^{Feed URL}][%^{Name}]] %^g\n%?" :empty-lines 1)
      ("w" "Web site" entry
       (file paths-file-downloads)
       "* %a :website:\n\n%U %?\n\n%:initial")))
@@ -9984,7 +10000,7 @@ alist and converting it to a hash table, `org-id-locations' can be
 left as an alist, causing `puthash' errors in `org-id-add-location'."
     (when (and org-id-locations (not (hash-table-p org-id-locations)))
       (setq org-id-locations (org-id-alist-to-hash org-id-locations))))
-  
+
   (advice-add 'org-id-add-location :before #'org-id-ensure-locations-hash-table))
 #+end_src
 
@@ -10846,7 +10862,7 @@ CLOCK: [2025-07-05 Sat 11:54]--[2025-07-05 Sat 11:54] =>  0:00
 (use-package org-percentile
   :disabled
   :ensure (:host github
-		 :repo "benthamite/org-percentile")
+                 :repo "benthamite/org-percentile")
   :after org-clock
   :custom
   (org-percentile-data-file (file-name-concat paths-dir-dropbox "misc/org-percentile-data.el"))
@@ -10920,10 +10936,10 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
   (org-roam-directory paths-dir-org-roam)
   (org-roam-node-display-template
    (concat "${title:*} "
-	   (propertize "${tags:10}" 'face 'org-tag)))
+           (propertize "${tags:10}" 'face 'org-tag)))
   (org-roam-node-display-template
    (concat "${hierarchy:160} "
-	   (propertize "${tags:20}" 'face 'org-tag)))
+           (propertize "${tags:20}" 'face 'org-tag)))
   ;; exclude selected headings based on other criteria
   (org-roam-db-node-include-function #'org-roam-extras-node-include-function)
 
@@ -10934,16 +10950,16 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
     (let ((level (org-roam-node-level node)))
       (concat
        (when (> level 0)
-	 (concat
-	  (propertize (org-roam-node-file-title node) 'face 'org-level-1)
-	  " > "))
+         (concat
+          (propertize (org-roam-node-file-title node) 'face 'org-level-1)
+          " > "))
        ;; This is a hacky propertization because it doesn't color the
        ;; intermediate headings differently, but doing that slowed
        ;; down the function too much.
        (when (> level 1)
-	 (concat
-	  (propertize (string-join (org-roam-node-olp node) " > ") 'face 'org-level-2)
-	  " > "))
+         (concat
+          (propertize (string-join (org-roam-node-olp node) " > ") 'face 'org-level-2)
+          " > "))
        (propertize (org-roam-node-title node) 'face 'org-level-3))))
 
   (with-eval-after-load 'org-roam-bibtex
@@ -10969,9 +10985,9 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 
   :bind
   (:map org-mode-map
-	("s-i" . org-roam-node-insert)
-	:map org-roam-mode-map
-	("f" . ace-link-org)))
+        ("s-i" . org-roam-node-insert)
+        :map org-roam-mode-map
+        ("f" . ace-link-org)))
 #+end_src
 
 ** =org-roam-extras=
@@ -11187,7 +11203,7 @@ The [[https://github.com/louietan/anki-editor][original package]] is abandoned, 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package anki-editor
   :ensure (:host github
-		 :repo "anki-editor/anki-editor")
+                 :repo "anki-editor/anki-editor")
   :defer t
   :custom
   ;; https://github.com/anki-editor/anki-editor/issues/116
@@ -11238,7 +11254,7 @@ The [[https://github.com/louietan/anki-editor][original package]] is abandoned, 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package anki-noter
   :ensure (:host github
-		 :repo "benthamite/anki-noter")
+                 :repo "benthamite/anki-noter")
   :defer t)
 #+end_src
 
@@ -11383,7 +11399,7 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
              ("language")
              ("version")
              ("rating")
-	     ("letterboxd")
+             ("letterboxd")
              ("note")
              ("organization")
              ("eprintclass" nil nil 4)
@@ -11864,7 +11880,7 @@ The macro below generates the commands correctly. But attempting to define key b
 
   :custom
   (ebib-extras-attach-existing-file-action 'overwrite)
-  
+
   :hook
   (ebib-add-entry . ebib-extras-create-list-of-existing-authors)
 
@@ -12879,7 +12895,7 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package slack
   :ensure (:host github
-		 :repo "benthamite/emacs-slack")
+                 :repo "benthamite/emacs-slack")
   :init
   (bind-keys ("A-k" . slack-extras-menu))
   :custom
@@ -12904,44 +12920,44 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
 
   :bind
   (:map slack-mode-map
-	("s-a" . slack-all-threads)
-	("s-c" . slack-channel-select)
-	("s-g" . slack-group-select)
-	("s-m" . slack-im-select)
-	("H-s-t" . slack-change-current-team)
-	("s-u" . slack-select-rooms)
-	("H-s-u" . slack-select-unread-rooms)
-	:map slack-buffer-mode-map
-	("s-a" . slack-all-threads)
-	("s-c" . slack-channel-select)
-	("s-g" . slack-group-select)
-	("s-m" . slack-im-select)
-	("H-s-t" . slack-change-current-team)
-	("s-u" . slack-select-rooms)
-	("H-s-u" . slack-select-unread-rooms) ; `slack-all-unreads' not working
-	:map slack-thread-message-buffer-mode-map
-	("d" . slack-thread-show-or-create)
-	("e" . slack-message-edit)
-	("k" . slack-buffer-goto-prev-message)
-	("l" . slack-buffer-goto-next-message)
-	("o" . slack-chat-org-capture)
-	("q" . files-extras-kill-other-buffer)
-	("r" . slack-message-add-reaction)
-	("R" . slack-message-remove-reaction)
-	("z" . slack-message-write-another-buffer)
-	:map slack-message-buffer-mode-map
-	("d" . slack-thread-show-or-create)
-	("e" . slack-message-edit)
-	("k" . slack-buffer-goto-prev-message)
-	("l" . slack-buffer-goto-next-message)
-	("o" . slack-chat-org-capture)
-	("r" . slack-message-add-reaction)
-	("R" . slack-message-remove-reaction)
-	("z" . slack-message-write-another-buffer)
-	:map slack-message-compose-buffer-mode-map
-	("s-c" . slack-message-send-from-buffer)
-	("s-f" . slack-message-select-file)
-	("s-m" . slack-message-embed-mention)))
+        ("s-a" . slack-all-threads)
+        ("s-c" . slack-channel-select)
+        ("s-g" . slack-group-select)
+        ("s-m" . slack-im-select)
+        ("H-s-t" . slack-change-current-team)
+        ("s-u" . slack-select-rooms)
+        ("H-s-u" . slack-select-unread-rooms)
+        :map slack-buffer-mode-map
+        ("s-a" . slack-all-threads)
+        ("s-c" . slack-channel-select)
+        ("s-g" . slack-group-select)
+        ("s-m" . slack-im-select)
+        ("H-s-t" . slack-change-current-team)
+        ("s-u" . slack-select-rooms)
+        ("H-s-u" . slack-select-unread-rooms) ; `slack-all-unreads' not working
+        :map slack-thread-message-buffer-mode-map
+        ("d" . slack-thread-show-or-create)
+        ("e" . slack-message-edit)
+        ("k" . slack-buffer-goto-prev-message)
+        ("l" . slack-buffer-goto-next-message)
+        ("o" . slack-chat-org-capture)
+        ("q" . files-extras-kill-other-buffer)
+        ("r" . slack-message-add-reaction)
+        ("R" . slack-message-remove-reaction)
+        ("z" . slack-message-write-another-buffer)
+        :map slack-message-buffer-mode-map
+        ("d" . slack-thread-show-or-create)
+        ("e" . slack-message-edit)
+        ("k" . slack-buffer-goto-prev-message)
+        ("l" . slack-buffer-goto-next-message)
+        ("o" . slack-chat-org-capture)
+        ("r" . slack-message-add-reaction)
+        ("R" . slack-message-remove-reaction)
+        ("z" . slack-message-write-another-buffer)
+        :map slack-message-compose-buffer-mode-map
+        ("s-c" . slack-message-send-from-buffer)
+        ("s-f" . slack-message-select-file)
+        ("s-m" . slack-message-embed-mention)))
 #+end_src
 
 ** =slack-extras=
@@ -13319,8 +13335,8 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
   :hook
   (elfeed-show-mode-hook . visual-line-mode)
   (elfeed-search-mode-hook . (lambda ()
-			       "Disable undo in ‘*elfeed-search*’ buffer to avoid warnings."
-			       (buffer-disable-undo)))
+                               "Disable undo in ‘*elfeed-search*’ buffer to avoid warnings."
+                               (buffer-disable-undo)))
 
   :bind
   (("A-f" . elfeed)
@@ -13452,7 +13468,7 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package elfeed-ai
   :ensure (:host github
-		 :repo "benthamite/elfeed-ai")
+                 :repo "benthamite/elfeed-ai")
   :after elfeed
   :demand t
   :custom
@@ -13464,8 +13480,8 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
 
   :bind
   (:map elfeed-search-mode-map
-	("a" . elfeed-ai-menu)
-	("t" . elfeed-ai-toggle-sort)))
+        ("a" . elfeed-ai-menu)
+        ("t" . elfeed-ai-toggle-sort)))
 #+end_src
 
 ** =engine-mode=
@@ -13938,7 +13954,7 @@ CLOCK: [2022-09-29 Thu 15:39]--[2022-09-29 Thu 16:26] =>  0:47
   :ensure (mullvad
            :host github
            :repo "benthamite/mullvad")
-  :demand t         
+  :demand t
   :custom
   (mullvad-durations '(1 5 10 30 60 120))
 
@@ -14095,19 +14111,19 @@ Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dl
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package esi-dictate
   :ensure (:host sourcehut
-		 :repo "lepisma/emacs-speech-input")
+                 :repo "lepisma/emacs-speech-input")
   :after llm
   :defer t
   :custom
   (esi-dictate-llm-provider (make-llm-openai
-			     :key (auth-source-pass-get "gptel" (concat "tlon/core/openai.com/" tlon-email-shared))
-			     :chat-model "gpt-4o-mini"))
+                             :key (auth-source-pass-get "gptel" (concat "tlon/core/openai.com/" tlon-email-shared))
+                             :chat-model "gpt-4o-mini"))
 
   (esi-dictate-dg-api-key (auth-source-pass-get "key" (concat "chrome/deepgram.com/" (getenv "PERSONAL_EMAIL"))))
 
   :bind (("A-h" . esi-dictate-start)
-	 :map esi-dictate-mode-map
-	 ("C-g" . esi-dictate-stop))
+         :map esi-dictate-mode-map
+         ("C-g" . esi-dictate-stop))
   :hook
   (esi-dictate-speech-final . esi-dictate-fix-context))
 #+end_src
@@ -14509,7 +14525,7 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package polymarket
   :ensure (:host github
-		 :repo "benthamite/polymarket")
+                 :repo "benthamite/polymarket")
   :defer t)
 #+end_src
 

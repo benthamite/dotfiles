@@ -2662,15 +2662,13 @@ CLOCK: [2023-03-30 Thu 22:12]--[2023-03-30 Thu 22:20] =>  0:08
   :after faces-extras
   :custom
   (auto-resize-tab-bars t)
-  (tab-bar-format '(tab-bar-format-align-right
-                    tab-bar-format-global))
+  (tab-bar-format '(tab-bar-format-global))
 
   :config
   (setf mode-line-misc-info
         ;; When the tab-bar is active, don't show `global-mode-string'
         ;; in `mode-line-misc-info', because we now show that in the
-        ;; tab-bar using `tab-bar-format-align-right' and
-        ;; `tab-bar-format-global'.
+        ;; tab-bar using `tab-bar-format-global'.
         (remove '(global-mode-string ("" global-mode-string))
                 mode-line-misc-info))
 

@@ -685,7 +685,7 @@ TYPE is a string. KEY is an optional BibTeX key string."
       (eww-extras-url-to-file type url
                               (lambda (file &optional _status)
                                 (ebib-extras-attach-file-to-entry file target-key))
-                              target-key)))))
+                              target-key))))
 
 (defun ebib-extras-url-to-pdf-attach (&optional key)
   "Generate a PDF from the URL of entry KEY and attach it.

@@ -1042,6 +1042,17 @@ When non-nil, passed to each `claude -p' invocation."
   :type '(choice (const :tag "Default" nil) string)
   :group 'claude-code-extras)
 
+(defcustom claude-code-extras-run-skill-model "claude-opus-4-6"
+  "Model to use for `claude-code-extras-run-skill'.
+Skills are complex agentic tasks that benefit from the most
+capable model.  Set to nil to use `claude-code-extras-batch-model'
+or Claude's default."
+  :type '(choice (const :tag "Opus 4.6" "claude-opus-4-6")
+                 (const :tag "Sonnet 4.6" "claude-sonnet-4-6")
+                 (const :tag "Use batch default" nil)
+                 string)
+  :group 'claude-code-extras)
+
 (defcustom claude-code-extras-audit-skills
   '("/code-audit" "/design-audit" "/interpretability-audit")
   "Skills to run when performing an integral project audit.
@@ -1507,6 +1518,7 @@ argument-source."
     (claude-code-extras--run-prompt
      prompt
      :dir (or dir default-directory)
+     :model claude-code-extras-run-skill-model
      :callback
      (lambda (result)
        (claude-code-extras--skill-display-result skill-name result)))))

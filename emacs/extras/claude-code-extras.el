@@ -1017,16 +1017,16 @@ that line before syncing and requesting completions."
       (cancel-timer claude-code-extras--copilot-change-timer))
     (setq claude-code-extras--copilot-active nil)))
 
-;;;;; Batch TODO processing
+;;;;; Non-interactive execution
 
 (defcustom claude-code-extras-batch-allowed-tools
   '("Bash" "Read" "Write" "Edit" "Glob" "Grep" "WebFetch" "WebSearch")
-  "Tools to auto-allow via `--allowedTools' for batch TODO processing."
+  "Tools to auto-allow via `--allowedTools' for non-interactive execution."
   :type '(repeat string)
   :group 'claude-code-extras)
 
 (defcustom claude-code-extras-batch-max-turns 30
-  "Maximum agentic turns per TODO when running batch processing."
+  "Maximum agentic turns per entry in non-interactive execution."
   :type 'integer
   :group 'claude-code-extras)
 
@@ -1037,7 +1037,7 @@ When non-nil, passed to each `claude -p' invocation."
   :group 'claude-code-extras)
 
 (defcustom claude-code-extras-batch-model nil
-  "Optional model override via `--model' for batch TODO processing.
+  "Optional model override via `--model' for non-interactive execution.
 When non-nil, passed to each `claude -p' invocation."
   :type '(choice (const :tag "Default" nil) string)
   :group 'claude-code-extras)
@@ -1151,69 +1151,35 @@ STATE is a plist with keys :queue :results :log-dir :working-dir
                               (replace-regexp-in-string
                                "[^a-zA-Z0-9_-]" "-"
                                (truncate-string-to-width title 50)))
-                      (plist-get state :log-dir)))
-           (args (claude-code-extras--batch-build-args prompt))
-           (env (cl-remove-if
-                 (lambda (s) (or (string-prefix-p "CLAUDE_CODE" s)
-                                 (string-prefix-p "ANTHROPIC_API_KEY=" s)))
-                 process-environment))
-           (start-time (current-time))
-           (output-buf (generate-new-buffer " *claude-batch-output*")))
+                      (plist-get state :log-dir))))
       (plist-put state :queue (cdr queue))
       (message "Batch [%d/%d]: %s"
                index
                (+ index (length (plist-get state :queue)))
                title)
-      (let ((process-environment env)
-            (default-directory (plist-get state :working-dir)))
-        (make-process
-         :name (format "claude-batch-%d" index)
-         :buffer output-buf
-         :command args
-         :sentinel
-         (lambda (proc _event)
-           (when (memq (process-status proc) '(exit signal))
-             (condition-case sentinel-err
-                 (let* ((exit-code (process-exit-status proc))
-                        (raw (with-current-buffer (process-buffer proc)
-                               (buffer-string)))
-                        (duration (float-time
-                                  (time-subtract (current-time) start-time)))
-                        (parsed
-                         (claude-code-extras--batch-parse-stream-json raw))
-                        (cost (plist-get parsed :cost))
-                        (result-text (plist-get parsed :text)))
-                   (with-temp-file log-file
-                     (insert raw))
-                   (plist-put state :results
-                              (cons (list :title title
-                                          :index index
-                                          :exit-code exit-code
-                                          :duration duration
-                                          :cost (or cost 0)
-                                          :result-text (or result-text
-                                                          "(failed to parse output)")
-                                          :log-file log-file)
-                                    (plist-get state :results)))
-                   (kill-buffer (process-buffer proc))
-                   (when (and (zerop exit-code)
-                              (plist-get state :commit-after-each))
-                     (ignore-errors
-                       (claude-code-extras--batch-commit-changes
-                        state title))))
-               (error
-                (plist-put state :results
-                           (cons (list :title title :index index :exit-code -1
-                                       :duration (float-time
-                                                  (time-subtract (current-time)
-                                                                 start-time))
-                                       :cost 0
-                                       :result-text (format "Sentinel error: %S"
-                                                            sentinel-err)
-                                       :log-file log-file)
-                                 (plist-get state :results)))
-                (ignore-errors (kill-buffer (process-buffer proc)))))
-             (claude-code-extras--batch-run-next state))))))))
+      (claude-code-extras--run-prompt
+       prompt
+       :dir (plist-get state :working-dir)
+       :callback
+       (lambda (result)
+         (when-let* ((raw (plist-get result :raw)))
+           (with-temp-file log-file
+             (insert raw)))
+         (plist-put state :results
+                    (cons (list :title title
+                                :index index
+                                :exit-code (plist-get result :exit-code)
+                                :duration (plist-get result :duration)
+                                :cost (plist-get result :cost)
+                                :result-text (or (plist-get result :text)
+                                                 "(failed to parse output)")
+                                :log-file log-file)
+                          (plist-get state :results)))
+         (when (and (zerop (plist-get result :exit-code))
+                    (plist-get state :commit-after-each))
+           (ignore-errors
+             (claude-code-extras--batch-commit-changes state title)))
+         (claude-code-extras--batch-run-next state))))))
 
 (defun claude-code-extras--batch-commit-changes (state title)
   "Commit any uncommitted changes in the working directory of STATE.
@@ -1261,26 +1227,252 @@ Returns (:text ASSISTANT-TEXT :cost COST :session-id ID
           :cost (or cost 0)
           :session-id session-id)))
 
-(defun claude-code-extras--batch-build-args (prompt)
-  "Build the command-line argument list for `claude -p' with PROMPT."
-  (let ((args (list claude-code-program
+(defun claude-code-extras--build-cli-args (prompt &rest kwargs)
+  "Build the argument list for `claude -p' with PROMPT.
+KWARGS are keyword arguments:
+  :allowed-tools  list of tool name strings
+  :system-prompt  string appended via --append-system-prompt
+  :model          model name string
+  :max-turns      integer, maximum agentic turns
+Each defaults to the corresponding `claude-code-extras-batch-*'
+customization variable when not supplied."
+  (let ((allowed-tools (or (plist-get kwargs :allowed-tools)
+                           claude-code-extras-batch-allowed-tools))
+        (system-prompt (or (plist-get kwargs :system-prompt)
+                           claude-code-extras-batch-system-prompt))
+        (model (or (plist-get kwargs :model)
+                   claude-code-extras-batch-model))
+        (max-turns (or (plist-get kwargs :max-turns)
+                       claude-code-extras-batch-max-turns))
+        (args (list claude-code-program
                     "-p" prompt
                     "--output-format" "stream-json"
-                    "--verbose"
-                    "--max-turns" (number-to-string
-                                  claude-code-extras-batch-max-turns))))
-    (when claude-code-extras-batch-allowed-tools
+                    "--verbose")))
+    (setq args (append args (list "--max-turns"
+                                  (number-to-string max-turns))))
+    (when allowed-tools
       (setq args (append args (list "--allowedTools"
-                                    (string-join
-                                     claude-code-extras-batch-allowed-tools
-                                     ",")))))
-    (when claude-code-extras-batch-system-prompt
+                                    (string-join allowed-tools ",")))))
+    (when system-prompt
       (setq args (append args (list "--append-system-prompt"
-                                    claude-code-extras-batch-system-prompt))))
-    (when claude-code-extras-batch-model
-      (setq args (append args (list "--model"
-                                    claude-code-extras-batch-model))))
+                                    system-prompt))))
+    (when model
+      (setq args (append args (list "--model" model))))
     args))
+
+(defun claude-code-extras--run-prompt (prompt &rest kwargs)
+  "Run PROMPT non-interactively via `claude -p' and call back with results.
+KWARGS are keyword arguments:
+  :dir             working directory (default `default-directory')
+  :callback        function called with a result plist (required)
+  :allowed-tools   passed to `claude-code-extras--build-cli-args'
+  :system-prompt   passed to `claude-code-extras--build-cli-args'
+  :model           passed to `claude-code-extras--build-cli-args'
+  :max-turns       passed to `claude-code-extras--build-cli-args'
+
+The CALLBACK receives a plist with keys:
+  :exit-code  process exit code
+  :duration   elapsed seconds (float)
+  :cost       USD cost (float)
+  :text       parsed assistant text
+  :session-id session ID string
+  :raw        raw stream-json output
+
+Returns the process object."
+  (let* ((dir (or (plist-get kwargs :dir) default-directory))
+         (callback (or (plist-get kwargs :callback)
+                       (error "claude-code-extras--run-prompt: :callback required")))
+         (args (apply #'claude-code-extras--build-cli-args prompt
+                      (cl-loop for key in '(:allowed-tools :system-prompt
+                                            :model :max-turns)
+                               for val = (plist-get kwargs key)
+                               when val append (list key val))))
+         (env (cl-remove-if
+               (lambda (s) (or (string-prefix-p "CLAUDE_CODE" s)
+                               (string-prefix-p "ANTHROPIC_API_KEY=" s)))
+               process-environment))
+         (start-time (current-time))
+         (output-buf (generate-new-buffer " *claude-run-output*")))
+    (let ((process-environment env)
+          (default-directory dir))
+      (make-process
+       :name "claude-run"
+       :buffer output-buf
+       :command args
+       :sentinel
+       (lambda (proc _event)
+         (when (memq (process-status proc) '(exit signal))
+           (let (result)
+             (condition-case err
+                 (let* ((exit-code (process-exit-status proc))
+                        (raw (with-current-buffer (process-buffer proc)
+                               (buffer-string)))
+                        (duration (float-time
+                                   (time-subtract (current-time) start-time)))
+                        (parsed (claude-code-extras--batch-parse-stream-json raw)))
+                   (setq result (list :exit-code exit-code
+                                      :duration duration
+                                      :cost (or (plist-get parsed :cost) 0)
+                                      :text (plist-get parsed :text)
+                                      :session-id (plist-get parsed :session-id)
+                                      :raw raw)))
+               (error
+                (setq result (list :exit-code -1
+                                   :duration (float-time
+                                              (time-subtract (current-time)
+                                                             start-time))
+                                   :cost 0
+                                   :text (format "Sentinel error: %S" err)
+                                   :session-id nil
+                                   :raw ""))))
+             (ignore-errors (kill-buffer (process-buffer proc)))
+             (funcall callback result))))))))
+
+;;;;; Skill runner
+
+(defun claude-code-extras--parse-skill-frontmatter (file)
+  "Parse YAML frontmatter from skill FILE and return a plist.
+Returns a plist with keys :name, :description, :argument-hint,
+:user-invocable, or nil if FILE has no frontmatter."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (goto-char (point-min))
+    (when (looking-at-p "---")
+      (forward-line 1)
+      (let ((start (point))
+            (result nil))
+        (when (re-search-forward "^---$" nil t)
+          (let ((yaml (buffer-substring-no-properties start
+                                                      (line-beginning-position))))
+            (dolist (line (split-string yaml "\n" t))
+              (when (string-match "^\\([a-z-]+\\): *\\(.*\\)$" line)
+                (let ((key (match-string 1 line))
+                      (val (string-trim (match-string 2 line))))
+                  ;; Strip surrounding quotes
+                  (when (string-match "^[\"']\\(.*\\)[\"']$" val)
+                    (setq val (match-string 1 val)))
+                  (pcase key
+                    ("name" (setq result (plist-put result :name val)))
+                    ("description" (setq result (plist-put result :description val)))
+                    ("argument-hint"
+                     (setq result (plist-put result :argument-hint val)))
+                    ("user-invocable"
+                     (setq result (plist-put result :user-invocable
+                                             (not (equal val "false")))))))))))
+        result))))
+
+(defun claude-code-extras--discover-skills ()
+  "Discover available Claude Code skills.
+Scans `~/.claude/skills/' for global skills and the current
+project's `.claude/skills/' for project-local skills.  Returns a
+list of plists, each with keys :name, :description,
+:argument-hint, :user-invocable, :path, :source.  Project skills
+shadow global skills with the same name."
+  (let ((skills (make-hash-table :test #'equal))
+        (global-dir (expand-file-name "~/.claude/skills"))
+        (project-dir (when-let* ((proj (project-current)))
+                       (expand-file-name ".claude/skills"
+                                         (project-root proj)))))
+    ;; Scan global skills first
+    (when (file-directory-p global-dir)
+      (dolist (file (file-expand-wildcards
+                     (expand-file-name "*/SKILL.md" global-dir)))
+        (when-let* ((meta (claude-code-extras--parse-skill-frontmatter file))
+                    (name (plist-get meta :name)))
+          (puthash name (append meta (list :path file :source "global"))
+                   skills))))
+    ;; Project skills shadow global ones
+    (when (and project-dir (file-directory-p project-dir))
+      (dolist (file (file-expand-wildcards
+                     (expand-file-name "*/SKILL.md" project-dir)))
+        (when-let* ((meta (claude-code-extras--parse-skill-frontmatter file))
+                    (name (plist-get meta :name)))
+          (puthash name (append meta (list :path file :source "project"))
+                   skills))))
+    ;; Filter to user-invocable and collect
+    (let (result)
+      (maphash (lambda (_name skill)
+                 ;; Include unless explicitly marked non-invocable
+                 (unless (and (plist-member skill :user-invocable)
+                              (not (plist-get skill :user-invocable)))
+                   (push skill result)))
+               skills)
+      (sort result (lambda (a b)
+                     (string< (plist-get a :name) (plist-get b :name)))))))
+
+(defun claude-code-extras--skill-display-result (skill-name result)
+  "Display RESULT plist in a buffer for SKILL-NAME."
+  (let ((buf (get-buffer-create (format "*Claude Skill: %s*" skill-name))))
+    (with-current-buffer buf
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert (format "#+title: /%s — %s\n\n"
+                        skill-name
+                        (format-time-string "%Y-%m-%d %H:%M:%S")))
+        (insert (format "- Cost: $%.4f\n" (plist-get result :cost)))
+        (insert (format "- Duration: %.1fs\n" (plist-get result :duration)))
+        (when-let* ((sid (plist-get result :session-id)))
+          (insert (format "- Session: %s\n" sid)))
+        (insert "\n")
+        (insert (or (plist-get result :text) "(no output)"))
+        (unless (string-suffix-p "\n" (or (plist-get result :text) ""))
+          (insert "\n")))
+      (org-mode)
+      (goto-char (point-min)))
+    (pop-to-buffer buf)
+    (message "/%s complete (%.1fs, $%.4f)"
+             skill-name
+             (plist-get result :duration)
+             (plist-get result :cost))))
+
+;;;###autoload
+(defun claude-code-extras-run-skill (skill-name &optional arguments dir)
+  "Run Claude Code skill SKILL-NAME non-interactively.
+ARGUMENTS is an optional string of arguments appended to the
+skill invocation.  DIR is the working directory for the process.
+
+Interactively, prompts for the skill with completion, then for
+arguments (if the skill declares an argument-hint), and finally
+for the working directory."
+  (interactive
+   (let* ((skills (claude-code-extras--discover-skills))
+          (_ (unless skills (user-error "No user-invocable skills found")))
+          (annotate (lambda (cand)
+                      (when-let* ((skill (cl-find cand skills
+                                                  :key (lambda (s) (plist-get s :name))
+                                                  :test #'equal))
+                                  (desc (plist-get skill :description)))
+                        (concat "  " (propertize desc 'face 'completions-annotations)))))
+          (name (completing-read
+                 "Skill: "
+                 (lambda (str pred action)
+                   (if (eq action 'metadata)
+                       `(metadata (annotation-function . ,annotate))
+                     (complete-with-action
+                      action
+                      (mapcar (lambda (s) (plist-get s :name)) skills)
+                      str pred)))))
+          (skill (cl-find name skills
+                          :key (lambda (s) (plist-get s :name))
+                          :test #'equal))
+          (hint (and skill (plist-get skill :argument-hint)))
+          (args (when hint
+                  (let ((input (read-string (format "Arguments %s: " hint))))
+                    (unless (string-empty-p input) input))))
+          (dir (read-directory-name "Working directory: " nil nil t)))
+     (list name args dir)))
+  (let ((prompt (if (and arguments (not (string-empty-p arguments)))
+                    (format "/%s %s" skill-name arguments)
+                  (format "/%s" skill-name))))
+    (message "Running /%s..." skill-name)
+    (claude-code-extras--run-prompt
+     prompt
+     :dir (or dir default-directory)
+     :callback
+     (lambda (result)
+       (claude-code-extras--skill-display-result skill-name result)))))
+
+;;;;; Batch TODO processing
 
 (defun claude-code-extras--batch-finish (state)
   "Display the batch processing summary buffer for STATE."

@@ -1333,7 +1333,8 @@ Returns the process object."
 (defun claude-code-extras--parse-skill-frontmatter (file)
   "Parse YAML frontmatter from skill FILE and return a plist.
 Returns a plist with keys :name, :description, :argument-hint,
-:user-invocable, or nil if FILE has no frontmatter."
+:argument-source, :argument-multiple, :user-invocable, or nil if
+FILE has no frontmatter."
   (with-temp-buffer
     (insert-file-contents file)
     (goto-char (point-min))
@@ -1356,6 +1357,11 @@ Returns a plist with keys :name, :description, :argument-hint,
                     ("description" (setq result (plist-put result :description val)))
                     ("argument-hint"
                      (setq result (plist-put result :argument-hint val)))
+                    ("argument-source"
+                     (setq result (plist-put result :argument-source val)))
+                    ("argument-multiple"
+                     (setq result (plist-put result :argument-multiple
+                                             (not (equal val "false")))))
                     ("user-invocable"
                      (setq result (plist-put result :user-invocable
                                              (not (equal val "false")))))))))))
@@ -1399,6 +1405,19 @@ shadow global skills with the same name."
                skills)
       (sort result (lambda (a b)
                      (string< (plist-get a :name) (plist-get b :name)))))))
+
+(defun claude-code-extras--skill-argument-candidates (skill)
+  "Return completion candidates for SKILL's arguments.
+SKILL is a plist from `claude-code-extras--discover-skills'.  If
+the skill has an :argument-source glob, resolve it relative to the
+skill's directory and return file stems as candidates.  Otherwise
+return nil."
+  (when-let* ((source (plist-get skill :argument-source))
+              (skill-dir (file-name-directory (plist-get skill :path))))
+    (let ((pattern (expand-file-name source skill-dir)))
+      (mapcar (lambda (f)
+                (file-name-sans-extension (file-name-nondirectory f)))
+              (file-expand-wildcards pattern)))))
 
 (defun claude-code-extras--skill-display-result (skill-name result)
   "Display RESULT plist in a buffer for SKILL-NAME."
@@ -1460,9 +1479,25 @@ for the working directory."
                           :key (lambda (s) (plist-get s :name))
                           :test #'equal))
           (hint (and skill (plist-get skill :argument-hint)))
-          (args (when hint
+          (candidates (and skill
+                           (claude-code-extras--skill-argument-candidates skill)))
+          (multiple-p (and skill (plist-get skill :argument-multiple)))
+          (args (cond
+                 ;; Completion candidates available
+                 ((and candidates multiple-p)
+                  (let ((selected (completing-read-multiple
+                                   (format "Arguments %s: " (or hint ""))
+                                   candidates)))
+                    (when selected (string-join selected " "))))
+                 (candidates
+                  (let ((selected (completing-read
+                                   (format "Arguments %s: " (or hint ""))
+                                   candidates)))
+                    (unless (string-empty-p selected) selected)))
+                 ;; No candidates but has a hint — free-form input
+                 (hint
                   (let ((input (read-string (format "Arguments %s: " hint))))
-                    (unless (string-empty-p input) input))))
+                    (unless (string-empty-p input) input)))))
           (dir (read-directory-name "Working directory: " nil nil t)))
      (list name args dir)))
   (let ((prompt (if (and arguments (not (string-empty-p arguments)))

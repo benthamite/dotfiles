@@ -27,6 +27,7 @@ The package provides eight main areas of functionality:
 - *Buffer lifecycle.* Kill protection for active sessions, automatic buffer cleanup on process exit, a SIGWINCH workaround for terminal rendering glitches, and a fix for ~C-g~ escape handling with multiple sessions ([[#h:buffer-lifecycle][Buffer lifecycle]]).
 - *Snippet insertion.* An adapter for ~consult-yasnippet~ that bypasses its direct buffer manipulation (which fails in Eat terminal buffers) and instead sends expanded snippet text through the terminal emulator ([[#h:snippet-insertion][Snippet insertion]]).
 - *Copilot integration.* An adapter that enables Copilot ghost-text prose completions while typing prompts in Claude Code buffers, routing accepted text through the terminal emulator ([[#h:copilot-integration][Copilot integration]]).
+- *Skill runner.* Run any user-invocable Claude Code skill non-interactively from Emacs with completion, argument prompting, and a result buffer ([[#h:skill-runner][Skill runner]]).
 - *Batch TODO processing.* Sequential execution of org TODO entries via =claude -p= in non-interactive mode, with logged results and a summary buffer ([[#h:batch-todo-processing][Batch TODO processing]]).
 - *Project audit.* One-command comprehensive audit that sequentially runs code, design, and interpretability audit skills with auto-fix on the current project ([[#h:project-audit][Project audit]]).
 
@@ -102,9 +103,9 @@ The user option ~claude-code-extras-log-directory~ specifies the directory where
 #+vindex: claude-code-extras-batch-max-turns
 #+vindex: claude-code-extras-batch-system-prompt
 #+vindex: claude-code-extras-batch-model
-The user option ~claude-code-extras-batch-allowed-tools~ specifies which tools are auto-allowed via =--allowedTools= when running batch TODO processing. The default includes =Bash=, =Read=, =Write=, =Edit=, =Glob=, =Grep=, =WebFetch=, and =WebSearch=. Adjust this list to restrict or expand what Claude can do autonomously during batch runs.
+The user option ~claude-code-extras-batch-allowed-tools~ specifies which tools are auto-allowed via =--allowedTools= for non-interactive execution (batch TODO processing, skill runner, and project audit). The default includes =Bash=, =Read=, =Write=, =Edit=, =Glob=, =Grep=, =WebFetch=, and =WebSearch=. Adjust this list to restrict or expand what Claude can do autonomously.
 
-The user option ~claude-code-extras-batch-max-turns~ controls the maximum number of agentic turns per TODO entry. The default is 10. Increase it for complex tasks that require many tool calls; decrease it to bound execution time.
+The user option ~claude-code-extras-batch-max-turns~ controls the maximum number of agentic turns per entry in non-interactive execution. The default is 30. Increase it for complex tasks that require many tool calls; decrease it to bound execution time.
 
 The user option ~claude-code-extras-batch-system-prompt~ specifies an optional system prompt appended via =--append-system-prompt= to each =claude -p= invocation. The default is ~nil~ (no extra system prompt).
 
@@ -151,6 +152,18 @@ Sessions are displayed by project name (extracted from the buffer name). When mu
 
 #+findex: claude-code-extras-toggle-alert
 The command ~claude-code-extras-toggle-alert~ toggles the buffer-local value of ~claude-code-extras-alert-on-ready~ and reports the new state. This is useful during long-running operations: enable alerts before submitting a complex prompt, then disable them when you return to interactive use. The alert style and sound are configured via the user options described in [[#h:alert-options][Alert options]].
+
+** Skill runner
+:PROPERTIES:
+:CUSTOM_ID: h:skill-runner
+:END:
+
+#+findex: claude-code-extras-run-skill
+The command ~claude-code-extras-run-skill~ runs a Claude Code skill non-interactively via =claude -p=. Interactively, it prompts for the skill name with completion (annotated with descriptions), then for arguments if the skill declares an =argument-hint= in its frontmatter, and finally for a working directory. The result is displayed in a =*Claude Skill: <name>*= buffer in org-mode with cost, duration, and session ID.
+
+Only skills with =user-invocable: true= (or no =user-invocable= field) in their =SKILL.md= frontmatter are offered for completion. Skills are discovered from =~/.claude/skills/= (global) and the current project's =.claude/skills/= directory. Project skills shadow global skills with the same name.
+
+The command uses the same non-interactive execution infrastructure as batch TODO processing, respecting ~claude-code-extras-batch-allowed-tools~, ~claude-code-extras-batch-max-turns~, ~claude-code-extras-batch-system-prompt~, and ~claude-code-extras-batch-model~ ([[#h:batch-todo-options][Batch TODO processing options]]).
 
 ** Batch TODO processing
 :PROPERTIES:
@@ -309,6 +322,34 @@ A predicate is added to ~copilot-disable-predicates~ that suppresses completions
 
 The function ~claude-code-extras-teardown-copilot~ clears the buffer-local Copilot integration flag and cancels any pending change timer when the buffer is killed. It is added to ~kill-buffer-hook~ automatically.
 
+** Non-interactive execution internals
+:PROPERTIES:
+:CUSTOM_ID: h:noninteractive-internals
+:END:
+
+#+findex: claude-code-extras--build-cli-args
+#+findex: claude-code-extras--run-prompt
+#+findex: claude-code-extras--batch-parse-stream-json
+The function ~claude-code-extras--build-cli-args~ assembles the command-line arguments for =claude -p=, incorporating allowed tools, max turns, system prompt, and model override. It accepts keyword arguments that default to the corresponding =claude-code-extras-batch-*= customization variables.
+
+The function ~claude-code-extras--run-prompt~ is the single-shot runner that spawns a =claude -p= process asynchronously. It takes a prompt string and keyword arguments =:dir=, =:callback=, =:allowed-tools=, =:system-prompt=, =:model=, and =:max-turns=. Any =CLAUDE_CODE= environment variables are stripped from ~process-environment~ to prevent nested-session errors. When the process finishes, the sentinel parses the stream-json output and calls the callback with a result plist containing =:exit-code=, =:duration=, =:cost=, =:text=, =:session-id=, and =:raw=. Both ~claude-code-extras-run-skill~ and ~claude-code-extras--batch-run-next~ delegate to this function.
+
+The function ~claude-code-extras--batch-parse-stream-json~ parses the raw stream-json output from =claude -p= into a plist with =:text= (concatenated assistant messages), =:cost=, and =:session-id=.
+
+** Skill runner internals
+:PROPERTIES:
+:CUSTOM_ID: h:skill-runner-internals
+:END:
+
+#+findex: claude-code-extras--parse-skill-frontmatter
+#+findex: claude-code-extras--discover-skills
+#+findex: claude-code-extras--skill-display-result
+The function ~claude-code-extras--parse-skill-frontmatter~ reads a =SKILL.md= file and extracts the YAML frontmatter into a plist with keys =:name=, =:description=, =:argument-hint=, and =:user-invocable=.
+
+The function ~claude-code-extras--discover-skills~ scans =~/.claude/skills/= and the current project's =.claude/skills/= for =SKILL.md= files, parses their frontmatter, and returns a list of skill plists. Project skills shadow global skills with the same name. Skills with =user-invocable: false= are excluded.
+
+The function ~claude-code-extras--skill-display-result~ creates and displays the =*Claude Skill: <name>*= result buffer.
+
 ** Batch TODO internals
 :PROPERTIES:
 :CUSTOM_ID: h:batch-todo-internals
@@ -318,7 +359,6 @@ The function ~claude-code-extras-teardown-copilot~ clears the buffer-local Copil
 #+findex: claude-code-extras--batch-format-prompt
 #+findex: claude-code-extras--batch-start
 #+findex: claude-code-extras--batch-run-next
-#+findex: claude-code-extras--batch-build-args
 #+findex: claude-code-extras--batch-finish
 The function ~claude-code-extras--batch-collect-todos~ uses ~org-map-entries~ to find entries with a TODO state in the given scope. For each entry, it extracts the heading text (without TODO keyword, priority, tags, or comment) and the body text (excluding property drawers and child subtrees).
 
@@ -326,9 +366,7 @@ The function ~claude-code-extras--batch-format-prompt~ combines an entry's title
 
 The function ~claude-code-extras--batch-start~ initializes the processing state, creates a timestamped log subdirectory, and kicks off the async chain.
 
-The function ~claude-code-extras--batch-run-next~ pops the next entry from the queue and spawns a =claude -p= process via ~make-process~. The prompt is passed as a positional argument (no shell escaping needed). Any =CLAUDE_CODE= environment variables are stripped from ~process-environment~ to prevent nested-session errors. When the process finishes, its sentinel parses the JSON output, saves it to a log file, records the result, and calls ~claude-code-extras--batch-run-next~ again.
-
-The function ~claude-code-extras--batch-build-args~ assembles the command-line arguments for =claude -p=, incorporating the configured allowed tools, max turns, system prompt, and model override.
+The function ~claude-code-extras--batch-run-next~ pops the next entry from the queue, formats the prompt, and delegates to ~claude-code-extras--run-prompt~. The callback saves raw output to a log file, records the result, optionally commits changes, and recurses to process the next entry.
 
 The function ~claude-code-extras--batch-finish~ constructs and displays the =*Claude Batch Results*= summary buffer with aggregate statistics and per-entry details.
 

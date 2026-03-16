@@ -5060,7 +5060,34 @@ CLOCK: [2021-03-30 Tue 21:45]--[2021-03-30 Tue 22:02] =>  0:17
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package logos
-  :demand t)
+  :demand t
+  :config
+  ;; Treat outline headings (org *, elisp ;;;, markdown #) as pages
+  (setq logos-outlines-are-pages t)
+
+  ;; Aesthetic tweaks for `logos-focus-mode' (all buffer-local)
+  (setq-default logos-hide-cursor nil
+                logos-hide-mode-line t
+                logos-hide-header-line t
+                logos-hide-buffer-boundaries t
+                logos-hide-fringe t
+                logos-variable-pitch nil
+                logos-buffer-read-only nil
+                logos-scroll-lock nil
+                logos-olivetti nil)
+
+  ;; Recenter at top on page motion so each "slide" starts at the top
+  (defun ps/logos-recenter-top ()
+    "Use `recenter' to reposition the view at the top."
+    (unless (derived-mode-p 'prog-mode)
+      (recenter 0)))
+  (add-hook 'logos-page-motion-hook #'ps/logos-recenter-top)
+
+  :bind
+  (([remap narrow-to-region] . logos-narrow-dwim)
+   ([remap forward-page] . logos-forward-page-dwim)
+   ([remap backward-page] . logos-backward-page-dwim)
+   ("<f9>" . logos-focus-mode)))
 #+end_src
 
 ** =ace-link=

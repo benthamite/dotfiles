@@ -9781,23 +9781,26 @@ CLOCK: [2021-02-09 Tue 09:37]--[2021-02-09 Tue 09:42] =>  0:05
      ;; github.com/alphapapa/org-protocol-capture-html#org-capture-template
      ("f" "Feed" entry
       (id "D70DFEBE-A5FD-4BA6-A054-49E7C8F6448A")
-      "*** [[%^{Feed URL}][%^{Name}]] %(org-capture-feed-tags)\n%?" :empty-lines 1)
+      "*** %(org-capture-feed-heading)\n%?" :empty-lines 1)
      ("w" "Web site" entry
       (file paths-file-downloads)
       "* %a :website:\n\n%U %?\n\n%:initial")))
 
   :config
-  (defun org-capture-feed-tags ()
-    "Prompt for feed tags using `completing-read-multiple'."
-    (let* ((id "D70DFEBE-A5FD-4BA6-A054-49E7C8F6448A")
+  (defun org-capture-feed-heading ()
+    "Prompt for feed URL, name, and tags, returning a formatted Org heading."
+    (let* ((url (read-string "Feed URL: "))
+           (name (read-string "Name: "))
+           (id "D70DFEBE-A5FD-4BA6-A054-49E7C8F6448A")
            (file (org-id-find-id-file id))
-           (tags (when file
-                   (with-current-buffer (find-file-noselect file)
-                     (mapcar #'car (org-get-buffer-tags)))))
-           (selected (completing-read-multiple "Tags: " tags)))
-      (if selected
-          (concat ":" (string-join selected ":") ":")
-        "")))
+           (all-tags (when file
+                       (with-current-buffer (find-file-noselect file)
+                         (mapcar #'car (org-get-buffer-tags)))))
+           (selected (completing-read-multiple "Tags: " all-tags))
+           (tag-str (if selected
+                        (concat " :" (string-join selected ":") ":")
+                      "")))
+      (format "[[%s][%s]]%s" url name tag-str)))
 
   (defun org-capture-feed-sort ()
     "Sort feed entries under the Feeds heading alphabetically after capture."

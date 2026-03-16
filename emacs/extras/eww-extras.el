@@ -167,22 +167,26 @@ BIBTEX-KEY is the BibTeX key associated with the download, if any.
 The returned sentinel function takes two arguments:
 PROC, the process object, and EVENT, a string describing the process status."
   (lambda (proc event)
-    (let ((exit-status (process-exit-status proc)))
+    (let* ((exit-status (process-exit-status proc))
+           (file-ok (and (file-exists-p output-file)
+                         (file-regular-p output-file)
+                         (> (file-attribute-size (file-attributes output-file)) 0))))
       (cond
-       ;; If the process truly exited “successfully.”
-       ((eq exit-status 0)
+       ;; Exited successfully and produced a non-empty file.
+       ((and (eq exit-status 0) file-ok)
         (eww-extras-run-callback callback output-file bibtex-key))
-       ;; If exit-status ≠ 0 but the file really exists and is nonempty,
-       ;; assume the download at least mostly succeeded, so attach it.
-       ((and (file-exists-p output-file)
-             (file-regular-p output-file)
-             (> (file-attribute-size (file-attributes output-file)) 0))
-        (message "Warning: process exited with status %s, but %s was created. Attaching anyway."
+       ;; Exited successfully but produced an empty or missing file.
+       ((eq exit-status 0)
+        (user-error “Process exited successfully but %s is empty or missing”
+                    (file-name-nondirectory output-file)))
+       ;; Non-zero exit but the file exists and is nonempty — attach anyway.
+       (file-ok
+        (message “Warning: process exited with status %s, but %s was created. Attaching anyway.”
                  exit-status (file-name-nondirectory output-file))
         (eww-extras-run-callback callback output-file bibtex-key))
        ;; Otherwise, bail out with the original error message.
        (t
-        (user-error "Could not get file. Process exit status was %s.\n\nRaw event:\n%s"
+        (user-error “Could not get file. Process exit status was %s.\n\nRaw event:\n%s”
                     exit-status event))))))
 
 (defun eww-extras-url-to-file-make-command (url output-file type)
@@ -295,11 +299,10 @@ The exceptions are listed in `eww-extras-readable-exceptions'."
                (dolist (url eww-extras-readable-exceptions)
                  (when (string-match-p url current-url)
                    (throw 'exception t))))))
-        (let ((source (plist-get eww-data :source)))
-          (unless (or exception
-                      (not source)
-                      (string-empty-p source))
-            (eww-readable)))))))
+        (unless (or exception
+                    ;; if `:source' is nil, `eww-readable' will throw an error
+                    (not (plist-get eww-data :source)))
+          (eww-readable))))))
 
 (add-hook 'eww-after-render-hook #'eww-extras-readable-autoview)
 

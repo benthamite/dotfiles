@@ -51,7 +51,8 @@ since starting the copilot server in such contexts can trigger errors that
 freeze Emacs."
   (unless (or buffer-read-only
 	      (memq major-mode copilot-extras-excluded-modes)
-	      (null this-command))
+	      (null this-command)
+	      (bound-and-true-p org-capture-mode))
     (copilot-mode)))
 
 (defun copilot-extras-restart-copilot ()

@@ -267,7 +267,9 @@ player.
 The function ~eww-extras-url-to-file~ is the core logic shared by
 ~eww-extras-url-to-pdf~ and ~eww-extras-url-to-html~.  It determines
 the URL and output file name from context, constructs and starts the
-headless Chrome process, and sets up the process sentinel.
+headless Chrome process, and sets up the process sentinel.  An optional
+~key~ argument lets callers supply the BibTeX key directly, bypassing
+the buffer-derived lookup.
 
 The function ~eww-extras-url-to-file-make-command~ builds the shell
 command for headless Chrome, including GPU disabling flags and a

@@ -1946,26 +1946,33 @@ package caused the error.  Once identified, start an interactive
 Claude Code session in the package's source directory and send it
 the backtrace file path."
   (interactive)
-  (debug-save-backtrace)
   (let ((backtrace-file (expand-file-name "backtrace.el" paths-dir-downloads)))
-    (unless (file-exists-p backtrace-file)
-      (user-error "Backtrace file not found: %s" backtrace-file))
-    (message "Identifying package from backtrace...")
-    (let ((contents (with-temp-buffer
-                      (insert-file-contents backtrace-file)
-                      (buffer-string)))
-          (gptel-backend (alist-get claude-code-extras-debug-backtrace-backend
-                                   gptel--known-backends nil nil #'string=))
-          (gptel-model claude-code-extras-debug-backtrace-model))
-      (gptel-request
-       (format "Backtrace file: %s\n\nContents:\n%s" backtrace-file contents)
-       :system "You are an Emacs expert. Given the backtrace, identify the single Emacs package that is the root cause of the error. Return ONLY the package name as a single word, nothing else. For example: \"magit\" or \"org\" or \"consult\"."
-       :callback
-       (lambda (response info)
-         (if (not response)
-             (message "gptel request failed: %s" (plist-get info :status))
-           (claude-code-extras--debug-start-session
-            (intern (string-trim response)) backtrace-file)))))))
+    ;; Schedule the identification work to run after the current command.
+    ;; `debug-save-backtrace' kills the *Backtrace* buffer, which exits the
+    ;; debugger's `recursive-edit' and unwinds this call frame.
+    (run-with-timer 0 nil #'claude-code-extras--debug-identify-package backtrace-file)
+    (debug-save-backtrace)))
+
+(defun claude-code-extras--debug-identify-package (backtrace-file)
+  "Identify the package from BACKTRACE-FILE and start a Claude Code session."
+  (unless (file-exists-p backtrace-file)
+    (user-error "Backtrace file not found: %s" backtrace-file))
+  (message "Identifying package from backtrace...")
+  (let ((contents (with-temp-buffer
+                    (insert-file-contents backtrace-file)
+                    (buffer-string)))
+        (gptel-backend (alist-get claude-code-extras-debug-backtrace-backend
+                                 gptel--known-backends nil nil #'string=))
+        (gptel-model claude-code-extras-debug-backtrace-model))
+    (gptel-request
+     (format "Backtrace file: %s\n\nContents:\n%s" backtrace-file contents)
+     :system "You are an Emacs expert. Given the backtrace, identify the single Emacs package that is the root cause of the error. Return ONLY the package name as a single word, nothing else. For example: \"magit\" or \"org\" or \"consult\"."
+     :callback
+     (lambda (response info)
+       (if (not response)
+           (message "gptel request failed: %s" (plist-get info :status))
+         (claude-code-extras--debug-start-session
+          (intern (string-trim response)) backtrace-file))))))
 
 (defun claude-code-extras--debug-start-session (package backtrace-file)
   "Start a Claude Code session for PACKAGE with BACKTRACE-FILE.

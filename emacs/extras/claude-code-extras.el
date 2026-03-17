@@ -120,6 +120,11 @@ prompts and accepted text is sent to the terminal correctly."
 (defvar-local claude-code-extras--status-data nil
   "Parsed status plist for the current Claude buffer.")
 
+(defvar-local claude-code-extras--display-name-cache nil
+  "Cached display name for the modeline.
+Updated by `claude-code-extras--refresh-display-names' whenever
+sessions are created or destroyed.")
+
 (defvar-local claude-code-extras--status-timer nil
   "Timer for periodic status polling in the current Claude buffer.")
 
@@ -476,15 +481,29 @@ Given \"*claude:~/path/to/project/:instance*\", return
   "Return the display name for BUFFER's modeline.
 Use the project name alone when it is unique among active Claude
 sessions, or \"project:instance\" when multiple sessions share
-the same project."
-  (let* ((buf (or buffer (current-buffer)))
-         (name (claude-code-extras--buffer-session-name buf))
-         (others (cl-remove buf (claude-code--find-all-claude-buffers)))
+the same project.  Returns the cached value when available to
+avoid scanning all buffers on every redisplay."
+  (let ((buf (or buffer (current-buffer))))
+    (or (buffer-local-value 'claude-code-extras--display-name-cache buf)
+        (claude-code-extras--compute-display-name buf))))
+
+(defun claude-code-extras--compute-display-name (buffer)
+  "Compute the display name for BUFFER by scanning Claude sessions."
+  (let* ((name (claude-code-extras--buffer-session-name buffer))
+         (others (cl-remove buffer (claude-code--find-all-claude-buffers)))
          (sibling-names (mapcar #'claude-code-extras--buffer-session-name
                                 others)))
     (if (member name sibling-names)
-        (claude-code-extras--qualified-session-name (buffer-name buf))
+        (claude-code-extras--qualified-session-name (buffer-name buffer))
       name)))
+
+(defun claude-code-extras--refresh-display-names ()
+  "Recompute and cache display names for all Claude buffers."
+  (dolist (buf (claude-code--find-all-claude-buffers))
+    (when (buffer-live-p buf)
+      (with-current-buffer buf
+        (setq claude-code-extras--display-name-cache
+              (claude-code-extras--compute-display-name buf))))))
 
 (defun claude-code-extras--buffer-preview-state (choices)
   "Return a preview state function for CHOICES.
@@ -523,6 +542,38 @@ CHOICES is an alist of (display-name . buffer) pairs."
                    timer-cell buf)))
       (setcar timer-cell timer)
       (setq claude-code-extras--status-timer timer))))
+
+(defvar monet--sessions)
+(declare-function monet--session-server "monet")
+
+(defun claude-code-extras--cleanup-monet-session ()
+  "Clean up the monet websocket session for the current Claude buffer.
+Stop the websocket server and remove the session from
+`monet--sessions' to prevent leaked processes."
+  (when (and (claude-code--buffer-p (current-buffer))
+             (boundp 'monet--sessions))
+    (let ((key (buffer-name)))
+      (when-let* ((session (gethash key monet--sessions)))
+        (when-let* ((server (monet--session-server session))
+                    ((process-live-p server)))
+          (delete-process server))
+        (remhash key monet--sessions)))))
+
+(defun claude-code-extras--monet-cleanup-before-start (orig-fn key directory)
+  "Clean up old monet session for KEY before ORIG-FN creates a new one.
+DIRECTORY is passed through to ORIG-FN."
+  (when (and (boundp 'monet--sessions)
+             (gethash key monet--sessions))
+    (when-let* ((old-session (gethash key monet--sessions))
+                (old-server (monet--session-server old-session))
+                ((process-live-p old-server)))
+      (delete-process old-server))
+    (remhash key monet--sessions))
+  (funcall orig-fn key directory))
+
+(with-eval-after-load 'monet
+  (advice-add 'monet-start-server-in-directory :around
+              #'claude-code-extras--monet-cleanup-before-start))
 
 (defun claude-code-extras-stop-status-polling ()
   "Stop status polling and clean up the status file."
@@ -2005,7 +2056,10 @@ there with the backtrace prompt passed as a CLI argument."
 (add-hook 'claude-code-start-hook #'claude-code-extras-setup-kill-on-exit)
 (add-hook 'claude-code-start-hook #'claude-code-extras-start-status-polling)
 (add-hook 'claude-code-start-hook #'claude-code-extras-set-modeline)
+(add-hook 'claude-code-start-hook #'claude-code-extras--refresh-display-names)
 (add-hook 'kill-buffer-hook #'claude-code-extras-stop-status-polling)
+(add-hook 'kill-buffer-hook #'claude-code-extras--refresh-display-names)
+(add-hook 'kill-buffer-hook #'claude-code-extras--cleanup-monet-session)
 (add-hook 'claude-code-start-hook #'claude-code-extras-disable-scrollback-truncation)
 (add-hook 'claude-code-start-hook #'claude-code-extras-setup-snippet-keys)
 (add-hook 'claude-code-start-hook #'claude-code-extras-setup-copilot)

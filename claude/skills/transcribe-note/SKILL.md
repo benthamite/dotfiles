@@ -2,6 +2,7 @@
 name: transcribe-note
 description: Transcribe the most recent audio file in Downloads and create an org-mode note from it. Use when the user says "transcribe", "transcribe note", "transcribe audio", "audio to note", "voice note", or wants to turn a recording into a written note.
 argument-hint: [language] [filename]
+model: sonnet
 ---
 
 # Transcribe audio to note

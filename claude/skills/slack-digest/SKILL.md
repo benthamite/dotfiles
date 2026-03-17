@@ -3,7 +3,8 @@ name: slack-digest
 description: Pull unread Slack messages, triage for actionability, and present a digest in an Emacs buffer. Use when the user says "slack digest", "check slack", "unread messages", "slack unreads", or wants to catch up on Slack.
 user-invocable: true
 argument-hint: "[--mark-read | --no-mark-read]"
-model: claude-sonnet-4-6
+argument-choices: "--mark-read, --no-mark-read"
+model: sonnet
 ---
 
 # Slack digest

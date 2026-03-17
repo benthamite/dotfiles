@@ -1,6 +1,7 @@
 ---
 name: proofread
 description: This skill should be used when the user says "proofread", "spell check", "check spelling", "check grammar", "proofread this document", "review for typos", "proofread my article", "check this for errors", or mentions proofreading a markdown file.
+model: sonnet
 ---
 
 # Proofread skill

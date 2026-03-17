@@ -2,6 +2,7 @@
 name: twitter
 description: Read tweets, threads, user timelines, and search Twitter/X via twitterapi.io. Use when the user says "read tweet", "get tweet", "fetch tweet", "read thread", "user's tweets", "tweets from @handle", "search twitter", or "save tweets".
 user-invocable: true
+model: sonnet
 ---
 
 # Twitter

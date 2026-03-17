@@ -1344,8 +1344,8 @@ Returns the process object."
 (defun claude-code-extras--parse-skill-frontmatter (file)
   "Parse YAML frontmatter from skill FILE and return a plist.
 Returns a plist with keys :name, :description, :argument-hint,
-:argument-source, :argument-multiple, :user-invocable, or nil if
-FILE has no frontmatter."
+:argument-source, :argument-choices, :argument-multiple,
+:user-invocable, or nil if FILE has no frontmatter."
   (with-temp-buffer
     (insert-file-contents file)
     (goto-char (point-min))
@@ -1370,12 +1370,18 @@ FILE has no frontmatter."
                      (setq result (plist-put result :argument-hint val)))
                     ("argument-source"
                      (setq result (plist-put result :argument-source val)))
+                    ("argument-choices"
+                     (setq result (plist-put result :argument-choices
+                                             (mapcar #'string-trim
+                                                     (split-string val "," t)))))
                     ("argument-multiple"
                      (setq result (plist-put result :argument-multiple
                                              (not (equal val "false")))))
                     ("user-invocable"
                      (setq result (plist-put result :user-invocable
-                                             (not (equal val "false")))))))))))
+                                             (not (equal val "false")))))
+                    ("model"
+                     (setq result (plist-put result :model val)))))))))
         result))))
 
 (defun claude-code-extras--discover-skills ()
@@ -1421,14 +1427,15 @@ shadow global skills with the same name."
   "Return completion candidates for SKILL's arguments.
 SKILL is a plist from `claude-code-extras--discover-skills'.  If
 the skill has an :argument-source glob, resolve it relative to the
-skill's directory and return file stems as candidates.  Otherwise
-return nil."
-  (when-let* ((source (plist-get skill :argument-source))
-              (skill-dir (file-name-directory (plist-get skill :path))))
-    (let ((pattern (expand-file-name source skill-dir)))
-      (mapcar (lambda (f)
-                (file-name-sans-extension (file-name-nondirectory f)))
-              (file-expand-wildcards pattern)))))
+skill's directory and return file stems as candidates.  If it has
+:argument-choices, return those directly.  Otherwise return nil."
+  (or (when-let* ((source (plist-get skill :argument-source))
+                  (skill-dir (file-name-directory (plist-get skill :path))))
+        (let ((pattern (expand-file-name source skill-dir)))
+          (mapcar (lambda (f)
+                    (file-name-sans-extension (file-name-nondirectory f)))
+                  (file-expand-wildcards pattern))))
+      (plist-get skill :argument-choices)))
 
 (defun claude-code-extras--skill-display-result (skill-name result)
   "Display RESULT plist in a buffer for SKILL-NAME."
@@ -1511,14 +1518,21 @@ argument-source."
                   (let ((input (read-string (format "Arguments %s: " hint))))
                     (unless (string-empty-p input) input))))))
      (list name args nil)))
-  (let ((prompt (if (and arguments (not (string-empty-p arguments)))
-                    (format "/%s %s" skill-name arguments)
-                  (format "/%s" skill-name))))
-    (message "Running /%s..." skill-name)
+  (let* ((skill (cl-find skill-name (claude-code-extras--discover-skills)
+                         :key (lambda (s) (plist-get s :name))
+                         :test #'equal))
+         (model (or (and skill (plist-get skill :model))
+                    claude-code-extras-run-skill-model))
+         (prompt (if (and arguments (not (string-empty-p arguments)))
+                     (format "/%s %s" skill-name arguments)
+                   (format "/%s" skill-name))))
+    (message "Running /%s%s..." skill-name
+             (if (and skill (plist-get skill :model))
+                 (format " [%s]" model) ""))
     (claude-code-extras--run-prompt
      prompt
      :dir (or dir default-directory)
-     :model claude-code-extras-run-skill-model
+     :model model
      :callback
      (lambda (result)
        (claude-code-extras--skill-display-result skill-name result)))))

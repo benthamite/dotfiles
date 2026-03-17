@@ -785,6 +785,16 @@ arguments passed to the format function."
              (string-match-p "duplicate IDs found" (apply #'format message args)))
     (org-extras-id-find-duplicate-ids)))
 
+(defun org-extras--inhibit-modification-hooks (orig-fun &rest args)
+  "Call ORIG-FUN with ARGS while inhibiting modification hooks.
+This prevents `org-modern-indent' and `org-indent' from triggering
+`org-element-at-point' when `org-id-update-id-locations' reads org files,
+which otherwise causes a cascading O(n*m) freeze."
+  (let ((inhibit-modification-hooks t))
+    (apply orig-fun args)))
+
+(advice-add 'org-id-update-id-locations :around #'org-extras--inhibit-modification-hooks)
+
 (defun org-extras-id-update-id-locations ()
   "Scan relevant files for IDs and process duplicates.
 Store the relation between files and corresponding IDs. This will

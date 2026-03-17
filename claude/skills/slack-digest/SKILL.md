@@ -4,7 +4,7 @@ description: Pull unread Slack messages, triage for actionability, and present a
 user-invocable: true
 argument-hint: "[--mark-read | --no-mark-read]"
 argument-choices: "--mark-read, --no-mark-read"
-argument-default: --no-mark-read
+argument-default: --mark-read
 model: sonnet
 ---
 
@@ -86,9 +86,10 @@ emacsclient -e "(progn (find-file \"$TMPFILE\") (goto-char (point-min)) (org-fol
 
 ### 7. Mark conversations as read
 
-If the argument `--mark-read` was passed, mark all channels as read without asking. If `--no-mark-read` was passed, skip marking. If neither was passed, ask the user: "Mark all conversations as read?"
+If the argument `--mark-read` was passed (this is the default), mark all channels as read without asking. If `--no-mark-read` was passed, skip marking. If neither was passed, mark all channels as read without asking.
 
 To mark as read:
-1. First, compile the complete list of channel IDs from step 1 (every channel that had unreads, not just the ones surfaced in the digest).
-2. Call `conversations_mark` for **each** channel ID. Do not skip any. Use parallel tool calls to batch them efficiently — call as many as you can in a single message.
-3. After all calls complete, count the number of successful marks and compare against the total. Report the count to the user (e.g. "Marked 23/23 channels as read").
+1. First, compile the complete list of channel IDs from step 1 (every channel that had unreads, not just the ones surfaced in the digest). **Include all channels, even those triaged as noise.**
+2. For each channel, determine the **latest timestamp** across all messages fetched from that channel (including thread replies fetched in step 3). This is critical: if you fetched thread replies with timestamps later than the root message, use the latest reply timestamp, not the root message timestamp.
+3. Call `conversations_mark` for **each** channel ID, passing the latest timestamp as `ts`. Do not skip any. Use parallel tool calls to batch them efficiently — call as many as you can in a single message.
+4. After all calls complete, count the number of successful marks and compare against the total. Report the count to the user (e.g. "Marked 23/23 channels as read").

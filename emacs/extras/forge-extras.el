@@ -136,15 +136,27 @@ not yet handle.  Rather than erroring, return nil so `seq-keep' filters them."
 (advice-add 'forge--ghub-massage-notification :around
             #'forge-extras-massage-notification-gracefully)
 
+(defvar forge-extras-pull-notifications-timeout 15
+  "Timeout in seconds for `forge-extras-pull-notifications'.
+`forge-pull-notifications' calls `url-retrieve-synchronously' without
+a timeout, so the synchronous TCP connect blocks Emacs when offline.
+This variable sets the timeout injected into the call.")
+
 (defun forge-extras-pull-notifications ()
   "Fetch notifications for all repositories from the current forge.
 Do not update if `elfeed' is in the process of being updated, since this causes
-problems."
+problems.  Inject a timeout into `url-retrieve-synchronously' so that
+Emacs does not freeze when there is no internet connection."
   (unless (bound-and-true-p elfeed-extras-auto-update-in-process)
     (condition-case err
         (shut-up
           (with-no-warnings
-            (forge-pull-notifications)))
+            (let ((orig (symbol-function 'url-retrieve-synchronously)))
+              (cl-letf (((symbol-function 'url-retrieve-synchronously)
+                         (lambda (url &optional silent inhibit-cookies timeout)
+                           (funcall orig url silent inhibit-cookies
+                                    (or timeout forge-extras-pull-notifications-timeout)))))
+                (forge-pull-notifications)))))
       (error
        (forge-extras-message-debug "Skipping notifications due to error: %S" err)))))
 

@@ -15,7 +15,7 @@
       "Glob",
       "Grep",
       "NotebookEdit",
-      "mcp__slack-epochai__*"
+      "mcp__*"
     ]
   },
   "hooks": {

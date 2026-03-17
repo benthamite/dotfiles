@@ -122,6 +122,17 @@ The user option ~claude-code-extras-audit-skills~ specifies the list of skills t
 #+vindex: claude-code-extras-audit-project-directories
 The user option ~claude-code-extras-audit-project-directories~ specifies the directories available for selection when running ~claude-code-extras-audit-project~. When the user enters a directory not already in this list, it is automatically appended and persisted via ~customize-save-variable~, so it will appear as a candidate in future invocations.
 
+** Debug backtrace options
+:PROPERTIES:
+:CUSTOM_ID: h:debug-backtrace-options
+:END:
+
+#+vindex: claude-code-extras-debug-backtrace-model
+The user option ~claude-code-extras-debug-backtrace-model~ sets the gptel model used to identify the offending package from a backtrace. The default is ~gemini-flash-lite-latest~, a fast and cheap model suited for this simple classification task.
+
+#+vindex: claude-code-extras-debug-backtrace-backend
+The user option ~claude-code-extras-debug-backtrace-backend~ sets the gptel backend name for backtrace analysis. The default is ~"Gemini"~.
+
 ** Status polling options
 :PROPERTIES:
 :CUSTOM_ID: h:status-polling-options
@@ -190,6 +201,19 @@ The command ~claude-code-extras-audit-project~ runs a comprehensive audit of a p
 After each audit completes successfully, any uncommitted changes in the project directory are automatically committed with a message of the form =<skill>: apply audit recommendations=. This ensures each audit's changes are isolated in their own commit, making them easy to review individually.
 
 The command reuses the batch processing infrastructure ([[#h:batch-todo-internals][Batch TODO internals]]), so results are logged and displayed in the same =*Claude Batch Results*= summary buffer with per-audit status, cost, duration, and output. The batch options (~claude-code-extras-batch-max-turns~, ~claude-code-extras-batch-model~, etc.) apply to audit runs as well.
+
+** Debug backtrace
+:PROPERTIES:
+:CUSTOM_ID: h:debug-backtrace
+:END:
+
+#+findex: claude-code-extras-debug-backtrace
+The command ~claude-code-extras-debug-backtrace~ automates the workflow of debugging an Emacs backtrace with Claude Code. When invoked from a =*Backtrace*= buffer, it:
+
+1. Saves the backtrace to the downloads directory via ~debug-save-backtrace~.
+2. Sends the backtrace to a light LLM (configured via ~claude-code-extras-debug-backtrace-model~ and ~claude-code-extras-debug-backtrace-backend~, [[#h:debug-backtrace-options][Debug backtrace options]]) to identify the package that caused the error.
+3. Starts an interactive Claude Code session in the package's elpaca source directory.
+4. Once the session is ready, sends it the backtrace file path and asks it to identify and fix the bug.
 
 * Functions
 :PROPERTIES:

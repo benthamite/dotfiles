@@ -1832,6 +1832,94 @@ unconditionally recenter with `(recenter -1)'."
             (goto-char cursor-pos)
             (recenter -1)))))))
 
+;;;;; Debug backtrace
+
+(defcustom claude-code-extras-debug-backtrace-model 'gemini-flash-lite-latest
+  "GPtel model for identifying the package from a backtrace."
+  :type 'symbol
+  :group 'claude-code-extras)
+
+(defcustom claude-code-extras-debug-backtrace-backend "Gemini"
+  "GPtel backend name for backtrace analysis."
+  :type 'string
+  :group 'claude-code-extras)
+
+(defvar gptel-backend)
+(defvar gptel-model)
+(defvar gptel--known-backends)
+(declare-function debug-save-backtrace "init" ())
+(declare-function gptel-request "gptel")
+(declare-function elpaca-get "elpaca")
+(declare-function elpaca-source-dir "elpaca")
+
+;;;###autoload
+(defun claude-code-extras-debug-backtrace ()
+  "Save the backtrace, identify the offending package, and open Claude Code.
+Use `debug-save-backtrace' to save the backtrace to the downloads
+directory, then ask a light LLM (via `gptel') to identify which
+package caused the error.  Once identified, start an interactive
+Claude Code session in the package's source directory and send it
+the backtrace file path."
+  (interactive)
+  (debug-save-backtrace)
+  (let ((backtrace-file (expand-file-name "backtrace.el" paths-dir-downloads)))
+    (unless (file-exists-p backtrace-file)
+      (user-error "Backtrace file not found: %s" backtrace-file))
+    (message "Identifying package from backtrace...")
+    (let ((contents (with-temp-buffer
+                      (insert-file-contents backtrace-file)
+                      (buffer-string)))
+          (gptel-backend (alist-get claude-code-extras-debug-backtrace-backend
+                                   gptel--known-backends nil nil #'string=))
+          (gptel-model claude-code-extras-debug-backtrace-model))
+      (gptel-request
+       (format "Backtrace file: %s\n\nContents:\n%s" backtrace-file contents)
+       :system "You are an Emacs expert. Given the backtrace, identify the single Emacs package that is the root cause of the error. Return ONLY the package name as a single word, nothing else. For example: \"magit\" or \"org\" or \"consult\"."
+       :callback
+       (lambda (response info)
+         (if (not response)
+             (message "gptel request failed: %s" (plist-get info :status))
+           (claude-code-extras--debug-start-session
+            (intern (string-trim response)) backtrace-file)))))))
+
+(defun claude-code-extras--debug-start-session (package backtrace-file)
+  "Start a Claude Code session for PACKAGE with BACKTRACE-FILE.
+Find the elpaca source directory for PACKAGE, start Claude Code
+there, and once the session is ready, send it BACKTRACE-FILE."
+  (let* ((elpaca-entry (elpaca-get package))
+         (dir (if elpaca-entry
+                  (elpaca-source-dir elpaca-entry)
+                (user-error "Package `%s' not found in elpaca" package))))
+    (message "Starting Claude Code for `%s' in %s..." package dir)
+    (cl-letf (((symbol-function 'claude-code--directory) (lambda () dir)))
+      (claude-code '(4)))
+    (let ((buf (current-buffer)))
+      (claude-code-extras--debug-send-when-ready buf backtrace-file))))
+
+(defun claude-code-extras--debug-send-when-ready (buffer backtrace-file)
+  "Wait for the Claude session in BUFFER to be ready, then send BACKTRACE-FILE.
+Install a one-shot handler on `claude-code-event-hook' that fires
+when the session emits its first `idle_prompt' notification."
+  (let ((handler nil))
+    (setq handler
+          (lambda (message)
+            (when (and (eq (plist-get message :type) 'notification)
+                       (when-let* ((buf (get-buffer (plist-get message :buffer-name))))
+                         (eq buf buffer))
+                       (equal (claude-code-extras--notification-type
+                               (plist-get message :json-data))
+                              "idle_prompt"))
+              (remove-hook 'claude-code-event-hook handler)
+              (with-current-buffer buffer
+                (claude-code--term-send-string
+                 claude-code-terminal-backend
+                 (format "Read the backtrace at %s. Identify the bug, fix it, and commit the fix." backtrace-file))
+                (sit-for 0.1)
+                (claude-code--term-send-string
+                 claude-code-terminal-backend (kbd "RET")))
+              nil)))
+    (add-hook 'claude-code-event-hook handler)))
+
 (setq claude-code-notification-function #'claude-code-default-notification)
 (add-hook 'claude-code-event-hook #'claude-code-extras--handle-notification)
 (add-hook 'claude-code-event-hook #'claude-code-extras--handle-stop)

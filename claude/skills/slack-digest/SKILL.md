@@ -79,4 +79,7 @@ emacsclient -e "(progn (find-file \"$TMPFILE\") (goto-char (point-min)) (org-fol
 
 If the argument `--mark-read` was passed, mark all channels as read without asking. If `--no-mark-read` was passed, skip marking. If neither was passed, ask the user: "Mark all conversations as read?"
 
-To mark as read, call `conversations_mark` on every channel that had unreads (not just the ones surfaced in the digest — mark **all** channels that were fetched in step 1).
+To mark as read:
+1. First, compile the complete list of channel IDs from step 1 (every channel that had unreads, not just the ones surfaced in the digest).
+2. Call `conversations_mark` for **each** channel ID. Do not skip any. Use parallel tool calls to batch them efficiently — call as many as you can in a single message.
+3. After all calls complete, count the number of successful marks and compare against the total. Report the count to the user (e.g. "Marked 23/23 channels as read").

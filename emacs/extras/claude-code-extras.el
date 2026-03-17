@@ -512,12 +512,17 @@ CHOICES is an alist of (display-name . buffer) pairs."
 (defun claude-code-extras-start-status-polling ()
   "Start polling the status file for the current Claude buffer."
   (when (claude-code--buffer-p (current-buffer))
-    (setq claude-code-extras--status-timer
-          (run-with-timer
-           claude-code-extras-status-interval
-           claude-code-extras-status-interval
-           #'claude-code-extras--read-status
-           (current-buffer)))))
+    (when claude-code-extras--status-timer
+      (cancel-timer claude-code-extras--status-timer))
+    (let* ((buf (current-buffer))
+           (timer-cell (cons nil nil))
+           (timer (run-with-timer
+                   claude-code-extras-status-interval
+                   claude-code-extras-status-interval
+                   #'claude-code-extras--read-status
+                   timer-cell buf)))
+      (setcar timer-cell timer)
+      (setq claude-code-extras--status-timer timer))))
 
 (defun claude-code-extras-stop-status-polling ()
   "Stop status polling and clean up the status file."
@@ -526,9 +531,12 @@ CHOICES is an alist of (display-name . buffer) pairs."
     (cancel-timer claude-code-extras--status-timer)
     (claude-code-extras--cleanup-status-file)))
 
-(defun claude-code-extras--read-status (buffer)
-  "Read and parse the status file for BUFFER."
-  (when (buffer-live-p buffer)
+(defun claude-code-extras--read-status (timer-cell buffer)
+  "Read and parse the status file for BUFFER.
+TIMER-CELL is a cons whose car is the timer that triggered this
+call; it is canceled automatically when BUFFER is no longer live."
+  (if (not (buffer-live-p buffer))
+      (cancel-timer (car timer-cell))
     (with-current-buffer buffer
       (when-let* ((data (claude-code-extras--parse-status-file)))
         (setq claude-code-extras--status-data data)))))

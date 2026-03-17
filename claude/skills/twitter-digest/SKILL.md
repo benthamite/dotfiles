@@ -141,8 +141,7 @@ Likes: N | Views: N | Like rate: X.X%
 **Unfiltered lists** (no `description`): use the same org format but replace the "Notable" heading with "All tweets", order tweets reverse-chronologically, and omit the "Discovered accounts" and "Accounts with nothing notable" sections entirely.
 
 Guidelines:
-- **Filtered lists**: order notable tweets by relevance to the rubric, not by engagement.
-- **Unfiltered lists**: order all tweets reverse-chronologically.
+- Order tweets by **like rate** (likes ÷ views) descending — this surfaces tweets that resonated most relative to their reach.
 - Include the tweet URL as an org link so the user can open it from Emacs.
 - For the "nothing notable" section (filtered lists only), just list the usernames in a single line.
 - If a tweet is part of a thread and the beginning is clearly missing context, note "(thread)" so the user knows to click through.

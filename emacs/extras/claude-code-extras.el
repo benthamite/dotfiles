@@ -1793,9 +1793,19 @@ one."
 
 (defun claude-code-extras-disable-scrollback-truncation ()
   "Disable eat scrollback truncation in Claude Code buffers.
-The default `eat-term-scrollback-size' of 8192 lines causes the
+The default `eat-term-scrollback-size' of 131072 characters causes the
 buffer to be truncated, losing earlier output."
   (setq-local eat-term-scrollback-size nil))
+
+(defun claude-code-extras--preserve-scrollback (orig-fn &optional n)
+  "Prevent Claude Code's TUI from erasing the scrollback region.
+When N is 3 (CSI 3 J: erase display including scrollback),
+downgrade to 2 (erase display only) in `claude-code-mode'
+buffers.  ORIG-FN is `eat--t-erase-in-disp'."
+  (funcall orig-fn (if (and (eq n 3) (bound-and-true-p claude-code-mode)) 2 n)))
+
+(advice-add 'eat--t-erase-in-disp :around
+            #'claude-code-extras--preserve-scrollback)
 
 ;; Fix upstream scroll function.  Two problems:
 ;;

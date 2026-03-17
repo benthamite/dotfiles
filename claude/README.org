@@ -53,7 +53,7 @@ Project-level instructions referencing the =dotfiles-context= skill. The global 
 :ID:       05017294-32AE-4465-9254-13C1BA5662CA
 :END:
 
-Skills are reusable prompt modules stored in =skills/<name>/SKILL.md=. Some are user-invocable (triggered by typing =/<name>=), others provide context that Claude loads automatically when relevant.
+Skills are reusable prompt modules stored in =skills/<name>/SKILL.md=. The filename must be uppercase =SKILL.md=, since =file-expand-wildcards= is case-sensitive on the Google Drive FUSE mount. Some skills are user-invocable (triggered by typing =/<name>=), others provide context that Claude loads automatically when relevant.
 
 ** Context skills
 :PROPERTIES:

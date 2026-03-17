@@ -1020,7 +1020,8 @@ that line before syncing and requesting completions."
 ;;;;; Non-interactive execution
 
 (defcustom claude-code-extras-batch-allowed-tools
-  '("Bash" "Read" "Write" "Edit" "Glob" "Grep" "WebFetch" "WebSearch")
+  '("Bash" "Read" "Write" "Edit" "Glob" "Grep"
+    "WebFetch" "WebSearch" "NotebookEdit" "mcp__*")
   "Tools to auto-allow via `--allowedTools' for non-interactive execution."
   :type '(repeat string)
   :group 'claude-code-extras)

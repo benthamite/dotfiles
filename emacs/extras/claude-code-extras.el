@@ -1019,11 +1019,26 @@ that line before syncing and requesting completions."
 
 ;;;;; Non-interactive execution
 
-(defcustom claude-code-extras-batch-allowed-tools
-  '("Bash" "Read" "Write" "Edit" "Glob" "Grep"
-    "WebFetch" "WebSearch" "NotebookEdit" "mcp__*")
-  "Tools to auto-allow via `--allowedTools' for non-interactive execution."
-  :type '(repeat string)
+(defcustom claude-code-extras-batch-allowed-tools nil
+  "Tools to auto-allow via `--allowedTools' for non-interactive execution.
+When nil (the default), no `--allowedTools' flag is passed and tool
+access is governed by `claude-code-extras-batch-permission-mode'
+and the user's settings.json."
+  :type '(choice (const :tag "None (use permission-mode)" nil)
+                 (repeat string))
+  :group 'claude-code-extras)
+
+(defcustom claude-code-extras-batch-permission-mode "bypassPermissions"
+  "Permission mode passed via `--permission-mode' for non-interactive execution.
+The default \"bypassPermissions\" grants all tool permissions
+automatically, which is necessary because `claude -p' cannot
+prompt the user for approval."
+  :type '(choice (const :tag "Bypass all" "bypassPermissions")
+                 (const :tag "Default" "default")
+                 (const :tag "Accept edits" "acceptEdits")
+                 (const :tag "Don't ask" "dontAsk")
+                 (const :tag "Auto" "auto")
+                 (const :tag "None" nil))
   :group 'claude-code-extras)
 
 (defcustom claude-code-extras-batch-max-turns 30
@@ -1244,14 +1259,17 @@ Returns (:text ASSISTANT-TEXT :cost COST :session-id ID
 (defun claude-code-extras--build-cli-args (prompt &rest kwargs)
   "Build the argument list for `claude -p' with PROMPT.
 KWARGS are keyword arguments:
-  :allowed-tools  list of tool name strings
-  :system-prompt  string appended via --append-system-prompt
-  :model          model name string
-  :max-turns      integer, maximum agentic turns
+  :allowed-tools   list of tool name strings
+  :permission-mode permission mode string
+  :system-prompt   string appended via --append-system-prompt
+  :model           model name string
+  :max-turns       integer, maximum agentic turns
 Each defaults to the corresponding `claude-code-extras-batch-*'
 customization variable when not supplied."
   (let ((allowed-tools (or (plist-get kwargs :allowed-tools)
                            claude-code-extras-batch-allowed-tools))
+        (permission-mode (or (plist-get kwargs :permission-mode)
+                             claude-code-extras-batch-permission-mode))
         (system-prompt (or (plist-get kwargs :system-prompt)
                            claude-code-extras-batch-system-prompt))
         (model (or (plist-get kwargs :model)
@@ -1264,6 +1282,8 @@ customization variable when not supplied."
                     "--verbose")))
     (setq args (append args (list "--max-turns"
                                   (number-to-string max-turns))))
+    (when permission-mode
+      (setq args (append args (list "--permission-mode" permission-mode))))
     (when allowed-tools
       (setq args (append args (list "--allowedTools"
                                     (string-join allowed-tools ",")))))

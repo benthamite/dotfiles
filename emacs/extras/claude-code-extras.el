@@ -1367,8 +1367,9 @@ Returns the process object."
 (defun claude-code-extras--parse-skill-frontmatter (file)
   "Parse YAML frontmatter from skill FILE and return a plist.
 Returns a plist with keys :name, :description, :argument-hint,
-:argument-source, :argument-choices, :argument-multiple,
-:user-invocable, or nil if FILE has no frontmatter."
+:argument-source, :argument-choices, :argument-default,
+:argument-multiple, :user-invocable, or nil if FILE has no
+frontmatter."
   (with-temp-buffer
     (insert-file-contents file)
     (goto-char (point-min))
@@ -1397,6 +1398,8 @@ Returns a plist with keys :name, :description, :argument-hint,
                      (setq result (plist-put result :argument-choices
                                              (mapcar #'string-trim
                                                      (split-string val "," t)))))
+                    ("argument-default"
+                     (setq result (plist-put result :argument-default val)))
                     ("argument-multiple"
                      (setq result (plist-put result :argument-multiple
                                              (not (equal val "false")))))
@@ -1523,6 +1526,7 @@ argument-source."
           (hint (and skill (plist-get skill :argument-hint)))
           (candidates (and skill
                            (claude-code-extras--skill-argument-candidates skill)))
+          (default (and skill (plist-get skill :argument-default)))
           (multiple-p (and skill (plist-get skill :argument-multiple)))
           (args (cond
                  ;; Completion candidates available
@@ -1533,8 +1537,14 @@ argument-source."
                     (when selected (string-join selected " "))))
                  (candidates
                   (let ((selected (completing-read
-                                   (format "Arguments %s: " (or hint ""))
-                                   candidates)))
+                                   (format "Arguments%s: "
+                                           (cond
+                                            ((and hint default)
+                                             (format " %s (default %s)" hint default))
+                                            (hint (format " %s" hint))
+                                            (default (format " (default %s)" default))
+                                            (t "")))
+                                   candidates nil nil nil nil default)))
                     (unless (string-empty-p selected) selected)))
                  ;; No candidates but has a hint — free-form input
                  (hint

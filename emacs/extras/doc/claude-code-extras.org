@@ -372,7 +372,7 @@ The function ~claude-code-extras--parse-skill-frontmatter~ reads a =SKILL.md= fi
 
 The function ~claude-code-extras--discover-skills~ scans =~/.claude/skills/= and the current project's =.claude/skills/= for =SKILL.md= files, parses their frontmatter, and returns a list of skill plists. Project skills shadow global skills with the same name. Skills with =user-invocable: false= are excluded.
 
-The function ~claude-code-extras--skill-display-result~ creates and displays the =*Claude Skill: <name>*= result buffer.
+The function ~claude-code-extras--skill-display-result~ displays the skill result.  When the skill created its own buffer (e.g. via =emacsclient=), the metadata (cost, duration, session) is added to that buffer and no separate buffer is created.  Otherwise a =*Claude Skill: <name>*= buffer is created with the full output.
 
 ** Batch TODO internals
 :PROPERTIES:

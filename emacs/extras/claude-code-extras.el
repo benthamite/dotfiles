@@ -1463,26 +1463,52 @@ skill's directory and return file stems as candidates.  If it has
                   (file-expand-wildcards pattern))))
       (plist-get skill :argument-choices)))
 
-(defun claude-code-extras--skill-display-result (skill-name result)
-  "Display RESULT plist in a buffer for SKILL-NAME."
-  (let ((buf (get-buffer-create (format "*Claude Skill: %s*" skill-name))))
-    (with-current-buffer buf
-      (let ((inhibit-read-only t))
-        (erase-buffer)
-        (insert (format "#+title: /%s — %s\n\n"
-                        skill-name
-                        (format-time-string "%Y-%m-%d %H:%M:%S")))
-        (insert (format "- Cost: $%.4f\n" (plist-get result :cost)))
-        (insert (format "- Duration: %.1fs\n" (plist-get result :duration)))
-        (when-let* ((sid (plist-get result :session-id)))
-          (insert (format "- Session: %s\n" sid)))
-        (insert "\n")
-        (insert (or (plist-get result :text) "(no output)"))
-        (unless (string-suffix-p "\n" (or (plist-get result :text) ""))
-          (insert "\n")))
-      (org-mode)
-      (goto-char (point-min)))
-    (pop-to-buffer buf)
+(defun claude-code-extras--skill-display-result (skill-name result
+                                                              &optional buffers-before)
+  "Display RESULT plist in a buffer for SKILL-NAME.
+When BUFFERS-BEFORE is non-nil, detect whether the skill created
+its own buffer (via emacsclient) and add metadata there instead of
+creating a separate buffer."
+  (let* ((new-buf (when buffers-before
+                    (car (cl-remove-if
+                          (lambda (b)
+                            (or (memq b buffers-before)
+                                (string-prefix-p " " (buffer-name b))))
+                          (buffer-list)))))
+         (meta-text (concat
+                     (format "#+cost: $%.4f\n" (plist-get result :cost))
+                     (format "#+duration: %.1fs\n" (plist-get result :duration))
+                     (if-let* ((sid (plist-get result :session-id)))
+                         (format "#+session: %s\n" sid)
+                       ""))))
+    (if new-buf
+        ;; Skill created its own buffer — add metadata there
+        (with-current-buffer new-buf
+          (let ((inhibit-read-only t))
+            (goto-char (point-min))
+            ;; Insert metadata after #+title line if present
+            (if (looking-at "^#\\+title:.*\n")
+                (goto-char (match-end 0))
+              (goto-char (point-min)))
+            (insert meta-text "\n"))
+          (goto-char (point-min))
+          (pop-to-buffer new-buf))
+      ;; No new buffer — show full result in a dedicated buffer
+      (let ((buf (get-buffer-create (format "*Claude Skill: %s*" skill-name))))
+        (with-current-buffer buf
+          (let ((inhibit-read-only t))
+            (erase-buffer)
+            (insert (format "#+title: /%s — %s\n"
+                            skill-name
+                            (format-time-string "%Y-%m-%d %H:%M:%S")))
+            (insert meta-text)
+            (insert "\n")
+            (insert (or (plist-get result :text) "(no output)"))
+            (unless (string-suffix-p "\n" (or (plist-get result :text) ""))
+              (insert "\n")))
+          (org-mode)
+          (goto-char (point-min)))
+        (pop-to-buffer buf)))
     (message "/%s complete (%.1fs, $%.4f)"
              skill-name
              (plist-get result :duration)
@@ -1558,7 +1584,8 @@ argument-source."
                     claude-code-extras-run-skill-model))
          (prompt (if (and arguments (not (string-empty-p arguments)))
                      (format "/%s %s" skill-name arguments)
-                   (format "/%s" skill-name))))
+                   (format "/%s" skill-name)))
+         (buffers-before (buffer-list)))
     (message "Running /%s%s..." skill-name
              (if (and skill (plist-get skill :model))
                  (format " [%s]" model) ""))
@@ -1568,7 +1595,8 @@ argument-source."
      :model model
      :callback
      (lambda (result)
-       (claude-code-extras--skill-display-result skill-name result)))))
+       (claude-code-extras--skill-display-result
+        skill-name result buffers-before)))))
 
 ;;;;; Batch TODO processing
 

@@ -244,9 +244,9 @@ The function ~claude-code-extras--send-escape-in-current-buffer~ is an =:around=
 
 #+findex: claude-code-extras-start-status-polling
 #+findex: claude-code-extras-stop-status-polling
-The function ~claude-code-extras-start-status-polling~ begins periodic reading of the JSON status file written by the bundled statusline shell script. The parsed data is stored in the buffer-local variable ~claude-code-extras--status-data~ as a plist.
+The function ~claude-code-extras-start-status-polling~ begins periodic reading of the JSON status file written by the bundled statusline shell script. The parsed data is stored in the buffer-local variable ~claude-code-extras--status-data~ as a plist. Calling it multiple times is safe: any existing timer is canceled before a new one is created.
 
-The function ~claude-code-extras-stop-status-polling~ cancels the timer and deletes the status file.
+The function ~claude-code-extras-stop-status-polling~ cancels the timer and deletes the status file. As a safety net, the polling callback also cancels itself if the associated buffer has been killed.
 
 ** Status accessors
 :PROPERTIES:

@@ -1105,6 +1105,15 @@ to avoid adding duplicate participant lines ([[#h:meeting-participants][Meeting 
 :CUSTOM_ID: h:id-update-warning-handler
 :END:
 
+#+findex: org-extras--inhibit-modification-hooks
+The function ~org-extras--inhibit-modification-hooks~ is installed as
+=:around= advice on ~org-id-update-id-locations~.  It binds
+~inhibit-modification-hooks~ to ~t~ while the ID scan runs, preventing
+~org-modern-indent~ and ~org-indent~ from triggering
+~org-element-at-point~ when files are read into existing org buffers.
+Without this, each file insertion fires ~after-change-functions~, causing
+a cascading O(n*m) freeze.
+
 #+findex: org-extras--id-update-warning-handler
 The function ~org-extras--id-update-warning-handler~ is installed as
 advice on ~display-warning~ during ~org-extras-id-update-id-locations~

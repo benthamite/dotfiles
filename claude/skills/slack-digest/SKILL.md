@@ -40,6 +40,15 @@ For each message, classify it into one of:
 
 Discard anything classified as noise.
 
+#### Ops-support channels
+
+Apply special handling to `#ops-support` and `#ops-support-temp`: these are shared channels where anyone on the ops team can pick up requests. For each request posted in these channels:
+
+1. Fetch the thread replies (if any) using `conversations_replies`.
+2. Check whether an ops team member has already replied claiming the request (e.g. "I'll take this", "on it", "handling this", or any substantive response indicating ownership).
+3. If no one has claimed it, classify it as **Action required** with a note like "Unclaimed ops request — no one has replied yet."
+4. If someone has already claimed it, classify it as **Noise** (or **Worth knowing** if the request itself is notable regardless).
+
 ### 5. Format the digest
 
 Build an org-mode buffer with this structure:

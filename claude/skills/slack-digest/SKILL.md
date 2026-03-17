@@ -42,7 +42,7 @@ Discard anything classified as noise.
 
 #### Ops-support channels
 
-Apply special handling to `#ops-support` and `#ops-support-temp`: these are shared channels where anyone on the ops team can pick up requests. For each request posted in these channels:
+Apply special handling to any channel whose name starts with `ops-support` (this includes the shared `#ops-support` channel, `#ops-support-temp`, and each team member's personal `#ops-support-<name>` channel). For each request posted in these channels:
 
 1. Fetch the thread replies (if any) using `conversations_replies`.
 2. Check whether an ops team member has already replied claiming the request (e.g. "I'll take this", "on it", "handling this", or any substantive response indicating ownership).

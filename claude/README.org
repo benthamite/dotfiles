@@ -267,7 +267,7 @@ Iterative, graph-based discovery of high-value Twitter accounts in any niche. In
 :ID:       DF40872F-2CA3-4CAD-99F9-E684C175F772
 :END:
 
-Pulls all unread Slack messages via the =slack-epochai= MCP server, triages them into "action required" vs. "worth knowing" (discarding noise), and opens the digest as an org-mode buffer in Emacs with deep links back to Slack. Optionally marks all conversations as read after review.
+Pulls all unread Slack messages via the =slack-epochai= MCP server, triages them into "action required" vs. "worth knowing" (discarding noise), and opens the digest as an org-mode buffer in Emacs with deep links back to Slack. Accepts =--mark-read= or =--no-mark-read= to control whether conversations are marked as read; if neither is passed, asks interactively.
 
 ** Security skills
 :PROPERTIES:

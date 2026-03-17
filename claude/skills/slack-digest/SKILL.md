@@ -2,6 +2,7 @@
 name: slack-digest
 description: Pull unread Slack messages, triage for actionability, and present a digest in an Emacs buffer. Use when the user says "slack digest", "check slack", "unread messages", "slack unreads", or wants to catch up on Slack.
 user-invocable: true
+argument-hint: "[--mark-read | --no-mark-read]"
 ---
 
 # Slack digest
@@ -71,8 +72,8 @@ TMPFILE=$(mktemp /tmp/slack-digest-XXXXXX.org)
 emacsclient -e "(progn (find-file \"$TMPFILE\") (goto-char (point-min)) (org-fold-show-all))"
 ```
 
-### 7. Ask about marking as read
+### 7. Mark conversations as read
 
-After opening the buffer, ask the user: "Mark all conversations as read?"
+If the argument `--mark-read` was passed, mark all channels as read without asking. If `--no-mark-read` was passed, skip marking. If neither was passed, ask the user: "Mark all conversations as read?"
 
-If yes, call `conversations_mark` on every channel that had unreads (not just the ones surfaced in the digest — mark **all** channels that were fetched in step 1).
+To mark as read, call `conversations_mark` on every channel that had unreads (not just the ones surfaced in the digest — mark **all** channels that were fetched in step 1).

@@ -7098,6 +7098,7 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
   :custom
   (wikipedia-draft-directory (file-name-concat paths-dir-google-drive "wikipedia"))
   (wikipedia-ai-model 'gemini-flash-lite-latest)
+  (wikipedia-auto-update-mode 1)
   (wikipedia-ai-review-auto t)
   (wikipedia-watchlist-score-reason-auto t)
 
@@ -8839,7 +8840,10 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (claude-code-extras-alert-on-ready t)
   (claude-code-extras-sync-theme t)
   ;; copilot support is buggy; needs more work
-  (claude-code-extras-copilot-enabled nil))
+  (claude-code-extras-copilot-enabled nil)
+  :bind
+  (:map debugger-mode-map
+	("D" . claude-code-extras-debug-backtrace)))
 #+end_src
 
 ** =claude-log=

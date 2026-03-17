@@ -331,6 +331,21 @@ a forge notification pull to keep forge in sync."
 (add-hook 'doom-modeline-after-github-fetch-notification-hook #'doom-modeline-extras-handle-github-notifications)
 
 (autoload 'doom-modeline--github-fetch-notifications "doom-modeline-segments")
+
+(defun doom-modeline-extras--safe-default-directory (orig-fn &rest args)
+  "Call ORIG-FN with ARGS, ensuring `default-directory' exists.
+`async-start' inherits `default-directory' as the working directory
+for the subprocess.  When a timer fires while the current buffer's
+directory has been deleted, `make-process' signals `file-missing'.
+Fall back to the user's home directory in that case."
+  (let ((default-directory (if (file-directory-p default-directory)
+                               default-directory
+                             "~/")))
+    (apply orig-fn args)))
+
+(advice-add 'doom-modeline--github-fetch-notifications :around
+            #'doom-modeline-extras--safe-default-directory)
+
 (defun doom-modeline-extras-refresh-github-after-forge (&rest _)
   "Refresh the doom-modeline GitHub count after forge pulls notifications.
 This ensures the tab-bar count updates immediately when notifications

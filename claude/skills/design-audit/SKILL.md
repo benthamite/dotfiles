@@ -2,6 +2,7 @@
 name: design-audit
 description: Audit code for suboptimal architecture, unnecessary complexity, missing or wrong abstractions, duplication, and refactoring opportunities. Use when the user wants to improve code structure rather than find bugs or readability issues.
 argument-hint: [--accept] [dir]
+argument-choices: "--accept"
 ---
 
 # Design audit

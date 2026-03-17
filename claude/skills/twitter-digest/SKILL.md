@@ -2,7 +2,10 @@
 name: twitter-digest
 description: Fetch recent tweets from a curated list of accounts, triage for relevance, and present a digest. Use when the user says "twitter digest", "check twitter", "twitter update", "what's new on twitter", or "twitter roundup".
 argument-hint: "[list-name]"
+argument-source: "lists/*.md"
+argument-multiple: true
 user-invocable: true
+model: sonnet
 ---
 
 # Twitter digest
@@ -49,7 +52,7 @@ Read the list file. Extract the account usernames and the description (triage ru
 
 Check if `~/.claude/skills/twitter-digest/last-run/<list-name>.txt` exists. If it does, read the ISO timestamp inside — this is the cutoff. Only tweets newer than this timestamp should be included in the digest.
 
-If the file doesn't exist, this is the first run for this list. Ask the user how far back to look (e.g., "last 24 hours", "last 3 days", "past week"). Default suggestion: 48 hours. Use their answer to compute a cutoff timestamp. If running in `/loop` mode (no interactive input), default to 48 hours.
+If the file doesn't exist, this is the first run for this list. Ask the user how far back to look (e.g., "last 24 hours", "last 3 days", "past week"). Default suggestion: 48 hours. Use their answer to compute a cutoff timestamp. If running non-interactively (`/loop` mode, `claude -p`, or `$ARGUMENTS` already specifies the list), default to 48 hours without asking.
 
 ### 3. Fetch recent tweets
 

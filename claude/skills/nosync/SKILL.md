@@ -2,6 +2,7 @@
 name: nosync
 description: Apply the .nosync trick to a directory so Google Drive stops syncing it. Renames the directory with a .nosync suffix and creates a symlink at the original path. Use when Google Drive complains about symlinks or other problematic files inside a directory (e.g. node_modules/.bin).
 argument-hint: <directory-path>
+model: sonnet
 ---
 
 # Google Drive .nosync fix

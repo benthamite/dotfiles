@@ -1042,13 +1042,15 @@ When non-nil, passed to each `claude -p' invocation."
   :type '(choice (const :tag "Default" nil) string)
   :group 'claude-code-extras)
 
-(defcustom claude-code-extras-run-skill-model "claude-opus-4-6"
+(defcustom claude-code-extras-run-skill-model "opus"
   "Model to use for `claude-code-extras-run-skill'.
 Skills are complex agentic tasks that benefit from the most
-capable model.  Set to nil to use `claude-code-extras-batch-model'
-or Claude's default."
-  :type '(choice (const :tag "Opus 4.6" "claude-opus-4-6")
-                 (const :tag "Sonnet 4.6" "claude-sonnet-4-6")
+capable model.  Supports aliases like \"opus\", \"sonnet\",
+\"haiku\" as well as full model IDs.  Set to nil to use
+`claude-code-extras-batch-model' or Claude's default."
+  :type '(choice (const :tag "Opus (latest)" "opus")
+                 (const :tag "Sonnet (latest)" "sonnet")
+                 (const :tag "Haiku (latest)" "haiku")
                  (const :tag "Use batch default" nil)
                  string)
   :group 'claude-code-extras)

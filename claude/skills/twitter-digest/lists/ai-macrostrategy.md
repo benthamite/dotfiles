@@ -1,0 +1,30 @@
+---
+name: ai-macrostrategy
+description: AI macrostrategy thinkers — surface original analysis on AI trajectories, governance, existential risk, alignment strategy, economic implications, and compute governance. Skip product announcements, generic AI hype, and content unrelated to macro-level AI reasoning.
+---
+
+- @ajeya_cotra
+- @tobyordoxford
+- @TomDavidsonX
+- @DKokotajlo
+- @joel_bkr
+- @ohlennart
+- @ben_j_todd
+- @pawtrammell
+- @HjalmarWijk
+- @RyanPGreenblatt
+- @Jsevillamol
+- @testingham
+- @leopoldasch
+- @willmacaskill
+- @sjgadler
+- @ChadJonesEcon
+- @thlarsen
+- @romeovdean
+- @fiiiiiist
+- @MKinniment
+- @JeffLadish
+- @jankulveit
+- @danwilliamsphil
+- @lukeprog
+- @Miles_Brundage

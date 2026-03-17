@@ -1935,8 +1935,5 @@ when the session emits its first `idle_prompt' notification."
 (add-hook 'enable-theme-functions #'claude-code-extras-sync-theme)
 (add-hook 'claude-code-start-hook #'claude-code-extras-sync-theme)
 
-(with-eval-after-load 'debug
-  (define-key debugger-mode-map "D" #'claude-code-extras-debug-backtrace))
-
 (provide 'claude-code-extras)
 ;;; claude-code-extras.el ends here

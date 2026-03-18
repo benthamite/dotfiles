@@ -3,6 +3,7 @@
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
   "includeCoAuthoredBy": false,
+  "defaultMode": "bypassPermissions",
   "permissions": {
     "allow": [
       "Bash",

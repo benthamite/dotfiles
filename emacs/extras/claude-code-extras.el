@@ -545,35 +545,59 @@ CHOICES is an alist of (display-name . buffer) pairs."
 
 (defvar monet--sessions)
 (declare-function monet--session-server "monet")
+(declare-function monet--session-port "monet")
+(declare-function monet--remove-lockfile "monet")
+(declare-function websocket-server-close "websocket")
+
+(defun claude-code-extras--monet-stop-session (key)
+  "Fully stop the monet session for KEY.
+Closes the websocket server, removes the lockfile, and removes
+the session from `monet--sessions'."
+  (when-let* ((session (gethash key monet--sessions))
+              (server (monet--session-server session)))
+    (ignore-errors
+      (monet--remove-lockfile (monet--session-port session)))
+    (when (process-live-p server)
+      (ignore-errors (websocket-server-close server))
+      (when (process-live-p server)
+        (delete-process server)))
+    (remhash key monet--sessions)))
 
 (defun claude-code-extras--cleanup-monet-session ()
-  "Clean up the monet websocket session for the current Claude buffer.
-Stop the websocket server and remove the session from
-`monet--sessions' to prevent leaked processes."
+  "Clean up the monet websocket session for the current Claude buffer."
   (when (and (claude-code--buffer-p (current-buffer))
              (boundp 'monet--sessions))
-    (let ((key (buffer-name)))
-      (when-let* ((session (gethash key monet--sessions)))
-        (when-let* ((server (monet--session-server session))
-                    ((process-live-p server)))
-          (delete-process server))
-        (remhash key monet--sessions)))))
+    (claude-code-extras--monet-stop-session (buffer-name))))
 
 (defun claude-code-extras--monet-cleanup-before-start (orig-fn key directory)
   "Clean up old monet session for KEY before ORIG-FN creates a new one.
 DIRECTORY is passed through to ORIG-FN."
   (when (and (boundp 'monet--sessions)
              (gethash key monet--sessions))
-    (when-let* ((old-session (gethash key monet--sessions))
-                (old-server (monet--session-server old-session))
-                ((process-live-p old-server)))
-      (delete-process old-server))
-    (remhash key monet--sessions))
+    (claude-code-extras--monet-stop-session key))
   (funcall orig-fn key directory))
+
+(defun claude-code-extras--monet-gc-orphaned-servers ()
+  "Delete websocket server processes not tracked by any monet session.
+Runs periodically as a safety net to catch servers leaked through
+any code path."
+  (when (boundp 'monet--sessions)
+    (let ((active-servers nil))
+      (maphash (lambda (_k session)
+        (when-let* ((server (monet--session-server session)))
+          (push server active-servers)))
+        monet--sessions)
+      (dolist (p (process-list))
+        (when (and (string-match-p "\\`websocket server on port [0-9]"
+                                   (process-name p))
+                   (eq (process-status p) 'listen)
+                   (not (memq p active-servers)))
+          (delete-process p))))))
 
 (with-eval-after-load 'monet
   (advice-add 'monet-start-server-in-directory :around
-              #'claude-code-extras--monet-cleanup-before-start))
+              #'claude-code-extras--monet-cleanup-before-start)
+  (run-with-timer 60 60 #'claude-code-extras--monet-gc-orphaned-servers))
 
 (defun claude-code-extras-stop-status-polling ()
   "Stop status polling and clean up the status file."

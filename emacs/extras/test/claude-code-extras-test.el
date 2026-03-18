@@ -409,10 +409,11 @@
   "Build args with only required settings (no optional overrides)."
   (let ((claude-code-program "claude")
         (claude-code-extras-batch-max-turns 10)
+        (claude-code-extras-batch-permission-mode nil)
         (claude-code-extras-batch-allowed-tools nil)
         (claude-code-extras-batch-system-prompt nil)
         (claude-code-extras-batch-model nil))
-    (should (equal (claude-code-extras--batch-build-args "do stuff")
+    (should (equal (claude-code-extras--build-cli-args "do stuff")
                    '("claude" "-p" "do stuff"
                      "--output-format" "stream-json"
                      "--verbose"
@@ -422,10 +423,11 @@
   "Include --allowedTools when batch-allowed-tools is set."
   (let ((claude-code-program "claude")
         (claude-code-extras-batch-max-turns 5)
+        (claude-code-extras-batch-permission-mode nil)
         (claude-code-extras-batch-allowed-tools '("Read" "Write"))
         (claude-code-extras-batch-system-prompt nil)
         (claude-code-extras-batch-model nil))
-    (let ((args (claude-code-extras--batch-build-args "test")))
+    (let ((args (claude-code-extras--build-cli-args "test")))
       (should (member "--allowedTools" args))
       (should (member "Read,Write" args)))))
 
@@ -433,10 +435,11 @@
   "Include --append-system-prompt when batch-system-prompt is set."
   (let ((claude-code-program "claude")
         (claude-code-extras-batch-max-turns 5)
+        (claude-code-extras-batch-permission-mode nil)
         (claude-code-extras-batch-allowed-tools nil)
         (claude-code-extras-batch-system-prompt "Be concise")
         (claude-code-extras-batch-model nil))
-    (let ((args (claude-code-extras--batch-build-args "test")))
+    (let ((args (claude-code-extras--build-cli-args "test")))
       (should (member "--append-system-prompt" args))
       (should (member "Be concise" args)))))
 
@@ -444,10 +447,11 @@
   "Include --model when batch-model is set."
   (let ((claude-code-program "claude")
         (claude-code-extras-batch-max-turns 5)
+        (claude-code-extras-batch-permission-mode nil)
         (claude-code-extras-batch-allowed-tools nil)
         (claude-code-extras-batch-system-prompt nil)
         (claude-code-extras-batch-model "opus"))
-    (let ((args (claude-code-extras--batch-build-args "test")))
+    (let ((args (claude-code-extras--build-cli-args "test")))
       (should (member "--model" args))
       (should (member "opus" args)))))
 
@@ -455,11 +459,14 @@
   "All optional flags appear when all batch variables are set."
   (let ((claude-code-program "/usr/bin/claude")
         (claude-code-extras-batch-max-turns 20)
+        (claude-code-extras-batch-permission-mode "bypassPermissions")
         (claude-code-extras-batch-allowed-tools '("Bash" "Read"))
         (claude-code-extras-batch-system-prompt "Be thorough")
         (claude-code-extras-batch-model "sonnet"))
-    (let ((args (claude-code-extras--batch-build-args "hello")))
+    (let ((args (claude-code-extras--build-cli-args "hello")))
       (should (equal (car args) "/usr/bin/claude"))
+      (should (member "--permission-mode" args))
+      (should (member "bypassPermissions" args))
       (should (member "--allowedTools" args))
       (should (member "Bash,Read" args))
       (should (member "--append-system-prompt" args))

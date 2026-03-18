@@ -8859,7 +8859,9 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :ensure (:host github
                  :repo "benthamite/claude-log")
   :after claude-code
-  :demand t)
+  :demand t
+  :custom
+  (claude-log-summary-model 'gemini-flash-latest))
 #+end_src
 
 ** =monet=

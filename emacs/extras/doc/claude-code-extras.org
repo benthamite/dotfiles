@@ -69,6 +69,8 @@ The user option ~claude-code-extras-sync-theme~ controls whether the Claude Code
 
 Sessions that are idle (waiting for user input) receive the ~/theme~ command immediately. Sessions where Claude is still generating a response queue the theme change and apply it automatically when the turn finishes (via the Stop hook).
 
+The theme sync is fully asynchronous: the ~enable-theme-functions~ hook returns immediately, and all terminal interactions are deferred to zero-delay timers.  This prevents reentrant timer execution (e.g. ~org-roam-db-sync~) from blocking the main thread during ~accept-process-output~.
+
 ** Alert options
 :PROPERTIES:
 :CUSTOM_ID: h:alert-options

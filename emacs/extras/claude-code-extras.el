@@ -1766,6 +1766,9 @@ persist via `customize-save-variable'."
 (defvar claude-code-extras--last-synced-theme nil
   "The last theme value synced to Claude Code settings.")
 
+(defvar claude-code-extras--sync-theme-timer nil
+  "Pending timer for deferred theme sync, or nil.")
+
 (defun claude-code-extras--emacs-theme ()
   "Return \"light\" or \"dark\" based on the current frame background mode."
   (if (eq (frame-parameter nil 'background-mode) 'dark) "dark" "light"))
@@ -1797,27 +1800,41 @@ THEME is \"light\" or \"dark\".  Sends the slash command, waits
 for the picker to render, then navigates to the correct option
 and confirms.  The picker cursor starts on the currently active
 theme, so we arrow up for dark (from light) or down for light
-\(from dark)."
+\(from dark).
+
+All terminal sends are scheduled asynchronously via `run-at-time'
+so that this function returns immediately.  This prevents timers
+from firing reentantly during `accept-process-output' inside eat,
+which could otherwise block the main thread indefinitely."
   (with-current-buffer buffer
     (setq claude-code-extras--waiting-for-input nil)
     (setq claude-code-extras--pending-theme nil)
-    (claude-code--term-send-string
-     claude-code-terminal-backend "/theme")
-    (sit-for 0.1)
-    (claude-code--term-send-string
-     claude-code-terminal-backend (kbd "RET"))
     (let ((buf buffer)
-          (navigate (if (string= theme "light") "\e[B" "\e[A")))
+          (navigate (if (string= theme "light") "\e[B" "\e[A"))
+          (backend claude-code-terminal-backend))
+      (claude-code--term-send-string backend "/theme")
       (run-at-time
-       0.5 nil
+       0.1 nil
        (lambda ()
-         (when (buffer-live-p buf)
+         (when (and (buffer-live-p buf)
+                    (process-live-p (get-buffer-process buf)))
            (with-current-buffer buf
-             (claude-code--term-send-string
-              claude-code-terminal-backend navigate)
-             (sit-for 0.1)
-             (claude-code--term-send-string
-              claude-code-terminal-backend (kbd "RET")))))))))
+             (claude-code--term-send-string backend (kbd "RET"))
+             (run-at-time
+              0.5 nil
+              (lambda ()
+                (when (and (buffer-live-p buf)
+                           (process-live-p (get-buffer-process buf)))
+                  (with-current-buffer buf
+                    (claude-code--term-send-string backend navigate)
+                    (run-at-time
+                     0.1 nil
+                     (lambda ()
+                       (when (and (buffer-live-p buf)
+                                  (process-live-p (get-buffer-process buf)))
+                         (with-current-buffer buf
+                           (claude-code--term-send-string
+                            backend (kbd "RET")))))))))))))))))
 
 (defun claude-code-extras--apply-pending-theme (buffer)
   "Apply the pending theme to BUFFER, if any.
@@ -1826,24 +1843,38 @@ Called from the Stop hook handler when Claude finishes a turn."
     (when (string= theme (claude-code-extras--emacs-theme))
       (claude-code-extras--send-theme-to-buffer buffer theme))))
 
+(defun claude-code-extras--do-sync-theme ()
+  "Perform the actual theme sync.
+Called from a zero-delay timer scheduled by `claude-code-extras-sync-theme'
+so that `enable-theme-functions' and `ns-system-appearance-change-functions'
+hooks return immediately and cannot be blocked by reentrant timer activity."
+  (setq claude-code-extras--sync-theme-timer nil)
+  (let ((theme (claude-code-extras--emacs-theme)))
+    (unless (equal theme claude-code-extras--last-synced-theme)
+      (setq claude-code-extras--last-synced-theme theme)
+      (claude-code-extras--sync-theme-to-settings)
+      (dolist (buf (claude-code--find-all-claude-buffers))
+        (when (and (buffer-live-p buf)
+                   (process-live-p (get-buffer-process buf)))
+          (if (buffer-local-value 'claude-code-extras--waiting-for-input buf)
+              (claude-code-extras--send-theme-to-buffer buf theme)
+            (with-current-buffer buf
+              (setq claude-code-extras--pending-theme theme))))))))
+
 (defun claude-code-extras-sync-theme (&rest _)
   "Sync Claude Code theme with the current Emacs background mode.
 Updates `~/.claude/settings.json' for new sessions and sends
 `/theme' to idle sessions immediately.  For busy sessions (where
 Claude is still generating), the theme is queued and applied
-automatically when Claude finishes its turn."
+automatically when Claude finishes its turn.
+
+The work is deferred to a zero-delay timer so that the calling
+hook returns immediately, preventing reentrant timer execution
+from blocking the main thread."
   (when claude-code-extras-sync-theme
-    (let ((theme (claude-code-extras--emacs-theme)))
-      (unless (equal theme claude-code-extras--last-synced-theme)
-        (setq claude-code-extras--last-synced-theme theme)
-        (claude-code-extras--sync-theme-to-settings)
-        (dolist (buf (claude-code--find-all-claude-buffers))
-          (when (and (buffer-live-p buf)
-                     (process-live-p (get-buffer-process buf)))
-            (if (buffer-local-value 'claude-code-extras--waiting-for-input buf)
-                (claude-code-extras--send-theme-to-buffer buf theme)
-              (with-current-buffer buf
-                (setq claude-code-extras--pending-theme theme)))))))))
+    (unless claude-code-extras--sync-theme-timer
+      (setq claude-code-extras--sync-theme-timer
+            (run-at-time 0 nil #'claude-code-extras--do-sync-theme)))))
 
 ;;;;; Auto-setup
 

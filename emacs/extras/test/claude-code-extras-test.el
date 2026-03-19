@@ -160,7 +160,7 @@
                  #'ignore)
                 ((symbol-function 'claude-code-extras--send-theme-to-buffer)
                  (lambda (_buf _theme) (setq sent t))))
-        (claude-code-extras-sync-theme)
+        (claude-code-extras--do-sync-theme)
         (should-not sent)
         (should (equal claude-code-extras--pending-theme "dark"))))))
 
@@ -185,7 +185,7 @@
                  #'ignore)
                 ((symbol-function 'claude-code-extras--send-theme-to-buffer)
                  (lambda (_buf theme) (setq sent-theme theme))))
-        (claude-code-extras-sync-theme)
+        (claude-code-extras--do-sync-theme)
         (should (equal sent-theme "light"))))))
 
 (ert-deftest claude-code-extras-test-apply-pending-theme-on-stop ()

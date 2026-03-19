@@ -5,7 +5,7 @@ argument-hint: "[list-name]"
 argument-source: "lists/*.md"
 argument-multiple: true
 user-invocable: true
-model: haiku
+model: sonnet
 ---
 
 # Twitter digest

@@ -1,52 +1,85 @@
 #!/usr/bin/env bash
-# Fetch tweets for a list of accounts via twitterapi.io REST API,
-# extract only the fields needed for triage, filter by cutoff date,
-# and optionally fetch RT-discovered authors too.
+# Fetch tweets for twitter-digest skill.
+# Reads the list file, checks last-run cutoff, fetches all accounts,
+# and outputs everything Claude needs for triage in one shot.
 #
-# Usage: fetch-tweets.sh <list-file> [cutoff-iso-timestamp]
+# Usage: fetch-tweets.sh <list-name>
+#        fetch-tweets.sh <list-name> <override-cutoff>
 #
-# Output (stdout), two sections separated by "---RT_DISCOVERY---":
-#   Section 1 (listed accounts):  @user|date|likes|views|OG/RT|tweet_id|rt_user|text
-#   Section 2 (discovered via RT): same format, only new authors
-#
+# Output: a self-contained block with metadata header + compact tweet lines.
 # Requires: TWITTER_API_IO env var
 
 set -euo pipefail
 
-LIST_FILE="$1"
-CUTOFF="${2:-}"
+SKILL_DIR="${SKILL_DIR:-$HOME/.claude/skills/twitter-digest}"
+LIST_NAME="$1"
+LIST_FILE="$SKILL_DIR/lists/$LIST_NAME.md"
 
+if [[ ! -f "$LIST_FILE" ]]; then
+  echo "ERROR: list file not found: $LIST_FILE" >&2
+  exit 1
+fi
 if [[ -z "${TWITTER_API_IO:-}" ]]; then
   echo "ERROR: TWITTER_API_IO env var not set" >&2
   exit 1
 fi
 
+# --- Read list metadata ---
+DESCRIPTION=$(python3 -c "
+import sys
+in_front = False
+for line in open(sys.argv[1]):
+    line = line.strip()
+    if line == '---':
+        if in_front: break
+        in_front = True; continue
+    if in_front and line.startswith('description:'):
+        print(line[len('description:'):].strip())
+        break
+" "$LIST_FILE")
 LIST_USERNAMES=$(sed -n 's/^- @\([^ ]*\).*/\1/p' "$LIST_FILE")
+
 if [[ -z "$LIST_USERNAMES" ]]; then
   echo "ERROR: no usernames found in $LIST_FILE" >&2
   exit 1
 fi
 
+# --- Resolve cutoff ---
+CUTOFF="${2:-}"
+if [[ -z "$CUTOFF" ]]; then
+  LAST_RUN_FILE="$SKILL_DIR/last-run/$LIST_NAME.txt"
+  if [[ -f "$LAST_RUN_FILE" ]]; then
+    CUTOFF=$(cat "$LAST_RUN_FILE")
+  else
+    # Default: 48 hours ago
+    CUTOFF=$(date -u -v-48H +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -d '48 hours ago' +%Y-%m-%dT%H:%M:%SZ)
+  fi
+fi
+
+# --- Output header ---
+echo "LIST:$LIST_NAME"
+echo "CUTOFF:$CUTOFF"
+echo "DESCRIPTION:$DESCRIPTION"
+echo "---TWEETS---"
+
+# --- Fetch helpers ---
 TMPDIR=$(mktemp -d /tmp/twitter-fetch-XXXXXX)
 trap 'rm -rf "$TMPDIR"' EXIT
 
-# Fetch + extract compact tweet lines for one user
 fetch_one() {
   local user="$1" outfile="$TMPDIR/$user.txt"
   curl -sf "https://api.twitterapi.io/twitter/user/last_tweets?userName=$user" \
     -H "X-API-Key: $TWITTER_API_IO" \
-    -o "$TMPDIR/$user.json" 2>/dev/null || { return 0; }
+    -o "$TMPDIR/$user.json" 2>/dev/null || return 0
 
   python3 -c "
 import json, sys, re
 from datetime import datetime
-
 cutoff_str = sys.argv[2] if len(sys.argv) > 2 and sys.argv[2] else None
 cutoff_dt = None
 if cutoff_str:
     try: cutoff_dt = datetime.fromisoformat(cutoff_str.replace('Z', '+00:00'))
     except ValueError: pass
-
 with open(sys.argv[1]) as f: data = json.load(f)
 for t in data.get('data', {}).get('tweets', []):
     ds = t.get('createdAt', '')
@@ -71,7 +104,6 @@ for t in data.get('data', {}).get('tweets', []):
 " "$TMPDIR/$user.json" "$CUTOFF" > "$outfile" 2>/dev/null || true
 }
 
-# Parallel fetch with throttling
 parallel_fetch() {
   local pids=() count=0
   for user in $1; do
@@ -86,33 +118,28 @@ parallel_fetch() {
   for p in "${pids[@]}"; do wait "$p" 2>/dev/null || true; done
 }
 
-# --- Phase 1: Fetch listed accounts ---
+# --- Phase 1: Listed accounts ---
 parallel_fetch "$LIST_USERNAMES"
 
 LISTED_LOWER=$(echo "$LIST_USERNAMES" | tr '[:upper:]' '[:lower:]' | sort -u)
-
-# Collect tweets and find RT discovery candidates
 RT_USERS=""
+
 for f in "$TMPDIR"/*.txt; do
   [[ -f "$f" ]] || continue
   while IFS='|' read -r user date likes views type tid rt_user text; do
     echo "$user|$date|$likes|$views|$type|$tid|$rt_user|$text"
     if [[ "$type" == "RT" && -n "$rt_user" ]]; then
       rt_lower=$(echo "$rt_user" | tr '[:upper:]' '[:lower:]')
-      if ! echo "$LISTED_LOWER" | grep -qx "$rt_lower"; then
-        RT_USERS="$RT_USERS $rt_user"
-      fi
+      echo "$LISTED_LOWER" | grep -qx "$rt_lower" || RT_USERS="$RT_USERS $rt_user"
     fi
   done < "$f"
 done
 
-# --- Phase 2: Fetch RT-discovered authors ---
+# --- Phase 2: RT-discovered authors ---
 RT_UNIQUE=$(echo "$RT_USERS" | tr ' ' '\n' | sort -u | grep -v '^$' || true)
 if [[ -n "$RT_UNIQUE" ]]; then
-  # Clean phase 1 files to avoid mixing
   rm -f "$TMPDIR"/*.txt "$TMPDIR"/*.json
   parallel_fetch "$RT_UNIQUE"
-
   echo "---RT_DISCOVERY---"
   for f in "$TMPDIR"/*.txt; do
     [[ -f "$f" ]] || continue

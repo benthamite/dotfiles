@@ -10,67 +10,71 @@ model: haiku
 
 # Twitter digest
 
-Fetch tweets from a list, triage for relevance, present an org-mode digest.
+## COST RULE — READ THIS FIRST
 
-**CRITICAL**: Never use MCP twitter tools. Use only `fetch-tweets.sh` (direct REST API, ~24x less data).
+Each tool call resends ~20K tokens of system context. **You MUST complete this skill in exactly 2 tool calls:**
 
-## Lists
+1. **Bash**: run `fetch-tweets.sh` (handles list reading, cutoff, fetching, RT discovery)
+2. **Bash**: write org file + open in Emacs + update last-run timestamp (one heredoc command)
 
-Stored in `~/.claude/skills/twitter-digest/lists/<name>.md`. Format: YAML frontmatter with optional `description` (triage rubric), then `- @username` lines. If `description` is present, triage tweets; otherwise show all unfiltered.
+Any extra tool calls (Read, Write, separate Bash) waste $0.02-0.05 each. Do NOT read list files or last-run files separately — the fetch script handles that.
 
-List selection: no arg + 1 list → use it; no arg + multiple → ask; missing name → offer to create.
+Never use MCP twitter tools. The fetch script calls the REST API directly.
 
-## Procedure
-
-**IMPORTANT: Minimize tool calls.** Each round-trip resends the full context. Combine operations into as few bash calls as possible. Target: 3 tool calls total (fetch, write+open, update timestamp).
-
-### 1. Fetch
-
-Read the list file and last-run timestamp (`~/.claude/skills/twitter-digest/last-run/<name>.txt`), then run the fetch script — all in one bash call:
+## Step 1: Fetch
 
 ```bash
-SKILL_DIR=~/.claude/skills/twitter-digest
-LIST="<name>"
-CUTOFF=$(cat "$SKILL_DIR/last-run/$LIST.txt" 2>/dev/null || echo "")
-# If no cutoff and non-interactive, default to 48h ago:
-# CUTOFF=$(date -u -v-48H +%Y-%m-%dT%H:%M:%SZ)
-bash "$SKILL_DIR/fetch-tweets.sh" "$SKILL_DIR/lists/$LIST.md" "$CUTOFF"
+bash ~/.claude/skills/twitter-digest/fetch-tweets.sh <list-name>
 ```
 
-Output format: `@user|date|likes|views|OG/RT|tweet_id|rt_user|text`, with `---RT_DISCOVERY---` separating listed accounts from RT-discovered authors.
+Output:
+```
+LIST:<name>
+CUTOFF:<iso-timestamp>
+DESCRIPTION:<triage rubric or empty>
+---TWEETS---
+@user|date|likes|views|OG/RT|tweet_id|rt_user|text
+...
+---RT_DISCOVERY---
+@user|date|likes|views|OG/RT|tweet_id|rt_user|text
+```
 
-### 2. Triage + format
+If no cutoff file exists and running non-interactively, defaults to 48h. If interactive, ask the user.
 
-From the fetch output, triage tweets using the list's `description` as rubric. Be aggressive — surface 5-15 tweets, not 200. Skip noise, hype, self-promotion, low-signal RTs.
+## Step 2: Triage + output
 
-For RT-discovered authors (after `---RT_DISCOVERY---`), triage separately and include notable ones under "Discovered accounts".
+If DESCRIPTION is non-empty, triage tweets: keep only notable ones matching the rubric. Be aggressive — 5-15 tweets from 20+ accounts. Skip noise, hype, self-promotion, low-signal RTs.
 
-Write the org digest to a temp file and open it, all in one bash call:
+For RT-discovered authors (after `---RT_DISCOVERY---`), triage separately.
+
+Then emit ONE bash command that does everything:
 
 ```bash
-cat > "$TMPFILE" <<'ORGEOF'
+TMPFILE=$(mktemp /tmp/twitter-digest-XXXXXX.org) && cat > "$TMPFILE" <<'ORGEOF'
 #+title: Twitter digest: <name> — YYYY-MM-DD
-...org content...
+
+* Notable
+
+** @username (Mon Mar 17 14:30)
+Tweet text
+Likes: N | Views: N | Like rate: X.X%
+[[https://x.com/username/status/ID][View on X]]
+
+* Discovered accounts
+...
+
+* Accounts with nothing notable
+@user1, @user2, ...
 ORGEOF
-emacsclient -e "(progn (find-file \"$TMPFILE\") (goto-char (point-min)) (org-fold-show-all))"
+emacsclient -e "(progn (find-file \"$TMPFILE\") (goto-char (point-min)) (org-fold-show-all))" && echo "<iso-timestamp-of-newest-tweet>" > ~/.claude/skills/twitter-digest/last-run/<name>.txt
 ```
 
-Org format:
-- Order by **like rate** (likes ÷ views) descending
-- `[[https://x.com/user/status/ID][View on X]]` links
-- Sections: `* Notable`, `* Discovered accounts` (if any), `* Accounts with nothing notable`
-- Unfiltered lists: use `* All tweets` (reverse-chrono), omit other sections
-
-### 3. Update timestamp
-
-Write the most recent tweet's ISO timestamp to `~/.claude/skills/twitter-digest/last-run/<name>.txt`.
+Order by like rate (likes÷views) descending. Omit "Discovered accounts" if none. Unfiltered lists (no description): show all tweets reverse-chrono under `* All tweets`, no other sections.
 
 ## Multiple lists
 
-Process each list with a separate fetch call. Combine into one org buffer with top-level headings per list.
+Run fetch-tweets.sh once per list. Combine into one org buffer with `* <list-name>` top-level headings.
 
-## Periodic use
+## List management
 
-```
-/loop 4h /twitter-digest ai-tools
-```
+Lists: `~/.claude/skills/twitter-digest/lists/<name>.md`. YAML frontmatter with optional `description` (triage rubric), then `- @username` lines. No arg + 1 list → use it; multiple → ask.

@@ -384,6 +384,16 @@ The function ~gptel-extras-set-mullvad~ is added as =:around= advice on ~gptel-c
 
 The VPN connection is made silently (no user prompt). The =mullvad= package must be installed and configured separately.
 
+*** Fast JSON logging
+:PROPERTIES:
+:CUSTOM_ID: h:fast-json-logging
+:END:
+
+#+findex: gptel-extras--fast-log
+The function ~gptel-extras--fast-log~ is added as =:around= advice on ~gptel--log~. The upstream ~gptel--log~ function calls ~json-pretty-print~, which uses ~replace-region-contents~ internally.  That function runs the O(n²) =compareseq= diff algorithm, which freezes Emacs on large JSON payloads (such as full LLM request/response bodies).
+
+This advice replaces the pretty-printing step with a direct parse-then-insert approach: the JSON data is parsed with ~json-parse-string~ and re-inserted with ~json-encode~ (with ~json-encoding-pretty-print~ bound to =t=), avoiding the diff entirely.
+
 ** Running queries programmatically
 :PROPERTIES:
 :CUSTOM_ID: h:run-query

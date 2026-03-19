@@ -205,15 +205,43 @@ you notice patterns. If commit messages are included, use them to inform your an
 
 (declare-function mullvad-connect-to-website "mullvad")
 (defun gptel-extras-set-mullvad (orig-fun &rest args)
-  "Enable `mullvad' when connecting to Gemini, then call ORIG-FUN with ARGS.
+  "Enable `mullvad’ when connecting to Gemini, then call ORIG-FUN with ARGS.
 Use to circumvent Gemini’s location restrictions."
-  (when (eq gptel-model 'gemini-pro)
+  (when (eq gptel-model ‘gemini-pro)
     (mullvad-connect-to-website "Gemini"
 				gptel-extras-gemini-mullvad-disconnect-after
-				'silently))
+				‘silently))
   (apply orig-fun args))
 
-(advice-add 'gptel-curl-get-response :around #'gptel-extras-set-mullvad)
+(advice-add ‘gptel-curl-get-response :around #’gptel-extras-set-mullvad)
+
+;;;;; Fast JSON logging
+
+(defun gptel-extras--fast-log (orig-fun data &optional type no-json)
+  "Advise `gptel--log’ to avoid `replace-buffer-contents’.
+`json-pretty-print’ uses `replace-region-contents’ internally, whose O(n²)
+`compareseq’ diff algorithm freezes Emacs on large JSON payloads.  This advice
+pretty-prints via parse-then-insert instead, then calls ORIG-FUN with DATA,
+TYPE, and NO-JSON."
+  (with-current-buffer (get-buffer-create gptel--log-buffer-name)
+    (goto-char (point-max))
+    (unless (bobp) (insert "\n"))
+    (let ((json-encoding-pretty-print t)
+	  (json-encoding-default-indentation "  "))
+      ;; Header
+      (insert (json-encode
+	       `((gptel . ,(or type "none"))
+		 (timestamp . ,(format-time-string "%Y-%m-%d %H:%M:%S"))))
+	      "\n")
+      ;; Data
+      (if no-json
+	  (insert data)
+	(condition-case nil
+	    (insert (json-encode
+		     (json-parse-string data :object-type ‘alist)))
+	  (error (insert data)))))))
+
+(advice-add ‘gptel--log :around #’gptel-extras--fast-log)
 
 ;;;;; Save buffer
 

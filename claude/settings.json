@@ -88,7 +88,7 @@
     "padding": 0
   },
   "effortLevel": "high",
-  "theme": "light",
+  "theme": "dark",
   "mcpServers": {
     "home-assistant": {
       "command": "mcp-proxy",

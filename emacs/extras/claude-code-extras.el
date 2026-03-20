@@ -2041,6 +2041,7 @@ unconditionally recenter with `(recenter -1)'."
 (declare-function gptel-request "gptel")
 (declare-function elpaca-get "elpaca")
 (declare-function elpaca-source-dir "elpaca")
+(declare-function find-library-name "find-func")
 
 ;;;###autoload
 (defun claude-code-extras-debug-backtrace ()
@@ -2086,9 +2087,12 @@ the backtrace file path."
 Find the elpaca source directory for PACKAGE, start Claude Code
 there with the backtrace prompt passed as a CLI argument."
   (let* ((elpaca-entry (elpaca-get package))
-         (dir (if elpaca-entry
-                  (elpaca-source-dir elpaca-entry)
-                (user-error "Package `%s' not found in elpaca" package)))
+         (dir (cond
+               (elpaca-entry (elpaca-source-dir elpaca-entry))
+               ((condition-case nil
+                    (file-name-directory (find-library-name (symbol-name package)))
+                  (error nil)))
+               (t (user-error "Package `%s' not found" package))))
          (prompt (format "Read the backtrace at %s. Identify the bug, fix it, and commit the fix."
                          backtrace-file)))
     (message "Starting Claude Code for `%s' in %s..." package dir)

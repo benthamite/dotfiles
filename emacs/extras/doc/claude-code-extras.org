@@ -214,7 +214,7 @@ The command ~claude-code-extras-debug-backtrace~ automates the workflow of debug
 
 1. Saves the backtrace to the downloads directory via ~debug-save-backtrace~.
 2. Sends the backtrace to a light LLM (configured via ~claude-code-extras-debug-backtrace-model~ and ~claude-code-extras-debug-backtrace-backend~, [[#h:debug-backtrace-options][Debug backtrace options]]) to identify the package that caused the error.
-3. Starts an interactive Claude Code session in the package's elpaca source directory.
+3. Starts an interactive Claude Code session in the package's source directory (elpaca source directory if available, otherwise the directory of the library file on ~load-path~).
 4. Once the session is ready, sends it the backtrace file path and asks it to identify and fix the bug.
 
 * Functions

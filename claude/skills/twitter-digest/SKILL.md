@@ -5,7 +5,6 @@ argument-hint: "[list-name]"
 argument-source: "lists/*.md"
 argument-multiple: true
 user-invocable: true
-model: sonnet
 ---
 
 # Twitter digest
@@ -15,7 +14,7 @@ model: sonnet
 Each tool call resends ~20K tokens of system context. **You MUST complete this skill in exactly 2 tool calls:**
 
 1. **Bash**: run `fetch-tweets.sh` (handles list reading, cutoff, fetching, RT discovery)
-2. **Bash**: write org file + open in Emacs + update last-run timestamp (one heredoc command)
+2. **Bash**: write org file + open in Emacs + update last-run timestamp + save digest + update lists (one heredoc command)
 
 Any extra tool calls (Read, Write, separate Bash) waste $0.02-0.05 each. Do NOT read list files or last-run files separately — the fetch script handles that.
 
@@ -66,10 +65,18 @@ Likes: N | Views: N | Like rate: X.X%
 * Accounts with nothing notable
 @user1, @user2, ...
 ORGEOF
-emacsclient -e "(progn (find-file \"$TMPFILE\") (goto-char (point-min)) (org-fold-show-all))" && echo "<iso-timestamp-of-newest-tweet>" > ~/.claude/skills/twitter-digest/last-run/<name>.txt
+emacsclient -e "(progn (find-file \"$TMPFILE\") (goto-char (point-min)) (org-fold-show-all))" && echo "<iso-timestamp-of-newest-tweet>" > ~/.claude/skills/twitter-digest/last-run/<name>.txt && cp "$TMPFILE" ~/.claude/skills/twitter-digest/digests/<name>-YYYY-MM-DD.org && echo "- @newuser1" >> ~/.claude/skills/twitter-digest/lists/<name>.md && echo "- @newuser2" >> ~/.claude/skills/twitter-digest/lists/<name>.md
 ```
 
 Order by like rate (likes÷views) descending. Omit "Discovered accounts" if none. Unfiltered lists (no description): show all tweets reverse-chrono under `* All tweets`, no other sections.
+
+## Saving digests
+
+Always save a copy of the digest to `~/.claude/skills/twitter-digest/digests/<name>-YYYY-MM-DD.org`. For multi-list digests, use the combined filename (e.g. `ai-tools-ai-macrostrategy-2026-03-20.org`).
+
+## Growing lists from discovered accounts
+
+When the "Discovered accounts" section contains authors whose tweets match the list's rubric well, **append them to the list file** in the same bash command. Only add accounts that are a clear fit — skip one-off viral tweets from accounts outside the list's niche. This is how lists grow organically over time.
 
 ## Multiple lists
 

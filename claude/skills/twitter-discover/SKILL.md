@@ -6,6 +6,8 @@ user-invocable: true
 
 # Twitter account discovery
 
+@claude/skills/twitter-vet/SKILL.md
+
 Iterative, graph-based discovery of high-value Twitter/X accounts in any topic area. Uses a "hot promise score" algorithm that combines following-list overlap with bio relevance filtering and continuous score updates.
 
 ## MCP tools used
@@ -77,18 +79,13 @@ promise_score = sum(score of each scored account that follows them)
 
 This score updates continuously — every time a new account is scored and its following list fetched, all promise scores are recalculated. This is what makes the scores "hot."
 
-#### 3d. Evaluate candidates
+#### 3d. Quick filter candidates
 
-Before spending API calls to sample tweets, review the candidate list from `compute_promise_scores`. Use your own judgment to evaluate each candidate's bio, name, follower count, and who follows them. Prioritize candidates that look relevant to the topic and deprioritize those that are clearly off-topic (company accounts, spam, unrelated fields). Sort by your assessment of likely relevance, breaking ties by promise score.
+Apply **Procedure A** (quick filter) from twitter-vet to the candidate list from `compute_promise_scores`. Use bio, follower count, and who follows them. Sort passing candidates by likely relevance, breaking ties by promise score.
 
-#### 3e. Profile top candidates
+#### 3e. Full scoring
 
-For the top 5-8 unscored candidates (after bio filtering):
-
-1. Fetch 20 tweets with `get_user_tweets`.
-2. Score against `RELEVANCE_CRITERIA`.
-3. For any scoring 7+, fetch their following list and update all promise scores (making the loop "hotter").
-4. Repeat from 3c with updated scores.
+For the top 5-8 candidates that pass the quick filter, apply **Procedure B** (full scoring) from twitter-vet using `RELEVANCE_CRITERIA` as the rubric. For any scoring 7+, also fetch their following list and update all promise scores (making the loop "hotter"). Repeat from 3c with updated scores.
 
 ### Phase 4: Checkpoint
 

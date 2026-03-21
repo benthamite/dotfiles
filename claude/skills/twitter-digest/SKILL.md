@@ -9,16 +9,19 @@ user-invocable: true
 
 # Twitter digest
 
+@claude/skills/twitter-vet/SKILL.md
+
 ## COST RULE — READ THIS FIRST
 
-Each tool call resends ~20K tokens of system context. **You MUST complete this skill in exactly 2 tool calls:**
+Each tool call resends ~20K tokens of system context. The core digest is **exactly 2 tool calls**. Vetting discovered accounts adds N more (typically 0-5, ~$0.003 each):
 
 1. **Bash**: run `fetch-tweets.sh` (handles list reading, cutoff, fetching, RT discovery)
 2. **Bash**: write org file + open in Emacs + update last-run timestamp + save digest (one heredoc command)
+3. **MCP** (0-5 calls): vet discovered accounts — see Step 3
 
 Any extra tool calls (Read, Write, separate Bash) waste $0.02-0.05 each. Do NOT read list files or last-run files separately — the fetch script handles that.
 
-Never use MCP twitter tools. The fetch script calls the REST API directly.
+Never use MCP twitter tools for the digest itself. The fetch script calls the REST API directly. MCP tools are only used for vetting discovered accounts.
 
 ## Step 1: Fetch
 
@@ -36,6 +39,8 @@ DESCRIPTION:<triage rubric or empty>
 ...
 ---RT_DISCOVERY---
 @user|date|likes|views|OG/RT|tweet_id|rt_user|text
+---RT_AUTHORS---
+@user|followers|bio_text
 ```
 
 If no cutoff file exists and running non-interactively, defaults to 48h. If interactive, ask the user.
@@ -74,9 +79,14 @@ Order by like rate (likes÷views) descending. Omit "Discovered accounts" if none
 
 Always save a copy of the digest to `~/.claude/skills/twitter-digest/digests/<name>-YYYY-MM-DD.org`. For multi-list digests, use the combined filename (e.g. `ai-tools-ai-macrostrategy-2026-03-20.org`).
 
-## Growing lists from discovered accounts
+## Step 3: Vet discovered accounts
 
-Do **not** add discovered accounts to the list directly. Instead, after presenting the digest, suggest running `/twitter-discover` seeded with the discovered handles to properly vet them (profile analysis, timeline review, scoring) before they join the list.
+If `---RT_DISCOVERY---` yielded accounts:
+
+1. **Quick filter** (Procedure A from twitter-vet): use `---RT_AUTHORS---` metadata (bio, followers) and `---RT_DISCOVERY---` tweets to filter. Cap at top 5 candidates by quick-filter confidence. Skip the rest.
+2. **Full scoring** (Procedure B from twitter-vet): for each account that passes, call `mcp__twitterapi-io__get_user_tweets` (userName, count "20"). Score 1-10 against the list's `description`.
+3. **Auto-add**: score >= 7 (or `vet-threshold` from list YAML) → append `- @username` to the list file. Score 5-6 → report as borderline in the digest. Score <= 4 → skip.
+4. **Update digest**: emit one final Bash call to append a `* Vetted accounts` section to the org file (replacing `* Discovered accounts`) showing each account's score and rationale, and append any new `- @username` lines to the list file.
 
 ## Multiple lists
 

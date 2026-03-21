@@ -83,10 +83,12 @@ Always save a copy of the digest to `~/.claude/skills/twitter-digest/digests/<na
 
 If `---RT_DISCOVERY---` yielded accounts:
 
-1. **Quick filter** (Procedure A from twitter-vet): use `---RT_AUTHORS---` metadata (bio, followers) and `---RT_DISCOVERY---` tweets to filter. Cap at top 5 candidates by quick-filter confidence. Skip the rest.
-2. **Full scoring** (Procedure B from twitter-vet): for each account that passes, call `mcp__twitterapi-io__get_user_tweets` (userName, count "20"). Score 1-10 against the list's `description`.
-3. **Auto-add**: score >= 7 (or `vet-threshold` from list YAML) → append `- @username` to the list file. Score 5-6 → report as borderline in the digest. Score <= 4 → skip.
-4. **Update digest**: emit one final Bash call to append a `* Vetted accounts` section to the org file (replacing `* Discovered accounts`) showing each account's score and rationale, and append any new `- @username` lines to the list file.
+1. **Check registry**: read `~/.claude/skills/twitter-vet/vetted/<list-name>.md` if it exists. Any RT-discovered account already listed there: skip re-vetting, use the recorded score directly.
+2. **Quick filter** (Procedure A from twitter-vet): use `---RT_AUTHORS---` metadata (bio, followers) and `---RT_DISCOVERY---` tweets to filter remaining accounts. Cap at top 5 candidates by quick-filter confidence. Skip the rest.
+3. **Full scoring** (Procedure B from twitter-vet): for each account that passes, call `mcp__twitterapi-io__get_user_tweets` (userName, count "20"). Score 1-10 against the list's `description`.
+4. **Auto-add**: score >= 7 (or `vet-threshold` from list YAML) → append `- @username` to the list file. Score 5-6 → report as borderline in the digest. Score <= 4 → skip.
+5. **Update digest**: emit one final Bash call to append a `* Vetted accounts` section to the org file (replacing `* Discovered accounts`) showing each account's score and rationale, and append any new `- @username` lines to the list file.
+6. **Update vet registry**: append newly scored accounts to `~/.claude/skills/twitter-vet/vetted/<list-name>.md` (creating the file with the standard header if it doesn't exist). Include all accounts that went through full scoring, regardless of outcome.
 
 ## Multiple lists
 

@@ -41,6 +41,40 @@ Steps:
 
 The threshold of 7 can be overridden via an optional `vet-threshold` field in the list's YAML frontmatter.
 
+## Vet registry
+
+All accounts ever scored against a specific list's rubric are recorded in a persistent registry at:
+
+```
+~/.claude/skills/twitter-vet/vetted/<list-name>.md
+```
+
+**Before vetting any account**, check the registry for the current list. If the account already has an entry, skip re-vetting and use the recorded score directly.
+
+**After scoring**, append the account to the appropriate tier section of the registry (create the file if it doesn't exist).
+
+Format:
+
+```markdown
+# Vet registry: <list-name>
+
+## Tier 1 (8-10)
+
+- **@handle** (score, YYYY-MM-DD) — one-line rationale
+
+## Tier 2 (6-7)
+
+- **@handle** (score, YYYY-MM-DD) — one-line rationale
+
+## Tier 3 (4-5)
+
+- **@handle** (score, YYYY-MM-DD) — one-line rationale
+
+## Below threshold (1-3)
+
+- **@handle** (score, YYYY-MM-DD) — one-line rationale
+```
+
 ## Cost
 
 ~$0.003 per account vetted (one `get_user_tweets` call). Quick filter is free.

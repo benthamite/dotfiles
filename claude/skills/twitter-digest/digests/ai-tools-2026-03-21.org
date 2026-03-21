@@ -1,0 +1,59 @@
+#+title: Twitter digest: ai-tools — 2026-03-21
+
+* Notable
+
+** @bcherny RT @lydiahallie (Sat Mar 21 00:38)
+Claude Code on desktop lets you select DOM elements directly, much easier than describing which component you want updated.
+Likes: 2,607 | Views: 240,038 | Like rate: 1.09%
+[[https://x.com/lydiahallie/status/2035153976270741862][View on X]]
+
+** @intellectronica RT (Sat Mar 21 11:10)
+You know what's common to all the mavens tweeting that "you don't need RAG just let the agent run grep on the filesystem"? They've never built a RAG system at scale.
+Likes: 27 | Views: 3,185 | Like rate: 0.85%
+[[https://x.com/intellectronica/status/2035313148669088121][View on X]]
+
+** @NickADobos (Sat Mar 21 04:02)
+In case you missed it, OpenAI is publishing prompt engineering guides and skills in order to fix model training shortcomings. Long live prompt engineering.
+Likes: 143 | Views: 17,054 | Like rate: 0.84%
+[[https://x.com/NickADobos/status/2035205381665005651][View on X]]
+
+** @RayFernando1337 RT @alvinsng (Sat Mar 21 05:55)
+We at @FactoryAI know this oh so well, which is why we've written about: banning useEffect() in React codebases, using linters to direct agents (Lint Driven Development), Agent Readiness (fixing the codebase before letting agents roam wild), and context compression.
+Likes: 430 | Views: 56,766 | Like rate: 0.76%
+[[https://x.com/alvinsng/status/2035218502295200031][View on X]]
+
+** @bcherny RT @noahzweben (Sat Mar 21 00:38)
+You can now schedule recurring cloud-based tasks on Claude Code. Set a repo (or repos), a schedule, and a prompt. Claude runs it on our servers.
+Likes: 5,105 | Views: 718,125 | Like rate: 0.71%
+[[https://x.com/noahzweben/status/2035153932448600264][View on X]]
+
+** @Saboo_Shubham_ (Sat Mar 21 02:54)
+My OpenClaw agents self-improve every week. Last week Ross reviewed 12 PRs. Merged 3. Flagged 2 as spam. His self-diagnosis: too many one-file wrapper PRs slipping through. He tightened his own review criteria. I didn't ask him to.
+Likes: 118 | Views: 18,035 | Like rate: 0.65%
+[[https://x.com/Saboo_Shubham_/status/2035188285413498906][View on X]]
+
+** @petergyang (Fri Mar 20 23:06)
+1/ Plan in short sprints 2/ Encourage demos and evals over docs (get a prototype in front of internal folks and users asap!) 3/ Revisit features with new models 4/ Do the simple thing first.
+Likes: 102 | Views: 16,751 | Like rate: 0.61%
+[[https://x.com/petergyang/status/2035130974682718585][View on X]]
+
+** @intellectronica RT (Sat Mar 21 01:12)
+Eleanor's Law: "If a problem can't be solved by the model, there's no point trying to solve it in the harness."
+Likes: 4 | Views: 766 | Like rate: 0.52%
+[[https://x.com/intellectronica/status/2035162481749033365][View on X]]
+
+* Vetted accounts
+
+** @alvinsng — 7/10 (auto-added)
+MTS at FactoryAI. Genuine practitioner content on lint-driven development for AI agents, agent readiness (fixing codebases before letting agents loose), CI guardrails for AI-generated PRs. Heavy company promotion but the signal is real and actionable.
+
+** @lydiahallie — 6/10 (borderline)
+Claude Code team at Anthropic. Mostly product announcements, but some genuinely useful tips: DOM element selection in desktop, context:fork for skills, effort levels. More feature drops than practitioner workflows.
+
+** @noahzweben — 5/10 (borderline)
+Claude Code PM at Anthropic. Feature launches with occasional practical tips (/web-setup, env vars for scheduled tasks). Primarily product-focused.
+
+** @felixrieseberg — 5/10 (borderline)
+Claude Cowork/Code at Anthropic, Electron co-maintainer. Product announcements for Dispatch, Projects, remote-control. Less practitioner workflow content.
+* Accounts with nothing notable
+@maddiedreese, @forgebitz, @bentossell, @itsolelehmann

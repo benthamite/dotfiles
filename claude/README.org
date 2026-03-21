@@ -269,6 +269,13 @@ Reads and searches Twitter/X content via the =twitterapi-io= MCP server. Support
 
 Fetches recent tweets from a named list of accounts, triages them against the list's description (used as a relevance rubric), and surfaces only notable content. Uses a shell script (=fetch-tweets.sh=) that curls the twitterapi.io REST API directly and extracts only the fields needed for triage (~130 chars/tweet), bypassing MCP tools whose raw JSON responses (~120K chars/account) would consume enormous context. Lists are stored in =~/.claude/skills/twitter-digest/lists/= and track the last-run timestamp to avoid re-surfacing old tweets. Digests are saved to =digests/= for archival. Discovered accounts (surfaced via retweets) are flagged for follow-up vetting via =/twitter-discover= before joining the list. Pairs with =/loop= for periodic digests.
 
+*** twitter-vet
+:PROPERTIES:
+:ID:       A7B3E1D4-5F92-4C8A-B6E0-9D2F4A1C7E53
+:END:
+
+Shared account vetting procedure used by =twitter-digest= and =twitter-discover=. Defines a two-phase evaluation: a free quick filter (follower bounds, bio relevance, tweet quality) and a full scoring pass (fetch 20 tweets, score 1-10 against the list's rubric). Accounts scoring above the threshold (default 7, overridable via =vet-threshold= frontmatter) are auto-added to the list; borderline scores are reported; low scores are skipped silently.
+
 *** twitter-discover
 :PROPERTIES:
 :ID:       D3FF4B1E-429E-4999-951C-FBFB30F1E488

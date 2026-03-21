@@ -11035,20 +11035,23 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 (use-personal-package org-roam-extras
   :custom
   (org-roam-extras-auto-show-backlink-buffer t)
-  ;; exclude headings in specific files and directories
-  (org-roam-file-exclude-regexp
-   (let (result)
-     (dolist (dir-or-file
-	      (append
-	       org-roam-extras-excluded-dirs
-	       org-roam-extras-excluded-files)
-	      (regexp-opt result))
-       (push (if (file-directory-p dir-or-file)
-		 (file-relative-name dir-or-file paths-dir-org-roam)
-	       dir-or-file)
-	     result))))
-  
+
   :config
+  ;; exclude headings in specific files and directories
+  ;; Set here rather than in :custom so that `org-roam-extras-excluded-dirs'
+  ;; and `org-roam-extras-excluded-files' are guaranteed to be defined (they
+  ;; are void if org-roam loads first, e.g. via a citar idle timer).
+  (setopt org-roam-file-exclude-regexp
+	  (let (result)
+	    (dolist (dir-or-file
+		     (append
+		      org-roam-extras-excluded-dirs
+		      org-roam-extras-excluded-files)
+		     (regexp-opt result))
+	      (push (if (file-directory-p dir-or-file)
+			(file-relative-name dir-or-file paths-dir-org-roam)
+		      dir-or-file)
+		    result))))
   (org-roam-extras-setup-db-sync)
 
   :hook

@@ -25,5 +25,3 @@ description: Practical AI tool workflows, tips, and tutorials from practitioners
 - @intellectronica
 - @chasing_next
 - @MattPRD
-- @oskargroth
-- @davebcn87

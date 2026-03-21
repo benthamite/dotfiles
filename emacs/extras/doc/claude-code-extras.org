@@ -48,6 +48,14 @@ The user option ~claude-code-extras-protect-buffers~ controls whether killing a 
 
 The default value is ~t~. Set it to ~nil~ if you prefer to kill Claude buffers without confirmation.
 
+** Diff display
+:PROPERTIES:
+:CUSTOM_ID: h:diff-display-fix
+:END:
+
+#+findex: claude-code-extras--display-diff-buffer
+The function ~claude-code-extras--display-diff-buffer~ overrides ~monet--display-diff-buffer~ to display diff buffers in a bottom side window instead of using ~display-buffer-in-tab~. The upstream implementation calls ~display-buffer-in-tab~ from an async websocket callback, which switches tabs as a side effect and can corrupt the window layout when the fallback ~display-buffer-pop-up-window~ fails and Emacs resorts to ~display-buffer-use-some-window~ (which replaces the buffer in an existing window). The override avoids tab switching entirely.
+
 ** Terminal rendering
 :PROPERTIES:
 :CUSTOM_ID: h:terminal-rendering-option

@@ -594,9 +594,23 @@ any code path."
                    (not (memq p active-servers)))
           (delete-process p))))))
 
+(defun claude-code-extras--display-diff-buffer (diff-buffer &optional _session)
+  "Display DIFF-BUFFER in a bottom side window without switching tabs.
+Override for `monet--display-diff-buffer' that avoids the tab-switching
+side effects of `display-buffer-in-tab', which can corrupt the window
+layout when called from an async websocket callback."
+  (display-buffer diff-buffer
+                  '((display-buffer-in-side-window)
+                    (side . bottom)
+                    (slot . 0)
+                    (window-height . 0.3)
+                    (preserve-size . (nil . t)))))
+
 (with-eval-after-load 'monet
   (advice-add 'monet-start-server-in-directory :around
               #'claude-code-extras--monet-cleanup-before-start)
+  (advice-add 'monet--display-diff-buffer :override
+              #'claude-code-extras--display-diff-buffer)
   (run-with-timer 60 60 #'claude-code-extras--monet-gc-orphaned-servers))
 
 (defun claude-code-extras-stop-status-polling ()

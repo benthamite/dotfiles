@@ -507,6 +507,39 @@ satisfies these criteria."
       (user-error "Multiple nodes share the title “%s”" title))
      (t (caar rows)))))
 
+;;;;; Node hierarchy
+
+;; adapted from
+;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#showing-node-hierarchy
+(cl-defmethod org-roam-node-hierarchy ((node org-roam-node))
+  (let ((level (org-roam-node-level node)))
+    (concat
+     (when (> level 0)
+       (concat
+        (propertize (org-roam-node-file-title node) 'face 'org-level-1)
+        " > "))
+     ;; This is a hacky propertization because it doesn't color the
+     ;; intermediate headings differently, but doing that slowed
+     ;; down the function too much.
+     (when (> level 1)
+       (concat
+        (propertize (string-join (org-roam-node-olp node) " > ") 'face 'org-level-2)
+        " > "))
+     (propertize (org-roam-node-title node) 'face 'org-level-3))))
+
+;;;;; DB sync
+
+(defun org-roam-extras-setup-db-sync ()
+  "Disable autosync and schedule periodic DB sync via an idle timer."
+  (org-roam-db-autosync-mode -1)
+  (run-with-idle-timer (* 20 60) t
+   (lambda ()
+     (condition-case err
+         (org-roam-db-sync)
+       (quit nil)
+       (file-error
+        (message "org-roam-db-sync: skipped due to file error: %S" err))))))
+
 ;;;;; Statistics
 
 (defun org-roam-extras-count-todos-and-efforts ()

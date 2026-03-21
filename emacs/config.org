@@ -11005,24 +11005,6 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
   (org-roam-db-node-include-function #'org-roam-extras-node-include-function)
 
   :config
-  ;; adapted from
-  ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#showing-node-hierarchy
-  (cl-defmethod org-roam-node-hierarchy ((node org-roam-node))
-    (let ((level (org-roam-node-level node)))
-      (concat
-       (when (> level 0)
-         (concat
-          (propertize (org-roam-node-file-title node) 'face 'org-level-1)
-          " > "))
-       ;; This is a hacky propertization because it doesn't color the
-       ;; intermediate headings differently, but doing that slowed
-       ;; down the function too much.
-       (when (> level 1)
-         (concat
-          (propertize (string-join (org-roam-node-olp node) " > ") 'face 'org-level-2)
-          " > "))
-       (propertize (org-roam-node-title node) 'face 'org-level-3))))
-
   (with-eval-after-load 'org-roam-bibtex
     (setopt org-roam-mode-sections (append org-roam-mode-sections '(orb-section-reference orb-section-abstract))))
 
@@ -11031,18 +11013,9 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
   ;; include transcluded links in `org-roam' backlinks
   (delete '(keyword "transclude") org-roam-db-extra-links-exclude-keys)
 
-  ;; I disable autosync for performance reasons, but still keep the db in sync via an idle timer
-  (org-roam-db-autosync-mode -1)
-  (run-with-idle-timer (* 20 60) t
-   (lambda ()
-     (condition-case err
-         (org-roam-db-sync)
-       (file-error
-        (message "org-roam-db-sync: skipped due to file error: %S" err)))))
-
   ;; https://github.com/org-roam/org-roam/issues/2550#issuecomment-3451456331
   (with-eval-after-load 'org-roam-capture
-    (setq org-roam-capture-new-node-hook nil))
+    (setopt org-roam-capture-new-node-hook nil))
 
   :bind
   (:map org-mode-map
@@ -11062,20 +11035,22 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 (use-personal-package org-roam-extras
   :custom
   (org-roam-extras-auto-show-backlink-buffer t)
-
-  :config
   ;; exclude headings in specific files and directories
-  (setopt org-roam-file-exclude-regexp
+  (org-roam-file-exclude-regexp
    (let (result)
      (dolist (dir-or-file
-              (append
-               org-roam-extras-excluded-dirs
-               org-roam-extras-excluded-files)
-              (regexp-opt result))
+	      (append
+	       org-roam-extras-excluded-dirs
+	       org-roam-extras-excluded-files)
+	      (regexp-opt result))
        (push (if (file-directory-p dir-or-file)
-                 (file-relative-name dir-or-file paths-dir-org-roam)
-               dir-or-file)
-             result))))
+		 (file-relative-name dir-or-file paths-dir-org-roam)
+	       dir-or-file)
+	     result))))
+  
+  :config
+  (org-roam-extras-setup-db-sync)
+
   :hook
   (org-capture-prepare-finalize-hook . org-roam-extras-remove-file-level-properties)
 

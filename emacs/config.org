@@ -8841,9 +8841,9 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (claude-code-extras-sync-theme t)
   ;; copilot support is buggy; needs more work
   (claude-code-extras-copilot-enabled nil)
-  :bind
-  (:map debugger-mode-map
-	("D" . claude-code-extras-debug-backtrace)))
+  :config
+  (with-eval-after-load 'debug
+    (bind-key "D" #'claude-code-extras-debug-backtrace debugger-mode-map)))
 #+end_src
 
 ** =claude-log=

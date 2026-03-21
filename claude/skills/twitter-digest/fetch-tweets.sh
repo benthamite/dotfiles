@@ -145,4 +145,21 @@ if [[ -n "$RT_UNIQUE" ]]; then
     [[ -f "$f" ]] || continue
     cat "$f"
   done
+  echo "---RT_AUTHORS---"
+  for f in "$TMPDIR"/*.json; do
+    [[ -f "$f" ]] || continue
+    python3 -c "
+import json, sys
+with open(sys.argv[1]) as f: data = json.load(f)
+tweets = data.get('data', {}).get('tweets', [])
+if not tweets: sys.exit(0)
+author = tweets[0].get('author')
+if not author: sys.exit(0)
+uname = author.get('userName', '')
+followers = author.get('followers', 0)
+bio = author.get('description', '')
+bio = bio.replace('\n', ' ').replace('|', '/').strip()[:200]
+print(f'@{uname}|{followers}|{bio}')
+" "$f" 2>/dev/null || true
+  done
 fi

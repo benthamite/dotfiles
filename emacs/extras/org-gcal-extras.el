@@ -47,12 +47,16 @@ This prevents `org-modern-indent' and `track-changes' from triggering
 `org-element-at-point' during buffer modifications, which can fail with
 \"Invalid search bound\" errors in async contexts (e.g. timer-based sync).
 Also resets the org-element cache before and after to prevent
-emergency exits from stale cache state."
-  (let ((inhibit-modification-hooks t))
-    (org-gcal-extras--reset-element-cache)
-    (unwind-protect
-	(apply orig-fun args)
-      (org-gcal-extras--reset-element-cache))))
+emergency exits from stale cache state.
+
+The cache resets must run outside the `let' that binds
+`inhibit-modification-hooks', because `org-element--cache-active-p'
+returns nil when that variable is non-nil."
+  (org-gcal-extras--reset-element-cache)
+  (unwind-protect
+      (let ((inhibit-modification-hooks t))
+	(apply orig-fun args))
+    (org-gcal-extras--reset-element-cache)))
 
 (advice-add 'org-gcal--update-entry :around #'org-gcal-extras--inhibit-modification-hooks)
 (advice-add 'org-gcal--sync-handle-events :around #'org-gcal-extras--inhibit-modification-hooks)

@@ -34,6 +34,24 @@
 (require 'paths)
 (require 'transient)
 
+;;;; Workarounds
+
+;; Emacs 30.2 build bug: `org-element-at-point-no-context' was
+;; byte-compiled (via autoload generation) without `org-macs' loaded, so
+;; the `org-element-with-disabled-cache' macro wasn't expanded and is
+;; called as a function at runtime, triggering `invalid-function'.
+;; Redefine with the macro manually expanded.  Remove once Emacs is
+;; rebuilt with a fix.
+(defun org-element-at-point-no-context (&optional pom)
+  "Quickly find element at point or POM.
+It is a faster version of `org-element-at-point' that is not
+guaranteed to return cached element.  `:parent' element may be
+deferred and slow to retrieve."
+  (or (org-element-at-point pom 'cached-only)
+      (cl-letf (((symbol-function #'org-element--cache-active-p)
+                 (lambda (&rest _) nil)))
+        (org-element-at-point pom))))
+
 ;;;; User options
 
 (defgroup org-extras ()

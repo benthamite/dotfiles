@@ -61,6 +61,6 @@ jq -n '{
   "hookSpecificOutput": {
     "hookEventName": "PreToolUse",
     "permissionDecision": "deny",
-    "permissionDecisionReason": "BLOCKED: Elisp files are staged but you have not tested them in this session. You MUST run `emacs --batch` to verify the changed code before committing. Use the batch testing pattern from the dotfiles-context skill: load elpaca build dirs, push emacs/extras to load-path, then require the changed package. For config.org use-package changes, also eval the changed use-package form in the batch session before requiring the package, so the after-load hooks are registered and can be exercised."
+    "permissionDecisionReason": "BLOCKED: Elisp files are staged but you have not tested them in this session. You MUST run `emacs --batch` to verify the changed code before committing. Use the batch testing pattern from the dotfiles-context skill: load elpaca build dirs, push emacs/extras to load-path, then require the changed package. For config.org changes: first tangle with `emacsclient -e '(init-build-profile (file-name-directory user-init-file))'`, then in the batch session also eval the changed use-package form before requiring the package, so after-load hooks are registered and exercised."
   }
 }'

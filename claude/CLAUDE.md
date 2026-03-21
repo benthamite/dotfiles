@@ -27,6 +27,11 @@
 - When spawning subagents or teams, always use the most advanced model available (as of 2026-02-14, that means Claude Opus 4.6).
 - In general, I value performance above speed, so prefer more powerful models even if they are slower.
 
+## MCP servers
+
+- Google MCP setup (two accounts, multiple servers, troubleshooting): see `~/My Drive/dotfiles/claude/google-mcp-setup.md`
+- MCP server definitions go in `~/.claude.json`, NOT `~/.claude/settings.json`.
+
 ## Filesystem organization
 
 ### Dotfiles

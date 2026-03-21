@@ -55,6 +55,11 @@
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/claude/hooks/symlink-project-memory.sh",
             "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/load-elisp-after-edit.sh",
+            "timeout": 10
           }
         ]
       }

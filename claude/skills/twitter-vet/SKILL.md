@@ -49,9 +49,16 @@ All accounts ever scored against a specific list's rubric are recorded in a pers
 ~/.claude/skills/twitter-vet/vetted/<list-name>.md
 ```
 
-**Before vetting any account**, check the registry for the current list. If the account already has an entry, skip re-vetting and use the recorded score directly.
+**Before vetting any account**, check the registry for the current list. If the account appears in any section, skip it entirely — do not re-score or re-filter.
 
-**After scoring**, append the account to the appropriate tier section of the registry (create the file if it doesn't exist).
+**After each evaluation**, record the account in the appropriate section (create the file if it doesn't exist):
+
+- Procedure A rejection → "Skipped (quick filter)"
+- Procedure B score 1-3 → "Below threshold"
+- Procedure B score 4-5 → "Tier 3"
+- Procedure B score 6-7 → "Tier 2"
+- Procedure B score 8-10 → "Tier 1"
+- User manually says no → "Rejected (manual)"
 
 Format:
 
@@ -73,6 +80,14 @@ Format:
 ## Below threshold (1-3)
 
 - **@handle** (score, YYYY-MM-DD) — one-line rationale
+
+## Rejected (manual)
+
+- **@handle** (YYYY-MM-DD) — reason or original score
+
+## Skipped (quick filter)
+
+- **@handle** (YYYY-MM-DD) — one-line reason
 ```
 
 ## Cost

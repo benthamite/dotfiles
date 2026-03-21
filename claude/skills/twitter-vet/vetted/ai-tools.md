@@ -13,3 +13,7 @@
 - **@felixrieseberg** (5, 2026-03-21) — Claude Cowork/Code at Anthropic, Electron co-maintainer. Product announcements for Dispatch, Projects, remote-control. Less practitioner workflow content.
 
 ## Below threshold (1-3)
+
+## Rejected (manual)
+
+## Skipped (quick filter)

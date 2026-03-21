@@ -1,6 +1,6 @@
 ---
 name: dotfiles-context
-description: Dotfiles worktree structure and extras documentation instructions. Use when working with dotfiles or Emacs extras doc files.
+description: Dotfiles worktree structure and documentation instructions for ‘extras-’ modules. Use when working with dotfiles or Emacs files.
 user-invocable: false
 ---
 
@@ -19,6 +19,16 @@ emacsclient -e 'init-current-profile'
 ```
 
 Always use this to resolve the active profile path (`~/.config/emacs-profiles/<profile>/elpaca/`) rather than hardcoding a profile name, since it changes over time.
+
+# Tangling config.org
+
+After editing `emacs/config.org`, always tangle it to the current profile using:
+
+```bash
+emacsclient -e '(init-build-profile (file-name-directory user-init-file))'
+```
+
+Do NOT use `org-babel-tangle-file` directly — it doesn't know about the profile system and may write to the wrong location.
 
 # Making changes
 

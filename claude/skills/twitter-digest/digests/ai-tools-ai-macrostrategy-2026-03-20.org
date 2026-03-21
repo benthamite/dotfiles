@@ -1,0 +1,182 @@
+#+title: Twitter digest: ai-tools, ai-macrostrategy — 2026-03-20
+#+cost: $1.5579
+#+duration: 686.0s
+#+session: 234dda0f-e7aa-4f4e-b0c3-b08a146237c4
+
+
+* ai-tools
+** Notable
+
+*** @boringmarketer (Fri Mar 20, 16:44)
+the challenge isn't the code it's the judgement and systems design embedded in it. That's why vertical experts who understand engineering are so valuable
+Likes: 53 | Views: 2,497 | Like rate: 2.1%
+[[https://x.com/boringmarketer/status/2035034644693807605][View on X]]
+
+*** @gabriel1 (Fri Mar 20, 00:34)
+me and everyone around me prompt codex and chatgpt with voice. the more decisions you can spit out to codex the better your code will be, so you're only interface limited. the "everyone will use speech" guys were right, just 234 products and 18344 softwares too early
+Likes: 647 | Views: 39,674 | Like rate: 1.6%
+[[https://x.com/gabriel1/status/2034790736655524331][View on X]]
+
+*** @_catwu (Fri Mar 20, 21:21)
+The PM playbook was built on an assumption that the technology underneath your product is roughly stable. With the current pace of model progress, this is no longer true. Here's how we've evolved the PM role:
+Likes: 552 | Views: 35,753 | Like rate: 1.5%
+[[https://x.com/_catwu/status/2035104384007422347][View on X]]
+
+*** @iannuttall (Fri Mar 20, 10:55)
+I haven't used Cursor in a long time, but the new Composer 2 model just one-shot a frontend design from Next.js over to Astro 6 that GPT 5.4 butchered badly! Fast is good and fast and accurate is great. Will use this a lot more now
+Likes: 111 | Views: 9,102 | Like rate: 1.2%
+[[https://x.com/iannuttall/status/2034946986412007780][View on X]]
+
+*** @forgebitz (Fri Mar 20, 13:03)
+10,000+ chatgpt citations in 30 days, new website, zero backlinks. pure content play: recent content/fresh insights, super fast + SSR for inference. SEO on this site is terrible, ranking 50+ for most keywords but the content answers the prompts
+Likes: 98 | Views: 8,392 | Like rate: 1.2%
+[[https://x.com/forgebitz/status/2034979257722589384][View on X]]
+
+*** @itsolelehmann (Fri Mar 20, 15:06)
+i built a skill that 10x's all your other claude skills on autopilot (using karpathy's autoresearch method). the problem: most of your claude skills are quietly broken and you have no idea. i ran my landing page copy skill through the autoresearch scoring loop and it was failing it
+Likes: 61 | Views: 5,303 | Like rate: 1.2%
+[[https://x.com/itsolelehmann/status/2035010159622426842][View on X]]
+
+*** @sids7 (via @steipete, Fri Mar 20, 12:41)
+Codex's ability to reverse engineer private macOS frameworks is uncanny. Just added an HDR toggle to DisplayBuddy - so many users wanted this
+Likes: 713 | Views: 71,670 | Like rate: 1.0%
+[[https://x.com/sids7/status/2034973575103631503][View on X]]
+
+*** @oskargroth (via @steipete, Fri Mar 20, 14:28)
+Wasn't joking about this one btw. You can reverse-engineer pretty much any part of Apple platform internals in seconds using Claude or Codex with Hopper MCP
+Likes: 1,903 | Views: 222,317 | Like rate: 0.9%
+[[https://x.com/oskargroth/status/2035000578443538656][View on X]]
+
+*** @Saboo_Shubham_ (Fri Mar 20, 17:52)
+Just added this free document parser to my OpenClaw Agent team. One line. That's it. LiteParse plugs right into any AI agent. 86 pages in 3.3 seconds on my Macmini. No GPU and no API key needed. 100% free, local and Opensource.
+Likes: 80 | Views: 12,129 | Like rate: 0.7%
+[[https://x.com/Saboo_Shubham_/status/2035051817080643726][View on X]]
+
+** Discovered accounts
+
+*** @davebcn87 (via @badlogicgames, Fri Mar 20, 22:05)
+I got pi-autoresearch to optimize the bundle size of an internal tool we use every day. It went from 414kb to 55kb (7.5x smaller)
+Likes: 192 | Views: 13,952 | Like rate: 1.4%
+[[https://x.com/davebcn87/status/2035115474657202594][View on X]]
+
+*** @emollick (Fri Mar 20, 17:31)
+This is a cool, practical technique for increasing AI idea diversity by adding random priming phrases & bits of end words. Similar prompts produce similar ideas, but since LLMs attend more to the start & end of inputs, this approach pushes towards novelty
+Likes: 219 | Views: 16,893 | Like rate: 1.3%
+[[https://x.com/emollick/status/2035046505262833846][View on X]]
+
+*** @aakashgupta (Fri Mar 20, 08:30)
+This is how to use Claude Code to run your entire work day
+Likes: 414 | Views: 39,970 | Like rate: 1.0%
+[[https://x.com/aakashgupta/status/2034910315469840688][View on X]]
+
+*** @emollick (Fri Mar 20, 19:53)
+Skill.md issue is great and I am stealing it.
+Likes: 273 | Views: 32,276 | Like rate: 0.8%
+[[https://x.com/emollick/status/2035082303932694773][View on X]]
+
+*** @theo (Fri Mar 20, 03:02)
+Just let Opus go for over an hour on a new feature. When it was done, I asked how I can test it. 20 minutes later, it realized I can't test it because it did the whole thing entirely wrong. Idk how you guys use this model every day for real work
+Likes: 1,436 | Views: 260,491 | Like rate: 0.6%
+[[https://x.com/theo/status/2034827787266400455][View on X]]
+
+*** @Keshavatearth (Fri Mar 20, 02:50)
+spent last night organizing swiftui docs so that I can pass them to an agent easily. 50k words narrowed down to <1k words to find the exact webpage from apple docs your agent needs.
+Likes: 11 | Views: 2,232 | Like rate: 0.5%
+[[https://x.com/Keshavatearth/status/2034824782903116198][View on X]]
+
+** Accounts with nothing notable
+@amirmxt, @bcherny, @bentossell, @chasing_next, @EyalToledano, @intellectronica, @NickADobos, @petergyang, @RayFernando1337, @simonw, @steipete, @trq212
+
+* ai-macrostrategy
+** Notable
+
+*** @TomDavidsonX (Fri Mar 20, 11:43)
+I think of cultural learning as a crucial part of the intelligence explosion, but don't think it could explode by itself. Historically, human cultural learning was super-exponential bc it was coupled with population growth and improvements in education. Without that, it would have fizzled out due to diminishing returns
+Likes: 12 | Views: 383 | Like rate: 3.1%
+[[https://x.com/TomDavidsonX/status/2034958924487516600][View on X]]
+
+*** @So8res (via @sjgadler, Fri Mar 20, 16:27)
+AI execs when talking about the danger vs the exact same AI execs talking about how we should respond:
+Likes: 133 | Views: 4,308 | Like rate: 3.1%
+[[https://x.com/So8res/status/2035030499408670835][View on X]]
+
+*** @sjgadler (Fri Mar 20, 16:48)
+New federal AI framework: 'It's bad for the government to coerce AI companies to change their content.' Dept of War position: 'Anthropic, change your model for us so that it produces different content, or else.'
+Likes: 10 | Views: 349 | Like rate: 2.9%
+[[https://x.com/sjgadler/status/2035035706960248866][View on X]]
+
+*** @tomekkorbak (via @TomDavidsonX, Fri Mar 20, 11:11)
+I think it's kinda cool that OpenAI monitors 99.9% of internal agent traffic for misalignment using GPT-5.4.
+Likes: 88 | Views: 4,411 | Like rate: 2.0%
+[[https://x.com/tomekkorbak/status/2034951000256123005][View on X]]
+
+*** @ohlennart (Fri Mar 20, 03:01)
+so we're gonna need a gazillion CPUs so that Claude can spin up a VM and install some docx package every time i ask it to generate some writing?
+Likes: 30 | Views: 1,587 | Like rate: 1.9%
+[[https://x.com/ohlennart/status/2034827587130642851][View on X]]
+
+*** @RyanPGreenblatt (Fri Mar 20, 18:42)
+I think most people working on mitigating catastrophic risk from powerful AI should focus on pretty short timelines (<4 years to full AI R&D automation) due to a mix of timelines actually being short (~25% in <2.5 years, ~50% in <5 years) and higher leverage in shorter timelines.
+Likes: 64 | Views: 3,504 | Like rate: 1.8%
+[[https://x.com/RyanPGreenblatt/status/2035064536194327009][View on X]]
+
+*** @jkcarlsmith (via @sjgadler, Fri Mar 20, 07:59)
+I wrote an essay about restraining AI development for the sake of safety. I think an idealized world would put itself in a position to restrain development if needed.
+Likes: 159 | Views: 9,023 | Like rate: 1.8%
+[[https://x.com/jkcarlsmith/status/2034902732164014413][View on X]]
+
+*** @ben_j_todd (Fri Mar 20, 17:21)
+For METR horizon skeptics, here's Claude making huge progress on a non-gamed agentic skill that takes humans several days.
+Likes: 63 | Views: 4,807 | Like rate: 1.3%
+[[https://x.com/ben_j_todd/status/2035044098650894578][View on X]]
+
+*** @ben_j_todd (Fri Mar 20, 13:00)
+Opus 4.6 is hugely better at Pokemon: Opus 4.0 took 1,000 hours to get half way through. Opus 4.5 could almost finish in 1,000 hours. Opus 4.6 was another 10x faster!
+Likes: 435 | Views: 34,085 | Like rate: 1.3%
+[[https://x.com/ben_j_todd/status/2034978509332853239][View on X]]
+
+*** @rikiparikh (via @Miles_Brundage, Fri Mar 20, 16:19)
+This framework asks Congress to preempt state AI laws, but it hasn't earned that. It offers nothing on independent safety testing, no serious ideas on how to address labor market disruption, and no accountability standard for when AI systems cause harm.
+Likes: 23 | Views: 2,308 | Like rate: 1.0%
+[[https://x.com/rikiparikh/status/2035028471299109181][View on X]]
+
+*** @tobyordoxford (Fri Mar 20, 15:38)
+B R O A D  T I M E L I N E S -- We should have neither short AI timelines, nor long timelines, but a broad probability distribution over when transformative AI will arrive. My new essay explains why & explores the implications of such deep uncertainty.
+Likes: 103 | Views: 13,457 | Like rate: 0.8%
+[[https://x.com/tobyordoxford/status/2035018204611846451][View on X]]
+
+** Discovered accounts
+
+*** @So8res (Fri Mar 20, 13:36)
+"Solar is about to hit the wall" they said, year after year, repeatedly discounting the progress right in front of their eyes.
+Likes: 111 | Views: 2,829 | Like rate: 3.9%
+[[https://x.com/So8res/status/2034987444018266335][View on X]]
+
+*** @Tom_Winter (Fri Mar 20, 01:06)
+NBC News: A new indictment alleges that three men affiliated with server maker Supermicro conspired to sell $510 million in servers with banned Nvidia chips to China.
+Likes: 306 | Views: 16,863 | Like rate: 1.8%
+[[https://x.com/Tom_Winter/status/2034798757389213885][View on X]]
+
+*** @hamandcheese (Fri Mar 20, 05:43)
+I agree with Sam Altman that if legacy institutions don't rapidly adopt AI they will be supplanted by end-to-end AI corporations that destabilize society.
+Likes: 35 | Views: 3,793 | Like rate: 0.9%
+[[https://x.com/hamandcheese/status/2034868390213378541][View on X]]
+
+*** @deanwball (Fri Mar 20, 19:21)
+The major and crucial distinction between this document and an Executive Order is that this document is self-consciously the opening move in a long, multi-dimensional public negotiation over the legislation. You must read it that way!
+Likes: 37 | Views: 4,526 | Like rate: 0.8%
+[[https://x.com/deanwball/status/2035074248176181264][View on X]]
+
+*** @hamandcheese (Fri Mar 20, 02:18)
+Chip smuggling goes right to the top. cc @nvidia @Broadcom
+Likes: 75 | Views: 19,985 | Like rate: 0.4%
+[[https://x.com/hamandcheese/status/2034816766484914187][View on X]]
+
+*** @techreview (Fri Mar 20, 12:24)
+An exclusive conversation with OpenAI's chief scientist Jakub Pachocki about his firm's new grand challenge and the future of AI.
+Likes: 165 | Views: 92,500 | Like rate: 0.2%
+[[https://x.com/techreview/status/2034969397513629914][View on X]]
+
+** Accounts with nothing notable
+@ajeya_cotra, @danwilliamsphil, @DKokotajlo, @Jsevillamol, @Miles_Brundage
+z

@@ -340,7 +340,7 @@ Six hook scripts handle workflow invariants and Emacs integration.
 :ID:       4E0CDC5D-C436-4701-AC99-E29F950318B4
 :END:
 
-Blocks =git commit= when Elisp files (=*.el= or =emacs/config.org=) are staged but no test has been run in the current session. Forces the agent to run =emacs --batch= before committing.
+Blocks =git commit= when Elisp files (=*.el= or =emacs/config.org=) are staged but no test has been run in the current session. Forces the agent to verify changes before committing. Also detects the case where =git add= and =git commit= appear in the same bash command (which would otherwise bypass the staged-file check by running before staging occurs).
 
 ** track-elisp-test.sh (PostToolUse)
 :PROPERTIES:

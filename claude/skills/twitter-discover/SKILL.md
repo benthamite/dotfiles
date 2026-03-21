@@ -311,8 +311,9 @@ description: <derive from RELEVANCE_CRITERIA — what to surface and what to ski
 ```
 
 4. Tell the user they can now run `/twitter-digest <list-name>` or set up a recurring digest with `/loop 4h /twitter-digest <list-name>`.
+5. Write all scored accounts (score + rationale) to `~/.claude/skills/twitter-vet/vetted/<list-name>.md` using the registry format defined in twitter-vet. Include all tiers and below-threshold accounts. This lets twitter-digest skip re-vetting accounts already evaluated here.
 
-If the digest skill is not installed, skip this step silently — don't suggest installing it.
+If the digest skill is not installed, skip steps 1-5 silently — don't suggest installing it.
 
 ## Cost awareness
 

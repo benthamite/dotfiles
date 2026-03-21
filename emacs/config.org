@@ -8886,6 +8886,29 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 
 /[[https://github.com/lizqwerscott/mcp.el][mcp]] an Emacs client for interfacing with [[https://modelcontextprotocol.io/introduction][MCP]]./
 
+Ensure nvm's default Node.js is on =exec-path= so that =npx= calls from MCP
+servers use the correct version.
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(let* ((default-file (expand-file-name "~/.nvm/alias/default")))
+  (when (file-readable-p default-file)
+    (let* ((alias (string-trim (with-temp-buffer
+                                 (insert-file-contents default-file)
+                                 (buffer-string))))
+           (major (if (string-match "^v?\\([0-9]+\\)" alias)
+                      (match-string 1 alias)
+                    alias))
+           (node-dir (expand-file-name "~/.nvm/versions/node/"))
+           (versions (when (file-directory-p node-dir)
+                       (directory-files node-dir nil
+                                        (concat "^v" (regexp-quote major) "\\."))))
+           (latest (car (last (sort (copy-sequence versions) #'string<))))
+           (bin-dir (when latest (expand-file-name (concat latest "/bin") node-dir))))
+      (when (and bin-dir (file-directory-p bin-dir))
+        (add-to-list 'exec-path bin-dir)
+        (setenv "PATH" (concat bin-dir ":" (getenv "PATH")))))))
+#+end_src
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package mcp
   :ensure (:host github

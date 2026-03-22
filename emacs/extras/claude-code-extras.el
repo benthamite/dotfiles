@@ -594,17 +594,28 @@ any code path."
                    (not (memq p active-servers)))
           (delete-process p))))))
 
-(defun claude-code-extras--display-diff-buffer (diff-buffer &optional _session)
+(defun claude-code-extras--diff-file-in-session-p (diff-buffer session)
+  "Return non-nil if DIFF-BUFFER's file is inside SESSION's directory."
+  (when-let ((session-dir (and session (monet--session-directory session)))
+             (file-dir (buffer-local-value 'default-directory diff-buffer)))
+    (string-prefix-p (file-name-as-directory (expand-file-name session-dir))
+                     (expand-file-name file-dir))))
+
+(defun claude-code-extras--display-diff-buffer (diff-buffer &optional session)
   "Display DIFF-BUFFER in a bottom side window without switching tabs.
 Override for `monet--display-diff-buffer' that avoids the tab-switching
 side effects of `display-buffer-in-tab', which can corrupt the window
-layout when called from an async websocket callback."
-  (display-buffer diff-buffer
-                  '((display-buffer-in-side-window)
-                    (side . bottom)
-                    (slot . 0)
-                    (window-height . 0.3)
-                    (preserve-size . (nil . t)))))
+layout when called from an async websocket callback.
+When SESSION is provided and the file is outside the session directory,
+the diff is suppressed entirely; the terminal approval prompt suffices."
+  (if (and session (not (claude-code-extras--diff-file-in-session-p diff-buffer session)))
+      nil
+    (display-buffer diff-buffer
+                    '((display-buffer-in-side-window)
+                      (side . bottom)
+                      (slot . 0)
+                      (window-height . 0.3)
+                      (preserve-size . (nil . t))))))
 
 (with-eval-after-load 'monet
   (advice-add 'monet-start-server-in-directory :around

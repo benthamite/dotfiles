@@ -59,11 +59,15 @@ contains only a single URL.
 #+vindex: mu4e-extras-daily-folder
 #+vindex: mu4e-extras-newsletters-folder
 #+vindex: mu4e-extras-epoch-inbox-folder
+#+vindex: mu4e-extras-epoch-sent-folder
+#+vindex: mu4e-extras-epoch-drafts-folder
+#+vindex: mu4e-extras-epoch-refiled-folder
+#+vindex: mu4e-extras-epoch-trash-folder
 The user option ~mu4e-extras-inbox-folder~ specifies the maildir path
-for the main inbox folder.  It is used by ~mu4e-extras-set-shortcuts~ to
-configure maildir shortcuts ([[#h:setup-helpers][Setup helpers]]).  The default value is an
-empty string; you must set this to match your maildir layout (e.g.,
-="/Inbox"=).
+for the main inbox folder.  It is used by ~mu4e-extras-set-shortcuts~
+and ~mu4e-extras-set-bookmarks~ to configure maildir shortcuts and
+bookmarks ([[#h:setup-helpers][Setup helpers]]).  The default value is an empty string; you
+must set this to match your maildir layout (e.g., ="/Inbox"=).
 
 The user option ~mu4e-extras-daily-folder~ specifies the maildir path
 for a "daily" folder, also used by ~mu4e-extras-set-shortcuts~.  The
@@ -75,8 +79,16 @@ This option is available for use in custom configurations but is not
 referenced by any default function in the package.
 
 The user option ~mu4e-extras-epoch-inbox-folder~ specifies the maildir
-path for the Epoch AI inbox folder, also used by
-~mu4e-extras-set-shortcuts~.  The default value is an empty string.
+path for the Epoch AI inbox folder, used by
+~mu4e-extras-set-shortcuts~ and ~mu4e-extras-set-bookmarks~.  The
+default value is an empty string.
+
+The user options ~mu4e-extras-epoch-sent-folder~,
+~mu4e-extras-epoch-drafts-folder~, ~mu4e-extras-epoch-refiled-folder~,
+and ~mu4e-extras-epoch-trash-folder~ specify the maildir paths for the
+corresponding Epoch AI folders.  They are used by
+~mu4e-extras-set-shortcuts~ to add uppercase-key maildir shortcuts for
+Epoch folders.  The default value for each is an empty string.
 
 ** Reply behavior
 :PROPERTIES:
@@ -308,12 +320,18 @@ manipulation does not apply to them.
 :END:
 
 #+findex: mu4e-extras-set-shortcuts
+#+findex: mu4e-extras-set-bookmarks
 #+findex: mu4e-extras-set-face-locally
 #+findex: mu4e-extras-set-contexts
 #+findex: mu4e-extras-set-index-params
 The function ~mu4e-extras-set-shortcuts~ adds predefined entries to
-~mu4e-maildir-shortcuts~ for the inbox, daily, and Epoch AI inbox
-folders.
+~mu4e-maildir-shortcuts~.  Personal folders use lowercase keys (~i~ for
+inbox, ~y~ for daily) and Epoch folders use uppercase keys (~I~ for
+inbox, ~T~ for sent, ~D~ for drafts, ~R~ for refiled, ~X~ for trash).
+
+The function ~mu4e-extras-set-bookmarks~ adds an "All inboxes" bookmark
+(key ~a~) to ~mu4e-bookmarks~ that queries both the personal and Epoch
+inbox folders, providing a combined view of all incoming mail.
 
 The function ~mu4e-extras-set-face-locally~ remaps the ~shr-text~ face
 to a smaller height (0.9) in ~mu4e-view-mode~ buffers.  This is

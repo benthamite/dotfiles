@@ -80,6 +80,13 @@ The function ~eat-extras-setup-semi-char-mode-map~ configures the semi-char mode
 
 The function ~eat-extras-sync-semi-char-mode-map~ patches a subtle issue: when ~eat-update-semi-char-mode-map~ replaces the keymap object via ~setq~, the entry in ~minor-mode-map-alist~ still points to the old object. This function updates the alist entry in place so the new bindings take effect immediately in all existing Eat buffers.
 
+** Fixed-pitch font
+:PROPERTIES:
+:CUSTOM_ID: h:fixed-pitch-font
+:END:
+
+#+findex: eat-extras-use-fixed-pitch-font
+The function ~eat-extras-use-fixed-pitch-font~ remaps the default face to a strict-monospace font variant in Eat buffers. Standard Iosevka renders certain characters (e.g. =●=, =—=) wider than one terminal cell, which causes line-wrapping errors where words are split mid-character at the right edge. The "Fixed" variant constrains every glyph to exactly one cell. The function detects the current font family and, if it is an Iosevka variant without "Fixed" or "Term" in its name, applies a face remapping to the corresponding "Fixed" variant. It is intended to be added to ~eat-mode-hook~.
 
 * Indices
 :PROPERTIES:

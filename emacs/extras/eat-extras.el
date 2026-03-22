@@ -111,5 +111,17 @@ but `minor-mode-map-alist' still references the old one."
     (when entry
       (setcdr entry eat-semi-char-mode-map))))
 
+(defun eat-extras-use-fixed-pitch-font ()
+  "Remap the default face to a strict-monospace variant in eat buffers.
+Standard Iosevka renders certain characters (e.g. ● —) wider than
+one cell, which causes terminal line-wrapping errors.  Iosevka Fixed
+constrains every glyph to exactly one cell."
+  (when-let* ((family (face-attribute 'default :family))
+              ((string-prefix-p "Iosevka" family))
+              ((not (string-match-p "Fixed\\|Term" family)))
+              (fixed (concat family " Fixed"))
+              ((list-fonts (font-spec :family fixed))))
+    (face-remap-add-relative 'default :family fixed)))
+
 (provide 'eat-extras)
 ;;; eat-extras.el ends here

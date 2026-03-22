@@ -1,0 +1,4 @@
+#!/bin/bash
+# Entry-point wrapper for gmail-maildir-sync Python package.
+# Calls the installed package via python -m.
+exec python3 -m gmail_maildir_sync "$@"

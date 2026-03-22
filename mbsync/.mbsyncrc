@@ -91,15 +91,14 @@ Channel gmail-trash
 Channel gmail-starred
 Channel gmail-all
 
-# Epoch AI (Google Workspace)
+# Epoch AI (Google Workspace, via email-oauth2-proxy)
 IMAPAccount epoch
-Host imap.gmail.com
+Host 127.0.0.1
+Port 2993
 UserCmd "echo $EPOCH_EMAIL"
-PassCmd "gpg --quiet --decrypt $HOME/.password-store/auth-sources/mbsync/epoch-password.gpg"
-TLSType IMAPS
-TLSVersions +1.3
+PassCmd "echo oauth2-proxy"
+TLSType None
 AuthMechs LOGIN
-CertificateFile /opt/homebrew/etc/openssl@1.1/cert.pem
 
 MaildirStore epoch-local
 Subfolders Verbatim

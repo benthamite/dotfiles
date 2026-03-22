@@ -370,6 +370,9 @@ takes just a couple of seconds."
             :match-func #'mu4e-extras-msg-is-epoch-and-html-p
             :vars `((user-mail-address . ,(getenv "EPOCH_EMAIL"))
 		    (smtpmail-smtp-user . ,(getenv "EPOCH_EMAIL"))
+		    (smtpmail-smtp-server . "127.0.0.1")
+		    (smtpmail-smtp-service . 2465)
+		    (smtpmail-stream-type . plain)
 		    (mu4e-sent-folder . "/epoch/Sent")
 		    (mu4e-drafts-folder . "/epoch/Drafts")
 		    (org-msg-signature . ,org-msg-extras-work-html-signature)))
@@ -380,6 +383,9 @@ takes just a couple of seconds."
 	    :leave-func #'org-msg-mode
             :vars `((user-mail-address . ,(getenv "EPOCH_EMAIL"))
 		    (smtpmail-smtp-user . ,(getenv "EPOCH_EMAIL"))
+		    (smtpmail-smtp-server . "127.0.0.1")
+		    (smtpmail-smtp-service . 2465)
+		    (smtpmail-stream-type . plain)
 		    (mu4e-sent-folder . "/epoch/Sent")
 		    (mu4e-drafts-folder . "/epoch/Drafts")
 		    (org-msg-signature . ,org-msg-extras-work-plain-text-signature)))

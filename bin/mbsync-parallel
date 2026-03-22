@@ -20,7 +20,7 @@ fi
 if [ "$include_gmail_all" = true ]; then
     channels=$(grep '^Channel ' ~/.mbsyncrc | awk '{print $2}' | sort -u)
 else
-    channels=$(grep '^Channel ' ~/.mbsyncrc | awk '{print $2}' | grep -v -- '-all$' | sort -u)
+    channels=$(grep '^Channel ' ~/.mbsyncrc | awk '{print $2}' | grep -v '^gmail-all$' | sort -u)
 fi
 
 # Use GNU parallel to run the sync in parallel

@@ -1,4 +1,4 @@
 #!/bin/bash
 # Entry-point wrapper for gmail-maildir-sync Python package.
-# Calls the installed package via python -m.
+export PYTHONPATH="$HOME/My Drive/repos/gmail-maildir-sync${PYTHONPATH:+:$PYTHONPATH}"
 exec python3 -m gmail_maildir_sync "$@"

@@ -23,17 +23,11 @@ else
     channels=$(grep '^Channel ' ~/.mbsyncrc | awk '{print $2}' | grep -v '^epoch-' | grep -v -- '-all$' | sort -u)
 fi
 
-# Run mbsync channels in parallel, plus gmail-maildir-sync for epoch
-(
-    echo "$channels" | parallel --will-cite sync_channel
-) &
-MBSYNC_PID=$!
-
-(
-    echo "Starting sync for epoch (gmail-maildir-sync)"
-    gmail-maildir-sync sync
-    echo "Finished sync for epoch (gmail-maildir-sync)"
-) &
+# Run gmail-maildir-sync in background (no GPG needed), mbsync in foreground
+# (mbsync needs GPG/pinentry which requires a TTY)
+gmail-maildir-sync sync &
 GMAIL_PID=$!
 
-wait $MBSYNC_PID $GMAIL_PID
+echo "$channels" | parallel --will-cite sync_channel
+
+wait $GMAIL_PID

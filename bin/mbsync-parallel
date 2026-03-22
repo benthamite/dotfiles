@@ -16,12 +16,24 @@ if [ "$1" == "include-gmail-all" ]; then
     include_gmail_all=true
 fi
 
-# Generate a list of channels to sync
+# Generate a list of mbsync channels, excluding epoch (handled by gmail-maildir-sync)
 if [ "$include_gmail_all" = true ]; then
-    channels=$(grep '^Channel ' ~/.mbsyncrc | awk '{print $2}' | sort -u)
+    channels=$(grep '^Channel ' ~/.mbsyncrc | awk '{print $2}' | grep -v '^epoch-' | sort -u)
 else
-    channels=$(grep '^Channel ' ~/.mbsyncrc | awk '{print $2}' | grep -v '^gmail-all$' | sort -u)
+    channels=$(grep '^Channel ' ~/.mbsyncrc | awk '{print $2}' | grep -v '^epoch-' | grep -v -- '-all$' | sort -u)
 fi
 
-# Use GNU parallel to run the sync in parallel
-echo "$channels" | parallel --will-cite sync_channel
+# Run mbsync channels in parallel, plus gmail-maildir-sync for epoch
+(
+    echo "$channels" | parallel --will-cite sync_channel
+) &
+MBSYNC_PID=$!
+
+(
+    echo "Starting sync for epoch (gmail-maildir-sync)"
+    gmail-maildir-sync sync
+    echo "Finished sync for epoch (gmail-maildir-sync)"
+) &
+GMAIL_PID=$!
+
+wait $MBSYNC_PID $GMAIL_PID

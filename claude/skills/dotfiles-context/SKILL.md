@@ -32,7 +32,7 @@ Do NOT use `org-babel-tangle-file` directly — it doesn't know about the profil
 
 # Making changes
 
-If you make a change to an extras Elisp file, please also update the corresponding org file in the `doc` subdirectory. For example, if you modify `emacs/extras/claude-code-extras.el`, also update `emacs/extras/doc/claude-code-extras.org`.
+If you make a change to any `.el` file in a project that has a `doc/` directory, also update the corresponding `.org` file in that directory. For example, if you modify `emacs/extras/claude-code-extras.el`, also update `emacs/extras/doc/claude-code-extras.org`. Use `/doc-elisp` to generate or update documentation.
 
 # Testing Emacs extras
 

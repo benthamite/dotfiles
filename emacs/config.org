@@ -12431,11 +12431,13 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   :custom
   (mu4e-extras-inbox-folder "/Inbox")
   (mu4e-extras-daily-folder "/Daily")
+  (mu4e-extras-epoch-inbox-folder "/epoch/Inbox")
   (mu4e-extras-wide-reply t)
 
   :config
   (mu4e-extras-set-shortcuts)
   (mu4e-extras-set-contexts)
+  (mu4e-extras-set-account-folders)
 
   :hook
   (mu4e-mark-execute-pre-hook . mu4e-extras-gmail-fix-flags)

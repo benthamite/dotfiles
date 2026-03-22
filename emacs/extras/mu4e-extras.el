@@ -57,6 +57,26 @@
   :type 'string
   :group 'mu4e-extras)
 
+(defcustom mu4e-extras-epoch-sent-folder ""
+  "Name of the Epoch AI `sent' folder."
+  :type 'string
+  :group 'mu4e-extras)
+
+(defcustom mu4e-extras-epoch-drafts-folder ""
+  "Name of the Epoch AI `drafts' folder."
+  :type 'string
+  :group 'mu4e-extras)
+
+(defcustom mu4e-extras-epoch-refiled-folder ""
+  "Name of the Epoch AI `refiled' folder."
+  :type 'string
+  :group 'mu4e-extras)
+
+(defcustom mu4e-extras-epoch-trash-folder ""
+  "Name of the Epoch AI `trash' folder."
+  :type 'string
+  :group 'mu4e-extras)
+
 (defcustom mu4e-extras-wide-reply 'prompt
   "Whether the reply to messages should be \"wide\" (a.k.a. \"reply-to-all\").
 If `prompt', ask the user. If t, always reply to all. If nil, always reply to
@@ -137,8 +157,21 @@ function marks the saved copy as read."
   "Set `mu4e-maildir-shortcuts'."
   (dolist (shortcut `((:maildir ,mu4e-extras-inbox-folder :key ?i)
 		      (:maildir ,mu4e-extras-daily-folder :key ?y)
-		      (:maildir ,mu4e-extras-epoch-inbox-folder :key ?e)))
+		      (:maildir ,mu4e-extras-epoch-inbox-folder :key ?I)
+		      (:maildir ,mu4e-extras-epoch-sent-folder :key ?T)
+		      (:maildir ,mu4e-extras-epoch-drafts-folder :key ?D)
+		      (:maildir ,mu4e-extras-epoch-refiled-folder :key ?R)
+		      (:maildir ,mu4e-extras-epoch-trash-folder :key ?X)))
     (add-to-list 'mu4e-maildir-shortcuts shortcut)))
+
+(defun mu4e-extras-set-bookmarks ()
+  "Set `mu4e-bookmarks'."
+  (add-to-list 'mu4e-bookmarks
+	       `(:name "All inboxes"
+		       :query ,(format "maildir:%s OR maildir:%s"
+				       mu4e-extras-inbox-folder
+				       mu4e-extras-epoch-inbox-folder)
+		       :key ?a)))
 
 (defun mu4e-extras-set-face-locally ()
   "Set `shr-text' face locally in `mu4ew-view-mode' buffers."

@@ -6639,6 +6639,8 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 (use-personal-package eat-extras
   :after eat
   :demand t
+  :hook
+  (eat-mode-hook . eat-extras-use-fixed-pitch-font)
   :config
   (eat-extras-setup-semi-char-mode-map))
 #+end_src

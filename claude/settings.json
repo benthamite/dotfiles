@@ -3,7 +3,6 @@
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
   "includeCoAuthoredBy": false,
-  "defaultMode": "bypassPermissions",
   "permissions": {
     "allow": [
       "Bash",
@@ -32,6 +31,11 @@
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/claude/hooks/require-readme-update.sh",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/require-doc-update.sh",
             "timeout": 10
           }
         ]
@@ -93,6 +97,7 @@
     "padding": 0
   },
   "effortLevel": "high",
+  "defaultMode": "bypassPermissions",
   "theme": "dark",
   "mcpServers": {
     "home-assistant": {
@@ -101,5 +106,6 @@
         "SSE_URL": "http://homeassistant.local:8123/mcp_server/sse"
       }
     }
-  }
+  },
+  "model": "opus[1m]"
 }

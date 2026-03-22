@@ -54,11 +54,12 @@ contains only a single URL.
 #+vindex: mu4e-extras-inbox-folder
 #+vindex: mu4e-extras-daily-folder
 #+vindex: mu4e-extras-newsletters-folder
+#+vindex: mu4e-extras-epoch-inbox-folder
 The user option ~mu4e-extras-inbox-folder~ specifies the maildir path
 for the main inbox folder.  It is used by ~mu4e-extras-set-shortcuts~ to
 configure maildir shortcuts ([[#h:setup-helpers][Setup helpers]]).  The default value is an
 empty string; you must set this to match your maildir layout (e.g.,
-="/gmail/Inbox"=).
+="/Inbox"=).
 
 The user option ~mu4e-extras-daily-folder~ specifies the maildir path
 for a "daily" folder, also used by ~mu4e-extras-set-shortcuts~.  The
@@ -68,6 +69,10 @@ The user option ~mu4e-extras-newsletters-folder~ specifies the maildir
 path for a newsletters folder.  The default value is an empty string.
 This option is available for use in custom configurations but is not
 referenced by any default function in the package.
+
+The user option ~mu4e-extras-epoch-inbox-folder~ specifies the maildir
+path for the Epoch AI inbox folder, also used by
+~mu4e-extras-set-shortcuts~.  The default value is an empty string.
 
 ** Reply behavior
 :PROPERTIES:
@@ -148,10 +153,10 @@ stops any running mail update, quits =mu4e=, and then runs the =muinit=
 script asynchronously.  Use this when the database is corrupted or after
 major configuration changes.
 
-The command ~mu4e-extras-update-all-mail-and-index~ runs =mbsync gmail-all=
-to fetch all mail including the Gmail archive, then indexes with =mu=.
-With a prefix argument, it runs in the background; otherwise, it shows
-a progress window.
+The command ~mu4e-extras-update-all-mail-and-index~ runs
+=mbsync gmail-all epoch-all= to fetch all mail including archives from
+all accounts, then indexes with =mu=.  With a prefix argument, it runs
+in the background; otherwise, it shows a progress window.
 
 The command ~mu4e-extras-check-all-mail~ performs the same operation as
 ~mu4e-extras-update-all-mail-and-index~ but always runs in the
@@ -296,7 +301,8 @@ refile, and toggling =\Starred= for flag/unflag.
 #+findex: mu4e-extras-set-contexts
 #+findex: mu4e-extras-set-index-params
 The function ~mu4e-extras-set-shortcuts~ adds predefined entries to
-~mu4e-maildir-shortcuts~ for the inbox and daily folders.
+~mu4e-maildir-shortcuts~ for the inbox, daily, and Epoch AI inbox
+folders.
 
 The function ~mu4e-extras-set-face-locally~ remaps the ~shr-text~ face
 to a smaller height (0.9) in ~mu4e-view-mode~ buffers.  This is
@@ -304,12 +310,19 @@ intended for ~mu4e-view-mode-hook~ to improve the readability of HTML
 emails rendered with =shr=.
 
 The function ~mu4e-extras-set-contexts~ defines and sets
-~mu4e-contexts~ for four combinations: personal HTML, personal plain
-text, work HTML, and work plain text.  Each context uses environment
-variables (=PERSONAL_GMAIL=, =WORK_EMAIL=) for email addresses and
-references Org Msg signature variables from =org-msg-extras.el=.  The
+~mu4e-contexts~ for six combinations: personal HTML, personal plain
+text, Epoch HTML, Epoch plain text, Tlon HTML, and Tlon plain text.
+Each context uses environment variables (=PERSONAL_GMAIL=,
+=EPOCH_EMAIL=, =WORK_EMAIL=) for email addresses and references Org Msg
+signature variables from =org-msg-extras.el=.  The Epoch contexts also
+set account-specific folder paths (sent, drafts) and SMTP user.  The
 plain text contexts disable ~org-msg-mode~ on entry and re-enable it on
 leave.
+
+#+findex: mu4e-extras-set-account-folders
+The function ~mu4e-extras-set-account-folders~ sets ~mu4e-refile-folder~
+and ~mu4e-trash-folder~ to functions that route messages to the correct
+account-specific folder based on the message's maildir path.
 
 The function ~mu4e-extras-set-index-params~ adjusts indexing parameters
 (~mu4e-index-lazy-check~ and ~mu4e-index-cleanup~) based on Emacs idle
@@ -335,15 +348,32 @@ to keep the archive up to date.
 :END:
 
 #+findex: mu4e-extras-msg-is-personal-p
-#+findex: mu4e-extras-msg-is-work-p
+#+findex: mu4e-extras-msg-is-epoch-p
+#+findex: mu4e-extras-msg-is-tlon-p
+#+findex: mu4e-extras-msg-belongs-to-epoch-p
 #+findex: mu4e-extras-msg-is-html-p
+#+findex: mu4e-extras-refile-folder
+#+findex: mu4e-extras-trash-folder
 The function ~mu4e-extras-msg-is-personal-p~ returns non-~nil~ if the
 message's =:to= field matches either the personal Gmail address or the
 personal email address (from environment variables).
 
-The function ~mu4e-extras-msg-is-work-p~ returns non-~nil~ if the
-message's =:to= field matches the work email address or if the
+The function ~mu4e-extras-msg-is-epoch-p~ returns non-~nil~ if the
+message's =:to= field matches the Epoch AI email address.
+
+The function ~mu4e-extras-msg-is-tlon-p~ returns non-~nil~ if the
+message's =:to= field matches the Tlon work email address or if the
 =:reply-to= field matches the team's Google Group.
+
+The function ~mu4e-extras-msg-belongs-to-epoch-p~ returns non-~nil~ if
+the message's maildir path starts with =/epoch/=.  This is used by the
+folder routing functions below.
+
+The function ~mu4e-extras-refile-folder~ returns =/epoch/Refiled= for
+Epoch messages and =/Refiled= for all others.
+
+The function ~mu4e-extras-trash-folder~ returns =/epoch/Trash= for
+Epoch messages and =/Trash= for all others.
 
 The function ~mu4e-extras-msg-is-html-p~ returns non-~nil~ if the
 message contains a =text/html= MIME part, as determined by parsing the

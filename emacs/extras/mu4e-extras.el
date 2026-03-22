@@ -52,6 +52,11 @@
   :type 'string
   :group 'mu4e-extras)
 
+(defcustom mu4e-extras-epoch-inbox-folder ""
+  "Name of the Epoch AI `inbox' folder."
+  :type 'string
+  :group 'mu4e-extras)
+
 (defcustom mu4e-extras-wide-reply 'prompt
   "Whether the reply to messages should be \"wide\" (a.k.a. \"reply-to-all\").
 If `prompt', ask the user. If t, always reply to all. If nil, always reply to
@@ -129,7 +134,8 @@ function marks the saved copy as read."
 (defun mu4e-extras-set-shortcuts ()
   "Set `mu4e-maildir-shortcuts'."
   (dolist (shortcut `((:maildir ,mu4e-extras-inbox-folder :key ?i)
-		      (:maildir ,mu4e-extras-daily-folder :key ?y)))
+		      (:maildir ,mu4e-extras-daily-folder :key ?y)
+		      (:maildir ,mu4e-extras-epoch-inbox-folder :key ?e)))
     (add-to-list 'mu4e-maildir-shortcuts shortcut)))
 
 (defun mu4e-extras-set-face-locally ()
@@ -145,7 +151,7 @@ function marks the saved copy as read."
 If RUN-IN-BACKGROUND is non-nil (or called with prefix-argument), run in the
 background; otherwise, pop up a window."
   (interactive "P")
-  (let ((mu4e-get-mail-command "mbsync gmail-all"))
+  (let ((mu4e-get-mail-command "mbsync gmail-all epoch-all"))
     (mu4e-update-mail-and-index run-in-background)))
 
 ;;;;;; Refile
@@ -327,12 +333,12 @@ Do not ask for user confirmation."
   (mu4e-mark-execute-all))
 
 (defun mu4e-extras-check-all-mail ()
-  "Check all Gmail channels.
-It takes `mbsync'a while to check all channels, so I run this function less
-frequently than `mu4e-update-mail-and-index', which excludes my archive and
+  "Check all mail channels including archives.
+It takes `mbsync' a while to check all channels, so I run this function less
+frequently than `mu4e-update-mail-and-index', which excludes the archive and
 takes just a couple of seconds."
   (interactive)
-  (let ((mu4e-get-mail-command "mbsync gmail-all"))
+  (let ((mu4e-get-mail-command "mbsync gmail-all epoch-all"))
     (mu4e-update-mail-and-index t)))
 
 ;;;;; Contexts
@@ -349,6 +355,7 @@ takes just a couple of seconds."
             :name "1 Personal HTML"
             :match-func #'mu4e-extras-msg-is-personal-and-html-p
             :vars `((user-mail-address . ,(getenv "PERSONAL_GMAIL"))
+		    (smtpmail-smtp-user . ,(getenv "PERSONAL_GMAIL"))
 		    (org-msg-signature . ,org-msg-extras-personal-html-signature)))
 	  ,(make-mu4e-context
             :name "2 Personal plain text"
@@ -356,19 +363,68 @@ takes just a couple of seconds."
 	    :enter-func (lambda () (org-msg-mode -1))
 	    :leave-func #'org-msg-mode
             :vars `((user-mail-address . ,(getenv "PERSONAL_GMAIL"))
+		    (smtpmail-smtp-user . ,(getenv "PERSONAL_GMAIL"))
 		    (org-msg-signature . ,org-msg-extras-personal-plain-text-signature)))
 	  ,(make-mu4e-context
-            :name "3 Work HTML"
-            :match-func #'mu4e-extras-msg-is-work-and-html-p
-            :vars `((user-mail-address . ,(getenv "WORK_EMAIL"))
+            :name "3 Epoch HTML"
+            :match-func #'mu4e-extras-msg-is-epoch-and-html-p
+            :vars `((user-mail-address . ,(getenv "EPOCH_EMAIL"))
+		    (smtpmail-smtp-user . ,(getenv "EPOCH_EMAIL"))
+		    (mu4e-sent-folder . "/epoch/Sent")
+		    (mu4e-drafts-folder . "/epoch/Drafts")
 		    (org-msg-signature . ,org-msg-extras-work-html-signature)))
 	  ,(make-mu4e-context
-            :name "4 Work plain text"
-            :match-func #'mu4e-extras-msg-is-work-and-plain-text-p
+            :name "4 Epoch plain text"
+            :match-func #'mu4e-extras-msg-is-epoch-and-plain-text-p
+	    :enter-func (lambda () (org-msg-mode -1))
+	    :leave-func #'org-msg-mode
+            :vars `((user-mail-address . ,(getenv "EPOCH_EMAIL"))
+		    (smtpmail-smtp-user . ,(getenv "EPOCH_EMAIL"))
+		    (mu4e-sent-folder . "/epoch/Sent")
+		    (mu4e-drafts-folder . "/epoch/Drafts")
+		    (org-msg-signature . ,org-msg-extras-work-plain-text-signature)))
+	  ,(make-mu4e-context
+            :name "5 Tlon HTML"
+            :match-func #'mu4e-extras-msg-is-tlon-and-html-p
+            :vars `((user-mail-address . ,(getenv "WORK_EMAIL"))
+		    (smtpmail-smtp-user . ,(getenv "WORK_EMAIL"))
+		    (org-msg-signature . ,org-msg-extras-work-html-signature)))
+	  ,(make-mu4e-context
+            :name "6 Tlon plain text"
+            :match-func #'mu4e-extras-msg-is-tlon-and-plain-text-p
 	    :enter-func (lambda () (org-msg-mode -1))
 	    :leave-func #'org-msg-mode
             :vars `((user-mail-address . ,(getenv "WORK_EMAIL"))
+		    (smtpmail-smtp-user . ,(getenv "WORK_EMAIL"))
 		    (org-msg-signature . ,org-msg-extras-work-plain-text-signature))))))
+
+;;;;; Account detection
+
+(defun mu4e-extras-msg-belongs-to-epoch-p (msg)
+  "Return t iff MSG belongs to the Epoch AI account."
+  (when-let* ((maildir (mu4e-message-field msg :maildir)))
+    (string-prefix-p "/epoch/" maildir)))
+
+;;;;; Account folders
+
+(defun mu4e-extras-refile-folder (msg)
+  "Return the refile folder for MSG."
+  (if (mu4e-extras-msg-belongs-to-epoch-p msg)
+      "/epoch/Refiled"
+    "/Refiled"))
+
+(defun mu4e-extras-trash-folder (msg)
+  "Return the trash folder for MSG."
+  (if (mu4e-extras-msg-belongs-to-epoch-p msg)
+      "/epoch/Trash"
+    "/Trash"))
+
+(defun mu4e-extras-set-account-folders ()
+  "Set folder variables for multi-account support."
+  (setq mu4e-refile-folder #'mu4e-extras-refile-folder
+	mu4e-trash-folder #'mu4e-extras-trash-folder))
+
+;;;;; Context matching
 
 (defun mu4e-extras-msg-is-personal-and-html-p (msg)
   "Return t iff MSG is a personal HTML message."
@@ -382,25 +438,41 @@ takes just a couple of seconds."
     (and (not (mu4e-extras-msg-is-html-p msg))
 	 (mu4e-extras-msg-is-personal-p msg))))
 
-(defun mu4e-extras-msg-is-work-and-html-p (msg)
-  "Return t iff MSG is a work HTML message."
+(defun mu4e-extras-msg-is-epoch-and-html-p (msg)
+  "Return t iff MSG is an Epoch AI HTML message."
   (when msg
     (and (mu4e-extras-msg-is-html-p msg)
-	 (mu4e-extras-msg-is-work-p msg))))
+	 (mu4e-extras-msg-is-epoch-p msg))))
 
-(defun mu4e-extras-msg-is-work-and-plain-text-p (msg)
-  "Return t iff MSG is a work plain text message."
+(defun mu4e-extras-msg-is-epoch-and-plain-text-p (msg)
+  "Return t iff MSG is an Epoch AI plain text message."
   (when msg
     (and (not (mu4e-extras-msg-is-html-p msg))
-	 (mu4e-extras-msg-is-work-p msg))))
+	 (mu4e-extras-msg-is-epoch-p msg))))
+
+(defun mu4e-extras-msg-is-tlon-and-html-p (msg)
+  "Return t iff MSG is a Tlon HTML message."
+  (when msg
+    (and (mu4e-extras-msg-is-html-p msg)
+	 (mu4e-extras-msg-is-tlon-p msg))))
+
+(defun mu4e-extras-msg-is-tlon-and-plain-text-p (msg)
+  "Return t iff MSG is a Tlon plain text message."
+  (when msg
+    (and (not (mu4e-extras-msg-is-html-p msg))
+	 (mu4e-extras-msg-is-tlon-p msg))))
 
 (defun mu4e-extras-msg-is-personal-p (msg)
   "Return t iff MSG is a personal message."
   (or (mu4e-message-contact-field-matches msg :to (getenv "PERSONAL_GMAIL"))
       (mu4e-message-contact-field-matches msg :to (getenv "PERSONAL_EMAIL"))))
 
-(defun mu4e-extras-msg-is-work-p (msg)
-  "Return t iff MSG is a work message."
+(defun mu4e-extras-msg-is-epoch-p (msg)
+  "Return t iff MSG is an Epoch AI message."
+  (mu4e-message-contact-field-matches msg :to (getenv "EPOCH_EMAIL")))
+
+(defun mu4e-extras-msg-is-tlon-p (msg)
+  "Return t iff MSG is a Tlon message."
   (or (mu4e-message-contact-field-matches msg :to (getenv "WORK_EMAIL"))
       (mu4e-message-contact-field-matches msg :reply-to "tlon-team@googlegroups.com")))
 

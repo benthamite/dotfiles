@@ -84,11 +84,13 @@ the sender only."
 ;;;;;; Fix flags
 
 (defun mu4e-extras-gmail-fix-flags (mark msg)
-  "Fix Gmail flags for each MARK and MSG pair."
-  (cond ((eq mark 'trash)  (mu4e-action-retag-message msg "-\\Inbox,+\\Trash,-\\Draft"))
-	((eq mark 'refile) (mu4e-action-retag-message msg "-\\Inbox,+\\Refiled"))
-	((eq mark 'flag)   (mu4e-action-retag-message msg "+\\Starred"))
-	((eq mark 'unflag) (mu4e-action-retag-message msg "-\\Starred"))))
+  "Fix Gmail flags for each MARK and MSG pair.
+Skip Epoch messages, which are synced via the Gmail API directly."
+  (unless (mu4e-extras-msg-belongs-to-epoch-p msg)
+    (cond ((eq mark 'trash)  (mu4e-action-retag-message msg "-\\Inbox,+\\Trash,-\\Draft"))
+          ((eq mark 'refile) (mu4e-action-retag-message msg "-\\Inbox,+\\Refiled"))
+          ((eq mark 'flag)   (mu4e-action-retag-message msg "+\\Starred"))
+          ((eq mark 'unflag) (mu4e-action-retag-message msg "-\\Starred")))))
 
 ;;;;;; Mark as read
 
@@ -151,7 +153,7 @@ function marks the saved copy as read."
 If RUN-IN-BACKGROUND is non-nil (or called with prefix-argument), run in the
 background; otherwise, pop up a window."
   (interactive "P")
-  (let ((mu4e-get-mail-command "mbsync gmail-all epoch-all"))
+  (let ((mu4e-get-mail-command "sh -c 'mbsync gmail-all & gmail-maildir-sync pull --include-all & wait'"))
     (mu4e-update-mail-and-index run-in-background)))
 
 ;;;;;; Refile
@@ -338,7 +340,7 @@ It takes `mbsync' a while to check all channels, so I run this function less
 frequently than `mu4e-update-mail-and-index', which excludes the archive and
 takes just a couple of seconds."
   (interactive)
-  (let ((mu4e-get-mail-command "mbsync gmail-all epoch-all"))
+  (let ((mu4e-get-mail-command "sh -c 'mbsync gmail-all & gmail-maildir-sync pull --include-all & wait'"))
     (mu4e-update-mail-and-index t)))
 
 ;;;;; Contexts
@@ -372,6 +374,9 @@ takes just a couple of seconds."
 		    (smtpmail-smtp-user . ,(getenv "EPOCH_EMAIL"))
 		    (mu4e-sent-folder . "/epoch/Sent")
 		    (mu4e-drafts-folder . "/epoch/Drafts")
+		    (message-send-mail-function . message-send-mail-with-sendmail)
+		    (sendmail-program . "~/bin/gmail-maildir-sync")
+		    (message-sendmail-extra-arguments . ("send"))
 		    (org-msg-signature . ,org-msg-extras-work-html-signature)))
 	  ,(make-mu4e-context
             :name "4 Epoch plain text"
@@ -382,6 +387,9 @@ takes just a couple of seconds."
 		    (smtpmail-smtp-user . ,(getenv "EPOCH_EMAIL"))
 		    (mu4e-sent-folder . "/epoch/Sent")
 		    (mu4e-drafts-folder . "/epoch/Drafts")
+		    (message-send-mail-function . message-send-mail-with-sendmail)
+		    (sendmail-program . "~/bin/gmail-maildir-sync")
+		    (message-sendmail-extra-arguments . ("send"))
 		    (org-msg-signature . ,org-msg-extras-work-plain-text-signature)))
 	  ,(make-mu4e-context
             :name "5 Tlon HTML"

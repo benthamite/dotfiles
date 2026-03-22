@@ -23,11 +23,15 @@ Gmail-based workflow.  It depends on =el-patch= for patching internal
 =mu4e= functions and on =mu4e= itself.
 
 The package solves several practical problems that arise when using
-=mu4e= with Gmail via =mbsync=.  Gmail's IMAP behavior can reset the
-read status of refiled and sent messages after synchronization.  This
-package tracks such messages in a queue and re-applies the read flag
-after each sync cycle, preventing the annoying appearance of
-already-read messages as unread.
+=mu4e= with Gmail.  The personal account syncs via =mbsync= (IMAP),
+while the Epoch AI account syncs via =gmail-maildir-sync=, a custom
+tool that uses the Gmail API directly (necessary because the Epoch
+Google Workspace admin has disabled IMAP).  Both sync backends run in
+parallel during mail updates.  Gmail's IMAP behavior can reset the read
+status of refiled and sent messages after synchronization.  This package
+tracks such messages in a queue and re-applies the read flag after each
+sync cycle, preventing the annoying appearance of already-read messages
+as unread.
 
 For daily email processing, the package provides one-step refile, trash,
 and move commands that skip the confirmation prompt.  This removes
@@ -153,10 +157,14 @@ stops any running mail update, quits =mu4e=, and then runs the =muinit=
 script asynchronously.  Use this when the database is corrupted or after
 major configuration changes.
 
-The command ~mu4e-extras-update-all-mail-and-index~ runs
-=mbsync gmail-all epoch-all= to fetch all mail including archives from
-all accounts, then indexes with =mu=.  With a prefix argument, it runs
-in the background; otherwise, it shows a progress window.
+The command ~mu4e-extras-update-all-mail-and-index~ fetches all mail
+including archives from all accounts, then indexes with =mu=.  It runs
+=mbsync gmail-all= for the personal account and
+=gmail-maildir-sync pull --include-all= for the Epoch account in
+parallel (the Epoch account uses the Gmail API instead of IMAP, since
+the Epoch Google Workspace admin has disabled IMAP).  With a prefix
+argument, it runs in the background; otherwise, it shows a progress
+window.
 
 The command ~mu4e-extras-check-all-mail~ performs the same operation as
 ~mu4e-extras-update-all-mail-and-index~ but always runs in the
@@ -289,7 +297,10 @@ The function ~mu4e-extras-gmail-fix-flags~ translates standard =mu4e=
 marks into Gmail-specific label changes.  For each mark and message
 pair, it applies the appropriate tag operations: removing =\Inbox= and
 adding =\Trash= for trash, removing =\Inbox= and adding =\Refiled= for
-refile, and toggling =\Starred= for flag/unflag.
+refile, and toggling =\Starred= for flag/unflag.  Epoch messages are
+skipped, since they are synced via the Gmail API directly (through
+=gmail-maildir-sync=) rather than via =mbsync=, so IMAP flag
+manipulation does not apply to them.
 
 ** Setup helpers
 :PROPERTIES:
@@ -315,9 +326,11 @@ text, Epoch HTML, Epoch plain text, Tlon HTML, and Tlon plain text.
 Each context uses environment variables (=PERSONAL_GMAIL=,
 =EPOCH_EMAIL=, =WORK_EMAIL=) for email addresses and references Org Msg
 signature variables from =org-msg-extras.el=.  The Epoch contexts also
-set account-specific folder paths (sent, drafts) and SMTP user.  The
-plain text contexts disable ~org-msg-mode~ on entry and re-enable it on
-leave.
+set account-specific folder paths (sent, drafts) and use
+=gmail-maildir-sync send= as the sendmail program (via
+~message-send-mail-with-sendmail~) instead of SMTP, since the Epoch
+Google Workspace admin has disabled IMAP/SMTP.  The plain text contexts
+disable ~org-msg-mode~ on entry and re-enable it on leave.
 
 #+findex: mu4e-extras-set-account-folders
 The function ~mu4e-extras-set-account-folders~ sets ~mu4e-refile-folder~

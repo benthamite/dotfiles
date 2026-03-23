@@ -44,9 +44,9 @@ Project-level instructions referencing the =dotfiles-context= skill. The global 
 
 - Fix root causes, not symptoms; no silent fallbacks.
 - Verify fixes before declaring them done.
-- Commit all changes immediately; never mix unrelated changes.
+- Commit all changes immediately.
 - Use subagents and teams liberally; prefer the most powerful model.
-- Use =trash= instead of =rm -rf=; never kill Emacs without confirmation.
+- Use =trash= instead of =rm -rf=; never send signals to Emacs without confirmation.
 
 * Skills
 :PROPERTIES:
@@ -67,14 +67,14 @@ These are not invoked directly. They supply background knowledge when Claude wor
 :ID:       3AB926D5-2116-4864-93F2-B6D33CE832C5
 :END:
 
-Describes the repository layout (all edits and commits in Google Drive/dotfiles; the elpaca clone syncs automatically), how to resolve the active elpaca profile, the batch-testing recipe, and the commit message format (=<scope>: <description>=).
+Describes the repository layout (the elpaca clone syncs automatically from Google Drive), how to resolve the active elpaca profile, the batch-testing recipe, and the commit message format (=<scope>: <description>=).
 
 *** elisp-conventions
 :PROPERTIES:
 :ID:       EBC619A2-2402-43B0-8FBA-8A68EE29BB7D
 :END:
 
-Emacs Lisp coding standards: atomic functions, helper placement, docstring format, no silent fallbacks, and testing patterns.
+Emacs Lisp coding standards: atomic functions, helper placement, docstring format, and elpaca rebuild patterns.
 
 ** Development skills
 :PROPERTIES:
@@ -333,7 +333,7 @@ Evaluates third-party skills from the [[https://github.com/HartreeWorks/skills][
 :ID:       4D862953-7E8A-4154-BC16-919ED6B092A5
 :END:
 
-Six hook scripts handle workflow invariants and Emacs integration.
+Seven hook scripts handle workflow invariants and Emacs integration.
 
 ** require-elisp-test-before-commit.sh (PreToolUse)
 :PROPERTIES:
@@ -362,6 +362,20 @@ On the first Edit or Write in a project, moves Claude Code's memory directory fr
 :END:
 
 Blocks =git commit= when files in =claude/= (skills, hooks, settings, CLAUDE.md) are staged but =claude/README.org= is not. Ensures documentation stays in sync with configuration changes.
+
+** require-doc-update.sh (PreToolUse)
+:PROPERTIES:
+:CUSTOM_ID: h:require-doc-update
+:END:
+
+Blocks =git commit= when =.el= files are staged but no =doc/*.org= or =README.org= manual update is included. Applies only in repos that have a =doc/= directory or a =README.org= at the root. Ensures documentation stays in sync with code changes.
+
+** load-elisp-after-edit.sh (PostToolUse)
+:PROPERTIES:
+:CUSTOM_ID: h:load-elisp-after-edit
+:END:
+
+Fires on every Edit or Write of an =.el= file. Deletes any stale =.elc= in elpaca =builds/= (so Emacs won't prefer old bytecode), then loads the source file into the running Emacs session via =emacsclient=. Skips byte-compiled files and test files.
 
 ** elpaca-run.sh (utility)
 :PROPERTIES:

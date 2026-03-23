@@ -1,12 +1,10 @@
 ---
 name: dotfiles-context
-description: Dotfiles worktree structure and documentation instructions for ‘extras-’ modules. Use when working with dotfiles or Emacs files.
+description: Dotfiles worktree structure and documentation instructions for 'extras-' modules. Use when working with dotfiles or Emacs files.
 user-invocable: false
 ---
 
 # Dotfiles repository
-
-The canonical location for all dotfiles, including Elisp extras, is **Google Drive/dotfiles** (`~/My Drive/dotfiles/`). All edits and commits should be made here.
 
 Elpaca keeps a separate clone at `~/.config/emacs-profiles/<profile>/elpaca/repos/dotfiles/` for loading Elisp, but do **not** commit there. The elpaca clone syncs from the Google Drive repo automatically.
 
@@ -29,10 +27,6 @@ emacsclient -e '(init-build-profile (file-name-directory user-init-file))'
 ```
 
 Do NOT use `org-babel-tangle-file` directly — it doesn't know about the profile system and may write to the wrong location.
-
-# Making changes
-
-If you make a change to any `.el` file in a project that has a `doc/` directory, also update the corresponding `.org` file in that directory. For example, if you modify `emacs/extras/claude-code-extras.el`, also update `emacs/extras/doc/claude-code-extras.org`. Use `/doc-elisp` to generate or update documentation.
 
 # Testing Emacs extras
 

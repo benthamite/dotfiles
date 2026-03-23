@@ -16,7 +16,7 @@ Register one of the user's Emacs packages in the public packages list and create
 
 - **Packages list**: `/Users/pablostafforini/My Drive/notes/pablos-miscellany/my-emacs-packages.org`
 - **Notes directory**: `/Users/pablostafforini/My Drive/notes/pablos-miscellany/`
-- **Elpaca repos**: resolve via `emacsclient -e 'init-current-profile'` → `~/.config/emacs-profiles/<profile>/elpaca/repos/<package>/`
+- **Elpaca sources**: resolve via `emacsclient -e 'init-current-profile'` → `~/.config/emacs-profiles/<profile>/elpaca/sources/<package>/`
 
 ## Execution steps
 
@@ -41,7 +41,7 @@ Resolve the elpaca profile:
 
 ```bash
 PROFILE=$(emacsclient -e 'init-current-profile' | tr -d '"')
-REPO_DIR="$HOME/.config/emacs-profiles/$PROFILE/elpaca/repos/<package>"
+REPO_DIR="$HOME/.config/emacs-profiles/$PROFILE/elpaca/sources/<package>"
 ```
 
 Look for a readme file in this order of preference:
@@ -79,7 +79,7 @@ Create the file `<package>.org` in the notes directory with this structure:
 ...
 ```
 
-Where `<path-to-readme>` uses the `~/.config/emacs-profiles/<profile>/elpaca/repos/<package>/` format (with the literal profile name, not a variable), and each `#+INCLUDE` line references one of the top-level headings extracted in step 4.
+Where `<path-to-readme>` uses the `~/.config/emacs-profiles/<profile>/elpaca/sources/<package>/` format (with the literal profile name, not a variable), and each `#+INCLUDE` line references one of the top-level headings extracted in step 4.
 
 **For markdown readmes**: Since `#+INCLUDE` only works with org files, instead of using `#+INCLUDE` directives, convert the markdown content into org-mode format and write it directly into the note.
 

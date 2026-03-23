@@ -118,6 +118,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#org-indent-pixel][org-indent-pixel]]
   - [[#org-tidy][org-tidy]]
   - [[#org-appear][org-appear]]
+  - [[#org-table-wrap][org-table-wrap]]
   - [[#face-remap][face-remap]]
   - [[#modus-themes][modus-themes]]
   - [[#modus-themes-extras][modus-themes-extras]]
@@ -2307,6 +2308,16 @@ CLOCK: [2023-11-05 Sun 13:34]--[2023-11-05 Sun 13:59] =>  0:25
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-appear
+  :after org
+  :hook org-mode-hook)
+#+end_src
+
+** =org-table-wrap=
+
+/[[https://github.com/benthamite/org-table-wrap][org-table-wrap]] provides visual word-wrapping for Org mode tables that overflow the window width, using display overlays without modifying the buffer./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package org-table-wrap
   :after org
   :hook org-mode-hook)
 #+end_src
@@ -7102,6 +7113,7 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
   (wikipedia-ai-model 'gemini-flash-lite-latest)
   (wikipedia-auto-update-mode 1)
   (wikipedia-ai-review-auto t)
+  (wikipedia-ai-summarize-auto t)
   (wikipedia-watchlist-score-reason-auto t)
 
   :bind

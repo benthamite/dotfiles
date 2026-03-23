@@ -322,6 +322,7 @@ manipulation does not apply to them.
 #+findex: mu4e-extras-set-shortcuts
 #+findex: mu4e-extras-set-bookmarks
 #+findex: mu4e-extras-set-face-locally
+#+findex: mu4e-extras-send-via-gmail-api
 #+findex: mu4e-extras-set-contexts
 #+findex: mu4e-extras-set-index-params
 The function ~mu4e-extras-set-shortcuts~ adds predefined entries to
@@ -338,16 +339,22 @@ to a smaller height (0.9) in ~mu4e-view-mode~ buffers.  This is
 intended for ~mu4e-view-mode-hook~ to improve the readability of HTML
 emails rendered with =shr=.
 
+The function ~mu4e-extras-send-via-gmail-api~ sends the current message
+by piping it to =gmail-maildir-sync send=, which uses the Gmail API
+directly.  Unlike ~message-send-mail-with-sendmail~, it does not inject
+sendmail-specific flags (=-oi=, =-f=, =-t=) that =gmail-maildir-sync=
+does not accept.
+
 The function ~mu4e-extras-set-contexts~ defines and sets
 ~mu4e-contexts~ for six combinations: personal HTML, personal plain
 text, Epoch HTML, Epoch plain text, Tlon HTML, and Tlon plain text.
 Each context uses environment variables (=PERSONAL_GMAIL=,
 =EPOCH_EMAIL=, =WORK_EMAIL=) for email addresses and references Org Msg
 signature variables from =org-msg-extras.el=.  The Epoch contexts also
-set account-specific folder paths (sent, drafts) and use
-=gmail-maildir-sync send= as the sendmail program (via
-~message-send-mail-with-sendmail~) instead of SMTP, since the Epoch
-Google Workspace admin has disabled IMAP/SMTP.  The plain text contexts
+set account-specific folder paths (sent, drafts) and use the custom
+function ~mu4e-extras-send-via-gmail-api~ to send messages via
+=gmail-maildir-sync send= instead of SMTP, since the Epoch Google
+Workspace admin has disabled IMAP/SMTP.  The plain text contexts
 disable ~org-msg-mode~ on entry and re-enable it on leave.
 
 #+findex: mu4e-extras-set-account-folders

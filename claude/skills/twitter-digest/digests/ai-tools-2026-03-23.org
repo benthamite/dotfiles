@@ -1,0 +1,97 @@
+#+title: Twitter digest: ai-tools — 2026-03-23
+
+* Notable
+
+** @chasing_next (Sun Mar 22 15:06)
+without fail claude code is the first thing i open on my comp in the morning. my /morning command: reads my calendar, weekly & daily to dos, knows open tasks & flags items not to lose ground on, processes my ideas from yesterday & routes them to relevant workstreams, helps me run my content system
+Likes: 4 | Views: 189 | Like rate: 2.1%
+[[https://x.com/chasing_next/status/2035734767660872117][View on X]]
+
+** @forgebitz (Sun Mar 22 09:00)
+as much as i love the CLI i always end up back in an editor. frontend still is a lot of pixel pushing, ai is still terrible at design. similar to more detailed code, i don't really write it by hand but i do browse files, select context etc.
+Likes: 111 | Views: 5,604 | Like rate: 2.0%
+[[https://x.com/forgebitz/status/2035642737614037295][View on X]]
+
+** @Saboo_Shubham_ (Sun Mar 22 16:49)
+You can now run Qwen 3.5 397B parameter model on your MacBook. 48GB RAM. Pure C. Hand-tuned Metal shaders. No Python, no frameworks. 4.4 tok/s. Built in 24 hours. Human + AI Agent pair programming. 90+ experiments.
+Likes: 625 | Views: 40,948 | Like rate: 1.5%
+[[https://x.com/Saboo_Shubham_/status/2035760668641742953][View on X]]
+
+** @RayFernando1337 (Sun Mar 22 19:46)
+Nothing gets lost. Every AI tool you use right now has the same problem. Long conversations get compressed, old messages get summarized, and details quietly disappear. You've felt it. LCM (Lossless Context Management) replaces all of that.
+Likes: 74 | Views: 5,342 | Like rate: 1.4%
+[[https://x.com/RayFernando1337/status/2035805263299842467][View on X]]
+
+** @steipete (Mon Mar 23 05:04)
+Really made tests a focus the last few days and now OpenClaw's harness takes around 2 minutes, earlier this week it was closer to 10 mins.
+Likes: 1,091 | Views: 92,030 | Like rate: 1.2%
+[[https://x.com/steipete/status/2035945773729493466][View on X]]
+
+** @RayFernando1337 (Sun Mar 22 00:52)
+No more captchas. OpenClaw 3.13 connects to Chrome 146 via MCP and your agent controls your real browser session. Not a bot. You. Update if you haven't.
+Likes: 102 | Views: 8,595 | Like rate: 1.2%
+[[https://x.com/RayFernando1337/status/2035519975520399436][View on X]]
+
+** @itsolelehmann (Mon Mar 23 13:47)
+I've built an anti-scam DM scanner with openclaw: 1. reads all my DMs via X API 2. uses perplexity API to find the latest scam iterations online 3. compares each DM against known scam patterns and flags suspicious ones
+Likes: 17 | Views: 1,487 | Like rate: 1.1%
+[[https://x.com/itsolelehmann/status/2036077285594288234][View on X]]
+
+** @steipete (Sun Mar 22 20:39)
+I feel my main velocity limitation lately isn't token speed anymore, it's compute. Running tests in parallel is taxing; can't wait for better cloud worker integration.
+Likes: 2,441 | Views: 219,355 | Like rate: 1.1%
+[[https://x.com/steipete/status/2035818621893767508][View on X]]
+
+** @iannuttall (Sat Mar 21 12:33)
+new workflow for the weekend: gpt 5.4 xhigh to plan, cursor composer 2 to implement, back to 5.4 xhigh to audit + fix, ship pull request, repeat
+Likes: 303 | Views: 28,842 | Like rate: 1.1%
+[[https://x.com/iannuttall/status/2035333924558082459][View on X]]
+
+** @simonw (Sat Mar 21 22:22)
+Still a work in progress, but I've published the first draft of a new chapter on "Using Git with coding agents"
+Likes: 769 | Views: 73,680 | Like rate: 1.0%
+[[https://x.com/simonw/status/2035482121037635798][View on X]]
+
+** @itsolelehmann (Mon Mar 23 12:58)
+i deleted half my Claude setup last week and every output got BETTER. sounds backwards, but anthropic's own team just explained exactly why it works. here's the one prompt that tells you what to cut (and you don't even have to paste anything).
+Likes: 576 | Views: 56,926 | Like rate: 1.0%
+[[https://x.com/itsolelehmann/status/2036065138147471665][View on X]]
+
+** @petergyang (Sat Mar 21 14:30)
+Claude Code with Figma MCP is an incredibly underrated combo for AI design. From Figma design to app in 10 min. From app back to Figma to create editable vector components. Also showed how to build beautiful 3D animated websites.
+Likes: 114 | Views: 11,299 | Like rate: 1.0%
+[[https://x.com/petergyang/status/2035363396753989844][View on X]]
+
+** @trq212 (Sun Mar 22 19:24)
+we're testing a new version of /init based on your feedback — it should interview you and help setup skills, hooks, etc. you can enable it with: CLAUDE_CODE_NEW_INIT=1 claude
+Likes: 3,737 | Views: 429,797 | Like rate: 0.9%
+[[https://x.com/trq212/status/2035799806640115806][View on X]]
+
+** @simonw (Mon Mar 23 00:13)
+Starlette 1.0 is out! I used this as an opportunity to experiment with Claude Skills, since Claude isn't yet familiar with the (minor) breaking changes in the 1.0 release compared to 0.x
+Likes: 151 | Views: 17,806 | Like rate: 0.8%
+[[https://x.com/simonw/status/2035872409421770901][View on X]]
+
+* Vetted accounts
+
+** @badlogicgames — 8/10, added to list
+33K followers. Creator of pi (coding agent). Deep practitioner content: debugging MiniMax's OpenAI Completions endpoint, refactoring pi's architecture, building and dogfooding agent tools daily. Low noise-to-signal ratio. Exactly the kind of builder the list targets.
+
+** @thdxr — 7/10, added to list
+119K followers. Creator of OpenCode and SST. "Fixed the AWS console" post is a concrete workflow gem. Open-source advocacy, honest productivity takes ("self-assessing productivity gains is like estimating calorie intake"). ~40% philosophical/market commentary dilutes, but the practitioner content is excellent.
+
+** @pontusab — 7/10, added to list
+31K followers. Builder of toolpick (solving "too many tools" for AI SDK) and Midday. AI-generated UI via json-render. Ships tools that solve real AI workflow problems.
+
+** @mitsuhiko — 6/10, borderline
+72K followers. Sentry CTO, pi contributor. "Having an agent edit its own edit tool" is peak meta-practitioner. But ~50% of content is non-AI (Europe, Lego, Rust). Good when on-topic, just not frequent enough.
+
+** @manthanguptaa — 5/10, borderline
+22K followers. Substantive technical critic. Pushed back hard on Supermemory's memory benchmark claims ("benchmark engineering + system inflation"). "AI Twitter feels like pure fear mongering" is a grounded take. More commentary than workflows.
+
+Previously vetted: @lydiahallie (6), @noahzweben (5) — scores unchanged.
+
+Skipped (quick filter): @beffjezos (e/acc philosophy), @burkov (ML thought leadership), @cryptopunk7213 (AI hype threads), @gabriel1 (optimism philosophy), @infoxiao (artistic), @karrisaarinen (Linear marketing), @landforce (marketing), @venturetwins (VC perspective), @thsottiaux (Codex product), @DhravyaShah (product announcements), @TheSeaMouse (memes), @KCG3D (too small), @babakarto (mixed), @marcelotryle (one-off), @meetgranola (company account), @mikelikesdesign (niche), @ModelScope2022 (company account), @petergostev (consumption-focused), @rronak_ (research-focused)
+
+* Accounts with nothing notable
+@amirmxt, @bcherny, @bentossell, @EyalToledano, @NickADobos, @intellectronica

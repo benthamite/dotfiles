@@ -26,3 +26,7 @@ description: Practical AI tool workflows, tips, and tutorials from practitioners
 - @chasing_next
 - @MattPRD
 - @alvinsng
+
+- @badlogicgames
+- @thdxr
+- @pontusab

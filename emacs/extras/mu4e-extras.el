@@ -376,6 +376,34 @@ takes just a couple of seconds."
   (let ((mu4e-get-mail-command "sh -c 'mbsync gmail-all & gmail-maildir-sync pull --include-all & wait'"))
     (mu4e-update-mail-and-index t)))
 
+;;;;; Sending via Gmail API
+
+(defun mu4e-extras-send-via-gmail-api ()
+  "Send the current message via `gmail-maildir-sync' Gmail API.
+This bypasses `message-send-mail-with-sendmail', which adds
+sendmail-specific flags (`-oi', `-f', `-t') that
+`gmail-maildir-sync' does not accept.  It also strips the
+`mail-header-separator' line that Emacs keeps in the compose
+buffer, replacing it with the blank line RFC 2822 requires
+between headers and body."
+  (save-excursion
+    (goto-char (point-min))
+    (re-search-forward
+     (concat "^" (regexp-quote mail-header-separator) "\n"))
+    (replace-match "\n"))
+  (let ((errbuf (generate-new-buffer " *gmail-api-send-errors*")))
+    (unwind-protect
+        (let ((exit-code (call-process-region (point-min) (point-max)
+                                              "gmail-maildir-sync"
+                                              nil errbuf nil
+                                              "send")))
+          (unless (zerop exit-code)
+            (error "gmail-maildir-sync send failed (exit %d): %s"
+                   exit-code
+                   (with-current-buffer errbuf
+                     (string-trim (buffer-string))))))
+      (kill-buffer errbuf))))
+
 ;;;;; Contexts
 
 (declare-function org-msg-mode "org-msg")
@@ -407,9 +435,7 @@ takes just a couple of seconds."
 		    (smtpmail-smtp-user . ,(getenv "EPOCH_EMAIL"))
 		    (mu4e-sent-folder . "/epoch/Sent")
 		    (mu4e-drafts-folder . "/epoch/Drafts")
-		    (message-send-mail-function . message-send-mail-with-sendmail)
-		    (sendmail-program . "~/bin/gmail-maildir-sync")
-		    (message-sendmail-extra-arguments . ("send"))
+		    (message-send-mail-function . mu4e-extras-send-via-gmail-api)
 		    (org-msg-signature . ,org-msg-extras-work-html-signature)))
 	  ,(make-mu4e-context
             :name "4 Epoch plain text"
@@ -420,9 +446,7 @@ takes just a couple of seconds."
 		    (smtpmail-smtp-user . ,(getenv "EPOCH_EMAIL"))
 		    (mu4e-sent-folder . "/epoch/Sent")
 		    (mu4e-drafts-folder . "/epoch/Drafts")
-		    (message-send-mail-function . message-send-mail-with-sendmail)
-		    (sendmail-program . "~/bin/gmail-maildir-sync")
-		    (message-sendmail-extra-arguments . ("send"))
+		    (message-send-mail-function . mu4e-extras-send-via-gmail-api)
 		    (org-msg-signature . ,org-msg-extras-work-plain-text-signature)))
 	  ,(make-mu4e-context
             :name "5 Tlon HTML"

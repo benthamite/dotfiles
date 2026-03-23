@@ -74,6 +74,8 @@ Claude's system prompt and training already establish many behaviors. Instructio
 
 Check for:
 - Direct contradictions (one rule says X, another says not-X)
+- **Global vs. project CLAUDE.md conflicts**: a project file can intentionally narrow or override a global rule (e.g., global says "commit immediately" but a project says "don't commit without PR review"). Flag these and ask whether the override is intentional. If intentional, the project file should say so explicitly. If accidental, one of them needs to change.
+- **Project CLAUDE.md shadowing**: a project file that restates a global rule with slightly different wording creates ambiguity about which version governs. These are repetition bugs, not conflicts — resolve by removing the project-level copy or adding an explicit "overrides global" note.
 - Tension between a blanket prohibition and a skill that needs to do the prohibited thing (e.g., "never kill Emacs" vs. a skill that sends SIGUSR2 with safeguards)
 - Instructions that intentionally override system prompt defaults — flag these as intentional overrides, not bugs
 - Rules that give different guidance for the same situation depending on which file is loaded

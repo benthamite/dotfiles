@@ -321,6 +321,13 @@ Consolidates Claude Code project data (sessions, memory, trust entries) across e
 
 Meta-skill for AI workflow design. Given a description of something to automate, analyzes the requirements along dimensions like context source, tool access, multi-step reasoning, and Emacs integration, then recommends the right approach: a Claude Code skill, a gptel directive, a gptel tool, or a gptel command. After confirmation, builds it following the conventions of each approach.
 
+*** audit-config
+:PROPERTIES:
+:CUSTOM_ID: h:audit-config
+:END:
+
+Audits the entire Claude Code configuration for redundancy, conflicts, dead weight, and staleness. Discovers all instruction sources (CLAUDE.md files, context skills, memory, hooks, settings), extracts every discrete rule, and evaluates each on five criteria: whether it restates default behavior, conflicts with another rule, duplicates something elsewhere, was a reactive fix for one bad output, or is too vague to apply consistently. Produces a cut list, conflict list, and cleaned-up CLAUDE.md.
+
 *** try-hartree-skills
 :PROPERTIES:
 :ID:       C9B601B2-393A-4098-B04B-82630F737520

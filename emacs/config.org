@@ -435,6 +435,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#org-tempo][org-tempo]]
   - [[#org-src][org-src]]
   - [[#org-table][org-table]]
+  - [[#org-table-wrap][org-table-wrap]]
   - [[#orgtbl-edit][orgtbl-edit]]
   - [[#orgtbl-join][orgtbl-join]]
   - [[#org-crypt][org-crypt]]
@@ -550,6 +551,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#read-aloud-extras][read-aloud-extras]]
   - [[#subed][subed]]
 - [[#misc][misc]]
+  - [[#epoch][epoch]]
   - [[#calc][calc]]
   - [[#calc-ext][calc-ext]]
   - [[#alert][alert]]
@@ -565,9 +567,8 @@ The extras come with their own manuals and user options: everything is documente
   - [[#polymarket][polymarket]]
   - [[#kelly][kelly]]
   - [[#fatebook][fatebook]]
-  - [[#tetris][tetris]]
-- [[#personal][personal]]
   - [[#keyboard-maestro][keyboard-maestro]]
+  - [[#tetris][tetris]]
 - [[#appendices][appendices]]
   - [[#key-bindings][key bindings]]
   - [[#profiling][profiling]]
@@ -2313,6 +2314,9 @@ CLOCK: [2023-11-05 Sun 13:34]--[2023-11-05 Sun 13:59] =>  0:25
 #+end_src
 
 ** =org-table-wrap=
+:PROPERTIES:
+:ID:       0103D200-0E3E-4CCB-87D7-F86D41437497
+:END:
 
 /[[https://github.com/benthamite/org-table-wrap][org-table-wrap]] provides visual word-wrapping for Org mode tables that overflow the window width, using display overlays without modifying the buffer./
 
@@ -7115,6 +7119,7 @@ This package is required by the ~markdown-mode~ command =markdown-edit-code-bloc
   (wikipedia-ai-review-auto t)
   (wikipedia-ai-summarize-auto t)
   (wikipedia-watchlist-score-reason-auto t)
+  (wikipedia-watchlist-sort-by-score t)
 
   :bind
   (("A-p" . wikipedia-transient)))
@@ -10526,6 +10531,23 @@ Note to self: Typescript syntax highlighting works fine, but calling ~org-edit-s
   :bind
   (:map org-table-fedit-map
    ("s-c" . org-table-fedit-finish)))
+#+end_src
+
+** =org-table-wrap=
+:PROPERTIES:
+:ID:       4770390A-B76B-4178-B52D-47341A159E8B
+:END:
+
+/[[https://github.com/benthamite/org-table-wrap][org-table-wrap]] provides visual word-wrapping for org mode tables./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package org-table-wrap
+  :ensure (:host github
+		 :repo "benthamite/org-table-wrap")
+  :after org-table
+  :demand t
+  :custom
+  (org-table-wrap-width-fraction 0.8))
 #+end_src
 
 ** =orgtbl-edit=
@@ -14290,6 +14312,19 @@ result to a user-specified file."
 :ID:       EB8682EE-77BC-4D88-AA87-5ECB804C8B53
 :END:
 
+
+** =epoch=
+:PROPERTIES:
+:ID:       0AE933C9-3FE5-4FEC-AE6B-7D34003B27BD
+:END:
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package epoch
+  :ensure (:host github
+		 :repo "benthamite/epoch.el")
+  :demand t)
+#+end_src
+
 ** =calc=
 :PROPERTIES:
 :ID:       50FAD2F3-E501-408E-A9A2-8358FAA87C1C
@@ -14646,6 +14681,21 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
   (fatebook-api-key-function (lambda () (auth-source-pass-get "api" "chrome/fatebook.io"))))
 #+end_src
 
+** =keyboard-maestro=
+:PROPERTIES:
+:ID:       1776C0C3-CEEC-4DED-B609-4DF0DF83B0C2
+:END:
+
+/Keybindings for triggering Emacs commands from [[https://www.keyboardmaestro.com/][Keyboard Maestro]]./
+
+These bindings allow Keyboard Maestro to trigger various Emacs processes.
+
+Note to self: The pattern for KM shortcuts is =C-H-<capital-letter>=. This corresponds to =⇧⌘⌃<letter>= in macOS.
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(global-set-key (kbd "C-H-Z") 'zotra-extras-add-entry)
+#+end_src
+
 ** =tetris=
 :PROPERTIES:
 :ID:       F4C5A232-7788-4240-9CE2-B6761C905786
@@ -14663,29 +14713,6 @@ And finally, the section you've all been waiting for.
    ("l" . tetris-move-down)
    ("j" . tetris-move-left)
    (";" . tetris-move-right)))
-#+end_src
-
-* personal
-:PROPERTIES:
-:ID:       9D7B5C99-2380-4159-A8C8-4021CC0482DE
-:END:
-:LOGBOOK:
-CLOCK: [2023-03-27 Mon 22:06]--[2023-03-27 Mon 22:17] =>  0:11
-:END:
-
-** =keyboard-maestro=
-:PROPERTIES:
-:ID:       1776C0C3-CEEC-4DED-B609-4DF0DF83B0C2
-:END:
-
-/Keybindings for triggering Emacs commands from [[https://www.keyboardmaestro.com/][Keyboard Maestro]]./
-
-These bindings allow Keyboard Maestro to trigger various Emacs processes.
-
-Note to self: The pattern for KM shortcuts is =C-H-<capital-letter>=. This corresponds to =⇧⌘⌃<letter>= in macOS.
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(global-set-key (kbd "C-H-Z") 'zotra-extras-add-entry)
 #+end_src
 
 * appendices

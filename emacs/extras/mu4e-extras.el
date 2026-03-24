@@ -295,20 +295,26 @@ If no message is found, return nil."
 
 ;;;;;; Gmail
 
-(defconst mu4e-extras-gmail-base
-  "https://mail.google.com/mail/u/0/"
-  "Base URL for Gmail.")
+(defun mu4e-extras-gmail-base (&optional msg)
+  "Return base Gmail URL for the account that MSG belongs to.
+Uses the email address in the URL path so Gmail switches to the
+correct account automatically."
+  (let ((account (if (and msg (mu4e-extras-msg-belongs-to-epoch-p msg))
+		     (getenv "EPOCH_EMAIL")
+		   (getenv "PERSONAL_GMAIL"))))
+    (format "https://mail.google.com/mail/u/%s/" account)))
 
 (defun mu4e-extras-open-gmail ()
   "Open Gmail in a browser."
   (interactive)
-  (browse-url (concat mu4e-extras-gmail-base "#inbox")))
+  (browse-url (concat (mu4e-extras-gmail-base) "#inbox")))
 
 (defun mu4e-extras-view-in-gmail ()
   "Open Gmail in a browser and view message at point in it."
   (interactive)
-  (let* ((id (url-hexify-string (plist-get (mu4e-message-at-point) :message-id)))
-	 (url (concat mu4e-extras-gmail-base "#search/rfc822msgid%3A" id)))
+  (let* ((msg (mu4e-message-at-point))
+	 (id (url-hexify-string (plist-get msg :message-id)))
+	 (url (concat (mu4e-extras-gmail-base msg) "#search/rfc822msgid%3A" id)))
     (browse-url url)))
 
 ;;;;;; Misc

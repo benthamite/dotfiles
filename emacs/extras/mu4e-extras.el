@@ -309,12 +309,28 @@ correct account automatically."
   (interactive)
   (browse-url (concat (mu4e-extras-gmail-base) "#inbox")))
 
+(defun mu4e-extras-gmail-message-id (msg)
+  "Return the Gmail hex message ID for MSG, or nil.
+Reads the `X-Gmail-Message-Id' header from the message file on disk."
+  (when-let* ((path (plist-get msg :path))
+	      ((file-exists-p path)))
+    (with-temp-buffer
+      (insert-file-contents path nil 0 4096)
+      (goto-char (point-min))
+      (when (re-search-forward "^X-Gmail-Message-Id: \\([0-9a-f]+\\)" nil t)
+	(match-string 1)))))
+
 (defun mu4e-extras-view-in-gmail ()
-  "Open Gmail in a browser and view message at point in it."
+  "Open Gmail in a browser and view message at point in it.
+If the message has a Gmail message ID (Epoch account), open it
+directly.  Otherwise, search by RFC 822 message ID."
   (interactive)
   (let* ((msg (mu4e-message-at-point))
-	 (id (url-hexify-string (plist-get msg :message-id)))
-	 (url (concat (mu4e-extras-gmail-base msg) "#search/rfc822msgid%3A" id)))
+	 (gmail-id (mu4e-extras-gmail-message-id msg))
+	 (url (if gmail-id
+		  (concat (mu4e-extras-gmail-base msg) "#all/" gmail-id)
+		(let ((id (url-hexify-string (plist-get msg :message-id))))
+		  (concat (mu4e-extras-gmail-base msg) "#search/rfc822msgid%3A" id)))))
     (browse-url url)))
 
 ;;;;;; Misc

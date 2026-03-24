@@ -210,6 +210,8 @@ screen in the default web browser, bypassing =mu4e= entirely.
 #+findex: mu4e-extras-view-in-gmail
 #+findex: mu4e-extras-gmail-base
 #+findex: mu4e-extras-gmail-message-id
+#+findex: mu4e-extras-gmail-thread-id
+#+vindex: mu4e-extras-gmail-sync-state-db
 The function ~mu4e-extras-gmail-base~ returns the base Gmail URL for the
 account that a message belongs to.  It uses the email address in the URL
 path (e.g. =https://mail.google.com/mail/u/pablo@epoch.ai/=) so that
@@ -222,12 +224,14 @@ default web browser.
 
 The command ~mu4e-extras-view-in-gmail~ opens the message at point in
 Gmail.  For messages synced via ~gmail-maildir-sync~ (Epoch account), it
-reads the =X-Gmail-Message-Id= header from the message file and opens
-the message directly using a ~#all/<id>~ URL.  For other messages
-(personal account), it falls back to searching by RFC 822 message ID.
-This is useful when you need to perform an action that =mu4e= does not
-support, such as viewing the full HTML rendering or accessing
-Gmail-specific features.
+reads the =X-Gmail-Message-Id= header from the message file, looks up
+the corresponding thread ID from the ~gmail-maildir-sync~ SQLite state
+database (~mu4e-extras-gmail-sync-state-db~), and opens the thread
+directly using a ~#all/<thread-id>~ URL.  For other messages (personal
+account), it falls back to searching by RFC 822 message ID.  This is
+useful when you need to perform an action that =mu4e= does not support,
+such as viewing the full HTML rendering or accessing Gmail-specific
+features.
 
 ** Message file operations
 :PROPERTIES:

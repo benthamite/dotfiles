@@ -419,6 +419,7 @@ between headers and body."
             :match-func #'mu4e-extras-msg-is-personal-and-html-p
             :vars `((user-mail-address . ,(getenv "PERSONAL_GMAIL"))
 		    (smtpmail-smtp-user . ,(getenv "PERSONAL_GMAIL"))
+		    (message-send-mail-function . smtpmail-send-it)
 		    (org-msg-signature . ,org-msg-extras-personal-html-signature)))
 	  ,(make-mu4e-context
             :name "2 Personal plain text"
@@ -427,6 +428,7 @@ between headers and body."
 	    :leave-func #'org-msg-mode
             :vars `((user-mail-address . ,(getenv "PERSONAL_GMAIL"))
 		    (smtpmail-smtp-user . ,(getenv "PERSONAL_GMAIL"))
+		    (message-send-mail-function . smtpmail-send-it)
 		    (org-msg-signature . ,org-msg-extras-personal-plain-text-signature)))
 	  ,(make-mu4e-context
             :name "3 Epoch HTML"
@@ -453,6 +455,7 @@ between headers and body."
             :match-func #'mu4e-extras-msg-is-tlon-and-html-p
             :vars `((user-mail-address . ,(getenv "WORK_EMAIL"))
 		    (smtpmail-smtp-user . ,(getenv "WORK_EMAIL"))
+		    (message-send-mail-function . smtpmail-send-it)
 		    (org-msg-signature . ,org-msg-extras-work-html-signature)))
 	  ,(make-mu4e-context
             :name "6 Tlon plain text"
@@ -461,6 +464,7 @@ between headers and body."
 	    :leave-func #'org-msg-mode
             :vars `((user-mail-address . ,(getenv "WORK_EMAIL"))
 		    (smtpmail-smtp-user . ,(getenv "WORK_EMAIL"))
+		    (message-send-mail-function . smtpmail-send-it)
 		    (org-msg-signature . ,org-msg-extras-work-plain-text-signature))))))
 
 ;;;;; Account detection

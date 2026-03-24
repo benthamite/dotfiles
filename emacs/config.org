@@ -13017,8 +13017,8 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
   (require 'pass)
   (slack-register-team
    :name "Epoch AI"
-   :token (auth-source-pass-get "token" "chrome/slack.com/epochai")
-   :cookie (auth-source-pass-get "cookie" "chrome/slack.com/epochai"))
+   :token (auth-source-pass-get "token" "epoch/slack.com/epochai")
+   :cookie (auth-source-pass-get "cookie" "epoch/slack.com/epochai"))
 
   :hook
   (slack-buffer-mode-hook . (lambda () (setopt line-spacing nil)))

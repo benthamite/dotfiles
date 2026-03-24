@@ -50,13 +50,13 @@
   :group 'org-msg-extras)
 
 (defcustom org-msg-extras-work-plain-text-signature
-  "\n--\nPablo Stafforini\nChief Automation Officer\nEpoch AI | https://epoch.ai/\n"
+  "\n--\nPablo Stafforini\nOperations Associate, Automations\nEpoch AI | https://epoch.ai/\n"
   "Work signature for plain text emails."
   :type 'string
   :group 'org-msg-extras)
 
 (defcustom org-msg-extras-work-html-signature
-  "\n#+begin_signature\n--\n*Pablo Stafforini*\nChief Automation Officer\n[[file:~/.local/share/epoch/epoch-logo.png]]\n[[https://epoch.ai/][Website]] | [[https://twitter.com/EpochAIResearch][Twitter]] | [[https://www.linkedin.com/company/epochai][LinkedIn]]\n#+end_signature"
+  "\n#+begin_signature\n--\n*Pablo Stafforini*\nOperations Associate, Automations\n[[file:~/.local/share/epoch/epoch-logo.png]]\n[[https://epoch.ai/][Website]] | [[https://twitter.com/EpochAIResearch][Twitter]] | [[https://www.linkedin.com/company/epochai][LinkedIn]]\n#+end_signature"
   "Work signature for HTML emails."
   :type 'string
   :group 'org-msg-extras)

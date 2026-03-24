@@ -208,18 +208,23 @@ screen in the default web browser, bypassing =mu4e= entirely.
 
 #+findex: mu4e-extras-open-gmail
 #+findex: mu4e-extras-view-in-gmail
-#+vindex: mu4e-extras-gmail-base
-The constant ~mu4e-extras-gmail-base~ holds the base URL for Gmail
-(="https://mail.google.com/mail/u/0/"=).  It is used by the commands
-below.
+#+findex: mu4e-extras-gmail-base
+The function ~mu4e-extras-gmail-base~ returns the base Gmail URL for the
+account that a message belongs to.  It uses the email address in the URL
+path (e.g. =https://mail.google.com/mail/u/pablo@epoch.ai/=) so that
+Gmail automatically switches to the correct account.  When the message
+belongs to the Epoch account (detected via its maildir prefix), it uses
+~EPOCH_EMAIL~; otherwise it falls back to ~PERSONAL_GMAIL~.
 
 The command ~mu4e-extras-open-gmail~ opens the Gmail inbox in the
 default web browser.
 
 The command ~mu4e-extras-view-in-gmail~ opens the message at point in
-Gmail by searching for its RFC 822 message ID.  This is useful when you
-need to perform an action that =mu4e= does not support, such as viewing
-the full HTML rendering or accessing Gmail-specific features.
+Gmail by searching for its RFC 822 message ID.  It automatically selects
+the correct Gmail account based on the message's maildir.  This is
+useful when you need to perform an action that =mu4e= does not support,
+such as viewing the full HTML rendering or accessing Gmail-specific
+features.
 
 ** Message file operations
 :PROPERTIES:

@@ -222,14 +222,14 @@ Diagnoses a frozen Emacs process: samples the stack, decodes native-comp symbols
 :ID:       BEEADA41-ECD4-457B-8A10-DA8D0C19984B
 :END:
 
-Applies the =.nosync= trick to a single directory: renames it with a =.nosync= suffix (which Google Drive skips), creates a symlink at the original path, and updates =.gitignore=. Use when Google Drive complains about a specific directory (e.g. =node_modules/.bin=).
+Moves a directory from inside =~/My Drive/= to =~/.drive-nosync/= (outside Drive's sync root) and leaves a symlink in its place. Drive skips symlinks, so the directory becomes invisible to sync while tooling works transparently. Use when Google Drive complains about a specific directory (e.g. =node_modules/.bin=).
 
 *** fix-drive-errors
 :PROPERTIES:
 :ID:       69244292-277A-4484-BC21-2AA9C8D588D9
 :END:
 
-Bulk version of =nosync=. Scans =~/My Drive/= for all directories causing sync errors (node_modules, build output, Python caches, large data dirs), applies =.nosync= to each, updates =.gitignore= files, then restarts Google Drive so it refreshes its error list. Use periodically or when the error list grows.
+Bulk version of =nosync=. Scans =~/My Drive/= for all directories causing sync errors (node_modules, build output, Python caches, large data dirs), moves them to =~/.drive-nosync/=, repairs broken symlinks, then restarts Google Drive. Use periodically or when the error list grows.
 
 ** Multi-model and research skills
 :PROPERTIES:

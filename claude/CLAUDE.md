@@ -12,7 +12,7 @@
 ## Safety
 
 - **Emacs:** never send signals to an active Emacs session without explicit confirmation.
-- **Deletion:** use `trash` instead of `rm -rf` (hook-enforced).
+- **Deletion:** use `trash` instead of `rm -rf`.
 - **Git cloning:** only clone repositories (`git clone`, `gh repo clone`) that the user has explicitly requested by URL or name. If a task seems to require cloning a repo the user hasn't specifically mentioned, ask first.
 
 ## Coding
@@ -22,7 +22,7 @@
 
 ## Documentation
 
-- When modifying `.el` files in a package that has a `doc/` directory, also update the corresponding `.org` manual in `doc/`. Use `/doc-elisp` to generate or update documentation.
+- When modifying `.el` files in a package that has a `doc/` directory, also update the corresponding `.org` manual in `doc/` (hook-enforced). Use `/doc-elisp` to generate or update documentation.
 
 ## Agents
 

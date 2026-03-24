@@ -1,7 +1,7 @@
 ---
 name: org-note
 description: Create or update an org-mode note in the user's notes directory. Use when the user asks to save, create, or update a note based on conversation content.
-user-invocable: false
+user-invocable: true
 ---
 
 # Org-mode note

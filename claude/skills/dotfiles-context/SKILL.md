@@ -6,7 +6,7 @@ user-invocable: false
 
 # Dotfiles repository
 
-Elpaca keeps a separate clone at `~/.config/emacs-profiles/<profile>/elpaca/repos/dotfiles/` for loading Elisp, but do **not** commit there. The elpaca clone syncs from the Google Drive repo automatically.
+Elpaca keeps a separate clone at `~/.config/emacs-profiles/<profile>/elpaca/sources/dotfiles/` for loading Elisp, but do **not** commit there. The elpaca clone syncs from the Google Drive repo automatically.
 
 # Elpaca profile
 

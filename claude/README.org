@@ -26,7 +26,7 @@ The =~/.claude/= directory symlinks its core files here, so changes are version-
 :END:
 
 - *Agent teams*: enabled.
-- *Allowed tools*: Bash, Read, Edit, Write, WebFetch, WebSearch, Task, Glob, Grep, NotebookEdit, and all Slack MCP tools.
+- *Allowed tools*: Bash, Read, Edit, Write, WebFetch, WebSearch, Task, Glob, Grep, NotebookEdit, and all MCP tools.
 
 ** settings.local.json
 :PROPERTIES:

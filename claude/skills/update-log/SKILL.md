@@ -1,6 +1,6 @@
 ---
 name: update-log
-description: End-of-session bookkeeping. Use at the end of a work session to update the session log and project status. Also use proactively when the session is running low on context.
+description: End-of-session bookkeeping. Use at the end of a work session to update the session log and project status. Only consider using proactively (e.g. when the session is running low on context) in projects that already have a log directory and a log reference in CLAUDE.md from a previous user invocation. Never invoke autonomously in projects without existing logs.
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
 argument-hint: "[optional summary of what was done]"

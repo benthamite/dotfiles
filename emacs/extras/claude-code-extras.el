@@ -102,9 +102,12 @@ prompts and accepted text is sent to the terminal correctly."
 (defcustom claude-code-extras-accounts nil
   "Alist of account names to `CLAUDE_CONFIG_DIR' paths.
 Each entry is (NAME . CONFIG-DIR).  When non-nil,
-`claude-code-extras-start-or-switch' prompts for an account
-before starting a new session, and sets `CLAUDE_CONFIG_DIR'
-accordingly so each account maintains its own OAuth credentials.
+`claude-code-extras-start-or-switch' uses the persisted account
+selection and sets `CLAUDE_CONFIG_DIR' accordingly so each account
+maintains its own OAuth credentials.
+
+Use `claude-code-extras-switch-account' to change the active account.
+The selection persists in `claude-code-extras-account-file'.
 
 Example:
   \\='((\"personal\" . \"~/.claude-personal\")
@@ -112,8 +115,21 @@ Example:
   :type '(alist :key-type string :value-type directory)
   :group 'claude-code-extras)
 
+(defcustom claude-code-extras-account-file
+  (expand-file-name ".claude-current-account" "~")
+  "File storing the name of the currently active Claude account.
+The file contains a single account name from `claude-code-extras-accounts'.
+Written by `claude-code-extras-switch-account', read at session start."
+  :type 'file
+  :group 'claude-code-extras)
+
+(defvar claude-code-extras--current-account nil
+  "Currently active Claude account name.
+Loaded from `claude-code-extras-account-file' on first use;
+changed by `claude-code-extras-switch-account'.")
+
 (defvar claude-code-extras--pending-account nil
-  "Account name selected for the next `claude-code' invocation.
+  "Account name for the current `claude-code' invocation.
 Dynamically bound by `claude-code-extras--start-with-account';
 read by `claude-code-extras--account-env'.")
 
@@ -400,8 +416,25 @@ bound by `claude-code-extras--start-with-account'."
                                      nil nil #'string=)))
     (list (format "CLAUDE_CONFIG_DIR=%s" (expand-file-name config-dir)))))
 
+(defun claude-code-extras--load-account ()
+  "Load the current account from `claude-code-extras-account-file'.
+Return the account name, or nil if the file is missing or stale."
+  (when (file-exists-p claude-code-extras-account-file)
+    (let ((name (string-trim
+                 (with-temp-buffer
+                   (insert-file-contents claude-code-extras-account-file)
+                   (buffer-string)))))
+      (when (alist-get name claude-code-extras-accounts nil nil #'string=)
+        name))))
+
+(defun claude-code-extras--save-account (name)
+  "Persist NAME as the active account to `claude-code-extras-account-file'."
+  (with-temp-file claude-code-extras-account-file
+    (insert name "\n"))
+  (setq claude-code-extras--current-account name))
+
 (defun claude-code-extras--prompt-account ()
-  "Prompt for an account if `claude-code-extras-accounts' is configured.
+  "Prompt for an account from `claude-code-extras-accounts'.
 Return the account name, or nil."
   (when claude-code-extras-accounts
     (let ((names (mapcar #'car claude-code-extras-accounts)))
@@ -409,10 +442,37 @@ Return the account name, or nil."
           (car names)
         (completing-read "Account: " names nil t)))))
 
+(defun claude-code-extras--resolve-account ()
+  "Return the active account, loading from disk or prompting as needed.
+On first use, loads from `claude-code-extras-account-file'.  If no
+persisted account exists, prompts once and saves the selection."
+  (when claude-code-extras-accounts
+    (unless claude-code-extras--current-account
+      (setq claude-code-extras--current-account
+            (claude-code-extras--load-account)))
+    (or claude-code-extras--current-account
+        (let ((account (claude-code-extras--prompt-account)))
+          (when account
+            (claude-code-extras--save-account account))
+          account))))
+
+;;;###autoload
+(defun claude-code-extras-switch-account ()
+  "Switch the active Claude account.
+Prompts for an account from `claude-code-extras-accounts' and
+persists the selection.  New sessions will use this account."
+  (interactive)
+  (unless claude-code-extras-accounts
+    (user-error "No accounts configured in `claude-code-extras-accounts'"))
+  (let ((account (claude-code-extras--prompt-account)))
+    (when account
+      (claude-code-extras--save-account account)
+      (message "Switched to account: %s" account))))
+
 (defun claude-code-extras--start-with-account ()
-  "Start a new Claude session, prompting for account if configured."
+  "Start a new Claude session using the active account."
   (let ((claude-code-extras--pending-account
-         (claude-code-extras--prompt-account)))
+         (claude-code-extras--resolve-account)))
     (claude-code)))
 
 ;;;###autoload

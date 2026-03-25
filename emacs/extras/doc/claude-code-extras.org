@@ -101,6 +101,9 @@ The user option ~claude-code-extras-alert-sound~ specifies the path to the sound
 #+vindex: claude-code-extras-accounts
 The user option ~claude-code-extras-accounts~ is an alist of =(NAME . CONFIG-DIR)= pairs for switching between multiple Claude OAuth accounts without re-authenticating. See [[#h:multi-account][Multi-account support]] for details and configuration examples. The default is ~nil~ (single-account mode).
 
+#+vindex: claude-code-extras-account-file
+The user option ~claude-code-extras-account-file~ is the file where the active account name is persisted across Emacs sessions. The default is =~/.claude-current-account=.
+
 ** Copilot options
 :PROPERTIES:
 :CUSTOM_ID: h:copilot-options
@@ -180,7 +183,7 @@ Sessions are displayed by project name (extracted from the buffer name). When mu
 :END:
 
 #+vindex: claude-code-extras-accounts
-When ~claude-code-extras-accounts~ is non-nil, starting a new session prompts for an account before launching Claude. Each account maps to a separate =CLAUDE_CONFIG_DIR=, so OAuth credentials, settings, and memory are kept independent. This avoids the need to log out and back in when switching between accounts (e.g. personal and work).
+When ~claude-code-extras-accounts~ is non-nil, each account maps to a separate =CLAUDE_CONFIG_DIR=, so OAuth credentials, settings, and memory are kept independent. This avoids the need to log out and back in when switching between accounts (e.g. personal and work).
 
 Configure accounts as an alist of =(NAME . CONFIG-DIR)= pairs:
 
@@ -190,7 +193,10 @@ Configure accounts as an alist of =(NAME . CONFIG-DIR)= pairs:
           ("work"     . "~/.claude-work")))
 #+end_src
 
-The first time you start a session with a given account, Claude will prompt for OAuth login. After that, switching is instant. If only one account is configured, it is selected automatically without prompting.
+#+findex: claude-code-extras-switch-account
+The active account is persisted across sessions (in ~claude-code-extras-account-file~). Use ~claude-code-extras-switch-account~ to change it. ~claude-code-extras-start-or-switch~ uses the persisted account silently; if no account has been selected yet, it prompts once and saves the choice. If only one account is configured, it is selected automatically.
+
+The first time you start a session with a given account, Claude will prompt for OAuth login. After that, switching is instant.
 
 ** Toggling alerts
 :PROPERTIES:

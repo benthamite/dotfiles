@@ -102,6 +102,10 @@ alias muinit="cd ~; mu init --maildir=$HOME/Mail --personal-address=$PERSONAL_EM
 alias emacsk="pkill -SIGUSR2 Emacs"
 alias emacsK="while true; do pkill -SIGUSR2 Emacs; done"
 
+# Claude Code multi-account (separate OAuth sessions via config dir)
+alias claude-personal='CLAUDE_CONFIG_DIR=~/.claude-personal claude'
+alias claude-work='CLAUDE_CONFIG_DIR=~/.claude-work claude'
+
 # make node use local certs
 export NODE_EXTRA_CA_CERTS="$HOME/Library/Application Support/mkcert/rootCA.pem"
 

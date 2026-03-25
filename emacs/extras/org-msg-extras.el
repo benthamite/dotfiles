@@ -122,6 +122,15 @@ This is a slightly tweaked version of `org-msg-goto-body'."
   (while (re-search-forward org-property-re nil t)
     (forward-line)))
 
+(defun org-msg-extras-fold-signature-blocks ()
+  "Fold export blocks inside the email signature."
+  (save-excursion
+    (goto-char (point-max))
+    (when (search-backward "#+begin_signature" nil t)
+      (save-restriction
+	(narrow-to-region (point) (point-max))
+	(org-hide-block-all)))))
+
 (provide 'org-msg-extras)
 ;;; org-msg-extras.el ends here
 

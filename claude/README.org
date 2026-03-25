@@ -31,10 +31,10 @@ Shared (symlinked into each account dir):
 - =plugins/= — installed plugins
 
 Separate per account:
-- =.claude.json= — OAuth identity and user ID (created on first login)
+- =.claude.json= — OAuth identity, user ID, and MCP servers (synced from =~/.claude.json=)
 - Keychain credentials — the actual OAuth tokens
 
-MCP servers (=~/.claude.json=) are at =$HOME= level, unaffected by =CLAUDE_CONFIG_DIR=.
+*MCP servers:* Claude Code reads =.claude.json= from =$CLAUDE_CONFIG_DIR= (not =$HOME=) when that variable is set. This means user-level MCP servers must be synced to each account directory. The canonical source of truth is =~/.claude.json=; run =claude/bin/sync-mcp-servers.sh= after adding or removing any MCP server there.
 
 From Emacs, =claude-code-extras-start-or-switch= uses the persisted account automatically (configured via =claude-code-extras-accounts=, persisted in =~/.claude-current-account=). Use =claude-code-extras-switch-account= to change the active account. From the terminal, the shell aliases =claude-personal= and =claude-work= are available.
 

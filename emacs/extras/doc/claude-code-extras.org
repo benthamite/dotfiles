@@ -93,6 +93,14 @@ The user option ~claude-code-extras-alert-style~ determines the type of notifica
 
 The user option ~claude-code-extras-alert-sound~ specifies the path to the sound file played for audible alerts. The default is =/System/Library/Sounds/Glass.aiff=, a macOS system sound. Change this to any audio file that =afplay= can handle.
 
+** Account options
+:PROPERTIES:
+:CUSTOM_ID: h:account-options
+:END:
+
+#+vindex: claude-code-extras-accounts
+The user option ~claude-code-extras-accounts~ is an alist of =(NAME . CONFIG-DIR)= pairs for switching between multiple Claude OAuth accounts without re-authenticating. See [[#h:multi-account][Multi-account support]] for details and configuration examples. The default is ~nil~ (single-account mode).
+
 ** Copilot options
 :PROPERTIES:
 :CUSTOM_ID: h:copilot-options
@@ -165,6 +173,24 @@ The user option ~claude-code-extras-status-interval~ sets the polling frequency 
 The command ~claude-code-extras-start-or-switch~ is the main entry point for working with Claude sessions. When no Claude sessions are active, it starts a new one by calling ~claude-code~. When one or more sessions exist, it opens a Consult selection interface listing all active sessions plus a "[new session]" option.
 
 Sessions are displayed by project name (extracted from the buffer name). When multiple sessions share the same project, the instance name is appended for disambiguation (e.g. "project:instance"). The interface provides live buffer previews as you navigate the candidates, so you can see the current state of each session before switching.
+
+*** Multi-account support
+:PROPERTIES:
+:CUSTOM_ID: h:multi-account
+:END:
+
+#+vindex: claude-code-extras-accounts
+When ~claude-code-extras-accounts~ is non-nil, starting a new session prompts for an account before launching Claude. Each account maps to a separate =CLAUDE_CONFIG_DIR=, so OAuth credentials, settings, and memory are kept independent. This avoids the need to log out and back in when switching between accounts (e.g. personal and work).
+
+Configure accounts as an alist of =(NAME . CONFIG-DIR)= pairs:
+
+#+begin_src emacs-lisp
+(setopt claude-code-extras-accounts
+        '(("personal" . "~/.claude-personal")
+          ("work"     . "~/.claude-work")))
+#+end_src
+
+The first time you start a session with a given account, Claude will prompt for OAuth login. After that, switching is instant. If only one account is configured, it is selected automatically without prompting.
 
 ** Toggling alerts
 :PROPERTIES:

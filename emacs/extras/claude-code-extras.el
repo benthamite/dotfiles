@@ -99,6 +99,24 @@ prompts and accepted text is sent to the terminal correctly."
   :type 'boolean
   :group 'claude-code-extras)
 
+(defcustom claude-code-extras-accounts nil
+  "Alist of account names to `CLAUDE_CONFIG_DIR' paths.
+Each entry is (NAME . CONFIG-DIR).  When non-nil,
+`claude-code-extras-start-or-switch' prompts for an account
+before starting a new session, and sets `CLAUDE_CONFIG_DIR'
+accordingly so each account maintains its own OAuth credentials.
+
+Example:
+  \\='((\"personal\" . \"~/.claude-personal\")
+    (\"work\"     . \"~/.claude-work\"))"
+  :type '(alist :key-type string :value-type directory)
+  :group 'claude-code-extras)
+
+(defvar claude-code-extras--pending-account nil
+  "Account name selected for the next `claude-code' invocation.
+Dynamically bound by `claude-code-extras--start-with-account';
+read by `claude-code-extras--account-env'.")
+
 (defconst claude-code-extras--hook-wrapper
   (expand-file-name
    "bin/claude-code-hook-wrapper"
@@ -373,6 +391,30 @@ resulting in a garbled banner."
 
 ;;;;; Smart start
 
+(defun claude-code-extras--account-env (_buffer-name _dir)
+  "Return `CLAUDE_CONFIG_DIR' for the pending account.
+Reads `claude-code-extras--pending-account', which is dynamically
+bound by `claude-code-extras--start-with-account'."
+  (when-let* ((account claude-code-extras--pending-account)
+              (config-dir (alist-get account claude-code-extras-accounts
+                                     nil nil #'string=)))
+    (list (format "CLAUDE_CONFIG_DIR=%s" (expand-file-name config-dir)))))
+
+(defun claude-code-extras--prompt-account ()
+  "Prompt for an account if `claude-code-extras-accounts' is configured.
+Return the account name, or nil."
+  (when claude-code-extras-accounts
+    (let ((names (mapcar #'car claude-code-extras-accounts)))
+      (if (= (length names) 1)
+          (car names)
+        (completing-read "Account: " names nil t)))))
+
+(defun claude-code-extras--start-with-account ()
+  "Start a new Claude session, prompting for account if configured."
+  (let ((claude-code-extras--pending-account
+         (claude-code-extras--prompt-account)))
+    (claude-code)))
+
 ;;;###autoload
 (defun claude-code-extras-start-or-switch ()
   "Start a new Claude session or switch to an existing one.
@@ -381,7 +423,7 @@ offer to switch to one of them or create a new session."
   (interactive)
   (let ((buffers (claude-code--find-all-claude-buffers)))
     (if (null buffers)
-        (claude-code)
+        (claude-code-extras--start-with-account)
       (claude-code-extras--prompt-start-or-switch buffers))))
 
 (defun claude-code-extras--prompt-start-or-switch (buffers)
@@ -404,7 +446,7 @@ session (triggered by window-resize events)."
                          :state (claude-code-extras--buffer-preview-state choices))
                       (claude-code-extras--restore-claude-window-points saved))))
     (if (string= selection new-label)
-        (claude-code)
+        (claude-code-extras--start-with-account)
       (switch-to-buffer (cdr (assoc selection choices))))))
 
 (defun claude-code-extras--save-claude-window-points (buffers exclude-window)

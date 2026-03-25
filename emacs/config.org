@@ -12578,7 +12578,7 @@ I use this package to compose messages and to reply to messages composed in HTML
                                (padding-top . "0px")
                                (padding-left . "5px")))
                          (nil signature
-                              ((font-family . "\"Georgia\"")
+                              ((font-family . "\"Arial\", \"Helvetica\", sans-serif")
                                (font-size . "11pt")
                                (margin-bottom . "20px")))
                          (blockquote quote0

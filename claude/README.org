@@ -15,6 +15,29 @@ The =~/.claude/= directory symlinks its core files here, so changes are version-
 - =~/.claude/CLAUDE.md= → =claude/CLAUDE.md=
 - =~/.claude/skills/= → =claude/skills/=
 
+** Multi-account setup
+:PROPERTIES:
+:CUSTOM_ID: h:multi-account
+:END:
+
+Two OAuth accounts (personal and work) are supported without re-authenticating. Each account uses a separate =CLAUDE_CONFIG_DIR= (=~/.claude-personal/= and =~/.claude-work/=) to keep its OAuth credentials and identity isolated, while sharing everything else via symlinks back to =~/.claude/=.
+
+Shared (symlinked into each account dir):
+- =CLAUDE.md=, =settings.json=, =settings.local.json= — instructions and preferences
+- =skills/= — custom skills
+- =memory/= — persistent memory
+- =projects/= — trusted folders, project config, session logs
+- =history.jsonl= — command history
+- =plugins/= — installed plugins
+
+Separate per account:
+- =.claude.json= — OAuth identity and user ID (created on first login)
+- Keychain credentials — the actual OAuth tokens
+
+MCP servers (=~/.claude.json=) are at =$HOME= level, unaffected by =CLAUDE_CONFIG_DIR=.
+
+From Emacs, =claude-code-extras-start-or-switch= prompts for the account when starting a new session (configured via =claude-code-extras-accounts=). From the terminal, the shell aliases =claude-personal= and =claude-work= are available.
+
 * Configuration
 :PROPERTIES:
 :ID:       48F2354B-E7A4-43D1-A5AD-856EB82225E3

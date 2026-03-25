@@ -30,3 +30,10 @@ description: Practical AI tool workflows, tips, and tutorials from practitioners
 - @badlogicgames
 - @thdxr
 - @pontusab
+
+- @championswimmer
+- @0xSero
+
+- @Dimillian
+- @Prince_Canuma
+- @xeophon

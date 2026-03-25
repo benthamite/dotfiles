@@ -28,3 +28,15 @@ description: AI macrostrategy thinkers — surface original analysis on AI traje
 - @danwilliamsphil
 - @lukeprog
 - @Miles_Brundage
+
+- @dwarkesh_sp
+- @sebkrier
+- @So8res
+- @cherylwoooo
+- @datagenproc
+
+- @deanwball
+- @robbensinger
+- @_NathanCalvin
+- @tyler_m_john
+- @AllanDafoe

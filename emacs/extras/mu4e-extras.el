@@ -126,6 +126,16 @@ The list of queued messages is stored in `mu4e-extras-mark-as-read-queue'."
   (when mu4e-extras-mark-as-read-queue
     (run-with-timer 30 nil #'mu4e-extras-reapply-read-status)))
 
+;;;;;;; Shared
+
+(defun mu4e-extras--preserve-read-status (msg)
+  "If MSG is already read, add it to the mark-as-read queue.
+Gmail may reset the Seen flag when a message is refiled via IMAP.
+By queuing already-read messages, we re-apply the Seen flag after sync."
+  (when (memq 'seen (mu4e-message-field msg :flags))
+    (add-to-list 'mu4e-extras-mark-as-read-queue
+		 (mu4e-message-field msg :message-id))))
+
 ;;;;;;; Refiled
 
 (defun mu4e-extras-add-refiled-to-mark-as-read-queue (msg)
@@ -148,7 +158,10 @@ When `mu4e' sends an email with Gmail, Gmail automatically saves a copy in the
 `mu4e-sent-messages-behavior'). However, the saved copy is treated as a new,
 unread message when synchronized back to the local client. To fix this, this
 function marks the saved copy as read."
-  (when-let* ((message-id (message-fetch-field "Message-ID")))
+  (when-let* ((raw-id (message-fetch-field "Message-ID"))
+	      ;; `message-fetch-field' returns the RFC 2822 form with angle
+	      ;; brackets, but `mu4e--server-move' needs the bare message-id.
+	      (message-id (replace-regexp-in-string "\\`<\\|>\\'" "" raw-id)))
     (add-to-list 'mu4e-extras-mark-as-read-queue message-id)))
 
 ;;;;; Setup
@@ -196,6 +209,7 @@ background; otherwise, pop up a window."
   "In headers mode, refile message at point.
 Do not ask for confirmation."
   (interactive)
+  (mu4e-extras--preserve-read-status (mu4e-message-at-point))
   (mu4e-headers-mark-for-refile)
   (mu4e-mark-execute-all t))
 
@@ -210,6 +224,7 @@ Do not ask for confirmation."
   "In view mode, refile message at point.
 Do not ask for confirmation."
   (interactive)
+  (mu4e-extras--preserve-read-status (mu4e-message-at-point))
   (mu4e-view-mark-for-refile)
   (mu4e-mark-execute-all t))
 

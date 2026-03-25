@@ -57,13 +57,22 @@
 
 (defcustom org-msg-extras-work-html-signature
   (concat
-   "\n#+begin_signature\n--\n*Pablo Stafforini*\n"
-   "Operations Associate, Automations\n"
+   "\n#+begin_signature\n--\n"
+   "#+begin_export html\n"
+   "<span style=\"display:block; font-family:Arial,Helvetica,sans-serif;"
+   " font-size:13px; line-height:1.4\">"
+   "<b>Pablo Stafforini</b><br>"
+   "Operations Associate, Automations</span>\n"
+   "#+end_export\n"
    "#+attr_html: :width 120\n"
    "[[file:~/.local/share/epoch/epoch-logo.png]]\n"
-   "[[https://epoch.ai/][Website]] | "
-   "[[https://x.com/EpochAIResearch][Twitter]] | "
-   "[[https://epochai.substack.com/subscribe][Newsletter]]\n"
+   "#+begin_export html\n"
+   "<span style=\"display:block; font-family:Arial,Helvetica,sans-serif;"
+   " font-size:11px; line-height:1.4\">"
+   "<a href=\"https://epoch.ai/\">Website</a> <b>|</b> "
+   "<a href=\"https://x.com/EpochAIResearch\">Twitter</a> <b>|</b> "
+   "<a href=\"https://epochai.substack.com/subscribe\">Newsletter</a></span>\n"
+   "#+end_export\n"
    "#+end_signature")
   "Work signature for HTML emails."
   :type 'string

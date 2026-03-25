@@ -114,17 +114,33 @@ Skip Epoch messages, which are synced via the Gmail API directly."
 
 ;;;;;; Mark as read
 
-(defun mu4e-extras-reapply-read-status ()
-  "Reapply `read' status to all messages in queue.
-The list of queued messages is stored in `mu4e-extras-mark-as-read-queue'."
-  (dolist (message-id mu4e-extras-mark-as-read-queue)
-    (mu4e--server-move message-id nil "+S-u"))  ;; `+S-u' = mark as seen
-  (setq mu4e-extras-mark-as-read-queue '()))
+(defvar mu4e-extras--reapply-in-progress nil
+  "Non-nil while a follow-up sync is running to push re-applied read status.")
 
-(defun mu4e-extras-reapply-read-status-set-timer ()
-  "Set a timer to reapply `read' status to all tracked messages."
-  (when mu4e-extras-mark-as-read-queue
-    (run-with-timer 30 nil #'mu4e-extras-reapply-read-status)))
+(defun mu4e-extras-reapply-read-status ()
+  "Reapply `read' status to all messages in queue, then trigger a follow-up sync.
+Gmail resets the Seen flag when a message is moved between mailboxes via IMAP,
+so after a sync that includes refiles, we re-apply the flag locally and push it
+to Gmail with an automatic follow-up sync.
+
+This function runs on `mu4e-index-updated-hook'.  The
+`mu4e-extras--reapply-in-progress' guard prevents infinite loops."
+  (when (and mu4e-extras-mark-as-read-queue
+	     (not mu4e-extras--reapply-in-progress))
+    (let ((count (length mu4e-extras-mark-as-read-queue)))
+      (dolist (message-id mu4e-extras-mark-as-read-queue)
+	(mu4e--server-move message-id nil "+S-u"))
+      (setq mu4e-extras-mark-as-read-queue '())
+      (message "mu4e-extras: re-applied read status to %d message(s), syncing..." count)
+      ;; Trigger a follow-up sync to push the re-applied flags to Gmail.
+      (setq mu4e-extras--reapply-in-progress t)
+      (run-with-timer 2 nil
+		      (lambda ()
+			(unwind-protect
+			    (mu4e-update-mail-and-index t)
+			  (run-with-timer 60 nil
+					  (lambda ()
+					    (setq mu4e-extras--reapply-in-progress nil)))))))))
 
 ;;;;;;; Shared
 

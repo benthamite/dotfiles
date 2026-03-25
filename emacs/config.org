@@ -12485,7 +12485,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
   (mu4e-mark-execute-pre-hook . mu4e-extras-gmail-fix-flags)
   (mu4e-view-mode-hook . mu4e-extras-set-face-locally)
   (mu4e-update-pre-hook . mu4e-extras-set-index-params)
-  (mu4e-update-pre-hook . mu4e-extras-reapply-read-status-set-timer)
+  (mu4e-index-updated-hook . mu4e-extras-reapply-read-status)
   (message-sent-hook . mu4e-extras-add-sent-to-mark-as-read-queue)
 
   :bind

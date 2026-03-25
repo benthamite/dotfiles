@@ -24,12 +24,15 @@ Pablo uses two Google accounts, which requires separate MCP servers for each.
 - **Known issue:** the PyPI package (v2.0.1) has a buggy entry point — `asyncio.run(mcp.run())` fails because `mcp.run()` is synchronous. The config uses `python3 -c "...mcp.run()"` to bypass this.
 - **Refresh token generation:** if the token expires or scopes need updating, run the OAuth flow via `google_auth_oauthlib.flow.InstalledAppFlow` with the desired scopes (see below).
 
-**gmail-epoch** (Local MCP, project-scoped to Epoch)
-- **Package:** custom/separate Gmail MCP
+**gmail-epoch** (project-scoped to Epoch, defined in `~/.claude.json` under `projects./Users/pablostafforini/My Drive/Epoch`)
+- **Package:** `workspace-mcp` via `uvx` (same package as `google-workspace`, but configured with `--tools gmail` and different credentials)
 - **Covers:** Gmail only
-- **Config dir:** `~/.gmail-mcp-epoch/`
-- **Accounts:** has credentials for both `pablo@epoch.ai` (`credentials-pablo.json`) and `email-triage@epoch.ai` (`credentials-bot.json`). The latter is a third Epoch account used only for the email triage bot.
+- **OAuth project:** same as `google-workspace` (`claude-code-gmail-490520`)
+- **Credentials:** stored in `~/.gmail-mcp-epoch/credentials/` as `{email}.json` files (one per account). The directory is set via `WORKSPACE_MCP_CREDENTIALS_DIR` in the MCP env config.
+- **Accounts:** `email-triage@epoch.ai` (the email triage bot account). Legacy credential files (`credentials-bot.json`, `credentials-pablo.json`) also exist in `~/.gmail-mcp-epoch/` but are not used by the MCP server.
+- **GCP OAuth keys:** `~/.gmail-mcp-epoch/gcp-oauth.keys.json`
 - **Not redundant:** retained for `email-triage@epoch.ai` access, which `google-workspace` doesn't cover.
+- **Known issue (port conflict):** both `google-workspace` and `gmail-epoch` run the same `workspace-mcp` package, which starts an OAuth callback server on port 8000. Whichever MCP process starts first claims the port; the other's built-in OAuth flow will always fail with "Invalid or expired OAuth state parameter" because the callback goes to the wrong process. **Fix:** never rely on the built-in OAuth flow for `gmail-epoch`. Instead, generate tokens manually (see below) and write them to the credentials directory.
 
 ### pablo.stafforini@gmail.com
 
@@ -64,6 +67,8 @@ Enable at: Google Cloud Console > APIs & Services > Library (project `claude-cod
 
 ## Generating a new refresh token
 
+### google-workspace (pablo@epoch.ai)
+
 If the token expires or you need to add scopes:
 
 ```bash
@@ -94,10 +99,54 @@ print('REFRESH_TOKEN=' + creds.refresh_token)
 
 Then update `GOOGLE_WORKSPACE_REFRESH_TOKEN` in `~/My Drive/dotfiles/shell/.zshenv-secrets`.
 
+### gmail-epoch (email-triage@epoch.ai)
+
+The built-in OAuth flow does not work due to the port conflict (see known issue above). Generate tokens manually using `InstalledAppFlow` on a different port, then write the result to the credentials directory.
+
+```bash
+python3 -c "
+from google_auth_oauthlib.flow import InstalledAppFlow
+import json
+flow = InstalledAppFlow.from_client_secrets_file(
+    '$HOME/.gmail-mcp-epoch/gcp-oauth.keys.json',
+    scopes=[
+        'https://www.googleapis.com/auth/gmail.readonly',
+        'https://www.googleapis.com/auth/gmail.compose',
+        'https://www.googleapis.com/auth/gmail.modify',
+        'https://www.googleapis.com/auth/gmail.labels',
+        'https://www.googleapis.com/auth/gmail.settings.basic',
+        'https://www.googleapis.com/auth/gmail.send',
+        'https://www.googleapis.com/auth/userinfo.email',
+        'https://www.googleapis.com/auth/userinfo.profile',
+        'openid',
+    ]
+)
+# IMPORTANT: use a different port than 8000 to avoid the port conflict
+creds = flow.run_local_server(port=9090, open_browser=True)
+token_data = {
+    'token': creds.token,
+    'refresh_token': creds.refresh_token,
+    'token_uri': creds.token_uri,
+    'client_id': creds.client_id,
+    'client_secret': creds.client_secret,
+    'scopes': list(creds.scopes),
+}
+# Write in the format the workspace-mcp credential store expects
+# The filename must be {email}.json
+with open('$HOME/.gmail-mcp-epoch/credentials/email-triage@epoch.ai.json', 'w') as f:
+    json.dump(token_data, f, indent=2)
+print('Credentials saved. Sign in as email-triage@epoch.ai in the browser.')
+"
+```
+
+After running, restart Claude Code so the `gmail-epoch` MCP server picks up the new credentials.
+
 ## Troubleshooting
 
 - **`invalid_grant`**: refresh token is expired or revoked. Regenerate it (see above).
 - **403 "caller does not have permission"**: either the relevant API isn't enabled on the GCP project, or the document isn't shared with the account the token belongs to.
-- **404 "File not found"**: Google Drive returns 404 (not 403) when you lack access — check sharing settings on the document.
+- **404 "File not found"**: Google Drive returns 404 (not 403) when you lack access; check sharing settings on the document.
 - **Server not appearing in `/mcp`**: MCP servers go in `~/.claude.json`, NOT `~/.claude/settings.json`. The latter is for Claude Code settings (hooks, permissions, theme).
 - **`ValueError: a coroutine was expected`**: the `google-workspace-mcp` entry point bug. Use the `python3 -c` invocation that calls `mcp.run()` directly.
+- **"Invalid or expired OAuth state parameter" on `gmail-epoch`**: this is the port 8000 conflict between `google-workspace` and `gmail-epoch`. Do NOT retry the built-in OAuth flow; it will never work. Instead, generate tokens manually on port 9090 (see "gmail-epoch" section above).
+- **gmail-epoch says "ACTION REQUIRED: Google Authentication Needed"**: the credential file is missing or the refresh token is expired. Regenerate using the manual flow above and write to `~/.gmail-mcp-epoch/credentials/{email}.json`. Then restart Claude Code.

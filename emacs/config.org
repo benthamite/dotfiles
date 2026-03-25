@@ -12651,6 +12651,8 @@ I use this package to compose messages and to reply to messages composed in HTML
 (use-personal-package org-msg-extras
   :after org-msg
   :demand t
+  :hook
+  (org-msg-edit-mode-hook . org-msg-extras-fold-signature-blocks)
   :bind
   (:map org-msg-edit-mode-map
         ("s-g" . org-msg-extras-open-in-grammarly)

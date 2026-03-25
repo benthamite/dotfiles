@@ -49,6 +49,14 @@
   :type 'string
   :group 'org-msg-extras)
 
+(defconst org-msg-extras-epoch-logo-base64
+  (with-temp-buffer
+    (insert-file-contents-literally
+     (expand-file-name "~/.local/share/epoch/epoch-logo.png"))
+    (base64-encode-region (point-min) (point-max) t)
+    (buffer-string))
+  "Base64-encoded Epoch AI logo (PNG, 300x53).")
+
 (defcustom org-msg-extras-work-plain-text-signature
   "\n--\nPablo Stafforini\nOperations Associate, Automations\nEpoch AI | https://epoch.ai/\n"
   "Work signature for plain text emails."
@@ -56,7 +64,22 @@
   :group 'org-msg-extras)
 
 (defcustom org-msg-extras-work-html-signature
-  "\n#+begin_signature\n--\n*Pablo Stafforini*\nOperations Associate, Automations\n[[file:~/.local/share/epoch/epoch-logo.png]]\n[[https://epoch.ai/][Website]] | [[https://twitter.com/EpochAIResearch][Twitter]] | [[https://www.linkedin.com/company/epochai][LinkedIn]]\n#+end_signature"
+  (format
+   (concat
+    "\n#+begin_signature\n#+begin_export html\n"
+    "<div style=\"font-family: Arial, Helvetica, sans-serif;\">"
+    "<p style=\"margin: 0; font-size: 13px; line-height: 1.4;\">"
+    "<b style=\"color: #000;\">Pablo Stafforini</b><br>"
+    "<span style=\"color: #333;\">Operations Associate, Automations</span></p>"
+    "<p style=\"margin: 6px 0 4px;\">"
+    "<img src=\"data:image/png;base64,%s\" alt=\"Epoch AI\""
+    " width=\"120\" style=\"height: auto;\"></p>"
+    "<p style=\"margin: 0; font-size: 11px; line-height: 1.4;\">"
+    "<a href=\"https://epoch.ai/\">Website</a> <b>|</b> "
+    "<a href=\"https://twitter.com/EpochAIResearch\">Twitter</a> <b>|</b> "
+    "<a href=\"https://epochai.substack.com/subscribe\">Newsletter</a></p>"
+    "</div>\n#+end_export\n#+end_signature")
+   org-msg-extras-epoch-logo-base64)
   "Work signature for HTML emails."
   :type 'string
   :group 'org-msg-extras)

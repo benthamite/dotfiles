@@ -75,7 +75,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/claude/hooks/elpaca-run.sh claude-code bin/claude-code-hook-wrapper notification"
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/fire-and-forget.sh ~/My\\ Drive/dotfiles/claude/hooks/elpaca-run.sh claude-code bin/claude-code-hook-wrapper notification",
+            "timeout": 5
           }
         ]
       }
@@ -86,7 +87,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/claude/hooks/elpaca-run.sh claude-code bin/claude-code-hook-wrapper stop"
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/fire-and-forget.sh ~/My\\ Drive/dotfiles/claude/hooks/elpaca-run.sh claude-code bin/claude-code-hook-wrapper stop",
+            "timeout": 5
           }
         ]
       }
@@ -98,7 +100,7 @@
     "padding": 0
   },
   "effortLevel": "high",
-  "defaultMode": "auto",
+  "defaultMode": "bypassPermissions",
   "theme": "light",
   "mcpServers": {},
   "skipDangerousModePermissionPrompt": true

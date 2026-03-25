@@ -1,5 +1,5 @@
 ---
-name: audit-config
+name: claude-config-audit
 description: Audit Claude Code configuration for redundancy, conflicts, dead weight, and staleness. Use when the user says "audit config", "audit setup", "clean up my config", "prune my instructions", "review my claude.md", "check for duplicate rules", or wants to optimize their Claude Code instruction set.
 ---
 

@@ -13045,14 +13045,14 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
         ("H-s-t" . slack-change-current-team)
         ("s-u" . slack-select-rooms)
         ("H-s-u" . slack-select-unread-rooms) ; `slack-all-unreads' not working
-        :map slack-thread-message-buffer-mode-map
-        ("d" . slack-thread-show-or-create)
-        ("e" . slack-message-edit)
-        ("o" . slack-chat-org-capture)
-        ("q" . files-extras-kill-other-buffer)
-        ("r" . slack-message-add-reaction)
-        ("R" . slack-message-remove-reaction)
-        ("z" . slack-message-write-another-buffer)
+        ;; :map slack-thread-message-buffer-mode-map
+        ;; ("d" . slack-thread-show-or-create)
+        ;; ("e" . slack-message-edit)
+        ;; ("o" . slack-chat-org-capture)
+        ;; ("q" . files-extras-kill-other-buffer)
+        ;; ("r" . slack-message-add-reaction)
+        ;; ("R" . slack-message-remove-reaction)
+        ;; ("z" . slack-message-write-another-buffer)
         :map slack-activity-feed-buffer-mode-map
         ("," . slack-activity-feed-goto-prev)
         ("." . slack-activity-feed-goto-next)

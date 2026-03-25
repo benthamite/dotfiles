@@ -98,8 +98,8 @@
     "padding": 0
   },
   "effortLevel": "high",
-  "defaultMode": "bypassPermissions",
-  "theme": "dark",
+  "defaultMode": "auto",
+  "theme": "light",
   "mcpServers": {},
   "skipDangerousModePermissionPrompt": true
 }

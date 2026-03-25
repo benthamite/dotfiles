@@ -36,7 +36,7 @@ Separate per account:
 
 MCP servers (=~/.claude.json=) are at =$HOME= level, unaffected by =CLAUDE_CONFIG_DIR=.
 
-From Emacs, =claude-code-extras-start-or-switch= prompts for the account when starting a new session (configured via =claude-code-extras-accounts=). From the terminal, the shell aliases =claude-personal= and =claude-work= are available.
+From Emacs, =claude-code-extras-start-or-switch= uses the persisted account automatically (configured via =claude-code-extras-accounts=, persisted in =~/.claude-current-account=). Use =claude-code-extras-switch-account= to change the active account. From the terminal, the shell aliases =claude-personal= and =claude-work= are available.
 
 * Configuration
 :PROPERTIES:

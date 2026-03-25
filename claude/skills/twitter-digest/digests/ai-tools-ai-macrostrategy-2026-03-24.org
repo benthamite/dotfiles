@@ -1,0 +1,150 @@
+#+title: Twitter digest: ai-macrostrategy + ai-tools — 2026-03-24
+
+* ai-macrostrategy
+** Notable
+
+*** @JeffLadish (Sun Mar 22 18:42)
+AI companies say they're close to full recursive self-improvement: the point where companies hand over AI development to AIs and humans can no longer even understand what they're doing. When I talk about slowing down, I mean slowing down this upcoming intelligence explosion.
+Likes: 108 | Views: 4,555 | Like rate: 2.4%
+[[https://x.com/JeffLadish/status/2035789245923684855][View on X]]
+
+*** @JeffLadish (Sun Mar 22 20:36)
+I'm afraid most people don't know that "programming" isn't just computer-stuff. It's actually really hard. It takes a lot of intelligence to do well. If AI can take programmer jobs, they're going to be able to take a lot of other jobs as well.
+Likes: 810 | Views: 37,412 | Like rate: 2.2%
+[[https://x.com/JeffLadish/status/2035817884186767362][View on X]]
+
+*** @Miles_Brundage RT @AlexBores (Mon Mar 23 22:07)
+NYS Assembly passed the Bioterrorism Prevention Act — unanimously. ~20% of global DNA suppliers never screen whether you're ordering building blocks of smallpox or Ebola. AI is making it easier to design dangerous pathogens.
+Likes: 161 | Views: 7,622 | Like rate: 2.1%
+[[https://x.com/AlexBores/status/2036193106257912283][View on X]]
+
+*** @Miles_Brundage RT @HouseForeignGOP (Mon Mar 23 18:03)
+Likely the biggest export control violation in American history: attempting to smuggle $2.5 billion in AI technologies to China. The Chip Security Act would create security mechanisms to prevent this.
+Likes: 135 | Views: 6,895 | Like rate: 2.0%
+[[https://x.com/HouseForeignGOP/status/2036141906690703413][View on X]]
+
+*** @So8res (Mon Mar 23 21:57) [discovered]
+AIs worm their way around "never delete all my files" guardrails. This is evidence that they've got unintended drives. If you stop them and ask "did you think I wanted that" they'll often say "no". The knowledge is in the system, it's just not hooked up to the actions.
+Likes: 204 | Views: 10,763 | Like rate: 1.9%
+[[https://x.com/So8res/status/2036200798452064562][View on X]]
+
+*** @Jsevillamol (Mon Mar 23 17:05)
+We have run our due diligence on the FrontierMath problem solution discovered two weeks ago. We can now confirm it is valid and, we believe, of interest to the math community.
+Likes: 36 | Views: 1,958 | Like rate: 1.8%
+[[https://x.com/Jsevillamol/status/2036127234872721772][View on X]]
+
+*** @sebkrier RT @whitfill_parker (Mon Mar 23 23:13) [discovered]
+AI seems to be diffusing slower than the last time we had a new class of general intelligences enter the labor market.
+Likes: 919 | Views: 59,124 | Like rate: 1.6%
+[[https://x.com/whitfill_parker/status/2036219748221067372][View on X]]
+
+*** @sebkrier RT @rohinmshah (Mon Mar 23 23:33) [discovered]
+"Just read the chain of thought" is one of our best safety techniques. Why does it work? Because models can only think opaquely...
+Likes: 339 | Views: 21,193 | Like rate: 1.6%
+[[https://x.com/rohinmshah/status/2036224961191506420][View on X]]
+
+*** @RyanPGreenblatt (Sun Mar 22 15:36)
+Current LLMs are just not that "smart" (yet). They compensate with vast knowledge and very strong mostly-narrow heuristics: high crystallized and lower fluid smarts. In humans, crystallized and fluid are very correlated due to limited time and capacity, but AIs train for longer.
+Likes: 275 | Views: 18,875 | Like rate: 1.5%
+[[https://x.com/RyanPGreenblatt/status/2035742322873541068][View on X]]
+
+*** @JeffLadish (Sun Mar 22 17:34)
+AI researchers, especially people at labs: please look for evidence of models having *any* long-term goals. Don't just look for scheming-type long term goals. If AIs don't show any long term goals, then lack of scheming goals isn't much evidence either way about their alignment.
+Likes: 222 | Views: 15,302 | Like rate: 1.5%
+[[https://x.com/JeffLadish/status/2035772228999270630][View on X]]
+
+*** @ohlennart (Mon Mar 23 19:10)
+DC is healing. At a recent roundtable only one person questioned if the compute demand is real. And no one brought up AI being a bubble.
+Likes: 168 | Views: 14,154 | Like rate: 1.2%
+[[https://x.com/ohlennart/status/2036158626075709674][View on X]]
+
+*** @Jsevillamol (Mon Mar 23 19:56)
+Internalizing that companies spend much more compute in experiments than training runs has been one of the biggest updates for how I think about AI in the last two years.
+Likes: 55 | Views: 4,978 | Like rate: 1.1%
+[[https://x.com/Jsevillamol/status/2036170155139428857][View on X]]
+
+*** @willmacaskill (Mon Mar 23 20:42)
+Due to Claude's Constitution and OpenAI's model spec, more people are paying attention to the characters of the AIs that companies are building. Should AIs be wholly obedient, or have their own ethical code? What should they refuse to help with?
+Likes: 61 | Views: 5,510 | Like rate: 1.1%
+[[https://x.com/willmacaskill/status/2036181719062290558][View on X]]
+
+*** @sebkrier RT @HopmanMia (Mon Mar 23 22:35) [discovered]
+New paper: "Evaluating and Understanding Scheming Propensity in LLM Agents" — studying when and why LLM agents covertly pursue goals.
+Likes: 56 | Views: 6,221 | Like rate: 0.9%
+[[https://x.com/HopmanMia/status/2036210331392040990][View on X]]
+
+*** @ben_j_todd (Sun Mar 22 14:29)
+New post: Do we already have AGI? According to the most prominent definitions, no...
+Likes: 117 | Views: 16,472 | Like rate: 0.7%
+[[https://x.com/ben_j_todd/status/2035725628780003757][View on X]]
+
+*** @dwarkesh_sp (Mon Mar 23 15:00) [discovered]
+AI has solved 50 Erdos problems in the last year. But on a wider sweep of problems, the models' success rate is only about 1-2%: labs have just been publishing the wins. Terence Tao thinks the models are currently at the level of a trustworthy grad student.
+Likes: 692 | Views: 119,409 | Like rate: 0.6%
+[[https://x.com/dwarkesh_sp/status/2036095632746983436][View on X]]
+
+*** @EricLevitz (Mon Mar 23 13:57) [discovered]
+Social media undermined expert authority, democratized public debate, and steered individuals into evermore bespoke conceptions of reality. But AI could reverse these trends. LLMs appear to be a "converging" and "technocratizing" technology.
+Likes: 109 | Views: 31,882 | Like rate: 0.3%
+[[https://x.com/EricLevitz/status/2036079967830716480][View on X]]
+
+** Vetted accounts
+- @dwarkesh_sp — *10/10, added.* AI podcast host (201K). Deep trajectory/compute/economics analysis. Perfect fit.
+- @sebkrier — *9/10, added.* AI economics, diffusion, irreproducibility thesis (21K). Very high signal.
+- @cherylwoooo — *9/10, added.* Epoch researcher. Compute allocation analysis. Auto-added.
+- @datagenproc — *9/10, added.* Epoch researcher. Compute distribution. Auto-added.
+- @So8res — *8/10, added.* Nate Soares/MIRI (11K). Alignment, x-risk, unintended drives.
+- @EricLevitz — *6/10, borderline.* Excellent AI analysis but ~70% non-AI political content.
+
+** Accounts with nothing notable
+@ajeya_cotra, @ChadJonesEcon, @danwilliamsphil, @HjalmarWijk, @joel_bkr, @lukeprog, @MKinniment
+
+* ai-tools
+** Notable
+
+*** @simonw (Tue Mar 24 04:08)
+Turns out you can run enormous Mixture-of-Experts on Mac hardware without fitting the whole model in RAM by streaming a subset of expert weights from SSD for each generated token. Kimi 2.5 is 1T, but only 32B active so fits 96GB.
+Likes: 1,883 | Views: 134,979 | Like rate: 1.4%
+[[https://x.com/simonw/status/2036294026438254783][View on X]]
+
+*** @steipete (Mon Mar 23 23:01)
+Working on automating our whole release pipeline (gotta protect myself from mistakes) and ran into some limits of GitHub's free tier. From asking to "yes ofc we sponsor you": 5 min. Kudos, @github!
+Likes: 2,444 | Views: 184,484 | Like rate: 1.3%
+[[https://x.com/steipete/status/2036216692750295442][View on X]]
+
+*** @bcherny (Tue Mar 24 03:38)
+Little known fact, the Anthropic Labs team shipped: MCP, Skills, Claude Desktop app, Claude Code. It was just a few of us, shipping fast, trying to keep pace with what the model was capable of.
+Likes: 5,712 | Views: 503,873 | Like rate: 1.1%
+[[https://x.com/bcherny/status/2036286592089022699][View on X]]
+
+*** @steipete (Tue Mar 24 01:23)
+Pretty much every PR I review: 0) review <URL> [codex does its thing] 1) is the issue clear? [if not, trash PR] 2) is this the best possible fix? [95% of the time no] 3) continue discussion, usually rewrite PR. Most folks send too localized, small fixes.
+Likes: 993 | Views: 123,964 | Like rate: 0.8%
+[[https://x.com/steipete/status/2036252448399171717][View on X]]
+
+*** @Saboo_Shubham_ (Tue Mar 24 04:07)
+OpenClaw biggest update: per-agent reasoning controls. Dwight gets deep thinking for research. Kelly stays on fast mode for drafts. One config line per agent. Ross reviews every PR — used to mass-approve, now does proper line-by-line reviews.
+Likes: 82 | Views: 10,860 | Like rate: 0.8%
+[[https://x.com/Saboo_Shubham_/status/2036293884263944460][View on X]]
+
+*** @bcherny RT @noahzweben (Tue Mar 24 04:37)
+Use /schedule to create recurring cloud-based jobs for Claude, directly from the terminal. We use these internally to automate tasks.
+Likes: 3,762 | Views: 708,705 | Like rate: 0.5%
+[[https://x.com/noahzweben/status/2036301428491530553][View on X]]
+
+*** @badlogicgames (Mon Mar 23 23:41)
+Classifier to identify clanker GitHub accounts. Who's building this? I'd pay. (Also: "100% working filter for clanker accounts: if they mention .js anywhere, they are a clanker.")
+Likes: 64 | Views: 21,436 | Like rate: 0.3%
+[[https://x.com/badlogicgames/status/2036226796270604606][View on X]]
+
+*** @itsolelehmann (Mon Mar 23 20:59)
+Vibe coding has a massive blind spot: we're shipping code 100x faster with Claude Code, Codex, Cursor, but the tooling to catch what breaks after you ship hasn't kept up at all.
+Likes: 36 | Views: 10,751 | Like rate: 0.3%
+[[https://x.com/itsolelehmann/status/2036185977912435175][View on X]]
+
+** Vetted accounts
+- @championswimmer — *7/10, added.* Practical AI coding critique. ~60% AI content, honest takes on Claude sprawl and refactoring.
+- @0xSero — *7/10, added.* Local model orchestration (vllm-studio, Parchi), 262B models locally. Some hype but substantive.
+
+** Accounts with nothing notable
+@alvinsng, @bentossell, @boringmarketer, @chasing_next, @intellectronica, @NickADobos, @petergyang, @RayFernando1337, @thdxr, @trq212

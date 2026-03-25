@@ -118,7 +118,6 @@ The extras come with their own manuals and user options: everything is documente
   - [[#org-indent-pixel][org-indent-pixel]]
   - [[#org-tidy][org-tidy]]
   - [[#org-appear][org-appear]]
-  - [[#org-table-wrap][org-table-wrap]]
   - [[#face-remap][face-remap]]
   - [[#modus-themes][modus-themes]]
   - [[#modus-themes-extras][modus-themes-extras]]
@@ -2313,19 +2312,6 @@ CLOCK: [2023-11-05 Sun 13:34]--[2023-11-05 Sun 13:59] =>  0:25
   :hook org-mode-hook)
 #+end_src
 
-** =org-table-wrap=
-:PROPERTIES:
-:ID:       0103D200-0E3E-4CCB-87D7-F86D41437497
-:END:
-
-/[[https://github.com/benthamite/org-table-wrap][org-table-wrap]] provides visual word-wrapping for Org mode tables that overflow the window width, using display overlays without modifying the buffer./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package org-table-wrap
-  :after org
-  :hook org-mode-hook)
-#+end_src
-
 ** =face-remap=
 :PROPERTIES:
 :ID:       A999E839-CB99-4BC3-BB40-962B17683EDE
@@ -3020,6 +3006,14 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
                ("l" . next-line)))
   (with-eval-after-load 'simple
     (bind-keys :map special-mode-map
+               ("k" . previous-line)
+               ("l" . next-line)))
+  (with-eval-after-load 'slack
+    (bind-keys :map slack-message-buffer-mode-map
+               ("k" . previous-line)
+               ("l" . next-line)))
+  (with-eval-after-load 'slack
+    (bind-keys :map slack-activity-feed-buffer-mode-map
                ("k" . previous-line)
                ("l" . next-line)))
   (with-eval-after-load 'wasabi
@@ -5136,7 +5130,12 @@ CLOCK: [2021-05-20 Thu 14:23]--[2021-05-20 Thu 14:32] =>  0:09
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package ace-link-extras
-  :after ace-link)
+  :after ace-link
+  :config
+  (dolist (mode '(slack-message-buffer-mode
+                  slack-thread-message-buffer-mode
+                  slack-activity-feed-buffer-mode))
+    (push (list 'ace-link-extras-slack mode) ace-link-major-mode-actions)))
 #+end_src
 
 * date & time
@@ -8843,7 +8842,8 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   ("C-c c" . claude-code-command-map)
 
   :hook
-  (claude-code-process-environment-functions . monet-start-server-function))
+  (claude-code-process-environment-functions . monet-start-server-function)
+  (claude-code-process-environment-functions . claude-code-extras--account-env))
 #+end_src
 
 ** =claude-code-extras=
@@ -8861,6 +8861,8 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (claude-code-extras-sync-theme t)
   ;; copilot support is buggy; needs more work
   (claude-code-extras-copilot-enabled nil)
+  (claude-code-extras-accounts '(("personal" . "~/.claude-personal")
+                                 ("work"     . "~/.claude-work")))
   :config
   (with-eval-after-load 'debug
     (bind-key "D" #'claude-code-extras-debug-backtrace debugger-mode-map)))
@@ -13046,21 +13048,32 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
         :map slack-thread-message-buffer-mode-map
         ("d" . slack-thread-show-or-create)
         ("e" . slack-message-edit)
-        ("k" . slack-buffer-goto-prev-message)
-        ("l" . slack-buffer-goto-next-message)
         ("o" . slack-chat-org-capture)
         ("q" . files-extras-kill-other-buffer)
         ("r" . slack-message-add-reaction)
         ("R" . slack-message-remove-reaction)
         ("z" . slack-message-write-another-buffer)
-        :map slack-message-buffer-mode-map
+        :map slack-activity-feed-buffer-mode-map
+        ("," . slack-activity-feed-goto-prev)
+        ("." . slack-activity-feed-goto-next)
+        ("R" . slack-message-remove-reaction)
         ("d" . slack-thread-show-or-create)
         ("e" . slack-message-edit)
         ("k" . slack-buffer-goto-prev-message)
         ("l" . slack-buffer-goto-next-message)
         ("o" . slack-chat-org-capture)
         ("r" . slack-message-add-reaction)
+        ("z" . slack-message-write-another-buffer)
+        :map slack-message-buffer-mode-map
+        ("," . slack-buffer-goto-prev-message)
+        ("." . slack-buffer-goto-next-message)
         ("R" . slack-message-remove-reaction)
+        ("d" . slack-thread-show-or-create)
+        ("e" . slack-message-edit)
+        ("k" . slack-buffer-goto-prev-message)
+        ("l" . slack-buffer-goto-next-message)
+        ("o" . slack-chat-org-capture)
+        ("r" . slack-message-add-reaction)
         ("z" . slack-message-write-another-buffer)
         :map slack-message-compose-buffer-mode-map
         ("s-c" . slack-message-send-from-buffer)

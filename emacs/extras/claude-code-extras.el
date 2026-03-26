@@ -416,6 +416,78 @@ bound by `claude-code-extras--start-with-account'."
                                      nil nil #'string=)))
     (list (format "CLAUDE_CONFIG_DIR=%s" (expand-file-name config-dir)))))
 
+(defun claude-code-extras--sync-account-config (account)
+  "Sync shared state into ACCOUNT's `.claude.json'.
+Merges the `projects' key from the canonical `~/.claude.json' and
+all account configs so folder trust decisions are available
+everywhere.  Without this, each account's config dir looks like a
+fresh install and re-prompts for folder trust."
+  (when-let* ((config-dir (alist-get account claude-code-extras-accounts
+                                     nil nil #'string=))
+              (target-path (expand-file-name
+                            ".claude.json" (expand-file-name config-dir))))
+    (condition-case err
+        (let* ((target (claude-code-extras--read-claude-json target-path))
+               (merged (claude-code-extras--collect-all-projects)))
+          (when (and target (> (hash-table-count merged) 0))
+            (puthash "projects" merged target)
+            (claude-code-extras--write-claude-json target-path target)))
+      (error
+       (message "claude-code-extras: failed to sync account config: %S" err)))))
+
+(defun claude-code-extras--read-claude-json (path)
+  "Read and parse the JSON file at PATH.
+Return a hash table, or nil if PATH does not exist or is invalid."
+  (when (file-exists-p path)
+    (condition-case nil
+        (with-temp-buffer
+          (insert-file-contents path)
+          (json-parse-buffer))
+      (error nil))))
+
+(defun claude-code-extras--collect-all-projects ()
+  "Collect and merge `projects' from all `.claude.json' sources.
+Reads the canonical `~/.claude.json' first, then each account
+config.  For duplicate keys, prefers entries where
+`hasTrustDialogAccepted' is true."
+  (let ((merged (make-hash-table :test #'equal))
+        (paths (claude-code-extras--all-claude-json-paths)))
+    (dolist (path paths)
+      (when-let* ((data (claude-code-extras--read-claude-json path))
+                  (projects (gethash "projects" data)))
+        (when (hash-table-p projects)
+          (maphash (lambda (key val)
+                     (claude-code-extras--merge-project merged key val))
+                   projects))))
+    merged))
+
+(defun claude-code-extras--all-claude-json-paths ()
+  "Return paths to the canonical and all account `.claude.json' files."
+  (cons (expand-file-name ".claude.json" "~")
+        (mapcar (lambda (entry)
+                  (expand-file-name ".claude.json"
+                                    (expand-file-name (cdr entry))))
+                claude-code-extras-accounts)))
+
+(defun claude-code-extras--merge-project (table key val)
+  "Merge project VAL under KEY into TABLE.
+Prefers entries where `hasTrustDialogAccepted' is true."
+  (let ((existing (gethash key table)))
+    (cond
+     ((not existing)
+      (puthash key val table))
+     ((and (hash-table-p val)
+           (eq (gethash "hasTrustDialogAccepted" val) t)
+           (not (eq (gethash "hasTrustDialogAccepted" existing) t)))
+      (puthash key val table)))))
+
+(defun claude-code-extras--write-claude-json (path data)
+  "Write DATA as pretty-printed JSON to PATH."
+  (require 'json)
+  (with-temp-file path
+    (insert (json-serialize data))
+    (json-pretty-print-buffer)))
+
 (defun claude-code-extras--load-account ()
   "Load the current account from `claude-code-extras-account-file'.
 Return the account name, or nil if the file is missing or stale."
@@ -467,12 +539,16 @@ persists the selection.  New sessions will use this account."
   (let ((account (claude-code-extras--prompt-account)))
     (when account
       (claude-code-extras--save-account account)
+      (claude-code-extras--sync-account-config account)
       (message "Switched to account: %s" account))))
 
 (defun claude-code-extras--start-with-account ()
   "Start a new Claude session using the active account."
   (let ((claude-code-extras--pending-account
          (claude-code-extras--resolve-account)))
+    (when claude-code-extras--pending-account
+      (claude-code-extras--sync-account-config
+       claude-code-extras--pending-account))
     (claude-code)))
 
 ;;;###autoload

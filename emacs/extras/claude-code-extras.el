@@ -133,6 +133,11 @@ changed by `claude-code-extras-switch-account'.")
 Dynamically bound by `claude-code-extras--start-with-account';
 read by `claude-code-extras--account-env'.")
 
+(defvar-local claude-code-extras--buffer-account nil
+  "Account name that was active when this buffer's session started.
+Set by `claude-code-extras--capture-buffer-account' via
+`claude-code-start-hook'.")
+
 (defconst claude-code-extras--hook-wrapper
   (expand-file-name
    "bin/claude-code-hook-wrapper"
@@ -1039,6 +1044,19 @@ Also starts status polling if it is not already active."
     (unless claude-code-extras--status-timer
       (claude-code-extras-start-status-polling))
     (doom-modeline-set-modeline 'claude-code)))
+
+(defun claude-code-extras--capture-buffer-account ()
+  "Store the pending account name as a buffer-local variable.
+Called from `claude-code-start-hook', which runs inside the new
+buffer within the dynamic scope of
+`claude-code-extras--start-with-account'."
+  (when claude-code-extras--pending-account
+    (setq claude-code-extras--buffer-account
+          claude-code-extras--pending-account)))
+
+(defun claude-code-extras-buffer-account ()
+  "Return the account name for the current buffer, or nil."
+  claude-code-extras--buffer-account)
 
 ;;;;; Copilot integration
 
@@ -2308,6 +2326,7 @@ there with the backtrace prompt passed as a CLI argument."
 (add-hook 'kill-buffer-query-functions #'claude-code-extras-protect-buffer)
 (add-hook 'claude-code-start-hook #'claude-code-extras-setup-kill-on-exit)
 (add-hook 'claude-code-start-hook #'claude-code-extras-start-status-polling)
+(add-hook 'claude-code-start-hook #'claude-code-extras--capture-buffer-account)
 (add-hook 'claude-code-start-hook #'claude-code-extras-set-modeline)
 (add-hook 'claude-code-start-hook #'claude-code-extras--refresh-display-names)
 (add-hook 'kill-buffer-hook #'claude-code-extras-stop-status-polling)

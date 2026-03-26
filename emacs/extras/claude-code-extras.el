@@ -99,6 +99,15 @@ prompts and accepted text is sent to the terminal correctly."
   :type 'boolean
   :group 'claude-code-extras)
 
+(defcustom claude-code-extras-use-accounts nil
+  "When non-nil, enable the multi-account setup.
+This gates all account-related functionality: session-start
+account resolution, `CLAUDE_CONFIG_DIR' injection, and
+`claude-code-extras-switch-account'.  Requires
+`claude-code-extras-accounts' to be configured."
+  :type 'boolean
+  :group 'claude-code-extras)
+
 (defcustom claude-code-extras-accounts nil
   "Alist of account names to `CLAUDE_CONFIG_DIR' paths.
 Each entry is (NAME . CONFIG-DIR).  When non-nil,
@@ -462,6 +471,8 @@ persisted account exists, prompts once and saves the selection."
 Prompts for an account from `claude-code-extras-accounts' and
 persists the selection.  New sessions will use this account."
   (interactive)
+  (unless claude-code-extras-use-accounts
+    (user-error "Multi-account support is disabled; set `claude-code-extras-use-accounts' to t"))
   (unless claude-code-extras-accounts
     (user-error "No accounts configured in `claude-code-extras-accounts'"))
   (let ((account (claude-code-extras--prompt-account)))
@@ -471,8 +482,10 @@ persists the selection.  New sessions will use this account."
 
 (defun claude-code-extras--start-with-account ()
   "Start a new Claude session using the active account."
-  (let ((claude-code-extras--pending-account
-         (claude-code-extras--resolve-account)))
+  (if claude-code-extras-use-accounts
+      (let ((claude-code-extras--pending-account
+             (claude-code-extras--resolve-account)))
+        (claude-code))
     (claude-code)))
 
 ;;;###autoload

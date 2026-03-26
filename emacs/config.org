@@ -8861,6 +8861,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (claude-code-extras-sync-theme t)
   ;; copilot support is buggy; needs more work
   (claude-code-extras-copilot-enabled nil)
+  (claude-code-extras-use-accounts t)
   (claude-code-extras-accounts '(("personal" . "~/.claude-personal")
                                  ("work"     . "~/.claude-work")))
   :config

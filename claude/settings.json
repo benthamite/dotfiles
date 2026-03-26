@@ -64,35 +64,13 @@
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/claude/hooks/load-elisp-after-edit.sh",
-            "timeout": 10
+            "timeout": 30
           }
         ]
       }
     ],
-    "Notification": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/claude/hooks/fire-and-forget.sh ~/My\\ Drive/dotfiles/claude/hooks/elpaca-run.sh claude-code bin/claude-code-hook-wrapper notification",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/claude/hooks/fire-and-forget.sh ~/My\\ Drive/dotfiles/claude/hooks/elpaca-run.sh claude-code bin/claude-code-hook-wrapper stop",
-            "timeout": 5
-          }
-        ]
-      }
-    ]
+    "Notification": [],
+    "Stop": []
   },
   "statusLine": {
     "type": "command",

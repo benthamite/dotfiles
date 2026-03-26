@@ -18,22 +18,36 @@ fi
 
 # Check staged files
 STAGED=$(git diff --cached --name-only 2>/dev/null || true)
-if [ -z "$STAGED" ]; then
-  exit 0
-fi
 
 HAS_CLAUDE_CHANGES=false
 HAS_README=false
-while IFS= read -r file; do
-  case "$file" in
-    claude/skills/*|claude/hooks/*|claude/settings*.json|claude/CLAUDE.md)
+if [ -n "$STAGED" ]; then
+  while IFS= read -r file; do
+    case "$file" in
+      claude/skills/*|claude/hooks/*|claude/settings*.json|claude/CLAUDE.md)
+        HAS_CLAUDE_CHANGES=true
+        ;;
+      claude/README.org)
+        HAS_README=true
+        ;;
+    esac
+  done <<< "$STAGED"
+fi
+
+# Also catch git add ... && git commit in a single bash command.
+# At hook-fire time git diff --cached doesn't see the new files yet.
+if [ "$HAS_CLAUDE_CHANGES" = false ]; then
+  if echo "$COMMAND" | grep -qE '\bgit\s+add\b'; then
+    if echo "$COMMAND" | grep -qE 'claude/(skills|hooks|settings|CLAUDE)'; then
       HAS_CLAUDE_CHANGES=true
-      ;;
-    claude/README.org)
-      HAS_README=true
-      ;;
-  esac
-done <<< "$STAGED"
+    fi
+  fi
+fi
+if [ "$HAS_README" = false ]; then
+  if echo "$COMMAND" | grep -qF 'README.org'; then
+    HAS_README=true
+  fi
+fi
 
 if [ "$HAS_CLAUDE_CHANGES" = false ] || [ "$HAS_README" = true ]; then
   exit 0

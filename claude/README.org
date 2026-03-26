@@ -391,7 +391,7 @@ On the first Edit or Write in a project, moves Claude Code's memory directory fr
 :ID:       F4D78958-4194-4DB3-9624-C04EC7790960
 :END:
 
-Blocks =git commit= when files in =claude/= (skills, hooks, settings, CLAUDE.md) are staged but =claude/README.org= is not. Ensures documentation stays in sync with configuration changes.
+Blocks =git commit= when files in =claude/= (skills, hooks, settings, CLAUDE.md) are staged but =claude/README.org= is not. Also detects when =git add= and =git commit= appear in the same bash command (which would otherwise bypass the staged-file check). Ensures documentation stays in sync with configuration changes.
 
 ** require-doc-update.sh (PreToolUse)
 :PROPERTIES:

@@ -16,18 +16,16 @@ user-invocable: false
 
 # Rebuilding elpaca packages after changes
 
-After changing an extras `.el` file, always rebuild the `.elc` and reload in the running session yourself — never ask the user to do it. Steps:
+A PostToolUse hook (`load-elisp-after-edit.sh`) automatically rebuilds and reloads the elpaca package whenever you edit a `.el` file under `elpaca/sources/`. It runs:
 
-```bash
-ELPACA=/Users/pablostafforini/.config/emacs-profiles/$(emacsclient -e 'init-current-profile' | tr -d '"')/elpaca
-# Byte-compile from the repo source
-emacs --batch \
-  --eval "(dolist (dir (file-expand-wildcards \"$ELPACA/builds/*/\")) (add-to-list 'load-path dir))" \
-  --eval "(push \"$PWD/emacs/extras\" load-path)" \
-  --eval "(byte-compile-file \"$ELPACA/sources/dotfiles/emacs/extras/PACKAGE.el\")" \
-  2>&1
-# Copy the .elc to the builds directory
-cp "$ELPACA/sources/dotfiles/emacs/extras/PACKAGE.elc" "$ELPACA/builds/PACKAGE/PACKAGE.elc"
-# Reload in the running session
-emacsclient -e '(load-file "$ELPACA/sources/dotfiles/emacs/extras/PACKAGE.el")'
+```elisp
+(elpaca-rebuild PKG t)
+(elpaca-wait)
+(elpaca-extras-reload PKG)
 ```
+
+This is synchronous — it byte-compiles the source into `elpaca/builds/`, waits for completion, then reloads all features via `load`. The running Emacs always has the latest byte-compiled code, matching what the user gets after a restart.
+
+**You must never use `load-file`, `eval-buffer`, `eval-defun`, or manual byte-compile commands to reload Elisp.** The hook handles it. If you find yourself reaching for these, something is wrong.
+
+After the hook runs, **verify the change works** via a small targeted `emacsclient -e` expression before asking the user to test. Simulate the actual user action and check edge cases (e.g., cursor on different buffer positions).

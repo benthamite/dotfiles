@@ -11,9 +11,9 @@ Pablo uses two Google accounts, which requires separate MCP servers for each.
 
 ## Servers by account
 
-### pablo@epoch.ai
+### work account
 
-**google-workspace** (User MCP in `~/.claude.json`)
+**google-workspace-epoch** (User MCP in `~/.claude.json`)
 - **Package:** `google-workspace-mcp` via `uvx`
 - **Covers:** Gmail, Calendar, Docs, Drive, Sheets, Slides
 - **OAuth project:** `claude-code-gmail-490520` (client ID `573541886075-...`)
@@ -24,25 +24,25 @@ Pablo uses two Google accounts, which requires separate MCP servers for each.
 - **Known issue:** the PyPI package (v2.0.1) has a buggy entry point — `asyncio.run(mcp.run())` fails because `mcp.run()` is synchronous. The config uses `python3 -c "...mcp.run()"` to bypass this.
 - **Refresh token generation:** if the token expires or scopes need updating, run the OAuth flow via `google_auth_oauthlib.flow.InstalledAppFlow` with the desired scopes (see below).
 
-**gmail-epoch** (project-scoped to Epoch, defined in `~/.claude.json` under `projects./Users/pablostafforini/My Drive/Epoch`)
-- **Package:** `workspace-mcp` via `uvx` (same package as `google-workspace`, but configured with `--tools gmail` and different credentials)
+**gmail-epoch-triage** (project-scoped to Epoch, defined in `~/.claude.json` under `projects./Users/pablostafforini/My Drive/Epoch`)
+- **Package:** `workspace-mcp` via `uvx` (same package as `google-workspace-epoch`, but configured with `--tools gmail` and different credentials)
 - **Covers:** Gmail only
-- **OAuth project:** same as `google-workspace` (`claude-code-gmail-490520`)
+- **OAuth project:** same as `google-workspace-epoch` (`claude-code-gmail-490520`)
 - **Credentials:** stored in `~/.gmail-mcp-epoch/credentials/` as `{email}.json` files (one per account). The directory is set via `WORKSPACE_MCP_CREDENTIALS_DIR` in the MCP env config.
 - **Accounts:** `email-triage@epoch.ai` (the email triage bot account). Legacy credential files (`credentials-bot.json`, `credentials-pablo.json`) also exist in `~/.gmail-mcp-epoch/` but are not used by the MCP server.
 - **GCP OAuth keys:** `~/.gmail-mcp-epoch/gcp-oauth.keys.json`
-- **Not redundant:** retained for `email-triage@epoch.ai` access, which `google-workspace` doesn't cover.
-- **Known issue (port conflict):** both `google-workspace` and `gmail-epoch` run the same `workspace-mcp` package, which starts an OAuth callback server on port 8000. Whichever MCP process starts first claims the port; the other's built-in OAuth flow will always fail with "Invalid or expired OAuth state parameter" because the callback goes to the wrong process. **Fix:** never rely on the built-in OAuth flow for `gmail-epoch`. Instead, generate tokens manually (see below) and write them to the credentials directory.
+- **Not redundant:** retained for `email-triage@epoch.ai` access, which `google-workspace-epoch` doesn't cover.
+- **Known issue (port conflict):** both `google-workspace-epoch` and `gmail-epoch-triage` run the same `workspace-mcp` package, which starts an OAuth callback server on port 8000. Whichever MCP process starts first claims the port; the other's built-in OAuth flow will always fail with "Invalid or expired OAuth state parameter" because the callback goes to the wrong process. **Fix:** never rely on the built-in OAuth flow for `gmail-epoch-triage`. Instead, generate tokens manually (see below) and write them to the credentials directory.
 
-### pablo.stafforini@gmail.com
+### personal account
 
-**google-docs** (User MCP in `~/.claude.json`)
+**google-docs-personal** (User MCP in `~/.claude.json`)
 - **Package:** `@a-bonus/google-docs-mcp` via `npx`
 - **Covers:** Docs (and possibly Drive/Sheets — the package has broad tools)
 - **OAuth client:** `831988183270-...` (different GCP project)
 - **Config dir:** `~/.config/google-docs-mcp/`
 
-**google-calendar** (User MCP in `~/.claude.json`)
+**google-calendar-personal** (User MCP in `~/.claude.json`)
 - **Package:** `@cocal/google-calendar-mcp` via `npx`
 - **Covers:** Calendar only
 - **OAuth client:** `896560031613-...` (yet another GCP project)
@@ -56,7 +56,7 @@ Pablo uses two Google accounts, which requires separate MCP servers for each.
 
 ## Enabled APIs on `claude-code-gmail-490520`
 
-The following APIs must be enabled for the `google-workspace` server to work:
+The following APIs must be enabled for the `google-workspace-epoch` server to work:
 - Gmail API
 - Google Calendar API
 - Google Drive API
@@ -67,7 +67,7 @@ Enable at: Google Cloud Console > APIs & Services > Library (project `claude-cod
 
 ## Generating a new refresh token
 
-### google-workspace (pablo@epoch.ai)
+### google-workspace-epoch (pablo@epoch.ai)
 
 If the token expires or you need to add scopes:
 
@@ -99,7 +99,7 @@ print('REFRESH_TOKEN=' + creds.refresh_token)
 
 Then update `GOOGLE_WORKSPACE_REFRESH_TOKEN` in `~/My Drive/dotfiles/shell/.zshenv-secrets`.
 
-### gmail-epoch (email-triage@epoch.ai)
+### gmail-epoch-triage (email-triage@epoch.ai)
 
 The built-in OAuth flow does not work due to the port conflict (see known issue above). Generate tokens manually using `InstalledAppFlow` on a different port, then write the result to the credentials directory.
 
@@ -139,7 +139,7 @@ print('Credentials saved. Sign in as email-triage@epoch.ai in the browser.')
 "
 ```
 
-After running, restart Claude Code so the `gmail-epoch` MCP server picks up the new credentials.
+After running, restart Claude Code so the `gmail-epoch-triage` MCP server picks up the new credentials.
 
 ## Troubleshooting
 
@@ -148,5 +148,5 @@ After running, restart Claude Code so the `gmail-epoch` MCP server picks up the 
 - **404 "File not found"**: Google Drive returns 404 (not 403) when you lack access; check sharing settings on the document.
 - **Server not appearing in `/mcp`**: MCP servers go in `~/.claude.json`, NOT `~/.claude/settings.json`. The latter is for Claude Code settings (hooks, permissions, theme).
 - **`ValueError: a coroutine was expected`**: the `google-workspace-mcp` entry point bug. Use the `python3 -c` invocation that calls `mcp.run()` directly.
-- **"Invalid or expired OAuth state parameter" on `gmail-epoch`**: this is the port 8000 conflict between `google-workspace` and `gmail-epoch`. Do NOT retry the built-in OAuth flow; it will never work. Instead, generate tokens manually on port 9090 (see "gmail-epoch" section above).
-- **gmail-epoch says "ACTION REQUIRED: Google Authentication Needed"**: the credential file is missing or the refresh token is expired. Regenerate using the manual flow above and write to `~/.gmail-mcp-epoch/credentials/{email}.json`. Then restart Claude Code.
+- **"Invalid or expired OAuth state parameter" on `gmail-epoch-triage`**: this is the port 8000 conflict between `google-workspace-epoch` and `gmail-epoch-triage`. Do NOT retry the built-in OAuth flow; it will never work. Instead, generate tokens manually on port 9090 (see "gmail-epoch-triage" section above).
+- **gmail-epoch-triage says "ACTION REQUIRED: Google Authentication Needed"**: the credential file is missing or the refresh token is expired. Regenerate using the manual flow above and write to `~/.gmail-mcp-epoch/credentials/{email}.json`. Then restart Claude Code.

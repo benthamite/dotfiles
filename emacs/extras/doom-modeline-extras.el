@@ -149,6 +149,7 @@ Uses strikethrough to indicate the cost is not actually charged."
 (declare-function claude-code-extras-toggle-alert "claude-code-extras")
 (declare-function claude-code-extras--session-name "claude-code-extras")
 (declare-function claude-code-extras-display-name "claude-code-extras")
+(declare-function claude-code-extras-buffer-account "claude-code-extras")
 (defvar claude-code-extras--status-data)
 (defvar claude-code-extras-alert-on-ready)
 
@@ -180,6 +181,7 @@ Uses strikethrough to indicate the cost is not actually charged."
 (defun doom-modeline-extras--format-claude-status ()
   "Assemble the Claude Code modeline string from status data."
   (let ((model (claude-code-extras-status-model))
+        (account (claude-code-extras-buffer-account))
         (tokens (claude-code-extras-status-token-count))
         (cost (claude-code-extras-status-cost))
         (pct (claude-code-extras-status-context-percent))
@@ -194,6 +196,7 @@ Uses strikethrough to indicate the cost is not actually charged."
                  'face '(bold doom-modeline-buffer-major-mode)
                  'help-echo "Claude Code session")
      (doom-modeline-extras--format-model model)
+     (doom-modeline-extras--format-account account)
      (when (bound-and-true-p doom-modeline-extras-claude-code-tokens)
        (doom-modeline-extras--format-tokens tokens))
      (doom-modeline-extras--format-cost cost)
@@ -219,6 +222,13 @@ Uses strikethrough to indicate the cost is not actually charged."
   "Format MODEL name with separator."
   (when model
     (concat " | " (propertize model 'help-echo "Model"))))
+
+(defun doom-modeline-extras--format-account (account)
+  "Format ACCOUNT name with separator."
+  (when account
+    (concat " | " (propertize account
+                               'face 'doom-modeline-buffer-path
+                               'help-echo "Claude account"))))
 
 (defun doom-modeline-extras--format-tokens (tokens)
   "Format TOKENS as a human-readable string with separator."

@@ -148,6 +148,8 @@ available, it displays multiple pipe-separated fields:
 
 - *Session name*: shown in bold, extracted from the buffer name.
 - *Model*: the Claude model in use (e.g., "opus", "sonnet").
+- *Account*: the Claude account used for this session (e.g., "personal",
+  "work"), when multi-account support is configured.
 - *Token count*: formatted compactly (e.g., "12.3k", "1.5M").
 - *Cost*: shown as a dollar amount, optionally with strikethrough on
   subscription plans ([[#h:claude-code-cost][Claude Code cost display]]).
@@ -164,6 +166,7 @@ Before status data arrives, the segment displays only the session name.
 
 The formatting is handled by several internal helper functions:
 ~doom-modeline-extras--format-model~,
+~doom-modeline-extras--format-account~,
 ~doom-modeline-extras--format-tokens~,
 ~doom-modeline-extras--format-cost~,
 ~doom-modeline-extras--format-context-percent~,

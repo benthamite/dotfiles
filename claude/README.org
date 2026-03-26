@@ -97,7 +97,7 @@ Describes the repository layout (the elpaca clone syncs automatically from Googl
 :ID:       EBC619A2-2402-43B0-8FBA-8A68EE29BB7D
 :END:
 
-Emacs Lisp coding standards: atomic functions, helper placement, docstring format, and elpaca rebuild patterns.
+Emacs Lisp coding standards: atomic functions, helper placement, docstring format. Documents the elpaca rebuild-wait-reload process enforced by the =load-elisp-after-edit= hook and prohibits ad-hoc reload mechanisms (=load-file=, =eval-buffer=, =eval-defun=).
 
 ** Development skills
 :PROPERTIES:
@@ -405,7 +405,7 @@ Blocks =git commit= when =.el= files are staged but no =doc/*.org= or =README.or
 :CUSTOM_ID: h:load-elisp-after-edit
 :END:
 
-Fires on every Edit or Write of an =.el= file. Deletes any stale =.elc= in elpaca =builds/= (so Emacs won't prefer old bytecode), then loads the source file into the running Emacs session via =emacsclient=. Skips byte-compiled files and test files.
+Fires on every Edit or Write of an =.el= file under =elpaca/sources/=. Identifies the elpaca package (by matching the file's basename against package names for extras, or by source directory prefix for standalone packages), then runs =elpaca-rebuild= + =elpaca-wait= + =elpaca-extras-reload= synchronously via =emacsclient=. This byte-compiles the source into =elpaca/builds/=, waits for completion, and reloads all features — so the running Emacs always has the latest byte-compiled code, matching what the user gets after a restart. Skips byte-compiled files and test files.
 
 ** elpaca-run.sh (utility)
 :PROPERTIES:

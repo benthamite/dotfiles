@@ -98,9 +98,6 @@ The user option ~claude-code-extras-alert-sound~ specifies the path to the sound
 :CUSTOM_ID: h:account-options
 :END:
 
-#+vindex: claude-code-extras-use-accounts
-The user option ~claude-code-extras-use-accounts~ controls whether the multi-account setup is active. When nil (the default), all account-related functionality is disabled and sessions use the default Claude configuration. Set to ~t~ to enable account resolution, =CLAUDE_CONFIG_DIR= injection, and ~claude-code-extras-switch-account~. Requires ~claude-code-extras-accounts~ to be configured.
-
 #+vindex: claude-code-extras-accounts
 The user option ~claude-code-extras-accounts~ is an alist of =(NAME . CONFIG-DIR)= pairs for switching between multiple Claude OAuth accounts without re-authenticating. See [[#h:multi-account][Multi-account support]] for details and configuration examples. The default is ~nil~ (single-account mode).
 
@@ -185,14 +182,12 @@ Sessions are displayed by project name (extracted from the buffer name). When mu
 :CUSTOM_ID: h:multi-account
 :END:
 
-#+vindex: claude-code-extras-use-accounts
 #+vindex: claude-code-extras-accounts
-The multi-account feature is gated behind ~claude-code-extras-use-accounts~. When set to ~t~, each account in ~claude-code-extras-accounts~ maps to a separate =CLAUDE_CONFIG_DIR=, so OAuth credentials, settings, and memory are kept independent. This avoids the need to log out and back in when switching between accounts (e.g. personal and work).
+When ~claude-code-extras-accounts~ is non-nil, each account maps to a separate =CLAUDE_CONFIG_DIR=, so OAuth credentials, settings, and memory are kept independent. This avoids the need to log out and back in when switching between accounts (e.g. personal and work).
 
 Configure accounts as an alist of =(NAME . CONFIG-DIR)= pairs:
 
 #+begin_src emacs-lisp
-(setopt claude-code-extras-use-accounts t)
 (setopt claude-code-extras-accounts
         '(("personal" . "~/.claude-personal")
           ("work"     . "~/.claude-work")))

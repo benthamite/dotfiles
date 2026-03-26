@@ -426,7 +426,11 @@ bound by `claude-code-extras--start-with-account'."
 Merges the `projects' key from the canonical `~/.claude.json' and
 all account configs so folder trust decisions are available
 everywhere.  Without this, each account's config dir looks like a
-fresh install and re-prompts for folder trust."
+fresh install and re-prompts for folder trust.
+
+Only writes the file when the merged projects actually differ from
+what is already on disk, to avoid triggering file-change detection
+in running Claude Code sessions."
   (when-let* ((config-dir (alist-get account claude-code-extras-accounts
                                      nil nil #'string=))
               (target-path (expand-file-name
@@ -435,8 +439,11 @@ fresh install and re-prompts for folder trust."
         (let* ((target (claude-code-extras--read-claude-json target-path))
                (merged (claude-code-extras--collect-all-projects)))
           (when (and target (> (hash-table-count merged) 0))
-            (puthash "projects" merged target)
-            (claude-code-extras--write-claude-json target-path target)))
+            (let ((existing (gethash "projects" target)))
+              (unless (equal (json-serialize existing)
+                             (json-serialize merged))
+                (puthash "projects" merged target)
+                (claude-code-extras--write-claude-json target-path target)))))
       (error
        (message "claude-code-extras: failed to sync account config: %S" err)))))
 

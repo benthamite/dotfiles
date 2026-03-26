@@ -24,6 +24,10 @@
 
 - When modifying `.el` files in a package that has a `doc/` directory, also update the corresponding `.org` manual in `doc/` (hook-enforced). Use `/doc-elisp` to generate or update documentation.
 
+## Secrets
+
+- When reading secrets from `pass` or `.zshenv-secrets`, never echo or print them in the terminal or logs.
+
 ## Agents
 
 - Make liberal use of subagents and agent teams.

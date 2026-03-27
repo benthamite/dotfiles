@@ -290,14 +290,14 @@ Reads and searches Twitter/X content via the =twitterapi-io= MCP server. Support
 :ID:       F677671C-6C97-4BC6-B2F5-A4E0E2457C92
 :END:
 
-Fetches recent tweets from a named list of accounts, triages them against the list's description (used as a relevance rubric), and surfaces only notable content. Uses a shell script (=fetch-tweets.sh=) that curls the twitterapi.io REST API directly and extracts only the fields needed for triage (~130 chars/tweet), bypassing MCP tools whose raw JSON responses (~120K chars/account) would consume enormous context. Lists are stored in =~/.claude/skills/twitter-digest/lists/= and track the last-run timestamp to avoid re-surfacing old tweets. Digests are saved to =digests/= for archival. Discovered accounts (surfaced via retweets) are automatically vetted using the shared =twitter-vet= procedure and auto-added to the list if they score >= 7. Pairs with =/loop= for periodic digests.
+Fetches recent tweets from a named list of accounts, triages them against the list's description (used as a relevance rubric), and surfaces only notable content. Uses a shell script (=fetch-tweets.sh=) that curls the twitterapi.io REST API directly and extracts only the fields needed for triage (~130 chars/tweet), bypassing MCP tools whose raw JSON responses (~120K chars/account) would consume enormous context. Lists are stored in =~/.claude/skills/twitter-digest/lists/= and track the last-run timestamp to avoid re-surfacing old tweets. Digests are saved to =digests/= for archival. Discovered accounts (surfaced via retweets) are automatically vetted using the shared =twitter-vet= procedure and auto-added to the list if they score >= 7. Commits all changed files (digests, last-run timestamps, list updates, vet registry) at the end. Pairs with =/loop= for periodic digests.
 
 *** twitter-vet
 :PROPERTIES:
 :ID:       A7B3E1D4-5F92-4C8A-B6E0-9D2F4A1C7E53
 :END:
 
-Shared account vetting procedure used by =twitter-digest= and =twitter-discover=. Defines a two-phase evaluation: a free quick filter (follower bounds, bio relevance, tweet quality) and a full scoring pass (fetch 20 tweets, score 1-10 against the list's rubric). Accounts scoring above the threshold (default 7, overridable via =vet-threshold= frontmatter) are auto-added to the list; borderline scores are reported; low scores are skipped silently.
+Shared account vetting procedure used by =twitter-digest= and =twitter-discover=. Defines a two-phase evaluation: a free quick filter (follower bounds, bio relevance, tweet quality) and a full scoring pass (fetch 20 tweets, score 1-10 against the list's rubric). Accounts scoring above the threshold (default 7, overridable via =vet-threshold= frontmatter) are auto-added to the list; borderline scores are reported; low scores are skipped silently. Commits changed files (list updates, vet registry) when run standalone; defers to the caller's commit step when invoked from =twitter-digest=.
 
 *** twitter-discover
 :PROPERTIES:
@@ -412,7 +412,7 @@ Fires on every Edit or Write of an =.el= file under =elpaca/sources/=. Identifie
 :ID:       54F62C33-E882-4B75-A4F0-A8963E5AF345
 :END:
 
-Resolves the active elpaca profile dynamically (via =emacsclient -e 'init-current-profile'=) and runs a script from the specified elpaca package. Searches both =repos/= and =sources/= directories to handle different elpaca layouts. Used by the Notification and Stop hooks to invoke =claude-code-hook-wrapper= without hardcoding the profile name.
+Resolves the active elpaca profile dynamically (via =emacsclient -e 'init-current-profile'=) and runs a script from the specified elpaca package. Searches both =repos/= and =sources/= directories to handle different elpaca layouts. Used by the Notification and Stop hooks to invoke =claude-code-hook-wrapper= without hardcoding the profile name. The =emacsclient= call has a 5-second timeout to prevent hangs when the Emacs server is unresponsive.
 
 ** claude-code-hook-wrapper (Notification, Stop)
 :PROPERTIES:

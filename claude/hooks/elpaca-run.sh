@@ -3,7 +3,7 @@
 # Usage: elpaca-run.sh <package> <relative-path> [args...]
 # Searches repos/ then sources/ to handle different elpaca layouts.
 
-PROFILE=$(emacsclient -e 'init-current-profile' 2>/dev/null | tr -d '"')
+PROFILE=$(timeout 5 emacsclient -e 'init-current-profile' 2>/dev/null | tr -d '"')
 [ -z "$PROFILE" ] && exit 0
 
 ELPACA="$HOME/.config/emacs-profiles/$PROFILE/elpaca"

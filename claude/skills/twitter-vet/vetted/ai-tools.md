@@ -35,3 +35,5 @@
 ## Rejected (manual)
 
 ## Skipped (quick filter)
+- **@dexhorthy** (7, 2026-03-26) — CodeLayer/agent practitioner. "No vibes allowed" coding with Claude, system prompt red-teaming. ~55% AI tools content.
+- **@DavidKPiano** (6, 2026-03-26) — XState creator. Good plan mode insights but only ~40% AI tools content. Borderline.

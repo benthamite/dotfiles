@@ -37,3 +37,4 @@ description: Practical AI tool workflows, tips, and tutorials from practitioners
 - @Dimillian
 - @Prince_Canuma
 - @xeophon
+- @dexhorthy

@@ -106,7 +106,7 @@ Each entry is (NAME . CONFIG-DIR).  When non-nil,
 selection and sets `CLAUDE_CONFIG_DIR' accordingly so each account
 maintains its own OAuth credentials.
 
-Use `claude-code-extras-switch-account' to change the active account.
+Use `claude-code-extras-select-account' to change the active account.
 The selection persists in `claude-code-extras-account-file'.
 
 Example:
@@ -119,14 +119,14 @@ Example:
   (expand-file-name ".claude-current-account" "~")
   "File storing the name of the currently active Claude account.
 The file contains a single account name from `claude-code-extras-accounts'.
-Written by `claude-code-extras-switch-account', read at session start."
+Written by `claude-code-extras-select-account', read at session start."
   :type 'file
   :group 'claude-code-extras)
 
 (defvar claude-code-extras--current-account nil
   "Currently active Claude account name.
 Loaded from `claude-code-extras-account-file' on first use;
-changed by `claude-code-extras-switch-account'.")
+changed by `claude-code-extras-select-account'.")
 
 (defvar claude-code-extras--pending-account nil
   "Account name for the current `claude-code' invocation.
@@ -541,7 +541,7 @@ persisted account exists, prompts once and saves the selection."
           account))))
 
 ;;;###autoload
-(defun claude-code-extras-switch-account ()
+(defun claude-code-extras-select-account ()
   "Switch the active Claude account.
 Prompts for an account from `claude-code-extras-accounts' and
 persists the selection.  New sessions will use this account."

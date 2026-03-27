@@ -90,6 +90,16 @@ Format:
 - **@handle** (YYYY-MM-DD) — one-line reason
 ```
 
+## Committing changes
+
+After vetting is complete, commit all changed markdown files (list files, vet registry) in one commit:
+
+```bash
+git -C ~/My\ Drive/dotfiles add claude/skills/twitter-vet/vetted/ claude/skills/twitter-digest/lists/ && git -C ~/My\ Drive/dotfiles commit -m "twitter-vet: update <list-name> registry"
+```
+
+Only stage paths that actually changed. When called from twitter-digest, skip this — twitter-digest's Step 4 handles the commit.
+
 ## Cost
 
 ~$0.003 per account vetted (one `get_user_tweets` call). Quick filter is free.

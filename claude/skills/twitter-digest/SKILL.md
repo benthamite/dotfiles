@@ -18,6 +18,7 @@ Each tool call resends ~20K tokens of system context. The core digest is **exact
 1. **Bash**: run `fetch-tweets.sh` (handles list reading, cutoff, fetching, RT discovery)
 2. **Bash**: write org file + open in Emacs + update last-run timestamp + save digest (one heredoc command)
 3. **MCP** (0-5 calls): vet discovered accounts — see Step 3
+4. **Bash**: commit all changed files — see Step 4
 
 Any extra tool calls (Read, Write, separate Bash) waste $0.02-0.05 each. Do NOT read list files or last-run files separately — the fetch script handles that.
 
@@ -89,6 +90,16 @@ If `---RT_DISCOVERY---` yielded accounts:
 4. **Auto-add**: score >= 7 (or `vet-threshold` from list YAML) → append `- @username` to the list file. Score 5-6 → report as borderline in the digest. Score <= 4 → skip.
 5. **Update digest**: emit one final Bash call to append a `* Vetted accounts` section to the org file (replacing `* Discovered accounts`) showing each account's score and rationale, and append any new `- @username` lines to the list file.
 6. **Update vet registry**: append newly scored accounts to `~/.claude/skills/twitter-vet/vetted/<list-name>.md` (creating the file with the standard header if it doesn't exist). Include all accounts that went through full scoring, regardless of outcome.
+
+## Step 4: Commit
+
+After all steps are complete, commit all changed files in one commit:
+
+```bash
+git -C ~/My\ Drive/dotfiles add claude/skills/twitter-digest/digests/ claude/skills/twitter-digest/last-run/ claude/skills/twitter-digest/lists/ claude/skills/twitter-vet/vetted/ && git -C ~/My\ Drive/dotfiles commit -m "twitter-digest: <list-name(s)> YYYY-MM-DD"
+```
+
+Only stage paths that actually changed. If vetting didn't run, omit the lists and vetted paths.
 
 ## Multiple lists
 

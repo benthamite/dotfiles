@@ -1632,10 +1632,17 @@ Returns the process object."
                                             :model :max-turns)
                                for val = (plist-get kwargs key)
                                when val append (list key val))))
-         (env (cl-remove-if
-               (lambda (s) (or (string-prefix-p "CLAUDE_CODE" s)
-                               (string-prefix-p "ANTHROPIC_API_KEY=" s)))
-               process-environment))
+         (env (let ((filtered (cl-remove-if
+                               (lambda (s) (or (string-prefix-p "CLAUDE_CODE" s)
+                                               (string-prefix-p "ANTHROPIC_API_KEY=" s)))
+                               process-environment)))
+                (if-let* ((account (claude-code-extras--resolve-account))
+                          (config-dir (alist-get account claude-code-extras-accounts
+                                                 nil nil #'string=)))
+                    (cons (format "CLAUDE_CONFIG_DIR=%s"
+                                  (expand-file-name config-dir))
+                          filtered)
+                  filtered)))
          (start-time (current-time))
          (output-buf (generate-new-buffer " *claude-run-output*")))
     (let ((process-environment env)

@@ -193,8 +193,8 @@ Configure accounts as an alist of =(NAME . CONFIG-DIR)= pairs:
           ("work"     . "~/.claude-work")))
 #+end_src
 
-#+findex: claude-code-extras-switch-account
-The active account is persisted across sessions (in ~claude-code-extras-account-file~). Use ~claude-code-extras-switch-account~ to change it. ~claude-code-extras-start-or-switch~ uses the persisted account silently; if no account has been selected yet, it prompts once and saves the choice. If only one account is configured, it is selected automatically.
+#+findex: claude-code-extras-select-account
+The active account is persisted across sessions (in ~claude-code-extras-account-file~). Use ~claude-code-extras-select-account~ to change it. ~claude-code-extras-start-or-switch~ uses the persisted account silently; if no account has been selected yet, it prompts once and saves the choice. If only one account is configured, it is selected automatically.
 
 The first time you start a session with a given account, Claude will prompt for OAuth login. After that, switching is instant.
 

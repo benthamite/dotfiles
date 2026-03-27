@@ -36,7 +36,7 @@ Separate per account:
 
 *MCP servers:* Claude Code reads =.claude.json= from =$CLAUDE_CONFIG_DIR= (not =$HOME=) when that variable is set. This means user-level MCP servers must be synced to each account directory. The canonical source of truth is =~/.claude.json=; run =claude/bin/sync-mcp-servers.sh= after adding or removing any MCP server there.
 
-From Emacs, =claude-code-extras-start-or-switch= uses the persisted account automatically (configured via =claude-code-extras-accounts=, persisted in =~/.claude-current-account=). Use =claude-code-extras-switch-account= to change the active account. From the terminal, the shell aliases =claude-personal= and =claude-work= are available.
+From Emacs, =claude-code-extras-start-or-switch= uses the persisted account automatically (configured via =claude-code-extras-accounts=, persisted in =~/.claude-current-account=). Use =claude-code-extras-select-account= to change the active account. From the terminal, the shell aliases =claude-personal= and =claude-work= are available.
 
 * Configuration
 :PROPERTIES:

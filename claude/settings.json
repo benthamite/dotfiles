@@ -79,7 +79,7 @@
   },
   "effortLevel": "high",
   "defaultMode": "bypassPermissions",
-  "theme": "light",
+  "theme": "dark",
   "mcpServers": {},
   "skipDangerousModePermissionPrompt": true
 }

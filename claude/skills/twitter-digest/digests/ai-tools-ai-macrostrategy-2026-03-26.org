@@ -1,0 +1,251 @@
+#+title: Twitter digest: ai-tools + ai-macrostrategy — 2026-03-26
+
+* ai-tools
+
+** Notable
+
+*** @trq212 (Wed Mar 25 23:33)
+We're starting "What We Shipped," a monthly stream where we'll share our latest tips and talk about new Claude Code releases. The first one is April 7th, come hang out!
+Likes: 1,754 | Views: 80,385 | Like rate: 2.2%
+[[https://x.com/trq212/status/2036949580148101478][View on X]]
+
+*** @thdxr (Thu Mar 26 13:22)
+we're doing a lot of introspection on our product process. i really think you should be too. the default place for our new coding agent abilities to go to is to work on the wrong things. products going from good to bad faster than ever
+Likes: 448 | Views: 21,492 | Like rate: 2.1%
+[[https://x.com/thdxr/status/2037158294792319164][View on X]]
+
+*** @0xSero (Thu Mar 26 14:34)
+I am going all in on Exllamav3. This is the middle ground between fast, performant, works on consumer cards, and intelligent. VLLM and Sglang are my go to but they're too finnicky below certain bits.
+Likes: 116 | Views: 5,849 | Like rate: 2.0%
+[[https://x.com/0xSero/status/2037176305330925971][View on X]]
+
+*** @badlogicgames (Thu Mar 26 21:45)
+it should also be "fucking obvious" that the rate of technical debt a team of humans can add to a codebase is much lower than that of a team of agents. humans will eventually fix some of that debt, due to the self-inflicted pain. agents feel no such pain.
+Likes: 69 | Views: 3,494 | Like rate: 2.0%
+[[https://x.com/badlogicgames/status/2037284717272207723][View on X]]
+
+*** @thdxr (Wed Mar 25 23:52)
+now that we have most features we want implemented, we're doing a pass to decompose them all into plugins. since we didn't have to use the plugin api, it never become very good. now all new features we want to build will be internal plugins, so the plugin api will have to be good
+Likes: 739 | Views: 41,079 | Like rate: 1.8%
+[[https://x.com/thdxr/status/2036954434727555095][View on X]]
+
+*** @0xSero (Wed Mar 25 19:46)
+21% total reduction in vram for the same context
+Likes: 711 | Views: 39,891 | Like rate: 1.8%
+[[https://x.com/0xSero/status/2036892612125208792][View on X]]
+
+*** @Dimillian (Thu Mar 26 17:20)
+I think we all need to collectively stop trashing vibe coded UI. I've been doing UI for 20 years and translating my taste into software is what I love to do. I'm happy with GPT-5.4 first iteration but what I like even more is to inject myself into the next iteration loop.
+Likes: 51 | Views: 3,394 | Like rate: 1.5%
+[[https://x.com/Dimillian/status/2037218132842951005][View on X]]
+
+*** @thdxr (Wed Mar 25 21:57)
+james has achieved distributed opencode. agents can run on your laptop, on a remote server, in a cloud sandbox provider. shut your laptop and things keep running. open it back up and all the data syncs. delete the sandbox nothing is lost
+Likes: 1,995 | Views: 153,573 | Like rate: 1.3%
+[[https://x.com/thdxr/status/2036925457417822299][View on X]]
+
+*** @maddiedreese (Wed Mar 25 18:39)
+I ran Claude Code on a Nintendo Switch! The original 2017 Switch has an unpatchable hardware exploit (Fusee Gelee) that allows you to boot into Recovery Mode by shorting two pins in the Joy-Con rail. I used a folded piece of aluminum foil instead of a commercial RCM jig.
+Likes: 890 | Views: 69,047 | Like rate: 1.3%
+[[https://x.com/maddiedreese/status/2036875690059174168][View on X]]
+
+*** @championswimmer (Thu Mar 26 19:30)
+I'm gonna hold your hand when I tell you that if a task is too complex to oneshot with the agents then the solution is *NOT* to parallel run in Claude, Codex and Gemini all three and pick the best output. (Some companies like Blackbox are selling this solution).
+Likes: 32 | Views: 2,620 | Like rate: 1.2%
+[[https://x.com/championswimmer/status/2037250740863783275][View on X]]
+
+*** @steipete (Thu Mar 26 14:38)
+Testing a new feature for Microsoft Foundry support in @openclaw. Their website is a jungle, I used to make screenshots so codex can guide me through it, but now Chrome has an MCP so codex can simply connect and drive my browser session and do all of that for me. The human is no longer the bottleneck.
+Likes: 1,031 | Views: 87,120 | Like rate: 1.2%
+[[https://x.com/steipete/status/2037177396315488627][View on X]]
+
+*** @Prince_Canuma (Wed Mar 25 22:27)
+TurboQuant is not model compression. It quantizes the KV cache (the memory that grows with context length), not the model itself. No training, no fine-tuning, zero accuracy loss at 3 bits. But if the model doesn't fit your VRAM? TurboQuant won't change that. It solves the inference bottleneck, not the model size bottleneck.
+Likes: 442 | Views: 38,123 | Like rate: 1.2%
+[[https://x.com/Prince_Canuma/status/2036932909173502051][View on X]]
+
+*** @RayFernando1337 (Wed Mar 25 23:37)
+Tests written after implementation don't catch bugs. They confirm decisions. You've watched an agent build a feature and then write the test suite. Everything passes. Full coverage. But the tests were shaped by the code, not by what the code was supposed to do.
+Likes: 30 | Views: 3,655 | Like rate: 0.8%
+[[https://x.com/RayFernando1337/status/2036950527599362464][View on X]]
+
+** Discovered accounts
+
+*** @dexhorthy (Wed Mar 25 17:10)
+if you'd been walking everywhere and one day you got a car, you wouldn't just get where you were going faster, you would go to way more places
+Likes: 1,483 | Views: 76,134 | Like rate: 1.9%
+[[https://x.com/dexhorthy/status/2036853160132939928][View on X]]
+
+*** @DavidKPiano (Wed Mar 25 22:20)
+Some days I'm tempted to skip "plan mode", but most days I realize I've saved myself at least 1/2 an hour of untangling bad code because the plan wasn't quite right
+Likes: 69 | Views: 4,643 | Like rate: 1.5%
+[[https://x.com/DavidKPiano/status/2036931210438393876][View on X]]
+
+*** @zeeg (Thu Mar 26 00:54)
+how many businesses only survive if models get significantly better? lots of snake oil right now
+Likes: 137 | Views: 10,683 | Like rate: 1.3%
+[[https://x.com/zeeg/status/2036969935751274641][View on X]]
+
+*** @emanueledpt (Thu Mar 26 14:00)
+Introducing Remodex -- the first Codex Remote Control for iOS! Codex runs on your Mac. Your iPhone controls it, from wherever you are. Pair with one QR scan: create threads, use subagents & skills, E2EE, git actions and more. Open source.
+Likes: 372 | Views: 32,927 | Like rate: 1.1%
+[[https://x.com/emanueledpt/status/2037167701940900339][View on X]]
+
+*** @noahzweben (Thu Mar 26 17:24)
+Thrilled to announce Claude Code auto-fix -- in the cloud. Web/Mobile sessions can now automatically follow PRs -- fixing CI failures and addressing comments so that your PR is always green. This happens remotely so you can fully walk away and come back to a ready-to-go PR.
+Likes: 3,474 | Views: 335,412 | Like rate: 1.0%
+[[https://x.com/noahzweben/status/2037219115002405076][View on X]]
+
+*** @samwhoo (Wed Mar 25 16:38)
+I think this is the best post I've ever made. [Interactive blog post on LLM quantization -- how it makes models 4x smaller and 2x faster with barely any quality loss.]
+Likes: 3,994 | Views: 509,139 | Like rate: 0.8%
+[[https://x.com/samwhoo/status/2036845101561835968][View on X]]
+
+*** @fat (Wed Mar 25 16:42)
+Code.Storage -- a new Git provider for machines. In Oct, Github shared they were averaging ~230 new repos per minute. Last week we hit a sustained peak of > 15,000 repos per minute for 3 hours. And in the last 30 days customers have created > 9m repos.
+Likes: 1,011 | Views: 442,377 | Like rate: 0.2%
+[[https://x.com/fat/status/2036846209265262729][View on X]]
+
+** Accounts with nothing notable
+@_catwu, @alvinsng, @bcherny, @bentossell, @boringmarketer, @chasing_next, @forgebitz, @intellectronica, @itsolelehmann, @NickADobos, @petergyang, @pontusab, @Saboo_Shubham_, @simonw, @xeophon
+
+* ai-macrostrategy
+
+** Notable
+
+*** @robbensinger (Thu Mar 26 18:57)
+I'm strongly in favor of an international ban on the race to build broadly superhuman AGI, but I'm still figuring out what I think about Sanders' proposal (and ones like it). I'll post high-quality takes and exchanges here as I run into them.
+Likes: 17 | Views: 454 | Like rate: 3.7%
+[[https://x.com/robbensinger/status/2037242585337782686][View on X]]
+
+*** @_NathanCalvin (Thu Mar 26 22:25)
+If high performing AI chips aren't really getting smuggled into China in large numbers (as Jensen has said), then why would putting in measures to detect chip smuggling hurt the industry so much?
+Likes: 7 | Views: 236 | Like rate: 3.0%
+[[https://x.com/_NathanCalvin/status/2037294803826725362][View on X]]
+
+*** @JeffLadish (Thu Mar 26 01:38)
+I had a great conversation with the hosts of ABC Nightline about the ways AIs can disobey instructions and act in ways developers do not intend.
+Likes: 88 | Views: 3,100 | Like rate: 2.8%
+[[https://x.com/JeffLadish/status/2036981200552656941][View on X]]
+
+*** @RyanPGreenblatt (Thu Mar 26 20:38)
+This sort of embedded third party auditing/red teaming seems very useful for getting the public (and the AI company itself) to have a more accurate understanding of risks. [Re: METR red-teaming Anthropic's monitoring systems]
+Likes: 26 | Views: 1,214 | Like rate: 2.1%
+[[https://x.com/RyanPGreenblatt/status/2037267866547093909][View on X]]
+
+*** @datagenproc (Wed Mar 25 20:59)
+Job listings are a great resource! For example, just today OpenAI added a role focused on detecting distillation.
+Likes: 8 | Views: 436 | Like rate: 1.8%
+[[https://x.com/datagenproc/status/2036910990470898030][View on X]]
+
+*** @TomDavidsonX (Wed Mar 25 19:57)
+The classic question of "aligned to what?" is often mentioned in passing, but careful analysis is sorely lacking. Frontier AI companies often have just a couple of ppl working on this! The topic deserves the attention of a rich research field.
+Likes: 29 | Views: 1,572 | Like rate: 1.8%
+[[https://x.com/TomDavidsonX/status/2036895150484443215][View on X]]
+
+*** @Jsevillamol (Wed Mar 25 18:38)
+New ARC-AGI benchmark out! The games are pretty fun, I recommend playing. I'm giving it until the end of the year for a +80% score.
+Likes: 34 | Views: 2,085 | Like rate: 1.6%
+[[https://x.com/Jsevillamol/status/2036875319060144465][View on X]]
+
+*** @_NathanCalvin (Wed Mar 25 18:58)
+I do think the spending might be backfiring for Bores's race, but I wouldn't underestimate the amount of fear this is creating for folks in Congress who are less deeply involved in this issue and are now more scared to touch it.
+Likes: 62 | Views: 3,911 | Like rate: 1.6%
+[[https://x.com/_NathanCalvin/status/2036880518558499272][View on X]]
+
+*** @Miles_Brundage (Thu Mar 26 18:29)
+My main thought re: the OAI Foundation is that it should be planning to spend much more much sooner, especially on bio risks. AI is moving extremely quickly + the OAI Foundation is among the only options for defenses moving similarly quickly.
+Likes: 64 | Views: 4,775 | Like rate: 1.3%
+[[https://x.com/Miles_Brundage/status/2037235471450071397][View on X]]
+
+*** @ohlennart (Wed Mar 25 16:06)
+KV cache efficiency keeps improving. But demand still outstrips it -- longer contexts, more users, agents spawning sessions. Same dynamic as compute: AI systems efficiency for training and inference improves exponentially, yet we spend more on compute than ever.
+Likes: 19 | Views: 1,563 | Like rate: 1.2%
+[[https://x.com/ohlennart/status/2036837009012957234][View on X]]
+
+*** @deanwball (Wed Mar 25 21:39)
+Pause AI rhetoric is predicated on the notion that the AI companies are recklessly racing toward dangerous tech and that a government controlled pause button is therefore necessary, but this seems really hard to reconcile with the fact that government is attempting to destroy an AI company because *it wasn't reckless enough*.
+Likes: 529 | Views: 75,822 | Like rate: 0.7%
+[[https://x.com/deanwball/status/2036920817502601559][View on X]]
+
+*** @deanwball (Thu Mar 26 15:22)
+Here are some questions I wish "Pause" and "Stop" advocates would address: 1. What would be the specific metric or objective we would say needs to be satisfied in advance? Who decides? 2. What happens to the countries that don't sign on?
+Likes: 118 | Views: 22,488 | Like rate: 0.5%
+[[https://x.com/deanwball/status/2037188557907890189][View on X]]
+
+*** @Miles_Brundage (Thu Mar 26 20:11)
+The extent to which Anthropic basically totally won over journalists is notable / not often remarked upon
+Likes: 144 | Views: 40,045 | Like rate: 0.4%
+[[https://x.com/Miles_Brundage/status/2037261120696967356][View on X]]
+
+** Discovered accounts
+
+*** @ESYudkowsky (Thu Mar 26 19:44)
+Update: I'm told that this bill contains export controls on chips, to prevent them from going to any other country that fails to sign onto safety standards. That's huge and I shift my stance from neutral to positive on the effects of the bill if passed.
+Likes: 311 | Views: 10,950 | Like rate: 2.8%
+[[https://x.com/ESYudkowsky/status/2037254465473130769][View on X]]
+
+*** @peterwildeford (Thu Mar 26 18:31)
+Myth: "It's great Bernie is talking about AI x-risk but he's going to make it partisan!" Reality: That's just recency bias. This is bipartisan! 32 current members of Congress have publicly discussed AGI, AI superintelligence, AI loss of control, recursive self-improvement, or the Singularity.
+Likes: 118 | Views: 4,222 | Like rate: 2.8%
+[[https://x.com/peterwildeford/status/2037235925567021550][View on X]]
+
+*** @tszzl (Wed Mar 25 18:06)
+the governance of superintelligence will work very differently based on whether we try to make it work for: the user, the "good" broadly construed as understood by the company, or "humanity" (what the hell is that anyways). among many other possible hierarchies
+Likes: 504 | Views: 30,175 | Like rate: 1.7%
+[[https://x.com/tszzl/status/2036867405889393140][View on X]]
+
+*** @mattyglesias (Thu Mar 26 17:14)
+What if leading lightbulb companies were saying that lightbulb technology posed a non-trivial risk of human extinction and the most likely non-extinction scenario was mass unemployment?
+Likes: 1,807 | Views: 126,875 | Like rate: 1.4%
+[[https://x.com/mattyglesias/status/2037216595630551460][View on X]]
+
+*** @GregHBurnham (Thu Mar 26 14:15)
+We did a few more runs: it tentatively seems like this problem really did just come within reach for models in the past two months or so. I guess Opus 4.6 probably technically has the first solve here! But I just wouldn't make too much of that.
+Likes: 34 | Views: 2,393 | Like rate: 1.4%
+[[https://x.com/GregHBurnham/status/2037171542770020553][View on X]]
+
+*** @alexolegimas (Thu Mar 26 14:21)
+I've been beating this drum: by making traditional signals of effort/information obsolete (eg writing a thoughtful email), AI will *increase* the value of social capital and networks. This is not a good outcome: information technology was supposed to "flatten" interactions. But I don't see a solution.
+Likes: 782 | Views: 64,942 | Like rate: 1.2%
+[[https://x.com/alexolegimas/status/2037173080741523742][View on X]]
+
+*** @METR_Evals (Thu Mar 26 17:51)
+In collaboration with Anthropic, a METR staff member recently spent three weeks red-teaming a subset of Anthropic's internal agent monitoring and security systems, many of which are described in the Opus 4.6 Sabotage Risk Report.
+Likes: 255 | Views: 24,438 | Like rate: 1.0%
+[[https://x.com/METR_Evals/status/2037225941282546042][View on X]]
+
+*** @fchollet (Wed Mar 25 18:47)
+Human-level general intelligence is achieved when an AI system can approach a new task and figure it out, without human intervention, *with the same learning efficiency as humans*. If every new task requires human intervention, it's not general. If every new task requires brute-forcing, it's not human-level.
+Likes: 667 | Views: 72,764 | Like rate: 0.9%
+[[https://x.com/fchollet/status/2036877742428610625][View on X]]
+
+*** @stevehou (Thu Mar 26 — RT by @deanwball)
+Normalized GPU rental price appreciation. AI compute prices are going up across the board, especially the newest installed Blackwell chips.
+Likes: 342 | Views: 62,755 | Like rate: 0.5%
+[[https://x.com/stevehou/status/2037177852596977829][View on X]]
+
+*** @Noahpinion (Thu Mar 26 08:59)
+"Our product will make you economically useless, and possibly kill you" is not a value proposition. AI leaders need to change their public messaging, and fast.
+Likes: 347 | Views: 144,045 | Like rate: 0.2%
+[[https://x.com/Noahpinion/status/2037092107421442519][View on X]]
+
+** Accounts with nothing notable
+@ajeya_cotra, @danwilliamsphil, @dwarkesh_sp, @joel_bkr, @sebkrier, @So8res, @testingham
+
+* Vetted accounts
+
+** ai-tools
+
+| Account | Score | Rationale |
+|---------+-------+-----------|
+| @dexhorthy | 7 | CodeLayer/agent practitioner. "No vibes allowed" coding with Claude, system prompt red-teaming, "harness must fit the alien mind." ~55% AI tools content. Auto-added. |
+| @DavidKPiano | 6 | XState creator. Good plan mode insights and AI devtools critique but only ~40% AI tools content. Borderline — not added. |
+
+** ai-macrostrategy
+
+| Account | Score | Rationale |
+|---------+-------+-----------|
+| @peterwildeford | 8 | Bipartisan AI governance data analyst. "32 Congress members discussed AGI." SuperPAC critique, AI x-risk framing. ~80% macro content. Auto-added. |
+| @alexolegimas | 8 | AI labor economist. Original analysis on automation vs displacement, social capital thesis. ~70% macro content. Auto-added. |
+| @GregHBurnham | 7 | Epoch AI researcher. FrontierMath leaderboard, benchmark nuance, capability timeline estimates. ~65% macro content. Auto-added. |

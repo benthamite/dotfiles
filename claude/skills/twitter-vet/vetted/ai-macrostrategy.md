@@ -26,3 +26,6 @@
 ## Rejected (manual)
 
 ## Skipped (quick filter)
+- **@peterwildeford** (8, 2026-03-26) — Bipartisan AI governance data analyst. "32 Congress members discussed AGI." SuperPAC critique, AI x-risk framing. ~80% macro content.
+- **@alexolegimas** (8, 2026-03-26) — AI labor economist. Automation vs displacement analysis, social capital thesis. ~70% macro content.
+- **@GregHBurnham** (7, 2026-03-26) — Epoch AI researcher. FrontierMath leaderboard, benchmark nuance, capability timeline estimates. ~65% macro content.

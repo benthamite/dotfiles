@@ -4094,6 +4094,8 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
     (bind-keys :map messages-buffer-mode-map
                ("q" . files-extras-bury-buffer-switch-to-other-window)))
   (with-eval-after-load 'slack
+    (bind-keys :map slack-activity-feed-buffer-mode-map
+               ("q" . files-extras-kill-this-buffer))
     (bind-keys :map slack-message-buffer-mode-map
                ("q" . files-extras-kill-this-buffer))
     (bind-keys :map slack-thread-message-buffer-mode-map
@@ -13059,8 +13061,8 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
         ("R" . slack-message-remove-reaction)
         ("d" . slack-thread-show-or-create)
         ("e" . slack-message-edit)
-        ("k" . slack-buffer-goto-prev-message)
-        ("l" . slack-buffer-goto-next-message)
+        ("k" . slack-feed-goto-prev)
+        ("l" . slack-feed-goto-next)
         ("o" . slack-chat-org-capture)
         ("r" . slack-message-add-reaction)
         ("z" . slack-message-write-another-buffer)
@@ -13098,7 +13100,7 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
 :ID:       5F9F6EF6-55A5-4DD4-BB81-BBA16266364B
 :END:
 
-/[[https://github.com/ag91/ol-emacs-slack][ol-emacs-slack]] provides ~org-store-link~ support for [[94F76C3D-9547-431D-93AB-8814F4218AFF][slack]]./
+/[[https://github.com/ag91/ol-emacs-slack][ol-emacs-slack]] provides =org-store-link= support for =slack=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package ol-emacs-slack

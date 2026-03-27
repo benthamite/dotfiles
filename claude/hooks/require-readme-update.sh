@@ -38,7 +38,7 @@ fi
 # At hook-fire time git diff --cached doesn't see the new files yet.
 if [ "$HAS_CLAUDE_CHANGES" = false ]; then
   if echo "$COMMAND" | grep -qE '\bgit\s+add\b'; then
-    if echo "$COMMAND" | grep -qE 'claude/(skills|hooks|settings|CLAUDE)'; then
+    if echo "$COMMAND" | grep -qE '(^|[[:space:]])claude/(skills|hooks|settings|CLAUDE)' && ! echo "$COMMAND" | grep -qE '\.claude/'; then
       HAS_CLAUDE_CHANGES=true
     fi
   fi

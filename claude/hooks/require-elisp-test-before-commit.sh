@@ -57,7 +57,23 @@ if [ -f "$MARKER" ]; then
 fi
 
 # Block the commit
-REASON="BLOCKED: Elisp files are staged but you have not tested them in this session. You MUST run \`emacs --batch\` to verify the changed code before committing. Use the batch testing pattern from the dotfiles-context skill: load elpaca build dirs, push emacs/extras to load-path, then require the changed package. For config.org changes: first tangle with \`emacsclient -e '(init-build-profile (file-name-directory user-init-file))'\`, then in the batch session also eval the changed use-package form before requiring the package, so after-load hooks are registered and exercised."
+# Extract the first staged .el filename to generate a ready-to-paste command
+STAGED_EL=$(echo "$STAGED" | grep '\.el$' | head -1 || true)
+PKG_NAME=""
+if [ -n "$STAGED_EL" ]; then
+  PKG_NAME=$(basename "$STAGED_EL" .el)
+fi
+
+ELPACA_PROFILE=$(emacsclient -e 'init-current-profile' 2>/dev/null | tr -d '"' || echo "8.1.0")
+ELPACA_DIR="\$HOME/.config/emacs-profiles/${ELPACA_PROFILE}/elpaca"
+
+if [ -n "$PKG_NAME" ]; then
+  EXAMPLE_CMD="rm -f emacs/extras/${PKG_NAME}.elc && emacs --batch --eval \\\"(dolist (dir (file-expand-wildcards \\\\\\\"${ELPACA_DIR}/builds/*/\\\\\\\")) (add-to-list 'load-path dir))\\\" --eval \\\"(push \\\\\\\"$PWD/emacs/extras\\\\\\\" load-path)\\\" --eval \\\"(require '${PKG_NAME})\\\"\n\nCRITICAL: The push MUST come AFTER the dolist so emacs/extras is at the FRONT of load-path. Otherwise the stale .elc from elpaca/builds will be loaded instead of your edits."
+else
+  EXAMPLE_CMD="See the batch testing pattern in the dotfiles-context skill."
+fi
+
+REASON="BLOCKED: Elisp files are staged but you have not tested them in this session. You MUST run \`emacs --batch\` to verify the changed code before committing.\n\nCommand:\n${EXAMPLE_CMD}\n\nFor config.org changes: first tangle with \`emacsclient -e '(init-build-profile (file-name-directory user-init-file))'\`, then in the batch session also eval the changed use-package form before requiring the package, so after-load hooks are registered and exercised."
 jq -n --arg reason "$REASON" '{
   "hookSpecificOutput": {
     "hookEventName": "PreToolUse",

@@ -12,12 +12,12 @@ to `~/.claude/handoff.md`.
 
 There are two paths:
 
-### Path 1: Explicit agreement
+### Path 1: User specifies the prompt
 
-If the user and you just discussed what should happen next (e.g., "what
-would you say is next?" followed by a list the user approved), write
-the prompt directly from that agreement. No confirmation needed — the
-user already approved the plan.
+If the user told you what the prompt should be (via arguments or in
+conversation), write **exactly what they said**. Do not add context,
+background, file paths, or embellishments. Their words are the prompt.
+No confirmation needed.
 
 ### Path 2: Inference
 
@@ -27,9 +27,7 @@ Then **present the proposed prompt to the user for confirmation**
 using `AskUserQuestion` before writing the file. The user may edit,
 reorder, or reject items.
 
-## Prompt format
-
-The prompt should:
+When drafting an inferred prompt:
 - Start with "Continue from previous session (DATE)."
 - List tasks in priority order
 - Include specific file paths, command names, and commit hashes
@@ -40,9 +38,9 @@ The prompt should:
 ## Steps
 
 1. Determine whether path 1 or path 2 applies.
-2. Draft the prompt.
-3. If path 2, confirm with the user.
-4. Save to `/tmp/claude-code-handoff.md`, overwriting any previous handoff.
-5. Print the contents so the user can review.
-6. Tell the user to run `M-x claude-code-extras-handoff` to close
+2. If path 1, write the user's prompt verbatim.
+   If path 2, draft a prompt, then confirm with the user.
+3. Save to `/tmp/claude-code-handoff.md`, overwriting any previous handoff.
+4. Print the contents so the user can review.
+5. Tell the user to run `M-x claude-code-extras-handoff` to close
    this session and start a new one with the prompt auto-submitted.

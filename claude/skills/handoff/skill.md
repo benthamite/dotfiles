@@ -14,9 +14,12 @@ There are two paths:
 
 ### Path 1: User specifies the prompt
 
-If the user told you what the prompt should be (via arguments or in
-conversation), write **exactly what they said**. Do not add context,
-background, file paths, or embellishments. Their words are the prompt.
+If the user told you what the next session should do (via arguments or
+in conversation), write a prompt that **does that thing**. You may
+rephrase for clarity, but the prompt must be a faithful representation
+of the user's intent — if they asked for a skill invocation, the
+prompt must invoke that skill; if they asked for a task, the prompt
+must perform that task. Do not replace actions with background context.
 No confirmation needed.
 
 ### Path 2: Inference

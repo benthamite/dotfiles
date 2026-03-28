@@ -8,12 +8,102 @@
 
 This directory contains my [[https://docs.anthropic.com/en/docs/claude-code][Claude Code]] configuration: settings, hooks, and custom skills. Claude Code is a CLI-based coding agent; I use it exclusively from the terminal. Indeed, these days I hardly do anything other than using Claude Code.
 
-The =~/.claude/= directory symlinks its core files here, so changes are version-controlled:
+** Architecture
+:PROPERTIES:
+:CUSTOM_ID: h:architecture
+:END:
 
-- =~/.claude/settings.json= → =claude/settings.json=
-- =~/.claude/settings.local.json= → =claude/settings.local.json=
-- =~/.claude/CLAUDE.md= → =claude/CLAUDE.md=
-- =~/.claude/skills/= → =claude/skills/=
+*** Directory topology
+:PROPERTIES:
+:CUSTOM_ID: h:directory-topology
+:END:
+
+Three layers of directories work together: this dotfiles directory (source of truth), the shared =~/.claude/= hub, and per-account overlay directories.
+
+*Source of truth* (version-controlled in this repo):
+
+#+begin_example
+~/My Drive/dotfiles/claude/           ← global config source of truth
+├── CLAUDE.md                         ← global conventions for all projects
+├── settings.json                     ← hooks, model, permissions, theme
+├── settings.local.json               ← machine-specific permissions (mpv, brew, osascript…)
+├── hooks/                            ← 9 hook scripts
+├── skills/                           ← 39 skill directories
+├── bin/sync-mcp-servers.sh           ← MCP server sync utility
+└── README.org                        ← this file
+#+end_example
+
+*Shared hub* (=~/.claude/=), mostly symlinks into the above:
+
+#+begin_example
+~/.claude/
+├── CLAUDE.md          → dotfiles/claude/CLAUDE.md
+├── settings.json      → dotfiles/claude/settings.json
+├── settings.local.json → dotfiles/claude/settings.local.json
+├── skills/            → dotfiles/claude/skills/
+├── projects/          ← per-project memory, trust entries (managed by Claude Code)
+├── memory/            ← global memory (managed by Claude Code)
+├── history.jsonl      ← command history (managed by Claude Code)
+└── plugins/           ← installed plugins (managed by Claude Code)
+#+end_example
+
+*Per-account overlays* (=~/.claude-personal/=, =~/.claude-work/=): see [[*Multi-account setup][multi-account setup]] below.
+
+*Per-project config* (=<project>/.claude/=):
+
+#+begin_example
+<project>/.claude/
+├── settings.json       ← project-level hooks (optional)
+├── settings.local.json ← project-specific permissions (accumulated interactively)
+├── memory/             ← project memory (moved here by symlink-project-memory.sh hook)
+└── skills/             ← project-specific skills (optional)
+#+end_example
+
+*MCP servers* are defined in =~/.claude.json= (canonical) and synced to account directories by =claude/bin/sync-mcp-servers.sh=.
+
+*** Settings hierarchy
+:PROPERTIES:
+:CUSTOM_ID: h:settings-hierarchy
+:END:
+
+Claude Code loads settings from multiple levels, merged together. Each level can define permissions, hooks, and other options. Permissions are additive across levels. Hooks run from all levels that define them.
+
+| Level | =settings.json= | =settings.local.json= | Purpose |
+|-------+------------------+-----------------------+---------|
+| User (=~/.claude/=) | Model, theme, global hooks, global permissions | Machine-specific tool whitelists | Applies to all projects |
+| Project (=<project>/.claude/=) | Project-specific hooks | Project-specific permissions | Applies only in that project |
+
+=settings.json= is version-controlled; =settings.local.json= is gitignored (machine-specific or accumulated interactively).
+
+The global =settings.json= allows =Bash= (all commands) and =mcp__*= (all MCP tools). Project-level =settings.local.json= files may contain more specific permissions accumulated through interactive approvals, but these are effectively redundant with the global wildcards unless the global permissions change.
+
+*** =CLAUDE.md= loading
+:PROPERTIES:
+:CUSTOM_ID: h:claude-md-loading
+:END:
+
+Claude Code loads =CLAUDE.md= files from several locations. When working in a project, it loads:
+
+1. =~/.claude/CLAUDE.md= — user-level global conventions (symlinked to =dotfiles/claude/CLAUDE.md=)
+2. =<project>/CLAUDE.md= — project-level instructions (if present)
+
+Each file should contain distinct content. The global one defines behavioral conventions (verify work, fix root causes, commit immediately, etc.). Project-level ones define project-specific context.
+
+*** Where to put things
+:PROPERTIES:
+:CUSTOM_ID: h:where-to-put-things
+:END:
+
+| What | Where | Why |
+|------+-------+-----|
+| New global behavioral rule | =claude/CLAUDE.md= | Applies to all projects |
+| New project-specific instruction | =<project>/CLAUDE.md= | Scoped to that project |
+| New skill (reusable across projects) | =claude/skills/<name>/SKILL.md= | Available everywhere |
+| New skill (project-specific) | =<project>/.claude/skills/<name>/SKILL.md= | Scoped to that project |
+| New global hook | =claude/settings.json= (hooks section) | Fires in all projects; write early-exit guards for inapplicable contexts |
+| New project-specific hook | =<project>/.claude/settings.json= (hooks section) | Fires only in that project |
+| New machine-specific permission | =claude/settings.local.json= | E.g. brew, osascript |
+| New MCP server | =~/.claude.json=, then run =claude/bin/sync-mcp-servers.sh= | Syncs to account dirs |
 
 ** Multi-account setup
 :PROPERTIES:
@@ -23,20 +113,23 @@ The =~/.claude/= directory symlinks its core files here, so changes are version-
 Two OAuth accounts (personal and work) are supported without re-authenticating. Each account uses a separate =CLAUDE_CONFIG_DIR= (=~/.claude-personal/= and =~/.claude-work/=) to keep its OAuth credentials and identity isolated, while sharing everything else via symlinks back to =~/.claude/=.
 
 Shared (symlinked into each account dir):
-- =CLAUDE.md=, =settings.json=, =settings.local.json= — instructions and preferences
+- =settings.json=, =settings.local.json= — preferences and permissions
 - =skills/= — custom skills
 - =memory/= — persistent memory
 - =projects/= — trusted folders, project config, session logs
 - =history.jsonl= — command history
 - =plugins/= — installed plugins
 
+Not symlinked:
+- =CLAUDE.md= — loaded from =~/.claude/CLAUDE.md= at user level; account dirs do not have their own copy (to avoid loading the same instructions twice)
+
 Separate per account:
 - =.claude.json= — OAuth identity, user ID, and MCP servers (synced from =~/.claude.json=)
 - Keychain credentials — the actual OAuth tokens
 
-*MCP servers:* Claude Code reads =.claude.json= from =$CLAUDE_CONFIG_DIR= (not =$HOME=) when that variable is set. This means user-level MCP servers must be synced to each account directory. The canonical source of truth is =~/.claude.json=; run =claude/bin/sync-mcp-servers.sh= after adding or removing any MCP server there.
+The active account is stored in =~/.claude-current-account=. From Emacs, =claude-code-extras-start-or-switch= uses the persisted account automatically (configured via =claude-code-extras-accounts=). Use =claude-code-extras-select-account= to change it. From the terminal, the shell aliases =claude-personal= and =claude-work= are available.
 
-From Emacs, =claude-code-extras-start-or-switch= uses the persisted account automatically (configured via =claude-code-extras-accounts=, persisted in =~/.claude-current-account=). Use =claude-code-extras-select-account= to change the active account. From the terminal, the shell aliases =claude-personal= and =claude-work= are available.
+*MCP servers:* Claude Code reads =.claude.json= from =$CLAUDE_CONFIG_DIR= (not =$HOME=) when that variable is set. The canonical source of truth is =~/.claude.json=; run =claude/bin/sync-mcp-servers.sh= after adding or removing any MCP server there.
 
 * Configuration
 :PROPERTIES:
@@ -381,7 +474,7 @@ Evaluates third-party skills from the [[https://github.com/HartreeWorks/skills][
 :ID:       4D862953-7E8A-4154-BC16-919ED6B092A5
 :END:
 
-Eight hook scripts handle workflow invariants and Emacs integration.
+Nine hook scripts handle workflow invariants and Emacs integration. Most are defined in the global =settings.json= and use early-exit guards to skip inapplicable projects. One (=require-readme-update.sh=) is defined in the dotfiles project-level =.claude/settings.json= since it only applies to this repo.
 
 ** require-elisp-test-before-commit.sh (PreToolUse)
 :PROPERTIES:
@@ -404,12 +497,12 @@ Creates a marker file (=/tmp/claude-elisp-tested-{SESSION_ID}=) whenever =emacs 
 
 On the first Edit or Write in a project, moves Claude Code's memory directory from its default location (=~/.claude/projects/<encoded-path>/memory/=) into the project's =.claude/memory/= directory, replacing the original with a symlink. This keeps memory local and version-controllable.
 
-** require-readme-update.sh (PreToolUse)
+** require-readme-update.sh (PreToolUse, project-level)
 :PROPERTIES:
 :ID:       F4D78958-4194-4DB3-9624-C04EC7790960
 :END:
 
-Blocks =git commit= when files in =claude/= (skills, hooks, settings, CLAUDE.md) are staged but =claude/README.org= is not. Also detects when =git add= and =git commit= appear in the same bash command (which would otherwise bypass the staged-file check). Ensures documentation stays in sync with configuration changes. Project-specific skills (under =.claude/skills/=) are excluded from this check, since they belong to their project's documentation, not the dotfiles README.
+Defined in the dotfiles project-level =.claude/settings.json= (not the global settings) since it only applies to this repo. Blocks =git commit= when files in =claude/= (skills, hooks, settings, CLAUDE.md) are staged but =claude/README.org= is not. Also detects when =git add= and =git commit= appear in the same bash command (which would otherwise bypass the staged-file check). Ensures documentation stays in sync with configuration changes. Project-specific skills (under =.claude/skills/=) are excluded from this check, since they belong to their project's documentation, not the dotfiles README.
 
 ** require-doc-update.sh (PreToolUse)
 :PROPERTIES:

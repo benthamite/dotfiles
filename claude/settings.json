@@ -31,11 +31,6 @@
           },
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/claude/hooks/require-readme-update.sh",
-            "timeout": 10
-          },
-          {
-            "type": "command",
             "command": "~/My\\ Drive/dotfiles/claude/hooks/require-doc-update.sh",
             "timeout": 10
           }
@@ -72,9 +67,14 @@
     "Notification": [],
     "Stop": [
       {
-        "type": "command",
-        "command": "~/My\\ Drive/dotfiles/claude/hooks/fire-and-forget.sh ~/My\\ Drive/dotfiles/claude/hooks/notify-emacs-session-end.sh",
-        "timeout": 5
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/fire-and-forget.sh ~/My\\ Drive/dotfiles/claude/hooks/notify-emacs-session-end.sh",
+            "timeout": 5
+          }
+        ]
       }
     ]
   },

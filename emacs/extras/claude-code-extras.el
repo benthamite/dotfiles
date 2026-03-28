@@ -2353,5 +2353,48 @@ there with the backtrace prompt passed as a CLI argument."
 (add-hook 'enable-theme-functions #'claude-code-extras-sync-theme)
 (add-hook 'claude-code-start-hook #'claude-code-extras-sync-theme)
 
+;;;;; Handoff
+
+(defconst claude-code-extras-handoff-file
+  (expand-file-name "handoff.md" "~/.claude/")
+  "Path to the handoff file written by the `/handoff' skill.")
+
+;;;###autoload
+(defun claude-code-extras-handoff ()
+  "Close this Claude session and start a new one with the handoff prompt.
+The `/handoff' skill must have been run first to write the handoff file.
+The new session starts in the same project directory with the handoff
+contents as its initial prompt."
+  (interactive)
+  (unless (file-exists-p claude-code-extras-handoff-file)
+    (user-error "No handoff file at %s — run /handoff first"
+                claude-code-extras-handoff-file))
+  (let* ((prompt (with-temp-buffer
+                   (insert-file-contents claude-code-extras-handoff-file)
+                   (string-trim (buffer-string))))
+         (dir default-directory)
+         (buf (current-buffer)))
+    (when (string-empty-p prompt)
+      (user-error "Handoff file is empty — run /handoff first"))
+    ;; Kill the current Claude buffer (bypass the protection query)
+    (when (claude-code--buffer-p buf)
+      (let ((kill-buffer-query-functions
+             (remq 'claude-code-extras-protect-buffer
+                   kill-buffer-query-functions)))
+        (kill-buffer buf)))
+    ;; Start a new session with the handoff prompt
+    (let ((default-directory dir))
+      (claude-code-extras--start-with-account)
+      ;; Send the prompt after a short delay to let the terminal initialize
+      (let ((new-buf (current-buffer)))
+        (run-with-timer
+         2.0 nil
+         (lambda ()
+           (when (buffer-live-p new-buf)
+             (with-current-buffer new-buf
+               (when (bound-and-true-p eat-terminal)
+                 (eat-term-send-string eat-terminal prompt)
+                 (eat-term-send-string eat-terminal (kbd "RET")))))))))))
+
 (provide 'claude-code-extras)
 ;;; claude-code-extras.el ends here

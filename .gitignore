@@ -16,6 +16,8 @@ emacs/logs/
 ai-marketplace-monitor/cache.db*
 ai-marketplace-monitor.log*
 
-## claude-code skills
+## claude-code
+.claude/
+claude/.claude/
 claude/skills/*/node_modules
 !CLAUDE.md

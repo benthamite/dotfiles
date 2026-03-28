@@ -368,7 +368,7 @@ Evaluates third-party skills from the [[https://github.com/HartreeWorks/skills][
 :ID:       4D862953-7E8A-4154-BC16-919ED6B092A5
 :END:
 
-Seven hook scripts handle workflow invariants and Emacs integration.
+Eight hook scripts handle workflow invariants and Emacs integration.
 
 ** require-elisp-test-before-commit.sh (PreToolUse)
 :PROPERTIES:
@@ -418,6 +418,13 @@ Fires on every Edit or Write of an =.el= file under =elpaca/sources/= or =dotfil
 :END:
 
 Resolves the active elpaca profile dynamically (via =emacsclient -e 'init-current-profile'=) and runs a script from the specified elpaca package. Searches both =repos/= and =sources/= directories to handle different elpaca layouts. Used by the Notification and Stop hooks to invoke =claude-code-hook-wrapper= without hardcoding the profile name. The =emacsclient= call has a 5-second timeout to prevent hangs when the Emacs server is unresponsive.
+
+** notify-emacs-session-end.sh (Stop)
+:PROPERTIES:
+:ID:       8A2F3E91-4D5C-4B8F-9E3A-7C6D2A1F0B94
+:END:
+
+Forwards the session-end event to Emacs via =claude-code-handle-hook=. Runs through =fire-and-forget.sh= so the CLI doesn't block on =emacsclient=. Works together with =claude-log-sync-on-session-end= to trigger log syncing when a session ends.
 
 ** claude-code-hook-wrapper (Notification, Stop)
 :PROPERTIES:

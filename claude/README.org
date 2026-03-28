@@ -235,7 +235,7 @@ Extracts and records architectural decisions from the current session into =deci
 
 *** handoff
 
-Saves next-session instructions to =~/.claude/handoff.md= for seamless session transitions. Reviews the conversation for agreed next steps, unfinished tasks, and pending issues, then writes a concrete, self-contained prompt that a fresh session can execute immediately. After running =/handoff=, call =M-x claude-code-extras-handoff= to kill the current session and start a new one with the handoff prompt auto-submitted. The Elisp command is in =claude-code-extras.el=.
+Saves next-session instructions to =~/.claude/handoff.md= for seamless session transitions. Two paths: (1) if the user and Claude just explicitly agreed on next steps, writes the prompt directly; (2) if no explicit agreement, infers next steps from conversation history and asks the user to confirm before writing. After running =/handoff=, call =M-x claude-code-extras-handoff= to kill the current session and start a new one with the handoff prompt auto-submitted.
 
 *** emacs-freeze
 :PROPERTIES:

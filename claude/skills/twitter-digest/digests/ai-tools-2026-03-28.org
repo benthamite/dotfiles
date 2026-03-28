@@ -1,0 +1,112 @@
+#+title: Twitter digest: ai-tools — 2026-03-28
+
+* Notable
+
+** @thdxr (Sat Mar 28 16:47)
+everyone made a big commotion about skills, a bunch of secondary tooling got built, standards got established and the majority of users have never installed a skill. i wish everyone would chill out, most ideas are bad, restraint is more important than ever
+Likes: 847 | Views: 37,019 | Like rate: 2.3%
+[[https://x.com/thdxr/status/2037934648198594908][View on X]]
+
+** @0xSero (Fri Mar 27 00:47)
+For everyone with 16 or less GB ram that want to run a coding model locally. This is an autocomplete code model that I've noticed does pretty well. Not as good as Cursor tab but good enough
+Likes: 783 | Views: 36,692 | Like rate: 2.1%
+[[https://x.com/0xSero/status/2037693094754213897][View on X]]
+
+** @0xSero (Sat Mar 28 10:22)
+Best models to run on your hardware level — weekly guide covering 8 GB, 16 GB, and up: autocomplete models, tool calling assistants, coding agents. Specific model links for each tier.
+Likes: 2,061 | Views: 97,690 | Like rate: 2.1%
+[[https://x.com/0xSero/status/2037837722094641610][View on X]]
+
+** @thdxr (Fri Mar 27 14:33)
+one place where i always need the smartest possible model is to resolve merge conflicts. smartest model for the dumbest work
+Likes: 549 | Views: 28,554 | Like rate: 1.9%
+[[https://x.com/thdxr/status/2037538425784390099][View on X]]
+
+** @Dimillian (Sat Mar 28 08:35)
+Did you see this Codex use case for understanding a large codebase? I naturally do those things a lot when cloning a new repo. I ask the codebase directly to get a faster understanding than just reading files.
+Likes: 130 | Views: 7,369 | Like rate: 1.8%
+[[https://x.com/Dimillian/status/2037810858609225888][View on X]]
+
+** @badlogicgames (Sat Mar 28 16:33)
+anytime i finish a blog post, i feed it to an LLM asking it to produce 20-40 HN or Reddit comments. immensely effective. stole that idea from @mitsuhiko
+Likes: 1,375 | Views: 83,411 | Like rate: 1.6%
+[[https://x.com/badlogicgames/status/2037930977717039260][View on X]]
+
+** @0xSero (Sat Mar 28 10:10)
+30 days AI usage: Local 50M tokens (free GLM), Kimi 150M ($30), Claude 1B ($110), Codex 19B ($280), Droid 150M ($100). Total spend $550, total usage 20.5B tokens.
+Likes: 473 | Views: 28,611 | Like rate: 1.7%
+[[https://x.com/0xSero/status/2037834783871402165][View on X]]
+
+** @simonw (Fri Mar 27 21:01)
+I've been vibe coding SwiftUI menu bar apps for my new Mac, turns out Claude Opus 4.6 and GPT-5.4 are both competent at Swift programming, no need to even open Xcode!
+Likes: 678 | Views: 43,096 | Like rate: 1.6%
+[[https://x.com/simonw/status/2037636041386099172][View on X]]
+
+** @badlogicgames (Sat Mar 28 13:28)
+i love my little pi. too many images in context for a specific provider? cool, write a bespoke image pruning extension ad-hoc in 2 minutes, reload, continue.
+Likes: 81 | Views: 5,488 | Like rate: 1.5%
+[[https://x.com/badlogicgames/status/2037884637716836857][View on X]]
+
+** @steipete (Sat Mar 28 02:56)
+Another sick upcoming feature: /acp spawn codex --bind here LOOK AT ME, I AM CODEX NOW. You could bind codex/claude code/opencode already in threads, now you can take over your current session as well.
+Likes: 1,166 | Views: 97,528 | Like rate: 1.2%
+[[https://x.com/steipete/status/2037725493315707290][View on X]]
+
+** @petergyang (Fri Mar 27 14:54)
+Build an /exec-review AI skill to get your leader's product feedback anytime you want. A simple way to start is with their decision-making framework — what gets support vs. push back. Below's a real example from a Meta VP.
+Likes: 95 | Views: 9,211 | Like rate: 1.0%
+[[https://x.com/petergyang/status/2037543771580289154][View on X]]
+
+** @dexhorthy (Sat Mar 28 03:43)
+today I watched a coding agent founder try humanlayer for the first time and he dead ass had 260k tokens of mcps turned on
+Likes: 104 | Views: 11,178 | Like rate: 0.9%
+[[https://x.com/dexhorthy/status/2037737400403907024][View on X]]
+
+** @dexhorthy (Fri Mar 27 17:31)
+it's a good post. I like to compare ai engineering to ci/cd - everyone wants to optimize it, it burns a lot of time, innovation is good but if everyone is innovating it's chaos. Can you imagine if every third engineer had their own custom Jenkins server running under their desk?
+Likes: 144 | Views: 15,728 | Like rate: 0.9%
+[[https://x.com/dexhorthy/status/2037583290656555383][View on X]]
+
+** @itsolelehmann (Fri Mar 27 15:42)
+one skill. that's it. you install it once and every time you ask claude to build something it: expands your prompt into a full spec, interviews you on the decisions it would otherwise guess at, builds from the complete brief. first drafts come back one-shotted or very close to it.
+Likes: 288 | Views: 72,600 | Like rate: 0.4%
+[[https://x.com/itsolelehmann/status/2037555869819543962][View on X]]
+
+* Discovered accounts
+
+** @ryanvogel (Sat Mar 28 00:00)
+you can extend @opencode with custom plugins that hook into events while the agent is working. so i wired mine up to communicate in GPWS style (watch to the end)
+Likes: 440 | Views: 28,227 | Like rate: 1.6%
+[[https://x.com/ryanvogel/status/2037681158071496822][View on X]]
+
+** @antranapp (Sat Mar 28 00:31)
+How to use Codex to build iOS and macOS apps
+Likes: 424 | Views: 28,313 | Like rate: 1.5%
+[[https://x.com/antranapp/status/2037688993110958173][View on X]]
+
+** @alex_barashkov (Sat Mar 28 10:09)
+Codex just dropped Hooks in the latest release - so I built a tiny macOS toolbar app, Loopndroll, that makes sure your Codex Agent never stops working. It's open source.
+Likes: 507 | Views: 49,404 | Like rate: 1.0%
+[[https://x.com/alex_barashkov/status/2037834418857918849][View on X]]
+
+* Accounts with nothing notable
+@amirmxt, @bentossell, @boringmarketer, @bcherny, @championswimmer, @chasing_next, @forgebitz, @intellectronica, @maddiedreese, @NickADobos, @pontusab, @Prince_Canuma, @Saboo_Shubham_, @xeophon, @alvinsng
+
+No tweets in window: @peterhartree, @iannuttall, @_catwu, @dmwlff, @eyaltoledano, @trq212, @MattPRD
+
+* Vetted accounts
+
+** @TheAhmadOsman — score 7, added
+Local LLM community leader (x/LocalLLaMA). Concrete hardware recs (VRAM isn't all that matters — bandwidth, interconnect, inference engine matter), model endorsements (Qwen 3.5 27B Dense, Nemotron-3-Super-120B), hardware tier advice (Unified Memory for background agents, GPU for realtime). ~60% AI tools content.
+
+** @ryanvogel — score 7, added
+OpenCode developer. Built GPWS-style communication plugin for agent events, Cursor tab key push-to-talk remap hack. Practical insider perspective on agent harness development. ~45% AI tools content.
+
+** @ivanfioravanti — score 7, added
+EXO maintainer. Multi-harness setups (3 Claude Codes + Gemini CLI in parallel), local model quantization benchmarks (Unsloth Qwen3.5-27B on 3090 TI), temp=0 vs 0.6-1 for tool calling. ~65% AI tools content.
+
+** @sudoingX — score 6, borderline
+Strong Qwen 3.5 27B Dense hardware benchmarks (35 tok/s on RTX 3090) but heavy on Hermes Agent promotion and community engagement. ~50% AI tools content.
+
+** @icanvardar — score 5, borderline
+Relic creator (MCP for secrets management), good tmux tip, but mostly hot takes and engagement posts. ~40% AI tools content.

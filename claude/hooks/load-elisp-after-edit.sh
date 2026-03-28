@@ -12,12 +12,13 @@ input=$(cat)
 
 file_path=$(printf '%s' "$input" | jq -r '.tool_input.file_path // empty')
 
-# Only act on .el source files inside elpaca
+# Only act on .el source files inside elpaca or dotfiles extras
 [[ "$file_path" == *.el ]]              || exit 0
 [[ "$file_path" != *.elc ]]             || exit 0
 [[ "$file_path" != *-test.el ]]         || exit 0
 [[ "$file_path" != *-tests.el ]]        || exit 0
-[[ "$file_path" == *elpaca/sources/* ]] || exit 0
+[[ "$file_path" == *elpaca/sources/* ]] || \
+[[ "$file_path" == */dotfiles/emacs/extras/* ]] || exit 0
 
 # Ask Emacs to find the package, rebuild, wait, and reload.
 # First try the file's basename as a package name (handles extras packages

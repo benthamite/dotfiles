@@ -2356,7 +2356,7 @@ there with the backtrace prompt passed as a CLI argument."
 ;;;;; Handoff
 
 (defconst claude-code-extras-handoff-file
-  (expand-file-name "handoff.md" "~/.claude/")
+  "/tmp/claude-code-handoff.md"
   "Path to the handoff file written by the `/handoff' skill.")
 
 ;;;###autoload

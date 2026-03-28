@@ -42,7 +42,7 @@ The prompt should:
 1. Determine whether path 1 or path 2 applies.
 2. Draft the prompt.
 3. If path 2, confirm with the user.
-4. Save to `~/.claude/handoff.md`, overwriting any previous handoff.
+4. Save to `/tmp/claude-code-handoff.md`, overwriting any previous handoff.
 5. Print the contents so the user can review.
 6. Tell the user to run `M-x claude-code-extras-handoff` to close
    this session and start a new one with the prompt auto-submitted.

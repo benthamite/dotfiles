@@ -50,6 +50,7 @@ From Emacs, =claude-code-extras-start-or-switch= uses the persisted account auto
 
 - *Agent teams*: enabled.
 - *Allowed tools*: Bash, Read, Edit, Write, WebFetch, WebSearch, Task, Glob, Grep, NotebookEdit, and all MCP tools.
+- *Theme*: light.
 
 ** settings.local.json
 :PROPERTIES:

@@ -1,0 +1,96 @@
+#+title: Elisp development workflow for dotfiles extras
+#+author: Pablo Stafforini
+
+* The two-clone problem
+
+Extras packages (=claude-code-extras=, =org-extras=, etc.) live in two places:
+
+- *Working tree*: =~/My Drive/dotfiles/emacs/extras/= — where all edits happen
+- *Elpaca clone*: =~/.config/emacs-profiles/<profile>/elpaca/sources/dotfiles/emacs/extras/= — where Emacs loads from
+
+Elpaca treats the dotfiles repo as a GitHub package (via =use-personal-package=, which generates an =:ensure= recipe pointing at =github:benthamite/dotfiles=).  It clones the repo into =elpaca/sources/dotfiles/= and byte-compiles from there into =elpaca/builds/=.  The builds directory contains symlinks to the sources directory plus =.elc= files.
+
+The working tree and the elpaca clone are *separate git clones of the same repo*.  Edits go into the working tree; Emacs loads from the elpaca clone.  They must be kept in sync.
+
+* Sync mechanism
+
+Three git hooks in the working tree's gitdir (=/Users/pablostafforini/git-dirs/dotfiles/hooks/=) propagate commits to the elpaca clone:
+
+| Hook | Trigger | Action |
+|------+---------+--------|
+| =post-commit= | Normal commits | Delegates to =sync-elpaca-clone.sh= |
+| =post-rewrite= | Rebases, amends | Delegates to =sync-elpaca-clone.sh= |
+| =sync-elpaca-clone.sh= | Called by the above | Fetches from the working tree's gitdir into the elpaca clone, then =reset --hard FETCH_HEAD= |
+
+After the sync, =sync-elpaca-clone.sh= also triggers =elpaca-rebuild= + =elpaca-wait= + =elpaca-extras-reload= asynchronously via =emacsclient= for any extras packages whose =.el= files changed.  This runs fire-and-forget (backgrounded with a 15-second timeout) to avoid deadlocking when git is spawned synchronously by Emacs (e.g. =magit-commit-squash=).
+
+The active elpaca profile is read from =~/.config/emacs-profiles/.current-profile= (a cache file written by Emacs at startup), not from =emacsclient=, to avoid the same deadlock.
+
+* Key invariant: sync only propagates committed changes
+
+The elpaca clone tracks git history, not the filesystem.  *Uncommitted edits in the working tree are invisible to the elpaca clone.*  This means:
+
+- After =git commit=: elpaca clone is up to date, =elpaca-rebuild= compiles the new code.
+- Before =git commit=: elpaca clone is stale, =elpaca-rebuild= compiles old code.
+
+The =load-elisp-after-edit.sh= Claude Code hook fires on every Edit/Write of an =.el= file and calls =elpaca-rebuild= + =elpaca-extras-reload=.  But if the edit hasn't been committed yet, the rebuild compiles from the stale elpaca source.  This is harmless because the =post-commit= hook triggers a second rebuild from the correct source.  But it means that *between editing and committing, the running Emacs may have stale code*.
+
+* Batch testing (=emacs --batch=)
+
+Batch tests bypass elpaca entirely.  The correct pattern:
+
+#+begin_src shell
+ELPACA=$HOME/.config/emacs-profiles/$(emacsclient -e 'init-current-profile' | tr -d '"')/elpaca
+rm -f "$PWD/emacs/extras/YOUR-PACKAGE.elc"
+emacs --batch \
+  --eval "(dolist (dir (file-expand-wildcards \"$ELPACA/builds/*/\")) (add-to-list 'load-path dir))" \
+  --eval "(push \"$PWD/emacs/extras\" load-path)" \
+  --eval "(require 'YOUR-PACKAGE)"
+#+end_src
+
+Critical details:
+
+- The =push= *must* come after the =dolist=.  This places =emacs/extras= at the front of =load-path=, so the working tree =.el= loads instead of the stale =.elc= in =elpaca/builds/=.
+- Never use =append= (puts it at the end, elpaca builds win).
+- Never use =load-prefer-newer= (causes version mismatches between elpaca dependencies).
+- Always =rm -f= the =.elc= in =emacs/extras/= (co-located =.elc= shadows =.el= when =load-prefer-newer= is off).
+
+* Common pitfalls
+
+** Wrong elpaca profile
+
+Multiple profiles may coexist (e.g. =8.1.0= and =8.1.0-dev=).  Always resolve the active profile dynamically:
+
+#+begin_src shell
+emacsclient -e 'init-current-profile'
+#+end_src
+
+Never hardcode a profile name.  Stale profiles have stale elpaca clones that are never synced.
+
+** =elpaca-rebuild= without =elpaca-extras-reload=
+
+=elpaca-rebuild= + =elpaca-wait= byte-compiles the source into =elpaca/builds/= but does *not* load the new code into the running Emacs session.  =elpaca-extras-reload= is the step that calls =load= on each feature, which re-evaluates =defconst=, =defvar=, =defun=, etc.
+
+Always call all three:
+
+#+begin_src emacs-lisp
+(elpaca-rebuild 'PACKAGE t)
+(elpaca-wait)
+(elpaca-extras-reload 'PACKAGE)
+#+end_src
+
+** Editing before committing
+
+If you edit a file and immediately check whether Emacs picked up the change (e.g. evaluating a =defconst=), it won't have — the edit hasn't been committed, so the elpaca clone is stale.  Commit first, then the post-commit hook handles sync + rebuild + reload automatically.
+
+* Full lifecycle of a change
+
+1. Edit =~/My Drive/dotfiles/emacs/extras/foo-extras.el=
+2. =load-elisp-after-edit.sh= fires (Claude Code hook) -> rebuilds from elpaca source (may be stale — this is OK)
+3. =require-elisp-test-before-commit.sh= blocks commit until =emacs --batch= test passes
+4. Run batch test with correct =load-path= order (tests from working tree, not elpaca)
+5. =git commit= -> =post-commit= hook -> =sync-elpaca-clone.sh=:
+   a. Fetches committed changes into elpaca clone
+   b. =reset --hard FETCH_HEAD=
+   c. Async =emacsclient=: =elpaca-rebuild= + =elpaca-wait= + =elpaca-extras-reload=
+6. Running Emacs now has the new byte-compiled code

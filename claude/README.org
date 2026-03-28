@@ -185,7 +185,7 @@ These are not invoked directly. They supply background knowledge when Claude wor
 :ID:       3AB926D5-2116-4864-93F2-B6D33CE832C5
 :END:
 
-Describes the repository layout (the elpaca clone syncs automatically from Google Drive), how to resolve the active elpaca profile, the batch-testing recipe, and the commit message format (=<scope>: <description>=).
+Describes the repository layout (the elpaca clone syncs automatically from Google Drive), how to resolve the active elpaca profile, the batch-testing recipe, and the commit message format (=<scope>: <description>=). See also =emacs/extras/doc/elisp-development-workflow.org= for the full two-clone sync architecture.
 
 *** elisp-conventions
 :PROPERTIES:
@@ -516,7 +516,7 @@ Blocks =git commit= when =.el= files are staged but no =doc/*.org= or =README.or
 :CUSTOM_ID: h:load-elisp-after-edit
 :END:
 
-Fires on every Edit or Write of an =.el= file under =elpaca/sources/= or =dotfiles/emacs/extras/=. Identifies the elpaca package (by matching the file's basename against package names for extras, or by source directory prefix for standalone packages), then runs =elpaca-rebuild= + =elpaca-wait= + =elpaca-extras-reload= synchronously via =emacsclient=. This byte-compiles the source into =elpaca/builds/=, waits for completion, and reloads all features — so the running Emacs always has the latest byte-compiled code, matching what the user gets after a restart. Skips byte-compiled files and test files.
+Fires on every Edit or Write of an =.el= file under =elpaca/sources/= or =dotfiles/emacs/extras/=. Identifies the elpaca package (by matching the file's basename against package names for extras, or by source directory prefix for standalone packages), then runs =elpaca-rebuild= + =elpaca-wait= + =elpaca-extras-reload= synchronously via =emacsclient=. This byte-compiles the source into =elpaca/builds/=, waits for completion, and reloads all features. Skips byte-compiled files and test files. Note: for dotfiles extras edits, the rebuild may compile from a stale elpaca source if the edit hasn't been committed yet; the =post-commit= hook triggers a second rebuild from the correct source (see =emacs/extras/doc/elisp-development-workflow.org=).
 
 ** elpaca-run.sh (utility)
 :PROPERTIES:

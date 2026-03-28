@@ -233,6 +233,10 @@ End-of-session bookkeeping. Detects the project's log directory from the =@= ref
 
 Extracts and records architectural decisions from the current session into =decisions/NNN.md= files. Called automatically by =/update-log= or invocable on demand. Only records decisions where alternatives were explicitly considered and rejected for non-obvious reasons. Updates =decisions-summary.md= with a compact table row for each new entry. Requires a =decisions/= directory to exist (the setup is handled by =/update-log='s first-run flow).
 
+*** handoff
+
+Saves next-session instructions to =~/.claude/handoff.md= for seamless session transitions. Reviews the conversation for agreed next steps, unfinished tasks, and pending issues, then writes a concrete, self-contained prompt that a fresh session can execute immediately. Start the next session with =claude -p "$(cat ~/.claude/handoff.md)"=.
+
 *** emacs-freeze
 :PROPERTIES:
 :ID:       5ED7EB34-774B-489C-95C5-27C8131CE048

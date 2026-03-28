@@ -22,13 +22,15 @@ Determine the project's log directory and whether decisions are tracked:
 
 ### First-run setup
 
-This project doesn't have session logging set up. Ask the user the following:
+This project doesn't have session logging set up. Use the `AskUserQuestion` tool to gather setup preferences before proceeding:
 
-1. **Log directory**: "This project doesn't have session logging set up yet. Where should session logs be stored? (default: `logs/`)"
-   - Create the chosen directory if it doesn't exist.
+1. **Ask both questions in a single `AskUserQuestion` call**:
+   - Question 1 (header: "Log dir"): "Where should session logs be stored?" with options like `logs/` (recommended), `docs/logs/`, and the user can type a custom path via "Other".
+   - Question 2 (header: "Decisions"): "Track architectural decisions in a `decisions/` directory?" with options Yes and No (no recommendation — both are valid).
 
-2. **Decision records**: "Would you also like to track architectural decisions in a `decisions/` directory? This records design trade-offs so future sessions don't re-propose rejected alternatives. (y/n, default: n)"
-   - If yes:
+2. **After receiving answers**, create the chosen log directory if it doesn't exist.
+
+3. If decisions were opted in:
      - Create `decisions/` directory.
      - Create `decisions-summary.md` with the initial table header:
        ```

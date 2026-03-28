@@ -37,3 +37,9 @@
 ## Skipped (quick filter)
 - **@dexhorthy** (7, 2026-03-26) — CodeLayer/agent practitioner. "No vibes allowed" coding with Claude, system prompt red-teaming. ~55% AI tools content.
 - **@DavidKPiano** (6, 2026-03-26) — XState creator. Good plan mode insights but only ~40% AI tools content. Borderline.
+
+- **@TheAhmadOsman** (7, 2026-03-28) — Local LLM community leader (x/LocalLLaMA). Concrete hardware/model recs (VRAM misconceptions, Unified Memory tiers, Qwen 3.5 27B endorsement). ~60% AI tools content.
+- **@ryanvogel** (7, 2026-03-28) — OpenCode developer. GPWS-style plugin for agent events, Cursor tab push-to-talk hack. Practical insider perspective. ~45% AI tools content.
+- **@ivanfioravanti** (7, 2026-03-28) — EXO maintainer. Multi-harness setups, local model quantization benchmarks, temp=0 tool-calling insight. ~65% AI tools content.
+- **@sudoingX** (6, 2026-03-28) — Qwen 3.5 27B Dense hardware benchmarks (35 tok/s on 3090), Hermes Agent advocacy. Heavy on community engagement/promotion. ~50% AI tools content.
+- **@icanvardar** (5, 2026-03-28) — Relic creator (MCP for secrets). Good tmux tip but mostly hot takes. ~40% AI tools content.

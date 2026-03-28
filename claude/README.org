@@ -192,7 +192,7 @@ Describes the repository layout (the elpaca clone syncs automatically from Googl
 :ID:       EBC619A2-2402-43B0-8FBA-8A68EE29BB7D
 :END:
 
-Emacs Lisp coding standards: atomic functions, helper placement, docstring format. Documents the elpaca rebuild-wait-reload process enforced by the =load-elisp-after-edit= hook and prohibits ad-hoc reload mechanisms (=load-file=, =eval-buffer=, =eval-defun=).
+Emacs Lisp coding standards: atomic functions, helper placement, docstring format. Documents the elpaca rebuild-wait-reload process enforced by the =load-elisp-after-edit= hook and prohibits ad-hoc reload mechanisms (=load-file=, =eval-buffer=, =eval-defun=). Also documents the critical =emacs --batch= testing pattern: elpaca builds on load-path first, then =push= =emacs/extras= to the front so the edited source always loads instead of the stale =.elc= from elpaca builds.
 
 ** Development skills
 :PROPERTIES:
@@ -330,7 +330,7 @@ Extracts and records architectural decisions from the current session into =deci
 
 *** handoff
 
-Saves next-session instructions to =~/.claude/handoff.md= for seamless session transitions. Two paths: (1) if the user and Claude just explicitly agreed on next steps, writes the prompt directly; (2) if no explicit agreement, infers next steps from conversation history and asks the user to confirm before writing. After running =/handoff=, call =M-x claude-code-extras-handoff= to kill the current session and start a new one with the handoff prompt auto-submitted.
+Saves next-session instructions to =/tmp/claude-code-handoff.md= for seamless session transitions. Two paths: (1) if the user and Claude just explicitly agreed on next steps, writes the prompt directly; (2) if no explicit agreement, infers next steps from conversation history and asks the user to confirm before writing. The file lives in =/tmp/= (not =~/.claude/=) to avoid triggering write confirmation prompts; being cleared on reboot is fine since stale handoffs are useless. After running =/handoff=, call =M-x claude-code-extras-handoff= to kill the current session and start a new one with the handoff prompt auto-submitted.
 
 *** emacs-freeze
 :PROPERTIES:
@@ -488,7 +488,7 @@ Blocks =git commit= when Elisp files (=*.el= or =emacs/config.org=) are staged b
 :ID:       85C6B926-9F3F-431A-9650-F504CEE12B4A
 :END:
 
-Creates a marker file (=/tmp/claude-elisp-tested-{SESSION_ID}=) whenever =emacs --batch= runs. This marker is what the pre-commit hook checks for. The marker is consumed (deleted) after a successful commit, so each commit requires a fresh test.
+Creates a marker file (=/tmp/claude-elisp-tested-{SESSION_ID}=) whenever =emacs --batch= runs. This marker is what the pre-commit hook checks for. The marker is consumed (deleted) after a successful commit, so each commit requires a fresh test. Also verifies that the test loaded files from the working tree, not stale =.elc= from =elpaca/builds/=: if the command output contains evidence of a stale load (e.g. "using older file" or =elpaca/builds/*.elc=), the marker is NOT created and a warning is printed, so the commit hook will still block.
 
 ** symlink-project-memory.sh (PostToolUse)
 :PROPERTIES:

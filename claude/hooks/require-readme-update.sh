@@ -38,7 +38,12 @@ fi
 # At hook-fire time git diff --cached doesn't see the new files yet.
 if [ "$HAS_CLAUDE_CHANGES" = false ]; then
   if echo "$COMMAND" | grep -qE '\bgit\s+add\b'; then
+    # Direct path in git add args (e.g., git add claude/skills/foo/SKILL.md)
     if echo "$COMMAND" | grep -qE '(^|[[:space:]])claude/(skills|hooks|settings|CLAUDE)' && ! echo "$COMMAND" | grep -qE '\.claude/'; then
+      HAS_CLAUDE_CHANGES=true
+    fi
+    # cd into a claude/ subdirectory before git add (e.g., cd ~/.claude/skills/foo && git add SKILL.md)
+    if echo "$COMMAND" | grep -qE '\bcd\s+.*[~/]\.?claude/(skills|hooks)'; then
       HAS_CLAUDE_CHANGES=true
     fi
   fi

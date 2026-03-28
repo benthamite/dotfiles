@@ -319,6 +319,18 @@ Iterative, graph-based discovery of high-value Twitter accounts in any niche. In
 
 Pulls all unread Slack messages via the =slack-epochai= MCP server, triages them into "action required" vs. "worth knowing" (discarding noise), and opens the digest as an org-mode buffer in Emacs with deep links back to Slack. Accepts =--mark-read= or =--no-mark-read= to control whether conversations are marked as read; if neither is passed, asks interactively.
 
+** Personal skills
+:PROPERTIES:
+:ID:       B7A2F3E1-8C4D-4A5B-9E6F-1D2C3B4A5E6F
+:END:
+
+*** finances
+:PROPERTIES:
+:ID:       A1B2C3D4-E5F6-7890-ABCD-EF1234567890
+:END:
+
+Imports CSV bank statements from Wise and Mercado Pago, categorizes transactions against a guide built from ~7,500 historical ledger entries, and generates ledger-cli entries via a staging workflow. Three modes: =import= (default) parses CSVs, categorizes, writes a staging file for review, merges approved entries into =journal.ledger=, reconciles, and commits; =reconcile= compares existing journal entries against statements and marks matched entries as cleared; =update-guide= scans recent journal entries for new payee-to-category mappings. The categorization guide (=categorization-guide.md=) classifies payees into deterministic (auto-categorize), high-confidence (use default unless description suggests otherwise), and ambiguous (always ask). Cash transactions must be entered manually. Statement CSVs go in =~/My Drive/ledger/statements/{wise,mercadopago}/=.
+
 ** Security skills
 :PROPERTIES:
 :ID:       503D6D12-1566-44FB-8BFA-408034BBB7D2

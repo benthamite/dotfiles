@@ -8885,7 +8885,8 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :after claude-code
   :demand t
   :custom
-  (claude-log-summary-model 'gemini-flash-latest))
+  (claude-log-summary-model 'gemini-flash-latest)
+  ( claude-log-sync-on-session-end t))
 #+end_src
 
 ** =monet=

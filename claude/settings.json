@@ -70,7 +70,13 @@
       }
     ],
     "Notification": [],
-    "Stop": []
+    "Stop": [
+      {
+        "type": "command",
+        "command": "~/My\\ Drive/dotfiles/claude/hooks/fire-and-forget.sh ~/My\\ Drive/dotfiles/claude/hooks/notify-emacs-session-end.sh",
+        "timeout": 5
+      }
+    ]
   },
   "statusLine": {
     "type": "command",

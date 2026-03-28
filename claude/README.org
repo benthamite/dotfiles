@@ -409,7 +409,7 @@ Blocks =git commit= when =.el= files are staged but no =doc/*.org= or =README.or
 :CUSTOM_ID: h:load-elisp-after-edit
 :END:
 
-Fires on every Edit or Write of an =.el= file under =elpaca/sources/=. Identifies the elpaca package (by matching the file's basename against package names for extras, or by source directory prefix for standalone packages), then runs =elpaca-rebuild= + =elpaca-wait= + =elpaca-extras-reload= synchronously via =emacsclient=. This byte-compiles the source into =elpaca/builds/=, waits for completion, and reloads all features — so the running Emacs always has the latest byte-compiled code, matching what the user gets after a restart. Skips byte-compiled files and test files.
+Fires on every Edit or Write of an =.el= file under =elpaca/sources/= or =dotfiles/emacs/extras/=. Identifies the elpaca package (by matching the file's basename against package names for extras, or by source directory prefix for standalone packages), then runs =elpaca-rebuild= + =elpaca-wait= + =elpaca-extras-reload= synchronously via =emacsclient=. This byte-compiles the source into =elpaca/builds/=, waits for completion, and reloads all features — so the running Emacs always has the latest byte-compiled code, matching what the user gets after a restart. Skips byte-compiled files and test files.
 
 ** elpaca-run.sh (utility)
 :PROPERTIES:

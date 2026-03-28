@@ -2401,3 +2401,4 @@ Bypasses the kill-protection query."
 
 (provide 'claude-code-extras)
 ;;; claude-code-extras.el ends here
+

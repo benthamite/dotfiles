@@ -34,6 +34,9 @@ if echo "$COMMAND" | grep -qE 'emacs\s+--batch|batch-test\.sh'; then
 
   MARKER="/tmp/claude-elisp-tested-${SESSION_ID}"
   touch "$MARKER"
+
+  # Clean up stale markers from old sessions (>1 hour)
+  find /tmp -maxdepth 1 -name 'claude-elisp-tested-*' -mmin +60 -delete 2>/dev/null || true
 fi
 
 exit 0

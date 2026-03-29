@@ -48,11 +48,9 @@ if [ "$HAS_ELISP" = false ]; then
   exit 0
 fi
 
-# Check for test marker
+# Check for test marker (kept across retries; cleaned up by TTL)
 MARKER="/tmp/claude-elisp-tested-${SESSION_ID}"
 if [ -f "$MARKER" ]; then
-  # Tests were run; allow the commit and remove the marker
-  rm -f "$MARKER"
   exit 0
 fi
 

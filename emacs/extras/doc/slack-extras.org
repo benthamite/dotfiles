@@ -19,13 +19,22 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 =slack-extras.el= extends the =emacs-slack= package with convenience commands and a unified transient menu that groups all common Slack operations in one place. The package provides:
 
+- Extended org link storage that adds ~slack-activity-feed-buffer-mode~ support to =ol-emacs-slack= ([[#h:link-storage][Link storage]]).
 - A connect-and-select command that starts Slack if needed and immediately opens channel selection ([[#h:start-and-select][Start and select]]).
 - A command to disconnect all teams at once ([[#h:disconnect-all][Disconnect all]]).
 - A command to capture the message at point to the Epoch inbox ([[#h:epoch-capture][Epoch capture]]).
 - A command to yank the kill ring as a code block in compose buffers ([[#h:yank-code-block][Yank code block]]).
 - A transient dispatch menu organizing Slack operations by workflow ([[#h:transient-menu][Transient menu]]).
 
-The package depends on =slack= and =transient=.
+The package depends on =slack=, =ol= and =transient=.
+
+* Link storage
+:PROPERTIES:
+:CUSTOM_ID: h:link-storage
+:END:
+
+#+findex: slack-extras--store-link
+The function ~slack-extras--store-link~ replaces ~ol/slack-store-link~ as the =emacs-slack= link `:store` handler via ~org-link-set-parameters~. It delegates to the original ~ol/slack-store-link~ in ~slack-message-buffer-mode~ and ~slack-thread-message-buffer-mode~, and adds support for ~slack-activity-feed-buffer-mode~ by reading the ~ts~ and ~room-id~ text properties at point. This makes ~org-store-link~ and capture templates that use ~%a~ work in the activity feed.
 
 * Commands
 :PROPERTIES:

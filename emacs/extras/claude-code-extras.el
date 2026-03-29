@@ -154,6 +154,14 @@ Set by `claude-code-extras--capture-buffer-account' via
                       (locate-library "claude-code"))))
   "Absolute path to the claude-code hook wrapper script.")
 
+(defconst claude-code-extras--hooks-directory
+  (file-truename
+   (expand-file-name "../../claude/hooks/"
+                     (file-name-directory
+                      (file-truename
+                       (or load-file-name buffer-file-name)))))
+  "Absolute path to the dotfiles hooks directory.")
+
 (defconst claude-code-extras--status-directory "/tmp/claude-code-status/"
   "Directory where the statusline script writes JSON status files.")
 
@@ -2244,8 +2252,76 @@ one."
           "        ]\n"
           "    }\n"))
 
+(defun claude-code-extras-ensure-notification-hook-config ()
+  "Ensure `~/.claude/settings.json' has a `Notification' hook.
+Adds the hook entry pointing to the notification forwarding script
+if absent or empty."
+  (let ((settings-file (expand-file-name "~/.claude/settings.json")))
+    (when (file-exists-p settings-file)
+      (with-temp-buffer
+        (insert-file-contents settings-file)
+        (unless (claude-code-extras--has-notification-hook-p)
+          (claude-code-extras--insert-notification-hook settings-file))))))
+
+(defun claude-code-extras--has-notification-hook-p ()
+  "Return non-nil if the current buffer has a configured Notification hook."
+  (goto-char (point-min))
+  (search-forward "notify-emacs-notification" nil t))
+
+(defun claude-code-extras--notification-hook-command ()
+  "Return the command string for the Notification hook in settings.json."
+  (format "%s %s"
+          (shell-quote-argument
+           (expand-file-name "fire-and-forget.sh"
+                             claude-code-extras--hooks-directory))
+          (shell-quote-argument
+           (expand-file-name "notify-emacs-notification.sh"
+                             claude-code-extras--hooks-directory))))
+
+(defun claude-code-extras--insert-notification-hook (file)
+  "Insert or fill the Notification hook entry in the JSON settings FILE."
+  (let ((cmd (claude-code-extras--notification-hook-command)))
+    (goto-char (point-min))
+    (cond
+     ;; Empty Notification array — replace it
+     ((search-forward "\"Notification\": []" nil t)
+      (replace-match
+       (format (concat "\"Notification\": [\n"
+                       "      {\n"
+                       "        \"matcher\": \"\",\n"
+                       "        \"hooks\": [\n"
+                       "          {\n"
+                       "            \"type\": \"command\",\n"
+                       "            \"command\": \"%s\",\n"
+                       "            \"timeout\": 5\n"
+                       "          }\n"
+                       "        ]\n"
+                       "      }\n"
+                       "    ]")
+               cmd)
+       t))
+     ;; No Notification key — add to hooks section
+     ((progn (goto-char (point-min))
+             (search-forward "\"hooks\"" nil t))
+      (search-forward "{")
+      (insert (format (concat "\n        \"Notification\": [\n"
+                              "            {\n"
+                              "                \"matcher\": \"\",\n"
+                              "                \"hooks\": [\n"
+                              "                    {\n"
+                              "                        \"type\": \"command\",\n"
+                              "                        \"command\": \"%s\",\n"
+                              "                        \"timeout\": 5\n"
+                              "                    }\n"
+                              "                ]\n"
+                              "            }\n"
+                              "        ],")
+                      cmd))))
+    (write-region (point-min) (point-max) file nil 'quiet)))
+
 (claude-code-extras-ensure-statusline-config)
 (claude-code-extras-ensure-stop-hook-config)
+(claude-code-extras-ensure-notification-hook-config)
 
 ;; Work around upstream bug: `claude-code--adjust-window-size-advice' crashes
 ;; when `claude-code--window-widths' is nil or void during redisplay.

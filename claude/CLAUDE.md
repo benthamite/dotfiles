@@ -8,6 +8,7 @@
 - When trying to guess something that could be learned from documentation you don't have access to, try to obtain that documentation, or else ask me to find it for you.
 - Use sentence case instead of title case whenever possible.
 - If you create temporary files or code, make sure to delete them afterwards.
+- Whenever you draft a message for me to send, also copy it to the clipboard.
 
 ## Safety
 
@@ -21,9 +22,13 @@
 - If you detect a bug, always try to fix its root cause, rather than patch its symptoms. For example, if the search functionality of a website we are building shows duplicate results, do not add a deduplication filter; instead, investigate why the search is returning duplicates in the first place.
 - Similarly, never rely on silent fallbacks: if you need to use a fallback, that means the primary approach is not working reliably. Make the primary approach robust, or replace it with a superior alternative. The fallback is a precarious patch, which also makes it more difficult to diagnose the actual phenomenon.
 
-## Documentation
+## Pre-commit checks (hook-enforced)
 
-- When modifying `.el` files in a package that has a `doc/` directory, also update the corresponding `.org` manual in `doc/` (hook-enforced). Use `/doc-elisp` to generate or update documentation.
+Do these proactively to avoid being blocked by pre-commit hooks:
+
+- **Elisp changes**: run an `emacs --batch` test before committing (see `elisp-conventions` skill for the recipe).
+- **Elisp changes**: stage the `doc/*.org` manual update alongside `.el` files. Use `/doc-elisp` to generate or update documentation.
+- **`claude/` changes** (dotfiles repo): stage `claude/README.org` alongside other changes.
 
 ## Secrets
 

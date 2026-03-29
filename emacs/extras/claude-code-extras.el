@@ -43,6 +43,14 @@
   :type 'boolean
   :group 'claude-code-extras)
 
+(defcustom claude-code-extras-warn-kill-with-branches t
+  "When non-nil, warn before killing a session that has branches.
+If the session being killed is the root of a branch tree with
+more than one member, a second confirmation prompt is shown after
+the standard kill-protection prompt."
+  :type 'boolean
+  :group 'claude-code-extras)
+
 (defcustom claude-code-extras-log-directory
   (expand-file-name "claude-logs" paths-dir-notes)
   "Directory where Claude conversation logs are saved."
@@ -370,11 +378,42 @@ handler already chains through snippet expansion."
   "Prompt for confirmation before killing claude-code buffers.
 Returns t if the buffer should be killed, nil otherwise.  Skips
 the prompt when the session process has already exited (e.g. via
-/exit).  Intended for use in `kill-buffer-query-functions'."
-  (or (not claude-code-extras-protect-buffers)
-      (not (claude-code--buffer-p (current-buffer)))
+/exit).  When `claude-code-extras-warn-kill-with-branches' is
+non-nil, shows a second warning if the session has branches.
+Intended for use in `kill-buffer-query-functions'."
+  (or (not (claude-code--buffer-p (current-buffer)))
       (not (process-live-p (get-buffer-process (current-buffer))))
-      (yes-or-no-p "Kill claude-code buffer? ")))
+      (and (or (not claude-code-extras-protect-buffers)
+               (yes-or-no-p "Kill claude-code buffer? "))
+           (or (not claude-code-extras-warn-kill-with-branches)
+               (claude-code-extras--confirm-kill-branches)))))
+
+(defun claude-code-extras--confirm-kill-branches ()
+  "Return t unless the current session has branches and user declines.
+Reads the status file to find the session ID and project
+directory, then does a fast header-only scan to check for
+branches.  Returns t (allow kill) if the session has no branches,
+if the status file is unavailable, or if the user confirms."
+  (condition-case nil
+      (let ((status (claude-code-extras--parse-status-file)))
+        (if (not status)
+            t
+          (let ((sid (plist-get status :session_id))
+                (transcript (plist-get status :transcript_path)))
+            (if (not (and sid transcript))
+                t
+              (let* ((project-dir (file-name-directory transcript))
+                     (headers (claude-code-extras--scan-session-headers project-dir))
+                     (children-map (claude-code-extras--build-children-map headers))
+                     (members (claude-code-extras--collect-tree-members sid children-map))
+                     (branch-count (1- (hash-table-count members))))
+                (if (<= branch-count 0)
+                    t
+                  (yes-or-no-p
+                   (format "Session has %d %s — kill anyway? "
+                           branch-count
+                           (if (= branch-count 1) "branch" "branches")))))))))
+    (error t)))
 
 (defun claude-code-extras-setup-kill-on-exit ()
   "Arrange for the buffer to be killed when the Claude process exits.

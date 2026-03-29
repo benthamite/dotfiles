@@ -8874,7 +8874,6 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 :ID:       E60F4A47-F939-4D66-8AF4-B460E15D40F0
 :END:
 
-
 /[[https://github.com/benthamite/claude-log][claude-log]] exports Claude Code conversation logs in Markdown format./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
@@ -8885,7 +8884,8 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :demand t
   :custom
   (claude-log-summary-model 'gemini-flash-latest)
-  (claude-log-sync-on-session-end t))
+  (claude-log-sync-on-session-end t)
+  (claude-log-auto-rename-sessions t))
 #+end_src
 
 ** =monet=
@@ -13021,6 +13021,11 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
     (interactive)
     (org-capture nil "s"))
 
+  (defun slack-chat-epoch-capture ()
+    "Capture Slack message at point to the Epoch inbox."
+    (interactive)
+    (org-capture nil "E"))
+
   (require 'pass)
   (slack-register-team
    :name "Epoch AI"
@@ -13058,6 +13063,7 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
         :map slack-activity-feed-buffer-mode-map
         ("," . slack-activity-feed-goto-prev)
         ("." . slack-activity-feed-goto-next)
+        ("E" . slack-chat-epoch-capture)
         ("R" . slack-message-remove-reaction)
         ("d" . slack-thread-show-or-create)
         ("e" . slack-message-edit)
@@ -13069,6 +13075,7 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
         :map slack-message-buffer-mode-map
         ("," . slack-buffer-goto-prev-message)
         ("." . slack-buffer-goto-next-message)
+        ("E" . slack-chat-epoch-capture)
         ("R" . slack-message-remove-reaction)
         ("d" . slack-thread-show-or-create)
         ("e" . slack-message-edit)

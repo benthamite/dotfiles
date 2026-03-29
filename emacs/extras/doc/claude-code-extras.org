@@ -149,7 +149,7 @@ The user option ~claude-code-extras-audit-project-directories~ specifies the dir
 :END:
 
 #+vindex: claude-code-extras-debug-backtrace-model
-The user option ~claude-code-extras-debug-backtrace-model~ sets the gptel model used to identify the offending package from a backtrace. The default is ~gemini-flash-lite-latest~, a fast and cheap model suited for this simple classification task.
+The user option ~claude-code-extras-debug-backtrace-model~ sets the gptel model used to identify candidate packages from a backtrace. The default is ~gemini-flash-lite-latest~, a fast and cheap model suited for this simple classification task.
 
 #+vindex: claude-code-extras-debug-backtrace-backend
 The user option ~claude-code-extras-debug-backtrace-backend~ sets the gptel backend name for backtrace analysis. The default is ~"Gemini"~.
@@ -253,9 +253,10 @@ The command reuses the batch processing infrastructure ([[#h:batch-todo-internal
 The command ~claude-code-extras-debug-backtrace~ automates the workflow of debugging an Emacs backtrace with Claude Code. When invoked from a =*Backtrace*= buffer, it:
 
 1. Saves the backtrace to the downloads directory via ~debug-save-backtrace~.
-2. Sends the backtrace to a light LLM (configured via ~claude-code-extras-debug-backtrace-model~ and ~claude-code-extras-debug-backtrace-backend~, [[#h:debug-backtrace-options][Debug backtrace options]]) to identify the package that caused the error.
-3. Starts an interactive Claude Code session in the package's source directory (elpaca source directory if available, otherwise the directory of the library file on ~load-path~).
-4. Once the session is ready, sends it the backtrace file path and asks it to identify and fix the bug.
+2. Sends the backtrace to a light LLM (configured via ~claude-code-extras-debug-backtrace-model~ and ~claude-code-extras-debug-backtrace-backend~, [[#h:debug-backtrace-options][Debug backtrace options]]) to identify all packages implicated in the error.
+3. Presents the candidate packages via ~completing-read~, ordered from most likely root cause to least likely, so the user can select the right one.
+4. Starts an interactive Claude Code session in the selected package's source directory (elpaca source directory if available, otherwise the directory of the library file on ~load-path~).
+5. Once the session is ready, sends it the backtrace file path and asks it to identify and fix the bug.
 
 * Functions
 :PROPERTIES:

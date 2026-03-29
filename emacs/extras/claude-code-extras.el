@@ -2260,7 +2260,7 @@ unconditionally recenter with `(recenter -1)'."
 ;;;;; Debug backtrace
 
 (defcustom claude-code-extras-debug-backtrace-model 'gemini-flash-lite-latest
-  "GPtel model for identifying the package from a backtrace."
+  "GPtel model for identifying candidate packages from a backtrace."
   :type 'symbol
   :group 'claude-code-extras)
 
@@ -2280,12 +2280,12 @@ unconditionally recenter with `(recenter -1)'."
 
 ;;;###autoload
 (defun claude-code-extras-debug-backtrace ()
-  "Save the backtrace, identify the offending package, and open Claude Code.
+  "Save the backtrace, choose the offending package, and open Claude Code.
 Use `debug-save-backtrace' to save the backtrace to the downloads
-directory, then ask a light LLM (via `gptel') to identify which
-package caused the error.  Once identified, start an interactive
-Claude Code session in the package's source directory and send it
-the backtrace file path."
+directory, then ask a light LLM (via `gptel') to list all packages
+implicated in the error.  The user selects the right one via
+`completing-read', then an interactive Claude Code session starts
+in that package's source directory with the backtrace file path."
   (interactive)
   (let ((backtrace-file (expand-file-name "backtrace.el" paths-dir-downloads)))
     ;; Schedule the identification work to run after the current command.
@@ -2295,10 +2295,13 @@ the backtrace file path."
     (debug-save-backtrace)))
 
 (defun claude-code-extras--debug-identify-package (backtrace-file)
-  "Identify the package from BACKTRACE-FILE and start a Claude Code session."
+  "Identify candidate packages from BACKTRACE-FILE and let the user choose.
+Ask a light LLM to list all packages implicated in the backtrace,
+then present the list via `completing-read' so the user can select
+the right one before starting a Claude Code session."
   (unless (file-exists-p backtrace-file)
     (user-error "Backtrace file not found: %s" backtrace-file))
-  (message "Identifying package from backtrace...")
+  (message "Identifying packages from backtrace...")
   (let ((contents (with-temp-buffer
                     (insert-file-contents backtrace-file)
                     (buffer-string)))
@@ -2307,13 +2310,16 @@ the backtrace file path."
         (gptel-model claude-code-extras-debug-backtrace-model))
     (gptel-request
      (format "Backtrace file: %s\n\nContents:\n%s" backtrace-file contents)
-     :system "You are an Emacs expert. Given the backtrace, identify the single Emacs package that is the root cause of the error. Return ONLY the package name as a single word, nothing else. For example: \"magit\" or \"org\" or \"consult\"."
+     :system "You are an Emacs expert. Given the backtrace, identify ALL Emacs packages that appear in the stack trace and could be the root cause of the error. Return ONLY a comma-separated list of package names, ordered from most likely root cause to least likely. For example: \"org-roam, org, emacsql\" or \"magit, transient, with-editor\"."
      :callback
      (lambda (response info)
        (if (not response)
            (message "gptel request failed: %s" (plist-get info :status))
-         (claude-code-extras--debug-start-session
-          (intern (string-trim response)) backtrace-file))))))
+         (let* ((candidates (mapcar #'string-trim (split-string response ",")))
+                (selected (completing-read "Package to debug: " candidates nil nil nil nil
+                                           (car candidates))))
+           (claude-code-extras--debug-start-session
+            (intern selected) backtrace-file)))))))
 
 (declare-function claude-code--start "claude-code")
 

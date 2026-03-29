@@ -45,9 +45,12 @@ The package depends on =claude-code=, =consult= (for the session switcher), and 
 :END:
 
 #+vindex: claude-code-extras-protect-buffers
+#+vindex: claude-code-extras-warn-kill-with-branches
 The user option ~claude-code-extras-protect-buffers~ controls whether killing a Claude Code buffer requires confirmation. When set to non-~nil~ (the default), any attempt to kill a buffer with a live Claude process triggers a =yes-or-no-p= prompt. This prevents accidental loss of an active session. When the process has already exited (e.g. via the =/exit= command inside Claude), the prompt is skipped.
 
-The default value is ~t~. Set it to ~nil~ if you prefer to kill Claude buffers without confirmation.
+The user option ~claude-code-extras-warn-kill-with-branches~ adds a second confirmation when the session being killed has branches (created via Claude Code's =/branch= command). This prevents accidentally closing a session that serves as the root of a branch tree. The check scans session JSONL headers in the project directory (fast, first-line only) to count branches. If the session has at least one branch, the prompt reports the count (e.g. "Session has 3 branches --- kill anyway?").
+
+Both options default to ~t~. Set either to ~nil~ to disable the corresponding prompt.
 
 ** Diff display
 :PROPERTIES:

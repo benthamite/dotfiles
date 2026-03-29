@@ -171,6 +171,8 @@ The summary is displayed in a dedicated =*Commit Summary*= buffer. The prompt is
 
 With a prefix argument (=C-u=), the command includes full diff content with unified context rather than the default three-line unified diff. This can help the LLM understand broader context around each change.
 
+Tool use (~gptel-use-tools~) is disabled for this request, since it is a programmatic call that should produce a plain-text summary without invoking any tools.
+
 This command must be invoked from a =magit-log-mode= buffer with an active region spanning the commits of interest.
 
 ** Aider context management
@@ -269,6 +271,8 @@ If you have already started writing a partial draft, the LLM will attempt to com
 With a prefix argument (=C-u=), the command lets you edit the prompt before sending it, which is useful for providing additional instructions (e.g., requesting a particular tone).
 
 Before sending, the command calls ~gptel-extras-warn-when-context~ ([[#h:context-warning][Context warning]]) to alert you if there is existing context that might interfere. After the request is sent, all context is removed.
+
+Tool use (~gptel-use-tools~) is disabled for this request, since the reply drafting is a programmatic call that should produce plain text without invoking any tools.
 
 ** Search integration
 :PROPERTIES:
@@ -403,6 +407,8 @@ This advice replaces the pretty-printing step with a direct parse-then-insert ap
 The function ~gptel-extras-run-query~ creates a new =gptel= buffer from a query string, optionally setting a specific backend and model. It is used internally by ~gptel-extras-search-and-ask-model~ ([[#h:search][Search integration]]) and can be called from Lisp for any programmatic query dispatch.
 
 The buffer name is a slugified version of the query with the appropriate file extension. If =BACKEND= or =MODEL= are nil, the global defaults are used.
+
+Tool use (~gptel-use-tools~) is disabled for this request, since it is a programmatic call that should produce a plain-text response without invoking any tools.
 
 ** Setting backend and model
 :PROPERTIES:

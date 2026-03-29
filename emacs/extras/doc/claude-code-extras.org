@@ -30,7 +30,6 @@ The package provides eight main areas of functionality:
 - *Skill runner.* Run any user-invocable Claude Code skill non-interactively from Emacs with completion, argument prompting, and a result buffer ([[#h:skill-runner][Skill runner]]).
 - *Batch TODO processing.* Sequential execution of org TODO entries via =claude -p= in non-interactive mode, with logged results and a summary buffer ([[#h:batch-todo-processing][Batch TODO processing]]).
 - *Project audit.* One-command comprehensive audit that sequentially runs code, design, and interpretability audit skills with auto-fix on the current project ([[#h:project-audit][Project audit]]).
-- *Session rename.* Batch generation of descriptive names for unnamed Claude Code sessions, written directly to the session JSONL files so they appear in the =/resume= picker ([[#h:session-rename][Session rename]]).
 
 The package depends on =claude-code=, =consult= (for the session switcher), and =paths= (for the batch log directory default).
 
@@ -157,16 +156,6 @@ The user option ~claude-code-extras-debug-backtrace-backend~ sets the gptel back
 
 The backtrace analysis request explicitly disables ~gptel-use-tools~ so that tool definitions are never sent to the model, keeping the request lightweight and avoiding unexpected tool-call responses.
 
-** Session rename options
-:PROPERTIES:
-:CUSTOM_ID: h:session-rename-options
-:END:
-
-#+vindex: claude-code-extras-rename-model
-The user option ~claude-code-extras-rename-model~ sets the model used for generating session names. Since naming is a lightweight classification task that does not require tool use or deep reasoning, a fast model is sufficient. The default is ~"haiku"~. Set it to ~"sonnet"~ or ~"opus"~ if you want higher quality names at the expense of speed and cost.
-
-The value accepts model aliases (~"haiku"~, ~"sonnet"~, ~"opus"~) as well as full model IDs. Set to ~nil~ to fall back to ~claude-code-extras-batch-model~ ([[#h:batch-todo-options][Batch TODO processing options]]).
-
 ** Status polling options
 :PROPERTIES:
 :CUSTOM_ID: h:status-polling-options
@@ -256,20 +245,6 @@ The command ~claude-code-extras-audit-project~ runs a comprehensive audit of a p
 After each audit completes successfully, any uncommitted changes in the project directory are automatically committed with a message of the form =<skill>: apply audit recommendations=. This ensures each audit's changes are isolated in their own commit, making them easy to review individually.
 
 The command reuses the batch processing infrastructure ([[#h:batch-todo-internals][Batch TODO internals]]), so results are logged and displayed in the same =*Claude Batch Results*= summary buffer with per-audit status, cost, duration, and output. The batch options (~claude-code-extras-batch-max-turns~, ~claude-code-extras-batch-model~, etc.) apply to audit runs as well.
-
-** Session rename
-:PROPERTIES:
-:CUSTOM_ID: h:session-rename
-:END:
-
-#+findex: claude-code-extras-rename-sessions
-The command ~claude-code-extras-rename-sessions~ generates descriptive names for all unnamed sessions in a Claude Code project. Claude Code's =/resume= picker shows sessions by their custom title, auto-generated summary, or first user prompt. Sessions that have never been renamed show only a truncated first prompt, making them hard to distinguish. This command fixes that by batch-generating kebab-case names (e.g. =fix-login-bug=, =refactor-api-client=) and writing them directly to the session JSONL files.
-
-When invoked, the command prompts for a project directory from the list of projects with stored sessions. It then scans all session JSONL files in that project, identifies those without a =custom-title= entry, and asks for confirmation before proceeding.
-
-Sessions are processed in batches of up to 20: the first user prompts from each session are sent to Claude in a single request, and Claude returns a name for each. This batched approach is far more efficient than making one API call per session. The generated names are appended to the session JSONL files as =custom-title= entries, the same format that Claude Code's =/rename= slash command uses.
-
-A =*Claude Session Rename*= results buffer is displayed when processing completes, showing which sessions were renamed successfully and which failed (e.g. because Claude returned an invalid name format). The model used for name generation is controlled by ~claude-code-extras-rename-model~ ([[#h:session-rename-options][Session rename options]]).
 
 ** Debug backtrace
 :PROPERTIES:
@@ -463,38 +438,6 @@ The function ~claude-code-extras--batch-start~ initializes the processing state,
 The function ~claude-code-extras--batch-run-next~ pops the next entry from the queue, formats the prompt, and delegates to ~claude-code-extras--run-prompt~. The callback saves raw output to a log file, records the result, optionally commits changes, and recurses to process the next entry.
 
 The function ~claude-code-extras--batch-finish~ constructs and displays the =*Claude Batch Results*= summary buffer with aggregate statistics and per-entry details.
-
-** Session rename internals
-:PROPERTIES:
-:CUSTOM_ID: h:session-rename-internals
-:END:
-
-#+findex: claude-code-extras--session-projects-dir
-#+findex: claude-code-extras--session-project-dirs
-#+findex: claude-code-extras--session-project-display-name
-#+findex: claude-code-extras--session-jsonl-files
-#+findex: claude-code-extras--session-parse-metadata
-#+findex: claude-code-extras--session-extract-context
-#+findex: claude-code-extras--session-append-custom-title
-#+findex: claude-code-extras--session-collect-unnamed
-#+findex: claude-code-extras--rename-sessions-batch
-#+findex: claude-code-extras--rename-next-batch
-#+findex: claude-code-extras--rename-build-batch-prompt
-#+findex: claude-code-extras--rename-parse-batch-response
-#+findex: claude-code-extras--rename-finish
-The function ~claude-code-extras--session-projects-dir~ resolves the =projects= directory under the active account's config directory (or =~/.claude= when no account is configured).
-
-The function ~claude-code-extras--session-project-dirs~ lists all project directory names within that directory. The function ~claude-code-extras--session-project-display-name~ reads the ~cwd~ field from the first session JSONL in a project and extracts its final path component (e.g. =dotfiles=, =tangodb=), matching the display names shown in ~claude-log-browse-sessions~. The function ~claude-code-extras--session-jsonl-files~ returns the JSONL session files for a given project.
-
-The function ~claude-code-extras--session-parse-metadata~ reads a session JSONL file and extracts metadata: the session ID, first user prompt, custom title (if any), timestamp, and file path. It scans the file line by line and returns early values for efficiency.
-
-The function ~claude-code-extras--session-extract-context~ reads user prompts from a session JSONL and concatenates them up to 1000 characters. This context is used as input for name generation.
-
-The function ~claude-code-extras--session-append-custom-title~ writes a =custom-title= JSON entry to the end of a session JSONL file. This is the same entry type that Claude Code's =/rename= slash command produces.
-
-The function ~claude-code-extras--session-collect-unnamed~ scans all sessions in a project and returns metadata plists for those lacking a custom title.
-
-The function ~claude-code-extras--rename-sessions-batch~ initializes batch state and begins the async processing chain. The function ~claude-code-extras--rename-next-batch~ takes up to 20 sessions from the queue, builds a prompt via ~claude-code-extras--rename-build-batch-prompt~, and sends it to Claude. When the response arrives, ~claude-code-extras--rename-parse-batch-response~ extracts session-ID-to-name pairs using a UUID regex, and valid names are written to the JSONL files. The function ~claude-code-extras--rename-finish~ displays the results buffer.
 
 ** Auto-setup
 :PROPERTIES:

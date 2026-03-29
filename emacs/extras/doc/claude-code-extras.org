@@ -471,6 +471,7 @@ The function ~claude-code-extras--batch-finish~ constructs and displays the =*Cl
 
 #+findex: claude-code-extras--session-projects-dir
 #+findex: claude-code-extras--session-project-dirs
+#+findex: claude-code-extras--session-project-display-name
 #+findex: claude-code-extras--session-jsonl-files
 #+findex: claude-code-extras--session-parse-metadata
 #+findex: claude-code-extras--session-extract-context
@@ -483,7 +484,7 @@ The function ~claude-code-extras--batch-finish~ constructs and displays the =*Cl
 #+findex: claude-code-extras--rename-finish
 The function ~claude-code-extras--session-projects-dir~ resolves the =projects= directory under the active account's config directory (or =~/.claude= when no account is configured).
 
-The function ~claude-code-extras--session-project-dirs~ lists all project directory names within that directory. The function ~claude-code-extras--session-jsonl-files~ returns the JSONL session files for a given project.
+The function ~claude-code-extras--session-project-dirs~ lists all project directory names within that directory. The function ~claude-code-extras--session-project-display-name~ reads the ~cwd~ field from the first session JSONL in a project and extracts its final path component (e.g. =dotfiles=, =tangodb=), matching the display names shown in ~claude-log-browse-sessions~. The function ~claude-code-extras--session-jsonl-files~ returns the JSONL session files for a given project.
 
 The function ~claude-code-extras--session-parse-metadata~ reads a session JSONL file and extracts metadata: the session ID, first user prompt, custom title (if any), timestamp, and file path. It scans the file line by line and returns early values for efficiency.
 

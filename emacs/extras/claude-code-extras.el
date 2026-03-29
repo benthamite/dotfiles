@@ -2120,12 +2120,31 @@ Returns a list of metadata plists for sessions lacking a customTitle."
           (push meta unnamed))))
     (nreverse unnamed)))
 
-(defun claude-code-extras--decode-project-dir (encoded)
-  "Decode ENCODED project directory name to a human-readable form.
-Claude Code encodes paths by replacing all non-alphanumeric chars
-with hyphens, so the decode is approximate (spaces, slashes, and
-dots all become hyphens).  The result is meant for display only."
-  (string-remove-prefix "-" encoded))
+(defun claude-code-extras--session-project-display-name (project-dir-name)
+  "Return a short display name for PROJECT-DIR-NAME.
+Reads the `cwd' from the first session JSONL in the project and
+extracts its final path component, matching the names shown in
+`claude-log-browse-sessions'.  Falls back to the raw directory
+name when no session file is readable."
+  (let ((files (claude-code-extras--session-jsonl-files project-dir-name)))
+    (or (cl-block nil
+          (dolist (file files)
+            (with-temp-buffer
+              (insert-file-contents file nil 0 4096)
+              (goto-char (point-min))
+              (while (not (eobp))
+                (let ((line (buffer-substring-no-properties
+                             (line-beginning-position) (line-end-position))))
+                  (unless (string-empty-p line)
+                    (condition-case nil
+                        (let ((obj (json-parse-string line :object-type 'plist)))
+                          (when (equal (plist-get obj :type) "user")
+                            (when-let* ((cwd (plist-get obj :cwd)))
+                              (cl-return (file-name-nondirectory
+                                          (directory-file-name cwd))))))
+                      (error nil))))
+                (forward-line 1)))))
+        project-dir-name)))
 
 ;;;###autoload
 (defun claude-code-extras-rename-sessions ()
@@ -2138,8 +2157,7 @@ JSONL files, making them visible in the /resume picker."
   (let* ((projects (claude-code-extras--session-project-dirs))
          (annotated (mapcar
                      (lambda (p)
-                       (let ((decoded (claude-code-extras--decode-project-dir p)))
-                         (cons decoded p)))
+                       (cons (claude-code-extras--session-project-display-name p) p))
                      projects))
          (display (completing-read
                    "Project: "

@@ -481,6 +481,13 @@ Consolidates Claude Code project data (sessions, memory, trust entries) across e
 
 Meta-skill for AI workflow design. Given a description of something to automate, analyzes the requirements along dimensions like context source, tool access, multi-step reasoning, and Emacs integration, then recommends the right approach: a Claude Code skill, a gptel directive, a gptel tool, or a gptel command. After confirmation, builds it following the conventions of each approach.
 
+*** diagnose
+:PROPERTIES:
+:CUSTOM_ID: h:diagnose
+:END:
+
+Diagnostic mode modifier. Prefix any question with =/diagnose= to investigate errors and friction as symptoms of underlying structural issues rather than problems to fix directly. Identifies root causes, considers whether the problem is an instance of a broader class, and proposes structural fixes to config, tooling, documentation, or workflow.
+
 *** claude-config-audit
 :PROPERTIES:
 :CUSTOM_ID: h:claude-config-audit

@@ -23,7 +23,7 @@ The package provides nine main areas of functionality:
 
 - *Session switching.* A Consult-powered interface for starting new Claude sessions or switching between existing ones, with live buffer previews ([[#h:session-switching][Session switching]]).
 - *Status polling.* Integration with a statusline script that exports session metadata (model name, cost, context usage, token counts) as JSON, polled periodically and exposed through accessor functions ([[#h:status-polling][Status polling]]).
-- *Alerts.* Configurable OS notifications (visual, audible, or both) when Claude needs attention, triggered by the CLI's Notification hook event for idle prompts, permission requests, and elicitation dialogs ([[#h:alerts][Alerts]]).
+- *Alerts.* Configurable OS notifications (visual, audible, or both) when Claude needs attention, triggered by the CLI's Notification hook event for idle prompts, permission requests, and elicitation dialogs.  The Notification hook is auto-configured in =~/.claude/settings.json= at load time ([[#h:alerts][Alerts]]).
 - *Buffer lifecycle.* Kill protection for active sessions, automatic buffer cleanup on process exit, a SIGWINCH workaround for terminal rendering glitches, and a fix for ~C-g~ escape handling with multiple sessions ([[#h:buffer-lifecycle][Buffer lifecycle]]).
 - *Snippet insertion.* An adapter for ~consult-yasnippet~ that bypasses its direct buffer manipulation (which fails in Eat terminal buffers) and instead sends expanded snippet text through the terminal emulator ([[#h:snippet-insertion][Snippet insertion]]).
 - *Copilot integration.* An adapter that enables Copilot ghost-text prose completions while typing prompts in Claude Code buffers, routing accepted text through the terminal emulator ([[#h:copilot-integration][Copilot integration]]).
@@ -359,6 +359,8 @@ The function ~claude-code-extras--handle-notification~ is a ~claude-code-event-h
 
 The function ~claude-code-extras-notify~ combines the default modeline pulse with optional OS alerts.  When ~claude-code-extras-alert-on-ready~ is non-~nil~, it dispatches visual and/or audible alerts according to ~claude-code-extras-alert-style~ ([[#h:alert-options][Alert options]]).  It is called by the notification handler rather than installed directly as ~claude-code-notification-function~ (which is set to the default modeline-only callback to avoid double-alerting from the terminal bell).
 
+The Notification hook that delivers these events is auto-configured at package load time via ~claude-code-extras-ensure-notification-hook-config~ ([[#h:auto-setup][Auto-setup]]), so no manual =settings.json= editing is required.
+
 The function ~claude-code-extras-alert-indicator~ returns a bell icon string reflecting the current alert state. It is intended for use in modeline segments or header lines to give a visual indication of whether alerts are active.
 
 ** Modeline integration
@@ -473,11 +475,14 @@ The function ~claude-code-extras--batch-finish~ constructs and displays the =*Cl
 
 #+findex: claude-code-extras-ensure-statusline-config
 #+findex: claude-code-extras-ensure-stop-hook-config
+#+findex: claude-code-extras-ensure-notification-hook-config
 The function ~claude-code-extras-ensure-statusline-config~ checks =~/.claude/settings.json= for a =statusLine= entry and adds one if absent, pointing to the bundled shell script. This ensures that the status JSON file is written for every Claude session without manual configuration.
 
 The function ~claude-code-extras-ensure-stop-hook-config~ similarly checks for a =Stop= hook entry and adds one if absent, pointing to the bundled hook wrapper script. This enables the stop-event detection that powers scroll-to-bottom and pending theme application.
 
-Both functions run automatically when the package is loaded.
+The function ~claude-code-extras-ensure-notification-hook-config~ checks for a =Notification= hook entry and adds one if absent, pointing to the bundled notification forwarding script. This enables the alert system ([[#h:alerts][Alerts]]) to receive =Notification= events (idle prompts, permission requests, elicitation dialogs) from the CLI via ~emacsclient~.
+
+All three functions run automatically when the package is loaded.
 
 * Indices
 :PROPERTIES:

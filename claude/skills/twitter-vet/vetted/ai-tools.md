@@ -43,3 +43,8 @@
 - **@ivanfioravanti** (7, 2026-03-28) — EXO maintainer. Multi-harness setups, local model quantization benchmarks, temp=0 tool-calling insight. ~65% AI tools content.
 - **@sudoingX** (6, 2026-03-28) — Qwen 3.5 27B Dense hardware benchmarks (35 tok/s on 3090), Hermes Agent advocacy. Heavy on community engagement/promotion. ~50% AI tools content.
 - **@icanvardar** (5, 2026-03-28) — Relic creator (MCP for secrets). Good tmux tip but mostly hot takes. ~40% AI tools content.
+
+- **@Teknium** (5, 2026-03-29) — Hermes Agent maintainer. Mostly RT'ing community enthusiasm, not practitioner workflows. ~30% original AI tools content.
+- **@0xblacklight** (5, 2026-03-29) — Agent design philosophy ("fewer tools, fewer instructions"). Insightful but ~40% AI tools, more philosophical than practical.
+- **@EnoReyes** (4, 2026-03-29) — Mostly amplifying FactoryAI/Droid content. One good QA tip but not enough original practical content. ~20% original AI tools content.
+- **@carson3068** (7, 2026-03-29) — Consistently practical: opencode-memory tool, auth token tips, on-chain AI workflow. Small (1.8K) but high signal-to-noise. ~70% AI tools content.

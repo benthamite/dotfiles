@@ -41,3 +41,4 @@ description: Practical AI tool workflows, tips, and tutorials from practitioners
 - @TheAhmadOsman
 - @ryanvogel
 - @ivanfioravanti
+- @carson3068

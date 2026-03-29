@@ -34,6 +34,8 @@
 
 ## Rejected (manual)
 
+- **@aakashgupta** (2026-03-29) — click-optimized framing; overclaiming without calibration. Removed by user.
+
 ## Skipped (quick filter)
 - **@dexhorthy** (7, 2026-03-26) — CodeLayer/agent practitioner. "No vibes allowed" coding with Claude, system prompt red-teaming. ~55% AI tools content.
 - **@DavidKPiano** (6, 2026-03-26) — XState creator. Good plan mode insights but only ~40% AI tools content. Borderline.

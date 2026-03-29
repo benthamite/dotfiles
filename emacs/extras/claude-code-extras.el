@@ -180,6 +180,10 @@ Set by `claude-code-extras--capture-buffer-account' via
 Updated by `claude-code-extras--refresh-display-names' whenever
 sessions are created or destroyed.")
 
+(defvar-local claude-code-extras--original-session-id nil
+  "Session ID when this buffer was first created.
+Used to detect when `/branch' creates a new session.")
+
 (defvar-local claude-code-extras--status-timer nil
   "Timer for periodic status polling in the current Claude buffer.")
 
@@ -726,6 +730,14 @@ avoid scanning all buffers on every redisplay."
 
 (defun claude-code-extras--compute-display-name (buffer)
   "Compute the display name for BUFFER by scanning Claude sessions."
+  (let* ((base (claude-code-extras--base-display-name buffer))
+         (branch-suffix (claude-code-extras--branch-suffix buffer)))
+    (if branch-suffix
+        (format "%s:%s" base branch-suffix)
+      base)))
+
+(defun claude-code-extras--base-display-name (buffer)
+  "Compute the base display name for BUFFER (without branch suffix)."
   (let* ((name (claude-code-extras--buffer-session-name buffer))
          (others (cl-remove buffer (claude-code--find-all-claude-buffers)))
          (sibling-names (mapcar #'claude-code-extras--buffer-session-name
@@ -733,6 +745,15 @@ avoid scanning all buffers on every redisplay."
     (if (member name sibling-names)
         (claude-code-extras--qualified-session-name (buffer-name buffer))
       name)))
+
+(defun claude-code-extras--branch-suffix (buffer)
+  "Return a short branch ID for BUFFER, or nil if not branched."
+  (with-current-buffer buffer
+    (let ((original claude-code-extras--original-session-id)
+          (current (when claude-code-extras--status-data
+                     (plist-get claude-code-extras--status-data :session_id))))
+      (when (and original current (not (string= original current)))
+        (substring current 0 8)))))
 
 (defun claude-code-extras--refresh-display-names ()
   "Recompute and cache display names for all Claude buffers."
@@ -876,7 +897,22 @@ call; it is canceled automatically when BUFFER is no longer live."
       (cancel-timer (car timer-cell))
     (with-current-buffer buffer
       (when-let* ((data (claude-code-extras--parse-status-file)))
+        (claude-code-extras--detect-branch data)
         (setq claude-code-extras--status-data data)))))
+
+(defun claude-code-extras--detect-branch (new-data)
+  "Detect when the session ID changes, indicating a branch.
+NEW-DATA is the freshly parsed status plist.  On the first poll,
+records the session ID as the original.  On subsequent polls, if
+the ID differs from the previous one, refreshes display names so
+the modeline reflects the new branch."
+  (let ((new-id (plist-get new-data :session_id)))
+    (when new-id
+      (if (not claude-code-extras--original-session-id)
+          (setq claude-code-extras--original-session-id new-id)
+        (let ((old-id (plist-get claude-code-extras--status-data :session_id)))
+          (when (and old-id (not (string= new-id old-id)))
+            (claude-code-extras--refresh-display-names)))))))
 
 (defun claude-code-extras--parse-status-file ()
   "Parse the status JSON file for the current buffer.

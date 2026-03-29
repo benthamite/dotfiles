@@ -19,8 +19,8 @@ STDOUT=$(printf '%s' "$INPUT" | jq -r '.tool_output.stdout // empty')
 STDERR=$(printf '%s' "$INPUT" | jq -r '.tool_output.stderr // empty')
 COMBINED="$STDOUT$STDERR"
 
-# Check if the command used emacs --batch (the standard Elisp testing method)
-if echo "$COMMAND" | grep -qE 'emacs\s+--batch'; then
+# Check if the command used emacs --batch or the batch-test.sh wrapper
+if echo "$COMMAND" | grep -qE 'emacs\s+--batch|batch-test\.sh'; then
   # Safety check: did the test load a file from elpaca/builds instead
   # of the working tree? This catches the silent-stale-load bug where
   # the .elc from elpaca shadows the edited .el source.

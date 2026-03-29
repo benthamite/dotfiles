@@ -328,6 +328,27 @@ End-of-session bookkeeping. Detects the project's log directory from the =@= ref
 
 Extracts and records architectural decisions from the current session into =decisions/NNN.md= files. Called automatically by =/update-log= or invocable on demand. Only records decisions where alternatives were explicitly considered and rejected for non-obvious reasons. Updates =decisions-summary.md= with a compact table row for each new entry. Requires a =decisions/= directory to exist (the setup is handled by =/update-log='s first-run flow).
 
+*** open-session-log
+:PROPERTIES:
+:CUSTOM_ID: h:open-session-log
+:END:
+
+Opens the current Claude Code session's conversation log in Emacs using the =claude-log= package. Walks up the process tree to find the session ID, then calls =claude-log-open-session= via =emacsclient=.
+
+*** new-project
+:PROPERTIES:
+:CUSTOM_ID: h:new-project
+:END:
+
+Creates a new Epoch project directory from the current conversation. Gathers context (conversation history, Slack URLs, research), writes an org file with background, TODOs, and reference material, sets up a session log with =CLAUDE.md= referencing it, commits, and instructs the user to start a focused session in the new directory.
+
+*** verify
+:PROPERTIES:
+:CUSTOM_ID: h:verify
+:END:
+
+Executes any task with self-generated verification criteria that close the agentic loop. Before doing the work, generates concrete testable criteria (the non-coding equivalent of unit tests), meta-verifies the criteria quality (recursing if uncertain), executes the task, then systematically evaluates the output against each criterion. Loops on failures until all criteria pass or escalates to the user.
+
 *** handoff
 
 Saves next-session instructions to =/tmp/claude-code-handoff.md= for seamless session transitions. Two paths: (1) if the user and Claude just explicitly agreed on next steps, writes the prompt directly; (2) if no explicit agreement, infers next steps from conversation history and asks the user to confirm before writing. The file lives in =/tmp/= (not =~/.claude/=) to avoid triggering write confirmation prompts; being cleared on reboot is fine since stale handoffs are useless. After running =/handoff=, call =M-x claude-code-extras-handoff= to kill the current session and start a new one with the handoff prompt auto-submitted.

@@ -21,6 +21,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 - A connect-and-select command that starts Slack if needed and immediately opens channel selection ([[#h:start-and-select][Start and select]]).
 - A command to disconnect all teams at once ([[#h:disconnect-all][Disconnect all]]).
+- A command to capture the message at point to the Epoch inbox ([[#h:epoch-capture][Epoch capture]]).
 - A command to yank the kill ring as a code block in compose buffers ([[#h:yank-code-block][Yank code block]]).
 - A transient dispatch menu organizing Slack operations by workflow ([[#h:transient-menu][Transient menu]]).
 
@@ -46,6 +47,14 @@ The command ~slack-extras-start-and-select~ checks whether all registered Slack 
 
 #+findex: slack-extras-disconnect-all
 The command ~slack-extras-disconnect-all~ iterates over all registered teams and disconnects any that have an active websocket connection, then reports that all teams have been disconnected. This is a quick way to cleanly shut down all Slack connections.
+
+** Epoch capture
+:PROPERTIES:
+:CUSTOM_ID: h:epoch-capture
+:END:
+
+#+findex: slack-extras-epoch-capture
+The command ~slack-extras-epoch-capture~ captures the Slack message at point to the Epoch inbox using ~org-capture~ with the ="E"= capture template. This is useful when a Slack conversation surfaces a task or follow-up that belongs in the Epoch project inbox rather than in the general org-capture flow. The command is bound to =E= in ~slack-activity-feed-buffer-mode-map~ and ~slack-message-buffer-mode-map~.
 
 ** Yank code block
 :PROPERTIES:

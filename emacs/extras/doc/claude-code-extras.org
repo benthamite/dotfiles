@@ -281,7 +281,7 @@ let's redesign the recordings validation  Mar 29 02:28
 └─ try alternative approach                Mar 29 03:20
 #+end_example
 
-On selection, the command checks whether the target session is already running in an Emacs buffer. If so, it switches to that buffer directly. If the session is not running, it starts a new Claude Code session with =--resume SESSION_ID= to reopen it.
+On selection, the command checks whether the target session is already running in an Emacs buffer. If so, it switches to that buffer directly. If the session is not running, it starts a new Claude Code session with =--resume SESSION_ID= to reopen it. The new buffer is automatically named =branch-XXXXXXXX= (using the first eight characters of the session ID) to avoid prompting for an instance name.
 
 The scan is optimized in two phases. First, only the first line of each JSONL file in the project directory is read to extract session IDs and ~forkedFrom~ fields (fast). The full branch tree is then identified, and only the handful of sessions in the tree are read more deeply to extract their display prompts. For branched sessions, the first /new/ user message after the fork point is used as the label, so branches are distinguishable from their parent even though they share conversation history.
 

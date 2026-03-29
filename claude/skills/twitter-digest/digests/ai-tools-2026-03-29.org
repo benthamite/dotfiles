@@ -1,0 +1,100 @@
+#+title: Twitter digest: ai-tools — 2026-03-29
+
+* Notable
+
+** @TheAhmadOsman (Sat Mar 28 23:47)
+if you're using Ollama switch to llama.cpp
+
+if you're using OpenClaw switch to Hermes
+
+these are basics at this point
+Likes: 1,320 | Views: 72,502 | Like rate: 1.8%
+[[https://x.com/TheAhmadOsman/status/2038040298647855526][View on X]]
+
+** @0xSero (Sat Mar 28 23:59)
+MoE compression breakthrough: 50% REAP + 3bit quant = 81.75% compression. Turboquant 4 for KV-cache. Run large MoEs with about 18-20% of the VRAM of BF16. For DeepSeek (671 GB) you would need about 134 GB.
+Likes: 227 | Views: 12,759 | Like rate: 1.8%
+[[https://x.com/0xSero/status/2038043211302605213][View on X]]
+
+** @carson3068 (Sat Mar 28 20:01) [discovered]
+Shipped opencode-memory, a read-only OpenCode skill for browsing local session history with sqlite3. No extra service. No hidden memory layer. Just clear queries over sessions, plans, and prompt history. Small AI tools > magic.
+Likes: 46 | Views: 2,616 | Like rate: 1.8%
+[[https://x.com/carson3068/status/2037983385365188621][View on X]]
+
+** @petergyang (Sun Mar 29 02:30)
+I love watching Jenny (Claude's design lead) use Claude Cowork to: 1. Summarize user feedback across channels 2. Create a design spec from feedback themes 3. Generate design variants based on the spec
+Likes: 585 | Views: 33,847 | Like rate: 1.7%
+[[https://x.com/petergyang/status/2038081375111422094][View on X]]
+
+** @TheAhmadOsman (Sun Mar 29 00:48)
+Running Claude Code w/ local models on my own GPUs at home: SGLang serving MiniMax on 8x RTX 3090s, nvtop showing live GPU load, Claude Code generating code + docs, end-to-end on a single node from my AI cluster.
+Likes: 288 | Views: 16,815 | Like rate: 1.7%
+[[https://x.com/TheAhmadOsman/status/2038055762446991814][View on X]]
+
+** @dexhorthy (Sun Mar 29 03:51)
+The ai coding meta is shifting from "token harder" to "token smarter". In August the mandate was "figure out how to spend lots of tokens" -- Ralph Wiggum, RPI, worktree tools like conductor, cmux. Now it is about structured thinking, better specs, smarter context engineering.
+Likes: 53 | Views: 3,563 | Like rate: 1.5%
+[[https://x.com/dexhorthy/status/2038101619720781941][View on X]]
+
+** @0xSero (Sat Mar 28 23:24)
+Most unhinged custom model list in any agent harness -- a mix of local models and all subs and hacks. Droid remote now allows BYOK, took 15 mins to setup end to end all synced. Claude Code remote control permissions suck. Codex has no mobile app.
+Likes: 127 | Views: 9,170 | Like rate: 1.4%
+[[https://x.com/0xSero/status/2038034428757184809][View on X]]
+
+** @bcherny RT @jarredsumner (Sun Mar 29 01:42)
+Claude Code now supports "if" conditions in hooks, which skips the hook if the command does not match. This can save minutes per session.
+Likes: 733 | Views: 61,776 | Like rate: 1.2%
+[[https://x.com/jarredsumner/status/2038069210870677756][View on X]]
+
+** @steipete (Sun Mar 29 02:04)
+MCPorter (MCP to CLI) 0.8.0 is out: stronger OAuth handling for servers, valid JSON output on fallback paths, better mcporter call behavior and error handling, generated CLIs handle object-valued args better, keep-alive/daemon reliability.
+Likes: 874 | Views: 87,768 | Like rate: 1.0%
+[[https://x.com/steipete/status/2038074759527981416][View on X]]
+
+** @xpasky (Sun Mar 29 11:10)
+Simple QoL for Pi users: LLMs maintain up-to-date session summaries shown in the footer and in the /resume session list. Pretty useful when wrangling ten subagents while traveling.
+Likes: 24 | Views: 2,520 | Like rate: 1.0%
+[[https://x.com/xpasky/status/2038212185449476435][View on X]]
+
+** @aakashgupta (Sun Mar 29 06:50) [discovered]
+Took Karpathy's loop and applied it to getting prompts from 80% reliable to 95%. One file changes. One metric scores it. The agent makes one edit per round, tests it, keeps winners, reverts losers. 12 experiments per hour.
+Likes: 169 | Views: 17,895 | Like rate: 0.9%
+[[https://x.com/aakashgupta/status/2038146639303512255][View on X]]
+
+** @aakashgupta (Sun Mar 29 05:53) [discovered]
+The reason autoresearch hit 42,000 GitHub stars in a week is that the architecture ports to anything with a score. Karpathy built it for ML training. config.py is the code the agent edits. val_bpb is the metric. program.md is the human research direction.
+Likes: 426 | Views: 46,599 | Like rate: 0.9%
+[[https://x.com/aakashgupta/status/2038132294817656978][View on X]]
+
+** @0xSero (Sat Mar 28 22:33)
+Best models to run on your hardware:
+- 64 GB: Qwen3-coder-next-80B-4bit (coding, Claude code, general agent), Qwen3.5-122B-reap (multimodal, tool calling)
+- 96 GB: GLM-4.6V (multimodal), Hermes-70B, Nemotron-120B-Super
+- 256 GB: MiniMax-M2.5 6bit MLX, Qwen3.5-262B-REAP, Nemotron-122B, GLM-5-358B
+- 512 GB: MiniMax FP16, Qwen3.5-397B 8bit, Kimi-k2.5-530B-PRISM 4bit
+Likes: 2,355 | Views: 293,629 | Like rate: 0.8%
+[[https://x.com/0xSero/status/2038021723719688266][View on X]]
+
+** @dexhorthy (Sun Mar 29 01:14)
+Code review bots: ask them to review for problems, they find a bunch. Ask if the code is good, they wax poetic about amazing things in the PR. It takes a lot of skill and context engineering to build an LLM that can evaluate things in a way that is genuinely useful.
+Likes: 282 | Views: 39,106 | Like rate: 0.7%
+[[https://x.com/dexhorthy/status/2038062253556297807][View on X]]
+
+* Vetted accounts
+
+** @carson3068 (1.8K followers) -- score: 7/10 -- ADDED
+Consistently practical: opencode-memory tool, Claude Code auth token sharing tip (copy ~/.claude/.credentials.json to opencode auth.json), on-chain smart contract workflow with AI. Small account but exactly the kind of practitioner content this list wants.
+
+** @Teknium (60K followers) -- score: 5/10 -- borderline
+Hermes Agent maintainer. Mostly RT'ing community enthusiasm rather than sharing practitioner workflows. More community manager than hands-on builder in his tweets.
+
+** @0xblacklight (5.3K followers) -- score: 5/10 -- borderline
+Insightful agent philosophy ("fewer tools, fewer instructions, less surface") but only ~40% AI tools content and more philosophical than practical workflows.
+
+** @EnoReyes (7.5K followers) -- score: 4/10 -- skip
+Mostly amplifying FactoryAI/Droid content. One good "Agents should QA every change" tip but not enough original practical content.
+
+
+* Accounts with nothing notable
+
+@_catwu, @badlogicgames, @bentossell, @Dimillian, @forgebitz, @intellectronica, @itsolelehmann, @ivanfioravanti, @maddiedreese, @NickADobos, @Prince_Canuma, @RayFernando1337, @ryanvogel, @Saboo_Shubham_, @thdxr, @xeophon

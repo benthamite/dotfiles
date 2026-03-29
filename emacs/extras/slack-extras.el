@@ -70,7 +70,7 @@ selection."
 (defun slack-extras-epoch-capture ()
   "Capture Slack message at point to the Epoch inbox."
   (interactive)
-  (org-capture nil "E"))
+  (org-capture nil "S"))
 
 ;;;;; Messages
 

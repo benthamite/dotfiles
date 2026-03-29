@@ -106,13 +106,10 @@ if [ "$HAS_EL" = false ]; then
   exit 0
 fi
 
-# If repo has doc/ directory, require doc/*.org update
-if [ "$HAS_DOC_DIR" = true ] && [ "$HAS_DOC_ORG" = true ]; then
-  exit 0
-fi
-
-# If repo has README.org (but no doc/), require README.org update
-if [ "$HAS_DOC_DIR" = false ] && [ "$HAS_README_ORG" = true ] && [ "$HAS_README_ORG_STAGED" = true ]; then
+# Accept if any documentation file is staged:
+# - doc/*.org (for repos with a doc/ directory)
+# - README.org (for repos that use README.org as the manual)
+if [ "$HAS_DOC_ORG" = true ] || [ "$HAS_README_ORG_STAGED" = true ]; then
   exit 0
 fi
 

@@ -2407,5 +2407,283 @@ Bypasses the kill-protection query."
                  kill-buffer-query-functions)))
       (kill-buffer (current-buffer)))))
 
+;;;;; Branch navigation
+
+(require 'iso8601)
+
+(defun claude-code-extras--read-session-header (jsonl-file)
+  "Read first line of JSONL-FILE and return a lightweight metadata plist.
+Returns (:session-id :forked-from :fork-uuid :file-path) or nil.
+This is fast (reads only first few KB) and is used for the initial
+scan to build the branch tree."
+  (condition-case nil
+      (with-temp-buffer
+        (let ((coding-system-for-read 'utf-8))
+          (insert-file-contents jsonl-file nil 0 65536))
+        (goto-char (point-min))
+        (let* ((line (buffer-substring-no-properties
+                      (point) (line-end-position)))
+               (json (json-parse-string line :object-type 'plist))
+               (forked (plist-get json :forkedFrom)))
+          (list :session-id (plist-get json :sessionId)
+                :forked-from (when forked (plist-get forked :sessionId))
+                :fork-uuid (when forked (plist-get forked :messageUuid))
+                :file-path jsonl-file)))
+    (error nil)))
+
+(defun claude-code-extras--read-session-prompt (header)
+  "Enrich HEADER plist with :first-prompt and :timestamp.
+Reads the full JSONL file referenced by HEADER's :file-path."
+  (let ((file (plist-get header :file-path))
+        (fork-uuid (plist-get header :fork-uuid))
+        (session-id (plist-get header :session-id))
+        (forked-from (plist-get header :forked-from)))
+    (condition-case nil
+        (with-temp-buffer
+          (let ((coding-system-for-read 'utf-8))
+            (insert-file-contents file))
+          (goto-char (point-min))
+          (if fork-uuid
+              (claude-code-extras--branch-prompt
+               session-id forked-from fork-uuid)
+            (claude-code-extras--root-prompt session-id)))
+      (error (list :session-id session-id
+                   :forked-from forked-from
+                   :first-prompt "(error reading session)"
+                   :timestamp nil)))))
+
+(defun claude-code-extras--user-message-prompt-p (json)
+  "Return non-nil if JSON is a user message with text content."
+  (and (equal (plist-get json :type) "user")
+       (let* ((msg (plist-get json :message))
+              (content (when msg (plist-get msg :content))))
+         (and (stringp content)
+              (not (string-empty-p (string-trim content)))))))
+
+(defun claude-code-extras--root-prompt (session-id)
+  "Find the first user prompt in the current buffer for SESSION-ID."
+  (goto-char (point-min))
+  (let ((result nil))
+    (while (and (not result) (not (eobp)))
+      (let ((json (claude-code-extras--parse-jsonl-line)))
+        (when (and json (claude-code-extras--user-message-prompt-p json))
+          (setq result (claude-code-extras--meta-from-json
+                        session-id nil json))))
+      (forward-line 1))
+    (or result
+        (list :session-id session-id :forked-from nil
+              :first-prompt "(no prompt)" :timestamp nil))))
+
+(defun claude-code-extras--branch-prompt (session-id forked-from fork-uuid)
+  "Find the first new user prompt after FORK-UUID in the current buffer.
+SESSION-ID and FORKED-FROM are passed through to the result."
+  (goto-char (point-min))
+  (let ((found-fork nil)
+        (result nil))
+    (while (and (not result) (not (eobp)))
+      (let ((json (claude-code-extras--parse-jsonl-line)))
+        (when json
+          (if (not found-fork)
+              (when (string= (plist-get json :uuid) fork-uuid)
+                (setq found-fork t))
+            (when (claude-code-extras--user-message-prompt-p json)
+              (setq result (claude-code-extras--meta-from-json
+                            session-id forked-from json))))))
+      (forward-line 1))
+    (or result
+        (list :session-id session-id
+              :forked-from forked-from
+              :first-prompt "(branch)"
+              :timestamp nil))))
+
+(defun claude-code-extras--parse-jsonl-line ()
+  "Parse the current line as JSON, returning a plist or nil."
+  (let ((line (buffer-substring-no-properties
+               (line-beginning-position) (line-end-position))))
+    (unless (string-empty-p line)
+      (condition-case nil
+          (json-parse-string line :object-type 'plist)
+        (error nil)))))
+
+(defun claude-code-extras--meta-from-json (session-id forked-from json)
+  "Build metadata plist from SESSION-ID, FORKED-FROM id, and message JSON."
+  (let* ((msg (plist-get json :message))
+         (content (when msg (plist-get msg :content))))
+    (list :session-id session-id
+          :forked-from forked-from
+          :first-prompt (claude-code-extras--truncate-prompt content)
+          :timestamp (plist-get json :timestamp))))
+
+(defun claude-code-extras--truncate-prompt (content)
+  "Truncate CONTENT to a short display string."
+  (if (stringp content)
+      (truncate-string-to-width
+       (replace-regexp-in-string "[\n\r\t]+" " " (string-trim content))
+       60 nil nil "…")
+    "(no prompt)"))
+
+(defun claude-code-extras--scan-session-headers (project-dir)
+  "Scan JSONL files in PROJECT-DIR and return session headers.
+Returns a hash table mapping session ID to a lightweight header
+plist.  Only reads the first line of each file (fast)."
+  (let ((table (make-hash-table :test 'equal)))
+    (dolist (file (directory-files project-dir t "\\.jsonl\\'"))
+      (let ((header (claude-code-extras--read-session-header file)))
+        (when (and header (plist-get header :session-id))
+          (puthash (plist-get header :session-id) header table))))
+    table))
+
+(defun claude-code-extras--enrich-sessions (headers member-ids)
+  "Read full prompts for sessions in MEMBER-IDS.
+HEADERS is a hash table of session ID to header plist.  Returns a
+new hash table with :first-prompt and :timestamp populated."
+  (let ((table (make-hash-table :test 'equal)))
+    (maphash (lambda (id header)
+               (when (gethash id member-ids)
+                 (puthash id (claude-code-extras--read-session-prompt header)
+                          table)))
+             headers)
+    table))
+
+(defun claude-code-extras--find-branch-root (session-id sessions)
+  "Follow forkedFrom chain from SESSION-ID upward in SESSIONS hash table.
+Returns the root session ID."
+  (let ((current session-id)
+        (seen (make-hash-table :test 'equal)))
+    (catch 'done
+      (while t
+        (puthash current t seen)
+        (let* ((meta (gethash current sessions))
+               (parent (when meta (plist-get meta :forked-from))))
+          (if (and parent (gethash parent sessions) (not (gethash parent seen)))
+              (setq current parent)
+            (throw 'done current)))))))
+
+(defun claude-code-extras--build-children-map (sessions)
+  "Build hash table mapping parent session ID to sorted list of child IDs.
+SESSIONS is a hash table of session ID to metadata.  Children are
+sorted by timestamp."
+  (let ((map (make-hash-table :test 'equal)))
+    (maphash (lambda (_id meta)
+               (let ((parent (plist-get meta :forked-from)))
+                 (when (and parent (gethash parent sessions))
+                   (push (plist-get meta :session-id)
+                         (gethash parent map)))))
+             sessions)
+    (maphash (lambda (parent children)
+               (puthash parent
+                        (sort children
+                              (lambda (a b)
+                                (string< (or (plist-get (gethash a sessions) :timestamp) "")
+                                         (or (plist-get (gethash b sessions) :timestamp) ""))))
+                        map))
+             map)
+    map))
+
+(defun claude-code-extras--collect-tree-members (root-id children-map)
+  "Return hash table of all session IDs reachable from ROOT-ID via CHILDREN-MAP."
+  (let ((members (make-hash-table :test 'equal))
+        (queue (list root-id)))
+    (while queue
+      (let ((id (pop queue)))
+        (unless (gethash id members)
+          (puthash id t members)
+          (dolist (child (gethash id children-map))
+            (push child queue)))))
+    members))
+
+(defun claude-code-extras--format-branch-timestamp (iso-ts)
+  "Format ISO-TS as \"Mon DD HH:MM\" for branch display."
+  (when iso-ts
+    (condition-case nil
+        (format-time-string "%b %d %H:%M"
+                            (encode-time (iso8601-parse iso-ts)))
+      (error (substring iso-ts 0 (min 16 (length iso-ts)))))))
+
+(defun claude-code-extras--format-branch-tree (root-id sessions children-map current-id)
+  "Format the branch tree rooted at ROOT-ID as an alist.
+SESSIONS maps IDs to metadata, CHILDREN-MAP maps parent to child
+IDs, CURRENT-ID is the active session.  Returns an alist of
+\(display-string . session-id)."
+  (claude-code-extras--format-branch-subtree
+   root-id sessions children-map current-id "" ""))
+
+(defun claude-code-extras--format-branch-subtree
+    (id sessions children-map current-id prefix child-prefix)
+  "Format branch node ID and its children recursively.
+PREFIX is the tree connector for this node, CHILD-PREFIX is the
+continuation for children.  Returns a list of (display . session-id)."
+  (let* ((meta (gethash id sessions))
+         (prompt (or (plist-get meta :first-prompt) "(no prompt)"))
+         (ts (claude-code-extras--format-branch-timestamp
+              (plist-get meta :timestamp)))
+         (marker (if (string= id current-id) " *" ""))
+         (display (format "%s%s  %s%s" prefix prompt (or ts "") marker))
+         (children (gethash id children-map))
+         (len (length children))
+         (result (list (cons display id))))
+    (cl-loop for child in children
+             for i from 0
+             for last-p = (= i (1- len))
+             do (setq result
+                      (nconc result
+                             (claude-code-extras--format-branch-subtree
+                              child sessions children-map current-id
+                              (concat child-prefix (if last-p "└─ " "├─ "))
+                              (concat child-prefix (if last-p "   " "│  "))))))
+    result))
+
+(defun claude-code-extras--find-buffer-for-session (session-id)
+  "Return a live Claude buffer whose session matches SESSION-ID, or nil."
+  (cl-find-if
+   (lambda (buf)
+     (when (buffer-live-p buf)
+       (with-current-buffer buf
+         (let ((status (claude-code-extras--parse-status-file)))
+           (and status
+                (string= (plist-get status :session_id) session-id))))))
+   (claude-code--find-all-claude-buffers)))
+
+;;;###autoload
+(defun claude-code-extras-switch-branch ()
+  "Navigate between branches of the current Claude session.
+Shows a tree of all sessions related by branching and lets you
+select one to switch to or resume."
+  (interactive)
+  (unless (claude-code--buffer-p (current-buffer))
+    (user-error "Not in a Claude buffer"))
+  (let ((status (claude-code-extras--parse-status-file)))
+    (unless status
+      (user-error "No status file; is status polling enabled?"))
+    (let ((session-id (plist-get status :session_id))
+          (transcript (plist-get status :transcript_path)))
+      (unless (and session-id transcript)
+        (user-error "Status file missing session_id or transcript_path"))
+      (let* ((project-dir (file-name-directory transcript))
+             (headers (claude-code-extras--scan-session-headers project-dir))
+             (children-map (claude-code-extras--build-children-map headers))
+             (root-id (claude-code-extras--find-branch-root session-id headers))
+             (members (claude-code-extras--collect-tree-members root-id children-map)))
+        (when (<= (hash-table-count members) 1)
+          (user-error "No branches for this session"))
+        (let* ((sessions (claude-code-extras--enrich-sessions headers members))
+               (tree-children (claude-code-extras--build-children-map sessions))
+               (tree (claude-code-extras--format-branch-tree
+                      root-id sessions tree-children session-id))
+               (selection (consult--read
+                           (mapcar #'car tree)
+                           :prompt "Branch: "
+                           :require-match t
+                           :sort nil))
+               (selected-id (cdr (assoc selection tree))))
+          (cond
+           ((string= selected-id session-id)
+            (message "Already on this session"))
+           ((claude-code-extras--find-buffer-for-session selected-id)
+            (switch-to-buffer
+             (claude-code-extras--find-buffer-for-session selected-id)))
+           (t
+            (claude-code--start nil (list "--resume" selected-id) nil t))))))))
+
 (provide 'claude-code-extras)
 ;;; claude-code-extras.el ends here

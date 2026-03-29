@@ -19,7 +19,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 =claude-code-extras.el= extends =claude-code=, the Emacs package that runs Claude Code sessions inside an Eat terminal buffer. While =claude-code= provides the core session management and terminal integration, this extras package layers on several quality-of-life features that make extended Claude sessions more manageable.
 
-The package provides eight main areas of functionality:
+The package provides nine main areas of functionality:
 
 - *Session switching.* A Consult-powered interface for starting new Claude sessions or switching between existing ones, with live buffer previews ([[#h:session-switching][Session switching]]).
 - *Status polling.* Integration with a statusline script that exports session metadata (model name, cost, context usage, token counts) as JSON, polled periodically and exposed through accessor functions ([[#h:status-polling][Status polling]]).
@@ -29,6 +29,7 @@ The package provides eight main areas of functionality:
 - *Copilot integration.* An adapter that enables Copilot ghost-text prose completions while typing prompts in Claude Code buffers, routing accepted text through the terminal emulator ([[#h:copilot-integration][Copilot integration]]).
 - *Skill runner.* Run any user-invocable Claude Code skill non-interactively from Emacs with completion, argument prompting, and a result buffer ([[#h:skill-runner][Skill runner]]).
 - *Batch TODO processing.* Sequential execution of org TODO entries via =claude -p= in non-interactive mode, with logged results and a summary buffer ([[#h:batch-todo-processing][Batch TODO processing]]).
+- *Branch navigation.* Navigate the tree of sessions created by Claude Code's =/branch= command, with a tree-formatted display showing the branching structure and the ability to switch to or resume any branch ([[#h:branch-navigation][Branch navigation]]).
 - *Project audit.* One-command comprehensive audit that sequentially runs code, design, and interpretability audit skills with auto-fix on the current project ([[#h:project-audit][Project audit]]).
 
 The package depends on =claude-code=, =consult= (for the session switcher), and =paths= (for the batch log directory default).
@@ -259,6 +260,29 @@ The command ~claude-code-extras-debug-backtrace~ automates the workflow of debug
 3. Presents the candidate packages via ~completing-read~, ordered from most likely root cause to least likely, so the user can select the right one.
 4. Starts an interactive Claude Code session in the selected package's source directory (elpaca source directory if available, otherwise the directory of the library file on ~load-path~).
 5. Once the session is ready, sends it the backtrace file path and asks it to identify and fix the bug.
+
+** Branch navigation
+:PROPERTIES:
+:CUSTOM_ID: h:branch-navigation
+:END:
+
+#+findex: claude-code-extras-switch-branch
+Claude Code's =/branch= command creates a new session forked from the current conversation. Over time, a single session can accumulate several branches (and branches of branches), but the CLI provides no way to see or navigate this tree. The command ~claude-code-extras-switch-branch~ fills this gap.
+
+When invoked from a Claude Code buffer, the command reads the current session's ID from the status file, scans the project's session JSONL files to reconstruct the branching structure, and displays a tree-formatted selection interface via ~consult--read~. Each entry shows the session's first user prompt (truncated to 60 characters), a formatted timestamp, and a =*= marker on the current session. Tree-drawing characters (=├─=, =└─=, =│=) visualize the parent-child relationships:
+
+#+begin_example
+let's redesign the recordings validation  Mar 29 02:28
+├─ do the quick check                     Mar 29 03:15 *
+│  └─ fix the edge case                   Mar 29 04:00
+└─ try alternative approach                Mar 29 03:20
+#+end_example
+
+On selection, the command checks whether the target session is already running in an Emacs buffer. If so, it switches to that buffer directly. If the session is not running, it starts a new Claude Code session with =--resume SESSION_ID= to reopen it.
+
+The scan is optimized in two phases. First, only the first line of each JSONL file in the project directory is read to extract session IDs and ~forkedFrom~ fields (fast). The full branch tree is then identified, and only the handful of sessions in the tree are read more deeply to extract their display prompts. For branched sessions, the first /new/ user message after the fork point is used as the label, so branches are distinguishable from their parent even though they share conversation history.
+
+If the current session has no branches (and is not itself a branch), the command signals a user error.
 
 * Functions
 :PROPERTIES:

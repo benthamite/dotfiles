@@ -13092,7 +13092,12 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package slack-extras
   :after slack
-  :demand t)
+  :demand t
+  :bind
+  (:map slack-activity-feed-buffer-mode-map
+        ("E" . slack-extras-epoch-capture)
+        :map slack-message-buffer-mode-map
+        ("E" . slack-extras-epoch-capture)))
 #+end_src
 
 ** =ol-emacs-slack=

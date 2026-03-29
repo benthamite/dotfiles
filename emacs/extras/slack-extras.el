@@ -64,6 +64,14 @@ selection."
            slack-teams-by-token)
   (message "Disconnected all Slack teams."))
 
+;;;;; Capture
+
+;;;###autoload
+(defun slack-extras-epoch-capture ()
+  "Capture Slack message at point to the Epoch inbox."
+  (interactive)
+  (org-capture nil "E"))
+
 ;;;;; Messages
 
 ;;;###autoload

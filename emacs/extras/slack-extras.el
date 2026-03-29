@@ -28,10 +28,42 @@
 
 ;;; Code:
 
+(require 'ol)
 (require 'slack)
 (require 'transient)
 
 ;;;; Functions
+
+;;;;; Link storage
+
+(declare-function ol/slack-store-link "ol-emacs-slack")
+(declare-function ol/slack-format-link "ol-emacs-slack")
+
+(defun slack-extras--store-link ()
+  "Store an org link to the Slack message at point.
+Extends `ol/slack-store-link' with support for
+`slack-activity-feed-buffer-mode'."
+  (cond
+   ((derived-mode-p 'slack-message-buffer-mode 'slack-thread-message-buffer-mode)
+    (ol/slack-store-link))
+   ((derived-mode-p 'slack-activity-feed-buffer-mode)
+    (let* ((ts (get-text-property (point) 'ts))
+           (room-id (get-text-property (point) 'room-id))
+           (team (slack-buffer-team slack-current-buffer))
+           (room (and room-id (slack-room-find room-id team))))
+      (when (and ts room)
+        (let* ((room-name (slack-room-name room team))
+               (formatted-ts (get-text-property (point) 'lui-formatted-time-stamp))
+               (link (ol/slack-format-link team room ts))
+               (description (concat
+                             "Slack message in #" room-name
+                             (if formatted-ts (format " at %s" formatted-ts) ""))))
+          (org-link-store-props
+           :type "emacs-slack"
+           :link (concat "emacs-slack:" link)
+           :description description)))))))
+
+(org-link-set-parameters "emacs-slack" :store #'slack-extras--store-link)
 
 ;;;;; Connection
 

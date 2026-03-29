@@ -26,12 +26,32 @@ Input: username, scoring rubric (the list's `description` or the discover skill'
 Steps:
 
 1. Fetch 20 tweets via `mcp__twitterapi-io__get_user_tweets` (userName: username, count: "20").
-2. Evaluate the tweet corpus against the rubric. Assign a score 1-10:
-   - **8-10**: Consistently produces content matching the rubric. Auto-add.
+2. Evaluate the tweet corpus against the rubric **and** the epistemic quality gate below. Assign a score 1-10:
+   - **8-10**: Consistently produces content matching the rubric with good epistemics. Auto-add.
    - **6-7**: Some signal, some noise. Strong candidate but not overwhelming.
    - **4-5**: Occasional relevant content but mostly off-topic.
    - **1-3**: Not relevant.
 3. Write a one-line rationale for the score.
+
+### Epistemic quality gate
+
+This is a universal criterion applied to **all** lists, independent of topical relevance. Accounts that fail this gate should be penalized by 2-3 points regardless of how well they match the rubric.
+
+**Red flags** (penalize):
+- Claims presented with more confidence than the evidence warrants
+- Engagement-optimized framing: superlatives ("the BEST way"), false urgency ("you NEED to"), listicle bait ("5 things that will change how you...")
+- No caveats, qualifications, or acknowledgment of limitations
+- Cherry-picked examples presented as general truths
+- Hype amplification without independent analysis
+
+**Green flags** (reward):
+- Confidence calibrated to evidence ("in my experience", "early results suggest", "this worked for X but YMMV")
+- Explicit caveats and limitations ("this breaks down when...", "caveat: only tested on...")
+- Willingness to say "I don't know" or "I was wrong"
+- Distinguishing personal experience from general claims
+- Engaging with counterarguments or tradeoffs rather than selling a single narrative
+
+When in doubt, ask: "Is this person trying to inform me, or trying to impress me?" Accounts optimized for impressions over information should not pass regardless of topical fit.
 
 ## Auto-add rule
 

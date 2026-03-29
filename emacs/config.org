@@ -1,6 +1,6 @@
-#+TITLE:Pablo's Emacs config
-#+AUTHOR: Pablo Stafforini
-#+PROPERTY: header-args :tangle (print init-file-user-init)
+#+title:Pablo's Emacs config
+#+author: Pablo Stafforini
+#+property: header-args :tangle (print init-file-user-init)
 :PROPERTIES:
 :TOC:      ignore
 :END:
@@ -8886,7 +8886,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :demand t
   :custom
   (claude-log-summary-model 'gemini-flash-latest)
-  ( claude-log-sync-on-session-end t))
+  (claude-log-sync-on-session-end t))
 #+end_src
 
 ** =monet=
@@ -8987,7 +8987,7 @@ servers use the correct version.
                                                :args ("-y" "@modelcontextprotocol/server-slack")
                                                :env (:SLACK_BOT_TOKEN ,(auth-source-pass-get
                                                                         "bot-token"
-                                                                        "tlon/core/slack.com/ae-racionalidad")
+                                                                        "chrome/slack.com/ae-racionalidad")
                                                                       :SLACK_TEAM_ID "T04EYQYHG74")))
           ("slack-ea-translations" . (:command "npx"
                                                :args ("-y" "@modelcontextprotocol/server-slack")

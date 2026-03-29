@@ -210,13 +210,13 @@ you notice patterns. If commit messages are included, use them to inform your an
 (defun gptel-extras-set-mullvad (orig-fun &rest args)
   "Enable `mullvad’ when connecting to Gemini, then call ORIG-FUN with ARGS.
 Use to circumvent Gemini’s location restrictions."
-  (when (eq gptel-model ‘gemini-pro)
+  (when (eq gptel-model 'gemini-pro)
     (mullvad-connect-to-website "Gemini"
 				gptel-extras-gemini-mullvad-disconnect-after
-				‘silently))
+				'silently))
   (apply orig-fun args))
 
-(advice-add ‘gptel-curl-get-response :around #’gptel-extras-set-mullvad)
+(advice-add 'gptel-curl-get-response :around #'gptel-extras-set-mullvad)
 
 ;;;;; Fast JSON logging
 
@@ -241,10 +241,10 @@ TYPE, and NO-JSON."
 	  (insert data)
 	(condition-case nil
 	    (insert (json-encode
-		     (json-parse-string data :object-type ‘alist)))
+		     (json-parse-string data :object-type 'alist)))
 	  (error (insert data)))))))
 
-(advice-add ‘gptel--log :around #’gptel-extras--fast-log)
+(advice-add 'gptel--log :around #'gptel-extras--fast-log)
 
 ;;;;; Save buffer
 

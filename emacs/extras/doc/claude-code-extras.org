@@ -154,6 +154,8 @@ The user option ~claude-code-extras-debug-backtrace-model~ sets the gptel model 
 #+vindex: claude-code-extras-debug-backtrace-backend
 The user option ~claude-code-extras-debug-backtrace-backend~ sets the gptel backend name for backtrace analysis. The default is ~"Gemini"~.
 
+The backtrace analysis request explicitly disables ~gptel-use-tools~ so that tool definitions are never sent to the model, keeping the request lightweight and avoiding unexpected tool-call responses.
+
 ** Status polling options
 :PROPERTIES:
 :CUSTOM_ID: h:status-polling-options

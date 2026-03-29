@@ -460,7 +460,7 @@ Meta-skill for AI workflow design. Given a description of something to automate,
 :CUSTOM_ID: h:claude-config-audit
 :END:
 
-Audits the entire Claude Code configuration for redundancy, conflicts, dead weight, and staleness. Discovers all instruction sources (CLAUDE.md files, context skills, memory, hooks, settings), extracts every discrete rule, and evaluates each on five criteria: whether it restates default behavior, conflicts with another rule, duplicates something elsewhere, was a reactive fix for one bad output, or is too vague to apply consistently. Produces a cut list, conflict list, and cleaned-up CLAUDE.md.
+Audits the entire Claude Code configuration for redundancy, conflicts, dead weight, and staleness. Discovers all instruction sources (CLAUDE.md files, context skills, memory, hooks, settings, and =claude/README.org= for cross-referencing), extracts every discrete rule, and evaluates each on five criteria: whether it restates default behavior, conflicts with another rule, duplicates something elsewhere, was a reactive fix for one bad output, or is too vague to apply consistently. Produces a cut list, conflict list, and cleaned-up CLAUDE.md.
 
 *** try-hartree-skills
 :PROPERTIES:

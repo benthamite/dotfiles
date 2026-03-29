@@ -76,7 +76,7 @@ Claude Code loads settings from multiple levels, merged together. Each level can
 
 =settings.json= is version-controlled; =settings.local.json= is gitignored (machine-specific or accumulated interactively).
 
-The global =settings.json= uses =auto= mode (=defaultMode=): an AI model evaluates each tool call and auto-approves safe operations while prompting for risky ones. Read-only and file-editing tools (Read, Edit, Write, Glob, Grep, etc.) and all MCP tools are always allowed. Bash commands go through auto-mode evaluation, so destructive commands (=rm=, =git push --force=, etc.) trigger a confirmation prompt. Project-level =settings.local.json= files may contain more specific permissions accumulated through interactive approvals.
+The global =settings.json= uses =bypassPermissions= mode: all tools run without approval prompts. The confirmation prompt is suppressed via =skipDangerousModePermissionPrompt=.
 
 *** =CLAUDE.md= loading
 :PROPERTIES:
@@ -142,13 +142,12 @@ The active account is stored in =~/.claude-current-account=. From Emacs, =claude
 :ID:       C60E07A6-7A22-4272-8875-45FE9B44F185
 :END:
 
-- *Permission mode*: =auto= — AI evaluates each tool call; safe ones auto-approve, risky ones prompt.
+- *Permission mode*: =bypassPermissions= — all tools run without approval prompts.
 - *Agent teams*: enabled.
-- *Always-allowed tools*: Read, Edit, Write, WebFetch, WebSearch, Task, Glob, Grep, NotebookEdit, and all MCP tools (=mcp__*=).
-- *Auto-evaluated tools*: Bash (safe commands auto-approve; destructive commands prompt).
+- *Allowed tools*: Bash, Read, Edit, Write, WebFetch, WebSearch, Task, Glob, Grep, NotebookEdit, and all MCP tools (=mcp__*=).
 - *Effort level*: high.
 - *Theme*: light.
-- *Auto-mode prompt*: suppressed (=skipAutoPermissionPrompt=).
+- *Bypass prompt*: suppressed (=skipDangerousModePermissionPrompt=).
 
 ** settings.local.json
 :PROPERTIES:

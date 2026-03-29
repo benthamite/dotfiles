@@ -5,6 +5,7 @@
   "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
+      "Bash",
       "Read",
       "Edit",
       "Write",
@@ -16,7 +17,7 @@
       "NotebookEdit",
       "mcp__*"
     ],
-    "defaultMode": "auto"
+    "defaultMode": "bypassPermissions"
   },
   "model": "opus[1m]",
   "hooks": {
@@ -86,5 +87,5 @@
   "effortLevel": "high",
   "theme": "light",
   "mcpServers": {},
-  "skipAutoPermissionPrompt": true
+  "skipDangerousModePermissionPrompt": true
 }

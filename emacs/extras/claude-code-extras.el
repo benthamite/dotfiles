@@ -2798,7 +2798,16 @@ select one to switch to or resume."
             (switch-to-buffer
              (claude-code-extras--find-buffer-for-session selected-id)))
            (t
-            (claude-code--start nil (list "--resume" selected-id) nil t))))))))
+            (claude-code-extras--resume-session selected-id))))))))
+
+(defun claude-code-extras--resume-session (session-id)
+  "Resume SESSION-ID in a new Claude buffer.
+Auto-generates an instance name from the session ID to avoid the
+interactive instance-name prompt."
+  (cl-letf (((symbol-function 'claude-code--prompt-for-instance-name)
+             (lambda (_dir _existing _force)
+               (format "branch-%s" (substring session-id 0 8)))))
+    (claude-code--start nil (list "--resume" session-id) nil t)))
 
 (provide 'claude-code-extras)
 ;;; claude-code-extras.el ends here

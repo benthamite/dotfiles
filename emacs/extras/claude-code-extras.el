@@ -378,15 +378,11 @@ handler already chains through snippet expansion."
   "Prompt for confirmation before killing claude-code buffers.
 Returns t if the buffer should be killed, nil otherwise.  Skips
 the prompt when the session process has already exited (e.g. via
-/exit).  When `claude-code-extras-warn-kill-with-branches' is
-non-nil, shows a second warning if the session has branches.
-Intended for use in `kill-buffer-query-functions'."
-  (or (not (claude-code--buffer-p (current-buffer)))
+/exit).  Intended for use in `kill-buffer-query-functions'."
+  (or (not claude-code-extras-protect-buffers)
+      (not (claude-code--buffer-p (current-buffer)))
       (not (process-live-p (get-buffer-process (current-buffer))))
-      (and (or (not claude-code-extras-protect-buffers)
-               (yes-or-no-p "Kill claude-code buffer? "))
-           (or (not claude-code-extras-warn-kill-with-branches)
-               (claude-code-extras--confirm-kill-branches)))))
+      (yes-or-no-p "Kill claude-code buffer? ")))
 
 (defun claude-code-extras--confirm-kill-branches ()
   "Return t unless the current session has branches and user declines.
@@ -417,7 +413,9 @@ if the status file is unavailable, or if the user confirms."
 
 (defun claude-code-extras-setup-kill-on-exit ()
   "Arrange for the buffer to be killed when the Claude process exits.
-Works with any terminal backend by wrapping the process sentinel."
+Works with any terminal backend by wrapping the process sentinel.
+When `claude-code-extras-warn-kill-with-branches' is non-nil and
+the session has branches, prompts for confirmation before killing."
   (when (claude-code--buffer-p (current-buffer))
     (when-let* ((proc (get-buffer-process (current-buffer))))
       (let ((orig (process-sentinel proc))
@@ -427,7 +425,9 @@ Works with any terminal backend by wrapping the process sentinel."
          (lambda (process event)
            (when orig
              (funcall orig process event))
-           (when (buffer-live-p buf)
+           (when (and (buffer-live-p buf)
+                      (with-current-buffer buf
+                        (claude-code-extras--confirm-kill-branches)))
              (kill-buffer buf))))))))
 
 (defun claude-code-extras-fix-rendering ()

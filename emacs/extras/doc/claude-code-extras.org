@@ -480,7 +480,7 @@ The function ~claude-code-extras-ensure-statusline-config~ checks =~/.claude/set
 
 The function ~claude-code-extras-ensure-stop-hook-config~ similarly checks for a =Stop= hook entry and adds one if absent, pointing to the bundled hook wrapper script. This enables the stop-event detection that powers scroll-to-bottom and pending theme application.
 
-The function ~claude-code-extras-ensure-notification-hook-config~ checks for a =Notification= hook entry and adds one if absent, pointing to the bundled notification forwarding script. This enables the alert system ([[#h:alerts][Alerts]]) to receive =Notification= events (idle prompts, permission requests, elicitation dialogs) from the CLI via ~emacsclient~.
+The function ~claude-code-extras-ensure-notification-hook-config~ checks for a =Notification= hook entry and adds one if absent or empty, pointing to the bundled notification forwarding script.  It handles both the case where the =Notification= key exists with an empty array and where the key is missing entirely.  This enables the alert system ([[#h:alerts][Alerts]]) to receive =Notification= events (idle prompts, permission requests, elicitation dialogs) from the CLI via ~emacsclient~.
 
 All three functions run automatically when the package is loaded.
 

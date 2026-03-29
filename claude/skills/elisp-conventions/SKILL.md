@@ -32,21 +32,16 @@ After the hook runs, **verify the change works** via a small targeted `emacsclie
 
 # Batch testing before commit (CRITICAL)
 
-A PreToolUse hook blocks `git commit` when `.el` files are staged until an `emacs --batch` test has run. The correct pattern:
+A PreToolUse hook blocks `git commit` when `.el` files are staged until an `emacs --batch` test has run. Use the helper script:
 
 ```bash
-ELPACA=$HOME/.config/emacs-profiles/$(emacsclient -e 'init-current-profile' | tr -d '"')/elpaca
-rm -f "$PWD/emacs/extras/YOUR-PACKAGE.elc"
-emacs --batch \
-  --eval "(dolist (dir (file-expand-wildcards \"$ELPACA/builds/*/\")) (add-to-list 'load-path dir))" \
-  --eval "(push \"$PWD/emacs/extras\" load-path)" \
-  --eval "(require 'YOUR-PACKAGE)" \
-  --eval "(message \"Result: %S\" (YOUR-TEST-EXPRESSION))" \
-  2>&1
+~/My\ Drive/dotfiles/claude/bin/batch-test.sh YOUR-PACKAGE
+~/My\ Drive/dotfiles/claude/bin/batch-test.sh YOUR-PACKAGE '(message "Result: %S" (YOUR-TEST-EXPRESSION))'
 ```
 
-**The `push` MUST come AFTER the `dolist`.** This puts `emacs/extras` at the front of `load-path` so your edited `.el` source loads instead of the stale `.elc` in `elpaca/builds/`. Getting this order wrong silently loads old code — the test passes but verifies nothing.
+The script handles profile resolution, load-path setup, and stale `.elc` cleanup automatically.
 
-**Never use `load-prefer-newer`** — it causes version mismatches between elpaca dependencies.
-
-**Never use `append`** to add `emacs/extras` — it puts it at the end where elpaca builds take precedence.
+If you need to understand what the script does (e.g., for debugging), the key details:
+- All `elpaca/builds/*/` directories are added to `load-path` via `file-expand-wildcards`.
+- `emacs/extras` is pushed to the **front** so edited `.el` sources take precedence over stale `.elc` in elpaca builds.
+- Never use `load-prefer-newer` (causes version mismatches) or `append` (puts extras at the end where elpaca builds take precedence).

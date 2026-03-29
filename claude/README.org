@@ -142,9 +142,8 @@ The active account is stored in =~/.claude-current-account=. From Emacs, =claude
 :ID:       C60E07A6-7A22-4272-8875-45FE9B44F185
 :END:
 
-- *Permission mode*: =bypassPermissions= — all tools run without approval prompts.
+- *Permission mode*: =bypassPermissions= — all tools run without approval prompts. The allow list is omitted since bypass mode skips all permission checks.
 - *Agent teams*: enabled.
-- *Allowed tools*: Bash, Read, Edit, Write, WebFetch, WebSearch, Task, Glob, Grep, NotebookEdit, and all MCP tools (=mcp__*=).
 - *Effort level*: high.
 - *Theme*: light.
 - *Bypass prompt*: suppressed (=skipDangerousModePermissionPrompt=).

@@ -4,19 +4,6 @@
   },
   "includeCoAuthoredBy": false,
   "permissions": {
-    "allow": [
-      "Bash",
-      "Read",
-      "Edit",
-      "Write",
-      "WebFetch",
-      "WebSearch",
-      "Task",
-      "Glob",
-      "Grep",
-      "NotebookEdit",
-      "mcp__*"
-    ],
     "defaultMode": "bypassPermissions"
   },
   "model": "opus[1m]",

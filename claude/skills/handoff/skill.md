@@ -45,5 +45,6 @@ When drafting an inferred prompt:
    If path 2, draft a prompt, then confirm with the user.
 3. Save to `/tmp/claude-code-handoff.md`, overwriting any previous handoff.
 4. Print the contents so the user can review.
-5. Tell the user to run `M-x claude-code-extras-handoff` to close
-   this session and start a new one with the prompt auto-submitted.
+5. Tell the user to run `! emacsclient -e '(claude-code-extras-handoff)'`
+   to close this session and start a new one with the prompt auto-submitted.
+   Do NOT run this command yourself — only the user should trigger it.

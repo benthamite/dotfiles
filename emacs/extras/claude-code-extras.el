@@ -2271,6 +2271,7 @@ unconditionally recenter with `(recenter -1)'."
 
 (defvar gptel-backend)
 (defvar gptel-model)
+(defvar gptel-use-tools)
 (defvar gptel--known-backends)
 (declare-function debug-save-backtrace "init" ())
 (declare-function gptel-request "gptel")
@@ -2307,7 +2308,8 @@ the right one before starting a Claude Code session."
                     (buffer-string)))
         (gptel-backend (alist-get claude-code-extras-debug-backtrace-backend
                                  gptel--known-backends nil nil #'string=))
-        (gptel-model claude-code-extras-debug-backtrace-model))
+        (gptel-model claude-code-extras-debug-backtrace-model)
+        (gptel-use-tools nil))
     (gptel-request
      (format "Backtrace file: %s\n\nContents:\n%s" backtrace-file contents)
      :system "You are an Emacs expert. Given the backtrace, identify ALL Emacs packages that appear in the stack trace and could be the root cause of the error. Return ONLY a comma-separated list of package names, ordered from most likely root cause to least likely. For example: \"org-roam, org, emacsql\" or \"magit, transient, with-editor\"."

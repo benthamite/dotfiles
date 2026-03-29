@@ -50,7 +50,7 @@ If no cutoff file exists and running non-interactively, defaults to 48h. If inte
 
 If DESCRIPTION is non-empty, triage tweets: keep only notable ones matching the rubric. Be aggressive — 5-15 tweets from 20+ accounts. Skip noise, hype, self-promotion, low-signal RTs.
 
-For RT-discovered authors (after `---RT_DISCOVERY---`), triage separately.
+For RT-discovered authors (after `---RT_DISCOVERY---`), triage separately. **Before including any discovered account in the output**, check `~/.claude/skills/twitter-vet/vetted/<list-name>.md` — if the account appears in "Rejected", "Below threshold", or "Skipped" sections, exclude their tweets from the digest entirely.
 
 Then emit ONE bash command that does everything:
 

@@ -287,6 +287,13 @@ The scan is optimized in two phases. First, only the first line of each JSONL fi
 
 If the current session has no branches (and is not itself a branch), the command signals a user error.
 
+*** Automatic branch detection in the modeline
+:PROPERTIES:
+:CUSTOM_ID: h:branch-detection-modeline
+:END:
+
+When you run =/branch= inside a Claude Code session, the CLI creates a new session within the same terminal buffer. The status poller detects this by comparing session IDs across polls: the first session ID seen is recorded as the original, and any subsequent change triggers a display name refresh. The modeline then shows a branch suffix appended to the normal display name, formatted as =dir:instance:SHORTID= (where =SHORTID= is the first eight characters of the new session ID). This makes it immediately visible that you are working in a branch rather than the original session.
+
 * Functions
 :PROPERTIES:
 :CUSTOM_ID: h:functions

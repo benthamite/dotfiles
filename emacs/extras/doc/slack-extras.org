@@ -54,7 +54,7 @@ The command ~slack-extras-disconnect-all~ iterates over all registered teams and
 :END:
 
 #+findex: slack-extras-epoch-capture
-The command ~slack-extras-epoch-capture~ captures the Slack message at point to the Epoch inbox using ~org-capture~ with the ="E"= capture template. This is useful when a Slack conversation surfaces a task or follow-up that belongs in the Epoch project inbox rather than in the general org-capture flow. The command is bound to =E= in ~slack-activity-feed-buffer-mode-map~ and ~slack-message-buffer-mode-map~.
+The command ~slack-extras-epoch-capture~ silently captures the Slack message at point to the Epoch inbox file. It behaves identically to ~slack-chat-org-capture~ (bound to =o=) — creating a "Follow up" TODO entry with a link back to the message and a scheduled date — but files the entry in ~paths-file-epoch-inbox~ instead of the default Slack capture target. The command is bound to =E= in ~slack-activity-feed-buffer-mode-map~ and ~slack-message-buffer-mode-map~.
 
 ** Yank code block
 :PROPERTIES:

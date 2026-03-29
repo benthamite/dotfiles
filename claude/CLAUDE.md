@@ -9,6 +9,7 @@
 - Use sentence case instead of title case whenever possible.
 - If you create temporary files or code, make sure to delete them afterwards.
 - Whenever you draft a message for me to send, also copy it to the clipboard.
+- When you encounter unexpected friction — errors, confusing APIs, missing information, tools that don't work as expected — don't just work around it and move on. Briefly surface it as a potential structural issue ("this was harder than expected because X — worth investigating?"). Use judgment: flag friction that suggests a class of problems or a recurring pattern, not one-off mistakes. If the user wants to dig deeper, they'll say so; if not, continue with the task. Use `/diagnose` to enter full diagnostic mode.
 
 ## Safety
 

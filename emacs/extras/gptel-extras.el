@@ -34,6 +34,8 @@
 (require 'seq)
 (require 'paths)
 
+(defvar gptel-use-tools)
+
 ;;;; User options
 
 (defgroup gptel-extras ()
@@ -180,7 +182,8 @@ each package or feature, following this model:\n\n%s"
 		    commit-diffs
 		    (let ((file gptel-extras-changelog-file))
 		      (with-temp-buffer (insert-file-contents file) (buffer-string)))))
-	   (gptel-stream t))
+	   (gptel-stream t)
+	   (gptel-use-tools nil))
       ;; Display summary in new buffer
       (with-current-buffer (get-buffer-create "*Commit Summary*")
 	(let ((inhibit-read-only t))
@@ -1064,7 +1067,8 @@ this prompt."
     (org-msg-extras-end-of-meta-data)
     (let ((prompt (if edit-prompt
 		      (read-string "Prompt: " gptel-extras-mu4e-draft-reply-prompt)
-		    gptel-extras-mu4e-draft-reply-prompt)))
+		    gptel-extras-mu4e-draft-reply-prompt))
+	  (gptel-use-tools nil))
       (gptel-request prompt
 	:transforms (cons 'gptel--transform-add-context gptel-prompt-transform-functions))
       (gptel-context-remove-all))))
@@ -1088,7 +1092,8 @@ Uses the `google-calendar' MCP server to create events with per-field timezones.
 		   (mu4e-message-field msg :body-html)
 		   (when (derived-mode-p 'mu4e-view-mode)
 		     (buffer-substring-no-properties (point-min) (point-max)))
-		   "")))
+		   ""))
+	 (gptel-use-tools nil))
     (when (string-empty-p body)
       (user-error "Email body is empty"))
     (message "Extracting events from email...")
@@ -1157,7 +1162,8 @@ If MODEL and BACKEND are nil, use the default model and backend."
   (let* ((buffer-name (file-name-with-extension (simple-extras-slugify query)
 						(pcase gptel-default-mode
 						  ('markdown-mode "md")
-						  ('org-mode "org")))))
+						  ('org-mode "org"))))
+	 (gptel-use-tools nil))
     (gptel query nil nil t)
     (with-current-buffer buffer-name
       (gptel-extras-set-backend-and-model backend model))

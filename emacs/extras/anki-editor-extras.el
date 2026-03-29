@@ -274,6 +274,7 @@ QUERY is an Anki search string."
 
 ;;;;; plot summaries
 
+(defvar gptel-use-tools)
 (declare-function ebib-extras-get-field "ebib-extras")
 (declare-function ebib-extras-key-is-valid-p "ebib-extras")
 ;;;###autoload
@@ -300,6 +301,7 @@ After inserting the summary, prompt to optionally push the note to Anki."
   "Insert a one-paragraph plot summary for the film with BibTeX KEY.
 After inserting, ask whether to push the note to Anki."
   (let* ((request (anki-editor-extras--plot-summary-request-for-key key))
+	 (gptel-use-tools nil)
 	 (request-buffer (current-buffer))
 	 (request-position (copy-marker (point-max) t)))
     (with-current-buffer request-buffer

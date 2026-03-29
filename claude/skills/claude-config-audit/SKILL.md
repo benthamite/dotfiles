@@ -40,6 +40,11 @@ Read every instruction source in the setup. Use subagents in parallel to cover a
 - `settings.json` and `settings.local.json` for any behavioral configuration
 - `~/.claude.json` for MCP server definitions (referenced by instructions?)
 
+### Documentation
+
+- Read `claude/README.org` (if present in the project) — this documents the claude/ subdirectory (skills, hooks, settings) and serves as a cross-reference for the audit
+- Flag any discrepancies between README.org and the actual configuration (missing skills, outdated hook descriptions, etc.)
+
 ### Third-party skills
 
 - Check `.agents/skills/` or any other non-standard skill locations

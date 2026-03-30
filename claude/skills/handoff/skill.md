@@ -26,9 +26,15 @@ No confirmation needed.
 
 If there was no explicit discussion of next steps, review the
 conversation history and infer the most important follow-up tasks.
-Then **present the proposed prompt to the user for confirmation**
-using `AskUserQuestion` before writing the file. The user may edit,
-reorder, or reject items.
+**Output the full proposed prompt as a markdown code block** so the
+user can read it, then use `AskUserQuestion` with a simple yes/no
+to confirm. The user may ask you to edit, reorder, or reject items
+before you save the file.
+
+IMPORTANT: `AskUserQuestion` cannot display long-form content — only
+short option labels. Never put the prompt text inside annotations or
+option descriptions. Always print the prompt as regular text output
+BEFORE calling `AskUserQuestion`.
 
 When drafting an inferred prompt:
 - Start with "Continue from previous session (DATE)."

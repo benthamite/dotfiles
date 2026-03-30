@@ -39,7 +39,8 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 User options
 
-* @code{files-extras-new-empty-buffer-major-mode}::
+* Screenshot directory::
+* New buffer major mode::
 
 Commands
 
@@ -65,6 +66,7 @@ Functions
 * Mode and buffer switching::
 * Package management::
 * Process support::
+* Directory-local variable chaining::
 * Trash and auto-save support::
 
 Indices
@@ -105,11 +107,23 @@ keyboard-driven launcher for the files you access most often.
 @chapter User options
 
 @menu
-* @code{files-extras-new-empty-buffer-major-mode}::
+* Screenshot directory::
+* New buffer major mode::
 @end menu
 
-@node @code{files-extras-new-empty-buffer-major-mode}
-@section @code{files-extras-new-empty-buffer-major-mode}
+@node Screenshot directory
+@section Screenshot directory
+
+@vindex files-extras-screenshot-directory
+The user option @code{files-extras-screenshot-directory} specifies the
+directory where macOS saves screenshots.  The default value is the
+downloads directory (via @code{paths-dir-downloads}).  This is used by
+@code{files-extras-copy-most-recent-screenshot}
+(@ref{Copying paths and contents}) to
+locate the most recent screenshot file.
+
+@node New buffer major mode
+@section New buffer major mode
 
 @vindex files-extras-new-empty-buffer-major-mode
 The user option @code{files-extras-new-empty-buffer-major-mode} specifies the
@@ -176,7 +190,7 @@ completes.
 @findex files-extras-new-buffer-in-current-mode
 The command @code{files-extras-new-empty-buffer} creates a new buffer named
 @samp{untitled<n>} and activates the major mode specified by the user option
-@code{files-extras-new-empty-buffer-major-mode} (@ref{@code{files-extras-new-empty-buffer-major-mode}, , files-extras-new-empty-buffer-major-mode}).
+@code{files-extras-new-empty-buffer-major-mode} (@ref{New buffer major mode, , files-extras-new-empty-buffer-major-mode}).
 The buffer is marked so that @code{save-some-buffers} will offer to save it.
 
 The command @code{files-extras-new-buffer-in-current-mode} creates a new
@@ -240,12 +254,14 @@ provides a single keybinding for both common evaluation workflows.
 @findex files-extras-copy-current-path
 @findex files-extras-copy-contents
 @findex files-extras-copy-as-kill-dwim
+@findex files-extras-copy-most-recent-screenshot
 The command @code{files-extras-show-buffer-name} displays the buffer name in
 the echo area and copies it to the kill ring.
 
 The command @code{files-extras-copy-current-path} copies the full path of the
 current buffer's file (or @code{default-directory} if the buffer is not
-visiting a file) to the kill ring.
+visiting a file) to the kill ring.  With a prefix argument, it copies
+the buffer name instead.
 
 The command @code{files-extras-copy-contents} copies the entire contents of a
 file to the kill ring.  When called interactively, it uses the file at
@@ -254,6 +270,14 @@ point in Dired, the current buffer's file, or prompts for a file.
 The command @code{files-extras-copy-as-kill-dwim} copies a context-appropriate
 string to the kill ring.  Currently, in a @code{helpful-mode} buffer, it
 extracts the symbol name from the buffer title and kills the buffer.
+
+The command @code{files-extras-copy-most-recent-screenshot} finds the most
+recent screenshot in @code{files-extras-screenshot-directory}
+(@ref{Screenshot directory}) and copies its full
+path to the kill ring.  Screenshots are identified by matching the macOS
+screenshot naming pattern (@samp{Screenshot YYYY-MM-DD at HH.MM.SS.EXT}).
+This is useful for quickly referencing a screenshot you just took,
+e.g., to attach it to an email or insert it into a document.
 
 @node OCR for PDF files
 @section OCR for PDF files
@@ -370,6 +394,7 @@ menu via the @samp{p} key.
 * Mode and buffer switching::
 * Package management::
 * Process support::
+* Directory-local variable chaining::
 * Trash and auto-save support::
 @end menu
 
@@ -463,6 +488,27 @@ for @samp{ocrmypdf} output.  It translates raw process output into
 human-readable status messages and suppresses duplicates.  For example,
 it informs the user when OCR has already been performed and a prefix
 argument is needed to force re-processing.
+
+@node Directory-local variable chaining
+@section Directory-local variable chaining
+
+@findex files-extras-walk-dir-locals-file
+@vindex files-extras-walk-dir-locals-upward
+The function @code{files-extras-walk-dir-locals-file} enables chaining of
+@samp{.dir-locals.el} files from the current directory upward through the
+file system hierarchy.  By default, Emacs only applies the nearest
+@samp{.dir-locals.el}; this function makes it possible to layer settings from
+multiple levels.
+
+The variable @code{files-extras-walk-dir-locals-upward} controls the order
+in which the chained files are evaluated.  When non-nil, evaluation
+proceeds from the current directory upward (most specific first);
+otherwise, evaluation proceeds from the top down.  The default value
+is @code{nil}.
+
+This function is designed to be used as @samp{:around} advice on
+@code{hack-dir-local-variables}.  The advice call is present in the source
+but commented out by default; uncomment it if you need this behavior.
 
 @node Trash and auto-save support
 @section Trash and auto-save support

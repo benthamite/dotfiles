@@ -48,7 +48,7 @@ If no cutoff file exists and running non-interactively, defaults to 48h. If inte
 
 ## Step 2: Triage + output
 
-If DESCRIPTION is non-empty, triage tweets: keep only notable ones matching the rubric. Be aggressive — 5-15 tweets from 20+ accounts. Skip noise, hype, self-promotion, low-signal RTs.
+If DESCRIPTION is non-empty, triage tweets: keep only tweets that **directly match** the rubric. The rubric is a hard filter, not a soft signal — if a tweet doesn't clearly fit the described topic, drop it regardless of engagement. Be aggressive — 5-15 tweets from 20+ accounts. Skip noise, hype, self-promotion, low-signal RTs, and anything the rubric's "skip" list covers (read it carefully).
 
 For RT-discovered authors (after `---RT_DISCOVERY---`), triage separately. **Before including any discovered account in the output**, check `~/.claude/skills/twitter-vet/vetted/<list-name>.md` — if the account appears in "Rejected", "Below threshold", or "Skipped" sections, exclude their tweets from the digest entirely.
 

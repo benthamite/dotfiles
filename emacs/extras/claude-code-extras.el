@@ -185,6 +185,13 @@ sessions are created or destroyed.")
   "Session ID when this buffer was first created.
 Used to detect when `/branch' creates a new session.")
 
+(defconst claude-code-extras--home-row-keys '("a" "s" "d" "f" "j" "k" "l" ";")
+  "Home row keys assigned to Claude sessions, in allocation order.
+When a session is killed its key becomes available for the next new session.")
+
+(defvar claude-code-extras--session-keys (make-hash-table :test 'eq)
+  "Map from live Claude buffer to its assigned home-row key.")
+
 (defvar-local claude-code-extras--status-timer nil
   "Timer for periodic status polling in the current Claude buffer.")
 
@@ -610,6 +617,7 @@ persists the selection.  New sessions will use this account."
 
 (defun claude-code-extras--start-with-account ()
   "Start a new Claude session using the active account."
+  (interactive)
   (let ((claude-code-extras--pending-account
          (claude-code-extras--resolve-account)))
     (when claude-code-extras--pending-account
@@ -621,94 +629,83 @@ persists the selection.  New sessions will use this account."
 (defun claude-code-extras-start-or-switch ()
   "Start a new Claude session or switch to an existing one.
 If no sessions are active, start a new one.  If sessions exist,
-offer to switch to one of them or create a new session."
+show a transient menu with home-row keys for quick switching."
   (interactive)
-  (let ((buffers (claude-code--find-all-claude-buffers)))
-    (if (null buffers)
-        (claude-code-extras--start-with-account)
-      (claude-code-extras--prompt-start-or-switch buffers))))
+  (if (null (claude-code--find-all-claude-buffers))
+      (claude-code-extras--start-with-account)
+    (claude-code-extras--ensure-all-session-keys)
+    (transient-setup 'claude-code-extras--session-switcher)))
 
-(defun claude-code-extras--prompt-start-or-switch (buffers)
-  "Prompt to switch to one of BUFFERS or start a new session.
-Window-points of all windows showing BUFFERS are saved before
-entering `consult--read' and restored afterward, because Eat's
-scroll synchronization can reset them during the minibuffer
-session (triggered by window-resize events)."
-  (let* ((choices (claude-code-extras--buffers-to-choices buffers))
-         (new-label "[new session]")
-         (all-choices (append (mapcar #'car choices) (list new-label)))
-         (saved (claude-code-extras--save-claude-window-points
-                 buffers (selected-window)))
-         (selection (unwind-protect
-                        (consult--read
-                         all-choices
-                         :prompt "Claude session: "
-                         :require-match t
-                         :sort nil
-                         :state (claude-code-extras--buffer-preview-state choices))
-                      (claude-code-extras--restore-claude-window-points saved))))
-    (if (string= selection new-label)
-        (claude-code-extras--start-with-account)
-      (switch-to-buffer (cdr (assoc selection choices))))))
+(defun claude-code-extras--purge-dead-session-keys ()
+  "Remove entries for buffers that are no longer live."
+  (let (dead)
+    (maphash (lambda (buf _) (unless (buffer-live-p buf) (push buf dead)))
+             claude-code-extras--session-keys)
+    (dolist (buf dead)
+      (remhash buf claude-code-extras--session-keys))))
 
-(defun claude-code-extras--save-claude-window-points (buffers exclude-window)
-  "Save window-points for all windows showing any buffer in BUFFERS.
-EXCLUDE-WINDOW is omitted from the result.
-Each entry is (WINDOW BUFFER POINT)."
-  (let (result)
-    (dolist (buf buffers result)
-      (dolist (w (get-buffer-window-list buf nil t))
-        (unless (eq w exclude-window)
-          (push (list w buf (window-point w)) result))))))
+(defun claude-code-extras--assign-session-key ()
+  "Assign a home-row key to the current Claude buffer."
+  (when (claude-code--buffer-p (current-buffer))
+    (unless (gethash (current-buffer) claude-code-extras--session-keys)
+      (claude-code-extras--purge-dead-session-keys)
+      (let ((used (hash-table-values claude-code-extras--session-keys)))
+        (when-let* ((key (cl-find-if (lambda (k) (not (member k used)))
+                                      claude-code-extras--home-row-keys)))
+          (puthash (current-buffer) key claude-code-extras--session-keys))))))
 
-(defun claude-code-extras--restore-claude-window-points (saved)
-  "Restore window-points from SAVED.
-Each entry is (WINDOW BUFFER POINT).  Only restores if WINDOW is
-still live and still displays the same BUFFER."
-  (pcase-dolist (`(,w ,buf ,pt) saved)
-    (when (and (window-live-p w) (eq (window-buffer w) buf))
-      (set-window-point w pt))))
+(defun claude-code-extras--release-session-key ()
+  "Release the home-row key for the current Claude buffer."
+  (remhash (current-buffer) claude-code-extras--session-keys))
 
-(defun claude-code-extras--buffers-to-choices (buffers)
-  "Convert BUFFERS to an alist of (display-name . buffer) pairs.
-Use the project name as display name, appending the instance name
-only when multiple sessions share the same project.  If names
-still collide after qualification, append a numeric suffix."
-  (let* ((names (mapcar #'claude-code-extras--buffer-session-name buffers))
-         (duplicates (claude-code-extras--find-duplicate-names names))
-         (qualified (cl-mapcar
-                     (lambda (buf name)
-                       (if (member name duplicates)
-                           (claude-code-extras--qualified-session-name
-                            (buffer-name buf))
-                         name))
-                     buffers names)))
-    (cl-mapcar #'cons
-               (claude-code-extras--deduplicate-names qualified)
-               buffers)))
+(defun claude-code-extras--ensure-all-session-keys ()
+  "Ensure every active Claude buffer has a home-row key.
+Assigns keys to any sessions that were started before the key
+system was loaded."
+  (claude-code-extras--purge-dead-session-keys)
+  (dolist (buf (claude-code--find-all-claude-buffers))
+    (unless (gethash buf claude-code-extras--session-keys)
+      (let ((used (hash-table-values claude-code-extras--session-keys)))
+        (when-let* ((key (cl-find-if (lambda (k) (not (member k used)))
+                                      claude-code-extras--home-row-keys)))
+          (puthash buf key claude-code-extras--session-keys))))))
+
+(transient-define-prefix claude-code-extras--session-switcher ()
+  "Switch to a Claude session or start a new one."
+  ["Sessions"
+   :class transient-column
+   :setup-children claude-code-extras--session-switcher-children])
+
+(defun claude-code-extras--session-switcher-children (_)
+  "Build transient suffixes for the session switcher."
+  (let (specs)
+    (maphash
+     (lambda (buf key)
+       (when (buffer-live-p buf)
+         (let ((cmd (make-symbol (format "claude-switch-%s" key))))
+           (fset cmd (lambda () (interactive) (switch-to-buffer buf)))
+           (push (list key (claude-code-extras-display-name buf) cmd)
+                 specs))))
+     claude-code-extras--session-keys)
+    (setq specs
+          (sort specs
+                (lambda (a b)
+                  (< (claude-code-extras--home-row-key-index (car a))
+                     (claude-code-extras--home-row-key-index (car b))))))
+    (setq specs (append specs
+                        (list '("n" "new session"
+                                claude-code-extras--start-with-account))))
+    (transient-parse-suffixes
+     'claude-code-extras--session-switcher
+     (apply #'vector specs))))
+
+(defun claude-code-extras--home-row-key-index (key)
+  "Return the index of KEY in `claude-code-extras--home-row-keys'."
+  (or (cl-position key claude-code-extras--home-row-keys :test #'string=) 99))
 
 (defun claude-code-extras--buffer-session-name (buffer)
   "Return the session name for BUFFER."
   (claude-code-extras--session-name (buffer-name buffer)))
-
-(defun claude-code-extras--deduplicate-names (names)
-  "Add numeric suffixes to duplicate entries in NAMES.
-The first occurrence keeps its original name; subsequent
-duplicates get \" (2)\", \" (3)\", etc."
-  (let ((counts (make-hash-table :test 'equal)))
-    (mapcar (lambda (name)
-              (let ((n (1+ (or (gethash name counts) 0))))
-                (puthash name n counts)
-                (if (= n 1) name (format "%s (%d)" name n))))
-            names)))
-
-(defun claude-code-extras--find-duplicate-names (names)
-  "Return the list of NAMES that appear more than once."
-  (let (seen dups)
-    (dolist (name names dups)
-      (if (member name seen)
-          (cl-pushnew name dups :test #'string=)
-        (push name seen)))))
 
 (defun claude-code-extras--qualified-session-name (buffer-name)
   "Return a qualified session name from BUFFER-NAME.
@@ -765,27 +762,6 @@ avoid scanning all buffers on every redisplay."
       (with-current-buffer buf
         (setq claude-code-extras--display-name-cache
               (claude-code-extras--compute-display-name buf))))))
-
-(defun claude-code-extras--buffer-preview-state (choices)
-  "Return a preview state function for CHOICES.
-CHOICES is an alist of (display-name . buffer) pairs."
-  (let ((orig-buf (window-buffer (consult--original-window)))
-        selected)
-    (lambda (action cand)
-      (pcase action
-        ('return (setq selected t))
-        ('exit
-         (when (and (not selected) (buffer-live-p orig-buf))
-           (set-window-buffer (consult--original-window) orig-buf)))
-        ('preview
-         (claude-code-extras--preview-buffer cand choices))))))
-
-(defun claude-code-extras--preview-buffer (cand choices)
-  "Show the buffer for CAND from CHOICES in the original window."
-  (when-let* ((cand)
-              (buf (cdr (assoc cand choices)))
-              ((buffer-live-p buf)))
-    (set-window-buffer (consult--original-window) buf)))
 
 ;;;;; Status polling
 
@@ -2516,7 +2492,9 @@ there with the backtrace prompt passed as a CLI argument."
 (add-hook 'kill-buffer-hook #'claude-code-extras--cleanup-monet-session)
 (add-hook 'claude-code-start-hook #'claude-code-extras-disable-scrollback-truncation)
 (add-hook 'claude-code-start-hook #'claude-code-extras-setup-snippet-keys)
+(add-hook 'claude-code-start-hook #'claude-code-extras--assign-session-key)
 (add-hook 'claude-code-start-hook #'claude-code-extras-setup-copilot)
+(add-hook 'kill-buffer-hook #'claude-code-extras--release-session-key)
 (add-hook 'kill-buffer-hook #'claude-code-extras-teardown-copilot)
 (add-hook 'enable-theme-functions #'claude-code-extras-sync-theme)
 (add-hook 'claude-code-start-hook #'claude-code-extras-sync-theme)

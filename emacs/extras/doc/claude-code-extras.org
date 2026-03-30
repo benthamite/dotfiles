@@ -497,8 +497,8 @@ All three functions run automatically when the package is loaded.
 :CUSTOM_ID: h:transient-menu
 :END:
 
-#+findex: claude-code-extras-dispatch
-The command ~claude-code-extras-dispatch~ opens a transient menu that provides quick access to all major features of the package.  The menu is organized into six groups:
+#+findex: claude-code-extras-menu
+The command ~claude-code-extras-menu~ opens a transient menu that provides quick access to all major features of the package.  The menu is organized into six groups:
 
 - *Sessions.* Start or switch between sessions (~claude-code-extras-start-or-switch~, [[#h:session-switching][Session switching]]), select an account (~claude-code-extras-select-account~, [[#h:multi-account][Multi-account support]]), navigate branches (~claude-code-extras-switch-branch~, [[#h:branch-navigation][Branch navigation]]), perform a session handoff (~claude-code-extras-handoff~), and open the upstream =claude-code= transient menu (~claude-code-transient~).
 - *Tools.* Run a skill (~claude-code-extras-run-skill~, [[#h:skill-runner][Skill runner]]), process batch TODOs (~claude-code-extras-batch-todos~, [[#h:batch-todo-processing][Batch TODO processing]]), audit a project (~claude-code-extras-audit-project~, [[#h:project-audit][Project audit]]), and debug a backtrace (~claude-code-extras-debug-backtrace~, [[#h:debug-backtrace][Debug backtrace]]).

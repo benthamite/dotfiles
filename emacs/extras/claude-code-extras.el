@@ -789,6 +789,7 @@ CHOICES is an alist of (display-name . buffer) pairs."
 
 (defun claude-code-extras-start-status-polling ()
   "Start polling the status file for the current Claude buffer."
+  (interactive)
   (when (claude-code--buffer-p (current-buffer))
     (when claude-code-extras--status-timer
       (cancel-timer claude-code-extras--status-timer))
@@ -885,6 +886,7 @@ the diff is suppressed entirely; the terminal approval prompt suffices."
 
 (defun claude-code-extras-stop-status-polling ()
   "Stop status polling and clean up the status file."
+  (interactive)
   (when (and (claude-code--buffer-p (current-buffer))
              claude-code-extras--status-timer)
     (cancel-timer claude-code-extras--status-timer)
@@ -2848,8 +2850,8 @@ interactive instance-name prompt."
 
 ;;;; Transient
 
-;;;###autoload (autoload 'claude-code-extras-dispatch "claude-code-extras" nil t)
-(transient-define-prefix claude-code-extras-dispatch ()
+;;;###autoload (autoload 'claude-code-extras-menu "claude-code-extras" nil t)
+(transient-define-prefix claude-code-extras-menu ()
   "Dispatch a `claude-code-extras' command."
   ["Sessions"
    [("s" "start or switch" claude-code-extras-start-or-switch)

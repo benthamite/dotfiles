@@ -2883,21 +2883,41 @@ interactive instance-name prompt."
     ("e n" "ensure notification hook" claude-code-extras-ensure-notification-hook-config)
     ("e h" "ensure stop hook" claude-code-extras-ensure-stop-hook-config)]
    ["Options"
-    ("o a" "alert on ready" claude-code-extras-alert-on-ready
-     :class transient-lisp-variable
-     :reader claude-code-extras--read-boolean)
-    ("o p" "protect buffers" claude-code-extras-protect-buffers
-     :class transient-lisp-variable
-     :reader claude-code-extras--read-boolean)
-    ("o t" "sync theme" claude-code-extras-sync-theme
-     :class transient-lisp-variable
-     :reader claude-code-extras--read-boolean)
-    ("o c" "copilot" claude-code-extras-copilot-enabled
-     :class transient-lisp-variable
-     :reader claude-code-extras--read-boolean)
-    ("o w" "warn kill with branches" claude-code-extras-warn-kill-with-branches
-     :class transient-lisp-variable
-     :reader claude-code-extras--read-boolean)]])
+    ("o a" claude-code-extras--infix-alert-on-ready)
+    ("o p" claude-code-extras--infix-protect-buffers)
+    ("o t" claude-code-extras--infix-sync-theme)
+    ("o c" claude-code-extras--infix-copilot-enabled)
+    ("o w" claude-code-extras--infix-warn-kill-with-branches)]])
+
+(transient-define-infix claude-code-extras--infix-alert-on-ready ()
+  "Toggle `claude-code-extras-alert-on-ready'."
+  :class 'transient-lisp-variable
+  :variable 'claude-code-extras-alert-on-ready
+  :reader #'claude-code-extras--read-boolean)
+
+(transient-define-infix claude-code-extras--infix-protect-buffers ()
+  "Toggle `claude-code-extras-protect-buffers'."
+  :class 'transient-lisp-variable
+  :variable 'claude-code-extras-protect-buffers
+  :reader #'claude-code-extras--read-boolean)
+
+(transient-define-infix claude-code-extras--infix-sync-theme ()
+  "Toggle `claude-code-extras-sync-theme'."
+  :class 'transient-lisp-variable
+  :variable 'claude-code-extras-sync-theme
+  :reader #'claude-code-extras--read-boolean)
+
+(transient-define-infix claude-code-extras--infix-copilot-enabled ()
+  "Toggle `claude-code-extras-copilot-enabled'."
+  :class 'transient-lisp-variable
+  :variable 'claude-code-extras-copilot-enabled
+  :reader #'claude-code-extras--read-boolean)
+
+(transient-define-infix claude-code-extras--infix-warn-kill-with-branches ()
+  "Toggle `claude-code-extras-warn-kill-with-branches'."
+  :class 'transient-lisp-variable
+  :variable 'claude-code-extras-warn-kill-with-branches
+  :reader #'claude-code-extras--read-boolean)
 
 (defun claude-code-extras--read-boolean (_prompt _initial-input _history)
   "Toggle a boolean: return the opposite of the current value.

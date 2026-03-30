@@ -115,6 +115,76 @@ selection."
   (unless (bolp) (insert "\n"))
   (insert "```"))
 
+;;;;; Tab-bar notifications
+
+(defvar tab-bar-extras-slack-notifications-enabled t
+  "Whether the Slack element displays notifications in the Tab Bar.")
+
+(defvar slack-has-unreads)
+(defvar slack-unread-count)
+(defvar slack-teams-by-token)
+(declare-function slack-counts-summary "slack-counts")
+(declare-function doom-modeline-icon "doom-modeline-core")
+(declare-function doom-modeline-vspc "doom-modeline-core")
+
+(defun slack-extras-actionable-unreads-p ()
+  "Return non-nil when there are Slack notifications worth attention.
+DMs, group DMs, and thread replies are actionable when unread.
+Channels are only actionable when they have @mentions."
+  (catch 'found
+    (maphash
+     (lambda (_token team)
+       (when-let ((counts (and (slot-boundp team 'counts) (oref team counts))))
+         (dolist (e (slack-counts-summary counts))
+           (let ((type (car e))
+                 (has-unreads (cadr e))
+                 (mentions (cddr e)))
+             (when (pcase type
+                     ((or 'im 'mpim 'thread) has-unreads)
+                     ('channel (> mentions 0)))
+               (throw 'found t))))))
+     slack-teams-by-token)
+    nil))
+
+(defconst tab-bar-extras-slack-element
+  '(:eval (when (and tab-bar-extras-slack-notifications-enabled
+                     (bound-and-true-p slack-teams-by-token)
+                     (slack-extras-actionable-unreads-p))
+            (let ((count (or (bound-and-true-p slack-unread-count) 0)))
+              (concat
+               " | "
+               (doom-modeline-icon 'mdicon "nf-md-slack" "💬" "S"
+                                   :face 'doom-modeline-notification)
+               (doom-modeline-vspc)
+               (propertize
+                (if (> count 0)
+                    (if (> count 99) "99+" (number-to-string count))
+                  "•")
+                'face '(:inherit
+                        (doom-modeline-unread-number
+                         doom-modeline-notification)))))))
+  "Tab-bar element showing Slack unread/mention count.")
+
+(declare-function tab-bar-extras-toggle-individual-notifications
+                  "tab-bar-extras")
+;;;###autoload
+(defun tab-bar-extras-toggle-slack-notifications (&optional action)
+  "Toggle Slack notifications in the Tab Bar.
+If ACTION is `enable', enable notifications.  If ACTION is
+`disable', disable them."
+  (tab-bar-extras-toggle-individual-notifications
+   'tab-bar-extras-slack-notifications-enabled action))
+
+(defun slack-extras--also-toggle-slack (fn &optional action)
+  "Around advice for `tab-bar-extras-toggle-notifications'.
+Call FN with ACTION, then also toggle Slack notifications."
+  (funcall fn action)
+  (tab-bar-extras-toggle-slack-notifications action))
+
+(with-eval-after-load 'tab-bar-extras
+  (advice-add 'tab-bar-extras-toggle-notifications
+              :around #'slack-extras--also-toggle-slack))
+
 ;;;;; Menu
 
 ;;;###autoload (autoload 'slack-extras-menu "slack-extras" nil t)

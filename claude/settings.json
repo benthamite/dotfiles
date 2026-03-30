@@ -23,6 +23,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/block-elpaca-dotfiles-edit.sh",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -52,7 +62,18 @@
         ]
       }
     ],
-    "Notification": [],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/fire-and-forget.sh ~/My\\ Drive/dotfiles/claude/hooks/notify-emacs-notification.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "matcher": "",
@@ -72,7 +93,7 @@
     "padding": 0
   },
   "effortLevel": "high",
-  "theme": "light",
+  "theme": "dark",
   "mcpServers": {},
   "skipDangerousModePermissionPrompt": true
 }

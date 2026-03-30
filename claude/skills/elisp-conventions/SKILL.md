@@ -16,7 +16,7 @@ user-invocable: false
 
 # Rebuilding elpaca packages after changes
 
-A PostToolUse hook (`load-elisp-after-edit.sh`) automatically rebuilds and reloads the elpaca package whenever you edit a `.el` file under `elpaca/sources/`. It runs:
+A PostToolUse hook (`load-elisp-after-edit.sh`) automatically rebuilds and reloads the elpaca package whenever you edit a `.el` file under `elpaca/sources/` or `dotfiles/emacs/extras/`. It runs:
 
 ```elisp
 (elpaca-rebuild PKG t)

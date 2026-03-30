@@ -6,7 +6,9 @@ user-invocable: false
 
 # Dotfiles repository
 
-Elpaca keeps a separate clone at `~/.config/emacs-profiles/<profile>/elpaca/sources/dotfiles/` for loading Elisp, but do **not** commit there. The elpaca clone syncs from the Google Drive repo automatically.
+Elpaca keeps a separate clone at `~/.config/emacs-profiles/<profile>/elpaca/sources/dotfiles/` for loading Elisp, but do **not** commit there. The elpaca clone syncs from the Google Drive repo via git commits.
+
+**A PreToolUse hook (`block-elpaca-dotfiles-edit.sh`) blocks direct edits to `elpaca/sources/dotfiles/`.** Always edit the canonical files in `~/My Drive/dotfiles/` instead. After editing, commit and push in the dotfiles repo so the elpaca clone picks up the change on next sync. Only then will `elpaca-rebuild` (triggered by the `load-elisp-after-edit.sh` PostToolUse hook) compile the new code.
 
 # Elpaca profile
 

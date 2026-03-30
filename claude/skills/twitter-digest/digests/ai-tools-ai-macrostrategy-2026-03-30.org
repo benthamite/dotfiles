@@ -1,4 +1,8 @@
 #+title: Twitter digest: ai-tools + ai-macrostrategy — 2026-03-30
+#+cost: $3.1770
+#+duration: 1253.5s
+#+session: 30e5999d-e2da-4b3d-90a0-b98441ec5f9a
+
 
 * ai-tools
 

@@ -21,7 +21,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The package provides ten main areas of functionality:
 
-- *Session switching.* A Consult-powered interface for starting new Claude sessions or switching between existing ones, with live buffer previews ([[#h:session-switching][Session switching]]).
+- *Session switching.* A transient menu with persistent home-row key bindings for starting new Claude sessions or switching between existing ones ([[#h:session-switching][Session switching]]).
 - *Status polling.* Integration with a statusline script that exports session metadata (model name, cost, context usage, token counts) as JSON, polled periodically and exposed through accessor functions ([[#h:status-polling][Status polling]]).
 - *Alerts.* Configurable OS notifications (visual, audible, or both) when Claude needs attention, triggered by the CLI's Notification hook event for idle prompts, permission requests, and elicitation dialogs.  The Notification hook is auto-configured in =~/.claude/settings.json= at load time ([[#h:alerts][Alerts]]).
 - *Buffer lifecycle.* Kill protection for active sessions, automatic buffer cleanup on process exit, a SIGWINCH workaround for terminal rendering glitches, and a fix for ~C-g~ escape handling with multiple sessions ([[#h:buffer-lifecycle][Buffer lifecycle]]).
@@ -33,7 +33,7 @@ The package provides ten main areas of functionality:
 - *Project audit.* One-command comprehensive audit that sequentially runs code, design, and interpretability audit skills with auto-fix on the current project ([[#h:project-audit][Project audit]]).
 - *Transient menu.* A transient dispatch menu that provides quick access to all commands, setup functions, and toggleable user options ([[#h:transient-menu][Transient menu]]).
 
-The package depends on =claude-code=, =consult= (for the session switcher), and =paths= (for the batch log directory default).
+The package depends on =claude-code=, =consult= (for branch navigation and snippet insertion), and =paths= (for the batch log directory default).
 
 * User options
 :PROPERTIES:
@@ -180,9 +180,11 @@ The user option ~claude-code-extras-status-interval~ sets the polling frequency 
 :END:
 
 #+findex: claude-code-extras-start-or-switch
-The command ~claude-code-extras-start-or-switch~ is the main entry point for working with Claude sessions. When no Claude sessions are active, it starts a new one by calling ~claude-code~. When one or more sessions exist, it opens a Consult selection interface listing all active sessions plus a "[new session]" option.
+The command ~claude-code-extras-start-or-switch~ is the main entry point for working with Claude sessions. When no Claude sessions are active, it starts a new one by calling ~claude-code~. When one or more sessions exist, it opens a transient menu where each active session is bound to a home-row key (=a=, =s=, =d=, =f=, =j=, =k=, =l=, =;=), allowing single-keystroke switching. Pressing =n= starts a new session.
 
-Sessions are displayed by project name (extracted from the buffer name). When multiple sessions share the same project, the instance name is appended for disambiguation (e.g. "project:instance"). The interface provides live buffer previews as you navigate the candidates, so you can see the current state of each session before switching.
+Each session is assigned a key when it starts (via ~claude-code-start-hook~). The assignment persists for the lifetime of the session: killing a buffer releases its key, and the freed key is reused by the next session that starts. Dead-buffer entries are automatically purged before each assignment, so keys are always recycled promptly. When the transient opens, any sessions that predate the key system (e.g. sessions started before the package was loaded) are retroactively assigned keys.
+
+Sessions are displayed by project name (extracted from the buffer name). When multiple sessions share the same project, the instance name is appended for disambiguation (e.g. "project:instance").
 
 *** Multi-account support
 :PROPERTIES:

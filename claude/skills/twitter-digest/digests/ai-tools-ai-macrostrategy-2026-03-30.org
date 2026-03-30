@@ -1,0 +1,182 @@
+#+title: Twitter digest: ai-tools + ai-macrostrategy — 2026-03-30
+
+* ai-tools
+
+** Notable
+
+*** @thdxr (via @opencode) (Sun Mar 29 17:10)
+We've signed Zero Data Retention agreements with all providers for Go. All models now follow a zero-retention policy. Your data is not used for training.
+Likes: 4,558 | Views: 185,707 | Like rate: 2.5%
+[[https://x.com/opencode/status/2038302829517893825][View on X]]
+
+*** @thdxr (Mon Mar 30 04:50)
+People often ask if OpenCode Go will have a higher tier than $10/month. We'd like to but let me explain what makes this complicated. Subscription plans need to offer more than spending the same amount on pay per token. To do this, we try to get a lot of customers and go to inference providers and negotiate.
+Likes: 1,156 | Views: 51,405 | Like rate: 2.2%
+[[https://x.com/thdxr/status/2038478856072335760][View on X]]
+
+*** @0xSero (Sun Mar 29 14:03)
+This is god tier and fits on 24gb+. It crushes everything up to 6x its size and ties with Gemini deep think and Deepseek on Math. [Qwen3.5-262B-REAP]
+Likes: 1,584 | Views: 78,018 | Like rate: 2.0%
+[[https://x.com/0xSero/status/2038255672404439405][View on X]]
+
+*** @micLivs (Sun Mar 29 17:26)
+Today I'm introducing not 1, not 2, but 12 new pi extensions. Agent web search is a mess — every provider has a slightly different tool shape, they share some common parameters but each has its own thing going for it. So instead of forcing one schema to rule them all...
+Likes: 151 | Views: 9,106 | Like rate: 1.7%
+[[https://x.com/micLivs/status/2038306908994506924][View on X]]
+
+*** @boringmarketer (Sun Mar 29 17:05)
+Hermes feels fundamentally better than every other agent harness I've tested. It manages its own memory and it actually works. It proactively writes what it learns about you, searches your full conversation history, and compresses context intelligently when sessions get long.
+Likes: 414 | Views: 28,760 | Like rate: 1.4%
+[[https://x.com/boringmarketer/status/2038301480243867947][View on X]]
+
+*** @RayFernando1337 (Sun Mar 29 19:19)
+A lot of people are calling Hermes Agent the end of OpenClaw. BRUH! It's not... Nous Research trains actual models and they built an agent around that expertise. The local model routing is solid, but the part that matters for your business is that your conversations become fine-tuning data.
+Likes: 433 | Views: 30,342 | Like rate: 1.4%
+[[https://x.com/RayFernando1337/status/2038335345142767907][View on X]]
+
+*** @badlogicgames (Sun Mar 29 19:42)
+I have real trust issues with opus. It's extremely weird. Any time it suggests a thing, I switch to GPT and ask for a second opinion. In 60%+ of cases, GPT finds additional things opus just missed. (Not a GPT shill, love opus, but it's complicated.)
+Likes: 657 | Views: 50,069 | Like rate: 1.3%
+[[https://x.com/badlogicgames/status/2038341068173738097][View on X]]
+
+*** @Dimillian (Mon Mar 30 08:10)
+Number of issues found by my review swarm skill vs the built-in /review command. [Review swarm spawns 4 sub-agents for behavioral regression, security, performance, test coverage gaps. Significantly outperforms built-in review.]
+Likes: 44 | Views: 3,551 | Like rate: 1.2%
+[[https://x.com/Dimillian/status/2038529296352829539][View on X]]
+
+*** @bcherny (Mon Mar 30 03:12)
+I wanted to share a bunch of my favorite hidden and under-utilized features in Claude Code. I'll focus on the ones I use the most. Here goes. [Thread from Boris, Claude Code creator]
+Likes: 13,059 | Views: 1,234,479 | Like rate: 1.1%
+[[https://x.com/bcherny/status/2038454336355999749][View on X]]
+
+*** @Prince_Canuma (Sun Mar 29 15:40)
+You can now track single or multiple objects in videos completely locally using Sam3 + MLX.
+Likes: 463 | Views: 52,490 | Like rate: 0.9%
+[[https://x.com/Prince_Canuma/status/2038280102589407688][View on X]]
+
+*** @badlogicgames RT @elithrar (Sun Mar 29 20:03)
+RT @elithrar: The number of issues I observe from people using these "kitchen sink" plugins for their coding agents — on top of context degradation + model guardrail errors — seems at odds with *any* improvement to output quality. I don't recommend + actively steer our people away from them.
+Likes: 93 | Views: 10,793 | Like rate: 0.9%
+[[https://x.com/elithrar/status/2038346301620854921][View on X]]
+
+*** @trq212 (Sun Mar 29 20:26)
+The more I've been digging into the new Figma MCP, the more excited I am about it. Something new I'm trying is starting with a very ugly sketch in Figma, and then having Claude Code flesh it out in Figma so I can tweak and edit before sending the final back to Claude Code.
+Likes: 1,155 | Views: 154,051 | Like rate: 0.8%
+[[https://x.com/trq212/status/2038352023633228183][View on X]]
+
+** Vetted accounts
+
+*** @iotcoi — score 7 (auto-added)
+Hermes Agent builder. DSPy GEPA module (recursive self-improvement), TurboQuant vLLM, enterprise mode. ~80% AI tools content. Small but focused.
+
+*** @garrytan — not scored (quick filter only)
+GStack creator, YC president. Very prolific (37K LOC/day) but mostly GStack ecosystem promotion. Practical features mixed with heavy self-promotion.
+
+*** @elithrar — not scored (quick filter only)
+Kitchen-sink plugin criticism. Strong signal but limited volume for scoring.
+
+*** @jayfarei — not scored (quick filter only)
+Agent trace CLI for HuggingFace. Single high-signal tweet.
+
+*** @MaziyarPanahi — not scored (quick filter only)
+MLX model conversions, SAM3 port, JEPA analysis.
+
+** Accounts with nothing notable
+@alvinsng, @amirmxt, @bentossell, @carson3068, @championswimmer, @dexhorthy, @forgebitz, @intellectronica, @itsolelehmann, @ivanfioravanti, @maddiedreese, @NickADobos, @petergyang, @pontusab, @ryanvogel, @Saboo_Shubham_, @steipete, @theo, @TheAhmadOsman
+
+* ai-macrostrategy
+
+** Notable
+
+*** @JeffLadish (Sat Mar 28 21:15)
+This was already an embarrassing take in 2023. But it's 2026. It's not even true that pretraining produces models that "can only regurgitate what other people have written". But setting that aside, have these people even heard of reinforcement learning?
+Likes: 395 | Views: 15,345 | Like rate: 2.6%
+[[https://x.com/JeffLadish/status/2038001940798255197][View on X]]
+
+*** @So8res (Mon Mar 30 04:56)
+For many years I have watched people wade into the AI issue expecting to find a healthy debate, and then (to their horror) find that the "there's nothing to worry about" folks have no actual counterarguments.
+Likes: 192 | Views: 8,145 | Like rate: 2.4%
+[[https://x.com/So8res/status/2038480550911168931][View on X]]
+
+*** @deanwball (Sun Mar 29 17:30)
+Early in my career at the Manhattan Institute, I cut my teeth helping to frame complex policy work into op-ed length writing. My boss always considered the Financial Times the gold standard for op-eds. It is a real honor for me to be in the pink pages today!
+Likes: 341 | Views: 16,056 | Like rate: 2.1%
+[[https://x.com/deanwball/status/2038307948519182418][View on X]]
+
+*** @sebkrier RT @judgeglock (Mon Mar 30 04:56)
+RT @judgeglock: Why didn't electricity, mass production, the automobile, electronics, or computers lead to huge growth spikes? Because regulation, credentialism, zoning, occupational licensing, and poor land use stifle adoption.
+Likes: 821 | Views: 38,705 | Like rate: 2.1%
+[[https://x.com/judgeglock/status/2038480463522664938][View on X]]
+
+*** @EpochAIResearch (Fri Mar 27 20:33)
+The total memory bandwidth of AI chips shipped since 2022 has reached 70 million terabytes per second, growing 4.1x per year. That's around 300,000x more data per second than global internet traffic.
+Likes: 208 | Views: 10,837 | Like rate: 1.9%
+[[https://x.com/EpochAIResearch/status/2037628978283024589][View on X]]
+
+*** @JeffLadish (Sun Mar 29 00:37)
+Imagine synthetic biologists had made a bunch of progress towards creating mirror life and then published all their biological designs on the internet. And then they realized that there was a substantial chance that mirror life, if created and released, would make earth uninhabitable.
+Likes: 151 | Views: 8,250 | Like rate: 1.8%
+[[https://x.com/JeffLadish/status/2038052931233284599][View on X]]
+
+*** @_NathanCalvin (Sat Mar 28 14:50)
+Hard for me to wrap my head around the fact that as we rapidly approach the two year anniversary of Dean and I meeting while debating SB 1047 on the Cognitive Revolution, we have now converged to remarkably similar views on a near term policy agenda for mitigating catastrophic risk while avoiding collateral damage.
+Likes: 60 | Views: 4,723 | Like rate: 1.3%
+[[https://x.com/_NathanCalvin/status/2037905209570021487][View on X]]
+
+*** @RyanPGreenblatt (Sun Mar 29 20:57)
+It's clearly possible to have 1 trillion parallel AIs that: run 1000x faster than humans, are ~strictly more capable than human experts, regularly sync dense mind states. Such AIs are wildly superhuman and I don't see how "externalized cognitive tools" would close the gap.
+Likes: 524 | Views: 44,502 | Like rate: 1.2%
+[[https://x.com/RyanPGreenblatt/status/2038359972632052174][View on X]]
+
+*** @tyler_m_john (Sun Mar 29 00:02)
+I'm still looking for exceptional, high agency people who understand transformative AI to work with me on grantmaking! I expect I could deploy $100m this year and shape much more, but I am massively constrained by labor, and will do much less than this without it!
+Likes: 307 | Views: 32,662 | Like rate: 0.9%
+[[https://x.com/tyler_m_john/status/2038044074805186760][View on X]]
+
+*** @willmacaskill (Sun Mar 29 13:46)
+There are lots of projects that could really help the transition to superintelligence go much better, which almost nobody is working on. With @finmoorhouse, I've written up eight ideas that seem especially promising.
+Likes: 196 | Views: 21,294 | Like rate: 0.9%
+[[https://x.com/willmacaskill/status/2038251446404345949][View on X]]
+
+*** @deanwball (Sun Mar 29 12:19)
+I have been told my questions about the details of Pause/Stop are 'too early.' But it has been 3 years, and the rhetoric and policy sophistication of this movement has been ~stagnant during that time period. At what point does a reasonable person conclude, 'this is unserious'?
+Likes: 55 | Views: 6,072 | Like rate: 0.9%
+[[https://x.com/deanwball/status/2038229680898150706][View on X]]
+
+*** @tyler_m_john (Sun Mar 29 00:18)
+On Capybara: this is in line with expectations of people who have been paying attention. A big pre-training run is going to have big capabilities jumps. We've started automating AI R&D, so this will compound. Expect the next 6 months to be the fastest yet.
+Likes: 202 | Views: 23,614 | Like rate: 0.9%
+[[https://x.com/tyler_m_john/status/2038048212955873728][View on X]]
+
+*** @Miles_Brundage (Sun Mar 29 17:19)
+The cyber/AI situation is getting quite serious — it's been clear for years that this day was coming eventually. The thing that has changed is it's now here, today. Carlini saying LLMs are better vulnerability researchers than him should be a red alert.
+Likes: 179 | Views: 22,323 | Like rate: 0.8%
+[[https://x.com/Miles_Brundage/status/2038305043670347862][View on X]]
+
+*** @ohlennart (Fri Mar 27 16:17)
+Reportedly 750K Huawei Ascend 950PRs this year. That's less than 1% of US-designed quality-adjusted production. Or: what Huawei plans to ship all year is what the US designers churn out in less than a week. The 950PR does about 1,000 TFLOP/s FP8. In contrast, Nvidia's Blackwell GB300 does 5,000 TFLOP/s.
+Likes: 281 | Views: 118,406 | Like rate: 0.2%
+[[https://x.com/ohlennart/status/2037564736892485670][View on X]]
+
+** Vetted accounts
+
+*** @AndrewCurran_ — score 9 (auto-added)
+48K followers. ~90% macro AI content. Frontier model predictions (Mythos analysis predated official announcement), training run analysis, compute supply chains, AI drug development. Excellent original macro analysis.
+
+*** @DavidSKrueger — score 8 (auto-added)
+21K followers. ML researcher. ~80% AI safety/governance. Rogue AI definition, international AI pause critique, AI Doc review. Original well-argued positions on AI risk.
+
+*** @fleetingbits — score 7 (auto-added)
+2.6K followers. ~60% macro AI. Mythos analysis (cybersecurity focus, new tier), AI safety org independence critique, alignment midtraining analysis. Good analysis when substantive but inconsistent volume.
+
+*** @hamandcheese — score 6 (borderline)
+30K followers. ~40% AI macro. Oil shock/substitution analysis, DoE cluster, housing policy. Good AI economics angle but majority non-AI content.
+
+*** @allTheYud — not scored (quick filter only)
+Eliezer Yudkowsky. Core AI x-risk voice. Nuclear nonproliferation concerns.
+
+*** @davidad — not scored (quick filter only)
+ARIA program manager. LLM "truesight" phenomenon analysis. Formal verification for AI safety.
+
+** Accounts with nothing notable
+@ajeya_cotra, @alexolegimas, @ben_j_todd, @ChadJonesEcon, @cherylwoooo, @danwilliamsphil, @datagenproc, @DKokotajlo, @GregHBurnham, @HjalmarWijk, @jankulveit, @Jsevillamol, @lukeprog, @MKinniment, @peterwildeford, @thlarsen

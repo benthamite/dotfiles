@@ -50,3 +50,5 @@
 - **@0xblacklight** (5, 2026-03-29) — Agent design philosophy ("fewer tools, fewer instructions"). Insightful but ~40% AI tools, more philosophical than practical.
 - **@EnoReyes** (4, 2026-03-29) — Mostly amplifying FactoryAI/Droid content. One good QA tip but not enough original practical content. ~20% original AI tools content.
 - **@carson3068** (7, 2026-03-29) — Consistently practical: opencode-memory tool, auth token tips, on-chain AI workflow. Small (1.8K) but high signal-to-noise. ~70% AI tools content.
+
+- **@iotcoi** (7, 2026-03-30) — Hermes Agent builder. DSPy GEPA module, TurboQuant vLLM, enterprise mode. ~80% AI tools content.

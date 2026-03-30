@@ -13013,17 +13013,14 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
                  :repo "benthamite/emacs-slack")
   :init
   (bind-keys ("A-k" . slack-extras-menu))
+
   :custom
   (slack-file-dir paths-dir-downloads)
   (slack-prefer-current-team t)
   (slack-buffer-emojify t)
+  (slack-message-custom-notifier 'ignore)
 
   :config
-  (defun slack-chat-org-capture ()
-    "Capture Slack message at point with `org-capture'."
-    (interactive)
-    (org-capture nil "s"))
-
   (require 'pass)
   (slack-register-team
    :name "Epoch AI"
@@ -13066,9 +13063,9 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
         ("e" . slack-message-edit)
         ("k" . slack-feed-goto-prev)
         ("l" . slack-feed-goto-next)
-        ("o" . slack-chat-org-capture)
         ("r" . slack-message-add-reaction)
         ("z" . slack-message-write-another-buffer)
+        ("s-z" . slack-message-write-another-buffer)
         :map slack-message-buffer-mode-map
         ("," . slack-buffer-goto-prev-message)
         ("." . slack-buffer-goto-next-message)
@@ -13080,6 +13077,7 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
         ("o" . slack-chat-org-capture)
         ("r" . slack-message-add-reaction)
         ("z" . slack-message-write-another-buffer)
+        ("s-z" . slack-message-write-another-buffer)
         :map slack-message-compose-buffer-mode-map
         ("s-c" . slack-message-send-from-buffer)
         ("s-f" . slack-message-select-file)
@@ -13098,9 +13096,11 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
   :demand t
   :bind
   (:map slack-activity-feed-buffer-mode-map
-        ("E" . slack-extras-epoch-capture)
-        :map slack-message-buffer-mode-map
-        ("E" . slack-extras-epoch-capture)))
+	("E" . slack-extras-work-capture)
+	("o" . slack-extras-personal-capture)
+	:map slack-message-buffer-mode-map
+	("E" . slack-extras-work-capture)
+	("o" . slack-extras-personal-capture)))
 #+end_src
 
 ** =ol-emacs-slack=

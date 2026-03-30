@@ -2860,13 +2860,12 @@ interactive instance-name prompt."
 (transient-define-prefix claude-code-extras-menu ()
   "Dispatch a `claude-code-extras' command."
   [["Sessions"
-    ("s" "start or switch" claude-code-extras-start-or-switch)
+    ("e" "start or switch" claude-code-extras-start-or-switch)
     ("a" "select account" claude-code-extras-select-account)
     ("B" "switch branch" claude-code-extras-switch-branch)
-    ("h" "handoff" claude-code-extras-handoff)
-    ("c" "upstream transient" claude-code-transient)]
+    ("h" "handoff" claude-code-extras-handoff)]
    ["Tools"
-    ("r" "run skill" claude-code-extras-run-skill)
+    ("s" "run skill" claude-code-extras-run-skill)
     ("b" "batch todos" claude-code-extras-batch-todos)
     ("A" "audit project" claude-code-extras-audit-project)
     ("d" "debug backtrace" claude-code-extras-debug-backtrace)]
@@ -2879,55 +2878,53 @@ interactive instance-name prompt."
     ("f" "fix rendering" claude-code-extras-fix-rendering)
     ("S" "disable scrollback truncation" claude-code-extras-disable-scrollback-truncation)]
    ["Setup"
-    ("e s" "ensure statusline config" claude-code-extras-ensure-statusline-config)
-    ("e n" "ensure notification hook" claude-code-extras-ensure-notification-hook-config)
-    ("e h" "ensure stop hook" claude-code-extras-ensure-stop-hook-config)]
+    ("E s" "ensure statusline config" claude-code-extras-ensure-statusline-config)
+    ("E n" "ensure notification hook" claude-code-extras-ensure-notification-hook-config)
+    ("E h" "ensure stop hook" claude-code-extras-ensure-stop-hook-config)]
    ["Options"
-    ("o a" claude-code-extras--infix-alert-on-ready)
-    ("o p" claude-code-extras--infix-protect-buffers)
-    ("o t" claude-code-extras--infix-sync-theme)
-    ("o c" claude-code-extras--infix-copilot-enabled)
-    ("o w" claude-code-extras--infix-warn-kill-with-branches)]])
+    ("-a" claude-code-extras--infix-alert-on-ready)
+    ("-p" claude-code-extras--infix-protect-buffers)
+    ("-t" claude-code-extras--infix-sync-theme)
+    ("-c" claude-code-extras--infix-copilot-enabled)
+    ("-w" claude-code-extras--infix-warn-kill-with-branches)]])
+
+(defclass claude-code-extras--boolean-variable (transient-lisp-variable)
+  ()
+  "A `transient-lisp-variable' that toggles a boolean on each press.")
+
+(cl-defmethod transient-infix-read ((obj claude-code-extras--boolean-variable))
+  "Toggle the boolean value."
+  (not (oref obj value)))
 
 (transient-define-infix claude-code-extras--infix-alert-on-ready ()
   "Toggle `claude-code-extras-alert-on-ready'."
-  :class 'transient-lisp-variable
+  :class 'claude-code-extras--boolean-variable
   :variable 'claude-code-extras-alert-on-ready
-  :description "alert on ready"
-  :reader #'claude-code-extras--read-boolean)
+  :description "alert on ready")
 
 (transient-define-infix claude-code-extras--infix-protect-buffers ()
   "Toggle `claude-code-extras-protect-buffers'."
-  :class 'transient-lisp-variable
+  :class 'claude-code-extras--boolean-variable
   :variable 'claude-code-extras-protect-buffers
-  :description "protect buffers"
-  :reader #'claude-code-extras--read-boolean)
+  :description "protect buffers")
 
 (transient-define-infix claude-code-extras--infix-sync-theme ()
   "Toggle `claude-code-extras-sync-theme'."
-  :class 'transient-lisp-variable
+  :class 'claude-code-extras--boolean-variable
   :variable 'claude-code-extras-sync-theme
-  :description "sync theme"
-  :reader #'claude-code-extras--read-boolean)
+  :description "sync theme")
 
 (transient-define-infix claude-code-extras--infix-copilot-enabled ()
   "Toggle `claude-code-extras-copilot-enabled'."
-  :class 'transient-lisp-variable
+  :class 'claude-code-extras--boolean-variable
   :variable 'claude-code-extras-copilot-enabled
-  :description "copilot"
-  :reader #'claude-code-extras--read-boolean)
+  :description "copilot")
 
 (transient-define-infix claude-code-extras--infix-warn-kill-with-branches ()
   "Toggle `claude-code-extras-warn-kill-with-branches'."
-  :class 'transient-lisp-variable
+  :class 'claude-code-extras--boolean-variable
   :variable 'claude-code-extras-warn-kill-with-branches
-  :description "warn kill with branches"
-  :reader #'claude-code-extras--read-boolean)
-
-(defun claude-code-extras--read-boolean (_prompt _initial-input _history)
-  "Toggle a boolean: return the opposite of the current value.
-PROMPT, INITIAL-INPUT, and HISTORY are ignored."
-  (not (oref transient--active-infix value)))
+  :description "warn kill with branches")
 
 (provide 'claude-code-extras)
 ;;; claude-code-extras.el ends here

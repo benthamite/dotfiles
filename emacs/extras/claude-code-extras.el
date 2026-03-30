@@ -2846,7 +2846,8 @@ interactive instance-name prompt."
     ("s" "run skill" claude-code-extras-run-skill)
     ("b" "batch todos" claude-code-extras-batch-todos)
     ("A" "audit project" claude-code-extras-audit-project)
-    ("d" "debug backtrace" claude-code-extras-debug-backtrace)]
+    ("d" "debug backtrace" claude-code-extras-debug-backtrace)
+    ("l" "logs" claude-log-menu)]
    ["Alerts & status"
     ("t" "toggle alert" claude-code-extras-toggle-alert)
     ("p" "start status polling" claude-code-extras-start-status-polling)

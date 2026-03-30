@@ -28,7 +28,7 @@ Three layers of directories work together: this dotfiles directory (source of tr
 ├── settings.json                     ← hooks, model, permissions, theme
 ├── settings.local.json               ← machine-specific permissions (mpv, brew, osascript…)
 ├── hooks/                            ← 9 hook scripts
-├── skills/                           ← 39 skill directories
+├── skills/                           ← 41 skill directories
 ├── bin/batch-test.sh                 ← elpaca-aware emacs --batch test runner
 ├── bin/sync-mcp-servers.sh           ← MCP server sync utility
 └── README.org                        ← this file
@@ -237,6 +237,13 @@ Spec-based build workflow inspired by [[https://x.com/trq212/status/200531527502
 :END:
 
 Creates comprehensive test suites. Performs reconnaissance on the tech stack, then generates tests prioritized by criticality: data integrity and input boundaries first, business logic and integrations second, regressions and configuration third.
+
+*** lint-elisp
+:PROPERTIES:
+:CUSTOM_ID: h:lint-elisp
+:END:
+
+Fixes byte-compile warnings and checkdoc notes in one or more Elisp files. Collects diagnostics from both sources in parallel, applies fixes (forward declarations, docstring rewording, unused variable cleanup), and re-runs until the output is clean.
 
 *** pr-audit
 :PROPERTIES:

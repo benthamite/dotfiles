@@ -210,6 +210,7 @@ Call FN with ACTION, then also toggle Slack notifications."
     ("z" "compose in buffer" slack-message-write-another-buffer)
     ("s" "share" slack-message-share)
     ("l" "copy link" slack-message-copy-link)
+    ("I" "copy id" slack-message-copy-id)
     ("Q" "quote & reply" slack-quote-and-reply)]
    ["React & pin"
     ("r" "add reaction" slack-message-add-reaction)

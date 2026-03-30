@@ -429,6 +429,7 @@ if the status file is unavailable, or if the user confirms."
 Works with any terminal backend by wrapping the process sentinel.
 When `claude-code-extras-warn-kill-with-branches' is non-nil and
 the session has branches, prompts for confirmation before killing."
+  (interactive)
   (when (claude-code--buffer-p (current-buffer))
     (when-let* ((proc (get-buffer-process (current-buffer))))
       (let ((orig (process-sentinel proc))
@@ -448,6 +449,7 @@ the session has branches, prompts for confirmation before killing."
 Works around a race condition where Claude Code's TUI queries
 terminal dimensions before the terminal window is fully laid out,
 resulting in a garbled banner."
+  (interactive)
   (when-let* ((proc (get-buffer-process (current-buffer))))
     (claude-code-extras--send-sigwinch-after-delay (current-buffer))))
 
@@ -2202,6 +2204,7 @@ from blocking the main thread."
 (defun claude-code-extras-ensure-statusline-config ()
   "Ensure `~/.claude/settings.json' has a `statusLine' entry.
 Adds the entry pointing to the bundled shell script if absent."
+  (interactive)
   (let ((settings-file (expand-file-name "~/.claude/settings.json")))
     (when (file-exists-p settings-file)
       (with-temp-buffer
@@ -2232,6 +2235,7 @@ Finds the last `}' and inserts the entry before it."
   "Ensure `~/.claude/settings.json' has a `Stop' hook.
 Adds the hook entry pointing to the bundled wrapper script if
 absent."
+  (interactive)
   (let ((settings-file (expand-file-name "~/.claude/settings.json")))
     (when (file-exists-p settings-file)
       (with-temp-buffer
@@ -2295,6 +2299,7 @@ one."
   "Ensure `~/.claude/settings.json' has a `Notification' hook.
 Adds the hook entry pointing to the notification forwarding script
 if absent or empty."
+  (interactive)
   (let ((settings-file (expand-file-name "~/.claude/settings.json")))
     (when (file-exists-p settings-file)
       (with-temp-buffer
@@ -2373,6 +2378,7 @@ if absent or empty."
   "Disable eat scrollback truncation in Claude Code buffers.
 The default `eat-term-scrollback-size' of 131072 characters causes the
 buffer to be truncated, losing earlier output."
+  (interactive)
   (setq-local eat-term-scrollback-size nil))
 
 
@@ -2869,8 +2875,7 @@ interactive instance-name prompt."
     ("p" "start status polling" claude-code-extras-start-status-polling)
     ("P" "stop status polling" claude-code-extras-stop-status-polling)]]
   ["Buffer"
-   [("k" "protect buffer" claude-code-extras-protect-buffer)
-    ("K" "setup kill on exit" claude-code-extras-setup-kill-on-exit)
+   [("K" "setup kill on exit" claude-code-extras-setup-kill-on-exit)
     ("f" "fix rendering" claude-code-extras-fix-rendering)
     ("S" "disable scrollback truncation" claude-code-extras-disable-scrollback-truncation)]]
   ["Setup"

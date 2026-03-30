@@ -31,6 +31,7 @@
 (require 'claude-code)
 (require 'consult)
 (require 'paths)
+(require 'transient)
 
 ;;;; Variables
 
@@ -2844,6 +2845,99 @@ interactive instance-name prompt."
              (lambda (_dir _existing _force)
                (format "branch-%s" (substring session-id 0 8)))))
     (claude-code--start nil (list "--resume" session-id) nil t)))
+
+;;;; Transient
+
+;;;###autoload (autoload 'claude-code-extras-dispatch "claude-code-extras" nil t)
+(transient-define-prefix claude-code-extras-dispatch ()
+  "Dispatch a `claude-code-extras' command."
+  ["Sessions"
+   [("s" "start or switch" claude-code-extras-start-or-switch)
+    ("a" "select account" claude-code-extras-select-account)
+    ("B" "switch branch" claude-code-extras-switch-branch)
+    ("h" "handoff" claude-code-extras-handoff)
+    ("c" "upstream transient" claude-code-transient)]]
+  ["Tools"
+   [("r" "run skill" claude-code-extras-run-skill)
+    ("b" "batch todos" claude-code-extras-batch-todos)
+    ("A" "audit project" claude-code-extras-audit-project)
+    ("d" "debug backtrace" claude-code-extras-debug-backtrace)]]
+  ["Alerts & status"
+   [("t" "toggle alert" claude-code-extras-toggle-alert)
+    ("p" "start status polling" claude-code-extras-start-status-polling)
+    ("P" "stop status polling" claude-code-extras-stop-status-polling)]]
+  ["Buffer"
+   [("k" "protect buffer" claude-code-extras-protect-buffer)
+    ("K" "setup kill on exit" claude-code-extras-setup-kill-on-exit)
+    ("f" "fix rendering" claude-code-extras-fix-rendering)
+    ("S" "disable scrollback truncation" claude-code-extras-disable-scrollback-truncation)]]
+  ["Setup"
+   [("e s" "ensure statusline config" claude-code-extras-ensure-statusline-config)
+    ("e n" "ensure notification hook" claude-code-extras-ensure-notification-hook-config)
+    ("e h" "ensure stop hook" claude-code-extras-ensure-stop-hook-config)]]
+  ["Options"
+   [("o a" "alert on ready" claude-code-extras--toggle-alert-on-ready)
+    ("o p" "protect buffers" claude-code-extras--toggle-protect-buffers)
+    ("o t" "sync theme" claude-code-extras--toggle-sync-theme)
+    ("o c" "copilot" claude-code-extras--toggle-copilot-enabled)
+    ("o w" "warn kill with branches" claude-code-extras--toggle-warn-kill-with-branches)]])
+
+(transient-define-suffix claude-code-extras--toggle-alert-on-ready ()
+  "Toggle `claude-code-extras-alert-on-ready'."
+  :transient t
+  :description (lambda ()
+                 (claude-code-extras--toggle-description
+                  "alert on ready" claude-code-extras-alert-on-ready))
+  (interactive)
+  (claude-code-extras--toggle-variable 'claude-code-extras-alert-on-ready))
+
+(transient-define-suffix claude-code-extras--toggle-protect-buffers ()
+  "Toggle `claude-code-extras-protect-buffers'."
+  :transient t
+  :description (lambda ()
+                 (claude-code-extras--toggle-description
+                  "protect buffers" claude-code-extras-protect-buffers))
+  (interactive)
+  (claude-code-extras--toggle-variable 'claude-code-extras-protect-buffers))
+
+(transient-define-suffix claude-code-extras--toggle-sync-theme ()
+  "Toggle `claude-code-extras-sync-theme'."
+  :transient t
+  :description (lambda ()
+                 (claude-code-extras--toggle-description
+                  "sync theme" claude-code-extras-sync-theme))
+  (interactive)
+  (claude-code-extras--toggle-variable 'claude-code-extras-sync-theme))
+
+(transient-define-suffix claude-code-extras--toggle-copilot-enabled ()
+  "Toggle `claude-code-extras-copilot-enabled'."
+  :transient t
+  :description (lambda ()
+                 (claude-code-extras--toggle-description
+                  "copilot" claude-code-extras-copilot-enabled))
+  (interactive)
+  (claude-code-extras--toggle-variable 'claude-code-extras-copilot-enabled))
+
+(transient-define-suffix claude-code-extras--toggle-warn-kill-with-branches ()
+  "Toggle `claude-code-extras-warn-kill-with-branches'."
+  :transient t
+  :description (lambda ()
+                 (claude-code-extras--toggle-description
+                  "warn kill with branches"
+                  claude-code-extras-warn-kill-with-branches))
+  (interactive)
+  (claude-code-extras--toggle-variable
+   'claude-code-extras-warn-kill-with-branches))
+
+(defun claude-code-extras--toggle-variable (symbol)
+  "Toggle the boolean variable SYMBOL and report its new value."
+  (set symbol (not (symbol-value symbol)))
+  (message "%s %s" symbol
+           (if (symbol-value symbol) "enabled" "disabled")))
+
+(defun claude-code-extras--toggle-description (label value)
+  "Return a description for LABEL showing VALUE as on/off."
+  (format "%s [%s]" label (if value "on" "off")))
 
 (provide 'claude-code-extras)
 ;;; claude-code-extras.el ends here

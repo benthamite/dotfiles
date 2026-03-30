@@ -2832,6 +2832,31 @@ interactive instance-name prompt."
                (format "branch-%s" (substring session-id 0 8)))))
     (claude-code--start nil (list "--resume" session-id) nil t)))
 
+;;;###autoload
+(defun claude-code-extras-create-branch ()
+  "Create a branch of the current Claude session and switch to it.
+Forks the current session via `--resume --fork-session' and opens
+the new branch in a separate buffer."
+  (interactive)
+  (unless (claude-code--buffer-p (current-buffer))
+    (user-error "Not in a Claude buffer"))
+  (let ((session-id (claude-code-extras--current-session-id)))
+    (cl-letf (((symbol-function 'claude-code--prompt-for-instance-name)
+               (lambda (_dir _existing _force)
+                 (format "fork-%s" (format-time-string "%H%M%S")))))
+      (claude-code--start nil
+                         (list "--resume" session-id "--fork-session")
+                         nil t))))
+
+(defun claude-code-extras--current-session-id ()
+  "Return the session ID of the current Claude buffer.
+Signals an error if the status file is missing or incomplete."
+  (let ((status (claude-code-extras--parse-status-file)))
+    (unless status
+      (user-error "No status file; is status polling enabled?"))
+    (or (plist-get status :session_id)
+        (user-error "Status file missing session_id"))))
+
 ;;;; Transient
 
 ;;;###autoload (autoload 'claude-code-extras-menu "claude-code-extras" nil t)
@@ -2841,6 +2866,7 @@ interactive instance-name prompt."
     ("e" "start or switch" claude-code-extras-start-or-switch)
     ("a" "select account" claude-code-extras-select-account)
     ("B" "switch branch" claude-code-extras-switch-branch)
+    ("N" "new branch" claude-code-extras-create-branch)
     ("h" "handoff" claude-code-extras-handoff)]
    ["Tools"
     ("s" "run skill" claude-code-extras-run-skill)

@@ -29,7 +29,7 @@ The package provides ten main areas of functionality:
 - *Copilot integration.* An adapter that enables Copilot ghost-text prose completions while typing prompts in Claude Code buffers, routing accepted text through the terminal emulator ([[#h:copilot-integration][Copilot integration]]).
 - *Skill runner.* Run any user-invocable Claude Code skill non-interactively from Emacs with completion, argument prompting, and a result buffer ([[#h:skill-runner][Skill runner]]).
 - *Batch TODO processing.* Sequential execution of org TODO entries via =claude -p= in non-interactive mode, with logged results and a summary buffer ([[#h:batch-todo-processing][Batch TODO processing]]).
-- *Branch navigation.* Navigate the tree of sessions created by Claude Code's =/branch= command, with a tree-formatted display showing the branching structure and the ability to switch to or resume any branch ([[#h:branch-navigation][Branch navigation]]).
+- *Branch navigation.* Create new branches from the current session and navigate the tree of sessions created by branching, with a tree-formatted display showing the branching structure and the ability to switch to or resume any branch ([[#h:branch-navigation][Branch navigation]]).
 - *Project audit.* One-command comprehensive audit that sequentially runs code, design, and interpretability audit skills with auto-fix on the current project ([[#h:project-audit][Project audit]]).
 - *Transient menu.* A transient dispatch menu that provides quick access to all commands, setup functions, and toggleable user options ([[#h:transient-menu][Transient menu]]).
 
@@ -272,8 +272,25 @@ The command ~claude-code-extras-debug-backtrace~ automates the workflow of debug
 :CUSTOM_ID: h:branch-navigation
 :END:
 
+#+findex: claude-code-extras-create-branch
 #+findex: claude-code-extras-switch-branch
-Claude Code's =/branch= command creates a new session forked from the current conversation. Over time, a single session can accumulate several branches (and branches of branches), but the CLI provides no way to see or navigate this tree. The command ~claude-code-extras-switch-branch~ fills this gap.
+Claude Code's branching mechanism creates a new session forked from the current conversation. Over time, a single session can accumulate several branches (and branches of branches). This section covers creating new branches from Emacs and navigating the resulting tree.
+
+*** Creating a branch
+:PROPERTIES:
+:CUSTOM_ID: h:create-branch
+:END:
+
+The command ~claude-code-extras-create-branch~ creates a new branch of the current Claude session and switches to it. It starts a new Claude process with =--resume SESSION_ID --fork-session=, which tells the CLI to resume the conversation but under a fresh session ID. The result is a new session that shares the full history of its parent but diverges from this point forward.
+
+The new buffer is automatically named =fork-HHMMSS= (using the current time) to avoid prompting for an instance name. After branching, you can interact with the new session independently while the original remains open in its buffer. Use ~claude-code-extras-switch-branch~ to navigate between them ([[#h:switch-branch][Switching branches]]).
+
+*** Switching branches
+:PROPERTIES:
+:CUSTOM_ID: h:switch-branch
+:END:
+
+The command ~claude-code-extras-switch-branch~ navigates between branches of the current session.
 
 When invoked from a Claude Code buffer, the command reads the current session's ID from the status file, scans the project's session JSONL files to reconstruct the branching structure, and displays a tree-formatted selection interface via ~consult--read~. Each entry shows the session's first user prompt (truncated to 60 characters), a formatted timestamp, and a =*= marker on the current session. Tree-drawing characters (=├─=, =└─=, =│=) visualize the parent-child relationships:
 
@@ -502,7 +519,7 @@ All three functions run automatically when the package is loaded.
 #+findex: claude-code-extras-menu
 The command ~claude-code-extras-menu~ opens a transient menu that provides quick access to all major features of the package.  The menu is organized into six groups:
 
-- *Sessions.* Start or switch between sessions (~claude-code-extras-start-or-switch~, [[#h:session-switching][Session switching]]), select an account (~claude-code-extras-select-account~, [[#h:multi-account][Multi-account support]]), navigate branches (~claude-code-extras-switch-branch~, [[#h:branch-navigation][Branch navigation]]), and perform a session handoff (~claude-code-extras-handoff~).
+- *Sessions.* Start or switch between sessions (~claude-code-extras-start-or-switch~, [[#h:session-switching][Session switching]]), select an account (~claude-code-extras-select-account~, [[#h:multi-account][Multi-account support]]), navigate branches (~claude-code-extras-switch-branch~, [[#h:branch-navigation][Branch navigation]]), create a new branch (~claude-code-extras-create-branch~, [[#h:create-branch][Creating a branch]]), and perform a session handoff (~claude-code-extras-handoff~).
 - *Tools.* Run a skill (~claude-code-extras-run-skill~, [[#h:skill-runner][Skill runner]]), process batch TODOs (~claude-code-extras-batch-todos~, [[#h:batch-todo-processing][Batch TODO processing]]), audit a project (~claude-code-extras-audit-project~, [[#h:project-audit][Project audit]]), debug a backtrace (~claude-code-extras-debug-backtrace~, [[#h:debug-backtrace][Debug backtrace]]), and browse session logs (~claude-log-menu~).
 - *Alerts & status.* Toggle alerts (~claude-code-extras-toggle-alert~, [[#h:alert-toggle][Toggling alerts]]), and start or stop status polling ([[#h:status-polling][Status polling]]).
 - *Buffer.* Kill-on-exit setup (~claude-code-extras-setup-kill-on-exit~), rendering fixes (~claude-code-extras-fix-rendering~), and scrollback truncation control (~claude-code-extras-disable-scrollback-truncation~).  See [[#h:buffer-lifecycle][Buffer lifecycle]].

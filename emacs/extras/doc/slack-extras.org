@@ -22,7 +22,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 - Extended org link storage that adds ~slack-activity-feed-buffer-mode~ support to =ol-emacs-slack= ([[#h:link-storage][Link storage]]).
 - A connect-and-select command that starts Slack if needed and immediately opens channel selection ([[#h:start-and-select][Start and select]]).
 - A command to disconnect all teams at once ([[#h:disconnect-all][Disconnect all]]).
-- A command to capture the message at point to the Epoch inbox ([[#h:epoch-capture][Epoch capture]]).
+- Commands to capture the message at point to personal or work inboxes ([[#h:capture][Capture]]).
 - A command to yank the kill ring as a code block in compose buffers ([[#h:yank-code-block][Yank code block]]).
 - A transient dispatch menu organizing Slack operations by workflow ([[#h:transient-menu][Transient menu]]).
 
@@ -57,13 +57,16 @@ The command ~slack-extras-start-and-select~ checks whether all registered Slack 
 #+findex: slack-extras-disconnect-all
 The command ~slack-extras-disconnect-all~ iterates over all registered teams and disconnects any that have an active websocket connection, then reports that all teams have been disconnected. This is a quick way to cleanly shut down all Slack connections.
 
-** Epoch capture
+** Capture
 :PROPERTIES:
-:CUSTOM_ID: h:epoch-capture
+:CUSTOM_ID: h:capture
 :END:
 
-#+findex: slack-extras-epoch-capture
-The command ~slack-extras-epoch-capture~ silently captures the Slack message at point to the Epoch inbox file. It behaves identically to ~slack-chat-org-capture~ (bound to =o=) — creating a "Follow up" TODO entry with a link back to the message and a scheduled date — but files the entry in ~paths-file-epoch-inbox~ instead of the default Slack capture target. The command is bound to =E= in ~slack-activity-feed-buffer-mode-map~ and ~slack-message-buffer-mode-map~.
+#+findex: slack-extras-personal-capture
+The command ~slack-extras-personal-capture~ captures the Slack message at point to the personal inbox via ~org-capture~ template =s=. It is bound to =o= in ~slack-activity-feed-buffer-mode-map~ and ~slack-message-buffer-mode-map~.
+
+#+findex: slack-extras-work-capture
+The command ~slack-extras-work-capture~ captures the Slack message at point to the work inbox via ~org-capture~ template =S=. It is bound to =E= in ~slack-activity-feed-buffer-mode-map~ and ~slack-message-buffer-mode-map~.
 
 ** Yank code block
 :PROPERTIES:

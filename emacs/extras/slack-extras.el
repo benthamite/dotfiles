@@ -99,8 +99,14 @@ selection."
 ;;;;; Capture
 
 ;;;###autoload
-(defun slack-extras-epoch-capture ()
-  "Capture Slack message at point to the Epoch inbox."
+(defun slack-extras-personal-capture ()
+  "Capture Slack message at point to the personal inbox."
+  (interactive)
+  (org-capture nil "s"))
+
+;;;###autoload
+(defun slack-extras-work-capture ()
+  "Capture Slack message at point to the work inbox."
   (interactive)
   (org-capture nil "S"))
 

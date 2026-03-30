@@ -424,10 +424,13 @@ more intrusive alert."
 
 (advice-add 'recover-this-file :after #'files-extras-diff-buffer-with-file)
 
-(defun files-extras-copy-current-path ()
-  "Copy the path of the current buffer to the kill ring."
-  (interactive)
-  (let ((path (or (buffer-file-name) default-directory)))
+(defun files-extras-copy-current-path (&optional arg)
+  "Copy the path of the current buffer to the kill ring.
+With prefix ARG, copy the buffer name instead."
+  (interactive "P")
+  (let ((path (if arg
+		  (buffer-name)
+		(or (buffer-file-name) default-directory))))
     (kill-new path)
     (message "Copied `%s'" path)))
 

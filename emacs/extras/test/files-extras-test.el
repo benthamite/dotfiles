@@ -326,6 +326,13 @@ which `file-name-as-directory' converts to \"./\"."
       (files-extras-copy-current-path)
       (should (equal (current-kill 0) "/tmp/some-dir/")))))
 
+(ert-deftest files-extras-test-copy-current-path-buffer-name ()
+  "Copy buffer name to kill ring with prefix argument."
+  (with-temp-buffer
+    (rename-buffer "test-buffer-name" t)
+    (files-extras-copy-current-path '(4))
+    (should (equal (current-kill 0) "test-buffer-name"))))
+
 ;;;; Kill all file-visiting buffers
 
 (ert-deftest files-extras-test-kill-all-file-visiting-buffers-kills-file-buffers ()

@@ -195,7 +195,8 @@ the echo area and copies it to the kill ring.
 
 The command ~files-extras-copy-current-path~ copies the full path of the
 current buffer's file (or ~default-directory~ if the buffer is not
-visiting a file) to the kill ring.
+visiting a file) to the kill ring.  With a prefix argument, it copies
+the buffer name instead.
 
 The command ~files-extras-copy-contents~ copies the entire contents of a
 file to the kill ring.  When called interactively, it uses the file at

@@ -355,7 +355,7 @@ Executes any task with self-generated verification criteria that close the agent
 
 *** handoff
 
-Saves next-session instructions to =/tmp/claude-code-handoff.md= for seamless session transitions. Two paths: (1) if the user and Claude just explicitly agreed on next steps, writes the prompt directly; (2) if no explicit agreement, infers next steps from conversation history and asks the user to confirm before writing. The file lives in =/tmp/= (not =~/.claude/=) to avoid triggering write confirmation prompts; being cleared on reboot is fine since stale handoffs are useless. After running =/handoff=, the user runs =! emacsclient -e '(claude-code-extras-handoff)'= to kill the current session and start a new one with the handoff prompt auto-submitted. Claude must not run this command itself.
+Saves next-session instructions to =/tmp/claude-code-handoff.md= for seamless session transitions. Two paths: (1) if the user and Claude just explicitly agreed on next steps, writes the prompt directly; (2) if no explicit agreement, infers next steps from conversation history, prints the proposed prompt as a code block for review, and asks the user to confirm via =AskUserQuestion= before writing. The file lives in =/tmp/= (not =~/.claude/=) to avoid triggering write confirmation prompts; being cleared on reboot is fine since stale handoffs are useless. After running =/handoff=, the user runs =! emacsclient -e '(claude-code-extras-handoff)'= to kill the current session and start a new one with the handoff prompt auto-submitted. Claude must not run this command itself.
 
 *** emacs-freeze
 :PROPERTIES:

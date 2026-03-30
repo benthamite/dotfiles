@@ -1401,7 +1401,7 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
 
   :custom
   (auth-source-debug nil) ; set to t for debugging
-  (auth-source-do-cache nil) ; not sure why set to nil
+  (auth-source-do-cache t)
   (auth-sources '(macos-keychain-internet macos-keychain-generic)))
 #+end_src
 

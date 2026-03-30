@@ -43,3 +43,6 @@ description: AI macrostrategy thinkers — surface original analysis on AI traje
 - @peterwildeford
 - @alexolegimas
 - @GregHBurnham
+- @AndrewCurran_
+- @DavidSKrueger
+- @fleetingbits

@@ -29,3 +29,9 @@
 - **@peterwildeford** (8, 2026-03-26) — Bipartisan AI governance data analyst. "32 Congress members discussed AGI." SuperPAC critique, AI x-risk framing. ~80% macro content.
 - **@alexolegimas** (8, 2026-03-26) — AI labor economist. Automation vs displacement analysis, social capital thesis. ~70% macro content.
 - **@GregHBurnham** (7, 2026-03-26) — Epoch AI researcher. FrontierMath leaderboard, benchmark nuance, capability timeline estimates. ~65% macro content.
+
+- **@AndrewCurran_** (9, 2026-03-30) — Frontier AI analysis. Mythos predictions, training run analysis, AI drug development, compute supply chains. ~90% macro AI content.
+- **@DavidSKrueger** (8, 2026-03-30) — ML researcher. Rogue AI definition, international AI pause critique, AI Doc review. ~80% AI safety/governance.
+- **@fleetingbits** (7, 2026-03-30) — AI analysis. Mythos analysis, alignment midtraining, AI safety org independence. ~60% macro AI content.
+- **@hamandcheese** (6, 2026-03-30) — AI economics. Oil shock/substitution, DoE cluster analysis. ~40% AI macro, majority broader policy. Borderline.
+- **@iotcoi** (7, 2026-03-30) — [cross-listed from ai-tools] Hermes Agent builder. AI tools focus.

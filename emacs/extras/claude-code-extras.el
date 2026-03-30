@@ -2859,31 +2859,31 @@ interactive instance-name prompt."
 ;;;###autoload (autoload 'claude-code-extras-menu "claude-code-extras" nil t)
 (transient-define-prefix claude-code-extras-menu ()
   "Dispatch a `claude-code-extras' command."
-  ["Sessions"
-   [("s" "start or switch" claude-code-extras-start-or-switch)
+  [["Sessions"
+    ("s" "start or switch" claude-code-extras-start-or-switch)
     ("a" "select account" claude-code-extras-select-account)
     ("B" "switch branch" claude-code-extras-switch-branch)
     ("h" "handoff" claude-code-extras-handoff)
-    ("c" "upstream transient" claude-code-transient)]]
-  ["Tools"
-   [("r" "run skill" claude-code-extras-run-skill)
+    ("c" "upstream transient" claude-code-transient)]
+   ["Tools"
+    ("r" "run skill" claude-code-extras-run-skill)
     ("b" "batch todos" claude-code-extras-batch-todos)
     ("A" "audit project" claude-code-extras-audit-project)
-    ("d" "debug backtrace" claude-code-extras-debug-backtrace)]]
-  ["Alerts & status"
-   [("t" "toggle alert" claude-code-extras-toggle-alert)
+    ("d" "debug backtrace" claude-code-extras-debug-backtrace)]
+   ["Alerts & status"
+    ("t" "toggle alert" claude-code-extras-toggle-alert)
     ("p" "start status polling" claude-code-extras-start-status-polling)
     ("P" "stop status polling" claude-code-extras-stop-status-polling)]]
-  ["Buffer"
-   [("K" "setup kill on exit" claude-code-extras-setup-kill-on-exit)
+  [["Buffer"
+    ("K" "setup kill on exit" claude-code-extras-setup-kill-on-exit)
     ("f" "fix rendering" claude-code-extras-fix-rendering)
-    ("S" "disable scrollback truncation" claude-code-extras-disable-scrollback-truncation)]]
-  ["Setup"
-   [("e s" "ensure statusline config" claude-code-extras-ensure-statusline-config)
+    ("S" "disable scrollback truncation" claude-code-extras-disable-scrollback-truncation)]
+   ["Setup"
+    ("e s" "ensure statusline config" claude-code-extras-ensure-statusline-config)
     ("e n" "ensure notification hook" claude-code-extras-ensure-notification-hook-config)
-    ("e h" "ensure stop hook" claude-code-extras-ensure-stop-hook-config)]]
-  ["Options"
-   [("o a" "alert on ready" claude-code-extras--toggle-alert-on-ready)
+    ("e h" "ensure stop hook" claude-code-extras-ensure-stop-hook-config)]
+   ["Options"
+    ("o a" "alert on ready" claude-code-extras--toggle-alert-on-ready)
     ("o p" "protect buffers" claude-code-extras--toggle-protect-buffers)
     ("o t" "sync theme" claude-code-extras--toggle-sync-theme)
     ("o c" "copilot" claude-code-extras--toggle-copilot-enabled)

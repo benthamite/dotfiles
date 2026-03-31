@@ -52,7 +52,7 @@
 ORIG-FUN is the original function.  ARGS are the arguments."
   (if (cdr (assoc "post-id" (org2blog--export-as-post t)))
       (apply orig-fun args)
-    (when (y-or-n-p "Post has no ID. Proceed anyway? ")
+    (when (y-or-n-p "Post has no ID.  Proceed anyway? ")
       (apply orig-fun args))))
 
 (advice-add 'org2blog-subtree-post-save :around #'org2blog-extras-subtree-publish-save)

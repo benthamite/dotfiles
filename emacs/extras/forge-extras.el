@@ -126,9 +126,10 @@ If ISSUE is nil, use the issue at point or in the current buffer."
       ('completed (forge--set-topic-state repo issue 'open)))))
 
 (defun forge-extras-massage-notification-gracefully (fn data githost)
-  "Advice around `forge--ghub-massage-notification' to skip unsupported types.
-GitHub may introduce new notification types (e.g. CheckSuite) that Forge does
-not yet handle.  Rather than erroring, return nil so `seq-keep' filters them."
+  "Advice around FN to skip unsupported notification types.
+Call FN with DATA and GITHOST.  GitHub may introduce new notification
+types (e.g. CheckSuite) that Forge does not yet handle.  Rather than
+erroring, return nil so `seq-keep' filters them."
   (condition-case nil
       (funcall fn data githost)
     (error nil)))
@@ -273,7 +274,7 @@ If DIR is nil, use the current directory."
 
 (defun forge-extras-track-repo-all-topics (&optional url-or-path)
   "Add a repository to the forge database, pulling all topics.
-If URL-OR-PATH is provided, add that repository. Otherwise, add the current
+If URL-OR-PATH is provided, add that repository.  Otherwise, add the current
 repo."
   (let* ((default-directory (if (and url-or-path (file-directory-p url-or-path))
 				(expand-file-name url-or-path)
@@ -382,7 +383,7 @@ Return a list of issue plists."
 (defun forge-extras--parse-gh-issue-table (table-string repo-string)
   "Parse the default (tabular) output of `gh issue list`.
 Return a list of plists with :repo :number :title :url.
-TABLE-STRING is the output string from `gh issue list`. REPO-STRING is the
+TABLE-STRING is the output string from `gh issue list`.  REPO-STRING is the
 repository string in the format \"owner/repo\"."
   (let ((lines   (split-string table-string "\n" t))
         (issues  nil))
@@ -616,7 +617,7 @@ and issue number.")
 (defun forge-extras--execute-gh-graphql-query (query-string variables)
   "Execute a GitHub GraphQL QUERY-STRING with VARIABLES.
 VARIABLES is an alist of (var-name . value) suitable for a JSON `variables'
-object. Returns the parsed JSON response as an Elisp data structure, or nil on
+object.  Returns the parsed JSON response as an Elisp data structure, or nil on
 failure."
   (let* ((lines (split-string query-string "\n" t))
          (lines-without-comments (mapcar (lambda (line) (replace-regexp-in-string "#.*" "" line)) lines))
@@ -638,7 +639,7 @@ failure."
     (let* ((process-args (list "api" "--method" "POST" "-H" "Content-Type: application/json" "/graphql" "--input" "-"))
            (gh-executable (executable-find "gh")))
       (unless gh-executable
-        (error "The 'gh' command-line tool was not found. Please ensure it is installed and accessible"))
+        (error "The 'gh' command-line tool was not found.  Please ensure it is installed and accessible"))
       (with-temp-buffer
         (insert json-payload-string)
         (setq exit-status
@@ -694,7 +695,7 @@ failure."
   "Execute a GitHub GraphQL MUTATION-QUERY-STRING with VARIABLES.
 VARIABLES is an alist of (var-name . value) for GraphQL variables.
 Values should be Elisp strings for GraphQL Strings/IDs, and Elisp numbers
-for GraphQL Ints/Floats. This function sends the request by piping a
+for GraphQL Ints/Floats.  This function sends the request by piping a
 JSON payload to `gh api ... --input -'."
   (let* ((lines (split-string mutation-query-string "\n" t))
          (lines-without-comments (mapcar (lambda (line) (replace-regexp-in-string "#.*" "" line)) lines))
@@ -717,7 +718,7 @@ JSON payload to `gh api ... --input -'."
     (let* ((process-args (list "api" "--method" "POST" "-H" "Content-Type: application/json" "/graphql" "--input" "-"))
            (gh-executable (executable-find "gh")))
       (unless gh-executable
-        (error "The 'gh' command-line tool was not found. Please ensure it is installed and accessible"))
+        (error "The 'gh' command-line tool was not found.  Please ensure it is installed and accessible"))
       (forge-extras-message-debug "forge-extras-gh--call-api-graphql-mutation: Executing 'gh %s' with payload via stdin" (string-join process-args " "))
       ;; Pass json-payload-string via stdin using call-process-region
       (with-temp-buffer
@@ -893,8 +894,8 @@ Returns the new project item's Node ID, or nil on failure."
 
 (defun forge-extras-gh-update-project-item-status-field (project-node-id item-node-id field-node-id status-option-id)
   "Update the project item's status field.
-PROJECT-NODE-ID is the project's Node ID. ITEM-NODE-ID is the project item's
-Node ID. FIELD-NODE-ID is the \"Status\" field's Node ID. STATUS-OPTION-ID is
+PROJECT-NODE-ID is the project's Node ID.  ITEM-NODE-ID is the project item's
+Node ID.  FIELD-NODE-ID is the \"Status\" field's Node ID.  STATUS-OPTION-ID is
 the Node ID of the desired status option (e.g., for \"Doing\")."
   (let* ((variables `(("projectNodeId" . ,project-node-id)
                       ("itemNodeId" . ,item-node-id)
@@ -913,8 +914,8 @@ the Node ID of the desired status option (e.g., for \"Doing\")."
 
 (defun forge-extras-gh-update-project-item-estimate-field (project-node-id item-node-id field-node-id estimate-value)
   "Update the project item's estimate field.
-PROJECT-NODE-ID is the project's Node ID. ITEM-NODE-ID is the project item's
-Node ID. FIELD-NODE-ID is the \"Estimate\" field's Node ID. ESTIMATE-VALUE is
+PROJECT-NODE-ID is the project's Node ID.  ITEM-NODE-ID is the project item's
+Node ID.  FIELD-NODE-ID is the \"Estimate\" field's Node ID.  ESTIMATE-VALUE is
 the numerical estimate to set."
   (let* ((variables `(("projectNodeId" . ,project-node-id)
                       ("itemNodeId" . ,item-node-id)
@@ -935,7 +936,7 @@ the numerical estimate to set."
 (defun forge-extras-set-project-status (&optional issue status)
   "Set the GitHub Project status for the current ISSUE to STATUS.
 ISSUE defaults to `forge-current-topic'.
-If STATUS is provided, use it directly. Otherwise, prompt for a status from
+If STATUS is provided, use it directly.  Otherwise, prompt for a status from
 `forge-extras-status-option-ids-alist'.
 If the issue is not yet in `forge-extras-project-number', automatically add it.
 Updates are performed via GitHub API calls."
@@ -964,15 +965,15 @@ Updates are performed via GitHub API calls."
     (forge-extras-message-debug "Fetching current project fields for issue #%s in %s/%s..."
 	     issue-number forge-extras-project-owner repo-name)
     (unless parsed-fields
-      (user-error "Could not retrieve project data for issue. Aborting"))
+      (user-error "Could not retrieve project data for issue.  Aborting"))
     (let* ((issue-node-id (plist-get parsed-fields :issue-node-id))
            (current-project-item-id (plist-get parsed-fields :project-item-id))
            (target-project-item-id current-project-item-id))
       (unless issue-node-id
-        (user-error "Could not retrieve GitHub Issue Node ID. Aborting")
+        (user-error "Could not retrieve GitHub Issue Node ID.  Aborting")
         (cl-return-from forge-extras-set-project-status))
       (when (string= chosen-status-name current-status-name)
-        (forge-extras-message-debug "Issue #%s is already in status '%s'. No change needed." issue-number chosen-status-name)
+        (forge-extras-message-debug "Issue #%s is already in status '%s'.  No change needed." issue-number chosen-status-name)
         (cl-return-from forge-extras-set-project-status))
       (setq target-project-item-id
             (forge-extras--ensure-issue-in-project
@@ -997,8 +998,8 @@ Updates are performed via GitHub API calls."
 (defun forge-extras-set-project-estimate (&optional issue estimate)
   "Set the GitHub Project estimate for the current ISSUE to ESTIMATE.
 ISSUE defaults to `forge-current-topic'.
-If ESTIMATE is provided, use it directly. Otherwise, prompt for a numerical
-estimate. The current estimate (if any, from a field named \"Estimate\") is
+If ESTIMATE is provided, use it directly.  Otherwise, prompt for a numerical
+estimate.  The current estimate (if any, from a field named \"Estimate\") is
 offered as default when prompting.
 If the issue is not yet in `forge-extras-project-number', automatically add it.
 Updates are performed via GitHub API calls using the field ID from
@@ -1009,7 +1010,7 @@ Updates are performed via GitHub API calls using the field ID from
   (unless (and (boundp 'forge-extras-estimate-field-node-id)
                (stringp forge-extras-estimate-field-node-id)
                (not (string-empty-p forge-extras-estimate-field-node-id)))
-    (user-error "`forge-extras-estimate-field-node-id' is not configured. Please set it"))
+    (user-error "`forge-extras-estimate-field-node-id' is not configured.  Please set it"))
   (let* ((repo (forge-get-repository issue))
          (issue-number (oref issue number))
          (repo-name (oref repo name))
@@ -1025,15 +1026,15 @@ Updates are performed via GitHub API calls using the field ID from
     (forge-extras-message-debug "Fetching current project fields for issue #%s in %s/%s..."
 	     issue-number forge-extras-project-owner repo-name)
     (unless parsed-fields
-      (user-error "Could not retrieve project data for issue. Aborting"))
+      (user-error "Could not retrieve project data for issue.  Aborting"))
     (let* ((issue-node-id (plist-get parsed-fields :issue-node-id))
            (current-project-item-id (plist-get parsed-fields :project-item-id))
            (target-project-item-id current-project-item-id))
       (unless issue-node-id
-        (user-error "Could not retrieve GitHub Issue Node ID. Aborting")
+        (user-error "Could not retrieve GitHub Issue Node ID.  Aborting")
         (cl-return-from forge-extras-set-project-estimate))
       (if (and current-estimate (= chosen-estimate current-estimate))
-          (forge-extras-message-debug "Issue #%s already has estimate '%s'. No change needed." issue-number current-estimate)
+          (forge-extras-message-debug "Issue #%s already has estimate '%s'.  No change needed." issue-number current-estimate)
         (progn ; Proceed with update
           (setq target-project-item-id
                 (forge-extras--ensure-issue-in-project
@@ -1057,15 +1058,15 @@ Updates are performed via GitHub API calls using the field ID from
 ;;;###autoload
 (defun forge-extras-get-project-field-ids ()
   "Fetch and display all field names and their Node IDs for the Project.
-The project is determined by `forge-extras-project-node-id'. The results are
-shown in a new buffer, \"*GitHub Project Fields*\". This command helps in
+The project is determined by `forge-extras-project-node-id'.  The results are
+shown in a new buffer, \"*GitHub Project Fields*\".  This command helps in
 finding the Node ID required for variables like
 `forge-extras-estimate-field-node-id' and `forge-extras-status-field-node-id'."
   (interactive)
   (unless (and (boundp 'forge-extras-project-node-id)
                (stringp forge-extras-project-node-id)
                (not (string-empty-p forge-extras-project-node-id)))
-    (user-error "`forge-extras-project-node-id' is not configured. Please set it first"))
+    (user-error "`forge-extras-project-node-id' is not configured.  Please set it first"))
   (message "Fetching project fields for Project Node ID: %s..." forge-extras-project-node-id)
   (let* ((raw-response (forge-extras-gh-get-project-fields forge-extras-project-node-id))
          (fields (if raw-response
@@ -1179,11 +1180,12 @@ finding the Node ID required for variables like
 
 (defun forge-extras--parse-project-items (raw-json-response &optional target-repo-name-with-owner include-closed-p)
   "Parse RAW-JSON-RESPONSE from project items query.
-If TARGET-REPO-NAME-WITH-OWNER is non-nil, filter items for that repository. If
-INCLUDE-CLOSED-P is nil, filter out closed/merged items. Filters for type (Issue
-or PullRequest). Returns a cons cell: (LIST-OF-ITEMS . PAGE-INFO-ALIST). Each
-item in LIST-OF-ITEMS is a plist with :type :number :title :url :repo :state
-and optionally :status :estimate if the data includes project field values."
+If TARGET-REPO-NAME-WITH-OWNER is non-nil, filter items for that
+repository.  If INCLUDE-CLOSED-P is nil, filter out closed/merged
+items.  Filters for type (Issue or PullRequest).  Returns a cons
+cell (LIST-OF-ITEMS . PAGE-INFO-ALIST).  Each item is a plist with
+:type :number :title :url :repo :state and optionally :status
+:estimate if the data includes project field values."
   (let ((items-and-prs nil)
         (page-info nil))
     (when-let* ((data (cdr (assoc 'data raw-json-response)))
@@ -1238,19 +1240,19 @@ and optionally :status :estimate if the data includes project field values."
 (defun forge-extras-list-project-issues-by-repo-ordered (repo-name-with-owner)
   "List issues and pull requests from REPO-NAME-WITH-OWNER in the GitHub project.
 The items are listed in the order they appear on the project board.
-REPO-NAME-WITH-OWNER should be in \"owner/repo\" format. Results are displayed
-in a new buffer \"*Project Issues for REPO-NAME-WITH-OWNER*\". Returns the list
+REPO-NAME-WITH-OWNER should be in \"owner/repo\" format.  Results are displayed
+in a new buffer \"*Project Issues for REPO-NAME-WITH-OWNER*\".  Returns the list
 of issue/PR plists."
   (interactive
    (list (read-string "Repository (owner/repo): ")))
   (unless (and (boundp 'forge-extras-project-node-id)
                (stringp forge-extras-project-node-id)
                (not (string-empty-p forge-extras-project-node-id)))
-    (user-error "`forge-extras-project-node-id' is not configured. Please set it first"))
+    (user-error "`forge-extras-project-node-id' is not configured.  Please set it first"))
   (unless (executable-find "gh")
     (user-error "The 'gh' command-line tool is not installed or not in PATH"))
   (unless (string-match-p ".+/.+" repo-name-with-owner)
-    (user-error "Invalid repository format. Expected \"owner/repo\""))
+    (user-error "Invalid repository format.  Expected \"owner/repo\""))
 
   (message "Fetching project items for %s from project %s..."
            repo-name-with-owner forge-extras-project-node-id)
@@ -1315,13 +1317,14 @@ Items are fetched page by page and listed in the order they appear on the
 project board.
 
 If USE-CACHE-P is non-nil and `forge-extras--cached-project-items` is non-nil,
-the cached list is used. Otherwise, items are fetched from the GitHub API. Note:
+the cached list is used.  Otherwise, items are fetched from the
+GitHub API.  Note:
 If cached data is used, the `include-closed-p` argument from the current call
 does not re-filter the cached items; it only applies if new data is fetched.
 
 If INCLUDE-CLOSED-P is non-nil (e.g., when called with any prefix argument and
 not using a populated cache for fetching), closed and merged items are included
-in the fetch. Otherwise, they are excluded.
+in the fetch.  Otherwise, they are excluded.
 
 If DISPLAY-BUFFER-P is non-nil (e.g., when called without a prefix argument),
 results are displayed in a new buffer \"*All Project Items (Ordered by
@@ -1349,7 +1352,7 @@ The returned list (whether fetched or from cache) is always (re)cached in
         (unless (and (boundp 'forge-extras-project-node-id)
                      (stringp forge-extras-project-node-id)
                      (not (string-empty-p forge-extras-project-node-id)))
-          (user-error "`forge-extras-project-node-id' is not configured. Please set it first"))
+          (user-error "`forge-extras-project-node-id' is not configured.  Please set it first"))
         (unless (executable-find "gh")
           (user-error "The 'gh' command-line tool is not installed or not in PATH"))
         (forge-extras-message-debug "Fetching all project items from project %s (Include closed: %s)..."
@@ -1460,11 +1463,11 @@ formatted for `forge-extras-status-option-ids-alist'."
   (unless (and (boundp 'forge-extras-project-node-id)
                (stringp forge-extras-project-node-id)
                (not (string-empty-p forge-extras-project-node-id)))
-    (user-error "`forge-extras-project-node-id' is not configured. Please set it first"))
+    (user-error "`forge-extras-project-node-id' is not configured.  Please set it first"))
   (unless (and (boundp 'forge-extras-status-field-node-id)
                (stringp forge-extras-status-field-node-id)
                (not (string-empty-p forge-extras-status-field-node-id)))
-    (user-error "`forge-extras-status-field-node-id' is not configured. Please set it first. You can use `forge-extras-get-project-field-ids` to find it"))
+    (user-error "`forge-extras-status-field-node-id' is not configured.  Please set it first.  You can use `forge-extras-get-project-field-ids` to find it"))
   (message "Fetching status options for Project Node ID: %s, Status Field ID: %s..."
            forge-extras-project-node-id forge-extras-status-field-node-id)
   (let* ((variables `(("statusFieldNodeId" . ,forge-extras-status-field-node-id)))
@@ -1498,10 +1501,10 @@ formatted for `forge-extras-status-option-ids-alist'."
                 (display-buffer buffer)
                 (message "Project status options displayed in *GitHub Project Status Options* buffer."))
             ;; else (parsed-options is nil after parsing)
-            (user-error "Failed to parse project status options from GraphQL response. Project Node ID: %s, Status Field ID: %s. This often means the 'Status Field ID' (%s) does not refer to a 'Single-Select' field type or has no options. Check *Messages* for parsing details"
+            (user-error "Failed to parse project status options from GraphQL response.  Project Node ID: %s, Status Field ID: %s.  This often means the 'Status Field ID' (%s) does not refer to a 'Single-Select' field type or has no options.  Check *Messages* for parsing details"
                         forge-extras-project-node-id forge-extras-status-field-node-id forge-extras-status-field-node-id)))
       ;; else (raw-response is nil - query failed)
-      (user-error "Failed to retrieve project status options (GraphQL query failed or `gh` command returned no data). Project Node ID: %s, Status Field ID: %s. Check *Messages* for `gh` command output or errors"
+      (user-error "Failed to retrieve project status options (GraphQL query failed or `gh` command returned no data).  Project Node ID: %s, Status Field ID: %s.  Check *Messages* for `gh` command output or errors"
                   forge-extras-project-node-id forge-extras-status-field-node-id))))
 
 ;;;###autoload
@@ -1515,11 +1518,11 @@ The found Option ID is displayed in the echo area."
   (unless (and (boundp 'forge-extras-project-node-id)
                (stringp forge-extras-project-node-id)
                (not (string-empty-p forge-extras-project-node-id)))
-    (user-error "`forge-extras-project-node-id' is not configured. Please set it first"))
+    (user-error "`forge-extras-project-node-id' is not configured.  Please set it first"))
   (unless (and (boundp 'forge-extras-status-field-node-id)
                (stringp forge-extras-status-field-node-id)
                (not (string-empty-p forge-extras-status-field-node-id)))
-    (user-error "`forge-extras-status-field-node-id' is not configured. Please set it first. You can use `forge-extras-get-project-field-ids` to find it"))
+    (user-error "`forge-extras-status-field-node-id' is not configured.  Please set it first.  You can use `forge-extras-get-project-field-ids` to find it"))
   (when (string-empty-p status-name)
     (user-error "Status name cannot be empty"))
 

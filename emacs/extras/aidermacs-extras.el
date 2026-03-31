@@ -37,7 +37,7 @@
   "Query before killing an Aidermacs buffer with a running process.
 Return t if the buffer can be killed (i.e., if it's not an
 aidermacs comint buffer with a process, or if the user confirms
-the kill). Return nil if the user decides not to kill the
+the kill).  Return nil if the user decides not to kill the
 buffer."
   (if (and (derived-mode-p 'comint-mode)
            (buffer-name)
@@ -58,7 +58,7 @@ buffer."
 
 (defun aidermacs-extras-copy-recent-history-to-kill-ring (&optional line-count)
   "Copy the last LINE-COUNT lines of `.aider.chat.history.md' to the kill ring.
-If LINE-COUNT is nil, defaults to 1000 lines. This function avoids opening the
+If LINE-COUNT is nil, defaults to 1000 lines.  This function avoids opening the
 file in Emacs for better performance with large files."
   (interactive "P")
   (let* ((line-count (or line-count 1000))
@@ -80,10 +80,10 @@ file in Emacs for better performance with large files."
 (defun aidermacs-extras-copy-prompt-region ()
   "Copy a region of the Aider history buffer based on user prompt blocks.
 Prompts the user to select the first line of a start prompt block
-\\=(consecutive lines beginning with '#### ') and an end prompt block. Copies
+\\=(consecutive lines beginning with '#### ') and an end prompt block.  Copies
 the text from the beginning of the start block's first line up to the beginning
 of the *next* block after the selected end block (or end of buffer if the end
-block is the last one). If the user presses RET for the end prompt, copies to
+block is the last one).  If the user presses RET for the end prompt, copies to
 the end of the buffer."
   (interactive)
   (unless (string-match-p "\\.aider\\.chat\\.history\\.md\\'" (or (buffer-file-name) ""))

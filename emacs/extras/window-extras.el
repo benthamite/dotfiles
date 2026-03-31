@@ -27,6 +27,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'window)
 
 ;;;; User options
@@ -75,7 +76,7 @@ Split in three windows if `frame-width' is greater than
 (defun window-extras--move-or-swap (this-buffer other-buffer &optional target-window)
   "Move THIS-BUFFER to the other window, and OTHER-BUFFER to the current window.
 If TARGET-WINDOW is non-nil, move THIS-BUFFER to TARGET-WINDOW and OTHER-BUFFER
-to the current window. If there is no other window, create it and move
+to the current window.  If there is no other window, create it and move
 THIS-BUFFER to it."
   (window-extras-split-if-unsplit)
   (let* ((windows (window-extras--get-target-and-source-windows target-window))

@@ -157,7 +157,7 @@ By queuing already-read messages, we re-apply the Seen flag after sync."
 (defun mu4e-extras-add-refiled-to-mark-as-read-queue (msg)
   "Add MSG to the queue of messages to mark as read upon resync.
 Messages that are both refiled and marked as read are re-marked as unread after
-synchronization with the Gmail server. To fix this, we keep track of the
+synchronization with the Gmail server.  To fix this, we keep track of the
 `message-id' property of every message that is refiled and marked as read,
 and re-mark them as read after synchronization."
   (let ((message-id (mu4e-message-field msg :message-id)))
@@ -470,7 +470,7 @@ between headers and body."
                                               nil errbuf nil
                                               "send")))
           (unless (zerop exit-code)
-            (error "gmail-maildir-sync send failed (exit %d): %s"
+            (error "Gmail-maildir-sync send failed (exit %d): %s"
                    exit-code
                    (with-current-buffer errbuf
                      (string-trim (buffer-string))))))
@@ -633,7 +633,7 @@ between headers and body."
 (defun mu4e-extras-set-index-params ()
   "Set the index parameters for the current update.
 This is dependent on if I'm active (hence wanting a quick update) or
-away (in which case it can take its time). Ideally we would do this
+away (in which case it can take its time).  Ideally we would do this
 right before the index but currently there is no hook for that.
 `mu4e-index-cleanup' is always t to avoid stale index errors when
 mbsync removes files between index runs."

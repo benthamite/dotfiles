@@ -41,7 +41,7 @@ be used with `org-capture'."
 
 (cl-defun org-web-tools-extras-org-title-for-url (&optional (url (org-web-tools--get-first-url)))
   "Return Org link to URL using title of HTML page at URL.
-If URL is not given, look for first URL in `kill-ring'. If page at URL has no
+If URL is not given, look for first URL in `kill-ring'.  If page at URL has no
 title, return URL."
   (let ((title (if-let* ((dom (condition-case nil
 				 (plz 'get url :as #'libxml-parse-html-region)

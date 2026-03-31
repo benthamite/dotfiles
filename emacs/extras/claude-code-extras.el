@@ -31,6 +31,7 @@
 (require 'claude-code)
 (require 'consult)
 (require 'paths)
+(require 'subr-x)
 (require 'transient)
 
 ;;;; Variables
@@ -271,8 +272,8 @@ consumed by the Stop hook handler.")
 ORIG-FN is `claude-code-send-escape'.  The upstream implementation uses
 `claude-code--with-buffer', which re-resolves the target buffer via
 `claude-code--get-or-prompt-for-buffer'.  When multiple sessions share
-the same project directory, that triggers a selection prompt—defeating
-the purpose of C-g as a quick interrupt.  This advice short-circuits
+the same project directory, that triggers a selection prompt--defeating
+the purpose of \\`ESC\\' as a quick interrupt.  This advice short-circuits
 the lookup: if the current buffer is already a Claude buffer, send the
 escape sequence directly to it."
   (if (claude-code--buffer-p (current-buffer))
@@ -784,6 +785,7 @@ avoid scanning all buffers on every redisplay."
 (defvar monet--sessions)
 (declare-function monet--session-server "monet")
 (declare-function monet--session-port "monet")
+(declare-function monet--session-directory "monet")
 (declare-function monet--remove-lockfile "monet")
 (declare-function websocket-server-close "websocket")
 
@@ -808,8 +810,8 @@ the session from `monet--sessions'."
     (claude-code-extras--monet-stop-session (buffer-name))))
 
 (defun claude-code-extras--monet-cleanup-before-start (orig-fn key directory)
-  "Clean up old monet session for KEY before ORIG-FN creates a new one.
-DIRECTORY is passed through to ORIG-FN."
+  "Clean up old monet session for KEY before starting a new one.
+ORIG-FN is called with KEY and DIRECTORY after cleanup."
   (when (and (boundp 'monet--sessions)
              (gethash key monet--sessions))
     (claude-code-extras--monet-stop-session key))
@@ -882,7 +884,7 @@ call; it is canceled automatically when BUFFER is no longer live."
         (setq claude-code-extras--status-data data)))))
 
 (defun claude-code-extras--detect-branch (new-data)
-  "Detect when the session ID changes, indicating a branch.
+  "Detect a session ID change, indicating a branch.
 NEW-DATA is the freshly parsed status plist.  On the first poll,
 records the session ID as the original.  On subsequent polls, if
 the ID differs from the previous one, refreshes display names so
@@ -1586,7 +1588,7 @@ STATE is a plist with keys :queue :results :log-dir :working-dir
          (claude-code-extras--batch-run-next state))))))
 
 (defun claude-code-extras--batch-commit-changes (state title)
-  "Commit any uncommitted changes in the working directory of STATE.
+  "Commit uncommitted work in the working directory of STATE.
 TITLE is the entry title, used to derive the commit message scope."
   (let ((default-directory (plist-get state :working-dir)))
     (with-temp-buffer
@@ -2672,9 +2674,10 @@ plist.  Only reads the first line of each file (fast)."
     table))
 
 (defun claude-code-extras--enrich-sessions (headers member-ids)
-  "Read full prompts for sessions in MEMBER-IDS.
-HEADERS is a hash table of session ID to header plist.  Returns a
-new hash table with :first-prompt and :timestamp populated."
+  "Enrich session HEADERS with full prompt text for MEMBER-IDS.
+HEADERS is a hash table of session ID to header plist.  MEMBER-IDS
+is a hash table of session IDs to include.  Return a new hash table
+with :first-prompt and :timestamp populated."
   (let ((table (make-hash-table :test 'equal)))
     (maphash (lambda (id header)
                (when (gethash id member-ids)
@@ -2749,8 +2752,10 @@ IDs, CURRENT-ID is the active session.  Returns an alist of
 (defun claude-code-extras--format-branch-subtree
     (id sessions children-map current-id prefix child-prefix)
   "Format branch node ID and its children recursively.
-PREFIX is the tree connector for this node, CHILD-PREFIX is the
-continuation for children.  Returns a list of (display . session-id)."
+SESSIONS maps IDs to metadata, CHILDREN-MAP maps parent to child
+IDs, CURRENT-ID is the active session.  PREFIX is the tree connector
+for this node, CHILD-PREFIX is the continuation for children.
+Return a list of (display . session-id)."
   (let* ((meta (gethash id sessions))
          (prompt (or (plist-get meta :first-prompt) "(no prompt)"))
          (ts (claude-code-extras--format-branch-timestamp
@@ -2898,7 +2903,7 @@ Signals an error if the status file is missing or incomplete."
   "A `transient-lisp-variable' that toggles a boolean on each press.")
 
 (cl-defmethod transient-infix-read ((obj claude-code-extras--boolean-variable))
-  "Toggle the boolean value."
+  "Toggle the boolean value of OBJ."
   (not (oref obj value)))
 
 (transient-define-infix claude-code-extras--infix-alert-on-ready ()

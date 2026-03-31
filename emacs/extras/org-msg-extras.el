@@ -129,7 +129,7 @@ This is a slightly tweaked version of `org-msg-goto-body'."
     (when (search-backward "#+begin_signature" nil t)
       (save-restriction
 	(narrow-to-region (point) (point-max))
-	(org-hide-block-all)))))
+	(org-fold-hide-block-all)))))
 
 (provide 'org-msg-extras)
 ;;; org-msg-extras.el ends here

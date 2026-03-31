@@ -94,7 +94,7 @@ OLD-FUN is the original `y-or-n-p' function."
 
 (defun dired-extras-clean-up-after-deletion-quietly (old-fun &rest r)
   "Advice to suppress the prompt when deleting files.
-OLD-FUN is the original `dired-clean-up-after-deletion' function. R is the
+OLD-FUN is the original `dired-clean-up-after-deletion' function.  R is the
 arguments passed to OLD-FUN."
   (advice-add 'y-or-n-p :around #'dired-extras-y-or-n-p-just-yes)
   (unwind-protect (apply old-fun r)
@@ -129,7 +129,7 @@ losing the `put back' option."
 
 (defun dired-extras-sort-toggle-dwim ()
   "Toggle sorting by date and refresh the Dired buffer in a dwim fashion.
-If point is on the first file, keep the point there after sorting. Otherwise,
+If point is on the first file, keep the point there after sorting.  Otherwise,
 follow the file that point is on.
 
 With a prefix argument, edit the current listing switches instead."
@@ -191,8 +191,8 @@ With a prefix argument, edit the current listing switches instead."
 (declare-function dired-du-mode "dired-du")
 (defun dired-extras-hide-details-mode-enhanced (&optional arg)
   "Set `dired-hide-details-mode' and associated modes.
-Toggle the mode if ARG is `toggle' or called interactively. Enable the mode if
-ARG is nil, omitted, or a positive number. Disable the mode if ARG is a negative
+Toggle the mode if ARG is `toggle' or called interactively.  Enable the mode if
+ARG is nil, omitted, or a positive number.  Disable the mode if ARG is a negative
 number."
   (interactive "P")
   (let ((arg (if (or (eq arg 'toggle)

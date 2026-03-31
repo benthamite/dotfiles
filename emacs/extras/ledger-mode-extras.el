@@ -321,7 +321,7 @@ blocks like:
   AIRBNB 4977
   + 200.79 USD
 
-Sometimes the first \"16 January\" line is missing. Also, some transactions
+Sometimes the first \"16 January\" line is missing.  Also, some transactions
 contain repeated date lines (e.g., a group header date and a transaction date).
 To avoid duplicates, this command anchors parsing on amount lines and finds the
 nearest preceding full date line (\"DD Month YYYY\") for each amount.

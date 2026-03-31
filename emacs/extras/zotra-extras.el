@@ -45,17 +45,17 @@ to the Mullvad VPN server associated with the city defined for \"IMDb\" in
 `mullvad-websites-and-cities'.
 
 The Internet Movie Database (IMDb) may return data based on the geographic
-location of the request. Connecting via a specific Mullvad server (e.g., New
+location of the request.  Connecting via a specific Mullvad server (e.g., New
 York for English results) can help control the language or region of the fetched
 data.
 
 This option requires the `mullvad' package, and the user options
 `mullvad-websites-and-cities' and `mullvad-cities-and-servers' to be set
-accordingly. Specifically, `mullvad-websites-and-cities' must include a cons
+accordingly.  Specifically, `mullvad-websites-and-cities' must include a cons
 cell whose car is `\"IMDb\"' and whose cdr is the city you want `mullvad' to
 connect to (e.g. `(\"IMDb\" . \"New York\")'), and `mullvad-cities-and-servers'
 must include a cons cell whose car is this city and whose cdr is a Mullvad
-server for this city (e.g. `(\"New York\" . \"us-nyc-wg-601\")'). Here is a
+server for this city (e.g. `(\"New York\" . \"us-nyc-wg-601\")').  Here is a
 sample configuration:
 
 \(setq mullvad-cities-and-servers
@@ -103,8 +103,8 @@ Refer to the `mullvad' package documentation for details."
 (defun zotra-extras-add-entry (&optional url-or-search-string entry-format bibfile do-not-open)
   "Like `zotra-add-entry', but with various customizations.
 Pass URL-OR-SEARCH-STRING and ENTRY-FORMAT to `zotra-get-entry' to get the
-entry. BIBFILE is the file where the BibTeX entry should be saved; if nil,
-prompt the user to select it. If DO-NOT-OPEN is non-nil, do not open the entry
+entry.  BIBFILE is the file where the BibTeX entry should be saved; if nil,
+prompt the user to select it.  If DO-NOT-OPEN is non-nil, do not open the entry
 in Ebib after adding it."
   (interactive)
   (pcase major-mode
@@ -130,7 +130,7 @@ in Ebib after adding it."
 (defun zotra-extras--add-and-maybe-open (url-or-search-string entry-format bibfile &optional do-not-open)
   "Add entry using `zotra-add-entry' and, by default, open it in Ebib.
 Pass URL-OR-SEARCH-STRING and ENTRY-FORMAT to `zotra-get-entry' to get the
-entry. BIBFILE is the file where the BibTeX entry should be saved. If
+entry.  BIBFILE is the file where the BibTeX entry should be saved.  If
 DO-NOT-OPEN is non-nil, do not open the entry in Ebib after adding it."
   (zotra-add-entry url-or-search-string entry-format bibfile)
   (unless do-not-open
@@ -248,7 +248,7 @@ than real bibliographic data for fields like \"abstract\"."
 (defun zotra-extras-fetch-field (field url-or-search-string &optional ignore-errors timeout)
   "Get FIELD value in bibliographic entry for URL-OR-SEARCH-STRING.
 If IGNORE-ERRORS is non-nil, handle error thrown by `zotra-get-entry-1'
-gracefully. IF TIMEOUT is non-nil, give up after that many seconds; otherwise,
+gracefully.  IF TIMEOUT is non-nil, give up after that many seconds; otherwise,
 use the default.  URLs matching a domain in `zotra-extras-excluded-domains' are
 skipped."
   (if (seq-some (lambda (domain)

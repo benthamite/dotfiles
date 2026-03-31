@@ -87,13 +87,13 @@ The placeholders are replaced by the URL.")
   (concat eww-extras-chrome-data-dir-base "pdf/")
   "A copy of the directory where Chrome data is stored.
 A headless Chrome session will fail to authenticate if Chrome is running,
-because the database will be locked. So we make a copy of the relevant
+because the database will be locked.  So we make a copy of the relevant
 directory by running `eww-extras-chrome-copy-data-dirs'.")
 
 (defconst eww-extras-chrome-data-dir-copy-html
   (concat eww-extras-chrome-data-dir-base "html/")
   "A copy of the directory where Chrome data is stored.
-This is an identical copy of `eww-extras-chrome-data-dir-copy-pdf'. It
+This is an identical copy of `eww-extras-chrome-data-dir-copy-pdf'.  It
 is needed so that we can run two headless Chrome sessions
 simultaneously.")
 
@@ -131,10 +131,11 @@ or prompt the user for a file."
 ;;;###autoload
 (defun eww-extras-url-to-file (type &optional url callback key)
   "Generate file of TYPE for URL and run CALLBACK function.
-CALLBACK is a function called when the process concludes. The function takes two
-arguments: the file to attach and the BibTeX key of the entry from which this
-function was called, if any. KEY is an optional BibTeX key; when non-nil it is
-used as the filename stem and passed to the callback sentinel, bypassing the
+CALLBACK is a function called when the process concludes.  The
+function takes two arguments: the file to attach and the BibTeX
+key of the entry from which this function was called, if any.
+KEY is an optional BibTeX key; when non-nil it is used as the
+filename stem and passed to the callback sentinel, bypassing the
 buffer-derived lookup."
   (let* ((url (simple-extras-get-url url))
          (bibtex-key (or key
@@ -177,16 +178,16 @@ PROC, the process object, and EVENT, a string describing the process status."
         (eww-extras-run-callback callback output-file bibtex-key))
        ;; Exited successfully but produced an empty or missing file.
        ((eq exit-status 0)
-        (user-error “Process exited successfully but %s is empty or missing”
+        (user-error "Process exited successfully but %s is empty or missing"
                     (file-name-nondirectory output-file)))
        ;; Non-zero exit but the file exists and is nonempty — attach anyway.
        (file-ok
-        (message “Warning: process exited with status %s, but %s was created. Attaching anyway.”
+        (message "Warning: process exited with status %s, but %s was created. Attaching anyway."
                  exit-status (file-name-nondirectory output-file))
         (eww-extras-run-callback callback output-file bibtex-key))
        ;; Otherwise, bail out with the original error message.
        (t
-        (user-error “Could not get file. Process exit status was %s.\n\nRaw event:\n%s”
+        (user-error "Could not get file.  Process exit status was %s.\n\nRaw event:\n%s"
                     exit-status event))))))
 
 (defun eww-extras-url-to-file-make-command (url output-file type)
@@ -216,13 +217,13 @@ FILE is the file to attach and KEY is the BibTeX key of the associated entry."
 (defun eww-extras-chrome-copy-data-dirs ()
   "Make copies of the Chrome data directory asynchronously.
 This command needs to be run to make two copies of the Chrome data directory,
-and then every once in a while to keep those copies updated. The initial copy
+and then every once in a while to keep those copies updated.  The initial copy
 may take a while if the data directory is very big, but subsequent updates
 should be fast."
   (interactive)
-  (when (y-or-n-p "Make sure you have closed all instances of Chrome, and that `eww-extras-chrome-data-dir' and `eww-extras-chrome-data-dir-copy' point to the right directories. This command runs asynchronously in the background. Proceed? ")
+  (when (y-or-n-p "Make sure you have closed all instances of Chrome, and that `eww-extras-chrome-data-dir' and `eww-extras-chrome-data-dir-copy' point to the right directories.  This command runs asynchronously in the background.  Proceed? ")
     (unless (string-empty-p (shell-command-to-string "pgrep -l \"Google Chrome\""))
-      (user-error "Chrome is running. Close all instances of Chrome and try again"))
+      (user-error "Chrome is running.  Close all instances of Chrome and try again"))
     (message "Copying Chrome data directory to `%s'..." eww-extras-chrome-data-dir-copy-pdf)
     (let ((process (start-process-shell-command
                     "eww-extras-rsync-pdf"

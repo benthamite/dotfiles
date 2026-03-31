@@ -133,7 +133,7 @@ Operate on the current paragraph, or the region if active."
 (defun org-noter-extras-highlight-offset (offset)
   "Fix numbering mismatch between PDF and book/article pages.
 OFFSET is the page number of the PDF (displayed in the document viewer) minus
-the page number in the book or article (shown on the printed page). Thus, if the
+the page number in the book or article (shown on the printed page).  Thus, if the
 PDF’s page number is 220 and the book’s page number is 210 , OFFSET is 10. The
 number will typically (but need not) be positive, since the PDF page number
 tends to be higher than the book page number."

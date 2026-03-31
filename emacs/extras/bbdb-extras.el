@@ -38,14 +38,14 @@
 ;; the two functions below replace the corresponding "non-quick"
 ;; native functions. they prompt for a name only.
 (defun bbdb-extras-create-quick (record)
-  "Add a new RECORD to BBDB. Prompt for name only."
+  "Add a new RECORD to BBDB.  Prompt for name only."
   (interactive (list (bbdb-extras-read-record-quick current-prefix-arg)))
   (bbdb-change-record record)
   (bbdb-display-records (list record)))
 
 (defun bbdb-extras-read-record-quick (&optional first-and-last)
   "Read and return a new BBDB record.
-To be used with `bbdb-extras-bbdb-create-quick'. FIRST-AND-LAST controls the
+To be used with `bbdb-extras-bbdb-create-quick'.  FIRST-AND-LAST controls the
 reading mode; see the `bbdb-read-name' docstring for details."
   (bbdb-editable)
   (let ((record (bbdb-empty-record)))

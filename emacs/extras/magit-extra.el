@@ -39,7 +39,7 @@
 ;;;###autoload
 (defun magit-extras-stage-commit-and-push (message &optional file no-push)
   "Stage modifications, commit with MESSAGE and push to remote.
-If FILE is provided, only stage and commit that file. If NO-PUSH is non-nil, do
+If FILE is provided, only stage and commit that file.  If NO-PUSH is non-nil, do
 not push to remote."
   (interactive
    (list (progn (magit-diff-unstaged) (read-string "Commit Message: "))))
@@ -88,8 +88,8 @@ between the start and completion of async processes."
 ;; TODO: check if there is a better way to do this
 (defun magit-extras-get-commit-file (&optional path)
   "Get file to commit.
-If more than one file is being committed, get the first one. By default, the
-path of file returned is relative to the current repository. If PATH is `full',
+If more than one file is being committed, get the first one.  By default, the
+path of file returned is relative to the current repository.  If PATH is `full',
 return instead the full path; if PATH is `sans-dir', return the filename only."
   (save-excursion
     (goto-char (point-min))

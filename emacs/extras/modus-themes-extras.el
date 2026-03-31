@@ -106,7 +106,7 @@ those variables take effect immediately."
   "Set extra faces for the `modus' themes.
 You can set any additional faces like this:
 
-(if (eq modus-themes-extras-light-theme (car custom-enabled-themes))
+\\=(if (eq modus-themes-extras-light-theme (car custom-enabled-themes))
       (set-face-attribute 'hl-sentence nil :background \"#bfefff\")
     (set-face-attribute 'hl-sentence nil :background \"#004065\"))")
 

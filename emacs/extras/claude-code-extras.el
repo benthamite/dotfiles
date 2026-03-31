@@ -133,6 +133,11 @@ Written by `claude-code-extras-select-account', read at session start."
   :type 'file
   :group 'claude-code-extras)
 
+(defface claude-code-extras-waiting
+  '((t :inherit warning))
+  "Face for sessions waiting for user input in the session switcher."
+  :group 'claude-code-extras)
+
 (defvar claude-code-extras--current-account nil
   "Currently active Claude account name.
 Loaded from `claude-code-extras-account-file' on first use;
@@ -683,10 +688,16 @@ system was loaded."
     (maphash
      (lambda (buf key)
        (when (buffer-live-p buf)
-         (let ((cmd (make-symbol (format "claude-switch-%s" key))))
+         (let* ((cmd (make-symbol (format "claude-switch-%s" key)))
+                (name (claude-code-extras-display-name buf))
+                (waiting (buffer-local-value
+                          'claude-code-extras--waiting-for-input buf))
+                (spec (list key name cmd)))
+           (when waiting
+             (setq spec (append spec
+                                (list :face 'claude-code-extras-waiting))))
            (fset cmd (lambda () (interactive) (switch-to-buffer buf)))
-           (push (list key (claude-code-extras-display-name buf) cmd)
-                 specs))))
+           (push spec specs))))
      claude-code-extras--session-keys)
     (setq specs
           (sort specs
@@ -1055,6 +1066,11 @@ elicitation_dialog notifications."
               "Claude Code"
               (format "%s: needs your attention" name))))))))
   nil)
+
+(defun claude-code-extras--clear-waiting-for-input (&rest _)
+  "Clear the waiting-for-input flag in the current Claude buffer."
+  (when (bound-and-true-p claude-code-extras--waiting-for-input)
+    (setq claude-code-extras--waiting-for-input nil)))
 
 (defun claude-code-extras--handle-stop (message)
   "Handle a stop event from the Claude Code CLI.
@@ -2551,6 +2567,12 @@ there with the backtrace prompt passed as a CLI argument."
 (add-hook 'kill-buffer-hook #'claude-code-extras-teardown-copilot)
 (add-hook 'enable-theme-functions #'claude-code-extras-sync-theme)
 (add-hook 'claude-code-start-hook #'claude-code-extras-sync-theme)
+(advice-add 'claude-code--eat-send-return :before
+            #'claude-code-extras--clear-waiting-for-input)
+(advice-add 'claude-code--vterm-send-return :before
+            #'claude-code-extras--clear-waiting-for-input)
+(advice-add 'claude-code--do-send-command :before
+            #'claude-code-extras--clear-waiting-for-input)
 
 ;;;;; Handoff
 

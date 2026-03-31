@@ -187,6 +187,9 @@ Each session is assigned a key when it starts (via ~claude-code-start-hook~). Th
 
 Sessions are displayed by project name (extracted from the buffer name). When multiple sessions share the same project, the instance name is appended for disambiguation (e.g. "project:instance").
 
+#+vindex: claude-code-extras-waiting
+Sessions that are waiting for user input (detected via the =idle_prompt= notification hook) are displayed with the ~claude-code-extras-waiting~ face, which inherits from ~warning~ by default.  The highlight is cleared as soon as input is sent to the session (Return key or programmatic command send).
+
 *** Multi-account support
 :PROPERTIES:
 :CUSTOM_ID: h:multi-account

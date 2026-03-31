@@ -28,7 +28,7 @@
 Do these proactively to avoid being blocked by pre-commit hooks:
 
 - **Elisp changes**: run an `emacs --batch` test before committing (see `elisp-conventions` skill for the recipe).
-- **Elisp changes**: stage the `doc/*.org` manual update alongside `.el` files. Use `/doc-elisp` to generate or update documentation.
+- **Elisp changes**: stage the corresponding `emacs/extras/doc/<package>.org` manual update alongside `.el` files. Use `/doc-elisp` to generate or update documentation.
 - **`claude/` changes** (dotfiles repo): stage `claude/README.org` alongside other changes.
 
 ## Secrets

@@ -399,19 +399,20 @@ Optionally, return such list only if its length is less than LIMIT."
 
 ;;;###autoload
 (defun org-roam-extras-replace-star-links-with-id (dir &optional nocase dirs)
-  "Walk through every *.org file inside DIR and turn links of the form
- 
+  "Replace star-links with id-links in every Org file inside DIR.
+Turn links of the form
+
      [[*Title][Description]]
- 
+
 into
- 
+
      [[id:UUID][Description]]
- 
+
 where UUID is the Org-ID of the node whose title is exactly TITLE.
 When NOCASE (\\[universal-argument]) is non-nil the title match is
-case-insensitive.
+case-insensitive.  DIRS, if non-nil, restricts the search scope.
 
-The command is completely automatic – it visits the file, performs the
+The command is completely automatic -- it visits the file, performs the
 substitutions, and saves the buffer when something changed."
   (interactive "DDirectory with Org files: \nP")
   (dolist (file (directory-files dir t "\\.org\\'"))
@@ -423,7 +424,7 @@ substitutions, and saves the buffer when something changed."
 (defun org-roam-extras--replace-star-links-with-id-in-file (file &optional nocase dirs)
   "Replace [[*Title][Desc]] links with [[id:UUID][Desc]] in FILE.
 Return non-nil when FILE was modified.  When NOCASE is non-nil the title match
-is case-insensitive."
+is case-insensitive.  DIRS, if non-nil, restricts the search scope."
   (with-current-buffer (find-file-noselect file)
     (save-excursion
       (widen)
@@ -512,6 +513,7 @@ satisfies these criteria."
 ;; adapted from
 ;; github.com/org-roam/org-roam/wiki/User-contributed-Tricks#showing-node-hierarchy
 (cl-defmethod org-roam-node-hierarchy ((node org-roam-node))
+  "Return a hierarchy string for NODE showing file title and outline path."
   (let ((level (org-roam-node-level node)))
     (concat
      (when (> level 0)
@@ -543,7 +545,7 @@ satisfies these criteria."
 ;;;;; Statistics
 
 (defun org-roam-extras-count-todos-and-efforts ()
-  "Count open TODO headings and sum their effort estimates in the org-roam database."
+  "Count open TODO headings and sum effort estimates in org-roam."
   (interactive)
   (let* ((done-keywords (or (with-temp-buffer
 			      (delay-mode-hooks (org-mode))

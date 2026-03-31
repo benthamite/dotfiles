@@ -103,9 +103,10 @@ Return ONLY valid JSON, no markdown fences or other text."
 
 (defcustom gptel-extras-dir (file-name-concat paths-dir-notes "gptel/")
   "The directory where to save the `gptel' buffers.
-In Dired, this directory is sorted chronologically rather than alphabetically,
-since the typical use case is to look for a recently modified `gptel' file. This
-directory-local sorting is set via a the `.dir-locals.el' file in the directory."
+In Dired, this directory is sorted chronologically rather than
+alphabetically, since the typical use case is to look for a
+recently modified `gptel' file.  This directory-local sorting is
+set via the `.dir-locals.el' file in the directory."
   :type 'directory
   :group 'gptel-extras)
 
@@ -117,7 +118,7 @@ directory-local sorting is set via a the `.dir-locals.el' file in the directory.
 
 (defcustom gptel-extras-alert-when-finished '()
   "List of models for which an alert is displayed when the response is inserted.
-If t, always display an alert. If nil, never display an alert."
+If t, always display an alert.  If nil, never display an alert."
   :type '(choice (const :tag "Always" t)
 		 (const :tag "Never" nil)
 		 (repeat :tag "Models" symbol))
@@ -149,7 +150,7 @@ If t, always display an alert. If nil, never display an alert."
 (autoload 'magit-git-insert "magit-git")
 (defun gptel-extras-summarize-commit-diffs (beg end &optional include-stats)
   "Summarize the diffs of commits in the selected region using an LLM.
-BEG and END mark the region of commits to summarize in `magit-log-mode'. When
+BEG and END mark the region of commits to summarize in `magit-log-mode'.  When
 INCLUDE-STATS is non-nil (with prefix arg), include diffstats in the prompt."
   (interactive "r\nP")
   (unless (derived-mode-p 'magit-log-mode)
@@ -220,12 +221,12 @@ Use to circumvent Gemini’s location restrictions."
 
 ;;;;; Fast JSON logging
 
-(defun gptel-extras--fast-log (orig-fun data &optional type no-json)
+(defun gptel-extras--fast-log (_orig-fun data &optional type no-json)
   "Advise `gptel--log’ to avoid `replace-buffer-contents’.
 `json-pretty-print’ uses `replace-region-contents’ internally, whose O(n²)
 `compareseq’ diff algorithm freezes Emacs on large JSON payloads.  This advice
-pretty-prints via parse-then-insert instead, then calls ORIG-FUN with DATA,
-TYPE, and NO-JSON."
+pretty-prints via parse-then-insert instead.  DATA is the payload string,
+TYPE is the log entry type, and NO-JSON skips JSON formatting."
   (with-current-buffer (get-buffer-create gptel--log-buffer-name)
     (goto-char (point-max))
     (unless (bobp) (insert "\n"))
@@ -254,7 +255,7 @@ TYPE, and NO-JSON."
 ;;;###autoload
 (defun gptel-extras-save-buffer (name _ _ interactivep)
   "Save the `gptel' buffer with NAME right after it is created.
-The buffer is saved to a file in `gptel-extras-dir'. INTERACTIVEP is t when
+The buffer is saved to a file in `gptel-extras-dir'.  INTERACTIVEP is t when
 gptel is called interactively.
 
 This function is meant to be an `:after' advice to `gptel'."
@@ -336,7 +337,7 @@ To enable this feature, customize `gptel-extras-alert-when-finished'."
 (defun gptel-extras-continue-in-new-buffer ()
   "Continue the conversation in a new buffer with a link from the original.
 Create a new buffer with the same heading as the current buffer, but with a
-number appended to it. Then insert a link to the new buffer at the end of the
+number appended to it.  Then insert a link to the new buffer at the end of the
 current buffer."
   (interactive)
   (gptel-extras-ensure-gptel-mode)
@@ -622,10 +623,11 @@ Otherwise, exclude archived conversations."
 
 (defmacro gptel-extras-make-tool-presets (name description tools)
   "Create two gptel presets for TOOLS with NAME and DESCRIPTION.
-Create a base preset named NAME that sets the tools to TOOLS, and an additive
-preset named NAME+ that appends TOOLS to existing tools. TOOLS is a list of tool
-name strings. NAME is a symbol for the preset name (e.g., `tools-web-search').
-DESCRIPTION is a string describing the tools (e.g., \"web search tools\")."
+Create a base preset named NAME that sets the tools to TOOLS,
+and an additive preset named NAME+ that appends TOOLS to existing
+tools.  TOOLS is a list of tool name strings.  NAME is a symbol
+for the preset name (e.g., `tools-web-search').  DESCRIPTION is a
+string describing the tools (e.g., \"web search tools\")."
   (let* ((name-str (symbol-name name))
          (base-symbol name)
          (additive-symbol (intern (concat name-str "+")))
@@ -660,11 +662,11 @@ DESCRIPTION is a string describing the tools (e.g., \"web search tools\")."
   "Around advice for `gptel--modify-value' to normalize :append specs.
 If ORIGINAL is a list and NEW-SPEC provides :append followed by one or
 more non-keyword atoms (strings/symbols) that are not wrapped in a list,
-wrap them into a list. Also coalesce multiple consecutive non-keyword
-values after :append into a single list. This avoids treating tool
+wrap them into a list.  Also coalesce multiple consecutive non-keyword
+values after :append into a single list.  This avoids treating tool
 names as string appends, which would error.
 
-ORIG-FN is the original function being advised. NEW-SPEC is the modification
+ORIG-FN is the original function being advised.  NEW-SPEC is the modification
 specification plist."
   (let ((fixed-spec new-spec))
     (when (and (consp new-spec) (keywordp (car new-spec)))
@@ -702,10 +704,10 @@ specification plist."
 
 ;; https://github.com/munen/emacs.d?tab=readme-ov-file#edit_file
 (defun gptel-extras-edit-file (file-path &optional file-edits)
-  "Edit FILE-PATH by applying FILE-EDITS using fuzzy string matching.
+  "Edit FILE-PATH by applying FILE-EDITS using fuzzy matching.
 
-This function directly modifies the file on disk without user confirmation. Each
-edit in FILE-EDITS should specify:
+This function directly modifies the file on disk without user
+confirmation.  Each edit in FILE-EDITS should specify:
 
 - `:old_string': the string to find and replace (fuzzy matched)
 
@@ -980,12 +982,12 @@ Each edit requires an old string to find (fuzzy matched) and a new string to rep
 This is a non-interactive search function intended for programmatic use.
 
 SEARCH-STRING is the string to search for.
-LIMIT, if non-nil, is the maximum number of results to return. Defaults to 10.
+LIMIT, if non-nil, is the maximum number of results to return.  Defaults to 10.
 Use -1 for no limit.
 OFFSET, if non-nil, is the starting position in the list of matches.
 
-Returns a list of pairs (FORMATTED-STRING . CITE-KEY). FORMATTED-STRING is
-the human-readable representation of a search result. CITE-KEY is the
+Returns a list of pairs (FORMATTED-STRING . CITE-KEY).  FORMATTED-STRING is
+the human-readable representation of a search result.  CITE-KEY is the
 corresponding citation key.
 
 If no matches are found, returns nil."
@@ -1031,7 +1033,7 @@ If no matches are found, returns nil."
 (declare-function zotra-extras-add-entry "zotra-extras")
 (defun gptel-extras-add-bib-entry (identifier bibfile)
   "Add bibliographic entry for IDENTIFIER to BIBFILE and return the entry’s bibkey.
-IDENTIFIER can be a URL, ISBN, or DOI. This function calls
+IDENTIFIER can be a URL, ISBN, or DOI.  This function calls
 `zotra-extras-add-entry' with nil as the second argument and t as the fourth
 argument."
   (zotra-extras-add-entry identifier nil bibfile t)
@@ -1146,7 +1148,7 @@ Uses the `google-calendar' MCP server to create events with per-field timezones.
 ;;;###autoload
 (defun gptel-extras-set-backend-and-model (&optional backend model)
   "Set the model and backend for the current `gptel' buffer.
-If MODEL is nil, use `gptel-model'. If BACKEND is nil, use `gptel-backend'."
+If MODEL is nil, use `gptel-model'.  If BACKEND is nil, use `gptel-backend'."
   (unless (derived-mode-p 'org-mode)
     (user-error "Not in an `org-mode' buffer"))
   (setq-local gptel-backend
@@ -1250,7 +1252,7 @@ added as a single context chunk."
 (defun gptel-extras-warn-when-context ()
   "Prompt for confirmation to proceed when `gptel' context is not empty."
   (unless (or (null gptel-context)
-	      (y-or-n-p "The `gptel' context is not empty. Proceed? "))
+	      (y-or-n-p "The `gptel' context is not empty.  Proceed? "))
     (let ((message "Aborted"))
       (when (y-or-n-p "Clear the `gptel' context? ")
 	(gptel-context-remove-all)

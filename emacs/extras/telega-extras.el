@@ -66,7 +66,7 @@
   "Switch to the most recent telega buffer, if one exists, else start telega.
 Repeated invocations of the command will move point from the
 middle of the chat buffer to the end of it, then to the root
-buffer, then to the beginning of it if not already there. A
+buffer, then to the beginning of it if not already there.  A
 similar sequence of events will be triggered if point is in an
 archive buffer."
   (interactive)
@@ -119,8 +119,8 @@ archive buffer."
 
 (defun telega-extras-smart-enter ()
   "Take the appropriate action for the thing at point.
-If the point is on a URL, open it in the browser. If the point is on a
-button, push it. Otherwise, send the message at point."
+If the point is on a URL, open it in the browser.  If the point is on a
+button, push it.  Otherwise, send the message at point."
   (interactive)
   (cond ((thing-at-point 'url)
 	 (browse-url-at-point))

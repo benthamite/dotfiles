@@ -103,7 +103,7 @@ With ARG prefix argument, prompt for the URL to use."
 This command will convert from HTML if the clipboard contains HTML, and from Org
 Mode otherwise.
 
-See also `org-extras-paste-with-conversion'. For the reverse process, use
+See also `org-extras-paste-with-conversion'.  For the reverse process, use
 `ox-clip-formatted-copy'."
   (interactive)
   (insert (simple-extras-pandoc-convert "gfm-raw_html" "org")))

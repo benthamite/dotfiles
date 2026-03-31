@@ -81,7 +81,7 @@ will no longer jump to its next occurrence."
 (defun avy-extras-goto-end-of-line-above (&optional offset bottom-up)
   "Go to visible end of line above the cursor.
 OFFSET changes the distance between the closest key to the cursor and the
-cursor. When BOTTOM-UP is non-nil, display avy candidates from top to bottom."
+cursor.  When BOTTOM-UP is non-nil, display avy candidates from top to bottom."
   (interactive)
   (call-interactively (lambda! (avy-goto-line-above offset bottom-up)))
   (end-of-line))
@@ -90,7 +90,7 @@ cursor. When BOTTOM-UP is non-nil, display avy candidates from top to bottom."
 (defun avy-extras-goto-end-of-line-below (&optional offset bottom-up)
   "Go to visible end of line below the cursor.
 OFFSET changes the distance between the closest key to the cursor and the
-cursor. When BOTTOM-UP is non-nil, display avy candidates from top to bottom."
+cursor.  When BOTTOM-UP is non-nil, display avy candidates from top to bottom."
   (interactive)
   (call-interactively (lambda! (avy-goto-line-below offset bottom-up)))
   (end-of-line))

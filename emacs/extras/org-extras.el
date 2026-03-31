@@ -61,7 +61,7 @@ deferred and slow to retrieve."
 (defcustom org-extras-agenda-files-excluded nil
   "Files to exclude from `org-agenda'.
 I have to exclude these files because otherwise extraneous information shows up
-in my agenda, such as TODOs and time logs. These files lack the `property' tag
+in my agenda, such as TODOs and time logs.  These files lack the `property' tag
 but the may still otherwise be included if they have been modified recently (see
 the function `vulpea-agenda-files-update')."
   :type '(repeat file)
@@ -285,7 +285,7 @@ When `org-return-follows-link' is non-nil and point is on a link, call
 This command will convert from HTML if the clipboard contains HTML, and from
 Markdown otherwise.
 
-See also `markdown-mode-extras-paste-with-conversion'. For the reverse process,
+See also `markdown-mode-extras-paste-with-conversion'.  For the reverse process,
 use `ox-clip-formatted-copy'."
   (interactive)
   (let ((output (simple-extras-pandoc-convert "org" "markdown")))
@@ -324,13 +324,13 @@ use `ox-clip-formatted-copy'."
 
 (defun org-extras-inline-images (&optional arg)
   "Enable or disable the display of inline images.
-If called interactively, toggle the display of inline images. If the prefix
+If called interactively, toggle the display of inline images.  If the prefix
 argument is negative, disable the display of inline images; otherwise, enable
 it.
 
 If called from Lisp, toggle the display of inline images if ARG is `toggle'.
 Enable the display of inline images if ARG is nil, omitted, or is a positive
-number. Disable the mode if ARG is a negative number."
+number.  Disable the mode if ARG is a negative number."
   (interactive "P")
   (when (or (and (called-interactively-p 'interactive) (not arg))
 	    (eq arg 'toggle))
@@ -406,10 +406,10 @@ number. Disable the mode if ARG is a negative number."
 
 (defun org-extras-agenda-goto-and-start-clock ()
   "Go to the Org entry for the item at point and start the clock there.
-This must be called from an Org agenda buffer. It first checks if the point is
-on a valid agenda item. If so, it navigates to the source Org file location
+This must be called from an Org agenda buffer.  It first checks if the point is
+on a valid agenda item.  If so, it navigates to the source Org file location
 using the item's marker, then starts the clock on that item using
-`org-clock-in'. If the point is not on a valid item, it signals a user error."
+`org-clock-in'.  If the point is not on a valid item, it signals a user error."
   (interactive)
   (unless (derived-mode-p 'org-agenda-mode)
     (user-error "Not in an Org agenda buffer"))
@@ -420,10 +420,10 @@ using the item's marker, then starts the clock on that item using
           (target-buffer (marker-buffer marker))
           (target-pos (marker-position marker)))
       (unless (and target-buffer (buffer-live-p target-buffer) target-pos)
-        (if (y-or-n-p "Agenda item marker is invalid (stale agenda?). Refresh agenda? ")
+        (if (y-or-n-p "Agenda item marker is invalid (stale agenda?).  Refresh agenda? ")
             (progn
               (org-agenda-redo)
-              (user-error "Agenda refreshed. Please try the command again"))
+              (user-error "Agenda refreshed.  Please try the command again"))
           (user-error "Agenda item marker is invalid or points to a dead buffer/position")))
       (condition-case err
           (call-interactively #'org-agenda-goto)
@@ -453,7 +453,7 @@ using the item's marker, then starts the clock on that item using
 (defun org-extras-agenda-switch-to-dwim ()
   "Open the file at point or go to timer, based on `org-agenda' log state.
 When point is on an agenda log line, go to that line and position in the
-corresponding file. Else, open the file."
+corresponding file.  Else, open the file."
   (interactive)
   (if org-agenda-show-log
       (ignore-errors (call-interactively 'org-clock-convenience-goto-ts))
@@ -691,7 +691,7 @@ IPOS, TABLES and PARAMS are required by the formatter function."
 processing an outer block such as #+begin_details, because it
 marks the entire outer block body with `font-lock-fontified'.
 This function finds #+begin_src lines that lack the
-`org-block-begin-line' face and fontifies them."
+`org-block-begin-line' face and fontifies them.  Search up to LIMIT."
   (let ((case-fold-search t))
     (while (re-search-forward "^[ \t]*\\(#\\+begin_src\\)\\(?: \\(\\S-+\\)\\)?" limit t)
       (unless (eq (get-text-property (match-beginning 1) 'face) 'org-block-begin-line)
@@ -736,8 +736,8 @@ Adds `org-extras-fontify-nested-src-blocks' to the buffer-local
 
 (defun org-extras-cycle-global (&optional arg)
   "Cycle the global visibility, hiding archived subtrees.
-With `C-u' prefix ARG, switch to startup visibility. With a numeric prefix, show
-all headlines up to that level."
+With `C-u' prefix ARG, switch to startup visibility.  With a
+numeric prefix, show all headlines up to that level."
   (interactive)
   (org-cycle-global arg)
   (org-cycle-hide-archived-subtrees 'all))
@@ -770,7 +770,7 @@ all headlines up to that level."
 To exclude directories, files or headings, customize
 `org-extras-id-auto-add-excluded-directories',
 `org-extras-id-auto-add-excluded-files',
-`org-extras-id-auto-add-excluded-headings'. You can also exclude individual
+`org-extras-id-auto-add-excluded-headings'.  You can also exclude individual
 files by setting the value of the file-local variable
 `org-extras-id-auto-add-exclude-file' to t, and can make the function add IDs to
 only level-1 headings in files in specified directories by customizing
@@ -796,7 +796,7 @@ only level-1 headings in files in specified directories by customizing
 (defun org-extras--id-update-warning-handler (level message &rest args)
   "Run `org-extras-id-find-duplicate-ids' when duplicate IDs are found.
 This function is intended to be used as an advice for `display-warning' when
-running `org-id-update-id-locations'. It checks if the warning LEVEL is `emacs'
+running `org-id-update-id-locations'.  It checks if the warning LEVEL is `emacs'
 and if the MESSAGE contains \"duplicate IDs found\". ARGS are additional
 arguments passed to the format function."
   (when (and (eq level 'emacs)
@@ -815,7 +815,7 @@ which otherwise causes a cascading O(n*m) freeze."
 
 (defun org-extras-id-update-id-locations ()
   "Scan relevant files for IDs and process duplicates.
-Store the relation between files and corresponding IDs. This will
+Store the relation between files and corresponding IDs.  This will
 scan all agenda files, all associated archives, all open Org
 files, recursively all files in `org-directory', and all files in
 `org-id-extra-files'.
@@ -877,7 +877,7 @@ most recent preceding \"Finding ID locations\" line."
   "Process the next duplicate ID from the *Duplicate Org IDs* buffer.
 This command opens the file associated with the first duplicate ID entry,
 widens the buffer, calls `simple-extras-visible-mode-enhanced', copies the ID to
-the kill ring, and removes the entry from the buffer. If the buffer becomes
+the kill ring, and removes the entry from the buffer.  If the buffer becomes
 empty, it is killed."
   (interactive)
   (if-let ((buf (get-buffer "*Duplicate Org IDs*")))
@@ -1000,7 +1000,7 @@ empty, it is killed."
 (declare-function org-roam-node-id "org-roam")
 (defun org-extras-linkify-elements (strings &optional separator)
   "For all STRINGS, return its link if node is found, else the string itself.
-The elements are returned as a string separated by SEPARATOR. If
+The elements are returned as a string separated by SEPARATOR.  If
 SEPARATOR is nil, use ' • '."
   (let ((nodes (org-roam-node-list)))
     (string-join
@@ -1151,7 +1151,7 @@ To see a list of Google Docs and their respective IDs, run
 (defun org-extras-remove-trailing-heading ()
   "Remove empty heading at the end of current buffer.
 This function is called automatically via a directory-local variable in the
-directory that stores the `gptel' notes. It is used to avoid the creation of
+directory that stores the `gptel' notes.  It is used to avoid the creation of
 empty headings, which trigger an `org-roam' warning."
   (interactive)
   (save-excursion

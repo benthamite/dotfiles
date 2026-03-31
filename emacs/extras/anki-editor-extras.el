@@ -142,7 +142,7 @@ Any additional model fields are set to empty strings."
 (defun anki-editor-extras-set-card-position (card-id position)
   "Set CARD-ID's new-card position to POSITION via AnkiConnect.
 CARD-ID and POSITION must be integers (or numeric strings).  POSITION is
-1-indexed, matching Anki's `due' position for new cards. For example:
+1-indexed, matching Anki's `due' position for new cards.  For example:
 
 \\=(anki-editor-extras-set-card-position 1764877783576 1)"
   (let ((cid (if (stringp card-id) (string-to-number card-id) card-id))
@@ -281,9 +281,9 @@ QUERY is an Anki search string."
 (defun anki-editor-extras-insert-film-plot-summary ()
   "Insert a one-paragraph plot summary for the film referenced by the current file.
 When the current buffer is in `org-mode', this command uses the base file name
-\\=(without extension) as a BibTeX key. If the key is valid per
+\\=(without extension) as a BibTeX key.  If the key is valid per
 `ebib-extras-key-is-valid-p', fetch the entry title via
-`ebib-extras-get-field' and request a plot summary from gptel. The summary is
+`ebib-extras-get-field' and request a plot summary from gptel.  The summary is
 inserted at the end of the buffer under a level-2 heading \"Plot summary\".
 
 After inserting the summary, prompt to optionally push the note to Anki."

@@ -29,6 +29,11 @@
 
 (require 'calendar)
 
+(defvar paths-dir-archive)
+(defvar paths-file-calendar)
+(declare-function org-get-deadline-time "org" (timestamp))
+(declare-function org-end-of-subtree "org" (&optional invisible-ok to-heading))
+
 ;;;; User options
 
 (defgroup calendar-extras ()
@@ -37,7 +42,7 @@
 
 (defcustom calendar-extras-location-name ""
   "Name of the current location.
-The value can be set manually. It can also be set via
+The value can be set manually.  It can also be set via
 `calendar-extras-set-geolocation'."
   :type 'string
   :group 'calendar-extras )

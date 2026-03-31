@@ -41,7 +41,7 @@ Do not include the \"#\" in the match data.")
   "\\(?1:[[:digit:]]\\{1,3\\}\\), ?\\(?2:[[:digit:]]\\{1,3\\}\\)%?, ?\\(?3:[[:digit:]]\\{1,3\\}\\)%?"
   "Regular expression matching a scaled HSL color string.
 The expression matches three numbers separated by commas, corresponding to
-hue, saturation and luminance, respectively. Hue is a number between 0 and 360,
+hue, saturation and luminance, respectively.  Hue is a number between 0 and 360,
 and saturation and luminance are each numbers between 0 and 100.")
 
 ;;;; Functions
@@ -67,7 +67,7 @@ If color is HSL, return it as a list of three numbers, unless STRING is non-nil.
 
 (defun color-extras-looking-at-hsl-scaled (&optional string)
   "Return the HSL color at point, if any.
-If STRING is non-nil, return the HSL color as a string. Otherwise, return the
+If STRING is non-nil, return the HSL color as a string.  Otherwise, return the
 HSL color as a list of three numbers."
   (when (thing-at-point-looking-at color-extras-hsl-scaled-pattern)
     (let ((hsl-list (color-extras-hsl-split)))
@@ -170,7 +170,7 @@ three values are rescaled to be each between 0 and 1."
 (defun color-extras-hex-to-hsl (hex &optional rescale)
   "Convert a HEX color string to its HSL representation.
 The HSL representation is a list of three numbers each between 0.0 and 1.0,
-inclusive. If RESCALE is non-nil, hue is a number between 0 and 360, and
+inclusive.  If RESCALE is non-nil, hue is a number between 0 and 360, and
 saturation and luminance are each numbers between 0 and 100."
   (cl-destructuring-bind (red green blue)
       (color-extras-hex-to-rgb hex)
@@ -181,7 +181,7 @@ saturation and luminance are each numbers between 0 and 100."
 (defun color-extras-hsl-to-hex (hue saturation luminance &optional rescale)
   "Convert HUE, SATURATION and LUMINANCE to a HEX color string.
 By default, HUE, SATURATION and LUMINANCE are each numbers between 0.0 and 1.0,
-inclusive. If RESCALE is non-nil, HUE is a number between 0 and 360, and
+inclusive.  If RESCALE is non-nil, HUE is a number between 0 and 360, and
 SATURATION and LUMINANCE are each numbers between 0 and 100."
   (cl-destructuring-bind (red green blue)
       (apply #'color-hsl-to-rgb

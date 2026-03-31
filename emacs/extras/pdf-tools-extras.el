@@ -158,7 +158,7 @@ If `opentopage' script is available, open to current page."
 (defun pdf-annot-extras-add-highlight-markup-annotation (list-of-edges
 							 &optional color property-alist)
   "Like `pdf-annot-add-highlight-markup-annotation', but copy the region.
-LIST-OF-EDGES is a list of edges of the region to highlight. COLOR and
+LIST-OF-EDGES is a list of edges of the region to highlight.  COLOR and
 PROPERTY-ALIST are as in `pdf-annot-add-highlight-markup-annotation'."
   (interactive (list (pdf-view-active-region)))
   (let* ((txt (pdf-view-active-region-text)))

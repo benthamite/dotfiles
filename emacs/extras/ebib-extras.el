@@ -43,7 +43,7 @@
 
 (defcustom ebib-extras-attach-existing-file-action 'prompt
   "Control what to do when attaching a file that already exists.
-If nil, abort. If `overwrite', attach without prompting. If `prompt' (the
+If nil, abort.  If `overwrite', attach without prompting.  If `prompt' (the
 default) or any other non-nil value, prompt before overwriting."
   :type '(choice (const :tag "Abort when the file exists" nil)
                  (const :tag "Overwrite without prompting" overwrite)
@@ -102,7 +102,7 @@ This function splits the current window if necessary and selects a target window
 (defun ebib-extras-reload-database-no-confirm (db)
   "Reload the Ebib database DB from disk without asking for confirmation.
 If the database is modified, it will still prompt unless `yes-or-no-p' returns
-true. It preserves the current entry key and updates buffers."
+true.  It preserves the current entry key and updates buffers."
   (when-let* ((filename (ebib-db-get-filename db)))
     (ebib--execute-when
       (entries
@@ -143,8 +143,8 @@ first part (if multiple ISBNs are listed) is returned."
 (defun ebib-extras--update-file-field-contents (key file-name)
   "Update the `file' field of entry KEY with FILE-NAME.
 This function operates directly on the Ebib database and avoids UI interaction,
-making it suitable for asynchronous callbacks. If FILE-NAME is already present
-in the field, no change is made. The database is marked as modified."
+making it suitable for asynchronous callbacks.  If FILE-NAME is already present
+in the field, no change is made.  The database is marked as modified."
   (let* ((db (catch 'found
 	       (dolist (d ebib--databases)
 		 (when (ebib-db-has-key key d)
@@ -213,10 +213,11 @@ Includes both lowercase and capitalized versions.")
 
 (defconst ebib-extras-crossref-inherited-fields
   '("booktitle" "editor" "publisher" "location" "date" "isbn")
-  "List of fields inherited via `crossref' that should not be hardcoded in child entries.")
+  "Fields inherited via `crossref'.
+These should not be hardcoded in child entries.")
 
 (defun ebib-extras-check-crossref (&optional key)
-  "Check that KEY uses `crossref' if it is a child entry type.
+  "Check that KEY use `crossref' if it is a child entry type.
 If KEY is nil, use the current entry.  Signal a `user-error' if
 the entry is a child type (e.g. `incollection') that hardcodes
 parent-level fields instead of using `crossref'."
@@ -245,7 +246,7 @@ instead of hardcoding %s"
 (defun ebib-extras-copy-current-field-contents ()
   "Copy the contents of the current field at point to the kill ring.
 If the field contains a value from a cross-referenced entry, that resolved value
-is copied. This is a wrapper around `ebib-copy-field-contents'."
+is copied.  This is a wrapper around `ebib-copy-field-contents'."
   (interactive)
   (ebib-copy-field-contents (ebib--current-field)))
 
@@ -253,9 +254,9 @@ is copied. This is a wrapper around `ebib-copy-field-contents'."
 (defun ebib-extras-get-file (extension)
   "Return the path of the file with EXTENSION in the entry at point.
 The function determines the correct way to get field values based on the current
-major mode (`ebib-entry-mode' or `bibtex-mode'). A file path is returned if a
+major mode (`ebib-entry-mode' or `bibtex-mode').  A file path is returned if a
 file with the given EXTENSION is uniquely found in the \"file\" field of the
-entry. Returns nil otherwise."
+entry.  Returns nil otherwise."
   (let ((get-field (pcase major-mode
 		     ('ebib-entry-mode #'ebib-extras-get-field)
 		     ('bibtex-mode #'bibtex-extras-get-field))))
@@ -285,7 +286,7 @@ first file matching an extension found via `ebib-extras-get-file'."
 (defun ebib-extras-open-file (extension)
   "Open the file with EXTENSION associated with the entry at point.
 A file will be opened using `find-file' if it uniquely exists (found via
-`ebib-extras-get-file'). Otherwise, a user error is signaled.
+`ebib-extras-get-file').  Otherwise, a user error is signaled.
 EXTENSION is a string representing the file extension."
   (interactive "sFile extension: ")
   (if-let* ((file-name (ebib-extras-get-file extension)))
@@ -295,7 +296,7 @@ EXTENSION is a string representing the file extension."
 (defun ebib-extras-open-file-externally (extension)
   "Open the file with EXTENSION for the entry at point externally.
 The file is opened via `shell-command' with \"open\" if it uniquely exists
-\\=(found via `ebib-extras-get-file'). Otherwise, a user error is signaled.
+\\=(found via `ebib-extras-get-file').  Otherwise, a user error is signaled.
 EXTENSION is a string representing the file extension."
   (interactive "sFile extension: ")
   (if-let* ((file-name (expand-file-name (ebib-extras-get-file extension))))
@@ -431,8 +432,8 @@ The original order of first occurrences is preserved."
 
 (defun ebib-extras--rename-and-abbreviate-file (directory key &optional extension)
   "Construct a new file path in DIRECTORY, named after KEY, with EXTENSION.
-The DIRECTORY path is abbreviated using `abbreviate-file-name'. If EXTENSION is
-non-nil, it's appended to KEY. This function primarily constructs the target
+The DIRECTORY path is abbreviated using `abbreviate-file-name'.  If EXTENSION is
+non-nil, it's appended to KEY.  This function primarily constructs the target
 path for renaming/moving files."
   (file-name-concat
    (abbreviate-file-name
@@ -491,9 +492,9 @@ Validity is determined by looking up the file's base name as a key using
 
 (defun ebib-extras-list-invalid-files (&optional dirs)
   "Populate `ebib-extras-invalid-files' with files from DIRS with invalid names.
-Invalid names are those whose base name isn't a known BibTeX key. If DIRS is
+Invalid names are those whose base name isn't a known BibTeX key.  If DIRS is
 nil, searches `paths-dir-pdf-library' and potentially others commented out in
-the original code. This can be slow. DIRS should be a list of directory paths."
+the original code.  This can be slow.  DIRS should be a list of directory paths."
   (interactive "P") ; Allow prefix for optional DIRS, or prompt.
   (let* ((dirs (or (if (listp dirs) dirs nil) ; Handle prefix arg for DIRS
                    (list
@@ -513,7 +514,7 @@ the original code. This can be slow. DIRS should be a list of directory paths."
 
 (defun ebib-extras-rename-invalid-file (file)
   "Rename an invalid FILE to match its corresponding BibTeX key.
-Removes FILE from `ebib-extras-invalid-files'. Looks up the BibTeX key
+Removes FILE from `ebib-extras-invalid-files'.  Looks up the BibTeX key
 associated with FILE, opens the entry in Ebib, and calls
 `ebib-extras-rename-files' if the entry is not cross-referenced."
   (setq ebib-extras-invalid-files (delete file ebib-extras-invalid-files))
@@ -527,8 +528,8 @@ associated with FILE, opens the entry in Ebib, and calls
 (defun ebib-extras-rename-next-invalid-file ()
   "Rename the next file from `ebib-extras-invalid-files'.
 This function processes the *first* file in `ebib-extras-invalid-files' by
-calling `ebib-extras-rename-invalid-file'. The processed file is removed from
-the list. Call this repeatedly to process all invalid files one by one."
+calling `ebib-extras-rename-invalid-file'.  The processed file is removed from
+the list.  Call this repeatedly to process all invalid files one by one."
   (interactive)
   (when ebib-extras-invalid-files
     (ebib-extras-rename-invalid-file (car ebib-extras-invalid-files))))
@@ -649,7 +650,7 @@ KEY.EXT, moved to the appropriate library directory and the
 	   (rename-file src dest t)
 	   dest)
 	  (_
-	   (when (y-or-n-p (format "File %s exists. Overwrite? "
+	   (when (y-or-n-p (format "File %s exists.  Overwrite? "
 				   (file-name-nondirectory dest)))
              (rename-file src dest t))
 	   dest))
@@ -676,10 +677,10 @@ KEY.EXT, moved to the appropriate library directory and the
 (declare-function eww-extras-url-to-file "eww-extras")
 (defun ebib-extras-url-to-file-attach (type &optional key)
   "Generate a file of TYPE (e.g., \"pdf\", \"html\") from the URL of entry KEY.
-The generated file is then attached to the entry. If KEY is nil, uses the entry
-at point. Uses `eww-extras-url-to-file' for generation and
+The generated file is then attached to the entry.  If KEY is nil, uses the entry
+at point.  Uses `eww-extras-url-to-file' for generation and
 `ebib-extras-attach-file-to-entry' as a callback for attachment.
-TYPE is a string. KEY is an optional BibTeX key string."
+TYPE is a string.  KEY is an optional BibTeX key string."
   (let ((target-key (or key (ebib--get-key-at-point))))
     (when-let* ((url (ebib-extras-get-field "url" target-key)))
       (eww-extras-url-to-file type url
@@ -689,7 +690,7 @@ TYPE is a string. KEY is an optional BibTeX key string."
 
 (defun ebib-extras-url-to-pdf-attach (&optional key)
   "Generate a PDF from the URL of entry KEY and attach it.
-If KEY is nil, uses the entry at point. This is a wrapper around
+If KEY is nil, uses the entry at point.  This is a wrapper around
 `ebib-extras-url-to-file-attach' with TYPE \"pdf\".
 KEY is an optional BibTeX key string, passed interactively as nil."
   (interactive (list nil))
@@ -697,7 +698,7 @@ KEY is an optional BibTeX key string, passed interactively as nil."
 
 (defun ebib-extras-url-to-html-attach (&optional key)
   "Generate an HTML file from the URL of entry KEY and attach it.
-If KEY is nil, uses the entry at point. This is a wrapper around
+If KEY is nil, uses the entry at point.  This is a wrapper around
 `ebib-extras-url-to-file-attach' with TYPE \"html\".
 KEY is an optional BibTeX key string, passed interactively as nil."
   (interactive (list nil))
@@ -706,10 +707,10 @@ KEY is an optional BibTeX key string, passed interactively as nil."
 (defvar eww-extras-download-subtitles) ; Should be declared if special
 (defun ebib-extras-url-to-srt-attach (&optional key)
   "Download SRT subtitles for the URL of the entry with KEY.
-If KEY is nil, uses the entry at point. Downloads to `paths-dir-downloads' using
-a shell command formatted by `eww-extras-download-subtitles'.
-Attachment of the downloaded SRT file must be done manually.
-KEY is an optional BibTeX key string, passed interactively as nil."
+If KEY is nil, use the entry at point.  Download to
+`paths-dir-downloads' using a shell command formatted by
+`eww-extras-download-subtitles'.  Attachment of the downloaded
+SRT file must be done manually."
   (interactive (list nil))
   (let ((target-key (or key (ebib--get-key-at-point))))
     (when-let* ((url (ebib-extras-get-field "url" target-key))
@@ -720,8 +721,8 @@ KEY is an optional BibTeX key string, passed interactively as nil."
 
 (defun ebib-extras-book-attach (&optional key)
   "Attempt to download and attach a PDF for the book-type entry with KEY.
-If KEY is nil, uses the entry at point. It uses the entry's ISBN or title (if a
-book-like type) to search and download via `annas-archive-download'. A hook is
+If KEY is nil, uses the entry at point.  It uses the entry's ISBN or title (if a
+book-like type) to search and download via `annas-archive-download'.  A hook is
 added to `annas-archive-post-download-hook' to automatically attach the
 downloaded file using `ebib-extras-attach-file' if the download was internal;
 otherwise, it messages to attach manually.
@@ -753,7 +754,7 @@ KEY is an optional BibTeX key string, passed interactively as nil."
 
 (defun ebib-extras-doi-attach (&optional key)
   "Attempt to download and attach a PDF for the entry with KEY using its DOI.
-If KEY is nil, use the entry at point. The DOI is downloaded via
+If KEY is nil, use the entry at point.  The DOI is downloaded via
 `annas-archive-download' and the resulting file is attached via
 `annas-archive-post-download-hook'."
   (interactive (list nil))
@@ -776,16 +777,17 @@ If KEY is nil, use the entry at point. The DOI is downloaded via
   "Attach FILE to the BibTeX entry with KEY.
 This function is primarily intended as a callback for asynchronous downloaders.
 It calls `ebib-extras-attach-file' and messages success.
-FILE is the path to the file. KEY is the BibTeX key string."
+FILE is the path to the file.  KEY is the BibTeX key string."
   ;; Do not switch buffers here, pass the key directly to attach-file
   (ebib-extras-attach-file file key)
   (message "Attached `%s' to %s" file key))
 
 (defun ebib-extras-attach-files (&optional key)
-  "Attach files appropriate for the entry with KEY (Do What I Mean).
-If KEY is nil, uses the entry at point. If a file is already attached (i.e.,
-the \"file\" field is non-empty), it attempts to set the abstract. Otherwise, it
-tries to attach files based on available identifiers and entry type:
+  "Attach files appropriate for the entry with KEY (DWIM).
+If KEY is nil, use the entry at point.  If a file is already
+attached (i.e., the \"file\" field is non-empty), it attempts to
+set the abstract.  Otherwise, it tries to attach files based on
+available identifiers and entry type:
 - DOI: Uses `ebib-extras-doi-attach'.
 - ISBN or book-like type: Uses `ebib-extras-book-attach'.
 - Video URL: Uses `ebib-extras-url-to-srt-attach' (for subtitles).
@@ -817,7 +819,7 @@ KEY is an optional BibTeX key string, passed interactively as nil.
 (defvar tlon-languages-properties) ; Should be declared if special
 (defun ebib-extras-ocr-pdf (&optional force)
   "Perform OCR on the PDF file associated with the current Ebib entry.
-This function calls `files-extras-ocr-pdf'. If FORCE is non-nil (e.g., when
+This function calls `files-extras-ocr-pdf'.  If FORCE is non-nil (e.g., when
 called with a prefix argument), OCR is forced even if text is already present."
   (interactive "P")
   (files-extras-ocr-pdf force))
@@ -828,10 +830,10 @@ called with a prefix argument), OCR is forced even if text is already present."
 (defun ebib-extras-get-or-set-language ()
   "Return the language of the current entry, prompting to set it if needed.
 Determines the appropriate field access functions based on `major-mode'
-\\=(`ebib-entry-mode' or `bibtex-mode'). If the \"langid\" field is empty or
+\\=(`ebib-entry-mode' or `bibtex-mode').  If the \"langid\" field is empty or
 contains an invalid language (checked against `tlon-languages-properties'),
 prompts the user to select a language using `completing-read' and sets the
-field. Returns the (potentially newly set) language."
+field.  Returns the (potentially newly set) language."
   (cl-destructuring-bind (get-field set-field)
       (pcase major-mode
         ('ebib-entry-mode '(ebib-extras-get-field ebib-extras-set-field))
@@ -1181,7 +1183,7 @@ The list of article download functions is specified by
 (declare-function bibtex-extras-get-entry-as-string "bibtex-extras")
 (defun ebib-extras-get-or-open-entry (&optional interactive-p)
   "Get or open the BibTeX entry at point.
-If INTERACTIVE-P is non-nil, open the entry. Otherwise, return it as a string."
+If INTERACTIVE-P is non-nil, open the entry.  Otherwise, return it as a string."
   (interactive "p")
   (when-let* ((file (ebib-db-get-filename ebib--cur-db))
 	      (key (ebib--get-key-at-point))
@@ -1277,7 +1279,7 @@ If STATE is nil, toggle between the relevant states."
 (declare-function citar-open-notes "citar")
 (defun ebib-extras-citar-open-notes ()
   "Open note for the entry at point using `citar-open-notes'.
-This command replaces the native `ebib-popup-note'. The
+This command replaces the native `ebib-popup-note'.  The
 replacement ensures that, when a note doesn't already exist, it
 is created following the same schema as notes created with
 `citar'."
@@ -1328,9 +1330,10 @@ Elements in this list are used to remove file-notify watches.")
 (defun ebib-extras--auto-reload-callback (_event _nth db db-file)
   "Handle file change notifications for Ebib databases.
 This function is called from the callback in
-`ebib-extras-auto-reload-database'.  It checks if a reload is necessary based on
-a 5-second cooldown. _EVENT is the file notification event. _NTH is the database
-index. DB is the ebib database object. DB-FILE is the path to the database
+`ebib-extras-auto-reload-database'.  It checks if a reload is
+necessary based on a 5-second cooldown.  _EVENT is the file
+notification event.  _NTH is the database index.  DB is the ebib
+database object.  DB-FILE is the path to the database
 file."
   (let ((now (current-time))
         (last-reload (gethash db-file ebib-extras-last-reload-times)))
@@ -1639,8 +1642,8 @@ Authors enclosed in braces are left untouched, but the braces are removed."
 
 (defun ebib-extras-format-authors (authors &optional separator max)
   "Format AUTHORS as a string.
-The authors are separated by SEPARATOR, which defaults to \" & \". A maximum of
-MAX authors are included in the string, which defaults to three. When MAX is
+The authors are separated by SEPARATOR, which defaults to \" & \".  A maximum of
+MAX authors are included in the string, which defaults to three.  When MAX is
 exceeded, only the first author will be listed, followed by \" et al\"."
   (let ((separator (or separator " & "))
 	(max (or max 3)))

@@ -23,7 +23,7 @@
 
 ;;; Commentary:
 
-;; Set variable paths. Values set via these variables will be available at startup for each user.
+;; Set variable paths.  Values set via these variables will be available at startup for each user.
 
 ;;; Code:
 
@@ -297,7 +297,7 @@
   "Path to the external repositories directory.
 This is where the repositories that are neither personal
 repositories (`paths-dir-personal-repos') nor Tlön
-repositories(`paths-dir-tlon-repos') will be cloned. If you clone all
+repositories(`paths-dir-tlon-repos') will be cloned.  If you clone all
 repositories in the same directory, all these variables will have the same
 value."
   :type 'directory

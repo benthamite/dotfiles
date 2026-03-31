@@ -36,7 +36,7 @@
 ;; Borrowed from Prot
 (defun elfeed-extras-show-visit-in-eww (&optional link)
   "Browse current entry's link or optional LINK in `eww'.
-Only show the readable part once the website loads. This can fail on
+Only show the readable part once the website loads.  This can fail on
 poorly-designed websites."
   (interactive)
   (let* ((entry (if (derived-mode-p 'elfeed-show-mode)

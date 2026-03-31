@@ -77,8 +77,8 @@
 
 (defcustom vc-extras-split-repo 'prompt
   "Whether to split the `.git' directory in a separate directory.
-If nil, never split the `.git' directory. If `prompt', ask the user whether to
-split the `.git' directory. If t or any other non-nil value, always split the
+If nil, never split the `.git' directory.  If `prompt', ask the user whether to
+split the `.git' directory.  If t or any other non-nil value, always split the
 `.git' directory."
   :type '(choice (const :tag "Never" nil)
 		 (const :tag "Prompt" prompt)
@@ -105,7 +105,7 @@ split the `.git' directory. If t or any other non-nil value, always split the
 ;;;###autoload
 (defun vc-extras-create-repo (&optional name account)
   "Create a new GitHub repository named NAME in ACCOUNT.
-If NAME is nil, prompt for one. If ACCOUNT is nil, select one."
+If NAME is nil, prompt for one.  If ACCOUNT is nil, select one."
   (interactive)
   (let* ((name (or name (read-string "Name: ")))
          (account (or account (completing-read "Account: "
@@ -185,7 +185,7 @@ a custom option."
 (defun vc-extras--initialize-submodules (dir)
   "Initialize submodules of the repo at DIR.
 Runs `git submodule init' and `git submodule update --recursive' with DIR as the
-working directory. Then, checks if `origin/main' or `origin/master' exists for
+working directory.  Then, checks if `origin/main' or `origin/master' exists for
 each submodule and checks out the first one found."
   (let ((default-directory dir))
     (call-process "git" nil nil nil "submodule" "init")
@@ -283,9 +283,9 @@ If ACCOUNT is nil, search in all accounts listed in `vc-extras-profiles'."
 
 (defun vc-extras-get-repo-dir (name account &optional git)
   "Return the directory of the repo named NAME in ACCOUNT.
-If GIT is `git', return
-the repo’s `.git' directory. If GIT is `split-git', return the repo’s split
-`.git' directory. Otherwise, return the repo directory."
+If GIT is `git’, return
+the repo’s `.git’ directory.  If GIT is `split-git’, return the repo’s split
+`.git’ directory.  Otherwise, return the repo directory."
   (let* ((account-dir (vc-extras-get-account-prop account :dir))
 	 (dir (pcase git
 		('split-git paths-dir-split-git)
@@ -361,8 +361,8 @@ If the repository has submodules, move their `.git' directories, too."
 ;;;###autoload
 (defun vc-extras-rename-repo (&optional old-name new-name account)
   "Rename repository OLD-NAME to NEW-NAME in ACCOUNT.
-If OLD-NAME is nil, prompt for one from local repositories. If NEW-NAME is nil,
-prompt for it. If ACCOUNT is nil, determine it from local candidates.
+If OLD-NAME is nil, prompt for one from local repositories.  If NEW-NAME is nil,
+prompt for it.  If ACCOUNT is nil, determine it from local candidates.
 
 This function renames:
 - The local repository directory
@@ -436,14 +436,14 @@ Updates the .git file pointer in NEW-MAIN-DIR to point to the new location."
 ;;;###autoload
 (defun vc-extras-delete-local-repo (&optional name account)
   "Delete the repo named NAME in ACCOUNT.
-If NAME is nil, prompt the user to select one from local repositories. If
+If NAME is nil, prompt the user to select one from local repositories.  If
 ACCOUNT is nil, candidates will be gathered from all available profiles.
-Otherwise, only local repos in the directory of ACCOUNT will be displayed. Note
+Otherwise, only local repos in the directory of ACCOUNT will be displayed.  Note
 that if multiple accounts share the same directory, repos from all these
 accounts will be displayed.
 
 Deletes both the main repository directory (if it exists and is a Git repo) and
-the corresponding split Git directory (if it exists). A message is displayed
+the corresponding split Git directory (if it exists).  A message is displayed
 listing the directories that were deleted."
   (interactive)
   (let* ((candidates (unless name (vc-extras-list-local-candidates account)))
@@ -484,7 +484,7 @@ Return DIR if deletion was performed, or nil otherwise."
 (defun vc-extras-list-local-candidates (&optional account)
   "Return an alist of local Git repositories as (NAME . DIR).
 If ACCOUNT is non-nil, only consider repositories in that account’s directory;
-otherwise, search all accounts listed in `vc-extras-profiles'. Only directories
+otherwise, search all accounts listed in `vc-extras-profiles'.  Only directories
 that appear to be Git repositories (according to `vc-extras-is-git-dir-p') are
 included."
   (let* ((repo-dirs (if account

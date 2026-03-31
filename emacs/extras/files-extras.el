@@ -80,7 +80,7 @@ Matches the pattern `Screenshot YYYY-MM-DD at HH.MM.SS.EXT'.")
 (defun files-extras-system-move-file-to-trash (filename)
   "Move file or directory named FILENAME to the recycle bin.
 This function overrides `system-move-file-to-trash' to use delete files using
-the `trash' utility. Deleting files in this way supports the \"Put Back\"
+the `trash' utility.  Deleting files in this way supports the \"Put Back\"
 functionality in macOS."
   (unless (executable-find "trash")
     (user-error "`trash' not found; please install it (e.g. `brew install trash')"))
@@ -223,8 +223,8 @@ functionality in macOS."
 ;; Copied from emacs.stackexchange.com/a/24461/32089
 (defun files-extras-revert-all-file-buffers ()
   "Refresh all open file buffers without confirmation.
-Buffers in modified (not yet saved) state in Emacs will not be reverted. They
-will be reverted though if they were modified outside Emacs. Buffers visiting
+Buffers in modified (not yet saved) state in Emacs will not be reverted.  They
+will be reverted though if they were modified outside Emacs.  Buffers visiting
 files which do not exist any more or are no longer readable will be killed."
   (interactive)
   (dolist (buf (buffer-list))
@@ -314,14 +314,14 @@ The screenshot directory is specified by `files-extras-screenshot-directory'."
 (defun files-extras-ocr-pdf (force &optional filename parameters)
   "OCR the FILENAME.
 If FILENAME is nil, use the PDF file at point or the file visited by the current
-buffer. If FORCE is non-nil or called with a prefix argument argument, force OCR
+buffer.  If FORCE is non-nil or called with a prefix argument argument, force OCR
 even if it has already been performed on the file.
 
-Optionally, pass PARAMETERS to `ocrmypdf'. If so, FORCE and FILENAME
+Optionally, pass PARAMETERS to `ocrmypdf'.  If so, FORCE and FILENAME
 have no effect."
   (interactive "P")
   (unless (executable-find "ocrmypdf")
-    (user-error "`ocrmypdf' not found. Please install it (e.g. `brew install ocrmypdf'"))
+    (user-error "`ocrmypdf' not found.  Please install it (e.g. `brew install ocrmypdf'"))
   (let* ((filename (or filename
 		       (pcase major-mode
 			 ('dired-mode (dired-get-filename))
@@ -393,7 +393,7 @@ This function gets STRING when PROCESS produces output."
 (defun files-extras-recover-all-files ()
   "Recover all files with auto-save data in the `auto-save' directory.
 One normally uses `recover-session' for this, but when Emacs crashes a session
-may fail to be created and then each file has to be recovered separately. This
+may fail to be created and then each file has to be recovered separately.  This
 command automates the recovery process in these cases."
   (interactive)
   (dolist (file (directory-files (file-name-concat paths-dir-emacs-profiles "var/auto-save")))
@@ -404,7 +404,7 @@ command automates the recovery process in these cases."
 (declare-function alert "alert")
 (defun files-extras-auto-save-alert ()
   "Alert user when auto save data is detected.
-`recover-this-file' notifications are easy to miss. This function triggers a
+`recover-this-file' notifications are easy to miss.  This function triggers a
 more intrusive alert."
   (when (and (not buffer-read-only)
 	     (file-newer-than-file-p (or buffer-auto-save-file-name
@@ -600,7 +600,7 @@ If N is nil, default to 0 (the first directory)."
 (defun files-extras-download-bypass-paywalls-chrome ()
   "Download and install Bypass Paywalls Chrome Clean.
 After running the command, both the extensions page and the local folder will
-open. To install the extension, drag the latter onto the former."
+open.  To install the extension, drag the latter onto the former."
   (interactive)
   (let* ((url files-extras-bypass-paywalls-chrome-zip-url)
 	 (file (file-name-concat paths-dir-downloads files-extras-bypass-paywalls-chrome-zip-file))

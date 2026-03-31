@@ -153,7 +153,7 @@
 (defun bibtex-extras-convert-titleaddon-to-journaltitle ()
   "Convert field `titleaddon' to `journaltitle' in entry at point.
 When items are imported with the Zotero translation server, the online
-publication venue is recorded in the `titleaddon' field. The correct Biblatex
+publication venue is recorded in the `titleaddon' field.  The correct Biblatex
 field for this information is `journaltitle', so we move it there."
   (save-excursion
     (save-restriction
@@ -224,7 +224,7 @@ If DELIMITER is nil, use a semicolon."
   "Return the BibTeX entry with KEY as a string.
 If KEY is nil, use the current entry.
 
-By default, return the entire entry. If FIELD is non-nil, return its value
+By default, return the entire entry.  If FIELD is non-nil, return its value
 instead.
 
 The search is performed across all files in `bibtex-files', or restricted to
@@ -304,13 +304,13 @@ This function was adapted from `bibtex-set-field' in `doi-utils.el'."
 
 (defun bibtex-extras-lessp (index1 index2)
   "Predicate for sorting BibTeX entries with indices INDEX1 and INDEX2.
-Entries will be first be sorted as follows. Those with a `crossref' field will
-be placed above the rest, and will be sorted in reverse alphabetical order. The
+Entries will be first be sorted as follows.  Those with a `crossref' field will
+be placed above the rest, and will be sorted in reverse alphabetical order.  The
 rest will be sorted alphabetically.
 
-This sorting criterion replicates the Ebib criterion. That the entries with a
+This sorting criterion replicates the Ebib criterion.  That the entries with a
 `crossref' field are sorted in reverse alphabetical order rather than
-alphabetically appears to be a bug. But we replicate it for consistency’s sake:
+alphabetically appears to be a bug.  But we replicate it for consistency’s sake:
 this way when either Ebib or `bibtex' sorts the buffer, it won't be later
 re-sorted by the other."
   (let ((key1 (nth 0 index1))

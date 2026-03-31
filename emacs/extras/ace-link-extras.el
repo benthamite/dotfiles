@@ -37,12 +37,12 @@
 (defun ace-link-extras-mu4e ()
   "Open a visible link in an `mu4e-view-mode' buffer.
 Unlike `ace-link-mu4e', this function is sensitive to the value of
-`mm-text-html-renderer'. Specifically, it will use `ace-link--w3m-collect' to
-collect the URLs if its value is `w3m'. Otherwise it will use the normal
+`mm-text-html-renderer'.  Specifically, it will use `ace-link--w3m-collect' to
+collect the URLs if its value is `w3m'.  Otherwise it will use the normal
 `ace-link-mu4e'.
 
 We do not use `ace-link-w3m' because we do not want to browse the URL with
-`w3m', which we only use to render HTML email messages. Instead, we rely on
+`w3m', which we only use to render HTML email messages.  Instead, we rely on
 `ace-link-extras-w3m-get-url' to get the URL and then open it with
 `browse-url' (which will browse it with `eww', `chrome' or `firefox', as
 specified by `browse-url-handlers')."

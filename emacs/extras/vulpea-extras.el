@@ -31,6 +31,8 @@
 (require 'paths)
 (require 'vulpea)
 
+(declare-function org-roam-db-query "org-roam-db" (sql &rest args))
+
 ;;;; User options
 
 (defgroup vulpea-extras ()

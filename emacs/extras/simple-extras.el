@@ -466,8 +466,9 @@ Transient Mark mode is on but the region is inactive."
 ;;;###autoload
 (defun simple-extras-visible-mode-enhanced (&optional arg)
   "Set `visible-mode' and associated modes.
-Toggle the mode if ARG is `toggle' or called interactively. Enable the mode if
-ARG is nil, omitted, or a positive number. Disable the mode if ARG is a negative
+Toggle the mode if ARG is `toggle' or called interactively.
+Enable the mode if ARG is nil, omitted, or a positive number.
+Disable the mode if ARG is a negative
 number."
   (interactive "P")
   (let ((arg (if (or (eq arg 'toggle)
@@ -576,7 +577,7 @@ The DWIM behaviour of this command is as follows:
 ;; Adapted from `spacemacs/indent-region-or-buffer'.
 (defun simple-extras-indent-dwim ()
   "Indent in a smart way, depending on context.
-If a region is selected, indent it. Otherwise, if point is on code block indent
+If a region is selected, indent it.  Otherwise, if point is on code block indent
 block only, else indent whole buffer."
   (interactive)
   (save-excursion
@@ -720,7 +721,7 @@ FORMS are evaluated with point restored to its original position."
 ;;;###autoload
 (defun simple-extras-pandoc-convert (target &optional source content)
   "Convert CONTENT from SOURCE to TARGET using Pandoc.
-If SOURCE is nil, use HTML. If CONTENT is nil, use the system clipboard. Use
+If SOURCE is nil, use HTML.  If CONTENT is nil, use the system clipboard.  Use
 Pandoc name for both SOURCE (https://pandoc.org/MANUAL.html#option--from) and
 TARGET (https://pandoc.org/MANUAL.html#option--to)."
   (if content
@@ -741,7 +742,7 @@ TARGET (https://pandoc.org/MANUAL.html#option--to)."
 
 ;; Adapted from xahlee.info/emacs/emacs/emacs_zap_gremlins.html
 (defun simple-extras-asciify-text (&optional begin end)
-  "Remove accents in some letters. e.g. café → cafe.
+  "Remove accents in some letters.  e.g. café → cafe.
 Change European language characters into equivalent ASCII ones.
 When called interactively, work on current line or text selection.
 
@@ -861,7 +862,7 @@ leading and trailing hyphen."
 
 (defun simple-extras-new-buffer-auto-save-dir (orig-func &rest args)
   "Use a standard location for auto-save files for non-file-visiting buffers.
-ORIG-FUNC is the original function being advised. ARGS are the arguments passed
+ORIG-FUNC is the original function being advised.  ARGS are the arguments passed
 to it."
   (if (simple-extras-is-new-buffer-p)
       (let ((default-directory simple-extras-new-buffer-auto-save-dir))
@@ -937,7 +938,7 @@ to it."
 (defun simple-extras-narrow-or-widen-dwim ()
   "Widen if buffer is narrowed, narrow-dwim otherwise.
 Dwim means: region, org-src-block, org-subtree, ledger
-transaction, or defun, whichever applies first. Narrowing to
+transaction, or defun, whichever applies first.  Narrowing to
 org-src-block actually calls `org-edit-src-code'.
 
 With prefix P, don't widen, just narrow even if buffer
@@ -971,7 +972,7 @@ If ELEMENT is the last element, return the first element."
 ;;;###autoload
 (defun simple-extras-call-verbosely (fun &optional format-string)
   "Call FUN and display a message with its name.
-Optionally, use FORMAT-STRING as the message format string. The string should
+Optionally, use FORMAT-STRING as the message format string.  The string should
 take a single argument, the name of the function being called."
   (let ((format-string (or format-string "Calling `%s'...")))
     (message format-string (symbol-name fun))

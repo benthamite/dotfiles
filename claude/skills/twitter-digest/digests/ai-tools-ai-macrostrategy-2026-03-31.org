@@ -1,0 +1,225 @@
+#+title: Twitter digest: ai-tools + ai-macrostrategy — 2026-03-31
+
+* ai-tools
+
+** Notable
+
+*** @0xSero (Mon Mar 30 22:29)
+Turn all your Hermes agent sessions into training-data.
+Likes: 428 | Views: 19471 | Like rate: 2.2%
+[[https://x.com/0xSero/status/2038745365021667655][View on X]]
+
+*** @Prince_Canuma (Mon Mar 30 17:07)
+Voxtral-TTS by @MistralAI now faster than realtime on MLX-Audio streaming. New release in a few!
+Likes: 142 | Views: 6735 | Like rate: 2.1%
+[[https://x.com/Prince_Canuma/status/2038664539412091333][View on X]]
+
+*** @0xSero (Mon Mar 30 18:20)
+Opencoded today, they have done so well with allowing you to port your own providers in, master class. GLM-5.1 natively feels pretty good here.
+Likes: 258 | Views: 12376 | Like rate: 2.1%
+[[https://x.com/0xSero/status/2038682791932522532][View on X]]
+
+*** @Dimillian (Mon Mar 30 14:06)
+Here is my usual Codex workflow and what I try to improve: Build some feature -> review and fix until there is no major issue -> ask for code simplification and deduplication -> review again -> manual review -> open PR. This is for supervised non vibe coded project.
+Likes: 276 | Views: 13889 | Like rate: 2.0%
+[[https://x.com/Dimillian/status/2038618994920346106][View on X]]
+
+*** @boringmarketer (Mon Mar 30 20:14)
+You can run multiple independent agents with Hermes each with its own memory, skills, etc. brb setting this up right now.
+Likes: 133 | Views: 6890 | Like rate: 1.9%
+[[https://x.com/boringmarketer/status/2038711420829769943][View on X]]
+
+*** @TheAhmadOsman (Mon Mar 30 22:17)
+Current models rotation (mix of API & local): GPT 5.4 Pro, MiniMax M2.7 (API) / M2.5 (local), GLM 5.1 (API) / 4.7 (local), Kimi K2.5, Qwen 3.5 397B MoE, Qwen 3.5 27B Dense.
+Likes: 199 | Views: 11793 | Like rate: 1.7%
+[[https://x.com/TheAhmadOsman/status/2038742473262899661][View on X]]
+
+*** @Dimillian (Mon Mar 30 13:53)
+The new iOS Build app Codex plugin skills package comes with a lot of SwiftUI skills, including one with a ton of very nice SwiftUI components and design patterns.
+Likes: 123 | Views: 8036 | Like rate: 1.5%
+[[https://x.com/Dimillian/status/2038615717260435518][View on X]]
+
+*** @itsolelehmann (Mon Mar 30 12:39)
+One of the highest leverage ideas in AI right now: "minimum viable prompting." Your Claude prompts/skills are probably way too detailed, and it is making your outputs worse. Boris Cherny's own setup is surprisingly minimal.
+Likes: 309 | Views: 22301 | Like rate: 1.4%
+[[https://x.com/itsolelehmann/status/2038596865235775818][View on X]]
+
+*** @dexhorthy (Mon Mar 30 16:03)
+Custom tools vs MCPs: always "both." Custom tools take work and taste, MCPs give flexibility but lower quality. For high-volume tools build first-class. For everything else, MCPs.
+Likes: 35 | Views: 3501 | Like rate: 1.0%
+[[https://x.com/dexhorthy/status/2038648255358394576][View on X]]
+
+*** @ivanfioravanti (Mon Mar 30 18:56)
+MLX: MBP 16 with M5 Max in Automatic vs High Performance mode using new dynamic quantization. Qwen3.5-35B-A3B. Was not expecting such a difference in batch processing.
+Likes: 50 | Views: 5086 | Like rate: 1.0%
+[[https://x.com/ivanfioravanti/status/2038691932415590403][View on X]]
+
+*** @championswimmer (Mon Mar 30 19:09)
+Love how easy to extend Pi (the plugin API). /context to view context usage does not work in Claude Code or Codex during agent work. Added it to pi.
+Likes: 54 | Views: 6220 | Like rate: 0.9%
+[[https://x.com/championswimmer/status/2038695138533298240][View on X]]
+
+*** @simonw (Mon Mar 30 20:28)
+Georgi on local model coding agents: the main issues revolve around the harness and intricacies around model chat templates and prompt construction, not model quality.
+Likes: 262 | Views: 45287 | Like rate: 0.6%
+[[https://x.com/simonw/status/2038714926769094875][View on X]]
+
+** Vetted accounts
+
+*** @altryne (score: 7 — auto-added to list)
+Claude Code ecosystem expert. Cache-invalidation investigation, weekly show host. ~60% AI tools.
+
+Claude session quotas draining fast: a Redditor reverse engineered the binaries with MITM to find 2 bugs causing cache-invalidation. Uncached tokens are 10x-20x more expensive.
+Likes: 4399 | Views: 1180872 | Like rate: 0.4%
+[[https://x.com/altryne/status/2038676458026189225][View on X]]
+
+*** @kr0der (score: 7 — auto-added to list)
+Comparative Claude/GPT workflows, /codex skills, review anti-patterns. ~70% AI tools.
+
+After trying Claude Code for ~a week, swapping back to 95% GPT 5.4 and keeping 5% Opus 4.6 for frontend only.
+Likes: 126 | Views: 4234 | Like rate: 3.0%
+[[https://x.com/kr0der/status/2038797484017791035][View on X]]
+
+Added /codex skill to get Codex to critique Claude's plan. First try, Codex found 2 bugs.
+Likes: 19 | Views: 1553 | Like rate: 1.2%
+[[https://x.com/kr0der/status/2038706889395970345][View on X]]
+
+*** @adamdotdev (score: 6 — borderline)
+Broader dev focus. ~35% AI tools.
+
+Tremendous alpha in having AI write storybook pages for designers to tweak dynamic UI layout. Vite plugin writes CSS changes back to source.
+Likes: 329 | Views: 25798 | Like rate: 1.3%
+[[https://x.com/adamdotdev/status/2038602590288556166][View on X]]
+
+*** @karpathy (not scored — celebrity, not list candidate)
+
+npm axios supply chain attack: most popular HTTP client, 300M weekly downloads. Pin to a known safe version.
+Likes: 6244 | Views: 648161 | Like rate: 1.0%
+[[https://x.com/karpathy/status/2038849654423798197][View on X]]
+
+** Accounts with nothing notable
+@_catwu, @amirmxt, @badlogicgames, @forgebitz, @intellectronica, @iotcoi, @maddiedreese, @NickADobos, @petergyang, @RayFernando1337, @ryanvogel, @Saboo_Shubham_, @steipete, @trq212, @xeophon
+
+* ai-macrostrategy
+
+** Notable
+
+*** @_NathanCalvin (Mon Mar 30 20:22)
+New Quinnipiac poll: "Americans are not rejecting AI outright, but they are sending a warning. Too much uncertainty, too little trust, too little regulation, and too much fear about jobs." The maximalist deregulatory AI agenda is not popular.
+Likes: 11 | Views: 472 | Like rate: 2.3%
+[[https://x.com/_NathanCalvin/status/2038713478878282004][View on X]]
+
+*** @Miles_Brundage (Tue Mar 31 01:36)
+Me when someone implies that we can just wait til next year to pass federal AI legislation.
+Likes: 25 | Views: 1125 | Like rate: 2.2%
+[[https://x.com/Miles_Brundage/status/2038792465076072735][View on X]]
+
+*** @sebkrier (Mon Mar 30 20:56)
+As systems grow (bacteria, companies, cities), they always add new function types more slowly than they add members. What differs is why: in cities innovation limits, in biology energy constraints, in firms coordination costs.
+Likes: 201 | Views: 9278 | Like rate: 2.2%
+[[https://x.com/sebkrier/status/2038721978031653197][View on X]]
+
+*** @tyler_m_john (Tue Mar 31 03:04)
+Replicate all East-West psychology studies in AI models, comparing answers of models trained on Chinese vs English data, to validate model psychology as a tool for behavioural science.
+Likes: 6 | Views: 282 | Like rate: 2.1%
+[[https://x.com/tyler_m_john/status/2038814779469619654][View on X]]
+
+*** @joel_bkr (Tue Mar 31 01:11)
+New paper begging to be written: "Many Benchmarks Would Saturate Much Earlier If You Let The AIs Use Adequate Token Budgets."
+Likes: 45 | Views: 2274 | Like rate: 2.0%
+[[https://x.com/joel_bkr/status/2038786207833117114][View on X]]
+
+*** @tyler_m_john (Tue Mar 31 01:56)
+The idea to memo gap is now dangerously small. Tempting to churn out 10 AI-assisted memos a day but no one can read them all. Get ready for a feedback loop of AI memos summarized and replied to by AIs.
+Likes: 6 | Views: 331 | Like rate: 1.8%
+[[https://x.com/tyler_m_john/status/2038797586975355071][View on X]]
+
+*** @GregHBurnham (Mon Mar 30 21:24)
+Me: Please solve this problem. AI: Epoch has "FrontierMath: Open Problems." According to them, problem is open. I cannot solve.
+Likes: 265 | Views: 16449 | Like rate: 1.6%
+[[https://x.com/GregHBurnham/status/2038729083270381760][View on X]]
+
+*** @_NathanCalvin (Mon Mar 30 14:10)
+Alignment progress better than I expected (though still need lots more work). Societal readiness worse than I hoped. Yet another 100m anti-guardrails AI superpac announced on Sunday.
+Likes: 24 | Views: 1658 | Like rate: 1.4%
+[[https://x.com/_NathanCalvin/status/2038619965494853793][View on X]]
+
+*** @So8res (Mon Mar 30 16:02)
+Safety folks at the AI companies cannot tell the difference between "the AI superficially does mostly what I ask" and the deep alignment properties needed for superintelligence, which casts doubt on their ability to pull off alignment.
+Likes: 128 | Views: 9814 | Like rate: 1.3%
+[[https://x.com/So8res/status/2038648146822414618][View on X]]
+
+*** @AndrewCurran_ (Mon Mar 30 15:20)
+WSJ Death of Sora: Disney execs learned about Sora shutdown less than an hour before. OpenAI needed to free up compute for Spud (enterprise tool use). Training run for Sora 3 had already begun.
+Likes: 2288 | Views: 197366 | Like rate: 1.2%
+[[https://x.com/AndrewCurran_/status/2038637443780579753][View on X]]
+
+*** @deanwball (Mon Mar 30 23:35)
+Many people in policy implicitly model the AI inference market as a buyer's market but really it will be a seller's market, at least during the next few years when energy + compute are so constrained.
+Likes: 69 | Views: 7769 | Like rate: 0.9%
+[[https://x.com/deanwball/status/2038762110579036539][View on X]]
+
+*** @deanwball (Mon Mar 30 12:16)
+My theory about why so many on the left remain in denial about AI: their worldview rests on a load-bearing notion of "the tech industry" as composed of vapid morons whose accomplishments will always be superficial, never real.
+Likes: 1455 | Views: 201352 | Like rate: 0.7%
+[[https://x.com/deanwball/status/2038591188425376187][View on X]]
+
+*** @alexolegimas (Mon Mar 30 16:48)
+After a meteoric rise in adoption, AI use at work seems to be *falling*. Same self-report methodology that documented the rise. Similar stall/drop across other sources. A puzzle worth investigating.
+Likes: 305 | Views: 91937 | Like rate: 0.3%
+[[https://x.com/alexolegimas/status/2038659525788746004][View on X]]
+
+*** @Jsevillamol (Tue Mar 31 06:39)
+Two out of three chances that a FrontierMath Open Problem qualifying as a solid result will be solved by end of year. Sounds about right.
+Likes: 1 | Views: 429 | Like rate: 0.2%
+[[https://x.com/Jsevillamol/status/2038868702746046626][View on X]]
+
+** Vetted accounts
+
+*** @emollick (score: 9 — auto-added to list)
+Wharton professor. AI adoption economics, Jevons Paradox, worker productivity, ARC-AGI. ~80% macro.
+
+Jevons Paradox: the current situation is simpler. Thanks to agents, token demand is surging and compute is supply constrained for powerful models. That will be reflected in pricing.
+Likes: 342 | Views: 21959 | Like rate: 1.6%
+[[https://x.com/emollick/status/2038629127712878725][View on X]]
+
+Average American worker using AI: time savings of 6%, or 2.5 hours per week. Similar to UK & Netherlands. Early, non-causal signs this is translating into real productivity growth.
+Likes: 378 | Views: 25700 | Like rate: 1.5%
+[[https://x.com/emollick/status/2038654608642294206][View on X]]
+
+*** @tomekkorbak (score: 8 — auto-added to list)
+OpenAI researcher. Alignment midtraining. ~80% macro.
+
+Can midtraining on aligned AI docs bake in alignment priors for agents? Those priors are quickly washed away by RL and fail to generalize to agentic settings. But priors that AIs are misaligned fade too.
+Likes: 186 | Views: 26323 | Like rate: 0.7%
+[[https://x.com/tomekkorbak/status/2038704753887379891][View on X]]
+
+*** @TheZvi (score: 7 — auto-added to list)
+AI commentator. AI Doc analysis, alignment positioning, social dynamics. ~60% macro.
+
+AI doc: @sama is optimistic and claims a lead, @DarioAmodei calls for government to help coordinate, @demishassabis talks about upside, @elonmusk is too busy to show up, and Zuckerberg is pure vaporware. Nailed it.
+Likes: 190 | Views: 14342 | Like rate: 1.3%
+[[https://x.com/TheZvi/status/2038667867328020514][View on X]]
+
+*** @Afinetheorem (score: 7 — auto-added to list)
+Economics professor. Cross-national AI use surveys, science commentary. ~40% macro.
+
+Great cross-national AI use survey. EU, esp. outside N. Europe, uses AI much less than US in 2025. AI use heavily correlated with sector-specific productivity gains. No effect on employment.
+Likes: 62 | Views: 14871 | Like rate: 0.4%
+[[https://x.com/Afinetheorem/status/2038610211229868282][View on X]]
+
+*** @sethlazar (score: 7 — auto-added to list)
+Ethics/governance researcher. NeurIPS position paper chair. ~50% macro.
+
+More to anti-AI denialism than left ideology. Up until late 2022, most AI *was* crap. When it failed, its adverse effects reliably hit the most vulnerable hardest.
+Likes: 79 | Views: 9143 | Like rate: 0.9%
+[[https://x.com/sethlazar/status/2038606279485374538][View on X]]
+
+*** @metzgov (score: 6 — borderline)
+AI polling analysis with specific data. ~30% macro.
+
+*** @CharlesFLehman (score: 6 — borderline)
+AI complement-vs-substitute survey analysis. ~40% macro.
+
+** Accounts with nothing notable
+@ChadJonesEcon, @cherylwoooo, @danwilliamsphil, @datagenproc, @DavidSKrueger, @fleetingbits, @JeffLadish, @lukeprog, @robbensinger, @sjgadler

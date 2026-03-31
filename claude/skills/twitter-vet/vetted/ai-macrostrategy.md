@@ -35,3 +35,11 @@
 - **@fleetingbits** (7, 2026-03-30) — AI analysis. Mythos analysis, alignment midtraining, AI safety org independence. ~60% macro AI content.
 - **@hamandcheese** (6, 2026-03-30) — AI economics. Oil shock/substitution, DoE cluster analysis. ~40% AI macro, majority broader policy. Borderline.
 - **@iotcoi** (7, 2026-03-30) — [cross-listed from ai-tools] Hermes Agent builder. AI tools focus.
+
+- **@emollick** (9, 2026-03-31) — Wharton professor. AI adoption economics, Jevons Paradox, worker productivity analysis, ARC-AGI. ~80% macro AI content.
+- **@tomekkorbak** (8, 2026-03-31) — OpenAI researcher. Alignment midtraining research. ~80% AI macro content.
+- **@Afinetheorem** (7, 2026-03-31) — Economics professor. Cross-national AI use surveys, science commentary. ~40% AI macro content.
+- **@sethlazar** (7, 2026-03-31) — Ethics/governance researcher. NeurIPS position paper chair. ~50% AI macro content.
+- **@TheZvi** (7, 2026-03-31) — AI commentator. AI Doc analysis, alignment positioning, social dynamics. ~60% AI macro content.
+- **@metzgov** (6, 2026-03-31) — AI polling analysis with specific data points. ~30% AI macro content.
+- **@CharlesFLehman** (6, 2026-03-31) — AI complement-vs-substitute survey analysis. ~40% AI macro content.

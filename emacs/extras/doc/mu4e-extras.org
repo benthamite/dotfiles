@@ -109,6 +109,17 @@ This option is consulted by ~mu4e-extras-compose-reply~
 recipient (excluding the sender), the option has no effect and a normal
 reply is always used.
 
+** Reaction emojis
+:PROPERTIES:
+:CUSTOM_ID: h:reaction-emojis
+:END:
+
+#+vindex: mu4e-extras-reaction-emojis
+The user option ~mu4e-extras-reaction-emojis~ specifies the list of
+emoji choices presented when reacting to a message with
+~mu4e-extras-react-to-message~ ([[#h:gmail-reactions][Gmail reactions]]).  The default value
+includes common emojis such as thumbs up, heart, and check mark.
+
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
@@ -200,6 +211,25 @@ user option ([[#h:reply-behavior][Reply behavior]]).
 
 The command ~mu4e-extras-compose-new-externally~ opens Gmail's compose
 screen in the default web browser, bypassing =mu4e= entirely.
+
+** Gmail reactions
+:PROPERTIES:
+:CUSTOM_ID: h:gmail-reactions
+:END:
+
+#+findex: mu4e-extras-react-to-message
+The command ~mu4e-extras-react-to-message~ reacts to the email at point
+with a Gmail emoji reaction.  It prompts the user to select an emoji
+from ~mu4e-extras-reaction-emojis~ ([[#h:reaction-emojis][Reaction emojis]]), then constructs a
+MIME message per Google's email reaction format specification (using a
+=text/vnd.google.email-reaction+json= part) and sends it to the
+original sender.
+
+The command automatically determines the sending account by checking
+which of the user's email addresses appears in the message's To or Cc
+fields.  Epoch messages are sent via the Gmail API (through
+=gmail-maildir-sync send=); personal and Tlon messages are sent via
+SMTP.
 
 ** Viewing messages in Gmail
 :PROPERTIES:
@@ -428,6 +458,33 @@ Epoch messages and =/Trash= for all others.
 The function ~mu4e-extras-msg-is-html-p~ returns non-~nil~ if the
 message contains a =text/html= MIME part, as determined by parsing the
 raw message file.
+
+** Reaction helpers
+:PROPERTIES:
+:CUSTOM_ID: h:reaction-helpers
+:END:
+
+#+findex: mu4e-extras-reaction-from-address
+#+findex: mu4e-extras-reaction-to-email
+#+findex: mu4e-extras-reaction-build-mime
+#+findex: mu4e-extras-reaction-send
+The function ~mu4e-extras-reaction-from-address~ determines the
+sending account for a reaction by checking which of the user's email
+addresses (Epoch, Tlon, or personal) appears in the message's To or
+Cc fields.
+
+The function ~mu4e-extras-reaction-to-email~ extracts the bare email
+address of the original sender.
+
+The function ~mu4e-extras-reaction-build-mime~ constructs a
+=multipart/alternative= MIME message containing three parts: a plain
+text fallback, a =text/vnd.google.email-reaction+json= part with the
+emoji and format version, and an HTML fallback.
+
+The function ~mu4e-extras-reaction-send~ dispatches the reaction
+message to the appropriate transport: the Gmail API (via
+=gmail-maildir-sync send=) for Epoch messages, and SMTP for all
+others.
 
 ** Message file access
 :PROPERTIES:

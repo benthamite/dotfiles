@@ -85,6 +85,12 @@ the sender only."
 		 (const :tag "Yes" t)
 		 (const :tag "No" nil)))
 
+(defcustom mu4e-extras-reaction-emojis
+  '("👍" "👎" "❤️" "😂" "😮" "😢" "🤔" "🔥" "👏" "🙏" "✅" "👀" "🎉" "💯")
+  "List of emoji choices for Gmail message reactions."
+  :type '(repeat string)
+  :group 'mu4e-extras)
+
 ;;;; Variables
 
 (defvar mu4e-extras-mark-as-read-queue '()
@@ -382,6 +388,136 @@ Otherwise, search by RFC 822 message ID."
 		(let ((id (url-hexify-string (plist-get msg :message-id))))
 		  (concat (mu4e-extras-gmail-base msg) "#search/rfc822msgid%3A" id)))))
     (browse-url url)))
+
+;;;;;; Reactions
+
+;;;###autoload
+(defun mu4e-extras-react-to-message (emoji)
+  "React to the message at point with EMOJI.
+Constructs and sends a Gmail reaction message per Google's email
+reaction format specification."
+  (interactive (list (mu4e-extras-reaction-read-emoji)))
+  (let* ((msg (mu4e-message-at-point))
+	 (from (mu4e-extras-reaction-from-address msg))
+	 (to (mu4e-extras-reaction-to-email msg))
+	 (message-id (mu4e-message-field msg :message-id))
+	 (subject (or (mu4e-message-field msg :subject) ""))
+	 (mime (mu4e-extras-reaction-build-mime
+		from to message-id subject emoji)))
+    (mu4e-extras-reaction-send msg to mime)
+    (message "Reacted with %s" emoji)))
+
+(defun mu4e-extras-reaction-read-emoji ()
+  "Prompt the user to select a reaction emoji."
+  (completing-read "React with: " mu4e-extras-reaction-emojis nil t))
+
+(defun mu4e-extras-reaction-from-address (msg)
+  "Return the user's email address for the account MSG belongs to.
+Checks which of the user's addresses appears in the To or Cc
+fields of MSG."
+  (cond
+   ((mu4e-extras-reaction-msg-matches-address-p msg (getenv "EPOCH_EMAIL"))
+    (getenv "EPOCH_EMAIL"))
+   ((mu4e-extras-reaction-msg-matches-address-p msg (getenv "WORK_EMAIL"))
+    (getenv "WORK_EMAIL"))
+   (t (getenv "PERSONAL_GMAIL"))))
+
+(defun mu4e-extras-reaction-msg-matches-address-p (msg address)
+  "Return non-nil if ADDRESS appears in the To or Cc fields of MSG."
+  (or (mu4e-message-contact-field-matches msg :to address)
+      (mu4e-message-contact-field-matches msg :cc address)))
+
+(defun mu4e-extras-reaction-to-email (msg)
+  "Return the bare email address of the sender of MSG."
+  (plist-get (car (mu4e-message-field msg :from)) :email))
+
+(defun mu4e-extras-reaction-build-mime (from to message-id subject emoji)
+  "Build a MIME reaction message.
+FROM and TO are email addresses.  MESSAGE-ID is the target
+message's bare ID (without angle brackets).  SUBJECT is the
+original subject line.  EMOJI is the reaction emoji string."
+  (let ((boundary (mu4e-extras-reaction-make-boundary)))
+    (concat
+     (mu4e-extras-reaction-format-headers
+      from to message-id subject boundary)
+     (mu4e-extras-reaction-format-body from emoji boundary))))
+
+(defun mu4e-extras-reaction-make-boundary ()
+  "Generate a unique MIME boundary string."
+  (format "----=_reaction_%s"
+	  (sha1 (format "%s%s" (emacs-pid) (float-time)))))
+
+(defun mu4e-extras-reaction-format-headers (from to message-id subject boundary)
+  "Format the RFC 2822 headers for a reaction message.
+FROM and TO are email addresses.  MESSAGE-ID is the target
+message's bare ID.  SUBJECT is the original subject.  BOUNDARY is
+the MIME boundary string."
+  (format (concat "From: %s\n"
+		  "To: %s\n"
+		  "Subject: Re: %s\n"
+		  "In-Reply-To: <%s>\n"
+		  "MIME-Version: 1.0\n"
+		  "Content-Type: multipart/alternative;"
+		  " boundary=\"%s\"\n\n")
+	  from to subject message-id boundary))
+
+(defun mu4e-extras-reaction-format-body (from emoji boundary)
+  "Format the multipart MIME body for a reaction message.
+FROM is the sender's address (used in fallback text).  EMOJI is
+the reaction emoji.  BOUNDARY is the MIME boundary string."
+  (let ((plain (format "%s reacted with %s to your message" from emoji))
+	(json (format "{\"emoji\":\"%s\",\"version\":1}" emoji))
+	(html (format
+	       "<html><body><p>%s reacted with %s to your message</p></body></html>"
+	       from emoji)))
+    (concat
+     (mu4e-extras-reaction-format-part boundary "text/plain" plain)
+     (mu4e-extras-reaction-format-part
+      boundary "text/vnd.google.email-reaction+json" json)
+     (mu4e-extras-reaction-format-part boundary "text/html" html)
+     (format "--%s--\n" boundary))))
+
+(defun mu4e-extras-reaction-format-part (boundary content-type content)
+  "Format a single MIME part.
+BOUNDARY is the MIME boundary string.  CONTENT-TYPE is the MIME
+type.  CONTENT is the part body."
+  (format (concat "--%s\n"
+		  "Content-Type: %s; charset=UTF-8\n"
+		  "Content-Transfer-Encoding: 8bit\n"
+		  "\n"
+		  "%s\n")
+	  boundary content-type content))
+
+(defun mu4e-extras-reaction-send (msg to mime)
+  "Send MIME as a reaction to MSG.
+TO is the recipient's bare email address.  Uses the Gmail API for
+Epoch messages and SMTP for all others."
+  (with-temp-buffer
+    (insert mime)
+    (if (mu4e-extras-msg-belongs-to-epoch-p msg)
+	(mu4e-extras-reaction-send-via-gmail-api)
+      (mu4e-extras-reaction-send-via-smtp to))))
+
+(declare-function smtpmail-via-smtp "smtpmail")
+
+(defun mu4e-extras-reaction-send-via-gmail-api ()
+  "Send the current buffer as a reaction via the Gmail API."
+  (let ((errbuf (generate-new-buffer " *gmail-api-reaction-errors*")))
+    (unwind-protect
+	(let ((exit-code (call-process-region
+			  (point-min) (point-max)
+			  "gmail-maildir-sync" nil errbuf nil "send")))
+	  (unless (zerop exit-code)
+	    (error "Gmail reaction send failed (exit %d): %s"
+		   exit-code
+		   (with-current-buffer errbuf
+		     (string-trim (buffer-string))))))
+      (kill-buffer errbuf))))
+
+(defun mu4e-extras-reaction-send-via-smtp (to)
+  "Send the current buffer as a reaction via SMTP to TO."
+  (when-let* ((result (smtpmail-via-smtp (list to) (current-buffer))))
+    (error "SMTP reaction send failed: %s" result)))
 
 ;;;;;; Misc
 

@@ -52,3 +52,7 @@
 - **@carson3068** (7, 2026-03-29) — Consistently practical: opencode-memory tool, auth token tips, on-chain AI workflow. Small (1.8K) but high signal-to-noise. ~70% AI tools content.
 
 - **@iotcoi** (7, 2026-03-30) — Hermes Agent builder. DSPy GEPA module, TurboQuant vLLM, enterprise mode. ~80% AI tools content.
+
+- **@altryne** (7, 2026-03-31) — Claude Code ecosystem expert. Cache-invalidation investigation, weekly show host. ~60% AI tools content.
+- **@kr0der** (7, 2026-03-31) — Comparative Claude/GPT workflows, /codex skills, review anti-patterns. ~70% AI tools content.
+- **@adamdotdev** (6, 2026-03-31) — AI storybook pages for designers. Great single workflow tip but broader dev focus. ~35% AI tools content.

@@ -1523,6 +1523,57 @@ in a summary buffer when all entries have been processed."
                  (format "Process %d TODO(s) in %s?" (length entries) dir)))
         (claude-code-extras--batch-start entries dir)))))
 
+(defun claude-code-extras-send-todo-at-point ()
+  "Send the org TODO at point to a running Claude Code session.
+Extracts the heading and body of the TODO entry at point,
+formats them as a prompt, and sends it to the Claude Code
+session associated with the current file's project.  When no
+unique session can be inferred, prompts for selection."
+  (interactive)
+  (unless (derived-mode-p 'org-mode)
+    (user-error "Must be called from an org-mode buffer"))
+  (unless (org-get-todo-state)
+    (user-error "Point is not on a TODO heading"))
+  (let* ((entry (claude-code-extras--collect-todo-at-point))
+         (prompt (claude-code-extras--batch-format-prompt entry))
+         (buf (claude-code-extras--resolve-session-for-file)))
+    (with-current-buffer buf
+      (claude-code--do-send-command prompt))
+    (display-buffer buf)))
+
+(defun claude-code-extras--collect-todo-at-point ()
+  "Return a plist with :title and :body for the TODO at point."
+  (save-excursion
+    (org-back-to-heading t)
+    (let* ((title (org-get-heading t t t t))
+           (body-start (progn (org-end-of-meta-data t) (point)))
+           (body-end (progn (outline-next-heading)
+                            (or (point) (point-max))))
+           (body (string-trim
+                  (buffer-substring-no-properties body-start body-end))))
+      (list :title title :body body))))
+
+(defun claude-code-extras--resolve-session-for-file ()
+  "Find the Claude Code session for the current file's project.
+Returns a buffer.  Uses the project root to find matching
+sessions.  Falls back to `claude-code--get-or-prompt-for-buffer'
+when no project is detected or no session matches."
+  (let* ((project (project-current))
+         (dir (and project (project-root project)))
+         (buffers (and dir
+                       (claude-code--find-claude-buffers-for-directory dir))))
+    (cond
+     ((= (length buffers) 1)
+      (car buffers))
+     ((> (length buffers) 1)
+      (claude-code--select-buffer-from-choices
+       (format "Multiple sessions for %s: "
+               (abbreviate-file-name dir))
+       buffers t))
+     (t
+      (or (claude-code--get-or-prompt-for-buffer)
+          (user-error "No running Claude Code session found"))))))
+
 (defun claude-code-extras--batch-start (entries dir &optional commit-after-each)
   "Start batch processing of ENTRIES in working directory DIR.
 When COMMIT-AFTER-EACH is non-nil, automatically commit any uncommitted
@@ -2876,6 +2927,7 @@ Signals an error if the status file is missing or incomplete."
    ["Tools"
     ("s" "run skill" claude-code-extras-run-skill)
     ("b" "batch todos" claude-code-extras-batch-todos)
+    ("T" "send todo at point" claude-code-extras-send-todo-at-point)
     ("A" "audit project" claude-code-extras-audit-project)
     ("d" "debug backtrace" claude-code-extras-debug-backtrace)
     ("l" "logs" claude-log-menu)]

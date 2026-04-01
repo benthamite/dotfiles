@@ -5,7 +5,7 @@
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/claude-code-extras.el
 ;; Version: 0.1
-;; Package-Requires: ((claude-code "0.1") (consult "1.0") (paths "0.1"))
+;; Package-Requires: ((claude-code "0.1") (consult "1.0") (paths "0.1") (ai-extras "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -29,6 +29,7 @@
 ;;; Code:
 
 (require 'claude-code)
+(require 'ai-extras)
 (require 'consult)
 (require 'paths)
 (require 'subr-x)
@@ -182,30 +183,24 @@ Set by `claude-code-extras--capture-buffer-account' via
 (defvar-local claude-code-extras--status-data nil
   "Parsed status plist for the current Claude buffer.")
 
-(defvar-local claude-code-extras--display-name-cache nil
-  "Cached display name for the modeline.
-Updated by `claude-code-extras--refresh-display-names' whenever
-sessions are created or destroyed.")
+;; Display name cache is now managed by `ai-extras--display-name-cache'.
+(defvaralias 'claude-code-extras--display-name-cache 'ai-extras--display-name-cache)
 
 (defvar-local claude-code-extras--original-session-id nil
   "Session ID when this buffer was first created.
 Used to detect when `/branch' creates a new session.")
 
-(defconst claude-code-extras--home-row-keys '("a" "s" "d" "f" "j" "k" "l" ";")
-  "Home row keys assigned to Claude sessions, in allocation order.
-When a session is killed its key becomes available for the next new session.")
-
-(defvar claude-code-extras--session-keys (make-hash-table :test 'eq)
-  "Map from live Claude buffer to its assigned home-row key.")
+;; Home-row keys and session key map are now managed by ai-extras.
+(defvaralias 'claude-code-extras--session-keys 'ai-extras--session-keys)
+(defconst claude-code-extras--home-row-keys ai-extras--home-row-keys
+  "Alias for `ai-extras--home-row-keys'.")
 
 (defvar-local claude-code-extras--status-timer nil
   "Timer for periodic status polling in the current Claude buffer.")
 
-(defvar-local claude-code-extras--waiting-for-input nil
-  "Non-nil when this Claude session is waiting for user input.
-Set to the time (via `current-time') by the Notification hook
-\(idle_prompt) and cleared when input is sent to the session
-\(e.g. a `/theme' command).")
+;; Waiting-for-input state is now managed by `ai-extras--waiting-for-input'.
+;; Keep the old variable as an alias for backward compatibility.
+(defvaralias 'claude-code-extras--waiting-for-input 'ai-extras--waiting-for-input)
 
 (defvar-local claude-code-extras--pending-theme nil
   "Theme to apply when this Claude session becomes idle.
@@ -268,6 +263,24 @@ consumed by the Stop hook handler.")
 (declare-function track-changes-unregister "track-changes")
 (declare-function jsonrpc-notify "jsonrpc")
 (declare-function jsonrpc-async-request "jsonrpc")
+
+;;;; Backend registration
+
+(ai-extras-register-backend 'claude-code
+  (list :buffer-p #'claude-code--buffer-p
+        :find-all-buffers #'claude-code--find-all-claude-buffers
+        :find-buffers-for-dir #'claude-code--find-claude-buffers-for-directory
+        :directory (lambda (buf) (with-current-buffer buf (claude-code--directory)))
+        :extract-directory #'claude-code--extract-directory-from-buffer-name
+        :extract-instance-name #'claude-code--extract-instance-name-from-buffer-name
+        :send-command (lambda (cmd &optional _buf) (claude-code--do-send-command cmd))
+        :start #'claude-code--start
+        :start-new #'claude-code-extras--start-with-account
+        :program claude-code-program
+        :send-return (lambda (&optional _buf)
+                       (claude-code--term-send-return claude-code-terminal-backend))
+        :icon "CC"
+        :label "Claude Code"))
 
 ;;;; Functions
 
@@ -636,12 +649,12 @@ persists the selection.  New sessions will use this account."
 (defun claude-code-extras-start-or-switch ()
   "Start a new Claude session or switch to an existing one.
 If no sessions are active, start a new one.  If sessions exist,
-show a transient menu with home-row keys for quick switching."
+show the unified session switcher."
   (interactive)
   (if (null (claude-code--find-all-claude-buffers))
       (claude-code-extras--start-with-account)
-    (claude-code-extras--ensure-all-session-keys)
-    (transient-setup 'claude-code-extras--session-switcher)))
+    (ai-extras--ensure-all-session-keys)
+    (transient-setup 'ai-extras--session-switcher)))
 
 (defun claude-code-extras--purge-dead-session-keys ()
   "Remove entries for buffers that are no longer live."
@@ -733,10 +746,8 @@ Given \"*claude:~/path/to/project/:instance*\", return
 
 (defun claude-code-extras-display-name (&optional buffer)
   "Return the display name for BUFFER's modeline.
-Use the project name alone when it is unique among active Claude
-sessions, or \"project:instance\" when multiple sessions share
-the same project.  Returns the cached value when available to
-avoid scanning all buffers on every redisplay."
+Delegates to `ai-extras-display-name' for the base name, then
+appends branch suffix if applicable."
   (let ((buf (or buffer (current-buffer))))
     (or (buffer-local-value 'claude-code-extras--display-name-cache buf)
         (claude-code-extras--compute-display-name buf))))
@@ -2592,29 +2603,29 @@ there with the backtrace prompt passed as a CLI argument."
 (setq claude-code-notification-function #'claude-code-default-notification)
 (add-hook 'claude-code-event-hook #'claude-code-extras--handle-notification)
 (add-hook 'claude-code-event-hook #'claude-code-extras--handle-stop)
-(add-hook 'kill-buffer-query-functions #'claude-code-extras-protect-buffer)
+(add-hook 'kill-buffer-query-functions #'ai-extras-protect-buffer)
 (add-hook 'claude-code-start-hook #'claude-code-extras-setup-kill-on-exit)
 (add-hook 'claude-code-start-hook #'claude-code-extras-start-status-polling)
 (add-hook 'claude-code-start-hook #'claude-code-extras--capture-buffer-account)
 (add-hook 'claude-code-start-hook #'claude-code-extras-set-modeline)
-(add-hook 'claude-code-start-hook #'claude-code-extras--refresh-display-names)
+(add-hook 'claude-code-start-hook #'ai-extras--refresh-display-names)
 (add-hook 'kill-buffer-hook #'claude-code-extras-stop-status-polling)
-(add-hook 'kill-buffer-hook #'claude-code-extras--refresh-display-names)
+(add-hook 'kill-buffer-hook #'ai-extras--refresh-display-names)
 (add-hook 'kill-buffer-hook #'claude-code-extras--cleanup-monet-session)
-(add-hook 'claude-code-start-hook #'claude-code-extras-disable-scrollback-truncation)
-(add-hook 'claude-code-start-hook #'claude-code-extras-setup-snippet-keys)
-(add-hook 'claude-code-start-hook #'claude-code-extras--assign-session-key)
+(add-hook 'claude-code-start-hook #'ai-extras-disable-scrollback-truncation)
+(add-hook 'claude-code-start-hook #'ai-extras-setup-snippet-keys)
+(add-hook 'claude-code-start-hook #'ai-extras--assign-session-key)
 (add-hook 'claude-code-start-hook #'claude-code-extras-setup-copilot)
-(add-hook 'kill-buffer-hook #'claude-code-extras--release-session-key)
+(add-hook 'kill-buffer-hook #'ai-extras--release-session-key)
 (add-hook 'kill-buffer-hook #'claude-code-extras-teardown-copilot)
 (add-hook 'enable-theme-functions #'claude-code-extras-sync-theme)
 (add-hook 'claude-code-start-hook #'claude-code-extras-sync-theme)
 (advice-add 'claude-code--eat-send-return :before
-            #'claude-code-extras--clear-waiting-for-input)
+            #'ai-extras--clear-waiting-for-input)
 (advice-add 'claude-code--vterm-send-return :before
-            #'claude-code-extras--clear-waiting-for-input)
+            #'ai-extras--clear-waiting-for-input)
 (advice-add 'claude-code--do-send-command :before
-            #'claude-code-extras--clear-waiting-for-input)
+            #'ai-extras--clear-waiting-for-input)
 
 ;;;;; Handoff
 

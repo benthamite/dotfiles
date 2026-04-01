@@ -1,0 +1,163 @@
+#+title: ai-extras: shared extensions for AI coding CLI tools
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: ai-extras.info
+#+texinfo_filename: ai-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: AI Extras: (ai-extras)
+#+texinfo_dir_desc: Shared extensions for AI coding CLI tools
+
+This manual describes the features and customization options for the Emacs Lisp file =ai-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=ai-extras.el= provides backend-agnostic abstractions for AI coding CLI tool extensions.  Rather than duplicating common functionality across packages like =claude-code-extras.el= and =codex-extras.el=, this package centralizes shared features such as session management, notifications, terminal integration, and snippet expansion.
+
+The package uses a backend registry with ~cl-defgeneric~ style dispatch.  Each AI tool (Claude Code, Codex, etc.) registers itself as a backend by providing a property list of functions for buffer detection, session enumeration, command sending, and session creation.  All shared features then operate across backends transparently.
+
+Key capabilities include:
+
+- A unified session switcher with home-row key assignments for quick session access across all registered backends.
+- An alert and notification system that fires OS notifications when sessions need attention.
+- Buffer protection to prevent accidental session kills.
+- Yasnippet integration for expanding snippets at terminal prompts.
+- Terminal rendering fixes for the =eat= terminal emulator.
+
+=ai-extras.el= depends on =transient= for the session switcher menu and =consult= for completion interfaces.
+
+* User options
+:PROPERTIES:
+:CUSTOM_ID: h:user-options
+:END:
+
+** Buffer protection and alerts
+:PROPERTIES:
+:CUSTOM_ID: h:protection-and-alerts
+:END:
+
+#+vindex: ai-extras-protect-buffers
+The user option ~ai-extras-protect-buffers~ controls whether killing an AI session buffer requires confirmation.  When set to non-~nil~ (the default), attempting to kill a buffer with a live session process triggers a yes-or-no prompt.  Buffers whose process has already exited (e.g., via the =/exit= command) are killed without prompting.  Set this to ~nil~ if you prefer to close sessions without confirmation.
+
+#+vindex: ai-extras-alert-on-ready
+The user option ~ai-extras-alert-on-ready~ enables OS notifications when an AI session finishes responding and is waiting for input.  The default is ~nil~.  Toggle it interactively with ~ai-extras-toggle-alert~ ([[#h:alert-commands][Alert commands]]).
+
+#+vindex: ai-extras-alert-style
+The user option ~ai-extras-alert-style~ determines the form of the notification.  Accepted values are ~visual~ (an OS notification via the =alert= package), ~sound~ (an audio alert), or ~both~ (the default).  This option only takes effect when ~ai-extras-alert-on-ready~ is non-~nil~.
+
+#+vindex: ai-extras-alert-sound
+The user option ~ai-extras-alert-sound~ specifies the path to the sound file played for audio alerts.  The default is =/System/Library/Sounds/Glass.aiff=, a macOS system sound.  Change this to any audio file playable by =afplay=.
+
+** Terminal rendering
+:PROPERTIES:
+:CUSTOM_ID: h:terminal-rendering-options
+:END:
+
+#+vindex: ai-extras-sigwinch-delay
+The user option ~ai-extras-sigwinch-delay~ controls the delay in seconds before sending a =SIGWINCH= signal to fix terminal rendering after session startup.  The default is =0.5= seconds.  AI CLI tools running in the =eat= terminal emulator sometimes render incorrectly due to a race condition in terminal size negotiation.  Sending =SIGWINCH= forces the TUI to re-query dimensions and redraw.  Increase this value if the fix does not take effect on slower systems.
+
+* Commands
+:PROPERTIES:
+:CUSTOM_ID: h:commands
+:END:
+
+** Session management
+:PROPERTIES:
+:CUSTOM_ID: h:session-management
+:END:
+
+#+findex: ai-extras-start-or-switch
+The command ~ai-extras-start-or-switch~ is the primary entry point for working with AI sessions.  When no sessions are active across any registered backend, it starts a new session.  If only one backend is registered, it starts that backend directly.  If multiple backends are available, it prompts the user to choose one.
+
+When sessions already exist, the command opens a transient menu displaying all active sessions with their assigned home-row keys.  Pressing a key instantly switches to that session.  Sessions waiting for user input are highlighted with the ~ai-extras-waiting~ face.
+
+The menu also offers two actions: =w= to jump to the most recently waiting session, and =n= to start a new session.
+
+#+findex: ai-extras-jump-to-waiting
+The command ~ai-extras-jump-to-waiting~ switches to the AI session that most recently started waiting for user input.  This is useful when running multiple sessions in parallel and you want to attend to whichever one finished first.  If no sessions are waiting, it displays a message.
+
+** Alert commands
+:PROPERTIES:
+:CUSTOM_ID: h:alert-commands
+:END:
+
+#+findex: ai-extras-toggle-alert
+The command ~ai-extras-toggle-alert~ toggles the value of ~ai-extras-alert-on-ready~ and reports the new state.  This provides a quick way to enable or disable notifications without visiting the customization interface.
+
+** Terminal commands
+:PROPERTIES:
+:CUSTOM_ID: h:terminal-commands
+:END:
+
+#+findex: ai-extras-fix-rendering
+The command ~ai-extras-fix-rendering~ sends a =SIGWINCH= signal to the current buffer's process after a short delay controlled by ~ai-extras-sigwinch-delay~ ([[#h:terminal-rendering-options][Terminal rendering]]).  Use this when the terminal display is garbled after startup or after resizing the window.
+
+#+findex: ai-extras-disable-scrollback-truncation
+The command ~ai-extras-disable-scrollback-truncation~ removes =eat='s default scrollback size limit for the current buffer.  Without this, the =eat= terminal emulator truncates output to ~eat-term-scrollback-size~ lines, causing older session output to disappear.  This is called automatically on session startup.
+
+#+findex: ai-extras-snippet-tab
+The command ~ai-extras-snippet-tab~ attempts to expand a yasnippet key at the terminal prompt.  If no snippet key matches, it sends a literal =TAB= character to the terminal.  This command is bound to =TAB= in AI session buffers when yasnippet is available.
+
+* Functions
+:PROPERTIES:
+:CUSTOM_ID: h:functions
+:END:
+
+** Backend registration
+:PROPERTIES:
+:CUSTOM_ID: h:backend-registration
+:END:
+
+#+findex: ai-extras-register-backend
+The function ~ai-extras-register-backend~ registers an AI tool as a backend.  It takes a symbol (e.g., ~claude-code~ or ~codex~) and a property list with keys describing how to interact with that tool's sessions.  Required keys include ~:buffer-p~ (a predicate), ~:find-all-buffers~, ~:send-command~, ~:start-new~, and ~:icon~.
+
+Backend registration is typically done at load time by extension packages like =claude-code-extras.el= and =codex-extras.el=.
+
+** Display names
+:PROPERTIES:
+:CUSTOM_ID: h:display-names
+:END:
+
+#+findex: ai-extras-display-name
+The function ~ai-extras-display-name~ returns a human-readable name for a session buffer.  When the project name is unique among active sessions, it returns just the project name (e.g., =my-project=).  When multiple sessions share the same project, it disambiguates with the instance name (e.g., =my-project:branch-abc=).  Results are cached and refreshed automatically when sessions are created or destroyed.
+
+** Notification display
+:PROPERTIES:
+:CUSTOM_ID: h:notification-display
+:END:
+
+#+findex: ai-extras-notify
+The function ~ai-extras-notify~ displays a notification with a title and message.  It always shows a minibuffer message.  When ~ai-extras-alert-on-ready~ is enabled, it additionally fires visual and/or audio alerts according to ~ai-extras-alert-style~ ([[#h:protection-and-alerts][Buffer protection and alerts]]).
+
+#+findex: ai-extras-alert-indicator
+The function ~ai-extras-alert-indicator~ returns a bell emoji reflecting the current alert state, suitable for use in modeline segments.
+
+** Buffer protection
+:PROPERTIES:
+:CUSTOM_ID: h:buffer-protection
+:END:
+
+#+findex: ai-extras-protect-buffer
+The function ~ai-extras-protect-buffer~ is intended for use in ~kill-buffer-query-functions~.  It returns ~t~ (allow kill) when ~ai-extras-protect-buffers~ is ~nil~, the buffer is not an AI session, or the session process has exited.  Otherwise it prompts for confirmation.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

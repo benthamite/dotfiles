@@ -145,6 +145,18 @@ The function ~ai-extras-alert-indicator~ returns a bell emoji reflecting the cur
 #+findex: ai-extras-protect-buffer
 The function ~ai-extras-protect-buffer~ is intended for use in ~kill-buffer-query-functions~.  It returns ~t~ (allow kill) when ~ai-extras-protect-buffers~ is ~nil~, the buffer is not an AI session, or the session process has exited.  Otherwise it prompts for confirmation.
 
+* Transient menu
+:PROPERTIES:
+:CUSTOM_ID: h:transient-menu
+:END:
+
+#+findex: ai-extras-menu
+The command ~ai-extras-menu~ opens a unified transient dispatch menu for all AI session commands.  The base menu provides shared entries organized into columns: Sessions, Tools, Alerts, Buffer, and Options.
+
+Shared tool commands (~ai-extras-handoff~, ~ai-extras-run-skill~, ~ai-extras-audit-project~, ~ai-extras-debug-backtrace~) dispatch to the appropriate backend based on the current buffer context.  When not in a session buffer and multiple backends are registered, the user is prompted to choose one.
+
+Backend-specific extension packages append their own entries to the menu at load time via ~transient-append-suffix~.  For example, =claude-code-extras.el= adds account selection, branch navigation, batch processing, and status polling entries, while =codex-extras.el= adds a Codex theme sync toggle.
+
 * Indices
 :PROPERTIES:
 :CUSTOM_ID: h:indices

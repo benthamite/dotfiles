@@ -127,8 +127,8 @@ The command ~codex-extras-setup-kill-on-exit~ wraps the process sentinel so that
 :CUSTOM_ID: h:transient-menus
 :END:
 
-#+findex: codex-extras-menu
-The command ~codex-extras-menu~ opens a transient dispatch menu providing access to all =codex-extras= commands.  The menu is organized into columns:
+#+findex: ai-extras-menu
+All =codex-extras= commands are accessible through the unified ~ai-extras-menu~ ([[info:ai-extras#h:transient-menu][ai-extras menu]]).  Codex-specific entries (such as the theme sync toggle) are appended to the shared menu at load time.  The menu is organized into columns:
 
 - *Sessions*: start or switch, handoff.
 - *Tools*: run skill, audit project, debug backtrace.

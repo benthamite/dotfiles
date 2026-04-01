@@ -33,7 +33,7 @@
 
 (require 'cl-lib)
 (require 'subr-x)
-(require 'transient)
+(eval-and-compile (require 'transient))
 
 ;;;; Custom group
 
@@ -58,7 +58,14 @@ Each entry is (SYMBOL . PLIST) where PLIST has keys:
   :program               string (CLI binary name)
   :send-return           function (&optional buffer)
   :icon                  string (short identifier, e.g. \"CC\" or \"CX\")
-  :label                 string (display name, e.g. \"Claude Code\" or \"Codex\")")
+  :label                 string (display name, e.g. \"Claude Code\" or \"Codex\")
+
+Optional command keys for dispatching shared commands:
+  :handoff               function () (close session, start new with handoff)
+  :run-skill             function () (discover and run a skill)
+  :audit-project         function () (run audit skills on a project)
+  :debug-backtrace       function () (analyze backtrace, start session)
+  :setup-kill-on-exit    function () (auto-kill buffer on process exit)")
 
 (defvar-local ai-extras--backend nil
   "Cached backend symbol for this buffer.")
@@ -564,15 +571,107 @@ ORIG-FN is the original escape command."
         (eat-term-send-string eat-terminal (kbd "ESC")))
     (funcall orig-fn)))
 
+;;;; Command dispatchers
+
+(defun ai-extras--resolve-backend ()
+  "Return the backend for the current context.
+If in a session buffer, use that backend.  If only one backend is
+registered, use it.  Otherwise, prompt."
+  (or (ai-extras--detect-backend)
+      (if (= (length ai-extras-backends) 1)
+          (caar ai-extras-backends)
+        (let* ((names (mapcar (lambda (e)
+                                (cons (or (plist-get (cdr e) :label)
+                                          (symbol-name (car e)))
+                                      (car e)))
+                              ai-extras-backends))
+               (choice (completing-read "Backend: " (mapcar #'car names) nil t)))
+          (cdr (assoc choice names))))))
+
+(defun ai-extras--dispatch (key)
+  "Dispatch command KEY to the appropriate backend."
+  (let* ((backend (ai-extras--resolve-backend))
+         (fn (ai-extras--backend-get backend key)))
+    (if fn
+        (funcall fn)
+      (user-error "Backend `%s' does not support `%s'" backend key))))
+
+;;;###autoload
+(defun ai-extras-handoff ()
+  "Close the current session and start a new one with the handoff prompt.
+Dispatches to the appropriate backend."
+  (interactive)
+  (ai-extras--dispatch :handoff))
+
+;;;###autoload
+(defun ai-extras-run-skill ()
+  "Discover and run a skill via the appropriate backend."
+  (interactive)
+  (ai-extras--dispatch :run-skill))
+
+;;;###autoload
+(defun ai-extras-audit-project ()
+  "Run a comprehensive project audit via the appropriate backend."
+  (interactive)
+  (ai-extras--dispatch :audit-project))
+
+;;;###autoload
+(defun ai-extras-debug-backtrace ()
+  "Analyze a backtrace and start a session in the culprit package."
+  (interactive)
+  (ai-extras--dispatch :debug-backtrace))
+
+;;;###autoload
+(defun ai-extras-setup-kill-on-exit ()
+  "Arrange for the buffer to be killed when the session process exits."
+  (interactive)
+  (ai-extras--dispatch :setup-kill-on-exit))
+
 ;;;; Transient boolean infix class
 
-(defclass ai-extras--boolean-variable (transient-lisp-variable)
-  ()
-  "A `transient-lisp-variable' that toggles a boolean on each press.")
+(eval-and-compile
+  (defclass ai-extras--boolean-variable (transient-lisp-variable)
+    ()
+    "A `transient-lisp-variable' that toggles a boolean on each press."))
 
 (cl-defmethod transient-infix-read ((obj ai-extras--boolean-variable))
   "Toggle the boolean value of OBJ."
   (not (oref obj value)))
+
+;;;; Transient menu
+
+;;;###autoload (autoload 'ai-extras-menu "ai-extras" nil t)
+(transient-define-prefix ai-extras-menu ()
+  "Dispatch AI session commands."
+  [["Sessions"
+    ("e" "start or switch" ai-extras-start-or-switch)
+    ("w" "jump to waiting" ai-extras-jump-to-waiting)
+    ("h" "handoff" ai-extras-handoff)]
+   ["Tools"
+    ("s" "run skill" ai-extras-run-skill)
+    ("A" "audit project" ai-extras-audit-project)
+    ("d" "debug backtrace" ai-extras-debug-backtrace)]
+   ["Alerts"
+    ("T" "toggle alert" ai-extras-toggle-alert)]]
+  [["Buffer"
+    ("K" "setup kill on exit" ai-extras-setup-kill-on-exit)
+    ("f" "fix rendering" ai-extras-fix-rendering)
+    ("S" "disable scrollback" ai-extras-disable-scrollback-truncation)]
+   ["Options"
+    ("-a" ai-extras--infix-alert-on-ready)
+    ("-p" ai-extras--infix-protect-buffers)]])
+
+(transient-define-infix ai-extras--infix-alert-on-ready ()
+  "Toggle `ai-extras-alert-on-ready'."
+  :class 'ai-extras--boolean-variable
+  :variable 'ai-extras-alert-on-ready
+  :description "alert on ready")
+
+(transient-define-infix ai-extras--infix-protect-buffers ()
+  "Toggle `ai-extras-protect-buffers'."
+  :class 'ai-extras--boolean-variable
+  :variable 'ai-extras-protect-buffers
+  :description "protect buffers")
 
 ;;;; Provide
 

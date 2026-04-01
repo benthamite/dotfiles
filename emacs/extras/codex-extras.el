@@ -29,7 +29,7 @@
 ;;; Code:
 
 (require 'codex)
-(require 'ai-extras)
+(eval-and-compile (require 'ai-extras))
 (require 'subr-x)
 (require 'transient)
 
@@ -121,7 +121,12 @@ When nil, use the CLI default."
         :send-return (lambda (&optional _buf)
                        (codex--term-send-return codex-terminal-backend))
         :icon "CX"
-        :label "Codex"))
+        :label "Codex"
+        :handoff #'codex-extras-handoff
+        :run-skill #'codex-extras-run-skill
+        :audit-project #'codex-extras-audit-project
+        :debug-backtrace #'codex-extras-debug-backtrace
+        :setup-kill-on-exit #'codex-extras-setup-kill-on-exit))
 
 ;;;; Functions
 
@@ -451,48 +456,17 @@ unified session switcher."
 (advice-add 'codex--do-send-command :before
             #'ai-extras--clear-waiting-for-input)
 
-;;;; Transient
-
-;;;###autoload (autoload 'codex-extras-menu "codex-extras" nil t)
-(transient-define-prefix codex-extras-menu ()
-  "Dispatch a `codex-extras' command."
-  [["Sessions"
-    ("e" "start or switch" codex-extras-start-or-switch)
-    ("B" "switch branch" codex-extras-switch-branch :if-nil t)
-    ("N" "new branch" codex-extras-create-branch :if-nil t)
-    ("h" "handoff" codex-extras-handoff)]
-   ["Tools"
-    ("s" "run skill" codex-extras-run-skill)
-    ("A" "audit project" codex-extras-audit-project)
-    ("d" "debug backtrace" codex-extras-debug-backtrace)]
-   ["Alerts"
-    ("T" "toggle alert" ai-extras-toggle-alert)]]
-  [["Buffer"
-    ("K" "setup kill on exit" codex-extras-setup-kill-on-exit)
-    ("f" "fix rendering" ai-extras-fix-rendering)
-    ("S" "disable scrollback" ai-extras-disable-scrollback-truncation)]
-   ["Options"
-    ("-a" codex-extras--infix-alert-on-ready)
-    ("-p" codex-extras--infix-protect-buffers)
-    ("-t" codex-extras--infix-sync-theme)]])
-
-(transient-define-infix codex-extras--infix-alert-on-ready ()
-  "Toggle `ai-extras-alert-on-ready'."
-  :class 'ai-extras--boolean-variable
-  :variable 'ai-extras-alert-on-ready
-  :description "alert on ready")
-
-(transient-define-infix codex-extras--infix-protect-buffers ()
-  "Toggle `ai-extras-protect-buffers'."
-  :class 'ai-extras--boolean-variable
-  :variable 'ai-extras-protect-buffers
-  :description "protect buffers")
+;;;; Extend unified menu
 
 (transient-define-infix codex-extras--infix-sync-theme ()
   "Toggle `codex-extras-sync-theme'."
   :class 'ai-extras--boolean-variable
   :variable 'codex-extras-sync-theme
-  :description "sync theme")
+  :description "sync theme (codex)")
+
+(with-eval-after-load 'ai-extras
+  (transient-append-suffix 'ai-extras-menu '(1 1 -1)
+    '("-t" codex-extras--infix-sync-theme)))
 
 ;;;;; Kill on exit
 

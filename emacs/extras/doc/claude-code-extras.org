@@ -193,6 +193,9 @@ Sessions are displayed by project name (extracted from the buffer name). When mu
 #+vindex: claude-code-extras-waiting
 Sessions that are waiting for user input (detected via the =idle_prompt= notification hook) are displayed with the ~claude-code-extras-waiting~ face, which inherits from ~warning~ by default.  The highlight is cleared as soon as input is sent to the session (Return key or programmatic command send).
 
+#+findex: claude-code-extras-jump-to-waiting
+The command ~claude-code-extras-jump-to-waiting~ (bound to =w= in the session switcher) switches to the session that most recently started waiting for user input.  This is useful when an alert sound fires but the notification is missed: pressing =w= jumps straight to the session that triggered it without needing to scan the list.  If no sessions are currently waiting, it displays a message.
+
 *** Multi-account support
 :PROPERTIES:
 :CUSTOM_ID: h:multi-account
@@ -405,7 +408,7 @@ These functions are designed to be called from modeline constructors (e.g. =doom
 #+findex: claude-code-extras-notify
 #+findex: claude-code-extras-alert-indicator
 #+findex: claude-code-extras--handle-notification
-The function ~claude-code-extras--handle-notification~ is a ~claude-code-event-hook~ listener that handles =Notification= events from the CLI.  It parses the notification JSON to determine the type and dispatches alerts accordingly: =idle_prompt= (Claude finished and is waiting), =permission_prompt= (a tool needs approval), and =elicitation_dialog= (Claude is showing an input dialog).  For =idle_prompt=, it also sets ~claude-code-extras--waiting-for-input~ to ~t~.
+The function ~claude-code-extras--handle-notification~ is a ~claude-code-event-hook~ listener that handles =Notification= events from the CLI.  It parses the notification JSON to determine the type and dispatches alerts accordingly: =idle_prompt= (Claude finished and is waiting), =permission_prompt= (a tool needs approval), and =elicitation_dialog= (Claude is showing an input dialog).  For =idle_prompt=, it also sets ~claude-code-extras--waiting-for-input~ to the current time (via ~current-time~), which is used by ~claude-code-extras-jump-to-waiting~ to identify the most recently waiting session.
 
 The function ~claude-code-extras-notify~ combines the default modeline pulse with optional OS alerts.  When ~claude-code-extras-alert-on-ready~ is non-~nil~, it dispatches visual and/or audible alerts according to ~claude-code-extras-alert-style~ ([[#h:alert-options][Alert options]]).  It is called by the notification handler rather than installed directly as ~claude-code-notification-function~ (which is set to the default modeline-only callback to avoid double-alerting from the terminal bell).
 

@@ -17,7 +17,9 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=claude-code-extras.el= extends =claude-code=, the Emacs package that runs Claude Code sessions inside an Eat terminal buffer. While =claude-code= provides the core session management and terminal integration, this extras package layers on several quality-of-life features that make extended Claude sessions more manageable.
+=claude-code-extras.el= extends =claude-code=, the Emacs package that runs Claude Code sessions inside an Eat terminal buffer.  While =claude-code= provides the core session management and terminal integration, this extras package layers on several quality-of-life features that make extended Claude sessions more manageable.
+
+Several features (session switching, buffer protection, alerts, snippet insertion, terminal fixes) are shared with =codex-extras.el= via the common =ai-extras.el= package ([[info:ai-extras#Top][ai-extras]]).  At load time, =claude-code-extras.el= registers the Claude Code backend with =ai-extras.el=, enabling a unified session switcher that shows sessions from all AI backends.
 
 The package provides ten main areas of functionality:
 

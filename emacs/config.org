@@ -392,10 +392,13 @@ The extras come with their own manuals and user options: everything is documente
   - [[#aidermacs-extras][aidermacs-extras]]
   - [[#ob-aider][ob-aider]]
   - [[#agent-shell][agent-shell]]
+  - [[#ai-extras][ai-extras]]
   - [[#claude-code][claude-code]]
   - [[#claude-code-extras][claude-code-extras]]
   - [[#claude-log][claude-log]]
   - [[#monet][monet]]
+  - [[#codex][codex]]
+  - [[#codex-extras][codex-extras]]
   - [[#mcp][mcp]]
   - [[#dall-e-shell][dall-e-shell]]
   - [[#llm][llm]]
@@ -549,6 +552,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#read-aloud][read-aloud]]
   - [[#read-aloud-extras][read-aloud-extras]]
   - [[#subed][subed]]
+  - [[#spofy][spofy]]
 - [[#misc][misc]]
   - [[#epoch][epoch]]
   - [[#calc][calc]]
@@ -2450,7 +2454,7 @@ CLOCK: [2022-05-07 Sat 19:00]--[2022-05-07 Sat 19:38] =>  0:38
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature emoji
   :bind
-  ("H-E" . emoji-search))
+  ("H-:" . emoji-search))
 #+end_src
 
 ** =color=
@@ -2610,6 +2614,7 @@ Here’s a screenshot illustrating the modeline and tab bar in action (click to 
   (doom-modeline-indent-info nil)
   (doom-modeline-github t)
   (doom-modeline-github-interval 60)
+  (doom-modeline-irc nil)
 
   :config
   (dolist (cons  '((display-time-mode-hook . doom-modeline-override-time)
@@ -3153,7 +3158,6 @@ CLOCK: [2021-03-22 Mon 20:56]--[2021-03-22 Mon 21:16] =>  0:20
    ("C-H-M-z" . crux-kill-line-backwards)
    ("C-M-<backspace>" . nil)
    ("C-M-k" . nil)
-   ("H-e" . shell-command)
    ("H-v" . yank)
    ("M-DEL" . nil)
    ("s-C" . nil)))
@@ -5285,7 +5289,8 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
   :custom
   (org-gcal-client-id (auth-source-pass-get "host" "auth-sources/org-gcal"))
   (org-gcal-client-secret (auth-source-pass-get 'secret "auth-sources/org-gcal"))
-  (org-gcal-fetch-file-alist `((,(getenv "PERSONAL_GMAIL") . ,paths-file-calendar)))
+  (org-gcal-fetch-file-alist `((,(getenv "PERSONAL_GMAIL") . ,paths-file-calendar)
+			       (,(getenv "EPOCH_EMAIL") . ,paths-file-calendar)))
   (org-gcal-recurring-events-mode 'top-level)
   (org-gcal-remove-api-cancelled-events nil) ; never remove cancelled events
   (org-gcal-notify-p nil)
@@ -8817,7 +8822,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 :END:
 
 
-/[[https://github.com/stevemolitor/claude-code.el][claude-code]] is an Emacs client for Claude Code./
+/[[https://github.com/stevemolitor/claude-code.el][claude-code]] is an Emacs client for [[https://code.claude.com/docs/en/overview][Claude Code]]./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package claude-code
@@ -8834,8 +8839,8 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (claude-code-mode)
 
   :bind
-  ("A-t" . claude-code-extras-start-or-switch)
-  ("C-c d" . claude-code-transient)
+  ("H-e" . claude-code-extras-menu)
+  ("H-E" . claude-code-transient)
   (:repeat-map my-claude-code-map
                ("M" . claude-code-cycle-mode))
 
@@ -8847,6 +8852,15 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (claude-code-process-environment-functions . claude-code-extras--account-env))
 #+end_src
 
+** =ai-extras=
+
+/[[file:extras/ai-extras.el][ai-extras]] provides shared abstractions for AI coding CLI tool extensions./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-personal-package ai-extras
+  :demand t)
+#+end_src
+
 ** =claude-code-extras=
 :PROPERTIES:
 :ID:       8966D143-A3B0-4778-8E32-7EFE527219BD
@@ -8855,15 +8869,17 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package claude-code-extras
-  :after claude-code
+  :after (claude-code ai-extras)
   :demand t
   :custom
   (claude-code-extras-alert-on-ready t)
   (claude-code-extras-sync-theme t)
   ;; copilot support is buggy; needs more work
   (claude-code-extras-copilot-enabled nil)
+  (claude-code-extras-org-todo-in-progress-keyword "DOING")
   (claude-code-extras-accounts '(("personal" . "~/.claude-personal")
                                  ("work"     . "~/.claude-work")))
+  
   :config
   (with-eval-after-load 'debug
     (bind-key "D" #'claude-code-extras-debug-backtrace debugger-mode-map)))
@@ -8901,6 +8917,34 @@ The author provides a good overview of the package in [[https://www.youtube.com/
                  :repo "stevemolitor/monet")
   :after claude-code
   :demand t)
+#+end_src
+
+** codex
+:PROPERTIES:
+:ID:       D8DEDECF-1CC8-4788-87A6-F98B92CD8DDE
+:END:
+
+/codex is an Emacs client for [[https://openai.com/codex/][Codex]]./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package codex
+  :ensure (:host github
+		 :repo "benthamite/codex")
+  :demand t)
+#+end_src
+
+** =codex-extras=
+
+/[[file:extras/codex-extras.el][codex-extras]] collects my extensions for =codex=./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-personal-package codex-extras
+  :after (codex ai-extras)
+  :demand t
+  :custom
+  (codex-extras-sync-theme t)
+  :bind
+  ("H-x" . codex-extras-menu))
 #+end_src
 
 ** =mcp=
@@ -12500,23 +12544,24 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
         ("g" . mu4e-extras-compose-new-externally)
         ("r" . mu4e-extras-reindex-db)
         :map mu4e-headers-mode-map
-        ("o" . mu4e-extras-view-org-capture)
-        ("r" . mu4e-extras-compose-reply)
         ("$" . mu4e-extras-copy-sum)
         ("D" . mu4e-extras-headers-trash)
-        ("e" . mu4e-extras-headers-refile)
         ("E" . mu4e-extras-headers-mark-read-and-refile)
-        ("v" . mu4e-extras-headers-move)
-        ("x" . mu4e-extras-open-gmail)
         ("X" . mu4e-extras-mark-execute-all-no-confirm)
-        :map mu4e-view-mode-map
+        ("e" . mu4e-extras-headers-refile)
         ("o" . mu4e-extras-view-org-capture)
         ("r" . mu4e-extras-compose-reply)
-        ("$" . mu4e-extras-copy-sum)
+        ("v" . mu4e-extras-headers-move)
+        ("x" . mu4e-extras-open-gmail)
+        :map mu4e-view-mode-map
+	("$" . mu4e-extras-copy-sum)
+        (";" . mu4e-copy-message-path)
         ("D" . mu4e-extras-view-trash)
         ("e" . mu4e-extras-view-refile)
-        ("x" . mu4e-extras-view-in-gmail)
-        ("v" . mu4e-extras-view-move)))
+        ("o" . mu4e-extras-view-org-capture)
+        ("r" . mu4e-extras-compose-reply)
+        ("v" . mu4e-extras-view-move)
+        ("x" . mu4e-extras-view-in-gmail)))
 #+end_src
 
 ** =org-msg=
@@ -13047,35 +13092,33 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
         ("H-s-t" . slack-change-current-team)
         ("s-u" . slack-select-rooms)
         ("H-s-u" . slack-select-unread-rooms) ; `slack-all-unreads' not working
-        ;; :map slack-thread-message-buffer-mode-map
-        ;; ("d" . slack-thread-show-or-create)
-        ;; ("e" . slack-message-edit)
-        ;; ("o" . slack-chat-org-capture)
-        ;; ("q" . files-extras-kill-other-buffer)
-        ;; ("r" . slack-message-add-reaction)
-        ;; ("R" . slack-message-remove-reaction)
-        ;; ("z" . slack-message-write-another-buffer)
+        :map slack-thread-message-buffer-mode-map
+        ("d" . slack-thread-show-or-create)
+        ("e" . slack-message-edit)
+        ("o" . slack-chat-org-capture)
+        ("q" . files-extras-kill-other-buffer)
+        ("R" . slack-message-add-reaction)
+        ("z" . slack-message-write-another-buffer)
+        ("s-z" . slack-message-write-another-buffer)
         :map slack-activity-feed-buffer-mode-map
         ("," . slack-activity-feed-goto-prev)
         ("." . slack-activity-feed-goto-next)
-        ("R" . slack-message-remove-reaction)
         ("d" . slack-thread-show-or-create)
         ("e" . slack-message-edit)
         ("k" . slack-feed-goto-prev)
         ("l" . slack-feed-goto-next)
-        ("r" . slack-message-add-reaction)
+        ("R" . slack-message-add-reaction)
         ("z" . slack-message-write-another-buffer)
         ("s-z" . slack-message-write-another-buffer)
         :map slack-message-buffer-mode-map
         ("," . slack-buffer-goto-prev-message)
         ("." . slack-buffer-goto-next-message)
-        ("R" . slack-message-remove-reaction)
         ("d" . slack-thread-show-or-create)
         ("e" . slack-message-edit)
         ("k" . slack-buffer-goto-prev-message)
         ("l" . slack-buffer-goto-next-message)
         ("o" . slack-chat-org-capture)
-        ("r" . slack-message-add-reaction)
+        ("R" . slack-message-add-reaction)
         ("z" . slack-message-write-another-buffer)
         ("s-z" . slack-message-write-another-buffer)
         :map slack-message-compose-buffer-mode-map
@@ -13098,9 +13141,15 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
   (:map slack-activity-feed-buffer-mode-map
 	("E" . slack-extras-work-capture)
 	("o" . slack-extras-personal-capture)
+	("r" . slack-extras-thread-reply)
+	:map slack-activity-feed-buffer-mode-map
+	("E" . slack-extras-work-capture)
+	("o" . slack-extras-personal-capture)
+	("r" . slack-extras-thread-reply)
 	:map slack-message-buffer-mode-map
 	("E" . slack-extras-work-capture)
-	("o" . slack-extras-personal-capture)))
+	("o" . slack-extras-personal-capture)
+	("r" . slack-extras-thread-reply)))
 #+end_src
 
 ** =ol-emacs-slack=
@@ -14331,6 +14380,29 @@ result to a user-specified file."
               (insert cleaned-text))
             (message "Transcript exported to %s" output-file))
         (message "Transcript export cancelled")))))
+#+end_src
+
+** =spofy=
+:PROPERTIES:
+:ID:       CEB9C1CC-0FA4-4BD4-92C1-6296123C804A
+:END:
+
+/[[https://github.com/benthamite/spofy][spofy]] is a Spotify player for Emacs./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package spofy
+  :ensure (:host github
+                 :repo "benthamite/spofy")
+  :defer t
+  :custom
+  (spofy-client-id (auth-source-pass-get "spofy-id" "chrome/accounts.spotify.com"))
+  (spofy-client-secret (auth-source-pass-get "spofy-secret" "chrome/accounts.spotify.com"))
+  (spofy-tab-bar-max-length nil)
+  (spofy-tab-bar-alignment 'right)
+  (spofy-enable-tab-bar t)
+  (spofy-consult-columns '((track 50 40 40) (album 50 40 6) (artist 50 45) (playlist 50 35) (device 45)))
+
+  :bind (("A-y" . spofy-menu)))
 #+end_src
 
 * misc

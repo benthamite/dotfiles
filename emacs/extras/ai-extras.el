@@ -447,6 +447,7 @@ configured alert style."
 Without this, eat truncates terminal output to
 `eat-term-scrollback-size' lines, causing older AI session output
 to vanish."
+  (interactive)
   (when (and (bound-and-true-p eat-terminal)
              (fboundp 'eat-term-set-scrollback-size))
     (eat-term-set-scrollback-size eat-terminal most-positive-fixnum)))

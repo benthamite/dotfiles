@@ -268,7 +268,14 @@ features.
 :CUSTOM_ID: h:message-files
 :END:
 
+#+findex: mu4e-extras-copy-message-path
 #+findex: mu4e-extras-open-message-file
+The command ~mu4e-extras-copy-message-path~ copies the filesystem path
+of the current message to the kill ring.  This is useful when you need
+to pass the path to an external tool or paste it into a shell command.
+It uses ~mu4e-extras-get-message-file~ internally
+([[#h:message-file-access][Message file access]]).
+
 The command ~mu4e-extras-open-message-file~ opens the file on disk that
 stores the current message.  It uses ~dired-jump~ to display the file
 in its parent directory in Dired mode.  This is useful for inspecting

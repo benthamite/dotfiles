@@ -324,6 +324,16 @@ If no message is found, return nil."
 			 (error nil))))
     (mu4e-message-field message :path)))
 
+;;;###autoload
+(defun mu4e-extras-copy-message-path ()
+  "Copy the path to the current message's file to the kill ring."
+  (interactive)
+  (if-let* ((path (mu4e-extras-get-message-file)))
+      (progn
+	(kill-new path)
+	(message "Copied: %s" path))
+    (user-error "No message at point")))
+
 (defun mu4e-extras-open-message-file ()
   "Open the current message's file in Dired."
   (interactive)

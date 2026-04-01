@@ -20,7 +20,9 @@ file_path=$(printf '%s' "$input" | jq -r '.tool_input.file_path // empty')
 [[ "$file_path" == *elpaca/sources/* ]] || \
 [[ "$file_path" == */dotfiles/emacs/extras/* ]] || exit 0
 
-# Ask Emacs to find the package, rebuild, wait, and reload.
+# Ask Emacs to find the package and schedule a rebuild.
+# The rebuild is deferred via run-at-time because elpaca-wait uses sit-for,
+# which deadlocks when called from inside emacsclient's server process filter.
 # First try the file's basename as a package name (handles extras packages
 # that share the dotfiles source dir).  Fall back to source dir prefix match.
 result=$(timeout 30 emacsclient -e "
@@ -32,9 +34,12 @@ result=$(timeout 30 emacsclient -e "
                          when (and src (string-prefix-p src file))
                          return (cadr e)))))
   (when pkg
-    (elpaca-rebuild pkg t)
-    (elpaca-wait)
-    (elpaca-extras-reload pkg)
+    (run-at-time 0 nil
+      (lambda ()
+        (elpaca-rebuild pkg t)
+        (elpaca-wait)
+        (elpaca-extras-reload pkg)
+        (message \"Rebuilt and reloaded: %s\" pkg)))
     (format \"%s\" pkg)))" 2>&1) || exit 0
 
 # Strip quotes from emacsclient output

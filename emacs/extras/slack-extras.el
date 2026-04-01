@@ -112,6 +112,53 @@ selection."
 
 ;;;;; Messages
 
+(declare-function slack-thread-message-buffer-p "slack-thread-message-buffer")
+(declare-function slack-buffer-display-message-compose-buffer "slack-buffer")
+(declare-function slack-room-find-message "slack-room")
+(declare-function slack-thread-ts "slack-message")
+(declare-function slack-thread-show-messages "slack-message-buffer")
+(declare-function slack-buffer-start-thread "slack-message-buffer")
+(declare-function slack-reply-broadcast-message-p "slack-message")
+
+;;;###autoload
+(defun slack-extras-thread-reply ()
+  "Open a thread for the message at point and start composing a reply.
+If the message already has a thread, open it; otherwise start a
+new one.  In both cases, immediately open a compose buffer in the
+thread."
+  (interactive)
+  (slack-if-let* ((buf slack-current-buffer))
+      (if (slack-thread-message-buffer-p buf)
+          (slack-buffer-display-message-compose-buffer buf)
+        (slack-extras--open-thread-and-compose buf (slack-get-ts)))))
+
+(defun slack-extras--open-thread-and-compose (buf ts)
+  "Open a thread for TS in BUF, then open a compose buffer.
+BUF is a `slack-message-buffer'."
+  (slack-if-let* ((team (slack-buffer-team buf))
+                  (room (slack-buffer-room buf))
+                  (message (slack-room-find-message room ts)))
+      (slack-if-let* ((thread-ts (slack-thread-ts message)))
+          (slack-thread-show-messages
+           message room team #'slack-extras--compose-in-current-buffer)
+        (slack-extras--start-thread-and-compose buf message ts))))
+
+(defun slack-extras--start-thread-and-compose (buf message ts)
+  "Start a new thread for MESSAGE at TS in BUF, then compose.
+BUF is a `slack-message-buffer'."
+  (when (slack-reply-broadcast-message-p message)
+    (error "Can't start thread from broadcasted message"))
+  (let ((thread-buf (slack-create-thread-message-buffer
+                     (slack-buffer-room buf)
+                     (slack-buffer-team buf)
+                     ts)))
+    (slack-buffer-display thread-buf)
+    (slack-buffer-display-message-compose-buffer thread-buf)))
+
+(defun slack-extras--compose-in-current-buffer ()
+  "Open a compose buffer for `slack-current-buffer'."
+  (slack-buffer-display-message-compose-buffer slack-current-buffer))
+
 ;;;###autoload
 (defun slack-extras-yank-code-block ()
   "Yank the kill ring as a Slack code block in the current compose buffer."
@@ -205,6 +252,7 @@ Call FN with ACTION, then also toggle Slack notifications."
     ("a" "all threads" slack-all-threads)]
    ["Message"
     ("d" "thread" slack-thread-show-or-create)
+    ("Z" "thread reply" slack-extras-thread-reply)
     ("e" "edit" slack-message-edit)
     ("D" "delete" slack-message-delete)
     ("z" "compose in buffer" slack-message-write-another-buffer)

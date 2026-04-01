@@ -183,24 +183,27 @@ Set by `claude-code-extras--capture-buffer-account' via
 (defvar-local claude-code-extras--status-data nil
   "Parsed status plist for the current Claude buffer.")
 
-;; Display name cache is now managed by `ai-extras--display-name-cache'.
-(defvaralias 'claude-code-extras--display-name-cache 'ai-extras--display-name-cache)
+(defvar-local claude-code-extras--display-name-cache nil
+  "Cached display name for the modeline.
+Updated by `ai-extras--refresh-display-names'.")
 
 (defvar-local claude-code-extras--original-session-id nil
   "Session ID when this buffer was first created.
 Used to detect when `/branch' creates a new session.")
 
 ;; Home-row keys and session key map are now managed by ai-extras.
-(defvaralias 'claude-code-extras--session-keys 'ai-extras--session-keys)
+(defvar claude-code-extras--session-keys ai-extras--session-keys
+  "Alias for `ai-extras--session-keys' for backward compatibility.")
 (defconst claude-code-extras--home-row-keys ai-extras--home-row-keys
   "Alias for `ai-extras--home-row-keys'.")
 
 (defvar-local claude-code-extras--status-timer nil
   "Timer for periodic status polling in the current Claude buffer.")
 
-;; Waiting-for-input state is now managed by `ai-extras--waiting-for-input'.
-;; Keep the old variable as an alias for backward compatibility.
-(defvaralias 'claude-code-extras--waiting-for-input 'ai-extras--waiting-for-input)
+(defvar-local claude-code-extras--waiting-for-input nil
+  "Non-nil when this Claude session is waiting for user input.
+Now managed by `ai-extras--waiting-for-input'; this variable is
+kept for code that still references it directly.")
 
 (defvar-local claude-code-extras--pending-theme nil
   "Theme to apply when this Claude session becomes idle.
@@ -1068,7 +1071,8 @@ elicitation_dialog notifications."
                        (plist-get message :json-data))))
           (pcase ntype
             ("idle_prompt"
-             (setq claude-code-extras--waiting-for-input (current-time))
+             (setq claude-code-extras--waiting-for-input (current-time)
+                   ai-extras--waiting-for-input (current-time))
              (claude-code-extras-notify
               "Claude ready"
               (format "%s: waiting for your response" name)))
@@ -1089,7 +1093,8 @@ elicitation_dialog notifications."
 (defun claude-code-extras--clear-waiting-for-input (&rest _)
   "Clear the waiting-for-input flag in the current Claude buffer."
   (when (bound-and-true-p claude-code-extras--waiting-for-input)
-    (setq claude-code-extras--waiting-for-input nil)))
+    (setq claude-code-extras--waiting-for-input nil
+          ai-extras--waiting-for-input nil)))
 
 (defun claude-code-extras-jump-to-waiting ()
   "Switch to the Claude session that most recently started waiting for input."
@@ -2235,7 +2240,8 @@ so that this function returns immediately.  This prevents timers
 from firing reentantly during `accept-process-output' inside eat,
 which could otherwise block the main thread indefinitely."
   (with-current-buffer buffer
-    (setq claude-code-extras--waiting-for-input nil)
+    (setq claude-code-extras--waiting-for-input nil
+          ai-extras--waiting-for-input nil)
     (setq claude-code-extras--pending-theme nil)
     (let ((buf buffer)
           (navigate (if (string= theme "light") "\e[B" "\e[A"))

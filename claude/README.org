@@ -330,7 +330,7 @@ Scans, prioritizes, and batch-resolves open GitHub issues for =tlon-team/tlon.el
 :ID:       DCC9EC24-1AB4-495E-8C89-DB4C63229744
 :END:
 
-End-of-session bookkeeping. Detects the project's log directory from the =@= reference in =CLAUDE.md= and creates a dated session log (what was done, key findings, results, open questions). On first run in a new project, uses =AskUserQuestion= to interactively set up the log directory and optionally a =decisions/= directory for tracking architectural decisions. Updates the =CLAUDE.md= session reference, runs =/record-decisions= if applicable, and commits.
+End-of-session bookkeeping. Detects the project's log directory from the =@= reference in =CLAUDE.md= and creates a dated session log (what was done, key findings, results, open questions). On first run in a new project, uses =AskUserQuestion= to interactively set up the log directory and optionally a =decisions/= directory for tracking architectural decisions. Updates the =CLAUDE.md= session reference, runs =/record-decisions= if applicable, and commits. Accepts =--exit= to end the session after completing all steps.
 
 *** record-decisions
 :PROPERTIES:

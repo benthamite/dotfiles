@@ -3,7 +3,7 @@ name: update-log
 description: End-of-session bookkeeping. Use at the end of a work session to update the session log and project status. Only consider using proactively (e.g. when the session is running low on context) in projects that already have a log directory and a log reference in CLAUDE.md from a previous user invocation. Never invoke autonomously in projects without existing logs.
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
-argument-hint: "[optional summary of what was done]"
+argument-hint: "[--exit] [optional summary of what was done]"
 ---
 
 # End-of-session log update
@@ -78,5 +78,9 @@ If no `decisions/` directory exists, skip this step.
 ## Step 4: Commit
 
 Stage and commit the new log file, updated CLAUDE.md, and any changes to `decisions/` or `decisions-summary.md` with a descriptive message.
+
+## Step 5: Exit (if requested)
+
+If `--exit` was passed in the arguments, type `/exit` to end the session after all steps are complete.
 
 $ARGUMENTS

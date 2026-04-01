@@ -57,7 +57,7 @@ Each entry is (SYMBOL . PLIST) where PLIST has keys:
   :start-new             function () -> buffer (start a new session)
   :program               string (CLI binary name)
   :send-return           function (&optional buffer)
-  :icon                  string (short identifier, e.g. \"CC\" or \"CX\")
+  :icon                  string or function returning a propertized string
   :label                 string (display name, e.g. \"Claude Code\" or \"Codex\")
 
 Optional command keys for dispatching shared commands:
@@ -92,6 +92,13 @@ backend symbol or nil."
 (defun ai-extras--backend-get (backend key)
   "Get KEY from the registered plist for BACKEND."
   (plist-get (alist-get backend ai-extras-backends) key))
+
+(defun ai-extras-backend-icon (backend)
+  "Return the icon string for BACKEND.
+The :icon property can be a string or a function; if a function,
+it is called to produce the icon."
+  (let ((icon (ai-extras--backend-get backend :icon)))
+    (if (functionp icon) (funcall icon) (or icon ""))))
 
 (defun ai-extras--find-all-buffers ()
   "Return all active AI session buffers across all backends."
@@ -327,10 +334,10 @@ If sessions exist, show a transient menu with home-row keys."
      (lambda (buf key)
        (when (buffer-live-p buf)
          (let* ((backend (ai-extras--detect-backend buf))
-                (icon (when backend
-                        (ai-extras--backend-get backend :icon)))
+                (icon (when backend (ai-extras-backend-icon backend)))
                 (name (ai-extras-display-name buf))
-                (label (if icon (format "%s %s" icon name) name))
+                (label (if (and icon (not (string-empty-p icon)))
+                           (format "%s %s" icon name) name))
                 (waiting (buffer-local-value
                           'ai-extras--waiting-for-input buf))
                 (cmd (make-symbol (format "ai-switch-%s" key)))

@@ -136,6 +136,8 @@ Uses strikethrough to indicate the cost is not actually charged."
 ;;;;;; Claude Code status
 
 (declare-function claude-code--buffer-p "claude-code")
+(declare-function ai-extras--detect-backend "ai-extras")
+(declare-function ai-extras-backend-icon "ai-extras")
 (declare-function claude-code-extras-status-model "claude-code-extras")
 (declare-function claude-code-extras-status-cost "claude-code-extras")
 (declare-function claude-code-extras-status-context-percent "claude-code-extras")
@@ -172,14 +174,19 @@ Uses strikethrough to indicate the cost is not actually charged."
   (when (and doom-modeline-extras-claude-code
              (fboundp 'claude-code--buffer-p)
              (claude-code--buffer-p (current-buffer)))
-    (if (bound-and-true-p claude-code-extras--status-data)
-        (doom-modeline-extras--format-claude-status)
-      (concat (doom-modeline-spc)
-              (claude-code-extras-display-name)
-              (doom-modeline-spc)))))
+    (let ((icon (when (fboundp 'ai-extras--detect-backend)
+                  (let ((backend (ai-extras--detect-backend (current-buffer))))
+                    (when backend (ai-extras-backend-icon backend))))))
+      (if (bound-and-true-p claude-code-extras--status-data)
+          (doom-modeline-extras--format-claude-status icon)
+        (concat (doom-modeline-spc)
+                (when icon (concat icon " "))
+                (claude-code-extras-display-name)
+                (doom-modeline-spc))))))
 
-(defun doom-modeline-extras--format-claude-status ()
-  "Assemble the Claude Code modeline string from status data."
+(defun doom-modeline-extras--format-claude-status (&optional icon)
+  "Assemble the Claude Code modeline string from status data.
+ICON is an optional backend icon string to prepend."
   (let ((model (claude-code-extras-status-model))
         (account (claude-code-extras-buffer-account))
         (tokens (claude-code-extras-status-token-count))
@@ -192,6 +199,7 @@ Uses strikethrough to indicate the cost is not actually charged."
         (cache-total (claude-code-extras-status-cache-total-tokens)))
     (concat
      (doom-modeline-spc)
+     (when icon (concat icon " "))
      (propertize (claude-code-extras-display-name)
                  'face '(bold doom-modeline-buffer-major-mode)
                  'help-echo "Claude Code session")

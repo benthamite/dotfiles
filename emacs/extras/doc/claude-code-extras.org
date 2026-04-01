@@ -257,7 +257,7 @@ The intended workflow is a split window with the org buffer on one side and the 
 
 Session resolution is automatic via ~claude-code-extras--resolve-session-for-file~: if the org file belongs to a project and exactly one Claude Code session is running in that project, it is used directly with no prompt. When multiple sessions exist for the project, the user is prompted to select one. When no project is detected or no session matches, it falls back to the standard ~claude-code--get-or-prompt-for-buffer~ selection.
 
-The prompt sent to the session is formatted identically to batch mode: the TODO heading text, followed by the entry body (if any) separated by a blank line.
+The prompt sent to the session is the cleaned heading text—stripped of the TODO keyword, priority, and tags—followed by the entry body (if any) separated by a blank line.  Org inline markup is converted to Markdown equivalents before sending: verbatim (~=…=~) and code (=~…~=) markers become backticks, so the prompt reads naturally in the Claude Code session.
 
 ** Project audit
 :PROPERTIES:

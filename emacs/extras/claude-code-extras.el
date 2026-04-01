@@ -1557,11 +1557,17 @@ unique session can be inferred, prompts for selection."
       (claude-code--do-send-command prompt))
     (display-buffer buf)))
 
+(defun claude-code-extras--org-to-markdown (text)
+  "Convert org inline markup in TEXT to Markdown equivalents.
+Handles verbatim (=…=) and code (~…~) to backticks."
+  (replace-regexp-in-string "[=~]\\([^=~\n]+\\)[=~]" "`\\1`" text))
+
 (defun claude-code-extras--collect-todo-at-point ()
   "Return a plist with :title and :body for the TODO at point."
   (save-excursion
     (org-back-to-heading t)
-    (let* ((title (org-get-heading t t t t))
+    (let* ((title (claude-code-extras--org-to-markdown
+                   (org-get-heading t t t t)))
            (body-start (progn (org-end-of-meta-data t) (point)))
            (body-end (progn (outline-next-heading)
                             (or (point) (point-max))))
@@ -2949,12 +2955,12 @@ Signals an error if the status file is missing or incomplete."
    ["Tools"
     ("s" "run skill" claude-code-extras-run-skill)
     ("b" "batch todos" claude-code-extras-batch-todos)
-    ("T" "send todo at point" claude-code-extras-send-todo-at-point)
+    ("t" "send todo at point" claude-code-extras-send-todo-at-point)
     ("A" "audit project" claude-code-extras-audit-project)
     ("d" "debug backtrace" claude-code-extras-debug-backtrace)
     ("l" "logs" claude-log-menu)]
    ["Alerts & status"
-    ("t" "toggle alert" claude-code-extras-toggle-alert)
+    ("T" "toggle alert" claude-code-extras-toggle-alert)
     ("p" "start status polling" claude-code-extras-start-status-polling)
     ("P" "stop status polling" claude-code-extras-stop-status-polling)]]
   [["Buffer"

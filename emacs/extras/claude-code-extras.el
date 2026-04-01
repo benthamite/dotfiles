@@ -679,9 +679,12 @@ system was loaded."
 
 (transient-define-prefix claude-code-extras--session-switcher ()
   "Switch to a Claude session or start a new one."
-  ["Sessions"
-   :class transient-column
-   :setup-children claude-code-extras--session-switcher-children])
+  [["Sessions"
+    :class transient-column
+    :setup-children claude-code-extras--session-switcher-children]
+   ["Actions"
+    ("w" "jump to waiting" claude-code-extras-jump-to-waiting)
+    ("n" "new session" claude-code-extras--start-with-account)]])
 
 (defun claude-code-extras--session-switcher-children (_)
   "Build transient suffixes for the session switcher."
@@ -705,11 +708,6 @@ system was loaded."
                 (lambda (a b)
                   (< (claude-code-extras--home-row-key-index (car a))
                      (claude-code-extras--home-row-key-index (car b))))))
-    (setq specs (append specs
-                        (list '("w" "jump to waiting"
-                                claude-code-extras-jump-to-waiting)
-                              '("n" "new session"
-                                claude-code-extras--start-with-account))))
     (transient-parse-suffixes
      'claude-code-extras--session-switcher
      (apply #'vector specs))))

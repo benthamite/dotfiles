@@ -184,7 +184,7 @@ The user option ~claude-code-extras-status-interval~ sets the polling frequency 
 :END:
 
 #+findex: claude-code-extras-start-or-switch
-The command ~claude-code-extras-start-or-switch~ is the main entry point for working with Claude sessions. When no Claude sessions are active, it starts a new one by calling ~claude-code~. When one or more sessions exist, it opens a transient menu where each active session is bound to a home-row key (=a=, =s=, =d=, =f=, =j=, =k=, =l=, =;=), allowing single-keystroke switching. Pressing =n= starts a new session.
+The command ~claude-code-extras-start-or-switch~ is the main entry point for working with Claude sessions. When no Claude sessions are active, it starts a new one by calling ~claude-code~. When one or more sessions exist, it opens a two-column transient menu.  The left column lists active sessions, each bound to a home-row key (=a=, =s=, =d=, =f=, =j=, =k=, =l=, =;=) for single-keystroke switching.  The right column contains actions: =w= to jump to the most recently waiting session and =n= to start a new session.
 
 Each session is assigned a key when it starts (via ~claude-code-start-hook~). The assignment persists for the lifetime of the session: killing a buffer releases its key, and the freed key is reused by the next session that starts. Dead-buffer entries are automatically purged before each assignment, so keys are always recycled promptly. When the transient opens, any sessions that predate the key system (e.g. sessions started before the package was loaded) are retroactively assigned keys.
 

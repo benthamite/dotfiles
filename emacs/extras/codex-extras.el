@@ -120,7 +120,9 @@ When nil, use the CLI default."
         :program "codex"
         :send-return (lambda (&optional _buf)
                        (codex--term-send-return codex-terminal-backend))
-        :icon "CX"
+        :icon (lambda () (if (require 'nerd-icons nil t)
+                             (nerd-icons-mdicon "nf-md-hexagon_outline")
+                           "CX"))
         :label "Codex"
         :handoff #'codex-extras-handoff
         :run-skill #'codex-extras-run-skill

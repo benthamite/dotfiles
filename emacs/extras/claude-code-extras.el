@@ -279,7 +279,9 @@ consumed by the Stop hook handler.")
         :program claude-code-program
         :send-return (lambda (&optional _buf)
                        (claude-code--term-send-return claude-code-terminal-backend))
-        :icon "CC"
+        :icon (lambda () (if (require 'nerd-icons nil t)
+                             (nerd-icons-mdicon "nf-md-star_four_points_outline")
+                           "CC"))
         :label "Claude Code"
         :handoff #'claude-code-extras-handoff
         :run-skill #'claude-code-extras-run-skill

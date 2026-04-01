@@ -203,8 +203,9 @@ When a session is killed its key becomes available for the next new session.")
 
 (defvar-local claude-code-extras--waiting-for-input nil
   "Non-nil when this Claude session is waiting for user input.
-Set to t by the Notification hook (idle_prompt) and cleared when
-input is sent to the session (e.g. a `/theme' command).")
+Set to the time (via `current-time') by the Notification hook
+\(idle_prompt) and cleared when input is sent to the session
+\(e.g. a `/theme' command).")
 
 (defvar-local claude-code-extras--pending-theme nil
   "Theme to apply when this Claude session becomes idle.
@@ -705,7 +706,9 @@ system was loaded."
                   (< (claude-code-extras--home-row-key-index (car a))
                      (claude-code-extras--home-row-key-index (car b))))))
     (setq specs (append specs
-                        (list '("n" "new session"
+                        (list '("w" "jump to waiting"
+                                claude-code-extras-jump-to-waiting)
+                              '("n" "new session"
                                 claude-code-extras--start-with-account))))
     (transient-parse-suffixes
      'claude-code-extras--session-switcher
@@ -1049,7 +1052,7 @@ elicitation_dialog notifications."
                        (plist-get message :json-data))))
           (pcase ntype
             ("idle_prompt"
-             (setq claude-code-extras--waiting-for-input t)
+             (setq claude-code-extras--waiting-for-input (current-time))
              (claude-code-extras-notify
               "Claude ready"
               (format "%s: waiting for your response" name)))
@@ -1071,6 +1074,20 @@ elicitation_dialog notifications."
   "Clear the waiting-for-input flag in the current Claude buffer."
   (when (bound-and-true-p claude-code-extras--waiting-for-input)
     (setq claude-code-extras--waiting-for-input nil)))
+
+(defun claude-code-extras-jump-to-waiting ()
+  "Switch to the Claude session that most recently started waiting for input."
+  (interactive)
+  (let (best-buf best-time)
+    (dolist (buf (claude-code--find-all-claude-buffers))
+      (when (buffer-live-p buf)
+        (let ((ts (buffer-local-value
+                   'claude-code-extras--waiting-for-input buf)))
+          (when (and ts (or (null best-time) (time-less-p best-time ts)))
+            (setq best-buf buf best-time ts)))))
+    (if best-buf
+        (switch-to-buffer best-buf)
+      (message "No sessions waiting for input"))))
 
 (defun claude-code-extras--handle-stop (message)
   "Handle a stop event from the Claude Code CLI.

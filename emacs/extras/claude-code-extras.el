@@ -1478,6 +1478,21 @@ New directories entered by the user are automatically added to this list."
   :type '(repeat directory)
   :group 'claude-code-extras)
 
+(defcustom claude-code-extras-org-todo-in-progress-keyword nil
+  "Org TODO keyword to set when sending a heading to Claude Code.
+When non-nil, `claude-code-extras-send-todo-at-point' changes the
+heading's TODO state to this keyword after sending.  The keyword
+must be one of the values in `org-todo-keywords' for the current
+buffer.  When nil, the TODO state is not changed.
+
+Org's built-in keywords are just TODO and DONE, with no
+intermediate state, so this is disabled by default.  Users who
+have configured an in-progress keyword (e.g. DOING, IN-PROGRESS,
+STARTED) can set this option to that keyword."
+  :type '(choice (const :tag "Don't change TODO state" nil)
+                 (string :tag "Keyword"))
+  :group 'claude-code-extras)
+
 ;; Batch state is passed as a plist through closures to support
 ;; parallel runs.  Keys: :queue :results :log-dir :working-dir :start-time
 
@@ -1544,7 +1559,11 @@ in a summary buffer when all entries have been processed."
 Extracts the heading and body of the TODO entry at point,
 formats them as a prompt, and sends it to the Claude Code
 session associated with the current file's project.  When no
-unique session can be inferred, prompts for selection."
+unique session can be inferred, prompts for selection.
+
+When `claude-code-extras-org-todo-in-progress-keyword' is
+non-nil, the heading's TODO state is changed to that keyword
+after sending."
   (interactive)
   (unless (derived-mode-p 'org-mode)
     (user-error "Must be called from an org-mode buffer"))
@@ -1555,6 +1574,8 @@ unique session can be inferred, prompts for selection."
          (buf (claude-code-extras--resolve-session-for-file)))
     (with-current-buffer buf
       (claude-code--do-send-command prompt))
+    (when claude-code-extras-org-todo-in-progress-keyword
+      (org-todo claude-code-extras-org-todo-in-progress-keyword))
     (display-buffer buf)))
 
 (defun claude-code-extras--org-to-markdown (text)

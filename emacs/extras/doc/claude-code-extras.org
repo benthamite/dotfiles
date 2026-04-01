@@ -138,6 +138,9 @@ The user option ~claude-code-extras-batch-system-prompt~ specifies an optional s
 
 The user option ~claude-code-extras-batch-model~ specifies an optional model override via =--model=. The default is ~nil~ (use Claude's default model).
 
+#+vindex: claude-code-extras-org-todo-in-progress-keyword
+The user option ~claude-code-extras-org-todo-in-progress-keyword~ specifies an Org TODO keyword to set on a heading when it is sent to Claude Code via ~claude-code-extras-send-todo-at-point~ ([[#h:send-todo-at-point][Send TODO at point]]).  The keyword must be one of the values configured in ~org-todo-keywords~ for the current buffer.  The default value is ~nil~, meaning the TODO state is not changed.  Since Org's built-in keywords are just ~TODO~ and ~DONE~, with no intermediate "in progress" state, this option is disabled by default.  Users who have configured a workflow with an in-progress keyword (e.g. ~DOING~, ~IN-PROGRESS~, ~STARTED~) can set this option to that keyword.
+
 ** Project audit options
 :PROPERTIES:
 :CUSTOM_ID: h:project-audit-options
@@ -258,6 +261,8 @@ The intended workflow is a split window with the org buffer on one side and the 
 Session resolution is automatic via ~claude-code-extras--resolve-session-for-file~: if the org file belongs to a project and exactly one Claude Code session is running in that project, it is used directly with no prompt. When multiple sessions exist for the project, the user is prompted to select one. When no project is detected or no session matches, it falls back to the standard ~claude-code--get-or-prompt-for-buffer~ selection.
 
 The prompt sent to the session is the cleaned heading text—stripped of the TODO keyword, priority, and tags—followed by the entry body (if any) separated by a blank line.  Org inline markup is converted to Markdown equivalents before sending: verbatim (~=…=~) and code (=~…~=) markers become backticks, so the prompt reads naturally in the Claude Code session.
+
+When ~claude-code-extras-org-todo-in-progress-keyword~ is non-~nil~, the heading's TODO state is changed to that keyword after the prompt is sent ([[#h:batch-todo-options][Batch TODO processing options]]).  This provides a visual indication in the org buffer of which tasks have been dispatched to Claude.
 
 ** Project audit
 :PROPERTIES:

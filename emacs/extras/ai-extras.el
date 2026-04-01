@@ -597,11 +597,13 @@ registered, use it.  Otherwise, prompt."
           (cdr (assoc choice names))))))
 
 (defun ai-extras--dispatch (key)
-  "Dispatch command KEY to the appropriate backend."
+  "Dispatch command KEY to the appropriate backend.
+Uses `call-interactively' so the target command's interactive spec
+runs and prompts for arguments as needed."
   (let* ((backend (ai-extras--resolve-backend))
          (fn (ai-extras--backend-get backend key)))
     (if fn
-        (funcall fn)
+        (call-interactively fn)
       (user-error "Backend `%s' does not support `%s'" backend key))))
 
 ;;;###autoload

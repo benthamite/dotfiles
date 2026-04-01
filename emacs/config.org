@@ -8839,7 +8839,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (claude-code-mode)
 
   :bind
-  ("H-e" . claude-code-extras-menu)
+  ("H-e" . ai-extras-menu)
   ("H-E" . claude-code-transient)
   (:repeat-map my-claude-code-map
                ("M" . claude-code-cycle-mode))
@@ -8942,9 +8942,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :after (codex ai-extras)
   :demand t
   :custom
-  (codex-extras-sync-theme t)
-  :bind
-  ("H-x" . codex-extras-menu))
+  (codex-extras-sync-theme t))
 #+end_src
 
 ** =mcp=

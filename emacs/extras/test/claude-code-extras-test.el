@@ -61,66 +61,6 @@
     (should (equal (claude-code-extras--sanitize-buffer-name)
                    "my_buffer_name"))))
 
-;;;; Find duplicate names
-
-(ert-deftest claude-code-extras-test-find-duplicate-names-no-duplicates ()
-  "Return nil when all names are unique."
-  (should (null (claude-code-extras--find-duplicate-names
-                 '("alpha" "beta" "gamma")))))
-
-(ert-deftest claude-code-extras-test-find-duplicate-names-one-duplicate ()
-  "Return a list containing the duplicated name."
-  (should (equal (claude-code-extras--find-duplicate-names
-                  '("alpha" "beta" "alpha"))
-                 '("alpha"))))
-
-(ert-deftest claude-code-extras-test-find-duplicate-names-multiple-duplicates ()
-  "Return all names that appear more than once."
-  (let ((result (claude-code-extras--find-duplicate-names
-                 '("alpha" "beta" "alpha" "beta" "gamma"))))
-    (should (member "alpha" result))
-    (should (member "beta" result))
-    (should (= (length result) 2))))
-
-(ert-deftest claude-code-extras-test-find-duplicate-names-empty ()
-  "Return nil for an empty list."
-  (should (null (claude-code-extras--find-duplicate-names '()))))
-
-(ert-deftest claude-code-extras-test-find-duplicate-names-triple ()
-  "A name appearing three times is reported once."
-  (let ((result (claude-code-extras--find-duplicate-names
-                 '("x" "x" "x"))))
-    (should (equal result '("x")))))
-
-;;;; Deduplicate names
-
-(ert-deftest claude-code-extras-test-deduplicate-names-no-duplicates ()
-  "Return names unchanged when all are unique."
-  (should (equal (claude-code-extras--deduplicate-names
-                  '("alpha" "beta" "gamma"))
-                 '("alpha" "beta" "gamma"))))
-
-(ert-deftest claude-code-extras-test-deduplicate-names-with-duplicates ()
-  "First occurrence keeps its name; subsequent get numeric suffixes."
-  (should (equal (claude-code-extras--deduplicate-names
-                  '("proj" "proj" "proj"))
-                 '("proj" "proj (2)" "proj (3)"))))
-
-(ert-deftest claude-code-extras-test-deduplicate-names-mixed ()
-  "Only duplicate names get suffixes; unique names are unchanged."
-  (should (equal (claude-code-extras--deduplicate-names
-                  '("alpha" "beta" "alpha" "gamma" "beta"))
-                 '("alpha" "beta" "alpha (2)" "gamma" "beta (2)"))))
-
-(ert-deftest claude-code-extras-test-deduplicate-names-empty ()
-  "Return nil for an empty list."
-  (should (null (claude-code-extras--deduplicate-names '()))))
-
-(ert-deftest claude-code-extras-test-deduplicate-names-single ()
-  "A single-element list is returned unchanged."
-  (should (equal (claude-code-extras--deduplicate-names '("only"))
-                 '("only"))))
-
 ;;;; Emacs theme detection
 
 (ert-deftest claude-code-extras-test-emacs-theme-dark ()

@@ -29,7 +29,7 @@
 ;;; Code:
 
 (require 'claude-code)
-(require 'ai-extras)
+(eval-and-compile (require 'ai-extras))
 (require 'consult)
 (require 'paths)
 (require 'subr-x)
@@ -280,7 +280,12 @@ consumed by the Stop hook handler.")
         :send-return (lambda (&optional _buf)
                        (claude-code--term-send-return claude-code-terminal-backend))
         :icon "CC"
-        :label "Claude Code"))
+        :label "Claude Code"
+        :handoff #'claude-code-extras-handoff
+        :run-skill #'claude-code-extras-run-skill
+        :audit-project #'claude-code-extras-audit-project
+        :debug-backtrace #'claude-code-extras-debug-backtrace
+        :setup-kill-on-exit #'claude-code-extras-setup-kill-on-exit))
 
 ;;;; Functions
 
@@ -2988,80 +2993,57 @@ Signals an error if the status file is missing or incomplete."
     (or (plist-get status :session_id)
         (user-error "Status file missing session_id"))))
 
-;;;; Transient
+;;;; Extend unified menu
 
-;;;###autoload (autoload 'claude-code-extras-menu "claude-code-extras" nil t)
-(transient-define-prefix claude-code-extras-menu ()
-  "Dispatch a `claude-code-extras' command."
-  [["Sessions"
-    ("e" "start or switch" claude-code-extras-start-or-switch)
-    ("a" "select account" claude-code-extras-select-account)
-    ("B" "switch branch" claude-code-extras-switch-branch)
-    ("N" "new branch" claude-code-extras-create-branch)
-    ("h" "handoff" claude-code-extras-handoff)]
-   ["Tools"
-    ("s" "run skill" claude-code-extras-run-skill)
-    ("b" "batch todos" claude-code-extras-batch-todos)
-    ("t" "send todo at point" claude-code-extras-send-todo-at-point)
-    ("A" "audit project" claude-code-extras-audit-project)
-    ("d" "debug backtrace" claude-code-extras-debug-backtrace)
-    ("l" "logs" claude-log-menu)]
-   ["Alerts & status"
-    ("T" "toggle alert" claude-code-extras-toggle-alert)
-    ("p" "start status polling" claude-code-extras-start-status-polling)
-    ("P" "stop status polling" claude-code-extras-stop-status-polling)]]
-  [["Buffer"
-    ("K" "setup kill on exit" claude-code-extras-setup-kill-on-exit)
-    ("f" "fix rendering" claude-code-extras-fix-rendering)
-    ("S" "disable scrollback truncation" claude-code-extras-disable-scrollback-truncation)]
-   ["Setup"
-    ("E s" "ensure statusline config" claude-code-extras-ensure-statusline-config)
-    ("E n" "ensure notification hook" claude-code-extras-ensure-notification-hook-config)
-    ("E h" "ensure stop hook" claude-code-extras-ensure-stop-hook-config)]
-   ["Options"
-    ("-a" claude-code-extras--infix-alert-on-ready)
-    ("-p" claude-code-extras--infix-protect-buffers)
-    ("-t" claude-code-extras--infix-sync-theme)
-    ("-c" claude-code-extras--infix-copilot-enabled)
-    ("-w" claude-code-extras--infix-warn-kill-with-branches)]])
-
-(defclass claude-code-extras--boolean-variable (transient-lisp-variable)
-  ()
-  "A `transient-lisp-variable' that toggles a boolean on each press.")
-
-(cl-defmethod transient-infix-read ((obj claude-code-extras--boolean-variable))
-  "Toggle the boolean value of OBJ."
-  (not (oref obj value)))
-
-(transient-define-infix claude-code-extras--infix-alert-on-ready ()
-  "Toggle `claude-code-extras-alert-on-ready'."
-  :class 'claude-code-extras--boolean-variable
-  :variable 'claude-code-extras-alert-on-ready
-  :description "alert on ready")
-
-(transient-define-infix claude-code-extras--infix-protect-buffers ()
-  "Toggle `claude-code-extras-protect-buffers'."
-  :class 'claude-code-extras--boolean-variable
-  :variable 'claude-code-extras-protect-buffers
-  :description "protect buffers")
+;;;###autoload
+(defalias 'claude-code-extras-menu 'ai-extras-menu
+  "Alias for `ai-extras-menu' for backward compatibility.")
 
 (transient-define-infix claude-code-extras--infix-sync-theme ()
   "Toggle `claude-code-extras-sync-theme'."
-  :class 'claude-code-extras--boolean-variable
+  :class 'ai-extras--boolean-variable
   :variable 'claude-code-extras-sync-theme
-  :description "sync theme")
+  :description "sync theme (claude)")
 
 (transient-define-infix claude-code-extras--infix-copilot-enabled ()
   "Toggle `claude-code-extras-copilot-enabled'."
-  :class 'claude-code-extras--boolean-variable
+  :class 'ai-extras--boolean-variable
   :variable 'claude-code-extras-copilot-enabled
   :description "copilot")
 
 (transient-define-infix claude-code-extras--infix-warn-kill-with-branches ()
   "Toggle `claude-code-extras-warn-kill-with-branches'."
-  :class 'claude-code-extras--boolean-variable
+  :class 'ai-extras--boolean-variable
   :variable 'claude-code-extras-warn-kill-with-branches
   :description "warn kill with branches")
+
+(with-eval-after-load 'ai-extras
+  ;; Sessions column: add account, branch, new branch
+  (transient-append-suffix 'ai-extras-menu '(0 0 -1)
+    '("a" "select account" claude-code-extras-select-account))
+  (transient-append-suffix 'ai-extras-menu '(0 0 -1)
+    '("B" "switch branch" claude-code-extras-switch-branch))
+  (transient-append-suffix 'ai-extras-menu '(0 0 -1)
+    '("N" "new branch" claude-code-extras-create-branch))
+  ;; Tools column: add batch, send todo, logs
+  (transient-append-suffix 'ai-extras-menu '(0 1 -1)
+    '("b" "batch todos" claude-code-extras-batch-todos))
+  (transient-append-suffix 'ai-extras-menu '(0 1 -1)
+    '("t" "send todo at point" claude-code-extras-send-todo-at-point))
+  (transient-append-suffix 'ai-extras-menu '(0 1 -1)
+    '("l" "logs" claude-log-menu))
+  ;; Alerts column: add polling
+  (transient-append-suffix 'ai-extras-menu '(0 2 -1)
+    '("p" "start status polling" claude-code-extras-start-status-polling))
+  (transient-append-suffix 'ai-extras-menu '(0 2 -1)
+    '("P" "stop status polling" claude-code-extras-stop-status-polling))
+  ;; Options column: add Claude-specific toggles
+  (transient-append-suffix 'ai-extras-menu '(1 1 -1)
+    '("-t" claude-code-extras--infix-sync-theme))
+  (transient-append-suffix 'ai-extras-menu '(1 1 -1)
+    '("-c" claude-code-extras--infix-copilot-enabled))
+  (transient-append-suffix 'ai-extras-menu '(1 1 -1)
+    '("-w" claude-code-extras--infix-warn-kill-with-branches)))
 
 (provide 'claude-code-extras)
 ;;; claude-code-extras.el ends here

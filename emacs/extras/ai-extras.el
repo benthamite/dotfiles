@@ -295,6 +295,7 @@ If sessions exist, show a transient menu with home-row keys."
 
 (defun ai-extras--start-new-session ()
   "Start a new session, prompting for backend if multiple are registered."
+  (interactive)
   (let ((backends ai-extras-backends))
     (cond
      ((null backends) (user-error "No AI backends registered"))

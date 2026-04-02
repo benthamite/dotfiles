@@ -627,13 +627,29 @@ registered, use it.  Otherwise, prompt."
   (or (ai-extras--detect-backend)
       (if (= (length ai-extras-backends) 1)
           (caar ai-extras-backends)
-        (let* ((names (mapcar (lambda (e)
-                                (cons (or (plist-get (cdr e) :label)
-                                          (symbol-name (car e)))
-                                      (car e)))
-                              ai-extras-backends))
-               (choice (completing-read "Backend: " (mapcar #'car names) nil t)))
-          (cdr (assoc choice names))))))
+        (let* ((entries (mapcar (lambda (e)
+                                  (cons (or (plist-get (cdr e) :label)
+                                            (symbol-name (car e)))
+                                        (car e)))
+                                ai-extras-backends))
+               (labels (mapcar #'car entries))
+               (affixate (lambda (cands)
+                           (mapcar (lambda (c)
+                                     (let* ((sym (cdr (assoc c entries)))
+                                            (icon (ai-extras-backend-icon sym)))
+                                       (list c
+                                             (if (string-empty-p icon) ""
+                                               (concat icon " "))
+                                             "")))
+                                   cands)))
+               (choice (completing-read
+                        "Backend: "
+                        (lambda (str pred action)
+                          (if (eq action 'metadata)
+                              `(metadata (affixation-function . ,affixate))
+                            (complete-with-action action labels str pred)))
+                        nil t)))
+          (cdr (assoc choice entries))))))
 
 (defun ai-extras--dispatch (key)
   "Dispatch command KEY to the appropriate backend.

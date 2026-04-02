@@ -435,9 +435,9 @@
 			       "emacs/extras/doc/claude-code-extras.texi")
 			      :depth nil :type git :protocol https :inherit t
 			      :ref "8177d5794e74526809e462866d6b0a7aeae955da"))
- (claude-log :source "elpaca-menu-lock-file" :recipe
-	     (:source nil :package "claude-log" :id claude-log :host github
-		      :repo "benthamite/claude-log" :type git :protocol https
+ (agent-log :source "elpaca-menu-lock-file" :recipe
+	     (:source nil :package "agent-log" :id agent-log :host github
+		      :repo "benthamite/agent-log" :type git :protocol https
 		      :inherit t :depth treeless :ref
 		      "74b697f5064220ff52436e6f4ae57284421caae7"))
  (clojure-mode :source "elpaca-menu-lock-file" :recipe

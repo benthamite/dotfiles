@@ -61,8 +61,9 @@ Each entry is (SYMBOL . PLIST) where PLIST has keys:
   :label                 string (display name, e.g. \"Claude Code\" or \"Codex\")
 
 Optional command keys for dispatching shared commands:
+  :discover-skills       function () -> list of skill plists
   :handoff               function () (close session, start new with handoff)
-  :run-skill             function () (discover and run a skill)
+  :run-skill             function (name &optional args) (run a skill)
   :audit-project         function () (run audit skills on a project)
   :debug-backtrace       function () (analyze backtrace, start session)
   :setup-kill-on-exit    function () (auto-kill buffer on process exit)
@@ -629,6 +630,32 @@ runs and prompts for arguments as needed."
         (call-interactively fn)
       (user-error "Backend `%s' does not support `%s'" backend key))))
 
+(defun ai-extras--skill-argument-candidates (skill)
+  "Return completion candidates for SKILL's arguments.
+SKILL is a plist.  If the skill has an :argument-source glob,
+resolve it relative to the skill's directory and return file stems.
+If it has :argument-choices, return those.  Otherwise return nil."
+  (or (when-let* ((source (plist-get skill :argument-source))
+                  (skill-dir (file-name-directory (plist-get skill :path))))
+        (let ((pattern (expand-file-name source skill-dir)))
+          (mapcar (lambda (f)
+                    (file-name-sans-extension (file-name-nondirectory f)))
+                  (file-expand-wildcards pattern))))
+      (plist-get skill :argument-choices)))
+
+(defun ai-extras--discover-all-skills ()
+  "Discover skills from all registered backends.
+Calls each backend's `:discover-skills' function and returns a
+combined list of skill plists, each augmented with `:backend'."
+  (let (all-skills)
+    (dolist (entry ai-extras-backends)
+      (when-let* ((discover-fn (plist-get (cdr entry) :discover-skills)))
+        (dolist (skill (funcall discover-fn))
+          (push (plist-put (copy-sequence skill) :backend (car entry))
+                all-skills))))
+    (sort all-skills (lambda (a b)
+                       (string< (plist-get a :name) (plist-get b :name))))))
+
 ;;;###autoload
 (defun ai-extras-handoff ()
   "Close the current session and start a new one with the handoff prompt.
@@ -638,9 +665,70 @@ Dispatches to the appropriate backend."
 
 ;;;###autoload
 (defun ai-extras-run-skill ()
-  "Discover and run a skill via the appropriate backend."
+  "Discover and run a skill from any registered backend.
+Shows an aggregated list of all skills with an indication of
+the backend next to each."
   (interactive)
-  (ai-extras--dispatch :run-skill))
+  (let* ((skills (ai-extras--discover-all-skills))
+         (_ (unless skills (user-error "No user-invocable skills found")))
+         (max-name-len (apply #'max (mapcar (lambda (s)
+                                              (length (plist-get s :name)))
+                                            skills)))
+         (annotate
+          (lambda (cand)
+            (when-let* ((skill (cl-find cand skills
+                                        :key (lambda (s) (plist-get s :name))
+                                        :test #'equal))
+                        (backend (plist-get skill :backend)))
+              (let ((label (or (ai-extras--backend-get backend :label)
+                               (symbol-name backend)))
+                    (desc (or (plist-get skill :description) "")))
+                (concat (make-string (- (+ max-name-len 2) (length cand)) ?\s)
+                        (propertize (format "[%s]" label) 'face 'shadow)
+                        " "
+                        (propertize desc 'face 'completions-annotations))))))
+         (name (completing-read
+                "Skill: "
+                (lambda (str pred action)
+                  (if (eq action 'metadata)
+                      `(metadata (annotation-function . ,annotate))
+                    (complete-with-action
+                     action
+                     (mapcar (lambda (s) (plist-get s :name)) skills)
+                     str pred)))))
+         (skill (cl-find name skills
+                         :key (lambda (s) (plist-get s :name))
+                         :test #'equal))
+         (backend (plist-get skill :backend))
+         ;; Prompt for arguments using skill metadata
+         (hint (plist-get skill :argument-hint))
+         (candidates (ai-extras--skill-argument-candidates skill))
+         (default (plist-get skill :argument-default))
+         (multiple-p (plist-get skill :argument-multiple))
+         (args (cond
+                ((and candidates multiple-p)
+                 (let ((selected (completing-read-multiple
+                                  (format "Arguments %s: " (or hint ""))
+                                  candidates)))
+                   (when selected (string-join selected " "))))
+                (candidates
+                 (let ((selected (completing-read
+                                  (format "Arguments%s: "
+                                          (cond
+                                           ((and hint default)
+                                            (format " %s (default %s)" hint default))
+                                           (hint (format " %s" hint))
+                                           (default (format " (default %s)" default))
+                                           (t "")))
+                                  candidates nil nil nil nil default)))
+                   (unless (string-empty-p selected) selected)))
+                (hint
+                 (let ((input (read-string (format "Arguments %s: " hint))))
+                   (unless (string-empty-p input) input)))))
+         (run-fn (ai-extras--backend-get backend :run-skill)))
+    (unless run-fn
+      (user-error "Backend `%s' does not support `:run-skill'" backend))
+    (funcall run-fn name args)))
 
 ;;;###autoload
 (defun ai-extras-audit-project ()

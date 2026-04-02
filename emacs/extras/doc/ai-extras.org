@@ -103,6 +103,22 @@ The command ~ai-extras-disable-scrollback-truncation~ removes =eat='s default sc
 #+findex: ai-extras-snippet-tab
 The command ~ai-extras-snippet-tab~ attempts to expand a yasnippet key at the terminal prompt.  If no snippet key matches, it sends a literal =TAB= character to the terminal.  This command is bound to =TAB= in AI session buffers when yasnippet is available.
 
+** Dispatched tool commands
+:PROPERTIES:
+:CUSTOM_ID: h:dispatched-tool-commands
+:END:
+
+#+findex: ai-extras-run-skill
+The command ~ai-extras-run-skill~ discovers skills from all registered backends and presents them in a single completion list.  Each candidate is annotated with the backend it belongs to (e.g., =[Claude Code]= or =[Codex]=), so the user can see at a glance which tool will execute the skill.  After selecting a skill, the command prompts for arguments when the skill declares an argument hint, argument source, or argument choices in its frontmatter.  It then dispatches execution to the appropriate backend's ~:run-skill~ handler.
+
+This unified approach eliminates the need to choose a backend before browsing skills.  Backends that provide a ~:discover-skills~ function in their registration plist contribute their skills to the aggregated list ([[#h:backend-registration][Backend registration]]).
+
+#+findex: ai-extras-handoff
+#+findex: ai-extras-audit-project
+#+findex: ai-extras-debug-backtrace
+#+findex: ai-extras-exit
+The remaining dispatched commands (~ai-extras-handoff~, ~ai-extras-audit-project~, ~ai-extras-debug-backtrace~, ~ai-extras-exit~) resolve a single backend from the current buffer context or by prompting, then delegate to that backend's handler.
+
 * Functions
 :PROPERTIES:
 :CUSTOM_ID: h:functions
@@ -115,6 +131,8 @@ The command ~ai-extras-snippet-tab~ attempts to expand a yasnippet key at the te
 
 #+findex: ai-extras-register-backend
 The function ~ai-extras-register-backend~ registers an AI tool as a backend.  It takes a symbol (e.g., ~claude-code~ or ~codex~) and a property list with keys describing how to interact with that tool's sessions.  Required keys include ~:buffer-p~ (a predicate), ~:find-all-buffers~, ~:send-command~, ~:start-new~, and ~:icon~.
+
+Optional keys include ~:discover-skills~, a function returning a list of skill plists, and ~:run-skill~, a function that accepts a skill name and optional arguments.  When a backend provides ~:discover-skills~, its skills appear in the aggregated list shown by ~ai-extras-run-skill~ ([[#h:dispatched-tool-commands][Dispatched tool commands]]).
 
 Backend registration is typically done at load time by extension packages like =claude-code-extras.el= and =codex-extras.el=.
 
@@ -153,7 +171,7 @@ The function ~ai-extras-protect-buffer~ is intended for use in ~kill-buffer-quer
 #+findex: ai-extras-menu
 The command ~ai-extras-menu~ opens a unified transient dispatch menu for all AI session commands.  The base menu provides shared entries organized into columns: Sessions, Tools, Alerts, Buffer, and Options.
 
-Shared tool commands (~ai-extras-handoff~, ~ai-extras-run-skill~, ~ai-extras-audit-project~, ~ai-extras-debug-backtrace~) dispatch to the appropriate backend based on the current buffer context.  When not in a session buffer and multiple backends are registered, the user is prompted to choose one.
+Shared tool commands dispatch to the appropriate backend.  ~ai-extras-run-skill~ aggregates skills from all backends into a single list ([[#h:dispatched-tool-commands][Dispatched tool commands]]).  The remaining dispatched commands (~ai-extras-handoff~, ~ai-extras-audit-project~, ~ai-extras-debug-backtrace~) resolve a backend from the current buffer context; when not in a session buffer and multiple backends are registered, the user is prompted to choose one.
 
 Backend-specific extension packages append their own entries to the menu at load time via ~transient-append-suffix~.  For example, =claude-code-extras.el= adds account selection, branch navigation, batch processing, and status polling entries, while =codex-extras.el= adds a Codex theme sync toggle.
 

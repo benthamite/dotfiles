@@ -87,6 +87,8 @@ From the gathered data, compile a progress summary organized by project. For eac
 2. **Current state** — where the project stands now.
 3. **What's next** — the immediate next step.
 
+**Link everything.** Whenever a Slack message, Google Doc, GitHub PR/issue, or other external resource is mentioned, include an org-mode link to it. For Slack messages, use the deep link format `https://epochai.slack.com/archives/CHANNEL_ID/pTIMESTAMP` (remove the dot from the message `ts`). For GitHub, link to the PR/issue URL. For Google Docs, link to the doc URL. Never reference a message or document without linking to it.
+
 Also note any cross-cutting activity (e.g., responding to ad-hoc requests, Slack conversations not tied to a specific project).
 
 If there are discrepancies between sources (e.g., the session log says something different from the project status file), flag them for the user to resolve.

@@ -234,9 +234,18 @@ Call FN with ACTION, then also toggle Slack notifications."
   (funcall fn action)
   (tab-bar-extras-toggle-slack-notifications action))
 
+(defun slack-extras--register-tab-bar-element ()
+  "Append the Slack element to `tab-bar-extras-global-mode-string'."
+  (unless (memq tab-bar-extras-slack-element
+                tab-bar-extras-global-mode-string)
+    (setq tab-bar-extras-global-mode-string
+          (append tab-bar-extras-global-mode-string
+                  (list tab-bar-extras-slack-element)))))
+
 (with-eval-after-load 'tab-bar-extras
   (advice-add 'tab-bar-extras-toggle-notifications
-              :around #'slack-extras--also-toggle-slack))
+              :around #'slack-extras--also-toggle-slack)
+  (slack-extras--register-tab-bar-element))
 
 ;;;;; Menu
 

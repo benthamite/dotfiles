@@ -109,9 +109,9 @@ When nil, use the CLI default."
 ;;;; Backend registration
 
 (defconst codex-extras-icon-svg
-  "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 32 32\"><path stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"2.484\" d=\"M22.356 19.797H17.17M9.662 12.29l1.979 3.576a.511.511 0 0 1-.005.504l-1.974 3.409M30.758 16c0 8.15-6.607 14.758-14.758 14.758-8.15 0-14.758-6.607-14.758-14.758C1.242 7.85 7.85 1.242 16 1.242c8.15 0 14.758 6.608 14.758 14.758Z\"/></svg>"
-  "SVG path data for the Codex logo (terminal prompt in circle).
-Source: openai/codex repository (Apache 2.0).")
+  "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\"><defs><clipPath id=\"codex-hex\" clipPathUnits=\"userSpaceOnUse\"><path d=\"M10.7 2.1Q12 .95 13.3 2.1L20.7 6.3Q22.7 7.4 22.7 9v6q0 1.6-2 2.7l-7.4 4.2Q12 23.05 10.7 21.9l-7.4-4.2Q1.3 16.6 1.3 15V9q0-1.6 2-2.7Z\"/></clipPath></defs><path d=\"M10.7 2.1Q12 .95 13.3 2.1L20.7 6.3Q22.7 7.4 22.7 9v6q0 1.6-2 2.7l-7.4 4.2Q12 23.05 10.7 21.9l-7.4-4.2Q1.3 16.6 1.3 15V9q0-1.6 2-2.7Z\" fill=\"currentColor\" stroke=\"currentColor\" stroke-width=\".8\" stroke-linejoin=\"round\"/><g clip-path=\"url(#codex-hex)\" fill=\"none\" stroke=\"#fff\" stroke-width=\"1.35\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M-1 5.7H6C8.3 5.7 9.1 7.3 10.3 7.3H13.7C14.9 7.3 15.7 5.7 18 5.7H25\" opacity=\".6\"/><path d=\"M-1 8.35H6C8.3 8.35 9.1 9.95 10.3 9.95H13.7C14.9 9.95 15.7 8.35 18 8.35H25\" opacity=\".7\"/><path d=\"M-1 11H6C8.3 11 9.1 12.6 10.3 12.6H13.7C14.9 12.6 15.7 11 18 11H25\" opacity=\".85\"/><path d=\"M-1 13.65H6C8.3 13.65 9.1 15.25 10.3 15.25H13.7C14.9 15.25 15.7 13.65 18 13.65H25\" opacity=\"1\"/></g></svg>"
+  "SVG path data for the Codex logo (hexagon with stacked layers).
+Recreated from the official Codex product logo.")
 
 (ai-extras-register-backend 'codex
   (list :buffer-p #'codex--buffer-p

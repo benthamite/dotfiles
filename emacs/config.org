@@ -392,10 +392,10 @@ The extras come with their own manuals and user options: everything is documente
   - [[#aidermacs-extras][aidermacs-extras]]
   - [[#ob-aider][ob-aider]]
   - [[#agent-shell][agent-shell]]
-  - [[#ai-extras][ai-extras]]
   - [[#claude-code][claude-code]]
+  - [[#ai-extras][ai-extras]]
   - [[#claude-code-extras][claude-code-extras]]
-  - [[#claude-log][claude-log]]
+  - [[#agent-log][agent-log]]
   - [[#monet][monet]]
   - [[#codex][codex]]
   - [[#codex-extras][codex-extras]]
@@ -607,12 +607,16 @@ interfering with `face-spec-recalc' during theme switches."
 (early-init-blacken-screen)
 #+end_src
 
+I also disable package initialization at startup ([[github.com/radian-software/straight.el#getting-started][recommended]] for elpaca) and set =load-prefer-newer= to =t= to ensure that Emacs always loads the latest version of a package (useful during development when packages are frequently updated).
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally nil t)
+(setq package-enable-at-startup nil)
+(setq load-prefer-newer t)
+#+end_src
+
 Then, I set some frame parameters to remove the title bar and maximize the frame on startup.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally nil t)
-;; recommended for straight/elpaca (github.com/radian-software/straight.el#getting-started)
-(setq package-enable-at-startup nil)
-
 (add-to-list 'default-frame-alist '(undecorated-round . t)) ; remove title bar
 (add-to-list 'initial-frame-alist '(fullscreen . maximized)) ; maximize frame on startup
 #+end_src
@@ -5290,7 +5294,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
   (org-gcal-client-id (auth-source-pass-get "host" "auth-sources/org-gcal"))
   (org-gcal-client-secret (auth-source-pass-get 'secret "auth-sources/org-gcal"))
   (org-gcal-fetch-file-alist `((,(getenv "PERSONAL_GMAIL") . ,paths-file-calendar)
-			       (,(getenv "EPOCH_EMAIL") . ,paths-file-calendar)))
+                               (,(getenv "EPOCH_EMAIL") . ,paths-file-calendar)))
   (org-gcal-recurring-events-mode 'top-level)
   (org-gcal-remove-api-cancelled-events nil) ; never remove cancelled events
   (org-gcal-notify-p nil)
@@ -8853,6 +8857,9 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 #+end_src
 
 ** =ai-extras=
+:PROPERTIES:
+:ID:       2E2F1B58-BDCE-46D4-A31D-B1C5B0D8761F
+:END:
 
 /[[file:extras/ai-extras.el][ai-extras]] provides shared abstractions for AI coding CLI tool extensions./
 
@@ -8878,30 +8885,31 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (claude-code-extras-copilot-enabled nil)
   (claude-code-extras-org-todo-in-progress-keyword "DOING")
   (claude-code-extras-accounts '(("personal" . "~/.claude-personal")
+                                 ("tlon" . "~/.claude-tlon")
                                  ("work"     . "~/.claude-work")))
-  
-  :config
-  (with-eval-after-load 'debug
-    (bind-key "D" #'claude-code-extras-debug-backtrace debugger-mode-map)))
+
+  :bind
+  (:map debugger-mode-map
+        ("D" . org-extras-tlon-menu)))
 #+end_src
 
-** =claude-log=
+** =agent-log=
 :PROPERTIES:
 :ID:       E60F4A47-F939-4D66-8AF4-B460E15D40F0
 :END:
 
 
-/[[https://github.com/benthamite/claude-log][claude-log]] exports Claude Code conversation logs in Markdown format./
+/[[https://github.com/benthamite/agent-log][agent-log]] exports Claude Code conversation logs in Markdown format./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package claude-log
+(use-package agent-log
   :ensure (:host github
-                 :repo "benthamite/claude-log")
+                 :repo "benthamite/agent-log")
   :after claude-code
   :demand t
   :custom
-  (claude-log-summary-model 'gemini-flash-latest)
-  (claude-log-sync-on-session-end t))
+  (agent-log-summary-model 'gemini-flash-latest)
+  (agent-log-sync-on-session-end t))
 #+end_src
 
 ** =monet=
@@ -8929,11 +8937,14 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package codex
   :ensure (:host github
-		 :repo "benthamite/codex")
+                 :repo "benthamite/codex")
   :demand t)
 #+end_src
 
 ** =codex-extras=
+:PROPERTIES:
+:ID:       95F6DE93-E313-4F2A-8A5E-E27FDFF4E2BA
+:END:
 
 /[[file:extras/codex-extras.el][codex-extras]] collects my extensions for =codex=./
 
@@ -10593,7 +10604,7 @@ Note to self: Typescript syntax highlighting works fine, but calling ~org-edit-s
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-table-wrap
   :ensure (:host github
-		 :repo "benthamite/org-table-wrap")
+                 :repo "benthamite/org-table-wrap")
   :after org-table
   :demand t
   :custom
@@ -11151,16 +11162,16 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
   ;; and `org-roam-extras-excluded-files' are guaranteed to be defined (they
   ;; are void if org-roam loads first, e.g. via a citar idle timer).
   (setopt org-roam-file-exclude-regexp
-	  (let (result)
-	    (dolist (dir-or-file
-		     (append
-		      org-roam-extras-excluded-dirs
-		      org-roam-extras-excluded-files)
-		     (regexp-opt result))
-	      (push (if (file-directory-p dir-or-file)
-			(file-relative-name dir-or-file paths-dir-org-roam)
-		      dir-or-file)
-		    result))))
+          (let (result)
+            (dolist (dir-or-file
+                     (append
+                      org-roam-extras-excluded-dirs
+                      org-roam-extras-excluded-files)
+                     (regexp-opt result))
+              (push (if (file-directory-p dir-or-file)
+                        (file-relative-name dir-or-file paths-dir-org-roam)
+                      dir-or-file)
+                    result))))
   (org-roam-extras-setup-db-sync)
 
   :hook
@@ -12552,7 +12563,7 @@ CLOCK: [2021-04-15 Thu 16:13]--[2021-04-15 Thu 16:31] =>  0:18
         ("v" . mu4e-extras-headers-move)
         ("x" . mu4e-extras-open-gmail)
         :map mu4e-view-mode-map
-	("$" . mu4e-extras-copy-sum)
+        ("$" . mu4e-extras-copy-sum)
         (";" . mu4e-copy-message-path)
         ("D" . mu4e-extras-view-trash)
         ("e" . mu4e-extras-view-refile)
@@ -13137,17 +13148,17 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
   :demand t
   :bind
   (:map slack-activity-feed-buffer-mode-map
-	("E" . slack-extras-work-capture)
-	("o" . slack-extras-personal-capture)
-	("r" . slack-extras-thread-reply)
-	:map slack-activity-feed-buffer-mode-map
-	("E" . slack-extras-work-capture)
-	("o" . slack-extras-personal-capture)
-	("r" . slack-extras-thread-reply)
-	:map slack-message-buffer-mode-map
-	("E" . slack-extras-work-capture)
-	("o" . slack-extras-personal-capture)
-	("r" . slack-extras-thread-reply)))
+        ("E" . slack-extras-work-capture)
+        ("o" . slack-extras-personal-capture)
+        ("r" . slack-extras-thread-reply)
+        :map slack-thread-message-buffer-mode-map
+        ("E" . slack-extras-work-capture)
+        ("o" . slack-extras-personal-capture)
+        ("r" . slack-extras-thread-reply)
+        :map slack-message-buffer-mode-map
+        ("E" . slack-extras-work-capture)
+        ("o" . slack-extras-personal-capture)
+        ("r" . slack-extras-thread-reply)))
 #+end_src
 
 ** =ol-emacs-slack=
@@ -14398,6 +14409,7 @@ result to a user-specified file."
   (spofy-tab-bar-max-length nil)
   (spofy-tab-bar-alignment 'right)
   (spofy-enable-tab-bar t)
+  (spofy-tab-bar-format "%p %t %a %s%r %g")
   (spofy-consult-columns '((track 50 40 40) (album 50 40 6) (artist 50 45) (playlist 50 35) (device 45)))
 
   :bind (("A-y" . spofy-menu)))
@@ -14417,7 +14429,7 @@ result to a user-specified file."
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package epoch
   :ensure (:host github
-		 :repo "benthamite/epoch.el")
+                 :repo "benthamite/epoch.el")
   :demand t)
 #+end_src
 

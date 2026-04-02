@@ -8,7 +8,7 @@
 # precedence over stale .elc in elpaca/builds, and runs emacs --batch.
 #
 # Examples:
-#   batch-test.sh claude-log
+#   batch-test.sh agent-log
 #   batch-test.sh gptel-extras '(message "%s" (gptel-extras-some-fn))'
 
 set -euo pipefail

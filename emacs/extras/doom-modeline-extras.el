@@ -133,11 +133,14 @@ Uses strikethrough to indicate the cost is not actually charged."
       (concat (doom-modeline-spc)
               (format "✨(%s)" count)))))
   
-;;;;;; Claude Code status
+;;;;;; AI session status
 
-(declare-function claude-code--buffer-p "claude-code")
 (declare-function ai-extras--detect-backend "ai-extras")
+(declare-function ai-extras--backend-get "ai-extras")
 (declare-function ai-extras-backend-icon "ai-extras")
+(declare-function ai-extras-display-name "ai-extras")
+(declare-function ai-extras-alert-indicator "ai-extras")
+(declare-function ai-extras-toggle-alert "ai-extras")
 (declare-function claude-code-extras-status-model "claude-code-extras")
 (declare-function claude-code-extras-status-cost "claude-code-extras")
 (declare-function claude-code-extras-status-context-percent "claude-code-extras")
@@ -147,19 +150,16 @@ Uses strikethrough to indicate the cost is not actually charged."
 (declare-function claude-code-extras-status-duration-ms "claude-code-extras")
 (declare-function claude-code-extras-status-cache-read-tokens "claude-code-extras")
 (declare-function claude-code-extras-status-cache-total-tokens "claude-code-extras")
-(declare-function claude-code-extras-alert-indicator "claude-code-extras")
-(declare-function claude-code-extras-toggle-alert "claude-code-extras")
-(declare-function claude-code-extras--session-name "claude-code-extras")
 (declare-function claude-code-extras-display-name "claude-code-extras")
 (declare-function claude-code-extras-buffer-account "claude-code-extras")
+(defvar ai-extras-alert-on-ready)
 (defvar claude-code-extras--status-data)
-(defvar claude-code-extras-alert-on-ready)
 
 (defun doom-modeline-extras--toggle-alert-click (event)
-  "Toggle Claude Code alert from a mouse click EVENT in the modeline."
+  "Toggle AI session alert from a mouse click EVENT in the modeline."
   (interactive "e")
   (with-selected-window (posn-window (event-start event))
-    (claude-code-extras-toggle-alert)
+    (ai-extras-toggle-alert)
     (force-mode-line-update)))
 
 (defvar doom-modeline-extras--alert-map
@@ -169,24 +169,34 @@ Uses strikethrough to indicate the cost is not actually charged."
     map)
   "Keymap for clicking the alert indicator in the modeline.")
 
-(doom-modeline-def-segment claude-code-status
-  "Display Claude Code session status: model, tokens, cost, context%."
+(doom-modeline-def-segment ai-session-status
+  "Display AI session status for any registered backend.
+Shows icon, bold session name, and alert indicator for all
+backends.  When the backend is Claude Code and status data is
+available, additional fields (model, cost, context%) are inserted
+between the name and the alert indicator."
   (when (and doom-modeline-extras-claude-code
-             (fboundp 'claude-code--buffer-p)
-             (claude-code--buffer-p (current-buffer)))
-    (let ((icon (when (fboundp 'ai-extras--detect-backend)
-                  (let ((backend (ai-extras--detect-backend (current-buffer))))
-                    (when backend (ai-extras-backend-icon backend))))))
-      (if (bound-and-true-p claude-code-extras--status-data)
-          (doom-modeline-extras--format-claude-status icon)
-        (concat (doom-modeline-spc)
-                (when icon (concat icon " "))
-                (claude-code-extras-display-name)
-                (doom-modeline-spc))))))
+             (fboundp 'ai-extras--detect-backend))
+    (let ((backend (ai-extras--detect-backend (current-buffer))))
+      (when backend
+        (let ((icon (ai-extras-backend-icon backend))
+              (name (ai-extras-display-name (current-buffer))))
+          (concat
+           (doom-modeline-spc)
+           (when (and icon (not (string-empty-p icon)))
+             (concat icon " "))
+           (propertize name
+                       'face '(bold doom-modeline-buffer-major-mode)
+                       'help-echo (format "%s session" (or (ai-extras--backend-get backend :label) "AI")))
+           (when (and (eq backend 'claude-code)
+                      (bound-and-true-p claude-code-extras--status-data))
+             (doom-modeline-extras--format-claude-status-fields))
+           " | " (doom-modeline-extras--format-alert-indicator)
+           (doom-modeline-spc)))))))
 
-(defun doom-modeline-extras--format-claude-status (&optional icon)
-  "Assemble the Claude Code modeline string from status data.
-ICON is an optional backend icon string to prepend."
+(defun doom-modeline-extras--format-claude-status-fields ()
+  "Return Claude Code-specific status fields for the modeline.
+These are inserted between the session name and the alert indicator."
   (let ((model (claude-code-extras-status-model))
         (account (claude-code-extras-buffer-account))
         (tokens (claude-code-extras-status-token-count))
@@ -198,11 +208,6 @@ ICON is an optional backend icon string to prepend."
         (cache-read (claude-code-extras-status-cache-read-tokens))
         (cache-total (claude-code-extras-status-cache-total-tokens)))
     (concat
-     (doom-modeline-spc)
-     (when icon (concat icon " "))
-     (propertize (claude-code-extras-display-name)
-                 'face '(bold doom-modeline-buffer-major-mode)
-                 'help-echo "Claude Code session")
      (doom-modeline-extras--format-model model)
      (doom-modeline-extras--format-account account)
      (when (bound-and-true-p doom-modeline-extras-claude-code-tokens)
@@ -213,15 +218,13 @@ ICON is an optional backend icon string to prepend."
        (doom-modeline-extras--format-lines-changed added removed))
      (doom-modeline-extras--format-duration duration)
      (when (bound-and-true-p doom-modeline-extras-claude-code-cache-efficiency)
-       (doom-modeline-extras--format-cache-efficiency cache-read cache-total))
-     " | " (doom-modeline-extras--format-alert-indicator)
-     (doom-modeline-spc))))
+       (doom-modeline-extras--format-cache-efficiency cache-read cache-total)))))
 
 (defun doom-modeline-extras--format-alert-indicator ()
   "Format the alert indicator with click action and tooltip."
-  (propertize (claude-code-extras-alert-indicator)
+  (propertize (ai-extras-alert-indicator)
               'help-echo (format "Alert notifications: %s\nmouse-1: Toggle"
-                                 (if claude-code-extras-alert-on-ready
+                                 (if ai-extras-alert-on-ready
                                      "enabled" "disabled"))
               'mouse-face 'doom-modeline-highlight
               'local-map doom-modeline-extras--alert-map))
@@ -330,8 +333,8 @@ is a mode-line escape character."
 
 ;;;;; Modeline definitions
 
-(doom-modeline-def-modeline 'claude-code
-  '(bar claude-code-status)
+(doom-modeline-def-modeline 'ai-session
+  '(bar ai-session-status)
   '(misc-info major-mode process time))
 
 ;;;;; GitHub notifications

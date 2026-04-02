@@ -139,6 +139,15 @@ Source: SVG Repo (CC0).")
 
 ;;;; Functions
 
+;;;;; Mode line
+
+(declare-function doom-modeline-set-modeline "doom-modeline-core")
+
+(defun codex-extras-set-modeline ()
+  "Set the doom-modeline to the `ai-session' modeline for this buffer."
+  (when (codex--buffer-p (current-buffer))
+    (doom-modeline-set-modeline 'ai-session)))
+
 ;;;;; Theme sync
 
 (defun codex-extras--emacs-theme ()
@@ -459,6 +468,7 @@ unified session switcher."
 (add-hook 'codex-start-hook #'ai-extras-setup-snippet-keys)
 (add-hook 'codex-start-hook #'ai-extras-fix-rendering)
 (add-hook 'codex-start-hook #'codex-extras-sync-theme)
+(add-hook 'codex-start-hook #'codex-extras-set-modeline)
 (add-hook 'kill-buffer-hook #'ai-extras--release-session-key)
 (add-hook 'kill-buffer-hook #'ai-extras--refresh-display-names)
 (add-hook 'enable-theme-functions #'codex-extras-sync-theme)

@@ -182,8 +182,8 @@ BUF is a `slack-message-buffer'."
 
 (defun slack-extras-actionable-unreads-p ()
   "Return non-nil when there are Slack notifications worth attention.
-DMs, group DMs, and thread replies are actionable when unread.
-Channels are only actionable when they have @mentions."
+DMs and group DMs are actionable when unread.  Channels and
+threads are only actionable when they have @mentions."
   (catch 'found
     (maphash
      (lambda (_token team)
@@ -193,8 +193,8 @@ Channels are only actionable when they have @mentions."
                  (has-unreads (cadr e))
                  (mentions (cddr e)))
              (when (pcase type
-                     ((or 'im 'mpim 'thread) has-unreads)
-                     ('channel (> mentions 0)))
+                     ((or 'im 'mpim) has-unreads)
+                     ((or 'channel 'thread) (> mentions 0)))
                (throw 'found t))))))
      slack-teams-by-token)
     nil))

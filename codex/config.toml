@@ -1,0 +1,19 @@
+model = "gpt-5.4"
+model_reasoning_effort = "xhigh"
+[projects."/Users/pablostafforini/My Drive/repos/consensus-trader"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/.config/emacs-profiles/8.1.0-dev/elpaca/sources/codex"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/.config/emacs-profiles/8.1.0-dev/elpaca/sources/spofy"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/.config/emacs-profiles/8.1.0-dev/elpaca/sources/emacs-slack"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/.config/emacs-profiles/8.1.0-dev/elpaca/sources/org-table-wrap"]
+trust_level = "trusted"
+
+[tui]
+theme = "light"

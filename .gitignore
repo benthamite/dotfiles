@@ -21,3 +21,6 @@ ai-marketplace-monitor.log*
 claude/.claude/
 claude/skills/*/node_modules
 !CLAUDE.md
+
+## codex
+codex/.codex/

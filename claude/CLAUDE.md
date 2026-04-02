@@ -58,3 +58,4 @@ My dotfiles are in `~/My Drive/dotfiles/`. Many files and directories in `~` are
 ## Version control
 
 - **Important**: commit all changes you make immediately, unless I specify otherwise or the changes are temporary.
+- Prefer amending commits when iterating on the same logical change, unless the previous commit has already been pushed.

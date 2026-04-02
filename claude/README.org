@@ -164,7 +164,7 @@ Project-level instructions referencing the =dotfiles-context= skill. The global 
 
 - Fix root causes, not symptoms; no silent fallbacks.
 - Verify fixes before declaring them done.
-- Commit all changes immediately.
+- Commit all changes immediately; prefer amending when iterating on the same logical change (unless already pushed).
 - Pre-commit checklist (hook-enforced): batch-test Elisp before committing, stage =doc/*.org= with =.el= changes, stage =README.org= with =claude/= changes.
 - Use subagents and teams liberally; prefer the most powerful model.
 - Use =trash= instead of =rm -rf=; never send signals to Emacs without confirmation.
@@ -196,7 +196,7 @@ Describes the repository layout (the elpaca clone syncs automatically from Googl
 :ID:       EBC619A2-2402-43B0-8FBA-8A68EE29BB7D
 :END:
 
-Emacs Lisp coding standards: atomic functions, helper placement, docstring format. Documents the elpaca rebuild-wait-reload process enforced by the =load-elisp-after-edit= hook and prohibits ad-hoc reload mechanisms (=load-file=, =eval-buffer=, =eval-defun=). Also documents the critical =emacs --batch= testing pattern: elpaca builds on load-path first, then =push= =emacs/extras= to the front so the edited source always loads instead of the stale =.elc= from elpaca builds.
+Emacs Lisp coding standards: atomic functions, helper placement, docstring format. Documents the elpaca rebuild-wait-reload process enforced by the =load-elisp-after-edit= hook and prohibits ad-hoc reload mechanisms (=load-file=, =eval-buffer=, =eval-defun=). Also documents the critical =emacs --batch= testing pattern: elpaca builds on load-path first, then =push= =emacs/extras= to the front so the edited source always loads instead of the stale =.elc= from elpaca builds. Includes a transient menus section: after adding or modifying a =transient-define-prefix=, every suffix must be verified as an interactive command (transient defers validation to invocation time).
 
 ** Development skills
 :PROPERTIES:

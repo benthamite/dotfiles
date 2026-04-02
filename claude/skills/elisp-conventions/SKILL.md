@@ -41,6 +41,12 @@ A PreToolUse hook blocks `git commit` when `.el` files are staged until an `emac
 
 The script handles profile resolution, load-path setup, and stale `.elc` cleanup automatically.
 
+# Transient menus
+
+After adding or modifying a `transient-define-prefix`, verify that **every suffix symbol** is an interactive command. Transient defers suffix validation to invocation time, so byte-compilation and `commandp` on the prefix itself will not catch non-interactive suffixes. Before committing, check every suffix via `emacsclient -e '(interactive-form (quote SYMBOL))'` — any that return `nil` need an `(interactive)` spec added to their `defun`.
+
+# Batch testing details
+
 If you need to understand what the script does (e.g., for debugging), the key details:
 - All `elpaca/builds/*/` directories are added to `load-path` via `file-expand-wildcards`.
 - `emacs/extras` is pushed to the **front** so edited `.el` sources take precedence over stale `.elc` in elpaca builds.

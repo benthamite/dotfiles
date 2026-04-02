@@ -6174,7 +6174,7 @@ CLOCK: [2022-07-14 Thu 20:14]--[2022-07-14 Thu 20:17] =>  0:03
 
   :config
   (faces-extras-set-and-store-face-attributes
-   '((corfu-default :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-height)))
+   '((corfu-default :family faces-extras-fixed-pitch-font :height faces-extras-fixed-pitch-size)))
 
   (global-corfu-mode)
 

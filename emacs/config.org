@@ -8833,6 +8833,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :ensure (:host github
                  :repo "stevemolitor/claude-code.el" :branch "main"
                  :files ("*.el" (:exclude "images/*")))
+  :demand t
   :custom
   (claude-code-display-window-fn (lambda (_buffer) (claude-code-switch-to-buffer) nil))
   (claude-code-terminal-backend 'eat)

@@ -3039,7 +3039,7 @@ Signals an error if the status file is missing or incomplete."
   (transient-append-suffix 'ai-extras-menu '(0 1 -1)
     '("t" "send todo at point" claude-code-extras-send-todo-at-point))
   (transient-append-suffix 'ai-extras-menu '(0 1 -1)
-    '("l" "logs" claude-log-menu))
+    '("l" "logs" agent-log-menu))
   ;; Alerts column: add polling
   (transient-append-suffix 'ai-extras-menu '(0 2 -1)
     '("p" "start status polling" claude-code-extras-start-status-polling))

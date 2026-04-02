@@ -182,8 +182,8 @@ BUF is a `slack-message-buffer'."
 
 (defun slack-extras-actionable-unreads-p ()
   "Return non-nil when there are Slack notifications worth attention.
-DMs and group DMs are actionable when unread.  Channels and
-threads are only actionable when they have @mentions."
+DMs, group DMs and thread replies are actionable when unread.
+Channels are only actionable when they have @mentions."
   (catch 'found
     (maphash
      (lambda (_token team)
@@ -193,8 +193,8 @@ threads are only actionable when they have @mentions."
                  (has-unreads (cadr e))
                  (mentions (cddr e)))
              (when (pcase type
-                     ((or 'im 'mpim) has-unreads)
-                     ((or 'channel 'thread) (> mentions 0)))
+                     ((or 'im 'mpim 'thread) has-unreads)
+                     ('channel (> mentions 0)))
                (throw 'found t))))))
      slack-teams-by-token)
     nil))
@@ -235,12 +235,14 @@ Call FN with ACTION, then also toggle Slack notifications."
   (tab-bar-extras-toggle-slack-notifications action))
 
 (defun slack-extras--register-tab-bar-element ()
-  "Append the Slack element to `tab-bar-extras-global-mode-string'."
-  (unless (memq tab-bar-extras-slack-element
+  "Append the Slack element to `tab-bar-extras-global-mode-string'.
+The symbol is appended rather than its value so that `memq' can
+find it across reloads (interned symbols are always `eq')."
+  (unless (memq 'tab-bar-extras-slack-element
                 tab-bar-extras-global-mode-string)
     (setq tab-bar-extras-global-mode-string
           (append tab-bar-extras-global-mode-string
-                  (list tab-bar-extras-slack-element)))))
+                  '(tab-bar-extras-slack-element)))))
 
 (with-eval-after-load 'tab-bar-extras
   (advice-add 'tab-bar-extras-toggle-notifications

@@ -23,7 +23,9 @@ This manual describes the features and customization options for the Emacs Lisp 
 - A connect-and-select command that starts Slack if needed and immediately opens channel selection ([[#h:start-and-select][Start and select]]).
 - A command to disconnect all teams at once ([[#h:disconnect-all][Disconnect all]]).
 - Commands to capture the message at point to personal or work inboxes ([[#h:capture][Capture]]).
+- A command to open a thread and immediately start composing a reply ([[#h:thread-reply][Thread reply]]).
 - A command to yank the kill ring as a code block in compose buffers ([[#h:yank-code-block][Yank code block]]).
+- A tab-bar notification element showing Slack unreads and mentions ([[#h:tab-bar-notifications][Tab-bar notifications]]).
 - A transient dispatch menu organizing Slack operations by workflow ([[#h:transient-menu][Transient menu]]).
 
 The package depends on =slack=, =ol= and =transient=.
@@ -68,6 +70,14 @@ The command ~slack-extras-personal-capture~ captures the Slack message at point 
 #+findex: slack-extras-work-capture
 The command ~slack-extras-work-capture~ captures the Slack message at point to the work inbox via ~org-capture~ template =S=. It is bound to =E= in ~slack-activity-feed-buffer-mode-map~ and ~slack-message-buffer-mode-map~.
 
+** Thread reply
+:PROPERTIES:
+:CUSTOM_ID: h:thread-reply
+:END:
+
+#+findex: slack-extras-thread-reply
+The command ~slack-extras-thread-reply~ opens the thread for the message at point and immediately opens a compose buffer for replying. If the message already has a thread, it opens the existing thread; otherwise it starts a new one. When already inside a thread buffer, it simply opens the compose buffer. This saves the two-step workflow of first opening a thread and then hitting compose.
+
 ** Yank code block
 :PROPERTIES:
 :CUSTOM_ID: h:yank-code-block
@@ -75,6 +85,22 @@ The command ~slack-extras-work-capture~ captures the Slack message at point to t
 
 #+findex: slack-extras-yank-code-block
 The command ~slack-extras-yank-code-block~ inserts the current kill ring entry wrapped in Slack triple-backtick code block markers. This is useful when composing messages in ~slack-message-compose-buffer-mode~ and you want to paste code.
+
+* Tab-bar notifications
+:PROPERTIES:
+:CUSTOM_ID: h:tab-bar-notifications
+:END:
+
+#+vindex: tab-bar-extras-slack-notifications-enabled
+The variable ~tab-bar-extras-slack-notifications-enabled~ controls whether the Slack notification element is displayed in the tab bar. It defaults to ~t~.
+
+#+findex: slack-extras-actionable-unreads-p
+The function ~slack-extras-actionable-unreads-p~ determines whether there are Slack notifications worth the user's attention. It iterates over all connected teams and inspects the counts summary from =slack-counts=. DMs, group DMs and thread replies are considered actionable whenever they have unreads. Channels are only actionable when they have @mentions, filtering out general channel noise.
+
+The tab-bar element ~tab-bar-extras-slack-element~ displays a Slack icon (from =nerd-icons=) and a badge when ~slack-extras-actionable-unreads-p~ returns non-nil. The badge shows the total mention count, or a bullet (~•~) when there are actionable unreads but no @mentions (such as thread replies or DMs).
+
+#+findex: tab-bar-extras-toggle-slack-notifications
+The command ~tab-bar-extras-toggle-slack-notifications~ toggles Slack notifications in the tab bar. It also participates in the master toggle: when ~tab-bar-extras-toggle-notifications~ is called, Slack notifications are toggled along with the other notification sources.
 
 ** Transient menu
 :PROPERTIES:
@@ -87,7 +113,7 @@ The command ~slack-extras-menu~ presents a transient menu that organizes Slack c
 *Row 1: messaging*
 
 - *Navigate*: select channel (~c~), group (~g~), direct message (~m~), rooms (~u~), unread rooms (~U~), all threads (~a~).
-- *Message*: show or create thread (~d~), edit (~e~), delete (~D~), compose in buffer (~z~), share (~s~), copy link (~l~), quote and reply (~Q~).
+- *Message*: show or create thread (~d~), thread reply (~Z~), edit (~e~), delete (~D~), compose in buffer (~z~), share (~s~), copy link (~l~), copy id (~I~), quote and reply (~Q~).
 - *React & pin*: add reaction (~r~), remove reaction (~R~), pin (~p~), unpin (~P~), pins list (~n~).
 - *File*: upload (~f~), quick upload (~F~), upload snippet (~S~), download at point (~x~).
 

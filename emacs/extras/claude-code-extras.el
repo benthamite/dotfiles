@@ -279,7 +279,7 @@ consumed by the Stop hook handler.")
         :send-command (lambda (cmd &optional _buf) (claude-code--do-send-command cmd))
         :start #'claude-code--start
         :start-new #'claude-code-extras--start-with-account
-        :program claude-code-program
+        :program "claude"
         :send-return (lambda (&optional _buf)
                        (claude-code--term-send-return claude-code-terminal-backend))
         :icon (lambda () (if (require 'nerd-icons nil t)
@@ -290,9 +290,21 @@ consumed by the Stop hook handler.")
         :run-skill #'claude-code-extras-run-skill
         :audit-project #'claude-code-extras-audit-project
         :debug-backtrace #'claude-code-extras-debug-backtrace
-        :setup-kill-on-exit #'claude-code-extras-setup-kill-on-exit))
+        :setup-kill-on-exit #'claude-code-extras-setup-kill-on-exit
+        :exit #'claude-code-extras-exit))
 
 ;;;; Functions
+
+;;;;; Exit
+
+;;;###autoload
+(defun claude-code-extras-exit ()
+  "Exit the current Claude Code session.
+Sends `/exit' to the CLI, which terminates the process.  The
+sentinel installed by `claude-code-extras-setup-kill-on-exit'
+then kills the buffer."
+  (interactive)
+  (claude-code--do-send-command "/exit"))
 
 ;;;;; C-g fix
 
@@ -479,7 +491,9 @@ the session has branches, prompts for confirmation before killing."
            (when (and (buffer-live-p buf)
                       (with-current-buffer buf
                         (claude-code-extras--confirm-kill-branches)))
-             (kill-buffer buf))))))))
+             (condition-case nil
+                 (kill-buffer buf)
+               (error nil)))))))))
 
 (defun claude-code-extras-fix-rendering ()
   "Send SIGWINCH to fix terminal rendering after startup.

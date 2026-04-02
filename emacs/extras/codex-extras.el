@@ -128,7 +128,8 @@ When nil, use the CLI default."
         :run-skill #'codex-extras-run-skill
         :audit-project #'codex-extras-audit-project
         :debug-backtrace #'codex-extras-debug-backtrace
-        :setup-kill-on-exit #'codex-extras-setup-kill-on-exit))
+        :setup-kill-on-exit #'codex-extras-setup-kill-on-exit
+        :exit #'codex-extras-exit))
 
 ;;;; Functions
 
@@ -470,7 +471,26 @@ unified session switcher."
   (transient-append-suffix 'ai-extras-menu '(1 1 -1)
     '("-t" codex-extras--infix-sync-theme)))
 
-;;;;; Kill on exit
+;;;;; Exit and kill on exit
+
+;;;###autoload
+(defun codex-extras-exit ()
+  "Exit the current Codex session and kill its buffer.
+Codex CLI does not support `/exit', so this sends the process a
+SIGHUP and kills the buffer from the Emacs side."
+  (interactive)
+  (ai-extras-kill-session-buffer))
+
+(defun codex-extras--intercept-exit (orig-fn cmd)
+  "Intercept `/exit' and kill the session instead of forwarding it.
+ORIG-FN is `codex--do-send-command'.  CMD is the command string.
+Codex CLI does not recognize `/exit', so we handle it on the
+Emacs side to match Claude Code's behavior."
+  (if (string= (string-trim cmd) "/exit")
+      (when-let* ((buf (codex--get-or-prompt-for-buffer)))
+        (with-current-buffer buf
+          (codex-extras-exit)))
+    (funcall orig-fn cmd)))
 
 (defun codex-extras-setup-kill-on-exit ()
   "Arrange for the buffer to be killed when the Codex process exits."
@@ -484,9 +504,12 @@ unified session switcher."
          (lambda (process event)
            (when orig (funcall orig process event))
            (when (buffer-live-p buf)
-             (kill-buffer buf))))))))
+             (condition-case nil
+                 (kill-buffer buf)
+               (error nil)))))))))
 
 (add-hook 'codex-start-hook #'codex-extras-setup-kill-on-exit)
+(advice-add 'codex--do-send-command :around #'codex-extras--intercept-exit)
 
 ;;;; Provide
 

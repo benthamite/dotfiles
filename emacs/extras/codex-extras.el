@@ -143,10 +143,36 @@ Source: SVG Repo (CC0).")
 
 (declare-function doom-modeline-set-modeline "doom-modeline-core")
 
+(defvar-local codex-extras--start-time nil
+  "Time when this Codex session started.")
+
+(defun codex-extras--read-config-model ()
+  "Read the model from `~/.codex/config.toml'."
+  (let ((config (expand-file-name "~/.codex/config.toml")))
+    (when (file-exists-p config)
+      (with-temp-buffer
+        (insert-file-contents config)
+        (goto-char (point-min))
+        (when (re-search-forward "^model *= *\"\\([^\"]+\\)\"" nil t)
+          (match-string 1))))))
+
 (defun codex-extras-set-modeline ()
-  "Set the doom-modeline to the `ai-session' modeline for this buffer."
+  "Set the doom-modeline to the `ai-session' modeline for this buffer.
+Also records the session start time."
   (when (codex--buffer-p (current-buffer))
+    (setq codex-extras--start-time (current-time))
     (doom-modeline-set-modeline 'ai-session)))
+
+(defun codex-extras-status-model ()
+  "Return the model name for the current Codex session."
+  (codex-extras--read-config-model))
+
+(defun codex-extras-status-duration-ms ()
+  "Return session duration in milliseconds, or nil."
+  (when codex-extras--start-time
+    (truncate (* 1000 (float-time
+                       (time-subtract (current-time)
+                                      codex-extras--start-time))))))
 
 ;;;;; Theme sync
 

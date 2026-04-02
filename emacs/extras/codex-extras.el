@@ -124,6 +124,7 @@ When nil, use the CLI default."
                              (nerd-icons-mdicon "nf-md-hexagon_outline")
                            "CX"))
         :label "Codex"
+        :discover-skills #'codex-extras--discover-skills
         :handoff #'codex-extras-handoff
         :run-skill #'codex-extras-run-skill
         :audit-project #'codex-extras-audit-project

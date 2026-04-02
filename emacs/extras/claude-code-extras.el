@@ -286,6 +286,7 @@ consumed by the Stop hook handler.")
                              (nerd-icons-mdicon "nf-md-star_four_points_outline")
                            "CC"))
         :label "Claude Code"
+        :discover-skills #'claude-code-extras--discover-skills
         :handoff #'claude-code-extras-handoff
         :run-skill #'claude-code-extras-run-skill
         :audit-project #'claude-code-extras-audit-project

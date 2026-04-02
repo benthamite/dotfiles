@@ -152,6 +152,8 @@ Uses strikethrough to indicate the cost is not actually charged."
 (declare-function claude-code-extras-status-cache-total-tokens "claude-code-extras")
 (declare-function claude-code-extras-display-name "claude-code-extras")
 (declare-function claude-code-extras-buffer-account "claude-code-extras")
+(declare-function codex-extras-status-model "codex-extras")
+(declare-function codex-extras-status-duration-ms "codex-extras")
 (defvar ai-extras-alert-on-ready)
 (defvar claude-code-extras--status-data)
 
@@ -188,9 +190,12 @@ between the name and the alert indicator."
            (propertize name
                        'face '(bold doom-modeline-buffer-major-mode)
                        'help-echo (format "%s session" (or (ai-extras--backend-get backend :label) "AI")))
-           (when (and (eq backend 'claude-code)
-                      (bound-and-true-p claude-code-extras--status-data))
-             (doom-modeline-extras--format-claude-status-fields))
+           (pcase backend
+             ('claude-code
+              (when (bound-and-true-p claude-code-extras--status-data)
+                (doom-modeline-extras--format-claude-status-fields)))
+             ('codex
+              (doom-modeline-extras--format-codex-status-fields)))
            " | " (doom-modeline-extras--format-alert-indicator)
            (doom-modeline-spc)))))))
 
@@ -219,6 +224,14 @@ These are inserted between the session name and the alert indicator."
      (doom-modeline-extras--format-duration duration)
      (when (bound-and-true-p doom-modeline-extras-claude-code-cache-efficiency)
        (doom-modeline-extras--format-cache-efficiency cache-read cache-total)))))
+
+(defun doom-modeline-extras--format-codex-status-fields ()
+  "Return Codex-specific status fields for the modeline."
+  (let ((model (codex-extras-status-model))
+        (duration (codex-extras-status-duration-ms)))
+    (concat
+     (doom-modeline-extras--format-model model)
+     (doom-modeline-extras--format-duration duration))))
 
 (defun doom-modeline-extras--format-alert-indicator ()
   "Format the alert indicator with click action and tooltip."

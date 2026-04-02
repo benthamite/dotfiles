@@ -51,3 +51,5 @@ description: AI macrostrategy thinkers — surface original analysis on AI traje
 - @sethlazar
 - @TheZvi
 - @tomekkorbak
+- @allTheYud
+- @ahall_research

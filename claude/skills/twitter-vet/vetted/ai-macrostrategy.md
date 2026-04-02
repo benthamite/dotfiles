@@ -43,3 +43,7 @@
 - **@TheZvi** (7, 2026-03-31) — AI commentator. AI Doc analysis, alignment positioning, social dynamics. ~60% AI macro content.
 - **@metzgov** (6, 2026-03-31) — AI polling analysis with specific data points. ~30% AI macro content.
 - **@CharlesFLehman** (6, 2026-03-31) — AI complement-vs-substitute survey analysis. ~40% AI macro content.
+
+- **@allTheYud** (8, 2026-04-02) — Eliezer Yudkowsky (11K). Foundational alignment voice. x-risk, AI psychosis, engineering analogies. ~50% AI macro but extremely high quality.
+- **@ahall_research** (8, 2026-04-02) — AI governance researcher (8.2K). Dictatorship Eval, space governance, agent coordination. ~80% macro AI content.
+- **@AndyMasley** (6, 2026-04-02) — Data center energy analysis (11.6K). Good infrastructure debunking but only ~40% AI macro. Borderline.

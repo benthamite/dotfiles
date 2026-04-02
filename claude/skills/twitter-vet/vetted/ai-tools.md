@@ -56,3 +56,6 @@
 - **@altryne** (7, 2026-03-31) — Claude Code ecosystem expert. Cache-invalidation investigation, weekly show host. ~60% AI tools content.
 - **@kr0der** (7, 2026-03-31) — Comparative Claude/GPT workflows, /codex skills, review anti-patterns. ~70% AI tools content.
 - **@adamdotdev** (6, 2026-03-31) — AI storybook pages for designers. Great single workflow tip but broader dev focus. ~35% AI tools content.
+
+- **@__tinygrad__** (7, 2026-04-02) — tinygrad/tinybox creator (69K). Local AI hardware advocacy: eGPU drivers for Mac (AMD+NVIDIA), tok/s benchmarks, budget recs. ~80% AI tools content.
+- **@anemll** (6, 2026-04-02) — Flash-MoE SSD streaming for Apple Silicon LLMs (3.5K). Very niche, many emoji-only tweets. Borderline.

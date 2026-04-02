@@ -8889,9 +8889,9 @@ The author provides a good overview of the package in [[https://www.youtube.com/
                                  ("tlon" . "~/.claude-tlon")
                                  ("work"     . "~/.claude-work")))
 
-  :bind
-  (:map debugger-mode-map
-        ("D" . org-extras-tlon-menu)))
+  :config
+  (with-eval-after-load 'debug
+    (keymap-set debugger-mode-map "D" #'org-extras-tlon-menu)))
 #+end_src
 
 ** =agent-log=

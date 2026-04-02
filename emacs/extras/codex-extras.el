@@ -97,6 +97,7 @@ When nil, use the CLI default."
 (defvar gptel-model)
 (defvar gptel-use-tools)
 (defvar gptel--known-backends)
+(declare-function ai-extras-svg-icon "ai-extras" (svg-data &optional face))
 (declare-function debug-save-backtrace "init" ())
 (declare-function gptel-request "gptel")
 (declare-function elpaca-get "elpaca")
@@ -106,6 +107,11 @@ When nil, use the CLI default."
 (defvar paths-dir-downloads)
 
 ;;;; Backend registration
+
+(defconst codex-extras-icon-svg
+  "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 32 32\"><path stroke=\"currentColor\" stroke-linecap=\"round\" stroke-width=\"2.484\" d=\"M22.356 19.797H17.17M9.662 12.29l1.979 3.576a.511.511 0 0 1-.005.504l-1.974 3.409M30.758 16c0 8.15-6.607 14.758-14.758 14.758-8.15 0-14.758-6.607-14.758-14.758C1.242 7.85 7.85 1.242 16 1.242c8.15 0 14.758 6.608 14.758 14.758Z\"/></svg>"
+  "SVG path data for the Codex logo (terminal prompt in circle).
+Source: openai/codex repository (Apache 2.0).")
 
 (ai-extras-register-backend 'codex
   (list :buffer-p #'codex--buffer-p
@@ -120,9 +126,8 @@ When nil, use the CLI default."
         :program "codex"
         :send-return (lambda (&optional _buf)
                        (codex--term-send-return codex-terminal-backend))
-        :icon (lambda () (if (require 'nerd-icons nil t)
-                             (nerd-icons-mdicon "nf-md-hexagon_outline")
-                           "CX"))
+        :icon (lambda () (let ((svg (ai-extras-svg-icon codex-extras-icon-svg)))
+                           (if (string-empty-p svg) "CX" svg)))
         :label "Codex"
         :discover-skills #'codex-extras--discover-skills
         :handoff #'codex-extras-handoff

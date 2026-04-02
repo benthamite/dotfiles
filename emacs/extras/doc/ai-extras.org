@@ -181,7 +181,7 @@ The function ~ai-extras-protect-buffer~ is intended for use in ~kill-buffer-quer
 #+findex: ai-extras-menu
 The command ~ai-extras-menu~ opens a unified transient dispatch menu for all AI session commands.  The base menu provides shared entries organized into columns: Sessions, Tools, Alerts, Buffer, and Options.
 
-Shared tool commands dispatch to the appropriate backend.  ~ai-extras-run-skill~ aggregates skills from all backends into a single list ([[#h:dispatched-tool-commands][Dispatched tool commands]]).  The remaining dispatched commands (~ai-extras-handoff~, ~ai-extras-audit-project~, ~ai-extras-debug-backtrace~) resolve a backend from the current buffer context; when not in a session buffer and multiple backends are registered, the user is prompted to choose one.
+Shared tool commands dispatch to the appropriate backend.  ~ai-extras-run-skill~ aggregates skills from all backends into a single list ([[#h:dispatched-tool-commands][Dispatched tool commands]]).  The remaining dispatched commands (~ai-extras-handoff~, ~ai-extras-audit-project~, ~ai-extras-debug-backtrace~) resolve a backend from the current buffer context; when not in a session buffer and multiple backends are registered, the user is prompted to choose one.  The backend prompt displays each backend's SVG icon to the left of its label ([[#h:svg-icons][SVG icons]]).
 
 Backend-specific extension packages append their own entries to the menu at load time via ~transient-append-suffix~.  For example, =claude-code-extras.el= adds account selection, branch navigation, batch processing, and status polling entries, while =codex-extras.el= adds a Codex theme sync toggle.
 

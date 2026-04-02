@@ -65,7 +65,8 @@ Optional command keys for dispatching shared commands:
   :run-skill             function () (discover and run a skill)
   :audit-project         function () (run audit skills on a project)
   :debug-backtrace       function () (analyze backtrace, start session)
-  :setup-kill-on-exit    function () (auto-kill buffer on process exit)")
+  :setup-kill-on-exit    function () (auto-kill buffer on process exit)
+  :exit                  function () (exit session and kill buffer)")
 
 (defvar-local ai-extras--backend nil
   "Cached backend symbol for this buffer.")
@@ -366,6 +367,28 @@ Returns t if the buffer should be killed, nil otherwise."
       (not (process-live-p (get-buffer-process (current-buffer))))
       (yes-or-no-p "Kill AI session buffer? ")))
 
+;;;; Session exit
+
+(defun ai-extras-kill-session-buffer ()
+  "Kill the current AI session buffer, bypassing all confirmation prompts.
+Terminates the CLI process if still running, then kills the
+buffer.  Signals an error unless the current buffer is an AI
+session."
+  (interactive)
+  (unless (ai-extras--detect-backend (current-buffer))
+    (user-error "Not in an AI session buffer"))
+  (ai-extras--force-kill-buffer (current-buffer)))
+
+(defun ai-extras--force-kill-buffer (buffer)
+  "Terminate the process in BUFFER and kill it without prompts."
+  (when-let* ((proc (get-buffer-process buffer)))
+    (set-process-query-on-exit-flag proc nil)
+    (set-process-sentinel proc #'ignore)
+    (delete-process proc))
+  (let ((kill-buffer-query-functions
+         (remq 'ai-extras-protect-buffer kill-buffer-query-functions)))
+    (kill-buffer buffer)))
+
 ;;;; Alert and notification system
 
 (defun ai-extras-notify (title message)
@@ -637,6 +660,14 @@ Dispatches to the appropriate backend."
   (interactive)
   (ai-extras--dispatch :setup-kill-on-exit))
 
+;;;###autoload
+(defun ai-extras-exit ()
+  "Exit the current AI session and kill its buffer.
+Dispatches to the backend's `:exit' handler, which should
+terminate the CLI process and kill the buffer."
+  (interactive)
+  (ai-extras--dispatch :exit))
+
 ;;;; Transient boolean infix class
 
 (eval-and-compile
@@ -656,7 +687,8 @@ Dispatches to the appropriate backend."
   [["Sessions"
     ("e" "start or switch" ai-extras-start-or-switch)
     ("w" "jump to waiting" ai-extras-jump-to-waiting)
-    ("h" "handoff" ai-extras-handoff)]
+    ("h" "handoff" ai-extras-handoff)
+    ("x" "exit session" ai-extras-exit)]
    ["Tools"
     ("s" "run skill" ai-extras-run-skill)
     ("A" "audit project" ai-extras-audit-project)

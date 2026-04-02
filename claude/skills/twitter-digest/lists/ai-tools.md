@@ -45,3 +45,4 @@ description: Practical AI tool workflows, tips, and tutorials from practitioners
 - @iotcoi
 - @altryne
 - @kr0der
+- @__tinygrad__

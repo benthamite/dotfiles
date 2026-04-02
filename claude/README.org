@@ -344,7 +344,7 @@ Extracts and records architectural decisions from the current session into =deci
 :CUSTOM_ID: h:open-session-log
 :END:
 
-Opens the current Claude Code session's conversation log in Emacs using the =claude-log= package. Walks up the process tree to find the session ID, then calls =claude-log-open-session= via =emacsclient=.
+Opens the current Claude Code session's conversation log in Emacs using the =agent-log= package. Walks up the process tree to find the session ID, then calls =agent-log-open-session= via =emacsclient=.
 
 *** new-project
 :PROPERTIES:
@@ -569,7 +569,7 @@ Resolves the active elpaca profile dynamically (via =emacsclient -e 'init-curren
 :ID:       8A2F3E91-4D5C-4B8F-9E3A-7C6D2A1F0B94
 :END:
 
-Forwards the session-end event to Emacs via =claude-code-handle-hook=. Runs through =fire-and-forget.sh= so the CLI doesn't block on =emacsclient=. Works together with =claude-log-sync-on-session-end= to trigger log syncing when a session ends.
+Forwards the session-end event to Emacs via =claude-code-handle-hook=. Runs through =fire-and-forget.sh= so the CLI doesn't block on =emacsclient=. Works together with =agent-log-sync-on-session-end= to trigger log syncing when a session ends.
 
 ** claude-code-hook-wrapper (Notification, Stop)
 :PROPERTIES:

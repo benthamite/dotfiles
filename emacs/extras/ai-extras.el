@@ -102,6 +102,21 @@ it is called to produce the icon."
   (let ((icon (ai-extras--backend-get backend :icon)))
     (if (functionp icon) (funcall icon) (or icon ""))))
 
+(defun ai-extras-svg-icon (svg-data &optional face)
+  "Return a propertized string displaying SVG-DATA as an inline icon.
+FACE determines the color and height; it defaults to `mode-line'.
+The SVG should use \"currentColor\" for fill or stroke attributes,
+which this function replaces with the foreground color of FACE.
+Falls back to an empty string when SVG support is unavailable."
+  (if (not (image-type-available-p 'svg))
+      ""
+    (let* ((face (or face 'mode-line))
+           (fg (face-foreground face nil t))
+           (h (window-font-height nil face))
+           (colored (replace-regexp-in-string "currentColor" (or fg "#000") svg-data t t))
+           (img (create-image colored 'svg t :height h :ascent 'center)))
+      (propertize " " 'display img 'rear-nonsticky '(display)))))
+
 (defun ai-extras--find-all-buffers ()
   "Return all active AI session buffers across all backends."
   (let (result)

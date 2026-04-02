@@ -21,7 +21,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The package builds on =ai-extras.el= ([[info:ai-extras#Top][ai-extras]]) for shared functionality such as the unified session switcher, home-row key assignments, buffer protection, notifications, snippet expansion, and terminal fixes.  Codex-specific features include theme synchronization with Codex's TOML configuration, a skill runner that discovers skills from Codex's =.agents/skills/= directories, and notification handling for Codex CLI hook events.
 
-At load time, =codex-extras.el= registers the Codex backend with =ai-extras.el= and installs hooks on ~codex-start-hook~, ~codex-event-hook~, and standard Emacs hooks to integrate all features automatically.
+At load time, =codex-extras.el= registers the Codex backend with =ai-extras.el= and installs hooks on ~codex-start-hook~, ~codex-event-hook~, and standard Emacs hooks to integrate all features automatically.  The backend icon is the official Codex terminal-prompt logo rendered as an inline SVG via ~ai-extras-svg-icon~ ([[info:ai-extras#h:svg-icons][SVG icons]]).
 
 * User options
 :PROPERTIES:

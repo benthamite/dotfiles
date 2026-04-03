@@ -1389,6 +1389,7 @@ file."
 (declare-function ebib-extras-search-letterboxd "ebib-extras")
 (declare-function bib-search-letterboxd "bib")
 (defvar bib-letterboxd-url)
+(defvar bib-letterboxd-use-slug-p)
 (defun ebib-extras-set-rating ()
   "Set rating of current entry.
 If applicable, open external website to set rating there as well."
@@ -1410,7 +1411,8 @@ If applicable, open external website to set rating there as well."
        (let ((lbx-slug (ebib-extras-get-field "letterboxd")))
          (if (and lbx-slug (not (string-empty-p lbx-slug)))
              (browse-url (format bib-letterboxd-url lbx-slug))
-           (let ((slug (bib-search-letterboxd title)))
+           (let ((slug (let ((bib-letterboxd-use-slug-p t))
+                          (bib-search-letterboxd title))))
              (when slug
                (ebib-set-field-value "letterboxd" slug (ebib--get-key-at-point)
                                      ebib--cur-db 'overwrite)

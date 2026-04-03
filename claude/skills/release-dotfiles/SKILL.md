@@ -5,21 +5,7 @@ description: Release a new version of the dotfiles repo after verifying all pack
 
 # Dotfiles release
 
-Cut a new release for the dotfiles repo (benthamite/dotfiles) on GitHub. Before releasing, verify that every personal package repo has a clean working tree in its local elpaca clone.
-
-## Packages source
-
-Read **all packages** (listed + unlisted) from:
-
-```
-~/My Drive/notes/pablos-miscellany/my-emacs-packages.org
-```
-
-Parse with:
-
-```bash
-grep -E '^\*{2,3} =' ~/My\ Drive/notes/pablos-miscellany/my-emacs-packages.org | sed 's/^\*\{2,3\} =//;s/=$//'
-```
+Cut a new release for the dotfiles repo (benthamite/dotfiles) on GitHub. Before releasing, verify that every repo in the elpaca sources directory has a clean working tree.
 
 ## Elpaca profile resolution
 
@@ -27,7 +13,7 @@ Resolve the active elpaca profile dynamically — never hard-code a profile name
 
 ```bash
 PROFILE=$(emacsclient -e 'init-current-profile' | tr -d '"')
-ELPACA_REPOS=~/.config/emacs-profiles/$PROFILE/elpaca/repos
+ELPACA_SOURCES=~/.config/emacs-profiles/$PROFILE/elpaca/sources
 ```
 
 ## Mode selection
@@ -52,51 +38,61 @@ Do NOT clone the repo — the user must already be in it.
 
 ---
 
-## Step 1: Check all package repos are clean and pushed
+## Step 1: Check all elpaca source repos are clean and pushed
 
-For each package parsed from the org file, check its local elpaca clone for a clean working tree **and** no unpushed commits. The goal is to ensure no local changes are lost when switching to a new elpaca profile.
-
-### Finding the elpaca directory
-
-For each package name, look up its directory in `$ELPACA_REPOS`:
-
-1. Try `$ELPACA_REPOS/<name>` (exact match).
-2. If not found, try stripping the `.el` suffix: `$ELPACA_REPOS/<name-without-.el>` (handles `stafforini.el` → `stafforini`, `tangodb.el` → `tangodb`).
-3. If still not found, **warn** but do not abort — the package may not be installed in the current profile.
+Iterate over every subdirectory in `$ELPACA_SOURCES` that is a git repository. For each, check for uncommitted changes **and** unpushed commits. The goal is to ensure no local changes are lost when switching to a new elpaca profile.
 
 ### Cleanliness check
 
-For each found directory, check both uncommitted changes and unpushed commits:
+For each git repo in `$ELPACA_SOURCES`:
 
 ```bash
-git -C "$ELPACA_REPOS/<dir>" status --porcelain
+git -C "$ELPACA_SOURCES/<dir>" status --porcelain
 ```
 
 If the output is non-empty, the repo is **dirty**.
 
 ```bash
-unpushed=$(git -C "$ELPACA_REPOS/<dir>" log --oneline @{u}..HEAD 2>/dev/null)
+unpushed=$(git -C "$ELPACA_SOURCES/<dir>" log --oneline @{u}..HEAD 2>/dev/null)
 rc=$?
 ```
 
 If `rc` is non-zero, the branch has **no upstream configured** — warn but do not abort. If `rc` is zero and the output is non-empty, the repo has **unpushed commits**.
 
-### Output
+### Auto-push unpushed repos
 
-Present a summary table:
+For repos that are **clean but have unpushed commits** (i.e., not dirty), push them automatically without asking. Report any push failures (e.g., permission denied on forks).
+
+### Report dirty repos
+
+Only report repos that are **dirty**. Present a table of problems:
 
 ```
 | Package          | Status                   |
 |------------------|--------------------------|
-| annas-archive    | clean                    |
 | bib              | dirty                    |
-| gdocs            | 14 unpushed              |
-| ledger-prices    | skipped (not in profile) |
+| gdocs            | dirty + 51 unpushed      |
+| emacs-slack      | dirty + no upstream      |
 ```
 
-If **any** repo is dirty or has unpushed commits, **abort the release**. List the affected repos and tell the user to commit/stash/push before retrying.
+### Pre-clean: delete artifacts
 
-If all repos are clean and pushed (or skipped), proceed to step 2.
+Before reporting dirty repos, automatically clean up untracked build artifacts:
+
+- **`.elc` files** (byte-compiled Elisp): delete them outright. They are always regenerable and should never be committed.
+
+After deleting artifacts, re-check whether the repo is still dirty. If the only untracked files were artifacts, the repo is now clean.
+
+### Offer to commit dirty repos
+
+If any repos are still dirty after pre-cleaning, **ask the user** whether they want you to commit all changes in all dirty repos. If the user accepts:
+
+1. For each dirty repo, stage all changes (`git add -A`) and create a focused commit with a descriptive message based on the changes.
+2. After committing, push each repo.
+3. Report any push failures.
+4. Then ask the user whether to proceed with the release.
+
+If the user declines, abort the release.
 
 ---
 
@@ -170,24 +166,64 @@ If there are many commits (e.g., 100+), summarize by theme rather than listing e
 
 ---
 
-## Step 7: Confirmation gate
+## Step 7: Pre-release summary
 
-Present a full summary:
+Present a summary:
 
 - Current version (from tag)
 - New version (proposed bump)
 - Number of commits included
-- Package cleanliness status (all clean / N skipped)
+- Elpaca sources cleanliness status (all clean)
 - Release notes draft
-- Actions that will be taken: tag, push, create GitHub release
 
-**Wait for explicit user confirmation before proceeding** (unless `--accept` was passed, in which case skip straight to step 8). Do not take any public/irreversible action until the user says yes. If the user wants changes, revise and re-present.
+**Wait for explicit user confirmation before proceeding** (unless `--accept` was passed). Do not take any action until the user says yes. If the user wants changes to the version or notes, revise and re-present.
 
 ---
 
-## Step 8: Execute the release
+## Step 8: Write lockfile and commit
 
-Only after confirmation:
+After the user confirms the version and notes:
+
+1. **Write lockfile**:
+
+   ```bash
+   emacsclient -e '(elpaca-extras-write-lock-file-excluding init-master-lockfile-path)'
+   ```
+
+   This writes the current elpaca lockfile to `emacs/lockfile.el` in the dotfiles repo.
+
+2. **Commit the lockfile**:
+
+   If the lockfile changed (`git status --porcelain emacs/lockfile.el` is non-empty), stage and commit it:
+
+   ```bash
+   git add emacs/lockfile.el
+   git commit -m "NEW_VERSION"
+   ```
+
+   If the lockfile did **not** change, create an empty commit:
+
+   ```bash
+   git commit --allow-empty -m "NEW_VERSION"
+   ```
+
+   The commit message is just the version number (e.g., `7.2.0`).
+
+3. **Stop and wait.** Tell the user the lockfile commit is ready and ask them to test the new profile. Explain that once they confirm the profile builds without errors, the release will proceed. If there are problems, the user can make further changes and amend the commit before releasing.
+
+---
+
+## Step 9: Release gate
+
+**Wait for explicit user confirmation** that the profile tested successfully. Do not proceed until the user explicitly says to continue.
+
+If the user made additional dotfiles changes after step 8 (e.g., fixing issues found during testing), check whether those changes have been committed. If uncommitted changes exist, offer to amend the release commit to include them before proceeding.
+
+---
+
+## Step 10: Tag, push, and create release
+
+Only after the user confirms:
 
 1. **Tag**:
 
@@ -211,7 +247,7 @@ Only after confirmation:
 
 ---
 
-## Step 9: Post-release verification
+## Step 11: Post-release verification
 
 After the release is created:
 

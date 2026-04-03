@@ -3875,6 +3875,8 @@ CLOCK: [2021-07-30 Fri 21:16]--[2021-07-30 Fri 21:31] =>  0:15
     (add-to-list 'savehist-additional-variables 'register-alist)))
 #+end_src
 
+*** TODO Fix bug with XXXJ
+
 ** =register-extras=
 :PROPERTIES:
 :ID:       A2DCE7E0-6094-45FC-B5BE-AF3A0351D3CC
@@ -8881,7 +8883,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :demand t
   :custom
   (claude-code-extras-alert-on-ready t)
-  (claude-code-extras-sync-theme t)
+  (claude-code-extras-sync-theme nil) ; FIXME: this isn't working reliably
   ;; copilot support is buggy; needs more work
   (claude-code-extras-copilot-enabled nil)
   (claude-code-extras-org-todo-in-progress-keyword "DOING")

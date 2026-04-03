@@ -20,7 +20,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 =eww-extras.el= extends EWW (Emacs Web Wowser), the built-in Emacs web
 browser, with capabilities for generating files from web pages, managing
 readability mode, navigating URL hierarchies, and integrating with other
-packages.  It depends on the =paths= package for directory constants.
+packages.  It depends on the =paths= and =el-patch= packages.
 
 The most substantial feature is the ability to generate PDF and HTML
 files from any URL using headless Chrome.  This requires Chrome to be
@@ -34,7 +34,9 @@ The package also enhances EWW's readability mode.  By default, every
 page rendered in EWW is automatically converted to its "readable" form
 (stripping navigation, ads, and other clutter).  A file-backed exception
 list allows excluding specific domains where readability mode produces
-poor results.  Adding exceptions is a single command away.
+poor results.  Adding exceptions is a single command away.  The package
+also patches an upstream bug in ~eww-score-readability~ that causes
+CSS-heavy pages to render as empty buffers ([[#h:patches][Patches]]).
 
 For navigation, the package provides Vimium-style commands: editing the
 current URL, opening kill ring content, and moving up or to the root of
@@ -234,7 +236,10 @@ available only in ~eww-mode~ buffers.
 The function ~eww-extras-readable-autoview~ is added to
 ~eww-after-render-hook~.  It automatically calls ~eww-readable~ unless
 the current URL matches a pattern in ~eww-extras-readable-exceptions~ or
-the page has no source content to process.
+the page has no source content to process.  If the readability heuristic
+selects a non-visible node (producing an empty buffer), the function
+falls back to displaying the full page.  This guards against the
+upstream scoring bug described in [[#h:patches][Patches]].
 
 The function ~eww-extras-set-readable-exceptions-from-file~ reads the
 exception patterns from ~eww-extras-readable-exceptions-file~ and
@@ -282,6 +287,33 @@ happen with certain Chrome warnings).
 
 The function ~eww-extras-run-callback~ safely executes the optional
 callback function with the output file and BibTeX key as arguments.
+
+* Patches
+:PROPERTIES:
+:CUSTOM_ID: h:patches
+:END:
+
+** Readability scoring
+:PROPERTIES:
+:CUSTOM_ID: h:readability-scoring-patch
+:END:
+
+#+findex: eww-score-readability
+The built-in function ~eww-score-readability~ determines which part of a
+web page contains the main textual content for ~eww-readable~.  It
+excludes ~script~, ~head~, and ~comment~ tags from scoring, but does not
+exclude ~style~ tags.  CSS text inside =<style>= elements is therefore
+counted as readable content, which can cause CSS-heavy nodes (such as
+Wikipedia's =div.navbox-styles=) to win the readability contest over the
+actual article.  The result is an empty buffer because the selected node
+contains only invisible CSS.
+
+This package uses ~el-patch~ to add ~style~ to the exclusion list in
+~eww-score-readability~, giving =<style>= elements a score of -2 (the
+same penalty applied to ~script~ and ~head~).  As an additional safety
+net, ~eww-extras-readable-autoview~ detects when the readable render
+produces an empty buffer and falls back to displaying the full page
+([[#h:readability-management][Readability management]]).
 
 * Indices
 :PROPERTIES:

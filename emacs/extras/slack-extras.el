@@ -180,7 +180,6 @@ BUF is a `slack-message-buffer'."
 (defvar slack-activity-refresh-debounce)
 (declare-function slack-activity-feed-refresh-unread-summary
                   "slack-activity-feed-buffer")
-(declare-function slack-team-connectedp "slack-team")
 (declare-function doom-modeline-icon "doom-modeline-core")
 (declare-function doom-modeline-vspc "doom-modeline-core")
 
@@ -195,22 +194,14 @@ stays current with the Slack UI."
   "Refresh Activity feed state if stale.
 Calls `slack-activity-feed-refresh-unread-summary' when more than
 `slack-activity-refresh-debounce' seconds have elapsed since the
-last refresh and at least one team is connected."
+last refresh.  The Activity feed API works over HTTP and does not
+require an active WebSocket."
   (when (and (bound-and-true-p slack-activity-refresh-debounce)
+             (not (hash-table-empty-p slack-teams-by-token))
              (> (- (float-time) (or slack-activity-last-refresh-time 0))
-                slack-activity-refresh-debounce)
-             (slack-extras--any-team-connected-p))
+                slack-activity-refresh-debounce))
     (setq slack-activity-last-refresh-time (float-time))
     (slack-activity-feed-refresh-unread-summary)))
-
-(defun slack-extras--any-team-connected-p ()
-  "Return non-nil if any Slack team is connected."
-  (catch 'found
-    (maphash (lambda (_token team)
-               (when (slack-team-connectedp team)
-                 (throw 'found t)))
-             slack-teams-by-token)
-    nil))
 
 (defconst tab-bar-extras-slack-element
   '(:eval (when (and tab-bar-extras-slack-notifications-enabled

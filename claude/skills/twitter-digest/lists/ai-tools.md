@@ -46,3 +46,6 @@ description: Practical AI tool workflows, tips, and tutorials from practitioners
 - @altryne
 - @kr0der
 - @__tinygrad__
+- @cathrynlavery
+- @kmdrfx
+- @lucasmeijer

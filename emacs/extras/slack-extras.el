@@ -181,23 +181,10 @@ BUF is a `slack-message-buffer'."
 (declare-function doom-modeline-vspc "doom-modeline-core")
 
 (defun slack-extras-actionable-unreads-p ()
-  "Return non-nil when there are Slack notifications worth attention.
-DMs, group DMs and thread replies are actionable when unread.
-Channels are only actionable when they have @mentions."
-  (catch 'found
-    (maphash
-     (lambda (_token team)
-       (when-let ((counts (and (slot-boundp team 'counts) (oref team counts))))
-         (dolist (e (slack-counts-summary counts))
-           (let ((type (car e))
-                 (has-unreads (cadr e))
-                 (mentions (cddr e)))
-             (when (pcase type
-                     ((or 'im 'mpim 'thread) has-unreads)
-                     ('channel (> mentions 0)))
-               (throw 'found t))))))
-     slack-teams-by-token)
-    nil))
+  "Return non-nil when Slack Activity has unseen notifications.
+Reads `slack-has-unreads', which is set from the `activity.feed'
+API and matches the Slack Activity section exactly."
+  slack-has-unreads)
 
 (defconst tab-bar-extras-slack-element
   '(:eval (when (and tab-bar-extras-slack-notifications-enabled

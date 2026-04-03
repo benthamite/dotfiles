@@ -1,0 +1,81 @@
+#+title: Twitter digest: ai-tools — 2026-04-03
+
+* Notable
+
+** @maddiedreese (Fri Apr 03 01:41)
+It's a work in progress, but, yes, you can run Claude Code through a Furby. Hardware: Stock Furby Connect (2016). No mods, just BLE. Mac. USB mic for voice capture. BLE (Bleak): Connects via GATT characteristic to Furby's GeneralPlus chip. Two command types: antenna LED color [0x14, R, G, B].
+Likes: 239 | Views: 13,859 | Like rate: 1.7%
+[[https://x.com/maddiedreese/status/2039880834518577488][View on X]]
+
+** @TheAhmadOsman (Thu Apr 02 22:12)
+Trying Gemma 4 26B-A4B MoE on my MacBook Pro M4 48GB. Running: Q4_K_M, Q6_K, Q8_0. Let's see how far we can push this.
+Likes: 268 | Views: 18,209 | Like rate: 1.5%
+[[https://x.com/TheAhmadOsman/status/2039828276995072112][View on X]]
+
+** @NickADobos (Thu Apr 02 20:22)
+Codex / claude code pro tip: NEVER RESUME A CONVERSATION AFTER HITTING THE LIMIT. Always new chat. If your last chat was using 500k of the 1mil window, you will nuke 50% of your usage with a single "hello" message. Caching is weird. If you need that context tell the AI to go read & summarize the relevant parts.
+Likes: 318 | Views: 23,926 | Like rate: 1.3%
+[[https://x.com/NickADobos/status/2039800787216547915][View on X]]
+
+** @Dimillian (Fri Apr 03 05:45)
+I've never been working with that many git worktrees, and it's so natural as soon as your project is setup correctly for it. The Codex App team made sure it's the case, worktree support is backed in right into the repo and it's a breeze to use them to build features for the app!
+Likes: 51 | Views: 3,861 | Like rate: 1.3%
+[[https://x.com/Dimillian/status/2039942452539187283][View on X]]
+
+** @RayFernando1337 (Thu Apr 02 21:09)
+Everyone's spinning up 50 agents in parallel. The engineer who built Droid Missions told me the opposite: if you can't produce something large and correct with one, adding more just makes it worse. Parallelization is for gathering live info, not building systems.
+Likes: 57 | Views: 4,632 | Like rate: 1.2%
+[[https://x.com/RayFernando1337/status/2039812459255767351][View on X]]
+
+** @Prince_Canuma (Thu Apr 02 23:00)
+Gemma 4 31B running with TurboQuant KV cache on MLX. 128K context: KV Memory 13.3 GB to 4.9 GB (63% reduction). Peak Memory 75.2 GB to 65.8 GB (-9.4 GB). Quality preserved. TurboQuant compression scales with sequence length, so the longer the context, the bigger the savings!
+Likes: 570 | Views: 47,824 | Like rate: 1.2%
+[[https://x.com/Prince_Canuma/status/2039840313074753896][View on X]]
+
+** @TheAhmadOsman (Fri Apr 03 07:20)
+How Fast is Gemma 4 on a MacBook Pro M4? Benchmarking Google's new MoE (26B-A4B). Model size: 26.1 GiB. Load time: ~4.2s. Single request TTFT: 5.68s. Prompt: 3,701 tokens @ 652 t/s. Comparing single vs concurrent requests with 32k total context, 4 parallel slots.
+Likes: 104 | Views: 9,479 | Like rate: 1.1%
+[[https://x.com/TheAhmadOsman/status/2039966249896087732][View on X]]
+
+** @Saboo_Shubham_ (Fri Apr 03 06:34)
+This is getting way too real! I can now get on a video call with my OpenClaw Agents to chat with them face to face. All I need to do is send them a Google Meet invite.
+Likes: 115 | Views: 10,604 | Like rate: 1.1%
+[[https://x.com/Saboo_Shubham_/status/2039954725559538096][View on X]]
+
+** @0xSero (Thu Apr 02 21:49)
+I have been using this to QA my site. Your clanker says it's done? "Prove it" -- have it go use the site, update the docs, record videos and take screenshots.
+Likes: 64 | Views: 6,961 | Like rate: 0.9%
+[[https://x.com/0xSero/status/2039822507188867399][View on X]]
+
+** @ivanfioravanti (Fri Apr 03 09:58)
+Today I'll try to switch my Hermes Agent to Trinity-Large-Thinking-4bit or 5bit running locally on a single M3 Ultra 512GB. Here a context benchmark using mlx_lm server up to 128K. Great job @arcee_ai -- this model keeps good speed even with large context!
+Likes: 10 | Views: 1,175 | Like rate: 0.9%
+[[https://x.com/ivanfioravanti/status/2040006032965996912][View on X]]
+
+** @amirmxt (Thu Apr 02 21:59)
+Built a super simple AI visibility checker using your own API key. How it works: 1) drop in your Perplexity API key 2) put your website domain 3) keywords to check for 4) option to add competitors. It tells you if you're visible via the Perplexity search API and if your competitors are.
+Likes: 33 | Views: 4,470 | Like rate: 0.7%
+[[https://x.com/amirmxt/status/2039825120202489913][View on X]]
+
+* Vetted accounts
+
+** @cathrynlavery — 7/10, added to list
+Founder bootstrapped to $55M. Open-sourced openclaw-ops (gateway fixes, watchdog, security audit). Design system skills, agent-friendly API philosophy. ~65% AI tools content.
+
+** @kmdrfx — 7/10, added to list
+OpenCode core contributor. Built plugin system (npm install, runtime activation), TUI features (markdown tables, light theme), OpenTUI Go bindings. ~75% AI tools content.
+
+** @lucasmeijer — 7/10, added to list
+Pi contributor. Terminal-signals extension, oneshot-learn-iterate workflow, "love letter to pi" blog. Thoughtful, calibrated takes. ~60% AI tools content.
+
+** @huntharo — 6/10, borderline
+OpenClaw contributor. Siri/CarPlay integration, Codex App Server plugin, xAI Responses API work. Good signal but lower volume and heavy on RTs. ~55% AI tools content.
+
+** @neural_avb — 6/10, borderline
+Neural Breakdown on YT. Paper reviews, text-albumentations data-gen library, training workflows. Strong ML practitioner but focus is research/training, not AI coding tools. ~70% AI content but off-rubric.
+
+** @KingBootoshi — skipped (quick filter)
+41K followers. Claude error hook insight was genuine but account is crypto/meme-heavy with sporadic AI content. Not primarily AI tools practitioner.
+
+* Accounts with nothing notable
+@__tinygrad__, @altryne, @alvinsng, @badlogicgames, @bentossell, @championswimmer, @dexhorthy, @forgebitz, @intellectronica, @iotcoi, @itsolelehmann, @kr0der, @petergyang, @ryanvogel, @simonw, @steipete, @thdxr, @trq212, @xeophon

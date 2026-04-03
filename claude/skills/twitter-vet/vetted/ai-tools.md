@@ -59,3 +59,10 @@
 
 - **@__tinygrad__** (7, 2026-04-02) — tinygrad/tinybox creator (69K). Local AI hardware advocacy: eGPU drivers for Mac (AMD+NVIDIA), tok/s benchmarks, budget recs. ~80% AI tools content.
 - **@anemll** (6, 2026-04-02) — Flash-MoE SSD streaming for Apple Silicon LLMs (3.5K). Very niche, many emoji-only tweets. Borderline.
+
+- @cathrynlavery (7, 2026-04-03) — Founder bootstrapped to $55M. openclaw-ops tooling, exec approval fixes, design system skills, agent-friendly API philosophy. ~65% AI tools content.
+- @kmdrfx (7, 2026-04-03) — OpenCode core contributor. Plugin system, TUI features, OpenTUI Go bindings, Markdown table rendering. ~75% AI tools content.
+- @lucasmeijer (7, 2026-04-03) — Pi contributor. Terminal-signals extension, oneshot-learn-iterate workflow, "love letter to pi" blog. ~60% AI tools content.
+- @huntharo (6, 2026-04-03) — OpenClaw contributor. Siri/CarPlay integration, Codex App Server plugin, xAI Responses API. ~55% AI tools content.
+- @neural_avb (6, 2026-04-03) — Neural Breakdown on YT. Paper reviews, text-albumentations data-gen lib. Focus is ML research/training, not AI coding tools. ~70% AI content but off-rubric.
+- @KingBootoshi (skip, 2026-04-03) — 41K followers. Crypto/meme-heavy, sporadic AI content. Quick-filtered.

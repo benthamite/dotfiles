@@ -181,7 +181,7 @@ If UPDATE-MODE is passed, then the functions in
 arguments as passed to this function and the point moved to the beginning of the
 heading."
     (unless (org-at-heading-p)
-      (user-error "Must be on Org-mode heading"))
+      (user-error "Must be on Org-mode heading."))
     (let* ((smry  (plist-get event :summary))
 	   (desc  (when-let* ((d (plist-get event :description)))
 		    (if (org-gcal--strip-html-p calendar-id)
@@ -208,7 +208,7 @@ heading."
 	   (old-start (plist-get old-time-desc :start))
 	   (old-end (plist-get old-time-desc :start))
 	   (recurrence (plist-get event :recurrence))
-	   (elem))
+	   (elem (org-element-at-point)))
       (when loc (replace-regexp-in-string "\n" ", " loc))
       (org-edit-headline
        (cond
@@ -258,7 +258,6 @@ heading."
       ;; Insert event time and description in :ORG-GCAL: drawer, erasing the
       ;; current contents.
       (org-gcal--back-to-heading)
-      (setq elem (org-element-at-point))
       (save-excursion
 	(when (re-search-forward
 	       (format

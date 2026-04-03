@@ -340,12 +340,12 @@ If sessions exist, show a transient menu with home-row keys."
 
 (transient-define-prefix ai-extras--session-switcher ()
   "Switch to an AI session or start a new one."
-  [["Sessions"
-    :class transient-column
-    :setup-children ai-extras--session-switcher-children]
-   ["Actions"
+  [["Actions"
     ("w" "jump to waiting" ai-extras-jump-to-waiting)
-    ("n" "new session" ai-extras--start-new-session)]])
+    ("n" "new session" ai-extras--start-new-session)]
+   ["Sessions"
+    :class transient-column
+    :setup-children ai-extras--session-switcher-children]])
 
 (defun ai-extras--session-switcher-children (_)
   "Build transient suffixes for the session switcher."

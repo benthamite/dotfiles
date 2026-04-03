@@ -1,4 +1,8 @@
 #+title: Twitter digest: ai-tools — 2026-04-03
+#+cost: $1.9229
+#+duration: 631.1s
+#+session: 7602892c-bb5d-44eb-9b93-19622501cc81
+
 
 * Notable
 

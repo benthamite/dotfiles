@@ -668,7 +668,7 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
 (defvar elpaca-sources-directory (expand-file-name "sources/" elpaca-directory))
 ;; Using benthamite fork until progfolio/elpaca#513 is merged (mono-repo deadlock fix).
 (defvar elpaca-order '(elpaca :repo "https://github.com/benthamite/elpaca.git"
-                              :ref "c57962b9bd13d84f71a5f661c8b576484bd3dba3" :depth 1 :inherit ignore
+                              :ref "6503e6c19931dc42bf16e9af980d2e69921f7b6a" :depth 1 :inherit ignore
                               :files (:defaults "elpaca-test.el" (:exclude "extensions"))
                               :build (:not elpaca-activate)))
 (let* ((repo  (expand-file-name "elpaca/" elpaca-sources-directory))
@@ -703,8 +703,9 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
 (elpaca `(,@elpaca-order))
 (elpaca-wait)
 
-;; Limit concurrent package operations to avoid GitHub rate-limiting on fresh deploys.
-(setq elpaca-queue-limit 20)
+;; NOTE: Do not set elpaca-queue-limit. It counts *all* queued packages (not just
+;; actively cloning ones) as "active", causing a false deadlock on fresh installs
+;; where hundreds of packages are enqueued simultaneously. See elpaca--continue-build.
 
 (require 'elpaca-menu-elpa)
 (setf (alist-get 'packages-url (alist-get 'gnu elpaca-menu-elpas))
@@ -3874,8 +3875,6 @@ CLOCK: [2021-07-30 Fri 21:16]--[2021-07-30 Fri 21:31] =>  0:15
   (with-eval-after-load 'savehist
     (add-to-list 'savehist-additional-variables 'register-alist)))
 #+end_src
-
-*** TODO Fix bug with XXXJ
 
 ** =register-extras=
 :PROPERTIES:
@@ -8439,6 +8438,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package gptel
+  :ensure (:host github :repo "benthamite/gptel")
   :init
   (with-eval-after-load 'dired
     (bind-keys
@@ -13174,7 +13174,7 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package ol-emacs-slack
   :ensure (:host github
-             :repo "ag91/ol-emacs-slack")
+             :repo "benthamite/ol-emacs-slack")
   :after slack)
 #+end_src
 
@@ -14578,8 +14578,9 @@ A tutorial for this undocumented package may be found [[https://github.com/andyc
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package bbdb
   :ensure (:host github
-                 :repo "emacsmirror/bbdb"
+                 :repo "benthamite/bbdb"
                  :files (:defaults "lisp/*.el")
+                 :depth nil
                  :pre-build (("./autogen.sh")
                              ("./configure")
                              ("make"))

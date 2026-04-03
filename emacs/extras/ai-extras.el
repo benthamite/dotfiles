@@ -105,9 +105,11 @@ function; if a function, it is called with FACE to produce the icon."
 
 (defun ai-extras-svg-icon (svg-data &optional face)
   "Return a propertized string displaying SVG-DATA as an inline icon.
-FACE determines the color and height; it defaults to `mode-line'.
+FACE determines the color and height; it defaults to `default'.
 The SVG should use \"currentColor\" for fill or stroke attributes,
 which this function replaces with the foreground color of FACE.
+For mode-line display, pass `mode-line-active' (not `mode-line',
+whose foreground may not match the active mode-line in Emacs 29+).
 Falls back to an empty string when SVG support is unavailable."
   (if (not (image-type-available-p 'svg))
       ""

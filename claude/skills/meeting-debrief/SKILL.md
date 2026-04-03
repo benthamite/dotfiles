@@ -194,7 +194,24 @@ If the file is new, create it with this structure:
 
 If the file already exists (e.g., from a previous run or manual prep), update the existing sections instead of overwriting.
 
-## Step 7: Drive shortcut (María mode only)
+## Step 7: Archive the Gemini notification email
+
+After extracting all information, archive the Gemini notification email (from Step 1) to keep the inbox clean. Use the Gmail API via `curl` with the email ID recorded in Step 1:
+
+```bash
+TOKEN=$(gcloud auth print-access-token --account=pablo@epoch.ai) && \
+curl -s -X POST \
+  "https://gmail.googleapis.com/gmail/v1/users/me/messages/<EMAIL_ID>/modify" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"removeLabelIds": ["INBOX"]}'
+```
+
+Replace `<EMAIL_ID>` with the Gemini email ID from Step 1.
+
+If the gcloud token is expired, ask the user to run `! gcloud auth login --account=pablo@epoch.ai` and retry.
+
+## Step 8: Drive shortcut (María mode only)
 
 Create a shortcut to the Gemini Google Doc so it appears locally at:
 
@@ -265,7 +282,7 @@ print(json.loads(resp2.read()))
 
 Replace `<DOC_ID>` with the Google Doc ID from Step 3 and `YYYY-MM-DD` with the meeting date.
 
-## Step 8: Update the project org file (general mode only)
+## Step 9: Update the project org file (general mode only)
 
 If `$CWD` is under a project directory (e.g., `projects/analytics-aggregation/`), find the project's main org file (the `.org` file whose name matches the project directory, e.g., `analytics-aggregation.org`).
 
@@ -278,13 +295,13 @@ Place this under the most appropriate existing heading. If the project org file 
 
 Do **not** duplicate the full meeting notes — the project org file should contain a concise project-relevant summary and a link to the detailed notes.
 
-## Step 9: Update the current projects list (general mode only)
+## Step 10: Update the current projects list (general mode only)
 
 Check whether the project has an entry in `/Users/pablostafforini/My Drive/Epoch/projects/current-list-of-automation-projects.org`. If it does, update that entry's **Status** and **Next step** fields to reflect the meeting outcomes. Keep the same terse, numbered-list format used by existing entries. Do not touch entries for other projects.
 
 If the project has no entry, skip this step.
 
-## Step 10: Review
+## Step 11: Review
 
 Read the updated files and verify:
 1. All action items from the Gemini notes are captured in the meeting file
@@ -294,7 +311,7 @@ Read the updated files and verify:
 
 Present a brief summary: "Extracted N action items (X Pablo, Y <Name>) and Z discussion points."
 
-## Step 11: Commit
+## Step 12: Commit
 
 Stage and commit all changed files together:
 - María mode: `Add meeting debrief for María YYYY-MM-DD`

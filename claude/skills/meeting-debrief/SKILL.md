@@ -265,18 +265,32 @@ print(json.loads(resp2.read()))
 
 Replace `<DOC_ID>` with the Google Doc ID from Step 3 and `YYYY-MM-DD` with the meeting date.
 
-## Step 8: Review
+## Step 8: Update the project org file (general mode only)
 
-Read the updated file and verify:
-1. All action items from the Gemini notes are captured
+If `$CWD` is under a project directory (e.g., `projects/analytics-aggregation/`), find the project's main org file (the `.org` file whose name matches the project directory, e.g., `analytics-aggregation.org`).
+
+Read the org file and add a new heading or update an existing meeting-related section with:
+- A brief summary of the meeting (1–2 sentences)
+- A link to the meeting notes file: `[[file:../../meetings/<person>/YYYY-MM-DD.org][Meeting with <Name> — YYYY-MM-DD]]`
+- Key action items and decisions that are relevant to the project (not all action items — only those that affect project direction or next steps)
+
+Place this under the most appropriate existing heading. If the project org file already has a section about collaboration with this person or about the handoff/meeting topic, update that section rather than creating a new one.
+
+Do **not** duplicate the full meeting notes — the project org file should contain a concise project-relevant summary and a link to the detailed notes.
+
+## Step 9: Review
+
+Read the updated files and verify:
+1. All action items from the Gemini notes are captured in the meeting file
 2. Notes accurately reflect the discussion
 3. No untranslated Spanish in action items (notes can include Spanish quotes if useful)
+4. (General mode) The project org file links to the meeting notes and captures project-relevant outcomes
 
 Present a brief summary: "Extracted N action items (X Pablo, Y <Name>) and Z discussion points."
 
-## Step 9: Commit
+## Step 10: Commit
 
-Stage and commit:
+Stage and commit all changed files together:
 - María mode: `Add meeting debrief for María YYYY-MM-DD`
 - General mode: `Add meeting debrief: <Name> YYYY-MM-DD`
 

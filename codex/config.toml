@@ -15,5 +15,14 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.1.0-dev/elpaca/sources/org-table-wrap"]
 trust_level = "trusted"
 
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/chatgpt-analyzer-beta-test"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/.config/emacs-profiles/8.1.0-dev/elpaca/sources/dotfiles"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/dotfiles"]
+trust_level = "trusted"
+
 [tui]
-theme = "light"
+theme = "dark"

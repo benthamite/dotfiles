@@ -5,7 +5,7 @@
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/eww-extras.el
 ;; Version: 0.2
-;; Package-Requires: ((paths "0.1"))
+;; Package-Requires: ((el-patch "1.1") (paths "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -28,8 +28,40 @@
 
 ;;; Code:
 
+(require 'el-patch)
 (require 'eww)
 (require 'paths)
+
+;;;; Patches
+
+;; Upstream bug: `eww-score-readability' does not exclude `style' tags, so CSS
+;; text inside <style> elements gets counted as readable content.  This causes
+;; CSS-heavy nodes (e.g. Wikipedia's `div.navbox-styles') to win the readability
+;; contest, producing an empty render.
+(el-patch-defun eww-score-readability (node)
+  (let ((score -1))
+    (cond
+     ((memq (dom-tag node) (el-patch-swap '(script head comment)
+					  '(script head comment style)))
+      (setq score -2))
+     ((eq (dom-tag node) 'meta)
+      (setq score -1))
+     ((eq (dom-tag node) 'img)
+      (setq score 2))
+     ((eq (dom-tag node) 'a)
+      (setq score (- (length (split-string (dom-text node))))))
+     (t
+      (dolist (elem (dom-children node))
+	(cond
+         ((stringp elem)
+          (setq score (+ score (length (split-string elem)))))
+         ((consp elem)
+	  (setq score (+ score
+			 (or (cdr (assoc :eww-readability-score (cdr elem)))
+			     (eww-score-readability elem)))))))))
+    ;; Cache the score of the node to avoid recomputing all the time.
+    (dom-set-attribute node :eww-readability-score score)
+    score))
 
 ;;;; Variables
 
@@ -303,7 +335,12 @@ The exceptions are listed in `eww-extras-readable-exceptions'."
         (unless (or exception
                     ;; if `:source' is nil, `eww-readable' will throw an error
                     (not (plist-get eww-data :source)))
-          (eww-readable))))))
+          (eww-readable)
+          ;; The readability heuristic can pick a non-visible node (e.g. a div
+          ;; containing only <style> elements), producing an empty buffer.  When
+          ;; that happens, fall back to the full page.
+          (when (zerop (buffer-size))
+            (eww-readable -1)))))))
 
 (add-hook 'eww-after-render-hook #'eww-extras-readable-autoview)
 

@@ -219,6 +219,10 @@ The active account is persisted across sessions (in ~claude-code-extras-account-
 
 The first time you start a session with a given account, Claude will prompt for OAuth login. After that, switching is instant.
 
+#+findex: claude-code-extras--ensure-shared-symlinks
+#+vindex: claude-code-extras--shared-config-items
+When a session starts, ~claude-code-extras--sync-account-config~ ensures that shared configuration items are symlinked from =~/.claude/= into the account's config directory.  The items are listed in ~claude-code-extras--shared-config-items~: =settings.json=, =settings.local.json=, =skills=, =plugins=, =projects=, =memory=, and =history.jsonl=.  This means permissions, hooks, skills, plugins, project trust, memory, and session history are available regardless of which account is active.  Only OAuth credentials remain account-specific.  Existing files or directories that are not symlinks are left untouched to avoid data loss.
+
 ** Toggling alerts
 :PROPERTIES:
 :CUSTOM_ID: h:alert-toggle

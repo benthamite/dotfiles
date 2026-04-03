@@ -532,20 +532,34 @@ bound by `claude-code-extras--start-with-account'."
                                      nil nil #'string=)))
     (list (format "CLAUDE_CONFIG_DIR=%s" (expand-file-name config-dir)))))
 
+(defconst claude-code-extras--shared-config-items
+  '("settings.json" "settings.local.json"
+    "skills" "plugins" "projects" "memory" "history.jsonl")
+  "Files and directories symlinked from `~/.claude/' into each account config dir.
+These items are shared across all accounts so that skills, plugins,
+project trust, memory, session history, permissions, and hooks are
+available regardless of which account is active.  Only OAuth
+credentials remain account-specific.")
+
 (defun claude-code-extras--sync-account-config (account)
-  "Sync shared state into ACCOUNT's `.claude.json'.
+  "Sync shared state into ACCOUNT's config directory.
 Merges the `projects' key from the canonical `~/.claude.json' and
 all account configs so folder trust decisions are available
 everywhere.  Without this, each account's config dir looks like a
 fresh install and re-prompts for folder trust.
 
-Only writes the file when the merged projects actually differ from
-what is already on disk, to avoid triggering file-change detection
-in running Claude Code sessions."
+Also ensures that settings, skills, plugins, projects, memory,
+and history are symlinked from `~/.claude/' so the experience is
+seamless across accounts.
+
+Only writes `.claude.json' when the merged projects actually
+differ from what is already on disk, to avoid triggering
+file-change detection in running Claude Code sessions."
   (when-let* ((config-dir (alist-get account claude-code-extras-accounts
                                      nil nil #'string=))
               (target-path (expand-file-name
                             ".claude.json" (expand-file-name config-dir))))
+    (claude-code-extras--ensure-shared-symlinks (expand-file-name config-dir))
     (condition-case err
         (let* ((target (claude-code-extras--read-claude-json target-path))
                (merged (claude-code-extras--collect-all-projects)))
@@ -557,6 +571,21 @@ in running Claude Code sessions."
                 (claude-code-extras--write-claude-json target-path target)))))
       (error
        (message "claude-code-extras: failed to sync account config: %S" err)))))
+
+(defun claude-code-extras--ensure-shared-symlinks (config-dir)
+  "Ensure shared config symlinks exist in CONFIG-DIR.
+For each item in `claude-code-extras--shared-config-items', create a
+symlink pointing to the canonical file or directory in `~/.claude/'
+if the item doesn't already exist in CONFIG-DIR.  Existing files
+and directories (non-symlinks) are left untouched to avoid data loss."
+  (let ((canonical-dir (expand-file-name ".claude/" "~")))
+    (dolist (item claude-code-extras--shared-config-items)
+      (let ((target (expand-file-name item config-dir))
+            (source (expand-file-name item canonical-dir)))
+        (when (and (file-exists-p source)
+                   (not (file-exists-p target)))
+          (make-symbolic-link source target)
+          (message "claude-code-extras: symlinked %s -> %s" target source))))))
 
 (defun claude-code-extras--read-claude-json (path)
   "Read and parse the JSON file at PATH.

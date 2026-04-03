@@ -27,8 +27,8 @@ Three layers of directories work together: this dotfiles directory (source of tr
 ├── CLAUDE.md                         ← global conventions for all projects
 ├── settings.json                     ← hooks, model, permissions, theme
 ├── settings.local.json               ← machine-specific permissions (mpv, brew, osascript…)
-├── hooks/                            ← 9 hook scripts
-├── skills/                           ← 41 skill directories
+├── hooks/                            ← 12 hook scripts
+├── skills/                           ← 44 skill directories
 ├── bin/batch-test.sh                 ← elpaca-aware emacs --batch test runner
 ├── bin/sync-mcp-servers.sh           ← MCP server sync utility
 └── README.org                        ← this file
@@ -385,6 +385,10 @@ Moves a directory from inside =~/My Drive/= to =~/.drive-nosync/= (outside Drive
 
 Bulk version of =nosync=. Scans =~/My Drive/= for all directories causing sync errors (node_modules, build output, Python caches, large data dirs), moves them to =~/.drive-nosync/=, repairs broken symlinks, then restarts Google Drive. Use periodically or when the error list grows.
 
+*** install-mcp-server
+
+Installs and configures a new MCP server for Claude Code. Walks through discovery, auth verification (checking for platform-locked OAuth before installing), dependency installation, and registration via =claude mcp add=. Encodes hard-won lessons: always use the CLI (not hand-edits to =~/.claude.json=), use absolute interpreter paths (=/opt/homebrew/bin/node=, not bare =node= which is an nvm shell function), and choose scope explicitly (=-s user= for global).
+
 ** Multi-model and research skills
 :PROPERTIES:
 :ID:       8BF704E6-F252-4E27-846A-0B2F9C52B62C
@@ -513,7 +517,7 @@ Evaluates third-party skills from the [[https://github.com/HartreeWorks/skills][
 :ID:       4D862953-7E8A-4154-BC16-919ED6B092A5
 :END:
 
-Nine hook scripts handle workflow invariants and Emacs integration. Most are defined in the global =settings.json= and use early-exit guards to skip inapplicable projects. One (=require-readme-update.sh=) is defined in the dotfiles project-level =.claude/settings.json= since it only applies to this repo.
+Ten hook scripts handle workflow invariants and Emacs integration. Most are defined in the global =settings.json= and use early-exit guards to skip inapplicable projects. One (=require-readme-update.sh=) is defined in the dotfiles project-level =.claude/settings.json= since it only applies to this repo.
 
 ** require-elisp-test-before-commit.sh (PreToolUse)
 :PROPERTIES:
@@ -542,6 +546,10 @@ On the first Edit or Write in a project, moves Claude Code's memory directory fr
 :END:
 
 Defined in the dotfiles project-level =.claude/settings.json= (not the global settings) since it only applies to this repo. Blocks =git commit= when files in =claude/= (skills, hooks, settings, CLAUDE.md) are staged but =claude/README.org= is not. Also detects when =git add= and =git commit= appear in the same bash command (which would otherwise bypass the staged-file check). Ensures documentation stays in sync with configuration changes. Project-specific skills (under =.claude/skills/=) are excluded from this check, since they belong to their project's documentation, not the dotfiles README.
+
+** remind-claude-readme-update.sh (PostToolUse)
+
+Companion to =require-readme-update.sh=. Fires globally after any Write or Edit, resolves the target path through symlinks, and outputs a reminder if the file is under =dotfiles/claude/= but the agent is working in a different project. This closes the gap where the commit-blocking hook never fires because the agent never switches to the dotfiles repo to commit. Silent when editing =README.org= itself or when already in the dotfiles repo.
 
 ** require-doc-update.sh (PreToolUse)
 :PROPERTIES:

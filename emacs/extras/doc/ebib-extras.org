@@ -213,7 +213,7 @@ The command ~ebib-extras-export-keywords~ moves keywords from the BibTeX entry i
 The command ~ebib-extras-set-rating~ prompts for a rating (1--10, where pressing =0= means 10) and stores it in the =rating= field. In addition to updating the BibTeX entry, it opens external rating websites based on the entry's supertype:
 
 - For books, it opens Goodreads with the entry's title.
-- For films, it opens the entry's stored IMDb URL (or searches IMDb if no URL is stored) and opens Letterboxd (using a stored slug or fetching one via ~bib-search-letterboxd~). If a Letterboxd slug is fetched, it is stored in the =letterboxd= field for future use.
+- For films, it opens the entry's stored IMDb URL (or searches IMDb if no URL is stored) and opens Letterboxd (using a stored slug or fetching one via ~bib-search-letterboxd~). If a Letterboxd slug is fetched, it is stored in the =letterboxd= field for future use. The slug is always a bare identifier (e.g. =hamnet-2025=), never a full URL.
 
 Pressing =RET= without entering a digit skips the rating without modifying the field.
 

@@ -278,7 +278,13 @@ Place this under the most appropriate existing heading. If the project org file 
 
 Do **not** duplicate the full meeting notes — the project org file should contain a concise project-relevant summary and a link to the detailed notes.
 
-## Step 9: Review
+## Step 9: Update the current projects list (general mode only)
+
+Check whether the project has an entry in `/Users/pablostafforini/My Drive/Epoch/projects/current-list-of-automation-projects.org`. If it does, update that entry's **Status** and **Next step** fields to reflect the meeting outcomes. Keep the same terse, numbered-list format used by existing entries. Do not touch entries for other projects.
+
+If the project has no entry, skip this step.
+
+## Step 10: Review
 
 Read the updated files and verify:
 1. All action items from the Gemini notes are captured in the meeting file
@@ -288,7 +294,7 @@ Read the updated files and verify:
 
 Present a brief summary: "Extracted N action items (X Pablo, Y <Name>) and Z discussion points."
 
-## Step 10: Commit
+## Step 11: Commit
 
 Stage and commit all changed files together:
 - María mode: `Add meeting debrief for María YYYY-MM-DD`

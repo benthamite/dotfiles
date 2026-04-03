@@ -58,6 +58,11 @@
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/claude/hooks/load-elisp-after-edit.sh",
             "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/remind-claude-readme-update.sh",
+            "timeout": 5
           }
         ]
       }

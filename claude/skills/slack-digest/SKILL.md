@@ -42,12 +42,12 @@ Discard anything classified as noise.
 
 #### Ops-support channels
 
-Apply special handling to any channel whose name starts with `ops-support` (this includes the shared `#ops-support` channel, `#ops-support-temp`, and each team member's personal `#ops-support-<name>` channel). For each request posted in these channels:
+Apply special handling to any channel whose name starts with `ops-support` (this includes the shared `#ops-support` channel, `#ops-support-temp`, and each team member's personal `#ops-support-<name>` channel). The user is on the ops team and wants visibility into all requests to decide whether to help. For each request posted in these channels:
 
 1. Fetch the thread replies (if any) using `conversations_replies`.
 2. Check whether an ops team member has already replied claiming the request (e.g. "I'll take this", "on it", "handling this", or any substantive response indicating ownership).
 3. If no one has claimed it, classify it as **Action required** with a note like "Unclaimed ops request — no one has replied yet."
-4. If someone has already claimed it, classify it as **Noise** (or **Worth knowing** if the request itself is notable regardless).
+4. If someone has already claimed it, classify it as **Worth knowing** with a note indicating who claimed it and the gist of their response. Never discard ops-support requests as noise.
 
 ### 5. Format the digest
 

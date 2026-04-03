@@ -342,7 +342,7 @@ If sessions exist, show a transient menu with home-row keys."
   "Switch to an AI session or start a new one."
   [["Actions"
     ("w" "jump to waiting" ai-extras-jump-to-waiting)
-    ("n" "new session" ai-extras--start-new-session)]
+    ("e" "new session" ai-extras--start-new-session)]
    ["Sessions"
     :class transient-column
     :setup-children ai-extras--session-switcher-children]])

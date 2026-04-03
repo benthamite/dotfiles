@@ -57,7 +57,7 @@ Each entry is (SYMBOL . PLIST) where PLIST has keys:
   :start-new             function () -> buffer (start a new session)
   :program               string (CLI binary name)
   :send-return           function (&optional buffer)
-  :icon                  string or function returning a propertized string
+  :icon                  string or function (&optional face) returning a propertized string
   :label                 string (display name, e.g. \"Claude Code\" or \"Codex\")
 
 Optional command keys for dispatching shared commands:
@@ -95,12 +95,13 @@ backend symbol or nil."
   "Get KEY from the registered plist for BACKEND."
   (plist-get (alist-get backend ai-extras-backends) key))
 
-(defun ai-extras-backend-icon (backend)
+(defun ai-extras-backend-icon (backend &optional face)
   "Return the icon string for BACKEND.
-The :icon property can be a string or a function; if a function,
-it is called to produce the icon."
+FACE is passed to the icon function to control the rendering color;
+see `ai-extras-svg-icon'.  The :icon property can be a string or a
+function; if a function, it is called with FACE to produce the icon."
   (let ((icon (ai-extras--backend-get backend :icon)))
-    (if (functionp icon) (funcall icon) (or icon ""))))
+    (if (functionp icon) (funcall icon face) (or icon ""))))
 
 (defun ai-extras-svg-icon (svg-data &optional face)
   "Return a propertized string displaying SVG-DATA as an inline icon.
@@ -110,7 +111,7 @@ which this function replaces with the foreground color of FACE.
 Falls back to an empty string when SVG support is unavailable."
   (if (not (image-type-available-p 'svg))
       ""
-    (let* ((face (or face 'mode-line))
+    (let* ((face (or face 'default))
            (fg (face-foreground face nil t))
            (h (window-font-height nil face))
            (colored (replace-regexp-in-string "currentColor" (or fg "#000") svg-data t t))

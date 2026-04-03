@@ -126,8 +126,8 @@ Source: SVG Repo (CC0).")
         :program "codex"
         :send-return (lambda (&optional _buf)
                        (codex--term-send-return codex-terminal-backend))
-        :icon (lambda () (let ((svg (ai-extras-svg-icon codex-extras-icon-svg)))
-                           (if (string-empty-p svg) "CX" svg)))
+        :icon (lambda (&optional face) (let ((svg (ai-extras-svg-icon codex-extras-icon-svg face)))
+                                        (if (string-empty-p svg) "CX" svg)))
         :label "Codex"
         :discover-skills #'codex-extras--discover-skills
         :handoff #'codex-extras-handoff

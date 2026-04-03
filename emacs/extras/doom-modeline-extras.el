@@ -181,7 +181,7 @@ between the name and the alert indicator."
              (fboundp 'ai-extras--detect-backend))
     (let ((backend (ai-extras--detect-backend (current-buffer))))
       (when backend
-        (let ((icon (ai-extras-backend-icon backend))
+        (let ((icon (ai-extras-backend-icon backend 'mode-line))
               (name (ai-extras-display-name (current-buffer))))
           (concat
            (doom-modeline-spc)

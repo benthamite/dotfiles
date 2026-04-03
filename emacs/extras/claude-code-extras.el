@@ -288,8 +288,8 @@ Source: lobehub/lobe-icons (MIT).")
         :program "claude"
         :send-return (lambda (&optional _buf)
                        (claude-code--term-send-return claude-code-terminal-backend))
-        :icon (lambda () (let ((svg (ai-extras-svg-icon claude-code-extras-icon-svg)))
-                           (if (string-empty-p svg) "CC" svg)))
+        :icon (lambda (&optional face) (let ((svg (ai-extras-svg-icon claude-code-extras-icon-svg face)))
+                                        (if (string-empty-p svg) "CC" svg)))
         :label "Claude Code"
         :discover-skills #'claude-code-extras--discover-skills
         :handoff #'claude-code-extras-handoff

@@ -142,9 +142,9 @@ Backend registration is typically done at load time by extension packages like =
 :END:
 
 #+findex: ai-extras-svg-icon
-The function ~ai-extras-svg-icon~ renders an SVG string as an inline image suitable for the mode line, tab bar, or transient menus.  It replaces occurrences of =currentColor= in the SVG data with the foreground color of FACE (defaulting to ~mode-line~), then creates an image scaled to match the font height of that face.  The result is a propertized string with a ~display~ image property.
+The function ~ai-extras-svg-icon~ renders an SVG string as an inline image suitable for the mode line, tab bar, or transient menus.  It replaces occurrences of =currentColor= in the SVG data with the foreground color of FACE (defaulting to ~default~), then creates an image scaled to match the font height of that face.  The result is a propertized string with a ~display~ image property.  Callers that display the icon in the mode line should pass ~mode-line~ as FACE so the color matches the mode-line foreground.
 
-Backends use this function in their ~:icon~ lambda to display official product logos (e.g., the Claude sparkle or the Codex terminal prompt) instead of generic icon-font glyphs.  When Emacs lacks SVG support (no =librsvg=), the function returns an empty string, and backends fall back to short text abbreviations.
+Backends use this function in their ~:icon~ lambda to display official product logos (e.g., the Clawd pixel-art mascot or the OpenAI knot) instead of generic icon-font glyphs.  The ~:icon~ function accepts an optional FACE argument and forwards it to ~ai-extras-svg-icon~.  When Emacs lacks SVG support (no =librsvg=), the function returns an empty string, and backends fall back to short text abbreviations.
 
 ** Display names
 :PROPERTIES:

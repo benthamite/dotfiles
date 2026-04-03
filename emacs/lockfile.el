@@ -4,7 +4,7 @@
 			 ("emacs/extras/abbrev-extras.el"
 			  "emacs/extras/doc/abbrev-extras.texi")
 			 :depth nil :type git :protocol https :inherit t :ref
-			 "8177d5794e74526809e462866d6b0a7aeae955da"))
+			 "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (ace-link :source "elpaca-menu-lock-file" :recipe
 	   (:package "ace-link" :repo "abo-abo/ace-link" :fetcher github :files
 		     ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo"
@@ -23,7 +23,7 @@
 			   ("emacs/extras/ace-link-extras.el"
 			    "emacs/extras/doc/ace-link-extras.texi")
 			   :depth nil :type git :protocol https :inherit t :ref
-			   "8177d5794e74526809e462866d6b0a7aeae955da"))
+			   "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (acp :source "elpaca-menu-lock-file" :recipe
       (:package "acp" :fetcher github :repo "xenodium/acp.el" :files
 		("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo" "doc/dir"
@@ -45,7 +45,7 @@
 					   "README*" "*-pkg.el"))
 				:source "MELPA" :id activity-watch-mode :type
 				git :protocol https :inherit t :depth treeless
-				:ref "19aed6ca81a3b1e549f47867c924d180d8536791"))
+				:ref "1a950ad310cbd0511bb01744b20c7012a1c0b0e8"))
  (affe :source "elpaca-menu-lock-file" :recipe
        (:package "affe" :repo "minad/affe" :fetcher github :files
 		 ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo" "doc/dir"
@@ -55,6 +55,11 @@
 			    "*-tests.el" "LICENSE" "README*" "*-pkg.el"))
 		 :source "MELPA" :id affe :type git :protocol https :inherit t
 		 :depth treeless :ref "295e2fb26a2de66e13c0f8414d1ada5b090a1011"))
+ (agent-log :source "elpaca-menu-lock-file" :recipe
+	    (:source nil :package "agent-log" :id agent-log :host github :repo
+		     "benthamite/agent-log" :type git :protocol https :inherit t
+		     :depth treeless :ref
+		     "ca5b984b38513f5a8ce88f220d1c86781f57600a"))
  (agent-shell :source "elpaca-menu-lock-file" :recipe
 	      (:package "agent-shell" :fetcher github :repo
 			"xenodium/agent-shell" :files
@@ -67,7 +72,7 @@
 				   "*-pkg.el"))
 			:source "MELPA" :id agent-shell :type git :protocol
 			https :inherit t :depth treeless :ref
-			"c72ff6e10855b63a418a73dff315a1c107aec86c"))
+			"a7908cb2576a636f6da40e2ace3404036da80f76"))
  (aggressive-indent :source "elpaca-menu-lock-file" :recipe
 		    (:package "aggressive-indent" :repo
 			      "Malabarba/aggressive-indent-mode" :fetcher github
@@ -82,6 +87,13 @@
 			      :source "MELPA" :id aggressive-indent :type git
 			      :protocol https :inherit t :depth treeless :ref
 			      "a437a45868f94b77362c6b913c5ee8e67b273c42"))
+ (ai-extras :source "elpaca-menu-lock-file" :recipe
+	    (:source nil :package "ai-extras" :id ai-extras :host github :repo
+		     "benthamite/dotfiles" :files
+		     ("emacs/extras/ai-extras.el"
+		      "emacs/extras/doc/ai-extras.texi")
+		     :depth nil :type git :protocol https :inherit t :ref
+		     "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (aidermacs :source "elpaca-menu-lock-file" :recipe
 	    (:package "aidermacs" :fetcher github :repo "MatthewZMD/aidermacs"
 		      :files
@@ -101,7 +113,7 @@
 			    ("emacs/extras/aidermacs-extras.el"
 			     "emacs/extras/doc/aidermacs-extras.texi")
 			    :depth nil :type git :protocol https :inherit t :ref
-			    "8177d5794e74526809e462866d6b0a7aeae955da"))
+			    "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (aio :source "elpaca-menu-lock-file" :recipe
       (:package "aio" :fetcher github :repo "skeeto/emacs-aio" :files
 		("aio.el" "README.md" "UNLICENSE") :source "MELPA" :id aio :type
@@ -151,12 +163,12 @@
 			      ("emacs/extras/anki-editor-extras.el"
 			       "emacs/extras/doc/anki-editor-extras.texi")
 			      :depth nil :type git :protocol https :inherit t
-			      :ref "8177d5794e74526809e462866d6b0a7aeae955da"))
+			      :ref "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (anki-noter :source "elpaca-menu-lock-file" :recipe
 	     (:source nil :package "anki-noter" :id anki-noter :host github
 		      :repo "benthamite/anki-noter" :type git :protocol https
 		      :inherit t :depth treeless :ref
-		      "a5934373f57c083147123743ebbb16587bed0a4b"))
+		      "727e8806f9fd9b598a2a14c5cff02f1cbb022593"))
  (ankiorg :source "elpaca-menu-lock-file" :recipe
 	  (:source nil :package "ankiorg" :id ankiorg :host github :repo
 		   "orgtre/ankiorg" :type git :protocol https :inherit t :depth
@@ -218,7 +230,7 @@
 		      ("emacs/extras/avy-extras.el"
 		       "emacs/extras/doc/avy-extras.texi")
 		      :depth nil :type git :protocol https :inherit t :ref
-		      "8177d5794e74526809e462866d6b0a7aeae955da"))
+		      "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (back-button :source "elpaca-menu-lock-file" :recipe
 	      (:package "back-button" :repo "rolandwalker/back-button" :fetcher
 			github :files
@@ -234,19 +246,19 @@
 			"f8783c98a7fefc1d0419959c1b462c7dcadce5a8"))
  (bbdb :source "elpaca-menu-lock-file" :recipe
        (:package "bbdb" :fetcher git :url
-		 "https://git.savannah.nongnu.org/git/bbdb.git" :files
+		 "https://github.com/benthamite/bbdb.git" :files
 		 (:defaults "lisp/*.el") :source "MELPA" :id bbdb :host github
-		 :repo "emacsmirror/bbdb" :pre-build
+		 :repo "benthamite/bbdb" :pre-build
 		 (("./autogen.sh") ("./configure") ("make")) :build
 		 (:not elpaca-build-docs) :type git :protocol https :inherit t
-		 :depth treeless :ref "53e8ba04c47b3542db75b68f9663941daf2e6ca4"))
+		 :depth nil :ref "a95dcb8592791c47883f87944efa79296ef7b28b"))
  (bbdb-extras :source "elpaca-menu-lock-file" :recipe
 	      (:source nil :package "bbdb-extras" :id bbdb-extras :host github
 		       :repo "benthamite/dotfiles" :files
 		       ("emacs/extras/bbdb-extras.el"
 			"emacs/extras/doc/bbdb-extras.texi")
 		       :depth nil :type git :protocol https :inherit t :ref
-		       "8177d5794e74526809e462866d6b0a7aeae955da"))
+		       "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (bbdb-vcard :source "elpaca-menu-lock-file" :recipe
 	     (:package "bbdb-vcard" :repo "tohojo/bbdb-vcard" :fetcher github
 		       :files
@@ -263,7 +275,7 @@
  (bib :source "elpaca-menu-lock-file" :recipe
       (:source nil :package "bib" :id bib :host github :repo "benthamite/bib"
 	       :depth nil :type git :protocol https :inherit t :ref
-	       "d8d65a7bd02d7fefed85f0e341f26569ff3bcd77"))
+	       "f0d9449bbec8198e50f3cc1564faee03c24dbfcd"))
  (biblio :source "elpaca-menu-lock-file" :recipe
 	 (:package "biblio" :repo "cpitclaudel/biblio.el" :fetcher github :files
 		   (:defaults (:exclude "biblio-core.el")) :source "MELPA" :id
@@ -290,14 +302,14 @@
 				     "emacs/extras/doc/bibtex-completion-extras.texi")
 				    :depth nil :type git :protocol https
 				    :inherit t :ref
-				    "8177d5794e74526809e462866d6b0a7aeae955da"))
+				    "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (bibtex-extras :source "elpaca-menu-lock-file" :recipe
 		(:source nil :package "bibtex-extras" :id bibtex-extras :host
 			 github :repo "benthamite/dotfiles" :files
 			 ("emacs/extras/bibtex-extras.el"
 			  "emacs/extras/doc/bibtex-extras.texi")
 			 :depth nil :type git :protocol https :inherit t :ref
-			 "8177d5794e74526809e462866d6b0a7aeae955da"))
+			 "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (breadcrumb :source "elpaca-menu-lock-file" :recipe
 	     (:package "breadcrumb" :repo
 		       ("https://github.com/joaotavora/breadcrumb"
@@ -313,7 +325,7 @@
 			     ("emacs/extras/browse-url-extras.el"
 			      "emacs/extras/doc/browse-url-extras.texi")
 			     :depth nil :type git :protocol https :inherit t
-			     :ref "8177d5794e74526809e462866d6b0a7aeae955da"))
+			     :ref "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (bug-hunter :source "elpaca-menu-lock-file" :recipe
 	     (:package "bug-hunter" :repo
 		       ("https://github.com/Malabarba/elisp-bug-hunter"
@@ -328,7 +340,7 @@
 			   ("emacs/extras/calendar-extras.el"
 			    "emacs/extras/doc/calendar-extras.texi")
 			   :depth nil :type git :protocol https :inherit t :ref
-			   "8177d5794e74526809e462866d6b0a7aeae955da"))
+			   "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (calfw :source "elpaca-menu-lock-file" :recipe
 	(:package "calfw" :fetcher github :repo "kiwanami/emacs-calfw" :files
 		  ("calfw.el" "calfw-compat.el") :source "MELPA" :id calfw :type
@@ -352,7 +364,7 @@
 		  (:exclude ".dir-locals.el" "test.el" "tests.el" "*-test.el"
 			    "*-tests.el" "LICENSE" "README*" "*-pkg.el"))
 		 :source "MELPA" :id cape :type git :protocol https :inherit t
-		 :depth treeless :ref "2b2a5c5bef16eddcce507d9b5804e5a0cc9481ae"))
+		 :depth treeless :ref "a326a0575fe5ca574f6607557dbb8bd6ce83dbbd"))
  (casual :source "elpaca-menu-lock-file" :recipe
 	 (:package "casual" :fetcher github :repo "kickingvegas/casual"
 		   :old-names
@@ -393,7 +405,7 @@
 			("emacs/extras/citar-extras.el"
 			 "emacs/extras/doc/citar-extras.texi")
 			:depth nil :type git :protocol https :inherit t :ref
-			"8177d5794e74526809e462866d6b0a7aeae955da"))
+			"59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (citar-org-roam :source "elpaca-menu-lock-file" :recipe
 		 (:package "citar-org-roam" :repo "emacs-citar/citar-org-roam"
 			   :fetcher github :files
@@ -428,18 +440,13 @@
 			:protocol https :inherit t :depth treeless :ref
 			"4a9914bd4161eb43f489820f9174c62390e5adc8"))
  (claude-code-extras :source "elpaca-menu-lock-file" :recipe
-		     (:source nil :package "claude-code-extras" :id
+		     (:source "Init file" :package "claude-code-extras" :id
 			      claude-code-extras :host github :repo
 			      "benthamite/dotfiles" :files
 			      ("emacs/extras/claude-code-extras.el"
 			       "emacs/extras/doc/claude-code-extras.texi")
 			      :depth nil :type git :protocol https :inherit t
-			      :ref "8177d5794e74526809e462866d6b0a7aeae955da"))
- (agent-log :source "elpaca-menu-lock-file" :recipe
-	     (:source nil :package "agent-log" :id agent-log :host github
-		      :repo "benthamite/agent-log" :type git :protocol https
-		      :inherit t :depth treeless :ref
-		      "74b697f5064220ff52436e6f4ae57284421caae7"))
+			      :ref "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (clojure-mode :source "elpaca-menu-lock-file" :recipe
 	       (:package "clojure-mode" :repo "clojure-emacs/clojure-mode"
 			 :fetcher github :files ("clojure-mode.el") :source
@@ -457,13 +464,24 @@
 		   :source "MELPA" :id closql :host github :type git :protocol
 		   https :inherit t :depth treeless :ref
 		   "947426d0c93e5ad5374c464b2f121c36cdaf2132"))
+ (codex :source "elpaca-menu-lock-file" :recipe
+	(:source nil :package "codex" :id codex :host github :repo
+		 "benthamite/codex" :type git :protocol https :inherit t :depth
+		 treeless :ref "8073d9d4b1fd79bf8a15fe11c20b14fc41de29cf"))
+ (codex-extras :source "elpaca-menu-lock-file" :recipe
+	       (:source nil :package "codex-extras" :id codex-extras :host
+			github :repo "benthamite/dotfiles" :files
+			("emacs/extras/codex-extras.el"
+			 "emacs/extras/doc/codex-extras.texi")
+			:depth nil :type git :protocol https :inherit t :ref
+			"59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (color-extras :source "elpaca-menu-lock-file" :recipe
 	       (:source nil :package "color-extras" :id color-extras :host
 			github :repo "benthamite/dotfiles" :files
 			("emacs/extras/color-extras.el"
 			 "emacs/extras/doc/color-extras.texi")
 			:depth nil :type git :protocol https :inherit t :ref
-			"8177d5794e74526809e462866d6b0a7aeae955da"))
+			"59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (company :source "elpaca-menu-lock-file" :recipe
 	  (:package "company" :fetcher github :repo "company-mode/company-mode"
 		    :files
@@ -511,7 +529,7 @@
 			  ("emacs/extras/consult-extras.el"
 			   "emacs/extras/doc/consult-extras.texi")
 			  :depth nil :type git :protocol https :inherit t :ref
-			  "8177d5794e74526809e462866d6b0a7aeae955da"))
+			  "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (consult-flycheck :source "elpaca-menu-lock-file" :recipe
 		   (:package "consult-flycheck" :fetcher github :repo
 			     "minad/consult-flycheck" :files
@@ -577,7 +595,7 @@
 			  ("emacs/extras/copilot-extras.el"
 			   "emacs/extras/doc/copilot-extras.texi")
 			  :depth nil :type git :protocol https :inherit t :ref
-			  "8177d5794e74526809e462866d6b0a7aeae955da"))
+			  "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (corfu :source "elpaca-menu-lock-file" :recipe
 	(:package "corfu" :repo "minad/corfu" :files (:defaults "extensions/*")
 		  :fetcher github :source "MELPA" :id corfu :includes
@@ -591,7 +609,7 @@
 			("emacs/extras/corfu-extras.el"
 			 "emacs/extras/doc/corfu-extras.texi")
 			:depth nil :type git :protocol https :inherit t :ref
-			"8177d5794e74526809e462866d6b0a7aeae955da"))
+			"59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (corg :source "elpaca-menu-lock-file" :recipe
        (:source nil :package "corg" :id corg :host github :repo
 		"isamert/corg.el" :type git :protocol https :inherit t :depth
@@ -657,7 +675,7 @@
 			("emacs/extras/dired-extras.el"
 			 "emacs/extras/doc/dired-extras.texi")
 			:depth nil :type git :protocol https :inherit t :ref
-			"8177d5794e74526809e462866d6b0a7aeae955da"))
+			"59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (dired-git-info :source "elpaca-menu-lock-file" :recipe
 		 (:package "dired-git-info" :repo
 			   ("https://github.com/clemera/dired-git-info"
@@ -704,7 +722,7 @@
 			  :source "MELPA" :id doom-modeline :build
 			  (:not elpaca-check-version) :type git :protocol https
 			  :inherit t :depth treeless :ref
-			  "febde435ae62b36466154c0d41649e7b4ee5685e"))
+			  "4a145ea1a1b23d8c2cc760b3002d475d6f680ad9"))
  (doom-modeline-extras :source "elpaca-menu-lock-file" :recipe
 		       (:source nil :package "doom-modeline-extras" :id
 				doom-modeline-extras :host github :repo
@@ -712,7 +730,7 @@
 				("emacs/extras/doom-modeline-extras.el"
 				 "emacs/extras/doc/doom-modeline-extras.texi")
 				:depth nil :type git :protocol https :inherit t
-				:ref "8177d5794e74526809e462866d6b0a7aeae955da"))
+				:ref "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (dwim-shell-command :source "elpaca-menu-lock-file" :recipe
 		     (:package "dwim-shell-command" :fetcher github :repo
 			       "xenodium/dwim-shell-command" :files
@@ -742,7 +760,7 @@
 		      ("emacs/extras/eat-extras.el"
 		       "emacs/extras/doc/eat-extras.texi")
 		      :depth nil :type git :protocol https :inherit t :ref
-		      "8177d5794e74526809e462866d6b0a7aeae955da"))
+		      "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (ebib :source "elpaca-menu-lock-file" :recipe
        (:package "ebib" :fetcher github :repo "joostkremers/ebib" :files
 		 ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo" "doc/dir"
@@ -758,14 +776,14 @@
 		       ("emacs/extras/ebib-extras.el"
 			"emacs/extras/doc/ebib-extras.texi")
 		       :depth nil :type git :protocol https :inherit t :ref
-		       "8177d5794e74526809e462866d6b0a7aeae955da"))
+		       "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (ediff-extras :source "elpaca-menu-lock-file" :recipe
 	       (:source nil :package "ediff-extras" :id ediff-extras :host
 			github :repo "benthamite/dotfiles" :files
 			("emacs/extras/ediff-extras.el"
 			 "emacs/extras/doc/ediff-extras.texi")
 			:depth nil :type git :protocol https :inherit t :ref
-			"8177d5794e74526809e462866d6b0a7aeae955da"))
+			"59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (edit-indirect :source "elpaca-menu-lock-file" :recipe
 		(:package "edit-indirect" :fetcher github :repo
 			  "Fanael/edit-indirect" :files
@@ -820,14 +838,14 @@
 				 "*-pkg.el"))
 		      :source "MELPA" :id elfeed-ai :host github :type git
 		      :protocol https :inherit t :depth treeless :ref
-		      "329ae01a8b45ab100a5e35a5f532c861261de3b2"))
+		      "9a71b5fece184a64ff7bb8563d5df8e417947643"))
  (elfeed-extras :source "elpaca-menu-lock-file" :recipe
 		(:source nil :package "elfeed-extras" :id elfeed-extras :host
 			 github :repo "benthamite/dotfiles" :files
 			 ("emacs/extras/elfeed-extras.el"
 			  "emacs/extras/doc/elfeed-extras.texi")
 			 :depth nil :type git :protocol https :inherit t :ref
-			 "8177d5794e74526809e462866d6b0a7aeae955da"))
+			 "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (elfeed-org :source "elpaca-menu-lock-file" :recipe
 	     (:package "elfeed-org" :repo "remyhonig/elfeed-org" :fetcher github
 		       :files
@@ -886,7 +904,7 @@
    "elpaca-menu-lock-file" :recipe
    (:source nil :package "elpaca" :id elpaca :repo
 	    "https://github.com/benthamite/elpaca.git" :ref
-	    "c57962b9bd13d84f71a5f661c8b576484bd3dba3" :depth 1 :inherit ignore
+	    "6503e6c19931dc42bf16e9af980d2e69921f7b6a" :depth 1 :inherit ignore
 	    :files (:defaults "elpaca-test.el" (:exclude "extensions")) :build
 	    (:not elpaca-activate) :type git :protocol https))
  (elpaca-extras :source "elpaca-menu-lock-file" :recipe
@@ -895,7 +913,7 @@
 			 ("emacs/extras/elpaca-extras.el"
 			  "emacs/extras/doc/elpaca-extras.texi")
 			 :depth nil :wait t :type git :protocol https :inherit t
-			 :ref "8177d5794e74526809e462866d6b0a7aeae955da"))
+			 :ref "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (elpaca-use-package :source "elpaca-menu-lock-file" :recipe
 		     (:package "elpaca-use-package" :wait t :repo
 			       "https://github.com/progfolio/elpaca.git" :files
@@ -904,7 +922,7 @@
 			       (:not elpaca-build-docs) :source
 			       "Elpaca extensions" :id elpaca-use-package :type
 			       git :protocol https :inherit t :depth treeless
-			       :ref "5543a4f0019edefe9d7f6697d551276d1ed2b28c"))
+			       :ref "8ed83477f74bcae5019f0542fc5f774d8e20c041"))
  (elpy :source "elpaca-menu-lock-file" :recipe
        (:package "elpy" :fetcher github :repo "jorgenschaefer/elpy" :files
 		 ("*.el" "NEWS.rst" "snippets" "elpy") :source "MELPA" :id elpy
@@ -954,6 +972,10 @@
 			:source "MELPA" :id engine-mode :type git :protocol
 			https :inherit t :depth treeless :ref
 			"e7f317f1b284853b6df4dfd37ab7715b248e0ebd"))
+ (epoch :source "elpaca-menu-lock-file" :recipe
+	(:source nil :package "epoch" :id epoch :host github :repo
+		 "benthamite/epoch.el" :type git :protocol https :inherit t
+		 :depth treeless :ref "95ca63650aae4902d73a6c03bda13d5ac43cafa8"))
  (eshell-syntax-highlighting :source "elpaca-menu-lock-file" :recipe
 			     (:package "eshell-syntax-highlighting" :fetcher
 				       github :repo
@@ -989,7 +1011,7 @@
 		      ("emacs/extras/eww-extras.el"
 		       "emacs/extras/doc/eww-extras.texi")
 		      :depth nil :type git :protocol https :inherit t :ref
-		      "8177d5794e74526809e462866d6b0a7aeae955da"))
+		      "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (expand-region :source "elpaca-menu-lock-file" :recipe
 		(:package "expand-region" :repo "magnars/expand-region.el"
 			  :fetcher github :files
@@ -1018,7 +1040,7 @@
 			("emacs/extras/faces-extras.el"
 			 "emacs/extras/doc/faces-extras.texi")
 			:depth nil :type git :protocol https :inherit t :ref
-			"8177d5794e74526809e462866d6b0a7aeae955da"))
+			"59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (fatebook :source "elpaca-menu-lock-file" :recipe
 	   (:source nil :package "fatebook" :id fatebook :repo
 		    "sonofhypnos/fatebook.el" :host github :files
@@ -1030,7 +1052,7 @@
 			("emacs/extras/files-extras.el"
 			 "emacs/extras/doc/files-extras.texi")
 			:depth nil :type git :protocol https :inherit t :ref
-			"8177d5794e74526809e462866d6b0a7aeae955da"))
+			"59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (flycheck :source "elpaca-menu-lock-file" :recipe
 	   (:package "flycheck" :repo "flycheck/flycheck" :fetcher github :files
 		     ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo"
@@ -1085,14 +1107,14 @@
 		  :id forge :host github :branch "main" :build
 		  (:not elpaca-check-version) :type git :protocol https :inherit
 		  t :depth treeless :ref
-		  "86ed2978236d3f39a083e6a07f4819019c91ae5a"))
+		  "7dfe1fbdeeed80a4fcbacf155aee4dda08c95bd4"))
  (forge-extras :source "elpaca-menu-lock-file" :recipe
 	       (:source nil :package "forge-extras" :id forge-extras :host
 			github :repo "benthamite/dotfiles" :files
 			("emacs/extras/forge-extras.el"
 			 "emacs/extras/doc/forge-extras.texi")
 			:depth nil :type git :protocol https :inherit t :ref
-			"8177d5794e74526809e462866d6b0a7aeae955da"))
+			"59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (forge-search :source "elpaca-menu-lock-file" :recipe
 	       (:source nil :package "forge-search" :id forge-search :host
 			github :repo "benthamite/forge-search.el" :branch
@@ -1105,7 +1127,7 @@
 			("emacs/extras/frame-extras.el"
 			 "emacs/extras/doc/frame-extras.texi")
 			:depth nil :type git :protocol https :inherit t :ref
-			"8177d5794e74526809e462866d6b0a7aeae955da"))
+			"59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (gcmh :source "elpaca-menu-lock-file" :recipe
        (:package "gcmh" :repo "koral/gcmh" :fetcher gitlab :files
 		 ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo" "doc/dir"
@@ -1118,7 +1140,7 @@
  (gdocs :source "elpaca-menu-lock-file" :recipe
 	(:source nil :package "gdocs" :id gdocs :host github :repo
 		 "benthamite/gdocs" :type git :protocol https :inherit t :depth
-		 treeless :ref "57f1de605addaea581e24142a6d47d8bb885a5fb"))
+		 treeless :ref "e8b551c4cbbe3f48382989dda1d2065b846e05d1"))
  (gdrive :source "elpaca-menu-lock-file" :recipe
 	 (:source nil :package "gdrive" :id gdrive :host github :repo
 		  "benthamite/gdrive" :depth nil :type git :protocol https
@@ -1188,16 +1210,17 @@
 		   "docs/*.texinfo"
 		   (:exclude ".dir-locals.el" "test.el" "tests.el" "*-test.el"
 			     "*-tests.el" "LICENSE" "README*" "*-pkg.el"))
-		  :source "MELPA" :id gptel :type git :protocol https :inherit t
+		  :source "MELPA" :id gptel :host github :repo "benthamite/gptel"
+		  :type git :protocol https :inherit t
 		  :depth treeless :ref
-		  "9682e8f5f96a72c858fb3420003642194793b32f"))
+		  "e6a676499d662bb977d9f6fef7ba95d7f8c4c90e"))
  (gptel-extras :source "elpaca-menu-lock-file" :recipe
 	       (:source nil :package "gptel-extras" :id gptel-extras :host
 			github :repo "benthamite/dotfiles" :files
 			("emacs/extras/gptel-extras.el"
 			 "emacs/extras/doc/gptel-extras.texi")
 			:depth nil :type git :protocol https :inherit t :ref
-			"8177d5794e74526809e462866d6b0a7aeae955da"))
+			"59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (gptel-plus :source "elpaca-menu-lock-file" :recipe
 	     (:source nil :package "gptel-plus" :id gptel-plus :host github
 		      :repo "benthamite/gptel-plus" :type git :protocol https
@@ -1355,7 +1378,7 @@
 			  ("emacs/extras/isearch-extras.el"
 			   "emacs/extras/doc/isearch-extras.texi")
 			  :depth nil :type git :protocol https :inherit t :ref
-			  "8177d5794e74526809e462866d6b0a7aeae955da"))
+			  "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (jeison :source "elpaca-menu-lock-file" :recipe
 	 (:package "jeison" :repo "SavchenkoValeriy/jeison" :fetcher github
 		   :files
@@ -1379,12 +1402,12 @@
 		       ("emacs/extras/jinx-extras.el"
 			"emacs/extras/doc/jinx-extras.texi")
 		       :depth nil :type git :protocol https :inherit t :ref
-		       "8177d5794e74526809e462866d6b0a7aeae955da"))
+		       "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (johnson :source "elpaca-menu-lock-file" :recipe
 	  (:source nil :package "johnson" :id johnson :host github :repo
 		   "benthamite/johnson" :type git :protocol https :inherit t
 		   :depth treeless :ref
-		   "f9d329ec1effd8c1158f28928640d6dcf658abe5"))
+		   "d25cc6e1e1f491e6a52d954dd841e6c6a0d47c82"))
  (js2-mode :source "elpaca-menu-lock-file" :recipe
 	   (:package "js2-mode" :repo "mooz/js2-mode" :fetcher github :files
 		     ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo"
@@ -1444,7 +1467,7 @@
 			 ("emacs/extras/kmacro-extras.el"
 			  "emacs/extras/doc/kmacro-extras.texi")
 			 :depth nil :type git :protocol https :inherit t :ref
-			 "8177d5794e74526809e462866d6b0a7aeae955da"))
+			 "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (language-detection :source "elpaca-menu-lock-file" :recipe
 		     (:package "language-detection" :fetcher github :repo
 			       "andreasjansson/language-detection.el" :files
@@ -1471,7 +1494,7 @@
 			      ("emacs/extras/ledger-mode-extras.el"
 			       "emacs/extras/doc/ledger-mode-extras.texi")
 			      :depth nil :type git :protocol https :inherit t
-			      :ref "8177d5794e74526809e462866d6b0a7aeae955da"))
+			      :ref "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (lin :source "elpaca-menu-lock-file" :recipe
       (:package "lin" :repo ("https://github.com/protesilaos/lin" . "lin") :tar
 		"2.0.0" :host gnu :files
@@ -1500,7 +1523,7 @@
       (:package "llm" :repo ("https://github.com/ahyatt/llm" . "llm") :tar
 		"0.29.0" :host gnu :files ("*" (:exclude ".git")) :source
 		"GNU ELPA" :id llm :type git :protocol https :inherit t :depth
-		treeless :ref "951524c93502d658538b5c9a0a3f2706211bdb12"))
+		treeless :ref "f5d9061263ca55032be7a0f11af14ecffc9c34e5"))
  (llm-tool-collection :source "elpaca-menu-lock-file" :recipe
 		      (:source nil :package "llm-tool-collection" :id
 			       llm-tool-collection :host github :repo
@@ -1529,6 +1552,14 @@
 		   :source "MELPA" :id logito :type git :protocol https :inherit
 		   t :depth treeless :ref
 		   "d5934ce10ba3a70d3fcfb94d742ce3b9136ce124"))
+ (logos :source "elpaca-menu-lock-file" :recipe
+	(:package "logos" :repo
+		  ("https://github.com/protesilaos/logos" . "logos") :tar
+		  "1.2.0" :host gnu :files
+		  ("*" (:exclude ".git" "COPYING" "doclicense.texi")) :source
+		  "GNU ELPA" :id logos :type git :protocol https :inherit t
+		  :depth treeless :ref
+		  "0f6680e48a819057ad43bd0964901c3746dd9f47"))
  (macos :source "elpaca-menu-lock-file" :recipe
 	(:source nil :package "macos" :id macos :host github :repo
 		 "benthamite/macos" :type git :protocol https :inherit t :depth
@@ -1555,14 +1586,14 @@
 		  :source "MELPA" :id magit :host github :branch "main" :build
 		  (:not elpaca-check-version) :type git :protocol https :inherit
 		  t :depth treeless :ref
-		  "b9f19bae4d5e5c485d2d8d7bf52364eeb7d22a6b"))
+		  "60e04662be037630b46fc241956e313ae405dd03"))
  (magit-extra :source "elpaca-menu-lock-file" :recipe
 	      (:source nil :package "magit-extra" :id magit-extra :host github
 		       :repo "benthamite/dotfiles" :files
 		       ("emacs/extras/magit-extra.el"
 			"emacs/extras/doc/magit-extra.texi")
 		       :depth nil :type git :protocol https :inherit t :ref
-		       "8177d5794e74526809e462866d6b0a7aeae955da"))
+		       "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (magit-gptcommit :source "elpaca-menu-lock-file" :recipe
 		  (:package "magit-gptcommit" :fetcher github :repo
 			    "douo/magit-gptcommit" :files
@@ -1583,7 +1614,7 @@
 			   "magit-section-pkg.el")
 			  :source "MELPA" :id magit-section :type git :protocol
 			  https :inherit t :depth treeless :ref
-			  "b9f19bae4d5e5c485d2d8d7bf52364eeb7d22a6b"))
+			  "60e04662be037630b46fc241956e313ae405dd03"))
  (marginalia :source "elpaca-menu-lock-file" :recipe
 	     (:package "marginalia" :repo "minad/marginalia" :fetcher github
 		       :files
@@ -1617,7 +1648,7 @@
 				("emacs/extras/markdown-mode-extras.el"
 				 "emacs/extras/doc/markdown-mode-extras.texi")
 				:depth nil :type git :protocol https :inherit t
-				:ref "8177d5794e74526809e462866d6b0a7aeae955da"))
+				:ref "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (marshal :source "elpaca-menu-lock-file" :recipe
 	  (:package "marshal" :fetcher github :repo "sigma/marshal.el" :files
 		    ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo"
@@ -1677,7 +1708,7 @@
 			       ("emacs/extras/modus-themes-extras.el"
 				"emacs/extras/doc/modus-themes-extras.texi")
 			       :depth nil :type git :protocol https :inherit t
-			       :ref "8177d5794e74526809e462866d6b0a7aeae955da"))
+			       :ref "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (monet :source "elpaca-menu-lock-file" :recipe
 	(:source nil :package "monet" :id monet :host github :repo
 		 "stevemolitor/monet" :type git :protocol https :inherit t
@@ -1711,12 +1742,12 @@
 		       ("emacs/extras/mu4e-extras.el"
 			"emacs/extras/doc/mu4e-extras.texi")
 		       :depth nil :type git :protocol https :inherit t :ref
-		       "8177d5794e74526809e462866d6b0a7aeae955da"))
+		       "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (mullvad :source "elpaca-menu-lock-file" :recipe
 	  (:source nil :package "mullvad" :id mullvad :host github :repo
 		   "benthamite/mullvad" :type git :protocol https :inherit t
 		   :depth treeless :ref
-		   "71e4b4b33aa6392eb6d14467dfc665aa2d461838"))
+		   "b39e532d923229b8a2bc71f248a7fad064f98043"))
  (nav-flash :source "elpaca-menu-lock-file" :recipe
 	    (:package "nav-flash" :repo "rolandwalker/nav-flash" :fetcher github
 		      :files
@@ -1778,7 +1809,7 @@
 				    "*-pkg.el"))
 			 :source "MELPA" :id no-littering :wait t :type git
 			 :protocol https :inherit t :depth treeless :ref
-			 "3b1d39d6b37f1f6f7dbda46712e40bc700ac79d2"))
+			 "24002d52785b5feb2313dfabc49d0006b8ba5ba0"))
  (nov :source "elpaca-menu-lock-file" :recipe
       (:package "nov" :fetcher git :url "https://depp.brause.cc/nov.el.git"
 		:files
@@ -1830,9 +1861,9 @@
 			  "5fe1762f8d8692dd5b6f1697bedbbf4cae9ef036"))
  (ol-emacs-slack :source "elpaca-menu-lock-file" :recipe
 		 (:source nil :package "ol-emacs-slack" :id ol-emacs-slack :host
-			  github :repo "ag91/ol-emacs-slack" :type git :protocol
+			  github :repo "benthamite/ol-emacs-slack" :type git :protocol
 			  https :inherit t :depth treeless :ref
-			  "93ecc9d5fbe94f1693a4aa0226a09f35b55d9acd"))
+			  "af95f9f61c66efe85061ee965a402078a5325aef"))
  (orderless :source "elpaca-menu-lock-file" :recipe
 	    (:package "orderless" :repo "oantolin/orderless" :fetcher github
 		      :files
@@ -1852,7 +1883,7 @@
 			    ("emacs/extras/orderless-extras.el"
 			     "emacs/extras/doc/orderless-extras.texi")
 			    :depth nil :type git :protocol https :inherit t :ref
-			    "8177d5794e74526809e462866d6b0a7aeae955da"))
+			    "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (org-appear :source "elpaca-menu-lock-file" :recipe
 	     (:package "org-appear" :fetcher github :repo "awth13/org-appear"
 		       :files
@@ -1947,7 +1978,7 @@
 		      ("emacs/extras/org-extras.el"
 		       "emacs/extras/doc/org-extras.texi")
 		      :depth nil :type git :protocol https :inherit t :ref
-		      "8177d5794e74526809e462866d6b0a7aeae955da"))
+		      "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (org-gcal :source "elpaca-menu-lock-file" :recipe
 	   (:package "org-gcal" :fetcher github :repo "benthamite/org-gcal.el"
 		     :files
@@ -1962,14 +1993,14 @@
 		     "fix/strip-html-descriptions" :build
 		     (:not elpaca-check-version) :type git :protocol https
 		     :inherit t :depth treeless :ref
-		     "3feab0b811b8305811d4753463c1a5788fb33017"))
+		     "640c6d29b5a18e9f578dec2ce3b4910d5f1e1f2a"))
  (org-gcal-extras :source "elpaca-menu-lock-file" :recipe
 		  (:source nil :package "org-gcal-extras" :id org-gcal-extras
 			   :host github :repo "benthamite/dotfiles" :files
 			   ("emacs/extras/org-gcal-extras.el"
 			    "emacs/extras/doc/org-gcal-extras.texi")
 			   :depth nil :type git :protocol https :inherit t :ref
-			   "8177d5794e74526809e462866d6b0a7aeae955da"))
+			   "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (org-indent-pixel :source "elpaca-menu-lock-file" :recipe
 		   (:source nil :package "org-indent-pixel" :id org-indent-pixel
 			    :host github :repo "benthamite/org-indent-pixel"
@@ -2038,7 +2069,7 @@
 			  ("emacs/extras/org-msg-extras.el"
 			   "emacs/extras/doc/org-msg-extras.texi")
 			  :depth nil :type git :protocol https :inherit t :ref
-			  "8177d5794e74526809e462866d6b0a7aeae955da"))
+			  "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (org-noter :source "elpaca-menu-lock-file" :recipe
 	    (:package "org-noter" :fetcher github :repo "org-noter/org-noter"
 		      :files
@@ -2053,7 +2084,7 @@
 			    ("emacs/extras/org-noter-extras.el"
 			     "emacs/extras/doc/org-noter-extras.texi")
 			    :depth nil :type git :protocol https :inherit t :ref
-			    "8177d5794e74526809e462866d6b0a7aeae955da"))
+			    "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (org-pdftools :source "elpaca-menu-lock-file" :recipe
 	       (:package "org-pdftools" :fetcher github :repo
 			 "fuxialexander/org-pdftools" :files ("org-pdftools.el")
@@ -2075,7 +2106,7 @@
 			       ("emacs/extras/org-pomodoro-extras.el"
 				"emacs/extras/doc/org-pomodoro-extras.texi")
 			       :depth nil :type git :protocol https :inherit t
-			       :ref "8177d5794e74526809e462866d6b0a7aeae955da"))
+			       :ref "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (org-ql :source "elpaca-menu-lock-file" :recipe
 	 (:package "org-ql" :fetcher github :repo "alphapapa/org-ql" :files
 		   (:defaults (:exclude "helm-org-ql.el")) :source "MELPA" :id
@@ -2093,7 +2124,7 @@
 			  ("emacs/extras/org-ref-extras.el"
 			   "emacs/extras/doc/org-ref-extras.texi")
 			  :depth nil :type git :protocol https :inherit t :ref
-			  "8177d5794e74526809e462866d6b0a7aeae955da"))
+			  "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (org-roam :source "elpaca-menu-lock-file" :recipe
 	   (:package "org-roam" :fetcher github :repo "benthamite/org-roam"
 		     :files (:defaults "extensions/*") :source "MELPA" :id
@@ -2119,7 +2150,7 @@
 			   ("emacs/extras/org-roam-extras.el"
 			    "emacs/extras/doc/org-roam-extras.texi")
 			   :depth nil :type git :protocol https :inherit t :ref
-			   "8177d5794e74526809e462866d6b0a7aeae955da"))
+			   "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (org-roam-ui :source "elpaca-menu-lock-file" :recipe
 	      (:package "org-roam-ui" :fetcher github :repo
 			"org-roam/org-roam-ui" :files ("*.el" "out") :source
@@ -2139,6 +2170,11 @@
 			     :source "MELPA" :id org-super-agenda :type git
 			     :protocol https :inherit t :depth treeless :ref
 			     "fb20ad9c8a9705aa05d40751682beae2d094e0fe"))
+ (org-table-wrap :source "elpaca-menu-lock-file" :recipe
+		 (:source nil :package "org-table-wrap" :id org-table-wrap :host
+			  github :repo "benthamite/org-table-wrap" :type git
+			  :protocol https :inherit t :depth treeless :ref
+			  "5f844036f7a92f5dbfce0791b017c29e4f141265"))
  (org-tidy :source "elpaca-menu-lock-file" :recipe
 	   (:package "org-tidy" :fetcher github :repo "jxq0/org-tidy" :files
 		     ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo"
@@ -2159,7 +2195,7 @@
 			     ("*" (:exclude ".git")) :source "GNU ELPA" :id
 			     org-transclusion :type git :protocol https :inherit
 			     t :depth treeless :ref
-			     "f70f5b8cb58ed148c5eec7273b7e9923441b94a3"))
+			     "f5dd4c22adc9d30c5d9365c3e6e1bceafabd4db5"))
  (org-vcard :source "elpaca-menu-lock-file" :recipe
 	    (:package "org-vcard" :fetcher github :repo "pinoaffe/org-vcard"
 		      :files ("org-vcard.el" "styles") :source "MELPA" :id
@@ -2185,7 +2221,7 @@
 				("emacs/extras/org-web-tools-extras.el"
 				 "emacs/extras/doc/org-web-tools-extras.texi")
 				:depth nil :type git :protocol https :inherit t
-				:ref "8177d5794e74526809e462866d6b0a7aeae955da"))
+				:ref "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (orgit :source "elpaca-menu-lock-file" :recipe
 	(:package "orgit" :fetcher github :repo "magit/orgit" :files
 		  ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo"
@@ -2228,7 +2264,7 @@
 				   "*-pkg.el"))
 			:source "MELPA" :id orgtbl-join :type git :protocol
 			https :inherit t :depth treeless :ref
-			"bd9edf54bdd55d1d33b8c6fb51a7f23a78c09355"))
+			"837155efe2c107e92d4c62701fffb7c0416fa4f4"))
  (outli :source "elpaca-menu-lock-file" :recipe
 	(:package "outli" :fetcher github :repo "jdtsmith/outli" :files
 		  ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo"
@@ -2246,7 +2282,7 @@
 			  ("emacs/extras/outline-extras.el"
 			   "emacs/extras/doc/outline-extras.texi")
 			  :depth nil :type git :protocol https :inherit t :ref
-			  "8177d5794e74526809e462866d6b0a7aeae955da"))
+			  "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (ov :source "elpaca-menu-lock-file" :recipe
      (:package "ov" :fetcher github :repo "emacsorphanage/ov" :files
 	       ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo" "doc/dir"
@@ -2295,7 +2331,7 @@
 			  ("emacs/extras/ox-hugo-extras.el"
 			   "emacs/extras/doc/ox-hugo-extras.texi")
 			  :depth nil :type git :protocol https :inherit t :ref
-			  "8177d5794e74526809e462866d6b0a7aeae955da"))
+			  "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (ox-pandoc :source "elpaca-menu-lock-file" :recipe
 	    (:package "ox-pandoc" :repo "emacsorphanage/ox-pandoc" :fetcher
 		      github :files
@@ -2355,7 +2391,7 @@
 		       ("emacs/extras/pass-extras.el"
 			"emacs/extras/doc/pass-extras.texi")
 		       :depth nil :type git :protocol https :inherit t :ref
-		       "8177d5794e74526809e462866d6b0a7aeae955da"))
+		       "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (password-generator :source "elpaca-menu-lock-file" :recipe
 		     (:package "password-generator" :fetcher github :repo
 			       "vandrlexay/emacs-password-genarator" :files
@@ -2396,7 +2432,7 @@
 		 "benthamite/dotfiles" :files
 		 ("emacs/extras/paths.el" "emacs/extras/doc/paths.texi") :depth
 		 nil :type git :protocol https :inherit t :ref
-		 "8177d5794e74526809e462866d6b0a7aeae955da"))
+		 "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (pcache :source "elpaca-menu-lock-file" :recipe
 	 (:package "pcache" :repo "sigma/pcache" :fetcher github :files
 		   ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo"
@@ -2433,7 +2469,7 @@
 			    ("emacs/extras/pdf-tools-extras.el"
 			     "emacs/extras/doc/pdf-tools-extras.texi")
 			    :depth nil :type git :protocol https :inherit t :ref
-			    "8177d5794e74526809e462866d6b0a7aeae955da"))
+			    "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (pdf-tools-pages :source "elpaca-menu-lock-file" :recipe
 		  (:source nil :package "pdf-tools-pages" :id pdf-tools-pages
 			   :host github :repo "benthamite/pdf-tools-pages" :type
@@ -2597,7 +2633,7 @@
 			   ("emacs/extras/profiler-extras.el"
 			    "emacs/extras/doc/profiler-extras.texi")
 			   :depth nil :type git :protocol https :inherit t :ref
-			   "8177d5794e74526809e462866d6b0a7aeae955da"))
+			   "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (prot-common :source "elpaca-menu-lock-file" :recipe
 	      (:source nil :package "prot-common" :id prot-common :host github
 		       :repo "protesilaos/dotfiles" :local-repo "prot-common"
@@ -2605,7 +2641,7 @@
 		       (:not elpaca-check-version) :files
 		       ("emacs/.emacs.d/prot-lisp/prot-common.el") :type git
 		       :protocol https :inherit t :depth treeless :ref
-		       "72461ab316dd4bb7e861037566817901c0fd9938"))
+		       "559be1a5ff2dac30ec1def3be678b08d08af2554"))
  (prot-eww :source "elpaca-menu-lock-file" :recipe
 	   (:source nil :package "prot-eww" :id prot-eww :host github :repo
 		    "protesilaos/dotfiles" :local-repo "prot-eww" :main
@@ -2613,7 +2649,7 @@
 		    (:not elpaca-check-version) :files
 		    ("emacs/.emacs.d/prot-lisp/prot-eww.el") :type git :protocol
 		    https :inherit t :depth treeless :ref
-		    "72461ab316dd4bb7e861037566817901c0fd9938"))
+		    "559be1a5ff2dac30ec1def3be678b08d08af2554"))
  (prot-scratch :source "elpaca-menu-lock-file" :recipe
 	       (:source nil :package "prot-scratch" :id prot-scratch :host
 			github :repo "protesilaos/dotfiles" :local-repo
@@ -2622,7 +2658,7 @@
 			(:not elpaca-check-version) :files
 			("emacs/.emacs.d/prot-lisp/prot-scratch.el") :type git
 			:protocol https :inherit t :depth treeless :ref
-			"72461ab316dd4bb7e861037566817901c0fd9938"))
+			"559be1a5ff2dac30ec1def3be678b08d08af2554"))
  (prot-simple :source "elpaca-menu-lock-file" :recipe
 	      (:source nil :package "prot-simple" :id prot-simple :host github
 		       :repo "protesilaos/dotfiles" :local-repo "prot-simple"
@@ -2630,7 +2666,7 @@
 		       (:not elpaca-check-version) :files
 		       ("emacs/.emacs.d/prot-lisp/prot-simple.el") :type git
 		       :protocol https :inherit t :depth treeless :ref
-		       "72461ab316dd4bb7e861037566817901c0fd9938"))
+		       "559be1a5ff2dac30ec1def3be678b08d08af2554"))
  (puni :source "elpaca-menu-lock-file" :recipe
        (:package "puni" :repo "AmaiKinono/puni" :fetcher github :files
 		 ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo" "doc/dir"
@@ -2719,14 +2755,14 @@
 			     ("emacs/extras/read-aloud-extras.el"
 			      "emacs/extras/doc/read-aloud-extras.texi")
 			     :depth nil :type git :protocol https :inherit t
-			     :ref "8177d5794e74526809e462866d6b0a7aeae955da"))
+			     :ref "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (register-extras :source "elpaca-menu-lock-file" :recipe
 		  (:source nil :package "register-extras" :id register-extras
 			   :host github :repo "benthamite/dotfiles" :files
 			   ("emacs/extras/register-extras.el"
 			    "emacs/extras/doc/register-extras.texi")
 			   :depth nil :type git :protocol https :inherit t :ref
-			   "8177d5794e74526809e462866d6b0a7aeae955da"))
+			   "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (request :source "elpaca-menu-lock-file"
    :recipe
    (:package "request" :repo "tkf/emacs-request" :fetcher github :files
@@ -2811,7 +2847,7 @@
 				   "*-pkg.el"))
 			:source "MELPA" :id shell-maker :type git :protocol
 			https :inherit t :depth treeless :ref
-			"afd5509b99b28589bab3a0d06786118905eadba9"))
+			"8c64f0b5b6855670db040e747e9af71062160d7e"))
  (shr-heading :source "elpaca-menu-lock-file" :recipe
 	      (:source nil :package "shr-heading" :id shr-heading :host github
 		       :repo "oantolin/emacs-config" :files
@@ -2862,7 +2898,7 @@
 			 ("emacs/extras/simple-extras.el"
 			  "emacs/extras/doc/simple-extras.texi")
 			 :depth nil :type git :protocol https :inherit t :ref
-			 "8177d5794e74526809e462866d6b0a7aeae955da"))
+			 "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (simple-httpd :source "elpaca-menu-lock-file" :recipe
 	       (:package "simple-httpd" :repo "skeeto/emacs-web-server" :fetcher
 			 github :files
@@ -2877,23 +2913,23 @@
 			 https :inherit t :depth treeless :ref
 			 "3982c55e9061475038a3ccd61aecb2de3d407cec"))
  (slack :source "elpaca-menu-lock-file" :recipe
-	(:package "slack" :fetcher github :repo "emacs-slack/emacs-slack" :files
+	(:package "slack" :fetcher github :repo "benthamite/emacs-slack" :files
 		  ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo"
 		   "doc/dir" "doc/*.info" "doc/*.texi" "doc/*.texinfo"
 		   "lisp/*.el" "docs/dir" "docs/*.info" "docs/*.texi"
 		   "docs/*.texinfo"
 		   (:exclude ".dir-locals.el" "test.el" "tests.el" "*-test.el"
 			     "*-tests.el" "LICENSE" "README*" "*-pkg.el"))
-		  :source "MELPA" :id slack :type git :protocol https :inherit t
-		  :depth treeless :ref
-		  "a39bf51e52ce3843c7330c2cd00ef189ba6b5fa7"))
+		  :source "MELPA" :id slack :host github :type git :protocol
+		  https :inherit t :depth treeless :ref
+		  "cf70e72058e1eafce93921dce0e4063f16724592"))
  (slack-extras :source "elpaca-menu-lock-file" :recipe
 	       (:source nil :package "slack-extras" :id slack-extras :host
 			github :repo "benthamite/dotfiles" :files
 			("emacs/extras/slack-extras.el"
 			 "emacs/extras/doc/slack-extras.texi")
 			:depth nil :type git :protocol https :inherit t :ref
-			"8177d5794e74526809e462866d6b0a7aeae955da"))
+			"59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (smartrep :source "elpaca-menu-lock-file" :recipe
 	   (:package "smartrep" :repo "myuhe/smartrep.el" :fetcher github :files
 		     ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo"
@@ -2916,6 +2952,10 @@
 			     "0.3.0" :type git :protocol https :inherit t :depth
 			     treeless :ref
 			     "9d96d301d5bccf192daaf00dba64bca9979dcb5a"))
+ (spofy :source "elpaca-menu-lock-file" :recipe
+	(:source nil :package "spofy" :id spofy :host github :repo
+		 "benthamite/spofy" :type git :protocol https :inherit t :depth
+		 treeless :ref "a1b6c376af0c6ba0163e1764d98ae9763b20ad0c"))
  (stafforini :source "elpaca-menu-lock-file" :recipe
 	     (:source nil :package "stafforini" :id stafforini :host github
 		      :repo "benthamite/stafforini.el" :type git :protocol https
@@ -2952,7 +2992,7 @@
 			  ("emacs/extras/tab-bar-extras.el"
 			   "emacs/extras/doc/tab-bar-extras.texi")
 			  :depth nil :type git :protocol https :inherit t :ref
-			  "8177d5794e74526809e462866d6b0a7aeae955da"))
+			  "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (tablist :source "elpaca-menu-lock-file" :recipe
 	  (:package "tablist" :fetcher github :repo "emacsorphanage/tablist"
 		    :files
@@ -2982,7 +3022,7 @@
 			 ("emacs/extras/telega-extras.el"
 			  "emacs/extras/doc/telega-extras.texi")
 			 :depth nil :type git :protocol https :inherit t :ref
-			 "8177d5794e74526809e462866d6b0a7aeae955da"))
+			 "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (tmr :source "elpaca-menu-lock-file" :recipe
       (:package "tmr" :repo ("https://github.com/protesilaos/tmr" . "tmr") :tar
 		"1.3.0" :host gnu :files
@@ -3044,14 +3084,14 @@
 			      ("emacs/extras/use-package-extras.el"
 			       "emacs/extras/doc/use-package-extras.texi")
 			      :depth nil :type git :protocol https :inherit t
-			      :ref "8177d5794e74526809e462866d6b0a7aeae955da"))
+			      :ref "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (vc-extras :source "elpaca-menu-lock-file" :recipe
 	    (:source nil :package "vc-extras" :id vc-extras :host github :repo
 		     "benthamite/dotfiles" :files
 		     ("emacs/extras/vc-extras.el"
 		      "emacs/extras/doc/vc-extras.texi")
 		     :depth nil :type git :protocol https :inherit t :ref
-		     "8177d5794e74526809e462866d6b0a7aeae955da"))
+		     "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (vertico :source "elpaca-menu-lock-file" :recipe
 	  (:package "vertico" :repo "minad/vertico" :files
 		    (:defaults "extensions/*") :fetcher github :source "MELPA"
@@ -3089,7 +3129,7 @@
 			("emacs/extras/vterm-extras.el"
 			 "emacs/extras/doc/vterm-extras.texi")
 			:depth nil :type git :protocol https :inherit t :ref
-			"8177d5794e74526809e462866d6b0a7aeae955da"))
+			"59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (vulpea :source "elpaca-menu-lock-file" :recipe
 	 (:package "vulpea" :fetcher github :repo "d12frosted/vulpea" :files
 		   ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo"
@@ -3107,7 +3147,7 @@
 			 ("emacs/extras/vulpea-extras.el"
 			  "emacs/extras/doc/vulpea-extras.texi")
 			 :depth nil :type git :protocol https :inherit t :ref
-			 "8177d5794e74526809e462866d6b0a7aeae955da"))
+			 "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (vundo :source "elpaca-menu-lock-file" :recipe
 	(:package "vundo" :repo ("https://github.com/casouri/vundo" . "vundo")
 		  :tar "2.4.0" :host gnu :files ("*" (:exclude ".git" "test"))
@@ -3144,17 +3184,16 @@
 		  :protocol https :inherit t :depth treeless :ref
 		  "49f09ab9b706d2312cab1199e1eeb1bcd3f27f6f"))
  (wikipedia :source "elpaca-menu-lock-file" :recipe
-	    (:source "Init file" :package "wikipedia" :id wikipedia :host github
-		     :repo "benthamite/wikipedia" :depth nil :type git :protocol
-		     https :inherit t :ref
-		     "88f943d2a40adaca559c869ef48eca3ed65135b5"))
+	    (:source nil :package "wikipedia" :id wikipedia :host github :repo
+		     "benthamite/wikipedia" :depth nil :type git :protocol https
+		     :inherit t :ref "c61f15f7d7ff77a87fada7464ccddf17102c76c4"))
  (window-extras :source "elpaca-menu-lock-file" :recipe
 		(:source nil :package "window-extras" :id window-extras :host
 			 github :repo "benthamite/dotfiles" :files
 			 ("emacs/extras/window-extras.el"
 			  "emacs/extras/doc/window-extras.texi")
 			 :depth nil :type git :protocol https :inherit t :ref
-			 "8177d5794e74526809e462866d6b0a7aeae955da"))
+			 "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (winum :source "elpaca-menu-lock-file" :recipe
 	(:package "winum" :fetcher github :repo "deb0ch/emacs-winum" :files
 		  ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo"
@@ -3250,4 +3289,4 @@
 			("emacs/extras/zotra-extras.el"
 			 "emacs/extras/doc/zotra-extras.texi")
 			:depth nil :type git :protocol https :inherit t :ref
-			"8177d5794e74526809e462866d6b0a7aeae955da")))
+			"59b3785184aafe2e0967352b7262dd1fa45fcca8")))

@@ -10,6 +10,14 @@ Elpaca keeps a separate clone at `~/.config/emacs-profiles/<profile>/elpaca/sour
 
 **A PreToolUse hook (`block-elpaca-dotfiles-edit.sh`) blocks direct edits to `elpaca/sources/dotfiles/`.** Always edit the canonical files in `~/My Drive/dotfiles/` instead. After editing, commit and push in the dotfiles repo so the elpaca clone picks up the change on next sync. Only then will `elpaca-rebuild` (triggered by the `load-elisp-after-edit.sh` PostToolUse hook) compile the new code.
 
+If you need to rebuild manually (e.g. after a commit-only change), use:
+
+```bash
+emacsclient -e '(progn (elpaca-rebuild (quote dotfiles) t) (elpaca-wait) (elpaca-extras-reload (quote dotfiles)))'
+```
+
+**Never use `load-file` as a substitute for `elpaca-rebuild`** — it bypasses byte-compilation, load-path management, and dependency ordering.
+
 # Elpaca profile
 
 The current elpaca profile name is stored in the Elisp variable `init-current-profile`. Query it with:

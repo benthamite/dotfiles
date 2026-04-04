@@ -221,7 +221,14 @@ The first time you start a session with a given account, Claude will prompt for 
 
 #+findex: claude-code-extras--ensure-shared-symlinks
 #+vindex: claude-code-extras--shared-config-items
-When a session starts, ~claude-code-extras--sync-account-config~ ensures that shared configuration items are symlinked from =~/.claude/= into the account's config directory.  The items are listed in ~claude-code-extras--shared-config-items~: =settings.json=, =settings.local.json=, =skills=, =plugins=, =projects=, =memory=, and =history.jsonl=.  This means permissions, hooks, skills, plugins, project trust, memory, and session history are available regardless of which account is active.  Only OAuth credentials remain account-specific.  Existing files or directories that are not symlinks are left untouched to avoid data loss.
+#+vindex: claude-code-extras--shared-claude-json-keys
+When a session starts, ~claude-code-extras--sync-account-config~ performs two kinds of synchronization:
+
+1. *Symlinked items* (listed in ~claude-code-extras--shared-config-items~): =settings.json=, =settings.local.json=, =skills=, =plugins=, =projects=, =memory=, and =history.jsonl= are symlinked from =~/.claude/= into the account's config directory.  This shares permissions, hooks, skills, plugins, project trust, memory, and session history across accounts.
+
+2. *Merged =.claude.json= keys* (listed in ~claude-code-extras--shared-claude-json-keys~): =mcpServers=, =theme=, =claudeInChromeDefaultEnabled=, and =hasCompletedClaudeInChromeOnboarding= are copied from the canonical =~/.claude.json= into each account's =.claude.json=.  The =projects= key is merged separately using trust-aware logic.  This ensures MCP servers and UI preferences are available in every account without sharing account-specific data like OAuth credentials.
+
+Existing files or directories that are not symlinks are left untouched to avoid data loss.  The =.claude.json= write is skipped when no changes are detected, to avoid triggering file-change watchers.
 
 ** Toggling alerts
 :PROPERTIES:

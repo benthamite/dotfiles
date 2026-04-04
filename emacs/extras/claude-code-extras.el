@@ -541,20 +541,25 @@ project trust, memory, session history, permissions, and hooks are
 available regardless of which account is active.  Only OAuth
 credentials remain account-specific.")
 
+(defconst claude-code-extras--shared-claude-json-keys
+  '("mcpServers" "theme" "claudeInChromeDefaultEnabled"
+    "hasCompletedClaudeInChromeOnboarding")
+  "Keys copied from the canonical `~/.claude.json' into each account's `.claude.json'.
+These are settings that should be identical across accounts.  The
+`projects' key is handled separately via merge logic.")
+
 (defun claude-code-extras--sync-account-config (account)
   "Sync shared state into ACCOUNT's config directory.
 Merges the `projects' key from the canonical `~/.claude.json' and
 all account configs so folder trust decisions are available
-everywhere.  Without this, each account's config dir looks like a
-fresh install and re-prompts for folder trust.
+everywhere.  Copies shared keys like `mcpServers' from the
+canonical config so MCP servers, theme, and chrome integration are
+available in all accounts.  Also symlinks settings, skills,
+plugins, projects, memory, and history from `~/.claude/'.
 
-Also ensures that settings, skills, plugins, projects, memory,
-and history are symlinked from `~/.claude/' so the experience is
-seamless across accounts.
-
-Only writes `.claude.json' when the merged projects actually
-differ from what is already on disk, to avoid triggering
-file-change detection in running Claude Code sessions."
+Only writes `.claude.json' when actual changes are detected, to
+avoid triggering file-change detection in running Claude Code
+sessions."
   (when-let* ((config-dir (alist-get account claude-code-extras-accounts
                                      nil nil #'string=))
               (target-path (expand-file-name
@@ -562,13 +567,29 @@ file-change detection in running Claude Code sessions."
     (claude-code-extras--ensure-shared-symlinks (expand-file-name config-dir))
     (condition-case err
         (let* ((target (claude-code-extras--read-claude-json target-path))
-               (merged (claude-code-extras--collect-all-projects)))
-          (when (and target (> (hash-table-count merged) 0))
-            (let ((existing (gethash "projects" target)))
-              (unless (equal (json-serialize existing)
-                             (json-serialize merged))
-                (puthash "projects" merged target)
-                (claude-code-extras--write-claude-json target-path target)))))
+               (canonical (claude-code-extras--read-claude-json
+                           (expand-file-name ".claude.json" "~")))
+               (merged-projects (claude-code-extras--collect-all-projects))
+               (changed nil))
+          (when target
+            ;; Sync shared keys from canonical config.
+            (when canonical
+              (dolist (key claude-code-extras--shared-claude-json-keys)
+                (let ((val (gethash key canonical)))
+                  (when (and val
+                             (not (equal (json-serialize
+                                         (gethash key target))
+                                        (json-serialize val))))
+                    (puthash key val target)
+                    (setq changed t)))))
+            ;; Merge projects from all accounts.
+            (when (> (hash-table-count merged-projects) 0)
+              (unless (equal (json-serialize (gethash "projects" target))
+                             (json-serialize merged-projects))
+                (puthash "projects" merged-projects target)
+                (setq changed t)))
+            (when changed
+              (claude-code-extras--write-claude-json target-path target))))
       (error
        (message "claude-code-extras: failed to sync account config: %S" err)))))
 

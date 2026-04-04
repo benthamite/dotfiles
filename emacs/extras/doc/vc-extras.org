@@ -263,7 +263,10 @@ checking authentication status.
 #+findex: vc-extras-resolve-repo-dir
 #+findex: vc-extras-list-local-candidates
 The function ~vc-extras-is-git-dir-p~ returns non-~nil~ if a directory
-is recognized as a Git repository by ~vc-responsible-backend~.
+is a Git repository.  It uses ~locate-dominating-file~ to check for a
+=.git= entry, which correctly handles both regular =.git= directories
+and =gitdir:= pointer files created by ~vc-extras-split-local-repo~
+([[#h:splitting-git-directory][Splitting the git directory]]).
 
 The function ~vc-extras-has-submodules-p~ checks whether a =.gitmodules=
 file exists in a directory, indicating that the repository has

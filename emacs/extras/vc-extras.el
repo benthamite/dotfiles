@@ -90,8 +90,10 @@ split the `.git' directory.  If t or any other non-nil value, always split the
 ;;;;; General
 
 (defun vc-extras-is-git-dir-p (dir)
-  "Return non-nil if DIR is a Git repository."
-  (eq (vc-responsible-backend dir t) 'Git))
+  "Return non-nil if DIR is a Git repository.
+Handles both regular `.git' directories and gitdir pointer files
+created by `vc-extras-split-local-repo'."
+  (and (locate-dominating-file dir ".git") t))
 
 (defun vc-extras-get-account-prop (account prop)
   "Return the value of PROP for ACCOUNT in `vc-extras-profiles'."

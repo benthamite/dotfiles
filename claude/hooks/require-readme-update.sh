@@ -24,6 +24,9 @@ HAS_README=false
 if [ -n "$STAGED" ]; then
   while IFS= read -r file; do
     case "$file" in
+      # Skip runtime data files that don't warrant a README update
+      claude/skills/*/digests/*|claude/skills/*/last-run/*|claude/skills/twitter-vet/vetted/*)
+        ;;
       claude/skills/*|claude/hooks/*|claude/settings*.json|claude/CLAUDE.md)
         HAS_CLAUDE_CHANGES=true
         ;;
@@ -39,7 +42,8 @@ fi
 if [ "$HAS_CLAUDE_CHANGES" = false ]; then
   if echo "$COMMAND" | grep -qE '\bgit\s+add\b'; then
     # Direct path in git add args (e.g., git add claude/skills/foo/SKILL.md)
-    if echo "$COMMAND" | grep -qE '(^|[[:space:]])claude/(skills|hooks|settings|CLAUDE)' && ! echo "$COMMAND" | grep -qE '\.claude/'; then
+    # Exclude runtime data paths (digests, last-run, vetted)
+    if echo "$COMMAND" | grep -qE '(^|[[:space:]])claude/(skills|hooks|settings|CLAUDE)' && ! echo "$COMMAND" | grep -qE '\.claude/' && ! echo "$COMMAND" | grep -qE 'claude/skills/[^/]+/(digests|last-run)/|claude/skills/twitter-vet/vetted/'; then
       HAS_CLAUDE_CHANGES=true
     fi
     # cd into a claude/ subdirectory before git add (e.g., cd ~/.claude/skills/foo && git add SKILL.md)

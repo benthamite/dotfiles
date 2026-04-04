@@ -570,7 +570,7 @@ On the first Edit or Write in a project, moves Claude Code's memory directory fr
 :ID:       F4D78958-4194-4DB3-9624-C04EC7790960
 :END:
 
-Defined in the dotfiles project-level =.claude/settings.json= (not the global settings) since it only applies to this repo. Blocks =git commit= when files in =claude/= (skills, hooks, settings, CLAUDE.md) are staged but =claude/README.org= is not. Also detects when =git add= and =git commit= appear in the same bash command (which would otherwise bypass the staged-file check). Ensures documentation stays in sync with configuration changes. Project-specific skills (under =.claude/skills/=) are excluded from this check, since they belong to their project's documentation, not the dotfiles README.
+Defined in the dotfiles project-level =.claude/settings.json= (not the global settings) since it only applies to this repo. Blocks =git commit= when files in =claude/= (skills, hooks, settings, CLAUDE.md) are staged but =claude/README.org= is not. Also detects when =git add= and =git commit= appear in the same bash command (which would otherwise bypass the staged-file check). Ensures documentation stays in sync with configuration changes. Project-specific skills (under =.claude/skills/=) are excluded from this check, since they belong to their project's documentation, not the dotfiles README. Runtime data paths (=digests/=, =last-run/=, =twitter-vet/vetted/=) are also excluded, since these are skill output files that don't warrant a README update.
 
 ** remind-claude-readme-update.sh (PostToolUse)
 :PROPERTIES:

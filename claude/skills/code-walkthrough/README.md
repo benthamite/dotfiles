@@ -1,8 +1,8 @@
 # Code walkthrough
 
-A Claude Code skill for generating structured, linear walkthroughs of codebases using [showboat](https://github.com/simonw/showboat).
+A Claude Code skill for generating structured, linear walkthroughs of codebases as org-mode literate documents.
 
-Based on the [linear walkthroughs](https://simonwillison.net/guides/agentic-engineering-patterns/linear-walkthroughs/) pattern from Simon Willison's agentic engineering patterns guide. All code snippets in the walkthrough are extracted via shell commands, not pasted manually, guaranteeing accuracy.
+Based on the [linear walkthroughs](https://simonwillison.net/guides/agentic-engineering-patterns/linear-walkthroughs/) pattern from Simon Willison's agentic engineering patterns guide. All code snippets in the walkthrough are extracted via shell commands, not pasted manually, guaranteeing accuracy. The output is an org-mode file with executable source blocks that can be re-run with `C-c C-c` to verify they still match the source.
 
 ## Usage
 

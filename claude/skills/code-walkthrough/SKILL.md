@@ -1,12 +1,12 @@
 ---
 name: code-walkthrough
-description: Generate a structured walkthrough of a codebase using showboat. Use when the user says "walkthrough", "code walkthrough", "explain this codebase", "walk me through the code", "how does this code work", or wants a detailed guided tour of how a project works.
+description: Generate a structured walkthrough of a codebase as an org-mode literate document. Use when the user says "walkthrough", "code walkthrough", "explain this codebase", "walk me through the code", "how does this code work", or wants a detailed guided tour of how a project works.
 argument-hint: [dir] [--output <file>]
 ---
 
 # Code walkthrough
 
-Generate a structured, linear walkthrough of a codebase that explains how it works in detail. The walkthrough is built with [showboat](https://github.com/simonw/showboat), which captures real code snippets via shell commands rather than manual copying — guaranteeing accuracy and eliminating hallucination risk.
+Generate a structured, linear walkthrough of a codebase that explains how it works in detail. The output is an org-mode literate document that interleaves prose with executable source blocks. Each code snippet is extracted via a shell command (`grep`, `sed`, `cat`, etc.) — never pasted from memory — guaranteeing accuracy.
 
 Based on the [linear walkthroughs](https://simonwillison.net/guides/agentic-engineering-patterns/linear-walkthroughs/) pattern from Simon Willison's agentic engineering patterns guide.
 
@@ -16,7 +16,7 @@ Based on the [linear walkthroughs](https://simonwillison.net/guides/agentic-engi
 
 Parse `$ARGUMENTS` for:
 - **Directory**: the codebase to walk through (default: current working directory)
-- **`--output <file>`**: path for the walkthrough document (default: `walkthrough.md` in the target directory)
+- **`--output <file>`**: path for the walkthrough document (default: `walkthrough.org` in the target directory)
 
 ### 2. Read and understand the codebase
 
@@ -36,41 +36,63 @@ Before writing anything, plan the walkthrough structure. A good walkthrough is *
 
 Present the planned outline to the user and ask for confirmation before proceeding.
 
-### 4. Build the walkthrough with showboat
+### 4. Build the walkthrough as an org-mode document
 
-Initialize the document:
+Write the document directly using the Write tool. The format is org-mode with `#+begin_src bash :results output` blocks for code extraction.
 
-```bash
-uvx showboat init <output-file> "<Project Name> — code walkthrough"
+#### Document structure
+
+```org
+#+title: <Project Name> — code walkthrough
+#+date: <today's date>
+
+* Overview
+
+Prose explaining the project...
+
+* Section title
+
+Prose explaining this part of the code...
+
+#+begin_src bash :results output :dir <source-dir>
+sed -n '10,25p' config.py
+#+end_src
+
+#+RESULTS:
+: <actual output from running the command>
+
+More commentary connecting this to the next piece...
 ```
 
-Then build the walkthrough by alternating between commentary and code:
+#### How to include code snippets
 
-- **Commentary** (`showboat note`): explain what a file or section does, why it exists, and how it connects to the rest of the codebase. Use clear, pedagogical prose.
-- **Code snippets** (`showboat exec`): use shell commands (`grep`, `sed`, `head`, `tail`, `cat`, `awk`) to extract the relevant code from source files. **Never paste code manually** — always use `showboat exec` so the snippet is grounded in the actual source.
+Every code snippet MUST be extracted via a shell command in a source block. The agent:
 
-Examples:
+1. Runs the extraction command via Bash to get the output
+2. Writes both the source block and its `#+RESULTS:` into the org file
+
+This ensures every snippet is grounded in the actual source. The reader can later re-execute any block with `C-c C-c` in Emacs to verify it still matches.
+
+**Extraction command examples:**
 
 ```bash
-# Add a section heading and commentary
-uvx showboat note <file> "## Configuration
-
-The app's configuration lives in \`config.py\`. It uses environment variables with sensible defaults:"
-
 # Show a specific code block by line range
-uvx showboat exec <file> bash "sed -n '10,25p' src/config.py"
+sed -n '10,25p' src/config.py
 
 # Show a function definition
-uvx showboat exec <file> bash "sed -n '/^def process_request/,/^def \|^class \|^$/p' src/handler.py"
+sed -n '/^def process_request/,/^def \|^class \|^$/p' src/handler.py
 
 # Show imports to illustrate dependencies
-uvx showboat exec <file> bash "head -20 src/main.py"
+head -20 src/main.py
 
 # Show a specific pattern across files
-uvx showboat exec <file> bash "grep -n 'register_route' src/*.py"
+grep -n 'register_route' src/*.py
 ```
 
-If an `exec` command produces wrong or noisy output, use `showboat pop` to remove it and try a better extraction command.
+#### Results formatting
+
+- For short outputs (< 10 lines), use the `: ` prefix format (one `: ` per line)
+- For longer outputs, use a `#+begin_example` / `#+end_example` block
 
 ### 5. Walkthrough structure
 
@@ -82,17 +104,13 @@ Each walkthrough should include:
 
 ### 6. Verify
 
-After building the walkthrough, run:
+After building the walkthrough, verify a sample of source blocks by re-running their commands and comparing the output to what's in the document. If anything has drifted, update the affected blocks.
 
-```bash
-uvx showboat verify <output-file>
-```
-
-This re-executes all code blocks and confirms the outputs still match. If any diffs appear, fix them with `pop` and re-do the affected sections.
+The reader can also verify any block interactively in Emacs with `C-c C-c`.
 
 ## Guidelines
 
-- **Ground truth only**: every code snippet must come from `showboat exec`. If you need to show code, write a shell command that extracts it. This is the core invariant of the pattern.
+- **Ground truth only**: every code snippet must come from an executed shell command. If you need to show code, write a command that extracts it. This is the core invariant of the pattern.
 - **Pedagogical tone**: write for someone who has never seen this codebase. Explain the "why", not just the "what".
 - **Be selective**: don't show every line of every file. Show the interesting parts — the architecture, the clever bits, the non-obvious decisions. Skip boilerplate.
 - **Connect the dots**: after showing a piece of code, explain how it relates to what came before and what comes next.

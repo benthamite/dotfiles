@@ -235,7 +235,7 @@ Audits code for intent transparency: magic values, misleading names, missing rat
 :ID:       7E94C626-47FA-47E4-8663-EED4424ECCA3
 :END:
 
-Generates a structured, linear walkthrough of a codebase using [[https://github.com/simonw/showboat][showboat]]. Based on the [[https://simonwillison.net/guides/agentic-engineering-patterns/linear-walkthroughs/][linear walkthroughs]] pattern from Simon Willison. All code snippets are extracted via shell commands (=showboat exec=), not pasted manually, guaranteeing accuracy. Accepts an optional directory and =--output= path. Inspired by an idea by Alejandro Acelas.
+Generates a structured, linear walkthrough of a codebase as an org-mode literate document. Based on the [[https://simonwillison.net/guides/agentic-engineering-patterns/linear-walkthroughs/][linear walkthroughs]] pattern from Simon Willison. All code snippets are extracted via shell commands in =#+begin_src bash= blocks, not pasted manually, guaranteeing accuracy. Re-execute any block with =C-c C-c= to verify. Accepts an optional directory and =--output= path. Inspired by an idea by Alejandro Acelas.
 
 *** build
 :PROPERTIES:

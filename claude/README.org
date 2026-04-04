@@ -242,7 +242,7 @@ Generates a structured, linear walkthrough of a codebase using [[https://github.
 :ID:       15574F2D-5827-48ED-8630-DFB3843EA3FB
 :END:
 
-Spec-based build workflow inspired by [[https://x.com/trq212/status/2005315275026260309][Thariq Shaukat's method]]. Reads =spec.md= in the current project and interviews the user in depth using =AskUserQuestion= to flesh out every aspect: technical implementation, UI/UX, tradeoffs, edge cases, security, and more. The questions are deliberately non-obvious, probing hidden complexity and unstated assumptions. Once the interview is complete, writes the detailed spec back to the file. Optionally executes the spec in the same session or defers to a fresh one.
+Spec-based build workflow inspired by [[https://x.com/trq212/status/2005315275026260309][Thariq Shaukat's method]]. Reads a one-line spec from the prompt (e.g. `/build a Spotify player for Emacs), or a =spec.md= file in the current project, and interviews the user in depth using =AskUserQuestion= to flesh out every aspect: technical implementation, UI/UX, tradeoffs, edge cases, security, and more. The questions are deliberately non-obvious, probing hidden complexity and unstated assumptions. Once the interview is complete, writes the detailed spec back to the file. Optionally executes the spec in the same session or defers to a fresh one.
 
 *** test-suite
 :PROPERTIES:

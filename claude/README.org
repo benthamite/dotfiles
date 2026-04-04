@@ -11,11 +11,13 @@ This directory contains my [[https://docs.anthropic.com/en/docs/claude-code][Cla
 ** Architecture
 :PROPERTIES:
 :CUSTOM_ID: h:architecture
+:ID:       AE7C697F-AF66-44E4-BBEA-85801E3B0895
 :END:
 
 *** Directory topology
 :PROPERTIES:
 :CUSTOM_ID: h:directory-topology
+:ID:       EB7422C8-E371-4F9B-AE1F-D6B6473F11BB
 :END:
 
 Three layers of directories work together: this dotfiles directory (source of truth), the shared =~/.claude/= hub, and per-account overlay directories.
@@ -65,6 +67,7 @@ Three layers of directories work together: this dotfiles directory (source of tr
 *** Settings hierarchy
 :PROPERTIES:
 :CUSTOM_ID: h:settings-hierarchy
+:ID:       ABB0C5CA-1B40-47BF-8746-BFFE1F4E420D
 :END:
 
 Claude Code loads settings from multiple levels, merged together. Each level can define permissions, hooks, and other options. Permissions are additive across levels. Hooks run from all levels that define them.
@@ -81,6 +84,7 @@ The global =settings.json= uses =bypassPermissions= mode: all tools run without 
 *** =CLAUDE.md= loading
 :PROPERTIES:
 :CUSTOM_ID: h:claude-md-loading
+:ID:       D03891CF-C905-480A-9690-62B4F8A7273D
 :END:
 
 Claude Code loads =CLAUDE.md= files from several locations. When working in a project, it loads:
@@ -93,6 +97,7 @@ Each file should contain distinct content. The global one defines behavioral con
 *** Where to put things
 :PROPERTIES:
 :CUSTOM_ID: h:where-to-put-things
+:ID:       A01A5164-CE5F-414D-9999-924B5C89339B
 :END:
 
 | What | Where | Why |
@@ -109,6 +114,7 @@ Each file should contain distinct content. The global one defines behavioral con
 ** Multi-account setup
 :PROPERTIES:
 :CUSTOM_ID: h:multi-account
+:ID:       239E0918-2383-460C-8C9C-2ABC4E3D344D
 :END:
 
 Two OAuth accounts (personal and work) are supported without re-authenticating. Each account uses a separate =CLAUDE_CONFIG_DIR= (=~/.claude-personal/= and =~/.claude-work/=) to keep its OAuth credentials and identity isolated, while sharing everything else via symlinks back to =~/.claude/=.
@@ -224,6 +230,13 @@ Audits code for architectural quality: unnecessary complexity, missing or wrong 
 
 Audits code for intent transparency: magic values, misleading names, missing rationale comments, undocumented conventions. Pass =--accept= to auto-fix high-impact clarity issues.
 
+*** code-walkthrough
+:PROPERTIES:
+:ID:       7E94C626-47FA-47E4-8663-EED4424ECCA3
+:END:
+
+Generates a structured, linear walkthrough of a codebase using [[https://github.com/simonw/showboat][showboat]]. Based on the [[https://simonwillison.net/guides/agentic-engineering-patterns/linear-walkthroughs/][linear walkthroughs]] pattern from Simon Willison. All code snippets are extracted via shell commands (=showboat exec=), not pasted manually, guaranteeing accuracy. Accepts an optional directory and =--output= path. Inspired by an idea by Alejandro Acelas.
+
 *** build
 :PROPERTIES:
 :ID:       15574F2D-5827-48ED-8630-DFB3843EA3FB
@@ -241,6 +254,7 @@ Creates comprehensive test suites. Performs reconnaissance on the tech stack, th
 *** lint-elisp
 :PROPERTIES:
 :CUSTOM_ID: h:lint-elisp
+:ID:       92D41417-BE75-415E-BF0C-6F705EAEBE27
 :END:
 
 Fixes byte-compile warnings and checkdoc notes in one or more Elisp files. Collects diagnostics from both sources in parallel, applies fixes (forward declarations, docstring rewording, unused variable cleanup), and re-runs until the output is clean.
@@ -342,6 +356,7 @@ Extracts and records architectural decisions from the current session into =deci
 *** open-session-log
 :PROPERTIES:
 :CUSTOM_ID: h:open-session-log
+:ID:       1C8D18F2-3EA7-4149-9BC4-40B4EFE8546C
 :END:
 
 Opens the current Claude Code session's conversation log in Emacs using the =agent-log= package. Walks up the process tree to find the session ID, then calls =agent-log-open-session= via =emacsclient=.
@@ -349,6 +364,7 @@ Opens the current Claude Code session's conversation log in Emacs using the =age
 *** new-project
 :PROPERTIES:
 :CUSTOM_ID: h:new-project
+:ID:       3AACE34C-578E-4B82-B2B4-09C8E3D2A366
 :END:
 
 Creates a new Epoch project directory from the current conversation. Gathers context (conversation history, Slack URLs, research), writes an org file with background, TODOs, and reference material, sets up a session log with =CLAUDE.md= referencing it, commits, and instructs the user to start a focused session in the new directory.
@@ -356,11 +372,15 @@ Creates a new Epoch project directory from the current conversation. Gathers con
 *** verify
 :PROPERTIES:
 :CUSTOM_ID: h:verify
+:ID:       D25CCDE3-F976-493E-9DD8-043A17422C65
 :END:
 
 Executes any task with self-generated verification criteria that close the agentic loop. Before doing the work, generates concrete testable criteria (the non-coding equivalent of unit tests), meta-verifies the criteria quality (recursing if uncertain), executes the task, then systematically evaluates the output against each criterion. Loops on failures until all criteria pass or escalates to the user.
 
 *** handoff
+:PROPERTIES:
+:ID:       CAB83D10-E108-48D4-871B-17821B1D3CD6
+:END:
 
 Saves next-session instructions to =/tmp/claude-code-handoff.md= for seamless session transitions. Two paths: (1) if the user and Claude just explicitly agreed on next steps, writes the prompt directly; (2) if no explicit agreement, infers next steps from conversation history, prints the proposed prompt as a code block for review, and asks the user to confirm via =AskUserQuestion= before writing. The file lives in =/tmp/= (not =~/.claude/=) to avoid triggering write confirmation prompts; being cleared on reboot is fine since stale handoffs are useless. After running =/handoff=, the user runs =! emacsclient -e '(claude-code-extras-handoff)'= to kill the current session and start a new one with the handoff prompt auto-submitted. Claude must not run this command itself.
 
@@ -386,6 +406,9 @@ Moves a directory from inside =~/My Drive/= to =~/.drive-nosync/= (outside Drive
 Bulk version of =nosync=. Scans =~/My Drive/= for all directories causing sync errors (node_modules, build output, Python caches, large data dirs), moves them to =~/.drive-nosync/=, repairs broken symlinks, then restarts Google Drive. Use periodically or when the error list grows.
 
 *** install-mcp-server
+:PROPERTIES:
+:ID:       AAB6CC73-A936-4D25-9255-544436259405
+:END:
 
 Installs and configures a new MCP server for Claude Code. Walks through discovery, auth verification (checking for platform-locked OAuth before installing), dependency installation, and registration via =claude mcp add=. Encodes hard-won lessons: always use the CLI (not hand-edits to =~/.claude.json=), use absolute interpreter paths (=/opt/homebrew/bin/node=, not bare =node= which is an nvm shell function), and choose scope explicitly (=-s user= for global).
 
@@ -494,6 +517,7 @@ Meta-skill for AI workflow design. Given a description of something to automate,
 *** diagnose
 :PROPERTIES:
 :CUSTOM_ID: h:diagnose
+:ID:       D1D774DB-B9D0-46A3-827D-D217AA28D58C
 :END:
 
 Diagnostic mode modifier. Prefix any question with =/diagnose= to investigate errors and friction as symptoms of underlying structural issues rather than problems to fix directly. Identifies root causes, considers whether the problem is an instance of a broader class, and proposes structural fixes to config, tooling, documentation, or workflow.
@@ -501,6 +525,7 @@ Diagnostic mode modifier. Prefix any question with =/diagnose= to investigate er
 *** claude-config-audit
 :PROPERTIES:
 :CUSTOM_ID: h:claude-config-audit
+:ID:       EEA4D06C-0E70-4A12-A588-81114465D2A4
 :END:
 
 Audits the entire Claude Code configuration for redundancy, conflicts, dead weight, and staleness. Discovers all instruction sources (CLAUDE.md files, context skills, memory, hooks, settings, and =claude/README.org= for cross-referencing), extracts every discrete rule, and evaluates each on five criteria: whether it restates default behavior, conflicts with another rule, duplicates something elsewhere, was a reactive fix for one bad output, or is too vague to apply consistently. Produces a cut list, conflict list, and cleaned-up CLAUDE.md.
@@ -548,12 +573,16 @@ On the first Edit or Write in a project, moves Claude Code's memory directory fr
 Defined in the dotfiles project-level =.claude/settings.json= (not the global settings) since it only applies to this repo. Blocks =git commit= when files in =claude/= (skills, hooks, settings, CLAUDE.md) are staged but =claude/README.org= is not. Also detects when =git add= and =git commit= appear in the same bash command (which would otherwise bypass the staged-file check). Ensures documentation stays in sync with configuration changes. Project-specific skills (under =.claude/skills/=) are excluded from this check, since they belong to their project's documentation, not the dotfiles README.
 
 ** remind-claude-readme-update.sh (PostToolUse)
+:PROPERTIES:
+:ID:       2D9A0367-26C4-40B8-9B9C-06346D89238B
+:END:
 
 Companion to =require-readme-update.sh=. Fires globally after any Write or Edit, resolves the target path through symlinks, and outputs a reminder if the file is under =dotfiles/claude/= but the agent is working in a different project. This closes the gap where the commit-blocking hook never fires because the agent never switches to the dotfiles repo to commit. Silent when editing =README.org= itself or when already in the dotfiles repo.
 
 ** require-doc-update.sh (PreToolUse)
 :PROPERTIES:
 :CUSTOM_ID: h:require-doc-update
+:ID:       BB6FE0BD-FC74-4BEB-89AB-4FE902A84055
 :END:
 
 Blocks =git commit= when =.el= files are staged but no =doc/*.org= or =README.org= manual update is included. Applies only in repos that have a =doc/= directory or a =README.org= at the root. Ensures documentation stays in sync with code changes.
@@ -561,6 +590,7 @@ Blocks =git commit= when =.el= files are staged but no =doc/*.org= or =README.or
 ** load-elisp-after-edit.sh (PostToolUse)
 :PROPERTIES:
 :CUSTOM_ID: h:load-elisp-after-edit
+:ID:       F07EF468-2770-42DE-B282-9BCB6E624EF5
 :END:
 
 Fires on every Edit or Write of an =.el= file under =elpaca/sources/= or =dotfiles/emacs/extras/=. Identifies the elpaca package (by matching the file's basename against package names for extras, or by source directory prefix for standalone packages), then runs =elpaca-rebuild= + =elpaca-wait= + =elpaca-extras-reload= synchronously via =emacsclient=. This byte-compiles the source into =elpaca/builds/=, waits for completion, and reloads all features. Skips byte-compiled files and test files. Note: for dotfiles extras edits, the rebuild may compile from a stale elpaca source if the edit hasn't been committed yet; the =post-commit= hook triggers a second rebuild from the correct source (see =emacs/extras/doc/elisp-development-workflow.org=).

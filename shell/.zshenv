@@ -24,6 +24,9 @@ export VISUAL="$EDITOR"
 # Prevent Python from writing __pycache__ bytecode to disk
 export PYTHONDONTWRITEBYTECODE=1
 
+# Claude Code: persist max reasoning effort across sessions
+export CLAUDE_CODE_EFFORT_LEVEL=max
+
 # Compiler flags
 export LDFLAGS="-L/opt/homebrew/opt/sqlite/lib"
 export CPPFLAGS="-I/opt/homebrew/opt/sqlite/include"

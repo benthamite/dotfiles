@@ -43,6 +43,7 @@ Do these proactively to avoid being blocked by pre-commit hooks:
 ## MCP servers
 
 - Google MCP setup (two accounts, multiple servers, troubleshooting): see `~/My Drive/dotfiles/claude/google-mcp-setup.md`
+- Chrome integration and multi-account: see `~/My Drive/dotfiles/claude/README.org` → "Chrome integration and multi-account". **Key fact**: the Chrome extension only supports one account at a time; it must match the Claude Code session's account or Chrome tools will fail silently.
 - MCP server definitions go in `~/.claude.json`, NOT `~/.claude/settings.json`.
 
 ## Filesystem organization

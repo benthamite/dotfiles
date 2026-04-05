@@ -254,7 +254,7 @@ The command ~claude-code-extras-toggle-alert~ toggles the buffer-local value of 
 
 #+findex: claude-code-extras-start-usage-polling
 #+findex: claude-code-extras-stop-usage-polling
-The command ~claude-code-extras-start-usage-polling~ begins periodic polling of the Anthropic =api/oauth/usage= endpoint to track plan utilization. The data is fetched asynchronously via ~url-retrieve~, with authentication handled by reading the OAuth token from the macOS Keychain. The fetched data is stored in a global variable (not buffer-local), since usage limits are account-wide rather than per-session. Calling this command when polling is already active is a no-op.
+The command ~claude-code-extras-start-usage-polling~ begins periodic polling of the Anthropic =api/oauth/usage= endpoint to track plan utilization. The data is fetched asynchronously via ~url-retrieve~ for each account with an active session. Authentication uses the per-account OAuth token from the macOS Keychain, where each ~CLAUDE_CONFIG_DIR~ has its own credential entry (service name =Claude Code-credentials-<sha256prefix>=). The fetched data is stored in a hash table keyed by account name, so each session's modeline shows its own account's rate limit status. Calling this command when polling is already active is a no-op.
 
 Polling starts automatically when a Claude Code modeline is set up (via ~claude-code-extras-set-modeline~, [[#h:modeline-integration][Modeline integration]]), so manual invocation is rarely needed. The polling interval is controlled by ~claude-code-extras-usage-interval~ ([[#h:usage-polling-options][Usage polling options]]).
 
@@ -446,7 +446,7 @@ These functions are designed to be called from modeline constructors (e.g. =doom
 #+findex: claude-code-extras-status-weekly-usage
 #+findex: claude-code-extras-status-session-reset
 #+findex: claude-code-extras-status-weekly-reset
-The usage accessor functions extract values from the data fetched by ~claude-code-extras-start-usage-polling~ ([[#h:usage-polling][Usage polling]]). Unlike the status accessors ([[#h:status-accessors][Status accessors]]), which read buffer-local data from a per-session status file, these functions read global data from the Anthropic usage API, since plan limits are account-wide. Each returns ~nil~ if usage data has not yet been fetched.
+The usage accessor functions extract values from the data fetched by ~claude-code-extras-start-usage-polling~ ([[#h:usage-polling][Usage polling]]). Unlike the status accessors ([[#h:status-accessors][Status accessors]]), which read buffer-local data from a per-session status file, these functions look up the current buffer's account in the per-account usage hash table. Each returns ~nil~ if usage data has not yet been fetched for that account.
 
 - ~claude-code-extras-status-session-usage~ returns the 5-hour session utilization as a percentage.
 - ~claude-code-extras-status-weekly-usage~ returns the 7-day weekly utilization as a percentage.

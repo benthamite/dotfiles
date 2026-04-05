@@ -206,14 +206,11 @@ Used to detect when `/branch' creates a new session.")
 (defvar-local claude-code-extras--status-timer nil
   "Timer for periodic status polling in the current Claude buffer.")
 
-(defvar claude-code-extras--usage-data nil
-  "Parsed usage plist from the API.")
+(defvar claude-code-extras--usage-data (make-hash-table :test #'equal)
+  "Hash table mapping account names to parsed usage plists.")
 
 (defvar claude-code-extras--usage-timer nil
   "Timer for periodic usage API polling.")
-
-(defvar claude-code-extras--usage-fetch-in-progress nil
-  "Non-nil when an async usage fetch is already running.")
 
 (defvar-local claude-code-extras--waiting-for-input nil
   "Non-nil when this Claude session is waiting for user input.
@@ -1050,49 +1047,78 @@ or hyphen with an underscore, mirroring the shell script's
 ;;;;; Usage polling
 
 (defun claude-code-extras--fetch-usage ()
-  "Fetch usage data from the API asynchronously.
+  "Fetch usage data for all accounts with active sessions."
+  (dolist (account (claude-code-extras--active-accounts))
+    (claude-code-extras--fetch-usage-for-account account)))
+
+(defun claude-code-extras--fetch-usage-for-account (account)
+  "Fetch usage data for ACCOUNT asynchronously.
 Reads the OAuth token from the macOS Keychain and queries the
 undocumented `api/oauth/usage' endpoint.  Stores the parsed
-response in `claude-code-extras--usage-data'."
-  (when (not claude-code-extras--usage-fetch-in-progress)
-    (when-let* ((token (claude-code-extras--get-oauth-token)))
-      (setq claude-code-extras--usage-fetch-in-progress t)
-      (let ((url-request-method "GET")
-            (url-request-extra-headers
-             `(("Authorization" . ,(concat "Bearer " token))
-               ("anthropic-beta" . "oauth-2025-04-20"))))
-        (url-retrieve
-         "https://api.anthropic.com/api/oauth/usage"
-         #'claude-code-extras--handle-usage-response
-         nil t t)))))
+response in `claude-code-extras--usage-data' keyed by ACCOUNT."
+  (when-let* ((token (claude-code-extras--get-oauth-token account)))
+    (let ((url-request-method "GET")
+          (url-request-extra-headers
+           `(("Authorization" . ,(concat "Bearer " token))
+             ("anthropic-beta" . "oauth-2025-04-20"))))
+      (url-retrieve
+       "https://api.anthropic.com/api/oauth/usage"
+       #'claude-code-extras--handle-usage-response
+       (list account) t t))))
 
-(defun claude-code-extras--handle-usage-response (status)
-  "Handle the async usage API response.
+(defun claude-code-extras--handle-usage-response (status account)
+  "Handle the async usage API response for ACCOUNT.
 STATUS is the plist passed by `url-retrieve'."
   (unwind-protect
       (unless (plist-get status :error)
         (goto-char url-http-end-of-headers)
         (condition-case nil
-            (setq claude-code-extras--usage-data
-                  (json-parse-buffer :object-type 'plist))
+            (puthash account
+                     (json-parse-buffer :object-type 'plist)
+                     claude-code-extras--usage-data)
           (json-parse-error nil)))
-    (setq claude-code-extras--usage-fetch-in-progress nil)
     (kill-buffer)))
 
-(defun claude-code-extras--get-oauth-token ()
-  "Extract the OAuth access token from the macOS Keychain.
+(defun claude-code-extras--active-accounts ()
+  "Return a list of unique account names with active Claude sessions.
+Returns a list containing nil when no multi-account setup exists."
+  (let ((accounts nil))
+    (dolist (buf (claude-code--find-all-claude-buffers))
+      (when (buffer-live-p buf)
+        (with-current-buffer buf
+          (cl-pushnew claude-code-extras--buffer-account accounts
+                      :test #'equal))))
+    (or accounts (list nil))))
+
+(defun claude-code-extras--get-oauth-token (account)
+  "Extract the OAuth access token from the macOS Keychain for ACCOUNT.
 Returns the token string, or nil if unavailable."
-  (when-let* ((raw (with-output-to-string
-                     (with-current-buffer standard-output
-                       (call-process "security" nil t nil
-                                     "find-generic-password"
-                                     "-s" "Claude Code-credentials" "-w"))))
-              (json (condition-case nil
-                        (json-parse-string (string-trim raw)
-                                           :object-type 'plist)
-                      (json-parse-error nil)))
-              (oauth (plist-get json :claudeAiOauth)))
-    (plist-get oauth :accessToken)))
+  (let ((service (claude-code-extras--keychain-service account)))
+    (when-let* ((raw (with-output-to-string
+                       (with-current-buffer standard-output
+                         (call-process "security" nil t nil
+                                       "find-generic-password"
+                                       "-s" service "-w"))))
+                (json (condition-case nil
+                          (json-parse-string (string-trim raw)
+                                             :object-type 'plist)
+                        (json-parse-error nil)))
+                (oauth (plist-get json :claudeAiOauth)))
+      (plist-get oauth :accessToken))))
+
+(defun claude-code-extras--keychain-service (account)
+  "Return the macOS Keychain service name for ACCOUNT.
+Computes the SHA-256 prefix of the expanded config directory
+path, matching Claude Code's credential storage convention.
+When ACCOUNT is nil or not in `claude-code-extras-accounts',
+returns the default service name."
+  (if-let* ((name (and (stringp account) account))
+            (config-dir (alist-get name claude-code-extras-accounts
+                                   nil nil #'string=)))
+      (concat "Claude Code-credentials-"
+              (substring (secure-hash 'sha256 (expand-file-name config-dir))
+                         0 8))
+    "Claude Code-credentials"))
 
 (defun claude-code-extras-start-usage-polling ()
   "Start polling the usage API.
@@ -1169,24 +1195,33 @@ CACHE_READ_INPUT_TOKENS."
 
 ;;;;; Usage accessors
 
+(defun claude-code-extras--usage-for-buffer ()
+  "Return the usage plist for the current buffer's account."
+  (gethash claude-code-extras--buffer-account
+           claude-code-extras--usage-data))
+
 (defun claude-code-extras-status-session-usage ()
   "Return the 5-hour session utilization percentage."
-  (when-let* ((five (plist-get claude-code-extras--usage-data :five_hour)))
+  (when-let* ((data (claude-code-extras--usage-for-buffer))
+              (five (plist-get data :five_hour)))
     (plist-get five :utilization)))
 
 (defun claude-code-extras-status-weekly-usage ()
   "Return the 7-day weekly utilization percentage."
-  (when-let* ((seven (plist-get claude-code-extras--usage-data :seven_day)))
+  (when-let* ((data (claude-code-extras--usage-for-buffer))
+              (seven (plist-get data :seven_day)))
     (plist-get seven :utilization)))
 
 (defun claude-code-extras-status-session-reset ()
   "Return the 5-hour session reset time as an ISO string."
-  (when-let* ((five (plist-get claude-code-extras--usage-data :five_hour)))
+  (when-let* ((data (claude-code-extras--usage-for-buffer))
+              (five (plist-get data :five_hour)))
     (plist-get five :resets_at)))
 
 (defun claude-code-extras-status-weekly-reset ()
   "Return the 7-day weekly reset time as an ISO string."
-  (when-let* ((seven (plist-get claude-code-extras--usage-data :seven_day)))
+  (when-let* ((data (claude-code-extras--usage-for-buffer))
+              (seven (plist-get data :seven_day)))
     (plist-get seven :resets_at)))
 
 ;;;;; Alert

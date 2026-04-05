@@ -437,7 +437,7 @@ Bulk version of =nosync=. Scans =~/My Drive/= for all directories causing sync e
 :ID:       AAB6CC73-A936-4D25-9255-544436259405
 :END:
 
-Installs and configures a new MCP server for Claude Code. Walks through discovery, auth verification (checking for platform-locked OAuth before installing), dependency installation, and registration via =claude mcp add=. Encodes hard-won lessons: always use the CLI (not hand-edits to =~/.claude.json=), use absolute interpreter paths (=/opt/homebrew/bin/node=, not bare =node= which is an nvm shell function), and choose scope explicitly (=-s user= for global).
+Installs and configures a new MCP server for Claude Code. Walks through discovery, auth verification (checking for platform-locked OAuth before installing), dependency installation, and registration via =claude mcp add=. Encodes hard-won lessons: always add a trailing slash to HTTP/SSE URLs (servers without it are silently invisible), verify with =claude mcp list= (not =claude mcp get=, which reads config but doesn't check runtime health), use absolute interpreter paths (=/opt/homebrew/bin/node=, not bare =node= which is an nvm shell function), and choose scope explicitly (=-s user= for global).
 
 ** Multi-model and research skills
 :PROPERTIES:

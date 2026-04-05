@@ -106,25 +106,19 @@
   (should (eq (doom-modeline-extras--cache-face 25) 'doom-modeline-urgent))
   (should (eq (doom-modeline-extras--cache-face 49) 'doom-modeline-urgent)))
 
-;;;; Usage face
+;;;; Usage deviation face
 
-(ert-deftest doom-modeline-extras-test-usage-face-urgent ()
-  "Usage face returns urgent for percentage >= 80."
-  (should (eq (doom-modeline-extras--usage-face 80) 'doom-modeline-urgent))
-  (should (eq (doom-modeline-extras--usage-face 95) 'doom-modeline-urgent))
-  (should (eq (doom-modeline-extras--usage-face 100) 'doom-modeline-urgent)))
+(ert-deftest doom-modeline-extras-test-usage-deviation-face-urgent ()
+  "Deviation face returns urgent for positive deviation (over budget)."
+  (should (eq (doom-modeline-extras--usage-deviation-face 1) 'doom-modeline-urgent))
+  (should (eq (doom-modeline-extras--usage-deviation-face 50) 'doom-modeline-urgent))
+  (should (eq (doom-modeline-extras--usage-deviation-face 100) 'doom-modeline-urgent)))
 
-(ert-deftest doom-modeline-extras-test-usage-face-warning ()
-  "Usage face returns warning for percentage >= 50 and < 80."
-  (should (eq (doom-modeline-extras--usage-face 50) 'doom-modeline-warning))
-  (should (eq (doom-modeline-extras--usage-face 65) 'doom-modeline-warning))
-  (should (eq (doom-modeline-extras--usage-face 79) 'doom-modeline-warning)))
-
-(ert-deftest doom-modeline-extras-test-usage-face-info ()
-  "Usage face returns info for percentage < 50."
-  (should (eq (doom-modeline-extras--usage-face 0) 'doom-modeline-info))
-  (should (eq (doom-modeline-extras--usage-face 25) 'doom-modeline-info))
-  (should (eq (doom-modeline-extras--usage-face 49) 'doom-modeline-info)))
+(ert-deftest doom-modeline-extras-test-usage-deviation-face-info ()
+  "Deviation face returns info for zero or negative deviation (under budget)."
+  (should (eq (doom-modeline-extras--usage-deviation-face 0) 'doom-modeline-info))
+  (should (eq (doom-modeline-extras--usage-deviation-face -25) 'doom-modeline-info))
+  (should (eq (doom-modeline-extras--usage-deviation-face -100) 'doom-modeline-info)))
 
 ;;;; Humanize reset
 

@@ -8840,6 +8840,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (claude-code-display-window-fn (lambda (_buffer) (claude-code-switch-to-buffer) nil))
   (claude-code-terminal-backend 'eat)
   (claude-code-optimize-window-resize nil)
+  (claude-code-program-switches '("--chrome"))
 
   :config
   (monet-mode 1)
@@ -8889,11 +8890,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (claude-code-extras-org-todo-in-progress-keyword "DOING")
   (claude-code-extras-accounts '(("personal" . "~/.claude-personal")
                                  ("tlon" . "~/.claude-tlon")
-                                 ("work"     . "~/.claude-work")))
-
-  :config
-  (with-eval-after-load 'debug
-    (keymap-set debugger-mode-map "D" #'org-extras-tlon-menu)))
+                                 ("work"     . "~/.claude-work"))))
 #+end_src
 
 ** =agent-log=

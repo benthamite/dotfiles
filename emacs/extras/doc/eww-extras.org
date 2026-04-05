@@ -281,7 +281,7 @@ the buffer-derived lookup.
 
 The function ~eww-extras-url-to-file-make-command~ builds the shell
 command for headless Chrome, including GPU disabling flags and a
-15-second timeout.
+15-second timeout.  URLs and output paths are shell-quoted for safety.
 
 The function ~eww-extras-url-to-file-sentinel~ creates a process
 sentinel that checks the exit status.  It runs the callback on success,

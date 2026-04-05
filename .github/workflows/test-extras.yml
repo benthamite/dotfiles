@@ -17,9 +17,9 @@ jobs:
       matrix:
         emacs-version: ['29.4']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
-      - uses: purcell/setup-emacs@master
+      - uses: purcell/setup-emacs@bdc64dc730ae1fcba200bfd52cb1b4cf6159cbe5 # master 2026-04-05
         with:
           version: ${{ matrix.emacs-version }}
 
@@ -44,8 +44,12 @@ jobs:
       - name: Clone non-MELPA packages
         run: |
           mkdir -p vendor
-          git clone --depth 1 https://github.com/benthamite/annas-archive.git vendor/annas-archive
-          git clone --depth 1 https://github.com/stevemolitor/claude-code.el.git vendor/claude-code
+          git init vendor/annas-archive
+          git -C vendor/annas-archive fetch --depth 1 https://github.com/benthamite/annas-archive.git 9b4eecc73a73dee7845f45b343f8ec4354e93138
+          git -C vendor/annas-archive checkout FETCH_HEAD
+          git init vendor/claude-code
+          git -C vendor/claude-code fetch --depth 1 https://github.com/stevemolitor/claude-code.el.git 4a9914bd4161eb43f489820f9174c62390e5adc8
+          git -C vendor/claude-code checkout FETCH_HEAD
 
       - name: Run tests
         env:

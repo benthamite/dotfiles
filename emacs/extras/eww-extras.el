@@ -259,10 +259,12 @@ PROC, the process object, and EVENT, a string describing the process status."
 	 (common (format "timeout 15s '%s' --headless --user-data-dir=\"%s\" "
 			 browse-url-chrome-program data-dir))
 	 (flags "--disable-gpu --disable-extensions --disable-software-rasterizer ")
+	 (quoted-url (shell-quote-argument url))
+	 (quoted-output (shell-quote-argument output-file))
 	 (format-string (pcase type
-			  ("pdf" "--no-pdf-header-footer %s --print-to-pdf=\"%s\"")
+			  ("pdf" "--no-pdf-header-footer %s --print-to-pdf=%s")
 			  ("html" "%s --dump-dom > %s")))
-	 (specific (format format-string url output-file)))
+	 (specific (format format-string quoted-url quoted-output)))
     (list shell-file-name shell-command-switch (concat common flags specific))))
 
 (defun eww-extras-run-callback (callback file key)

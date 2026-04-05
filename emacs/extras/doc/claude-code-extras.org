@@ -270,7 +270,7 @@ The polled data is exposed through four accessor functions described in [[#h:usa
 #+findex: claude-code-extras-run-skill
 The command ~claude-code-extras-run-skill~ runs a Claude Code skill non-interactively via =claude -p=. Interactively, it prompts for the skill name with completion (annotated with descriptions), then for arguments if the skill declares an =argument-hint= in its frontmatter, and finally for a working directory. The result is displayed in a =*Claude Skill: <name>*= buffer in org-mode with cost, duration, and session ID.
 
-Only skills with =user-invocable: true= (or no =user-invocable= field) in their =SKILL.md= frontmatter are offered for completion. Skills are discovered from =~/.claude/skills/= (global) and the current project's =.claude/skills/= directory. Project skills shadow global skills with the same name.
+Only skills with =user-invocable: true= (or no =user-invocable= field) in their =SKILL.md= frontmatter are offered for completion. Skills are discovered from =~/.claude/skills/= (global) and the current project's =.claude/skills/= directory. Project skills shadow global skills with the same name. The completion UI annotates each candidate with a =[global]= or =[project]= tag to indicate its source.
 
 The command uses the same non-interactive execution infrastructure as batch TODO processing, respecting ~claude-code-extras-batch-allowed-tools~, ~claude-code-extras-batch-max-turns~, ~claude-code-extras-batch-system-prompt~, and ~claude-code-extras-batch-model~ ([[#h:batch-todo-options][Batch TODO processing options]]).
 

@@ -422,7 +422,10 @@ Updates the .git file pointer in NEW-MAIN-DIR to point to the new location."
   (vc-extras-ensure-gh-exists)
   (let* ((result (shell-command-to-string
                   (format "%s api repos/%s/%s -X PATCH -f name=%s"
-                          vc-extras-gh-executable account old-name new-name)))
+                          vc-extras-gh-executable
+                          (shell-quote-argument account)
+                          (shell-quote-argument old-name)
+                          (shell-quote-argument new-name))))
          (error-p (string-match-p "error\\|not found" result)))
     (when error-p
       (message "Warning: Failed to rename remote repo: %s" result))))

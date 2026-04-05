@@ -2261,8 +2261,11 @@ argument-source."
                       (when-let* ((skill (cl-find cand skills
                                                   :key (lambda (s) (plist-get s :name))
                                                   :test #'equal))
-                                  (desc (plist-get skill :description)))
+                                  (desc (plist-get skill :description))
+                                  (source (plist-get skill :source)))
                         (concat (make-string (- (+ max-len 2) (length cand)) ?\s)
+                                (propertize (format "[%s] " source)
+                                            'face 'font-lock-comment-face)
                                 (propertize desc 'face 'completions-annotations)))))
           (name (completing-read
                  "Skill: "

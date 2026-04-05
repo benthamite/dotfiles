@@ -13609,11 +13609,8 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package elfeed-tube
-  :ensure (:host github
-                 :repo "benthamite/elfeed-tube") ; PRs #51, #52, #53
   :after elfeed
   :demand t
-
   :custom
   (elfeed-tube-auto-save-p t)
 
@@ -13637,10 +13634,8 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package elfeed-tube-mpv
-  :ensure (:host github
-                 :repo "benthamite/elfeed-tube"
-                 :files ("elfeed-tube-mpv.el"))
   :after elfeed-tube
+  :demand t
   :custom
   (elfeed-tube-save-indicator t))
 #+end_src

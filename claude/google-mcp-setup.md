@@ -41,12 +41,24 @@ Pablo uses two Google accounts, which requires separate MCP servers for each.
 - **Covers:** Docs (and possibly Drive/Sheets — the package has broad tools)
 - **OAuth client:** `831988183270-...` (different GCP project)
 - **Config dir:** `~/.config/google-docs-mcp/`
+- **Known issue (token expiry):** the OAuth app is in Google "testing" mode, which means **refresh tokens expire after 7 days**. This causes recurring `invalid_grant` errors. The long-term fix is to replace this server with a `google-workspace-personal` instance using the `claude-mcp-personal-ps` GCP project in production mode (see "Planned: google-workspace-personal" below).
 
 **google-calendar-personal** (User MCP in `~/.claude.json`)
 - **Package:** `@cocal/google-calendar-mcp` via `npx`
 - **Covers:** Calendar only
 - **OAuth client:** `896560031613-...` (yet another GCP project)
 - **Config dir:** `~/.config/google-calendar-mcp/`
+
+### Planned: google-workspace-personal
+
+A GCP project `claude-mcp-personal-ps` has been created with APIs enabled (Docs, Calendar, Drive, Sheets, Gmail) to replace the flaky `google-docs-personal` and `google-calendar-personal` servers with a single `google-workspace-personal` server using the same `google-workspace-mcp` package as the Epoch server. **Remaining steps:**
+1. Configure OAuth consent screen in production mode (GCP Console > APIs & Services > OAuth consent screen for project `claude-mcp-personal-ps`)
+2. Create OAuth client credentials (Desktop app)
+3. Generate refresh token using `InstalledAppFlow` (see recipe below)
+4. Add `google-workspace-personal` MCP server entry to `~/.claude.json`
+5. Remove `google-docs-personal` and `google-calendar-personal` from `~/.claude.json`
+6. Run `sync-mcp-servers.sh` to propagate to account config dirs
+7. Update this documentation
 
 ### Built-in (claude.ai integrations)
 
@@ -143,9 +155,42 @@ After running, restart Claude Code so the `gmail-epoch-triage` MCP server picks 
 
 ## Troubleshooting
 
-- **`invalid_grant`**: refresh token is expired or revoked. Regenerate it (see above).
+### `invalid_grant` on google-docs-personal
+
+The `@a-bonus/google-docs-mcp` server's OAuth app is in Google "testing" mode, so refresh tokens expire every 7 days. To fix:
+
+1. Delete the stale token: `rm ~/.config/google-docs-mcp/token.json`
+2. Re-run the MCP server to trigger the OAuth flow (credentials are in `~/.zshenv-secrets`):
+   ```bash
+   GOOGLE_CLIENT_ID="$GOOGLE_DOCS_CLIENT_ID" \
+   GOOGLE_CLIENT_SECRET="$GOOGLE_DOCS_CLIENT_SECRET" \
+   npx -y @a-bonus/google-docs-mcp
+   ```
+   This will print an auth URL — open it, sign in with `pablo.stafforini@gmail.com`, and authorize.
+3. **Critical:** the running MCP server process caches the old token in memory. You **must start a brand new Claude Code session** (not resume) for it to pick up the new token. Restarting the session via `/exit` + re-open is sufficient, but only if the new session gets a fresh process (not a resumed session).
+
+### `invalid_grant` on google-workspace-epoch
+
+Regenerate the refresh token (see "Generating a new refresh token" above), then update `GOOGLE_WORKSPACE_REFRESH_TOKEN` in `~/.zshenv-secrets` and restart Claude Code.
+
+### General `invalid_grant` fix procedure
+
+After re-authing any MCP server token:
+1. Verify the new token was saved to disk
+2. **Restart Claude Code** — MCP server processes cache tokens in memory and won't re-read from disk
+3. **Start a brand new session**, not a resumed one — resumed sessions preserve the original MCP server configuration
+
+### 404 "File not found"
+
+Google Drive returns 404 (not 403) when you lack access. Check which Google account the MCP server uses:
+- `google-workspace-epoch` → `pablo@epoch.ai`
+- `google-docs-personal` → `pablo.stafforini@gmail.com`
+
+If the document is shared with one account but you're querying via the other server, you'll get 404. Use the correct server for the account that has access.
+
+### Other issues
+
 - **403 "caller does not have permission"**: either the relevant API isn't enabled on the GCP project, or the document isn't shared with the account the token belongs to.
-- **404 "File not found"**: Google Drive returns 404 (not 403) when you lack access; check sharing settings on the document.
 - **Server not appearing in `/mcp`**: MCP servers go in `~/.claude.json`, NOT `~/.claude/settings.json`. The latter is for Claude Code settings (hooks, permissions, theme).
 - **`ValueError: a coroutine was expected`**: the `google-workspace-mcp` entry point bug. Use the `python3 -c` invocation that calls `mcp.run()` directly.
 - **"Invalid or expired OAuth state parameter" on `gmail-epoch-triage`**: this is the port 8000 conflict between `google-workspace-epoch` and `gmail-epoch-triage`. Do NOT retry the built-in OAuth flow; it will never work. Instead, generate tokens manually on port 9090 (see "gmail-epoch-triage" section above).

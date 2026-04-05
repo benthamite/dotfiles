@@ -288,7 +288,7 @@ find it across reloads (interned symbols are always `eq')."
     ("x" "download at point" slack-download-file-at-point)]]
   [["Search"
     ("/" "messages" slack-search-from-messages)
-    ("?" "files" slack-search-from-files)]
+    ("\\" "files" slack-search-from-files)]
    ["Channel"
     ("C" "create" slack-create-channel)
     ("j" "join" slack-channel-join)
@@ -303,7 +303,7 @@ find it across reloads (interned symbols are always `eq')."
     ("+" "set status" slack-user-set-status)
     ("-" "reset status" slack-user-reset-status)]
    ["Misc"
-    ("*" "stars" slack-stars-list)
+    ("*" "saved items" slack-saved-items)
     ("A" "activity feed" slack-activity-feed-show)
     ("M" "scheduled messages" slack-scheduled-messages-show)
     ("K" "kill all buffers" slack-kill-all-buffers)

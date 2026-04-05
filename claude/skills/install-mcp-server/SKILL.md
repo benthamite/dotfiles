@@ -81,8 +81,6 @@ Use these rules:
 
 ## Step 5: Register with Claude Code
 
-**CRITICAL**: Always use the `claude mcp add` CLI command. NEVER hand-edit `~/.claude.json` — Claude Code reads MCP server configs from an internal location that `claude mcp add` knows about, and hand-edits to `~/.claude.json` are silently ignored.
-
 ### Scope
 - **`-s user`** (global): Available in all projects. Use this by default.
 - **`-s local`** (project): Only available in the current project. Use for project-specific servers.
@@ -108,16 +106,36 @@ claude mcp add -s user <name> -- uvx <package>
 claude mcp add -s user --transport http <name> <url>
 ```
 
-### Verify registration
+### HTTP/SSE URL formatting (CRITICAL)
+
+**Always include a trailing slash on HTTP MCP server URLs.** Claude Code's HTTP transport handler may silently drop servers whose URL lacks a trailing slash — the server entry is written to config but never appears in `claude mcp list` and is completely invisible at runtime.
+
+- WRONG: `https://mcp.example.com`
+- RIGHT: `https://mcp.example.com/`
+
+When extracting a URL from documentation, always verify it ends with `/`. If it doesn't, add one.
+
+### Verify registration (CRITICAL — use `claude mcp list`, NOT `claude mcp get`)
+
+After adding, run:
 
 ```bash
-claude mcp get <name>
+claude mcp list 2>&1 | grep <name>
 ```
 
-This should show "Status: Connected". If it doesn't:
-1. Check the error message.
-2. Try running the command manually to see stderr output.
-3. Common fixes: absolute paths, missing env vars, native module ABI mismatches.
+The server **MUST** appear in `claude mcp list` output. This command checks actual runtime health.
+
+**Do NOT rely on `claude mcp get <name>`** — it reads from the config file and will report a server as present even when Claude Code cannot actually load it. A server that appears in `claude mcp get` but not `claude mcp list` is broken.
+
+If the server doesn't appear in `claude mcp list`:
+1. Check the URL has a trailing slash (for HTTP servers).
+2. Test the endpoint with `curl -s -o /dev/null -w "%{http_code}" <url>` — a 401 is OK (means endpoint exists but needs auth), a connection error means the URL is wrong.
+3. Remove and re-add with corrected config.
+
+Expected statuses in `claude mcp list`:
+- `✓ Connected` — working.
+- `! Needs authentication` — server loaded, OAuth flow will trigger on first tool use. This is fine for OAuth-based servers.
+- Not listed at all — server is broken. Fix the config.
 
 ## Step 6: Test
 
@@ -149,8 +167,9 @@ Tell the user:
 
 | Pitfall | Symptom | Fix |
 |---|---|---|
+| Missing trailing slash on HTTP URL | Server in config but invisible in `claude mcp list` | Add `/` to end of URL |
+| Verifying with `claude mcp get` instead of `claude mcp list` | Looks OK but server doesn't actually work | Always use `claude mcp list` to verify |
 | Bare `node` command | Server silently missing after restart | Use `/opt/homebrew/bin/node` |
-| Hand-editing `~/.claude.json` | Server invisible to `claude mcp list` | Use `claude mcp add` CLI |
 | Platform-locked OAuth | "This app is blocked" in browser | Server is unusable with Claude Code; find alternative |
 | Native module ABI mismatch | Server crashes on startup | Rebuild with the same node version you're running |
 | Forgot `-s user` | Server only works in one project | Re-add with `-s user` |

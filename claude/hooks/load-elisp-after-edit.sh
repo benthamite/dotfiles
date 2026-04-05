@@ -20,13 +20,17 @@ file_path=$(printf '%s' "$input" | jq -r '.tool_input.file_path // empty')
 [[ "$file_path" == *elpaca/sources/* ]] || \
 [[ "$file_path" == */dotfiles/emacs/extras/* ]] || exit 0
 
+# Escape backslashes and double-quotes so the path is safe inside an Elisp string.
+escaped_path=${file_path//\\/\\\\}
+escaped_path=${escaped_path//\"/\\\"}
+
 # Ask Emacs to find the package and schedule a rebuild.
 # The rebuild is deferred via run-at-time because elpaca-wait uses sit-for,
 # which deadlocks when called from inside emacsclient's server process filter.
 # First try the file's basename as a package name (handles extras packages
 # that share the dotfiles source dir).  Fall back to source dir prefix match.
 result=$(timeout 30 emacsclient -e "
-(let* ((file \"$file_path\")
+(let* ((file \"$escaped_path\")
        (base (intern (file-name-sans-extension (file-name-nondirectory file))))
        (pkg (or (and (elpaca-get base) base)
                 (cl-loop for e in (mapcar #'cdr (elpaca--queued))

@@ -178,8 +178,9 @@ The command performs four operations:
 3. Renames the repository on GitHub via the =gh= API.
 4. Updates the Git remote URL in the local configuration.
 
-If any step fails (e.g., the remote rename returns an error), the
-command reports a warning but continues with the remaining steps.
+Repository name arguments are shell-quoted when passed to =gh= and =git=
+commands.  If any step fails (e.g., the remote rename returns an error),
+the command reports a warning but continues with the remaining steps.
 
 ** Deleting local repositories
 :PROPERTIES:

@@ -13,6 +13,10 @@ set -euo pipefail
 
 SKILL_DIR="${SKILL_DIR:-$HOME/.claude/skills/twitter-digest}"
 LIST_NAME="$1"
+if [[ "$LIST_NAME" =~ [/\\] ]] || [[ "$LIST_NAME" == *..* ]]; then
+  echo "ERROR: invalid list name: $LIST_NAME" >&2
+  exit 1
+fi
 LIST_FILE="$SKILL_DIR/lists/$LIST_NAME.md"
 
 if [[ ! -f "$LIST_FILE" ]]; then

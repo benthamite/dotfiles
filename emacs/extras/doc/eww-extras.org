@@ -237,9 +237,12 @@ The function ~eww-extras-readable-autoview~ is added to
 ~eww-after-render-hook~.  It automatically calls ~eww-readable~ unless
 the current URL matches a pattern in ~eww-extras-readable-exceptions~ or
 the page has no source content to process.  If the readability heuristic
-selects a non-visible node (producing an empty buffer), the function
-falls back to displaying the full page.  This guards against the
-upstream scoring bug described in [[#h:patches][Patches]].
+selects a non-visible node (producing an empty buffer) or a node
+covering only a tiny fraction of the article content, the function falls
+back to displaying the full page.  This guards against the upstream
+scoring bug described in [[#h:patches][Patches]]) and against cases where
+navigation-heavy elements drag down the full content node's score,
+causing a narrow subsection to be selected instead.
 
 The function ~eww-extras-set-readable-exceptions-from-file~ reads the
 exception patterns from ~eww-extras-readable-exceptions-file~ and
@@ -312,7 +315,8 @@ This package uses ~el-patch~ to add ~style~ to the exclusion list in
 ~eww-score-readability~, giving =<style>= elements a score of -2 (the
 same penalty applied to ~script~ and ~head~).  As an additional safety
 net, ~eww-extras-readable-autoview~ detects when the readable render
-produces an empty buffer and falls back to displaying the full page
+produces an empty buffer or a result smaller than 2% of the HTML source
+size, and falls back to displaying the full page
 ([[#h:readability-management][Readability management]]).
 
 * Indices

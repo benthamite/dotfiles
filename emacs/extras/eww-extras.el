@@ -337,9 +337,15 @@ The exceptions are listed in `eww-extras-readable-exceptions'."
                     (not (plist-get eww-data :source)))
           (eww-readable)
           ;; The readability heuristic can pick a non-visible node (e.g. a div
-          ;; containing only <style> elements), producing an empty buffer.  When
-          ;; that happens, fall back to the full page.
-          (when (zerop (buffer-size))
+          ;; containing only <style> elements), producing an empty buffer.  It
+          ;; can also pick a node covering only a small fraction of the article
+          ;; (e.g. the lead section of a Wikipedia page when navigation-heavy
+          ;; elements drag down the full content node's score).  Fall back to
+          ;; the full page in either case.
+          (when (let ((source-len (length (plist-get eww-data :source))))
+                  (or (zerop (buffer-size))
+                      (and (> source-len 0)
+                           (< (/ (float (buffer-size)) source-len) 0.02))))
             (eww-readable -1)))))))
 
 (add-hook 'eww-after-render-hook #'eww-extras-readable-autoview)

@@ -53,6 +53,7 @@ GitHub notifications arrive.
 #+vindex: doom-modeline-extras-tlon-split
 #+vindex: doom-modeline-extras-ai-context
 #+vindex: doom-modeline-extras-claude-code
+#+vindex: doom-modeline-extras-claude-code-usage
 The user option ~doom-modeline-extras-org-roam~ controls whether the Org
 Roam backlink count segment is displayed.  When non-~nil~ (the default),
 the backlink count appears in the modeline while visiting an Org mode
@@ -71,6 +72,12 @@ appears as a sparkle icon with a number.
 The user option ~doom-modeline-extras-claude-code~ controls whether the
 Claude Code status segment is displayed in Claude Code buffers.  The
 default value is ~t~.
+
+The user option ~doom-modeline-extras-claude-code-usage~ controls
+whether rate limit usage percentages are displayed in the Claude Code
+modeline segment.  The default value is ~t~.  When non-~nil~, the
+segment shows 5-hour session and 7-day weekly usage data sourced from
+the usage polling in =claude-code-extras= ([[info:claude-code-extras#Top][claude-code-extras]]).
 
 ** Claude Code cost display
 :PROPERTIES:
@@ -150,6 +157,14 @@ available, it displays multiple pipe-separated fields:
 - *Model*: the Claude model in use (e.g., "opus", "sonnet").
 - *Account*: the Claude account used for this session (e.g., "personal",
   "work"), when multi-account support is configured.
+- *Rate limit usage*: shown as =5h:X% 7d:Y%= when
+  ~doom-modeline-extras-claude-code-usage~ is non-~nil~.  The two
+  figures represent the 5-hour session window and 7-day weekly window,
+  respectively.  Each percentage is color-coded---green below 50%,
+  yellow at 50--79%, red at 80% and above.  Hovering shows a tooltip
+  with the relative reset time (e.g., "Resets: in 2h 30m").  The
+  underlying data comes from the usage polling in =claude-code-extras=
+  ([[info:claude-code-extras#Top][claude-code-extras]]).
 - *Token count*: formatted compactly (e.g., "12.3k", "1.5M").
 - *Cost*: shown as a dollar amount, optionally with strikethrough on
   subscription plans ([[#h:claude-code-cost][Claude Code cost display]]).

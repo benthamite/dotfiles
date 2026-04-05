@@ -138,6 +138,33 @@ The active account is stored in =~/.claude-current-account=. From Emacs, =claude
 
 *MCP servers:* Claude Code reads =.claude.json= from =$CLAUDE_CONFIG_DIR= (not =$HOME=) when that variable is set. The canonical source of truth is =~/.claude.json=; run =claude/bin/sync-mcp-servers.sh= after adding or removing any MCP server there.
 
+*** Chrome integration and multi-account
+
+The Claude in Chrome extension only supports *one account at a time*. The account logged into the extension must match the account of the Claude Code session trying to use it. If they don't match, Chrome tools return "No Chrome extension connected" (or "Browser extension is not connected").
+
+*Current state:* three Claude Code accounts (personal, work, tlon) but only one Chrome extension login. Whichever account is logged into the extension is the only one that can use =/chrome=.
+
+*To switch the Chrome extension account:*
+1. Open the extension settings (click the Claude extension icon in Chrome toolbar)
+2. Click "Log out"
+3. Log in with the desired account (e.g. =tlon.shared@gmail.com=)
+4. *Restart Chrome* — the native messaging bridge caches the old session and won't pick up the new account without a restart
+
+*Troubleshooting "No Chrome extension connected":*
+1. Check which account the extension is logged into (extension settings, top right)
+2. Check which account the Claude Code session is using (=echo $CLAUDE_CONFIG_DIR=, then check =.claude.json= → =oauthAccount.emailAddress=)
+3. If they don't match, switch the extension account (see above)
+4. If they match but it still fails: restart Chrome, then start a *new* Claude Code session (resumed sessions preserve old MCP config)
+
+*Emacs-specific:* non-interactive sessions (Emacs) require the =--chrome= flag, set via =(setq claude-code-program-switches '("--chrome"))=. Without it, Claude Code silently skips Chrome MCP startup.
+
+*Architecture:*
+- Chrome extension (ID =fcoeoabgfenejglbffodgkkbkcdhcgfn=) communicates via native messaging
+- Native host manifest: =~/Library/Application Support/Google/Chrome/NativeMessagingHosts/com.anthropic.claude_code_browser_extension.json=
+- Native host script: =~/.claude-tlon/chrome/chrome-native-host= (points to the installed =claude= binary with =--chrome-native-host=)
+- Bridge socket: =/tmp/claude-mcp-browser-bridge-pablostafforini/<pid>.sock=
+- Keychain credentials per account: =Claude Code-credentials-<sha256(config_dir)[:8]>=
+
 * Configuration
 :PROPERTIES:
 :ID:       48F2354B-E7A4-43D1-A5AD-856EB82225E3

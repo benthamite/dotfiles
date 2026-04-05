@@ -84,6 +84,12 @@ charge.  When non-nil, displays the cost normally."
   :type 'boolean
   :group 'doom-modeline)
 
+(defcustom doom-modeline-extras-claude-code-usage t
+  "Whether to display rate limit usage in the Claude Code modeline.
+Shows 5-hour session usage and 7-day weekly usage percentages."
+  :type 'boolean
+  :group 'doom-modeline)
+
 ;;;; Faces
 
 (defface doom-modeline-extras-cost-free
@@ -152,6 +158,10 @@ Uses strikethrough to indicate the cost is not actually charged."
 (declare-function claude-code-extras-status-cache-total-tokens "claude-code-extras")
 (declare-function claude-code-extras-display-name "claude-code-extras")
 (declare-function claude-code-extras-buffer-account "claude-code-extras")
+(declare-function claude-code-extras-status-session-usage "claude-code-extras")
+(declare-function claude-code-extras-status-weekly-usage "claude-code-extras")
+(declare-function claude-code-extras-status-session-reset "claude-code-extras")
+(declare-function claude-code-extras-status-weekly-reset "claude-code-extras")
 (declare-function codex-extras-status-model "codex-extras")
 (declare-function codex-extras-status-duration-ms "codex-extras")
 (defvar ai-extras-alert-on-ready)
@@ -204,6 +214,8 @@ between the name and the alert indicator."
 These are inserted between the session name and the alert indicator."
   (let ((model (claude-code-extras-status-model))
         (account (claude-code-extras-buffer-account))
+        (session-usage (claude-code-extras-status-session-usage))
+        (weekly-usage (claude-code-extras-status-weekly-usage))
         (tokens (claude-code-extras-status-token-count))
         (cost (claude-code-extras-status-cost))
         (pct (claude-code-extras-status-context-percent))
@@ -215,6 +227,8 @@ These are inserted between the session name and the alert indicator."
     (concat
      (doom-modeline-extras--format-model model)
      (doom-modeline-extras--format-account account)
+     (when (bound-and-true-p doom-modeline-extras-claude-code-usage)
+       (doom-modeline-extras--format-usage session-usage weekly-usage))
      (when (bound-and-true-p doom-modeline-extras-claude-code-tokens)
        (doom-modeline-extras--format-tokens tokens))
      (doom-modeline-extras--format-cost cost)
@@ -253,6 +267,57 @@ These are inserted between the session name and the alert indicator."
     (concat " | " (propertize account
                                'face 'doom-modeline-buffer-path
                                'help-echo "Claude account"))))
+
+(defun doom-modeline-extras--format-usage (session weekly)
+  "Format SESSION and WEEKLY usage percentages for the modeline."
+  (when (or (and (numberp session) (> session 0))
+            (and (numberp weekly) (> weekly 0)))
+    (let ((parts nil))
+      (when (and (numberp weekly) (> weekly 0))
+        (push (propertize (format "7d:%.0f%%%%" weekly)
+                          'face (doom-modeline-extras--usage-face weekly)
+                          'help-echo (doom-modeline-extras--usage-tooltip
+                                      "7-day weekly" weekly
+                                      (claude-code-extras-status-weekly-reset)))
+              parts))
+      (when (and (numberp session) (> session 0))
+        (push (propertize (format "5h:%.0f%%%%" session)
+                          'face (doom-modeline-extras--usage-face session)
+                          'help-echo (doom-modeline-extras--usage-tooltip
+                                      "5-hour session" session
+                                      (claude-code-extras-status-session-reset)))
+              parts))
+      (when parts
+        (concat " | " (string-join parts " "))))))
+
+(defun doom-modeline-extras--usage-tooltip (label pct reset-iso)
+  "Build a tooltip for LABEL usage at PCT percent with RESET-ISO time."
+  (format "%s usage: %.0f%%\nResets: %s"
+          label pct
+          (or (doom-modeline-extras--humanize-reset reset-iso) "unknown")))
+
+(defun doom-modeline-extras--humanize-reset (iso-string)
+  "Return a human-readable relative time until ISO-STRING."
+  (when (and iso-string (stringp iso-string) (require 'iso8601 nil t))
+    (condition-case nil
+        (let* ((target (parse-iso8601-time-string iso-string))
+               (diff (float-time (time-subtract target nil))))
+          (if (<= diff 0)
+              "now"
+            (let* ((hours (floor (/ diff 3600)))
+                   (mins (floor (/ (mod diff 3600) 60))))
+              (cond
+               ((> hours 24) (format "in %dd %dh" (/ hours 24) (mod hours 24)))
+               ((> hours 0) (format "in %dh %dm" hours mins))
+               (t (format "in %dm" mins))))))
+      (error nil))))
+
+(defun doom-modeline-extras--usage-face (pct)
+  "Return the face for usage percentage PCT."
+  (cond
+   ((>= pct 80) 'doom-modeline-urgent)
+   ((>= pct 50) 'doom-modeline-warning)
+   (t 'doom-modeline-info)))
 
 (defun doom-modeline-extras--format-tokens (tokens)
   "Format TOKENS as a human-readable string with separator."

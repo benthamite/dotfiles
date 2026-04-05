@@ -21,10 +21,11 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 Several features (session switching, buffer protection, alerts, snippet insertion, terminal fixes) are shared with =codex-extras.el= via the common =ai-extras.el= package ([[info:ai-extras#Top][ai-extras]]).  At load time, =claude-code-extras.el= registers the Claude Code backend with =ai-extras.el=, enabling a unified session switcher that shows sessions from all AI backends.  The backend icon is the official Claude sparkle logo rendered as an inline SVG via ~ai-extras-svg-icon~ ([[info:ai-extras#h:svg-icons][SVG icons]]).
 
-The package provides ten main areas of functionality:
+The package provides thirteen main areas of functionality:
 
 - *Session switching.* A transient menu with persistent home-row key bindings for starting new Claude sessions or switching between existing ones ([[#h:session-switching][Session switching]]).
 - *Status polling.* Integration with a statusline script that exports session metadata (model name, cost, context usage, token counts) as JSON, polled periodically and exposed through accessor functions ([[#h:status-polling][Status polling]]).
+- *Usage polling.* Periodic polling of the Anthropic =api/oauth/usage= endpoint to track 5-hour session and 7-day weekly utilization percentages, with accessor functions for modeline display and programmatic use ([[#h:usage-polling][Usage polling]]).
 - *Alerts.* Configurable OS notifications (visual, audible, or both) when Claude needs attention, triggered by the CLI's Notification hook event for idle prompts, permission requests, and elicitation dialogs.  The Notification hook is auto-configured in =~/.claude/settings.json= at load time ([[#h:alerts][Alerts]]).
 - *Buffer lifecycle.* Kill protection for active sessions, automatic buffer cleanup on process exit, a SIGWINCH workaround for terminal rendering glitches, and a fix for ~C-g~ escape handling with multiple sessions ([[#h:buffer-lifecycle][Buffer lifecycle]]).
 - *Snippet insertion.* An adapter for ~consult-yasnippet~ that bypasses its direct buffer manipulation (which fails in Eat terminal buffers) and instead sends expanded snippet text through the terminal emulator ([[#h:snippet-insertion][Snippet insertion]]).
@@ -175,6 +176,14 @@ The backtrace analysis request explicitly disables ~gptel-use-tools~ so that too
 #+vindex: claude-code-extras-status-interval
 The user option ~claude-code-extras-status-interval~ sets the polling frequency (in seconds) for reading the status JSON file. The default is 5. Lower values give more responsive modeline updates; higher values reduce filesystem polling overhead.
 
+** Usage polling options
+:PROPERTIES:
+:CUSTOM_ID: h:usage-polling-options
+:END:
+
+#+vindex: claude-code-extras-usage-interval
+The user option ~claude-code-extras-usage-interval~ sets the polling frequency (in seconds) for querying the Anthropic usage API. The default is 60. This controls how often ~claude-code-extras-start-usage-polling~ ([[#h:usage-polling][Usage polling]]) fetches updated utilization data from the =api/oauth/usage= endpoint. Lower values provide more timely updates at the cost of more frequent network requests; higher values reduce API traffic. Since usage data changes slowly (the session window is 5 hours and the weekly window is 7 days), the default of 60 seconds is a reasonable balance.
+
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
@@ -237,6 +246,21 @@ Existing files or directories that are not symlinks are left untouched to avoid 
 
 #+findex: claude-code-extras-toggle-alert
 The command ~claude-code-extras-toggle-alert~ toggles the buffer-local value of ~claude-code-extras-alert-on-ready~ and reports the new state. This is useful during long-running operations: enable alerts before submitting a complex prompt, then disable them when you return to interactive use. The alert style and sound are configured via the user options described in [[#h:alert-options][Alert options]].
+
+** Usage polling
+:PROPERTIES:
+:CUSTOM_ID: h:usage-polling
+:END:
+
+#+findex: claude-code-extras-start-usage-polling
+#+findex: claude-code-extras-stop-usage-polling
+The command ~claude-code-extras-start-usage-polling~ begins periodic polling of the Anthropic =api/oauth/usage= endpoint to track plan utilization. The data is fetched asynchronously via ~url-retrieve~, with authentication handled by reading the OAuth token from the macOS Keychain. The fetched data is stored in a global variable (not buffer-local), since usage limits are account-wide rather than per-session. Calling this command when polling is already active is a no-op.
+
+Polling starts automatically when a Claude Code modeline is set up (via ~claude-code-extras-set-modeline~, [[#h:modeline-integration][Modeline integration]]), so manual invocation is rarely needed. The polling interval is controlled by ~claude-code-extras-usage-interval~ ([[#h:usage-polling-options][Usage polling options]]).
+
+The command ~claude-code-extras-stop-usage-polling~ cancels the usage polling timer. Use it to stop background API requests when they are no longer needed.
+
+The polled data is exposed through four accessor functions described in [[#h:usage-accessors][Usage accessors]].
 
 ** Skill runner
 :PROPERTIES:
@@ -413,6 +437,24 @@ The status accessor functions extract specific values from the parsed status dat
 
 These functions are designed to be called from modeline constructors (e.g. =doom-modeline-extras.el=) to display live session statistics.
 
+** Usage accessors
+:PROPERTIES:
+:CUSTOM_ID: h:usage-accessors
+:END:
+
+#+findex: claude-code-extras-status-session-usage
+#+findex: claude-code-extras-status-weekly-usage
+#+findex: claude-code-extras-status-session-reset
+#+findex: claude-code-extras-status-weekly-reset
+The usage accessor functions extract values from the data fetched by ~claude-code-extras-start-usage-polling~ ([[#h:usage-polling][Usage polling]]). Unlike the status accessors ([[#h:status-accessors][Status accessors]]), which read buffer-local data from a per-session status file, these functions read global data from the Anthropic usage API, since plan limits are account-wide. Each returns ~nil~ if usage data has not yet been fetched.
+
+- ~claude-code-extras-status-session-usage~ returns the 5-hour session utilization as a percentage.
+- ~claude-code-extras-status-weekly-usage~ returns the 7-day weekly utilization as a percentage.
+- ~claude-code-extras-status-session-reset~ returns the 5-hour session reset time as an ISO 8601 string.
+- ~claude-code-extras-status-weekly-reset~ returns the 7-day weekly reset time as an ISO 8601 string.
+
+These functions are designed to be called from modeline constructors or other display code that needs to show plan utilization alongside the per-session statistics provided by the status accessors.
+
 ** Alerts
 :PROPERTIES:
 :CUSTOM_ID: h:alerts
@@ -560,7 +602,7 @@ The command ~claude-code-extras-menu~ opens a transient menu that provides quick
 
 - *Sessions.* Start or switch between sessions (~claude-code-extras-start-or-switch~, [[#h:session-switching][Session switching]]), select an account (~claude-code-extras-select-account~, [[#h:multi-account][Multi-account support]]), navigate branches (~claude-code-extras-switch-branch~, [[#h:branch-navigation][Branch navigation]]), create a new branch (~claude-code-extras-create-branch~, [[#h:create-branch][Creating a branch]]), and perform a session handoff (~claude-code-extras-handoff~).
 - *Tools.* Run a skill (~claude-code-extras-run-skill~, [[#h:skill-runner][Skill runner]]), process batch TODOs (~claude-code-extras-batch-todos~, [[#h:batch-todo-processing][Batch TODO processing]]), send the TODO at point to an interactive session (~claude-code-extras-send-todo-at-point~, [[#h:send-todo-at-point][Send TODO at point]]), audit a project (~claude-code-extras-audit-project~, [[#h:project-audit][Project audit]]), debug a backtrace (~claude-code-extras-debug-backtrace~, [[#h:debug-backtrace][Debug backtrace]]), and browse session logs (~agent-log-menu~).
-- *Alerts & status.* Toggle alerts (~claude-code-extras-toggle-alert~, [[#h:alert-toggle][Toggling alerts]]), and start or stop status polling ([[#h:status-polling][Status polling]]).
+- *Alerts & status.* Toggle alerts (~claude-code-extras-toggle-alert~, [[#h:alert-toggle][Toggling alerts]]), start or stop status polling ([[#h:status-polling][Status polling]]), and start or stop usage polling (~claude-code-extras-start-usage-polling~, ~claude-code-extras-stop-usage-polling~, [[#h:usage-polling][Usage polling]]).
 - *Buffer.* Kill-on-exit setup (~claude-code-extras-setup-kill-on-exit~), rendering fixes (~claude-code-extras-fix-rendering~), and scrollback truncation control (~claude-code-extras-disable-scrollback-truncation~).  See [[#h:buffer-lifecycle][Buffer lifecycle]].
 - *Setup.* Ensure statusline, notification hook, and stop hook configurations are present in =~/.claude/settings.json=.  See [[#h:auto-setup][Auto-setup]].
 - *Options.* Toggleable infixes for five boolean user options: ~claude-code-extras-alert-on-ready~ ([[#h:alert-options][Alert options]]), ~claude-code-extras-protect-buffers~ ([[#h:buffer-protection-option][Buffer protection]]), ~claude-code-extras-sync-theme~ ([[#h:theme-sync-option][Theme sync]]), ~claude-code-extras-copilot-enabled~ ([[#h:copilot-options][Copilot options]]), and ~claude-code-extras-warn-kill-with-branches~ ([[#h:buffer-protection-option][Buffer protection]]).  Each infix displays its current value and stays in the transient after toggling, so you can adjust multiple options in one invocation.

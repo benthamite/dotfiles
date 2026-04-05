@@ -103,6 +103,12 @@ Toggle with `claude-code-extras-toggle-alert'."
   :type 'integer
   :group 'claude-code-extras)
 
+(defcustom claude-code-extras-usage-interval 60
+  "Interval in seconds between usage API polls.
+Fetches 5-hour session and 7-day weekly utilization from the API."
+  :type 'integer
+  :group 'claude-code-extras)
+
 (defcustom claude-code-extras-copilot-enabled nil
   "When non-nil, enable `copilot-mode' in Claude Code buffers.
 Copilot's ghost-text prose completions are shown while typing
@@ -199,6 +205,15 @@ Used to detect when `/branch' creates a new session.")
 
 (defvar-local claude-code-extras--status-timer nil
   "Timer for periodic status polling in the current Claude buffer.")
+
+(defvar claude-code-extras--usage-data nil
+  "Parsed usage plist from the API.")
+
+(defvar claude-code-extras--usage-timer nil
+  "Timer for periodic usage API polling.")
+
+(defvar claude-code-extras--usage-fetch-in-progress nil
+  "Non-nil when an async usage fetch is already running.")
 
 (defvar-local claude-code-extras--waiting-for-input nil
   "Non-nil when this Claude session is waiting for user input.
@@ -1032,6 +1047,72 @@ or hyphen with an underscore, mirroring the shell script's
     (when (file-exists-p file)
       (delete-file file))))
 
+;;;;; Usage polling
+
+(defun claude-code-extras--fetch-usage ()
+  "Fetch usage data from the API asynchronously.
+Reads the OAuth token from the macOS Keychain and queries the
+undocumented `api/oauth/usage' endpoint.  Stores the parsed
+response in `claude-code-extras--usage-data'."
+  (when (not claude-code-extras--usage-fetch-in-progress)
+    (when-let* ((token (claude-code-extras--get-oauth-token)))
+      (setq claude-code-extras--usage-fetch-in-progress t)
+      (let ((url-request-method "GET")
+            (url-request-extra-headers
+             `(("Authorization" . ,(concat "Bearer " token))
+               ("anthropic-beta" . "oauth-2025-04-20"))))
+        (url-retrieve
+         "https://api.anthropic.com/api/oauth/usage"
+         #'claude-code-extras--handle-usage-response
+         nil t t)))))
+
+(defun claude-code-extras--handle-usage-response (status)
+  "Handle the async usage API response.
+STATUS is the plist passed by `url-retrieve'."
+  (unwind-protect
+      (unless (plist-get status :error)
+        (goto-char url-http-end-of-headers)
+        (condition-case nil
+            (setq claude-code-extras--usage-data
+                  (json-parse-buffer :object-type 'plist))
+          (json-parse-error nil)))
+    (setq claude-code-extras--usage-fetch-in-progress nil)
+    (kill-buffer)))
+
+(defun claude-code-extras--get-oauth-token ()
+  "Extract the OAuth access token from the macOS Keychain.
+Returns the token string, or nil if unavailable."
+  (when-let* ((raw (with-output-to-string
+                     (with-current-buffer standard-output
+                       (call-process "security" nil t nil
+                                     "find-generic-password"
+                                     "-s" "Claude Code-credentials" "-w"))))
+              (json (condition-case nil
+                        (json-parse-string (string-trim raw)
+                                           :object-type 'plist)
+                      (json-parse-error nil)))
+              (oauth (plist-get json :claudeAiOauth)))
+    (plist-get oauth :accessToken)))
+
+(defun claude-code-extras-start-usage-polling ()
+  "Start polling the usage API.
+Does nothing if the timer is already running."
+  (interactive)
+  (unless claude-code-extras--usage-timer
+    (claude-code-extras--fetch-usage)
+    (setq claude-code-extras--usage-timer
+          (run-with-timer
+           claude-code-extras-usage-interval
+           claude-code-extras-usage-interval
+           #'claude-code-extras--fetch-usage))))
+
+(defun claude-code-extras-stop-usage-polling ()
+  "Stop polling the usage API."
+  (interactive)
+  (when claude-code-extras--usage-timer
+    (cancel-timer claude-code-extras--usage-timer)
+    (setq claude-code-extras--usage-timer nil)))
+
 ;;;;; Status accessors
 
 (defun claude-code-extras-status-model ()
@@ -1085,6 +1166,28 @@ CACHE_READ_INPUT_TOKENS."
           (creation (or (plist-get usage :cache_creation_input_tokens) 0))
           (read (or (plist-get usage :cache_read_input_tokens) 0)))
       (+ input creation read))))
+
+;;;;; Usage accessors
+
+(defun claude-code-extras-status-session-usage ()
+  "Return the 5-hour session utilization percentage."
+  (when-let* ((five (plist-get claude-code-extras--usage-data :five_hour)))
+    (plist-get five :utilization)))
+
+(defun claude-code-extras-status-weekly-usage ()
+  "Return the 7-day weekly utilization percentage."
+  (when-let* ((seven (plist-get claude-code-extras--usage-data :seven_day)))
+    (plist-get seven :utilization)))
+
+(defun claude-code-extras-status-session-reset ()
+  "Return the 5-hour session reset time as an ISO string."
+  (when-let* ((five (plist-get claude-code-extras--usage-data :five_hour)))
+    (plist-get five :resets_at)))
+
+(defun claude-code-extras-status-weekly-reset ()
+  "Return the 7-day weekly reset time as an ISO string."
+  (when-let* ((seven (plist-get claude-code-extras--usage-data :seven_day)))
+    (plist-get seven :resets_at)))
 
 ;;;;; Alert
 
@@ -1236,20 +1339,23 @@ Given \"*claude:~/path/to/project/:default*\", return
 
 (defun claude-code-extras-set-modeline ()
   "Set the doom-modeline to the `ai-session' modeline for this buffer.
-Also starts status polling if it is not already active."
+Also starts status and usage polling if not already active."
   (when (claude-code--buffer-p (current-buffer))
     (unless claude-code-extras--status-timer
       (claude-code-extras-start-status-polling))
+    (claude-code-extras-start-usage-polling)
     (doom-modeline-set-modeline 'ai-session)))
 
 (defun claude-code-extras--capture-buffer-account ()
-  "Store the pending account name as a buffer-local variable.
-Called from `claude-code-start-hook', which runs inside the new
-buffer within the dynamic scope of
-`claude-code-extras--start-with-account'."
-  (when claude-code-extras--pending-account
-    (setq claude-code-extras--buffer-account
-          claude-code-extras--pending-account)))
+  "Store the account name as a buffer-local variable.
+Called from `claude-code-start-hook'.  Uses the dynamically bound
+`claude-code-extras--pending-account' when available (set by
+`claude-code-extras--start-with-account'), otherwise falls back to
+`claude-code-extras--resolve-account' so that sessions started via
+other code paths (e.g. `agent-log-resume-session') also get an account."
+  (setq claude-code-extras--buffer-account
+        (or claude-code-extras--pending-account
+            (claude-code-extras--resolve-account))))
 
 (defun claude-code-extras-buffer-account ()
   "Return the account name for the current buffer, or nil."

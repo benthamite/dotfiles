@@ -106,5 +106,35 @@
   (should (eq (doom-modeline-extras--cache-face 25) 'doom-modeline-urgent))
   (should (eq (doom-modeline-extras--cache-face 49) 'doom-modeline-urgent)))
 
+;;;; Usage face
+
+(ert-deftest doom-modeline-extras-test-usage-face-urgent ()
+  "Usage face returns urgent for percentage >= 80."
+  (should (eq (doom-modeline-extras--usage-face 80) 'doom-modeline-urgent))
+  (should (eq (doom-modeline-extras--usage-face 95) 'doom-modeline-urgent))
+  (should (eq (doom-modeline-extras--usage-face 100) 'doom-modeline-urgent)))
+
+(ert-deftest doom-modeline-extras-test-usage-face-warning ()
+  "Usage face returns warning for percentage >= 50 and < 80."
+  (should (eq (doom-modeline-extras--usage-face 50) 'doom-modeline-warning))
+  (should (eq (doom-modeline-extras--usage-face 65) 'doom-modeline-warning))
+  (should (eq (doom-modeline-extras--usage-face 79) 'doom-modeline-warning)))
+
+(ert-deftest doom-modeline-extras-test-usage-face-info ()
+  "Usage face returns info for percentage < 50."
+  (should (eq (doom-modeline-extras--usage-face 0) 'doom-modeline-info))
+  (should (eq (doom-modeline-extras--usage-face 25) 'doom-modeline-info))
+  (should (eq (doom-modeline-extras--usage-face 49) 'doom-modeline-info)))
+
+;;;; Humanize reset
+
+(ert-deftest doom-modeline-extras-test-humanize-reset-nil ()
+  "Humanize reset returns nil for nil input."
+  (should-not (doom-modeline-extras--humanize-reset nil)))
+
+(ert-deftest doom-modeline-extras-test-humanize-reset-invalid ()
+  "Humanize reset returns nil for invalid input."
+  (should-not (doom-modeline-extras--humanize-reset "not-a-date")))
+
 (provide 'doom-modeline-extras-test)
 ;;; doom-modeline-extras-test.el ends here

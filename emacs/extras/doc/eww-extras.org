@@ -319,6 +319,26 @@ produces an empty buffer or a result smaller than 2% of the HTML source
 size, and falls back to displaying the full page
 ([[#h:readability-management][Readability management]]).
 
+** Readability node selection
+:PROPERTIES:
+:CUSTOM_ID: h:readability-node-selection-patch
+:END:
+
+#+findex: eww-highest-readability
+The built-in function ~eww-highest-readability~ selects the DOM node
+with the highest readability score for ~eww-readable~.  It replaces the
+current best node with a deeper child whenever the child scores higher
+and contains more than 100 words.  On pages where navigation-heavy
+elements (navboxes, table of contents, categories) drag down the full
+content node's aggregate score, a small subsection—such as the lead
+paragraph—can win the readability contest over the full article.
+
+This package uses ~el-patch~ to raise the minimum word threshold from a
+fixed 100 to ~max(100, 1/3 of the current best node's word count)~.
+This ensures a child must contain a substantial fraction of the
+parent's text to replace it, preventing narrow subsections from winning
+over broader content areas.
+
 * Indices
 :PROPERTIES:
 :CUSTOM_ID: h:indices

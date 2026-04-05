@@ -63,6 +63,34 @@
     (dom-set-attribute node :eww-readability-score score)
     score))
 
+;; Upstream `eww-highest-readability' replaces the current best node with a
+;; deeper child whenever the child scores higher and has more than 100 words.
+;; On pages where navigation-heavy elements (navboxes, TOC, categories) drag
+;; down the full content node's score, a small subsection—such as the lead
+;; paragraph—can win the readability contest.  We raise the threshold to
+;; max(100, 1/3 of the current best node's word count), so a child must
+;; contain a substantial fraction of the parent's text to replace it.
+(el-patch-defun eww-highest-readability (node)
+  (let ((result node)
+	(el-patch-add (result-words (length (split-string (dom-texts node)))))
+	highest)
+    (dolist (elem (dom-non-text-children node))
+      (when (> (or (dom-attr
+		    (setq highest (eww-highest-readability elem))
+		    :eww-readability-score)
+		   most-negative-fixnum)
+	       (or (dom-attr result :eww-readability-score)
+		   most-negative-fixnum))
+        ;; We set a lower bound to how long we accept that the
+        ;; readable portion of the page is going to be.
+        (when (> (length (split-string (dom-texts highest)))
+		 (el-patch-swap 100
+				(max 100 (/ result-words 3))))
+	  (el-patch-add
+	   (setq result-words (length (split-string (dom-texts highest)))))
+          (setq result highest))))
+    result))
+
 ;;;; Variables
 
 ;;;;; Chrome headless

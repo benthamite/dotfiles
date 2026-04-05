@@ -14402,7 +14402,6 @@ result to a user-specified file."
   (spofy-tab-bar-max-length nil)
   (spofy-tab-bar-alignment 'right)
   (spofy-enable-tab-bar t)
-  (spofy-tab-bar-format "%p %t %a %s%r %g")
   (spofy-consult-columns '((track 50 40 40) (album 50 40 6) (artist 50 45) (playlist 50 35) (device 45)))
 
   :bind (("A-y" . spofy-menu)))

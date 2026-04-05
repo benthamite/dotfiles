@@ -24,5 +24,8 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/My Drive/dotfiles"]
 trust_level = "trusted"
 
+[projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/emacs-slack"]
+trust_level = "trusted"
+
 [tui]
-theme = "light"
+theme = "dark"

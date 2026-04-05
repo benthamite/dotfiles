@@ -216,6 +216,8 @@ These are inserted between the session name and the alert indicator."
         (account (claude-code-extras-buffer-account))
         (session-usage (claude-code-extras-status-session-usage))
         (weekly-usage (claude-code-extras-status-weekly-usage))
+        (session-reset (claude-code-extras-status-session-reset))
+        (weekly-reset (claude-code-extras-status-weekly-reset))
         (tokens (claude-code-extras-status-token-count))
         (cost (claude-code-extras-status-cost))
         (pct (claude-code-extras-status-context-percent))
@@ -228,7 +230,8 @@ These are inserted between the session name and the alert indicator."
      (doom-modeline-extras--format-model model)
      (doom-modeline-extras--format-account account)
      (when (bound-and-true-p doom-modeline-extras-claude-code-usage)
-       (doom-modeline-extras--format-usage session-usage weekly-usage))
+       (doom-modeline-extras--format-usage session-usage weekly-usage
+                                           session-reset weekly-reset))
      (when (bound-and-true-p doom-modeline-extras-claude-code-tokens)
        (doom-modeline-extras--format-tokens tokens))
      (doom-modeline-extras--format-cost cost)
@@ -268,32 +271,64 @@ These are inserted between the session name and the alert indicator."
                                'face 'doom-modeline-buffer-path
                                'help-echo "Claude account"))))
 
-(defun doom-modeline-extras--format-usage (session weekly)
-  "Format SESSION and WEEKLY usage percentages for the modeline."
-  (when (or (and (numberp session) (> session 0))
-            (and (numberp weekly) (> weekly 0)))
-    (let ((parts nil))
-      (when (and (numberp weekly) (> weekly 0))
-        (push (propertize (format "7d:%.0f%%%%" weekly)
-                          'face (doom-modeline-extras--usage-face weekly)
-                          'help-echo (doom-modeline-extras--usage-tooltip
-                                      "7-day weekly" weekly
-                                      (claude-code-extras-status-weekly-reset)))
-              parts))
-      (when (and (numberp session) (> session 0))
-        (push (propertize (format "5h:%.0f%%%%" session)
-                          'face (doom-modeline-extras--usage-face session)
-                          'help-echo (doom-modeline-extras--usage-tooltip
-                                      "5-hour session" session
-                                      (claude-code-extras-status-session-reset)))
-              parts))
-      (when parts
-        (concat " | " (string-join parts " "))))))
+(defconst doom-modeline-extras--usage-window-5h (* 5 3600)
+  "Duration of the 5-hour rate limit window in seconds.")
 
-(defun doom-modeline-extras--usage-tooltip (label pct reset-iso)
-  "Build a tooltip for LABEL usage at PCT percent with RESET-ISO time."
-  (format "%s usage: %.0f%%\nResets: %s"
-          label pct
+(defconst doom-modeline-extras--usage-window-7d (* 7 24 3600)
+  "Duration of the 7-day rate limit window in seconds.")
+
+(defun doom-modeline-extras--format-usage (session weekly session-reset weekly-reset)
+  "Format SESSION and WEEKLY usage as burn-rate deviations.
+SESSION-RESET and WEEKLY-RESET are ISO timestamps for window
+reset times.  Computes how far ahead or behind the user is
+relative to a uniform consumption pace."
+  (let ((s-dev (doom-modeline-extras--usage-deviation
+                session session-reset
+                doom-modeline-extras--usage-window-5h))
+        (w-dev (doom-modeline-extras--usage-deviation
+                weekly weekly-reset
+                doom-modeline-extras--usage-window-7d)))
+    (when (or s-dev w-dev)
+      (let ((parts nil))
+        (when w-dev
+          (push (propertize (format "7d:%+.0f%%%%" w-dev)
+                            'face (doom-modeline-extras--usage-deviation-face w-dev)
+                            'help-echo (doom-modeline-extras--usage-tooltip
+                                        "7-day weekly" weekly w-dev
+                                        weekly-reset))
+                parts))
+        (when s-dev
+          (push (propertize (format "5h:%+.0f%%%%" s-dev)
+                            'face (doom-modeline-extras--usage-deviation-face s-dev)
+                            'help-echo (doom-modeline-extras--usage-tooltip
+                                        "5-hour session" session s-dev
+                                        session-reset))
+                parts))
+        (when parts
+          (concat " | " (string-join parts " ")))))))
+
+(defun doom-modeline-extras--usage-deviation (utilization reset-iso window-secs)
+  "Compute usage deviation for UTILIZATION given RESET-ISO and WINDOW-SECS.
+Returns the percentage deviation from expected usage at this
+point in the window.  Positive means over budget, negative means
+under.  Returns nil when elapsed time is too small to be
+meaningful or data is unavailable."
+  (when (and (numberp utilization) (> utilization 0)
+             reset-iso (stringp reset-iso)
+             (require 'iso8601 nil t))
+    (condition-case nil
+        (let* ((target (parse-iso8601-time-string reset-iso))
+               (remaining (max (float-time (time-subtract target nil)) 0))
+               (elapsed (- window-secs remaining))
+               (expected (* (/ elapsed (float window-secs)) 100.0)))
+          (when (> expected 2.0)
+            (* (1- (/ utilization expected)) 100.0)))
+      (error nil))))
+
+(defun doom-modeline-extras--usage-tooltip (label raw-pct deviation reset-iso)
+  "Build a tooltip for LABEL with RAW-PCT usage, DEVIATION, and RESET-ISO."
+  (format "%s: %.0f%% used, %+.0f%% vs pace\nResets: %s"
+          label raw-pct deviation
           (or (doom-modeline-extras--humanize-reset reset-iso) "unknown")))
 
 (defun doom-modeline-extras--humanize-reset (iso-string)
@@ -312,12 +347,12 @@ These are inserted between the session name and the alert indicator."
                (t (format "in %dm" mins))))))
       (error nil))))
 
-(defun doom-modeline-extras--usage-face (pct)
-  "Return the face for usage percentage PCT."
-  (cond
-   ((>= pct 80) 'doom-modeline-urgent)
-   ((>= pct 50) 'doom-modeline-warning)
-   (t 'doom-modeline-info)))
+(defun doom-modeline-extras--usage-deviation-face (deviation)
+  "Return the face for usage DEVIATION percentage.
+Red when over budget (positive), green when under (negative)."
+  (if (> deviation 0)
+      'doom-modeline-urgent
+    'doom-modeline-info))
 
 (defun doom-modeline-extras--format-tokens (tokens)
   "Format TOKENS as a human-readable string with separator."

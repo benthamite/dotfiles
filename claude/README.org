@@ -195,7 +195,7 @@ Machine-specific tool whitelists, such as Homebrew, MPV, AppleScript, and variou
 
 Project-level instructions referencing the =dotfiles-context= skill. The global =~/.claude/CLAUDE.md= (symlinked here) defines conventions that apply across all projects:
 
-- Fix root causes, not symptoms; no silent fallbacks.
+- Fix root causes, not symptoms; no silent fallbacks. Prefer robust solutions over hacks, even if they take longer.
 - Verify fixes before declaring them done.
 - Commit all changes immediately; prefer amending when iterating on the same logical change (unless already pushed).
 - Pre-commit checklist (hook-enforced): batch-test Elisp before committing, stage =doc/*.org= with =.el= changes, stage =README.org= with =claude/= changes.

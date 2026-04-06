@@ -1,0 +1,88 @@
+#+title: Twitter digest: ai-tools — 2026-04-06
+
+* Notable
+
+** @dexhorthy (Mon Apr 06 00:28)
+plans vs outlines vs design docs:
+
+I think the value of a plan-for-the-model is take intent + codebase research and build like a "guide to building this feature for idiots" - at least 80-90% correct, close enough that you have high success chance to spray out the diffs and fix anything that was missed.
+Likes: 60 | Views: 3191 | Like rate: 1.9%
+[[https://x.com/dexhorthy/status/2040949799525257476][View on X]]
+
+** @carson3068 (Mon Apr 06 10:08)
+Shipped opencode-memory, a read-only OpenCode skill for browsing local session history with sqlite3. No extra service. No daemon. Just sqlite3 + one skill.md.
+Likes: 754 | Views: 41023 | Like rate: 1.8%
+[[https://x.com/carson3068/status/2041095686742040587][View on X]]
+
+** @steipete (Sun Apr 05 20:47)
+Working on a new QA process where we use openclaw to QA openclaw with a new synthetic message channel. Orchestrator agent understands project, defines tasks (e.g. ask agent to create cron) then verifies that agent did what that. If failure -> spin up subagent to analyze+fix.
+Likes: 701 | Views: 43181 | Like rate: 1.6%
+[[https://x.com/steipete/status/2040894021036384502][View on X]]
+
+** @xeophon (Sun Apr 05 15:06)
+PSA: Gemma 4 uses a harmony-like syntax for vLLM with </channel>thought, but the Gemini API (when using OpenAI chat completions) uses <thought> for the CoT.
+Likes: 89 | Views: 5998 | Like rate: 1.5%
+[[https://x.com/xeophon/status/2040808282554503194][View on X]]
+
+** @intellectronica (Sun Apr 05 21:02)
+Recipe for little temp directories at home with delayed cleanup. I use this to run dozens of experiments and ad-hoc little projects every day. The directories survive restarts and stick around for long enough in case they're useful for a bit later.
+Likes: 4 | Views: 282 | Like rate: 1.4%
+[[https://x.com/intellectronica/status/2040897864541639122][View on X]]
+
+** @Dimillian (Mon Apr 06 05:04)
+Codex automations are so good, paired with the Notions, Slack and Github plugin I basically have a daily debrief automation running and updating a Notions page. Useful to keep track of the work I did and left to do.
+Likes: 36 | Views: 2643 | Like rate: 1.4%
+[[https://x.com/Dimillian/status/2041019243915772220][View on X]]
+
+** @itsolelehmann (Sun Apr 05 16:33)
+i taught claude to watch me work every week and tell me what to automate
+
+here's the idea: you probably open ai, do a task, close it. then next week you do the same task again. and again. you never zoom out and ask "what am i repeatedly doing that should be automated by now" because when you're inside the loop, every task feels like a one-off.
+Likes: 295 | Views: 22375 | Like rate: 1.3%
+[[https://x.com/itsolelehmann/status/2040830260170944752][View on X]]
+
+** @ivanfioravanti (Sun Apr 05 14:42)
+M5 Max difference in Low Power, Automatic and High Power is huge! Be sure to set High Power when plugged in during LLM usage. Peak Power consumption: High ~140W, Low ~30W.
+Likes: 98 | Views: 7589 | Like rate: 1.3%
+[[https://x.com/ivanfioravanti/status/2040802136687075814][View on X]]
+
+** @simonw (Sun Apr 05 04:17)
+I built a new Python CLI tool for scanning folders for secret strings, useful if you want to share a bunch of log files but first want to check they didn't accidentally leak API keys or similar. Run: uvx scan-for-secrets --help
+Likes: 539 | Views: 44884 | Like rate: 1.2%
+[[https://x.com/simonw/status/2040644971204857879][View on X]]
+
+** @mattzcarey (Sun Apr 05 17:19) [discovered]
+Thinking of making up some agent boxes. Mine is a raspberry pi in my living room and it's got to a scary level of good. Stuff it does for me: screenshots the surf cams, predicts paragliding/kiting opportunities, tracks food macros, pings me to drink/walk around, migrated my entire website...
+Likes: 34 | Views: 3142 | Like rate: 1.1%
+[[https://x.com/mattzcarey/status/2040841819546677293][View on X]]
+
+** @badlogicgames (Mon Apr 06 02:27)
+Putting my tokens where my mouth is. I built pi-share-hf. Share your pi coding agent sessions as HuggingFace datasets. It tries to prevent you from uploading sessions containing PII/sensitive data with 3 tiers of defenses. Best used on OSS coding sessions.
+Likes: 296 | Views: 30881 | Like rate: 1.0%
+[[https://x.com/badlogicgames/status/2040979640265633882][View on X]]
+
+** @ryanvogel (Sun Apr 05 18:36)
+Agent refactoring workflow for every single API route:
+1. read target + reference
+2. write pseudo-tests (<file>.test.ts)
+3. mini-plan
+4. implement
+5. run tests
+Likes: 14 | Views: 1609 | Like rate: 0.9%
+[[https://x.com/ryanvogel/status/2040861151681225173][View on X]]
+
+** @karpathy (Sat Apr 04 16:45) [discovered]
+In this era of LLM agents, there is less of a point/need of sharing the specific code/app, you just share the idea, then the other person's agent customizes it, builds it, etc. Introducing the "idea file": a markdown doc with the idea. What to build, not how to build it. Your agent reads it and figures out the rest.
+Likes: 23716 | Views: 5443791 | Like rate: 0.4%
+[[https://x.com/karpathy/status/2040470801506541998][View on X]]
+
+* Vetted accounts
+
+- @jtdavies (2.8K) — Score 7, added to list. Consistent local model benchmarking (TurboQuant MLX, Gemma vs Qwen coding tests, speculative decoding). ~75% AI tools content.
+- @mattzcarey (22K) — Score 6, borderline. Raspberry Pi agent box, code mode isolation on Cloudflare workerd. Interesting but scattered (~45% AI tools).
+- @LLMJunky (9.4K) — Score 6, borderline. Good Codex ecosystem coverage and model recs, but more news curation than practitioner workflows (~50% original).
+- @karpathy (2.1M) — Skipped vetting. Too general/famous for this niche list despite excellent individual tweets.
+- @MaziyarPanahi (13K) — Skipped vetting. Multi-model local pipelines are impressive but lean demo over workflow.
+
+* Accounts with nothing notable
+@__tinygrad__, @0xSero, @altryne, @amirmxt, @bentossell, @cathrynlavery, @championswimmer, @forgebitz, @iotcoi, @kr0der, @lucasmeijer, @maddiedreese, @NickADobos, @petergyang, @pontusab, @Prince_Canuma, @RayFernando1337, @Saboo_Shubham_, @thdxr, @trq212

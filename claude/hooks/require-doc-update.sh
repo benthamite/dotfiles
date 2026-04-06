@@ -108,10 +108,21 @@ if echo "$COMMAND" | grep -qE '\bgit\s+add\b'; then
     done
   fi
   if [ "$HAS_DOC_ORG" = false ] && echo "$COMMAND" | grep -qE '(^|/)doc/[^ ]*\.org'; then
-    HAS_DOC_ORG=true
+    # Verify at least one doc/*.org file has actual modifications
+    for doc_file in $(echo "$COMMAND" | grep -oE '(^|[/ ])[^ ]*doc/[^ ]*\.org' || true); do
+      if [ -n "$(git diff --name-only -- "$doc_file" 2>/dev/null)" ] || \
+         [ -n "$(git diff --cached --name-only -- "$doc_file" 2>/dev/null)" ]; then
+        HAS_DOC_ORG=true
+        break
+      fi
+    done
   fi
   if [ "$HAS_README_ORG_STAGED" = false ] && echo "$COMMAND" | grep -qF 'README.org'; then
-    HAS_README_ORG_STAGED=true
+    # Only count README.org if it has actual modifications (staged or unstaged)
+    if [ -n "$(git diff --name-only -- README.org 2>/dev/null)" ] || \
+       [ -n "$(git diff --cached --name-only -- README.org 2>/dev/null)" ]; then
+      HAS_README_ORG_STAGED=true
+    fi
   fi
 fi
 

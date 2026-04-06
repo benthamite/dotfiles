@@ -647,3 +647,11 @@ Invoked via =elpaca-run.sh= on Notification and Stop events. Delegates to the =c
 
 Blocks edits to =.texi= files, which are auto-generated from =.org= sources via =ox-texinfo=. Directs the agent to edit the corresponding =.org= file instead and regenerate.
 
+** require-elisp-skill.sh (PreToolUse)
+
+Blocks edits to =.el= files until the =elisp-conventions= skill has been loaded in the current session. Checks for a session marker created by the companion =track-elisp-skill.sh= hook. If no marker exists, denies the edit with a message telling the agent to load the skill first.
+
+** track-elisp-skill.sh (PostToolUse)
+
+Creates a session marker (=/tmp/claude-elisp-skill-{SESSION_ID}=) when the =elisp-conventions= skill is loaded via the Skill tool. This marker allows =require-elisp-skill.sh= to permit =.el= edits. Cleans up stale markers older than 2 hours.
+

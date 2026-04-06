@@ -86,6 +86,7 @@ Signals an error if pdftotext is not found."
                         " ")))
     (shell-command-to-string cmd)))
 
+;;;###autoload
 (defun pdf-tools-extras-convert-pdf (source &optional destination)
   "Convert PDF in SOURCE to text.
 If DESTINATION is non-nil, write the text to that file path.

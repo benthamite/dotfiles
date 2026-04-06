@@ -39,17 +39,23 @@ The package depends on =org-msg= and =org-extras=.
 
 #+vindex: org-msg-extras-personal-plain-text-signature
 #+vindex: org-msg-extras-personal-html-signature
-#+vindex: org-msg-extras-work-plain-text-signature
-#+vindex: org-msg-extras-work-html-signature
-=org-msg-extras.el= provides four user options for defining email signatures, covering two contexts (personal and work) and two formats (plain text and HTML/Org).
+#+vindex: org-msg-extras-epoch-plain-text-signature
+#+vindex: org-msg-extras-epoch-html-signature
+#+vindex: org-msg-extras-tlon-plain-text-signature
+#+vindex: org-msg-extras-tlon-html-signature
+=org-msg-extras.el= provides six user options for defining email signatures, covering three contexts (personal, Epoch AI, and Tlön) and two formats (plain text and HTML/Org).
 
 The user option ~org-msg-extras-personal-plain-text-signature~ holds the signature for personal emails sent in plain text format. Its default value is ="\n--\nPablo\n"=, a minimal signature preceded by the conventional =--= separator. The type is a string.
 
 The user option ~org-msg-extras-personal-html-signature~ holds the signature for personal emails composed in Org mode (which =org-msg= exports to HTML). Its default value is ="\n#+begin_signature\n--\n*Pablo*\n#+end_signature"=, using the Org signature block syntax that =org-msg= recognizes. The type is a string.
 
-The user option ~org-msg-extras-work-plain-text-signature~ holds the signature for work emails in plain text. By default it is set to the same value as ~org-msg-extras-personal-plain-text-signature~, so you only need to customize it if your work signature differs from your personal one. The type is a string.
+The user option ~org-msg-extras-epoch-plain-text-signature~ holds the signature for Epoch AI emails in plain text, including name, title, and website URL. The type is a string.
 
-The user option ~org-msg-extras-work-html-signature~ holds the signature for work emails in Org/HTML format. By default it is set to the same value as ~org-msg-extras-personal-html-signature~. The type is a string.
+The user option ~org-msg-extras-epoch-html-signature~ holds the signature for Epoch AI emails in Org/HTML format, including the Epoch logo and links to the website, Twitter, and newsletter. The type is a string.
+
+The user option ~org-msg-extras-tlon-plain-text-signature~ holds the signature for Tlön emails in plain text, including name, title, and company name. The type is a string.
+
+The user option ~org-msg-extras-tlon-html-signature~ holds the signature for Tlön emails in Org/HTML format, with styled name, title, and company name. The type is a string.
 
 These variables are not automatically inserted into messages by =org-msg-extras.el= itself. You should configure your mail user agent or =org-msg= setup to reference the appropriate variable based on the sending account. For example, you might set ~org-msg-signature~ dynamically in a hook based on which email account is active.
 

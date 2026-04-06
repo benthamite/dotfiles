@@ -398,8 +398,10 @@ The function ~mu4e-extras-set-contexts~ defines and sets
 ~mu4e-contexts~ for six combinations: personal HTML, personal plain
 text, Epoch HTML, Epoch plain text, Tlon HTML, and Tlon plain text.
 Each context uses environment variables (=PERSONAL_GMAIL=,
-=EPOCH_EMAIL=, =WORK_EMAIL=) for email addresses and references Org Msg
-signature variables from =org-msg-extras.el=.  The Epoch contexts also
+=EPOCH_EMAIL=, =WORK_EMAIL=) for email addresses and references
+account-specific signature variables from =org-msg-extras.el=
+(~org-msg-extras-epoch-html-signature~,
+~org-msg-extras-tlon-html-signature~, etc.).  The Epoch contexts also
 set account-specific folder paths (sent, drafts) and use the custom
 function ~mu4e-extras-send-via-gmail-api~ to send messages via
 =gmail-maildir-sync send= instead of SMTP, since the Epoch Google

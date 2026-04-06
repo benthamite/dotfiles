@@ -49,13 +49,13 @@
   :type 'string
   :group 'org-msg-extras)
 
-(defcustom org-msg-extras-work-plain-text-signature
+(defcustom org-msg-extras-epoch-plain-text-signature
   "\n--\nPablo Stafforini\nOperations Associate, Automations\nEpoch AI | https://epoch.ai/\n"
-  "Work signature for plain text emails."
+  "Epoch AI signature for plain text emails."
   :type 'string
   :group 'org-msg-extras)
 
-(defcustom org-msg-extras-work-html-signature
+(defcustom org-msg-extras-epoch-html-signature
   (concat
    "\n#+begin_signature\n--\n"
    "#+begin_export html\n"
@@ -74,7 +74,28 @@
    "<a href=\"https://epochai.substack.com/subscribe\">Newsletter</a></span>\n"
    "#+end_export\n"
    "#+end_signature")
-  "Work signature for HTML emails."
+  "Epoch AI signature for HTML emails."
+  :type 'string
+  :group 'org-msg-extras)
+
+(defcustom org-msg-extras-tlon-plain-text-signature
+  "\n--\nPablo Stafforini\nFounder & President\nTlön\n"
+  "Tlön signature for plain text emails."
+  :type 'string
+  :group 'org-msg-extras)
+
+(defcustom org-msg-extras-tlon-html-signature
+  (concat
+   "\n#+begin_signature\n--\n"
+   "#+begin_export html\n"
+   "<span style=\"display:block; font-family:Arial,Helvetica,sans-serif;"
+   " font-size:13px; line-height:1.4\">"
+   "<b>Pablo Stafforini</b><br>"
+   "Founder &amp; President<br>"
+   "Tlön</span>\n"
+   "#+end_export\n"
+   "#+end_signature")
+  "Tlön signature for HTML emails."
   :type 'string
   :group 'org-msg-extras)
 

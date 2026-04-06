@@ -627,8 +627,10 @@ between headers and body."
 (declare-function org-msg-mode "org-msg")
 (defvar org-msg-extras-personal-html-signature)
 (defvar org-msg-extras-personal-plain-text-signature)
-(defvar org-msg-extras-work-html-signature)
-(defvar org-msg-extras-work-plain-text-signature)
+(defvar org-msg-extras-epoch-html-signature)
+(defvar org-msg-extras-epoch-plain-text-signature)
+(defvar org-msg-extras-tlon-html-signature)
+(defvar org-msg-extras-tlon-plain-text-signature)
 (defun mu4e-extras-set-contexts ()
   "Set `mu4e-contexts'."
   (setq mu4e-contexts
@@ -656,7 +658,7 @@ between headers and body."
 		    (mu4e-sent-folder . "/epoch/Sent")
 		    (mu4e-drafts-folder . "/epoch/Drafts")
 		    (message-send-mail-function . mu4e-extras-send-via-gmail-api)
-		    (org-msg-signature . ,org-msg-extras-work-html-signature)))
+		    (org-msg-signature . ,org-msg-extras-epoch-html-signature)))
 	  ,(make-mu4e-context
             :name "4 Epoch plain text"
             :match-func #'mu4e-extras-msg-is-epoch-and-plain-text-p
@@ -667,14 +669,14 @@ between headers and body."
 		    (mu4e-sent-folder . "/epoch/Sent")
 		    (mu4e-drafts-folder . "/epoch/Drafts")
 		    (message-send-mail-function . mu4e-extras-send-via-gmail-api)
-		    (org-msg-signature . ,org-msg-extras-work-plain-text-signature)))
+		    (org-msg-signature . ,org-msg-extras-epoch-plain-text-signature)))
 	  ,(make-mu4e-context
             :name "5 Tlon HTML"
             :match-func #'mu4e-extras-msg-is-tlon-and-html-p
             :vars `((user-mail-address . ,(getenv "WORK_EMAIL"))
 		    (smtpmail-smtp-user . ,(getenv "PERSONAL_GMAIL"))
 		    (message-send-mail-function . smtpmail-send-it)
-		    (org-msg-signature . ,org-msg-extras-work-html-signature)))
+		    (org-msg-signature . ,org-msg-extras-tlon-html-signature)))
 	  ,(make-mu4e-context
             :name "6 Tlon plain text"
             :match-func #'mu4e-extras-msg-is-tlon-and-plain-text-p
@@ -683,7 +685,7 @@ between headers and body."
             :vars `((user-mail-address . ,(getenv "WORK_EMAIL"))
 		    (smtpmail-smtp-user . ,(getenv "PERSONAL_GMAIL"))
 		    (message-send-mail-function . smtpmail-send-it)
-		    (org-msg-signature . ,org-msg-extras-work-plain-text-signature))))))
+		    (org-msg-signature . ,org-msg-extras-tlon-plain-text-signature))))))
 
 ;;;;; Account detection
 

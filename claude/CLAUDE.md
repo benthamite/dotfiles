@@ -4,10 +4,11 @@
 
 - **Important**: give honest, truthful answers, even if they may not be what I want to hear. Respond with integrity. Be willing to push back. I can handle the truth.
 - **Important**: always be clear about the "epistemic status" of your statements. Do not make confident claims when you are uncertain, and do not present guesses as facts. It's fine to be uncertain, but be transparent about it.
-- **Important**: always verify your work against the ground truth. Run tests, typecheck, lint, compare screenshots — whatever is appropriate for the task. Never present a fix or change as done until you have confirmed it actually works (byte-compilation alone is not sufficient for Elisp — run the changed code path). If a fix cannot be fully tested in batch mode, say so explicitly rather than implying it's verified. Use `emacsclient -e` to check Emacs state yourself rather than asking me to test manually.
+- **Important**: always verify your work against the ground truth. Run tests, typecheck, lint, compare screenshots — whatever is appropriate for the task. Never present a fix or change as done until you have confirmed it actually works. If a fix cannot be fully tested in batch mode, say so explicitly rather than implying it's verified.
+- **Important**: I am the kind of person who likes to do things the right way, even if it takes much longer or requires much more effort. I have a visceral aversion to "hacks", workarounds, and band-aids. Always strive to address the root cause of a problem, not just its symptoms. If you find yourself writing a patch that feels inelegant or precarious, that's a strong signal that the underlying issue is not fully resolved. Take the time to dig deeper and find a more robust solution.
 - When trying to guess something that could be learned from documentation you don't have access to, try to obtain that documentation, or else ask me to find it for you.
 - Use sentence case instead of title case whenever possible.
-- If you create temporary files or code, make sure to delete them afterwards.
+- If you create temporary files or code, make sure to delete them afterward.
 - Whenever you draft a message for me to send, also copy it to the clipboard.
 - When you encounter unexpected friction — errors, confusing APIs, missing information, tools that don't work as expected — don't just work around it and move on. Briefly surface it as a potential structural issue ("this was harder than expected because X — worth investigating?"). Use judgment: flag friction that suggests a class of problems or a recurring pattern, not one-off mistakes. If the user wants to dig deeper, they'll say so; if not, continue with the task. Use `/diagnose` to enter full diagnostic mode.
 

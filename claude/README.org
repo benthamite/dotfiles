@@ -29,7 +29,7 @@ Three layers of directories work together: this dotfiles directory (source of tr
 ├── CLAUDE.md                         ← global conventions for all projects
 ├── settings.json                     ← hooks, model, permissions, theme
 ├── settings.local.json               ← machine-specific permissions (mpv, brew, osascript…)
-├── hooks/                            ← 12 hook scripts
+├── hooks/                            ← 15 hook scripts
 ├── skills/                           ← 44 skill directories
 ├── bin/batch-test.sh                 ← elpaca-aware emacs --batch test runner
 ├── bin/sync-mcp-servers.sh           ← MCP server sync utility
@@ -569,7 +569,7 @@ Evaluates third-party skills from the [[https://github.com/HartreeWorks/skills][
 :ID:       4D862953-7E8A-4154-BC16-919ED6B092A5
 :END:
 
-Ten hook scripts handle workflow invariants and Emacs integration. Most are defined in the global =settings.json= and use early-exit guards to skip inapplicable projects. One (=require-readme-update.sh=) is defined in the dotfiles project-level =.claude/settings.json= since it only applies to this repo. The emacsclient hooks (=notify-emacs-session-end.sh=, =notify-emacs-notification.sh=, =load-elisp-after-edit.sh=) escape interpolated values before embedding them in Elisp strings to prevent injection.
+Thirteen hook scripts handle workflow invariants and Emacs integration. Most are defined in the global =settings.json= and use early-exit guards to skip inapplicable projects. One (=require-readme-update.sh=) is defined in the dotfiles project-level =.claude/settings.json= since it only applies to this repo. The emacsclient hooks (=notify-emacs-session-end.sh=, =notify-emacs-notification.sh=, =load-elisp-after-edit.sh=) escape interpolated values before embedding them in Elisp strings to prevent injection.
 
 ** require-elisp-test-before-commit.sh (PreToolUse)
 :PROPERTIES:
@@ -642,4 +642,8 @@ Forwards the session-end event to Emacs via =claude-code-handle-hook=. Runs thro
 :END:
 
 Invoked via =elpaca-run.sh= on Notification and Stop events. Delegates to the =claude-code= Emacs package's hook wrapper, which updates the Emacs-side state (e.g. mode-line indicators) in response to Claude Code lifecycle events.
+
+** block-texi-edit.sh (PreToolUse)
+
+Blocks edits to =.texi= files, which are auto-generated from =.org= sources via =ox-texinfo=. Directs the agent to edit the corresponding =.org= file instead and regenerate.
 

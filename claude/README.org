@@ -612,7 +612,7 @@ Companion to =require-readme-update.sh=. Fires globally after any Write or Edit,
 :ID:       BB6FE0BD-FC74-4BEB-89AB-4FE902A84055
 :END:
 
-Blocks =git commit= when =.el= files are staged but no =doc/*.org= or =README.org= manual update is included. Applies only in repos that have a =doc/= directory or a =README.org= at the root. Ensures documentation stays in sync with code changes.
+Blocks =git commit= when =.el= files are staged but no =doc/*.org= or =README.org= manual update is included. Applies only in repos that have a =doc/= directory or a =README.org= at the root. When detecting doc files in a combined =git add && git commit= command, verifies that the doc files have actual modifications (staged or unstaged) rather than accepting unchanged files. Ensures documentation stays in sync with code changes.
 
 ** load-elisp-after-edit.sh (PostToolUse)
 :PROPERTIES:

@@ -1,5 +1,18 @@
 model = "gpt-5.4"
 model_reasoning_effort = "xhigh"
+project_doc_fallback_filenames = ["CLAUDE.md"]
+
+[features]
+codex_hooks = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/dotfiles-context/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/elisp-conventions/SKILL.md"
+enabled = true
+
 [projects."/Users/pablostafforini/My Drive/repos/consensus-trader"]
 trust_level = "trusted"
 
@@ -25,6 +38,9 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/emacs-slack"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/repos/stafforini.com"]
 trust_level = "trusted"
 
 [tui]

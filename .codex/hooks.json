@@ -1,0 +1,53 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/require-elisp-test-before-commit.sh",
+            "timeout": 10,
+            "statusMessage": "Checking Elisp test gate"
+          },
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/require-doc-update.sh",
+            "timeout": 10,
+            "statusMessage": "Checking Org manual update"
+          },
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/require-readme-update.sh",
+            "timeout": 10,
+            "statusMessage": "Checking README update"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/track-elisp-test.sh",
+            "timeout": 5,
+            "statusMessage": "Tracking Elisp batch tests"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/fire-and-forget.sh ~/My\\ Drive/dotfiles/claude/hooks/notify-emacs-session-end.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

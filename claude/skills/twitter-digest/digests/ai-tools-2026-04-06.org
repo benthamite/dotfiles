@@ -2,87 +2,92 @@
 
 * Notable
 
-** @dexhorthy (Mon Apr 06 00:28)
-plans vs outlines vs design docs:
+** @kr0der (Mon Apr 06 18:02)
+i kinda like running Codex to do the actual task, then opening Claude Code so i can run /simplify because it does a pretty good job of simplifying Codex's code. the problem is that 5% of the time it'll just break the code
+Likes: 15 | Views: 588 | Like rate: 2.6%
+[[https://x.com/kr0der/status/2041214983032242426][View on X]]
 
-I think the value of a plan-for-the-model is take intent + codebase research and build like a "guide to building this feature for idiots" - at least 80-90% correct, close enough that you have high success chance to spray out the diffs and fix anything that was missed.
-Likes: 60 | Views: 3191 | Like rate: 1.9%
-[[https://x.com/dexhorthy/status/2040949799525257476][View on X]]
+** @iotcoi (Mon Apr 06 18:32)
+4.7M tokens KV cache TurboQuant3.5 Qwen3.5-35B 1M tokens context (YaRN) 3426.7 tokens/sec peak batch vLLM 0.19.0 + TurboQuant CUDA 12.8 Triton 3.6 TQ kernels — all on a single desktop GPU workstation with 4xA6K
+Likes: 108 | Views: 5,634 | Like rate: 1.9%
+[[https://x.com/iotcoi/status/2041222475573297423][View on X]]
 
-** @carson3068 (Mon Apr 06 10:08)
-Shipped opencode-memory, a read-only OpenCode skill for browsing local session history with sqlite3. No extra service. No daemon. Just sqlite3 + one skill.md.
-Likes: 754 | Views: 41023 | Like rate: 1.8%
-[[https://x.com/carson3068/status/2041095686742040587][View on X]]
+** @Prince_Canuma (Mon Apr 06 21:24)
+The best ideas are the simplest: "Gemma4 looks at the image, decides what to segment, Falcon Perception returns pixel-accurate masks + metadata (centroid, area_fraction, bbox), Gemma4 reasons on the numbers and calls the next tool or answers."
+Likes: 30 | Views: 2,416 | Like rate: 1.2%
+[[https://x.com/Prince_Canuma/status/2041265931133779968][View on X]]
 
-** @steipete (Sun Apr 05 20:47)
-Working on a new QA process where we use openclaw to QA openclaw with a new synthetic message channel. Orchestrator agent understands project, defines tasks (e.g. ask agent to create cron) then verifies that agent did what that. If failure -> spin up subagent to analyze+fix.
-Likes: 701 | Views: 43181 | Like rate: 1.6%
-[[https://x.com/steipete/status/2040894021036384502][View on X]]
+** @itsolelehmann (Mon Apr 06 17:07)
+With Anthropic banning OpenClaw outside API it's a good time to check out Perplexity Computer — multi-modal (Claude, OpenAI, etc.), lots of connectors/integrations, easiest to setup for non-technical people. Will be sharing more workflows with PC soon.
+Likes: 44 | Views: 3,701 | Like rate: 1.2%
+[[https://x.com/itsolelehmann/status/2041201156399976708][View on X]]
 
-** @xeophon (Sun Apr 05 15:06)
-PSA: Gemma 4 uses a harmony-like syntax for vLLM with </channel>thought, but the Gemini API (when using OpenAI chat completions) uses <thought> for the CoT.
-Likes: 89 | Views: 5998 | Like rate: 1.5%
-[[https://x.com/xeophon/status/2040808282554503194][View on X]]
+** @dexhorthy (Mon Apr 06 16:04)
+DO NOT ask a model to make a judgment call — they are trained to be sycophantic and to tell us what we wanna hear. The model has no idea if you've never taken a CS class or if you're Linus Torvalds. You cannot outsource the thinking.
+Likes: 40 | Views: 3,811 | Like rate: 1.1%
+[[https://x.com/dexhorthy/status/2041185180996841652][View on X]]
 
-** @intellectronica (Sun Apr 05 21:02)
-Recipe for little temp directories at home with delayed cleanup. I use this to run dozens of experiments and ad-hoc little projects every day. The directories survive restarts and stick around for long enough in case they're useful for a bit later.
-Likes: 4 | Views: 282 | Like rate: 1.4%
-[[https://x.com/intellectronica/status/2040897864541639122][View on X]]
+** @jtdavies (Mon Apr 06 15:20)
+Gemma-4 TurboQuant MLX benchmarks on M5 Max: 4-bit, 8-bit and bf16 with/without TurboQuant at 2.5-bit, context from 4k to 256k.
+Likes: 26 | Views: 2,785 | Like rate: 0.9%
+[[https://x.com/jtdavies/status/2041174266729632168][View on X]]
 
-** @Dimillian (Mon Apr 06 05:04)
-Codex automations are so good, paired with the Notions, Slack and Github plugin I basically have a daily debrief automation running and updating a Notions page. Useful to keep track of the work I did and left to do.
-Likes: 36 | Views: 2643 | Like rate: 1.4%
-[[https://x.com/Dimillian/status/2041019243915772220][View on X]]
+* Discovered accounts
 
-** @itsolelehmann (Sun Apr 05 16:33)
-i taught claude to watch me work every week and tell me what to automate
+** @micLivs (Mon Apr 06 18:05)
+Introducing pi-psst: your agent uses secrets without ever seeing them. Secrets are injected as env vars to bash tool, scrubbed from all tool output, stored in local encrypted vault. The agent knows what's available but never sees a value.
+Likes: 141 | Views: 6,161 | Like rate: 2.3%
+[[https://x.com/micLivs/status/2041215611330531454][View on X]]
 
-here's the idea: you probably open ai, do a task, close it. then next week you do the same task again. and again. you never zoom out and ask "what am i repeatedly doing that should be automated by now" because when you're inside the loop, every task feels like a one-off.
-Likes: 295 | Views: 22375 | Like rate: 1.3%
-[[https://x.com/itsolelehmann/status/2040830260170944752][View on X]]
+** @ClementDelangue (Mon Apr 06 16:22)
+We keep saying we want open-source frontier agents. Fine. Then let's build the dataset. @badlogicgames shared his Pi agent traces on HuggingFace. Now sharing mine too, exporting from Hermes, OpenCode, and Claude via tracescom — and challenging others to do the same.
+Likes: 481 | Views: 28,345 | Like rate: 1.7%
+[[https://x.com/ClementDelangue/status/2041189872556269697][View on X]]
 
-** @ivanfioravanti (Sun Apr 05 14:42)
-M5 Max difference in Low Power, Automatic and High Power is huge! Be sure to set High Power when plugged in during LLM usage. Peak Power consumption: High ~140W, Low ~30W.
-Likes: 98 | Views: 7589 | Like rate: 1.3%
-[[https://x.com/ivanfioravanti/status/2040802136687075814][View on X]]
+** @nibzard (Mon Apr 06 21:06)
+Got nerd sniped seeing Absurd from @mitsuhiko so I mixed it with Pi and Steel — now I have a Durable Researcher. Lately deep research products feel like they've been getting worse, at least subjectively.
+Likes: 62 | Views: 3,974 | Like rate: 1.6%
+[[https://x.com/nibzard/status/2041261309837164629][View on X]]
 
-** @simonw (Sun Apr 05 04:17)
-I built a new Python CLI tool for scanning folders for secret strings, useful if you want to share a bunch of log files but first want to check they didn't accidentally leak API keys or similar. Run: uvx scan-for-secrets --help
-Likes: 539 | Views: 44884 | Like rate: 1.2%
-[[https://x.com/simonw/status/2040644971204857879][View on X]]
+** @fxnction (Mon Apr 06 15:30)
+Most people struggle with OpenClaw because they have single agent ecosystems. No matter how strong the LLM, if you're trying to complete extremely complex tasks, you need multiple agents working in harmony. You can't expect one Agent to figure everything out.
+Likes: 30 | Views: 2,061 | Like rate: 1.5%
+[[https://x.com/fxnction/status/2041176746645680130][View on X]]
 
-** @mattzcarey (Sun Apr 05 17:19) [discovered]
-Thinking of making up some agent boxes. Mine is a raspberry pi in my living room and it's got to a scary level of good. Stuff it does for me: screenshots the surf cams, predicts paragliding/kiting opportunities, tracks food macros, pings me to drink/walk around, migrated my entire website...
-Likes: 34 | Views: 3142 | Like rate: 1.1%
-[[https://x.com/mattzcarey/status/2040841819546677293][View on X]]
+** @fxnction (Mon Apr 06 15:20)
+Fully switched OpenClaw to oauth GPT 5.4/Codex after the Claude debacle. Immediately, Codex noticed over 10 gaps in my 12-agent dev team pipeline that Opus hadn't identified or fixed. Took maybe 20 minutes to fix all gaps.
+Likes: 34 | Views: 3,803 | Like rate: 0.9%
+[[https://x.com/fxnction/status/2041174309197193726][View on X]]
 
-** @badlogicgames (Mon Apr 06 02:27)
-Putting my tokens where my mouth is. I built pi-share-hf. Share your pi coding agent sessions as HuggingFace datasets. It tries to prevent you from uploading sessions containing PII/sensitive data with 3 tiers of defenses. Best used on OSS coding sessions.
-Likes: 296 | Views: 30881 | Like rate: 1.0%
-[[https://x.com/badlogicgames/status/2040979640265633882][View on X]]
+** @helloitsaustin (Mon Apr 06 18:17)
+Ramblings from working at Anthropic. The single most important thing a growth marketer should be doing with AI: after running dozens of growth workflows through Claude, the useful mental model is treating AI as a thinking partner across your full workflow — not just a single task.
+Likes: 480 | Views: 58,154 | Like rate: 0.8%
+[[https://x.com/helloitsaustin/status/2041218663827812815][View on X]]
 
-** @ryanvogel (Sun Apr 05 18:36)
-Agent refactoring workflow for every single API route:
-1. read target + reference
-2. write pseudo-tests (<file>.test.ts)
-3. mini-plan
-4. implement
-5. run tests
-Likes: 14 | Views: 1609 | Like rate: 0.9%
-[[https://x.com/ryanvogel/status/2040861151681225173][View on X]]
+** @antirez (Mon Apr 06 21:56)
+During the last week I executed very long autonomous sessions of Claude Code Opus 4.6 and Codex GPT 5.4 (both at max thinking budget), in cloned directories (refreshed every time one was behind). I burned a lot of tokens...
+Likes: 178 | Views: 30,687 | Like rate: 0.6%
+[[https://x.com/antirez/status/2041273781256159646][View on X]]
 
-** @karpathy (Sat Apr 04 16:45) [discovered]
-In this era of LLM agents, there is less of a point/need of sharing the specific code/app, you just share the idea, then the other person's agent customizes it, builds it, etc. Introducing the "idea file": a markdown doc with the idea. What to build, not how to build it. Your agent reads it and figures out the rest.
-Likes: 23716 | Views: 5443791 | Like rate: 0.4%
-[[https://x.com/karpathy/status/2040470801506541998][View on X]]
+* Accounts with nothing notable
+@0xSero, @altryne, @alvinsng, @amirmxt, @badlogicgames, @cathrynlavery, @Dimillian, @forgebitz, @intellectronica, @ivanfioravanti, @lucasmeijer, @maddiedreese, @NickADobos, @petergyang, @pontusab, @RayFernando1337, @ryanvogel, @steipete, @thdxr, @trq212
 
 * Vetted accounts
 
-- @jtdavies (2.8K) — Score 7, added to list. Consistent local model benchmarking (TurboQuant MLX, Gemma vs Qwen coding tests, speculative decoding). ~75% AI tools content.
-- @mattzcarey (22K) — Score 6, borderline. Raspberry Pi agent box, code mode isolation on Cloudflare workerd. Interesting but scattered (~45% AI tools).
-- @LLMJunky (9.4K) — Score 6, borderline. Good Codex ecosystem coverage and model recs, but more news curation than practitioner workflows (~50% original).
-- @karpathy (2.1M) — Skipped vetting. Too general/famous for this niche list despite excellent individual tweets.
-- @MaziyarPanahi (13K) — Skipped vetting. Multi-model local pipelines are impressive but lean demo over workflow.
+** @antirez — score 8 (auto-added)
+Redis creator. Autonomous Claude Code Opus 4.6 vs Codex GPT 5.4 sessions in cloned directories, SPEC.md-guided project creation trick, TurboQuant vector search analysis. ~55% AI tools content but extremely high quality when on-topic.
 
-* Accounts with nothing notable
-@__tinygrad__, @0xSero, @altryne, @amirmxt, @bentossell, @cathrynlavery, @championswimmer, @forgebitz, @iotcoi, @kr0der, @lucasmeijer, @maddiedreese, @NickADobos, @petergyang, @pontusab, @Prince_Canuma, @RayFernando1337, @Saboo_Shubham_, @thdxr, @trq212
+** @helloitsaustin — score 8 (auto-added)
+Anthropic growth marketer. Claude Cowork plugin for Google Ads management (4K likes), moved 90% of growth work to Cowork, practical 4-dimension framework for AI in marketing. ~75% AI tools content.
+
+** @micLivs — score 7 (auto-added)
+Tool builder: pi-psst (agent secret management), dripline (API/CLI to SQL via DuckDB), napkin (Obsidian SDK). ~80% AI tools content. Small audience (1.2K) but very high signal-to-noise.
+
+** @nibzard — score 7 (auto-added)
+Hands-on integrator: Durable Researcher (Pi + Absurd + Steel), Cohere transcribe CLI on MLX, Claude Code Gmail automation, Hermes Agent PRs. ~65% AI tools content.
+
+** @fxnction — score 6 (borderline)
+12-agent dev team on OpenClaw, multi-agent ecosystem insights, Opus-to-Codex comparison. ~50% AI tools content — practical multi-agent workflows but heavy crypto/promotional noise.
+
+** @ClementDelangue — quick-filtered, not fully scored
+HuggingFace CEO (239K). Agent traces sharing initiative is actionable but most tweets are RT amplification of community projects. Leadership perspective rather than practitioner workflows.

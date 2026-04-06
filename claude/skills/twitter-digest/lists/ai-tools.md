@@ -49,3 +49,7 @@ description: Practical AI tool workflows, tips, and tutorials from practitioners
 - @kmdrfx
 - @lucasmeijer
 - @jtdavies
+- @antirez
+- @helloitsaustin
+- @micLivs
+- @nibzard

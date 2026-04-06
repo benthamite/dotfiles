@@ -3,6 +3,8 @@
 ## Tier 1 (8-10)
 
 - **@badlogicgames** (8, 2026-03-23) — Pi agent creator. Deep practitioner content on building coding agents, debugging APIs, refactoring agent architecture.
+- **@antirez** (8, 2026-04-06) — Redis creator. Autonomous Claude Code vs Codex sessions, SPEC.md project trick, TurboQuant analysis. ~55% AI tools content, extremely high quality when on-topic.
+- **@helloitsaustin** (8, 2026-04-06) — Anthropic growth marketer. Claude Cowork Google Ads plugin, 90% of work in Cowork, 4-dimension AI marketing framework. ~75% AI tools content.
 
 ## Tier 2 (6-7)
 
@@ -17,6 +19,8 @@
 - **@Dimillian** (7, 2026-03-25) — Codex/AI coding workflow practitioner. Menu bar app demos, TODO system, memory features. ~55% AI tools content, rest is personal/French community.
 - **@Prince_Canuma** (7, 2026-03-25) — MLX ecosystem builder. TurboQuant, mlx-vlm releases, local model optimization. ~75% AI tools content.
 - **@xeophon** (7, 2026-03-25) — Prime CLI developer. Made CLI LLM-friendly, security awareness (litellm), honest AI tooling takes. ~60% AI tools content.
+- **@micLivs** (7, 2026-04-06) — Tool builder: pi-psst, dripline, napkin. ~80% AI tools content. Small (1.2K) but very high signal.
+- **@nibzard** (7, 2026-04-06) — Integrator: Durable Researcher, Cohere MLX transcription, Claude Gmail automation. ~65% AI tools content.
 
 ## Tier 3 (4-5)
 
@@ -69,4 +73,7 @@
 
 - @jtdavies (7, 2026-04-06) — Local model benchmarking practitioner. TurboQuant MLX evals, Gemma vs Qwen coding tests, speculative decoding, Claude Code semaphore trick. ~75% AI tools content.
 - @LLMJunky (6, 2026-04-06) — Codex ecosystem coverage, model recommendations (GPT 5.4 Mini, Minimax 2.7). More news curation than hands-on workflows. ~50% original AI tools content.
-- @mattzcarey (6, 2026-04-06) — Cloudflare dev. Raspberry Pi agent box, code mode isolation on workerd. Scattered across AI/Cloudflare/zig/personal. ~45% AI tools content.
+- @mattzcarey (6, 2026-04-06)
+- @fxnction (6, 2026-04-06) — 12-agent dev team on OpenClaw, multi-agent insights, Opus-to-Codex comparison. ~50% AI tools content, heavy crypto/promotional noise.
+- @ClementDelangue (skip, 2026-04-06) — HuggingFace CEO (239K). Agent traces initiative is actionable but mostly RT amplification. Quick-filtered. — Cloudflare dev. Raspberry Pi agent box, code mode isolation on workerd. Scattered across AI/Cloudflare/zig/personal. ~45% AI tools content.
+

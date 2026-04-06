@@ -30,7 +30,7 @@ Three layers of directories work together: this dotfiles directory (source of tr
 ├── settings.json                     ← hooks, model, permissions, theme
 ├── settings.local.json               ← machine-specific permissions (mpv, brew, osascript…)
 ├── hooks/                            ← 15 hook scripts
-├── skills/                           ← 44 skill directories
+├── skills/                           ← 47 skill directories
 ├── bin/batch-test.sh                 ← elpaca-aware emacs --batch test runner
 ├── bin/sync-mcp-servers.sh           ← MCP server sync utility
 └── README.org                        ← this file
@@ -256,6 +256,13 @@ Audits code for architectural quality: unnecessary complexity, missing or wrong 
 :END:
 
 Audits code for intent transparency: magic values, misleading names, missing rationale comments, undocumented conventions. Pass =--accept= to auto-fix high-impact clarity issues.
+
+*** dx-audit
+:PROPERTIES:
+:ID:       B2E4A6C8-1D3F-4E9A-8B5C-7F2D9A0E4C16
+:END:
+
+Audits a codebase from the AI agent's perspective: inventories existing verification infrastructure (tests, types, linting, CI), project instructions, code navigability, and automation, then produces prioritized recommendations for reducing friction. Each recommendation is concrete, justified from the AI's perspective, and effort-estimated. Pass =--accept= to implement all recommendations without prompting.
 
 *** code-walkthrough
 :PROPERTIES:

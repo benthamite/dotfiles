@@ -7,7 +7,8 @@
 # output contains a load warning about elpaca/builds, the marker
 # is NOT created and a warning is printed.
 #
-# Reads JSON from stdin (Claude Code PostToolUse format).
+# Reads JSON from stdin. Supports both Claude Code's `tool_output` payload and
+# Codex's `tool_response` payload.
 
 set -euo pipefail
 
@@ -15,8 +16,24 @@ INPUT=$(cat)
 
 COMMAND=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')
 SESSION_ID=$(printf '%s' "$INPUT" | jq -r '.session_id // empty')
-STDOUT=$(printf '%s' "$INPUT" | jq -r '.tool_output.stdout // empty')
-STDERR=$(printf '%s' "$INPUT" | jq -r '.tool_output.stderr // empty')
+STDOUT=$(printf '%s' "$INPUT" | jq -r '
+  def response_object:
+    .tool_response? as $response |
+    if ($response | type) == "object" then $response
+    elif ($response | type) == "string" then ($response | fromjson? // {"output": $response})
+    else {}
+    end;
+  .tool_output.stdout // response_object.stdout // response_object.output // response_object.text // empty
+')
+STDERR=$(printf '%s' "$INPUT" | jq -r '
+  def response_object:
+    .tool_response? as $response |
+    if ($response | type) == "object" then $response
+    elif ($response | type) == "string" then ($response | fromjson? // {"output": $response})
+    else {}
+    end;
+  .tool_output.stderr // response_object.stderr // empty
+')
 COMBINED="$STDOUT$STDERR"
 
 # Check if the command used emacs --batch or the batch-test.sh wrapper

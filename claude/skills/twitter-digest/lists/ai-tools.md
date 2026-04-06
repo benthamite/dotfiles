@@ -48,3 +48,4 @@ description: Practical AI tool workflows, tips, and tutorials from practitioners
 - @cathrynlavery
 - @kmdrfx
 - @lucasmeijer
+- @jtdavies

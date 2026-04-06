@@ -66,3 +66,7 @@
 - @huntharo (6, 2026-04-03) — OpenClaw contributor. Siri/CarPlay integration, Codex App Server plugin, xAI Responses API. ~55% AI tools content.
 - @neural_avb (6, 2026-04-03) — Neural Breakdown on YT. Paper reviews, text-albumentations data-gen lib. Focus is ML research/training, not AI coding tools. ~70% AI content but off-rubric.
 - @KingBootoshi (skip, 2026-04-03) — 41K followers. Crypto/meme-heavy, sporadic AI content. Quick-filtered.
+
+- @jtdavies (7, 2026-04-06) — Local model benchmarking practitioner. TurboQuant MLX evals, Gemma vs Qwen coding tests, speculative decoding, Claude Code semaphore trick. ~75% AI tools content.
+- @LLMJunky (6, 2026-04-06) — Codex ecosystem coverage, model recommendations (GPT 5.4 Mini, Minimax 2.7). More news curation than hands-on workflows. ~50% original AI tools content.
+- @mattzcarey (6, 2026-04-06) — Cloudflare dev. Raspberry Pi agent box, code mode isolation on workerd. Scattered across AI/Cloudflare/zig/personal. ~45% AI tools content.

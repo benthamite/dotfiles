@@ -1,0 +1,61 @@
+#+title: Codex configuration
+#+author: Pablo Stafforini
+
+* Overview
+
+This directory contains the dotfiles source of truth for the parts of my
+[[https://developers.openai.com/codex/][Codex]] setup that are version-controlled.
+
+* Current layout
+
+#+begin_example
+codex/
+├── AGENTS.md
+├── config.toml
+├── README.org
+├── rules/default.rules
+└── skills/
+    ├── dotfiles-context/
+    └── elisp-conventions/
+#+end_example
+
+* What ports cleanly
+
+- Global instructions via =~/.codex/AGENTS.md= (source of truth:
+  =codex/AGENTS.md=).
+- Project instructions via repository =AGENTS.md= files.
+- Skills via =codex/skills/=, registered in =codex/config.toml=.
+- Trusted-project settings, model defaults, theme, and rules via
+  =codex/config.toml= and =codex/rules/default.rules=.
+
+* What ports partially
+
+- Hooks: Codex hooks are experimental and currently support
+  =SessionStart=, =PreToolUse=, =PostToolUse=, =UserPromptSubmit=, and
+  =Stop=. Today =PreToolUse= and =PostToolUse= only match =Bash=. This is
+  enough for commit-gating hooks, but not for Claude's =Edit|Write= hooks.
+- Custom status line: no direct Codex equivalent.
+- Claude project/global memory relocation: no stable Codex equivalent yet.
+- Claude's allow-list permissions: Codex uses sandbox settings, approval
+  policy, and prefix rules instead.
+
+* Active port in this repo
+
+- =project_doc_fallback_filenames = ["CLAUDE.md"]= lets Codex keep reading
+  existing =CLAUDE.md= files in repositories that have not moved to
+  =AGENTS.md= yet.
+- =.codex/hooks.json= ports the Bash-based commit hooks and the stop hook for
+  this repository.
+- The following Claude hooks are *not* ported because Codex does not
+  currently emit =Edit|Write= hook events:
+  =block-elpaca-dotfiles-edit.sh=, =symlink-project-memory.sh=,
+  =load-elisp-after-edit.sh=, and =remind-claude-readme-update.sh=.
+
+* Global activation
+
+To make the global instructions apply everywhere, symlink
+=~/.codex/AGENTS.md= to =~/My Drive/dotfiles/codex/AGENTS.md=.
+
+If I later want a global hook layer, I can also symlink =~/.codex/hooks.json=
+to a shared hooks file. Until then, the repository-local =.codex/hooks.json=
+only affects this repository.

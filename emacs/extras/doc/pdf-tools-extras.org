@@ -85,7 +85,7 @@ If your PDF files are named after BibTeX keys (e.g., =Smith2023.pdf= corresponds
 The variable ~pdf-tools-extras-pdftotext-executable~ holds the path to the =pdftotext= executable (default ="pdftotext"=). Customize it if the executable is installed in a non-standard location.
 
 #+findex: pdf-tools-extras-convert-pdf
-The function ~pdf-tools-extras-convert-pdf~ converts a PDF file to plain text. It accepts a SOURCE file path and an optional DESTINATION. When DESTINATION is non-nil, the text is written to that file; otherwise, the text is returned as a string. This is the main entry point for PDF text extraction and is used by other packages such as =read-aloud-extras.el=. It is autoloaded, so external packages can call it without requiring =pdf-tools-extras= first.
+The function ~pdf-tools-extras-convert-pdf~ converts a PDF file to plain text. It accepts a SOURCE file path and an optional DESTINATION. When DESTINATION is non-nil, the text is written to that file; otherwise, the text is returned as a string. This is the main entry point for PDF text extraction and is used by other packages such as =read-aloud-extras.el=. It has an =;;;###autoload= cookie, so external packages can call it without requiring =pdf-tools-extras= first.
 
 #+findex: pdf-tools-extras--run-pdftotext
 Internally, ~pdf-tools-extras--run-pdftotext~ runs the =pdftotext= executable on a SOURCE file, writing to OUTPUT (a file path or ="-"= for stdout). It accepts an optional EXTRA-ARGS list for additional flags such as margin settings. It signals an error if =pdftotext= is not installed.

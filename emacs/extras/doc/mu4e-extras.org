@@ -403,8 +403,11 @@ signature variables from =org-msg-extras.el=.  The Epoch contexts also
 set account-specific folder paths (sent, drafts) and use the custom
 function ~mu4e-extras-send-via-gmail-api~ to send messages via
 =gmail-maildir-sync send= instead of SMTP, since the Epoch Google
-Workspace admin has disabled IMAP/SMTP.  The plain text contexts
-disable ~org-msg-mode~ on entry and re-enable it on leave.
+Workspace admin has disabled IMAP/SMTP.  The Tlon contexts
+authenticate SMTP as =PERSONAL_GMAIL= (not =WORK_EMAIL=), since
+the Tlon account is configured as a send-as alias in Gmail.  The
+plain text contexts disable ~org-msg-mode~ on entry and re-enable
+it on leave.
 
 #+findex: mu4e-extras-set-account-folders
 The function ~mu4e-extras-set-account-folders~ sets ~mu4e-refile-folder~

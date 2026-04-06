@@ -672,7 +672,7 @@ between headers and body."
             :name "5 Tlon HTML"
             :match-func #'mu4e-extras-msg-is-tlon-and-html-p
             :vars `((user-mail-address . ,(getenv "WORK_EMAIL"))
-		    (smtpmail-smtp-user . ,(getenv "WORK_EMAIL"))
+		    (smtpmail-smtp-user . ,(getenv "PERSONAL_GMAIL"))
 		    (message-send-mail-function . smtpmail-send-it)
 		    (org-msg-signature . ,org-msg-extras-work-html-signature)))
 	  ,(make-mu4e-context
@@ -681,7 +681,7 @@ between headers and body."
 	    :enter-func (lambda () (org-msg-mode -1))
 	    :leave-func #'org-msg-mode
             :vars `((user-mail-address . ,(getenv "WORK_EMAIL"))
-		    (smtpmail-smtp-user . ,(getenv "WORK_EMAIL"))
+		    (smtpmail-smtp-user . ,(getenv "PERSONAL_GMAIL"))
 		    (message-send-mail-function . smtpmail-send-it)
 		    (org-msg-signature . ,org-msg-extras-work-plain-text-signature))))))
 

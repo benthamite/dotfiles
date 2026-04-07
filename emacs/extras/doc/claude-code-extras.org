@@ -223,7 +223,7 @@ Configure accounts as an alist of =(NAME . CONFIG-DIR)= pairs:
 #+begin_src emacs-lisp
 (setopt claude-code-extras-accounts
         '(("personal" . "~/.claude-personal")
-          ("work"     . "~/.claude-work")))
+          ("epoch"    . "~/.claude-epoch")))
 #+end_src
 
 #+findex: claude-code-extras-select-account

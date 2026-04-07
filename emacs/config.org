@@ -8890,7 +8890,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (claude-code-extras-org-todo-in-progress-keyword "DOING")
   (claude-code-extras-accounts '(("personal" . "~/.claude-personal")
                                  ("tlon" . "~/.claude-tlon")
-                                 ("work"     . "~/.claude-work"))))
+                                 ("epoch"     . "~/.claude-epoch"))))
 #+end_src
 
 ** =agent-log=

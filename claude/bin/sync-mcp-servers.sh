@@ -14,7 +14,7 @@ import tempfile
 
 CANONICAL = os.path.expanduser("~/.claude.json")
 TARGETS = [
-    os.path.expanduser("~/.claude-work/.claude.json"),
+    os.path.expanduser("~/.claude-epoch/.claude.json"),
     os.path.expanduser("~/.claude-personal/.claude.json"),
 ]
 

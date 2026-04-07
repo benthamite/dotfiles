@@ -135,7 +135,7 @@ The selection persists in `claude-code-extras-account-file'.
 
 Example:
   \\='((\"personal\" . \"~/.claude-personal\")
-    (\"work\"     . \"~/.claude-work\"))"
+    (\"epoch\"    . \"~/.claude-epoch\"))"
   :type '(alist :key-type string :value-type directory)
   :group 'claude-code-extras)
 

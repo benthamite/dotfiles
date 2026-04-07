@@ -813,6 +813,25 @@ which otherwise causes a cascading O(n*m) freeze."
 
 (advice-add 'org-id-update-id-locations :around #'org-extras--inhibit-modification-hooks)
 
+(defun org-extras--memoize-file-truename (orig-fun &rest args)
+  "Call ORIG-FUN with ARGS while memoizing `file-truename'.
+`org-id-update-id-locations' calls `file-truename' on every file,
+and each call recursively resolves symlink components through
+`tramp-completion-file-name-handler'.  In Google Drive trees with
+many symlinked paths sharing common prefixes, caching the results
+eliminates redundant filesystem and regex overhead."
+  (let ((cache (make-hash-table :test #'equal))
+        (real-file-truename (symbol-function 'file-truename)))
+    (cl-letf (((symbol-function 'file-truename)
+               (lambda (filename &optional counter prev-dirs)
+                 (or (gethash filename cache)
+                     (puthash filename
+                              (funcall real-file-truename filename counter prev-dirs)
+                              cache)))))
+      (apply orig-fun args))))
+
+(advice-add 'org-id-update-id-locations :around #'org-extras--memoize-file-truename)
+
 (defun org-extras-id-update-id-locations ()
   "Scan relevant files for IDs and process duplicates.
 Store the relation between files and corresponding IDs.  This will

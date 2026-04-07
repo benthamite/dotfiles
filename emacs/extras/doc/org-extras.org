@@ -725,6 +725,17 @@ that you can review and resolve them.
 Internally, it temporarily advises ~display-warning~ to intercept
 "duplicate IDs found" messages and trigger the duplicate-ID workflow.
 
+Two ~:around~ advices on ~org-id-update-id-locations~ improve
+performance.  The first (~org-extras--inhibit-modification-hooks~)
+inhibits modification hooks during the scan, preventing
+~org-modern-indent~ and ~org-indent~ from triggering
+~org-element-at-point~ on every visited file.  The second
+(~org-extras--memoize-file-truename~) caches ~file-truename~ results
+for the duration of the scan.  In Google Drive trees where many org
+files share deeply symlinked path prefixes, this eliminates redundant
+filesystem calls and ~tramp-completion-file-name-handler~ regex
+overhead that would otherwise dominate the scan time.
+
 *** Finding duplicate IDs
 :PROPERTIES:
 :CUSTOM_ID: h:finding-duplicate-ids

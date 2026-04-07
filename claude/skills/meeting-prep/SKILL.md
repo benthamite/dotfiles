@@ -2,7 +2,7 @@
 name: meeting-prep
 description: Generate a pre-meeting org file for the biweekly 1:1 with María. Gathers progress from session logs, project statuses, Slack activity, and GitHub activity since the last meeting. Use when the user says "meeting prep", "prep for María", "prepare for 1:1", "meeting with María", or wants to prepare for their manager meeting.
 user-invocable: true
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, mcp__slack-unofficial-epochai__conversations_search_messages, mcp__slack-unofficial-epochai__channels_list, mcp__slack-unofficial-epochai__conversations_history, mcp__slack-unofficial-epochai__conversations_replies
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, mcp__slack-unofficial-epochai__conversations_search_messages, mcp__slack-unofficial-epochai__channels_list, mcp__slack-unofficial-epochai__conversations_history, mcp__slack-unofficial-epochai__conversations_replies, mcp__google-docs-personal__readDocument, mcp__google-docs-personal__insertText
 argument-hint: "[YYYY-MM-DD date override]"
 ---
 
@@ -13,6 +13,7 @@ Generate a pre-populated org-mode meeting file for the biweekly 1:1 with María 
 ## Constants
 
 - **Meetings directory**: `meetings/maria/` (relative to the Epoch project root — the closest ancestor directory containing `CLAUDE.md` with "Epoch AI" in it)
+- **Shared meetings Google Doc ID**: `1mTsZWI9ImtI4OAI3XsPI4K6b2cKugTBp2q-blGoR2tE`
 - **Slack user ID**: `U0AKT7H6G2H` (Pablo)
 - **GitHub username**: `benthamite`
 - **GitHub org**: `epoch-research`
@@ -91,9 +92,32 @@ From the gathered data, compile a progress summary organized by project. For eac
 
 Also note any cross-cutting activity (e.g., responding to ad-hoc requests, Slack conversations not tied to a specific project).
 
-If there are discrepancies between sources (e.g., the session log says something different from the project status file), flag them for the user to resolve.
+If there are discrepancies between sources (e.g., the session log says something different from the project status file), flag them — they will be addressed in Step 3.
 
-## Step 3: Generate the meeting file
+## Step 3: Update project docs
+
+The gathering phase often reveals that project documentation has drifted from reality. Before generating the meeting file, reconcile the docs with what you just learned.
+
+### 3a. Update individual project org files
+
+For each project that had activity since the last meeting, compare what you gathered (session logs, git history, Slack, GitHub) against the project's org file(s). Update any fields or sections that are stale — e.g., status, next steps, open questions, blockers, links to new PRs/issues. Do not rewrite narrative sections or add speculative information; only update what the evidence supports.
+
+### 3b. Update the master project list
+
+Read `projects/current-list-of-automation-projects.org` and compare it against the gathered data. Update:
+
+- **Status** of each project (e.g., if a project moved from "blocked" to "in progress", or was completed).
+- **Next steps** that have changed.
+- **New projects** that appeared in the period (e.g., a new repo was created, or a Slack thread kicked off a new initiative) — add them to the appropriate section.
+- **Completed or paused projects** — move them to the right section if they're in the wrong one.
+
+### 3c. Commit doc updates
+
+Stage and commit all updated project files with message: `Update project docs based on meeting prep for YYYY-MM-DD`. This commit is separate from the meeting file commit in Step 6.
+
+If no updates were needed, skip this step.
+
+## Step 4: Generate the meeting file
 
 Write the org file to `meetings/maria/YYYY-MM-DD.org` (using the meeting date):
 
@@ -133,7 +157,31 @@ write "All resolved."]
 ** Notes
 ```
 
-## Step 4: Review and open
+## Step 4b: Update the shared meetings Google Doc
+
+María's shared meetings document (ID in Constants) follows a reverse-chronological format where the newest meeting section is at the top. Each meeting section has a "Pablo" list with one bullet point per active project.
+
+1. Read the shared Google Doc with `readDocument` (format `markdown`) to understand the current structure.
+2. From the synthesized progress (Step 2), generate **one bullet point per project that had activity** since the last meeting. Each bullet should be a single sentence in the format: `**Project name**: concise status/headline.` Include only projects with meaningful progress — skip projects where the only activity was waiting.
+3. Insert a new meeting section at **index 1** (beginning of the document body) using `insertText`. The section should follow this exact format:
+
+```
+---
+
+Attendees:
+
+- Maria's points
+
+- Pablo
+  - **Project A**: One-sentence summary.
+  - **Project B**: One-sentence summary.
+  ...
+
+```
+
+Note the trailing blank line after the last bullet. This ensures clean separation from the previous meeting section below.
+
+## Step 5: Review and open
 
 1. Read the generated file back and verify it looks correct.
 2. Open it in Emacs:
@@ -142,7 +190,7 @@ write "All resolved."]
    ```
 3. Tell the user the file is ready for review, and note any items that need their attention (e.g., ambiguous priorities, conflicting information, or items they should add to the Discussion section before the meeting).
 
-## Step 5: Commit
+## Step 6: Commit
 
 Stage and commit the new meeting file with message: `Add meeting prep for María YYYY-MM-DD`.
 

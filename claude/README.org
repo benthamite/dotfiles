@@ -396,6 +396,18 @@ Extracts and records architectural decisions from the current session into =deci
 
 Opens the current Claude Code session's conversation log in Emacs using the =agent-log= package. Walks up the process tree to find the session ID, then calls =agent-log-open-session= via =emacsclient=.
 
+*** move-session-log
+
+Moves a Claude Code internal session log (=.jsonl= and associated directory) from another project's =~/.claude/projects/= directory to the current project's. Useful when a session was started in the wrong project context. Accepts a session ID as argument; if none given, lists the 10 most recent sessions from other projects and asks the user to pick one.
+
+*** meeting-prep
+
+Generates a pre-meeting org file for the biweekly 1:1 with María. Gathers progress from session logs, git history, project status files, Slack messages, and GitHub activity since the last meeting. Reconciles stale project documentation against gathered evidence before writing the meeting file. Also updates the shared Google Doc (reverse-chronological, one bullet per active project). Commits updated project docs and the meeting file in separate commits.
+
+*** meeting-debrief
+
+Processes a Gemini meeting summary (from the transcript of a Google Meet call) and extracts action items, discussion notes, and decisions into an org-mode meeting file. Two modes: general (single-project, inferred from =CWD= or attendees) and María (biweekly 1:1, may cover multiple projects). Updates project org files and the master project list with meeting outcomes. Accepts an optional Google Doc URL; otherwise searches recent Gemini-generated docs.
+
 *** new-project
 :PROPERTIES:
 :CUSTOM_ID: h:new-project

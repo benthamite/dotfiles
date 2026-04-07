@@ -282,9 +282,9 @@ print(json.loads(resp2.read()))
 
 Replace `<DOC_ID>` with the Google Doc ID from Step 3 and `YYYY-MM-DD` with the meeting date.
 
-## Step 9: Update the project org file (general mode only)
+## Step 9: Update project org files
 
-If `$CWD` is under a project directory (e.g., `projects/analytics-aggregation/`), find the project's main org file (the `.org` file whose name matches the project directory, e.g., `analytics-aggregation.org`).
+For each project discussed in the meeting that has a directory under `projects/`, find the project's main org file (the `.org` file whose name matches the project directory, e.g., `analytics-aggregation.org`). In general mode, the meeting usually concerns a single project (inferred from `$CWD` or attendees). In María mode, the 1:1 often covers multiple projects — update all that had substantive discussion (status changes, decisions, new context).
 
 Read the org file and add a new heading or update an existing meeting-related section with:
 - A brief summary of the meeting (1–2 sentences)
@@ -295,11 +295,11 @@ Place this under the most appropriate existing heading. If the project org file 
 
 Do **not** duplicate the full meeting notes — the project org file should contain a concise project-relevant summary and a link to the detailed notes.
 
-## Step 10: Update the current projects list (general mode only)
+## Step 10: Update the current projects list
 
-Check whether the project has an entry in `/Users/pablostafforini/My Drive/Epoch/projects/current-list-of-automation-projects.org`. If it does, update that entry's **Status** and **Next step** fields to reflect the meeting outcomes. Keep the same terse, numbered-list format used by existing entries. Do not touch entries for other projects.
+For each project updated in Step 9, check whether it has an entry in `/Users/pablostafforini/My Drive/Epoch/projects/current-list-of-automation-projects.org`. If it does, update that entry's **Status** and **Next step** fields to reflect the meeting outcomes. Keep the same terse, numbered-list format used by existing entries. Do not touch entries for other projects.
 
-If the project has no entry, skip this step.
+If a project has no entry, skip it.
 
 ## Step 11: Review
 
@@ -307,7 +307,7 @@ Read the updated files and verify:
 1. All action items from the Gemini notes are captured in the meeting file
 2. Notes accurately reflect the discussion
 3. No untranslated Spanish in action items (notes can include Spanish quotes if useful)
-4. (General mode) The project org file links to the meeting notes and captures project-relevant outcomes
+4. Project org files link to the meeting notes and capture project-relevant outcomes
 
 Present a brief summary: "Extracted N action items (X Pablo, Y <Name>) and Z discussion points."
 

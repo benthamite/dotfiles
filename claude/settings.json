@@ -21,6 +21,11 @@
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/claude/hooks/require-doc-update.sh",
             "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/block-elpaca-rebuild-uncommitted.sh",
+            "timeout": 10
           }
         ]
       },

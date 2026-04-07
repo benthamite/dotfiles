@@ -35,10 +35,13 @@ fi
 # Also catch the pattern: git add ... && git commit in a single bash command.
 # When staging and committing happen in one call, git diff --cached sees nothing
 # yet at hook-fire time, so we must also scan the command string itself.
+# Extract only the `git add` arguments to avoid false positives from
+# commit messages or other parts of the command that mention .el files.
 if [ "$HAS_ELISP" = false ]; then
-  if echo "$COMMAND" | grep -qE '\bgit\s+add\b'; then
-    if echo "$COMMAND" | grep -qE '\.el[[:space:]|&;]|\.el$' || \
-       echo "$COMMAND" | grep -qF 'emacs/config.org'; then
+  ADD_ARGS=$(echo "$COMMAND" | grep -oE 'git\s+add\s+[^;&|]*' || true)
+  if [ -n "$ADD_ARGS" ]; then
+    if echo "$ADD_ARGS" | grep -qE '\.el[[:space:]|&;]|\.el$' || \
+       echo "$ADD_ARGS" | grep -qF 'emacs/config.org'; then
       HAS_ELISP=true
     fi
   fi

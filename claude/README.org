@@ -140,29 +140,32 @@ The active account is stored in =~/.claude-current-account=. From Emacs, =claude
 
 *** Chrome integration and multi-account
 
-The Claude in Chrome extension only supports *one account at a time*. The account logged into the extension must match the account of the Claude Code session trying to use it. If they don't match, Chrome tools return "No Chrome extension connected" (or "Browser extension is not connected").
+Chrome integration uses two Chrome profiles, each with the Claude in Chrome extension installed and logged into a different Anthropic account. This allows =/chrome= to work from both the epoch and tlon Claude Code accounts without switching extension logins.
 
-*Current state:* three Claude Code accounts (personal, work, tlon) but only one Chrome extension login. Whichever account is logged into the extension is the only one that can use =/chrome=.
+*Chrome profiles:*
 
-*To switch the Chrome extension account:*
-1. Open the extension settings (click the Claude extension icon in Chrome toolbar)
-2. Click "Log out"
-3. Log in with the desired account (e.g. =tlon.shared@gmail.com=)
-4. *Restart Chrome* — the native messaging bridge caches the old session and won't pick up the new account without a restart
+| Chrome profile | Google account              | Extension logged into    | Claude Code account |
+|----------------+-----------------------------+--------------------------+---------------------|
+| Default        | =pablo.stafforini@gmail.com=  | =tlon.shared@gmail.com=    | tlon                |
+| Profile 2      | =pablo@epoch.ai=              | =pablo@epoch.ai=           | epoch               |
 
-*Troubleshooting "No Chrome extension connected":*
-1. Check which account the extension is logged into (extension settings, top right)
-2. Check which account the Claude Code session is using (=echo $CLAUDE_CONFIG_DIR=, then check =.claude.json= → =oauthAccount.emailAddress=)
-3. If they don't match, switch the extension account (see above)
-4. If they match but it still fails: restart Chrome, then start a *new* Claude Code session (resumed sessions preserve old MCP config)
-5. If you started a session under one account, then switched accounts (e.g. via =claude-code-extras-select-account=) and resumed the same session: Chrome will still fail. The running process retains the original =CLAUDE_CONFIG_DIR= in its environment; switching accounts only affects *new* sessions. You must start a fresh session under the correct account — use =/handoff= to preserve context if needed.
+Each Claude Code account stores its own =chromeExtension.pairedDeviceId= and =pairedDeviceName= in its =.claude.json=. These are *not* synced across accounts (unlike =claudeInChromeDefaultEnabled=, which is in =claude-code-extras--shared-claude-json-keys=) because each account pairs with a different Chrome profile's extension instance.
+
+*How profile selection works:* when a Claude Code session starts with =--chrome=, it connects to the Chrome extension instance that matches the session's OAuth account. The extension in each Chrome profile authenticates independently via native messaging. The =pairedDeviceId= links a specific Claude Code instance to a specific extension instance.
+
+*Native host manifest:* there is a single manifest file shared across all Chrome profiles. Its =path= field should point to the current account's =chrome-native-host= script (e.g. =~/.claude-epoch/chrome/chrome-native-host=). In practice, all account scripts are identical (they exec the same =claude= binary with =--chrome-native-host=), so the path doesn't affect functionality today — but it should be kept in sync for correctness.
 
 *Emacs-specific:* non-interactive sessions (Emacs) require the =--chrome= flag, set via =(setq claude-code-program-switches '("--chrome"))=. Without it, Claude Code silently skips Chrome MCP startup.
+
+*Known issues:*
+- *Silent bridge failure:* the Chrome bridge can fail to connect at session startup (e.g. due to stale sockets or timing issues). When this happens, =/chrome= shows "Status: Disabled" even though =--chrome= was passed. The only fix is starting a new session. There is no mid-session reconnect mechanism.
+- *Stale bridge sockets:* old sockets in =/tmp/claude-mcp-browser-bridge-pablostafforini/= are not automatically cleaned up and may interfere with new connections.
+- *Session-account binding:* if you switch accounts mid-session (e.g. via =claude-code-extras-select-account=), Chrome will still use the original account. The running process retains its =CLAUDE_CONFIG_DIR=; you must start a fresh session under the new account — use =/handoff= to preserve context if needed.
 
 *Architecture:*
 - Chrome extension (ID =fcoeoabgfenejglbffodgkkbkcdhcgfn=) communicates via native messaging
 - Native host manifest: =~/Library/Application Support/Google/Chrome/NativeMessagingHosts/com.anthropic.claude_code_browser_extension.json=
-- Native host script: =~/.claude-tlon/chrome/chrome-native-host= (points to the installed =claude= binary with =--chrome-native-host=)
+- Native host scripts: =~/.claude-{epoch,tlon}/chrome/chrome-native-host= (each execs the installed =claude= binary with =--chrome-native-host=)
 - Bridge socket: =/tmp/claude-mcp-browser-bridge-pablostafforini/<pid>.sock=
 - Keychain credentials per account: =Claude Code-credentials-<sha256(config_dir)[:8]>=
 

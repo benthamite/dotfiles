@@ -97,19 +97,22 @@ fi
 # Also catch `git add ... && git commit` in a single bash command.
 # When staging and committing happen in one call, git diff --cached
 # sees nothing yet at hook-fire time, so scan the command string too.
-if echo "$COMMAND" | grep -qE '\bgit\s+add\b'; then
+# Extract only the `git add` arguments to avoid false positives from
+# commit messages or other parts of the command that mention .el files.
+ADD_ARGS=$(echo "$COMMAND" | grep -oE 'git\s+add\s+[^;&|]*' || true)
+if [ -n "$ADD_ARGS" ]; then
   if [ "$HAS_EL" = false ]; then
-    # Extract .el filenames from the command, skipping machine-generated ones
-    for el_file in $(echo "$COMMAND" | grep -oE '[^ ]*\.el' || true); do
+    # Extract .el filenames from git add args, skipping machine-generated ones
+    for el_file in $(echo "$ADD_ARGS" | grep -oE '[^ ]*\.el\b' || true); do
       if ! is_generated_el "$el_file"; then
         HAS_EL=true
         break
       fi
     done
   fi
-  if [ "$HAS_DOC_ORG" = false ] && echo "$COMMAND" | grep -qE '(^|/)doc/[^ ]*\.org'; then
+  if [ "$HAS_DOC_ORG" = false ] && echo "$ADD_ARGS" | grep -qE '(^|/)doc/[^ ]*\.org'; then
     # Verify at least one doc/*.org file has actual modifications
-    for doc_file in $(echo "$COMMAND" | grep -oE '(^|[/ ])[^ ]*doc/[^ ]*\.org' || true); do
+    for doc_file in $(echo "$ADD_ARGS" | grep -oE '(^|[/ ])[^ ]*doc/[^ ]*\.org' || true); do
       if [ -n "$(git diff --name-only -- "$doc_file" 2>/dev/null)" ] || \
          [ -n "$(git diff --cached --name-only -- "$doc_file" 2>/dev/null)" ]; then
         HAS_DOC_ORG=true
@@ -117,7 +120,7 @@ if echo "$COMMAND" | grep -qE '\bgit\s+add\b'; then
       fi
     done
   fi
-  if [ "$HAS_README_ORG_STAGED" = false ] && echo "$COMMAND" | grep -qF 'README.org'; then
+  if [ "$HAS_README_ORG_STAGED" = false ] && echo "$ADD_ARGS" | grep -qF 'README.org'; then
     # Only count README.org if it has actual modifications (staged or unstaged)
     if [ -n "$(git diff --name-only -- README.org 2>/dev/null)" ] || \
        [ -n "$(git diff --cached --name-only -- README.org 2>/dev/null)" ]; then

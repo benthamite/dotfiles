@@ -272,12 +272,11 @@ SMTP.
 #+findex: mu4e-extras-gmail-message-id
 #+findex: mu4e-extras-gmail-thread-id
 #+vindex: mu4e-extras-gmail-sync-state-db
-The function ~mu4e-extras-gmail-base~ returns the base Gmail URL for the
-account that a message belongs to.  It uses the email address in the URL
-path (e.g. =https://mail.google.com/mail/u/pablo@epoch.ai/=) so that
-Gmail automatically switches to the correct account.  When the message
-belongs to the Epoch account (detected via its maildir prefix), it uses
-~EPOCH_EMAIL~; otherwise it falls back to ~PERSONAL_GMAIL~.
+The function ~mu4e-extras-gmail-base~ returns the base Gmail URL
+(=https://mail.google.com/mail/u/0/=).  It uses account index 0
+because Chrome profile selection ([[#h:chrome-profiles][Chrome profile selection]]) already
+routes to the correct account, making email-based account resolution
+in the URL unnecessary.
 
 The command ~mu4e-extras-open-gmail~ opens the Gmail inbox in a browser.
 When called from a message buffer, it detects the message's account and

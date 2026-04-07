@@ -378,14 +378,11 @@ profile otherwise."
       mu4e-extras-chrome-profile-work
     mu4e-extras-chrome-profile-personal))
 
-(defun mu4e-extras-gmail-base (&optional msg)
-  "Return base Gmail URL for the account that MSG belongs to.
-Uses the email address in the URL path so Gmail switches to the
-correct account automatically."
-  (let ((account (if (and msg (mu4e-extras-msg-belongs-to-epoch-p msg))
-		     (getenv "EPOCH_EMAIL")
-		   (getenv "PERSONAL_GMAIL"))))
-    (format "https://mail.google.com/mail/u/%s/" account)))
+(defun mu4e-extras-gmail-base (&optional _msg)
+  "Return the base Gmail URL.
+Uses account index 0, since Chrome profile selection already
+routes to the correct account."
+  "https://mail.google.com/mail/u/0/")
 
 (defun mu4e-extras-open-gmail ()
   "Open Gmail in a browser.

@@ -634,6 +634,13 @@ Companion to =require-readme-update.sh=. Fires globally after any Write or Edit,
 
 Blocks =git commit= when =.el= files are staged but no =doc/*.org= or =README.org= manual update is included. Applies only in repos that have a =doc/= directory or a =README.org= at the root. When detecting doc files in a combined =git add && git commit= command, verifies that the doc files have actual modifications (staged or unstaged) rather than accepting unchanged files. Ensures documentation stays in sync with code changes.
 
+** block-elpaca-rebuild-uncommitted.sh (PreToolUse)
+:PROPERTIES:
+:CUSTOM_ID: h:block-elpaca-rebuild-uncommitted
+:END:
+
+Blocks =emacsclient= commands that invoke =elpaca-rebuild= or =elpaca-extras-reload= when there are uncommitted =.el= changes in =emacs/extras/=. The elpaca source clone only has committed code, so rebuilding before committing would silently compile and load stale definitions from the last commit, ignoring the working tree edits. The error message lists the uncommitted files and instructs the agent to commit first.
+
 ** load-elisp-after-edit.sh (PostToolUse)
 :PROPERTIES:
 :CUSTOM_ID: h:load-elisp-after-edit

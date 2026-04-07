@@ -182,7 +182,10 @@ The user option ~claude-code-extras-status-interval~ sets the polling frequency 
 :END:
 
 #+vindex: claude-code-extras-usage-interval
-The user option ~claude-code-extras-usage-interval~ sets the polling frequency (in seconds) for querying the Anthropic usage API. The default is 60. This controls how often ~claude-code-extras-start-usage-polling~ ([[#h:usage-polling][Usage polling]]) fetches updated utilization data from the =api/oauth/usage= endpoint. Lower values provide more timely updates at the cost of more frequent network requests; higher values reduce API traffic. Since usage data changes slowly (the session window is 5 hours and the weekly window is 7 days), the default of 60 seconds is a reasonable balance.
+#+vindex: claude-code-extras-usage-max-interval
+The user option ~claude-code-extras-usage-interval~ sets the base polling frequency (in seconds) for querying the Anthropic usage API. The default is 300 (5 minutes). This controls how often ~claude-code-extras-start-usage-polling~ ([[#h:usage-polling][Usage polling]]) fetches updated utilization data from the =api/oauth/usage= endpoint.
+
+When the API responds with HTTP 429 (rate limited), the polling interval doubles automatically until it reaches ~claude-code-extras-usage-max-interval~ (default 900 seconds, i.e. 15 minutes). On the next successful response, the interval resets to the base value. This exponential backoff avoids hammering an undocumented endpoint that enforces strict rate limits.
 
 * Commands
 :PROPERTIES:
@@ -256,7 +259,7 @@ The command ~claude-code-extras-toggle-alert~ toggles the buffer-local value of 
 #+findex: claude-code-extras-stop-usage-polling
 The command ~claude-code-extras-start-usage-polling~ begins periodic polling of the Anthropic =api/oauth/usage= endpoint to track plan utilization. The data is fetched asynchronously via ~url-retrieve~ for each account with an active session. Authentication uses the per-account OAuth token from the macOS Keychain, where each ~CLAUDE_CONFIG_DIR~ has its own credential entry (service name =Claude Code-credentials-<sha256prefix>=). The fetched data is stored in a hash table keyed by account name, so each session's modeline shows its own account's rate limit status. Calling this command when polling is already active is a no-op.
 
-Polling starts automatically when a Claude Code modeline is set up (via ~claude-code-extras-set-modeline~, [[#h:modeline-integration][Modeline integration]]), so manual invocation is rarely needed. The polling interval is controlled by ~claude-code-extras-usage-interval~ ([[#h:usage-polling-options][Usage polling options]]).
+Polling starts automatically when a Claude Code modeline is set up (via ~claude-code-extras-set-modeline~, [[#h:modeline-integration][Modeline integration]]), so manual invocation is rarely needed. The polling interval is controlled by ~claude-code-extras-usage-interval~ ([[#h:usage-polling-options][Usage polling options]]), with automatic exponential backoff on HTTP 429 responses.
 
 The command ~claude-code-extras-stop-usage-polling~ cancels the usage polling timer. Use it to stop background API requests when they are no longer needed.
 

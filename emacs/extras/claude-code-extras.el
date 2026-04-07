@@ -103,9 +103,16 @@ Toggle with `claude-code-extras-toggle-alert'."
   :type 'integer
   :group 'claude-code-extras)
 
-(defcustom claude-code-extras-usage-interval 60
-  "Interval in seconds between usage API polls.
-Fetches 5-hour session and 7-day weekly utilization from the API."
+(defcustom claude-code-extras-usage-interval 300
+  "Base interval in seconds between usage API polls.
+Fetches 5-hour session and 7-day weekly utilization from the API.
+On HTTP 429 responses the interval doubles, up to
+`claude-code-extras-usage-max-interval'; it resets on success."
+  :type 'integer
+  :group 'claude-code-extras)
+
+(defcustom claude-code-extras-usage-max-interval 900
+  "Maximum polling interval in seconds after repeated 429 backoffs."
   :type 'integer
   :group 'claude-code-extras)
 
@@ -211,6 +218,9 @@ Used to detect when `/branch' creates a new session.")
 
 (defvar claude-code-extras--usage-timer nil
   "Timer for periodic usage API polling.")
+
+(defvar claude-code-extras--usage-current-interval nil
+  "Current polling interval in seconds, possibly increased by backoff.")
 
 (defvar-local claude-code-extras--waiting-for-input nil
   "Non-nil when this Claude session is waiting for user input.
@@ -1070,14 +1080,51 @@ response in `claude-code-extras--usage-data' keyed by ACCOUNT."
   "Handle the async usage API response for ACCOUNT.
 STATUS is the plist passed by `url-retrieve'."
   (unwind-protect
-      (unless (plist-get status :error)
-        (goto-char url-http-end-of-headers)
-        (condition-case nil
-            (puthash account
-                     (json-parse-buffer :object-type 'plist)
-                     claude-code-extras--usage-data)
-          (json-parse-error nil)))
+      (let ((err (plist-get status :error)))
+        (if (claude-code-extras--usage-response-429-p err)
+            (claude-code-extras--usage-backoff)
+          (when (and (null err) url-http-end-of-headers)
+            (goto-char url-http-end-of-headers)
+            (condition-case nil
+                (progn
+                  (puthash account
+                           (json-parse-buffer :object-type 'plist)
+                           claude-code-extras--usage-data)
+                  (claude-code-extras--usage-reset-interval))
+              (json-parse-error nil)))))
     (kill-buffer)))
+
+(defun claude-code-extras--usage-response-429-p (err)
+  "Return non-nil if ERR indicates an HTTP 429 response."
+  (and (consp err)
+       (eq (car err) 'error)
+       (member 429 (cdr err))))
+
+(defun claude-code-extras--usage-backoff ()
+  "Double the polling interval, capped at the configured maximum."
+  (let ((new-interval (min (* 2 (or claude-code-extras--usage-current-interval
+                                    claude-code-extras-usage-interval))
+                           claude-code-extras-usage-max-interval)))
+    (setq claude-code-extras--usage-current-interval new-interval)
+    (claude-code-extras--usage-reschedule new-interval)))
+
+(defun claude-code-extras--usage-reset-interval ()
+  "Reset the polling interval to the base value after a successful fetch."
+  (when (and claude-code-extras--usage-current-interval
+             (> claude-code-extras--usage-current-interval
+                claude-code-extras-usage-interval))
+    (setq claude-code-extras--usage-current-interval
+          claude-code-extras-usage-interval)
+    (claude-code-extras--usage-reschedule
+     claude-code-extras-usage-interval)))
+
+(defun claude-code-extras--usage-reschedule (interval)
+  "Cancel the current usage timer and restart it with INTERVAL seconds."
+  (when claude-code-extras--usage-timer
+    (cancel-timer claude-code-extras--usage-timer)
+    (setq claude-code-extras--usage-timer
+          (run-with-timer interval interval
+                          #'claude-code-extras--fetch-usage))))
 
 (defun claude-code-extras--active-accounts ()
   "Return a list of unique account names with active Claude sessions.
@@ -1125,6 +1172,8 @@ returns the default service name."
 Does nothing if the timer is already running."
   (interactive)
   (unless claude-code-extras--usage-timer
+    (setq claude-code-extras--usage-current-interval
+          claude-code-extras-usage-interval)
     (claude-code-extras--fetch-usage)
     (setq claude-code-extras--usage-timer
           (run-with-timer
@@ -1137,7 +1186,8 @@ Does nothing if the timer is already running."
   (interactive)
   (when claude-code-extras--usage-timer
     (cancel-timer claude-code-extras--usage-timer)
-    (setq claude-code-extras--usage-timer nil)))
+    (setq claude-code-extras--usage-timer nil
+          claude-code-extras--usage-current-interval nil)))
 
 ;;;;; Status accessors
 

@@ -120,6 +120,35 @@ emoji choices presented when reacting to a message with
 ~mu4e-extras-react-to-message~ ([[#h:gmail-reactions][Gmail reactions]]).  The default value
 includes common emojis such as thumbs up, heart, and check mark.
 
+** Chrome profile selection
+:PROPERTIES:
+:CUSTOM_ID: h:chrome-profiles
+:END:
+
+#+vindex: mu4e-extras-chrome-profile-personal
+#+vindex: mu4e-extras-chrome-profile-work
+Commands that open Gmail in a browser route the URL to a specific
+Chrome profile based on the email account.  This is useful when you
+run separate Chrome profiles for personal and work browsing.
+
+The user option ~mu4e-extras-chrome-profile-personal~ specifies the
+Chrome profile directory for personal email.  The value is the on-disk
+directory name inside =~/Library/Application Support/Google/Chrome/=
+(e.g. ="Default"=, ="Profile 1"=, ="Profile 2"=), *not* the display
+name shown in Chrome's UI.  Chrome numbers profile directories
+sequentially: the first profile is ="Default"=, subsequent profiles
+are ="Profile 1"=, ="Profile 2"=, and so on.  The default value is
+="Default"=.
+
+The user option ~mu4e-extras-chrome-profile-work~ specifies the Chrome
+profile directory for work (Epoch) email, using the same naming
+convention.  The default value is ="Profile 2"=.
+
+These options are consulted by ~mu4e-extras-chrome-profile-for-msg~
+([[#h:chrome-profile-helpers][Chrome profile helpers]]), which is called by ~mu4e-extras-view-in-gmail~,
+~mu4e-extras-open-gmail~, and ~mu4e-extras-compose-new-externally~
+([[#h:gmail-commands][Viewing messages in Gmail]], [[#h:composing-messages][Composing messages]]).
+
 * Commands
 :PROPERTIES:
 :CUSTOM_ID: h:commands
@@ -210,7 +239,8 @@ multiple recipients, the behavior depends on the ~mu4e-extras-wide-reply~
 user option ([[#h:reply-behavior][Reply behavior]]).
 
 The command ~mu4e-extras-compose-new-externally~ opens Gmail's compose
-screen in the default web browser, bypassing =mu4e= entirely.
+screen in a browser, bypassing =mu4e= entirely.  It always opens in
+the personal Chrome profile ([[#h:chrome-profiles][Chrome profile selection]]).
 
 ** Gmail reactions
 :PROPERTIES:
@@ -249,8 +279,11 @@ Gmail automatically switches to the correct account.  When the message
 belongs to the Epoch account (detected via its maildir prefix), it uses
 ~EPOCH_EMAIL~; otherwise it falls back to ~PERSONAL_GMAIL~.
 
-The command ~mu4e-extras-open-gmail~ opens the Gmail inbox in the
-default web browser.
+The command ~mu4e-extras-open-gmail~ opens the Gmail inbox in a browser.
+When called from a message buffer, it detects the message's account and
+opens the URL in the corresponding Chrome profile ([[#h:chrome-profiles][Chrome profile
+selection]]).  When no message is at point, it defaults to the personal
+profile.
 
 The command ~mu4e-extras-view-in-gmail~ opens the message at point in
 Gmail.  For messages synced via ~gmail-maildir-sync~ (Epoch account), it
@@ -258,10 +291,11 @@ reads the =X-Gmail-Message-Id= header from the message file, looks up
 the corresponding thread ID from the ~gmail-maildir-sync~ SQLite state
 database (~mu4e-extras-gmail-sync-state-db~), and opens the thread
 directly using a ~#all/<thread-id>~ URL.  For other messages (personal
-account), it falls back to searching by RFC 822 message ID.  This is
-useful when you need to perform an action that =mu4e= does not support,
-such as viewing the full HTML rendering or accessing Gmail-specific
-features.
+account), it falls back to searching by RFC 822 message ID.  The URL is
+opened in the Chrome profile matching the message's account
+([[#h:chrome-profiles][Chrome profile selection]]).  This is useful when you need to perform an
+action that =mu4e= does not support, such as viewing the full HTML
+rendering or accessing Gmail-specific features.
 
 ** Message file operations
 :PROPERTIES:
@@ -497,6 +531,24 @@ The function ~mu4e-extras-reaction-send~ dispatches the reaction
 message to the appropriate transport: the Gmail API (via
 =gmail-maildir-sync send=) for Epoch messages, and SMTP for all
 others.
+
+** Chrome profile helpers
+:PROPERTIES:
+:CUSTOM_ID: h:chrome-profile-helpers
+:END:
+
+#+findex: mu4e-extras-browse-url-in-chrome-profile
+#+findex: mu4e-extras-chrome-profile-for-msg
+The function ~mu4e-extras-browse-url-in-chrome-profile~ opens a URL in
+a specific Chrome profile by launching Chrome with the
+=--profile-directory= flag via =open -na=.  PROFILE is a directory name
+like ="Default"= or ="Profile 2"=.
+
+The function ~mu4e-extras-chrome-profile-for-msg~ returns the Chrome
+profile directory for a given message.  It returns
+~mu4e-extras-chrome-profile-work~ for Epoch messages and
+~mu4e-extras-chrome-profile-personal~ otherwise ([[#h:chrome-profiles][Chrome profile
+selection]]).  When MSG is ~nil~, it returns the personal profile.
 
 ** Message file access
 :PROPERTIES:

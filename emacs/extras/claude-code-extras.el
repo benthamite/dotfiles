@@ -239,13 +239,19 @@ consumed by the Stop hook handler.")
   "Debounce timer for triggering Copilot after eat buffer changes.")
 
 (defvar eat-terminal)
+(defvar url-http-end-of-headers)
+(defvar url-request-method)
+(defvar url-request-extra-headers)
 (declare-function ai-extras-svg-icon "ai-extras" (svg-data &optional face))
+(declare-function claude-code--term-send-return "claude-code" (backend))
 (declare-function json-pretty-print-buffer "json" ())
+(declare-function org-back-to-heading "org" (&optional invisible-ok))
 (declare-function org-map-entries "org" (func &optional match scope &rest skip))
 (declare-function org-get-todo-state "org" ())
 (declare-function org-get-heading "org" (&optional no-tags no-todo no-priority no-comment))
 (declare-function org-end-of-meta-data "org" (&optional full))
 (declare-function org-entry-is-done-p "org" ())
+(declare-function org-todo "org" (&optional arg))
 (declare-function outline-next-heading "outline" ())
 (declare-function eat-self-input "eat" (n &optional e))
 (declare-function eat-term-display-cursor "eat" (terminal))
@@ -566,7 +572,7 @@ credentials remain account-specific.")
 (defconst claude-code-extras--shared-claude-json-keys
   '("mcpServers" "theme" "claudeInChromeDefaultEnabled"
     "hasCompletedClaudeInChromeOnboarding")
-  "Keys copied from the canonical `~/.claude.json' into each account's `.claude.json'.
+  "Keys copied from canonical `~/.claude.json' into each account copy.
 These are settings that should be identical across accounts.  The
 `projects' key is handled separately via merge logic.")
 

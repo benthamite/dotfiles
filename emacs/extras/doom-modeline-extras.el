@@ -164,6 +164,7 @@ Uses strikethrough to indicate the cost is not actually charged."
 (declare-function claude-code-extras-status-weekly-reset "claude-code-extras")
 (declare-function codex-extras-status-model "codex-extras")
 (declare-function codex-extras-status-duration-ms "codex-extras")
+(declare-function parse-iso8601-time-string "parse-time")
 (defvar ai-extras-alert-on-ready)
 (defvar claude-code-extras--status-data)
 

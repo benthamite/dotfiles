@@ -147,9 +147,9 @@ separator would remain even when the elements are absent.")
 ;;;###autoload
 (defun tab-bar-extras-reset (&optional quick)
   "Reset the tab bar.
-This resets the clock, refreshes the Tab Bar and its color, and updates the
-geolocation and weather information.  If QUICK is non-nil, run only the essential
-reset functions."
+This resets the clock, refreshes the Tab Bar and its color, and
+updates the geolocation and weather information.  If QUICK is
+non-nil, run only the essential reset functions."
   (interactive)
   (display-time) ; in case clock gets stuck
   (tab-bar-extras-set-global-mode-string)

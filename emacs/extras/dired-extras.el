@@ -191,9 +191,9 @@ With a prefix argument, edit the current listing switches instead."
 (declare-function dired-du-mode "dired-du")
 (defun dired-extras-hide-details-mode-enhanced (&optional arg)
   "Set `dired-hide-details-mode' and associated modes.
-Toggle the mode if ARG is `toggle' or called interactively.  Enable the mode if
-ARG is nil, omitted, or a positive number.  Disable the mode if ARG is a negative
-number."
+Toggle the mode if ARG is `toggle' or called interactively.
+Enable the mode if ARG is nil, omitted, or a positive number.
+Disable the mode if ARG is a negative number."
   (interactive "P")
   (let ((arg (if (or (eq arg 'toggle)
 		     (and (null arg) (called-interactively-p 'any)))

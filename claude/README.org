@@ -199,7 +199,7 @@ Project-level instructions referencing the =dotfiles-context= skill. The global 
 - Fix root causes, not symptoms; no silent fallbacks. Prefer robust solutions over hacks, even if they take longer.
 - Verify fixes before declaring them done.
 - Commit all changes immediately; prefer amending when iterating on the same logical change (unless already pushed).
-- Pre-commit checklist (hook-enforced): batch-test Elisp before committing, stage =doc/*.org= with =.el= changes, stage =README.org= with =claude/= changes.
+- Pre-commit checklist (hook-enforced): batch-test Elisp before committing, stage =doc/*.org= with =.el= changes. (The =README.org= staging rule is now in the project =CLAUDE.md= rather than the global one.)
 - Use subagents and teams liberally; prefer the most powerful model.
 - Use =trash= instead of =rm -rf=; never send signals to Emacs without confirmation.
 - Never take actions visible to others (push, PR, post) without explicit confirmation.

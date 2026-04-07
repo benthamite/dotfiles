@@ -589,14 +589,14 @@ Evaluates third-party skills from the [[https://github.com/HartreeWorks/skills][
 :ID:       4D862953-7E8A-4154-BC16-919ED6B092A5
 :END:
 
-Thirteen hook scripts handle workflow invariants and Emacs integration. Most are defined in the global =settings.json= and use early-exit guards to skip inapplicable projects. One (=require-readme-update.sh=) is defined in the dotfiles project-level =.claude/settings.json= since it only applies to this repo. The emacsclient hooks (=notify-emacs-session-end.sh=, =notify-emacs-notification.sh=, =load-elisp-after-edit.sh=) escape interpolated values before embedding them in Elisp strings to prevent injection.
+Fourteen hook scripts handle workflow invariants and Emacs integration. Most are defined in the global =settings.json= and use early-exit guards to skip inapplicable projects. One (=require-readme-update.sh=) is defined in the dotfiles project-level =.claude/settings.json= since it only applies to this repo. The emacsclient hooks (=notify-emacs-session-end.sh=, =notify-emacs-notification.sh=, =load-elisp-after-edit.sh=) escape interpolated values before embedding them in Elisp strings to prevent injection.
 
 ** require-elisp-test-before-commit.sh (PreToolUse)
 :PROPERTIES:
 :ID:       4E0CDC5D-C436-4701-AC99-E29F950318B4
 :END:
 
-Blocks =git commit= when Elisp files (=*.el= or =emacs/config.org=) are staged but no test has been run in the current session. Forces the agent to verify changes before committing. The error message suggests a ready-to-paste =batch-test.sh= command with the detected package name. Also detects the case where =git add= and =git commit= appear in the same bash command (which would otherwise bypass the staged-file check by running before staging occurs).
+Blocks =git commit= when Elisp files (=*.el= or =emacs/config.org=) are staged but no test has been run in the current session. Forces the agent to verify changes before committing. The error message suggests a ready-to-paste =batch-test.sh= command with the detected package name. Also detects the case where =git add= and =git commit= appear in the same bash command (which would otherwise bypass the staged-file check by running before staging occurs). When scanning the command string, only the =git add= arguments are examined (not the commit message or other parts of the command) to avoid false positives from commit messages that mention =.el= files.
 
 ** track-elisp-test.sh (PostToolUse)
 :PROPERTIES:
@@ -632,7 +632,7 @@ Companion to =require-readme-update.sh=. Fires globally after any Write or Edit,
 :ID:       BB6FE0BD-FC74-4BEB-89AB-4FE902A84055
 :END:
 
-Blocks =git commit= when =.el= files are staged but no =doc/*.org= or =README.org= manual update is included. Applies only in repos that have a =doc/= directory or a =README.org= at the root. When detecting doc files in a combined =git add && git commit= command, verifies that the doc files have actual modifications (staged or unstaged) rather than accepting unchanged files. Ensures documentation stays in sync with code changes.
+Blocks =git commit= when =.el= files are staged but no =doc/*.org= or =README.org= manual update is included. Applies only in repos that have a =doc/= directory or a =README.org= at the root. When scanning a combined =git add && git commit= command, only the =git add= arguments are examined (not the commit message) to avoid false positives from commit messages that mention =.el= files. Verifies that doc files have actual modifications (staged or unstaged) rather than accepting unchanged files. Ensures documentation stays in sync with code changes.
 
 ** block-elpaca-rebuild-uncommitted.sh (PreToolUse)
 :PROPERTIES:

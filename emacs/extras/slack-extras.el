@@ -176,6 +176,7 @@ BUF is a `slack-message-buffer'."
 (defvar slack-has-unreads)
 (defvar slack-unread-count)
 (defvar slack-teams-by-token)
+(defvar tab-bar-extras-global-mode-string)
 (defvar slack-activity-last-refresh-time)
 (defvar slack-activity-refresh-debounce)
 (declare-function slack-activity-feed-refresh-unread-summary

@@ -171,6 +171,9 @@ The function ~ai-extras-alert-indicator~ returns a bell emoji reflecting the cur
 #+findex: ai-extras-protect-buffer
 The function ~ai-extras-protect-buffer~ is intended for use in ~kill-buffer-query-functions~.  It returns ~t~ (allow kill) when ~ai-extras-protect-buffers~ is ~nil~, the buffer is not an AI session, or the session process has exited.  Otherwise it prompts for confirmation.
 
+#+findex: ai-extras-kill-session-buffer
+The command ~ai-extras-kill-session-buffer~ terminates the CLI process in the current buffer and kills the buffer, bypassing confirmation.  It signals an error unless the current buffer is an AI session.
+
 * Transient menu
 :PROPERTIES:
 :CUSTOM_ID: h:transient-menu

@@ -53,12 +53,15 @@ Each entry is (SYMBOL . PLIST) where PLIST has keys:
   :extract-directory     function (buffer-name) -> directory string
   :extract-instance-name function (buffer-name) -> instance or nil
   :send-command          function (cmd &optional buffer)
-  :start                 function (arg extra-switches &optional force-prompt force-switch)
+  :start                 function (arg extra-switches
+                           &optional force-prompt force-switch)
   :start-new             function () -> buffer (start a new session)
   :program               string (CLI binary name)
   :send-return           function (&optional buffer)
-  :icon                  string or function (&optional face) returning a propertized string
-  :label                 string (display name, e.g. \"Claude Code\" or \"Codex\")
+  :icon                  string or function (&optional face)
+                           returning a propertized string
+  :label                 string (display name,
+                           e.g. \"Claude Code\" or \"Codex\")
 
 Optional command keys for dispatching shared commands:
   :discover-skills       function () -> list of skill plists
@@ -389,7 +392,7 @@ Returns t if the buffer should be killed, nil otherwise."
 ;;;; Session exit
 
 (defun ai-extras-kill-session-buffer ()
-  "Kill the current AI session buffer, bypassing all confirmation prompts.
+  "Kill the current AI session buffer, bypassing confirmation.
 Terminates the CLI process if still running, then kills the
 buffer.  Signals an error unless the current buffer is an AI
 session."
@@ -399,7 +402,7 @@ session."
   (ai-extras--force-kill-buffer (current-buffer)))
 
 (defun ai-extras--force-kill-buffer (buffer)
-  "Terminate the process in BUFFER and kill it without prompts."
+  "Terminate the process in BUFFER and kill it without confirmation."
   (when-let* ((proc (get-buffer-process buffer)))
     (set-process-query-on-exit-flag proc nil)
     (set-process-sentinel proc #'ignore)

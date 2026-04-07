@@ -313,12 +313,13 @@ The screenshot directory is specified by `files-extras-screenshot-directory'."
 (defvar tlon-languages-properties)
 (defun files-extras-ocr-pdf (force &optional filename parameters)
   "OCR the FILENAME.
-If FILENAME is nil, use the PDF file at point or the file visited by the current
-buffer.  If FORCE is non-nil or called with a prefix argument argument, force OCR
-even if it has already been performed on the file.
+If FILENAME is nil, use the PDF file at point or the file visited
+by the current buffer.  If FORCE is non-nil or called with a prefix
+argument, force OCR even if it has already been performed on the
+file.
 
-Optionally, pass PARAMETERS to `ocrmypdf'.  If so, FORCE and FILENAME
-have no effect."
+Optionally, pass PARAMETERS to `ocrmypdf'.  If so, FORCE and
+FILENAME have no effect."
   (interactive "P")
   (unless (executable-find "ocrmypdf")
     (user-error "`ocrmypdf' not found.  Please install it (e.g. `brew install ocrmypdf'"))

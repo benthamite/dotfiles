@@ -155,6 +155,7 @@ The Claude in Chrome extension only supports *one account at a time*. The accoun
 2. Check which account the Claude Code session is using (=echo $CLAUDE_CONFIG_DIR=, then check =.claude.json= → =oauthAccount.emailAddress=)
 3. If they don't match, switch the extension account (see above)
 4. If they match but it still fails: restart Chrome, then start a *new* Claude Code session (resumed sessions preserve old MCP config)
+5. If you started a session under one account, then switched accounts (e.g. via =claude-code-extras-select-account=) and resumed the same session: Chrome will still fail. The running process retains the original =CLAUDE_CONFIG_DIR= in its environment; switching accounts only affects *new* sessions. You must start a fresh session under the correct account — use =/handoff= to preserve context if needed.
 
 *Emacs-specific:* non-interactive sessions (Emacs) require the =--chrome= flag, set via =(setq claude-code-program-switches '("--chrome"))=. Without it, Claude Code silently skips Chrome MCP startup.
 

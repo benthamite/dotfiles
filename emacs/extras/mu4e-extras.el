@@ -91,6 +91,26 @@ the sender only."
   :type '(repeat string)
   :group 'mu4e-extras)
 
+(defcustom mu4e-extras-chrome-profile-personal "Default"
+  "Chrome profile directory for personal email.
+This is the on-disk directory name inside
+\"~/Library/Application Support/Google/Chrome/\",
+not the display name shown in Chrome's UI.  Use
+\"Default\" for the first profile, \"Profile 1\" for
+the second, etc."
+  :type 'string
+  :group 'mu4e-extras)
+
+(defcustom mu4e-extras-chrome-profile-work "Profile 2"
+  "Chrome profile directory for work email.
+This is the on-disk directory name inside
+\"~/Library/Application Support/Google/Chrome/\",
+not the display name shown in Chrome's UI.  Use
+\"Default\" for the first profile, \"Profile 1\" for
+the second, etc."
+  :type 'string
+  :group 'mu4e-extras)
+
 ;;;; Variables
 
 (defvar mu4e-extras-mark-as-read-queue '()
@@ -312,7 +332,9 @@ otherwise.."
 (defun mu4e-extras-compose-new-externally ()
   "Start writing a new message in Gmail."
   (interactive)
-  (browse-url "https://mail.google.com/mail/u/0/#inbox?compose=new"))
+  (mu4e-extras-browse-url-in-chrome-profile
+   "https://mail.google.com/mail/u/0/#inbox?compose=new"
+   mu4e-extras-chrome-profile-personal))
 
 ;;;;;; Message files
 
@@ -342,6 +364,20 @@ If no message is found, return nil."
 
 ;;;;;; Gmail
 
+(defun mu4e-extras-browse-url-in-chrome-profile (url profile)
+  "Open URL in the Chrome profile named PROFILE.
+PROFILE is a directory name like \"Default\" or \"Profile 2\"."
+  (start-process "chrome" nil "open" "-na" "Google Chrome"
+		 "--args" (concat "--profile-directory=" profile) url))
+
+(defun mu4e-extras-chrome-profile-for-msg (&optional msg)
+  "Return the Chrome profile directory for MSG.
+Returns the work profile for Epoch messages, and the personal
+profile otherwise."
+  (if (and msg (mu4e-extras-msg-belongs-to-epoch-p msg))
+      mu4e-extras-chrome-profile-work
+    mu4e-extras-chrome-profile-personal))
+
 (defun mu4e-extras-gmail-base (&optional msg)
   "Return base Gmail URL for the account that MSG belongs to.
 Uses the email address in the URL path so Gmail switches to the
@@ -352,9 +388,14 @@ correct account automatically."
     (format "https://mail.google.com/mail/u/%s/" account)))
 
 (defun mu4e-extras-open-gmail ()
-  "Open Gmail in a browser."
+  "Open Gmail in a browser.
+When called from a message buffer, opens the correct Chrome
+profile for that message's account."
   (interactive)
-  (browse-url (concat (mu4e-extras-gmail-base) "#inbox")))
+  (let ((msg (ignore-errors (mu4e-message-at-point))))
+    (mu4e-extras-browse-url-in-chrome-profile
+     (concat (mu4e-extras-gmail-base msg) "#inbox")
+     (mu4e-extras-chrome-profile-for-msg msg))))
 
 (defconst mu4e-extras-gmail-sync-state-db
   (expand-file-name "~/.local/share/gmail-maildir-sync/state.db")
@@ -397,7 +438,8 @@ Otherwise, search by RFC 822 message ID."
 		  (concat (mu4e-extras-gmail-base msg) "#all/" thread-id)
 		(let ((id (url-hexify-string (plist-get msg :message-id))))
 		  (concat (mu4e-extras-gmail-base msg) "#search/rfc822msgid%3A" id)))))
-    (browse-url url)))
+    (mu4e-extras-browse-url-in-chrome-profile
+     url (mu4e-extras-chrome-profile-for-msg msg))))
 
 ;;;;;; Reactions
 

@@ -238,6 +238,24 @@ This command is primarily intended for use in timers or hooks (for
 example, to refresh notifications periodically in the background) rather
 than direct interactive invocation.
 
+*** Re-entrancy protection
+:PROPERTIES:
+:CUSTOM_ID: h:reentrant-protection
+:END:
+
+Forge queries involve synchronous GPG decryption (via ~epg-wait-for-status~)
+and network waits (via ~url-retrieve-synchronously~), both of which call
+~accept-process-output~.  This services the Emacs event loop, allowing
+timers to fire re-entrantly.  Each re-entrant ~forge--query~ blocks on
+GPG again, creating unbounded nesting that can freeze Emacs.
+
+Two guards prevent this.  The command-level guard
+~forge-extras--pull-in-progress~ prevents re-entrant calls through
+~forge-extras-pull-notifications~ itself.  The lower-level guard
+~forge-extras--query-active~, installed as ~:around~ advice on
+~forge--query~, catches re-entrant calls that enter forge through any
+other path (such as callback hooks or other timers).
+
 ** Graceful handling of unsupported notification types
 :PROPERTIES:
 :CUSTOM_ID: h:massage-notification-gracefully

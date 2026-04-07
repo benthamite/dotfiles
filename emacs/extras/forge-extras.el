@@ -143,6 +143,24 @@ erroring, return nil so `seq-keep' filters them."
 a timeout, so the synchronous TCP connect blocks Emacs when offline.
 This variable sets the timeout injected into the call.")
 
+(defvar forge-extras--query-active nil
+  "Non-nil while `forge--query' is executing.
+Prevents re-entrant forge queries when timers fire during
+synchronous GPG decryption or network waits inside
+`accept-process-output'.")
+
+(defun forge-extras--prevent-reentrant-query (orig-fun &rest args)
+  "Call ORIG-FUN with ARGS unless a forge query is already active.
+During `epg-wait-for-status' and `url-retrieve-synchronously',
+`accept-process-output' services the event loop, allowing timers
+to fire re-entrantly.  Each re-entrant `forge--query' blocks on
+GPG again, creating unbounded nesting that freezes Emacs."
+  (unless forge-extras--query-active
+    (let ((forge-extras--query-active t))
+      (apply orig-fun args))))
+
+(advice-add 'forge--query :around #'forge-extras--prevent-reentrant-query)
+
 (defvar forge-extras--pull-in-progress nil
   "Non-nil while `forge-extras-pull-notifications' is running.
 Prevents re-entrant calls when a timer fires during GPG decryption.")

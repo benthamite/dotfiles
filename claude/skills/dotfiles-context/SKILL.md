@@ -16,8 +16,6 @@ If you need to rebuild manually (e.g. after a commit-only change), use:
 emacsclient -e '(progn (elpaca-rebuild (quote dotfiles) t) (elpaca-wait) (elpaca-extras-reload (quote dotfiles)))'
 ```
 
-**Never use `load-file` as a substitute for `elpaca-rebuild`** — it bypasses byte-compilation, load-path management, and dependency ordering.
-
 # Elpaca profile
 
 The current elpaca profile name is stored in the Elisp variable `init-current-profile`. Query it with:
@@ -37,10 +35,6 @@ emacsclient -e '(init-build-profile (file-name-directory user-init-file))'
 ```
 
 Do NOT use `org-babel-tangle-file` directly — it doesn't know about the profile system and may write to the wrong location.
-
-# Testing Emacs extras
-
-See the `elisp-conventions` skill for the batch testing recipe, load-path setup, and stale `.elc` handling. For interactive testing, use `emacsclient -e '(EXPRESSION)'`.
 
 # Version control
 

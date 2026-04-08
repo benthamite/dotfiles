@@ -30,7 +30,6 @@
 
 (require 'ol)
 (require 'slack)
-(require 'transient)
 
 ;;;; Functions
 
@@ -65,37 +64,6 @@ Extends `ol/slack-store-link' with support for
 
 (org-link-set-parameters "emacs-slack" :store #'slack-extras--store-link)
 
-;;;;; Connection
-
-;;;###autoload
-(defun slack-extras-start-and-select ()
-  "Start Slack if not connected, then select a channel.
-If all registered teams are already connected, skip straight to channel
-selection."
-  (interactive)
-  (let ((disconnected
-         (let (teams)
-           (maphash (lambda (_token team)
-                      (unless (oref team ws)
-                        (push team teams)))
-                    slack-teams-by-token)
-           teams)))
-    (if disconnected
-        (progn
-          (slack-start)
-          (message "Connecting to Slack... use `slack-channel-select' once ready."))
-      (call-interactively #'slack-channel-select))))
-
-;;;###autoload
-(defun slack-extras-disconnect-all ()
-  "Disconnect all connected Slack teams."
-  (interactive)
-  (maphash (lambda (_token team)
-             (when (oref team ws)
-               (slack-team-disconnect team)))
-           slack-teams-by-token)
-  (message "Disconnected all Slack teams."))
-
 ;;;;; Capture
 
 ;;;###autoload
@@ -109,64 +77,6 @@ selection."
   "Capture Slack message at point to the work inbox."
   (interactive)
   (org-capture nil "S"))
-
-;;;;; Messages
-
-(declare-function slack-thread-message-buffer-p "slack-thread-message-buffer")
-(declare-function slack-buffer-display-message-compose-buffer "slack-buffer")
-(declare-function slack-room-find-message "slack-room")
-(declare-function slack-thread-ts "slack-message")
-(declare-function slack-thread-show-messages "slack-message-buffer")
-(declare-function slack-buffer-start-thread "slack-message-buffer")
-(declare-function slack-reply-broadcast-message-p "slack-message")
-
-;;;###autoload
-(defun slack-extras-thread-reply ()
-  "Open a thread for the message at point and start composing a reply.
-If the message already has a thread, open it; otherwise start a
-new one.  In both cases, immediately open a compose buffer in the
-thread."
-  (interactive)
-  (slack-if-let* ((buf slack-current-buffer))
-      (if (slack-thread-message-buffer-p buf)
-          (slack-buffer-display-message-compose-buffer buf)
-        (slack-extras--open-thread-and-compose buf (slack-get-ts)))))
-
-(defun slack-extras--open-thread-and-compose (buf ts)
-  "Open a thread for TS in BUF, then open a compose buffer.
-BUF is a `slack-message-buffer'."
-  (slack-if-let* ((team (slack-buffer-team buf))
-                  (room (slack-buffer-room buf))
-                  (message (slack-room-find-message room ts)))
-      (slack-if-let* ((thread-ts (slack-thread-ts message)))
-          (slack-thread-show-messages
-           message room team #'slack-extras--compose-in-current-buffer)
-        (slack-extras--start-thread-and-compose buf message ts))))
-
-(defun slack-extras--start-thread-and-compose (buf message ts)
-  "Start a new thread for MESSAGE at TS in BUF, then compose.
-BUF is a `slack-message-buffer'."
-  (when (slack-reply-broadcast-message-p message)
-    (error "Can't start thread from broadcasted message"))
-  (let ((thread-buf (slack-create-thread-message-buffer
-                     (slack-buffer-room buf)
-                     (slack-buffer-team buf)
-                     ts)))
-    (slack-buffer-display thread-buf)
-    (slack-buffer-display-message-compose-buffer thread-buf)))
-
-(defun slack-extras--compose-in-current-buffer ()
-  "Open a compose buffer for `slack-current-buffer'."
-  (slack-buffer-display-message-compose-buffer slack-current-buffer))
-
-;;;###autoload
-(defun slack-extras-yank-code-block ()
-  "Yank the kill ring as a Slack code block in the current compose buffer."
-  (interactive)
-  (insert "```\n")
-  (yank)
-  (unless (bolp) (insert "\n"))
-  (insert "```"))
 
 ;;;;; Tab-bar notifications
 
@@ -253,63 +163,6 @@ find it across reloads (interned symbols are always `eq')."
   (advice-add 'tab-bar-extras-toggle-notifications
               :around #'slack-extras--also-toggle-slack)
   (slack-extras--register-tab-bar-element))
-
-;;;;; Menu
-
-;;;###autoload (autoload 'slack-extras-menu "slack-extras" nil t)
-(transient-define-prefix slack-extras-menu ()
-  "`slack-extras' menu."
-  [["Navigate"
-    ("c" "channel" slack-channel-select)
-    ("g" "group" slack-group-select)
-    ("m" "direct message" slack-im-select)
-    ("u" "rooms" slack-select-rooms)
-    ("U" "unread rooms" slack-select-unread-rooms)
-    ("a" "all threads" slack-all-threads)]
-   ["Message"
-    ("d" "thread" slack-thread-show-or-create)
-    ("Z" "thread reply" slack-extras-thread-reply)
-    ("e" "edit" slack-message-edit)
-    ("D" "delete" slack-message-delete)
-    ("z" "compose in buffer" slack-message-write-another-buffer)
-    ("s" "share" slack-message-share)
-    ("l" "copy link" slack-message-copy-link)
-    ("I" "copy id" slack-message-copy-id)
-    ("Q" "quote & reply" slack-quote-and-reply)]
-   ["React & pin"
-    ("r" "add reaction" slack-message-add-reaction)
-    ("R" "remove reaction" slack-message-remove-reaction)
-    ("p" "pin" slack-message-pins-add)
-    ("P" "unpin" slack-message-pins-remove)
-    ("n" "pins list" slack-room-pins-list)]
-   ["File"
-    ("f" "upload" slack-file-upload)
-    ("F" "quick upload" slack-file-upload-quick)
-    ("S" "upload snippet" slack-file-upload-snippet)
-    ("x" "download at point" slack-download-file-at-point)]]
-  [["Search"
-    ("/" "messages" slack-search-from-messages)
-    ("\\" "files" slack-search-from-files)]
-   ["Channel"
-    ("C" "create" slack-create-channel)
-    ("j" "join" slack-channel-join)
-    ("v" "leave" slack-channel-leave)
-    ("t" "set topic" slack-channel-set-topic)
-    ("i" "info" slack-show-channel-info)
-    ("b" "bookmarks" slack-show-channel-bookmarks)]
-   ["Team & connection"
-    ("T" "change team" slack-change-current-team)
-    ("o" "start" slack-extras-start-and-select)
-    ("O" "stop" slack-extras-disconnect-all)
-    ("+" "set status" slack-user-set-status)
-    ("-" "reset status" slack-user-reset-status)]
-   ["Misc"
-    ("*" "saved items" slack-saved-items)
-    ("A" "activity feed" slack-activity-feed-show)
-    ("M" "scheduled messages" slack-scheduled-messages-show)
-    ("K" "kill all buffers" slack-kill-all-buffers)
-    ("w" "open in browser" slack-jump-to-browser)
-    ("y" "yank code block" slack-extras-yank-code-block)]])
 
 (provide 'slack-extras)
 ;;; slack-extras.el ends here

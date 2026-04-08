@@ -13062,9 +13062,6 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
 (use-package slack
   :ensure (:host github
                  :repo "benthamite/emacs-slack")
-  :init
-  (bind-keys ("A-k" . slack-extras-menu))
-
   :custom
   (slack-file-dir paths-dir-downloads)
   (slack-prefer-current-team t)
@@ -13082,55 +13079,59 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
   (slack-buffer-mode-hook . (lambda () (setopt line-spacing nil)))
 
   :bind
-  (:map slack-mode-map
-        ("s-a" . slack-all-threads)
-        ("s-c" . slack-channel-select)
-        ("s-g" . slack-group-select)
-        ("s-m" . slack-im-select)
-        ("H-s-t" . slack-change-current-team)
-        ("s-u" . slack-select-rooms)
-        ("H-s-u" . slack-select-unread-rooms)
-        :map slack-buffer-mode-map
-        ("s-a" . slack-all-threads)
-        ("s-c" . slack-channel-select)
-        ("s-g" . slack-group-select)
-        ("s-m" . slack-im-select)
-        ("H-s-t" . slack-change-current-team)
-        ("s-u" . slack-select-rooms)
-        ("H-s-u" . slack-select-unread-rooms) ; `slack-all-unreads' not working
-        :map slack-thread-message-buffer-mode-map
-        ("d" . slack-thread-show-or-create)
-        ("e" . slack-message-edit)
-        ("o" . slack-chat-org-capture)
-        ("q" . files-extras-kill-other-buffer)
-        ("R" . slack-message-add-reaction)
-        ("z" . slack-message-write-another-buffer)
-        ("s-z" . slack-message-write-another-buffer)
-        :map slack-activity-feed-buffer-mode-map
-        ("," . slack-activity-feed-goto-prev)
-        ("." . slack-activity-feed-goto-next)
-        ("d" . slack-thread-show-or-create)
-        ("e" . slack-message-edit)
-        ("k" . slack-feed-goto-prev)
-        ("l" . slack-feed-goto-next)
-        ("R" . slack-message-add-reaction)
-        ("z" . slack-message-write-another-buffer)
-        ("s-z" . slack-message-write-another-buffer)
-        :map slack-message-buffer-mode-map
-        ("," . slack-buffer-goto-prev-message)
-        ("." . slack-buffer-goto-next-message)
-        ("d" . slack-thread-show-or-create)
-        ("e" . slack-message-edit)
-        ("k" . slack-buffer-goto-prev-message)
-        ("l" . slack-buffer-goto-next-message)
-        ("o" . slack-chat-org-capture)
-        ("R" . slack-message-add-reaction)
-        ("z" . slack-message-write-another-buffer)
-        ("s-z" . slack-message-write-another-buffer)
-        :map slack-message-compose-buffer-mode-map
-        ("s-c" . slack-message-send-from-buffer)
-        ("s-f" . slack-message-select-file)
-        ("s-m" . slack-message-embed-mention)))
+  (("A-k" . slack-menu)
+   :map slack-mode-map
+   ("s-a" . slack-all-threads)
+   ("s-c" . slack-channel-select)
+   ("s-g" . slack-group-select)
+   ("s-m" . slack-im-select)
+   ("H-s-t" . slack-change-current-team)
+   ("s-u" . slack-select-rooms)
+   ("H-s-u" . slack-select-unread-rooms)
+   :map slack-buffer-mode-map
+   ("s-a" . slack-all-threads)
+   ("s-c" . slack-channel-select)
+   ("s-g" . slack-group-select)
+   ("s-m" . slack-im-select)
+   ("H-s-t" . slack-change-current-team)
+   ("s-u" . slack-select-rooms)
+   ("H-s-u" . slack-select-unread-rooms) ; `slack-all-unreads' not working
+   :map slack-thread-message-buffer-mode-map
+   ("d" . slack-thread-show-or-create)
+   ("e" . slack-message-edit)
+   ("o" . slack-chat-org-capture)
+   ("q" . files-extras-kill-other-buffer)
+   ("r" . slack-thread-reply)
+   ("R" . slack-message-add-reaction)
+   ("z" . slack-message-write-another-buffer)
+   ("s-z" . slack-message-write-another-buffer)
+   :map slack-activity-feed-buffer-mode-map
+   ("," . slack-activity-feed-goto-prev)
+   ("." . slack-activity-feed-goto-next)
+   ("d" . slack-thread-show-or-create)
+   ("e" . slack-message-edit)
+   ("k" . slack-feed-goto-prev)
+   ("l" . slack-feed-goto-next)
+   ("r" . slack-thread-reply)
+   ("R" . slack-message-add-reaction)
+   ("z" . slack-message-write-another-buffer)
+   ("s-z" . slack-message-write-another-buffer)
+   :map slack-message-buffer-mode-map
+   ("," . slack-buffer-goto-prev-message)
+   ("." . slack-buffer-goto-next-message)
+   ("d" . slack-thread-show-or-create)
+   ("e" . slack-message-edit)
+   ("k" . slack-buffer-goto-prev-message)
+   ("l" . slack-buffer-goto-next-message)
+   ("o" . slack-chat-org-capture)
+   ("r" . slack-thread-reply)
+   ("R" . slack-message-add-reaction)
+   ("z" . slack-message-write-another-buffer)
+   ("s-z" . slack-message-write-another-buffer)
+   :map slack-message-compose-buffer-mode-map
+   ("s-c" . slack-message-send-from-buffer)
+   ("s-f" . slack-message-select-file)
+   ("s-m" . slack-message-embed-mention)))
 #+end_src
 
 ** =slack-extras=
@@ -13147,15 +13148,12 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
   (:map slack-activity-feed-buffer-mode-map
         ("E" . slack-extras-work-capture)
         ("o" . slack-extras-personal-capture)
-        ("r" . slack-extras-thread-reply)
         :map slack-thread-message-buffer-mode-map
         ("E" . slack-extras-work-capture)
         ("o" . slack-extras-personal-capture)
-        ("r" . slack-extras-thread-reply)
         :map slack-message-buffer-mode-map
         ("E" . slack-extras-work-capture)
-        ("o" . slack-extras-personal-capture)
-        ("r" . slack-extras-thread-reply)))
+        ("o" . slack-extras-personal-capture)))
 #+end_src
 
 ** =ol-emacs-slack=

@@ -528,7 +528,7 @@ Pulls all unread Slack messages via the =slack-epochai= MCP server, triages them
 
 *** finances
 :PROPERTIES:
-:ID:       A1B2C3D4-E5F6-7890-ABCD-EF1234567890
+:ID:       9FB8F226-1770-4571-B164-5575729722A7
 :END:
 
 Imports CSV bank statements from Wise and Mercado Pago, categorizes transactions against a guide built from ~7,500 historical ledger entries, and generates ledger-cli entries via a staging workflow. Three modes: =import= (default) parses CSVs, categorizes, writes a staging file for review, merges approved entries into =journal.ledger=, reconciles, and commits; =reconcile= compares existing journal entries against statements and marks matched entries as cleared; =update-guide= scans recent journal entries for new payee-to-category mappings. The categorization guide (=categorization-guide.md=) classifies payees into deterministic (auto-categorize), high-confidence (use default unless description suggests otherwise), and ambiguous (always ask). Cash transactions must be entered manually. Statement CSVs go in =~/My Drive/ledger/statements/{wise,mercadopago}/=.

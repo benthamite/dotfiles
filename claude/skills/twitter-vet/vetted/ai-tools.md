@@ -77,3 +77,7 @@
 - @fxnction (6, 2026-04-06) — 12-agent dev team on OpenClaw, multi-agent insights, Opus-to-Codex comparison. ~50% AI tools content, heavy crypto/promotional noise.
 - @ClementDelangue (skip, 2026-04-06) — HuggingFace CEO (239K). Agent traces initiative is actionable but mostly RT amplification. Quick-filtered. — Cloudflare dev. Raspberry Pi agent box, code mode isolation on workerd. Scattered across AI/Cloudflare/zig/personal. ~45% AI tools content.
 
+- @FarzaTV (5, 2026-04-08) — 98K. Built Clicky (AI teacher next to cursor), open-sourced it. Great one-off tool but all content is about this single viral project. No ongoing AI tools workflow tips.
+- @chris__sev (6, 2026-04-08) — 32K. Practical Claude Code user: thinking+fastMode tip, honest Paperclip review, Dispatch permissions. ~50% AI tools content but thin original workflow content.
+- @vincent_koc (6, 2026-04-08) — 15K. Building LLM wiki for Obsidian with backfilling, OpenClaw personality features, SOUL.md approach. ~40% AI tools, rest is memes/community noise.
+- @om_patel5 (4, 2026-04-08) — 20K. ALL CAPS aggregator surfacing others' projects (voice mode hack, RPG agents, Claude drama). Not a practitioner sharing own workflows.

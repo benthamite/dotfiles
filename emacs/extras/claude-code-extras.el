@@ -318,6 +318,8 @@ Source: lobehub/lobe-icons (MIT).")
                        (claude-code--term-send-return claude-code-terminal-backend))
         :icon (lambda (&optional face) (let ((svg (ai-extras-svg-icon claude-code-extras-icon-svg face)))
                                         (if (string-empty-p svg) "CC" svg)))
+        :account (lambda (buf)
+                   (buffer-local-value 'claude-code-extras--buffer-account buf))
         :label "Claude Code"
         :discover-skills #'claude-code-extras--discover-skills
         :handoff #'claude-code-extras-handoff

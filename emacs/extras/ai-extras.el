@@ -63,6 +63,10 @@ Each entry is (SYMBOL . PLIST) where PLIST has keys:
   :label                 string (display name,
                            e.g. \"Claude Code\" or \"Codex\")
 
+Optional session metadata:
+  :account               function (buffer) -> string or nil
+                           (account name for session grouping)
+
 Optional command keys for dispatching shared commands:
   :discover-skills       function () -> list of skill plists
   :handoff               function () (close session, start new with handoff)
@@ -351,33 +355,75 @@ If sessions exist, show a transient menu with home-row keys."
     :setup-children ai-extras--session-switcher-children]])
 
 (defun ai-extras--session-switcher-children (_)
-  "Build transient suffixes for the session switcher."
-  (let (specs)
+  "Build transient suffixes for the session switcher, grouped by account."
+  (let ((groups (ai-extras--group-sessions-by-account)))
+    (transient-parse-suffixes
+     'ai-extras--session-switcher
+     (apply #'vector (ai-extras--interleave-group-headers groups)))))
+
+(defun ai-extras--group-sessions-by-account ()
+  "Return an alist of (ACCOUNT . SPECS) sorted by account name.
+Each SPECS is a list of suffix specs sorted by home-row key."
+  (let ((groups (make-hash-table :test 'equal)))
     (maphash
      (lambda (buf key)
        (when (buffer-live-p buf)
-         (let* ((backend (ai-extras--detect-backend buf))
-                (icon (when backend (ai-extras-backend-icon backend)))
-                (name (ai-extras-display-name buf))
-                (label (if (and icon (not (string-empty-p icon)))
-                           (format "%s %s" icon name) name))
-                (waiting (buffer-local-value
-                          'ai-extras--waiting-for-input buf))
-                (cmd (make-symbol (format "ai-switch-%s" key)))
-                (spec (list key label cmd)))
-           (when waiting
-             (setq spec (append spec (list :face 'ai-extras-waiting))))
-           (fset cmd (lambda () (interactive) (switch-to-buffer buf)))
-           (push spec specs))))
+         (push (ai-extras--session-suffix-spec buf key)
+               (gethash (ai-extras--session-group-key buf) groups))))
      ai-extras--session-keys)
-    (setq specs
-          (sort specs
-                (lambda (a b)
-                  (< (ai-extras--home-row-key-index (car a))
-                     (ai-extras--home-row-key-index (car b))))))
-    (transient-parse-suffixes
-     'ai-extras--session-switcher
-     (apply #'vector specs))))
+    (ai-extras--hash-to-sorted-alist groups)))
+
+(defun ai-extras--session-group-key (buffer)
+  "Return the group key for BUFFER in the session switcher.
+Uses the backend's :account function if available, falling back
+to the backend's :label or symbol name."
+  (let ((backend (ai-extras--detect-backend buffer)))
+    (or (when-let* ((account-fn (ai-extras--backend-get backend :account)))
+          (funcall account-fn buffer))
+        (ai-extras--backend-get backend :label)
+        (and backend (symbol-name backend))
+        "Sessions")))
+
+(defun ai-extras--session-suffix-spec (buf key)
+  "Build a transient suffix spec for BUF bound to KEY."
+  (let* ((backend (ai-extras--detect-backend buf))
+         (icon (when backend (ai-extras-backend-icon backend)))
+         (name (ai-extras-display-name buf))
+         (label (if (and icon (not (string-empty-p icon)))
+                    (format "%s %s" icon name) name))
+         (waiting (buffer-local-value
+                   'ai-extras--waiting-for-input buf))
+         (cmd (make-symbol (format "ai-switch-%s" key)))
+         (spec (list key label cmd)))
+    (when waiting
+      (setq spec (append spec (list :face 'ai-extras-waiting))))
+    (fset cmd (lambda () (interactive) (switch-to-buffer buf)))
+    spec))
+
+(defun ai-extras--hash-to-sorted-alist (groups)
+  "Convert GROUPS hash table to an alist sorted by key.
+Each value's suffix specs are sorted by home-row key index."
+  (let (alist)
+    (maphash
+     (lambda (group-key specs)
+       (push (cons group-key
+                   (sort specs
+                         (lambda (a b)
+                           (< (ai-extras--home-row-key-index (car a))
+                              (ai-extras--home-row-key-index (car b))))))
+             alist))
+     groups)
+    (sort alist (lambda (a b) (string< (car a) (car b))))))
+
+(defun ai-extras--interleave-group-headers (groups)
+  "Interleave :info headers before each group's suffix specs.
+GROUPS is an alist of (ACCOUNT . SPECS).  When there is only one
+group, no headers are added."
+  (if (<= (length groups) 1)
+      (mapcan #'cdr groups)
+    (mapcan (lambda (entry)
+              (cons (list :info (car entry)) (cdr entry)))
+            groups)))
 
 ;;;; Buffer protection
 

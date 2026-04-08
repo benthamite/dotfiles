@@ -95,7 +95,7 @@ The =el-patch= in =org-gcal-extras.el= makes three changes to this behavior:
 
 Together with the timestamp reading patch ([[#h:get-time-and-desc-patch][Reading event timestamps]]), these changes create a consistent workflow where Google Calendar events use deadlines throughout the round-trip synchronization.
 
-The =el-patch= base tracks the upstream definition and must be updated when upstream changes. Minor upstream refactors (such as moving variable bindings within a =let*= form or adjusting error message punctuation) require corresponding updates to the patch base even though they do not affect the patched behavior.
+The =el-patch= base tracks the upstream definition and must be updated when upstream changes. Minor upstream refactors (such as moving variable bindings within a =let*= form or adjusting error message punctuation) require corresponding updates to the patch base even though they do not affect the patched behavior. Use ~el-patch-validate~ to check whether the patch base has diverged from the current upstream source.
 
 * Indices
 :PROPERTIES:

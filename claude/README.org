@@ -50,7 +50,7 @@ Three layers of directories work together: this dotfiles directory (source of tr
 └── plugins/           ← installed plugins (managed by Claude Code)
 #+end_example
 
-*Per-account overlays* (=~/.claude-personal/=, =~/.claude-epoch/=): see [[*Multi-account setup][multi-account setup]] below.
+*Per-account overlays* (=~/.claude-tlon/=, =~/.claude-epoch/=): see [[*Multi-account setup][multi-account setup]] below.
 
 *Per-project config* (=<project>/.claude/=):
 
@@ -117,7 +117,7 @@ Each file should contain distinct content. The global one defines behavioral con
 :ID:       239E0918-2383-460C-8C9C-2ABC4E3D344D
 :END:
 
-Two OAuth accounts (personal and epoch) are supported without re-authenticating. Each account uses a separate =CLAUDE_CONFIG_DIR= (=~/.claude-personal/= and =~/.claude-epoch/=) to keep its OAuth credentials and identity isolated, while sharing everything else via symlinks back to =~/.claude/=.
+Two OAuth accounts (tlon and epoch) are supported without re-authenticating. Each account uses a separate =CLAUDE_CONFIG_DIR= (=~/.claude-tlon/= and =~/.claude-epoch/=) to keep its OAuth credentials and identity isolated, while sharing everything else via symlinks back to =~/.claude/=.
 
 Shared (symlinked into each account dir):
 - =settings.json=, =settings.local.json= — preferences and permissions
@@ -134,7 +134,7 @@ Separate per account:
 - =.claude.json= — OAuth identity, user ID, and MCP servers (synced from =~/.claude.json=)
 - Keychain credentials — the actual OAuth tokens
 
-The active account is stored in =~/.claude-current-account=. From Emacs, =claude-code-extras-start-or-switch= uses the persisted account automatically (configured via =claude-code-extras-accounts=). Use =claude-code-extras-select-account= to change it. From the terminal, the shell aliases =claude-personal= and =claude-epoch= are available.
+The active account is stored in =~/.claude-current-account=. From Emacs, =claude-code-extras-start-or-switch= uses the persisted account automatically (configured via =claude-code-extras-accounts=). Use =claude-code-extras-select-account= to change it. From the terminal, the shell aliases =claude-tlon= and =claude-epoch= are available.
 
 *MCP servers:* Claude Code reads =.claude.json= from =$CLAUDE_CONFIG_DIR= (not =$HOME=) when that variable is set. The canonical source of truth is =~/.claude.json=; run =claude/bin/sync-mcp-servers.sh= after adding or removing any MCP server there.
 

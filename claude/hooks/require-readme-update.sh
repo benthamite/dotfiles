@@ -16,8 +16,9 @@ if ! echo "$COMMAND" | grep -qE '\bgit\s+commit\b'; then
   exit 0
 fi
 
-# Check staged files
-STAGED=$(git diff --cached --name-only 2>/dev/null || true)
+# Check staged files (amend-aware: see lib-staged-files.sh)
+# shellcheck source=lib-staged-files.sh
+source "$(dirname "$0")/lib-staged-files.sh"
 
 HAS_CLAUDE_CHANGES=false
 HAS_README=false

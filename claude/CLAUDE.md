@@ -30,6 +30,10 @@ Do these proactively to avoid being blocked by pre-commit hooks:
 ## Secrets
 
 - When reading secrets from `pass` or `.zshenv-secrets`, never echo or print them in the terminal or logs.
+- **Personal secrets** (non-Epoch): stored in `pass` (GPG-encrypted). Referenced in `.zshenv-secrets` via `$(pass path/to/entry)`.
+- **Epoch secrets**: stored in 1Password (vault "Employee" for personal items, shared vaults like "Ops Automation" for team items). Referenced via `op://` in MCP server env blocks (resolved at runtime by `op run`), or in `.zshenv-secrets` via `$(op read 'op://...')`.
+- **Never modify items in shared 1Password vaults** (Ops Automation, Epoch AI - All, etc.) without explicit confirmation. Only create/edit items in the "Employee" vault.
+- **Account-specific MCP secrets** (e.g. different API keys per Claude Code account): use the `claude-code-extras-account-env-vars` mechanism. Export suffixed vars in `.zshenv-secrets` (e.g. `TWITTERAPI_API_KEY_TLON`, `TWITTERAPI_API_KEY_EPOCH`) and map them in `config.org`.
 
 ## Agents
 

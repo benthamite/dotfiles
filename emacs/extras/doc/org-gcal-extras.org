@@ -19,13 +19,29 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 =org-gcal-extras.el= extends =org-gcal=, the package that synchronizes Org mode entries with Google Calendar events. The upstream package stores event timestamps as =SCHEDULED= properties and places descriptions inside a dedicated =:org-gcal:= drawer. This layout may not suit every workflow---for instance, if you use deadlines rather than scheduled dates for calendar events, or if you prefer event descriptions to live in the heading body rather than a drawer.
 
-The package provides three categories of functionality:
+The package provides four categories of functionality:
 
+- *Re-entrancy guard.* Advice that prevents nested =org-gcal= operations from firing when timers re-enter during synchronous waits, avoiding a deadlock that freezes Emacs ([[#h:reentrancy-guard][Re-entrancy guard]]).
 - *Commands.* A command to open the Google Calendar event at point in a web browser, and a transient menu that groups all common =org-gcal= operations into a single dispatch interface ([[#h:commands][Commands]]).
 - *Compatibility fixes.* Advice that prevents ~track-changes~ assertion failures and stale org-element cache errors during asynchronous synchronization on Emacs 30 and later ([[#h:compatibility-fixes][Compatibility fixes]]).
 - *Patched synchronization behavior.* =el-patch= modifications that change how =org-gcal= reads and writes event data: using =DEADLINE= instead of =SCHEDULED=, placing descriptions in the heading body, and removing the =:org-gcal:= drawer ([[#h:patched-functions][Patched functions]]).
 
 The package depends on =org-gcal=, =el-patch=, and =transient=.
+
+* Re-entrancy guard
+:PROPERTIES:
+:CUSTOM_ID: h:reentrancy-guard
+:END:
+
+#+vindex: org-gcal-extras--sync-active
+#+findex: org-gcal-extras--prevent-reentrant-sync
+Several =org-gcal= operations block the main thread while waiting for network I/O or GPG decryption (via ~aio-wait-for~, ~url-retrieve-synchronously~, or ~epg-wait-for-completion~). During these waits, ~accept-process-output~ services the event loop, which allows pending timers to fire. If another =org-gcal= operation is scheduled on a timer (for example via ~midnight-hook~), it re-enters and triggers its own OAuth2 token refresh and GPG decryption. This nesting can repeat multiple levels deep.
+
+The deadlock occurs when ~oauth2-auto--plstore-write~ calls ~plstore-save~, which calls ~basic-save-buffer~. If the plstore buffer's state causes ~basic-save-buffer~ to prompt for a filename, it opens a native macOS save dialog (~NSSavePanel~) that blocks the entire event loop. While that dialog waits for user input, further nested timer entries stack up behind it, and Emacs becomes unresponsive.
+
+The variable ~org-gcal-extras--sync-active~ acts as a re-entrancy flag. The function ~org-gcal-extras--prevent-reentrant-sync~ wraps all public =org-gcal= entry points (~org-gcal-sync~, ~org-gcal-fetch~, ~org-gcal-sync-buffer~, ~org-gcal-fetch-buffer~, ~org-gcal-post-at-point~, and ~org-gcal-delete-at-point~) with =:around= advice. When any of these functions is already executing, subsequent calls from re-entrant timers are silently suppressed.
+
+This is the same pattern used by ~forge-extras--prevent-reentrant-query~ to protect =forge= from the identical class of freeze.
 
 * Commands
 :PROPERTIES:

@@ -582,7 +582,8 @@ by `claude-code-extras--start-with-account'."
     (let ((env (list (format "CLAUDE_CONFIG_DIR=%s"
                              (expand-file-name config-dir)))))
       (dolist (mapping (claude-code-extras--account-env-mappings account))
-        (when-let* ((val (getenv (cdr mapping))))
+        (when-let* ((val (claude-code-extras--resolve-env-value
+                          (cdr mapping))))
           (push (format "%s=%s" (car mapping) val) env)))
       env)))
 
@@ -592,6 +593,23 @@ Each mapping is a (TARGET-VAR . SOURCE-VAR) cons cell from
 `claude-code-extras-account-env-vars'."
   (alist-get account claude-code-extras-account-env-vars
              nil nil #'string=))
+
+(defun claude-code-extras--resolve-env-value (source-var)
+  "Return the resolved value of SOURCE-VAR.
+Reads SOURCE-VAR from the environment.  If the value is an
+`op://' reference, resolve it via `op read' at runtime.  This
+avoids calling `op read' at shell startup."
+  (when-let* ((raw (getenv source-var)))
+    (if (string-prefix-p "op://" raw)
+        (claude-code-extras--op-read raw)
+      raw)))
+
+(defun claude-code-extras--op-read (reference)
+  "Resolve a 1Password REFERENCE via `op read'.
+Return the secret value as a string, or nil on failure."
+  (with-temp-buffer
+    (when (zerop (call-process "op" nil t nil "read" reference))
+      (string-trim (buffer-string)))))
 
 (defconst claude-code-extras--shared-config-items
   '("settings.json" "settings.local.json"

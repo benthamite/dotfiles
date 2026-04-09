@@ -103,7 +103,7 @@ alias emacsk="pkill -SIGUSR2 Emacs"
 alias emacsK="while true; do pkill -SIGUSR2 Emacs; done"
 
 # Claude Code multi-account (separate OAuth sessions via config dir)
-alias claude-personal='CLAUDE_CONFIG_DIR=~/.claude-personal claude'
+alias claude-tlon='CLAUDE_CONFIG_DIR=~/.claude-tlon claude'
 alias claude-epoch='CLAUDE_CONFIG_DIR=~/.claude-epoch claude'
 
 # make node use local certs

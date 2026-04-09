@@ -415,15 +415,29 @@ Each value's suffix specs are sorted by home-row key index."
      groups)
     (sort alist (lambda (a b) (string< (car a) (car b))))))
 
+(defun ai-extras--accountless-labels ()
+  "Return labels for backends without an :account function.
+These backends don't support multi-account grouping, so their
+sessions appear without a heading."
+  (let (labels)
+    (dolist (entry ai-extras-backends labels)
+      (unless (plist-get (cdr entry) :account)
+        (when-let* ((label (plist-get (cdr entry) :label)))
+          (push label labels))))))
+
 (defun ai-extras--interleave-group-headers (groups)
   "Interleave :info headers before each group's suffix specs.
 GROUPS is an alist of (ACCOUNT . SPECS).  When there is only one
-group, no headers are added."
+group, no headers are added.  Groups whose key matches an
+accountless backend label appear without a heading."
   (if (<= (length groups) 1)
       (mapcan #'cdr groups)
-    (mapcan (lambda (entry)
-              (cons (list :info (car entry)) (cdr entry)))
-            groups)))
+    (let ((no-header (ai-extras--accountless-labels)))
+      (mapcan (lambda (entry)
+                (if (member (car entry) no-header)
+                    (copy-sequence (cdr entry))
+                  (cons (list :info (car entry)) (cdr entry))))
+              groups))))
 
 ;;;; Buffer protection
 

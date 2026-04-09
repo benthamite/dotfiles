@@ -3297,10 +3297,36 @@ Signals an error if the status file is missing or incomplete."
   :variable 'claude-code-extras-warn-kill-with-branches
   :description "warn kill with branches")
 
+(eval-and-compile
+  (defclass claude-code-extras--account-variable (transient-lisp-variable)
+    ()
+    "An infix that displays and selects the active Claude account."))
+
+(cl-defmethod transient-infix-read ((_obj claude-code-extras--account-variable))
+  "Prompt for a Claude account."
+  (claude-code-extras--prompt-account))
+
+(cl-defmethod transient-infix-set ((obj claude-code-extras--account-variable) value)
+  "Set the account variable and persist VALUE to disk."
+  (cl-call-next-method obj value)
+  (when value
+    (claude-code-extras--save-account value)
+    (claude-code-extras--sync-account-config value)))
+
+(cl-defmethod transient-init-value ((obj claude-code-extras--account-variable))
+  "Initialize OBJ from disk if the variable is nil."
+  (unless (symbol-value (oref obj variable))
+    (set (oref obj variable) (claude-code-extras--load-account)))
+  (cl-call-next-method obj))
+
+(transient-define-infix claude-code-extras--infix-account ()
+  "Select the active Claude account."
+  :class 'claude-code-extras--account-variable
+  :variable 'claude-code-extras--current-account
+  :description "account")
+
 (with-eval-after-load 'ai-extras
-  ;; Sessions column: add account, branch, new branch
-  (transient-append-suffix 'ai-extras-menu '(0 0 -1)
-    '("a" "select account" claude-code-extras-select-account))
+  ;; Sessions column: add branch, new branch
   (transient-append-suffix 'ai-extras-menu '(0 0 -1)
     '("B" "switch branch" claude-code-extras-switch-branch))
   (transient-append-suffix 'ai-extras-menu '(0 0 -1)
@@ -3317,7 +3343,9 @@ Signals an error if the status file is missing or incomplete."
     '("p" "start status polling" claude-code-extras-start-status-polling))
   (transient-append-suffix 'ai-extras-menu '(0 2 -1)
     '("P" "stop status polling" claude-code-extras-stop-status-polling))
-  ;; Options column: add Claude-specific toggles
+  ;; Options column: add account display and Claude-specific toggles
+  (transient-append-suffix 'ai-extras-menu '(1 1 -1)
+    '("-a" claude-code-extras--infix-account))
   (transient-append-suffix 'ai-extras-menu '(1 1 -1)
     '("-t" claude-code-extras--infix-sync-theme))
   (transient-append-suffix 'ai-extras-menu '(1 1 -1)

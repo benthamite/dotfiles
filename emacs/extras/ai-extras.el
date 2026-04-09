@@ -862,7 +862,7 @@ terminate the CLI process and kill the buffer."
     ("x" "exit session" ai-extras-exit)]
    ["Tools"
     ("s" "run skill" ai-extras-run-skill)
-    ("A" "audit project" ai-extras-audit-project)
+    ("a" "audit project" ai-extras-audit-project)
     ("d" "debug backtrace" ai-extras-debug-backtrace)]
    ["Alerts"
     ("T" "toggle alert" ai-extras-toggle-alert)]]
@@ -871,7 +871,7 @@ terminate the CLI process and kill the buffer."
     ("f" "fix rendering" ai-extras-fix-rendering)
     ("S" "disable scrollback" ai-extras-disable-scrollback-truncation)]
    ["Options"
-    ("-a" ai-extras--infix-alert-on-ready)
+    ("-A" ai-extras--infix-alert-on-ready)
     ("-p" ai-extras--infix-protect-buffers)]])
 
 (transient-define-infix ai-extras--infix-alert-on-ready ()

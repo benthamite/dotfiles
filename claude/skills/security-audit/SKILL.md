@@ -25,8 +25,8 @@ Scan for exposed credentials and secrets mismanagement.
   - GitHub: `gh[ps]_[A-Za-z0-9_]{36,}`, `github_pat_[A-Za-z0-9_]{22,}`
   - Generic: `(api[_-]?key|secret|token|password)\s*[=:]\s*['"][A-Za-z0-9/+=_-]{20,}`
   - Slack: `xox[bporca]-[A-Za-z0-9-]+`
-  - Google OAuth: `\d+-[a-z0-9]+\.apps\.googleusercontent\.com`
   - Private keys: `-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----`
+  - Do **not** flag public identifiers such as Google OAuth client IDs by themselves. Only flag actual secrets (client secrets, tokens, private keys, plaintext passwords).
 - **Git-crypt coverage**: verify `.gitattributes` lists all files containing secrets. Check that encrypted files are actually encrypted in the repo (not committed in plaintext before git-crypt was configured).
 - **`.gitignore` coverage**: verify `.env` files are gitignored. Flag any `.env` that is both present on disk and tracked by git.
 - **Shell history**: check `~/.zsh_history` for leaked secrets in command arguments (e.g. `curl -H "Authorization: Bearer sk-..."`)
@@ -44,7 +44,7 @@ Audit dependencies for known vulnerabilities and supply chain risk.
 
 **What to check:**
 
-- **Known vulnerabilities**: run `npm audit` (Node), `pip audit` (Python), `cargo audit` (Rust), `gh api /repos/{owner}/{repo}/vulnerability-alerts` (GitHub) as applicable. Report severity, CVE, and whether a fix is available.
+- **Known vulnerabilities**: run `npm audit` (Node), `pip audit` (Python), `cargo audit` (Rust), `gh api /repos/{owner}/{repo}/dependabot/alerts` (GitHub) as applicable. Report severity, CVE or advisory ID, and whether a fix is available.
 - **Unpinned dependencies**: flag `^`, `~`, `>=`, or `*` version ranges in `package.json`, unpinned entries in `requirements.txt` or `pyproject.toml`. These are how supply chain attacks like axios and litellm propagate.
 - **Lockfile integrity**: verify lockfiles exist and are committed. Flag repos that have a manifest but no lockfile.
 - **Release age policy**: check for `min-release-age` in `.npmrc`, or equivalent protections. Recommend adding it if absent.
@@ -52,8 +52,8 @@ Audit dependencies for known vulnerabilities and supply chain risk.
 
 **What NOT to check:**
 
-- Transitive dependency vulnerabilities with no upgrade path (note them but don't flag as actionable).
-- Dev-only dependencies with network-related CVEs (lower risk since they don't run in production).
+- Transitive dependency vulnerabilities with no upgrade path (note them but don't flag as directly actionable unless the repo can mitigate them another way).
+- Do **not** automatically downgrade dev-only dependencies. In a development-environment audit they still run on the developer machine and can be a real supply-chain path. Lower severity only when you can explain why the vulnerable package is isolated from actual developer workflows.
 
 ### `--machine` — Machine posture
 
@@ -63,7 +63,7 @@ Audit macOS system security configuration.
 
 - **Software updates**: `softwareupdate -l` for pending updates. Flag any pending security update.
 - **FileVault**: `fdesetup status` — must be enabled.
-- **Firewall**: `sudo /usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate` — should be enabled.
+- **Firewall**: `/usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate` — should be enabled.
 - **Gatekeeper**: `spctl --status` — must be enabled.
 - **SIP**: `csrutil status` — must be enabled.
 - **SSH keys**: flag keys without passphrases (`ssh-keygen -y -P "" -f <key>` returns 0 = no passphrase). Flag `~/.ssh/authorized_keys` entries that are unfamiliar.
@@ -107,8 +107,10 @@ For each domain, produce:
 
 For each finding, include:
 - Location (file path and line, or system setting)
-- What's wrong (be specific — "Slack xoxc token in plaintext at ~/.claude.json line 47", not "credentials could be more secure")
+- What's wrong (be specific — "Slack token in plaintext at ~/.claude.json line 47", not "credentials could be more secure")
 - Remediation (concrete command or change)
+
+Never echo or paste the full secret value into the report. Redact secrets by default; mention the secret type, location, and at most a short fingerprint or prefix/suffix when needed to distinguish duplicates.
 
 ## Final section
 

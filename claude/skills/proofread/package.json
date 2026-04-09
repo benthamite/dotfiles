@@ -8,13 +8,13 @@
     "apply": "tsx scripts/apply-suggestions.ts"
   },
   "dependencies": {
-    "@ai-sdk/google": "^1.0.0",
-    "ai": "^4.0.0",
+    "@ai-sdk/google": "^3.0.20",
+    "ai": "^6.0.68",
     "dotenv": "^16.4.0",
     "zod": "^4.3.5"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
+    "@types/node": "^22.0.0",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0"
   }

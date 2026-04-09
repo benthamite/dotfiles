@@ -547,7 +547,7 @@ Adapted from [[https://pjh.is/][Peter Hartree]]'s [[https://github.com/HartreeWo
 
 *** security-audit
 
-Audits the development environment security posture across four domains, each runnable independently via flags: =--secrets= (plaintext credentials in configs, git-crypt coverage, gitignore gaps, shell history leaks, 1Password/pass consistency), =--deps= (known vulnerabilities via =npm audit= / =pip audit= / =cargo audit=, unpinned dependency versions, missing lockfiles, release age policies), =--machine= (macOS software updates, FileVault, Firewall, Gatekeeper, SIP, SSH key passphrases, browser extensions, login items, network egress controls), =--claude= (=bypassPermissions= compensating controls, MCP server credential storage, hook coverage gaps, unenforceable CLAUDE.md safety instructions, skill privilege escalation risk, memory exposure). Produces findings organized by severity (critical, high, medium, low) with specific file paths and concrete remediation steps. Complements =block-secret-leak.sh= (which prevents leaks in real time) by auditing the broader security posture on demand.
+Audits the development environment security posture across four domains, each runnable independently via flags: =--secrets= (plaintext credentials in configs, git-crypt coverage, gitignore gaps, shell history leaks, 1Password/pass consistency, with redacted reporting), =--deps= (known vulnerabilities via =npm audit= / =pip audit= / =cargo audit= / GitHub Dependabot alerts, unpinned dependency versions, missing lockfiles, release age policies), =--machine= (macOS software updates, FileVault, Firewall, Gatekeeper, SIP, SSH key passphrases, browser extensions, login items, network egress controls), =--claude= (=bypassPermissions= compensating controls, MCP server credential storage, hook coverage gaps, unenforceable CLAUDE.md safety instructions, skill privilege escalation risk, memory exposure). Produces findings organized by severity (critical, high, medium, low) with specific file paths and concrete remediation steps. Complements =block-secret-leak.sh= (which prevents leaks in real time) by auditing the broader security posture on demand.
 
 ** Meta skills
 :PROPERTIES:
@@ -700,4 +700,3 @@ Blocks edits to =.el= files until the =elisp-conventions= skill has been loaded 
 ** track-elisp-skill.sh (PostToolUse)
 
 Creates a session marker (=/tmp/claude-elisp-skill-{SESSION_ID}=) when the =elisp-conventions= skill is loaded via the Skill tool. This marker allows =require-elisp-skill.sh= to permit =.el= edits. Cleans up stale markers older than 2 hours.
-

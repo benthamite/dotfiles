@@ -63,11 +63,27 @@ The Epoch project root is the closest ancestor directory containing `CLAUDE.md` 
    @logs/YYYY-MM-DD.md
    ```
 
-## Step 4: Commit
+## Step 4: Add entry to current list of automation projects
 
-Stage all new files under `projects/<name>/` and commit with message: `Add <name> project`.
+Open `projects/current-list-of-automation-projects.org` and add an entry for the new project under the appropriate section (usually `** In active development`). Follow the exact format used by existing entries:
 
-## Step 5: Transition
+```org
+*** *[[file:<name>/<name>.org][<Project title>]]*
+:PROPERTIES:
+:ID:       <name>
+:END:
+  1. Comments: <Brief context — who requested it, why it exists.>
+  2. Status: *Kickoff*. <One-sentence summary of where the project stands.>
+  3. Next step: <Most immediate TODO.>
+```
+
+Use a `file:` link (relative to `projects/`) pointing to the project's org file. For the `:ID:` property, use the kebab-case directory name. Keep comments, status, and next step terse to match the style of surrounding entries.
+
+## Step 5: Commit
+
+Stage all new files under `projects/<name>/` **and** the updated `projects/current-list-of-automation-projects.org`, then commit with message: `Add <name> project`.
+
+## Step 6: Transition
 
 Print the following to the user:
 

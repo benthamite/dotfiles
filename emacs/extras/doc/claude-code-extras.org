@@ -111,7 +111,7 @@ The user option ~claude-code-extras-alert-sound~ specifies the path to the sound
 The user option ~claude-code-extras-accounts~ is an alist of =(NAME . CONFIG-DIR)= pairs for switching between multiple Claude OAuth accounts without re-authenticating. See [[#h:multi-account][Multi-account support]] for details and configuration examples. The default is ~nil~ (single-account mode).
 
 #+vindex: claude-code-extras-account-env-vars
-The user option ~claude-code-extras-account-env-vars~ is an alist of =(ACCOUNT-NAME . ((TARGET-VAR . SOURCE-VAR) ...))= pairs.  When a session starts for ACCOUNT-NAME, each TARGET-VAR is set to the value of SOURCE-VAR from the current shell environment.  This allows MCP servers that share the same definition across accounts to receive different credentials depending on which account is active.  The default is ~nil~.
+The user option ~claude-code-extras-account-env-vars~ is an alist of =(ACCOUNT-NAME . ((TARGET-VAR . SOURCE-VAR) ...))= pairs.  When a session starts for ACCOUNT-NAME, each TARGET-VAR is set to the value of SOURCE-VAR from the current shell environment.  If the resolved value of SOURCE-VAR is an =op://= reference, it is resolved via ~op read~ at session start time (avoiding expensive 1Password lookups on every shell startup).  This allows MCP servers that share the same definition across accounts to receive different credentials depending on which account is active.  The default is ~nil~.
 
 #+vindex: claude-code-extras-account-file
 The user option ~claude-code-extras-account-file~ is the file where the active account name is persisted across Emacs sessions. The default is =~/.claude-current-account=.

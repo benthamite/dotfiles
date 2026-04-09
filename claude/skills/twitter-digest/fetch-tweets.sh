@@ -7,7 +7,7 @@
 #        fetch-tweets.sh <list-name> <override-cutoff>
 #
 # Output: a self-contained block with metadata header + compact tweet lines.
-# Requires: TWITTER_API_IO env var
+# Requires: TWITTERAPI_API_KEY env var
 
 set -euo pipefail
 
@@ -23,8 +23,8 @@ if [[ ! -f "$LIST_FILE" ]]; then
   echo "ERROR: list file not found: $LIST_FILE" >&2
   exit 1
 fi
-if [[ -z "${TWITTER_API_IO:-}" ]]; then
-  echo "ERROR: TWITTER_API_IO env var not set" >&2
+if [[ -z "${TWITTERAPI_API_KEY:-}" ]]; then
+  echo "ERROR: TWITTERAPI_API_KEY env var not set" >&2
   exit 1
 fi
 
@@ -73,7 +73,7 @@ trap 'rm -rf "$TMPDIR"' EXIT
 fetch_one() {
   local user="$1" outfile="$TMPDIR/$user.txt"
   curl -sf "https://api.twitterapi.io/twitter/user/last_tweets?userName=$user" \
-    -H "X-API-Key: $TWITTER_API_IO" \
+    -H "X-API-Key: $TWITTERAPI_API_KEY" \
     -o "$TMPDIR/$user.json" 2>/dev/null || return 0
 
   python3 -c "

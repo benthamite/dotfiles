@@ -32,6 +32,32 @@
 (require 'el-patch)
 (require 'transient)
 
+;;;; Re-entrancy guard
+
+(defvar org-gcal-extras--sync-active nil
+  "Non-nil while an `org-gcal' sync operation is executing.
+Prevents re-entrant sync calls when timers fire during
+`accept-process-output' inside `aio-wait-for' or
+`url-retrieve-synchronously'.  Without this guard, nested
+timer entry triggers OAuth2 token refresh and GPG decryption
+concurrently, which can deadlock Emacs (e.g. a native
+save-panel dialog from `plstore-save' blocks the event loop
+while inner timers stack up).")
+
+(defun org-gcal-extras--prevent-reentrant-sync (orig-fun &rest args)
+  "Call ORIG-FUN with ARGS unless an org-gcal sync is already active."
+  (unless org-gcal-extras--sync-active
+    (let ((org-gcal-extras--sync-active t))
+      (apply orig-fun args))))
+
+(dolist (fn '(org-gcal-sync
+              org-gcal-fetch
+              org-gcal-sync-buffer
+              org-gcal-fetch-buffer
+              org-gcal-post-at-point
+              org-gcal-delete-at-point))
+  (advice-add fn :around #'org-gcal-extras--prevent-reentrant-sync))
+
 ;;;; Functions
 
 (defun org-gcal-extras--reset-element-cache ()

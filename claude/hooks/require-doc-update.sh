@@ -72,8 +72,9 @@ is_generated_el() {
   esac
 }
 
-# Check staged files
-STAGED=$(git diff --cached --name-only 2>/dev/null || true)
+# Check staged files (amend-aware: see lib-staged-files.sh)
+# shellcheck source=lib-staged-files.sh
+source "$(dirname "$0")/lib-staged-files.sh"
 
 HAS_EL=false
 HAS_DOC_ORG=false

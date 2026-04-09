@@ -17,8 +17,9 @@ if ! echo "$COMMAND" | grep -qE '\bgit\s+commit\b'; then
   exit 0
 fi
 
-# Check if any staged files are Elisp-related
-STAGED=$(git diff --cached --name-only 2>/dev/null || true)
+# Check if any staged files are Elisp-related (amend-aware: see lib-staged-files.sh)
+# shellcheck source=lib-staged-files.sh
+source "$(dirname "$0")/lib-staged-files.sh"
 
 HAS_ELISP=false
 if [ -n "$STAGED" ]; then

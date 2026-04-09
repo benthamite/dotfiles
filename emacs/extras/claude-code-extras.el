@@ -139,6 +139,23 @@ Example:
   :type '(alist :key-type string :value-type directory)
   :group 'claude-code-extras)
 
+(defcustom claude-code-extras-account-env-vars nil
+  "Account-specific environment variable overrides.
+Alist of (ACCOUNT-NAME . ((TARGET-VAR . SOURCE-VAR) ...)).
+When a session starts for ACCOUNT-NAME, each TARGET-VAR is set
+to the value of SOURCE-VAR from the current shell environment.
+
+This allows MCP servers that share the same definition across
+accounts to receive different credentials depending on which
+account is active.
+
+Example:
+  \\='((\"tlon\"  . ((\"TWITTERAPI_API_KEY\" . \"TWITTERAPI_API_KEY_TLON\")))
+    (\"epoch\" . ((\"TWITTERAPI_API_KEY\" . \"TWITTERAPI_API_KEY_EPOCH\"))))"
+  :type '(alist :key-type string
+                :value-type (alist :key-type string :value-type string))
+  :group 'claude-code-extras)
+
 (defcustom claude-code-extras-account-file
   (expand-file-name ".claude-current-account" "~")
   "File storing the name of the currently active Claude account.
@@ -554,13 +571,27 @@ resulting in a garbled banner."
 ;;;;; Smart start
 
 (defun claude-code-extras--account-env (_buffer-name _dir)
-  "Return `CLAUDE_CONFIG_DIR' for the pending account.
-Reads `claude-code-extras--pending-account', which is dynamically
-bound by `claude-code-extras--start-with-account'."
+  "Return environment variables for the pending account.
+Sets `CLAUDE_CONFIG_DIR' and any account-specific overrides from
+`claude-code-extras-account-env-vars'.  Reads
+`claude-code-extras--pending-account', which is dynamically bound
+by `claude-code-extras--start-with-account'."
   (when-let* ((account claude-code-extras--pending-account)
               (config-dir (alist-get account claude-code-extras-accounts
                                      nil nil #'string=)))
-    (list (format "CLAUDE_CONFIG_DIR=%s" (expand-file-name config-dir)))))
+    (let ((env (list (format "CLAUDE_CONFIG_DIR=%s"
+                             (expand-file-name config-dir)))))
+      (dolist (mapping (claude-code-extras--account-env-mappings account))
+        (when-let* ((val (getenv (cdr mapping))))
+          (push (format "%s=%s" (car mapping) val) env)))
+      env)))
+
+(defun claude-code-extras--account-env-mappings (account)
+  "Return the env var mappings for ACCOUNT.
+Each mapping is a (TARGET-VAR . SOURCE-VAR) cons cell from
+`claude-code-extras-account-env-vars'."
+  (alist-get account claude-code-extras-account-env-vars
+             nil nil #'string=))
 
 (defconst claude-code-extras--shared-config-items
   '("settings.json" "settings.local.json"

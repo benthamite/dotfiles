@@ -685,6 +685,14 @@ Blocks edits to =.texi= files, which are auto-generated from =.org= sources via 
 
 Compensating control for =bypassPermissions= mode. Fires on =Bash|Write= and pattern-matches the tool input for common secret formats: AWS access keys, GitHub tokens, Slack tokens, =sk-= API keys, private key headers, Google OAuth client secrets, and generic high-entropy values assigned to known secret variable names. Blocks the operation with a specific message identifying the secret type. Allowlists legitimate secret-handling commands (=pass=, =op=, =security=, =git-crypt=), pattern-scanning tools (=grep=, =rg=), environment variable references (=$VAR=), and writes to known secret files (=.zshenv-secrets=, =.env.op=). Complements the =/security-audit= skill, which audits the broader security posture on demand rather than blocking in real time.
 
+** block-destructive-command.sh (PreToolUse)
+
+Blocks destructive shell commands that are hard to reverse. Catches =rm -rf= (suggests =trash=), =git push --force=, =git reset --hard=, =git clean -f=, =git checkout -- .=, and =git branch -D=. Each blocked pattern includes a specific remediation suggestion. Users can run blocked commands manually via =!=.
+
+** guard-external-actions.sh (PreToolUse)
+
+Guards externally-visible MCP actions that are visible to others and hard to undo. Fires on all =mcp__= tools. Blocks: email sending/replying (Gmail), tweet creation (Twitter), and resource deletion (Google Drive, Calendar). Allows low-risk operations like marking Slack channels as read.
+
 ** require-elisp-skill.sh (PreToolUse)
 
 Blocks edits to =.el= files until the =elisp-conventions= skill has been loaded in the current session. Checks for a session marker created by the companion =track-elisp-skill.sh= hook. If no marker exists, denies the edit with a message telling the agent to load the skill first.

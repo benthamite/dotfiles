@@ -68,7 +68,7 @@ Audit macOS system security configuration.
 - **SIP**: `csrutil status` — must be enabled.
 - **SSH keys**: flag keys without passphrases (`ssh-keygen -y -P "" -f <key>` returns 0 = no passphrase). Flag `~/.ssh/authorized_keys` entries that are unfamiliar.
 - **Browser extensions**: list installed extensions for Chrome and Firefox. Flag extensions that are not from major, well-known publishers (per Kim's Glasswing guidance: "be skeptical of lesser-known browser extensions").
-- **Network egress**: if Little Snitch is installed, report its status. If not installed, note its absence as a gap.
+- **Network egress**: check for an outbound firewall (Little Snitch, LuLu, or Radio Silence). Report its status. If none is installed, note the absence as a gap.
 - **Login items**: `osascript -e 'tell application "System Events" to get the name of every login item'` — flag unfamiliar entries.
 - **Remote access**: verify Screen Sharing and Remote Login are disabled unless intentionally enabled.
 

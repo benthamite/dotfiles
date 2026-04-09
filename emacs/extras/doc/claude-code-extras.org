@@ -219,14 +219,14 @@ The command ~claude-code-extras-jump-to-waiting~ (bound to =w= in the session sw
 :END:
 
 #+vindex: claude-code-extras-accounts
-When ~claude-code-extras-accounts~ is non-nil, each account maps to a separate =CLAUDE_CONFIG_DIR=, so OAuth credentials, settings, and memory are kept independent. This avoids the need to log out and back in when switching between accounts (e.g. personal and work).
+When ~claude-code-extras-accounts~ is non-nil, each account maps to a separate =CLAUDE_CONFIG_DIR=, so OAuth credentials, settings, and memory are kept independent. This avoids the need to log out and back in when switching between accounts (e.g. tlon and epoch).
 
 Configure accounts as an alist of =(NAME . CONFIG-DIR)= pairs:
 
 #+begin_src emacs-lisp
 (setopt claude-code-extras-accounts
-        '(("personal" . "~/.claude-personal")
-          ("epoch"    . "~/.claude-epoch")))
+        '(("tlon"  . "~/.claude-tlon")
+          ("epoch" . "~/.claude-epoch")))
 #+end_src
 
 #+findex: claude-code-extras-select-account

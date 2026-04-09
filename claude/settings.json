@@ -38,6 +38,16 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "Bash|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/block-secret-leak.sh",
+            "timeout": 5
+          }
+        ]
       }
     ],
     "PostToolUse": [

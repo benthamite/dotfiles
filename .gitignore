@@ -16,6 +16,11 @@ emacs/logs/
 ai-marketplace-monitor/cache.db*
 ai-marketplace-monitor.log*
 
+## secrets
+**/.env
+!**/.env.example
+!**/.env.op
+
 ## claude-code
 /.claude/*
 !/.claude/skills/

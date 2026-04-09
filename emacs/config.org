@@ -9598,8 +9598,7 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
   (before-save-hook . org-extras-id-auto-add-ids-to-headings-in-file)
 
   :bind
-  (("H-l" . org-extras-tlon-menu)
-   ("H-;" . org-extras-personal-menu)
+  (("H-;" . org-extras-personal-menu)
    ("A-H-w" . org-extras-refile-goto-latest)
    :map org-mode-map
    ("s-<return>" . org-extras-super-return)
@@ -14419,7 +14418,9 @@ result to a user-specified file."
 (use-package epoch
   :ensure (:host github
                  :repo "benthamite/epoch.el")
-  :demand t)
+  :demand t
+  :bind
+  (("H-l" . epoch-menu)))
 #+end_src
 
 ** =calc=

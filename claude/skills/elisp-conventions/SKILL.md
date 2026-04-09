@@ -14,21 +14,30 @@ user-invocable: false
 - Do not end error messages with a period.
 - Only add comments if truly necessary to understand the code. Avoid commenting every detail.
 
-# Rebuilding elpaca packages after changes
+# Two-phase reload lifecycle
 
-A PostToolUse hook (`load-elisp-after-edit.sh`) automatically rebuilds and reloads the elpaca package whenever you edit a `.el` file under `elpaca/sources/` or `dotfiles/emacs/extras/`. It runs:
+Elisp changes propagate to the running Emacs in two phases. Understanding both is critical to avoid testing stale code.
 
-```elisp
-(elpaca-rebuild PKG t)
-(elpaca-wait)
-(elpaca-extras-reload PKG)
-```
+## Phase 1: PostToolUse hook (pre-commit, potentially stale)
 
-This is synchronous — it byte-compiles the source into `elpaca/builds/`, waits for completion, then reloads all features via `load`. The running Emacs always has the latest byte-compiled code, matching what the user gets after a restart.
+A PostToolUse hook (`load-elisp-after-edit.sh`) fires on edits to `.el` files under `elpaca/sources/` or `dotfiles/emacs/extras/`. It triggers `elpaca-rebuild` + `elpaca-extras-reload`. However, **`elpaca-rebuild` compiles from the elpaca source clone** (`elpaca/sources/dotfiles/`), which is a separate git checkout from the canonical `~/My Drive/dotfiles/`. Pre-commit, the elpaca clone has the old code, so this rebuild may load stale definitions. This is expected and harmless.
 
-**You must never use `load-file`, `eval-buffer`, `eval-defun`, or manual byte-compile commands to reload Elisp.** The hook handles it. If you find yourself reaching for these, something is wrong.
+## Phase 2: git post-commit hook (authoritative)
 
-After the hook runs, **verify the change works** via a small targeted `emacsclient -e` expression before asking the user to test. Simulate the actual user action and check edge cases (e.g., cursor on different buffer positions).
+A git `post-commit` hook (`sync-elpaca-clone.sh`) runs after every commit. It fetches from the local gitdir into the elpaca source clone, resets it to FETCH_HEAD, then runs `elpaca-rebuild` + `elpaca-extras-reload` for each changed package. **Only after committing does the running Emacs have the latest code.**
+
+## Correct workflow
+
+1. Edit canonical files in `~/My Drive/dotfiles/emacs/extras/`
+2. Run `batch-test.sh` to verify compilation (this uses the canonical source, not the elpaca clone)
+3. Commit — the post-commit hook syncs the elpaca clone and reloads
+4. **Then** verify via `emacsclient -e` expressions
+
+**You must never use `load-file`, `eval-buffer`, `eval-defun`, or manual byte-compile commands to reload Elisp.** If you find yourself reaching for these, the correct action is to commit so the post-commit hook propagates the changes.
+
+A PreToolUse hook (`block-elpaca-rebuild-uncommitted.sh`) blocks manual `elpaca-rebuild` calls when there are uncommitted `.el` changes, to prevent accidentally testing stale code.
+
+See `emacs/extras/doc/elisp-development-workflow.org` for the full design rationale.
 
 # Batch testing before commit (CRITICAL)
 

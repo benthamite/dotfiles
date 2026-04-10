@@ -29,7 +29,7 @@ Three layers of directories work together: this dotfiles directory (source of tr
 ├── CLAUDE.md                         ← global conventions for all projects
 ├── settings.json                     ← hooks, model, permissions, theme
 ├── settings.local.json               ← machine-specific permissions (mpv, brew, pip3…)
-├── hooks/                            ← 18 hook scripts
+├── hooks/                            ← 21 hook scripts
 ├── skills/                           ← 48 skill directories
 ├── bin/batch-test.sh                 ← elpaca-aware emacs --batch test runner
 ├── bin/sync-mcp-servers.sh           ← MCP server sync utility
@@ -689,13 +689,17 @@ Invoked via =elpaca-run.sh= on Notification and Stop events. Delegates to the =c
 
 Blocks edits to =.texi= files, which are auto-generated from =.org= sources via =ox-texinfo=. Directs the agent to edit the corresponding =.org= file instead and regenerate.
 
+** block-sensitive-read.sh (PreToolUse)
+
+Guards the =Read= tool against accidental ingestion of sensitive files into the context window. Fires on =Read= and checks the target =file_path= against known sensitive locations: =~/.password-store/=, =.zshenv-secrets=, =~/.ssh/id_*= (private keys), =~/.gnupg/=, =tokens.json= inside =~/.config/=, =~/.gmail-mcp-epoch/credentials/=, and =secret.json= / =client_secret*.json= inside =~/.config/=. Uses =permissionDecision: "ask"= to escalate to the user rather than hard-denying.
+
 ** block-secret-leak.sh (PreToolUse)
 
-Compensating control for =bypassPermissions= mode. Fires on =Bash|Write= and pattern-matches the tool input for common secret formats: AWS access keys, GitHub tokens, Slack tokens, =sk-= API keys, private key headers, Google OAuth client secrets, and generic high-entropy values assigned to known secret variable names. Blocks the operation with a specific message identifying the secret type. Allowlists legitimate secret-handling commands (=pass=, =op=, =security=, =git-crypt=), pattern-scanning tools (=grep=, =rg=), environment variable references (=$VAR=), and writes to known secret files (=.zshenv-secrets=, =.env.op=). Complements the =/security-audit= skill, which audits the broader security posture on demand rather than blocking in real time.
+Compensating control for =bypassPermissions= mode. Fires on =Bash|Write= and pattern-matches the tool input for common secret formats: AWS access keys, GitHub tokens, Slack tokens, =sk-= API keys, private key headers, Google OAuth client secrets, and generic high-entropy values assigned to known secret variable names. Blocks the operation with a specific message identifying the secret type. Allowlists legitimate secret-handling commands (=pass=, =op=, =security=, =git-crypt=), pattern-scanning tools (=grep=, =rg=), environment variable references (=$VAR=), and writes to known secret files (=.zshenv-secrets=, =.env.op=). Also detects exfiltration patterns: sensitive files (SSH keys, GPG keys, password store, =tokens.json=, =.zshenv-secrets=) piped to network tools (=curl=, =wget=, =nc=, =ncat=), =curl --data @= uploads of sensitive files, and network commands containing inline high-entropy strings (>30 chars with mixed character classes including digits). Complements the =/security-audit= skill, which audits the broader security posture on demand rather than blocking in real time.
 
 ** block-destructive-command.sh (PreToolUse)
 
-Blocks destructive shell commands that are hard to reverse. Catches =rm -rf= (suggests =trash=), =git push --force=, =git reset --hard=, =git clean -f=, =git checkout -- .=, and =git branch -D=. Each blocked pattern includes a specific remediation suggestion. Users can run blocked commands manually via =!=.
+Blocks or gates destructive shell commands that are hard to reverse. Hard-blocks (deny): =rm -rf= (suggests =trash=), =git push --force=, =git reset --hard=, =git clean -f=, =git checkout -- .=, and =git branch -D=. Prompts for confirmation (ask): =git push= (all pushes), =git clone= / =gh repo clone=. Each pattern includes a specific remediation suggestion. Users can run blocked commands manually via =!=.
 
 ** guard-external-actions.sh (PreToolUse)
 

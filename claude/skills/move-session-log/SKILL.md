@@ -40,4 +40,52 @@ If no argument is provided, list all `.jsonl` files across `~/.claude/projects/`
    mv "<source>/<session-id>" "$current_dir/" 2>/dev/null  # directory may not exist
    ```
 
-4. **Confirm.** Report what was moved and from where (show the source project path for clarity).
+4. **Rewrite history.jsonl.** Update the `project` field in `~/.claude/history.jsonl` for all entries matching this session ID to point to `$CLAUDE_PROJECT_DIR`:
+
+   ```python
+   import json
+
+   history = os.path.expanduser("~/.claude/history.jsonl")
+   new_project = os.environ["CLAUDE_PROJECT_DIR"]
+
+   lines = []
+   with open(history) as f:
+       for line in f:
+           entry = json.loads(line)
+           if entry.get("sessionId") == session_id:
+               entry["project"] = new_project
+           lines.append(json.dumps(entry, ensure_ascii=False))
+
+   with open(history, "w") as f:
+       f.write("\n".join(lines) + "\n")
+   ```
+
+5. **Rewrite cwd in the session .jsonl.** Update all `cwd` fields in the moved session file to point to `$CLAUDE_PROJECT_DIR`:
+
+   ```python
+   import json
+
+   session_file = os.path.join(current_dir, f"{session_id}.jsonl")
+   new_cwd = os.environ["CLAUDE_PROJECT_DIR"]
+
+   lines = []
+   with open(session_file) as f:
+       for line in f:
+           line = line.rstrip("\n")
+           if not line.strip():
+               lines.append(line)
+               continue
+           try:
+               entry = json.loads(line)
+           except json.JSONDecodeError:
+               lines.append(line)
+               continue
+           if "cwd" in entry:
+               entry["cwd"] = new_cwd
+           lines.append(json.dumps(entry, ensure_ascii=False))
+
+   with open(session_file, "w") as f:
+       f.write("\n".join(lines) + "\n")
+   ```
+
+6. **Confirm.** Report what was moved and from where (show the source project path for clarity), and note that `history.jsonl` and session `cwd` fields were updated.

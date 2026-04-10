@@ -405,7 +405,7 @@ Opens the current Claude Code session's conversation log in Emacs using the =age
 
 *** move-session-log
 
-Moves a Claude Code internal session log (=.jsonl= and associated directory) from another project's =~/.claude/projects/= directory to the current project's. Useful when a session was started in the wrong project context. Accepts a session ID as argument; if none given, lists the 10 most recent sessions from other projects and asks the user to pick one.
+Moves a Claude Code internal session log (=.jsonl= and associated directory) from another project's =~/.claude/projects/= directory to the current project's. Also rewrites the =project= field in =history.jsonl= and =cwd= fields in the session =.jsonl= so that =agent-log-resume-session= opens the session in the correct directory. Useful when a session was started in the wrong project context. Accepts a session ID as argument; if none given, lists the 10 most recent sessions from other projects and asks the user to pick one.
 
 *** meeting-prep
 

@@ -29,6 +29,19 @@ deny() {
   exit 0
 }
 
+ask() {
+  local label="$1"
+  local suggestion="$2"
+  jq -n --arg label "$label" --arg suggestion "$suggestion" '{
+    "hookSpecificOutput": {
+      "hookEventName": "PreToolUse",
+      "permissionDecision": "ask",
+      "permissionDecisionReason": ($label + ". " + $suggestion)
+    }
+  }'
+  exit 0
+}
+
 # --- rm -rf / rm -r (should use trash) ---
 if echo "$CMD" | grep -qE '\brm\s+(-[a-zA-Z]*r[a-zA-Z]*f|(-[a-zA-Z]*f[a-zA-Z]*r)|-rf|-fr)\b'; then
   deny "rm -rf detected" "Use 'trash' instead of 'rm -rf' to allow recovery."
@@ -37,6 +50,16 @@ fi
 # --- git push --force / -f (dangerous to shared branches) ---
 if echo "$CMD" | grep -qE '\bgit\s+push\s+.*(-f|--force|--force-with-lease)\b'; then
   deny "git push --force detected" "Force-pushing can overwrite upstream history. Confirm with the user first."
+fi
+
+# --- git push (all pushes need user approval) ---
+if echo "$CMD" | grep -qE '\bgit\s+push\b'; then
+  ask "git push detected" "Pushes are visible to others. Confirm with the user first."
+fi
+
+# --- git clone (prevent cloning without approval) ---
+if echo "$CMD" | grep -qE '\b(git\s+clone|gh\s+repo\s+clone)\b'; then
+  ask "git clone detected" "Only clone repositories the user has explicitly requested."
 fi
 
 # --- git reset --hard ---

@@ -537,6 +537,10 @@ Pulls all unread Slack messages via the =slack-epochai= MCP server, triages them
 
 Imports CSV bank statements from Wise and Mercado Pago, categorizes transactions against a guide built from ~7,500 historical ledger entries, and generates ledger-cli entries via a staging workflow. Three modes: =import= (default) parses CSVs, categorizes, writes a staging file for review, merges approved entries into =journal.ledger=, reconciles, and commits; =reconcile= compares existing journal entries against statements and marks matched entries as cleared; =update-guide= scans recent journal entries for new payee-to-category mappings. The categorization guide (=categorization-guide.md=) classifies payees into deterministic (auto-categorize), high-confidence (use default unless description suggests otherwise), and ambiguous (always ask). Cash transactions must be entered manually. Statement CSVs go in =~/My Drive/ledger/statements/{wise,mercadopago}/=.
 
+*** afip-invoice
+
+Issues a monthly Factura C via ARCA's RCEL (Comprobantes en Línea) system for Monotributo billing. Walks through the full AFIP login, form navigation, and five-step invoice creation flow using browser automation. Includes mandatory verification of all fields against expected values before confirmation. Invoice parameters (CUITs, names, addresses, amounts) are stored in =~/.config/afip/invoice-defaults.json= to keep PII out of the tracked skill file.
+
 ** Security skills
 :PROPERTIES:
 :ID:       503D6D12-1566-44FB-8BFA-408034BBB7D2

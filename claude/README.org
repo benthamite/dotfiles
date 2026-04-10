@@ -28,7 +28,7 @@ Three layers of directories work together: this dotfiles directory (source of tr
 ~/My Drive/dotfiles/claude/           ← global config source of truth
 ├── CLAUDE.md                         ← global conventions for all projects
 ├── settings.json                     ← hooks, model, permissions, theme
-├── settings.local.json               ← machine-specific permissions (mpv, brew, osascript…)
+├── settings.local.json               ← machine-specific permissions (mpv, brew, pip3…)
 ├── hooks/                            ← 18 hook scripts
 ├── skills/                           ← 48 skill directories
 ├── bin/batch-test.sh                 ← elpaca-aware emacs --batch test runner
@@ -108,7 +108,7 @@ Each file should contain distinct content. The global one defines behavioral con
 | New skill (project-specific) | =<project>/.claude/skills/<name>/SKILL.md= | Scoped to that project |
 | New global hook | =claude/settings.json= (hooks section) | Fires in all projects; write early-exit guards for inapplicable contexts |
 | New project-specific hook | =<project>/.claude/settings.json= (hooks section) | Fires only in that project |
-| New machine-specific permission | =claude/settings.local.json= | E.g. brew, osascript |
+| New machine-specific permission | =claude/settings.local.json= | E.g. brew, mpv, pip3 |
 | New MCP server | =~/.claude.json=, then run =claude/bin/sync-mcp-servers.sh= | Syncs to account dirs |
 
 ** Multi-account setup

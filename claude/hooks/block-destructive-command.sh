@@ -82,4 +82,9 @@ if echo "$CMD" | grep -qE '\bgit\s+branch\s+-D\b'; then
   deny "git branch -D detected" "Force-deleting a branch can lose unmerged work. Use -d for safe delete."
 fi
 
+# --- GitHub repo visibility change (destroys stars and watchers) ---
+if echo "$CMD" | grep -qE '\bgh\s+api\s+.*repos/.*visibility|gh\s+repo\s+edit\s+.*--visibility'; then
+  deny "GitHub repo visibility change detected" "Toggling a repo private permanently destroys all stars and watchers. NEVER do this."
+fi
+
 exit 0

@@ -7,7 +7,6 @@
       "Bash(brew install:*)",
       "Bash(SwitchAudioSource -a)",
       "Bash(SwitchAudioSource -s \"MacBook Pro Speakers\")",
-      "Bash(osascript:*)",
       "Bash(pip3 install:*)",
       "Bash(nanodlna list:*)"
     ]

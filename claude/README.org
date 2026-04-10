@@ -567,7 +567,7 @@ Audits the development environment security posture across four domains, each ru
 :ID:       025A523A-F1AE-43F8-89DB-13FF2A5A98B1
 :END:
 
-Consolidates Claude Code project data (sessions, memory, trust entries) across elpaca profile changes. Scans =~/.claude/projects/= for all directories matching the elpaca pattern, groups them by package name (extracted by splitting on =-elpaca-repos-= or =-elpaca-sources-=), and merges all old-profile entries into the current profile's directory. Also migrates project authorization entries in =~/.claude.json= so Claude Code doesn't re-prompt trust dialogs. No explicit package list is needed. Non-destructive: never overwrites existing data.
+Consolidates Claude Code project data (sessions, memory, trust entries) across elpaca profile changes. Scans =~/.claude/projects/= for all directories matching the elpaca pattern, groups them by package name (extracted by splitting on =-elpaca-repos-= or =-elpaca-sources-=), and merges all old-profile entries into the current profile's directory. Also migrates project authorization entries in =~/.claude.json= so Claude Code doesn't re-prompt trust dialogs, and rewrites =project= paths in =history.jsonl= and =cwd= fields inside session =.jsonl= files so that =agent-log-resume-session= opens sessions in the current profile directory. Handles package renames by prompting when a package is not found under the new profile. No explicit package list is needed. Non-destructive: never overwrites existing data.
 
 *** automate
 :PROPERTIES:

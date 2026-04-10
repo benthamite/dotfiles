@@ -74,7 +74,7 @@ for pkg in "${!sources_map[@]}"; do
 done
 ```
 
-If the package does not exist under the new profile at all, skip it and note this in the summary.
+If the package does not exist under the new profile at all, **ask the user whether the package was renamed**. Packages are sometimes renamed across profiles (e.g., `claude-log` → `agent-log`, `infovore` → `elfeed-ai`). If the user confirms a rename, use the new name as the target package name for that migration (affecting the target directory, `history.jsonl` rewrite, and `cwd` rewrite). If no rename applies, skip the package and note this in the summary.
 
 ## Migration (non-destructive merge)
 
@@ -156,7 +156,64 @@ with open(os.path.expanduser("~/.claude.json"), "w") as f:
     json.dump(data, f, indent=2)
 ```
 
-### 5. Delete source directories
+### 5. Rewrite project paths in history.jsonl
+
+Session entries in `~/.claude/history.jsonl` record the original `project` path (e.g., `…/7.1.30-target/elpaca/repos/annas-archive`). After migration, these must point to the new profile path so that `agent-log-resume-session` opens sessions in the correct directory.
+
+For each migrated package, update every `history.jsonl` entry whose `project` matches any old-profile elpaca path for that package:
+
+```python
+import json, re
+
+history = os.path.expanduser("~/.claude/history.jsonl")
+# new_path: the actual filesystem path under the new profile, e.g.
+# /Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/annas-archive
+# pkg_name: the package name extracted during discovery
+
+pattern = re.compile(
+    r".*/emacs-profiles/[^/]+/elpaca/(repos|sources)/" + re.escape(pkg_name) + r"$"
+)
+
+lines = []
+with open(history) as f:
+    for line in f:
+        entry = json.loads(line)
+        if pattern.match(entry.get("project", "")) and entry["project"] != new_path:
+            entry["project"] = new_path
+        lines.append(json.dumps(entry, ensure_ascii=False))
+
+with open(history, "w") as f:
+    f.write("\n".join(lines) + "\n")
+```
+
+### 6. Rewrite cwd in session .jsonl files
+
+Each message inside a session `.jsonl` file records a `cwd` field with the original working directory. Update these in all session files that were copied to the target:
+
+```python
+import json, re, glob
+
+target_dir = os.path.join(CLAUDE_PROJECTS, targets[pkg_name])
+pattern = re.compile(
+    r".*/emacs-profiles/[^/]+/elpaca/(repos|sources)/" + re.escape(pkg_name) + r"$"
+)
+
+for jsonl in glob.glob(os.path.join(target_dir, "*.jsonl")):
+    lines = []
+    changed = False
+    with open(jsonl) as f:
+        for line in f:
+            entry = json.loads(line)
+            if pattern.match(entry.get("cwd", "")) and entry["cwd"] != new_path:
+                entry["cwd"] = new_path
+                changed = True
+            lines.append(json.dumps(entry, ensure_ascii=False))
+    if changed:
+        with open(jsonl, "w") as f:
+            f.write("\n".join(lines) + "\n")
+```
+
+### 7. Delete source directories
 
 After successfully copying all data from a source directory, delete it:
 
@@ -177,13 +234,14 @@ This ensures old profile directories don't accumulate and makes it clear which p
    - Sessions to copy (count)
    - Memory files to copy (count)
    - Trust entry in `~/.claude.json` (yes/no)
+   - history.jsonl entries to rewrite (count)
    - Status: "will migrate", "already migrated" (all files exist in target), "skipped" (no source or no target)
 
 2. **Ask for confirmation** before proceeding with the actual copy and deletion.
 
 3. **Execute the migration** (copy then delete sources) using the commands above.
 
-4. **Post-migration summary**: report how many sessions and memory files were copied for each package, how many source directories were deleted, how many trust entries were migrated in `~/.claude.json`, and any packages that were skipped.
+4. **Post-migration summary**: report how many sessions and memory files were copied for each package, how many source directories were deleted, how many trust entries were migrated in `~/.claude.json`, how many `history.jsonl` and session `.jsonl` path entries were rewritten, and any packages that were skipped.
 
 ## Important notes
 

@@ -699,7 +699,7 @@ Blocks destructive shell commands that are hard to reverse. Catches =rm -rf= (su
 
 ** guard-external-actions.sh (PreToolUse)
 
-Guards externally-visible MCP actions that are visible to others and hard to undo. Fires on all =mcp__= tools. Blocks: email sending/replying (Gmail), tweet creation (Twitter), and resource deletion (Google Drive, Calendar). Allows low-risk operations like marking Slack channels as read.
+Deny-by-default guard for all MCP tools. Fires on all =mcp__= tools. Read-only tools are explicitly allowlisted (pattern-matched on verb prefixes like =read_*=, =list_*=, =get_*=, =search_*=, plus specific tool names per server). Everything else exits 2 to require user confirmation. This ensures new MCP servers and tools are guarded automatically without needing to enumerate every dangerous action.
 
 ** require-elisp-skill.sh (PreToolUse)
 

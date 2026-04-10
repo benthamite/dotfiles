@@ -5,6 +5,7 @@
 - **@badlogicgames** (8, 2026-03-23) — Pi agent creator. Deep practitioner content on building coding agents, debugging APIs, refactoring agent architecture.
 - **@antirez** (8, 2026-04-06) — Redis creator. Autonomous Claude Code vs Codex sessions, SPEC.md project trick, TurboQuant analysis. ~55% AI tools content, extremely high quality when on-topic.
 - **@helloitsaustin** (8, 2026-04-06) — Anthropic growth marketer. Claude Cowork Google Ads plugin, 90% of work in Cowork, 4-dimension AI marketing framework. ~75% AI tools content.
+- **@allnoteson** (8, 2026-04-10) — Harness engineer @cloudflare, ex-co-founder @replicate. Exceptional tool builder: plwr (Playwright CLI), leta (LSP client), veta (knowledge base CLI), cctr (shell test runner). ~80% AI tools content.
 
 ## Tier 2 (6-7)
 
@@ -21,6 +22,8 @@
 - **@xeophon** (7, 2026-03-25) — Prime CLI developer. Made CLI LLM-friendly, security awareness (litellm), honest AI tooling takes. ~60% AI tools content.
 - **@micLivs** (7, 2026-04-06) — Tool builder: pi-psst, dripline, napkin. ~80% AI tools content. Small (1.2K) but very high signal.
 - **@nibzard** (7, 2026-04-06) — Integrator: Durable Researcher, Cohere MLX transcription, Claude Gmail automation. ~65% AI tools content.
+- **@KatanaLarp** (7, 2026-04-10) — Research-informed practitioner. Anti-pattern warnings (LLM benchmark self-cheating), CUPS research, prompting techniques. ~50% AI tools content.
+
 
 ## Tier 3 (4-5)
 
@@ -81,3 +84,7 @@
 - @chris__sev (6, 2026-04-08) — 32K. Practical Claude Code user: thinking+fastMode tip, honest Paperclip review, Dispatch permissions. ~50% AI tools content but thin original workflow content.
 - @vincent_koc (6, 2026-04-08) — 15K. Building LLM wiki for Obsidian with backfilling, OpenClaw personality features, SOUL.md approach. ~40% AI tools, rest is memes/community noise.
 - @om_patel5 (4, 2026-04-08) — 20K. ALL CAPS aggregator surfacing others' projects (voice mode hack, RPG agents, Claude drama). Not a practitioner sharing own workflows.
+
+- @realsigridjin (6, 2026-04-10) — UBC Agentic Club. Good MCP/evals takes but scattered among RTs and community noise. ~45% AI tools content.
+- @rekram11 (6, 2026-04-10) — OpenCode contributor. Practical insider tips but project-specific. ~55% AI tools content.
+- @amix3k (5, 2026-04-10) — Doist CEO (34K). Mostly product promotion and industry commentary. ~30% AI tools content.

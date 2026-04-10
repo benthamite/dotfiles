@@ -1,0 +1,125 @@
+#+title: Twitter digest: ai-tools — 2026-04-10
+
+* Notable
+
+** @xeophon (Fri Apr 10 10:45)
+Codex brought down CI run-time by 6x
+Likes: 25 | Views: 814 | Like rate: 3.1%
+[[https://x.com/xeophon/status/2042554671110201790][View on X]]
+
+** @kr0der (Fri Apr 10 00:04)
+GPT 5.4 in Codex really feels like you never need to worry about compaction — long running chats feel perfectly fine, they've worked some magic here
+Likes: 637 | Views: 21,099 | Like rate: 3.0%
+[[https://x.com/kr0der/status/2042393303237136804][View on X]]
+
+** @intellectronica (Thu Apr 09 21:20, RT self)
+Want reliable agents? Don't choose between context files and on-demand skills. Use a hybrid approach: put routing hints in context files, load full skill instructions on demand.
+Likes: 7 | Views: 333 | Like rate: 2.1%
+[[https://x.com/intellectronica/status/2042352078627258555][View on X]]
+
+** @forgebitz (Thu Apr 09 17:04)
+Been using Codex for the past couple of days instead of Opus — and it's a lot better, it feels smarter. Code quality can be a bit meh, but if you steer it + good linting with examples it's pretty solid.
+Likes: 76 | Views: 3,855 | Like rate: 2.0%
+[[https://x.com/forgebitz/status/2042287486911606861][View on X]]
+
+** @Saboo_Shubham_ (Thu Apr 09 17:05)
+Fine-tune and run Gemma 4 and 500+ open source AI models in a free Google Colab. Just choose an AI model and hit start training. No need to write a single line of code. 100% free and Open Source.
+Likes: 450 | Views: 28,261 | Like rate: 1.6%
+[[https://x.com/Saboo_Shubham_/status/2042287806131945718][View on X]]
+
+** @antirez (Fri Apr 10 10:32)
+Security in the AI era... GPT 5.4 xhigh work. Screenshot from the Redis core team chat. @valkey_io I guess we need to coordinate some release.
+Likes: 91 | Views: 5,908 | Like rate: 1.5%
+[[https://x.com/antirez/status/2042551265133998153][View on X]]
+
+** @championswimmer (Fri Apr 10 01:12)
+Parkinson's Law for the AI era: work also expands to fill the 'competency' available in the LLM used to do it. For many types of work, using a '2x smarter' agent doesn't get the work done '2x faster' or '2x better'.
+Likes: 16 | Views: 1,047 | Like rate: 1.5%
+[[https://x.com/championswimmer/status/2042410455499481261][View on X]]
+
+** @kmdrfx (Thu Apr 09 20:30)
+Playing with some post-processing effects in an OpenCode plugin. (Video demo with audio)
+Likes: 756 | Views: 49,661 | Like rate: 1.5%
+[[https://x.com/kmdrfx/status/2042339308003012861][View on X]]
+
+** @amirmxt (Thu Apr 09 20:26)
+We went from webflow → framer → custom code with the agent as our CMS for Humblytics. Built site using Claude Code + @paper + tailark + custom design skills. I enjoy spending this much time on the small details instead of fiddling with UI toggles.
+Likes: 53 | Views: 3,522 | Like rate: 1.5%
+[[https://x.com/amirmxt/status/2042338468869689350][View on X]]
+
+** @Saboo_Shubham_ (Fri Apr 10 02:27)
+Someone just dropped an open source alternative to Claude Managed Agents. Install the CLI, create an agent, assign a task. It automatically shows up on the board like any other team member. Works with Claude Code, Codex, OpenClaw and OpenCode.
+Likes: 175 | Views: 11,842 | Like rate: 1.5%
+[[https://x.com/Saboo_Shubham_/status/2042429119254958102][View on X]]
+
+** @Dimillian (Thu Apr 09 15:56)
+The built iOS/macOS Codex plugins are great because they bundle skills that allow Codex to easily refactor bad and bloated SwiftUI code to properly separated views, services, and models layers.
+Likes: 79 | Views: 5,444 | Like rate: 1.5%
+[[https://x.com/Dimillian/status/2042270431135301948][View on X]]
+
+** @antirez (Fri Apr 10 08:13, RT @allnoteson)
+This has been my workflow too: Get Claude to write me a little CLI tool in Rust, then write a skill for it. Open source, readable by humans, composable, e2e-testable, etc.
+Likes: 113 | Views: 8,659 | Like rate: 1.3%
+[[https://x.com/allnoteson/status/2042516150559326414][View on X]]
+
+** @trq212 (Thu Apr 09 20:13)
+You'll need to explicitly prompt Claude Code to use it, but the Monitor Tool is super powerful — e.g. "start my dev server and use the MonitorTool to observe for errors"
+Likes: 2,320 | Views: 228,358 | Like rate: 1.0%
+[[https://x.com/trq212/status/2042335178388103559][View on X]]
+
+** @antirez (Fri Apr 10 08:04)
+About (not using) MCP (blog post link)
+Likes: 130 | Views: 15,412 | Like rate: 0.8%
+[[https://x.com/antirez/status/2042514016291996150][View on X]]
+
+** @bcherny (Thu Apr 09 21:23)
+Here's how we made @-mentions 3x faster in large enterprise codebases — thread on optimization work for Claude Code in one of the world's biggest codebases.
+Likes: 1,764 | Views: 252,194 | Like rate: 0.7%
+[[https://x.com/bcherny/status/2042352720489955539][View on X]]
+
+* Vetted accounts
+
+** @allnoteson — 8/10, added to list
+Harness engineer @cloudflare, ex-co-founder @replicate, ML @spotify. 1.4K followers. Exceptional tool builder: plwr (Playwright CLI for agents), leta (LSP client for agents), veta (knowledge base CLI), cctr (shell test runner). Almost every tweet is about building practical CLI tools for AI agents in Rust. ~80% on-topic.
+
+** @KatanaLarp — 7/10, added to list
+2.8K followers. Research-informed practitioner perspective on AI coding. Anti-pattern warnings (LLM benchmark self-cheating), CUPS research on "Deferring Thought About A Suggestion", practical prompting techniques (self-priming, "keep it simple" comparison). ~50% on-topic.
+
+** @realsigridjin — 6/10, borderline
+12K followers. UBC Agentic Club founder. Good takes on MCP being overkill and evals-as-training-data, but scattered among community engagement RTs, memes, and personal content. ~45% on-topic.
+
+** @rekram11 — 6/10, borderline
+2.9K followers. OpenCode contributor. Practical insider tips (fast model modes, AI SDK migration, code review signals) but very project-specific. ~55% on-topic.
+
+** @amix3k — 5/10, skip
+34K followers. Doist CEO. Mostly product promotion and industry commentary. One good Claude Code codebase analysis tweet but ~30% on-topic overall.
+
+** Discovered account tweets
+
+*** @realsigridjin (Fri Apr 10 12:08)
+Hot take: MCP is overkill for most LLM tasks. If you wouldn't query a massive JSON service endpoint to check AWS prices, why make the AI do it. Give it a simple .md file — skills alone aren't enough, make LLM build a tool for the task, give it a text file saying how to use it.
+Likes: 5 | Views: 295 | Like rate: 1.7%
+[[https://x.com/realsigridjin/status/2042575548241842356][View on X]]
+
+*** @allnoteson (Fri Apr 10 08:12)
+This has been my workflow too: Get Claude to write me a little CLI tool in Rust, then write a skill for it. Open source, readable by humans, composable, e2e-testable, etc.
+Likes: 113 | Views: 8,659 | Like rate: 1.3%
+[[https://x.com/allnoteson/status/2042516150559326414][View on X]]
+
+*** @rekram11 (Fri Apr 10 02:37)
+You can use the fast versions of GPT and Opus models that support it in OpenCode now — recommend you only try Opus if you're rich though.
+Likes: 114 | Views: 10,553 | Like rate: 1.1%
+[[https://x.com/rekram11/status/2042431633865744486][View on X]]
+
+*** @amix3k (Fri Apr 10 08:56)
+I browsed the leaked Claude Code codebase to see what makes it a great coding agent. The biggest takeaway is that it acts as an operating system — what makes it good is the runtime system around the model, not just the prompts or the model itself.
+Likes: 35 | Views: 3,377 | Like rate: 1.0%
+[[https://x.com/amix3k/status/2042527211320729859][View on X]]
+
+*** @realsigridjin (Fri Apr 10 03:11)
+Evals are the new training data. Instead of updating weights, you're updating the agent harness. Problem is agents are famous cheaters — they will reward-hack your evals. Solution: treat evals like real ML, you need strict train/test splits.
+Likes: 47 | Views: 5,897 | Like rate: 0.8%
+[[https://x.com/realsigridjin/status/2042440330503733343][View on X]]
+
+* Accounts with nothing notable
+@_catwu, @0xSero, @altryne, @alvinsng, @badlogicgames, @boringmarketer, @chasing_next, @dexhorthy, @itsolelehmann, @ivanfioravanti, @jtdavies, @maddiedreese, @micLivs, @nibzard, @NickADobos, @petergyang, @Prince_Canuma, @RayFernando1337, @ryanvogel, @steipete, @thdxr

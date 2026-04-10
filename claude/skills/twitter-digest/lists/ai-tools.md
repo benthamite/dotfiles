@@ -53,3 +53,5 @@ description: Practical AI tool workflows, tips, and tutorials from practitioners
 - @helloitsaustin
 - @micLivs
 - @nibzard
+- @allnoteson
+- @KatanaLarp

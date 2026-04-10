@@ -413,7 +413,7 @@ Generates a pre-meeting org file for the biweekly 1:1 with María. Gathers progr
 
 *** meeting-debrief
 
-Processes a Gemini meeting summary (from the transcript of a Google Meet call) and extracts action items, discussion notes, and decisions into an org-mode meeting file. Two modes: general (single-project, inferred from =CWD= or attendees) and María (biweekly 1:1, may cover multiple projects). Updates project org files and the master project list with meeting outcomes. Accepts an optional Google Doc URL; otherwise searches recent Gemini-generated docs.
+Processes a Gemini meeting summary (from the transcript of a Google Meet call) and extracts action items, discussion notes, and decisions into an org-mode meeting file. Two modes: general (single-project, inferred from =CWD= or attendees) and María (biweekly 1:1, may cover multiple projects). Updates project org files and the master project list with meeting outcomes. Accepts an optional Google Doc URL; otherwise searches recent Gemini-generated docs. Google Workspace API calls (email archiving, doc sharing, Drive shortcuts) are handled by a standalone =google-workspace-api.py= script that reads credentials from env vars at runtime, keeping secrets out of the prompt context.
 
 *** new-project
 :PROPERTIES:

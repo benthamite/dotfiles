@@ -196,20 +196,15 @@ If the file already exists (e.g., from a previous run or manual prep), update th
 
 ## Step 7: Archive the Gemini notification email
 
-After extracting all information, archive the Gemini notification email (from Step 1) to keep the inbox clean. Use the Gmail API via `curl` with the email ID recorded in Step 1:
+After extracting all information, archive the Gemini notification email (from Step 1) to keep the inbox clean:
 
 ```bash
-TOKEN=$(gcloud auth print-access-token --account=pablo@epoch.ai) && \
-curl -s -X POST \
-  "https://gmail.googleapis.com/gmail/v1/users/me/messages/<EMAIL_ID>/modify" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"removeLabelIds": ["INBOX"]}'
+python3 ~/My\ Drive/dotfiles/claude/skills/meeting-debrief/google-workspace-api.py archive-email <EMAIL_ID>
 ```
 
 Replace `<EMAIL_ID>` with the Gemini email ID from Step 1.
 
-If the gcloud token is expired, ask the user to run `! gcloud auth login --account=pablo@epoch.ai` and retry.
+Note: this uses the same OAuth credentials as the `google-workspace-epoch` MCP server (`GOOGLE_WORKSPACE_*` env vars). The server doesn't expose a modify-labels tool, but the refresh token has `gmail.modify` scope. Do NOT use the `gmail-epoch-triage` server (that's for the `email-triage@epoch.ai` bot account).
 
 ## Step 8: Drive shortcut (María mode only)
 
@@ -223,61 +218,18 @@ Create a shortcut to the Gemini Google Doc so it appears locally at:
 
 The Gemini doc is owned by the Epoch account (`pablo@epoch.ai`), but the local "My Drive" mount is the personal account (`pablo.stafforini@gmail.com`). The doc won't appear on the local filesystem unless the personal account can access it.
 
-### Step 7a: Share the doc with the personal account
-
-Use `gcloud` (authenticated as `pablo@epoch.ai`) to grant read access:
+### Step 8a: Share the doc with the personal account
 
 ```bash
-TOKEN=$(gcloud auth print-access-token --account=pablo@epoch.ai) && \
-curl -s -X POST \
-  "https://www.googleapis.com/drive/v3/files/<DOC_ID>/permissions" \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"role":"reader","type":"user","emailAddress":"pablo.stafforini@gmail.com"}'
+python3 ~/My\ Drive/dotfiles/claude/skills/meeting-debrief/google-workspace-api.py share-doc <DOC_ID> pablo.stafforini@gmail.com
 ```
 
-If the gcloud token is expired (error about refreshing credentials), ask the user to run `! gcloud auth login --account=pablo@epoch.ai --enable-gdrive-access` and retry.
+Replace `<DOC_ID>` with the Google Doc ID from Step 3.
 
-### Step 7b: Create a shortcut in the personal Drive
+### Step 8b: Create a shortcut in the personal Drive
 
-Use gdrive's stored refresh token to get an access token for the personal account, then create a shortcut via the Drive API:
-
-```python
-import json, urllib.request, urllib.parse
-
-# Load gdrive credentials
-with open('<HOME>/.config/gdrive3/pablo.stafforini@gmail.com/tokens.json') as f:
-    tokens = json.load(f)
-with open('<HOME>/.config/gdrive3/pablo.stafforini@gmail.com/secret.json') as f:
-    secret = json.load(f)
-
-token_data = tokens[0]['token']
-
-# Refresh the access token
-data = urllib.parse.urlencode({
-    'client_id': secret['client_id'],
-    'client_secret': secret['client_secret'],
-    'refresh_token': token_data['refresh_token'],
-    'grant_type': 'refresh_token'
-}).encode()
-req = urllib.request.Request('https://oauth2.googleapis.com/token', data=data)
-resp = urllib.request.urlopen(req)
-access_token = json.loads(resp.read())['access_token']
-
-# Create the shortcut
-shortcut_metadata = {
-    'name': 'YYYY-MM-DD',
-    'mimeType': 'application/vnd.google-apps.shortcut',
-    'shortcutDetails': {'targetId': '<DOC_ID>'},
-    'parents': ['1ifujqJKGgn7x2zIiSIMLgAl7Idgp0CX4']
-}
-req2 = urllib.request.Request(
-    'https://www.googleapis.com/drive/v3/files',
-    data=json.dumps(shortcut_metadata).encode(),
-    headers={'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'}
-)
-resp2 = urllib.request.urlopen(req2)
-print(json.loads(resp2.read()))
+```bash
+python3 ~/My\ Drive/dotfiles/claude/skills/meeting-debrief/google-workspace-api.py create-shortcut <DOC_ID> YYYY-MM-DD 1ifujqJKGgn7x2zIiSIMLgAl7Idgp0CX4
 ```
 
 Replace `<DOC_ID>` with the Google Doc ID from Step 3 and `YYYY-MM-DD` with the meeting date.

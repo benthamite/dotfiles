@@ -43,5 +43,8 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/My Drive/repos/stafforini.com"]
 trust_level = "trusted"
 
+[projects."/Users/pablostafforini/My Drive/dotfiles/claude"]
+trust_level = "trusted"
+
 [tui]
-theme = "dark"
+theme = "light"

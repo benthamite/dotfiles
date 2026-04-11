@@ -186,15 +186,16 @@ Each Claude Code account stores its own =chromeExtension.pairedDeviceId= and =pa
 - *Permission mode*: =bypassPermissions= — all tools run without approval prompts. The allow list is omitted since bypass mode skips all permission checks.
 - *Agent teams*: enabled.
 - *Effort level*: high.
-- *Theme*: light.
 - *Bypass prompt*: suppressed (=skipDangerousModePermissionPrompt=).
+
+*Symlink breakage risk:* =~/.claude/settings.json= is a symlink to =dotfiles/claude/settings.json=. Claude Code (Node.js) may use atomic writes (temp file + rename) when updating settings, which replaces the symlink with a regular file. If =~/.claude/settings.json= stops being a symlink, the tracked source and the deployed file will silently diverge. To detect this, check =ls -la ~/.claude/settings.json= — it should show =->= pointing to the dotfiles path. To fix: =trash ~/.claude/settings.json && ln -s "/Users/pablostafforini/My Drive/dotfiles/claude/settings.json" ~/.claude/settings.json=.
 
 ** settings.local.json
 :PROPERTIES:
 :ID:       709B6F3F-F5B6-44F1-AA4E-1D2BE510FC1E
 :END:
 
-Machine-specific tool whitelists, such as Homebrew, MPV, AppleScript, and various MCP tools.
+Machine-specific tool whitelists and the =theme= key (synced from Emacs by =claude-code-extras--sync-theme-to-settings=). This file lives at =~/.claude/settings.local.json= as a regular file (not symlinked) so that frequent theme changes do not dirty the git-tracked =settings.json= symlink.
 
 ** CLAUDE.md
 :PROPERTIES:

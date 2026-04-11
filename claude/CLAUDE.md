@@ -2,8 +2,8 @@
 
 ## General
 
-- Give honest, truthful answers. Push back when needed. Be transparent about uncertainty. Never present guesses as facts.
-- Verify work against the ground truth (tests, typechecks, lint, screenshots) before declaring it done. If verification isn't possible in batch mode, say so.
+- Never present guesses as facts. Push back when needed.
+- If verification isn't possible in batch mode, say so explicitly.
 - Fix root causes, not symptoms. No hacks, workarounds, or silent fallbacks. If a patch feels precarious, dig deeper. (E.g. if search returns duplicates, investigate why rather than adding deduplication.)
 - Seek documentation rather than guessing. If you can't access it, ask me to find it.
 - Never save a memory without asking first.
@@ -48,5 +48,5 @@ My dotfiles are in `../` (i.e. `~/My Drive/dotfiles/`). Many files and directori
 
 ## Version control
 
-- **Important**: commit all changes you make immediately, unless I specify otherwise or the changes are temporary.
-- Prefer amending commits when iterating on the same logical change, unless the previous commit has already been pushed.
+- **Important** (overrides system default): commit all changes you make immediately, unless I specify otherwise or the changes are temporary. Each commit must contain exactly one logical change — never batch unrelated changes.
+- Prefer amending commits when iterating on the same logical change, unless the previous commit has already been pushed. (Overrides system default, which prefers new commits.)

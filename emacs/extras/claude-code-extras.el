@@ -2528,10 +2528,12 @@ persist via `customize-save-variable'."
   (if (eq (frame-parameter nil 'background-mode) 'dark) "dark" "light"))
 
 (defun claude-code-extras--sync-theme-to-settings ()
-  "Update the `theme' key in `~/.claude/settings.json' to match Emacs.
-Only writes the file when the theme value actually changes."
+  "Update the `theme' key in `~/.claude/settings.local.json'.
+Only writes the file when the theme value actually changes.
+Uses `settings.local.json' rather than `settings.json' so that
+theme changes do not dirty the git-tracked symlink."
   (let* ((theme (claude-code-extras--emacs-theme))
-         (settings-file (expand-file-name "~/.claude/settings.json"))
+         (settings-file (expand-file-name "~/.claude/settings.local.json"))
          (settings (condition-case nil
                        (json-parse-string
                         (with-temp-buffer
@@ -2618,7 +2620,7 @@ hooks return immediately and cannot be blocked by reentrant timer activity."
 
 (defun claude-code-extras-sync-theme (&rest _)
   "Sync Claude Code theme with the current Emacs background mode.
-Updates `~/.claude/settings.json' for new sessions and sends
+Updates `~/.claude/settings.local.json' for new sessions and sends
 `/theme' to idle sessions immediately.  For busy sessions (where
 Claude is still generating), the theme is queued and applied
 automatically when Claude finishes its turn.

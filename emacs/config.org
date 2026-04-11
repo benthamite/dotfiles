@@ -7359,6 +7359,23 @@ To populate the database of historical prices:
   :config
   (run-with-idle-timer (* 60 60) t #'tlon-pull-issues-in-all-repos)
 
+  (with-eval-after-load 'tlon-db
+    (defun tlon-db-extras--suppress-debugger (orig-fun &rest args)
+      "Call ORIG-FUN with ARGS with `debug-on-error' bound to nil.
+When `tlon-db-get-entries-no-confirm' runs from its idle timer,
+`url-retrieve-synchronously' calls `accept-process-output', which
+can fire sentinels for unrelated connections (e.g. ghub/Forge).
+If those sentinels signal an error while `debug-on-error' is t,
+the debugger's `recursive-edit' freezes Emacs inside the timer."
+      (let ((debug-on-error nil))
+        (condition-case err
+            (apply orig-fun args)
+          (error
+           (message "tlon-db: periodic refresh failed: %s"
+                    (error-message-string err))))))
+    (advice-add 'tlon-db-get-entries-no-confirm :around
+                #'tlon-db-extras--suppress-debugger))
+
   :hook
   (init-post-init-hook . tlon-initialize)
 

@@ -22,7 +22,7 @@
 ## Secrets
 
 - When reading secrets from `pass` or `.zshenv-secrets`, never echo or print them in the terminal or logs.
-- **Personal secrets** (non-Epoch): stored in `pass` (GPG-encrypted). The **Epoch** secrets setup is described in `/Users/pablostafforini/My Drive/Epoch/CLAUDE.md`.
+- **Personal secrets** (non-Epoch): stored in `pass` (GPG-encrypted). The **Epoch** secrets setup is described in `../../Epoch/CLAUDE.md`.
 - **Account-specific MCP secrets** (e.g. different API keys per Claude Code account): use the `claude-code-extras-account-env-vars` mechanism. Export suffixed vars in `.zshenv-secrets` (e.g. `TWITTERAPI_API_KEY_TLON`, `TWITTERAPI_API_KEY_EPOCH`) and map them in `config.org`.
 
 ## Agents
@@ -32,19 +32,19 @@
 
 ## MCP servers
 
-- Google MCP setup (two accounts, multiple servers, troubleshooting): see `~/My Drive/dotfiles/claude/google-mcp-setup.md`
-- Chrome integration and multi-account: see `~/My Drive/dotfiles/claude/README.org` → "Chrome integration and multi-account".
+- Google MCP setup (two accounts, multiple servers, troubleshooting): see `google-mcp-setup.md`
+- Chrome integration and multi-account: see `README.org` → "Chrome integration and multi-account".
 - MCP server definitions go in `~/.claude.json`, NOT `~/.claude/settings.json`.
 
 ## Filesystem organization
 
 ### Dotfiles
 
-My dotfiles are in `~/My Drive/dotfiles/`. Many files and directories in `~` are symlinked to this location.
+My dotfiles are in `../` (i.e. `~/My Drive/dotfiles/`). Many files and directories in `~` are symlinked to this location.
 
 ### Projects
 
-- My projects are stored in `~/My Drive/repos/`.
+- My projects are stored in `../../repos/`.
 
 ## Version control
 

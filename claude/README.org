@@ -27,9 +27,9 @@ Three layers of directories work together: this dotfiles directory (source of tr
 #+begin_example
 ~/My Drive/dotfiles/claude/           ← global config source of truth
 ├── CLAUDE.md                         ← global conventions for all projects
-├── settings.json                     ← hooks, model, permissions, theme
+├── settings.json                     ← hooks, model, permissions (no theme; symlinked from ~/.claude/)
 ├── settings.local.json               ← machine-specific permissions (mpv, brew, pip3…)
-├── hooks/                            ← 21 hook scripts
+├── hooks/                            ← 24 hook scripts
 ├── skills/                           ← 48 skill directories
 ├── bin/batch-test.sh                 ← elpaca-aware emacs --batch test runner
 ├── bin/sync-mcp-servers.sh           ← MCP server sync utility
@@ -604,7 +604,7 @@ Evaluates third-party skills from the [[https://github.com/HartreeWorks/skills][
 :ID:       4D862953-7E8A-4154-BC16-919ED6B092A5
 :END:
 
-Eighteen hook scripts handle workflow invariants, security, and Emacs integration. Most are defined in the global =settings.json= and use early-exit guards to skip inapplicable projects. One (=require-readme-update.sh=) is defined in the dotfiles project-level =.claude/settings.json= since it only applies to this repo. The emacsclient hooks (=notify-emacs-session-end.sh=, =notify-emacs-notification.sh=, =load-elisp-after-edit.sh=) escape interpolated values before embedding them in Elisp strings to prevent injection.
+Twenty-four hook and utility scripts handle workflow invariants, security, and Emacs integration. Most are defined in the global =settings.json= and use early-exit guards to skip inapplicable projects. One (=require-readme-update.sh=) is defined in the dotfiles project-level =.claude/settings.json= since it only applies to this repo. The emacsclient hooks (=notify-emacs-session-end.sh=, =notify-emacs-notification.sh=, =load-elisp-after-edit.sh=) escape interpolated values before embedding them in Elisp strings to prevent injection.
 
 ** require-elisp-test-before-commit.sh (PreToolUse)
 :PROPERTIES:
@@ -655,6 +655,10 @@ Blocks =git commit= when =.el= files are staged but no =doc/*.org= or =README.or
 :END:
 
 Blocks =emacsclient= commands that invoke =elpaca-rebuild= or =elpaca-extras-reload= when there are uncommitted =.el= changes in =emacs/extras/=. The elpaca source clone only has committed code, so rebuilding before committing would silently compile and load stale definitions from the last commit, ignoring the working tree edits. The error message lists the uncommitted files and instructs the agent to commit first.
+
+** block-elpaca-dotfiles-edit.sh (PreToolUse)
+
+Blocks Edit and Write operations targeting files under =elpaca/sources/dotfiles/=. The elpaca clone is a separate git checkout that syncs from the canonical =~/My Drive/dotfiles/= repo via git commits; direct edits there would be overwritten on the next sync. Directs the agent to edit the canonical files instead.
 
 ** load-elisp-after-edit.sh (PostToolUse)
 :PROPERTIES:
@@ -712,3 +716,23 @@ Blocks edits to =.el= files until the =elisp-conventions= skill has been loaded 
 ** track-elisp-skill.sh (PostToolUse)
 
 Creates a session marker (=/tmp/claude-elisp-skill-{SESSION_ID}=) when the =elisp-conventions= skill is loaded via the Skill tool. This marker allows =require-elisp-skill.sh= to permit =.el= edits. Cleans up stale markers older than 2 hours.
+
+** require-elisp-verify-after-commit.sh (PreToolUse)
+
+Blocks all Bash commands (except =emacsclient=) after committing =.el= files until verification via =emacsclient -e= has been run. Uses a session marker created by the companion =track-elisp-verify.sh= hook. Ensures the agent verifies that committed Elisp loads correctly in the running Emacs before moving on.
+
+** track-elisp-verify.sh (PostToolUse)
+
+Creates a verification marker (=/tmp/claude-elisp-verify-needed-{SESSION_ID}=) after a successful =git commit= that includes =.el= files. Clears the marker when =emacsclient -e= runs. Skips test files (=*-test.el=, =*-tests.el=). Cleans up stale markers older than 2 hours.
+
+** notify-emacs-notification.sh (Notification)
+
+Forwards Claude Code notifications to Emacs via =claude-code-handle-hook=. Runs through =fire-and-forget.sh= so the CLI doesn't block on =emacsclient=.
+
+** fire-and-forget.sh (utility)
+
+Wrapper that runs a hook command in the background. Reads stdin first to avoid broken pipes, then execs the command detached. Used by the Notification and Stop hooks so the CLI doesn't block waiting for =emacsclient=.
+
+** lib-staged-files.sh (utility)
+
+Shared helper sourced by other hooks. Lists staged files and handles the =--amend= flag correctly by comparing against =HEAD~1= when amending (since amending replays the previous commit's changes).

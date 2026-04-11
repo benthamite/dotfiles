@@ -84,6 +84,7 @@ returns nil when that variable is non-nil."
 	(apply orig-fun args))
     (org-gcal-extras--reset-element-cache)))
 
+(advice-add 'org-gcal-post-at-point :around #'org-gcal-extras--inhibit-modification-hooks)
 (advice-add 'org-gcal--update-entry :around #'org-gcal-extras--inhibit-modification-hooks)
 (advice-add 'org-gcal--sync-handle-events :around #'org-gcal-extras--inhibit-modification-hooks)
 

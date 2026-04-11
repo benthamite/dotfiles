@@ -39,6 +39,13 @@ A PreToolUse hook (`block-elpaca-rebuild-uncommitted.sh`) blocks manual `elpaca-
 
 See `emacs/extras/doc/elisp-development-workflow.org` for the full design rationale.
 
+# Pre-commit checks (hook-enforced)
+
+Do these proactively to avoid being blocked by pre-commit hooks:
+
+- **Batch test**: run `emacs --batch` before committing (details below).
+- **Stage documentation**: stage the corresponding `emacs/extras/doc/<package>.org` manual update alongside `.el` files. Use `/doc-elisp` to generate or update documentation.
+
 # Batch testing before commit (CRITICAL)
 
 A PreToolUse hook blocks `git commit` when `.el` files are staged until an `emacs --batch` test has run. Use the helper script:

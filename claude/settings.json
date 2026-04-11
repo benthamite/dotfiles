@@ -14,6 +14,16 @@
         "hooks": [
           {
             "type": "command",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/block-secret-leak.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/block-destructive-command.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
             "command": "~/My\\ Drive/dotfiles/claude/hooks/require-elisp-test-before-commit.sh",
             "timeout": 10
           },
@@ -24,8 +34,33 @@
           },
           {
             "type": "command",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/require-elisp-verify-after-commit.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
             "command": "~/My\\ Drive/dotfiles/claude/hooks/block-elpaca-rebuild-uncommitted.sh",
             "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/guard-external-actions.sh",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/block-sensitive-read.sh",
+            "timeout": 5
           }
         ]
       },
@@ -34,17 +69,22 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/claude/hooks/block-elpaca-dotfiles-edit.sh",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/block-secret-leak.sh",
             "timeout": 5
-          }
-        ]
-      },
-      {
-        "matcher": "Bash|Write",
-        "hooks": [
+          },
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/claude/hooks/block-secret-leak.sh",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/block-elpaca-dotfiles-edit.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/require-elisp-skill.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/block-texi-edit.sh",
             "timeout": 5
           }
         ]
@@ -57,6 +97,21 @@
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/claude/hooks/track-elisp-test.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/track-elisp-verify.sh",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/My\\ Drive/dotfiles/claude/hooks/track-elisp-skill.sh",
             "timeout": 5
           }
         ]
@@ -112,8 +167,18 @@
     "command": "~/My\\ Drive/dotfiles/emacs/extras/etc/claude-code-statusline.sh",
     "padding": 0
   },
+  "extraKnownMarketplaces": {
+    "openai-codex": {
+      "source": {
+        "source": "github",
+        "repo": "openai/codex-plugin-cc"
+      }
+    }
+  },
   "effortLevel": "high",
-  "theme": "dark",
+  "skipDangerousModePermissionPrompt": true,
   "mcpServers": {},
-  "skipDangerousModePermissionPrompt": true
+  "enabledPlugins": {
+    "codex@openai-codex": true
+  }
 }

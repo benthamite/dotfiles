@@ -14264,6 +14264,19 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
   :defer t)
 #+end_src
 
+** =trx=
+:PROPERTIES:
+:END:
+
+/[[https://github.com/benthamite/trx][trx]] is an Emacs interface for the [[https://transmissionbt.com/][Transmission]] BitTorrent client./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package trx
+  :ensure (:host github
+                 :repo "benthamite/trx")
+  :defer t)
+#+end_src
+
 ** =ytdl=
 :PROPERTIES:
 :ID:       26EEEF20-5CDC-4855-A03D-AFEBB784D637

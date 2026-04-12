@@ -25,6 +25,11 @@ if echo "$COMMAND" | grep -qE '\bemacsclient\b'; then
   exit 0
 fi
 
+# Allow batch-test.sh through — compilation testing is a valid next step
+if echo "$COMMAND" | grep -qE 'batch-test\.sh'; then
+  exit 0
+fi
+
 # Block everything else
 REASON="BLOCKED: You committed Elisp changes but have not verified them in the running Emacs. Run \`emacsclient -e\` to exercise the changed code path before continuing. The post-commit hook has already reloaded the code — verify the fix works, don't just compile."
 jq -n --arg reason "$REASON" '{

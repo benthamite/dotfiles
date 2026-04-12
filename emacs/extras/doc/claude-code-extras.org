@@ -132,10 +132,13 @@ The user option ~claude-code-extras-copilot-enabled~ controls whether Copilot gh
 #+vindex: claude-code-extras-log-directory
 The user option ~claude-code-extras-log-directory~ specifies the directory where batch processing output is saved. The default value is the =claude-logs= subdirectory under ~paths-dir-notes~.
 
+#+vindex: claude-code-extras-batch-permission-mode
 #+vindex: claude-code-extras-batch-allowed-tools
 #+vindex: claude-code-extras-batch-max-turns
 #+vindex: claude-code-extras-batch-system-prompt
 #+vindex: claude-code-extras-batch-model
+The user option ~claude-code-extras-batch-permission-mode~ specifies the permission mode passed via =--permission-mode= for non-interactive execution. The default is ="auto"=, which uses a background classifier to allow most actions while blocking risky ones.
+
 The user option ~claude-code-extras-batch-allowed-tools~ specifies which tools are auto-allowed via =--allowedTools= for non-interactive execution (batch TODO processing, skill runner, and project audit). The default includes =Bash=, =Read=, =Write=, =Edit=, =Glob=, =Grep=, =WebFetch=, and =WebSearch=. Adjust this list to restrict or expand what Claude can do autonomously.
 
 The user option ~claude-code-extras-batch-max-turns~ controls the maximum number of agentic turns per entry in non-interactive execution. The default is 30. Increase it for complex tasks that require many tool calls; decrease it to bound execution time.

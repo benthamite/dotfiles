@@ -377,7 +377,11 @@ to a Codex session."
     (when (yes-or-no-p
            (format "Run %d audit(s) on %s?" (length skills) dir))
       (let ((buf (or (car (codex--find-codex-buffers-for-directory dir))
-                     (let ((default-directory dir)) (codex)))))
+                     (let ((default-directory dir))
+                       (codex)
+                       (car (codex--find-codex-buffers-for-directory dir))))))
+        (unless buf
+          (user-error "Failed to create Codex session for %s" dir))
         (dolist (skill skills)
           (with-current-buffer buf
             (codex--do-send-command (format "%s --accept" skill))))))))

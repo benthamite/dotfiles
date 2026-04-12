@@ -164,8 +164,7 @@ Only takes effect when `ai-extras-alert-on-ready' is non-nil."
   :group 'ai-extras)
 
 (defcustom ai-extras-alert-on-ready nil
-  "When non-nil, alert the user when an AI session finishes responding.
-Toggle with `ai-extras-toggle-alert'."
+  "When non-nil, alert the user when an AI session finishes responding."
   :type 'boolean
   :group 'ai-extras)
 
@@ -874,19 +873,19 @@ terminate the CLI process and kill the buffer."
     ("w" "jump to waiting" ai-extras-jump-to-waiting)
     ("h" "handoff" ai-extras-handoff)
     ("x" "exit session" ai-extras-exit)]
-   ["Tools"
-    ("s" "run skill" ai-extras-run-skill)
-    ("a" "audit project" ai-extras-audit-project)
-    ("d" "debug backtrace" ai-extras-debug-backtrace)]
+   ["Options"
+    ("-A" ai-extras--infix-alert-on-ready)
+    ("-p" ai-extras--infix-protect-buffers)]
    ["Alerts"
     ("T" "toggle alert" ai-extras-toggle-alert)]]
   [["Buffer"
     ("K" "setup kill on exit" ai-extras-setup-kill-on-exit)
     ("f" "fix rendering" ai-extras-fix-rendering)
     ("S" "disable scrollback" ai-extras-disable-scrollback-truncation)]
-   ["Options"
-    ("-A" ai-extras--infix-alert-on-ready)
-    ("-p" ai-extras--infix-protect-buffers)]])
+   ["Tools"
+    ("s" "run skill" ai-extras-run-skill)
+    ("a" "audit project" ai-extras-audit-project)
+    ("d" "debug backtrace" ai-extras-debug-backtrace)]])
 
 (transient-define-infix ai-extras--infix-alert-on-ready ()
   "Toggle `ai-extras-alert-on-ready'."

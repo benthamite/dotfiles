@@ -3382,26 +3382,26 @@ Signals an error if the status file is missing or incomplete."
     '("B" "switch branch" claude-code-extras-switch-branch))
   (transient-append-suffix 'ai-extras-menu '(0 0 -1)
     '("N" "new branch" claude-code-extras-create-branch))
-  ;; Tools column: add batch, send todo, logs
-  (transient-append-suffix 'ai-extras-menu '(0 1 -1)
+  ;; Tools column (row 1, col 1): add batch, send todo, logs
+  (transient-append-suffix 'ai-extras-menu '(1 1 -1)
     '("b" "batch todos" claude-code-extras-batch-todos))
-  (transient-append-suffix 'ai-extras-menu '(0 1 -1)
+  (transient-append-suffix 'ai-extras-menu '(1 1 -1)
     '("t" "send todo at point" claude-code-extras-send-todo-at-point))
-  (transient-append-suffix 'ai-extras-menu '(0 1 -1)
+  (transient-append-suffix 'ai-extras-menu '(1 1 -1)
     '("l" "logs" agent-log-menu))
-  ;; Alerts column: add polling
+  ;; Alerts column (row 0, col 2): add polling
   (transient-append-suffix 'ai-extras-menu '(0 2 -1)
     '("p" "start status polling" claude-code-extras-start-status-polling))
   (transient-append-suffix 'ai-extras-menu '(0 2 -1)
     '("P" "stop status polling" claude-code-extras-stop-status-polling))
-  ;; Options column: add account display and Claude-specific toggles
-  (transient-append-suffix 'ai-extras-menu '(1 1 -1)
+  ;; Options column (row 0, col 1): add account display and Claude-specific toggles
+  (transient-append-suffix 'ai-extras-menu '(0 1 -1)
     '("-a" claude-code-extras--infix-account))
-  (transient-append-suffix 'ai-extras-menu '(1 1 -1)
+  (transient-append-suffix 'ai-extras-menu '(0 1 -1)
     '("-t" claude-code-extras--infix-sync-theme))
-  (transient-append-suffix 'ai-extras-menu '(1 1 -1)
+  (transient-append-suffix 'ai-extras-menu '(0 1 -1)
     '("-c" claude-code-extras--infix-copilot-enabled))
-  (transient-append-suffix 'ai-extras-menu '(1 1 -1)
+  (transient-append-suffix 'ai-extras-menu '(0 1 -1)
     '("-w" claude-code-extras--infix-warn-kill-with-branches)))
 
 (provide 'claude-code-extras)

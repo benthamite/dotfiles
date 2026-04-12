@@ -180,7 +180,7 @@ The command ~ai-extras-kill-session-buffer~ terminates the CLI process in the cu
 :END:
 
 #+findex: ai-extras-menu
-The command ~ai-extras-menu~ opens a unified transient dispatch menu for all AI session commands.  The base menu provides shared entries organized into columns: Sessions, Tools, Alerts, Buffer, and Options.
+The command ~ai-extras-menu~ opens a unified transient dispatch menu for all AI session commands.  The base menu is organized in two rows of columns.  The first row contains Sessions, Options, and Alerts; the second row contains Buffer and Tools.
 
 Shared tool commands dispatch to the appropriate backend.  ~ai-extras-run-skill~ aggregates skills from all backends into a single list ([[#h:dispatched-tool-commands][Dispatched tool commands]]).  The remaining dispatched commands (~ai-extras-handoff~, ~ai-extras-audit-project~, ~ai-extras-debug-backtrace~) resolve a backend from the current buffer context; when not in a session buffer and multiple backends are registered, the user is prompted to choose one.  The backend prompt displays each backend's SVG icon to the left of its label ([[#h:svg-icons][SVG icons]]).
 

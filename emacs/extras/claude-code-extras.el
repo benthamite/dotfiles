@@ -1777,16 +1777,16 @@ and the user's settings.json."
                  (repeat string))
   :group 'claude-code-extras)
 
-(defcustom claude-code-extras-batch-permission-mode "bypassPermissions"
+(defcustom claude-code-extras-batch-permission-mode "auto"
   "Permission mode passed via `--permission-mode' for non-interactive execution.
-The default \"bypassPermissions\" grants all tool permissions
-automatically, which is necessary because `claude -p' cannot
-prompt the user for approval."
-  :type '(choice (const :tag "Bypass all" "bypassPermissions")
+The default \"auto\" uses a background classifier to allow most
+actions while blocking risky ones (force pushes, mass deletion,
+sending secrets to external endpoints, etc.)."
+  :type '(choice (const :tag "Auto" "auto")
+                 (const :tag "Bypass all" "bypassPermissions")
                  (const :tag "Default" "default")
                  (const :tag "Accept edits" "acceptEdits")
                  (const :tag "Don't ask" "dontAsk")
-                 (const :tag "Auto" "auto")
                  (const :tag "None" nil))
   :group 'claude-code-extras)
 
@@ -3377,31 +3377,31 @@ Signals an error if the status file is missing or incomplete."
   :description "account")
 
 (with-eval-after-load 'ai-extras
-  ;; Sessions column: add branch, new branch
-  (transient-append-suffix 'ai-extras-menu '(0 0 -1)
+  ;; Sessions: after "exit session"
+  (transient-append-suffix 'ai-extras-menu "x"
     '("B" "switch branch" claude-code-extras-switch-branch))
-  (transient-append-suffix 'ai-extras-menu '(0 0 -1)
+  (transient-append-suffix 'ai-extras-menu "B"
     '("N" "new branch" claude-code-extras-create-branch))
-  ;; Tools column (row 1, col 1): add batch, send todo, logs
-  (transient-append-suffix 'ai-extras-menu '(1 1 -1)
+  ;; Tools: after "debug backtrace"
+  (transient-append-suffix 'ai-extras-menu "d"
     '("b" "batch todos" claude-code-extras-batch-todos))
-  (transient-append-suffix 'ai-extras-menu '(1 1 -1)
+  (transient-append-suffix 'ai-extras-menu "b"
     '("t" "send todo at point" claude-code-extras-send-todo-at-point))
-  (transient-append-suffix 'ai-extras-menu '(1 1 -1)
+  (transient-append-suffix 'ai-extras-menu "t"
     '("l" "logs" agent-log-menu))
-  ;; Alerts column (row 0, col 2): add polling
-  (transient-append-suffix 'ai-extras-menu '(0 2 -1)
+  ;; Alerts: after "toggle alert"
+  (transient-append-suffix 'ai-extras-menu "T"
     '("p" "start status polling" claude-code-extras-start-status-polling))
-  (transient-append-suffix 'ai-extras-menu '(0 2 -1)
+  (transient-append-suffix 'ai-extras-menu "p"
     '("P" "stop status polling" claude-code-extras-stop-status-polling))
-  ;; Options column (row 0, col 1): add account display and Claude-specific toggles
-  (transient-append-suffix 'ai-extras-menu '(0 1 -1)
+  ;; Options: after "protect buffers"
+  (transient-append-suffix 'ai-extras-menu "-p"
     '("-a" claude-code-extras--infix-account))
-  (transient-append-suffix 'ai-extras-menu '(0 1 -1)
+  (transient-append-suffix 'ai-extras-menu "-a"
     '("-t" claude-code-extras--infix-sync-theme))
-  (transient-append-suffix 'ai-extras-menu '(0 1 -1)
+  (transient-append-suffix 'ai-extras-menu "-t"
     '("-c" claude-code-extras--infix-copilot-enabled))
-  (transient-append-suffix 'ai-extras-menu '(0 1 -1)
+  (transient-append-suffix 'ai-extras-menu "-c"
     '("-w" claude-code-extras--infix-warn-kill-with-branches)))
 
 (provide 'claude-code-extras)

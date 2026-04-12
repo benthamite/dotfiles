@@ -510,7 +510,7 @@ unified session switcher."
   :description "sync theme (codex)")
 
 (with-eval-after-load 'ai-extras
-  (transient-append-suffix 'ai-extras-menu '(0 1 -1)
+  (transient-append-suffix 'ai-extras-menu "-p"
     '("-t" codex-extras--infix-sync-theme)))
 
 ;;;;; Exit and kill on exit

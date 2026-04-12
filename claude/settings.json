@@ -4,7 +4,7 @@
   },
   "includeCoAuthoredBy": false,
   "permissions": {
-    "defaultMode": "bypassPermissions"
+    "defaultMode": "auto"
   },
   "model": "opus[1m]",
   "hooks": {
@@ -176,7 +176,6 @@
     }
   },
   "effortLevel": "high",
-  "skipDangerousModePermissionPrompt": true,
   "mcpServers": {},
   "enabledPlugins": {
     "codex@openai-codex": true

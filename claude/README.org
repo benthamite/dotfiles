@@ -79,7 +79,7 @@ Claude Code loads settings from multiple levels, merged together. Each level can
 
 =settings.json= is version-controlled; =settings.local.json= is gitignored (machine-specific or accumulated interactively).
 
-The global =settings.json= uses =bypassPermissions= mode: all tools run without approval prompts. The confirmation prompt is suppressed via =skipDangerousModePermissionPrompt=.
+The global =settings.json= uses =auto= mode: a background classifier allows most actions while blocking risky ones (force pushes, mass deletion, sending secrets to external endpoints, etc.).
 
 *** =CLAUDE.md= loading
 :PROPERTIES:
@@ -183,10 +183,9 @@ Each Claude Code account stores its own =chromeExtension.pairedDeviceId= and =pa
 :ID:       C60E07A6-7A22-4272-8875-45FE9B44F185
 :END:
 
-- *Permission mode*: =bypassPermissions= — all tools run without approval prompts. The allow list is omitted since bypass mode skips all permission checks.
+- *Permission mode*: =auto= — a background classifier allows most actions while blocking risky ones (force pushes, mass deletion, sending secrets to external endpoints, etc.).
 - *Agent teams*: enabled.
 - *Effort level*: high.
-- *Bypass prompt*: suppressed (=skipDangerousModePermissionPrompt=).
 
 *Symlink breakage risk:* =~/.claude/settings.json= is a symlink to =dotfiles/claude/settings.json=. Claude Code (Node.js) may use atomic writes (temp file + rename) when updating settings, which replaces the symlink with a regular file. If =~/.claude/settings.json= stops being a symlink, the tracked source and the deployed file will silently diverge. To detect this, check =ls -la ~/.claude/settings.json= — it should show =->= pointing to the dotfiles path. To fix: =trash ~/.claude/settings.json && ln -s "/Users/pablostafforini/My Drive/dotfiles/claude/settings.json" ~/.claude/settings.json=.
 
@@ -556,7 +555,7 @@ Adapted from [[https://pjh.is/][Peter Hartree]]'s [[https://github.com/HartreeWo
 
 *** security-audit
 
-Audits the development environment security posture across four domains, each runnable independently via flags. Framed around the threat model "you will eventually run malware via supply chain compromise; limit what it can do." =--secrets=: plaintext credentials in configs, globally exported secrets in shell rc files (recommends =envchain= / per-process injection), git-crypt coverage, gitignore gaps, shell history leaks, 1Password/pass consistency, =.envrc= keychain lookups. =--deps=: =ignore-scripts= in =.npmrc= (postinstall as primary supply chain vector), =minimum-release-age= (native in npm 11.10+, pnpm 10.16+), known vulnerabilities via =npm audit= / =pip audit= / =cargo audit= / Dependabot, unpinned versions, =--frozen-lockfile= usage, Python =setup.py= install-time risk, Socket.dev for GitHub repos. =--machine=: macOS Lockdown Mode, code execution isolation (VMs, Claude Code Web), browser profile separation, password manager presence, Google Advanced Protection, hardware security keys, plus existing checks (FileVault, Firewall, Gatekeeper, SIP, SSH keys, browser extensions, login items, egress controls). =--claude=: =bypassPermissions= compensating controls, MCP server credential storage, hook coverage gaps, unenforceable CLAUDE.md safety instructions, skill privilege escalation risk, memory exposure. Produces findings organized by severity (critical, high, medium, low) with specific file paths and concrete remediation steps. Complements =block-secret-leak.sh= (which prevents leaks in real time) by auditing the broader security posture on demand.
+Audits the development environment security posture across four domains, each runnable independently via flags. Framed around the threat model "you will eventually run malware via supply chain compromise; limit what it can do." =--secrets=: plaintext credentials in configs, globally exported secrets in shell rc files (recommends =envchain= / per-process injection), git-crypt coverage, gitignore gaps, shell history leaks, 1Password/pass consistency, =.envrc= keychain lookups. =--deps=: =ignore-scripts= in =.npmrc= (postinstall as primary supply chain vector), =minimum-release-age= (native in npm 11.10+, pnpm 10.16+), known vulnerabilities via =npm audit= / =pip audit= / =cargo audit= / Dependabot, unpinned versions, =--frozen-lockfile= usage, Python =setup.py= install-time risk, Socket.dev for GitHub repos. =--machine=: macOS Lockdown Mode, code execution isolation (VMs, Claude Code Web), browser profile separation, password manager presence, Google Advanced Protection, hardware security keys, plus existing checks (FileVault, Firewall, Gatekeeper, SIP, SSH keys, browser extensions, login items, egress controls). =--claude=: permission mode compensating controls, MCP server credential storage, hook coverage gaps, unenforceable CLAUDE.md safety instructions, skill privilege escalation risk, memory exposure. Produces findings organized by severity (critical, high, medium, low) with specific file paths and concrete remediation steps. Complements =block-secret-leak.sh= (which prevents leaks in real time) by auditing the broader security posture on demand.
 
 ** Meta skills
 :PROPERTIES:
@@ -700,7 +699,7 @@ Guards the =Read= tool against accidental ingestion of sensitive files into the 
 
 ** block-secret-leak.sh (PreToolUse)
 
-Compensating control for =bypassPermissions= mode. Fires on =Bash|Write= and pattern-matches the tool input for common secret formats: AWS access keys, GitHub tokens, Slack tokens, =sk-= API keys, private key headers, Google OAuth client secrets, and generic high-entropy values assigned to known secret variable names. Blocks the operation with a specific message identifying the secret type. Allowlists legitimate secret-handling commands (=pass=, =op=, =security=, =git-crypt=), pattern-scanning tools (=grep=, =rg=), environment variable references (=$VAR=), and writes to known secret files (=.zshenv-secrets=, =.env.op=). Also detects exfiltration patterns: sensitive files (SSH keys, GPG keys, password store, =tokens.json=, =.zshenv-secrets=) piped to network tools (=curl=, =wget=, =nc=, =ncat=), =curl --data @= uploads of sensitive files, and network commands containing inline high-entropy strings (>30 chars with mixed character classes including digits). Complements the =/security-audit= skill, which audits the broader security posture on demand rather than blocking in real time.
+Compensating control for permissive modes (=auto=, =bypassPermissions=). Fires on =Bash|Write= and pattern-matches the tool input for common secret formats: AWS access keys, GitHub tokens, Slack tokens, =sk-= API keys, private key headers, Google OAuth client secrets, and generic high-entropy values assigned to known secret variable names. Blocks the operation with a specific message identifying the secret type. Allowlists legitimate secret-handling commands (=pass=, =op=, =security=, =git-crypt=), pattern-scanning tools (=grep=, =rg=), environment variable references (=$VAR=), and writes to known secret files (=.zshenv-secrets=, =.env.op=). Also detects exfiltration patterns: sensitive files (SSH keys, GPG keys, password store, =tokens.json=, =.zshenv-secrets=) piped to network tools (=curl=, =wget=, =nc=, =ncat=), =curl --data @= uploads of sensitive files, and network commands containing inline high-entropy strings (>30 chars with mixed character classes including digits). Complements the =/security-audit= skill, which audits the broader security posture on demand rather than blocking in real time.
 
 ** block-destructive-command.sh (PreToolUse)
 

@@ -872,20 +872,22 @@ terminate the CLI process and kill the buffer."
     ("e" "start or switch" ai-extras-start-or-switch)
     ("w" "jump to waiting" ai-extras-jump-to-waiting)
     ("h" "handoff" ai-extras-handoff)
-    ("x" "exit session" ai-extras-exit)]
-   ["Options"
-    ("-A" ai-extras--infix-alert-on-ready)
-    ("-p" ai-extras--infix-protect-buffers)]
-   ["Alerts"
-    ("T" "toggle alert" ai-extras-toggle-alert)]]
-  [["Buffer"
+    ("x" "exit session" ai-extras-exit)
+    ""
+    "Buffer"
     ("K" "setup kill on exit" ai-extras-setup-kill-on-exit)
     ("f" "fix rendering" ai-extras-fix-rendering)
     ("S" "disable scrollback" ai-extras-disable-scrollback-truncation)]
    ["Tools"
     ("s" "run skill" ai-extras-run-skill)
     ("a" "audit project" ai-extras-audit-project)
-    ("d" "debug backtrace" ai-extras-debug-backtrace)]])
+    ("d" "debug backtrace" ai-extras-debug-backtrace)
+    ""
+    "Alerts"
+    ("T" "toggle alert" ai-extras-toggle-alert)]
+   ["Options"
+    ("-A" ai-extras--infix-alert-on-ready)
+    ("-p" ai-extras--infix-protect-buffers)]])
 
 (transient-define-infix ai-extras--infix-alert-on-ready ()
   "Toggle `ai-extras-alert-on-ready'."

@@ -719,7 +719,7 @@ Creates a session marker (=/tmp/claude-elisp-skill-{SESSION_ID}=) when the =elis
 
 ** require-elisp-verify-after-commit.sh (PreToolUse)
 
-Blocks all Bash commands (except =emacsclient=) after committing =.el= files until verification via =emacsclient -e= has been run. Uses a session marker created by the companion =track-elisp-verify.sh= hook. Ensures the agent verifies that committed Elisp loads correctly in the running Emacs before moving on.
+Blocks all Bash commands (except =emacsclient= and =batch-test.sh=) after committing =.el= files until verification via =emacsclient -e= has been run. Uses a session marker created by the companion =track-elisp-verify.sh= hook. Ensures the agent verifies that committed Elisp loads correctly in the running Emacs before moving on.
 
 ** track-elisp-verify.sh (PostToolUse)
 

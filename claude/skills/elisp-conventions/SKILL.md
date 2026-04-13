@@ -57,6 +57,16 @@ A PreToolUse hook blocks `git commit` when `.el` files are staged until an `emac
 
 The script handles profile resolution, load-path setup, and stale `.elc` cleanup automatically.
 
+# Emacs session safety
+
+- Never run ERT test suites (`ert-run-tests-batch`, etc.) in the active Emacs session via emacsclient. Use a separate `emacs --batch` process. The active session is for loading code and interactive testing, not test suites.
+- Never use `emacsclient -e` to print large Emacs objects (hash tables, EIEIO objects, etc.). Serializing them freezes Emacs. Always extract specific slots or counts instead (e.g. `(hash-table-count ht)` instead of `ht`).
+- Never send potentially blocking or long-running expressions via `emacsclient -e`: no `font-lock-ensure`, no interactive commands, no unbounded loops, no operations whose runtime is unpredictable. A hung emacsclient blocks the Emacs server queue and makes Emacs unresponsive.
+- Never send emacsclient expressions that iterate over buffer positions char-by-char. Use `next-single-property-change` for O(regions) jumps, or skip the diagnostic entirely and reason from the code.
+- Never output large emoji data structures to the terminal. The eat terminal emulator freezes on bulk emoji rendering. Write emoji data to a file or check specific keys only.
+- If `sed` or other Bash commands are used to edit `.el` files (bypassing the Edit tool), manually call `emacsclient --eval '(load-file "...")'` afterward — the PostToolUse hook only fires on Edit/Write.
+- Do not run multiple background agents that edit `.el` files simultaneously — the elpaca rebuild hook fires on each save, flooding Emacs with concurrent rebuilds. Serialize edits or batch into a single agent.
+
 # Transient menus
 
 After adding or modifying a `transient-define-prefix`, verify that **every suffix symbol** is an interactive command. Transient defers suffix validation to invocation time, so byte-compilation and `commandp` on the prefix itself will not catch non-interactive suffixes. Before committing, check every suffix via `emacsclient -e '(interactive-form (quote SYMBOL))'` — any that return `nil` need an `(interactive)` spec added to their `defun`.

@@ -6,11 +6,21 @@
 - If verification isn't possible in batch mode, say so explicitly.
 - Fix root causes, not symptoms. No hacks, workarounds, or silent fallbacks. If a patch feels precarious, dig deeper. (E.g. if search returns duplicates, investigate why rather than adding deduplication.)
 - Seek documentation rather than guessing. If you can't access it, ask me to find it.
-- Never save a memory without asking first.
 - Delete temporary files and code when done.
 - Copy drafted messages to the clipboard automatically.
 - Surface structural friction when you encounter it ("this was harder than expected because X — worth investigating?"). Use `/diagnose` for deep dives.
 - I often use dictation, so expect misspellings and unusual punctuation.
+
+## About me
+
+- Heavy Claude Code user, no software engineering background. Strong on specification clarity, debugging thinking, systems thinking, verification discipline. Git-literate. Proficient Elisp programmer, knows Python rudiments but can't follow non-Elisp code granularly.
+
+## Behavioral
+
+- Never ask me to run a command when you can do it yourself via `emacsclient -e` or Bash.
+- Verify fixes end-to-end before presenting them as done. Byte-compilation alone is insufficient.
+- When fixing something, audit all similar views/modes for consistency. Don't fix one instance and leave others broken.
+- When giving step-by-step setup instructions (e.g. cloud services, APIs), verify each step matches the actual UI. Don't parrot README instructions without checking exact names and paths.
 
 ## Safety
 
@@ -22,6 +32,7 @@
 ## Secrets
 
 - When reading secrets from `pass` or `.zshenv-secrets`, never echo or print them in the terminal or logs.
+- When using `pass`, always use full paths (e.g. `env/home-assistant-token`, not `home-assistant-token`). Never grep `pass ls` output — it strips directory context. Use `pass find <name>` to search.
 - **Personal secrets** (non-Epoch): stored in `pass` (GPG-encrypted). The **Epoch** secrets setup is described in `../../Epoch/CLAUDE.md`.
 - **Account-specific MCP secrets** (e.g. different API keys per Claude Code account): use the `claude-code-extras-account-env-vars` mechanism. Export suffixed vars in `.zshenv-secrets` (e.g. `TWITTERAPI_API_KEY_TLON`, `TWITTERAPI_API_KEY_EPOCH`) and map them in `config.org`.
 

@@ -40,6 +40,17 @@ For each message, classify it into one of:
 
 Discard anything classified as noise.
 
+#### AI assistance opportunities
+
+Scan all channels for messages where someone is struggling with an AI tool — Claude (from Slack, Claude Code, claude.ai), ChatGPT, Cursor, Copilot, Gemini, or any other AI assistant. Signals include:
+
+- Error messages or unexpected behavior from an AI tool (e.g. "Claude can't connect to GitHub", "it keeps hallucinating", "the bot isn't responding")
+- Frustration or confusion about how to use an AI tool effectively (e.g. "how do I get Claude to do X?", "this isn't working the way I expected")
+- Workarounds that suggest the person doesn't know the proper fix (e.g. manually merging branches when a reconnect would solve it)
+- Repeated failed attempts to get an AI tool to do something
+
+When you spot one of these, classify it as **Action required** with a note like "AI assistance opportunity — [person] is struggling with [tool/issue]. You may know a fix." Include enough context about the problem for the user to assess whether they can help before opening the thread.
+
 #### Ops-support channels
 
 Apply special handling to any channel whose name starts with `ops-support` (this includes the shared `#ops-support` channel, `#ops-support-temp`, and each team member's personal `#ops-support-<name>` channel). The user is on the ops team and wants visibility into all requests to decide whether to help. For each request posted in these channels:

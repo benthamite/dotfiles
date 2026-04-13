@@ -510,6 +510,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#telega-dired-dwim][telega-dired-dwim]]
   - [[#telega-extras][telega-extras]]
   - [[#ol-telega][ol-telega]]
+  - [[#signel][signel]]
   - [[#wasabi][wasabi]]
   - [[#ement][ement]]
   - [[#erc][erc]]
@@ -547,6 +548,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#emms][EMMS]]
   - [[#empv][empv]]
   - [[#tangodb][tangodb]]
+  - [[#trx][trx]]
   - [[#ytdl][ytdl]]
   - [[#esi-dictate][esi-dictate]]
   - [[#read-aloud][read-aloud]]
@@ -12972,6 +12974,19 @@ Then change the value of =telega-server-libs-prefix= from =/opt/homebrew= to =/u
   :after telega)
 #+end_src
 
+** signel
+:PROPERTIES:
+:ID:       EE8FDB64-9E1A-4B5E-8F67-E8A0AD6F077D
+:END:
+
+/[[https://github.com/keenban/signel][signel]] is an Emacs interface for Signal./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package signel
+  :custom
+  (signel-account "+14246668293"))
+#+end_src
+
 ** =wasabi=
 :PROPERTIES:
 :ID:       6D2A5268-FC77-401E-A425-EC6F5961ED3B
@@ -14264,6 +14279,7 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
 
 ** =trx=
 :PROPERTIES:
+:ID:       542959BD-CC42-463F-989D-D4C66F168F86
 :END:
 
 /[[https://github.com/benthamite/trx][trx]] is an Emacs interface for the [[https://transmissionbt.com/][Transmission]] BitTorrent client./

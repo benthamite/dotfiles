@@ -44,8 +44,7 @@ Three layers of directories work together: this dotfiles directory (source of tr
 ├── settings.json      → dotfiles/claude/settings.json
 ├── settings.local.json → dotfiles/claude/settings.local.json
 ├── skills/            → dotfiles/claude/skills/
-├── projects/          ← per-project memory, trust entries (managed by Claude Code)
-├── memory/            ← global memory (managed by Claude Code)
+├── projects/          ← trust entries, session logs (managed by Claude Code)
 ├── history.jsonl      ← command history (managed by Claude Code)
 └── plugins/           ← installed plugins (managed by Claude Code)
 #+end_example
@@ -58,7 +57,6 @@ Three layers of directories work together: this dotfiles directory (source of tr
 <project>/.claude/
 ├── settings.json       ← project-level hooks (optional)
 ├── settings.local.json ← project-specific permissions (accumulated interactively)
-├── memory/             ← project memory (moved here by symlink-project-memory.sh hook)
 └── skills/             ← project-specific skills (optional)
 #+end_example
 
@@ -122,7 +120,6 @@ Two OAuth accounts (tlon and epoch) are supported without re-authenticating. Eac
 Shared (symlinked into each account dir):
 - =settings.json=, =settings.local.json= — preferences and permissions
 - =skills/= — custom skills
-- =memory/= — persistent memory
 - =projects/= — trusted folders, project config, session logs
 - =history.jsonl= — command history
 - =plugins/= — installed plugins
@@ -619,13 +616,6 @@ Blocks =git commit= when Elisp files (=*.el= or =emacs/config.org=) are staged b
 :END:
 
 Creates a marker file (=/tmp/claude-elisp-tested-{SESSION_ID}=) whenever =emacs --batch= runs. This marker is what the pre-commit hook checks for. The marker is consumed (deleted) after a successful commit, so each commit requires a fresh test. Also verifies that the test loaded files from the working tree, not stale =.elc= from =elpaca/builds/=: if the command output contains evidence of a stale load (e.g. "using older file" or =elpaca/builds/*.elc=), the marker is NOT created and a warning is printed, so the commit hook will still block. Supports both Claude Code's =tool_output= payload and Codex's =tool_response= payload.
-
-** symlink-project-memory.sh (PostToolUse)
-:PROPERTIES:
-:ID:       086B58F4-949F-4C88-B855-687EAD5F3B63
-:END:
-
-On the first Edit or Write in a project, moves Claude Code's memory directory from its default location (=~/.claude/projects/<encoded-path>/memory/=) into the project's =.claude/memory/= directory, replacing the original with a symlink. This keeps memory local and version-controllable.
 
 ** require-readme-update.sh (PreToolUse, project-level)
 :PROPERTIES:

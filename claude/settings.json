@@ -2,6 +2,7 @@
   "env": {
     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
   },
+  "autoMemoryEnabled": false,
   "includeCoAuthoredBy": false,
   "permissions": {
     "defaultMode": "bypassPermissions"
@@ -119,11 +120,6 @@
       {
         "matcher": "Edit|Write",
         "hooks": [
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/claude/hooks/symlink-project-memory.sh",
-            "timeout": 5
-          },
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/claude/hooks/load-elisp-after-edit.sh",

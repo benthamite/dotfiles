@@ -40,6 +40,10 @@ For each message, classify it into one of:
 
 Discard anything classified as noise.
 
+#### Pablo channels (top priority)
+
+Any channel whose name starts with `pablo-` (e.g. `#pablo-maria`, `#pablo-caroline`) is a direct collaboration channel. If the latest message in such a channel is from someone other than the user (i.e. not `pablo.stafforini`), classify it as **Action required** and place it at the top of the digest — these are the highest-priority items. Note who sent the last message and summarize what they said.
+
 #### AI assistance opportunities
 
 Scan all channels for messages where someone is struggling with an AI tool — Claude (from Slack, Claude Code, claude.ai), ChatGPT, Cursor, Copilot, Gemini, or any other AI assistant. Signals include:

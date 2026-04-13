@@ -26,7 +26,8 @@ if ! echo "$COMMAND" | grep -qE '\bgit\s+commit\b'; then
 fi
 
 # Find the repo root; bail if not in a git repo
-REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || true)
+# shellcheck source=lib-repo-root.sh
+source "$(dirname "$0")/lib-repo-root.sh"
 if [ -z "$REPO_ROOT" ]; then
   exit 0
 fi

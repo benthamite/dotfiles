@@ -95,11 +95,19 @@ If a `decisions/` directory exists in the project root, run `/record-decisions` 
 
 If no `decisions/` directory exists, skip this step.
 
-## Step 4: Commit
+## Step 4: Run post-update-log hooks
 
-Stage and commit the new log file, updated CLAUDE.md, and any changes to `decisions/` or `decisions-summary.md` with a descriptive message.
+After writing the log and updating CLAUDE.md, check whether any ancestor directory (walking up from the project root toward the git root) contains a CLAUDE.md with a `## Post-`/update-log` hook` section. If found, read and follow the instructions in that section.
 
-## Step 5: Exit (if requested)
+This allows parent directories to define project-family-level bookkeeping — such as updating a master project list or syncing a shared status document — that fires automatically after every `/update-log` invocation.
+
+If no ancestor CLAUDE.md contains this section, skip this step.
+
+## Step 5: Commit
+
+Stage and commit the new log file, updated CLAUDE.md, any changes to `decisions/` or `decisions-summary.md`, and any files modified by post-hooks with a descriptive message.
+
+## Step 6: Exit (if requested)
 
 If `--exit` was passed in the arguments, type `/exit` to end the session after all steps are complete.
 

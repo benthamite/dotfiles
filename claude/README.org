@@ -30,7 +30,7 @@ Three layers of directories work together: this dotfiles directory (source of tr
 ├── settings.json                     ← hooks, model, permissions (no theme; symlinked from ~/.claude/)
 ├── settings.local.json               ← machine-specific permissions (mpv, brew, pip3…)
 ├── hooks/                            ← 24 hook scripts
-├── skills/                           ← 48 skill directories
+├── skills/                           ← 50 skill directories
 ├── bin/batch-test.sh                 ← elpaca-aware emacs --batch test runner
 ├── bin/sync-mcp-servers.sh           ← MCP server sync utility
 └── README.org                        ← this file
@@ -580,6 +580,10 @@ Meta-skill for AI workflow design. Given a description of something to automate,
 :END:
 
 Diagnostic mode modifier. Prefix any question with =/diagnose= to investigate errors and friction as symptoms of underlying structural issues rather than problems to fix directly. Identifies root causes, considers whether the problem is an instance of a broader class, and proposes structural fixes to config, tooling, documentation, or workflow. Includes explicit criteria for what counts as a structural fix (a concrete mechanism like a hook or config change) versus aspirational statements that depend on memory and discipline.
+
+*** optimize-claude-md
+
+Optimizes a project's CLAUDE.md for maximum agent instruction-following while minimizing context waste. Evaluates every instruction against seven criteria (universal applicability, specificity, pointer-vs-copy, linter delegation, default behavior, conflicts, positioning), checks WHAT/WHY/HOW coverage and progressive disclosure, and produces a rewritten file with dead weight removed, non-universal rules externalized to =.claude/rules/= or skills, and critical instructions positioned at top and bottom. Grounded in Anthropic's official guidance (~200 line target, concrete verifiable rules) and the HumanLayer research on instruction budgets (~150-200 effective instructions, with ~50 consumed by the system prompt). Pass =--accept= to apply changes without prompting.
 
 *** claude-config-audit
 :PROPERTIES:

@@ -25,6 +25,14 @@ Claude Code encodes project paths as directory names under `~/.claude/projects/`
 
 Example: `/Users/pablostafforini/.config/emacs-profiles/8.0.0-dev/elpaca/sources/elfeed-ai` becomes `-Users-pablostafforini--config-emacs-profiles-8-0-0-dev-elpaca-sources-elfeed-ai`.
 
+## Update the active-profile symlink
+
+Retarget the stable symlink so that org `#+INCLUDE:` directives (and anything else using `~/.config/emacs-profiles/active`) resolve to the new profile:
+
+```bash
+ln -sfn "$HOME/.config/emacs-profiles/$NEW_PROFILE" "$HOME/.config/emacs-profiles/active"
+```
+
 ## Discover and group projects
 
 Scan `~/.claude/projects/` for all directories matching the elpaca pattern. Extract the package name by splitting on `-elpaca-repos-` or `-elpaca-sources-` (these are unambiguous delimiters — they correspond to the literal directory structure `elpaca/repos/` or `elpaca/sources/`).

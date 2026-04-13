@@ -14,7 +14,11 @@ Perform the following bookkeeping steps to preserve this session's work for futu
 
 Determine the project's log directory and whether decisions are tracked:
 
-1. **Read `CLAUDE.md`** in the project root. Look for an `@` reference to a log file — a path matching a pattern like `@<dir>/YYYY-MM-DD.md` (e.g. `@logs/2026-01-15.md`, `@results/logs/2026-01-15.md`). Extract the directory portion — that is the log directory.
+1. **Read `CLAUDE.md`** in the project root. Look for a reference to a session log file — either:
+   - A path like `<dir>/YYYY-MM-DD.md` in a "Latest session" section (current format), or
+   - A legacy `@<dir>/YYYY-MM-DD.md` import (old format — will be migrated in Step 2).
+   
+   Extract the directory portion — that is the log directory.
 
 2. **Check for a decisions directory**: look for a `decisions/` directory in the project root and a `decisions-summary.md` file.
 
@@ -46,6 +50,7 @@ This project doesn't have session logging set up. Use the `AskUserQuestion` tool
 3. **Update CLAUDE.md**:
    - If CLAUDE.md doesn't exist, create it with a minimal structure containing the project name (from the directory name or `package.json`/`pyproject.toml` if available), a "Latest session" section, and (if decisions were opted in) a "Decision records" section with the `@decisions-summary.md` reference.
    - If CLAUDE.md exists but has no "Latest session" section, append one.
+   - The "Latest session" section will be populated in Step 2 with a summary + pointer (not an `@` import).
 
 Then proceed to Step 1.
 
@@ -65,9 +70,24 @@ Be concise but specific. Include exact numbers where available (counts, percenta
 
 ## Step 2: Update CLAUDE.md
 
-Update the `@<log_dir>/...` reference under "Latest session" to point to the new log file.
+Update the "Latest session" section in CLAUDE.md with:
 
-Do NOT duplicate the log contents into CLAUDE.md. The `@` reference ensures Claude reads the file automatically at the start of the next session.
+1. A **2–4 sentence summary** of this session's work (what was done, key outcomes, important numbers).
+2. A **pointer** to the full log file: `Full details: <log_dir>/YYYY-MM-DD.md`
+
+Example:
+
+```
+## Latest session
+
+Externalized reconciliation conventions from CLAUDE.md, removing @-imports of session log and decisions summary. Effective context load dropped from 479 to 62 lines. Created `docs/reconciliation_conventions.md` as the new authoritative location.
+
+Full details: session-logs/2026-04-13.md
+```
+
+Do NOT use an `@` import — the full log can be hundreds of lines and should not be injected into every session. The summary gives the next session enough context to orient; the pointer lets it read deeper on demand.
+
+If CLAUDE.md currently has a legacy `@<log_dir>/...` import, replace it with the summary + pointer format.
 
 ## Step 3: Record decisions
 

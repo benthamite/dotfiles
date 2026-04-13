@@ -1,0 +1,157 @@
+#+title: Twitter digest: ai-tools — 2026-04-13
+
+* Notable
+
+** @0xSero (Sun Apr 12 21:58)
+lifehack
+
+1. copy ~/.claude into ~/.claude-zai
+2. make an alias for claude-zai when you use that command it passes off your api key and url to Claude Code
+3. use GLM-5.1 in Claude Code
+
+The model is very good with Claude Code, I prefer Droid but loop is really useful
+Likes: 323 | Views: 13808 | Like rate: 2.3%
+[[https://x.com/0xSero/status/2043448648009154755][View on X]]
+
+** @0xSero (Mon Apr 13 10:13)
+Been using Droid and GLM-5.1 to decompile binaries back into something similar enough to the original that it can be modified for my needs.
+
+Is this hacking?
+Likes: 306 | Views: 15201 | Like rate: 2.0%
+[[https://x.com/0xSero/status/2043633651888382424][View on X]]
+
+** @Saboo_Shubham_ (Sun Apr 12 03:40)
+Production-grade engineering skills for AI coding agents with Google's best practices.
+
+20 skills. 7 slash commands. Spec before code. Test before merge. Measure before optimize.
+
+Works with Claude Code, Cursor, Gemini CLI and more.
+
+100% Opensource.
+Likes: 185 | Views: 10084 | Like rate: 1.8%
+[[https://x.com/Saboo_Shubham_/status/2043172313475211273][View on X]]
+
+** @iotcoi (Fri Apr 10 16:55)
+Strix Halo:
+- Gemma 4 31B @ 256k ctx
+- Zeta-2 next-edit prediction
+- Firecracker microVM isolation
+- AgentFS (SQLite state machine)
+- Pi terminal harness
+
+I now have 39B parameters predicting my code, SQL-querying their own memories, and trapped in isolated VM. Total cost: $0
+Likes: 112 | Views: 6318 | Like rate: 1.8%
+[[https://x.com/iotcoi/status/2042647616534520028][View on X]]
+
+** @ivanfioravanti (Mon Apr 13 15:27)
+For anyone wondering how to use Claude Code with zai or minimax. Here the gist with instructions and my settings.
+
+Have fun!
+Likes: 22 | Views: 1300 | Like rate: 1.7%
+[[https://x.com/ivanfioravanti/status/2043712630175539477][View on X]]
+
+** @ivanfioravanti (Mon Apr 13 06:26)
+After a whole weekend with GLM 5.1 and 200M+ tokens used I can say it has become my go to model and coding plan.
+Likes: 763 | Views: 46431 | Like rate: 1.6%
+[[https://x.com/ivanfioravanti/status/2043576559492039085][View on X]]
+
+** @cathrynlavery (Mon Apr 13 18:17)
+Made my assistant agent more useful. Built an automated mail processing workflow:
+- Logs into our virtual P.O. box
+- Downloads new letters as PDFs
+- Uploads to Drive, logs to a tracking sheet
+- My Chief of Staff reviews and adds anything that needs my attention to my tasks
+
+Used to be a weekly manual task.
+Likes: 21 | Views: 1436 | Like rate: 1.5%
+[[https://x.com/cathrynlavery/status/2043755551671091256][View on X]]
+
+** @dexhorthy (Mon Apr 13 18:53)
+Streaming is one of the lowest hanging fruits in most agent systems.
+
+It magically makes your app feel infinitely more responsive. In less than 1 hour we discussed the architecture, built the backend, and added a frontend with incremental streaming.
+
+(Ps there's a claude.md we shared that makes this work)
+Likes: 16 | Views: 1144 | Like rate: 1.4%
+[[https://x.com/dexhorthy/status/2043764617969848471][View on X]]
+
+** @ryanvogel (Sun Apr 12 23:16)
+unironically using @opencode to do my P&L cause the accountant I was using ghosted and blocked me. ama
+Likes: 56 | Views: 4074 | Like rate: 1.4%
+[[https://x.com/ryanvogel/status/2043468453059641776][View on X]]
+
+** @kr0der (Sat Apr 11 22:36)
+if you don't like worktrees, try the Codex app.
+
+go to Settings -> Environments, add a setup script and an action to start local dev server
+
+i went from working in max 4 chats at once to having 10-20 chats open (not all running) because worktrees got abstracted away nicely
+Likes: 166 | Views: 12524 | Like rate: 1.3%
+[[https://x.com/kr0der/status/2043095842995810584][View on X]]
+
+** @ivanfioravanti (Mon Apr 13 13:37)
+For GLM Coding Plan subscribers: GLM-5.1 consumes quota at 3x during peak hours and 2x during off-peak hours.
+
+As a limited-time promotion through the end of April, off-peak usage is billed at 1x. So in reality I'm consuming 1x, this is the reason why I have plenty of tokens available!
+Likes: 130 | Views: 10098 | Like rate: 1.3%
+[[https://x.com/ivanfioravanti/status/2043685076186120442][View on X]]
+
+** @NickADobos (Sat Apr 11 14:56)
+I think people are sleeping on using Claude or codex to decompile apps with Ghidra, hopper, etc.
+
+Big new area to easily remix existing app.
+Likes: 445 | Views: 35298 | Like rate: 1.3%
+[[https://x.com/NickADobos/status/2042980033221005652][View on X]]
+
+** @ryanvogel (Fri Apr 10 16:02)
+sitting here at omacon listening to @iamdothash and wanted a better way to check if TSA lines at JFK were bad since I have a tight flight
+
+i scraped the graphql request and had @opencode build a simple clean status for TSA
+Likes: 48 | Views: 4420 | Like rate: 1.1%
+[[https://x.com/ryanvogel/status/2042634219458040049][View on X]]
+
+** @antirez (Fri Apr 10 20:17)
+Video of bug hunting using LLMs with Redis (but the same pipeline can be used with everything). English audio available, if you click on the YouTube settings, also subtitles.
+Likes: 212 | Views: 24684 | Like rate: 0.9%
+[[https://x.com/antirez/status/2042698497430900746][View on X]]
+
+** @trq212 (Fri Apr 10 18:29)
+New in Claude Code: /ultraplan
+
+Claude builds an implementation plan for you on the web. You can read it and edit it, then run the plan on the web or back in your terminal.
+
+Available now in preview for all users with CC on the web enabled.
+Likes: 10312 | Views: 1246699 | Like rate: 0.8%
+[[https://x.com/trq212/status/2042671370186973589][View on X]]
+
+* Vetted accounts
+
+** @bstnxbt — Score: 7 (added to list)
+707 followers. DFlash speculative decoding creator for Apple Silicon. Custom Metal kernels, 4x speedups on Qwen3.5-4B. ~95% on-topic. Narrow (single project) but extremely high signal for local inference practitioners.
+
+DFlash. Speculative decoding for Apple Silicon. Stock MLX, no fork.
+
+@ 2048 tokens, M5 Max, stock mlx_lm baseline:
+- Qwen3.5-4B: 53.74 -> 219.83 tok/s (x4.10)
+- Qwen3.5-9B: 30.96 -> 127.07 tok/s (x4.13)
+- Qwen3.5-27B-4bit: 32.35 -> 62.78 tok/s (x1.90)
+Likes: 446 | Views: 33594 | Like rate: 1.3%
+[[https://x.com/bstnxbt/status/2043696397388554447][View on X]]
+
+** @gabrielchua — Score: 7 (added to list)
+7541 followers. Codex team-adjacent. Comprehensive "how we use Codex" workflow guide, subagent experiments. ~60% actionable AI tools content, rest is amplification.
+
+Here's how we use Codex to:
+> understand large codebases > review PRs faster > build macOS apps > turn Figma into code > automate bug triage > create a CLI as agent tools > analyze datasets > generate slide decks > coordinate new-hire onboarding > learn a new concept
+Likes: 820 | Views: 49059 | Like rate: 1.7%
+[[https://x.com/gabrielchua/status/2043339151278506234][View on X]]
+
+** @boristane — Score: 6 (borderline, not added)
+17870 followers. nominal.io builder. Good anti-slop automation tips but ~50% opinions. Useful but not consistently actionable.
+
+you can create automations for pretty much anything. coding agents love to cast typescript with "as any" or "as unknow" instead of fixing the types. just block these from getting into your codebase. fighting slop creep one automation at the time.
+Likes: 71 | Views: 6965 | Like rate: 1.0%
+[[https://x.com/boristane/status/2043037590186770897][View on X]]
+
+* Accounts with nothing notable
+@__tinygrad__, @allnoteson, @altryne, @alvinsng, @amirmxt, @badlogicgames, @bcherny, @bentossell, @boringmarketer, @carson3068, @championswimmer, @chasing_next, @Dimillian, @forgebitz, @intellectronica, @itsolelehmann, @jtdavies, @KatanaLarp, @kmdrfx, @lucasmeijer, @maddiedreese, @micLivs, @nibzard, @petergyang, @pontusab, @Prince_Canuma, @RayFernando1337, @simonw, @steipete, @thdxr, @xeophon

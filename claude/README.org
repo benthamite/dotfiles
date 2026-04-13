@@ -727,6 +727,10 @@ Forwards Claude Code notifications to Emacs via =claude-code-handle-hook=. Runs 
 
 Wrapper that runs a hook command in the background. Reads stdin first to avoid broken pipes, then execs the command detached. Used by the Notification and Stop hooks so the CLI doesn't block waiting for =emacsclient=.
 
+** lib-repo-root.sh (utility)
+
+Shared helper sourced by other hooks. Resolves the git repo root from the command context. PreToolUse hooks run before the bash command executes, so the hook's cwd may differ from the command's effective cwd. If the command starts with =cd <path> &&=, this helper resolves the repo root from that path and cds into it so subsequent git commands operate on the correct repo.
+
 ** lib-staged-files.sh (utility)
 
 Shared helper sourced by other hooks. Lists staged files and handles the =--amend= flag correctly by comparing against =HEAD~1= when amending (since amending replays the previous commit's changes).

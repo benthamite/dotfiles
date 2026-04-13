@@ -1,5 +1,9 @@
 # Global conventions
 
+## About me
+
+- Heavy Claude Code user, no software engineering background. Strong on specification clarity, debugging thinking, systems thinking, verification discipline. Git-literate. Proficient Elisp programmer, knows Python rudiments but can't follow non-Elisp code granularly.
+
 ## General
 
 - Never present guesses as facts. Push back when needed.
@@ -10,10 +14,6 @@
 - Copy drafted messages to the clipboard automatically.
 - Surface structural friction when you encounter it ("this was harder than expected because X — worth investigating?"). Use `/diagnose` for deep dives.
 - I often use dictation, so expect misspellings and unusual punctuation.
-
-## About me
-
-- Heavy Claude Code user, no software engineering background. Strong on specification clarity, debugging thinking, systems thinking, verification discipline. Git-literate. Proficient Elisp programmer, knows Python rudiments but can't follow non-Elisp code granularly.
 
 ## Behavioral
 
@@ -31,10 +31,7 @@
 
 ## Secrets
 
-- When reading secrets from `pass` or `.zshenv-secrets`, never echo or print them in the terminal or logs.
-- When using `pass`, always use full paths (e.g. `env/home-assistant-token`, not `home-assistant-token`). Never grep `pass ls` output — it strips directory context. Use `pass find <name>` to search.
-- **Personal secrets** (non-Epoch): stored in `pass` (GPG-encrypted). The **Epoch** secrets setup is described in `../../Epoch/CLAUDE.md`.
-- **Account-specific MCP secrets** (e.g. different API keys per Claude Code account): use the `claude-code-extras-account-env-vars` mechanism. Export suffixed vars in `.zshenv-secrets` (e.g. `TWITTERAPI_API_KEY_TLON`, `TWITTERAPI_API_KEY_EPOCH`) and map them in `config.org`.
+See [Secrets](context/secrets.md) for full details.
 
 ## Agents
 
@@ -43,18 +40,13 @@
 
 ## MCP servers
 
-- Google MCP setup (two accounts, multiple servers, troubleshooting): see `google-mcp-setup.md`
+- Google MCP setup (two accounts, multiple servers, troubleshooting): see [Google MCP setup](context/google-mcp-setup.md) for full details.
 - Chrome integration and multi-account: see `README.org` → "Chrome integration and multi-account".
 - MCP server definitions go in `~/.claude.json`, NOT `~/.claude/settings.json`.
 
 ## Filesystem organization
 
-### Dotfiles
-
-My dotfiles are in `../` (i.e. `~/My Drive/dotfiles/`). Many files and directories in `~` are symlinked to this location.
-
-### Projects
-
+- My dotfiles are in `../` (i.e. `~/My Drive/dotfiles/`). Many files and directories in `~` are symlinked to this location.
 - My projects are stored in `../../repos/`.
 
 ## Version control

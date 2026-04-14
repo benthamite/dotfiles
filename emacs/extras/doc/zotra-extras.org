@@ -102,6 +102,7 @@ The command ~zotra-extras-add-entry~ is the primary entry point for importing bi
 - *URL auto-detection.* When invoked from an =elfeed-show-mode= buffer, it copies the current entry's URL to the kill ring. In =eww-mode=, it copies the current page URL. In other modes, it pre-fills the prompt with the most recent kill ring entry.
 - *Bibliography file selection.* If no BIBFILE argument is provided, it prompts the user to choose one via ~zotra-extras-set-bibfile~ ([[#h:bibliography-file-selection][Bibliography file selection]]) and stores the choice in the variable ~zotra-extras-most-recent-bibfile~.
 - *VPN routing.* When ~zotra-extras-use-mullvad-p~ is non-nil and the URL matches =imdb.com=, the command connects through Mullvad VPN before fetching ([[#h:zotra-extras-use-mullvad-p][VPN for IMDb]]).
+- *ISBN fallback via Google Books.* When the input is a bare ISBN (10 or 13 digits) and the translation server's search translators return no results, the command automatically retries by looking up the ISBN on Google Books ([[#h:isbn-fallback][ISBN fallback]]).
 - *Backend fallback.* If the primary =zotra= backend fails with a JSON parse error indicating an internal server error, the command automatically retries with the =citoid= backend.
 - *Ebib integration.* After successfully adding the entry, it opens the new entry in =ebib= for review, unless the optional DO-NOT-OPEN argument is non-nil.
 
@@ -176,6 +177,17 @@ The protocol is registered automatically when the package is loaded, adding an e
 
 #+findex: zotra-extras-add-multiple-urls
 The function ~zotra-extras-add-multiple-urls~ is the non-interactive workhorse behind ~zotra-extras-add-multiple-urls-from-file~ ([[#h:batch-processing][Batch processing]]). It accepts a list of URLS and a BIBFILE, saves all open =ebib= databases, then iterates through the URLs calling ~zotra-extras-add-entry~ for each with DO-NOT-OPEN set. After all entries are added, it opens the bibliography in =ebib= and sorts by timestamp.
+
+** ISBN fallback
+:PROPERTIES:
+:CUSTOM_ID: h:isbn-fallback
+:END:
+
+#+findex: zotra-extras--isbn-p
+#+findex: zotra-extras--isbn-to-google-books-url
+The Zotero translation server's =/search= endpoint resolves bare ISBNs by querying a chain of library catalog translators (Library of Congress, BnF, K10plus, Open WorldCat). When the ISBN belongs to a publisher or edition not cataloged by any of these services, the search fails with "No items returned from any translator".
+
+To handle this, ~zotra-extras-add-entry~ ([[#h:adding-entries][Adding entries]]) detects the failure, checks whether the input is a bare ISBN using ~zotra-extras--isbn-p~, and retries the lookup by constructing a Google Books URL with ~zotra-extras--isbn-to-google-books-url~. The Google Books translator in the translation server's =/web= endpoint has broader ISBN coverage and typically succeeds where the catalog-based search translators fail.
 
 * Indices
 :PROPERTIES:

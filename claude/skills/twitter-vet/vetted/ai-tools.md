@@ -88,3 +88,9 @@
 - @realsigridjin (6, 2026-04-10) — UBC Agentic Club. Good MCP/evals takes but scattered among RTs and community noise. ~45% AI tools content.
 - @rekram11 (6, 2026-04-10) — OpenCode contributor. Practical insider tips but project-specific. ~55% AI tools content.
 - @amix3k (5, 2026-04-10) — Doist CEO (34K). Mostly product promotion and industry commentary. ~30% AI tools content.
+
+- @clairevo (7, 2026-04-14) — 'How I AI' podcast host. Claude Cowork + brain file pattern, Slack digest Kanban triage, MCP integrations, Trashcan Method framework. ~45-50% AI tools content.
+- @zeeg (6, 2026-04-14) — Sentry CEO (29K). Junior slackbot architecture, Claude/Codex daily switching, token-burn critique. Operational observations from production use but lacks step-by-step tutorials. ~40-45% AI tools content.
+- @VictorTaelin (5, 2026-04-14) — Bend/HVM creator (70K). Built Bend-Metal compiler in one day with Opus+GPT, cost analysis. But mostly personal posts/enthusiasm/RTs. ~35-40% AI tools content.
+- @rakyll (4, 2026-04-14) — Jaana Dogan, ex-Google (166K). Excellent engineering thinker but mostly aviation/career/exhibitions. AI content is architectural commentary, not workflows. ~25-30% AI tools content.
+- @VicVijayakumar (2, 2026-04-14) — 25K followers. Almost entirely personal/lifestyle content. AI-adjacent tweets lack actionable detail. ~10% AI tools content.

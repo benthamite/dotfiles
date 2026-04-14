@@ -57,3 +57,4 @@ description: Practical AI tool workflows, tips, and tutorials from practitioners
 - @KatanaLarp
 - @bstnxbt
 - @gabrielchua
+- @clairevo

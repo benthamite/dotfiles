@@ -139,23 +139,6 @@ Example:
   :type '(alist :key-type string :value-type directory)
   :group 'claude-code-extras)
 
-(defcustom claude-code-extras-account-env-vars nil
-  "Account-specific environment variable overrides.
-Alist of (ACCOUNT-NAME . ((TARGET-VAR . SOURCE-VAR) ...)).
-When a session starts for ACCOUNT-NAME, each TARGET-VAR is set
-to the value of SOURCE-VAR from the current shell environment.
-
-This allows MCP servers that share the same definition across
-accounts to receive different credentials depending on which
-account is active.
-
-Example:
-  \\='((\"tlon\"  . ((\"TWITTERAPI_API_KEY\" . \"TWITTERAPI_API_KEY_TLON\")))
-    (\"epoch\" . ((\"TWITTERAPI_API_KEY\" . \"TWITTERAPI_API_KEY_EPOCH\"))))"
-  :type '(alist :key-type string
-                :value-type (alist :key-type string :value-type string))
-  :group 'claude-code-extras)
-
 (defcustom claude-code-extras-account-file
   (expand-file-name ".claude-current-account" "~")
   "File storing the name of the currently active Claude account.
@@ -572,44 +555,14 @@ resulting in a garbled banner."
 
 (defun claude-code-extras--account-env (_buffer-name _dir)
   "Return environment variables for the pending account.
-Sets `CLAUDE_CONFIG_DIR' and any account-specific overrides from
-`claude-code-extras-account-env-vars'.  Reads
-`claude-code-extras--pending-account', which is dynamically bound
-by `claude-code-extras--start-with-account'."
+Sets `CLAUDE_CONFIG_DIR' based on `claude-code-extras-accounts'.
+Reads `claude-code-extras--pending-account', which is dynamically
+bound by `claude-code-extras--start-with-account'."
   (when-let* ((account claude-code-extras--pending-account)
               (config-dir (alist-get account claude-code-extras-accounts
                                      nil nil #'string=)))
-    (let ((env (list (format "CLAUDE_CONFIG_DIR=%s"
-                             (expand-file-name config-dir)))))
-      (dolist (mapping (claude-code-extras--account-env-mappings account))
-        (when-let* ((val (claude-code-extras--resolve-env-value
-                          (cdr mapping))))
-          (push (format "%s=%s" (car mapping) val) env)))
-      env)))
-
-(defun claude-code-extras--account-env-mappings (account)
-  "Return the env var mappings for ACCOUNT.
-Each mapping is a (TARGET-VAR . SOURCE-VAR) cons cell from
-`claude-code-extras-account-env-vars'."
-  (alist-get account claude-code-extras-account-env-vars
-             nil nil #'string=))
-
-(defun claude-code-extras--resolve-env-value (source-var)
-  "Return the resolved value of SOURCE-VAR.
-Reads SOURCE-VAR from the environment.  If the value is an
-`op://' reference, resolve it via `op read' at runtime.  This
-avoids calling `op read' at shell startup."
-  (when-let* ((raw (getenv source-var)))
-    (if (string-prefix-p "op://" raw)
-        (claude-code-extras--op-read raw)
-      raw)))
-
-(defun claude-code-extras--op-read (reference)
-  "Resolve a 1Password REFERENCE via `op read'.
-Return the secret value as a string, or nil on failure."
-  (with-temp-buffer
-    (when (zerop (call-process "op" nil t nil "read" reference))
-      (string-trim (buffer-string)))))
+    (list (format "CLAUDE_CONFIG_DIR=%s"
+                  (expand-file-name config-dir)))))
 
 (defconst claude-code-extras--shared-config-items
   '("settings.json" "settings.local.json"
@@ -621,20 +574,21 @@ available regardless of which account is active.  Only OAuth
 credentials remain account-specific.")
 
 (defconst claude-code-extras--shared-claude-json-keys
-  '("mcpServers" "theme" "claudeInChromeDefaultEnabled"
+  '("theme" "claudeInChromeDefaultEnabled"
     "hasCompletedClaudeInChromeOnboarding")
-  "Keys copied from canonical `~/.claude.json' into each account copy.
-These are settings that should be identical across accounts.  The
-`projects' key is handled separately via merge logic.")
+  "Keys copied verbatim from canonical `~/.claude.json' into each
+account copy.  The `mcpServers' key is handled separately via
+per-server deep merge.  The `projects' key is handled separately
+via trust-aware merge logic.")
 
 (defun claude-code-extras--sync-account-config (account)
   "Sync shared state into ACCOUNT's config directory.
-Merges the `projects' key from the canonical `~/.claude.json' and
-all account configs so folder trust decisions are available
-everywhere.  Copies shared keys like `mcpServers' from the
-canonical config so MCP servers, theme, and chrome integration are
-available in all accounts.  Also symlinks settings, skills,
-plugins, projects, memory, and history from `~/.claude/'.
+Deep-merges `mcpServers' per-server from canonical, preserving
+per-account `env' entries (e.g. account-specific API keys).
+Copies theme and chrome settings verbatim.  Merges the `projects'
+key from all account configs so folder trust decisions are
+available everywhere.  Also symlinks settings, skills, plugins,
+projects, memory, and history from `~/.claude/'.
 
 Only writes `.claude.json' when actual changes are detected, to
 avoid triggering file-change detection in running Claude Code
@@ -660,6 +614,15 @@ sessions."
                                          (gethash key target))
                                         (json-serialize val))))
                     (puthash key val target)
+                    (setq changed t))))
+              ;; Deep-merge mcpServers per-server, preserving per-account env.
+              (when-let* ((canonical-servers (gethash "mcpServers" canonical)))
+                (let ((merged (claude-code-extras--merge-mcp-servers
+                               canonical-servers
+                               (gethash "mcpServers" target))))
+                  (unless (equal (json-serialize (gethash "mcpServers" target))
+                                 (json-serialize merged))
+                    (puthash "mcpServers" merged target)
                     (setq changed t)))))
             ;; Merge projects from all accounts.
             (when (> (hash-table-count merged-projects) 0)
@@ -671,6 +634,32 @@ sessions."
               (claude-code-extras--write-claude-json target-path target))))
       (error
        (message "claude-code-extras: failed to sync account config: %S" err)))))
+
+(defun claude-code-extras--merge-mcp-servers (canonical target)
+  "Merge CANONICAL MCP servers into TARGET, preserving per-account env.
+For each server in CANONICAL, copy all keys into TARGET's entry
+but deep-merge the `env' hash table so per-account entries
+survive.  Returns the merged result."
+  (let ((result (or target (make-hash-table :test #'equal))))
+    (maphash
+     (lambda (name config)
+       (let ((existing (gethash name result)))
+         (if (not (and existing (hash-table-p existing)))
+             (puthash name config result)
+           (let ((account-env (copy-hash-table (gethash "env" existing
+                                                        (make-hash-table)))))
+             (maphash (lambda (k v) (puthash k v existing)) config)
+             (claude-code-extras--deep-merge-env account-env
+                                                 (gethash "env" existing))))))
+     canonical)
+    result))
+
+(defun claude-code-extras--deep-merge-env (account-env target-env)
+  "Merge ACCOUNT-ENV entries into TARGET-ENV, account wins on conflict.
+Modifies TARGET-ENV in place."
+  (when (and (hash-table-p account-env)
+             (> (hash-table-count account-env) 0))
+    (maphash (lambda (k v) (puthash k v target-env)) account-env)))
 
 (defun claude-code-extras--ensure-shared-symlinks (config-dir)
   "Ensure shared config symlinks exist in CONFIG-DIR.
@@ -797,11 +786,10 @@ persists the selection.  New sessions will use this account."
 (defun claude-code-extras--start-with-account ()
   "Start a new Claude session using the active account."
   (interactive)
-  (let ((claude-code-extras--pending-account
-         (claude-code-extras--resolve-account)))
-    (when claude-code-extras--pending-account
-      (claude-code-extras--sync-account-config
-       claude-code-extras--pending-account))
+  (let* ((account (claude-code-extras--resolve-account))
+         (claude-code-extras--pending-account account))
+    (when account
+      (claude-code-extras--sync-account-config account))
     (claude-code)))
 
 ;;;###autoload

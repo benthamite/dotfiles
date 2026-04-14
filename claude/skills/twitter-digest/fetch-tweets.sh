@@ -7,9 +7,23 @@
 #        fetch-tweets.sh <list-name> <override-cutoff>
 #
 # Output: a self-contained block with metadata header + compact tweet lines.
-# Requires: TWITTERAPI_API_KEY env var
+# Requires: TWITTERAPI_API_KEY (or account-specific variant) env var
 
 set -euo pipefail
+
+# Resolve TWITTERAPI_API_KEY from account-specific env vars if not set directly.
+if [[ -z "${TWITTERAPI_API_KEY:-}" ]]; then
+  if [[ "${CLAUDE_CONFIG_DIR:-}" == *epoch* ]] && [[ -n "${TWITTERAPI_API_KEY_EPOCH:-}" ]]; then
+    TWITTERAPI_API_KEY="$TWITTERAPI_API_KEY_EPOCH"
+  elif [[ -n "${TWITTERAPI_API_KEY_TLON:-}" ]]; then
+    TWITTERAPI_API_KEY="$TWITTERAPI_API_KEY_TLON"
+  fi
+fi
+# Resolve op:// references via 1Password CLI.
+if [[ "${TWITTERAPI_API_KEY:-}" == op://* ]]; then
+  TWITTERAPI_API_KEY=$(op read "$TWITTERAPI_API_KEY")
+fi
+export TWITTERAPI_API_KEY
 
 SKILL_DIR="${SKILL_DIR:-$HOME/.claude/skills/twitter-digest}"
 LIST_NAME="$1"

@@ -1822,7 +1822,6 @@ Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magi
   :ensure (:host github
                  :repo "alphapapa/magit-todos"
                  :build (:not elpaca-check-version))
-  :disabled
   :after magit hl-todo
   :custom
   (magit-todos-branch-list nil)
@@ -8906,10 +8905,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (claude-code-extras-copilot-enabled nil)
   (claude-code-extras-org-todo-in-progress-keyword "DOING")
   (claude-code-extras-accounts '(("tlon"  . "~/.claude-tlon")
-                                 ("epoch" . "~/.claude-epoch")))
-  (claude-code-extras-account-env-vars
-   '(("tlon"  . (("TWITTERAPI_API_KEY" . "TWITTERAPI_API_KEY_TLON")))
-     ("epoch" . (("TWITTERAPI_API_KEY" . "TWITTERAPI_API_KEY_EPOCH"))))))
+                                 ("epoch" . "~/.claude-epoch"))))
 #+end_src
 
 ** =agent-log=
@@ -12974,17 +12970,19 @@ Then change the value of =telega-server-libs-prefix= from =/opt/homebrew= to =/u
   :after telega)
 #+end_src
 
-** signel
+** sgn
 :PROPERTIES:
 :ID:       EE8FDB64-9E1A-4B5E-8F67-E8A0AD6F077D
 :END:
 
-/[[https://github.com/keenban/signel][signel]] is an Emacs interface for Signal./
+/[[https://github.com/benthamite/sgn][sgn]] is an Emacs interface for Signal./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package signel
+(use-package sgn
+  :ensure (:host github
+           :repo "benthamite/sgn")
   :custom
-  (signel-account "+14246668293"))
+  (sgn-account "+14246668293"))
 #+end_src
 
 ** =wasabi=

@@ -121,11 +121,27 @@ in Ebib after adding it."
     (condition-case err
 	(zotra-extras--add-and-maybe-open url-or-search-string entry-format bibfile do-not-open)
       (error
-       (if (string-match-p "JSON parse error: Internal Server Error" (error-message-string err))
+       (let ((msg (error-message-string err)))
+	 (cond
+	  ((and (string-match-p "No items returned from any translator" msg)
+		(zotra-extras--isbn-p url-or-search-string))
+	   (message "ISBN search failed. Retrying via Google Books...")
+	   (zotra-extras--add-and-maybe-open
+	    (zotra-extras--isbn-to-google-books-url url-or-search-string)
+	    entry-format bibfile do-not-open))
+	  ((string-match-p "JSON parse error: Internal Server Error" msg)
 	   (let ((zotra-backend 'citoid))
 	     (message "Request with main backend failed. Retrying with `citoid'...")
-	     (zotra-extras--add-and-maybe-open url-or-search-string entry-format bibfile do-not-open))
-	 (signal (car err) (cdr err)))))))
+	     (zotra-extras--add-and-maybe-open url-or-search-string entry-format bibfile do-not-open)))
+	  (t (signal (car err) (cdr err)))))))))
+
+(defun zotra-extras--isbn-p (string)
+  "Return non-nil if STRING looks like a bare ISBN-10 or ISBN-13."
+  (string-match-p "\\`[0-9]\\{10,13\\}\\'" (string-trim string)))
+
+(defun zotra-extras--isbn-to-google-books-url (isbn)
+  "Return a Google Books URL for ISBN."
+  (format "https://books.google.com/books?vid=ISBN%s" (string-trim isbn)))
 
 (defun zotra-extras--add-and-maybe-open (url-or-search-string entry-format bibfile &optional do-not-open)
   "Add entry using `zotra-add-entry' and, by default, open it in Ebib.

@@ -77,7 +77,7 @@ Claude Code loads settings from multiple levels, merged together. Each level can
 
 =settings.json= is version-controlled; =settings.local.json= is gitignored (machine-specific or accumulated interactively).
 
-The global =settings.json= uses =auto= mode: a background classifier allows most actions while blocking risky ones (force pushes, mass deletion, sending secrets to external endpoints, etc.).
+The global =settings.json= uses =bypassPermissions= mode with =skipDangerousModePermissionPrompt= (both inside the =permissions= object). All MCP servers are explicitly listed in =permissions.allow= as a workaround for [[https://github.com/anthropics/claude-code/issues/5140][anthropics/claude-code#5140]]. Safety hooks (=guard-external-actions.sh=, =block-destructive-command.sh=, etc.) provide the actual guardrails.
 
 *** =CLAUDE.md= loading
 :PROPERTIES:

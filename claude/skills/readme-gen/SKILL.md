@@ -74,21 +74,22 @@ Include installation instructions for the most common methods:
 - **package-vc** (built-in since Emacs 30):
 
   ```emacs-lisp
-  (package-vc-install "https://github.com/OWNER/PACKAGE")
+  (use-package PACKAGE
+    :vc (:url "https://github.com/OWNER/PACKAGE"))
   ```
 
 - **Elpaca**:
 
   ```emacs-lisp
   (use-package PACKAGE
-    :ensure (PACKAGE :host github :repo "OWNER/PACKAGE"))
+    :ensure (:host github :repo "OWNER/PACKAGE"))
   ```
 
 - **straight.el**:
 
   ```emacs-lisp
-  (straight-use-package
-   '(PACKAGE :type git :host github :repo "OWNER/PACKAGE"))
+  (use-package PACKAGE
+    :straight (:host github :repo "OWNER/PACKAGE"))
   ```
 
 Infer `OWNER/PACKAGE` from the git remote:

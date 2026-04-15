@@ -148,7 +148,32 @@ The function ~magit-extras-get-commit-heading~ retrieves the Org mode heading as
 
 The function ~magit-extras-get-unstaged-files~ returns a list of unstaged file names using =git diff --name-only --diff-filter=d=. The function ~magit-extras-track-file~ stages a single file with =git add=. The function ~magit-extras-move-point-to-start~ moves point to the beginning of the buffer after a brief delay, which can be useful in Magit hooks.
 
-The function ~magit-extras-midnight-update~ performs a stage-commit-push cycle in the given DIRECTORY with the commit message "Midnight update". It is called by ~magit-extras-stage-commit-and-push-all-repos~ ([[#h:stage-commit-push][Stage, commit, and push]]).
+The function ~magit-extras-midnight-update~ performs a stage-commit-push
+cycle in the given DIRECTORY with the commit message "Midnight update".
+Before staging, it calls ~magit-extras-revert-clean-buffers-in-directory~
+to refresh stale Emacs buffers, preventing on-disk changes made by
+external tools from being overwritten ([[#h:revert-clean-buffers][Reverting stale buffers]]).
+It is called by ~magit-extras-stage-commit-and-push-all-repos~
+([[#h:stage-commit-push][Stage, commit, and push]]).
+
+** Reverting stale buffers
+:PROPERTIES:
+:CUSTOM_ID: h:revert-clean-buffers
+:END:
+
+#+findex: magit-extras-revert-clean-buffers-in-directory
+The function ~magit-extras-revert-clean-buffers-in-directory~ reverts
+all unmodified file-visiting buffers whose files reside under
+DIRECTORY.  A buffer is reverted only when its file still exists on
+disk and the buffer has no unsaved edits.  This ensures that external
+modifications---from scripts, command-line tools, or other
+processes---are picked up by Emacs before a commit.
+
+This function is called automatically by ~magit-extras-midnight-update~
+before staging.  Without it, the ~files-extras-save-all-buffers~ step
+(which runs earlier in the ~midnight-hook~) could overwrite on-disk
+changes with stale buffer contents, silently deleting work done
+outside Emacs.
 
 * Indices
 :PROPERTIES:

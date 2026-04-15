@@ -60,17 +60,35 @@ not push to remote."
 
 (defun magit-extras-midnight-update (directory)
   "Update repo in DIRECTORY with `midnight'.
-Unlike `magit-extras-stage-commit-and-push', this uses synchronous git
-operations to avoid process sentinel issues when `default-directory' changes
-between the start and completion of async processes."
+Unlike `magit-extras-stage-commit-and-push', this uses synchronous
+git operations to avoid process sentinel issues when
+`default-directory' changes between the start and completion of
+async processes.
+
+Before staging, revert unmodified file-visiting buffers under
+DIRECTORY so that on-disk changes made outside Emacs are not
+clobbered by stale buffer contents."
   (let ((default-directory directory))
     (when (and (file-directory-p directory)
                (magit-toplevel))
+      (magit-extras-revert-clean-buffers-in-directory directory)
       (when (or (magit-anything-staged-p)
                 (magit-anything-unstaged-p))
         (magit-call-git "add" "--all" ".")
         (magit-call-git "commit" "-m" "Midnight update"))
       (magit-call-git "push"))))
+
+(defun magit-extras-revert-clean-buffers-in-directory (directory)
+  "Revert unmodified file-visiting buffers under DIRECTORY.
+Only buffers whose files still exist on disk and that have no
+unsaved edits are reverted."
+  (dolist (buf (buffer-list))
+    (when-let ((file (buffer-file-name buf)))
+      (when (and (file-in-directory-p file directory)
+                 (file-exists-p file)
+                 (not (buffer-modified-p buf)))
+        (with-current-buffer buf
+          (revert-buffer t t t))))))
 
 ;; gist.github.com/dotemacs/9a0433341e75e01461c9
 (defun magit-extras-parse-url (url)

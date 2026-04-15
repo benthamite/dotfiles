@@ -155,6 +155,8 @@ After running, restart Claude Code so the `gmail-epoch-triage` MCP server picks 
 
 ## Troubleshooting
 
+When an MCP tool call fails: (1) retry the same call immediately, (2) try the equivalent tool on the other server covering the same service, (3) only after both retries fail, consult the specific issues below. Never speculate about env vars or suggest restarting Emacs without evidence.
+
 ### `invalid_grant` on google-docs-personal
 
 The `@a-bonus/google-docs-mcp` server's OAuth app is in Google "testing" mode, so refresh tokens expire every 7 days. To fix:

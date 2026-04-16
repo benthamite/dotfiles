@@ -23,6 +23,17 @@ else
     channels=$(grep '^Channel ' ~/.mbsyncrc | awk '{print $2}' | grep -v '^epoch-' | grep -v -- '-all$' | sort -u)
 fi
 
+# Decrypt the IMAP password once to a secure temp file so the parallel mbsync
+# jobs below don't race on the GPG keyring lock (otherwise each channel's
+# PassCmd invokes gpg concurrently and some emit "gpg: lockfile disappeared").
+# mbsync-passcmd reads from this file when MBSYNC_PASSFILE is set.
+MBSYNC_PASSFILE=$(mktemp -t mbsync-pass.XXXXXX)
+chmod 600 "$MBSYNC_PASSFILE"
+trap 'rm -f "$MBSYNC_PASSFILE"' EXIT
+gpg --quiet --decrypt "$HOME/.password-store/auth-sources/mbsync/password.gpg" \
+    > "$MBSYNC_PASSFILE"
+export MBSYNC_PASSFILE
+
 # Run gmail-maildir-sync in background (no GPG needed), mbsync in foreground
 # (mbsync needs GPG/pinentry which requires a TTY)
 gmail-maildir-sync sync &

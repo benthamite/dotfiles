@@ -1,7 +1,7 @@
 IMAPAccount gmail
 Host imap.gmail.com
 UserCmd "echo $PERSONAL_GMAIL"
-PassCmd "gpg --quiet --decrypt $HOME/.password-store/auth-sources/mbsync/password.gpg"
+PassCmd "mbsync-passcmd"
 TLSType IMAPS
 TLSVersions +1.3
 AuthMechs LOGIN

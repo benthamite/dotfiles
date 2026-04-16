@@ -46,5 +46,11 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/My Drive/dotfiles/claude"]
 trust_level = "trusted"
 
+[projects."/Users/pablostafforini/My Drive/notes"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/sgn"]
+trust_level = "trusted"
+
 [tui]
 theme = "light"

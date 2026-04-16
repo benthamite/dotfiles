@@ -10623,7 +10623,10 @@ Note to self: Typescript syntax highlighting works fine, but calling ~org-edit-s
   :after org-table
   :demand t
   :custom
-  (org-table-wrap-width-fraction 0.8))
+  (org-table-wrap-width-fraction 0.8)
+
+  :hook
+  (org-mode-hook . org-table-wrap-mode))
 #+end_src
 
 ** =orgtbl-edit=

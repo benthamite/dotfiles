@@ -350,7 +350,7 @@ Transcribes the most recent audio file in =~/Downloads/= using whisperx, then re
 :ID:       E8FD1360-FDF6-46FE-940F-BD8A346AE4BF
 :END:
 
-Registers an Emacs package in =my-emacs-packages.org=, creates an accompanying documentation note with =#+INCLUDE= directives pointing to the package's readme, and adds a card to the =benthamite/benthamite= GitHub profile README. Determines the package name from the argument or the current directory, inserts entries in alphabetical order, and generates org IDs for both the note and the list entry. Checks both the packages list and the GitHub profile README, skipping whichever is already done.
+Registers an Emacs package in =my-emacs-packages.org=, creates an accompanying documentation note with =#+INCLUDE= directives pointing to the package's readme, and adds a card to the =benthamite/benthamite= GitHub profile README. Determines the package name from the argument or the current directory, inserts entries in alphabetical order, and generates org IDs for both the note and the list entry. Marks the exported note as =:unlisted true= via =EXPORT_HUGO_CUSTOM_FRONT_MATTER= so it stays out of the site's note index. Checks both the packages list and the GitHub profile README, skipping whichever is already done.
 
 ** Release and operations skills
 :PROPERTIES:

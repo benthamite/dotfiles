@@ -72,6 +72,7 @@ Create the file `<package>.org` in the notes directory with this structure:
   :EXPORT_FILE_NAME: <package>
   :EXPORT_HUGO_SECTION: notes
   :EXPORT_DATE: <today's date in YYYY-MM-DD format>
+  :EXPORT_HUGO_CUSTOM_FRONT_MATTER: :unlisted true
   :END:
 
 #+INCLUDE: "<path-to-readme>::*<Section 1>" :minlevel 2

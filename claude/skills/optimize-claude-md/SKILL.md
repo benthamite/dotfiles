@@ -73,7 +73,17 @@ Examples of likely defaults: don't mix unrelated changes in a commit, use descri
 
 Contradictions cause arbitrary behavior — Claude picks one at random. Review for direct contradictions, semantic tension, and instructions that give different guidance for the same situation.
 
-### Criterion 7: Instruction positioning
+### Criterion 7: Operational vs. reference
+
+"Is this operational (trigger → action) or reference (a fact to look up)?"
+
+Operational content — procedures the agent must execute correctly (commands, workflows, behavioral rules shaped like *"when the user says X, do Y"*) — belongs in a **skill**, not an `@`-import or linked doc. Skills load their description into the system reminder, match against the user's request via keyword triggers, and carry a "BLOCKING REQUIREMENT" to invoke when they match. `@`-imports and linked docs expand inline but can be skimmed past, especially when the user's phrasing doesn't explicitly cue the reference.
+
+Reference content — facts, lookups, infrequent data the agent retrieves on demand (calendar links, token rotation commands, architectural background) — belongs in an `@`-import or linked doc. No procedure to trigger; the agent reads when it needs the info.
+
+Diagnostic: if removing the content from CLAUDE.md and not putting it in a skill would cause the agent to silently skip an expected action, it's operational → skill. If it would only cause the agent to ask the user for the fact, it's reference → `@`-import.
+
+### Criterion 8: Instruction positioning
 
 "Are the most critical instructions positioned for maximum attention?"
 
@@ -93,14 +103,16 @@ Check which dimensions are covered, which are missing, and which are over-repres
 
 ### Progressive disclosure
 
-Content that doesn't need to be in every session should be externalized:
+Content that doesn't need to be in every session should be externalized. Match the externalization mechanism to the content type (see Criterion 7):
 
-- Task-specific procedures → skills
-- File-type-specific conventions → `.claude/rules/` with `paths` frontmatter
-- Detailed reference material → separate docs referenced with `@` imports
-- Lengthy architectural explanations → standalone files with brief CLAUDE.md pointers
+- **Operational content** (trigger → action procedures, behavioral rules tied to user intent) → skills. Skills are the only mechanism with keyword-triggered auto-loading and a blocking invocation requirement. `@`-imports are unreliable for operational content — the agent may fail to attend to it when the triggering situation arises.
+- **File-type-specific conventions** → `.claude/rules/` with `paths` frontmatter. Auto-loaded when the agent touches matching files.
+- **Reference material** (facts, lookups, infrequent data) → separate docs referenced with `@` imports.
+- **Lengthy architectural explanations** → standalone files with brief CLAUDE.md pointers (agent pulls on demand).
 
 CLAUDE.md should list available resources with one-line descriptions so the agent knows they exist, not embed their full contents.
+
+Anti-pattern to flag: `See [context/foo.md](context/foo.md)` with no surrounding context, pointing to operational content. Plain links are the weakest externalization — weaker than `@`-imports, which at least expand inline. If the target is operational, convert it to a skill. If it's reference, at minimum use an `@`-import.
 
 ### Markdown structure
 

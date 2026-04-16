@@ -510,7 +510,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#telega-dired-dwim][telega-dired-dwim]]
   - [[#telega-extras][telega-extras]]
   - [[#ol-telega][ol-telega]]
-  - [[#signel][signel]]
+  - [[#sgn][sgn]]
   - [[#wasabi][wasabi]]
   - [[#ement][ement]]
   - [[#erc][erc]]

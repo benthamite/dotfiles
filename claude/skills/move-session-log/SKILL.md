@@ -17,10 +17,10 @@ If no argument is provided, list all `.jsonl` files across `~/.claude/projects/`
 
 ## Steps
 
-1. **Derive the current project's internal logs directory.** The directory name under `~/.claude/projects/` is the absolute path of the project root with every `/` and space replaced by `-`. Use `$CLAUDE_PROJECT_DIR` to get the project root, then derive the directory name:
+1. **Derive the current project's internal logs directory.** The directory name under `~/.claude/projects/` is the absolute path of the project root with every `/`, `.`, and space replaced by `-`. Use `$PWD` to get the project root, then derive the directory name:
 
    ```bash
-   current_dir="$HOME/.claude/projects/$(echo "$CLAUDE_PROJECT_DIR" | sed 's|[/ ]|-|g')"
+   current_dir="$HOME/.claude/projects/$(echo "$PWD" | sed 's|[/. ]|-|g')"
    ```
 
    Verify this directory exists. If not, report the error and stop.
@@ -40,13 +40,13 @@ If no argument is provided, list all `.jsonl` files across `~/.claude/projects/`
    mv "<source>/<session-id>" "$current_dir/" 2>/dev/null  # directory may not exist
    ```
 
-4. **Rewrite history.jsonl.** Update the `project` field in `~/.claude/history.jsonl` for all entries matching this session ID to point to `$CLAUDE_PROJECT_DIR`:
+4. **Rewrite history.jsonl.** Update the `project` field in `~/.claude/history.jsonl` for all entries matching this session ID to point to the current project root:
 
    ```python
-   import json
+   import json, os
 
    history = os.path.expanduser("~/.claude/history.jsonl")
-   new_project = os.environ["CLAUDE_PROJECT_DIR"]
+   new_project = os.getcwd()
 
    lines = []
    with open(history) as f:
@@ -60,13 +60,13 @@ If no argument is provided, list all `.jsonl` files across `~/.claude/projects/`
        f.write("\n".join(lines) + "\n")
    ```
 
-5. **Rewrite cwd in the session .jsonl.** Update all `cwd` fields in the moved session file to point to `$CLAUDE_PROJECT_DIR`:
+5. **Rewrite cwd in the session .jsonl.** Update all `cwd` fields in the moved session file to point to the current project root:
 
    ```python
-   import json
+   import json, os
 
    session_file = os.path.join(current_dir, f"{session_id}.jsonl")
-   new_cwd = os.environ["CLAUDE_PROJECT_DIR"]
+   new_cwd = os.getcwd()
 
    lines = []
    with open(session_file) as f:

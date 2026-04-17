@@ -89,15 +89,19 @@ Guidelines for the content:
 - Group entries by the two categories above. Within each category, order by importance.
 - If a category has no entries, omit it.
 
-### 6. Open in Emacs
+### 6. Save and open in Emacs
 
-Write the digest to a temporary file and open it in Emacs:
+Write the digest to a **persistent** file under `~/My Drive/notes/Slack/`, named `YYYY-MM-DD-HHMM-slack-digest.org` using the current local date/time. Never use `/tmp` or `mktemp` — those locations are wiped by macOS and the user loses the digest if the buffer is closed.
 
 ```bash
-TMPFILE=$(mktemp /tmp/slack-digest-XXXXXX.org)
-# (write content to $TMPFILE)
-emacsclient -e "(progn (find-file \"$TMPFILE\") (goto-char (point-min)) (org-fold-show-all))"
+OUTDIR="$HOME/My Drive/notes/Slack"
+mkdir -p "$OUTDIR"
+OUTFILE="$OUTDIR/$(date +%Y-%m-%d-%H%M)-slack-digest.org"
+# (use the Write tool to write the digest content to "$OUTFILE")
+emacsclient -e "(progn (find-file \"$OUTFILE\") (goto-char (point-min)) (org-fold-show-all))"
 ```
+
+The file must be written to disk **before** step 7 (marking channels as read), so that if marking succeeds the user still has a durable record of what was in the unreads.
 
 ### 7. Mark conversations as read
 

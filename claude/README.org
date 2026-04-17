@@ -227,7 +227,7 @@ These are not invoked directly. They supply background knowledge when Claude wor
 :ID:       3AB926D5-2116-4864-93F2-B6D33CE832C5
 :END:
 
-Describes the repository layout (the elpaca clone syncs automatically from Google Drive), how to resolve the active elpaca profile, the batch-testing recipe, and the commit message format (=<scope>: <description>=). See also =emacs/extras/doc/elisp-development-workflow.org= for the full two-clone sync architecture.
+States the general rule for where external Emacs packages live — all elpaca-managed packages are cloned at =~/.config/emacs-profiles/<profile>/elpaca/sources/<package>/= and that clone is the canonical working copy, with =dotfiles= as the single exception (mirror of =~/My Drive/dotfiles/=). Also covers how to resolve the active elpaca profile, the batch-testing recipe, and the commit message format (=<scope>: <description>=). See also =emacs/extras/doc/elisp-development-workflow.org= for the full two-clone sync architecture.
 
 *** elisp-conventions
 :PROPERTIES:

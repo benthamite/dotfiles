@@ -4,11 +4,11 @@ description: Dotfiles worktree structure and documentation instructions for 'ext
 user-invocable: false
 ---
 
-# Dotfiles repository
+# Where external Emacs packages live
 
-Elpaca keeps a separate clone at `~/.config/emacs-profiles/<profile>/elpaca/sources/dotfiles/` for loading Elisp, but do **not** commit there. The elpaca clone syncs from the Google Drive repo via git commits.
+All elpaca-managed packages — whether authored by the user or third-party — are cloned to `~/.config/emacs-profiles/<profile>/elpaca/sources/<package>/`. For every package *except* `dotfiles`, that clone is the canonical working copy: edit it directly, commit there, push upstream. There is no separate Drive-side master.
 
-**A PreToolUse hook (`block-elpaca-dotfiles-edit.sh`) blocks direct edits to `elpaca/sources/dotfiles/`.** Always edit the canonical files in `~/My Drive/dotfiles/` instead. After editing, commit and push in the dotfiles repo so the elpaca clone picks up the change on next sync. Only then will `elpaca-rebuild` (triggered by the `load-elisp-after-edit.sh` PostToolUse hook) compile the new code.
+The `dotfiles` package is the single exception: its canonical source is `~/My Drive/dotfiles/`, and the elpaca clone at `elpaca/sources/dotfiles/` is a read-only mirror that syncs via git commits. A PreToolUse hook (`block-elpaca-dotfiles-edit.sh`) enforces this by blocking direct edits to the mirror. After editing the canonical files and committing+pushing, the elpaca clone picks up the change on next sync, and `elpaca-rebuild` (triggered by the `load-elisp-after-edit.sh` PostToolUse hook) compiles the new code.
 
 If you need to rebuild manually (e.g. after a commit-only change), use:
 

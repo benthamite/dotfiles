@@ -82,9 +82,11 @@ The function ~claude-code-extras-disable-scrollback-truncation~ sets ~eat-term-s
 :END:
 
 #+vindex: claude-code-extras-sync-theme
-The user option ~claude-code-extras-sync-theme~ controls whether the Claude Code theme is kept in sync with the current Emacs theme. When non-~nil~, changing the Emacs theme (via ~enable-theme-functions~) updates =~/.claude/settings.local.json= and sends ~/theme~ to all running Claude Code sessions so they switch between light and dark mode automatically. The default value is ~nil~ (disabled). The theme is written to =settings.local.json= rather than =settings.json= so that theme changes do not dirty the git-tracked =settings.json= symlink.
+The user option ~claude-code-extras-sync-theme~ controls whether Claude Code sessions are kept in sync with the current Emacs theme. When non-~nil~, changing the Emacs theme (via ~enable-theme-functions~) re-runs ~/theme~ in all running Claude Code sessions, forcing Claude Code to re-query the terminal background via the OSC 11 escape sequence. The default value is ~nil~ (disabled).
 
-Sessions that are idle (waiting for user input) receive the ~/theme~ command immediately. Sessions where Claude is still generating a response queue the theme change and apply it automatically when the turn finishes (via the Stop hook).
+This assumes Claude Code is configured with the ~auto~ theme globally (in =~/.claude.json=). The ~auto~ theme detects the terminal background at startup but does not continuously re-probe, so re-running ~/theme~ is what triggers re-detection mid-session.
+
+Sessions that are idle (waiting for user input) receive the ~/theme~ command immediately. Sessions where Claude is still generating a response queue the re-selection and apply it automatically when the turn finishes (via the Stop hook).
 
 The theme sync is fully asynchronous: the ~enable-theme-functions~ hook returns immediately, and all terminal interactions are deferred to zero-delay timers.  This prevents reentrant timer execution (e.g. ~org-roam-db-sync~) from blocking the main thread during ~accept-process-output~.
 

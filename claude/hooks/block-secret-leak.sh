@@ -105,6 +105,21 @@ check_pattern '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----' 'private key'
 # Client IDs are semi-public; secrets are not.
 check_pattern '"client_secret"\s*:\s*"[A-Za-z0-9_-]{20,}"' 'Google OAuth client secret'
 
+# Google API key (AIza...)
+check_pattern 'AIza[0-9A-Za-z_-]{35}' 'Google API key'
+
+# GitLab personal access token
+check_pattern 'glpat-[A-Za-z0-9_-]{20,}' 'GitLab token'
+
+# JWT (three base64url segments separated by dots)
+# JWTs always start with eyJ (base64 of {") and have exactly two dots.
+check_pattern 'eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+' 'JWT'
+
+# Database connection string with embedded credentials.
+# Matches scheme://user:password@host for common DB schemes. Credential-less
+# URLs (e.g. postgres://localhost/db) do not match.
+check_pattern '(postgres|postgresql|mysql|mongodb|mongodb\+srv|redis|amqp|amqps|mssql)://[^:/ ]+:[^@/ ]+@' 'database connection string with embedded credentials'
+
 # Generic high-entropy tokens assigned to known secret variable names
 # This catches: API_KEY=abc123..., secret: "abc123...", token = "abc123..."
 # The {32,} threshold reduces false positives from short values.

@@ -8927,7 +8927,8 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :custom
   (agent-log-summary-model 'gemini-flash-latest)
   (agent-log-sync-on-session-end t)
-  (agent-log-auto-rename-sessions t))
+  (agent-log-auto-rename-sessions t)
+  (agent-log-redact-scrub-on-session-end t))
 #+end_src
 
 ** =monet=

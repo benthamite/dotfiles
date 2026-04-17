@@ -61,9 +61,12 @@ the standard kill-protection prompt."
   :group 'claude-code-extras)
 
 (defcustom claude-code-extras-sync-theme nil
-  "Whether to sync the Claude Code theme with the current Emacs theme.
-When non-nil, updates `~/.claude/settings.json' and sends `/theme' to all
-running Claude Code sessions whenever `enable-theme-functions' fires."
+  "Whether to sync Claude Code sessions with the current Emacs theme.
+When non-nil, re-runs `/theme' in all running Claude Code sessions
+whenever `enable-theme-functions' fires, forcing Claude Code to
+re-query the terminal background via OSC 11.  Assumes the user has
+configured Claude Code with the `auto' theme globally (in
+`~/.claude.json')."
   :type 'boolean
   :group 'claude-code-extras)
 
@@ -228,9 +231,10 @@ Now managed by `ai-extras--waiting-for-input'; this variable is
 kept for code that still references it directly.")
 
 (defvar-local claude-code-extras--pending-theme nil
-  "Theme to apply when this Claude session becomes idle.
+  "Non-nil when this Claude session has a queued theme re-selection.
 Set by `claude-code-extras-sync-theme' when the session is busy;
-consumed by the Stop hook handler.")
+consumed by the Stop hook handler, which re-runs `/theme' to force
+Claude Code to re-query the terminal background via OSC 11.")
 
 (defvar-local claude-code-extras--copilot-active nil
   "Non-nil when Copilot integration is active in the current buffer.")
@@ -2505,57 +2509,29 @@ persist via `customize-save-variable'."
 
 ;;;;; Theme sync
 
-(defvar claude-code-extras--last-synced-theme nil
-  "The last theme value synced to Claude Code settings.")
+(defvar claude-code-extras--last-synced-theme
+  (frame-parameter nil 'background-mode)
+  "The last Emacs background mode synced to Claude Code sessions.")
 
 (defvar claude-code-extras--sync-theme-timer nil
   "Pending timer for deferred theme sync, or nil.")
 
-(defun claude-code-extras--emacs-theme ()
-  "Return \"light\" or \"dark\" based on the current frame background mode."
-  (if (eq (frame-parameter nil 'background-mode) 'dark) "dark" "light"))
-
-(defun claude-code-extras--sync-theme-to-settings ()
-  "Update the `theme' key in `~/.claude/settings.local.json'.
-Only writes the file when the theme value actually changes.
-Uses `settings.local.json' rather than `settings.json' so that
-theme changes do not dirty the git-tracked symlink."
-  (let* ((theme (claude-code-extras--emacs-theme))
-         (settings-file (expand-file-name "~/.claude/settings.local.json"))
-         (settings (condition-case nil
-                       (json-parse-string
-                        (with-temp-buffer
-                          (insert-file-contents settings-file)
-                          (buffer-string))
-                        :object-type 'hash-table)
-                     (error (make-hash-table :test 'equal))))
-         (current (gethash "theme" settings)))
-    (unless (equal current theme)
-      (puthash "theme" theme settings)
-      (make-directory (file-name-directory settings-file) t)
-      (with-temp-file settings-file
-        (insert (json-serialize settings))
-        (json-pretty-print-buffer)))))
-
-(defun claude-code-extras--send-theme-to-buffer (buffer theme)
-  "Send `/theme' to BUFFER and select THEME.
-
-THEME is \"light\" or \"dark\".  Sends the slash command, waits
-for the picker to render, then navigates to the correct option
-and confirms.  The picker cursor starts on the currently active
-theme, so we arrow up for dark (from light) or down for light
-\(from dark).
+(defun claude-code-extras--reselect-auto-in-buffer (buffer)
+  "Re-run `/theme' in BUFFER to force OSC 11 terminal re-detection.
+Claude Code's `auto' theme queries the terminal background via
+OSC 11 when the option is chosen through `/theme'.  Re-running the
+picker and confirming Auto re-triggers detection so the session
+tracks the current Emacs theme.
 
 All terminal sends are scheduled asynchronously via `run-at-time'
 so that this function returns immediately.  This prevents timers
-from firing reentantly during `accept-process-output' inside eat,
+from firing reentrantly during `accept-process-output' inside eat,
 which could otherwise block the main thread indefinitely."
   (with-current-buffer buffer
     (setq claude-code-extras--waiting-for-input nil
-          ai-extras--waiting-for-input nil)
-    (setq claude-code-extras--pending-theme nil)
+          ai-extras--waiting-for-input nil
+          claude-code-extras--pending-theme nil)
     (let ((buf buffer)
-          (navigate (if (string= theme "light") "\e[B" "\e[A"))
           (backend claude-code-terminal-backend))
       (claude-code--term-send-string backend "/theme")
       (run-at-time
@@ -2571,47 +2547,39 @@ which could otherwise block the main thread indefinitely."
                 (when (and (buffer-live-p buf)
                            (process-live-p (get-buffer-process buf)))
                   (with-current-buffer buf
-                    (claude-code--term-send-string backend navigate)
-                    (run-at-time
-                     0.1 nil
-                     (lambda ()
-                       (when (and (buffer-live-p buf)
-                                  (process-live-p (get-buffer-process buf)))
-                         (with-current-buffer buf
-                           (claude-code--term-send-string
-                            backend (kbd "RET")))))))))))))))))
+                    (claude-code--term-send-string
+                     backend (kbd "RET")))))))))))))
 
 (defun claude-code-extras--apply-pending-theme (buffer)
-  "Apply the pending theme to BUFFER, if any.
+  "Re-run `/theme' in BUFFER if a re-selection was queued.
 Called from the Stop hook handler when Claude finishes a turn."
-  (when-let* ((theme (buffer-local-value 'claude-code-extras--pending-theme buffer)))
-    (when (string= theme (claude-code-extras--emacs-theme))
-      (claude-code-extras--send-theme-to-buffer buffer theme))))
+  (when (buffer-local-value 'claude-code-extras--pending-theme buffer)
+    (claude-code-extras--reselect-auto-in-buffer buffer)))
 
 (defun claude-code-extras--do-sync-theme ()
   "Perform the actual theme sync.
-Called from a zero-delay timer scheduled by `claude-code-extras-sync-theme'
-so that `enable-theme-functions' and `ns-system-appearance-change-functions'
-hooks return immediately and cannot be blocked by reentrant timer activity."
+Called from a zero-delay timer scheduled by
+`claude-code-extras-sync-theme' so that `enable-theme-functions'
+and `ns-system-appearance-change-functions' hooks return
+immediately and cannot be blocked by reentrant timer activity."
   (setq claude-code-extras--sync-theme-timer nil)
-  (let ((theme (claude-code-extras--emacs-theme)))
-    (unless (equal theme claude-code-extras--last-synced-theme)
-      (setq claude-code-extras--last-synced-theme theme)
-      (claude-code-extras--sync-theme-to-settings)
+  (let ((mode (frame-parameter nil 'background-mode)))
+    (unless (equal mode claude-code-extras--last-synced-theme)
+      (setq claude-code-extras--last-synced-theme mode)
       (dolist (buf (claude-code--find-all-claude-buffers))
         (when (and (buffer-live-p buf)
                    (process-live-p (get-buffer-process buf)))
           (if (buffer-local-value 'claude-code-extras--waiting-for-input buf)
-              (claude-code-extras--send-theme-to-buffer buf theme)
+              (claude-code-extras--reselect-auto-in-buffer buf)
             (with-current-buffer buf
-              (setq claude-code-extras--pending-theme theme))))))))
+              (setq claude-code-extras--pending-theme t))))))))
 
 (defun claude-code-extras-sync-theme (&rest _)
-  "Sync Claude Code theme with the current Emacs background mode.
-Updates `~/.claude/settings.local.json' for new sessions and sends
-`/theme' to idle sessions immediately.  For busy sessions (where
-Claude is still generating), the theme is queued and applied
-automatically when Claude finishes its turn.
+  "Sync Claude Code sessions with the current Emacs background mode.
+Re-runs `/theme' in idle sessions immediately to force Claude
+Code to re-query the terminal via OSC 11.  For busy sessions
+\(where Claude is still generating), the re-selection is queued
+and applied automatically when Claude finishes its turn.
 
 The work is deferred to a zero-delay timer so that the calling
 hook returns immediately, preventing reentrant timer execution
@@ -2943,7 +2911,6 @@ there with the backtrace prompt passed as a CLI argument."
 (add-hook 'kill-buffer-hook #'ai-extras--release-session-key)
 (add-hook 'kill-buffer-hook #'claude-code-extras-teardown-copilot)
 (add-hook 'enable-theme-functions #'claude-code-extras-sync-theme)
-(add-hook 'claude-code-start-hook #'claude-code-extras-sync-theme)
 (advice-add 'claude-code--eat-send-return :before
             #'ai-extras--clear-waiting-for-input)
 (advice-add 'claude-code--vterm-send-return :before

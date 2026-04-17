@@ -3,11 +3,18 @@ name: dotfiles-context
 description: Dotfiles worktree structure, elpaca clone rules, batch-test entrypoints, and commit-message conventions. Use when working in ~/My Drive/dotfiles or related Emacs files.
 ---
 
-# Dotfiles repository
+# Where external Emacs packages live
 
-`~/My Drive/dotfiles/` is the canonical repository. Do **not** commit or edit
-the mirrored elpaca clone under
-`~/.config/emacs-profiles/<profile>/elpaca/sources/dotfiles/`.
+All elpaca-managed packages — whether authored by the user or third-party — are
+cloned to `~/.config/emacs-profiles/<profile>/elpaca/sources/<package>/`. For
+every package *except* `dotfiles`, that clone is the canonical working copy:
+edit it directly, commit there, push upstream. There is no separate Drive-side
+master.
+
+The `dotfiles` package is the single exception: its canonical source is
+`~/My Drive/dotfiles/`, and the elpaca clone at
+`~/.config/emacs-profiles/<profile>/elpaca/sources/dotfiles/` is a read-only
+mirror that syncs via git commits. Do **not** commit or edit that mirror.
 
 If you need to rebuild the installed package after editing dotfiles Emacs Lisp,
 use:

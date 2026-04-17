@@ -2528,9 +2528,7 @@ so that this function returns immediately.  This prevents timers
 from firing reentrantly during `accept-process-output' inside eat,
 which could otherwise block the main thread indefinitely."
   (with-current-buffer buffer
-    (setq claude-code-extras--waiting-for-input nil
-          ai-extras--waiting-for-input nil
-          claude-code-extras--pending-theme nil)
+    (setq claude-code-extras--pending-theme nil)
     (let ((buf buffer)
           (backend claude-code-terminal-backend))
       (claude-code--term-send-string backend "/theme")

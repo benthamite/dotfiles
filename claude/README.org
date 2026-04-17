@@ -522,6 +522,10 @@ Iterative, graph-based discovery of high-value Twitter accounts in any niche. In
 
 Pulls all unread Slack messages via the =slack-epochai= MCP server, triages them into "action required" vs. "worth knowing" (discarding noise), and opens the digest as an org-mode buffer in Emacs with deep links back to Slack. Accepts =--mark-read= or =--no-mark-read= to control whether conversations are marked as read; if neither is passed, asks interactively.
 
+*** ai-journal
+
+Scans Claude Code and Codex session transcripts since the last run, surfaces interesting AI use cases the user may want to write about (novel prompting techniques, clever skill combinations, debugging surprises, meta-observations, automations built), presents them as numbered candidates for selection, and drafts informal study-diary posts for publication at stafforini.com/ai. Uses a Python script (=find-sessions.py=) to list sessions modified after the cutoff from both =~/.claude/projects= and =~/.codex/sessions=, deduplicating by resolved path (since =~/.claude-epoch/projects= is a symlink to the same tree). The cutoff is stored in =last-run.txt=; on first run, the skill asks the user how far back to scan. Drafts are written as Hugo markdown under =content/ai/= in the stafforini.com repo and committed per-post without pushing.
+
 ** Personal skills
 :PROPERTIES:
 :ID:       B7A2F3E1-8C4D-4A5B-9E6F-1D2C3B4A5E6F

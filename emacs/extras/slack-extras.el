@@ -149,15 +149,21 @@ Call FN with ACTION, then also toggle Slack notifications."
   (funcall fn action)
   (tab-bar-extras-toggle-slack-notifications action))
 
+(declare-function tab-bar-extras-set-global-mode-string "tab-bar-extras")
 (defun slack-extras--register-tab-bar-element ()
   "Append the Slack element to `tab-bar-extras-global-mode-string'.
 The symbol is appended rather than its value so that `memq' can
-find it across reloads (interned symbols are always `eq')."
+find it across reloads (interned symbols are always `eq').  Also
+syncs `global-mode-string', which is what the tab bar actually
+displays, so the element is visible even when registration
+happens after the initial mode-string sync."
   (unless (memq 'tab-bar-extras-slack-element
                 tab-bar-extras-global-mode-string)
     (setq tab-bar-extras-global-mode-string
           (append tab-bar-extras-global-mode-string
-                  '(tab-bar-extras-slack-element)))))
+                  '(tab-bar-extras-slack-element))))
+  (when (fboundp 'tab-bar-extras-set-global-mode-string)
+    (tab-bar-extras-set-global-mode-string)))
 
 (with-eval-after-load 'tab-bar-extras
   (advice-add 'tab-bar-extras-toggle-notifications

@@ -60,7 +60,7 @@ The variable ~tab-bar-extras-slack-notifications-enabled~ controls whether the S
 #+findex: slack-extras-actionable-unreads-p
 The function ~slack-extras-actionable-unreads-p~ determines whether there are Slack notifications worth the user's attention. It triggers a debounced refresh of the Activity feed unread summary and returns the value of ~slack-has-unreads~.
 
-The tab-bar element ~tab-bar-extras-slack-element~ displays a Slack icon (from =nerd-icons=) and a badge when ~slack-extras-actionable-unreads-p~ returns non-nil. The badge shows the total mention count, or a bullet (~•~) when there are actionable unreads but no @mentions (such as thread replies or DMs).
+The tab-bar element ~tab-bar-extras-slack-element~ displays a Slack icon (from =nerd-icons=) and a badge when ~slack-extras-actionable-unreads-p~ returns non-nil. The badge shows the total mention count, or a bullet (~•~) when there are actionable unreads but no @mentions (such as thread replies or DMs). Registration appends the element to ~tab-bar-extras-global-mode-string~ and immediately syncs ~global-mode-string~ via ~tab-bar-extras-set-global-mode-string~, so the badge appears even when =slack-extras= loads after the initial tab-bar sync.
 
 #+findex: tab-bar-extras-toggle-slack-notifications
 The command ~tab-bar-extras-toggle-slack-notifications~ toggles Slack notifications in the tab bar. It also participates in the master toggle: when ~tab-bar-extras-toggle-notifications~ is called, Slack notifications are toggled along with the other notification sources.

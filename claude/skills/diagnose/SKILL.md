@@ -8,11 +8,18 @@ The user is asking you to investigate a problem diagnostically. Treat errors, co
 
 Your job is to:
 
-1. **Identify the root cause** — why was this hard, confusing, or error-prone?
-2. **Consider whether it's an instance of a broader class of problems** — is this a one-off, or does it point to a pattern?
-3. **Propose structural fixes** (to config, tooling, documentation, or workflow) that prevent the class of problems, not just this instance.
+1. **Check whether an existing mechanism already covers the failure.** Before proposing anything, enumerate the hooks, skills, configs, or scripts that *should* have prevented or detected the issue. For each, confirm by observation (read the hook, check the log, test the behavior) whether it fired, whether it succeeded, and whether its output was acted on. Do not assert behavior you have not verified.
+2. **Identify the root cause** — why was this hard, confusing, or error-prone? Distinguish carefully between:
+   - *Structural gap*: no existing mechanism would have caught this, or the mechanism is broken.
+   - *Behavioral lapse*: an existing mechanism would have caught it (or did, and was ignored), and the failure is disciplinary. This is a valid diagnosis outcome. When it is the correct diagnosis, say so plainly and stop — do not invent additional mechanisms to compensate for discipline.
+3. **Consider whether it's an instance of a broader class of problems** — is this a one-off, or does it point to a pattern?
+4. **Propose structural fixes only when a structural gap is confirmed.** If the existing mechanism would have prevented the failure and only discipline was missing, the correct output is to name the rule that was violated, not to propose new mechanisms on top of it.
 
 Do NOT try to fix or work around the original error. Focus entirely on diagnosis and structural remedies. Present your findings, then wait for the user to decide what action to take.
+
+## Before proposing any fix
+
+Run this single check: *would an existing mechanism, firing as intended, have prevented this failure?* If yes, stop — the diagnosis is "behavioral lapse; existing rule X was violated." If no, a structural gap exists and a fix is warranted. Do not skip this check; every turn that skips it compounds onto unverified assumptions about what the system does.
 
 ## What counts as a structural fix
 

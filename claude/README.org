@@ -583,7 +583,7 @@ Meta-skill for AI workflow design. Given a description of something to automate,
 :ID:       D1D774DB-B9D0-46A3-827D-D217AA28D58C
 :END:
 
-Diagnostic mode modifier. Prefix any question with =/diagnose= to investigate errors and friction as symptoms of underlying structural issues rather than problems to fix directly. Identifies root causes, considers whether the problem is an instance of a broader class, and proposes structural fixes to config, tooling, documentation, or workflow. Includes explicit criteria for what counts as a structural fix (a concrete mechanism like a hook or config change) versus aspirational statements that depend on memory and discipline.
+Diagnostic mode modifier. Prefix any question with =/diagnose= to investigate errors and friction as symptoms of underlying structural issues rather than problems to fix directly. Identifies root causes, considers whether the problem is an instance of a broader class, and proposes structural fixes to config, tooling, documentation, or workflow. Includes explicit criteria for what counts as a structural fix (a concrete mechanism like a hook or config change) versus aspirational statements that depend on memory and discipline. Requires a one-step check before proposing any fix: /would an existing mechanism, firing as intended, have prevented this failure?/ If yes, the diagnosis is "behavioral lapse; rule X was violated" and the skill stops rather than inventing additional mechanisms to compensate for discipline.
 
 *** optimize-claude-md
 

@@ -8922,6 +8922,8 @@ The author provides a good overview of the package in [[https://www.youtube.com/
                  :repo "benthamite/agent-log")
   :after claude-code
   :demand t
+  :config
+  (require 'agent-log-redact)
   :custom
   (agent-log-summary-model 'gemini-flash-latest)
   (agent-log-sync-on-session-end t)

@@ -16,7 +16,6 @@ After any meeting, find the Gemini-generated meeting summary, extract action ite
 - **Meetings base directory**: `meetings/` (relative to Epoch project root)
 - **Gmail sender for Gemini notes**: `gemini-notes@google.com`
 - **María meetings directory**: `meetings/maria/` (relative to Epoch project root)
-- **Personal Drive María folder ID**: `1ifujqJKGgn7x2zIiSIMLgAl7Idgp0CX4`
 - **gdrive config dir**: `~/.config/gdrive3/pablo.stafforini@gmail.com/`
 
 ## Step 0: Identify the meeting
@@ -206,13 +205,15 @@ Replace `<EMAIL_ID>` with the Gemini email ID from Step 1.
 
 Note: this uses the same OAuth credentials as the `google-workspace-epoch` MCP server (`GOOGLE_WORKSPACE_*` env vars). The server doesn't expose a modify-labels tool, but the refresh token has `gmail.modify` scope. Do NOT use the `gmail-epoch-triage` server (that's for the `email-triage@epoch.ai` bot account).
 
-## Step 8: Drive shortcut (María mode only)
+## Step 8: Drive shortcut
 
 Create a shortcut to the Gemini Google Doc so it appears locally at:
 
 ```
-/Users/pablostafforini/My Drive/Epoch/meetings/maria/YYYY-MM-DD.gdoc
+/Users/pablostafforini/My Drive/Epoch/meetings/<person>/YYYY-MM-DD.gdoc
 ```
+
+Applies to both María mode and general mode.
 
 ### Background
 
@@ -226,13 +227,25 @@ python3 ~/My\ Drive/dotfiles/claude/skills/meeting-debrief/google-workspace-api.
 
 Replace `<DOC_ID>` with the Google Doc ID from Step 3.
 
-### Step 8b: Create a shortcut in the personal Drive
+### Step 8b: Resolve the personal-Drive folder ID for `meetings/<person>/`
+
+Use `gdrive` to look up the folder ID in the personal account:
 
 ```bash
-python3 ~/My\ Drive/dotfiles/claude/skills/meeting-debrief/google-workspace-api.py create-shortcut <DOC_ID> YYYY-MM-DD 1ifujqJKGgn7x2zIiSIMLgAl7Idgp0CX4
+gdrive files list --query "name = '<person>' and trashed = false"
 ```
 
-Replace `<DOC_ID>` with the Google Doc ID from Step 3 and `YYYY-MM-DD` with the meeting date.
+If multiple folders share the name, disambiguate via `gdrive files info <id>` and follow the `Parents` chain until you find the one whose parent is the Epoch `meetings/` folder.
+
+If the local directory `meetings/<person>/` was just created (general mode, first meeting with this person), wait a moment for Drive to sync before looking up — or re-run the query if it returns nothing the first time.
+
+### Step 8c: Create a shortcut in the personal Drive
+
+```bash
+python3 ~/My\ Drive/dotfiles/claude/skills/meeting-debrief/google-workspace-api.py create-shortcut <DOC_ID> YYYY-MM-DD <PARENT_FOLDER_ID>
+```
+
+Replace `<DOC_ID>` with the Google Doc ID from Step 3, `YYYY-MM-DD` with the meeting date, and `<PARENT_FOLDER_ID>` with the folder ID resolved in Step 8b.
 
 ## Step 9: Update project org files
 

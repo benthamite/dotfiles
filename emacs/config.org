@@ -15081,22 +15081,7 @@ CLOCK: [2021-03-21 Sun 16:23]--[2021-03-21 Sun 16:32] =>  0:09
 CLOCK: [2021-02-28 Sun 10:12]--[2021-02-28 Sun 10:27] =>  0:15
 CLOCK: [2021-02-04 Thu 12:49]--[2021-02-04 Thu 14:36] =>  1:47
 :END:
-The below is a link dump for config files and other related links I have found useful in the past or may want to check out for ideas at some point in the future.
-- [[https://github.com/emacs-tw/awesome-emacs][Awesome Emacs]]: A list of useful Emacs packages.
-- [[https://sam217pa.github.io/2016/09/02/how-to-build-your-own-spacemacs/][How to build your own spacemacs · Samuel Barreto]]
-- [[https://www.reddit.com/r/emacs/comments/3lt3c6/using_spacemacs_modeline_in_vanilla_emacs/][Using SpaceMacs mode-line in vanilla Emacs : emacs]]
-- [[https://github.com/hlissner/doom-emacs/blob/develop/docs/faq.org#how-does-doom-start-up-so-quickly][How does Emacs Doom start so quickly?]] Might be useful for ideas on how to speed up config file.
-- [[https://prelude.emacsredux.com/en/latest/][Emacs Prelude]]. I've seen this recommended. Might want to check it out.
-- [[https://www.reddit.com/r/emacs/comments/ehjcu2/screenshot_polishing_my_emacs_who_said_an_old/][Polishing my Emacs -- who said an old tool can't look modern]]
-  [[https://github.com/mbriggs/.emacs.d-oldv2/blob/master/init/init-keymaps.el][.emacs.d-oldv2/init-keymaps.el at master · mbriggs/.emacs.d-oldv2]]. Lots of key bindings.
-
-Literate configuration
-- [[https://commonplace.doubleloop.net/setting-up-a-spacemacs-literate-config-file][Setting up a spacemacs literate config file]]
-- [[https://www.reddit.com/r/spacemacs/comments/atuzd9/does_anyone_have_their_dotfile_redone_in_literate/][Does anyone have their dotfile redone in literate programming with babel? : spacemacs]]
-- Diego Zamboni, /[[https://leanpub.com/lit-config][Literate configuration]]/
-- [[https://emacs.sJtackexchange.com/questions/3143/can-i-use-org-mode-to-structure-my-emacs-or-other-el-configuration-file][elisp - Can I use org-mode to structure my .emacs or other .el configuration file? - Emacs Stack Exchange]]
-
-Some useful config files:
+Some interesting config files:
 - [[https://github.com/stsquad/my-emacs-stuff][Alex Bennée]].
 - [[https://zzamboni.org/post/my-emacs-configuration-with-commentary/][Diego Zamboni]]
 - [[https://jamiecollinson.com/blog/my-emacs-config/][Jamie Collinson]]

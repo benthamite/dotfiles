@@ -7938,8 +7938,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 
   :bind
   (:map debugger-mode-map
-        ("s" . debug-save-backtrace)
-        ("D" . ai-extras-debug-backtrace)))
+        ("s" . debug-save-backtrace)))
 #+end_src
 
 ** =edebug=
@@ -8886,7 +8885,11 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package ai-extras
-  :demand t)
+  :demand t
+  :config
+  (with-eval-after-load 'debug
+    (bind-keys :map debugger-mode-map
+               ("D" . ai-extras-debug-backtrace))))
 #+end_src
 
 ** =claude-code-extras=

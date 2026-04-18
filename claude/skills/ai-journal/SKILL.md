@@ -14,8 +14,17 @@ Scan Claude Code and Codex sessions since the last run, surface interesting AI u
 - **State file**: `last-run.txt` in the skill directory (ISO 8601 UTC timestamp)
 - **Scan script**: `find-sessions.py` in the skill directory
 - **Website**: `~/My Drive/repos/stafforini.com/`
-- **Journal section**: `content/ai/` (create on first run)
+- **Org source for posts**: `~/My Drive/notes/ai-journal/<slug>.org`
+- **Exported markdown** (generated, gitignored): `~/My Drive/repos/stafforini.com/content/ai/<slug>.md`
 - **Hugo config**: `hugo.toml`
+
+## How the site's content pipeline works
+
+This site is ox-hugo-driven. `content/` is gitignored and generated; never write markdown directly. Notes are authored as org files under `~/My Drive/notes/` and batch-exported by `scripts/export-notes.sh` (which runs `export-org.py notes` under the hood). The export scan is recursive (`rglob("*.org")`), so subdirectories like `~/My Drive/notes/ai-journal/` are picked up automatically.
+
+The Hugo destination is controlled by the `:EXPORT_HUGO_SECTION:` property on each heading: set it to `ai` and ox-hugo writes the resulting markdown into `content/ai/`. The stale-cleanup step in `export-org.py` only touches the section's own `output_dir` (`content/notes/` for the notes section), so ai-sectioned files are safe.
+
+See `~/My Drive/repos/stafforini.com/PUBLISHING.md` and `CLAUDE.md` for the canonical workflow.
 
 ## Session sources
 
@@ -32,24 +41,25 @@ Convert the user's answer to an ISO 8601 UTC timestamp before invoking the scan 
 
 ### 2. First-run journal setup
 
-If `~/My Drive/repos/stafforini.com/content/ai/` does not exist:
+If `~/My Drive/notes/ai-journal/` does not exist:
 
-1. Create `content/ai/_index.md` with:
+1. Create the directory. This is the org-source home for all journal posts.
+2. Create a local `~/My Drive/repos/stafforini.com/content/ai/_index.md` with:
    ```
    +++
    title = "AI journal"
    description = "An informal study diary about using AI tools better."
    +++
    ```
-2. Add a menu entry to `hugo.toml`, placed before the "About" entry:
+   `content/` is gitignored, so this lives locally only and rides along on `scripts/deploy.sh`. It mirrors how `content/notes/_index.md` is a hand-created local file.
+3. Optionally add a menu entry to `hugo.toml`. Propose the edit but let the user decide; other menu slots may already be spoken for. Template:
    ```toml
    [[menus.main]]
      name = "AI"
      pageRef = "/ai/"
-     weight = 3
+     weight = <next available>
    ```
-   Bump the weight of the "About" entry to 4.
-3. Ask the user to confirm the section title and description before committing. Commit the setup as a separate commit (`ai-journal: scaffold /ai section`).
+4. Ask the user to confirm the section title, description, and menu slot before committing. Commit the `hugo.toml` edit (if any) as a separate commit (`ai-journal: scaffold /ai section`). The `_index.md` is not tracked in git.
 
 ### 3. Scan sessions
 
@@ -113,22 +123,33 @@ Then ask: "Which should I draft? (e.g. `1, 3, 4` or `all` or `none`)"
 
 ### 6. Draft posts
 
-For each selected candidate, create `~/My Drive/repos/stafforini.com/content/ai/<slug>.md`.
+For each selected candidate, create an **org file** at `~/My Drive/notes/ai-journal/<slug>.org`. Do not write markdown under `content/ai/` directly — that directory is gitignored and overwritten by ox-hugo exports. The canonical source is org; Hugo markdown is always generated.
 
 **Slug**: lowercase, hyphen-separated, kept short. Use `emacsclient -e '(simple-extras-slugify "TITLE")'` if unsure.
 
-**Front matter** (match existing site style):
+**Org file template**:
 
+```org
+#+title: <Title as it should appear>
+#+hugo_base_dir: ~/My Drive/repos/stafforini.com/
+
+* <Title as it should appear>
+  :PROPERTIES:
+  :ID:       <UUID — get one via `uuidgen`>
+  :EXPORT_FILE_NAME: <slug>
+  :EXPORT_HUGO_SECTION: ai
+  :EXPORT_DATE: YYYY-MM-DD
+  :END:
+
+Body in org syntax...
 ```
-+++
-title = "<title>"
-author = ["Pablo Stafforini"]
-date = YYYY-MM-DD
-lastmod = YYYY-MM-DD
-draft = false
-tags = ["ai-journal"]
-+++
-```
+
+Notes on the template:
+
+- `:EXPORT_HUGO_SECTION: ai` is what routes the output to `content/ai/<slug>.md`. Without it, ox-hugo would default to the `content/notes/` destination.
+- `:ID:` should be a fresh UUID so org-roam can track the note in its graph.
+- Use org syntax for the body: `=inline code=`, `*bold*`, `/italics/`, `#+begin_quote ... #+end_quote`, `** Subsection`, ordered/unordered lists, `[[file:other-note.org][link text]]` for cross-references to other notes.
+- Author, draft, tags, and lastmod are injected by the pipeline — don't set them by hand.
 
 **Body**: 300-800 words, first-person, informal study-diary tone. Structure flexibly but typically:
 
@@ -142,24 +163,39 @@ tags = ["ai-journal"]
 
 **Do not fabricate**. Every claim about what happened must be grounded in the session transcript. If you need context that isn't in the session, ask the user before writing.
 
-Read an existing note (e.g. `content/notes/agent-log.md`) if unsure about the site's markdown conventions.
+Read an existing note (e.g. `~/My Drive/notes/arguing-from-ignorance.org`) if unsure about the site's org conventions.
 
-### 7. Update state and commit
+### 7. Render and verify
 
-After drafts are written and the user approves:
+After writing the org files, run the export and check that the markdown actually lands in `content/ai/`:
+
+```bash
+bash ~/My\ Drive/repos/stafforini.com/scripts/export-notes.sh
+ls ~/My\ Drive/repos/stafforini.com/content/ai/
+```
+
+(Or `emacsclient -e '(stafforini-export-all-notes)'` if the user prefers the Emacs entry point.)
+
+Confirm each expected `<slug>.md` exists. If any slug is missing, check that `:EXPORT_FILE_NAME:` and `:EXPORT_HUGO_SECTION: ai` are set on the heading, not just in the top-of-file keywords.
+
+### 8. Update state and commit
+
+After drafts are written, exported, and the user has confirmed they look right:
 
 1. Update `last-run.txt` with the current UTC timestamp:
    ```bash
    date -u +"%Y-%m-%dT%H:%M:%SZ" > ~/.claude/skills/ai-journal/last-run.txt
    ```
-2. Commit in `~/My Drive/repos/stafforini.com`: one commit per post, scope `ai-journal`, description lowercase imperative (e.g. `ai-journal: add post on prompting claude to diagnose before patching`).
+2. Commit the org sources: the `~/My Drive/notes/` tree is versioned as part of the `notes` git repo (check with `git -C ~/My\ Drive/notes status`). One commit per post, scope `ai-journal`, description lowercase imperative (e.g. `ai-journal: add post on prompting claude to diagnose before patching`).
 3. Commit the `last-run.txt` bump in the dotfiles repo: `ai-journal: bump last-run to <date>`.
+
+The generated markdown under `content/ai/` is gitignored and not committed; it'll be rebuilt by `deploy.sh`.
 
 If the user declines all candidates, still bump `last-run.txt` — they've been reviewed.
 
-### 8. Confirm before shared-system actions
+### 9. Confirm before shared-system actions
 
-Do **not** push, deploy, or publish. Leave the posts committed locally. Tell the user what was created and let them decide when to push.
+Do **not** push, deploy, or publish. Leave everything committed locally. Tell the user what was created and let them decide when to run `stafforini-deploy`.
 
 ## Subagent prompt template
 

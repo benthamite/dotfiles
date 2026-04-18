@@ -5,8 +5,7 @@
   "autoMemoryEnabled": false,
   "includeCoAuthoredBy": false,
   "permissions": {
-    "defaultMode": "bypassPermissions",
-    "skipDangerousModePermissionPrompt": true,
+    "defaultMode": "auto",
     "allow": [
       "mcp__annas-archive",
       "mcp__claude-in-chrome",

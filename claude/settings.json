@@ -1,6 +1,7 @@
 {
   "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "CLAUDE_CODE_EFFORT_LEVEL": "max"
   },
   "autoMemoryEnabled": false,
   "includeCoAuthoredBy": false,
@@ -186,7 +187,7 @@
       }
     }
   },
-  "effortLevel": "high",
+  "effortLevel": "xhigh",
   "mcpServers": {},
   "enabledPlugins": {
     "codex@openai-codex": true

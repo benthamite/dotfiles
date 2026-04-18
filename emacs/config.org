@@ -576,7 +576,6 @@ The extras come with their own manuals and user options: everything is documente
   - [[#tetris][tetris]]
 - [[#appendices][appendices]]
   - [[#key-bindings][key bindings]]
-  - [[#profiling][profiling]]
   - [[#installation][installation]]
   - [[#other-config-files][other config files]]
 - [[#local-variables][local variables]]
@@ -14965,47 +14964,6 @@ CLOCK: [2020-08-19 Wed 13:52]--[2020-08-19 Wed 14:47] =>  0:55
 :END:
 Emacs has five native [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Modifier-Keys.html][modifier keys]]: ~Control~ (~C~), ~Meta~ (~M~), ~Super~ (~s~), ~Hyper~ (~H~), and ~Alt~ (~A~). (The letter abbreviation for the ~Super~ modifier is ~s~ because ~S~ is assigned to the ~Shift~ key.) I use [[https://karabiner-elements.pqrs.org/][Karabiner-Elements]], in combination with a [[https://www.zsa.io/moonlander/][Moonlander keyboard]], to generate several additional "pseudo modifiers", or mappings between individual keys and combinations of two or more Emacs modifiers:
 
-[[file:etc/moonlander-emacs.png]]
-
-So when you see a monstrous key binding such as ~C-H-M-s-d~, remember that everything that precedes the final key (in this case, ~d~) represents a single key press (in this case, ~l~). For details, see my [[../karabiner/modifications.org][Karabiner config file]], specifically the "Key associations" section.
-
-I set key bindings in the following ways:
-- With the =:bind= keyword of =use-package=.
-  - For commands provided by the package or feature being loaded in that block.
-  - For commands provided by other packages or features, when these are being set in a keymap provided by the feature being loaded in that block. This approach is appropriate when one wants to bind a key to a command in a keymap and wants this binding to be active even before the feature providing the command is loaded. Example:
-- With =bind-keys= within the =:init= section of =use-package=.
-  - For commands provided by the feature being loaded in that block that are bound in a keymap provided by another feature. This is appropriate when the feature providing the keymap may load after the feature providing the command. In these cases, using =:bind= is not possible since Emacs will throw an error. Example: binding the command =scroll-down-command=, which is provided by =window=, to the key =y= in =elfeed-show-mode-map=, which is provided by =elfeed=. Note that if the command is not natively autoloaded, an autoload must be set, e.g. =(autoload #'=scroll-down-command "window" nil t)=. [confirm that this is so: it’s possible =bind-keys= automatically creates autoloads, just like the =:bind= keyword does]
-  - For commands provided by the feature being loaded in that block that are bound globally and should be available even before the feature is configured. (Note that I distinguish between the loading of a feature and its configuration. A key binding specified via the =:bind= keyword of =use-package= will be available before the package is loaded but only after it is configured. If, for example, the block includes the =:after= keyword, the package will only be configured after that condition is satisfied.) Example: =ebib-extras-open-or-switch=, which is provided by =ebib-extras= and will be configured after =ebib= is loaded, yet we want it to be available even before =ebib= is loaded.
-
-** debugging                                                       :noexport:
-:PROPERTIES:
-:ID:       ED2955EA-3BD8-4058-A973-3CC87847D9A5
-:END:
-:LOGBOOK:
-CLOCK: [2021-04-12 Mon 13:20]--[2021-04-12 Mon 13:46] =>  0:26
-:END:
-- Run =emacs -q= or =emacs --debug-init=.
-- Cut suspected sections of the org file (=org-cut-subtree=), tangle immediately afterwards, then undo the changes. This will generate an init file without the code blocks included in the removed sections, while leaving the literal org file intact.
-- Use =magit-log-buffer-file= or =git-timemachine= to explore previous versions of your config file.
-- Set =debug-on-error= to ~t~ to see a backtrace of an error. Or call =toggle-debug-on-error= interactively.
-  - To determine what function is changing the value of a variable, use =debug-on-variable-change=.
-  - To determine what function is generating a particular message, use =debug-on-message=.
-- Bisect the init file until you locate the culprit.
-  - Run =bug-hunter-init-file= and select "bisect interactively" (~i~).
-- If Emacs becomes unresponsive, run =pkill -USR2 Emacs= in a terminal. Emacs will likely trigger a backtrace, which you can inspect to diagnose the issue.
-- Use =edebug-defun=. See [[https://org-roam.discourse.group/t/need-help-getting-noter-pdfs-and-org-roam-bibtex-to-work/794/45?u=pablo][this discussion]].
-- For org-related issues (e.g. tangling the config file), use =org-lint=, which checks the current buffer for syntax mistakes.
-- For more ideas, see:
-  - [[https://www.emacswiki.org/emacs/DebugEmacs][EmacsWiki: Debug Emacs]]
-  - [[https://whatacold.io/blog/2022-07-17-emacs-elisp-debug/][Emacs Debugging Basics - whatacold's space]]
-  - [[https://discourse.doomemacs.org/t/how-to-debug-issues/55][How to debug issues - Guides & Tutorials - Doom Emacs Discourse]].
-  - [[id:94184DD8-591C-46CD-BFC3-9738113DA640][Debugging Emacs Lisp]] [internal org note]
-
-** profiling
-:PROPERTIES:
-:ID:       60B7A58C-A79A-4EEF-A91D-EECC85CFA173
-:END:
-- If you use ~use-package~, the command =use-package-report= displays a table showing the impact of each package on load times.
 
 ** installation
 :PROPERTIES:

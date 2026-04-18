@@ -4,7 +4,7 @@
 #
 # Matches common secret patterns (AWS keys, GitHub tokens, Slack tokens,
 # API keys, private keys, etc.) in tool arguments. This is a compensating
-# control for bypassPermissions mode — it enforces what CLAUDE.md's
+# control for auto/bypass permission modes — it enforces what CLAUDE.md's
 # "never echo or print secrets" instruction cannot guarantee.
 #
 # Matchers: Bash, Write

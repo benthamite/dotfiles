@@ -578,6 +578,10 @@ Consolidates Claude Code project data (sessions, memory, trust entries) across e
 
 Meta-skill for AI workflow design. Given a description of something to automate, analyzes the requirements along dimensions like context source, tool access, multi-step reasoning, and Emacs integration, then recommends the right approach: a Claude Code skill, a gptel directive, a gptel tool, or a gptel command. After confirmation, builds it following the conventions of each approach.
 
+*** skill-audit
+
+Scans Claude Code and Codex session transcripts since the last run, identifies manual workflows that repeat across two or more sessions (same multi-step procedure, same context re-supplied to the agent, same class of bug or request resolved the same way), and presents them as candidates for new skills or extensions of existing ones. Reuses =ai-journal='s =find-sessions.py= scan script, tracks its own cutoff in =last-run.txt=, and dispatches selected candidates to =/automate= rather than building skills itself — keeping triage and build concerns separate. Before proposing a new skill, checks =~/My Drive/dotfiles/claude/skills/= for an existing skill that already covers the pattern, framing such matches as a gap to extend rather than a duplicate to create. Pairs with =/schedule= to run on a weekly cadence (Ole Lehmann's "audit your week" pattern, [[https://x.com/itsolelehmann/status/2044425992802848954][origin tweet]]).
+
 *** diagnose
 :PROPERTIES:
 :CUSTOM_ID: h:diagnose

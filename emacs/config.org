@@ -8930,7 +8930,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (require 'agent-log-redact)
   :custom
   (agent-log-summary-model 'gemini-flash-latest)
-  (agent-log-sync-on-session-end t)
+  (agent-log-auto-sync-sessions t)
   (agent-log-auto-rename-sessions t)
   (agent-log-auto-redact-sessions t))
 #+end_src

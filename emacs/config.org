@@ -8903,7 +8903,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :demand t
   :custom
   (claude-code-extras-alert-on-ready t)
-  (claude-code-extras-sync-theme nil) ; FIXME: this isn't working reliably
+  (claude-code-extras-sync-theme t)
   ;; copilot support is buggy; needs more work
   (claude-code-extras-copilot-enabled nil)
   (claude-code-extras-org-todo-in-progress-keyword "DOING")

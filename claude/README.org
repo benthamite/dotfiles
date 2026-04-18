@@ -27,23 +27,23 @@ Three layers of directories work together: this dotfiles directory (source of tr
 #+begin_example
 ~/My Drive/dotfiles/claude/           ← global config source of truth
 ├── CLAUDE.md                         ← global conventions for all projects
-├── settings.json                     ← hooks, model, permissions (no theme; symlinked from ~/.claude/)
-├── settings.local.json               ← machine-specific permissions (mpv, brew, pip3…)
-├── hooks/                            ← 24 hook scripts
-├── skills/                           ← 50 skill directories
+├── hooks/                            ← hook scripts
+├── skills/                           ← skill directories
 ├── bin/batch-test.sh                 ← elpaca-aware emacs --batch test runner
 ├── bin/sync-mcp-servers.sh           ← MCP server sync utility
 └── README.org                        ← this file
 #+end_example
 
-*Shared hub* (=~/.claude/=), mostly symlinks into the above:
+Note: =settings.json= is intentionally *not* tracked here. Claude Code writes to =~/.claude/settings.json= directly (via =/theme=, =/effort=, =/permissions=, plugin toggles, etc.), and those atomic writes would break any symlink back to this directory. The file is the canonical live config; edit it in place.
+
+*Shared hub* (=~/.claude/=):
 
 #+begin_example
 ~/.claude/
-├── CLAUDE.md          → dotfiles/claude/CLAUDE.md
-├── settings.json      → dotfiles/claude/settings.json
-├── settings.local.json → dotfiles/claude/settings.local.json
-├── skills/            → dotfiles/claude/skills/
+├── CLAUDE.md          → dotfiles/claude/CLAUDE.md (symlink)
+├── skills/            → dotfiles/claude/skills/ (symlink)
+├── settings.json      ← canonical, mutable, not tracked
+├── settings.local.json ← machine-specific, not tracked
 ├── projects/          ← trust entries, session logs (managed by Claude Code)
 ├── history.jsonl      ← command history (managed by Claude Code)
 └── plugins/           ← installed plugins (managed by Claude Code)
@@ -75,7 +75,7 @@ Claude Code loads settings from multiple levels, merged together. Each level can
 | User (=~/.claude/=) | Model, theme, global hooks, global permissions | Machine-specific tool whitelists | Applies to all projects |
 | Project (=<project>/.claude/=) | Project-specific hooks | Project-specific permissions | Applies only in that project |
 
-=settings.json= is version-controlled; =settings.local.json= is gitignored (machine-specific or accumulated interactively).
+Neither =settings.json= nor =settings.local.json= is version-controlled; both are edited in place in =~/.claude/=.
 
 The global =settings.json= uses =auto= mode (Anthropic's classifier-backed permission mode that approves most actions while flagging risky ones) inside the =permissions= object. All MCP servers are explicitly listed in =permissions.allow= as a workaround for [[https://github.com/anthropics/claude-code/issues/5140][anthropics/claude-code#5140]]. Safety hooks (=guard-external-actions.sh=, =block-destructive-command.sh=, etc.) provide additional guardrails.
 
@@ -104,9 +104,9 @@ Each file should contain distinct content. The global one defines behavioral con
 | New project-specific instruction | =<project>/CLAUDE.md= | Scoped to that project |
 | New skill (reusable across projects) | =claude/skills/<name>/SKILL.md= | Available everywhere |
 | New skill (project-specific) | =<project>/.claude/skills/<name>/SKILL.md= | Scoped to that project |
-| New global hook | =claude/settings.json= (hooks section) | Fires in all projects; write early-exit guards for inapplicable contexts |
+| New global hook | =~/.claude/settings.json= (hooks section) | Fires in all projects; write early-exit guards for inapplicable contexts |
 | New project-specific hook | =<project>/.claude/settings.json= (hooks section) | Fires only in that project |
-| New machine-specific permission | =claude/settings.local.json= | E.g. brew, mpv, pip3 |
+| New machine-specific permission | =~/.claude/settings.local.json= | E.g. brew, mpv, pip3 |
 | New MCP server | =~/.claude.json=, then run =claude/bin/sync-mcp-servers.sh= | Syncs to account dirs |
 
 ** Multi-account setup
@@ -180,18 +180,19 @@ Each Claude Code account stores its own =chromeExtension.pairedDeviceId= and =pa
 :ID:       C60E07A6-7A22-4272-8875-45FE9B44F185
 :END:
 
-- *Permission mode*: =auto= — a background classifier allows most actions while blocking risky ones (force pushes, mass deletion, sending secrets to external endpoints, etc.).
-- *Agent teams*: enabled.
-- *Effort level*: high.
+Lives at =~/.claude/settings.json= as a regular file, not tracked in this repo. Claude Code writes to it directly when you run =/theme=, =/effort=, =/permissions=, toggle plugins, etc., so any attempt to symlink it back to version control breaks on the first such write. Edit it in place.
 
-*Symlink breakage risk:* =~/.claude/settings.json= is a symlink to =dotfiles/claude/settings.json=. Claude Code (Node.js) may use atomic writes (temp file + rename) when updating settings, which replaces the symlink with a regular file. If =~/.claude/settings.json= stops being a symlink, the tracked source and the deployed file will silently diverge. To detect this, check =ls -la ~/.claude/settings.json= — it should show =->= pointing to the dotfiles path. To fix: =trash ~/.claude/settings.json && ln -s "/Users/pablostafforini/My Drive/dotfiles/claude/settings.json" ~/.claude/settings.json=.
+Notable current values:
+- *Permission mode*: =auto= — a background classifier allows most actions while blocking risky ones.
+- *Agent teams*: enabled (=CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=).
+- *Effort level*: =xhigh= (persistent) with =CLAUDE_CODE_EFFORT_LEVEL=max= in =env= to force max across sessions.
 
 ** settings.local.json
 :PROPERTIES:
 :ID:       709B6F3F-F5B6-44F1-AA4E-1D2BE510FC1E
 :END:
 
-Machine-specific tool whitelists and the =theme= key (synced from Emacs by =claude-code-extras--sync-theme-to-settings=). This file lives at =~/.claude/settings.local.json= as a regular file (not symlinked) so that frequent theme changes do not dirty the git-tracked =settings.json= symlink.
+Machine-specific tool whitelists and the =theme= key (synced from Emacs by =claude-code-extras--sync-theme-to-settings=). Also lives at =~/.claude/settings.local.json= as a regular file, not tracked.
 
 ** CLAUDE.md
 :PROPERTIES:

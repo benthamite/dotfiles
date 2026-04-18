@@ -7938,7 +7938,8 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 
   :bind
   (:map debugger-mode-map
-        ("s" . debug-save-backtrace)))
+        ("s" . debug-save-backtrace)
+        ("D" . ai-extras-debug-backtrace)))
 #+end_src
 
 ** =edebug=

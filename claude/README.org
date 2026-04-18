@@ -353,6 +353,10 @@ Transcribes the most recent audio file in =~/Downloads/= using whisperx, then re
 
 Registers an Emacs package in =my-emacs-packages.org=, creates an accompanying documentation note with =#+INCLUDE= directives pointing to the package's readme, and adds a card to the =benthamite/benthamite= GitHub profile README. Determines the package name from the argument or the current directory, inserts entries in alphabetical order, and generates org IDs for both the note and the list entry. Marks the exported note as =:unlisted true= via =EXPORT_HUGO_CUSTOM_FRONT_MATTER= so it stays out of the site's note index. Checks both the packages list and the GitHub profile README, skipping whichever is already done.
 
+*** convert-citations
+
+Replaces raw bibliographic references in a =.org= file with org-mode =[cite:@KEY]= citations by resolving each work against the user's citar bibliography. Takes the target file path as an argument (prompted by =ai-extras-run-skill= when invoked via =ai-extras-menu= → =s=). Uses =emacsclient -e '(tlon-bibliography-lookup FIELD VALUE "=key=")'= for lookups, falling back to substring matching, DOI matching, =WebFetch= for URL-based references, and =WebSearch= as a last resort. Preserves formatting (bold, italics, parentheticals, locators like =pp. 123–145= or =ch. 5=); does not fabricate keys for works not found in the bibliography. Canonical style reference: =~/My Drive/notes/pablos-miscellany/c-d-broad-a-bibliography.org=. This is a Claude Code replacement for =tlon-bib-replace-citations-in-file=, whose gptel-based agentic loop was brittle for this kind of lookup-heavy task.
+
 ** Release and operations skills
 :PROPERTIES:
 :ID:       F49B76EA-C29B-45D6-AD8D-D3E47DB4073E

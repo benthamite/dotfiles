@@ -73,4 +73,4 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [tui]
-theme = "light"
+theme = "dark"

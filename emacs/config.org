@@ -7355,7 +7355,12 @@ To populate the database of historical prices:
   (tlon-forg-sort-after-sync-or-capture t)
 
   :config
-  (run-with-idle-timer (* 60 60) t #'tlon-pull-issues-in-all-repos)
+  (defvar pablo/tlon-pull-issues-timer nil
+    "Idle timer that periodically pulls issues in all Tlön repos.")
+  (when (timerp pablo/tlon-pull-issues-timer)
+    (cancel-timer pablo/tlon-pull-issues-timer))
+  (setq pablo/tlon-pull-issues-timer
+        (run-with-idle-timer (* 60 60) t #'tlon-pull-issues-in-all-repos))
 
   (with-eval-after-load 'tlon-db
     (defun tlon-db-extras--suppress-debugger (orig-fun &rest args)

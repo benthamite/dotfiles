@@ -324,6 +324,7 @@ Source: lobehub/lobe-icons (MIT).")
                                         (if (string-empty-p svg) "CC" svg)))
         :account (lambda (buf)
                    (buffer-local-value 'claude-code-extras--buffer-account buf))
+        :has-background-tasks-p #'claude-code-extras--has-background-tasks-p
         :label "Claude Code"
         :discover-skills #'claude-code-extras--discover-skills
         :handoff #'claude-code-extras-handoff
@@ -1402,6 +1403,25 @@ elicitation_dialog notifications."
   (when (bound-and-true-p claude-code-extras--waiting-for-input)
     (setq claude-code-extras--waiting-for-input nil
           ai-extras--waiting-for-input nil)))
+
+(defconst claude-code-extras--background-tasks-regexp
+  "· *[0-9]+ +\\(shells?\\|monitors?\\)"
+  "Regexp matching the background-task count in Claude's status line.
+Claude Code renders \"· N shells\" or \"· N monitors\" near the
+footer when background Bash processes or Task agents are running.")
+
+(defun claude-code-extras--has-background-tasks-p (&optional buffer)
+  "Return non-nil when Claude session BUFFER has active background tasks.
+Scans the tail of the terminal buffer for Claude Code's
+status-line indicator (e.g. \"· 3 shells\" or \"· 5 monitors\")."
+  (let ((buf (or buffer (current-buffer))))
+    (when (buffer-live-p buf)
+      (with-current-buffer buf
+        (save-excursion
+          (goto-char (point-max))
+          (re-search-backward claude-code-extras--background-tasks-regexp
+                              (max (point-min) (- (point-max) 800))
+                              t))))))
 
 (defun claude-code-extras-jump-to-waiting ()
   "Switch to the Claude session that most recently started waiting for input."

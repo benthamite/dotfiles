@@ -479,6 +479,9 @@ The Notification hook that delivers these events is auto-configured at package l
 
 The function ~claude-code-extras-alert-indicator~ returns a bell icon string reflecting the current alert state. It is intended for use in modeline segments or header lines to give a visual indication of whether alerts are active.
 
+#+findex: claude-code-extras--has-background-tasks-p
+The function ~claude-code-extras--has-background-tasks-p~ returns non-~nil~ when the current (or given) Claude session buffer has active background work.  It scans the tail of the terminal buffer for Claude Code's status-line indicator, which renders =· N shells= or =· N monitors= when background Bash processes or Task agents are still running.  It is registered as the backend's ~:has-background-tasks-p~ function, allowing the shared session switcher to highlight idle-but-busy sessions with a distinct face ([[*Session management][Session management]] in the =ai-extras= manual).
+
 ** Modeline integration
 :PROPERTIES:
 :CUSTOM_ID: h:modeline-integration

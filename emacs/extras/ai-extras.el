@@ -66,6 +66,9 @@ Each entry is (SYMBOL . PLIST) where PLIST has keys:
 Optional session metadata:
   :account               function (buffer) -> string or nil
                            (account name for session grouping)
+  :has-background-tasks-p function (buffer) -> bool
+                           (non-nil if the session has ongoing
+                           background work while idle for input)
 
 Optional command keys for dispatching shared commands:
   :discover-skills       function () -> list of skill plists
@@ -176,8 +179,16 @@ Only takes effect when `ai-extras-alert-on-ready' is non-nil."
 ;;;; Faces
 
 (defface ai-extras-waiting
-  '((t :inherit warning))
+  '((t :inherit success))
   "Face for sessions waiting for user input in the session switcher."
+  :group 'ai-extras)
+
+(defface ai-extras-waiting-with-background
+  '((t :inherit warning))
+  "Face for sessions waiting for user input while background work runs.
+Applied in the session switcher when the backend's
+`:has-background-tasks-p' reports ongoing work, to distinguish
+these sessions from `ai-extras-waiting' (truly idle)."
   :group 'ai-extras)
 
 ;;;; State variables
@@ -395,9 +406,22 @@ to the backend's :label or symbol name."
          (cmd (make-symbol (format "ai-switch-%s" key)))
          (spec (list key label cmd)))
     (when waiting
-      (setq spec (append spec (list :face 'ai-extras-waiting))))
+      (setq spec (append spec
+                         (list :face (ai-extras--waiting-face buf backend)))))
     (fset cmd (lambda () (interactive) (switch-to-buffer buf)))
     spec))
+
+(defun ai-extras--waiting-face (buffer backend)
+  "Return the face for BUFFER's waiting indicator.
+Uses `ai-extras-waiting-with-background' when BACKEND reports
+that BUFFER has active background tasks, `ai-extras-waiting'
+otherwise."
+  (if (and backend
+           (when-let* ((fn (ai-extras--backend-get
+                            backend :has-background-tasks-p)))
+             (funcall fn buffer)))
+      'ai-extras-waiting-with-background
+    'ai-extras-waiting))
 
 (defun ai-extras--hash-to-sorted-alist (groups)
   "Convert GROUPS hash table to an alist sorted by key.

@@ -50,6 +50,10 @@ When drafting an inferred prompt:
 2. If path 1, write the user's prompt verbatim.
    If path 2, draft a prompt, then confirm with the user.
 3. Save to `/tmp/claude-code-handoff.md`, overwriting any previous handoff.
+   The Write tool refuses to overwrite an existing file without a prior
+   Read in the same session. Either `rm -f /tmp/claude-code-handoff.md`
+   via Bash first and then Write, or Read the existing file before
+   Writing — either works.
 4. Print the contents so the user can review.
 5. Tell the user to run `! emacsclient -e '(claude-code-extras-handoff)'`
    to close this session and start a new one with the prompt auto-submitted.

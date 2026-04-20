@@ -461,6 +461,10 @@ Bulk version of =nosync=. Scans =~/My Drive/= for all directories causing sync e
 
 Installs and configures a new MCP server for Claude Code. Walks through discovery, auth verification (checking for platform-locked OAuth before installing), dependency installation, and registration via =claude mcp add=. Encodes hard-won lessons: always add a trailing slash to HTTP/SSE URLs (servers without it are silently invisible), verify with =claude mcp list= (not =claude mcp get=, which reads config but doesn't check runtime health), use absolute interpreter paths (=/opt/homebrew/bin/node=, not bare =node= which is an nvm shell function), and choose scope explicitly (=-s user= for global).
 
+*** store-secret
+
+Creates, updates, or deletes a secret in Epoch's 1Password Automations vault. The =OP_SERVICE_ACCOUNT_TOKEN= exported at shell startup has =read_items= scope only, so write operations must unset it (=env -u OP_SERVICE_ACCOUNT_TOKEN=) and go through the desktop-app CLI integration with Touch ID. Covers =op item create=/=edit=/=delete= with field-type syntax (=[text]=, =[concealed]=, =[url]=), naming conventions (no parentheses in titles — they break =op://= parsing; =<Service> - <scope>= format; lowercase snake_case field names), and vault safety (never write to shared vaults without confirmation). Also triggers automatically whenever =op item create/edit/delete= returns "You do not have permission to perform this action".
+
 ** Multi-model and research skills
 :PROPERTIES:
 :ID:       8BF704E6-F252-4E27-846A-0B2F9C52B62C
@@ -519,6 +523,14 @@ Iterative, graph-based discovery of high-value Twitter accounts in any niche. In
 :END:
 
 Pulls all unread Slack messages via the =slack-epochai= MCP server, triages them into "action required" vs. "worth knowing" (discarding noise), and opens the digest as an org-mode buffer in Emacs with deep links back to Slack. Accepts =--mark-read= or =--no-mark-read= to control whether conversations are marked as read; if neither is passed, asks interactively.
+
+*** slack-saved
+
+Fetches all Slack "saved for later" messages via =conversations_search_messages is:saved=, pulls thread context for each via =conversations_replies=, and classifies them into *action required*, *waiting on others*, *resolved / stale*, and *reference*. Presents the triaged report as an org-mode buffer in Emacs with deep links back to Slack. Accepts =--unsave= to interactively bulk-unsave categories after review (using the internal =saved.delete= API with tokens pulled from 1Password); defaults to =--no-unsave=.
+
+*** slack-emacs
+
+Opens Slack permalinks, threads, and messages in Emacs via =slack-browse-url=, and manages the reply-drafting workflow. Whenever the user asks for a draft reply to a Slack message, this skill enforces the three-step default: draft → copy to clipboard (=pbcopy=) → open the thread in Emacs so the user can paste directly. Constructs permalinks from =channel_id= + =ts= automatically (message: =/archives/<cid>/p<ts-without-dot>=; threaded: append =?thread_ts=<thread-ts>&cid=<cid>=) rather than asking the user to supply them.
 
 *** ai-journal
 
@@ -605,6 +617,10 @@ Audits the entire Claude Code configuration for redundancy, conflicts, dead weig
 :END:
 
 Evaluates third-party skills from the [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository, one at a time. (The repository is maintained by my friend [[https://pjh.is/][Peter Hartree]], a Claude Code power user.) Installs each skill, tests it, and records the verdict.
+
+*** walk-list
+
+Processes items from a list file strictly one at a time (sequential) or N-at-a-time (parallel subagent pool), guaranteeing no item is skipped or batched. =walk.py start= /moves/ the input file into =~/.claude/walk-list-data/<uuid>/= and leaves a stub at the original path; a PreToolUse hook (=block-walk-list-access.sh=) denies every tool (Read, Grep, Glob, Edit, Write, Bash, etc.) that tries to touch the protected store except =python .../walk.py= itself — the main session cannot peek ahead, and subagents only see the single item handed to them in their prompt. State updates go through =flock= so concurrent =record= calls from pool subagents cannot clobber each other. Subcommands: =start=, =next= (sequential), =dispatch= + =record= (pool), =pool-status=, =status=, =show-decisions=, =release-stale= (reclaim stuck slots), =set-max-concurrent=, =restore= (finalize and write decisions alongside the original file), =abort=.
 
 * Hooks
 :PROPERTIES:

@@ -54,5 +54,23 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/sgn"]
 trust_level = "trusted"
 
+[projects."/Users/pablostafforini/My Drive/Epoch"]
+trust_level = "trusted"
+
+[projects."/private/tmp"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/tlon"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/johnson"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/Library/CloudStorage/Dropbox/tlon"]
+trust_level = "trusted"
+
 [tui]
 theme = "light"

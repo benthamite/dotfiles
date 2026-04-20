@@ -14862,7 +14862,7 @@ Note to self: The pattern for KM shortcuts is =C-H-<capital-letter>=. This corre
 
 /[[https://github.com/emacs-mirror/emacs/blob/master/lisp/play/tetris.el][tetris]] is an implementation of the classic Tetris game for Emacs./
 
-And finally, the section you've all been waiting for.
+And finally, the section you've all been waiting for:
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature tetris

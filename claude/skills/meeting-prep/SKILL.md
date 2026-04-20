@@ -24,15 +24,46 @@ Generate a pre-populated org-mode meeting file for the biweekly 1:1 with María 
 2. Find the **last meeting date** by listing files in the meetings directory and picking the most recent one. Extract the date from the filename (format: `YYYY-MM-DD.org`).
 3. Compute the **since date** as the day after the last meeting date (this is the start of the period to search).
 
-## Step 1: Gather information (use parallel agents)
+## Step 1: Reconcile past meeting checkboxes
+
+Before gathering new data, walk backward through past meeting files and tick any `- [ ]` items whose underlying work is now demonstrably complete according to project-file ground truth. This keeps the meeting history aligned with reality and ensures Step 2f (carry-forward) produces a clean list.
+
+### 1a. List candidate files
+
+List every `.org` file in `meetings/maria/` in reverse chronological order. Process at most **10** files in a single run to cap blast radius; log a note if the walk is truncated.
+
+### 1b. Process each file in turn
+
+For each meeting file, starting with the most recent:
+
+1. Read the file and collect every `- [ ]` line under `** Action items` and `** Action items from previous meeting`.
+2. If the file has **no unchecked items**, stop the walk — earlier files are assumed reconciled from prior runs. (This is the terminating condition.)
+3. Otherwise, for each unchecked item:
+   1. **Identify the project.** In order:
+      - Match verbatim against any `- [ ] (…) <text> — [[file:…]]` line under a `** Open action items from meetings` heading in project files (these were mirrored by `/meeting-debrief` Step 9).
+      - If no verbatim match, infer the project from keywords in the item text (e.g., "media mentions" → `projects/media-mentions-automation/`, "email-triage" → `projects/email-triage/`, "add-on" → `projects/epoch-ai-addon/`).
+      - If still ambiguous, **skip the item** (leave unchecked). Do not guess.
+   2. **Check for completion.** Read the project's main org file, its `CLAUDE.md` "Latest session" field, and its entry in `projects/current-list-of-automation-projects.org`. Treat any of the following as confirmation:
+      - The mirrored checkbox under `** Open action items from meetings` is already `[X]`.
+      - The project's `CLAUDE.md` "Latest session" or a recent entry in `logs/` explicitly describes completing this action.
+      - The project's Status/Next-step in `current-list-of-automation-projects.org` has moved past this action.
+      - For items assigned to others (María, Caroline, etc.): a subsequent meeting file already recorded the outcome (e.g., 2026-04-16 notes `[X] Message Robert…`).
+   3. If confirmed, change `- [ ]` to `- [X]` in the meeting file. If the mirrored checkbox in the project file is still `[ ]`, tick it too so both sides stay in sync. If not confirmed, leave the item unchecked.
+4. Move to the next-most-recent meeting file and repeat.
+
+### 1c. Commit reconciliation separately
+
+If any meeting or project files were modified, stage and commit them with message: `Reconcile meeting action items through YYYY-MM-DD` (use the meeting date). Keep this commit separate from the doc-update commit (Step 4c) and the meeting-file commit (Step 7). If nothing changed, skip the commit.
+
+## Step 2: Gather information (use parallel agents)
 
 Launch the following data-gathering tasks in parallel using subagents. Each agent should return structured, concise results.
 
-### 1a. Session logs
+### 2a. Session logs
 
 Read all session log files in the project's `logs/` directory with dates between the since date and today (inclusive). Summarize the key work done, findings, and decisions from each log entry.
 
-### 1b. Project statuses
+### 2b. Project statuses
 
 Read `projects/current-list-of-automation-projects.org`. For each project in the "In active development" section, extract:
 - Project name
@@ -41,11 +72,11 @@ Read `projects/current-list-of-automation-projects.org`. For each project in the
 
 Also run `git log --since="SINCE_DATE" --oneline -- projects/current-list-of-automation-projects.org` to see what changed in the project list since the last meeting.
 
-### 1c. Individual project changes
+### 2c. Individual project changes
 
 Run `git log --since="SINCE_DATE" --oneline -- projects/` to identify which project directories had commits. For each project with changes, briefly summarize what was done (read the most recent log entries or git diff summaries).
 
-### 1d. Slack activity
+### 2d. Slack activity
 
 Search Slack for messages sent by Pablo since the last meeting:
 
@@ -61,7 +92,7 @@ Use `conversations_search_messages` from `slack-unofficial-epochai`. Review the 
 
 Discard noise (greetings, reactions, trivial messages).
 
-### 1e. GitHub activity
+### 2e. GitHub activity
 
 Run these commands to find GitHub activity:
 
@@ -76,11 +107,11 @@ Also check for PRs that are open and awaiting review:
 gh search prs --author=benthamite --state=open --json title,url,repository --limit 20
 ```
 
-### 1f. Previous meeting action items
+### 2f. Previous meeting action items
 
-Read the previous meeting file. Extract any action items (lines matching `- [ ]` patterns) that are still unchecked. These will be carried forward.
+Read the previous meeting file (already reconciled in Step 1). Extract any action items (lines matching `- [ ]` patterns) that are still unchecked. These will be carried forward.
 
-## Step 2: Synthesize progress
+## Step 3: Synthesize progress
 
 From the gathered data, compile a progress summary organized by project. For each project that had activity:
 
@@ -92,17 +123,17 @@ From the gathered data, compile a progress summary organized by project. For eac
 
 Also note any cross-cutting activity (e.g., responding to ad-hoc requests, Slack conversations not tied to a specific project).
 
-If there are discrepancies between sources (e.g., the session log says something different from the project status file), flag them — they will be addressed in Step 3.
+If there are discrepancies between sources (e.g., the session log says something different from the project status file), flag them — they will be addressed in Step 4.
 
-## Step 3: Update project docs
+## Step 4: Update project docs
 
 The gathering phase often reveals that project documentation has drifted from reality. Before generating the meeting file, reconcile the docs with what you just learned.
 
-### 3a. Update individual project org files
+### 4a. Update individual project org files
 
 For each project that had activity since the last meeting, compare what you gathered (session logs, git history, Slack, GitHub) against the project's org file(s). Update any fields or sections that are stale — e.g., status, next steps, open questions, blockers, links to new PRs/issues. Do not rewrite narrative sections or add speculative information; only update what the evidence supports.
 
-### 3b. Update the master project list
+### 4b. Update the master project list
 
 Read `projects/current-list-of-automation-projects.org` and compare it against the gathered data. Update:
 
@@ -111,13 +142,13 @@ Read `projects/current-list-of-automation-projects.org` and compare it against t
 - **New projects** that appeared in the period (e.g., a new repo was created, or a Slack thread kicked off a new initiative) — add them to the appropriate section.
 - **Completed or paused projects** — move them to the right section if they're in the wrong one.
 
-### 3c. Commit doc updates
+### 4c. Commit doc updates
 
-Stage and commit all updated project files with message: `Update project docs based on meeting prep for YYYY-MM-DD`. This commit is separate from the meeting file commit in Step 6.
+Stage and commit all updated project files with message: `Update project docs based on meeting prep for YYYY-MM-DD`. This commit is separate from the reconciliation commit (Step 1c) and the meeting file commit (Step 7).
 
 If no updates were needed, skip this step.
 
-## Step 4: Generate the meeting file
+## Step 5: Generate the meeting file
 
 Write the org file to `meetings/maria/YYYY-MM-DD.org` (using the meeting date):
 
@@ -127,7 +158,7 @@ Write the org file to `meetings/maria/YYYY-MM-DD.org` (using the meeting date):
 * Meeting with María — YYYY-MM-DD
 ** Progress since last meeting (LAST_MEETING_DATE)
 
-[Synthesized progress from step 2, organized by project. Use org sub-headings
+[Synthesized progress from step 3, organized by project. Use org sub-headings
 (***) for each project. Include specifics — numbers, PR links, deployment dates.
 Keep each project entry to 2-5 lines.]
 
@@ -157,12 +188,12 @@ write "All resolved."]
 ** Notes
 ```
 
-## Step 4b: Update the shared meetings Google Doc
+## Step 5b: Update the shared meetings Google Doc
 
 María's shared meetings document (ID in Constants) follows a reverse-chronological format where the newest meeting section is at the top. Each meeting section has a "Pablo" list with one bullet point per active project.
 
 1. Read the shared Google Doc with `readDocument` (format `markdown`) to understand the current structure.
-2. From the synthesized progress (Step 2), generate **one bullet point per project that had activity** since the last meeting. Each bullet should be a single sentence in the format: `**Project name**: concise status/headline.` Include only projects with meaningful progress — skip projects where the only activity was waiting.
+2. From the synthesized progress (Step 3), generate **one bullet point per project that had activity** since the last meeting. Each bullet should be a single sentence in the format: `**Project name**: concise status/headline.` Include only projects with meaningful progress — skip projects where the only activity was waiting.
 3. Insert a new meeting section at **index 1** (beginning of the document body) using `insertText`. The section should follow this exact format:
 
 ```
@@ -181,7 +212,7 @@ Attendees:
 
 Note the trailing blank line after the last bullet. This ensures clean separation from the previous meeting section below.
 
-## Step 5: Review and open
+## Step 6: Review and open
 
 1. Read the generated file back and verify it looks correct.
 2. Open it in Emacs:
@@ -190,7 +221,7 @@ Note the trailing blank line after the last bullet. This ensures clean separatio
    ```
 3. Tell the user the file is ready for review, and note any items that need their attention (e.g., ambiguous priorities, conflicting information, or items they should add to the Discussion section before the meeting).
 
-## Step 6: Commit
+## Step 7: Commit
 
 Stage and commit the new meeting file with message: `Add meeting prep for María YYYY-MM-DD`.
 

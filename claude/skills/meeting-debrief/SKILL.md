@@ -247,18 +247,54 @@ python3 ~/My\ Drive/dotfiles/claude/skills/meeting-debrief/google-workspace-api.
 
 Replace `<DOC_ID>` with the Google Doc ID from Step 3, `YYYY-MM-DD` with the meeting date, and `<PARENT_FOLDER_ID>` with the folder ID resolved in Step 8b.
 
-## Step 9: Update project org files
+## Step 9: Mirror action items into project org files
 
-For each project discussed in the meeting that has a directory under `projects/`, find the project's main org file (the `.org` file whose name matches the project directory, e.g., `analytics-aggregation.org`). In general mode, the meeting usually concerns a single project (inferred from `$CWD` or attendees). In María mode, the 1:1 often covers multiple projects — update all that had substantive discussion (status changes, decisions, new context).
+For each project discussed in the meeting that has a directory under `projects/`, find the project's main org file (the `.org` file whose name matches the project directory, e.g., `analytics-aggregation.org`). In general mode, the meeting usually concerns a single project (inferred from `$CWD` or attendees). In María mode, the 1:1 often covers multiple projects — update all that had substantive discussion.
 
-Read the org file and add a new heading or update an existing meeting-related section with:
-- A brief summary of the meeting (1–2 sentences)
-- A link to the meeting notes file: `[[file:../../meetings/<person>/YYYY-MM-DD.org][Meeting with <Name> — YYYY-MM-DD]]`
-- Key action items and decisions that are relevant to the project (not all action items — only those that affect project direction or next steps)
+The goal is to make every project-relevant action item **trackable as a real checkbox in the project file**, so later reconciliation (via `/meeting-prep`) can verify whether it's been done. This replaces the old practice of burying action items inside prose meeting summaries.
 
-Place this under the most appropriate existing heading. If the project org file already has a section about collaboration with this person or about the handoff/meeting topic, update that section rather than creating a new one.
+### 9a. Select items to mirror
 
-Do **not** duplicate the full meeting notes — the project org file should contain a concise project-relevant summary and a link to the detailed notes.
+From the meeting's `** Action items` section, pick every item that is:
+- Assigned to Pablo, **or** blocks Pablo's work (e.g., `(Caroline) Complete cybersecurity handoff`), **and**
+- Scoped to a specific project that has a directory under `projects/<name>/`.
+
+Skip cross-cutting items that aren't tied to a specific project (e.g., "Adopt a backlog-based prioritization method"). Also skip items assigned to others that Pablo is not waiting on.
+
+### 9b. Append checkboxes to the project file
+
+In each target project org file, find or create a heading named exactly:
+
+```org
+** Open action items from meetings
+```
+
+Place it at second-outline level, under the project's main top-level heading, near the top of the file (after Purpose/Background but before design or log sections). If the heading already exists, reuse it.
+
+Under this heading, append each selected action item as a checkbox with this **exact** format:
+
+```org
+- [ ] (<Assignee>) <verbatim action text> — [[file:../../meetings/<person>/YYYY-MM-DD.org][<Person> YYYY-MM-DD]]
+```
+
+Rules:
+- The action text must match the meeting file's checkbox text **verbatim** (same phrasing, punctuation, capitalization). `/meeting-prep` reconciliation relies on exact text match.
+- Do **not** duplicate: if a line under this heading already has the same verbatim action text (regardless of which meeting it links to), skip it.
+- Do not reword, translate, or summarize. Copy the item as it appears in the meeting file.
+
+### 9c. One-line progress reference (optional)
+
+In addition to the mirrored checkboxes, add a single line under the project's existing progress/log-style heading (create one named `** Meeting references` if none exists) in this format:
+
+```org
+- YYYY-MM-DD — [[file:../../meetings/<person>/YYYY-MM-DD.org][Meeting with <Name>]]: <1-sentence headline>.
+```
+
+This gives narrative context. If a line for the same date already exists, skip.
+
+### 9d. Do not duplicate other content
+
+Do **not** copy discussion notes, decisions, or the Gemini summary into the project file — those stay in the meeting file only. The project file receives (i) mirrored action-item checkboxes under `** Open action items from meetings`, and (ii) one line under `** Meeting references`.
 
 ## Step 10: Update the current projects list
 

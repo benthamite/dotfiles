@@ -35,10 +35,27 @@ If you only have `channel_id` and `ts` from an MCP call, construct the permalink
 When the user asks you to draft a reply to a specific Slack message or thread:
 
 1. Draft the reply.
-2. Copy the draft to the clipboard (`pbcopy`).
+2. Push the draft to the Emacs kill ring (see "Copying drafts" below). This also syncs to the system clipboard, and has the advantage that the draft survives in kill-ring history (accessible via `M-y`) even if the user copies something else in the meantime.
 3. **Open the thread in Emacs** using `slack-browse-url` so the user can paste the draft directly into the thread input.
 
 Steps 2 and 3 are both required every time. Do not skip step 3 just because the user hasn't explicitly asked for it — it's the default behavior for this operation.
+
+### Copying drafts
+
+Prefer the Emacs kill ring over `pbcopy`. `select-enable-clipboard` is `t` and `interprogram-cut-function` is `gui-select-text`, so `kill-new` updates both the kill ring and the system clipboard in one go.
+
+For multi-line drafts, write to a temp file and read it back inside Emacs to avoid elisp string-escaping pain:
+
+```bash
+TMPFILE=$(mktemp)
+cat > "$TMPFILE" <<'EOF'
+multi
+line
+draft
+EOF
+emacsclient --eval "(with-temp-buffer (insert-file-contents \"$TMPFILE\") (kill-new (buffer-string)))" >/dev/null
+rm "$TMPFILE"
+```
 
 ## Do not trigger this skill for
 

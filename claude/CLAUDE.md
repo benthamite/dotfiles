@@ -11,7 +11,7 @@
 - Fix root causes, not symptoms. No hacks, workarounds, or silent fallbacks. If a patch feels precarious, dig deeper. (E.g. if search returns duplicates, investigate why rather than adding deduplication.)
 - Seek documentation rather than guessing. If you can't access it, ask me to find it.
 - Delete temporary files and code when done.
-- Copy drafted messages to the clipboard automatically.
+- Copy drafted messages to the Emacs kill ring automatically (via `emacsclient --eval '(kill-new ...)'`, not `pbcopy`). This persists the draft in the kill ring history (accessible via `M-y`) while also syncing to the system clipboard via `interprogram-cut-function`, so anything I copy afterwards doesn't destroy the draft. For multi-line content, write to a temp file and use `(with-temp-buffer (insert-file-contents FILE) (kill-new (buffer-string)))` to avoid elisp string-escaping headaches.
 - Surface structural friction when you encounter it ("this was harder than expected because X — worth investigating?"). Use `/diagnose` for deep dives.
 - I often use dictation, so expect misspellings and unusual punctuation.
 

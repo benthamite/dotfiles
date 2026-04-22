@@ -583,7 +583,7 @@ The extras come with their own manuals and user options: everything is documente
 - [[#local-variables][local variables]]
 :END:
 
-* early-init
+* =early-init=
 :PROPERTIES:
 :ID:       F59230DF-14ED-44FF-B54B-4A6758C12D99
 :END:

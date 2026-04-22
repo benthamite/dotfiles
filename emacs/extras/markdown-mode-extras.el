@@ -108,5 +108,20 @@ See also `org-extras-paste-with-conversion'.  For the reverse process, use
   (interactive)
   (insert (simple-extras-pandoc-convert "gfm-raw_html" "org")))
 
+;;;###autoload
+(defun markdown-mode-extras-align-all-tables ()
+  "Align every table in the current buffer."
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (while (not (eobp))
+      (if (markdown-table-at-point-p)
+          (let ((end (copy-marker (markdown-table-end))))
+            (markdown-table-align)
+            (goto-char end)
+            (set-marker end nil)
+            (forward-line 1))
+        (forward-line 1)))))
+
 (provide 'markdown-mode-extras)
 ;;; markdown-mode-extras.el ends here

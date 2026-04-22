@@ -34,6 +34,8 @@ The main capabilities are:
   Markdown section ([[#h:section-operations][Section operations]]).
 - *Link editing*: strip the URL from a Markdown link, keeping only the
   description text ([[#h:link-editing][Link editing]]).
+- *Table alignment*: realign every pipe table in the buffer so column
+  separators line up ([[#h:table-alignment][Table alignment]]).
 
 * Commands
 :PROPERTIES:
@@ -98,6 +100,19 @@ replacement URL.  This is handy for updating broken or outdated links.
 
 The command uses ~markdown-mode-extras-delete-link~
 ([[#h:delete-link][Deleting a link]]) to remove the original link structure.
+
+** Table alignment
+:PROPERTIES:
+:CUSTOM_ID: h:table-alignment
+:END:
+
+#+findex: markdown-mode-extras-align-all-tables
+The command ~markdown-mode-extras-align-all-tables~ walks the buffer
+and calls ~markdown-table-align~ on every pipe table it finds, so
+column separators line up visually.  The command is wired to
+=markdown-mode-hook= so that tables are aligned whenever a Markdown
+(or GFM) buffer is visited.  Re-running the command is useful after
+pasting or editing table data that leaves the columns misaligned.
 
 * Functions
 :PROPERTIES:

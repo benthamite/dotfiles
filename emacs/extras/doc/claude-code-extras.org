@@ -227,12 +227,16 @@ Configure accounts as an alist of =(NAME . CONFIG-DIR)= pairs:
 
 #+begin_src emacs-lisp
 (setopt claude-code-extras-accounts
-        '(("tlon"  . "~/.claude-tlon")
-          ("epoch" . "~/.claude-epoch")))
+        '(("personal" . "~/.claude-personal")
+          ("tlon"     . "~/.claude-tlon")
+          ("epoch"    . "~/.claude-epoch")))
 #+end_src
 
 #+findex: claude-code-extras-select-account
 The active account is persisted across sessions (in ~claude-code-extras-account-file~). Use ~claude-code-extras-select-account~ to change it. In the transient menu ([[#h:transient-menu][Transient menu]]), the Options column includes an "account" infix (bound to ~-a~) that displays the currently active account name and lets you switch accounts by pressing the key.  ~claude-code-extras-start-or-switch~ uses the persisted account silently; if no account has been selected yet, it prompts once and saves the choice. If only one account is configured, it is selected automatically.
+
+#+findex: claude-code-extras-init-account
+Before a new account's first =claude= run, call ~claude-code-extras-init-account~ to create its config directory and set up the shared symlinks.  This avoids a bootstrap race where =claude= writes fresh empty files into the account directory before the sync can symlink them, leaving permissions and history isolated from the rest of your setup.  ~claude-code-extras-select-account~ also runs the same setup implicitly, so either entry point works.  The function is safe to re-run: it heals virgin-state files (empty =settings.json=, empty directories) by replacing them with symlinks, and leaves real content alone with a warning.
 
 The first time you start a session with a given account, Claude will prompt for OAuth login. After that, switching is instant.
 
@@ -245,7 +249,7 @@ When a session starts, ~claude-code-extras--sync-account-config~ performs two ki
 
 2. *Merged =.claude.json= keys*: =theme=, =claudeInChromeDefaultEnabled=, and =hasCompletedClaudeInChromeOnboarding= (listed in ~claude-code-extras--shared-claude-json-keys~) are copied verbatim from the canonical =~/.claude.json= into each account's =.claude.json=.  The =mcpServers= key is deep-merged per-server: server definitions are copied from canonical, but per-account =env= entries are preserved so that account-specific credentials (e.g. =op://= references for API keys) survive the sync.  The =projects= key is merged separately using trust-aware logic.  This ensures MCP servers and UI preferences are available in every account without sharing account-specific data like OAuth credentials.
 
-Existing files or directories that are not symlinks are left untouched to avoid data loss.  The =.claude.json= write is skipped when no changes are detected, to avoid triggering file-change watchers.
+Existing files or directories that are not symlinks are inspected: if they are in a *virgin state* (empty, or a JSON file containing only =\{\}= or =[]=, or an empty directory), they are deleted and replaced with a symlink to the canonical location.  Targets with real content are left untouched and a warning is logged, so the user can migrate data manually and then re-run ~claude-code-extras-init-account~.  The =.claude.json= write is skipped when no changes are detected, to avoid triggering file-change watchers.
 
 ** Toggling alerts
 :PROPERTIES:

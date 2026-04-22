@@ -32,6 +32,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 * User options::
 * Commands::
 * Functions::
+* Transient menu::
 * Indices::
 
 @detailmenu
@@ -40,24 +41,53 @@ This manual describes the features and customization options for the Emacs Lisp 
 User options
 
 * Buffer protection::
-* Logging options::
+* Diff display::
 * Terminal rendering::
+* Theme sync::
 * Alert options::
+* Account options::
+* Copilot options::
+* Batch TODO processing options::
+* Project audit options::
+* Debug backtrace options::
 * Status polling options::
+* Usage polling options::
 
 Commands
 
 * Session switching::
 * Toggling alerts::
+* Usage polling::
+* Skill runner::
+* Batch TODO processing::
+* Send TODO at point::
+* Project audit::
+* Debug backtrace::
+* Branch navigation::
+
+Session switching
+
+* Multi-account support::
+
+Branch navigation
+
+* Creating a branch::
+* Switching branches::
+* Automatic branch detection in the modeline::
 
 Functions
 
-* Logging::
 * Buffer lifecycle::
 * Status polling::
 * Status accessors::
+* Usage accessors::
 * Alerts::
 * Modeline integration::
+* Snippet insertion::
+* Copilot integration::
+* Non-interactive execution internals::
+* Skill runner internals::
+* Batch TODO internals::
 * Auto-setup::
 
 Indices
@@ -71,52 +101,77 @@ Indices
 @node Overview
 @chapter Overview
 
-@samp{claude-code-extras.el} extends @samp{claude-code}, the Emacs package that runs Claude Code sessions inside an Eat terminal buffer. While @samp{claude-code} provides the core session management and terminal integration, this extras package layers on several quality-of-life features that make extended Claude sessions more manageable.
+@samp{claude-code-extras.el} extends @samp{claude-code}, the Emacs package that runs Claude Code sessions inside an Eat terminal buffer.  While @samp{claude-code} provides the core session management and terminal integration, this extras package layers on several quality-of-life features that make extended Claude sessions more manageable.
 
-The package provides five main areas of functionality:
+Several features (session switching, buffer protection, alerts, snippet insertion, terminal fixes) are shared with @samp{codex-extras.el} via the common @samp{ai-extras.el} package (@ref{Top,ai-extras,,ai-extras,}).  At load time, @samp{claude-code-extras.el} registers the Claude Code backend with @samp{ai-extras.el}, enabling a unified session switcher that shows sessions from all AI backends.  The backend icon is the official Claude sparkle logo rendered as an inline SVG via @code{ai-extras-svg-icon} (@ref{h:svg-icons,SVG icons,,ai-extras,}).
+
+The package provides thirteen main areas of functionality:
 
 @itemize
 @item
-@strong{Session switching.} A Consult-powered interface for starting new Claude sessions or switching between existing ones, with live buffer previews (@ref{Session switching}).
-@item
-@strong{Conversation logging.} Automatic periodic saving of terminal buffer contents to timestamped log files, with detection of conversation clears (@ref{Logging}).
+@strong{Session switching.} A transient menu with persistent home-row key bindings for starting new Claude sessions or switching between existing ones (@ref{Session switching}).
 @item
 @strong{Status polling.} Integration with a statusline script that exports session metadata (model name, cost, context usage, token counts) as JSON, polled periodically and exposed through accessor functions (@ref{Status polling}).
 @item
-@strong{Alerts.} Configurable OS notifications (visual, audible, or both) when Claude finishes responding, triggered by a hook-based stop event (@ref{Alerts}).
+@strong{Usage polling.} Periodic polling of the Anthropic @samp{api/oauth/usage} endpoint to track 5-hour session and 7-day weekly utilization percentages, with accessor functions for modeline display and programmatic use (@ref{Usage polling}).
 @item
-@strong{Buffer lifecycle.} Kill protection for active sessions, automatic buffer cleanup on process exit, and a SIGWINCH workaround for terminal rendering glitches (@ref{Buffer lifecycle}).
+@strong{Alerts.} Configurable OS notifications (visual, audible, or both) when Claude needs attention, triggered by the CLI's Notification hook event for idle prompts, permission requests, and elicitation dialogs.  The Notification hook is auto-configured in @samp{~/.claude/settings.json} at load time (@ref{Alerts}).
+@item
+@strong{Buffer lifecycle.} Kill protection for active sessions, automatic buffer cleanup on process exit, a SIGWINCH workaround for terminal rendering glitches, and a fix for @code{C-g} escape handling with multiple sessions (@ref{Buffer lifecycle}).
+@item
+@strong{Snippet insertion.} An adapter for @code{consult-yasnippet} that bypasses its direct buffer manipulation (which fails in Eat terminal buffers) and instead sends expanded snippet text through the terminal emulator (@ref{Snippet insertion}).
+@item
+@strong{Copilot integration.} An adapter that enables Copilot ghost-text prose completions while typing prompts in Claude Code buffers, routing accepted text through the terminal emulator (@ref{Copilot integration}).
+@item
+@strong{Skill runner.} Run any user-invocable Claude Code skill non-interactively from Emacs with completion, argument prompting, and a result buffer (@ref{Skill runner}).
+@item
+@strong{Batch TODO processing.} Sequential execution of org TODO entries via @samp{claude -p} in non-interactive mode, with logged results and a summary buffer (@ref{Batch TODO processing}).
+@item
+@strong{Interactive TODO sending.} Send the org TODO at point to a running interactive Claude Code session, with automatic project-based session resolution (@ref{Send TODO at point}).
+@item
+@strong{Branch navigation.} Create new branches from the current session and navigate the tree of sessions created by branching, with a tree-formatted display showing the branching structure and the ability to switch to or resume any branch (@ref{Branch navigation}).
+@item
+@strong{Project audit.} One-command comprehensive audit that sequentially runs code, design, and interpretability audit skills with auto-fix on the current project (@ref{Project audit}).
+@item
+@strong{Transient menu.} A transient dispatch menu that provides quick access to all commands, setup functions, and toggleable user options (@ref{Transient menu}).
 @end itemize
 
-The package depends on @samp{claude-code}, @samp{consult} (for the session switcher), and @samp{paths} (for the log directory default).
+The package depends on @samp{claude-code}, @samp{consult} (for branch navigation and snippet insertion), and @samp{paths} (for the batch log directory default).
 
 @node User options
 @chapter User options
 
 @menu
 * Buffer protection::
-* Logging options::
+* Diff display::
 * Terminal rendering::
+* Theme sync::
 * Alert options::
+* Account options::
+* Copilot options::
+* Batch TODO processing options::
+* Project audit options::
+* Debug backtrace options::
 * Status polling options::
+* Usage polling options::
 @end menu
 
 @node Buffer protection
 @section Buffer protection
 
 @vindex claude-code-extras-protect-buffers
+@vindex claude-code-extras-warn-kill-with-branches
 The user option @code{claude-code-extras-protect-buffers} controls whether killing a Claude Code buffer requires confirmation. When set to non-@code{nil} (the default), any attempt to kill a buffer with a live Claude process triggers a @samp{yes-or-no-p} prompt. This prevents accidental loss of an active session. When the process has already exited (e.g. via the @samp{/exit} command inside Claude), the prompt is skipped.
 
-The default value is @code{t}. Set it to @code{nil} if you prefer to kill Claude buffers without confirmation.
+The user option @code{claude-code-extras-warn-kill-with-branches} controls whether exiting a Claude Code session via @samp{/exit} prompts for confirmation when the session has branches (created via @samp{/branch}). This is a separate guard from @code{claude-code-extras-protect-buffers}: the buffer-kill guard prevents accidental closure, while the branch guard reminds you that related sessions exist. The check scans session JSONL headers in the project directory (fast, first-line only) to count branches. If the session has at least one branch, the prompt reports the count (e.g. ``Session has 3 branches --- kill anyway?''). If declined, the buffer is kept alive even though the process has exited, giving you a chance to use @code{claude-code-extras-switch-branch} (@ref{Branch navigation}) first.
 
-@node Logging options
-@section Logging options
+Both options default to @code{t}. Set either to @code{nil} to disable the corresponding prompt.
 
-@vindex claude-code-extras-log-directory
-@vindex claude-code-extras-log-interval
-The user option @code{claude-code-extras-log-directory} specifies the directory where conversation logs are saved. Each Claude session gets its own timestamped log file. The default value is the @samp{claude-logs} subdirectory under @code{paths-dir-notes} (@ref{Overview}). You would change this if you want logs stored elsewhere in your filesystem.
+@node Diff display
+@section Diff display
 
-The user option @code{claude-code-extras-log-interval} controls how often (in seconds) the buffer contents are saved to disk. The default is 30, meaning the log file is updated every 30 seconds while the session is active. Lower values provide more granular recovery in case of a crash; higher values reduce disk I/O@.
+@findex claude-code-extras--display-diff-buffer
+The function @code{claude-code-extras--display-diff-buffer} overrides @code{monet--display-diff-buffer} to display diff buffers in a bottom side window instead of using @code{display-buffer-in-tab}. The upstream implementation calls @code{display-buffer-in-tab} from an async websocket callback, which switches tabs as a side effect and can corrupt the window layout when the fallback @code{display-buffer-pop-up-window} fails and Emacs resorts to @code{display-buffer-use-some-window} (which replaces the buffer in an existing window). The override avoids tab switching entirely.
 
 @node Terminal rendering
 @section Terminal rendering
@@ -124,17 +179,91 @@ The user option @code{claude-code-extras-log-interval} controls how often (in se
 @vindex claude-code-extras-sigwinch-delay
 The user option @code{claude-code-extras-sigwinch-delay} specifies the delay (in seconds) before sending a @samp{SIGWINCH} signal to the Claude process after startup. This works around a race condition where the TUI queries terminal dimensions before the Eat terminal window is fully laid out, resulting in a garbled banner. The default value is @samp{0.5}. Increase it if you still see rendering artifacts on slower machines.
 
+@findex claude-code-extras-disable-scrollback-truncation
+The function @code{claude-code-extras-disable-scrollback-truncation} sets @code{eat-term-scrollback-size} to @samp{nil} in Claude Code buffers. Eat's default scrollback limit of 8192 lines causes early output to be silently discarded in long sessions. This function is added to @code{claude-code-start-hook} automatically.
+
+@node Theme sync
+@section Theme sync
+
+@vindex claude-code-extras-sync-theme
+The user option @code{claude-code-extras-sync-theme} controls whether Claude Code sessions are kept in sync with the current Emacs theme. When non-@code{nil}, changing the Emacs theme (via @code{enable-theme-functions}) re-runs @code{/theme} in all running Claude Code sessions, forcing Claude Code to re-query the terminal background via the OSC 11 escape sequence. The default value is @code{nil} (disabled).
+
+This assumes Claude Code is configured with the @code{auto} theme globally (in @samp{~/.claude.json}). The @code{auto} theme detects the terminal background at startup but does not continuously re-probe, so re-running @code{/theme} is what triggers re-detection mid-session.
+
+Sessions that are idle (waiting for user input) receive the @code{/theme} command immediately. Sessions where Claude is still generating a response queue the re-selection and apply it automatically when the turn finishes (via the Stop hook). Because @code{/theme} is a client-side slash command that does not start a new turn, the session's idle state is preserved across re-selections, so subsequent Emacs theme toggles continue to apply immediately rather than queueing indefinitely.
+
+The theme sync is fully asynchronous: the @code{enable-theme-functions} hook returns immediately, and all terminal interactions are deferred to zero-delay timers.  This prevents reentrant timer execution (e.g. @code{org-roam-db-sync}) from blocking the main thread during @code{accept-process-output}.
+
 @node Alert options
 @section Alert options
 
 @vindex claude-code-extras-alert-on-ready
 @vindex claude-code-extras-alert-style
 @vindex claude-code-extras-alert-sound
-The user option @code{claude-code-extras-alert-on-ready} controls whether the user is notified when Claude finishes responding. The default is @code{nil} (no alerts). Toggle it interactively with @code{claude-code-extras-toggle-alert} (@ref{Toggling alerts}).
+The user option @code{claude-code-extras-alert-on-ready} controls whether the user is notified when Claude needs attention. The default is @code{nil} (no alerts). Toggle it interactively with @code{claude-code-extras-toggle-alert} (@ref{Toggling alerts}).
 
 The user option @code{claude-code-extras-alert-style} determines the type of notification. It accepts one of three values: @code{visual} (an OS notification via the @samp{alert} package), @code{sound} (an audio alert), or @code{both} (the default when alerts are enabled). This option only takes effect when @code{claude-code-extras-alert-on-ready} is non-@code{nil}.
 
 The user option @code{claude-code-extras-alert-sound} specifies the path to the sound file played for audible alerts. The default is @samp{/System/Library/Sounds/Glass.aiff}, a macOS system sound. Change this to any audio file that @samp{afplay} can handle.
+
+@node Account options
+@section Account options
+
+@vindex claude-code-extras-accounts
+The user option @code{claude-code-extras-accounts} is an alist of @samp{(NAME . CONFIG-DIR)} pairs for switching between multiple Claude OAuth accounts without re-authenticating. See @ref{Multi-account support} for details and configuration examples. The default is @code{nil} (single-account mode).
+
+@vindex claude-code-extras-account-file
+The user option @code{claude-code-extras-account-file} is the file where the active account name is persisted across Emacs sessions. The default is @samp{~/.claude-current-account}.
+
+@node Copilot options
+@section Copilot options
+
+@vindex claude-code-extras-copilot-enabled
+The user option @code{claude-code-extras-copilot-enabled} controls whether Copilot ghost-text completions are enabled in Claude Code buffers. The default is @code{nil} (disabled). When set to non-@code{nil}, @code{copilot-mode} is automatically activated in new Claude Code buffers, and an adapter routes accepted completions through the Eat terminal emulator instead of inserting them directly into the buffer. Completions are suppressed while Claude is responding (i.e. when the buffer is read-only). The @samp{copilot} package must be installed for this feature to work; if it is not available, the setup is silently skipped.
+
+@node Batch TODO processing options
+@section Batch TODO processing options
+
+@vindex claude-code-extras-log-directory
+The user option @code{claude-code-extras-log-directory} specifies the directory where batch processing output is saved. The default value is the @samp{claude-logs} subdirectory under @code{paths-dir-notes}.
+
+@vindex claude-code-extras-batch-permission-mode
+@vindex claude-code-extras-batch-allowed-tools
+@vindex claude-code-extras-batch-max-turns
+@vindex claude-code-extras-batch-system-prompt
+@vindex claude-code-extras-batch-model
+The user option @code{claude-code-extras-batch-permission-mode} specifies the permission mode passed via @samp{--permission-mode} for non-interactive execution. The default is @samp{"auto"}, which uses a background classifier to allow most actions while blocking risky ones.
+
+The user option @code{claude-code-extras-batch-allowed-tools} specifies which tools are auto-allowed via @samp{--allowedTools} for non-interactive execution (batch TODO processing, skill runner, and project audit). The default includes @samp{Bash}, @samp{Read}, @samp{Write}, @samp{Edit}, @samp{Glob}, @samp{Grep}, @samp{WebFetch}, and @samp{WebSearch}. Adjust this list to restrict or expand what Claude can do autonomously.
+
+The user option @code{claude-code-extras-batch-max-turns} controls the maximum number of agentic turns per entry in non-interactive execution. The default is 30. Increase it for complex tasks that require many tool calls; decrease it to bound execution time.
+
+The user option @code{claude-code-extras-batch-system-prompt} specifies an optional system prompt appended via @samp{--append-system-prompt} to each @samp{claude -p} invocation. The default is @code{nil} (no extra system prompt).
+
+The user option @code{claude-code-extras-batch-model} specifies an optional model override via @samp{--model}. The default is @code{nil} (use Claude's default model).
+
+@vindex claude-code-extras-org-todo-in-progress-keyword
+The user option @code{claude-code-extras-org-todo-in-progress-keyword} specifies an Org TODO keyword to set on a heading when it is sent to Claude Code via @code{claude-code-extras-send-todo-at-point} (@ref{Send TODO at point}).  The keyword must be one of the values configured in @code{org-todo-keywords} for the current buffer.  The default value is @code{nil}, meaning the TODO state is not changed.  Since Org's built-in keywords are just @code{TODO} and @code{DONE}, with no intermediate ``in progress'' state, this option is disabled by default.  Users who have configured a workflow with an in-progress keyword (e.g. @code{DOING}, @code{IN-PROGRESS}, @code{STARTED}) can set this option to that keyword.
+
+@node Project audit options
+@section Project audit options
+
+@vindex claude-code-extras-audit-skills
+The user option @code{claude-code-extras-audit-skills} specifies the list of skills to run when performing a project audit via @code{claude-code-extras-audit-project}. Each entry is a skill name with a leading slash. The default value is @code{("/code-audit" "/design-audit" "/interpretability-audit")}. Each skill is invoked with @samp{--accept}, which instructs it to auto-fix all findings without prompting. Customize this list to add, remove, or reorder audit passes.
+
+@vindex claude-code-extras-audit-project-directories
+The user option @code{claude-code-extras-audit-project-directories} specifies the directories available for selection when running @code{claude-code-extras-audit-project}. When the user enters a directory not already in this list, it is automatically appended and persisted via @code{customize-save-variable}, so it will appear as a candidate in future invocations.
+
+@node Debug backtrace options
+@section Debug backtrace options
+
+@vindex claude-code-extras-debug-backtrace-model
+The user option @code{claude-code-extras-debug-backtrace-model} sets the gptel model used to identify candidate packages from a backtrace. The default is @code{gemini-flash-lite-latest}, a fast and cheap model suited for this simple classification task.
+
+@vindex claude-code-extras-debug-backtrace-backend
+The user option @code{claude-code-extras-debug-backtrace-backend} sets the gptel backend name for backtrace analysis. The default is @code{"Gemini"}.
+
+The backtrace analysis request explicitly disables @code{gptel-use-tools} so that tool definitions are never sent to the model, keeping the request lightweight and avoiding unexpected tool-call responses.
 
 @node Status polling options
 @section Status polling options
@@ -142,21 +271,87 @@ The user option @code{claude-code-extras-alert-sound} specifies the path to the 
 @vindex claude-code-extras-status-interval
 The user option @code{claude-code-extras-status-interval} sets the polling frequency (in seconds) for reading the status JSON file. The default is 5. Lower values give more responsive modeline updates; higher values reduce filesystem polling overhead.
 
+@node Usage polling options
+@section Usage polling options
+
+@vindex claude-code-extras-usage-interval
+@vindex claude-code-extras-usage-max-interval
+The user option @code{claude-code-extras-usage-interval} sets the base polling frequency (in seconds) for querying the Anthropic usage API@. The default is 300 (5 minutes). This controls how often @code{claude-code-extras-start-usage-polling} (@ref{Usage polling}) fetches updated utilization data from the @samp{api/oauth/usage} endpoint.
+
+When the API responds with HTTP 429 (rate limited), the polling interval doubles automatically until it reaches @code{claude-code-extras-usage-max-interval} (default 900 seconds, i.e. 15 minutes). On the next successful response, the interval resets to the base value. This exponential backoff avoids hammering an undocumented endpoint that enforces strict rate limits.
+
 @node Commands
 @chapter Commands
 
 @menu
 * Session switching::
 * Toggling alerts::
+* Usage polling::
+* Skill runner::
+* Batch TODO processing::
+* Send TODO at point::
+* Project audit::
+* Debug backtrace::
+* Branch navigation::
 @end menu
 
 @node Session switching
 @section Session switching
 
 @findex claude-code-extras-start-or-switch
-The command @code{claude-code-extras-start-or-switch} is the main entry point for working with Claude sessions. When no Claude sessions are active, it starts a new one by calling @code{claude-code}. When one or more sessions exist, it opens a Consult selection interface listing all active sessions plus a ``[new session]'' option.
+The command @code{claude-code-extras-start-or-switch} is the main entry point for working with Claude sessions. When no Claude sessions are active, it starts a new one by calling @code{claude-code}. When one or more sessions exist, it opens a two-column transient menu.  The left column lists active sessions, each bound to a home-row key (@samp{a}, @samp{s}, @samp{d}, @samp{f}, @samp{j}, @samp{k}, @samp{l}, @samp{;}) for single-keystroke switching.  The right column contains actions: @samp{w} to jump to the most recently waiting session and @samp{n} to start a new session.
 
-Sessions are displayed by project name (extracted from the buffer name). When multiple sessions share the same project, the instance name is appended for disambiguation (e.g. ``project:instance''). The interface provides live buffer previews as you navigate the candidates, so you can see the current state of each session before switching.
+Each session is assigned a key when it starts (via @code{claude-code-start-hook}). The assignment persists for the lifetime of the session: killing a buffer releases its key, and the freed key is reused by the next session that starts. Dead-buffer entries are automatically purged before each assignment, so keys are always recycled promptly. When the transient opens, any sessions that predate the key system (e.g. sessions started before the package was loaded) are retroactively assigned keys.
+
+Sessions are displayed by project name (extracted from the buffer name). When multiple sessions share the same project, the instance name is appended for disambiguation (e.g. ``project:instance'').
+
+@vindex claude-code-extras-waiting
+Sessions that are waiting for user input (detected via the @samp{idle_prompt} notification hook) are displayed with the @code{claude-code-extras-waiting} face, which inherits from @code{warning} by default.  The highlight is cleared as soon as input is sent to the session (Return key or programmatic command send).
+
+@findex claude-code-extras-jump-to-waiting
+The command @code{claude-code-extras-jump-to-waiting} (bound to @samp{w} in the session switcher) switches to the session that most recently started waiting for user input.  This is useful when an alert sound fires but the notification is missed: pressing @samp{w} jumps straight to the session that triggered it without needing to scan the list.  If no sessions are currently waiting, it displays a message.
+
+@menu
+* Multi-account support::
+@end menu
+
+@node Multi-account support
+@subsection Multi-account support
+
+@vindex claude-code-extras-accounts
+When @code{claude-code-extras-accounts} is non-nil, each account maps to a separate @samp{CLAUDE_CONFIG_DIR}, so OAuth credentials, settings, and memory are kept independent. This avoids the need to log out and back in when switching between accounts (e.g. tlon and epoch).
+
+Configure accounts as an alist of @samp{(NAME . CONFIG-DIR)} pairs:
+
+@lisp
+(setopt claude-code-extras-accounts
+        '(("personal" . "~/.claude-personal")
+          ("tlon"     . "~/.claude-tlon")
+          ("epoch"    . "~/.claude-epoch")))
+@end lisp
+
+@findex claude-code-extras-select-account
+The active account is persisted across sessions (in @code{claude-code-extras-account-file}). Use @code{claude-code-extras-select-account} to change it. In the transient menu (@ref{Transient menu}), the Options column includes an ``account'' infix (bound to @code{-a}) that displays the currently active account name and lets you switch accounts by pressing the key.  @code{claude-code-extras-start-or-switch} uses the persisted account silently; if no account has been selected yet, it prompts once and saves the choice. If only one account is configured, it is selected automatically.
+
+@findex claude-code-extras-init-account
+Before a new account's first @samp{claude} run, call @code{claude-code-extras-init-account} to create its config directory and set up the shared symlinks.  This avoids a bootstrap race where @samp{claude} writes fresh empty files into the account directory before the sync can symlink them, leaving permissions and history isolated from the rest of your setup.  @code{claude-code-extras-select-account} also runs the same setup implicitly, so either entry point works.  The function is safe to re-run: it heals virgin-state files (empty @samp{settings.json}, empty directories) by replacing them with symlinks, and leaves real content alone with a warning.
+
+The first time you start a session with a given account, Claude will prompt for OAuth login. After that, switching is instant.
+
+@findex claude-code-extras--ensure-shared-symlinks
+@vindex claude-code-extras--shared-config-items
+@vindex claude-code-extras--shared-claude-json-keys
+When a session starts, @code{claude-code-extras--sync-account-config} performs two kinds of synchronization:
+
+@enumerate
+@item
+@strong{Symlinked items} (listed in @code{claude-code-extras--shared-config-items}): @samp{settings.json}, @samp{settings.local.json}, @samp{skills}, @samp{plugins}, @samp{projects}, @samp{memory}, and @samp{history.jsonl} are symlinked from @samp{~/.claude/} into the account's config directory.  This shares permissions, hooks, skills, plugins, project trust, memory, and session history across accounts.
+
+@item
+@strong{Merged @samp{.claude.json} keys}: @samp{theme}, @samp{claudeInChromeDefaultEnabled}, and @samp{hasCompletedClaudeInChromeOnboarding} (listed in @code{claude-code-extras--shared-claude-json-keys}) are copied verbatim from the canonical @samp{~/.claude.json} into each account's @samp{.claude.json}.  The @samp{mcpServers} key is deep-merged per-server: server definitions are copied from canonical, but per-account @samp{env} entries are preserved so that account-specific credentials (e.g. @samp{op://} references for API keys) survive the sync.  The @samp{projects} key is merged separately using trust-aware logic.  This ensures MCP servers and UI preferences are available in every account without sharing account-specific data like OAuth credentials.
+@end enumerate
+
+Existing files or directories that are not symlinks are inspected: if they are in a @strong{virgin state} (empty, or a JSON file containing only @samp{\@{\@}} or @samp{[]}, or an empty directory), they are deleted and replaced with a symlink to the canonical location.  Targets with real content are left untouched and a warning is logged, so the user can migrate data manually and then re-run @code{claude-code-extras-init-account}.  The @samp{.claude.json} write is skipped when no changes are detected, to avoid triggering file-change watchers.
 
 @node Toggling alerts
 @section Toggling alerts
@@ -164,27 +359,146 @@ Sessions are displayed by project name (extracted from the buffer name). When mu
 @findex claude-code-extras-toggle-alert
 The command @code{claude-code-extras-toggle-alert} toggles the buffer-local value of @code{claude-code-extras-alert-on-ready} and reports the new state. This is useful during long-running operations: enable alerts before submitting a complex prompt, then disable them when you return to interactive use. The alert style and sound are configured via the user options described in @ref{Alert options}.
 
+@node Usage polling
+@section Usage polling
+
+@findex claude-code-extras-start-usage-polling
+@findex claude-code-extras-stop-usage-polling
+The command @code{claude-code-extras-start-usage-polling} begins periodic polling of the Anthropic @samp{api/oauth/usage} endpoint to track plan utilization. The data is fetched asynchronously via @code{url-retrieve} for each account with an active session. Authentication uses the per-account OAuth token from the macOS Keychain, where each @code{CLAUDE_CONFIG_DIR} has its own credential entry (service name @samp{Claude Code-credentials-<sha256prefix>}). The fetched data is stored in a hash table keyed by account name, so each session's modeline shows its own account's rate limit status. Calling this command when polling is already active is a no-op.
+
+Polling starts automatically when a Claude Code modeline is set up (via @code{claude-code-extras-set-modeline}, @ref{Modeline integration}), so manual invocation is rarely needed. The polling interval is controlled by @code{claude-code-extras-usage-interval} (@ref{Usage polling options}), with automatic exponential backoff on HTTP 429 responses.
+
+The command @code{claude-code-extras-stop-usage-polling} cancels the usage polling timer. Use it to stop background API requests when they are no longer needed.
+
+The polled data is exposed through four accessor functions described in @ref{Usage accessors}.
+
+@node Skill runner
+@section Skill runner
+
+@findex claude-code-extras-run-skill
+The command @code{claude-code-extras-run-skill} runs a Claude Code skill non-interactively via @samp{claude -p}. Interactively, it prompts for the skill name with completion (annotated with descriptions), then for arguments if the skill declares an @samp{argument-hint} in its frontmatter, and finally for a working directory. The result is displayed in a @samp{*Claude Skill: <name>*} buffer in org-mode with cost, duration, and session ID@.
+
+Only skills with @samp{user-invocable: true} (or no @samp{user-invocable} field) in their @samp{SKILL.md} frontmatter are offered for completion. Skills are discovered from @samp{~/.claude/skills/} (global) and the current project's @samp{.claude/skills/} directory. Project skills shadow global skills with the same name. The completion UI annotates each candidate with a @samp{[global]} or @samp{[project]} tag to indicate its source.
+
+The command uses the same non-interactive execution infrastructure as batch TODO processing, respecting @code{claude-code-extras-batch-allowed-tools}, @code{claude-code-extras-batch-max-turns}, @code{claude-code-extras-batch-system-prompt}, and @code{claude-code-extras-batch-model} (@ref{Batch TODO processing options}).
+
+@node Batch TODO processing
+@section Batch TODO processing
+
+@findex claude-code-extras-batch-todos
+The command @code{claude-code-extras-batch-todos} processes org TODO entries sequentially via @samp{claude -p} in non-interactive mode. It must be called from an org-mode buffer. Scope is inferred automatically: @samp{region} if the region is active, @samp{subtree} if the buffer is narrowed, @samp{buffer} otherwise. The command then prompts for a working directory via @code{project-prompt-project-dir}. A confirmation prompt is shown unless the scope is @samp{region} (where the explicit selection already signals intent).
+
+Each TODO's heading becomes the prompt (with body text appended if present). Entries are processed sequentially — each @samp{claude -p} invocation must finish before the next starts. Errors do not abort the batch; each failure is recorded and processing continues.
+
+Results are saved as JSON log files in a timestamped subdirectory under @code{claude-code-extras-log-directory} (@ref{Batch TODO processing options}). When all entries have been processed, a @samp{*Claude Batch Results*} summary buffer is displayed in org-mode with per-entry status, cost, duration, log file links, and Claude's response text.
+
+The command respects @code{claude-code-extras-batch-allowed-tools}, @code{claude-code-extras-batch-max-turns}, @code{claude-code-extras-batch-system-prompt}, and @code{claude-code-extras-batch-model} (@ref{Batch TODO processing options}).
+
+@node Send TODO at point
+@section Send TODO at point
+
+@findex claude-code-extras-send-todo-at-point
+The command @code{claude-code-extras-send-todo-at-point} sends the org TODO heading at point to a running interactive Claude Code session. Unlike @code{claude-code-extras-batch-todos} (@ref{Batch TODO processing}), which processes entries non-interactively via @samp{claude -p}, this command targets a live TUI session where the user can review Claude's output and intervene between tasks.
+
+The intended workflow is a split window with the org buffer on one side and the Claude Code session on the other. After reviewing Claude's output for one task, the user moves point to the next TODO heading and invokes the command again.
+
+Session resolution is automatic via @code{claude-code-extras--resolve-session-for-file}: if the org file belongs to a project and exactly one Claude Code session is running in that project, it is used directly with no prompt. When multiple sessions exist for the project, the user is prompted to select one. When no project is detected or no session matches, it falls back to the standard @code{claude-code--get-or-prompt-for-buffer} selection.
+
+The prompt sent to the session is the cleaned heading text—stripped of the TODO keyword, priority, and tags—followed by the entry body (if any) separated by a blank line.  Org inline markup is converted to Markdown equivalents before sending: verbatim (@code{=…=}) and code (@samp{~…~}) markers become backticks, so the prompt reads naturally in the Claude Code session.
+
+When @code{claude-code-extras-org-todo-in-progress-keyword} is non-@code{nil}, the heading's TODO state is changed to that keyword after the prompt is sent (@ref{Batch TODO processing options}).  This provides a visual indication in the org buffer of which tasks have been dispatched to Claude.
+
+@node Project audit
+@section Project audit
+
+@findex claude-code-extras-audit-project
+The command @code{claude-code-extras-audit-project} runs a comprehensive audit of a project. It prompts the user to select a directory from @code{claude-code-extras-audit-project-directories} (@ref{Project audit options}) or enter a new one. New directories are automatically added to the list for future use. It then sequentially invokes each skill in @code{claude-code-extras-audit-skills} (@ref{Project audit options}) with @samp{--accept}, each as a separate non-interactive @samp{claude -p} session. This means each audit starts with a fresh context window.
+
+After each audit completes successfully, any uncommitted changes in the project directory are automatically committed with a message of the form @samp{<skill>: apply audit recommendations}. This ensures each audit's changes are isolated in their own commit, making them easy to review individually.
+
+The command reuses the batch processing infrastructure (@ref{Batch TODO internals}), so results are logged and displayed in the same @samp{*Claude Batch Results*} summary buffer with per-audit status, cost, duration, and output. The batch options (@code{claude-code-extras-batch-max-turns}, @code{claude-code-extras-batch-model}, etc.) apply to audit runs as well.
+
+@node Debug backtrace
+@section Debug backtrace
+
+@findex claude-code-extras-debug-backtrace
+The command @code{claude-code-extras-debug-backtrace} automates the workflow of debugging an Emacs backtrace with Claude Code. When invoked from a @samp{*Backtrace*} buffer, it:
+
+@enumerate
+@item
+Saves the backtrace to the downloads directory via @code{debug-save-backtrace}.
+@item
+Sends the backtrace to a light LLM (configured via @code{claude-code-extras-debug-backtrace-model} and @code{claude-code-extras-debug-backtrace-backend}, @ref{Debug backtrace options}) to identify all packages implicated in the error.
+@item
+Presents the candidate packages via @code{completing-read}, ordered from most likely root cause to least likely, so the user can select the right one.
+@item
+Starts an interactive Claude Code session in the selected package's source directory (elpaca source directory if available, otherwise the directory of the library file on @code{load-path}).
+@item
+Once the session is ready, sends it the backtrace file path and asks it to identify and fix the bug.
+@end enumerate
+
+@node Branch navigation
+@section Branch navigation
+
+@findex claude-code-extras-create-branch
+@findex claude-code-extras-switch-branch
+Claude Code's branching mechanism creates a new session forked from the current conversation. Over time, a single session can accumulate several branches (and branches of branches). This section covers creating new branches from Emacs and navigating the resulting tree.
+
+@menu
+* Creating a branch::
+* Switching branches::
+* Automatic branch detection in the modeline::
+@end menu
+
+@node Creating a branch
+@subsection Creating a branch
+
+The command @code{claude-code-extras-create-branch} creates a new branch of the current Claude session and switches to it. It starts a new Claude process with @samp{--resume SESSION_ID --fork-session}, which tells the CLI to resume the conversation but under a fresh session ID@. The result is a new session that shares the full history of its parent but diverges from this point forward.
+
+The new buffer is automatically named @samp{fork-HHMMSS} (using the current time) to avoid prompting for an instance name. After branching, you can interact with the new session independently while the original remains open in its buffer. Use @code{claude-code-extras-switch-branch} to navigate between them (@ref{Switching branches}).
+
+@node Switching branches
+@subsection Switching branches
+
+The command @code{claude-code-extras-switch-branch} navigates between branches of the current session.
+
+When invoked from a Claude Code buffer, the command reads the current session's ID from the status file, scans the project's session JSONL files to reconstruct the branching structure, and displays a tree-formatted selection interface via @code{consult--read}. Each entry shows the session's first user prompt (truncated to 60 characters), a formatted timestamp, and a @samp{*} marker on the current session. Tree-drawing characters (@samp{├─}, @samp{└─}, @samp{│}) visualize the parent-child relationships:
+
+@example
+let's redesign the recordings validation  Mar 29 02:28
+├─ do the quick check                     Mar 29 03:15 *
+│  └─ fix the edge case                   Mar 29 04:00
+└─ try alternative approach                Mar 29 03:20
+@end example
+
+On selection, the command checks whether the target session is already running in an Emacs buffer. If so, it switches to that buffer directly. If the session is not running, it starts a new Claude Code session with @samp{--resume SESSION_ID} to reopen it. The new buffer is automatically named @samp{branch-XXXXXXXX} (using the first eight characters of the session ID) to avoid prompting for an instance name.
+
+The scan is optimized in two phases. First, only the first line of each JSONL file in the project directory is read to extract session IDs and @code{forkedFrom} fields (fast). The full branch tree is then identified, and only the handful of sessions in the tree are read more deeply to extract their display prompts. For branched sessions, the first @emph{new} user message after the fork point is used as the label, so branches are distinguishable from their parent even though they share conversation history.
+
+If the current session has no branches (and is not itself a branch), the command signals a user error.
+
+@node Automatic branch detection in the modeline
+@subsection Automatic branch detection in the modeline
+
+When you run @samp{/branch} inside a Claude Code session, the CLI creates a new session within the same terminal buffer. The status poller detects this by comparing session IDs across polls: the first session ID seen is recorded as the original, and any subsequent change triggers a display name refresh. The modeline then shows a branch suffix appended to the normal display name, formatted as @samp{dir:instance:SHORTID} (where @samp{SHORTID} is the first eight characters of the new session ID). This makes it immediately visible that you are working in a branch rather than the original session.
+
 @node Functions
 @chapter Functions
 
 @menu
-* Logging::
 * Buffer lifecycle::
 * Status polling::
 * Status accessors::
+* Usage accessors::
 * Alerts::
 * Modeline integration::
+* Snippet insertion::
+* Copilot integration::
+* Non-interactive execution internals::
+* Skill runner internals::
+* Batch TODO internals::
 * Auto-setup::
 @end menu
-
-@node Logging
-@section Logging
-
-@findex claude-code-extras-start-logging
-@findex claude-code-extras-stop-logging
-The function @code{claude-code-extras-start-logging} begins periodic saving of the current Claude buffer to a log file. It is added to @code{claude-code-start-hook} automatically. The log file name combines a sanitized version of the buffer name with a timestamp (e.g. @samp{_claude_project_default__2025-06-15_14-30-00.txt}). If the conversation is cleared (detected when the existing log file is more than twice the current buffer size), a new log file is started.
-
-The function @code{claude-code-extras-stop-logging} cancels the timer and performs a final save. It is added to @code{kill-buffer-hook} automatically.
 
 @node Buffer lifecycle
 @section Buffer lifecycle
@@ -198,14 +512,17 @@ The function @code{claude-code-extras-setup-kill-on-exit} wraps the process sent
 
 The function @code{claude-code-extras-fix-rendering} sends a @samp{SIGWINCH} signal to the Claude process after the delay specified by @code{claude-code-extras-sigwinch-delay} (@ref{Terminal rendering}). This forces the TUI to re-query terminal dimensions and redraw correctly.
 
+@findex claude-code-extras--send-escape-in-current-buffer
+The function @code{claude-code-extras--send-escape-in-current-buffer} is an @samp{:around} advice on @code{claude-code-send-escape} that fixes @code{C-g} behavior when multiple Claude sessions share the same project directory.  The upstream implementation uses @code{claude-code--with-buffer}, which re-resolves the target buffer via @code{claude-code--get-or-prompt-for-buffer}.  When multiple sessions exist for the same project, this triggers a selection prompt instead of sending the escape to the current buffer.  The advice short-circuits the lookup: if the current buffer is already a Claude buffer, it sends the escape sequence directly; otherwise it falls through to the original function.
+
 @node Status polling
 @section Status polling
 
 @findex claude-code-extras-start-status-polling
 @findex claude-code-extras-stop-status-polling
-The function @code{claude-code-extras-start-status-polling} begins periodic reading of the JSON status file written by the bundled statusline shell script. The parsed data is stored in the buffer-local variable @code{claude-code-extras--status-data} as a plist.
+The function @code{claude-code-extras-start-status-polling} begins periodic reading of the JSON status file written by the bundled statusline shell script. The parsed data is stored in the buffer-local variable @code{claude-code-extras--status-data} as a plist. Calling it multiple times is safe: any existing timer is canceled before a new one is created.
 
-The function @code{claude-code-extras-stop-status-polling} cancels the timer and deletes the status file.
+The function @code{claude-code-extras-stop-status-polling} cancels the timer and deletes the status file. As a safety net, the polling callback also cancels itself if the associated buffer has been killed.
 
 @node Status accessors
 @section Status accessors
@@ -242,14 +559,44 @@ The status accessor functions extract specific values from the parsed status dat
 
 These functions are designed to be called from modeline constructors (e.g. @samp{doom-modeline-extras.el}) to display live session statistics.
 
+@node Usage accessors
+@section Usage accessors
+
+@findex claude-code-extras-status-session-usage
+@findex claude-code-extras-status-weekly-usage
+@findex claude-code-extras-status-session-reset
+@findex claude-code-extras-status-weekly-reset
+The usage accessor functions extract values from the data fetched by @code{claude-code-extras-start-usage-polling} (@ref{Usage polling}). Unlike the status accessors (@ref{Status accessors}), which read buffer-local data from a per-session status file, these functions look up the current buffer's account in the per-account usage hash table. Each returns @code{nil} if usage data has not yet been fetched for that account.
+
+@itemize
+@item
+@code{claude-code-extras-status-session-usage} returns the 5-hour session utilization as a percentage.
+@item
+@code{claude-code-extras-status-weekly-usage} returns the 7-day weekly utilization as a percentage.
+@item
+@code{claude-code-extras-status-session-reset} returns the 5-hour session reset time as an ISO 8601 string.
+@item
+@code{claude-code-extras-status-weekly-reset} returns the 7-day weekly reset time as an ISO 8601 string.
+@end itemize
+
+These functions are designed to be called from modeline constructors or other display code that needs to show plan utilization alongside the per-session statistics provided by the status accessors.
+
 @node Alerts
 @section Alerts
 
 @findex claude-code-extras-notify
 @findex claude-code-extras-alert-indicator
-The function @code{claude-code-extras-notify} is the notification callback installed as @code{claude-code-notification-function}. It always calls the default notification (a modeline pulse), and when @code{claude-code-extras-alert-on-ready} is non-@code{nil}, it additionally dispatches visual and/or audible alerts according to @code{claude-code-extras-alert-style} (@ref{Alert options}).
+@findex claude-code-extras--handle-notification
+The function @code{claude-code-extras--handle-notification} is a @code{claude-code-event-hook} listener that handles @samp{Notification} events from the CLI@.  It parses the notification JSON to determine the type and dispatches alerts accordingly: @samp{idle_prompt} (Claude finished and is waiting), @samp{permission_prompt} (a tool needs approval), and @samp{elicitation_dialog} (Claude is showing an input dialog).  For @samp{idle_prompt}, it also sets @code{claude-code-extras--waiting-for-input} to the current time (via @code{current-time}), which is used by @code{claude-code-extras-jump-to-waiting} to identify the most recently waiting session.
+
+The function @code{claude-code-extras-notify} combines the default modeline pulse with optional OS alerts.  When @code{claude-code-extras-alert-on-ready} is non-@code{nil}, it dispatches visual and/or audible alerts according to @code{claude-code-extras-alert-style} (@ref{Alert options}).  It is called by the notification handler rather than installed directly as @code{claude-code-notification-function} (which is set to the default modeline-only callback to avoid double-alerting from the terminal bell).
+
+The Notification hook that delivers these events is auto-configured at package load time via @code{claude-code-extras-ensure-notification-hook-config} (@ref{Auto-setup}), so no manual @samp{settings.json} editing is required.
 
 The function @code{claude-code-extras-alert-indicator} returns a bell icon string reflecting the current alert state. It is intended for use in modeline segments or header lines to give a visual indication of whether alerts are active.
+
+@findex claude-code-extras--has-background-tasks-p
+The function @code{claude-code-extras--has-background-tasks-p} returns non-@code{nil} when the current (or given) Claude session buffer has active background work.  It scans the tail of the terminal buffer for Claude Code's status-line indicator, which renders @samp{· N shells} or @samp{· N monitors} when background Bash processes or Task agents are still running.  It is registered as the backend's @code{:has-background-tasks-p} function, allowing the shared session switcher to highlight idle-but-busy sessions with a distinct face ( in the @samp{ai-extras} manual).
 
 @node Modeline integration
 @section Modeline integration
@@ -257,16 +604,135 @@ The function @code{claude-code-extras-alert-indicator} returns a bell icon strin
 @findex claude-code-extras-set-modeline
 The function @code{claude-code-extras-set-modeline} activates the @samp{claude-code} doom-modeline segment for the current buffer. It also starts status polling if it is not already active (@ref{Status polling}). This function is added to @code{claude-code-start-hook} automatically.
 
+@node Snippet insertion
+@section Snippet insertion
+
+@findex claude-code-extras--consult-yasnippet
+@findex claude-code-extras--expand-snippet-to-text
+The function @code{claude-code-extras--consult-yasnippet} is an @samp{:around} advice on @code{consult-yasnippet} that makes snippet insertion work in Eat terminal buffers (such as Claude Code sessions).  The upstream @code{consult-yasnippet} captures buffer positions at invocation time and manipulates them on return (via @code{delete-region}, @code{insert}, and @code{goto-char}) for preview cleanup.  In an Eat buffer the terminal emulator modifies the buffer asynchronously, so those positions become stale and cause @samp{args-out-of-range} errors.
+
+The advice detects @code{eat-mode} and replaces the entire flow: it calls @code{consult-yasnippet--candidates} and @code{consult--read} without a @samp{:state} function (no preview or buffer manipulation), then expands the selected template to plain text via @code{claude-code-extras--expand-snippet-to-text}, which creates a temporary buffer, enables @code{yas-minor-mode}, expands the snippet, commits all active snippet fields to their defaults, and returns the resulting string.  Newlines in the expanded text are converted to Alt+Enter sequences (@code{ESC CR}) so that Claude Code's TUI treats them as multi-line input.  The final text is sent through @code{eat-term-send-string}.
+
+In non-Eat buffers the advice delegates to the original function unchanged.
+
+@findex claude-code-extras--try-expand-snippet-at-prompt
+@findex claude-code-extras-snippet-tab
+@findex claude-code-extras-setup-snippet-keys
+The function @code{claude-code-extras--try-expand-snippet-at-prompt} enables TAB-triggered snippet expansion at the terminal prompt.  It searches backward from @code{point-max} for the @samp{❯} prompt marker, extracts the user's input, and checks whether it ends with a yasnippet key.  When the input matches, the function sends DEL characters to erase the key from the terminal, then sends the expanded snippet text through @code{eat-term-send-string}.  When multiple keys match, the longest one wins.
+
+The minor mode @code{claude-code-extras--snippet-keys-mode} overrides TAB in Claude Code buffers to call @code{claude-code-extras-snippet-tab}, which tries snippet expansion first and falls through to @code{eat-self-input} otherwise.  The function @code{claude-code-extras-setup-snippet-keys} activates this mode from @code{claude-code-start-hook} when Copilot integration is disabled.  When Copilot is enabled, the Copilot TAB handler (@code{claude-code-extras--copilot-tab}) chains through snippet expansion before falling through to eat, so a separate mode is not needed.
+
+@node Copilot integration
+@section Copilot integration
+
+@findex claude-code-extras-setup-copilot
+@findex claude-code-extras-teardown-copilot
+The function @code{claude-code-extras-setup-copilot} enables Copilot in the current Claude Code buffer. It is added to @code{claude-code-start-hook} automatically and guards on @code{claude-code-extras-copilot-enabled} (@ref{Copilot options}), the presence of an Eat terminal, and the availability of the @samp{copilot} package. When all conditions are met, it bridges three mechanical mismatches between Copilot and Eat terminal buffers:
+
+@enumerate
+@item
+@strong{Language ID@.} Installs @samp{:around} advice on @code{copilot--get-language-id} that returns @samp{"plaintext"} in Claude Code buffers.  The default language ID @samp{"eat"} is unknown to the Copilot server.
+
+@item
+@strong{Document URI@.} Sets @code{buffer-file-name} to a temporary file path so that @code{copilot--get-uri} returns a @samp{file://} URI@.  The Copilot server silently ignores the virtual @samp{buffer://} URIs that non-file buffers produce.
+
+@item
+@strong{Acceptance routing.} Installs @samp{:around} advice on @code{copilot-accept-completion} that sends accepted text through @code{eat-term-send-string} instead of using @code{delete-region~/~insert}, which would corrupt the terminal state.  Newlines in accepted completions are converted to Alt+Enter sequences so that Claude Code's TUI treats them as multi-line input rather than prompt submission.  The advice also sends the appropriate Copilot telemetry for both full and partial acceptance.
+@end enumerate
+
+Additionally, the setup installs a @code{post-command-hook} handler that schedules a debounced document sync and completion request after each user command.  Two issues make copilot's built-in triggers ineffective in Eat buffers: (a) Eat's process filter runs with @code{inhibit-modification-hooks} bound to t, so neither @code{after-change-functions} nor @code{track-changes} (which copilot uses for incremental document sync) detect buffer modifications; (b) the terminal echo from a keystroke arrives asynchronously after @code{post-command-hook} has already fired.  The handler works around both problems by waiting 0.3 seconds for the echo to land, then sending a full-document @code{textDocument/didChange} notification to the Copilot server before requesting completions.  The completion request is positioned at the TUI input prompt (identified by the @samp{❯} marker) rather than at the terminal cursor, which may be on a status-bar or border line due to TUI rendering updates.
+
+Copilot's @code{track-changes} handler is unregistered after @code{copilot-mode} enables, since it cannot function in Eat buffers and would otherwise cause ``Recovering from confusing calls to before/after-change-functions'' errors.  Copilot's own @code{post-command-hook} handler (@code{copilot--post-command}) is also removed, since it would call @code{copilot-complete} without syncing the document first.
+
+An @samp{:around} advice on @code{copilot--show-completion} relocates the overlay to the TUI prompt line after the original function creates it.  In eat buffers the line numbers in the server's range drift because the buffer changes between sync and response, so the overlay often ends up on a TUI chrome line.  The advice lets the original function create the overlay, then moves it to the prompt and re-renders the ghost text at the correct position, and finally moves point there so the Emacs cursor sits at the ghost text boundary.
+
+Completions are truncated to a single line via @samp{:around} advice on @code{copilot--set-overlay-text}, preventing ghost text from extending past the TUI input area into the terminal chrome below.
+
+A predicate is added to @code{copilot-disable-predicates} that suppresses completions while @code{buffer-read-only} is non-nil.
+
+@enumerate
+@item
+@strong{TAB acceptance.}  Eat's semi-char-mode keymap binds TAB to @code{eat-self-input}, which takes priority over copilot's keymap overlay.  A buffer-local minor mode (@code{claude-code-extras--copilot-keys-mode}) overrides TAB so that it accepts the visible completion when one exists, and falls through to @code{eat-self-input} otherwise.
+@end enumerate
+
+The function @code{claude-code-extras-teardown-copilot} clears the buffer-local Copilot integration flag and cancels any pending change timer when the buffer is killed. It is added to @code{kill-buffer-hook} automatically.
+
+@node Non-interactive execution internals
+@section Non-interactive execution internals
+
+@findex claude-code-extras--build-cli-args
+@findex claude-code-extras--run-prompt
+@findex claude-code-extras--batch-parse-stream-json
+The function @code{claude-code-extras--build-cli-args} assembles the command-line arguments for @samp{claude -p}, incorporating allowed tools, max turns, system prompt, and model override. It accepts keyword arguments that default to the corresponding @samp{claude-code-extras-batch-*} customization variables.
+
+The function @code{claude-code-extras--run-prompt} is the single-shot runner that spawns a @samp{claude -p} process asynchronously. It takes a prompt string and keyword arguments @samp{:dir}, @samp{:callback}, @samp{:allowed-tools}, @samp{:system-prompt}, @samp{:model}, and @samp{:max-turns}. Any @samp{CLAUDE_CODE} environment variables are stripped from @code{process-environment} to prevent nested-session errors. When the process finishes, the sentinel parses the stream-json output and calls the callback with a result plist containing @samp{:exit-code}, @samp{:duration}, @samp{:cost}, @samp{:text}, @samp{:session-id}, and @samp{:raw}. Both @code{claude-code-extras-run-skill} and @code{claude-code-extras--batch-run-next} delegate to this function.
+
+The function @code{claude-code-extras--batch-parse-stream-json} parses the raw stream-json output from @samp{claude -p} into a plist with @samp{:text} (concatenated assistant messages), @samp{:cost}, and @samp{:session-id}.
+
+@node Skill runner internals
+@section Skill runner internals
+
+@findex claude-code-extras--parse-skill-frontmatter
+@findex claude-code-extras--discover-skills
+@findex claude-code-extras--skill-display-result
+The function @code{claude-code-extras--parse-skill-frontmatter} reads a @samp{SKILL.md} file and extracts the YAML frontmatter into a plist with keys @samp{:name}, @samp{:description}, @samp{:argument-hint}, and @samp{:user-invocable}.
+
+The function @code{claude-code-extras--discover-skills} scans @samp{~/.claude/skills/} and the current project's @samp{.claude/skills/} for @samp{SKILL.md} files, parses their frontmatter, and returns a list of skill plists. Project skills shadow global skills with the same name. Skills with @samp{user-invocable: false} are excluded.
+
+The function @code{claude-code-extras--skill-display-result} displays the skill result.  When the skill created its own buffer (e.g. via @samp{emacsclient}), the metadata (cost, duration, session) is added to that buffer and no separate buffer is created.  Otherwise a @samp{*Claude Skill: <name>*} buffer is created with the full output.
+
+@node Batch TODO internals
+@section Batch TODO internals
+
+@findex claude-code-extras--batch-collect-todos
+@findex claude-code-extras--batch-format-prompt
+@findex claude-code-extras--batch-start
+@findex claude-code-extras--batch-run-next
+@findex claude-code-extras--batch-finish
+The function @code{claude-code-extras--batch-collect-todos} uses @code{org-map-entries} to find entries with a TODO state in the given scope. For each entry, it extracts the heading text (without TODO keyword, priority, tags, or comment) and the body text (excluding property drawers and child subtrees).
+
+The function @code{claude-code-extras--batch-format-prompt} combines an entry's title and body into a single prompt string. If the body is empty, the title alone is used.
+
+The function @code{claude-code-extras--batch-start} initializes the processing state, creates a timestamped log subdirectory, and kicks off the async chain.
+
+The function @code{claude-code-extras--batch-run-next} pops the next entry from the queue, formats the prompt, and delegates to @code{claude-code-extras--run-prompt}. The callback saves raw output to a log file, records the result, optionally commits changes, and recurses to process the next entry.
+
+The function @code{claude-code-extras--batch-finish} constructs and displays the @samp{*Claude Batch Results*} summary buffer with aggregate statistics and per-entry details.
+
 @node Auto-setup
 @section Auto-setup
 
 @findex claude-code-extras-ensure-statusline-config
 @findex claude-code-extras-ensure-stop-hook-config
+@findex claude-code-extras-ensure-notification-hook-config
 The function @code{claude-code-extras-ensure-statusline-config} checks @samp{~/.claude/settings.json} for a @samp{statusLine} entry and adds one if absent, pointing to the bundled shell script. This ensures that the status JSON file is written for every Claude session without manual configuration.
 
-The function @code{claude-code-extras-ensure-stop-hook-config} similarly checks for a @samp{Stop} hook entry and adds one if absent, pointing to the bundled hook wrapper script. This enables the stop-event detection that powers the alert system (@ref{Alerts}).
+The function @code{claude-code-extras-ensure-stop-hook-config} similarly checks for a @samp{Stop} hook entry and adds one if absent, pointing to the bundled hook wrapper script. This enables the stop-event detection that powers scroll-to-bottom and pending theme application.
 
-Both functions run automatically when the package is loaded.
+The function @code{claude-code-extras-ensure-notification-hook-config} checks for a @samp{Notification} hook entry and adds one if absent or empty, pointing to the bundled notification forwarding script.  It handles both the case where the @samp{Notification} key exists with an empty array and where the key is missing entirely.  This enables the alert system (@ref{Alerts}) to receive @samp{Notification} events (idle prompts, permission requests, elicitation dialogs) from the CLI via @code{emacsclient}.
+
+All three functions run automatically when the package is loaded.
+
+@node Transient menu
+@chapter Transient menu
+
+@findex claude-code-extras-menu
+The command @code{claude-code-extras-menu} opens a transient menu that provides quick access to all major features of the package.  The menu is organized into six groups:
+
+@itemize
+@item
+@strong{Sessions.} Start or switch between sessions (@code{claude-code-extras-start-or-switch}, @ref{Session switching}), navigate branches (@code{claude-code-extras-switch-branch}, @ref{Branch navigation}), create a new branch (@code{claude-code-extras-create-branch}, @ref{Creating a branch}), and perform a session handoff (@code{claude-code-extras-handoff}).
+@item
+@strong{Tools.} Run a skill (@code{claude-code-extras-run-skill}, @ref{Skill runner}), process batch TODOs (@code{claude-code-extras-batch-todos}, @ref{Batch TODO processing}), send the TODO at point to an interactive session (@code{claude-code-extras-send-todo-at-point}, @ref{Send TODO at point}), audit a project (@code{claude-code-extras-audit-project}, @ref{Project audit}), debug a backtrace (@code{claude-code-extras-debug-backtrace}, @ref{Debug backtrace}), and browse session logs (@code{agent-log-menu}).
+@item
+@strong{Alerts & status.} Toggle alerts (@code{claude-code-extras-toggle-alert}, @ref{Toggling alerts}), start or stop status polling (@ref{Status polling}), and start or stop usage polling (@code{claude-code-extras-start-usage-polling}, @code{claude-code-extras-stop-usage-polling}, @ref{Usage polling}).
+@item
+@strong{Buffer.} Kill-on-exit setup (@code{claude-code-extras-setup-kill-on-exit}), rendering fixes (@code{claude-code-extras-fix-rendering}), and scrollback truncation control (@code{claude-code-extras-disable-scrollback-truncation}).  See @ref{Buffer lifecycle}.
+@item
+@strong{Setup.} Ensure statusline, notification hook, and stop hook configurations are present in @samp{~/.claude/settings.json}.  See @ref{Auto-setup}.
+@item
+@strong{Options.} An account infix (@code{-a}) that displays and selects the active Claude account (@ref{Multi-account support}), plus toggleable infixes for five boolean user options: @code{claude-code-extras-alert-on-ready} (@ref{Alert options}), @code{claude-code-extras-protect-buffers} (@ref{Buffer protection}), @code{claude-code-extras-sync-theme} (@ref{Theme sync}), @code{claude-code-extras-copilot-enabled} (@ref{Copilot options}), and @code{claude-code-extras-warn-kill-with-branches} (@ref{Buffer protection}).  Each infix displays its current value and stays in the transient after toggling, so you can adjust multiple options in one invocation.
+@end itemize
 
 @node Indices
 @chapter Indices

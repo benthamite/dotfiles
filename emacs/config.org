@@ -9059,8 +9059,9 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   ;; copilot support is buggy; needs more work
   (claude-code-extras-copilot-enabled nil)
   (claude-code-extras-org-todo-in-progress-keyword "DOING")
-  (claude-code-extras-accounts '(("tlon"  . "~/.claude-tlon")
-                                 ("epoch" . "~/.claude-epoch"))))
+  (claude-code-extras-accounts '(("personal"  . "~/.claude-personal")
+				 ("tlon"  . "~/.claude-tlon")
+				 ("epoch" . "~/.claude-epoch"))))
 #+end_src
 
 ** =agent-log=

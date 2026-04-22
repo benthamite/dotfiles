@@ -13275,17 +13275,13 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
    ("s-c" . slack-channel-select)
    ("s-g" . slack-group-select)
    ("s-m" . slack-im-select)
-   ("H-s-t" . slack-change-current-team)
    ("s-u" . slack-select-rooms)
-   ("H-s-u" . slack-select-unread-rooms)
    :map slack-buffer-mode-map
    ("s-a" . slack-all-threads)
    ("s-c" . slack-channel-select)
    ("s-g" . slack-group-select)
    ("s-m" . slack-im-select)
-   ("H-s-t" . slack-change-current-team)
    ("s-u" . slack-select-rooms)
-   ("H-s-u" . slack-select-unread-rooms) ; `slack-all-unreads' not working
    :map slack-thread-message-buffer-mode-map
    ("d" . slack-thread-show-or-create)
    ("e" . slack-message-edit)

@@ -1362,8 +1362,6 @@ Partly borrowed from [[https://gitlab.com/protesilaos/dotfiles/-/blob/350ca3144c
 :PROPERTIES:
 :ID:       D412C998-40EE-4638-959A-C2530EC9F247
 :END:
-:LOGBOOK:
-:END:
 
 ** =plstore=
 :PROPERTIES:
@@ -1544,8 +1542,6 @@ CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
 * version control
 :PROPERTIES:
 :ID:       CBBAD256-2800-4E9C-9042-C033FF95FA58
-:END:
-:LOGBOOK:
 :END:
 
 ** =vc=
@@ -12900,8 +12896,6 @@ I use this package to compose messages and to reply to messages composed in HTML
 * messaging
 :PROPERTIES:
 :ID:       7DD09AFA-70A6-4E9D-AA78-C8E8421A9673
-:END:
-:LOGBOOK:
 :END:
 
 ** =telega=

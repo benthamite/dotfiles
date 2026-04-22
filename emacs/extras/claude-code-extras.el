@@ -602,6 +602,7 @@ sessions."
                                      nil nil #'string=))
               (target-path (expand-file-name
                             ".claude.json" (expand-file-name config-dir))))
+    (make-directory (expand-file-name config-dir) t)
     (claude-code-extras--ensure-shared-symlinks (expand-file-name config-dir))
     (condition-case err
         (let* ((target (claude-code-extras--read-claude-json target-path))
@@ -669,17 +670,64 @@ Modifies TARGET-ENV in place."
 (defun claude-code-extras--ensure-shared-symlinks (config-dir)
   "Ensure shared config symlinks exist in CONFIG-DIR.
 For each item in `claude-code-extras--shared-config-items', create a
-symlink pointing to the canonical file or directory in `~/.claude/'
-if the item doesn't already exist in CONFIG-DIR.  Existing files
-and directories (non-symlinks) are left untouched to avoid data loss."
+symlink pointing to the canonical file or directory in `~/.claude/'.
+If the target is a virgin-state file or empty directory (typically
+created by `claude' on first authentication), it is replaced with a
+symlink.  Targets with real content are left alone and a warning is
+logged."
   (let ((canonical-dir (expand-file-name ".claude/" "~")))
     (dolist (item claude-code-extras--shared-config-items)
-      (let ((target (expand-file-name item config-dir))
-            (source (expand-file-name item canonical-dir)))
-        (when (and (file-exists-p source)
-                   (not (file-exists-p target)))
-          (make-symbolic-link source target)
-          (message "claude-code-extras: symlinked %s -> %s" target source))))))
+      (claude-code-extras--ensure-shared-symlink
+       (expand-file-name item canonical-dir)
+       (expand-file-name item config-dir)))))
+
+(defun claude-code-extras--ensure-shared-symlink (source target)
+  "Ensure TARGET is a symlink pointing to SOURCE.
+Create the symlink if TARGET is missing, replace TARGET if it is a
+virgin-state file or empty directory, warn and skip if TARGET has
+real content."
+  (when (file-exists-p source)
+    (cond
+     ((file-symlink-p target))
+     ((not (file-exists-p target))
+      (make-symbolic-link source target)
+      (message "claude-code-extras: symlinked %s -> %s" target source))
+     ((claude-code-extras--item-virgin-p target)
+      (claude-code-extras--delete-item target)
+      (make-symbolic-link source target)
+      (message "claude-code-extras: replaced virgin %s with symlink to %s"
+               target source))
+     (t
+      (lwarn 'claude-code-extras :warning
+             "%s has real content; cannot replace with symlink to %s"
+             target source)))))
+
+(defun claude-code-extras--item-virgin-p (path)
+  "Return non-nil if PATH is a virgin-state file or empty directory.
+An empty directory is virgin.  A zero-byte file is virgin.  A small
+JSON file containing only `{}' or `[]' is virgin."
+  (cond
+   ((file-directory-p path)
+    (null (directory-files path nil directory-files-no-dot-files-regexp)))
+   ((file-regular-p path)
+    (claude-code-extras--file-virgin-p path))))
+
+(defun claude-code-extras--file-virgin-p (path)
+  "Return non-nil if regular file PATH has empty or placeholder content."
+  (let ((size (file-attribute-size (file-attributes path))))
+    (or (zerop size)
+        (and (< size 16)
+             (member (string-trim
+                      (with-temp-buffer
+                        (insert-file-contents path)
+                        (buffer-string)))
+                     '("" "{}" "[]"))))))
+
+(defun claude-code-extras--delete-item (path)
+  "Delete PATH, whether it is a file or a directory."
+  (if (file-directory-p path)
+      (delete-directory path t)
+    (delete-file path)))
 
 (defun claude-code-extras--read-claude-json (path)
   "Read and parse the JSON file at PATH.
@@ -787,6 +835,26 @@ persists the selection.  New sessions will use this account."
       (claude-code-extras--save-account account)
       (claude-code-extras--sync-account-config account)
       (message "Switched to account: %s" account))))
+
+;;;###autoload
+(defun claude-code-extras-init-account (account)
+  "Initialize ACCOUNT's config directory without switching to it.
+Creates the config directory and all shared symlinks pointing at
+`~/.claude/'.  Safe to call on an already-initialized account: it heals
+virgin-state files that `claude' may have created on first
+authentication, and leaves real content alone with a warning.
+
+Use this before a new account's first `claude' run, or to repair an
+account whose shared files got reset.  Does not change the persisted
+active account."
+  (interactive
+   (list (completing-read "Initialize account: "
+                          (mapcar #'car claude-code-extras-accounts)
+                          nil t)))
+  (unless (alist-get account claude-code-extras-accounts nil nil #'string=)
+    (user-error "Account %S not in `claude-code-extras-accounts'" account))
+  (claude-code-extras--sync-account-config account)
+  (message "Initialized account: %s" account))
 
 (defun claude-code-extras--start-with-account ()
   "Start a new Claude session using the active account."

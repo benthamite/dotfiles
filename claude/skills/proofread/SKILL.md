@@ -1,23 +1,15 @@
 ---
 name: proofread
-description: This skill should be used when the user says "proofread", "spell check", "check spelling", "check grammar", "proofread this document", "review for typos", "proofread my article", "check this for errors", or mentions proofreading a markdown file.
+description: "Proofread markdown documents for spelling errors, grammar mistakes, typos, and punctuation issues using aspell (fast, deterministic) or Gemini Flash (thorough AI-powered corrections with style suggestions). Use when the user says proofread, spell check, check spelling, check grammar, review for typos, check this for errors, or mentions proofreading a markdown file."
 model: sonnet
 ---
 
 # Proofread skill
 
-> Adapted from [Peter Hartree](https://pjh.is/)'s [HartreeWorks/skills](https://github.com/HartreeWorks/skills) repository.
-
 Proofreading for markdown documents using British English conventions. Two engines available:
 
 - **Spellcheck** (fast, deterministic): Uses aspell for spell-checking (~2 seconds)
 - **LLM** (thorough, AI-powered): Uses Gemini Flash for spelling, grammar, style, and clarity (~30-60 seconds per 100 lines)
-
-## How it works
-
-1. **Spellcheck engine**: Reports possible misspellings as suggestions for review (no auto-apply, since aspell has limited vocabulary)
-2. **LLM engine**: Auto-applies safe corrections (spelling, punctuation, grammar), flags style/clarity as suggestions with IDs (S1, S2, etc.)
-3. **Interactive acceptance**: User types suggestion IDs to accept them
 
 ## Workflow
 
@@ -146,5 +138,3 @@ brew install aspell
 
 - Uses British English conventions
 - Preserves author's voice and technical terminology
-- Processes long documents in chunks automatically
-- Progress shown via stderr, results via stdout (JSON)

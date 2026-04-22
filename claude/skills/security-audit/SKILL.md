@@ -1,7 +1,7 @@
 ---
 name: security-audit
-description: Audit development environment security posture — secrets hygiene, supply chain, machine hardening, and Claude Code attack surface. Use when the user wants to check their security setup, after reading about new threats, or periodically.
-argument-hint: [--secrets] [--deps] [--machine] [--claude] [dir]
+description: "Scan for exposed API keys and leaked credentials, audit dependency vulnerabilities, review macOS hardening settings, and evaluate Claude Code configuration risks. Use when the user wants a security review, vulnerability scan, dependency audit, secrets check, or periodic security posture assessment."
+argument-hint: "[--secrets] [--deps] [--machine] [--claude] [dir]"
 ---
 
 # Security audit
@@ -14,11 +14,7 @@ Use subagents to explore in parallel where appropriate. Read actual files — do
 
 ## Threat model
 
-You will eventually run malware via supply chain compromise. The goal is to limit what it can do when that happens.
-
-User-level malware on macOS can read browser cookies and session tokens. Once malware is running as your user, it can steal already-authenticated sessions — bypassing 2FA entirely, because the authentication already happened. 2FA remains critical for other vectors (credential theft, phishing, account takeover from other devices), but for malware already on the machine, **isolation** is the primary defense.
-
-This threat model shapes the audit: checks that reduce the blast radius of a compromised process (isolation, per-process secrets, browser separation) are weighted higher than checks that assume prevention alone.
+Assume eventual supply chain compromise. User-level malware can read browser cookies and steal authenticated sessions, bypassing 2FA. Therefore **isolation** is the primary defense — checks that reduce blast radius (per-process secrets, browser separation, sandboxed installs) are weighted higher than prevention-only checks.
 
 ## Domains
 

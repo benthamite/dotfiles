@@ -3,7 +3,7 @@ name: meeting-debrief
 description: Process a Gemini meeting summary, extract action items and notes, and update the relevant meeting org file. Infers the meeting from today's calendar and the current project context. Use when the user says "meeting debrief", "debrief", "process meeting notes", "meeting followup", or wants to process notes from a recent meeting.
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, mcp__google-workspace-epoch__query_gmail_emails, mcp__google-workspace-epoch__gmail_get_message_details, mcp__google-workspace-epoch__drive_search_files, mcp__google-workspace-epoch__docs_get_content_as_markdown, mcp__google-workspace-epoch__calendar_get_events
-argument-hint: "[person name or YYYY-MM-DD date override]"
+argument-hint: "[person name, group label (e.g. ops-team), or YYYY-MM-DD date override]"
 ---
 
 # Meeting debrief
@@ -22,7 +22,12 @@ After any meeting, find the Gemini-generated meeting summary, extract action ite
 
 ### From arguments
 
-If `$ARGUMENTS` contains a person's name, use it to filter calendar events. If it contains a date (`YYYY-MM-DD`), use that date instead of today.
+`$ARGUMENTS` can contain any combination of:
+- A **date** (`YYYY-MM-DD`) — use this date instead of today.
+- A **person name** — filter calendar events by attendee.
+- A **group label** (e.g. `ops-team`, `all-hands`) — treat as a directory-name override for group meetings with no single primary attendee. An argument is a group label if a directory `meetings/<label>/` already exists, or if it contains a hyphen and doesn't match a calendar attendee's first name.
+
+When a group label is given, filter calendar events by title/recurrence rather than by a single attendee, and skip "primary non-Pablo attendee" resolution in Step 0's Record step.
 
 ### From calendar
 
@@ -35,11 +40,16 @@ Examine `$CWD`. If it's under a project directory (e.g., `projects/analytics-agg
 ### Resolution
 
 - If `$ARGUMENTS` names a person, match calendar events by that attendee/title.
+- If `$ARGUMENTS` is a group label, match by calendar title (e.g. "Ops team sync") or by recurring-event metadata.
 - If exactly one meeting matches the combined context (arguments + project + recency), use it.
 - If multiple matches, present the list and ask the user to pick.
 - If no matches, ask the user which meeting to debrief.
 
-Record: the **meeting title**, **meeting date** (`YYYY-MM-DD`), and **attendee names** (first names only). Identify the primary non-Pablo attendee — this determines the meeting directory name.
+Record: the **meeting title**, **meeting date** (`YYYY-MM-DD`), and **attendee names** (first names only).
+
+Determine the **directory label** (the folder name under `meetings/`):
+- If `$ARGUMENTS` included a group label, use it verbatim (e.g. `ops-team`).
+- Otherwise, identify the primary non-Pablo attendee and use their first name lowercased (e.g. `markov`).
 
 ## Step 1: Find the Gemini meeting summary via Gmail
 
@@ -94,11 +104,11 @@ Activates when the meeting title matches a María 1:1 pattern (e.g., contains "M
 
 ### General mode
 
-For all other meetings.
+For all other meetings (1:1 or group).
 
-- **Target directory**: `meetings/<person>/` where `<person>` is the primary attendee's first name, lowercased (e.g., `meetings/markov/`, `meetings/caroline/`).
+- **Target directory**: `meetings/<label>/` where `<label>` is the directory label from Step 0 — either a primary attendee's first name (e.g. `markov`, `caroline`) or a group label (e.g. `ops-team`).
 - Create the directory if it doesn't exist.
-- **Target file**: `meetings/<person>/YYYY-MM-DD.org`.
+- **Target file**: `meetings/<label>/YYYY-MM-DD.org`.
 - If the file already exists, update it. Otherwise, create it.
 - Proceed to Step 5.
 
@@ -161,16 +171,17 @@ The file already has the structure from `/meeting-prep`. Update it using the Edi
 
 ### General mode
 
-If the file is new, create it with this structure:
+If the file is new, create it with this structure. For a 1:1, `<Heading>` is "Meeting with <Name>"; for a group meeting, use the calendar event title (e.g. "Ops team sync"). Include an `:ATTENDEES:` property for group meetings so future runs have the attendee list.
 
 ```org
 #+title: YYYY-MM-DD
 #+date: YYYY-MM-DD
 
-* Meeting with <Name> — YYYY-MM-DD
+* <Heading> — YYYY-MM-DD
 :PROPERTIES:
 :GEMINI_DOC_ID: <Google Doc ID>
 :MEETING_TITLE: <calendar event title>
+:ATTENDEES: <comma-separated first names>  ;; group meetings only
 :END:
 
 ** Action items
@@ -210,10 +221,10 @@ Note: this uses the same OAuth credentials as the `google-workspace-epoch` MCP s
 Create a shortcut to the Gemini Google Doc so it appears locally at:
 
 ```
-/Users/pablostafforini/My Drive/Epoch/meetings/<person>/YYYY-MM-DD.gdoc
+/Users/pablostafforini/My Drive/Epoch/meetings/<label>/YYYY-MM-DD.gdoc
 ```
 
-Applies to both María mode and general mode.
+Where `<label>` is the directory label from Step 0 (person's first name or group label). Applies to both María mode and general mode.
 
 ### Background
 
@@ -227,17 +238,17 @@ python3 ~/My\ Drive/dotfiles/claude/skills/meeting-debrief/google-workspace-api.
 
 Replace `<DOC_ID>` with the Google Doc ID from Step 3.
 
-### Step 8b: Resolve the personal-Drive folder ID for `meetings/<person>/`
+### Step 8b: Resolve the personal-Drive folder ID for `meetings/<label>/`
 
 Use `gdrive` to look up the folder ID in the personal account:
 
 ```bash
-gdrive files list --query "name = '<person>' and trashed = false"
+gdrive files list --query "name = '<label>' and trashed = false"
 ```
 
 If multiple folders share the name, disambiguate via `gdrive files info <id>` and follow the `Parents` chain until you find the one whose parent is the Epoch `meetings/` folder.
 
-If the local directory `meetings/<person>/` was just created (general mode, first meeting with this person), wait a moment for Drive to sync before looking up — or re-run the query if it returns nothing the first time.
+If the local directory `meetings/<label>/` was just created (general mode, first meeting for this person/group), wait a moment for Drive to sync before looking up — or re-run the query if it returns nothing the first time.
 
 ### Step 8c: Create a shortcut in the personal Drive
 
@@ -249,7 +260,7 @@ Replace `<DOC_ID>` with the Google Doc ID from Step 3, `YYYY-MM-DD` with the mee
 
 ## Step 9: Mirror action items into project org files
 
-For each project discussed in the meeting that has a directory under `projects/`, find the project's main org file (the `.org` file whose name matches the project directory, e.g., `analytics-aggregation.org`). In general mode, the meeting usually concerns a single project (inferred from `$CWD` or attendees). In María mode, the 1:1 often covers multiple projects — update all that had substantive discussion.
+For each project discussed in the meeting that has a directory under `projects/`, find the project's main org file (the `.org` file whose name matches the project directory, e.g., `analytics-aggregation.org`). In 1:1 general mode, the meeting usually concerns a single project (inferred from `$CWD` or attendees). In María mode and group-meeting mode, the meeting often covers multiple projects — update all that had substantive discussion.
 
 The goal is to make every project-relevant action item **trackable as a real checkbox in the project file**, so later reconciliation (via `/meeting-prep`) can verify whether it's been done. This replaces the old practice of burying action items inside prose meeting summaries.
 
@@ -274,8 +285,10 @@ Place it at second-outline level, under the project's main top-level heading, ne
 Under this heading, append each selected action item as a checkbox with this **exact** format:
 
 ```org
-- [ ] (<Assignee>) <verbatim action text> — [[file:../../meetings/<person>/YYYY-MM-DD.org][<Person> YYYY-MM-DD]]
+- [ ] (<Assignee>) <verbatim action text> — [[file:../../meetings/<label>/YYYY-MM-DD.org][<Link text> YYYY-MM-DD]]
 ```
+
+`<label>` is the directory label from Step 0. `<Link text>` is the primary attendee's name for 1:1s, or a human-readable form of the group label for group meetings (e.g. "Ops team" for `ops-team`).
 
 Rules:
 - The action text must match the meeting file's checkbox text **verbatim** (same phrasing, punctuation, capitalization). `/meeting-prep` reconciliation relies on exact text match.
@@ -287,7 +300,7 @@ Rules:
 In addition to the mirrored checkboxes, add a single line under the project's existing progress/log-style heading (create one named `** Meeting references` if none exists) in this format:
 
 ```org
-- YYYY-MM-DD — [[file:../../meetings/<person>/YYYY-MM-DD.org][Meeting with <Name>]]: <1-sentence headline>.
+- YYYY-MM-DD — [[file:../../meetings/<label>/YYYY-MM-DD.org][Meeting with <Name or group>]]: <1-sentence headline>.
 ```
 
 This gives narrative context. If a line for the same date already exists, skip.
@@ -316,6 +329,7 @@ Present a brief summary: "Extracted N action items (X Pablo, Y <Name>) and Z dis
 
 Stage and commit all changed files together:
 - María mode: `Add meeting debrief for María YYYY-MM-DD`
-- General mode: `Add meeting debrief: <Name> YYYY-MM-DD`
+- General mode (1:1): `Add meeting debrief: <Name> YYYY-MM-DD`
+- General mode (group): `Add meeting debrief: <group label> YYYY-MM-DD` (e.g. `ops-team 2026-04-22`)
 
 $ARGUMENTS

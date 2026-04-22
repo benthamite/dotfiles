@@ -352,5 +352,37 @@ heading."
 	    (org-back-to-heading t)
 	    (funcall f calendar-id event update-mode)))))))
 
+;; Respect a pre-set `calendar-id' (e.g. from a capture template) instead of
+;; clobbering it with the first match in `org-gcal-fetch-file-alist'.
+(el-patch-defun org-gcal--capture-post ()
+  "Create gcal event for headline when captured or refiled into a gcal Org file."
+  (when (not org-note-abort)
+    (save-excursion
+      (save-window-excursion
+        (let ((inhibit-message t))
+          (org-capture-goto-last-stored))
+        (el-patch-swap
+          (dolist (i org-gcal-fetch-file-alist)
+            (when (and (buffer-file-name)
+                       (string= (file-truename (cdr i))
+                                (file-truename (buffer-file-name))))
+              (org-entry-put (point) org-gcal-calendar-id-property (car i))
+              (org-gcal-post-at-point)))
+          (progn
+            (org-gcal-extras--ensure-capture-calendar-id)
+            (when (org-entry-get (point) org-gcal-calendar-id-property)
+              (org-gcal-post-at-point))))))))
+
+(defun org-gcal-extras--ensure-capture-calendar-id ()
+  "Ensure a `calendar-id' property is set on the entry at point.
+If missing, default to the first entry in `org-gcal-fetch-file-alist' whose
+file matches the current buffer."
+  (when (and (buffer-file-name)
+             (not (org-entry-get (point) org-gcal-calendar-id-property)))
+    (cl-loop for (id . file) in org-gcal-fetch-file-alist
+             when (string= (file-truename file)
+                           (file-truename (buffer-file-name)))
+             return (org-entry-put (point) org-gcal-calendar-id-property id))))
+
 (provide 'org-gcal-extras)
 ;;; org-gcal-extras.el ends here

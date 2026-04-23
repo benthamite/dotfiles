@@ -155,24 +155,11 @@ Chrome integration uses three Chrome profiles, one per Claude Code account. Brow
 
 The Google column is the account each Chrome profile is signed into (independent of Anthropic). The Anthropic identity column is the account used to authenticate the Claude Code CLI inside =~/.claude-<account>/= — each =CLAUDE_CONFIG_DIR= holds its own OAuth credentials for a distinct Anthropic account, so =/usage= and rate-limit tracking report each account separately.
 
-Each Claude Code account stores its own =chromeExtension.pairedDeviceId= and =pairedDeviceName= in its =.claude.json=. These are *not* synced across accounts (unlike =claudeInChromeDefaultEnabled=, which is in =claude-code-extras--shared-claude-json-keys=) because each account pairs with a different Chrome profile's extension instance.
+*Setup:* make sure each target Chrome profile has the Claude extension installed and is signed into =claude.ai= using the Anthropic identity the table above assigns to that profile. That's the whole setup — no CLI-side pairing step is needed.
 
-*Pairing procedure (run once per account):*
+*How profile selection works:* when a Claude Code session starts with =--chrome=, it opens a websocket to =wss://bridge.claudeusercontent.com=. Each Claude extension instance in Chrome also connects to that bridge. The bridge matches a CLI session to an extension instance by shared Anthropic identity, so a session authenticated as =tlon.shared@gmail.com= automatically finds the Chrome extension signed into the same account (i.e. the one in Profile 3). No per-device pair record is required.
 
-1. Make sure the target Chrome profile has the Claude extension installed and is signed into =claude.ai= inside that profile, using the Anthropic identity you want that profile to represent (see the table above). Extension login is independent of the Chrome Google login.
-2. In a fresh terminal:
-   #+begin_src shell
-   CLAUDE_CONFIG_DIR=~/.claude-<account> claude --chrome
-   #+end_src
-   substituting =personal=, =epoch=, or =tlon= for =<account>=.
-3. At the Claude prompt, run =/chrome=.
-4. Focus the matching Chrome profile window, click the Claude extension icon → *Connect*.
-5. The CLI confirms the pair and writes =chromeExtension.pairedDeviceId= into =~/.claude-<account>/.claude.json=.
-6. Exit. Subsequent sessions under that account automatically route browser MCP calls to the paired profile.
-
-A =SessionStart= hook (=hooks/check-chrome-profile-pair.sh=) reminds you at session start if the current account lacks a pairing.
-
-*How profile selection works:* when a Claude Code session starts with =--chrome=, it connects to the Chrome extension instance that matches the session's OAuth account. The extension in each Chrome profile authenticates independently via native messaging. The =pairedDeviceId= links a specific Claude Code instance to a specific extension instance.
+You may see =chromeExtension.pairedDeviceId= and =pairedDeviceName= populated in some accounts' =.claude.json= (e.g. epoch's =Epoch= device). These are leftovers from an older CLI flow and are not read by current Chrome integration — they can be safely ignored or deleted. The =hooks/check-chrome-profile-pair.sh= SessionStart hook used to warn when this field was missing; it's now a no-op placeholder because the warning was based on a wrong assumption.
 
 *Native host manifest:* there is a single manifest file shared across all Chrome profiles. Its =path= field should point to the current account's =chrome-native-host= script (e.g. =~/.claude-epoch/chrome/chrome-native-host=). In practice, all account scripts are identical (they exec the same =claude= binary with =--chrome-native-host=), so the path doesn't affect functionality today — but it should be kept in sync for correctness.
 

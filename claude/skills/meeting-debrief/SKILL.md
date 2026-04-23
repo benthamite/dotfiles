@@ -2,7 +2,7 @@
 name: meeting-debrief
 description: Process a Gemini meeting summary, extract action items and notes, and update the relevant meeting org file. Infers the meeting from today's calendar and the current project context. Use when the user says "meeting debrief", "debrief", "process meeting notes", "meeting followup", or wants to process notes from a recent meeting.
 user-invocable: true
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, mcp__google-workspace-epoch__query_gmail_emails, mcp__google-workspace-epoch__gmail_get_message_details, mcp__google-workspace-epoch__drive_search_files, mcp__google-workspace-epoch__docs_get_content_as_markdown, mcp__google-workspace-epoch__calendar_get_events
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, mcp__google-workspace-epoch__query_gmail_emails, mcp__google-workspace-epoch__gmail_get_message_details, mcp__google-workspace-epoch__calendar_get_events
 argument-hint: "[person name, group label (e.g. ops-team), or YYYY-MM-DD date override]"
 ---
 
@@ -16,7 +16,10 @@ After any meeting, find the Gemini-generated meeting summary, extract action ite
 - **Meetings base directory**: `meetings/` (relative to Epoch project root)
 - **Gmail sender for Gemini notes**: `gemini-notes@google.com`
 - **María meetings directory**: `meetings/maria/` (relative to Epoch project root)
-- **gdrive config dir**: `~/.config/gdrive3/pablo.stafforini@gmail.com/`
+
+## Google Docs access
+
+All Google Docs/Drive operations in this skill run through the `gdoc` CLI, authenticated as `pablo@epoch.ai` (account name: `epoch`). Always pass `--account epoch`. Do not use `mcp__google-docs-personal__*` (personal account) or `mcp__google-workspace-epoch__docs_*` / `drive_*` (superseded by `gdoc`). Gmail and Calendar still use `mcp__google-workspace-epoch__*` since `gdoc` doesn't cover those.
 
 ## Step 0: Identify the meeting
 
@@ -76,13 +79,21 @@ The email also references a Google Doc with richer detail (timestamped notes, fu
 
 ## Step 3: Find and read the Google Doc
 
-Search Google Drive for the full document using `mcp__google-workspace-epoch__drive_search_files`:
+Prefer extracting the Google Doc ID directly from the email body in Step 2 — the Gemini notification always links to the full notes doc. Parse the URL of the form `https://docs.google.com/document/d/<DOC_ID>/edit` and record `<DOC_ID>`.
 
-```
-name contains '<key words from meeting title>' and name contains 'Notes by Gemini' and name contains 'YYYY/MM/DD'
+If the email has no doc link, fall back to searching Drive with `gdoc`:
+
+```bash
+gdoc find --account epoch --title --plain "Notes by Gemini"
 ```
 
-Then use `mcp__google-workspace-epoch__docs_get_content_as_markdown` to read it.
+Match results against the meeting title and date from Step 0. You can narrow further by piping to `grep` on the title + date (the filename format is `<meeting title> - YYYY/MM/DD HH:MM TZ - Notes by Gemini`).
+
+Read the doc contents:
+
+```bash
+gdoc cat --account epoch <DOC_ID>
+```
 
 The Doc typically contains everything in the email **plus**:
 - **Details** ("Detalles") — timestamped, richer topic summaries
@@ -90,7 +101,7 @@ The Doc typically contains everything in the email **plus**:
 
 Use the Google Doc as the primary source. Fall back to the email body if the Doc cannot be found.
 
-Record the **Google Doc ID** for later use (Drive shortcut, linking).
+Record the **Google Doc ID** for use in the org file's `:GEMINI_DOC_ID:` property.
 
 ## Step 4: Determine the mode
 
@@ -216,55 +227,13 @@ Replace `<EMAIL_ID>` with the Gemini email ID from Step 1.
 
 Note: this uses the same OAuth credentials as the `google-workspace-epoch` MCP server (`GOOGLE_WORKSPACE_*` env vars). The server doesn't expose a modify-labels tool, but the refresh token has `gmail.modify` scope. Do NOT use the `gmail-epoch-triage` server (that's for the `email-triage@epoch.ai` bot account).
 
-## Step 8: Drive shortcut
-
-Create a shortcut to the Gemini Google Doc so it appears locally at:
-
-```
-/Users/pablostafforini/My Drive/Epoch/meetings/<label>/YYYY-MM-DD.gdoc
-```
-
-Where `<label>` is the directory label from Step 0 (person's first name or group label). Applies to both María mode and general mode.
-
-### Background
-
-The Gemini doc is owned by the Epoch account (`pablo@epoch.ai`), but the local "My Drive" mount is the personal account (`pablo.stafforini@gmail.com`). The doc won't appear on the local filesystem unless the personal account can access it.
-
-### Step 8a: Share the doc with the personal account
-
-```bash
-python3 ~/My\ Drive/dotfiles/claude/skills/meeting-debrief/google-workspace-api.py share-doc <DOC_ID> pablo.stafforini@gmail.com
-```
-
-Replace `<DOC_ID>` with the Google Doc ID from Step 3.
-
-### Step 8b: Resolve the personal-Drive folder ID for `meetings/<label>/`
-
-Use `gdrive` to look up the folder ID in the personal account:
-
-```bash
-gdrive files list --query "name = '<label>' and trashed = false"
-```
-
-If multiple folders share the name, disambiguate via `gdrive files info <id>` and follow the `Parents` chain until you find the one whose parent is the Epoch `meetings/` folder.
-
-If the local directory `meetings/<label>/` was just created (general mode, first meeting for this person/group), wait a moment for Drive to sync before looking up — or re-run the query if it returns nothing the first time.
-
-### Step 8c: Create a shortcut in the personal Drive
-
-```bash
-python3 ~/My\ Drive/dotfiles/claude/skills/meeting-debrief/google-workspace-api.py create-shortcut <DOC_ID> YYYY-MM-DD <PARENT_FOLDER_ID>
-```
-
-Replace `<DOC_ID>` with the Google Doc ID from Step 3, `YYYY-MM-DD` with the meeting date, and `<PARENT_FOLDER_ID>` with the folder ID resolved in Step 8b.
-
-## Step 9: Mirror action items into project org files
+## Step 8: Mirror action items into project org files
 
 For each project discussed in the meeting that has a directory under `projects/`, find the project's main org file (the `.org` file whose name matches the project directory, e.g., `analytics-aggregation.org`). In 1:1 general mode, the meeting usually concerns a single project (inferred from `$CWD` or attendees). In María mode and group-meeting mode, the meeting often covers multiple projects — update all that had substantive discussion.
 
 The goal is to make every project-relevant action item **trackable as a real checkbox in the project file**, so later reconciliation (via `/meeting-prep`) can verify whether it's been done. This replaces the old practice of burying action items inside prose meeting summaries.
 
-### 9a. Select items to mirror
+### 8a. Select items to mirror
 
 From the meeting's `** Action items` section, pick every item that is:
 - Assigned to Pablo, **or** blocks Pablo's work (e.g., `(Caroline) Complete cybersecurity handoff`), **and**
@@ -272,7 +241,7 @@ From the meeting's `** Action items` section, pick every item that is:
 
 Skip cross-cutting items that aren't tied to a specific project (e.g., "Adopt a backlog-based prioritization method"). Also skip items assigned to others that Pablo is not waiting on.
 
-### 9b. Append checkboxes to the project file
+### 8b. Append checkboxes to the project file
 
 In each target project org file, find or create a heading named exactly:
 
@@ -295,7 +264,7 @@ Rules:
 - Do **not** duplicate: if a line under this heading already has the same verbatim action text (regardless of which meeting it links to), skip it.
 - Do not reword, translate, or summarize. Copy the item as it appears in the meeting file.
 
-### 9c. One-line progress reference (optional)
+### 8c. One-line progress reference (optional)
 
 In addition to the mirrored checkboxes, add a single line under the project's existing progress/log-style heading (create one named `** Meeting references` if none exists) in this format:
 
@@ -305,17 +274,17 @@ In addition to the mirrored checkboxes, add a single line under the project's ex
 
 This gives narrative context. If a line for the same date already exists, skip.
 
-### 9d. Do not duplicate other content
+### 8d. Do not duplicate other content
 
 Do **not** copy discussion notes, decisions, or the Gemini summary into the project file — those stay in the meeting file only. The project file receives (i) mirrored action-item checkboxes under `** Open action items from meetings`, and (ii) one line under `** Meeting references`.
 
-## Step 10: Update the current projects list
+## Step 9: Update the current projects list
 
-For each project updated in Step 9, check whether it has an entry in `/Users/pablostafforini/My Drive/Epoch/projects/current-list-of-automation-projects.org`. If it does, update that entry's **Status** and **Next step** fields to reflect the meeting outcomes. Keep the same terse, numbered-list format used by existing entries. Do not touch entries for other projects.
+For each project updated in Step 8, check whether it has an entry in `/Users/pablostafforini/My Drive/Epoch/projects/current-list-of-automation-projects.org`. If it does, update that entry's **Status** and **Next step** fields to reflect the meeting outcomes. Keep the same terse, numbered-list format used by existing entries. Do not touch entries for other projects.
 
 If a project has no entry, skip it.
 
-## Step 11: Review
+## Step 10: Review
 
 Read the updated files and verify:
 1. All action items from the Gemini notes are captured in the meeting file
@@ -325,7 +294,7 @@ Read the updated files and verify:
 
 Present a brief summary: "Extracted N action items (X Pablo, Y <Name>) and Z discussion points."
 
-## Step 12: Commit
+## Step 11: Commit
 
 Stage and commit all changed files together:
 - María mode: `Add meeting debrief for María YYYY-MM-DD`

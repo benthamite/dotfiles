@@ -9,6 +9,21 @@ Pablo uses two Google accounts, which requires separate MCP servers for each.
 | `pablo@epoch.ai`             | Epoch work account |
 | `pablo.stafforini@gmail.com` | Personal account   |
 
+## Google Docs/Drive: prefer `gdoc` CLI
+
+For Google Docs and Drive operations on the **Epoch** account, always use the [`gdoc`](https://github.com/benthamite/gdocs) CLI with `--account epoch`. It's faster and more capable than the MCP `docs_*` / `drive_*` tools and keeps doc ownership in `pablo@epoch.ai`. Common commands:
+
+- `gdoc find --account epoch --title --plain '<query>'` — search Drive by title
+- `gdoc cat --account epoch <doc_id_or_url>` — read doc as markdown
+- `gdoc insert --account epoch --tab <tab> --position start <doc_id> <markdown_file>` — insert content
+- `gdoc edit --account epoch <doc_id> '<old>' '<new>'` — find-and-replace
+- `gdoc info --account epoch <doc_id>` — doc metadata
+- `gdoc share --account epoch --role <reader|commenter|writer> <doc_id> <email>` — share
+
+All Epoch-related skills (`/meeting-debrief`, `/meeting-prep`, etc.) and interactive sessions that touch Epoch Google Docs should default to `gdoc`. Fall back to `mcp__google-workspace-epoch__docs_*` / `drive_*` only if `gdoc` is unavailable or lacks the needed operation. Do **not** use `mcp__google-docs-personal__*` for Epoch work — that server is authenticated as the personal account and will create docs owned by `pablo.stafforini@gmail.com`.
+
+Gmail and Calendar are not covered by `gdoc`; keep using `mcp__google-workspace-epoch__*` for those.
+
 ## Servers by account
 
 ### work account

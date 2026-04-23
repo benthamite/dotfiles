@@ -194,6 +194,8 @@ Sessions that are idle (waiting for user input) receive the @code{/theme} comman
 
 The theme sync is fully asynchronous: the @code{enable-theme-functions} hook returns immediately, and all terminal interactions are deferred to zero-delay timers.  This prevents reentrant timer execution (e.g. @code{org-roam-db-sync}) from blocking the main thread during @code{accept-process-output}.
 
+The busy/idle dispatch and the Stop-hook re-selection are covered by ERT tests in @samp{emacs/extras/test/claude-code-extras-test.el} under the @samp{Theme sync busy/idle handling} section.
+
 @node Alert options
 @section Alert options
 
@@ -337,6 +339,9 @@ The active account is persisted across sessions (in @code{claude-code-extras-acc
 Before a new account's first @samp{claude} run, call @code{claude-code-extras-init-account} to create its config directory and set up the shared symlinks.  This avoids a bootstrap race where @samp{claude} writes fresh empty files into the account directory before the sync can symlink them, leaving permissions and history isolated from the rest of your setup.  @code{claude-code-extras-select-account} also runs the same setup implicitly, so either entry point works.  The function is safe to re-run: it heals virgin-state files (empty @samp{settings.json}, empty directories) by replacing them with symlinks, and leaves real content alone with a warning.
 
 The first time you start a session with a given account, Claude will prompt for OAuth login. After that, switching is instant.
+
+@findex claude-code-extras--account-env
+Every code path that launches a session -- including @code{claude-code-extras--start-with-account}, @code{claude-code-extras-restart}, @code{claude-code-extras-handoff}, the branch navigation commands, and @code{claude-code-extras--debug-start-session} -- routes @samp{CLAUDE_CONFIG_DIR} through @code{claude-code-extras--account-env}.  That function prefers the dynamically bound @code{claude-code-extras--pending-account} (set by the smart-start entry points) and falls back to @code{claude-code-extras--resolve-account} (the persisted active account) when the binding is absent.  The fallback ensures direct calls to @code{claude-code--start} still pick the right account instead of silently using @samp{~/.claude/}.
 
 @findex claude-code-extras--ensure-shared-symlinks
 @vindex claude-code-extras--shared-config-items

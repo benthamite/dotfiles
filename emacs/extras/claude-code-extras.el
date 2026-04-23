@@ -332,7 +332,8 @@ Source: lobehub/lobe-icons (MIT).")
         :audit-project #'claude-code-extras-audit-project
         :debug-backtrace #'claude-code-extras-debug-backtrace
         :setup-kill-on-exit #'claude-code-extras-setup-kill-on-exit
-        :exit #'claude-code-extras-exit))
+        :exit #'claude-code-extras-exit
+        :restart #'claude-code-extras-restart))
 
 ;;;; Functions
 
@@ -3049,6 +3050,32 @@ Bypasses the kill-protection query."
            (remq 'claude-code-extras-protect-buffer
                  kill-buffer-query-functions)))
       (kill-buffer (current-buffer)))))
+
+;;;;; Restart
+
+;;;###autoload
+(defun claude-code-extras-restart ()
+  "Kill the current Claude session and resume it in place.
+Useful when a setting change requires relaunching Claude.  Preserves the
+session's directory and instance name, and uses the currently active
+account (from `claude-code-extras-accounts'), so the result is
+equivalent to manually closing the session and reopening it."
+  (interactive)
+  (unless (claude-code--buffer-p (current-buffer))
+    (user-error "Not in a Claude buffer"))
+  (let* ((account (claude-code-extras--resolve-account))
+         (claude-code-extras--pending-account account)
+         (session-id (claude-code-extras--current-session-id))
+         (dir default-directory)
+         (instance-name (claude-code--extract-instance-name-from-buffer-name
+                         (buffer-name))))
+    (when account
+      (claude-code-extras--sync-account-config account))
+    (claude-code-extras--kill-current-claude-buffer)
+    (cl-letf (((symbol-function 'claude-code--directory) (lambda () dir))
+              ((symbol-function 'claude-code--prompt-for-instance-name)
+               (lambda (_dir _existing _force) instance-name)))
+      (claude-code--start nil (list "--resume" session-id) nil t))))
 
 ;;;;; Branch navigation
 

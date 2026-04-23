@@ -115,7 +115,8 @@ This unified approach eliminates the need to choose a backend before browsing sk
 #+findex: ai-extras-audit-project
 #+findex: ai-extras-debug-backtrace
 #+findex: ai-extras-exit
-The remaining dispatched commands (~ai-extras-handoff~, ~ai-extras-audit-project~, ~ai-extras-debug-backtrace~, ~ai-extras-exit~) resolve a single backend from the current buffer context or by prompting, then delegate to that backend's handler.
+#+findex: ai-extras-restart
+The remaining dispatched commands (~ai-extras-handoff~, ~ai-extras-audit-project~, ~ai-extras-debug-backtrace~, ~ai-extras-exit~, ~ai-extras-restart~) resolve a single backend from the current buffer context or by prompting, then delegate to that backend's handler.
 
 * Functions
 :PROPERTIES:

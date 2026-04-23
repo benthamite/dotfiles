@@ -205,9 +205,20 @@ Route each rotation to the Chrome profile that owns the credential. See `dotfile
      printf '%s\n' "${cur//$OLD/$NEW}" | pass insert -m -f "$entry"
    done
    ```
-8. `shred -u -n 3 ~/Downloads/gg-new-pat.txt` (or `trash` it).
-9. Commit `.zshenv-secrets` in the dotfiles repo with a descriptive message.
-10. Mark GG incident resolved (Step 5).
+8. **Refresh `gh`'s macOS-keychain entry (CRITICAL — otherwise launchd jobs break).** `gh` stores credentials in two places: the `GH_TOKEN` environment variable *and* the macOS keychain "keyring". Rotating `GH_TOKEN` in `.zshenv-secrets` only updates the env-var side. Terminal sessions that source `.zshenv-secrets` are fine, but launchd jobs run with a minimal env (no `GH_TOKEN` inherited) and fall back to the keyring — which still holds the revoked PAT, causing `git push` / `git fetch` over HTTPS to fail with exit 128 ("Password authentication is not supported for Git operations"). Impacted: every launchd plist that does HTTPS git ops (e.g., `com.stafforini.sa-lp-refresh`, `com.stafforini.epoch-website-pull`, `com.stafforini.download-pdfs`, any daily refresh script).
+   
+   `gh auth login --with-token` refuses to write to the keyring while `GH_TOKEN` is set — it sees the env var and no-ops. Use `env -u` to unset it for the single command:
+   ```bash
+   env -u GH_TOKEN -u GITHUB_TOKEN bash -c "echo '$NEW_TOKEN' | gh auth login --with-token"
+   ```
+   After running, `gh auth status` should show *both* sources ✓ (env-var and keyring). Verify the keyring path works without the env var via:
+   ```bash
+   env -u GH_TOKEN -u GITHUB_TOKEN gh auth git-credential get <<< $'protocol=https\nhost=github.com\n\n'
+   ```
+   Also make sure `gh auth setup-git` has been run once (adds `credential.https://github.com.helper=!gh auth git-credential` to `~/.gitconfig`); without it, git won't even ask `gh` for the token.
+9. `shred -u -n 3 ~/Downloads/gg-new-pat.txt` (or `trash` it).
+10. Commit `.zshenv-secrets` in the dotfiles repo with a descriptive message.
+11. Mark GG incident resolved (Step 5).
 
 #### OpenAI key
 

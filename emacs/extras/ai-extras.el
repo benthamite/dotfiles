@@ -876,6 +876,14 @@ terminate the CLI process and kill the buffer."
   (interactive)
   (ai-extras--dispatch :exit))
 
+;;;###autoload
+(defun ai-extras-restart ()
+  "Kill the current AI session and resume it in place.
+Useful when a setting change requires relaunching the CLI.
+Dispatches to the backend's `:restart' handler."
+  (interactive)
+  (ai-extras--dispatch :restart))
+
 ;;;; Transient boolean infix class
 
 (eval-and-compile
@@ -897,6 +905,7 @@ terminate the CLI process and kill the buffer."
     ("w" "jump to waiting" ai-extras-jump-to-waiting)
     ("h" "handoff" ai-extras-handoff)
     ("x" "exit session" ai-extras-exit)
+    ("r" "restart" ai-extras-restart)
     ""
     "Buffer"
     ("K" "setup kill on exit" ai-extras-setup-kill-on-exit)

@@ -1,0 +1,204 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename codex-extras.info
+@settitle codex-extras: extensions for codex
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Codex Extras: (codex-extras). Extensions for codex.
+@end direntry
+
+@finalout
+@titlepage
+@title codex-extras: extensions for codex
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top codex-extras: extensions for codex
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{codex-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Commands::
+* Transient menus::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* Theme synchronization::
+* Session handoff::
+* Skill runner::
+* Project audit::
+* Debug backtrace::
+
+Commands
+
+* Session management::
+* Tool execution::
+* Debugging::
+* Buffer management::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{codex-extras.el} extends the @samp{codex} package with additional functionality for working with the OpenAI Codex CLI from within Emacs.  It is the Codex counterpart to @samp{claude-code-extras.el}, providing a similar set of conveniences for session management, theme synchronization, skill execution, project auditing, and debugging.
+
+The package builds on @samp{ai-extras.el} (@ref{Top,ai-extras,,ai-extras,}) for shared functionality such as the unified session switcher, home-row key assignments, buffer protection, notifications, snippet expansion, and terminal fixes.  Codex-specific features include theme synchronization with Codex's TOML configuration, a skill runner that discovers skills from Codex's @samp{.agents/skills/} directories, and notification handling for Codex CLI hook events.
+
+At load time, @samp{codex-extras.el} registers the Codex backend with @samp{ai-extras.el} and installs hooks on @code{codex-start-hook}, @code{codex-event-hook}, and standard Emacs hooks to integrate all features automatically.  The backend icon is the official Codex terminal-prompt logo rendered as an inline SVG via @code{ai-extras-svg-icon} (@ref{h:svg-icons,SVG icons,,ai-extras,}).
+
+@node User options
+@chapter User options
+
+@menu
+* Theme synchronization::
+* Session handoff::
+* Skill runner::
+* Project audit::
+* Debug backtrace::
+@end menu
+
+@node Theme synchronization
+@section Theme synchronization
+
+@vindex codex-extras-sync-theme
+The user option @code{codex-extras-sync-theme} controls whether Emacs theme changes are propagated to Codex.  When non-@code{nil}, switching between light and dark Emacs themes updates the @samp{tui.theme} key in @samp{~/.codex/config.toml} and sends the @samp{/theme} command to all running Codex sessions.  The default is @code{nil}.
+
+@node Session handoff
+@section Session handoff
+
+@vindex codex-extras-handoff-file
+The user option @code{codex-extras-handoff-file} specifies the path to the handoff file used by @code{codex-extras-handoff} ().  The default is @samp{/tmp/codex-handoff.md}.  The handoff skill writes session transition instructions to this file before the command reads them.
+
+@node Skill runner
+@section Skill runner
+
+@vindex codex-extras-skill-directories
+The user option @code{codex-extras-skill-directories} specifies additional directories to scan for Codex skills, beyond the standard locations (@samp{~/.codex/skills/} and the project's @samp{.agents/skills/}).
+
+@vindex codex-extras-run-skill-model
+The user option @code{codex-extras-run-skill-model} overrides the model used when running skills via @code{codex-extras-run-skill}.  The default is @code{nil}, which uses the CLI's default model.
+
+@node Project audit
+@section Project audit
+
+@vindex codex-extras-audit-skills
+The user option @code{codex-extras-audit-skills} lists the skills invoked by @code{codex-extras-audit-project} ().  The default includes @samp{/code-audit}, @samp{/design-audit}, and @samp{/interpretability-audit}.  Each skill is sent with the @samp{--accept} flag for non-interactive execution.
+
+@vindex codex-extras-audit-project-directories
+The user option @code{codex-extras-audit-project-directories} provides completion candidates for the project audit directory prompt.  New directories entered by the user are automatically persisted to this list.
+
+@node Debug backtrace
+@section Debug backtrace
+
+@vindex codex-extras-debug-backtrace-model
+The user option @code{codex-extras-debug-backtrace-model} specifies the @samp{gptel} model used to analyze Emacs backtraces and identify the culprit package.  The default is @code{gemini-flash-lite-latest}, a fast model suitable for this classification task.
+
+@vindex codex-extras-debug-backtrace-backend
+The user option @code{codex-extras-debug-backtrace-backend} specifies the @samp{gptel} backend name for backtrace analysis.  The default is @samp{"Gemini"}.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Session management::
+* Tool execution::
+* Debugging::
+* Buffer management::
+@end menu
+
+@node Session management
+@section Session management
+
+@findex codex-extras-start-or-switch
+The command @code{codex-extras-start-or-switch} starts a new Codex session or opens the unified session switcher.  When no Codex sessions are active, it calls @code{codex} to start a new one.  When sessions exist, it delegates to the @samp{ai-extras} session switcher (@ref{h:session-management,Session management,,ai-extras,}), which displays all AI sessions (including Claude Code sessions, if any) with home-row key bindings.
+
+@findex codex-extras-handoff
+The command @code{codex-extras-handoff} closes the current Codex session and starts a new one with the handoff prompt.  The handoff skill must have been run first to write the handoff file at @code{codex-extras-handoff-file} (@ref{Session handoff}).  The new session starts in the same project directory as the closed one, with the handoff contents passed as a CLI argument.
+
+@findex codex-extras-restart
+The command @code{codex-extras-restart} kills the current Codex session and resumes it in place.  This is useful when a setting change requires relaunching Codex.  The new session preserves the directory and instance name, and resumes via @samp{codex resume --last}, which Codex CLI filters by the current working directory; since the just-killed session is the most recently updated one for that directory, Codex re-opens it.  If multiple Codex sessions share the same directory, Codex picks whichever was most recently written.
+
+@node Tool execution
+@section Tool execution
+
+@findex codex-extras-run-skill
+The command @code{codex-extras-run-skill} discovers available Codex skills, prompts the user to select one with completion, optionally prompts for arguments, and sends the skill invocation to the active Codex session.  Skills are discovered from @samp{~/.codex/skills/}, the project's @samp{.agents/skills/} directory, and any directories in @code{codex-extras-skill-directories} (@ref{Skill runner}).
+
+@findex codex-extras-audit-project
+The command @code{codex-extras-audit-project} runs a comprehensive audit of a project directory.  It prompts for a directory (with completion from @code{codex-extras-audit-project-directories}), then sequentially sends each skill in @code{codex-extras-audit-skills} to a Codex session in that directory.  Each skill is invoked with @samp{--accept} for non-interactive execution.  If no existing Codex session is found, the command creates one; if session creation fails, it signals an error.
+
+@node Debugging
+@section Debugging
+
+@findex codex-extras-debug-backtrace
+The command @code{codex-extras-debug-backtrace} automates the workflow of debugging an Emacs error.  When invoked from the @samp{*Backtrace*} buffer, it saves the backtrace, sends it to a lightweight LLM (via @samp{gptel}) to identify candidate packages, presents the candidates via @code{completing-read}, then starts a Codex session in the selected package's source directory with instructions to fix the bug.
+
+The LLM backend and model are configured via @code{codex-extras-debug-backtrace-backend} and @code{codex-extras-debug-backtrace-model} (@ref{Debug backtrace}).
+
+@node Buffer management
+@section Buffer management
+
+@findex codex-extras-setup-kill-on-exit
+The command @code{codex-extras-setup-kill-on-exit} wraps the process sentinel so that the buffer is automatically killed when the Codex process exits.  This is called automatically on session startup via @code{codex-start-hook}.
+
+@node Transient menus
+@chapter Transient menus
+
+@findex ai-extras-menu
+All @samp{codex-extras} commands are accessible through the unified @code{ai-extras-menu} (@ref{h:transient-menu,ai-extras menu,,ai-extras,}).  Codex-specific entries (such as the theme sync toggle) are appended to the shared menu at load time.  The menu is organized into columns:
+
+@itemize
+@item
+@strong{Sessions}: start or switch, handoff, restart.
+@item
+@strong{Tools}: run skill, audit project, debug backtrace.
+@item
+@strong{Alerts}: toggle alert notifications.
+@item
+@strong{Buffer}: setup kill on exit, fix rendering, disable scrollback.
+@item
+@strong{Options}: toggle boolean settings (alert on ready, protect buffers, sync theme).
+@end itemize
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

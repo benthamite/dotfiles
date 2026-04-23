@@ -1,0 +1,257 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename ai-extras.info
+@settitle ai-extras: shared extensions for AI coding CLI tools
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* AI Extras: (ai-extras). Shared extensions for AI coding CLI tools.
+@end direntry
+
+@finalout
+@titlepage
+@title ai-extras: shared extensions for AI coding CLI tools
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top ai-extras: shared extensions for AI coding CLI tools
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{ai-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* User options::
+* Commands::
+* Functions::
+* Transient menu::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+User options
+
+* Buffer protection and alerts::
+* Terminal rendering::
+
+Commands
+
+* Session management::
+* Alert commands::
+* Terminal commands::
+* Dispatched tool commands::
+
+Functions
+
+* Backend registration::
+* SVG icons::
+* Display names::
+* Notification display::
+* Buffer protection::
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{ai-extras.el} provides backend-agnostic abstractions for AI coding CLI tool extensions.  Rather than duplicating common functionality across packages like @samp{claude-code-extras.el} and @samp{codex-extras.el}, this package centralizes shared features such as session management, notifications, terminal integration, and snippet expansion.
+
+The package uses a backend registry with @code{cl-defgeneric} style dispatch.  Each AI tool (Claude Code, Codex, etc.) registers itself as a backend by providing a property list of functions for buffer detection, session enumeration, command sending, and session creation.  All shared features then operate across backends transparently.
+
+Key capabilities include:
+
+@itemize
+@item
+A unified session switcher with home-row key assignments for quick session access across all registered backends.
+@item
+An alert and notification system that fires OS notifications when sessions need attention.
+@item
+Buffer protection to prevent accidental session kills.
+@item
+Yasnippet integration for expanding snippets at terminal prompts.
+@item
+Terminal rendering fixes for the @samp{eat} terminal emulator.
+@end itemize
+
+@samp{ai-extras.el} depends on @samp{transient} for the session switcher menu and @samp{consult} for completion interfaces.
+
+@node User options
+@chapter User options
+
+@menu
+* Buffer protection and alerts::
+* Terminal rendering::
+@end menu
+
+@node Buffer protection and alerts
+@section Buffer protection and alerts
+
+@vindex ai-extras-protect-buffers
+The user option @code{ai-extras-protect-buffers} controls whether killing an AI session buffer requires confirmation.  When set to non-@code{nil} (the default), attempting to kill a buffer with a live session process triggers a yes-or-no prompt.  Buffers whose process has already exited (e.g., via the @samp{/exit} command) are killed without prompting.  Set this to @code{nil} if you prefer to close sessions without confirmation.
+
+@vindex ai-extras-alert-on-ready
+The user option @code{ai-extras-alert-on-ready} enables OS notifications when an AI session finishes responding and is waiting for input.  The default is @code{nil}.  Toggle it interactively with @code{ai-extras-toggle-alert} (@ref{Alert commands}).
+
+@vindex ai-extras-alert-style
+The user option @code{ai-extras-alert-style} determines the form of the notification.  Accepted values are @code{visual} (an OS notification via the @samp{alert} package), @code{sound} (an audio alert), or @code{both} (the default).  This option only takes effect when @code{ai-extras-alert-on-ready} is non-@code{nil}.
+
+@vindex ai-extras-alert-sound
+The user option @code{ai-extras-alert-sound} specifies the path to the sound file played for audio alerts.  The default is @samp{/System/Library/Sounds/Glass.aiff}, a macOS system sound.  Change this to any audio file playable by @samp{afplay}.
+
+@node Terminal rendering
+@section Terminal rendering
+
+@vindex ai-extras-sigwinch-delay
+The user option @code{ai-extras-sigwinch-delay} controls the delay in seconds before sending a @samp{SIGWINCH} signal to fix terminal rendering after session startup.  The default is @samp{0.5} seconds.  AI CLI tools running in the @samp{eat} terminal emulator sometimes render incorrectly due to a race condition in terminal size negotiation.  Sending @samp{SIGWINCH} forces the TUI to re-query dimensions and redraw.  Increase this value if the fix does not take effect on slower systems.
+
+@node Commands
+@chapter Commands
+
+@menu
+* Session management::
+* Alert commands::
+* Terminal commands::
+* Dispatched tool commands::
+@end menu
+
+@node Session management
+@section Session management
+
+@findex ai-extras-start-or-switch
+The command @code{ai-extras-start-or-switch} is the primary entry point for working with AI sessions.  When no sessions are active across any registered backend, it starts a new session.  If only one backend is registered, it starts that backend directly.  If multiple backends are available, it prompts the user to choose one.
+
+When sessions already exist, the command opens a transient menu.  The first column lists two actions: @samp{w} to jump to the most recently waiting session, and @samp{e} to start a new session.  The remaining columns display active sessions grouped by account.  When a backend provides an @code{:account} function, its sessions are grouped under a heading named after the account.  Sessions from backends without an @code{:account} function appear at the top of the list without a group heading, since these backends do not support multi-account grouping.  Within each group, sessions are sorted by home-row key.  Pressing a key instantly switches to that session.  Sessions waiting for user input are highlighted with the @code{ai-extras-waiting} face (inherits @code{success} by default, signalling ``ready for input''), or with @code{ai-extras-waiting-with-background} (inherits @code{warning} by default) when the backend's @code{:has-background-tasks-p} function reports that the session has ongoing background work (for example, running background Bash processes or Task agents).  The warning-coloured highlight draws attention to sessions that are idle but still busy under the hood.
+
+@findex ai-extras-jump-to-waiting
+The command @code{ai-extras-jump-to-waiting} switches to the AI session that most recently started waiting for user input.  This is useful when running multiple sessions in parallel and you want to attend to whichever one finished first.  If no sessions are waiting, it displays a message.
+
+@node Alert commands
+@section Alert commands
+
+@findex ai-extras-toggle-alert
+The command @code{ai-extras-toggle-alert} toggles the value of @code{ai-extras-alert-on-ready} and reports the new state.  This provides a quick way to enable or disable notifications without visiting the customization interface.
+
+@node Terminal commands
+@section Terminal commands
+
+@findex ai-extras-fix-rendering
+The command @code{ai-extras-fix-rendering} sends a @samp{SIGWINCH} signal to the current buffer's process after a short delay controlled by @code{ai-extras-sigwinch-delay} (@ref{Terminal rendering}).  Use this when the terminal display is garbled after startup or after resizing the window.
+
+@findex ai-extras-disable-scrollback-truncation
+The command @code{ai-extras-disable-scrollback-truncation} removes @samp{eat}'s default scrollback size limit for the current buffer.  Without this, the @samp{eat} terminal emulator truncates output to @code{eat-term-scrollback-size} lines, causing older session output to disappear.  This is called automatically on session startup.
+
+@findex ai-extras-snippet-tab
+The command @code{ai-extras-snippet-tab} attempts to expand a yasnippet key at the terminal prompt.  If no snippet key matches, it sends a literal @samp{TAB} character to the terminal.  This command is bound to @samp{TAB} in AI session buffers when yasnippet is available.
+
+@node Dispatched tool commands
+@section Dispatched tool commands
+
+@findex ai-extras-run-skill
+The command @code{ai-extras-run-skill} discovers skills from all registered backends and presents them in a single completion list.  Each candidate is annotated with the backend it belongs to (e.g., @samp{[Claude Code]} or @samp{[Codex]}), so the user can see at a glance which tool will execute the skill.  After selecting a skill, the command prompts for arguments when the skill declares an argument hint, argument source, or argument choices in its frontmatter.  It then dispatches execution to the appropriate backend's @code{:run-skill} handler.
+
+This unified approach eliminates the need to choose a backend before browsing skills.  Backends that provide a @code{:discover-skills} function in their registration plist contribute their skills to the aggregated list (@ref{Backend registration}).
+
+@findex ai-extras-handoff
+@findex ai-extras-audit-project
+@findex ai-extras-debug-backtrace
+@findex ai-extras-exit
+@findex ai-extras-restart
+The remaining dispatched commands (@code{ai-extras-handoff}, @code{ai-extras-audit-project}, @code{ai-extras-debug-backtrace}, @code{ai-extras-exit}, @code{ai-extras-restart}) resolve a single backend from the current buffer context or by prompting, then delegate to that backend's handler.
+
+@node Functions
+@chapter Functions
+
+@menu
+* Backend registration::
+* SVG icons::
+* Display names::
+* Notification display::
+* Buffer protection::
+@end menu
+
+@node Backend registration
+@section Backend registration
+
+@findex ai-extras-register-backend
+The function @code{ai-extras-register-backend} registers an AI tool as a backend.  It takes a symbol (e.g., @code{claude-code} or @code{codex}) and a property list with keys describing how to interact with that tool's sessions.  Required keys include @code{:buffer-p} (a predicate), @code{:find-all-buffers}, @code{:send-command}, @code{:start-new}, and @code{:icon}.
+
+Optional keys include @code{:account}, a function that takes a buffer and returns the account name as a string or nil.  When provided, the session switcher groups sessions by account, creating a labeled section per account (@ref{Session management}).  Backends that omit @code{:account} have their sessions listed without a group heading.  Another optional key is @code{:has-background-tasks-p}, a predicate that takes a buffer and returns non-nil when the session has ongoing background work (e.g. background Bash processes or Task agents) even though it is idle for input.  When the backend reports that a waiting session has background work, the switcher highlights it with the @code{ai-extras-waiting-with-background} face instead of @code{ai-extras-waiting} (@ref{Session management}).  Other optional keys include @code{:discover-skills}, a function returning a list of skill plists, and @code{:run-skill}, a function that accepts a skill name and optional arguments.  When a backend provides @code{:discover-skills}, its skills appear in the aggregated list shown by @code{ai-extras-run-skill} (@ref{Dispatched tool commands}).
+
+Backend registration is typically done at load time by extension packages like @samp{claude-code-extras.el} and @samp{codex-extras.el}.
+
+@node SVG icons
+@section SVG icons
+
+@findex ai-extras-svg-icon
+The function @code{ai-extras-svg-icon} renders an SVG string as an inline image suitable for the mode line, tab bar, or transient menus.  It replaces occurrences of @samp{currentColor} in the SVG data with the foreground color of FACE (defaulting to @code{default}), then creates an image scaled to match the font height of that face.  The result is a propertized string with a @code{display} image property.  Callers that display the icon in the mode line should pass @code{mode-line} as FACE so the color matches the mode-line foreground.
+
+Backends use this function in their @code{:icon} lambda to display official product logos (e.g., the Clawd pixel-art mascot or the OpenAI knot) instead of generic icon-font glyphs.  The @code{:icon} function accepts an optional FACE argument and forwards it to @code{ai-extras-svg-icon}.  When Emacs lacks SVG support (no @samp{librsvg}), the function returns an empty string, and backends fall back to short text abbreviations.
+
+@node Display names
+@section Display names
+
+@findex ai-extras-display-name
+The function @code{ai-extras-display-name} returns a human-readable name for a session buffer.  When the project name is unique among active sessions, it returns just the project name (e.g., @samp{my-project}).  When multiple sessions share the same project, it disambiguates with the instance name (e.g., @samp{my-project:branch-abc}).  Results are cached and refreshed automatically when sessions are created or destroyed.
+
+@node Notification display
+@section Notification display
+
+@findex ai-extras-notify
+The function @code{ai-extras-notify} displays a notification with a title and message.  It always shows a minibuffer message.  When @code{ai-extras-alert-on-ready} is enabled, it additionally fires visual and/or audio alerts according to @code{ai-extras-alert-style} (@ref{Buffer protection and alerts}).
+
+@findex ai-extras-alert-indicator
+The function @code{ai-extras-alert-indicator} returns a bell emoji reflecting the current alert state, suitable for use in modeline segments.
+
+@node Buffer protection
+@section Buffer protection
+
+@findex ai-extras-protect-buffer
+The function @code{ai-extras-protect-buffer} is intended for use in @code{kill-buffer-query-functions}.  It returns @code{t} (allow kill) when @code{ai-extras-protect-buffers} is @code{nil}, the buffer is not an AI session, or the session process has exited.  Otherwise it prompts for confirmation.
+
+@findex ai-extras-kill-session-buffer
+The command @code{ai-extras-kill-session-buffer} terminates the CLI process in the current buffer and kills the buffer, bypassing confirmation.  It signals an error unless the current buffer is an AI session.
+
+@node Transient menu
+@chapter Transient menu
+
+@findex ai-extras-menu
+The command @code{ai-extras-menu} opens a unified transient dispatch menu for all AI session commands.  The base menu is a single column group with three columns.  The left column stacks Sessions and Buffer, the middle column stacks Tools and Alerts, and the right column contains Options.  Using a single group ensures all columns are vertically aligned.
+
+Shared tool commands dispatch to the appropriate backend.  @code{ai-extras-run-skill} aggregates skills from all backends into a single list (@ref{Dispatched tool commands}).  The remaining dispatched commands (@code{ai-extras-handoff}, @code{ai-extras-audit-project}, @code{ai-extras-debug-backtrace}) resolve a backend from the current buffer context; when not in a session buffer and multiple backends are registered, the user is prompted to choose one.  The backend prompt displays each backend's SVG icon to the left of its label (@ref{SVG icons}).
+
+Backend-specific extension packages append their own entries to the menu at load time via @code{transient-append-suffix}.  For example, @samp{claude-code-extras.el} adds account selection, branch navigation, batch processing, and status polling entries, while @samp{codex-extras.el} adds a Codex theme sync toggle.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

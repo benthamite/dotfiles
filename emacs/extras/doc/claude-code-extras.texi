@@ -721,7 +721,7 @@ The command @code{claude-code-extras-menu} opens a transient menu that provides 
 
 @itemize
 @item
-@strong{Sessions.} Start or switch between sessions (@code{claude-code-extras-start-or-switch}, @ref{Session switching}), navigate branches (@code{claude-code-extras-switch-branch}, @ref{Branch navigation}), create a new branch (@code{claude-code-extras-create-branch}, @ref{Creating a branch}), and perform a session handoff (@code{claude-code-extras-handoff}).
+@strong{Sessions.} Start or switch between sessions (@code{claude-code-extras-start-or-switch}, @ref{Session switching}), navigate branches (@code{claude-code-extras-switch-branch}, @ref{Branch navigation}), create a new branch (@code{claude-code-extras-create-branch}, @ref{Creating a branch}), restart the current session in place (@code{claude-code-extras-restart}), and perform a session handoff (@code{claude-code-extras-handoff}).
 @item
 @strong{Tools.} Run a skill (@code{claude-code-extras-run-skill}, @ref{Skill runner}), process batch TODOs (@code{claude-code-extras-batch-todos}, @ref{Batch TODO processing}), send the TODO at point to an interactive session (@code{claude-code-extras-send-todo-at-point}, @ref{Send TODO at point}), audit a project (@code{claude-code-extras-audit-project}, @ref{Project audit}), debug a backtrace (@code{claude-code-extras-debug-backtrace}, @ref{Debug backtrace}), and browse session logs (@code{agent-log-menu}).
 @item

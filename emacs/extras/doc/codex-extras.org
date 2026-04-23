@@ -93,6 +93,9 @@ The command ~codex-extras-start-or-switch~ starts a new Codex session or opens t
 #+findex: codex-extras-handoff
 The command ~codex-extras-handoff~ closes the current Codex session and starts a new one with the handoff prompt.  The handoff skill must have been run first to write the handoff file at ~codex-extras-handoff-file~ ([[#h:handoff-options][Session handoff]]).  The new session starts in the same project directory as the closed one, with the handoff contents passed as a CLI argument.
 
+#+findex: codex-extras-restart
+The command ~codex-extras-restart~ kills the current Codex session and resumes it in place.  This is useful when a setting change requires relaunching Codex.  The new session preserves the directory and instance name, and resumes via =codex resume --last=, which Codex CLI filters by the current working directory; since the just-killed session is the most recently updated one for that directory, Codex re-opens it.  If multiple Codex sessions share the same directory, Codex picks whichever was most recently written.
+
 ** Tool execution
 :PROPERTIES:
 :CUSTOM_ID: h:tool-commands
@@ -130,7 +133,7 @@ The command ~codex-extras-setup-kill-on-exit~ wraps the process sentinel so that
 #+findex: ai-extras-menu
 All =codex-extras= commands are accessible through the unified ~ai-extras-menu~ ([[info:ai-extras#h:transient-menu][ai-extras menu]]).  Codex-specific entries (such as the theme sync toggle) are appended to the shared menu at load time.  The menu is organized into columns:
 
-- *Sessions*: start or switch, handoff.
+- *Sessions*: start or switch, handoff, restart.
 - *Tools*: run skill, audit project, debug backtrace.
 - *Alerts*: toggle alert notifications.
 - *Buffer*: setup kill on exit, fix rendering, disable scrollback.

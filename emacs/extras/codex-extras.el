@@ -135,7 +135,8 @@ Source: SVG Repo (CC0).")
         :audit-project #'codex-extras-audit-project
         :debug-backtrace #'codex-extras-debug-backtrace
         :setup-kill-on-exit #'codex-extras-setup-kill-on-exit
-        :exit #'codex-extras-exit))
+        :exit #'codex-extras-exit
+        :restart #'codex-extras-restart))
 
 ;;;; Functions
 
@@ -474,6 +475,28 @@ to a Codex session."
         (kill-buffer (current-buffer))))
     (cl-letf (((symbol-function 'codex--directory) (lambda () dir)))
       (codex--start nil (list prompt) nil t))))
+
+;;;;; Restart
+
+;;;###autoload
+(defun codex-extras-restart ()
+  "Kill the current Codex session and resume it in place.
+Useful when a setting change requires relaunching Codex.  Preserves the
+session's directory and instance name.  Codex does not expose a
+session ID to Emacs, so this relies on `codex resume --last', which
+Codex CLI filters by working directory; the just-killed session is
+the most recently updated one for that directory."
+  (interactive)
+  (unless (codex--buffer-p (current-buffer))
+    (user-error "Not in a Codex buffer"))
+  (let ((dir default-directory)
+        (instance-name (codex--extract-instance-name-from-buffer-name
+                        (buffer-name))))
+    (let ((kill-buffer-query-functions
+           (remq 'ai-extras-protect-buffer kill-buffer-query-functions)))
+      (kill-buffer (current-buffer)))
+    (cl-letf (((symbol-function 'codex--directory) (lambda () dir)))
+      (codex--start-subcommand "resume" t nil instance-name))))
 
 ;;;;; Start or switch (Codex-specific entry point)
 

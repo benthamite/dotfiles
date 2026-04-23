@@ -147,17 +147,19 @@ Chrome integration uses three Chrome profiles, one per Claude Code account. Brow
 
 *Profile ↔ account mapping:*
 
-| Chrome profile | Google account               | Claude Code account |
-|----------------+------------------------------+---------------------|
-| Default        | =pablo.stafforini@gmail.com=   | personal            |
-| Profile 2      | =pablo@epoch.ai=               | epoch               |
-| Profile 3      | =pablo@tlon.team=              | tlon                |
+| Chrome profile | Google account (Chrome)      | Anthropic identity (Claude Code) | Claude Code account |
+|----------------+------------------------------+----------------------------------+---------------------|
+| Default        | =pablo.stafforini@gmail.com=   | =pablo@stafforini.com=             | personal            |
+| Profile 2      | =pablo@epoch.ai=               | =pablo@epoch.ai=                   | epoch               |
+| Profile 3      | =pablo@tlon.team=              | =tlon.shared@gmail.com=            | tlon                |
+
+The Google column is the account each Chrome profile is signed into (independent of Anthropic). The Anthropic identity column is the account used to authenticate the Claude Code CLI inside =~/.claude-<account>/= — each =CLAUDE_CONFIG_DIR= holds its own OAuth credentials for a distinct Anthropic account, so =/usage= and rate-limit tracking report each account separately.
 
 Each Claude Code account stores its own =chromeExtension.pairedDeviceId= and =pairedDeviceName= in its =.claude.json=. These are *not* synced across accounts (unlike =claudeInChromeDefaultEnabled=, which is in =claude-code-extras--shared-claude-json-keys=) because each account pairs with a different Chrome profile's extension instance.
 
 *Pairing procedure (run once per account):*
 
-1. Make sure the target Chrome profile has the Claude extension installed and is signed into =claude.ai= inside that profile. Extension login is independent of the Google login — you can sign in with your primary Anthropic account (=pablo@stafforini.com=) across all three profiles.
+1. Make sure the target Chrome profile has the Claude extension installed and is signed into =claude.ai= inside that profile, using the Anthropic identity you want that profile to represent (see the table above). Extension login is independent of the Chrome Google login.
 2. In a fresh terminal:
    #+begin_src shell
    CLAUDE_CONFIG_DIR=~/.claude-<account> claude --chrome

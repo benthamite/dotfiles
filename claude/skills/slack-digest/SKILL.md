@@ -101,9 +101,16 @@ OUTFILE="$OUTDIR/$(date +%Y-%m-%d-%H%M)-slack-digest.org"
 emacsclient -e "(progn (find-file \"$OUTFILE\") (goto-char (point-min)) (org-fold-show-all))"
 ```
 
-The file must be written to disk **before** step 7 (marking channels as read), so that if marking succeeds the user still has a durable record of what was in the unreads.
+**CRITICAL — verify the write succeeded before proceeding.** The Write tool can fail silently from the model's perspective when permissions aren't granted (e.g. when running from a working directory that doesn't have write access to `~/My Drive/notes/Slack/`, the harness returns a "permissions not yet granted" error). If you skip this check and proceed to step 7, you will mark all channels as read while the digest sits nowhere on disk — destroying the user's only record of what was unread.
+
+After calling Write:
+1. Inspect the Write tool result. If it contains "permission", "not granted", "denied", "blocked", or any other error indicator, **STOP IMMEDIATELY**. Do NOT proceed to step 7. Tell the user the digest could not be saved, paste the digest content directly into your message so they have a copy, and ask them to either grant the permission and re-run, or re-run from a directory that has the necessary permissions (e.g. `~/.claude/` or `~/My Drive/dotfiles/claude/`).
+2. Then run `ls -la "$OUTFILE"` via Bash. If the file does not exist or is empty, **STOP** — same handling as above.
+3. Only after both checks pass, open the file in Emacs and proceed to step 7.
 
 ### 7. Mark conversations as read
+
+**Pre-flight check:** Before doing anything in this step, confirm that step 6 wrote the digest file successfully (the `ls -la` check passed). If it did not, you should have already stopped in step 6 — do not proceed under any circumstances.
 
 If the argument `--mark-read` was passed (this is the default), mark all channels as read without asking. If `--no-mark-read` was passed, skip marking. If neither was passed, mark all channels as read without asking.
 

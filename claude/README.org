@@ -225,7 +225,7 @@ Project-level instructions referencing the =dotfiles-context= skill. The global 
 - Pre-commit checklist (hook-enforced): Elisp pre-commit checks (batch-test, stage =doc/*.org=) are in the =elisp-conventions= skill; the =README.org= staging rule is in the project =CLAUDE.md=.
 - Use subagents and teams liberally; prefer the most powerful model.
 - Use =trash= instead of =rm -rf=; never send signals to Emacs without confirmation.
-- Never take actions visible to others (push, PR, post) without explicit confirmation.
+- =git push= to the user's own remotes is allowed autonomously (once the underlying commits are in); other externally-visible actions (PRs, issues, Slack, email) still require explicit confirmation.
 
 * Skills
 :PROPERTIES:

@@ -143,16 +143,32 @@ The active account is stored in =~/.claude-current-account=. From Emacs, =claude
 
 *** Chrome integration and multi-account
 
-Chrome integration uses two Chrome profiles, each with the Claude in Chrome extension installed and logged into a different Anthropic account. This allows =/chrome= to work from both the epoch and tlon Claude Code accounts without switching extension logins.
+Chrome integration uses three Chrome profiles, one per Claude Code account. Browser automation from a given Claude Code session targets the Chrome profile its account is paired to, so agents working on a tlon project automatically drive the tlon browser, and likewise for epoch and personal.
 
-*Chrome profiles:*
+*Profile ↔ account mapping:*
 
-| Chrome profile | Google account              | Extension logged into    | Claude Code account |
-|----------------+-----------------------------+--------------------------+---------------------|
-| Default        | =pablo.stafforini@gmail.com=  | =tlon.shared@gmail.com=    | tlon                |
-| Profile 2      | =pablo@epoch.ai=              | =pablo@epoch.ai=           | epoch               |
+| Chrome profile | Google account               | Claude Code account |
+|----------------+------------------------------+---------------------|
+| Default        | =pablo.stafforini@gmail.com=   | personal            |
+| Profile 2      | =pablo@epoch.ai=               | epoch               |
+| Profile 3      | =pablo@tlon.team=              | tlon                |
 
 Each Claude Code account stores its own =chromeExtension.pairedDeviceId= and =pairedDeviceName= in its =.claude.json=. These are *not* synced across accounts (unlike =claudeInChromeDefaultEnabled=, which is in =claude-code-extras--shared-claude-json-keys=) because each account pairs with a different Chrome profile's extension instance.
+
+*Pairing procedure (run once per account):*
+
+1. Make sure the target Chrome profile has the Claude extension installed and is signed into =claude.ai= inside that profile. Extension login is independent of the Google login — you can sign in with your primary Anthropic account (=pablo@stafforini.com=) across all three profiles.
+2. In a fresh terminal:
+   #+begin_src shell
+   CLAUDE_CONFIG_DIR=~/.claude-<account> claude --chrome
+   #+end_src
+   substituting =personal=, =epoch=, or =tlon= for =<account>=.
+3. At the Claude prompt, run =/chrome=.
+4. Focus the matching Chrome profile window, click the Claude extension icon → *Connect*.
+5. The CLI confirms the pair and writes =chromeExtension.pairedDeviceId= into =~/.claude-<account>/.claude.json=.
+6. Exit. Subsequent sessions under that account automatically route browser MCP calls to the paired profile.
+
+A =SessionStart= hook (=hooks/check-chrome-profile-pair.sh=) reminds you at session start if the current account lacks a pairing.
 
 *How profile selection works:* when a Claude Code session starts with =--chrome=, it connects to the Chrome extension instance that matches the session's OAuth account. The extension in each Chrome profile authenticates independently via native messaging. The =pairedDeviceId= links a specific Claude Code instance to a specific extension instance.
 

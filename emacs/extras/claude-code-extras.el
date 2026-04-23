@@ -560,11 +560,16 @@ resulting in a garbled banner."
 ;;;;; Smart start
 
 (defun claude-code-extras--account-env (_buffer-name _dir)
-  "Return environment variables for the pending account.
+  "Return environment variables for the session being started.
 Sets `CLAUDE_CONFIG_DIR' based on `claude-code-extras-accounts'.
-Reads `claude-code-extras--pending-account', which is dynamically
-bound by `claude-code-extras--start-with-account'."
-  (when-let* ((account claude-code-extras--pending-account)
+Prefers the dynamically bound `claude-code-extras--pending-account'
+\(set by `claude-code-extras--start-with-account' and
+`claude-code-extras-restart') and falls back to the persisted active
+account via `claude-code-extras--resolve-account', so callers that
+invoke `claude-code--start' directly (handoff, branch navigation,
+debug sessions) still get the right account's `CLAUDE_CONFIG_DIR'."
+  (when-let* ((account (or claude-code-extras--pending-account
+                           (claude-code-extras--resolve-account)))
               (config-dir (alist-get account claude-code-extras-accounts
                                      nil nil #'string=)))
     (list (format "CLAUDE_CONFIG_DIR=%s"

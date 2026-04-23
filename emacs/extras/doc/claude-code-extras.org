@@ -242,6 +242,9 @@ Before a new account's first =claude= run, call ~claude-code-extras-init-account
 
 The first time you start a session with a given account, Claude will prompt for OAuth login. After that, switching is instant.
 
+#+findex: claude-code-extras--account-env
+Every code path that launches a session -- including ~claude-code-extras--start-with-account~, ~claude-code-extras-restart~, ~claude-code-extras-handoff~, the branch navigation commands, and ~claude-code-extras--debug-start-session~ -- routes =CLAUDE_CONFIG_DIR= through ~claude-code-extras--account-env~.  That function prefers the dynamically bound ~claude-code-extras--pending-account~ (set by the smart-start entry points) and falls back to ~claude-code-extras--resolve-account~ (the persisted active account) when the binding is absent.  The fallback ensures direct calls to ~claude-code--start~ still pick the right account instead of silently using =~/.claude/=.
+
 #+findex: claude-code-extras--ensure-shared-symlinks
 #+vindex: claude-code-extras--shared-config-items
 #+vindex: claude-code-extras--shared-claude-json-keys

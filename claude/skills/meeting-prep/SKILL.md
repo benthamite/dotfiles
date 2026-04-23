@@ -44,7 +44,7 @@ For each meeting file, starting with the most recent:
 2. If the file has **no unchecked items**, stop the walk — earlier files are assumed reconciled from prior runs. (This is the terminating condition.)
 3. Otherwise, for each unchecked item:
    1. **Identify the project.** In order:
-      - Match verbatim against any `- [ ] (…) <text> — [[file:…]]` line under a `** Open action items from meetings` heading in project files (these were mirrored by `/meeting-debrief` Step 8).
+      - Match verbatim against any `- [ ] (…) <text> — [[file:…]]` line under a `** Open action items from meetings` heading in project files (these were mirrored by `/meeting-debrief` Step 9).
       - If no verbatim match, infer the project from keywords in the item text (e.g., "media mentions" → `projects/media-mentions-automation/`, "email-triage" → `projects/email-triage/`, "add-on" → `projects/epoch-ai-addon/`).
       - If still ambiguous, **skip the item** (leave unchecked). Do not guess.
    2. **Check for completion.** Read the project's main org file, its `CLAUDE.md` "Latest session" field, and its entry in `projects/current-list-of-automation-projects.org`. Treat any of the following as confirmation:

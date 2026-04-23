@@ -72,5 +72,8 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/Library/CloudStorage/Dropbox/tlon"]
 trust_level = "trusted"
 
+[projects."/Users/pablostafforini/My Drive/repos/airbnb-pricing"]
+trust_level = "trusted"
+
 [tui]
 theme = "dark"

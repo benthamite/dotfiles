@@ -90,6 +90,8 @@ Sessions that are idle (waiting for user input) receive the ~/theme~ command imm
 
 The theme sync is fully asynchronous: the ~enable-theme-functions~ hook returns immediately, and all terminal interactions are deferred to zero-delay timers.  This prevents reentrant timer execution (e.g. ~org-roam-db-sync~) from blocking the main thread during ~accept-process-output~.
 
+The busy/idle dispatch and the Stop-hook re-selection are covered by ERT tests in =emacs/extras/test/claude-code-extras-test.el= under the =Theme sync busy/idle handling= section.
+
 ** Alert options
 :PROPERTIES:
 :CUSTOM_ID: h:alert-options

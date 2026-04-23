@@ -2,7 +2,7 @@
 name: meeting-prep
 description: Generate a pre-meeting org file for the biweekly 1:1 with María. Gathers progress from session logs, project statuses, Slack activity, and GitHub activity since the last meeting. Use when the user says "meeting prep", "prep for María", "prepare for 1:1", "meeting with María", or wants to prepare for their manager meeting.
 user-invocable: true
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, mcp__slack-unofficial-epochai__conversations_search_messages, mcp__slack-unofficial-epochai__channels_list, mcp__slack-unofficial-epochai__conversations_history, mcp__slack-unofficial-epochai__conversations_replies, mcp__google-docs-personal__readDocument, mcp__google-docs-personal__insertText
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, mcp__slack-unofficial-epochai__conversations_search_messages, mcp__slack-unofficial-epochai__channels_list, mcp__slack-unofficial-epochai__conversations_history, mcp__slack-unofficial-epochai__conversations_replies
 argument-hint: "[YYYY-MM-DD date override]"
 ---
 
@@ -17,6 +17,10 @@ Generate a pre-populated org-mode meeting file for the biweekly 1:1 with María 
 - **Slack user ID**: `U0AKT7H6G2H` (Pablo)
 - **GitHub username**: `benthamite`
 - **GitHub org**: `epoch-research`
+
+## Google Docs access
+
+All Google Docs/Drive operations run through the `gdoc` CLI, authenticated as `pablo@epoch.ai` (account name: `epoch`). Always pass `--account epoch`. Do not use `mcp__google-docs-personal__*`.
 
 ## Step 0: Determine dates
 
@@ -40,7 +44,7 @@ For each meeting file, starting with the most recent:
 2. If the file has **no unchecked items**, stop the walk — earlier files are assumed reconciled from prior runs. (This is the terminating condition.)
 3. Otherwise, for each unchecked item:
    1. **Identify the project.** In order:
-      - Match verbatim against any `- [ ] (…) <text> — [[file:…]]` line under a `** Open action items from meetings` heading in project files (these were mirrored by `/meeting-debrief` Step 9).
+      - Match verbatim against any `- [ ] (…) <text> — [[file:…]]` line under a `** Open action items from meetings` heading in project files (these were mirrored by `/meeting-debrief` Step 8).
       - If no verbatim match, infer the project from keywords in the item text (e.g., "media mentions" → `projects/media-mentions-automation/`, "email-triage" → `projects/email-triage/`, "add-on" → `projects/epoch-ai-addon/`).
       - If still ambiguous, **skip the item** (leave unchecked). Do not guess.
    2. **Check for completion.** Read the project's main org file, its `CLAUDE.md` "Latest session" field, and its entry in `projects/current-list-of-automation-projects.org`. Treat any of the following as confirmation:
@@ -192,25 +196,33 @@ write "All resolved."]
 
 María's shared meetings document (ID in Constants) follows a reverse-chronological format where the newest meeting section is at the top. Each meeting section has a "Pablo" list with one bullet point per active project.
 
-1. Read the shared Google Doc with `readDocument` (format `markdown`) to understand the current structure.
+1. Read the shared Google Doc to understand the current structure:
+   ```bash
+   gdoc cat --account epoch 1mTsZWI9ImtI4OAI3XsPI4K6b2cKugTBp2q-blGoR2tE
+   ```
 2. From the synthesized progress (Step 3), generate **one bullet point per project that had activity** since the last meeting. Each bullet should be a single sentence in the format: `**Project name**: concise status/headline.` Include only projects with meaningful progress — skip projects where the only activity was waiting.
-3. Insert a new meeting section at **index 1** (beginning of the document body) using `insertText`. The section should follow this exact format:
+3. Write the new meeting section to a temporary markdown file, following this exact format (note the trailing blank line for clean separation from the section below):
 
-```
----
+   ```
+   ---
 
-Attendees:
+   Attendees:
 
-- Maria's points
+   - Maria's points
 
-- Pablo
-  - **Project A**: One-sentence summary.
-  - **Project B**: One-sentence summary.
-  ...
+   - Pablo
+     - **Project A**: One-sentence summary.
+     - **Project B**: One-sentence summary.
+     ...
 
-```
+   ```
 
-Note the trailing blank line after the last bullet. This ensures clean separation from the previous meeting section below.
+4. Insert the new section at the top of the first tab using `gdoc insert`:
+   ```bash
+   gdoc insert --account epoch --tab t.0 --position start \
+     1mTsZWI9ImtI4OAI3XsPI4K6b2cKugTBp2q-blGoR2tE /tmp/meeting-prep-section.md
+   ```
+5. Delete the temporary file once the insert succeeds.
 
 ## Step 6: Review and open
 

@@ -97,11 +97,11 @@ If no `decisions/` directory exists, skip this step.
 
 ## Step 4: Run post-update-log hooks
 
-After writing the log and updating CLAUDE.md, check whether any ancestor directory (walking up from the project root toward the git root) contains a CLAUDE.md with a `## Post-`/update-log` hook` section. If found, read and follow the instructions in that section.
+Walk up ancestor directories from the project root to the git root (inclusive). For each ancestor, check whether `<ancestor>/context/post-update-log-hook.md` exists. If found, read and follow its instructions. Run all matching hooks, innermost first.
 
-This allows parent directories to define project-family-level bookkeeping — such as updating a master project list or syncing a shared status document — that fires automatically after every `/update-log` invocation.
+This lets parent directories define project-family-level bookkeeping — master project list updates, shared status syncing, meeting action item reconciliation, etc. — that fires automatically after every `/update-log` invocation, without bloating per-session CLAUDE.md context.
 
-If no ancestor CLAUDE.md contains this section, skip this step.
+If no such file is found at any level, skip this step.
 
 ## Step 5: Commit
 

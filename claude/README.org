@@ -445,7 +445,7 @@ Saves next-session instructions to =/tmp/claude-code-handoff.md= for seamless se
 :ID:       5ED7EB34-774B-489C-95C5-27C8131CE048
 :END:
 
-Diagnoses a frozen Emacs process: samples the stack, decodes native-comp symbols, identifies the hot path, and suggests recovery options (SIGUSR2, SIGTERM, or SIGKILL with appropriate warnings).
+Diagnoses a frozen Emacs process. First tries to dump =*Backtrace*= and =*Messages*= via the server socket (the primary evidence for debugger-induced freezes), then samples the stack as a fallback. Analysis forces a stuck-vs-busy check and a nested-debugger count *before* identifying any hot path, to avoid confusing timers firing inside a wedged recursive edit with the actual cause. Recovery options are tailored to the diagnosis: =(top-level)= via emacsclient for debugger nesting, =keyboard-quit= for responsive-but-stuck, SIGUSR2/SIGTERM/SIGKILL (with warnings) otherwise. Explicit rules forbid unverified citations and require labelling observation vs. inference vs. unknowns.
 
 *** nosync
 :PROPERTIES:

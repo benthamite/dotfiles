@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: post-build-check
+# key: pbc
+# contributor: Pablo Stafforini
+# --
+How confident are you in what you built? Is there anything that will break? Edge cases? Bad code?

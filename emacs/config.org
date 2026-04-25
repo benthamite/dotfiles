@@ -1412,6 +1412,7 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
   :custom
   (auth-source-debug nil) ; set to t for debugging
   (auth-source-do-cache t)
+  (auth-source-pass-extra-query-keywords t) ; stop full password-store scan on every auth lookup
   (auth-sources '(macos-keychain-internet macos-keychain-generic)))
 #+end_src
 

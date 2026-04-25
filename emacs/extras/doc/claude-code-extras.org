@@ -363,7 +363,13 @@ Claude Code's branching mechanism creates a new session forked from the current 
 
 The command ~claude-code-extras-create-branch~ creates a new branch of the current Claude session and switches to it. It starts a new Claude process with =--resume SESSION_ID --fork-session=, which tells the CLI to resume the conversation but under a fresh session ID. The result is a new session that shares the full history of its parent but diverges from this point forward.
 
+To prevent two parallel sessions from clobbering each other on the same working tree (concurrent commits, ~git filter-branch~ rewrites, untracked files briefly disappearing), the command also creates a git worktree on a fresh branch and starts the fork inside it. The worktree lives under ~claude-code-extras-fork-worktree-directory~ (default =~/.cache/claude-worktrees/=, kept outside Google Drive to avoid sync interference) on a branch named =claude-fork-HHMMSS=. The fork starts at the parent's =HEAD=; uncommitted changes in the parent are NOT carried over, so commit them first if you want them in the fork. When the buffer is not in a git repo, the fork falls back to running in place without isolation.
+
+Because Claude Code stores sessions per project directory under =~/.claude/projects/=, the parent session's JSONL is symlinked into the worktree's project directory so that =--resume= can find it from the new cwd.
+
 The new buffer is automatically named =fork-HHMMSS= (using the current time) to avoid prompting for an instance name. After branching, you can interact with the new session independently while the original remains open in its buffer. Use ~claude-code-extras-switch-branch~ to navigate between them ([[#h:switch-branch][Switching branches]]).
+
+When you are done with a fork, clean it up with =git worktree remove <path> && git branch -D claude-fork-HHMMSS=.
 
 *** Switching branches
 :PROPERTIES:

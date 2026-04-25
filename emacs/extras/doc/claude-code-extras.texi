@@ -460,13 +460,21 @@ Claude Code's branching mechanism creates a new session forked from the current 
 
 The command @code{claude-code-extras-create-branch} creates a new branch of the current Claude session and switches to it. It starts a new Claude process with @samp{--resume SESSION_ID --fork-session}, which tells the CLI to resume the conversation but under a fresh session ID@. The result is a new session that shares the full history of its parent but diverges from this point forward.
 
-To prevent two parallel sessions from clobbering each other on the same working tree (concurrent commits, @code{git filter-branch} rewrites, untracked files briefly disappearing), the command also creates a git worktree on a fresh branch and starts the fork inside it. The worktree lives under @code{claude-code-extras-fork-worktree-directory} (default @samp{~/.cache/claude-worktrees/}, kept outside Google Drive to avoid sync interference) on a branch named @samp{claude-fork-HHMMSS}. The fork starts at the parent's @samp{HEAD}; uncommitted changes in the parent are NOT carried over, so commit them first if you want them in the fork. When the buffer is not in a git repo, the fork falls back to running in place without isolation.
-
-Because Claude Code stores sessions per project directory under @samp{~/.claude/projects/}, the parent session's JSONL is symlinked into the worktree's project directory so that @samp{--resume} can find it from the new cwd.
+By default the fork runs in the parent's working directory, matching the behavior of launching a second Claude instance in the same project: both sessions see the same uncommitted changes and untracked files. This is usually what you want when forking to explore an alternative.
 
 The new buffer is automatically named @samp{fork-HHMMSS} (using the current time) to avoid prompting for an instance name. After branching, you can interact with the new session independently while the original remains open in its buffer. Use @code{claude-code-extras-switch-branch} to navigate between them (@ref{Switching branches}).
 
-When you are done with a fork, clean it up with @samp{git worktree remove <path> && git branch -D claude-fork-HHMMSS}.
+@enumerate
+@item
+@anchor{Isolating a fork in a git worktree}Isolating a fork in a git worktree
+
+
+With a prefix argument (@samp{C-u}), @code{claude-code-extras-create-branch} additionally creates a git worktree on a fresh branch under @code{claude-code-extras-fork-worktree-directory} (default @samp{~/.cache/claude-worktrees/}, kept outside Google Drive to avoid sync interference) and runs the fork inside it. The new branch is named @samp{claude-fork-HHMMSS}. The fork starts at the parent's @samp{HEAD}, so uncommitted parent changes are NOT carried over.
+
+This is useful when both sessions might run destructive git operations concurrently (@samp{git filter-branch}, history rewrites, large rebases) and you don't want them stepping on each other. For ordinary parallel exploration, prefer the default in-place behavior.
+
+Because Claude Code stores sessions per project directory under @samp{~/.claude/projects/}, the parent session's JSONL is symlinked into the worktree's project directory so that @samp{--resume} can find it from the new cwd. When you are done with an isolated fork, clean it up with @samp{git worktree remove <path> && git branch -D claude-fork-HHMMSS}.
+@end enumerate
 
 @node Switching branches
 @subsection Switching branches

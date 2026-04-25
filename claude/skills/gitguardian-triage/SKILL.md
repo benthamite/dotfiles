@@ -134,35 +134,60 @@ Before any rotation, hit the provider with the key and confirm the call succeeds
 
 ### 4.1 Find live consumers of each secret
 
-**The right question is not "where is this exact leaked string used?"** It's "what env var / pass entry / config line uses this service, and does it currently hold the leaked value?" Rotated keys can look identical in git history but the live consumer might already have a newer key.
+**The right question is not "where is this exact leaked string used?"** It's "what env var / pass entry / config line uses this service, and does it currently hold the leaked value?" Rotated keys can look identical in git history but the live consumer might already have a newer key. Conversely, the leaked value may live **exclusively** inside a multi-line `pass` entry under a non-default subkey (e.g. `gptel:`), with only Elisp code reaching it via `(auth-source-pass-get "gptel" "tlon/core/openai.com/<email>")` — never appearing as a literal in any source file. A naïve `grep` will miss those consumers entirely.
 
-For each secret:
+Run all five searches below for every leaked value. None alone is sufficient.
 
-1. Extract the USE pattern (e.g., `OPENAI_API_KEY`, `GEMINI_API_KEY`, `GH_TOKEN`).
-2. In `.zshenv-secrets` (plaintext at edit time; git-crypt encrypted at rest):
-   ```bash
-   grep -E '^export NAME=' "$HOME/My Drive/dotfiles/shell/.zshenv-secrets" | sed -E 's/.*="([^"]+)".*/\1/'
-   ```
-3. In `pass`:
-   ```bash
-   cd ~/.password-store
-   find . -name "*.gpg" -not -path "./.git/*" | while read f; do
-     rel="${f#./}"; rel="${rel%.gpg}"
-     val=$(pass "$rel" 2>/dev/null | head -1)
-     [ "$val" = "$LEAKED_VAL" ] && echo "MATCH in pass: $rel"
-   done
-   ```
-4. Other file-level consumers:
-   ```bash
-   grep -rIl -F "$LEAKED_VAL" \
-     "$HOME/My Drive/dotfiles" \
-     "$HOME/My Drive/repos" \
-     "$HOME/.password-store" \
-     --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=elpaca \
-     --exclude-dir=__pycache__ --exclude-dir=.venv --exclude-dir=archive
-   ```
+**Search 1 — `.zshenv-secrets`** (plaintext at edit time, git-crypt encrypted at rest):
+```bash
+grep -F -- "$LEAKED" "$HOME/My Drive/dotfiles/shell/.zshenv-secrets"
+```
 
-Files in `repos/archive/` and `notes/claude-logs/` and `notes/gptel/` generally don't count as live consumers — they're historical copies. Focus on `.zshenv-secrets`, `pass` entries, config files in active repos, and running services (gcloud, etc.).
+**Search 2 — every line of every `pass` entry** (NOT just the first line — the leaked value may be on a `<subkey>:` line that `auth-source-pass-get` selects by name):
+```bash
+cd ~/.password-store
+LEAK_FILE=$(mktemp); printf '%s' "$LEAKED" > "$LEAK_FILE"
+find . -name "*.gpg" -not -path "./.git/*" -print0 | xargs -0 -P 8 -I{} bash -c '
+  rel="${1#./}"; rel="${rel%.gpg}"
+  pass "$rel" 2>/dev/null | grep -F -q -f "'"$LEAK_FILE"'" && echo "  pass: $rel"
+' _ {}
+rm -f "$LEAK_FILE"
+```
+The earlier `head -1` shortcut misses every multi-field entry. Always scan the full content.
+
+**Search 3 — Elisp/code references to the matching pass entries.** For each `pass` entry that hit in Search 2, grep code for the **path prefix** (the entry's parent dir), because the actual call site usually concatenates a runtime variable for the leaf:
+```bash
+PASS_PREFIX="tlon/core/openai.com/"   # parent dir of the matching pass entry
+grep -rIn -F -- "$PASS_PREFIX" \
+  "$HOME/My Drive/dotfiles/emacs" \
+  "$HOME/My Drive/repos" \
+  ~/.config/emacs-profiles \
+  --include="*.el" --include="*.org" --include="*.py" --include="*.sh" \
+  --exclude-dir=elpaca/builds --exclude-dir=elpaca-cache --exclude-dir=.git
+```
+Typical patterns: `(auth-source-pass-get "<subkey>" "<path>")`, `(auth-source-search :host ...)`, `(shell-command "pass <path>")`, or Python `subprocess.check_output(["pass", "<path>"])`. A match means rotating the pass entry is sufficient — no source-file edit needed for that consumer.
+
+**Search 4 — direct file-level grep for the literal** in active code/config (excluding archives and historical transcripts):
+```bash
+grep -rIlF -- "$LEAKED" \
+  "$HOME/My Drive/dotfiles" \
+  "$HOME/My Drive/repos" \
+  ~/.config/emacs-profiles \
+  --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=elpaca/builds \
+  --exclude-dir=elpaca-cache --exclude-dir=__pycache__ --exclude-dir=.venv \
+  --exclude-dir=archive --exclude-dir=claude-logs --exclude-dir=gptel
+```
+Files in `repos/archive/`, `notes/claude-logs/`, and `notes/gptel/` document the leak but are not live consumers — redact them in Step 6, don't update them as consumers.
+
+**Search 5 — indirection layers** that don't show up as direct hits:
+```bash
+# 1Password op:// URIs in .zshenv-secrets (their vault items may need rotating too)
+grep -E '^export [A-Z_]+="op://' "$HOME/My Drive/dotfiles/shell/.zshenv-secrets"
+# macOS keychain (relevant only for gh — see GitHub flow Step 4.2)
+gh auth status 2>&1 | head -20
+```
+
+**After rotation: re-run Searches 1, 2, and 4 with the OLD value.** Any remaining hit is a consumer you missed — find it and update it before closing the GG incident.
 
 ### 4.2 Per-provider rotation procedures
 

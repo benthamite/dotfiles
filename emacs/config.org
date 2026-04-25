@@ -9083,6 +9083,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :custom
   (agent-log-summary-model 'gemini-flash-latest)
   (agent-log-auto-sync-sessions t)
+  (agent-log-auto-summarize-sessions t)
   (agent-log-auto-rename-sessions t)
   (agent-log-auto-redact-sessions t))
 #+end_src

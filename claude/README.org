@@ -411,7 +411,7 @@ Moves a Claude Code internal session log (=.jsonl= and associated directory) fro
 
 *** meeting-prep
 
-Generates a pre-meeting org file for the biweekly 1:1 with María. Gathers progress from session logs, git history, project status files, Slack messages, and GitHub activity since the last meeting. Reconciles stale project documentation against gathered evidence before writing the meeting file. Also updates the shared Google Doc (reverse-chronological, one bullet per active project). Commits updated project docs and the meeting file in separate commits.
+Generates a pre-meeting org file for the biweekly 1:1 with María. Gathers progress from session logs, git history, project status files, Slack messages, and GitHub activity since the last meeting. Reconciles stale project documentation against gathered evidence before writing the meeting file. Also updates the shared Google Doc (reverse-chronological, one bullet per active project, using =*= rather than =-= since Google Docs renders =-= as a literal hyphen but converts =*= into proper bullets). Every named resource — Slack channels, Slack messages, Google Docs, Google Groups, GitHub PRs/issues, Airtable bases, dashboards — must be a live link in both the org file and the Google Doc insert; bare names are not acceptable. Commits updated project docs and the meeting file in separate commits.
 
 *** meeting-debrief
 

@@ -277,6 +277,10 @@ Audits code for intent transparency: magic values, misleading names, missing rat
 
 Audits a codebase from the AI agent's perspective: inventories existing verification infrastructure (tests, types, linting, CI), project instructions, code navigability, and automation, then produces prioritized recommendations for reducing friction. Each recommendation is concrete, justified from the AI's perspective, and effort-estimated. Pass =--accept= to implement all recommendations without prompting.
 
+*** symptom-check
+
+Forces a structured root-cause analysis before applying any non-trivial bug fix, to prevent the failure mode where agents patch the immediate symptom while the underlying invariant stays broken (so the same shape recurs in different places until the architectural drift is finally caught). Workflow: restate the symptom, consult =architectural-issues.md= for similar prior entries, draft the local fix, articulate the invariant in one sentence, search for other manifestations, then pick a disposition (=fix locally= / =fix locally + flag= / =stop and refactor=). The "+ flag" and "stop and refactor" dispositions produce a registry entry to append to =architectural-issues.md= so pattern recognition compounds across sessions.
+
 *** build
 :PROPERTIES:
 :ID:       15574F2D-5827-48ED-8630-DFB3843EA3FB

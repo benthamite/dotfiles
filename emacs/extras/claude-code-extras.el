@@ -3385,26 +3385,30 @@ interactive instance-name prompt."
     (claude-code--start nil (list "--resume" session-id) nil t)))
 
 ;;;###autoload
-(defun claude-code-extras-create-branch ()
+(defun claude-code-extras-create-branch (&optional isolated)
   "Create a branch of the current Claude session and switch to it.
-Forks the current session via `--resume --fork-session', creates a
-git worktree on a new branch under
-`claude-code-extras-fork-worktree-directory', and opens the fork
-in that worktree so it is filesystem-isolated from the parent.
+Forks the current session via `--resume --fork-session' and opens
+the new branch in a separate buffer.  By default the fork shares
+the parent's working tree, matching the behavior of launching a
+second Claude instance in the same project.
 
-The fork starts at the parent's HEAD; uncommitted parent changes
-are NOT carried over.  Commit them first if you need them in the
-fork.  When the buffer is not in a git repo, the fork runs in
-place without isolation."
-  (interactive)
+With prefix arg ISOLATED, also create a git worktree on a fresh
+branch under `claude-code-extras-fork-worktree-directory' and run
+the fork inside it.  The worktree starts at the parent's HEAD,
+so uncommitted parent changes are NOT carried over.  Use this
+when concurrent destructive git operations across forks are a
+concern; otherwise the default is what you want."
+  (interactive "P")
   (unless (claude-code--buffer-p (current-buffer))
     (user-error "Not in a Claude buffer"))
   (let* ((session-id (claude-code-extras--current-session-id))
          (parent-cwd default-directory)
-         (toplevel (claude-code-extras--git-toplevel))
          (fork-id (format-time-string "%H%M%S"))
-         (worktree (and toplevel
-                        (claude-code-extras--make-fork-worktree toplevel fork-id))))
+         (worktree (and isolated
+                        (claude-code-extras--make-fork-worktree
+                         (or (claude-code-extras--git-toplevel)
+                             (user-error "Not in a git repo; cannot isolate"))
+                         fork-id))))
     (when worktree
       (claude-code-extras--link-session-into-project
        session-id parent-cwd (car worktree)))

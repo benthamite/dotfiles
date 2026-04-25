@@ -123,7 +123,17 @@ From the gathered data, compile a progress summary organized by project. For eac
 2. **Current state** — where the project stands now.
 3. **What's next** — the immediate next step.
 
-**Link everything.** Whenever a Slack message, Google Doc, GitHub PR/issue, or other external resource is mentioned, include an org-mode link to it. For Slack messages, use the deep link format `https://epochai.slack.com/archives/CHANNEL_ID/pTIMESTAMP` (remove the dot from the message `ts`). For GitHub, link to the PR/issue URL. For Google Docs, link to the doc URL. Never reference a message or document without linking to it.
+**Link everything.** Any named resource must be a live link — never reference one without the URL. Apply these rules consistently in both the org meeting file (Step 5) and the shared Google Doc insert (Step 5b):
+
+- **Slack channels** (e.g. `#media-mentions-digest`): link to `https://epochai.slack.com/archives/CHANNEL_ID`. Look up the ID from `mcp__slack-unofficial-epochai__channels_list` results or from permalinks captured elsewhere in the data.
+- **Slack messages / threads**: use the deep link format `https://epochai.slack.com/archives/CHANNEL_ID/pTIMESTAMP` (remove the dot from the message `ts`).
+- **Google Docs / Sheets / Slides**: link to the doc URL (grab from session logs, project files, or run `gdoc ls --account epoch` if needed).
+- **Google Groups** (e.g. `media@epoch.ai`, `feedback@epoch.ai`): link to `https://groups.google.com/a/epoch.ai/g/<group-name>`.
+- **GitHub**: link to the PR/issue/repo URL.
+- **Airtable bases / tables**: link to the base URL.
+- **Looker Studio dashboards, Marketplace listings, chat-stats-style webapps**: link to the live URL.
+
+If a resource is mentioned in the Slack/session-log data gathering but its URL is missing, retrieve it before writing the meeting file — do not emit a bare name.
 
 Also note any cross-cutting activity (e.g., responding to ad-hoc requests, Slack conversations not tied to a specific project).
 
@@ -201,18 +211,18 @@ María's shared meetings document (ID in Constants) follows a reverse-chronologi
    gdoc cat --account epoch 1mTsZWI9ImtI4OAI3XsPI4K6b2cKugTBp2q-blGoR2tE
    ```
 2. From the synthesized progress (Step 3), generate **one bullet point per project that had activity** since the last meeting. Each bullet should be a single sentence in the format: `**Project name**: concise status/headline.` Include only projects with meaningful progress — skip projects where the only activity was waiting.
-3. Write the new meeting section to a temporary markdown file, following this exact format (note the trailing blank line for clean separation from the section below):
+3. Write the new meeting section to a temporary markdown file, following this exact format (note the trailing blank line for clean separation from the section below). **Use `*` for bullets, not `-`** — Google Docs renders `-` as a literal hyphen, but converts `*` into proper bulleted lists. Also **link every named resource** per the rules in Step 3 (Slack channels as `[#channel](URL)`, Google Docs as `[Doc title](URL)`, GitHub as `[#123](URL)`, etc.).
 
    ```
    ---
 
    Attendees:
 
-   - Maria's points
+   * Maria's points
 
-   - Pablo
-     - **Project A**: One-sentence summary.
-     - **Project B**: One-sentence summary.
+   * Pablo
+     * **Project A**: One-sentence summary with [linked resources](URL) inline.
+     * **Project B**: One-sentence summary.
      ...
 
    ```

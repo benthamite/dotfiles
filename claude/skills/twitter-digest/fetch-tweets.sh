@@ -11,12 +11,26 @@
 
 set -euo pipefail
 
-# Resolve TWITTERAPI_API_KEY from account-specific env vars if not set directly.
+# Resolve TWITTERAPI_API_KEY from the active Claude account.
+# An explicit TWITTERAPI_API_KEY in the environment overrides account resolution.
 if [[ -z "${TWITTERAPI_API_KEY:-}" ]]; then
-  if [[ "${CLAUDE_CONFIG_DIR:-}" == *epoch* ]] && [[ -n "${TWITTERAPI_API_KEY_EPOCH:-}" ]]; then
-    TWITTERAPI_API_KEY="$TWITTERAPI_API_KEY_EPOCH"
-  elif [[ -n "${TWITTERAPI_API_KEY_TLON:-}" ]]; then
-    TWITTERAPI_API_KEY="$TWITTERAPI_API_KEY_TLON"
+  config_dir="${CLAUDE_CONFIG_DIR:-}"
+  config_dir="${config_dir%/}"
+  case "$config_dir" in
+    */.claude-epoch)
+      TWITTERAPI_API_KEY="${TWITTERAPI_API_KEY_EPOCH:-}"
+      ;;
+    */.claude-personal|*/.claude-tlon|"")
+      TWITTERAPI_API_KEY="${TWITTERAPI_API_KEY_TLON:-}"
+      ;;
+    *)
+      echo "ERROR: unknown CLAUDE_CONFIG_DIR for twitter-digest: $config_dir" >&2
+      exit 1
+      ;;
+  esac
+  if [[ -z "$TWITTERAPI_API_KEY" ]]; then
+    echo "ERROR: no Twitter API key set for the active account (CLAUDE_CONFIG_DIR=${config_dir:-<unset>})" >&2
+    exit 1
   fi
 fi
 # Resolve op:// references via 1Password CLI.

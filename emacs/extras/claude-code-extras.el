@@ -54,6 +54,18 @@ the standard kill-protection prompt."
   :type 'boolean
   :group 'claude-code-extras)
 
+(defcustom claude-code-extras-fork-worktree-directory
+  (expand-file-name "claude-worktrees"
+                    (or (getenv "XDG_CACHE_HOME")
+                        (expand-file-name ".cache" "~")))
+  "Base directory for git worktrees created by `claude-code-extras-create-branch'.
+Each forked session gets a sibling worktree under this directory,
+isolating its filesystem and git state from the parent session.
+Defaults to a location outside Google Drive to avoid sync
+interference with concurrent git operations."
+  :type 'directory
+  :group 'claude-code-extras)
+
 (defcustom claude-code-extras-log-directory
   (expand-file-name "claude-logs" paths-dir-notes)
   "Directory where Claude conversation logs are saved."
@@ -3375,18 +3387,97 @@ interactive instance-name prompt."
 ;;;###autoload
 (defun claude-code-extras-create-branch ()
   "Create a branch of the current Claude session and switch to it.
-Forks the current session via `--resume --fork-session' and opens
-the new branch in a separate buffer."
+Forks the current session via `--resume --fork-session', creates a
+git worktree on a new branch under
+`claude-code-extras-fork-worktree-directory', and opens the fork
+in that worktree so it is filesystem-isolated from the parent.
+
+The fork starts at the parent's HEAD; uncommitted parent changes
+are NOT carried over.  Commit them first if you need them in the
+fork.  When the buffer is not in a git repo, the fork runs in
+place without isolation."
   (interactive)
   (unless (claude-code--buffer-p (current-buffer))
     (user-error "Not in a Claude buffer"))
-  (let ((session-id (claude-code-extras--current-session-id)))
+  (let* ((session-id (claude-code-extras--current-session-id))
+         (parent-cwd default-directory)
+         (toplevel (claude-code-extras--git-toplevel))
+         (fork-id (format-time-string "%H%M%S"))
+         (worktree (and toplevel
+                        (claude-code-extras--make-fork-worktree toplevel fork-id))))
+    (when worktree
+      (claude-code-extras--link-session-into-project
+       session-id parent-cwd (car worktree)))
     (cl-letf (((symbol-function 'claude-code--prompt-for-instance-name)
                (lambda (_dir _existing _force)
-                 (format "fork-%s" (format-time-string "%H%M%S")))))
-      (claude-code--start nil
-                         (list "--resume" session-id "--fork-session")
-                         nil t))))
+                 (format "fork-%s" fork-id))))
+      (let ((default-directory (or (car worktree) default-directory)))
+        (claude-code--start nil
+                            (list "--resume" session-id "--fork-session")
+                            nil t)))
+    (when worktree
+      (message "Forked in worktree %s on branch %s"
+               (car worktree) (cdr worktree)))))
+
+(defun claude-code-extras--git-toplevel (&optional dir)
+  "Return git toplevel for DIR (or `default-directory'), or nil if none."
+  (let ((default-directory (or dir default-directory)))
+    (with-temp-buffer
+      (when (zerop (call-process "git" nil t nil
+                                 "rev-parse" "--show-toplevel"))
+        (file-name-as-directory (string-trim (buffer-string)))))))
+
+(defun claude-code-extras--make-fork-worktree (toplevel fork-id)
+  "Create a git worktree of TOPLEVEL identified by FORK-ID.
+Returns a cons (PATH . BRANCH-NAME).  Signals an error on failure."
+  (let* ((repo-name (file-name-nondirectory (directory-file-name toplevel)))
+         (branch-name (format "claude-fork-%s" fork-id))
+         (worktree-path (file-name-as-directory
+                         (expand-file-name
+                          (format "%s-fork-%s" repo-name fork-id)
+                          claude-code-extras-fork-worktree-directory))))
+    (make-directory claude-code-extras-fork-worktree-directory t)
+    (claude-code-extras--git-worktree-add toplevel branch-name worktree-path)
+    (cons worktree-path branch-name)))
+
+(defun claude-code-extras--git-worktree-add (toplevel branch-name worktree-path)
+  "Run `git worktree add' in TOPLEVEL for BRANCH-NAME at WORKTREE-PATH."
+  (let ((default-directory toplevel))
+    (with-temp-buffer
+      (let ((exit (call-process "git" nil t nil
+                                "worktree" "add" "-b" branch-name
+                                (directory-file-name worktree-path))))
+        (unless (zerop exit)
+          (error "git worktree add failed: %s"
+                 (string-trim (buffer-string))))))))
+
+(defun claude-code-extras--link-session-into-project (session-id source-cwd target-cwd)
+  "Symlink SESSION-ID's JSONL from SOURCE-CWD's project dir into TARGET-CWD's.
+Lets `--resume SESSION-ID' find the session when the CLI runs from
+TARGET-CWD instead of SOURCE-CWD, since Claude Code stores sessions
+under `~/.claude/projects/<encoded-cwd>/'."
+  (let* ((filename (concat session-id ".jsonl"))
+         (src (expand-file-name
+               filename
+               (claude-code-extras--project-dir-for source-cwd)))
+         (dst-dir (claude-code-extras--project-dir-for target-cwd))
+         (dst (expand-file-name filename dst-dir)))
+    (unless (file-exists-p src)
+      (error "Session JSONL not found: %s" src))
+    (make-directory dst-dir t)
+    (unless (file-exists-p dst)
+      (make-symbolic-link src dst))))
+
+(defun claude-code-extras--project-dir-for (cwd)
+  "Return the `~/.claude/projects/' directory that Claude Code uses for CWD."
+  (expand-file-name (claude-code-extras--encode-project-cwd cwd)
+                    "~/.claude/projects/"))
+
+(defun claude-code-extras--encode-project-cwd (path)
+  "Encode PATH the way Claude Code names dirs under `~/.claude/projects/'."
+  (replace-regexp-in-string
+   "[^A-Za-z0-9-]" "-"
+   (directory-file-name (expand-file-name path))))
 
 (defun claude-code-extras--current-session-id ()
   "Return the session ID of the current Claude buffer.

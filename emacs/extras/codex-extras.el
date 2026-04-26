@@ -147,15 +147,32 @@ Source: SVG Repo (CC0).")
 (defvar-local codex-extras--start-time nil
   "Time when this Codex session started.")
 
+(defvar codex-extras--config-model-cache nil
+  "Cached model lookup as (MTIME . MODEL) for `~/.codex/config.toml'.")
+
+(defun codex-extras--parse-config-model (config)
+  "Return the model string declared in CONFIG, or nil."
+  (with-temp-buffer
+    (insert-file-contents config)
+    (goto-char (point-min))
+    (when (re-search-forward "^model *= *\"\\([^\"]+\\)\"" nil t)
+      (match-string 1))))
+
 (defun codex-extras--read-config-model ()
-  "Read the model from `~/.codex/config.toml'."
-  (let ((config (expand-file-name "~/.codex/config.toml")))
-    (when (file-exists-p config)
-      (with-temp-buffer
-        (insert-file-contents config)
-        (goto-char (point-min))
-        (when (re-search-forward "^model *= *\"\\([^\"]+\\)\"" nil t)
-          (match-string 1))))))
+  "Read the model from `~/.codex/config.toml'.
+Cached by file modification time so the doom-modeline ai-session
+segment does not perform disk I/O on every redisplay."
+  (let* ((config (expand-file-name "~/.codex/config.toml"))
+         (mtime (file-attribute-modification-time (file-attributes config))))
+    (cond
+     ((null mtime) nil)
+     ((and codex-extras--config-model-cache
+           (equal mtime (car codex-extras--config-model-cache)))
+      (cdr codex-extras--config-model-cache))
+     (t
+      (let ((model (codex-extras--parse-config-model config)))
+        (setq codex-extras--config-model-cache (cons mtime model))
+        model)))))
 
 (defun codex-extras-set-modeline ()
   "Set the doom-modeline to the `ai-session' modeline for this buffer.

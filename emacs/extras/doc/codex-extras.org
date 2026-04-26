@@ -125,6 +125,18 @@ The LLM backend and model are configured via ~codex-extras-debug-backtrace-backe
 #+findex: codex-extras-setup-kill-on-exit
 The command ~codex-extras-setup-kill-on-exit~ wraps the process sentinel so that the buffer is automatically killed when the Codex process exits.  This is called automatically on session startup via ~codex-start-hook~.
 
+* Mode line integration
+:PROPERTIES:
+:CUSTOM_ID: h:mode-line-integration
+:END:
+
+#+findex: codex-extras-status-model
+#+findex: codex-extras-status-duration-ms
+The package provides helpers used by the =doom-modeline= =ai-session= segment.  ~codex-extras-status-model~ returns the model declared in =~/.codex/config.toml=, and ~codex-extras-status-duration-ms~ returns the running session's elapsed time in milliseconds (or ~nil~ outside a Codex session).
+
+#+vindex: codex-extras--config-model-cache
+The status helper caches the model lookup in ~codex-extras--config-model-cache~, keyed by the configuration file's modification time.  This avoids re-reading =~/.codex/config.toml= from disk on every modeline redraw — a hot path that is evaluated on every keystroke when a Codex buffer is current.  The cache invalidates automatically the next time the file is touched.
+
 * Transient menus
 :PROPERTIES:
 :CUSTOM_ID: h:transient-menus

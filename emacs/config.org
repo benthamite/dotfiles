@@ -1732,6 +1732,7 @@ CLOCK: [2021-02-25 Thu 14:53]--[2021-02-25 Thu 15:00] =>  0:07
   (magit-commit-ask-to-stage 'stage)
   (magit-clone-set-remote.pushDefault t)
   (magit-diff-refine-hunk 'all) ; show word-granularity differences in all diff hunks
+  (magit-show-long-lines-warning nil)
 
   :config
   (with-eval-after-load 'savehist

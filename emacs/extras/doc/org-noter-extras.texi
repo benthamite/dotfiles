@@ -139,12 +139,14 @@ It prompts you for a descriptive title for the annotation.
 @item
 It extracts the text content from the ``Contents'' subheading, running dehyphenation and filling the text to remove PDF line breaks.
 @item
-It replaces the generic heading with one in the format ``TITLE, p. N'', where N is the page number extracted from the original heading.
+It replaces the generic heading with the supplied title (without any page-number suffix).
 @item
 It wraps the extracted content in an Org quote block (@samp{#+begin_quote} @dots{} @samp{#+end_quote}).
+@item
+It appends a citation of the form @samp{[cite:@@KEY, p. N]} after the quote block, where @samp{KEY} is the bib key obtained from the inherited @samp{Custom_ID} property and @samp{N} is the page number extracted from the original heading.
 @end enumerate
 
-This command is intended to be called with point on a ``Highlight on page N'' heading or its ``Contents'' child heading.
+This command is intended to be called with point on a ``Highlight on page N'' heading or its ``Contents'' child heading. It signals an error if no @samp{Custom_ID} property can be found by inheritance.
 
 @node Merging annotations
 @section Merging annotations

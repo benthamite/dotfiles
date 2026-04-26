@@ -75,10 +75,11 @@ After running ~org-noter-create-skeleton~ to generate annotations from PDF highl
 2. It switches to the Org notes buffer.
 3. It prompts you for a descriptive title for the annotation.
 4. It extracts the text content from the "Contents" subheading, running dehyphenation and filling the text to remove PDF line breaks.
-5. It replaces the generic heading with one in the format "TITLE, p. N", where N is the page number extracted from the original heading.
+5. It replaces the generic heading with the supplied title (without any page-number suffix).
 6. It wraps the extracted content in an Org quote block (=#+begin_quote= ... =#+end_quote=).
+7. It appends a citation of the form =[cite:@KEY, p. N]= after the quote block, where =KEY= is the bib key obtained from the inherited =Custom_ID= property and =N= is the page number extracted from the original heading.
 
-This command is intended to be called with point on a "Highlight on page N" heading or its "Contents" child heading.
+This command is intended to be called with point on a "Highlight on page N" heading or its "Contents" child heading. It signals an error if no =Custom_ID= property can be found by inheritance.
 
 ** Merging annotations
 :PROPERTIES:

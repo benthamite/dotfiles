@@ -1,8 +1,8 @@
 #!/bin/bash
 # PreToolUse hook: block destructive shell commands that are hard to reverse.
 #
-# Enforces CLAUDE.md's "use trash instead of rm -rf" and "never push without
-# confirmation" instructions with code, not just prose.
+# Enforces CLAUDE.md's "use trash instead of rm -rf" instruction with code,
+# not just prose.
 #
 # Matcher: Bash
 
@@ -50,11 +50,6 @@ fi
 # --- git push --force / -f (dangerous to shared branches) ---
 if echo "$CMD" | grep -qE '\bgit\s+push\s+.*(-f|--force|--force-with-lease)\b'; then
   deny "git push --force detected" "Force-pushing can overwrite upstream history. Confirm with the user first."
-fi
-
-# --- git push (all pushes need user approval) ---
-if echo "$CMD" | grep -qE '\bgit\s+push\b'; then
-  ask "git push detected" "Pushes are visible to others. Confirm with the user first."
 fi
 
 # --- git clone (prevent cloning without approval) ---

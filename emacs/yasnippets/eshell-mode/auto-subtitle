@@ -3,4 +3,4 @@
 # key: as
 # contributor: Pablo Stafforini
 # --
-subsai "$1" --model-configs '{"model_type": "large"}' -tsl en$2 -ttl es$3
+whisperx "$1" --model large-v3 --language $2 --device cpu --compute_type int8 --batch_size 16 --threads 8 --output_format srt --output_dir ${3:.}

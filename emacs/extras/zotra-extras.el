@@ -203,8 +203,11 @@ DO-NOT-OPEN is non-nil, do not open the entry in Ebib after adding it."
 (autoload 'bibtex-extras-convert-titleaddon-to-journaltitle "bibtex-extras")
 (defun zotra-extras-after-add-process-bibtex ()
   "Process newly added bibtex entry."
-  ;; TODO: check that there are no unsaved changes in
-  ;; `zotra-extras-most-recent-bibfile'
+  (when-let* ((file zotra-extras-most-recent-bibfile)
+              (buf (find-buffer-visiting file))
+              ((not (eq buf (current-buffer))))
+              ((buffer-modified-p buf)))
+    (user-error "Bibfile %s has unsaved changes" file))
   (goto-char (point-max))
   (bibtex-extras-convert-titleaddon-to-journaltitle)
   (bibtex-set-field "timestamp" (format-time-string ebib-timestamp-format nil "GMT"))

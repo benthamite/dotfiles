@@ -148,7 +148,7 @@ The function ~zotra-extras-open-in-ebib~ handles the workflow of opening a newly
 
 #+findex: zotra-extras-after-add-process-bibtex
 #+findex: zotra-extras-fix-octal-sequences
-The function ~zotra-extras-after-add-process-bibtex~ performs several cleanup steps on a newly added BibTeX entry in the current buffer. It converts =titleaddon= fields to =journaltitle=, sets a =timestamp= field using the =ebib= timestamp format, fixes octal encoding sequences, cleans the entry using ~org-ref-clean-bibtex-entry~, replaces EAF URLs via ~tlon-cleanup-eaf-replace-urls~, and records the entry key in ~zotra-extras-most-recent-bibkey~.
+The function ~zotra-extras-after-add-process-bibtex~ performs several cleanup steps on a newly added BibTeX entry in the current buffer. It first signals an error if another buffer is visiting ~zotra-extras-most-recent-bibfile~ with unsaved changes, to prevent corrupting that work. It then converts =titleaddon= fields to =journaltitle=, sets a =timestamp= field using the =ebib= timestamp format, fixes octal encoding sequences, cleans the entry using ~org-ref-clean-bibtex-entry~, replaces EAF URLs via ~tlon-cleanup-eaf-replace-urls~, and records the entry key in ~zotra-extras-most-recent-bibkey~.
 
 The function ~zotra-extras-fix-octal-sequences~ addresses a specific issue where Zotero-imported BibTeX entries contain octal escape sequences (such as =\302\267= for a middle dot) that Emacs does not decode automatically. The function iterates over a range of possible octal sequences and replaces each one with its corresponding UTF-8 character.
 

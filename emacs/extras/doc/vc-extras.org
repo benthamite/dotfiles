@@ -84,7 +84,8 @@ The user option ~vc-extras-profiles~ defines a list of GitHub profiles.
 Each profile is a property list with three keys: ~:name~ (a symbol like
 ~personal~ or ~work~), ~:account~ (the GitHub username string), and
 ~:dir~ (the local directory path for repositories belonging to that
-account).
+account). The Customize interface renders one editable field per key,
+making the schema explicit when adding a new profile.
 
 The profile system drives most of the package's behavior.  When cloning
 a repository, the account determines the target directory.  When

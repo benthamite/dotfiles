@@ -1,7 +1,7 @@
 ---
 name: security-audit
-description: Audit development environment security posture — secrets hygiene, supply chain, machine hardening, and Claude Code attack surface. Use when the user wants to check their security setup, after reading about new threats, or periodically.
-argument-hint: [--secrets] [--deps] [--machine] [--claude] [dir]
+description: "Scan for exposed API keys and leaked credentials, audit dependency vulnerabilities, review macOS hardening settings, and evaluate Claude Code configuration risks. Use when the user wants a security review, vulnerability scan, dependency audit, secrets check, or periodic security posture assessment."
+argument-hint: "[--secrets] [--deps] [--machine] [--claude] [dir]"
 ---
 
 # Security audit

@@ -3,4 +3,4 @@
 # key: as
 # contributor: Pablo Stafforini
 # --
-auto-subtitle "$1" ${2:lang} ${3:$$(if (yas-field-value 1) (file-name-directory (yas-field-value 1)) ".")}
+auto-subtitle "$1" ${2:lang} ${3:}${3:$(or (and (yas-field-value 1) (file-name-directory (yas-field-value 1))) ".")}

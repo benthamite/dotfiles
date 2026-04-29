@@ -71,8 +71,9 @@
 	   :account ,vc-extras-github-account-work
 	   :dir ,paths-dir-tlon-repos))
   "A list of GitHub profiles and their corresponding directories."
-  ;; TODO: define type correctly
-  :type '(alist :key-type symbol :value-type (alist :key-type symbol :value-type string))
+  :type '(repeat (list (const :name) symbol
+		       (const :account) string
+		       (const :dir) directory))
   :group 'vc-extras)
 
 (defcustom vc-extras-split-repo 'prompt

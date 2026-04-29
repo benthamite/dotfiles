@@ -137,7 +137,8 @@ The user option @code{vc-extras-profiles} defines a list of GitHub profiles.
 Each profile is a property list with three keys: @code{:name} (a symbol like
 @code{personal} or @code{work}), @code{:account} (the GitHub username string), and
 @code{:dir} (the local directory path for repositories belonging to that
-account).
+account). The Customize interface renders one editable field per key,
+making the schema explicit when adding a new profile.
 
 The profile system drives most of the package's behavior.  When cloning
 a repository, the account determines the target directory.  When
@@ -218,8 +219,10 @@ Optionally prompts to add the repository to Forge (via
 non-@code{nil}.
 @end enumerate
 
-With a prefix argument, the command prompts for the parent directory
-instead of using the account's default directory.
+With a prefix argument, the command prompts for the target clone
+directory.  The choices include the account's default directory, the
+current elpaca sources directory (if available), and an option to
+select any other directory.
 
 The clone runs asynchronously and reports progress via messages.
 
@@ -246,8 +249,9 @@ Renames the repository on GitHub via the @samp{gh} API@.
 Updates the Git remote URL in the local configuration.
 @end enumerate
 
-If any step fails (e.g., the remote rename returns an error), the
-command reports a warning but continues with the remaining steps.
+Repository name arguments are shell-quoted when passed to @samp{gh} and @samp{git}
+commands.  If any step fails (e.g., the remote rename returns an error),
+the command reports a warning but continues with the remaining steps.
 
 @node Deleting local repositories
 @section Deleting local repositories
@@ -322,7 +326,10 @@ checking authentication status.
 @findex vc-extras-resolve-repo-dir
 @findex vc-extras-list-local-candidates
 The function @code{vc-extras-is-git-dir-p} returns non-@code{nil} if a directory
-is recognized as a Git repository by @code{vc-responsible-backend}.
+is a Git repository.  It uses @code{locate-dominating-file} to check for a
+@samp{.git} entry, which correctly handles both regular @samp{.git} directories
+and @samp{gitdir:} pointer files created by @code{vc-extras-split-local-repo}
+(@ref{Splitting the git directory}).
 
 The function @code{vc-extras-has-submodules-p} checks whether a @samp{.gitmodules}
 file exists in a directory, indicating that the repository has

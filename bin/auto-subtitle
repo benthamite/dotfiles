@@ -1,0 +1,33 @@
+#!/bin/bash
+# auto-subtitle: transcribe a video with WhisperX (Apple Silicon CPU/int8)
+# and tighten the resulting SRT for movie-style subtitles.
+#
+# Usage: auto-subtitle VIDEO LANG [OUTPUT_DIR]
+#   VIDEO       path to a video/audio file
+#   LANG        Whisper language code (e.g. fr, es, de)
+#   OUTPUT_DIR  where to write SRT (default: directory of VIDEO)
+
+set -euo pipefail
+
+if [[ $# -lt 2 || $# -gt 3 ]]; then
+  echo "Usage: auto-subtitle VIDEO LANG [OUTPUT_DIR]" >&2
+  exit 2
+fi
+
+VIDEO="$1"
+LANG="$2"
+OUT_DIR="${3:-$(dirname "$VIDEO")}"
+
+whisperx "$VIDEO" \
+  --model large-v3 \
+  --language "$LANG" \
+  --device cpu \
+  --compute_type int8 \
+  --batch_size 16 \
+  --threads 8 \
+  --output_format srt \
+  --output_dir "$OUT_DIR"
+
+BASE=$(basename "$VIDEO")
+BASE="${BASE%.*}"
+srt-tighten "$OUT_DIR/$BASE.srt"

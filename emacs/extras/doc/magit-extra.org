@@ -142,7 +142,7 @@ Both suffixes accept the standard ~magit-submodule-arguments~ for the =--recursi
 #+findex: magit-extras-midnight-update
 The function ~magit-extras-parse-url~ converts a Git remote URL in SSH format (e.g., =git@github.com:user/repo.git=) into an HTTPS URL. It passes HTTP URLs through unchanged.
 
-The function ~magit-extras-get-commit-file~ extracts the name of the first file listed under "Changes to be committed" in the current buffer. It accepts an optional PATH argument: ~'full~ returns the absolute path, ~'sans-dir~ returns only the filename, and ~nil~ (the default) returns the path relative to the repository root.
+The function ~magit-extras-get-commit-file~ returns the first staged file in the current repository, querying =git= via ~magit-staged-files~. It accepts an optional PATH argument: ~'full~ returns the absolute path, ~'sans-dir~ returns only the filename, and ~nil~ (the default) returns the path relative to the repository root.
 
 The function ~magit-extras-get-commit-heading~ retrieves the Org mode heading associated with the code being committed. It parses the diff in the commit buffer to find the first changed line number, visits the file at that line, and returns the enclosing heading via ~org-entry-get~. This is useful for generating commit messages from Org structure.
 

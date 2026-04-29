@@ -370,7 +370,7 @@ The command @code{ebib-extras-set-rating} prompts for a rating (1--10, where pre
 @item
 For books, it opens Goodreads with the entry's title.
 @item
-For films, it opens the entry's stored IMDb URL (or searches IMDb if no URL is stored) and opens Letterboxd (using a stored slug or fetching one via @code{bib-search-letterboxd}). If a Letterboxd slug is fetched, it is stored in the @samp{letterboxd} field for future use.
+For films, it opens the entry's stored IMDb URL (or searches IMDb if no URL is stored) and opens Letterboxd (using a stored slug or fetching one via @code{bib-search-letterboxd}). If a Letterboxd slug is fetched, it is stored in the @samp{letterboxd} field for future use. The slug is always a bare identifier (e.g. @samp{hamnet-2025}), never a full URL@.
 @end itemize
 
 Pressing @samp{RET} without entering a digit skips the rating without modifying the field.
@@ -690,7 +690,7 @@ The function @code{ebib-extras-get-field} is a convenience wrapper around @code{
 
 The function @code{ebib-extras-set-field} sets the value of FIELD to VALUE for the entry at point. It preserves the bracing status of the original field contents and updates the entry buffer display afterward.
 
-The function @code{ebib-extras-update-entry-buffer} refreshes the Ebib entry buffer display after field modifications. It calls @code{ebib--update-entry-buffer}, clears the buffer's modified flag, and marks the database as modified.
+The function @code{ebib-extras-update-entry-buffer} refreshes the Ebib entry buffer display after field modifications. It calls @code{ebib--update-entry-buffer}, clears the buffer's modified flag, and marks the database as modified, all wrapped in @code{save-excursion} so point is preserved.
 
 @node Database utilities
 @section Database utilities

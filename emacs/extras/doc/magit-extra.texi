@@ -54,6 +54,7 @@ Repository maintenance
 Functions
 
 * URL and file helpers::
+* Reverting stale buffers::
 
 Indices
 
@@ -178,6 +179,7 @@ Both suffixes accept the standard @code{magit-submodule-arguments} for the @samp
 
 @menu
 * URL and file helpers::
+* Reverting stale buffers::
 @end menu
 
 @node URL and file helpers
@@ -192,13 +194,36 @@ Both suffixes accept the standard @code{magit-submodule-arguments} for the @samp
 @findex magit-extras-midnight-update
 The function @code{magit-extras-parse-url} converts a Git remote URL in SSH format (e.g., @samp{git@@github.com:user/repo.git}) into an HTTPS URL@. It passes HTTP URLs through unchanged.
 
-The function @code{magit-extras-get-commit-file} extracts the name of the first file listed under ``Changes to be committed'' in the current buffer. It accepts an optional PATH argument: @code{'full} returns the absolute path, @code{'sans-dir} returns only the filename, and @code{nil} (the default) returns the path relative to the repository root.
+The function @code{magit-extras-get-commit-file} returns the first staged file in the current repository, querying @samp{git} via @code{magit-staged-files}. It accepts an optional PATH argument: @code{'full} returns the absolute path, @code{'sans-dir} returns only the filename, and @code{nil} (the default) returns the path relative to the repository root.
 
-The function @code{magit-extras-get-commit-heading} retrieves the Org mode heading associated with the code being committed. It uses @code{magit-extras-get-commit-file} to find the file, visits it in the previous window, and extracts the heading via @code{org-entry-get}. This is useful for generating commit messages from Org structure.
+The function @code{magit-extras-get-commit-heading} retrieves the Org mode heading associated with the code being committed. It parses the diff in the commit buffer to find the first changed line number, visits the file at that line, and returns the enclosing heading via @code{org-entry-get}. This is useful for generating commit messages from Org structure.
 
 The function @code{magit-extras-get-unstaged-files} returns a list of unstaged file names using @samp{git diff --name-only --diff-filter=d}. The function @code{magit-extras-track-file} stages a single file with @samp{git add}. The function @code{magit-extras-move-point-to-start} moves point to the beginning of the buffer after a brief delay, which can be useful in Magit hooks.
 
-The function @code{magit-extras-midnight-update} performs a stage-commit-push cycle in the given DIRECTORY with the commit message ``Midnight update''. It is called by @code{magit-extras-stage-commit-and-push-all-repos} (@ref{Stage commit and push, , Stage@comma{} commit@comma{} and push}).
+The function @code{magit-extras-midnight-update} performs a stage-commit-push
+cycle in the given DIRECTORY with the commit message ``Midnight update''.
+Before staging, it calls @code{magit-extras-revert-clean-buffers-in-directory}
+to refresh stale Emacs buffers, preventing on-disk changes made by
+external tools from being overwritten (@ref{Reverting stale buffers}).
+It is called by @code{magit-extras-stage-commit-and-push-all-repos}
+(@ref{Stage commit and push, , Stage@comma{} commit@comma{} and push}).
+
+@node Reverting stale buffers
+@section Reverting stale buffers
+
+@findex magit-extras-revert-clean-buffers-in-directory
+The function @code{magit-extras-revert-clean-buffers-in-directory} reverts
+all unmodified file-visiting buffers whose files reside under
+DIRECTORY@.  A buffer is reverted only when its file still exists on
+disk and the buffer has no unsaved edits.  This ensures that external
+modifications---from scripts, command-line tools, or other
+processes---are picked up by Emacs before a commit.
+
+This function is called automatically by @code{magit-extras-midnight-update}
+before staging.  Without it, the @code{files-extras-save-all-buffers} step
+(which runs earlier in the @code{midnight-hook}) could overwrite on-disk
+changes with stale buffer contents, silently deleting work done
+outside Emacs.
 
 @node Indices
 @chapter Indices

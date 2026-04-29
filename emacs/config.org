@@ -10878,11 +10878,6 @@ CLOCK: [2023-02-26 Sun 13:15]--[2023-02-26 Sun 13:28] =>  0:13
   ("A-j" . org-journal-new-entry-in-journal))
 #+end_src
 
-*** TODO [#5] Explore how to use org journal as the day organizer
-:PROPERTIES:
-:ID:       67333293-EE6D-4936-8C88-07F5AE193B81
-:END:
-
 ** =org-contacts=
 :PROPERTIES:
 :ID:       63430292-5227-42B5-ABDC-4630C719E9D1

@@ -450,11 +450,6 @@ CLOCK: [2023-12-01 Fri 21:37]--[2023-12-01 Fri 21:50] =>  0:13
   :custom (async-email-sending-use-async-send-mail t))
 #+end_src
 
-*** TODO [#5] Open issue
-:PROPERTIES:
-:ID:       C1790096-C90A-4C28-9257-34223AC4341C
-:END:
-
 ** fancy-battery
 :PROPERTIES:
 :ID:       DDFE34BA-7C23-459E-B4E2-2957D2535700
@@ -1597,7 +1592,6 @@ CLOCK: [2021-04-03 Sat 17:59]--[2021-04-03 Sat 18:15] =>  0:16
     (setq twittering-timeline-data-table (make-hash-table :test 'equal))
     (twit))
 
-    ;; TODO: create macro for this
   (defun ps/twittering-ea-news ()
     "Start a `twittering-mode' session with the `ea_dot_news' account."
     (interactive)

@@ -540,7 +540,7 @@ The function ~ebib-extras-get-field~ is a convenience wrapper around ~ebib-get-f
 
 The function ~ebib-extras-set-field~ sets the value of FIELD to VALUE for the entry at point. It preserves the bracing status of the original field contents and updates the entry buffer display afterward.
 
-The function ~ebib-extras-update-entry-buffer~ refreshes the Ebib entry buffer display after field modifications. It calls ~ebib--update-entry-buffer~, clears the buffer's modified flag, and marks the database as modified.
+The function ~ebib-extras-update-entry-buffer~ refreshes the Ebib entry buffer display after field modifications. It calls ~ebib--update-entry-buffer~, clears the buffer's modified flag, and marks the database as modified, all wrapped in ~save-excursion~ so point is preserved.
 
 ** Database utilities
 :PROPERTIES:

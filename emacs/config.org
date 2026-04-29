@@ -12198,7 +12198,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
   :defer t
   :custom
   (zotra-use-curl nil)
-  (zotra-url-retrieve-timeout 15)
+  (zotra-url-retrieve-timeout 60)
   (zotra-default-entry-format "biblatex")
   (zotra-download-attachment-default-directory paths-dir-downloads)
   (zotra-backend 'zotra-server)

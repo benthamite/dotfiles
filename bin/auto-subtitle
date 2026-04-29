@@ -18,6 +18,9 @@ VIDEO="$1"
 LANG="$2"
 OUT_DIR="${3:-$(dirname "$VIDEO")}"
 
+# Drop two known-harmless stderr warnings: ObjC duplicate-class noise from
+# PyAV's bundled ffmpeg colliding with Homebrew ffmpeg, and Lightning's
+# checkpoint-format upgrade notice.
 whisperx "$VIDEO" \
   --model large-v3 \
   --language "$LANG" \
@@ -26,7 +29,8 @@ whisperx "$VIDEO" \
   --batch_size 16 \
   --threads 8 \
   --output_format srt \
-  --output_dir "$OUT_DIR"
+  --output_dir "$OUT_DIR" \
+  2> >(grep -v -E '^objc\[[0-9]+\]: |Lightning automatically upgraded' >&2)
 
 BASE=$(basename "$VIDEO")
 BASE="${BASE%.*}"

@@ -1,8 +1,8 @@
-model = "gpt-5.4"
+model = "gpt-5.5"
 model_reasoning_effort = "xhigh"
 project_doc_fallback_filenames = ["CLAUDE.md"]
 approval_policy = "never"
-sandbox_mode = "workspace-write"
+sandbox_mode = "danger-full-access"
 
 [features]
 codex_hooks = true
@@ -73,6 +73,12 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/My Drive/repos/airbnb-pricing"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/repos/tangodb"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/dotfiles/codex"]
 trust_level = "trusted"
 
 [tui]

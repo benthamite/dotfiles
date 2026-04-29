@@ -782,6 +782,8 @@ FILE is the path to the file.  KEY is the BibTeX key string."
   (ebib-extras-attach-file file key)
   (message "Attached `%s' to %s" file key))
 
+;; TODO: Ensure `ebib-extras-set-abstract' works correctly for TARGET-KEY if
+;; it's not the currently displayed Ebib entry.
 (defun ebib-extras-attach-files (&optional key)
   "Attach files appropriate for the entry with KEY (DWIM).
 If KEY is nil, use the entry at point.  If a file is already
@@ -793,9 +795,7 @@ available identifiers and entry type:
 - Video URL: Uses `ebib-extras-url-to-srt-attach' (for subtitles).
 - Online or article type with URL: Uses `ebib-extras-url-to-pdf-attach' and
   `ebib-extras-url-to-html-attach'.
-KEY is an optional BibTeX key string, passed interactively as nil.
-;; TODO: Ensure `ebib-extras-set-abstract' works correctly for TARGET-KEY if
-;; it's not the currently displayed Ebib entry."
+KEY is an optional BibTeX key string, passed interactively as nil."
   (interactive (list nil))
   (let ((target-key (or key (ebib--get-key-at-point))))
     (cl-destructuring-bind (doi url isbn type file)
@@ -1422,12 +1422,12 @@ If applicable, open external website to set rating there as well."
       (ebib-set-field-value "rating" rating (ebib--get-key-at-point) ebib--cur-db 'overwrite))
     (ebib-extras-update-entry-buffer db)))
 
-;; TODO: find way to do this without moving point
 (defun ebib-extras-update-entry-buffer (db)
   "Update the entry buffer with the current entry in DB."
-  (ebib--update-entry-buffer)
-  (set-buffer-modified-p nil)
-  (ebib--set-modified t db t nil))
+  (save-excursion
+    (ebib--update-entry-buffer)
+    (set-buffer-modified-p nil)
+    (ebib--set-modified t db t nil)))
 
 (defun ebib-extras-choose-rating ()
   "Prompt for a rating from 1 to 10 and return it, or nil if skipped.

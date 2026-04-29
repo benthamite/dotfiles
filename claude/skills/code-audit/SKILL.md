@@ -1,7 +1,7 @@
 ---
 name: code-audit
-description: Audit code for bugs, security issues, error handling gaps, and correctness problems. Use when the user wants to find actual defects rather than readability issues.
-argument-hint: [--accept] [dir]
+description: "Audit code for bugs, security vulnerabilities, error handling gaps, and correctness problems. Checks for logic errors, race conditions, injection flaws, resource leaks, and data integrity issues. Use when the user wants to find actual defects, review code for bugs, or run a vulnerability check — not for readability or style issues."
+argument-hint: "[--accept] [dir]"
 argument-choices: "--accept"
 ---
 

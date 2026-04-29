@@ -1,6 +1,6 @@
 ---
 name: pr-audit
-description: Verify a PR before submitting or after revising it. Runs compilation, tests, commit review, and diff checks to catch problems before a maintainer sees them. Use before pushing a new PR or after force-pushing revisions.
+description: "Verify a pull request before submitting or after revising it. Runs compilation, tests, commit review, and diff checks to catch problems before a maintainer sees them. Use when the user wants to validate a PR, run pre-submit checks, review before pushing, or verify after force-pushing revisions."
 ---
 
 # PR verification

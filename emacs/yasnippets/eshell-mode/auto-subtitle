@@ -3,4 +3,4 @@
 # key: as
 # contributor: Pablo Stafforini
 # --
-whisperx "$1" --model large-v3 --language $2 --device cpu --compute_type int8 --batch_size 16 --threads 8 --output_format srt --output_dir ${3:.}
+auto-subtitle "$1" ${2:fr} ${3:$(if (yas-field-value 1) (file-name-directory (yas-field-value 1)) ".")}

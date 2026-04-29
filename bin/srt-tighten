@@ -1,0 +1,152 @@
+#!/usr/bin/env python3
+"""
+Post-process a Whisper/WhisperX SRT to fix two common problems:
+
+1. Captions that are too dense (3+ wrapped lines) — split into multiple
+   captions of at most MAX_LINES wrapped lines, distributing the original
+   time interval proportionally to chunk length.
+
+2. Captions that linger across long silences — cap each caption's end at
+   start + max(MIN_DUR, min(MAX_DUR, len(text)/CPS)). This uses standard
+   subtitle reading-speed conventions instead of the next-segment start.
+
+Also strips junk segments that contain no real text (e.g. "... ... ...").
+
+Usage:
+    srt-tighten FILE.srt              # in-place; backs original up to FILE.original.srt
+    srt-tighten INPUT.srt OUTPUT.srt  # explicit input/output
+"""
+
+import re
+import sys
+
+CPS = 17                # reading speed, chars/second (Netflix adult standard)
+MIN_DUR = 1.0           # seconds
+MAX_DUR = 7.0           # seconds
+MAX_LINE_WIDTH = 42     # chars per line
+MAX_LINES = 2           # lines per caption
+
+
+def parse_time(t):
+    h, m, s_ms = t.split(":")
+    s, ms = s_ms.split(",")
+    return int(h) * 3600 + int(m) * 60 + int(s) + int(ms) / 1000.0
+
+
+def fmt_time(t):
+    if t < 0:
+        t = 0
+    h = int(t // 3600)
+    m = int((t % 3600) // 60)
+    s = int(t % 60)
+    ms = int(round((t - int(t)) * 1000))
+    if ms == 1000:
+        ms = 0
+        s += 1
+    return f"{h:02d}:{m:02d}:{s:02d},{ms:03d}"
+
+
+def wrap_lines(text, width=MAX_LINE_WIDTH):
+    """Greedy word wrap to width."""
+    words = text.split()
+    lines, cur = [], ""
+    for w in words:
+        if not cur:
+            cur = w
+        elif len(cur) + 1 + len(w) <= width:
+            cur += " " + w
+        else:
+            lines.append(cur)
+            cur = w
+    if cur:
+        lines.append(cur)
+    return lines
+
+
+def group_into_captions(text, max_lines=MAX_LINES, width=MAX_LINE_WIDTH):
+    """Wrap text to `width`-char lines, then group into batches of at most
+    `max_lines` lines. Each batch becomes one caption (no words dropped)."""
+    lines = wrap_lines(text, width)
+    if not lines:
+        return []
+    return [lines[i : i + max_lines] for i in range(0, len(lines), max_lines)]
+
+
+def parse_srt(content):
+    blocks = re.split(r"\n\s*\n", content.strip())
+    entries = []
+    for block in blocks:
+        lines = [ln for ln in block.strip().splitlines() if ln.strip()]
+        if len(lines) < 3:
+            continue
+        m = re.match(r"(\S+)\s+-->\s+(\S+)", lines[1])
+        if not m:
+            continue
+        text = " ".join(lines[2:]).strip()
+        entries.append((parse_time(m.group(1)), parse_time(m.group(2)), text))
+    return entries
+
+
+def is_junk(text):
+    return not re.search(r"[A-Za-zÀ-ſЀ-ӿ]", text)
+
+
+def process(entries):
+    out = []
+    for start, end, text in entries:
+        if is_junk(text):
+            continue
+        groups = group_into_captions(text)
+        if not groups:
+            continue
+        group_chars = [sum(len(l) for l in g) for g in groups]
+        total = sum(group_chars) or 1
+        duration = max(0.0, end - start)
+        t = start
+        for g_lines, g_chars in zip(groups, group_chars):
+            share = duration * (g_chars / total)
+            chunk_end = t + share
+            desired = max(MIN_DUR, min(MAX_DUR, g_chars / CPS))
+            chunk_end = min(chunk_end, t + desired)
+            chunk_end = max(chunk_end, t + MIN_DUR)
+            out.append((t, chunk_end, "\n".join(g_lines)))
+            t += share
+    # Ensure non-overlap with next entry
+    for i in range(len(out) - 1):
+        s, e, c = out[i]
+        ns = out[i + 1][0]
+        if e > ns:
+            out[i] = (s, max(s + MIN_DUR, ns - 0.05), c)
+    return out
+
+
+def write_srt(entries, path):
+    with open(path, "w", encoding="utf-8") as f:
+        for i, (s, e, text) in enumerate(entries, 1):
+            f.write(f"{i}\n{fmt_time(s)} --> {fmt_time(e)}\n{text}\n\n")
+
+
+def main():
+    import os
+    args = sys.argv[1:]
+    if len(args) == 1:
+        src = args[0]
+        backup = src.removesuffix(".srt") + ".original.srt"
+        if not os.path.exists(backup):
+            os.rename(src, backup)
+        in_path, out_path = backup, src
+    elif len(args) == 2:
+        in_path, out_path = args
+    else:
+        print(__doc__, file=sys.stderr)
+        sys.exit(2)
+    with open(in_path, encoding="utf-8") as f:
+        content = f.read()
+    entries = parse_srt(content)
+    fixed = process(entries)
+    write_srt(fixed, out_path)
+    print(f"{in_path}: {len(entries)} captions in -> {len(fixed)} captions out -> {out_path}")
+
+
+if __name__ == "__main__":
+    main()

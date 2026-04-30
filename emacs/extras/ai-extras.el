@@ -196,8 +196,19 @@ these sessions from `ai-extras-waiting' (truly idle)."
 (defconst ai-extras--home-row-keys '("a" "s" "d" "f" "j" "k" "l" ";")
   "Home row keys assigned to AI sessions, in allocation order.")
 
+(defconst ai-extras--fallback-keys
+  '("g" "h" "q" "r" "t" "y" "u" "i" "o" "p"
+    "z" "x" "c" "v" "b" "n" "m")
+  "Fallback keys used when home-row keys are exhausted.
+Excludes \"w\" and \"e\", which are reserved for actions in
+`ai-extras--session-switcher'.")
+
+(defconst ai-extras--session-key-pool
+  (append ai-extras--home-row-keys ai-extras--fallback-keys)
+  "Full pool of keys for AI session assignment, home row first.")
+
 (defvar ai-extras--session-keys (make-hash-table :test 'eq)
-  "Map from live AI session buffer to its assigned home-row key.")
+  "Map from live AI session buffer to its assigned key.")
 
 (defvar-local ai-extras--display-name-cache nil
   "Cached display name for the modeline.")
@@ -248,32 +259,32 @@ and cleared when input is sent.")
       (remhash buf ai-extras--session-keys))))
 
 (defun ai-extras--assign-session-key ()
-  "Assign a home-row key to the current AI session buffer."
+  "Assign a key from `ai-extras--session-key-pool' to the current buffer."
   (when (ai-extras--detect-backend (current-buffer))
     (unless (gethash (current-buffer) ai-extras--session-keys)
       (ai-extras--purge-dead-session-keys)
       (let ((used (hash-table-values ai-extras--session-keys)))
         (when-let* ((key (cl-find-if (lambda (k) (not (member k used)))
-                                      ai-extras--home-row-keys)))
+                                      ai-extras--session-key-pool)))
           (puthash (current-buffer) key ai-extras--session-keys))))))
 
 (defun ai-extras--release-session-key ()
-  "Release the home-row key for the current buffer."
+  "Release the session key for the current buffer."
   (remhash (current-buffer) ai-extras--session-keys))
 
 (defun ai-extras--ensure-all-session-keys ()
-  "Ensure every active AI session buffer has a home-row key."
+  "Ensure every active AI session buffer has a session key."
   (ai-extras--purge-dead-session-keys)
   (dolist (buf (ai-extras--find-all-buffers))
     (unless (gethash buf ai-extras--session-keys)
       (let ((used (hash-table-values ai-extras--session-keys)))
         (when-let* ((key (cl-find-if (lambda (k) (not (member k used)))
-                                      ai-extras--home-row-keys)))
+                                      ai-extras--session-key-pool)))
           (puthash buf key ai-extras--session-keys))))))
 
-(defun ai-extras--home-row-key-index (key)
-  "Return the index of KEY in `ai-extras--home-row-keys'."
-  (or (cl-position key ai-extras--home-row-keys :test #'string=) 99))
+(defun ai-extras--session-key-index (key)
+  "Return the index of KEY in `ai-extras--session-key-pool'."
+  (or (cl-position key ai-extras--session-key-pool :test #'string=) 99))
 
 ;;;; Display names
 
@@ -425,15 +436,15 @@ otherwise."
 
 (defun ai-extras--hash-to-sorted-alist (groups)
   "Convert GROUPS hash table to an alist sorted by key.
-Each value's suffix specs are sorted by home-row key index."
+Each value's suffix specs are sorted by session-key pool index."
   (let (alist)
     (maphash
      (lambda (group-key specs)
        (push (cons group-key
                    (sort specs
                          (lambda (a b)
-                           (< (ai-extras--home-row-key-index (car a))
-                              (ai-extras--home-row-key-index (car b))))))
+                           (< (ai-extras--session-key-index (car a))
+                              (ai-extras--session-key-index (car b))))))
              alist))
      groups)
     (sort alist (lambda (a b) (string< (car a) (car b))))))

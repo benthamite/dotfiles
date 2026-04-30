@@ -21,27 +21,39 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 The package provides four categories of functionality:
 
-- *Re-entrancy guard.* Advice that prevents nested =org-gcal= operations from firing when timers re-enter during synchronous waits, avoiding a deadlock that freezes Emacs ([[#h:reentrancy-guard][Re-entrancy guard]]).
+- *Re-entrancy and prompt guards.* Advice that prevents nested =org-gcal= operations from firing when timers re-enter during synchronous waits, blocks concurrent top-level syncs, and suppresses =org-read-date= prompts that would otherwise stall the deferred chain on entries with missing dates ([[#h:reentrancy-guard][Re-entrancy and prompt guards]]).
 - *Commands.* A command to open the Google Calendar event at point in a web browser, and a transient menu that groups all common =org-gcal= operations into a single dispatch interface ([[#h:commands][Commands]]).
 - *Compatibility fixes.* Advice that prevents ~track-changes~ assertion failures and stale org-element cache errors during asynchronous synchronization on Emacs 30 and later ([[#h:compatibility-fixes][Compatibility fixes]]).
 - *Patched synchronization behavior.* =el-patch= modifications that change how =org-gcal= reads and writes event data: using =DEADLINE= instead of =SCHEDULED=, placing descriptions in the heading body, and removing the =:org-gcal:= drawer ([[#h:patched-functions][Patched functions]]).
 
 The package depends on =org-gcal=, =el-patch=, and =transient=.
 
-* Re-entrancy guard
+* Re-entrancy and prompt guards
 :PROPERTIES:
 :CUSTOM_ID: h:reentrancy-guard
 :END:
 
-#+vindex: org-gcal-extras--sync-active
-#+findex: org-gcal-extras--prevent-reentrant-sync
 Several =org-gcal= operations block the main thread while waiting for network I/O or GPG decryption (via ~aio-wait-for~, ~url-retrieve-synchronously~, or ~epg-wait-for-completion~). During these waits, ~accept-process-output~ services the event loop, which allows pending timers to fire. If another =org-gcal= operation is scheduled on a timer (for example via ~midnight-hook~), it re-enters and triggers its own OAuth2 token refresh and GPG decryption. This nesting can repeat multiple levels deep.
 
 The deadlock occurs when ~oauth2-auto--plstore-write~ calls ~plstore-save~, which calls ~basic-save-buffer~. If the plstore buffer's state causes ~basic-save-buffer~ to prompt for a filename, it opens a native macOS save dialog (~NSSavePanel~) that blocks the entire event loop. While that dialog waits for user input, further nested timer entries stack up behind it, and Emacs becomes unresponsive.
 
-The variable ~org-gcal-extras--sync-active~ acts as a re-entrancy flag. The function ~org-gcal-extras--prevent-reentrant-sync~ wraps all public =org-gcal= entry points (~org-gcal-sync~, ~org-gcal-fetch~, ~org-gcal-sync-buffer~, ~org-gcal-fetch-buffer~, ~org-gcal-post-at-point~, and ~org-gcal-delete-at-point~) with =:around= advice. When any of these functions is already executing, subsequent calls from re-entrant timers are silently suppressed.
+A second class of bug appears when =org-gcal-sync='s deferred chain reaches an entry with missing or unparseable date information. Inside ~org-gcal-post-at-point~, the chain falls into a branch that calls ~org-read-date~ to ask the user. Because the chain is running on a timer (not on a user keypress), the prompt blocks the chain and lets other timers (e.g.~display-time~) fire reentrantly, producing spurious "Timer already activated" errors.
 
-This is the same pattern used by ~forge-extras--prevent-reentrant-query~ to protect =forge= from the identical class of freeze.
+The package addresses both classes with three layers of guards:
+
+#+vindex: org-gcal-extras--sync-active
+#+findex: org-gcal-extras--prevent-reentrant-sync
+*Inner guard (synchronous re-entrancy).* The variable ~org-gcal-extras--sync-active~ is ~let~-bound by ~org-gcal-extras--prevent-reentrant-sync~ around all public =org-gcal= entry points (~org-gcal-sync~, ~org-gcal-fetch~, ~org-gcal-sync-buffer~, ~org-gcal-fetch-buffer~, ~org-gcal-post-at-point~, and ~org-gcal-delete-at-point~). It catches re-entrant calls that fire during the synchronous portion of an ~org-gcal-*~ call (e.g. a timer that fires inside ~accept-process-output~). Subsequent calls during the same synchronous window are silently suppressed.
+
+#+vindex: org-gcal-extras--sync-chain-active
+#+findex: org-gcal-extras--prevent-concurrent-sync
+#+findex: org-gcal-extras--reset-sync-chain
+*Outer guard (chain-spanning).* The variable ~org-gcal-extras--sync-chain-active~ is set with ~setq~ by ~org-gcal-extras--prevent-concurrent-sync~ at the moment a top-level entry point is invoked, and is held until the deferred chain settles (success or error). It is applied only to top-level sync entry points (~org-gcal-sync~, ~org-gcal-fetch~, ~org-gcal-sync-buffer~, ~org-gcal-fetch-buffer~), so that internal calls within the chain --- such as the per-entry ~org-gcal-post-at-point~ that =org-gcal= itself issues at =org-gcal.el:781= --- are not blocked. A concurrent attempt to start a top-level sync while one is in flight raises a ~user-error~. If the flag gets stuck (e.g.~due to an unhandled error), the command ~org-gcal-extras--reset-sync-chain~ clears it manually, and ~org-gcal--sync-unlock~ also clears it via =:after= advice.
+
+#+findex: org-gcal-extras--avoid-prompt-during-sync-chain
+*Prompt suppression.* The function ~org-gcal-extras--avoid-prompt-during-sync-chain~ is added as =:around= advice to ~org-read-date~. When the outer guard is active and ~deferred:worker~ is on the call stack (i.e.~the prompt is being raised from inside the chain rather than from a user keypress), it signals an error instead of prompting. The error propagates back to the chain's existing ~deferred:error~ handler, which logs it and proceeds with the next entry. Direct user calls and ~org-read-date~ invocations outside the chain are unaffected.
+
+The inner guard is the same pattern used by ~forge-extras--prevent-reentrant-query~ to protect =forge= from the identical class of freeze.
 
 * Commands
 :PROPERTIES:

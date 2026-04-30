@@ -28,24 +28,44 @@
 
 ;;; Code:
 
+(require 'cl-lib)
+(require 'deferred)
 (require 'org-gcal)
 (require 'el-patch)
 (require 'transient)
 
-;;;; Re-entrancy guard
+;;;; Re-entrancy and prompt guards
 
 (defvar org-gcal-extras--sync-active nil
-  "Non-nil while an `org-gcal' sync operation is executing.
-Prevents re-entrant sync calls when timers fire during
+  "Non-nil during the synchronous portion of an `org-gcal' call.
+`let'-bound by `org-gcal-extras--prevent-reentrant-sync', so it is only
+`t' while one of the advised functions is on the stack synchronously.
+Prevents re-entrant calls when timers fire during
 `accept-process-output' inside `aio-wait-for' or
-`url-retrieve-synchronously'.  Without this guard, nested
-timer entry triggers OAuth2 token refresh and GPG decryption
-concurrently, which can deadlock Emacs (e.g. a native
-save-panel dialog from `plstore-save' blocks the event loop
-while inner timers stack up).")
+`url-retrieve-synchronously'.  Without this guard, nested timer entry
+triggers OAuth2 token refresh and GPG decryption concurrently, which can
+deadlock Emacs (e.g. a native save-panel dialog from `plstore-save'
+blocks the event loop while inner timers stack up).")
+
+(defvar org-gcal-extras--sync-chain-active nil
+  "Non-nil while a top-level `org-gcal' sync chain is in flight.
+Held with `setq' from the moment a top-level entry point is invoked
+until its deferred chain settles (success or error).  Used to block
+concurrent top-level syncs and to suppress `org-read-date' prompts that
+the chain would otherwise raise on entries with missing or unparseable
+dates.
+
+If this flag gets stuck, call `org-gcal-extras--reset-sync-chain' to
+clear it manually.  `org-gcal--sync-unlock' also clears it via :after
+advice.")
+
+;;;;; Inner guard: synchronous-portion re-entrancy
 
 (defun org-gcal-extras--prevent-reentrant-sync (orig-fun &rest args)
-  "Call ORIG-FUN with ARGS unless an org-gcal sync is already active."
+  "Call ORIG-FUN with ARGS unless an `org-gcal' sync is already active.
+The guard is `let'-bound, so it only catches re-entrant calls during the
+synchronous portion of ORIG-FUN (e.g. a timer that fires inside
+`accept-process-output')."
   (unless org-gcal-extras--sync-active
     (let ((org-gcal-extras--sync-active t))
       (apply orig-fun args))))
@@ -57,6 +77,81 @@ while inner timers stack up).")
               org-gcal-post-at-point
               org-gcal-delete-at-point))
   (advice-add fn :around #'org-gcal-extras--prevent-reentrant-sync))
+
+;;;;; Outer guard: chain-spanning, top-level entry points only
+
+(defun org-gcal-extras--prevent-concurrent-sync (orig-fun &rest args)
+  "Call ORIG-FUN with ARGS unless a sync chain is already in flight.
+Holds `org-gcal-extras--sync-chain-active' for the entire deferred chain
+returned by ORIG-FUN, clearing it when the chain settles.  Applied only
+to top-level sync entry points so that internal calls within the chain
+\(e.g. per-entry `org-gcal-post-at-point') are not blocked."
+  (if org-gcal-extras--sync-chain-active
+      (user-error "org-gcal sync already in progress; \
+call `org-gcal-extras--reset-sync-chain' if it is stuck")
+    (setq org-gcal-extras--sync-chain-active t)
+    (condition-case err
+        (let ((result (apply orig-fun args)))
+          (if (deferred-p result)
+              (deferred:error
+                (deferred:nextc result #'org-gcal-extras--clear-sync-chain)
+                #'org-gcal-extras--clear-sync-chain-on-error)
+            (setq org-gcal-extras--sync-chain-active nil)
+            result))
+      (error
+       (setq org-gcal-extras--sync-chain-active nil)
+       (signal (car err) (cdr err))))))
+
+(defun org-gcal-extras--clear-sync-chain (value)
+  "Clear `org-gcal-extras--sync-chain-active' and return VALUE."
+  (setq org-gcal-extras--sync-chain-active nil)
+  value)
+
+(defun org-gcal-extras--clear-sync-chain-on-error (err)
+  "Clear `org-gcal-extras--sync-chain-active' and re-raise ERR."
+  (setq org-gcal-extras--sync-chain-active nil)
+  (signal (car-safe err) (cdr-safe err)))
+
+(dolist (fn '(org-gcal-sync
+              org-gcal-fetch
+              org-gcal-sync-buffer
+              org-gcal-fetch-buffer))
+  (advice-add fn :around #'org-gcal-extras--prevent-concurrent-sync))
+
+(defun org-gcal-extras--reset-sync-chain ()
+  "Clear `org-gcal-extras--sync-chain-active' to recover from a stuck flag."
+  (interactive)
+  (setq org-gcal-extras--sync-chain-active nil)
+  (when (called-interactively-p 'any)
+    (message "org-gcal-extras: sync chain flag cleared")))
+
+(advice-add 'org-gcal--sync-unlock :after #'org-gcal-extras--reset-sync-chain)
+
+;;;;; Prompt suppression during sync chain
+
+(defun org-gcal-extras--avoid-prompt-during-sync-chain (orig-fun &rest args)
+  "Signal an error instead of prompting if called from a sync chain.
+When `org-gcal-extras--sync-chain-active' is non-nil and `deferred:worker'
+is on the stack (i.e. we are running inside the chain's processing, not
+on a user keypress), signal an error rather than calling ORIG-FUN with
+ARGS.  The error propagates back to the chain's existing
+`deferred:error' handler, which logs it and proceeds with the next
+entry.
+
+Direct user calls, calls when no sync is running, and `org-read-date'
+invocations outside the chain all proceed normally."
+  (if (and org-gcal-extras--sync-chain-active
+           (org-gcal-extras--in-deferred-worker-p))
+      (error "org-gcal-extras: refusing to prompt for date during sync chain; entry skipped")
+    (apply orig-fun args)))
+
+(defun org-gcal-extras--in-deferred-worker-p ()
+  "Return non-nil if `deferred:worker' is on the call stack."
+  (cl-some (lambda (frame)
+             (eq (cadr frame) 'deferred:worker))
+           (backtrace-frames)))
+
+(advice-add 'org-read-date :around #'org-gcal-extras--avoid-prompt-during-sync-chain)
 
 ;;;; Functions
 

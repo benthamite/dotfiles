@@ -145,6 +145,36 @@ This skill does not pick a vault for you, and there is no default vault. Each Ep
 - **Confirmation rule**: only `Automations` and `Employee` are owner-write for Pablo. For any other vault (`Operations`, `Benchmarking`, `API transition`, `Epoch AI - All`, etc.), confirm the destination with the user before writing.
 - **When unsure, ask** rather than guessing. There is no safe default.
 
+## Sharing a secret with someone else
+
+The right pattern depends on the secret's lifecycle. Pick **before** you create any 1P item — getting this wrong creates autofill pollution that's annoying to clean up.
+
+| Lifecycle | Pattern |
+|---|---|
+| **Ephemeral / one-time** (e.g., AWS first-login temp password, password-reset link) — consumed on first use | **Send directly via Slack DM.** Do not create a 1P item. The credential dies on first use; persisting it in 1P adds nothing security-wise and pollutes Pablo's autofill (any item with a matching URL will surface in the browser extension). |
+| **Long-lived, recipient is an Epoch staffer with 1P access** | **Use a shared 1P vault.** Move the item into a vault both parties have ACL on (`Operations`, `Benchmarking`, `API transition`, etc., per `epoch-vaults`). No share link, no expiry to manage — vault permissions do the work. |
+| **Long-lived, recipient is external or doesn't have 1P access in the Epoch workspace** | Use `op item share`, but set it up so it doesn't pollute Pablo's autofill: (a) put the item in a vault that the browser extension excludes, OR strip the URL field on the item; (b) `--view-once --emails <recipient>`; (c) delete the item once the recipient confirms access. |
+
+### Why the autofill pollution problem exists
+
+1Password's share feature does not have a transient/ephemeral mode — every share link is backed by an item that lives in one of your vaults. The browser extension surfaces all items in vaults Pablo has access to whenever a URL matches. So creating `Giles Hawk AWS` in `API transition` to share it means Pablo's own AWS console sign-in pages now offer Giles's creds in the autofill dropdown, forever (or until the item is deleted). This is a real footgun — don't create persistent items for ephemeral creds.
+
+### `op item share` flags
+
+```bash
+env -u OP_SERVICE_ACCOUNT_TOKEN op item share <item> --vault=<vault> [flags]
+```
+
+- `--view-once`: link expires after one view. Mutually exclusive with `--expires-in` (combining them returns "expiration cannot be set when the share is only one view").
+- `--expires-in <duration>`: `7d` default. Accepts `s`/`m`/`h`/`d`/`w`.
+- `--emails a@b.com,c@d.com`: restrict to specific addresses; recipients verify by email code. Combinable with `--view-once` or `--expires-in`.
+- The CLI prints the share URL to stdout. Pipe to a file or capture in a variable; do not echo to logs you'll later quote.
+
+### Cleanup after sharing
+
+- **Item**: delete from the vault (`op item delete <id> --vault=<v>`) once the recipient confirms access.
+- **Share link**: separately revocable via desktop app (item → ⌄ next to vault name → View Sharing History → Delete Link). Deleting the item invalidates pending share links anyway.
+
 ## Troubleshooting
 
 | Symptom | Cause | Fix |

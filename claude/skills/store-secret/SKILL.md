@@ -1,11 +1,13 @@
 ---
 name: store-secret
-description: Create, update, or delete a secret in Epoch's 1Password Automations vault. The service account token in OP_SERVICE_ACCOUNT_TOKEN is read-only, so write operations must fall back to the desktop-app biometric auth flow. Use when the user says "store secret", "save credential", "add to 1password", "create 1password item", "add API key to vault", "new secret", or "put in automations". Also invoke whenever `op item create`, `op item edit`, or `op item delete` returns "You do not have permission to perform this action".
+description: Create, update, or delete a secret in any of Epoch's 1Password vaults. The service account token in OP_SERVICE_ACCOUNT_TOKEN is read-only, so write operations must fall back to the desktop-app biometric auth flow. Use when the user says "store secret", "save credential", "add to 1password", "create 1password item", "add API key to vault", or "new secret". Also invoke whenever `op item create`, `op item edit`, or `op item delete` returns "You do not have permission to perform this action".
 ---
 
 # Store, update, or delete an Epoch 1Password secret
 
-Epoch secrets live in the **Automations** vault on the `epoch-team.1password.com` tenant. The service account token (`OP_SERVICE_ACCOUNT_TOKEN`) has `read_items` scope — it can read but never write. All write operations must go through the desktop app's CLI integration.
+Epoch's secrets live across multiple vaults on the `epoch-team.1password.com` tenant. The right destination depends on what the secret is (automation key vs. shared vendor login vs. handover credential, etc.); see the `epoch-vaults` skill for the topology and selection rules. Pick the vault first, then run the commands below.
+
+The service account token (`OP_SERVICE_ACCOUNT_TOKEN`) has `read_items` scope — it can read but never write. All write operations must go through the desktop app's CLI integration regardless of which vault.
 
 ## Prerequisites (one-time, already set up on Pablo's machine)
 
@@ -56,7 +58,7 @@ env -u OP_SERVICE_ACCOUNT_TOKEN op item create \
 env -u OP_SERVICE_ACCOUNT_TOKEN op item create \
   --category="API Credential" \
   --title="<Service> - <scope>" \
-  --vault=Automations \
+  --vault=<vault> \
   "field1[text]=<value>" \
   "field2[concealed]=<secret-value>"
 ```
@@ -86,7 +88,7 @@ unset SECRET
 
 ```bash
 env -u OP_SERVICE_ACCOUNT_TOKEN op item create \
-  --category="API Credential" --title="..." --vault=Automations \
+  --category="API Credential" --title="..." --vault=<vault> \
   "access_key[text]=$(head -1 /tmp/keys.env)" \
   "secret_key[concealed]=$(tail -1 /tmp/keys.env)"
 trash /tmp/keys.env
@@ -107,17 +109,25 @@ If suspicious, ask the user to copy the password again before running `op item c
 ## Update / delete
 
 ```bash
-env -u OP_SERVICE_ACCOUNT_TOKEN op item edit "<title>" --vault=Automations "field=<new-value>"
-env -u OP_SERVICE_ACCOUNT_TOKEN op item delete "<title>" --vault=Automations
+env -u OP_SERVICE_ACCOUNT_TOKEN op item edit "<title>" --vault=<vault> "field=<new-value>"
+env -u OP_SERVICE_ACCOUNT_TOKEN op item delete "<title>" --vault=<vault>
 ```
 
-## Verify from the service account's perspective
+## Verify the item is reachable
 
-Confirm the workflow will be able to read the item. The service account token is still exported, so a plain `op read` uses it:
+Read it back via the same desktop session that just wrote it:
+
+```bash
+env -u OP_SERVICE_ACCOUNT_TOKEN op read "op://<vault>/<item-title>/<field-name>"
+```
+
+If the item lives specifically in `Automations`, the read-only service account token can also read it — useful to confirm a GitHub Actions workflow will see it without falling back to biometrics:
 
 ```bash
 op read "op://Automations/<item-title>/<field-name>"
 ```
+
+This second form fails for items in any other vault. That's expected: only `Automations` is reachable from the service account token.
 
 ## Naming conventions
 
@@ -125,10 +135,15 @@ op read "op://Automations/<item-title>/<field-name>"
 - Format: `<Service> - <scope>` (e.g. `Wayback - SPN2`, `Anthropic - email-triage`, `Slack - Epoch Bot`).
 - Field names: lowercase snake_case (`access_key`, `secret_key`, `webhook_url`), so `op://...` references match between Python env vars and the 1Password item.
 
-## Vault rules
+## Choosing the vault
 
-- **Only write to `Automations`.** Never create, edit, or delete items in shared vaults (Ops Automation, Epoch AI - All, Operations, Employee) without explicit user confirmation.
-- If a task seems to require touching a shared vault, stop and ask.
+This skill does not pick a vault for you, and there is no default vault. Each Epoch vault has a specific purpose (automation creds vs. shared org logins vs. handover staging vs. personal-work creds, etc.) — pick based on what the secret is.
+
+- **Defer to the `epoch-vaults` skill** for the topology and the "where does this kind of secret belong" mapping. It's the source of truth.
+- **Strong precedent rule**: if a related credential already exists in a specific vault (e.g. an existing `Pablo AWS` entry in `API transition`), put the new related credential in the same vault. Don't split a logical group across vaults without a reason.
+- **`Automations` is for one specific case**: API keys consumed by automation projects (GitHub Actions / scheduled jobs) that need the read-only service account token to fetch them at runtime. Putting non-automation creds (human IAM logins, vendor account passwords, handover items) there is a category error — even if it "works."
+- **Confirmation rule**: only `Automations` and `Employee` are owner-write for Pablo. For any other vault (`Operations`, `Benchmarking`, `API transition`, `Epoch AI - All`, etc.), confirm the destination with the user before writing.
+- **When unsure, ask** rather than guessing. There is no safe default.
 
 ## Troubleshooting
 
@@ -143,7 +158,8 @@ op read "op://Automations/<item-title>/<field-name>"
 
 ## Reference: how things resolve at runtime
 
-- In `.env.op` files, in MCP server `env` blocks, and in GitHub Actions workflows: `op://Automations/<item-title>/<field-name>`.
+- `op://` reference format: `op://<vault>/<item-title>/<field-name>`. Used in `.env.op` files, MCP server `env` blocks, and GitHub Actions workflows.
+- The `OP_SERVICE_ACCOUNT_TOKEN` is scoped to `Automations` only — workflows referencing other vaults need a different auth path (e.g. desktop session, or a different service account).
 - Claude Code resolves `op://` references natively in MCP env blocks.
 - At shell startup, `OP_SERVICE_ACCOUNT_TOKEN` is sourced by `.zshenv-secrets` from `pass epoch/1password-service-account-token`.
 

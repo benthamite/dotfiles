@@ -34,6 +34,24 @@ If `op signin` gives an error like "1Password CLI couldn't connect to the 1Passw
 
 ## Create an item
 
+Pick the **category** first — the category determines the field syntax. Getting this wrong is the #1 source of errors. The supported `[fieldType]` tokens are: `text`, `concealed`, `password`, `email`, `url`, `phone`, `date`, `monthYear`, `otp`, `file`. **`[username]` is not a valid type** — it's a label baked into the LOGIN category.
+
+### `--category=login` (web logins: username + password)
+
+```bash
+env -u OP_SERVICE_ACCOUNT_TOKEN op item create \
+  --category=login \
+  --title="<Service> - <scope>" \
+  --vault=<vault> \
+  --url="https://<service>" \
+  "username=<email-or-handle>" \
+  "password=<secret>"
+```
+
+`username` and `password` are **bare assignments** here, not bracketed — the category provides them as built-in fields. Adding `[text]` or `[concealed]` is wrong. Do **not** write `"username[username]=..."` (it will fail with `"username" is not a supported field type`).
+
+### `--category="API Credential"` (API tokens, webhook URLs, etc.)
+
 ```bash
 env -u OP_SERVICE_ACCOUNT_TOKEN op item create \
   --category="API Credential" \
@@ -45,16 +63,46 @@ env -u OP_SERVICE_ACCOUNT_TOKEN op item create \
 
 Field type syntax: `name[text]=...` for plain fields, `name[concealed]=...` for masked/secret fields, `name[url]=...` for URLs.
 
-If values contain special characters, read them from a file to avoid shell-escaping issues:
+### When in doubt
+
+Run `op item create --help` and `op item template list` (then `op item template get <category>`) to see the exact field shape for any category. Don't guess.
+
+### Handling values with special characters
+
+Two safe patterns:
+
+**Pipe through a bash variable** (works for most passwords; bash command substitution `$(...)` strips trailing newlines automatically):
+
+```bash
+SECRET="$(pbpaste)"
+env -u OP_SERVICE_ACCOUNT_TOKEN op item create \
+  --category=login --title="..." --vault=<vault> --url="..." \
+  "username=<email>" \
+  "password=$SECRET"
+unset SECRET
+```
+
+**Temp file** (safer when the value may contain shell metacharacters like `$`, backticks, or quotes):
 
 ```bash
 env -u OP_SERVICE_ACCOUNT_TOKEN op item create \
   --category="API Credential" --title="..." --vault=Automations \
   "access_key[text]=$(head -1 /tmp/keys.env)" \
   "secret_key[concealed]=$(tail -1 /tmp/keys.env)"
+trash /tmp/keys.env
 ```
 
-Delete the temp key file afterward: `trash /tmp/keys.env`.
+**Never** name a bash variable `$PWD` — it's the shell's current-working-directory builtin and will get clobbered.
+
+### When the password came from the user's clipboard
+
+`pbpaste` returns the macOS clipboard content. **Sanity-check before writing** — if length > ~100 bytes or includes newlines, it's almost certainly not the password (probably stale Emacs kill-ring content from `(kill-new ...)`, or a copied document):
+
+```bash
+printf 'len=%d nl=%d\n' "$(pbpaste | wc -c)" "$(pbpaste | grep -c '')"
+```
+
+If suspicious, ask the user to copy the password again before running `op item create`. Never display the contents to the user — even partial — to verify; trust the length+newline-count signal.
 
 ## Update / delete
 
@@ -90,6 +138,8 @@ op read "op://Automations/<item-title>/<field-name>"
 | `account is not signed in` (with `env -u`) | No active desktop-app session. | Run `env -u OP_SERVICE_ACCOUNT_TOKEN op signin --force` first. |
 | `1Password CLI couldn't connect to the 1Password desktop app` | App not running or CLI integration off. | Ask user to launch the app and enable Settings → Developer → "Integrate with 1Password CLI". |
 | `native messaging: LostConnectionToApp` | App not running. | `open -a 1Password` and retry. |
+| `assignment statement number N is not formatted correctly - "X" is not a supported field type` | You wrote `"X[X]=value"` thinking the bracket holds a label, but it's the field *type* (one of `text`, `concealed`, `password`, etc.). | For LOGIN: use bare `"username=..."` and `"password=..."`. For API Credential: use `"label[text]=..."` or `"label[concealed]=..."`. See "Create an item" above. |
+| `op signin` exits 1 silently | Already signed in — exit 1 just means "did nothing because session is alive". | Verify with `op whoami` (under `env -u OP_SERVICE_ACCOUNT_TOKEN`); if it prints a user, you're good. |
 
 ## Reference: how things resolve at runtime
 

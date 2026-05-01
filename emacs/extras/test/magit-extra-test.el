@@ -4,6 +4,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'ert)
 (require 'magit-extra)
 
@@ -37,25 +38,29 @@
 ;;;; magit-extras-get-commit-file
 
 (ert-deftest magit-extra-test-get-commit-file-relative ()
-  "Extracts the relative file path from a commit buffer."
-  (with-temp-buffer
-    (insert "# Changes to be committed:\n#\tmodified:   src/main.el\n")
-    (let ((file (magit-extras-get-commit-file)))
-      (should (equal file "src/main.el")))))
+  "Returns the first staged file relative to the repository root."
+  (cl-letf (((symbol-function 'magit-staged-files)
+             (lambda () '("src/main.el"))))
+    (should (equal (magit-extras-get-commit-file) "src/main.el"))))
 
 (ert-deftest magit-extra-test-get-commit-file-sans-dir ()
-  "Extracts just the filename without directory."
-  (with-temp-buffer
-    (insert "# Changes to be committed:\n#\tmodified:   src/main.el\n")
-    (let ((file (magit-extras-get-commit-file 'sans-dir)))
-      (should (equal file "main.el")))))
+  "Returns just the filename without directory when PATH is `sans-dir'."
+  (cl-letf (((symbol-function 'magit-staged-files)
+             (lambda () '("src/main.el"))))
+    (should (equal (magit-extras-get-commit-file 'sans-dir) "main.el"))))
+
+(ert-deftest magit-extra-test-get-commit-file-full ()
+  "Returns the full path when PATH is `full'."
+  (cl-letf (((symbol-function 'magit-staged-files)
+             (lambda () '("src/main.el")))
+            ((symbol-function 'magit-toplevel)
+             (lambda () "/repo")))
+    (should (equal (magit-extras-get-commit-file 'full) "/repo/src/main.el"))))
 
 (ert-deftest magit-extra-test-get-commit-file-no-staged ()
-  "Signals error when no staged file is found."
-  (with-temp-buffer
-    (insert "# nothing to commit\n")
-    (should-error (magit-extras-get-commit-file)
-                  :type 'user-error)))
+  "Signals a user-error when no file is staged."
+  (cl-letf (((symbol-function 'magit-staged-files) (lambda () nil)))
+    (should-error (magit-extras-get-commit-file) :type 'user-error)))
 
 (provide 'magit-extra-test)
 ;;; magit-extra-test.el ends here

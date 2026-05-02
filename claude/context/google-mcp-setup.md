@@ -1,6 +1,6 @@
-# Google MCP servers setup
+# Google services setup
 
-Pablo uses two Google accounts, which requires separate MCP servers for each.
+Pablo uses two Google accounts and accesses each via different tools.
 
 ## Accounts
 
@@ -9,57 +9,47 @@ Pablo uses two Google accounts, which requires separate MCP servers for each.
 | `pablo@epoch.ai`             | Epoch work account |
 | `pablo.stafforini@gmail.com` | Personal account   |
 
-## Google Docs/Drive: prefer `gdoc` CLI
+## Tooling by service
 
-For Google Docs and Drive operations on the **Epoch** account, always use the [`gdoc`](https://github.com/benthamite/gdocs) CLI with `--account epoch`. It's faster and more capable than the MCP `docs_*` / `drive_*` tools and keeps doc ownership in `pablo@epoch.ai`. Common commands:
+For the **Epoch** account (`pablo@epoch.ai`), prefer CLIs over MCP. The CLIs share auth via the `GOOGLE_WORKSPACE_*` env vars (see "Auth" below).
 
-- `gdoc find --account epoch --title --plain '<query>'` — search Drive by title
-- `gdoc cat --account epoch <doc_id_or_url>` — read doc as markdown
-- `gdoc insert --account epoch --tab <tab> --position start <doc_id> <markdown_file>` — insert content
-- `gdoc edit --account epoch <doc_id> '<old>' '<new>'` — find-and-replace
-- `gdoc info --account epoch <doc_id>` — doc metadata
-- `gdoc share --account epoch --role <reader|commenter|writer> <doc_id> <email>` — share
+| Service  | Tool | Notes |
+|----------|------|-------|
+| Docs     | `gdoc` CLI | `gdoc cat/find/edit/insert/info/share`. Always pass `--account epoch`. |
+| Drive    | `gdoc` CLI | `gdoc find --account epoch --title --plain '<query>'`. |
+| Gmail    | `claude/bin/gmail.py` | Subcommands: `query`, `get`, `raw`, `attachment`, `archive`, `draft`, `send`, `reply`, `send-draft`. |
+| Sheets   | `claude/bin/sheets.py` | Subcommands: `read`, `write`, `append`, `clear`, `add-sheet`, `delete-sheet`, `create`, `info`. |
+| Calendar | `gcalcli` CLI | `gcalcli agenda/search/add/edit/delete`, with `--calendar '<name>'` to scope. |
+| Slides   | none | Rare enough to handle ad-hoc via curl + Sheets/Drive APIs if ever needed. |
 
-All Epoch-related skills (`/meeting-debrief`, `/meeting-prep`, etc.) and interactive sessions that touch Epoch Google Docs should default to `gdoc`. Fall back to `mcp__google-workspace-epoch__docs_*` / `drive_*` only if `gdoc` is unavailable or lacks the needed operation. Do **not** use `mcp__google-docs-personal__*` for Epoch work — that server is authenticated as the personal account and will create docs owned by `pablo.stafforini@gmail.com`.
+For the **personal** account (`pablo.stafforini@gmail.com`):
+- Docs: `mcp__google-docs-personal__*` (the only personal-account MCP still in use). See "google-docs-personal" below for the OAuth-token-expiry quirk.
+- Calendar: `gcalcli` (already configured for both accounts).
+- Gmail: not currently wired. Add to `gmail.py` with separate creds if needed.
 
-Gmail is not covered by `gdoc`; keep using `mcp__google-workspace-epoch__*` for it.
+## Auth (Epoch CLIs)
 
-## Calendar: prefer `gcalcli`
+`gmail.py` and `sheets.py` share auth via `claude/bin/_gworkspace_auth.py`. They read these env vars (set in `~/My Drive/dotfiles/shell/.zshenv-secrets`):
 
-For Calendar operations (either account), use the `gcalcli` CLI. It's already configured with both `pablo@epoch.ai` and `pablo.stafforini@gmail.com` calendars. Common commands:
+- `GOOGLE_WORKSPACE_CLIENT_ID`
+- `GOOGLE_WORKSPACE_CLIENT_SECRET`
+- `GOOGLE_WORKSPACE_REFRESH_TOKEN`
 
-- `gcalcli agenda` — upcoming events
-- `gcalcli search '<query>'` — search events
-- `gcalcli add` / `gcalcli quick` — create events
-- `gcalcli edit` / `gcalcli delete` — modify events
-- `gcalcli --calendar '<name>' ...` — restrict to one calendar (e.g. `Work`, `pablo.stafforini@gmail.com`)
+The OAuth project is `claude-code-gmail-490520`. The wrapper exchanges the refresh token for an access token and caches it in `/tmp/gworkspace-access-token.json` until it expires.
 
-Fall back to `mcp__google-workspace-epoch__calendar_*` only if `gcalcli` lacks the needed operation.
+The same refresh token also powers `gdoc` (which has its own auth flow but uses the same OAuth client) and `gmail-epoch-triage` (separate, see below).
+
+If the token expires (`invalid_grant` errors), regenerate with the recipe under "Generating a new refresh token" below and update `GOOGLE_WORKSPACE_REFRESH_TOKEN` in `~/.zshenv-secrets`.
 
 ## Servers by account
 
 ### work account
 
-**google-workspace-epoch** (User MCP in `~/.claude.json`)
-- **Package:** `google-workspace-mcp` via `uvx`
-- **Covers:** Gmail, Calendar, Docs, Drive, Sheets, Slides
-- **OAuth project:** `claude-code-gmail-490520` (client ID `573541886075-...`)
-- **Credentials:** env vars in `~/My Drive/dotfiles/shell/.zshenv-secrets`:
-  - `GOOGLE_WORKSPACE_CLIENT_ID`
-  - `GOOGLE_WORKSPACE_CLIENT_SECRET`
-  - `GOOGLE_WORKSPACE_REFRESH_TOKEN`
-- **Known issue:** the PyPI package (v2.0.1) has a buggy entry point — `asyncio.run(mcp.run())` fails because `mcp.run()` is synchronous. The config uses `python3 -c "...mcp.run()"` to bypass this.
-- **Refresh token generation:** if the token expires or scopes need updating, run the OAuth flow via `google_auth_oauthlib.flow.InstalledAppFlow` with the desired scopes (see below).
-
 **gmail-epoch-triage** (project-scoped to Epoch, defined in `~/.claude.json` under `projects./Users/pablostafforini/My Drive/Epoch`)
-- **Package:** `workspace-mcp` via `uvx` (same package as `google-workspace-epoch`, but configured with `--tools gmail` and different credentials)
-- **Covers:** Gmail only
-- **OAuth project:** same as `google-workspace-epoch` (`claude-code-gmail-490520`)
-- **Credentials:** stored in `~/.gmail-mcp-epoch/credentials/` as `{email}.json` files (one per account). The directory is set via `WORKSPACE_MCP_CREDENTIALS_DIR` in the MCP env config.
-- **Accounts:** `email-triage@epoch.ai` (the email triage bot account). Legacy credential files (`credentials-bot.json`, `credentials-pablo.json`) also exist in `~/.gmail-mcp-epoch/` but are not used by the MCP server.
-- **GCP OAuth keys:** `~/.gmail-mcp-epoch/gcp-oauth.keys.json`
-- **Not redundant:** retained for `email-triage@epoch.ai` access, which `google-workspace-epoch` doesn't cover.
-- **Known issue (port conflict):** both `google-workspace-epoch` and `gmail-epoch-triage` run the same `workspace-mcp` package, which starts an OAuth callback server on port 8000. Whichever MCP process starts first claims the port; the other's built-in OAuth flow will always fail with "Invalid or expired OAuth state parameter" because the callback goes to the wrong process. **Fix:** never rely on the built-in OAuth flow for `gmail-epoch-triage`. Instead, generate tokens manually (see below) and write them to the credentials directory.
+- **Package:** `workspace-mcp` via `uvx` (configured with `--tools gmail`)
+- **Covers:** Gmail only, for the `email-triage@epoch.ai` bot account (NOT `pablo@epoch.ai`).
+- **Credentials:** stored in `~/.gmail-mcp-epoch/credentials/` as `{email}.json` files. Directory set via `WORKSPACE_MCP_CREDENTIALS_DIR`.
+- **Not redundant with `gmail.py`:** the wrapper is authenticated as `pablo@epoch.ai`; this server is the `email-triage@epoch.ai` bot.
 
 ### personal account
 
@@ -68,30 +58,27 @@ Fall back to `mcp__google-workspace-epoch__calendar_*` only if `gcalcli` lacks t
 - **Covers:** Docs (and possibly Drive/Sheets — the package has broad tools)
 - **OAuth client:** `831988183270-...` (different GCP project)
 - **Config dir:** `~/.config/google-docs-mcp/`
-- **Known issue (token expiry):** the OAuth app is in Google "testing" mode, which means **refresh tokens expire after 7 days**. This causes recurring `invalid_grant` errors. The long-term fix is to replace this server with a `google-workspace-personal` instance using the `claude-mcp-personal-ps` GCP project in production mode (see "Planned: google-workspace-personal" below).
-
-Personal calendar is handled by `gcalcli` (see "Calendar: prefer `gcalcli`" above) — there is no longer a personal-calendar MCP server.
+- **Known issue (token expiry):** the OAuth app is in Google "testing" mode, which means **refresh tokens expire after 7 days**. This causes recurring `invalid_grant` errors. Long-term fix is to replace it with a `google-workspace-personal` server in production mode (see "Planned" below).
 
 ### Planned: google-workspace-personal
 
-A GCP project `claude-mcp-personal-ps` has been created with APIs enabled (Docs, Drive, Sheets, Gmail) to replace the flaky `google-docs-personal` server with a `google-workspace-personal` server using the same `google-workspace-mcp` package as the Epoch server. **Remaining steps:**
+A GCP project `claude-mcp-personal-ps` was created with APIs enabled to replace the flaky `google-docs-personal`. Remaining steps:
 1. Configure OAuth consent screen in production mode (GCP Console > APIs & Services > OAuth consent screen for project `claude-mcp-personal-ps`)
 2. Create OAuth client credentials (Desktop app)
 3. Generate refresh token using `InstalledAppFlow` (see recipe below)
-4. Add `google-workspace-personal` MCP server entry to `~/.claude.json`
+4. Either (a) add a `google-workspace-personal` MCP server entry to `~/.claude.json`, or (b) extend `gmail.py`/`sheets.py` to support a `--account personal` flag with a separate set of `GOOGLE_WORKSPACE_PERSONAL_*` env vars. Option (b) is preferable — fewer running processes, less schema overhead.
 5. Remove `google-docs-personal` from `~/.claude.json`
-6. Run `sync-mcp-servers.sh` to propagate to account config dirs
-7. Update this documentation
+6. Update this documentation
 
 ### Built-in (claude.ai integrations)
 
-- **claude.ai Gmail** — unclear which account; managed by Claude's own auth
-- **claude.ai Google Calendar** — same as above
+- **claude.ai Gmail** — managed by Claude's own auth
+- **claude.ai Google Calendar** — same
 - **claude.ai Airtable** — Epoch Airtable
 
 ## Enabled APIs on `claude-code-gmail-490520`
 
-The following APIs must be enabled for the `google-workspace-epoch` server to work:
+These APIs must be enabled for `gmail.py`, `sheets.py`, `gdoc`, and `gcalcli` to work:
 - Gmail API
 - Google Calendar API
 - Google Drive API
@@ -102,7 +89,7 @@ Enable at: Google Cloud Console > APIs & Services > Library (project `claude-cod
 
 ## Generating a new refresh token
 
-### google-workspace-epoch (pablo@epoch.ai)
+### For the Epoch CLIs (`gmail.py`, `sheets.py`, gdoc)
 
 If the token expires or you need to add scopes:
 
@@ -132,11 +119,11 @@ print('REFRESH_TOKEN=' + creds.refresh_token)
 "
 ```
 
-Then update `GOOGLE_WORKSPACE_REFRESH_TOKEN` in `~/My Drive/dotfiles/shell/.zshenv-secrets`.
+Update `GOOGLE_WORKSPACE_REFRESH_TOKEN` in `~/My Drive/dotfiles/shell/.zshenv-secrets`. Then `rm /tmp/gworkspace-access-token.json` to flush the wrapper's token cache.
 
 ### gmail-epoch-triage (email-triage@epoch.ai)
 
-The built-in OAuth flow does not work due to the port conflict (see known issue above). Generate tokens manually using `InstalledAppFlow` on a different port, then write the result to the credentials directory.
+The built-in OAuth flow does not work for this server (port-conflict-related, when both this and the old `google-workspace-epoch` ran). Generate tokens manually using `InstalledAppFlow` on a different port and write to the credentials directory:
 
 ```bash
 python3 -c "
@@ -156,7 +143,6 @@ flow = InstalledAppFlow.from_client_secrets_file(
         'openid',
     ]
 )
-# IMPORTANT: use a different port than 8000 to avoid the port conflict
 creds = flow.run_local_server(port=9090, open_browser=True)
 token_data = {
     'token': creds.token,
@@ -166,57 +152,46 @@ token_data = {
     'client_secret': creds.client_secret,
     'scopes': list(creds.scopes),
 }
-# Write in the format the workspace-mcp credential store expects
-# The filename must be {email}.json
 with open('$HOME/.gmail-mcp-epoch/credentials/email-triage@epoch.ai.json', 'w') as f:
     json.dump(token_data, f, indent=2)
 print('Credentials saved. Sign in as email-triage@epoch.ai in the browser.')
 "
 ```
 
-After running, restart Claude Code so the `gmail-epoch-triage` MCP server picks up the new credentials.
+After running, restart Claude Code so the MCP server picks up the new credentials.
 
 ## Troubleshooting
 
-When an MCP tool call fails: (1) retry the same call immediately, (2) try the equivalent tool on the other server covering the same service, (3) only after both retries fail, consult the specific issues below. Never speculate about env vars or suggest restarting Emacs without evidence.
+### `invalid_grant` from gmail.py / sheets.py
+
+The cached access token expired or the refresh token was revoked. Try in order:
+
+1. `rm /tmp/gworkspace-access-token.json` and re-run the command. If a stale cache was the only problem, this fixes it.
+2. If still failing, regenerate the refresh token (see "Generating a new refresh token" above), update `~/.zshenv-secrets`, then `source ~/.zshenv-secrets` (or open a fresh shell).
 
 ### `invalid_grant` on google-docs-personal
 
 The `@a-bonus/google-docs-mcp` server's OAuth app is in Google "testing" mode, so refresh tokens expire every 7 days. To fix:
 
 1. Delete the stale token: `rm ~/.config/google-docs-mcp/token.json`
-2. Re-run the MCP server to trigger the OAuth flow (credentials are in `~/.zshenv-secrets`):
+2. Re-run the MCP server to trigger the OAuth flow:
    ```bash
    GOOGLE_CLIENT_ID="$GOOGLE_DOCS_CLIENT_ID" \
    GOOGLE_CLIENT_SECRET="$GOOGLE_DOCS_CLIENT_SECRET" \
    npx -y @a-bonus/google-docs-mcp
    ```
-   This will print an auth URL — open it, sign in with `pablo.stafforini@gmail.com`, and authorize.
-3. **Critical:** the running MCP server process caches the old token in memory. You **must start a brand new Claude Code session** (not resume) for it to pick up the new token. Restarting the session via `/exit` + re-open is sufficient, but only if the new session gets a fresh process (not a resumed session).
+   Open the printed auth URL, sign in with `pablo.stafforini@gmail.com`, authorize.
+3. **Critical:** the running MCP server process caches the old token in memory. You **must start a brand new Claude Code session** (not resume) for it to pick up the new token.
 
-### `invalid_grant` on google-workspace-epoch
+### gmail.py reports "ERROR: missing env var"
 
-Regenerate the refresh token (see "Generating a new refresh token" above), then update `GOOGLE_WORKSPACE_REFRESH_TOKEN` in `~/.zshenv-secrets` and restart Claude Code.
+`~/.zshenv-secrets` isn't being sourced into the active shell. Open a fresh terminal or `source ~/.zshenv-secrets`.
 
-### General `invalid_grant` fix procedure
+### gmail-epoch-triage says "ACTION REQUIRED: Google Authentication Needed"
 
-After re-authing any MCP server token:
-1. Verify the new token was saved to disk
-2. **Restart Claude Code** — MCP server processes cache tokens in memory and won't re-read from disk
-3. **Start a brand new session**, not a resumed one — resumed sessions preserve the original MCP server configuration
-
-### 404 "File not found"
-
-Google Drive returns 404 (not 403) when you lack access. Check which Google account the MCP server uses:
-- `google-workspace-epoch` → `pablo@epoch.ai`
-- `google-docs-personal` → `pablo.stafforini@gmail.com`
-
-If the document is shared with one account but you're querying via the other server, you'll get 404. Use the correct server for the account that has access.
+The credential file is missing or the refresh token is expired. Regenerate using the manual flow above and write to `~/.gmail-mcp-epoch/credentials/{email}.json`. Then restart Claude Code.
 
 ### Other issues
 
 - **403 "caller does not have permission"**: either the relevant API isn't enabled on the GCP project, or the document isn't shared with the account the token belongs to.
-- **Server not appearing in `/mcp`**: MCP servers go in `~/.claude.json`, NOT `~/.claude/settings.json`. The latter is for Claude Code settings (hooks, permissions, theme).
-- **`ValueError: a coroutine was expected`**: the `google-workspace-mcp` entry point bug. Use the `python3 -c` invocation that calls `mcp.run()` directly.
-- **"Invalid or expired OAuth state parameter" on `gmail-epoch-triage`**: this is the port 8000 conflict between `google-workspace-epoch` and `gmail-epoch-triage`. Do NOT retry the built-in OAuth flow; it will never work. Instead, generate tokens manually on port 9090 (see "gmail-epoch-triage" section above).
-- **gmail-epoch-triage says "ACTION REQUIRED: Google Authentication Needed"**: the credential file is missing or the refresh token is expired. Regenerate using the manual flow above and write to `~/.gmail-mcp-epoch/credentials/{email}.json`. Then restart Claude Code.
+- **MCP server not appearing in `/mcp`**: MCP servers go in `~/.claude.json`, NOT `~/.claude/settings.json`. The latter is for Claude Code settings (hooks, permissions, theme).

@@ -2,7 +2,7 @@
 name: meeting-debrief
 description: Process a Gemini meeting summary, extract action items and notes, and update the relevant meeting org file. Infers the meeting from today's calendar and the current project context. Use when the user says "meeting debrief", "debrief", "process meeting notes", "meeting followup", or wants to process notes from a recent meeting.
 user-invocable: true
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, mcp__google-workspace-epoch__query_gmail_emails, mcp__google-workspace-epoch__gmail_get_message_details, mcp__google-workspace-epoch__calendar_get_events
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent
 argument-hint: "[person name, group label (e.g. ops-team), or YYYY-MM-DD date override]"
 ---
 
@@ -17,9 +17,11 @@ After any meeting, find the Gemini-generated meeting summary, extract action ite
 - **Gmail sender for Gemini notes**: `gemini-notes@google.com`
 - **María meetings directory**: `meetings/maria/` (relative to Epoch project root)
 
-## Google Docs access
+## Tooling
 
-All Google Docs/Drive operations in this skill run through the `gdoc` CLI, authenticated as `pablo@epoch.ai` (account name: `epoch`). Always pass `--account epoch`. Do not use `mcp__google-docs-personal__*` (personal account) or `mcp__google-workspace-epoch__docs_*` / `drive_*` (superseded by `gdoc`). Gmail and Calendar still use `mcp__google-workspace-epoch__*` since `gdoc` doesn't cover those.
+- **Google Docs / Drive** — `gdoc` CLI, authenticated as `pablo@epoch.ai` (always pass `--account epoch`). Do not use `mcp__google-docs-personal__*` (that's the personal account).
+- **Gmail** — `~/My Drive/dotfiles/claude/bin/gmail.py` (search, read, archive). Auth via the `GOOGLE_WORKSPACE_*` env vars.
+- **Calendar** — `gcalcli` CLI.
 
 ## Step 0: Identify the meeting
 
@@ -34,7 +36,7 @@ When a group label is given, filter calendar events by title/recurrence rather t
 
 ### From calendar
 
-Query today's calendar events using `mcp__google-workspace-epoch__calendar_get_events` (use today's date range). List all meetings that have already ended.
+Query today's calendar events using `gcalcli agenda` (today's date range). List all meetings that have already ended.
 
 ### From project context
 
@@ -62,13 +64,13 @@ Search for the Gemini notification email:
 from:gemini-notes@google.com newer_than:1d
 ```
 
-Use `mcp__google-workspace-epoch__query_gmail_emails`. Match results against the meeting title from Step 0 — the email subject typically contains the calendar event title and date.
+Use `~/My Drive/dotfiles/claude/bin/gmail.py query 'from:gemini-notes@google.com newer_than:1d'`. Match results against the meeting title from Step 0 — the email subject typically contains the calendar event title and date.
 
 If no results, broaden to `newer_than:3d` and filter manually. If still nothing, inform the user that no Gemini summary was found and ask if they want to write notes manually.
 
 ## Step 2: Read the notification email
 
-Use `mcp__google-workspace-epoch__gmail_get_message_details` to read the full email body.
+Use `~/My Drive/dotfiles/claude/bin/gmail.py get <message-id>` to read the full email body (headers + plaintext).
 
 The email contains:
 1. **Summary** ("Resumen" / "Summary") — brief overview
@@ -220,12 +222,10 @@ If the file already exists (e.g., from a previous run or manual prep), update th
 After extracting all information, archive the Gemini notification email (from Step 1) to keep the inbox clean:
 
 ```bash
-python3 ~/My\ Drive/dotfiles/claude/skills/meeting-debrief/google-workspace-api.py archive-email <EMAIL_ID>
+python3 ~/My\ Drive/dotfiles/claude/bin/gmail.py archive <EMAIL_ID>
 ```
 
-Replace `<EMAIL_ID>` with the Gemini email ID from Step 1.
-
-Note: this uses the same OAuth credentials as the `google-workspace-epoch` MCP server (`GOOGLE_WORKSPACE_*` env vars). The server doesn't expose a modify-labels tool, but the refresh token has `gmail.modify` scope. Do NOT use the `gmail-epoch-triage` server (that's for the `email-triage@epoch.ai` bot account).
+Replace `<EMAIL_ID>` with the Gemini email ID from Step 1. The wrapper uses the `GOOGLE_WORKSPACE_*` env vars; the refresh token has `gmail.modify` scope.
 
 ## Step 8: Create a local .gdoc shortcut
 

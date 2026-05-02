@@ -9,7 +9,6 @@
 # Read-only allowlist patterns: read_*, list_*, get_*, search_*, find_*,
 # *_read*, *_list*, *_get*, *_search*, *_find*, *_context*, *_overview*,
 # *_history*, *_stats*, *_info*, *_check*, plus per-server tool names.
-# Entire documentation-only servers (e.g. twitterapi-io-docs) are allowed.
 #
 # Matcher: mcp__
 
@@ -26,18 +25,11 @@ echo "$TOOL_NAME" | grep -q '^mcp__' || exit 0
 # Tools matching these patterns are considered safe (read-only) and pass through.
 # Everything else requires user confirmation (exit 2).
 
-# 1. Entire documentation-only servers (all tools are safe)
-case "$TOOL_NAME" in
-  mcp__twitterapi-io-docs__*)
-    exit 0
-    ;;
-esac
-
-# 2. Strip the mcp__<server>__ prefix to get the bare tool name for pattern matching.
+# 1. Strip the mcp__<server>__ prefix to get the bare tool name for pattern matching.
 bare_tool="${TOOL_NAME#mcp__}"       # remove first mcp__
 bare_tool="${bare_tool#*__}"          # remove <server>__
 
-# 3. Match read-only patterns against the bare tool name.
+# 2. Match read-only patterns against the bare tool name.
 #    We use a case statement with glob patterns for clarity and speed.
 case "$bare_tool" in
   # Patterns: <verb>_<rest> (prefix match)

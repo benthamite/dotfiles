@@ -24,7 +24,7 @@ Use these tools from the `twitterapi-io` MCP server:
 | `mcp__twitterapi-io__get_user_following` | Who a user follows |
 | `mcp__twitterapi-io__search_users` | Find users by name/keyword |
 
-For API documentation details, use the `twitterapi-io-docs` MCP server tools (e.g. `mcp__twitterapi-io-docs__get_twitterapi_endpoint`).
+For API documentation, fetch from `https://docs.twitterapi.io/` with `WebFetch` as needed.
 
 ## Parsing input
 

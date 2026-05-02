@@ -54,11 +54,6 @@ case "$bare_tool" in
     exit 0
     ;;
 
-  # Home Assistant read-only tools
-  GetDateTime|GetLiveContext|todo_get_items)
-    exit 0
-    ;;
-
   # Slack low-risk: marking as read and listing
   conversations_mark)
     exit 0

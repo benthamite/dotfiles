@@ -14,21 +14,21 @@ Pull all unread Slack messages, triage them for relevance and actionability, and
 
 ## Procedure
 
-### 1. Fetch unreads
+### 1. Fetch unread state
 
-Call `conversations_unreads` with:
-- `include_messages: true`
-- `max_channels: 100`
-- `max_messages_per_channel: 20`
-- `include_muted: false`
+Run `~/My Drive/dotfiles/claude/bin/slack.py unreads`. This wraps the internal `client.counts` endpoint and returns per-channel unread state — channel ID, last-read timestamp, and unread/mention counts — for `channels`, `mpims`, `ims`, and `threads`. No message bodies yet.
 
-### 2. Resolve channel IDs
+Filter to channels where `unread_count_display > 0` or `mention_count_display > 0`, ignoring muted channels (those with `is_muted: true` if present, otherwise channels named `*-bot` or notification-only channels by convention).
 
-The unreads response contains channel names but not IDs. Call `channels_list` with `channel_types: "public_channel,private_channel,im,mpim"` and `limit: 999` to get a full mapping of channel names to IDs (including DMs and group DMs). You will need the IDs to construct Slack deep links in step 5. **Do not guess or fabricate channel IDs.**
+### 2. Resolve channel names
 
-### 3. Fetch thread context where needed
+Run `slack.py channels` to get a name-to-ID mapping (the unreads response has IDs but not always human-readable names for DMs/MPIMs). You will need the names for the digest output and the IDs for Slack deep links in step 5. **Do not guess or fabricate channel IDs.**
 
-For messages that appear to be mid-thread or are replying to something (i.e. they have a `ThreadTs` that differs from their `MsgID`), call `conversations_replies` to get the full thread so you can understand the context.
+### 3. Fetch unread messages per channel
+
+For each unread channel, run `slack.py history <channel-id> --oldest=<last_read> --limit=20` to get the actual unread messages. Cap at ~100 channels and 20 messages each to bound output volume.
+
+For messages that appear to be mid-thread or are replying to something (i.e. they have a `thread_ts` that differs from their `ts`), run `slack.py replies <channel-id> <thread-ts>` to get the full thread so you can understand the context.
 
 ### 4. Triage
 
@@ -59,7 +59,7 @@ When you spot one of these, classify it as **Action required** with a note like 
 
 Apply special handling to any channel whose name starts with `ops-support` (this includes the shared `#ops-support` channel, `#ops-support-temp`, and each team member's personal `#ops-support-<name>` channel). The user is on the ops team and wants visibility into all requests to decide whether to help. For each request posted in these channels:
 
-1. Fetch the thread replies (if any) using `conversations_replies`.
+1. Fetch the thread replies (if any) using `slack.py replies <channel-id> <thread-ts>`.
 2. Check whether an ops team member has already replied claiming the request (e.g. "I'll take this", "on it", "handling this", or any substantive response indicating ownership).
 3. If no one has claimed it, classify it as **Action required** with a note like "Unclaimed ops request — no one has replied yet."
 4. If someone has already claimed it, classify it as **Worth knowing** with a note indicating who claimed it and the gist of their response. Never discard ops-support requests as noise.
@@ -117,5 +117,5 @@ If the argument `--mark-read` was passed (this is the default), mark all channel
 To mark as read:
 1. First, compile the complete list of channel IDs from step 1 (every channel that had unreads, not just the ones surfaced in the digest). **Include all channels, even those triaged as noise.**
 2. For each channel, determine the **latest timestamp** across all messages fetched from that channel (including thread replies fetched in step 3). This is critical: if you fetched thread replies with timestamps later than the root message, use the latest reply timestamp, not the root message timestamp.
-3. Call `conversations_mark` for **each** channel ID, passing the latest timestamp as `ts`. Do not skip any. Use parallel tool calls to batch them efficiently — call as many as you can in a single message.
+3. Run `slack.py mark <channel-id> <ts>` for **each** channel ID, passing the latest timestamp as `ts`. Do not skip any. Use parallel Bash calls to batch them efficiently — call as many as you can in a single message.
 4. After all calls complete, count the number of successful marks and compare against the total. Report the count to the user (e.g. "Marked 23/23 channels as read").

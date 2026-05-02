@@ -53,6 +53,7 @@ These tools are installed locally and should be invoked directly via Bash; do NO
 - **Twitter / X** — `claude/skills/twitter/lib/twitterapi.sh`. See the `twitter` skill.
 - **Gmail (Epoch account)** — `claude/bin/gmail.py`. See `context/google-mcp-setup.md`.
 - **Google Sheets (Epoch account)** — `claude/bin/sheets.py`. Same.
+- **Slack (Epoch workspace, user-impersonating)** — `claude/bin/slack.py`. Subcommands: `search`, `history`, `replies`, `channels`, `users-search`, `user-info`, `mark`, `unreads`. Auth via xoxc/xoxd from `op://Automations/Slack MCP - Epoch Unofficial`.
 - **Google Calendar** — `gcalcli`.
 - **Google Docs / Drive (Epoch account)** — `gdoc --account epoch`.
 - **GitHub** — `gh`.

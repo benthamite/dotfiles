@@ -33,6 +33,7 @@ Three layers of directories work together: this dotfiles directory (source of tr
 ├── bin/sync-mcp-servers.sh           ← MCP server sync utility
 ├── bin/gmail.py                      ← Gmail API CLI (Epoch account)
 ├── bin/sheets.py                     ← Sheets API CLI (Epoch account)
+├── bin/slack.py                      ← Slack web-API CLI (Epoch workspace, xoxc/xoxd)
 ├── bin/_gworkspace_auth.py           ← shared OAuth helper for gmail.py / sheets.py
 └── README.org                        ← this file
 #+end_example
@@ -65,7 +66,7 @@ Note: =settings.json= is intentionally *not* tracked here. Claude Code writes to
 
 *MCP servers* are defined in =~/.claude.json= (canonical) and synced to active account directories (=~/.claude-epoch/=, =~/.claude-personal/=, =~/.claude-tlon/=) by =claude/bin/sync-mcp-servers.sh=. Skipping the sync after a change leaves new sessions in those accounts reading a stale list.
 
-*External CLIs preferred over MCP.* Several services that would otherwise be MCP servers are wired up as direct CLI invocations from Bash, listed under "External CLIs preferred over MCP" in =claude/CLAUDE.md=: Anna's Archive (=annas-mcp= binary used as a CLI), Twitter (=twitterapi.sh=), Gmail and Sheets (=claude/bin/gmail.py= and =sheets.py=, sharing =_gworkspace_auth.py= for OAuth), Calendar (=gcalcli=), Docs/Drive (=gdoc=), GitHub (=gh=). Dropping the MCP wrappers shaves the corresponding tool schemas out of every session's context.
+*External CLIs preferred over MCP.* Several services that would otherwise be MCP servers are wired up as direct CLI invocations from Bash, listed under "External CLIs preferred over MCP" in =claude/CLAUDE.md=: Anna's Archive (=annas-mcp= binary used as a CLI), Twitter (=twitterapi.sh=), Gmail and Sheets (=claude/bin/gmail.py= and =sheets.py=, sharing =_gworkspace_auth.py= for OAuth), Slack (=claude/bin/slack.py=, xoxc/xoxd auth via 1Password), Calendar (=gcalcli=), Docs/Drive (=gdoc=), GitHub (=gh=). Dropping the MCP wrappers shaves the corresponding tool schemas out of every session's context.
 
 *** Settings hierarchy
 :PROPERTIES:

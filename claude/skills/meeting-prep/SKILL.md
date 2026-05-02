@@ -2,7 +2,7 @@
 name: meeting-prep
 description: Generate a pre-meeting org file for the biweekly 1:1 with María. Gathers progress from session logs, project statuses, Slack activity, and GitHub activity since the last meeting. Use when the user says "meeting prep", "prep for María", "prepare for 1:1", "meeting with María", or wants to prepare for their manager meeting.
 user-invocable: true
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, mcp__slack-unofficial-epochai__conversations_search_messages, mcp__slack-unofficial-epochai__channels_list, mcp__slack-unofficial-epochai__conversations_history, mcp__slack-unofficial-epochai__conversations_replies
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent
 argument-hint: "[YYYY-MM-DD date override]"
 ---
 
@@ -88,7 +88,7 @@ Search Slack for messages sent by Pablo since the last meeting:
 from:U0AKT7H6G2H after:SINCE_DATE
 ```
 
-Use `conversations_search_messages` from `slack-unofficial-epochai`. Review the results to identify:
+Run `~/My Drive/dotfiles/claude/bin/slack.py search 'from:U0AKT7H6G2H after:SINCE_DATE'`. Review the results to identify:
 - Substantive messages (not just reactions or brief replies)
 - Any commitments made ("I'll do X", "will follow up on Y")
 - Any questions asked that are still unanswered
@@ -125,7 +125,7 @@ From the gathered data, compile a progress summary organized by project. For eac
 
 **Link everything.** Any named resource must be a live link — never reference one without the URL. Apply these rules consistently in both the org meeting file (Step 5) and the shared Google Doc insert (Step 5b):
 
-- **Slack channels** (e.g. `#media-mentions-digest`): link to `https://epochai.slack.com/archives/CHANNEL_ID`. Look up the ID from `mcp__slack-unofficial-epochai__channels_list` results or from permalinks captured elsewhere in the data.
+- **Slack channels** (e.g. `#media-mentions-digest`): link to `https://epochai.slack.com/archives/CHANNEL_ID`. Look up the ID from `slack.py channels` results or from permalinks captured elsewhere in the data.
 - **Slack messages / threads**: use the deep link format `https://epochai.slack.com/archives/CHANNEL_ID/pTIMESTAMP` (remove the dot from the message `ts`).
 - **Google Docs / Sheets / Slides**: link to the doc URL (grab from session logs, project files, or run `gdoc ls --account epoch` if needed).
 - **Google Groups** (e.g. `media@epoch.ai`, `feedback@epoch.ai`): link to `https://groups.google.com/a/epoch.ai/g/<group-name>`.

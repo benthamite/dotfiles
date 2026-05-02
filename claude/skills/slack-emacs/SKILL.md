@@ -9,7 +9,7 @@ description: Open Slack links/threads in Emacs and handle drafting replies to Sl
 
 - The user wants to open a Slack message, thread, channel, or permalink in Emacs.
 - The user asks you to draft a reply to a Slack message (even if they don't mention Emacs). Drafting a reply **always** requires opening the thread in Emacs so the user can paste the draft directly into the thread — this is a hard rule, not an optional step.
-- The user shares a Slack URL (`https://epochai.slack.com/archives/...`) and asks you to do anything with it beyond reading its content programmatically via the Slack MCP tools.
+- The user shares a Slack URL (`https://epochai.slack.com/archives/...`) and asks you to do anything with it beyond reading its content programmatically via the `slack.py` wrapper.
 
 ## Opening a Slack permalink in Emacs
 
@@ -59,6 +59,6 @@ rm "$TMPFILE"
 
 ## Do not trigger this skill for
 
-- Reading Slack content via MCP tools (`conversations_history`, `conversations_replies`, `conversations_search_messages`, etc.) — those don't require Emacs.
-- Sending a message via the Slack MCP — not currently supported in this workflow; the user pastes manually in Emacs.
+- Reading Slack content via the `slack.py` wrapper (`history`, `replies`, `search`, etc.) — those don't require Emacs.
+- Sending a message programmatically — not currently supported in this workflow; the user pastes manually in Emacs.
 - General Slack digests / unreads — use `slack-digest` or `slack-saved` instead.

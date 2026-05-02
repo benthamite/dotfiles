@@ -16,19 +16,15 @@ Fetch all Slack messages the user has saved for later, assess each for pending a
 
 ### 1. Fetch saved messages
 
-Call `conversations_search_messages` with:
-- `search_query: "is:saved"`
-- `limit: 100`
-
-If 100 results are returned, paginate using the cursor from the last row until all saved messages are retrieved.
+Run `~/My Drive/dotfiles/claude/bin/slack.py search 'is:saved' --max=100`. If 100 results are returned, paginate using the cursor from the last row (`--cursor=...` arg) until all saved messages are retrieved.
 
 ### 2. Resolve channel IDs
 
-Call `channels_list` with `channel_types: "public_channel,private_channel,im,mpim"` and `limit: 999` to build a mapping of channel names to IDs. You need the IDs for Slack deep links.
+Run `slack.py channels` to build a mapping of channel names to IDs. You need the IDs for Slack deep links.
 
 ### 3. Fetch thread context
 
-For each saved message that appears to be part of a thread (i.e. its `ThreadTs` differs from its `MsgID`, or it looks like a reply), call `conversations_replies` to get the full thread. This context is essential for understanding what action — if any — is pending.
+For each saved message that appears to be part of a thread (i.e. its `thread_ts` differs from its `ts`, or it looks like a reply), run `slack.py replies <channel-id> <thread-ts>` to get the full thread. This context is essential for understanding what action — if any — is pending.
 
 Also fetch thread context for root messages that may have received replies since being saved, as the replies may resolve the pending action.
 

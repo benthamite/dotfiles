@@ -31,8 +31,8 @@ Three layers of directories work together: this dotfiles directory (source of tr
 ├── skills/                           ← skill directories
 ├── bin/batch-test.sh                 ← elpaca-aware emacs --batch test runner
 ├── bin/sync-mcp-servers.sh           ← MCP server sync utility
-├── bin/gmail.py                      ← Gmail API CLI (Epoch account)
-├── bin/sheets.py                     ← Sheets API CLI (Epoch account)
+├── bin/gmail.py                      ← Gmail API CLI (--account epoch|personal)
+├── bin/sheets.py                     ← Sheets API CLI (--account epoch|personal)
 ├── bin/slack.py                      ← Slack web-API CLI (Epoch workspace, xoxc/xoxd)
 ├── bin/_gworkspace_auth.py           ← shared OAuth helper for gmail.py / sheets.py
 └── README.org                        ← this file
@@ -84,7 +84,7 @@ Do *not* use =~/.claude.json= 's =projects.<path>.mcpServers= block — Claude C
 - Plugin-managed: none currently enabled.
 - =claude-in-chrome=: enabled (heavy use — browser automation).
 
-*External CLIs preferred over MCP.* Every service that previously had a user-level MCP server has been replaced by a direct CLI invocation, listed under "External CLIs preferred over MCP" in =claude/CLAUDE.md=: Anna's Archive (=annas-mcp= binary used as a CLI), Twitter (=twitterapi.sh=), Gmail and Sheets (=claude/bin/gmail.py= and =sheets.py=, sharing =_gworkspace_auth.py= for OAuth), Slack (=claude/bin/slack.py=, xoxc/xoxd auth via 1Password — replaces both the unofficial and official Slack MCP servers), Calendar (=gcalcli=), Docs/Drive (=gdoc=, multi-account: =--account epoch= or =--account personal=), GitHub (=gh=). Dropping the MCP wrappers shaves the corresponding tool schemas out of every session's context.
+*External CLIs preferred over MCP.* Every service that previously had a user-level MCP server has been replaced by a direct CLI invocation, listed under "External CLIs preferred over MCP" in =claude/CLAUDE.md=: Anna's Archive (=annas-mcp= binary used as a CLI), Twitter (=twitterapi.sh=), Gmail and Sheets (=claude/bin/gmail.py= and =sheets.py=, multi-account: =--account epoch= or =--account personal=, sharing =_gworkspace_auth.py= for OAuth), Slack (=claude/bin/slack.py=, xoxc/xoxd auth via 1Password — replaces both the unofficial and official Slack MCP servers), Calendar (=gcalcli=), Docs/Drive (=gdoc=, multi-account: =--account epoch= or =--account personal=), GitHub (=gh=). Dropping the MCP wrappers shaves the corresponding tool schemas out of every session's context.
 
 *** Settings hierarchy
 :PROPERTIES:

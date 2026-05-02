@@ -36,3 +36,4 @@ claude/settings.json
 
 ## codex
 codex/.codex/
+claude/bin/__pycache__/

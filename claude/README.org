@@ -63,7 +63,9 @@ Note: =settings.json= is intentionally *not* tracked here. Claude Code writes to
 └── skills/             ← project-specific skills (optional)
 #+end_example
 
-*MCP servers* are defined in =~/.claude.json= (canonical) and synced to account directories by =claude/bin/sync-mcp-servers.sh=.
+*MCP servers* are defined in =~/.claude.json= (canonical) and synced to active account directories (=~/.claude-epoch/=, =~/.claude-personal/=, =~/.claude-tlon/=) by =claude/bin/sync-mcp-servers.sh=. Skipping the sync after a change leaves new sessions in those accounts reading a stale list.
+
+*External CLIs preferred over MCP.* Several services that would otherwise be MCP servers are wired up as direct CLI invocations from Bash, listed under "External CLIs preferred over MCP" in =claude/CLAUDE.md=: Anna's Archive (=annas-mcp= binary used as a CLI), Twitter (=twitterapi.sh=), Gmail and Sheets (=claude/bin/gmail.py= and =sheets.py=, sharing =_gworkspace_auth.py= for OAuth), Calendar (=gcalcli=), Docs/Drive (=gdoc=), GitHub (=gh=). Dropping the MCP wrappers shaves the corresponding tool schemas out of every session's context.
 
 *** Settings hierarchy
 :PROPERTIES:

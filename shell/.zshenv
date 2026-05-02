@@ -27,6 +27,10 @@ export PYTHONDONTWRITEBYTECODE=1
 # Claude Code: persist high reasoning effort across sessions
 export CLAUDE_CODE_EFFORT_LEVEL=high
 
+# Anna's Archive CLI (annas-mcp binary used as a CLI, not as an MCP server)
+export ANNAS_BASE_URL="annas-archive.gl"
+export ANNAS_DOWNLOAD_PATH="$HOME/My Drive/repos/consensus-trader/papers"
+
 # Compiler flags
 export LDFLAGS="-L/opt/homebrew/opt/sqlite/lib"
 export CPPFLAGS="-I/opt/homebrew/opt/sqlite/include"

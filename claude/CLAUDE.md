@@ -11,7 +11,7 @@
 - Fix root causes, not symptoms. No hacks, workarounds, or silent fallbacks. If a patch feels precarious, dig deeper.
 - Seek documentation rather than guessing. If you can't access it, ask me to find it.
 - Delete temporary files and code when done.
-- Copy drafted messages to the Emacs kill ring automatically (via `emacsclient --eval '(kill-new ...)'`, not `pbcopy`). For multi-line content, write to a temp file and use `(with-temp-buffer (insert-file-contents FILE) (kill-new (buffer-string)))` to avoid elisp string-escaping headaches.
+- Copy drafted messages to the Emacs kill ring automatically (via `emacsclient --eval '(kill-new ...)'`, not `pbcopy`). For multi-line content, write to a temp file and use `(with-temp-buffer (insert-file-contents FILE) (kill-new (buffer-string)))` to avoid elisp string-escaping headaches. If the message is meant to be posted somewhere (e.g. Slack) open the relevant thread.
 - Surface structural friction when you encounter it ("this was harder than expected because X — worth investigating?"). Use `/diagnose` for deep dives.
 - I often use dictation, so expect misspellings and unusual punctuation.
 
@@ -43,7 +43,19 @@ See [Secrets](context/secrets.md) for full details.
 
 - Google MCP setup (two accounts, multiple servers, troubleshooting): see [Google MCP setup](context/google-mcp-setup.md) for full details.
 - Chrome integration and multi-account: see `README.org` → "Chrome integration and multi-account".
-- MCP server definitions go in `~/.claude.json`, NOT `~/.claude/settings.json`.
+- MCP server definitions go in `~/.claude.json`, NOT `~/.claude/settings.json`. Run `claude/bin/sync-mcp-servers.sh` after every change to propagate to per-account dirs (`~/.claude-epoch/`, `~/.claude-personal/`, `~/.claude-tlon/`); skipping the sync leaves new sessions reading a stale list.
+
+## External CLIs preferred over MCP
+
+These tools are installed locally and should be invoked directly via Bash; do NOT look for an MCP equivalent.
+
+- **Anna's Archive** — `annas-mcp` binary used as a CLI: `annas-mcp book-search '<query>'`, `book-download <md5> <filename>`, `article-search '<doi-or-keywords>'`, `article-download <doi>`. Env: `ANNAS_BASE_URL`, `ANNAS_DOWNLOAD_PATH` (in `.zshenv`), `ANNAS_SECRET_KEY` (in `.zshenv-secrets`). The same binary also has an `mcp` subcommand we no longer use.
+- **Twitter / X** — `claude/skills/twitter/lib/twitterapi.sh`. See the `twitter` skill.
+- **Gmail (Epoch account)** — `claude/bin/gmail.py`. See `context/google-mcp-setup.md`.
+- **Google Sheets (Epoch account)** — `claude/bin/sheets.py`. Same.
+- **Google Calendar** — `gcalcli`.
+- **Google Docs / Drive (Epoch account)** — `gdoc --account epoch`.
+- **GitHub** — `gh`.
 
 ## Filesystem organization
 

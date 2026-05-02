@@ -1,15 +1,22 @@
 #!/bin/bash
-# Run an emacs --batch test with the correct elpaca load-path.
+# Run an emacs --batch test for an Elisp package.
 #
 # Usage: batch-test.sh <package> [elisp-expressions...]
 #
-# Resolves the active elpaca profile, adds all build directories to
-# load-path, puts emacs/extras at the front so edited sources take
-# precedence over stale .elc in elpaca/builds, and runs emacs --batch.
+# Handles two package layouts:
+#
+#   1. Dotfiles extras (canonical source in ~/My Drive/dotfiles/emacs/extras/,
+#      separate elpaca clone). Removes the canonical .elc, adds all elpaca
+#      builds to load-path, then prepends emacs/extras so the edited source
+#      wins over the stale .elc in the elpaca clone.
+#
+#   2. Standalone elpaca/sources/<pkg> packages (canonical source IS the
+#      elpaca clone). Adds all elpaca builds to load-path; the auto-rebuild
+#      hook keeps elpaca/builds/<pkg>/ in sync with the source.
 #
 # Examples:
 #   batch-test.sh agent-log
-#   batch-test.sh gptel-extras '(message "%s" (gptel-extras-some-fn))'
+#   batch-test.sh sgn '(message "result: %S" (sgn-some-fn))'
 
 set -euo pipefail
 
@@ -26,16 +33,24 @@ PROFILE=$(emacsclient -e 'init-current-profile' 2>/dev/null | tr -d '"')
 ELPACA="$HOME/.config/emacs-profiles/$PROFILE/elpaca"
 EXTRAS="$REPO_ROOT/emacs/extras"
 
-# Remove stale .elc so the edited .el source is picked up
-rm -f "$EXTRAS/$PACKAGE.elc"
+# Detect package layout: extras (canonical .el in dotfiles/emacs/extras)
+# vs standalone (canonical .el directly under elpaca/sources/<pkg>/).
+IS_EXTRAS=false
+if [ -f "$EXTRAS/$PACKAGE.el" ]; then
+  IS_EXTRAS=true
+fi
 
 ARGS=(--batch)
 
-# All elpaca builds on load-path
+# All elpaca builds on load-path (both layouts need this for dependencies).
 ARGS+=(--eval "(dolist (dir (file-expand-wildcards \"$ELPACA/builds/*/\")) (add-to-list 'load-path dir))")
 
-# Extras at the FRONT so edited sources win
-ARGS+=(--eval "(push \"$EXTRAS\" load-path)")
+if [ "$IS_EXTRAS" = true ]; then
+  # Remove co-located .elc so the edited .el wins.
+  rm -f "$EXTRAS/$PACKAGE.elc"
+  # Push extras to FRONT so canonical source beats stale elpaca-build .elc.
+  ARGS+=(--eval "(push \"$EXTRAS\" load-path)")
+fi
 
 # Load the package
 ARGS+=(--eval "(require '$PACKAGE)")

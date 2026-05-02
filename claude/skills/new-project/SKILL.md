@@ -27,6 +27,7 @@ From this, determine:
 3. **Background** — why this project exists, who requested it, key links (Slack threads, docs, etc.)
 4. **TODO items** — concrete next steps identified in the conversation
 5. **Reference material** — instructions, research findings, data gathered
+6. **Whether this is an automation project** — i.e. one that will run on a schedule (typically GH Actions cron) and live alongside `analytics-aggregation`, `email-triage`, etc. If unclear from context, ask the user. The answer drives Steps 4 and 5 below.
 
 If the name is ambiguous, confirm with the user before proceeding.
 
@@ -63,7 +64,26 @@ The Epoch project root is the closest ancestor directory containing `CLAUDE.md` 
    @logs/YYYY-MM-DD.md
    ```
 
-## Step 4: Add entry to current list of automation projects
+## Step 4: If automation project, note scaffolding plan
+
+Skip this step for non-automation projects.
+
+The skill itself does **not** auto-scaffold the `repo/`, GH Actions workflow, or GitHub remote — those are typically built up in a follow-up session inside the project. But record in the org file's `** TODO` section that the scaffolding should follow the [automation project defaults](#automation-project-defaults) below, so the next session has a clear pointer.
+
+A reasonable starter TODO looks like:
+
+```org
+** TODO Scaffold automation skeleton
+   Follow the defaults in the =new-project= skill (=Automation project defaults=):
+   repo at =projects/<name>/repo/= with =.git= symlinked to =~/git-dirs/<name>/.git=,
+   private remote =epoch-research/<name>=, GH Actions cron + workflow_dispatch,
+   secrets via 1Password Automations vault, failure alert to =#automation-alerts=.
+   Reference: =projects/analytics-aggregation/repo/.github/workflows/weekly-refresh.yml=.
+```
+
+## Step 5: Add entry to current list of automation projects
+
+Skip this step for non-automation projects.
 
 Open `projects/current-list-of-automation-projects.org` and add an entry for the new project under the appropriate section (usually `** In active development`). Follow the exact format used by existing entries:
 
@@ -79,11 +99,11 @@ Open `projects/current-list-of-automation-projects.org` and add an entry for the
 
 Use a `file:` link (relative to `projects/`) pointing to the project's org file. For the `:ID:` property, use the kebab-case directory name. Keep comments, status, and next step terse to match the style of surrounding entries.
 
-## Step 5: Commit
+## Step 6: Commit
 
-Stage all new files under `projects/<name>/` **and** the updated `projects/current-list-of-automation-projects.org`, then commit with message: `Add <name> project`.
+Stage all new files under `projects/<name>/` (and `projects/current-list-of-automation-projects.org` if it was updated in Step 5), then commit with message: `Add <name> project`.
 
-## Step 6: Transition
+## Step 7: Transition
 
 Print the following to the user:
 
@@ -95,3 +115,16 @@ Print the following to the user:
 > ```
 
 Then suggest the user type `/exit` to close the current session.
+
+## Automation project defaults
+
+These conventions apply to automation projects (Steps 4–5 above, plus any follow-up scaffolding work inside the new project). Use them unless there's a strong, explicit reason to deviate. If a default ever needs to be revisited, update this skill rather than deciding ad hoc.
+
+- **Slack identity**: reuse the existing "Slack - Epoch Bot" app (token at `op://Automations/Slack - Epoch Bot/credential`). Do not create a new Slack app per project. All current automation projects (`analytics-aggregation`, `email-triage`, `media-mentions-automation`, `citation-tracking-automation`, `benchmark-updates-automation`, `wip-summary-automation`, `slack-emoji-to-asana`, etc.) share this identity.
+- **Scheduling**: GitHub Actions (`on: schedule: cron:` + `workflow_dispatch`). Do not use system cron, launchd, or other host-bound schedulers — every automation project under `projects/` runs on GH Actions today and that's the convention.
+- **Failure alerts**: post to `#automation-alerts` (`C0AUU186CGL`) with `<@U0AKT7H6G2H>` mention so Pablo gets notified, via `op://Automations/Slack - Epoch Bot/credential`. Always include a link to the failed GH Actions run. (Older workflows still post to Pablo's DM `D0AL9HF9NC9` directly — migrate them to `#automation-alerts` when touching them.) The bot must be a member of the alert channel; have it self-join via `conversations.join` since the app lacks `channels:write.invites`.
+- **Secrets**: 1Password Automations vault, loaded via `1password/install-cli-action@v1` + `op read` in the workflow. `OP_SERVICE_ACCOUNT_TOKEN` is the only secret stored as a GitHub Actions secret.
+- **Repo layout**: code in `projects/<name>/repo/`, `.git` symlinked to `~/git-dirs/<name>/.git` (Drive doesn't sync `.git`). Remote at `epoch-research/<name>` (private).
+- **Open-source posture**: although the repos are currently private, they should be conceived as public projects. Avoid including any sensitive information in the code, and follow best practices for open source projects (clear README, documentation, tests) to make it easy to share or open source in the future if desired.
+
+Reference implementation to copy from: `projects/analytics-aggregation/repo/.github/workflows/weekly-refresh.yml`.

@@ -505,7 +505,7 @@ Adapted from [[https://pjh.is/][Peter Hartree]]'s [[https://github.com/HartreeWo
 :ID:       F2720AF8-171F-4DF0-BA03-B16E2F923C2E
 :END:
 
-Reads and searches Twitter/X content via the =twitterapi-io= MCP server. Supports single tweet lookup, thread/reply retrieval, user timelines, keyword search, and user profile lookup. Saves tweets as markdown files with engagement stats and URLs. Includes detailed pricing and rate-limit guidance to keep API costs under control. Cross-references =/twitter-digest= and =/twitter-discover= for higher-level workflows.
+Reads and searches Twitter/X content via =claude/skills/twitter/lib/twitterapi.sh=, a curl wrapper around the twitterapi.io REST API. One subcommand per call type: =tweet=, =replies=, =tweets=, =user=, =search=, =followers=, =following=, =users=. Replaced the =twitterapi-io= MCP server (no more tool schemas loaded into context per session). Supports single tweet lookup, thread/reply retrieval, user timelines, keyword search, and user profile lookup. Saves tweets as markdown files with engagement stats and URLs. Includes detailed pricing and rate-limit guidance to keep API costs under control. Cross-references =/twitter-digest= and =/twitter-discover= for higher-level workflows.
 
 *** twitter-digest
 :PROPERTIES:

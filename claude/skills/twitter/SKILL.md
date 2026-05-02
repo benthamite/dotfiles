@@ -7,57 +7,59 @@ model: sonnet
 
 # Twitter
 
-Read and search Twitter/X content using the `twitterapi-io` MCP server. Supports single tweets, threads/replies, user timelines, and keyword search.
+Read and search Twitter/X content via the twitterapi.io API, accessed through the `twitterapi.sh` wrapper script.
 
-## Available MCP tools
+## The wrapper script
 
-Use these tools from the `twitterapi-io` MCP server:
+All access goes through `~/.claude/skills/twitter/lib/twitterapi.sh`. It outputs raw JSON on stdout. Each call hits one twitterapi.io endpoint.
 
-| Tool | Use for |
-|---|---|
-| `mcp__twitterapi-io__get_tweet_by_id` | Single tweet by ID |
-| `mcp__twitterapi-io__get_tweet_replies` | Replies/thread for a tweet |
-| `mcp__twitterapi-io__get_user_tweets` | A user's recent tweets |
-| `mcp__twitterapi-io__get_user_by_username` | User profile info |
-| `mcp__twitterapi-io__search_tweets` | Keyword search (recent, popular, or mixed) |
-| `mcp__twitterapi-io__get_user_followers` | A user's followers |
-| `mcp__twitterapi-io__get_user_following` | Who a user follows |
-| `mcp__twitterapi-io__search_users` | Find users by name/keyword |
+Pipe results through `python3 -c '...'` (or save to a file and parse) to extract what you need — JSON shapes are documented at `https://docs.twitterapi.io/`. Use `WebFetch` for endpoint details if needed.
 
-For API documentation, fetch from `https://docs.twitterapi.io/` with `WebFetch` as needed.
+| Subcommand | Use for | Endpoint |
+|---|---|---|
+| `tweet <id> [<id>...]` | Single (or batch) tweet by ID | `/twitter/tweets` |
+| `replies <id> [--type=Latest\|Likes\|Relevance]` | Replies/thread for a tweet | `/twitter/tweet/replies/v2` |
+| `tweets <username> [--include-replies]` | A user's recent tweets | `/twitter/user/last_tweets` |
+| `user <username>` | User profile info | `/twitter/user/info` |
+| `search <query> [--type=Latest\|Top]` | Keyword search (default: Top) | `/twitter/tweet/advanced_search` |
+| `followers <username> [--page-size=N]` | A user's followers | `/twitter/user/followers` |
+| `following <username> [--page-size=N]` | Who a user follows | `/twitter/user/followings` |
+| `users <query>` | Find users by name/keyword | `/twitter/user/search` |
+
+All subcommands accept `--cursor=...` for pagination.
 
 ## Parsing input
 
-When the user provides a tweet URL like `https://x.com/username/status/1234567890`, extract the numeric tweet ID (`1234567890`) and use `get_tweet_by_id`. If they provide a username with or without `@`, strip the `@` and use the bare username.
+When the user provides a tweet URL like `https://x.com/username/status/1234567890`, extract the numeric tweet ID (`1234567890`) and use `tweet <id>`. The script strips a leading `@` from usernames automatically.
 
 ## Procedure
 
 ### Reading a single tweet
 
-1. Call `get_tweet_by_id` with the tweet ID.
+1. Run `twitterapi.sh tweet <id>`.
 2. Present: author name, handle, date, full text, media descriptions if any, engagement stats (likes, retweets, replies, views).
 
 ### Reading a thread or replies
 
-1. Call `get_tweet_by_id` for the root tweet.
-2. Call `get_tweet_replies` with `count: 100` to get replies.
+1. Run `twitterapi.sh tweet <id>` for the root tweet.
+2. Run `twitterapi.sh replies <id> --type=Latest` to get replies (defaults to Relevance, which is rarely what you want for threads).
 3. If the user asked for the thread (i.e. the author's own continuation), filter replies to only those where the author matches the root tweet's author. Present them in chronological order.
 4. If the user asked for replies/reactions, present all replies grouped by engagement.
 
 ### Reading a user's timeline
 
-1. Call `get_user_tweets` with the username and requested count (default 20).
+1. Run `twitterapi.sh tweets <username>`. The endpoint returns ~20 tweets per page; pass `--cursor=<next_cursor>` for more.
 2. Present each tweet with: date, text (truncated if very long), engagement stats.
 3. Highlight tweets with notably high engagement relative to the user's average.
 
 ### Searching tweets
 
-1. Call `search_tweets` with the query. Default to `result_type: "recent"` unless the user asks for popular/top tweets.
+1. Run `twitterapi.sh search '<query>'`. Default queryType is `Top`; pass `--type=Latest` for recent.
 2. Present results with: author, date, text, engagement stats.
 
 ### User profile lookup
 
-1. Call `get_user_by_username`.
+1. Run `twitterapi.sh user <username>`.
 2. Present: name, handle, bio, follower/following counts, verified status, account creation date, pinned tweet if any.
 
 ## Saving tweets

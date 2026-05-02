@@ -25,7 +25,7 @@ Input: username, scoring rubric (the list's `description` or the discover skill'
 
 Steps:
 
-1. Fetch 20 tweets via `mcp__twitterapi-io__get_user_tweets` (userName: username, count: "20").
+1. Fetch ~20 tweets via `~/.claude/skills/twitter/lib/twitterapi.sh tweets <username>`.
 2. Evaluate the tweet corpus against the rubric **and** the epistemic quality gate below. Assign a score 1-10:
    - **8-10**: Consistently produces content matching the rubric with good epistemics. Auto-add.
    - **6-7**: Some signal, some noise. Strong candidate but not overwhelming.

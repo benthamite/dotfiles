@@ -41,9 +41,11 @@ See [Secrets](context/secrets.md) for full details.
 
 ## MCP servers
 
-- Google services (two accounts, CLI tooling, the one remaining `gmail-epoch-triage` MCP, troubleshooting): see [Google services](context/google-services.md) for full details.
+- **Where MCPs live** — five mechanisms (user-level, project-local, claude.ai connectors, plugins, claude-in-chrome). See `README.org` → "Where MCP servers live" for the full table including which file to edit and how each is loaded.
+- **User-level MCPs** go in `~/.claude.json` top-level `mcpServers`, NOT `~/.claude/settings.json`. After editing, run `claude/bin/sync-mcp-servers.sh` to propagate to per-account dirs (`~/.claude-epoch/`, `~/.claude-personal/`, `~/.claude-tlon/`); skipping the sync leaves new sessions reading a stale list.
+- **Project-scoped MCPs** go in `<project>/.mcp.json`. Auto-loaded when CWD is that project. No sync needed. Do NOT use `~/.claude.json`'s `projects.<path>.mcpServers` block — it's a hidden duplicate; the file-based form is the convention.
+- Google services (two accounts, CLI tooling, the `gmail-epoch-triage` MCP under `~/My Drive/Epoch/.mcp.json`, troubleshooting): see [Google services](context/google-services.md) for full details.
 - Chrome integration and multi-account: see `README.org` → "Chrome integration and multi-account".
-- MCP server definitions go in `~/.claude.json`, NOT `~/.claude/settings.json`. Run `claude/bin/sync-mcp-servers.sh` after every change to propagate to per-account dirs (`~/.claude-epoch/`, `~/.claude-personal/`, `~/.claude-tlon/`); skipping the sync leaves new sessions reading a stale list.
 
 ## External CLIs preferred over MCP
 

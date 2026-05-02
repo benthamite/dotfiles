@@ -64,7 +64,25 @@ Note: =settings.json= is intentionally *not* tracked here. Claude Code writes to
 └── skills/             ← project-specific skills (optional)
 #+end_example
 
-*MCP servers* are defined in =~/.claude.json= (canonical) and synced to active account directories (=~/.claude-epoch/=, =~/.claude-personal/=, =~/.claude-tlon/=) by =claude/bin/sync-mcp-servers.sh=. Skipping the sync after a change leaves new sessions in those accounts reading a stale list. The user-level =mcpServers= map is currently empty — every former entry has been replaced by direct CLI invocations (see "External CLIs preferred over MCP" below). One project-scoped MCP server remains: =gmail-epoch-triage= (project-scoped to the Epoch project dir, retained because =gmail.py= authenticates as =pablo@epoch.ai= and can't see the =email-triage@epoch.ai= mailbox).
+*Where MCP servers live.* Five different mechanisms, by source-of-truth file:
+
+| Mechanism | File | When loaded | Edit how |
+|-----------+------+-------------+----------|
+| User-level | =~/.claude.json= top-level =mcpServers= | every session, every directory | edit + run =claude/bin/sync-mcp-servers.sh= to propagate to per-account dirs (=~/.claude-epoch/=, =~/.claude-personal/=, =~/.claude-tlon/=) |
+| Project-local | =<project>/.mcp.json= | only when CWD is that project | edit the file directly (no sync needed — Claude Code reads it on session start) |
+| claude.ai connectors | server-side, no local file | every session, regardless of CWD | https://claude.ai → Settings → Connectors |
+| Plugin-managed | =~/.claude/plugins/...= | when the plugin is enabled | =/plugin enable/disable <name>= |
+| =claude-in-chrome= | Chrome extension + native messaging host | when Claude Code is started with =--chrome= | =/chrome= toggle or =claudeInChromeDefaultEnabled= in =~/.claude.json= |
+
+Do *not* use =~/.claude.json= 's =projects.<path>.mcpServers= block — Claude Code supports it but it duplicates =<project>/.mcp.json= in a hidden location. Always put project-scoped MCPs in =<project>/.mcp.json=.
+
+*Current inventory* (across all five mechanisms, as of the latest cleanup):
+
+- User-level: =(empty)= — every former entry replaced by a CLI (see "External CLIs preferred over MCP" below).
+- Project-local: =~/My Drive/Epoch/.mcp.json= holds =airtable=, =asana=, =gmail-epoch-triage=. =~/source/ForumMagnum/.mcp.json= holds =playwright=.
+- claude.ai connectors: GitHub Integration (connected), Ahrefs, Gmail, Google Calendar, Google Drive, Slack (Interactive). Plus custom-URL entries (Github via Copilot MCP, Asana — not yet connected). Manage via the web UI.
+- Plugin-managed: none currently enabled.
+- =claude-in-chrome=: enabled (heavy use — browser automation).
 
 *External CLIs preferred over MCP.* Every service that previously had a user-level MCP server has been replaced by a direct CLI invocation, listed under "External CLIs preferred over MCP" in =claude/CLAUDE.md=: Anna's Archive (=annas-mcp= binary used as a CLI), Twitter (=twitterapi.sh=), Gmail and Sheets (=claude/bin/gmail.py= and =sheets.py=, sharing =_gworkspace_auth.py= for OAuth), Slack (=claude/bin/slack.py=, xoxc/xoxd auth via 1Password — replaces both the unofficial and official Slack MCP servers), Calendar (=gcalcli=), Docs/Drive (=gdoc=, multi-account: =--account epoch= or =--account personal=), GitHub (=gh=). Dropping the MCP wrappers shaves the corresponding tool schemas out of every session's context.
 

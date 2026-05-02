@@ -53,7 +53,7 @@ The Epoch project root is the closest ancestor directory containing `CLAUDE.md` 
    - **What was done**: decisions made, research performed, communications sent (Slack messages, emails)
    - **Open questions**: anything unresolved or awaiting a response
    - **Next steps**: what the next session should pick up
-3. Create `projects/<name>/CLAUDE.md` with a brief project description and a log reference:
+3. Create `projects/<name>/CLAUDE.md` with a brief project description and a session summary + pointer to the log (matching the `/update-log` convention — do **not** use an `@logs/...` import, which would inline the entire log on every session):
    ```
    # <Project title>
 
@@ -61,7 +61,9 @@ The Epoch project root is the closest ancestor directory containing `CLAUDE.md` 
 
    ## Latest session
 
-   @logs/YYYY-MM-DD.md
+   <2–4 sentence summary of the kickoff: what the project is, key decisions made, and what the next session should pick up.>
+
+   Full details: logs/YYYY-MM-DD.md
    ```
 
 ## Step 4: If automation project, note scaffolding plan

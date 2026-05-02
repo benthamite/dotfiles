@@ -41,7 +41,7 @@ See [Secrets](context/secrets.md) for full details.
 
 ## MCP servers
 
-- Google MCP setup (two accounts, multiple servers, troubleshooting): see [Google MCP setup](context/google-mcp-setup.md) for full details.
+- Google services (two accounts, CLI tooling, the one remaining `gmail-epoch-triage` MCP, troubleshooting): see [Google services](context/google-services.md) for full details.
 - Chrome integration and multi-account: see `README.org` → "Chrome integration and multi-account".
 - MCP server definitions go in `~/.claude.json`, NOT `~/.claude/settings.json`. Run `claude/bin/sync-mcp-servers.sh` after every change to propagate to per-account dirs (`~/.claude-epoch/`, `~/.claude-personal/`, `~/.claude-tlon/`); skipping the sync leaves new sessions reading a stale list.
 
@@ -51,7 +51,7 @@ These tools are installed locally and should be invoked directly via Bash; do NO
 
 - **Anna's Archive** — `annas-mcp` binary used as a CLI: `annas-mcp book-search '<query>'`, `book-download <md5> <filename>`, `article-search '<doi-or-keywords>'`, `article-download <doi>`. Env: `ANNAS_BASE_URL`, `ANNAS_DOWNLOAD_PATH` (in `.zshenv`), `ANNAS_SECRET_KEY` (in `.zshenv-secrets`). The same binary also has an `mcp` subcommand we no longer use.
 - **Twitter / X** — `claude/skills/twitter/lib/twitterapi.sh`. See the `twitter` skill.
-- **Gmail (Epoch account)** — `claude/bin/gmail.py`. See `context/google-mcp-setup.md`.
+- **Gmail (Epoch account)** — `claude/bin/gmail.py`. See `context/google-services.md`.
 - **Google Sheets (Epoch account)** — `claude/bin/sheets.py`. Same.
 - **Slack (Epoch workspace, user-impersonating)** — `claude/bin/slack.py`. Subcommands: `search`, `history`, `replies`, `channels`, `users-search`, `user-info`, `mark`, `unreads`. Auth via xoxc/xoxd from `op://Automations/Slack MCP - Epoch Unofficial`.
 - **Google Calendar** — `gcalcli`.

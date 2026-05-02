@@ -32,7 +32,7 @@ Run these in parallel and note every hit:
 5. `cd <project>/repo && git remote -v` — capture remote URL
 6. `gh repo view epoch-research/<old-slug>` — confirm GitHub repo exists
 7. `op item get "Anthropic - <old-slug>" --vault Automations 2>&1` (and any other obvious `<service> - <old-slug>` patterns from the workflow file)
-8. `mcp__slack-official-epochai__slack_search_channels query=<old-slug>` — confirm channel state and ID
+8. `~/My Drive/dotfiles/claude/bin/slack.py channels | jq -r '.channels[] | select(.name | contains("<old-slug>")) | "\(.id)\t\(.name)"'` — confirm channel state and ID
 
 Categorize each grep hit as:
 - **active reference** (rewrite): CLAUDE.md, `.gitignore`, `current-list-of-automation-projects.org`, project's own org file, sibling `automation-watchdog/repo/config.yml`, code/workflow files inside the project repo, etc.

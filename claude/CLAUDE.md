@@ -53,8 +53,8 @@ These tools are installed locally and should be invoked directly via Bash; do NO
 
 - **Anna's Archive** — `annas-mcp` binary used as a CLI: `annas-mcp book-search '<query>'`, `book-download <md5> <filename>`, `article-search '<doi-or-keywords>'`, `article-download <doi>`. Env: `ANNAS_BASE_URL`, `ANNAS_DOWNLOAD_PATH` (in `.zshenv`), `ANNAS_SECRET_KEY` (in `.zshenv-secrets`). The same binary also has an `mcp` subcommand we no longer use.
 - **Twitter / X** — `claude/skills/twitter/lib/twitterapi.sh`. See the `twitter` skill.
-- **Gmail (Epoch account)** — `claude/bin/gmail.py`. See `context/google-services.md`.
-- **Google Sheets (Epoch account)** — `claude/bin/sheets.py`. Same.
+- **Gmail** — `claude/bin/gmail.py [--account epoch|personal]` (default `epoch`). See `context/google-services.md`.
+- **Google Sheets** — `claude/bin/sheets.py [--account epoch|personal]` (default `epoch`).
 - **Slack (Epoch workspace, user-impersonating)** — `claude/bin/slack.py`. Subcommands: `search`, `history`, `replies`, `channels`, `users-search`, `user-info`, `mark`, `unreads`. Auth via xoxc/xoxd from `op://Automations/Slack MCP - Epoch Unofficial`.
 - **Google Calendar** — `gcalcli`.
 - **Google Docs / Drive** — `gdoc --account epoch` (work) or `gdoc --account personal` (personal).

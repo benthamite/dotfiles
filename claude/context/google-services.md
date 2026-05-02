@@ -24,24 +24,28 @@ For the **Epoch** account (`pablo@epoch.ai`), prefer CLIs over MCP. The CLIs sha
 
 For the **personal** account (`pablo.stafforini@gmail.com`):
 - Docs/Drive: `gdoc --account personal` (same CLI as Epoch, separate OAuth token under `~/.config/gdoc/accounts/personal/`).
-- Calendar: `gcalcli` (already configured for both accounts).
-- Gmail: not currently wired. Add to `gmail.py` with separate creds if needed.
+- Gmail: `gmail.py --account personal` (same CLI, separate refresh token; see "Auth" below).
+- Sheets: `sheets.py --account personal` (same CLI, same token as Gmail).
+- Calendar: `gcalcli` (already configured for both accounts via shared calendars; no per-account flag).
 
-The personal-account `gdoc` OAuth client lives in the same `claude-code-gmail-490520` GCP project as the Epoch one, with `pablo.stafforini@gmail.com` added as a test user on the OAuth consent screen. To re-auth: `gdoc auth --account personal`. To list authenticated accounts: `gdoc auth --list`.
+The personal-account OAuth grants are against the same `claude-code-gmail-490520` GCP project as the Epoch one, with `pablo.stafforini@gmail.com` added as a test user on the OAuth consent screen.
 
-## Auth (Epoch CLIs)
+## Auth
 
-`gmail.py` and `sheets.py` share auth via `claude/bin/_gworkspace_auth.py`. They read these env vars (set in `~/My Drive/dotfiles/shell/.zshenv-secrets`):
+`gmail.py`, `sheets.py`, and the shared `claude/bin/_gworkspace_auth.py` helper support both accounts. The OAuth client (id and secret) is shared; only the refresh token differs per account. Env vars (set in `~/My Drive/dotfiles/shell/.zshenv-secrets`):
 
-- `GOOGLE_WORKSPACE_CLIENT_ID`
-- `GOOGLE_WORKSPACE_CLIENT_SECRET`
-- `GOOGLE_WORKSPACE_REFRESH_TOKEN`
+| Var | Account | Purpose |
+|---|---|---|
+| `GOOGLE_WORKSPACE_CLIENT_ID` | both | OAuth client ID (shared) |
+| `GOOGLE_WORKSPACE_CLIENT_SECRET` | both | OAuth client secret (shared) |
+| `GOOGLE_WORKSPACE_REFRESH_TOKEN` | epoch | refresh token authenticated as `pablo@epoch.ai` |
+| `GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL` | personal | refresh token authenticated as `pablo.stafforini@gmail.com` |
 
-The OAuth project is `claude-code-gmail-490520`. The wrapper exchanges the refresh token for an access token and caches it in `/tmp/gworkspace-access-token.json` until it expires.
+Pick the account with `--account epoch` (default) or `--account personal` on `gmail.py`/`sheets.py`. The wrapper exchanges the refresh token for an access token and caches per-account at `/tmp/gworkspace-access-token-<account>.json`.
 
-The same refresh token also powers `gdoc` (which has its own auth flow but uses the same OAuth client) and `gmail-epoch-triage` (separate, see below).
+The Epoch refresh token also powers `gdoc --account epoch` (which has its own auth flow but uses the same OAuth client) and the `gmail-epoch-triage` MCP (separate, see below). The personal refresh token is used only by `gmail.py`/`sheets.py`; `gdoc --account personal` has its own token under `~/.config/gdoc/accounts/personal/`.
 
-If the token expires (`invalid_grant` errors), regenerate with the recipe under "Generating a new refresh token" below and update `GOOGLE_WORKSPACE_REFRESH_TOKEN` in `~/.zshenv-secrets`.
+If a token expires (`invalid_grant` errors), regenerate with the recipe under "Generating a new refresh token" below and update the appropriate env var in `~/.zshenv-secrets`.
 
 ## Servers by account
 
@@ -76,37 +80,62 @@ Enable at: Google Cloud Console > APIs & Services > Library (project `claude-cod
 
 ## Generating a new refresh token
 
-### For the Epoch CLIs (`gmail.py`, `sheets.py`, gdoc)
+The recipe below works for both accounts — the only differences are which Google account you sign in as, which env var to update afterwards, and which scopes to request. It prints the refresh token to stdout; copy that into the matching env var in `~/.zshenv-secrets`. If you'd rather not have the token transit your terminal, see the "without printing" variant below.
 
-If the token expires or you need to add scopes:
+### Recipe (both accounts)
+
+Choose your scopes by what the token will be used for:
+
+- Epoch (full set): `gmail.modify`, `calendar`, `drive`, `documents`, `spreadsheets`.
+- Personal (just what `gmail.py` and `sheets.py` need): `gmail.modify`, `spreadsheets`.
 
 ```bash
-GOOGLE_OAUTH_CLIENT_ID="$GOOGLE_WORKSPACE_CLIENT_ID" \
-GOOGLE_OAUTH_CLIENT_SECRET="$GOOGLE_WORKSPACE_CLIENT_SECRET" \
-uvx --from google-workspace-mcp python3 -c "
-from google_auth_oauthlib.flow import InstalledAppFlow
+SCOPES="https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/spreadsheets"
+# Add ' https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/documents' for the Epoch full set.
+
+uv run --with google-auth-oauthlib --no-project python3 -c "
 import os
-flow = InstalledAppFlow.from_client_config({
-    'installed': {
-        'client_id': os.environ['GOOGLE_OAUTH_CLIENT_ID'],
-        'client_secret': os.environ['GOOGLE_OAUTH_CLIENT_SECRET'],
-        'redirect_uris': ['http://localhost'],
-        'auth_uri': 'https://accounts.google.com/o/oauth2/auth',
-        'token_uri': 'https://oauth2.googleapis.com/token',
-    }
-}, [
-    'https://www.googleapis.com/auth/gmail.modify',
-    'https://www.googleapis.com/auth/calendar',
-    'https://www.googleapis.com/auth/drive',
-    'https://www.googleapis.com/auth/documents',
-    'https://www.googleapis.com/auth/spreadsheets',
-])
-creds = flow.run_local_server(port=0, open_browser=True)
+from google_auth_oauthlib.flow import InstalledAppFlow
+flow = InstalledAppFlow.from_client_config({'installed': {
+    'client_id': os.environ['GOOGLE_WORKSPACE_CLIENT_ID'],
+    'client_secret': os.environ['GOOGLE_WORKSPACE_CLIENT_SECRET'],
+    'redirect_uris': ['http://localhost'],
+    'auth_uri': 'https://accounts.google.com/o/oauth2/auth',
+    'token_uri': 'https://oauth2.googleapis.com/token',
+}}, os.environ['SCOPES'].split())
+creds = flow.run_local_server(port=8080, open_browser=True)
 print('REFRESH_TOKEN=' + creds.refresh_token)
 "
 ```
 
-Update `GOOGLE_WORKSPACE_REFRESH_TOKEN` in `~/My Drive/dotfiles/shell/.zshenv-secrets`. Then `rm /tmp/gworkspace-access-token.json` to flush the wrapper's token cache.
+When the browser opens, sign in as the account you want the token for: `pablo@epoch.ai` for `GOOGLE_WORKSPACE_REFRESH_TOKEN`, `pablo.stafforini@gmail.com` for `GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL`.
+
+After printing, paste the value into the corresponding `export` line in `~/.zshenv-secrets`, then `rm /tmp/gworkspace-access-token-<account>.json` to flush the wrapper's token cache and `source ~/.zshenv-secrets` (or open a fresh shell).
+
+### Without printing the token to the terminal
+
+If you'd rather not have the token in scrollback, replace the final `print(...)` line with code that writes the token directly to `.zshenv-secrets`:
+
+```python
+from pathlib import Path
+import sys
+VAR = "GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL"  # or GOOGLE_WORKSPACE_REFRESH_TOKEN
+secrets = Path.home() / "My Drive" / "dotfiles" / "shell" / ".zshenv-secrets"
+text = secrets.read_text() if secrets.exists() else ""
+new_line = f'export {VAR}="{creds.refresh_token}"\n'
+lines = text.splitlines(keepends=True)
+for i, line in enumerate(lines):
+    if line.startswith(f"export {VAR}="):
+        lines[i] = new_line
+        break
+else:
+    if text and not text.endswith("\n"): lines.append("\n")
+    lines.append(new_line)
+secrets.write_text("".join(lines))
+print(f"Wrote {VAR} to {secrets}", file=sys.stderr)
+```
+
+Note: the OAuth flow's `port=8080` matches the redirect URI registered for `claude-code-gmail-490520`. `port=0` (random ephemeral) returns a Google 400 because the loopback redirect URI isn't auto-registered for this client.
 
 ### gmail-epoch-triage (email-triage@epoch.ai)
 
@@ -153,8 +182,8 @@ After running, restart Claude Code so the MCP server picks up the new credential
 
 The cached access token expired or the refresh token was revoked. Try in order:
 
-1. `rm /tmp/gworkspace-access-token.json` and re-run the command. If a stale cache was the only problem, this fixes it.
-2. If still failing, regenerate the refresh token (see "Generating a new refresh token" above), update `~/.zshenv-secrets`, then `source ~/.zshenv-secrets` (or open a fresh shell).
+1. `rm /tmp/gworkspace-access-token-<account>.json` (`<account>` is `epoch` or `personal` — match whichever account you ran with) and re-run the command. If a stale cache was the only problem, this fixes it.
+2. If still failing, regenerate the refresh token (see "Generating a new refresh token" above), update the matching env var (`GOOGLE_WORKSPACE_REFRESH_TOKEN` for epoch, `GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL` for personal) in `~/.zshenv-secrets`, then `source ~/.zshenv-secrets` (or open a fresh shell).
 
 ### `invalid_grant` from `gdoc --account personal`
 

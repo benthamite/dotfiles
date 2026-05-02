@@ -8,6 +8,8 @@ argument-hint: "[new-profile]"
 
 Consolidate Claude Code project data (sessions, memory, subagents, tool results) across elpaca profile changes by scanning `~/.claude/projects/` for all directories matching the elpaca pattern and grouping them by package name. No explicit package list is needed.
 
+> **Related skills.** The per-package logic here is essentially the same operation as `move-session-log --rename` (whole-project rename mode), applied in bulk. This skill stays separate because it adds (a) merge semantics — multiple sources can flow into one target — and (b) profile-path rewrites in `~/.claude.json` keyed on the elpaca profile name rather than a single old/new pair. For a single project rename outside an elpaca-profile bump, use the `move-session-log` skill directly (and `rename-project` for full project renames).
+
 ## Determine new profile
 
 - If `$ARGUMENTS` names a profile (e.g., `8.0.0-dev`), use that.

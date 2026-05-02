@@ -111,9 +111,17 @@ mv ~/git-dirs/epoch-<old-slug> ~/git-dirs/epoch-<new-slug>
 # Rewrite the .git pointer (Write tool — single line: "gitdir: <new-path>")
 mv "<Epoch>/projects/<old-slug>/<old-slug>.org" "<Epoch>/projects/<old-slug>/<new-slug>.org"
 mv "<Epoch>/projects/<old-slug>" "<Epoch>/projects/<new-slug>"
-mv ~/.claude/projects/-Users-...-<old-slug> ~/.claude/projects/-Users-...-<new-slug>
 mv ~/.claude/rendered/<old-slug> ~/.claude/rendered/<new-slug>     # if the dir exists
 ```
+
+Then invoke the **`move-session-log` skill** in `--rename` mode to relocate the project's Claude session-log directory **and** rewrite the embedded paths (47 history entries and 1300+ `cwd` fields are typical for a long-lived project — without these rewrites `agent-log-resume-session` opens the wrong path):
+
+```
+Skill: move-session-log
+Args: --rename "<Epoch>/projects/<old-slug>" "<Epoch>/projects/<new-slug>"
+```
+
+That skill is idempotent: if the project dir under `~/.claude/projects/` has already been moved, it skips the move and only does the path rewrites. It also migrates the `~/.claude.json` `projects` map entry so the trust dialog doesn't re-prompt.
 
 If `~/.claude/rendered/_index.el` exists, rewrite the path strings inside it too (the file is large — use Python with `replace`, not Edit):
 
@@ -157,7 +165,27 @@ gh repo edit epoch-research/<new-slug> --description "<new description with new 
 2. **GitHub state**: `gh repo view epoch-research/<new-slug> --json name,description,url` and `gh repo view epoch-research/<old-slug>` (latter should resolve to new via redirect).
 3. **1P state**: `op read "op://Automations/<service> - <new-slug>/credential"` (using service-account token, not biometric session) — proves GH Actions will see it.
 4. **Local repo health**: `cd <Epoch>/projects/<new-slug>/repo && git status && git log -1 --oneline`.
-5. **End-to-end (best test)**: if the project has a GH Actions workflow with `workflow_dispatch` and a `dry_run` input, trigger one:
+5. **Session-log paths rewritten**: confirm zero stale `cwd` and `project` entries:
+   ```bash
+   python3 -c "
+   import json, glob, os
+   old = '<old-project-path>'
+   ok = True
+   with open(os.path.expanduser('~/.claude/history.jsonl')) as f:
+       for line in f:
+           try: e = json.loads(line)
+           except: continue
+           if e.get('project') == old: ok = False; print('stale history entry'); break
+   for jl in glob.glob(os.path.expanduser('~/.claude/projects/-Users-...-<new-slug>/*.jsonl')):
+       with open(jl) as f:
+           for line in f:
+               try: e = json.loads(line)
+               except: continue
+               if e.get('cwd') == old: ok = False; print(f'stale cwd in {jl}'); break
+   print('clean' if ok else 'STALE')
+   "
+   ```
+6. **End-to-end (best test)**: if the project has a GH Actions workflow with `workflow_dispatch` and a `dry_run` input, trigger one:
    ```bash
    gh workflow run <workflow>.yml -f dry_run=true
    gh run watch <run-id> --repo epoch-research/<new-slug> --exit-status
@@ -176,10 +204,9 @@ gh repo edit epoch-research/<new-slug> --description "<new description with new 
 
 ## What this skill deliberately does NOT touch
 
-- Historical session logs and meeting notes (rooted by date)
-- `~/.claude/history.jsonl`
-- Old session-log `.jsonl` files' content (the dir is renamed, the content is preserved)
-- `:summary` strings in `~/.claude/rendered/_index.el`
+- Historical session logs (under `<project>/logs/<date>.md`) and meeting notes (under `meetings/<person>/<date>.org`) — these describe past events on those dates
+- The session log **content** of `.jsonl` messages — only the `cwd` field gets rewritten by `move-session-log`; the user/assistant message bodies stay intact even if they mention the old slug
+- `:summary` strings in `~/.claude/rendered/_index.el` (only the path strings get rewritten)
 - Asana project name, Gmail filters, Google Drive folders — flag these for manual followup if they exist
 
 ## Reference: this skill was authored from the rename of `ai-productivity-bot` → `ai-productivity-digest` (2026-05-02). End-to-end workflow_dispatch verification: `gh run 25254428602` succeeded.

@@ -20,7 +20,7 @@ Generate a pre-populated org-mode meeting file for the biweekly 1:1 with María 
 
 ## Google Docs access
 
-All Google Docs/Drive operations run through the `gdoc` CLI, authenticated as `pablo@epoch.ai` (account name: `epoch`). Always pass `--account epoch`. Do not use `mcp__google-docs-personal__*`.
+All Google Docs/Drive operations run through the `gdoc` CLI, authenticated as `pablo@epoch.ai` (account name: `epoch`). Always pass `--account epoch` for this skill.
 
 ## Step 0: Determine dates
 

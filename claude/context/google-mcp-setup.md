@@ -23,9 +23,11 @@ For the **Epoch** account (`pablo@epoch.ai`), prefer CLIs over MCP. The CLIs sha
 | Slides   | none | Rare enough to handle ad-hoc via curl + Sheets/Drive APIs if ever needed. |
 
 For the **personal** account (`pablo.stafforini@gmail.com`):
-- Docs: `mcp__google-docs-personal__*` (the only personal-account MCP still in use). See "google-docs-personal" below for the OAuth-token-expiry quirk.
+- Docs/Drive: `gdoc --account personal` (same CLI as Epoch, separate OAuth token under `~/.config/gdoc/accounts/personal/`).
 - Calendar: `gcalcli` (already configured for both accounts).
 - Gmail: not currently wired. Add to `gmail.py` with separate creds if needed.
+
+The personal-account `gdoc` OAuth client lives in the same `claude-code-gmail-490520` GCP project as the Epoch one, with `pablo.stafforini@gmail.com` added as a test user on the OAuth consent screen. To re-auth: `gdoc auth --account personal`. To list authenticated accounts: `gdoc auth --list`.
 
 ## Auth (Epoch CLIs)
 
@@ -53,22 +55,7 @@ If the token expires (`invalid_grant` errors), regenerate with the recipe under 
 
 ### personal account
 
-**google-docs-personal** (User MCP in `~/.claude.json`)
-- **Package:** `@a-bonus/google-docs-mcp` via `npx`
-- **Covers:** Docs (and possibly Drive/Sheets — the package has broad tools)
-- **OAuth client:** `831988183270-...` (different GCP project)
-- **Config dir:** `~/.config/google-docs-mcp/`
-- **Known issue (token expiry):** the OAuth app is in Google "testing" mode, which means **refresh tokens expire after 7 days**. This causes recurring `invalid_grant` errors. Long-term fix is to replace it with a `google-workspace-personal` server in production mode (see "Planned" below).
-
-### Planned: google-workspace-personal
-
-A GCP project `claude-mcp-personal-ps` was created with APIs enabled to replace the flaky `google-docs-personal`. Remaining steps:
-1. Configure OAuth consent screen in production mode (GCP Console > APIs & Services > OAuth consent screen for project `claude-mcp-personal-ps`)
-2. Create OAuth client credentials (Desktop app)
-3. Generate refresh token using `InstalledAppFlow` (see recipe below)
-4. Either (a) add a `google-workspace-personal` MCP server entry to `~/.claude.json`, or (b) extend `gmail.py`/`sheets.py` to support a `--account personal` flag with a separate set of `GOOGLE_WORKSPACE_PERSONAL_*` env vars. Option (b) is preferable — fewer running processes, less schema overhead.
-5. Remove `google-docs-personal` from `~/.claude.json`
-6. Update this documentation
+No dedicated MCP server. Personal-account Docs/Drive go through `gdoc --account personal` (see "Tooling by service" above). Calendar through `gcalcli`. Gmail isn't wired.
 
 ### Built-in (claude.ai integrations)
 
@@ -169,19 +156,15 @@ The cached access token expired or the refresh token was revoked. Try in order:
 1. `rm /tmp/gworkspace-access-token.json` and re-run the command. If a stale cache was the only problem, this fixes it.
 2. If still failing, regenerate the refresh token (see "Generating a new refresh token" above), update `~/.zshenv-secrets`, then `source ~/.zshenv-secrets` (or open a fresh shell).
 
-### `invalid_grant` on google-docs-personal
+### `invalid_grant` from `gdoc --account personal`
 
-The `@a-bonus/google-docs-mcp` server's OAuth app is in Google "testing" mode, so refresh tokens expire every 7 days. To fix:
+The personal-account OAuth token was revoked or aged out. Re-auth:
 
-1. Delete the stale token: `rm ~/.config/google-docs-mcp/token.json`
-2. Re-run the MCP server to trigger the OAuth flow:
-   ```bash
-   GOOGLE_CLIENT_ID="$GOOGLE_DOCS_CLIENT_ID" \
-   GOOGLE_CLIENT_SECRET="$GOOGLE_DOCS_CLIENT_SECRET" \
-   npx -y @a-bonus/google-docs-mcp
-   ```
-   Open the printed auth URL, sign in with `pablo.stafforini@gmail.com`, authorize.
-3. **Critical:** the running MCP server process caches the old token in memory. You **must start a brand new Claude Code session** (not resume) for it to pick up the new token.
+```bash
+gdoc auth --account personal
+```
+
+A browser opens; sign in as `pablo.stafforini@gmail.com`. The OAuth client is in "testing" mode under GCP project `claude-code-gmail-490520`, so the personal email must remain in the project's **Test users** list (GCP Console → APIs & Services → OAuth consent screen → Audience).
 
 ### gmail.py reports "ERROR: missing env var"
 

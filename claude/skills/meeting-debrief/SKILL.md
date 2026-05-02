@@ -19,7 +19,7 @@ After any meeting, find the Gemini-generated meeting summary, extract action ite
 
 ## Tooling
 
-- **Google Docs / Drive** — `gdoc` CLI, authenticated as `pablo@epoch.ai` (always pass `--account epoch`). Do not use `mcp__google-docs-personal__*` (that's the personal account).
+- **Google Docs / Drive** — `gdoc` CLI. Pass `--account epoch` for `pablo@epoch.ai` (default for this skill) or `--account personal` for `pablo.stafforini@gmail.com`.
 - **Gmail** — `~/My Drive/dotfiles/claude/bin/gmail.py` (search, read, archive). Auth via the `GOOGLE_WORKSPACE_*` env vars.
 - **Calendar** — `gcalcli` CLI.
 

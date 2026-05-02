@@ -13,9 +13,12 @@ import sys
 import tempfile
 
 CANONICAL = os.path.expanduser("~/.claude.json")
+# Active account dirs only. ~/.claude-work is obsolete and intentionally
+# excluded; do not re-add unless that account is reactivated.
 TARGETS = [
     os.path.expanduser("~/.claude-epoch/.claude.json"),
     os.path.expanduser("~/.claude-personal/.claude.json"),
+    os.path.expanduser("~/.claude-tlon/.claude.json"),
 ]
 
 if not os.path.isfile(CANONICAL):

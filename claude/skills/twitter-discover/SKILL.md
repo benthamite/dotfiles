@@ -10,17 +10,19 @@ user-invocable: true
 
 Iterative, graph-based discovery of high-value Twitter/X accounts in any topic area. Uses a "hot promise score" algorithm that combines following-list overlap with bio relevance filtering and continuous score updates.
 
-## MCP tools used
+## API access
 
-From the `twitterapi-io` MCP server:
+All twitterapi.io calls go through `~/.claude/skills/twitter/lib/twitterapi.sh`. See the `twitter` skill for the full subcommand reference. Subcommands used here:
 
-| Tool                                       | Use for                                  |
-|--------------------------------------------|------------------------------------------|
-| `mcp__twitterapi-io__search_tweets`        | Find initial seed accounts by topic      |
-| `mcp__twitterapi-io__get_user_tweets`      | Sample tweets to evaluate an account     |
-| `mcp__twitterapi-io__get_user_following`   | Get who an account follows (max 100)     |
-| `mcp__twitterapi-io__get_user_by_username` | Check bio/profile before sampling tweets |
-| `mcp__twitterapi-io__search_users`         | Find users by keyword                    |
+| Subcommand                | Use for                                   |
+|---------------------------|-------------------------------------------|
+| `twitterapi.sh search`    | Find initial seed accounts by topic       |
+| `twitterapi.sh tweets`    | Sample tweets to evaluate an account      |
+| `twitterapi.sh following` | Get who an account follows (page up to 200) |
+| `twitterapi.sh user`      | Check bio/profile before sampling tweets  |
+| `twitterapi.sh users`     | Find users by keyword                     |
+
+Save each response to a file under `/tmp/` and pass the file path to the helpers below to parse out the fields you care about.
 
 ## Procedure
 
@@ -43,12 +45,12 @@ Confirm the criteria with the user before proceeding.
 
 **If not**, find seeds via search:
 
-1. Run 3-5 `search_tweets` calls using `TOPIC_KEYWORDS` with `result_type: "popular"` and `count: 20`.
+1. Run 3-5 `twitterapi.sh search` calls using `TOPIC_KEYWORDS` (default `--type=Top`, no need to pass it). Save each response to `/tmp/`.
 2. Extract unique authors from results, filtering out:
    - Accounts with <500 followers (too small to anchor discovery).
    - Accounts whose bio or content is clearly irrelevant (use your judgment).
    - Reply-only results.
-3. For the top 5-8 authors by engagement, sample their tweets (`get_user_tweets`, count 20).
+3. For the top 5-8 authors by engagement, sample their tweets (`twitterapi.sh tweets <username>`, ~20 tweets per page).
 4. Score each using `RELEVANCE_CRITERIA`. Any scoring 6+ become seeds.
 5. If fewer than 3 seeds found, try different search queries and repeat.
 
@@ -59,13 +61,13 @@ This is the core loop. Repeat until the user is satisfied.
 #### 3a. Score seed accounts
 
 For each unscored seed:
-1. Fetch 20 tweets with `get_user_tweets`.
+1. Fetch ~20 tweets with `twitterapi.sh tweets <username>`.
 2. Evaluate against `RELEVANCE_CRITERIA`. Assign a score 1-10.
 3. Record the score.
 
 #### 3b. Fetch following lists
 
-For each scored account with score >= 6, fetch their following list (`get_user_following`, count 100).
+For each scored account with score >= 6, fetch their following list (`twitterapi.sh following <username> --page-size=100`).
 
 **Important**: Do these calls sequentially (not in parallel) to avoid rate limiting. A 2-second pause between calls is not needed but avoid firing more than 3 simultaneously.
 

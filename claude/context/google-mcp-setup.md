@@ -22,7 +22,19 @@ For Google Docs and Drive operations on the **Epoch** account, always use the [`
 
 All Epoch-related skills (`/meeting-debrief`, `/meeting-prep`, etc.) and interactive sessions that touch Epoch Google Docs should default to `gdoc`. Fall back to `mcp__google-workspace-epoch__docs_*` / `drive_*` only if `gdoc` is unavailable or lacks the needed operation. Do **not** use `mcp__google-docs-personal__*` for Epoch work — that server is authenticated as the personal account and will create docs owned by `pablo.stafforini@gmail.com`.
 
-Gmail and Calendar are not covered by `gdoc`; keep using `mcp__google-workspace-epoch__*` for those.
+Gmail is not covered by `gdoc`; keep using `mcp__google-workspace-epoch__*` for it.
+
+## Calendar: prefer `gcalcli`
+
+For Calendar operations (either account), use the `gcalcli` CLI. It's already configured with both `pablo@epoch.ai` and `pablo.stafforini@gmail.com` calendars. Common commands:
+
+- `gcalcli agenda` — upcoming events
+- `gcalcli search '<query>'` — search events
+- `gcalcli add` / `gcalcli quick` — create events
+- `gcalcli edit` / `gcalcli delete` — modify events
+- `gcalcli --calendar '<name>' ...` — restrict to one calendar (e.g. `Work`, `pablo.stafforini@gmail.com`)
+
+Fall back to `mcp__google-workspace-epoch__calendar_*` only if `gcalcli` lacks the needed operation.
 
 ## Servers by account
 
@@ -58,20 +70,16 @@ Gmail and Calendar are not covered by `gdoc`; keep using `mcp__google-workspace-
 - **Config dir:** `~/.config/google-docs-mcp/`
 - **Known issue (token expiry):** the OAuth app is in Google "testing" mode, which means **refresh tokens expire after 7 days**. This causes recurring `invalid_grant` errors. The long-term fix is to replace this server with a `google-workspace-personal` instance using the `claude-mcp-personal-ps` GCP project in production mode (see "Planned: google-workspace-personal" below).
 
-**google-calendar-personal** (User MCP in `~/.claude.json`)
-- **Package:** `@cocal/google-calendar-mcp` via `npx`
-- **Covers:** Calendar only
-- **OAuth client:** `896560031613-...` (yet another GCP project)
-- **Config dir:** `~/.config/google-calendar-mcp/`
+Personal calendar is handled by `gcalcli` (see "Calendar: prefer `gcalcli`" above) — there is no longer a personal-calendar MCP server.
 
 ### Planned: google-workspace-personal
 
-A GCP project `claude-mcp-personal-ps` has been created with APIs enabled (Docs, Calendar, Drive, Sheets, Gmail) to replace the flaky `google-docs-personal` and `google-calendar-personal` servers with a single `google-workspace-personal` server using the same `google-workspace-mcp` package as the Epoch server. **Remaining steps:**
+A GCP project `claude-mcp-personal-ps` has been created with APIs enabled (Docs, Drive, Sheets, Gmail) to replace the flaky `google-docs-personal` server with a `google-workspace-personal` server using the same `google-workspace-mcp` package as the Epoch server. **Remaining steps:**
 1. Configure OAuth consent screen in production mode (GCP Console > APIs & Services > OAuth consent screen for project `claude-mcp-personal-ps`)
 2. Create OAuth client credentials (Desktop app)
 3. Generate refresh token using `InstalledAppFlow` (see recipe below)
 4. Add `google-workspace-personal` MCP server entry to `~/.claude.json`
-5. Remove `google-docs-personal` and `google-calendar-personal` from `~/.claude.json`
+5. Remove `google-docs-personal` from `~/.claude.json`
 6. Run `sync-mcp-servers.sh` to propagate to account config dirs
 7. Update this documentation
 

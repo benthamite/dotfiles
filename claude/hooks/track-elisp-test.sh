@@ -38,13 +38,15 @@ COMBINED="$STDOUT$STDERR"
 
 # Check if the command used emacs --batch or the batch-test.sh wrapper
 if echo "$COMMAND" | grep -qE 'emacs\s+--batch|batch-test\.sh'; then
-  # Safety check: did the test load a file from elpaca/builds instead
-  # of the working tree? This catches the silent-stale-load bug where
-  # the .elc from elpaca shadows the edited .el source.
-  if echo "$COMBINED" | grep -qE 'elpaca/builds/.*\.elc|using older file'; then
-    echo "WARNING: emacs --batch loaded a stale .elc from elpaca/builds." >&2
-    echo "The test did NOT verify your edits. Fix the load-path order:" >&2
-    echo '  (push "/path/to/emacs/extras" load-path)  ; MUST come last' >&2
+  # Safety check: did Emacs print a real stale-load warning? These are
+  # the canonical messages emitted when a .elc shadows a newer .el. We
+  # match them literally rather than any mention of elpaca/builds, which
+  # produces false positives when the test prints function source paths
+  # or when a standalone package legitimately loads from elpaca/builds.
+  if echo "$COMBINED" | grep -qE 'newer than byte-compiled file|using older file'; then
+    echo "WARNING: emacs --batch printed a stale-load warning." >&2
+    echo "The test may not have verified your edits. Fix load-path order:" >&2
+    echo '  (push "/path/to/canonical/source" load-path)  ; before elpaca builds' >&2
     # Do NOT create the marker — the commit hook should still block.
     exit 0
   fi

@@ -64,5 +64,46 @@
       (should-not (codex-extras--sync-theme-before-start "buf" "/tmp"))
       (should called))))
 
+;;;; Skill runner
+
+(ert-deftest codex-extras-test-parse-skill-frontmatter-argument-metadata ()
+  "Parse Codex skill argument metadata with the shared parser."
+  (let ((file (make-temp-file "codex-skill" nil ".md")))
+    (unwind-protect
+        (progn
+          (with-temp-file file
+            (insert "---\n")
+            (insert "name: proofread\n")
+            (insert "description: Proofread a file\n")
+            (insert "argument-hint: FILE\n")
+            (insert "argument-source: references/*.org\n")
+            (insert "---\n"))
+          (let ((meta (codex-extras--parse-skill-frontmatter file)))
+            (should (equal (plist-get meta :name) "proofread"))
+            (should (equal (plist-get meta :argument-hint) "FILE"))
+            (should (equal (plist-get meta :argument-source)
+                           "references/*.org"))))
+      (delete-file file))))
+
+(ert-deftest codex-extras-test-run-skill-prefers-current-codex-buffer ()
+  "Send skills to the current Codex buffer when already in one."
+  (let (sent-buffer sent-command displayed)
+    (with-temp-buffer
+      (let ((target (current-buffer)))
+        (cl-letf (((symbol-function 'codex--buffer-p)
+                   (lambda (buffer) (eq buffer target)))
+                  ((symbol-function 'codex--get-or-prompt-for-buffer)
+                   (lambda () (error "should not prompt")))
+                  ((symbol-function 'codex--do-send-command)
+                   (lambda (command)
+                     (setq sent-buffer (current-buffer)
+                           sent-command command)))
+                  ((symbol-function 'display-buffer)
+                   (lambda (buffer &rest _args) (setq displayed buffer))))
+          (codex-extras-run-skill "proofread" "file.org")
+          (should (eq sent-buffer target))
+          (should (eq displayed target))
+          (should (equal sent-command "/proofread file.org")))))))
+
 (provide 'codex-extras-test)
 ;;; codex-extras-test.el ends here

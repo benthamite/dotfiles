@@ -19,16 +19,16 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 =claude-code-extras.el= extends =claude-code=, the Emacs package that runs Claude Code sessions inside an Eat terminal buffer.  While =claude-code= provides the core session management and terminal integration, this extras package layers on several quality-of-life features that make extended Claude sessions more manageable.
 
-Several features (session switching, buffer protection, alerts, snippet insertion, terminal fixes) are shared with =codex-extras.el= via the common =ai-extras.el= package ([[info:ai-extras#Top][ai-extras]]).  At load time, =claude-code-extras.el= registers the Claude Code backend with =ai-extras.el=, enabling a unified session switcher that shows sessions from all AI backends.  The backend icon is the official Claude sparkle logo rendered as an inline SVG via ~ai-extras-svg-icon~ ([[info:ai-extras#h:svg-icons][SVG icons]]).
+Several features (session switching, buffer protection, alerts, snippet insertion, terminal fixes) are shared with =codex-extras.el= via the common =ai-extras.el= package ([[info:ai-extras#Top][ai-extras]]).  At load time, =claude-code-extras.el= registers the Claude Code backend with =ai-extras.el=, enabling a unified session switcher that shows sessions from all AI backends.  The backend icon is the Clawd pixel-art mark rendered as an inline SVG via ~ai-extras-svg-icon~ ([[info:ai-extras#h:svg-icons][SVG icons]]).
 
 The package provides thirteen main areas of functionality:
 
-- *Session switching.* A transient menu with persistent home-row key bindings for starting new Claude sessions or switching between existing ones ([[#h:session-switching][Session switching]]).
+- *Session switching.* The shared =ai-extras= transient menu with persistent home-row key bindings for starting new sessions or switching between existing AI sessions ([[#h:session-switching][Session switching]]).
 - *Status polling.* Integration with a statusline script that exports session metadata (model name, cost, context usage, token counts) as JSON, polled periodically and exposed through accessor functions ([[#h:status-polling][Status polling]]).
 - *Usage polling.* Periodic polling of the Anthropic =api/oauth/usage= endpoint to track 5-hour session and 7-day weekly utilization percentages, with accessor functions for modeline display and programmatic use ([[#h:usage-polling][Usage polling]]).
-- *Alerts.* Configurable OS notifications (visual, audible, or both) when Claude needs attention, triggered by the CLI's Notification hook event for idle prompts, permission requests, and elicitation dialogs.  The Notification hook is auto-configured in =~/.claude/settings.json= at load time ([[#h:alerts][Alerts]]).
+- *Alerts.* Shared =ai-extras= OS notifications (visual, audible, or both) when Claude needs attention, triggered by the CLI's Notification hook event for idle prompts, permission requests, and elicitation dialogs.  The Notification hook is auto-configured in =~/.claude/settings.json= at load time ([[#h:alerts][Alerts]]).
 - *Buffer lifecycle.* Kill protection for active sessions, automatic buffer cleanup on process exit, a SIGWINCH workaround for terminal rendering glitches, and a fix for ~C-g~ escape handling with multiple sessions ([[#h:buffer-lifecycle][Buffer lifecycle]]).
-- *Snippet insertion.* An adapter for ~consult-yasnippet~ that bypasses its direct buffer manipulation (which fails in Eat terminal buffers) and instead sends expanded snippet text through the terminal emulator ([[#h:snippet-insertion][Snippet insertion]]).
+- *Snippet insertion.* The shared =ai-extras= adapter for expanding yasnippets at Eat terminal prompts ([[#h:snippet-insertion][Snippet insertion]]).
 - *Copilot integration.* An adapter that enables Copilot ghost-text prose completions while typing prompts in Claude Code buffers, routing accepted text through the terminal emulator ([[#h:copilot-integration][Copilot integration]]).
 - *Skill runner.* Run any user-invocable Claude Code skill non-interactively from Emacs with completion, argument prompting, and a result buffer ([[#h:skill-runner][Skill runner]]).
 - *Batch TODO processing.* Sequential execution of org TODO entries via =claude -p= in non-interactive mode, with logged results and a summary buffer ([[#h:batch-todo-processing][Batch TODO processing]]).
@@ -37,7 +37,7 @@ The package provides thirteen main areas of functionality:
 - *Project audit.* One-command comprehensive audit that sequentially runs code, design, and interpretability audit skills with auto-fix on the current project ([[#h:project-audit][Project audit]]).
 - *Transient menu.* A transient dispatch menu that provides quick access to all commands, setup functions, and toggleable user options ([[#h:transient-menu][Transient menu]]).
 
-The package depends on =claude-code=, =consult= (for branch navigation and snippet insertion), and =paths= (for the batch log directory default).
+The package depends on =claude-code=, =consult= (for branch navigation and snippet insertion), =paths= (for the batch log directory default), and =agent-log= (for the session-log menu entry).
 
 * User options
 :PROPERTIES:
@@ -49,13 +49,14 @@ The package depends on =claude-code=, =consult= (for branch navigation and snipp
 :CUSTOM_ID: h:buffer-protection-option
 :END:
 
+#+vindex: ai-extras-protect-buffers
 #+vindex: claude-code-extras-protect-buffers
 #+vindex: claude-code-extras-warn-kill-with-branches
-The user option ~claude-code-extras-protect-buffers~ controls whether killing a Claude Code buffer requires confirmation. When set to non-~nil~ (the default), any attempt to kill a buffer with a live Claude process triggers a =yes-or-no-p= prompt. This prevents accidental loss of an active session. When the process has already exited (e.g. via the =/exit= command inside Claude), the prompt is skipped.
+The shared user option ~ai-extras-protect-buffers~ controls whether killing a Claude Code buffer requires confirmation.  ~claude-code-extras-protect-buffers~ is kept as an obsolete alias for compatibility.  When set to non-~nil~ (the default), any attempt to kill a buffer with a live Claude process triggers a =yes-or-no-p= prompt. This prevents accidental loss of an active session. When the process has already exited (e.g. via the =/exit= command inside Claude), the prompt is skipped.
 
-The user option ~claude-code-extras-warn-kill-with-branches~ controls whether exiting a Claude Code session via =/exit= prompts for confirmation when the session has branches (created via =/branch=). This is a separate guard from ~claude-code-extras-protect-buffers~: the buffer-kill guard prevents accidental closure, while the branch guard reminds you that related sessions exist. The check scans session JSONL headers in the project directory (fast, first-line only) to count branches. If the session has at least one branch, the prompt reports the count (e.g. "Session has 3 branches --- kill anyway?"). If declined, the buffer is kept alive even though the process has exited, giving you a chance to use ~claude-code-extras-switch-branch~ ([[#h:branch-navigation][Branch navigation]]) first.
+The user option ~claude-code-extras-warn-kill-with-branches~ controls whether exiting a Claude Code session via =/exit= prompts for confirmation when the session has branches (created via =/branch=). This is a separate guard from ~ai-extras-protect-buffers~: the buffer-kill guard prevents accidental closure, while the branch guard reminds you that related sessions exist. The check scans session JSONL headers in the project directory (fast, first-line only) to count branches. If the session has at least one branch, the prompt reports the count (e.g. "Session has 3 branches --- kill anyway?"). If declined, the buffer is kept alive even though the process has exited, giving you a chance to use ~claude-code-extras-switch-branch~ ([[#h:branch-navigation][Branch navigation]]) first.
 
-Both options default to ~t~. Set either to ~nil~ to disable the corresponding prompt.
+Both active options default to ~t~. Set either to ~nil~ to disable the corresponding prompt.
 
 ** Diff display
 :PROPERTIES:
@@ -70,11 +71,12 @@ The function ~claude-code-extras--display-diff-buffer~ overrides ~monet--display
 :CUSTOM_ID: h:terminal-rendering-option
 :END:
 
+#+vindex: ai-extras-sigwinch-delay
 #+vindex: claude-code-extras-sigwinch-delay
-The user option ~claude-code-extras-sigwinch-delay~ specifies the delay (in seconds) before sending a =SIGWINCH= signal to the Claude process after startup. This works around a race condition where the TUI queries terminal dimensions before the Eat terminal window is fully laid out, resulting in a garbled banner. The default value is =0.5=. Increase it if you still see rendering artifacts on slower machines.
+The shared user option ~ai-extras-sigwinch-delay~ specifies the delay (in seconds) before sending a =SIGWINCH= signal to the Claude process after startup.  ~claude-code-extras-sigwinch-delay~ is kept as an obsolete alias.  This works around a race condition where the TUI queries terminal dimensions before the Eat terminal window is fully laid out, resulting in a garbled banner. The default value is =0.5=. Increase it if you still see rendering artifacts on slower machines.
 
-#+findex: claude-code-extras-disable-scrollback-truncation
-The function ~claude-code-extras-disable-scrollback-truncation~ sets ~eat-term-scrollback-size~ to =nil= in Claude Code buffers. Eat's default scrollback limit of 8192 lines causes early output to be silently discarded in long sessions. This function is added to ~claude-code-start-hook~ automatically.
+#+findex: ai-extras-disable-scrollback-truncation
+The shared function ~ai-extras-disable-scrollback-truncation~ disables Eat's scrollback limit in Claude Code buffers. Eat's default scrollback limit of 8192 lines causes early output to be silently discarded in long sessions. This function is added to ~claude-code-start-hook~ automatically.
 
 ** Theme sync
 :PROPERTIES:
@@ -94,14 +96,17 @@ The shared sync dispatcher is covered by ERT tests in =emacs/extras/test/ai-extr
 :CUSTOM_ID: h:alert-options
 :END:
 
+#+vindex: ai-extras-alert-on-ready
+#+vindex: ai-extras-alert-style
+#+vindex: ai-extras-alert-sound
 #+vindex: claude-code-extras-alert-on-ready
 #+vindex: claude-code-extras-alert-style
 #+vindex: claude-code-extras-alert-sound
-The user option ~claude-code-extras-alert-on-ready~ controls whether the user is notified when Claude needs attention. The default is ~nil~ (no alerts). Toggle it interactively with ~claude-code-extras-toggle-alert~ ([[#h:alert-toggle][Toggling alerts]]).
+The shared user option ~ai-extras-alert-on-ready~ controls whether the user is notified when Claude needs attention.  The Claude-specific alert variables are obsolete aliases to the corresponding ~ai-extras-*~ variables.  The default is ~nil~ (no alerts). Toggle it interactively with ~ai-extras-toggle-alert~ or the compatibility command ~claude-code-extras-toggle-alert~ ([[#h:alert-toggle][Toggling alerts]]).
 
-The user option ~claude-code-extras-alert-style~ determines the type of notification. It accepts one of three values: ~visual~ (an OS notification via the =alert= package), ~sound~ (an audio alert), or ~both~ (the default when alerts are enabled). This option only takes effect when ~claude-code-extras-alert-on-ready~ is non-~nil~.
+The user option ~ai-extras-alert-style~ determines the type of notification. It accepts one of three values: ~visual~ (an OS notification via the =alert= package), ~sound~ (an audio alert), or ~both~ (the default when alerts are enabled). This option only takes effect when ~ai-extras-alert-on-ready~ is non-~nil~.
 
-The user option ~claude-code-extras-alert-sound~ specifies the path to the sound file played for audible alerts. The default is =/System/Library/Sounds/Glass.aiff=, a macOS system sound. Change this to any audio file that =afplay= can handle.
+The user option ~ai-extras-alert-sound~ specifies the path to the sound file played for audible alerts. The default is =/System/Library/Sounds/Glass.aiff=, a macOS system sound. Change this to any audio file that =afplay= can handle.
 
 ** Account options
 :PROPERTIES:
@@ -202,14 +207,15 @@ When the API responds with HTTP 429 (rate limited), the polling interval doubles
 :END:
 
 #+findex: claude-code-extras-start-or-switch
-The command ~claude-code-extras-start-or-switch~ is the main entry point for working with Claude sessions. When no Claude sessions are active, it starts a new one by calling ~claude-code~. When one or more sessions exist, it opens a two-column transient menu.  The left column lists active sessions, each bound to a home-row key (=a=, =s=, =d=, =f=, =j=, =k=, =l=, =;=) for single-keystroke switching.  The right column contains actions: =w= to jump to the most recently waiting session and =n= to start a new session.
+The command ~claude-code-extras-start-or-switch~ is the main entry point for working with Claude sessions. When no Claude sessions are active, it starts a new one by calling ~claude-code~ through the active account wrapper. When one or more sessions exist, it opens the shared =ai-extras= session switcher.  The action column provides =w= to jump to the most recently waiting session and =e= to start a new session.  Active sessions are bound to persistent home-row keys (=a=, =s=, =d=, =f=, =j=, =k=, =l=, =;=), with fallback keys for additional sessions.
 
-Each session is assigned a key when it starts (via ~claude-code-start-hook~). The assignment persists for the lifetime of the session: killing a buffer releases its key, and the freed key is reused by the next session that starts. Dead-buffer entries are automatically purged before each assignment, so keys are always recycled promptly. When the transient opens, any sessions that predate the key system (e.g. sessions started before the package was loaded) are retroactively assigned keys.
+Each session is assigned a key by the shared ~ai-extras--assign-session-key~ hook. The assignment persists for the lifetime of the session: killing a buffer releases its key, and the freed key is reused by the next session that starts. Dead-buffer entries are automatically purged before each assignment, so keys are always recycled promptly. When the transient opens, any sessions that predate the key system (e.g. sessions started before the package was loaded) are retroactively assigned keys.
 
-Sessions are displayed by project name (extracted from the buffer name). When multiple sessions share the same project, the instance name is appended for disambiguation (e.g. "project:instance").
+Sessions are displayed by project name (extracted from the buffer name). When multiple sessions share the same project, the instance name is appended for disambiguation (e.g. "project:instance"). Claude registers an ~ai-extras~ display-name suffix hook so branch sessions append a short session ID after the shared project/instance name.
 
-#+vindex: claude-code-extras-waiting
-Sessions that are waiting for user input (detected via the =idle_prompt= notification hook) are displayed with the ~claude-code-extras-waiting~ face, which inherits from ~warning~ by default.  The highlight is cleared as soon as input is sent to the session (Return key or programmatic command send).
+#+vindex: ai-extras-waiting
+#+vindex: ai-extras-waiting-with-background
+Sessions that are waiting for user input (detected via the =idle_prompt= notification hook) are displayed with the shared ~ai-extras-waiting~ face.  Sessions that are waiting while Claude reports background shell or task activity are displayed with ~ai-extras-waiting-with-background~.  The highlight is cleared as soon as input is sent to the session (Return key or programmatic command send).
 
 #+findex: claude-code-extras-jump-to-waiting
 The command ~claude-code-extras-jump-to-waiting~ (bound to =w= in the session switcher) switches to the session that most recently started waiting for user input.  This is useful when an alert sound fires but the notification is missed: pressing =w= jumps straight to the session that triggered it without needing to scan the list.  If no sessions are currently waiting, it displays a message.
@@ -259,7 +265,7 @@ Existing files or directories that are not symlinks are inspected: if they are i
 :END:
 
 #+findex: claude-code-extras-toggle-alert
-The command ~claude-code-extras-toggle-alert~ toggles the buffer-local value of ~claude-code-extras-alert-on-ready~ and reports the new state. This is useful during long-running operations: enable alerts before submitting a complex prompt, then disable them when you return to interactive use. The alert style and sound are configured via the user options described in [[#h:alert-options][Alert options]].
+The command ~claude-code-extras-toggle-alert~ toggles the shared ~ai-extras-alert-on-ready~ value through its obsolete alias and reports the new state. This is useful during long-running operations: enable alerts before submitting a complex prompt, then disable them when you return to interactive use. The alert style and sound are configured via the user options described in [[#h:alert-options][Alert options]].
 
 ** Usage polling
 :PROPERTIES:
@@ -411,14 +417,14 @@ When you run =/branch= inside a Claude Code session, the CLI creates a new sessi
 :CUSTOM_ID: h:buffer-lifecycle
 :END:
 
-#+findex: claude-code-extras-protect-buffer
+#+findex: ai-extras-protect-buffer
 #+findex: claude-code-extras-setup-kill-on-exit
-#+findex: claude-code-extras-fix-rendering
-The function ~claude-code-extras-protect-buffer~ is a ~kill-buffer-query-functions~ member that prompts for confirmation before killing Claude buffers with live processes. It respects the ~claude-code-extras-protect-buffers~ user option ([[#h:buffer-protection-option][Buffer protection]]).
+#+findex: ai-extras-fix-rendering
+The function ~ai-extras-protect-buffer~ is a ~kill-buffer-query-functions~ member that prompts for confirmation before killing Claude buffers with live processes. It respects the ~ai-extras-protect-buffers~ user option ([[#h:buffer-protection-option][Buffer protection]]).
 
 The function ~claude-code-extras-setup-kill-on-exit~ wraps the process sentinel so that the buffer is automatically killed when the Claude process exits. This keeps the buffer list clean after normal session termination via =/exit=.
 
-The function ~claude-code-extras-fix-rendering~ sends a =SIGWINCH= signal to the Claude process after the delay specified by ~claude-code-extras-sigwinch-delay~ ([[#h:terminal-rendering-option][Terminal rendering]]). This forces the TUI to re-query terminal dimensions and redraw correctly.
+The function ~ai-extras-fix-rendering~ sends a =SIGWINCH= signal to the Claude process after the delay specified by ~ai-extras-sigwinch-delay~ ([[#h:terminal-rendering-option][Terminal rendering]]). This forces the TUI to re-query terminal dimensions and redraw correctly.  ~claude-code-extras-fix-rendering~ remains available as the Claude-specific command.
 
 #+findex: claude-code-extras--send-escape-in-current-buffer
 The function ~claude-code-extras--send-escape-in-current-buffer~ is an =:around= advice on ~claude-code-send-escape~ that fixes ~C-g~ behavior when multiple Claude sessions share the same project directory.  The upstream implementation uses ~claude-code--with-buffer~, which re-resolves the target buffer via ~claude-code--get-or-prompt-for-buffer~.  When multiple sessions exist for the same project, this triggers a selection prompt instead of sending the escape to the current buffer.  The advice short-circuits the lookup: if the current buffer is already a Claude buffer, it sends the escape sequence directly; otherwise it falls through to the original function.
@@ -487,9 +493,9 @@ These functions are designed to be called from modeline constructors or other di
 #+findex: claude-code-extras-notify
 #+findex: claude-code-extras-alert-indicator
 #+findex: claude-code-extras--handle-notification
-The function ~claude-code-extras--handle-notification~ is a ~claude-code-event-hook~ listener that handles =Notification= events from the CLI.  It parses the notification JSON to determine the type and dispatches alerts accordingly: =idle_prompt= (Claude finished and is waiting), =permission_prompt= (a tool needs approval), and =elicitation_dialog= (Claude is showing an input dialog).  For =idle_prompt=, it also sets ~claude-code-extras--waiting-for-input~ to the current time (via ~current-time~), which is used by ~claude-code-extras-jump-to-waiting~ to identify the most recently waiting session.
+The function ~claude-code-extras--handle-notification~ is a ~claude-code-event-hook~ listener that handles =Notification= events from the CLI.  It parses the notification JSON to determine the type and dispatches alerts accordingly: =idle_prompt= (Claude finished and is waiting), =permission_prompt= (a tool needs approval), and =elicitation_dialog= (Claude is showing an input dialog).  For =idle_prompt=, it also sets the shared ~ai-extras--waiting-for-input~ timestamp, which is used by ~claude-code-extras-jump-to-waiting~ and ~ai-extras-jump-to-waiting~ to identify the most recently waiting session.
 
-The function ~claude-code-extras-notify~ combines the default modeline pulse with optional OS alerts.  When ~claude-code-extras-alert-on-ready~ is non-~nil~, it dispatches visual and/or audible alerts according to ~claude-code-extras-alert-style~ ([[#h:alert-options][Alert options]]).  It is called by the notification handler rather than installed directly as ~claude-code-notification-function~ (which is set to the default modeline-only callback to avoid double-alerting from the terminal bell).
+The function ~claude-code-extras-notify~ combines the default modeline pulse with optional shared OS alerts.  When ~ai-extras-alert-on-ready~ is non-~nil~, it dispatches visual and/or audible alerts according to ~ai-extras-alert-style~ ([[#h:alert-options][Alert options]]).  It is called by the notification handler rather than installed directly as ~claude-code-notification-function~ (which is set to the default modeline-only callback to avoid double-alerting from the terminal bell).
 
 The Notification hook that delivers these events is auto-configured at package load time via ~claude-code-extras-ensure-notification-hook-config~ ([[#h:auto-setup][Auto-setup]]), so no manual =settings.json= editing is required.
 
@@ -519,12 +525,12 @@ The advice detects ~eat-mode~ and replaces the entire flow: it calls ~consult-ya
 
 In non-Eat buffers the advice delegates to the original function unchanged.
 
-#+findex: claude-code-extras--try-expand-snippet-at-prompt
-#+findex: claude-code-extras-snippet-tab
-#+findex: claude-code-extras-setup-snippet-keys
-The function ~claude-code-extras--try-expand-snippet-at-prompt~ enables TAB-triggered snippet expansion at the terminal prompt.  It searches backward from ~point-max~ for the =❯= prompt marker, extracts the user's input, and checks whether it ends with a yasnippet key.  When the input matches, the function sends DEL characters to erase the key from the terminal, then sends the expanded snippet text through ~eat-term-send-string~.  When multiple keys match, the longest one wins.
+#+findex: ai-extras--try-expand-snippet-at-prompt
+#+findex: ai-extras-snippet-tab
+#+findex: ai-extras-setup-snippet-keys
+The function ~ai-extras--try-expand-snippet-at-prompt~ enables TAB-triggered snippet expansion at the terminal prompt.  It searches backward from ~point-max~ for the prompt marker, extracts the user's input, and checks whether it ends with a yasnippet key.  When the input matches, the function sends DEL characters to erase the key from the terminal, then sends the expanded snippet text through ~eat-term-send-string~.  When multiple keys match, the longest one wins.
 
-The minor mode ~claude-code-extras--snippet-keys-mode~ overrides TAB in Claude Code buffers to call ~claude-code-extras-snippet-tab~, which tries snippet expansion first and falls through to ~eat-self-input~ otherwise.  The function ~claude-code-extras-setup-snippet-keys~ activates this mode from ~claude-code-start-hook~ when Copilot integration is disabled.  When Copilot is enabled, the Copilot TAB handler (~claude-code-extras--copilot-tab~) chains through snippet expansion before falling through to eat, so a separate mode is not needed.
+The minor mode ~ai-extras--snippet-keys-mode~ overrides TAB in Claude Code buffers to call ~ai-extras-snippet-tab~, which tries snippet expansion first and falls through to ~eat-self-input~ otherwise.  The function ~ai-extras-setup-snippet-keys~ activates this mode from ~claude-code-start-hook~.  When Copilot is enabled, the Copilot TAB handler (~claude-code-extras--copilot-tab~) chains through the same shared snippet expansion before falling through to eat.
 
 ** Copilot integration
 :PROPERTIES:
@@ -577,7 +583,7 @@ The function ~claude-code-extras--batch-parse-stream-json~ parses the raw stream
 #+findex: claude-code-extras--parse-skill-frontmatter
 #+findex: claude-code-extras--discover-skills
 #+findex: claude-code-extras--skill-display-result
-The function ~claude-code-extras--parse-skill-frontmatter~ reads a =SKILL.md= file and extracts the YAML frontmatter into a plist with keys =:name=, =:description=, =:argument-hint=, and =:user-invocable=.
+The function ~claude-code-extras--parse-skill-frontmatter~ delegates to ~ai-extras-parse-skill-frontmatter~, which extracts shared skill metadata including =:name=, =:description=, =:argument-hint=, =:argument-source=, =:argument-choices=, =:argument-default=, =:argument-multiple=, =:user-invocable=, and =:model=.
 
 The function ~claude-code-extras--discover-skills~ scans =~/.claude/skills/= and the current project's =.claude/skills/= for =SKILL.md= files, parses their frontmatter, and returns a list of skill plists. Project skills shadow global skills with the same name. Skills with =user-invocable: false= are excluded.
 
@@ -624,13 +630,14 @@ All three functions run automatically when the package is loaded.
 :CUSTOM_ID: h:transient-menu
 :END:
 
+#+findex: ai-extras-menu
 #+findex: claude-code-extras-menu
-The command ~claude-code-extras-menu~ opens a transient menu that provides quick access to all major features of the package.  The menu is organized into six groups:
+The command ~claude-code-extras-menu~ is a compatibility alias for the unified ~ai-extras-menu~, which provides quick access to all major AI backend features.  Claude appends its backend-specific entries to that shared menu:
 
 - *Sessions.* Start or switch between sessions (~claude-code-extras-start-or-switch~, [[#h:session-switching][Session switching]]), navigate branches (~claude-code-extras-switch-branch~, [[#h:branch-navigation][Branch navigation]]), create a new branch (~claude-code-extras-create-branch~, [[#h:create-branch][Creating a branch]]), restart the current session in place (~claude-code-extras-restart~), and perform a session handoff (~claude-code-extras-handoff~).
 - *Tools.* Run a skill (~claude-code-extras-run-skill~, [[#h:skill-runner][Skill runner]]), process batch TODOs (~claude-code-extras-batch-todos~, [[#h:batch-todo-processing][Batch TODO processing]]), send the TODO at point to an interactive session (~claude-code-extras-send-todo-at-point~, [[#h:send-todo-at-point][Send TODO at point]]), audit a project (~claude-code-extras-audit-project~, [[#h:project-audit][Project audit]]), debug a backtrace (~claude-code-extras-debug-backtrace~, [[#h:debug-backtrace][Debug backtrace]]), and browse session logs (~agent-log-menu~).
-- *Alerts & status.* Toggle alerts (~claude-code-extras-toggle-alert~, [[#h:alert-toggle][Toggling alerts]]), start or stop status polling ([[#h:status-polling][Status polling]]), and start or stop usage polling (~claude-code-extras-start-usage-polling~, ~claude-code-extras-stop-usage-polling~, [[#h:usage-polling][Usage polling]]).
-- *Buffer.* Kill-on-exit setup (~claude-code-extras-setup-kill-on-exit~), rendering fixes (~claude-code-extras-fix-rendering~), and scrollback truncation control (~claude-code-extras-disable-scrollback-truncation~).  See [[#h:buffer-lifecycle][Buffer lifecycle]].
+- *Alerts & status.* Toggle shared alerts (~ai-extras-toggle-alert~, [[#h:alert-toggle][Toggling alerts]]), start or stop status polling ([[#h:status-polling][Status polling]]), and start or stop usage polling (~claude-code-extras-start-usage-polling~, ~claude-code-extras-stop-usage-polling~, [[#h:usage-polling][Usage polling]]).
+- *Buffer.* Kill-on-exit setup (~claude-code-extras-setup-kill-on-exit~), shared rendering fixes (~ai-extras-fix-rendering~), and shared scrollback truncation control (~ai-extras-disable-scrollback-truncation~).  See [[#h:buffer-lifecycle][Buffer lifecycle]].
 - *Setup.* Ensure statusline, notification hook, and stop hook configurations are present in =~/.claude/settings.json=.  See [[#h:auto-setup][Auto-setup]].
 - *Options.* An account infix (~-a~) that displays and selects the active Claude account ([[#h:multi-account][Multi-account support]]), the shared ~ai-extras-sync-theme~ toggle ([[#h:theme-sync-option][Theme sync]]), plus Claude-specific toggles for ~claude-code-extras-copilot-enabled~ ([[#h:copilot-options][Copilot options]]) and ~claude-code-extras-warn-kill-with-branches~ ([[#h:buffer-protection-option][Buffer protection]]).  Shared alert and buffer-protection toggles are provided by =ai-extras=.  Each infix displays its current value and stays in the transient after toggling, so you can adjust multiple options in one invocation.
 

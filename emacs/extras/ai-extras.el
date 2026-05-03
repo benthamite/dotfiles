@@ -62,6 +62,8 @@ Each entry is (SYMBOL . PLIST) where PLIST has keys:
                            returning a propertized string
   :label                 string (display name,
                            e.g. \"Claude Code\" or \"Codex\")
+  :display-name-suffix   function (buffer) -> string or nil
+                           (extra suffix appended after base name)
 
 Optional session metadata:
   :account               function (buffer) -> string or nil
@@ -83,9 +85,20 @@ Optional command keys for dispatching shared commands:
 (defvar-local ai-extras--backend nil
   "Cached backend symbol for this buffer.")
 
+(defconst ai-extras--required-backend-keys
+  '(:buffer-p :find-all-buffers :extract-instance-name :start-new)
+  "Backend plist keys required by the shared session layer.")
+
 (defun ai-extras-register-backend (symbol plist)
   "Register SYMBOL as an AI extras backend with PLIST properties."
+  (ai-extras--validate-backend symbol plist)
   (setf (alist-get symbol ai-extras-backends) plist))
+
+(defun ai-extras--validate-backend (symbol plist)
+  "Signal an error if SYMBOL's backend PLIST is missing required keys."
+  (dolist (key ai-extras--required-backend-keys)
+    (unless (plist-get plist key)
+      (error "AI backend `%s' is missing required key `%s'" symbol key))))
 
 (defun ai-extras--detect-backend (&optional buffer)
   "Detect which AI backend BUFFER belongs to.
@@ -234,6 +247,7 @@ and cleared when input is sent.")
 ;;;; Forward declarations
 
 (defvar eat-terminal)
+(defvar eat-term-scrollback-size)
 (declare-function eat-self-input "eat" (n &optional e))
 (declare-function eat-term-send-string "eat" (terminal string))
 (declare-function eat-term-display-cursor "eat" (terminal))
@@ -360,7 +374,8 @@ Includes instance name when present for disambiguation."
   "Return the display name for BUFFER.
 Use the project name alone when it is unique among active sessions,
 or \"project:instance\" when multiple sessions share the same
-project.  Returns the cached value when available."
+project.  Appends the backend's display suffix when provided.
+Returns the cached value when available."
   (let ((buf (or buffer (current-buffer))))
     (or (buffer-local-value 'ai-extras--display-name-cache buf)
         (ai-extras--compute-display-name buf))))
@@ -373,10 +388,20 @@ project.  Returns the cached value when available."
                        (funcall (ai-extras--backend-get backend :find-all-buffers))
                      (ai-extras--find-all-buffers)))
          (others (cl-remove buffer all-bufs))
-         (sibling-names (mapcar #'ai-extras--buffer-session-name others)))
-    (if (member name sibling-names)
-        (ai-extras--qualified-session-name (buffer-name buffer))
-      name)))
+         (sibling-names (mapcar #'ai-extras--buffer-session-name others))
+         (base (if (member name sibling-names)
+                   (ai-extras--qualified-session-name (buffer-name buffer))
+                 name)))
+    (ai-extras--display-name-with-suffix buffer backend base)))
+
+(defun ai-extras--display-name-with-suffix (buffer backend base)
+  "Return BASE plus BACKEND's display suffix for BUFFER, when any."
+  (if-let* ((suffix-fn (and backend
+                            (ai-extras--backend-get backend
+                                                    :display-name-suffix)))
+            (suffix (funcall suffix-fn buffer)))
+      (format "%s:%s" base suffix)
+    base))
 
 (defun ai-extras--refresh-display-names ()
   "Recompute and cache display names for all AI session buffers."
@@ -385,6 +410,10 @@ project.  Returns the cached value when available."
       (with-current-buffer buf
         (setq ai-extras--display-name-cache
               (ai-extras--compute-display-name buf))))))
+
+(defun ai-extras--refresh-display-names-deferred ()
+  "Refresh AI display names after the current hook finishes."
+  (run-at-time 0 nil #'ai-extras--refresh-display-names))
 
 ;;;; Session switcher
 
@@ -571,8 +600,8 @@ configured alert style."
 (defun ai-extras--alert-visual (title message)
   "Show a visual notification with TITLE and MESSAGE."
   (when (memq ai-extras-alert-style '(visual both))
-    (require 'alert nil t)
-    (alert message :title title)))
+    (when (and (require 'alert nil t) (fboundp 'alert))
+      (alert message :title title))))
 
 (defun ai-extras--alert-sound ()
   "Play the configured alert sound."
@@ -654,9 +683,10 @@ Without this, eat truncates terminal output to
 `eat-term-scrollback-size' lines, causing older AI session output
 to vanish."
   (interactive)
-  (when (and (bound-and-true-p eat-terminal)
-             (fboundp 'eat-term-set-scrollback-size))
-    (eat-term-set-scrollback-size eat-terminal most-positive-fixnum)))
+  (when (bound-and-true-p eat-terminal)
+    (if (fboundp 'eat-term-set-scrollback-size)
+        (eat-term-set-scrollback-size eat-terminal most-positive-fixnum)
+      (setq-local eat-term-scrollback-size nil))))
 
 ;;;; Snippet insertion
 
@@ -826,6 +856,59 @@ If it has :argument-choices, return those.  Otherwise return nil."
                   (file-expand-wildcards pattern))))
       (plist-get skill :argument-choices)))
 
+(defun ai-extras-parse-skill-frontmatter (file)
+  "Parse skill frontmatter from FILE and return a plist.
+Recognizes :name, :description, :argument-hint, :argument-source,
+:argument-choices, :argument-default, :argument-multiple,
+:user-invocable, and :model."
+  (with-temp-buffer
+    (insert-file-contents file)
+    (goto-char (point-min))
+    (when (looking-at-p "---")
+      (forward-line 1)
+      (let ((start (point))
+            (result nil))
+        (when (re-search-forward "^---$" nil t)
+          (dolist (line (split-string
+                         (buffer-substring-no-properties
+                          start (line-beginning-position))
+                         "\n" t))
+            (when (string-match "^\\([a-z0-9_-]+\\): *\\(.*\\)$" line)
+              (setq result
+                    (ai-extras--put-skill-frontmatter-field
+                     result
+                     (match-string 1 line)
+                     (ai-extras--clean-skill-frontmatter-value
+                      (match-string 2 line)))))))
+        result))))
+
+(defun ai-extras--clean-skill-frontmatter-value (value)
+  "Return normalized frontmatter VALUE."
+  (let ((val (string-trim value)))
+    (if (string-match "^[\"']\\(.*\\)[\"']$" val)
+        (match-string 1 val)
+      val)))
+
+(defun ai-extras--put-skill-frontmatter-field (plist key value)
+  "Return PLIST with frontmatter KEY set to VALUE when recognized."
+  (pcase key
+    ("name" (plist-put plist :name value))
+    ("description" (plist-put plist :description value))
+    ("argument-hint" (plist-put plist :argument-hint value))
+    ("argument-source" (plist-put plist :argument-source value))
+    ("argument-choices"
+     (plist-put plist :argument-choices
+                (mapcar #'string-trim (split-string value "," t))))
+    ("argument-default" (plist-put plist :argument-default value))
+    ("argument-multiple"
+     (plist-put plist :argument-multiple
+                (not (string= (downcase value) "false"))))
+    ("user-invocable"
+     (plist-put plist :user-invocable
+                (not (string= (downcase value) "false"))))
+    ("model" (plist-put plist :model value))
+    (_ plist)))
+
 (defun ai-extras--discover-all-skills ()
   "Discover skills from all registered backends.
 Calls each backend's `:discover-skills' function and returns a
@@ -838,6 +921,24 @@ combined list of skill plists, each augmented with `:backend'."
                 all-skills))))
     (sort all-skills (lambda (a b)
                        (string< (plist-get a :name) (plist-get b :name))))))
+
+(defun ai-extras--skill-candidate (skill)
+  "Return a unique completion candidate for SKILL."
+  (let* ((backend (plist-get skill :backend))
+         (label (or (ai-extras--backend-get backend :label)
+                    (symbol-name backend))))
+    (propertize (format "%s [%s]" (plist-get skill :name) label)
+                'ai-extras-skill skill)))
+
+(defun ai-extras--skill-candidates (skills)
+  "Return completion candidates for SKILLS with embedded skill plists."
+  (mapcar #'ai-extras--skill-candidate skills))
+
+(defun ai-extras--skill-from-candidate (candidate candidates)
+  "Return the skill plist for CANDIDATE from CANDIDATES."
+  (or (get-text-property 0 'ai-extras-skill candidate)
+      (get-text-property 0 'ai-extras-skill
+                         (cl-find candidate candidates :test #'string=))))
 
 ;;;###autoload
 (defun ai-extras-handoff ()
@@ -854,34 +955,24 @@ the backend next to each."
   (interactive)
   (let* ((skills (ai-extras--discover-all-skills))
          (_ (unless skills (user-error "No user-invocable skills found")))
-         (max-name-len (apply #'max (mapcar (lambda (s)
-                                              (length (plist-get s :name)))
-                                            skills)))
+         (skill-candidates (ai-extras--skill-candidates skills))
+         (max-cand-len (apply #'max (mapcar #'length skill-candidates)))
          (annotate
           (lambda (cand)
-            (when-let* ((skill (cl-find cand skills
-                                        :key (lambda (s) (plist-get s :name))
-                                        :test #'equal))
-                        (backend (plist-get skill :backend)))
-              (let ((label (or (ai-extras--backend-get backend :label)
-                               (symbol-name backend)))
-                    (desc (or (plist-get skill :description) "")))
-                (concat (make-string (- (+ max-name-len 2) (length cand)) ?\s)
-                        (propertize (format "[%s]" label) 'face 'shadow)
-                        " "
+            (when-let* ((skill (ai-extras--skill-from-candidate
+                                cand skill-candidates)))
+              (let ((desc (or (plist-get skill :description) "")))
+                (concat (make-string (- (+ max-cand-len 2) (length cand)) ?\s)
                         (propertize desc 'face 'completions-annotations))))))
-         (name (completing-read
-                "Skill: "
-                (lambda (str pred action)
-                  (if (eq action 'metadata)
-                      `(metadata (annotation-function . ,annotate))
-                    (complete-with-action
-                     action
-                     (mapcar (lambda (s) (plist-get s :name)) skills)
-                     str pred)))))
-         (skill (cl-find name skills
-                         :key (lambda (s) (plist-get s :name))
-                         :test #'equal))
+         (candidate (completing-read
+                     "Skill: "
+                     (lambda (str pred action)
+                       (if (eq action 'metadata)
+                           `(metadata (annotation-function . ,annotate))
+                         (complete-with-action
+                          action skill-candidates str pred)))
+                     nil t))
+         (skill (ai-extras--skill-from-candidate candidate skill-candidates))
          (backend (plist-get skill :backend))
          ;; Prompt for arguments using skill metadata
          (hint (plist-get skill :argument-hint))
@@ -911,7 +1002,7 @@ the backend next to each."
          (run-fn (ai-extras--backend-get backend :run-skill)))
     (unless run-fn
       (user-error "Backend `%s' does not support `:run-skill'" backend))
-    (funcall run-fn name args)))
+    (funcall run-fn (plist-get skill :name) args)))
 
 ;;;###autoload
 (defun ai-extras-audit-project ()

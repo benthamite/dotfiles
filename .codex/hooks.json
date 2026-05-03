@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/builds/codex/bin/codex-hook-wrapper UserPromptSubmit",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper UserPromptSubmit",
             "timeout": 30
           }
         ]
@@ -152,7 +152,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/builds/codex/bin/codex-hook-wrapper PreToolUse",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper PreToolUse",
             "timeout": 30
           }
         ]
@@ -239,7 +239,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/builds/codex/bin/codex-hook-wrapper PostToolUse",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper PostToolUse",
             "timeout": 30
           }
         ]
@@ -261,7 +261,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/builds/codex/bin/codex-hook-wrapper SessionStart",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper SessionStart",
             "timeout": 30
           }
         ]
@@ -283,7 +283,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/builds/codex/bin/codex-hook-wrapper Stop",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper Stop",
             "timeout": 30
           }
         ]

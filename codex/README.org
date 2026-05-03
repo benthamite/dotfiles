@@ -19,6 +19,7 @@ one-sided commits unless the counterpart or =ai-config-sync.json= is staged.
 codex/
 ├── AGENTS.md              -> ../claude/CLAUDE.md
 ├── config.toml            <- live ~/.codex/config.toml symlink target
+├── bin/install-skills.sh  <- links tracked skills into ~/.codex/skills
 ├── hooks/                 <- Codex hook script ports
 ├── README.org
 ├── rules/default.rules
@@ -50,8 +51,17 @@ be expanded by Codex.
 =codex/skills/= contains one Codex port for each Claude skill under
 =claude/skills/=.  The one-time port copies the skill bodies and auxiliary
 files, then strips Claude-only frontmatter keys such as =user-invocable=,
-=allowed-tools=, =argument-hint=, and =model=.  =codex/config.toml= registers
-all of these =SKILL.md= files explicitly so they are available globally.
+=allowed-tools=, =argument-hint=, and =model=.
+
+Codex discovers global skills from =~/.codex/skills/*/SKILL.md=.  The tracked
+ports therefore have to be linked into that directory.  Run:
+
+#+begin_src sh
+codex/bin/install-skills.sh
+#+end_src
+
+The script creates one symlink per tracked skill and leaves unrelated local
+skills, such as project handoff skills, alone.
 
 When changing a skill:
 
@@ -123,5 +133,6 @@ visible.
 therefore updates the live global Codex configuration.
 
 =~/.codex/skills/= remains a normal Codex home directory for system or local
-skills.  The mirrored Claude skills are not symlinked there; they are registered
-from their tracked paths in =codex/config.toml=.
+skills.  The mirrored Claude skill ports are symlinked into that directory by
+=codex/bin/install-skills.sh= because Codex does not load arbitrary skill paths
+from =codex/config.toml=.

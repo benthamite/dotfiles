@@ -1,0 +1,15 @@
+# Audit reports (contain app-specific data)
+/audits/
+
+# Temporary audit files
+/tmp/
+*.tmp
+
+# macOS
+.DS_Store
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo

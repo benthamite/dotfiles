@@ -1,0 +1,174 @@
+#+title: Twitter digest: ai-tools + ai-macrostrategy — 2026-04-02
+
+* ai-tools
+
+** Notable
+
+*** @kr0der (Thu Apr 02 18:23)
+Cursor 3 just dropped. It's really well built and the best part for me is that it has a built-in browser so you don't need 5 different chrome windows open to test your projects.
+Likes: 16 | Views: 610 | Like rate: 2.6%
+[[https://x.com/kr0der/status/2039770615822119213][View on X]]
+
+*** @TheAhmadOsman (Thu Apr 02 18:42)
+MASSIVE — Gemma 4 (31B, Dense), a model that performs on parity w/ Kimi K2.5 (1.1T, MoE). 35x SMALLER than Kimi K2.5. Would run on any hardware at home: RTX 3090/4090/5090, DGX Spark / Mac Studios, MacBook Pro (24GB+). New local SoTA.
+Likes: 162 | Views: 6,213 | Like rate: 2.6%
+[[https://x.com/TheAhmadOsman/status/2039775428605354047][View on X]]
+
+*** @ivanfioravanti (Wed Apr 01 15:42)
+I asked Hermes Agent, powered by MiniMax M2.7-highspeed to configure Docker on a new Mac Studio and migrate containers from other machines to consolidate and update everything at the same time. Done in few minutes, without any issue.
+Likes: 229 | Views: 9,622 | Like rate: 2.4%
+[[https://x.com/ivanfioravanti/status/2039367684517921209][View on X]]
+
+*** @kr0der (Thu Apr 02 11:16)
+One of the best things about GPT 5.4 is that it'll just clean up random parts of your codebase as you work with it, purely because it saw a rule in the AGENTS.md file. That's one of the advantages of the model as it's insanely good at following instructions.
+Likes: 99 | Views: 4,666 | Like rate: 2.1%
+[[https://x.com/kr0der/status/2039663192771551627][View on X]]
+
+*** @ryanvogel (Wed Apr 01 22:14)
+Moved my entire devstack to an EC2 VPS because of all the supply chain attacks. Asked kimi k2.5 to export my dev preferences and config, then fed that to kimi l2.5 on the new machine. It just configured everything identically & was up and running in 20 minutes.
+Likes: 24 | Views: 1,161 | Like rate: 2.1%
+[[https://x.com/ryanvogel/status/2039466515456770510][View on X]]
+
+*** @0xSero (Thu Apr 02 18:00)
+Best subscriptions on market based on your budget. $10/mo: #1 Opencode Go, #2 GLM basic, #3 MiniMax basic, #4 HuggingFace Pro. $20/mo: #1 GPT-Plus, #2 Kimi-Code, #3 mix and match from $10 tier. $50/mo: #1 Qwen Code, #2 mix and match from above.
+Likes: 369 | Views: 18,995 | Like rate: 1.9%
+[[https://x.com/0xSero/status/2039764907906777478][View on X]]
+
+*** @ivanfioravanti (Thu Apr 02 04:12)
+Hybrid AI is the way to go! I've been running LLMs locally on Apple Silicon for over two years now. In CoreViewHQ, in my investment company and for my family usage. Inference, classification, clustering, fine-tuning, agentic coding, chat all on Mac Studios that sit on my desk. No cloud dependency.
+Likes: 126 | Views: 6,667 | Like rate: 1.9%
+[[https://x.com/ivanfioravanti/status/2039556428344746087][View on X]]
+
+*** @forgebitz (Thu Apr 02 08:22)
+What we will see with agents is a more "always on", push-based setup. Essentially, you can create a ping/cron job as a heartbeat for agents to keep running. This will allow more proactive agents to fire off events and tell users what to do/read, compared to me having to prompt the AI.
+Likes: 25 | Views: 1,440 | Like rate: 1.7%
+[[https://x.com/forgebitz/status/2039619460454072820][View on X]]
+
+*** @0xSero (Thu Apr 02 09:56)
+Here are all the open weight models that can get close frontier level code, and tie for agentic purposes: GLM-5.*, MiniMax-M2.*, Kimi-K2.5, Deepseek-V3.2, Qwen-3.5-Plus-397B. If you want AI at home for coding agents similar to Claude/Codex the VRAM needed: 192GB for Q4 quant + REAP.
+Likes: 598 | Views: 38,345 | Like rate: 1.6%
+[[https://x.com/0xSero/status/2039643150818419032][View on X]]
+
+*** @__tinygrad__ (Wed Apr 01 06:18) /discovered/
+Qwen 3.5 27B getting 18.5 tok/s on Mac Mini with external 7900XTX. It should be able to be 3x faster than this with work, SSM stuff is still in PR. Hopefully Mac eGPU support brings in devs.
+Likes: 410 | Views: 26,372 | Like rate: 1.6%
+[[https://x.com/__tinygrad__/status/2039225868187582810][View on X]]
+
+*** @pontusab (Tue Mar 31 10:46)
+toolpick picks the right tools at each step so your agent isn't overloaded with 100+ at once. v0.4.0 adds relatedTools to include required dependencies automatically. Built for Vercel AI SDK.
+Likes: 81 | Views: 5,625 | Like rate: 1.4%
+[[https://x.com/pontusab/status/2038930956984385907][View on X]]
+
+*** @intellectronica (Wed Apr 01 17:21)
+Treat multi-agent orchestration like Gas Town or Claude Flow as educational experiments. Instead of wrestling with complex, inefficient scaffolding, use a main agent thread with specialised sub-agents in Copilot or Claude. Keep it simple.
+Likes: 6 | Views: 457 | Like rate: 1.3%
+[[https://x.com/intellectronica/status/2039392608129355835][View on X]]
+
+*** @anemll (Thu Apr 02 05:23) /discovered/
+More progress with Kimi-K2.5 (1T params model) on M5 Max with 128 GB Flash SSD, streaming. Now reaching 6 t/s after fusing Flash-SSD kernels. Integrating and troubleshooting Llama.cpp takes much longer than the MLX repo. Still plenty of room for improvement.
+Likes: 241 | Views: 21,405 | Like rate: 1.1%
+[[https://x.com/anemll/status/2039574545263435969][View on X]]
+
+*** @itsolelehmann (Tue Mar 31 10:57)
+Perplexity actually runs Karpathy's LLM Council natively. They call it "model council." Multiple models answer your question independently, then a synthesis layer combines the best reasoning from all of them into one response.
+Likes: 204 | Views: 22,587 | Like rate: 0.9%
+[[https://x.com/itsolelehmann/status/2038933706367520887][View on X]]
+
+*** @Prince_Canuma (Wed Apr 01 15:15)
+TurboQuant MLX pushed to the max: 265K context using Qwen3.5-4B. Achieves 500ms TTFT and a reasonable 40 tok/s.
+Likes: 405 | Views: 45,528 | Like rate: 0.9%
+[[https://x.com/Prince_Canuma/status/2039361103684116543][View on X]]
+
+** Vetted accounts
+- *@__tinygrad__* (69K) — Score: 7. Practical local AI hardware: eGPU drivers for Mac (AMD+NVIDIA), tinybox pricing, tok/s benchmarks. ~80% AI tools. *Added to list.*
+- *@anemll* (3.5K) — Score: 6. Flash-MoE SSD streaming for local LLMs. Very niche, many emoji-only tweets. Borderline.
+
+** Accounts with nothing notable
+@_catwu, @altryne, @alvinsng, @amirmxt, @badlogicgames, @bcherny, @bentossell, @boringmarketer, @championswimmer, @chasing_next, @dexhorthy, @Dimillian, @dmwlff, @iotcoi, @maddiedreese, @NickADobos, @petergyang, @RayFernando1337, @Saboo_Shubham_, @simonw, @steipete, @thdxr, @trq212, @xeophon
+
+* ai-macrostrategy
+
+** Notable
+
+*** @So8res (Wed Apr 01 20:10)
+"Cats are grown; we don't understand their internals. Windows is so big these days that no one human understands it completely. Incomprehensible tech is fine." Usually! But if you were on track to make your cat or OS superintelligent, people should have some questions.
+Likes: 67 | Views: 2,182 | Like rate: 3.1%
+[[https://x.com/So8res/status/2039435268806369390][View on X]]
+
+*** @emollick (Wed Apr 01 16:27)
+A sign that human creativity is a bottleneck is that this year everyone can generate almost any image or video they can think of for nearly free and the April Fools posts are basically just as bad as any other year.
+Likes: 1,057 | Views: 37,240 | Like rate: 2.8%
+[[https://x.com/emollick/status/2039379053480914959][View on X]]
+
+*** @TheZvi (Thu Apr 02 12:45)
+Cheer up. I know losing access to Anthropic models sucks but it isn't that bad.
+Likes: 726 | Views: 26,205 | Like rate: 2.8%
+[[https://x.com/TheZvi/status/2039685551582843344][View on X]]
+
+*** @peterwildeford (Wed Apr 01 17:23)
+Some days I'm excited about AI but other days it really feels like big tobacco executives building nuclear missiles.
+Likes: 352 | Views: 14,478 | Like rate: 2.4%
+[[https://x.com/peterwildeford/status/2039393316978991551][View on X]]
+
+*** @peterwildeford (Wed Apr 01 16:39)
+Wow, OpenAI created an essentially fake "parents and kids" coalition to advance their policy goals... OpenAI has been doing some brazen dark arts politics stuff this year. Hard to imagine how this helps build the social preparedness for AI that Altman says he wants...
+Likes: 234 | Views: 10,084 | Like rate: 2.3%
+[[https://x.com/peterwildeford/status/2039382029104533512][View on X]]
+
+*** @RyanPGreenblatt (Thu Apr 02 19:06)
+These numbers seem reasonable. My median for "full automation of AI R&D" is ~early 2031 and my 25th percentile is ~mid 2028. I'm between Daniel's more aggressive views and Eli's. (My superintelligence median is closer to Eli's, my superhuman coder median is closer to Daniel's.)
+Likes: 29 | Views: 1,394 | Like rate: 2.1%
+[[https://x.com/RyanPGreenblatt/status/2039781450107793812][View on X]]
+
+*** @robbensinger (Tue Mar 31 22:45)
+Fascinating piece. It seems honest! My one caveat, on "labs aren't lying when they say they want regulation while still racing ahead": Altman seems to lie about everything, and OpenAI has poured a massive amount of money into lobbying against regulation.
+Likes: 183 | Views: 9,738 | Like rate: 1.9%
+[[https://x.com/robbensinger/status/2039111815767191925][View on X]]
+
+*** @allTheYud (Thu Apr 02 01:57) /discovered/
+TIL that Gemini, Claude, and ChatGPT (but not Grok) are told that today is March 32nd, because if you tell LLMs it's April 1st, the conditional text predictions downstream become less reliable for obvious training-dataset reasons.
+Likes: 3,883 | Views: 212,157 | Like rate: 1.8%
+[[https://x.com/allTheYud/status/2039522463282065548][View on X]]
+
+*** @AndrewCurran_ (Tue Mar 31 18:34)
+Anthropic has only commented once on Mythos, directly to Fortune the day the story broke. Silence since. That makes me think we are headed for a big exclusive reveal interview with Dario + 1, probably in the WSJ. Anthropic's blog will post the announcement the same time the story goes live.
+Likes: 609 | Views: 33,357 | Like rate: 1.8%
+[[https://x.com/AndrewCurran_/status/2039048645044281479][View on X]]
+
+*** @DavidSKrueger (Tue Mar 31 23:49)
+Regulating AI is harder than Stopping AI.
+Likes: 62 | Views: 3,825 | Like rate: 1.6%
+[[https://x.com/DavidSKrueger/status/2039128042245959796][View on X]]
+
+*** @emollick (Thu Apr 02 13:50)
+My piece in the Economist where I argue against de-weirding AI. It is a strange technology with both risks & opportunities that need to be discovered. Pretending AI works like normal IT automation can result in bad outcomes for companies & their employees.
+Likes: 364 | Views: 22,693 | Like rate: 1.6%
+[[https://x.com/emollick/status/2039702114910306638][View on X]]
+
+*** @jankulveit (Wed Apr 01 10:08)
+The problem isn't in "explaining the plan". The problem is there is no specific plan how post-AGI future could look like with humans alive, happy and empowered.
+Likes: 91 | Views: 5,802 | Like rate: 1.6%
+[[https://x.com/jankulveit/status/2039283783283691706][View on X]]
+
+*** @JeffLadish (Wed Apr 01 17:34)
+I hate to say it but an international agreement between the US and China to ban superintelligence is inevitable. Leaders in these countries are just going to follow their incentives, and none of them are willing to give up control to an artificial superintelligence.
+Likes: 294 | Views: 21,388 | Like rate: 1.4%
+[[https://x.com/JeffLadish/status/2039395883503305020][View on X]]
+
+*** @DKokotajlo (Thu Apr 02 18:25)
+New timelines update! We at AI Futures Project will try to do this quarterly. Tl;dr: shortened timelines by about a year.
+Likes: 156 | Views: 22,275 | Like rate: 0.7%
+[[https://x.com/DKokotajlo/status/2039771119851544863][View on X]]
+
+*** @joel_bkr (Tue Mar 31 17:23)
+First ever blog post from me: "straight lines on graphs". As a researcher at METR_Evals I've had hammered into me again and again that AI progress is (not only rapid) but remarkably regular. This intuition then suggests a bunch of useful mental models which aren't obvious without the initially counterintuitive starting point.
+Likes: 343 | Views: 137,821 | Like rate: 0.2%
+[[https://x.com/joel_bkr/status/2039030947115348185][View on X]]
+
+** Vetted accounts
+- *@allTheYud* (11K) — Score: 8. Foundational alignment voice. x-risk, AI psychosis, engineering analogies. ~50% AI macro but extremely high quality. *Added to list.*
+- *@ahall_research* (8.2K) — Score: 8. Dictatorship Eval, space governance, agent coordination governance. ~80% macro AI. *Added to list.*
+- *@AndyMasley* (11.6K) — Score: 6. Data center energy analysis. Only ~40% AI macro. Borderline.
+
+** Accounts with nothing notable
+@_NathanCalvin, @ajeya_cotra, @alexolegimas, @Afinetheorem, @ben_j_todd, @ChadJonesEcon, @cherylwoooo, @danwilliamsphil, @datagenproc, @deanwball, @dwarkesh_sp, @fleetingbits, @GregHBurnham, @Jsevillamol, @lukeprog, @Miles_Brundage, @ohlennart, @pawtrammell, @sebkrier, @sethlazar, @sjgadler, @testingham, @tomekkorbak, @tyler_m_john, @willmacaskill

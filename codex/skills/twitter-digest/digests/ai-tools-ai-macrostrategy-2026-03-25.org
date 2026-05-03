@@ -1,0 +1,194 @@
+#+title: Twitter digest: ai-tools, ai-macrostrategy — 2026-03-25
+
+* ai-tools
+
+** Notable
+
+*** @0xSero (Tue Mar 24 21:21)
+For all my backend/fullstack peeps out there. Agents can mock entire databases, and HTML UIs to demo out any idea you have. You can ask them to build 10 variations of the UI and data model, then experiment with each before you commit to any real code. So much time saved.
+Likes: 613 | Views: 22,038 | Like rate: 2.8%
+[[https://x.com/0xSero/status/2036554133285614021][View on X]]
+
+*** @mitsuhiko (Tue Mar 24 16:11) [discovered]
+There will be more of this. And as much as we're joking about it, we're seeing a massive degradation of code quality right now and we're increasingly only catching it way too late.
+Likes: 1,151 | Views: 42,286 | Like rate: 2.7%
+[[https://x.com/mitsuhiko/status/2036475951349948557][View on X]]
+
+*** @0xSero (Tue Mar 24 22:15)
+Factory team made Droid 10x better for BYOK in the last 2 weeks, like man it is night and day. Latest version makes it so much more stable.
+Likes: 302 | Views: 13,644 | Like rate: 2.2%
+[[https://x.com/0xSero/status/2036567726076928325][View on X]]
+
+*** @kepano (Wed Mar 25 13:10) [discovered]
+What are the chances this thing will be abandonware in a month? You can make something in a few days but will you commit to maintaining and improving it for the next few years?
+Likes: 220 | Views: 11,348 | Like rate: 1.9%
+[[https://x.com/kepano/status/2036792836834947265][View on X]]
+
+*** @cnakazawa (Wed Mar 25 00:02) [discovered]
+Slop Cringe: When you let an LLM write your blog posts. Don't do it. It sucks, and it shows.
+Likes: 104 | Views: 6,025 | Like rate: 1.7%
+[[https://x.com/cnakazawa/status/2036594611720953963][View on X]]
+
+*** @0xSero (Tue Mar 24 13:38)
+Look at these and read them carefully, this will give you an idea of what you can expect from different Open Weight models. Qwen3.5-27B is the smartest, Qwen3.5-35B-3A is the fastest. Any Laptop, Macbook, or GPU should handle them.
+Likes: 1,109 | Views: 64,690 | Like rate: 1.7%
+[[https://x.com/0xSero/status/2036437409433326040][View on X]]
+
+*** @xeophon (Tue Mar 24 19:15) [discovered]
+We updated the prime CLI to be easier to use for LLMs: added --plain to remove human-readable formatting, added json schemas to all list commands so the LLM knows what the output looks like.
+Likes: 108 | Views: 7,226 | Like rate: 1.5%
+[[https://x.com/xeophon/status/2036522331988722046][View on X]]
+
+*** @Dimillian (Tue Mar 24 20:10) [discovered]
+Full demo of Codex building a macOS menu bar app that lists your most recent Codex threads grouped by workspace. One shotted in 3 minutes, with a build script you can run directly from the Codex app. Clicking a menu item opens the Codex app!
+Likes: 270 | Views: 19,038 | Like rate: 1.4%
+[[https://x.com/Dimillian/status/2036536193068732783][View on X]]
+
+*** @badlogicgames (Tue Mar 24 19:44)
+I used to optimize for CPU cycles. Now I optimize for token usage. Makes me kinda sad :/
+Likes: 100 | Views: 7,810 | Like rate: 1.3%
+[[https://x.com/badlogicgames/status/2036529566999593286][View on X]]
+
+*** @Prince_Canuma (Wed Mar 25 01:07) [discovered]
+Just implemented Google's TurboQuant in MLX and the results are wild! Needle-in-a-haystack using Qwen3.5-35B-A3B: 6/6 exact match at every quant level. TurboQuant 2.5-bit: 4.9x smaller KV cache. TurboQuant 3.5-bit: 3.8x smaller KV cache.
+Likes: 2,998 | Views: 273,268 | Like rate: 1.1%
+[[https://x.com/Prince_Canuma/status/2036611007523512397][View on X]]
+
+*** @boringmarketer (Tue Mar 24 23:15)
+What I'm seeing is that top 1% operators are collapsing into something beyond "vibe coders" — it's more like can understand systems and architecture enough to be super dangerous with Claude Code. You apply your deep vertical knowledge to this and you become unstoppable.
+Likes: 366 | Views: 36,816 | Like rate: 1.0%
+[[https://x.com/boringmarketer/status/2036582590153388329][View on X]]
+
+*** @badlogicgames (Wed Mar 25 08:52)
+"When asked to evaluate work they've produced, agents tend to respond by confidently praising the work — even when, to a human observer, the quality is obviously mediocre"
+Likes: 346 | Views: 38,444 | Like rate: 0.9%
+[[https://x.com/badlogicgames/status/2036730953880465529][View on X]]
+
+*** @Dimillian (Tue Mar 24 17:24) [discovered]
+Here is a little trick: I don't use a TODO app. I use a pinned Codex thread for my long-running TODO. The initial system prompt is to create a master TODO.md and keep it updated with items added by date. It's natural intelligence for my tasks.
+Likes: 718 | Views: 80,458 | Like rate: 0.9%
+[[https://x.com/Dimillian/status/2036494444799656095][View on X]]
+
+*** @simonw (Tue Mar 24 14:35)
+Thankfully the LiteLLM package has now been marked as "quarantined" on PyPI so attempting to install the compromised update via pip et al shouldn't work.
+Likes: 880 | Views: 111,738 | Like rate: 0.8%
+[[https://x.com/simonw/status/2036451896970584167][View on X]]
+
+*** @petergyang (Tue Mar 24 14:30)
+My friend is a VP at Meta who got tired of repeating the same feedback over and over. So he built a skill that reviews docs using his principles, questions, and voice. It has been a game changer for his entire team.
+Likes: 393 | Views: 50,369 | Like rate: 0.8%
+[[https://x.com/petergyang/status/2036450489102155888][View on X]]
+
+** Vetted accounts
+
+*** Added to list
+- @Dimillian (7/10) — Codex workflow practitioner. Menu bar app demos, TODO system, memory features. ~55% AI tools content. Auto-added.
+- @Prince_Canuma (7/10) — MLX ecosystem builder. TurboQuant, mlx-vlm, local model optimization. ~75% AI tools. Auto-added.
+- @xeophon (7/10) — Prime CLI developer. Made CLI LLM-friendly, security awareness. ~60% AI tools. Auto-added.
+
+*** Borderline
+- @cnakazawa (6/10) — Void IDE creator. Anti-AI-slop voice, Codex critique. ~40% AI tools, heavy JS ecosystem.
+- @kepano (5/10) — Obsidian creator. Mostly software philosophy (file-over-app, persistence). ~35% AI-relevant.
+
+*** Previously vetted
+- @mitsuhiko (6/10, 2026-03-23) — Sentry CTO, pi contributor. Already on registry.
+
+** Accounts with nothing notable
+@peterhartree, @Saboo_Shubham_, @steipete, @itsolelehmann, @bentossell, @maddiedreese, @iannuttall, @_catwu, @dmwlff, @amirmxt, @eyaltoledano, @forgebitz, @NickADobos, @bcherny, @trq212, @rayfernando1337, @intellectronica, @chasing_next, @MattPRD, @alvinsng, @thdxr, @pontusab, @championswimmer
+
+* ai-macrostrategy
+
+** Notable
+
+*** @So8res (Tue Mar 24 19:22)
+Every top AI exec is worried about what happens if any other top AI exec creates superintelligence. I just go one further.
+Likes: 355 | Views: 10,893 | Like rate: 3.3%
+[[https://x.com/So8res/status/2036524175712723428][View on X]]
+
+*** @robbensinger (Tue Mar 24 21:43) [discovered]
+It's over. AI risk is no longer a niche topic. Let's talk about this, together. Let's find a way through this.
+Likes: 142 | Views: 6,194 | Like rate: 2.3%
+[[https://x.com/robbensinger/status/2036559607519461793][View on X]]
+
+*** @deanwball (Wed Mar 25 11:08) [discovered]
+I would love to see policymakers take 50x greater interest in issues like this and 99.9% less interest in issues like AI water use.
+Likes: 135 | Views: 6,939 | Like rate: 1.9%
+[[https://x.com/deanwball/status/2036762255308583275][View on X]]
+
+*** @_NathanCalvin (Tue Mar 24 20:40) [discovered]
+Judge Lin coming in with a framing of the case that seems quite favorable to Anthropic's position: "What is troubling to me is that these [government] actions don't seem tailored to the national security concern... it looks like defendants went further than that."
+Likes: 31 | Views: 1,882 | Like rate: 1.6%
+[[https://x.com/_NathanCalvin/status/2036543611815493755][View on X]]
+
+*** @Miles_Brundage (Wed Mar 25 05:09)
+So many outcomes in the world (including AI-related ones) are driven by the most petty + dumb motivations imaginable, such that if you think too hard about it you will explode, but nevertheless we have to play the human nature card we've been dealt.
+Likes: 36 | Views: 2,185 | Like rate: 1.6%
+[[https://x.com/Miles_Brundage/status/2036671774944112961][View on X]]
+
+*** @deanwball (Wed Mar 25 00:12) [discovered]
+I think if I worked at the OpenAI Foundation I would write stuff like "We are interested in funding ambitious research around Climate, Health, Democracy, and Programmable Self-Assembling Diamondoid Lattice Structures"
+Likes: 198 | Views: 12,209 | Like rate: 1.6%
+[[https://x.com/deanwball/status/2036596951689347179][View on X]]
+
+*** @tyler_m_john (Tue Mar 24 22:51) [discovered]
+I expect the world to go entirely off the rails within years. It doesn't have to be this way. We're going to have many new tools and resources to keep the world on its rails. This won't happen by default. If you're not firing on all cylinders for good outcomes from AI, it's time.
+Likes: 102 | Views: 6,666 | Like rate: 1.5%
+[[https://x.com/tyler_m_john/status/2036576742991917330][View on X]]
+
+*** @Jsevillamol RT @rohinmshah (Tue Mar 24 14:29)
+"Just read the chain of thought" is one of our best safety techniques. Why does it work? Because models can only think opaquely if they are doing so in a way that is hard for humans to interpret...
+Likes: 436 | Views: 28,671 | Like rate: 1.5%
+[[https://x.com/Jsevillamol/status/2036450297367724199][View on X]]
+
+*** @Miles_Brundage (Tue Mar 24 22:26)
+AGI-pilled people trying to explain to normies that AI progress continues to be rapid [image]
+Likes: 228 | Views: 15,630 | Like rate: 1.5%
+[[https://x.com/Miles_Brundage/status/2036570463820980263][View on X]]
+
+*** @deanwball (Tue Mar 24 20:55) [discovered]
+Pete Hegseth tweeted, basically, "this is my ultra-super official determination, and it is absolutely final," and the government's lawyers are standing in court with a straight face saying this "had no legal effect and no reasonable person should have concluded that it did."
+Likes: 1,008 | Views: 81,598 | Like rate: 1.2%
+[[https://x.com/deanwball/status/2036547553647358241][View on X]]
+
+*** @ben_j_todd (Tue Mar 24 20:59)
+I wrote 80,000 Hours ten years ago because I was frustrated at how terrible career advice can be. Today it's even worse: still focused on traditional paths like law & medicine when we face AGI. To fix that, Penguin are publishing a fully updated edition.
+Likes: 231 | Views: 21,832 | Like rate: 1.1%
+[[https://x.com/ben_j_todd/status/2036548487379141087][View on X]]
+
+*** @deanwball (Tue Mar 24 19:46) [discovered]
+The end state is that you don't "use the computer" like you used to, or do now. The computer will use itself. With time, your use of the computer for work will look more and more like you are playing a strange video game, which will itself be built in large part by computers.
+Likes: 191 | Views: 22,260 | Like rate: 0.9%
+[[https://x.com/deanwball/status/2036530166860546193][View on X]]
+
+*** @ShanuMathew93 (Tue Mar 24 13:47) [discovered]
+NVDA Chief Scientist: "Inference is THE job now. It's easily 90% of the power in data centers is going into inference." I feel like he'd have pretty good insight into how the chips are being used...
+Likes: 65 | Views: 9,180 | Like rate: 0.7%
+[[https://x.com/ShanuMathew93/status/2036439852611207280][View on X]]
+
+*** @mentalgeorge (Tue Mar 24 15:33) [discovered]
+If scaling compute is all that matters, why do labs spend less than a quarter of their R&D compute on final training runs? Naively, this finding seems to fly in the face of the Bitter Lesson / Scaling Law kool-aid we're all drinking.
+Likes: 44 | Views: 8,627 | Like rate: 0.5%
+[[https://x.com/mentalgeorge/status/2036466402257744175][View on X]]
+
+*** @_NathanCalvin (Tue Mar 24 14:47) [discovered]
+Empirical question I am confused about: Will companies in practice give AI agents more permissions and access than they give e.g. freshly hired engineers or interns?
+Likes: 10 | Views: 2,866 | Like rate: 0.3%
+[[https://x.com/_NathanCalvin/status/2036454989820752006][View on X]]
+
+** Vetted accounts
+
+*** Added to list
+- @deanwball (9/10) — AI governance writer (hyperdimensional.co). Anthropic/Pentagon legal analysis, compute policy. ~85% macro. Auto-added.
+- @robbensinger (8/10) — MIRI communications. AI risk advocacy, superb RT curation. ~95% macro. Auto-added.
+- @_NathanCalvin (8/10) — AI policy/law analyst. Legal commentary, resilience, governance. ~90% macro. Auto-added.
+- @AllanDafoe (8/10) — Google DeepMind Frontier Strategy lead. Institutional voice, hiring signals. ~85% macro. Auto-added.
+- @tyler_m_john (7/10) — Philosophy/AI ethics. Existential risk, philosophical depth. ~65% macro. Auto-added.
+
+*** Not scored (insufficient data or off-rubric)
+- @ShanuMathew93 — Data center compute/infrastructure (more markets than macro)
+- @mentalgeorge — Compute scaling analysis (promising, only 355 followers)
+- @JTillipman — AI governance/legal documentation
+- @rohinmshah — Alignment research (strong, would likely score well if vetted)
+
+** Accounts with nothing notable
+@ajeya_cotra, @tobyordoxford, @TomDavidsonX, @DKokotajlo, @joel_bkr, @ohlennart, @pawtrammell, @HjalmarWijk, @RyanPGreenblatt, @testingham, @leopoldasch, @willmacaskill, @sjgadler, @ChadJonesEcon, @thlarsen, @romeovdean, @fiiiiiist, @MKinniment, @JeffLadish, @jankulveit, @danwilliamsphil, @lukeprog, @dwarkesh_sp, @sebkrier, @cherylwoooo, @datagenproc

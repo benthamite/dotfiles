@@ -1,0 +1,159 @@
+{
+  "presets": {
+    "quick": {
+      "description": "Fast responses from efficient models",
+      "models": ["gemini-3-flash", "grok-4.1-non-reasoning", "claude-sonnet-4-5"],
+      "timeout_seconds": 60
+    },
+    "comprehensive": {
+      "description": "All default models plus GPT-5.2 Pro",
+      "models": ["gpt-5.2-thinking", "claude-opus-4-6-thinking", "gemini-3.1-pro", "grok-4.1", "gpt-5.2-pro"],
+      "timeout_seconds": 300
+    },
+    "deep-research": {
+      "description": "Deep research (10-20 min per model)",
+      "models": ["openai-deep-research", "gemini-deep-research", "gpt-5.2-pro"],
+      "timeout_seconds": 3600
+    },
+    "comprehensive-deep": {
+      "description": "Quick models + deep research",
+      "models": ["gpt-5.2-thinking", "claude-opus-4-6-thinking", "gemini-3.1-pro", "grok-4.1", "openai-deep-research", "gemini-deep-research"],
+      "timeout_seconds": 3600
+    },
+    "brainstorm": {
+      "description": "Brainstorming with powerful models (12 API calls)",
+      "models": ["gpt-5.2-thinking", "claude-opus-4-6-thinking", "gemini-3.1-pro", "grok-4.1"],
+      "timeout_seconds": 300,
+      "brainstorm": true,
+      "num_samples": 3,
+      "temperature": 1.0
+    },
+    "brainstorm-intense": {
+      "description": "Intense brainstorming with diverse models (35 API calls)",
+      "models": ["gpt-5.2-thinking", "claude-opus-4-6-thinking", "gemini-3.1-pro", "grok-4.1", "gpt-5.2-pro", "claude-sonnet-4-5", "gemini-3-flash"],
+      "timeout_seconds": 300,
+      "brainstorm": true,
+      "num_samples": 5,
+      "temperature": 1.1
+    },
+    "brainstorm-ultra": {
+      "description": "Ultra creative: varies temperature 0.5–1.5 across samples (42 API calls)",
+      "models": ["gpt-5.2-thinking", "claude-opus-4-6-thinking", "gemini-3.1-pro", "grok-4.1", "gpt-5.2-pro", "claude-sonnet-4-5", "gemini-3-flash"],
+      "timeout_seconds": 300,
+      "brainstorm": true,
+      "num_samples": 6,
+      "temperature_range": [0.5, 1.5]
+    }
+  },
+  "models": {
+    "gpt-5.2": {
+      "provider": "openai",
+      "model_id": "gpt-5.2",
+      "display_name": "GPT-5.2",
+      "type": "api",
+      "max_tokens": 16000
+    },
+    "gpt-5.2-thinking": {
+      "provider": "openai",
+      "model_id": "gpt-5.2",
+      "display_name": "GPT-5.2 Thinking",
+      "type": "api",
+      "max_tokens": 32000,
+      "reasoning": true
+    },
+    "gpt-5.2-pro": {
+      "provider": "openai",
+      "model_id": "gpt-5.2-pro",
+      "display_name": "GPT-5.2 Pro",
+      "type": "api",
+      "max_tokens": 32000,
+      "slow": true,
+      "timeout_seconds": 3600
+    },
+    "claude-opus-4-6": {
+      "provider": "anthropic",
+      "model_id": "claude-opus-4-6",
+      "display_name": "Claude 4.6 Opus",
+      "type": "api",
+      "max_tokens": 16000
+    },
+    "claude-opus-4-6-thinking": {
+      "provider": "anthropic",
+      "model_id": "claude-opus-4-6",
+      "display_name": "Claude 4.6 Opus Thinking",
+      "type": "api",
+      "max_tokens": 32000,
+      "reasoning": true
+    },
+    "claude-sonnet-4-5": {
+      "provider": "anthropic",
+      "model_id": "claude-sonnet-4-5-20250929",
+      "display_name": "Claude 4.5 Sonnet",
+      "type": "api",
+      "max_tokens": 16000
+    },
+    "gemini-3.1-pro": {
+      "provider": "google",
+      "model_id": "gemini-3.1-pro-preview",
+      "display_name": "Gemini 3.1 Pro",
+      "type": "api",
+      "max_tokens": 32000
+    },
+    "gemini-3-flash": {
+      "provider": "google",
+      "model_id": "gemini-3-flash-preview",
+      "display_name": "Gemini 3 Flash",
+      "type": "api",
+      "max_tokens": 16000
+    },
+    "grok-4.1": {
+      "provider": "xai",
+      "model_id": "grok-4-1-fast-reasoning",
+      "display_name": "Grok 4.1 (Reasoning)",
+      "type": "api",
+      "max_tokens": 16000
+    },
+    "grok-4.1-non-reasoning": {
+      "provider": "xai",
+      "model_id": "grok-4-1-fast-non-reasoning",
+      "display_name": "Grok 4.1 (Fast)",
+      "type": "api",
+      "max_tokens": 16000
+    },
+    "gpt-5.2-pro-browser": {
+      "provider": "openai",
+      "display_name": "GPT-5.2 Pro (Browser)",
+      "type": "browser",
+      "url": "https://chatgpt.com/?model=gpt-5.2-pro",
+      "requires_browser": true
+    },
+    "openai-deep-research": {
+      "provider": "openai-deep",
+      "model_id": "o3-deep-research-2025-06-26",
+      "display_name": "OpenAI Deep Research",
+      "type": "api",
+      "deep_research": true,
+      "timeout_seconds": 3600,
+      "poll_interval_ms": 10000
+    },
+    "gemini-deep-research": {
+      "provider": "gemini-deep",
+      "model_id": "deep-research-pro-preview-12-2025",
+      "display_name": "Gemini Deep Research",
+      "type": "api",
+      "deep_research": true,
+      "timeout_seconds": 3600,
+      "poll_interval_ms": 10000
+    }
+  },
+  "defaults": {
+    "preset": "quick",
+    "synthesis_depth": "executive",
+    "max_tokens": 4000
+  },
+  "synthesis_depths": {
+    "brief": "2-3 sentence summary highlighting key consensus and disagreements",
+    "executive": "1-2 paragraph summary with bullet points for key insights",
+    "full": "Comprehensive analysis preserving all unique insights, organised by topic"
+  }
+}

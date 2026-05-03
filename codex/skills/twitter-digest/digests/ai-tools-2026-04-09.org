@@ -1,0 +1,93 @@
+#+title: Twitter digest: ai-tools — 2026-04-09
+
+* Notable
+
+** @iotcoi (Thu Apr 09 11:26)
+Gemma4-31B "fix it" brain + Gemma4-26B "go explore" muscle both living in 86% of an AMD Strix Halo thanks to TurboQuant KV squeeze. Zed -> DSPy GEPA -> llama-servers -> Vulkan writes tokens + x64 32core Ryzen babysitting agents/tools. AgentFS for grown-up security and automation.
+Likes: 23 | Views: 697 | Like rate: 3.3%
+[[https://x.com/iotcoi/status/2042202547922870497][View on X]]
+
+** @maddiedreese (Wed Apr 08 23:45)
+I only vibe code with Joy-Cons now. 6 gestures: swipe right -> Enter, swipe left -> Escape, stab -> y + Enter, shake -> Ctrl+C, flick up -> Up arrow, circle -> "explain this". Performed 180 training samples to classify gestures, piped into Claude Code.
+Likes: 65 | Views: 3086 | Like rate: 2.1%
+[[https://x.com/maddiedreese/status/2042026147844911477][View on X]]
+
+** @helloitsaustin (Wed Apr 08 17:58)
+For the marketers wondering which Claude product to use: need to think? -> Claude chat. Need a deliverable? -> Claude Cowork. Need a tool? -> Claude Code. Walkthrough on how to use each.
+Likes: 168 | Views: 8630 | Like rate: 1.9%
+[[https://x.com/helloitsaustin/status/2041938686233964585][View on X]]
+
+** @intellectronica (Thu Apr 09 09:14)
+Want reliable agents? Don't choose between context files and on-demand skills. Use a hybrid approach: put routing hints in AGENTS.md and heavy logic in skills.
+Likes: 2 | Views: 123 | Like rate: 1.6%
+[[https://x.com/intellectronica/status/2042169152383885590][View on X]]
+
+** @thekitze (Wed Apr 08 21:19)
+Download LM Studio + Gemma 4. You never know when you need a local LLM — hotel had terrible wifi, couldn't connect beryl router. Gemma walked through combinations of fixes and got it working. Always have a local model ready.
+Likes: 439 | Views: 29019 | Like rate: 1.5%
+[[https://x.com/thekitze/status/2041989301299507287][View on X]]
+
+** @kr0der (Thu Apr 09 06:57)
+The /grill-me skill by @mattpocockuk is one of the best Claude skills — should be what plan mode does by default. Asks tough questions before you start building.
+Likes: 19 | Views: 1266 | Like rate: 1.5%
+[[https://x.com/kr0der/status/2042134808520687777][View on X]]
+
+** @kr0der (Thu Apr 09 10:05)
+Subscribe to Cursor even if you don't code in it — Bugbot alone is worth $20/m. $40/m for unlimited PR reviews with insane accuracy.
+Likes: 21 | Views: 1587 | Like rate: 1.3%
+[[https://x.com/kr0der/status/2042182121268126025][View on X]]
+
+** @Prince_Canuma (Wed Apr 08 23:26)
+TriAttention implemented in MLX: 81% KV compression at 60K tokens for Gemma-4-31B-IT in BF16. Unlike TurboQuant (quantizes KV values), TriAttention prunes low-importance tokens entirely using trigonometric series scoring.
+Likes: 451 | Views: 36686 | Like rate: 1.2%
+[[https://x.com/Prince_Canuma/status/2042021304270819394][View on X]]
+
+** @Dimillian (Wed Apr 08 19:51)
+Demo of the new Build macOS Apps Codex plugin: building a native SwiftUI app with Codex App Server, launching it, checking telemetry to confirm it works, and resuming the Codex thread.
+Likes: 227 | Views: 18914 | Like rate: 1.2%
+[[https://x.com/Dimillian/status/2041967222005100696][View on X]]
+
+** @Saboo_Shubham_ (Thu Apr 09 04:32)
+GPT-5.4 in Hermes Agent is surprisingly good. Import OpenClaw settings, skills, memories and API keys in seconds. Zero extra config. Also: rewrite every SOUL file when moving to GPT-5.4 — don't copy-paste, ask your agent to create a version specific to YOU.
+Likes: 58 | Views: 4971 | Like rate: 1.2%
+[[https://x.com/Saboo_Shubham_/status/2042098209749922160][View on X]]
+
+** @steipete (Wed Apr 08 23:11)
+Working on character evals: Claude constantly picks itself as #1. Fix: remove model names from the judge prompt.
+Likes: 746 | Views: 82373 | Like rate: 0.9%
+[[https://x.com/steipete/status/2042017534816231486][View on X]]
+
+** @cathrynlavery (Wed Apr 08 21:42)
+Current setup: Codex 5.4 main agent + Paperclip for agent team via local Claude adapters. Codex as Chief of Staff delegating tasks to Opus/Sonnet agents in Paperclip.
+Likes: 250 | Views: 35994 | Like rate: 0.7%
+[[https://x.com/cathrynlavery/status/2041995120048750993][View on X]]
+
+* Discovered accounts
+
+** @garrytan (Thu Apr 09 00:20)
+How to make your claw a durable AI agent you never have to instruct twice — paste into AGENTS.md: "You are not allowed to do one-off work. If I ask you to do something and it's the kind of thing that will need to happen again, you must: 1. Do it manually first, then create a skill/automation."
+Likes: 1552 | Views: 109066 | Like rate: 1.4%
+[[https://x.com/garrytan/status/2042034964825551072][View on X]]
+
+** @pvncher (Thu Apr 09 00:33)
+You can get GPT 5.4 to ask Gemini 3.1 Pro for a second opinion on design in RepoPrompt. App server talking to ACP through the RP Agent.
+Likes: 25 | Views: 1229 | Like rate: 2.0%
+[[https://x.com/pvncher/status/2042038216035881224][View on X]]
+
+** @nickbaumann_ (Thu Apr 09 05:42)
+The poor man's eval for building a skill: ask Codex to spin up 20 subagents and pretend to be a naive user.
+Likes: 32 | Views: 2166 | Like rate: 1.5%
+[[https://x.com/nickbaumann_/status/2042115999793868833][View on X]]
+
+** @nrupatunga1987 (Thu Apr 09 09:35)
+PDF reader built with Pi RPC mode + Glimpse + PDFium: chat with papers, annotate and ask about them, keep multiple sessions per paper, /fork a thread and /resume later. Research with branching context instead of one long chat.
+Likes: 23 | Views: 2366 | Like rate: 1.0%
+[[https://x.com/nrupatunga1987/status/2042174499693723720][View on X]]
+
+** @wunderwuzzi23 (Thu Apr 09 00:15)
+When dumping Muse Spark system prompt, triple quotes in a tool definition broke the tool call to write to file. Tip: calling a tool (create file/artifact) is a neat trick for extracting system info from chat UIs.
+Likes: 23 | Views: 2610 | Like rate: 0.9%
+[[https://x.com/wunderwuzzi23/status/2042033500677927087][View on X]]
+
+* Accounts with nothing notable
+@altryne, @alvinsng, @antirez, @badlogicgames, @bcherny, @bentossell, @boringmarketer, @championswimmer, @dexhorthy, @EyalToledano, @forgebitz, @ivanfioravanti, @itsolelehmann, @NickADobos, @nibzard, @petergyang, @pontusab, @RayFernando1337, @ryanvogel, @simonw, @thdxr, @trq212, @xeophon

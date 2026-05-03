@@ -1,0 +1,95 @@
+#+title: Twitter digest: ai-tools — 2026-04-14
+
+* Notable
+
+** @0xSero (Tue Apr 14 21:26)
+Guide to running BIG B0Is on your small hardware.
+
+1. Use REAPs: up to 50% savings
+2. Use quantisations: 75% savings
+   - AWQ / GPTQ / W4A16 / FP8 = FAST inference
+   - GGUF / EXL3 = Slow but just works
+   - MLX = Best for apple
+3. Use 8bit KV cache: 50-75% savings
+Likes: 119 | Views: 4307 | Like rate: 2.8%
+[[https://x.com/0xSero/status/2044165332928213243][View on X]]
+
+** @ivanfioravanti (Tue Apr 14 08:31)
+Today coding stack setup is: - 2 OpenCode with GLM 5.1 - 1 Kimi Code with K2.6 Coding Preview - 1 Gemini CLI with Gemini 3.1 Pro Preview - 1 Claude with Opus 4.6 - 1 Cursor - Hermes Agent with MiniMax M2.7
+Likes: 101 | Views: 3898 | Like rate: 2.6%
+[[https://x.com/ivanfioravanti/status/2043970443103596940][View on X]]
+
+** @maddiedreese (Tue Apr 14 01:48)
+Claude Code on the Apple Watch?! Watch app -> Tailscale -> Mac mini -> tmux -> Claude Code. Yes I can actually send commands through voice and text input!
+Likes: 33 | Views: 1292 | Like rate: 2.6%
+[[https://x.com/maddiedreese/status/2043868912920735778][View on X]]
+
+** @iotcoi (Tue Apr 14 13:26)
+I've added experimental DDTree to vLLM 0.19.1rc1. DFlash: 6x speedup with block diffusion. DDTree: "Hold my speculative beer." One diffusion pass -> entire draft TREE -> verified in parallel. Still lossless.
+Likes: 186 | Views: 7471 | Like rate: 2.5%
+[[https://x.com/iotcoi/status/2044044588717908046][View on X]]
+
+** @cathrynlavery (Tue Apr 14 20:54)
+Turn your old content into a writing system / context memory in one afternoon: 1. yt-dlp to download every voice-memo/podcast/tiktok/loom by URL or handle 2. whisper.cpp to transcribe locally, no API cost 3. claude sonnet to extract story atoms from each transcript 4. one markdown file per atom for a searchable knowledge base
+Likes: 15 | Views: 614 | Like rate: 2.4%
+[[https://x.com/cathrynlavery/status/2044157471359435089][View on X]]
+
+** @0xSero (Tue Apr 14 13:19)
+For model reviews the proof is in the tokens. I have went from using 250M a month to 400M tokens a WEEK with GLM-5.1. Their new vision models are good as well, the Turbo is impressive in its own rights but this GLM-5.1 is absolutely unique and highly capable. 5/7 perfect score.
+Likes: 215 | Views: 9385 | Like rate: 2.3%
+[[https://x.com/0xSero/status/2044042959356662115][View on X]]
+
+** @badlogicgames (Tue Apr 14 18:53)
+People of pi. I'm implementing a new contribution standard tonight. 75% of issues submitted are agent slop garbage. This helps me get a hold of that, while still letting respectful humans through.
+Likes: 123 | Views: 5585 | Like rate: 2.2%
+[[https://x.com/badlogicgames/status/2044126845956714808][View on X]]
+
+** @iotcoi (Tue Apr 14 18:43)
+speculative-config '{"method":"dflash","model":"z-lab/Qwen3.5-27B-DFlash","num_speculative_tokens":128,"dflash_block_size":16,"dflash_tree_budget":128}' is all you need.
+Likes: 40 | Views: 1910 | Like rate: 2.1%
+[[https://x.com/iotcoi/status/2044124502724891089][View on X]]
+
+** @petergyang (Tue Apr 14 00:27)
+The thing I have to remind myself constantly with OpenClaw, Claude Code, and the like is am I actually setting up workflows to get real work done or am I just optimizing my setup. Very easy to just do the latter because it feels like progress (and is fun) but isn't actually getting work done.
+Likes: 361 | Views: 20269 | Like rate: 1.8%
+[[https://x.com/petergyang/status/2043848480423325757][View on X]]
+
+** @ivanfioravanti (Tue Apr 14 14:42)
+Coding part is now irrelevant compared to testing the final results and considering that now you code much more, you have to test even more.
+Likes: 28 | Views: 1728 | Like rate: 1.6%
+[[https://x.com/ivanfioravanti/status/2044063627133468814][View on X]]
+
+** @Saboo_Shubham_ (Tue Apr 14 17:46)
+Self-improving agent skills built with Google Agent Development Kit and Gemini 3. This multi-agent system takes any agent skill, runs it against test scenarios, diagnoses failures, and fixes itself. 100% Opensource.
+Likes: 44 | Views: 3209 | Like rate: 1.4%
+[[https://x.com/Saboo_Shubham_/status/2044110021219553767][View on X]]
+
+** @dexhorthy (Tue Apr 14 01:45)
+"thick skills thin harness" is basically getting at what was said back in November: "don't build agents, build skills instead." While "put the biz logic in the skills + the deterministic code they reference (CLIs)" is probably +EV, the concern is that skills can become their own kind of bloat.
+Likes: 118 | Views: 9233 | Like rate: 1.3%
+[[https://x.com/dexhorthy/status/2043868331590189252][View on X]]
+
+** @cathrynlavery (Tue Apr 14 19:56, RT of self)
+Vibe coding pro tip: Your AI skills shouldn't live in 3 different places that create redundancy. Create a .agents Git repo with all your agent-related configurations, skills, and context in one place.
+Likes: 139 | Views: 13186 | Like rate: 1.1%
+[[https://x.com/cathrynlavery/status/2044142669790683420][View on X]]
+
+* Vetted accounts
+
+** @clairevo — Score: 7 (added to list)
+51K followers. Runs 'How I AI' podcast producing exactly what the list wants: concrete setups (Claude Cowork + brain file pattern, Slack digest as Kanban triage UI, MCP integrations). The Trashcan Method of AI Engineering is an actionable framework. ~45-50% on-rubric. Noise from parenting/personal content.
+
+** @zeeg — Score: 6 (borderline)
+29K followers, Sentry CEO. Junior slackbot architecture, Claude Code vs Codex daily switching, token-burn critique. Using AI tools in production at scale with operational observations. Lacks step-by-step actionability — more hard-won observations than tutorials. ~40-45% on-rubric.
+
+** @VictorTaelin — Score: 5 (borderline)
+70K followers, Bend/HVM creator. Built Bend-Metal compiler in one day with Opus+GPT, concrete cost analysis ($1.3K/day), model comparison insights. But bulk of timeline is personal posts, enthusiasm, and RTs unrelated to rubric. ~35-40% on-rubric.
+
+** @rakyll — Score: 4 (skip)
+166K followers, ex-Google. Excellent engineering thinker but mostly aviation safety, career dynamics, exhibitions. AI content is architectural commentary rather than concrete workflows. ~25-30% on-rubric.
+
+** @VicVijayakumar — Score: 2 (skip)
+25K followers. Almost entirely personal life content. The few AI-adjacent tweets lack actionable detail. ~10% on-rubric.
+
+* Accounts with nothing notable
+@__tinygrad__, @_catwu, @altryne, @alvinsng, @amirmxt, @bentossell, @boringmarketer, @bstnxbt, @championswimmer, @Dimillian, @dmwlff, @forgebitz, @gabrielchua, @intellectronica, @itsolelehmann, @KatanaLarp, @kmdrfx, @kr0der, @lucasmeijer, @micLivs, @nibzard, @NickADobos, @pontusab, @Prince_Canuma, @RayFernando1337, @ryanvogel, @steipete, @thdxr, @trq212, @xeophon

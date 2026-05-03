@@ -17,8 +17,6 @@ discovery rules require Codex-specific filenames.
 codex/
 ├── AGENTS.md
 ├── config.toml
-├── hooks/
-│   └── run-claude-hook.sh
 ├── README.org
 ├── rules/default.rules
 └── skills/
@@ -54,9 +52,8 @@ codex/
   =PreToolUse=, =PermissionRequest=, =PostToolUse=, =UserPromptSubmit=, and
   =Stop=.  =PreToolUse= and =PostToolUse= can match =Bash=, =apply_patch=,
   MCP tools, and the =Edit|Write= aliases, but the payload shape and available
-  events differ from Claude's.  Shared hook scripts live under =claude/hooks/=
-  and Codex calls them through =codex/hooks/run-claude-hook.sh=, which
-  normalizes Codex hook JSON into the Claude-shaped fields the scripts expect.
+  events differ from Claude's.  Shared hook scripts should be wrapped by
+  tool-specific adapters when they inspect hook input.
 - Skills with Claude-only frontmatter or runtime assumptions need Codex
   overlays.  Examples include =allowed-tools=, subagent execution, dynamic
   context injection, Claude environment variables, Chrome assumptions, and
@@ -78,8 +75,7 @@ codex/
   existing =CLAUDE.md= files without migrating the source of truth to
   =AGENTS.md=.
 - =.codex/hooks.json= ports the Bash-based commit hooks and the stop hook for
-  this repository by calling shared =claude/hooks/= scripts through
-  =codex/hooks/run-claude-hook.sh=.
+  this repository.
 - =codex/skills/= currently contains only the two Codex-specific ports needed
   for this repository: =dotfiles-context= and =elisp-conventions=.
 - The remaining Claude hooks are not ported yet.  Edit/write-oriented hooks

@@ -17,7 +17,6 @@ one-sided commits unless the counterpart or =ai-config-sync.json= is staged.
 
 #+begin_example
 codex/
-├── AGENTS.md              -> ../claude/CLAUDE.md
 ├── config.toml            <- live ~/.codex/config.toml symlink target
 ├── bin/install-skills.sh  <- links tracked skills into ~/.codex/skills
 ├── hooks/                 <- Codex hook script ports
@@ -32,14 +31,18 @@ bin/ai-config-sync         <- audit, reminder, and commit-guard checker
 
 * Instructions
 
-=claude/CLAUDE.md= is the global instruction source.  =codex/AGENTS.md= is a
-symlink to that file, so Codex sees the Claude content through the filename it
-expects.  Project-level =CLAUDE.md= files are still loaded by Codex because
+Project-level =CLAUDE.md= files are loaded by Codex because
 =codex/config.toml= sets:
 
 #+begin_example
 project_doc_fallback_filenames = ["CLAUDE.md"]
 #+end_example
+
+That setting removes the need for project-level =AGENTS.md= symlinks.  It does
+not apply to Codex's user-level instruction file in =$CODEX_HOME=.  Codex reads
+global user instructions from =AGENTS.override.md= and =AGENTS.md= in
+=$CODEX_HOME=, so the live =~/.codex/AGENTS.md= points directly to
+=claude/CLAUDE.md=.
 
 Codex does not expand Claude-style =@file= imports in Markdown instructions.
 For that reason, the repo-root =AGENTS.md= remains a manual Codex-readable port
@@ -135,6 +138,11 @@ visible.
 =~/.codex/config.toml= points to =codex/config.toml=, and
 =~/.codex/hooks.json= points to =.codex/hooks.json=.  Updating the tracked files
 therefore updates the live global Codex configuration.
+
+=~/.codex/AGENTS.md= points directly to =claude/CLAUDE.md= so Codex gets the
+same global user instructions as Claude.  This is needed for user-level
+instructions; project-level =CLAUDE.md= loading is handled by
+=project_doc_fallback_filenames= instead.
 
 =~/.codex/skills/= remains a normal Codex home directory for system or local
 skills.  The mirrored Claude skill ports are symlinked into that directory by

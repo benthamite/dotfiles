@@ -12,6 +12,17 @@ mkdir -p "$target_dir"
 created=0
 updated=0
 skipped=0
+pruned=0
+expected_links=
+
+resolve_link() {
+  local link="$1" target
+  target=$(readlink "$link")
+  case "$target" in
+    /*) printf '%s\n' "$target" ;;
+    *) printf '%s\n' "$(cd "$(dirname "$link")" && pwd)/$target" ;;
+  esac
+}
 
 for skill_dir in "$source_dir"/*; do
   [ -d "$skill_dir" ] || continue
@@ -19,13 +30,15 @@ for skill_dir in "$source_dir"/*; do
 
   name=$(basename "$skill_dir")
   target="$target_dir/$name"
+  expected_links="${expected_links}${target}
+"
 
   if [ -L "$target" ]; then
     current=$(readlink "$target")
     if [ "$current" = "$skill_dir" ]; then
       continue
     fi
-    rm "$target"
+    unlink "$target"
     ln -s "$skill_dir" "$target"
     updated=$((updated + 1))
     continue
@@ -41,7 +54,20 @@ for skill_dir in "$source_dir"/*; do
   created=$((created + 1))
 done
 
-printf 'Codex skills linked: %d created, %d updated, %d skipped.\n' "$created" "$updated" "$skipped"
+for target in "$target_dir"/*; do
+  [ -L "$target" ] || continue
+  resolved=$(resolve_link "$target")
+  case "$resolved" in
+    "$source_dir"/*)
+      if ! printf '%s' "$expected_links" | grep -Fxq "$target"; then
+        unlink "$target"
+        pruned=$((pruned + 1))
+      fi
+      ;;
+  esac
+done
+
+printf 'Codex skills linked: %d created, %d updated, %d pruned, %d skipped.\n' "$created" "$updated" "$pruned" "$skipped"
 
 if [ "$skipped" -gt 0 ]; then
   exit 1

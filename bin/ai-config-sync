@@ -334,6 +334,13 @@ def staged_paths() -> set[str]:
     return set(git_lines(["diff", "--cached", "--name-only"]))
 
 
+def git_text(args: list[str]) -> str | None:
+    proc = run_git(args)
+    if proc.returncode != 0:
+        return None
+    return proc.stdout
+
+
 def tracked_dirty_paths() -> set[str]:
     return set(git_lines(["diff", "--name-only"]))
 
@@ -456,6 +463,115 @@ def has_changed_prefix(prefix: str, paths: set[str], changed: set[str]) -> bool:
     return False
 
 
+def parse_manifest_text(text: str, label: str, problems: list[str]) -> dict:
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError as exc:
+        problems.append(f"{label} is not valid JSON: {exc}")
+        return {}
+
+
+def manifest_text_from_head() -> str:
+    text = git_text(["show", f"HEAD:{MANIFEST}"])
+    if text is not None:
+        return text
+    if MANIFEST_PATH.exists():
+        return MANIFEST_PATH.read_text()
+    return "{}"
+
+
+def guard_manifests(
+    command_paths: set[str],
+    staged: set[str],
+    problems: list[str],
+) -> tuple[dict, dict]:
+    base_text = manifest_text_from_head()
+    base = parse_manifest_text(base_text, f"HEAD:{MANIFEST}", problems)
+
+    if path_has_change(MANIFEST, command_paths):
+        candidate_text = MANIFEST_PATH.read_text()
+        label = MANIFEST
+    elif path_has_change(MANIFEST, staged):
+        candidate_text = git_text(["show", f":{MANIFEST}"])
+        if candidate_text is None:
+            problems.append(f"Could not read staged {MANIFEST}")
+            candidate_text = base_text
+        label = f"staged {MANIFEST}"
+    else:
+        candidate_text = base_text
+        label = f"HEAD:{MANIFEST}"
+
+    candidate = parse_manifest_text(candidate_text, label, problems)
+    return base, candidate
+
+
+def manifest_item_by_name(manifest: dict, section: str, name: str) -> dict | None:
+    for item in manifest.get(section) or []:
+        if item.get("name") == name:
+            return item
+    return None
+
+
+def manifest_registration(manifest: dict, path: str) -> dict | None:
+    for item in manifest.get("registrations") or []:
+        if item.get("path") == path:
+            return item
+    return None
+
+
+def manifest_item_is_paired(item: dict | None) -> bool:
+    if not item:
+        return False
+    status = str(item.get("status") or "")
+    return bool(item.get("claude") and item.get("codex") and status.startswith("ported"))
+
+
+def manifest_item_is_explicitly_unpaired(item: dict | None) -> bool:
+    if not item:
+        return False
+    status = str(item.get("status") or "")
+    return bool(status) and not status.startswith("ported")
+
+
+def manifest_registration_changed(base: dict, candidate: dict, path: str) -> bool:
+    return manifest_registration(base, path) != manifest_registration(candidate, path)
+
+
+def skill_sync_problems(skill: str) -> list[str]:
+    problems: list[str] = []
+    claude_dir = ROOT / "claude" / "skills" / skill
+    codex_dir = ROOT / "codex" / "skills" / skill
+    claude_skill = claude_dir / "SKILL.md"
+    codex_skill = codex_dir / "SKILL.md"
+
+    if not claude_skill.exists():
+        problems.append(f"Missing Claude skill file: claude/skills/{skill}/SKILL.md")
+    if not codex_skill.exists():
+        problems.append(f"Missing Codex skill file: codex/skills/{skill}/SKILL.md")
+    if problems:
+        return problems
+
+    if frontmatter_normalized_skill(claude_skill, CODEX_DROPPED_FRONTMATTER) != codex_skill.read_text():
+        problems.append(f"Skill content drift after Codex frontmatter transform: {skill}")
+
+    claude_aux = skill_aux_files(claude_dir)
+    codex_aux = skill_aux_files(codex_dir)
+    for rel in sorted(set(claude_aux) - set(codex_aux)):
+        problems.append(f"Missing Codex auxiliary skill file: {skill}/{rel}")
+    for rel in sorted(set(codex_aux) - set(claude_aux)):
+        problems.append(f"Extra Codex auxiliary skill file: {skill}/{rel}")
+    for rel in sorted(set(claude_aux) & set(codex_aux)):
+        if not filecmp.cmp(claude_aux[rel], codex_aux[rel], shallow=False):
+            problems.append(f"Auxiliary skill file drift: {skill}/{rel}")
+
+    return problems
+
+
+def add_nested_problems(problems: list[str], header: str, nested: list[str]) -> None:
+    problems.append(header)
+    problems.extend(f"  - {problem}" for problem in nested)
+
+
 def guard_commit() -> None:
     data = read_input_json()
     command = str((data.get("tool_input") or {}).get("command") or "")
@@ -464,13 +580,16 @@ def guard_commit() -> None:
         return
 
     changed = dirty_paths()
-    paths = staged_paths() | command_paths
+    staged = staged_paths()
+    paths = staged | command_paths
     changed_paths = {path for path in paths if path_has_change(path, changed)}
     if not changed_paths:
         return
 
-    manifest_changed = path_has_change(MANIFEST, changed_paths)
     problems: list[str] = []
+    base_manifest, candidate_manifest = guard_manifests(command_paths, staged, problems)
+    processed_skills: set[str] = set()
+    processed_hooks: set[str] = set()
 
     for path in sorted(changed_paths):
         if skip_runtime_path(path):
@@ -478,24 +597,76 @@ def guard_commit() -> None:
 
         if path.startswith("claude/skills/"):
             skill = path.removeprefix("claude/skills/").split("/", 1)[0]
-            if not manifest_changed and not has_changed_prefix(f"codex/skills/{skill}", paths, changed):
-                problems.append(f"claude/skills/{skill} changed without codex/skills/{skill} or {MANIFEST}")
+            if skill in processed_skills:
+                continue
+            processed_skills.add(skill)
+            drift = skill_sync_problems(skill)
+            if not drift:
+                continue
+            item = manifest_item_by_name(candidate_manifest, "skills", skill)
+            if manifest_item_is_explicitly_unpaired(item):
+                continue
+            counterpart = f"codex/skills/{skill}"
+            if has_changed_prefix(counterpart, paths, changed):
+                add_nested_problems(
+                    problems,
+                    f"claude/skills/{skill} and {counterpart} are both changed, but the Codex port still drifts:",
+                    drift,
+                )
+            else:
+                add_nested_problems(
+                    problems,
+                    f"claude/skills/{skill} changed without a synchronized {counterpart} port or a skill-specific {MANIFEST} exemption:",
+                    drift,
+                )
         elif path.startswith("codex/skills/"):
             skill = path.removeprefix("codex/skills/").split("/", 1)[0]
-            if not manifest_changed and not has_changed_prefix(f"claude/skills/{skill}", paths, changed):
-                problems.append(f"codex/skills/{skill} changed without claude/skills/{skill} or {MANIFEST}")
+            if skill in processed_skills:
+                continue
+            processed_skills.add(skill)
+            drift = skill_sync_problems(skill)
+            if not drift:
+                continue
+            item = manifest_item_by_name(candidate_manifest, "skills", skill)
+            if manifest_item_is_explicitly_unpaired(item):
+                continue
+            counterpart = f"claude/skills/{skill}"
+            if has_changed_prefix(counterpart, paths, changed):
+                add_nested_problems(
+                    problems,
+                    f"codex/skills/{skill} and {counterpart} are both changed, but the skill port still drifts:",
+                    drift,
+                )
+            else:
+                add_nested_problems(
+                    problems,
+                    f"codex/skills/{skill} changed without a synchronized {counterpart} port or a skill-specific {MANIFEST} exemption:",
+                    drift,
+                )
         elif path.startswith("claude/hooks/"):
             hook = path.removeprefix("claude/hooks/")
+            if hook in processed_hooks:
+                continue
+            processed_hooks.add(hook)
             counterpart = f"codex/hooks/{hook}"
-            if not manifest_changed and not path_has_change(counterpart, changed_paths):
+            item = manifest_item_by_name(candidate_manifest, "hooks", hook)
+            if manifest_item_is_explicitly_unpaired(item):
+                continue
+            if not path_has_change(counterpart, changed_paths):
                 problems.append(f"claude/hooks/{hook} changed without codex/hooks/{hook} or {MANIFEST}")
         elif path.startswith("codex/hooks/"):
             hook = path.removeprefix("codex/hooks/")
+            if hook in processed_hooks:
+                continue
+            processed_hooks.add(hook)
             counterpart = f"claude/hooks/{hook}"
-            if not manifest_changed and not path_has_change(counterpart, changed_paths):
+            item = manifest_item_by_name(candidate_manifest, "hooks", hook)
+            if manifest_item_is_explicitly_unpaired(item):
+                continue
+            if not path_has_change(counterpart, changed_paths):
                 problems.append(f"codex/hooks/{hook} changed without claude/hooks/{hook} or {MANIFEST}")
-        elif path in SYNC_CONFIG_PATHS and not manifest_changed:
-            problems.append(f"{path} changed without {MANIFEST}")
+        elif path in SYNC_CONFIG_PATHS and not manifest_registration_changed(base_manifest, candidate_manifest, path):
+            problems.append(f"{path} changed without a path-specific {MANIFEST} registration update")
 
     if not problems:
         return
@@ -503,7 +674,7 @@ def guard_commit() -> None:
     reason = (
         "BLOCKED: AI config sync guard found one-sided Claude/Codex changes.\n\n"
         + "\n".join(problems)
-        + f"\n\nUpdate the counterpart in this same session, or stage {MANIFEST} with an explicit status/exemption."
+        + f"\n\nUpdate the counterpart in this same session, or stage {MANIFEST} with an explicit status/exemption for the changed artifact."
     )
     print(
         json.dumps(
@@ -534,6 +705,13 @@ def check_symlink(problems: list[str], target: Path, expected: Path, label: str)
     actual = Path(os.readlink(target))
     if actual != expected:
         add_problem(problems, f"Wrong live {label} symlink: {target} -> {actual}; expected {expected}")
+
+
+def symlink_target(path: Path) -> Path:
+    target = Path(os.readlink(path))
+    if not target.is_absolute():
+        target = path.parent / target
+    return target
 
 
 def frontmatter_normalized_skill(path: Path, drop_keys: set[str]) -> str:
@@ -660,6 +838,20 @@ def audit_skills(problems: list[str], manifest: dict) -> None:
         for rel in sorted(set(claude_aux) & set(codex_aux)):
             if not filecmp.cmp(claude_aux[rel], codex_aux[rel], shallow=False):
                 add_problem(problems, f"Auxiliary skill file drift: {skill}/{rel}")
+
+    codex_live_dir = Path.home() / ".codex" / "skills"
+    codex_source = ROOT / "codex" / "skills"
+    if codex_live_dir.exists():
+        for live_skill in codex_live_dir.iterdir():
+            if not live_skill.is_symlink():
+                continue
+            target = symlink_target(live_skill)
+            try:
+                target.relative_to(codex_source)
+            except ValueError:
+                continue
+            if live_skill.name not in codex_skills:
+                add_problem(problems, f"Stale managed Codex skill symlink: {live_skill} -> {target}")
 
 
 def audit_hooks(problems: list[str], manifest: dict) -> None:

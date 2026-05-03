@@ -2,7 +2,7 @@
   "version": 1,
   "policy": {
     "source_of_truth": "Claude files remain the human source where possible, but Codex has explicit ports where syntax or discovery differs.",
-    "maintenance": "When one side changes, the active agent must update the counterpart in the same session. Hooks remind immediately and block one-sided commits unless this manifest is staged with an explicit status or exemption.",
+    "maintenance": "When one side changes, the active agent must update the counterpart in the same session. Hooks remind immediately and block one-sided commits unless the changed artifact is synchronized or this manifest records an explicit artifact-specific status or exemption.",
     "no_silent_sync": true
   },
   "instructions": [
@@ -708,7 +708,7 @@
       "path": "codex/bin/install-skills.sh",
       "tracked": true,
       "live_path": "~/.codex/skills/<name>",
-      "note": "Creates one symlink per tracked codex/skills/<name> directory because Codex discovers global skills from ~/.codex/skills/*/SKILL.md."
+      "note": "Creates one symlink per tracked codex/skills/<name> directory and prunes stale symlinks that point back into the tracked codex/skills tree because Codex discovers global skills from ~/.codex/skills/*/SKILL.md."
     },
     {
       "tool": "Codex",

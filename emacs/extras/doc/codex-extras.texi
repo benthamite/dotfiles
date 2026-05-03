@@ -83,8 +83,9 @@ At load time, @samp{codex-extras.el} registers the Codex backend with @samp{ai-e
 @node Theme synchronization
 @section Theme synchronization
 
+@vindex ai-extras-sync-theme
 @vindex codex-extras-sync-theme
-The user option @code{codex-extras-sync-theme} controls whether Emacs theme changes are propagated to Codex.  When non-@code{nil}, switching between light and dark Emacs themes updates the @samp{tui.theme} key in @samp{~/.codex/config.toml} and sends the @samp{/theme} command to all running Codex sessions.  The default is @code{nil}. @*
+Theme synchronization is controlled by the shared user option @code{ai-extras-sync-theme}; @code{codex-extras-sync-theme} is kept as an obsolete alias for compatibility.  When non-@code{nil}, switching between light and dark Emacs themes updates the @samp{tui.theme} key in @samp{~/.codex/config.toml}.  The package does not send @code{/theme} to running Codex sessions, so active conversations are not interrupted; a running TUI picks up the persisted setting on its next start or restart.  The default is @code{nil}. @*
 
 @node Session handoff
 @section Session handoff
@@ -178,7 +179,7 @@ The status helper caches the model lookup in @code{codex-extras--config-model-ca
 @chapter Transient menus
 
 @findex ai-extras-menu
-All @samp{codex-extras} commands are accessible through the unified @code{ai-extras-menu} (@ref{h:transient-menu,ai-extras menu,,ai-extras,}).  Codex-specific entries (such as the theme sync toggle) are appended to the shared menu at load time.  The menu is organized into columns: @*
+All @samp{codex-extras} commands are accessible through the unified @code{ai-extras-menu} (@ref{h:transient-menu,ai-extras menu,,ai-extras,}).  Codex-specific commands use the shared menu; theme synchronization is now a shared @samp{ai-extras} option rather than a Codex-only toggle.  The menu is organized into columns: @*
 
 @itemize
 @item

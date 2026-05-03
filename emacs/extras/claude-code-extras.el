@@ -72,15 +72,8 @@ interference with concurrent git operations."
   :type 'directory
   :group 'claude-code-extras)
 
-(defcustom claude-code-extras-sync-theme nil
-  "Whether to sync Claude Code sessions with the current Emacs theme.
-When non-nil, re-runs `/theme' in all running Claude Code sessions
-whenever `enable-theme-functions' fires, forcing Claude Code to
-re-query the terminal background via OSC 11.  Assumes the user has
-configured Claude Code with the `auto' theme globally (in
-`~/.claude.json')."
-  :type 'boolean
-  :group 'claude-code-extras)
+(define-obsolete-variable-alias 'claude-code-extras-sync-theme
+  'ai-extras-sync-theme "2026-05-03")
 
 (defcustom claude-code-extras-sigwinch-delay 0.5
   "Delay in seconds before sending SIGWINCH to fix terminal rendering.
@@ -242,12 +235,6 @@ Used to detect when `/branch' creates a new session.")
 Now managed by `ai-extras--waiting-for-input'; this variable is
 kept for code that still references it directly.")
 
-(defvar-local claude-code-extras--pending-theme nil
-  "Non-nil when this Claude session has a queued theme re-selection.
-Set by `claude-code-extras-sync-theme' when the session is busy;
-consumed by the Stop hook handler, which re-runs `/theme' to force
-Claude Code to re-query the terminal background via OSC 11.")
-
 (defvar-local claude-code-extras--copilot-active nil
   "Non-nil when Copilot integration is active in the current buffer.")
 
@@ -345,7 +332,8 @@ Source: lobehub/lobe-icons (MIT).")
         :debug-backtrace #'claude-code-extras-debug-backtrace
         :setup-kill-on-exit #'claude-code-extras-setup-kill-on-exit
         :exit #'claude-code-extras-exit
-        :restart #'claude-code-extras-restart))
+        :restart #'claude-code-extras-restart
+        :sync-theme #'claude-code-extras--sync-theme))
 
 ;;;; Functions
 
@@ -1526,12 +1514,11 @@ status-line indicator (e.g. \"· 3 shells\" or \"· 5 monitors\")."
 (defun claude-code-extras--handle-stop (message)
   "Handle a stop event from the Claude Code CLI.
 MESSAGE is a plist with :type, :buffer-name, :json-data, and
-:args.  Scrolls to bottom and applies any pending theme."
+:args.  Scrolls the corresponding terminal buffer to bottom."
   (when (eq (plist-get message :type) 'stop)
     (when-let* ((buf (get-buffer (plist-get message :buffer-name))))
       (with-current-buffer buf
-        (claude-code-extras--scroll-to-bottom buf)
-        (claude-code-extras--apply-pending-theme buf))))
+        (claude-code-extras--scroll-to-bottom buf))))
   nil)
 
 (defun claude-code-extras--scroll-to-bottom (buffer)
@@ -2615,83 +2602,70 @@ persist via `customize-save-variable'."
 
 ;;;;; Theme sync
 
-(defvar claude-code-extras--last-synced-theme
-  (frame-parameter nil 'background-mode)
-  "The last Emacs background mode synced to Claude Code sessions.")
+(defun claude-code-extras--sync-theme (theme)
+  "Update Claude Code persistent theme settings to THEME.
+THEME is either \"light\" or \"dark\".  Return the number of files
+changed."
+  (let ((changed 0))
+    (dolist (path (claude-code-extras--theme-config-files))
+      (when (claude-code-extras--write-claude-json-key path "theme" theme)
+        (setq changed (1+ changed))))
+    changed))
 
-(defvar claude-code-extras--sync-theme-timer nil
-  "Pending timer for deferred theme sync, or nil.")
+(defun claude-code-extras--theme-config-files ()
+  "Return Claude Code JSON files that should receive theme sync."
+  (claude-code-extras--dedupe-existing-files
+   (append
+    (claude-code-extras--primary-or-existing-files
+     (claude-code-extras--all-claude-settings-paths))
+    (claude-code-extras--primary-or-existing-files
+     (claude-code-extras--all-claude-json-paths)))))
 
-(defun claude-code-extras--reselect-auto-in-buffer (buffer)
-  "Re-run `/theme' in BUFFER to force OSC 11 terminal re-detection.
-Claude Code's `auto' theme queries the terminal background via
-OSC 11 when the option is chosen through `/theme'.  Re-running the
-picker and confirming Auto re-triggers detection so the session
-tracks the current Emacs theme.
+(defun claude-code-extras--all-claude-settings-paths ()
+  "Return paths to canonical and account `settings.json' files."
+  (cons (expand-file-name "settings.json" "~/.claude/")
+        (mapcar (lambda (entry)
+                  (expand-file-name "settings.json"
+                                    (expand-file-name (cdr entry))))
+                claude-code-extras-accounts)))
 
-All terminal sends are scheduled asynchronously via `run-at-time'
-so that this function returns immediately.  This prevents timers
-from firing reentrantly during `accept-process-output' inside eat,
-which could otherwise block the main thread indefinitely."
-  (with-current-buffer buffer
-    (setq claude-code-extras--pending-theme nil)
-    (let ((buf buffer)
-          (backend claude-code-terminal-backend))
-      (claude-code--term-send-string backend "/theme")
-      (run-at-time
-       0.1 nil
-       (lambda ()
-         (when (and (buffer-live-p buf)
-                    (process-live-p (get-buffer-process buf)))
-           (with-current-buffer buf
-             (claude-code--term-send-string backend (kbd "RET"))
-             (run-at-time
-              0.5 nil
-              (lambda ()
-                (when (and (buffer-live-p buf)
-                           (process-live-p (get-buffer-process buf)))
-                  (with-current-buffer buf
-                    (claude-code--term-send-string
-                     backend (kbd "RET")))))))))))))
+(defun claude-code-extras--primary-or-existing-files (paths)
+  "Return the first file from PATHS, plus any other existing files."
+  (let ((primary t)
+        result)
+    (dolist (path paths (nreverse result))
+      (when (or primary (file-exists-p path))
+        (push path result))
+      (setq primary nil))))
 
-(defun claude-code-extras--apply-pending-theme (buffer)
-  "Re-run `/theme' in BUFFER if a re-selection was queued.
-Called from the Stop hook handler when Claude finishes a turn."
-  (when (buffer-local-value 'claude-code-extras--pending-theme buffer)
-    (claude-code-extras--reselect-auto-in-buffer buffer)))
+(defun claude-code-extras--dedupe-existing-files (paths)
+  "Return PATHS de-duplicated by true name when possible."
+  (let (seen result)
+    (dolist (path paths (nreverse result))
+      (let ((key (if (file-exists-p path)
+                     (file-truename path)
+                   (expand-file-name path))))
+        (unless (member key seen)
+          (push key seen)
+          (push path result))))))
 
-(defun claude-code-extras--do-sync-theme ()
-  "Perform the actual theme sync.
-Called from a zero-delay timer scheduled by
-`claude-code-extras-sync-theme' so that `enable-theme-functions'
-and `ns-system-appearance-change-functions' hooks return
-immediately and cannot be blocked by reentrant timer activity."
-  (setq claude-code-extras--sync-theme-timer nil)
-  (let ((mode (frame-parameter nil 'background-mode)))
-    (unless (equal mode claude-code-extras--last-synced-theme)
-      (setq claude-code-extras--last-synced-theme mode)
-      (dolist (buf (claude-code--find-all-claude-buffers))
-        (when (and (buffer-live-p buf)
-                   (process-live-p (get-buffer-process buf)))
-          (if (buffer-local-value 'claude-code-extras--waiting-for-input buf)
-              (claude-code-extras--reselect-auto-in-buffer buf)
-            (with-current-buffer buf
-              (setq claude-code-extras--pending-theme t))))))))
+(defun claude-code-extras--write-claude-json-key (path key value)
+  "Write KEY to VALUE in Claude JSON file PATH if it changed.
+Return non-nil when PATH was written."
+  (let ((data (if (file-exists-p path)
+                  (or (claude-code-extras--read-claude-json path)
+                      (error "Invalid JSON in %s" path))
+                (make-hash-table :test #'equal))))
+    (unless (equal (gethash key data) value)
+      (puthash key value data)
+      (make-directory (file-name-directory path) t)
+      (claude-code-extras--write-claude-json path data)
+      t)))
 
-(defun claude-code-extras-sync-theme (&rest _)
-  "Sync Claude Code sessions with the current Emacs background mode.
-Re-runs `/theme' in idle sessions immediately to force Claude
-Code to re-query the terminal via OSC 11.  For busy sessions
-\(where Claude is still generating), the re-selection is queued
-and applied automatically when Claude finishes its turn.
-
-The work is deferred to a zero-delay timer so that the calling
-hook returns immediately, preventing reentrant timer execution
-from blocking the main thread."
-  (when claude-code-extras-sync-theme
-    (unless claude-code-extras--sync-theme-timer
-      (setq claude-code-extras--sync-theme-timer
-            (run-at-time 0 nil #'claude-code-extras--do-sync-theme)))))
+(defun claude-code-extras--sync-theme-before-start (&rest _)
+  "Persist the shared AI theme before starting a Claude Code process."
+  (ai-extras-sync-theme-now)
+  nil)
 
 ;;;;; Auto-setup
 
@@ -3012,9 +2986,10 @@ there with the backtrace prompt passed as a CLI argument."
 (add-hook 'claude-code-start-hook #'ai-extras-setup-snippet-keys)
 (add-hook 'claude-code-start-hook #'ai-extras--assign-session-key)
 (add-hook 'claude-code-start-hook #'claude-code-extras-setup-copilot)
+(add-hook 'claude-code-process-environment-functions
+          #'claude-code-extras--sync-theme-before-start)
 (add-hook 'kill-buffer-hook #'ai-extras--release-session-key)
 (add-hook 'kill-buffer-hook #'claude-code-extras-teardown-copilot)
-(add-hook 'enable-theme-functions #'claude-code-extras-sync-theme)
 (advice-add 'claude-code--eat-send-return :before
             #'ai-extras--clear-waiting-for-input)
 (advice-add 'claude-code--vterm-send-return :before
@@ -3498,12 +3473,6 @@ Signals an error if the status file is missing or incomplete."
 (defalias 'claude-code-extras-menu 'ai-extras-menu
   "Alias for `ai-extras-menu' for backward compatibility.")
 
-(transient-define-infix claude-code-extras--infix-sync-theme ()
-  "Toggle `claude-code-extras-sync-theme'."
-  :class 'ai-extras--boolean-variable
-  :variable 'claude-code-extras-sync-theme
-  :description "sync theme (claude)")
-
 (transient-define-infix claude-code-extras--infix-copilot-enabled ()
   "Toggle `claude-code-extras-copilot-enabled'."
   :class 'ai-extras--boolean-variable
@@ -3565,8 +3534,6 @@ Signals an error if the status file is missing or incomplete."
   ;; Options: after "protect buffers"
   (transient-append-suffix 'ai-extras-menu "-p"
     '("-a" claude-code-extras--infix-account))
-  (transient-append-suffix 'ai-extras-menu "-a"
-    '("-t" claude-code-extras--infix-sync-theme))
   (transient-append-suffix 'ai-extras-menu "-t"
     '("-c" claude-code-extras--infix-copilot-enabled))
   (transient-append-suffix 'ai-extras-menu "-c"

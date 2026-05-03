@@ -39,12 +39,8 @@
   "Extensions for `codex'."
   :group 'codex)
 
-(defcustom codex-extras-sync-theme nil
-  "Whether to sync the Codex theme with the current Emacs theme.
-When non-nil, updates `~/.codex/config.toml' and sends `/theme' to
-all running Codex sessions whenever `enable-theme-functions' fires."
-  :type 'boolean
-  :group 'codex-extras)
+(define-obsolete-variable-alias 'codex-extras-sync-theme
+  'ai-extras-sync-theme "2026-05-03")
 
 (defcustom codex-extras-handoff-file "/tmp/codex-handoff.md"
   "Path to the handoff file written by the handoff skill."
@@ -83,15 +79,6 @@ When nil, use the CLI default."
   "GPtel backend name for backtrace analysis."
   :type 'string
   :group 'codex-extras)
-
-(defvar codex-extras--last-synced-theme nil
-  "The last theme value synced to Codex config.")
-
-(defvar codex-extras--sync-theme-timer nil
-  "Pending timer for deferred theme sync, or nil.")
-
-(defvar-local codex-extras--pending-theme nil
-  "Theme to apply when this Codex session becomes idle.")
 
 (defvar gptel-backend)
 (defvar gptel-model)
@@ -136,7 +123,8 @@ Source: SVG Repo (CC0).")
         :debug-backtrace #'codex-extras-debug-backtrace
         :setup-kill-on-exit #'codex-extras-setup-kill-on-exit
         :exit #'codex-extras-exit
-        :restart #'codex-extras-restart))
+        :restart #'codex-extras-restart
+        :sync-theme #'codex-extras--sync-theme))
 
 ;;;; Functions
 
@@ -194,94 +182,50 @@ Also records the session start time."
 
 ;;;;; Theme sync
 
-(defun codex-extras--emacs-theme ()
-  "Return \"light\" or \"dark\" based on the current frame background mode."
-  (if (eq (frame-parameter nil 'background-mode) 'dark) "dark" "light"))
+(defun codex-extras--sync-theme (theme)
+  "Update Codex persistent theme configuration to THEME.
+THEME is either \"light\" or \"dark\".  Return non-nil when the
+config file changed."
+  (codex-extras--sync-theme-to-config theme))
 
-(defun codex-extras--sync-theme-to-config ()
-  "Update `tui.theme' in `~/.codex/config.toml' to match Emacs.
+(defun codex-extras--sync-theme-to-config (theme)
+  "Update `tui.theme' in `codex-hooks-config-path' to THEME.
 Only writes the file when the theme value actually changes."
-  (let* ((theme (codex-extras--emacs-theme))
-         (config-file (expand-file-name "~/.codex/config.toml"))
+  (let* ((config-file (expand-file-name codex-hooks-config-path))
          (new-line (format "theme = \"%s\"" theme)))
-    (when (file-exists-p config-file)
-      (with-temp-buffer
-        (insert-file-contents config-file)
+    (make-directory (file-name-directory config-file) t)
+    (with-temp-buffer
+      (when (file-exists-p config-file)
+        (insert-file-contents config-file))
+      (let ((original (buffer-string))
+            (found nil))
         (goto-char (point-min))
-        (let ((found nil))
-          ;; Look for existing theme line under [tui] section
-          (when (re-search-forward "^\\[tui\\]" nil t)
-            (let ((section-end (save-excursion
-                                 (if (re-search-forward "^\\[" nil t)
-                                     (line-beginning-position)
-                                   (point-max)))))
-              (when (re-search-forward "^theme *= *\"[^\"]*\"" section-end t)
-                (replace-match new-line)
-                (setq found t))))
-          ;; If not found, append under [tui] or create section
-          (unless found
-            (goto-char (point-min))
-            (if (re-search-forward "^\\[tui\\]" nil t)
-                (progn
-                  (end-of-line)
-                  (insert "\n" new-line))
-              (goto-char (point-max))
-              (unless (bolp) (insert "\n"))
-              (insert "\n[tui]\n" new-line "\n"))))
-        (write-region (point-min) (point-max) config-file nil 'silent)))))
+        (when (re-search-forward "^\\[tui\\]" nil t)
+          (let ((section-end (save-excursion
+                               (if (re-search-forward "^\\[" nil t)
+                                   (line-beginning-position)
+                                 (point-max)))))
+            (when (re-search-forward "^theme *= *\"[^\"]*\"" section-end t)
+              (replace-match new-line)
+              (setq found t))))
+        (unless found
+          (goto-char (point-min))
+          (if (re-search-forward "^\\[tui\\]" nil t)
+              (progn
+                (end-of-line)
+                (insert "\n" new-line))
+            (goto-char (point-max))
+            (unless (or (bobp) (bolp)) (insert "\n"))
+            (unless (bobp) (insert "\n"))
+            (insert "[tui]\n" new-line "\n")))
+        (unless (equal original (buffer-string))
+          (write-region (point-min) (point-max) config-file nil 'silent)
+          t)))))
 
-(defun codex-extras--send-theme-to-buffer (buffer theme)
-  "Send `/theme' to BUFFER and select THEME.
-THEME is \"light\" or \"dark\"."
-  (with-current-buffer buffer
-    (setq ai-extras--waiting-for-input nil)
-    (setq codex-extras--pending-theme nil)
-    (let ((buf buffer))
-      (codex--do-send-command "/theme")
-      (run-at-time
-       0.5 nil
-       (lambda ()
-         (when (and (buffer-live-p buf)
-                    (process-live-p (get-buffer-process buf)))
-           (with-current-buffer buf
-             (let ((navigate (if (string= theme "light") "\e[B" "\e[A")))
-               (codex--term-send-string codex-terminal-backend navigate)
-               (run-at-time
-                0.1 nil
-                (lambda ()
-                  (when (and (buffer-live-p buf)
-                             (process-live-p (get-buffer-process buf)))
-                    (with-current-buffer buf
-                      (codex--term-send-string
-                       codex-terminal-backend (kbd "RET"))))))))))))))
-
-(defun codex-extras--apply-pending-theme (buffer)
-  "Apply the pending theme to BUFFER, if any."
-  (when-let* ((theme (buffer-local-value 'codex-extras--pending-theme buffer)))
-    (when (string= theme (codex-extras--emacs-theme))
-      (codex-extras--send-theme-to-buffer buffer theme))))
-
-(defun codex-extras--do-sync-theme ()
-  "Perform the actual theme sync."
-  (setq codex-extras--sync-theme-timer nil)
-  (let ((theme (codex-extras--emacs-theme)))
-    (unless (equal theme codex-extras--last-synced-theme)
-      (setq codex-extras--last-synced-theme theme)
-      (codex-extras--sync-theme-to-config)
-      (dolist (buf (codex--find-all-codex-buffers))
-        (when (and (buffer-live-p buf)
-                   (process-live-p (get-buffer-process buf)))
-          (if (buffer-local-value 'ai-extras--waiting-for-input buf)
-              (codex-extras--send-theme-to-buffer buf theme)
-            (with-current-buffer buf
-              (setq codex-extras--pending-theme theme))))))))
-
-(defun codex-extras-sync-theme (&rest _)
-  "Sync Codex theme with the current Emacs background mode."
-  (when codex-extras-sync-theme
-    (unless codex-extras--sync-theme-timer
-      (setq codex-extras--sync-theme-timer
-            (run-at-time 0 nil #'codex-extras--do-sync-theme)))))
+(defun codex-extras--sync-theme-before-start (&rest _)
+  "Persist the shared AI theme before starting a Codex process."
+  (ai-extras-sync-theme-now)
+  nil)
 
 ;;;;; Notification handling
 
@@ -300,8 +244,7 @@ The :type field is a string from the hook wrapper (e.g. \"Stop\")."
                (ai-extras-notify
                 "Codex ready"
                 (format "%s: waiting for your response" name))
-               (ai-extras--scroll-to-bottom buf)
-               (codex-extras--apply-pending-theme buf))
+               (ai-extras--scroll-to-bottom buf))
               ("Notification"
                (ai-extras-notify
                 "Codex"
@@ -537,25 +480,13 @@ unified session switcher."
 (add-hook 'codex-start-hook #'ai-extras-disable-scrollback-truncation)
 (add-hook 'codex-start-hook #'ai-extras-setup-snippet-keys)
 (add-hook 'codex-start-hook #'ai-extras-fix-rendering)
-(add-hook 'codex-start-hook #'codex-extras-sync-theme)
 (add-hook 'codex-start-hook #'codex-extras-set-modeline)
+(add-hook 'codex-process-environment-functions
+          #'codex-extras--sync-theme-before-start)
 (add-hook 'kill-buffer-hook #'ai-extras--release-session-key)
 (add-hook 'kill-buffer-hook #'ai-extras--refresh-display-names)
-(add-hook 'enable-theme-functions #'codex-extras-sync-theme)
 (advice-add 'codex--do-send-command :before
             #'ai-extras--clear-waiting-for-input)
-
-;;;; Extend unified menu
-
-(transient-define-infix codex-extras--infix-sync-theme ()
-  "Toggle `codex-extras-sync-theme'."
-  :class 'ai-extras--boolean-variable
-  :variable 'codex-extras-sync-theme
-  :description "sync theme (codex)")
-
-(with-eval-after-load 'ai-extras
-  (transient-append-suffix 'ai-extras-menu "-p"
-    '("-t" codex-extras--infix-sync-theme)))
 
 ;;;;; Exit and kill on exit
 

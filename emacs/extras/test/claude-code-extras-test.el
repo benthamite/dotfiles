@@ -5,6 +5,7 @@
 ;;; Code:
 
 (require 'ert)
+(require 'json)
 (require 'claude-code-extras)
 
 ;;;; Session name extraction
@@ -61,72 +62,97 @@
     (should (equal (claude-code-extras--sanitize-buffer-name)
                    "my_buffer_name"))))
 
-;;;; Theme sync busy/idle handling
+;;;; Theme sync
 
-(ert-deftest claude-code-extras-test-sync-theme-queues-when-busy ()
-  "Queue re-selection for busy sessions instead of running it immediately."
+(defun claude-code-extras-test--json-theme (file)
+  "Return the `theme' value from JSON FILE."
   (with-temp-buffer
-    (setq claude-code-extras--waiting-for-input nil)
-    (setq claude-code-extras--pending-theme nil)
-    (let ((claude-code-extras-sync-theme t)
-          (claude-code-extras--last-synced-theme nil)
-          (frame-params '((background-mode . dark)))
-          (reselected nil))
-      (cl-letf (((symbol-function 'frame-parameter)
-                 (lambda (_frame param) (alist-get param frame-params)))
-                ((symbol-function 'claude-code--find-all-claude-buffers)
-                 (lambda () (list (current-buffer))))
-                ((symbol-function 'get-buffer-process)
-                 (lambda (_buf) t))
-                ((symbol-function 'process-live-p)
-                 (lambda (_proc) t))
-                ((symbol-function 'claude-code-extras--reselect-auto-in-buffer)
-                 (lambda (_buf) (setq reselected t))))
-        (claude-code-extras--do-sync-theme)
-        (should-not reselected)
-        (should claude-code-extras--pending-theme)))))
+    (insert-file-contents file)
+    (gethash "theme" (json-parse-buffer))))
 
-(ert-deftest claude-code-extras-test-sync-theme-sends-when-idle ()
-  "Re-run /theme immediately for idle sessions."
-  (with-temp-buffer
-    (setq claude-code-extras--waiting-for-input t)
-    (setq claude-code-extras--pending-theme nil)
-    (let ((claude-code-extras-sync-theme t)
-          (claude-code-extras--last-synced-theme nil)
-          (frame-params '((background-mode . light)))
-          (reselected-buf nil))
-      (cl-letf (((symbol-function 'frame-parameter)
-                 (lambda (_frame param) (alist-get param frame-params)))
-                ((symbol-function 'claude-code--find-all-claude-buffers)
-                 (lambda () (list (current-buffer))))
-                ((symbol-function 'get-buffer-process)
-                 (lambda (_buf) t))
-                ((symbol-function 'process-live-p)
-                 (lambda (_proc) t))
-                ((symbol-function 'claude-code-extras--reselect-auto-in-buffer)
-                 (lambda (buf) (setq reselected-buf buf))))
-        (claude-code-extras--do-sync-theme)
-        (should (eq reselected-buf (current-buffer)))))))
+(ert-deftest claude-code-extras-test-sync-theme-writes-config-files ()
+  "Persist theme changes to Claude Code JSON config files."
+  (let* ((dir (make-temp-file "claude-theme" t))
+         (settings (expand-file-name ".claude/settings.json" dir))
+         (legacy (expand-file-name ".claude.json" dir))
+         (account (expand-file-name "account/.claude.json" dir)))
+    (unwind-protect
+        (progn
+          (make-directory (file-name-directory settings) t)
+          (make-directory (file-name-directory account) t)
+          (with-temp-file settings
+            (insert "{\"theme\":\"light\",\"other\":1}"))
+          (with-temp-file legacy
+            (insert "{\"theme\":\"light\",\"other\":1}"))
+          (with-temp-file account
+            (insert "{\"theme\":\"light\"}"))
+          (cl-letf (((symbol-function 'claude-code-extras--theme-config-files)
+                     (lambda () (list settings legacy account))))
+            (should (= (claude-code-extras--sync-theme "dark") 3))
+            (should (equal (claude-code-extras-test--json-theme settings)
+                           "dark"))
+            (should (equal (claude-code-extras-test--json-theme legacy)
+                           "dark"))
+            (should (equal (claude-code-extras-test--json-theme account)
+                           "dark"))))
+      (delete-directory dir t))))
 
-(ert-deftest claude-code-extras-test-apply-pending-theme-on-stop ()
-  "Re-run /theme when the Stop hook fires and a re-selection is queued."
-  (with-temp-buffer
-    (setq claude-code-extras--pending-theme t)
-    (let ((reselected nil))
-      (cl-letf (((symbol-function 'claude-code-extras--reselect-auto-in-buffer)
-                 (lambda (_buf) (setq reselected t))))
-        (claude-code-extras--apply-pending-theme (current-buffer))
-        (should reselected)))))
+(ert-deftest claude-code-extras-test-theme-config-files-prefers-settings ()
+  "Sync modern settings files before legacy `.claude.json' files."
+  (let* ((dir (make-temp-file "claude-theme" t))
+         (settings (expand-file-name "settings.json" dir))
+         (missing-settings (expand-file-name "missing/settings.json" dir))
+         (legacy (expand-file-name ".claude.json" dir))
+         (missing-legacy (expand-file-name "missing/.claude.json" dir)))
+    (unwind-protect
+        (progn
+          (with-temp-file settings (insert "{}"))
+          (with-temp-file legacy (insert "{}"))
+          (cl-letf (((symbol-function 'claude-code-extras--all-claude-settings-paths)
+                     (lambda () (list settings missing-settings)))
+                    ((symbol-function 'claude-code-extras--all-claude-json-paths)
+                     (lambda () (list legacy missing-legacy))))
+            (should (equal (claude-code-extras--theme-config-files)
+                           (list settings legacy)))))
+      (delete-directory dir t))))
 
-(ert-deftest claude-code-extras-test-apply-pending-theme-skipped-when-not-pending ()
-  "Do nothing when no re-selection is queued."
-  (with-temp-buffer
-    (setq claude-code-extras--pending-theme nil)
-    (let ((reselected nil))
-      (cl-letf (((symbol-function 'claude-code-extras--reselect-auto-in-buffer)
-                 (lambda (_buf) (setq reselected t))))
-        (claude-code-extras--apply-pending-theme (current-buffer))
-        (should-not reselected)))))
+(ert-deftest claude-code-extras-test-sync-theme-skips-unchanged-config ()
+  "Avoid rewriting Claude Code JSON files when the theme already matches."
+  (let* ((dir (make-temp-file "claude-theme" t))
+         (canonical (expand-file-name ".claude.json" dir)))
+    (unwind-protect
+        (progn
+          (with-temp-file canonical
+            (insert "{\"theme\":\"dark\"}"))
+          (cl-letf (((symbol-function 'claude-code-extras--theme-config-files)
+                     (lambda () (list canonical))))
+            (should (= (claude-code-extras--sync-theme "dark") 0))))
+      (delete-directory dir t))))
+
+(ert-deftest claude-code-extras-test-sync-theme-errors-on-invalid-json ()
+  "Do not overwrite an existing invalid Claude Code JSON file."
+  (let* ((dir (make-temp-file "claude-theme" t))
+         (canonical (expand-file-name ".claude.json" dir)))
+    (unwind-protect
+        (progn
+          (with-temp-file canonical
+            (insert "{"))
+          (cl-letf (((symbol-function 'claude-code-extras--theme-config-files)
+                     (lambda () (list canonical))))
+            (should-error (claude-code-extras--sync-theme "dark")))
+          (should (equal (with-temp-buffer
+                           (insert-file-contents canonical)
+                           (buffer-string))
+                         "{")))
+      (delete-directory dir t))))
+
+(ert-deftest claude-code-extras-test-sync-theme-before-start ()
+  "Run shared theme sync before starting a Claude Code process."
+  (let ((called nil))
+    (cl-letf (((symbol-function 'ai-extras-sync-theme-now)
+               (lambda (&rest _) (setq called t))))
+      (should-not (claude-code-extras--sync-theme-before-start "buf" "/tmp"))
+      (should called))))
 
 ;;;; Batch format prompt
 

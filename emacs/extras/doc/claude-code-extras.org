@@ -81,16 +81,13 @@ The function ~claude-code-extras-disable-scrollback-truncation~ sets ~eat-term-s
 :CUSTOM_ID: h:theme-sync-option
 :END:
 
+#+vindex: ai-extras-sync-theme
 #+vindex: claude-code-extras-sync-theme
-The user option ~claude-code-extras-sync-theme~ controls whether Claude Code sessions are kept in sync with the current Emacs theme. When non-~nil~, changing the Emacs theme (via ~enable-theme-functions~) re-runs ~/theme~ in all running Claude Code sessions, forcing Claude Code to re-query the terminal background via the OSC 11 escape sequence. The default value is ~nil~ (disabled).
+Theme synchronization is controlled by the shared user option ~ai-extras-sync-theme~; ~claude-code-extras-sync-theme~ is kept as an obsolete alias for compatibility. When non-~nil~, changing the Emacs theme updates the =theme= key in =~/.claude/settings.json= and existing account-specific =settings.json= files, then mirrors the same key to canonical and existing account-specific =.claude.json= files for legacy compatibility. The default value is ~nil~ (disabled).
 
-This assumes Claude Code is configured with the ~auto~ theme globally (in =~/.claude.json=). The ~auto~ theme detects the terminal background at startup but does not continuously re-probe, so re-running ~/theme~ is what triggers re-detection mid-session.
+The sync is config-based: it does not send ~/theme~ into running Claude Code terminal buffers.  This avoids disturbing active conversations.  A running TUI picks up the persisted setting on its next start or restart; new sessions update the config before the =claude= process starts.
 
-Sessions that are idle (waiting for user input) receive the ~/theme~ command immediately. Sessions where Claude is still generating a response queue the re-selection and apply it automatically when the turn finishes (via the Stop hook). Because ~/theme~ is a client-side slash command that does not start a new turn, the session's idle state is preserved across re-selections, so subsequent Emacs theme toggles continue to apply immediately rather than queueing indefinitely.
-
-The theme sync is fully asynchronous: the ~enable-theme-functions~ hook returns immediately, and all terminal interactions are deferred to zero-delay timers.  This prevents reentrant timer execution (e.g. ~org-roam-db-sync~) from blocking the main thread during ~accept-process-output~.
-
-The busy/idle dispatch and the Stop-hook re-selection are covered by ERT tests in =emacs/extras/test/claude-code-extras-test.el= under the =Theme sync busy/idle handling= section.
+The shared sync dispatcher is covered by ERT tests in =emacs/extras/test/ai-extras-test.el=.  Claude-specific JSON writes are covered in =emacs/extras/test/claude-code-extras-test.el= under the =Theme sync= section.
 
 ** Alert options
 :PROPERTIES:
@@ -616,7 +613,7 @@ The function ~claude-code-extras--batch-finish~ constructs and displays the =*Cl
 #+findex: claude-code-extras-ensure-notification-hook-config
 The function ~claude-code-extras-ensure-statusline-config~ checks =~/.claude/settings.json= for a =statusLine= entry and adds one if absent, pointing to the bundled shell script. This ensures that the status JSON file is written for every Claude session without manual configuration.
 
-The function ~claude-code-extras-ensure-stop-hook-config~ similarly checks for a =Stop= hook entry and adds one if absent, pointing to the bundled hook wrapper script. This enables the stop-event detection that powers scroll-to-bottom and pending theme application.
+The function ~claude-code-extras-ensure-stop-hook-config~ similarly checks for a =Stop= hook entry and adds one if absent, pointing to the bundled hook wrapper script. This enables the stop-event detection that powers scroll-to-bottom.
 
 The function ~claude-code-extras-ensure-notification-hook-config~ checks for a =Notification= hook entry and adds one if absent or empty, pointing to the bundled notification forwarding script.  It handles both the case where the =Notification= key exists with an empty array and where the key is missing entirely.  This enables the alert system ([[#h:alerts][Alerts]]) to receive =Notification= events (idle prompts, permission requests, elicitation dialogs) from the CLI via ~emacsclient~.
 
@@ -635,7 +632,7 @@ The command ~claude-code-extras-menu~ opens a transient menu that provides quick
 - *Alerts & status.* Toggle alerts (~claude-code-extras-toggle-alert~, [[#h:alert-toggle][Toggling alerts]]), start or stop status polling ([[#h:status-polling][Status polling]]), and start or stop usage polling (~claude-code-extras-start-usage-polling~, ~claude-code-extras-stop-usage-polling~, [[#h:usage-polling][Usage polling]]).
 - *Buffer.* Kill-on-exit setup (~claude-code-extras-setup-kill-on-exit~), rendering fixes (~claude-code-extras-fix-rendering~), and scrollback truncation control (~claude-code-extras-disable-scrollback-truncation~).  See [[#h:buffer-lifecycle][Buffer lifecycle]].
 - *Setup.* Ensure statusline, notification hook, and stop hook configurations are present in =~/.claude/settings.json=.  See [[#h:auto-setup][Auto-setup]].
-- *Options.* An account infix (~-a~) that displays and selects the active Claude account ([[#h:multi-account][Multi-account support]]), plus toggleable infixes for five boolean user options: ~claude-code-extras-alert-on-ready~ ([[#h:alert-options][Alert options]]), ~claude-code-extras-protect-buffers~ ([[#h:buffer-protection-option][Buffer protection]]), ~claude-code-extras-sync-theme~ ([[#h:theme-sync-option][Theme sync]]), ~claude-code-extras-copilot-enabled~ ([[#h:copilot-options][Copilot options]]), and ~claude-code-extras-warn-kill-with-branches~ ([[#h:buffer-protection-option][Buffer protection]]).  Each infix displays its current value and stays in the transient after toggling, so you can adjust multiple options in one invocation.
+- *Options.* An account infix (~-a~) that displays and selects the active Claude account ([[#h:multi-account][Multi-account support]]), the shared ~ai-extras-sync-theme~ toggle ([[#h:theme-sync-option][Theme sync]]), plus Claude-specific toggles for ~claude-code-extras-copilot-enabled~ ([[#h:copilot-options][Copilot options]]) and ~claude-code-extras-warn-kill-with-branches~ ([[#h:buffer-protection-option][Buffer protection]]).  Shared alert and buffer-protection toggles are provided by =ai-extras=.  Each infix displays its current value and stays in the transient after toggling, so you can adjust multiple options in one invocation.
 
 * Indices
 :PROPERTIES:
@@ -653,4 +650,3 @@ The command ~claude-code-extras-menu~ opens a transient menu that provides quick
 :INDEX: vr
 :CUSTOM_ID: h:variable-index
 :END:
-

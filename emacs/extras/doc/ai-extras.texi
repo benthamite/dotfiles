@@ -234,7 +234,7 @@ The command @code{ai-extras-menu} opens a unified transient dispatch menu for al
 
 Shared tool commands dispatch to the appropriate backend.  @code{ai-extras-run-skill} aggregates skills from all backends into a single list (@ref{Dispatched tool commands}).  The remaining dispatched commands (@code{ai-extras-handoff}, @code{ai-extras-audit-project}, @code{ai-extras-debug-backtrace}) resolve a backend from the current buffer context; when not in a session buffer and multiple backends are registered, the user is prompted to choose one.  The backend prompt displays each backend's SVG icon to the left of its label (@ref{SVG icons}).
 
-Backend-specific extension packages append their own entries to the menu at load time via @code{transient-append-suffix}.  For example, @samp{claude-code-extras.el} adds account selection, branch navigation, batch processing, and status polling entries, while @samp{codex-extras.el} adds a Codex theme sync toggle.
+Backend-specific extension packages append their own entries to the menu at load time via @code{transient-append-suffix}.  For example, @samp{claude-code-extras.el} adds account selection, branch navigation, batch processing, and status polling entries.  Theme synchronization is a shared @samp{ai-extras} option that dispatches to registered backend @code{:sync-theme} handlers, so one toggle controls both Claude Code and Codex when those backends are loaded.
 
 @node Indices
 @chapter Indices

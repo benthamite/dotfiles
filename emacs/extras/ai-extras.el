@@ -77,7 +77,8 @@ Optional command keys for dispatching shared commands:
   :audit-project         function () (run audit skills on a project)
   :debug-backtrace       function () (analyze backtrace, start session)
   :setup-kill-on-exit    function () (auto-kill buffer on process exit)
-  :exit                  function () (exit session and kill buffer)")
+  :exit                  function () (exit session and kill buffer)
+  :sync-theme            function (theme) (persist light/dark theme)")
 
 (defvar-local ai-extras--backend nil
   "Cached backend symbol for this buffer.")
@@ -171,6 +172,15 @@ Only takes effect when `ai-extras-alert-on-ready' is non-nil."
   :type 'boolean
   :group 'ai-extras)
 
+(defcustom ai-extras-sync-theme nil
+  "When non-nil, sync AI CLI themes with the current Emacs theme.
+Theme changes are persisted through registered backend
+`:sync-theme' handlers.  This intentionally updates configuration
+files instead of sending slash commands to active terminal sessions,
+so it does not inject text into a running conversation."
+  :type 'boolean
+  :group 'ai-extras)
+
 (defcustom ai-extras-sigwinch-delay 0.5
   "Delay in seconds before sending SIGWINCH to fix terminal rendering."
   :type 'number
@@ -218,6 +228,9 @@ Excludes \"w\" and \"e\", which are reserved for actions in
 Set to the time (via `current-time') by the notification handler
 and cleared when input is sent.")
 
+(defvar ai-extras--sync-theme-timer nil
+  "Pending timer for deferred theme sync, or nil.")
+
 ;;;; Forward declarations
 
 (defvar eat-terminal)
@@ -247,6 +260,45 @@ and cleared when input is sent.")
 (defvar yas-minor-mode)
 (defvar yas-prompt-functions)
 (defvar yas--tables)
+
+;;;; Theme sync
+
+(defun ai-extras-sync-theme (&rest _)
+  "Sync registered AI backend themes with Emacs in a deferred timer."
+  (interactive)
+  (when ai-extras-sync-theme
+    (unless ai-extras--sync-theme-timer
+      (setq ai-extras--sync-theme-timer
+            (run-at-time 0 nil #'ai-extras--do-sync-theme)))))
+
+(defun ai-extras-sync-theme-now (&rest _)
+  "Sync registered AI backend themes with Emacs immediately.
+This is useful before starting a CLI process, so the process reads
+the current persisted theme at startup."
+  (interactive)
+  (when ai-extras-sync-theme
+    (when ai-extras--sync-theme-timer
+      (cancel-timer ai-extras--sync-theme-timer)
+      (setq ai-extras--sync-theme-timer nil))
+    (ai-extras--do-sync-theme t)))
+
+(defun ai-extras--do-sync-theme (&optional force)
+  "Perform the actual AI backend theme sync.
+When FORCE is non-nil, sync even if `ai-extras-sync-theme' is nil."
+  (setq ai-extras--sync-theme-timer nil)
+  (when (or force ai-extras-sync-theme)
+    (let ((theme (ai-extras--theme)))
+      (dolist (entry ai-extras-backends)
+        (when-let* ((sync-fn (plist-get (cdr entry) :sync-theme)))
+          (condition-case err
+              (funcall sync-fn theme)
+            (error
+             (message "ai-extras: failed to sync %s theme: %S"
+                      (car entry) err))))))))
+
+(defun ai-extras--theme ()
+  "Return \"light\" or \"dark\" based on the current frame background mode."
+  (if (eq (frame-parameter nil 'background-mode) 'dark) "dark" "light"))
 
 ;;;; Home-row session keys
 
@@ -931,7 +983,8 @@ Dispatches to the backend's `:restart' handler."
     ("T" "toggle alert" ai-extras-toggle-alert)]
    ["Options"
     ("-A" ai-extras--infix-alert-on-ready)
-    ("-p" ai-extras--infix-protect-buffers)]])
+    ("-p" ai-extras--infix-protect-buffers)
+    ("-t" ai-extras--infix-sync-theme)]])
 
 (transient-define-infix ai-extras--infix-alert-on-ready ()
   "Toggle `ai-extras-alert-on-ready'."
@@ -944,6 +997,25 @@ Dispatches to the backend's `:restart' handler."
   :class 'ai-extras--boolean-variable
   :variable 'ai-extras-protect-buffers
   :description "protect buffers")
+
+(eval-and-compile
+  (defclass ai-extras--sync-theme-variable (ai-extras--boolean-variable)
+    ()
+    "A boolean infix that syncs themes when enabled."))
+
+(cl-defmethod transient-infix-set :after
+  ((obj ai-extras--sync-theme-variable) _value)
+  "Sync themes after OBJ enables `ai-extras-sync-theme'."
+  (when (symbol-value (oref obj variable))
+    (ai-extras-sync-theme-now)))
+
+(transient-define-infix ai-extras--infix-sync-theme ()
+  "Toggle `ai-extras-sync-theme'."
+  :class 'ai-extras--sync-theme-variable
+  :variable 'ai-extras-sync-theme
+  :description "sync theme")
+
+(add-hook 'enable-theme-functions #'ai-extras-sync-theme)
 
 ;;;; Provide
 

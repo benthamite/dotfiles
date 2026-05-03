@@ -185,16 +185,13 @@ The function @code{claude-code-extras-disable-scrollback-truncation} sets @code{
 @node Theme sync
 @section Theme sync
 
+@vindex ai-extras-sync-theme
 @vindex claude-code-extras-sync-theme
-The user option @code{claude-code-extras-sync-theme} controls whether Claude Code sessions are kept in sync with the current Emacs theme. When non-@code{nil}, changing the Emacs theme (via @code{enable-theme-functions}) re-runs @code{/theme} in all running Claude Code sessions, forcing Claude Code to re-query the terminal background via the OSC 11 escape sequence. The default value is @code{nil} (disabled).
+Theme synchronization is controlled by the shared user option @code{ai-extras-sync-theme}; @code{claude-code-extras-sync-theme} is kept as an obsolete alias for compatibility. When non-@code{nil}, changing the Emacs theme updates the @samp{theme} key in @samp{~/.claude/settings.json} and existing account-specific @samp{settings.json} files, then mirrors the same key to canonical and existing account-specific @samp{.claude.json} files for legacy compatibility. The default value is @code{nil} (disabled).
 
-This assumes Claude Code is configured with the @code{auto} theme globally (in @samp{~/.claude.json}). The @code{auto} theme detects the terminal background at startup but does not continuously re-probe, so re-running @code{/theme} is what triggers re-detection mid-session.
+The sync is config-based: it does not send @code{/theme} into running Claude Code terminal buffers.  This avoids disturbing active conversations.  A running TUI picks up the persisted setting on its next start or restart; new sessions update the config before the @samp{claude} process starts.
 
-Sessions that are idle (waiting for user input) receive the @code{/theme} command immediately. Sessions where Claude is still generating a response queue the re-selection and apply it automatically when the turn finishes (via the Stop hook). Because @code{/theme} is a client-side slash command that does not start a new turn, the session's idle state is preserved across re-selections, so subsequent Emacs theme toggles continue to apply immediately rather than queueing indefinitely.
-
-The theme sync is fully asynchronous: the @code{enable-theme-functions} hook returns immediately, and all terminal interactions are deferred to zero-delay timers.  This prevents reentrant timer execution (e.g. @code{org-roam-db-sync}) from blocking the main thread during @code{accept-process-output}.
-
-The busy/idle dispatch and the Stop-hook re-selection are covered by ERT tests in @samp{emacs/extras/test/claude-code-extras-test.el} under the @samp{Theme sync busy/idle handling} section.
+The shared sync dispatcher is covered by ERT tests in @samp{emacs/extras/test/ai-extras-test.el}.  Claude-specific JSON writes are covered in @samp{emacs/extras/test/claude-code-extras-test.el} under the @samp{Theme sync} section.
 
 @node Alert options
 @section Alert options
@@ -726,7 +723,7 @@ The function @code{claude-code-extras--batch-finish} constructs and displays the
 @findex claude-code-extras-ensure-notification-hook-config
 The function @code{claude-code-extras-ensure-statusline-config} checks @samp{~/.claude/settings.json} for a @samp{statusLine} entry and adds one if absent, pointing to the bundled shell script. This ensures that the status JSON file is written for every Claude session without manual configuration.
 
-The function @code{claude-code-extras-ensure-stop-hook-config} similarly checks for a @samp{Stop} hook entry and adds one if absent, pointing to the bundled hook wrapper script. This enables the stop-event detection that powers scroll-to-bottom and pending theme application.
+The function @code{claude-code-extras-ensure-stop-hook-config} similarly checks for a @samp{Stop} hook entry and adds one if absent, pointing to the bundled hook wrapper script. This enables the stop-event detection that powers scroll-to-bottom.
 
 The function @code{claude-code-extras-ensure-notification-hook-config} checks for a @samp{Notification} hook entry and adds one if absent or empty, pointing to the bundled notification forwarding script.  It handles both the case where the @samp{Notification} key exists with an empty array and where the key is missing entirely.  This enables the alert system (@ref{Alerts}) to receive @samp{Notification} events (idle prompts, permission requests, elicitation dialogs) from the CLI via @code{emacsclient}.
 
@@ -750,7 +747,7 @@ The command @code{claude-code-extras-menu} opens a transient menu that provides 
 @item
 @strong{Setup.} Ensure statusline, notification hook, and stop hook configurations are present in @samp{~/.claude/settings.json}.  See @ref{Auto-setup}.
 @item
-@strong{Options.} An account infix (@code{-a}) that displays and selects the active Claude account (@ref{Multi-account support}), plus toggleable infixes for five boolean user options: @code{claude-code-extras-alert-on-ready} (@ref{Alert options}), @code{claude-code-extras-protect-buffers} (@ref{Buffer protection}), @code{claude-code-extras-sync-theme} (@ref{Theme sync}), @code{claude-code-extras-copilot-enabled} (@ref{Copilot options}), and @code{claude-code-extras-warn-kill-with-branches} (@ref{Buffer protection}).  Each infix displays its current value and stays in the transient after toggling, so you can adjust multiple options in one invocation.
+@strong{Options.} An account infix (@code{-a}) that displays and selects the active Claude account (@ref{Multi-account support}), the shared @code{ai-extras-sync-theme} toggle (@ref{Theme sync}), plus Claude-specific toggles for @code{claude-code-extras-copilot-enabled} (@ref{Copilot options}) and @code{claude-code-extras-warn-kill-with-branches} (@ref{Buffer protection}).  Shared alert and buffer-protection toggles are provided by @samp{ai-extras}.  Each infix displays its current value and stays in the transient after toggling, so you can adjust multiple options in one invocation.
 @end itemize
 
 @node Indices

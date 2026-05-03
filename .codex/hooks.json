@@ -6,19 +6,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/claude/hooks/require-elisp-test-before-commit.sh",
+            "command": "~/My\\ Drive/dotfiles/codex/hooks/run-claude-hook.sh ~/My\\ Drive/dotfiles/claude/hooks/require-elisp-test-before-commit.sh",
             "timeout": 10,
             "statusMessage": "Checking Elisp test gate"
           },
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/claude/hooks/require-doc-update.sh",
+            "command": "~/My\\ Drive/dotfiles/codex/hooks/run-claude-hook.sh ~/My\\ Drive/dotfiles/claude/hooks/require-doc-update.sh",
             "timeout": 10,
             "statusMessage": "Checking Org manual update"
           },
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/claude/hooks/require-readme-update.sh",
+            "command": "~/My\\ Drive/dotfiles/codex/hooks/run-claude-hook.sh ~/My\\ Drive/dotfiles/claude/hooks/require-readme-update.sh",
             "timeout": 10,
             "statusMessage": "Checking README update"
           }
@@ -31,7 +31,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/claude/hooks/track-elisp-test.sh",
+            "command": "~/My\\ Drive/dotfiles/codex/hooks/run-claude-hook.sh ~/My\\ Drive/dotfiles/claude/hooks/track-elisp-test.sh",
             "timeout": 5,
             "statusMessage": "Tracking Elisp batch tests"
           }
@@ -43,7 +43,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/My\\ Drive/dotfiles/claude/hooks/fire-and-forget.sh ~/My\\ Drive/dotfiles/claude/hooks/notify-emacs-session-end.sh",
+            "command": "~/My\\ Drive/dotfiles/codex/hooks/run-claude-hook.sh ~/My\\ Drive/dotfiles/claude/hooks/fire-and-forget.sh ~/My\\ Drive/dotfiles/claude/hooks/notify-emacs-session-end.sh",
             "timeout": 5
           }
         ]

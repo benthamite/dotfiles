@@ -5,7 +5,7 @@
 ;; Author: Pablo Stafforini
 ;; URL: https://github.com/benthamite/dotfiles/tree/master/emacs/extras/claude-code-extras.el
 ;; Version: 0.1
-;; Package-Requires: ((claude-code "0.1") (consult "1.0") (paths "0.1") (ai-extras "0.1"))
+;; Package-Requires: ((claude-code "0.1") (consult "1.0") (paths "0.1") (ai-extras "0.1") (agent-log "0.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -41,10 +41,8 @@
   "Extensions for `claude-code'."
   :group 'claude-code)
 
-(defcustom claude-code-extras-protect-buffers t
-  "When non-nil, prompt for confirmation before killing claude-code buffers."
-  :type 'boolean
-  :group 'claude-code-extras)
+(define-obsolete-variable-alias 'claude-code-extras-protect-buffers
+  'ai-extras-protect-buffers "2026-05-03")
 
 (defcustom claude-code-extras-warn-kill-with-branches t
   "When non-nil, warn before killing a session that has branches.
@@ -75,36 +73,17 @@ interference with concurrent git operations."
 (define-obsolete-variable-alias 'claude-code-extras-sync-theme
   'ai-extras-sync-theme "2026-05-03")
 
-(defcustom claude-code-extras-sigwinch-delay 0.5
-  "Delay in seconds before sending SIGWINCH to fix terminal rendering.
-After Claude Code starts, the TUI may render incorrectly due to a
-race condition in terminal size negotiation.  Sending SIGWINCH
-forces the TUI to re-query terminal dimensions and redraw."
-  :type 'number
-  :group 'claude-code-extras)
+(define-obsolete-variable-alias 'claude-code-extras-sigwinch-delay
+  'ai-extras-sigwinch-delay "2026-05-03")
 
-(defcustom claude-code-extras-alert-style 'both
-  "Style of alert when Claude finishes responding.
-Only takes effect when `claude-code-extras-alert-on-ready' is
-non-nil in the current buffer."
-  :type '(choice (const :tag "Visual notification only" visual)
-                 (const :tag "Sound only" sound)
-                 (const :tag "Both visual and sound" both))
-  :group 'claude-code-extras)
+(define-obsolete-variable-alias 'claude-code-extras-alert-style
+  'ai-extras-alert-style "2026-05-03")
 
-(defcustom claude-code-extras-alert-sound
-  "/System/Library/Sounds/Glass.aiff"
-  "Path to the sound file played when Claude finishes responding.
-Only used when `claude-code-extras-alert-style' is `sound' or
-`both'."
-  :type 'file
-  :group 'claude-code-extras)
+(define-obsolete-variable-alias 'claude-code-extras-alert-sound
+  'ai-extras-alert-sound "2026-05-03")
 
-(defcustom claude-code-extras-alert-on-ready nil
-  "When non-nil, alert the user when Claude finishes responding.
-Toggle with `claude-code-extras-toggle-alert'."
-  :type 'boolean
-  :group 'claude-code-extras)
+(define-obsolete-variable-alias 'claude-code-extras-alert-on-ready
+  'ai-extras-alert-on-ready "2026-05-03")
 
 (defcustom claude-code-extras-status-interval 5
   "Interval in seconds between status file polls."
@@ -231,9 +210,11 @@ Used to detect when `/branch' creates a new session.")
   "Current polling interval in seconds, possibly increased by backoff.")
 
 (defvar-local claude-code-extras--waiting-for-input nil
-  "Non-nil when this Claude session is waiting for user input.
-Now managed by `ai-extras--waiting-for-input'; this variable is
-kept for code that still references it directly.")
+  "Obsolete compatibility variable for Claude waiting state.
+Use `ai-extras--waiting-for-input' instead.")
+(make-obsolete-variable 'claude-code-extras--waiting-for-input
+                        'ai-extras--waiting-for-input
+                        "2026-05-03")
 
 (defvar-local claude-code-extras--copilot-active nil
   "Non-nil when Copilot integration is active in the current buffer.")
@@ -256,26 +237,10 @@ kept for code that still references it directly.")
 (declare-function org-entry-is-done-p "org" ())
 (declare-function org-todo "org" (&optional arg))
 (declare-function outline-next-heading "outline" ())
+(autoload 'agent-log-menu "agent-log" nil t)
 (declare-function eat-self-input "eat" (n &optional e))
 (declare-function eat-term-display-cursor "eat" (terminal))
 (declare-function eat-term-send-string "eat" (terminal string))
-
-(declare-function map-values "map")
-(declare-function consult-yasnippet--candidates "consult-yasnippet")
-(declare-function consult-yasnippet--annotate "consult-yasnippet")
-(declare-function yas--template-content "yasnippet")
-(declare-function yas--template-expand-env "yasnippet")
-(declare-function yas--all-templates "yasnippet")
-(declare-function yas--get-snippet-tables "yasnippet")
-(declare-function yas-minor-mode "yasnippet")
-(declare-function yas-expand-snippet "yasnippet")
-(declare-function yas-active-snippets "yasnippet")
-(declare-function yas--commit-snippet "yasnippet")
-(declare-function yas--template-key "yasnippet")
-
-(defvar yas-minor-mode)
-(defvar yas-prompt-functions)
-(defvar yas--tables)
 
 (defvar copilot-mode)
 (defvar copilot--overlay)
@@ -324,6 +289,7 @@ Source: lobehub/lobe-icons (MIT).")
         :account (lambda (buf)
                    (buffer-local-value 'claude-code-extras--buffer-account buf))
         :has-background-tasks-p #'claude-code-extras--has-background-tasks-p
+        :display-name-suffix #'claude-code-extras--branch-suffix
         :label "Claude Code"
         :discover-skills #'claude-code-extras--discover-skills
         :handoff #'claude-code-extras-handoff
@@ -368,113 +334,14 @@ escape sequence directly to it."
 
 ;;;;; Snippet insertion
 
-(defun claude-code-extras--expand-snippet-to-text (template)
-  "Expand yasnippet TEMPLATE to plain text in a temporary buffer."
-  (with-temp-buffer
-    (yas-minor-mode 1)
-    (let ((yas-prompt-functions '(yas-no-prompt)))
-      (yas-expand-snippet (yas--template-content template)
-                          nil nil
-                          (yas--template-expand-env template)))
-    (mapc #'yas--commit-snippet (yas-active-snippets))
-    (buffer-string)))
+(define-obsolete-function-alias 'claude-code-extras-snippet-tab
+  'ai-extras-snippet-tab "2026-05-03")
 
-(defun claude-code-extras--consult-yasnippet (orig-fn arg)
-  "In eat-mode buffers, send snippet content via the terminal.
-`consult-yasnippet' manipulates buffer contents directly for
-previews and cleanup, which fails in eat-mode because the
-terminal emulator manages the buffer.  This advice bypasses
-the problematic state function and sends the expanded snippet
-text through `eat-term-send-string' instead.
-ORIG-FN is `consult-yasnippet'; ARG is the prefix argument."
-  (if (not (derived-mode-p 'eat-mode))
-      (funcall orig-fn arg)
-    (let* ((candidates
-            (consult-yasnippet--candidates
-             (if arg
-                 (progn (require 'map)
-                        (yas--all-templates (map-values yas--tables)))
-               (yas--all-templates (yas--get-snippet-tables)))))
-           (template
-            (consult--read
-             candidates
-             :prompt "Choose a snippet: "
-             :annotate (consult-yasnippet--annotate candidates)
-             :lookup 'consult--lookup-cdr
-             :require-match t
-             :group 'consult--prefix-group
-             :category 'yasnippet)))
-      (when template
-        (let* ((expanded (claude-code-extras--expand-snippet-to-text template))
-               (text (replace-regexp-in-string "\n" "\e\r" expanded)))
-          (eat-term-send-string eat-terminal text))))))
+(define-obsolete-function-alias 'claude-code-extras-setup-snippet-keys
+  'ai-extras-setup-snippet-keys "2026-05-03")
 
-(advice-add 'consult-yasnippet :around
-            #'claude-code-extras--consult-yasnippet)
-
-(defun claude-code-extras--try-expand-snippet-at-prompt ()
-  "Try to expand a yasnippet key at the eat terminal prompt.
-Search backward from `point-max' for the prompt marker, extract
-the user's input, and check whether it ends with a snippet key.
-If a match is found, send backspaces to erase the key and then
-send the expanded snippet text.  Return non-nil if a snippet was
-expanded."
-  (when (and (derived-mode-p 'eat-mode)
-             (bound-and-true-p eat-terminal)
-             (bound-and-true-p yas-minor-mode))
-    (save-excursion
-      (goto-char (point-max))
-      (when (re-search-backward "^❯[[:space:]]" nil t)
-        (let* ((prompt-start (match-end 0))
-               (prompt-end (progn (end-of-line) (point)))
-               (input (string-trim-right
-                       (buffer-substring-no-properties prompt-start prompt-end)))
-               (templates (yas--all-templates (yas--get-snippet-tables)))
-               (best-match nil)
-               (best-key nil))
-          (dolist (template templates)
-            (let ((key (yas--template-key template)))
-              (when (and key
-                         (> (length key) 0)
-                         (<= (length key) (length input))
-                         (string= key (substring input (- (length input) (length key))))
-                         (or (null best-key)
-                             (> (length key) (length best-key))))
-                (setq best-match template
-                      best-key key))))
-          (when best-match
-            (eat-term-send-string eat-terminal
-                                  (make-string (length best-key) ?\x7f))
-            (let* ((expanded (claude-code-extras--expand-snippet-to-text best-match))
-                   (text (replace-regexp-in-string "\n" "\e\r" expanded)))
-              (eat-term-send-string eat-terminal text))
-            t))))))
-
-(defun claude-code-extras-snippet-tab ()
-  "Try snippet expansion at prompt, otherwise send TAB to eat."
-  (interactive)
-  (unless (claude-code-extras--try-expand-snippet-at-prompt)
-    (eat-self-input 1 ?\t)))
-
-(defvar claude-code-extras--snippet-keys-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "TAB") #'claude-code-extras-snippet-tab)
-    (define-key map [tab] #'claude-code-extras-snippet-tab)
-    map)
-  "Keymap for `claude-code-extras--snippet-keys-mode'.")
-
-(define-minor-mode claude-code-extras--snippet-keys-mode
-  "Minor mode providing yasnippet TAB expansion in Claude Code buffers."
-  :keymap claude-code-extras--snippet-keys-mode-map)
-
-(defun claude-code-extras-setup-snippet-keys ()
-  "Enable yasnippet TAB expansion in the current Claude Code buffer.
-Only activates when Copilot is not enabled, since the Copilot TAB
-handler already chains through snippet expansion."
-  (when (and (claude-code--buffer-p (current-buffer))
-             (bound-and-true-p eat-terminal)
-             (not claude-code-extras-copilot-enabled))
-    (claude-code-extras--snippet-keys-mode 1)))
+(define-obsolete-function-alias 'claude-code-extras--try-expand-snippet-at-prompt
+  'ai-extras--try-expand-snippet-at-prompt "2026-05-03")
 
 ;;;;; Buffer protection
 
@@ -483,7 +350,7 @@ handler already chains through snippet expansion."
 Returns t if the buffer should be killed, nil otherwise.  Skips
 the prompt when the session process has already exited (e.g. via
 /exit).  Intended for use in `kill-buffer-query-functions'."
-  (or (not claude-code-extras-protect-buffers)
+  (or (not ai-extras-protect-buffers)
       (not (claude-code--buffer-p (current-buffer)))
       (not (process-live-p (get-buffer-process (current-buffer))))
       (yes-or-no-p "Kill claude-code buffer? ")))
@@ -548,7 +415,7 @@ resulting in a garbled banner."
 
 (defun claude-code-extras--send-sigwinch-after-delay (buffer)
   "Send SIGWINCH to the process in BUFFER after a short delay."
-  (run-at-time claude-code-extras-sigwinch-delay nil
+  (run-at-time ai-extras-sigwinch-delay nil
                #'claude-code-extras--send-sigwinch buffer))
 
 (defun claude-code-extras--send-sigwinch (buffer)
@@ -882,119 +749,41 @@ show the unified session switcher."
     (ai-extras--ensure-all-session-keys)
     (transient-setup 'ai-extras--session-switcher)))
 
-(defun claude-code-extras--purge-dead-session-keys ()
-  "Remove entries for buffers that are no longer live."
-  (let (dead)
-    (maphash (lambda (buf _) (unless (buffer-live-p buf) (push buf dead)))
-             claude-code-extras--session-keys)
-    (dolist (buf dead)
-      (remhash buf claude-code-extras--session-keys))))
+(define-obsolete-function-alias 'claude-code-extras--purge-dead-session-keys
+  'ai-extras--purge-dead-session-keys "2026-05-03")
 
-(defun claude-code-extras--assign-session-key ()
-  "Assign a home-row key to the current Claude buffer."
-  (when (claude-code--buffer-p (current-buffer))
-    (unless (gethash (current-buffer) claude-code-extras--session-keys)
-      (claude-code-extras--purge-dead-session-keys)
-      (let ((used (hash-table-values claude-code-extras--session-keys)))
-        (when-let* ((key (cl-find-if (lambda (k) (not (member k used)))
-                                      claude-code-extras--home-row-keys)))
-          (puthash (current-buffer) key claude-code-extras--session-keys))))))
+(define-obsolete-function-alias 'claude-code-extras--assign-session-key
+  'ai-extras--assign-session-key "2026-05-03")
 
-(defun claude-code-extras--release-session-key ()
-  "Release the home-row key for the current Claude buffer."
-  (remhash (current-buffer) claude-code-extras--session-keys))
+(define-obsolete-function-alias 'claude-code-extras--release-session-key
+  'ai-extras--release-session-key "2026-05-03")
 
-(defun claude-code-extras--ensure-all-session-keys ()
-  "Ensure every active Claude buffer has a home-row key.
-Assigns keys to any sessions that were started before the key
-system was loaded."
-  (claude-code-extras--purge-dead-session-keys)
-  (dolist (buf (claude-code--find-all-claude-buffers))
-    (unless (gethash buf claude-code-extras--session-keys)
-      (let ((used (hash-table-values claude-code-extras--session-keys)))
-        (when-let* ((key (cl-find-if (lambda (k) (not (member k used)))
-                                      claude-code-extras--home-row-keys)))
-          (puthash buf key claude-code-extras--session-keys))))))
+(define-obsolete-function-alias 'claude-code-extras--ensure-all-session-keys
+  'ai-extras--ensure-all-session-keys "2026-05-03")
 
-(transient-define-prefix claude-code-extras--session-switcher ()
-  "Switch to a Claude session or start a new one."
-  [["Sessions"
-    :class transient-column
-    :setup-children claude-code-extras--session-switcher-children]
-   ["Actions"
-    ("w" "jump to waiting" claude-code-extras-jump-to-waiting)
-    ("n" "new session" claude-code-extras--start-with-account)]])
+(define-obsolete-function-alias 'claude-code-extras--session-switcher
+  'ai-extras--session-switcher "2026-05-03")
 
-(defun claude-code-extras--session-switcher-children (_)
-  "Build transient suffixes for the session switcher."
-  (let (specs)
-    (maphash
-     (lambda (buf key)
-       (when (buffer-live-p buf)
-         (let* ((cmd (make-symbol (format "claude-switch-%s" key)))
-                (name (claude-code-extras-display-name buf))
-                (waiting (buffer-local-value
-                          'claude-code-extras--waiting-for-input buf))
-                (spec (list key name cmd)))
-           (when waiting
-             (setq spec (append spec
-                                (list :face 'claude-code-extras-waiting))))
-           (fset cmd (lambda () (interactive) (switch-to-buffer buf)))
-           (push spec specs))))
-     claude-code-extras--session-keys)
-    (setq specs
-          (sort specs
-                (lambda (a b)
-                  (< (claude-code-extras--home-row-key-index (car a))
-                     (claude-code-extras--home-row-key-index (car b))))))
-    (transient-parse-suffixes
-     'claude-code-extras--session-switcher
-     (apply #'vector specs))))
+(define-obsolete-function-alias 'claude-code-extras--session-switcher-children
+  'ai-extras--session-switcher-children "2026-05-03")
 
-(defun claude-code-extras--home-row-key-index (key)
-  "Return the index of KEY in `claude-code-extras--home-row-keys'."
-  (or (cl-position key claude-code-extras--home-row-keys :test #'string=) 99))
+(define-obsolete-function-alias 'claude-code-extras--home-row-key-index
+  'ai-extras--session-key-index "2026-05-03")
 
-(defun claude-code-extras--buffer-session-name (buffer)
-  "Return the session name for BUFFER."
-  (claude-code-extras--session-name (buffer-name buffer)))
+(define-obsolete-function-alias 'claude-code-extras--buffer-session-name
+  'ai-extras--buffer-session-name "2026-05-03")
 
-(defun claude-code-extras--qualified-session-name (buffer-name)
-  "Return a qualified session name from BUFFER-NAME.
-Given \"*claude:~/path/to/project/:instance*\", return
-\"project:instance\"."
-  (let ((project (claude-code-extras--session-name buffer-name))
-        (instance (claude-code--extract-instance-name-from-buffer-name
-                   buffer-name)))
-    (if instance
-        (format "%s:%s" project instance)
-      project)))
+(define-obsolete-function-alias 'claude-code-extras--qualified-session-name
+  'ai-extras--qualified-session-name "2026-05-03")
 
 (defun claude-code-extras-display-name (&optional buffer)
   "Return the display name for BUFFER's modeline.
-Delegates to `ai-extras-display-name' for the base name, then
-appends branch suffix if applicable."
-  (let ((buf (or buffer (current-buffer))))
-    (or (buffer-local-value 'claude-code-extras--display-name-cache buf)
-        (claude-code-extras--compute-display-name buf))))
+Delegates to `ai-extras-display-name', which appends branch suffixes
+through the Claude backend registration."
+  (ai-extras-display-name (or buffer (current-buffer))))
 
-(defun claude-code-extras--compute-display-name (buffer)
-  "Compute the display name for BUFFER by scanning Claude sessions."
-  (let* ((base (claude-code-extras--base-display-name buffer))
-         (branch-suffix (claude-code-extras--branch-suffix buffer)))
-    (if branch-suffix
-        (format "%s:%s" base branch-suffix)
-      base)))
-
-(defun claude-code-extras--base-display-name (buffer)
-  "Compute the base display name for BUFFER (without branch suffix)."
-  (let* ((name (claude-code-extras--buffer-session-name buffer))
-         (others (cl-remove buffer (claude-code--find-all-claude-buffers)))
-         (sibling-names (mapcar #'claude-code-extras--buffer-session-name
-                                others)))
-    (if (member name sibling-names)
-        (claude-code-extras--qualified-session-name (buffer-name buffer))
-      name)))
+(define-obsolete-function-alias 'claude-code-extras--compute-display-name
+  'ai-extras--compute-display-name "2026-05-03")
 
 (defun claude-code-extras--branch-suffix (buffer)
   "Return a short branch ID for BUFFER, or nil if not branched."
@@ -1007,11 +796,7 @@ appends branch suffix if applicable."
 
 (defun claude-code-extras--refresh-display-names ()
   "Recompute and cache display names for all Claude buffers."
-  (dolist (buf (claude-code--find-all-claude-buffers))
-    (when (buffer-live-p buf)
-      (with-current-buffer buf
-        (setq claude-code-extras--display-name-cache
-              (claude-code-extras--compute-display-name buf))))))
+  (ai-extras--refresh-display-names))
 
 ;;;;; Status polling
 
@@ -1400,34 +1185,21 @@ CACHE_READ_INPUT_TOKENS."
 
 ;;;;; Alert
 
-(declare-function alert "alert")
-
 (defun claude-code-extras-notify (title message)
   "Notification function combining modeline pulse with optional alert.
 TITLE is the notification title.  MESSAGE is the notification
-body.  When `claude-code-extras-alert-on-ready' is non-nil,
-dispatch to the style configured in
-`claude-code-extras-alert-style'."
+body.  When `ai-extras-alert-on-ready' is non-nil, dispatch to
+the style configured in `ai-extras-alert-style'."
   (claude-code-default-notification title message)
-  (when claude-code-extras-alert-on-ready
-    (claude-code-extras--alert-visual title message)
-    (claude-code-extras--alert-sound)))
+  (when ai-extras-alert-on-ready
+    (ai-extras--alert-visual title message)
+    (ai-extras--alert-sound)))
 
-(defun claude-code-extras--alert-visual (title message)
-  "Show a visual notification with TITLE and MESSAGE.
-Only fires when `claude-code-extras-alert-style' is `visual' or
-`both'."
-  (when (memq claude-code-extras-alert-style '(visual both))
-    (alert message :title title)))
+(define-obsolete-function-alias 'claude-code-extras--alert-visual
+  'ai-extras--alert-visual "2026-05-03")
 
-(defun claude-code-extras--alert-sound ()
-  "Play the configured alert sound.
-Only fires when `claude-code-extras-alert-style' is `sound' or
-`both'."
-  (when (memq claude-code-extras-alert-style '(sound both))
-    (when-let* ((sound claude-code-extras-alert-sound)
-                ((file-exists-p sound)))
-      (start-process "claude-code-alert-sound" nil "afplay" sound))))
+(define-obsolete-function-alias 'claude-code-extras--alert-sound
+  'ai-extras--alert-sound "2026-05-03")
 
 (defun claude-code-extras--notification-type (json-str)
   "Extract the notification type from JSON-STR.
@@ -1453,8 +1225,9 @@ elicitation_dialog notifications."
                        (plist-get message :json-data))))
           (pcase ntype
             ("idle_prompt"
-             (setq claude-code-extras--waiting-for-input (current-time)
-                   ai-extras--waiting-for-input (current-time))
+             (let ((time (current-time)))
+               (setq ai-extras--waiting-for-input time
+                     claude-code-extras--waiting-for-input time))
              (claude-code-extras-notify
               "Claude ready"
               (format "%s: waiting for your response" name)))
@@ -1474,9 +1247,10 @@ elicitation_dialog notifications."
 
 (defun claude-code-extras--clear-waiting-for-input (&rest _)
   "Clear the waiting-for-input flag in the current Claude buffer."
-  (when (bound-and-true-p claude-code-extras--waiting-for-input)
-    (setq claude-code-extras--waiting-for-input nil
-          ai-extras--waiting-for-input nil)))
+  (when (or (bound-and-true-p ai-extras--waiting-for-input)
+            (bound-and-true-p claude-code-extras--waiting-for-input))
+    (setq ai-extras--waiting-for-input nil
+          claude-code-extras--waiting-for-input nil)))
 
 (defconst claude-code-extras--background-tasks-regexp
   "· *[0-9]+ +\\(shells?\\|monitors?\\)"
@@ -1503,8 +1277,9 @@ status-line indicator (e.g. \"· 3 shells\" or \"· 5 monitors\")."
   (let (best-buf best-time)
     (dolist (buf (claude-code--find-all-claude-buffers))
       (when (buffer-live-p buf)
-        (let ((ts (buffer-local-value
-                   'claude-code-extras--waiting-for-input buf)))
+        (let ((ts (or (buffer-local-value 'ai-extras--waiting-for-input buf)
+                      (buffer-local-value
+                       'claude-code-extras--waiting-for-input buf))))
           (when (and ts (or (null best-time) (time-less-p best-time ts)))
             (setq best-buf buf best-time ts)))))
     (if best-buf
@@ -1551,14 +1326,13 @@ Given \"*claude:~/path/to/project/:default*\", return
 (defun claude-code-extras-toggle-alert ()
   "Toggle OS notifications for the current Claude session."
   (interactive)
-  (setq claude-code-extras-alert-on-ready
-        (not claude-code-extras-alert-on-ready))
+  (setq ai-extras-alert-on-ready (not ai-extras-alert-on-ready))
   (message "Claude alert notifications %s"
-           (if claude-code-extras-alert-on-ready "enabled" "disabled")))
+           (if ai-extras-alert-on-ready "enabled" "disabled")))
 
 (defun claude-code-extras-alert-indicator ()
   "Return a bell icon reflecting the current alert state."
-  (if claude-code-extras-alert-on-ready "🔔" "🔕"))
+  (if ai-extras-alert-on-ready "🔔" "🔕"))
 
 ;;;;; Modeline
 
@@ -1661,7 +1435,7 @@ the `copilot' package."
   (cond
    ((copilot--overlay-visible)
     (copilot-accept-completion))
-   ((claude-code-extras--try-expand-snippet-at-prompt)
+   ((ai-extras--try-expand-snippet-at-prompt)
     nil)
    (t
     (eat-self-input 1 ?\t))))
@@ -2289,45 +2063,7 @@ Returns a plist with keys :name, :description, :argument-hint,
 :argument-source, :argument-choices, :argument-default,
 :argument-multiple, :user-invocable, or nil if FILE has no
 frontmatter."
-  (with-temp-buffer
-    (insert-file-contents file)
-    (goto-char (point-min))
-    (when (looking-at-p "---")
-      (forward-line 1)
-      (let ((start (point))
-            (result nil))
-        (when (re-search-forward "^---$" nil t)
-          (let ((yaml (buffer-substring-no-properties start
-                                                      (line-beginning-position))))
-            (dolist (line (split-string yaml "\n" t))
-              (when (string-match "^\\([a-z-]+\\): *\\(.*\\)$" line)
-                (let ((key (match-string 1 line))
-                      (val (string-trim (match-string 2 line))))
-                  ;; Strip surrounding quotes
-                  (when (string-match "^[\"']\\(.*\\)[\"']$" val)
-                    (setq val (match-string 1 val)))
-                  (pcase key
-                    ("name" (setq result (plist-put result :name val)))
-                    ("description" (setq result (plist-put result :description val)))
-                    ("argument-hint"
-                     (setq result (plist-put result :argument-hint val)))
-                    ("argument-source"
-                     (setq result (plist-put result :argument-source val)))
-                    ("argument-choices"
-                     (setq result (plist-put result :argument-choices
-                                             (mapcar #'string-trim
-                                                     (split-string val "," t)))))
-                    ("argument-default"
-                     (setq result (plist-put result :argument-default val)))
-                    ("argument-multiple"
-                     (setq result (plist-put result :argument-multiple
-                                             (not (equal val "false")))))
-                    ("user-invocable"
-                     (setq result (plist-put result :user-invocable
-                                             (not (equal val "false")))))
-                    ("model"
-                     (setq result (plist-put result :model val)))))))))
-        result))))
+  (ai-extras-parse-skill-frontmatter file))
 
 (defun claude-code-extras--discover-skills ()
   "Discover available Claude Code skills.
@@ -2367,20 +2103,6 @@ shadow global skills with the same name."
                skills)
       (sort result (lambda (a b)
                      (string< (plist-get a :name) (plist-get b :name)))))))
-
-(defun claude-code-extras--skill-argument-candidates (skill)
-  "Return completion candidates for SKILL's arguments.
-SKILL is a plist from `claude-code-extras--discover-skills'.  If
-the skill has an :argument-source glob, resolve it relative to the
-skill's directory and return file stems as candidates.  If it has
-:argument-choices, return those directly.  Otherwise return nil."
-  (or (when-let* ((source (plist-get skill :argument-source))
-                  (skill-dir (file-name-directory (plist-get skill :path))))
-        (let ((pattern (expand-file-name source skill-dir)))
-          (mapcar (lambda (f)
-                    (file-name-sans-extension (file-name-nondirectory f)))
-                  (file-expand-wildcards pattern))))
-      (plist-get skill :argument-choices)))
 
 (defun claude-code-extras--skill-display-result (skill-name result
                                                               &optional buffers-before)
@@ -2473,7 +2195,7 @@ argument-source."
                           :test #'equal))
           (hint (and skill (plist-get skill :argument-hint)))
           (candidates (and skill
-                           (claude-code-extras--skill-argument-candidates skill)))
+                           (ai-extras--skill-argument-candidates skill)))
           (default (and skill (plist-get skill :argument-default)))
           (multiple-p (and skill (plist-get skill :argument-multiple)))
           (args (cond
@@ -2980,7 +2702,7 @@ there with the backtrace prompt passed as a CLI argument."
 (add-hook 'claude-code-start-hook #'claude-code-extras-set-modeline)
 (add-hook 'claude-code-start-hook #'ai-extras--refresh-display-names)
 (add-hook 'kill-buffer-hook #'claude-code-extras-stop-status-polling)
-(add-hook 'kill-buffer-hook #'ai-extras--refresh-display-names)
+(add-hook 'kill-buffer-hook #'ai-extras--refresh-display-names-deferred)
 (add-hook 'kill-buffer-hook #'claude-code-extras--cleanup-monet-session)
 (add-hook 'claude-code-start-hook #'ai-extras-disable-scrollback-truncation)
 (add-hook 'claude-code-start-hook #'ai-extras-setup-snippet-keys)
@@ -3039,7 +2761,7 @@ Uses the current Claude buffer's directory if in one."
 Bypasses the kill-protection query."
   (when (claude-code--buffer-p (current-buffer))
     (let ((kill-buffer-query-functions
-           (remq 'claude-code-extras-protect-buffer
+           (remq 'ai-extras-protect-buffer
                  kill-buffer-query-functions)))
       (kill-buffer (current-buffer)))))
 

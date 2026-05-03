@@ -8928,6 +8928,9 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package ai-extras
   :demand t
+  :custom
+  (ai-extras-alert-on-ready t)
+  (ai-extras-sync-theme t)
   :config
   (with-eval-after-load 'debug
     (bind-keys :map debugger-mode-map
@@ -8945,8 +8948,6 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :after (claude-code ai-extras)
   :demand t
   :custom
-  (claude-code-extras-alert-on-ready t)
-  ;; (claude-code-extras-sync-theme t)
   ;; copilot support is buggy; needs more work
   (claude-code-extras-copilot-enabled nil)
   (claude-code-extras-org-todo-in-progress-keyword "DOING")
@@ -9018,9 +9019,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package codex-extras
   :after (codex ai-extras)
-  :demand t
-  :custom
-  (codex-extras-sync-theme t))
+  :demand t)
 #+end_src
 
 ** =mcp=

@@ -284,6 +284,39 @@
   (let ((claude-code-extras-alert-on-ready nil))
     (should (equal (claude-code-extras-alert-indicator) "🔕"))))
 
+(ert-deftest claude-code-extras-test-alert-indicator-uses-shared-state ()
+  "Reflect the shared `ai-extras-alert-on-ready' state."
+  (let ((ai-extras-alert-on-ready t))
+    (should (equal (claude-code-extras-alert-indicator) "🔔"))))
+
+;;;; Waiting state
+
+(ert-deftest claude-code-extras-test-clear-waiting-clears-compat-state ()
+  "Clear both shared and obsolete Claude waiting state."
+  (let ((ai-extras--waiting-for-input (current-time))
+        (claude-code-extras--waiting-for-input (current-time)))
+    (claude-code-extras--clear-waiting-for-input)
+    (should-not ai-extras--waiting-for-input)
+    (should-not claude-code-extras--waiting-for-input)))
+
+;;;; Transient menu
+
+(ert-deftest claude-code-extras-test-agent-log-menu-is-autoloaded ()
+  "Expose `agent-log-menu' as a command for transient suffix validation."
+  (should (commandp 'agent-log-menu)))
+
+;;;; Display names
+
+(ert-deftest claude-code-extras-test-display-name-adds-branch-suffix ()
+  "Append Claude branch suffixes via the shared display-name hook."
+  (with-temp-buffer
+    (rename-buffer "*claude:~/repo/unique-claude-display-test/:default*" t)
+    (let ((claude-code-extras--original-session-id "original-session")
+          (claude-code-extras--status-data
+           '(:session_id "branched-session-id")))
+      (should (equal (claude-code-extras-display-name (current-buffer))
+                     "unique-claude-display-test:branched")))))
+
 ;;;; Batch parse stream JSON
 
 (ert-deftest claude-code-extras-test-batch-parse-stream-json-assistant-text ()

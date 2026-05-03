@@ -53,12 +53,6 @@ Searched in addition to the standard locations."
   :type '(repeat directory)
   :group 'codex-extras)
 
-(defcustom codex-extras-run-skill-model nil
-  "Model to use for `codex-extras-run-skill'.
-When nil, use the CLI default."
-  :type '(choice (const :tag "CLI default" nil) string)
-  :group 'codex-extras)
-
 (defcustom codex-extras-audit-skills
   '("/code-audit" "/design-audit" "/interpretability-audit")
   "Skills to run when performing a project audit."
@@ -282,26 +276,7 @@ from `codex-extras-skill-directories'."
 
 (defun codex-extras--parse-skill-frontmatter (file)
   "Parse YAML frontmatter from skill FILE and return a plist."
-  (with-temp-buffer
-    (insert-file-contents file)
-    (goto-char (point-min))
-    (when (looking-at-p "---")
-      (forward-line 1)
-      (let ((start (point))
-            (result nil))
-        (when (re-search-forward "^---$" nil t)
-          (let ((yaml (buffer-substring-no-properties start
-                                                      (line-beginning-position))))
-            (dolist (line (split-string yaml "\n" t))
-              (when (string-match "^\\([a-z_-]+\\): *\\(.*\\)$" line)
-                (let ((key (match-string 1 line))
-                      (val (string-trim (match-string 2 line))))
-                  (when (string-match "^[\"']\\(.*\\)[\"']$" val)
-                    (setq val (match-string 1 val)))
-                  (pcase key
-                    ("name" (setq result (plist-put result :name val)))
-                    ("description" (setq result (plist-put result :description val)))))))))
-        result))))
+  (ai-extras-parse-skill-frontmatter file))
 
 ;;;###autoload
 (defun codex-extras-run-skill (skill-name &optional arguments)
@@ -319,7 +294,9 @@ Sends the skill invocation to the active Codex session."
   (let* ((prompt (if arguments
                      (format "/%s %s" skill-name arguments)
                    (format "/%s" skill-name)))
-         (buf (or (car (codex--find-all-codex-buffers))
+         (buf (or (and (codex--buffer-p (current-buffer))
+                       (current-buffer))
+                  (codex--get-or-prompt-for-buffer)
                   (user-error "No running Codex session"))))
     (with-current-buffer buf
       (codex--do-send-command prompt))
@@ -484,7 +461,7 @@ unified session switcher."
 (add-hook 'codex-process-environment-functions
           #'codex-extras--sync-theme-before-start)
 (add-hook 'kill-buffer-hook #'ai-extras--release-session-key)
-(add-hook 'kill-buffer-hook #'ai-extras--refresh-display-names)
+(add-hook 'kill-buffer-hook #'ai-extras--refresh-display-names-deferred)
 (advice-add 'codex--do-send-command :before
             #'ai-extras--clear-waiting-for-input)
 

@@ -285,6 +285,12 @@ audit() {
       printf 'Missing Codex skill port: %s\n' "$skill"
       missing=$((missing + 1))
     }
+    target="$HOME/.codex/skills/$skill"
+    expected="$ROOT/codex/skills/$skill"
+    if [ ! -L "$target" ] || [ "$(readlink "$target" 2>/dev/null || true)" != "$expected" ]; then
+      printf 'Missing live Codex skill symlink: %s -> %s\n' "$target" "$expected"
+      missing=$((missing + 1))
+    fi
   done < <(cd "$ROOT/claude/skills" && find . -mindepth 2 -maxdepth 2 -name SKILL.md | sed 's#^\./##; s#/SKILL.md$##' | sort)
 
   for hook in block-secret-leak.sh block-destructive-command.sh block-walk-list-access.sh guard-external-actions.sh require-elisp-test-before-commit.sh require-doc-update.sh require-readme-update.sh require-elisp-verify-after-commit.sh block-elpaca-rebuild-uncommitted.sh track-elisp-test.sh track-elisp-verify.sh block-elpaca-dotfiles-edit.sh block-texi-edit.sh load-elisp-after-edit.sh regenerate-manual-after-edit.sh remind-ai-config-sync.sh require-ai-config-sync.sh; do

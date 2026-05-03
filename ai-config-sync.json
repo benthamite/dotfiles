@@ -700,7 +700,14 @@
       "path": "codex/config.toml",
       "tracked": true,
       "live_path": "~/.codex/config.toml",
-      "note": "Live global Codex config is a symlink to the tracked repo file."
+      "note": "Live global Codex config is a symlink to the tracked repo file; it does not register skills."
+    },
+    {
+      "tool": "Codex",
+      "path": "codex/bin/install-skills.sh",
+      "tracked": true,
+      "live_path": "~/.codex/skills/<name>",
+      "note": "Creates one symlink per tracked codex/skills/<name> directory because Codex discovers global skills from ~/.codex/skills/*/SKILL.md."
     }
   ],
   "audit_command": "bin/ai-config-sync audit"

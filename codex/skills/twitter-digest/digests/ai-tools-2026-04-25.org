@@ -1,0 +1,107 @@
+#+title: Twitter digest: ai-tools — 2026-04-25
+
+* Notable
+
+** @chasing_next (Tue Apr 21 18:48)
+highly recommend asking claude code this during building sessions:
+
+"how confident are you in what you built? is there anything that will break? edge cases? bad code?"
+
+it catches little things that were poorly designed or could quietly fail.
+Likes: 3 | Views: 85 | Like rate: 3.5%
+[[https://x.com/chasing_next/status/2046662402838863930][View on X]]
+
+** @championswimmer (Sat Apr 25 13:16)
+Btw, I regularly use Gemini (not the app, but via Gemini CLI) to search, research, learn. Even to understand code of new codebases.
+
+If you have a long tail agentic flow (edit, bash, test - loop) Gemini falters a bit, but it is usually 'wise'-er than Opus/GPT5.4 otherwise.
+Likes: 2 | Views: 81 | Like rate: 2.5%
+[[https://x.com/championswimmer/status/2048028330981572831][View on X]]
+
+** @kr0der (Sat Apr 25 02:56)
+since compaction is magic in the Codex app, i'm loving 1 giant thread per PR.
+
+since that thread contains all the context on the task, it can auto-fix PR comments since it knows what decisions were intentional/tradeoffs. thread automations are really helpful for autofixing PRs
+Likes: 10 | Views: 437 | Like rate: 2.3%
+[[https://x.com/kr0der/status/2047872241677766948][View on X]]
+
+** @steipete (Sat Apr 25 10:14)
+Built clawsweeper, which runs 50 codex in parallel around the clock, scans issues/prs deep and closes what is already implemented or what makes no sense. Closed around 4000 issues today, a few thousand are in the pipeline. (rate limits are rough)
+Likes: 2285 | Views: 139954 | Like rate: 1.6%
+[[https://x.com/steipete/status/2047982647264059734][View on X]]
+
+** @altryne (Thu Apr 23 22:57)
+Small PSA: If you're trying to combine GP2-image-2 generated designs + GPT 5.5 to recreate them in Codex:
+
+Make sure to do two separate sessions, first generate the image, then in a new session, ask codex for a pixel perfect recreation.
+
+It seems that 5.5 doesn't "see" the image Codex just generated.
+Likes: 206 | Views: 13533 | Like rate: 1.5%
+[[https://x.com/altryne/status/2047449896039657652][View on X]]
+
+** @ivanfioravanti (Sat Apr 25 04:08)
+Small but very useful trick for long running tasks on your GPUs:
+
+If you need your GPU in the middle of a benchmark and you don't want to impact results:
+- kill -STOP pid (freeze your benchmark process)
+- kill -CONT pid (unfreeze and continue!)
+Likes: 27 | Views: 1793 | Like rate: 1.5%
+[[https://x.com/ivanfioravanti/status/2047890342230597711][View on X]]
+
+** @intellectronica (Wed Apr 22 09:40)
+I don't have time right now for creating a proper community plugin so I figured I'd share the prompt I gave Codex to get it to create a plugin in my @obsdmd to sync my @usemonologue notes. It worked, one shot!
+Likes: 7 | Views: 483 | Like rate: 1.4%
+[[https://x.com/intellectronica/status/2046886885688283628][View on X]]
+
+** @antirez (Wed Apr 22 17:43)
+When you transform a synchronous AI workflow into an asynchronous one (spawning agents), you gain speed and lose control, quality. So: the async pattern should be used with care, when there is a clear objective, with a strong feedback, and rails to setup.
+Likes: 144 | Views: 10140 | Like rate: 1.4%
+[[https://x.com/antirez/status/2047008509129093232][View on X]]
+
+** @lucasmeijer (Fri Apr 24 19:10)
+I treat most AI generated unit test as thinking blocks. Useful to let the agent keep eye on the ball, but i'm not committing that shit. I throw 90% of those tests away.
+Likes: 12 | Views: 846 | Like rate: 1.4%
+[[https://x.com/lucasmeijer/status/2047755079671775671][View on X]]
+
+** @altryne (Fri Apr 24 15:27)
+Protip: if you have Codex configured with your email, you can ask it to email you things "for later"
+Likes: 31 | Views: 2416 | Like rate: 1.3%
+[[https://x.com/altryne/status/2047699034807357764][View on X]]
+
+** @simonw (Thu Apr 23 21:57)
+LiteParse is really neat! It does a great job of extracting text from annoying layouts in PDFs (multiple columns for example)
+
+It's only available as a Node.js CLI app, so I vibe-coded up this version that runs in a browser.
+Likes: 245 | Views: 20030 | Like rate: 1.2%
+[[https://x.com/simonw/status/2047434783962354130][View on X]]
+
+** @pontusab (Thu Apr 23 10:43)
+Introducing mcp-typegen.
+
+One command turns any MCP server into a typed TS tree, one file per tool.
+
+npx mcp-typegen --url <your-mcp> -o ./servers
+Likes: 102 | Views: 9242 | Like rate: 1.1%
+[[https://x.com/pontusab/status/2047264994895785988][View on X]]
+
+** @clairevo (Mon Apr 20 16:54)
+I feel like I want to be everyone's security mom today, but Codex security is really good at building a threat model and identifying IDOR issues in particular + ranking by severity, and then you can use GPT-5.4 + codex to fix them systematically.
+Likes: 60 | Views: 5935 | Like rate: 1.0%
+[[https://x.com/clairevo/status/2046271319751504304][View on X]]
+
+** @cathrynlavery (Tue Apr 21 16:29)
+Opus 4.7 produces beautiful, well-structured plans that confidently reference infrastructure that doesn't exist.
+
+Every single one I've reviewed has had serious issues when codex checks them.
+Likes: 52 | Views: 6021 | Like rate: 0.9%
+[[https://x.com/cathrynlavery/status/2046627449568387084][View on X]]
+
+** @petergyang (Thu Apr 23 14:24)
+Here's @rywiggs (VP Mercury) walking through how he built his Claude Code second brain at work:
+
+"I pulled together almost 5M words from my five years at Mercury and built that as a knowledge base. At the start of everyday, I get a brief of what's on my calendar, Linear, Slack and at the end of the day a summary..."
+Likes: 108 | Views: 22872 | Like rate: 0.5%
+[[https://x.com/petergyang/status/2047320679889162321][View on X]]
+
+* Accounts with nothing notable
+@__tinygrad__, @_catwu, @0xSero, @alvinsng, @amirmxt, @badlogicgames, @bcherny, @bentossell, @boringmarketer, @bstnxbt, @carson3068, @dexhorthy, @Dimillian, @dmwlff, @forgebitz, @gabrielchua, @iotcoi, @itsolelehmann, @jtdavies, @KatanaLarp, @kmdrfx, @maddiedreese, @micLivs, @nibzard, @NickADobos, @Prince_Canuma, @RayFernando1337, @ryanvogel, @Saboo_Shubham_, @thdxr, @trq212, @xeophon

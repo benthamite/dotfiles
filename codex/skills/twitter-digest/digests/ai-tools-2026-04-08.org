@@ -1,0 +1,102 @@
+#+title: Twitter digest: ai-tools — 2026-04-08
+
+* Notable
+
+** @itsolelehmann (Wed Apr 08 11:40)
+one of the highest impact AI uses cases for me is to use Grok to explain tweets to me. sounds stupid simple, but it's highly effective. I'm non-technical, so I use it quiet a lot to ELI5 ideas and concepts to me. you either chose AI to learn everything or nothing, chose wisely
+Likes: 49 | Views: 2,241 | Like rate: 2.2%
+[[https://x.com/itsolelehmann/status/2041843628704772557][View on X]]
+
+** @kr0der (Tue Apr 07 14:55)
+Cursor's debug mode is one of the most underrated features currently: hypotheses → instrumentation → reproduce → check logs → eliminate and/or create new hypotheses → repeat until solved. legit so good for debugging
+Likes: 6 | Views: 298 | Like rate: 2.0%
+[[https://x.com/kr0der/status/2041530203894067508][View on X]]
+
+** @Dimillian (Wed Apr 08 12:00)
+With the skills in the Build iOS Apps plugin, Codex is very good at making well-organized SwiftUI code from the get-go or helping you reshape your codebase.
+Likes: 99 | Views: 4,995 | Like rate: 2.0%
+[[https://x.com/Dimillian/status/2041848622573347285][View on X]]
+
+** @championswimmer (Wed Apr 08 03:13)
+Built most of the landing page with Pi + Gemini 3.1 Pro (no Claude, no Codex). It turned on iOS Simulator and Android emulator, took screenshots, adorned them in device outlines, made them 3D-ish, and created the entire hero banner.
+Likes: 80 | Views: 4,282 | Like rate: 1.9%
+[[https://x.com/championswimmer/status/2041715909753029118][View on X]]
+
+** @iotcoi (Tue Apr 07 12:14)
+1664 tok/sec peak with Qwen 3.5 27B AWQ. 1,010,000 tokens context window. 2,581,568 tokens KV cache. TurboQuant 3.5. In 4xA6K first-gen GPUs from Oct 2020 — 5yo hardware. vLLM 0.19.0; CUDA 12.8; Triton 3.6; all code on GitHub.
+Likes: 437 | Views: 28,937 | Like rate: 1.5%
+[[https://x.com/iotcoi/status/2041489883567435894][View on X]]
+
+** @amirmxt (Wed Apr 08 00:55)
+here's how we're using claude code + humblytics to increase our trial conversions by 30% month over month with AB testing: go to humblytics, click on copy prompt, the agent will automatically sign up for an account, add your site and pull traffic insights, once installed and data comes in, it runs AB tests
+Likes: 15 | Views: 1,032 | Like rate: 1.5%
+[[https://x.com/amirmxt/status/2041681346699899186][View on X]]
+
+** @Dimillian (Tue Apr 07 21:38)
+Type English, watch stuff getting built, /review, $simplify, /review, test, review, $yeet
+Likes: 51 | Views: 4,508 | Like rate: 1.1%
+[[https://x.com/Dimillian/status/2041631694672032181][View on X]]
+
+** @micLivs (Tue Apr 07 12:26)
+vibed pi-shot, a cli for capturing pi sessions as pixel perfect PNGs, mock conversations, or run real slash commands, load existing sessions, swap themes etc
+Likes: 34 | Views: 3,851 | Like rate: 0.9%
+[[https://x.com/micLivs/status/2041492780732633406][View on X]]
+
+** @badlogicgames (Wed Apr 08 08:48)
+people of pi, turn off extra usage on your Anthropic account immediately. what a bad policy to auto-draw from that.
+Likes: 132 | Views: 15,651 | Like rate: 0.8%
+[[https://x.com/badlogicgames/status/2041800278630908401][View on X]]
+
+** @_catwu (Tue Apr 07 23:12)
+Run /powerup to learn our team's favorite Claude Code CLI features!
+Likes: 381 | Views: 50,080 | Like rate: 0.8%
+[[https://x.com/_catwu/status/2041655441864978552][View on X]]
+
+** @trq212 (Wed Apr 08 03:37)
+done about 10 of these calls so far + looked at more transcripts. many learnings but one of the biggest is that it's very easy to spend a lot of tokens on open ended verification that doesn't make your output better. I'll try and write more on how to do it efficiently
+Likes: 950 | Views: 127,665 | Like rate: 0.7%
+[[https://x.com/trq212/status/2041722125510377705][View on X]]
+
+** @Saboo_Shubham_ (Tue Apr 07 17:28)
+Run Gemma 4 locally with OpenClaw in 3 simple steps: 1. Install Ollama 2. Download Gemma 4 3. Launch OpenClaw with Gemma 4. Run OpenClaw Agents 24/7 for FREE.
+Likes: 244 | Views: 33,049 | Like rate: 0.7%
+[[https://x.com/Saboo_Shubham_/status/2041568749640388848][View on X]]
+
+* Vetted accounts
+
+** @FarzaTV — 5/10 (not added)
+98K followers. Built Clicky (AI teacher next to cursor), open-sourced it. Genuinely practical tool but all recent content is about this one viral project. No evidence of ongoing AI tools workflow tips.
+
+** @om_patel5 — 4/10 (not added)
+20K followers. ALL CAPS aggregator surfacing others' projects (voice mode hack, RPG agents, Claude drama). Not a practitioner sharing own workflows.
+
+** @chris__sev — 6/10 (borderline)
+32K followers. Practical Claude Code user: thinking+fastMode tip, honest Paperclip review, Dispatch permissions. ~50% AI tools content but thin original workflow content.
+
+** @vincent_koc — 6/10 (borderline)
+15K followers. Building LLM wiki for Obsidian with backfilling, OpenClaw personality features, SOUL.md approach. ~40% AI tools, rest is memes/community noise.
+
+*** Surfaced tweets (included in digest)
+
+** @om_patel5 (Wed Apr 08 03:20)
+Built an RPG world for AI agents — 5 agents each with a pixel character and station. They walk around the space and when enough unresolved issues pile up, agents walk to a meeting point and hold a council session.
+Likes: 3,082 | Views: 220,451 | Like rate: 1.4%
+[[https://x.com/om_patel5/status/2041717699307323399][View on X]]
+
+** @om_patel5 (Tue Apr 07 01:47)
+Connected Claude voice mode to Claude Code — codes by talking into AirPods. Uses Apple Reminders as a bridge: voice mode puts the prompt into a reminders list, Claude Code checks every 60 seconds and executes.
+Likes: 1,747 | Views: 145,956 | Like rate: 1.2%
+[[https://x.com/om_patel5/status/2041332038276428177][View on X]]
+
+** @chris__sev (Tue Apr 07 12:57)
+A lot of people switching to gpt-5.4 for openclaw. Do yourself a favor and set thinking to high and turn on fastMode.
+Likes: 418 | Views: 45,705 | Like rate: 0.9%
+[[https://x.com/chris__sev/status/2041500561636499692][View on X]]
+
+** @FarzaTV (Tue Apr 07 00:38)
+I built this thing called Clicky. It is an AI teacher that lives as a buddy next to your cursor. It can see your screen, talk to you, and even point at stuff, kinda like having a real teacher next to you. I have been using it the past few days to learn Davinci Resolve.
+Likes: 13,623 | Views: 2,073,386 | Like rate: 0.7%
+[[https://x.com/FarzaTV/status/2041314633978659092][View on X]]
+
+* Accounts with nothing notable
+@__tinygrad__, @0xSero, @altryne, @alvinsng, @antirez, @bcherny, @bentossell, @cathrynlavery, @dexhorthy, @dmwlff, @EyalToledano, @forgebitz, @intellectronica, @ivanfioravanti, @jtdavies, @lucasmeijer, @maddiedreese, @nibzard, @NickADobos, @petergyang, @pontusab, @Prince_Canuma, @RayFernando1337, @ryanvogel, @simonw, @steipete, @thdxr, @xeophon

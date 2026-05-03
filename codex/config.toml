@@ -8,11 +8,255 @@ sandbox_mode = "danger-full-access"
 codex_hooks = true
 
 [[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/add-to-emacs-packages/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/afip-invoice/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/ahrefs-api/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/ai-journal/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/audit-mac-app/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/automate/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/best-of-n/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/build/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/claude-config-audit/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/code-audit/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/convert-citations/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/design-audit/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/diagnose/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/doc-elisp/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/doc-extras/SKILL.md"
+enabled = true
+
+[[skills.config]]
 path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/dotfiles-context/SKILL.md"
 enabled = true
 
 [[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/dx-audit/SKILL.md"
+enabled = true
+
+[[skills.config]]
 path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/elisp-conventions/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/emacs-freeze/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/epoch-vaults/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/epoch-website/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/finances/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/fix-drive-errors/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/gitguardian-triage/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/handoff/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/install-mcp-server/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/interpretability-audit/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/lint-elisp/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/meeting-debrief/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/meeting-prep/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/mercury-receipts/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/migrate-profile/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/move-session-log/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/new-project/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/nosync/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/open-session-log/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/optimize-claude-md/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/org-note/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/pr-audit/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/proofread/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/readme-gen/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/record-decisions/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/release/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/release-dotfiles/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/rename-project/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/security-audit/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/skill-audit/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/slack-digest/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/slack-emacs/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/slack-saved/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/store-secret/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/symptom-check/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/test-suite/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/transcribe-note/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/triage-issues/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/try-hartree-skills/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/twitter/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/twitter-digest/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/twitter-discover/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/twitter-vet/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/update-log/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/verify/SKILL.md"
+enabled = true
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/walk-list/SKILL.md"
 enabled = true
 
 [projects."/Users/pablostafforini/My Drive/repos/consensus-trader"]

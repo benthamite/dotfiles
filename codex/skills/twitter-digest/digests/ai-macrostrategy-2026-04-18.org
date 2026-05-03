@@ -1,0 +1,81 @@
+#+title: Twitter digest: ai-macrostrategy — 2026-04-18
+
+* Notable
+
+** @JeffLadish (Sun Apr 12 22:25)
+We're in a period where centaurs, AIs and humans working together, can outcompete AIs or humans alone. I don't know how much longer this will last, but it's pretty clear it will be followed by AIs alone outcompeting centaurs.
+Likes: 65 | Views: 2571 | Like rate: 2.5%
+[[https://x.com/JeffLadish/status/2043455603545374966][View on X]]
+
+** @ben_j_todd (Thu Apr 09 17:07)
+Many don't appreciate that several more years of AI progress is already baked in, as compute that *has already been purchased* comes online. So *at a minimum* we should expect agents that can complete multiweek coding projects, with superhuman hacking and near frontier scientific & mathematical abi…
+Likes: 272 | Views: 11703 | Like rate: 2.3%
+[[https://x.com/ben_j_todd/status/2042288349751206124][View on X]]
+
+** @RyanPGreenblatt (Thu Apr 02 20:37)
+Maybe I'm preaching to the choir, but I think that if you have AI systems that can automate all cognitive labor (currently done by humans) economic growth would be fast. This clearest argument for this is that much faster population growth would cause fast economic growth.
+Likes: 109 | Views: 5540 | Like rate: 2.0%
+[[https://x.com/RyanPGreenblatt/status/2039804375389098481][View on X]]
+
+** @RyanPGreenblatt (Tue Apr 14 16:46)
+(Niche AI safety content) While I tentatively think inoculation prompting is net good, it has some under-discussed downsides: - It makes training gaming intended (removing a warning sign) - It could push models toward scheming sooner via salience. I say more in a new short post:
+Likes: 57 | Views: 3498 | Like rate: 1.6%
+[[https://x.com/RyanPGreenblatt/status/2044094897331023920][View on X]]
+
+** @JeffLadish (Sun Apr 12 20:22)
+AI centralizes power because both training and inference at scale require enormous amounts of compute. And the more autonomous the AIs are, the more they can do with more inference compute.
+Likes: 22 | Views: 1548 | Like rate: 1.4%
+[[https://x.com/JeffLadish/status/2043424447642976300][View on X]]
+
+** @JeffLadish (Tue Apr 14 19:48)
+Pre-superintelligence, I'm worried about a combination of economic disempowerment and political disempowerment via increasingly persuasive AI that can persuade people to vote against their interests. I don't really see any solutions to this right now.
+Likes: 43 | Views: 3083 | Like rate: 1.4%
+[[https://x.com/JeffLadish/status/2044140648077595019][View on X]]
+
+** @MKinniment (Fri Apr 03 19:57)
+2023 was also the scariest time for me (so far). 2023 felt like we were flying blind. Then 2024-2025 we got better evals + trends, and we could finally see in front of us. Now I think capabilities are starting to outpace our sight again. I hope we don't end up back in 2023!
+Likes: 47 | Views: 3546 | Like rate: 1.3%
+[[https://x.com/MKinniment/status/2040156844870824038][View on X]]
+
+** @RyanPGreenblatt (Wed Apr 08 02:02)
+I don't think Anthropic (or anyone) has an achievable path for keeping risk low if AI proceeds as fast as Anthropic expects (or as fast as I expect). Anthropic could (and hopefully will) take actions that significantly reduce the risk, but this won't keep risk low.
+Likes: 170 | Views: 13035 | Like rate: 1.3%
+[[https://x.com/RyanPGreenblatt/status/2041698250726711764][View on X]]
+
+** @ben_j_todd (Thu Apr 16 13:10)
+If the AI-focused EAs were this right in 2015, it's worth asking what they're saying now that's getting dismissed: 1. Digital sentience is a massive fucking deal 2. AGI might let a single person take over the government within 5 years 3. Superrationality is a thing 4. Irreversible decisions about s…
+Likes: 273 | Views: 21134 | Like rate: 1.3%
+[[https://x.com/ben_j_todd/status/2044765462597104069][View on X]]
+
+** @joel_bkr (Fri Apr 10 15:47)
+i was stunned by these results. todays AIs are able to make extraordinary progress building very hard + very well-specified software utilizing extremely high (~1B) token limits.
+Likes: 151 | Views: 11725 | Like rate: 1.3%
+[[https://x.com/joel_bkr/status/2042630615976030587][View on X]]
+
+** @ben_j_todd (Wed Apr 08 14:51)
+3 scenarios for AI: 1) Automated coder in 2028, 1yr intelligence explosion to superintelligence in 2029. 2) Automated coder in 2030, slower takeoff to ASI ~2036. 3) AI plateaus around 2030. AI agents everywhere but don't reach true AGI for decades. What should you do in each?
+Likes: 197 | Views: 16451 | Like rate: 1.2%
+[[https://x.com/ben_j_todd/status/2041891729134002515][View on X]]
+
+** @ajeya_cotra (Fri Apr 03 18:43)
+Basic and extremely important point: it would cost $1000s to pay a human to do a 10h task. But with the default way we measure AI performance, we spend like $10 running the AI agent. The AI gets much less time than the human. This can massively underestimate capabilities!
+Likes: 176 | Views: 14904 | Like rate: 1.2%
+[[https://x.com/ajeya_cotra/status/2040138012928229561][View on X]]
+
+** @RyanPGreenblatt (Wed Apr 15 16:56)
+Current AIs (Opus 4.5/4.6) seem pretty misaligned to me (in a mundane behavioral sense). In my experience, they often oversell their work, downplay problems, and stop early while claiming to be done. They sometimes brazenly cheat.
+Likes: 366 | Views: 36179 | Like rate: 1.0%
+[[https://x.com/RyanPGreenblatt/status/2044459766278438966][View on X]]
+
+** @jankulveit (Fri Apr 10 09:45)
+Seems there is a surprising amount of confusion / nonsense on my timeline about "Mythos vs. open models" even among people who are usually sensible (+usual twitter toxoplasma of rage). I like the work of both @AnthropicAI and @Aisle_Inc, so here are some takes: 1. Anthropic is not a household name…
+Likes: 214 | Views: 28542 | Like rate: 0.8%
+[[https://x.com/jankulveit/status/2042539525839134962][View on X]]
+
+** @ohlennart (Fri Apr 17 16:17)
+Reasonable people can disagree on whether export controls were the right call. But Trump 1 started it in 2019 and Biden in 2022 made it a package. Reversal is the worst of both worlds: China got the signal and accelerated indigenization (though they did already before) and the costs have been paid.
+Likes: 39 | Views: 6387 | Like rate: 0.6%
+[[https://x.com/ohlennart/status/2045174779515121688][View on X]]
+
+* Accounts with nothing notable
+@ChadJonesEcon, @danwilliamsphil, @DKokotajlo, @HjalmarWijk, @Jsevillamol, @lukeprog, @sjgadler, @testingham, @tobyordoxford, @TomDavidsonX, @willmacaskill

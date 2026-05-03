@@ -1,0 +1,79 @@
+#+title: Twitter digest: ai-tools — 2026-04-04
+
+* Notable
+
+** @0xSero (Fri Apr 03 18:35)
+Here's what I'd recommend if you're just getting started in AI, local or otherwise. 1. Work with the compute you have, even the dumbest LLMs can be useful if you treat them as a node in your system. Some basic problems: tag all your screenshots, classify your emails, build a personal document Q&A...
+Likes: 627 | Views: 18,299 | Like rate: 3.4%
+[[https://x.com/0xSero/status/2040136236845682867][View on X]]
+
+** @TheAhmadOsman (Fri Apr 03 18:05)
+DROP EVERYTHING: install Harbor, harbor pull unsloth/gemma-4-31B-it-GGUF:Q4_K_M, harbor up llamacpp searxng webui, open Open WebUI, load Gemma 4. Now your local model has a UI, web search, and a sandboxed stack.
+Likes: 1,333 | Views: 52,174 | Like rate: 2.6%
+[[https://x.com/TheAhmadOsman/status/2040128469544108231][View on X]]
+
+** @badlogicgames (Sat Apr 04 02:07)
+Vibed a pi extension that lets you connect to a pi session via Telegram. It's basically a mini claw. 1K LOC, does all I need, including file attachments. Trivial to setup.
+Likes: 249 | Views: 10,114 | Like rate: 2.5%
+[[https://x.com/badlogicgames/status/2040249920834195686][View on X]]
+
+** @0xSero (Fri Apr 03 14:01)
+Agent-browser is the best CLI tool I have given to my agents. It lets them control the browser, and all my Electron apps (Discord, VS Code, Slack, etc). It barely consumes any tokens compared to Playwright, has a great skill and the agents seem very comfortable with it.
+Likes: 1,989 | Views: 100,906 | Like rate: 2.0%
+[[https://x.com/0xSero/status/2040067262124601358][View on X]]
+
+** @TheAhmadOsman (Fri Apr 03 20:18)
+You don't pick an Inference Engine — you pick a Hardware Strategy, and the Engine follows. Inference engines breakdown with cheat sheet: llama.cpp runs anywhere, best when VRAM is tight and RAM is plenty. vLLM for multi-GPU Linux serving. SGLang for high throughput. Ollama for ease of use.
+Likes: 457 | Views: 29,816 | Like rate: 1.5%
+[[https://x.com/TheAhmadOsman/status/2040162154398064704][View on X]]
+
+** @iotcoi (Fri Apr 03 16:42)
+APEX: Adaptive Precision for EXpert Models. Cut LLM size in half without cutting its IQ. Best MoE quantization at the moment. Model: gemma-4-26B-A4B-APEX-I-Quality GGUF. Hardware: Strix Halo + Vulkan. Size: 50% of Q8. Quality: F16 perplexity.
+Likes: 108 | Views: 7,402 | Like rate: 1.5%
+[[https://x.com/iotcoi/status/2040107762332381253][View on X]]
+
+** @xeophon (Fri Apr 03 18:07)
+Codex security / Aardvark is really good and def underused based on me seeing no tweets about it, ever (tbf, it is pretty hidden). It is a bit overeager, but that's good for such a tool.
+Likes: 24 | Views: 1,783 | Like rate: 1.3%
+[[https://x.com/xeophon/status/2040129098995949975][View on X]]
+
+** @mitsuhiko (Sat Apr 04 10:26)
+Low key best improvement I did to my agent setup: also mentioned my emails. It's a subtle thing but it greatly helps the agent understand my own comments, users and log files.
+Likes: 48 | Views: 4,098 | Like rate: 1.2%
+[[https://x.com/mitsuhiko/status/2040375335535997077][View on X]]
+
+** @badlogicgames (Fri Apr 03 23:03)
+3:30 minutes to have pi build me an ad-hoc extension so it can observe file changes in a dir and get the changes injected into its context automatically. Great for collaborating on a document.
+Likes: 68 | Views: 6,815 | Like rate: 1.0%
+[[https://x.com/badlogicgames/status/2040203563612168590][View on X]]
+
+** @Dimillian (Sat Apr 04 06:51)
+Just ask Codex to build anything you want connecting to the Codex App Server. It's very self-aware about it, and you can connect Codex to anything and talk to it from any UI you want to build. This is how the whole Codex Monitor thing started.
+Likes: 83 | Views: 8,707 | Like rate: 1.0%
+[[https://x.com/Dimillian/status/2040321351085343129][View on X]]
+
+** @LLMJunky (Fri Apr 03 18:00)
+Found a way to greatly reduce usage rates in Claude. Navigate to your .claude folder and open settings.json. Set model to claude-sonnet-4-5, compactThreshold to 200000, subagentModel to claude-haiku-4-5-20251001.
+Likes: 2,034 | Views: 219,866 | Like rate: 0.9%
+[[https://x.com/LLMJunky/status/2040127436864586166][View on X]]
+
+** @itsolelehmann (Fri Apr 03 22:08)
+Google just introduced design.md: a single plain text file where you describe how your app should look. Colors, fonts, spacing, button styles, card layouts — all written in plain English. Then AI agents use it to generate consistent, on-brand UI.
+Likes: 384 | Views: 51,969 | Like rate: 0.7%
+[[https://x.com/itsolelehmann/status/2040189738859307303][View on X]]
+
+** @Dimillian (Fri Apr 03 15:27)
+This morning I wanted to slow down, so I asked Codex for a full codebase megabrief. I had it spin up as many sub-agents as needed, each inspecting a different part of the codebase, and produce a deep, comprehensive architecture report.
+Likes: 198 | Views: 28,658 | Like rate: 0.7%
+[[https://x.com/Dimillian/status/2040088728522137732][View on X]]
+
+* Vetted accounts
+
+** @thsottiaux — score 3/10 (skip)
+VP/Head of Codex at OpenAI. 19 of 20 tweets are product announcements, capacity updates, and company news. Only 1 practical anecdote (Codex checking CPU usage). Rubric excludes product announcements.
+
+** @mattzcarey — score 5/10 (borderline)
+Cloudflare engineer. ~25% relevant content (workerd self-hosted runtime, code mode, MCP servers). Mostly Cloudflare product promotion and RT amplification. Some practical signal but not enough original practitioner workflows.
+
+* Accounts with nothing notable
+@__tinygrad__, @altryne, @alvinsng, @bcherny, @bentossell, @carson3068, @cathrynlavery, @championswimmer, @chasing_next, @dexhorthy, @forgebitz, @intellectronica, @ivanfioravanti, @kr0der, @maddiedreese, @NickADobos, @petergyang, @Prince_Canuma, @RayFernando1337, @ryanvogel, @Saboo_Shubham_, @simonw, @steipete, @thdxr, @trq212

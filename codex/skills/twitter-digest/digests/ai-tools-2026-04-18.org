@@ -1,0 +1,146 @@
+#+title: Twitter digest: ai-tools — 2026-04-18
+
+* Notable
+
+** @0xSero (Sat Apr 18 10:12)
+New magical prompt to unlock your learning. Send 6 subagents to research various subtopics of _, find research, repos, blogs, reports. Then make a wiki relevant to my needs, focus on copying, quoting, and linking to content instead of writing it.
+Likes: 137 | Views: 4658 | Like rate: 2.9%
+[[https://x.com/0xSero/status/2045445286072336796][View on X]]
+
+** @0xSero (Sat Apr 18 10:17)
+Do you want to increase Qwen3.6-35B's performance significantly? Turn off thinking for basic agent and all coding tasks you should try it if you have the vram.
+Likes: 232 | Views: 8685 | Like rate: 2.7%
+[[https://x.com/0xSero/status/2045446659883110609][View on X]]
+
+** @nibzard (Fri Apr 17 19:57)
+One command and Pi gets a real cloud browser: `pi install npm:@steel-experiments/pi-steel`. A @steeldotdev extension for Pi coding agent — navigate/scrape (text/markdown/html), screenshots + PDFs as artifacts, structured extraction with JSON schema.
+Likes: 41 | Views: 1582 | Like rate: 2.6%
+[[https://x.com/nibzard/status/2045230152091594857][View on X]]
+
+** @maddiedreese (Fri Apr 17 20:22)
+Claude Code on the 1998 iMac G3! Mac mini runs tmux with Claude Code inside. Pi Zero 2W bridges telnet to the Mac mini's tmux session over SSH. iMac G3 connects via BetterTelnet on Mac OS 8.5. VT100 emulation renders the full TUI.
+Likes: 66 | Views: 2611 | Like rate: 2.5%
+[[https://x.com/maddiedreese/status/2045236402238247240][View on X]]
+
+** @s_streichsbier (Sat Apr 18 09:06)
+Compaction works well in Pi. Same session for a couple of days now and kept compacting it — 33 times to be exact. It still seems to remember all the key details. Used /tree a lot, jumped all over.
+Likes: 100 | Views: 4077 | Like rate: 2.5%
+[[https://x.com/s_streichsbier/status/2045428653463683117][View on X]]
+
+** @Dimillian (Fri Apr 17 19:00)
+Did you know that the Codex App has its own command palette. You can open it with CMD+K. And we recently added a theme selector to it!
+Likes: 138 | Views: 5837 | Like rate: 2.4%
+[[https://x.com/Dimillian/status/2045215873464438977][View on X]]
+
+** @kr0der (Sat Apr 18 00:04)
+Codex's in-app browser is tied to a specific chat. You could have 5 different worktrees/chats going, all with a different browser to test that specific feature out. Hit CMD+Shift+B to open the browser!
+Likes: 80 | Views: 4009 | Like rate: 2.0%
+[[https://x.com/kr0der/status/2045292243699778002][View on X]]
+
+** @cathrynlavery (Thu Apr 16 19:05)
+Made a claude skill for design-quality diagrams for articles, presentations, tweets etc. 13 diagram types (architecture, flowchart, sequence, state, tree, layers, venn, pyramid). Reads your website on first run and pulls your palette + fonts. 3 variants per type.
+Likes: 125 | Views: 6300 | Like rate: 2.0%
+[[https://x.com/cathrynlavery/status/2044854624021090774][View on X]]
+
+** @micLivs (Thu Apr 16 18:29)
+Introducing poster and pi-poster. Poster is a CLI and SDK that renders a single .tsx file to PNG, SVG, WebP, PDF, or JPG. Normal react, anything that chrome can render works. Pi-poster wires it into pi as a tool and skill so agents can design directly.
+Likes: 154 | Views: 8340 | Like rate: 1.8%
+[[https://x.com/micLivs/status/2044845639092359262][View on X]]
+
+** @xlr8harder (Fri Apr 17 14:43)
+Finally ran Opus 4.7 thinking and got a nearly identical score to non-thinking. There is usually more variance than this between thinking and non-thinking models. The scores converging at a new higher level suggests this is an intentional, targeted change.
+Likes: 18 | Views: 983 | Like rate: 1.8%
+[[https://x.com/xlr8harder/status/2045151211393798520][View on X]]
+
+** @thdxr (Fri Apr 17 19:52)
+The biggest impact on my coding workflow lately hasn't been anything agent related. It's realizing how good these parakeet local voice models are and then just dictating everything into opencode. Typing is more of a burden/bottleneck than you realize.
+Likes: 1387 | Views: 79460 | Like rate: 1.7%
+[[https://x.com/thdxr/status/2045228857460998636][View on X]]
+
+** @__tinygrad__ (Fri Apr 17 11:03)
+They have discovered JITBEAM=4. This GPU (AMD 7900XTX) costs $620 on eBay and tinygrad entirely bypasses all AMD drivers and HIP. Just waiting for someone to write the tool calling stuff and tinygrad can be your go-to engine for openclaw and opencode.
+Likes: 428 | Views: 29028 | Like rate: 1.5%
+[[https://x.com/__tinygrad__/status/2045095800334946366][View on X]]
+
+** @_catwu (Thu Apr 16 16:01)
+Opus 4.7 is live in Claude Code today! The model performs best if you treat it like an engineer you're delegating to, not a pair programmer you're guiding line by line. Three workflow shifts we recommend for this model (thread).
+Likes: 990 | Views: 71020 | Like rate: 1.4%
+[[https://x.com/_catwu/status/2044808533905178822][View on X]]
+
+** @kr0der (Fri Apr 17 20:56)
+I wanted to learn new coding concepts quickly, so I used the 'Skill Creator' skill in the Codex app to create a skill that creates a short PDF explaining the concept, including tables and diagrams.
+Likes: 37 | Views: 2938 | Like rate: 1.3%
+[[https://x.com/kr0der/status/2045244924849697056][View on X]]
+
+** @pontusab (Fri Apr 17 11:51)
+Launched Midday Computer two days ago. Secure Exec is wild: V8-isolate Node execution, deny-by-default permissions, real bridged APIs, no container required, fast cold starts, great for AI code execution.
+Likes: 74 | Views: 5757 | Like rate: 1.3%
+[[https://x.com/pontusab/status/2045107872451948781][View on X]]
+
+** @simonw (Thu Apr 16 17:27)
+Shocking result on my pelican benchmark this morning — got a better pelican from a 21GB local Qwen3.6-35B-A3B running on my laptop than I did from the new Opus 4.7!
+Likes: 2331 | Views: 195837 | Like rate: 1.2%
+[[https://x.com/simonw/status/2044830134885306701][View on X]]
+
+** @cathrynlavery (Thu Apr 16 21:07)
+Trying to set up a long working agent (before school pick-up) that won't die over the next few hours. Great resource: Nudge skill by @MatSilverstein. It watches tmux sessions for Codex / Claude / Gemini and nudges them forward when they're actually idle.
+Likes: 26 | Views: 2177 | Like rate: 1.2%
+[[https://x.com/cathrynlavery/status/2044885535542710678][View on X]]
+
+** @stevibe (Thu Apr 16 16:18)
+Qwen3.6 35B-A3B: smarter, but forgot how to use tools? Running 6 Bench Packs on BenchLocal across 3 open-source Qwen models. ReasonMath: 92 vs 85 vs 86 — 3.6 wins. ToolCall: 83 vs 97 vs 100 — 3.6 tanks. Qwen3.5 27B still the tool-calling champ.
+Likes: 392 | Views: 33360 | Like rate: 1.2%
+[[https://x.com/stevibe/status/2044812786442891275][View on X]]
+
+** @petergyang (Fri Apr 17 16:45)
+Made a 30 second video of Claude Design just by pasting in the Claude Design blog post and some tweets from @AnthropicAI employees. Kinda speechless.
+Likes: 1875 | Views: 167043 | Like rate: 1.1%
+[[https://x.com/petergyang/status/2045181813484884396][View on X]]
+
+** @thdxr (Fri Apr 17 19:32)
+We've done instrumentation work in opencode recently so we can get traces out. They get shipped to a local otel tui (by kit) which also has endpoints for the agent to read this data. Provides a good feedback loop for the agent to analyze issues.
+Likes: 650 | Views: 63809 | Like rate: 1.0%
+[[https://x.com/thdxr/status/2045223784160846033][View on X]]
+
+** @petergyang (Fri Apr 17 04:36)
+When I build skills now I always ask AI to spin up a separate eval agent to do yes/no checks to grade the first agent's output. If the output isn't "yes" across the board it asks the first agent to keep working. Building one for YouTube thumbnails and titles now.
+Likes: 28 | Views: 2865 | Like rate: 1.0%
+[[https://x.com/petergyang/status/2044998456062906422][View on X]]
+
+** @dexhorthy (Thu Apr 16 22:28)
+Switch-hitting between claude and codex since we rolled our own alternative harness in march. Opus 4.7 now available in humanlayer. Vibes: opus 4.5 more reliable than 4.6 or 4.7 for most things. Fwiw actually preferred intelligence of 4.1 to 4.5.
+Likes: 114 | Views: 12684 | Like rate: 0.9%
+[[https://x.com/dexhorthy/status/2044905857365029233][View on X]]
+
+** @dexhorthy (Fri Apr 17 18:56)
+Biggest difference in the last three months watching public-company engineers wielding claude/codex: in Jan/Feb, nobody had their MCP story sorted out. Since then most engineers expect and drive coding agent to use gdocs, figma, glean, atlassian MCPs as part of everyday workflow.
+Likes: 108 | Views: 12271 | Like rate: 0.9%
+[[https://x.com/dexhorthy/status/2045214909991117223][View on X]]
+
+** @lucasmeijer (Thu Apr 16 22:36)
+Built this pipeline today: Write a math tutor script. Gemini TTS → audio file → Groq transcription api → now I have words + timecodes.
+Likes: 7 | Views: 881 | Like rate: 0.8%
+[[https://x.com/lucasmeijer/status/2044907788938134000][View on X]]
+
+** @antirez (Thu Apr 16 17:19)
+Opus 4.7 criticizing work done with GPT 5.4 and getting everything wrong. GPT 5.4 critique to the original claims are all spot on, matching the errors I outlined.
+Likes: 916 | Views: 115985 | Like rate: 0.8%
+[[https://x.com/antirez/status/2044828110449754112][View on X]]
+
+** @trq212 (Thu Apr 16 05:44)
+The 1M context window is a double-edged sword. It allows Claude to do more complex tasks but it can also lead to more context pollution if you don't manage your session well. This is how you do that (thread).
+Likes: 1610 | Views: 263925 | Like rate: 0.6%
+[[https://x.com/trq212/status/2044653083817660431][View on X]]
+
+** @WolframRvnwlf (Fri Apr 17 01:08)
+Switched to Claude Opus 4.7 as my main model in Hermes Agent — then switched right back to 4.6. 4.6 never once botched a JSON edit. 4.7 corrupted a file, prompted for user input during an autonomous agent run, and acted impulsively.
+Likes: 40 | Views: 8599 | Like rate: 0.5%
+[[https://x.com/WolframRvnwlf/status/2044946040168571369][View on X]]
+
+** @itsolelehmann (Wed Apr 15 19:49)
+Have Claude audit your entire week and automate the repetitive stuff for you. Scheduled task that: (1) scans all your Claude sessions from the past week, (2) finds the workflows you keep manually repeating, (3) tells you exactly what to turn into automations.
+Likes: 368 | Views: 93324 | Like rate: 0.4%
+[[https://x.com/itsolelehmann/status/2044503273932263643][View on X]]
+
+* Accounts with nothing notable
+@allnoteson, @altryne, @alvinsng, @amirmxt, @badlogicgames, @bcherny, @bentossell, @boringmarketer, @bstnxbt, @carson3068, @championswimmer, @chasing_next, @clairevo, @dmwlff, @forgebitz, @gabrielchua, @helloitsaustin, @intellectronica, @iotcoi, @ivanfioravanti, @jtdavies, @KatanaLarp, @kmdrfx, @NickADobos, @peterhartree, @Prince_Canuma, @RayFernando1337, @ryanvogel, @Saboo_Shubham_, @samsaffron, @sdinakar7, @ShopifyEng, @songjunkr, @soumitrashukla9, @spicey_lemonade, @steipete, @sudoingX, @weswinder, @xeophon, @Zai_org

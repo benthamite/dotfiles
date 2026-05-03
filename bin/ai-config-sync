@@ -1,0 +1,316 @@
+#!/usr/bin/env bash
+# Audit and guard the Claude Code <-> Codex configuration port.
+
+set -euo pipefail
+
+ROOT="$HOME/My Drive/dotfiles"
+MANIFEST="ai-config-sync.json"
+
+usage() {
+  cat <<EOF
+Usage: ai-config-sync MODE
+
+Modes:
+  remind-claude   Read Claude hook JSON from stdin and print counterpart reminders.
+  remind-codex    Read Codex hook JSON from stdin and print counterpart reminders.
+  guard-commit    Read Bash PreToolUse JSON from stdin and block one-sided commits.
+  audit           Check the local Claude/Codex config inventory.
+EOF
+}
+
+real_path() {
+  python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$1" 2>/dev/null || true
+}
+
+relative_to_root() {
+  local path="$1" real root_real
+
+  case "$path" in
+    "~"/*) path="$HOME/${path#~/}" ;;
+  esac
+
+  if [ "$path" = "$HOME/.claude/settings.json" ] || [ "$path" = "$HOME/.claude/settings.local.json" ]; then
+    printf '%s\n' "$path"
+    return 0
+  fi
+
+  real=$(real_path "$path")
+  root_real=$(real_path "$ROOT")
+  case "$real" in
+    "$root_real") printf '.\n' ;;
+    "$root_real"/*) printf '%s\n' "${real#$root_real/}" ;;
+    *) printf '%s\n' "$path" ;;
+  esac
+}
+
+direct_file_path() {
+  local input="$1"
+  printf '%s' "$input" | jq -r '
+    .tool_input.file_path //
+    .tool_input.filePath //
+    .tool_input.path //
+    .tool_input.notebook_path //
+    empty
+  '
+}
+
+patch_text() {
+  local input="$1"
+  printf '%s' "$input" | jq -r '
+    .tool_input.patch //
+    .tool_input.command //
+    .tool_input.input //
+    .tool_input.text //
+    empty
+  '
+}
+
+paths_from_patch() {
+  awk '
+    /^\*\*\* (Add|Update|Delete) File: / {
+      sub(/^\*\*\* (Add|Update|Delete) File: /, "")
+      print
+    }
+    /^\*\*\* Move to: / {
+      sub(/^\*\*\* Move to: /, "")
+      print
+    }
+    /^diff --git a\// {
+      old=$3
+      new=$4
+      sub(/^a\//, "", old)
+      sub(/^b\//, "", new)
+      if (old != "/dev/null") print old
+      if (new != "/dev/null") print new
+    }
+  '
+}
+
+paths_from_codex_input() {
+  local input="$1" direct patch
+
+  direct=$(direct_file_path "$input")
+  if [ -n "$direct" ]; then
+    printf '%s\n' "$direct"
+  fi
+
+  patch=$(patch_text "$input")
+  if [ -n "$patch" ]; then
+    printf '%s\n' "$patch" | paths_from_patch
+  fi
+}
+
+paths_from_command() {
+  local command="$1"
+  printf '%s\n' "$command" | grep -oE '(^|[[:space:]])(claude|codex|\.codex)/[^[:space:];|&]+' | sed 's/^[[:space:]]*//' || true
+  printf '%s\n' "$command" | grep -oE '(^|[[:space:]])(AGENTS\.md|CLAUDE\.md|ai-config-sync\.json|bin/ai-config-sync)([[:space:];|&]|$)' | sed 's/^[[:space:]]*//; s/[[:space:];|&]$//' || true
+}
+
+sync_message_for_path() {
+  local rel="$1" skill hook
+
+  case "$rel" in
+    claude/skills/*)
+      skill=${rel#claude/skills/}
+      skill=${skill%%/*}
+      printf 'claude/skills/%s changed; update codex/skills/%s in the same session.\n' "$skill" "$skill"
+      ;;
+    codex/skills/*)
+      skill=${rel#codex/skills/}
+      skill=${skill%%/*}
+      printf 'codex/skills/%s changed; update claude/skills/%s in the same session.\n' "$skill" "$skill"
+      ;;
+    claude/hooks/*)
+      hook=${rel#claude/hooks/}
+      if [ -e "$ROOT/codex/hooks/$hook" ]; then
+        printf 'claude/hooks/%s changed; update codex/hooks/%s and the hook registration if needed.\n' "$hook" "$hook"
+      else
+        printf 'claude/hooks/%s changed; add/adjust its Codex port or record why it is unsupported in %s.\n' "$hook" "$MANIFEST"
+      fi
+      ;;
+    codex/hooks/*)
+      hook=${rel#codex/hooks/}
+      if [ -e "$ROOT/claude/hooks/$hook" ]; then
+        printf 'codex/hooks/%s changed; update claude/hooks/%s and ~/.claude/settings.json if registration changed.\n' "$hook" "$hook"
+      else
+        printf 'codex/hooks/%s changed; add/adjust its Claude counterpart or record why it is Codex-only in %s.\n' "$hook" "$MANIFEST"
+      fi
+      ;;
+    "$HOME/.claude/settings.json"|"$HOME/.claude/settings.local.json")
+      printf '%s changed; check .codex/hooks.json, codex/config.toml, and %s for matching policy changes.\n' "$rel" "$MANIFEST"
+      ;;
+    .codex/hooks.json)
+      printf '.codex/hooks.json changed; update ~/.claude/settings.json and %s if the global hook policy changed.\n' "$MANIFEST"
+      ;;
+    codex/config.toml)
+      printf 'codex/config.toml changed; update %s if skill or hook registration changed.\n' "$MANIFEST"
+      ;;
+    codex/AGENTS.md)
+      printf 'codex/AGENTS.md changed; check whether claude/CLAUDE.md or the global Codex symlink should change too.\n'
+      ;;
+    claude/CLAUDE.md)
+      printf 'claude/CLAUDE.md changed; Codex normally consumes this source, but check codex/AGENTS.md if the entrypoint changed.\n'
+      ;;
+    "$MANIFEST")
+      ;;
+  esac
+}
+
+remind_paths() {
+  local rel
+  while IFS= read -r path; do
+    [ -n "$path" ] || continue
+    rel=$(relative_to_root "$path")
+    sync_message_for_path "$rel"
+  done | sort -u
+}
+
+remind_claude() {
+  local input path
+  input=$(cat)
+  path=$(direct_file_path "$input")
+  [ -n "$path" ] || exit 0
+  remind_paths <<< "$path"
+}
+
+remind_codex() {
+  local input
+  input=$(cat)
+  paths_from_codex_input "$input" | remind_paths
+}
+
+skip_runtime_path() {
+  case "$1" in
+    claude/skills/*/digests/*|claude/skills/*/last-run/*|claude/skills/twitter-vet/vetted/*)
+      return 0
+      ;;
+    codex/skills/*/digests/*|codex/skills/*/last-run/*|codex/skills/twitter-vet/vetted/*)
+      return 0
+      ;;
+  esac
+  return 1
+}
+
+has_path() {
+  local needle="$1" haystack="$2"
+  grep -qxF "$needle" <<< "$haystack"
+}
+
+has_prefix() {
+  local prefix="$1" haystack="$2"
+  grep -qE "^${prefix}" <<< "$haystack"
+}
+
+guard_commit() {
+  local input command cwd_root root_real staged command_paths paths manifest_changed problems=""
+  input=$(cat)
+  command=$(printf '%s' "$input" | jq -r '.tool_input.command // empty')
+
+  if ! echo "$command" | grep -qE '\bgit\s+commit\b'; then
+    exit 0
+  fi
+
+  cwd_root=$(git rev-parse --show-toplevel 2>/dev/null || true)
+  root_real=$(real_path "$ROOT")
+  if [ "$(real_path "$cwd_root")" != "$root_real" ] && ! echo "$command" | grep -qE 'dotfiles|\.codex|claude/|codex/|ai-config-sync\.json'; then
+    exit 0
+  fi
+
+  staged=$(git -C "$ROOT" diff --cached --name-only 2>/dev/null || true)
+  command_paths=$(paths_from_command "$command")
+  paths=$(printf '%s\n%s\n' "$staged" "$command_paths" | sed '/^$/d' | sort -u)
+
+  [ -n "$paths" ] || exit 0
+
+  manifest_changed=false
+  if has_path "$MANIFEST" "$paths"; then
+    manifest_changed=true
+  fi
+
+  while IFS= read -r path; do
+    [ -n "$path" ] || continue
+    skip_runtime_path "$path" && continue
+
+    case "$path" in
+      claude/skills/*)
+        skill=${path#claude/skills/}
+        skill=${skill%%/*}
+        if ! has_prefix "codex/skills/$skill/" "$paths" && [ "$manifest_changed" = false ]; then
+          problems="${problems}claude/skills/$skill changed without codex/skills/$skill or $MANIFEST\n"
+        fi
+        ;;
+      codex/skills/*)
+        skill=${path#codex/skills/}
+        skill=${skill%%/*}
+        if ! has_prefix "claude/skills/$skill/" "$paths" && [ "$manifest_changed" = false ]; then
+          problems="${problems}codex/skills/$skill changed without claude/skills/$skill or $MANIFEST\n"
+        fi
+        ;;
+      claude/hooks/*)
+        hook=${path#claude/hooks/}
+        if ! has_path "codex/hooks/$hook" "$paths" && [ "$manifest_changed" = false ]; then
+          problems="${problems}claude/hooks/$hook changed without codex/hooks/$hook or $MANIFEST\n"
+        fi
+        ;;
+      codex/hooks/*)
+        hook=${path#codex/hooks/}
+        if ! has_path "claude/hooks/$hook" "$paths" && [ "$manifest_changed" = false ]; then
+          problems="${problems}codex/hooks/$hook changed without claude/hooks/$hook or $MANIFEST\n"
+        fi
+        ;;
+      .codex/hooks.json|codex/config.toml|codex/AGENTS.md)
+        if [ "$manifest_changed" = false ]; then
+          problems="${problems}$path changed without $MANIFEST\n"
+        fi
+        ;;
+    esac
+  done <<< "$paths"
+
+  [ -z "$problems" ] && exit 0
+
+  jq -n --arg reason "BLOCKED: AI config sync guard found one-sided Claude/Codex changes.\n\n$problems\nUpdate the counterpart in this same session, or stage $MANIFEST with an explicit status/exemption." '{
+    "hookSpecificOutput": {
+      "hookEventName": "PreToolUse",
+      "permissionDecision": "deny",
+      "permissionDecisionReason": $reason
+    }
+  }'
+}
+
+audit() {
+  local missing=0 skill hook
+
+  while IFS= read -r skill; do
+    [ -e "$ROOT/codex/skills/$skill/SKILL.md" ] || {
+      printf 'Missing Codex skill port: %s\n' "$skill"
+      missing=$((missing + 1))
+    }
+  done < <(cd "$ROOT/claude/skills" && find . -mindepth 2 -maxdepth 2 -name SKILL.md | sed 's#^\./##; s#/SKILL.md$##' | sort)
+
+  for hook in block-secret-leak.sh block-destructive-command.sh block-walk-list-access.sh guard-external-actions.sh require-elisp-test-before-commit.sh require-doc-update.sh require-readme-update.sh require-elisp-verify-after-commit.sh block-elpaca-rebuild-uncommitted.sh track-elisp-test.sh track-elisp-verify.sh block-elpaca-dotfiles-edit.sh block-texi-edit.sh load-elisp-after-edit.sh regenerate-manual-after-edit.sh remind-ai-config-sync.sh require-ai-config-sync.sh; do
+    [ -e "$ROOT/codex/hooks/$hook" ] || {
+      printf 'Missing Codex hook port: %s\n' "$hook"
+      missing=$((missing + 1))
+    }
+  done
+
+  [ -f "$ROOT/$MANIFEST" ] || {
+    printf 'Missing manifest: %s\n' "$MANIFEST"
+    missing=$((missing + 1))
+  }
+
+  if [ "$missing" -eq 0 ]; then
+    printf 'AI config sync audit passed.\n'
+  else
+    return 1
+  fi
+}
+
+mode=${1:-}
+case "$mode" in
+  remind-claude) remind_claude ;;
+  remind-codex) remind_codex ;;
+  guard-commit) guard_commit ;;
+  audit) audit ;;
+  *) usage; exit 2 ;;
+esac

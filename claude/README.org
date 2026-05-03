@@ -35,6 +35,7 @@ Three layers of directories work together: this dotfiles directory (source of tr
 ├── bin/sheets.py                     ← Sheets API CLI (--account epoch|personal)
 ├── bin/slack.py                      ← Slack web-API CLI (Epoch workspace, xoxc/xoxd)
 ├── bin/_gworkspace_auth.py           ← shared OAuth helper for gmail.py / sheets.py
+├── ../bin/ai-config-sync             ← Claude/Codex port audit and hook checker
 └── README.org                        ← this file
 #+end_example
 
@@ -132,6 +133,11 @@ Each file should contain distinct content. The global one defines behavioral con
 | New project-specific hook | =<project>/.claude/settings.json= (hooks section) | Fires only in that project |
 | New machine-specific permission | =~/.claude/settings.local.json= | E.g. brew, mpv, pip3 |
 | New MCP server | =~/.claude.json=, then run =claude/bin/sync-mcp-servers.sh= | Syncs to account dirs |
+
+When adding or changing a reusable Claude skill or hook, update the Codex
+counterpart in =codex/skills/= or =codex/hooks/= in the same session.  The
+=remind-ai-config-sync.sh= and =require-ai-config-sync.sh= hooks make this
+visible but do not auto-edit the other side.
 
 ** Multi-account setup
 :PROPERTIES:
@@ -670,7 +676,11 @@ Processes items from a list file strictly one at a time (sequential) or N-at-a-t
 :ID:       4D862953-7E8A-4154-BC16-919ED6B092A5
 :END:
 
-Twenty-four hook and utility scripts handle workflow invariants, security, and Emacs integration. Most are defined in the global =settings.json= and use early-exit guards to skip inapplicable projects. One (=require-readme-update.sh=) is defined in the dotfiles project-level =.claude/settings.json= since it only applies to this repo. The emacsclient hooks (=notify-emacs-session-end.sh=, =notify-emacs-notification.sh=, =load-elisp-after-edit.sh=) escape interpolated values before embedding them in Elisp strings to prevent injection.
+Twenty-eight hook and utility scripts handle workflow invariants, security, Emacs integration, and Claude/Codex configuration sync. Most are defined in the global =~/.claude/settings.json= and use early-exit guards to skip inapplicable projects. Repository-specific commit guards also exist on the Codex side in =.codex/hooks.json=. The emacsclient hooks (=notify-emacs-session-end.sh=, =notify-emacs-notification.sh=, =load-elisp-after-edit.sh=) escape interpolated values before embedding them in Elisp strings to prevent injection.
+
+Claude and Codex hooks are no longer shared through adapters.  Claude hooks live
+in =claude/hooks/=; Codex ports live in =codex/hooks/=.  The mapping and known
+non-ports are recorded in =ai-config-sync.json=.
 
 ** require-elisp-test-before-commit.sh (PreToolUse)
 :PROPERTIES:
@@ -686,12 +696,12 @@ Blocks =git commit= when Elisp files (=*.el= or =emacs/config.org=) are staged b
 
 Creates a marker file (=/tmp/claude-elisp-tested-{SESSION_ID}=) whenever =emacs --batch= runs. This marker is what the pre-commit hook checks for. The marker is consumed (deleted) after a successful commit, so each commit requires a fresh test. Also verifies that the test loaded files from the working tree, not stale =.elc= from =elpaca/builds/=: if the command output contains evidence of a stale load (e.g. "using older file" or =elpaca/builds/*.elc=), the marker is NOT created and a warning is printed, so the commit hook will still block. Supports both Claude Code's =tool_output= payload and Codex's =tool_response= payload.
 
-** require-readme-update.sh (PreToolUse, project-level)
+** require-readme-update.sh (PreToolUse, dotfiles-scoped)
 :PROPERTIES:
 :ID:       F4D78958-4194-4DB3-9624-C04EC7790960
 :END:
 
-Defined in the dotfiles project-level =.claude/settings.json= (not the global settings) since it only applies to this repo. Blocks =git commit= when files in =claude/= (skills, hooks, settings, CLAUDE.md) are staged but =claude/README.org= is not. Also detects when =git add= and =git commit= appear in the same bash command (which would otherwise bypass the staged-file check). Ensures documentation stays in sync with configuration changes. Project-specific skills (under =.claude/skills/=) are excluded from this check, since they belong to their project's documentation, not the dotfiles README. Runtime data paths (=digests/=, =last-run/=, =twitter-vet/vetted/=) are also excluded, since these are skill output files that don't warrant a README update.
+Blocks =git commit= when files in =claude/= (skills, hooks, settings, CLAUDE.md) are staged but =claude/README.org= is not. Also detects when =git add= and =git commit= appear in the same bash command (which would otherwise bypass the staged-file check). Ensures documentation stays in sync with configuration changes. Project-specific skills (under =.claude/skills/=) are excluded from this check, since they belong to their project's documentation, not the dotfiles README. Runtime data paths (=digests/=, =last-run/=, =twitter-vet/vetted/=) are also excluded, since these are skill output files that don't warrant a README update.
 
 ** remind-claude-readme-update.sh (PostToolUse)
 :PROPERTIES:
@@ -699,6 +709,14 @@ Defined in the dotfiles project-level =.claude/settings.json= (not the global se
 :END:
 
 Companion to =require-readme-update.sh=. Fires globally after any Write or Edit, resolves the target path through symlinks, and outputs a reminder if the file is under =dotfiles/claude/= but the agent is working in a different project. This closes the gap where the commit-blocking hook never fires because the agent never switches to the dotfiles repo to commit. Silent when editing =README.org= itself or when already in the dotfiles repo.
+
+** remind-ai-config-sync.sh (PostToolUse)
+
+Fires after Claude Edit or Write operations and calls =bin/ai-config-sync remind-claude=. If a reusable Claude skill, hook, or live settings file changed, it prints the Codex counterpart that should be updated in the same session. This is intentionally a reminder, not an auto-sync mechanism.
+
+** require-ai-config-sync.sh (PreToolUse)
+
+Fires before Bash =git commit= commands and calls =bin/ai-config-sync guard-commit=. Blocks one-sided Claude/Codex configuration changes in the dotfiles repo unless the counterpart or =ai-config-sync.json= is staged. This keeps the model explicit: the active agent makes both edits and commits them together, or records an intentional exception in the manifest.
 
 ** require-doc-update.sh (PreToolUse)
 :PROPERTIES:

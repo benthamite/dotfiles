@@ -1,0 +1,96 @@
+#+title: Twitter digest: ai-macrostrategy — 2026-04-25
+
+* Notable
+
+** @_NathanCalvin (Sat Apr 25 01:11)
+Let's say for a moment that in fact LTF didn't know their vendor was doing extensive ai astroturfing before Midas published. That might be even worse? If true they are so frantically shoveling money out the door to hostile bad faith oppo that they can't even keep it straight.
+Likes: 35 | Views: 1513 | Like rate: 2.3%
+[[https://x.com/_NathanCalvin/status/2047845938061070430][View on X]]
+
+** @robbensinger (Wed Apr 22 23:25)
+"It's futile for anyone to try to change things, and everything will turn out fine regardless, and also it's futile to try to understand stuff or make predictions" seems like a pretty false world-view, and also a uniquely, suspiciously convenient one. You can't change anything anyway, so there's no
+Likes: 97 | Views: 5028 | Like rate: 1.9%
+[[https://x.com/robbensinger/status/2047094540230889760][View on X]]
+
+** @TomDavidsonX (Mon Apr 20 14:59)
+One of the big ways that AI will shape society during the intelligence explosion is by advising powerful ppl on important decisions. So, how good are today's AI systems at giving high-stakes advice? I was pretty underwhelmed by their responses to my scenarios. For example, when a AI company CEO a
+Likes: 27 | Views: 1400 | Like rate: 1.9%
+[[https://x.com/TomDavidsonX/status/2046242409244229892][View on X]]
+
+** @So8res (Sat Apr 25 02:05)
+don't worry; I'm told they're gonna nail alignment on the first critical try
+Likes: 240 | Views: 13726 | Like rate: 1.7%
+[[https://x.com/So8res/status/2047859479316971583][View on X]]
+
+** @TheZvi (Tue Apr 21 11:10)
+I keep catching my child not using AI. Not sure what to do about it.
+Likes: 288 | Views: 16781 | Like rate: 1.7%
+[[https://x.com/TheZvi/status/2046547175484600694][View on X]]
+
+** @JeffLadish (Sun Apr 19 22:34)
+These "self-replicating factories" taking over the Midwest are just the latest desperate marketing stunt by Anthropic 🙄 People act like this is the first instance of self-replicating solar-powered factories taking over Earth's plains. Omg, go touch some fucking GRASS
+Likes: 367 | Views: 21286 | Like rate: 1.7%
+[[https://x.com/JeffLadish/status/2045994492587860264][View on X]]
+
+** @DavidSKrueger (Thu Apr 23 21:05)
+I'm absolutely thrilled to be joining @BernieSanders @tegmark @yi_zeng and Xue Lan to discuss the existential threat posed by AI and the need for international cooperation! Next Wednesday, April 29, 7pm (doors 6:15pm) at the U.S. Capitol.
+Likes: 140 | Views: 8751 | Like rate: 1.6%
+[[https://x.com/DavidSKrueger/status/2047421519777734696][View on X]]
+
+** @emollick (Thu Apr 23 16:40)
+One change over the last six months is that in every big company I talk, at least a few senior people absolutely get AI — they experiment (a lot of OpenClaw, surprisingly) & they have an intuitive sense of the exponential curve — next challenge is translating that to the firm.
+Likes: 464 | Views: 31196 | Like rate: 1.5%
+[[https://x.com/emollick/status/2047355060330393648][View on X]]
+
+** @AndrewCurran_ (Thu Apr 23 00:30)
+META plans to capture their employees keystrokes and mouse clicks while using sites like Google, LinkedIn, and Wikipedia to train their AI models by using an employee tracking tool named Model Capability Initiative (MCI).
+Likes: 76 | Views: 5172 | Like rate: 1.5%
+[[https://x.com/AndrewCurran_/status/2047110924994302353][View on X]]
+
+** @peterwildeford (Thu Apr 23 15:20)
+I've been tracking quotes about who in Congress has been speaking about superintelligence. I've tracked 37 members so far and it's been very bipartisan (18 Republicans and 19 Dems). Now we at @AIpolicynetwork are releasing full details with all the quotes for people to dive in!
+Likes: 145 | Views: 10618 | Like rate: 1.4%
+[[https://x.com/peterwildeford/status/2047334906095628384][View on X]]
+
+** @TheZvi (Wed Apr 22 12:20)
+Reading the details, this seems less like 'you don't need advice' as the same thing game designers know: When they tell you what is wrong, listen. When they tell you how to fix it, ignore.
+Likes: 413 | Views: 34241 | Like rate: 1.2%
+[[https://x.com/TheZvi/status/2046927115979723000][View on X]]
+
+** @deanwball (Fri Apr 24 13:54)
+There's this weird thing about doing AI policy where you just kind of sit in mourning for ideas and institutions that others do not yet realize are dead. One of those things is the nobility of purpose that animated the early AGI efforts, of which DeepSeek is an example.
+Likes: 93 | Views: 9555 | Like rate: 1.0%
+[[https://x.com/deanwball/status/2047675676375887958][View on X]]
+
+** @TheZvi (Tue Apr 21 15:56)
+The definition of chutzpah might be going after Scott Weiner and accusing him of watering down AI regulation and being in bed with the AI companies. I'm almost impressed at the attempt. But no, very obviously that is not true. Scott Weiner passed the strongest bill he could.
+Likes: 78 | Views: 8015 | Like rate: 1.0%
+[[https://x.com/TheZvi/status/2046619180212928556][View on X]]
+
+** @ben_j_todd (Thu Apr 23 16:46)
+Yann LeCun in 2032 [image of overhang]
+Likes: 1184 | Views: 142229 | Like rate: 0.8%
+[[https://x.com/ben_j_todd/status/2047356416109813973][View on X]]
+
+** @ohlennart (Thu Apr 23 16:22)
+Dylan Rogers wrote a good piece on "Does controlling ASML really get you leverage?" Relates to my quoted tweet, especially to point 3 about vertical and horizontal escalation.
+Likes: 41 | Views: 5932 | Like rate: 0.7%
+[[https://x.com/ohlennart/status/2047350398831255590][View on X]]
+
+* Discovered accounts
+
+Note: vetting via twitterapi.io returned 401 Unauthorized this run; candidates listed here are borderline pending manual review (none auto-added to list).
+
+** @AlexBarry4 — METR/ECI prediction work
+RT'd by @Jsevillamol, @TomDavidsonX. Tweet: "I used Anthropic's internal ECI values from the Opus 4.7 model card to predict the METR Time Horizon values they would receive. This predicts Mythos will have a 50% TH of 40 hours, and Opus 4.7 19 hours. 80% THs are 5.5 and 2.5 hours respectively."
+Likes: 202 | Views: 95917
+[[https://x.com/AlexBarry4/status/2046951516754280600][View on X]]
+
+** @daniel_271828 — AI safety / automated R&D researcher
+Bio: "Researching effects of automated AI R&D / pro-America, pro-tech, & pro-AI safety" (10.7K followers). RT'd by @allTheYud, @peterwildeford, @robbensinger. Tweet: "The OpenAI-a16z super PAC continues to be cartoonishly evil (no, this is not standard for industry; none of GDM/Anthropic/…)"
+
+** @ChrisPainterYup — AI capability/safety commentator
+RT'd by @joel_bkr, @austinc3301, @DKokotajlo. Posts on AI safety default plan problems and capability concerns.
+
+* Accounts with nothing notable
+@abigailrsal, @Afinetheorem, @ahall_research, @ajeya_cotra, @alexolegimas, @allTheYud, @AllanDafoe, @cherylwoooo, @ChadJonesEcon, @danwilliamsphil, @datagenproc, @DKokotajlo, @dwarkesh_sp, @fiiiiiist, @fleetingbits, @GregHBurnham, @HjalmarWijk, @jankulveit, @joel_bkr, @Jsevillamol, @leopoldasch, @lukeprog, @Miles_Brundage, @MKinniment, @pawtrammell, @romeovdean, @RyanPGreenblatt, @sebkrier, @sethlazar, @sjgadler, @testingham, @thlarsen, @tobyordoxford, @tomekkorbak, @tyler_m_john, @willmacaskill

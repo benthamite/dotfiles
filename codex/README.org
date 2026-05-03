@@ -3,109 +3,125 @@
 
 * Overview
 
-This directory contains the dotfiles source of truth for the parts of my
-[[https://developers.openai.com/codex/][Codex]] setup that are version-controlled.
+This directory contains the version-controlled parts of my [[https://developers.openai.com/codex/][Codex]] setup.
+The matching Claude Code setup remains the source of truth where the two tools
+can share content directly.  Codex gets explicit ports only where Codex syntax
+or discovery rules require them.
 
-The corresponding Claude Code setup remains the primary source of truth for
-shared behavioral instructions.  Codex should consume those instructions
-directly where it can, and use generated or wrapper files only where Codex's
-discovery rules require Codex-specific filenames.
+The current synchronization model is deliberately not automatic.  The ports are
+real files that an agent updates in the same session when it changes the
+corresponding Claude file.  Hooks remind the active agent immediately and block
+one-sided commits unless the counterpart or =ai-config-sync.json= is staged.
 
 * Current layout
 
 #+begin_example
 codex/
-├── AGENTS.md
-├── config.toml
+├── AGENTS.md              -> ../claude/CLAUDE.md
+├── config.toml            <- live ~/.codex/config.toml symlink target
+├── hooks/                 <- Codex hook script ports
 ├── README.org
 ├── rules/default.rules
-└── skills/
-    ├── dotfiles-context/
-    └── elisp-conventions/
+└── skills/                <- Codex ports of Claude skills
+
+.codex/hooks.json          <- live ~/.codex/hooks.json symlink target
+ai-config-sync.json        <- Claude/Codex port manifest
+bin/ai-config-sync         <- audit, reminder, and commit-guard checker
 #+end_example
 
-* What ports cleanly
+* Instructions
 
-- Project instructions via repository =CLAUDE.md= files, because
-  =codex/config.toml= sets =project_doc_fallback_filenames = ["CLAUDE.md"]=.
-- Repository =AGENTS.md= files also work when a project already uses that
-  convention, but they are not required for my own repositories.
-- Plain =SKILL.md= skills: the shared subset of Claude/Codex skills can be
-  reused with thin registration or symlink layers.
-- Trusted-project settings, model defaults, theme, and rules via
-  =codex/config.toml= and =codex/rules/default.rules=.
+=claude/CLAUDE.md= is the global instruction source.  =codex/AGENTS.md= is a
+symlink to that file, so Codex sees the Claude content through the filename it
+expects.  Project-level =CLAUDE.md= files are still loaded by Codex because
+=codex/config.toml= sets:
 
-* What ports partially
+#+begin_example
+project_doc_fallback_filenames = ["CLAUDE.md"]
+#+end_example
 
-- Global instructions: Codex's global discovery reads only
-  =~/.codex/AGENTS.override.md= or =~/.codex/AGENTS.md=.  Fallback filenames
-  apply to project documents, not the Codex home directory.  If global Codex
-  instructions must exactly mirror Claude, generate a flattened
-  =~/.codex/AGENTS.md= from =claude/CLAUDE.md= rather than maintaining a
-  hand-written fork.
-- File imports: Claude expands =@path/to/file= imports in =CLAUDE.md= at
-  session startup.  Codex =AGENTS.md= files are plain Markdown; Codex does not
-  document support for =@= import expansion in instruction files.  Any
-  instructions Codex must always see should be self-contained or generated into
-  a flattened file.
-- Hooks: Codex hooks are experimental and currently support =SessionStart=,
-  =PreToolUse=, =PermissionRequest=, =PostToolUse=, =UserPromptSubmit=, and
-  =Stop=.  =PreToolUse= and =PostToolUse= can match =Bash=, =apply_patch=,
-  MCP tools, and the =Edit|Write= aliases, but the payload shape and available
-  events differ from Claude's.  Shared hook scripts should be wrapped by
-  tool-specific adapters when they inspect hook input.
-- Skills with Claude-only frontmatter or runtime assumptions need Codex
-  overlays.  Examples include =allowed-tools=, subagent execution, dynamic
-  context injection, Claude environment variables, Chrome assumptions, and
-  references to Claude-specific tool names.
-- MCP server definitions use the same protocol but different config files.
-  Treat the server inventory as shared policy and generate per-tool config if
-  user-level MCPs return.
-- Subagents are conceptually portable but not file-format portable.  Claude
-  uses Markdown/YAML agent definitions; Codex custom agents are TOML config
-  layers.
-- Custom status line: no direct Codex equivalent.
-- Claude project/global memory relocation: no stable Codex equivalent yet.
-- Claude's allow-list permissions: Codex uses sandbox settings, approval
-  policy, and prefix rules instead.
+Codex does not expand Claude-style =@file= imports in Markdown instructions.
+For that reason, the repo-root =AGENTS.md= remains a manual Codex-readable port
+of the repo-root =CLAUDE.md= rules, whose =@claude/skills/...= import would not
+be expanded by Codex.
 
-* Active port in this repo
+* Skills
 
-- =project_doc_fallback_filenames = ["CLAUDE.md"]= lets Codex keep reading my
-  existing =CLAUDE.md= files without migrating the source of truth to
-  =AGENTS.md=.
-- =.codex/hooks.json= ports the Bash-based commit hooks and the stop hook for
-  this repository.
-- =codex/skills/= currently contains only the two Codex-specific ports needed
-  for this repository: =dotfiles-context= and =elisp-conventions=.
-- The remaining Claude hooks are not ported yet.  Edit/write-oriented hooks
-  such as =block-elpaca-dotfiles-edit.sh=, =load-elisp-after-edit.sh=, and
-  =remind-claude-readme-update.sh= should be re-evaluated against Codex's
-  current =Edit|Write= hook matching before deciding whether they need
-  wrappers, simplification, or should remain Claude-only.
+=codex/skills/= contains one Codex port for each Claude skill under
+=claude/skills/=.  The one-time port copies the skill bodies and auxiliary
+files, then strips Claude-only frontmatter keys such as =user-invocable=,
+=allowed-tools=, =argument-hint=, and =model=.  =codex/config.toml= registers
+all of these =SKILL.md= files explicitly so they are available globally.
 
-* Global activation
+When changing a skill:
 
-To make global Codex instructions apply everywhere, symlink =~/.codex/AGENTS.md=
-to =~/My Drive/dotfiles/codex/AGENTS.md= only if that file is kept as a real
-Codex-readable entrypoint.  A bare pointer to =claude/CLAUDE.md= is useful for
-humans but is not a guaranteed import mechanism.
+1. Edit the side requested by the user.
+2. Update the counterpart in the same session.
+3. Stage both sides, or stage =ai-config-sync.json= with a clear status or
+   exemption if a counterpart is intentionally absent.
 
-If I later want a global hook layer, I can also symlink =~/.codex/hooks.json=
-to a shared hooks file. Until then, the repository-local =.codex/hooks.json=
-only affects this repository.
+Skill files must be named uppercase =SKILL.md=.  This matters on the Google
+Drive mount and for Codex skill discovery.
 
-* Synchronization plan
+* Hooks
 
-- Keep =claude/CLAUDE.md= as the human-edited source of truth for shared
-  behavioral instructions.
-- Keep project =CLAUDE.md= files self-contained when Codex must consume them.
-  If a =CLAUDE.md= uses Claude-only =@= imports, generate a flattened Codex
-  instruction file or move that content into a portable skill.
-- Classify Claude skills as =portable=, =codex-overlay-needed=, or
-  =claude-only= before registering them for Codex.
-- Share hook scripts where practical, but keep hook registration and JSON input
-  adapters tool-specific.
-- Add an audit command that reports unclassified Claude skills, divergent
-  shared skill files, stale Codex overlays, and hook references to missing
-  scripts.
+=.codex/hooks.json= is tracked here and live globally through the symlink at
+=~/.codex/hooks.json=.  It registers Codex-side scripts from =codex/hooks/=
+instead of calling Claude hook scripts directly.
+
+The Codex ports cover:
+
+- Bash safety and workflow gates: secret leakage, destructive commands,
+  walk-list data access, Elisp test-before-commit, manual update checks,
+  post-commit Elisp verification, and stale elpaca rebuild protection.
+- MCP guardrails through =guard-external-actions.sh=.
+- =apply_patch=/=Edit|Write= guards for secret leakage, generated Texinfo
+  files, elpaca dotfiles mirror edits, and walk-list protected data.
+- Post-edit behavior for Elisp reloads, generated manual regeneration, README
+  reminders, and Claude/Codex sync reminders.
+- Codex Stop and SessionStart forwarding to Emacs via
+  =codex/hooks/notify-emacs-hook.sh=.
+
+Some Claude hooks are intentionally not ported one-for-one because Codex does
+not expose the same event in this setup:
+
+- Claude =Read=/=Grep=/=Glob= hooks such as =block-sensitive-read.sh=.
+- Claude =Skill= hooks such as =require-elisp-skill.sh= and
+  =track-elisp-skill.sh=.
+- Claude Notification-specific Emacs hooks.  Codex uses
+  =notify-emacs-hook.sh= for Codex lifecycle events instead.
+
+* Sync Guard
+
+=ai-config-sync.json= is the manifest for the port.  It lists every skill, the
+hook port status, live registration files, and the current unsupported or
+Codex-only cases.
+
+Two hook pairs keep the model simple:
+
+- =claude/hooks/remind-ai-config-sync.sh= and
+  =codex/hooks/remind-ai-config-sync.sh= run after edits and print the
+  counterpart that should be updated.
+- =claude/hooks/require-ai-config-sync.sh= and
+  =codex/hooks/require-ai-config-sync.sh= run before =git commit= and block
+  one-sided Claude/Codex config changes unless the counterpart or manifest is
+  staged.
+
+Manual audit:
+
+#+begin_src sh
+bin/ai-config-sync audit
+#+end_src
+
+The audit is deterministic; it does not edit files.  Its job is to make drift
+visible.
+
+* Global Activation
+
+=~/.codex/config.toml= points to =codex/config.toml=, and
+=~/.codex/hooks.json= points to =.codex/hooks.json=.  Updating the tracked files
+therefore updates the live global Codex configuration.
+
+=~/.codex/skills/= remains a normal Codex home directory for system or local
+skills.  The mirrored Claude skills are not symlinked there; they are registered
+from their tracked paths in =codex/config.toml=.

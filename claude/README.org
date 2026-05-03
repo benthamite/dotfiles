@@ -268,6 +268,10 @@ States the general rule for where external Emacs packages live — all elpaca-ma
 
 Emacs Lisp coding standards: atomic functions, helper placement, docstring format. Documents the elpaca rebuild-wait-reload process enforced by the =load-elisp-after-edit= hook and prohibits ad-hoc reload mechanisms (=load-file=, =eval-buffer=, =eval-defun=). Also documents the critical =emacs --batch= testing pattern: elpaca builds on load-path first, then =push= =emacs/extras= to the front so the edited source always loads instead of the stale =.elc= from elpaca builds. Includes pre-commit checks (batch-test and doc staging) and a transient menus section: after adding or modifying a =transient-define-prefix=, every suffix must be verified as an interactive command (transient defers validation to invocation time).
 
+*** epoch-vaults
+
+Reference for Epoch's 1Password vault topology and credential-placement rules. Documents which vaults hold automation keys, shared Operations credentials, benchmarking credentials, API handover items, and personal Employee secrets; distinguishes read-only lookup from write operations; and points secret writes to =store-secret= for the biometric-auth flow and vault-safety checks.
+
 ** Development skills
 :PROPERTIES:
 :ID:       71770F84-ED6B-4F0B-B121-1F23CBCEB769

@@ -670,11 +670,7 @@ Processes items from a list file strictly one at a time (sequential) or N-at-a-t
 :ID:       4D862953-7E8A-4154-BC16-919ED6B092A5
 :END:
 
-Hook and utility scripts handle workflow invariants, security, and Emacs integration. Most are defined in the global =settings.json= and use early-exit guards to skip inapplicable projects. One (=require-readme-update.sh=) is defined in the dotfiles project-level =.claude/settings.json= since it only applies to this repo. Hook configuration should call tool-specific adapters rather than duplicating hook logic: Claude uses =run-shared-hook.sh= as a thin pass-through adapter, while Codex uses =codex/hooks/run-claude-hook.sh= to normalize Codex hook JSON before invoking these shared scripts. The emacsclient hooks (=notify-emacs-session-end.sh=, =notify-emacs-notification.sh=, =load-elisp-after-edit.sh=) escape interpolated values before embedding them in Elisp strings to prevent injection.
-
-** run-shared-hook.sh (adapter)
-
-Claude Code adapter for shared hook scripts. It reads the Claude-shaped hook JSON from stdin and forwards it unchanged to the target script. This keeps the Claude project-level hook config structurally parallel with Codex's adapter-based hook config.
+Twenty-four hook and utility scripts handle workflow invariants, security, and Emacs integration. Most are defined in the global =settings.json= and use early-exit guards to skip inapplicable projects. One (=require-readme-update.sh=) is defined in the dotfiles project-level =.claude/settings.json= since it only applies to this repo. The emacsclient hooks (=notify-emacs-session-end.sh=, =notify-emacs-notification.sh=, =load-elisp-after-edit.sh=) escape interpolated values before embedding them in Elisp strings to prevent injection.
 
 ** require-elisp-test-before-commit.sh (PreToolUse)
 :PROPERTIES:

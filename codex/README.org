@@ -4,14 +4,12 @@
 * Overview
 
 This directory contains the version-controlled parts of my [[https://developers.openai.com/codex/][Codex]] setup.
-The matching Claude Code setup remains the source of truth where the two tools
-can share content directly.  Codex gets explicit ports only where Codex syntax
-or discovery rules require them.
+The cross-tool synchronization policy is documented in =../agents/README.org=.
+This file covers the Codex-specific activation files and local conventions.
 
-The current synchronization model is deliberately not automatic.  The ports are
-real files that an agent updates in the same session when it changes the
-corresponding Claude file.  Hooks remind the active agent immediately and block
-one-sided commits unless the counterpart or =ai-config-sync.json= is staged.
+Claude files remain the source where Codex can consume them directly. Codex gets
+explicit ports only where Codex syntax, hook payloads, or discovery rules
+require them.
 
 * Current layout
 
@@ -44,10 +42,8 @@ global user instructions from =AGENTS.override.md= and =AGENTS.md= in
 =$CODEX_HOME=, so the live =~/.codex/AGENTS.md= points directly to
 =claude/CLAUDE.md=.
 
-Codex does not expand Claude-style =@file= imports in Markdown instructions.
-For that reason, the repo-root =AGENTS.md= remains a manual Codex-readable port
-of the repo-root =CLAUDE.md= rules, whose =@claude/skills/...= import would not
-be expanded by Codex.
+There is no repo-root =AGENTS.md= manual port. Project-level Codex instructions
+come from =CLAUDE.md= through =project_doc_fallback_filenames=.
 
 * Skills
 
@@ -134,7 +130,8 @@ bin/ai-config-sync audit
 #+end_src
 
 The audit is deterministic; it does not edit files.  Its job is to make drift
-visible.
+visible. See =../agents/README.org= for the full synchronization contract and
+the audit scope.
 
 * Global Activation
 

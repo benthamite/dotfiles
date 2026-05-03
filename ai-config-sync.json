@@ -11,12 +11,6 @@
       "codex": "~/.codex/AGENTS.md",
       "status": "live-global-symlink",
       "note": "Codex reads global user instructions from AGENTS.md in $CODEX_HOME; project_doc_fallback_filenames applies to project docs, not $CODEX_HOME."
-    },
-    {
-      "claude": "CLAUDE.md",
-      "codex": "AGENTS.md",
-      "status": "manual-port",
-      "note": "Root AGENTS.md is a Codex-readable manual port because Codex does not expand Claude @file imports."
     }
   ],
   "skills": [
@@ -715,6 +709,13 @@
       "tracked": true,
       "live_path": "~/.codex/skills/<name>",
       "note": "Creates one symlink per tracked codex/skills/<name> directory because Codex discovers global skills from ~/.codex/skills/*/SKILL.md."
+    },
+    {
+      "tool": "Codex",
+      "path": "codex/rules/default.rules",
+      "tracked": true,
+      "live_path": "~/.codex/rules/default.rules",
+      "note": "Codex-only command allowlist rules. There is no Claude counterpart; material policy changes should be recorded here."
     }
   ],
   "audit_command": "bin/ai-config-sync audit"

@@ -1,0 +1,100 @@
+#+title: Agent configuration synchronization
+#+author: Pablo Stafforini
+
+* Overview
+
+This document describes how the Claude Code and Codex configurations in this
+repo stay aligned. Tool-specific setup details remain in
+=claude/README.org= and =codex/README.org=.
+
+The synchronization model is intentionally manual, not auto-generated. When an
+agent changes a reusable Claude or Codex artifact, hooks remind it to update the
+counterpart during the same session. Commit guards then block one-sided commits
+unless the counterpart is staged or =ai-config-sync.json= is staged with an
+explicit status or exemption.
+
+* Source Model
+
+Claude files remain the human source where possible. Codex uses the same file
+directly when Codex can load it safely, and gets an explicit port only when its
+syntax, discovery rules, or hook payloads differ.
+
+There is no repo-root =AGENTS.md= manual port. Project-level instructions come
+from =CLAUDE.md= because =codex/config.toml= sets:
+
+#+begin_example
+project_doc_fallback_filenames = ["CLAUDE.md"]
+#+end_example
+
+The live =~/.codex/AGENTS.md= is a separate user-level compatibility symlink to
+=claude/CLAUDE.md=. Codex's project-doc fallback does not apply to =$CODEX_HOME=,
+so this symlink is still needed for global user instructions. It is not a
+manual port.
+
+* Skills
+
+=claude/skills/<name>/= and =codex/skills/<name>/= should contain matching skill
+bodies and auxiliary files. The Codex =SKILL.md= copy strips Claude-only or
+unsupported frontmatter keys such as =allowed-tools=, =argument-hint=, =model=,
+=user-invocable=, and argument metadata. Runtime output directories such as
+=digests/=, =last-run/=, and =twitter-vet/vetted/= are intentionally ignored.
+
+Codex discovers global skills from =~/.codex/skills/*/SKILL.md=. The tracked
+ports are linked there by:
+
+#+begin_src sh
+codex/bin/install-skills.sh
+#+end_src
+
+* Hooks
+
+Hook scripts are ported when the two tools expose compatible events and payloads.
+The Codex ports live in =codex/hooks/= and are registered from
+=.codex/hooks.json=. Claude hooks live in =claude/hooks/= and are registered in
+the mutable live =~/.claude/settings.json=.
+
+Some hooks cannot be synchronized one-for-one:
+
+- Claude =Read=/=Grep=/=Glob= hooks do not have equivalent Codex events here.
+- Claude =Skill= hooks do not have equivalent Codex skill hook events here.
+- Claude Notification hooks are replaced by Codex lifecycle forwarding through
+  =codex/hooks/notify-emacs-hook.sh=.
+- Chrome-specific Claude hooks have no Codex counterpart.
+
+These cases are recorded in =ai-config-sync.json= rather than treated as drift.
+
+* Guard Rails
+
+=bin/ai-config-sync= provides three kinds of checks:
+
+- =remind-claude= and =remind-codex= read hook JSON and print the counterpart to
+  update after relevant edits.
+- =guard-commit= blocks one-sided commits. It inspects staged files and common
+  one-shot shell forms such as =git add ... && git commit=, =git add -A=,
+  =git commit -a=, quoted paths, absolute paths, and symlinked =~/.claude= paths.
+- =audit= verifies the manifest, live symlinks, skill content parity after Codex
+  frontmatter normalization, auxiliary skill files, hook file inventory, hook
+  registrations, and Codex activation files.
+
+Run the deterministic audit with:
+
+#+begin_src sh
+bin/ai-config-sync audit
+#+end_src
+
+* When Changing Config
+
+1. Edit the side requested by the user.
+2. Update the counterpart in the same session, unless the manifest already
+   records the artifact as unsupported or tool-specific.
+3. If no counterpart should exist, stage =ai-config-sync.json= with the explicit
+   status or exemption.
+4. Run =bin/ai-config-sync audit= before committing.
+
+* Limits
+
+The system can keep the shared artifacts synchronized, but it cannot make Claude
+Code and Codex fully behaviorally identical. Their global settings formats,
+permission systems, hook event surfaces, tool names, model settings, MCP/plugin
+systems, and lifecycle events differ. The sync target is therefore explicit
+parity where possible plus documented non-parity where the tools differ.

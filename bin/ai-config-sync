@@ -1,326 +1,787 @@
-#!/usr/bin/env bash
-# Audit and guard the Claude Code <-> Codex configuration port.
+#!/usr/bin/env python3
+"""Audit and guard the Claude Code <-> Codex configuration port."""
 
-set -euo pipefail
+from __future__ import annotations
 
-ROOT="$HOME/My Drive/dotfiles"
-MANIFEST="ai-config-sync.json"
+import filecmp
+import fnmatch
+import json
+import os
+import shlex
+import subprocess
+import sys
+import tomllib
+from pathlib import Path
+from typing import Iterable
 
-usage() {
-  cat <<EOF
-Usage: ai-config-sync MODE
+
+ROOT = Path.home() / "My Drive" / "dotfiles"
+MANIFEST = "ai-config-sync.json"
+MANIFEST_PATH = ROOT / MANIFEST
+
+CODEX_DROPPED_FRONTMATTER = {
+    "allowed-tools",
+    "argument-choices",
+    "argument-default",
+    "argument-hint",
+    "argument-multiple",
+    "argument-source",
+    "model",
+    "tools",
+    "user-invocable",
+}
+
+RUNTIME_PATTERNS = (
+    "claude/skills/*/digests/*",
+    "claude/skills/*/last-run/*",
+    "claude/skills/twitter-vet/vetted/*",
+    "codex/skills/*/digests/*",
+    "codex/skills/*/last-run/*",
+    "codex/skills/twitter-vet/vetted/*",
+)
+
+SYNC_CONFIG_PATHS = {
+    ".codex/hooks.json",
+    "codex/config.toml",
+    "codex/rules/default.rules",
+}
+
+GIT_OPTIONS_WITH_VALUE = {
+    "-C",
+    "-c",
+    "--git-dir",
+    "--work-tree",
+    "--namespace",
+    "--super-prefix",
+}
+
+GIT_ADD_OPTIONS_WITH_VALUE = {
+    "--pathspec-from-file",
+    "--chmod",
+}
+
+
+def usage() -> None:
+    print(
+        """Usage: ai-config-sync MODE
 
 Modes:
   remind-claude   Read Claude hook JSON from stdin and print counterpart reminders.
   remind-codex    Read Codex hook JSON from stdin and print counterpart reminders.
   guard-commit    Read Bash PreToolUse JSON from stdin and block one-sided commits.
-  audit           Check the local Claude/Codex config inventory.
-EOF
-}
+  audit           Check the local Claude/Codex config inventory and content drift.
+""",
+        end="",
+    )
 
-real_path() {
-  python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))' "$1" 2>/dev/null || true
-}
 
-relative_to_root() {
-  local path="$1" real root_real
+def read_input_json() -> dict:
+    raw = sys.stdin.read()
+    if not raw.strip():
+        return {}
+    return json.loads(raw)
 
-  case "$path" in
-    "~"/*) path="$HOME/${path#~/}" ;;
-  esac
 
-  if [ "$path" = "$HOME/.claude/settings.json" ] || [ "$path" = "$HOME/.claude/settings.local.json" ]; then
-    printf '%s\n' "$path"
+def run_git(args: list[str]) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["git", "-C", str(ROOT), *args],
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+
+def git_lines(args: list[str]) -> list[str]:
+    proc = run_git(args)
+    if proc.returncode != 0:
+        return []
+    return [line for line in proc.stdout.splitlines() if line]
+
+
+def real_path(path: Path) -> Path:
+    try:
+        return path.resolve()
+    except OSError:
+        return Path(os.path.realpath(path))
+
+
+def path_from_token(token: str, cwd: Path = ROOT) -> Path:
+    expanded = os.path.expanduser(token)
+    path = Path(expanded)
+    if not path.is_absolute():
+        path = cwd / path
+    return path
+
+
+def relative_to_root(path_text: str, cwd: Path = ROOT) -> str:
+    if not path_text:
+        return ""
+
+    path = path_from_token(path_text, cwd)
+    home = Path.home()
+    if path == home / ".claude" / "settings.json":
+        return str(path)
+    if path == home / ".claude" / "settings.local.json":
+        return str(path)
+
+    real = real_path(path)
+    root_real = real_path(ROOT)
+    try:
+        return real.relative_to(root_real).as_posix()
+    except ValueError:
+        return path_text
+
+
+def direct_file_path(data: dict) -> str:
+    tool_input = data.get("tool_input") or {}
+    for key in ("file_path", "filePath", "path", "notebook_path"):
+        value = tool_input.get(key)
+        if value:
+            return str(value)
+    return ""
+
+
+def patch_text(data: dict) -> str:
+    tool_input = data.get("tool_input") or {}
+    for key in ("patch", "command", "input", "text"):
+        value = tool_input.get(key)
+        if value:
+            return str(value)
+    return ""
+
+
+def paths_from_patch(text: str) -> list[str]:
+    paths: list[str] = []
+    for line in text.splitlines():
+        for prefix in (
+            "*** Add File: ",
+            "*** Update File: ",
+            "*** Delete File: ",
+            "*** Move to: ",
+        ):
+            if line.startswith(prefix):
+                paths.append(line.removeprefix(prefix))
+                break
+        else:
+            if line.startswith("diff --git a/"):
+                parts = line.split()
+                if len(parts) >= 4:
+                    old = parts[2].removeprefix("a/")
+                    new = parts[3].removeprefix("b/")
+                    if old != "/dev/null":
+                        paths.append(old)
+                    if new != "/dev/null":
+                        paths.append(new)
+    return paths
+
+
+def paths_from_codex_input(data: dict) -> list[str]:
+    paths: list[str] = []
+    direct = direct_file_path(data)
+    if direct:
+        paths.append(direct)
+    patch = patch_text(data)
+    if patch:
+        paths.extend(paths_from_patch(patch))
+    return paths
+
+
+def sync_message_for_path(rel: str) -> str:
+    if not rel:
+        return ""
+
+    home = str(Path.home())
+    if rel.startswith("claude/skills/"):
+        skill = rel.removeprefix("claude/skills/").split("/", 1)[0]
+        return f"claude/skills/{skill} changed; update codex/skills/{skill} in the same session."
+    if rel.startswith("codex/skills/"):
+        skill = rel.removeprefix("codex/skills/").split("/", 1)[0]
+        return f"codex/skills/{skill} changed; update claude/skills/{skill} in the same session."
+    if rel.startswith("claude/hooks/"):
+        hook = rel.removeprefix("claude/hooks/")
+        if (ROOT / "codex" / "hooks" / hook).exists():
+            return f"claude/hooks/{hook} changed; update codex/hooks/{hook} and the hook registration if needed."
+        return f"claude/hooks/{hook} changed; add/adjust its Codex port or record why it is unsupported in {MANIFEST}."
+    if rel.startswith("codex/hooks/"):
+        hook = rel.removeprefix("codex/hooks/")
+        if (ROOT / "claude" / "hooks" / hook).exists():
+            return f"codex/hooks/{hook} changed; update claude/hooks/{hook} and ~/.claude/settings.json if registration changed."
+        return f"codex/hooks/{hook} changed; add/adjust its Claude counterpart or record why it is Codex-only in {MANIFEST}."
+    if rel in {f"{home}/.claude/settings.json", f"{home}/.claude/settings.local.json"}:
+        return f"{rel} changed; check .codex/hooks.json, codex/config.toml, codex/rules/default.rules, and {MANIFEST} for matching policy changes."
+    if rel == ".codex/hooks.json":
+        return f".codex/hooks.json changed; update ~/.claude/settings.json and {MANIFEST} if the global hook policy changed."
+    if rel == "codex/config.toml":
+        return f"codex/config.toml changed; update {MANIFEST} if instruction, skill, or hook registration changed."
+    if rel == "codex/rules/default.rules":
+        return f"codex/rules/default.rules changed; update {MANIFEST} if the Codex-only policy changed."
+    if rel == "claude/CLAUDE.md":
+        return "claude/CLAUDE.md changed; Codex consumes this source through ~/.codex/AGENTS.md, so check only if global activation changed."
+    return ""
+
+
+def remind_paths(paths: Iterable[str]) -> None:
+    messages = {
+        sync_message_for_path(relative_to_root(path))
+        for path in paths
+        if path
+    }
+    for message in sorted(message for message in messages if message):
+        print(message)
+
+
+def remind_claude() -> None:
+    data = read_input_json()
+    path = direct_file_path(data)
+    if path:
+        remind_paths([path])
+
+
+def remind_codex() -> None:
+    data = read_input_json()
+    remind_paths(paths_from_codex_input(data))
+
+
+def shell_tokens(command: str) -> list[str]:
+    lexer = shlex.shlex(command, posix=True, punctuation_chars=True)
+    lexer.whitespace_split = True
+    return list(lexer)
+
+
+def split_shell_segments(tokens: list[str]) -> list[list[str]]:
+    segments: list[list[str]] = []
+    current: list[str] = []
+    for token in tokens:
+        if set(token) <= {"&", "|", ";", "(", ")"}:
+            if current:
+                segments.append(current)
+                current = []
+            continue
+        current.append(token)
+    if current:
+        segments.append(current)
+    return segments
+
+
+def git_invocation(segment: list[str], cwd: Path) -> tuple[str, list[str], Path] | None:
+    if not segment or Path(segment[0]).name != "git":
+        return None
+
+    args = segment[1:]
+    git_cwd = cwd
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == "-C" and i + 1 < len(args):
+            git_cwd = path_from_token(args[i + 1], git_cwd)
+            i += 2
+            continue
+        if arg.startswith("-C") and len(arg) > 2:
+            git_cwd = path_from_token(arg[2:], git_cwd)
+            i += 1
+            continue
+        if arg in GIT_OPTIONS_WITH_VALUE:
+            i += 2
+            continue
+        if arg.startswith("-"):
+            i += 1
+            continue
+        return arg, args[i + 1 :], git_cwd
+    return None
+
+
+def command_targets_root(command: str, invocations: list[tuple[str, list[str], Path]]) -> bool:
+    cwd_real = real_path(Path.cwd())
+    root_real = real_path(ROOT)
+    try:
+        cwd_real.relative_to(root_real)
+        return True
+    except ValueError:
+        pass
+
+    for _, _, git_cwd in invocations:
+        try:
+            real_path(git_cwd).relative_to(root_real)
+            return True
+        except ValueError:
+            pass
+
+    return any(
+        needle in command
+        for needle in (
+            "dotfiles",
+            ".claude",
+            ".codex",
+            "claude/",
+            "codex/",
+            "ai-config-sync.json",
+        )
+    )
+
+
+def dirty_paths(include_untracked: bool = True, include_tracked: bool = True) -> set[str]:
+    paths: set[str] = set()
+    if include_tracked:
+        paths.update(git_lines(["diff", "--name-only"]))
+        paths.update(git_lines(["diff", "--cached", "--name-only"]))
+    if include_untracked:
+        paths.update(git_lines(["ls-files", "--others", "--exclude-standard"]))
+    return paths
+
+
+def staged_paths() -> set[str]:
+    return set(git_lines(["diff", "--cached", "--name-only"]))
+
+
+def tracked_dirty_paths() -> set[str]:
+    return set(git_lines(["diff", "--name-only"]))
+
+
+def path_has_change(path: str, changed: set[str]) -> bool:
+    if path in changed:
+        return True
+    prefix = path.rstrip("/") + "/"
+    return any(item.startswith(prefix) for item in changed)
+
+
+def expand_pathspec(rel: str, changed: set[str]) -> set[str]:
+    if rel in {".", ""}:
+        return set(changed)
+    if path_has_change(rel, changed):
+        prefix = rel.rstrip("/") + "/"
+        expanded = {item for item in changed if item == rel or item.startswith(prefix)}
+        return expanded or {rel}
+    return {rel}
+
+
+def paths_from_git_add(args: list[str], git_cwd: Path, changed: set[str]) -> set[str]:
+    paths: set[str] = set()
+    include_all = False
+    include_tracked = False
+    pathspec_from_file = False
+    i = 0
+
+    while i < len(args):
+        arg = args[i]
+        if arg == "--":
+            i += 1
+            break
+        if arg in {"-A", "--all", "--no-ignore-removal"}:
+            include_all = True
+            i += 1
+            continue
+        if arg in {"-u", "--update"}:
+            include_tracked = True
+            i += 1
+            continue
+        if arg in GIT_ADD_OPTIONS_WITH_VALUE:
+            pathspec_from_file = True
+            i += 2
+            continue
+        if arg.startswith("--pathspec-from-file="):
+            pathspec_from_file = True
+            i += 1
+            continue
+        if arg.startswith("-"):
+            i += 1
+            continue
+        break
+
+    if include_all or pathspec_from_file:
+        return set(changed)
+    if include_tracked and i >= len(args):
+        return tracked_dirty_paths()
+
+    for raw_path in args[i:]:
+        rel = relative_to_root(raw_path, git_cwd)
+        if rel and not rel.startswith("/"):
+            paths.update(expand_pathspec(rel, changed))
+    if include_tracked:
+        paths.update(tracked_dirty_paths())
+    return paths
+
+
+def is_commit_all_arg(arg: str) -> bool:
+    if arg == "--all":
+        return True
+    return arg.startswith("-") and not arg.startswith("--") and "a" in arg[1:]
+
+
+def command_paths_and_commit_flag(command: str) -> tuple[set[str], bool]:
+    try:
+        tokens = shell_tokens(command)
+    except ValueError:
+        return set(), "git commit" in command
+
+    current_dir = Path.cwd()
+    invocations: list[tuple[str, list[str], Path]] = []
+    paths: set[str] = set()
+    commit_seen = False
+    changed = dirty_paths()
+
+    for segment in split_shell_segments(tokens):
+        if segment and segment[0] == "cd" and len(segment) >= 2:
+            current_dir = path_from_token(segment[1], current_dir)
+            continue
+
+        invocation = git_invocation(segment, current_dir)
+        if invocation is None:
+            continue
+
+        command_name, args, git_cwd = invocation
+        invocations.append(invocation)
+        if command_name == "add":
+            paths.update(paths_from_git_add(args, git_cwd, changed))
+        elif command_name == "commit":
+            commit_seen = True
+            if any(is_commit_all_arg(arg) for arg in args):
+                paths.update(tracked_dirty_paths())
+
+    if not commit_seen or not command_targets_root(command, invocations):
+        return set(), False
+
+    return paths, True
+
+
+def skip_runtime_path(path: str) -> bool:
+    return any(fnmatch.fnmatchcase(path, pattern) for pattern in RUNTIME_PATTERNS)
+
+
+def has_changed_prefix(prefix: str, paths: set[str], changed: set[str]) -> bool:
+    prefix = prefix.rstrip("/") + "/"
+    for path in paths:
+        if path.startswith(prefix) and path_has_change(path, changed):
+            return True
+    return False
+
+
+def guard_commit() -> None:
+    data = read_input_json()
+    command = str((data.get("tool_input") or {}).get("command") or "")
+    command_paths, commit_seen = command_paths_and_commit_flag(command)
+    if not commit_seen:
+        return
+
+    changed = dirty_paths()
+    paths = staged_paths() | command_paths
+    changed_paths = {path for path in paths if path_has_change(path, changed)}
+    if not changed_paths:
+        return
+
+    manifest_changed = path_has_change(MANIFEST, changed_paths)
+    problems: list[str] = []
+
+    for path in sorted(changed_paths):
+        if skip_runtime_path(path):
+            continue
+
+        if path.startswith("claude/skills/"):
+            skill = path.removeprefix("claude/skills/").split("/", 1)[0]
+            if not manifest_changed and not has_changed_prefix(f"codex/skills/{skill}", paths, changed):
+                problems.append(f"claude/skills/{skill} changed without codex/skills/{skill} or {MANIFEST}")
+        elif path.startswith("codex/skills/"):
+            skill = path.removeprefix("codex/skills/").split("/", 1)[0]
+            if not manifest_changed and not has_changed_prefix(f"claude/skills/{skill}", paths, changed):
+                problems.append(f"codex/skills/{skill} changed without claude/skills/{skill} or {MANIFEST}")
+        elif path.startswith("claude/hooks/"):
+            hook = path.removeprefix("claude/hooks/")
+            counterpart = f"codex/hooks/{hook}"
+            if not manifest_changed and not path_has_change(counterpart, changed_paths):
+                problems.append(f"claude/hooks/{hook} changed without codex/hooks/{hook} or {MANIFEST}")
+        elif path.startswith("codex/hooks/"):
+            hook = path.removeprefix("codex/hooks/")
+            counterpart = f"claude/hooks/{hook}"
+            if not manifest_changed and not path_has_change(counterpart, changed_paths):
+                problems.append(f"codex/hooks/{hook} changed without claude/hooks/{hook} or {MANIFEST}")
+        elif path in SYNC_CONFIG_PATHS and not manifest_changed:
+            problems.append(f"{path} changed without {MANIFEST}")
+
+    if not problems:
+        return
+
+    reason = (
+        "BLOCKED: AI config sync guard found one-sided Claude/Codex changes.\n\n"
+        + "\n".join(problems)
+        + f"\n\nUpdate the counterpart in this same session, or stage {MANIFEST} with an explicit status/exemption."
+    )
+    print(
+        json.dumps(
+            {
+                "hookSpecificOutput": {
+                    "hookEventName": "PreToolUse",
+                    "permissionDecision": "deny",
+                    "permissionDecisionReason": reason,
+                }
+            },
+            indent=2,
+        )
+    )
+
+
+def load_manifest() -> dict:
+    return json.loads(MANIFEST_PATH.read_text())
+
+
+def add_problem(problems: list[str], message: str) -> None:
+    problems.append(message)
+
+
+def check_symlink(problems: list[str], target: Path, expected: Path, label: str) -> None:
+    if not target.is_symlink():
+        add_problem(problems, f"Missing live {label} symlink: {target} -> {expected}")
+        return
+    actual = Path(os.readlink(target))
+    if actual != expected:
+        add_problem(problems, f"Wrong live {label} symlink: {target} -> {actual}; expected {expected}")
+
+
+def frontmatter_normalized_skill(path: Path, drop_keys: set[str]) -> str:
+    text = path.read_text()
+    if not text.startswith("---\n"):
+        return text
+    end = text.find("\n---\n", 4)
+    if end < 0:
+        return text
+    frontmatter = text[4:end].splitlines()
+    body = text[end + 5 :]
+    kept = []
+    for line in frontmatter:
+        key = line.split(":", 1)[0].strip() if ":" in line else ""
+        if key not in drop_keys:
+            kept.append(line)
+    return "---\n" + "\n".join(kept) + "\n---\n" + body
+
+
+def skill_aux_files(skill_dir: Path) -> dict[str, Path]:
+    files: dict[str, Path] = {}
+    for path in skill_dir.rglob("*"):
+        if not path.is_file():
+            continue
+        rel = path.relative_to(skill_dir).as_posix()
+        if rel == "SKILL.md" or path.name == ".DS_Store":
+            continue
+        if rel.startswith(("digests/", "last-run/", "vetted/")):
+            continue
+        if "node_modules/" in rel:
+            continue
+        files[rel] = path
+    return files
+
+
+def command_executable(command: str) -> Path | None:
+    try:
+        parts = shlex.split(command)
+    except ValueError:
+        return None
+    if not parts:
+        return None
+    return path_from_token(parts[0])
+
+
+def hook_commands(config: dict) -> list[str]:
+    commands: list[str] = []
+    for entries in (config.get("hooks") or {}).values():
+        for entry in entries:
+            for hook in entry.get("hooks") or []:
+                command = hook.get("command")
+                if command:
+                    commands.append(command)
+    return commands
+
+
+def command_mentions_path(command: str, path: Path) -> bool:
+    path_text = str(path)
+    try:
+        parts = shlex.split(command)
+    except ValueError:
+        return path_text in command
+    return any(part == path_text or part == path_text.replace(str(Path.home()), "~") for part in parts) or path_text in command
+
+
+def audit_instructions(problems: list[str], manifest: dict) -> None:
+    instructions = manifest.get("instructions") or []
+    for item in instructions:
+        if item.get("codex") == "AGENTS.md":
+            add_problem(problems, "Manifest still declares a repo-root AGENTS.md manual port.")
+    if (ROOT / "AGENTS.md").exists():
+        add_problem(problems, "Repo-root AGENTS.md exists; project-level Codex instructions should come from CLAUDE.md fallback instead.")
+
+    check_symlink(
+        problems,
+        Path.home() / ".codex" / "AGENTS.md",
+        ROOT / "claude" / "CLAUDE.md",
+        "Codex global instruction",
+    )
+    check_symlink(
+        problems,
+        Path.home() / ".claude" / "CLAUDE.md",
+        ROOT / "claude" / "CLAUDE.md",
+        "Claude global instruction",
+    )
+
+
+def audit_skills(problems: list[str], manifest: dict) -> None:
+    manifest_skills = {item["name"] for item in manifest.get("skills") or []}
+    claude_skills = {path.parent.name for path in (ROOT / "claude" / "skills").glob("*/SKILL.md")}
+    codex_skills = {path.parent.name for path in (ROOT / "codex" / "skills").glob("*/SKILL.md")}
+
+    for skill in sorted(claude_skills - codex_skills):
+        add_problem(problems, f"Missing Codex skill port: {skill}")
+    for skill in sorted(codex_skills - claude_skills):
+        add_problem(problems, f"Extra tracked Codex skill without Claude counterpart: {skill}")
+    for skill in sorted(claude_skills - manifest_skills):
+        add_problem(problems, f"Skill missing from manifest: {skill}")
+    for skill in sorted(manifest_skills - claude_skills):
+        add_problem(problems, f"Manifest skill missing from Claude tree: {skill}")
+
+    check_symlink(
+        problems,
+        Path.home() / ".claude" / "skills",
+        ROOT / "claude" / "skills",
+        "Claude skills",
+    )
+
+    for skill in sorted(claude_skills & codex_skills):
+        codex_live = Path.home() / ".codex" / "skills" / skill
+        check_symlink(problems, codex_live, ROOT / "codex" / "skills" / skill, f"Codex skill {skill}")
+
+        claude_skill = ROOT / "claude" / "skills" / skill / "SKILL.md"
+        codex_skill = ROOT / "codex" / "skills" / skill / "SKILL.md"
+        if frontmatter_normalized_skill(claude_skill, CODEX_DROPPED_FRONTMATTER) != codex_skill.read_text():
+            add_problem(problems, f"Skill content drift after Codex frontmatter transform: {skill}")
+
+        claude_aux = skill_aux_files(claude_skill.parent)
+        codex_aux = skill_aux_files(codex_skill.parent)
+        for rel in sorted(set(claude_aux) - set(codex_aux)):
+            add_problem(problems, f"Missing Codex auxiliary skill file: {skill}/{rel}")
+        for rel in sorted(set(codex_aux) - set(claude_aux)):
+            add_problem(problems, f"Extra Codex auxiliary skill file: {skill}/{rel}")
+        for rel in sorted(set(claude_aux) & set(codex_aux)):
+            if not filecmp.cmp(claude_aux[rel], codex_aux[rel], shallow=False):
+                add_problem(problems, f"Auxiliary skill file drift: {skill}/{rel}")
+
+
+def audit_hooks(problems: list[str], manifest: dict) -> None:
+    manifest_hooks = {item["name"]: item for item in manifest.get("hooks") or []}
+    claude_hooks = {path.name for path in (ROOT / "claude" / "hooks").iterdir() if path.is_file()}
+    codex_hooks = {path.name for path in (ROOT / "codex" / "hooks").iterdir() if path.is_file()}
+
+    for hook in sorted((claude_hooks | codex_hooks) - set(manifest_hooks)):
+        add_problem(problems, f"Hook missing from manifest: {hook}")
+    for hook in sorted(set(manifest_hooks) - (claude_hooks | codex_hooks)):
+        add_problem(problems, f"Manifest hook missing from both trees: {hook}")
+
+    for name, item in sorted(manifest_hooks.items()):
+        status = item.get("status")
+        claude = item.get("claude")
+        codex = item.get("codex")
+        if claude and not (ROOT / claude).exists():
+            add_problem(problems, f"Manifest Claude hook path missing: {claude}")
+        if codex and not (ROOT / codex).exists():
+            add_problem(problems, f"Manifest Codex hook path missing: {codex}")
+        if status == "ported" and not (claude and codex):
+            add_problem(problems, f"Ported hook lacks both sides in manifest: {name}")
+
+    claude_settings = json.loads((Path.home() / ".claude" / "settings.json").read_text())
+    codex_hooks_json = json.loads((ROOT / ".codex" / "hooks.json").read_text())
+    claude_commands = hook_commands(claude_settings)
+    codex_commands = hook_commands(codex_hooks_json)
+
+    for label, commands in (("Claude", claude_commands), ("Codex", codex_commands)):
+        for command in commands:
+            executable = command_executable(command)
+            if executable is None or not executable.exists():
+                add_problem(problems, f"{label} hook command executable is missing: {command}")
+
+    for name, item in sorted(manifest_hooks.items()):
+        if item.get("status") != "ported":
+            continue
+        claude_path = ROOT / item["claude"]
+        codex_path = ROOT / item["codex"]
+        if not any(command_mentions_path(command, claude_path) for command in claude_commands):
+            add_problem(problems, f"Ported Claude hook is not registered in ~/.claude/settings.json: {name}")
+        if not any(command_mentions_path(command, codex_path) for command in codex_commands):
+            add_problem(problems, f"Ported Codex hook is not registered in .codex/hooks.json: {name}")
+
+
+def audit_registrations(problems: list[str], manifest: dict) -> None:
+    check_symlink(
+        problems,
+        Path.home() / ".codex" / "config.toml",
+        ROOT / "codex" / "config.toml",
+        "Codex config",
+    )
+    check_symlink(
+        problems,
+        Path.home() / ".codex" / "hooks.json",
+        ROOT / ".codex" / "hooks.json",
+        "Codex hooks",
+    )
+    check_symlink(
+        problems,
+        Path.home() / ".codex" / "rules",
+        ROOT / "codex" / "rules",
+        "Codex rules",
+    )
+
+    config = tomllib.loads((ROOT / "codex" / "config.toml").read_text())
+    if "CLAUDE.md" not in config.get("project_doc_fallback_filenames", []):
+        add_problem(problems, "codex/config.toml does not include CLAUDE.md in project_doc_fallback_filenames.")
+    if not config.get("features", {}).get("codex_hooks"):
+        add_problem(problems, "codex/config.toml does not enable features.codex_hooks.")
+
+    registration_paths = {item.get("path") for item in manifest.get("registrations") or []}
+    for expected in (
+        "~/.codex/AGENTS.md",
+        "~/.claude/settings.json",
+        ".codex/hooks.json",
+        "codex/config.toml",
+        "codex/bin/install-skills.sh",
+        "codex/rules/default.rules",
+    ):
+        if expected not in registration_paths:
+            add_problem(problems, f"Manifest registrations missing: {expected}")
+
+
+def audit() -> int:
+    problems: list[str] = []
+    if not MANIFEST_PATH.exists():
+        print(f"Missing manifest: {MANIFEST}")
+        return 1
+
+    manifest = load_manifest()
+    audit_instructions(problems, manifest)
+    audit_skills(problems, manifest)
+    audit_hooks(problems, manifest)
+    audit_registrations(problems, manifest)
+
+    if problems:
+        print("AI config sync audit failed:")
+        for problem in problems:
+            print(f"- {problem}")
+        return 1
+
+    print("AI config sync audit passed.")
     return 0
-  fi
 
-  real=$(real_path "$path")
-  root_real=$(real_path "$ROOT")
-  case "$real" in
-    "$root_real") printf '.\n' ;;
-    "$root_real"/*) printf '%s\n' "${real#$root_real/}" ;;
-    *) printf '%s\n' "$path" ;;
-  esac
-}
 
-direct_file_path() {
-  local input="$1"
-  printf '%s' "$input" | jq -r '
-    .tool_input.file_path //
-    .tool_input.filePath //
-    .tool_input.path //
-    .tool_input.notebook_path //
-    empty
-  '
-}
+def main() -> int:
+    mode = sys.argv[1] if len(sys.argv) > 1 else ""
+    if mode == "remind-claude":
+        remind_claude()
+        return 0
+    if mode == "remind-codex":
+        remind_codex()
+        return 0
+    if mode == "guard-commit":
+        guard_commit()
+        return 0
+    if mode == "audit":
+        return audit()
+    usage()
+    return 2
 
-patch_text() {
-  local input="$1"
-  printf '%s' "$input" | jq -r '
-    .tool_input.patch //
-    .tool_input.command //
-    .tool_input.input //
-    .tool_input.text //
-    empty
-  '
-}
 
-paths_from_patch() {
-  awk '
-    /^\*\*\* (Add|Update|Delete) File: / {
-      sub(/^\*\*\* (Add|Update|Delete) File: /, "")
-      print
-    }
-    /^\*\*\* Move to: / {
-      sub(/^\*\*\* Move to: /, "")
-      print
-    }
-    /^diff --git a\// {
-      old=$3
-      new=$4
-      sub(/^a\//, "", old)
-      sub(/^b\//, "", new)
-      if (old != "/dev/null") print old
-      if (new != "/dev/null") print new
-    }
-  '
-}
-
-paths_from_codex_input() {
-  local input="$1" direct patch
-
-  direct=$(direct_file_path "$input")
-  if [ -n "$direct" ]; then
-    printf '%s\n' "$direct"
-  fi
-
-  patch=$(patch_text "$input")
-  if [ -n "$patch" ]; then
-    printf '%s\n' "$patch" | paths_from_patch
-  fi
-}
-
-paths_from_command() {
-  local command="$1"
-  printf '%s\n' "$command" | grep -oE '(^|[[:space:]])(claude|codex|\.codex)/[^[:space:];|&]+' | sed 's/^[[:space:]]*//' || true
-  printf '%s\n' "$command" | grep -oE '(^|[[:space:]])(AGENTS\.md|CLAUDE\.md|ai-config-sync\.json|bin/ai-config-sync)([[:space:];|&]|$)' | sed 's/^[[:space:]]*//; s/[[:space:];|&]$//' || true
-}
-
-sync_message_for_path() {
-  local rel="$1" skill hook
-
-  case "$rel" in
-    claude/skills/*)
-      skill=${rel#claude/skills/}
-      skill=${skill%%/*}
-      printf 'claude/skills/%s changed; update codex/skills/%s in the same session.\n' "$skill" "$skill"
-      ;;
-    codex/skills/*)
-      skill=${rel#codex/skills/}
-      skill=${skill%%/*}
-      printf 'codex/skills/%s changed; update claude/skills/%s in the same session.\n' "$skill" "$skill"
-      ;;
-    claude/hooks/*)
-      hook=${rel#claude/hooks/}
-      if [ -e "$ROOT/codex/hooks/$hook" ]; then
-        printf 'claude/hooks/%s changed; update codex/hooks/%s and the hook registration if needed.\n' "$hook" "$hook"
-      else
-        printf 'claude/hooks/%s changed; add/adjust its Codex port or record why it is unsupported in %s.\n' "$hook" "$MANIFEST"
-      fi
-      ;;
-    codex/hooks/*)
-      hook=${rel#codex/hooks/}
-      if [ -e "$ROOT/claude/hooks/$hook" ]; then
-        printf 'codex/hooks/%s changed; update claude/hooks/%s and ~/.claude/settings.json if registration changed.\n' "$hook" "$hook"
-      else
-        printf 'codex/hooks/%s changed; add/adjust its Claude counterpart or record why it is Codex-only in %s.\n' "$hook" "$MANIFEST"
-      fi
-      ;;
-    "$HOME/.claude/settings.json"|"$HOME/.claude/settings.local.json")
-      printf '%s changed; check .codex/hooks.json, codex/config.toml, and %s for matching policy changes.\n' "$rel" "$MANIFEST"
-      ;;
-    .codex/hooks.json)
-      printf '.codex/hooks.json changed; update ~/.claude/settings.json and %s if the global hook policy changed.\n' "$MANIFEST"
-      ;;
-    codex/config.toml)
-      printf 'codex/config.toml changed; update %s if skill or hook registration changed.\n' "$MANIFEST"
-      ;;
-    claude/CLAUDE.md)
-      printf 'claude/CLAUDE.md changed; Codex consumes this source through ~/.codex/AGENTS.md, so check only if global activation changed.\n'
-      ;;
-    "$MANIFEST")
-      ;;
-  esac
-}
-
-remind_paths() {
-  local rel
-  while IFS= read -r path; do
-    [ -n "$path" ] || continue
-    rel=$(relative_to_root "$path")
-    sync_message_for_path "$rel"
-  done | sort -u
-}
-
-remind_claude() {
-  local input path
-  input=$(cat)
-  path=$(direct_file_path "$input")
-  [ -n "$path" ] || exit 0
-  remind_paths <<< "$path"
-}
-
-remind_codex() {
-  local input
-  input=$(cat)
-  paths_from_codex_input "$input" | remind_paths
-}
-
-skip_runtime_path() {
-  case "$1" in
-    claude/skills/*/digests/*|claude/skills/*/last-run/*|claude/skills/twitter-vet/vetted/*)
-      return 0
-      ;;
-    codex/skills/*/digests/*|codex/skills/*/last-run/*|codex/skills/twitter-vet/vetted/*)
-      return 0
-      ;;
-  esac
-  return 1
-}
-
-has_path() {
-  local needle="$1" haystack="$2"
-  grep -qxF "$needle" <<< "$haystack"
-}
-
-has_prefix() {
-  local prefix="$1" haystack="$2"
-  grep -qE "^${prefix}" <<< "$haystack"
-}
-
-guard_commit() {
-  local input command cwd_root root_real staged command_paths paths manifest_changed problems=""
-  input=$(cat)
-  command=$(printf '%s' "$input" | jq -r '.tool_input.command // empty')
-
-  if ! echo "$command" | grep -qE '\bgit\s+commit\b'; then
-    exit 0
-  fi
-
-  cwd_root=$(git rev-parse --show-toplevel 2>/dev/null || true)
-  root_real=$(real_path "$ROOT")
-  if [ "$(real_path "$cwd_root")" != "$root_real" ] && ! echo "$command" | grep -qE 'dotfiles|\.codex|claude/|codex/|ai-config-sync\.json'; then
-    exit 0
-  fi
-
-  staged=$(git -C "$ROOT" diff --cached --name-only 2>/dev/null || true)
-  command_paths=$(paths_from_command "$command")
-  paths=$(printf '%s\n%s\n' "$staged" "$command_paths" | sed '/^$/d' | sort -u)
-
-  [ -n "$paths" ] || exit 0
-
-  manifest_changed=false
-  if has_path "$MANIFEST" "$paths"; then
-    manifest_changed=true
-  fi
-
-  while IFS= read -r path; do
-    [ -n "$path" ] || continue
-    skip_runtime_path "$path" && continue
-
-    case "$path" in
-      claude/skills/*)
-        skill=${path#claude/skills/}
-        skill=${skill%%/*}
-        if ! has_prefix "codex/skills/$skill/" "$paths" && [ "$manifest_changed" = false ]; then
-          problems="${problems}claude/skills/$skill changed without codex/skills/$skill or $MANIFEST\n"
-        fi
-        ;;
-      codex/skills/*)
-        skill=${path#codex/skills/}
-        skill=${skill%%/*}
-        if ! has_prefix "claude/skills/$skill/" "$paths" && [ "$manifest_changed" = false ]; then
-          problems="${problems}codex/skills/$skill changed without claude/skills/$skill or $MANIFEST\n"
-        fi
-        ;;
-      claude/hooks/*)
-        hook=${path#claude/hooks/}
-        if ! has_path "codex/hooks/$hook" "$paths" && [ "$manifest_changed" = false ]; then
-          problems="${problems}claude/hooks/$hook changed without codex/hooks/$hook or $MANIFEST\n"
-        fi
-        ;;
-      codex/hooks/*)
-        hook=${path#codex/hooks/}
-        if ! has_path "claude/hooks/$hook" "$paths" && [ "$manifest_changed" = false ]; then
-          problems="${problems}codex/hooks/$hook changed without claude/hooks/$hook or $MANIFEST\n"
-        fi
-        ;;
-      .codex/hooks.json|codex/config.toml)
-        if [ "$manifest_changed" = false ]; then
-          problems="${problems}$path changed without $MANIFEST\n"
-        fi
-        ;;
-    esac
-  done <<< "$paths"
-
-  [ -z "$problems" ] && exit 0
-
-  jq -n --arg reason "BLOCKED: AI config sync guard found one-sided Claude/Codex changes.\n\n$problems\nUpdate the counterpart in this same session, or stage $MANIFEST with an explicit status/exemption." '{
-    "hookSpecificOutput": {
-      "hookEventName": "PreToolUse",
-      "permissionDecision": "deny",
-      "permissionDecisionReason": $reason
-    }
-  }'
-}
-
-audit() {
-  local missing=0 skill hook target expected
-
-  while IFS= read -r skill; do
-    [ -e "$ROOT/codex/skills/$skill/SKILL.md" ] || {
-      printf 'Missing Codex skill port: %s\n' "$skill"
-      missing=$((missing + 1))
-    }
-    target="$HOME/.codex/skills/$skill"
-    expected="$ROOT/codex/skills/$skill"
-    if [ ! -L "$target" ] || [ "$(readlink "$target" 2>/dev/null || true)" != "$expected" ]; then
-      printf 'Missing live Codex skill symlink: %s -> %s\n' "$target" "$expected"
-      missing=$((missing + 1))
-    fi
-  done < <(cd "$ROOT/claude/skills" && find . -mindepth 2 -maxdepth 2 -name SKILL.md | sed 's#^\./##; s#/SKILL.md$##' | sort)
-
-  target="$HOME/.codex/AGENTS.md"
-  expected="$ROOT/claude/CLAUDE.md"
-  if [ ! -L "$target" ] || [ "$(readlink "$target" 2>/dev/null || true)" != "$expected" ]; then
-    printf 'Missing live Codex global instruction symlink: %s -> %s\n' "$target" "$expected"
-    missing=$((missing + 1))
-  fi
-
-  for hook in block-secret-leak.sh block-destructive-command.sh block-walk-list-access.sh guard-external-actions.sh require-elisp-test-before-commit.sh require-doc-update.sh require-readme-update.sh require-elisp-verify-after-commit.sh block-elpaca-rebuild-uncommitted.sh track-elisp-test.sh track-elisp-verify.sh block-elpaca-dotfiles-edit.sh block-texi-edit.sh load-elisp-after-edit.sh regenerate-manual-after-edit.sh remind-ai-config-sync.sh require-ai-config-sync.sh; do
-    [ -e "$ROOT/codex/hooks/$hook" ] || {
-      printf 'Missing Codex hook port: %s\n' "$hook"
-      missing=$((missing + 1))
-    }
-  done
-
-  [ -f "$ROOT/$MANIFEST" ] || {
-    printf 'Missing manifest: %s\n' "$MANIFEST"
-    missing=$((missing + 1))
-  }
-
-  if [ "$missing" -eq 0 ]; then
-    printf 'AI config sync audit passed.\n'
-  else
-    return 1
-  fi
-}
-
-mode=${1:-}
-case "$mode" in
-  remind-claude) remind_claude ;;
-  remind-codex) remind_codex ;;
-  guard-commit) guard_commit ;;
-  audit) audit ;;
-  *) usage; exit 2 ;;
-esac
+if __name__ == "__main__":
+    raise SystemExit(main())

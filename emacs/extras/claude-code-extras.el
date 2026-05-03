@@ -209,13 +209,6 @@ Used to detect when `/branch' creates a new session.")
 (defvar claude-code-extras--usage-current-interval nil
   "Current polling interval in seconds, possibly increased by backoff.")
 
-(defvar-local claude-code-extras--waiting-for-input nil
-  "Obsolete compatibility variable for Claude waiting state.
-Use `ai-extras--waiting-for-input' instead.")
-(make-obsolete-variable 'claude-code-extras--waiting-for-input
-                        'ai-extras--waiting-for-input
-                        "2026-05-03")
-
 (defvar-local claude-code-extras--copilot-active nil
   "Non-nil when Copilot integration is active in the current buffer.")
 
@@ -1225,9 +1218,7 @@ elicitation_dialog notifications."
                        (plist-get message :json-data))))
           (pcase ntype
             ("idle_prompt"
-             (let ((time (current-time)))
-               (setq ai-extras--waiting-for-input time
-                     claude-code-extras--waiting-for-input time))
+             (setq ai-extras--waiting-for-input (current-time))
              (claude-code-extras-notify
               "Claude ready"
               (format "%s: waiting for your response" name)))
@@ -1244,13 +1235,6 @@ elicitation_dialog notifications."
               "Claude Code"
               (format "%s: needs your attention" name))))))))
   nil)
-
-(defun claude-code-extras--clear-waiting-for-input (&rest _)
-  "Clear the waiting-for-input flag in the current Claude buffer."
-  (when (or (bound-and-true-p ai-extras--waiting-for-input)
-            (bound-and-true-p claude-code-extras--waiting-for-input))
-    (setq ai-extras--waiting-for-input nil
-          claude-code-extras--waiting-for-input nil)))
 
 (defconst claude-code-extras--background-tasks-regexp
   "· *[0-9]+ +\\(shells?\\|monitors?\\)"
@@ -1277,9 +1261,7 @@ status-line indicator (e.g. \"· 3 shells\" or \"· 5 monitors\")."
   (let (best-buf best-time)
     (dolist (buf (claude-code--find-all-claude-buffers))
       (when (buffer-live-p buf)
-        (let ((ts (or (buffer-local-value 'ai-extras--waiting-for-input buf)
-                      (buffer-local-value
-                       'claude-code-extras--waiting-for-input buf))))
+        (let ((ts (buffer-local-value 'ai-extras--waiting-for-input buf)))
           (when (and ts (or (null best-time) (time-less-p best-time ts)))
             (setq best-buf buf best-time ts)))))
     (if best-buf

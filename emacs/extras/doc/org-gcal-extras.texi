@@ -29,6 +29,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 @menu
 * Overview::
+* Re-entrancy and prompt guards::
 * Commands::
 * Compatibility fixes::
 * Patched functions::
@@ -60,9 +61,11 @@ Indices
 
 @samp{org-gcal-extras.el} extends @samp{org-gcal}, the package that synchronizes Org mode entries with Google Calendar events. The upstream package stores event timestamps as @samp{SCHEDULED} properties and places descriptions inside a dedicated @samp{:org-gcal:} drawer. This layout may not suit every workflow---for instance, if you use deadlines rather than scheduled dates for calendar events, or if you prefer event descriptions to live in the heading body rather than a drawer.
 
-The package provides three categories of functionality:
+The package provides four categories of functionality:
 
 @itemize
+@item
+@strong{Re-entrancy and prompt guards.} Advice that prevents nested @samp{org-gcal} operations from firing when timers re-enter during synchronous waits, blocks concurrent top-level syncs, and suppresses @samp{org-read-date} prompts that would otherwise stall the deferred chain on entries with missing dates (@ref{Re-entrancy and prompt guards}).
 @item
 @strong{Commands.} A command to open the Google Calendar event at point in a web browser, and a transient menu that groups all common @samp{org-gcal} operations into a single dispatch interface (@ref{Commands}).
 @item
@@ -72,6 +75,31 @@ The package provides three categories of functionality:
 @end itemize
 
 The package depends on @samp{org-gcal}, @samp{el-patch}, and @samp{transient}.
+
+@node Re-entrancy and prompt guards
+@chapter Re-entrancy and prompt guards
+
+Several @samp{org-gcal} operations block the main thread while waiting for network I/O or GPG decryption (via @code{aio-wait-for}, @code{url-retrieve-synchronously}, or @code{epg-wait-for-completion}). During these waits, @code{accept-process-output} services the event loop, which allows pending timers to fire. If another @samp{org-gcal} operation is scheduled on a timer (for example via @code{midnight-hook}), it re-enters and triggers its own OAuth2 token refresh and GPG decryption. This nesting can repeat multiple levels deep.
+
+The deadlock occurs when @code{oauth2-auto--plstore-write} calls @code{plstore-save}, which calls @code{basic-save-buffer}. If the plstore buffer's state causes @code{basic-save-buffer} to prompt for a filename, it opens a native macOS save dialog (@code{NSSavePanel}) that blocks the entire event loop. While that dialog waits for user input, further nested timer entries stack up behind it, and Emacs becomes unresponsive.
+
+A second class of bug appears when @samp{org-gcal-sync}'s deferred chain reaches an entry with missing or unparseable date information. Inside @code{org-gcal-post-at-point}, the chain falls into a branch that calls @code{org-read-date} to ask the user. Because the chain is running on a timer (not on a user keypress), the prompt blocks the chain and lets other timers (e.g.~display-time~) fire reentrantly, producing spurious ``Timer already activated'' errors.
+
+The package addresses both classes with three layers of guards:
+
+@vindex org-gcal-extras--sync-active
+@findex org-gcal-extras--prevent-reentrant-sync
+@strong{Inner guard (synchronous re-entrancy).} The variable @code{org-gcal-extras--sync-active} is @code{let}-bound by @code{org-gcal-extras--prevent-reentrant-sync} around all public @samp{org-gcal} entry points (@code{org-gcal-sync}, @code{org-gcal-fetch}, @code{org-gcal-sync-buffer}, @code{org-gcal-fetch-buffer}, @code{org-gcal-post-at-point}, and @code{org-gcal-delete-at-point}). It catches re-entrant calls that fire during the synchronous portion of an @code{org-gcal-*} call (e.g. a timer that fires inside @code{accept-process-output}). Subsequent calls during the same synchronous window are silently suppressed.
+
+@vindex org-gcal-extras--sync-chain-active
+@findex org-gcal-extras--prevent-concurrent-sync
+@findex org-gcal-extras--reset-sync-chain
+@strong{Outer guard (chain-spanning).} The variable @code{org-gcal-extras--sync-chain-active} is set with @code{setq} by @code{org-gcal-extras--prevent-concurrent-sync} at the moment a top-level entry point is invoked, and is held until the deferred chain settles (success or error). It is applied only to top-level sync entry points (@code{org-gcal-sync}, @code{org-gcal-fetch}, @code{org-gcal-sync-buffer}, @code{org-gcal-fetch-buffer}), so that internal calls within the chain --- such as the per-entry @code{org-gcal-post-at-point} that @samp{org-gcal} itself issues at @samp{org-gcal.el:781} --- are not blocked. A concurrent attempt to start a top-level sync while one is in flight raises a @code{user-error}. If the flag gets stuck (e.g.~due to an unhandled error), the command @code{org-gcal-extras--reset-sync-chain} clears it manually, and @code{org-gcal--sync-unlock} also clears it via @samp{:after} advice.
+
+@findex org-gcal-extras--avoid-prompt-during-sync-chain
+@strong{Prompt suppression.} The function @code{org-gcal-extras--avoid-prompt-during-sync-chain} is added as @samp{:around} advice to @code{org-read-date}. When the outer guard is active and @code{deferred:worker} is on the call stack (i.e.~the prompt is being raised from inside the chain rather than from a user keypress), it signals an error instead of prompting. The error propagates back to the chain's existing @code{deferred:error} handler, which logs it and proceeds with the next entry. Direct user calls and @code{org-read-date} invocations outside the chain are unaffected.
+
+The inner guard is the same pattern used by @code{forge-extras--prevent-reentrant-query} to protect @samp{forge} from the identical class of freeze.
 
 @node Commands
 @chapter Commands
@@ -109,9 +137,13 @@ This menu is defined with @code{transient-define-prefix} and can be bound to a c
 @node Compatibility fixes
 @chapter Compatibility fixes
 
-Emacs 30 introduced the @code{track-changes} facility, which can trigger assertion failures when @samp{org-gcal} modifies buffers asynchronously during synchronization. Additionally, the org-element cache may enter a stale state during these async updates, causing ``emergency'' cache resets and subsequent errors.
+Emacs 30 introduced the @code{track-changes} facility, which can trigger assertion failures when @samp{org-gcal} modifies buffers asynchronously during synchronization. The @samp{org-modern-indent} package can similarly trigger @code{org-element-at-point} during buffer modifications, leading to ``Invalid search bound'' errors in async contexts. Additionally, the org-element cache may enter a stale state during these async updates, causing ``emergency'' cache resets and subsequent errors.
 
-@samp{org-gcal-extras.el} addresses both issues with an @samp{:around} advice on @code{org-gcal--update-entry} that wraps the original function in two protective measures: it sets @code{inhibit-modification-hooks} to @code{t} during the update (preventing @code{track-changes} assertions), and it resets the org-element cache both before and after the update (preventing stale cache errors). These fixes are applied automatically when the package is loaded.
+@samp{org-gcal-extras.el} addresses these issues with @samp{:around} advice on @code{org-gcal-post-at-point}, @code{org-gcal--update-entry}, and @code{org-gcal--sync-handle-events}. The advice wraps each original function in two protective measures: it sets @code{inhibit-modification-hooks} to @code{t} during the update (preventing @code{track-changes} and @code{org-modern-indent} from triggering @code{org-element-at-point}), and it resets the org-element cache both before and after the update (preventing stale cache errors). @code{org-gcal-post-at-point} needs the advice because it calls @code{org-entry-get} (which invokes @code{org-element-at-point}) before reaching @code{org-gcal--update-entry}.
+
+Crucially, the cache resets run @emph{outside} the @code{let} that binds @code{inhibit-modification-hooks}. This is necessary because @code{org-element--cache-active-p} returns nil when @code{inhibit-modification-hooks} is non-nil, so a reset inside the @code{let} would silently do nothing. The @code{unwind-protect} ensures the post-sync reset fires even if the sync errors out.
+
+These fixes are applied automatically when the package is loaded.
 
 @node Patched functions
 @chapter Patched functions
@@ -143,6 +175,8 @@ The event date is set using @code{org-deadline} instead of @code{org-schedule}, 
 @end enumerate
 
 Together with the timestamp reading patch (@ref{Reading event timestamps}), these changes create a consistent workflow where Google Calendar events use deadlines throughout the round-trip synchronization.
+
+The @samp{el-patch} base tracks the upstream definition and must be updated when upstream changes. Minor upstream refactors (such as moving variable bindings within a @samp{let*} form or adjusting error message punctuation) require corresponding updates to the patch base even though they do not affect the patched behavior. Use @code{el-patch-validate} to check whether the patch base has diverged from the current upstream source.
 
 @node Indices
 @chapter Indices

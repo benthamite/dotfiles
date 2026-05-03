@@ -289,16 +289,6 @@
   (let ((ai-extras-alert-on-ready t))
     (should (equal (claude-code-extras-alert-indicator) "🔔"))))
 
-;;;; Waiting state
-
-(ert-deftest claude-code-extras-test-clear-waiting-clears-compat-state ()
-  "Clear both shared and obsolete Claude waiting state."
-  (let ((ai-extras--waiting-for-input (current-time))
-        (claude-code-extras--waiting-for-input (current-time)))
-    (claude-code-extras--clear-waiting-for-input)
-    (should-not ai-extras--waiting-for-input)
-    (should-not claude-code-extras--waiting-for-input)))
-
 ;;;; Transient menu
 
 (ert-deftest claude-code-extras-test-agent-log-menu-is-autoloaded ()

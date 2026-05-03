@@ -81,5 +81,8 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/My Drive/dotfiles/codex"]
 trust_level = "trusted"
 
+[projects."/Users/pablostafforini/My Drive/dotfiles/emacs/extras"]
+trust_level = "trusted"
+
 [tui]
 theme = "light"

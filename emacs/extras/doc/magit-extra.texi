@@ -194,7 +194,7 @@ Both suffixes accept the standard @code{magit-submodule-arguments} for the @samp
 @findex magit-extras-midnight-update
 The function @code{magit-extras-parse-url} converts a Git remote URL in SSH format (e.g., @samp{git@@github.com:user/repo.git}) into an HTTPS URL@. It passes HTTP URLs through unchanged.
 
-The function @code{magit-extras-get-commit-file} returns the first staged file in the current repository, querying @samp{git} via @code{magit-staged-files}. It accepts an optional PATH argument: @code{'full} returns the absolute path, @code{'sans-dir} returns only the filename, and @code{nil} (the default) returns the path relative to the repository root.
+The function @code{magit-extras-get-commit-file} returns the first staged file in the current repository, querying @samp{git} via @code{magit-staged-files}. It accepts an optional PATH argument: @code{'full} returns the absolute path (joined against @code{magit-toplevel}), @code{'sans-dir} returns only the filename, and @code{nil} (the default) returns the path relative to the repository root. When no file is staged, the function signals a @code{user-error}.
 
 The function @code{magit-extras-get-commit-heading} retrieves the Org mode heading associated with the code being committed. It parses the diff in the commit buffer to find the first changed line number, visits the file at that line, and returns the enclosing heading via @code{org-entry-get}. This is useful for generating commit messages from Org structure.
 

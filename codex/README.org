@@ -84,7 +84,10 @@ instead of calling Claude hook scripts directly.
 
 The Emacs =codex= package also auto-adds =codex-hook-wrapper= entries for its
 own event handling.  Those entries coexist with the dotfiles hooks and should
-not be hand-pruned unless the Emacs package configuration changes.
+not be hand-pruned unless the Emacs package configuration changes.  The wrapper
+commands must point at the package source or repo tree, not =elpaca/builds/=:
+the build directory contains compiled Elisp but not the =bin/codex-hook-wrapper=
+script.
 
 The Codex ports cover:
 

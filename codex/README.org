@@ -59,15 +59,17 @@ ports therefore have to be linked into that directory.  Run:
 codex/bin/install-skills.sh
 #+end_src
 
-The script creates one symlink per tracked skill and leaves unrelated local
+The script creates one symlink per tracked skill and prunes stale symlinks that
+point back into the tracked =codex/skills/= tree. It leaves unrelated local
 skills, such as project handoff skills, alone.
 
 When changing a skill:
 
 1. Edit the side requested by the user.
 2. Update the counterpart in the same session.
-3. Stage both sides, or stage =ai-config-sync.json= with a clear status or
-   exemption if a counterpart is intentionally absent.
+3. Stage both sides, or update =ai-config-sync.json= with a clear
+   artifact-specific status or exemption if a counterpart is intentionally
+   absent.
 
 Skill files must be named uppercase =SKILL.md=.  This matters on the Google
 Drive mount and for Codex skill discovery.
@@ -120,8 +122,8 @@ Two hook pairs keep the model simple:
   counterpart that should be updated.
 - =claude/hooks/require-ai-config-sync.sh= and
   =codex/hooks/require-ai-config-sync.sh= run before =git commit= and block
-  one-sided Claude/Codex config changes unless the counterpart or manifest is
-  staged.
+  one-sided Claude/Codex config changes unless the counterpart is synchronized
+  or the manifest records an explicit artifact-specific exemption.
 
 Manual audit:
 
@@ -147,4 +149,6 @@ instructions; project-level =CLAUDE.md= loading is handled by
 =~/.codex/skills/= remains a normal Codex home directory for system or local
 skills.  The mirrored Claude skill ports are symlinked into that directory by
 =codex/bin/install-skills.sh= because Codex does not load arbitrary skill paths
-from =codex/config.toml=.
+from =codex/config.toml=.  The installer prunes stale symlinks that point back
+into the tracked =codex/skills/= tree, but it does not prune unrelated local
+skills.

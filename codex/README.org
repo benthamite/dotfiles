@@ -79,6 +79,10 @@ Drive mount and for Codex skill discovery.
 =~/.codex/hooks.json=.  It registers Codex-side scripts from =codex/hooks/=
 instead of calling Claude hook scripts directly.
 
+The Emacs =codex= package also auto-adds =codex-hook-wrapper= entries for its
+own event handling.  Those entries coexist with the dotfiles hooks and should
+not be hand-pruned unless the Emacs package configuration changes.
+
 The Codex ports cover:
 
 - Bash safety and workflow gates: secret leakage, destructive commands,

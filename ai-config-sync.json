@@ -8,9 +8,9 @@
   "instructions": [
     {
       "claude": "claude/CLAUDE.md",
-      "codex": "codex/AGENTS.md",
-      "status": "symlink-entrypoint",
-      "note": "codex/AGENTS.md is a symlink to claude/CLAUDE.md; project-level CLAUDE.md fallback remains enabled in codex/config.toml."
+      "codex": "~/.codex/AGENTS.md",
+      "status": "live-global-symlink",
+      "note": "Codex reads global user instructions from AGENTS.md in $CODEX_HOME; project_doc_fallback_filenames applies to project docs, not $CODEX_HOME."
     },
     {
       "claude": "CLAUDE.md",
@@ -682,6 +682,13 @@
     }
   ],
   "registrations": [
+    {
+      "tool": "Codex",
+      "path": "~/.codex/AGENTS.md",
+      "tracked": false,
+      "live_path": "~/.codex/AGENTS.md",
+      "note": "Live global Codex instructions symlink points directly to claude/CLAUDE.md because Codex does not apply project_doc_fallback_filenames to $CODEX_HOME."
+    },
     {
       "tool": "Claude Code",
       "path": "~/.claude/settings.json",

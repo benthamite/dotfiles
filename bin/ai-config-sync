@@ -145,11 +145,8 @@ sync_message_for_path() {
     codex/config.toml)
       printf 'codex/config.toml changed; update %s if skill or hook registration changed.\n' "$MANIFEST"
       ;;
-    codex/AGENTS.md)
-      printf 'codex/AGENTS.md changed; check whether claude/CLAUDE.md or the global Codex symlink should change too.\n'
-      ;;
     claude/CLAUDE.md)
-      printf 'claude/CLAUDE.md changed; Codex normally consumes this source, but check codex/AGENTS.md if the entrypoint changed.\n'
+      printf 'claude/CLAUDE.md changed; Codex consumes this source through ~/.codex/AGENTS.md, so check only if global activation changed.\n'
       ;;
     "$MANIFEST")
       ;;
@@ -258,7 +255,7 @@ guard_commit() {
           problems="${problems}codex/hooks/$hook changed without claude/hooks/$hook or $MANIFEST\n"
         fi
         ;;
-      .codex/hooks.json|codex/config.toml|codex/AGENTS.md)
+      .codex/hooks.json|codex/config.toml)
         if [ "$manifest_changed" = false ]; then
           problems="${problems}$path changed without $MANIFEST\n"
         fi
@@ -278,7 +275,7 @@ guard_commit() {
 }
 
 audit() {
-  local missing=0 skill hook
+  local missing=0 skill hook target expected
 
   while IFS= read -r skill; do
     [ -e "$ROOT/codex/skills/$skill/SKILL.md" ] || {
@@ -292,6 +289,13 @@ audit() {
       missing=$((missing + 1))
     fi
   done < <(cd "$ROOT/claude/skills" && find . -mindepth 2 -maxdepth 2 -name SKILL.md | sed 's#^\./##; s#/SKILL.md$##' | sort)
+
+  target="$HOME/.codex/AGENTS.md"
+  expected="$ROOT/claude/CLAUDE.md"
+  if [ ! -L "$target" ] || [ "$(readlink "$target" 2>/dev/null || true)" != "$expected" ]; then
+    printf 'Missing live Codex global instruction symlink: %s -> %s\n' "$target" "$expected"
+    missing=$((missing + 1))
+  fi
 
   for hook in block-secret-leak.sh block-destructive-command.sh block-walk-list-access.sh guard-external-actions.sh require-elisp-test-before-commit.sh require-doc-update.sh require-readme-update.sh require-elisp-verify-after-commit.sh block-elpaca-rebuild-uncommitted.sh track-elisp-test.sh track-elisp-verify.sh block-elpaca-dotfiles-edit.sh block-texi-edit.sh load-elisp-after-edit.sh regenerate-manual-after-edit.sh remind-ai-config-sync.sh require-ai-config-sync.sh; do
     [ -e "$ROOT/codex/hooks/$hook" ] || {

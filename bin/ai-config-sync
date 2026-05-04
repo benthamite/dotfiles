@@ -824,6 +824,10 @@ def audit_skills(problems: list[str], manifest: dict) -> None:
         codex_live = Path.home() / ".codex" / "skills" / skill
         check_symlink(problems, codex_live, ROOT / "codex" / "skills" / skill, f"Codex skill {skill}")
 
+        item = manifest_item_by_name(manifest, "skills", skill)
+        if manifest_item_is_explicitly_unpaired(item):
+            continue
+
         claude_skill = ROOT / "claude" / "skills" / skill / "SKILL.md"
         codex_skill = ROOT / "codex" / "skills" / skill / "SKILL.md"
         if frontmatter_normalized_skill(claude_skill, CODEX_DROPPED_FRONTMATTER) != codex_skill.read_text():

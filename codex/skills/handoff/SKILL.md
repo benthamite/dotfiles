@@ -6,7 +6,7 @@ description: Save next-session instructions to a handoff file for seamless sessi
 # Handoff
 
 Write a concrete, actionable prompt for the next session and save it
-to `~/.claude/handoff.md`.
+to `/tmp/codex-handoff.md`.
 
 ## Determining the prompt
 
@@ -49,12 +49,12 @@ When drafting an inferred prompt:
 1. Determine whether path 1 or path 2 applies.
 2. If path 1, write the user's prompt verbatim.
    If path 2, draft a prompt, then confirm with the user.
-3. Save to `/tmp/claude-code-handoff.md`, overwriting any previous handoff.
+3. Save to `/tmp/codex-handoff.md`, overwriting any previous handoff.
    The Write tool refuses to overwrite an existing file without a prior
-   Read in the same session. Either `rm -f /tmp/claude-code-handoff.md`
+   Read in the same session. Either `rm -f /tmp/codex-handoff.md`
    via Bash first and then Write, or Read the existing file before
    Writing — either works.
 4. Print the contents so the user can review.
-5. Tell the user to run `! emacsclient -e '(claude-code-extras-handoff)'`
+5. Tell the user to run `! emacsclient -e '(codex-extras-handoff)'`
    to close this session and start a new one with the prompt auto-submitted.
    Do NOT run this command yourself — only the user should trigger it.

@@ -6,7 +6,7 @@
 :ID:       FC7EF2FA-CDB3-43C0-9EFC-545DEA807191
 :END:
 
-This directory contains my [[https://docs.anthropic.com/en/docs/claude-code][Claude Code]] configuration: settings, hooks, and custom skills. Claude Code is a CLI-based coding agent; I use it exclusively from the terminal. Indeed, these days I hardly do anything other than using Claude Code.
+This directory contains my [[https://docs.anthropic.com/en/docs/claude-code][Claude Code]] configuration: settings, hooks, and custom skills. Claude Code is a CLI-based coding agent; I use it from the terminal alongside Codex.
 
 The cross-tool synchronization policy with Codex is documented in
 =../agents/README.org=. This file covers the Claude Code-specific configuration

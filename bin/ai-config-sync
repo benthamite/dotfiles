@@ -707,13 +707,6 @@ def check_symlink(problems: list[str], target: Path, expected: Path, label: str)
         add_problem(problems, f"Wrong live {label} symlink: {target} -> {actual}; expected {expected}")
 
 
-def symlink_target(path: Path) -> Path:
-    target = Path(os.readlink(path))
-    if not target.is_absolute():
-        target = path.parent / target
-    return target
-
-
 def frontmatter_normalized_skill(path: Path, drop_keys: set[str]) -> str:
     text = path.read_text()
     if not text.startswith("---\n"):
@@ -819,11 +812,14 @@ def audit_skills(problems: list[str], manifest: dict) -> None:
         ROOT / "claude" / "skills",
         "Claude skills",
     )
+    check_symlink(
+        problems,
+        Path.home() / ".codex" / "skills",
+        ROOT / "codex" / "skills",
+        "Codex skills",
+    )
 
     for skill in sorted(claude_skills & codex_skills):
-        codex_live = Path.home() / ".codex" / "skills" / skill
-        check_symlink(problems, codex_live, ROOT / "codex" / "skills" / skill, f"Codex skill {skill}")
-
         item = manifest_item_by_name(manifest, "skills", skill)
         if manifest_item_is_explicitly_unpaired(item):
             continue
@@ -842,20 +838,6 @@ def audit_skills(problems: list[str], manifest: dict) -> None:
         for rel in sorted(set(claude_aux) & set(codex_aux)):
             if not filecmp.cmp(claude_aux[rel], codex_aux[rel], shallow=False):
                 add_problem(problems, f"Auxiliary skill file drift: {skill}/{rel}")
-
-    codex_live_dir = Path.home() / ".codex" / "skills"
-    codex_source = ROOT / "codex" / "skills"
-    if codex_live_dir.exists():
-        for live_skill in codex_live_dir.iterdir():
-            if not live_skill.is_symlink():
-                continue
-            target = symlink_target(live_skill)
-            try:
-                target.relative_to(codex_source)
-            except ValueError:
-                continue
-            if live_skill.name not in codex_skills:
-                add_problem(problems, f"Stale managed Codex skill symlink: {live_skill} -> {target}")
 
 
 def audit_hooks(problems: list[str], manifest: dict) -> None:

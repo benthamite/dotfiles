@@ -1,0 +1,6 @@
+interface:
+  display_name: "Tangodb Continue"
+  short_description: "Resume tangodb cleanup sessions safely"
+  default_prompt: "Use $tangodb-continue to resume the current tangodb data-cleanup handoff."
+policy:
+  allow_implicit_invocation: false

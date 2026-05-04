@@ -11,7 +11,7 @@ Pablo uses two Google accounts and accesses each via different tools.
 
 ## Tooling by service
 
-For the **Epoch** account (`pablo@epoch.ai`), prefer CLIs over MCP. The CLIs share auth via the `GOOGLE_WORKSPACE_*` env vars (see "Auth" below).
+For the **Epoch** account (`pablo@epoch.ai`), use the local Google tools below. They share auth via the `GOOGLE_WORKSPACE_*` env vars (see "Auth" below).
 
 | Service  | Tool | Notes |
 |----------|------|-------|

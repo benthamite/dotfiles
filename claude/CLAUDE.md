@@ -32,14 +32,11 @@
 
 ## MCP Servers
 
-- For MCP placement, follow `README.org` -> "Where MCP servers live".
-- User-level MCPs go in `~/.claude.json` top-level `mcpServers`; after editing, run `claude/bin/sync-mcp-servers.sh`.
-- Project-scoped MCPs go in `<project>/.mcp.json`; do not use `~/.claude.json`'s `projects.<path>.mcpServers` block.
-- Chrome integration and multi-account details live in `README.org` -> "Chrome integration and multi-account".
+For MCP server placement, inventory, and account-specific MCP notes, read `context/mcp-servers.md`.
 
-## External CLIs Preferred Over MCP
+## Service Access Tools
 
-Prefer these local CLIs over MCP tools: Anna's Archive `annas-mcp`, Twitter `claude/skills/twitter/lib/twitterapi.sh`, Gmail `claude/bin/gmail.py`, Sheets `claude/bin/sheets.py`, Slack `claude/bin/slack.py`, Calendar `gcalcli`, Docs/Drive `gdoc`, GitHub `gh`.
+Use these local tools to connect to external services: Anna's Archive `annas-mcp`, Twitter/X `claude/skills/twitter/lib/twitterapi.sh`, Gmail `claude/bin/gmail.py`, Google Sheets `claude/bin/sheets.py`, Slack `claude/bin/slack.py`, Google Calendar `gcalcli`, Google Docs/Drive `gdoc`, GitHub `gh`.
 
 For Google account/auth details, read `context/google-services.md`. For Twitter workflows, use the `twitter` skill.
 

@@ -506,7 +506,7 @@ Diagnoses a frozen Emacs process. First tries to dump =*Backtrace*= and =*Messag
 :ID:       BEEADA41-ECD4-457B-8A10-DA8D0C19984B
 :END:
 
-Moves a directory from inside =~/My Drive/= to =~/.drive-nosync/= (outside Drive's sync root) and leaves a symlink in its place. Drive skips symlinks, so the directory becomes invisible to sync while tooling works transparently. Use when Google Drive complains about a specific directory (e.g. =node_modules/.bin=).
+Moves a directory from inside =~/My Drive/= to =~/.drive-nosync/= (outside Drive's sync root) and leaves a symlink in its place. Drive skips symlinks, so the directory becomes invisible to sync while tooling works transparently. After the move, walks the relocated tree and rewrites any relative symlinks whose =..= chain pointed outside the moved directory — without this step they break silently because their new parent is =~/.drive-nosync/= instead of =~/My Drive/=. Use when Google Drive complains about a specific directory (e.g. =node_modules/.bin=).
 
 *** fix-drive-errors
 :PROPERTIES:

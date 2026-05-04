@@ -43,6 +43,36 @@ ln -s "$ext_dir" "$dir"
 
 Verify the symlink resolves correctly by listing a few entries inside it.
 
+#### Step 2.5: Rewrite broken relative symlinks
+
+Relative symlinks inside the moved tree that pointed *outside* the moved directory will break, because their `..` chain now climbs out of `~/.drive-nosync/` instead of `~/My Drive/`. Walk the moved tree, find each broken relative symlink, compute what it used to point to (by resolving its target string from the symlink's *original* pre-move location), and rewrite to that absolute path if it exists. Pure string normalization — do not use `realpath`/`Path.resolve`, since they follow the new symlink back into nosync.
+
+```bash
+python3 - "$dir" "$ext_dir" <<'PY'
+import os, sys
+from pathlib import Path
+src, dst = sys.argv[1], sys.argv[2]
+fixed = []
+for link in Path(dst).rglob("*"):
+    if not link.is_symlink() or link.exists():
+        continue
+    target = os.readlink(link)
+    if os.path.isabs(target):
+        continue
+    orig_link = src + str(link)[len(dst):]
+    abs_target = os.path.normpath(os.path.join(os.path.dirname(orig_link), target))
+    if not os.path.exists(abs_target):
+        continue
+    link.unlink()
+    link.symlink_to(abs_target)
+    fixed.append((str(link), abs_target))
+for l, t in fixed:
+    print(f"rewrote {l} -> {t}")
+PY
+```
+
+Report the rewrites to the user; if any symlinks remain broken after this pass (e.g. their original target was already missing), list them so the user can decide what to do.
+
 #### Step 3: Update .gitignore (if applicable)
 
 If the directory is inside a git repository:

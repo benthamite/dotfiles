@@ -143,6 +143,11 @@ the audit scope.
 =~/.codex/hooks.json= points to =.codex/hooks.json=.  Updating the tracked files
 therefore updates the live global Codex configuration.
 
+=codex/config.toml= sets the default model and reasoning effort, uses
+=CLAUDE.md= as the project-doc fallback, enables Codex hooks, enables the goals
+UI and terminal resize reflow, records trusted project roots, and sets the TUI
+theme.
+
 =~/.codex/AGENTS.md= points directly to =claude/CLAUDE.md= so Codex gets the
 same global user instructions as Claude.  This is needed for user-level
 instructions; project-level =CLAUDE.md= loading is handled by

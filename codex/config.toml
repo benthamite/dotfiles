@@ -3,9 +3,11 @@ model_reasoning_effort = "xhigh"
 project_doc_fallback_filenames = ["CLAUDE.md"]
 approval_policy = "never"
 sandbox_mode = "danger-full-access"
+goals = true
 
 [features]
 codex_hooks = true
+terminal_resize_reflow = true
 
 [projects."/Users/pablostafforini/My Drive/repos/consensus-trader"]
 trust_level = "trusted"
@@ -76,5 +78,11 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/My Drive/dotfiles/emacs/extras"]
 trust_level = "trusted"
 
+[projects."/Users/pablostafforini/My Drive/dotfiles/agents"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/email-triage"]
+trust_level = "trusted"
+
 [tui]
-theme = "light"
+theme = "dark"

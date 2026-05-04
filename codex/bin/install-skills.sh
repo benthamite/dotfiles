@@ -1,19 +1,17 @@
 #!/usr/bin/env bash
-# Link tracked Codex skill ports into the Codex home skill directory.
+# Link the Codex home skill directory to the tracked skill ports.
 
 set -euo pipefail
 
 repo_root=$(cd "$(dirname "$0")/../.." && pwd)
 source_dir="$repo_root/codex/skills"
-target_dir="${CODEX_HOME:-$HOME/.codex}/skills"
+codex_home="${CODEX_HOME:-$HOME/.codex}"
+target_dir="$codex_home/skills"
 
-mkdir -p "$target_dir"
-
-created=0
-updated=0
-skipped=0
-pruned=0
-expected_links=
+if [ ! -d "$source_dir" ]; then
+  printf 'Missing tracked Codex skills directory: %s\n' "$source_dir" >&2
+  exit 1
+fi
 
 resolve_link() {
   local link="$1" target
@@ -24,51 +22,24 @@ resolve_link() {
   esac
 }
 
-for skill_dir in "$source_dir"/*; do
-  [ -d "$skill_dir" ] || continue
-  [ -f "$skill_dir/SKILL.md" ] || continue
+mkdir -p "$codex_home"
 
-  name=$(basename "$skill_dir")
-  target="$target_dir/$name"
-  expected_links="${expected_links}${target}
-"
-
-  if [ -L "$target" ]; then
-    current=$(readlink "$target")
-    if [ "$current" = "$skill_dir" ]; then
-      continue
-    fi
-    unlink "$target"
-    ln -s "$skill_dir" "$target"
-    updated=$((updated + 1))
-    continue
+if [ -L "$target_dir" ]; then
+  current=$(resolve_link "$target_dir")
+  if [ "$current" = "$source_dir" ]; then
+    printf 'Codex skills directory already linked: %s -> %s\n' "$target_dir" "$source_dir"
+    exit 0
   fi
-
-  if [ -e "$target" ]; then
-    printf 'Skipping existing non-symlink: %s\n' "$target" >&2
-    skipped=$((skipped + 1))
-    continue
+  unlink "$target_dir"
+elif [ -e "$target_dir" ]; then
+  backup="$target_dir.pre-symlink.$(date +%Y%m%d%H%M%S)"
+  mv "$target_dir" "$backup"
+  printf 'Moved existing Codex skills directory to backup: %s\n' "$backup" >&2
+  if [ -d "$backup/.system" ] && [ ! -e "$source_dir/.system" ]; then
+    mv "$backup/.system" "$source_dir/.system"
+    printf 'Preserved Codex system skills under ignored path: %s\n' "$source_dir/.system" >&2
   fi
-
-  ln -s "$skill_dir" "$target"
-  created=$((created + 1))
-done
-
-for target in "$target_dir"/*; do
-  [ -L "$target" ] || continue
-  resolved=$(resolve_link "$target")
-  case "$resolved" in
-    "$source_dir"/*)
-      if ! printf '%s' "$expected_links" | grep -Fxq "$target"; then
-        unlink "$target"
-        pruned=$((pruned + 1))
-      fi
-      ;;
-  esac
-done
-
-printf 'Codex skills linked: %d created, %d updated, %d pruned, %d skipped.\n' "$created" "$updated" "$pruned" "$skipped"
-
-if [ "$skipped" -gt 0 ]; then
-  exit 1
 fi
+
+ln -s "$source_dir" "$target_dir"
+printf 'Codex skills directory linked: %s -> %s\n' "$target_dir" "$source_dir"

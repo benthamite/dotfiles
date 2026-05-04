@@ -40,15 +40,17 @@ unsupported frontmatter keys such as =allowed-tools=, =argument-hint=, =model=,
 =digests/=, =last-run/=, and =twitter-vet/vetted/= are intentionally ignored.
 
 Codex discovers global skills from =~/.codex/skills/*/SKILL.md=. The tracked
-ports are linked there by:
+ports are activated by:
 
 #+begin_src sh
 codex/bin/install-skills.sh
 #+end_src
 
-The installer prunes stale symlinks that point back into the tracked
-=codex/skills/= tree. It leaves unrelated local or system skills alone, so
-=~/.codex/skills= is intentionally not an exact mirror of =codex/skills/=.
+The installer makes =~/.codex/skills= a symlink to the tracked =codex/skills/=
+tree. Local reusable skills should be ported into both =claude/skills/= and
+=codex/skills/= instead of living only under =~/.codex/skills=. Hidden
+Codex-managed system skills may exist under ignored =codex/skills/.system/=
+runtime data, but they are not part of the reusable skill parity model.
 
 * Hooks
 
@@ -80,7 +82,7 @@ These cases are recorded in =ai-config-sync.json= rather than treated as drift.
   rather than accepting any arbitrary counterpart file.
 - =audit= verifies the manifest, live symlinks, skill content parity after Codex
   frontmatter normalization, auxiliary skill files, hook file inventory, hook
-  registrations, managed Codex skill symlinks, and Codex activation files.
+  registrations, the Codex skills directory symlink, and Codex activation files.
 
 Run the deterministic audit with:
 

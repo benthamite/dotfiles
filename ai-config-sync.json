@@ -379,6 +379,20 @@
       "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
     },
     {
+      "name": "tangodb-closeout",
+      "claude": "claude/skills/tangodb-closeout/SKILL.md",
+      "codex": "codex/skills/tangodb-closeout/SKILL.md",
+      "status": "ported",
+      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+    },
+    {
+      "name": "tangodb-continue",
+      "claude": "claude/skills/tangodb-continue/SKILL.md",
+      "codex": "codex/skills/tangodb-continue/SKILL.md",
+      "status": "ported",
+      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+    },
+    {
       "name": "test-suite",
       "claude": "claude/skills/test-suite/SKILL.md",
       "codex": "codex/skills/test-suite/SKILL.md",
@@ -707,8 +721,8 @@
       "tool": "Codex",
       "path": "codex/bin/install-skills.sh",
       "tracked": true,
-      "live_path": "~/.codex/skills/<name>",
-      "note": "Creates one symlink per tracked codex/skills/<name> directory and prunes stale symlinks that point back into the tracked codex/skills tree because Codex discovers global skills from ~/.codex/skills/*/SKILL.md."
+      "live_path": "~/.codex/skills",
+      "note": "Ensures the live ~/.codex/skills directory is a symlink to the tracked codex/skills tree because Codex discovers global skills from ~/.codex/skills/*/SKILL.md."
     },
     {
       "tool": "Codex",

@@ -16,7 +16,7 @@ require them.
 #+begin_example
 codex/
 ├── config.toml            <- live ~/.codex/config.toml symlink target
-├── bin/install-skills.sh  <- links tracked skills into ~/.codex/skills
+├── bin/install-skills.sh  <- links ~/.codex/skills to tracked skills
 ├── hooks/                 <- Codex hook script ports
 ├── README.org
 ├── rules/default.rules
@@ -52,16 +52,18 @@ come from =CLAUDE.md= through =project_doc_fallback_filenames=.
 files, then strips Claude-only frontmatter keys such as =user-invocable=,
 =allowed-tools=, =argument-hint=, and =model=.
 
-Codex discovers global skills from =~/.codex/skills/*/SKILL.md=.  The tracked
-ports therefore have to be linked into that directory.  Run:
+Codex discovers global skills from =~/.codex/skills/*/SKILL.md=.  The live
+skills directory is therefore a symlink to the tracked ports.  Run:
 
 #+begin_src sh
 codex/bin/install-skills.sh
 #+end_src
 
-The script creates one symlink per tracked skill and prunes stale symlinks that
-point back into the tracked =codex/skills/= tree. It leaves unrelated local
-skills, such as project handoff skills, alone.
+The script ensures =~/.codex/skills= points at =codex/skills/=. Local reusable
+skills belong in both =claude/skills/= and =codex/skills/=, not as untracked
+directories under =~/.codex/skills=. Codex-managed hidden system skills, when
+present, live under ignored =codex/skills/.system/= runtime data and are not
+part of the reusable Claude/Codex skill parity model.
 
 When changing a skill:
 
@@ -146,9 +148,8 @@ same global user instructions as Claude.  This is needed for user-level
 instructions; project-level =CLAUDE.md= loading is handled by
 =project_doc_fallback_filenames= instead.
 
-=~/.codex/skills/= remains a normal Codex home directory for system or local
-skills.  The mirrored Claude skill ports are symlinked into that directory by
+=~/.codex/skills= points directly to =codex/skills/= via
 =codex/bin/install-skills.sh= because Codex does not load arbitrary skill paths
-from =codex/config.toml=.  The installer prunes stale symlinks that point back
-into the tracked =codex/skills/= tree, but it does not prune unrelated local
-skills.
+from =codex/config.toml=. This keeps the live Codex skill inventory aligned
+with the tracked Claude/Codex skill ports. Codex-managed hidden system skills,
+if present, are ignored runtime data under =codex/skills/.system/=.

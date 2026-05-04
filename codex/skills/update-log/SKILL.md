@@ -104,6 +104,12 @@ If no such file is found at any level, skip this step.
 
 Stage and commit the new log file, updated CLAUDE.md, any changes to `decisions/` or `decisions-summary.md`, and any files modified by post-hooks with a descriptive message.
 
+**Before running `git commit`, verify that every intended path was actually staged.** `git add` silently exits 0 for gitignored paths; if the project's notes are accidentally ignored at a parent repo, the log file you just created will not be committed and the orphaning will go undetected. Concretely:
+
+1. Build a list of paths you intended to stage (the new log file, CLAUDE.md, etc.).
+2. After `git add`, compare against `git diff --cached --name-only`. For any intended path that does not appear in the cached diff, run `git check-ignore -v <path>` to identify the matching ignore rule.
+3. If any intended path is ignored, **stop**: report the path and the matching `.gitignore` rule to the user, and ask whether to un-ignore the path (preferred — likely a misconfigured parent repo, as in `backlinks-health-automation` 2026-05-04) or to force-add with `git add -f` (only if the user confirms the ignore is intentional and they want this single file through anyway). Do not silently proceed with a partial commit.
+
 ## Step 6: Exit (if requested)
 
 If `--exit` was passed in the arguments, type `/exit` to end the session after all steps are complete.

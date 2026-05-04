@@ -921,7 +921,7 @@ Wrapper that runs a hook command in the background. Reads stdin first to avoid b
 :ID:       6149F4DB-9E5E-496D-9976-08EE7A930DAF
 :END:
 
-Shared helper sourced by other hooks. Resolves the git repo root from the command context. PreToolUse hooks run before the bash command executes, so the hook's cwd may differ from the command's effective cwd. If the command starts with =cd <path> &&=, this helper resolves the repo root from that path and cds into it so subsequent git commands operate on the correct repo.
+Shared helper sourced by other hooks. Resolves the git repo root from the command context. PreToolUse hooks run before the bash command executes, so the hook's cwd may differ from the command's effective cwd. If the command starts with =cd <path> &&=, this helper resolves the repo root from that path and cds into it so subsequent git commands operate on the correct repo. Commands without a leading =cd= are valid and fall back to the hook's current working directory.
 
 *** lib-staged-files.sh (utility)
 :PROPERTIES:

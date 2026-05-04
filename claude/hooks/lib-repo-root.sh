@@ -14,7 +14,7 @@
 #   source "$(dirname "$0")/lib-repo-root.sh"
 #   # $REPO_ROOT is set and cwd is $REPO_ROOT
 
-_cd_prefix=$(printf '%s' "$COMMAND" | grep -oE '^\s*cd\s+[^&]+' | head -1)
+_cd_prefix=$(printf '%s' "$COMMAND" | grep -oE '^\s*cd\s+[^&]+' | head -1 || true)
 if [ -n "$_cd_prefix" ]; then
   REPO_ROOT=$(bash -c "$_cd_prefix && git rev-parse --show-toplevel" 2>/dev/null || true)
 else

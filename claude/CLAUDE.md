@@ -1,71 +1,56 @@
-# Global conventions
+# Global Claude Code Conventions
 
-## About me
+## Operating Rules
 
-- Heavy Codex and Claude Code user, no software engineering background. Strong on specification clarity, debugging thinking, systems thinking, verification discipline. Git-literate. Proficient Elisp programmer, knows Python rudiments but can't follow non-Elisp code granularly.
-
-## General
-
-- Never present guesses as facts. Push back when needed.
-- If verification isn't possible in batch mode, say so explicitly.
-- Fix root causes, not symptoms. No hacks, workarounds, or silent fallbacks. If a patch feels precarious, dig deeper.
-- Seek documentation rather than guessing. If you can't access it, ask me to find it.
-- Delete temporary files and code when done.
-- Copy drafted messages to the Emacs kill ring automatically (via `emacsclient --eval '(kill-new ...)'`, not `pbcopy`). For multi-line content, write to a temp file and use `(with-temp-buffer (insert-file-contents FILE) (kill-new (buffer-string)))` to avoid elisp string-escaping headaches. If the message is meant to be posted somewhere (e.g. Slack) open the relevant thread.
-- Surface structural friction when you encounter it ("this was harder than expected because X — worth investigating?"). Use `/diagnose` for deep dives.
-- I often use dictation, so expect misspellings and unusual punctuation.
-
-## Behavioral
-
-- *Iportant*: Verify fixes end-to-end before presenting them as done. Byte-compilation alone is insufficient.
-- Never ask me to run a command when you can do it yourself via `emacsclient -e` or Bash.
-- When fixing something, audit all similar views/modes for consistency. Don't fix one instance and leave others broken.
-- When giving step-by-step setup instructions (e.g. cloud services, APIs), verify each step matches the actual UI. Don't parrot README instructions without checking exact names and paths.
-- When using `/schedule`, always set email as the notification method.
+- Never present guesses as facts; state uncertainty and push back when assumptions are weak or conflict with constraints.
+- Fix root causes, not symptoms. Do not add silent fallbacks or workaround code unless explicitly labeled, justified, and approved.
+- Verify fixes end-to-end before calling them done. If end-to-end verification is not possible, say exactly what was and was not verified.
+- Do not ask me to do things you can do yourself. Ask only when blocked by authentication, unavailable UI access, or required confirmation.
+- For unfamiliar APIs, tools, or behavior that may have changed, consult authoritative docs rather than guessing.
+- Clean up temporary files/code you created before finishing.
+- When fixing a repeated pattern, check analogous views/modes touched by the same implementation path and keep behavior consistent.
+- If repo/tooling/docs made the task unexpectedly harder, mention the concrete friction. For deep investigation, use the `diagnose` skill.
 
 ## Safety
 
 - **Emacs:** never send signals to an active Emacs session without explicit confirmation.
-- **Deletion:** use `trash` instead of `rm -rf`.
-- **Git cloning:** only clone repositories (`git clone`, `gh repo clone`) that the user has explicitly requested by URL or name. If a task seems to require cloning a repo the user hasn't specifically mentioned, ask first.
-- **Shared systems:** `git push` to the user's own remotes is allowed without prior confirmation once the underlying commits are in. Creating PRs, opening issues, posting messages (Slack, email, comments), or taking any other action visible to others still requires explicit confirmation first.
+- **Deletion:** use `trash` instead of destructive recursive deletion.
+- **Git cloning:** only clone repositories (`git clone`, `gh repo clone`) that I have explicitly requested by URL or name. If a task seems to require cloning an unmentioned repo, ask first.
+- **Shared systems:** do not create PRs, open issues, post Slack/email/comments, or take other externally visible actions without my explicit confirmation.
+- @context/secrets.md
 
-## Secrets
+## User context and communication
 
-See [Secrets](context/secrets.md) for full details.
+- Assume I am git-literate, strong on specs/debugging/verification, proficient in Elisp, and less comfortable reading non-Elisp code line-by-line.
+- Expect dictation errors in my messages.
+- When drafting a message for me to post, copy it to the Emacs kill ring with `emacsclient`. For multi-line content, write to a temp file and use `(with-temp-buffer (insert-file-contents FILE) (kill-new (buffer-string)))` to avoid Elisp string-escaping issues. If the message is meant for Slack, email, or comments, open the relevant thread in Emacs.
 
 ## Agents
 
 - Make liberal use of subagents and agent teams.
-- Always use the most capable model available for subagents. I value performance above speed, so prefer more powerful models even if they are slower or more expensive.
+- Always use the most capable model available for subagents; prefer performance over speed/cost.
 
-## MCP servers
+## MCP Servers
 
-- **Where MCPs live** — five mechanisms (user-level, project-local, claude.ai connectors, plugins, claude-in-chrome). See `README.org` → "Where MCP servers live" for the full table including which file to edit and how each is loaded.
-- **User-level MCPs** go in `~/.claude.json` top-level `mcpServers`, NOT `~/.claude/settings.json`. After editing, run `claude/bin/sync-mcp-servers.sh` to propagate to per-account dirs (`~/.claude-epoch/`, `~/.claude-personal/`, `~/.claude-tlon/`); skipping the sync leaves new sessions reading a stale list.
-- **Project-scoped MCPs** go in `<project>/.mcp.json`. Auto-loaded when CWD is that project. No sync needed. Do NOT use `~/.claude.json`'s `projects.<path>.mcpServers` block — it's a hidden duplicate; the file-based form is the convention.
-- Google services (two accounts, CLI tooling, the `gmail-epoch-triage` MCP under `~/My Drive/Epoch/.mcp.json`, troubleshooting): see [Google services](context/google-services.md) for full details.
-- Chrome integration and multi-account: see `README.org` → "Chrome integration and multi-account".
+- For MCP placement, follow `README.org` -> "Where MCP servers live".
+- User-level MCPs go in `~/.claude.json` top-level `mcpServers`; after editing, run `claude/bin/sync-mcp-servers.sh`.
+- Project-scoped MCPs go in `<project>/.mcp.json`; do not use `~/.claude.json`'s `projects.<path>.mcpServers` block.
+- Chrome integration and multi-account details live in `README.org` -> "Chrome integration and multi-account".
 
-## External CLIs preferred over MCP
+## External CLIs Preferred Over MCP
 
-These tools are installed locally and should be invoked directly via Bash; do NOT look for an MCP equivalent.
+Prefer these local CLIs over MCP tools: Anna's Archive `annas-mcp`, Twitter `claude/skills/twitter/lib/twitterapi.sh`, Gmail `claude/bin/gmail.py`, Sheets `claude/bin/sheets.py`, Slack `claude/bin/slack.py`, Calendar `gcalcli`, Docs/Drive `gdoc`, GitHub `gh`.
 
-- **Anna's Archive** — `annas-mcp` binary used as a CLI: `annas-mcp book-search '<query>'`, `book-download <md5> <filename>`, `article-search '<doi-or-keywords>'`, `article-download <doi>`. Env: `ANNAS_BASE_URL`, `ANNAS_DOWNLOAD_PATH` (in `.zshenv`), `ANNAS_SECRET_KEY` (in `.zshenv-secrets`). The same binary also has an `mcp` subcommand we no longer use.
-- **Twitter / X** — `claude/skills/twitter/lib/twitterapi.sh`. See the `twitter` skill.
-- **Gmail** — `claude/bin/gmail.py [--account epoch|personal]` (default `epoch`). See `context/google-services.md`.
-- **Google Sheets** — `claude/bin/sheets.py [--account epoch|personal]` (default `epoch`).
-- **Slack (Epoch workspace, user-impersonating)** — `claude/bin/slack.py`. Subcommands: `search`, `history`, `replies`, `channels`, `users-search`, `user-info`, `mark`, `unreads`. Auth via xoxc/xoxd from `op://Automations/Slack MCP - Epoch Unofficial`.
-- **Google Calendar** — `gcalcli`.
-- **Google Docs / Drive** — `gdoc --account epoch` (work) or `gdoc --account personal` (personal).
-- **GitHub** — `gh`.
+For Google account/auth details, read `context/google-services.md`. For Twitter workflows, use the `twitter` skill.
 
-## Filesystem organization
+For `/schedule`, always set email as the notification method.
 
-- My dotfiles are in `../` (i.e. `~/My Drive/dotfiles/`). Many files and directories in `~` are symlinked to this location.
-- My projects are stored in `../../repos/`.
+## Filesystem Organization
 
-## Version control
+- Dotfiles source of truth: `~/My Drive/dotfiles/`; many home-directory paths are symlinks into it.
+- Project repos: `~/My Drive/repos/`.
 
-- Commit all changes you make immediately, unless I specify otherwise or the changes are temporary. Each commit must contain exactly one logical change; never batch unrelated changes.
-- Prefer amending commits when iterating on the same logical change, unless the previous commit has already been pushed.
+## Version Control
+
+- Commit each logical change immediately unless the change is temporary.
+- Keep commits single-purpose. Amend when iterating on the same logical change.

@@ -51,7 +51,7 @@ If a token expires (`invalid_grant` errors), regenerate with the recipe under "G
 
 ### work account
 
-**gmail-epoch-triage** (project-scoped to Epoch, defined in `~/.claude.json` under `projects./Users/pablostafforini/My Drive/Epoch`)
+**gmail-epoch-triage** (project-scoped to Epoch, defined in `~/My Drive/Epoch/.mcp.json`)
 - **Package:** `workspace-mcp` via `uvx` (configured with `--tools gmail`)
 - **Covers:** Gmail only, for the `email-triage@epoch.ai` bot account (NOT `pablo@epoch.ai`).
 - **Credentials:** stored in `~/.gmail-mcp-epoch/credentials/` as `{email}.json` files. Directory set via `WORKSPACE_MCP_CREDENTIALS_DIR`.

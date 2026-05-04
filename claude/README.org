@@ -69,27 +69,9 @@ Note: =settings.json= is intentionally *not* tracked here. Claude Code writes to
 └── skills/             ← project-specific skills (optional)
 #+end_example
 
-*Where MCP servers live.* Five different mechanisms, by source-of-truth file:
+*MCP server reference.* Placement rules, current inventory, multi-account notes, and account-specific credential handling live in =context/mcp-servers.md=. The global =CLAUDE.md= points agents there when MCP-specific context is needed, so they do not need to read this whole README just to configure or debug an MCP server.
 
-| Mechanism | File | When loaded | Edit how |
-|-----------+------+-------------+----------|
-| User-level | =~/.claude.json= top-level =mcpServers= | every session, every directory | edit + run =claude/bin/sync-mcp-servers.sh= to propagate to per-account dirs (=~/.claude-epoch/=, =~/.claude-personal/=, =~/.claude-tlon/=) |
-| Project-local | =<project>/.mcp.json= | only when CWD is that project | edit the file directly (no sync needed — Claude Code reads it on session start) |
-| claude.ai connectors | server-side, no local file | every session, regardless of CWD | https://claude.ai → Settings → Connectors |
-| Plugin-managed | =~/.claude/plugins/...= | when the plugin is enabled | =/plugin enable/disable <name>= |
-| =claude-in-chrome= | Chrome extension + native messaging host | when Claude Code is started with =--chrome= | =/chrome= toggle or =claudeInChromeDefaultEnabled= in =~/.claude.json= |
-
-Do *not* use =~/.claude.json= 's =projects.<path>.mcpServers= block — Claude Code supports it but it duplicates =<project>/.mcp.json= in a hidden location. Always put project-scoped MCPs in =<project>/.mcp.json=.
-
-*Current inventory* (across all five mechanisms, as of the latest cleanup):
-
-- User-level: =(empty)= — every former entry replaced by a CLI (see "External CLIs preferred over MCP" below).
-- Project-local: =~/My Drive/Epoch/.mcp.json= holds =airtable=, =asana=, =gmail-epoch-triage=. =~/source/ForumMagnum/.mcp.json= holds =playwright=.
-- claude.ai connectors: GitHub Integration (connected), Ahrefs, Gmail, Google Calendar, Google Drive, Slack (Interactive). Plus custom-URL entries (Github via Copilot MCP, Asana — not yet connected). Manage via the web UI.
-- Plugin-managed: none currently enabled.
-- =claude-in-chrome=: enabled (heavy use — browser automation).
-
-*External CLIs preferred over MCP.* Every service that previously had a user-level MCP server has been replaced by a direct CLI invocation, listed under "External CLIs preferred over MCP" in =claude/CLAUDE.md=: Anna's Archive (=annas-mcp= binary used as a CLI), Twitter (=twitterapi.sh=), Gmail and Sheets (=claude/bin/gmail.py= and =sheets.py=, multi-account: =--account epoch= or =--account personal=, sharing =_gworkspace_auth.py= for OAuth), Slack (=claude/bin/slack.py=, xoxc/xoxd auth via 1Password — replaces both the unofficial and official Slack MCP servers), Calendar (=gcalcli=), Docs/Drive (=gdoc=, multi-account: =--account epoch= or =--account personal=), GitHub (=gh=). Dropping the MCP wrappers shaves the corresponding tool schemas out of every session's context.
+*Service access tools.* The global =CLAUDE.md= lists the local tools used to connect to external services: Anna's Archive, Twitter/X, Gmail, Google Sheets, Slack, Google Calendar, Google Docs/Drive, and GitHub.
 
 *** Settings hierarchy
 :PROPERTIES:
@@ -137,6 +119,7 @@ Each file should contain distinct content. The global one defines behavioral con
 | New project-specific hook | =<project>/.claude/settings.json= (hooks section) | Fires only in that project |
 | New machine-specific permission | =~/.claude/settings.local.json= | E.g. brew, mpv, pip3 |
 | New MCP server | =~/.claude.json=, then run =claude/bin/sync-mcp-servers.sh= | Syncs to account dirs |
+| New MCP reference detail | =claude/context/mcp-servers.md= | Keeps MCP-specific instructions out of global memory and the long README |
 
 When adding or changing a reusable Claude skill or hook, update the Codex
 counterpart in =codex/skills/= or =codex/hooks/= in the same session.  The
@@ -175,9 +158,7 @@ The active account is stored in =~/.claude-current-account=. From Emacs, =claude
 
 *1Password service account:* All =op://= references resolve silently via =OP_SERVICE_ACCOUNT_TOKEN= (a 1Password service account token with read-only access to the "Automations" vault).  The token is stored in =pass= at =epoch/1password-service-account-token= and exported in =.zshenv-secrets=.  No Touch ID prompts are needed.  To rotate: delete the old service account in the admin console, create a new one with =op service-account create "Epoch Ops Automation" --vault "Automations:read_items" --raw=, and update the =pass= entry.  Item names in the Automations vault must not contain parentheses (they break =op://= parsing).
 
-*Account-specific MCP secrets:* When an MCP server needs different credentials per account, place =op://= references (or plain text values) directly in each per-account =.claude.json= file's MCP server =env= block.  Claude Code resolves =op://= natively.  The sync function deep-merges =mcpServers= per-server, preserving per-account =env= entries.  To add a new account-specific secret: (1) add the =env= entry to each per-account =.claude.json= (e.g. =~/.claude-tlon/.claude.json=, =~/.claude-epoch/.claude.json=), (2) leave the canonical =~/.claude.json= with an empty =env= for that server.
-
-*MCP servers:* Claude Code reads =.claude.json= from =$CLAUDE_CONFIG_DIR= (not =$HOME=) when that variable is set. The canonical source of truth is =~/.claude.json=; run =claude/bin/sync-mcp-servers.sh= after adding or removing any MCP server there.
+*MCP servers:* Placement rules, current inventory, multi-account behavior, and account-specific MCP secret handling live in =context/mcp-servers.md=.
 
 *** Chrome integration and multi-account
 
@@ -256,6 +237,8 @@ The global =~/.claude/CLAUDE.md= (symlinked here) is the user-level memory loade
 - Use =trash= instead of =rm -rf=; never send signals to Emacs without confirmation.
 - =git push= to the user's own remotes is allowed autonomously (once the underlying commits are in); other externally-visible actions (PRs, issues, Slack, email) still require explicit confirmation.
 - Secrets handling is imported from =context/secrets.md= with =@context/secrets.md= so the short safety rules load with the global memory.
+- MCP server instructions are referenced via =context/mcp-servers.md=, not imported, so agents load them only when MCP-specific context is needed.
+- Service access tools are listed by service in the global memory.
 
 * Skills
 :PROPERTIES:

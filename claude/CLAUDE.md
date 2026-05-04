@@ -2,7 +2,7 @@
 
 ## About me
 
-- Heavy Claude Code user, no software engineering background. Strong on specification clarity, debugging thinking, systems thinking, verification discipline. Git-literate. Proficient Elisp programmer, knows Python rudiments but can't follow non-Elisp code granularly.
+- Heavy Codex and Claude Code user, no software engineering background. Strong on specification clarity, debugging thinking, systems thinking, verification discipline. Git-literate. Proficient Elisp programmer, knows Python rudiments but can't follow non-Elisp code granularly.
 
 ## General
 

@@ -1,7 +1,11 @@
 #+title: Claude Code configuration
 #+author: Pablo Stafforini
 
-* Overview
+* Claude Code configuration
+:PROPERTIES:
+:ID:       8A661AE9-E263-4E1B-9969-44C61B202DA4
+:END:
+** Overview
 :PROPERTIES:
 :ID:       FC7EF2FA-CDB3-43C0-9EFC-545DEA807191
 :END:
@@ -12,13 +16,13 @@ The cross-tool synchronization policy with Codex is documented in
 =../agents/README.org=. This file covers the Claude Code-specific configuration
 topology and inventory.
 
-** Architecture
+*** Architecture
 :PROPERTIES:
 :CUSTOM_ID: h:architecture
 :ID:       AE7C697F-AF66-44E4-BBEA-85801E3B0895
 :END:
 
-*** Directory topology
+**** Directory topology
 :PROPERTIES:
 :CUSTOM_ID: h:directory-topology
 :ID:       EB7422C8-E371-4F9B-AE1F-D6B6473F11BB
@@ -73,7 +77,7 @@ Note: =settings.json= is intentionally *not* tracked here. Claude Code writes to
 
 *Service access tools.* The global =CLAUDE.md= lists the local tools used to connect to external services: Anna's Archive, Twitter/X, Gmail, Google Sheets, Slack, Google Calendar, Google Docs/Drive, and GitHub.
 
-*** Settings hierarchy
+**** Settings hierarchy
 :PROPERTIES:
 :CUSTOM_ID: h:settings-hierarchy
 :ID:       ABB0C5CA-1B40-47BF-8746-BFFE1F4E420D
@@ -90,7 +94,7 @@ Neither =settings.json= nor =settings.local.json= is version-controlled; both ar
 
 The global =settings.json= uses =auto= mode (Anthropic's classifier-backed permission mode that approves most actions while flagging risky ones) inside the =permissions= object. All MCP servers are explicitly listed in =permissions.allow= as a workaround for [[https://github.com/anthropics/claude-code/issues/5140][anthropics/claude-code#5140]]. Safety hooks (=guard-external-actions.sh=, =block-destructive-command.sh=, etc.) provide additional guardrails.
 
-*** =CLAUDE.md= loading
+**** =CLAUDE.md= loading
 :PROPERTIES:
 :CUSTOM_ID: h:claude-md-loading
 :ID:       D03891CF-C905-480A-9690-62B4F8A7273D
@@ -103,7 +107,7 @@ Claude Code loads =CLAUDE.md= files from several locations. When working in a pr
 
 Each file should contain distinct content. The global one defines behavioral conventions (verify work, fix root causes, commit immediately, etc.). Project-level ones define project-specific context.
 
-*** Where to put things
+**** Where to put things
 :PROPERTIES:
 :CUSTOM_ID: h:where-to-put-things
 :ID:       A01A5164-CE5F-414D-9999-924B5C89339B
@@ -130,7 +134,7 @@ bypasses when the manifest records an artifact-specific status or exemption. See
 =../agents/README.org= for the full synchronization contract and known
 non-portable cases.
 
-** Multi-account setup
+*** Multi-account setup
 :PROPERTIES:
 :CUSTOM_ID: h:multi-account
 :ID:       239E0918-2383-460C-8C9C-2ABC4E3D344D
@@ -160,7 +164,10 @@ The active account is stored in =~/.claude-current-account=. From Emacs, =claude
 
 *MCP servers:* Placement rules, current inventory, multi-account behavior, and account-specific MCP secret handling live in =context/mcp-servers.md=.
 
-*** Chrome integration and multi-account
+**** Chrome integration and multi-account
+:PROPERTIES:
+:ID:       E317AE6E-6C3F-4543-A66B-3EF1D50E7719
+:END:
 
 Chrome integration uses three Chrome profiles, one per Claude Code account. Browser automation from a given Claude Code session targets the Chrome profile its account is paired to, so agents working on a tlon project automatically drive the tlon browser, and likewise for epoch and personal.
 
@@ -196,12 +203,12 @@ You may see =chromeExtension.pairedDeviceId= and =pairedDeviceName= populated in
 - Bridge socket: =/tmp/claude-mcp-browser-bridge-pablostafforini/<pid>.sock=
 - Keychain credentials per account: =Claude Code-credentials-<sha256(config_dir)[:8]>=
 
-* Configuration
+** Configuration
 :PROPERTIES:
 :ID:       48F2354B-E7A4-43D1-A5AD-856EB82225E3
 :END:
 
-** settings.json
+*** settings.json
 :PROPERTIES:
 :ID:       C60E07A6-7A22-4272-8875-45FE9B44F185
 :END:
@@ -213,14 +220,14 @@ Notable current values:
 - *Agent teams*: enabled (=CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=).
 - *Effort level*: =xhigh= (persistent) with =CLAUDE_CODE_EFFORT_LEVEL=max= in =env= to force max across sessions.
 
-** settings.local.json
+*** settings.local.json
 :PROPERTIES:
 :ID:       709B6F3F-F5B6-44F1-AA4E-1D2BE510FC1E
 :END:
 
 Machine-specific tool whitelists and the =theme= key (synced from Emacs by =claude-code-extras--sync-theme-to-settings=). Also lives at =~/.claude/settings.local.json= as a regular file, not tracked.
 
-** CLAUDE.md
+*** CLAUDE.md
 :PROPERTIES:
 :ID:       9B404E8C-F109-4188-9F3E-1F1A9A64A37D
 :END:
@@ -233,97 +240,103 @@ The global =~/.claude/CLAUDE.md= (symlinked here) is the user-level memory loade
 - Commit each logical change immediately; prefer amending when iterating on the same logical change (unless already pushed).
 - Pre-commit checklist (hook-enforced): Elisp pre-commit checks (batch-test, stage =doc/*.org=) are in the =elisp-conventions= skill; the =README.org= staging rule is in the project =CLAUDE.md=.
 - Use subagents and teams liberally; prefer the most powerful model.
-- For =/schedule=, always set email as the notification method.
 - Use =trash= instead of =rm -rf=; never send signals to Emacs without confirmation.
+- For =/schedule=, always set email as the notification method.
 - =git push= to the user's own remotes is allowed autonomously (once the underlying commits are in); other externally-visible actions (PRs, issues, Slack, email) still require explicit confirmation.
 - Secrets handling is imported from =context/secrets.md= with =@context/secrets.md= so the short safety rules load with the global memory.
 - MCP server instructions are referenced via =context/mcp-servers.md=, not imported, so agents load them only when MCP-specific context is needed.
 - Service access tools are listed by service in the global memory.
 
-* Skills
+** Skills
 :PROPERTIES:
 :ID:       05017294-32AE-4465-9254-13C1BA5662CA
 :END:
 
 Skills are reusable prompt modules stored in =skills/<name>/SKILL.md=. The filename must be uppercase =SKILL.md=, since =file-expand-wildcards= is case-sensitive on the Google Drive FUSE mount. Some skills are user-invocable (triggered by typing =/<name>=), others provide context that Claude loads automatically when relevant.
 
-** Context skills
+*** Context skills
 :PROPERTIES:
 :ID:       E1337818-A431-4C45-9239-BCEE76BEB3AE
 :END:
 
 These are not invoked directly. They supply background knowledge when Claude works in this repo.
 
-*** dotfiles-context
+**** dotfiles-context
 :PROPERTIES:
 :ID:       3AB926D5-2116-4864-93F2-B6D33CE832C5
 :END:
 
 States the general rule for where external Emacs packages live — all elpaca-managed packages are cloned at =~/.config/emacs-profiles/<profile>/elpaca/sources/<package>/= and that clone is the canonical working copy, with =dotfiles= as the single exception (mirror of =~/My Drive/dotfiles/=). Also covers how to resolve the active elpaca profile, the batch-testing recipe, and the commit message format (=<scope>: <description>=). See also =emacs/extras/doc/elisp-development-workflow.org= for the full two-clone sync architecture.
 
-*** elisp-conventions
+**** elisp-conventions
 :PROPERTIES:
 :ID:       EBC619A2-2402-43B0-8FBA-8A68EE29BB7D
 :END:
 
 Emacs Lisp coding standards: atomic functions, helper placement, docstring format. Documents the elpaca rebuild-wait-reload process enforced by the =load-elisp-after-edit= hook and prohibits ad-hoc reload mechanisms (=load-file=, =eval-buffer=, =eval-defun=). Also documents the critical =emacs --batch= testing pattern: elpaca builds on load-path first, then =push= =emacs/extras= to the front so the edited source always loads instead of the stale =.elc= from elpaca builds. Includes pre-commit checks (batch-test and doc staging) and a transient menus section: after adding or modifying a =transient-define-prefix=, every suffix must be verified as an interactive command (transient defers validation to invocation time).
 
-*** epoch-vaults
+**** epoch-vaults
+:PROPERTIES:
+:ID:       9948174C-539E-470E-B215-051F908167CF
+:END:
 
 Reference for Epoch's 1Password vault topology and credential-placement rules. Documents which vaults hold automation keys, shared Operations credentials, benchmarking credentials, API handover items, and personal Employee secrets; distinguishes read-only lookup from write operations; and points secret writes to =store-secret= for the biometric-auth flow and vault-safety checks.
 
-** Development skills
+*** Development skills
 :PROPERTIES:
 :ID:       71770F84-ED6B-4F0B-B121-1F23CBCEB769
 :END:
 
-*** code-audit
+**** code-audit
 :PROPERTIES:
 :ID:       D3121B68-8480-41B2-835B-97E85BB7DE29
 :END:
 
 Audits code for bugs, security issues, error handling gaps, and correctness problems. Categorizes findings as critical, bugs, fragile, or minor, with specific line numbers. Pass =--accept= to auto-fix all findings.
 
-*** design-audit
+**** design-audit
 :PROPERTIES:
 :ID:       F01330D3-C44B-415D-9107-C1E865FB0B63
 :END:
 
 Audits code for architectural quality: unnecessary complexity, missing or wrong abstractions, duplication, and refactoring opportunities. Pass =--accept= to auto-refactor high-impact findings.
 
-*** interpretability-audit
+**** interpretability-audit
 :PROPERTIES:
 :ID:       800B3CAA-A993-4929-BB4A-7467A56FA70C
 :END:
 
 Audits code for intent transparency: magic values, misleading names, missing rationale comments, undocumented conventions. Pass =--accept= to auto-fix high-impact clarity issues.
 
-*** dx-audit
+**** dx-audit
 :PROPERTIES:
 :ID:       B2E4A6C8-1D3F-4E9A-8B5C-7F2D9A0E4C16
 :END:
 
 Audits a codebase from the AI agent's perspective: inventories existing verification infrastructure (tests, types, linting, CI), project instructions, code navigability, and automation, then produces prioritized recommendations for reducing friction. Each recommendation is concrete, justified from the AI's perspective, and effort-estimated. Pass =--accept= to implement all recommendations without prompting.
 
-*** symptom-check
+**** symptom-check
+:PROPERTIES:
+:ID:       CC534E25-3A8B-495E-A6BD-7FB05B4721F3
+:END:
 
 Forces a structured root-cause analysis before applying any non-trivial bug fix, to prevent the failure mode where agents patch the immediate symptom while the underlying invariant stays broken (so the same shape recurs in different places until the architectural drift is finally caught). Workflow: restate the symptom, consult =architectural-issues.md= for similar prior entries, draft the local fix, articulate the invariant in one sentence, search for other manifestations, then pick a disposition (=fix locally= / =fix locally + flag= / =stop and refactor=). The "+ flag" and "stop and refactor" dispositions produce a registry entry to append to =architectural-issues.md= so pattern recognition compounds across sessions.
 
-*** build
+**** build
 :PROPERTIES:
 :ID:       15574F2D-5827-48ED-8630-DFB3843EA3FB
 :END:
 
 Spec-based build workflow inspired by [[https://x.com/trq212/status/2005315275026260309][Thariq Shaukat's method]]. Reads a one-line spec from the prompt (e.g. `/build a Spotify player for Emacs), or a =spec.md= file in the current project, and interviews the user in depth using =AskUserQuestion= to flesh out every aspect: technical implementation, UI/UX, tradeoffs, edge cases, security, and more. The questions are deliberately non-obvious, probing hidden complexity and unstated assumptions. Once the interview is complete, writes the detailed spec back to the file. Optionally executes the spec in the same session or defers to a fresh one.
 
-*** test-suite
+**** test-suite
 :PROPERTIES:
 :ID:       057FB141-D07F-4BD4-B880-912B67275263
 :END:
 
 Creates comprehensive test suites. Performs reconnaissance on the tech stack, then generates tests prioritized by criticality: data integrity and input boundaries first, business logic and integrations second, regressions and configuration third.
 
-*** lint-elisp
+**** lint-elisp
 :PROPERTIES:
 :CUSTOM_ID: h:lint-elisp
 :ID:       92D41417-BE75-415E-BF0C-6F705EAEBE27
@@ -331,105 +344,108 @@ Creates comprehensive test suites. Performs reconnaissance on the tech stack, th
 
 Fixes byte-compile warnings and checkdoc notes in one or more Elisp files. Collects diagnostics from both sources in parallel, applies fixes (forward declarations, docstring rewording, unused variable cleanup), and re-runs until the output is clean.
 
-*** pr-audit
+**** pr-audit
 :PROPERTIES:
 :ID:       03187E6C-B3E2-47EB-821B-68121F4F883F
 :END:
 
 Six-step PR verification: byte-compile/type-check/lint, run tests, review commits, check upstream alignment, verify file hygiene, and check CI results. I run it before submitting or merging any PR.
 
-** Documentation skills
+*** Documentation skills
 :PROPERTIES:
 :ID:       7BAA2662-D24F-42B2-A865-5442B2F2E1B1
 :END:
 
-*** doc-elisp
+**** doc-elisp
 :PROPERTIES:
 :ID:       32BB20B4-C967-4FB4-9EF6-674F87BF9023
 :END:
 
 Creates or updates documentation for any Elisp package, following the Denote manual style: org-mode with PROPERTIES drawers, Texinfo index entries, and cross-references.
 
-*** doc-extras
+**** doc-extras
 :PROPERTIES:
 :ID:       C70171D9-4A5C-45BE-9F74-D7AE244336EF
 :END:
 
 Scans all =emacs/extras/*.el= files, identifies missing or outdated documentation, and generates docs in parallel using subagents.
 
-*** readme-gen
+**** readme-gen
 :PROPERTIES:
 :ID:       A3F5B8D1-7C42-4E9A-B6A1-2D8E4F9C0A73
 :END:
 
 Generates or updates a =README.md= for an Emacs Lisp package from its org manual. Verifies that the repo contains both a valid =.el= package and a =README.org= manual; if either is missing, aborts with guidance. Produces a structured markdown README (title, overview, screenshots, installation for package-vc/Elpaca/straight.el, quick start, documentation link) and optionally moves any roadmap content from the manual into the README.
 
-*** org-note
+**** org-note
 :PROPERTIES:
 :ID:       F859475D-8BEF-46B7-9417-3F8462826BA9
 :END:
 
 Creates or updates org-mode notes in my notes directory (=~/My Drive/notes/=), with proper slugified filenames and org IDs.
 
-*** transcribe-note
+**** transcribe-note
 :PROPERTIES:
 :ID:       56961BB0-30BB-44D1-BC8F-D74713517D4E
 :END:
 
 Transcribes the most recent audio file in =~/Downloads/= using whisperx, then restructures the transcript into a well-organized org-mode note saved to =~/My Drive/notes/=. Accepts optional language code and filename arguments.
 
-*** add-to-emacs-packages
+**** add-to-emacs-packages
 :PROPERTIES:
 :ID:       E8FD1360-FDF6-46FE-940F-BD8A346AE4BF
 :END:
 
 Registers an Emacs package in =my-emacs-packages.org=, creates an accompanying documentation note with =#+INCLUDE= directives pointing to the package's readme, and adds a card to the =benthamite/benthamite= GitHub profile README. Determines the package name from the argument or the current directory, inserts entries in alphabetical order, and generates org IDs for both the note and the list entry. Marks the exported note as =:unlisted true= via =EXPORT_HUGO_CUSTOM_FRONT_MATTER= so it stays out of the site's note index. Checks both the packages list and the GitHub profile README, skipping whichever is already done.
 
-*** convert-citations
+**** convert-citations
+:PROPERTIES:
+:ID:       EDFDB065-9B7C-4E9A-B858-F9CCD9E1E5D2
+:END:
 
 Replaces raw bibliographic references in a =.org= file with org-mode =[cite:@KEY]= citations by resolving each work against the user's citar bibliography. Takes the target file path as an argument (prompted by =ai-extras-run-skill= when invoked via =ai-extras-menu= → =s=). Uses =emacsclient -e '(tlon-bibliography-lookup FIELD VALUE "=key=")'= for lookups, falling back to substring matching, DOI matching, =WebFetch= for URL-based references, and =WebSearch= as a last resort. Preserves formatting (bold, italics, parentheticals, locators like =pp. 123–145= or =ch. 5=); does not fabricate keys for works not found in the bibliography. Canonical style reference: =~/My Drive/notes/pablos-miscellany/c-d-broad-a-bibliography.org=. This is a Claude Code replacement for =tlon-bib-replace-citations-in-file=, whose gptel-based agentic loop was brittle for this kind of lookup-heavy task.
 
-** Release and operations skills
+*** Release and operations skills
 :PROPERTIES:
 :ID:       F49B76EA-C29B-45D6-AD8D-D3E47DB4073E
 :END:
 
-*** release
+**** release
 :PROPERTIES:
 :ID:       10DF729B-32D5-48E0-A150-9F5D18F799AF
 :END:
 
 Cuts releases for my Emacs packages (read dynamically from =my-emacs-packages.org=). Validates the repo, classifies commits since the last tag, suggests a semver bump, and drafts release notes. Also has an audit mode that scans all packages for version mismatches or unreleased commits. Pass =--accept= to skip the confirmation gate.
 
-*** release-dotfiles
+**** release-dotfiles
 :PROPERTIES:
 :ID:       49102EA7-4B49-4F93-8134-06FA7925AE55
 :END:
 
 Cuts releases for the dotfiles repo itself. Verifies that every personal package repo has a clean working tree in its local elpaca clone, checks the dotfiles working tree, classifies commits since the last tag, suggests a semver bump, drafts release notes, and creates a GitHub release. Pass =--accept= to skip the confirmation gate.
 
-*** triage-issues
+**** triage-issues
 :PROPERTIES:
 :ID:       D1A897E8-29DC-4FFD-8D16-2AC792A4DA0F
 :END:
 
 Scans, prioritizes, and batch-resolves open GitHub issues for =tlon-team/tlon.el=. Fetches issues, ranks by complexity, presents batches for review, fixes them with parallel subagents, closes on GitHub as =tlon-ai=, and archives the corresponding org headings.
 
-*** update-log
+**** update-log
 :PROPERTIES:
 :ID:       DCC9EC24-1AB4-495E-8C89-DB4C63229744
 :END:
 
 End-of-session bookkeeping. Detects the project's log directory from the =@= reference in =CLAUDE.md= and creates a dated session log (what was done, key findings, results, open questions). On first run in a new project, uses =AskUserQuestion= to interactively set up the log directory and optionally a =decisions/= directory for tracking architectural decisions. Updates the =CLAUDE.md= session reference, runs =/record-decisions= if applicable, and commits. Before committing, verifies every intended path was actually staged (=git diff --cached --name-only= vs the intended list, with =git check-ignore= for any missing path) and stops with a clear report rather than silently producing a partial commit when a parent repo's =.gitignore= has filtered the log. Accepts =--exit= to end the session after completing all steps.
 
-*** record-decisions
+**** record-decisions
 :PROPERTIES:
 :ID:       D62A0EFB-05AC-4A56-88A0-668E632460AE
 :END:
 
 Extracts and records architectural decisions from the current session into =decisions/NNN.md= files. Called automatically by =/update-log= or invocable on demand. Only records decisions where alternatives were explicitly considered and rejected for non-obvious reasons. Updates =decisions-summary.md= with a compact table row for each new entry. Requires a =decisions/= directory to exist (the setup is handled by =/update-log='s first-run flow).
 
-*** open-session-log
+**** open-session-log
 :PROPERTIES:
 :CUSTOM_ID: h:open-session-log
 :ID:       1C8D18F2-3EA7-4149-9BC4-40B4EFE8546C
@@ -437,19 +453,28 @@ Extracts and records architectural decisions from the current session into =deci
 
 Opens the current Claude Code session's conversation log in Emacs using the =agent-log= package. Walks up the process tree to find the session ID, then calls =agent-log-open-session= via =emacsclient=.
 
-*** move-session-log
+**** move-session-log
+:PROPERTIES:
+:ID:       98D5F4FA-F05B-423A-8A16-967234CA1FDC
+:END:
 
 Moves a Claude Code internal session log (=.jsonl= and associated directory) from another project's =~/.claude/projects/= directory to the current project's. Also rewrites the =project= field in =history.jsonl= and =cwd= fields in the session =.jsonl= so that =agent-log-resume-session= opens the session in the correct directory. Useful when a session was started in the wrong project context. Accepts a session ID as argument; if none given, lists the 10 most recent sessions from other projects and asks the user to pick one.
 
-*** meeting-prep
+**** meeting-prep
+:PROPERTIES:
+:ID:       4CC6A4C0-C6DE-4D80-BE0F-1D5F9DDB2298
+:END:
 
 Generates a pre-meeting org file for the biweekly 1:1 with María. Gathers progress from session logs, git history, project status files, Slack messages, and GitHub activity since the last meeting. Reconciles stale project documentation against gathered evidence before writing the meeting file. Also updates the shared Google Doc (reverse-chronological, one bullet per active project, using =*= rather than =-= since Google Docs renders =-= as a literal hyphen but converts =*= into proper bullets). Every named resource — Slack channels, Slack messages, Google Docs, Google Groups, GitHub PRs/issues, Airtable bases, dashboards — must be a live link in both the org file and the Google Doc insert; bare names are not acceptable. Commits updated project docs and the meeting file in separate commits.
 
-*** meeting-debrief
+**** meeting-debrief
+:PROPERTIES:
+:ID:       14DF90DD-4EBF-4621-BD6F-BFE3CFEF1F5B
+:END:
 
 Processes a Gemini meeting summary (from the transcript of a Google Meet call) and extracts action items, discussion notes, and decisions into an org-mode meeting file. Two modes: general (single-project, inferred from =CWD= or attendees) and María (biweekly 1:1, may cover multiple projects). Updates project org files and the master project list with meeting outcomes. Accepts an optional Google Doc URL; otherwise searches recent Gemini-generated docs. Calendar lookups go through =gcalcli=, Gmail through =claude/bin/gmail.py= (which reads OAuth credentials from env vars at runtime), and Google Docs/Drive through the =gdoc= CLI.
 
-*** new-project
+**** new-project
 :PROPERTIES:
 :CUSTOM_ID: h:new-project
 :ID:       3AACE34C-578E-4B82-B2B4-09C8E3D2A366
@@ -457,7 +482,7 @@ Processes a Gemini meeting summary (from the transcript of a Google Meet call) a
 
 Creates a new Epoch project directory from the current conversation. Gathers context (conversation history, Slack URLs, research), writes an org file with background, TODOs, and reference material, sets up a session log with =CLAUDE.md= referencing it, commits, and instructs the user to start a focused session in the new directory.
 
-*** verify
+**** verify
 :PROPERTIES:
 :CUSTOM_ID: h:verify
 :ID:       D25CCDE3-F976-493E-9DD8-043A17422C65
@@ -465,184 +490,214 @@ Creates a new Epoch project directory from the current conversation. Gathers con
 
 Executes any task with self-generated verification criteria that close the agentic loop. Before doing the work, generates concrete testable criteria (the non-coding equivalent of unit tests), meta-verifies the criteria quality (recursing if uncertain), executes the task, then systematically evaluates the output against each criterion. Loops on failures until all criteria pass or escalates to the user.
 
-*** handoff
+**** handoff
 :PROPERTIES:
 :ID:       CAB83D10-E108-48D4-871B-17821B1D3CD6
 :END:
 
 Saves next-session instructions to =/tmp/claude-code-handoff.md= for seamless session transitions. Two paths: (1) if the user and Claude just explicitly agreed on next steps, writes the prompt directly; (2) if no explicit agreement, infers next steps from conversation history, prints the proposed prompt as a code block for review, and asks the user to confirm via =AskUserQuestion= before writing. The file lives in =/tmp/= (not =~/.claude/=) to avoid triggering write confirmation prompts; being cleared on reboot is fine since stale handoffs are useless. After running =/handoff=, the user runs =! emacsclient -e '(claude-code-extras-handoff)'= to kill the current session and start a new one with the handoff prompt auto-submitted. Claude must not run this command itself.
 
-*** tangodb-continue
+**** tangodb-continue
+:PROPERTIES:
+:ID:       E913CE0D-4D9C-42E6-82A5-97BA231521A3
+:END:
 
 Tangodb session-start and resume workflow. Reads the project guide, the data-cleanup plan, =docs/data-cleanup-progress.md=, and required slice docs, then resumes the exact next step from the progress file. It keeps chaining safe read-only slices until a progress-file hard stop, approval gate, externally visible action, or real blocker is reached.
 
-*** tangodb-closeout
+**** tangodb-closeout
+:PROPERTIES:
+:ID:       4CC505DA-FBF3-4111-9397-D1FB3D936981
+:END:
 
 Tangodb end-of-session closeout workflow. Updates or creates =docs/data-cleanup-progress.md= with the active plan, current state, exact next step for =continue=, required first reads, hard stop rules, verification, blockers, and compact closeout history so a later Claude Code or Codex session can resume without chat history.
 
-*** emacs-freeze
+**** emacs-freeze
 :PROPERTIES:
 :ID:       5ED7EB34-774B-489C-95C5-27C8131CE048
 :END:
 
 Diagnoses a frozen Emacs process. First tries to dump =*Backtrace*= and =*Messages*= via the server socket (the primary evidence for debugger-induced freezes), then samples the stack as a fallback. Analysis forces a stuck-vs-busy check and a nested-debugger count *before* identifying any hot path, to avoid confusing timers firing inside a wedged recursive edit with the actual cause. Recovery options are tailored to the diagnosis: =(top-level)= via emacsclient for debugger nesting, =keyboard-quit= for responsive-but-stuck, SIGUSR2/SIGTERM/SIGKILL (with warnings) otherwise. Explicit rules forbid unverified citations and require labelling observation vs. inference vs. unknowns.
 
-*** nosync
+**** nosync
 :PROPERTIES:
 :ID:       BEEADA41-ECD4-457B-8A10-DA8D0C19984B
 :END:
 
 Moves a directory from inside =~/My Drive/= to =~/.drive-nosync/= (outside Drive's sync root) and leaves a symlink in its place. Drive skips symlinks, so the directory becomes invisible to sync while tooling works transparently. After the move, walks the relocated tree and rewrites any relative symlinks whose =..= chain pointed outside the moved directory — without this step they break silently because their new parent is =~/.drive-nosync/= instead of =~/My Drive/=. Use when Google Drive complains about a specific directory (e.g. =node_modules/.bin=).
 
-*** fix-drive-errors
+**** fix-drive-errors
 :PROPERTIES:
 :ID:       69244292-277A-4484-BC21-2AA9C8D588D9
 :END:
 
 Bulk version of =nosync=. Scans =~/My Drive/= for all directories causing sync errors (node_modules, build output, Python caches, large data dirs), moves them to =~/.drive-nosync/=, repairs broken symlinks, then restarts Google Drive. Use periodically or when the error list grows.
 
-*** install-mcp-server
+**** install-mcp-server
 :PROPERTIES:
 :ID:       AAB6CC73-A936-4D25-9255-544436259405
 :END:
 
 Installs and configures a new MCP server for Claude Code. Walks through discovery, auth verification (checking for platform-locked OAuth before installing), dependency installation, and registration via =claude mcp add=. Encodes hard-won lessons: always add a trailing slash to HTTP/SSE URLs (servers without it are silently invisible), verify with =claude mcp list= (not =claude mcp get=, which reads config but doesn't check runtime health), use absolute interpreter paths (=/opt/homebrew/bin/node=, not bare =node= which is an nvm shell function), and choose scope explicitly (=-s user= for global).
 
-*** store-secret
+**** store-secret
+:PROPERTIES:
+:ID:       2B277DAE-8F04-4B38-8778-EAC38E1A4D9E
+:END:
 
 Creates, updates, or deletes a secret in Epoch's 1Password Automations vault. The =OP_SERVICE_ACCOUNT_TOKEN= exported at shell startup has =read_items= scope only, so write operations must unset it (=env -u OP_SERVICE_ACCOUNT_TOKEN=) and go through the desktop-app CLI integration with Touch ID. Covers =op item create=/=edit=/=delete= with field-type syntax (=[text]=, =[concealed]=, =[url]=), naming conventions (no parentheses in titles — they break =op://= parsing; =<Service> - <scope>= format; lowercase snake_case field names), and vault safety (never write to shared vaults without confirmation). Also triggers automatically whenever =op item create/edit/delete= returns "You do not have permission to perform this action".
 
-** Multi-model and research skills
+*** Multi-model and research skills
 :PROPERTIES:
 :ID:       8BF704E6-F252-4E27-846A-0B2F9C52B62C
 :END:
 
-*** best-of-n
+**** best-of-n
 :PROPERTIES:
 :ID:       76E6E656-8DCE-4433-B9AA-1F6D0ACDB3B0
 :END:
 
 Adapted from [[https://pjh.is/][Peter Hartree]]'s [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository. Queries multiple AI models with temperature-varied sampling. For each model, generates N responses and selects the best one (using Gemini 3 Flash as judge). Then synthesizes across models using Claude Opus 4.6 with extended thinking. Has a brainstorm mode that merges unique ideas instead of picking one winner. Presets: Quick (4 models x 3), Intense (7 x 5), Ultra (7 x 6).
 
-*** proofread
+**** proofread
 :PROPERTIES:
 :ID:       D9EC1B04-5470-4EF9-8C4C-FEDFB2333128
 :END:
 
 Adapted from [[https://pjh.is/][Peter Hartree]]'s [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository. Proofreads documents using either aspell (fast, spelling-only) or an LLM (Gemini Flash, with configurable depth: mechanical, light style, or comprehensive). Auto-applies safe corrections and flags style suggestions for interactive review. Uses British English conventions. Depends on =ai= (v6) and =@ai-sdk/google= (v3).
 
-** Twitter and communication skills
+*** Twitter and communication skills
 :PROPERTIES:
 :ID:       6E879560-81C4-4842-90F2-AC14D8E0A1CC
 :END:
 
-*** twitter
+**** twitter
 :PROPERTIES:
 :ID:       F2720AF8-171F-4DF0-BA03-B16E2F923C2E
 :END:
 
 Reads and searches Twitter/X content via =claude/skills/twitter/lib/twitterapi.sh=, a curl wrapper around the twitterapi.io REST API. One subcommand per call type: =tweet=, =replies=, =tweets=, =user=, =search=, =followers=, =following=, =users=. Replaced the =twitterapi-io= MCP server (no more tool schemas loaded into context per session). Supports single tweet lookup, thread/reply retrieval, user timelines, keyword search, and user profile lookup. Saves tweets as markdown files with engagement stats and URLs. Includes detailed pricing and rate-limit guidance to keep API costs under control. Cross-references =/twitter-digest= and =/twitter-discover= for higher-level workflows.
 
-*** twitter-digest
+**** twitter-digest
 :PROPERTIES:
 :ID:       F677671C-6C97-4BC6-B2F5-A4E0E2457C92
 :END:
 
 Fetches recent tweets from a named list of accounts, triages them against the list's description (used as a relevance rubric), and surfaces only notable content. Uses a shell script (=fetch-tweets.sh=) requiring the =TWITTERAPI_API_KEY= env var, which curls the twitterapi.io REST API directly and extracts only the fields needed for triage (~130 chars/tweet), bypassing MCP tools whose raw JSON responses (~120K chars/account) would consume enormous context. Lists are stored in =~/.claude/skills/twitter-digest/lists/= and track the last-run timestamp to avoid re-surfacing old tweets. =fetch-tweets.sh= validates list names against path traversal before constructing file paths. Digests are saved to =digests/= for archival, with session metadata (cost, duration, session ID) in the org frontmatter. Discovered accounts (surfaced via retweets) are checked against the vet registry and excluded if previously rejected or below threshold; remaining accounts are vetted using the shared =twitter-vet= procedure (including the epistemic quality gate) and auto-added to the list if they score >= 7. Commits all changed files (digests, last-run timestamps, list updates, vet registry) at the end. Pairs with =/loop= for periodic digests.
 
-*** twitter-vet
+**** twitter-vet
 :PROPERTIES:
 :ID:       A7B3E1D4-5F92-4C8A-B6E0-9D2F4A1C7E53
 :END:
 
 Shared account vetting procedure used by =twitter-digest= and =twitter-discover=. Defines a two-phase evaluation: a free quick filter (follower bounds, bio relevance, tweet quality) and a full scoring pass (fetch 20 tweets, score 1-10 against the list's rubric). Includes a universal *epistemic quality gate* that penalizes engagement-optimized framing, overclaiming, and hype, and rewards calibrated confidence, caveats, and uncertainty acknowledgment. Accounts failing the epistemic gate are penalized 2-3 points regardless of topical fit. Accounts scoring above the threshold (default 7, overridable via =vet-threshold= frontmatter) are auto-added to the list; borderline scores are reported; low scores are skipped silently. Commits changed files (list updates, vet registry) when run standalone; defers to the caller's commit step when invoked from =twitter-digest=.
 
-*** twitter-discover
+**** twitter-discover
 :PROPERTIES:
 :ID:       D3FF4B1E-429E-4999-951C-FBFB30F1E488
 :END:
 
 Iterative, graph-based discovery of high-value Twitter accounts in any niche. Interviews the user for criteria, acquires seed accounts via search, then expands using a "hot promise score" algorithm: accounts followed by multiple high-scoring seeds are profiled next, with scores recomputed after each round. Presents tiered results (must-follow, strong, situational) at checkpoints and optionally exports to a =twitter-digest= list.
 
-*** slack-digest
+**** slack-digest
 :PROPERTIES:
 :ID:       DF40872F-2CA3-4CAD-99F9-E684C175F772
 :END:
 
 Pulls all unread Slack messages via the =slack-epochai= MCP server, triages them into "action required" vs. "worth knowing" (discarding noise), and opens the digest as an org-mode buffer in Emacs with deep links back to Slack. Accepts =--mark-read= or =--no-mark-read= to control whether conversations are marked as read; if neither is passed, asks interactively.
 
-*** slack-saved
+**** slack-saved
+:PROPERTIES:
+:ID:       053BC715-BF0B-4DC8-8C6C-C9A57629CC74
+:END:
 
 Fetches all Slack "saved for later" messages via =conversations_search_messages is:saved=, pulls thread context for each via =conversations_replies=, and classifies them into *action required*, *waiting on others*, *resolved / stale*, and *reference*. Presents the triaged report as an org-mode buffer in Emacs with deep links back to Slack. Accepts =--unsave= to interactively bulk-unsave categories after review (using the internal =saved.delete= API with tokens pulled from 1Password); defaults to =--no-unsave=.
 
-*** slack-emacs
+**** slack-emacs
+:PROPERTIES:
+:ID:       C7C1DC78-417C-4699-A9E5-9ED58475115D
+:END:
 
 Opens Slack permalinks, threads, and messages in Emacs via =slack-browse-url=, and manages the reply-drafting workflow. Whenever the user asks for a draft reply to a Slack message, this skill enforces the three-step default: draft → copy to clipboard (=pbcopy=) → open the thread in Emacs so the user can paste directly. Constructs permalinks from =channel_id= + =ts= automatically (message: =/archives/<cid>/p<ts-without-dot>=; threaded: append =?thread_ts=<thread-ts>&cid=<cid>=) rather than asking the user to supply them.
 
-*** ai-journal
+**** ai-journal
+:PROPERTIES:
+:ID:       47E2C34F-6874-4D38-8567-8B48C94836BA
+:END:
 
 Scans Claude Code and Codex session transcripts since the last run, surfaces interesting AI use cases the user may want to write about (novel prompting techniques, clever skill combinations, debugging surprises, meta-observations, automations built), presents them as numbered candidates for selection, and drafts informal study-diary posts for publication at stafforini.com/ai. Uses a Python script (=find-sessions.py=) to list sessions modified after the cutoff from both =~/.claude/projects= and =~/.codex/sessions=, deduplicating by resolved path (since =~/.claude-epoch/projects= is a symlink to the same tree). The cutoff is stored in =last-run.txt=, which is updated at the end of each successful run; on first run, the skill asks the user how far back to scan. Drafts are written as *org source files* under =~/My Drive/notes/ai-journal/<slug>.org= with =:EXPORT_HUGO_SECTION: ai= on the heading, and the normal stafforini.com notes-export pipeline (=scripts/export-notes.sh=) renders them to =content/ai/<slug>.md=. The skill never writes markdown under =content/= directly — that directory is gitignored and generated by ox-hugo. The org sources are committed in the notes git repo; generated markdown is rebuilt on each deploy.
 
-** Personal skills
+*** Personal skills
 :PROPERTIES:
 :ID:       B7A2F3E1-8C4D-4A5B-9E6F-1D2C3B4A5E6F
 :END:
 
-*** finances
+**** finances
 :PROPERTIES:
 :ID:       9FB8F226-1770-4571-B164-5575729722A7
 :END:
 
 Imports CSV bank statements from Wise and Mercado Pago, categorizes transactions against a guide built from ~7,500 historical ledger entries, and generates ledger-cli entries via a staging workflow. Three modes: =import= (default) parses CSVs, categorizes, writes a staging file for review, merges approved entries into =journal.ledger=, reconciles, and commits; =reconcile= compares existing journal entries against statements and marks matched entries as cleared; =update-guide= scans recent journal entries for new payee-to-category mappings. The categorization guide (=categorization-guide.md=) classifies payees into deterministic (auto-categorize), high-confidence (use default unless description suggests otherwise), and ambiguous (always ask). Cash transactions must be entered manually. Statement CSVs go in =~/My Drive/ledger/statements/{wise,mercadopago}/=.
 
-*** afip-invoice
+**** afip-invoice
+:PROPERTIES:
+:ID:       F32AFC53-165D-4382-8E1B-ED7D93316C79
+:END:
 
 Issues a monthly Factura C via ARCA's RCEL (Comprobantes en Línea) system for Monotributo billing. Walks through the full AFIP login, form navigation, and five-step invoice creation flow using browser automation. Includes mandatory verification of all fields against expected values before confirmation. Invoice parameters (CUITs, names, addresses, amounts) are stored in =~/.config/afip/invoice-defaults.json= to keep PII out of the tracked skill file.
 
-** Security skills
+*** Security skills
 :PROPERTIES:
 :ID:       503D6D12-1566-44FB-8BFA-408034BBB7D2
 :END:
 
-*** audit-mac-app
+**** audit-mac-app
 :PROPERTIES:
 :ID:       0266B51A-276F-40DB-85F9-DDFBDF19E71D
 :END:
 
 Adapted from [[https://pjh.is/][Peter Hartree]]'s [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository. Eight-phase security audit of macOS applications: trust verification, permission analysis, app type detection, code extraction (with Electron-specific checks for nodeIntegration, contextIsolation, etc.), network endpoint scanning, and binary analysis. Generates a markdown report with severity ratings.
 
-*** gitguardian-triage
+**** gitguardian-triage
+:PROPERTIES:
+:ID:       A3ED4593-1323-4991-8D41-2AA9AF45D093
+:END:
 
 End-to-end processor for the GitGuardian secrets dashboard. Fetches all open incidents via the GG API (token lives in =pass auth-sources/api.gitguardian.com/pablo@stafforini.com=), classifies each into a disposition bucket (rotate, already-invalid, false positive, low risk, test credential, or needs-user-input for unknown-validity), and drives rotation end-to-end for the valid ones. Rotation is routed to the Chrome profile that owns each credential per the mapping in [[*Chrome integration and multi-account][Chrome integration]]: GitHub/OpenAI/Anthropic/Google/Telegram each have provider-specific steps (Regenerate PAT with scope matching, legacy-user-key caveats in OpenAI, =gcloud alpha services api-keys= for Google Cloud, =/revoke= via BotFather in Telegram Desktop). Extracting new secrets from browser tabs uses a download-attribute trick (macOS blocks clipboard writes from backgrounded Chrome tabs). Consumer enumeration runs five complementary searches per leaked value: =.zshenv-secrets=, every line of every =pass= entry (NOT just =head -1= — multi-field entries hide the leaked value on a =<subkey>:= line that =auth-source-pass-get= reaches by name), Elisp/code references to matching pass-entry path prefixes (catches =(auth-source-pass-get "gptel" (concat "tlon/core/openai.com/" tlon-email-shared))= where the literal never appears in source), direct file-level grep for the literal, and indirection layers (=op://= URIs, =gh= keychain). After rotation, the skill re-runs the searches against the OLD value to verify zero remaining consumers. Updates =.zshenv-secrets= and =pass= consumers, commits the dotfiles change, and closes each GG incident via =/resolve= (rotated) or =/ignore= with =false_positive= | =low_risk= | =test_credential= (the only three valid reasons). Documents the rule "look for the variable, not the exact value" when finding consumers — rotated keys can share git history with their dead predecessors. Explicitly does not rewrite git history; rotating + marking resolved is enough once the old value is dead. After rotating a GitHub PAT, the skill also refreshes =gh='s macOS-keychain entry via =env -u GH_TOKEN gh auth login --with-token=, otherwise launchd jobs (which don't inherit =GH_TOKEN=) fall back to the stale keychain token and HTTPS pushes break silently.
 
-*** security-audit
+**** security-audit
+:PROPERTIES:
+:ID:       8D6548E8-93F8-40B8-9619-DF1956653ED7
+:END:
 
 Audits the development environment security posture across four domains, each runnable independently via flags. Framed around the threat model "you will eventually run malware via supply chain compromise; limit what it can do." =--secrets=: plaintext credentials in configs, globally exported secrets in shell rc files (recommends =envchain= / per-process injection), git-crypt coverage, gitignore gaps, shell history leaks, 1Password/pass consistency, =.envrc= keychain lookups. =--deps=: =ignore-scripts= in =.npmrc= (postinstall as primary supply chain vector), =minimum-release-age= (native in npm 11.10+, pnpm 10.16+), known vulnerabilities via =npm audit= / =pip audit= / =cargo audit= / Dependabot, unpinned versions, =--frozen-lockfile= usage, Python =setup.py= install-time risk, Socket.dev for GitHub repos. =--machine=: macOS Lockdown Mode, code execution isolation (VMs, Claude Code Web), browser profile separation, password manager presence, Google Advanced Protection, hardware security keys, plus existing checks (FileVault, Firewall, Gatekeeper, SIP, SSH keys, browser extensions, login items, egress controls). =--claude=: permission mode compensating controls, MCP server credential storage, hook coverage gaps, unenforceable CLAUDE.md safety instructions, skill privilege escalation risk, memory exposure. Produces findings organized by severity (critical, high, medium, low) with specific file paths and concrete remediation steps. Complements =block-secret-leak.sh= (which prevents leaks in real time) by auditing the broader security posture on demand.
 
-** Meta skills
+*** Meta skills
 :PROPERTIES:
 :ID:       57A97EB8-103B-4D7E-9BB2-BA9AE81C177C
 :END:
 
-*** migrate-profile
+**** migrate-profile
 :PROPERTIES:
 :ID:       025A523A-F1AE-43F8-89DB-13FF2A5A98B1
 :END:
 
 Consolidates Claude Code project data (sessions, memory, trust entries) across elpaca profile changes. Retargets the =~/.config/emacs-profiles/active= symlink to the new profile so that org =#+INCLUDE:= directives and other references resolve correctly. Scans =~/.claude/projects/= for all directories matching the elpaca pattern, groups them by package name (extracted by splitting on =-elpaca-repos-= or =-elpaca-sources-=), and merges all old-profile entries into the current profile's directory. Also migrates project authorization entries in =~/.claude.json= so Claude Code doesn't re-prompt trust dialogs, and rewrites =project= paths in =history.jsonl= and =cwd= fields inside session =.jsonl= files so that =agent-log-resume-session= opens sessions in the current profile directory. Handles package renames by prompting when a package is not found under the new profile. No explicit package list is needed. Non-destructive: never overwrites existing data.
 
-*** automate
+**** automate
 :PROPERTIES:
 :ID:       A1AC6915-C52E-4382-B1A6-731C697E736B
 :END:
 
 Meta-skill for AI workflow design. Given a description of something to automate, analyzes the requirements along dimensions like context source, tool access, multi-step reasoning, and Emacs integration, then recommends the right approach: a Claude Code skill, a gptel directive, a gptel tool, or a gptel command. After confirmation, builds it following the conventions of each approach.
 
-*** skill-audit
+**** skill-audit
+:PROPERTIES:
+:ID:       8987E24A-517D-469D-AC77-0984631386B6
+:END:
 
 Scans Claude Code and Codex session transcripts since the last run, identifies manual workflows that repeat across two or more sessions (same multi-step procedure, same context re-supplied to the agent, same class of bug or request resolved the same way), and presents them as candidates for new skills or extensions of existing ones. Reuses =ai-journal='s =find-sessions.py= scan script, tracks its own cutoff in =last-run.txt=, and dispatches selected candidates to =/automate= rather than building skills itself — keeping triage and build concerns separate. Before proposing a new skill, checks =~/My Drive/dotfiles/claude/skills/= for an existing skill that already covers the pattern, framing such matches as a gap to extend rather than a duplicate to create. Pairs with =/schedule= to run on a weekly cadence (Ole Lehmann's "audit your week" pattern, [[https://x.com/itsolelehmann/status/2044425992802848954][origin tweet]]).
 
-*** diagnose
+**** diagnose
 :PROPERTIES:
 :CUSTOM_ID: h:diagnose
 :ID:       D1D774DB-B9D0-46A3-827D-D217AA28D58C
@@ -650,11 +705,14 @@ Scans Claude Code and Codex session transcripts since the last run, identifies m
 
 Diagnostic mode modifier. Prefix any question with =/diagnose= to investigate errors and friction as symptoms of underlying structural issues rather than problems to fix directly. Identifies root causes, considers whether the problem is an instance of a broader class, and proposes structural fixes to config, tooling, documentation, or workflow. Includes explicit criteria for what counts as a structural fix (a concrete mechanism like a hook or config change) versus aspirational statements that depend on memory and discipline. Requires a one-step check before proposing any fix: /would an existing mechanism, firing as intended, have prevented this failure?/ If yes, the diagnosis is "behavioral lapse; rule X was violated" and the skill stops rather than inventing additional mechanisms to compensate for discipline.
 
-*** optimize-claude-md
+**** optimize-claude-md
+:PROPERTIES:
+:ID:       6ACB6F22-2E3E-4BDD-B107-06CC109282EA
+:END:
 
 Optimizes a project's CLAUDE.md for maximum agent instruction-following while minimizing context waste. Evaluates every instruction against seven criteria (universal applicability, specificity, pointer-vs-copy, linter delegation, default behavior, conflicts, positioning), checks WHAT/WHY/HOW coverage and progressive disclosure, and produces a rewritten file with dead weight removed, non-universal rules externalized to =.claude/rules/= or skills, and critical instructions positioned at top and bottom. Grounded in Anthropic's official guidance (~200 line target, concrete verifiable rules) and the HumanLayer research on instruction budgets (~150-200 effective instructions, with ~50 consumed by the system prompt). Pass =--accept= to apply changes without prompting.
 
-*** claude-config-audit
+**** claude-config-audit
 :PROPERTIES:
 :CUSTOM_ID: h:claude-config-audit
 :ID:       EEA4D06C-0E70-4A12-A588-81114465D2A4
@@ -662,18 +720,21 @@ Optimizes a project's CLAUDE.md for maximum agent instruction-following while mi
 
 Audits the entire Claude Code configuration for redundancy, conflicts, dead weight, and staleness. Discovers all instruction sources (CLAUDE.md files, context skills, memory, hooks, settings, and =claude/README.org= for cross-referencing), extracts every discrete rule, and evaluates each on five criteria: whether it restates default behavior, conflicts with another rule, duplicates something elsewhere, was a reactive fix for one bad output, or is too vague to apply consistently. Produces a cut list, conflict list, and cleaned-up CLAUDE.md.
 
-*** try-hartree-skills
+**** try-hartree-skills
 :PROPERTIES:
 :ID:       C9B601B2-393A-4098-B04B-82630F737520
 :END:
 
 Evaluates third-party skills from the [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository, one at a time. (The repository is maintained by my friend [[https://pjh.is/][Peter Hartree]], a Claude Code power user.) Installs each skill, tests it, and records the verdict.
 
-*** walk-list
+**** walk-list
+:PROPERTIES:
+:ID:       01E6C587-5B48-4478-B002-BA5388C32A5B
+:END:
 
 Processes items from a list file strictly one at a time (sequential) or N-at-a-time (parallel subagent pool), guaranteeing no item is skipped or batched. =walk.py start= /moves/ the input file into =~/.claude/walk-list-data/<uuid>/= and leaves a stub at the original path; a PreToolUse hook (=block-walk-list-access.sh=) denies every tool (Read, Grep, Glob, Edit, Write, Bash, etc.) that tries to touch the protected store except =python .../walk.py= itself — the main session cannot peek ahead, and subagents only see the single item handed to them in their prompt. State updates go through =flock= so concurrent =record= calls from pool subagents cannot clobber each other. Subcommands: =start=, =next= (sequential), =dispatch= + =record= (pool), =pool-status=, =status=, =show-decisions=, =release-stale= (reclaim stuck slots), =set-max-concurrent=, =restore= (finalize and write decisions alongside the original file), =abort=.
 
-* Hooks
+** Hooks
 :PROPERTIES:
 :ID:       4D862953-7E8A-4154-BC16-919ED6B092A5
 :END:
@@ -684,43 +745,49 @@ Claude and Codex hooks are no longer shared through adapters.  Claude hooks live
 in =claude/hooks/=; Codex ports live in =codex/hooks/=.  The mapping and known
 non-ports are recorded in =ai-config-sync.json=.
 
-** require-elisp-test-before-commit.sh (PreToolUse)
+*** require-elisp-test-before-commit.sh (PreToolUse)
 :PROPERTIES:
 :ID:       4E0CDC5D-C436-4701-AC99-E29F950318B4
 :END:
 
 Blocks =git commit= when Elisp files (=*.el= or =emacs/config.org=) are staged but no test has been run in the current session. Forces the agent to verify changes before committing. The error message suggests a ready-to-paste =batch-test.sh= command with the detected package name. Also detects the case where =git add= and =git commit= appear in the same bash command (which would otherwise bypass the staged-file check by running before staging occurs). When scanning the command string, only the =git add= arguments are examined (not the commit message or other parts of the command) to avoid false positives from commit messages that mention =.el= files.
 
-** track-elisp-test.sh (PostToolUse)
+*** track-elisp-test.sh (PostToolUse)
 :PROPERTIES:
 :ID:       85C6B926-9F3F-431A-9650-F504CEE12B4A
 :END:
 
 Creates a marker file (=/tmp/claude-elisp-tested-{SESSION_ID}=) whenever =emacs --batch= runs. This marker is what the pre-commit hook checks for. The marker is consumed (deleted) after a successful commit, so each commit requires a fresh test. Also verifies that the test loaded files from the working tree, not stale =.elc= from =elpaca/builds/=: if the command output contains evidence of a stale load (e.g. "using older file" or =elpaca/builds/*.elc=), the marker is NOT created and a warning is printed, so the commit hook will still block. Supports both Claude Code's =tool_output= payload and Codex's =tool_response= payload.
 
-** require-readme-update.sh (PreToolUse, dotfiles-scoped)
+*** require-readme-update.sh (PreToolUse, dotfiles-scoped)
 :PROPERTIES:
 :ID:       F4D78958-4194-4DB3-9624-C04EC7790960
 :END:
 
 Blocks =git commit= when files in =claude/= (skills, hooks, settings, CLAUDE.md) are staged but =claude/README.org= is not. Also detects when =git add= and =git commit= appear in the same bash command (which would otherwise bypass the staged-file check). Ensures documentation stays in sync with configuration changes. Project-specific skills (under =.claude/skills/=) are excluded from this check, since they belong to their project's documentation, not the dotfiles README. Runtime data paths (=digests/=, =last-run/=, =twitter-vet/vetted/=) are also excluded, since these are skill output files that don't warrant a README update.
 
-** remind-claude-readme-update.sh (PostToolUse)
+*** remind-claude-readme-update.sh (PostToolUse)
 :PROPERTIES:
 :ID:       2D9A0367-26C4-40B8-9B9C-06346D89238B
 :END:
 
 Companion to =require-readme-update.sh=. Fires globally after any Write or Edit, resolves the target path through symlinks, and outputs a reminder if the file is under =dotfiles/claude/= but the agent is working in a different project. This closes the gap where the commit-blocking hook never fires because the agent never switches to the dotfiles repo to commit. Silent when editing =README.org= itself or when already in the dotfiles repo.
 
-** remind-ai-config-sync.sh (PostToolUse)
+*** remind-ai-config-sync.sh (PostToolUse)
+:PROPERTIES:
+:ID:       44F44D89-3847-49A8-BD92-380CD88CC0B1
+:END:
 
 Fires after Claude Edit or Write operations and calls =bin/ai-config-sync remind-claude=. If a reusable Claude skill, hook, or live settings file changed, it prints the Codex counterpart that should be updated in the same session. This is intentionally a reminder, not an auto-sync mechanism.
 
-** require-ai-config-sync.sh (PreToolUse)
+*** require-ai-config-sync.sh (PreToolUse)
+:PROPERTIES:
+:ID:       5428CDD1-C447-4549-8365-56066C479F61
+:END:
 
 Fires before Bash =git commit= commands and calls =bin/ai-config-sync guard-commit=. Blocks one-sided Claude/Codex configuration changes in the dotfiles repo unless the counterpart is synchronized or =ai-config-sync.json= records an artifact-specific status or exemption. For skills, the guard checks body and auxiliary-file parity after stripping Codex-unsupported Claude frontmatter, so unrelated counterpart edits do not satisfy it. This keeps the model explicit: the active agent makes both edits and commits them together, or records an intentional exception in the manifest.
 
-** require-doc-update.sh (PreToolUse)
+*** require-doc-update.sh (PreToolUse)
 :PROPERTIES:
 :CUSTOM_ID: h:require-doc-update
 :ID:       BB6FE0BD-FC74-4BEB-89AB-4FE902A84055
@@ -728,18 +795,22 @@ Fires before Bash =git commit= commands and calls =bin/ai-config-sync guard-comm
 
 Blocks =git commit= when =.el= files are staged but no =doc/*.org= or =README.org= manual update is included. Applies only in repos that have a =doc/= directory or a =README.org= at the root. When scanning a combined =git add && git commit= command, only the =git add= arguments are examined (not the commit message) to avoid false positives from commit messages that mention =.el= files. Verifies that doc files have actual modifications (staged or unstaged) rather than accepting unchanged files. Ensures documentation stays in sync with code changes.
 
-** block-elpaca-rebuild-uncommitted.sh (PreToolUse)
+*** block-elpaca-rebuild-uncommitted.sh (PreToolUse)
 :PROPERTIES:
 :CUSTOM_ID: h:block-elpaca-rebuild-uncommitted
+:ID:       C3D0F41C-1A34-4AFE-BB9F-FC803D557CCF
 :END:
 
 Blocks =emacsclient= commands that invoke =elpaca-rebuild= or =elpaca-extras-reload= when there are uncommitted =.el= changes in =emacs/extras/=. The elpaca source clone only has committed code, so rebuilding before committing would silently compile and load stale definitions from the last commit, ignoring the working tree edits. The error message lists the uncommitted files and instructs the agent to commit first.
 
-** block-elpaca-dotfiles-edit.sh (PreToolUse)
+*** block-elpaca-dotfiles-edit.sh (PreToolUse)
+:PROPERTIES:
+:ID:       864BDC53-69C3-45F3-BB74-68154834BD4B
+:END:
 
 Blocks Edit and Write operations targeting files under =elpaca/sources/dotfiles/=. The elpaca clone is a separate git checkout that syncs from the canonical =~/My Drive/dotfiles/= repo via git commits; direct edits there would be overwritten on the next sync. Directs the agent to edit the canonical files instead.
 
-** load-elisp-after-edit.sh (PostToolUse)
+*** load-elisp-after-edit.sh (PostToolUse)
 :PROPERTIES:
 :CUSTOM_ID: h:load-elisp-after-edit
 :ID:       F07EF468-2770-42DE-B282-9BCB6E624EF5
@@ -747,75 +818,114 @@ Blocks Edit and Write operations targeting files under =elpaca/sources/dotfiles/
 
 Fires on every Edit or Write of an =.el= file under =elpaca/sources/= or =dotfiles/emacs/extras/=. Identifies the elpaca package (by matching the file's basename against package names for extras, or by source directory prefix for standalone packages), then runs =elpaca-rebuild= + =elpaca-wait= + =elpaca-extras-reload= synchronously via =emacsclient=. This byte-compiles the source into =elpaca/builds/=, waits for completion, and reloads all features. Skips byte-compiled files and test files. Note: for dotfiles extras edits, the rebuild may compile from a stale elpaca source if the edit hasn't been committed yet; the =post-commit= hook triggers a second rebuild from the correct source (see =emacs/extras/doc/elisp-development-workflow.org=).
 
-** elpaca-run.sh (utility)
+*** elpaca-run.sh (utility)
 :PROPERTIES:
 :ID:       54F62C33-E882-4B75-A4F0-A8963E5AF345
 :END:
 
 Resolves the active elpaca profile dynamically (via =emacsclient -e 'init-current-profile'=) and runs a script from the specified elpaca package. Searches both =repos/= and =sources/= directories to handle different elpaca layouts. Used by the Notification and Stop hooks to invoke =claude-code-hook-wrapper= without hardcoding the profile name. The =emacsclient= call has a 5-second timeout to prevent hangs when the Emacs server is unresponsive.
 
-** notify-emacs-session-end.sh (Stop)
+*** notify-emacs-session-end.sh (Stop)
 :PROPERTIES:
 :ID:       8A2F3E91-4D5C-4B8F-9E3A-7C6D2A1F0B94
 :END:
 
 Forwards the session-end event to Emacs via =claude-code-handle-hook=. Runs through =fire-and-forget.sh= so the CLI doesn't block on =emacsclient=. Works together with =agent-log-sync-on-session-end= to trigger log syncing when a session ends.
 
-** claude-code-hook-wrapper (Notification, Stop)
+*** claude-code-hook-wrapper (Notification, Stop)
 :PROPERTIES:
 :ID:       44E20BF0-9B6B-420E-858F-98CBF18D13F8
 :END:
 
 Invoked via =elpaca-run.sh= on Notification and Stop events. Delegates to the =claude-code= Emacs package's hook wrapper, which updates the Emacs-side state (e.g. mode-line indicators) in response to Claude Code lifecycle events.
 
-** block-texi-edit.sh (PreToolUse)
+*** block-texi-edit.sh (PreToolUse)
+:PROPERTIES:
+:ID:       40DE3EB3-0452-4AD7-8CA4-DE80BEF0F6B0
+:END:
 
 Blocks edits to =.texi= files, which are auto-generated from =.org= sources via =ox-texinfo=. Directs the agent to edit the corresponding =.org= file instead and regenerate.
 
-** block-sensitive-read.sh (PreToolUse)
+*** block-sensitive-read.sh (PreToolUse)
+:PROPERTIES:
+:ID:       8B4D91E7-7EA8-44FC-83E9-FD92097997BA
+:END:
 
 Guards against accidental ingestion of sensitive files into the context window. Fires on =Read= AND =Bash=, checking either the target =file_path= or the Bash command for the same sensitive-path set: =~/.password-store/=, =.zshenv-secrets=, =~/.ssh/id_*= (private keys), =~/.gnupg/=, =tokens.json= inside =~/.config/=, =~/.gmail-mcp-epoch/credentials/=, and =secret.json= / =client_secret*.json= inside =~/.config/=. The Bash branch allowlists operations that legitimately mention these paths without exposing content: auth-aware tools (=pass=, =op=, =git-crypt=, =security=), metadata commands (=ls=, =stat=, =file=, =basename=, =dirname=, =realpath=), =wc= with safe flags, =grep=/=rg=/=ripgrep= with non-content flags (=-l=, =-c=, =-q=, =-L=), and existence tests (=[ -f=, =[[ -f=, =test -f=). Anything else that touches a sensitive path is treated as content-extraction and escalated. Uses =permissionDecision: "ask"= to escalate to the user rather than hard-denying. Closes the structural gap that allowed e.g. =grep ANNAS .zshenv-secrets= to dump the secret value into the transcript via Bash, bypassing the original Read-only matcher.
 
-** block-secret-leak.sh (PreToolUse)
+*** block-secret-leak.sh (PreToolUse)
+:PROPERTIES:
+:ID:       1F459B3F-EA5B-4FF3-BE3B-B963D8C0F0DB
+:END:
 
 Compensating control for permissive modes (=auto=, =bypassPermissions=). Fires on =Bash|Write= and pattern-matches the tool input for common secret formats: AWS access keys, GitHub tokens, GitLab tokens, Slack tokens, =sk-= API keys, Google API keys (=AIza...=), JWTs, database connection strings with embedded credentials, private key headers, Google OAuth client secrets, and generic high-entropy values assigned to known secret variable names. Blocks the operation with a specific message identifying the secret type. Allowlists legitimate secret-handling commands (=pass=, =op=, =security=, =git-crypt=), pattern-scanning tools (=grep=, =rg=), environment variable references (=$VAR=), and writes to known secret files (=.zshenv-secrets=, =.env.op=). Also detects exfiltration patterns: sensitive files (SSH keys, GPG keys, password store, =tokens.json=, =.zshenv-secrets=) piped to network tools (=curl=, =wget=, =nc=, =ncat=), =curl --data @= uploads of sensitive files, and network commands containing inline high-entropy strings (>30 chars with mixed character classes including digits). Complements the =/security-audit= skill, which audits the broader security posture on demand rather than blocking in real time.
 
-** block-destructive-command.sh (PreToolUse)
+*** block-destructive-command.sh (PreToolUse)
+:PROPERTIES:
+:ID:       DC12DCB5-4C06-43D2-B235-9C08B99653D9
+:END:
 
 Blocks or gates destructive shell commands that are hard to reverse. Hard-blocks (deny): =rm -rf= (suggests =trash=), =git push --force=, =git reset --hard=, =git clean -f=, =git checkout -- .=, and =git branch -D=. Prompts for confirmation (ask): =git push= (all pushes), =git clone= / =gh repo clone=. Each pattern includes a specific remediation suggestion. Users can run blocked commands manually via =!=.
 
-** guard-external-actions.sh (PreToolUse)
+*** guard-external-actions.sh (PreToolUse)
+:PROPERTIES:
+:ID:       963E9C95-5AA8-4905-905E-F5C0FF68627E
+:END:
 
 Deny-by-default guard for all MCP tools. Fires on all =mcp__= tools. Read-only tools are explicitly allowlisted (pattern-matched on verb prefixes like =read_*=, =list_*=, =get_*=, =search_*=, plus specific tool names per server). Everything else exits 2 to require user confirmation. This ensures new MCP servers and tools are guarded automatically without needing to enumerate every dangerous action.
 
-** require-elisp-skill.sh (PreToolUse)
+*** require-elisp-skill.sh (PreToolUse)
+:PROPERTIES:
+:ID:       B9B181F6-1530-437D-8B3C-848E4C65B28F
+:END:
 
 Blocks edits to =.el= files until the =elisp-conventions= skill has been loaded in the current session. Checks for a session marker created by the companion =track-elisp-skill.sh= hook. If no marker exists, denies the edit with a message telling the agent to load the skill first.
 
-** track-elisp-skill.sh (PostToolUse)
+*** track-elisp-skill.sh (PostToolUse)
+:PROPERTIES:
+:ID:       1C627F38-97A8-447E-95A0-586890A4D5B8
+:END:
 
 Creates a session marker (=/tmp/claude-elisp-skill-{SESSION_ID}=) when the =elisp-conventions= skill is loaded via the Skill tool. This marker allows =require-elisp-skill.sh= to permit =.el= edits. Cleans up stale markers older than 2 hours.
 
-** require-elisp-verify-after-commit.sh (PreToolUse)
+*** require-elisp-verify-after-commit.sh (PreToolUse)
+:PROPERTIES:
+:ID:       130ACA78-30B6-4B1A-9E02-EC99B126079D
+:END:
 
 Blocks all Bash commands (except =emacsclient= and =batch-test.sh=) after committing =.el= files until verification via =emacsclient -e= has been run. Uses a session marker created by the companion =track-elisp-verify.sh= hook. Ensures the agent verifies that committed Elisp loads correctly in the running Emacs before moving on.
 
-** track-elisp-verify.sh (PostToolUse)
+*** track-elisp-verify.sh (PostToolUse)
+:PROPERTIES:
+:ID:       CEA9EC73-B53B-4097-B9CA-38828EB94D97
+:END:
 
 Creates a verification marker (=/tmp/claude-elisp-verify-needed-{SESSION_ID}=) after a successful =git commit= that includes =.el= files. Clears the marker when =emacsclient -e= runs. Skips test files (=*-test.el=, =*-tests.el=). Cleans up stale markers older than 2 hours.
 
-** notify-emacs-notification.sh (Notification)
+*** notify-emacs-notification.sh (Notification)
+:PROPERTIES:
+:ID:       E0B2AF05-8A03-40DE-B373-2952381AA760
+:END:
 
 Forwards Claude Code notifications to Emacs via =claude-code-handle-hook=. Runs through =fire-and-forget.sh= so the CLI doesn't block on =emacsclient=.
 
-** fire-and-forget.sh (utility)
+*** fire-and-forget.sh (utility)
+:PROPERTIES:
+:ID:       4DAD911D-7415-47DC-B7ED-62F0A2C22017
+:END:
 
 Wrapper that runs a hook command in the background. Reads stdin first to avoid broken pipes, then execs the command detached. Used by the Notification and Stop hooks so the CLI doesn't block waiting for =emacsclient=.
 
-** lib-repo-root.sh (utility)
+*** lib-repo-root.sh (utility)
+:PROPERTIES:
+:ID:       6149F4DB-9E5E-496D-9976-08EE7A930DAF
+:END:
 
 Shared helper sourced by other hooks. Resolves the git repo root from the command context. PreToolUse hooks run before the bash command executes, so the hook's cwd may differ from the command's effective cwd. If the command starts with =cd <path> &&=, this helper resolves the repo root from that path and cds into it so subsequent git commands operate on the correct repo.
 
-** lib-staged-files.sh (utility)
+*** lib-staged-files.sh (utility)
+:PROPERTIES:
+:ID:       8BC3FC4A-63DE-4E4A-9174-C6D8672C5EC0
+:END:
 
 Shared helper sourced by other hooks. Lists staged files and handles the =--amend= flag correctly by comparing against =HEAD~1= when amending (since amending replays the previous commit's changes).

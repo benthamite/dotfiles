@@ -186,8 +186,8 @@
       "name": "handoff",
       "claude": "claude/skills/handoff/SKILL.md",
       "codex": "codex/skills/handoff/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "tool-specific-divergence",
+      "note": "Claude and Codex handoff skills intentionally differ because their Emacs handoff commands read different temp files and have different command names."
     },
     {
       "name": "install-mcp-server",

@@ -67,12 +67,14 @@ fi
 # Compute relative path for the message
 REL_PATH="${REAL_PATH#$DOTFILES_CLAUDE_REAL/}"
 
-cat <<EOF
+MESSAGE=$(cat <<EOF
 REMINDER: You just modified claude/$REL_PATH (in the dotfiles repo, via symlink).
 You MUST:
   1. Update claude/README.org to reflect this change.
   2. Commit in the dotfiles repo: cd "$DOTFILES_ROOT" && git add claude/ && git commit
 The require-readme-update.sh hook will block the commit if README.org is not staged.
 EOF
+)
+jq -n --arg message "$MESSAGE" '{"hookSpecificOutput":{"message":$message}}'
   exit 0
 done < <(codex_changed_paths "$INPUT")

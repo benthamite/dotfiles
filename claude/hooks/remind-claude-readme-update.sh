@@ -62,7 +62,8 @@ if [ "$REPO_ROOT" = "$DOTFILES_ROOT" ] || [ "$REPO_ROOT" = "$DOTFILES_ROOT_REAL"
   exit 0
 fi
 
-# Compute relative path for the message
+# Compute relative path for the message.  Claude Code displays this reminder
+# from plain stdout; the Codex port wraps its reminder as PostToolUse JSON.
 REL_PATH="${REAL_PATH#$DOTFILES_CLAUDE_REAL/}"
 
 cat <<EOF

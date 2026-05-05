@@ -771,7 +771,7 @@ Blocks =git commit= when files in =claude/= (skills, hooks, settings, CLAUDE.md)
 :ID:       2D9A0367-26C4-40B8-9B9C-06346D89238B
 :END:
 
-Companion to =require-readme-update.sh=. Fires globally after any Write or Edit, resolves the target path through symlinks, and outputs a reminder if the file is under =dotfiles/claude/= but the agent is working in a different project. This closes the gap where the commit-blocking hook never fires because the agent never switches to the dotfiles repo to commit. Silent when editing =README.org= itself or when already in the dotfiles repo.
+Companion to =require-readme-update.sh=. Fires globally after any Write or Edit, resolves the target path through symlinks, and outputs a reminder if the file is under =dotfiles/claude/= but the agent is working in a different project. This closes the gap where the commit-blocking hook never fires because the agent never switches to the dotfiles repo to commit. Silent when editing =README.org= itself or when already in the dotfiles repo. The Claude hook emits the reminder as plain stdout; the Codex port wraps the same reminder as PostToolUse JSON because Codex treats plain stdout as invalid hook protocol output.
 
 *** remind-ai-config-sync.sh (PostToolUse)
 :PROPERTIES:

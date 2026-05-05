@@ -8927,7 +8927,11 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 (use-package ai-agent
   :ensure (:host github
                  :repo "benthamite/ai-agent")
-  :defer t
+  :demand t
+  :config
+  (require 'ai-agent-claude)
+  (require 'ai-agent-codex)
+
   :custom
   (ai-agent-alert-on-ready t)
   (ai-agent-sync-theme t)

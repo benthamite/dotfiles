@@ -65,6 +65,7 @@ done < <(codex_changed_paths "$input")
 
 jq -n --arg p "$first_pkg" --argjson c "$count" '{
   "hookSpecificOutput": {
-    "message": (if $c == 1 then "Rebuilt and reloaded: " + $p else "Rebuilt and reloaded " + ($c|tostring) + " Elisp package(s), starting with: " + $p end)
+    "hookEventName": "PostToolUse",
+    "additionalContext": (if $c == 1 then "Rebuilt and reloaded: " + $p else "Rebuilt and reloaded " + ($c|tostring) + " Elisp package(s), starting with: " + $p end)
   }
 }'

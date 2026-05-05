@@ -239,7 +239,17 @@ def print_codex_post_tool_message(messages: Iterable[str]) -> None:
     text = "\n".join(message for message in messages if message)
     if not text:
         return
-    print(json.dumps({"hookSpecificOutput": {"message": text}}, indent=2))
+    print(
+        json.dumps(
+            {
+                "hookSpecificOutput": {
+                    "hookEventName": "PostToolUse",
+                    "additionalContext": text,
+                }
+            },
+            indent=2,
+        )
+    )
 
 
 def remind_claude() -> None:
@@ -548,6 +558,10 @@ def manifest_registration_changed(base: dict, candidate: dict, path: str) -> boo
     return manifest_registration(base, path) != manifest_registration(candidate, path)
 
 
+def manifest_item_changed(base: dict, candidate: dict, section: str, name: str) -> bool:
+    return manifest_item_by_name(base, section, name) != manifest_item_by_name(candidate, section, name)
+
+
 def skill_sync_problems(skill: str) -> list[str]:
     problems: list[str] = []
     claude_dir = ROOT / "claude" / "skills" / skill
@@ -663,7 +677,7 @@ def guard_commit() -> None:
             item = manifest_item_by_name(candidate_manifest, "hooks", hook)
             if manifest_item_is_explicitly_unpaired(item):
                 continue
-            if not path_has_change(counterpart, changed_paths):
+            if not path_has_change(counterpart, changed_paths) and not manifest_item_changed(base_manifest, candidate_manifest, "hooks", hook):
                 problems.append(f"claude/hooks/{hook} changed without codex/hooks/{hook} or {MANIFEST}")
         elif path.startswith("codex/hooks/"):
             hook = path.removeprefix("codex/hooks/")
@@ -674,7 +688,7 @@ def guard_commit() -> None:
             item = manifest_item_by_name(candidate_manifest, "hooks", hook)
             if manifest_item_is_explicitly_unpaired(item):
                 continue
-            if not path_has_change(counterpart, changed_paths):
+            if not path_has_change(counterpart, changed_paths) and not manifest_item_changed(base_manifest, candidate_manifest, "hooks", hook):
                 problems.append(f"codex/hooks/{hook} changed without claude/hooks/{hook} or {MANIFEST}")
         elif path in SYNC_CONFIG_PATHS and not manifest_registration_changed(base_manifest, candidate_manifest, path):
             problems.append(f"{path} changed without a path-specific {MANIFEST} registration update")

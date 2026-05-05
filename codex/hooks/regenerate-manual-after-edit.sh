@@ -46,7 +46,7 @@ while IFS= read -r file_path; do
   (setq org-export-with-broken-links t)
   (org-texinfo-export-to-texinfo))' 2>&1); then
     jq -n --arg msg "Texinfo export failed: $(echo "$texi_err" | tail -5 | tr '\n' ' ')" \
-      '{"hookSpecificOutput":{"message":$msg}}'
+      '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":$msg}}'
     exit 0
   fi
 
@@ -71,4 +71,4 @@ done < <(codex_changed_paths "$input")
 [ "$total_texi" -gt 0 ] || exit 0
 
 jq -n --arg dir "$last_dir" --argjson t "$total_texi" --argjson i "$total_info" \
-  '{"hookSpecificOutput":{"message":("Regenerated " + ($t|tostring) + " .texi and " + ($i|tostring) + " .info file(s) in " + $dir)}}'
+  '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":("Regenerated " + ($t|tostring) + " .texi and " + ($i|tostring) + " .info file(s) in " + $dir)}}'

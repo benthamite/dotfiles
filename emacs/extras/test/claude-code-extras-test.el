@@ -146,6 +146,30 @@
                          "{")))
       (delete-directory dir t))))
 
+(ert-deftest claude-code-extras-test-cleanup-obsolete-theme-sync ()
+  "Remove stale Claude Code theme hooks, timers, and functions."
+  (let ((enable-theme-functions
+         (cons 'claude-code-extras-sync-theme enable-theme-functions))
+        (timer (run-at-time 9999 nil 'claude-code-extras--do-sync-theme)))
+    (unwind-protect
+        (progn
+          (fset 'claude-code-extras-sync-theme #'ignore)
+          (fset 'claude-code-extras--do-sync-theme #'ignore)
+          (set 'claude-code-extras--sync-theme-timer timer)
+          (claude-code-extras--cleanup-obsolete-theme-sync)
+          (should-not (memq 'claude-code-extras-sync-theme
+                            enable-theme-functions))
+          (should-not (symbol-value 'claude-code-extras--sync-theme-timer))
+          (should-not (fboundp 'claude-code-extras-sync-theme))
+          (should-not (fboundp 'claude-code-extras--do-sync-theme)))
+      (cancel-timer timer)
+      (when (fboundp 'claude-code-extras-sync-theme)
+        (fmakunbound 'claude-code-extras-sync-theme))
+      (when (fboundp 'claude-code-extras--do-sync-theme)
+        (fmakunbound 'claude-code-extras--do-sync-theme))
+      (when (boundp 'claude-code-extras--sync-theme-timer)
+        (makunbound 'claude-code-extras--sync-theme-timer)))))
+
 (ert-deftest claude-code-extras-test-sync-theme-before-start ()
   "Run shared theme sync before starting a Claude Code process."
   (let ((called nil))

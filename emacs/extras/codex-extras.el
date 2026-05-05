@@ -122,6 +122,24 @@ Source: SVG Repo (CC0).")
 
 ;;;; Functions
 
+;;;;; Obsolete theme sync cleanup
+
+(defun codex-extras--cleanup-obsolete-theme-sync ()
+  "Remove live callbacks from Codex's old theme sync implementation."
+  (remove-hook 'enable-theme-functions 'codex-extras-sync-theme)
+  (remove-hook 'codex-start-hook 'codex-extras-sync-theme)
+  (cancel-function-timers 'codex-extras--do-sync-theme)
+  (when-let* ((timer (and (boundp 'codex-extras--sync-theme-timer)
+                          (symbol-value 'codex-extras--sync-theme-timer))))
+    (when (timerp timer)
+      (cancel-timer timer))
+    (set 'codex-extras--sync-theme-timer nil))
+  (dolist (fn '(codex-extras-sync-theme codex-extras--do-sync-theme))
+    (when (fboundp fn)
+      (fmakunbound fn))))
+
+(codex-extras--cleanup-obsolete-theme-sync)
+
 ;;;;; Mode line
 
 (declare-function doom-modeline-set-modeline "doom-modeline-core")
@@ -182,10 +200,12 @@ THEME is either \"light\" or \"dark\".  Return non-nil when the
 config file changed."
   (codex-extras--sync-theme-to-config theme))
 
-(defun codex-extras--sync-theme-to-config (theme)
+(defun codex-extras--sync-theme-to-config (&optional theme)
   "Update `tui.theme' in `codex-hooks-config-path' to THEME.
-Only writes the file when the theme value actually changes."
-  (let* ((config-file (expand-file-name codex-hooks-config-path))
+When THEME is nil, use the current Emacs AI theme.  Only writes
+the file when the theme value actually changes."
+  (let* ((theme (or theme (ai-extras--theme)))
+         (config-file (expand-file-name codex-hooks-config-path))
          (new-line (format "theme = \"%s\"" theme)))
     (make-directory (file-name-directory config-file) t)
     (with-temp-buffer

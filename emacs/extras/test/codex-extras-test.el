@@ -56,6 +56,52 @@
           (should-not (codex-extras--sync-theme "dark")))
       (delete-directory dir t))))
 
+(ert-deftest codex-extras-test-sync-theme-to-config-allows-legacy-call ()
+  "Accept the old no-argument theme config writer call."
+  (let* ((dir (make-temp-file "codex-theme" t))
+         (config (expand-file-name "config.toml" dir))
+         (codex-hooks-config-path config))
+    (unwind-protect
+        (progn
+          (with-temp-file config
+            (insert "[tui]\ntheme = \"light\"\n"))
+          (cl-letf (((symbol-function 'frame-parameter)
+                     (lambda (_frame param)
+                       (when (eq param 'background-mode) 'dark))))
+            (should (codex-extras--sync-theme-to-config)))
+          (should (string-match-p
+                   "^\\[tui\\]\ntheme = \"dark\""
+                   (with-temp-buffer
+                     (insert-file-contents config)
+                     (buffer-string)))))
+      (delete-directory dir t))))
+
+(ert-deftest codex-extras-test-cleanup-obsolete-theme-sync ()
+  "Remove stale Codex theme hooks, timers, and functions."
+  (let ((enable-theme-functions
+         (cons 'codex-extras-sync-theme enable-theme-functions))
+        (codex-start-hook
+         (cons 'codex-extras-sync-theme codex-start-hook))
+        (timer (run-at-time 9999 nil 'codex-extras--do-sync-theme)))
+    (unwind-protect
+        (progn
+          (fset 'codex-extras-sync-theme #'ignore)
+          (fset 'codex-extras--do-sync-theme #'ignore)
+          (set 'codex-extras--sync-theme-timer timer)
+          (codex-extras--cleanup-obsolete-theme-sync)
+          (should-not (memq 'codex-extras-sync-theme enable-theme-functions))
+          (should-not (memq 'codex-extras-sync-theme codex-start-hook))
+          (should-not (symbol-value 'codex-extras--sync-theme-timer))
+          (should-not (fboundp 'codex-extras-sync-theme))
+          (should-not (fboundp 'codex-extras--do-sync-theme)))
+      (cancel-timer timer)
+      (when (fboundp 'codex-extras-sync-theme)
+        (fmakunbound 'codex-extras-sync-theme))
+      (when (fboundp 'codex-extras--do-sync-theme)
+        (fmakunbound 'codex-extras--do-sync-theme))
+      (when (boundp 'codex-extras--sync-theme-timer)
+        (makunbound 'codex-extras--sync-theme-timer)))))
+
 (ert-deftest codex-extras-test-sync-theme-before-start ()
   "Run shared theme sync before starting a Codex process."
   (let ((called nil))

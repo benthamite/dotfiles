@@ -3,7 +3,7 @@
 
 * The two-clone problem
 
-Extras packages (=claude-code-extras=, =org-extras=, etc.) live in two places:
+Extras packages (=org-extras=, =gptel-extras=, etc.) live in two places:
 
 - *Working tree*: =~/My Drive/dotfiles/emacs/extras/= — where all edits happen
 - *Elpaca clone*: =~/.config/emacs-profiles/<profile>/elpaca/sources/dotfiles/emacs/extras/= — where Emacs loads from

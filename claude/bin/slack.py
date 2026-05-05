@@ -19,6 +19,8 @@ Usage:
       Fetch a channel's recent messages (conversations.history).
   slack.py replies <channel-id> <thread-ts> [--limit=N] [--cursor=...]
       Fetch replies in a thread (conversations.replies).
+  slack.py permalink <url> [--limit=N] [--cursor=...]
+      Fetch the message or thread context for a Slack permalink.
   slack.py channels [--types=public_channel,private_channel,im,mpim] [--cursor=...]
       List channels (conversations.list).
   slack.py users-search <query> [--max=N]
@@ -96,6 +98,49 @@ def call(method, **params):
     return data
 
 
+def _permalink_ts_to_ts(permalink_ts):
+    if not permalink_ts.isdigit() or len(permalink_ts) <= 6:
+        raise ValueError(f"invalid Slack permalink timestamp: {permalink_ts}")
+    return f"{permalink_ts[:-6]}.{permalink_ts[-6:]}"
+
+
+def parse_permalink(url):
+    parsed = urllib.parse.urlparse(url)
+    if parsed.scheme not in ("http", "https") or not parsed.netloc.endswith(".slack.com"):
+        raise ValueError(f"not a Slack URL: {url}")
+
+    parts = [part for part in parsed.path.split("/") if part]
+    if len(parts) < 3 or parts[0] != "archives":
+        raise ValueError(f"not a Slack message permalink: {url}")
+
+    channel = parts[1]
+    message_part = parts[2]
+    if not message_part.startswith("p"):
+        raise ValueError(f"Slack permalink is missing p<timestamp>: {url}")
+
+    message_ts = _permalink_ts_to_ts(message_part[1:])
+    query = urllib.parse.parse_qs(parsed.query)
+    thread_ts = (query.get("thread_ts") or [None])[0]
+    cid = (query.get("cid") or [None])[0]
+    if cid and cid != channel:
+        raise ValueError(f"Slack permalink channel mismatch: path={channel}, cid={cid}")
+
+    return {
+        "url": url,
+        "team_domain": parsed.netloc.removesuffix(".slack.com"),
+        "channel": channel,
+        "message_ts": message_ts,
+        "thread_ts": thread_ts,
+    }
+
+
+def _has_replies(message):
+    try:
+        return int(message.get("reply_count") or 0) > 0
+    except (TypeError, ValueError):
+        return False
+
+
 def cmd_search(args):
     out = call("search.messages", query=args.query, count=str(args.max), sort=args.sort)
     print(json.dumps(out, indent=2))
@@ -121,6 +166,48 @@ def cmd_replies(args):
         limit=str(args.limit),
         cursor=args.cursor,
     )
+    print(json.dumps(out, indent=2))
+
+
+def cmd_permalink(args):
+    try:
+        info = parse_permalink(args.url)
+    except ValueError as e:
+        sys.stderr.write(f"ERROR: {e}\n")
+        sys.exit(2)
+
+    if info["thread_ts"]:
+        out = call(
+            "conversations.replies",
+            channel=info["channel"],
+            ts=info["thread_ts"],
+            limit=str(args.limit),
+            cursor=args.cursor,
+        )
+        out["source"] = "conversations.replies"
+    else:
+        out = call(
+            "conversations.history",
+            channel=info["channel"],
+            latest=info["message_ts"],
+            inclusive="true",
+            limit="1",
+        )
+        out["source"] = "conversations.history"
+        messages = out.get("messages") or []
+        if messages and _has_replies(messages[0]):
+            thread_ts = messages[0].get("thread_ts") or messages[0].get("ts")
+            info["thread_ts"] = thread_ts
+            out = call(
+                "conversations.replies",
+                channel=info["channel"],
+                ts=thread_ts,
+                limit=str(args.limit),
+                cursor=args.cursor,
+            )
+            out["source"] = "conversations.replies"
+
+    out["permalink"] = info
     print(json.dumps(out, indent=2))
 
 
@@ -199,6 +286,12 @@ def main():
     r.add_argument("--limit", type=int, default=200)
     r.add_argument("--cursor")
     r.set_defaults(func=cmd_replies)
+
+    pl = sub.add_parser("permalink")
+    pl.add_argument("url")
+    pl.add_argument("--limit", type=int, default=200)
+    pl.add_argument("--cursor")
+    pl.set_defaults(func=cmd_permalink)
 
     c = sub.add_parser("channels")
     c.add_argument("--types", default="public_channel,private_channel,im,mpim")

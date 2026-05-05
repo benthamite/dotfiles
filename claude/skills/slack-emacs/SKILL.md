@@ -1,25 +1,24 @@
 ---
 name: slack-emacs
-description: Open Slack links/threads in Emacs and handle drafting replies to Slack messages. Use when the user says "open slack", "open slack thread", "open slack message", "open the slack link", "draft a slack reply", "reply to this slack message", "reply to the slack thread", or whenever the task involves drafting a reply to a specific Slack message or opening a Slack permalink. Also trigger when the user provides a Slack URL (epochai.slack.com/archives/...) and wants to act on it.
+description: Read Slack permalinks programmatically and handle guarded Emacs reply drafting. Use when the user says "open slack", "open slack thread", "open slack message", "open the slack link", "draft a slack reply", "reply to this slack message", "reply to the slack thread", or whenever the user provides a Slack URL (epochai.slack.com/archives/...) and wants to act on it.
 ---
 
-# Slack in Emacs
+# Slack permalinks and Emacs
 
 ## When to invoke this skill
 
-- The user wants to open a Slack message, thread, channel, or permalink in Emacs.
+- The user shares a Slack URL (`https://epochai.slack.com/archives/...`) and wants to read, investigate, summarize, or act on it.
 - The user asks you to draft a reply to a Slack message (even if they don't mention Emacs). Drafting a reply **always** requires opening the thread in Emacs so the user can paste the draft directly into the thread — this is a hard rule, not an optional step.
-- The user shares a Slack URL (`https://epochai.slack.com/archives/...`) and asks you to do anything with it beyond reading its content programmatically via the `slack.py` wrapper.
 
-## Opening a Slack permalink in Emacs
+## Reading a Slack permalink
 
-Use `slack-browse-url` via `emacsclient`:
+For reading or investigation, never open Slack UI. Fetch the permalink via the Slack API wrapper:
 
 ```bash
-emacsclient --no-wait --eval '(progn (slack-browse-url "PERMALINK") nil)'
+~/My\ Drive/dotfiles/claude/bin/slack.py permalink "PERMALINK"
 ```
 
-The trailing `nil` suppresses the return value that would otherwise clutter the shell output.
+This parses the channel and timestamp from the URL and returns the message or full thread context as JSON. Use this first even when the eventual task is to draft a reply.
 
 ### Permalink format
 
@@ -30,15 +29,31 @@ The trailing `nil` suppresses the return value that would otherwise clutter the 
 
 If you only have `channel_id` and `ts` from an MCP call, construct the permalink yourself — do not ask the user to supply it.
 
+## Opening a Slack permalink in Emacs
+
+Only open Slack in Emacs when the user explicitly asks to open the Slack UI, or after drafting a reply so the user can paste it. Use a guarded `slack-browse-url` call that blocks the package's default-browser fallback:
+
+```bash
+emacsclient --no-wait --eval '(progn
+  (require (quote cl-lib))
+  (cl-letf (((symbol-function (quote browse-url-default-browser))
+             (lambda (&rest _) (error "Blocked browser fallback from slack-browse-url"))))
+    (slack-browse-url "PERMALINK"))
+  nil)'
+```
+
+If this fails, report that Emacs Slack could not open the thread. Do not retry with an external browser unless the user explicitly asks for that.
+
 ## Drafting a reply to a Slack message
 
 When the user asks you to draft a reply to a specific Slack message or thread:
 
-1. Draft the reply.
-2. Push the draft to the Emacs kill ring (see "Copying drafts" below). This also syncs to the system clipboard, and has the advantage that the draft survives in kill-ring history (accessible via `M-y`) even if the user copies something else in the meantime.
-3. **Open the thread in Emacs** using `slack-browse-url` so the user can paste the draft directly into the thread input.
+1. Read the permalink with `slack.py permalink "PERMALINK"` if the full context is not already loaded.
+2. Draft the reply.
+3. Push the draft to the Emacs kill ring (see "Copying drafts" below). This also syncs to the system clipboard, and has the advantage that the draft survives in kill-ring history (accessible via `M-y`) even if the user copies something else in the meantime.
+4. **Open the thread in Emacs** using the guarded `slack-browse-url` command above so the user can paste directly.
 
-Steps 2 and 3 are both required every time. Do not skip step 3 just because the user hasn't explicitly asked for it — it's the default behavior for this operation.
+Steps 3 and 4 are both required every time. Do not skip step 4 just because the user hasn't explicitly asked for it — it's the default behavior for reply drafting.
 
 ### Copying drafts
 
@@ -59,6 +74,10 @@ rm "$TMPFILE"
 
 ## Do not trigger this skill for
 
-- Reading Slack content via the `slack.py` wrapper (`history`, `replies`, `search`, etc.) — those don't require Emacs.
-- Sending a message programmatically — not currently supported in this workflow; the user pastes manually in Emacs.
 - General Slack digests / unreads — use `slack-digest` or `slack-saved` instead.
+- Sending a message programmatically — not currently supported in this workflow; the user pastes manually in Emacs.
+
+## Hard rules
+
+- Do not call unguarded `slack-browse-url` from Codex; it can fall back to `browse-url-default-browser`.
+- Do not open Slack UI just to read a permalink. Use `slack.py permalink`.

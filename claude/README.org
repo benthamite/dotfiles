@@ -41,7 +41,7 @@ Three layers of directories work together: this dotfiles directory (source of tr
 ├── bin/sync-mcp-servers.sh           ← MCP server sync utility
 ├── bin/gmail.py                      ← Gmail API CLI (--account epoch|personal)
 ├── bin/sheets.py                     ← Sheets API CLI (--account epoch|personal)
-├── bin/slack.py                      ← Slack web-API CLI (Epoch workspace, xoxc/xoxd)
+├── bin/slack.py                      ← Slack web-API CLI, including permalink/thread fetches
 ├── bin/_gworkspace_auth.py           ← shared OAuth helper for gmail.py / sheets.py
 ├── ../bin/ai-config-sync             ← Claude/Codex port audit and hook checker
 └── README.org                        ← this file
@@ -630,7 +630,7 @@ Fetches all Slack "saved for later" messages via =conversations_search_messages 
 :ID:       C7C1DC78-417C-4699-A9E5-9ED58475115D
 :END:
 
-Opens Slack permalinks, threads, and messages in Emacs via =slack-browse-url=, and manages the reply-drafting workflow. Whenever the user asks for a draft reply to a Slack message, this skill enforces the three-step default: draft → copy to clipboard (=pbcopy=) → open the thread in Emacs so the user can paste directly. Constructs permalinks from =channel_id= + =ts= automatically (message: =/archives/<cid>/p<ts-without-dot>=; threaded: append =?thread_ts=<thread-ts>&cid=<cid>=) rather than asking the user to supply them.
+Reads Slack permalinks through =claude/bin/slack.py permalink= before any UI action, so message and thread context is fetched via the Slack API rather than opening Slack in a browser. Manages the reply-drafting workflow by drafting, copying to the Emacs kill ring, and then opening the thread in Emacs with a guarded =slack-browse-url= call that blocks the package's default-browser fallback. Constructs permalinks from =channel_id= + =ts= automatically (message: =/archives/<cid>/p<ts-without-dot>=; threaded: append =?thread_ts=<thread-ts>&cid=<cid>=) rather than asking the user to supply them.
 
 **** ai-journal
 :PROPERTIES:

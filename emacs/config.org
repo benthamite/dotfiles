@@ -8891,7 +8891,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :ensure (:host github
                  :repo "stevemolitor/claude-code.el" :branch "main"
                  :files ("*.el" (:exclude "images/*")))
-  :demand t
+  :defer t
   :custom
   (claude-code-display-window-fn (lambda (_buffer) (claude-code-switch-to-buffer) nil))
   (claude-code-terminal-backend 'eat)
@@ -8959,10 +8959,8 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 (use-package agent-log
   :ensure (:host github
                  :repo "benthamite/agent-log")
-  :after claude-code
+  :after (:any codex claude-code)
   :demand t
-  :config
-  (require 'agent-log-redact)
   :custom
   (agent-log-summary-model 'gemini-flash-latest)
   (agent-log-auto-sync-sessions t)
@@ -8997,7 +8995,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 (use-package codex
   :ensure (:host github
                  :repo "benthamite/codex")
-  :demand t)
+  :defer t)
 #+end_src
 
 ** =mcp=
@@ -13006,6 +13004,7 @@ Then change the value of =telega-server-libs-prefix= from =/opt/homebrew= to =/u
 (use-package sgn
   :ensure (:host github
            :repo "benthamite/sgn")
+  :defer t
   :custom
   (sgn-account "+14246668293"))
 #+end_src

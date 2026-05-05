@@ -141,38 +141,38 @@ Uses strikethrough to indicate the cost is not actually charged."
   
 ;;;;;; AI session status
 
-(declare-function ai-extras--detect-backend "ai-extras")
-(declare-function ai-extras--backend-get "ai-extras")
-(declare-function ai-extras-backend-icon "ai-extras")
-(declare-function ai-extras-display-name "ai-extras")
-(declare-function ai-extras-alert-indicator "ai-extras")
-(declare-function ai-extras-toggle-alert "ai-extras")
-(declare-function claude-code-extras-status-model "claude-code-extras")
-(declare-function claude-code-extras-status-cost "claude-code-extras")
-(declare-function claude-code-extras-status-context-percent "claude-code-extras")
-(declare-function claude-code-extras-status-token-count "claude-code-extras")
-(declare-function claude-code-extras-status-lines-added "claude-code-extras")
-(declare-function claude-code-extras-status-lines-removed "claude-code-extras")
-(declare-function claude-code-extras-status-duration-ms "claude-code-extras")
-(declare-function claude-code-extras-status-cache-read-tokens "claude-code-extras")
-(declare-function claude-code-extras-status-cache-total-tokens "claude-code-extras")
-(declare-function claude-code-extras-display-name "claude-code-extras")
-(declare-function claude-code-extras-buffer-account "claude-code-extras")
-(declare-function claude-code-extras-status-session-usage "claude-code-extras")
-(declare-function claude-code-extras-status-weekly-usage "claude-code-extras")
-(declare-function claude-code-extras-status-session-reset "claude-code-extras")
-(declare-function claude-code-extras-status-weekly-reset "claude-code-extras")
-(declare-function codex-extras-status-model "codex-extras")
-(declare-function codex-extras-status-duration-ms "codex-extras")
+(declare-function ai-agent--detect-backend "ai-agent")
+(declare-function ai-agent--backend-get "ai-agent")
+(declare-function ai-agent-backend-icon "ai-agent")
+(declare-function ai-agent-display-name "ai-agent")
+(declare-function ai-agent-alert-indicator "ai-agent")
+(declare-function ai-agent-toggle-alert "ai-agent")
+(declare-function ai-agent-claude-status-model "ai-agent-claude")
+(declare-function ai-agent-claude-status-cost "ai-agent-claude")
+(declare-function ai-agent-claude-status-context-percent "ai-agent-claude")
+(declare-function ai-agent-claude-status-token-count "ai-agent-claude")
+(declare-function ai-agent-claude-status-lines-added "ai-agent-claude")
+(declare-function ai-agent-claude-status-lines-removed "ai-agent-claude")
+(declare-function ai-agent-claude-status-duration-ms "ai-agent-claude")
+(declare-function ai-agent-claude-status-cache-read-tokens "ai-agent-claude")
+(declare-function ai-agent-claude-status-cache-total-tokens "ai-agent-claude")
+(declare-function ai-agent-claude-display-name "ai-agent-claude")
+(declare-function ai-agent-claude-buffer-account "ai-agent-claude")
+(declare-function ai-agent-claude-status-session-usage "ai-agent-claude")
+(declare-function ai-agent-claude-status-weekly-usage "ai-agent-claude")
+(declare-function ai-agent-claude-status-session-reset "ai-agent-claude")
+(declare-function ai-agent-claude-status-weekly-reset "ai-agent-claude")
+(declare-function ai-agent-codex-status-model "ai-agent-codex")
+(declare-function ai-agent-codex-status-duration-ms "ai-agent-codex")
 (declare-function parse-iso8601-time-string "parse-time")
-(defvar ai-extras-alert-on-ready)
-(defvar claude-code-extras--status-data)
+(defvar ai-agent-alert-on-ready)
+(defvar ai-agent-claude--status-data)
 
 (defun doom-modeline-extras--toggle-alert-click (event)
   "Toggle AI session alert from a mouse click EVENT in the modeline."
   (interactive "e")
   (with-selected-window (posn-window (event-start event))
-    (ai-extras-toggle-alert)
+    (ai-agent-toggle-alert)
     (force-mode-line-update)))
 
 (defvar doom-modeline-extras--alert-map
@@ -189,21 +189,21 @@ backends.  When the backend is Claude Code and status data is
 available, additional fields (model, cost, context%) are inserted
 between the name and the alert indicator."
   (when (and doom-modeline-extras-claude-code
-             (fboundp 'ai-extras--detect-backend))
-    (let ((backend (ai-extras--detect-backend (current-buffer))))
+             (fboundp 'ai-agent--detect-backend))
+    (let ((backend (ai-agent--detect-backend (current-buffer))))
       (when backend
-        (let ((icon (ai-extras-backend-icon backend 'mode-line-active))
-              (name (ai-extras-display-name (current-buffer))))
+        (let ((icon (ai-agent-backend-icon backend 'mode-line-active))
+              (name (ai-agent-display-name (current-buffer))))
           (concat
            (doom-modeline-spc)
            (when (and icon (not (string-empty-p icon)))
              (concat icon " "))
            (propertize name
                        'face '(bold doom-modeline-buffer-major-mode)
-                       'help-echo (format "%s session" (or (ai-extras--backend-get backend :label) "AI")))
+                       'help-echo (format "%s session" (or (ai-agent--backend-get backend :label) "AI")))
            (pcase backend
              ('claude-code
-              (when (bound-and-true-p claude-code-extras--status-data)
+              (when (bound-and-true-p ai-agent-claude--status-data)
                 (doom-modeline-extras--format-claude-status-fields)))
              ('codex
               (doom-modeline-extras--format-codex-status-fields)))
@@ -213,20 +213,20 @@ between the name and the alert indicator."
 (defun doom-modeline-extras--format-claude-status-fields ()
   "Return Claude Code-specific status fields for the modeline.
 These are inserted between the session name and the alert indicator."
-  (let ((model (claude-code-extras-status-model))
-        (account (claude-code-extras-buffer-account))
-        (session-usage (claude-code-extras-status-session-usage))
-        (weekly-usage (claude-code-extras-status-weekly-usage))
-        (session-reset (claude-code-extras-status-session-reset))
-        (weekly-reset (claude-code-extras-status-weekly-reset))
-        (tokens (claude-code-extras-status-token-count))
-        (cost (claude-code-extras-status-cost))
-        (pct (claude-code-extras-status-context-percent))
-        (added (claude-code-extras-status-lines-added))
-        (removed (claude-code-extras-status-lines-removed))
-        (duration (claude-code-extras-status-duration-ms))
-        (cache-read (claude-code-extras-status-cache-read-tokens))
-        (cache-total (claude-code-extras-status-cache-total-tokens)))
+  (let ((model (ai-agent-claude-status-model))
+        (account (ai-agent-claude-buffer-account))
+        (session-usage (ai-agent-claude-status-session-usage))
+        (weekly-usage (ai-agent-claude-status-weekly-usage))
+        (session-reset (ai-agent-claude-status-session-reset))
+        (weekly-reset (ai-agent-claude-status-weekly-reset))
+        (tokens (ai-agent-claude-status-token-count))
+        (cost (ai-agent-claude-status-cost))
+        (pct (ai-agent-claude-status-context-percent))
+        (added (ai-agent-claude-status-lines-added))
+        (removed (ai-agent-claude-status-lines-removed))
+        (duration (ai-agent-claude-status-duration-ms))
+        (cache-read (ai-agent-claude-status-cache-read-tokens))
+        (cache-total (ai-agent-claude-status-cache-total-tokens)))
     (concat
      (doom-modeline-extras--format-model model)
      (doom-modeline-extras--format-account account)
@@ -245,17 +245,17 @@ These are inserted between the session name and the alert indicator."
 
 (defun doom-modeline-extras--format-codex-status-fields ()
   "Return Codex-specific status fields for the modeline."
-  (let ((model (codex-extras-status-model))
-        (duration (codex-extras-status-duration-ms)))
+  (let ((model (ai-agent-codex-status-model))
+        (duration (ai-agent-codex-status-duration-ms)))
     (concat
      (doom-modeline-extras--format-model model)
      (doom-modeline-extras--format-duration duration))))
 
 (defun doom-modeline-extras--format-alert-indicator ()
   "Format the alert indicator with click action and tooltip."
-  (propertize (ai-extras-alert-indicator)
+  (propertize (ai-agent-alert-indicator)
               'help-echo (format "Alert notifications: %s\nmouse-1: Toggle"
-                                 (if ai-extras-alert-on-ready
+                                 (if ai-agent-alert-on-ready
                                      "enabled" "disabled"))
               'mouse-face 'doom-modeline-highlight
               'local-map doom-modeline-extras--alert-map))

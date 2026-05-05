@@ -111,11 +111,14 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/My Drive/Epoch/projects/ai-productivity-digest"]
 trust_level = "trusted"
 
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/automation-watchdog"]
+trust_level = "trusted"
+
 [tui]
 theme = "light"
 
 [marketplaces.openai-bundled]
-last_updated = "2026-05-04T20:54:28Z"
+last_updated = "2026-05-05T16:30:50Z"
 source_type = "local"
 source = "/Users/pablostafforini/.codex/.tmp/bundled-marketplaces/openai-bundled"
 

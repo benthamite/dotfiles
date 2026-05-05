@@ -18,18 +18,22 @@ Distinguish three derived strings up front:
 
 Generic English uses of words inside the slug (e.g. "Slack bot that posts...") should **not** be rewritten — only explicit slug/display-name references.
 
+Treat the workflow as idempotent. If inventory shows the rename is already partially complete (for example the project directory still has the old slug but the repo remote, GitHub repo, or gitdir already uses the new slug), do **not** force the normal path. Record the mixed state, skip already-completed external operations, and finish the remaining local/session/doc rewrites. If both old and new artifacts exist for the same thing (two GitHub repos, two gitdirs, two session-log dirs), stop and ask before merging or deleting.
+
 ## Step 1: Inventory everything that references the old slug
 
-Run these in parallel and note every hit:
+Run these in parallel and note every hit. Prefer `rg -l` over `grep` when available; exclude generated directories such as `.git`, `.venv`, and `node_modules` so generated path strings don't drive edits.
 
-1. `grep -rln "<old-slug>" --exclude-dir=.git "<Epoch root>"` — Epoch parent repo
-2. `grep -rln "<old-slug>" ~/.claude/` — Claude config + rendered transcripts + session logs
+1. `rg -l "<old-slug>" "<Epoch root>" -g '!.git' -g '!**/.venv/**' -g '!node_modules/**'` — Epoch parent repo
+2. `rg -l "<old-slug>" ~/.claude/` — Claude config + rendered transcripts + session logs
 3. `ls ~/git-dirs/ | grep <old-slug>` — separate-gitdir
 4. `cat <project>/repo/.git` — confirm it's a `gitdir:` pointer; capture target
 5. `cd <project>/repo && git remote -v` — capture remote URL
-6. `gh repo view epoch-research/<old-slug>` — confirm GitHub repo exists
+6. `gh repo view epoch-research/<old-slug>` and `gh repo view epoch-research/<new-slug>` — confirm GitHub state; if only the new repo exists, treat GitHub as already renamed
 7. `op item get "Anthropic - <old-slug>" --vault Automations 2>&1` (and any other obvious `<service> - <old-slug>` patterns from the workflow file)
 8. `~/My Drive/dotfiles/claude/bin/slack.py channels | jq -r '.channels[] | select(.name | contains("<old-slug>")) | "\(.id)\t\(.name)"'` — confirm channel state and ID
+
+Also search for the old display name and obvious display-family strings (e.g. `Backlinks health` for `backlinks-health-automation`) in active docs and code. Rewrite these only where they are project names or user-visible labels; leave domain-specific terms like "broken backlinks" alone.
 
 Categorize each grep hit as:
 - **active reference** (rewrite): CLAUDE.md, `.gitignore`, `current-list-of-automation-projects.org`, project's own org file, sibling `automation-watchdog/repo/config.yml`, code/workflow files inside the project repo, etc.
@@ -48,8 +52,8 @@ Skip the question if the corresponding artifact doesn't exist.
 
 Show the user a structured plan before any destructive action:
 - Local fs renames (project dir, gitdir, .git pointer, Claude session-log dir, rendered-transcripts dir, project org file)
-- GitHub repo rename + description update
-- 1P item rename (if approved)
+- GitHub repo rename + description update, or a note that GitHub is already on the new slug
+- 1P item rename (if approved), or a note that the project uses GitHub secrets directly and has no project-specific `op://` item
 - File-content rewrites: list each file with the count of matches
 - What is being explicitly **left alone** (historical logs, summaries, etc.)
 - Any external-service flags for manual followup
@@ -92,9 +96,12 @@ If the item lives in any vault other than `Automations`, the service-account tok
 
 ```bash
 cd projects/<old-slug>/repo
-git pull --rebase origin master   # likely needed: workflow auto-commits cutoff/state files
+branch=$(gh repo view --json defaultBranchRef -q .defaultBranchRef.name 2>/dev/null || git branch --show-current)
+git pull --rebase origin "$branch"   # likely needed: workflow auto-commits cutoff/state files
 git push
-gh repo rename <new-slug> --repo epoch-research/<old-slug> --yes
+if gh repo view epoch-research/<old-slug> >/dev/null 2>&1; then
+  gh repo rename <new-slug> --repo epoch-research/<old-slug> --yes
+fi
 git remote set-url origin git@github.com:epoch-research/<new-slug>.git
 git fetch origin
 ```
@@ -104,8 +111,10 @@ GitHub auto-creates a permanent redirect from old → new for both git operation
 ### 4d. Rename local filesystem
 
 ```bash
+# If old gitdir exists and new gitdir does not, move it. If the .git pointer
+# already targets ~/git-dirs/epoch-<new-slug>, skip the gitdir move.
 mv ~/git-dirs/epoch-<old-slug> ~/git-dirs/epoch-<new-slug>
-# Rewrite the .git pointer (Write tool — single line: "gitdir: <new-path>")
+# Rewrite the .git pointer if needed (single line: "gitdir: <new-path>")
 mv "<Epoch>/projects/<old-slug>/<old-slug>.org" "<Epoch>/projects/<old-slug>/<new-slug>.org"
 mv "<Epoch>/projects/<old-slug>" "<Epoch>/projects/<new-slug>"
 mv ~/.claude/rendered/<old-slug> ~/.claude/rendered/<new-slug>     # if the dir exists
@@ -138,6 +147,7 @@ For each active-reference file from Step 1, do an `Edit` (or `Edit replace_all=t
 - `<Epoch>/projects/current-list-of-automation-projects.org`: section heading, `:ID:` property, prose mentions, watchdog list entry on the watchdog section
 - `<Epoch>/projects/<new-slug>/CLAUDE.md`: title, channel name
 - `<Epoch>/projects/<new-slug>/<new-slug>.org`: title, all slug references (replace_all is safe here)
+- Other active docs found by the filtered `rg` sweep, such as presentations or candidate-automation index files
 - `<Epoch>/projects/automation-watchdog/repo/config.yml`: `repo:` line — only update the slug, leave the `label:` (it's a human-readable label that may or may not contain the slug)
 - `<Epoch>/projects/automation-watchdog/automation-watchdog.org`: prose mentions, table row in the "Currently monitored" section
 
@@ -155,11 +165,11 @@ gh repo edit epoch-research/<new-slug> --description "<new description with new 
 
 1. **Final stale-slug grep** (active files only):
    ```bash
-   grep -rln "<old-slug>" --exclude-dir=.git "<Epoch>" 2>/dev/null \
-     | grep -vE "/logs/|/meetings/[^/]+/2[0-9]{3}-"
+   rg -n "<old-slug>|<old display name>" "<Epoch>" \
+     -g '!.git' -g '!**/.venv/**' -g '!**/logs/**' -g '!meetings/**'
    # should be empty
    ```
-2. **GitHub state**: `gh repo view epoch-research/<new-slug> --json name,description,url` and `gh repo view epoch-research/<old-slug>` (latter should resolve to new via redirect).
+2. **GitHub state**: `gh repo view epoch-research/<new-slug> --json name,description,url` and `gh repo view epoch-research/<old-slug>`. The old slug should either resolve via redirect or fail if the repo had already been renamed before this skill ran.
 3. **1P state**: `op read "op://Automations/<service> - <new-slug>/credential"` (using service-account token, not biometric session) — proves GH Actions will see it.
 4. **Local repo health**: `cd <Epoch>/projects/<new-slug>/repo && git status && git log -1 --oneline`.
 5. **Session-log paths rewritten**: confirm zero stale `cwd` and `project` entries:
@@ -192,11 +202,14 @@ gh repo edit epoch-research/<new-slug> --description "<new description with new 
 ## Pitfalls observed
 
 - **First push after the local commit may be rejected** because the workflow has been auto-committing state (cutoff timestamps, dedup state) since the last fetch. `git pull --rebase` first.
+- **Default branch is not always `master`**. Use `gh repo view --json defaultBranchRef` or the current branch instead of hardcoding `master`; many automation repos use `main`.
+- **Partial renames are common**. If the remote or `.git` pointer already uses the new slug, skip that step and finish the still-stale local docs/session paths.
 - **`op item edit --title` fails silently** with the read-only service-account token (returns "Couldn't update the item" with no detail). Always prefix `env -u OP_SERVICE_ACCOUNT_TOKEN` and ensure `op signin --force` succeeded.
 - **The `.git` pointer file inside the worktree is a single text line** (`gitdir: <path>`); use `Write`, not `Edit` (Edit needs `Read` first and the format is brittle).
 - **The Edit tool requires `Read` on every target file** even if you've already read it via Bash `cat`.
 - **`replace_all` on slugs is safe** when the slug is unambiguous (e.g. `ai-productivity-bot` doesn't appear as a substring of any other word). Verify by inspecting the grep output before flipping the switch.
 - **Generic English uses** ("Slack bot that posts…") should not be rewritten. Only rewrite explicit slug references and the project display name.
+- **Generated environments produce stale path strings**. Do not edit `.venv` activation scripts just because they contain the old path; exclude generated dirs from the active-reference sweep and recreate the environment only if it actually breaks.
 - **`~/.claude/rendered/_index.el` is large** (>500k tokens) and must be edited via Python text-replace, not Read/Edit.
 
 ## What this skill deliberately does NOT touch

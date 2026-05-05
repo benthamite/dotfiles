@@ -242,8 +242,8 @@
       "name": "move-session-log",
       "claude": "claude/skills/move-session-log/SKILL.md",
       "codex": "codex/skills/move-session-log/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "tool-specific-divergence",
+      "note": "Claude Code and Codex store session logs in different locations and formats. The Claude skill operates on ~/.claude/projects plus ~/.claude/history.jsonl and ~/.claude.json; the Codex skill operates on ~/.codex/sessions plus Codex history/index files."
     },
     {
       "name": "new-project",

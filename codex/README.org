@@ -47,10 +47,12 @@ come from =CLAUDE.md= through =project_doc_fallback_filenames=.
 
 * Skills
 
-=codex/skills/= contains one Codex port for each Claude skill under
-=claude/skills/=.  The one-time port copies the skill bodies and auxiliary
-files, then strips Claude-only frontmatter keys such as =user-invocable=,
-=allowed-tools=, =argument-hint=, and =model=.
+=codex/skills/= contains one Codex counterpart for each Claude skill under
+=claude/skills/=. Most ports copy the skill bodies and auxiliary files, then
+strip Claude-only frontmatter keys such as =user-invocable=, =allowed-tools=,
+=argument-hint=, and =model=. Tool-specific skills may intentionally diverge
+when Claude Code and Codex store state differently; these cases are recorded in
+=ai-config-sync.json=.
 
 Codex discovers global skills from =~/.codex/skills/*/SKILL.md=.  The live
 skills directory is therefore a symlink to the tracked ports.  Run:

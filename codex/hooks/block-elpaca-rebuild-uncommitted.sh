@@ -11,9 +11,13 @@
 
 set -euo pipefail
 
+SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
+# shellcheck source=lib-codex-hook-json.sh
+source "$SCRIPT_DIR/lib-codex-hook-json.sh"
+
 INPUT=$(cat)
 
-COMMAND=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')
+COMMAND=$(codex_tool_input_field "$INPUT" command)
 
 # Only intercept emacsclient commands that trigger elpaca-rebuild or reload
 if ! echo "$COMMAND" | grep -qE '\bemacsclient\b'; then

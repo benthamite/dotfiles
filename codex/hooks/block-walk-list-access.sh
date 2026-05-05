@@ -17,7 +17,7 @@ source "$(dirname "$0")/lib-codex-paths.sh"
 
 INPUT=$(cat)
 
-TOOL_NAME=$(printf '%s' "$INPUT" | jq -r '.tool_name // empty')
+TOOL_NAME=$(codex_tool_name "$INPUT")
 [ -z "$TOOL_NAME" ] && exit 0
 
 GUARDED_PATTERN='/\.claude/walk-list-data'
@@ -51,23 +51,23 @@ path_is_guarded() {
 
 case "$TOOL_NAME" in
   Read|Edit|Write|NotebookEdit)
-    FIELD=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // .tool_input.notebook_path // .tool_input.path // empty')
+    FIELD=$(codex_hook_jq "$INPUT" 'codex_tool_input.file_path // codex_tool_input.notebook_path // codex_tool_input.path // empty')
     if path_is_guarded "$FIELD"; then
       deny "$TOOL_NAME of walk-list protected path: $FIELD"
     fi
     ;;
   Grep|Glob)
-    FIELD=$(printf '%s' "$INPUT" | jq -r '.tool_input.path // empty')
+    FIELD=$(codex_tool_input_field "$INPUT" path)
     if path_is_guarded "$FIELD"; then
       deny "$TOOL_NAME of walk-list protected path: $FIELD"
     fi
-    PATTERN=$(printf '%s' "$INPUT" | jq -r '.tool_input.pattern // empty')
+    PATTERN=$(codex_tool_input_field "$INPUT" pattern)
     if path_is_guarded "$PATTERN"; then
       deny "$TOOL_NAME pattern references walk-list protected path: $PATTERN"
     fi
     ;;
   Bash)
-    CMD=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')
+    CMD=$(codex_tool_input_field "$INPUT" command)
     [ -z "$CMD" ] && exit 0
     # If the command doesn't reference the guarded dir at all, allow.
     if ! echo "$CMD" | grep -qE "(\.claude/walk-list-data|~/\.claude/walk-list-data|$EXPANDED_HOME)"; then

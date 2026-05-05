@@ -476,7 +476,7 @@
       "claude": "claude/hooks/block-destructive-command.sh",
       "codex": "codex/hooks/block-destructive-command.sh",
       "status": "ported",
-      "note": "ported; Claude ask decisions become deny-with-user-confirmation instructions"
+      "note": "ported; Claude ask decisions become deny-with-user-confirmation instructions; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
     },
     {
       "name": "block-elpaca-dotfiles-edit.sh",
@@ -490,14 +490,14 @@
       "claude": "claude/hooks/block-elpaca-rebuild-uncommitted.sh",
       "codex": "codex/hooks/block-elpaca-rebuild-uncommitted.sh",
       "status": "ported",
-      "note": "ported for Bash emacsclient guard"
+      "note": "ported for Bash emacsclient guard; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
     },
     {
       "name": "block-secret-leak.sh",
       "claude": "claude/hooks/block-secret-leak.sh",
       "codex": "codex/hooks/block-secret-leak.sh",
       "status": "ported",
-      "note": "ported; Codex version scans Bash and apply_patch payloads"
+      "note": "ported; Codex version scans Bash and apply_patch payloads; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
     },
     {
       "name": "block-sensitive-read.sh",
@@ -518,7 +518,7 @@
       "claude": "claude/hooks/block-walk-list-access.sh",
       "codex": "codex/hooks/block-walk-list-access.sh",
       "status": "ported",
-      "note": "ported; Codex version scans Bash and apply_patch paths"
+      "note": "ported; Codex version scans Bash and apply_patch paths; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
     },
     {
       "name": "check-chrome-profile-pair.sh",
@@ -549,25 +549,32 @@
       "note": "ported for MCP tool names"
     },
     {
+      "name": "lib-codex-hook-json.sh",
+      "claude": null,
+      "codex": "codex/hooks/lib-codex-hook-json.sh",
+      "status": "codex-only",
+      "note": "Codex hook payload normalizer for tool_input/tool_response object-or-string variants; Claude hooks read native Claude payloads directly."
+    },
+    {
       "name": "lib-codex-paths.sh",
       "claude": null,
       "codex": "codex/hooks/lib-codex-paths.sh",
       "status": "codex-only",
-      "note": "Codex apply_patch path extraction helper."
+      "note": "Codex apply_patch path extraction helper; uses lib-codex-hook-json.sh for object-or-string payload normalization."
     },
     {
       "name": "lib-repo-root.sh",
       "claude": "claude/hooks/lib-repo-root.sh",
       "codex": "codex/hooks/lib-repo-root.sh",
       "status": "ported-utility",
-      "note": "Shared repo-root helper copied for hooks that need command-context git roots."
+      "note": "Shared repo-root helper copied for hooks that need command-context git roots; Codex usage comment references lib-codex-hook-json.sh."
     },
     {
       "name": "lib-staged-files.sh",
       "claude": "claude/hooks/lib-staged-files.sh",
       "codex": "codex/hooks/lib-staged-files.sh",
       "status": "ported-utility",
-      "note": "Shared staged-file helper copied for commit gates."
+      "note": "Shared staged-file helper copied for commit gates; Codex usage comment references lib-codex-hook-json.sh."
     },
     {
       "name": "load-elisp-after-edit.sh",
@@ -630,14 +637,14 @@
       "claude": null,
       "codex": "codex/hooks/require-codex-readme-update.sh",
       "status": "codex-only",
-      "note": "Codex README commit gate for Codex integration files."
+      "note": "Codex README commit gate for Codex integration files; uses lib-codex-hook-json.sh for object-or-string payload normalization."
     },
     {
       "name": "require-doc-update.sh",
       "claude": "claude/hooks/require-doc-update.sh",
       "codex": "codex/hooks/require-doc-update.sh",
       "status": "ported",
-      "note": "ported for Bash git commit gate"
+      "note": "ported for Bash git commit gate; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
     },
     {
       "name": "require-elisp-skill.sh",
@@ -651,21 +658,21 @@
       "claude": "claude/hooks/require-elisp-test-before-commit.sh",
       "codex": "codex/hooks/require-elisp-test-before-commit.sh",
       "status": "ported",
-      "note": "ported for Bash git commit gate"
+      "note": "ported for Bash git commit gate; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
     },
     {
       "name": "require-elisp-verify-after-commit.sh",
       "claude": "claude/hooks/require-elisp-verify-after-commit.sh",
       "codex": "codex/hooks/require-elisp-verify-after-commit.sh",
       "status": "ported",
-      "note": "ported for Bash post-commit verification gate"
+      "note": "ported for Bash post-commit verification gate; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
     },
     {
       "name": "require-readme-update.sh",
       "claude": "claude/hooks/require-readme-update.sh",
       "codex": "codex/hooks/require-readme-update.sh",
       "status": "ported",
-      "note": "ported for Claude config README gate"
+      "note": "ported for Claude config README gate; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
     },
     {
       "name": "track-elisp-skill.sh",
@@ -679,14 +686,14 @@
       "claude": "claude/hooks/track-elisp-test.sh",
       "codex": "codex/hooks/track-elisp-test.sh",
       "status": "ported",
-      "note": "ported for Bash post-tool tracking"
+      "note": "ported for Bash post-tool tracking; Codex side normalizes string-wrapped tool_input/tool_response via lib-codex-hook-json.sh"
     },
     {
       "name": "track-elisp-verify.sh",
       "claude": "claude/hooks/track-elisp-verify.sh",
       "codex": "codex/hooks/track-elisp-verify.sh",
       "status": "ported",
-      "note": "ported; Codex version accepts exitCode and exit_code payload keys"
+      "note": "ported; Codex version accepts exitCode and exit_code payload keys and normalizes string-wrapped tool_input/tool_response via lib-codex-hook-json.sh"
     }
   ],
   "registrations": [

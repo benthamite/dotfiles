@@ -12,27 +12,19 @@
 
 set -euo pipefail
 
+SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
+# shellcheck source=lib-codex-hook-json.sh
+source "$SCRIPT_DIR/lib-codex-hook-json.sh"
+
 INPUT=$(cat)
 
-COMMAND=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')
-SESSION_ID=$(printf '%s' "$INPUT" | jq -r '.session_id // empty')
-STDOUT=$(printf '%s' "$INPUT" | jq -r '
-  def response_object:
-    .tool_response? as $response |
-    if ($response | type) == "object" then $response
-    elif ($response | type) == "string" then ($response | fromjson? // {"output": $response})
-    else {}
-    end;
-  .tool_output.stdout // response_object.stdout // response_object.output // response_object.text // empty
+COMMAND=$(codex_tool_input_field "$INPUT" command)
+SESSION_ID=$(codex_session_id "$INPUT")
+STDOUT=$(codex_hook_jq "$INPUT" '
+  .tool_output.stdout // codex_tool_response.stdout // codex_tool_response.output // codex_tool_response.text // empty
 ')
-STDERR=$(printf '%s' "$INPUT" | jq -r '
-  def response_object:
-    .tool_response? as $response |
-    if ($response | type) == "object" then $response
-    elif ($response | type) == "string" then ($response | fromjson? // {"output": $response})
-    else {}
-    end;
-  .tool_output.stderr // response_object.stderr // empty
+STDERR=$(codex_hook_jq "$INPUT" '
+  .tool_output.stderr // codex_tool_response.stderr // empty
 ')
 COMBINED="$STDOUT$STDERR"
 

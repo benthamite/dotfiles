@@ -10,21 +10,19 @@
 
 set -euo pipefail
 
+SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
+# shellcheck source=lib-codex-hook-json.sh
+source "$SCRIPT_DIR/lib-codex-hook-json.sh"
+
 INPUT=$(cat)
 
-COMMAND=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')
-SESSION_ID=$(printf '%s' "$INPUT" | jq -r '.session_id // empty')
-EXIT_CODE=$(printf '%s' "$INPUT" | jq -r '
-  def response_object:
-    .tool_response? as $response |
-    if ($response | type) == "object" then $response
-    elif ($response | type) == "string" then ($response | fromjson? // {"output": $response})
-    else {}
-    end;
+COMMAND=$(codex_tool_input_field "$INPUT" command)
+SESSION_ID=$(codex_session_id "$INPUT")
+EXIT_CODE=$(codex_hook_jq "$INPUT" '
   .tool_output.exitCode //
   .tool_output.exit_code //
-  response_object.exitCode //
-  response_object.exit_code //
+  codex_tool_response.exitCode //
+  codex_tool_response.exit_code //
   "0"
 ')
 

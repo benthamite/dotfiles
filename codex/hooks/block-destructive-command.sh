@@ -8,12 +8,16 @@
 
 set -euo pipefail
 
+SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
+# shellcheck source=lib-codex-hook-json.sh
+source "$SCRIPT_DIR/lib-codex-hook-json.sh"
+
 INPUT=$(cat)
 
-TOOL_NAME=$(printf '%s' "$INPUT" | jq -r '.tool_name // empty')
+TOOL_NAME=$(codex_tool_name "$INPUT")
 [ "$TOOL_NAME" != "Bash" ] && exit 0
 
-CMD=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')
+CMD=$(codex_tool_input_field "$INPUT" command)
 [ -z "$CMD" ] && exit 0
 
 deny() {

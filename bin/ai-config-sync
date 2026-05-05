@@ -114,6 +114,21 @@ def path_from_token(token: str, cwd: Path = ROOT) -> Path:
     return path
 
 
+def tool_input_object(data: dict) -> dict:
+    tool_input = data.get("tool_input") or {}
+    if isinstance(tool_input, dict):
+        return tool_input
+    if isinstance(tool_input, str):
+        try:
+            parsed = json.loads(tool_input)
+        except json.JSONDecodeError:
+            return {"command": tool_input}
+        if isinstance(parsed, dict):
+            return parsed
+        return {"command": tool_input}
+    return {}
+
+
 def relative_to_root(path_text: str, cwd: Path = ROOT) -> str:
     if not path_text:
         return ""
@@ -134,7 +149,7 @@ def relative_to_root(path_text: str, cwd: Path = ROOT) -> str:
 
 
 def direct_file_path(data: dict) -> str:
-    tool_input = data.get("tool_input") or {}
+    tool_input = tool_input_object(data)
     for key in ("file_path", "filePath", "path", "notebook_path"):
         value = tool_input.get(key)
         if value:
@@ -143,7 +158,7 @@ def direct_file_path(data: dict) -> str:
 
 
 def patch_text(data: dict) -> str:
-    tool_input = data.get("tool_input") or {}
+    tool_input = tool_input_object(data)
     for key in ("patch", "command", "input", "text"):
         value = tool_input.get(key)
         if value:
@@ -599,7 +614,7 @@ def add_nested_problems(problems: list[str], header: str, nested: list[str]) -> 
 
 def guard_commit() -> None:
     data = read_input_json()
-    command = str((data.get("tool_input") or {}).get("command") or "")
+    command = str(tool_input_object(data).get("command") or "")
     command_paths, commit_seen = command_paths_and_commit_flag(command)
     if not commit_seen:
         return

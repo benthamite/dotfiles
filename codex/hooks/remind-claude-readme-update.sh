@@ -75,6 +75,6 @@ You MUST:
 The require-readme-update.sh hook will block the commit if README.org is not staged.
 EOF
 )
-jq -n --arg message "$MESSAGE" '{"hookSpecificOutput":{"message":$message}}'
+jq -n --arg message "$MESSAGE" '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":$message}}'
   exit 0
 done < <(codex_changed_paths "$INPUT")

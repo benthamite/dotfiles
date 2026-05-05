@@ -296,6 +296,24 @@ Source: lobehub/lobe-icons (MIT).")
 
 ;;;; Functions
 
+;;;;; Obsolete theme sync cleanup
+
+(defun claude-code-extras--cleanup-obsolete-theme-sync ()
+  "Remove live callbacks from Claude Code's old theme sync implementation."
+  (remove-hook 'enable-theme-functions 'claude-code-extras-sync-theme)
+  (cancel-function-timers 'claude-code-extras--do-sync-theme)
+  (when-let* ((timer (and (boundp 'claude-code-extras--sync-theme-timer)
+                          (symbol-value 'claude-code-extras--sync-theme-timer))))
+    (when (timerp timer)
+      (cancel-timer timer))
+    (set 'claude-code-extras--sync-theme-timer nil))
+  (dolist (fn '(claude-code-extras-sync-theme
+                claude-code-extras--do-sync-theme))
+    (when (fboundp fn)
+      (fmakunbound fn))))
+
+(claude-code-extras--cleanup-obsolete-theme-sync)
+
 ;;;;; Exit
 
 ;;;###autoload

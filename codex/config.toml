@@ -102,6 +102,15 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/dotfiles"]
 trust_level = "trusted"
 
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/wip-summary-automation"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/ai-agent"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/ai-productivity-digest"]
+trust_level = "trusted"
+
 [tui]
 theme = "light"
 

@@ -483,6 +483,13 @@ Processes a Gemini meeting summary (from the transcript of a Google Meet call) a
 
 Creates a new Epoch project directory from the current conversation. Gathers context (conversation history, Slack URLs, research), writes an org file with background, TODOs, and reference material, sets up a session log with =CLAUDE.md= referencing it, commits, and instructs the user to start a focused session in the new directory.
 
+**** rename-project
+:PROPERTIES:
+:ID:       45A82AE1-488C-4ADF-9BC6-B78D327D68C5
+:END:
+
+Renames an Epoch project slug end-to-end across the local project directory, separate gitdir, GitHub repo, 1Password item, Slack channel references, active docs, and Claude session/rendered-log paths. Performs a required inventory and dry-run confirmation before shared-system changes. Handles partial renames idempotently, detects the repo default branch instead of assuming =master=, excludes generated environments from stale-reference sweeps, and keeps historical logs/meeting notes unchanged.
+
 **** verify
 :PROPERTIES:
 :CUSTOM_ID: h:verify

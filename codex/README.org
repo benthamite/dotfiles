@@ -88,6 +88,13 @@ When changing a skill:
 Skill files must be named uppercase =SKILL.md=.  This matters on the Google
 Drive mount and for Codex skill discovery.
 
+The =gsc-indexing-triage= skill is a paired Claude/Codex operations skill for
+=stafforini.com= Search Console Page indexing alerts.  It includes the
+=scripts/extract-gsc-links.py= helper, a site-specific reference file, and a
+workflow for reading GSC emails, fixing root causes, quick-deploying when
+authorized, validating in the browser, archiving handled emails, and appending
+to the site's persistent =logs/gsc-indexing.md= log.
+
 * Hooks
 
 =.codex/hooks.json= is tracked here and live globally through the symlink at

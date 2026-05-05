@@ -221,26 +221,37 @@ def sync_message_for_path(rel: str) -> str:
     return ""
 
 
-def remind_paths(paths: Iterable[str]) -> None:
+def reminder_messages(paths: Iterable[str]) -> list[str]:
     messages = {
         sync_message_for_path(relative_to_root(path))
         for path in paths
         if path
     }
-    for message in sorted(message for message in messages if message):
+    return sorted(message for message in messages if message)
+
+
+def print_reminders(paths: Iterable[str]) -> None:
+    for message in reminder_messages(paths):
         print(message)
+
+
+def print_codex_post_tool_message(messages: Iterable[str]) -> None:
+    text = "\n".join(message for message in messages if message)
+    if not text:
+        return
+    print(json.dumps({"hookSpecificOutput": {"message": text}}, indent=2))
 
 
 def remind_claude() -> None:
     data = read_input_json()
     path = direct_file_path(data)
     if path:
-        remind_paths([path])
+        print_reminders([path])
 
 
 def remind_codex() -> None:
     data = read_input_json()
-    remind_paths(paths_from_codex_input(data))
+    print_codex_post_tool_message(reminder_messages(paths_from_codex_input(data)))
 
 
 def shell_tokens(command: str) -> list[str]:

@@ -104,6 +104,10 @@ The Codex ports cover:
 - Codex Stop and SessionStart forwarding to Emacs via
   =codex/hooks/notify-emacs-hook.sh=.
 
+Codex PostToolUse hooks must write either no stdout or valid hook JSON.  Reminder
+hooks therefore return ={"hookSpecificOutput":{"message":...}}= instead of
+plain text; plain stdout is treated as invalid hook protocol output by Codex.
+
 Some Claude hooks are intentionally not ported one-for-one because Codex does
 not expose the same event in this setup:
 

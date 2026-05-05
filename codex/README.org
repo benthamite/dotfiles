@@ -159,6 +159,8 @@ therefore updates the live global Codex configuration.
 =CLAUDE.md= as the project-doc fallback, enables Codex hooks, enables the goals
 UI and terminal resize reflow, records trusted project roots, and sets the TUI
 theme.
+Trusted project roots are Codex-local allowlist entries for directories that can
+run without extra trust prompts; they do not have a Claude settings counterpart.
 
 =~/.codex/AGENTS.md= points directly to =claude/CLAUDE.md= so Codex gets the
 same global user instructions as Claude.  This is needed for user-level

@@ -55,6 +55,10 @@ It also records the manual Chrome profile routing used by browser-only service
 flows: =Default= for personal projects and =Profile 2= for Epoch/work projects
 (=pablo@epoch.ai=).
 
+=codex/config.toml= enables experimental goals support under =[features]=. It
+also sets =suppress_unstable_features_warning = true= so Codex does not print
+the startup warning on every launch.
+
 * Skills
 
 =codex/skills/= contains one Codex counterpart for each Claude skill under

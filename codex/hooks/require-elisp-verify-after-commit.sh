@@ -8,10 +8,14 @@
 
 set -euo pipefail
 
+SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
+# shellcheck source=lib-codex-hook-json.sh
+source "$SCRIPT_DIR/lib-codex-hook-json.sh"
+
 INPUT=$(cat)
 
-COMMAND=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')
-SESSION_ID=$(printf '%s' "$INPUT" | jq -r '.session_id // empty')
+COMMAND=$(codex_tool_input_field "$INPUT" command)
+SESSION_ID=$(codex_session_id "$INPUT")
 
 MARKER="/tmp/claude-elisp-verify-needed-${SESSION_ID}"
 

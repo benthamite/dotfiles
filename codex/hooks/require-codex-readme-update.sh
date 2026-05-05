@@ -4,8 +4,12 @@
 
 set -euo pipefail
 
+SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
+# shellcheck source=lib-codex-hook-json.sh
+source "$SCRIPT_DIR/lib-codex-hook-json.sh"
+
 INPUT=$(cat)
-COMMAND=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')
+COMMAND=$(codex_tool_input_field "$INPUT" command)
 
 if ! echo "$COMMAND" | grep -qE '\bgit\s+commit\b'; then
   exit 0

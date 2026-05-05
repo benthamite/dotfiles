@@ -94,6 +94,9 @@ The Codex ports cover:
 - Bash safety and workflow gates: secret leakage, destructive commands,
   walk-list data access, Elisp test-before-commit, manual update checks,
   post-commit Elisp verification, and stale elpaca rebuild protection.
+- Shared hook payload helpers such as =lib-codex-hook-json.sh=, which normalize
+  Codex =tool_input= and =tool_response= whether Codex supplies them as objects
+  or JSON strings.
 - Shared hook helpers such as =lib-repo-root.sh=, which resolves an optional
   leading =cd <path> &&= prefix and otherwise falls back to the hook cwd.
 - MCP guardrails through =guard-external-actions.sh=.

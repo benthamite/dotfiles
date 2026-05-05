@@ -8,7 +8,7 @@
 #
 # Usage: source this file after setting $COMMAND, then use $STAGED.
 #
-#   COMMAND=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')
+#   COMMAND=$(codex_tool_input_field "$INPUT" command)
 #   source "$(dirname "$0")/lib-staged-files.sh"
 #   # $STAGED now contains the list of staged files
 

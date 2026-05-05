@@ -16,13 +16,13 @@ source "$(dirname "$0")/lib-codex-paths.sh"
 
 INPUT=$(cat)
 
-TOOL_NAME=$(printf '%s' "$INPUT" | jq -r '.tool_name // empty')
+TOOL_NAME=$(codex_tool_name "$INPUT")
 
 # Extract the content to scan based on tool type
 CONTENT=""
 case "$TOOL_NAME" in
   Bash)
-    CONTENT=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')
+    CONTENT=$(codex_tool_input_field "$INPUT" command)
     ;;
   Write|Edit|apply_patch)
     CONTENT=$(codex_patch_content_for_scan "$INPUT")

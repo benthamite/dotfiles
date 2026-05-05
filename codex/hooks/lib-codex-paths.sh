@@ -1,33 +1,31 @@
 #!/usr/bin/env bash
 # Helpers for Codex hook scripts that need paths from Edit/Write/apply_patch.
 
+# shellcheck source=lib-codex-hook-json.sh
+source "$(dirname "${BASH_SOURCE[0]}")/lib-codex-hook-json.sh"
+
 codex_hook_input_json() {
   cat
 }
 
-codex_tool_name() {
-  local input="$1"
-  printf '%s' "$input" | jq -r '.tool_name // empty'
-}
-
 codex_patch_text() {
   local input="$1"
-  printf '%s' "$input" | jq -r '
-    .tool_input.patch //
-    .tool_input.command //
-    .tool_input.input //
-    .tool_input.text //
+  codex_hook_jq "$input" '
+    codex_tool_input.patch //
+    codex_tool_input.command //
+    codex_tool_input.input //
+    codex_tool_input.text //
     empty
   '
 }
 
 codex_direct_file_path() {
   local input="$1"
-  printf '%s' "$input" | jq -r '
-    .tool_input.file_path //
-    .tool_input.filePath //
-    .tool_input.path //
-    .tool_input.notebook_path //
+  codex_hook_jq "$input" '
+    codex_tool_input.file_path //
+    codex_tool_input.filePath //
+    codex_tool_input.path //
+    codex_tool_input.notebook_path //
     empty
   '
 }

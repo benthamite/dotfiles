@@ -8926,10 +8926,8 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package ai-agent
   :ensure (:host github
-                 :repo "benthamite/ai-agent"
-                 :files ("*.el" "etc/*.sh" "hooks/*.sh" "*.texi" "README.org"))
-  :after (claude-code codex)
-  :demand t
+                 :repo "benthamite/ai-agent")
+  :defer t
   :custom
   (ai-agent-alert-on-ready t)
   (ai-agent-sync-theme t)
@@ -8940,8 +8938,6 @@ The author provides a good overview of the package in [[https://www.youtube.com/
                               ("tlon"     . "~/.claude-tlon")
                               ("epoch"    . "~/.claude-epoch")))
   :config
-  (require 'ai-agent-claude)
-  (require 'ai-agent-codex)
   (with-eval-after-load 'debug
     (bind-keys :map debugger-mode-map
                ("D" . ai-agent-debug-backtrace))))

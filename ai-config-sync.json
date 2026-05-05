@@ -184,6 +184,13 @@
       "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
     },
     {
+      "name": "gsc-indexing-triage",
+      "claude": "claude/skills/gsc-indexing-triage/SKILL.md",
+      "codex": "codex/skills/gsc-indexing-triage/SKILL.md",
+      "status": "ported",
+      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+    },
+    {
       "name": "handoff",
       "claude": "claude/skills/handoff/SKILL.md",
       "codex": "codex/skills/handoff/SKILL.md",

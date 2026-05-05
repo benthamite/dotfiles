@@ -46,6 +46,10 @@ SYNC_CONFIG_PATHS = {
     "codex/rules/default.rules",
 }
 
+GLOBAL_INSTRUCTION_NAME = "global-instructions"
+GLOBAL_INSTRUCTION_CLAUDE = "claude/CLAUDE.md"
+GLOBAL_INSTRUCTION_CODEX = "codex/AGENTS.md"
+
 GIT_OPTIONS_WITH_VALUE = {
     "-C",
     "-c",
@@ -231,8 +235,10 @@ def sync_message_for_path(rel: str) -> str:
         return f"codex/config.toml changed; update {MANIFEST} if instruction, skill, or hook registration changed."
     if rel == "codex/rules/default.rules":
         return f"codex/rules/default.rules changed; update {MANIFEST} if the Codex-only policy changed."
-    if rel == "claude/CLAUDE.md":
-        return "claude/CLAUDE.md changed; Codex consumes this source through ~/.codex/AGENTS.md, so check only if global activation changed."
+    if rel == GLOBAL_INSTRUCTION_CLAUDE:
+        return f"{GLOBAL_INSTRUCTION_CLAUDE} changed; update {GLOBAL_INSTRUCTION_CODEX} in the same session."
+    if rel == GLOBAL_INSTRUCTION_CODEX:
+        return f"{GLOBAL_INSTRUCTION_CODEX} changed; update {GLOBAL_INSTRUCTION_CLAUDE} in the same session."
     return ""
 
 
@@ -607,6 +613,48 @@ def skill_sync_problems(skill: str) -> list[str]:
     return problems
 
 
+def codex_global_instruction_port() -> str:
+    text = (ROOT / GLOBAL_INSTRUCTION_CLAUDE).read_text()
+    root_text = str(ROOT)
+    replacements = {
+        "# Global Claude Code conventions": "# Global Codex conventions",
+        "- @context/secrets.md": (
+            f"- **Secrets:** Read `{root_text}/claude/context/secrets.md` before handling secrets. "
+            "In particular, never echo or print secrets from `pass`, `.zshenv-secrets`, or MCP credential resolution; "
+            "use full `pass` paths and `pass find`, not `pass ls` grep."
+        ),
+        "`context/mcp-servers.md`": f"`{root_text}/claude/context/mcp-servers.md`",
+        "`context/google-services.md`": f"`{root_text}/claude/context/google-services.md`",
+        "`claude/skills/twitter/lib/twitterapi.sh`": f"`{root_text}/claude/skills/twitter/lib/twitterapi.sh`",
+        "`claude/bin/gmail.py`": f"`{root_text}/claude/bin/gmail.py`",
+        "`claude/bin/sheets.py`": f"`{root_text}/claude/bin/sheets.py`",
+        "`claude/bin/slack.py`": f"`{root_text}/claude/bin/slack.py`",
+    }
+    for old, new in replacements.items():
+        text = text.replace(old, new)
+    return text
+
+
+def global_instruction_sync_problems() -> list[str]:
+    problems: list[str] = []
+    codex_path = ROOT / GLOBAL_INSTRUCTION_CODEX
+    if not (ROOT / GLOBAL_INSTRUCTION_CLAUDE).exists():
+        problems.append(f"Missing Claude global instruction file: {GLOBAL_INSTRUCTION_CLAUDE}")
+    if not codex_path.exists():
+        problems.append(f"Missing Codex global instruction file: {GLOBAL_INSTRUCTION_CODEX}")
+    if problems:
+        return problems
+
+    expected = codex_global_instruction_port()
+    actual = codex_path.read_text()
+    if actual != expected:
+        problems.append("Global Codex instruction port drift: codex/AGENTS.md no longer matches the Claude-to-Codex port transform.")
+    for forbidden in ("@context/", "`context/"):
+        if forbidden in actual:
+            problems.append(f"Codex global instructions contain unresolved relative context reference: {forbidden}")
+    return problems
+
+
 def add_nested_problems(problems: list[str], header: str, nested: list[str]) -> None:
     problems.append(header)
     problems.extend(f"  - {problem}" for problem in nested)
@@ -628,6 +676,7 @@ def guard_commit() -> None:
 
     problems: list[str] = []
     base_manifest, candidate_manifest = guard_manifests(command_paths, staged, problems)
+    processed_global_instructions = False
     processed_skills: set[str] = set()
     processed_hooks: set[str] = set()
 
@@ -635,7 +684,34 @@ def guard_commit() -> None:
         if skip_runtime_path(path):
             continue
 
-        if path.startswith("claude/skills/"):
+        if path in {GLOBAL_INSTRUCTION_CLAUDE, GLOBAL_INSTRUCTION_CODEX}:
+            if processed_global_instructions:
+                continue
+            processed_global_instructions = True
+            item = manifest_item_by_name(candidate_manifest, "instructions", GLOBAL_INSTRUCTION_NAME)
+            if manifest_item_is_explicitly_unpaired(item):
+                continue
+            drift = global_instruction_sync_problems()
+            if not drift:
+                continue
+            counterpart = (
+                GLOBAL_INSTRUCTION_CODEX
+                if path == GLOBAL_INSTRUCTION_CLAUDE
+                else GLOBAL_INSTRUCTION_CLAUDE
+            )
+            if path_has_change(counterpart, changed_paths):
+                add_nested_problems(
+                    problems,
+                    f"{GLOBAL_INSTRUCTION_CLAUDE} and {GLOBAL_INSTRUCTION_CODEX} are both changed, but the Codex port still drifts:",
+                    drift,
+                )
+            else:
+                add_nested_problems(
+                    problems,
+                    f"{path} changed without a synchronized {counterpart} port or an instruction-specific {MANIFEST} exemption:",
+                    drift,
+                )
+        elif path.startswith("claude/skills/"):
             skill = path.removeprefix("claude/skills/").split("/", 1)[0]
             if skill in processed_skills:
                 continue
@@ -812,6 +888,17 @@ def command_mentions_path(command: str, path: Path) -> bool:
 
 def audit_instructions(problems: list[str], manifest: dict) -> None:
     instructions = manifest.get("instructions") or []
+    item = manifest_item_by_name(manifest, "instructions", GLOBAL_INSTRUCTION_NAME)
+    if item is None:
+        add_problem(problems, f"Manifest instructions missing: {GLOBAL_INSTRUCTION_NAME}")
+    else:
+        if item.get("claude") != GLOBAL_INSTRUCTION_CLAUDE:
+            add_problem(problems, f"Global instruction manifest has wrong Claude path: {item.get('claude')}")
+        if item.get("codex") != GLOBAL_INSTRUCTION_CODEX:
+            add_problem(problems, f"Global instruction manifest has wrong Codex path: {item.get('codex')}")
+        if not manifest_item_is_paired(item):
+            add_problem(problems, f"Global instruction manifest is not marked as a ported pair: {GLOBAL_INSTRUCTION_NAME}")
+
     for item in instructions:
         if item.get("codex") == "AGENTS.md":
             add_problem(problems, "Manifest still declares a repo-root AGENTS.md manual port.")
@@ -821,7 +908,7 @@ def audit_instructions(problems: list[str], manifest: dict) -> None:
     check_symlink(
         problems,
         Path.home() / ".codex" / "AGENTS.md",
-        ROOT / "claude" / "CLAUDE.md",
+        ROOT / "codex" / "AGENTS.md",
         "Codex global instruction",
     )
     check_symlink(
@@ -830,6 +917,9 @@ def audit_instructions(problems: list[str], manifest: dict) -> None:
         ROOT / "claude" / "CLAUDE.md",
         "Claude global instruction",
     )
+    drift = global_instruction_sync_problems()
+    if drift:
+        add_nested_problems(problems, "Global instruction port is not synchronized:", drift)
 
 
 def audit_skills(problems: list[str], manifest: dict) -> None:
@@ -951,7 +1041,7 @@ def audit_registrations(problems: list[str], manifest: dict) -> None:
 
     registration_paths = {item.get("path") for item in manifest.get("registrations") or []}
     for expected in (
-        "~/.codex/AGENTS.md",
+        "codex/AGENTS.md",
         "~/.claude/settings.json",
         ".codex/hooks.json",
         "codex/config.toml",

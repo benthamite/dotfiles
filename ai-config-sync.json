@@ -7,10 +7,11 @@
   },
   "instructions": [
     {
+      "name": "global-instructions",
       "claude": "claude/CLAUDE.md",
-      "codex": "~/.codex/AGENTS.md",
-      "status": "live-global-symlink",
-      "note": "Codex reads global user instructions from AGENTS.md in $CODEX_HOME; project_doc_fallback_filenames applies to project docs, not $CODEX_HOME."
+      "codex": "codex/AGENTS.md",
+      "status": "ported",
+      "codex_transform": "Title rewritten for Codex; Claude @context include and relative context/tool paths converted to Codex-safe absolute references. The live ~/.codex/AGENTS.md symlink points at this tracked port."
     }
   ],
   "skills": [
@@ -699,10 +700,10 @@
   "registrations": [
     {
       "tool": "Codex",
-      "path": "~/.codex/AGENTS.md",
-      "tracked": false,
+      "path": "codex/AGENTS.md",
+      "tracked": true,
       "live_path": "~/.codex/AGENTS.md",
-      "note": "Live global Codex instructions symlink points directly to claude/CLAUDE.md because Codex does not apply project_doc_fallback_filenames to $CODEX_HOME."
+      "note": "Tracked global Codex instruction port. The live ~/.codex/AGENTS.md symlink points here because Codex does not apply project_doc_fallback_filenames to $CODEX_HOME."
     },
     {
       "tool": "Claude Code",
@@ -736,7 +737,7 @@
       "path": "codex/rules/default.rules",
       "tracked": true,
       "live_path": "~/.codex/rules/default.rules",
-      "note": "Codex-only command allowlist rules. There is no Claude counterpart; material policy changes should be recorded here."
+      "note": "Codex-only command allowlist rules, including the allowed ~/.codex/AGENTS.md symlink target. There is no Claude counterpart; material policy changes should be recorded here."
     }
   ],
   "audit_command": "bin/ai-config-sync audit"

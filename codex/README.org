@@ -7,14 +7,15 @@ This directory contains the version-controlled parts of my [[https://developers.
 The cross-tool synchronization policy is documented in =../agents/README.org=.
 This file covers the Codex-specific activation files and local conventions.
 
-Claude files remain the source where Codex can consume them directly. Codex gets
-explicit ports only where Codex syntax, hook payloads, or discovery rules
+Claude files remain the source where possible. Codex gets explicit ports where
+Codex syntax, hook payloads, discovery rules, or instruction-loading semantics
 require them.
 
 * Current layout
 
 #+begin_example
 codex/
+├── AGENTS.md              <- tracked global Codex instruction port
 ├── config.toml            <- live ~/.codex/config.toml symlink target
 ├── bin/install-skills.sh  <- links ~/.codex/skills to tracked skills
 ├── hooks/                 <- Codex hook script ports
@@ -37,13 +38,18 @@ project_doc_fallback_filenames = ["CLAUDE.md"]
 #+end_example
 
 That setting removes the need for project-level =AGENTS.md= symlinks.  It does
-not apply to Codex's user-level instruction file in =$CODEX_HOME=.  Codex reads
+not apply to Codex's user-level instruction file in =$CODEX_HOME=. Codex reads
 global user instructions from =AGENTS.override.md= and =AGENTS.md= in
-=$CODEX_HOME=, so the live =~/.codex/AGENTS.md= points directly to
-=claude/CLAUDE.md=.
+=$CODEX_HOME=, so the live =~/.codex/AGENTS.md= points to the tracked
+=codex/AGENTS.md= port.
 
 There is no repo-root =AGENTS.md= manual port. Project-level Codex instructions
 come from =CLAUDE.md= through =project_doc_fallback_filenames=.
+
+The tracked =codex/AGENTS.md= is a Codex-safe port of =claude/CLAUDE.md=: it
+rewrites the title, expands Claude's =@context/secrets.md= import into an
+explicit secrets rule, and rewrites relative context/tool paths to absolute
+paths so they resolve correctly from any project.
 
 * Skills
 
@@ -127,9 +133,9 @@ not expose the same event in this setup:
 
 * Sync Guard
 
-=ai-config-sync.json= is the manifest for the port.  It lists every skill, the
-hook port status, live registration files, and the current unsupported or
-Codex-only cases.
+=ai-config-sync.json= is the manifest for the port.  It lists the global
+instruction pair, every skill, the hook port status, live registration files,
+and the current unsupported or Codex-only cases.
 
 Two hook pairs keep the model simple:
 
@@ -164,8 +170,8 @@ theme.
 Trusted project roots are Codex-local allowlist entries for directories that can
 run without extra trust prompts; they do not have a Claude settings counterpart.
 
-=~/.codex/AGENTS.md= points directly to =claude/CLAUDE.md= so Codex gets the
-same global user instructions as Claude.  This is needed for user-level
+=~/.codex/AGENTS.md= points to =codex/AGENTS.md= so Codex gets a tracked global
+instruction file with Codex-safe path references. This is needed for user-level
 instructions; project-level =CLAUDE.md= loading is handled by
 =project_doc_fallback_filenames= instead.
 

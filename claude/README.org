@@ -248,6 +248,11 @@ The global =~/.claude/CLAUDE.md= (symlinked here) is the user-level memory loade
 - MCP server instructions are referenced via =context/mcp-servers.md=, not imported, so agents load them only when MCP-specific context is needed.
 - Service access tools are listed by service in the global memory.
 
+Codex does not consume this file directly. Its tracked user-level port is
+=codex/AGENTS.md=, with Claude-only =@context= syntax and relative context/tool
+paths rewritten for Codex. The live =~/.codex/AGENTS.md= symlink points to that
+port, and =bin/ai-config-sync= audits the transform.
+
 ** Skills
 :PROPERTIES:
 :ID:       05017294-32AE-4465-9254-13C1BA5662CA

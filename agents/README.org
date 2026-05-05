@@ -16,8 +16,8 @@ explicit artifact-specific status or exemption.
 * Source Model
 
 Claude files remain the human source where possible. Codex uses the same file
-directly when Codex can load it safely, and gets an explicit port only when its
-syntax, discovery rules, or hook payloads differ.
+directly when Codex can load it safely, and gets an explicit port when its
+syntax, discovery rules, hook payloads, or instruction-loading semantics differ.
 
 There is no repo-root =AGENTS.md= manual port. Project-level instructions come
 from =CLAUDE.md= because =codex/config.toml= sets:
@@ -26,10 +26,11 @@ from =CLAUDE.md= because =codex/config.toml= sets:
 project_doc_fallback_filenames = ["CLAUDE.md"]
 #+end_example
 
-The live =~/.codex/AGENTS.md= is a separate user-level compatibility symlink to
-=claude/CLAUDE.md=. Codex's project-doc fallback does not apply to =$CODEX_HOME=,
-so this symlink is still needed for global user instructions. It is not a
-manual port.
+The tracked =codex/AGENTS.md= is the user-level Codex port of
+=claude/CLAUDE.md=. The live =~/.codex/AGENTS.md= symlink points to this tracked
+port, because Codex's project-doc fallback does not apply to =$CODEX_HOME=.
+The port rewrites Claude-only =@context= syntax and relative context/tool paths
+into Codex-safe instructions.
 
 * Skills
 
@@ -80,9 +81,10 @@ These cases are recorded in =ai-config-sync.json= rather than treated as drift.
   =git commit -a=, quoted paths, absolute paths, and symlinked =~/.claude= paths.
   For skills, it checks content parity after the Codex frontmatter transform
   rather than accepting any arbitrary counterpart file.
-- =audit= verifies the manifest, live symlinks, skill content parity after Codex
-  frontmatter normalization, auxiliary skill files, hook file inventory, hook
-  registrations, the Codex skills directory symlink, and Codex activation files.
+- =audit= verifies the manifest, live symlinks, global instruction port, skill
+  content parity after Codex frontmatter normalization, auxiliary skill files,
+  hook file inventory, hook registrations, the Codex skills directory symlink,
+  and Codex activation files.
 
 Run the deterministic audit with:
 

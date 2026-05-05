@@ -41,6 +41,8 @@ Use these local tools to connect to external services: Anna's Archive `annas-mcp
 
 For Google account/auth details, read `context/google-services.md`. For Twitter workflows, use the `twitter` skill.
 
+When opening Chrome manually for browser-only service flows, use Chrome profile `Default` for personal projects and Chrome profile `Profile 2` for Epoch/work projects (`pablo@epoch.ai`). For example, open work pages with `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome --profile-directory="Profile 2" URL`.
+
 ## Filesystem organization
 
 - Dotfiles source of truth: `~/My Drive/dotfiles/`; many home-directory paths are symlinks into it.

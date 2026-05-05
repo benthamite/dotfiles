@@ -51,6 +51,10 @@ rewrites the title, expands Claude's =@context/secrets.md= import into an
 explicit secrets rule, and rewrites relative context/tool paths to absolute
 paths so they resolve correctly from any project.
 
+It also records the manual Chrome profile routing used by browser-only service
+flows: =Default= for personal projects and =Profile 2= for Epoch/work projects
+(=pablo@epoch.ai=).
+
 * Skills
 
 =codex/skills/= contains one Codex counterpart for each Claude skill under

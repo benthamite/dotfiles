@@ -20,7 +20,8 @@ Codex App supports local conversation deeplinks in the form `codex://threads/<TH
 Explicit invocation:
 
 - Pablo can say `$codex-app-browser` when he wants this handoff/preflight procedure used.
-- Treat `$codex-app-browser` as a direct instruction to run the Browser Use bootstrap before claiming browser access is unavailable.
+- Treat `$codex-app-browser <task>` as complete user intent. Do not require Pablo to mention CLI, Emacs, `CODEX_THREAD_ID`, handoff, Node REPL, or tool visibility.
+- Treat `$codex-app-browser` as a direct instruction to handle the CLI/App handoff or run the Browser Use bootstrap before claiming browser access is unavailable.
 
 Trigger on phrases such as:
 
@@ -31,6 +32,20 @@ Trigger on phrases such as:
 - "I switched to the app"
 - "test/click/screenshot this in Codex"
 - "Browser Use"
+
+## Minimal user prompt
+
+Pablo's prompt can be only:
+
+```text
+$codex-app-browser <the browser-dependent task>
+```
+
+The skill must provide the environment-specific context automatically:
+
+- If this is a CLI/Emacs turn, run `codex-app-handoff` and tell Pablo to send the next turn from the Codex App thread.
+- If this is already a Codex App turn, run the Browser Use preflight immediately.
+- If signed-in sites, browser extensions, or an existing browser profile are needed, choose Computer Use or a structured service connector rather than the unauthenticated in-app browser.
 
 If the user starts in Codex CLI or Emacs and asks for browser work, do not say the task is impossible. Run:
 

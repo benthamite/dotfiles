@@ -135,6 +135,98 @@ if [ -n "$ADD_ARGS" ]; then
   fi
 fi
 
+texinfo_manual_outputs() {
+  local source_rel="$1"
+  local source_abs="$REPO_ROOT/$source_rel"
+  local source_dir_rel target texi info out rel
+  [ -f "$source_abs" ] || return 0
+  target=$(
+    awk 'BEGIN { IGNORECASE = 1 }
+         /^#\+(texinfo_filename|export_file_name):/ {
+           sub(/^[^:]*:[ \t]*/, "", $0)
+           gsub(/^[ \t]+|[ \t]+$/, "", $0)
+           print
+           exit
+         }' "$source_abs"
+  )
+  [ -n "$target" ] || return 0
+  case "$target" in
+    *.info)
+      texi="${target%.info}.texi"
+      info="$target"
+      ;;
+    *.texi)
+      texi="$target"
+      info="${target%.texi}.info"
+      ;;
+    *)
+      texi="$target.texi"
+      info="$target.info"
+      ;;
+  esac
+  source_dir_rel=$(dirname "$source_rel")
+  for out in "$texi" "$info"; do
+    case "$out" in
+      /*)
+        case "$out" in
+          "$REPO_ROOT"/*) rel="${out#$REPO_ROOT/}" ;;
+          *) continue ;;
+        esac
+        ;;
+      *)
+        if [ "$source_dir_rel" = "." ]; then
+          rel="$out"
+        else
+          rel="$source_dir_rel/$out"
+        fi
+        ;;
+    esac
+    if [ -e "$REPO_ROOT/$rel" ] || git -C "$REPO_ROOT" ls-files --error-unmatch "$rel" >/dev/null 2>&1; then
+      printf '%s\n' "$rel"
+    fi
+  done
+}
+
+DIRTY_GENERATED_DOCS=()
+check_texinfo_manual_source() {
+  local file="$1"
+  case "$file" in
+    README.org | doc/*.org | */doc/*.org)
+      while IFS= read -r generated; do
+        [ -n "$generated" ] || continue
+        if ! git -C "$REPO_ROOT" diff --quiet -- "$generated" || \
+           [ -n "$(git -C "$REPO_ROOT" ls-files --others --exclude-standard -- "$generated")" ]; then
+          DIRTY_GENERATED_DOCS+=("$generated")
+        fi
+      done < <(texinfo_manual_outputs "$file")
+      ;;
+  esac
+}
+
+if [ -n "$STAGED" ]; then
+  while IFS= read -r file; do
+    check_texinfo_manual_source "$file"
+  done <<< "$STAGED"
+fi
+
+if [ -n "$ADD_ARGS" ]; then
+  for file in $(echo "$ADD_ARGS" | grep -oE '([^ ]*/)?README\.org|([^ ]*/)?doc/[^ ]*\.org' || true); do
+    check_texinfo_manual_source "$file"
+  done
+fi
+
+if [ "${#DIRTY_GENERATED_DOCS[@]}" -gt 0 ]; then
+  REASON=$(printf 'BLOCKED: generated Texinfo files have unstaged changes after the org manual update. Stage these generated files too: %s' "${DIRTY_GENERATED_DOCS[*]}")
+  jq -n --arg reason "$REASON" '{
+    "hookSpecificOutput": {
+      "hookEventName": "PreToolUse",
+      "permissionDecision": "deny",
+      "permissionDecisionReason": $reason
+    }
+  }'
+  exit 0
+fi
+
 if [ "$HAS_EL" = false ]; then
   exit 0
 fi

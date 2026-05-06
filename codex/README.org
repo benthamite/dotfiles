@@ -122,8 +122,9 @@ instead of relying on emacsclient's default server lookup.
 The Codex ports cover:
 
 - Bash safety and workflow gates: secret leakage, destructive commands,
-  walk-list data access, Elisp test-before-commit, manual update checks,
-  post-commit Elisp verification, and stale elpaca rebuild protection.
+  walk-list data access, Elisp test-before-commit, manual update checks
+  (including staged generated Texinfo outputs), post-commit Elisp
+  verification, and stale elpaca rebuild protection.
 - Shared hook payload helpers such as =lib-codex-hook-json.sh=, which normalize
   Codex =tool_input= and =tool_response= whether Codex supplies them as objects
   or JSON strings.
@@ -133,7 +134,10 @@ The Codex ports cover:
 - =apply_patch=/=Edit|Write= guards for secret leakage, generated Texinfo
   files, elpaca dotfiles mirror edits, and walk-list protected data.
 - Post-edit behavior for Elisp reloads, generated manual regeneration, README
-  reminders, and Claude/Codex sync reminders.
+  reminders, and Claude/Codex sync reminders. Manual regeneration runs
+  =ox-texinfo= with batch lockfile creation disabled and only regenerates the
+  exact =.texi= returned by the org exporter plus its existing matching
+  =.info= file.
 - Codex Stop and SessionStart forwarding to Emacs via
   =codex/hooks/notify-emacs-hook.sh=.
 

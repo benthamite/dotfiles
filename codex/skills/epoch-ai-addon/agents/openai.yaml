@@ -1,0 +1,4 @@
+interface:
+  display_name: "Epoch AI Add-on"
+  short_description: "Test and publish the Epoch Docs add-on"
+  default_prompt: "Use $epoch-ai-addon to test and publish the Epoch AI Google Docs add-on."

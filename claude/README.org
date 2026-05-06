@@ -446,6 +446,13 @@ Scans, prioritizes, and batch-resolves open GitHub issues for =tlon-team/tlon.el
 
 End-to-end workflow for Google Search Console Page indexing emails for =stafforini.com=. Reads personal Gmail alerts from =sc-noreply@google.com= via =claude/bin/gmail.py=, decodes the "View issue details" =c.gle= links with =scripts/extract-gsc-links.py=, checks current Search Console examples and the persistent log at =stafforini.com/logs/gsc-indexing.md=, fixes root causes in the proper source repo rather than generated =content/=, runs the stafforini.com export/test/render verification path, quick-deploys only when explicitly authorized, validates fixes in Search Console through browser automation, archives handled emails, and appends a durable log entry with messages, issue URLs, examples, commits, deploy and validation counts. Its frontmatter is kept Codex-safe because Codex skips skills whose =description= field is not parsed as a string.
 
+**** epoch-ai-addon
+:PROPERTIES:
+:ID:       F5609953-1308-4E96-9D94-17107FD6FBAB
+:END:
+
+Operational workflow for the Epoch AI Google Docs add-on/editorial checker, with matching Claude/Codex skill metadata. Points agents to the project notes and add-on repo, enforces the local =npm test= and =clasp status= gate, documents Apps Script container-bound push/restore steps, runtime Google Docs fixture usage, known Codex Desktop iframe limitations, clean-user authorization canaries, and the Marketplace release gate for Apps Script versioning, SDK App Configuration, Store Listing publishing, and production canaries.
+
 **** update-log
 :PROPERTIES:
 :ID:       DCC9EC24-1AB4-495E-8C89-DB4C63229744

@@ -5,21 +5,68 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: codex-app-handoff [THREAD_ID]
+Usage: codex-app-handoff [OPTIONS] [THREAD_ID]
 
 Open a Codex thread in the desktop app using its codex:// deeplink.
 If THREAD_ID is omitted, CODEX_THREAD_ID is used.
+
+Options:
+  --message TEXT   Copy TEXT as the App continuation prompt
+  --no-copy        Do not copy a continuation prompt
+  -h, --help       Show this help
 EOF
 }
 
-case "${1:-}" in
-  -h|--help)
-    usage
-    exit 0
-    ;;
-esac
+copy_continue=true
+continue_message="Continue from the previous turn. Use the Codex App browser or Computer Use as appropriate and complete the requested task."
+thread_id=""
 
-thread_id="${1:-${CODEX_THREAD_ID:-}}"
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --message)
+      if [ "$#" -lt 2 ]; then
+        printf 'Missing value for --message\n' >&2
+        exit 2
+      fi
+      continue_message="$2"
+      shift 2
+      ;;
+    --message=*)
+      continue_message="${1#--message=}"
+      shift
+      ;;
+    --no-copy)
+      copy_continue=false
+      shift
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      printf 'Unknown option: %s\n' "$1" >&2
+      exit 2
+      ;;
+    *)
+      if [ -n "$thread_id" ]; then
+        printf 'Unexpected extra argument: %s\n' "$1" >&2
+        exit 2
+      fi
+      thread_id="$1"
+      shift
+      ;;
+  esac
+done
+
+if [ -z "$thread_id" ] && [ "$#" -gt 0 ]; then
+  thread_id="$1"
+fi
+
+thread_id="${thread_id:-${CODEX_THREAD_ID:-}}"
 
 if [ -z "$thread_id" ]; then
   printf 'No thread id provided and CODEX_THREAD_ID is not set.\n' >&2
@@ -52,3 +99,17 @@ case "$(uname -s)" in
 esac
 
 printf 'Opened %s\n' "$url"
+
+if [ "$copy_continue" = true ]; then
+  tmp=$(mktemp)
+  chmod 600 "$tmp"
+  printf '%s\n' "$continue_message" > "$tmp"
+  if command -v emacsclient >/dev/null 2>&1; then
+    emacsclient --eval "(with-temp-buffer (insert-file-contents \"$tmp\") (kill-new (buffer-string)))" >/dev/null 2>&1 || true
+  fi
+  if command -v pbcopy >/dev/null 2>&1; then
+    pbcopy < "$tmp"
+  fi
+  rm -f "$tmp"
+  printf 'Copied continuation prompt to clipboard/kill ring.\n'
+fi

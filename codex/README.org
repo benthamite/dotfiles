@@ -98,7 +98,10 @@ Browser Use bootstrap procedure; it intentionally has no Claude counterpart.
 =bin/codex-app-handoff= opens the current Codex thread in the desktop app via
 the app's =codex://threads/<THREAD_ID>= deeplink. Use it from CLI/Emacs turns
 when a task needs App-only Browser Use tools; the next turn must be sent from
-the Codex App for the Browser plugin / Node REPL tools to appear.
+the Codex App for the Browser plugin / Node REPL tools to appear. The command
+also copies a short continuation prompt to the Emacs kill ring and macOS
+clipboard, because the existing-thread deeplink opens the thread but does not
+submit a new message.
 
 User prompts should not need to mention the transport details. The intended
 shape is =\$codex-app-browser <task>=; the skill decides whether to hand off

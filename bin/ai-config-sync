@@ -110,7 +110,9 @@ def real_path(path: Path) -> Path:
         return Path(os.path.realpath(path))
 
 
-def path_from_token(token: str, cwd: Path = ROOT) -> Path:
+def path_from_token(token: str, cwd: Path | None = None) -> Path:
+    if cwd is None:
+        cwd = Path.cwd()
     expanded = os.path.expanduser(token)
     path = Path(expanded)
     if not path.is_absolute():
@@ -133,9 +135,11 @@ def tool_input_object(data: dict) -> dict:
     return {}
 
 
-def relative_to_root(path_text: str, cwd: Path = ROOT) -> str:
+def relative_to_root(path_text: str, cwd: Path | None = None) -> str:
     if not path_text:
         return ""
+    if cwd is None:
+        cwd = Path.cwd()
 
     path = path_from_token(path_text, cwd)
     home = Path.home()
@@ -150,6 +154,16 @@ def relative_to_root(path_text: str, cwd: Path = ROOT) -> str:
         return real.relative_to(root_real).as_posix()
     except ValueError:
         return path_text
+
+
+def hook_cwd(data: dict) -> Path:
+    tool_input = tool_input_object(data)
+    for source in (tool_input, data):
+        for key in ("cwd", "workdir", "working_dir"):
+            value = source.get(key)
+            if value:
+                return path_from_token(str(value))
+    return Path.cwd()
 
 
 def direct_file_path(data: dict) -> str:
@@ -242,17 +256,17 @@ def sync_message_for_path(rel: str) -> str:
     return ""
 
 
-def reminder_messages(paths: Iterable[str]) -> list[str]:
+def reminder_messages(paths: Iterable[str], cwd: Path | None = None) -> list[str]:
     messages = {
-        sync_message_for_path(relative_to_root(path))
+        sync_message_for_path(relative_to_root(path, cwd))
         for path in paths
         if path
     }
     return sorted(message for message in messages if message)
 
 
-def print_reminders(paths: Iterable[str]) -> None:
-    for message in reminder_messages(paths):
+def print_reminders(paths: Iterable[str], cwd: Path | None = None) -> None:
+    for message in reminder_messages(paths, cwd):
         print(message)
 
 
@@ -277,12 +291,12 @@ def remind_claude() -> None:
     data = read_input_json()
     path = direct_file_path(data)
     if path:
-        print_reminders([path])
+        print_reminders([path], hook_cwd(data))
 
 
 def remind_codex() -> None:
     data = read_input_json()
-    print_codex_post_tool_message(reminder_messages(paths_from_codex_input(data)))
+    print_codex_post_tool_message(reminder_messages(paths_from_codex_input(data), hook_cwd(data)))
 
 
 def shell_tokens(command: str) -> list[str]:
@@ -863,7 +877,7 @@ def command_executable(command: str) -> Path | None:
         return None
     if not parts:
         return None
-    return path_from_token(parts[0])
+    return path_from_token(parts[0], ROOT)
 
 
 def hook_commands(config: dict) -> list[str]:

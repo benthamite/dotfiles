@@ -45,6 +45,9 @@ global user instructions from =AGENTS.override.md= and =AGENTS.md= in
 
 There is no repo-root =AGENTS.md= manual port. Project-level Codex instructions
 come from =CLAUDE.md= through =project_doc_fallback_filenames=.
+The Claude/Codex sync hooks therefore only treat =claude/CLAUDE.md= and
+=codex/AGENTS.md= as a paired instruction port; other project =CLAUDE.md= or
+=AGENTS.md= files are not paired by that hook.
 
 The tracked =codex/AGENTS.md= is a Codex-safe port of =claude/CLAUDE.md=: it
 rewrites the title, expands Claude's =@context/secrets.md= import into an

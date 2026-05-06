@@ -115,7 +115,9 @@ own event handling.  Those entries coexist with the dotfiles hooks and should
 not be hand-pruned unless the Emacs package configuration changes.  The wrapper
 commands must point at the package source or repo tree, not =elpaca/builds/=:
 the build directory contains compiled Elisp but not the =bin/codex-hook-wrapper=
-script.
+script.  Managed wrapper commands include explicit =--emacsclient= and
+=--socket-name= arguments so hook dispatch targets the active Emacs server
+instead of relying on emacsclient's default server lookup.
 
 The Codex ports cover:
 

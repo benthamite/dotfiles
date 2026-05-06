@@ -1,12 +1,24 @@
 {
   "hooks": {
+    "PermissionRequest": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper PermissionRequest --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
     "UserPromptSubmit": [
       {
         "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper UserPromptSubmit",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper UserPromptSubmit --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
             "timeout": 30
           }
         ]
@@ -152,7 +164,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper PreToolUse",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper PreToolUse --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
             "timeout": 30
           }
         ]
@@ -239,7 +251,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper PostToolUse",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper PostToolUse --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
             "timeout": 30
           }
         ]
@@ -261,7 +273,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper SessionStart",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper SessionStart --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
             "timeout": 30
           }
         ]
@@ -283,7 +295,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper Stop",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper Stop --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
             "timeout": 30
           }
         ]

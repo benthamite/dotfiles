@@ -261,9 +261,9 @@
       "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
     },
     {
-      "name": "readme-gen",
-      "claude": "claude/skills/readme-gen/SKILL.md",
-      "codex": "codex/skills/readme-gen/SKILL.md",
+      "name": "generate-readme",
+      "claude": "claude/skills/generate-readme/SKILL.md",
+      "codex": "codex/skills/generate-readme/SKILL.md",
       "status": "ported",
       "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
     },

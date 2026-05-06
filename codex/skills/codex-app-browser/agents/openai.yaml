@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex App Browser"
+  short_description: "Bootstrap Codex App browser access"
+  default_prompt: "Use $codex-app-browser to open or inspect the Codex App in-app browser before deciding whether browser access is available."

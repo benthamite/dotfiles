@@ -1,6 +1,6 @@
 ---
 name: codex-app-browser
-description: Use when the user asks to use the Codex App, in-app browser, in-built browser, Browser Use, or to open/navigate/click/test/screenshot something in the Codex app; also use when the user says they switched or resumed a Codex CLI/Emacs session in the Codex App to get browser access.
+description: Use when the user explicitly invokes `$codex-app-browser`, asks to use the Codex App, in-app browser, in-built browser, Browser Use, or to open/navigate/click/test/screenshot something in the Codex app; also use when the user says they switched or resumed a Codex CLI/Emacs session in the Codex App to get browser access.
 ---
 
 # Codex App browser handoff
@@ -10,6 +10,11 @@ This is a Codex-only operational skill. Do not mirror it into Claude Code: it ex
 Use this skill together with the bundled `browser-use:browser` skill. This skill explains the handoff and the failure modes; the bundled skill is the authoritative API reference.
 
 ## When this applies
+
+Explicit invocation:
+
+- Pablo can say `$codex-app-browser` when he wants this handoff/preflight procedure used.
+- Treat `$codex-app-browser` as a direct instruction to run the Browser Use bootstrap before claiming browser access is unavailable.
 
 Trigger on phrases such as:
 

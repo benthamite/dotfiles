@@ -30,13 +30,6 @@
       "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
     },
     {
-      "name": "ahrefs-api",
-      "claude": "claude/skills/ahrefs-api/SKILL.md",
-      "codex": "codex/skills/ahrefs-api/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
-    },
-    {
       "name": "ai-journal",
       "claude": "claude/skills/ai-journal/SKILL.md",
       "codex": "codex/skills/ai-journal/SKILL.md",
@@ -149,27 +142,6 @@
       "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
     },
     {
-      "name": "epoch-ai-addon",
-      "claude": "claude/skills/epoch-ai-addon/SKILL.md",
-      "codex": "codex/skills/epoch-ai-addon/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
-    },
-    {
-      "name": "epoch-vaults",
-      "claude": "claude/skills/epoch-vaults/SKILL.md",
-      "codex": "codex/skills/epoch-vaults/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
-    },
-    {
-      "name": "epoch-website",
-      "claude": "claude/skills/epoch-website/SKILL.md",
-      "codex": "codex/skills/epoch-website/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
-    },
-    {
       "name": "finances",
       "claude": "claude/skills/finances/SKILL.md",
       "codex": "codex/skills/finances/SKILL.md",
@@ -226,27 +198,6 @@
       "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
     },
     {
-      "name": "meeting-debrief",
-      "claude": "claude/skills/meeting-debrief/SKILL.md",
-      "codex": "codex/skills/meeting-debrief/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
-    },
-    {
-      "name": "meeting-prep",
-      "claude": "claude/skills/meeting-prep/SKILL.md",
-      "codex": "codex/skills/meeting-prep/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
-    },
-    {
-      "name": "mercury-receipts",
-      "claude": "claude/skills/mercury-receipts/SKILL.md",
-      "codex": "codex/skills/mercury-receipts/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
-    },
-    {
       "name": "migrate-profile",
       "claude": "claude/skills/migrate-profile/SKILL.md",
       "codex": "codex/skills/migrate-profile/SKILL.md",
@@ -259,13 +210,6 @@
       "codex": "codex/skills/move-session-log/SKILL.md",
       "status": "tool-specific-divergence",
       "note": "Claude Code and Codex store session logs in different locations and formats. The Claude skill operates on ~/.claude/projects plus ~/.claude/history.jsonl and ~/.claude.json; the Codex skill operates on ~/.codex/sessions plus Codex history/index files."
-    },
-    {
-      "name": "new-project",
-      "claude": "claude/skills/new-project/SKILL.md",
-      "codex": "codex/skills/new-project/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
     },
     {
       "name": "nosync",
@@ -338,13 +282,6 @@
       "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
     },
     {
-      "name": "rename-project",
-      "claude": "claude/skills/rename-project/SKILL.md",
-      "codex": "codex/skills/rename-project/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
-    },
-    {
       "name": "security-audit",
       "claude": "claude/skills/security-audit/SKILL.md",
       "codex": "codex/skills/security-audit/SKILL.md",
@@ -355,34 +292,6 @@
       "name": "skill-audit",
       "claude": "claude/skills/skill-audit/SKILL.md",
       "codex": "codex/skills/skill-audit/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
-    },
-    {
-      "name": "slack-digest",
-      "claude": "claude/skills/slack-digest/SKILL.md",
-      "codex": "codex/skills/slack-digest/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
-    },
-    {
-      "name": "slack-emacs",
-      "claude": "claude/skills/slack-emacs/SKILL.md",
-      "codex": "codex/skills/slack-emacs/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
-    },
-    {
-      "name": "slack-saved",
-      "claude": "claude/skills/slack-saved/SKILL.md",
-      "codex": "codex/skills/slack-saved/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
-    },
-    {
-      "name": "store-secret",
-      "claude": "claude/skills/store-secret/SKILL.md",
-      "codex": "codex/skills/store-secret/SKILL.md",
       "status": "ported",
       "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
     },

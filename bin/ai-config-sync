@@ -597,6 +597,19 @@ def manifest_item_changed(base: dict, candidate: dict, section: str, name: str) 
     return manifest_item_by_name(base, section, name) != manifest_item_by_name(candidate, section, name)
 
 
+def manifest_skill_removed(base: dict, candidate: dict, skill: str) -> bool:
+    return (
+        manifest_item_by_name(base, "skills", skill) is not None
+        and manifest_item_by_name(candidate, "skills", skill) is None
+    )
+
+
+def global_skill_files_absent(skill: str) -> bool:
+    return not (ROOT / "claude" / "skills" / skill / "SKILL.md").exists() and not (
+        ROOT / "codex" / "skills" / skill / "SKILL.md"
+    ).exists()
+
+
 def skill_sync_problems(skill: str) -> list[str]:
     problems: list[str] = []
     claude_dir = ROOT / "claude" / "skills" / skill
@@ -730,6 +743,8 @@ def guard_commit() -> None:
             if skill in processed_skills:
                 continue
             processed_skills.add(skill)
+            if manifest_skill_removed(base_manifest, candidate_manifest, skill) and global_skill_files_absent(skill):
+                continue
             drift = skill_sync_problems(skill)
             if not drift:
                 continue
@@ -754,6 +769,8 @@ def guard_commit() -> None:
             if skill in processed_skills:
                 continue
             processed_skills.add(skill)
+            if manifest_skill_removed(base_manifest, candidate_manifest, skill) and global_skill_files_absent(skill):
+                continue
             drift = skill_sync_problems(skill)
             if not drift:
                 continue

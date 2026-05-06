@@ -262,6 +262,8 @@ port, and =bin/ai-config-sync= audits the transform.
 
 Skills are reusable prompt modules stored in =skills/<name>/SKILL.md=. The filename must be uppercase =SKILL.md=, since =file-expand-wildcards= is case-sensitive on the Google Drive FUSE mount. Some skills are user-invocable (triggered by typing =/<name>=), others provide context that Claude loads automatically when relevant.
 
+Epoch-only skills live in the Epoch workspace instead of this global dotfiles tree: =~/My Drive/Epoch/.claude/skills/= for Claude and =~/My Drive/Epoch/.codex/skills/= for Codex. Keep workflows there when their triggers and instructions only make sense inside the Epoch project context.
+
 *** Context skills
 :PROPERTIES:
 :ID:       E1337818-A431-4C45-9239-BCEE76BEB3AE
@@ -282,13 +284,6 @@ States the general rule for where external Emacs packages live — all elpaca-ma
 :END:
 
 Emacs Lisp coding standards: atomic functions, helper placement, docstring format. Documents the elpaca rebuild-wait-reload process enforced by the =load-elisp-after-edit= hook and prohibits ad-hoc reload mechanisms (=load-file=, =eval-buffer=, =eval-defun=). Also documents the critical =emacs --batch= testing pattern: elpaca builds on load-path first, then =push= =emacs/extras= to the front so the edited source always loads instead of the stale =.elc= from elpaca builds. Includes pre-commit checks (batch-test and doc staging) and a transient menus section: after adding or modifying a =transient-define-prefix=, every suffix must be verified as an interactive command (transient defers validation to invocation time).
-
-**** epoch-vaults
-:PROPERTIES:
-:ID:       9948174C-539E-470E-B215-051F908167CF
-:END:
-
-Reference for Epoch's 1Password vault topology and credential-placement rules. Documents which vaults hold automation keys, shared Operations credentials, benchmarking credentials, API handover items, and personal Employee secrets; distinguishes read-only lookup from write operations; and points secret writes to =store-secret= for the biometric-auth flow and vault-safety checks.
 
 *** Development skills
 :PROPERTIES:
@@ -446,13 +441,6 @@ Scans, prioritizes, and batch-resolves open GitHub issues for =tlon-team/tlon.el
 
 End-to-end workflow for Google Search Console Page indexing emails for =stafforini.com=. Reads personal Gmail alerts from =sc-noreply@google.com= via =claude/bin/gmail.py=, decodes the "View issue details" =c.gle= links with =scripts/extract-gsc-links.py=, checks current Search Console examples and the persistent log at =stafforini.com/logs/gsc-indexing.md=, fixes root causes in the proper source repo rather than generated =content/=, runs the stafforini.com export/test/render verification path, quick-deploys only when explicitly authorized, validates fixes in Search Console through browser automation, archives handled emails, and appends a durable log entry with messages, issue URLs, examples, commits, deploy and validation counts. Its frontmatter is kept Codex-safe because Codex skips skills whose =description= field is not parsed as a string.
 
-**** epoch-ai-addon
-:PROPERTIES:
-:ID:       F5609953-1308-4E96-9D94-17107FD6FBAB
-:END:
-
-Operational workflow for the Epoch AI Google Docs add-on/editorial checker, with matching Claude/Codex skill metadata. Points agents to the project notes and add-on repo, enforces the local =npm test= and =clasp status= gate, documents Apps Script container-bound push/restore steps, runtime Google Docs fixture usage, known Codex Desktop iframe limitations, clean-user authorization canaries, and the Marketplace release gate for Apps Script versioning, SDK App Configuration, Store Listing publishing, and production canaries.
-
 **** update-log
 :PROPERTIES:
 :ID:       DCC9EC24-1AB4-495E-8C89-DB4C63229744
@@ -481,35 +469,6 @@ Opens the current Claude Code session's conversation log in Emacs using the =age
 :END:
 
 Moves a Claude Code internal session log (=.jsonl= and associated directory) from another project's =~/.claude/projects/= directory to the current project's. Also rewrites the =project= field in =history.jsonl= and =cwd= fields in the session =.jsonl= so that =agent-log-resume-session= opens the session in the correct directory. Useful when a Claude session was started in the wrong project context. Accepts a session ID as argument; if none given, lists the 10 most recent Claude sessions from other projects and asks the user to pick one. This skill is Claude-specific; Codex sessions live under =~/.codex/sessions= and use the Codex-side =move-session-log= skill.
-
-**** meeting-prep
-:PROPERTIES:
-:ID:       4CC6A4C0-C6DE-4D80-BE0F-1D5F9DDB2298
-:END:
-
-Generates a pre-meeting org file for the biweekly 1:1 with María. Gathers progress from session logs, git history, project status files, Slack messages, and GitHub activity since the last meeting. Reconciles stale project documentation against gathered evidence before writing the meeting file. Also updates the shared Google Doc (reverse-chronological, one bullet per active project, using =*= rather than =-= since Google Docs renders =-= as a literal hyphen but converts =*= into proper bullets). Every named resource — Slack channels, Slack messages, Google Docs, Google Groups, GitHub PRs/issues, Airtable bases, dashboards — must be a live link in both the org file and the Google Doc insert; bare names are not acceptable. Commits updated project docs and the meeting file in separate commits.
-
-**** meeting-debrief
-:PROPERTIES:
-:ID:       14DF90DD-4EBF-4621-BD6F-BFE3CFEF1F5B
-:END:
-
-Processes a Gemini meeting summary (from the transcript of a Google Meet call) and extracts action items, discussion notes, and decisions into an org-mode meeting file. Two modes: general (single-project, inferred from =CWD= or attendees) and María (biweekly 1:1, may cover multiple projects). Updates project org files and the master project list with meeting outcomes. Accepts an optional Google Doc URL; otherwise searches recent Gemini-generated docs. Calendar lookups go through =gcalcli=, Gmail through =claude/bin/gmail.py= (which reads OAuth credentials from env vars at runtime), and Google Docs/Drive through the =gdoc= CLI.
-
-**** new-project
-:PROPERTIES:
-:CUSTOM_ID: h:new-project
-:ID:       3AACE34C-578E-4B82-B2B4-09C8E3D2A366
-:END:
-
-Creates a new Epoch project directory from the current conversation. Gathers context (conversation history, Slack URLs, research), writes an org file with background, TODOs, and reference material, sets up a session log with =CLAUDE.md= referencing it, commits, and instructs the user to start a focused session in the new directory.
-
-**** rename-project
-:PROPERTIES:
-:ID:       45A82AE1-488C-4ADF-9BC6-B78D327D68C5
-:END:
-
-Renames an Epoch project slug end-to-end across the local project directory, separate gitdir, GitHub repo, 1Password item, Slack channel references, active docs, and Claude session/rendered-log paths. Performs a required inventory and dry-run confirmation before shared-system changes. Handles partial renames idempotently, detects the repo default branch instead of assuming =master=, excludes generated environments from stale-reference sweeps, and keeps historical logs/meeting notes unchanged.
 
 **** verify
 :PROPERTIES:
@@ -568,13 +527,6 @@ Bulk version of =nosync=. Scans =~/My Drive/= for all directories causing sync e
 
 Installs and configures a new MCP server for Claude Code. Walks through discovery, auth verification (checking for platform-locked OAuth before installing), dependency installation, and registration via =claude mcp add=. Encodes hard-won lessons: always add a trailing slash to HTTP/SSE URLs (servers without it are silently invisible), verify with =claude mcp list= (not =claude mcp get=, which reads config but doesn't check runtime health), use absolute interpreter paths (=/opt/homebrew/bin/node=, not bare =node= which is an nvm shell function), and choose scope explicitly (=-s user= for global).
 
-**** store-secret
-:PROPERTIES:
-:ID:       2B277DAE-8F04-4B38-8778-EAC38E1A4D9E
-:END:
-
-Creates, updates, or deletes a secret in Epoch's 1Password Automations vault. The =OP_SERVICE_ACCOUNT_TOKEN= exported at shell startup has =read_items= scope only, so write operations must unset it (=env -u OP_SERVICE_ACCOUNT_TOKEN=) and go through the desktop-app CLI integration with Touch ID. Covers =op item create=/=edit=/=delete= with field-type syntax (=[text]=, =[concealed]=, =[url]=), naming conventions (no parentheses in titles — they break =op://= parsing; =<Service> - <scope>= format; lowercase snake_case field names), and vault safety (never write to shared vaults without confirmation). Also triggers automatically whenever =op item create/edit/delete= returns "You do not have permission to perform this action".
-
 *** Multi-model and research skills
 :PROPERTIES:
 :ID:       8BF704E6-F252-4E27-846A-0B2F9C52B62C
@@ -626,27 +578,6 @@ Shared account vetting procedure used by =twitter-digest= and =twitter-discover=
 :END:
 
 Iterative, graph-based discovery of high-value Twitter accounts in any niche. Interviews the user for criteria, acquires seed accounts via search, then expands using a "hot promise score" algorithm: accounts followed by multiple high-scoring seeds are profiled next, with scores recomputed after each round. Presents tiered results (must-follow, strong, situational) at checkpoints and optionally exports to a =twitter-digest= list.
-
-**** slack-digest
-:PROPERTIES:
-:ID:       DF40872F-2CA3-4CAD-99F9-E684C175F772
-:END:
-
-Pulls all unread Slack messages via the =slack-epochai= MCP server, triages them into "action required" vs. "worth knowing" (discarding noise), and opens the digest as an org-mode buffer in Emacs with deep links back to Slack. Accepts =--mark-read= or =--no-mark-read= to control whether conversations are marked as read; if neither is passed, asks interactively.
-
-**** slack-saved
-:PROPERTIES:
-:ID:       053BC715-BF0B-4DC8-8C6C-C9A57629CC74
-:END:
-
-Fetches all Slack "saved for later" messages via =conversations_search_messages is:saved=, pulls thread context for each via =conversations_replies=, and classifies them into *action required*, *waiting on others*, *resolved / stale*, and *reference*. Presents the triaged report as an org-mode buffer in Emacs with deep links back to Slack. Accepts =--unsave= to interactively bulk-unsave categories after review (using the internal =saved.delete= API with tokens pulled from 1Password); defaults to =--no-unsave=.
-
-**** slack-emacs
-:PROPERTIES:
-:ID:       C7C1DC78-417C-4699-A9E5-9ED58475115D
-:END:
-
-Reads Slack permalinks through =claude/bin/slack.py permalink= before any UI action, so message and thread context is fetched via the Slack API rather than opening Slack in a browser. Manages the reply-drafting workflow by drafting, copying to the Emacs kill ring, and then opening the thread in Emacs with a guarded =slack-browse-url= call that blocks the package's default-browser fallback. Constructs permalinks from =channel_id= + =ts= automatically (message: =/archives/<cid>/p<ts-without-dot>=; threaded: append =?thread_ts=<thread-ts>&cid=<cid>=) rather than asking the user to supply them.
 
 **** ai-journal
 :PROPERTIES:

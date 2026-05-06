@@ -31,6 +31,10 @@ The tracked =codex/AGENTS.md= is the user-level Codex port of
 port, because Codex's project-doc fallback does not apply to =$CODEX_HOME=.
 The port rewrites Claude-only =@context= syntax and relative context/tool paths
 into Codex-safe instructions.
+The hook scope is intentionally exact-path: only =claude/CLAUDE.md= and
+=codex/AGENTS.md= are paired. Other =CLAUDE.md= or =AGENTS.md= files are
+project-local docs, and Codex can read project =CLAUDE.md= files directly via
+the fallback setting above.
 
 * Skills
 

@@ -100,6 +100,10 @@ the app's =codex://threads/<THREAD_ID>= deeplink. Use it from CLI/Emacs turns
 when a task needs App-only Browser Use tools; the next turn must be sent from
 the Codex App for the Browser plugin / Node REPL tools to appear.
 
+User prompts should not need to mention the transport details. The intended
+shape is =\$codex-app-browser <task>=; the skill decides whether to hand off
+from CLI/Emacs or run the App Browser preflight immediately.
+
 When changing a skill:
 
 1. Edit the side requested by the user.

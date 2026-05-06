@@ -373,7 +373,7 @@ Creates or updates documentation for any Elisp package, following the Denote man
 
 Scans all =emacs/extras/*.el= files, identifies missing or outdated documentation, and generates docs in parallel using subagents.
 
-**** readme-gen
+**** generate-readme
 :PROPERTIES:
 :ID:       A3F5B8D1-7C42-4E9A-B6A1-2D8E4F9C0A73
 :END:

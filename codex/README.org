@@ -115,7 +115,9 @@ When changing a skill:
    artifact-specific status or exemption if a counterpart is intentionally
    absent.
 
-When removing a global skill, remove both the Claude and Codex copies and
+When renaming a global skill, rename both the Claude and Codex directories,
+update each =name= frontmatter value, and update the skill entry in
+=ai-config-sync.json=. When removing a global skill, remove both copies and
 remove the skill's entry from =ai-config-sync.json=. Project-local replacements
 should live in the target project's =.claude/skills/= and =.codex/skills/=
 directories.

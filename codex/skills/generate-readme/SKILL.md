@@ -1,5 +1,5 @@
 ---
-name: readme-gen
+name: generate-readme
 description: Generate or update a README.md for an Emacs Lisp package from its org manual. Use when the user says "generate readme", "create readme", "update readme", "readme from manual", or wants a GitHub-facing README for an Elisp package.
 ---
 

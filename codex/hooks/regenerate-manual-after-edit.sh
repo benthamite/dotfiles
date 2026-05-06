@@ -39,30 +39,37 @@ while IFS= read -r file_path; do
   last_dir="$dir"
 
   # Run ox-texinfo in a clean batch Emacs.
-  if ! texi_err=$(emacs --batch -Q "$file_path" --eval '
+  if ! texi_output=$(emacs --batch -Q "$file_path" --eval '
 (progn
+  (setq create-lockfiles nil
+        make-backup-files nil)
   (require (quote org))
   (require (quote ox-texinfo))
   (setq org-export-with-broken-links t)
-  (org-texinfo-export-to-texinfo))' 2>&1); then
-    jq -n --arg msg "Texinfo export failed: $(echo "$texi_err" | tail -5 | tr '\n' ' ')" \
+  (princ (concat "\n::codex-texi::"
+                 (org-texinfo-export-to-texinfo)
+                 "\n")))' 2>&1); then
+    jq -n --arg msg "Texinfo export failed: $(echo "$texi_output" | tail -5 | tr '\n' ' ')" \
       '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":$msg}}'
     exit 0
   fi
 
-  # ox-texinfo drops the .texi alongside the .org. Regenerate every sibling
-  # .info whose .texi was just produced (or already exists here).
+  texi=$(printf '%s\n' "$texi_output" | sed -n 's/^::codex-texi:://p' | tail -1)
+  [ -n "$texi" ] || continue
+  case "$texi" in
+    /*) ;;
+    *) texi="$dir/$texi" ;;
+  esac
+  [ -f "$texi" ] || continue
+
+  # ox-texinfo drops the .texi alongside the .org. Regenerate the matching
+  # .info only when that .info is already part of the repository layout.
   info_count=0
-  texi_count=0
-  for texi in "$dir"/*.texi; do
-    [ -f "$texi" ] || continue
-    texi_count=$((texi_count + 1))
-    info="${texi%.texi}.info"
-    [ -f "$info" ] || continue
-    if makeinfo --no-split "$texi" -o "$info" >/dev/null 2>&1; then
-      info_count=$((info_count + 1))
-    fi
-  done
+  texi_count=1
+  info="${texi%.texi}.info"
+  if [ -f "$info" ] && makeinfo --no-split "$texi" -o "$info" >/dev/null 2>&1; then
+    info_count=1
+  fi
 
   total_texi=$((total_texi + texi_count))
   total_info=$((total_info + info_count))

@@ -822,7 +822,7 @@ Fires before Bash =git commit= commands and calls =bin/ai-config-sync guard-comm
 :ID:       BB6FE0BD-FC74-4BEB-89AB-4FE902A84055
 :END:
 
-Blocks =git commit= when =.el= files are staged but no =doc/*.org= or =README.org= manual update is included. Applies only in repos that have a =doc/= directory or a =README.org= at the root. When scanning a combined =git add && git commit= command, only the =git add= arguments are examined (not the commit message) to avoid false positives from commit messages that mention =.el= files. Verifies that doc files have actual modifications (staged or unstaged) rather than accepting unchanged files. Ensures documentation stays in sync with code changes.
+Blocks =git commit= when =.el= files are staged but no =doc/*.org= or =README.org= manual update is included. Applies only in repos that have a =doc/= directory or a =README.org= at the root. When scanning a combined =git add && git commit= command, only the =git add= arguments are examined (not the commit message) to avoid false positives from commit messages that mention =.el= files. Verifies that doc files have actual modifications (staged or unstaged) rather than accepting unchanged files. If a staged org manual, or an org manual in the same command's =git add= arguments, has Texinfo export headers and dirty generated =.texi= or tracked =.info= outputs, blocks the commit until those generated files are staged too. Ensures documentation stays in sync with code changes.
 
 *** block-elpaca-rebuild-uncommitted.sh (PreToolUse)
 :PROPERTIES:
@@ -846,6 +846,13 @@ Blocks Edit and Write operations targeting files under =elpaca/sources/dotfiles/
 :END:
 
 Fires on every Edit or Write of an =.el= file under =elpaca/sources/= or =dotfiles/emacs/extras/=. Identifies the elpaca package (by matching the file's basename against package names for extras, or by source directory prefix for standalone packages), then runs =elpaca-rebuild= + =elpaca-wait= + =elpaca-extras-reload= synchronously via =emacsclient=. This byte-compiles the source into =elpaca/builds/=, waits for completion, and reloads all features. Skips byte-compiled files and test files. Note: for dotfiles extras edits, the rebuild may compile from a stale elpaca source if the edit hasn't been committed yet; the =post-commit= hook triggers a second rebuild from the correct source (see =emacs/extras/doc/elisp-development-workflow.org=).
+
+*** regenerate-manual-after-edit.sh (PostToolUse)
+:PROPERTIES:
+:ID:       59760DD8-5F48-4F71-BDCF-68B74D4DBB5F
+:END:
+
+Regenerates Texinfo manuals after Edit or Write touches an org source with =#+texinfo_filename= or =#+export_file_name= headers. This covers agent edits that bypass package-local =after-save-hook= entries. The hook runs =ox-texinfo= in a clean batch Emacs with lockfile creation disabled, so stale or active locks on generated =.texi= outputs do not make batch export fail. It uses the exact =.texi= path returned by =org-texinfo-export-to-texinfo= and runs =makeinfo --no-split= only for the matching =.info= file when that file already exists in the repository layout.
 
 *** elpaca-run.sh (utility)
 :PROPERTIES:

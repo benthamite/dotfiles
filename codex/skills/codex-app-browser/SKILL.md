@@ -43,7 +43,7 @@ $codex-app-browser <the browser-dependent task>
 
 The skill must provide the environment-specific context automatically:
 
-- If this is a CLI/Emacs turn, run `codex-app-handoff` and tell Pablo to send the next turn from the Codex App thread.
+- If this is a CLI/Emacs turn, run `codex-app-handoff`. It opens the thread and copies a continuation prompt. Tell Pablo to paste/send that prompt from the Codex App thread.
 - If this is already a Codex App turn, run the Browser Use preflight immediately.
 - If signed-in sites, browser extensions, or an existing browser profile are needed, choose Computer Use or a structured service connector rather than the unauthenticated in-app browser.
 
@@ -53,7 +53,9 @@ If the user starts in Codex CLI or Emacs and asks for browser work, do not say t
 codex-app-handoff
 ```
 
-Then say, briefly, that the exact thread has been opened in the Codex App and that the next browser-capable turn must be sent from there. Once Pablo sends a message from the app, immediately retry the Browser Use bootstrap.
+Then say, briefly, that the exact thread has been opened in the Codex App, that a continuation prompt was copied, and that the next browser-capable turn must be sent from there. Once Pablo sends a message from the app, immediately retry the Browser Use bootstrap.
+
+Current limitation: the supported `codex://threads/<THREAD_ID>` deeplink opens an existing thread, but it does not submit a message into that thread. Do not promise fully automatic continuation unless a future Codex App/App Server API exposes that action.
 
 If `CODEX_THREAD_ID` is unavailable, run `codex app "$PWD"` instead and explain that the App should be opened on the current workspace, but that the exact thread could not be deeplinked automatically.
 

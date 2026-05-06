@@ -64,12 +64,12 @@ the startup warning on every launch.
 
 * Skills
 
-=codex/skills/= contains one Codex counterpart for each Claude skill under
-=claude/skills/=. Most ports copy the skill bodies and auxiliary files, then
-strip Claude-only frontmatter keys such as =user-invocable=, =allowed-tools=,
-=argument-hint=, and =model=. Tool-specific skills may intentionally diverge
-when Claude Code and Codex store state differently; these cases are recorded in
-=ai-config-sync.json=.
+=codex/skills/= contains one Codex counterpart for each global Claude skill
+under =claude/skills/=. Most ports copy the skill bodies and auxiliary files,
+then strip Claude-only frontmatter keys such as =user-invocable=,
+=allowed-tools=, =argument-hint=, and =model=. Tool-specific skills may
+intentionally diverge when Claude Code and Codex store state differently; these
+cases are recorded in =ai-config-sync.json=.
 
 Codex discovers global skills from =~/.codex/skills/*/SKILL.md=.  The live
 skills directory is therefore a symlink to the tracked ports.  Run:
@@ -84,6 +84,11 @@ directories under =~/.codex/skills=. Codex-managed hidden system skills, when
 present, live under ignored =codex/skills/.system/= runtime data and are not
 part of the reusable Claude/Codex skill parity model.
 
+Project-specific skills belong beside their project instead of this global
+tree. For the Epoch workspace, the Claude copies live in
+=~/My Drive/Epoch/.claude/skills/= and the Codex copies live in
+=~/My Drive/Epoch/.codex/skills/=.
+
 When changing a skill:
 
 1. Edit the side requested by the user.
@@ -91,6 +96,11 @@ When changing a skill:
 3. Stage both sides, or update =ai-config-sync.json= with a clear
    artifact-specific status or exemption if a counterpart is intentionally
    absent.
+
+When removing a global skill, remove both the Claude and Codex copies and
+remove the skill's entry from =ai-config-sync.json=. Project-local replacements
+should live in the target project's =.claude/skills/= and =.codex/skills/=
+directories.
 
 Skill files must be named uppercase =SKILL.md=.  This matters on the Google
 Drive mount and for Codex skill discovery.
@@ -160,8 +170,8 @@ not expose the same event in this setup:
 * Sync Guard
 
 =ai-config-sync.json= is the manifest for the port.  It lists the global
-instruction pair, every skill, the hook port status, live registration files,
-and the current unsupported or Codex-only cases.
+instruction pair, every global skill, the hook port status, live registration
+files, and the current unsupported or Codex-only cases.
 
 Two hook pairs keep the model simple:
 
@@ -204,5 +214,7 @@ instructions; project-level =CLAUDE.md= loading is handled by
 =~/.codex/skills= points directly to =codex/skills/= via
 =codex/bin/install-skills.sh= because Codex does not load arbitrary skill paths
 from =codex/config.toml=. This keeps the live Codex skill inventory aligned
-with the tracked Claude/Codex skill ports. Codex-managed hidden system skills,
-if present, are ignored runtime data under =codex/skills/.system/=.
+with the tracked global Claude/Codex skill ports. Project-local Codex skills
+are stored under the project's own =.codex/skills/= directory. Codex-managed
+hidden system skills, if present, are ignored runtime data under
+=codex/skills/.system/=.

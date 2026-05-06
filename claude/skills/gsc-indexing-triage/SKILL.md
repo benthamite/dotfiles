@@ -1,6 +1,6 @@
 ---
 name: gsc-indexing-triage
-description: Triage Google Search Console Page indexing emails for stafforini.com end to end. Use when the user says "GSC", "Google Search Console", "Search Console issues", "indexing issues", "validate fixes", or wants Codex/Claude to read Search Console emails, fix stafforini.com indexing problems, quick-deploy, validate fixes in the browser, archive handled emails, and write a persistent log.
+description: 'Triage Google Search Console Page indexing emails for stafforini.com end to end. Use when the user says "GSC", "Google Search Console", "Search Console issues", "indexing issues", "validate fixes", or wants Codex/Claude to read Search Console emails, fix stafforini.com indexing problems, quick-deploy, validate fixes in the browser, archive handled emails, and write a persistent log.'
 ---
 
 # GSC indexing triage

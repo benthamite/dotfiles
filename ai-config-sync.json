@@ -149,6 +149,13 @@
       "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
     },
     {
+      "name": "epoch-ai-addon",
+      "claude": "claude/skills/epoch-ai-addon/SKILL.md",
+      "codex": "codex/skills/epoch-ai-addon/SKILL.md",
+      "status": "ported",
+      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+    },
+    {
       "name": "epoch-vaults",
       "claude": "claude/skills/epoch-vaults/SKILL.md",
       "codex": "codex/skills/epoch-vaults/SKILL.md",

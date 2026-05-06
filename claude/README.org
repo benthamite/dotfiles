@@ -444,7 +444,7 @@ Scans, prioritizes, and batch-resolves open GitHub issues for =tlon-team/tlon.el
 :ID:       B4CAB9FD-AFE7-4E5F-A7D6-582C76D68F73
 :END:
 
-End-to-end workflow for Google Search Console Page indexing emails for =stafforini.com=. Reads personal Gmail alerts from =sc-noreply@google.com= via =claude/bin/gmail.py=, decodes the "View issue details" =c.gle= links with =scripts/extract-gsc-links.py=, checks current Search Console examples and the persistent log at =stafforini.com/logs/gsc-indexing.md=, fixes root causes in the proper source repo rather than generated =content/=, runs the stafforini.com export/test/render verification path, quick-deploys only when explicitly authorized, validates fixes in Search Console through browser automation, archives handled emails, and appends a durable log entry with messages, issue URLs, examples, commits, deploy and validation counts.
+End-to-end workflow for Google Search Console Page indexing emails for =stafforini.com=. Reads personal Gmail alerts from =sc-noreply@google.com= via =claude/bin/gmail.py=, decodes the "View issue details" =c.gle= links with =scripts/extract-gsc-links.py=, checks current Search Console examples and the persistent log at =stafforini.com/logs/gsc-indexing.md=, fixes root causes in the proper source repo rather than generated =content/=, runs the stafforini.com export/test/render verification path, quick-deploys only when explicitly authorized, validates fixes in Search Console through browser automation, archives handled emails, and appends a durable log entry with messages, issue URLs, examples, commits, deploy and validation counts. Its frontmatter is kept Codex-safe because Codex skips skills whose =description= field is not parsed as a string.
 
 **** update-log
 :PROPERTIES:

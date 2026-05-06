@@ -89,6 +89,12 @@ tree. For the Epoch workspace, the Claude copies live in
 =~/My Drive/Epoch/.claude/skills/= and the Codex copies live in
 =~/My Drive/Epoch/.codex/skills/=.
 
+Codex-only skills are allowed when they document a capability that exists only
+in Codex. Record them in =ai-config-sync.json= with =status: codex-only=,
+=claude: null=, and the tracked Codex skill path. The current example is
+=codex-app-browser=, which captures the Codex App in-app browser handoff and
+Browser Use bootstrap procedure; it intentionally has no Claude counterpart.
+
 When changing a skill:
 
 1. Edit the side requested by the user.

@@ -72,6 +72,13 @@
       "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
     },
     {
+      "name": "codex-app-browser",
+      "claude": null,
+      "codex": "codex/skills/codex-app-browser/SKILL.md",
+      "status": "codex-only",
+      "note": "Codex App Browser Use handoff procedure. No Claude counterpart because it documents Codex App in-app browser bootstrap and Node REPL MCP naming."
+    },
+    {
       "name": "code-audit",
       "claude": "claude/skills/code-audit/SKILL.md",
       "codex": "codex/skills/code-audit/SKILL.md",

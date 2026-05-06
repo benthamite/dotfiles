@@ -954,17 +954,27 @@ def audit_instructions(problems: list[str], manifest: dict) -> None:
 
 
 def audit_skills(problems: list[str], manifest: dict) -> None:
-    manifest_skills = {item["name"] for item in manifest.get("skills") or []}
+    manifest_skill_items = {item["name"]: item for item in manifest.get("skills") or []}
+    manifest_skills = set(manifest_skill_items)
     claude_skills = {path.parent.name for path in (ROOT / "claude" / "skills").glob("*/SKILL.md")}
     codex_skills = {path.parent.name for path in (ROOT / "codex" / "skills").glob("*/SKILL.md")}
 
     for skill in sorted(claude_skills - codex_skills):
+        item = manifest_skill_items.get(skill)
+        if manifest_item_is_explicitly_unpaired(item) and item.get("codex") is None:
+            continue
         add_problem(problems, f"Missing Codex skill port: {skill}")
     for skill in sorted(codex_skills - claude_skills):
+        item = manifest_skill_items.get(skill)
+        if manifest_item_is_explicitly_unpaired(item) and item.get("claude") is None:
+            continue
         add_problem(problems, f"Extra tracked Codex skill without Claude counterpart: {skill}")
     for skill in sorted(claude_skills - manifest_skills):
         add_problem(problems, f"Skill missing from manifest: {skill}")
     for skill in sorted(manifest_skills - claude_skills):
+        item = manifest_skill_items.get(skill)
+        if manifest_item_is_explicitly_unpaired(item) and item.get("claude") is None:
+            continue
         add_problem(problems, f"Manifest skill missing from Claude tree: {skill}")
 
     check_symlink(

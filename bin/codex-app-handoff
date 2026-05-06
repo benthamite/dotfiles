@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# Open the current Codex thread in the Codex desktop app.
+
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: codex-app-handoff [THREAD_ID]
+
+Open a Codex thread in the desktop app using its codex:// deeplink.
+If THREAD_ID is omitted, CODEX_THREAD_ID is used.
+EOF
+}
+
+case "${1:-}" in
+  -h|--help)
+    usage
+    exit 0
+    ;;
+esac
+
+thread_id="${1:-${CODEX_THREAD_ID:-}}"
+
+if [ -z "$thread_id" ]; then
+  printf 'No thread id provided and CODEX_THREAD_ID is not set.\n' >&2
+  printf 'Opening the current workspace in the Codex app instead.\n' >&2
+  exec codex app "$PWD"
+fi
+
+if ! [[ "$thread_id" =~ ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$ ]]; then
+  printf 'Invalid Codex thread id: %s\n' "$thread_id" >&2
+  exit 2
+fi
+
+url="codex://threads/$thread_id"
+
+case "$(uname -s)" in
+  Darwin)
+    open "$url"
+    ;;
+  Linux)
+    xdg-open "$url" >/dev/null 2>&1 &
+    ;;
+  MINGW*|MSYS*|CYGWIN*)
+    start "" "$url"
+    ;;
+  *)
+    printf 'Unsupported platform for automatic open: %s\n' "$(uname -s)" >&2
+    printf '%s\n' "$url"
+    exit 3
+    ;;
+esac
+
+printf 'Opened %s\n' "$url"

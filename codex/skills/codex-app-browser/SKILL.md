@@ -9,6 +9,12 @@ This is a Codex-only operational skill. Do not mirror it into Claude Code: it ex
 
 Use this skill together with the bundled `browser-use:browser` skill. This skill explains the handoff and the failure modes; the bundled skill is the authoritative API reference.
 
+## Root cause to remember
+
+Browser Use is only exposed to the model in Codex App turns where the Browser plugin / Node REPL MCP is present. A Codex CLI or Emacs turn cannot gain that tool midway through the same turn just because the desktop app has been opened; the next turn must run from the Codex App thread.
+
+Codex App supports local conversation deeplinks in the form `codex://threads/<THREAD_ID>`. In CLI/Emacs sessions, `CODEX_THREAD_ID` normally contains the current thread id. Use the `codex-app-handoff` command to open the exact current thread in the desktop app.
+
 ## When this applies
 
 Explicit invocation:
@@ -26,11 +32,19 @@ Trigger on phrases such as:
 - "test/click/screenshot this in Codex"
 - "Browser Use"
 
-If the user starts in Codex CLI or Emacs and asks for browser work, do not say the task is impossible. Say the task needs the same chat resumed in the Codex App, and ask Pablo to switch there. Once the user says they are in the app, immediately retry the Browser Use bootstrap.
+If the user starts in Codex CLI or Emacs and asks for browser work, do not say the task is impossible. Run:
+
+```bash
+codex-app-handoff
+```
+
+Then say, briefly, that the exact thread has been opened in the Codex App and that the next browser-capable turn must be sent from there. Once Pablo sends a message from the app, immediately retry the Browser Use bootstrap.
+
+If `CODEX_THREAD_ID` is unavailable, run `codex app "$PWD"` instead and explain that the App should be opened on the current workspace, but that the exact thread could not be deeplinked automatically.
 
 ## Required preflight
 
-Before saying the in-app browser is unavailable, actually run the Browser Use bootstrap through the Node REPL MCP `js` tool.
+Before saying the in-app browser is unavailable from a Codex App turn, actually run the Browser Use bootstrap through the Node REPL MCP `js` tool.
 
 Important naming trap: in Codex tool listings, the callable may appear as namespace `mcp__node_repl__` with function `js`, not as a single tool named `mcp__node_repl__js`. Do not infer that Node REPL is unavailable just because the joined name is absent.
 
@@ -54,6 +68,7 @@ If that succeeds, continue with normal Browser Use operations via `tab`.
 
 Do not do any of these before the required preflight:
 
+- Do not claim that CLI/Emacs cannot be moved to the Codex App; use `codex-app-handoff` first.
 - Do not inspect or patch `/tmp/codex-browser-use` sockets.
 - Do not use macOS screen capture, OCR, or AppleScript UI scraping as a substitute for Browser Use.
 - Do not open external Chrome or use the Slack/API layer when the user asked for in-app browser operation.

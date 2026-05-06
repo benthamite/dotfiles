@@ -95,6 +95,11 @@ in Codex. Record them in =ai-config-sync.json= with =status: codex-only=,
 =codex-app-browser=, which captures the Codex App in-app browser handoff and
 Browser Use bootstrap procedure; it intentionally has no Claude counterpart.
 
+=bin/codex-app-handoff= opens the current Codex thread in the desktop app via
+the app's =codex://threads/<THREAD_ID>= deeplink. Use it from CLI/Emacs turns
+when a task needs App-only Browser Use tools; the next turn must be sent from
+the Codex App for the Browser plugin / Node REPL tools to appear.
+
 When changing a skill:
 
 1. Edit the side requested by the user.

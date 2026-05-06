@@ -730,7 +730,7 @@
       "path": ".codex/hooks.json",
       "tracked": true,
       "live_path": "~/.codex/hooks.json",
-      "note": "Live global Codex hook file is a symlink to the tracked repo file. Codex-only codex-hook-wrapper entries point at the Emacs package source tree because elpaca/builds contains compiled Elisp but not the wrapper script."
+      "note": "Live global Codex hook file is a symlink to the tracked repo file. Codex-only codex-hook-wrapper entries point at the Emacs package source tree because elpaca/builds contains compiled Elisp but not the wrapper script, and include explicit emacsclient/socket arguments so dispatch targets the active Emacs server."
     },
     {
       "tool": "Codex",

@@ -657,13 +657,20 @@ Meta-skill for AI workflow design. Given a description of something to automate,
 
 Scans Claude Code and Codex session transcripts since the last run, identifies manual workflows that repeat across two or more sessions (same multi-step procedure, same context re-supplied to the agent, same class of bug or request resolved the same way), and presents them as candidates for new skills or extensions of existing ones. Reuses =ai-journal='s =find-sessions.py= scan script, tracks its own cutoff in =last-run.txt=, and dispatches selected candidates to =/automate= rather than building skills itself — keeping triage and build concerns separate. Before proposing a new skill, checks =~/My Drive/dotfiles/claude/skills/= for an existing skill that already covers the pattern, framing such matches as a gap to extend rather than a duplicate to create. Pairs with =/schedule= to run on a weekly cadence (Ole Lehmann's "audit your week" pattern, [[https://x.com/itsolelehmann/status/2044425992802848954][origin tweet]]).
 
+**** skill-resolver
+:PROPERTIES:
+:ID:       9F4D94C6-19C7-4DE2-9A5B-98C52064495C
+:END:
+
+Resolves Claude/Codex skills by name through =bin/agent-skill= instead of relying on manual root-alias expansion. Searches project-local skills before global skills and exposes =path=, =cat=, =list=, and =roots= commands for deterministic skill loading/debugging.
+
 **** diagnose
 :PROPERTIES:
 :CUSTOM_ID: h:diagnose
 :ID:       D1D774DB-B9D0-46A3-827D-D217AA28D58C
 :END:
 
-Diagnostic mode modifier. Prefix any question with =/diagnose= to investigate errors and friction as symptoms of underlying structural issues rather than problems to fix directly. Identifies root causes, considers whether the problem is an instance of a broader class, and proposes structural fixes to config, tooling, documentation, or workflow. Includes explicit criteria for what counts as a structural fix (a concrete mechanism like a hook or config change) versus aspirational statements that depend on memory and discipline. Requires a one-step check before proposing any fix: /would an existing mechanism, firing as intended, have prevented this failure?/ If yes, the diagnosis is "behavioral lapse; rule X was violated" and the skill stops rather than inventing additional mechanisms to compensate for discipline.
+Diagnostic mode modifier. Prefix any question with =/diagnose= to investigate errors and friction as symptoms of underlying structural issues rather than problems to fix directly. Identifies root causes, considers whether the problem is an instance of a broader class, and proposes structural fixes to config, tooling, documentation, or workflow. Includes explicit criteria for what counts as a structural fix (a concrete mechanism like a hook, config change, or deterministic resolver CLI) versus aspirational statements that depend on memory and discipline. Requires the usual check before proposing any fix — /would an existing mechanism, firing as intended, have prevented this immediate failure?/ — then adds a second check for whether that mechanism is actually enforced or merely prose that asks the agent to perform a brittle deterministic operation by attention. The skill can therefore distinguish plain behavioral lapses from behavioral lapses with a structural remedy.
 
 **** optimize-claude-md
 :PROPERTIES:

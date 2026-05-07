@@ -296,6 +296,13 @@
       "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
     },
     {
+      "name": "skill-resolver",
+      "claude": "claude/skills/skill-resolver/SKILL.md",
+      "codex": "codex/skills/skill-resolver/SKILL.md",
+      "status": "ported",
+      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+    },
+    {
       "name": "skill-audit",
       "claude": "claude/skills/skill-audit/SKILL.md",
       "codex": "codex/skills/skill-audit/SKILL.md",

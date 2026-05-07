@@ -134,6 +134,11 @@ to the site's persistent =logs/gsc-indexing.md= log.  Its frontmatter is kept
 Codex-safe because Codex skips skills whose =description= field is not parsed as
 a string.
 
+The =skill-resolver= skill wraps =bin/agent-skill=, a deterministic resolver for
+opening skills by name.  It searches project-local skills before global skills
+and supports =path=, =cat=, =list=, and =roots= so agents do not need to manually
+expand skill root aliases such as =r0= / =r1=.
+
 * Hooks
 
 =.codex/hooks.json= is tracked here and live globally through the symlink at

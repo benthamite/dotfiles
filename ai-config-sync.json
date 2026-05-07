@@ -23,13 +23,6 @@
       "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
     },
     {
-      "name": "afip-invoice",
-      "claude": "claude/skills/afip-invoice/SKILL.md",
-      "codex": "codex/skills/afip-invoice/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
-    },
-    {
       "name": "ai-journal",
       "claude": "claude/skills/ai-journal/SKILL.md",
       "codex": "codex/skills/ai-journal/SKILL.md",

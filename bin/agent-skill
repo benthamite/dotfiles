@@ -1,0 +1,263 @@
+#!/usr/bin/env python3
+"""Resolve Claude/Codex skill files by skill name."""
+
+from __future__ import annotations
+
+import argparse
+import os
+import re
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+HOME = Path.home()
+
+
+@dataclass(frozen=True)
+class SkillRoot:
+    path: Path
+    tool: str
+    source: str
+    priority: int
+
+
+@dataclass(frozen=True)
+class SkillFile:
+    name: str
+    folder: str
+    path: Path
+    root: SkillRoot
+
+    @property
+    def match_names(self) -> set[str]:
+        names = {self.name, self.folder}
+        if "plugins/cache" in str(self.path):
+            parts = self.path.parts
+            try:
+                cache_index = parts.index("cache")
+                plugin = parts[cache_index + 1]
+                names.add(f"{plugin}:{self.name}")
+            except (ValueError, IndexError):
+                pass
+        return names
+
+
+def existing_dir(path: Path) -> bool:
+    try:
+        return path.is_dir()
+    except OSError:
+        return False
+
+
+def ancestors(cwd: Path) -> list[Path]:
+    resolved = cwd.resolve()
+    return [resolved, *resolved.parents]
+
+
+def add_root(
+    roots: list[SkillRoot],
+    seen: set[tuple[str, str]],
+    path: Path,
+    tool: str,
+    source: str,
+    priority: int,
+) -> None:
+    if not existing_dir(path):
+        return
+    try:
+        real = str(path.resolve())
+    except OSError:
+        real = str(path)
+    key = (tool, real)
+    if key in seen:
+        return
+    seen.add(key)
+    roots.append(SkillRoot(path=path, tool=tool, source=source, priority=priority))
+
+
+def discover_roots(cwd: Path, tool: str) -> list[SkillRoot]:
+    roots: list[SkillRoot] = []
+    seen: set[tuple[str, str]] = set()
+    wanted = {"codex", "claude"} if tool == "any" else {tool}
+
+    for depth, parent in enumerate(ancestors(cwd)):
+        if parent == HOME:
+            continue
+        if "codex" in wanted:
+            add_root(
+                roots,
+                seen,
+                parent / ".codex" / "skills",
+                "codex",
+                f"project-local:{parent}",
+                10 + depth,
+            )
+        if "claude" in wanted:
+            add_root(
+                roots,
+                seen,
+                parent / ".claude" / "skills",
+                "claude",
+                f"project-local:{parent}",
+                10 + depth,
+            )
+
+    epoch_root = HOME / "My Drive" / "Epoch"
+    if "codex" in wanted:
+        add_root(
+            roots,
+            seen,
+            epoch_root / ".codex" / "skills",
+            "codex",
+            "epoch-workspace",
+            40,
+        )
+    if "claude" in wanted:
+        add_root(
+            roots,
+            seen,
+            epoch_root / ".claude" / "skills",
+            "claude",
+            "epoch-workspace",
+            40,
+        )
+
+    if "codex" in wanted:
+        codex_home = Path(os.environ.get("CODEX_HOME", HOME / ".codex"))
+        add_root(roots, seen, codex_home / "skills", "codex", "CODEX_HOME", 100)
+        add_root(roots, seen, REPO_ROOT / "codex" / "skills", "codex", "dotfiles", 110)
+
+        plugin_cache = codex_home / "plugins" / "cache"
+        if existing_dir(plugin_cache):
+            for skills_dir in sorted(plugin_cache.rglob("skills")):
+                add_root(roots, seen, skills_dir, "codex", "codex-plugin-cache", 200)
+
+    if "claude" in wanted:
+        claude_home = Path(os.environ.get("CLAUDE_HOME", HOME / ".claude"))
+        add_root(roots, seen, claude_home / "skills", "claude", "CLAUDE_HOME", 100)
+        add_root(roots, seen, REPO_ROOT / "claude" / "skills", "claude", "dotfiles", 110)
+
+    expanded: list[SkillRoot] = []
+    expanded_seen: set[tuple[str, str]] = set()
+    for root in sorted(roots, key=lambda root: (root.priority, str(root.path))):
+        add_root(expanded, expanded_seen, root.path, root.tool, root.source, root.priority)
+        add_root(
+            expanded,
+            expanded_seen,
+            root.path / ".system",
+            root.tool,
+            f"{root.source}:system",
+            root.priority + 1,
+        )
+
+    return sorted(expanded, key=lambda root: (root.priority, str(root.path)))
+
+
+def parse_skill_name(path: Path) -> str:
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return path.parent.name
+    if not text.startswith("---"):
+        return path.parent.name
+    frontmatter = text.split("---", 2)
+    if len(frontmatter) < 3:
+        return path.parent.name
+    for line in frontmatter[1].splitlines():
+        match = re.match(r"\s*name:\s*(.+?)\s*$", line)
+        if match:
+            return match.group(1).strip().strip("\"'")
+    return path.parent.name
+
+
+def discover_skills(roots: list[SkillRoot]) -> list[SkillFile]:
+    skills: list[SkillFile] = []
+    seen_paths: set[str] = set()
+    for root in roots:
+        for path in sorted(root.path.glob("*/SKILL.md")):
+            try:
+                real = str(path.resolve())
+            except OSError:
+                real = str(path)
+            if real in seen_paths:
+                continue
+            seen_paths.add(real)
+            skills.append(
+                SkillFile(
+                    name=parse_skill_name(path),
+                    folder=path.parent.name,
+                    path=path,
+                    root=root,
+                )
+            )
+    return sorted(skills, key=lambda skill: (skill.root.priority, skill.name, str(skill.path)))
+
+
+def resolve_skill(skills: list[SkillFile], name: str) -> SkillFile:
+    matches = [skill for skill in skills if name in skill.match_names]
+    if not matches:
+        raise SystemExit(f"No skill named {name!r} found.")
+
+    matches = sorted(matches, key=lambda skill: (skill.root.priority, str(skill.path)))
+    best_priority = matches[0].root.priority
+    best = [skill for skill in matches if skill.root.priority == best_priority]
+    if len(best) > 1:
+        lines = [f"Ambiguous skill name {name!r}; matching skills at the same priority:"]
+        lines.extend(f"- {skill.path} [{skill.root.source}]" for skill in best)
+        raise SystemExit("\n".join(lines))
+    return best[0]
+
+
+def add_common_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--tool", choices=("codex", "claude", "any"), default="codex")
+    parser.add_argument("--cwd", default=os.getcwd(), help="working directory for project-local lookup")
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    for command in ("path", "cat"):
+        subparser = subparsers.add_parser(command)
+        subparser.add_argument("name")
+        add_common_args(subparser)
+
+    list_parser = subparsers.add_parser("list")
+    add_common_args(list_parser)
+
+    roots_parser = subparsers.add_parser("roots")
+    add_common_args(roots_parser)
+
+    return parser
+
+
+def main() -> int:
+    args = build_parser().parse_args()
+    roots = discover_roots(Path(args.cwd), args.tool)
+
+    if args.command == "roots":
+        for root in roots:
+            print(f"{root.tool}\t{root.priority}\t{root.source}\t{root.path}")
+        return 0
+
+    skills = discover_skills(roots)
+    if args.command == "list":
+        for skill in skills:
+            print(f"{skill.name}\t{skill.root.tool}\t{skill.path}")
+        return 0
+
+    skill = resolve_skill(skills, args.name)
+    if args.command == "path":
+        print(skill.path)
+        return 0
+    if args.command == "cat":
+        sys.stdout.write(skill.path.read_text(encoding="utf-8", errors="replace"))
+        return 0
+
+    raise AssertionError(args.command)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

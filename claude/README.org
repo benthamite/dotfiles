@@ -39,7 +39,7 @@ Three layers of directories work together: this dotfiles directory (source of tr
 ├── skills/                           ← skill directories
 ├── bin/batch-test.sh                 ← elpaca-aware emacs --batch test runner
 ├── bin/sync-mcp-servers.sh           ← MCP server sync utility
-├── bin/gmail.py                      ← Gmail API CLI (--account epoch|personal)
+├── bin/gmail.py                      ← Gmail API CLI (--account epoch|personal; attachments supported for send/draft/reply)
 ├── bin/sheets.py                     ← Sheets API CLI (--account epoch|personal)
 ├── bin/slack.py                      ← Slack web-API CLI, including permalink/thread fetches
 ├── bin/_gworkspace_auth.py           ← shared OAuth helper for gmail.py / sheets.py
@@ -75,7 +75,7 @@ Note: =settings.json= is intentionally *not* tracked here. Claude Code writes to
 
 *MCP server reference.* Placement rules, current inventory, multi-account notes, and account-specific credential handling live in =context/mcp-servers.md=. The global =CLAUDE.md= points agents there when MCP-specific context is needed, so they do not need to read this whole README just to configure or debug an MCP server.
 
-*Service access tools.* The global =CLAUDE.md= lists the local tools used to connect to external services: Anna's Archive, Twitter/X, Gmail, Google Sheets, Slack, Google Calendar, Google Docs/Drive, and GitHub.
+*Service access tools.* The global =CLAUDE.md= lists the local tools used to connect to external services: Anna's Archive, Twitter/X, Gmail, Google Sheets, Slack, Google Calendar, Google Docs/Drive, and GitHub. These local tools are the default path for shared Claude/Codex workflows; MCP servers and hosted connectors are exceptions documented in =context/mcp-servers.md= and service-specific context files.
 
 **** Settings hierarchy
 :PROPERTIES:

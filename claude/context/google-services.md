@@ -11,13 +11,13 @@ Pablo uses two Google accounts and accesses each via different tools.
 
 ## Tooling by service
 
-For the **Epoch** account (`pablo@epoch.ai`), use the local Google tools below. They share auth via the `GOOGLE_WORKSPACE_*` env vars (see "Auth" below).
+For the **Epoch** account (`pablo@epoch.ai`), use the local Google tools below. They replace the former general-purpose Google Workspace MCP path for Pablo-owned agent work and share auth via the `GOOGLE_WORKSPACE_*` env vars (see "Auth" below).
 
 | Service  | Tool | Notes |
 |----------|------|-------|
 | Docs     | `gdoc` CLI | `gdoc cat/find/edit/insert/info/share`. Always pass `--account epoch`. |
 | Drive    | `gdoc` CLI | `gdoc find --account epoch --title --plain '<query>'`. |
-| Gmail    | `claude/bin/gmail.py` | Subcommands: `query`, `get`, `raw`, `attachment`, `archive`, `draft`, `send`, `reply`, `send-draft`. |
+| Gmail    | `claude/bin/gmail.py` | Subcommands: `query`, `get`, `raw`, `attachment`, `archive`, `draft`, `send`, `reply`, `send-draft`; `send`, `draft`, and `reply` support `--attach`. |
 | Sheets   | `claude/bin/sheets.py` | Subcommands: `read`, `write`, `append`, `clear`, `add-sheet`, `delete-sheet`, `create`, `info`. |
 | Calendar | `gcalcli` CLI | `gcalcli agenda/search/add/edit/delete`, with `--calendar '<name>'` to scope. |
 | Slides   | none | Rare enough to handle ad-hoc via curl + Sheets/Drive APIs if ever needed. |
@@ -43,7 +43,7 @@ The personal-account OAuth grants are against the same `claude-code-gmail-490520
 
 Pick the account with `--account epoch` (default) or `--account personal` on `gmail.py`/`sheets.py`. The wrapper exchanges the refresh token for an access token and caches per-account at `/tmp/gworkspace-access-token-<account>.json`.
 
-The Epoch refresh token also powers `gdoc --account epoch` (which has its own auth flow but uses the same OAuth client) and the `gmail-epoch-triage` MCP (separate, see below). The personal refresh token is used only by `gmail.py`/`sheets.py`; `gdoc --account personal` has its own token under `~/.config/gdoc/accounts/personal/`.
+The Epoch refresh token also powers `gdoc --account epoch` (which has its own auth flow but uses the same OAuth client). The `gmail-epoch-triage` MCP is separate and exists only for the email-triage bot account (see below). The personal refresh token is used only by `gmail.py`/`sheets.py`; `gdoc --account personal` has its own token under `~/.config/gdoc/accounts/personal/`.
 
 If a token expires (`invalid_grant` errors), regenerate with the recipe under "Generating a new refresh token" below and update the appropriate env var in `~/.zshenv-secrets`.
 
@@ -55,7 +55,8 @@ If a token expires (`invalid_grant` errors), regenerate with the recipe under "G
 - **Package:** `workspace-mcp` via `uvx` (configured with `--tools gmail`)
 - **Covers:** Gmail only, for the `email-triage@epoch.ai` bot account (NOT `pablo@epoch.ai`).
 - **Credentials:** stored in `~/.gmail-mcp-epoch/credentials/` as `{email}.json` files. Directory set via `WORKSPACE_MCP_CREDENTIALS_DIR`.
-- **Not redundant with `gmail.py`:** the wrapper is authenticated as `pablo@epoch.ai`; this server is the `email-triage@epoch.ai` bot.
+- **Use only for bot-owned operations:** email-triage automation maintenance, bot mailbox checks, and related debugging. Do not use it for Pablo's Epoch inbox, Pablo's personal inbox, Mercury receipts, or one-off human-account email work.
+- **Not redundant with `gmail.py`:** the wrapper is authenticated as `pablo@epoch.ai` or `pablo.stafforini@gmail.com`; this server is the `email-triage@epoch.ai` bot.
 
 ### personal account
 
@@ -63,9 +64,9 @@ No dedicated MCP server. Personal-account Docs/Drive go through `gdoc --account 
 
 ### Built-in (claude.ai integrations)
 
-- **claude.ai Gmail** — managed by Claude's own auth
+- **claude.ai Gmail** — managed by Claude's own auth; not canonical for local Claude/Codex workflows
 - **claude.ai Google Calendar** — same
-- **claude.ai Airtable** — Epoch Airtable
+- **claude.ai Airtable** — Epoch Airtable; use only when a task explicitly depends on the hosted connector surface
 
 ## Enabled APIs on `claude-code-gmail-490520`
 

@@ -20,11 +20,11 @@ Usage:
       Download an attachment to <output-path>.
   gmail.py [--account ...] archive <message-id>
       Remove the INBOX label from a message.
-  gmail.py [--account ...] draft --to=<addr> --subject=<s> [--body=<text> | --body-file=<path>] [--cc=<addr>] [--bcc=<addr>]
+  gmail.py [--account ...] draft --to=<addr> --subject=<s> [--body=<text> | --body-file=<path>] [--cc=<addr>] [--bcc=<addr>] [--attach=<path> ...]
       Create a draft. Prints the new draft ID on stdout.
-  gmail.py [--account ...] send --to=<addr> --subject=<s> [--body=<text> | --body-file=<path>] [--cc=<addr>] [--bcc=<addr>]
+  gmail.py [--account ...] send --to=<addr> --subject=<s> [--body=<text> | --body-file=<path>] [--cc=<addr>] [--bcc=<addr>] [--attach=<path> ...]
       Send an email. Prints the sent message ID.
-  gmail.py [--account ...] reply <message-id> [--body=<text> | --body-file=<path>]
+  gmail.py [--account ...] reply <message-id> [--to=<addr>] [--body=<text> | --body-file=<path>] [--attach=<path> ...]
       Reply to a thread (preserves In-Reply-To and References).
   gmail.py [--account ...] send-draft <draft-id>
       Send a previously created draft.
@@ -34,6 +34,7 @@ import argparse
 import base64
 import email.message
 import json
+import mimetypes
 import os
 import sys
 import urllib.parse
@@ -110,6 +111,22 @@ def _read_body(args):
     return args.body or ""
 
 
+def _add_attachments(msg, paths):
+    for path in paths or []:
+        mime_type, _ = mimetypes.guess_type(path)
+        if mime_type:
+            maintype, subtype = mime_type.split("/", 1)
+        else:
+            maintype, subtype = "application", "octet-stream"
+        with open(path, "rb") as f:
+            msg.add_attachment(
+                f.read(),
+                maintype=maintype,
+                subtype=subtype,
+                filename=os.path.basename(path),
+            )
+
+
 def _build_raw(args):
     msg = email.message.EmailMessage()
     msg["To"] = args.to
@@ -119,6 +136,7 @@ def _build_raw(args):
         msg["Bcc"] = args.bcc
     msg["Subject"] = args.subject
     msg.set_content(_read_body(args))
+    _add_attachments(msg, getattr(args, "attach", []))
     return base64.urlsafe_b64encode(msg.as_bytes()).decode().rstrip("=")
 
 
@@ -220,12 +238,13 @@ def cmd_reply(args):
         subject = "Re: " + subject
     body = _read_body(args)
     msg = email.message.EmailMessage()
-    msg["To"] = h.get("from", "")
+    msg["To"] = args.to or h.get("from", "")
     msg["Subject"] = subject
     if "message-id" in h:
         msg["In-Reply-To"] = h["message-id"]
         msg["References"] = (h.get("references", "") + " " + h["message-id"]).strip()
     msg.set_content(body)
+    _add_attachments(msg, args.attach)
     raw = base64.urlsafe_b64encode(msg.as_bytes()).decode().rstrip("=")
     out = api_request(
         "POST",
@@ -288,12 +307,15 @@ def main():
         s.add_argument("--body-file", dest="body_file")
         s.add_argument("--cc")
         s.add_argument("--bcc")
+        s.add_argument("--attach", action="append", default=[])
         s.set_defaults(func=fn)
 
     rep = sub.add_parser("reply", parents=[common])
     rep.add_argument("id")
+    rep.add_argument("--to")
     rep.add_argument("--body")
     rep.add_argument("--body-file", dest="body_file")
+    rep.add_argument("--attach", action="append", default=[])
     rep.set_defaults(func=cmd_reply)
 
     sd = sub.add_parser("send-draft", parents=[common])

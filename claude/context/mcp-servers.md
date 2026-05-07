@@ -32,7 +32,7 @@ Chrome integration uses three Chrome profiles, one per Claude Code account. Brow
 ## Current inventory
 
 - User-level: empty.
-- Project-local: `~/My Drive/Epoch/.mcp.json` holds `airtable`, `asana`, and `gmail-epoch-triage`; `~/source/ForumMagnum/.mcp.json` holds `playwright`.
+- Project-local: `~/My Drive/Epoch/.mcp.json` holds `airtable`, `asana`, and `gmail-epoch-triage`; `~/source/ForumMagnum/.mcp.json` holds `playwright`. The Epoch Asana MCP is the canonical Asana interface for reads and writes; the global shared-systems rule still requires explicit user confirmation before creating or updating tasks.
 - claude.ai connectors: GitHub Integration, Ahrefs, Gmail, Google Calendar, Google Drive, Slack, GitHub via Copilot MCP, and Asana.
 - Plugin-managed: none currently enabled.
 - `claude-in-chrome`: enabled and heavily used for browser automation.

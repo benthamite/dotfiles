@@ -17,7 +17,7 @@
 - **Emacs:** never send signals to an active Emacs session without explicit confirmation.
 - **Deletion:** use `trash` instead of destructive recursive deletion.
 - **Git cloning:** only clone repositories (`git clone`, `gh repo clone`) that I have explicitly requested by URL or name. If a task seems to require cloning an unmentioned repo, ask first.
-- **Shared systems:** do not create PRs, open issues, post Slack/email/comments, or take other externally visible actions without my explicit confirmation.
+- **Shared systems:** do not create PRs, open issues, post Slack/email/comments, create or update Asana tasks, or take other externally visible actions without my explicit confirmation.
 - @context/secrets.md
 
 ## User context and communication

@@ -245,7 +245,7 @@ The global =~/.claude/CLAUDE.md= (symlinked here) is the user-level memory loade
 - Use =trash= instead of =rm -rf=; never send signals to Emacs without confirmation.
 - Anything the user is asked to paste — message, credential, URL, snippet — goes to the Emacs kill ring via =emacsclient= (and =pbcopy= as well when the paste target is a Chrome or native form). Multi-line or secret content uses the temp-file =insert-file-contents= → =kill-new= pattern to avoid Elisp string-escaping.
 - For =/schedule=, always set email as the notification method.
-- =git push= to the user's own remotes is allowed autonomously (once the underlying commits are in); other externally-visible actions (PRs, issues, Slack, email) still require explicit confirmation.
+- =git push= to the user's own remotes is allowed autonomously (once the underlying commits are in); other externally-visible actions (PRs, issues, Slack, email, Asana task creation/updates) still require explicit confirmation.
 - Secrets handling is imported from =context/secrets.md= with =@context/secrets.md= so the short safety rules load with the global memory.
 - MCP server instructions are referenced via =context/mcp-servers.md=, not imported, so agents load them only when MCP-specific context is needed.
 - Service access tools are listed by service in the global memory.

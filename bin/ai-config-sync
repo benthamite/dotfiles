@@ -1077,8 +1077,8 @@ def audit_registrations(problems: list[str], manifest: dict) -> None:
     config = tomllib.loads((ROOT / "codex" / "config.toml").read_text())
     if "CLAUDE.md" not in config.get("project_doc_fallback_filenames", []):
         add_problem(problems, "codex/config.toml does not include CLAUDE.md in project_doc_fallback_filenames.")
-    if not config.get("features", {}).get("codex_hooks"):
-        add_problem(problems, "codex/config.toml does not enable features.codex_hooks.")
+    if not config.get("features", {}).get("hooks"):
+        add_problem(problems, "codex/config.toml does not enable features.hooks.")
 
     registration_paths = {item.get("path") for item in manifest.get("registrations") or []}
     for expected in (

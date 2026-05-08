@@ -16,6 +16,8 @@
 
 set -euo pipefail
 
+SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
+
 INPUT=$(cat)
 
 COMMAND=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')
@@ -27,7 +29,7 @@ fi
 
 # Find the repo root; bail if not in a git repo
 # shellcheck source=lib-repo-root.sh
-source "$(dirname "$0")/lib-repo-root.sh"
+source "$SCRIPT_DIR/lib-repo-root.sh"
 if [ -z "$REPO_ROOT" ]; then
   exit 0
 fi
@@ -75,7 +77,7 @@ is_generated_el() {
 
 # Check staged files (amend-aware: see lib-staged-files.sh)
 # shellcheck source=lib-staged-files.sh
-source "$(dirname "$0")/lib-staged-files.sh"
+source "$SCRIPT_DIR/lib-staged-files.sh"
 
 HAS_EL=false
 HAS_DOC_ORG=false

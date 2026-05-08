@@ -164,7 +164,8 @@ The Codex ports cover:
   Codex =tool_input= and =tool_response= whether Codex supplies them as objects
   or JSON strings.
 - Shared hook helpers such as =lib-repo-root.sh=, which resolves an optional
-  leading =cd <path> &&= prefix and otherwise falls back to the hook cwd.
+  leading =cd <path> &&= prefix, otherwise uses structured =workdir= / =cwd=
+  hook payload fields when present, and only then falls back to the hook cwd.
 - MCP guardrails through =guard-external-actions.sh=.
 - =apply_patch=/=Edit|Write= guards for secret leakage, generated Texinfo
   files, elpaca dotfiles mirror edits, and walk-list protected data.

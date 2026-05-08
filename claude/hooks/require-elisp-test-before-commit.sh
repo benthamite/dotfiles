@@ -7,6 +7,8 @@
 
 set -euo pipefail
 
+SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
+
 INPUT=$(cat)
 
 COMMAND=$(printf '%s' "$INPUT" | jq -r '.tool_input.command // empty')
@@ -17,9 +19,16 @@ if ! echo "$COMMAND" | grep -qE '\bgit\s+commit\b'; then
   exit 0
 fi
 
+# Inspect staged files in the repo targeted by the command, not the hook cwd.
+# shellcheck source=lib-repo-root.sh
+source "$SCRIPT_DIR/lib-repo-root.sh"
+if [ -z "$REPO_ROOT" ]; then
+  exit 0
+fi
+
 # Check if any staged files are Elisp-related (amend-aware: see lib-staged-files.sh)
 # shellcheck source=lib-staged-files.sh
-source "$(dirname "$0")/lib-staged-files.sh"
+source "$SCRIPT_DIR/lib-staged-files.sh"
 
 HAS_ELISP=false
 if [ -n "$STAGED" ]; then

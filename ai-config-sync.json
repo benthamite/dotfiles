@@ -463,14 +463,14 @@
       "claude": "claude/hooks/elpaca-run.sh",
       "codex": null,
       "status": "unsupported-or-replaced",
-      "note": "Claude Emacs hook utility; Codex uses codex/hooks/notify-emacs-hook.sh instead."
+      "note": "Claude Emacs hook utility; Codex routes Emacs events through codex-hook-wrapper directly."
     },
     {
       "name": "fire-and-forget.sh",
       "claude": "claude/hooks/fire-and-forget.sh",
-      "codex": "codex/hooks/fire-and-forget.sh",
-      "status": "ported-utility-unused",
-      "note": "Copied for utility parity; current Codex registration uses notify-emacs-hook.sh directly."
+      "codex": null,
+      "status": "claude-only",
+      "note": "Claude utility wrapping notify-emacs-* hooks so the CLI doesn't block on emacsclient. The Codex copy was never registered and was removed when the redundant Codex notify-emacs-hook.sh registrations were dropped in favor of codex-hook-wrapper."
     },
     {
       "name": "guard-external-actions.sh",
@@ -515,25 +515,18 @@
       "note": "ported for apply_patch/Edit/Write path lists; Codex PostToolUse output must include hookEventName and use additionalContext rather than Claude's message field"
     },
     {
-      "name": "notify-emacs-hook.sh",
-      "claude": null,
-      "codex": "codex/hooks/notify-emacs-hook.sh",
-      "status": "codex-only",
-      "note": "Codex-side Emacs event bridge for Stop and SessionStart."
-    },
-    {
       "name": "notify-emacs-notification.sh",
       "claude": "claude/hooks/notify-emacs-notification.sh",
       "codex": null,
       "status": "unsupported-or-replaced",
-      "note": "Claude Notification event; Codex notification handling uses codex/hooks/notify-emacs-hook.sh."
+      "note": "Claude Notification event; Codex routes Notification-equivalent events through codex-hook-wrapper directly."
     },
     {
       "name": "notify-emacs-session-end.sh",
       "claude": "claude/hooks/notify-emacs-session-end.sh",
       "codex": null,
       "status": "unsupported-or-replaced",
-      "note": "Claude Stop event wrapper; Codex uses codex/hooks/notify-emacs-hook.sh."
+      "note": "Claude Stop event wrapper; Codex routes Stop through codex-hook-wrapper directly."
     },
     {
       "name": "regenerate-manual-after-edit.sh",
@@ -646,7 +639,7 @@
       "path": ".codex/hooks.json",
       "tracked": true,
       "live_path": "~/.codex/hooks.json",
-      "note": "Live global Codex hook file is a symlink to the tracked repo file. Codex-only codex-hook-wrapper entries point at the Emacs package source tree because elpaca/builds contains compiled Elisp but not the wrapper script, and include explicit emacsclient/socket arguments so dispatch targets the active Emacs server."
+      "note": "Live global Codex hook file is a symlink to the tracked repo file. Codex-only codex-hook-wrapper entries point at the Emacs package source tree because elpaca/builds contains compiled Elisp but not the wrapper script, and include explicit emacsclient/socket arguments so dispatch targets the active Emacs server. The apply_patch and Edit|Write matchers are collapsed into a single apply_patch|Edit|Write block per event to keep the trust-review list compact under the Codex 0.129 hook trust gate; SessionStart and Stop dispatch through codex-hook-wrapper alone (the redundant notify-emacs-hook.sh entries were removed)."
     },
     {
       "tool": "Codex",

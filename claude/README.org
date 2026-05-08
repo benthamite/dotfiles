@@ -699,7 +699,7 @@ Processes items from a list file strictly one at a time (sequential) or N-at-a-t
 :ID:       4D862953-7E8A-4154-BC16-919ED6B092A5
 :END:
 
-Twenty-eight hook and utility scripts handle workflow invariants, security, Emacs integration, and Claude/Codex configuration sync. Most are defined in the global =~/.claude/settings.json= and use early-exit guards to skip inapplicable projects. Repository-specific commit guards also exist on the Codex side in =.codex/hooks.json=. =notify-emacs-session-end.sh= and =notify-emacs-notification.sh= escape interpolated buffer-name values before embedding them in Elisp strings; =load-elisp-after-edit.sh= base64-encodes the changed file path and decodes it via =base64-decode-string= on the Elisp side so command-substitution metacharacters never reach the shell during interpolation. =lib-repo-root.sh= extracts a leading =cd <path>= from the bash command via a bash-regex match (bailing out on any =$(...)= or backtick) and calls =git -C <path>= rather than re-shelling the command.
+Twenty-eight hook and utility scripts handle workflow invariants, security, Emacs integration, and Claude/Codex configuration sync. Most are defined in the global =~/.claude/settings.json= and use early-exit guards to skip inapplicable projects. Repository-specific commit guards also exist on the Codex side in =.codex/hooks.json=. =notify-emacs-session-end.sh= and =notify-emacs-notification.sh= escape interpolated buffer-name values before embedding them in Elisp strings; =load-elisp-after-edit.sh= base64-encodes the changed file path and decodes it via =base64-decode-string= on the Elisp side so command-substitution metacharacters never reach the shell during interpolation. =lib-repo-root.sh= extracts a leading =cd <path>= from the bash command via a bash-regex match (bailing out on any =$(...)= or backtick) and calls =git -C <path>= rather than re-shelling the command; when the hook payload contains a structured =cwd= or =workdir=, that directory is used as the fallback repo context before the hook process cwd.
 
 Claude and Codex hooks are no longer shared through adapters.  Claude hooks live
 in =claude/hooks/=; Codex ports live in =codex/hooks/=.  The mapping and known
@@ -710,7 +710,7 @@ non-ports are recorded in =ai-config-sync.json=.
 :ID:       4E0CDC5D-C436-4701-AC99-E29F950318B4
 :END:
 
-Blocks =git commit= when Elisp files (=*.el= or =emacs/config.org=) are staged but no test has been run in the current session. Forces the agent to verify changes before committing. The error message suggests a ready-to-paste =batch-test.sh= command with the detected package name. Also detects the case where =git add= and =git commit= appear in the same bash command (which would otherwise bypass the staged-file check by running before staging occurs). When scanning the command string, only the =git add= arguments are examined (not the commit message or other parts of the command) to avoid false positives from commit messages that mention =.el= files.
+Blocks =git commit= when Elisp files (=*.el= or =emacs/config.org=) are staged in the command's target repo but no test has been run in the current session. Forces the agent to verify changes before committing. The error message suggests a ready-to-paste =batch-test.sh= command with the detected package name. Also detects the case where =git add= and =git commit= appear in the same bash command (which would otherwise bypass the staged-file check by running before staging occurs). When scanning the command string, only the =git add= arguments are examined (not the commit message or other parts of the command) to avoid false positives from commit messages that mention =.el= files.
 
 *** track-elisp-test.sh (PostToolUse)
 :PROPERTIES:
@@ -724,7 +724,7 @@ Creates a marker file (=/tmp/claude-elisp-tested-{SESSION_ID}=) whenever =emacs 
 :ID:       F4D78958-4194-4DB3-9624-C04EC7790960
 :END:
 
-Blocks =git commit= when files in =claude/= (skills, hooks, settings, CLAUDE.md) are staged but =claude/README.org= is not. Also detects when =git add= and =git commit= appear in the same bash command (which would otherwise bypass the staged-file check). Ensures documentation stays in sync with configuration changes. Project-specific skills (under =.claude/skills/=) are excluded from this check, since they belong to their project's documentation, not the dotfiles README. Runtime data paths (=digests/=, =last-run/=, =twitter-vet/vetted/=) are also excluded, since these are skill output files that don't warrant a README update.
+Blocks =git commit= when files in =claude/= (skills, hooks, settings, CLAUDE.md) are staged in the command's target repo but =claude/README.org= is not. Also detects when =git add= and =git commit= appear in the same bash command (which would otherwise bypass the staged-file check). Ensures documentation stays in sync with configuration changes. Project-specific skills (under =.claude/skills/=) are excluded from this check, since they belong to their project's documentation, not the dotfiles README. Runtime data paths (=digests/=, =last-run/=, =twitter-vet/vetted/=) are also excluded, since these are skill output files that don't warrant a README update.
 
 *** remind-claude-readme-update.sh (PostToolUse)
 :PROPERTIES:
@@ -867,7 +867,7 @@ Blocks all Bash commands (except =emacsclient= and =batch-test.sh=) after commit
 :ID:       CEA9EC73-B53B-4097-B9CA-38828EB94D97
 :END:
 
-Creates a verification marker (=/tmp/claude-elisp-verify-needed-{SESSION_ID}=) after a successful =git commit= that includes =.el= files. Clears the marker when =emacsclient -e= runs. Skips test files (=*-test.el=, =*-tests.el=). Cleans up stale markers older than 2 hours.
+Creates a verification marker (=/tmp/claude-elisp-verify-needed-{SESSION_ID}=) after a successful =git commit= whose target repo's just-created commit includes =.el= files. Clears the marker when =emacsclient -e= runs. Skips test files (=*-test.el=, =*-tests.el=). Cleans up stale markers older than 2 hours.
 
 *** notify-emacs-notification.sh (Notification)
 :PROPERTIES:
@@ -888,7 +888,7 @@ Wrapper that runs a hook command in the background. Reads stdin first to avoid b
 :ID:       6149F4DB-9E5E-496D-9976-08EE7A930DAF
 :END:
 
-Shared helper sourced by other hooks. Resolves the git repo root from the command context. PreToolUse hooks run before the bash command executes, so the hook's cwd may differ from the command's effective cwd. If the command starts with =cd <path> &&=, this helper resolves the repo root from that path and cds into it so subsequent git commands operate on the correct repo. Commands without a leading =cd= are valid and fall back to the hook's current working directory.
+Shared helper sourced by other hooks. Resolves the git repo root from the command context. PreToolUse hooks run before the bash command executes, so the hook's cwd may differ from the command's effective cwd. If the command starts with =cd <path> &&=, this helper resolves the repo root from that path and cds into it so subsequent git commands operate on the correct repo. Otherwise it uses structured =workdir= / =cwd= fields from the hook payload when present, then falls back to the hook's current working directory.
 
 *** lib-staged-files.sh (utility)
 :PROPERTIES:

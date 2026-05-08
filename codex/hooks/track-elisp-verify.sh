@@ -31,6 +31,14 @@ MARKER="/tmp/claude-elisp-verify-needed-${SESSION_ID}"
 # On successful git commit with .el files: set marker
 if echo "$COMMAND" | grep -qE '\bgit\s+commit\b'; then
   if [ "$EXIT_CODE" = "0" ]; then
+    # Inspect the repo that the committed command actually targeted, not the
+    # hook process cwd.
+    # shellcheck source=lib-repo-root.sh
+    source "$SCRIPT_DIR/lib-repo-root.sh"
+    if [ -z "$REPO_ROOT" ]; then
+      exit 0
+    fi
+
     # After a successful commit, the staged files are now committed.
     # Check the just-committed files via git diff-tree.
     COMMITTED=$(git diff-tree --no-commit-id --name-only -r HEAD 2>/dev/null || true)

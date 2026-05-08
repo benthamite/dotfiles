@@ -52,8 +52,12 @@ if echo "$CMD" | grep -qE '\brm\s+(-[a-zA-Z]*r[a-zA-Z]*f|(-[a-zA-Z]*f[a-zA-Z]*r)
 fi
 
 # --- git push --force / -f (dangerous to shared branches) ---
-if echo "$CMD" | grep -qE '\bgit\s+push\s+.*(-f|--force|--force-with-lease)\b'; then
-  deny "git push --force detected" "Force-pushing can overwrite upstream history. Confirm with the user first."
+# --force-with-lease is the safe form (per CLAUDE.md, it's medium-risk on a
+# verified user-owned feature branch) — allow it through.
+if echo "$CMD" | grep -qE '\bgit\s+push\b' && \
+   echo "$CMD" | grep -qE '(\s-f\b|\s--force\b)' && \
+   ! echo "$CMD" | grep -qF -- '--force-with-lease'; then
+  deny "git push --force detected" "Force-pushing can overwrite upstream history. Use --force-with-lease for branch-scoped pushes, or confirm with the user."
 fi
 
 # --- git clone (prevent cloning without approval) ---
@@ -84,6 +88,32 @@ fi
 # --- GitHub repo visibility change (destroys stars and watchers) ---
 if echo "$CMD" | grep -qE '\bgh\s+api\s+.*repos/.*visibility|gh\s+repo\s+edit\s+.*--visibility'; then
   deny "GitHub repo visibility change detected" "Toggling a repo private permanently destroys all stars and watchers. NEVER do this."
+fi
+
+# --- gh repo delete (irreversible) ---
+if echo "$CMD" | grep -qE '\bgh\s+repo\s+delete\b'; then
+  deny "gh repo delete detected" "Deleting a GitHub repo is irreversible and destroys all stars, forks, and history. Confirm with the user first."
+fi
+
+# --- dropdb (PostgreSQL/MySQL database removal) ---
+if echo "$CMD" | grep -qE '\bdropdb\b'; then
+  deny "dropdb detected" "Dropping a database is irreversible. Confirm with the user first."
+fi
+
+# --- bq rm (BigQuery dataset/table removal) ---
+if echo "$CMD" | grep -qE '\bbq\s+rm\b'; then
+  deny "bq rm detected" "BigQuery rm is irreversible. Confirm with the user first."
+fi
+
+# --- aws s3 rm --recursive ---
+if echo "$CMD" | grep -qE '\baws\s+s3\s+rm\b' && \
+   echo "$CMD" | grep -qE '(--recursive\b|\s-r\b)'; then
+  deny "aws s3 rm --recursive detected" "Recursive S3 deletion is irreversible. Confirm with the user first."
+fi
+
+# --- op item delete (1Password) ---
+if echo "$CMD" | grep -qE '\bop\s+item\s+(delete|remove)\b'; then
+  deny "op item delete detected" "Deleting a 1Password item is irreversible. Confirm with the user first."
 fi
 
 exit 0

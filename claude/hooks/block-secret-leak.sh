@@ -95,8 +95,20 @@ check_pattern 'github_pat_[A-Za-z0-9_]{22,}' 'GitHub personal access token'
 # Slack tokens
 check_pattern 'xox[bporca]-[A-Za-z0-9-]{10,}' 'Slack token'
 
-# OpenAI / Anthropic / generic sk- keys
+# Anthropic API key (more specific than generic sk- below)
+check_pattern 'sk-ant-[A-Za-z0-9_-]{40,}' 'Anthropic API key'
+
+# OpenAI / generic sk- keys (catches sk-..., excluded above for sk-ant-)
 check_pattern 'sk-[a-zA-Z0-9_-]{20,}' 'API secret key (sk-...)'
+
+# Stripe live/test keys (sk_live_, pk_live_, rk_live_, sk_test_, pk_test_, rk_test_)
+check_pattern '(sk|pk|rk)_(live|test)_[A-Za-z0-9]{20,}' 'Stripe API key'
+
+# Linear API key
+check_pattern 'lin_api_[A-Za-z0-9]{40,}' 'Linear API key'
+
+# Airtable personal access token (modern format: patXXXXXXXXXXXXXX.<64 hex>)
+check_pattern 'pat[A-Za-z0-9]{14}\.[a-f0-9]{64}' 'Airtable personal access token'
 
 # Private keys
 check_pattern '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----' 'private key'

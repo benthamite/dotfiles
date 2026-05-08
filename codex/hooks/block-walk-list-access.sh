@@ -9,6 +9,13 @@
 # Matchers: Read, Grep, Glob, Edit, Write, NotebookEdit, Bash, apply_patch
 #
 # Bash commands are allowed only if they invoke walk.py explicitly.
+#
+# NOTE: the Read|Grep|Glob|NotebookEdit branches below are never reached on
+# the Codex side because Codex does not dispatch those tool names — they
+# remain in the case statement to keep the script structurally identical to
+# its Claude port (status: ported in ai-config-sync.json).  On Codex the
+# only reachable matchers are Bash and apply_patch (and Edit|Write through
+# the apply_patch|Edit|Write block in .codex/hooks.json).
 
 set -euo pipefail
 

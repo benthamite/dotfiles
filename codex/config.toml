@@ -7,7 +7,7 @@ suppress_unstable_features_warning = true
 approvals_reviewer = "auto_review"
 
 [features]
-codex_hooks = true
+hooks = true
 terminal_resize_reflow = true
 goals = true
 
@@ -116,16 +116,100 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/My Drive/Epoch/projects/automation-watchdog"]
 trust_level = "trusted"
 
+[projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/spofy"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/gdocs"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/ai-access-management"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/chatgpt-analyzer"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/editorial-checker"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/automation-tools-rollout"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/dotfiles/claude/skills"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/url-health"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/telega"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/media-mentions-automation"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/meetings/benjamin-ou"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/meetings/isabel"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Finance"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/meetings/luke"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/candidate-screening"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/benchmark-updates-automation"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/bench-scraper-automation"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/ai-workflow-advisor-bot"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/call-summarization-automation"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/citation-tracking-automation"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/internal-linking-automation"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/link-archiving-automation"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/release-tagging-automation"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/slack-channel-description-automation"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/bench-scraper"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/meetings/maria"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/automations-dashboard"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/time-tracker"]
+trust_level = "trusted"
+
 [tui]
 theme = "light"
 
 [marketplaces.openai-bundled]
-last_updated = "2026-05-05T16:30:50Z"
+last_updated = "2026-05-07T21:49:04Z"
 source_type = "local"
 source = "/Users/pablostafforini/.codex/.tmp/bundled-marketplaces/openai-bundled"
 
 [marketplaces.openai-primary-runtime]
-last_updated = "2026-05-04T18:44:30Z"
+last_updated = "2026-05-07T22:49:26Z"
 source_type = "local"
 source = "/Users/pablostafforini/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
 
@@ -140,3 +224,118 @@ enabled = true
 
 [plugins."browser-use@openai-bundled"]
 enabled = true
+
+[hooks.state]
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:permission_request:0:0"]
+trusted_hash = "sha256:0471abb006ca3333294467313667ec6a250416793a7d1e1c21a3aa662d7cfb8b"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:post_tool_use:0:0"]
+trusted_hash = "sha256:69fd2e4f29e4e6b098d05350785d4b5039facb21a05de1c3b85fcb15d1080172"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:post_tool_use:0:1"]
+trusted_hash = "sha256:03dbf36a2882210ff72e464ed6fea30ec405e60cf5540063fe0fa9167df58ce6"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:post_tool_use:1:0"]
+trusted_hash = "sha256:61d5235457848ab918a1734283c738194dbf7edbe8e7df67722c5086a440c18e"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:post_tool_use:1:1"]
+trusted_hash = "sha256:3ec927fb6719a597f51fe9a9e7256cbd8c8cb5b5f8f611e8e85456ee02ed9b4c"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:post_tool_use:1:2"]
+trusted_hash = "sha256:1f9e79e03faff5f94d81830fe7728c2430dde1fb5fc394019147f766adde0d8a"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:post_tool_use:1:3"]
+trusted_hash = "sha256:5a4864048b528eb5be497e1c0ac7ea5b3e78076adab6edd1825080e4e00050dc"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:post_tool_use:2:0"]
+trusted_hash = "sha256:b28e5622fd7653122b3f573798cc61f27c6742a99f2b02b993cd5773bbc29615"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:post_tool_use:2:1"]
+trusted_hash = "sha256:2a9506641d497171d869e06890cfe2b35eb6ba1a373b27e612cde8e8f4fa26ed"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:post_tool_use:2:2"]
+trusted_hash = "sha256:6dfdbb568d079521daf74a359a2dc998a789c61f1ba8f0330ee5d942656a304e"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:post_tool_use:2:3"]
+trusted_hash = "sha256:5af81b56cf7fcfed5b18211c0f18deae44d8ccbd8f30be1e56e4e4e6f2991af7"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:post_tool_use:3:0"]
+trusted_hash = "sha256:6c99a7779b0438ffb6b856111fca6da5bdca5371a5d5d8b4e8eb4bb77f11e1d8"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:0"]
+trusted_hash = "sha256:79c2a2b27422cdf7fc33e09ff225f38116bb42498dee85102923ba984d09cfc8"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:1"]
+trusted_hash = "sha256:a0da68685df2345d90193a1cfc03ef7d1a3ad86f8d7ad42d006108e69f973db2"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:2"]
+trusted_hash = "sha256:bb250bf41056db92bbb78981d7b8fd16fe2e0b0cc415c6dd6f68f8b6b3f78edf"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:3"]
+trusted_hash = "sha256:71cf254c1af844c74f72eb477e24bc7cb9506c76de1b5357e64ad6866f896309"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:4"]
+trusted_hash = "sha256:3cca4ac78df45330fd6205b616f96ee75194007c6059bf2883471db85f98e19b"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:5"]
+trusted_hash = "sha256:344ffcb2695b4eac01532e28bfe0f3b6729efd08cf3b532b7dbff5555a71ea93"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:6"]
+trusted_hash = "sha256:570902351de347cde1d76e2b8e939bd9524726c8dd782183933bc3f1ee071ec5"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:7"]
+enabled = true
+trusted_hash = "sha256:d3fb29cb854ef57f24e934d0497496fe392b29e58e544917c19ecf0335fa7663"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:8"]
+trusted_hash = "sha256:e23c8ad130f99db0bbc99abd88be9cfb51753e564b1c79c01f7b0a0bb01b0591"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:9"]
+trusted_hash = "sha256:9d8aab8357efce1be13308a54ea67a6615f9fa096e1020b0b72df8c15dcb2f26"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:1:0"]
+trusted_hash = "sha256:0e70fed86f8fc8a276b1eff275732505ed7e61d0d1aeb6487ecea593e3cccd8f"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:2:0"]
+trusted_hash = "sha256:e46365bccff038d84591c1f4969bee6dd40b162a80925e2555e4b5fd664d07db"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:2:1"]
+trusted_hash = "sha256:25c0c6176383eb63f9808a9564400b0393859dc60512aa7540922c88a6fc575d"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:2:2"]
+trusted_hash = "sha256:b18c95a52a81fd32a6b834e1cf3abc211c09d37129c6564f289a15ac6fa55350"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:2:3"]
+trusted_hash = "sha256:f0b4d5ef221b99d247f392116ffc1dcc5480fc10e3c713426222f9e2d9028c43"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:3:0"]
+trusted_hash = "sha256:ae7e3e60546aa0358434d6544f072c837290f6ff2fce7dd826135b3d20681f17"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:3:1"]
+trusted_hash = "sha256:e31be271abc48e7829f05b22ff965f6c78ff6ab269d3bb20ae6fe72f03cced9d"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:3:2"]
+trusted_hash = "sha256:de35cb0fea4fd6a57f61547f8bbe5e339eae9ade5d445506691b4d8eefcbbabc"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:3:3"]
+trusted_hash = "sha256:fa46ed51f018d22d13a60f23fe7d22510465d66b9a0e8d97ed0bf9086f538447"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:4:0"]
+enabled = true
+trusted_hash = "sha256:4d81ee8aab72e102919629d8cae2c5371372a8eef2d042d42d5a84b2a7cd8247"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:session_start:0:0"]
+trusted_hash = "sha256:3a5b296132348f85b142433929a04f1f295634b5ac5def4a6f21f700fc5c2710"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:session_start:1:0"]
+trusted_hash = "sha256:a02a78132ccf90aedca6965c499ba4c548cfdd458ebd13b3fc8de0ff5472e024"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:stop:0:0"]
+trusted_hash = "sha256:807a3ef64125b7f0cc2742a9a2f970c12b9a83d6fa2f9aa71730f5b85749f225"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:stop:1:0"]
+trusted_hash = "sha256:a63a4068a3cb56d0ca7d13c09ed2850f05163dfa08afaf282fa1567e0745c0ee"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:user_prompt_submit:0:0"]
+trusted_hash = "sha256:a26be4a779a3df7d64e93948953c7b288c444444e78df682b6048b0a1a2d05ca"

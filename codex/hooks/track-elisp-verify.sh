@@ -31,8 +31,6 @@ MARKER="/tmp/claude-elisp-verify-needed-${SESSION_ID}"
 # On successful git commit with .el files: set marker
 if echo "$COMMAND" | grep -qE '\bgit\s+commit\b'; then
   if [ "$EXIT_CODE" = "0" ]; then
-    # shellcheck source=lib-staged-files.sh
-    source "$(dirname "$0")/lib-staged-files.sh"
     # After a successful commit, the staged files are now committed.
     # Check the just-committed files via git diff-tree.
     COMMITTED=$(git diff-tree --no-commit-id --name-only -r HEAD 2>/dev/null || true)

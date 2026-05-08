@@ -547,7 +547,7 @@
       "claude": "claude/hooks/remind-claude-readme-update.sh",
       "codex": "codex/hooks/remind-claude-readme-update.sh",
       "status": "ported",
-      "note": "ported for Codex apply_patch/Edit/Write path lists; Codex PostToolUse output must include hookEventName and use additionalContext rather than Claude's plain-text reminder"
+      "note": "ported for Codex apply_patch/Edit/Write path lists; Codex PostToolUse output must include hookEventName and use additionalContext rather than Claude's plain-text reminder. Codex side was re-indented and the in-dotfiles-repo short-circuit was lifted out of the per-path loop (cosmetic; Claude side was already correctly structured because it processes a single file_path)."
     },
     {
       "name": "require-ai-config-sync.sh",
@@ -639,7 +639,7 @@
       "path": ".codex/hooks.json",
       "tracked": true,
       "live_path": "~/.codex/hooks.json",
-      "note": "Live global Codex hook file is a symlink to the tracked repo file. Codex-only codex-hook-wrapper entries point at the Emacs package source tree because elpaca/builds contains compiled Elisp but not the wrapper script, and include explicit emacsclient/socket arguments so dispatch targets the active Emacs server. The apply_patch and Edit|Write matchers are collapsed into a single apply_patch|Edit|Write block per event to keep the trust-review list compact under the Codex 0.129 hook trust gate; SessionStart and Stop dispatch through codex-hook-wrapper alone (the redundant notify-emacs-hook.sh entries were removed)."
+      "note": "Live global Codex hook file is a symlink to the tracked repo file. Codex-only codex-hook-wrapper entries point at the Emacs package source tree because elpaca/builds contains compiled Elisp but not the wrapper script, and include explicit emacsclient/socket arguments so dispatch targets the active Emacs server. The apply_patch and Edit|Write matchers are collapsed into a single apply_patch|Edit|Write block per event to keep the trust-review list compact under the Codex 0.129 hook trust gate; SessionStart and Stop dispatch through codex-hook-wrapper alone (the redundant notify-emacs-hook.sh entries were removed). Matcher fields use \"*\" everywhere (including UserPromptSubmit) for consistency."
     },
     {
       "tool": "Codex",

@@ -699,7 +699,7 @@ Processes items from a list file strictly one at a time (sequential) or N-at-a-t
 :ID:       4D862953-7E8A-4154-BC16-919ED6B092A5
 :END:
 
-Twenty-eight hook and utility scripts handle workflow invariants, security, Emacs integration, and Claude/Codex configuration sync. Most are defined in the global =~/.claude/settings.json= and use early-exit guards to skip inapplicable projects. Repository-specific commit guards also exist on the Codex side in =.codex/hooks.json=. The emacsclient hooks (=notify-emacs-session-end.sh=, =notify-emacs-notification.sh=, =load-elisp-after-edit.sh=) escape interpolated values before embedding them in Elisp strings to prevent injection.
+Twenty-eight hook and utility scripts handle workflow invariants, security, Emacs integration, and Claude/Codex configuration sync. Most are defined in the global =~/.claude/settings.json= and use early-exit guards to skip inapplicable projects. Repository-specific commit guards also exist on the Codex side in =.codex/hooks.json=. =notify-emacs-session-end.sh= and =notify-emacs-notification.sh= escape interpolated buffer-name values before embedding them in Elisp strings; =load-elisp-after-edit.sh= base64-encodes the changed file path and decodes it via =base64-decode-string= on the Elisp side so command-substitution metacharacters never reach the shell during interpolation. =lib-repo-root.sh= extracts a leading =cd <path>= from the bash command via a bash-regex match (bailing out on any =$(...)= or backtick) and calls =git -C <path>= rather than re-shelling the command.
 
 Claude and Codex hooks are no longer shared through adapters.  Claude hooks live
 in =claude/hooks/=; Codex ports live in =codex/hooks/=.  The mapping and known

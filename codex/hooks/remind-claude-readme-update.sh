@@ -24,50 +24,38 @@ case "$TOOL" in
   *) exit 0 ;;
 esac
 
-while IFS= read -r FILE_PATH; do
-  if [ -z "$FILE_PATH" ]; then
-    continue
-  fi
-
-# Resolve symlinks to get the real path
-REAL_PATH=$(python3 -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$FILE_PATH" 2>/dev/null || true)
-
-if [ -z "$REAL_PATH" ]; then
-  continue
-fi
-
 DOTFILES_CLAUDE="$HOME/My Drive/dotfiles/claude"
 DOTFILES_CLAUDE_REAL=$(python3 -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$DOTFILES_CLAUDE" 2>/dev/null || true)
-
-# Check if the file is under dotfiles/claude/
-case "$REAL_PATH" in
-  "$DOTFILES_CLAUDE_REAL"/*)
-    ;;
-  *)
-    continue
-    ;;
-esac
-
-# Skip if the file IS README.org (the agent is already updating it)
-case "$REAL_PATH" in
-  */README.org)
-    continue
-    ;;
-esac
-
-# Skip if we're already in the dotfiles repo (the commit hook will handle it)
-REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || true)
 DOTFILES_ROOT="$HOME/My Drive/dotfiles"
 DOTFILES_ROOT_REAL=$(python3 -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$DOTFILES_ROOT" 2>/dev/null || true)
 
+# Skip if we're already in the dotfiles repo (the commit hook will handle it).
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || true)
 if [ "$REPO_ROOT" = "$DOTFILES_ROOT" ] || [ "$REPO_ROOT" = "$DOTFILES_ROOT_REAL" ]; then
   exit 0
 fi
 
-# Compute relative path for the message
-REL_PATH="${REAL_PATH#$DOTFILES_CLAUDE_REAL/}"
+while IFS= read -r FILE_PATH; do
+  [ -n "$FILE_PATH" ] || continue
 
-MESSAGE=$(cat <<EOF
+  # Resolve symlinks to get the real path
+  REAL_PATH=$(python3 -c "import os,sys; print(os.path.realpath(sys.argv[1]))" "$FILE_PATH" 2>/dev/null || true)
+  [ -n "$REAL_PATH" ] || continue
+
+  # Check if the file is under dotfiles/claude/
+  case "$REAL_PATH" in
+    "$DOTFILES_CLAUDE_REAL"/*) ;;
+    *) continue ;;
+  esac
+
+  # Skip if the file IS README.org (the agent is already updating it)
+  case "$REAL_PATH" in
+    */README.org) continue ;;
+  esac
+
+  REL_PATH="${REAL_PATH#$DOTFILES_CLAUDE_REAL/}"
+
+  MESSAGE=$(cat <<EOF
 REMINDER: You just modified claude/$REL_PATH (in the dotfiles repo, via symlink).
 You MUST:
   1. Update claude/README.org to reflect this change.
@@ -75,6 +63,6 @@ You MUST:
 The require-readme-update.sh hook will block the commit if README.org is not staged.
 EOF
 )
-jq -n --arg message "$MESSAGE" '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":$message}}'
+  jq -n --arg message "$MESSAGE" '{"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":$message}}'
   exit 0
 done < <(codex_changed_paths "$INPUT")

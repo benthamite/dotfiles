@@ -222,6 +222,30 @@
           }
         ]
       }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper PreCompact --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper PostCompact --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
+            "timeout": 30
+          }
+        ]
+      }
     ]
   }
 }

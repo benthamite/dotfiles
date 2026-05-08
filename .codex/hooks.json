@@ -102,36 +102,7 @@
         ]
       },
       {
-        "matcher": "apply_patch",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-secret-leak.sh",
-            "timeout": 5,
-            "statusMessage": "Checking for secret exposure"
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-elpaca-dotfiles-edit.sh",
-            "timeout": 5,
-            "statusMessage": "Checking dotfiles source path"
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-texi-edit.sh",
-            "timeout": 5,
-            "statusMessage": "Checking generated Texinfo edit guard"
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-walk-list-access.sh",
-            "timeout": 5,
-            "statusMessage": "Checking walk-list guard"
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write",
+        "matcher": "apply_patch|Edit|Write",
         "hooks": [
           {
             "type": "command",
@@ -189,36 +160,7 @@
         ]
       },
       {
-        "matcher": "apply_patch",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/load-elisp-after-edit.sh",
-            "timeout": 30,
-            "statusMessage": "Reloading edited Elisp"
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/remind-claude-readme-update.sh",
-            "timeout": 5,
-            "statusMessage": "Checking Claude README reminder"
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/regenerate-manual-after-edit.sh",
-            "timeout": 60,
-            "statusMessage": "Regenerating generated manuals"
-          },
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/remind-ai-config-sync.sh",
-            "timeout": 5,
-            "statusMessage": "Checking Claude/Codex sync reminder"
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write",
+        "matcher": "apply_patch|Edit|Write",
         "hooks": [
           {
             "type": "command",
@@ -259,16 +201,6 @@
     ],
     "SessionStart": [
       {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/notify-emacs-hook.sh SessionStart",
-            "timeout": 5
-          }
-        ]
-      },
-      {
         "matcher": "*",
         "hooks": [
           {
@@ -280,16 +212,6 @@
       }
     ],
     "Stop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/notify-emacs-hook.sh Stop",
-            "timeout": 5
-          }
-        ]
-      },
       {
         "matcher": "*",
         "hooks": [

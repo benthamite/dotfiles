@@ -1,7 +1,7 @@
 {
   "version": 1,
   "policy": {
-    "source_of_truth": "Claude files remain the human source where possible, but Codex has explicit ports where syntax or discovery differs.",
+    "relationship": "Claude and Codex artifacts are peer implementations of shared agent behavior. Neither side is the canonical source; each side may be edited first.",
     "maintenance": "When one side changes, the active agent must update the counterpart in the same session. Hooks remind immediately and block one-sided commits unless the changed artifact is synchronized or this manifest records an explicit artifact-specific status or exemption.",
     "no_silent_sync": true
   },
@@ -10,8 +10,8 @@
       "name": "global-instructions",
       "claude": "claude/CLAUDE.md",
       "codex": "codex/AGENTS.md",
-      "status": "ported",
-      "codex_transform": "Title rewritten for Codex; Claude @context include and relative context/tool paths converted to Codex-safe absolute references. The live ~/.codex/AGENTS.md symlink points at this tracked port."
+      "status": "paired",
+      "equivalence": "Equivalent after tool-specific instruction normalization; Claude @context syntax and Codex absolute context/tool paths are compared semantically. The live ~/.codex/AGENTS.md symlink points at the tracked Codex global instruction file."
     }
   ],
   "skills": [
@@ -19,50 +19,50 @@
       "name": "add-to-emacs-packages",
       "claude": "claude/skills/add-to-emacs-packages/SKILL.md",
       "codex": "codex/skills/add-to-emacs-packages/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "ai-journal",
       "claude": "claude/skills/ai-journal/SKILL.md",
       "codex": "codex/skills/ai-journal/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "audit-mac-app",
       "claude": "claude/skills/audit-mac-app/SKILL.md",
       "codex": "codex/skills/audit-mac-app/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "automate",
       "claude": "claude/skills/automate/SKILL.md",
       "codex": "codex/skills/automate/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "best-of-n",
       "claude": "claude/skills/best-of-n/SKILL.md",
       "codex": "codex/skills/best-of-n/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "build",
       "claude": "claude/skills/build/SKILL.md",
       "codex": "codex/skills/build/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "claude-config-audit",
       "claude": "claude/skills/claude-config-audit/SKILL.md",
       "codex": "codex/skills/claude-config-audit/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "codex-app-browser",
@@ -75,113 +75,113 @@
       "name": "code-audit",
       "claude": "claude/skills/code-audit/SKILL.md",
       "codex": "codex/skills/code-audit/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "convert-citations",
       "claude": "claude/skills/convert-citations/SKILL.md",
       "codex": "codex/skills/convert-citations/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "design-audit",
       "claude": "claude/skills/design-audit/SKILL.md",
       "codex": "codex/skills/design-audit/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "diagnose",
       "claude": "claude/skills/diagnose/SKILL.md",
       "codex": "codex/skills/diagnose/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "doc-elisp",
       "claude": "claude/skills/doc-elisp/SKILL.md",
       "codex": "codex/skills/doc-elisp/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "doc-extras",
       "claude": "claude/skills/doc-extras/SKILL.md",
       "codex": "codex/skills/doc-extras/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "dotfiles-context",
       "claude": "claude/skills/dotfiles-context/SKILL.md",
       "codex": "codex/skills/dotfiles-context/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "dx-audit",
       "claude": "claude/skills/dx-audit/SKILL.md",
       "codex": "codex/skills/dx-audit/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "elisp-conventions",
       "claude": "claude/skills/elisp-conventions/SKILL.md",
       "codex": "codex/skills/elisp-conventions/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "emacs-freeze",
       "claude": "claude/skills/emacs-freeze/SKILL.md",
       "codex": "codex/skills/emacs-freeze/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "finances",
       "claude": "claude/skills/finances/SKILL.md",
       "codex": "codex/skills/finances/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "fix-drive-errors",
       "claude": "claude/skills/fix-drive-errors/SKILL.md",
       "codex": "codex/skills/fix-drive-errors/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "find-skills",
       "claude": "claude/skills/find-skills/SKILL.md",
       "codex": "codex/skills/find-skills/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Moved from dotfiles project-local .claude/skills into the global skill trees; Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Moved from dotfiles project-local .claude/skills into the global skill trees; equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "gitguardian-triage",
       "claude": "claude/skills/gitguardian-triage/SKILL.md",
       "codex": "codex/skills/gitguardian-triage/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "gsc-indexing-triage",
       "claude": "claude/skills/gsc-indexing-triage/SKILL.md",
       "codex": "codex/skills/gsc-indexing-triage/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "google-sheets-comments",
       "claude": "claude/skills/google-sheets-comments/SKILL.md",
       "codex": "codex/skills/google-sheets-comments/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "handoff",
@@ -194,29 +194,29 @@
       "name": "install-mcp-server",
       "claude": "claude/skills/install-mcp-server/SKILL.md",
       "codex": "codex/skills/install-mcp-server/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "interpretability-audit",
       "claude": "claude/skills/interpretability-audit/SKILL.md",
       "codex": "codex/skills/interpretability-audit/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "lint-elisp",
       "claude": "claude/skills/lint-elisp/SKILL.md",
       "codex": "codex/skills/lint-elisp/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "migrate-profile",
       "claude": "claude/skills/migrate-profile/SKILL.md",
       "codex": "codex/skills/migrate-profile/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "move-session-log",
@@ -229,204 +229,204 @@
       "name": "nosync",
       "claude": "claude/skills/nosync/SKILL.md",
       "codex": "codex/skills/nosync/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "open-session-log",
       "claude": "claude/skills/open-session-log/SKILL.md",
       "codex": "codex/skills/open-session-log/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "optimize-claude-md",
       "claude": "claude/skills/optimize-claude-md/SKILL.md",
       "codex": "codex/skills/optimize-claude-md/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "org-note",
       "claude": "claude/skills/org-note/SKILL.md",
       "codex": "codex/skills/org-note/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "pr-audit",
       "claude": "claude/skills/pr-audit/SKILL.md",
       "codex": "codex/skills/pr-audit/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "proofread",
       "claude": "claude/skills/proofread/SKILL.md",
       "codex": "codex/skills/proofread/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "generate-readme",
       "claude": "claude/skills/generate-readme/SKILL.md",
       "codex": "codex/skills/generate-readme/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "record-decisions",
       "claude": "claude/skills/record-decisions/SKILL.md",
       "codex": "codex/skills/record-decisions/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "release",
       "claude": "claude/skills/release/SKILL.md",
       "codex": "codex/skills/release/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "release-dotfiles",
       "claude": "claude/skills/release-dotfiles/SKILL.md",
       "codex": "codex/skills/release-dotfiles/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "security-audit",
       "claude": "claude/skills/security-audit/SKILL.md",
       "codex": "codex/skills/security-audit/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "skill-creator",
       "claude": "claude/skills/skill-creator/SKILL.md",
       "codex": "codex/skills/skill-creator/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Moved from dotfiles project-local .claude/skills into the global skill trees; Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Moved from dotfiles project-local .claude/skills into the global skill trees; equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "skill-resolver",
       "claude": "claude/skills/skill-resolver/SKILL.md",
       "codex": "codex/skills/skill-resolver/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "skill-audit",
       "claude": "claude/skills/skill-audit/SKILL.md",
       "codex": "codex/skills/skill-audit/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "symptom-check",
       "claude": "claude/skills/symptom-check/SKILL.md",
       "codex": "codex/skills/symptom-check/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "systematic-debugging",
       "claude": "claude/skills/systematic-debugging/SKILL.md",
       "codex": "codex/skills/systematic-debugging/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Moved from dotfiles project-local .claude/skills into the global skill trees; Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Moved from dotfiles project-local .claude/skills into the global skill trees; equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "tangodb-closeout",
       "claude": "claude/skills/tangodb-closeout/SKILL.md",
       "codex": "codex/skills/tangodb-closeout/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "tangodb-continue",
       "claude": "claude/skills/tangodb-continue/SKILL.md",
       "codex": "codex/skills/tangodb-continue/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "test-suite",
       "claude": "claude/skills/test-suite/SKILL.md",
       "codex": "codex/skills/test-suite/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "transcribe-note",
       "claude": "claude/skills/transcribe-note/SKILL.md",
       "codex": "codex/skills/transcribe-note/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "triage-issues",
       "claude": "claude/skills/triage-issues/SKILL.md",
       "codex": "codex/skills/triage-issues/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "try-hartree-skills",
       "claude": "claude/skills/try-hartree-skills/SKILL.md",
       "codex": "codex/skills/try-hartree-skills/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "twitter",
       "claude": "claude/skills/twitter/SKILL.md",
       "codex": "codex/skills/twitter/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "twitter-digest",
       "claude": "claude/skills/twitter-digest/SKILL.md",
       "codex": "codex/skills/twitter-digest/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "twitter-discover",
       "claude": "claude/skills/twitter-discover/SKILL.md",
       "codex": "codex/skills/twitter-discover/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "twitter-vet",
       "claude": "claude/skills/twitter-vet/SKILL.md",
       "codex": "codex/skills/twitter-vet/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "update-log",
       "claude": "claude/skills/update-log/SKILL.md",
       "codex": "codex/skills/update-log/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "verify",
       "claude": "claude/skills/verify/SKILL.md",
       "codex": "codex/skills/verify/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "walk-list",
       "claude": "claude/skills/walk-list/SKILL.md",
       "codex": "codex/skills/walk-list/SKILL.md",
-      "status": "ported",
-      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     }
   ],
   "hooks": [
@@ -434,29 +434,29 @@
       "name": "block-destructive-command.sh",
       "claude": "claude/hooks/block-destructive-command.sh",
       "codex": "codex/hooks/block-destructive-command.sh",
-      "status": "ported",
-      "note": "ported; Claude ask decisions become deny-with-user-confirmation instructions; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
+      "status": "paired",
+      "note": "paired; Claude ask decisions become deny-with-user-confirmation instructions; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
     },
     {
       "name": "block-elpaca-dotfiles-edit.sh",
       "claude": "claude/hooks/block-elpaca-dotfiles-edit.sh",
       "codex": "codex/hooks/block-elpaca-dotfiles-edit.sh",
-      "status": "ported",
-      "note": "ported for apply_patch/Edit/Write path guards"
+      "status": "paired",
+      "note": "paired for apply_patch/Edit/Write path guards"
     },
     {
       "name": "block-elpaca-rebuild-uncommitted.sh",
       "claude": "claude/hooks/block-elpaca-rebuild-uncommitted.sh",
       "codex": "codex/hooks/block-elpaca-rebuild-uncommitted.sh",
-      "status": "ported",
-      "note": "ported for Bash emacsclient guard; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
+      "status": "paired",
+      "note": "paired for Bash emacsclient guard; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
     },
     {
       "name": "block-secret-leak.sh",
       "claude": "claude/hooks/block-secret-leak.sh",
       "codex": "codex/hooks/block-secret-leak.sh",
-      "status": "ported",
-      "note": "ported; Codex version scans Bash and apply_patch payloads; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
+      "status": "paired",
+      "note": "paired; Codex version scans Bash and apply_patch payloads; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
     },
     {
       "name": "block-sensitive-read.sh",
@@ -469,15 +469,15 @@
       "name": "block-texi-edit.sh",
       "claude": "claude/hooks/block-texi-edit.sh",
       "codex": "codex/hooks/block-texi-edit.sh",
-      "status": "ported",
-      "note": "ported for apply_patch/Edit/Write path guards"
+      "status": "paired",
+      "note": "paired for apply_patch/Edit/Write path guards"
     },
     {
       "name": "block-walk-list-access.sh",
       "claude": "claude/hooks/block-walk-list-access.sh",
       "codex": "codex/hooks/block-walk-list-access.sh",
-      "status": "ported",
-      "note": "ported; Codex version scans Bash and apply_patch paths; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh. The Read|Grep|Glob|NotebookEdit branches in the case statement are unreachable on the Codex side (Codex does not dispatch those tool names) but are kept for structural parity with the Claude port; documented in the script header."
+      "status": "paired",
+      "note": "paired; Codex version scans Bash and apply_patch paths; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh. The Read|Grep|Glob|NotebookEdit branches in the case statement are unreachable on the Codex side (Codex does not dispatch those tool names) but are kept for structural parity with the Claude counterpart; documented in the script header."
     },
     {
       "name": "check-chrome-profile-pair.sh",
@@ -504,8 +504,8 @@
       "name": "guard-external-actions.sh",
       "claude": "claude/hooks/guard-external-actions.sh",
       "codex": "codex/hooks/guard-external-actions.sh",
-      "status": "ported",
-      "note": "ported for MCP tool names"
+      "status": "paired",
+      "note": "paired for MCP tool names"
     },
     {
       "name": "lib-codex-hook-json.sh",
@@ -525,22 +525,22 @@
       "name": "lib-repo-root.sh",
       "claude": "claude/hooks/lib-repo-root.sh",
       "codex": "codex/hooks/lib-repo-root.sh",
-      "status": "ported-utility",
+      "status": "paired-utility",
       "note": "Shared repo-root helper copied for hooks that need command-context git roots; Codex usage comment references lib-codex-hook-json.sh."
     },
     {
       "name": "lib-staged-files.sh",
       "claude": "claude/hooks/lib-staged-files.sh",
       "codex": "codex/hooks/lib-staged-files.sh",
-      "status": "ported-utility",
+      "status": "paired-utility",
       "note": "Shared staged-file helper copied for commit gates; Codex usage comment references lib-codex-hook-json.sh."
     },
     {
       "name": "load-elisp-after-edit.sh",
       "claude": "claude/hooks/load-elisp-after-edit.sh",
       "codex": "codex/hooks/load-elisp-after-edit.sh",
-      "status": "ported",
-      "note": "ported for apply_patch/Edit/Write path lists; Codex PostToolUse output must include hookEventName and use additionalContext rather than Claude's message field"
+      "status": "paired",
+      "note": "paired for apply_patch/Edit/Write path lists; Codex PostToolUse output must include hookEventName and use additionalContext rather than Claude's message field"
     },
     {
       "name": "notify-emacs-notification.sh",
@@ -560,29 +560,29 @@
       "name": "regenerate-manual-after-edit.sh",
       "claude": "claude/hooks/regenerate-manual-after-edit.sh",
       "codex": "codex/hooks/regenerate-manual-after-edit.sh",
-      "status": "ported",
-      "note": "ported for apply_patch/Edit/Write path lists; Codex PostToolUse output must include hookEventName and use additionalContext rather than Claude's message field"
+      "status": "paired",
+      "note": "paired for apply_patch/Edit/Write path lists; Codex PostToolUse output must include hookEventName and use additionalContext rather than Claude's message field"
     },
     {
       "name": "remind-ai-config-sync.sh",
       "claude": "claude/hooks/remind-ai-config-sync.sh",
       "codex": "codex/hooks/remind-ai-config-sync.sh",
-      "status": "ported",
-      "note": "ported as paired Claude/Codex wrappers around bin/ai-config-sync"
+      "status": "paired",
+      "note": "paired as Claude/Codex wrappers around bin/ai-config-sync"
     },
     {
       "name": "remind-claude-readme-update.sh",
       "claude": "claude/hooks/remind-claude-readme-update.sh",
       "codex": "codex/hooks/remind-claude-readme-update.sh",
-      "status": "ported",
-      "note": "ported for Codex apply_patch/Edit/Write path lists; Codex PostToolUse output must include hookEventName and use additionalContext rather than Claude's plain-text reminder. Codex side was re-indented and the in-dotfiles-repo short-circuit was lifted out of the per-path loop (cosmetic; Claude side was already correctly structured because it processes a single file_path)."
+      "status": "paired",
+      "note": "paired for Codex apply_patch/Edit/Write path lists; Codex PostToolUse output must include hookEventName and use additionalContext rather than Claude's plain-text reminder. Codex side was re-indented and the in-dotfiles-repo short-circuit was lifted out of the per-path loop (cosmetic; Claude side was already correctly structured because it processes a single file_path)."
     },
     {
       "name": "require-ai-config-sync.sh",
       "claude": "claude/hooks/require-ai-config-sync.sh",
       "codex": "codex/hooks/require-ai-config-sync.sh",
-      "status": "ported",
-      "note": "ported as paired Claude/Codex wrappers around bin/ai-config-sync"
+      "status": "paired",
+      "note": "paired as Claude/Codex wrappers around bin/ai-config-sync"
     },
     {
       "name": "require-codex-readme-update.sh",
@@ -595,8 +595,8 @@
       "name": "require-doc-update.sh",
       "claude": "claude/hooks/require-doc-update.sh",
       "codex": "codex/hooks/require-doc-update.sh",
-      "status": "ported",
-      "note": "ported for Bash git commit gate; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
+      "status": "paired",
+      "note": "paired for Bash git commit gate; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
     },
     {
       "name": "require-elisp-skill.sh",
@@ -609,22 +609,22 @@
       "name": "require-elisp-test-before-commit.sh",
       "claude": "claude/hooks/require-elisp-test-before-commit.sh",
       "codex": "codex/hooks/require-elisp-test-before-commit.sh",
-      "status": "ported",
-      "note": "ported for Bash git commit gate; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
+      "status": "paired",
+      "note": "paired for Bash git commit gate; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
     },
     {
       "name": "require-elisp-verify-after-commit.sh",
       "claude": "claude/hooks/require-elisp-verify-after-commit.sh",
       "codex": "codex/hooks/require-elisp-verify-after-commit.sh",
-      "status": "ported",
-      "note": "ported for Bash post-commit verification gate; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
+      "status": "paired",
+      "note": "paired for Bash post-commit verification gate; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
     },
     {
       "name": "require-readme-update.sh",
       "claude": "claude/hooks/require-readme-update.sh",
       "codex": "codex/hooks/require-readme-update.sh",
-      "status": "ported",
-      "note": "ported for Claude config README gate; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
+      "status": "paired",
+      "note": "paired for Claude config README gate; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
     },
     {
       "name": "track-elisp-skill.sh",
@@ -637,15 +637,15 @@
       "name": "track-elisp-test.sh",
       "claude": "claude/hooks/track-elisp-test.sh",
       "codex": "codex/hooks/track-elisp-test.sh",
-      "status": "ported",
-      "note": "ported for Bash post-tool tracking; Codex side normalizes string-wrapped tool_input/tool_response via lib-codex-hook-json.sh"
+      "status": "paired",
+      "note": "paired for Bash post-tool tracking; Codex side normalizes string-wrapped tool_input/tool_response via lib-codex-hook-json.sh"
     },
     {
       "name": "track-elisp-verify.sh",
       "claude": "claude/hooks/track-elisp-verify.sh",
       "codex": "codex/hooks/track-elisp-verify.sh",
-      "status": "ported",
-      "note": "ported; Codex version accepts exitCode and exit_code payload keys and normalizes string-wrapped tool_input/tool_response via lib-codex-hook-json.sh"
+      "status": "paired",
+      "note": "paired; Codex version accepts exitCode and exit_code payload keys and normalizes string-wrapped tool_input/tool_response via lib-codex-hook-json.sh"
     }
   ],
   "registrations": [
@@ -654,7 +654,7 @@
       "path": "codex/AGENTS.md",
       "tracked": true,
       "live_path": "~/.codex/AGENTS.md",
-      "note": "Tracked global Codex instruction port. The live ~/.codex/AGENTS.md symlink points here because Codex does not apply project_doc_fallback_filenames to $CODEX_HOME."
+      "note": "Tracked global Codex instruction counterpart. The live ~/.codex/AGENTS.md symlink points here because Codex does not apply project_doc_fallback_filenames to $CODEX_HOME."
     },
     {
       "tool": "Claude Code",

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit and guard the Claude Code <-> Codex configuration port."""
+"""Audit and guard paired Claude Code and Codex configuration."""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ ROOT = Path.home() / "My Drive" / "dotfiles"
 MANIFEST = "ai-config-sync.json"
 MANIFEST_PATH = ROOT / MANIFEST
 
-CODEX_DROPPED_FRONTMATTER = {
+TOOL_SPECIFIC_SKILL_FRONTMATTER = {
     "allowed-tools",
     "argument-choices",
     "argument-default",
@@ -30,6 +30,9 @@ CODEX_DROPPED_FRONTMATTER = {
     "tools",
     "user-invocable",
 }
+
+PEER_STATUS_PREFIXES = ("paired",)
+REGISTERED_PAIR_STATUSES = {"paired"}
 
 RUNTIME_PATTERNS = (
     "claude/skills/*/digests/*",
@@ -235,7 +238,7 @@ def sync_message_for_path(rel: str) -> str:
         hook = rel.removeprefix("claude/hooks/")
         if (ROOT / "codex" / "hooks" / hook).exists():
             return f"claude/hooks/{hook} changed; update codex/hooks/{hook} and the hook registration if needed."
-        return f"claude/hooks/{hook} changed; add/adjust its Codex port or record why it is unsupported in {MANIFEST}."
+        return f"claude/hooks/{hook} changed; add/adjust its Codex counterpart or record why it is unsupported in {MANIFEST}."
     if rel.startswith("codex/hooks/"):
         hook = rel.removeprefix("codex/hooks/")
         if (ROOT / "claude" / "hooks" / hook).exists():
@@ -579,14 +582,20 @@ def manifest_item_is_paired(item: dict | None) -> bool:
     if not item:
         return False
     status = str(item.get("status") or "")
-    return bool(item.get("claude") and item.get("codex") and status.startswith("ported"))
+    return bool(item.get("claude") and item.get("codex") and status.startswith(PEER_STATUS_PREFIXES))
+
+
+def manifest_item_is_registered_pair(item: dict | None) -> bool:
+    if not item:
+        return False
+    return bool(item.get("claude") and item.get("codex") and item.get("status") in REGISTERED_PAIR_STATUSES)
 
 
 def manifest_item_is_explicitly_unpaired(item: dict | None) -> bool:
     if not item:
         return False
     status = str(item.get("status") or "")
-    return bool(status) and not status.startswith("ported")
+    return bool(status) and not status.startswith(PEER_STATUS_PREFIXES)
 
 
 def manifest_registration_changed(base: dict, candidate: dict, path: str) -> bool:
@@ -624,15 +633,15 @@ def skill_sync_problems(skill: str) -> list[str]:
     if problems:
         return problems
 
-    if frontmatter_normalized_skill(claude_skill, CODEX_DROPPED_FRONTMATTER) != codex_skill.read_text():
-        problems.append(f"Skill content drift after Codex frontmatter transform: {skill}")
+    if normalized_skill_text(claude_skill) != normalized_skill_text(codex_skill):
+        problems.append(f"Skill content drift after tool-specific frontmatter normalization: {skill}")
 
     claude_aux = skill_aux_files(claude_dir)
     codex_aux = skill_aux_files(codex_dir)
     for rel in sorted(set(claude_aux) - set(codex_aux)):
-        problems.append(f"Missing Codex auxiliary skill file: {skill}/{rel}")
+        problems.append(f"Auxiliary skill file only in Claude tree: {skill}/{rel}")
     for rel in sorted(set(codex_aux) - set(claude_aux)):
-        problems.append(f"Extra Codex auxiliary skill file: {skill}/{rel}")
+        problems.append(f"Auxiliary skill file only in Codex tree: {skill}/{rel}")
     for rel in sorted(set(claude_aux) & set(codex_aux)):
         if not filecmp.cmp(claude_aux[rel], codex_aux[rel], shallow=False):
             problems.append(f"Auxiliary skill file drift: {skill}/{rel}")
@@ -640,25 +649,21 @@ def skill_sync_problems(skill: str) -> list[str]:
     return problems
 
 
-def codex_global_instruction_port() -> str:
-    text = (ROOT / GLOBAL_INSTRUCTION_CLAUDE).read_text()
+def normalized_global_instruction_text(path: Path) -> str:
+    text = path.read_text()
     root_text = str(ROOT)
-    replacements = {
-        "# Global Claude Code conventions": "# Global Codex conventions",
-        "- @context/secrets.md": (
-            f"- **Secrets:** Read `{root_text}/claude/context/secrets.md` before handling secrets. "
-            "In particular, never echo or print secrets from `pass`, `.zshenv-secrets`, or MCP credential resolution; "
-            "use full `pass` paths and `pass find`, not `pass ls` grep."
-        ),
-        "`context/mcp-servers.md`": f"`{root_text}/claude/context/mcp-servers.md`",
-        "`context/google-services.md`": f"`{root_text}/claude/context/google-services.md`",
-        "`claude/skills/twitter/lib/twitterapi.sh`": f"`{root_text}/claude/skills/twitter/lib/twitterapi.sh`",
-        "`claude/bin/gmail.py`": f"`{root_text}/claude/bin/gmail.py`",
-        "`claude/bin/sheets.py`": f"`{root_text}/claude/bin/sheets.py`",
-        "`claude/bin/slack.py`": f"`{root_text}/claude/bin/slack.py`",
-    }
-    for old, new in replacements.items():
-        text = text.replace(old, new)
+    text = text.replace("# Global Claude Code conventions", "# Global agent conventions")
+    text = text.replace("# Global Codex conventions", "# Global agent conventions")
+    text = text.replace(f"{root_text}/", "")
+    text = text.replace("`claude/context/mcp-servers.md`", "`context/mcp-servers.md`")
+    text = text.replace("`claude/context/google-services.md`", "`context/google-services.md`")
+    text = text.replace("`claude/context/secrets.md`", "`context/secrets.md`")
+    codex_secrets_rule = (
+        "- **Secrets:** Read `context/secrets.md` before handling secrets. "
+        "In particular, never echo or print secrets from `pass`, `.zshenv-secrets`, or MCP credential resolution; "
+        "use full `pass` paths and `pass find`, not `pass ls` grep."
+    )
+    text = text.replace(codex_secrets_rule, "- @context/secrets.md")
     return text
 
 
@@ -672,12 +677,11 @@ def global_instruction_sync_problems() -> list[str]:
     if problems:
         return problems
 
-    expected = codex_global_instruction_port()
-    actual = codex_path.read_text()
-    if actual != expected:
-        problems.append("Global Codex instruction port drift: codex/AGENTS.md no longer matches the Claude-to-Codex port transform.")
+    if normalized_global_instruction_text(ROOT / GLOBAL_INSTRUCTION_CLAUDE) != normalized_global_instruction_text(codex_path):
+        problems.append("Global instruction semantic drift after tool-specific normalization.")
+    actual_codex = codex_path.read_text()
     for forbidden in ("@context/", "`context/"):
-        if forbidden in actual:
+        if forbidden in actual_codex:
             problems.append(f"Codex global instructions contain unresolved relative context reference: {forbidden}")
     return problems
 
@@ -729,13 +733,13 @@ def guard_commit() -> None:
             if path_has_change(counterpart, changed_paths):
                 add_nested_problems(
                     problems,
-                    f"{GLOBAL_INSTRUCTION_CLAUDE} and {GLOBAL_INSTRUCTION_CODEX} are both changed, but the Codex port still drifts:",
+                    f"{GLOBAL_INSTRUCTION_CLAUDE} and {GLOBAL_INSTRUCTION_CODEX} are both changed, but the paired instructions still drift:",
                     drift,
                 )
             else:
                 add_nested_problems(
                     problems,
-                    f"{path} changed without a synchronized {counterpart} port or an instruction-specific {MANIFEST} exemption:",
+                    f"{path} changed without synchronized counterpart {counterpart} or an instruction-specific {MANIFEST} exemption:",
                     drift,
                 )
         elif path.startswith("claude/skills/"):
@@ -755,13 +759,13 @@ def guard_commit() -> None:
             if has_changed_prefix(counterpart, paths, changed):
                 add_nested_problems(
                     problems,
-                    f"claude/skills/{skill} and {counterpart} are both changed, but the Codex port still drifts:",
+                    f"claude/skills/{skill} and {counterpart} are both changed, but the paired skill still drifts:",
                     drift,
                 )
             else:
                 add_nested_problems(
                     problems,
-                    f"claude/skills/{skill} changed without a synchronized {counterpart} port or a skill-specific {MANIFEST} exemption:",
+                    f"claude/skills/{skill} changed without synchronized counterpart {counterpart} or a skill-specific {MANIFEST} exemption:",
                     drift,
                 )
         elif path.startswith("codex/skills/"):
@@ -781,13 +785,13 @@ def guard_commit() -> None:
             if has_changed_prefix(counterpart, paths, changed):
                 add_nested_problems(
                     problems,
-                    f"codex/skills/{skill} and {counterpart} are both changed, but the skill port still drifts:",
+                    f"codex/skills/{skill} and {counterpart} are both changed, but the paired skill still drifts:",
                     drift,
                 )
             else:
                 add_nested_problems(
                     problems,
-                    f"codex/skills/{skill} changed without a synchronized {counterpart} port or a skill-specific {MANIFEST} exemption:",
+                    f"codex/skills/{skill} changed without synchronized counterpart {counterpart} or a skill-specific {MANIFEST} exemption:",
                     drift,
                 )
         elif path.startswith("claude/hooks/"):
@@ -901,7 +905,7 @@ def audit_topology(problems: list[str]) -> None:
         )
 
 
-def frontmatter_normalized_skill(path: Path, drop_keys: set[str]) -> str:
+def normalized_skill_text(path: Path) -> str:
     text = path.read_text()
     if not text.startswith("---\n"):
         return text
@@ -913,7 +917,7 @@ def frontmatter_normalized_skill(path: Path, drop_keys: set[str]) -> str:
     kept = []
     for line in frontmatter:
         key = line.split(":", 1)[0].strip() if ":" in line else ""
-        if key not in drop_keys:
+        if key not in TOOL_SPECIFIC_SKILL_FRONTMATTER:
             kept.append(line)
     return "---\n" + "\n".join(kept) + "\n---\n" + body
 
@@ -975,11 +979,11 @@ def audit_instructions(problems: list[str], manifest: dict) -> None:
         if item.get("codex") != GLOBAL_INSTRUCTION_CODEX:
             add_problem(problems, f"Global instruction manifest has wrong Codex path: {item.get('codex')}")
         if not manifest_item_is_paired(item):
-            add_problem(problems, f"Global instruction manifest is not marked as a ported pair: {GLOBAL_INSTRUCTION_NAME}")
+            add_problem(problems, f"Global instruction manifest is not marked as a paired artifact: {GLOBAL_INSTRUCTION_NAME}")
 
     for item in instructions:
         if item.get("codex") == "AGENTS.md":
-            add_problem(problems, "Manifest still declares a repo-root AGENTS.md manual port.")
+            add_problem(problems, "Manifest still declares a repo-root AGENTS.md manual counterpart.")
     if (ROOT / "AGENTS.md").exists():
         add_problem(problems, "Repo-root AGENTS.md exists; project-level Codex instructions should come from CLAUDE.md fallback instead.")
 
@@ -997,7 +1001,7 @@ def audit_instructions(problems: list[str], manifest: dict) -> None:
     )
     drift = global_instruction_sync_problems()
     if drift:
-        add_nested_problems(problems, "Global instruction port is not synchronized:", drift)
+        add_nested_problems(problems, "Global instructions are not synchronized:", drift)
 
 
 def audit_skills(problems: list[str], manifest: dict) -> None:
@@ -1010,12 +1014,12 @@ def audit_skills(problems: list[str], manifest: dict) -> None:
         item = manifest_skill_items.get(skill)
         if manifest_item_is_explicitly_unpaired(item) and item.get("codex") is None:
             continue
-        add_problem(problems, f"Missing Codex skill port: {skill}")
+        add_problem(problems, f"Missing Codex skill counterpart: {skill}")
     for skill in sorted(codex_skills - claude_skills):
         item = manifest_skill_items.get(skill)
         if manifest_item_is_explicitly_unpaired(item) and item.get("claude") is None:
             continue
-        add_problem(problems, f"Extra tracked Codex skill without Claude counterpart: {skill}")
+        add_problem(problems, f"Codex skill lacks Claude counterpart or manifest exemption: {skill}")
     for skill in sorted(claude_skills - manifest_skills):
         add_problem(problems, f"Skill missing from manifest: {skill}")
     for skill in sorted(manifest_skills - claude_skills):
@@ -1044,15 +1048,15 @@ def audit_skills(problems: list[str], manifest: dict) -> None:
 
         claude_skill = ROOT / "claude" / "skills" / skill / "SKILL.md"
         codex_skill = ROOT / "codex" / "skills" / skill / "SKILL.md"
-        if frontmatter_normalized_skill(claude_skill, CODEX_DROPPED_FRONTMATTER) != codex_skill.read_text():
-            add_problem(problems, f"Skill content drift after Codex frontmatter transform: {skill}")
+        if normalized_skill_text(claude_skill) != normalized_skill_text(codex_skill):
+            add_problem(problems, f"Skill content drift after tool-specific frontmatter normalization: {skill}")
 
         claude_aux = skill_aux_files(claude_skill.parent)
         codex_aux = skill_aux_files(codex_skill.parent)
         for rel in sorted(set(claude_aux) - set(codex_aux)):
-            add_problem(problems, f"Missing Codex auxiliary skill file: {skill}/{rel}")
+            add_problem(problems, f"Auxiliary skill file only in Claude tree: {skill}/{rel}")
         for rel in sorted(set(codex_aux) - set(claude_aux)):
-            add_problem(problems, f"Extra Codex auxiliary skill file: {skill}/{rel}")
+            add_problem(problems, f"Auxiliary skill file only in Codex tree: {skill}/{rel}")
         for rel in sorted(set(claude_aux) & set(codex_aux)):
             if not filecmp.cmp(claude_aux[rel], codex_aux[rel], shallow=False):
                 add_problem(problems, f"Auxiliary skill file drift: {skill}/{rel}")
@@ -1076,8 +1080,8 @@ def audit_hooks(problems: list[str], manifest: dict) -> None:
             add_problem(problems, f"Manifest Claude hook path missing: {claude}")
         if codex and not (ROOT / codex).exists():
             add_problem(problems, f"Manifest Codex hook path missing: {codex}")
-        if status == "ported" and not (claude and codex):
-            add_problem(problems, f"Ported hook lacks both sides in manifest: {name}")
+        if manifest_item_is_paired(item) and not (claude and codex):
+            add_problem(problems, f"Paired hook lacks both sides in manifest: {name}")
 
     claude_settings = json.loads((Path.home() / ".claude" / "settings.json").read_text())
     codex_hooks_json = json.loads((ROOT / "codex" / "hooks.json").read_text())
@@ -1091,7 +1095,7 @@ def audit_hooks(problems: list[str], manifest: dict) -> None:
                 add_problem(problems, f"{label} hook command executable is missing: {command}")
 
     for name, item in sorted(manifest_hooks.items()):
-        if item.get("status") != "ported":
+        if not manifest_item_is_registered_pair(item):
             continue
         claude_path = ROOT / item["claude"]
         codex_path = ROOT / item["codex"]

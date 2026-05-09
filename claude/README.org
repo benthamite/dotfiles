@@ -583,6 +583,19 @@ Adapted from [[https://pjh.is/][Peter Hartree]]'s [[https://github.com/HartreeWo
 :ID:       6E879560-81C4-4842-90F2-AC14D8E0A1CC
 :END:
 
+**** google-sheets-comments
+:PROPERTIES:
+:ID:       EFE90D9A-B6DB-47BA-BCED-58415B71F4EA
+:END:
+
+Handles Google Sheets comment review and replies using Drive comments as the
+source of truth. Prevents agents from treating Gmail notification emails as
+canonical comment state or from assuming email replies posted to the Sheet.
+The workflow lists comments with =gdoc comments --account <account> --json
+--all=, processes one Drive comment/reply at a time, quotes the exact comment,
+waits for explicit approval before any externally visible reply, posts only via
+=gdoc reply=, and verifies with =gdoc comment-info= before moving on.
+
 **** twitter
 :PROPERTIES:
 :ID:       F2720AF8-171F-4DF0-BA03-B16E2F923C2E

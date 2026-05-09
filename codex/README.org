@@ -17,13 +17,13 @@ require them.
 codex/
 ├── AGENTS.md              <- tracked global Codex instruction port
 ├── config.toml            <- live ~/.codex/config.toml symlink target
+├── hooks.json             <- live ~/.codex/hooks.json symlink target
 ├── bin/install-skills.sh  <- links ~/.codex/skills to tracked skills
 ├── hooks/                 <- Codex hook script ports
 ├── README.org
 ├── rules/default.rules
 └── skills/                <- Codex ports of Claude skills
 
-.codex/hooks.json          <- live ~/.codex/hooks.json symlink target
 ai-config-sync.json        <- Claude/Codex port manifest
 bin/ai-config-sync         <- audit, reminder, and commit-guard checker
 #+end_example
@@ -141,7 +141,7 @@ expand skill root aliases such as =r0= / =r1=.
 
 * Hooks
 
-=.codex/hooks.json= is tracked here and live globally through the symlink at
+=codex/hooks.json= is tracked here and live globally through the symlink at
 =~/.codex/hooks.json=.  It registers Codex-side scripts from =codex/hooks/=
 instead of calling Claude hook scripts directly.
 
@@ -222,7 +222,7 @@ the audit scope.
 * Global Activation
 
 =~/.codex/config.toml= points to =codex/config.toml=, and
-=~/.codex/hooks.json= points to =.codex/hooks.json=.  Updating the tracked files
+=~/.codex/hooks.json= points to =codex/hooks.json=.  Updating the tracked files
 therefore updates the live global Codex configuration.
 
 =codex/config.toml= sets the default model and reasoning effort, uses

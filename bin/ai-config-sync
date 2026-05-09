@@ -41,7 +41,7 @@ RUNTIME_PATTERNS = (
 )
 
 SYNC_CONFIG_PATHS = {
-    ".codex/hooks.json",
+    "codex/hooks.json",
     "codex/config.toml",
     "codex/rules/default.rules",
 }
@@ -242,9 +242,9 @@ def sync_message_for_path(rel: str) -> str:
             return f"codex/hooks/{hook} changed; update claude/hooks/{hook} and ~/.claude/settings.json if registration changed."
         return f"codex/hooks/{hook} changed; add/adjust its Claude counterpart or record why it is Codex-only in {MANIFEST}."
     if rel in {f"{home}/.claude/settings.json", f"{home}/.claude/settings.local.json"}:
-        return f"{rel} changed; check .codex/hooks.json, codex/config.toml, codex/rules/default.rules, and {MANIFEST} for matching policy changes."
-    if rel == ".codex/hooks.json":
-        return f".codex/hooks.json changed; update ~/.claude/settings.json and {MANIFEST} if the global hook policy changed."
+        return f"{rel} changed; check codex/hooks.json, codex/config.toml, codex/rules/default.rules, and {MANIFEST} for matching policy changes."
+    if rel == "codex/hooks.json":
+        return f"codex/hooks.json changed; update ~/.claude/settings.json and {MANIFEST} if the global hook policy changed."
     if rel == "codex/config.toml":
         return f"codex/config.toml changed; update {MANIFEST} if instruction, skill, or hook registration changed."
     if rel == "codex/rules/default.rules":
@@ -1033,7 +1033,7 @@ def audit_hooks(problems: list[str], manifest: dict) -> None:
             add_problem(problems, f"Ported hook lacks both sides in manifest: {name}")
 
     claude_settings = json.loads((Path.home() / ".claude" / "settings.json").read_text())
-    codex_hooks_json = json.loads((ROOT / ".codex" / "hooks.json").read_text())
+    codex_hooks_json = json.loads((ROOT / "codex" / "hooks.json").read_text())
     claude_commands = hook_commands(claude_settings)
     codex_commands = hook_commands(codex_hooks_json)
 
@@ -1051,7 +1051,7 @@ def audit_hooks(problems: list[str], manifest: dict) -> None:
         if not any(command_mentions_path(command, claude_path) for command in claude_commands):
             add_problem(problems, f"Ported Claude hook is not registered in ~/.claude/settings.json: {name}")
         if not any(command_mentions_path(command, codex_path) for command in codex_commands):
-            add_problem(problems, f"Ported Codex hook is not registered in .codex/hooks.json: {name}")
+            add_problem(problems, f"Ported Codex hook is not registered in codex/hooks.json: {name}")
 
 
 def audit_registrations(problems: list[str], manifest: dict) -> None:
@@ -1064,7 +1064,7 @@ def audit_registrations(problems: list[str], manifest: dict) -> None:
     check_symlink(
         problems,
         Path.home() / ".codex" / "hooks.json",
-        ROOT / ".codex" / "hooks.json",
+        ROOT / "codex" / "hooks.json",
         "Codex hooks",
     )
     check_symlink(
@@ -1084,7 +1084,7 @@ def audit_registrations(problems: list[str], manifest: dict) -> None:
     for expected in (
         "codex/AGENTS.md",
         "~/.claude/settings.json",
-        ".codex/hooks.json",
+        "codex/hooks.json",
         "codex/config.toml",
         "codex/bin/install-skills.sh",
         "codex/rules/default.rules",

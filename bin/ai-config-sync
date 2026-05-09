@@ -41,6 +41,12 @@ RUNTIME_PATTERNS = (
     "codex/skills/*/digests/*",
     "codex/skills/*/last-run/*",
     "codex/skills/twitter-vet/vetted/*",
+    ".claude/skills/*/digests/*",
+    ".claude/skills/*/last-run/*",
+    ".claude/skills/twitter-vet/vetted/*",
+    ".codex/skills/*/digests/*",
+    ".codex/skills/*/last-run/*",
+    ".codex/skills/twitter-vet/vetted/*",
 )
 
 SYNC_CONFIG_PATHS = {
@@ -89,9 +95,9 @@ def read_input_json() -> dict:
     return json.loads(raw)
 
 
-def run_git(args: list[str]) -> subprocess.CompletedProcess[str]:
+def run_git(args: list[str], repo: Path = ROOT) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
-        ["git", "-C", str(ROOT), *args],
+        ["git", "-C", str(repo), *args],
         check=False,
         text=True,
         stdout=subprocess.PIPE,
@@ -99,8 +105,8 @@ def run_git(args: list[str]) -> subprocess.CompletedProcess[str]:
     )
 
 
-def git_lines(args: list[str]) -> list[str]:
-    proc = run_git(args)
+def git_lines(args: list[str], repo: Path = ROOT) -> list[str]:
+    proc = run_git(args, repo)
     if proc.returncode != 0:
         return []
     return [line for line in proc.stdout.splitlines() if line]
@@ -111,6 +117,39 @@ def real_path(path: Path) -> Path:
         return path.resolve()
     except OSError:
         return Path(os.path.realpath(path))
+
+
+def same_path(left: Path, right: Path) -> bool:
+    return real_path(left) == real_path(right)
+
+
+def nearest_existing_path(path: Path) -> Path:
+    candidate = path if path.is_dir() else path.parent
+    while not candidate.exists() and candidate != candidate.parent:
+        candidate = candidate.parent
+    return candidate
+
+
+def git_root_for_dir(path: Path) -> Path | None:
+    proc = subprocess.run(
+        ["git", "-C", str(path), "rev-parse", "--show-toplevel"],
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+    )
+    if proc.returncode != 0:
+        return None
+    return Path(proc.stdout.strip())
+
+
+def git_root_for_path(path: Path, fallback_cwd: Path | None = None) -> Path | None:
+    root = git_root_for_dir(nearest_existing_path(path))
+    if root is not None:
+        return root
+    if fallback_cwd is not None:
+        return git_root_for_dir(nearest_existing_path(fallback_cwd))
+    return None
 
 
 def path_from_token(token: str, cwd: Path | None = None) -> Path:
@@ -138,25 +177,70 @@ def tool_input_object(data: dict) -> dict:
     return {}
 
 
-def relative_to_root(path_text: str, cwd: Path | None = None) -> str:
+def relative_to_repo(path_text: str, cwd: Path, repo_root: Path) -> str:
     if not path_text:
         return ""
+    if path_text in {".", ""}:
+        return path_text
+
+    path = path_from_token(path_text, cwd)
+    try:
+        return path.relative_to(repo_root).as_posix()
+    except ValueError:
+        pass
+
+    try:
+        return real_path(path).relative_to(real_path(repo_root)).as_posix()
+    except ValueError:
+        return ""
+
+
+def local_sync_path(rel: str) -> bool:
+    return rel.startswith((".claude/", ".codex/"))
+
+
+def global_sync_path(rel: str) -> bool:
+    return (
+        rel.startswith(("claude/", "codex/"))
+        or rel == MANIFEST
+        or rel in SYNC_CONFIG_PATHS
+        or rel in {GLOBAL_INSTRUCTION_CLAUDE, GLOBAL_INSTRUCTION_CODEX}
+    )
+
+
+def sync_scope_for_path(
+    path_text: str,
+    cwd: Path | None = None,
+    repo_root: Path | None = None,
+) -> tuple[str, Path | None, str]:
+    if not path_text:
+        return "other", None, ""
     if cwd is None:
         cwd = Path.cwd()
 
     path = path_from_token(path_text, cwd)
     home = Path.home()
     if path == home / ".claude" / "settings.json":
-        return str(path)
+        return "global", ROOT, str(path)
     if path == home / ".claude" / "settings.local.json":
-        return str(path)
+        return "global", ROOT, str(path)
 
-    real = real_path(path)
     root_real = real_path(ROOT)
     try:
-        return real.relative_to(root_real).as_posix()
+        root_rel = real_path(path).relative_to(root_real).as_posix()
     except ValueError:
-        return path_text
+        root_rel = ""
+    if root_rel and global_sync_path(root_rel):
+        return "global", ROOT, root_rel
+
+    local_root = repo_root or git_root_for_path(path, cwd)
+    if local_root is None:
+        return "other", None, path_text
+    rel = relative_to_repo(path_text, cwd, local_root)
+    if local_sync_path(rel):
+        return "local", local_root, rel
+
+    return "other", local_root, rel or path_text
 
 
 def hook_cwd(data: dict) -> Path:
@@ -223,7 +307,7 @@ def paths_from_codex_input(data: dict) -> list[str]:
     return paths
 
 
-def sync_message_for_path(rel: str) -> str:
+def global_sync_message_for_path(rel: str) -> str:
     if not rel:
         return ""
 
@@ -259,12 +343,77 @@ def sync_message_for_path(rel: str) -> str:
     return ""
 
 
+def local_sync_message_for_path(rel: str, repo_root: Path) -> str:
+    if not rel:
+        return ""
+
+    if rel.startswith(".claude/skills/"):
+        skill = rel.removeprefix(".claude/skills/").split("/", 1)[0]
+        return (
+            f"Project-local .claude/skills/{skill} changed; "
+            f"update .codex/skills/{skill} in the same repo."
+        )
+    if rel.startswith(".codex/skills/"):
+        skill = rel.removeprefix(".codex/skills/").split("/", 1)[0]
+        return (
+            f"Project-local .codex/skills/{skill} changed; "
+            f"update .claude/skills/{skill} in the same repo."
+        )
+    if rel.startswith(".claude/hooks/"):
+        hook = rel.removeprefix(".claude/hooks/")
+        if (repo_root / ".codex" / "hooks" / hook).exists():
+            return (
+                f"Project-local .claude/hooks/{hook} changed; "
+                f"update .codex/hooks/{hook} and .codex/hooks.json if registration changed."
+            )
+        return (
+            f"Project-local .claude/hooks/{hook} changed; "
+            "add/adjust its Codex counterpart under .codex/hooks/."
+        )
+    if rel.startswith(".codex/hooks/"):
+        hook = rel.removeprefix(".codex/hooks/")
+        if (repo_root / ".claude" / "hooks" / hook).exists():
+            return (
+                f"Project-local .codex/hooks/{hook} changed; "
+                f"update .claude/hooks/{hook} and .claude/settings.json if registration changed."
+            )
+        return (
+            f"Project-local .codex/hooks/{hook} changed; "
+            "add/adjust its Claude counterpart under .claude/hooks/."
+        )
+    if rel in {".claude/settings.json", ".claude/settings.local.json"}:
+        return (
+            f"Project-local {rel} changed; "
+            "check .codex/hooks.json and .codex/config.toml for matching policy changes."
+        )
+    if rel == ".codex/hooks.json":
+        return (
+            "Project-local .codex/hooks.json changed; "
+            "update .claude/settings.json if the local hook policy changed."
+        )
+    if rel == ".codex/config.toml":
+        return (
+            "Project-local .codex/config.toml changed; "
+            "update the Claude project config if instruction, skill, or hook policy changed."
+        )
+    if rel == ".codex/rules/default.rules":
+        return (
+            "Project-local .codex/rules/default.rules changed; "
+            "update the Claude project config if the local policy changed."
+        )
+    return ""
+
+
 def reminder_messages(paths: Iterable[str], cwd: Path | None = None) -> list[str]:
-    messages = {
-        sync_message_for_path(relative_to_root(path, cwd))
-        for path in paths
-        if path
-    }
+    messages = set()
+    for path in paths:
+        if not path:
+            continue
+        kind, root, rel = sync_scope_for_path(path, cwd)
+        if kind == "global":
+            messages.add(global_sync_message_for_path(rel))
+        elif kind == "local" and root is not None:
+            messages.add(local_sync_message_for_path(rel, root))
     return sorted(message for message in messages if message)
 
 
@@ -350,58 +499,33 @@ def git_invocation(segment: list[str], cwd: Path) -> tuple[str, list[str], Path]
     return None
 
 
-def command_targets_root(command: str, invocations: list[tuple[str, list[str], Path]]) -> bool:
-    cwd_real = real_path(Path.cwd())
-    root_real = real_path(ROOT)
-    try:
-        cwd_real.relative_to(root_real)
-        return True
-    except ValueError:
-        pass
-
-    for _, _, git_cwd in invocations:
-        try:
-            real_path(git_cwd).relative_to(root_real)
-            return True
-        except ValueError:
-            pass
-
-    return any(
-        needle in command
-        for needle in (
-            "dotfiles",
-            ".claude",
-            ".codex",
-            "claude/",
-            "codex/",
-            "ai-config-sync.json",
-        )
-    )
-
-
-def dirty_paths(include_untracked: bool = True, include_tracked: bool = True) -> set[str]:
+def dirty_paths(
+    repo: Path = ROOT,
+    include_untracked: bool = True,
+    include_tracked: bool = True,
+) -> set[str]:
     paths: set[str] = set()
     if include_tracked:
-        paths.update(git_lines(["diff", "--name-only"]))
-        paths.update(git_lines(["diff", "--cached", "--name-only"]))
+        paths.update(git_lines(["diff", "--name-only"], repo))
+        paths.update(git_lines(["diff", "--cached", "--name-only"], repo))
     if include_untracked:
-        paths.update(git_lines(["ls-files", "--others", "--exclude-standard"]))
+        paths.update(git_lines(["ls-files", "--others", "--exclude-standard"], repo))
     return paths
 
 
-def staged_paths() -> set[str]:
-    return set(git_lines(["diff", "--cached", "--name-only"]))
+def staged_paths(repo: Path = ROOT) -> set[str]:
+    return set(git_lines(["diff", "--cached", "--name-only"], repo))
 
 
-def git_text(args: list[str]) -> str | None:
-    proc = run_git(args)
+def git_text(args: list[str], repo: Path = ROOT) -> str | None:
+    proc = run_git(args, repo)
     if proc.returncode != 0:
         return None
     return proc.stdout
 
 
-def tracked_dirty_paths() -> set[str]:
-    return set(git_lines(["diff", "--name-only"]))
+def tracked_dirty_paths(repo: Path = ROOT) -> set[str]:
+    return set(git_lines(["diff", "--name-only"], repo))
 
 
 def path_has_change(path: str, changed: set[str]) -> bool:
@@ -421,7 +545,12 @@ def expand_pathspec(rel: str, changed: set[str]) -> set[str]:
     return {rel}
 
 
-def paths_from_git_add(args: list[str], git_cwd: Path, changed: set[str]) -> set[str]:
+def paths_from_git_add(
+    args: list[str],
+    git_cwd: Path,
+    repo_root: Path,
+    changed: set[str],
+) -> set[str]:
     paths: set[str] = set()
     include_all = False
     include_tracked = False
@@ -457,14 +586,14 @@ def paths_from_git_add(args: list[str], git_cwd: Path, changed: set[str]) -> set
     if include_all or pathspec_from_file:
         return set(changed)
     if include_tracked and i >= len(args):
-        return tracked_dirty_paths()
+        return tracked_dirty_paths(repo_root)
 
     for raw_path in args[i:]:
-        rel = relative_to_root(raw_path, git_cwd)
+        rel = relative_to_repo(raw_path, git_cwd, repo_root)
         if rel and not rel.startswith("/"):
             paths.update(expand_pathspec(rel, changed))
     if include_tracked:
-        paths.update(tracked_dirty_paths())
+        paths.update(tracked_dirty_paths(repo_root))
     return paths
 
 
@@ -474,17 +603,27 @@ def is_commit_all_arg(arg: str) -> bool:
     return arg.startswith("-") and not arg.startswith("--") and "a" in arg[1:]
 
 
-def command_paths_and_commit_flag(command: str) -> tuple[set[str], bool]:
+def command_paths_and_commit_repos(
+    command: str,
+    cwd: Path,
+) -> tuple[dict[Path, set[str]], set[Path]]:
     try:
         tokens = shell_tokens(command)
     except ValueError:
-        return set(), "git commit" in command
+        repo = git_root_for_dir(nearest_existing_path(cwd))
+        if repo is not None and "git commit" in command:
+            return {}, {repo}
+        return {}, set()
 
-    current_dir = Path.cwd()
-    invocations: list[tuple[str, list[str], Path]] = []
-    paths: set[str] = set()
-    commit_seen = False
-    changed = dirty_paths()
+    current_dir = cwd
+    paths_by_repo: dict[Path, set[str]] = {}
+    commit_repos: set[Path] = set()
+    dirty_cache: dict[Path, set[str]] = {}
+
+    def repo_dirty(repo: Path) -> set[str]:
+        if repo not in dirty_cache:
+            dirty_cache[repo] = dirty_paths(repo)
+        return dirty_cache[repo]
 
     for segment in split_shell_segments(tokens):
         if segment and segment[0] == "cd" and len(segment) >= 2:
@@ -496,18 +635,19 @@ def command_paths_and_commit_flag(command: str) -> tuple[set[str], bool]:
             continue
 
         command_name, args, git_cwd = invocation
-        invocations.append(invocation)
+        repo = git_root_for_dir(nearest_existing_path(git_cwd))
+        if repo is None:
+            continue
         if command_name == "add":
-            paths.update(paths_from_git_add(args, git_cwd, changed))
+            paths_by_repo.setdefault(repo, set()).update(
+                paths_from_git_add(args, git_cwd, repo, repo_dirty(repo))
+            )
         elif command_name == "commit":
-            commit_seen = True
+            commit_repos.add(repo)
             if any(is_commit_all_arg(arg) for arg in args):
-                paths.update(tracked_dirty_paths())
+                paths_by_repo.setdefault(repo, set()).update(tracked_dirty_paths(repo))
 
-    if not commit_seen or not command_targets_root(command, invocations):
-        return set(), False
-
-    return paths, True
+    return paths_by_repo, commit_repos
 
 
 def skip_runtime_path(path: str) -> bool:
@@ -649,6 +789,42 @@ def skill_sync_problems(skill: str) -> list[str]:
     return problems
 
 
+def local_skill_sync_problems(repo_root: Path, skill: str) -> list[str]:
+    problems: list[str] = []
+    claude_dir = repo_root / ".claude" / "skills" / skill
+    codex_dir = repo_root / ".codex" / "skills" / skill
+    claude_skill = claude_dir / "SKILL.md"
+    codex_skill = codex_dir / "SKILL.md"
+
+    if not claude_skill.exists():
+        problems.append(
+            f"Missing Claude project-local skill file: .claude/skills/{skill}/SKILL.md"
+        )
+    if not codex_skill.exists():
+        problems.append(
+            f"Missing Codex project-local skill file: .codex/skills/{skill}/SKILL.md"
+        )
+    if problems:
+        return problems
+
+    if normalized_skill_text(claude_skill) != normalized_skill_text(codex_skill):
+        problems.append(
+            f"Project-local skill content drift after tool-specific frontmatter normalization: {skill}"
+        )
+
+    claude_aux = skill_aux_files(claude_dir)
+    codex_aux = skill_aux_files(codex_dir)
+    for rel in sorted(set(claude_aux) - set(codex_aux)):
+        problems.append(f"Auxiliary project-local skill file only in Claude tree: {skill}/{rel}")
+    for rel in sorted(set(codex_aux) - set(claude_aux)):
+        problems.append(f"Auxiliary project-local skill file only in Codex tree: {skill}/{rel}")
+    for rel in sorted(set(claude_aux) & set(codex_aux)):
+        if not filecmp.cmp(claude_aux[rel], codex_aux[rel], shallow=False):
+            problems.append(f"Auxiliary project-local skill file drift: {skill}/{rel}")
+
+    return problems
+
+
 def normalized_global_instruction_text(path: Path) -> str:
     text = path.read_text()
     root_text = str(ROOT)
@@ -691,31 +867,27 @@ def add_nested_problems(problems: list[str], header: str, nested: list[str]) -> 
     problems.extend(f"  - {problem}" for problem in nested)
 
 
-def guard_commit() -> None:
-    data = read_input_json()
-    command = str(tool_input_object(data).get("command") or "")
-    command_paths, commit_seen = command_paths_and_commit_flag(command)
-    if not commit_seen:
-        return
-
-    changed = dirty_paths()
-    staged = staged_paths()
-    paths = staged | command_paths
-    changed_paths = {path for path in paths if path_has_change(path, changed)}
-    if not changed_paths:
-        return
-
-    problems: list[str] = []
-    base_manifest, candidate_manifest = guard_manifests(command_paths, staged, problems)
+def guard_changed_paths(
+    repo_root: Path,
+    changed_paths: set[str],
+    paths: set[str],
+    changed: set[str],
+    problems: list[str],
+    include_global: bool,
+    base_manifest: dict,
+    candidate_manifest: dict,
+) -> None:
     processed_global_instructions = False
-    processed_skills: set[str] = set()
-    processed_hooks: set[str] = set()
+    processed_global_skills: set[str] = set()
+    processed_global_hooks: set[str] = set()
+    processed_local_skills: set[str] = set()
+    processed_local_hooks: set[str] = set()
 
     for path in sorted(changed_paths):
         if skip_runtime_path(path):
             continue
 
-        if path in {GLOBAL_INSTRUCTION_CLAUDE, GLOBAL_INSTRUCTION_CODEX}:
+        if include_global and path in {GLOBAL_INSTRUCTION_CLAUDE, GLOBAL_INSTRUCTION_CODEX}:
             if processed_global_instructions:
                 continue
             processed_global_instructions = True
@@ -742,11 +914,11 @@ def guard_commit() -> None:
                     f"{path} changed without synchronized counterpart {counterpart} or an instruction-specific {MANIFEST} exemption:",
                     drift,
                 )
-        elif path.startswith("claude/skills/"):
+        elif include_global and path.startswith("claude/skills/"):
             skill = path.removeprefix("claude/skills/").split("/", 1)[0]
-            if skill in processed_skills:
+            if skill in processed_global_skills:
                 continue
-            processed_skills.add(skill)
+            processed_global_skills.add(skill)
             if manifest_skill_removed(base_manifest, candidate_manifest, skill) and global_skill_files_absent(skill):
                 continue
             drift = skill_sync_problems(skill)
@@ -768,11 +940,11 @@ def guard_commit() -> None:
                     f"claude/skills/{skill} changed without synchronized counterpart {counterpart} or a skill-specific {MANIFEST} exemption:",
                     drift,
                 )
-        elif path.startswith("codex/skills/"):
+        elif include_global and path.startswith("codex/skills/"):
             skill = path.removeprefix("codex/skills/").split("/", 1)[0]
-            if skill in processed_skills:
+            if skill in processed_global_skills:
                 continue
-            processed_skills.add(skill)
+            processed_global_skills.add(skill)
             if manifest_skill_removed(base_manifest, candidate_manifest, skill) and global_skill_files_absent(skill):
                 continue
             drift = skill_sync_problems(skill)
@@ -794,30 +966,143 @@ def guard_commit() -> None:
                     f"codex/skills/{skill} changed without synchronized counterpart {counterpart} or a skill-specific {MANIFEST} exemption:",
                     drift,
                 )
-        elif path.startswith("claude/hooks/"):
+        elif include_global and path.startswith("claude/hooks/"):
             hook = path.removeprefix("claude/hooks/")
-            if hook in processed_hooks:
+            if hook in processed_global_hooks:
                 continue
-            processed_hooks.add(hook)
+            processed_global_hooks.add(hook)
             counterpart = f"codex/hooks/{hook}"
             item = manifest_item_by_name(candidate_manifest, "hooks", hook)
             if manifest_item_is_explicitly_unpaired(item):
                 continue
-            if not path_has_change(counterpart, changed_paths) and not manifest_item_changed(base_manifest, candidate_manifest, "hooks", hook):
+            if not path_has_change(counterpart, changed_paths) and not manifest_item_changed(
+                base_manifest,
+                candidate_manifest,
+                "hooks",
+                hook,
+            ):
                 problems.append(f"claude/hooks/{hook} changed without codex/hooks/{hook} or {MANIFEST}")
-        elif path.startswith("codex/hooks/"):
+        elif include_global and path.startswith("codex/hooks/"):
             hook = path.removeprefix("codex/hooks/")
-            if hook in processed_hooks:
+            if hook in processed_global_hooks:
                 continue
-            processed_hooks.add(hook)
+            processed_global_hooks.add(hook)
             counterpart = f"claude/hooks/{hook}"
             item = manifest_item_by_name(candidate_manifest, "hooks", hook)
             if manifest_item_is_explicitly_unpaired(item):
                 continue
-            if not path_has_change(counterpart, changed_paths) and not manifest_item_changed(base_manifest, candidate_manifest, "hooks", hook):
+            if not path_has_change(counterpart, changed_paths) and not manifest_item_changed(
+                base_manifest,
+                candidate_manifest,
+                "hooks",
+                hook,
+            ):
                 problems.append(f"codex/hooks/{hook} changed without claude/hooks/{hook} or {MANIFEST}")
-        elif path in SYNC_CONFIG_PATHS and not manifest_registration_changed(base_manifest, candidate_manifest, path):
+        elif (
+            include_global
+            and path in SYNC_CONFIG_PATHS
+            and not manifest_registration_changed(base_manifest, candidate_manifest, path)
+        ):
             problems.append(f"{path} changed without a path-specific {MANIFEST} registration update")
+        elif path.startswith(".claude/skills/"):
+            skill = path.removeprefix(".claude/skills/").split("/", 1)[0]
+            if skill in processed_local_skills:
+                continue
+            processed_local_skills.add(skill)
+            drift = local_skill_sync_problems(repo_root, skill)
+            if not drift:
+                continue
+            counterpart = f".codex/skills/{skill}"
+            if has_changed_prefix(counterpart, paths, changed):
+                add_nested_problems(
+                    problems,
+                    f"Project-local .claude/skills/{skill} and {counterpart} are both changed, but the paired skill still drifts:",
+                    drift,
+                )
+            else:
+                add_nested_problems(
+                    problems,
+                    f"Project-local .claude/skills/{skill} changed without synchronized counterpart {counterpart}:",
+                    drift,
+                )
+        elif path.startswith(".codex/skills/"):
+            skill = path.removeprefix(".codex/skills/").split("/", 1)[0]
+            if skill in processed_local_skills:
+                continue
+            processed_local_skills.add(skill)
+            drift = local_skill_sync_problems(repo_root, skill)
+            if not drift:
+                continue
+            counterpart = f".claude/skills/{skill}"
+            if has_changed_prefix(counterpart, paths, changed):
+                add_nested_problems(
+                    problems,
+                    f"Project-local .codex/skills/{skill} and {counterpart} are both changed, but the paired skill still drifts:",
+                    drift,
+                )
+            else:
+                add_nested_problems(
+                    problems,
+                    f"Project-local .codex/skills/{skill} changed without synchronized counterpart {counterpart}:",
+                    drift,
+                )
+        elif path.startswith(".claude/hooks/"):
+            hook = path.removeprefix(".claude/hooks/")
+            if hook in processed_local_hooks:
+                continue
+            processed_local_hooks.add(hook)
+            counterpart = f".codex/hooks/{hook}"
+            if not path_has_change(counterpart, changed_paths):
+                problems.append(f"Project-local .claude/hooks/{hook} changed without .codex/hooks/{hook}")
+        elif path.startswith(".codex/hooks/"):
+            hook = path.removeprefix(".codex/hooks/")
+            if hook in processed_local_hooks:
+                continue
+            processed_local_hooks.add(hook)
+            counterpart = f".claude/hooks/{hook}"
+            if not path_has_change(counterpart, changed_paths):
+                problems.append(f"Project-local .codex/hooks/{hook} changed without .claude/hooks/{hook}")
+        elif path == ".claude/settings.json":
+            if not path_has_change(".codex/hooks.json", changed_paths):
+                problems.append("Project-local .claude/settings.json changed without .codex/hooks.json")
+        elif path == ".codex/hooks.json":
+            if not path_has_change(".claude/settings.json", changed_paths):
+                problems.append("Project-local .codex/hooks.json changed without .claude/settings.json")
+
+
+def guard_commit() -> None:
+    data = read_input_json()
+    command = str(tool_input_object(data).get("command") or "")
+    paths_by_repo, commit_repos = command_paths_and_commit_repos(command, hook_cwd(data))
+    if not commit_repos:
+        return
+
+    problems: list[str] = []
+    for repo_root in sorted(commit_repos, key=str):
+        changed = dirty_paths(repo_root)
+        staged = staged_paths(repo_root)
+        command_paths = paths_by_repo.get(repo_root, set())
+        paths = staged | command_paths
+        changed_paths = {path for path in paths if path_has_change(path, changed)}
+        if not changed_paths:
+            continue
+
+        include_global = same_path(repo_root, ROOT)
+        if include_global:
+            base_manifest, candidate_manifest = guard_manifests(command_paths, staged, problems)
+        else:
+            base_manifest, candidate_manifest = {}, {}
+
+        guard_changed_paths(
+            repo_root,
+            changed_paths,
+            paths,
+            changed,
+            problems,
+            include_global,
+            base_manifest,
+            candidate_manifest,
+        )
 
     if not problems:
         return
@@ -825,7 +1110,9 @@ def guard_commit() -> None:
     reason = (
         "BLOCKED: AI config sync guard found one-sided Claude/Codex changes.\n\n"
         + "\n".join(problems)
-        + f"\n\nUpdate the counterpart in this same session, or stage {MANIFEST} with an explicit status/exemption for the changed artifact."
+        + "\n\nUpdate the counterpart in this same session. For global dotfiles "
+        f"artifacts, stage {MANIFEST} with an explicit status/exemption if the "
+        "counterpart should not exist."
     )
     print(
         json.dumps(

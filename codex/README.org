@@ -96,7 +96,10 @@ part of the reusable Claude/Codex skill parity model.
 Project-specific skills belong beside their project instead of this global
 tree. For the Epoch workspace, the Claude copies live in
 =~/My Drive/Epoch/.claude/skills/= and the Codex copies live in
-=~/My Drive/Epoch/.codex/skills/=.
+=~/My Drive/Epoch/.codex/skills/=. The sync reminder and commit guard apply to
+these project-local pairs too: changing one local skill reminds the agent to
+update the other, and committing one side without an equivalent counterpart is
+blocked.
 
 The former dotfiles-project-local Claude skills =find-skills=,
 =skill-creator=, and =systematic-debugging= now live in the global
@@ -125,8 +128,8 @@ When changing a skill:
 
 1. Edit the side requested by the user.
 2. Update the counterpart in the same session.
-3. Stage both sides, or update =ai-config-sync.json= with a clear
-   artifact-specific status or exemption if a counterpart is intentionally
+3. Stage both sides. For global skills, update =ai-config-sync.json= with a
+   clear artifact-specific status or exemption if a counterpart is intentionally
    absent.
 
 When renaming a global skill, rename both the Claude and Codex directories,
@@ -228,7 +231,14 @@ Two hook pairs keep the model simple:
 - =claude/hooks/require-ai-config-sync.sh= and
   =codex/hooks/require-ai-config-sync.sh= run before =git commit= and block
   one-sided Claude/Codex config changes unless the counterpart is synchronized
-  or the manifest records an explicit artifact-specific exemption.
+  or, for global dotfiles artifacts, the manifest records an explicit
+  artifact-specific exemption.
+
+The same hooks also handle project-local skills and hooks in the git repo being
+committed. Local pairs use =.claude/skills/= with =.codex/skills/=,
+=.claude/hooks/= with =.codex/hooks/=, and =.claude/settings.json= with
+=.codex/hooks.json=. Local skills are compared with the same tool-specific
+frontmatter normalization used for global skills.
 
 Manual audit:
 

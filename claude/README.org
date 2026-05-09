@@ -795,14 +795,27 @@ Companion to =require-readme-update.sh=. Fires globally after any Write or Edit,
 :ID:       44F44D89-3847-49A8-BD92-380CD88CC0B1
 :END:
 
-Fires after Claude Edit or Write operations and calls =bin/ai-config-sync remind-claude=. If a reusable Claude skill, hook, or live settings file changed, it prints the Codex counterpart that should be updated in the same session. This is intentionally a reminder, not an auto-sync mechanism.
+Fires after Claude Edit or Write operations and calls =bin/ai-config-sync
+remind-claude=. If a global or project-local Claude skill, hook, or live
+settings file changed, it prints the Codex counterpart that should be updated in
+the same session. Project-local paths use the target repo's =.claude/= and
+=.codex/= trees. This is intentionally a reminder, not an auto-sync mechanism.
 
 *** require-ai-config-sync.sh (PreToolUse)
 :PROPERTIES:
 :ID:       5428CDD1-C447-4549-8365-56066C479F61
 :END:
 
-Fires before Bash =git commit= commands and calls =bin/ai-config-sync guard-commit=. Blocks one-sided Claude/Codex configuration changes in the dotfiles repo unless the counterpart is synchronized or =ai-config-sync.json= records an artifact-specific status or exemption. For skills, the guard checks body and auxiliary-file parity after removing tool-specific frontmatter from both sides, so unrelated counterpart edits do not satisfy it. This keeps the model explicit: the active agent makes both edits and commits them together, or records an intentional exception in the manifest.
+Fires before Bash =git commit= commands and calls =bin/ai-config-sync
+guard-commit=. Blocks one-sided Claude/Codex configuration changes in the
+dotfiles repo unless the counterpart is synchronized or =ai-config-sync.json=
+records an artifact-specific status or exemption. It also resolves the git repo
+targeted by the commit command and applies the same checks to project-local
+=.claude/= and =.codex/= skills, hooks, and hook registration files. For skills,
+the guard checks body and auxiliary-file parity after removing tool-specific
+frontmatter from both sides, so unrelated counterpart edits do not satisfy it.
+This keeps the model explicit: the active agent makes both edits and commits
+them together, or records an intentional global exception in the manifest.
 
 *** require-doc-update.sh (PreToolUse)
 :PROPERTIES:

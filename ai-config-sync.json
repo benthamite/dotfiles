@@ -156,6 +156,13 @@
       "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
     },
     {
+      "name": "find-skills",
+      "claude": "claude/skills/find-skills/SKILL.md",
+      "codex": "codex/skills/find-skills/SKILL.md",
+      "status": "ported",
+      "codex_transform": "Moved from dotfiles project-local .claude/skills into the global skill trees; Claude-only frontmatter keys removed; body and auxiliary files copied."
+    },
+    {
       "name": "gitguardian-triage",
       "claude": "claude/skills/gitguardian-triage/SKILL.md",
       "codex": "codex/skills/gitguardian-triage/SKILL.md",
@@ -289,6 +296,13 @@
       "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
     },
     {
+      "name": "skill-creator",
+      "claude": "claude/skills/skill-creator/SKILL.md",
+      "codex": "codex/skills/skill-creator/SKILL.md",
+      "status": "ported",
+      "codex_transform": "Moved from dotfiles project-local .claude/skills into the global skill trees; Claude-only frontmatter keys removed; body and auxiliary files copied."
+    },
+    {
       "name": "skill-resolver",
       "claude": "claude/skills/skill-resolver/SKILL.md",
       "codex": "codex/skills/skill-resolver/SKILL.md",
@@ -308,6 +322,13 @@
       "codex": "codex/skills/symptom-check/SKILL.md",
       "status": "ported",
       "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+    },
+    {
+      "name": "systematic-debugging",
+      "claude": "claude/skills/systematic-debugging/SKILL.md",
+      "codex": "codex/skills/systematic-debugging/SKILL.md",
+      "status": "ported",
+      "codex_transform": "Moved from dotfiles project-local .claude/skills into the global skill trees; Claude-only frontmatter keys removed; body and auxiliary files copied."
     },
     {
       "name": "tangodb-closeout",

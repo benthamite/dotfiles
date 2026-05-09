@@ -28,7 +28,7 @@ topology and inventory.
 :ID:       EB7422C8-E371-4F9B-AE1F-D6B6473F11BB
 :END:
 
-Three layers of directories work together: this dotfiles directory (source of truth), the shared =~/.claude/= hub, and per-account overlay directories.
+Three layers of directories work together: this dotfiles directory (source of truth), the shared =~/.claude/= hub, and per-account overlay directories. Codex uses the same pattern through the parallel =codex/= source tree and =~/.codex/= live hub.
 
 *Source of truth* (version-controlled in this repo):
 
@@ -72,6 +72,27 @@ Note: =settings.json= is intentionally *not* tracked here. Claude Code writes to
 ├── settings.local.json ← project-specific permissions (accumulated interactively)
 └── skills/             ← project-specific skills (optional)
 #+end_example
+
+*Cross-tool path roles*:
+
+| Path | Role | Tracked? | Live consumer |
+|------+------|----------|---------------|
+| =claude/CLAUDE.md= | Claude global instructions | Yes | =~/.claude/CLAUDE.md= symlink |
+| =codex/AGENTS.md= | Codex global instruction port | Yes | =~/.codex/AGENTS.md= symlink |
+| =CLAUDE.md= | dotfiles project instructions | Yes | Loaded only when working in this repo |
+| =claude/skills/= and =codex/skills/= | Global reusable skills | Yes | =~/.claude/skills= and =~/.codex/skills= symlinks |
+| =claude/hooks/= and =codex/hooks/= | Hook script implementations | Yes | Referenced by live hook registrations |
+| =~/.claude/settings.json= | Claude global settings and hook registration | No | Real mutable file, edited in place |
+| =codex/hooks.json= | Codex global hook registration | Yes | =~/.codex/hooks.json= symlink |
+| =codex/config.toml= | Codex global settings | Yes | =~/.codex/config.toml= symlink |
+| =<project>/.claude/= and =<project>/.codex/= | Project-local tool config | Usually no | Loaded only for that project |
+
+Repo-root =.claude/= and =.codex/= paths are project-local by definition. Do
+not use them as targets for global =~/.claude/= or =~/.codex/= symlinks. In this
+dotfiles repo, reusable skills belong in =claude/skills/= and =codex/skills/=;
+repo-root =.claude/skills/= or =.codex/skills/= should only contain genuinely
+dotfiles-project-only skills, and such exceptions need an explicit counterpart
+or audit exemption.
 
 *MCP server reference.* Placement rules, current inventory, multi-account notes, account-specific credential handling, identity checks, and reload requirements for remaining project-local exceptions live in =context/mcp-servers.md=. The global =CLAUDE.md= points agents there when MCP-specific context is needed, so they do not need to read this whole README just to configure or debug an MCP server.
 
@@ -117,10 +138,10 @@ Each file should contain distinct content. The global one defines behavioral con
 |------+-------+-----|
 | New global behavioral rule | =claude/CLAUDE.md= | Applies to all projects |
 | New project-specific instruction | =<project>/CLAUDE.md= | Scoped to that project |
-| New skill (reusable across projects) | =claude/skills/<name>/SKILL.md= | Available everywhere |
-| New skill (project-specific) | =<project>/.claude/skills/<name>/SKILL.md= | Scoped to that project |
-| New global hook | =~/.claude/settings.json= (hooks section) | Fires in all projects; write early-exit guards for inapplicable contexts |
-| New project-specific hook | =<project>/.claude/settings.json= (hooks section) | Fires only in that project |
+| New skill (reusable across projects) | =claude/skills/<name>/SKILL.md= and =codex/skills/<name>/SKILL.md= | Available everywhere in both tools |
+| New skill (project-specific) | =<project>/.claude/skills/<name>/SKILL.md= and =<project>/.codex/skills/<name>/SKILL.md= | Scoped to that project in both tools |
+| New global hook | =~/.claude/settings.json= plus =codex/hooks.json= and =codex/hooks/<script>= | Fires in all projects; write early-exit guards for inapplicable contexts |
+| New project-specific hook | =<project>/.claude/settings.json= and =<project>/.codex/hooks.json= | Fires only in that project |
 | New machine-specific permission | =~/.claude/settings.local.json= | E.g. brew, mpv, pip3 |
 | New MCP server | =~/.claude.json=, then run =claude/bin/sync-mcp-servers.sh= | Syncs to account dirs |
 | New MCP reference detail | =claude/context/mcp-servers.md= | Keeps MCP-specific instructions out of global memory and the long README |
@@ -324,6 +345,17 @@ Audits a codebase from the AI agent's perspective: inventories existing verifica
 :END:
 
 Forces a structured root-cause analysis before applying any non-trivial bug fix, to prevent the failure mode where agents patch the immediate symptom while the underlying invariant stays broken (so the same shape recurs in different places until the architectural drift is finally caught). Workflow: restate the symptom, consult =architectural-issues.md= for similar prior entries, draft the local fix, articulate the invariant in one sentence, search for other manifestations, then pick a disposition (=fix locally= / =fix locally + flag= / =stop and refactor=). The "+ flag" and "stop and refactor" dispositions produce a registry entry to append to =architectural-issues.md= so pattern recognition compounds across sessions.
+
+**** systematic-debugging
+:PROPERTIES:
+:ID:       E08A0D8A-314E-4ABD-80C2-FBBBD5E9C128
+:END:
+
+Adapted from the third-party skill previously stored under the dotfiles
+project-local =.claude/skills/= tree. Forces root-cause investigation before
+bug fixes, with supporting references for condition-based waiting, defense in
+depth, and tracing polluters. It is now a global Claude/Codex skill so
+debugging behavior is consistent outside the dotfiles project.
 
 **** build
 :PROPERTIES:
@@ -649,6 +681,27 @@ Meta-skill for AI workflow design. Given a description of something to automate,
 :END:
 
 Scans Claude Code and Codex session transcripts since the last run, identifies manual workflows that repeat across two or more sessions (same multi-step procedure, same context re-supplied to the agent, same class of bug or request resolved the same way), and presents them as candidates for new skills or extensions of existing ones. Reuses =ai-journal='s =find-sessions.py= scan script, tracks its own cutoff in =last-run.txt=, and dispatches selected candidates to =/automate= rather than building skills itself — keeping triage and build concerns separate. Before proposing a new skill, checks =~/My Drive/dotfiles/claude/skills/= for an existing skill that already covers the pattern, framing such matches as a gap to extend rather than a duplicate to create. Pairs with =/schedule= to run on a weekly cadence (Ole Lehmann's "audit your week" pattern, [[https://x.com/itsolelehmann/status/2044425992802848954][origin tweet]]).
+
+**** skill-creator
+:PROPERTIES:
+:ID:       A0C1015B-51E0-4388-9CE2-FDE1B8DC1282
+:END:
+
+Third-party skill creation workflow previously stored under dotfiles
+project-local =.claude/skills/=. Helps create and improve skills with eval
+cases, benchmark artifacts, and a bundled HTML review viewer. It is now in the
+global Claude/Codex skill trees so skill authoring is available consistently
+across projects.
+
+**** find-skills
+:PROPERTIES:
+:ID:       8565265E-E80C-4483-A09C-F38FDD2243D3
+:END:
+
+Third-party discovery helper for the open skills ecosystem. Uses the =npx
+skills= CLI and =skills.sh= catalog to search for installable skills when a
+requested capability may already exist. Moved from dotfiles project-local
+=.claude/skills/= into the global Claude/Codex skill trees.
 
 **** skill-resolver
 :PROPERTIES:

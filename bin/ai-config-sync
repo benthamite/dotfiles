@@ -854,6 +854,53 @@ def check_symlink(problems: list[str], target: Path, expected: Path, label: str)
         add_problem(problems, f"Wrong live {label} symlink: {target} -> {actual}; expected {expected}")
 
 
+def path_is_inside(path: Path, parent: Path) -> bool:
+    try:
+        real_path(path).relative_to(real_path(parent))
+    except ValueError:
+        return False
+    return True
+
+
+def audit_topology(problems: list[str]) -> None:
+    forbidden_project_hooks = ROOT / ".codex" / "hooks.json"
+    if forbidden_project_hooks.exists() or forbidden_project_hooks.is_symlink():
+        add_problem(
+            problems,
+            "dotfiles/.codex/hooks.json exists; repo-root .codex is project-local, so global Codex hooks must live in codex/hooks.json.",
+        )
+
+    live_codex_hooks = Path.home() / ".codex" / "hooks.json"
+    if live_codex_hooks.exists() and path_is_inside(live_codex_hooks, ROOT / ".codex"):
+        add_problem(
+            problems,
+            f"Live Codex hooks resolve inside dotfiles/.codex: {live_codex_hooks}; use codex/hooks.json as the global symlink target.",
+        )
+
+    allowed_live_symlinks = {
+        Path.home() / ".claude": {"CLAUDE.md", "skills"},
+        Path.home() / ".codex": {"AGENTS.md", "config.toml", "hooks.json", "rules", "skills"},
+    }
+    for directory, allowed_names in allowed_live_symlinks.items():
+        if not directory.is_dir():
+            continue
+        for child in directory.iterdir():
+            if child.is_symlink() and child.name not in allowed_names:
+                add_problem(problems, f"Undocumented live tool-home symlink: {child} -> {os.readlink(child)}")
+
+    project_claude_skills = {
+        path.parent.name for path in (ROOT / ".claude" / "skills").glob("*/SKILL.md")
+    }
+    project_codex_skills = {
+        path.parent.name for path in (ROOT / ".codex" / "skills").glob("*/SKILL.md")
+    }
+    for skill in sorted(project_claude_skills | project_codex_skills):
+        add_problem(
+            problems,
+            f"dotfiles project-local skill exists: {skill}; reusable skills belong in claude/skills and codex/skills, not repo-root .claude/.codex.",
+        )
+
+
 def frontmatter_normalized_skill(path: Path, drop_keys: set[str]) -> str:
     text = path.read_text()
     if not text.startswith("---\n"):
@@ -1100,6 +1147,7 @@ def audit() -> int:
         return 1
 
     manifest = load_manifest()
+    audit_topology(problems)
     audit_instructions(problems, manifest)
     audit_skills(problems, manifest)
     audit_hooks(problems, manifest)

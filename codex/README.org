@@ -240,6 +240,11 @@ committed. Local pairs use =.claude/skills/= with =.codex/skills/=,
 =.codex/hooks.json=. Local skills are compared with the same tool-specific
 frontmatter normalization used for global skills.
 
+The Codex-only README gate, =require-codex-readme-update.sh=, is scoped to this
+dotfiles repository. That prevents unrelated repositories with paths such as
+=codex/= or =bin/ai-config-sync= from being treated as Codex integration
+changes for these dotfiles.
+
 Manual audit:
 
 #+begin_src sh

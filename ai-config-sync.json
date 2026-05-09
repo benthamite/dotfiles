@@ -589,7 +589,7 @@
       "claude": null,
       "codex": "codex/hooks/require-codex-readme-update.sh",
       "status": "codex-only",
-      "note": "Codex README commit gate for Codex integration files; uses lib-codex-hook-json.sh for object-or-string payload normalization."
+      "note": "Codex README commit gate for Codex integration files; scoped to the dotfiles repo so unrelated repositories with codex/ or bin/ai-config-sync paths are not blocked; uses lib-codex-hook-json.sh for object-or-string payload normalization."
     },
     {
       "name": "require-doc-update.sh",

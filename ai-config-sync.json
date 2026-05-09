@@ -636,10 +636,10 @@
     },
     {
       "tool": "Codex",
-      "path": ".codex/hooks.json",
+      "path": "codex/hooks.json",
       "tracked": true,
       "live_path": "~/.codex/hooks.json",
-      "note": "Live global Codex hook file is a symlink to the tracked repo file. Codex-only codex-hook-wrapper entries point at the Emacs package source tree because elpaca/builds contains compiled Elisp but not the wrapper script, and include explicit emacsclient/socket arguments so dispatch targets the active Emacs server. The apply_patch and Edit|Write matchers are collapsed into a single apply_patch|Edit|Write block per event to keep the trust-review list compact under the Codex 0.129 hook trust gate; SessionStart and Stop dispatch through codex-hook-wrapper alone (the redundant notify-emacs-hook.sh entries were removed). Matcher fields use \"*\" everywhere (including UserPromptSubmit) for consistency. PreCompact and PostCompact route through codex-hook-wrapper so the Emacs side observes the full lifecycle."
+      "note": "Live global Codex hook file is a symlink to the tracked repo file. The tracked file intentionally lives outside a repo-root .codex/ directory so launching Codex from the dotfiles root does not load the same hooks a second time as project-local hooks. Codex-only codex-hook-wrapper entries point at the Emacs package source tree because elpaca/builds contains compiled Elisp but not the wrapper script, and include explicit emacsclient/socket arguments so dispatch targets the active Emacs server. The apply_patch and Edit|Write matchers are collapsed into a single apply_patch|Edit|Write block per event to keep the trust-review list compact under the Codex 0.129 hook trust gate; SessionStart and Stop dispatch through codex-hook-wrapper alone (the redundant notify-emacs-hook.sh entries were removed). Matcher fields use \"*\" everywhere (including UserPromptSubmit) for consistency. PreCompact and PostCompact route through codex-hook-wrapper so the Emacs side observes the full lifecycle."
     },
     {
       "tool": "Codex",

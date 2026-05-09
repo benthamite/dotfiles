@@ -7,24 +7,24 @@ This directory contains the version-controlled parts of my [[https://developers.
 The cross-tool synchronization policy is documented in =../agents/README.org=.
 This file covers the Codex-specific activation files and local conventions.
 
-Claude files remain the source where possible. Codex gets explicit ports where
-Codex syntax, hook payloads, discovery rules, or instruction-loading semantics
-require them.
+Claude and Codex artifacts are peer implementations of shared agent behavior.
+Codex gets explicit counterpart files where Codex syntax, hook payloads,
+discovery rules, or instruction-loading semantics require them.
 
 * Current layout
 
 #+begin_example
 codex/
-├── AGENTS.md              <- tracked global Codex instruction port
+├── AGENTS.md              <- tracked global Codex instructions
 ├── config.toml            <- live ~/.codex/config.toml symlink target
 ├── hooks.json             <- live ~/.codex/hooks.json symlink target
 ├── bin/install-skills.sh  <- links ~/.codex/skills to tracked skills
-├── hooks/                 <- Codex hook script ports
+├── hooks/                 <- Codex hook counterparts
 ├── README.org
 ├── rules/default.rules
-└── skills/                <- Codex ports of Claude skills
+└── skills/                <- Codex counterparts for paired skills
 
-ai-config-sync.json        <- Claude/Codex port manifest
+ai-config-sync.json        <- Claude/Codex sync manifest
 bin/ai-config-sync         <- audit, reminder, and commit-guard checker
 #+end_example
 
@@ -47,18 +47,20 @@ That setting removes the need for project-level =AGENTS.md= symlinks.  It does
 not apply to Codex's user-level instruction file in =$CODEX_HOME=. Codex reads
 global user instructions from =AGENTS.override.md= and =AGENTS.md= in
 =$CODEX_HOME=, so the live =~/.codex/AGENTS.md= points to the tracked
-=codex/AGENTS.md= port.
+=codex/AGENTS.md= file.
 
-There is no repo-root =AGENTS.md= manual port. Project-level Codex instructions
-come from =CLAUDE.md= through =project_doc_fallback_filenames=.
+There is no repo-root =AGENTS.md= manual counterpart. Project-level Codex
+instructions come from =CLAUDE.md= through =project_doc_fallback_filenames=.
 The Claude/Codex sync hooks therefore only treat =claude/CLAUDE.md= and
-=codex/AGENTS.md= as a paired instruction port; other project =CLAUDE.md= or
+=codex/AGENTS.md= as a paired instruction file; other project =CLAUDE.md= or
 =AGENTS.md= files are not paired by that hook.
 
-The tracked =codex/AGENTS.md= is a Codex-safe port of =claude/CLAUDE.md=: it
-rewrites the title, expands Claude's =@context/secrets.md= import into an
-explicit secrets rule, and rewrites relative context/tool paths to absolute
-paths so they resolve correctly from any project.
+The tracked =codex/AGENTS.md= is the Codex-side peer of =claude/CLAUDE.md=. It
+uses Codex-safe syntax: the title is tool-specific, Claude's
+=@context/secrets.md= import is expanded into an explicit secrets rule, and
+relative context/tool paths are absolute so they resolve correctly from any
+project. =bin/ai-config-sync= normalizes those tool-specific forms before
+checking instruction equivalence.
 
 It also records the manual Chrome profile routing used by browser-only service
 flows: =Default= for personal projects and =Profile 2= for Epoch/work projects
@@ -70,15 +72,16 @@ the startup warning on every launch.
 
 * Skills
 
-=codex/skills/= contains one Codex counterpart for each global Claude skill
-under =claude/skills/=. Most ports copy the skill bodies and auxiliary files,
-then strip Claude-only frontmatter keys such as =user-invocable=,
-=allowed-tools=, =argument-hint=, and =model=. Tool-specific skills may
+=codex/skills/= contains one Codex counterpart for each paired global skill
+under =claude/skills/=. Most counterparts share the same skill bodies and
+auxiliary files. The sync check removes tool-specific frontmatter keys such as
+=user-invocable=, =allowed-tools=, =argument-hint=, and =model= before
+comparison. Tool-specific skills may
 intentionally diverge when Claude Code and Codex store state differently; these
 cases are recorded in =ai-config-sync.json=.
 
 Codex discovers global skills from =~/.codex/skills/*/SKILL.md=.  The live
-skills directory is therefore a symlink to the tracked ports.  Run:
+skills directory is therefore a symlink to the tracked Codex tree.  Run:
 
 #+begin_src sh
 codex/bin/install-skills.sh
@@ -171,7 +174,7 @@ script.  Managed wrapper commands include explicit =--emacsclient= and
 =--socket-name= arguments so hook dispatch targets the active Emacs server
 instead of relying on emacsclient's default server lookup.
 
-The Codex ports cover:
+The Codex hook counterparts cover:
 
 - Bash safety and workflow gates: secret leakage, destructive commands,
   walk-list data access, Elisp test-before-commit, manual update checks
@@ -201,7 +204,7 @@ instead of plain text; plain stdout, missing =hookEventName=, and unsupported
 fields such as =hookSpecificOutput.message= are treated as invalid hook protocol
 output by Codex.
 
-Some Claude hooks are intentionally not ported one-for-one because Codex does
+Some Claude hooks are intentionally not paired one-for-one because Codex does
 not expose the same event in this setup:
 
 - Claude =Read=/=Grep=/=Glob= hooks such as =block-sensitive-read.sh=.
@@ -213,9 +216,9 @@ not expose the same event in this setup:
 
 * Sync Guard
 
-=ai-config-sync.json= is the manifest for the port.  It lists the global
-instruction pair, every global skill, the hook port status, live registration
-files, and the current unsupported or Codex-only cases.
+=ai-config-sync.json= is the sync manifest.  It lists the global instruction
+pair, every global skill, hook pairing status, live registration files, and the
+current unsupported or Codex-only cases.
 
 Two hook pairs keep the model simple:
 
@@ -258,7 +261,7 @@ instructions; project-level =CLAUDE.md= loading is handled by
 =~/.codex/skills= points directly to =codex/skills/= via
 =codex/bin/install-skills.sh= because Codex does not load arbitrary skill paths
 from =codex/config.toml=. This keeps the live Codex skill inventory aligned
-with the tracked global Claude/Codex skill ports. Project-local Codex skills
+with the tracked global Claude/Codex skill counterparts. Project-local Codex skills
 are stored under the project's own =.codex/skills/= directory. Codex-managed
 hidden system skills, if present, are ignored runtime data under
 =codex/skills/.system/=.

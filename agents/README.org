@@ -22,7 +22,7 @@ explicit artifact-specific status or exemption.
 | Path | Role | Tracked? | Live consumer |
 |------+------|----------|---------------|
 | =claude/CLAUDE.md= | Claude global instructions | Yes | =~/.claude/CLAUDE.md= symlink |
-| =codex/AGENTS.md= | Codex global instruction port | Yes | =~/.codex/AGENTS.md= symlink |
+| =codex/AGENTS.md= | Codex global instructions | Yes | =~/.codex/AGENTS.md= symlink |
 | =CLAUDE.md= | Dotfiles project instructions | Yes | Loaded only when working in this repo |
 | =claude/skills/= and =codex/skills/= | Global reusable skills | Yes | =~/.claude/skills= and =~/.codex/skills= symlinks |
 | =claude/hooks/= and =codex/hooks/= | Hook script implementations | Yes | Referenced by live hook registrations |
@@ -39,24 +39,26 @@ repo-root =.claude/skills/= or =.codex/skills/= should only contain genuinely
 dotfiles-project-only skills, and such exceptions need an explicit counterpart
 or audit exemption.
 
-* Source Model
+* Peer Model
 
-Claude files remain the human source where possible. Codex uses the same file
-directly when Codex can load it safely, and gets an explicit port when its
-syntax, discovery rules, hook payloads, or instruction-loading semantics differ.
+Claude and Codex artifacts are peer implementations of shared agent behavior.
+Either side may be edited first. When the tools need different syntax,
+discovery rules, hook payloads, or activation files, both files are kept as
+explicit counterparts and =bin/ai-config-sync= checks equivalence under
+tool-specific normalization.
 
-There is no repo-root =AGENTS.md= manual port. Project-level instructions come
+There is no repo-root =AGENTS.md= counterpart. Project-level instructions come
 from =CLAUDE.md= because =codex/config.toml= sets:
 
 #+begin_example
 project_doc_fallback_filenames = ["CLAUDE.md"]
 #+end_example
 
-The tracked =codex/AGENTS.md= is the user-level Codex port of
-=claude/CLAUDE.md=. The live =~/.codex/AGENTS.md= symlink points to this tracked
-port, because Codex's project-doc fallback does not apply to =$CODEX_HOME=.
-The port rewrites Claude-only =@context= syntax and relative context/tool paths
-into Codex-safe instructions.
+The tracked =claude/CLAUDE.md= and =codex/AGENTS.md= files are paired
+user-level instruction files. The live =~/.codex/AGENTS.md= symlink points to
+the tracked Codex file because Codex's project-doc fallback does not apply to
+=$CODEX_HOME=. The equivalence check normalizes the Claude-only =@context=
+syntax and Codex absolute context/tool paths before comparing the files.
 The hook scope is intentionally exact-path: only =claude/CLAUDE.md= and
 =codex/AGENTS.md= are paired. Other =CLAUDE.md= or =AGENTS.md= files are
 project-local docs, and Codex can read project =CLAUDE.md= files directly via
@@ -64,29 +66,30 @@ the fallback setting above.
 
 * Skills
 
-=claude/skills/<name>/= and =codex/skills/<name>/= should contain matching skill
-bodies and auxiliary files. The Codex =SKILL.md= copy strips Claude-only or
-unsupported frontmatter keys such as =allowed-tools=, =argument-hint=, =model=,
-=user-invocable=, and argument metadata. Runtime output directories such as
-=digests/=, =last-run/=, and =twitter-vet/vetted/= are intentionally ignored.
+=claude/skills/<name>/= and =codex/skills/<name>/= should contain equivalent
+skill bodies and auxiliary files. The content check removes tool-specific
+frontmatter keys such as =allowed-tools=, =argument-hint=, =model=,
+=user-invocable=, and argument metadata from both sides before comparison.
+Runtime output directories such as =digests/=, =last-run/=, and
+=twitter-vet/vetted/= are intentionally ignored.
 
 Codex discovers global skills from =~/.codex/skills/*/SKILL.md=. The tracked
-ports are activated by:
+Codex skill tree is activated by:
 
 #+begin_src sh
 codex/bin/install-skills.sh
 #+end_src
 
 The installer makes =~/.codex/skills= a symlink to the tracked =codex/skills/=
-tree. Local reusable skills should be ported into both =claude/skills/= and
+tree. Local reusable skills should live in both =claude/skills/= and
 =codex/skills/= instead of living only under =~/.codex/skills=. Hidden
 Codex-managed system skills may exist under ignored =codex/skills/.system/=
 runtime data, but they are not part of the reusable skill parity model.
 
 * Hooks
 
-Hook scripts are ported when the two tools expose compatible events and payloads.
-The Codex ports live in =codex/hooks/= and are registered from the tracked
+Hook scripts are paired when the two tools expose compatible events and payloads.
+The Codex counterparts live in =codex/hooks/= and are registered from the tracked
 =codex/hooks.json= file, which is live globally through the
 =~/.codex/hooks.json= symlink. Claude hooks live in =claude/hooks/= and are
 registered in the mutable live =~/.claude/settings.json=.
@@ -110,10 +113,10 @@ These cases are recorded in =ai-config-sync.json= rather than treated as drift.
 - =guard-commit= blocks one-sided commits. It inspects staged files and common
   one-shot shell forms such as =git add ... && git commit=, =git add -A=,
   =git commit -a=, quoted paths, absolute paths, and symlinked =~/.claude= paths.
-  For skills, it checks content parity after the Codex frontmatter transform
+  For skills, it checks content parity after tool-specific frontmatter normalization
   rather than accepting any arbitrary counterpart file.
 - =audit= verifies the manifest, topology invariants, live symlinks, global
-  instruction port, skill content parity after Codex frontmatter normalization,
+  instruction equivalence, skill content parity after tool-specific frontmatter normalization,
   auxiliary skill files, hook file inventory, hook registrations, the Codex
   skills directory symlink, and Codex activation files. Topology checks include
   forbidden dotfiles-local =.codex/hooks.json= files, live symlinks resolving

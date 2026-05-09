@@ -45,7 +45,7 @@ authoritative cross-tool path-role table lives in =../agents/README.org=.
 ├── bin/sheets.py                     ← Sheets API CLI (--account epoch|personal)
 ├── bin/slack.py                      ← Slack web-API CLI, including permalink/thread fetches
 ├── bin/_gworkspace_auth.py           ← shared OAuth helper for gmail.py / sheets.py
-├── ../bin/ai-config-sync             ← Claude/Codex port audit and hook checker
+├── ../bin/ai-config-sync             ← Claude/Codex sync audit and hook checker
 └── README.org                        ← this file
 #+end_example
 
@@ -127,7 +127,7 @@ work in both Claude and Codex, =../agents/README.org= is authoritative.
 
 | What | Where | Why |
 |------+-------+-----|
-| New global Claude behavioral rule | =claude/CLAUDE.md= | Applies to all Claude projects; port to =codex/AGENTS.md= when it should also apply to Codex |
+| New global Claude behavioral rule | =claude/CLAUDE.md= | Applies to all Claude projects; update =codex/AGENTS.md= when it should also apply to Codex |
 | New project-specific instruction | =<project>/CLAUDE.md= | Scoped to that project; Codex also reads it through its project-doc fallback |
 | New reusable skill or hook | Follow =../agents/README.org= | Shared artifacts need a counterpart or explicit manifest exemption |
 | New Claude global hook registration | =~/.claude/settings.json= | Fires in all Claude projects; mutable live config edited in place |
@@ -140,10 +140,10 @@ When adding or changing a reusable Claude skill or hook, update the Codex
 counterpart in =codex/skills/= or =codex/hooks/= in the same session.  The
 =remind-ai-config-sync.sh= and =require-ai-config-sync.sh= hooks make this
 visible but do not auto-edit the other side. The commit guard checks skill
-content after the Codex frontmatter transform and only accepts manifest-based
-bypasses when the manifest records an artifact-specific status or exemption. See
-=../agents/README.org= for the full synchronization contract and known
-non-portable cases.
+content after tool-specific frontmatter normalization and only accepts
+manifest-based bypasses when the manifest records an artifact-specific status or
+exemption. See =../agents/README.org= for the full synchronization contract and
+known non-portable cases.
 
 *** Multi-account setup
 :PROPERTIES:
@@ -261,10 +261,11 @@ The global =~/.claude/CLAUDE.md= (symlinked here) is the user-level memory loade
 - MCP server instructions are referenced via =context/mcp-servers.md=, not imported, so agents load them only when MCP-specific context is needed.
 - Service access tools are listed by service in the global memory.
 
-Codex does not consume this file directly. Its tracked user-level port is
-=codex/AGENTS.md=, with Claude-only =@context= syntax and relative context/tool
-paths rewritten for Codex. The live =~/.codex/AGENTS.md= symlink points to that
-port, and =bin/ai-config-sync= audits the transform.
+Codex does not consume this file directly. Its tracked user-level counterpart
+is =codex/AGENTS.md=, with Claude-only =@context= syntax and relative
+context/tool paths expressed in Codex-safe form. The live =~/.codex/AGENTS.md=
+symlink points to that file, and =bin/ai-config-sync= audits semantic
+equivalence after tool-specific normalization.
 
 ** Skills
 :PROPERTIES:
@@ -758,8 +759,8 @@ Processes items from a list file strictly one at a time (sequential) or N-at-a-t
 Twenty-eight hook and utility scripts handle workflow invariants, security, Emacs integration, and Claude/Codex configuration sync. Most Claude hooks are defined in the global =~/.claude/settings.json= and use early-exit guards to skip inapplicable projects. Codex has a separate global registration in =codex/hooks.json=; dotfiles-specific Codex behavior is implemented by registered scripts that inspect the target repo and exit outside scope. =notify-emacs-session-end.sh= and =notify-emacs-notification.sh= escape interpolated buffer-name values before embedding them in Elisp strings; =load-elisp-after-edit.sh= base64-encodes the changed file path and decodes it via =base64-decode-string= on the Elisp side so command-substitution metacharacters never reach the shell during interpolation. =lib-repo-root.sh= extracts a leading =cd <path>= from the bash command via a bash-regex match (bailing out on any =$(...)= or backtick) and calls =git -C <path>= rather than re-shelling the command; when the hook payload contains a structured =cwd= or =workdir=, that directory is used as the fallback repo context before the hook process cwd.
 
 Claude and Codex hooks are no longer shared through adapters.  Claude hooks live
-in =claude/hooks/=; Codex ports live in =codex/hooks/=.  The mapping and known
-non-ports are recorded in =ai-config-sync.json=.
+in =claude/hooks/=; Codex counterparts live in =codex/hooks/=.  The mapping and
+known non-pairs are recorded in =ai-config-sync.json=.
 
 *** require-elisp-test-before-commit.sh (PreToolUse)
 :PROPERTIES:
@@ -787,7 +788,7 @@ Blocks =git commit= when files in =claude/= (skills, hooks, settings, CLAUDE.md)
 :ID:       2D9A0367-26C4-40B8-9B9C-06346D89238B
 :END:
 
-Companion to =require-readme-update.sh=. Fires globally after any Write or Edit, resolves the target path through symlinks, and outputs a reminder if the file is under =dotfiles/claude/= but the agent is working in a different project. This closes the gap where the commit-blocking hook never fires because the agent never switches to the dotfiles repo to commit. Silent when editing =README.org= itself or when already in the dotfiles repo. The Claude hook emits the reminder as plain stdout; the Codex port wraps the same reminder as PostToolUse JSON because Codex treats plain stdout as invalid hook protocol output.
+Companion to =require-readme-update.sh=. Fires globally after any Write or Edit, resolves the target path through symlinks, and outputs a reminder if the file is under =dotfiles/claude/= but the agent is working in a different project. This closes the gap where the commit-blocking hook never fires because the agent never switches to the dotfiles repo to commit. Silent when editing =README.org= itself or when already in the dotfiles repo. The Claude hook emits the reminder as plain stdout; the Codex counterpart wraps the same reminder as PostToolUse JSON because Codex treats plain stdout as invalid hook protocol output.
 
 *** remind-ai-config-sync.sh (PostToolUse)
 :PROPERTIES:
@@ -801,7 +802,7 @@ Fires after Claude Edit or Write operations and calls =bin/ai-config-sync remind
 :ID:       5428CDD1-C447-4549-8365-56066C479F61
 :END:
 
-Fires before Bash =git commit= commands and calls =bin/ai-config-sync guard-commit=. Blocks one-sided Claude/Codex configuration changes in the dotfiles repo unless the counterpart is synchronized or =ai-config-sync.json= records an artifact-specific status or exemption. For skills, the guard checks body and auxiliary-file parity after stripping Codex-unsupported Claude frontmatter, so unrelated counterpart edits do not satisfy it. This keeps the model explicit: the active agent makes both edits and commits them together, or records an intentional exception in the manifest.
+Fires before Bash =git commit= commands and calls =bin/ai-config-sync guard-commit=. Blocks one-sided Claude/Codex configuration changes in the dotfiles repo unless the counterpart is synchronized or =ai-config-sync.json= records an artifact-specific status or exemption. For skills, the guard checks body and auxiliary-file parity after removing tool-specific frontmatter from both sides, so unrelated counterpart edits do not satisfy it. This keeps the model explicit: the active agent makes both edits and commits them together, or records an intentional exception in the manifest.
 
 *** require-doc-update.sh (PreToolUse)
 :PROPERTIES:

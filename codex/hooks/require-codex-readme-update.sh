@@ -22,6 +22,11 @@ if [ -z "$REPO_ROOT" ]; then
   exit 0
 fi
 
+DOTFILES_ROOT=$(cd -- "$SCRIPT_DIR/../.." && pwd)
+if [ "$(cd -- "$REPO_ROOT" && pwd)" != "$DOTFILES_ROOT" ]; then
+  exit 0
+fi
+
 # shellcheck source=lib-staged-files.sh
 source "$SCRIPT_DIR/lib-staged-files.sh"
 

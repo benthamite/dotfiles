@@ -23,11 +23,6 @@ ai-marketplace-monitor.log*
 
 ## claude-code
 /.claude/*
-!/.claude/skills/
-/.claude/skills/*
-!/.claude/skills/skill-creator/
-!/.claude/skills/find-skills/
-!/.claude/skills/systematic-debugging/
 **/.claude/
 !/.claude/
 claude/skills/*/node_modules

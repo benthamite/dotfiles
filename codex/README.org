@@ -28,6 +28,12 @@ ai-config-sync.json        <- Claude/Codex port manifest
 bin/ai-config-sync         <- audit, reminder, and commit-guard checker
 #+end_example
 
+Repo-root =.codex/= is reserved for project-local Codex config. Do not use
+=~/My Drive/dotfiles/.codex/= as a target for live global =~/.codex/= symlinks;
+that makes Codex load the same file as both global and dotfiles-project-local
+configuration. The topology table in =../claude/README.org= is the
+authoritative cross-tool reference.
+
 * Instructions
 
 Project-level =CLAUDE.md= files are loaded by Codex because
@@ -88,6 +94,11 @@ Project-specific skills belong beside their project instead of this global
 tree. For the Epoch workspace, the Claude copies live in
 =~/My Drive/Epoch/.claude/skills/= and the Codex copies live in
 =~/My Drive/Epoch/.codex/skills/=.
+
+The former dotfiles-project-local Claude skills =find-skills=,
+=skill-creator=, and =systematic-debugging= now live in the global
+=claude/skills/= and =codex/skills/= trees so they are available consistently
+from both tools in every project.
 
 Codex-only skills are allowed when they document a capability that exists only
 in Codex. Record them in =ai-config-sync.json= with =status: codex-only=,

@@ -31,7 +31,7 @@ bin/ai-config-sync         <- audit, reminder, and commit-guard checker
 Repo-root =.codex/= is reserved for project-local Codex config. Do not use
 =~/My Drive/dotfiles/.codex/= as a target for live global =~/.codex/= symlinks;
 that makes Codex load the same file as both global and dotfiles-project-local
-configuration. The topology table in =../claude/README.org= is the
+configuration. The topology table in =../agents/README.org= is the
 authoritative cross-tool reference.
 
 * Instructions
@@ -191,8 +191,8 @@ The Codex ports cover:
   =ox-texinfo= with batch lockfile creation disabled and only regenerates the
   exact =.texi= returned by the org exporter plus its existing matching
   =.info= file.
-- Codex Stop and SessionStart forwarding to Emacs via
-  =codex/hooks/notify-emacs-hook.sh=.
+- Codex lifecycle forwarding to Emacs through =codex-hook-wrapper= entries in
+  =codex/hooks.json=.
 
 Codex PostToolUse hooks must write either no stdout or valid hook JSON.  Reminder
 hooks therefore return
@@ -207,8 +207,9 @@ not expose the same event in this setup:
 - Claude =Read=/=Grep=/=Glob= hooks such as =block-sensitive-read.sh=.
 - Claude =Skill= hooks such as =require-elisp-skill.sh= and
   =track-elisp-skill.sh=.
-- Claude Notification-specific Emacs hooks.  Codex uses
-  =notify-emacs-hook.sh= for Codex lifecycle events instead.
+- Claude Notification-specific Emacs hooks.  Codex routes lifecycle and
+  notification-equivalent events through =codex-hook-wrapper= entries in
+  =codex/hooks.json= instead.
 
 * Sync Guard
 

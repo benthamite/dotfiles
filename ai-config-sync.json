@@ -177,6 +177,13 @@
       "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
     },
     {
+      "name": "google-sheets-comments",
+      "claude": "claude/skills/google-sheets-comments/SKILL.md",
+      "codex": "codex/skills/google-sheets-comments/SKILL.md",
+      "status": "ported",
+      "codex_transform": "Claude-only frontmatter keys removed; body and auxiliary files copied."
+    },
+    {
       "name": "handoff",
       "claude": "claude/skills/handoff/SKILL.md",
       "codex": "codex/skills/handoff/SKILL.md",

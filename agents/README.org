@@ -7,11 +7,37 @@ This document describes how the Claude Code and Codex configurations in this
 repo stay aligned. Tool-specific setup details remain in
 =claude/README.org= and =codex/README.org=.
 
+This file is the authoritative cross-tool topology reference. If a tool-specific
+README conflicts with this file about where a shared artifact belongs, follow
+this file.
+
 The synchronization model is intentionally manual, not auto-generated. When an
 agent changes a reusable Claude or Codex artifact, hooks remind it to update the
 counterpart during the same session. Commit guards then block one-sided commits
 unless the changed artifact is synchronized or =ai-config-sync.json= records an
 explicit artifact-specific status or exemption.
+
+* Topology
+
+| Path | Role | Tracked? | Live consumer |
+|------+------|----------|---------------|
+| =claude/CLAUDE.md= | Claude global instructions | Yes | =~/.claude/CLAUDE.md= symlink |
+| =codex/AGENTS.md= | Codex global instruction port | Yes | =~/.codex/AGENTS.md= symlink |
+| =CLAUDE.md= | Dotfiles project instructions | Yes | Loaded only when working in this repo |
+| =claude/skills/= and =codex/skills/= | Global reusable skills | Yes | =~/.claude/skills= and =~/.codex/skills= symlinks |
+| =claude/hooks/= and =codex/hooks/= | Hook script implementations | Yes | Referenced by live hook registrations |
+| =~/.claude/settings.json= | Claude global settings and hook registration | No | Real mutable file, edited in place |
+| =~/.claude/settings.local.json= | Claude machine-local permissions | No | Real mutable file, edited in place |
+| =codex/hooks.json= | Codex global hook registration | Yes | =~/.codex/hooks.json= symlink |
+| =codex/config.toml= | Codex global settings | Yes | =~/.codex/config.toml= symlink |
+| =<project>/.claude/= and =<project>/.codex/= | Project-local tool config | Usually no | Loaded only for that project |
+
+Repo-root =.claude/= and =.codex/= paths are project-local by definition. Do
+not use them as targets for global =~/.claude/= or =~/.codex/= symlinks. In this
+dotfiles repo, reusable skills belong in =claude/skills/= and =codex/skills/=;
+repo-root =.claude/skills/= or =.codex/skills/= should only contain genuinely
+dotfiles-project-only skills, and such exceptions need an explicit counterpart
+or audit exemption.
 
 * Source Model
 
@@ -60,16 +86,17 @@ runtime data, but they are not part of the reusable skill parity model.
 * Hooks
 
 Hook scripts are ported when the two tools expose compatible events and payloads.
-The Codex ports live in =codex/hooks/= and are registered from
-=.codex/hooks.json=. Claude hooks live in =claude/hooks/= and are registered in
-the mutable live =~/.claude/settings.json=.
+The Codex ports live in =codex/hooks/= and are registered from the tracked
+=codex/hooks.json= file, which is live globally through the
+=~/.codex/hooks.json= symlink. Claude hooks live in =claude/hooks/= and are
+registered in the mutable live =~/.claude/settings.json=.
 
 Some hooks cannot be synchronized one-for-one:
 
 - Claude =Read=/=Grep=/=Glob= hooks do not have equivalent Codex events here.
 - Claude =Skill= hooks do not have equivalent Codex skill hook events here.
 - Claude Notification hooks are replaced by Codex lifecycle forwarding through
-  =codex/hooks/notify-emacs-hook.sh=.
+  =codex-hook-wrapper= entries in =codex/hooks.json=.
 - Chrome-specific Claude hooks have no Codex counterpart.
 
 These cases are recorded in =ai-config-sync.json= rather than treated as drift.
@@ -85,10 +112,13 @@ These cases are recorded in =ai-config-sync.json= rather than treated as drift.
   =git commit -a=, quoted paths, absolute paths, and symlinked =~/.claude= paths.
   For skills, it checks content parity after the Codex frontmatter transform
   rather than accepting any arbitrary counterpart file.
-- =audit= verifies the manifest, live symlinks, global instruction port, skill
-  content parity after Codex frontmatter normalization, auxiliary skill files,
-  hook file inventory, hook registrations, the Codex skills directory symlink,
-  and Codex activation files.
+- =audit= verifies the manifest, topology invariants, live symlinks, global
+  instruction port, skill content parity after Codex frontmatter normalization,
+  auxiliary skill files, hook file inventory, hook registrations, the Codex
+  skills directory symlink, and Codex activation files. Topology checks include
+  forbidden dotfiles-local =.codex/hooks.json= files, live symlinks resolving
+  into project-local config, undocumented tool-home symlinks, and dotfiles
+  project-local skills.
 
 Run the deterministic audit with:
 

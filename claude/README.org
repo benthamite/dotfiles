@@ -28,7 +28,9 @@ topology and inventory.
 :ID:       EB7422C8-E371-4F9B-AE1F-D6B6473F11BB
 :END:
 
-Three layers of directories work together: this dotfiles directory (source of truth), the shared =~/.claude/= hub, and per-account overlay directories. Codex uses the same pattern through the parallel =codex/= source tree and =~/.codex/= live hub.
+Three Claude-specific layers work together: this dotfiles directory (source of
+truth), the shared =~/.claude/= hub, and per-account overlay directories. The
+authoritative cross-tool path-role table lives in =../agents/README.org=.
 
 *Source of truth* (version-controlled in this repo):
 
@@ -73,26 +75,10 @@ Note: =settings.json= is intentionally *not* tracked here. Claude Code writes to
 └── skills/             ← project-specific skills (optional)
 #+end_example
 
-*Cross-tool path roles*:
-
-| Path | Role | Tracked? | Live consumer |
-|------+------|----------|---------------|
-| =claude/CLAUDE.md= | Claude global instructions | Yes | =~/.claude/CLAUDE.md= symlink |
-| =codex/AGENTS.md= | Codex global instruction port | Yes | =~/.codex/AGENTS.md= symlink |
-| =CLAUDE.md= | dotfiles project instructions | Yes | Loaded only when working in this repo |
-| =claude/skills/= and =codex/skills/= | Global reusable skills | Yes | =~/.claude/skills= and =~/.codex/skills= symlinks |
-| =claude/hooks/= and =codex/hooks/= | Hook script implementations | Yes | Referenced by live hook registrations |
-| =~/.claude/settings.json= | Claude global settings and hook registration | No | Real mutable file, edited in place |
-| =codex/hooks.json= | Codex global hook registration | Yes | =~/.codex/hooks.json= symlink |
-| =codex/config.toml= | Codex global settings | Yes | =~/.codex/config.toml= symlink |
-| =<project>/.claude/= and =<project>/.codex/= | Project-local tool config | Usually no | Loaded only for that project |
-
-Repo-root =.claude/= and =.codex/= paths are project-local by definition. Do
-not use them as targets for global =~/.claude/= or =~/.codex/= symlinks. In this
-dotfiles repo, reusable skills belong in =claude/skills/= and =codex/skills/=;
-repo-root =.claude/skills/= or =.codex/skills/= should only contain genuinely
-dotfiles-project-only skills, and such exceptions need an explicit counterpart
-or audit exemption.
+*Cross-tool topology.* The authoritative path-role table lives in
+=../agents/README.org=. In particular, repo-root =.claude/= and =.codex/= paths
+are project-local by definition and must not be used as targets for global
+=~/.claude/= or =~/.codex/= symlinks.
 
 *MCP server reference.* Placement rules, current inventory, multi-account notes, account-specific credential handling, identity checks, and reload requirements for remaining project-local exceptions live in =context/mcp-servers.md=. The global =CLAUDE.md= points agents there when MCP-specific context is needed, so they do not need to read this whole README just to configure or debug an MCP server.
 
@@ -111,7 +97,9 @@ Claude Code loads settings from multiple levels, merged together. Each level can
 | User (=~/.claude/=) | Model, theme, global hooks, global permissions | Machine-specific tool whitelists | Applies to all projects |
 | Project (=<project>/.claude/=) | Project-specific hooks | Project-specific permissions | Applies only in that project |
 
-Neither =settings.json= nor =settings.local.json= is version-controlled; both are edited in place in =~/.claude/=.
+The user-level =~/.claude/settings.json= and
+=~/.claude/settings.local.json= files are not version-controlled; both are
+edited in place in =~/.claude/=.
 
 The global =settings.json= uses =auto= mode (Anthropic's classifier-backed permission mode that approves most actions while flagging risky ones) inside the =permissions= object. All MCP servers are explicitly listed in =permissions.allow= as a workaround for [[https://github.com/anthropics/claude-code/issues/5140][anthropics/claude-code#5140]]. Safety hooks (=guard-external-actions.sh=, =block-destructive-command.sh=, etc.) provide additional guardrails.
 
@@ -134,14 +122,16 @@ Each file should contain distinct content. The global one defines behavioral con
 :ID:       A01A5164-CE5F-414D-9999-924B5C89339B
 :END:
 
+Use this table for Claude-specific placement. For reusable artifacts that should
+work in both Claude and Codex, =../agents/README.org= is authoritative.
+
 | What | Where | Why |
 |------+-------+-----|
-| New global behavioral rule | =claude/CLAUDE.md= | Applies to all projects |
-| New project-specific instruction | =<project>/CLAUDE.md= | Scoped to that project |
-| New skill (reusable across projects) | =claude/skills/<name>/SKILL.md= and =codex/skills/<name>/SKILL.md= | Available everywhere in both tools |
-| New skill (project-specific) | =<project>/.claude/skills/<name>/SKILL.md= and =<project>/.codex/skills/<name>/SKILL.md= | Scoped to that project in both tools |
-| New global hook | =~/.claude/settings.json= plus =codex/hooks.json= and =codex/hooks/<script>= | Fires in all projects; write early-exit guards for inapplicable contexts |
-| New project-specific hook | =<project>/.claude/settings.json= and =<project>/.codex/hooks.json= | Fires only in that project |
+| New global Claude behavioral rule | =claude/CLAUDE.md= | Applies to all Claude projects; port to =codex/AGENTS.md= when it should also apply to Codex |
+| New project-specific instruction | =<project>/CLAUDE.md= | Scoped to that project; Codex also reads it through its project-doc fallback |
+| New reusable skill or hook | Follow =../agents/README.org= | Shared artifacts need a counterpart or explicit manifest exemption |
+| New Claude global hook registration | =~/.claude/settings.json= | Fires in all Claude projects; mutable live config edited in place |
+| New Claude project-specific hook registration | =<project>/.claude/settings.json= | Fires only in that project |
 | New machine-specific permission | =~/.claude/settings.local.json= | E.g. brew, mpv, pip3 |
 | New MCP server | =~/.claude.json=, then run =claude/bin/sync-mcp-servers.sh= | Syncs to account dirs |
 | New MCP reference detail | =claude/context/mcp-servers.md= | Keeps MCP-specific instructions out of global memory and the long README |
@@ -765,7 +755,7 @@ Processes items from a list file strictly one at a time (sequential) or N-at-a-t
 :ID:       4D862953-7E8A-4154-BC16-919ED6B092A5
 :END:
 
-Twenty-eight hook and utility scripts handle workflow invariants, security, Emacs integration, and Claude/Codex configuration sync. Most are defined in the global =~/.claude/settings.json= and use early-exit guards to skip inapplicable projects. Repository-specific commit guards also exist on the Codex side in =codex/hooks.json=. =notify-emacs-session-end.sh= and =notify-emacs-notification.sh= escape interpolated buffer-name values before embedding them in Elisp strings; =load-elisp-after-edit.sh= base64-encodes the changed file path and decodes it via =base64-decode-string= on the Elisp side so command-substitution metacharacters never reach the shell during interpolation. =lib-repo-root.sh= extracts a leading =cd <path>= from the bash command via a bash-regex match (bailing out on any =$(...)= or backtick) and calls =git -C <path>= rather than re-shelling the command; when the hook payload contains a structured =cwd= or =workdir=, that directory is used as the fallback repo context before the hook process cwd.
+Twenty-eight hook and utility scripts handle workflow invariants, security, Emacs integration, and Claude/Codex configuration sync. Most Claude hooks are defined in the global =~/.claude/settings.json= and use early-exit guards to skip inapplicable projects. Codex has a separate global registration in =codex/hooks.json=; dotfiles-specific Codex behavior is implemented by registered scripts that inspect the target repo and exit outside scope. =notify-emacs-session-end.sh= and =notify-emacs-notification.sh= escape interpolated buffer-name values before embedding them in Elisp strings; =load-elisp-after-edit.sh= base64-encodes the changed file path and decodes it via =base64-decode-string= on the Elisp side so command-substitution metacharacters never reach the shell during interpolation. =lib-repo-root.sh= extracts a leading =cd <path>= from the bash command via a bash-regex match (bailing out on any =$(...)= or backtick) and calls =git -C <path>= rather than re-shelling the command; when the hook payload contains a structured =cwd= or =workdir=, that directory is used as the fallback repo context before the hook process cwd.
 
 Claude and Codex hooks are no longer shared through adapters.  Claude hooks live
 in =claude/hooks/=; Codex ports live in =codex/hooks/=.  The mapping and known

@@ -24,7 +24,7 @@ record an explicit artifact-specific status or exemption.
 |------+------|----------|---------------|
 | =claude/CLAUDE.md= | Claude global instructions | Yes | =~/.claude/CLAUDE.md= symlink |
 | =codex/AGENTS.md= | Codex global instructions | Yes | =~/.codex/AGENTS.md= symlink |
-| =CLAUDE.md= | Dotfiles project instructions | Yes | Loaded only when working in this repo |
+| =CLAUDE.md= and =AGENTS.md= | Dotfiles project instructions | Yes | Loaded only when working in this repo |
 | =claude/skills/= and =codex/skills/= | Global reusable skills | Yes | =~/.claude/skills= and =~/.codex/skills= symlinks |
 | =claude/hooks/= and =codex/hooks/= | Hook script implementations | Yes | Referenced by live hook registrations |
 | =~/.claude/settings.json= | Claude global settings and hook registration | No | Real mutable file, edited in place |
@@ -49,22 +49,20 @@ discovery rules, hook payloads, or activation files, both files are kept as
 explicit counterparts and =bin/ai-config-sync= checks equivalence under
 tool-specific normalization.
 
-There is no repo-root =AGENTS.md= counterpart. Project-level instructions come
-from =CLAUDE.md= because =codex/config.toml= sets:
-
-#+begin_example
-project_doc_fallback_filenames = ["CLAUDE.md"]
-#+end_example
-
 The tracked =claude/CLAUDE.md= and =codex/AGENTS.md= files are paired
 user-level instruction files. The live =~/.codex/AGENTS.md= symlink points to
-the tracked Codex file because Codex's project-doc fallback does not apply to
-=$CODEX_HOME=. The equivalence check normalizes the Claude-only =@context=
-syntax and Codex absolute context/tool paths before comparing the files.
-The hook scope is intentionally exact-path: only =claude/CLAUDE.md= and
-=codex/AGENTS.md= are paired. Other =CLAUDE.md= or =AGENTS.md= files are
-project-local docs, and Codex can read project =CLAUDE.md= files directly via
-the fallback setting above.
+the tracked Codex file.
+
+Project-level instructions are also paired. Every project-root =CLAUDE.md=
+should have a project-root =AGENTS.md= counterpart. The sync checker treats
+=CLAUDE.md= and =AGENTS.md= in the command's target git repository as
+project-local instruction peers, just as it treats =.claude/skills/= and
+=.codex/skills/= as project-local skill peers. Codex does not use
+=project_doc_fallback_filenames= to read =CLAUDE.md=; project Codex
+instructions live in =AGENTS.md=.
+
+Instruction equivalence checks normalize the Claude-only =@context= syntax and
+Codex-safe path references before comparing paired instruction files.
 
 * Skills
 
@@ -126,17 +124,18 @@ These cases are recorded in =ai-config-sync.json= rather than treated as drift.
   one-shot shell forms such as =git add ... && git commit=, =git add -A=,
   =git commit -a=, quoted paths, absolute paths, and symlinked =~/.claude= paths.
   The guard resolves the git repo targeted by the commit command, so it checks
-  project-local =.claude/= and =.codex/= pairs in that repo as well as global
-  dotfiles pairs. For skills, it checks content parity after tool-specific
-  frontmatter normalization rather than accepting any arbitrary counterpart
-  file.
+  project-local =CLAUDE.md=/=AGENTS.md=, =.claude/=, and =.codex/= pairs in that
+  repo as well as global dotfiles pairs. For skills, it checks content parity
+  after tool-specific frontmatter normalization rather than accepting any
+  arbitrary counterpart file.
 - =audit= verifies the manifest, topology invariants, live symlinks, global
   instruction equivalence, skill content parity after tool-specific frontmatter normalization,
   auxiliary skill files, hook file inventory, hook registrations, the Codex
   skills directory symlink, and Codex activation files. Topology checks include
   forbidden dotfiles-local =.codex/hooks.json= files, live symlinks resolving
   into project-local config, undocumented tool-home symlinks, and dotfiles
-  project-local skills.
+  project-local skills. It also checks the dotfiles repo-root
+  =CLAUDE.md=/=AGENTS.md= pair.
 
 Run the deterministic audit with:
 

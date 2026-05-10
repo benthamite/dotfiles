@@ -1,11 +1,13 @@
 ---
 name: release
-description: Release an Emacs package or audit all packages for release readiness. Use `/release <package>` to cut a release, or `/release --audit` to scan all packages.
+description: Release one of the user's Emacs packages or audit package release readiness. Use when the user says `/release <package>`, asks to bump/tag/create a GitHub release, wants release notes for a benthamite Emacs package, or runs `/release --audit`; do not use for dotfiles releases.
 ---
 
 # Package release
 
 Cut a new release for an Emacs package on GitHub (benthamite/), or audit all packages for release readiness.
+
+Use `release-dotfiles` instead for the `dotfiles` repo itself. Do not use this skill for README generation, package registration, or generic release-note drafting unless the user is releasing one of these Emacs packages.
 
 ## Packages
 
@@ -18,15 +20,26 @@ Do NOT hard-code a package list. Instead, read the **listed packages** (level-2 
 Parse with:
 
 ```bash
-grep -E '^\*\* =' ~/My\ Drive/notes/pablos-miscellany/my-emacs-packages.org | sed 's/^\*\* =//;s/=$//'
+awk '
+  /^\*\* Unlisted packages([[:space:]]|$)/ { stop = 1 }
+  stop { next }
+  /^\*\* =[^=]+=$/ {
+    name = $0
+    sub(/^\*\* =/, "", name)
+    sub(/=$/, "", name)
+    print name
+  }
+' "$HOME/My Drive/notes/pablos-miscellany/my-emacs-packages.org"
 ```
 
 ## Semver normalization rules
 
 When comparing versions, normalize to 3-part semver (`MAJOR.MINOR.PATCH`):
 
+- Strip a leading `v` from tags for comparison.
 - If a tag or header has only 2 parts (e.g., `0.1`), treat it as `0.1.0` for comparison purposes.
 - A tag `0.1` and a header `0.1.0` are considered a **match** after normalization.
+- Compare numeric components, not strings (`0.10.0` is greater than `0.2.0`).
 
 When writing a new version (header or tag), **match the format the repo already uses**. If the most recent tag is 2-part (e.g., `0.3`), create a 2-part tag. If 3-part (e.g., `0.1.0`), create a 3-part tag. The header format should likewise match the repo's convention.
 
@@ -37,13 +50,15 @@ Parse `$ARGUMENTS` to determine the mode:
 - `--audit` → audit mode
 - Anything else (a package name, or empty if inside a package repo) → release mode
 
+Strip recognized flags such as `--audit` and `--accept` before interpreting a release-mode package name. If any unrecognized flag or more than one non-flag argument remains, stop and ask for clarification rather than guessing the package.
+
 If `--accept` is present in `$ARGUMENTS`, skip the confirmation gate (step 9) and proceed directly to executing the release. All other steps (including presenting the summary and release notes) still run normally — `--accept` only removes the wait for user confirmation.
 
 ---
 
 ## Audit mode (`/release --audit`)
 
-Scan all listed packages **in parallel** using `gh api` exclusively — do NOT clone any repos.
+Scan all listed packages **in parallel** where the current agent/tooling supports it, using `gh api` exclusively — do NOT clone any repos. Do not create tags, releases, PRs, issues, or other externally visible changes in audit mode.
 
 ### For each package, run these in a single subagent:
 
@@ -52,6 +67,8 @@ Scan all listed packages **in parallel** using `gh api` exclusively — do NOT c
    ```bash
    gh api repos/benthamite/PACKAGE/tags --jq '.[0].name'
    ```
+
+   If this returns nothing, record the latest tag as `(none)`, skip the compare API, and treat the full commit history as unreleased.
 
 2. **Count commits since that tag**:
 
@@ -65,13 +82,20 @@ Scan all listed packages **in parallel** using `gh api` exclusively — do NOT c
    gh api repos/benthamite/PACKAGE/compare/TAG...HEAD --jq '.commits[] | .commit.message' | head -20
    ```
 
+   For a repo with no tags, use commits endpoint pagination instead:
+
+   ```bash
+   gh api repos/benthamite/PACKAGE/commits --paginate --jq '.[].sha' | wc -l
+   gh api repos/benthamite/PACKAGE/commits --per-page 20 --jq '.[].commit.message'
+   ```
+
 3. **Read the `Version:` header** from the main `.el` file:
 
    ```bash
    gh api repos/benthamite/PACKAGE/contents/PACKAGE.el --jq '.content' | base64 -d | grep -m1 '^;; Version:'
    ```
 
-4. **Normalize and compare**: apply the semver normalization rules above to both the tag and the header version. Flag any mismatch.
+4. **Normalize and compare**: apply the semver normalization rules above to both the tag and the header version. Flag any mismatch. If there is no tag, report `n/a` for match status and include the package with release-ready results if it has a version header.
 
 ### Output
 
@@ -83,11 +107,11 @@ Present a summary table:
 | annas-archive     | 0.1.0      | 0.1.0          | yes   | 3          | Add search, fix pagination… |
 ```
 
-Then group results into three sections:
+Then group results into four sections:
 
 1. **Version mismatches (header behind tag)** — header version is lower than tag after normalization. These are genuinely broken and need manual resolution.
 2. **Ready to release (pre-bumped)** — header version is ahead of tag. The header was already bumped in anticipation of the next release. These can be released using the header version directly (the release skill handles this automatically). Note: even if the compare API reports 0 unreleased commits, the header bump itself indicates intent to release — include these here, not in "up to date".
-3. **Ready to release** — versions match, unreleased commit count > 0.
+3. **Ready to release** — versions match, unreleased commit count > 0, or the package has no tags but does have a `Version:` header.
 4. **Up to date** — versions match, unreleased commit count = 0.
 
 ---
@@ -99,6 +123,7 @@ Then group results into three sections:
 - If `$ARGUMENTS` names a package, use that.
 - If `$ARGUMENTS` is empty, infer from the current working directory (look for a `.el` file matching the repo name).
 - If neither works, ask the user.
+- Ignore recognized flags such as `--accept` when determining the package.
 
 ### 2. Verify local repo
 
@@ -133,18 +158,25 @@ If the local branch is behind the remote, warn the user and ask whether to pull 
 
 ```bash
 LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null)
-git log "$LATEST_TAG"..HEAD --oneline
+if [ -n "$LATEST_TAG" ]; then
+  git log "$LATEST_TAG"..HEAD --oneline
+else
+  git log --oneline
+fi
 ```
 
-If there are **zero** commits since the last tag, stop — there is nothing to release.
+Record the number of commits shown. Do not stop yet when the count is zero, because a pre-bumped `Version:` header can still indicate that the intended release tag has not been created.
 
 ### 6. Check version header vs tag
 
 Read the `Version:` header from the main `.el` file. Normalize both to 3-part semver and compare:
 
+- **No tag exists**: use the header version as the initial release version, skip step 7, and skip the version-bump commit in step 10 unless the user explicitly asks for a different initial version.
 - **Header == tag**: normal flow. Proceed to step 7 to classify commits and suggest a bump.
 - **Header > tag** (pre-bumped): the header was already bumped in anticipation of this release. Use the header version as the release version. **Skip step 7** (the user already chose the version). Proceed to step 8 to draft release notes.
 - **Header < tag**: this is genuinely broken — the header is behind the tag. **Stop and flag the issue.** Do not proceed. Offer to update the header to match the tag.
+
+If the header matches the tag and there are **zero** commits since the tag, stop — there is nothing to release.
 
 ### 7. Classify commits and suggest bump
 
@@ -157,7 +189,7 @@ Read each commit since the last tag. Classify into:
 - **Fix** — bug fixes → bump PATCH
 - **Docs/chore/other** — no bump on their own
 
-Suggest the appropriate semver bump based on the highest-priority category present. Present the suggestion but let the user override.
+Suggest the appropriate semver bump based on the highest-priority category present. If `--accept` was passed, use this suggested bump automatically; otherwise present the suggestion and let the user override in step 9.
 
 ### 8. Draft release notes
 
@@ -193,12 +225,12 @@ Present a full summary:
 
 ### 10. Execute the release
 
-Only after confirmation:
+Only after confirmation, or after step 9 has been skipped by `--accept`:
 
 1. **Update the `Version:` header** in the main `.el` file to the new version (skip if pre-bumped):
 
    ```bash
-   # Use the Edit tool — do not use sed
+   # Use apply_patch in Codex, or the Edit tool in Claude Code. Do not rewrite with sed/perl.
    ```
 
 2. **Commit** (skip if pre-bumped — the header is already at the right version):
@@ -243,7 +275,7 @@ Confirm the tag and release are live. Report success or any errors.
 
 ## Error handling
 
-- **No tags exist**: treat the entire history as unreleased. Use the root commit as the base for comparison.
+- **No tags exist**: treat the entire history as unreleased. In audit mode, report latest tag as `(none)` and match as `n/a`; in release mode, use the `Version:` header as the initial release version and skip the version-bump commit unless the user asks for a different initial version.
 - **API rate limiting**: if `gh api` returns 403/429, report it and suggest the user wait or authenticate with a higher-rate token.
 - **Tag format variations**: tags may or may not have a `v` prefix. Normalize by stripping `v` when comparing, but preserve the existing convention when creating new tags (match whatever the repo already uses).
 - **Multiple `.el` files**: use the one whose name matches the package/repo name.

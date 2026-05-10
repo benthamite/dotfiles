@@ -461,7 +461,7 @@ Replaces raw bibliographic references in =.org= files with org-mode =[cite:@KEY]
 :ID:       10DF729B-32D5-48E0-A150-9F5D18F799AF
 :END:
 
-Cuts releases for my Emacs packages (read dynamically from the listed package headings in =my-emacs-packages.org=, excluding the unlisted section). Validates the repo, classifies commits since the last tag, suggests a semver bump, and drafts release notes. Also has an audit mode that scans all packages for version mismatches or unreleased commits without creating tags or releases. Handles untagged package repos as initial releases, strips flags such as =--accept= before package inference, and routes dotfiles releases to =release-dotfiles=. Pass =--accept= to skip the confirmation gate.
+Cuts releases for my Emacs packages (read dynamically from the listed package headings in =my-emacs-packages.org=, excluding the unlisted section). Validates the repo, classifies commits since the last tag, suggests a semver bump, and drafts release notes. Also has an audit mode that scans all packages for version mismatches or unreleased commits without cloning or creating tags/releases. Handles untagged package repos as initial releases, strips flags such as =--accept= before package inference, and routes dotfiles releases to =release-dotfiles=. Pass =--accept= to skip the confirmation gate.
 
 **** release-dotfiles
 :PROPERTIES:

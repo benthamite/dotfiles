@@ -279,10 +279,17 @@ the user phrasing, scope boundary, and important near-miss exclusions needed to
 decide whether to load the skill, but keep implementation details in the skill
 body.
 
-The tracked skill bodies live under =claude/skills/= and =codex/skills/=. The
-live home-directory skill roots (=~/.claude/skills= and =~/.codex/skills=) are
-symlinks to those tracked trees, created by =bin/skill-prune install= or either
-=claude/bin/install-skills.sh= / =codex/bin/install-skills.sh=.
+The tracked interactive skill bodies live under =claude/skills/= and
+=codex/skills/=. The live home-directory skill roots (=~/.claude/skills= and
+=~/.codex/skills=) are symlinks to those tracked trees, created by
+=bin/skill-prune install= or either =claude/bin/install-skills.sh= /
+=codex/bin/install-skills.sh=.
+
+Programmatic-only skills live under =claude/programmatic-skills/= and
+=codex/programmatic-skills/=. The installers link these to
+=~/.claude/programmatic-skills= and =~/.codex/programmatic-skills= for
+=ai-agent-run-skill= discovery, but ordinary Claude Code and Codex sessions do
+not load them as interactive skills.
 
 Run =bin/skill-prune apply --days 60= to disable stale paired skills. The scan
 checks recent Claude and Codex transcripts and disables a skill only when both

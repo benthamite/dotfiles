@@ -1310,8 +1310,8 @@ def audit_topology(problems: list[str]) -> None:
         )
 
     allowed_live_symlinks = {
-        Path.home() / ".claude": {"CLAUDE.md", "skills"},
-        Path.home() / ".codex": {"AGENTS.md", "config.toml", "hooks.json", "rules", "skills"},
+        Path.home() / ".claude": {"CLAUDE.md", "programmatic-skills", "skills"},
+        Path.home() / ".codex": {"AGENTS.md", "config.toml", "hooks.json", "programmatic-skills", "rules", "skills"},
     }
     for directory, allowed_names in allowed_live_symlinks.items():
         if not directory.is_dir():

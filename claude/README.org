@@ -306,16 +306,21 @@ Claude =skillOverrides= entries set to ="off" in the live
 intentionally retained skill should remain enabled despite missing history.
 
 Project-local skills live with the project or workspace that owns their
-workflow instead of this global dotfiles tree. Dotfiles maintenance skills live
-under =~/My Drive/dotfiles/.claude/skills/= and =~/My Drive/dotfiles/.codex/skills/=.
-Emacs-only maintenance skills live under =~/My Drive/dotfiles/emacs/.claude/skills/=
-and =~/My Drive/dotfiles/emacs/.codex/skills/=. Notes workflows live under
-=~/My Drive/notes/.claude/skills/= and =~/My Drive/notes/.codex/skills/=,
-with batch-only note workflows under the matching =programmatic-skills= roots.
-Google Drive cleanup skills live under =~/My Drive/.claude/skills/= and
-=~/My Drive/.codex/skills/=. Epoch-only skills live in the Epoch workspace:
-=~/My Drive/Epoch/.claude/skills/= for Claude and
-=~/My Drive/Epoch/.codex/skills/= for Codex.
+workflow instead of this global dotfiles tree:
+
+- Dotfiles maintenance: =~/My Drive/dotfiles/.claude/skills/= and
+  =~/My Drive/dotfiles/.codex/skills/=.
+- Emacs-only maintenance: =~/My Drive/dotfiles/emacs/.claude/skills/= and
+  =~/My Drive/dotfiles/emacs/.codex/skills/=.
+- Notes workflows: =~/My Drive/notes/.claude/skills/= and
+  =~/My Drive/notes/.codex/skills/=.
+- Batch-only notes workflows: the matching =programmatic-skills= roots under
+  =~/My Drive/notes/.claude/= and =~/My Drive/notes/.codex/=.
+- Google Drive cleanup: =~/My Drive/.claude/skills/= and
+  =~/My Drive/.codex/skills/=.
+- Epoch-only workflows: =~/My Drive/Epoch/.claude/skills/= and
+  =~/My Drive/Epoch/.codex/skills/=.
+
 Each project-local skill root documents its skills in that project's
 =README.org= under a dedicated =Skills= section.
 

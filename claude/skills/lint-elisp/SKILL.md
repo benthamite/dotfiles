@@ -14,52 +14,87 @@ Check `$ARGUMENTS` for a file or directory path.
 
 - **File path provided**: lint that single file.
 - **Directory path provided**: lint all `.el` files in that directory (non-recursive). Skip files that are auto-generated (e.g. `*-autoloads.el`, `*-pkg.el`).
-- **No argument provided**: use `AskUserQuestion` to ask the user:
+- **No argument provided**: ask the user which target to lint. Use the
+  available structured input mechanism (`AskUserQuestion` in Claude Code,
+  `request_user_input` in Codex Plan mode); if none is available, ask a concise
+  plain-text question with these choices:
   - **Current file** — lint the main `.el` file in the current working directory (find it with `*.el` glob, excluding `-autoloads.el` and `-pkg.el`; if multiple, pick the one matching the directory name).
   - **Current directory** — lint all `.el` files in the current working directory.
   - **Custom path** — the user will type a file or directory path via the "Other" option.
 
 ## Step 2: Collect diagnostics
 
-For each target `.el` file, collect diagnostics from two sources in parallel:
+For each target `.el` file, collect diagnostics from two sources in parallel.
+Use an absolute `FILE` value; the examples below are safe for paths containing
+spaces. If `emacsclient` cannot return `init-current-profile`, stop and report
+that the active profile could not be resolved instead of guessing.
 
 ### Byte-compile warnings
 
 Resolve the elpaca profile and build a load-path that includes all `elpaca/builds/*/` directories plus the file's own directory. Then byte-compile:
 
 ```bash
+FILE="/absolute/path/to/file.el"
+DIR="$(dirname "$FILE")"
 PROFILE=$(emacsclient -e 'init-current-profile' 2>/dev/null | tr -d '"')
+test -n "$PROFILE" || { echo "Could not resolve init-current-profile"; exit 1; }
 ELPACA="$HOME/.config/emacs-profiles/$PROFILE/elpaca"
 
 emacs --batch \
   --eval "(dolist (dir (file-expand-wildcards \"$ELPACA/builds/*/\")) (add-to-list 'load-path dir))" \
-  -L "$(dirname FILE)" \
-  --eval "(progn (setq byte-compile-warnings 'all) (byte-compile-file \"FILE\"))" \
+  -L "$DIR" \
+  --eval "
+(progn
+  (require 'bytecomp)
+  (let* ((file (expand-file-name \"$FILE\"))
+         (temp-dir (make-temp-file \"lint-elisp-byte-compile-\" t))
+         (byte-compile-dest-file-function
+          (lambda (source)
+            (expand-file-name
+             (concat (file-name-nondirectory
+                      (file-name-sans-extension source))
+                     \".elc\")
+             temp-dir))))
+    (unwind-protect
+        (progn
+          (setq byte-compile-warnings 'all)
+          (byte-compile-file file))
+      (delete-directory temp-dir t))))" \
   2>&1
 ```
 
-Parse lines matching `Warning:` from stderr.
+Parse lines matching `Warning:` from stderr. The temporary destination keeps
+byte-compilation from leaving `.elc` files beside the source.
 
 ### Checkdoc notes
 
-Run flymake's checkdoc backend in batch mode on the same file:
+Run flymake's checkdoc backend directly in batch mode on the same file:
 
 ```bash
+FILE="/absolute/path/to/file.el"
+DIR="$(dirname "$FILE")"
+PROFILE=$(emacsclient -e 'init-current-profile' 2>/dev/null | tr -d '"')
+test -n "$PROFILE" || { echo "Could not resolve init-current-profile"; exit 1; }
+ELPACA="$HOME/.config/emacs-profiles/$PROFILE/elpaca"
+
 emacs --batch \
   --eval "(dolist (dir (file-expand-wildcards \"$ELPACA/builds/*/\")) (add-to-list 'load-path dir))" \
-  -L "$(dirname FILE)" \
+  -L "$DIR" \
   --eval "
 (progn
-  (find-file \"FILE\")
   (require 'flymake)
-  (flymake-mode 1)
-  (sleep-for 5)
-  (dolist (d (flymake-diagnostics))
-    (message \"%s:%d: %s: %s\"
-             (buffer-name)
-             (line-number-at-pos (flymake-diagnostic-beg d))
-             (flymake-diagnostic-type d)
-             (flymake-diagnostic-text d))))" \
+  (require 'elisp-mode)
+  (find-file (expand-file-name \"$FILE\"))
+  (let (diagnostics)
+    (elisp-flymake-checkdoc
+     (lambda (diags &rest _args)
+       (setq diagnostics diags)))
+    (dolist (d diagnostics)
+      (message \"%s:%d: %s: %s\"
+               (buffer-name)
+               (line-number-at-pos (flymake-diagnostic-beg d))
+               (flymake-diagnostic-type d)
+               (flymake-diagnostic-text d)))))" \
   2>&1
 ```
 
@@ -88,6 +123,10 @@ When moving definitions (e.g. a `defcustom` forward), place them in the section 
 
 Re-run both diagnostic commands from Step 2 on every file that was modified. If new diagnostics appear (e.g. a rewording triggered a new checkdoc note, or a line became too wide), fix those too. Repeat until the output is clean.
 
+For edited `.el` files, also run the relevant `elisp-conventions`
+verification: `batch-test.sh PACKAGE` before commit, then a targeted live
+`emacsclient -e` check after commit when the file belongs to a loaded package.
+
 ## Step 5: Report
 
 Print a short summary:
@@ -95,4 +134,5 @@ Print a short summary:
 - Number of diagnostics found and fixed
 - Any diagnostics intentionally skipped, with reason
 
-Commit all changes with a message summarizing what was fixed.
+Inspect `git status --short`, stage only files modified by this lint run, and
+commit them with a message summarizing what was fixed.

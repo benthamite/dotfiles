@@ -14,6 +14,9 @@ This is the Claude Code version of the workflow. It must operate on
 use it for Codex sessions, which live under `~/.codex/sessions` and are handled
 by the Codex-side `move-session-log` skill.
 
+Do not use this skill to inspect or open the current conversation log; use
+`open-session-log` for that.
+
 ## Modes
 
 - **Single session**: `move-session-log <session-id>` — move a specific session from another project's logs to the **current** project's logs. Use when one session got recorded under the wrong project (e.g., you `cd`'d during a session, or invoked Claude from the wrong dir).

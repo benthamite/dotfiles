@@ -1,17 +1,17 @@
 ---
 name: convert-citations
-description: Convert raw bibliographic references in a `.org` file to org-mode `[cite:@KEY]` citations by looking each work up in the user's bibliography. Use when the user says "convert citations", "convert references", "citar-ify this bibliography", or mentions needing to replace raw references in a bibliography .org file with org citations.
+description: Convert raw bibliographic references in `.org` files to org-mode `[cite:@KEY]` citations by looking up each work in the user's bibliography. Use when the user says "convert citations", "convert references", "citar-ify this bibliography", or asks to replace raw reference lists with org citations.
 argument-hint: "[bibliography-file]"
 user-invocable: true
 ---
 
 # Convert citations
 
-Replace raw bibliographic references in an org file with `[cite:@KEY]` citations, resolving each work against the user's citar bibliography via `emacsclient -e`. Mirrors the behaviour of `tlon-bib-replace-citations-in-file` but runs natively in Claude Code (more reliable than the gptel-based Elisp for agentic lookups).
+Replace raw bibliographic references in org files with `[cite:@KEY]` citations, resolving each work against the user's citar bibliography via `emacsclient -e`. Mirrors the behaviour of `tlon-bib-replace-citations-in-file` but runs as a native agent workflow, which is more reliable than the gptel-based Elisp loop for lookup-heavy tasks.
 
 ## Arguments
 
-`$ARGUMENTS` is the absolute path to the `.org` file to convert. If empty, ask the user for the path.
+`$ARGUMENTS` is the absolute path to the `.org` file to convert. If empty, ask the user for the path. If the user passes a directory or glob, expand it to `.org` files only and process them sequentially. If no target exists or no `.org` files match, stop and report that rather than editing nearby files.
 
 Canonical style reference: `~/My Drive/notes/pablos-miscellany/c-d-broad-a-bibliography.org` — each citation is a list item of the form `- [cite:@KEY]` (with optional locators or multiple keys).
 
@@ -23,6 +23,12 @@ Canonical style reference: `~/My Drive/notes/pablos-miscellany/c-d-broad-a-bibli
 - Bold/italic/quotes around the citation are preserved (e.g. `*[cite:@KEY]*` stays bold)
 
 Do NOT introduce `<Cite bibKey="..." />` XML-style tags. That format is for Markdown; this skill targets org-mode only.
+
+## When not to use
+
+- Do not use for Markdown, MDX, or XML-style citation components.
+- Do not use to create or repair BibTeX entries; this skill only resolves existing bibliography keys.
+- Do not rewrite prose, org metadata, or unrelated links that are not raw bibliographic references.
 
 ## Procedure
 
@@ -75,15 +81,15 @@ emacsclient -e '(tlon-bibliography-lookup "doi" "10.1234/abc" "=key=")'
 
 **d. URL-based lookup** (if the reference is a link without explicit metadata)
 
-Use `WebFetch` to open the URL and extract the title/author/DOI, then retry (a)-(c).
+Use the current agent's page-fetch/open tool, such as Claude Code `WebFetch` or Codex `web.run open`, to extract the title/author/DOI, then retry (a)-(c).
 
 **e. Web search** (last resort)
 
-Use `WebSearch` to find the canonical title/DOI/year for an ambiguous reference, then retry (a)-(c).
+Use the current agent's web search tool, such as Claude Code `WebSearch` or Codex `web.run search_query`, to find the canonical title/DOI/year for an ambiguous reference, then retry (a)-(c).
 
 ### 4. Apply replacements
 
-Build the list of replacements — map each raw reference to `[cite:@KEY]` (with locators preserved). Apply via `Edit` tool in a single pass per region.
+Build the list of replacements — map each raw reference to `[cite:@KEY]` (with locators preserved). Apply via the normal file-editing tool for the current environment (`Edit` in Claude Code; `apply_patch` in Codex) in a single pass per region.
 
 **If a work is not found**: leave the original reference untouched. Do NOT fabricate a key, do NOT invent entries, do NOT add `{!...!}` placeholder markers. Just skip it.
 
@@ -99,13 +105,27 @@ Build the list of replacements — map each raw reference to `[cite:@KEY]` (with
 
 Match locator style to what's already in the canonical example file.
 
-### 5. Report
+### 5. Verify
+
+After editing each file:
+
+- Re-read the edited region and confirm every inserted citation uses org-mode `[cite:@...]` syntax.
+- Check the diff and confirm only the intended raw references changed; org metadata, commentary, already-converted citations, and unrelated links must be untouched.
+- Run this check against each edited file, substituting the target path:
+
+```bash
+rg -n '<Cite bibKey|\{!|!\}' PATH
+```
+
+It should produce no output. If it finds Markdown citation tags or placeholder markers, fix or remove them before reporting.
+
+### 6. Report
 
 After applying the edits, summarise:
 
 - How many references were found and converted
 - How many were left untouched (and a short list of the skipped ones — title or first few words — so the user can decide whether to add them to the bibliography)
-- If any lookups required WebFetch/WebSearch, note which ones (these are the most likely to be wrong)
+- If any lookups required web fetch/search tools, note which ones (these are the most likely to be wrong)
 
 Do NOT commit. The user commits when they've reviewed the result.
 

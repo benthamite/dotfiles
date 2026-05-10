@@ -206,6 +206,13 @@ that externally visible update has been explicitly authorized. It saves org IDs
 after creating them, verifies the note/list/profile changes before committing,
 and cleans temporary clones with =trash=.
 
+The =convert-citations= skill is a paired Claude/Codex workflow for replacing
+raw bibliographic references in org files with =[cite:@KEY]= citations from the
+user's citar bibliography. It validates file, directory, and glob targets,
+keeps raw-reference edits out of org metadata and prose, uses the current
+agent's file-editing and web lookup tools, and verifies edited files for
+Markdown citation tags or placeholder markers before reporting.
+
 The =audit-mac-app= skill is a paired Claude/Codex static-first workflow for
 auditing macOS applications before running them or granting sensitive
 permissions. It covers trust verification, permission analysis, app type

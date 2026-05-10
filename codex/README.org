@@ -201,6 +201,13 @@ repeatable workflow, triggers on realistic user phrasing, gives ordered
 operational guidance, defines output and verification expectations, and avoids
 surprising side effects.
 
+The =migrate-profile= skill is a paired Claude/Codex workflow for consolidating
+Claude Code project data after elpaca profile changes. It dry-runs first,
+requires confirmation before retargeting the active profile symlink, copying
+data, rewriting =~/.claude.json=, =history.jsonl=, or session =cwd= paths, or
+trashing old source directories, and handles package renames by matching the old
+source package name while writing the new target path.
+
 The =diagnose= skill is a paired Claude/Codex diagnostic mode modifier for
 investigating errors, confusion, and process/tooling friction before patching.
 It triggers on =/diagnose=, why-did-this-happen questions, root-cause analysis

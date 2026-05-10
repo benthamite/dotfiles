@@ -170,6 +170,13 @@ repeatable workflow, triggers on realistic user phrasing, gives ordered
 operational guidance, defines output and verification expectations, and avoids
 surprising side effects.
 
+The =update-log= skill is a paired Claude/Codex end-of-session bookkeeping
+workflow. The Codex copy treats =CLAUDE.md= as the session-log index unless the
+project explicitly says otherwise, asks for first-run setup without relying on
+Claude-only tools, uses the =record-decisions= skill or its local workflow when
+applicable, reports any =context/post-update-log-hook.md= hooks, and stages only
+intended bookkeeping paths before committing.
+
 * Hooks
 
 =codex/hooks.json= is tracked here and live globally through the symlink at

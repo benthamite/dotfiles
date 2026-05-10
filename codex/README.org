@@ -36,24 +36,16 @@ authoritative cross-tool reference.
 
 * Instructions
 
-Project-level =CLAUDE.md= files are loaded by Codex because
-=codex/config.toml= sets:
-
-#+begin_example
-project_doc_fallback_filenames = ["CLAUDE.md"]
-#+end_example
-
-That setting removes the need for project-level =AGENTS.md= symlinks.  It does
-not apply to Codex's user-level instruction file in =$CODEX_HOME=. Codex reads
-global user instructions from =AGENTS.override.md= and =AGENTS.md= in
-=$CODEX_HOME=, so the live =~/.codex/AGENTS.md= points to the tracked
+Codex reads global user instructions from =AGENTS.override.md= and =AGENTS.md=
+in =$CODEX_HOME=, so the live =~/.codex/AGENTS.md= points to the tracked
 =codex/AGENTS.md= file.
 
-There is no repo-root =AGENTS.md= manual counterpart. Project-level Codex
-instructions come from =CLAUDE.md= through =project_doc_fallback_filenames=.
-The Claude/Codex sync hooks therefore only treat =claude/CLAUDE.md= and
-=codex/AGENTS.md= as a paired instruction file; other project =CLAUDE.md= or
-=AGENTS.md= files are not paired by that hook.
+Project-level Codex instructions live in project-root =AGENTS.md= files. The
+old =project_doc_fallback_filenames = ["CLAUDE.md"]= setting is intentionally
+not used, so every project-root =CLAUDE.md= should have a project-root
+=AGENTS.md= counterpart. The Claude/Codex sync hooks treat these root
+instruction files as project-local peers in the git repo being edited or
+committed.
 
 The tracked =codex/AGENTS.md= is the Codex-side peer of =claude/CLAUDE.md=. It
 uses Codex-safe syntax: the title is tool-specific, Claude's
@@ -357,11 +349,12 @@ Two hook pairs keep the model simple:
   or, for global dotfiles artifacts, the manifest records an explicit
   artifact-specific exemption.
 
-The same hooks also handle project-local skills and hooks in the git repo being
-committed. Local pairs use =.claude/skills/= with =.codex/skills/=,
-=.claude/hooks/= with =.codex/hooks/=, and =.claude/settings.json= with
-=.codex/hooks.json=. Local skills are compared with the same tool-specific
-frontmatter normalization used for global skills.
+The same hooks also handle project-local instructions, skills, and hooks in the
+git repo being committed. Local pairs use =CLAUDE.md= with =AGENTS.md=,
+=.claude/skills/= with =.codex/skills/=, =.claude/hooks/= with
+=.codex/hooks/=, and =.claude/settings.json= with =.codex/hooks.json=. Local
+skills are compared with the same tool-specific frontmatter normalization used
+for global skills.
 
 The Codex-only README gate, =require-codex-readme-update.sh=, is scoped to this
 dotfiles repository. That prevents unrelated repositories with paths such as
@@ -384,17 +377,16 @@ the audit scope.
 =~/.codex/hooks.json= points to =codex/hooks.json=.  Updating the tracked files
 therefore updates the live global Codex configuration.
 
-=codex/config.toml= sets the default model and reasoning effort, uses
-=CLAUDE.md= as the project-doc fallback, enables Codex hooks, enables the goals
-UI and terminal resize reflow, records trusted project roots, and sets the TUI
-theme.
+=codex/config.toml= sets the default model and reasoning effort, enables Codex
+hooks, enables the goals UI and terminal resize reflow, records trusted project
+roots, and sets the TUI theme.
 Trusted project roots are Codex-local allowlist entries for directories that can
 run without extra trust prompts; they do not have a Claude settings counterpart.
 
 =~/.codex/AGENTS.md= points to =codex/AGENTS.md= so Codex gets a tracked global
 instruction file with Codex-safe path references. This is needed for user-level
-instructions; project-level =CLAUDE.md= loading is handled by
-=project_doc_fallback_filenames= instead.
+instructions; project-level Codex instructions are handled by project-root
+=AGENTS.md= files.
 
 =~/.codex/skills= points directly to =codex/skills/= via
 =codex/bin/install-skills.sh= because Codex does not load arbitrary skill paths

@@ -128,7 +128,7 @@ work in both Claude and Codex, =../agents/README.org= is authoritative.
 | What | Where | Why |
 |------+-------+-----|
 | New global Claude behavioral rule | =claude/CLAUDE.md= | Applies to all Claude projects; update =codex/AGENTS.md= when it should also apply to Codex |
-| New project-specific instruction | =<project>/CLAUDE.md= | Scoped to that project; Codex also reads it through its project-doc fallback |
+| New project-specific instruction | =<project>/CLAUDE.md= | Scoped to that project; update =<project>/AGENTS.md= as the Codex counterpart |
 | New reusable skill or hook | Follow =../agents/README.org= | Shared artifacts need a counterpart or explicit manifest exemption |
 | New Claude global hook registration | =~/.claude/settings.json= | Fires in all Claude projects; mutable live config edited in place |
 | New Claude project-specific hook registration | =<project>/.claude/settings.json= | Fires only in that project |
@@ -813,10 +813,11 @@ Companion to =require-readme-update.sh=. Fires globally after any Write or Edit,
 :END:
 
 Fires after Claude Edit or Write operations and calls =bin/ai-config-sync
-remind-claude=. If a global or project-local Claude skill, hook, or live
-settings file changed, it prints the Codex counterpart that should be updated in
-the same session. Project-local paths use the target repo's =.claude/= and
-=.codex/= trees. This is intentionally a reminder, not an auto-sync mechanism.
+remind-claude=. If a global or project-local Claude instruction file, skill,
+hook, or live settings file changed, it prints the Codex counterpart that should
+be updated in the same session. Project-local paths use the target repo's
+=CLAUDE.md=/=AGENTS.md= pair and =.claude/= and =.codex/= trees. This is
+intentionally a reminder, not an auto-sync mechanism.
 
 *** require-ai-config-sync.sh (PreToolUse)
 :PROPERTIES:
@@ -828,11 +829,12 @@ guard-commit=. Blocks one-sided Claude/Codex configuration changes in the
 dotfiles repo unless the counterpart is synchronized or =ai-config-sync.json=
 records an artifact-specific status or exemption. It also resolves the git repo
 targeted by the commit command and applies the same checks to project-local
-=.claude/= and =.codex/= skills, hooks, and hook registration files. For skills,
-the guard checks body and auxiliary-file parity after removing tool-specific
-frontmatter from both sides, so unrelated counterpart edits do not satisfy it.
-This keeps the model explicit: the active agent makes both edits and commits
-them together, or records an intentional global exception in the manifest.
+=CLAUDE.md=/=AGENTS.md= instruction files, =.claude/= and =.codex/= skills,
+hooks, and hook registration files. For skills, the guard checks body and
+auxiliary-file parity after removing tool-specific frontmatter from both sides,
+so unrelated counterpart edits do not satisfy it. This keeps the model explicit:
+the active agent makes both edits and commits them together, or records an
+intentional global exception in the manifest.
 
 *** require-doc-update.sh (PreToolUse)
 :PROPERTIES:

@@ -7,6 +7,7 @@ import filecmp
 import fnmatch
 import json
 import os
+import re
 import shlex
 import subprocess
 import sys
@@ -83,6 +84,8 @@ Modes:
   remind-codex    Read Codex hook JSON from stdin and print counterpart reminders.
   guard-commit    Read Bash PreToolUse JSON from stdin and block one-sided commits.
   audit           Check the local Claude/Codex config inventory and content drift.
+  migrate-project-instructions [ROOT...]
+                  Create missing project AGENTS.md files from root CLAUDE.md files.
 """,
         end="",
     )
@@ -196,7 +199,7 @@ def relative_to_repo(path_text: str, cwd: Path, repo_root: Path) -> str:
 
 
 def local_sync_path(rel: str) -> bool:
-    return rel.startswith((".claude/", ".codex/"))
+    return rel in {"CLAUDE.md", "AGENTS.md"} or rel.startswith((".claude/", ".codex/"))
 
 
 def global_sync_path(rel: str) -> bool:
@@ -347,6 +350,10 @@ def local_sync_message_for_path(rel: str, repo_root: Path) -> str:
     if not rel:
         return ""
 
+    if rel == "CLAUDE.md":
+        return "Project-local CLAUDE.md changed; update AGENTS.md in the same repo."
+    if rel == "AGENTS.md":
+        return "Project-local AGENTS.md changed; update CLAUDE.md in the same repo."
     if rel.startswith(".claude/skills/"):
         skill = rel.removeprefix(".claude/skills/").split("/", 1)[0]
         return (
@@ -825,6 +832,39 @@ def local_skill_sync_problems(repo_root: Path, skill: str) -> list[str]:
     return problems
 
 
+def normalized_project_instruction_text(path: Path) -> str:
+    text = path.read_text()
+    text = re.sub(r"(?m)^@(\S+)[ \t]*$", r"`\1`", text)
+    return "\n".join(line.rstrip() for line in text.splitlines()).strip() + "\n"
+
+
+def codex_project_instruction_text_from_claude(path: Path) -> str:
+    text = path.read_text()
+    text = re.sub(r"(?m)^@(\S+)[ \t]*$", r"`\1`", text)
+    if not text.endswith("\n"):
+        text += "\n"
+    return text
+
+
+def local_instruction_sync_problems(repo_root: Path) -> list[str]:
+    problems: list[str] = []
+    claude_path = repo_root / "CLAUDE.md"
+    codex_path = repo_root / "AGENTS.md"
+
+    if not claude_path.exists() and not codex_path.exists():
+        return problems
+    if not claude_path.exists():
+        problems.append("Missing project-local instruction file: CLAUDE.md")
+    if not codex_path.exists():
+        problems.append("Missing project-local instruction file: AGENTS.md")
+    if problems:
+        return problems
+
+    if normalized_project_instruction_text(claude_path) != normalized_project_instruction_text(codex_path):
+        problems.append("Project-local instruction drift after tool-specific normalization.")
+    return problems
+
+
 def normalized_global_instruction_text(path: Path) -> str:
     text = path.read_text()
     root_text = str(ROOT)
@@ -880,6 +920,7 @@ def guard_changed_paths(
     processed_global_instructions = False
     processed_global_skills: set[str] = set()
     processed_global_hooks: set[str] = set()
+    processed_local_instructions = False
     processed_local_skills: set[str] = set()
     processed_local_hooks: set[str] = set()
 
@@ -1004,6 +1045,26 @@ def guard_changed_paths(
             and not manifest_registration_changed(base_manifest, candidate_manifest, path)
         ):
             problems.append(f"{path} changed without a path-specific {MANIFEST} registration update")
+        elif path in {"CLAUDE.md", "AGENTS.md"}:
+            if processed_local_instructions:
+                continue
+            processed_local_instructions = True
+            drift = local_instruction_sync_problems(repo_root)
+            if not drift:
+                continue
+            counterpart = "AGENTS.md" if path == "CLAUDE.md" else "CLAUDE.md"
+            if path_has_change(counterpart, changed_paths):
+                add_nested_problems(
+                    problems,
+                    "Project-local CLAUDE.md and AGENTS.md are both changed, but the paired instructions still drift:",
+                    drift,
+                )
+            else:
+                add_nested_problems(
+                    problems,
+                    f"Project-local {path} changed without synchronized counterpart {counterpart}:",
+                    drift,
+                )
         elif path.startswith(".claude/skills/"):
             skill = path.removeprefix(".claude/skills/").split("/", 1)[0]
             if skill in processed_local_skills:
@@ -1191,6 +1252,10 @@ def audit_topology(problems: list[str]) -> None:
             f"dotfiles project-local skill exists: {skill}; reusable skills belong in claude/skills and codex/skills, not repo-root .claude/.codex.",
         )
 
+    drift = local_instruction_sync_problems(ROOT)
+    if drift:
+        add_nested_problems(problems, "Dotfiles project instructions are not synchronized:", drift)
+
 
 def normalized_skill_text(path: Path) -> str:
     text = path.read_text()
@@ -1271,8 +1336,6 @@ def audit_instructions(problems: list[str], manifest: dict) -> None:
     for item in instructions:
         if item.get("codex") == "AGENTS.md":
             add_problem(problems, "Manifest still declares a repo-root AGENTS.md manual counterpart.")
-    if (ROOT / "AGENTS.md").exists():
-        add_problem(problems, "Repo-root AGENTS.md exists; project-level Codex instructions should come from CLAUDE.md fallback instead.")
 
     check_symlink(
         problems,
@@ -1413,8 +1476,11 @@ def audit_registrations(problems: list[str], manifest: dict) -> None:
     )
 
     config = tomllib.loads((ROOT / "codex" / "config.toml").read_text())
-    if "CLAUDE.md" not in config.get("project_doc_fallback_filenames", []):
-        add_problem(problems, "codex/config.toml does not include CLAUDE.md in project_doc_fallback_filenames.")
+    if "project_doc_fallback_filenames" in config:
+        add_problem(
+            problems,
+            "codex/config.toml still configures project_doc_fallback_filenames; project Codex instructions now come from AGENTS.md.",
+        )
     if not config.get("features", {}).get("hooks"):
         add_problem(problems, "codex/config.toml does not enable features.hooks.")
 
@@ -1454,6 +1520,79 @@ def audit() -> int:
     return 0
 
 
+def iter_project_claude_files(search_root: Path) -> Iterable[Path]:
+    for current, dirs, files in os.walk(search_root):
+        dirs[:] = [
+            item
+            for item in dirs
+            if item
+            not in {
+                ".git",
+                ".hg",
+                ".svn",
+                "node_modules",
+                ".venv",
+                "venv",
+                "__pycache__",
+            }
+        ]
+        if "CLAUDE.md" in files:
+            yield Path(current) / "CLAUDE.md"
+
+
+def migrate_project_instructions(argv: list[str]) -> int:
+    roots = [path_from_token(arg, Path.cwd()) for arg in argv] if argv else [ROOT]
+    seen_repos: set[Path] = set()
+    created: list[Path] = []
+    skipped_existing: list[Path] = []
+    skipped_nested: list[Path] = []
+    skipped_not_git: list[Path] = []
+
+    for search_root in roots:
+        if search_root.is_file():
+            candidates = [search_root]
+        else:
+            candidates = list(iter_project_claude_files(search_root))
+
+        for claude_path in candidates:
+            repo_root = git_root_for_path(claude_path)
+            if repo_root is None:
+                skipped_not_git.append(claude_path)
+                continue
+            if repo_root in seen_repos:
+                continue
+            seen_repos.add(repo_root)
+            try:
+                rel = claude_path.relative_to(repo_root).as_posix()
+            except ValueError:
+                skipped_nested.append(claude_path)
+                continue
+            if rel != "CLAUDE.md":
+                skipped_nested.append(claude_path)
+                continue
+
+            codex_path = repo_root / "AGENTS.md"
+            if codex_path.exists():
+                skipped_existing.append(codex_path)
+                continue
+
+            codex_path.write_text(codex_project_instruction_text_from_claude(claude_path))
+            created.append(codex_path)
+
+    for path in created:
+        print(f"Created {path}")
+    for path in skipped_existing:
+        print(f"Skipped existing {path}")
+    for path in skipped_nested:
+        print(f"Skipped nested non-root {path}")
+    for path in skipped_not_git:
+        print(f"Skipped non-git {path}")
+
+    if not created:
+        print("No missing project AGENTS.md files created.")
+    return 0
+
+
 def main() -> int:
     mode = sys.argv[1] if len(sys.argv) > 1 else ""
     if mode == "remind-claude":
@@ -1467,6 +1606,8 @@ def main() -> int:
         return 0
     if mode == "audit":
         return audit()
+    if mode == "migrate-project-instructions":
+        return migrate_project_instructions(sys.argv[2:])
     usage()
     return 2
 

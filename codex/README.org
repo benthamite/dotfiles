@@ -542,7 +542,11 @@ reconciles matched statement rows, and moves discarded staging files to Trash.
 
 The =update-log= skill is a paired Claude/Codex end-of-session bookkeeping
 workflow. It triggers from =/update-log=, "update log", "session log",
-"close out", "wrap up", or direct requests to save end-of-session progress. The
+"close out", "wrap up", or direct requests to save end-of-session progress, and
+also runs at the end of sessions that changed durable project state. It does not
+run after pure Q&A or read-only lookups where nothing durable changed;
+session-end hooks should use the skill policy to remind or guard, not silently
+run the mutating workflow unattended. The
 Codex copy treats =CLAUDE.md= as the session-log index unless the project
 explicitly says otherwise, asks for first-run setup without relying on
 Claude-only tools, snapshots the working tree before edits so pre-existing dirty

@@ -1,11 +1,25 @@
 ---
 name: update-log
-description: End-of-session bookkeeping. Use when the user says /update-log, update log, session log, close out, wrap up, or asks to save project progress. Only invoke proactively in projects with existing log conventions.
+description: End-of-session bookkeeping. Use when the user says /update-log, update log, session log, close out, wrap up, or asks to save project progress. Also use at the end of any session that changed durable project state in a project with existing log conventions.
 ---
 
 # End-of-session log update
 
 Perform the following bookkeeping steps to preserve this session's work for future sessions.
+
+## When to run
+
+Run this skill at the end of any session that changed durable project state. Durable project state includes:
+
+- code, docs, configuration, workflow, or data changes;
+- new findings, debugging results, validation results, or service-state changes that future sessions should know;
+- decisions, active TODOs, blockers, next steps, or status changes;
+- external-service work whose outcome matters later, such as Slack/Google/GitHub/Asana changes;
+- any session whose results should be visible in the project note, current project list, or next meeting prep.
+
+Do not run it after purely conversational Q&A, quick read-only lookups, or sessions where nothing durable changed. If uncertain, prefer running it when the project already has logs and the session produced information a future agent would otherwise need to recover from the transcript.
+
+Session-end hooks or reminders should point to this policy instead of duplicating their own criteria. Hooks may remind or block session close when durable state appears unsaved, but they should not silently perform this workflow unattended because it writes logs, updates project notes, may reconcile TODOs, and commits.
 
 ## Step 0: Detect project setup
 

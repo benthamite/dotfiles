@@ -170,6 +170,13 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
+      "name": "session-retro",
+      "claude": "claude/skills/session-retro/SKILL.md",
+      "codex": "codex/skills/session-retro/SKILL.md",
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
+    },
+    {
       "name": "symptom-check",
       "claude": "claude/skills/symptom-check/SKILL.md",
       "codex": "codex/skills/symptom-check/SKILL.md",

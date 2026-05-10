@@ -398,6 +398,20 @@ writing, avoids duplicate entries and invented rejected alternatives, updates
 =decisions-summary.md= rows with explicit status values, and verifies edited
 decision files plus the summary before reporting.
 
+The =session-retro= skill is a Codex workflow for reviewing dotfiles
+agent-learning inbox suggestions under =.agent-learnings/inbox/=. It interviews
+the user about each distinct suggestion with implement/defer/drop choices, waits
+until every suggestion is classified before applying accepted improvements,
+treats raw inbox files as local working material, keeps deferred suggestions in
+the inbox, archives implemented suggestions under
+=.agent-learnings/archive/YYYY-MM-DD/= with source, changed files,
+verification, and commit metadata, and deletes dropped suggestions with the
+system trash command rather than destructive removal. Implementation follows
+normal dotfiles rules: use the relevant specific skill, keep Claude/Codex
+counterparts synchronized, update required docs, verify, run
+=bin/ai-config-sync audit=, and leave only deferred suggestions in the inbox
+before reporting.
+
 Manual audit:
 
 #+begin_src sh

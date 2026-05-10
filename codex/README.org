@@ -220,6 +220,15 @@ one-comment-at-a-time approval before externally visible actions, uses the
 matching =gdoc reply=, =gdoc resolve=, or =gdoc reopen= command, and verifies
 with =gdoc comment-info= before moving on.
 
+The =twitter= skill is a paired Claude/Codex workflow for direct Twitter/X
+lookup, search, and save requests via the active skill copy's
+=lib/twitterapi.sh= curl wrapper around twitterapi.io. It supports tweet,
+thread/reply, timeline, profile, follower/following, user-search, and keyword
+search calls; documents the explicit Claude/Codex wrapper paths; protects API
+keys from logging; separates direct lookup from =twitter-digest=,
+=twitter-discover=, and =twitter-vet= workflows; and requires response,
+pagination, and saved-file verification before reporting completion.
+
 The =handoff= skill saves next-session instructions to
 =/tmp/codex-handoff.md= for Codex session transitions. It writes explicit user
 next steps directly, but if next steps must be inferred it first prints the

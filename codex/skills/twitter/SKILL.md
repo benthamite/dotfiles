@@ -1,17 +1,26 @@
 ---
 name: twitter
-description: Read tweets, threads, user timelines, and search Twitter/X via twitterapi.io. Use when the user says "read tweet", "get tweet", "fetch tweet", "read thread", "user's tweets", "tweets from @handle", "search twitter", or "save tweets".
+description: Read, fetch, summarize, or save specific Twitter/X tweets, threads, replies, user profiles, timelines, follower/following lists, and keyword search results via twitterapi.io. Use for prompts like "read tweet", "get tweet", "fetch tweet", "read thread", "replies to this tweet", "tweets from @handle", "profile @handle", "search twitter", or "save tweets"; use twitter-digest, twitter-discover, or twitter-vet for curated digests, account discovery, or account vetting.
 ---
 
 # Twitter
 
 Read and search Twitter/X content via the twitterapi.io API, accessed through the `twitterapi.sh` wrapper script.
 
+Use this skill for direct lookup, search, and save requests. For recurring or curated summaries use `twitter-digest`; for finding accounts to follow use `twitter-discover`; for scoring accounts against a rubric use `twitter-vet`.
+
 ## The wrapper script
 
-All access goes through `~/.claude/skills/twitter/lib/twitterapi.sh`. It outputs raw JSON on stdout. Each call hits one twitterapi.io endpoint.
+All access goes through the wrapper script in the active skill copy. Examples below call it as `$TWITTERAPI`; set that variable to the path for the current agent before the first call:
 
-Pipe results through `python3 -c '...'` (or save to a file and parse) to extract what you need — JSON shapes are documented at `https://docs.twitterapi.io/`. Use `WebFetch` for endpoint details if needed.
+- Codex: `TWITTERAPI="$HOME/.codex/skills/twitter/lib/twitterapi.sh"`
+- Claude: `TWITTERAPI="$HOME/.claude/skills/twitter/lib/twitterapi.sh"`
+
+Then verify the wrapper exists with `test -x "$TWITTERAPI"`.
+
+The wrapper outputs raw JSON on stdout. Each call hits one twitterapi.io endpoint.
+
+Pipe results through `jq` or `python3 -c '...'` (or save to a file and parse) to extract what you need. JSON shapes are documented at `https://docs.twitterapi.io/`; consult the docs with an available web/docs tool if endpoint details are unclear.
 
 | Subcommand | Use for | Endpoint |
 |---|---|---|
@@ -24,7 +33,13 @@ Pipe results through `python3 -c '...'` (or save to a file and parse) to extract
 | `following <username> [--page-size=N]` | Who a user follows | `/twitter/user/followings` |
 | `users <query>` | Find users by name/keyword | `/twitter/user/search` |
 
-All subcommands accept `--cursor=...` for pagination.
+Paginated subcommands accept `--cursor=...`: `replies`, `tweets`, `search`, `followers`, `following`, and `users`.
+
+## Safety and cost boundaries
+
+- The wrapper is read-only. Do not bypass it for mutating Twitter/X operations or authenticated browser actions unless the user explicitly asks and confirms the external side effect.
+- Treat resolved API keys and environment variables as secrets: do not echo `TWITTERAPI_API_KEY*`, do not enable shell xtrace, and do not print curl commands that include `X-API-Key`.
+- Ask before fetching more than ~500 tweets/follows or when the session is likely to exceed $2. Otherwise keep calls sequential or modestly parallel, following the rate-limit guidance below.
 
 ## Parsing input
 
@@ -34,35 +49,39 @@ When the user provides a tweet URL like `https://x.com/username/status/123456789
 
 ### Reading a single tweet
 
-1. Run `twitterapi.sh tweet <id>`.
-2. Present: author name, handle, date, full text, media descriptions if any, engagement stats (likes, retweets, replies, views).
+1. Run `$TWITTERAPI tweet <id>`.
+2. Present: author name, handle, date, full text, media descriptions if any, engagement stats (likes, retweets, replies, views), and canonical URL.
 
 ### Reading a thread or replies
 
-1. Run `twitterapi.sh tweet <id>` for the root tweet.
-2. Run `twitterapi.sh replies <id> --type=Latest` to get replies (defaults to Relevance, which is rarely what you want for threads).
+1. Run `$TWITTERAPI tweet <id>` for the root tweet.
+2. Run `$TWITTERAPI replies <id> --type=Latest` to get replies (defaults to Relevance, which is rarely what you want for threads).
 3. If the user asked for the thread (i.e. the author's own continuation), filter replies to only those where the author matches the root tweet's author. Present them in chronological order.
-4. If the user asked for replies/reactions, present all replies grouped by engagement.
+4. If an author-authored continuation clearly replies to a later tweet rather than the root, follow that tweet's replies with a small bounded loop and preserve chronological order.
+5. If the user asked for replies/reactions, present all replies grouped by engagement.
 
 ### Reading a user's timeline
 
-1. Run `twitterapi.sh tweets <username>`. The endpoint returns ~20 tweets per page; pass `--cursor=<next_cursor>` for more.
+1. Run `$TWITTERAPI tweets <username>`. The endpoint returns ~20 tweets per page; pass `--cursor=<next_cursor>` for more.
 2. Present each tweet with: date, text (truncated if very long), engagement stats.
 3. Highlight tweets with notably high engagement relative to the user's average.
 
 ### Searching tweets
 
-1. Run `twitterapi.sh search '<query>'`. Default queryType is `Top`; pass `--type=Latest` for recent.
+1. Run `$TWITTERAPI search '<query>'`. Default queryType is `Top`; pass `--type=Latest` for recent.
 2. Present results with: author, date, text, engagement stats.
 
 ### User profile lookup
 
-1. Run `twitterapi.sh user <username>`.
+1. Run `$TWITTERAPI user <username>`.
 2. Present: name, handle, bio, follower/following counts, verified status, account creation date, pinned tweet if any.
 
 ## Saving tweets
 
-When the user asks to save tweets, write them to `~/.claude/skills/twitter/saved-tweets/YYYY-MM-DD/`.
+When the user asks to save tweets, write them to the active skill copy's `saved-tweets/YYYY-MM-DD/` directory. Create it with `mkdir -p` if needed.
+
+- Codex: `~/.codex/skills/twitter/saved-tweets/YYYY-MM-DD/`
+- Claude: `~/.claude/skills/twitter/saved-tweets/YYYY-MM-DD/`
 
 **Markdown format** (default):
 
@@ -82,8 +101,18 @@ When saving a thread, concatenate all tweets in order in a single file with `---
 
 ## Related skills
 
-- `/twitter-digest` — curated digests from account lists with triage, last-run tracking, and `/loop` support.
-- `/twitter-discover` — graph-based discovery of high-value accounts in any niche.
+- `twitter-digest` — curated digests from account lists with triage, last-run tracking, and loop support.
+- `twitter-discover` — graph-based discovery of high-value accounts in any niche.
+- `twitter-vet` — account scoring and registry updates against a list-specific rubric.
+
+## Verification
+
+Before giving the final answer:
+
+1. Confirm each API response has the expected success/data fields and that returned tweet IDs, usernames, or query terms match the request.
+2. If the API response is empty, errors, or has an unexpected shape, report that directly and do not infer missing tweet content.
+3. For paginated work, state how many pages were fetched and whether a `next_cursor` remained when you stopped.
+4. For saved tweets, re-read the saved file and confirm it includes the title, tweet text, engagement line, and canonical URL.
 
 ## Pricing and rate limits
 

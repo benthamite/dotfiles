@@ -381,3 +381,34 @@ trusted_hash = "sha256:a63a4068a3cb56d0ca7d13c09ed2850f05163dfa08afaf282fa1567e0
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:user_prompt_submit:0:0"]
 trusted_hash = "sha256:a26be4a779a3df7d64e93948953c7b288c444444e78df682b6048b0a1a2d05ca"
+
+# BEGIN skill-prune disabled skills
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/find-skills/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/generate-readme/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/google-sheets-comments/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/post-push-ci/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/skill-discovery/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/skill-resolver/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/systematic-debugging/SKILL.md"
+enabled = false
+# END skill-prune disabled skills

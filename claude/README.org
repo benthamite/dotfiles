@@ -551,6 +551,24 @@ mechanism after completing all steps.
 
 Extracts and records architectural, algorithmic, or design decisions from the current session into =decisions/NNN.md= files. Called automatically by =/update-log= or invocable on demand when the user asks to record/capture an ADR or decision. It records choices with explicit alternatives, plus user-requested records without inventing rejected alternatives; reads existing decision context before writing; creates a missing =decisions-summary.md= only when =decisions/= already exists; updates summary rows with status values; and verifies every edited decision file and summary row before reporting.
 
+**** session-retro
+:PROPERTIES:
+:ID:       295FA722-0E04-41C0-B0F7-49B02379C1CF
+:END:
+
+Reviews dotfiles agent-learning inbox suggestions under
+=.agent-learnings/inbox/=, interviews the user about each distinct suggestion
+with implement/defer/drop choices, and waits until every suggestion is
+classified before applying accepted improvements. It treats raw inbox files as
+local working material, keeps deferred suggestions in the inbox, archives
+implemented suggestions under =.agent-learnings/archive/YYYY-MM-DD/= with
+source, changed files, verification, and commit metadata, and deletes dropped
+suggestions with the system trash command rather than destructive removal.
+Implementation follows the normal dotfiles rules: use the relevant specific
+skill, keep Claude/Codex counterparts synchronized, update required docs,
+verify, run =bin/ai-config-sync audit=, and leave only deferred suggestions in
+the inbox before reporting.
+
 **** verify
 :PROPERTIES:
 :CUSTOM_ID: h:verify

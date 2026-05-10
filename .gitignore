@@ -36,3 +36,11 @@ codex/.codex/
 codex/skills/.system/
 codex/skills/*/node_modules
 claude/bin/__pycache__/
+
+## local agent-learning inbox
+.agent-learnings/**
+!.agent-learnings/
+!.agent-learnings/inbox/
+!.agent-learnings/archive/
+!.agent-learnings/inbox/.gitkeep
+!.agent-learnings/archive/.gitkeep

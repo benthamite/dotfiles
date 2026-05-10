@@ -655,7 +655,10 @@ for global skills.
 The Codex-only README gate, =require-codex-readme-update.sh=, is scoped to this
 dotfiles repository. That prevents unrelated repositories with paths such as
 =codex/= or =bin/ai-config-sync= from being treated as Codex integration
-changes for these dotfiles.
+changes for these dotfiles. Its command-text fallback deliberately ignores
+=.codex/= paths: project-local commits often stage =.codex/skills/...= before
+the hook can reliably resolve the target repo, and the staged-file pass remains
+authoritative for any actual dotfiles-root =.codex/= changes.
 
 Manual audit:
 

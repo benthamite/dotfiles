@@ -1,13 +1,26 @@
 ---
 name: elisp-conventions
-description: Emacs Lisp coding conventions and elpaca rebuild patterns. Use when writing, reviewing, or testing Elisp code.
+description: Use when writing, editing, reviewing, or testing Emacs Lisp code, including dotfiles extras packages, Elpaca rebuild/reload behavior, batch-test verification, docstring and error-message conventions, and transient menu suffix checks.
 user-invocable: false
 ---
+
+# Emacs Lisp conventions
+
+Use this skill before changing any `.el` file and keep it open through
+verification. It supplies local coding conventions plus the rebuild/test path.
+Use `lint-elisp` in addition when the user asks for compiler, checkdoc, or
+lint diagnostics; use `doc-elisp` when package documentation must be generated
+or refreshed.
+
+Do not use this as the primary workflow for non-Elisp changes, broad design
+reviews, or documentation-only work unrelated to an Elisp edit.
+
+# Coding style
 
 - Write atomic, focused functions. When tempted to add a comment explaining code, refactor it into a function with a clear intention, so that the comment is no longer necessary. Functions should generally be only a few lines long.
 - Never insert empty lines within a function.
 - Put helper functions *after* the function that calls them, not before.
-- Docstrings should document all arguments, capitalized.
+- Docstrings should document every argument using uppercase argument names.
 - Fill all docstrings to 80 characters.
 - The first line of the docstring should be a single-sentence summary.
 - When writing multiline docstrings, do not leave a newline between the first and second lines. But do leave a newline between all successive paragraphs.
@@ -27,7 +40,7 @@ Every `.el` file you edit belongs to one of two layouts. The verification workfl
 Same five steps for both layouts:
 
 1. **Edit** the `.el` file.
-2. **Auto-rebuild fires.** `load-elisp-after-edit.sh` (PostToolUse) asks Emacs to `elpaca-rebuild` + `elpaca-extras-reload` the affected package. For standalone packages this is authoritative — the running Emacs now has the new code. For extras it compiles against the (still stale) elpaca clone — useful sanity check but not a real verification.
+2. **Let auto-rebuild fire when the edit path supports it.** `load-elisp-after-edit.sh` (PostToolUse) asks Emacs to `elpaca-rebuild` + `elpaca-extras-reload` the affected package. For standalone packages this is authoritative — the running Emacs now has the new code. For extras it compiles against the (still stale) elpaca clone — useful sanity check but not a real verification. If a shell command changed the file and no PostToolUse rebuild fired, continue with the batch-test and commit workflow below rather than using an ad-hoc reload.
 3. **Run `batch-test.sh PACKAGE`** to verify in a clean Emacs. The script auto-detects the layout: for extras it pushes `emacs/extras` to the front of `load-path` so the canonical source wins; for standalone it just `(require 'PKG)` from `elpaca/builds/`. This run also creates the test marker the commit hook requires.
 4. **Commit.** For extras, the post-commit hook then syncs the elpaca clone and rebuilds — so the running Emacs gets the canonical code. For standalone there is no post-commit step (already in sync).
 5. **Verify in live Emacs** via `emacsclient -e` exercising the changed code path.
@@ -37,7 +50,7 @@ Same five steps for both layouts:
 ~/My\ Drive/dotfiles/claude/bin/batch-test.sh PACKAGE '(message "%S" (PACKAGE-some-fn))'
 ```
 
-**Never** use `load-file`, `eval-buffer`, `eval-defun`, or manual `byte-compile-file` to reload Elisp. The auto-rebuild hook + `elpaca-extras-rebuild-and-reload` are the only sanctioned reload paths.
+**Never** use `load-file`, `eval-buffer`, `eval-defun`, or manual `byte-compile-file` to reload Elisp. The edit/commit hooks and `elpaca-extras-rebuild-and-reload` are the only sanctioned reload paths; for extras with uncommitted changes, wait for the post-commit sync before live Emacs verification.
 
 A PreToolUse hook (`block-elpaca-rebuild-uncommitted.sh`) blocks manual `elpaca-rebuild` calls when there are uncommitted `.el` changes in dotfiles/extras — running rebuild against a stale clone silently loads old code.
 
@@ -59,7 +72,7 @@ The PostToolUse hook (`track-elisp-test.sh`) inspects batch-test output for actu
 - Never send potentially blocking or long-running expressions via `emacsclient -e`: no `font-lock-ensure`, no interactive commands, no unbounded loops, no operations whose runtime is unpredictable. A hung emacsclient blocks the Emacs server queue and makes Emacs unresponsive.
 - Never send emacsclient expressions that iterate over buffer positions char-by-char. Use `next-single-property-change` for O(regions) jumps, or skip the diagnostic entirely and reason from the code.
 - Never output large emoji data structures to the terminal. The eat terminal emulator freezes on bulk emoji rendering. Write emoji data to a file or check specific keys only.
-- If `sed` or other Bash commands are used to edit `.el` files (bypassing the Edit tool), manually call `emacsclient --eval '(load-file "...")'` afterward — the PostToolUse hook only fires on Edit/Write.
+- If `sed` or other shell commands change `.el` files and bypass the edit hook, do not call `load-file`; rely on `batch-test.sh`, the commit-triggered sync/rebuild, and a targeted live `emacsclient -e` verification after commit.
 - Do not run multiple background agents that edit `.el` files simultaneously — the elpaca rebuild hook fires on each save, flooding Emacs with concurrent rebuilds. Serialize edits or batch into a single agent.
 
 # Transient menus

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Fetch tweets for twitter-digest skill.
 # Reads the list file, checks last-run cutoff, fetches all accounts,
-# and outputs everything Claude needs for triage in one shot.
+# and outputs everything the agent needs for triage in one shot.
 #
 # Usage: fetch-tweets.sh <list-name>
 #        fetch-tweets.sh <list-name> <override-cutoff>
@@ -11,35 +11,13 @@
 
 set -euo pipefail
 
-# Resolve TWITTERAPI_API_KEY from the active Claude account.
-# An explicit TWITTERAPI_API_KEY in the environment overrides account resolution.
-if [[ -z "${TWITTERAPI_API_KEY:-}" ]]; then
-  config_dir="${CLAUDE_CONFIG_DIR:-}"
-  config_dir="${config_dir%/}"
-  case "$config_dir" in
-    */.claude-epoch)
-      TWITTERAPI_API_KEY="${TWITTERAPI_API_KEY_EPOCH:-}"
-      ;;
-    */.claude-personal|*/.claude-tlon|"")
-      TWITTERAPI_API_KEY="${TWITTERAPI_API_KEY_TLON:-}"
-      ;;
-    *)
-      echo "ERROR: unknown CLAUDE_CONFIG_DIR for twitter-digest: $config_dir" >&2
-      exit 1
-      ;;
-  esac
-  if [[ -z "$TWITTERAPI_API_KEY" ]]; then
-    echo "ERROR: no Twitter API key set for the active account (CLAUDE_CONFIG_DIR=${config_dir:-<unset>})" >&2
-    exit 1
-  fi
+if (( $# < 1 || $# > 2 )); then
+  echo "Usage: fetch-tweets.sh <list-name> [override-cutoff]" >&2
+  exit 64
 fi
-# Resolve op:// references via 1Password CLI.
-if [[ "${TWITTERAPI_API_KEY:-}" == op://* ]]; then
-  TWITTERAPI_API_KEY=$(op read "$TWITTERAPI_API_KEY")
-fi
-export TWITTERAPI_API_KEY
 
-SKILL_DIR="${SKILL_DIR:-$HOME/.claude/skills/twitter-digest}"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+SKILL_DIR="${SKILL_DIR:-$SCRIPT_DIR}"
 LIST_NAME="$1"
 if [[ "$LIST_NAME" =~ [/\\] ]] || [[ "$LIST_NAME" == *..* ]]; then
   echo "ERROR: invalid list name: $LIST_NAME" >&2
@@ -49,10 +27,6 @@ LIST_FILE="$SKILL_DIR/lists/$LIST_NAME.md"
 
 if [[ ! -f "$LIST_FILE" ]]; then
   echo "ERROR: list file not found: $LIST_FILE" >&2
-  exit 1
-fi
-if [[ -z "${TWITTERAPI_API_KEY:-}" ]]; then
-  echo "ERROR: TWITTERAPI_API_KEY env var not set" >&2
   exit 1
 fi
 
@@ -76,6 +50,34 @@ if [[ -z "$LIST_USERNAMES" ]]; then
   exit 1
 fi
 
+# Resolve TWITTERAPI_API_KEY from the active configured account.
+# An explicit TWITTERAPI_API_KEY in the environment overrides account resolution.
+if [[ -z "${TWITTERAPI_API_KEY:-}" ]]; then
+  config_dir="${CLAUDE_CONFIG_DIR:-}"
+  config_dir="${config_dir%/}"
+  case "$config_dir" in
+    */.claude-epoch)
+      TWITTERAPI_API_KEY="${TWITTERAPI_API_KEY_EPOCH:-}"
+      ;;
+    */.claude-personal|*/.claude-tlon|"")
+      TWITTERAPI_API_KEY="${TWITTERAPI_API_KEY_TLON:-}"
+      ;;
+    *)
+      echo "ERROR: unknown CLAUDE_CONFIG_DIR for twitter-digest: $config_dir" >&2
+      exit 1
+      ;;
+  esac
+  if [[ -z "$TWITTERAPI_API_KEY" ]]; then
+    echo "ERROR: no Twitter API key set for the active account (CLAUDE_CONFIG_DIR=${config_dir:-<unset>})" >&2
+    exit 1
+  fi
+fi
+# Resolve op:// references via 1Password CLI without printing the resolved value.
+if [[ "${TWITTERAPI_API_KEY:-}" == op://* ]]; then
+  TWITTERAPI_API_KEY=$(op read "$TWITTERAPI_API_KEY")
+fi
+export TWITTERAPI_API_KEY
+
 # --- Resolve cutoff ---
 CUTOFF="${2:-}"
 if [[ -z "$CUTOFF" ]]; then
@@ -96,13 +98,27 @@ echo "---TWEETS---"
 
 # --- Fetch helpers ---
 TMPDIR=$(mktemp -d /tmp/twitter-fetch-XXXXXX)
-trap 'rm -rf "$TMPDIR"' EXIT
+cleanup() {
+  [[ "$TMPDIR" == /tmp/twitter-fetch-* ]] || return 0
+  rm -f "$TMPDIR"/*
+  rmdir "$TMPDIR" 2>/dev/null || true
+}
+trap cleanup EXIT
 
 fetch_one() {
-  local user="$1" outfile="$TMPDIR/$user.txt"
-  curl -sf "https://api.twitterapi.io/twitter/user/last_tweets?userName=$user" \
+  local user="$1" outfile="$TMPDIR/$user.txt" http_code curl_status=0
+  http_code=$(curl -sS -w "%{http_code}" "https://api.twitterapi.io/twitter/user/last_tweets?userName=$user" \
     -H "X-API-Key: $TWITTERAPI_API_KEY" \
-    -o "$TMPDIR/$user.json" 2>/dev/null || return 0
+    -o "$TMPDIR/$user.json" 2>"$TMPDIR/$user.err") || curl_status=$?
+  if (( curl_status != 0 )); then
+    echo "WARN: fetch failed for @$user (curl exit $curl_status)" >&2
+    return 0
+  fi
+  if [[ ! "$http_code" =~ ^2[0-9][0-9]$ ]]; then
+    echo "WARN: fetch failed for @$user (HTTP $http_code)" >&2
+    return 0
+  fi
+  touch "$TMPDIR/$user.ok"
 
   python3 -c "
 import json, sys, re
@@ -153,6 +169,11 @@ parallel_fetch() {
 # --- Phase 1: Listed accounts ---
 parallel_fetch "$LIST_USERNAMES"
 
+if ! compgen -G "$TMPDIR/*.ok" > /dev/null; then
+  echo "ERROR: no listed account fetches succeeded; check Twitter API credentials, rate limits, or connectivity" >&2
+  exit 1
+fi
+
 LISTED_LOWER=$(echo "$LIST_USERNAMES" | tr '[:upper:]' '[:lower:]' | sort -u)
 RT_USERS=""
 
@@ -170,7 +191,7 @@ done
 # --- Phase 2: RT-discovered authors ---
 RT_UNIQUE=$(echo "$RT_USERS" | tr ' ' '\n' | sort -u | grep -v '^$' || true)
 if [[ -n "$RT_UNIQUE" ]]; then
-  rm -f "$TMPDIR"/*.txt "$TMPDIR"/*.json
+  rm -f "$TMPDIR"/*.txt "$TMPDIR"/*.json "$TMPDIR"/*.ok "$TMPDIR"/*.err
   parallel_fetch "$RT_UNIQUE"
   echo "---RT_DISCOVERY---"
   for f in "$TMPDIR"/*.txt; do

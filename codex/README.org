@@ -229,6 +229,17 @@ keys from logging; separates direct lookup from =twitter-digest=,
 =twitter-discover=, and =twitter-vet= workflows; and requires response,
 pagination, and saved-file verification before reporting completion.
 
+The =twitter-digest= skill is a paired Claude/Codex workflow for fetching recent
+tweets from a named curated account list, triaging them against the list rubric,
+saving an org digest, and updating last-run state. It uses the active
+=fetch-tweets.sh= helper and active =twitterapi.sh= wrapper rather than MCP
+Twitter tools, keeps API keys out of logs, writes digest archives and last-run
+timestamps only into the current tool's runtime tree, keeps curated list files
+synchronized in both skill trees, uses the shared Claude-side =twitter-vet=
+registry, fails loudly when no listed account fetch succeeds, and verifies fetch
+markers, saved digest, last-run timestamp, diff cleanliness, and staged paths
+before committing digest, timestamp, list, and vet registry changes.
+
 The =twitter-vet= skill is a paired Claude/Codex workflow for vetting, scoring,
 ranking, or deciding whether Twitter/X accounts belong on curated lists. It
 requires a handle, list name, rubric, and optional =vet-threshold=; uses the

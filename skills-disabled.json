@@ -43,5 +43,11 @@
       "threshold_days": 60
     }
   },
+  "enabled": {
+    "generate-readme": {
+      "enabled_at": "2026-05-10T16:01:41+00:00",
+      "reason": "Renamed recently; historical usage is under the previous skill name."
+    }
+  },
   "version": 1
 }

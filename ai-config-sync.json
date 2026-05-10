@@ -688,7 +688,7 @@
       "path": "codex/config.toml",
       "tracked": true,
       "live_path": "~/.codex/config.toml",
-      "note": "Live global Codex config is a symlink to the tracked repo file; trusted project entries and marketplace timestamps are Codex-local and do not have a Claude counterpart; it does not register skills or project-doc fallbacks. bin/skill-prune may add or remove managed [[skills.config]] entries here to disable or re-enable stale paired skills; the Claude counterpart is the live untracked ~/.claude/settings.local.json skillOverrides block, with the tracked state recorded in skills-disabled.json. Codex 0.129 renamed [features].codex_hooks to [features].hooks; the audit check in bin/ai-config-sync was updated accordingly."
+      "note": "Live global Codex config is a symlink to the tracked repo file; trusted project entries and marketplace timestamps are Codex-local and do not have a Claude counterpart; it does not register skills or project-doc fallbacks. bin/skill-prune may add or remove managed [[skills.config]] entries here to disable or re-enable stale paired global and project-local skills; the Claude counterpart is the live untracked ~/.claude/settings.local.json skillOverrides block, with tracked state and absolute project-local paths recorded in skills-disabled.json. Codex 0.129 renamed [features].codex_hooks to [features].hooks; the audit check in bin/ai-config-sync was updated accordingly."
     },
     {
       "tool": "Codex",

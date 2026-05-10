@@ -1,6 +1,6 @@
 ---
 name: finances
-description: Import bank statements, categorize transactions, and reconcile against the ledger. Use when the user says "finances", "import statements", "reconcile", "bank statements", "ledger import", or "accounting".
+description: Import Wise or Mercado Pago bank statements, categorize transactions, reconcile the ledger-cli journal, or update the finance categorization guide. Use when the user says "finances", "import statements", "reconcile", "bank statements", "ledger import", or asks to process the user's accounting ledger.
 ---
 
 # Finances
@@ -12,7 +12,7 @@ Import CSV bank statements from Wise and Mercado Pago, categorize transactions, 
 - **Journal**: `~/My Drive/ledger/journal.ledger`
 - **Staging file**: `~/My Drive/ledger/journal-staging.ledger`
 - **Statements**: `~/My Drive/ledger/statements/{wise,mercadopago}/`
-- **Categorization guide**: `~/.claude/skills/finances/categorization-guide.md`
+- **Categorization guide**: `categorization-guide.md` in this skill directory. When updating it, edit the paired tracked copies under `claude/skills/finances/` and `codex/skills/finances/` in the dotfiles repo.
 
 ## What the user must do manually
 
@@ -20,6 +20,17 @@ Import CSV bank statements from Wise and Mercado Pago, categorize transactions, 
 - **Cash transactions**: these leave no bank record, so the user must enter them manually in `journal.ledger`
 - **Categorize ambiguous items** (Mercado Libre, Amazon, Mom, one-off vendors) when prompted
 - **Resolve reconciliation discrepancies** when flagged
+
+## When not to use
+
+- Do not use this for general financial advice, tax advice, or accounting questions that do not involve the user's ledger files.
+- Do not import or reconcile unsupported statement sources unless the user explicitly asks to extend the workflow.
+
+## Operational guardrails
+
+- Treat statement CSVs and ledger entries as sensitive financial data. Summarize results and show only the transactions needed for review.
+- Use `$HOME/My Drive/...` in shell commands. Do not quote `~` as `"~/..."`, because that prevents shell expansion.
+- Keep `journal-staging.ledger` until merge validation and reconciliation succeed. Move discarded staging files to Trash with `trash "$HOME/My Drive/ledger/journal-staging.ledger"` instead of deleting them directly.
 
 ## Modes
 
@@ -42,7 +53,7 @@ Analyze recent journal entries and add any new payee→category mappings to the 
 ### Step 1: Check for statements
 
 ```bash
-ls "~/My Drive/ledger/statements/wise/" "~/My Drive/ledger/statements/mercadopago/" 2>/dev/null
+find "$HOME/My Drive/ledger/statements/wise" "$HOME/My Drive/ledger/statements/mercadopago" -maxdepth 1 -type f -iname '*.csv' -print 2>/dev/null
 ```
 
 If no CSVs found, tell the user:
@@ -55,7 +66,7 @@ Ask the user to place the CSVs in the appropriate subdirectory and try again.
 
 If `journal-staging.ledger` already exists, ask the user whether to:
 - Resume reviewing the existing staging file
-- Discard it and start fresh
+- Move it to Trash and start fresh
 
 ### Step 3: Read inputs
 
@@ -196,15 +207,15 @@ After all entries are resolved:
 
 1. Read `journal.ledger` to find the correct insertion point (maintain rough chronological order — insert after the last entry with a date <= the earliest staging entry date).
 
-2. Append the staging entries to `journal.ledger`.
+2. Insert the staging entries into `journal.ledger` at that point.
 
 3. Validate:
    ```bash
-   cd "~/My Drive/ledger" && ledger -f journal.ledger bal > /dev/null 2>&1
+   cd "$HOME/My Drive/ledger" && ledger -f journal.ledger bal >/dev/null
    ```
-   If validation fails, show the error and ask the user for help. Do NOT proceed with a broken journal.
+   If validation fails, inspect and repair the staged entries when the cause is clear. If it is not clear, show the error and ask the user how to resolve it. Do NOT proceed with a broken journal.
 
-4. Delete the staging file.
+4. Keep the staging file until reconciliation succeeds.
 
 ### Step 10: Reconcile
 
@@ -214,22 +225,27 @@ For each CSV source processed:
 
 **Balance check**: Compare the CSV's ending balance with ledger's balance for that account:
 ```bash
-cd "~/My Drive/ledger" && ledger -f journal.ledger bal "Assets:Mercado Pago" --end YYYY-MM-DD
-cd "~/My Drive/ledger" && ledger -f journal.ledger bal "Assets:Wise" --end YYYY-MM-DD
+cd "$HOME/My Drive/ledger" && ledger -f journal.ledger bal "Assets:Mercado Pago" --end YYYY-MM-DD
+cd "$HOME/My Drive/ledger" && ledger -f journal.ledger bal "Assets:Wise" --end YYYY-MM-DD
 ```
 Report any discrepancy.
 
 **Mark cleared**: For all matched entries, add `*` to the posting line of the source account. Edit the journal file to add the cleared marker.
 
+After validation and reconciliation succeed, move `journal-staging.ledger` to Trash:
+```bash
+trash "$HOME/My Drive/ledger/journal-staging.ledger"
+```
+
 ### Step 11: Commit
 
 ```bash
-cd "~/My Drive/ledger" && git add journal.ledger && git commit -m "finances: import $(date +%Y-%m-%d) statements"
+cd "$HOME/My Drive/ledger" && git add journal.ledger && git commit -m "finances: import $(date +%Y-%m-%d) statements"
 ```
 
 If the categorization guide was updated, also commit that:
 ```bash
-cd ~/.claude/skills/finances && git add categorization-guide.md && git commit -m "finances: update categorization guide"
+cd "$HOME/My Drive/dotfiles" && git add claude/skills/finances/categorization-guide.md codex/skills/finances/categorization-guide.md && git commit -m "finances: update categorization guide"
 ```
 
 ---
@@ -257,7 +273,7 @@ When run with `update-guide` argument:
 
 1. Run:
    ```bash
-   cd "~/My Drive/ledger" && ledger -f journal.ledger reg Expenses --format '%(payee)\t%(account)\n' 2>/dev/null | sort | uniq -c | sort -rn
+   cd "$HOME/My Drive/ledger" && ledger -f journal.ledger reg Expenses --format '%(payee)\t%(account)\n' 2>/dev/null | sort | uniq -c | sort -rn
    ```
 2. Compare against the existing categorization guide
 3. Identify new payees or changed patterns

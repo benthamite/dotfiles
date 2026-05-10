@@ -279,18 +279,16 @@ the user phrasing, scope boundary, and important near-miss exclusions needed to
 decide whether to load the skill, but keep implementation details in the skill
 body.
 
-The tracked interactive skill bodies live under =claude/skills/= and
-=codex/skills/=. The live home-directory skill roots (=~/.claude/skills= and
-=~/.codex/skills=) are symlinks to those tracked trees, created by
-=bin/skill-prune install= or either =claude/bin/install-skills.sh= /
-=codex/bin/install-skills.sh=.
+The tracked Claude interactive skill bodies live under =claude/skills/=. The
+live Claude skill root, =~/.claude/skills=, is a symlink to that tracked tree,
+created by =bin/skill-prune install= or =claude/bin/install-skills.sh=.
 
-Programmatic-only skills are not available in ordinary Claude Code or Codex
-sessions. They live in =programmatic-skills/= directories so
-=ai-agent-run-skill= can find and run them explicitly from Emacs without adding
-them to every interactive agent session. The installers expose those directories
-at =~/.claude/programmatic-skills= and =~/.codex/programmatic-skills= because
-=ai-agent-run-skill= discovers skills from those live paths.
+Programmatic-only skills are not available in ordinary Claude Code sessions.
+They live in =programmatic-skills/= directories so =ai-agent-run-skill= can find
+and run them explicitly from Emacs without adding them to every interactive
+Claude session. The installer exposes those directories at
+=~/.claude/programmatic-skills= because =ai-agent-run-skill= discovers Claude
+skills from that live path.
 
 Run =bin/skill-prune apply --days 60= to disable stale paired skills. The scan
 checks recent Claude and Codex transcripts and disables a skill only when both
@@ -298,28 +296,22 @@ tools lack usage inside the threshold window; recent use in either tool keeps
 both tools enabled. It includes global paired skills and dynamically discovered
 project-local skill pairs under =~/My Drive=; override the discovery roots with
 =SKILL_PRUNE_LOCAL_ROOTS=, using the platform path separator for multiple roots.
-Disabled skills are recorded in =skills-disabled.json= and applied through native tool settings:
-Claude =skillOverrides= entries set to ="off" in the live
-=~/.claude/settings.local.json=, and Codex =[[skills.config]]= entries with
-=enabled = false= in =codex/config.toml=. Re-enable a skill with
+Disabled skills are recorded in =skills-disabled.json= and applied to Claude as
+=skillOverrides= entries set to ="off" in the live
+=~/.claude/settings.local.json=. Re-enable a skill with
 =bin/skill-prune enable NAME=; add =--keep= when a renamed or otherwise
 intentionally retained skill should remain enabled despite missing history.
 
 Project-local skills live with the project or workspace that owns their
 workflow instead of this global dotfiles tree:
 
-- Dotfiles maintenance: =~/My Drive/dotfiles/.claude/skills/= and
-  =~/My Drive/dotfiles/.codex/skills/=.
-- Emacs-only maintenance: =~/My Drive/dotfiles/emacs/.claude/skills/= and
-  =~/My Drive/dotfiles/emacs/.codex/skills/=.
-- Notes workflows: =~/My Drive/notes/.claude/skills/= and
-  =~/My Drive/notes/.codex/skills/=.
+- Dotfiles maintenance: =~/My Drive/dotfiles/.claude/skills/=.
+- Emacs-only maintenance: =~/My Drive/dotfiles/emacs/.claude/skills/=.
+- Notes workflows: =~/My Drive/notes/.claude/skills/=.
 - Batch-only notes workflows: the matching =programmatic-skills= roots under
-  =~/My Drive/notes/.claude/= and =~/My Drive/notes/.codex/=.
-- Google Drive cleanup: =~/My Drive/.claude/skills/= and
-  =~/My Drive/.codex/skills/=.
-- Epoch-only workflows: =~/My Drive/Epoch/.claude/skills/= and
-  =~/My Drive/Epoch/.codex/skills/=.
+  =~/My Drive/notes/.claude/=.
+- Google Drive cleanup: =~/My Drive/.claude/skills/=.
+- Epoch-only workflows: =~/My Drive/Epoch/.claude/skills/=.
 
 Each project-local skill root documents its skills in that project's
 =README.org= under a dedicated =Skills= section.

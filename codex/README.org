@@ -64,9 +64,9 @@ the startup warning on every launch.
 
 * Skills
 
-=codex/skills/= contains one Codex counterpart for each paired global skill
-under =claude/skills/=. Most counterparts share the same skill bodies and
-auxiliary files. The sync check removes tool-specific frontmatter keys such as
+=codex/skills/= contains the tracked Codex global skills. Most paired skills
+share the same bodies and auxiliary files across tools. The sync check removes
+tool-specific frontmatter keys such as
 =user-invocable=, =allowed-tools=, =argument-hint=, and =model= before
 comparison. Tool-specific skills may
 intentionally diverge when Claude Code and Codex store state differently; these
@@ -86,14 +86,13 @@ codex/bin/install-skills.sh
 
 The script ensures =~/.codex/skills= points at =codex/skills/= and applies any
 native skill-disable settings recorded by =bin/skill-prune=. Local reusable
-interactive skills belong in both =claude/skills/= and =codex/skills/=, not as
-untracked directories under =~/.codex/skills=. Programmatic-only skills are not
-available in ordinary Claude Code or Codex sessions. They live in
-=programmatic-skills/= directories so =ai-agent-run-skill= can find and run them
-explicitly from Emacs without adding them to every interactive agent session.
-The installers expose those directories at =~/.claude/programmatic-skills= and
-=~/.codex/programmatic-skills= because =ai-agent-run-skill= discovers skills
-from those live paths. Codex-managed hidden system skills, when present, live
+Codex skills belong in =codex/skills/=, not as untracked directories under
+=~/.codex/skills=. Programmatic-only skills are not available in ordinary Codex
+sessions. They live in =programmatic-skills/= directories so
+=ai-agent-run-skill= can find and run them explicitly from Emacs without adding
+them to every interactive Codex session. The installer exposes those directories
+at =~/.codex/programmatic-skills= because =ai-agent-run-skill= discovers Codex
+skills from that live path. Codex-managed hidden system skills, when present, live
 under ignored =codex/skills/.system/= runtime data and are not part of the
 reusable Claude/Codex skill parity model.
 
@@ -113,29 +112,24 @@ if either Claude or Codex used the skill recently, both tools keep it enabled.
 It includes global paired skills and dynamically discovered project-local skill
 pairs under =~/My Drive=; override the discovery roots with
 =SKILL_PRUNE_LOCAL_ROOTS=, using the platform path separator for multiple roots.
-Disabled skills are recorded in =skills-disabled.json= and applied through native tool settings: Claude
-=skillOverrides= entries set to ="off" in the live
-=~/.claude/settings.local.json=, and Codex =[[skills.config]]= entries with
-=enabled = false= in =codex/config.toml=. Re-enable a disabled skill with
+Disabled skills are recorded in =skills-disabled.json= and applied to Codex as
+=[[skills.config]]= entries with =enabled = false= in =codex/config.toml=.
+Re-enable a disabled skill with
 =bin/skill-prune enable NAME=; add =--keep= when a renamed or otherwise
 intentionally retained skill should remain enabled despite missing history.
 
 Project-specific skills belong beside their project instead of this global
 tree:
 
-- Dotfiles maintenance: =.claude/skills/= and =.codex/skills/= at the dotfiles
-  repo root. They are available while working in dotfiles without loading
-  globally in unrelated projects.
-- Emacs-only maintenance: =~/My Drive/dotfiles/emacs/.claude/skills/= and
-  =~/My Drive/dotfiles/emacs/.codex/skills/=.
-- Notes workflows: =~/My Drive/notes/.claude/skills/= and
-  =~/My Drive/notes/.codex/skills/=.
+- Dotfiles maintenance: =.codex/skills/= at the dotfiles repo root. They are
+  available while working in dotfiles without loading globally in unrelated
+  projects.
+- Emacs-only maintenance: =~/My Drive/dotfiles/emacs/.codex/skills/=.
+- Notes workflows: =~/My Drive/notes/.codex/skills/=.
 - Batch-only notes workflows: the matching =programmatic-skills= roots under
-  =~/My Drive/notes/.claude/= and =~/My Drive/notes/.codex/=.
-- Google Drive cleanup: =~/My Drive/.claude/skills/= and
-  =~/My Drive/.codex/skills/=.
-- Epoch-only workflows: =~/My Drive/Epoch/.claude/skills/= and
-  =~/My Drive/Epoch/.codex/skills/=.
+  =~/My Drive/notes/.codex/=.
+- Google Drive cleanup: =~/My Drive/.codex/skills/=.
+- Epoch-only workflows: =~/My Drive/Epoch/.codex/skills/=.
 
 The sync reminder and commit guard apply to these project-local pairs too:
 changing one local skill reminds the agent to update the other, and committing

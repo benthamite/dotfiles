@@ -861,7 +861,7 @@ def local_skill_readme_problems(
     if path_has_change("README.org", changed_paths):
         return []
     return [
-        f"Project-local .claude/{skill_root}/{skill} or .codex/{skill_root}/{skill} changed without README.org documentation in the same repo."
+        f"Project-local {skill_root}/{skill} changed without README.org documentation in the same repo. Update the local README.org Skills section, and document only this repo's local skill behavior; do not describe the other agent's paths or behavior there."
     ]
 
 
@@ -1290,7 +1290,9 @@ def guard_commit() -> None:
         + "\n".join(problems)
         + "\n\nUpdate the counterpart in this same session. For global dotfiles "
         f"artifacts, stage {MANIFEST} with an explicit status/exemption if the "
-        "counterpart should not exist."
+        "counterpart should not exist. When updating README.org files, document "
+        "the behavior and paths for that README's own tool or project only; do "
+        "not document the other agent's behavior in a tool-specific README."
     )
     print(
         json.dumps(

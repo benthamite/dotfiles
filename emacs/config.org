@@ -667,9 +667,8 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
 (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
 (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
 (defvar elpaca-sources-directory (expand-file-name "sources/" elpaca-directory))
-;; Using benthamite fork until progfolio/elpaca#513 is merged (mono-repo deadlock fix).
-(defvar elpaca-order '(elpaca :repo "https://github.com/benthamite/elpaca.git"
-                              :ref "6503e6c19931dc42bf16e9af980d2e69921f7b6a" :depth 1 :inherit ignore
+(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
+                              :ref "abda553407b8769006c241a8b2f0381fe66ad613" :depth 1 :inherit ignore
                               :files (:defaults "elpaca-test.el" (:exclude "extensions"))
                               :build (:not elpaca-activate)))
 (let* ((repo  (expand-file-name "elpaca/" elpaca-sources-directory))
@@ -5316,6 +5315,8 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 
 (That's the actively maintained fork; the [[https://github.com/myuhe/org-gcal.el/issues/124#issuecomment-642859466][official repository]] is no longer maintained.)
 
+Using my fork while awaiting merge of [[https://github.com/kidd/org-gcal.el/pull/276][kidd/org-gcal.el#276]].
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-gcal
   :ensure (:host github
@@ -6850,6 +6851,8 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 :END:
 
 /[[https://github.com/emacs-languagetool/flycheck-languagetool][flycheck-languagetool]] provides ~flycheck~ support for [[https://languagetool.org/][LanguageTool]]./
+
+Using my fork while awaiting merge of [[https://github.com/emacs-languagetool/flycheck-languagetool/pull/40][emacs-languagetool/flycheck-languagetool#40]].
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package flycheck-languagetool
@@ -11146,6 +11149,8 @@ CLOCK: [2020-09-08 Tue 19:45]--[2020-09-08 Tue 19:59] =>  0:14
 
 /[[https://github.com/org-roam/org-roam][org-roam]] is a Roam replica with org-mode./
 
+Using my fork while awaiting merge of [[https://github.com/org-roam/org-roam/pull/2609][org-roam/org-roam#2609]].
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-roam
   :ensure (:host github
@@ -13553,8 +13558,7 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package elfeed
   :ensure (:host github
-                 :repo "benthamite/elfeed"
-                 :branch "debounce-search-update") ; https://github.com/skeeto/elfeed/pull/558
+                 :repo "emacs-elfeed/elfeed")
   :init
   (run-with-idle-timer (* 5 60) t #'elfeed-extras-update)
 

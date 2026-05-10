@@ -776,21 +776,47 @@ ENSURE, REST, and STATE are `use-package' handler arguments."
   (use-package-minimum-reported-time 0.1)
 
   :config
+  (defun init-personal-package-recipe (name)
+    "Return the dotfiles Elpaca recipe for personal package NAME."
+    (let ((name-str (symbol-name name)))
+      `(:host github
+        :repo "benthamite/dotfiles"
+        :files ,(list (file-name-concat
+                       "emacs/extras"
+                       (file-name-with-extension name-str "el"))
+                      (file-name-concat
+                       "emacs/extras/doc"
+                       (file-name-with-extension name-str "texi")))
+        :wait t
+        :depth nil)))
+
+  (defun init-personal-package-menu (request &optional item)
+    "Return personal package menu ITEM for Elpaca REQUEST."
+    (when (and (eq request 'index)
+               item
+               (init-personal-package-name-p item))
+      (cdr (init-personal-package-menu-item item))))
+
+  (defun init-personal-package-menu-item (name)
+    "Return Elpaca menu item for personal package NAME."
+    (cons name
+          (list :source "dotfiles personal packages"
+                :recipe (init-personal-package-recipe name))))
+
+  (defun init-personal-package-name-p (name)
+    "Return non-nil when NAME is in the personal package namespace."
+    (let ((name-str (symbol-name name)))
+      (or (string-suffix-p "-extras" name-str)
+          (memq name '(paths magit-extra)))))
+
+  (add-to-list 'elpaca-menu-functions #'init-personal-package-menu)
+
   (defmacro use-personal-package (name &rest args)
     "Like `use-package' but to load personal packages.
 NAME and ARGS as in `use-package'."
     (declare (indent defun))
-    (let* ((name-str (symbol-name (eval `(quote ,name))))
-           (ensure `(:host github
-                     :repo "benthamite/dotfiles"
-                     :files ,(list (file-name-concat
-                                    "emacs/extras"
-                                   (file-name-with-extension name-str "el"))
-                                   (file-name-concat
-                                    "emacs/extras/doc"
-                                    (file-name-with-extension name-str "texi")))
-                     :wait t
-                     :depth nil)))
+    (let* ((name (eval `(quote ,name)))
+           (ensure (init-personal-package-recipe name)))
       `(use-package ,name
          :ensure ,(unless (elpaca-use-package-dependency-queued-p name) ensure)
          ,@args))))
@@ -798,7 +824,7 @@ NAME and ARGS as in `use-package'."
 (elpaca-wait)
 #+end_src
 
-Because =use-personal-package= declares each extras file with an =:ensure= recipe pointing at this GitHub repository, =elpaca= treats them like any other package: it clones the repo into its own =elpaca/sources/dotfiles/= directory and builds the relevant files from there. The recipes use =:wait t= because all personal packages share that single source checkout; serializing them prevents concurrent Git checkout steps from racing on the shared index. This means the dotfiles end up in two separate local clones—the primary one in my main dotfiles location (where all edits are made) and the elpaca-managed one under =elpaca/sources/dotfiles/= (which Emacs loads from). To keep them in sync, three git hooks in the primary clone's gitdir automatically propagate changes to the elpaca clone. The =post-commit= hook handles normal commits, the =post-rewrite= hook handles rebases and amends, and both delegate to a shared =sync-elpaca-clone.sh= script. All three files live in the gitdir's =hooks/= directory and must be executable. The script reads the active profile name from a cache file (=~/.config/emacs-profiles/.current-profile=) that Emacs writes at startup, rather than calling =emacsclient=, to avoid deadlocking when the hook is triggered by a synchronous git process inside Emacs (e.g., =magit-commit-squash=).
+Because =use-personal-package= declares each extras file with an =:ensure= recipe pointing at this GitHub repository, =elpaca= treats them like any other package: it clones the repo into its own =elpaca/sources/dotfiles/= directory and builds the relevant files from there. The matching =init-personal-package-menu= also exposes those recipes to Elpaca's dependency resolver, so extras packages referenced from another package's =Package-Requires= metadata remain installable even when a development profile intentionally has no lockfile. The recipes use =:wait t= because all personal packages share that single source checkout; serializing them prevents concurrent Git checkout steps from racing on the shared index. This means the dotfiles end up in two separate local clones—the primary one in my main dotfiles location (where all edits are made) and the elpaca-managed one under =elpaca/sources/dotfiles/= (which Emacs loads from). To keep them in sync, three git hooks in the primary clone's gitdir automatically propagate changes to the elpaca clone. The =post-commit= hook handles normal commits, the =post-rewrite= hook handles rebases and amends, and both delegate to a shared =sync-elpaca-clone.sh= script. All three files live in the gitdir's =hooks/= directory and must be executable. The script reads the active profile name from a cache file (=~/.config/emacs-profiles/.current-profile=) that Emacs writes at startup, rather than calling =emacsclient=, to avoid deadlocking when the hook is triggered by a synchronous git process inside Emacs (e.g., =magit-commit-squash=).
 
 =hooks/sync-elpaca-clone.sh=:
 

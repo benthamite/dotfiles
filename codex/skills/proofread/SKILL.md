@@ -1,22 +1,33 @@
 ---
 name: proofread
-description: "Proofread markdown documents for spelling errors, grammar mistakes, typos, and punctuation issues using aspell (fast, deterministic) or Gemini Flash (thorough AI-powered corrections with style suggestions). Use when the user says proofread, spell check, check spelling, check grammar, review for typos, check this for errors, or mentions proofreading a markdown file."
+description: "Proofread Markdown documents for spelling errors, grammar mistakes, typos, punctuation issues, and light style/clarity problems using aspell or Gemini Flash. Use when the user says proofread, spell check, check spelling, check grammar, review for typos, check this for errors, or asks for a proofreading pass over a Markdown file."
 ---
 
 # Proofread skill
 
 > Adapted from [Peter Hartree](https://pjh.is/)'s [HartreeWorks/skills](https://github.com/HartreeWorks/skills) repository.
 
-Proofreading for markdown documents using British English conventions. Two engines available:
+Proofreading for Markdown documents using British English conventions by default. The scripts are for `.md`, `.markdown`, and `.mdx` files only.
+
+Two engines are available:
 
 - **Spellcheck** (fast, deterministic): Uses aspell for spell-checking (~2 seconds)
 - **LLM** (thorough, AI-powered): Uses Gemini Flash for spelling, grammar, style, and clarity (~30-60 seconds per 100 lines)
 
 ## Workflow
 
-### Step 1: Ask which engine and level
+### Step 1: Confirm target and mode
 
-When the user wants to proofread a document, ask:
+If the user did not provide a file path, ask for one. If the file is not Markdown (`.md`, `.markdown`, or `.mdx`), say this skill is scoped to Markdown files and do not run the bundled scripts.
+
+Infer the engine when the user already gives a clear preference:
+
+- Use **Spellcheck** for "quick spell check", "check spelling", or other spelling-only requests.
+- Use **LLM level 2** for generic "proofread", "check grammar", "review for typos", or "light style" requests.
+- Use **LLM level 1** for explicitly mechanical-only requests.
+- Use **LLM level 3** for comprehensive or thorough editing requests.
+
+If the mode is unclear, ask:
 
 > Which proofreading approach do you want?
 >
@@ -31,9 +42,16 @@ When the user wants to proofread a document, ask:
 
 **Skip this step if the user chose Spellcheck.**
 
+Resolve the current tool's skill directory before checking configuration:
+
+- Codex: `/Users/pablostafforini/My Drive/dotfiles/bin/agent-skill path proofread --tool codex`
+- Claude Code: `/Users/pablostafforini/My Drive/dotfiles/bin/agent-skill path proofread --tool claude`
+
+Set `skill_dir` to the parent directory of the returned `SKILL.md` path. Use that directory for `.env`, scripts, and dependency installs.
+
 If the user chose an LLM level, check if the API key is configured:
 
-1. Read `~/.claude/skills/proofread/.env`
+1. Read `$skill_dir/.env`
 2. Check if it contains `GOOGLE_AI_API_KEY=` with a value
 
 **If the key is missing or the file doesn't exist**, tell the user:
@@ -43,7 +61,7 @@ If the user chose an LLM level, check if the API key is configured:
 > To set it up:
 > 1. Go to https://aistudio.google.com/app/apikey
 > 2. Create an API key
-> 3. Add it to `~/.claude/skills/proofread/.env`:
+> 3. Add it to this skill's `.env` file:
 >    ```
 >    GOOGLE_AI_API_KEY=your_key_here
 >    ```
@@ -58,13 +76,15 @@ If the user chose an LLM level, check if the API key is configured:
 
 For spellcheck engine:
 ```bash
-cd ~/.claude/skills/proofread && npx tsx scripts/proofread.ts "<file_path>" --engine spellcheck
+cd "$skill_dir" && yarn -s proofread "<file_path>" --engine spellcheck
 ```
 
 For LLM engine:
 ```bash
-cd ~/.claude/skills/proofread && npx tsx scripts/proofread.ts "<file_path>" --engine llm --level <1|2|3>
+cd "$skill_dir" && yarn -s proofread "<file_path>" --engine llm --level <1|2|3>
 ```
+
+Add `--language american` only if the user explicitly requests American English.
 
 The script outputs JSON to stdout. Parse it and present to the user.
 
@@ -80,7 +100,7 @@ Format the output like this:
 - ...
 
 **Suggestions for review:**
-- [S1] Line <n>: <description>
+- [S1] Line <n>: <description> (suggested: "<replacement>")
 - [S2] Line <n>: <description>
 - ...
 
@@ -89,20 +109,29 @@ Corrected file saved to: <filename>.proofread.md
 **To accept suggestions**, type their IDs (e.g., "S1 S3") or "all", or "none" to skip.
 ```
 
+Spellcheck mode does not auto-apply corrections; it reports all possible spelling fixes as suggestions for review.
+
 ### Step 4: Apply accepted suggestions
 
 When the user provides IDs:
 
 ```bash
-cd ~/.claude/skills/proofread && npx tsx scripts/apply-suggestions.ts "<file>.proofread.md" <S1 S2 ...>
+cd "$skill_dir" && yarn -s apply "<file>.proofread.md" <S1 S2 ...>
 ```
 
 Or if they say "all":
 ```bash
-cd ~/.claude/skills/proofread && npx tsx scripts/apply-suggestions.ts "<file>.proofread.md" all
+cd "$skill_dir" && yarn -s apply "<file>.proofread.md" all
+```
+
+Or if they say "none":
+```bash
+cd "$skill_dir" && yarn -s apply "<file>.proofread.md" none
 ```
 
 ### Step 5: Confirm completion
+
+Re-read the final file path if needed to confirm it exists and suggestion comments were removed.
 
 ```
 Final file saved to: <filename>.final.md
@@ -116,7 +145,7 @@ Removed: S2, S4
 If the user hasn't installed dependencies yet:
 
 ```bash
-cd ~/.claude/skills/proofread && yarn install
+cd "$skill_dir" && yarn install
 ```
 
 ## Configuration

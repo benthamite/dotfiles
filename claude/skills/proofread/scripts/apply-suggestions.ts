@@ -10,6 +10,66 @@ interface ApplyResult {
   removed: string[];
 }
 
+interface EncodedSuggestion {
+  id: string;
+  text?: string;
+  from?: string;
+  to?: string | null;
+}
+
+interface SuggestionComment {
+  fullMatch: string;
+  id: string;
+  from?: string;
+  to?: string | null;
+}
+
+function parseEncodedSuggestion(fullMatch: string, encoded: string): SuggestionComment | null {
+  try {
+    const payload = JSON.parse(decodeURIComponent(encoded.trim())) as EncodedSuggestion;
+    if (!payload.id) {
+      return null;
+    }
+    return {
+      fullMatch,
+      id: payload.id,
+      from: payload.from,
+      to: payload.to,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function collectSuggestionComments(line: string): SuggestionComment[] {
+  const comments: SuggestionComment[] = [];
+
+  const encodedRegex = /\s*<!--\s*proofread:([\s\S]*?)\s*-->/g;
+  let match;
+  while ((match = encodedRegex.exec(line)) !== null) {
+    const parsed = parseEncodedSuggestion(match[0], match[1]);
+    if (parsed) {
+      comments.push(parsed);
+    }
+  }
+
+  if (comments.length > 0) {
+    return comments;
+  }
+
+  // Backward compatibility for files generated before encoded comments existed.
+  const legacyRegex = /\s*<!--\s*\[(S\d+)\]\s*REVIEW:\s*(.*?)(?:\s*Suggested:\s*"([^"]*)")?\s*-->/g;
+  while ((match = legacyRegex.exec(line)) !== null) {
+    comments.push({
+      fullMatch: match[0],
+      id: match[1],
+      to: match[3],
+    });
+  }
+
+  return comments;
+}
+
 function applySuggestions(
   filePath: string,
   acceptedIds: string[]
@@ -24,41 +84,30 @@ function applySuggestions(
 
   const applied: string[] = [];
   const removed: string[] = [];
+  const accepted = new Set(acceptedIds.map((id) => id.toUpperCase()));
+  const acceptAll = accepted.has("ALL");
 
   // Process each line - handle multiple comments per line
   const lines = text.split("\n");
   const processedLines: string[] = [];
 
-  // Regex to match suggestion comments globally
-  const commentRegex = /\s*<!--\s*\[(S\d+)\]\s*REVIEW:\s*(.*?)(?:\s*Suggested:\s*"([^"]*)")?\s*-->/g;
-
   for (const line of lines) {
     let processedLine = line;
-    let match;
-
-    // Find all comments on this line
-    const commentsOnLine: Array<{fullMatch: string; id: string; suggested: string | undefined}> = [];
-    const tempLine = line;
-
-    while ((match = commentRegex.exec(tempLine)) !== null) {
-      commentsOnLine.push({
-        fullMatch: match[0],
-        id: match[1],
-        suggested: match[3]
-      });
-    }
-    // Reset regex lastIndex for next line
-    commentRegex.lastIndex = 0;
+    const commentsOnLine = collectSuggestionComments(line);
 
     if (commentsOnLine.length > 0) {
       for (const comment of commentsOnLine) {
-        if (acceptedIds.includes(comment.id) || acceptedIds.includes("ALL")) {
+        const shouldApply = acceptAll || accepted.has(comment.id.toUpperCase());
+        // Remove the review comment before applying replacements so matches in
+        // the comment payload itself cannot be altered.
+        processedLine = processedLine.replace(comment.fullMatch, "");
+
+        if (shouldApply && comment.from && comment.to && processedLine.includes(comment.from)) {
+          processedLine = processedLine.replace(comment.from, comment.to);
           applied.push(comment.id);
         } else {
           removed.push(comment.id);
         }
-        // Remove the comment from the line
-        processedLine = processedLine.replace(comment.fullMatch, "");
       }
       processedLines.push(processedLine.trimEnd());
     } else {
@@ -83,12 +132,13 @@ function main() {
 
   if (args.length < 2) {
     console.error(
-      "Usage: npx tsx apply-suggestions.ts <file.proofread.md> <S1 S2 ...> | all"
+      "Usage: yarn -s apply <file.proofread.md> <S1 S2 ...> | all | none"
     );
     console.error("");
     console.error("Examples:");
-    console.error("  npx tsx apply-suggestions.ts doc.proofread.md S1 S3 S5");
-    console.error("  npx tsx apply-suggestions.ts doc.proofread.md all");
+    console.error("  yarn -s apply doc.proofread.md S1 S3 S5");
+    console.error("  yarn -s apply doc.proofread.md all");
+    console.error("  yarn -s apply doc.proofread.md none");
     process.exit(1);
   }
 

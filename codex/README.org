@@ -177,6 +177,12 @@ running, use =models.json= as the source of truth for preset details, exclude
 deep-research/browser presets from the normal menu, and verify result files
 before reporting completion.
 
+The =proofread= skill is a paired Claude/Codex workflow for proofreading
+Markdown files with aspell or Gemini Flash. It resolves the live tool-specific
+skill directory, keeps API keys scoped to the skill =.env= file, writes reviewed
+output to =*.proofread.md=, applies accepted suggestions to =*.final.md=, and
+uses British English conventions by default.
+
 The =gsc-indexing-triage= skill is a paired Claude/Codex operations skill for
 =stafforini.com= Search Console Page indexing alerts and validation failures.
 It includes the =scripts/extract-gsc-links.py= helper, a site-specific

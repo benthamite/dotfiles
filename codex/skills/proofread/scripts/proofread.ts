@@ -39,6 +39,7 @@ interface Suggestion {
   line: number;
   type: "style" | "clarity" | "spelling";
   text: string;
+  from?: string;
   suggested: string | null;
   context?: string;
 }
@@ -230,6 +231,7 @@ async function proofreadChunk(
           line: item.line,
           type: "style", // Generic type for suggestions
           text: item.reason || "Style/clarity suggestion",
+          from: item.from,
           suggested: item.to,
           context: item.from,
         });
@@ -259,6 +261,24 @@ function applyAutoCorrections(text: string, corrections: Change[]): string {
   return lines.join("\n");
 }
 
+function correctedPath(filePath: string): { fileName: string; correctedFileName: string; correctedFilePath: string } {
+  const fileName = basename(filePath);
+  const fileDir = dirname(filePath);
+  const match = fileName.match(/^(.*)\.(md|markdown|mdx)$/i);
+
+  if (!match) {
+    throw new Error("Proofread expects a Markdown file ending in .md, .markdown, or .mdx");
+  }
+
+  const correctedFileName = `${match[1]}.proofread.md`;
+
+  return {
+    fileName,
+    correctedFileName,
+    correctedFilePath: join(fileDir, correctedFileName),
+  };
+}
+
 function insertSuggestionComments(text: string, suggestions: Suggestion[]): string {
   const lines = text.split("\n");
 
@@ -268,9 +288,13 @@ function insertSuggestionComments(text: string, suggestions: Suggestion[]): stri
   for (const suggestion of sorted) {
     const lineIndex = suggestion.line - 1;
     if (lineIndex >= 0 && lineIndex < lines.length) {
-      const comment = `<!-- [${suggestion.id}] REVIEW: ${suggestion.text}${
-        suggestion.suggested ? ` Suggested: "${suggestion.suggested}"` : ""
-      } -->`;
+      const payload = encodeURIComponent(JSON.stringify({
+        id: suggestion.id,
+        text: suggestion.text,
+        from: suggestion.from ?? "",
+        to: suggestion.suggested,
+      }));
+      const comment = `<!-- proofread:${payload} -->`;
       // Insert comment at end of the line
       lines[lineIndex] = lines[lineIndex] + " " + comment;
     }
@@ -285,10 +309,7 @@ async function proofread(
   language: string = "british"
 ): Promise<ProofreadResult> {
   const text = readFileSync(filePath, "utf-8");
-  const fileName = basename(filePath);
-  const fileDir = dirname(filePath);
-  const correctedFileName = fileName.replace(/\.md$/, ".proofread.md");
-  const correctedFilePath = join(fileDir, correctedFileName);
+  const { fileName, correctedFileName, correctedFilePath } = correctedPath(filePath);
 
   const chunks = chunkText(text);
   const allAutoCorrections: Change[] = [];
@@ -344,10 +365,7 @@ async function proofread(
 // Deterministic spell-check using aspell
 async function spellcheck(filePath: string): Promise<ProofreadResult> {
   const text = readFileSync(filePath, "utf-8");
-  const fileName = basename(filePath);
-  const fileDir = dirname(filePath);
-  const correctedFileName = fileName.replace(/\.md$/, ".proofread.md");
-  const correctedFilePath = join(fileDir, correctedFileName);
+  const { fileName, correctedFileName, correctedFilePath } = correctedPath(filePath);
 
   console.error("Running aspell spell-check (British English)...");
 
@@ -452,6 +470,7 @@ async function spellcheck(filePath: string): Promise<ProofreadResult> {
     line: c.line,
     type: "spelling" as const,
     text: `Possible misspelling: "${c.from}"`,
+    from: c.from,
     suggested: c.to,
     context: c.context,
   }));
@@ -477,7 +496,7 @@ async function main() {
   const args = process.argv.slice(2);
 
   if (args.length === 0) {
-    console.error("Usage: npx tsx proofread.ts <file.md> [--engine llm|spellcheck] [--level 1|2|3] [--language british|american]");
+    console.error("Usage: yarn -s proofread <file.md> [--engine llm|spellcheck] [--level 1|2|3] [--language british|american]");
     console.error("");
     console.error("Engines:");
     console.error("  llm        - Gemini-based proofreading (default)");

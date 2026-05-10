@@ -1219,19 +1219,23 @@ def check_symlink(problems: list[str], target: Path, expected: Path, label: str)
         add_problem(problems, f"Wrong live {label} symlink: {target} -> {actual}; expected {expected}")
 
 
-def disabled_skill_names() -> set[str]:
+def disabled_skill_records() -> dict:
     if not DISABLED_SKILLS_PATH.exists():
-        return set()
+        return {}
     try:
         data = json.loads(DISABLED_SKILLS_PATH.read_text())
     except json.JSONDecodeError as exc:
-        return set()
-    disabled = data.get("disabled") or {}
-    return set(disabled)
+        return {}
+    return data.get("disabled") or {}
+
+
+def disabled_skill_names() -> set[str]:
+    return set(disabled_skill_records())
 
 
 def check_native_disabled_skills(problems: list[str]) -> None:
-    disabled = disabled_skill_names()
+    disabled_records = disabled_skill_records()
+    disabled = set(disabled_records)
     if not disabled:
         return
 
@@ -1258,7 +1262,9 @@ def check_native_disabled_skills(problems: list[str]) -> None:
         if entry.get("enabled") is False and entry.get("path")
     }
     for name in sorted(disabled):
-        expected = ROOT / "codex" / "skills" / name / "SKILL.md"
+        record = disabled_records.get(name) or {}
+        codex_path = record.get("codex_path") or f"codex/skills/{name}/SKILL.md"
+        expected = path_from_token(str(codex_path), ROOT)
         if real_path(expected) not in disabled_codex_paths:
             add_problem(problems, f"Disabled skill missing Codex skills.config disabled entry: {name}")
 

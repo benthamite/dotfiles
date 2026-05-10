@@ -106,11 +106,14 @@ bin/skill-prune apply --days 60
 The prune command scans recent Claude and Codex transcripts. It disables only
 paired skills for which neither tool shows usage inside the threshold window;
 if either Claude or Codex used the skill recently, both tools keep it enabled.
-Disabled skills are recorded in =skills-disabled.json= and applied through
-native tool settings: Claude =skillOverrides= entries set to ="off" in the live
+It includes global paired skills and project-local paired skills under
+=~/My Drive/Epoch= and =~/My Drive/repos=. Disabled skills are recorded in
+=skills-disabled.json= and applied through native tool settings: Claude
+=skillOverrides= entries set to ="off" in the live
 =~/.claude/settings.local.json=, and Codex =[[skills.config]]= entries with
 =enabled = false= in =codex/config.toml=. Re-enable a disabled skill with
-=bin/skill-prune enable NAME=.
+=bin/skill-prune enable NAME=; add =--keep= when a renamed or otherwise
+intentionally retained skill should remain enabled despite missing history.
 
 Project-specific skills belong beside their project instead of this global
 tree. For the Epoch workspace, the Claude copies live in

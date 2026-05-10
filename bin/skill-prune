@@ -29,6 +29,7 @@ class Skill:
     claude: str | None
     codex: str | None
     status: str
+    source: str = "global"
 
 
 def iso_now() -> str:
@@ -42,6 +43,13 @@ def parse_iso(value: str) -> datetime | None:
         return None
 
 
+def skill_path(path: str) -> Path:
+    value = Path(path)
+    if value.is_absolute():
+        return value
+    return ROOT / value
+
+
 def load_manifest() -> list[Skill]:
     data = json.loads(MANIFEST.read_text())
     return [
@@ -50,14 +58,42 @@ def load_manifest() -> list[Skill]:
             claude=item.get("claude"),
             codex=item.get("codex"),
             status=item.get("status", ""),
+            source="global",
         )
         for item in data.get("skills", [])
     ]
 
 
+def discover_project_local_skills() -> list[Skill]:
+    search_roots = [Path.home() / "My Drive" / "Epoch", Path.home() / "My Drive" / "repos"]
+    skills: list[Skill] = []
+    for root in search_roots:
+        if not root.exists():
+            continue
+        for claude_skill in root.glob("**/.claude/skills/*/SKILL.md"):
+            project = claude_skill.parents[3]
+            name = claude_skill.parent.name
+            codex_skill = project / ".codex" / "skills" / name / "SKILL.md"
+            if codex_skill.exists():
+                skills.append(
+                    Skill(
+                        name=name,
+                        claude=claude_skill.as_posix(),
+                        codex=codex_skill.as_posix(),
+                        status="paired-project-local",
+                        source="project-local",
+                    )
+                )
+    return skills
+
+
+def load_skills() -> list[Skill]:
+    return load_manifest() + discover_project_local_skills()
+
+
 def load_disabled() -> dict:
     if not DISABLED.exists():
-        return {"version": 1, "disabled": {}}
+        return {"version": 1, "disabled": {}, "enabled": {}}
     return json.loads(DISABLED.read_text())
 
 
@@ -257,11 +293,23 @@ def fmt_ts(timestamp: float | None) -> str:
     return datetime.fromtimestamp(timestamp, timezone.utc).strftime("%Y-%m-%d")
 
 
-def stale_skills(skills: list[Skill], days: int, last_used: dict[str, dict[str, float]]) -> list[Skill]:
+def keep_enabled_names(disabled_data: dict) -> set[str]:
+    return set((disabled_data.get("enabled") or {}).keys())
+
+
+def stale_skills(
+    skills: list[Skill],
+    days: int,
+    last_used: dict[str, dict[str, float]],
+    keep_enabled: set[str] | None = None,
+) -> list[Skill]:
     cutoff_ts = datetime.now(timezone.utc).timestamp() - days * 86400
+    keep_enabled = keep_enabled or set()
     stale: list[Skill] = []
     for skill in skills:
         if not skill.claude or not skill.codex:
+            continue
+        if skill.name in keep_enabled:
             continue
         claude_recent = last_used["claude"].get(skill.name, 0) >= cutoff_ts
         codex_recent = last_used["codex"].get(skill.name, 0) >= cutoff_ts
@@ -305,13 +353,29 @@ def strip_codex_block(text: str) -> str:
     return pattern.sub("\n", text).rstrip() + "\n"
 
 
-def update_codex_config(disabled_names: set[str]) -> None:
+def paired_skill_by_name(skills: list[Skill]) -> dict[str, Skill]:
+    paired = [skill for skill in skills if skill.claude and skill.codex]
+    counts: dict[str, int] = {}
+    for skill in paired:
+        counts[skill.name] = counts.get(skill.name, 0) + 1
+    duplicates = sorted(name for name, count in counts.items() if count > 1)
+    if duplicates:
+        joined = ", ".join(duplicates)
+        raise SystemExit(f"Refusing to manage non-unique paired skill names: {joined}")
+    return {skill.name: skill for skill in paired}
+
+
+def update_codex_config(disabled_names: set[str], skills: list[Skill]) -> None:
+    skill_map = paired_skill_by_name(skills)
     config = ROOT / "codex" / "config.toml"
     text = strip_codex_block(config.read_text())
     if disabled_names:
         lines = ["", CODEX_BLOCK_BEGIN]
         for name in sorted(disabled_names):
-            path = ROOT / "codex" / "skills" / name / "SKILL.md"
+            skill = skill_map.get(name)
+            if not skill or not skill.codex:
+                continue
+            path = skill_path(skill.codex)
             lines.extend(
                 [
                     "",
@@ -325,18 +389,14 @@ def update_codex_config(disabled_names: set[str]) -> None:
     config.write_text(text)
 
 
-def update_claude_settings(disabled_names: set[str]) -> None:
+def update_claude_settings(disabled_names: set[str], skills: list[Skill]) -> None:
     settings = resolve_home("claude") / "settings.local.json"
     if settings.exists():
         data = json.loads(settings.read_text())
     else:
         data = {}
     overrides = data.setdefault("skillOverrides", {})
-    managed_names = {
-        item["name"]
-        for item in (json.loads(MANIFEST.read_text()).get("skills") or [])
-        if item.get("claude") and item.get("codex")
-    }
+    managed_names = set(paired_skill_by_name(skills))
     for name in sorted(managed_names - disabled_names):
         if overrides.get(name) == "off":
             overrides.pop(name)
@@ -349,17 +409,18 @@ def update_claude_settings(disabled_names: set[str]) -> None:
 
 def install(disabled_data: dict) -> None:
     disabled_names = set((disabled_data.get("disabled") or {}).keys())
+    skills = load_skills()
     link_tool_skills("claude")
     link_tool_skills("codex")
-    update_codex_config(disabled_names)
-    update_claude_settings(disabled_names)
+    update_codex_config(disabled_names, skills)
+    update_claude_settings(disabled_names, skills)
 
 
 def audit(args: argparse.Namespace) -> int:
-    skills = load_manifest()
+    skills = load_skills()
     disabled = load_disabled()
     last_used = scan_usage(skills, args.days)
-    stale = stale_skills(skills, args.days, last_used)
+    stale = stale_skills(skills, args.days, last_used, keep_enabled_names(disabled))
     disabled_names = set((disabled.get("disabled") or {}).keys())
     if not stale:
         print(f"No paired skills are stale under the {args.days}-day threshold.")
@@ -375,12 +436,13 @@ def audit(args: argparse.Namespace) -> int:
 
 
 def apply(args: argparse.Namespace) -> int:
-    skills = load_manifest()
+    skills = load_skills()
     disabled = load_disabled()
     disabled.setdefault("version", 1)
     disabled.setdefault("disabled", {})
+    disabled.setdefault("enabled", {})
     last_used = scan_usage(skills, args.days)
-    stale = stale_skills(skills, args.days, last_used)
+    stale = stale_skills(skills, args.days, last_used, keep_enabled_names(disabled))
     now = iso_now()
     for skill in stale:
         disabled["disabled"].setdefault(
@@ -391,6 +453,9 @@ def apply(args: argparse.Namespace) -> int:
                 "reason": "No Claude or Codex usage found inside the threshold window.",
                 "claude_last_used": fmt_ts(last_used["claude"].get(skill.name)),
                 "codex_last_used": fmt_ts(last_used["codex"].get(skill.name)),
+                "claude_path": skill.claude,
+                "codex_path": skill.codex,
+                "source": skill.source,
             },
         )
     save_disabled(disabled)
@@ -404,6 +469,12 @@ def enable(args: argparse.Namespace) -> int:
     changed = False
     for name in args.name:
         if disabled.get("disabled", {}).pop(name, None) is not None:
+            changed = True
+        if args.keep:
+            disabled.setdefault("enabled", {})[name] = {
+                "enabled_at": iso_now(),
+                "reason": args.reason,
+            }
             changed = True
     if changed:
         save_disabled(disabled)
@@ -421,6 +492,8 @@ def main() -> int:
     subparsers.add_parser("install", help="Apply live skill links and native settings from skills-disabled.json.")
     enable_parser = subparsers.add_parser("enable", help="Re-enable named skills and apply native settings.")
     enable_parser.add_argument("name", nargs="+")
+    enable_parser.add_argument("--keep", action="store_true", help="Keep named skills enabled even if usage history is absent.")
+    enable_parser.add_argument("--reason", default="Manually kept enabled.", help="Reason stored with --keep.")
     args = parser.parse_args()
     if args.command == "audit":
         return audit(args)

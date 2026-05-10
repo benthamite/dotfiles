@@ -278,6 +278,15 @@ verification, read real code paths, and report concrete failure modes. With
 committed cleanly; broader readability, architecture, or security-posture
 reviews route to the neighboring audit skills.
 
+The =test-suite= skill is a paired Claude/Codex development workflow for adding
+or expanding high-value tests. It triggers on requests to write tests, improve
+coverage, bootstrap testing, or create regression tests, while routing ordinary
+debugging, code review, lint cleanup, and one-off validation elsewhere. It
+reads project instructions, existing runners, fixtures, dependencies, and
+critical paths before writing behavior-focused tests by risk, then reports
+commands run, coverage added, gaps left, bugs uncovered, and unresolved
+failures.
+
 The =pr-audit= skill is a paired Claude/Codex PR readiness workflow. It
 discovers the branch and PR base, runs project build/test checks, reviews each
 commit in the PR range, checks upstream freshness, scans changed files for

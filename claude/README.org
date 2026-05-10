@@ -82,7 +82,7 @@ are project-local by definition and must not be used as targets for global
 
 *MCP server reference.* Placement rules, current inventory, multi-account notes, account-specific credential handling, identity checks, and reload requirements for remaining project-local exceptions live in =context/mcp-servers.md=. The global =CLAUDE.md= points agents there when MCP-specific context is needed, so they do not need to read this whole README just to configure or debug an MCP server.
 
-*Service access tools.* The global =CLAUDE.md= lists the local tools used to connect to external services: Anna's Archive, Twitter/X, Gmail, Google Sheets, Slack, Google Calendar, Google Docs/Drive, and GitHub. These local tools are the default path for shared Claude/Codex workflows; MCP servers and hosted connectors are exceptions documented in =context/mcp-servers.md= and service-specific context files.
+*Service access tools.* The global =CLAUDE.md= lists the local tools used to connect to external services: Anna's Archive, Twitter/X, Gmail, Google Sheets, Slack, Google Calendar, Google Docs/Drive, and GitHub. These local tools are the default path for Claude workflows; MCP servers and hosted connectors are exceptions documented in =context/mcp-servers.md= and service-specific context files.
 
 **** Settings hierarchy
 :PROPERTIES:
@@ -127,8 +127,8 @@ work in both Claude and Codex, =../agents/README.org= is authoritative.
 
 | What | Where | Why |
 |------+-------+-----|
-| New global Claude behavioral rule | =claude/CLAUDE.md= | Applies to all Claude projects; update =codex/AGENTS.md= when it should also apply to Codex |
-| New project-specific instruction | =<project>/CLAUDE.md= | Scoped to that project; update the sibling =<project>/AGENTS.md= as the Codex counterpart |
+| New global Claude behavioral rule | =claude/CLAUDE.md= | Applies to all Claude projects; follow =../agents/README.org= when the rule should also apply elsewhere |
+| New project-specific instruction | =<project>/CLAUDE.md= | Scoped to that project; follow =../agents/README.org= for counterpart policy |
 | New reusable skill or hook | Follow =../agents/README.org= | Shared artifacts need a counterpart or explicit manifest exemption |
 | New Claude global hook registration | =~/.claude/settings.json= | Fires in all Claude projects; mutable live config edited in place |
 | New Claude project-specific hook registration | =<project>/.claude/settings.json= | Fires only in that project |
@@ -136,10 +136,10 @@ work in both Claude and Codex, =../agents/README.org= is authoritative.
 | New MCP server | =~/.claude.json=, then run =claude/bin/sync-mcp-servers.sh= | Syncs to account dirs |
 | New MCP reference detail | =claude/context/mcp-servers.md= | Keeps MCP-specific instructions out of global memory and the long README |
 
-When adding or changing a reusable Claude skill or hook, update the Codex
-counterpart in =codex/skills/= or =codex/hooks/= in the same session.  The
+When adding or changing a reusable Claude skill or hook, follow the counterpart
+policy in =../agents/README.org= in the same session. The
 =remind-ai-config-sync.sh= and =require-ai-config-sync.sh= hooks make this
-visible but do not auto-edit the other side. The commit guard checks skill
+visible but do not auto-edit the counterpart. The commit guard checks skill
 content after tool-specific frontmatter normalization and only accepts
 manifest-based bypasses when the manifest records an artifact-specific status or
 exemption. See =../agents/README.org= for the full synchronization contract and
@@ -261,11 +261,9 @@ The global =~/.claude/CLAUDE.md= (symlinked here) is the user-level memory loade
 - MCP server instructions are referenced via =context/mcp-servers.md=, not imported, so agents load them only when MCP-specific context is needed.
 - Service access tools are listed by service in the global memory.
 
-Codex does not consume this file directly. Its tracked user-level counterpart
-is =codex/AGENTS.md=, with Claude-only =@context= syntax and relative
-context/tool paths expressed in Codex-safe form. The live =~/.codex/AGENTS.md=
-symlink points to that file, and =bin/ai-config-sync= audits semantic
-equivalence after tool-specific normalization.
+Other agents do not consume this file directly. Counterpart instruction files
+are documented in =../agents/README.org=, and =bin/ai-config-sync= audits
+semantic equivalence after tool-specific normalization.
 
 ** Skills
 :PROPERTIES:
@@ -328,7 +326,7 @@ These are not invoked directly. They supply background knowledge when Claude wor
 :ID:       3AB926D5-2116-4864-93F2-B6D33CE832C5
 :END:
 
-States where dotfiles and external Emacs packages should be edited: all non-=dotfiles= elpaca packages are edited in the active profile's =~/.config/emacs-profiles/<profile>/elpaca/sources/<package>/= clone, while =dotfiles= is edited only at =~/My Drive/dotfiles/= and the elpaca clone is a read-only mirror synced by git hooks. Also covers active profile lookup, profile-aware =emacs/config.org= tangling, required Claude/Codex README updates, verification handoffs, and the commit message format (=<scope>: <description>=). See also =elisp-conventions= for Elisp testing/reload rules and =emacs/extras/doc/elisp-development-workflow.org= for the full two-clone sync architecture.
+States where dotfiles and external Emacs packages should be edited: all non-=dotfiles= elpaca packages are edited in the active profile's =~/.config/emacs-profiles/<profile>/elpaca/sources/<package>/= clone, while =dotfiles= is edited only at =~/My Drive/dotfiles/= and the elpaca clone is a read-only mirror synced by git hooks. Also covers active profile lookup, profile-aware =emacs/config.org= tangling, required agent README updates, verification handoffs, and the commit message format (=<scope>: <description>=). See also =elisp-conventions= for Elisp testing/reload rules and =emacs/extras/doc/elisp-development-workflow.org= for the full two-clone sync architecture.
 
 **** elisp-conventions
 :PROPERTIES:
@@ -401,7 +399,7 @@ the reproduction, test, lint, build, or re-read verification that was performed.
 Adapted from the third-party skill previously stored under the dotfiles
 project-local =.claude/skills/= tree. Forces root-cause investigation before
 bug fixes, with supporting references for condition-based waiting, defense in
-depth, and tracing polluters. It is now a global Claude/Codex skill so
+depth, and tracing polluters. It is now a global Claude skill so
 debugging behavior is consistent outside the dotfiles project. The skill also
 documents when not to trigger, how it differs from =symptom-check=, and the
 evidence, root cause, fix, verification, and residual risk fields expected in
@@ -617,28 +615,28 @@ before moving on.
 :ID:       F2720AF8-171F-4DF0-BA03-B16E2F923C2E
 :END:
 
-Reads and searches Twitter/X content via the active skill copy's =lib/twitterapi.sh= curl wrapper around the twitterapi.io REST API. One subcommand per call type: =tweet=, =replies=, =tweets=, =user=, =search=, =followers=, =following=, =users=. Replaced the =twitterapi-io= MCP server (no more tool schemas loaded into context per session). Supports single tweet lookup, thread/reply retrieval, user timelines, keyword search, user profile lookup, follower/following checks, and saving tweets as markdown files with engagement stats and canonical URLs. The skill documents explicit Claude/Codex wrapper paths, API-key logging safeguards, cursor-capable subcommands, pricing and rate-limit boundaries, and response/save verification. Cross-references =twitter-digest=, =twitter-discover=, and =twitter-vet= for higher-level workflows.
+Reads and searches Twitter/X content via the active skill copy's =lib/twitterapi.sh= curl wrapper around the twitterapi.io REST API. One subcommand per call type: =tweet=, =replies=, =tweets=, =user=, =search=, =followers=, =following=, =users=. Replaced the =twitterapi-io= MCP server (no more tool schemas loaded into context per session). Supports single tweet lookup, thread/reply retrieval, user timelines, keyword search, user profile lookup, follower/following checks, and saving tweets as markdown files with engagement stats and canonical URLs. The skill documents the Claude wrapper path, API-key logging safeguards, cursor-capable subcommands, pricing and rate-limit boundaries, and response/save verification. Cross-references =twitter-digest=, =twitter-discover=, and =twitter-vet= for higher-level workflows.
 
 **** twitter-digest
 :PROPERTIES:
 :ID:       F677671C-6C97-4BC6-B2F5-A4E0E2457C92
 :END:
 
-Fetches recent tweets from a named list of accounts, triages them against the list's description (used as a relevance rubric), and surfaces only notable content. Uses a shell script (=fetch-tweets.sh=) requiring the =TWITTERAPI_API_KEY= env var, which curls the twitterapi.io REST API directly and extracts only the fields needed for triage (~130 chars/tweet), bypassing MCP tools whose raw JSON responses (~120K chars/account) would consume enormous context. The paired Claude/Codex copies set active skill paths before fetching and saving digests, while keeping curated list files synchronized in both skill trees and using the shared Claude-side =twitter-vet= registry. =fetch-tweets.sh= validates usage, list names, and list existence before credential resolution, resolves credentials without printing secrets, and fails loudly if no listed account fetch succeeds. Digests are saved to the active tool's =digests/= directory for archival. Discovered accounts (surfaced via retweets) are checked against the vet registry and excluded if previously rejected or below threshold; remaining accounts are vetted through the read-only =twitterapi.sh= wrapper using the shared =twitter-vet= procedure (including the epistemic quality gate) and auto-added to both paired list files if they score >= 7. The workflow verifies fetch markers, saved digest, last-run timestamp, diff cleanliness, and staged paths before committing changed digest, timestamp, list, and vet registry files. Pairs with =/loop= for periodic digests.
+Fetches recent tweets from a named list of accounts, triages them against the list's description (used as a relevance rubric), and surfaces only notable content. Uses a shell script (=fetch-tweets.sh=) requiring the =TWITTERAPI_API_KEY= env var, which curls the twitterapi.io REST API directly and extracts only the fields needed for triage (~130 chars/tweet), bypassing MCP tools whose raw JSON responses (~120K chars/account) would consume enormous context. The skill sets active skill paths before fetching and saving digests, while keeping curated list files synchronized through the sync policy and using the shared =twitter-vet= registry. =fetch-tweets.sh= validates usage, list names, and list existence before credential resolution, resolves credentials without printing secrets, and fails loudly if no listed account fetch succeeds. Digests are saved to the active tool's =digests/= directory for archival. Discovered accounts (surfaced via retweets) are checked against the vet registry and excluded if previously rejected or below threshold; remaining accounts are vetted through the read-only =twitterapi.sh= wrapper using the shared =twitter-vet= procedure (including the epistemic quality gate) and auto-added to curated list files if they score >= 7. The workflow verifies fetch markers, saved digest, last-run timestamp, diff cleanliness, and staged paths before committing changed digest, timestamp, list, and vet registry files. Pairs with =/loop= for periodic digests.
 
 **** twitter-vet
 :PROPERTIES:
 :ID:       A7B3E1D4-5F92-4C8A-B6E0-9D2F4A1C7E53
 :END:
 
-Shared account vetting procedure used by =twitter-digest= and =twitter-discover=, and directly for requests to vet, score, rank, or decide whether a Twitter/X account belongs on a curated list. Defines required inputs (handle, list name, rubric, optional =vet-threshold=), a free quick filter, and a full scoring pass through the active =twitter= skill wrapper rather than a hardcoded Claude-only path. Includes a universal *epistemic quality gate* that penalizes engagement-optimized framing, overclaiming, and hype, and rewards calibrated confidence, caveats, and uncertainty acknowledgment. The shared vet registry remains under =~/.claude/skills/twitter-vet/vetted/= so Claude and Codex callers do not split history. Existing digest lists auto-add accounts scoring above threshold; discovery callers receive scores without premature list edits until their save phase. Standalone runs verify registry/list placement, API sample counts, and clean diffs before committing changed list and registry files.
+Shared account vetting procedure used by =twitter-digest= and =twitter-discover=, and directly for requests to vet, score, rank, or decide whether a Twitter/X account belongs on a curated list. Defines required inputs (handle, list name, rubric, optional =vet-threshold=), a free quick filter, and a full scoring pass through the active =twitter= skill wrapper rather than a hardcoded Claude-only path. Includes a universal *epistemic quality gate* that penalizes engagement-optimized framing, overclaiming, and hype, and rewards calibrated confidence, caveats, and uncertainty acknowledgment. The shared vet registry remains under =~/.claude/skills/twitter-vet/vetted/= so Claude callers do not split history. Existing digest lists auto-add accounts scoring above threshold; discovery callers receive scores without premature list edits until their save phase. Standalone runs verify registry/list placement, API sample counts, and clean diffs before committing changed list and registry files.
 
 **** twitter-discover
 :PROPERTIES:
 :ID:       D3FF4B1E-429E-4999-951C-FBFB30F1E488
 :END:
 
-Iterative, graph-based discovery of high-value Twitter accounts in any niche. Interviews the user for criteria, acquires seed accounts via search, then expands using a "hot promise score" algorithm: accounts followed by multiple high-scoring seeds are profiled next, with scores recomputed after each round. Uses the active Claude/Codex skill root for the Twitter API wrapper, =twitter-vet= rubric, result logs, digest lists, and vet registry; keeps API responses in a per-session temporary directory; verifies the helper script before parsing; and re-reads saved logs/lists/registries before reporting completion. Presents tiered results (must-follow, strong, situational) at checkpoints and optionally exports to a =twitter-digest= list.
+Iterative, graph-based discovery of high-value Twitter accounts in any niche. Interviews the user for criteria, acquires seed accounts via search, then expands using a "hot promise score" algorithm: accounts followed by multiple high-scoring seeds are profiled next, with scores recomputed after each round. Uses the active Claude skill root for the Twitter API wrapper, =twitter-vet= rubric, result logs, digest lists, and vet registry; keeps API responses in a per-session temporary directory; verifies the helper script before parsing; and re-reads saved logs/lists/registries before reporting completion. Presents tiered results (must-follow, strong, situational) at checkpoints and optionally exports to a =twitter-digest= list.
 
 **** audit-mac-app
 :PROPERTIES:
@@ -693,7 +691,7 @@ Processes items from a list file strictly one at a time (sequential) or N-at-a-t
 :ID:       4D862953-7E8A-4154-BC16-919ED6B092A5
 :END:
 
-Twenty-eight hook and utility scripts handle workflow invariants, security, Emacs integration, and Claude/Codex configuration sync. Most Claude hooks are defined in the global =~/.claude/settings.json= and use early-exit guards to skip inapplicable projects. Codex has a separate global registration in =codex/hooks.json=; dotfiles-specific Codex behavior is implemented by registered scripts that inspect the target repo and exit outside scope. =notify-emacs-session-end.sh= and =notify-emacs-notification.sh= escape interpolated buffer-name values before embedding them in Elisp strings; =load-elisp-after-edit.sh= base64-encodes the changed file path and decodes it via =base64-decode-string= on the Elisp side so command-substitution metacharacters never reach the shell during interpolation. =lib-repo-root.sh= extracts a leading =cd <path>= from the bash command via a bash-regex match (bailing out on any =$(...)= or backtick) and calls =git -C <path>= rather than re-shelling the command; when the hook payload contains a structured =cwd= or =workdir=, that directory is used as the fallback repo context before the hook process cwd.
+Twenty-eight hook and utility scripts handle workflow invariants, security, Emacs integration, and configuration sync. Most Claude hooks are defined in the global =~/.claude/settings.json= and use early-exit guards to skip inapplicable projects. =notify-emacs-session-end.sh= and =notify-emacs-notification.sh= escape interpolated buffer-name values before embedding them in Elisp strings; =load-elisp-after-edit.sh= base64-encodes the changed file path and decodes it via =base64-decode-string= on the Elisp side so command-substitution metacharacters never reach the shell during interpolation. =lib-repo-root.sh= extracts a leading =cd <path>= from the bash command via a bash-regex match (bailing out on any =$(...)= or backtick) and calls =git -C <path>= rather than re-shelling the command; when the hook payload contains a structured =cwd= or =workdir=, that directory is used as the fallback repo context before the hook process cwd.
 
 Claude and Codex hooks are no longer shared through adapters.  Claude hooks live
 in =claude/hooks/=; Codex counterparts live in =codex/hooks/=.  The mapping and
@@ -734,9 +732,10 @@ Companion to =require-readme-update.sh=. Fires globally after any Write or Edit,
 
 Fires after Claude Edit or Write operations and calls =bin/ai-config-sync
 remind-claude=. If a global or project-local Claude instruction file, skill,
-hook, or live settings file changed, it prints the Codex counterpart that should
-be updated in the same session. Project-local paths use the target repo's
-sibling =CLAUDE.md=/=AGENTS.md= pairs and =.claude/= and =.codex/= trees. This is
+hook, or live settings file changed, it prints the counterpart that should be
+updated in the same session. The reminder is about synchronization only: Claude
+documentation should describe Claude behavior and paths, while counterpart
+documentation should describe counterpart behavior and paths. This is
 intentionally a reminder, not an auto-sync mechanism.
 
 *** require-ai-config-sync.sh (PreToolUse)
@@ -753,9 +752,11 @@ sibling =CLAUDE.md=/=AGENTS.md= instruction files, =.claude/= and =.codex/=
 skills, programmatic skills, hooks, and hook registration files. For skills, the
 guard checks body and auxiliary-file parity after removing tool-specific
 frontmatter from both sides, and requires the project-local =README.org= to be
-updated in the same commit. This keeps the model explicit: the active agent
-makes both edits and commits them together, documents the local skill where it
-lives, or records an intentional global exception in the manifest.
+updated in the same commit. That README must document the local skill behavior
+for its own project or tool only, not the other agent's paths or behavior. This
+keeps the model explicit: the active agent makes both edits and commits them
+together, documents the local skill where it lives, or records an intentional
+global exception in the manifest.
 
 *** require-doc-update.sh (PreToolUse)
 :PROPERTIES:

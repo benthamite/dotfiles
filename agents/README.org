@@ -135,7 +135,10 @@ These cases are recorded in =ai-config-sync.json= rather than treated as drift.
   project-local sibling =CLAUDE.md=/=AGENTS.md=, =.claude/=, and =.codex/= pairs in that
   repo as well as global dotfiles pairs. For skills, it checks content parity
   after tool-specific frontmatter normalization rather than accepting any
-  arbitrary counterpart file.
+  arbitrary counterpart file. Project-local skill changes must also update the
+  same repo's =README.org= =Skills= section. Tool-specific README files document
+  only that tool's behavior and paths; project-local README files document only
+  the local project behavior, not the other agent's directory layout.
 - =audit= verifies the manifest, topology invariants, live symlinks, global
   instruction equivalence, skill content parity after tool-specific frontmatter normalization,
   auxiliary skill files, hook file inventory, hook registrations, the live skill

@@ -69,8 +69,8 @@ share the same bodies and auxiliary files across tools. The sync check removes
 tool-specific frontmatter keys such as
 =user-invocable=, =allowed-tools=, =argument-hint=, and =model= before
 comparison. Tool-specific skills may
-intentionally diverge when Claude Code and Codex store state differently; these
-cases are recorded in =ai-config-sync.json=.
+intentionally diverge when agents store state differently; these cases are
+recorded in =ai-config-sync.json=.
 
 For paired skills that keep small state files in their skill directories, update
 both tool copies to the same contents unless =ai-config-sync.json= records an
@@ -92,9 +92,9 @@ sessions. They live in =programmatic-skills/= directories so
 =ai-agent-run-skill= can find and run them explicitly from Emacs without adding
 them to every interactive Codex session. The installer exposes those directories
 at =~/.codex/programmatic-skills= because =ai-agent-run-skill= discovers Codex
-skills from that live path. Codex-managed hidden system skills, when present, live
-under ignored =codex/skills/.system/= runtime data and are not part of the
-reusable Claude/Codex skill parity model.
+skills from that live path. Codex-managed hidden system skills, when present,
+live under ignored =codex/skills/.system/= runtime data and are not part of the
+reusable cross-tool skill parity model.
 
 Skill frontmatter descriptions are loaded for routing, so keep them concise:
 preserve user phrasing, scope boundaries, and important near-miss exclusions,
@@ -153,29 +153,29 @@ When changing a skill:
    clear artifact-specific status or exemption if a counterpart is intentionally
    absent.
 
-When renaming a global skill, rename both the Claude and Codex directories,
-update each =name= frontmatter value, and update the skill entry in
-=ai-config-sync.json=. When removing a global skill, remove both copies and
-remove the skill's entry from =ai-config-sync.json=. Project-local replacements
-should live in the target project's =.claude/skills/= and =.codex/skills/=
-directories.
+When renaming a global Codex skill, rename the Codex directory, update its
+=name= frontmatter value, and follow the synchronization policy in
+=../agents/README.org=. When removing a global Codex skill, remove the Codex
+copy and update =ai-config-sync.json= according to that policy. Project-local
+Codex replacements should live in the target project's =.codex/skills/=
+directory.
 
 Skill files must be named uppercase =SKILL.md=.  This matters on the Google
 Drive mount and for Codex skill discovery.
 
-The =dotfiles-context= skill is a paired Claude/Codex context skill for routing
+The =dotfiles-context= skill is a Codex context skill for routing
 dotfiles and Emacs package edits to the correct canonical clone. It explains
 the =dotfiles= exception to the normal elpaca source layout, active profile
 lookup, profile-aware =emacs/config.org= tangling, README update obligations,
 verification handoffs, and the standard =<scope>: <description>= commit format.
 
-The =proofread= skill is a paired Claude/Codex workflow for proofreading
+The =proofread= skill is a Codex workflow for proofreading
 Markdown files with aspell or Gemini Flash. It resolves the live tool-specific
 skill directory, keeps API keys scoped to the skill =.env= file, writes reviewed
 output to =*.proofread.md=, applies accepted suggestions to =*.final.md=, and
 uses British English conventions by default.
 
-The =triage-issues= skill is a paired Claude/Codex operations workflow for
+The =triage-issues= skill is a Codex operations workflow for
 open GitHub issues in =tlon-team/tlon.el=. It starts with a scope and mode gate
 that verifies the current checkout, separates read-only triage, local fixes,
 and externally visible closure, and requires explicit authorization before
@@ -184,7 +184,7 @@ edits, verifies =TLON_AI_GITHUB_TOKEN= belongs to =tlon-ai= without creating
 test comments, commits fixes issue-by-issue, and reports commit, check,
 GitHub, and org-archive verification.
 
-The =google-sheets-comments= skill is a paired Claude/Codex workflow for
+The =google-sheets-comments= skill is a Codex workflow for
 processing Google Sheets comment review, replies, resolves, and reopens. It
 makes Drive comments via =gdoc comments= the source of truth, treats Gmail
 notifications only as pointers, excludes ordinary spreadsheet editing, requires
@@ -192,44 +192,43 @@ one-comment-at-a-time approval before externally visible actions, uses the
 matching =gdoc reply=, =gdoc resolve=, or =gdoc reopen= command, and verifies
 with =gdoc comment-info= before moving on.
 
-The =twitter= skill is a paired Claude/Codex workflow for direct Twitter/X
+The =twitter= skill is a Codex workflow for direct Twitter/X
 lookup, search, and save requests via the active skill copy's
 =lib/twitterapi.sh= curl wrapper around twitterapi.io. It supports tweet,
 thread/reply, timeline, profile, follower/following, user-search, and keyword
-search calls; documents the explicit Claude/Codex wrapper paths; protects API
+search calls; documents the Codex wrapper path; protects API
 keys from logging; separates direct lookup from =twitter-digest=,
 =twitter-discover=, and =twitter-vet= workflows; and requires response,
 pagination, and saved-file verification before reporting completion.
 
-The =twitter-digest= skill is a paired Claude/Codex workflow for fetching recent
+The =twitter-digest= skill is a Codex workflow for fetching recent
 tweets from a named curated account list, triaging them against the list rubric,
 saving an org digest, and updating last-run state. It uses the active
 =fetch-tweets.sh= helper and active =twitterapi.sh= wrapper rather than MCP
 Twitter tools, keeps API keys out of logs, writes digest archives and last-run
 timestamps only into the current tool's runtime tree, keeps curated list files
-synchronized in both skill trees, uses the shared Claude-side =twitter-vet=
-registry, fails loudly when no listed account fetch succeeds, and verifies fetch
+synchronized through the sync policy, uses the shared =twitter-vet= registry,
+fails loudly when no listed account fetch succeeds, and verifies fetch
 markers, saved digest, last-run timestamp, diff cleanliness, and staged paths
 before committing digest, timestamp, list, and vet registry changes.
 
-The =twitter-discover= skill is a paired Claude/Codex workflow for iterative,
+The =twitter-discover= skill is a Codex workflow for iterative,
 graph-based discovery of high-value Twitter accounts in any niche. It
 interviews the user for criteria, acquires seed accounts via search, expands
 through hot promise scores from following-list overlap, uses the active
-Claude/Codex skill root for wrappers and saved state, keeps API responses in a
+Codex skill root for wrappers and saved state, keeps API responses in a
 per-session temporary directory, verifies its parsing helper, re-reads saved
 logs/lists/registries, and optionally exports high-scoring accounts to a
 =twitter-digest= list.
 
-The =twitter-vet= skill is a paired Claude/Codex workflow for vetting, scoring,
+The =twitter-vet= skill is a Codex workflow for vetting, scoring,
 ranking, or deciding whether Twitter/X accounts belong on curated lists. It
 requires a handle, list name, rubric, and optional =vet-threshold=; uses the
 active =twitter= skill wrapper for read-only tweet sampling; applies a quick
 filter plus a full 1-10 scoring pass with the shared epistemic quality gate; and
-keeps the shared vet registry under =~/.claude/skills/twitter-vet/vetted/= so
-Claude and Codex callers do not split history. It auto-adds accounts only for
-existing digest lists, returns scores to =twitter-discover= until its save
-phase, and verifies registry/list placement plus clean diffs before standalone
+keeps a shared vet registry so Codex callers do not split history. It auto-adds
+accounts only for existing digest lists, returns scores to =twitter-discover=
+until its save phase, and verifies registry/list placement plus clean diffs before standalone
 commits.
 
 The =handoff= skill saves next-session instructions to
@@ -240,7 +239,7 @@ prompts include exact dates, file paths, command names, commit hashes, and
 verification state; after writing, the skill re-reads the temp file, prints the
 saved contents, and tells the user to run =! emacsclient -e '(ai-agent-codex-handoff)'=.
 
-The =verify= skill is a paired Claude/Codex workflow for running an explicit
+The =verify= skill is a Codex workflow for running an explicit
 verification loop when the user asks to verify, close the loop, define success
 criteria before work, or rigorously check an output whose correctness is not
 automatically answerable. It generates concrete criteria before acting,
@@ -250,7 +249,7 @@ scope/risk, evaluates each criterion, loops on failures, and reports
 pass/fail/uncertain evidence. Ordinary coding and debugging use narrower
 project checks unless this meta-verification workflow was explicitly requested.
 
-The =walk-list= skill is a paired Claude/Codex workflow for strict item-by-item
+The =walk-list= skill is a Codex workflow for strict item-by-item
 processing of JSON arrays, newline-delimited JSON, or newline-separated text
 files. It moves the source file into the protected walk-list store, leaves a
 stub with quoted commands generated from the same =walk.py= path that started
@@ -258,7 +257,7 @@ the walk, validates positive concurrency and non-negative stale-claim
 thresholds, and distinguishes strict isolation/concurrency work from ordinary
 summarizing, filtering, sorting, or bulk list transformations.
 
-The =code-audit= skill is a paired Claude/Codex development skill for finding
+The =code-audit= skill is a Codex development skill for finding
 actual correctness, security, error-handling, and data-integrity defects in
 application code. It requires agents to resolve scope, identify project-specific
 verification, read real code paths, and report concrete failure modes. With
@@ -266,7 +265,7 @@ verification, read real code paths, and report concrete failure modes. With
 committed cleanly; broader readability, architecture, or security-posture
 reviews route to the neighboring audit skills.
 
-The =test-suite= skill is a paired Claude/Codex development workflow for adding
+The =test-suite= skill is a Codex development workflow for adding
 or expanding high-value tests. It triggers on requests to write tests, improve
 coverage, bootstrap testing, or create regression tests, while routing ordinary
 debugging, code review, lint cleanup, and one-off validation elsewhere. It
@@ -275,21 +274,21 @@ critical paths before writing behavior-focused tests by risk, then reports
 commands run, coverage added, gaps left, bugs uncovered, and unresolved
 failures.
 
-The =pr-audit= skill is a paired Claude/Codex PR readiness workflow. It
+The =pr-audit= skill is a Codex PR readiness workflow. It
 discovers the branch and PR base, runs project build/test checks, reviews each
 commit in the PR range, checks upstream freshness, scans changed files for
 artifacts, secrets, whitespace, and line endings, and polls remote CI only when
 the branch or PR is already pushed. It reports unavailable checks explicitly and
 does not change remote state.
 
-The =post-push-ci= skill is a paired Claude/Codex workflow for closing the
+The =post-push-ci= skill is a Codex workflow for closing the
 GitHub Actions loop after an authorized agent push. It runs =ci-after-push= to
 wait for push-triggered CI on the pushed SHA, fetches failed logs, fixes root
 causes, commits and pushes follow-up fixes, and repeats until the pushed commit
 is green or a concrete blocker is identified. It does not grant permission to
 push; it only applies after a push has already been authorized.
 
-The =release= skill is a paired Claude/Codex operations workflow for releasing
+The =release= skill is a Codex operations workflow for releasing
 the user's listed Emacs packages from the listed headings in
 =my-emacs-packages.org=, excluding the unlisted section. It supports =/release
 <package>= and =/release --audit=, avoids cloning or creating tags/releases
@@ -297,7 +296,7 @@ during audits, handles untagged package repos as initial releases, strips flags
 such as =--accept= before package inference, and keeps dotfiles releases routed
 to the dotfiles-local release workflow.
 
-The =diagnose= skill is a paired Claude/Codex diagnostic mode modifier for
+The =diagnose= skill is a Codex diagnostic mode modifier for
 investigating errors, confusion, and process/tooling friction before patching.
 It triggers on =/diagnose=, why-did-this-happen questions, root-cause analysis
 requests, and requests to investigate failures without immediately changing
@@ -308,13 +307,13 @@ remedy.
 
 uses =trash= or non-recursive removal of the known diagnostic files.
 
-The =design-audit= skill is a paired Claude/Codex development skill for
+The =design-audit= skill is a Codex development skill for
 architecture and maintainability reviews. It treats auditing as the default
 mode and uses =--accept= only for high-confidence, behavior-preserving
 high-impact refactors; risky or broad redesigns are reported instead of
 half-applied.
 
-The =interpretability-audit= skill is a paired Claude/Codex development skill
+The =interpretability-audit= skill is a Codex development skill
 for reader-comprehension reviews. It targets unclear names, magic values,
 missing rationale, undocumented conventions, implicit phases, opaque score
 formulas, duplicated explanatory logic, and type-safety escapes that obscure
@@ -322,20 +321,20 @@ intent. With =--accept=, it applies only high-confidence, behavior-preserving
 clarity fixes and reports risky renames, broad refactors, public API changes,
 or domain-judgment calls instead of applying them.
 
-The =automate= skill is a paired Claude/Codex meta-skill for reusable AI
+The =automate= skill is a Codex meta-skill for reusable AI
 workflow design. It decides whether a request should become a Claude Code skill,
 a Codex skill, a gptel directive or preset, a gptel tool, or a gptel command,
 then builds in the canonical dotfiles paths after confirmation and verifies the
 result before committing.
 
-The =add-to-emacs-packages= skill is a paired Claude/Codex workflow for
+The =add-to-emacs-packages= skill is a Codex workflow for
 registering one of the user's Emacs packages in =my-emacs-packages.org=,
 creating its documentation note, and adding the GitHub profile README card when
 that externally visible update has been explicitly authorized. It saves org IDs
 after creating them, verifies the note/list/profile changes before committing,
 and cleans temporary clones with =trash=.
 
-The =doc-elisp= skill is a paired Claude/Codex workflow for creating or
+The =doc-elisp= skill is a Codex workflow for creating or
 updating Org manuals for Elisp packages in the Denote manual style. It resolves
 the correct manual path for standalone repositories versus dotfiles extras,
 distinguishes nearby =generate-readme=, =doc-extras=, and =lint-elisp= requests,
@@ -343,7 +342,7 @@ inventories public options, faces, commands, and functions across all source
 files, avoids broad =.dir-locals.el= changes in the dotfiles monorepo, and
 requires source/manual verification before reporting completion.
 
-The =generate-readme= skill is a paired Claude/Codex workflow for generating or
+The =generate-readme= skill is a Codex workflow for generating or
 updating a GitHub-facing =README.md= for an Emacs Lisp package from its
 =README.org= manual. It verifies the package/manual prerequisites, reads the
 manual, main Elisp file, and existing Markdown README, preserves accurate
@@ -351,7 +350,7 @@ README-specific material, handles package-vc/use-package =:vc= assumptions
 explicitly, checks links/placeholders and roadmap moves, then commits verified
 README/manual changes when the user requested file edits.
 
-The =audit-mac-app= skill is a paired Claude/Codex static-first workflow for
+The =audit-mac-app= skill is a Codex static-first workflow for
 auditing macOS applications before running them or granting sensitive
 permissions. It covers trust verification, permission analysis, app type
 detection, Electron source extraction and security checks, network endpoint
@@ -360,7 +359,7 @@ for temporary directories and moves extracted sources to Trash when possible.
 
 output, and sensitive temporary files are cleaned up before reporting.
 
-The =security-audit= skill is a paired Claude/Codex workflow for auditing the
+The =security-audit= skill is a Codex workflow for auditing the
 development environment across secrets hygiene, supply-chain dependencies,
 macOS machine posture, and Claude Code configuration risk. It is audit-only
 unless remediation is explicitly requested, redacts raw secret matches during
@@ -368,22 +367,21 @@ collection and reporting, records unavailable or unsafe checks instead of
 guessing, and reports findings by severity with concrete locations and
 remediation steps.
 
-The =build= skill is a paired Claude/Codex workflow for turning a rough
+The =build= skill is a Codex workflow for turning a rough
 =spec.md= or explicit spec path into an implementation-ready plan. It interviews
 the user in depth, records goals, design, edge cases, implementation order, and
 verification in the spec, and only proceeds to implementation after explicit
 confirmation.
 
-The =update-log= skill is a paired Claude/Codex end-of-session bookkeeping
+The =update-log= skill is a Codex end-of-session bookkeeping
 workflow. It triggers from =/update-log=, "update log", "session log",
 "close out", "wrap up", or direct requests to save end-of-session progress, and
 also runs at the end of sessions that changed durable project state. It does not
 run after pure Q&A or read-only lookups where nothing durable changed;
 session-end hooks should use the skill policy to remind or guard, not silently
-run the mutating workflow unattended. The
-Codex copy treats =CLAUDE.md= as the session-log index unless the project
-explicitly says otherwise, asks for first-run setup without relying on
-Claude-only tools, snapshots the working tree before edits so pre-existing dirty
+run the mutating workflow unattended. The Codex workflow treats =CLAUDE.md= as
+the session-log index unless the project explicitly says otherwise, asks for
+first-run setup without relying on another tool's helpers, snapshots the working tree before edits so pre-existing dirty
 hunks are not staged accidentally, uses the =record-decisions= skill or its local
 workflow when applicable, reports any =context/post-update-log-hook.md= hooks,
 keeps Epoch project notes as concise ground-truth briefs when hook guidance
@@ -392,7 +390,7 @@ history, and no routine =** Meeting references= sections), verifies the cached
 diff, commits only intended bookkeeping paths, and reports the resulting log
 path, pointer, hook/decision status, commit hash, and verification.
 
-The =record-decisions= skill is a paired Claude/Codex workflow for extracting
+The =record-decisions= skill is a Codex workflow for extracting
 architectural, algorithmic, or design decisions from the current session into
 =decisions/NNN.md= files. It triggers from =/update-log= or direct requests to
 record/capture an ADR or decision, reads existing decision context before

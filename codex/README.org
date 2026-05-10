@@ -113,6 +113,12 @@ standard to =doc-elisp=, checks coverage for every top-level =.el= file,
 verifies changed Org manuals and generated Texinfo before committing, and keeps
 package documentation commits scoped to one package at a time.
 
+The =nosync= skill moves one explicitly named generated directory from
+=~/My Drive/= to =~/.drive-nosync/=, leaves a symlink in its place, refuses to
+merge or overwrite an existing mirrored target, verifies the replacement
+symlink, and reports any broken symlinks that cannot be repaired. Use it for a
+specific problematic directory; use =fix-drive-errors= for broad scans.
+
 The =fix-drive-errors= skill is the batch counterpart to =nosync= for Google
 Drive sync cleanup. It scans =~/My Drive/= for generated dependency, build,
 cache, and virtual environment directories; skips ambiguous source/user data;

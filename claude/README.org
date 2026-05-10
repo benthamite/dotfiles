@@ -583,13 +583,15 @@ Adapted from [[https://pjh.is/][Peter Hartree]]'s [[https://github.com/HartreeWo
 :ID:       EFE90D9A-B6DB-47BA-BCED-58415B71F4EA
 :END:
 
-Handles Google Sheets comment review and replies using Drive comments as the
-source of truth. Prevents agents from treating Gmail notification emails as
-canonical comment state or from assuming email replies posted to the Sheet.
-The workflow lists comments with =gdoc comments --account <account> --json
---all=, processes one Drive comment/reply at a time, quotes the exact comment,
-waits for explicit approval before any externally visible reply, posts only via
-=gdoc reply=, and verifies with =gdoc comment-info= before moving on.
+Handles Google Sheets comment review, replies, resolves, and reopens using
+Drive comments as the source of truth. Prevents agents from treating Gmail
+notification emails as canonical comment state, assuming email replies posted
+to the Sheet, or triggering for ordinary spreadsheet editing. The workflow
+lists comments with =gdoc comments --account <account> --json --all=, processes
+one Drive comment/reply at a time, quotes the exact comment, waits for explicit
+approval before any externally visible action, uses the matching =gdoc reply=,
+=gdoc resolve=, or =gdoc reopen= command, and verifies with =gdoc comment-info=
+before moving on.
 
 **** twitter
 :PROPERTIES:

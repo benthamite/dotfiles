@@ -392,7 +392,7 @@ path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/convert-citations/
 enabled = false
 
 [[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/find-skills/SKILL.md"
+path = "/Users/pablostafforini/My Drive/dotfiles/.codex/skills/find-skills/SKILL.md"
 enabled = false
 
 [[skills.config]]
@@ -404,11 +404,11 @@ path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/post-push-ci/SKILL
 enabled = false
 
 [[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/skill-discovery/SKILL.md"
+path = "/Users/pablostafforini/My Drive/dotfiles/.codex/skills/skill-discovery/SKILL.md"
 enabled = false
 
 [[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/skill-resolver/SKILL.md"
+path = "/Users/pablostafforini/My Drive/dotfiles/.codex/skills/skill-resolver/SKILL.md"
 enabled = false
 
 [[skills.config]]
@@ -417,6 +417,22 @@ enabled = false
 
 [[skills.config]]
 path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/triage-issues/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/twitter/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/twitter-digest/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/twitter-discover/SKILL.md"
+enabled = false
+
+[[skills.config]]
+path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/twitter-vet/SKILL.md"
 enabled = false
 
 [[skills.config]]

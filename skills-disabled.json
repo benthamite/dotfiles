@@ -1,8 +1,16 @@
 {
   "disabled": {
+    "convert-citations": {
+      "claude_last_used": "not checked",
+      "codex_last_used": "not checked",
+      "disabled_at": "2026-05-10T00:00:00-03:00",
+      "reason": "Batch citation conversion is primarily meant for ai-agent-run-skill/programmatic invocation, not ordinary interactive routing.",
+      "threshold_days": null
+    },
     "find-skills": {
       "claude_last_used": "not found",
       "codex_last_used": "not found",
+      "codex_path": ".codex/skills/find-skills/SKILL.md",
       "disabled_at": "2026-05-10T15:14:51+00:00",
       "reason": "No Claude or Codex usage found inside the threshold window.",
       "threshold_days": 60
@@ -14,13 +22,6 @@
       "reason": "No Claude or Codex usage found inside the threshold window.",
       "threshold_days": 60
     },
-    "convert-citations": {
-      "claude_last_used": "not checked",
-      "codex_last_used": "not checked",
-      "disabled_at": "2026-05-10T00:00:00-03:00",
-      "reason": "Batch citation conversion is primarily meant for ai-agent-run-skill/programmatic invocation, not ordinary interactive routing.",
-      "threshold_days": null
-    },
     "post-push-ci": {
       "claude_last_used": "not found",
       "codex_last_used": "not found",
@@ -31,6 +32,7 @@
     "skill-discovery": {
       "claude_last_used": "not found",
       "codex_last_used": "not found",
+      "codex_path": ".codex/skills/skill-discovery/SKILL.md",
       "disabled_at": "2026-05-10T15:14:51+00:00",
       "reason": "No Claude or Codex usage found inside the threshold window.",
       "threshold_days": 60
@@ -38,6 +40,7 @@
     "skill-resolver": {
       "claude_last_used": "not found",
       "codex_last_used": "not found",
+      "codex_path": ".codex/skills/skill-resolver/SKILL.md",
       "disabled_at": "2026-05-10T15:14:51+00:00",
       "reason": "No Claude or Codex usage found inside the threshold window.",
       "threshold_days": 60
@@ -54,6 +57,34 @@
       "codex_last_used": "not checked",
       "disabled_at": "2026-05-10T00:00:00-03:00",
       "reason": "Project-specific tlon.el workflow kept out of ordinary interactive routing until a project-local skill target exists.",
+      "threshold_days": null
+    },
+    "twitter": {
+      "claude_last_used": "not checked",
+      "codex_last_used": "not checked",
+      "disabled_at": "2026-05-10T00:00:00-03:00",
+      "reason": "Twitter workflows are retained for programmatic invocation only, not ordinary interactive routing.",
+      "threshold_days": null
+    },
+    "twitter-digest": {
+      "claude_last_used": "not checked",
+      "codex_last_used": "not checked",
+      "disabled_at": "2026-05-10T00:00:00-03:00",
+      "reason": "Twitter workflows are retained for programmatic invocation only, not ordinary interactive routing.",
+      "threshold_days": null
+    },
+    "twitter-discover": {
+      "claude_last_used": "not checked",
+      "codex_last_used": "not checked",
+      "disabled_at": "2026-05-10T00:00:00-03:00",
+      "reason": "Twitter workflows are retained for programmatic invocation only, not ordinary interactive routing.",
+      "threshold_days": null
+    },
+    "twitter-vet": {
+      "claude_last_used": "not checked",
+      "codex_last_used": "not checked",
+      "disabled_at": "2026-05-10T00:00:00-03:00",
+      "reason": "Twitter workflows are retained for programmatic invocation only, not ordinary interactive routing.",
       "threshold_days": null
     },
     "walk-list": {

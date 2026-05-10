@@ -118,6 +118,10 @@ ROOTED_SKILL_RE = re.compile(r"\br[0-9]+/([A-Za-z0-9_.-]+)/SKILL\.md\b")
 CLAUDE_SKILL_TOOL_RE = re.compile(r"\bSkill\(skill:\s*[\"']([A-Za-z0-9_.-]+)[\"']\)")
 BRACKET_SKILL_RE = re.compile(r"\[\$?([A-Za-z0-9_.-]+)\]\([^)]*/skills/\1/SKILL\.md\)")
 EXPLICIT_SKILL_RE = re.compile(r"(?<![\w-])\$([A-Za-z0-9_.-]+)(?![\w-])")
+ASSISTANT_SKILL_ANNOUNCE_RE = re.compile(
+    r"\b(?:using|use|used|trigger(?:ing|ed)?)\s+(?:the\s+)?([A-Za-z0-9_.-]+)\s+skill\b",
+    re.IGNORECASE,
+)
 
 
 def matching_skill_names(text: str, tool: str, skill_names: set[str]) -> set[str]:
@@ -132,6 +136,25 @@ def matching_skill_names(text: str, tool: str, skill_names: set[str]) -> set[str
             name = match.group(1)
             if name in skill_names:
                 matches.add(name)
+    return matches
+
+
+def explicit_skill_names(text: str, skill_names: set[str]) -> set[str]:
+    matches: set[str] = set()
+    for regex in (BRACKET_SKILL_RE, EXPLICIT_SKILL_RE):
+        for match in regex.finditer(text):
+            name = match.group(1)
+            if name in skill_names:
+                matches.add(name)
+    return matches
+
+
+def announced_skill_names(text: str, skill_names: set[str]) -> set[str]:
+    matches: set[str] = set()
+    for match in ASSISTANT_SKILL_ANNOUNCE_RE.finditer(text):
+        name = match.group(1)
+        if name in skill_names:
+            matches.add(name)
     return matches
 
 
@@ -185,10 +208,19 @@ def scan_codex_rollouts(skill_names: set[str], cutoff_ts: float, last_used: dict
         role = payload.get("role")
         if role in {"developer", "system"}:
             continue
+        payload_type = payload.get("type")
+        if payload_type in {"function_call", "function_call_output"}:
+            continue
         for text in text_parts(payload):
             if "<skills_instructions>" in text or "### Available skills" in text:
                 continue
-            for name in matching_skill_names(text, "codex", skill_names):
+            if role == "user":
+                matches = explicit_skill_names(text, skill_names)
+            elif role == "assistant":
+                matches = announced_skill_names(text, skill_names)
+            else:
+                matches = set()
+            for name in matches:
                 note_match(last_used, "codex", name, timestamp)
 
 
@@ -209,7 +241,7 @@ def scan_codex_sqlite(skill_names: set[str], cutoff_ts: float, last_used: dict[s
         for timestamp, body in rows:
             if "<skills_instructions>" in body or "### Available skills" in body:
                 continue
-            for name in matching_skill_names(body, "codex", skill_names):
+            for name in announced_skill_names(body, skill_names) | explicit_skill_names(body, skill_names):
                 note_match(last_used, "codex", name, float(timestamp))
     except sqlite3.Error:
         return

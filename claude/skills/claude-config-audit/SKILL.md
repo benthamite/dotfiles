@@ -1,15 +1,23 @@
 ---
 name: claude-config-audit
-description: Audit Claude Code configuration for redundancy, conflicts, dead weight, and staleness. Use when the user says "audit config", "audit setup", "clean up my config", "prune my instructions", "review my claude.md", "check for duplicate rules", or wants to optimize their Claude Code instruction set.
+description: Audit Claude Code configuration across CLAUDE.md, skills, memory, hooks, settings, and documentation for redundancy, conflicts, dead weight, staleness, and instruction drift. Use when the user says "audit config", "audit setup", "clean up my config", "prune my instructions", "review my claude.md", "check for duplicate rules", "audit hooks", "audit memory", or wants to optimize their Claude Code instruction set.
 ---
 
 # Audit Claude Code configuration
 
-Perform a comprehensive audit of all instruction sources — CLAUDE.md files, skills, memory, hooks, and settings — to find redundancy, conflicts, staleness, and dead weight.
+Perform a comprehensive audit of all Claude Code instruction sources to find redundancy, conflicts, staleness, dead weight, and documentation drift.
+
+## Scope and safety
+
+- Use this for Claude Code configuration audits, not ordinary app config linting, code review, repo architecture review, or general security scans unless the question is specifically about Claude Code instructions or automation behavior.
+- Treat settings, MCP configuration, memory, and hook payload examples as potentially sensitive. Read them locally, but do not quote secrets, OAuth tokens, API keys, credential helper output, or unnecessary account identifiers in the report. Redact values and report only the setting names or rule effects needed for the audit.
+- If the audit runs inside this dotfiles repo and secret material may be involved, follow the repo secret-handling instructions before inspecting credential-related files.
+- If an expected source is missing, unreadable, generated, or intentionally absent, record that explicitly instead of inferring its contents.
+- If the user supplied `--accept` or explicitly asked you to apply the cleanup, treat that as confirmation to apply high-confidence, scope-preserving edits after the audit. Otherwise, present the audit and ask before changing files.
 
 ## Phase 1: Discovery
 
-Read every instruction source in the setup. Use subagents in parallel to cover all of these:
+Create an inventory first, then read every instruction source in the setup. For each source, record the resolved path, symlink target when relevant, whether it is tracked, and what role it plays. Use subagents in parallel when available; when they are not available, partition the inventory manually and use parallel file reads where possible.
 
 ### Instruction files
 
@@ -39,6 +47,7 @@ Read every instruction source in the setup. Use subagents in parallel to cover a
 
 - `settings.json` and `settings.local.json` for any behavioral configuration
 - `~/.claude.json` for MCP server definitions (referenced by instructions?)
+- Redact sensitive values. The audit needs behavioral meaning, configured paths, and rule effects, not raw credentials.
 
 ### Documentation
 
@@ -51,7 +60,7 @@ Read every instruction source in the setup. Use subagents in parallel to cover a
 
 ## Phase 2: Extraction
 
-For each source, extract every discrete rule, instruction, or preference. A "rule" is any statement that constrains or directs behavior. Examples:
+For each source, extract every discrete rule, instruction, or preference, while respecting the Phase 1 limits for user-invocable procedural skill bodies. A "rule" is any statement that constrains or directs behavior. Examples:
 
 - "Use sentence case instead of title case" — a rule
 - "After editing config.org, tangle with init-build-profile" — a rule
@@ -159,10 +168,29 @@ For each non-CLAUDE.md file that needs changes (skills, memory), list the specif
 - Which memory files to delete
 - Which MEMORY.md entries to remove
 
+## Applying changes
+
+If applying changes after confirmation or `--accept`:
+
+1. Apply only high-confidence edits that preserve the intended scope of the user's configuration.
+2. Prefer consolidation, wording tightening, and removal of confirmed duplicates over broad rewrites.
+3. Do not delete memory files or other user-authored records destructively; use the repo's deletion policy and make the deletion explicit in the summary.
+4. Keep paired Claude/Codex configuration artifacts synchronized when the repo defines a sync relationship.
+5. Commit each logical change when working in a git repo, unless the user explicitly asked not to commit.
+
+## Verification
+
+Before calling the audit complete:
+
+- Re-read every changed file and check for internal contradictions, broken references, and accidental scope changes.
+- Run any available repo-specific checks, especially sync checks for paired Claude/Codex artifacts.
+- Review the final diff and staged files so unrelated user changes are not included.
+- In the final response, list files changed, verification performed, and unresolved issues or sources that could not be checked.
+
 ## Guidelines
 
 - **Do not remove rules that are working.** If a rule changes behavior in a useful way and isn't duplicated elsewhere, it stays — even if it was reactive in origin.
 - **Canonical location principle.** When a rule must exist somewhere, prefer CLAUDE.md (always loaded) over context skills (loaded conditionally) over memory (loaded per-project). If a rule is in CLAUDE.md AND a skill, cut it from the skill.
 - **Hooks trump instructions.** If a hook mechanically enforces a rule, the instruction-level statement is documentation at best. It can be cut unless it provides context the hook can't (e.g., explaining *why* the rule exists).
 - **Don't touch procedural skills.** The body of user-invocable skills is procedural, not a competing instruction set. Don't recommend cutting steps from release, twitter-digest, etc. unless they contain general rules that duplicate CLAUDE.md.
-- **Ask before applying.** Present the full analysis and wait for confirmation before making any changes.
+- **Respect the confirmation boundary.** `--accept` or an explicit apply request authorizes high-confidence cleanup; otherwise, present the full analysis and wait for confirmation before changing files.

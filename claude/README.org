@@ -748,7 +748,7 @@ Optimizes a project's CLAUDE.md for maximum agent instruction-following while mi
 :ID:       EEA4D06C-0E70-4A12-A588-81114465D2A4
 :END:
 
-Audits the entire Claude Code configuration for redundancy, conflicts, dead weight, and staleness. Discovers all instruction sources (CLAUDE.md files, context skills, memory, hooks, settings, and =claude/README.org= for cross-referencing), extracts every discrete rule, and evaluates each on five criteria: whether it restates default behavior, conflicts with another rule, duplicates something elsewhere, was a reactive fix for one bad output, or is too vague to apply consistently. Produces a cut list, conflict list, and cleaned-up CLAUDE.md.
+Audits the entire Claude Code configuration for redundancy, conflicts, dead weight, staleness, and instruction drift. Discovers all instruction sources (CLAUDE.md files, context skills, memory, hooks, settings, and =claude/README.org= for cross-referencing), redacts sensitive settings values, extracts every discrete rule, and evaluates each on five criteria: whether it restates default behavior, conflicts with another rule, duplicates something elsewhere, was a reactive fix for one bad output, or is too vague to apply consistently. Produces a cut list, conflict list, and cleaned-up CLAUDE.md; pass =--accept= or explicitly ask to apply cleanup to make high-confidence scope-preserving edits, verify changed files and sync checks, and commit the result.
 
 **** try-hartree-skills
 :PROPERTIES:

@@ -2065,8 +2065,7 @@ CLOCK: [2021-04-15 Thu 13:37]--[2021-04-15 Thu 13:42] =>  0:05
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package forge-search
   :ensure (:host github
-                 :repo "benthamite/forge-search.el"
-                 :branch "fix/forge-get-repository")
+                 :repo "eatse21/forge-search.el")
   :after forge
   :bind
   (:map forge-search-mode-map

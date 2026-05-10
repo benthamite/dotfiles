@@ -162,6 +162,14 @@ opening skills by name.  It searches project-local skills before global skills
 and supports =path=, =cat=, =list=, and =roots= so agents do not need to manually
 expand skill root aliases such as =r0= / =r1=.
 
+The =skill-audit= skill is a paired Claude/Codex meta-skill for reviewing
+skills and =SKILL.md= files. It checks trigger quality, workflow design,
+progressive disclosure, bundled resources, verification, portability, and
+maintainability, with special attention to whether the skill captures a
+repeatable workflow, triggers on realistic user phrasing, gives ordered
+operational guidance, defines output and verification expectations, and avoids
+surprising side effects.
+
 * Hooks
 
 =codex/hooks.json= is tracked here and live globally through the symlink at

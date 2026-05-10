@@ -1,6 +1,6 @@
 ---
 name: update-log
-description: End-of-session bookkeeping. Use at the end of a work session to update the session log and project status. Only consider using proactively (e.g. when the session is running low on context) in projects that already have a log directory and a log reference in CLAUDE.md from a previous user invocation. Never invoke autonomously in projects without existing logs.
+description: End-of-session bookkeeping. Use when the user says "/update-log", "update log", "session log", "close out", "wrap up", or asks to save end-of-session progress by updating the session log and project status. Only consider using proactively (e.g. when the session is running low on context) in projects that already have a log directory and a log reference in CLAUDE.md from a previous user invocation. Never invoke autonomously in projects without existing logs.
 ---
 
 # End-of-session log update
@@ -10,6 +10,8 @@ Perform the following bookkeeping steps to preserve this session's work for futu
 ## Step 0: Detect project setup
 
 Determine the project's log directory and whether decisions are tracked:
+
+0. **Snapshot the working tree before editing** with `git status --short`. If `CLAUDE.md`, `decisions-summary.md`, existing `decisions/` files, or any hook-managed status files are already dirty, inspect their current diff before changing them. Use this baseline in Step 5 so pre-existing user or concurrent-agent hunks do not get staged with this bookkeeping commit.
 
 1. **Read `CLAUDE.md`** in the project root. For this workflow, `CLAUDE.md` is the canonical session-log index unless the project explicitly says otherwise; in Codex sessions, `AGENTS.md` may contain agent instructions but is not the session-log pointer. Look for a reference to a session log file — either:
    - A path like `<dir>/YYYY-MM-DD.md` in a "Latest session" section (current format), or
@@ -104,15 +106,18 @@ If no such file is found at any level, skip this step. In the final report, stat
 
 Before staging, inspect `git status --short` and identify any pre-existing unrelated changes. Do not stage unrelated user changes.
 
-Stage and commit only the new log file, updated CLAUDE.md, any changes to `decisions/` or `decisions-summary.md`, and any files modified by post-hooks with a descriptive message.
+Stage and commit only the new log file, updated CLAUDE.md, any changes to `decisions/` or `decisions-summary.md`, and any files modified by post-hooks with a descriptive message. If any intended file was already dirty in the Step 0 baseline, use hunk-level staging or an index patch so the commit contains only the changes made by this `/update-log` run; do not stage the whole file unless every hunk belongs to this run.
 
 **Before running `git commit`, verify that every intended path was actually staged.** `git add` silently exits 0 for gitignored paths; if the project's notes are accidentally ignored at a parent repo, the log file you just created will not be committed and the orphaning will go undetected. Concretely:
 
 1. Build a list of paths you intended to stage (the new log file, CLAUDE.md, etc.).
 2. After `git add`, compare against `git diff --cached --name-only`. For any intended path that does not appear in the cached diff, run `git check-ignore -v <path>` to identify the matching ignore rule.
 3. If any intended path is ignored, **stop**: report the path and the matching `.gitignore` rule to the user, and ask whether to un-ignore the path (preferred — likely a misconfigured parent repo, as in `backlinks-health-automation` 2026-05-04) or to force-add with `git add -f` (only if the user confirms the ignore is intentional and they want this single file through anyway). Do not silently proceed with a partial commit.
+4. Inspect `git diff --cached` and confirm the staged content contains only the intended bookkeeping changes before committing.
 
-## Step 6: Exit (if requested)
+## Step 6: Report and exit (if requested)
+
+Report the log file path, the `CLAUDE.md` pointer that was written, any decisions created or skipped, hooks found and run, files changed by hooks, the commit hash, and the verification performed for staging and commit completeness.
 
 If `--exit` was passed in the arguments, end the session using the host environment's normal exit mechanism after all steps are complete. If no explicit exit mechanism is available, state that bookkeeping is complete and stop.
 

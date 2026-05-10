@@ -483,11 +483,16 @@ review, validates with =ledger -f journal.ledger bal= before proceeding,
 reconciles matched statement rows, and moves discarded staging files to Trash.
 
 The =update-log= skill is a paired Claude/Codex end-of-session bookkeeping
-workflow. The Codex copy treats =CLAUDE.md= as the session-log index unless the
-project explicitly says otherwise, asks for first-run setup without relying on
-Claude-only tools, uses the =record-decisions= skill or its local workflow when
-applicable, reports any =context/post-update-log-hook.md= hooks, and stages only
-intended bookkeeping paths before committing.
+workflow. It triggers from =/update-log=, "update log", "session log",
+"close out", "wrap up", or direct requests to save end-of-session progress. The
+Codex copy treats =CLAUDE.md= as the session-log index unless the project
+explicitly says otherwise, asks for first-run setup without relying on
+Claude-only tools, snapshots the working tree before edits so pre-existing dirty
+hunks are not staged accidentally, uses the =record-decisions= skill or its local
+workflow when applicable, reports any =context/post-update-log-hook.md= hooks,
+verifies the cached diff, commits only intended bookkeeping paths, and reports
+the resulting log path, pointer, hook/decision status, commit hash, and
+verification.
 
 The =record-decisions= skill is a paired Claude/Codex workflow for extracting
 architectural, algorithmic, or design decisions from the current session into

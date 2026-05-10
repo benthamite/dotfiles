@@ -389,14 +389,14 @@
 		  (:defaults (:exclude "citar-embark.el")) :old-names
 		  (bibtex-actions) :source "MELPA" :id citar :host github
 		  :includes (citar-org) :type git :protocol https :inherit t
-		  :depth treeless :ref
-		  "d4a86fe89484b5f5feaaeda8f26c0e2a32f9e1b9"))
+		  :depth treeless :branch "main" :ref
+		  "58df8b9b8af8a2636b28ed5c6005eddef7f579f7"))
  (citar-embark :source "elpaca-menu-lock-file" :recipe
 	       (:package "citar-embark" :repo "emacs-citar/citar" :fetcher
 			 github :files ("citar-embark.el") :source "MELPA" :id
 			 citar-embark :type git :protocol https :inherit t
-			 :depth treeless :ref
-			 "d4a86fe89484b5f5feaaeda8f26c0e2a32f9e1b9"))
+			 :depth treeless :branch "main" :ref
+			 "58df8b9b8af8a2636b28ed5c6005eddef7f579f7"))
  (citar-extras :source "elpaca-menu-lock-file" :recipe
 	       (:source nil :package "citar-extras" :id citar-extras :host
 			github :repo "benthamite/dotfiles" :files
@@ -804,11 +804,11 @@
 		     :inherit t :depth treeless :ref
 		     "5adb7097d0ff3d9e004a8bb07c0b25f7ee20ba8a"))
  (elfeed :source "elpaca-menu-lock-file" :recipe
-	 (:package "elfeed" :repo "benthamite/elfeed" :fetcher github :files
-		   (:defaults "README.md") :source "MELPA" :id elfeed :host
-		   github :branch "debounce-search-update" :type git :protocol
+	 (:package "elfeed" :repo "emacs-elfeed/elfeed" :fetcher github
+		   :files (:defaults "README.md") :source "MELPA" :id
+		   elfeed :host github :branch "main" :type git :protocol
 		   https :inherit t :depth treeless :ref
-		   "7a47724e616834dc2bef384f3773d1a53b729600"))
+		   "8fed405b1549c4127cbfb7d61e060fa6012093f0"))
  (elfeed-ai :source "elpaca-menu-lock-file" :recipe
 	    (:package "elfeed-ai" :fetcher github :repo "benthamite/elfeed-ai"
 		      :files
@@ -1100,9 +1100,8 @@
 			"be39a56ccd48c3823362ff9e243c0cdf01b2c31e"))
  (forge-search :source "elpaca-menu-lock-file" :recipe
 	       (:source nil :package "forge-search" :id forge-search :host
-			github :repo "benthamite/forge-search.el" :branch
-			"fix/forge-get-repository" :type git :protocol https
-			:inherit t :depth treeless :ref
+			github :repo "eatse21/forge-search.el" :branch "master"
+			:type git :protocol https :inherit t :depth treeless :ref
 			"3eb546e561115be901f6e2fe2dd11f7b25b31ad9"))
  (frame-extras :source "elpaca-menu-lock-file" :recipe
 	       (:source nil :package "frame-extras" :id frame-extras :host
@@ -3168,7 +3167,8 @@
  (wasabi :source "elpaca-menu-lock-file" :recipe
 	 (:source nil :package "wasabi" :id wasabi :host github :repo
 		  "xenodium/wasabi" :type git :protocol https :inherit t :depth
-		  treeless :ref "d8152448d850d01d06425446fe4a79e4deb0edbd"))
+		  treeless :branch "main" :ref
+		  "93a74069d3e1408d251fa22146350e263a33bb7b"))
  (websocket :source "elpaca-menu-lock-file" :recipe
 	    (:package "websocket" :repo "ahyatt/emacs-websocket" :fetcher github
 		      :files

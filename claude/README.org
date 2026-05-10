@@ -721,8 +721,10 @@ high-confidence fixes that preserve the skill's intended scope.
 
 Third-party discovery helper for the open skills ecosystem. Uses the =npx
 skills= CLI and =skills.sh= catalog to search for installable skills when a
-requested capability may already exist. Moved from dotfiles project-local
-=.claude/skills/= into the global Claude/Codex skill trees.
+requested capability may already exist. Requires current catalog/source
+verification before recommending a skill and explicit approval before installing
+an exact package. Moved from dotfiles project-local =.claude/skills/= into the
+global Claude/Codex skill trees.
 
 **** skill-resolver
 :PROPERTIES:

@@ -102,7 +102,9 @@ blocked.
 The former dotfiles-project-local Claude skills =find-skills=,
 =skill-creator=, and =systematic-debugging= now live in the global
 =claude/skills/= and =codex/skills/= trees so they are available consistently
-from both tools in every project.
+from both tools in every project. The =find-skills= helper requires current
+catalog/source verification before recommending a skill and explicit approval
+before installing an exact package.
 
 The =doc-extras= skill is a paired Claude/Codex documentation workflow for
 auditing, creating, and refreshing manuals under =emacs/extras/doc/= from the

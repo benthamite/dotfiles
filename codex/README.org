@@ -191,6 +191,15 @@ skill directory, keeps API keys scoped to the skill =.env= file, writes reviewed
 output to =*.proofread.md=, applies accepted suggestions to =*.final.md=, and
 uses British English conventions by default.
 
+The =triage-issues= skill is a paired Claude/Codex operations workflow for
+open GitHub issues in =tlon-team/tlon.el=. It starts with a scope and mode gate
+that verifies the current checkout, separates read-only triage, local fixes,
+and externally visible closure, and requires explicit authorization before
+GitHub comments, issue closure, or org archiving. It presents batches before
+edits, verifies =TLON_AI_GITHUB_TOKEN= belongs to =tlon-ai= without creating
+test comments, commits fixes issue-by-issue, and reports commit, check,
+GitHub, and org-archive verification.
+
 The =gsc-indexing-triage= skill is a paired Claude/Codex operations skill for
 =stafforini.com= Search Console Page indexing alerts and validation failures.
 It includes the =scripts/extract-gsc-links.py= helper, a site-specific

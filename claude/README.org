@@ -478,7 +478,7 @@ Cuts releases for the dotfiles repo itself. Verifies that every personal package
 :ID:       D1A897E8-29DC-4FFD-8D16-2AC792A4DA0F
 :END:
 
-Scans, prioritizes, and batch-resolves open GitHub issues for =tlon-team/tlon.el=. Fetches issues, ranks by complexity, presents batches for review, fixes them with parallel subagents, closes on GitHub as =tlon-ai=, and archives the corresponding org headings.
+Scans, prioritizes, and batch-resolves open GitHub issues for =tlon-team/tlon.el=. Starts with a scope and mode gate that verifies the current checkout, separates read-only triage, local fixes, and externally visible closure, and requires explicit authorization before GitHub comments, issue closure, or org archiving. It presents batches before edits, uses subagents or agent teams when available, verifies =TLON_AI_GITHUB_TOKEN= belongs to =tlon-ai= without creating test comments, commits fixes issue-by-issue, and reports commit, check, GitHub, and org-archive verification.
 
 **** gsc-indexing-triage
 :PROPERTIES:

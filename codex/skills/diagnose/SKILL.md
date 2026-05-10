@@ -1,9 +1,11 @@
 ---
 name: diagnose
-description: Investigate errors and friction diagnostically instead of fixing them. Use when the user says "/diagnose" followed by a question about why something went wrong.
+description: Diagnose errors, confusion, or workflow friction before fixing. Use when the user says "/diagnose", asks why something went wrong, asks for root-cause analysis, or asks to investigate process/tooling failure without immediately changing code.
 ---
 
-The user is asking you to investigate a problem diagnostically. Treat errors, confusion, and friction as *symptoms* of an underlying structural issue, not as problems to fix directly.
+The user is asking you to investigate a problem diagnostically. Treat errors, confusion, and friction as *symptoms* of an underlying structural issue, not as problems to fix directly. The deliverable is a diagnosis, not a patch.
+
+Do not use this skill for ordinary debugging or implementation requests where the user wants the issue fixed now. If the user asks for both diagnosis and a fix, diagnose first, report the proposed remedy, and wait for confirmation before changing files or external systems.
 
 Your job is to:
 
@@ -14,6 +16,7 @@ Your job is to:
    - *Behavioral lapse with structural remedy*: an existing instruction covered the immediate failure, but the failure happened in a repetitive, low-level, deterministic operation where relying on attention/manual expansion is itself brittle. In this case, name both: the immediate rule violation and the mechanism that would remove or reduce that class of lapse.
 3. **Consider whether it's an instance of a broader class of problems** — is this a one-off, or does it point to a pattern?
 4. **Propose structural fixes only when a structural gap is confirmed.** If the existing mechanism would have prevented the failure and only discipline was missing, the correct output is to name the rule that was violated, not to propose new mechanisms on top of it.
+5. **Report and stop.** Present the observed symptom, mechanisms checked, diagnosis category, evidence, broader pattern, and any structural remedy candidates. If no reliable structural fix is visible yet, say what remains to investigate. Do not implement the remedy until the user asks.
 
 Do NOT try to fix or work around the original error. Focus entirely on diagnosis and structural remedies. Present your findings, then wait for the user to decide what action to take.
 

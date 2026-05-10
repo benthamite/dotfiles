@@ -185,6 +185,15 @@ repeatable workflow, triggers on realistic user phrasing, gives ordered
 operational guidance, defines output and verification expectations, and avoids
 surprising side effects.
 
+The =diagnose= skill is a paired Claude/Codex diagnostic mode modifier for
+investigating errors, confusion, and process/tooling friction before patching.
+It triggers on =/diagnose=, why-did-this-happen questions, root-cause analysis
+requests, and requests to investigate failures without immediately changing
+code. It requires the agent to verify which existing hooks, skills, configs, or
+scripts should have caught the issue, classify the diagnosis, distinguish
+structural gaps from behavioral lapses, and report before implementing any
+remedy.
+
 The =code-audit= skill is a paired Claude/Codex development skill for finding
 actual correctness, security, error-handling, and data-integrity defects in
 application code. It requires agents to resolve scope, identify project-specific

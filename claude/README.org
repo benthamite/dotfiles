@@ -540,7 +540,13 @@ Scans, prioritizes, and batch-resolves open GitHub issues for =tlon-team/tlon.el
 
 End-of-session bookkeeping triggered by =/update-log=, "update log", "session
 log", "close out", "wrap up", or direct requests to save end-of-session
-progress. Treats =CLAUDE.md= as the canonical session-log index unless the
+progress. Also runs at the end of sessions that changed durable project state:
+code, docs, config, data, findings, decisions, TODOs, blockers,
+external-service outcomes, or status changes future sessions should know. It
+does not run after pure Q&A or trivial read-only lookups where nothing durable
+changed; session-end hooks should use this policy to remind or guard, not
+silently run the mutating workflow unattended. Treats =CLAUDE.md= as the
+canonical session-log index unless the
 project says otherwise, detects the project's log directory from the
 latest-session pointer, snapshots the working tree before edits, and creates a
 dated session log (what was done, key findings, results, open questions). On

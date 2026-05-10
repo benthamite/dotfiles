@@ -13,6 +13,10 @@ than in per-project directories. Do not use `~/.claude/projects`,
 `~/.claude/history.jsonl`, or `~/.claude.json` for this skill. For Codex, the
 "move" is a metadata rewrite, not a filesystem move.
 
+Do not use this skill to inspect or open the current conversation log; use
+`open-session-log` for that. Do not use it for Claude Code logs, which are
+handled by the Claude-side `move-session-log` skill.
+
 Use the bundled script:
 
 ```bash
@@ -20,6 +24,9 @@ python3 /Users/pablostafforini/My\ Drive/dotfiles/codex/skills/move-session-log/
 ```
 
 The script defaults to the current working directory as the target project.
+In single-session mode, the target project path is resolved to its canonical
+absolute path before writing, so symlinked paths such as `/tmp` may be reported
+under their resolved location.
 
 ## Modes
 
@@ -34,7 +41,7 @@ The script defaults to the current working directory as the target project.
 
 ## Single-session mode
 
-`$ARGUMENTS` must contain a session ID, for example
+`$ARGUMENTS` usually contains a session ID, for example
 `019df86a-a988-7632-a9b1-603858683498`.
 
 Run:
@@ -64,11 +71,18 @@ If no session ID is supplied, list recent sessions from `~/.codex/sessions`
 whose `session_meta.payload.cwd` is not the current project and ask the user
 which one to import.
 
+If the target project is not the shell's current directory, pass it explicitly:
+
+```bash
+python3 /Users/pablostafforini/My\ Drive/dotfiles/codex/skills/move-session-log/scripts/move_session_log.py --project '<target-project-path>' '<session-id>'
+```
+
 ## Whole-project rename mode
 
 Both paths must be absolute:
 
 ```bash
+python3 /Users/pablostafforini/My\ Drive/dotfiles/codex/skills/move-session-log/scripts/move_session_log.py --dry-run --rename '<old-project-path>' '<new-project-path>'
 python3 /Users/pablostafforini/My\ Drive/dotfiles/codex/skills/move-session-log/scripts/move_session_log.py --rename '<old-project-path>' '<new-project-path>'
 ```
 
@@ -79,6 +93,9 @@ The script rewrites exact structured path fields only:
 
 It does not perform raw string replacement in transcript text, command output,
 or JSON-encoded function-call argument strings.
+
+Always run the dry run first for `--rename`, inspect the reported counts, and
+stop if the old/new paths appear reversed or the count is unexpectedly broad.
 
 ## Verification
 
@@ -92,3 +109,10 @@ Report:
 - the number of session JSONL path fields rewritten
 - whether `history.jsonl` or `session_index.jsonl` had path fields to update
 - whether shell snapshots were found
+
+For `--rename`, report whether the dry run matched the final run's counts:
+
+- session files scanned and rewritten
+- session path fields rewritten
+- `history.jsonl` path fields rewritten
+- `session_index.jsonl` path fields rewritten

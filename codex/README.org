@@ -226,6 +226,14 @@ data, rewriting =~/.claude.json=, =history.jsonl=, or session =cwd= paths, or
 trashing old source directories, and handles package renames by matching the old
 source package name while writing the new target path.
 
+The =move-session-log= skill is a tool-specific Codex workflow for relocating
+Codex session metadata after a session starts in the wrong project or a project
+directory is renamed. It rewrites structured =cwd= and =project= fields under
+=~/.codex/sessions= plus Codex history/index files without moving session
+files, dry-runs whole-project renames before applying them, and reports the
+exact session file, rewrite counts, index/history updates, and shell snapshot
+matches.
+
 The =diagnose= skill is a paired Claude/Codex diagnostic mode modifier for
 investigating errors, confusion, and process/tooling friction before patching.
 It triggers on =/diagnose=, why-did-this-happen questions, root-cause analysis

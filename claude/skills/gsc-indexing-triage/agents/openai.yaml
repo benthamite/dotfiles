@@ -1,4 +1,0 @@
-interface:
-  display_name: "GSC Indexing Triage"
-  short_description: "Triage Search Console indexing issues"
-  default_prompt: "Use $gsc-indexing-triage to triage and fix Search Console indexing issues for stafforini.com, log the result, and deploy, validate, or archive only if I explicitly authorize those external actions in this request."

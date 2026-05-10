@@ -14,6 +14,13 @@
       "reason": "No Claude or Codex usage found inside the threshold window.",
       "threshold_days": 60
     },
+    "convert-citations": {
+      "claude_last_used": "not checked",
+      "codex_last_used": "not checked",
+      "disabled_at": "2026-05-10T00:00:00-03:00",
+      "reason": "Batch citation conversion is primarily meant for ai-agent-run-skill/programmatic invocation, not ordinary interactive routing.",
+      "threshold_days": null
+    },
     "post-push-ci": {
       "claude_last_used": "not found",
       "codex_last_used": "not found",
@@ -41,6 +48,20 @@
       "disabled_at": "2026-05-10T15:14:51+00:00",
       "reason": "No Claude or Codex usage found inside the threshold window.",
       "threshold_days": 60
+    },
+    "triage-issues": {
+      "claude_last_used": "not checked",
+      "codex_last_used": "not checked",
+      "disabled_at": "2026-05-10T00:00:00-03:00",
+      "reason": "Project-specific tlon.el workflow kept out of ordinary interactive routing until a project-local skill target exists.",
+      "threshold_days": null
+    },
+    "walk-list": {
+      "claude_last_used": "not checked",
+      "codex_last_used": "not checked",
+      "disabled_at": "2026-05-10T00:00:00-03:00",
+      "reason": "Protected stateful list walking is a command/batch workflow, not ordinary interactive routing.",
+      "threshold_days": null
     }
   },
   "enabled": {

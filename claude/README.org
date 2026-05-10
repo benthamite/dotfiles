@@ -540,7 +540,15 @@ Moves a Claude Code internal session log (=.jsonl= and associated directory) fro
 :ID:       D25CCDE3-F976-493E-9DD8-043A17422C65
 :END:
 
-Executes any task with self-generated verification criteria that close the agentic loop. Before doing the work, generates concrete testable criteria (the non-coding equivalent of unit tests), meta-verifies the criteria quality (recursing if uncertain), executes the task, then systematically evaluates the output against each criterion. Loops on failures until all criteria pass or escalates to the user.
+Executes a task under an explicit verification loop when the user asks to
+verify, close the loop, define success criteria before work, or rigorously
+check an output whose correctness is not automatically answerable. It generates
+concrete criteria before acting, meta-verifies criteria quality, proceeds
+without a user checkpoint when criteria are clear, asks only when criteria
+require user/domain judgment or change scope/risk, evaluates each criterion,
+loops on failures, and reports pass/fail/uncertain evidence. Ordinary coding
+and debugging use narrower project checks unless this meta-verification
+workflow was explicitly requested.
 
 **** handoff
 :PROPERTIES:

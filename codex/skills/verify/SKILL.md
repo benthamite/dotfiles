@@ -1,6 +1,6 @@
 ---
 name: verify
-description: Execute any task with self-generated verification criteria that close the agentic loop. Generates testable success criteria before acting, verifies against them after, and loops until criteria are met. Use when the user says "verify", "verified task", "close the loop", or wants rigorous verification of non-coding work. Works for writing, research, analysis, classification, data work, and any domain where "did I get this right?" isn't automatically answerable.
+description: Execute a task under an explicit verification loop when the user says "verify", "verified task", "close the loop", asks for success criteria before work, or wants rigorous checking of writing, research, analysis, classification, data work, or other outputs where "did I get this right?" is not automatically answerable. Generate concrete criteria before acting, verify against them after, and loop on failures. Do not use for ordinary implementation or debugging when project tests or a narrower audit/debugging skill already provide the verification path, unless the user explicitly requests this meta-verification workflow.
 ---
 
 # Verified task execution
@@ -10,6 +10,12 @@ Execute $ARGUMENTS with self-generated verification criteria that close the agen
 ## When this skill is invoked
 
 **IMPORTANT**: When triggered, follow the execution steps below. Do NOT just describe what the skill does.
+
+## When not to use
+
+- Do not use for a simple direct check where the user asked for one command or one fact and no verification loop is needed.
+- Do not use for ordinary coding, debugging, PR, security, or design-review work when a narrower local skill already defines the right verification path. Use that skill's checks instead.
+- Do not use self-generated criteria as a substitute for required external confirmation, domain authority, or user approval for irreversible or externally visible actions.
 
 ### Execution steps
 
@@ -36,7 +42,7 @@ Before doing any work on the task itself, generate a set of **concrete, testable
 | Data transformation | Sample input X produces output Y. Empty input produces []. Malformed input raises a clear error, not garbage output. |
 | Summarization | All key points from the source are represented. No claims appear in the summary that aren't in the source. Length is within N% of target. |
 
-Present the criteria to the user for review before proceeding. The user may add, remove, or modify criteria. This is the one human-in-the-loop moment — get it right.
+Briefly state the criteria before proceeding when that helps the user understand the work. Do not stop for user review unless the user asked to approve criteria, the criteria require domain judgment you cannot approximate, or the choice of criteria changes scope, cost, risk, or externally visible behavior. If you do ask for review, make the tradeoff explicit and keep the question focused.
 
 #### Phase 2.5: Meta-verify the criteria (recursive)
 
@@ -44,7 +50,7 @@ After generating criteria, assess your confidence in them:
 
 - **High confidence**: the criteria are concrete, testable, and you can see exactly how you'd evaluate each one. Proceed to Phase 3.
 - **Low confidence**: some criteria are vague, subjective, or you're not sure they capture what matters. **Treat the problem of generating better criteria as its own task and recurse.** Specifically:
-  1. Ask: "What would good verification criteria look like for this type of task?" Research this — look at how experts in the domain evaluate quality, find rubrics, examine analogous evaluation frameworks.
+  1. Ask: "What would good verification criteria look like for this type of task?" Research or inspect authoritative rubrics when useful; for unfamiliar or time-sensitive domains, use current authoritative sources rather than guessing.
   2. Generate improved criteria based on your research.
   3. Assess confidence again.
   4. If still uncertain after 2 levels of recursion, surface to the user: "I couldn't generate criteria I'm confident in. Here's what I considered and why it fell short. Can you help me define what 'done right' looks like?"
@@ -72,6 +78,8 @@ If using curated test cases (e.g., classification), run every case and report ac
 - **Some uncertain**: flag these to the user. Ask whether they want to provide judgment, modify the criteria, or accept the uncertainty.
 
 If you loop more than 3 times on the same criterion, stop and surface the issue to the user rather than spinning.
+
+Keep the final response proportionate to the task. Include the result or artifact, the criteria evaluated, pass/fail/uncertain status with evidence, and any unresolved uncertainty. For small tasks, a terse verification summary is enough; for larger tasks, use a compact table or checklist.
 
 ## Key principles
 

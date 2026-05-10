@@ -272,9 +272,10 @@ to =release-dotfiles=.
 The =release-dotfiles= skill is a paired Claude/Codex operations workflow for
 cutting a new =benthamite/dotfiles= release. It checks every personal package
 repo in the active elpaca profile, gates externally visible pushes and release
-creation, cleans only untracked =.elc= artifacts via Trash, classifies commits
-since the latest semver tag, writes the lockfile release commit, waits for
-profile testing, then tags, pushes, creates, and verifies the GitHub release.
+creation, cleans only untracked =.elc= artifacts selected with =git ls-files=
+and moved via Trash, classifies commits since the latest semver tag, writes the
+lockfile release commit, waits for profile testing, then tags, pushes, creates,
+and verifies the GitHub release.
 
 The =emacs-freeze= skill is a paired Claude/Codex operations skill for frozen,
 hung, beachballing, or otherwise unresponsive Emacs sessions. It collects

@@ -208,6 +208,15 @@ mode and uses =--accept= only for high-confidence, behavior-preserving
 high-impact refactors; risky or broad redesigns are reported instead of
 half-applied.
 
+The =claude-config-audit= skill is a paired Claude/Codex meta-skill for auditing
+Claude Code configuration across CLAUDE.md, skills, memory, hooks, settings, and
+documentation. It inventories instruction sources, redacts sensitive setting
+values, extracts discrete rules, checks for default-behavior restatements,
+conflicts, duplicates, reactive one-off fixes, and vague guidance, then produces
+a cut list, conflict list, and cleaned-up CLAUDE.md. Pass =--accept= or
+explicitly ask to apply cleanup to make high-confidence scope-preserving edits,
+verify changed files and sync checks, and commit the result.
+
 The =automate= skill is a paired Claude/Codex meta-skill for reusable AI
 workflow design. It decides whether a request should become a Claude Code skill,
 a Codex skill, a gptel directive or preset, a gptel tool, or a gptel command,

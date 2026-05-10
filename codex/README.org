@@ -76,7 +76,8 @@ For paired skills that keep small state files in their skill directories, update
 both tool copies to the same contents unless =ai-config-sync.json= records an
 explicit tool-specific divergence. For example, =ai-journal= keeps its
 =last-run.txt= cutoff synchronized under both =claude/skills/ai-journal/= and
-=codex/skills/ai-journal/=.
+=codex/skills/ai-journal/=; =skill-discovery= follows the same paired-state
+rule under its own Claude and Codex skill directories.
 
 Codex discovers global skills from =~/.codex/skills/*/SKILL.md=.  The live
 skills directory is therefore a symlink to the tracked Codex tree.  Run:

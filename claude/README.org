@@ -571,7 +571,7 @@ Bulk version of =nosync=. Scans =~/My Drive/= for generated directories causing 
 :ID:       AAB6CC73-A936-4D25-9255-544436259405
 :END:
 
-Installs and configures a new MCP server for Claude Code. Walks through discovery, auth verification (checking for platform-locked OAuth before installing), dependency installation, and registration via =claude mcp add=. Encodes hard-won lessons: always add a trailing slash to HTTP/SSE URLs (servers without it are silently invisible), verify with =claude mcp list= (not =claude mcp get=, which reads config but doesn't check runtime health), use absolute interpreter paths (=/opt/homebrew/bin/node=, not bare =node= which is an nvm shell function), and choose scope explicitly (=-s user= for global).
+Installs and configures a new MCP server for Claude Code. Walks through discovery, auth verification (checking for platform-locked OAuth before installing), dependency installation, credential-safe setup, and registration via =claude mcp add=. Encodes hard-won lessons: always add a trailing slash to HTTP/SSE URLs (servers without it are silently invisible), verify with =claude mcp list= (not =claude mcp get=, which reads config but doesn't check runtime health), use absolute interpreter paths (=/opt/homebrew/bin/node=, not bare =node= which is an nvm shell function), use =-s user= for global servers and run the absolute =~/My Drive/dotfiles/claude/bin/sync-mcp-servers.sh= sync script afterward, use =-s project= for shared =.mcp.json= project servers, avoid the default =-s local= unless explicitly requested, prepare secret references before registration, and tell users to restart running Claude Code sessions before expecting new MCP tools to appear.
 
 *** Multi-model and research skills
 :PROPERTIES:

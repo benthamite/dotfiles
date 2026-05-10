@@ -9060,6 +9060,8 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 
   :custom
   (ai-agent-alert-on-ready t)
+  (ai-agent-before-exit-skill-name "session-retro")
+  (ai-agent-before-exit-skill-directories '("~/My Drive/dotfiles/"))
   (ai-agent-sync-theme t)
   ;; copilot support is buggy; needs more work
   (ai-agent-claude-copilot-enabled nil)
@@ -9068,43 +9070,6 @@ The author provides a good overview of the package in [[https://www.youtube.com/
                               ("tlon"     . "~/.claude-tlon")
                               ("epoch"    . "~/.claude-epoch")))
   :config
-  (defvar-local init-ai-agent--session-retro-sent nil
-    "Non-nil when session-retro was already sent before exit.")
-
-  (defun init-ai-agent-run-session-retro-before-exit (backend buffer)
-    "Run session-retro before exiting dotfiles session BUFFER.
-BACKEND is the resolved `ai-agent' backend."
-    (with-current-buffer buffer
-      (let* ((directory-fn (ai-agent--backend-get backend :directory))
-             (directory (and directory-fn (funcall directory-fn buffer)))
-             (dotfiles (file-truename "~/My Drive/dotfiles/"))
-             (session-dir (and directory (file-truename directory)))
-             (command (init-ai-agent-session-retro-command backend)))
-        (if (or init-ai-agent--session-retro-sent
-                (not command)
-                (not session-dir)
-                (not (file-in-directory-p session-dir dotfiles)))
-            t
-          (setq-local init-ai-agent--session-retro-sent t)
-          (init-ai-agent-send-session-retro-command backend buffer command)
-          (message "Started %s; run ai-agent-exit again to close this session." command)
-          nil))))
-
-  (defun init-ai-agent-send-session-retro-command (backend buffer command)
-    "Send and submit session-retro COMMAND to BACKEND session BUFFER."
-    (funcall (ai-agent--backend-get backend :send-command) command buffer)
-    (when-let* ((send-return-fn (ai-agent--backend-get backend :send-return)))
-      (funcall send-return-fn buffer)))
-
-  (defun init-ai-agent-session-retro-command (backend)
-    "Return the session-retro command for ai-agent BACKEND."
-    (pcase backend
-      ('claude-code "/session-retro")
-      ('codex "$session-retro")))
-
-  (add-hook 'ai-agent-before-exit-functions
-            #'init-ai-agent-run-session-retro-before-exit)
-
   (with-eval-after-load 'debug
     (bind-keys :map debugger-mode-map
                ("D" . ai-agent-debug-backtrace))))

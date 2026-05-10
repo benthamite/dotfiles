@@ -504,7 +504,7 @@ Extracts and records architectural decisions from the current session into =deci
 :ID:       1C8D18F2-3EA7-4149-9BC4-40B4EFE8546C
 :END:
 
-Opens the current Claude Code session's conversation log in Emacs using the =agent-log= package. Walks up the process tree to find the session ID, then calls =agent-log-open-session= via =emacsclient=.
+Opens the current Claude Code session's conversation log in Emacs using the =agent-log= package. Walks up the process tree to find the session ID, then calls =agent-log-open-session= via =emacsclient=. Avoids latest-session fallbacks because concurrent Claude Code sessions can make recency ambiguous.
 
 **** move-session-log
 :PROPERTIES:

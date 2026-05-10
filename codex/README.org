@@ -376,6 +376,13 @@ Claude-only tools, uses the =record-decisions= skill or its local workflow when
 applicable, reports any =context/post-update-log-hook.md= hooks, and stages only
 intended bookkeeping paths before committing.
 
+The =open-session-log= skill is a tool-specific Codex workflow for opening the
+current Codex thread in Emacs through =agent-log=. It writes a unique marker in
+one shell command, finds the exact current transcript containing that marker
+under =~/.codex/sessions=, and opens the resulting session ID with
+=agent-log-open-session=. It intentionally avoids latest-session fallbacks
+because concurrent Codex agents can make recency ambiguous.
+
 * Hooks
 
 =codex/hooks.json= is tracked here and live globally through the symlink at

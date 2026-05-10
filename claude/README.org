@@ -351,7 +351,10 @@ Adapted from the third-party skill previously stored under the dotfiles
 project-local =.claude/skills/= tree. Forces root-cause investigation before
 bug fixes, with supporting references for condition-based waiting, defense in
 depth, and tracing polluters. It is now a global Claude/Codex skill so
-debugging behavior is consistent outside the dotfiles project.
+debugging behavior is consistent outside the dotfiles project. The skill also
+documents when not to trigger, how it differs from =symptom-check=, and the
+evidence, root cause, fix, verification, and residual risk fields expected in
+the final debugging report.
 
 **** build
 :PROPERTIES:

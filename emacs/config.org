@@ -738,8 +738,33 @@ CLOCK: [2021-04-03 Sat 19:35]--[2021-04-03 Sat 20:18] =>  0:43
 /[[https://github.com/jwiegley/use-package][use-package]] is a package organizer./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(defun elpaca-use-package-dependency-queued-p (name)
+  "Return non-nil if NAME is already queued as an elpaca dependency."
+  (when-let* ((entry (elpaca-get name))
+              (dependents (ignore-errors (elpaca<-dependents entry))))
+    dependents))
+
+(defun init-elpaca-use-package-handler (name _keyword ensure rest state)
+  "Handle Elpaca-managed `use-package' declarations for NAME.
+ENSURE, REST, and STATE are `use-package' handler arguments."
+  (let ((processed (use-package-process-keywords name rest state)))
+    (when (memq (car-safe ensure) '(quote \`))
+      (setq ensure (eval ensure t)))
+    (if-let* ((order (cond
+                      ((null ensure) nil)
+                      ((or (eq ensure t) (eq (car-safe ensure) t)) name)
+                      ((and (consp ensure) (keywordp (car ensure)))
+                       (cons name ensure))
+                      (t ensure))))
+        (if (elpaca-use-package-dependency-queued-p (elpaca--first order))
+            processed
+          `((elpaca ,order ,@processed)))
+      processed)))
+
 (elpaca elpaca-use-package
-  (elpaca-use-package-mode))
+  (elpaca-use-package-mode)
+  (advice-add #'use-package-handler/:ensure
+              :override #'init-elpaca-use-package-handler))
 
 (use-package use-package
   :demand t
@@ -755,18 +780,19 @@ CLOCK: [2021-04-03 Sat 19:35]--[2021-04-03 Sat 20:18] =>  0:43
     "Like `use-package' but to load personal packages.
 NAME and ARGS as in `use-package'."
     (declare (indent defun))
-    (let ((name-str (symbol-name (eval `(quote ,name)))))
+    (let* ((name-str (symbol-name (eval `(quote ,name))))
+           (ensure `(:host github
+                     :repo "benthamite/dotfiles"
+                     :files ,(list (file-name-concat
+                                    "emacs/extras"
+                                   (file-name-with-extension name-str "el"))
+                                   (file-name-concat
+                                    "emacs/extras/doc"
+                                    (file-name-with-extension name-str "texi")))
+                     :wait t
+                     :depth nil)))
       `(use-package ,name
-         :ensure (:host github
-                        :repo "benthamite/dotfiles"
-                        :files ,(list (file-name-concat
-                                       "emacs/extras"
-                                       (file-name-with-extension name-str "el"))
-                                      (file-name-concat
-                                       "emacs/extras/doc"
-                                       (file-name-with-extension name-str "texi")))
-                        :wait t
-                        :depth nil)
+         :ensure ,(unless (elpaca-use-package-dependency-queued-p name) ensure)
          ,@args))))
 
 (elpaca-wait)
@@ -878,6 +904,48 @@ exec "$(dirname "$0")/sync-elpaca-clone.sh"
 
 (use-package seq
   :ensure `(seq :build (:before elpaca-activate elpaca-unload-seq)))
+#+end_src
+
+Some packages are dependencies of earlier packages but still have their main
+configuration later in this file.  Declare the custom recipes here so elpaca
+has a single installation owner before any dependency can queue them.
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package compat
+  :ensure (:host github
+                 :repo "emacs-compat/compat"
+                 :branch "main")
+  :defer t)
+
+(use-package hl-todo
+  :ensure (:build (:not elpaca-check-version))
+  :defer t)
+
+(use-package password-generator
+  :ensure (:host github
+                 :repo "vandrlexay/emacs-password-genarator") ; sic
+  :defer t)
+
+(use-package org-noter
+  :ensure (:host github
+                 :repo "org-noter/org-noter")
+  :defer t)
+
+(use-package org-roam
+  :ensure (:host github
+                 :repo "benthamite/org-roam"
+                 :branch "fix/handle-nil-db-version") ; https://github.com/org-roam/org-roam/pull/2609
+  :defer t)
+
+(use-package annas-archive
+  :ensure (:host github
+                 :repo "benthamite/annas-archive")
+  :defer t)
+
+(use-package yaml
+  :ensure (:host github
+                 :repo "zkry/yaml.el")
+  :defer t)
 #+end_src
 
 ** =paths=
@@ -1496,7 +1564,7 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package password-store-otp
-  :ensure (:version (lambda (_) "0.1.5"))  ; github.com/progfolio/elpaca/issues/229
+  :ensure nil ; `pass' queues this package as a dependency.
   :after pass)
 #+end_src
 
@@ -1532,8 +1600,7 @@ CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package password-generator
-  :ensure (:host github
-                 :repo "vandrlexay/emacs-password-genarator") ; sic
+  :ensure nil ; `pass-extras' queues this package as a dependency.
   :defer t)
 #+end_src
 
@@ -1871,6 +1938,7 @@ if the process's buffer has already been deleted."
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package with-editor
+  :ensure nil ; Queued as a dependency before this configuration block.
   :bind (("s-c" . with-editor-finish)
          ("s-k" . with-editor-cancel)
          ("C-c C-c" . with-editor-finish)))
@@ -2559,6 +2627,7 @@ Note that the loading of ~color~ cannot be deferred, since it is required by ~pu
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package hsluv
+  :ensure nil ; Queued as a dependency before this configuration block.
   :after color-extras)
 #+end_src
 
@@ -2806,6 +2875,7 @@ Note that the icons need to be installed via =nerd-icons-install-fonts=. If you 
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package nerd-icons
+  :ensure nil ; Queued as a dependency before this configuration block.
   :defer t)
 #+end_src
 
@@ -5749,6 +5819,7 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package pcre2el
+  :ensure nil ; Queued as a dependency before this configuration block.
   :defer t)
 #+end_src
 
@@ -6991,6 +7062,7 @@ CLOCK: [2021-10-19 Tue 12:32]--[2021-10-19 Tue 13:19] =>  0:47
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package markdown-mode
+  :ensure nil ; Queued as a dependency before this configuration block.
   :custom
   (markdown-fontify-code-blocks-natively t)
   (markdown-command "pandoc --from markdown --to html")
@@ -7926,6 +7998,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package f
+  :ensure nil ; Queued as a dependency before this configuration block.
   :defer t)
 #+end_src
 
@@ -7938,6 +8011,7 @@ CLOCK: [2021-02-23 Tue 10:59]--[2021-02-23 Tue 11:05] =>  0:06
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package s
+  :ensure nil ; Queued as a dependency before this configuration block.
   :defer t)
 #+end_src
 
@@ -8215,6 +8289,7 @@ This needs to be configured.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package csv-mode
+  :ensure nil ; Queued as a dependency before this configuration block.
   :defer t)
 #+end_src
 
@@ -8226,8 +8301,7 @@ This needs to be configured.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package yaml
-  :ensure (:host github
-                 :repo "zkry/yaml.el")
+  :ensure nil ; Recipe owner is declared near the package bootstrap.
   :defer t)
 #+end_src
 
@@ -8251,7 +8325,9 @@ This needs to be configured.
 /[[https://github.com/cask/shut-up/][shut-up]] provides a macro to silence function calls./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package shut-up)
+(use-package shut-up
+  ;; Personal packages queue this package as a dependency.
+  :ensure nil)
 #+end_src
 
 ** =puni=
@@ -8290,7 +8366,7 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package hl-todo
-  :ensure (:build (:not elpaca-check-version))
+  :ensure nil ; Recipe owner is declared near the package bootstrap.
   :defer 30
   :config
   (setopt hl-todo-keyword-faces
@@ -8500,6 +8576,7 @@ CLOCK: [2023-10-31 Tue 13:53]--[2023-10-31 Tue 14:02] =>  0:09
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package gptel
+  :ensure nil ; Queued as a dependency before this configuration block.
   :defer
   :init
   (with-eval-after-load 'dired
@@ -11157,9 +11234,7 @@ Using my fork while awaiting merge of [[https://github.com/org-roam/org-roam/pul
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-roam
-  :ensure (:host github
-                 :repo "benthamite/org-roam"
-                 :branch "fix/handle-nil-db-version") ; https://github.com/org-roam/org-roam/pull/2609
+  :ensure nil ; Recipe owner is declared near the package bootstrap.
   :after org
   :custom
   (org-roam-directory paths-dir-org-roam)
@@ -11344,8 +11419,7 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-noter
-  :ensure (:host github
-                 :repo "org-noter/org-noter")
+  :ensure nil ; Recipe owner is declared near the package bootstrap.
   :after org-extras
   :init
   (with-eval-after-load 'pdf-annot
@@ -11991,6 +12065,7 @@ We defer-load the package to activate the timer that in turn updates the bibliog
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package ebib
+  :ensure nil ; `bibtex-extras' queues this package as a dependency.
   :custom
   (ebib-preload-bib-files paths-files-bibliography-all)
   (ebib-notes-directory paths-dir-bibliographic-notes)
@@ -12221,8 +12296,7 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package annas-archive
-  :ensure (:host github
-                 :repo "benthamite/annas-archive")
+  :ensure nil ; `ebib-extras' queues this package as a dependency.
   :defer t
   :init
   (with-eval-after-load 'ebib
@@ -13567,9 +13641,7 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package compat
-  :ensure (:host github
-                 :repo "emacs-compat/compat"
-                 :branch "main")
+  :ensure nil ; Recipe owner is declared near the package bootstrap.
   :demand t)
 
 (use-package elfeed
@@ -14160,6 +14232,7 @@ CLOCK: [2021-10-01 Fri 21:10]--[2021-10-01 Fri 21:51] =>  0:41
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package request
+  :ensure nil ; Queued as a dependency before this configuration block.
   :defer t)
 #+end_src
 
@@ -14172,6 +14245,7 @@ CLOCK: [2021-10-01 Fri 21:10]--[2021-10-01 Fri 21:51] =>  0:41
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package deferred
+  :ensure nil ; Queued as a dependency before this configuration block.
   :defer t)
 #+end_src
 
@@ -14565,6 +14639,7 @@ CLOCK: [2021-03-27 Sat 16:50]--[2021-03-27 Sat 17:00] =>  0:10
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package alert
+  :ensure nil ; Queued as a dependency before this configuration block.
   :defer t
   :custom
   ;; the settings below are not working; is it because `alert-default-style' is set to `notifier'?

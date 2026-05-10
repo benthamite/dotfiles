@@ -313,6 +313,15 @@ verifies old-value removal before closing incidents. Secret values are handled
 through protected files, stdin, env vars, or =pass= rather than printed command
 output, and sensitive temporary files are cleaned up before reporting.
 
+The =install-mcp-server= skill is a paired Claude/Codex workflow for installing
+Claude Code MCP servers. It verifies candidate servers and auth before
+installation, chooses =-s user= for global servers or =-s project= for shared
+=.mcp.json= project servers, avoids Claude CLI's default =-s local= scope unless
+the user explicitly wants a private exception, prepares secret references before
+registration, runs the absolute dotfiles MCP sync script after user-level changes, and
+separates =claude mcp list= shell health checks from the restart needed before a
+running Claude Code session can see new MCP tools.
+
 The =build= skill is a paired Claude/Codex workflow for turning a rough
 =spec.md= or explicit spec path into an implementation-ready plan. It interviews
 the user in depth, records goals, design, edge cases, implementation order, and

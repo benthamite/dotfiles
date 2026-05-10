@@ -1,6 +1,6 @@
 ---
 name: open-session-log
-description: Open the current Claude Code session's log in Emacs via agent-log. Use when the user says "open session log", "view log", "show log", "open my log", or "view this session".
+description: Open the current Claude Code session's log in Emacs via agent-log. Use when the user says "open session log", "view log", "show log", "open my log", "view this session", or asks to inspect the current Claude Code thread.
 user-invocable: true
 allowed-tools: Bash
 ---
@@ -9,11 +9,11 @@ allowed-tools: Bash
 
 Open this Claude Code session's conversation log in Emacs using the `agent-log` package.
 
-When triggered, follow these steps exactly. Do NOT just describe what the skill does.
+When triggered, do the work; do not merely describe what the skill does. This skill accepts no arguments.
 
 ## Steps
 
-1. **Find the session ID**: Run a bash command that walks up the process tree from `$PPID` to find the Claude Code PID (the one with a matching file in `~/.claude/sessions/`), then prints the session JSON:
+1. **Find the session ID**: Run a shell command that walks up the process tree from `$PPID` to find the Claude Code PID (the one with a matching file in `~/.claude/sessions/`), then prints the session JSON:
 
    ```bash
    pid=$PPID
@@ -33,8 +33,6 @@ When triggered, follow these steps exactly. Do NOT just describe what the skill 
 
    Replace `SESSION_ID` with the actual session ID from step 2.
 
-4. Tell the user the log has been opened in Emacs.
+4. If `emacsclient` exits successfully, tell the user the log has been opened in Emacs. If it errors, report the error instead of claiming success.
 
-If the session file cannot be found, tell the user and suggest running `M-x agent-log-open-latest` in Emacs as a fallback.
-
-$ARGUMENTS
+Do not open the latest session as a fallback; concurrent Claude Code sessions can make that wrong. If the session file cannot be found, tell the user and suggest running `M-x agent-log-open-current-session` from the Claude Code buffer in Emacs.

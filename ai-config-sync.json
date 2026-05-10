@@ -236,8 +236,8 @@
       "name": "open-session-log",
       "claude": "claude/skills/open-session-log/SKILL.md",
       "codex": "codex/skills/open-session-log/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
+      "status": "tool-specific-divergence",
+      "note": "Claude Code and Codex expose current session identity differently. The Claude skill reads Claude's PID-indexed ~/.claude/sessions status file, while the Codex skill identifies the current Codex thread by writing a unique marker to the active transcript and searching ~/.codex/sessions for it."
     },
     {
       "name": "optimize-claude-md",

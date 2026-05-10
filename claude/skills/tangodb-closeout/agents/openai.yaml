@@ -1,4 +1,0 @@
-interface:
-  display_name: "Tangodb closeout"
-  short_description: "Update the tangodb progress handoff before ending a session."
-  default_prompt: "Update the tangodb data-cleanup progress file and leave the next session ready to continue."

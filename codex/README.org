@@ -224,18 +224,6 @@ edits, verifies =TLON_AI_GITHUB_TOKEN= belongs to =tlon-ai= without creating
 test comments, commits fixes issue-by-issue, and reports commit, check,
 GitHub, and org-archive verification.
 
-The =gsc-indexing-triage= skill is a paired Claude/Codex operations skill for
-=stafforini.com= Search Console Page indexing alerts and validation failures.
-It includes the =scripts/extract-gsc-links.py= helper, a site-specific
-reference file, and a workflow for reading GSC emails, fixing root causes, and
-appending to the site's persistent =logs/gsc-indexing.md= log.  The workflow
-resolves bundled helper paths through =bin/agent-skill= and starts with a scope
-gate that separates read-only triage, local fixes, and externally visible
-actions, so quick deploys, Search Console validation, and Gmail archiving only
-happen when the current request explicitly authorizes them.  Its frontmatter is
-kept Codex-safe because Codex skips skills whose =description= field is not
-parsed as a string.
-
 The =google-sheets-comments= skill is a paired Claude/Codex workflow for
 processing Google Sheets comment review, replies, resolves, and reopens. It
 makes Drive comments via =gdoc comments= the source of truth, treats Gmail
@@ -292,24 +280,6 @@ prompts include exact dates, file paths, command names, commit hashes, and
 verification state; after writing, the skill re-reads the temp file, prints the
 saved contents, and tells the user to run =! emacsclient -e '(ai-agent-codex-handoff)'=.
 Browser Use handoffs stay in =codex-app-browser=.
-
-The =tangodb-continue= skill is a paired Claude/Codex session-start and resume
-workflow for the tangodb repository. It is only for starting or resuming tangodb
-cleanup work; ending sessions belongs to =tangodb-closeout=, and generic
-handoffs belong to the general handoff workflow. It reads the applicable
-project guide files, the data-cleanup plan, =docs/data-cleanup-progress.md=,
-and required slice docs, resumes the exact next step from the progress file,
-keeps chaining safe read-only slices until a hard stop or approval gate, and
-reports the completed slice, verification, stop reason, and closeout state.
-
-The =tangodb-closeout= skill is a paired Claude/Codex end-of-session workflow
-for the tangodb repository. It is only for ending tangodb work; starting or
-resuming belongs to =tangodb-continue=, and generic handoffs belong to the
-general handoff workflow. It updates or creates
-=docs/data-cleanup-progress.md= with current state, exact next step for
-=continue=, required first reads, hard stop rules, verification, blockers, and
-compact closeout history, then re-reads the progress file, checks the
-progress-file diff, and runs =git diff --check=.
 
 The =skill-resolver= skill wraps =bin/agent-skill=, a deterministic resolver for
 opening skills by name. It searches project-local roots from the current or

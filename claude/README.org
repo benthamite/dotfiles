@@ -816,7 +816,7 @@ Audits the entire Claude Code configuration for redundancy, conflicts, dead weig
 :ID:       C9B601B2-393A-4098-B04B-82630F737520
 :END:
 
-Evaluates third-party skills from the [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository, one at a time. (The repository is maintained by my friend [[https://pjh.is/][Peter Hartree]], a Claude Code power user.) Installs each skill, tests it, and records the verdict.
+Evaluates third-party skills from the [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository, one at a time. (The repository is maintained by my friend [[https://pjh.is/][Peter Hartree]], a Claude Code power user.) It is an interactive queue, not a general installer: the agent tries one listed skill per turn, uses the current tool's tracked skill directory, mirrors kept global skills across the paired Claude/Codex trees, tests with a realistic low-risk prompt, waits for the user's verdict, moves rejected candidates to Trash, and records =keep=, =removed=, =revisit=, or =skipped= with a note.
 
 **** walk-list
 :PROPERTIES:

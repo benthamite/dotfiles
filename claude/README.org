@@ -738,10 +738,13 @@ Scans Claude Code and Codex session transcripts since the last run, discovers ma
 :END:
 
 Third-party skill creation workflow previously stored under dotfiles
-project-local =.claude/skills/=. Helps create and improve skills with eval
-cases, benchmark artifacts, and a bundled HTML review viewer. It is now in the
-global Claude/Codex skill trees so skill authoring is available consistently
-across projects.
+project-local =.claude/skills/=. Helps create and improve skills through a
+draft -> test -> review -> revise loop, distinguishes authoring/eval work from
+one-pass audits, and keeps paired Claude/Codex copies synchronized. Uses
+realistic eval prompts, =expectations= schema fields, configuration/run
+directories such as =with_skill/run-1/= and =old_skill/run-1/=, benchmark
+artifacts, and the bundled HTML review viewer. It can also run trigger
+description optimization after the skill body is stable.
 
 **** skill-audit
 :PROPERTIES:

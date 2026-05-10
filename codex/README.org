@@ -105,7 +105,11 @@ The former dotfiles-project-local Claude skills =find-skills=,
 =claude/skills/= and =codex/skills/= trees so they are available consistently
 from both tools in every project. The =find-skills= helper requires current
 catalog/source verification before recommending a skill and explicit approval
-before installing an exact package.
+before installing an exact package. The =skill-creator= workflow distinguishes
+skill authoring/eval loops from one-pass audits, keeps paired Claude/Codex
+copies synchronized, and documents the eval workspace layout expected by its
+bundled benchmark aggregator (=with_skill/run-1/=, =without_skill/run-1/=, or
+=old_skill/run-1/= with =expectations= fields).
 
 The =doc-extras= skill is a paired Claude/Codex documentation workflow for
 auditing, creating, and refreshing manuals under =emacs/extras/doc/= from the

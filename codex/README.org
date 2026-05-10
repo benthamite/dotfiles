@@ -189,6 +189,13 @@ that externally visible update has been explicitly authorized. It saves org IDs
 after creating them, verifies the note/list/profile changes before committing,
 and cleans temporary clones with =trash=.
 
+The =audit-mac-app= skill is a paired Claude/Codex static-first workflow for
+auditing macOS applications before running them or granting sensitive
+permissions. It covers trust verification, permission analysis, app type
+detection, Electron source extraction and security checks, network endpoint
+scanning, and spaces-safe binary analysis. Its bundled scanner uses =mktemp=
+for temporary directories and moves extracted sources to Trash when possible.
+
 The =build= skill is a paired Claude/Codex workflow for turning a rough
 =spec.md= or explicit spec path into an implementation-ready plan. It interviews
 the user in depth, records goals, design, edge cases, implementation order, and

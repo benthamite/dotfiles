@@ -1,6 +1,6 @@
 ---
 name: audit-mac-app
-description: This skill should be used when the user asks to audit a Mac app, check if an app is safe, or scan for malware. Focuses on apps requesting sensitive permissions.
+description: Audit a macOS .app before running it or granting permissions, especially when the user asks whether a Mac app is safe, suspicious, malware, from an unknown developer, or requests screen recording, accessibility, camera, microphone, input monitoring, or other sensitive permissions.
 ---
 
 # Mac App Security Audit
@@ -17,14 +17,18 @@ Use this workflow when:
 - Apps that auto-update and you want to verify each version
 - Any situation where you want to understand what an app does before granting permissions
 
+Do not use this as a substitute for live malware containment, incident response, iOS/mobile app review, or enterprise assurance. Do not launch the app or grant new permissions during the audit unless the user explicitly asks for dynamic testing.
+
 ## Quick Start
 
 Run the automated scanner:
 ```bash
-~/.claude/skills/audit-mac-app/scripts/audit-mac-app.sh /Applications/AppName.app
+# Set this to the directory containing this SKILL.md.
+SKILL_DIR="/path/to/audit-mac-app"
+"$SKILL_DIR/scripts/audit-mac-app.sh" /Applications/AppName.app
 ```
 
-After the scan completes, ask Claude to save a markdown report if you want to keep a copy.
+If a durable record is useful, save the findings as a markdown report and include the report path in the final response.
 
 Or follow the manual workflow below for deeper analysis.
 
@@ -104,11 +108,11 @@ For Electron apps, extract the source code:
 
 ```bash
 APP_NAME=$(basename "$APP_PATH" .app)
-AUDIT_DIR="$HOME/.claude/app-audits/$APP_NAME/$(date +%Y%m%d)"
+AUDIT_DIR="$HOME/.cache/app-audits/$APP_NAME/$(date +%Y%m%d)"
 mkdir -p "$AUDIT_DIR"
 
 # Extract asar
-npx asar extract "$APP_PATH/Contents/Resources/app.asar" "$AUDIT_DIR/extracted"
+npx --yes asar extract "$APP_PATH/Contents/Resources/app.asar" "$AUDIT_DIR/extracted"
 
 # Also check unpacked resources
 cp -r "$APP_PATH/Contents/Resources/app.asar.unpacked" "$AUDIT_DIR/" 2>/dev/null
@@ -119,7 +123,9 @@ cp -r "$APP_PATH/Contents/Resources/app.asar.unpacked" "$AUDIT_DIR/" 2>/dev/null
 Run the automated scanner:
 
 ```bash
-~/.claude/skills/audit-mac-app/scripts/audit-mac-app.sh "$APP_PATH"
+# Set this to the directory containing this SKILL.md if not already set.
+SKILL_DIR="/path/to/audit-mac-app"
+"$SKILL_DIR/scripts/audit-mac-app.sh" "$APP_PATH"
 ```
 
 Or run individual checks manually:
@@ -177,20 +183,21 @@ grep -rn "Content-Security-Policy" . --include="*.js" --include="*.html"
 For native apps or to supplement Electron audits:
 
 ```bash
-BINARY="$APP_PATH/Contents/MacOS/"*
+find "$APP_PATH/Contents/MacOS" -type f \( -perm -100 -o -perm -010 -o -perm -001 \) -print0 |
+while IFS= read -r -d '' BINARY; do
+    # Extract strings (URLs, paths, keywords)
+    strings -a "$BINARY" | grep -E "https?://" | sort -u
+    strings -a "$BINARY" | grep -iE "(password|secret|key|token|auth)" | head -20
 
-# Extract strings (URLs, paths, keywords)
-strings -a $BINARY | grep -E "https?://" | sort -u
-strings -a $BINARY | grep -iE "(password|secret|key|token|auth)" | head -20
+    # Linked libraries
+    otool -L "$BINARY"
 
-# Linked libraries
-otool -L $BINARY
+    # Check for private frameworks (potential red flag)
+    otool -L "$BINARY" | grep -i "PrivateFrameworks"
 
-# Check for private frameworks (potential red flag)
-otool -L $BINARY | grep -i "PrivateFrameworks"
-
-# Persistence indicators
-strings -a $BINARY | grep -iE "(LaunchAgent|LoginItem|LSSharedFileList)"
+    # Persistence indicators
+    strings -a "$BINARY" | grep -iE "(LaunchAgent|LoginItem|LSSharedFileList)"
+done
 ```
 
 ### Phase 8: Report Generation
@@ -243,16 +250,20 @@ To compare between app versions after an update:
 
 ```bash
 # Extract both versions to temp directories
-npx asar extract /Applications/OldApp.app/Contents/Resources/app.asar /tmp/old-version
-npx asar extract /Applications/NewApp.app/Contents/Resources/app.asar /tmp/new-version
+OLD_DIR=$(mktemp -d "${TMPDIR:-/tmp}/old-version.XXXXXX")
+NEW_DIR=$(mktemp -d "${TMPDIR:-/tmp}/new-version.XXXXXX")
+OLD_URLS=$(mktemp "${TMPDIR:-/tmp}/old-urls.XXXXXX")
+NEW_URLS=$(mktemp "${TMPDIR:-/tmp}/new-urls.XXXXXX")
+npx --yes asar extract /Applications/OldApp.app/Contents/Resources/app.asar "$OLD_DIR"
+npx --yes asar extract /Applications/NewApp.app/Contents/Resources/app.asar "$NEW_DIR"
 
 # Diff the extracted source
-diff -r /tmp/old-version /tmp/new-version | head -100
+diff -r "$OLD_DIR" "$NEW_DIR" | head -100
 
 # Check for new network endpoints
-grep -rh "https://" /tmp/new-version --include="*.js" | sort -u > /tmp/new-urls.txt
-grep -rh "https://" /tmp/old-version --include="*.js" | sort -u > /tmp/old-urls.txt
-comm -13 /tmp/old-urls.txt /tmp/new-urls.txt
+grep -rh "https://" "$NEW_DIR" --include="*.js" | sort -u > "$NEW_URLS"
+grep -rh "https://" "$OLD_DIR" --include="*.js" | sort -u > "$OLD_URLS"
+comm -13 "$OLD_URLS" "$NEW_URLS"
 ```
 
 ## Quick Reference
@@ -263,9 +274,9 @@ comm -13 /tmp/old-urls.txt /tmp/new-urls.txt
 | Notarization | `spctl --assess --type execute "$APP_PATH"` |
 | Entitlements | `codesign -d --entitlements - "$APP_PATH"` |
 | App type | `file "$APP_PATH/Contents/MacOS/"*` |
-| Extract Electron | `npx asar extract app.asar ./extracted` |
+| Extract Electron | `npx --yes asar extract app.asar ./extracted` |
 | Find URLs | `grep -rE "https?://" . \| sort -u` |
-| Run full audit | `~/.claude/skills/audit-mac-app/scripts/audit-mac-app.sh "$APP_PATH"` |
+| Run full audit | `"$SKILL_DIR/scripts/audit-mac-app.sh" "$APP_PATH"` |
 
 ## Limitations
 
@@ -284,6 +295,10 @@ This audit **CANNOT** detect:
 - Apps handling sensitive/regulated data
 - Apps with CRITICAL findings you still need to use
 - Suspected compromise or malware
+
+## Final Response
+
+End with the verdict, the highest-severity findings, sensitive permissions or entitlements found, verification performed, limitations, and the path to any saved report. State clearly when a result is only an inference from static analysis.
 
 ## Additional Resources
 

@@ -53,6 +53,27 @@ success() {
     echo -e "${GREEN}[OK]${NC} $1"
 }
 
+AUDIT_DIR=""
+
+cleanup_audit_dir() {
+    if [ -z "$AUDIT_DIR" ] || [ ! -d "$AUDIT_DIR" ]; then
+        return
+    fi
+
+    if command -v trash >/dev/null 2>&1; then
+        if trash "$AUDIT_DIR" >/dev/null 2>&1; then
+            AUDIT_DIR=""
+            return
+        fi
+        echo "Warning: could not move temporary audit directory to Trash: $AUDIT_DIR"
+        return
+    fi
+
+    echo "Temporary audit directory retained at $AUDIT_DIR because the 'trash' CLI is unavailable."
+}
+
+trap cleanup_audit_dir EXIT
+
 header() {
     echo -e "\n${BOLD}=== $1 ===${NC}"
 }
@@ -223,14 +244,21 @@ header "Phase 4: Source Code Extraction"
 # =============================================================================
 
 if [ "$IS_ELECTRON" = true ]; then
-    AUDIT_DIR="/tmp/audit-$$"
-    mkdir -p "$AUDIT_DIR"
-
     if [ -f "$APP_PATH/Contents/Resources/app.asar" ]; then
-        echo "Extracting Electron app.asar..."
-        npx --yes asar extract "$APP_PATH/Contents/Resources/app.asar" "$AUDIT_DIR/extracted" 2>/dev/null
-        EXTRACTED_PATH="$AUDIT_DIR/extracted"
-        success "Source code extracted for analysis"
+        if ! AUDIT_DIR=$(mktemp -d "${TMPDIR:-/tmp}/audit-mac-app.XXXXXX"); then
+            high "Could not create temporary audit directory; skipping Electron source extraction"
+        else
+            echo "Extracting Electron app.asar..."
+            if npx --yes asar extract "$APP_PATH/Contents/Resources/app.asar" "$AUDIT_DIR/extracted" 2>/dev/null \
+                && [ -d "$AUDIT_DIR/extracted" ]; then
+                EXTRACTED_PATH="$AUDIT_DIR/extracted"
+                success "Source code extracted for analysis"
+            else
+                high "Failed to extract app.asar; install Node/npm or inspect the bundle manually"
+            fi
+        fi
+    else
+        medium "Electron framework found but app.asar was not present"
     fi
 fi
 
@@ -412,12 +440,11 @@ else
     # Binary analysis for non-Electron apps
     subheader "Binary String Analysis"
 
-    BINARY_FILES=$(find "$BINARY_PATH" -type f -perm +111 2>/dev/null)
-    for BINARY in $BINARY_FILES; do
+    while IFS= read -r -d '' BINARY; do
         info "Analyzing binary: $(basename "$BINARY")"
 
         # Extract URLs from binary
-        BINARY_URL_COUNT=$(strings -a "$BINARY" 2>/dev/null | grep -cE "https?://" || echo "0")
+        BINARY_URL_COUNT=$(strings -a "$BINARY" 2>/dev/null | grep -cE "https?://")
         if [ "$BINARY_URL_COUNT" -gt 0 ]; then
             info "Found $BINARY_URL_COUNT URLs in binary strings"
         fi
@@ -427,7 +454,7 @@ else
         if [ -n "$SUSPICIOUS" ]; then
             critical "Suspicious strings in binary"
         fi
-    done
+    done < <(find "$BINARY_PATH" -type f \( -perm -100 -o -perm -010 -o -perm -001 \) -print0 2>/dev/null)
 fi
 
 # =============================================================================
@@ -489,14 +516,13 @@ if [ -n "$LAUNCH_AGENTS" ]; then
 fi
 
 # Check binary for persistence-related strings
-BINARY_FILES=$(find "$BINARY_PATH" -type f -perm +111 2>/dev/null)
-for BINARY in $BINARY_FILES; do
+while IFS= read -r -d '' BINARY; do
     PERSISTENCE=$(strings -a "$BINARY" 2>/dev/null | grep -iE "(LaunchAgent|LoginItem|LSSharedFileList|SMLoginItem)" | head -1)
     if [ -n "$PERSISTENCE" ]; then
         medium "Persistence mechanism indicators in binary"
         break
     fi
-done
+done < <(find "$BINARY_PATH" -type f \( -perm -100 -o -perm -010 -o -perm -001 \) -print0 2>/dev/null)
 
 # Check for helper tools
 if [ -d "$APP_PATH/Contents/Library/LaunchServices" ]; then
@@ -538,7 +564,5 @@ fi
 echo ""
 echo -e "${BOLD}Note:${NC} This scan cannot detect obfuscated code, delayed payloads, or server-side changes."
 
-# Cleanup temp files
-if [ -d "/tmp/audit-$$" ]; then
-    rm -rf "/tmp/audit-$$"
-fi
+cleanup_audit_dir
+trap - EXIT

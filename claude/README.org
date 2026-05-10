@@ -644,7 +644,7 @@ Imports CSV bank statements from Wise and Mercado Pago, categorizes transactions
 :ID:       0266B51A-276F-40DB-85F9-DDFBDF19E71D
 :END:
 
-Adapted from [[https://pjh.is/][Peter Hartree]]'s [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository. Eight-phase security audit of macOS applications: trust verification, permission analysis, app type detection, code extraction (with Electron-specific checks for nodeIntegration, contextIsolation, etc.), network endpoint scanning, and binary analysis. Generates a markdown report with severity ratings.
+Adapted from [[https://pjh.is/][Peter Hartree]]'s [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository. Static-first security audit of macOS applications before running them or granting sensitive permissions. Covers trust verification, permission analysis, app type detection, Electron source extraction and security checks, network endpoint scanning, and spaces-safe binary analysis. The bundled scanner uses temporary directories created with =mktemp= and moves extracted sources to Trash when possible. Final reports include the verdict, highest-severity findings, verification performed, and static-analysis limitations.
 
 **** gitguardian-triage
 :PROPERTIES:

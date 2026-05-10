@@ -232,6 +232,9 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/My Drive/repos/agent-skills"]
 trust_level = "trusted"
 
+[projects."/Users/pablostafforini/My Drive/dotfiles/emacs"]
+trust_level = "trusted"
+
 [tui]
 theme = "light"
 

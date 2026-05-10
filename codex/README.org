@@ -262,11 +262,12 @@ the branch or PR is already pushed. It reports unavailable checks explicitly and
 does not change remote state.
 
 The =release= skill is a paired Claude/Codex operations workflow for releasing
-the user's listed Emacs packages from =my-emacs-packages.org=. It supports
-=/release <package>= and =/release --audit=, avoids cloning during audits,
-handles untagged package repos as initial releases, strips flags such as
-=--accept= before package inference, and keeps dotfiles releases routed to
-=release-dotfiles=.
+the user's listed Emacs packages from the listed headings in
+=my-emacs-packages.org=, excluding the unlisted section. It supports =/release
+<package>= and =/release --audit=, avoids cloning or creating tags/releases
+during audits, handles untagged package repos as initial releases, strips flags
+such as =--accept= before package inference, and keeps dotfiles releases routed
+to =release-dotfiles=.
 
 The =release-dotfiles= skill is a paired Claude/Codex operations workflow for
 cutting a new =benthamite/dotfiles= release. It checks every personal package

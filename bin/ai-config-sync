@@ -20,7 +20,6 @@ ROOT = Path.home() / "My Drive" / "dotfiles"
 MANIFEST = "ai-config-sync.json"
 MANIFEST_PATH = ROOT / MANIFEST
 DISABLED_SKILLS_PATH = ROOT / "skills-disabled.json"
-SKILL_PRUNE_MARKER = ".managed-by-dotfiles-skill-prune"
 
 TOOL_SPECIFIC_SKILL_FRONTMATTER = {
     "allowed-tools",
@@ -1225,44 +1224,43 @@ def disabled_skill_names() -> set[str]:
         return set()
     try:
         data = json.loads(DISABLED_SKILLS_PATH.read_text())
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as exc:
         return set()
     disabled = data.get("disabled") or {}
     return set(disabled)
 
 
-def check_live_skill_farm(
-    problems: list[str],
-    target: Path,
-    source: Path,
-    label: str,
-    disabled: set[str],
-) -> None:
-    if target.is_symlink():
-        actual = Path(os.readlink(target))
-        if actual != source:
-            add_problem(problems, f"Wrong live {label} symlink: {target} -> {actual}; expected {source}")
-        if disabled:
-            add_problem(problems, f"Live {label} is a direct symlink and ignores disabled skills: {target}")
+def check_native_disabled_skills(problems: list[str]) -> None:
+    disabled = disabled_skill_names()
+    if not disabled:
         return
-    marker = target / SKILL_PRUNE_MARKER
-    if not marker.is_file():
-        add_problem(problems, f"Missing managed live {label} directory: {target}")
-        return
-    expected = {
-        path.parent.name: path.parent
-        for path in source.glob("*/SKILL.md")
-        if path.parent.name not in disabled
-    }
-    if label == "Codex skills" and (source / ".system").is_dir():
-        expected[".system"] = source / ".system"
-    for name, expected_target in sorted(expected.items()):
-        link = target / name
-        if not link.is_symlink() or real_path(link) != real_path(expected_target):
-            add_problem(problems, f"Missing live {label} link: {link} -> {expected_target}")
+
+    claude_settings = Path.home() / ".claude" / "settings.local.json"
+    try:
+        claude_data = json.loads(claude_settings.read_text())
+    except (OSError, json.JSONDecodeError) as exc:
+        add_problem(problems, f"Cannot read live Claude settings.local.json for disabled skills: {exc}")
+        claude_data = {}
+    overrides = claude_data.get("skillOverrides") or {}
     for name in sorted(disabled):
-        if (target / name).exists() or (target / name).is_symlink():
-            add_problem(problems, f"Disabled {label} entry is still live: {target / name}")
+        if overrides.get(name) != "off":
+            add_problem(problems, f"Disabled skill missing Claude skillOverrides off entry: {name}")
+
+    try:
+        codex_data = tomllib.loads((ROOT / "codex" / "config.toml").read_text())
+    except (OSError, tomllib.TOMLDecodeError) as exc:
+        add_problem(problems, f"Cannot read Codex config for disabled skills: {exc}")
+        return
+    config_entries = ((codex_data.get("skills") or {}).get("config") or [])
+    disabled_codex_paths = {
+        real_path(path_from_token(str(entry.get("path")), ROOT))
+        for entry in config_entries
+        if entry.get("enabled") is False and entry.get("path")
+    }
+    for name in sorted(disabled):
+        expected = ROOT / "codex" / "skills" / name / "SKILL.md"
+        if real_path(expected) not in disabled_codex_paths:
+            add_problem(problems, f"Disabled skill missing Codex skills.config disabled entry: {name}")
 
 
 def path_is_inside(path: Path, parent: Path) -> bool:
@@ -1437,21 +1435,19 @@ def audit_skills(problems: list[str], manifest: dict) -> None:
             continue
         add_problem(problems, f"Manifest skill missing from Claude tree: {skill}")
 
-    disabled = disabled_skill_names()
-    check_live_skill_farm(
+    check_symlink(
         problems,
         Path.home() / ".claude" / "skills",
         ROOT / "claude" / "skills",
         "Claude skills",
-        disabled,
     )
-    check_live_skill_farm(
+    check_symlink(
         problems,
         Path.home() / ".codex" / "skills",
         ROOT / "codex" / "skills",
         "Codex skills",
-        disabled,
     )
+    check_native_disabled_skills(problems)
 
     for skill in sorted(claude_skills & codex_skills):
         item = manifest_item_by_name(manifest, "skills", skill)

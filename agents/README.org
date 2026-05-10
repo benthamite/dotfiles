@@ -25,7 +25,7 @@ record an explicit artifact-specific status or exemption.
 | =claude/CLAUDE.md= | Claude global instructions | Yes | =~/.claude/CLAUDE.md= symlink |
 | =codex/AGENTS.md= | Codex global instructions | Yes | =~/.codex/AGENTS.md= symlink |
 | =CLAUDE.md= and =AGENTS.md= | Dotfiles project instructions | Yes | Loaded only when working in this repo |
-| =claude/skills/= and =codex/skills/= | Global reusable skills | Yes | =~/.claude/skills= and =~/.codex/skills= managed symlink farms |
+| =claude/skills/= and =codex/skills/= | Global reusable skills | Yes | =~/.claude/skills= and =~/.codex/skills= symlinks |
 | =claude/hooks/= and =codex/hooks/= | Hook script implementations | Yes | Referenced by live hook registrations |
 | =~/.claude/settings.json= | Claude global settings and hook registration | No | Real mutable file, edited in place |
 | =~/.claude/settings.local.json= | Claude machine-local permissions | No | Real mutable file, edited in place |
@@ -86,14 +86,16 @@ trees are activated by:
 codex/bin/install-skills.sh
 #+end_src
 
-The installer delegates to =bin/skill-prune install=. It makes
-=~/.claude/skills= and =~/.codex/skills= managed directories of symlinks to the
-enabled tracked skill directories. =skills-disabled.json= records global skills
-omitted from both live farms. Run =bin/skill-prune apply --days 60= to disable
-paired skills that have no recent usage in either Claude or Codex; a recent use
-in either tool keeps both live links. Local reusable skills should live in both
-=claude/skills/= and =codex/skills/= instead of living only under a live
-home-directory farm. Hidden Codex-managed system skills may exist under ignored
+The installers keep =~/.claude/skills= and =~/.codex/skills= linked to the
+tracked skill trees. =skills-disabled.json= records stale global skills that
+=bin/skill-prune= disables through native tool settings: Claude
+=skillOverrides= in the live =~/.claude/settings.local.json= and Codex
+=[[skills.config]]= entries in =codex/config.toml=. Run
+=bin/skill-prune apply --days 60= to disable paired skills that have no recent
+usage in either Claude or Codex; a recent use in either tool keeps both tools
+enabled. Local reusable skills should live in both =claude/skills/= and
+=codex/skills/= instead of living only under a live home-directory symlink.
+Hidden Codex-managed system skills may exist under ignored
 =codex/skills/.system/= runtime data, but they are not part of the reusable
 skill parity model.
 
@@ -136,8 +138,8 @@ These cases are recorded in =ai-config-sync.json= rather than treated as drift.
   arbitrary counterpart file.
 - =audit= verifies the manifest, topology invariants, live symlinks, global
   instruction equivalence, skill content parity after tool-specific frontmatter normalization,
-  auxiliary skill files, hook file inventory, hook registrations, the managed
-  live skills farms, and Codex activation files. Topology checks include
+  auxiliary skill files, hook file inventory, hook registrations, the live skill
+  symlinks, and Codex activation files. Topology checks include
   forbidden dotfiles-local =.codex/hooks.json= files, live symlinks resolving
   into project-local config, undocumented tool-home symlinks, and dotfiles
   project-local skills. It also checks the dotfiles repo-root

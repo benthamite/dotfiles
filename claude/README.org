@@ -438,7 +438,7 @@ saved org IDs for new notes, and an explicit re-read verification step.
 :ID:       56961BB0-30BB-44D1-BC8F-D74713517D4E
 :END:
 
-Transcribes the most recent audio file in =~/Downloads/= using whisperx, then restructures the transcript into a well-organized org-mode note saved to =~/My Drive/notes/=. Accepts optional language code and filename arguments.
+Transcribes a recent or named audio file in =~/Downloads/= using whisperx, then restructures the transcript into a well-organized org-mode note saved to =~/My Drive/notes/=. Handles optional language code and filename arguments, avoids verbatim-transcript/subtitle near-misses, saves the generated org ID, and verifies the note before reporting completion.
 
 **** add-to-emacs-packages
 :PROPERTIES:

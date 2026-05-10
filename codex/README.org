@@ -367,6 +367,14 @@ protects local memories as private conflict context, and treats =--accept= as an
 applied mode that verifies changed instruction files, imports, rules, and sync
 checks before closeout.
 
+
+The =transcribe-note= skill is a paired Claude/Codex workflow for turning a
+recent or named audio file in =~/Downloads/= into a structured org note under
+=~/My Drive/notes/=. It checks local =whisperx=, =ffmpeg=, and =emacsclient=
+dependencies, keeps verbatim transcript and subtitle requests out of scope,
+asks for a title with transcript context, saves generated org IDs, cleans
+temporary transcript directories, and verifies the note before reporting
+completion.
 The =automate= skill is a paired Claude/Codex meta-skill for reusable AI
 workflow design. It decides whether a request should become a Claude Code skill,
 a Codex skill, a gptel directive or preset, a gptel tool, or a gptel command,

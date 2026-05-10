@@ -14,9 +14,33 @@
 #   twitterapi.sh users <query> [--cursor=...]
 #
 # Output: raw JSON from the API on stdout. Non-zero exit on error.
-# Auth: resolves TWITTERAPI_API_KEY from the active Claude account.
+# Auth: resolves TWITTERAPI_API_KEY from the active account environment.
 
 set -euo pipefail
+
+print_usage() {
+  awk '
+    /^# Usage:/ { printing = 1 }
+    printing {
+      line = $0
+      sub(/^# ?/, "", line)
+      print line
+      if ($0 ~ /^# Auth:/) exit
+    }
+  ' "$0"
+}
+
+if [[ $# -eq 0 ]]; then
+  print_usage
+  exit 1
+fi
+
+case "${1:-}" in
+  -h|--help|help)
+    print_usage
+    exit 0
+    ;;
+esac
 
 # --- Auth resolution -------------------------------------------------------
 
@@ -89,7 +113,7 @@ parse_opts() {
 }
 
 usage() {
-  sed -n '4,18p' "$0" | sed 's/^# \{0,1\}//'
+  print_usage
   exit "${1:-1}"
 }
 

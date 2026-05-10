@@ -148,6 +148,13 @@ directories.
 Skill files must be named uppercase =SKILL.md=.  This matters on the Google
 Drive mount and for Codex skill discovery.
 
+The =best-of-n= skill is a paired Claude/Codex workflow for querying several
+models multiple times, selecting or merging the best samples, and synthesizing
+the result.  Agents resolve the live tool-specific skill directory before
+running, use =models.json= as the source of truth for preset details, exclude
+deep-research/browser presets from the normal menu, and verify result files
+before reporting completion.
+
 The =gsc-indexing-triage= skill is a paired Claude/Codex operations skill for
 =stafforini.com= Search Console Page indexing alerts.  It includes the
 =scripts/extract-gsc-links.py= helper, a site-specific reference file, and a

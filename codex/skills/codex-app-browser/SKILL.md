@@ -61,25 +61,28 @@ If `CODEX_THREAD_ID` is unavailable, run `codex app "$PWD"` instead and explain 
 
 ## Required preflight
 
-Before saying the in-app browser is unavailable from a Codex App turn, actually run the Browser Use bootstrap through the Node REPL MCP `js` tool.
+Before saying the in-app browser is unavailable from a Codex App turn, actually run the Browser Use bootstrap through the Node REPL `js` tool documented in the bundled `browser-use:browser` skill.
 
-Important naming trap: in Codex tool listings, the callable may appear as namespace `mcp__node_repl__` with function `js`, not as a single tool named `mcp__node_repl__js`. Do not infer that Node REPL is unavailable just because the joined name is absent.
+Important naming trap: in Codex tool listings, the callable may appear as `mcp__node_repl__js`, or as namespace `mcp__node_repl__` with function `js`. Do not infer that Node REPL is unavailable from one spelling alone.
 
-Use this first cell:
+Use the plugin root from the bundled `browser-use:browser` skill, not a hard-coded versioned path, and run this guarded first cell:
 
 ```js
 if (!globalThis.agent) {
-  const { setupAtlasRuntime } = await import("/Users/pablostafforini/.codex/plugins/cache/openai-bundled/browser-use/0.1.0-alpha1/scripts/browser-client.mjs");
-  await setupAtlasRuntime({ globals: globalThis, backend: "iab" });
+  const { setupAtlasRuntime } = await import("<plugin root>/scripts/browser-client.mjs");
+  await setupAtlasRuntime({ globals: globalThis });
 }
-await agent.browser.nameSession("🔎 browser task");
+if (!globalThis.browser) {
+  globalThis.browser = await agent.browsers.get("iab");
+}
+await browser.nameSession("🔎 browser task");
 if (typeof tab === "undefined") {
-  globalThis.tab = await agent.browser.tabs.new();
+  globalThis.tab = await browser.tabs.new();
 }
-nodeRepl.write(JSON.stringify({ ok: true, title: await tab.title(), url: await tab.url() }));
+console.log(JSON.stringify({ ok: true, title: await tab.title(), url: await tab.url() }));
 ```
 
-If that succeeds, continue with normal Browser Use operations via `tab`.
+If that succeeds, continue with normal Browser Use operations via `browser` and `tab`.
 
 ## What not to do
 

@@ -387,6 +387,14 @@ Claude-only tools, uses the =record-decisions= skill or its local workflow when
 applicable, reports any =context/post-update-log-hook.md= hooks, and stages only
 intended bookkeeping paths before committing.
 
+The =record-decisions= skill is a paired Claude/Codex workflow for extracting
+architectural, algorithmic, or design decisions from the current session into
+=decisions/NNN.md= files. It triggers from =/update-log= or direct requests to
+record/capture an ADR or decision, reads existing decision context before
+writing, avoids duplicate entries and invented rejected alternatives, updates
+=decisions-summary.md= rows with explicit status values, and verifies edited
+decision files plus the summary before reporting.
+
 The =open-session-log= skill is a tool-specific Codex workflow for opening the
 current Codex thread in Emacs through =agent-log=. It writes a unique marker in
 one shell command, finds the exact current transcript containing that marker

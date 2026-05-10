@@ -318,11 +318,13 @@ skills and =SKILL.md= files. It checks trigger quality, workflow design,
 progressive disclosure, bundled resources, verification, portability, and
 maintainability, with special attention to whether the skill captures a
 repeatable workflow, triggers on realistic user phrasing, gives ordered
-operational guidance, defines output and verification expectations, and avoids
-surprising side effects. It distinguishes skill audits from neighboring code,
-design, security, and documentation audits, compares paired Claude/Codex copies
-when applicable, and in =--accept= mode applies only high-confidence fixes that
-preserve the skill's intended scope before verifying and committing them.
+operational guidance, keeps trigger descriptions concise without losing
+routing-critical phrases or frontmatter safety, defines output and verification
+expectations, and avoids surprising side effects. It distinguishes skill audits
+from neighboring code, design, security, and documentation audits, compares
+paired Claude/Codex copies when applicable, and in =--accept= mode applies only
+high-confidence fixes that preserve the skill's intended scope before verifying
+and committing them.
 
 The =verify= skill is a paired Claude/Codex workflow for running an explicit
 verification loop when the user asks to verify, close the loop, define success

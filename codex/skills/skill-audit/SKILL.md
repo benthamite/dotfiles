@@ -42,6 +42,9 @@ Use this skill for reusable agent skills, skill directories, `SKILL.md` files, a
 - **Undertrigger risk**: the description is too modest for a workflow the user expects the agent to notice proactively.
 - **Overtrigger risk**: the description captures broad keywords but not the actual intent boundary.
 - **Misplaced trigger guidance**: "when to use" information lives only in the body, where it will not help the model decide whether to open the skill.
+- **Bloated descriptions**: the description includes implementation details, internal workflow steps, or background that is only needed after the skill has already triggered.
+- **Over-compressed descriptions**: shortening removed user phrasing, scope boundaries, or near-miss exclusions needed for reliable routing.
+- **Unsafe frontmatter**: unquoted YAML-sensitive text, especially `: ` inside plain scalar descriptions, may break parsers or skill loading.
 
 ### Scope and Fit
 
@@ -104,11 +107,12 @@ Use this skill for reusable agent skills, skill directories, `SKILL.md` files, a
 When proposing changes, prefer small edits that preserve the skill's purpose. The highest-value improvements usually are:
 
 1. Rewrite the description so it triggers on realistic user phrasing.
-2. Add a concise ordered workflow.
-3. Add "when not to use" near-miss guidance.
-4. Specify output format and verification.
-5. Move long material into references or repeated helper logic into scripts.
-6. Add realistic eval prompts, including should-trigger and should-not-trigger cases.
+2. Keep the description concise but not lossy: preserve routing-critical phrases and move implementation detail into the body.
+3. Add a concise ordered workflow.
+4. Add "when not to use" near-miss guidance.
+5. Specify output format and verification.
+6. Move long material into references or repeated helper logic into scripts.
+7. Add realistic eval prompts, including should-trigger and should-not-trigger cases.
 
 Explain why each recommendation matters. Skills work best when they transmit judgment, not just rules.
 

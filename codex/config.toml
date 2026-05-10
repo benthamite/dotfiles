@@ -396,10 +396,6 @@ path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/google-sheets-comm
 enabled = false
 
 [[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/post-push-ci/SKILL.md"
-enabled = false
-
-[[skills.config]]
 path = "/Users/pablostafforini/My Drive/dotfiles/.codex/skills/skill-discovery/SKILL.md"
 enabled = false
 

@@ -582,7 +582,7 @@
       "claude": null,
       "codex": "codex/hooks/require-codex-readme-update.sh",
       "status": "codex-only",
-      "note": "Codex README commit gate for Codex integration files; scoped to the dotfiles repo so unrelated repositories with codex/ or bin/ai-config-sync paths are not blocked; uses lib-codex-hook-json.sh for object-or-string payload normalization."
+      "note": "Codex README commit gate for Codex integration files; scoped to the dotfiles repo so unrelated repositories with codex/ or bin/ai-config-sync paths are not blocked; uses lib-codex-hook-json.sh for object-or-string payload normalization. The command-text fallback deliberately ignores .codex/ paths because project-local skill commits can stage .codex/skills before the hook can reliably resolve the target repo."
     },
     {
       "name": "require-doc-update.sh",

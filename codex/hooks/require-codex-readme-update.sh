@@ -47,7 +47,12 @@ if [ -n "$STAGED" ]; then
 fi
 
 if [ "$HAS_CODEX_CHANGES" = false ] && echo "$COMMAND" | grep -qE '\bgit\s+add\b'; then
-  if echo "$COMMAND" | grep -qE '(^|[[:space:]])(AGENTS\.md|\.codex/|codex/|ai-config-sync\.json|bin/ai-config-sync)'; then
+  # The staged-file pass above is authoritative for .codex/ paths.  Do not
+  # infer from command text here: project-local commits commonly stage
+  # `.codex/skills/...`, and Codex hook payloads do not always include enough
+  # cwd/workdir context for lib-repo-root.sh to distinguish those commands
+  # before `git add` has run.
+  if echo "$COMMAND" | grep -qE '(^|[[:space:]])(AGENTS\.md|codex/|ai-config-sync\.json|bin/ai-config-sync)'; then
     HAS_CODEX_CHANGES=true
   fi
 fi

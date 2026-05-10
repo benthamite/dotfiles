@@ -486,13 +486,6 @@ Creates or updates org-mode notes in my notes directory
 (=~/My Drive/notes/=), with slugified filenames, preserved existing content,
 saved org IDs for new notes, and an explicit re-read verification step.
 
-**** transcribe-note
-:PROPERTIES:
-:ID:       56961BB0-30BB-44D1-BC8F-D74713517D4E
-:END:
-
-Transcribes a recent or named audio file in =~/Downloads/= using whisperx, then restructures the transcript into a well-organized org-mode note saved to =~/My Drive/notes/=. Handles optional language code and filename arguments, avoids verbatim-transcript/subtitle near-misses, saves the generated org ID, and verifies the note before reporting completion.
-
 **** add-to-emacs-packages
 :PROPERTIES:
 :ID:       E8FD1360-FDF6-46FE-940F-BD8A346AE4BF
@@ -517,14 +510,7 @@ Replaces raw bibliographic references in =.org= files with org-mode =[cite:@KEY]
 :ID:       10DF729B-32D5-48E0-A150-9F5D18F799AF
 :END:
 
-Cuts releases for my Emacs packages (read dynamically from the listed package headings in =my-emacs-packages.org=, excluding the unlisted section). Validates the repo, classifies commits since the last tag, suggests a semver bump, and drafts release notes. Also has an audit mode that scans all packages for version mismatches or unreleased commits without cloning or creating tags/releases. Handles untagged package repos as initial releases, strips flags such as =--accept= before package inference, and routes dotfiles releases to =release-dotfiles=. Pass =--accept= to skip the confirmation gate.
-
-**** release-dotfiles
-:PROPERTIES:
-:ID:       49102EA7-4B49-4F93-8134-06FA7925AE55
-:END:
-
-Cuts releases for the dotfiles repo itself. Verifies that every personal package repo has a clean working tree in its local elpaca clone, checks the dotfiles working tree, classifies commits since the last semver tag, suggests a semver bump, drafts release notes, and creates a GitHub release. Clean unpushed package commits are pushed only after explicit authorization or =--accept=, untracked =.elc= cleanup is selected with =git ls-files= and moved via Trash, and =--accept= never skips the post-lockfile profile-test gate.
+Cuts releases for my Emacs packages (read dynamically from the listed package headings in =my-emacs-packages.org=, excluding the unlisted section). Validates the repo, classifies commits since the last tag, suggests a semver bump, and drafts release notes. Also has an audit mode that scans all packages for version mismatches or unreleased commits without cloning or creating tags/releases. Handles untagged package repos as initial releases, strips flags such as =--accept= before package inference, and routes dotfiles releases to the dotfiles-local release workflow. Pass =--accept= to skip the confirmation gate.
 
 **** triage-issues
 :PROPERTIES:
@@ -576,21 +562,6 @@ mechanism after completing all steps.
 :END:
 
 Extracts and records architectural, algorithmic, or design decisions from the current session into =decisions/NNN.md= files. Called automatically by =/update-log= or invocable on demand when the user asks to record/capture an ADR or decision. It records choices with explicit alternatives, plus user-requested records without inventing rejected alternatives; reads existing decision context before writing; creates a missing =decisions-summary.md= only when =decisions/= already exists; updates summary rows with status values; and verifies every edited decision file and summary row before reporting.
-
-**** open-session-log
-:PROPERTIES:
-:CUSTOM_ID: h:open-session-log
-:ID:       1C8D18F2-3EA7-4149-9BC4-40B4EFE8546C
-:END:
-
-Opens the current Claude Code session's conversation log in Emacs using the =agent-log= package. Walks up the process tree to find the session ID, then calls =agent-log-open-session= via =emacsclient=. Avoids latest-session fallbacks because concurrent Claude Code sessions can make recency ambiguous.
-
-**** move-session-log
-:PROPERTIES:
-:ID:       98D5F4FA-F05B-423A-8A16-967234CA1FDC
-:END:
-
-Moves a Claude Code internal session log (=.jsonl= and associated directory) from another project's =~/.claude/projects/= directory to the current project's. Also rewrites the =project= field in =history.jsonl= and =cwd= fields in the session =.jsonl= so that =agent-log-resume-session= opens the session in the correct directory. Useful when a Claude session was started in the wrong project context. Accepts a session ID as argument; if none given, lists the 10 most recent Claude sessions from other projects and asks the user to pick one. This skill is Claude-specific; Codex sessions live under =~/.codex/sessions= and use the Codex-side =move-session-log= skill.
 
 **** verify
 :PROPERTIES:
@@ -652,18 +623,6 @@ hidden. Use when Google Drive complains about a specific directory (e.g.
 :END:
 
 Bulk version of =nosync=. Scans =~/My Drive/= for generated directories causing sync errors (node_modules, build output, Python caches, virtual environments), skips ambiguous source/user data, moves confirmed offenders to =~/.drive-nosync/=, rewrites broken relative symlinks after each move, reports unresolved conflicts or missing targets, and restarts Google Drive after changes. Use periodically or when the error list grows.
-
-**** install-mcp-server
-:PROPERTIES:
-:ID:       AAB6CC73-A936-4D25-9255-544436259405
-:END:
-
-Installs and configures a new MCP server for Claude Code. Walks through discovery, auth verification (checking for platform-locked OAuth before installing), dependency installation, credential-safe setup, and registration via =claude mcp add=. Encodes hard-won lessons: always add a trailing slash to HTTP/SSE URLs (servers without it are silently invisible), verify with =claude mcp list= (not =claude mcp get=, which reads config but doesn't check runtime health), use absolute interpreter paths (=/opt/homebrew/bin/node=, not bare =node= which is an nvm shell function), use =-s user= for global servers and run the absolute =~/My Drive/dotfiles/claude/bin/sync-mcp-servers.sh= sync script afterward, use =-s project= for shared =.mcp.json= project servers, avoid the default =-s local= unless explicitly requested, prepare secret references before registration, and tell users to restart running Claude Code sessions before expecting new MCP tools to appear.
-
-*** Multi-model and research skills
-:PROPERTIES:
-:ID:       8BF704E6-F252-4E27-846A-0B2F9C52B62C
-:END:
 
 **** best-of-n
 :PROPERTIES:
@@ -727,30 +686,6 @@ Shared account vetting procedure used by =twitter-digest= and =twitter-discover=
 
 Iterative, graph-based discovery of high-value Twitter accounts in any niche. Interviews the user for criteria, acquires seed accounts via search, then expands using a "hot promise score" algorithm: accounts followed by multiple high-scoring seeds are profiled next, with scores recomputed after each round. Uses the active Claude/Codex skill root for the Twitter API wrapper, =twitter-vet= rubric, result logs, digest lists, and vet registry; keeps API responses in a per-session temporary directory; verifies the helper script before parsing; and re-reads saved logs/lists/registries before reporting completion. Presents tiered results (must-follow, strong, situational) at checkpoints and optionally exports to a =twitter-digest= list.
 
-**** ai-journal
-:PROPERTIES:
-:ID:       47E2C34F-6874-4D38-8567-8B48C94836BA
-:END:
-
-Scans Claude Code and Codex session transcripts since the last run, surfaces interesting AI use cases the user may want to write about (novel prompting techniques, clever skill combinations, debugging surprises, meta-observations, automations built), presents them as numbered candidates for selection, and drafts informal study-diary posts for publication at stafforini.com/ai. Uses a Python script (=find-sessions.py=) to list sessions modified after the cutoff from both =~/.claude/projects= and =~/.codex/sessions=, deduplicating by resolved path (since =~/.claude-epoch/projects= is a symlink to the same tree). The cutoff is stored in the paired =last-run.txt= files under both =claude/skills/ai-journal/= and =codex/skills/ai-journal/=; the workflow checks that they match before scanning and updates them to the same timestamp at the end of each successful run. On first run, the skill asks the user how far back to scan. Drafts are written as *org source files* under =~/My Drive/notes/ai-journal/<slug>.org= with =:EXPORT_HUGO_SECTION: ai= on the heading, and the normal stafforini.com notes-export pipeline (=scripts/export-notes.sh=) renders them to =content/ai/<slug>.md=. The skill never writes markdown under =content/= directly — that directory is gitignored and generated by ox-hugo. The org sources are committed in the notes git repo; generated markdown is rebuilt on each deploy.
-
-*** Personal skills
-:PROPERTIES:
-:ID:       B7A2F3E1-8C4D-4A5B-9E6F-1D2C3B4A5E6F
-:END:
-
-**** finances
-:PROPERTIES:
-:ID:       9FB8F226-1770-4571-B164-5575729722A7
-:END:
-
-Imports CSV bank statements from Wise and Mercado Pago, categorizes transactions against a guide built from ~7,500 historical ledger entries, and generates ledger-cli entries via a staging workflow. Three modes: =import= (default) parses CSVs, categorizes, writes a staging file for review, merges approved entries into =journal.ledger=, reconciles, and commits; =reconcile= compares existing journal entries against statements and marks matched entries as cleared; =update-guide= scans recent journal entries for new payee-to-category mappings. The paired categorization guide (=categorization-guide.md=) classifies payees into deterministic (auto-categorize), high-confidence (use default unless description suggests otherwise), and ambiguous (always ask), and guide edits are kept synchronized under =claude/skills/finances/= and =codex/skills/finances/=. Cash transactions must be entered manually. Statement CSVs go in =~/My Drive/ledger/statements/{wise,mercadopago}/=; shell commands in the skill use =$HOME/My Drive= paths, validate with =ledger -f journal.ledger bal=, and move discarded staging files to Trash.
-
-*** Security skills
-:PROPERTIES:
-:ID:       503D6D12-1566-44FB-8BFA-408034BBB7D2
-:END:
-
 **** audit-mac-app
 :PROPERTIES:
 :ID:       0266B51A-276F-40DB-85F9-DDFBDF19E71D
@@ -777,80 +712,12 @@ Audits the development environment security posture across four domains, each ru
 :ID:       57A97EB8-103B-4D7E-9BB2-BA9AE81C177C
 :END:
 
-**** migrate-profile
-:PROPERTIES:
-:ID:       025A523A-F1AE-43F8-89DB-13FF2A5A98B1
-:END:
-
-Consolidates Claude Code project data (sessions, memory, trust entries) across elpaca profile changes. Runs a dry run and asks for confirmation before retargeting the =~/.config/emacs-profiles/active= symlink, copying data, rewriting JSON/JSONL paths, or trashing old source directories. Scans =~/.claude/projects/= for all directories matching the elpaca pattern, groups them by package name (extracted by splitting on =-elpaca-repos-= or =-elpaca-sources-=), and merges old-profile entries into the current profile's directory without overwriting existing target data. Also migrates project authorization entries in =~/.claude.json= so Claude Code doesn't re-prompt trust dialogs, and rewrites =project= paths in =history.jsonl= and =cwd= fields inside session =.jsonl= files so that =agent-log-resume-session= opens sessions in the current profile directory. Handles package renames by keeping the old source package name separate from the new target path during rewrites. No explicit package list is needed.
-
 **** automate
 :PROPERTIES:
 :ID:       A1AC6915-C52E-4382-B1A6-731C697E736B
 :END:
 
 Meta-skill for reusable AI workflow design. Given a description of something to automate, analyzes the requirements along dimensions like context source, tool access, multi-step reasoning, and Emacs integration, then recommends the right approach: a Claude Code skill, a Codex skill, a gptel directive or preset, a gptel tool, or a gptel command. After confirmation, builds it in the canonical dotfiles paths, verifies the result, and commits the logical change.
-
-**** skill-discovery
-:PROPERTIES:
-:ID:       8987E24A-517D-469D-AC77-0984631386B6
-:END:
-
-Scans Claude Code and Codex session transcripts since the last run, discovers manual workflows that repeat across two or more sessions (same multi-step procedure, same context re-supplied to the agent, same class of bug or request resolved the same way), and presents them as candidates for new skills or extensions of existing ones. Reuses =ai-journal='s =find-sessions.py= scan script, tracks its own cutoff in paired =last-run.txt= files under both =claude/skills/skill-discovery/= and =codex/skills/skill-discovery/=, and dispatches selected candidates to =automate= rather than building new skills itself — keeping discovery and build concerns separate. Before proposing a new skill, checks both the Claude and Codex skill trees for an existing skill that already covers the pattern, framing such matches as a gap to extend rather than a duplicate to create. Pairs with =/schedule= to run on a weekly cadence with email notifications (Ole Lehmann's "audit your week" pattern, [[https://x.com/itsolelehmann/status/2044425992802848954][origin tweet]]).
-
-**** skill-creator
-:PROPERTIES:
-:ID:       A0C1015B-51E0-4388-9CE2-FDE1B8DC1282
-:END:
-
-Third-party skill creation workflow previously stored under dotfiles
-project-local =.claude/skills/=. Helps create and improve skills through a
-draft -> test -> review -> revise loop, distinguishes authoring/eval work from
-one-pass audits, and keeps paired Claude/Codex copies synchronized. Uses
-realistic eval prompts, =expectations= schema fields, configuration/run
-directories such as =with_skill/run-1/= and =old_skill/run-1/=, benchmark
-artifacts, and the bundled HTML review viewer. It can also run trigger
-description optimization after the skill body is stable.
-
-**** skill-audit
-:PROPERTIES:
-:ID:       5865021A-BC02-4C3B-9A73-8D58682B67B0
-:END:
-
-Audits Claude/Codex skills and =SKILL.md= files for trigger quality, workflow
-design, progressive disclosure, bundled resources, verification, portability,
-and maintainability. Focuses on whether the skill captures a repeatable
-workflow, triggers on realistic user phrasing, gives ordered operational
-guidance, keeps trigger descriptions concise without losing routing-critical
-phrases or frontmatter safety, uses references/scripts appropriately, defines
-output and verification expectations, and avoids surprising side effects. It
-distinguishes skill audits from neighboring code, design, security, and
-documentation audits, compares paired Claude/Codex copies when applicable, and
-in =--accept= mode applies only high-confidence fixes that preserve the skill's
-intended scope before verifying and committing them.
-
-**** find-skills
-:PROPERTIES:
-:ID:       8565265E-E80C-4483-A09C-F38FDD2243D3
-:END:
-
-Third-party discovery helper for the open skills ecosystem. Uses the =npx
-skills= CLI and =skills.sh= catalog to search for installable skills when a
-requested capability may already exist. Requires current catalog/source
-verification before recommending a skill and explicit approval before installing
-an exact package. Moved from dotfiles project-local =.claude/skills/= into the
-global Claude/Codex skill trees.
-
-**** skill-resolver
-:PROPERTIES:
-:ID:       9F4D94C6-19C7-4DE2-9A5B-98C52064495C
-:END:
-
-Resolves Claude/Codex skills by name through =bin/agent-skill= instead of
-relying on manual root-alias expansion. Searches project-local roots from the
-current or supplied =--cwd= before workspace/global/system/plugin roots, exposes
-=path=, =cat=, =list=, and =roots= commands, and tells agents to edit canonical
-tracked skill paths when paired copies need changes.
 
 **** diagnose
 :PROPERTIES:
@@ -859,28 +726,6 @@ tracked skill paths when paired copies need changes.
 :END:
 
 Diagnostic mode modifier. Prefix any question with =/diagnose=, ask why something went wrong, request root-cause analysis, or ask to investigate process/tooling friction without immediately changing code. Treats errors and confusion as symptoms to diagnose before patching. The deliverable is a diagnosis, not a patch: the agent checks which existing hooks, skills, configs, or scripts should have prevented or detected the failure; verifies whether each fired and whether its output was acted on; identifies the root cause category; considers whether the issue is part of a broader pattern; and reports findings before implementing remedies. Includes explicit criteria for what counts as a structural fix (a concrete mechanism like a hook, config change, or deterministic resolver CLI) versus aspirational statements that depend on memory and discipline. Requires the usual check before proposing any fix — /would an existing mechanism, firing as intended, have prevented this immediate failure?/ — then adds a second check for whether that mechanism is actually enforced or merely prose that asks the agent to perform a brittle deterministic operation by attention. The skill can therefore distinguish plain behavioral lapses from behavioral lapses with a structural remedy.
-
-**** optimize-claude-md
-:PROPERTIES:
-:ID:       6ACB6F22-2E3E-4BDD-B107-06CC109282EA
-:END:
-
-Optimizes a project's Claude Code instruction files for maximum agent instruction-following while minimizing context waste. Evaluates every instruction against eight criteria (universal applicability, specificity, pointer-vs-copy, linter delegation, default behavior, conflicts, operational-vs-reference placement, positioning), checks WHAT/WHY/HOW coverage and progressive disclosure, and produces a rewritten file with dead weight removed, non-universal rules externalized to =.claude/rules/=, imports, or skills, and critical instructions positioned at top and bottom. It treats local memories as private conflict context, handles =--accept= as an applied mode with verification, and keeps risky or broad rewrites as reported follow-up instead of half-applying them. Grounded in Anthropic's official guidance (~200 line target, concrete verifiable rules) and the HumanLayer research on instruction budgets (~150-200 effective instructions, with ~50 consumed by the system prompt). Pass =--accept= to apply high-confidence changes without prompting.
-
-**** claude-config-audit
-:PROPERTIES:
-:CUSTOM_ID: h:claude-config-audit
-:ID:       EEA4D06C-0E70-4A12-A588-81114465D2A4
-:END:
-
-Audits the entire Claude Code configuration for redundancy, conflicts, dead weight, staleness, and instruction drift. Discovers all instruction sources (CLAUDE.md files, context skills, memory, hooks, settings, and =claude/README.org= for cross-referencing), redacts sensitive settings values, extracts every discrete rule, and evaluates each on five criteria: whether it restates default behavior, conflicts with another rule, duplicates something elsewhere, was a reactive fix for one bad output, or is too vague to apply consistently. Produces a cut list, conflict list, and cleaned-up CLAUDE.md; pass =--accept= or explicitly ask to apply cleanup to make high-confidence scope-preserving edits, verify changed files and sync checks, and commit the result.
-
-**** try-hartree-skills
-:PROPERTIES:
-:ID:       C9B601B2-393A-4098-B04B-82630F737520
-:END:
-
-Evaluates third-party skills from the [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository, one at a time. (The repository is maintained by my friend [[https://pjh.is/][Peter Hartree]], a Claude Code power user.) It is an interactive queue, not a general installer: the agent tries one listed skill per turn, uses the current tool's tracked skill directory, mirrors kept global skills across the paired Claude/Codex trees, tests with a realistic low-risk prompt, waits for the user's verdict, moves rejected candidates to Trash, and records =keep=, =removed=, =revisit=, or =skipped= with a note.
 
 **** walk-list
 :PROPERTIES:

@@ -1,7 +1,6 @@
 ---
 name: skill-discovery
 description: Scan recent Claude Code and Codex sessions to discover repeated manual workflows worth turning into skills, present the candidates, and optionally build them via automate. Use when the user says "skill discovery", "what should I automate", "find automation candidates", "repeated workflows", "discover skill candidates", or wants a periodic review of what workflows to automate next. Do not use for one-off requests to build an already specified automation, AI journal posts, or third-party skill installation.
-user-invocable: true
 ---
 
 # Skill discovery
@@ -12,12 +11,12 @@ This is the "automate your automations" loop: the goal is for the user to wake u
 
 ## Locations
 
-- **Claude skill directory**: `~/My Drive/dotfiles/claude/skills/skill-discovery/`
-- **Codex skill directory**: `~/My Drive/dotfiles/codex/skills/skill-discovery/`
+- **Claude skill directory**: `~/My Drive/dotfiles/.claude/skills/skill-discovery/`
+- **Codex skill directory**: `~/My Drive/dotfiles/.codex/skills/skill-discovery/`
 - **State file**: `last-run.txt` in both paired skill directories (ISO 8601 UTC timestamp; keep the two copies identical)
 - **Scan script**: reused from `ai-journal`; use the current tool's paired copy:
-  - Claude Code: `~/My Drive/dotfiles/claude/skills/ai-journal/find-sessions.py`
-  - Codex: `~/My Drive/dotfiles/codex/skills/ai-journal/find-sessions.py`
+  - Claude Code: `~/My Drive/notes/.claude/skills/ai-journal/find-sessions.py`
+  - Codex: `~/My Drive/notes/.codex/skills/ai-journal/find-sessions.py`
 - **Existing skills indexes**:
   - `~/My Drive/dotfiles/claude/skills/`
   - `~/My Drive/dotfiles/codex/skills/`
@@ -32,10 +31,10 @@ Read `last-run.txt` from both paired skill directories. They should match; if th
 
 ```bash
 # Claude Code
-python3 ~/My\ Drive/dotfiles/claude/skills/ai-journal/find-sessions.py "<cutoff-iso>"
+python3 ~/My\ Drive/notes/.claude/skills/ai-journal/find-sessions.py "<cutoff-iso>"
 
 # Codex
-python3 ~/My\ Drive/dotfiles/codex/skills/ai-journal/find-sessions.py "<cutoff-iso>"
+python3 ~/My\ Drive/notes/.codex/skills/ai-journal/find-sessions.py "<cutoff-iso>"
 ```
 
 Run the command for the current tool; the script copies should stay identical.
@@ -108,8 +107,8 @@ After the user confirms the candidates are built (or declined):
 1. Update both paired `last-run.txt` files to the same timestamp:
    ```bash
    stamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-   printf '%s\n' "$stamp" > ~/My\ Drive/dotfiles/claude/skills/skill-discovery/last-run.txt
-   printf '%s\n' "$stamp" > ~/My\ Drive/dotfiles/codex/skills/skill-discovery/last-run.txt
+   printf '%s\n' "$stamp" > ~/My\ Drive/dotfiles/.claude/skills/skill-discovery/last-run.txt
+   printf '%s\n' "$stamp" > ~/My\ Drive/dotfiles/.codex/skills/skill-discovery/last-run.txt
    ```
 2. Commit the paired `last-run.txt` bump: `skill-discovery: bump last-run to <date>`.
 3. Any new skills built by `automate` will have been committed by `automate` itself (one commit per skill).

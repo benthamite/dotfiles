@@ -20,7 +20,7 @@ handled by the Claude-side `move-session-log` skill.
 Use the bundled script:
 
 ```bash
-python3 /Users/pablostafforini/My\ Drive/dotfiles/codex/skills/move-session-log/scripts/move_session_log.py <session-id>
+python3 /Users/pablostafforini/My\ Drive/dotfiles/.codex/skills/move-session-log/scripts/move_session_log.py <session-id>
 ```
 
 The script defaults to the current working directory as the target project.
@@ -47,7 +47,7 @@ under their resolved location.
 Run:
 
 ```bash
-python3 /Users/pablostafforini/My\ Drive/dotfiles/codex/skills/move-session-log/scripts/move_session_log.py "$ARGUMENTS"
+python3 /Users/pablostafforini/My\ Drive/dotfiles/.codex/skills/move-session-log/scripts/move_session_log.py "$ARGUMENTS"
 ```
 
 The script:
@@ -74,7 +74,7 @@ which one to import.
 If the target project is not the shell's current directory, pass it explicitly:
 
 ```bash
-python3 /Users/pablostafforini/My\ Drive/dotfiles/codex/skills/move-session-log/scripts/move_session_log.py --project '<target-project-path>' '<session-id>'
+python3 /Users/pablostafforini/My\ Drive/dotfiles/.codex/skills/move-session-log/scripts/move_session_log.py --project '<target-project-path>' '<session-id>'
 ```
 
 ## Whole-project rename mode
@@ -82,8 +82,8 @@ python3 /Users/pablostafforini/My\ Drive/dotfiles/codex/skills/move-session-log/
 Both paths must be absolute:
 
 ```bash
-python3 /Users/pablostafforini/My\ Drive/dotfiles/codex/skills/move-session-log/scripts/move_session_log.py --dry-run --rename '<old-project-path>' '<new-project-path>'
-python3 /Users/pablostafforini/My\ Drive/dotfiles/codex/skills/move-session-log/scripts/move_session_log.py --rename '<old-project-path>' '<new-project-path>'
+python3 /Users/pablostafforini/My\ Drive/dotfiles/.codex/skills/move-session-log/scripts/move_session_log.py --dry-run --rename '<old-project-path>' '<new-project-path>'
+python3 /Users/pablostafforini/My\ Drive/dotfiles/.codex/skills/move-session-log/scripts/move_session_log.py --rename '<old-project-path>' '<new-project-path>'
 ```
 
 The script rewrites exact structured path fields only:

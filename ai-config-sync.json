@@ -23,13 +23,6 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
-      "name": "ai-journal",
-      "claude": "claude/skills/ai-journal/SKILL.md",
-      "codex": "codex/skills/ai-journal/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
       "name": "audit-mac-app",
       "claude": "claude/skills/audit-mac-app/SKILL.md",
       "codex": "codex/skills/audit-mac-app/SKILL.md",
@@ -56,20 +49,6 @@
       "codex": "codex/skills/build/SKILL.md",
       "status": "paired",
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
-      "name": "claude-config-audit",
-      "claude": "claude/skills/claude-config-audit/SKILL.md",
-      "codex": "codex/skills/claude-config-audit/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
-      "name": "codex-app-browser",
-      "claude": null,
-      "codex": "codex/skills/codex-app-browser/SKILL.md",
-      "status": "codex-only",
-      "note": "Codex App Browser Use handoff procedure. No Claude counterpart because it documents Codex App in-app browser bootstrap and Node REPL MCP naming."
     },
     {
       "name": "code-audit",
@@ -142,25 +121,11 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
-      "name": "finances",
-      "claude": "claude/skills/finances/SKILL.md",
-      "codex": "codex/skills/finances/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
       "name": "fix-drive-errors",
       "claude": "claude/skills/fix-drive-errors/SKILL.md",
       "codex": "codex/skills/fix-drive-errors/SKILL.md",
       "status": "paired",
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
-      "name": "find-skills",
-      "claude": "claude/skills/find-skills/SKILL.md",
-      "codex": "codex/skills/find-skills/SKILL.md",
-      "status": "paired",
-      "equivalence": "Moved from dotfiles project-local .claude/skills into the global skill trees; equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
       "name": "gitguardian-triage",
@@ -184,13 +149,6 @@
       "note": "Claude and Codex handoff skills intentionally differ because their Emacs handoff commands read different temp files and have different command names."
     },
     {
-      "name": "install-mcp-server",
-      "claude": "claude/skills/install-mcp-server/SKILL.md",
-      "codex": "codex/skills/install-mcp-server/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
       "name": "interpretability-audit",
       "claude": "claude/skills/interpretability-audit/SKILL.md",
       "codex": "codex/skills/interpretability-audit/SKILL.md",
@@ -205,37 +163,9 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
-      "name": "migrate-profile",
-      "claude": "claude/skills/migrate-profile/SKILL.md",
-      "codex": "codex/skills/migrate-profile/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
-      "name": "move-session-log",
-      "claude": "claude/skills/move-session-log/SKILL.md",
-      "codex": "codex/skills/move-session-log/SKILL.md",
-      "status": "tool-specific-divergence",
-      "note": "Claude Code and Codex store session logs in different locations and formats. The Claude skill operates on ~/.claude/projects plus ~/.claude/history.jsonl and ~/.claude.json; the Codex skill operates on ~/.codex/sessions plus Codex history/index files."
-    },
-    {
       "name": "nosync",
       "claude": "claude/skills/nosync/SKILL.md",
       "codex": "codex/skills/nosync/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
-      "name": "open-session-log",
-      "claude": "claude/skills/open-session-log/SKILL.md",
-      "codex": "codex/skills/open-session-log/SKILL.md",
-      "status": "tool-specific-divergence",
-      "note": "Claude Code and Codex expose current session identity differently. The Claude skill reads Claude's PID-indexed ~/.claude/sessions status file, while the Codex skill identifies the current Codex thread by writing a unique marker to the active transcript and searching ~/.codex/sessions for it."
-    },
-    {
-      "name": "optimize-claude-md",
-      "claude": "claude/skills/optimize-claude-md/SKILL.md",
-      "codex": "codex/skills/optimize-claude-md/SKILL.md",
       "status": "paired",
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
@@ -289,44 +219,9 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
-      "name": "release-dotfiles",
-      "claude": "claude/skills/release-dotfiles/SKILL.md",
-      "codex": "codex/skills/release-dotfiles/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
       "name": "security-audit",
       "claude": "claude/skills/security-audit/SKILL.md",
       "codex": "codex/skills/security-audit/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
-      "name": "skill-audit",
-      "claude": "claude/skills/skill-audit/SKILL.md",
-      "codex": "codex/skills/skill-audit/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
-      "name": "skill-creator",
-      "claude": "claude/skills/skill-creator/SKILL.md",
-      "codex": "codex/skills/skill-creator/SKILL.md",
-      "status": "paired",
-      "equivalence": "Moved from dotfiles project-local .claude/skills into the global skill trees; equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
-      "name": "skill-resolver",
-      "claude": "claude/skills/skill-resolver/SKILL.md",
-      "codex": "codex/skills/skill-resolver/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
-      "name": "skill-discovery",
-      "claude": "claude/skills/skill-discovery/SKILL.md",
-      "codex": "codex/skills/skill-discovery/SKILL.md",
       "status": "paired",
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
@@ -352,23 +247,9 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
-      "name": "transcribe-note",
-      "claude": "claude/skills/transcribe-note/SKILL.md",
-      "codex": "codex/skills/transcribe-note/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
       "name": "triage-issues",
       "claude": "claude/skills/triage-issues/SKILL.md",
       "codex": "codex/skills/triage-issues/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
-      "name": "try-hartree-skills",
-      "claude": "claude/skills/try-hartree-skills/SKILL.md",
-      "codex": "codex/skills/try-hartree-skills/SKILL.md",
       "status": "paired",
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
@@ -582,7 +463,7 @@
       "claude": null,
       "codex": "codex/hooks/require-codex-readme-update.sh",
       "status": "codex-only",
-      "note": "Codex README commit gate for Codex integration files; scoped to the dotfiles repo so unrelated repositories with codex/ or bin/ai-config-sync paths are not blocked; uses lib-codex-hook-json.sh for object-or-string payload normalization. The command-text fallback deliberately ignores .codex/ paths because project-local skill commits can stage .codex/skills before the hook can reliably resolve the target repo."
+      "note": "Codex README commit gate for Codex integration files; scoped to the dotfiles repo so unrelated repositories with codex/ or bin/ai-config-sync paths are not blocked; uses lib-codex-hook-json.sh for object-or-string payload normalization. The command-text fallback deliberately ignores .codex/ paths because project-local skill commits can stage .codex/skills before the hook can reliably resolve the target repo. Dotfiles maintenance skills are an intentional repo-root project-local exception and live under dotfiles/.claude/skills and dotfiles/.codex/skills."
     },
     {
       "name": "require-doc-update.sh",

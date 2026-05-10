@@ -25,6 +25,8 @@ ai-marketplace-monitor.log*
 /.claude/*
 **/.claude/
 !/.claude/
+!/.claude/skills/
+!/.claude/skills/**
 claude/skills/*/node_modules
 claude/settings.json
 !CLAUDE.md

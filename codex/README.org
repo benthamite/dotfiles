@@ -74,10 +74,8 @@ cases are recorded in =ai-config-sync.json=.
 
 For paired skills that keep small state files in their skill directories, update
 both tool copies to the same contents unless =ai-config-sync.json= records an
-explicit tool-specific divergence. For example, =ai-journal= keeps its
-=last-run.txt= cutoff synchronized under both =claude/skills/ai-journal/= and
-=codex/skills/ai-journal/=; =skill-discovery= follows the same paired-state
-rule under its own Claude and Codex skill directories.
+explicit tool-specific divergence. Project-local skill pairs follow the same
+paired-state rule as global skills.
 
 Codex discovers global skills from =~/.codex/skills/*/SKILL.md=. The live
 directory is a symlink to the tracked Codex tree. Run:
@@ -117,26 +115,15 @@ Disabled skills are recorded in =skills-disabled.json= and applied through nativ
 intentionally retained skill should remain enabled despite missing history.
 
 Project-specific skills belong beside their project instead of this global
-tree. For the Epoch workspace, the Claude copies live in
+tree. Dotfiles maintenance skills live in the dotfiles repo-root project-local
+=.claude/skills/= and =.codex/skills/= roots so they are available while
+working in the dotfiles tree without loading globally in unrelated projects.
+For the Epoch workspace, the Claude copies live in
 =~/My Drive/Epoch/.claude/skills/= and the Codex copies live in
 =~/My Drive/Epoch/.codex/skills/=. The sync reminder and commit guard apply to
 these project-local pairs too: changing one local skill reminds the agent to
 update the other, and committing one side without an equivalent counterpart is
 blocked.
-
-The former dotfiles-project-local Claude skills =find-skills=,
-=skill-creator=, and =systematic-debugging= now live in the global
-=claude/skills/= and =codex/skills/= trees so they are available consistently
-from both tools in every project. The =find-skills= helper requires current
-catalog/source verification before recommending a skill and explicit approval
-before installing an exact package. The =skill-creator= workflow distinguishes
-skill authoring/eval loops from one-pass audits, keeps paired Claude/Codex
-copies synchronized, and documents the eval workspace layout expected by its
-bundled benchmark aggregator (=with_skill/run-1/=, =without_skill/run-1/=, or
-=old_skill/run-1/= with =expectations= fields). The =systematic-debugging=
-skill documents near-miss cases that should not trigger, its division of
-responsibility with =symptom-check=, and the evidence, root cause, fix,
-verification, and residual risk fields expected in the final debugging report.
 
 The =doc-extras= skill is a paired Claude/Codex documentation workflow for
 auditing, creating, and refreshing manuals under =emacs/extras/doc/= from the
@@ -158,14 +145,6 @@ moves confirmed offenders to =~/.drive-nosync/=; rewrites broken relative
 symlinks after each move; reports conflicts or missing targets instead of
 guessing; and restarts Google Drive only after changes.
 
-Codex-only skills are allowed when they document a capability that exists only
-in Codex. Record them in =ai-config-sync.json= with =status: codex-only=,
-=claude: null=, and the tracked Codex skill path. The current example is
-=codex-app-browser=, which captures the Codex App in-app browser handoff and
-Browser Use bootstrap procedure; it intentionally has no Claude counterpart.
-The skill defers to the bundled =browser-use:browser= skill for the current
-plugin root and Browser API instead of hard-coding a versioned plugin path.
-
 =bin/codex-app-handoff= opens the current Codex thread in the desktop app via
 the app's =codex://threads/<THREAD_ID>= deeplink. Use it from CLI/Emacs turns
 when a task needs App-only Browser Use tools; the next turn must be sent from
@@ -173,10 +152,6 @@ the Codex App for the Browser plugin / Node REPL tools to appear. The command
 also copies a short continuation prompt to the Emacs kill ring and macOS
 clipboard, because the existing-thread deeplink opens the thread but does not
 submit a new message.
-
-User prompts should not need to mention the transport details. The intended
-shape is =\$codex-app-browser <task>=; the skill decides whether to hand off
-from CLI/Emacs or run the App Browser preflight immediately.
 
 When changing a skill:
 
@@ -279,26 +254,6 @@ full proposed prompt as a code block and asks for yes/no confirmation. Inferred
 prompts include exact dates, file paths, command names, commit hashes, and
 verification state; after writing, the skill re-reads the temp file, prints the
 saved contents, and tells the user to run =! emacsclient -e '(ai-agent-codex-handoff)'=.
-Browser Use handoffs stay in =codex-app-browser=.
-
-The =skill-resolver= skill wraps =bin/agent-skill=, a deterministic resolver for
-opening skills by name. It searches project-local roots from the current or
-supplied =--cwd= before workspace/global/system/plugin roots and supports
-=path=, =cat=, =list=, and =roots= so agents do not need to manually expand skill
-root aliases such as =r0= / =r1= or guess canonical edit paths.
-
-The =skill-audit= skill is a paired Claude/Codex meta-skill for reviewing
-skills and =SKILL.md= files. It checks trigger quality, workflow design,
-progressive disclosure, bundled resources, verification, portability, and
-maintainability, with special attention to whether the skill captures a
-repeatable workflow, triggers on realistic user phrasing, gives ordered
-operational guidance, keeps trigger descriptions concise without losing
-routing-critical phrases or frontmatter safety, defines output and verification
-expectations, and avoids surprising side effects. It distinguishes skill audits
-from neighboring code, design, security, and documentation audits, compares
-paired Claude/Codex copies when applicable, and in =--accept= mode applies only
-high-confidence fixes that preserve the skill's intended scope before verifying
-and committing them.
 
 The =verify= skill is a paired Claude/Codex workflow for running an explicit
 verification loop when the user asks to verify, close the loop, define success
@@ -310,14 +265,6 @@ scope/risk, evaluates each criterion, loops on failures, and reports
 pass/fail/uncertain evidence. Ordinary coding and debugging use narrower
 project checks unless this meta-verification workflow was explicitly requested.
 
-The =try-hartree-skills= skill is a paired Claude/Codex queue for evaluating
-third-party skills from HartreeWorks one at a time. It is not a general
-installer: the agent tries one listed skill per turn, uses the current tool's
-tracked skill directory, mirrors kept global skills across the paired trees,
-tests with a realistic low-risk prompt, waits for the user's verdict, moves
-rejected candidates to Trash, and records =keep=, =removed=, =revisit=, or
-=skipped= with a note.
-
 The =walk-list= skill is a paired Claude/Codex workflow for strict item-by-item
 processing of JSON arrays, newline-delimited JSON, or newline-separated text
 files. It moves the source file into the protected walk-list store, leaves a
@@ -325,21 +272,6 @@ stub with quoted commands generated from the same =walk.py= path that started
 the walk, validates positive concurrency and non-negative stale-claim
 thresholds, and distinguishes strict isolation/concurrency work from ordinary
 summarizing, filtering, sorting, or bulk list transformations.
-
-The =migrate-profile= skill is a paired Claude/Codex workflow for consolidating
-Claude Code project data after elpaca profile changes. It dry-runs first,
-requires confirmation before retargeting the active profile symlink, copying
-data, rewriting =~/.claude.json=, =history.jsonl=, or session =cwd= paths, or
-trashing old source directories, and handles package renames by matching the old
-source package name while writing the new target path.
-
-The =move-session-log= skill is a tool-specific Codex workflow for relocating
-Codex session metadata after a session starts in the wrong project or a project
-directory is renamed. It rewrites structured =cwd= and =project= fields under
-=~/.codex/sessions= plus Codex history/index files without moving session
-files, dry-runs whole-project renames before applying them, and reports the
-exact session file, rewrite counts, index/history updates, and shell snapshot
-matches.
 
 The =code-audit= skill is a paired Claude/Codex development skill for finding
 actual correctness, security, error-handling, and data-integrity defects in
@@ -378,15 +310,7 @@ the user's listed Emacs packages from the listed headings in
 <package>= and =/release --audit=, avoids cloning or creating tags/releases
 during audits, handles untagged package repos as initial releases, strips flags
 such as =--accept= before package inference, and keeps dotfiles releases routed
-to =release-dotfiles=.
-
-The =release-dotfiles= skill is a paired Claude/Codex operations workflow for
-cutting a new =benthamite/dotfiles= release. It checks every personal package
-repo in the active elpaca profile, gates externally visible pushes and release
-creation, cleans only untracked =.elc= artifacts selected with =git ls-files=
-and moved via Trash, classifies commits since the latest semver tag, writes the
-lockfile release commit, waits for profile testing, then tags, pushes, creates,
-and verifies the GitHub release.
+to the dotfiles-local release workflow.
 
 The =diagnose= skill is a paired Claude/Codex diagnostic mode modifier for
 investigating errors, confusion, and process/tooling friction before patching.
@@ -419,23 +343,6 @@ formulas, duplicated explanatory logic, and type-safety escapes that obscure
 intent. With =--accept=, it applies only high-confidence, behavior-preserving
 clarity fixes and reports risky renames, broad refactors, public API changes,
 or domain-judgment calls instead of applying them.
-
-The =claude-config-audit= skill is a paired Claude/Codex meta-skill for auditing
-Claude Code configuration across CLAUDE.md, skills, memory, hooks, settings, and
-documentation. It inventories instruction sources, redacts sensitive setting
-values, extracts discrete rules, checks for default-behavior restatements,
-conflicts, duplicates, reactive one-off fixes, and vague guidance, then produces
-a cut list, conflict list, and cleaned-up CLAUDE.md. Pass =--accept= or
-explicitly ask to apply cleanup to make high-confidence scope-preserving edits,
-verify changed files and sync checks, and commit the result.
-
-The =optimize-claude-md= skill is a paired Claude/Codex meta-skill for optimizing
-Claude Code instruction files (=CLAUDE.md=, =.claude/CLAUDE.md=,
-=CLAUDE.local.md=, and =.claude/rules=). It audits every instruction against
-eight criteria, checks WHAT/WHY/HOW coverage and progressive disclosure,
-protects local memories as private conflict context, and treats =--accept= as an
-applied mode that verifies changed instruction files, imports, rules, and sync
-checks before closeout.
 
 The =automate= skill is a paired Claude/Codex meta-skill for reusable AI
 workflow design. It decides whether a request should become a Claude Code skill,
@@ -472,14 +379,6 @@ title, slugifies filenames through Emacs, preserves existing note structure on
 updates, saves org IDs for new notes, and re-reads the note from disk before
 reporting completion.
 
-The =transcribe-note= skill is a paired Claude/Codex workflow for turning a
-recent or named audio file in =~/Downloads/= into a structured org note under
-=~/My Drive/notes/=. It checks local =whisperx=, =ffmpeg=, and =emacsclient=
-dependencies, keeps verbatim transcript and subtitle requests out of scope,
-asks for a title with transcript context, saves generated org IDs, cleans
-temporary transcript directories, and verifies the note before reporting
-completion.
-
 The =convert-citations= skill is a paired Claude/Codex workflow for replacing
 raw bibliographic references in org files with =[cite:@KEY]= citations from the
 user's citar bibliography. It validates file, directory, and glob targets,
@@ -511,34 +410,11 @@ collection and reporting, records unavailable or unsafe checks instead of
 guessing, and reports findings by severity with concrete locations and
 remediation steps.
 
-The =install-mcp-server= skill is a paired Claude/Codex workflow for installing
-Claude Code MCP servers. It verifies candidate servers and auth before
-installation, chooses =-s user= for global servers or =-s project= for shared
-=.mcp.json= project servers, avoids Claude CLI's default =-s local= scope unless
-the user explicitly wants a private exception, prepares secret references before
-registration, runs the absolute dotfiles MCP sync script after user-level changes, and
-separates =claude mcp list= shell health checks from the restart needed before a
-running Claude Code session can see new MCP tools.
-
 The =build= skill is a paired Claude/Codex workflow for turning a rough
 =spec.md= or explicit spec path into an implementation-ready plan. It interviews
 the user in depth, records goals, design, edge cases, implementation order, and
 verification in the spec, and only proceeds to implementation after explicit
 confirmation.
-
-The =ai-journal= skill is a paired Claude/Codex workflow for scanning recent
-Claude Code and Codex sessions, surfacing candidate AI journal topics, and
-drafting org-sourced posts for =stafforini.com/ai=. Its =find-sessions.py= and
-=last-run.txt= auxiliary files are kept synchronized in both paired skill
-directories; the workflow checks for cutoff drift before scanning so either
-tool can run it without silently using stale state.
-
-The =finances= skill is a paired Claude/Codex personal workflow for importing
-Wise and Mercado Pago statement CSVs into the user's ledger-cli journal. It
-categorizes transactions with the paired =categorization-guide.md= files under
-=claude/skills/finances/= and =codex/skills/finances/=, stages entries for
-review, validates with =ledger -f journal.ledger bal= before proceeding,
-reconciles matched statement rows, and moves discarded staging files to Trash.
 
 The =update-log= skill is a paired Claude/Codex end-of-session bookkeeping
 workflow. It triggers from =/update-log=, "update log", "session log",
@@ -565,100 +441,6 @@ record/capture an ADR or decision, reads existing decision context before
 writing, avoids duplicate entries and invented rejected alternatives, updates
 =decisions-summary.md= rows with explicit status values, and verifies edited
 decision files plus the summary before reporting.
-
-The =open-session-log= skill is a tool-specific Codex workflow for opening the
-current Codex thread in Emacs through =agent-log=. It writes a unique marker in
-one shell command, finds the exact current transcript containing that marker
-under =~/.codex/sessions=, and opens the resulting session ID with
-=agent-log-open-session=. It intentionally avoids latest-session fallbacks
-because concurrent Codex agents can make recency ambiguous.
-
-* Hooks
-
-=codex/hooks.json= is tracked here and live globally through the symlink at
-=~/.codex/hooks.json=.  It registers Codex-side scripts from =codex/hooks/=
-instead of calling Claude hook scripts directly.
-
-The Emacs =codex= package also auto-adds =codex-hook-wrapper= entries for its
-own event handling.  Those entries coexist with the dotfiles hooks and should
-not be hand-pruned unless the Emacs package configuration changes.  The wrapper
-commands must point at the package source or repo tree, not =elpaca/builds/=:
-the build directory contains compiled Elisp but not the =bin/codex-hook-wrapper=
-script.  Managed wrapper commands include explicit =--emacsclient= and
-=--socket-name= arguments so hook dispatch targets the active Emacs server
-instead of relying on emacsclient's default server lookup.
-
-The Codex hook counterparts cover:
-
-- Bash safety and workflow gates: secret leakage, destructive commands,
-  walk-list data access, Elisp test-before-commit, manual update checks
-  (including staged generated Texinfo outputs), post-commit Elisp
-  verification, and stale elpaca rebuild protection.
-- Shared hook payload helpers such as =lib-codex-hook-json.sh=, which normalize
-  Codex =tool_input= and =tool_response= whether Codex supplies them as objects
-  or JSON strings.
-- Shared hook helpers such as =lib-repo-root.sh=, which resolves an optional
-  leading =cd <path> &&= prefix, otherwise uses structured =workdir= / =cwd=
-  hook payload fields when present, and only then falls back to the hook cwd.
-- MCP guardrails through =guard-external-actions.sh=.
-- =apply_patch=/=Edit|Write= guards for secret leakage, generated Texinfo
-  files, elpaca dotfiles mirror edits, and walk-list protected data.
-- Post-edit behavior for Elisp reloads, generated manual regeneration, README
-  reminders, and Claude/Codex sync reminders. Manual regeneration runs
-  =ox-texinfo= with batch lockfile creation disabled and only regenerates the
-  exact =.texi= returned by the org exporter plus its existing matching
-  =.info= file.
-- Codex lifecycle forwarding to Emacs through =codex-hook-wrapper= entries in
-  =codex/hooks.json=.
-
-Codex PostToolUse hooks must write either no stdout or valid hook JSON.  Reminder
-hooks therefore return
-={"hookSpecificOutput":{"hookEventName":"PostToolUse","additionalContext":...}}=
-instead of plain text; plain stdout, missing =hookEventName=, and unsupported
-fields such as =hookSpecificOutput.message= are treated as invalid hook protocol
-output by Codex.
-
-Some Claude hooks are intentionally not paired one-for-one because Codex does
-not expose the same event in this setup:
-
-- Claude =Read=/=Grep=/=Glob= hooks such as =block-sensitive-read.sh=.
-- Claude =Skill= hooks such as =require-elisp-skill.sh= and
-  =track-elisp-skill.sh=.
-- Claude Notification-specific Emacs hooks.  Codex routes lifecycle and
-  notification-equivalent events through =codex-hook-wrapper= entries in
-  =codex/hooks.json= instead.
-
-* Sync Guard
-
-=ai-config-sync.json= is the sync manifest.  It lists the global instruction
-pair, every global skill, hook pairing status, live registration files, and the
-current unsupported or Codex-only cases.
-
-Two hook pairs keep the model simple:
-
-- =claude/hooks/remind-ai-config-sync.sh= and
-  =codex/hooks/remind-ai-config-sync.sh= run after edits and print the
-  counterpart that should be updated.
-- =claude/hooks/require-ai-config-sync.sh= and
-  =codex/hooks/require-ai-config-sync.sh= run before =git commit= and block
-  one-sided Claude/Codex config changes unless the counterpart is synchronized
-  or, for global dotfiles artifacts, the manifest records an explicit
-  artifact-specific exemption.
-
-The same hooks also handle project-local instructions, skills, and hooks in the
-git repo being committed. Local pairs use sibling =CLAUDE.md= with =AGENTS.md=,
-=.claude/skills/= with =.codex/skills/=, =.claude/hooks/= with
-=.codex/hooks/=, and =.claude/settings.json= with =.codex/hooks.json=. Local
-skills are compared with the same tool-specific frontmatter normalization used
-for global skills.
-
-The Codex-only README gate, =require-codex-readme-update.sh=, is scoped to this
-dotfiles repository. That prevents unrelated repositories with paths such as
-=codex/= or =bin/ai-config-sync= from being treated as Codex integration
-changes for these dotfiles. Its command-text fallback deliberately ignores
-=.codex/= paths: project-local commits often stage =.codex/skills/...= before
-the hook can reliably resolve the target repo, and the staged-file pass remains
-authoritative for any actual dotfiles-root =.codex/= changes.
 
 Manual audit:
 

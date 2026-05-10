@@ -21,6 +21,23 @@ MANIFEST = "ai-config-sync.json"
 MANIFEST_PATH = ROOT / MANIFEST
 DISABLED_SKILLS_PATH = ROOT / "skills-disabled.json"
 
+DOTFILES_PROJECT_LOCAL_SKILLS = {
+    "claude-config-audit",
+    "codex-app-browser",
+    "find-skills",
+    "install-mcp-server",
+    "migrate-profile",
+    "move-session-log",
+    "open-session-log",
+    "optimize-claude-md",
+    "release-dotfiles",
+    "skill-audit",
+    "skill-creator",
+    "skill-discovery",
+    "skill-resolver",
+    "try-hartree-skills",
+}
+
 TOOL_SPECIFIC_SKILL_FRONTMATTER = {
     "allowed-tools",
     "argument-choices",
@@ -1309,10 +1326,11 @@ def audit_topology(problems: list[str]) -> None:
     project_codex_skills = {
         path.parent.name for path in (ROOT / ".codex" / "skills").glob("*/SKILL.md")
     }
-    for skill in sorted(project_claude_skills | project_codex_skills):
+    unexpected_project_local = (project_claude_skills | project_codex_skills) - DOTFILES_PROJECT_LOCAL_SKILLS
+    for skill in sorted(unexpected_project_local):
         add_problem(
             problems,
-            f"dotfiles project-local skill exists: {skill}; reusable skills belong in claude/skills and codex/skills, not repo-root .claude/.codex.",
+            f"unexpected dotfiles project-local skill exists: {skill}; reusable skills belong in claude/skills and codex/skills, not repo-root .claude/.codex.",
         )
 
     drift = local_instruction_sync_problems(ROOT)

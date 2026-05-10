@@ -275,6 +275,14 @@ a cut list, conflict list, and cleaned-up CLAUDE.md. Pass =--accept= or
 explicitly ask to apply cleanup to make high-confidence scope-preserving edits,
 verify changed files and sync checks, and commit the result.
 
+The =optimize-claude-md= skill is a paired Claude/Codex meta-skill for optimizing
+Claude Code instruction files (=CLAUDE.md=, =.claude/CLAUDE.md=,
+=CLAUDE.local.md=, and =.claude/rules=). It audits every instruction against
+eight criteria, checks WHAT/WHY/HOW coverage and progressive disclosure,
+protects local memories as private conflict context, and treats =--accept= as an
+applied mode that verifies changed instruction files, imports, rules, and sync
+checks before closeout.
+
 The =automate= skill is a paired Claude/Codex meta-skill for reusable AI
 workflow design. It decides whether a request should become a Claude Code skill,
 a Codex skill, a gptel directive or preset, a gptel tool, or a gptel command,

@@ -1,36 +1,36 @@
 ---
 name: optimize-claude-md
-description: Optimize a project's CLAUDE.md for maximum agent effectiveness. Applies best practices from Anthropic docs and community research. Use when the user says "optimize claude md", "improve claude md", "clean up claude md", "review my claude md", or wants to make their project instructions more effective.
+description: Optimize a project's Claude Code instruction files for maximum agent effectiveness. Use when the user says "optimize claude md", "improve claude md", "clean up claude md", "review my claude md", or wants persistent CLAUDE.md guidance made more concise, concrete, and reliable. Do not use for ordinary project docs, code reviews, architecture reviews, or one-off prompt advice.
 argument-hint: [--accept] [path-to-CLAUDE.md]
 argument-choices: "--accept"
 ---
 
 # Optimize CLAUDE.md
 
-Analyze and rewrite the project's CLAUDE.md to maximize agent instruction-following while minimizing context waste. If a path is given in `$ARGUMENTS`, use that file; otherwise, look for `CLAUDE.md` in the current project root (or `.claude/CLAUDE.md`).
+Analyze and rewrite the project's Claude Code instruction files to maximize agent instruction-following while minimizing context waste. Treat flags such as `--accept` as flags, not paths. If a non-flag path is given in `$ARGUMENTS`, use that file; otherwise, look for `CLAUDE.md` in the current project root (or `.claude/CLAUDE.md`).
 
-If `--accept` is present in `$ARGUMENTS`, apply all changes without asking for confirmation. Otherwise, present the analysis and proposed rewrite, then wait for approval.
+Use this skill for persistent Claude Code instructions: `CLAUDE.md`, `.claude/CLAUDE.md`, `CLAUDE.local.md`, and `.claude/rules/**/*.md`. If `--accept` is present in `$ARGUMENTS`, apply all high-confidence changes without asking for confirmation. Otherwise, present the analysis and proposed rewrite, then wait for approval.
 
 ## Background: why this matters
 
-LLMs are stateless. CLAUDE.md is the only file loaded into every single session — it's the highest-leverage point in the harness. A flawed CLAUDE.md degrades every phase of every workflow. But the instruction budget is finite: frontier thinking models reliably follow ~150-200 instructions total, and Claude Code's system prompt already consumes ~50 of those. Every line in CLAUDE.md competes for the remainder.
+Claude Code loads CLAUDE.md files, imports, local memories, and rules as context rather than enforced configuration. They are high-leverage because they shape every relevant session, but the instruction budget is finite: frontier thinking models reliably follow ~150-200 instructions total, and Claude Code's system prompt already consumes ~50 of those. Every line in persistent instructions competes for the remainder.
 
-Worse, Claude Code injects: "this context may or may not be relevant to your tasks. You should not respond to this context unless it is highly relevant to your task." If CLAUDE.md contains too much non-universally-applicable content, Claude may discount the entire file.
+Long, vague, stale, or non-universal instructions consume context and reduce adherence. The goal is not to make instructions clever; it is to keep them scoped, concrete, current, and easy for the agent to verify.
 
 ## Phase 1: Read and measure
 
 1. Read the target CLAUDE.md in full
-2. Resolve and read all `@`-imported files
-3. Read any `.claude/rules/*.md` files and `.claude/CLAUDE.md` if separate
-4. Read `CLAUDE.local.md` if present
+2. Resolve and read all `@`-imported files, noting import depth and size
+3. Read the Claude Code instruction sources that affect the target: `.claude/CLAUDE.md` if separate, `CLAUDE.local.md` if present, and `.claude/rules/**/*.md` if present
+4. Treat local or personal instruction files as private context: use them to detect conflicts, but do not quote sensitive content or copy local-only rules into shared files unless the user explicitly targets those files
 5. Count:
    - Total lines (target: under 200; absolute max: 300)
    - Discrete instructions/rules (target: under 100, accounting for system prompt's ~50)
-   - `@`-imports and their sizes
+   - `@`-imports, rules files, and their sizes
 
 ## Phase 2: Evaluate every instruction
 
-For each discrete instruction or rule, evaluate against these criteria. Use subagents in parallel to cover multiple sections.
+For each discrete instruction or rule, evaluate against these criteria. Use subagents in parallel when the active agent environment supports them; otherwise divide the sections explicitly in your own notes.
 
 ### Criterion 1: Universal applicability
 
@@ -120,7 +120,9 @@ Anti-pattern to flag: `See [context/foo.md](context/foo.md)` with no surrounding
 - No dense paragraphs of prose — bullets are more reliably followed
 - Logical grouping: related rules are adjacent, not scattered
 
-## Phase 4: Output
+## Phase 4: Output and applied-mode closeout
+
+For analysis-only runs, provide the full report below. For `--accept` runs, apply the safe edits first, then give a concise closeout with before/after metrics, files changed, verification performed, commit hash if committed, and unresolved issues. Do not paste a full rewritten CLAUDE.md after applying it unless the user asks.
 
 ### 1. Metrics
 
@@ -128,11 +130,11 @@ Anti-pattern to flag: `See [context/foo.md](context/foo.md)` with no surrounding
 |--------|---------|--------|--------|
 | Total lines | N | < 200 | ok/over |
 | Instruction count | N | < 100 | ok/over |
-| Imports | N | — | — |
+| Imports/rules | N | — | — |
 
 ### 2. Per-instruction analysis
 
-A table with columns: Instruction (short), Universal?, Specific?, Pointer?, Not linter?, Not default?, No conflict?. Mark failures.
+A table with columns: Instruction (short), Universal?, Specific?, Pointer?, Not linter?, Not default?, No conflict?, Right placement?, Positioned?. Mark failures.
 
 ### 3. Structural assessment
 
@@ -164,7 +166,17 @@ Show a diff summary of what changed.
 
 ### 6. Externalized files
 
-For each file that needs to be created (`.claude/rules/*.md`, imported docs), provide the full content.
+For each file that needs to be created (`.claude/rules/*.md`, imported docs), provide the full content. In `--accept` mode, create or edit those files directly and summarize them in the closeout.
+
+## Phase 5: Verification
+
+When edits are applied:
+
+1. Re-read every changed instruction file for consistency and scope drift
+2. Recount lines, discrete instructions, imports, and rules for the edited instruction set
+3. Verify all `@` imports and rules paths resolve, and confirm no private/local-only instruction was copied into a shared file unintentionally
+4. Run project-specific checks or docs-sync checks when available
+5. Inspect `git diff` and `git status --short` before committing or reporting completion
 
 ## Guidelines
 
@@ -173,4 +185,4 @@ For each file that needs to be created (`.claude/rules/*.md`, imported docs), pr
 - **Respect intentional overrides.** Some instructions deliberately override Claude's system prompt defaults (e.g., "commit all changes immediately" overrides the default "only commit when asked"). These are high-value — flag them as intentional overrides, don't cut them.
 - **Hooks trump instructions.** If a hook mechanically enforces a rule, the CLAUDE.md statement is redundant unless it provides context the hook can't (explaining *why*).
 - **Context skills trump CLAUDE.md for scoped rules.** If a rule only applies in certain contexts (e.g., Elisp conventions), it belongs in a context skill or `.claude/rules/`, not the root CLAUDE.md.
-- **Ask before applying** (unless `--accept`). Present the full analysis and wait for confirmation before making any changes.
+- **Ask before applying** unless `--accept` is present. In `--accept` mode, apply only high-confidence, scope-preserving edits; report risky or broad changes as unresolved issues instead of half-applying them.

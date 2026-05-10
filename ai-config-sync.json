@@ -58,13 +58,6 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
-      "name": "convert-citations",
-      "claude": "claude/skills/convert-citations/SKILL.md",
-      "codex": "codex/skills/convert-citations/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
       "name": "design-audit",
       "claude": "claude/skills/design-audit/SKILL.md",
       "codex": "codex/skills/design-audit/SKILL.md",
@@ -254,34 +247,6 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
-      "name": "twitter",
-      "claude": "claude/skills/twitter/SKILL.md",
-      "codex": "codex/skills/twitter/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
-      "name": "twitter-digest",
-      "claude": "claude/skills/twitter-digest/SKILL.md",
-      "codex": "codex/skills/twitter-digest/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
-      "name": "twitter-discover",
-      "claude": "claude/skills/twitter-discover/SKILL.md",
-      "codex": "codex/skills/twitter-discover/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
-      "name": "twitter-vet",
-      "claude": "claude/skills/twitter-vet/SKILL.md",
-      "codex": "codex/skills/twitter-vet/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
       "name": "update-log",
       "claude": "claude/skills/update-log/SKILL.md",
       "codex": "codex/skills/update-log/SKILL.md",
@@ -292,13 +257,6 @@
       "name": "verify",
       "claude": "claude/skills/verify/SKILL.md",
       "codex": "codex/skills/verify/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
-      "name": "walk-list",
-      "claude": "claude/skills/walk-list/SKILL.md",
-      "codex": "codex/skills/walk-list/SKILL.md",
       "status": "paired",
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     }

@@ -5,8 +5,10 @@ set -euo pipefail
 
 repo_root=$(cd "$(dirname "$0")/../.." && pwd)
 source_dir="$repo_root/codex/skills"
+programmatic_source_dir="$repo_root/codex/programmatic-skills"
 codex_home="${CODEX_HOME:-$HOME/.codex}"
 target_dir="$codex_home/skills"
+programmatic_target_dir="$codex_home/programmatic-skills"
 
 if [ ! -d "$source_dir" ]; then
   printf 'Missing tracked Codex skills directory: %s\n' "$source_dir" >&2
@@ -28,10 +30,11 @@ if [ -L "$target_dir" ]; then
   current=$(resolve_link "$target_dir")
   if [ "$current" = "$source_dir" ]; then
     printf 'Codex skills directory already linked: %s -> %s\n' "$target_dir" "$source_dir"
-    "$repo_root/bin/skill-prune" install
-    exit 0
+  else
+    unlink "$target_dir"
+    ln -s "$source_dir" "$target_dir"
+    printf 'Codex skills directory linked: %s -> %s\n' "$target_dir" "$source_dir"
   fi
-  unlink "$target_dir"
 elif [ -e "$target_dir" ]; then
   backup="$target_dir.pre-symlink.$(date +%Y%m%d%H%M%S)"
   mv "$target_dir" "$backup"
@@ -40,8 +43,22 @@ elif [ -e "$target_dir" ]; then
     mv "$backup/.system" "$source_dir/.system"
     printf 'Preserved Codex system skills under ignored path: %s\n' "$source_dir/.system" >&2
   fi
+  ln -s "$source_dir" "$target_dir"
+  printf 'Codex skills directory linked: %s -> %s\n' "$target_dir" "$source_dir"
+else
+  ln -s "$source_dir" "$target_dir"
+  printf 'Codex skills directory linked: %s -> %s\n' "$target_dir" "$source_dir"
 fi
 
-ln -s "$source_dir" "$target_dir"
-printf 'Codex skills directory linked: %s -> %s\n' "$target_dir" "$source_dir"
+if [ -d "$programmatic_source_dir" ]; then
+  if [ -L "$programmatic_target_dir" ]; then
+    unlink "$programmatic_target_dir"
+  elif [ -e "$programmatic_target_dir" ]; then
+    backup="$programmatic_target_dir.pre-symlink.$(date +%Y%m%d%H%M%S)"
+    mv "$programmatic_target_dir" "$backup"
+    printf 'Moved existing Codex programmatic skills directory to backup: %s\n' "$backup" >&2
+  fi
+  ln -s "$programmatic_source_dir" "$programmatic_target_dir"
+  printf 'Codex programmatic skills directory linked: %s -> %s\n' "$programmatic_target_dir" "$programmatic_source_dir"
+fi
 "$repo_root/bin/skill-prune" install

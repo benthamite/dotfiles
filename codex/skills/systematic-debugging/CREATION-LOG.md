@@ -4,7 +4,7 @@ Reference example of extracting, structuring, and bulletproofing a critical skil
 
 ## Source Material
 
-Extracted debugging framework from `/Users/jesse/.claude/CLAUDE.md`:
+Extracted debugging framework from a third-party Claude configuration:
 - 4-phase systematic process (Investigation → Pattern Analysis → Hypothesis → Implementation)
 - Core mandate: ALWAYS find root cause, NEVER fix symptoms
 - Rules designed to resist time pressure and rationalization
@@ -54,7 +54,7 @@ Framework designed to resist rationalization under pressure:
 
 ## Testing Approach
 
-Created 4 validation tests following skills/meta/testing-skills-with-subagents:
+Created 4 validation tests as reusable prompt files in this directory:
 
 ### Test 1: Academic Context (No Pressure)
 - Simple bug, no time pressure
@@ -81,8 +81,8 @@ Created 4 validation tests following skills/meta/testing-skills-with-subagents:
 - Anti-patterns section
 - Flowchart for "fix failed" decision
 
-### Enhancement 1: TDD Reference
-- Added link to skills/testing/test-driven-development
+### Enhancement 1: Regression Test Guidance
+- Added guidance to create the smallest focused regression test before fixing
 - Note explaining TDD's "simplest code" ≠ debugging's "root cause"
 - Prevents confusion between methodologies
 
@@ -104,7 +104,7 @@ Bulletproof skill that:
 ## Usage Example
 
 When encountering a bug:
-1. Load skill: skills/debugging/systematic-debugging
+1. Load the local `systematic-debugging` skill
 2. Read overview (10 sec) - reminded of mandate
 3. Follow Phase 1 checklist - forced investigation
 4. If tempted to skip - see anti-pattern, stop

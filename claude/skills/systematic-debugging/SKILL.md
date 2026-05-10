@@ -1,6 +1,6 @@
 ---
 name: systematic-debugging
-description: Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes
+description: Use when debugging bugs, failing tests/builds, flaky behavior, regressions, crashes, performance anomalies, or other unexpected technical behavior before proposing fixes; especially when asked to diagnose, find root cause, stop guessing, or recover after a failed fix attempt. Do not use for pure feature work, code review, or architecture review when there is no concrete observed failure.
 ---
 
 # Systematic Debugging
@@ -42,6 +42,18 @@ Use for ANY technical issue:
 - Issue seems simple (simple bugs have root causes too)
 - You're in a hurry (rushing guarantees rework)
 - Manager wants it fixed NOW (systematic is faster than thrashing)
+
+## When Not to Use
+
+Do not use this for pure feature implementation, ordinary code review, release
+prep, or broad architecture assessment when there is no concrete observed
+failure. Use the corresponding build, review, release, or audit skill instead.
+
+Use `symptom-check` when a non-trivial local fix is already being considered and
+you need to decide whether it restores a real invariant, should be logged as a
+recurring pattern, or points to a broader refactor. If both skills apply, use
+this skill first to identify the root cause, then use `symptom-check` before
+editing when the proposed fix may be a symptom patch.
 
 ## The Four Phases
 
@@ -176,7 +188,8 @@ You MUST complete each phase before proceeding to the next.
    - Automated test if possible
    - One-off test script if no framework
    - MUST have before fixing
-   - Use the `superpowers:test-driven-development` skill for writing proper failing tests
+   - Use the codebase's existing test tooling; use `test-suite` only when the task
+     calls for broader coverage beyond the smallest regression test
 
 2. **Implement Single Fix**
    - Address the root cause identified
@@ -229,9 +242,9 @@ If you catch yourself thinking:
 
 **ALL of these mean: STOP. Return to Phase 1.**
 
-**If 3+ fixes failed:** Question the architecture (see Phase 4.5)
+**If 3+ fixes failed:** Question the architecture (see Phase 4, step 5)
 
-## your human partner's Signals You're Doing It Wrong
+## Your Human Partner's Signals You're Doing It Wrong
 
 **Watch for these redirections:**
 - "Is that not happening?" - You assumed without verifying
@@ -264,6 +277,21 @@ If you catch yourself thinking:
 | **3. Hypothesis** | Form theory, test minimally | Confirmed or new hypothesis |
 | **4. Implementation** | Create test, fix, verify | Bug resolved, tests pass |
 
+## Working Notes and Final Report
+
+While debugging, keep a concise record of:
+
+- Symptom and reproduction steps
+- Evidence gathered and where it points
+- Root cause hypothesis and test result
+- Fix applied, if any
+- Verification run and outcome
+- Unknowns, residual risk, or reason work stopped
+
+When reporting completion, distinguish confirmed root cause from inference and
+include the verification command or manual check that proved the failure is
+resolved.
+
 ## When Process Reveals "No Root Cause"
 
 If systematic investigation reveals issue is truly environmental, timing-dependent, or external:
@@ -284,8 +312,11 @@ These techniques are part of systematic debugging and available in this director
 - **`condition-based-waiting.md`** - Replace arbitrary timeouts with condition polling
 
 **Related skills:**
-- **superpowers:test-driven-development** - For creating failing test case (Phase 4, Step 1)
-- **superpowers:verification-before-completion** - Verify fix worked before claiming success
+- **`symptom-check`** - Use after root cause when a non-trivial local fix may
+  patch a broader invariant or architecture problem
+- **`test-suite`** - Use when the fix needs broader coverage than the smallest
+  focused regression test
+- **`verify`** - Use when the task asks for an explicit verification loop before completion
 
 ## Real-World Impact
 

@@ -105,7 +105,10 @@ The former dotfiles-project-local Claude skills =find-skills=,
 =claude/skills/= and =codex/skills/= trees so they are available consistently
 from both tools in every project. The =find-skills= helper requires current
 catalog/source verification before recommending a skill and explicit approval
-before installing an exact package. The =skill-creator= workflow distinguishes
+before installing an exact package. The =systematic-debugging=
+skill documents near-miss cases that should not trigger, its division of
+responsibility with =symptom-check=, and the evidence, root cause, fix,
+verification, and residual risk fields expected in the final debugging report. The =skill-creator= workflow distinguishes
 skill authoring/eval loops from one-pass audits, keeps paired Claude/Codex
 copies synchronized, and documents the eval workspace layout expected by its
 bundled benchmark aggregator (=with_skill/run-1/=, =without_skill/run-1/=, or

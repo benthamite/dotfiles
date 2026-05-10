@@ -596,6 +596,11 @@
 			   "emacs/extras/doc/copilot-extras.texi")
 			  :depth nil :type git :protocol https :inherit t :ref
 			  "59b3785184aafe2e0967352b7262dd1fa45fcca8"))
+ (compat :source "elpaca-menu-lock-file" :recipe
+	 (:source nil :package "compat" :id compat :host github :repo
+		  "emacs-compat/compat" :branch "main" :type git :protocol
+		  https :inherit t :depth treeless :ref
+		  "b5b48183689b536f72b1214106afeabc465da9d4"))
  (corfu :source "elpaca-menu-lock-file" :recipe
 	(:package "corfu" :repo "minad/corfu" :files (:defaults "extensions/*")
 		  :fetcher github :source "MELPA" :id corfu :includes
@@ -821,11 +826,11 @@
 		     :inherit t :depth treeless :ref
 		     "5adb7097d0ff3d9e004a8bb07c0b25f7ee20ba8a"))
  (elfeed :source "elpaca-menu-lock-file" :recipe
-	 (:package "elfeed" :repo "benthamite/elfeed" :fetcher github :files
-		   (:defaults "README.md") :source "MELPA" :id elfeed :host
-		   github :branch "debounce-search-update" :type git :protocol
-		   https :inherit t :depth treeless :ref
-		   "0e7a94e931e7989fb6f2900d2345bcb88d3a2a45"))
+	 (:package "elfeed" :repo "emacs-elfeed/elfeed" :fetcher github
+		   :files (:defaults "README.md") :source "MELPA" :id elfeed
+		   :host github :branch "main" :type git :protocol https
+		   :inherit t :depth treeless :ref
+		   "7a47724e616834dc2bef384f3773d1a53b729600"))
  (elfeed-ai :source "elpaca-menu-lock-file" :recipe
 	    (:package "elfeed-ai" :fetcher github :repo "benthamite/elfeed-ai"
 		      :files
@@ -864,7 +869,7 @@
 			"benthamite/elfeed-tube" :files
 			(:defaults (:exclude "elfeed-tube-mpv.el")) :source
 			"MELPA" :id elfeed-tube :host github :type git :protocol
-			https :inherit t :depth treeless :ref
+			https :inherit t :depth treeless :wait t :ref
 			"65657a6b97058cac296eea9b9eb761c835548213"))
  (elfeed-tube-mpv :source "elpaca-menu-lock-file" :recipe
 		  (:package "elfeed-tube-mpv" :repo "benthamite/elfeed-tube"
@@ -1117,10 +1122,9 @@
 			"59b3785184aafe2e0967352b7262dd1fa45fcca8"))
  (forge-search :source "elpaca-menu-lock-file" :recipe
 	       (:source nil :package "forge-search" :id forge-search :host
-			github :repo "benthamite/forge-search.el" :branch
-			"fix/forge-get-repository" :type git :protocol https
-			:inherit t :depth treeless :ref
-			"dc792fa9cd1d26c194313f888b4c0092b6f42e03"))
+			github :repo "eatse21/forge-search.el" :branch "master"
+			:type git :protocol https :inherit t :depth treeless :ref
+			"3eb546e561115be901f6e2fe2dd11f7b25b31ad9"))
  (frame-extras :source "elpaca-menu-lock-file" :recipe
 	       (:source nil :package "frame-extras" :id frame-extras :host
 			github :repo "benthamite/dotfiles" :files
@@ -1203,17 +1207,17 @@
 			     :protocol https :inherit t :depth treeless :ref
 			     "58b0928bc255b47aad318cd183a5dce8f62199cc"))
  (gptel :source "elpaca-menu-lock-file" :recipe
-	(:package "gptel" :repo "karthink/gptel" :fetcher github :files
+	(:package "gptel" :repo "benthamite/gptel" :fetcher github :files
 		  ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo"
 		   "doc/dir" "doc/*.info" "doc/*.texi" "doc/*.texinfo"
 		   "lisp/*.el" "docs/dir" "docs/*.info" "docs/*.texi"
 		   "docs/*.texinfo"
 		   (:exclude ".dir-locals.el" "test.el" "tests.el" "*-test.el"
 			     "*-tests.el" "LICENSE" "README*" "*-pkg.el"))
-		  :source "MELPA" :id gptel :host github :repo "benthamite/gptel"
+		  :source "MELPA" :id gptel :host github :branch "master"
 		  :type git :protocol https :inherit t
 		  :depth treeless :ref
-		  "e6a676499d662bb977d9f6fef7ba95d7f8c4c90e"))
+		  "46c735c692c10f3cdcdfe46e182334af85de4489"))
  (gptel-extras :source "elpaca-menu-lock-file" :recipe
 	       (:source nil :package "gptel-extras" :id gptel-extras :host
 			github :repo "benthamite/dotfiles" :files

@@ -468,7 +468,7 @@ Cuts releases for my Emacs packages (read dynamically from the listed package he
 :ID:       49102EA7-4B49-4F93-8134-06FA7925AE55
 :END:
 
-Cuts releases for the dotfiles repo itself. Verifies that every personal package repo has a clean working tree in its local elpaca clone, checks the dotfiles working tree, classifies commits since the last semver tag, suggests a semver bump, drafts release notes, and creates a GitHub release. Clean unpushed package commits are pushed only after explicit authorization or =--accept=, untracked =.elc= cleanup uses Trash, and =--accept= never skips the post-lockfile profile-test gate.
+Cuts releases for the dotfiles repo itself. Verifies that every personal package repo has a clean working tree in its local elpaca clone, checks the dotfiles working tree, classifies commits since the last semver tag, suggests a semver bump, drafts release notes, and creates a GitHub release. Clean unpushed package commits are pushed only after explicit authorization or =--accept=, untracked =.elc= cleanup is selected with =git ls-files= and moved via Trash, and =--accept= never skips the post-lockfile profile-test gate.
 
 **** triage-issues
 :PROPERTIES:

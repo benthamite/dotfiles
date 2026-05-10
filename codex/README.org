@@ -87,12 +87,14 @@ codex/bin/install-skills.sh
 The script ensures =~/.codex/skills= points at =codex/skills/= and applies any
 native skill-disable settings recorded by =bin/skill-prune=. Local reusable
 interactive skills belong in both =claude/skills/= and =codex/skills/=, not as
-untracked directories under =~/.codex/skills=. Programmatic-only skills belong
-under =claude/programmatic-skills/= and =codex/programmatic-skills/=; the
-installers link those trees to =~/.claude/programmatic-skills= and
-=~/.codex/programmatic-skills= for =ai-agent-run-skill= without loading them
-into ordinary agent sessions. Codex-managed hidden system skills, when present,
-live under ignored =codex/skills/.system/= runtime data and are not part of the
+untracked directories under =~/.codex/skills=. Programmatic-only skills are not
+available in ordinary Claude Code or Codex sessions. They live in
+=programmatic-skills/= directories so =ai-agent-run-skill= can find and run them
+explicitly from Emacs without adding them to every interactive agent session.
+The installers expose those directories at =~/.claude/programmatic-skills= and
+=~/.codex/programmatic-skills= because =ai-agent-run-skill= discovers skills
+from those live paths. Codex-managed hidden system skills, when present, live
+under ignored =codex/skills/.system/= runtime data and are not part of the
 reusable Claude/Codex skill parity model.
 
 Skill frontmatter descriptions are loaded for routing, so keep them concise:

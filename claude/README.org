@@ -285,11 +285,12 @@ The tracked interactive skill bodies live under =claude/skills/= and
 =bin/skill-prune install= or either =claude/bin/install-skills.sh= /
 =codex/bin/install-skills.sh=.
 
-Programmatic-only skills live under =claude/programmatic-skills/= and
-=codex/programmatic-skills/=. The installers link these to
-=~/.claude/programmatic-skills= and =~/.codex/programmatic-skills= for
-=ai-agent-run-skill= discovery, but ordinary Claude Code and Codex sessions do
-not load them as interactive skills.
+Programmatic-only skills are not available in ordinary Claude Code or Codex
+sessions. They live in =programmatic-skills/= directories so
+=ai-agent-run-skill= can find and run them explicitly from Emacs without adding
+them to every interactive agent session. The installers expose those directories
+at =~/.claude/programmatic-skills= and =~/.codex/programmatic-skills= because
+=ai-agent-run-skill= discovers skills from those live paths.
 
 Run =bin/skill-prune apply --days 60= to disable stale paired skills. The scan
 checks recent Claude and Codex transcripts and disables a skill only when both

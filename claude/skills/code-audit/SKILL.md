@@ -1,6 +1,6 @@
 ---
 name: code-audit
-description: "Audit code for bugs, security vulnerabilities, error handling gaps, and correctness problems. Checks for logic errors, race conditions, injection flaws, resource leaks, and data integrity issues. Use when the user wants to find actual defects, review code for bugs, or run a vulnerability check — not for readability or style issues."
+description: "Audit code for actual defects: bugs, security vulnerabilities in application code, error handling gaps, and correctness problems. Use when the user asks to find bugs, review code for defects, debug risky edge cases, run a code vulnerability check, or apply confirmed fixes with --accept. Do not use for readability, architecture, test coverage, performance-only, or broad environment security reviews."
 argument-hint: "[--accept] [dir]"
 argument-choices: "--accept"
 ---
@@ -9,9 +9,15 @@ argument-choices: "--accept"
 
 Review $ARGUMENTS for correctness, security, and robustness issues. The goal is to find **actual or potential defects** — things that could cause wrong behavior, data loss, security vulnerabilities, or silent failures.
 
-If `--accept` is present in `$ARGUMENTS`, after completing the audit, immediately fix **all** findings (critical, bugs, fragile, and minor) without asking for confirmation. Byte-compile and run tests after applying all fixes. Commit the result.
+If `--accept` is present in `$ARGUMENTS`, audit first, then fix all confirmed findings whose fix is clear and within the requested scope. Do not broaden into refactors, feature work, or speculative defensive rewrites. If a finding needs product judgment, credentials, or an externally visible action, report it as unresolved instead of guessing. Run the relevant verification for the project and commit only the accepted fixes.
 
-Use subagents to explore the codebase in parallel where appropriate. Read actual code — don't guess from file names.
+## Workflow
+
+1. **Resolve the scope**: use the explicit files, directories, diff, PR, or issue named in `$ARGUMENTS`; if none is provided, default to the current project. Read project instructions and check the working tree before editing.
+2. **Identify verification**: inspect the project's docs and config for the right checks before changing code. Examples: byte-compile and ERT for Elisp, typecheck/lint/test commands for typed or compiled projects, dependency scanners when the audit includes package risk.
+3. **Read real code paths**: inspect the implementation, callers, inputs, and persistence boundaries. Use available subagents or parallel searches for broad codebases, but do not infer findings from filenames alone.
+4. **Confirm each finding**: trace a concrete failure mode, bad input, race, leak, or attack path. Prefer reproducible examples or precise reasoning over generic "could be safer" advice.
+5. **Report or fix**: in normal mode, report findings in the format below and offer to fix critical and bug-level issues. With `--accept`, apply the confirmed in-scope fixes, verify them, and commit the result.
 
 ## What to look for
 
@@ -48,9 +54,11 @@ Use subagents to explore the codebase in parallel where appropriate. Read actual
 ## What NOT to flag
 
 - Style, formatting, or naming issues (use `/interpretability-audit` for that)
+- Architecture, abstraction, duplication, or refactoring opportunities where behavior is already correct (use `/design-audit` for that)
 - Missing features or enhancements
 - Performance issues that don't affect correctness (unless they could cause timeouts or OOM)
 - Test coverage gaps (mention if a critical path is untested, but don't audit test quality)
+- Broad machine, secrets, dependency, or Claude Code posture issues outside the application code under review (use `/security-audit` for that)
 - Code that is correct and handles errors properly — don't suggest defensive code for impossible conditions
 
 ## Output format
@@ -65,6 +73,12 @@ Organize findings into:
 For each finding, include:
 - File path and line number(s)
 - What's wrong (be specific — "this crashes when X is empty", not "error handling could be improved")
+- The concrete input, call path, data state, or threat model that makes it fail
 - A concrete fix or approach
 
-At the end, offer to fix the critical and bug-level issues.
+Then include:
+
+- **Verification**: checks run, results, and any checks that were relevant but could not be run
+- **No findings**: if no defects were found, say that clearly and describe the scoped files or paths reviewed plus any residual risk
+
+At the end, offer to fix the critical and bug-level issues unless `--accept` was used. If `--accept` was used, summarize the fixes, verification, unresolved findings, and commit hash.

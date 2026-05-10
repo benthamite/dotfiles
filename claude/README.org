@@ -307,7 +307,7 @@ Emacs Lisp coding standards: atomic functions, helper placement, docstring forma
 :ID:       D3121B68-8480-41B2-835B-97E85BB7DE29
 :END:
 
-Audits code for bugs, security issues, error handling gaps, and correctness problems. Categorizes findings as critical, bugs, fragile, or minor, with specific line numbers. Pass =--accept= to auto-fix all findings.
+Audits code for actual defects: bugs, application-code security issues, error handling gaps, and correctness problems. Categorizes findings as critical, bugs, fragile, or minor, with specific line numbers and concrete failure modes. Pass =--accept= to fix confirmed in-scope findings, verify them, and commit the result.
 
 **** design-audit
 :PROPERTIES:

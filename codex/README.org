@@ -174,10 +174,12 @@ Codex-safe because Codex skips skills whose =description= field is not parsed as
 a string.
 
 The =google-sheets-comments= skill is a paired Claude/Codex workflow for
-processing Google Sheets comments. It makes Drive comments via =gdoc comments=
-the source of truth, treats Gmail notifications only as pointers, requires
-one-comment-at-a-time approval before externally visible replies, posts through
-=gdoc reply=, and verifies with =gdoc comment-info= before moving on.
+processing Google Sheets comment review, replies, resolves, and reopens. It
+makes Drive comments via =gdoc comments= the source of truth, treats Gmail
+notifications only as pointers, excludes ordinary spreadsheet editing, requires
+one-comment-at-a-time approval before externally visible actions, uses the
+matching =gdoc reply=, =gdoc resolve=, or =gdoc reopen= command, and verifies
+with =gdoc comment-info= before moving on.
 
 The =skill-resolver= skill wraps =bin/agent-skill=, a deterministic resolver for
 opening skills by name.  It searches project-local skills before global skills

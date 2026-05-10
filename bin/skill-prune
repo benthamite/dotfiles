@@ -21,6 +21,24 @@ DEFAULT_DAYS = 60
 CODEX_BLOCK_BEGIN = "# BEGIN skill-prune disabled skills"
 CODEX_BLOCK_END = "# END skill-prune disabled skills"
 OLD_MANAGED_MARKER = ".managed-by-dotfiles-skill-prune"
+LOCAL_ROOTS_ENV = "SKILL_PRUNE_LOCAL_ROOTS"
+DEFAULT_LOCAL_ROOT = Path.home() / "My Drive"
+LOCAL_SCAN_SKIP_DIRS = {
+    ".cache",
+    ".claude",
+    ".codex",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".tox",
+    ".venv",
+    ".svn",
+    "dist",
+    "node_modules",
+    "target",
+    "venv",
+}
 
 
 @dataclass
@@ -64,17 +82,36 @@ def load_manifest() -> list[Skill]:
     ]
 
 
+def local_skill_search_roots() -> list[Path]:
+    configured = os.environ.get(LOCAL_ROOTS_ENV)
+    if configured:
+        return [Path(item).expanduser() for item in configured.split(os.pathsep) if item]
+    return [DEFAULT_LOCAL_ROOT]
+
+
 def discover_project_local_skills() -> list[Skill]:
-    search_roots = [Path.home() / "My Drive" / "Epoch", Path.home() / "My Drive" / "repos"]
     skills: list[Skill] = []
-    for root in search_roots:
+    seen_projects: set[Path] = set()
+    for root in local_skill_search_roots():
         if not root.exists():
             continue
-        for claude_skill in root.glob("**/.claude/skills/*/SKILL.md"):
-            project = claude_skill.parents[3]
-            name = claude_skill.parent.name
-            codex_skill = project / ".codex" / "skills" / name / "SKILL.md"
-            if codex_skill.exists():
+        for dirpath, dirnames, _filenames in os.walk(root):
+            project = Path(dirpath)
+            claude_root = project / ".claude" / "skills"
+            codex_root = project / ".codex" / "skills"
+            if project in seen_projects or not claude_root.is_dir() or not codex_root.is_dir():
+                dirnames[:] = [
+                    name
+                    for name in dirnames
+                    if name not in LOCAL_SCAN_SKIP_DIRS and not name.endswith(".nosync")
+                ]
+                continue
+            seen_projects.add(project)
+            for claude_skill in sorted(claude_root.glob("*/SKILL.md")):
+                name = claude_skill.parent.name
+                codex_skill = codex_root / name / "SKILL.md"
+                if not codex_skill.exists():
+                    continue
                 skills.append(
                     Skill(
                         name=name,
@@ -84,6 +121,11 @@ def discover_project_local_skills() -> list[Skill]:
                         source="project-local",
                     )
                 )
+            dirnames[:] = [
+                name
+                for name in dirnames
+                if name not in LOCAL_SCAN_SKIP_DIRS and not name.endswith(".nosync")
+            ]
     return skills
 
 

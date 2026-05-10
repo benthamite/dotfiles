@@ -400,6 +400,18 @@ freshness, scans changed files for artifacts, secrets, whitespace, and line
 endings, and polls remote CI only when the branch or PR is already pushed. It
 reports not-run checks with concrete reasons and does not change remote state.
 
+**** post-push-ci
+:PROPERTIES:
+:ID:       D7819BB0-C383-4A3F-8950-2B9F26097E0F
+:END:
+
+Post-push GitHub Actions closeout. It applies after an agent has pushed a
+commit, runs =ci-after-push= to wait for push-triggered CI on the pushed SHA,
+fetches failed logs, fixes root causes, commits and pushes follow-up fixes, and
+repeats until the pushed commit is green or a concrete blocker is identified.
+It does not grant permission to push; it only closes the loop after an
+authorized push.
+
 *** Documentation skills
 :PROPERTIES:
 :ID:       7BAA2662-D24F-42B2-A865-5442B2F2E1B1

@@ -1,0 +1,235 @@
+#!/usr/bin/env bash
+# Push the current branch and wait for GitHub Actions runs for the pushed SHA.
+
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: ci-after-push [OPTIONS]
+
+Push the current branch, wait for GitHub Actions runs triggered by the pushed
+commit, print failed logs, and exit non-zero if any run fails.
+
+Options:
+  --no-push          Do not run git push; check the selected commit only
+  --repo OWNER/REPO  GitHub repository to inspect (default: gh repo view)
+  --commit SHA       Commit SHA to inspect (default: HEAD)
+  --branch BRANCH    Branch name to report (default: current branch)
+  --event EVENT      GitHub Actions event to inspect (default: push)
+  --timeout SECONDS  Maximum time to wait for runs (default: 900)
+  --interval SECONDS Polling interval (default: 10)
+  --limit N          Maximum matching runs to inspect (default: 20)
+  -h, --help         Show this help
+EOF
+}
+
+push=true
+repo=""
+commit=""
+branch=""
+event="push"
+timeout=900
+interval=10
+limit=20
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --no-push)
+      push=false
+      shift
+      ;;
+    --repo)
+      repo="${2:-}"
+      if [ -z "$repo" ]; then
+        printf 'Missing value for --repo\n' >&2
+        exit 2
+      fi
+      shift 2
+      ;;
+    --repo=*)
+      repo="${1#--repo=}"
+      shift
+      ;;
+    --commit)
+      commit="${2:-}"
+      if [ -z "$commit" ]; then
+        printf 'Missing value for --commit\n' >&2
+        exit 2
+      fi
+      shift 2
+      ;;
+    --commit=*)
+      commit="${1#--commit=}"
+      shift
+      ;;
+    --branch)
+      branch="${2:-}"
+      if [ -z "$branch" ]; then
+        printf 'Missing value for --branch\n' >&2
+        exit 2
+      fi
+      shift 2
+      ;;
+    --branch=*)
+      branch="${1#--branch=}"
+      shift
+      ;;
+    --event)
+      event="${2:-}"
+      if [ -z "$event" ]; then
+        printf 'Missing value for --event\n' >&2
+        exit 2
+      fi
+      shift 2
+      ;;
+    --event=*)
+      event="${1#--event=}"
+      shift
+      ;;
+    --timeout)
+      timeout="${2:-}"
+      if ! [[ "$timeout" =~ ^[0-9]+$ ]]; then
+        printf 'Invalid --timeout value: %s\n' "$timeout" >&2
+        exit 2
+      fi
+      shift 2
+      ;;
+    --timeout=*)
+      timeout="${1#--timeout=}"
+      if ! [[ "$timeout" =~ ^[0-9]+$ ]]; then
+        printf 'Invalid --timeout value: %s\n' "$timeout" >&2
+        exit 2
+      fi
+      shift
+      ;;
+    --interval)
+      interval="${2:-}"
+      if ! [[ "$interval" =~ ^[0-9]+$ ]] || [ "$interval" -eq 0 ]; then
+        printf 'Invalid --interval value: %s\n' "$interval" >&2
+        exit 2
+      fi
+      shift 2
+      ;;
+    --interval=*)
+      interval="${1#--interval=}"
+      if ! [[ "$interval" =~ ^[0-9]+$ ]] || [ "$interval" -eq 0 ]; then
+        printf 'Invalid --interval value: %s\n' "$interval" >&2
+        exit 2
+      fi
+      shift
+      ;;
+    --limit)
+      limit="${2:-}"
+      if ! [[ "$limit" =~ ^[0-9]+$ ]] || [ "$limit" -eq 0 ]; then
+        printf 'Invalid --limit value: %s\n' "$limit" >&2
+        exit 2
+      fi
+      shift 2
+      ;;
+    --limit=*)
+      limit="${1#--limit=}"
+      if ! [[ "$limit" =~ ^[0-9]+$ ]] || [ "$limit" -eq 0 ]; then
+        printf 'Invalid --limit value: %s\n' "$limit" >&2
+        exit 2
+      fi
+      shift
+      ;;
+    -*)
+      printf 'Unknown option: %s\n' "$1" >&2
+      exit 2
+      ;;
+    *)
+      printf 'Unexpected argument: %s\n' "$1" >&2
+      exit 2
+      ;;
+  esac
+done
+
+command -v git >/dev/null 2>&1 || { printf 'git is required.\n' >&2; exit 127; }
+command -v gh >/dev/null 2>&1 || { printf 'gh is required.\n' >&2; exit 127; }
+command -v jq >/dev/null 2>&1 || { printf 'jq is required.\n' >&2; exit 127; }
+
+if ! git rev-parse --show-toplevel >/dev/null 2>&1; then
+  printf 'ci-after-push must run inside a git repository.\n' >&2
+  exit 2
+fi
+
+if [ -z "$repo" ]; then
+  repo="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
+fi
+
+if [ -z "$commit" ]; then
+  commit="$(git rev-parse HEAD)"
+fi
+
+if [ -z "$branch" ]; then
+  branch="$(git rev-parse --abbrev-ref HEAD)"
+fi
+
+if [ "$push" = true ]; then
+  printf 'Pushing %s (%s) to %s...\n' "$branch" "$commit" "$repo"
+  git push
+else
+  printf 'Checking existing %s run(s) for %s (%s) in %s...\n' "$event" "$branch" "$commit" "$repo"
+fi
+
+deadline=$(( $(date +%s) + timeout ))
+runs_json="[]"
+
+while :; do
+  runs_json="$(
+    gh run list \
+      --repo "$repo" \
+      --commit "$commit" \
+      --event "$event" \
+      --limit "$limit" \
+      --json databaseId,status,conclusion,name,workflowName,url,headBranch,headSha,createdAt,updatedAt
+  )"
+
+  count="$(printf '%s\n' "$runs_json" | jq 'length')"
+  incomplete="$(printf '%s\n' "$runs_json" | jq '[.[] | select(.status != "completed")] | length')"
+
+  if [ "$count" -gt 0 ] && [ "$incomplete" -eq 0 ]; then
+    break
+  fi
+
+  now="$(date +%s)"
+  if [ "$now" -ge "$deadline" ]; then
+    printf 'Timed out waiting for GitHub Actions runs for %s after %ss.\n' "$commit" "$timeout" >&2
+    printf '%s\n' "$runs_json" | jq -r '.[] | "\(.databaseId)\t\(.status)\t\(.conclusion // "pending")\t\(.name)\t\(.url)"'
+    exit 124
+  fi
+
+  if [ "$count" -eq 0 ]; then
+    printf 'Waiting for GitHub Actions runs to appear for %s...\n' "$commit"
+  else
+    printf 'Waiting for %s/%s GitHub Actions run(s) to complete...\n' "$incomplete" "$count"
+  fi
+  sleep "$interval"
+done
+
+printf 'GitHub Actions runs for %s:\n' "$commit"
+printf '%s\n' "$runs_json" | jq -r '.[] | "- \(.conclusion // .status): \(.name) \(.url)"'
+
+failed_ids="$(
+  printf '%s\n' "$runs_json" |
+    jq -r '.[] | select(.conclusion != "success" and .conclusion != "skipped" and .conclusion != "neutral") | .databaseId'
+)"
+
+if [ -n "$failed_ids" ]; then
+  printf '\nFailed GitHub Actions logs:\n' >&2
+  while IFS= read -r run_id; do
+    [ -n "$run_id" ] || continue
+    printf '\n===== run %s =====\n' "$run_id" >&2
+    gh run view "$run_id" --repo "$repo" --log-failed >&2 || true
+  done <<EOF
+$failed_ids
+EOF
+  exit 1
+fi
+
+printf 'All GitHub Actions runs for %s completed successfully.\n' "$commit"

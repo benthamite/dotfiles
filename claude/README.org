@@ -677,7 +677,7 @@ Consolidates Claude Code project data (sessions, memory, trust entries) across e
 :ID:       A1AC6915-C52E-4382-B1A6-731C697E736B
 :END:
 
-Meta-skill for AI workflow design. Given a description of something to automate, analyzes the requirements along dimensions like context source, tool access, multi-step reasoning, and Emacs integration, then recommends the right approach: a Claude Code skill, a gptel directive, a gptel tool, or a gptel command. After confirmation, builds it following the conventions of each approach.
+Meta-skill for reusable AI workflow design. Given a description of something to automate, analyzes the requirements along dimensions like context source, tool access, multi-step reasoning, and Emacs integration, then recommends the right approach: a Claude Code skill, a Codex skill, a gptel directive or preset, a gptel tool, or a gptel command. After confirmation, builds it in the canonical dotfiles paths, verifies the result, and commits the logical change.
 
 **** skill-discovery
 :PROPERTIES:

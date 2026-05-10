@@ -277,6 +277,15 @@ detection, Electron source extraction and security checks, network endpoint
 scanning, and spaces-safe binary analysis. Its bundled scanner uses =mktemp=
 for temporary directories and moves extracted sources to Trash when possible.
 
+The =gitguardian-triage= skill is a paired Claude/Codex security workflow for
+clearing GitGuardian secret incidents end to end. It fetches incidents via the
+GG API, classifies them into rotate/resolve/ignore buckets, routes provider
+rotation to the owning account, searches =.zshenv-secrets=, =pass=, code
+references, literal file hits, and indirection layers for live consumers, and
+verifies old-value removal before closing incidents. Secret values are handled
+through protected files, stdin, env vars, or =pass= rather than printed command
+output, and sensitive temporary files are cleaned up before reporting.
+
 The =build= skill is a paired Claude/Codex workflow for turning a rough
 =spec.md= or explicit spec path into an implementation-ready plan. It interviews
 the user in depth, records goals, design, edge cases, implementation order, and

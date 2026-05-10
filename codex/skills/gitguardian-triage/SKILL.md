@@ -7,6 +7,8 @@ description: Triage and remediate all open GitGuardian secret incidents in the u
 
 Go through every open incident in the user's GitGuardian workspace and resolve it: rotate real secrets at the provider, update local consumers, and close the incident in GG with the right disposition. Everything is driven via the GitGuardian API — no browser needed for the triage phase.
 
+Treat every matched value, replacement key, provider response, and consumer file as sensitive. Do not print secret values in terminal output, chat, final reports, screenshots, or command strings; pass them through protected files, environment variables, stdin, or `pass` instead.
+
 ## Prerequisites (check first, fail loud if missing)
 
 1. **GG API token** at `pass auth-sources/api.gitguardian.com/pablo@stafforini.com` — first line is the `gg_pat_*` token. If missing, walk the user through creating one at `https://dashboard.gitguardian.com/api/personal-access-tokens` with scopes `incidents:read`, `incidents:write`, `sources:read`. Store via `pass insert -m auth-sources/api.gitguardian.com/pablo@stafforini.com`.
@@ -18,25 +20,46 @@ Go through every open incident in the user's GitGuardian workspace and resolve i
 ## Step 1: Enumerate open incidents
 
 ```bash
-GG_TOKEN=$(pass auth-sources/api.gitguardian.com/pablo@stafforini.com | head -1)
-mkdir -p /tmp/gg
-curl -s -H "Authorization: Token $GG_TOKEN" \
-  "https://api.gitguardian.com/v1/incidents/secrets?per_page=100&status=TRIGGERED" \
-  -o /tmp/gg/triggered.json
-jq 'length' /tmp/gg/triggered.json   # count
-```
+GG_TOKEN=$(pass auth-sources/api.gitguardian.com/pablo@stafforini.com | head -n 1)
+GG_DIR=$(mktemp -d "${TMPDIR:-/tmp}/gg.XXXXXX")
+chmod 700 "$GG_DIR"
+url="https://api.gitguardian.com/v1/incidents/secrets?per_page=100&status=TRIGGERED"
+page=1
+: > "$GG_DIR/triggered.ndjson"
+while [ -n "$url" ]; do
+  headers="$GG_DIR/headers-$page.txt"
+  body="$GG_DIR/triggered-$page.json"
+  curl -sS -D "$headers" -H "Authorization: Token $GG_TOKEN" "$url" -o "$body"
+  jq -c '.[]' "$body" >> "$GG_DIR/triggered.ndjson"
+  url=$(python3 - "$headers" <<'PY'
+import re
+import sys
 
-Note pagination: if `length == 100`, also fetch subsequent pages via the `link` header.
+for line in open(sys.argv[1], encoding="utf-8", errors="replace"):
+    if line.lower().startswith("link:"):
+        for part in line.split(","):
+            if 'rel="next"' in part:
+                match = re.search(r"<([^>]+)>", part)
+                if match:
+                    print(match.group(1))
+                raise SystemExit
+PY
+)
+  page=$((page + 1))
+done
+jq -s '.' "$GG_DIR/triggered.ndjson" > "$GG_DIR/triggered.json"
+jq 'length' "$GG_DIR/triggered.json"
+```
 
 Fetch detailed records in parallel (rate limit is 500/min, so a few hundred is fine):
 
 ```bash
-jq -r '.[].id' /tmp/gg/triggered.json > /tmp/gg/ids.txt
-while read id; do
+jq -r '.[].id' "$GG_DIR/triggered.json" > "$GG_DIR/ids.txt"
+while IFS= read -r id; do
   curl -s -H "Authorization: Token $GG_TOKEN" \
     "https://api.gitguardian.com/v1/incidents/secrets/$id" \
-    > "/tmp/gg/incident-$id.json" &
-done < /tmp/gg/ids.txt
+    > "$GG_DIR/incident-$id.json" &
+done < "$GG_DIR/ids.txt"
 wait
 ```
 
@@ -45,7 +68,7 @@ wait
 Present to the user:
 
 ```bash
-jq -r '[.id, .detector.display_name, .severity, .validity, (.occurrences_count|tostring), (.occurrences[0].source.full_name // "?"), (.occurrences[0].source.visibility // "?"), (.occurrences[0].filepath // "?"), (.date[0:10])] | @tsv' /tmp/gg/incident-*.json \
+jq -r '[.id, .detector.display_name, .severity, .validity, (.occurrences_count|tostring), (.occurrences[0].source.full_name // "?"), (.occurrences[0].source.visibility // "?"), (.occurrences[0].filepath // "?"), (.date[0:10])] | @tsv' "$GG_DIR"/incident-*.json \
   | sort -k2,2 -k1,1n | column -t -s $'\t'
 ```
 
@@ -89,18 +112,21 @@ Patterns the GG detectors misfire on (confirmed by pulling the flagged byte rang
 
 ### 3e. Extract the flagged substring to confirm the above
 
-GG exposes `matches[0].indice_start`/`indice_end` as byte offsets within the file (not the line). Resolve against the local clone at the commit:
+GG exposes `matches[0].indice_start`/`indice_end` as byte offsets within the file (not the line). Resolve against the local clone at the commit, but write the match to a protected file rather than printing it:
 
 ```bash
 cd <repo>
-start=$(jq -r '.occurrences[0].matches[0].indice_start' /tmp/gg/incident-$id.json)
-end=$(jq   -r '.occurrences[0].matches[0].indice_end'   /tmp/gg/incident-$id.json)
-sha=$(jq   -r '.occurrences[0].sha'                     /tmp/gg/incident-$id.json)
-file=$(jq  -r '.occurrences[0].filepath'                /tmp/gg/incident-$id.json)
-git show "$sha:$file" 2>/dev/null | dd bs=1 skip=$start count=$((end - start)) 2>/dev/null
+start=$(jq -r '.occurrences[0].matches[0].indice_start' "$GG_DIR/incident-$id.json")
+end=$(jq   -r '.occurrences[0].matches[0].indice_end'   "$GG_DIR/incident-$id.json")
+sha=$(jq   -r '.occurrences[0].sha'                     "$GG_DIR/incident-$id.json")
+file=$(jq  -r '.occurrences[0].filepath'                "$GG_DIR/incident-$id.json")
+match_file="$GG_DIR/match-$id.bin"
+git show "$sha:$file" 2>/dev/null | dd bs=1 skip=$start count=$((end - start)) of="$match_file" 2>/dev/null
+chmod 600 "$match_file"
+wc -c "$match_file"
 ```
 
-If the commit isn't present locally (archived repos, detached history), use the HEAD content at the same byte range, or fetch from the repo's GitHub URL (the incident JSON has `.occurrences[0].url`).
+If the commit isn't present locally (archived repos, detached history), use the HEAD content at the same byte range, or fetch from the repo's GitHub URL (the incident JSON has `.occurrences[0].url`). Inspect `match_file` only as needed to classify the incident; never paste or print the matched value. Summaries may report the detector, path, length, character class, and disposition, not the secret itself.
 
 ### 3f. Real, still-valid secrets → rotate (Step 4)
 
@@ -138,13 +164,17 @@ Run all five searches below for every leaked value. None alone is sufficient.
 
 **Search 1 — `.zshenv-secrets`** (plaintext at edit time, git-crypt encrypted at rest):
 ```bash
-grep -F -- "$LEAKED" "$HOME/My Drive/dotfiles/shell/.zshenv-secrets"
+if grep -F -q -- "$LEAKED" "$HOME/My Drive/dotfiles/shell/.zshenv-secrets"; then
+  printf '%s\n' "  file: shell/.zshenv-secrets"
+fi
 ```
 
 **Search 2 — every line of every `pass` entry** (NOT just the first line — the leaked value may be on a `<subkey>:` line that `auth-source-pass-get` selects by name):
 ```bash
 cd ~/.password-store
-LEAK_FILE=$(mktemp); printf '%s' "$LEAKED" > "$LEAK_FILE"
+LEAK_FILE=$(mktemp "${TMPDIR:-/tmp}/gg-leak.XXXXXX")
+chmod 600 "$LEAK_FILE"
+printf '%s' "$LEAKED" > "$LEAK_FILE"
 find . -name "*.gpg" -not -path "./.git/*" -print0 | xargs -0 -P 8 -I{} bash -c '
   rel="${1#./}"; rel="${rel%.gpg}"
   pass "$rel" 2>/dev/null | grep -F -q -f "'"$LEAK_FILE"'" && echo "  pass: $rel"
@@ -180,12 +210,13 @@ Files in `repos/archive/`, `notes/claude-logs/`, and `notes/gptel/` document the
 **Search 5 — indirection layers** that don't show up as direct hits:
 ```bash
 # 1Password op:// URIs in .zshenv-secrets (their vault items may need rotating too)
-grep -E '^export [A-Z_]+="op://' "$HOME/My Drive/dotfiles/shell/.zshenv-secrets"
+grep -E '^export [A-Z_]+="op://' "$HOME/My Drive/dotfiles/shell/.zshenv-secrets" \
+  | sed -E 's/^export ([A-Z_]+)=.*/  op-uri env: \1/'
 # macOS keychain (relevant only for gh — see GitHub flow Step 4.2)
 gh auth status 2>&1 | head -20
 ```
 
-**After rotation: re-run Searches 1, 2, and 4 with the OLD value.** Any remaining hit is a consumer you missed — find it and update it before closing the GG incident.
+**After rotation: re-run Searches 1, 2, and 4 with the OLD value.** Any remaining hit is a consumer you missed — find it and update it before closing the GG incident. These searches should print only file names, pass entry names, or status labels, never matching secret lines.
 
 ### 4.2 Per-provider rotation procedures
 
@@ -207,22 +238,33 @@ Route each rotation to the Chrome profile that owns the credential. See `dotfile
    document.body.appendChild(a); a.click();
    setTimeout(()=>a.remove(), 1000);
    ```
-   Then `cat ~/Downloads/gg-new-pat.txt` to read it. Don't try to read via clipboard — macOS blocks clipboard writes from backgrounded Chrome tabs.
+   Then lock down the downloaded file and use it as `NEW_TOKEN_FILE`; do not `cat` or print it. Don't try to read via clipboard — macOS blocks clipboard writes from backgrounded Chrome tabs.
+   ```bash
+   NEW_TOKEN_FILE="$HOME/Downloads/gg-new-pat.txt"
+   chmod 600 "$NEW_TOKEN_FILE"
+   test -s "$NEW_TOKEN_FILE"
+   ```
 5. Verify new token works, verify old is 401.
 6. Update `.zshenv-secrets` (Python edit — never put the token literal in the shell command):
    ```bash
    export FILE="$HOME/My Drive/dotfiles/shell/.zshenv-secrets"
-   export OLD="<old_token>"  # via pass/env, never literal in this doc
+   export OLD_TOKEN_FILE="$match_file"
+   export NEW_TOKEN_FILE="$HOME/Downloads/gg-new-pat.txt"
    python3 <<'PY'
    import os
-   new = open(os.path.expanduser('~/Downloads/gg-new-pat.txt')).read().strip()
+   old = open(os.environ['OLD_TOKEN_FILE']).read().strip()
+   new = open(os.path.expanduser(os.environ['NEW_TOKEN_FILE'])).read().strip()
    p = os.environ['FILE']; c = open(p).read()
-   c = c.replace(os.environ['OLD'], new)
+   if old not in c:
+       raise SystemExit("old token not found in .zshenv-secrets")
+   c = c.replace(old, new)
    open(p, 'w').write(c)
    PY
    ```
 7. Update any matching `pass` entries (iterate; skip entries holding different PATs):
    ```bash
+   OLD=$(<"$OLD_TOKEN_FILE")
+   NEW=$(<"$NEW_TOKEN_FILE")
    for entry in auth-sources/api.github.com/benthamite^{code-review,forge,ghub,github-review,magit}; do
      cur=$(pass "$entry"); [ "$(echo "$cur" | head -1)" = "$OLD" ] || continue
      printf '%s\n' "${cur//$OLD/$NEW}" | pass insert -m -f "$entry"
@@ -232,11 +274,12 @@ Route each rotation to the Chrome profile that owns the credential. See `dotfile
    
    `gh auth login --with-token` refuses to write to the keyring while `GH_TOKEN` is set — it sees the env var and no-ops. Use `env -u` to unset it for the single command:
    ```bash
-   env -u GH_TOKEN -u GITHUB_TOKEN bash -c "echo '$NEW_TOKEN' | gh auth login --with-token"
+   env -u GH_TOKEN -u GITHUB_TOKEN gh auth login --with-token < "$NEW_TOKEN_FILE"
    ```
    After running, `gh auth status` should show *both* sources ✓ (env-var and keyring). Verify the keyring path works without the env var via:
    ```bash
-   env -u GH_TOKEN -u GITHUB_TOKEN gh auth git-credential get <<< $'protocol=https\nhost=github.com\n\n'
+   env -u GH_TOKEN -u GITHUB_TOKEN gh auth git-credential get <<< $'protocol=https\nhost=github.com\n\n' \
+     | awk -F= '/^password=/{found=1} END{exit found ? 0 : 1}'
    ```
    Also make sure `gh auth setup-git` has been run once (adds `credential.https://github.com.helper=!gh auth git-credential` to `~/.gitconfig`); without it, git won't even ask `gh` for the token.
 9. `shred -u -n 3 ~/Downloads/gg-new-pat.txt` (or `trash` it).
@@ -289,9 +332,9 @@ Ask the user to:
 1. Open Telegram Desktop, search `@BotFather`.
 2. Send `/revoke`.
 3. Pick the bot (menu shows bot username).
-4. BotFather returns the new token. User pastes it back to you.
+4. BotFather returns the new token. Have the user paste it into a `pass insert -m ...` prompt or a `chmod 600` temp file you created; do not ask them to paste it into chat or any logged transcript.
 
-You update `pass` entries (e.g., `tlon/core/Telegram Bot/<botname>`) and any live env consumer.
+You update `pass` entries (e.g., `tlon/core/Telegram Bot/<botname>`) and any live env consumer from the protected source, then delete any temp file.
 
 #### PostgreSQL / generic service credentials
 
@@ -322,14 +365,30 @@ Valid `ignore_reason` values: `false_positive`, `low_risk`, `test_credential`. N
 If a currently-live key is captured in a committed file (claude-logs, gptel transcripts, .env leaked to wrong repo), delete that file from the working tree during the rotation window so GG stops re-flagging:
 
 ```bash
-cd <repo>; trash path/to/leaky-file
+cd <repo>
+trash path/to/leaky-file
 git add -u path/to/leaky-file
 git commit -m "<path>: scrub file that leaks live API keys"
 ```
 
 Do NOT rewrite history. The dead value in history is inert once rotated; the rotation + GG resolve is what actually matters. Rewriting history requires force-push and re-seeding every clone, which is invasive and rarely worth it for private repos.
 
-## Step 7: Surface blocked items for user follow-up
+## Step 7: Clean up sensitive temporary files
+
+Before reporting completion, remove temporary files that contain matched secrets, replacement keys, or provider responses. Use `shred -u` for individual secret-bearing files when available; otherwise move them to Trash and report the residual risk.
+
+```bash
+if command -v shred >/dev/null; then
+  find "$GG_DIR" -type f -name 'match-*.bin' -exec shred -u -n 3 {} +
+  [ -n "${NEW_TOKEN_FILE:-}" ] && [ -f "$NEW_TOKEN_FILE" ] && shred -u -n 3 "$NEW_TOKEN_FILE"
+else
+  printf '%s\n' "shred unavailable; moving secret temp files to Trash instead"
+  [ -n "${NEW_TOKEN_FILE:-}" ] && [ -f "$NEW_TOKEN_FILE" ] && trash "$NEW_TOKEN_FILE"
+fi
+trash "$GG_DIR"
+```
+
+## Step 8: Surface blocked items for user follow-up
 
 At the end, report:
 
@@ -347,6 +406,6 @@ At the end, report:
 - **Pagination**: `/v1/incidents/secrets` returns up to 100; follow the `link: <...>; rel="next"` header if present.
 - **Repo-scanning scope**: GG scans both public and private repos. Private-repo incidents are still worth resolving; they indicate the key is present, not that it's exposed to the world.
 
-## Use TaskCreate
+## Use Task Tracking
 
-For any non-trivial batch (>5 incidents), create one Task per bucket at the start (one for valid-rotations, one for invalid-closures, one for false-positive batch, etc.) and mark them in_progress / completed as you go. Individual incidents within a bucket don't need their own Task unless they need user follow-up.
+For any non-trivial batch (>5 incidents), create one task/plan item per bucket at the start (one for valid-rotations, one for invalid-closures, one for false-positive batch, etc.) and mark them in_progress / completed as you go. Use the current agent's task-tracking primitive (`TaskCreate` in Claude Code, `update_plan` in Codex). Individual incidents within a bucket don't need their own task unless they need user follow-up.

@@ -340,7 +340,18 @@ Audits a codebase from the AI agent's perspective: inventories existing verifica
 :ID:       CC534E25-3A8B-495E-A6BD-7FB05B4721F3
 :END:
 
-Forces a structured root-cause analysis before applying any non-trivial bug fix, to prevent the failure mode where agents patch the immediate symptom while the underlying invariant stays broken (so the same shape recurs in different places until the architectural drift is finally caught). Workflow: restate the symptom, consult =architectural-issues.md= for similar prior entries, draft the local fix, articulate the invariant in one sentence, search for other manifestations, then pick a disposition (=fix locally= / =fix locally + flag= / =stop and refactor=). The "+ flag" and "stop and refactor" dispositions produce a registry entry to append to =architectural-issues.md= so pattern recognition compounds across sessions.
+Forces an invariant-focused root-cause check before applying any non-trivial bug
+fix, after enough debugging has identified a tempting local patch. It prevents
+the failure mode where agents patch the immediate symptom while the underlying
+invariant stays broken, and it explicitly avoids trivial typo/formatting fixes
+and greenfield feature work. Workflow: restate the symptom, consult
+=architectural-issues.md= at the repository root for similar prior entries,
+draft the local fix, articulate the invariant in one sentence, search for other
+manifestations with code evidence, then pick a disposition (=fix locally= /
+=fix locally + flag= / =stop and refactor=). The "+ flag" and "stop and
+refactor" dispositions produce a registry entry for review, or add it directly
+only when registry updates were explicitly authorized; the workflow then reports
+the reproduction, test, lint, build, or re-read verification that was performed.
 
 **** systematic-debugging
 :PROPERTIES:
@@ -368,7 +379,7 @@ Spec-based build workflow inspired by [[https://x.com/trq212/status/200531527502
 :ID:       057FB141-D07F-4BD4-B880-912B67275263
 :END:
 
-Creates comprehensive test suites. Performs reconnaissance on the tech stack, then generates tests prioritized by criticality: data integrity and input boundaries first, business logic and integrations second, regressions and configuration third.
+Creates or expands high-value test suites for a codebase or module. It triggers on requests to add or write tests, improve coverage, bootstrap testing, or create regression tests, while routing ordinary debugging, code review, lint cleanup, and one-off validation elsewhere. It inventories project instructions, existing test runners, fixtures, dependencies, and critical paths before writing behavior-focused tests by risk, then reports commands run, coverage added, gaps left, bugs uncovered, and unresolved failures.
 
 **** lint-elisp
 :PROPERTIES:
@@ -399,7 +410,14 @@ reports not-run checks with concrete reasons and does not change remote state.
 :ID:       32BB20B4-C967-4FB4-9EF6-674F87BF9023
 :END:
 
-Creates or updates documentation for any Elisp package, following the Denote manual style: org-mode with PROPERTIES drawers, Texinfo index entries, and cross-references.
+Creates or updates Org manuals for Elisp packages, following the Denote manual
+style: PROPERTIES drawers, Texinfo index entries, cross-references, and
+workflow-oriented prose. It defines the standalone =README.org= and dotfiles
+=emacs/extras/doc/*.org= paths explicitly, distinguishes nearby
+=generate-readme=, =doc-extras=, and =lint-elisp= requests, inventories public
+options/faces/commands/functions across all source files, avoids broad
+=.dir-locals.el= changes in the dotfiles monorepo, and requires source/manual
+verification before reporting completion.
 
 **** doc-extras
 :PROPERTIES:

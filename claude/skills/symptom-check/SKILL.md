@@ -1,10 +1,12 @@
 ---
 name: symptom-check
-description: Force a root-cause analysis before applying a non-trivial bug fix. Use when something looks broken and a local fix is being considered — output forces articulation of the invariant being restored, surfaces other places the same issue may live, and produces a registry entry for project-local pattern recognition. Use proactively whenever you'd otherwise jump to a local patch.
+description: Force an invariant-focused root-cause check before applying a non-trivial bug fix. Use when a bug, regression, test failure, or suspicious behavior has a tempting local patch and you need to decide whether to fix locally, fix plus flag in architectural-issues.md, or stop for a refactor. Use after initial debugging when you would otherwise jump to a patch; do not use for trivial typo/formatting fixes or greenfield features.
 user-invocable: true
 ---
 
 The user (or you, on your own initiative) has flagged an apparent bug, and a fix is being considered. Your job is to **stop and force a structured root-cause analysis before any edit happens**, then recommend whether to fix locally, fix + flag for follow-up, or refactor.
+
+This skill starts when a plausible local fix is already in view. If the root cause is still unknown, run the project's normal debugging workflow first, then return here before editing.
 
 The default failure mode this skill exists to prevent: agents fix the immediate symptom, the abstraction stays broken, the same symptom recurs in different shapes, and the architectural drift is only caught when several seemingly-unrelated symptoms accumulate. By the time the connection is visible, multiple local patches have already shipped.
 
@@ -14,6 +16,13 @@ The default failure mode this skill exists to prevent: agents fix the immediate 
 - Optionally a proposed local fix.
 - The repository working directory (you should read code, not guess).
 
+## When not to use
+
+- Do not use for trivial, mechanically obvious changes such as typo fixes, formatting-only edits, or comment cleanup.
+- Do not use for greenfield feature work where no broken behavior or proposed bug fix exists.
+- Use `systematic-debugging` first when the root cause is still unknown; use this skill once a local patch is tempting and you need to decide whether it is an isolated repair or a broader architectural issue.
+- Use `code-audit` or `design-audit` for broad reviews that are not anchored to a concrete symptom.
+
 ## Workflow
 
 ### Step 1 — Read the symptom carefully
@@ -22,7 +31,7 @@ Restate the symptom in one or two sentences in your own words. If the input is v
 
 ### Step 2 — Read the existing registry
 
-Read `architectural-issues.md` at the project root (if present). Skim Open and Closed entries. **If the new symptom looks structurally similar to an existing entry, surface the connection explicitly** — state which entry, why you think they're related, and whether the new symptom is a fresh manifestation of the existing root cause or a separate issue.
+Resolve the project root with `git rev-parse --show-toplevel` when available, then read `architectural-issues.md` there if present. Skim Open and Closed entries. **If the new symptom looks structurally similar to an existing entry, surface the connection explicitly** — state which entry, why you think they're related, and whether the new symptom is a fresh manifestation of the existing root cause or a separate issue.
 
 If no registry exists yet, that's fine. The first invocation seeds it.
 
@@ -44,7 +53,7 @@ If the invariant statement is hard to write — if it keeps collapsing back to s
 
 ### Step 5 — Find other manifestations
 
-Given the invariant, search for other places it might be violated. Be concrete: grep for parallel patterns, list the call sites, name the data paths. Use the Bash tool, the Grep tool, or a subagent. Do not speculate from filenames.
+Given the invariant, search for other places it might be violated. Be concrete: use `rg`, `git grep`, code navigation, or subagents to find parallel patterns; list the call sites and name the data paths. Do not speculate from filenames.
 
 For each candidate manifestation, state whether you confirmed it (read the code and verified) or flagged it (suspicious-looking and worth investigating). Do not pad the list with maybes.
 
@@ -53,7 +62,7 @@ For each candidate manifestation, state whether you confirmed it (read the code 
 Pick exactly one:
 
 - **Fix locally.** The local fix restores a clear invariant, no other manifestations exist, and the abstraction is sound. Apply the fix; no registry entry needed.
-- **Fix locally + flag.** The local fix is correct for this case, but the same shape may exist elsewhere or warrant later review. Apply the fix AND add a registry entry so the pattern is visible.
+- **Fix locally + flag.** The local fix is correct for this case, but the same shape may exist elsewhere or warrant later review. Apply the fix when edits are authorized, then produce a registry entry for review or add it if registry updates were explicitly authorized.
 - **Stop and refactor.** The local fix would patch one case while leaving the architectural drift in place. Multiple manifestations exist (or one is severe enough that ad-hoc patching is the wrong response). Do NOT apply the local fix yet — design the refactor first, log it in the registry, get user buy-in, then refactor.
 
 The bias should be toward **flag** or **refactor** when in doubt. A registry entry costs nothing to add and pays off whenever the next similar symptom surfaces.
@@ -73,11 +82,17 @@ If the disposition is "fix locally + flag" or "stop and refactor", produce a mar
 - **Disposition:** what was decided. If refactor: link to decision record (or "TBD"). If flag: a sentence on what would trigger reopening.
 ```
 
-Offer the entry to the user before writing it. The user may want to edit the wording.
+Offer the entry to the user before writing it unless the original task explicitly authorized registry updates. The user may want to edit the wording.
+
+## Verification
+
+Before editing, verify that Steps 2, 4, and 5 are complete: registry checked, invariant stated in one sentence, and analogous manifestations searched from code evidence rather than filename guesses.
+
+After applying an authorized fix, run the smallest relevant reproduction, test, lint, or build check that proves the symptom is resolved and the invariant still holds. If no executable check exists, re-read the changed code and state exactly what was and was not verified.
 
 ## Output format
 
-Present Steps 1–6 as labelled sections in the chat. The registry entry (Step 7) goes in a fenced markdown block at the end.
+Present Steps 1–6 as labelled sections in the chat. If Step 7 is needed, put the registry entry in a fenced markdown block at the end.
 
 End with one of three sentences:
 
@@ -94,3 +109,4 @@ These have all happened. Don't:
 - **Recommend "fix locally" as a default** when the invariant is shaky. Default to "flag."
 - **Auto-write the registry entry without offering it.** The user reviews; the user approves.
 - **Forget the existing registry.** Step 2 is not optional. Pattern recognition over time is the whole point.
+- **Use this as a substitute for debugging.** This skill classifies a tempting fix; it does not replace reproducing the issue or identifying the root cause.

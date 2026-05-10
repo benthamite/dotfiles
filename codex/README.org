@@ -105,14 +105,14 @@ The former dotfiles-project-local Claude skills =find-skills=,
 =claude/skills/= and =codex/skills/= trees so they are available consistently
 from both tools in every project. The =find-skills= helper requires current
 catalog/source verification before recommending a skill and explicit approval
-before installing an exact package. The =systematic-debugging=
-skill documents near-miss cases that should not trigger, its division of
-responsibility with =symptom-check=, and the evidence, root cause, fix,
-verification, and residual risk fields expected in the final debugging report. The =skill-creator= workflow distinguishes
+before installing an exact package. The =skill-creator= workflow distinguishes
 skill authoring/eval loops from one-pass audits, keeps paired Claude/Codex
 copies synchronized, and documents the eval workspace layout expected by its
 bundled benchmark aggregator (=with_skill/run-1/=, =without_skill/run-1/=, or
-=old_skill/run-1/= with =expectations= fields).
+=old_skill/run-1/= with =expectations= fields). The =systematic-debugging=
+skill documents near-miss cases that should not trigger, its division of
+responsibility with =symptom-check=, and the evidence, root cause, fix,
+verification, and residual risk fields expected in the final debugging report.
 
 The =doc-extras= skill is a paired Claude/Codex documentation workflow for
 auditing, creating, and refreshing manuals under =emacs/extras/doc/= from the
@@ -345,15 +345,6 @@ files, dry-runs whole-project renames before applying them, and reports the
 exact session file, rewrite counts, index/history updates, and shell snapshot
 matches.
 
-The =diagnose= skill is a paired Claude/Codex diagnostic mode modifier for
-investigating errors, confusion, and process/tooling friction before patching.
-It triggers on =/diagnose=, why-did-this-happen questions, root-cause analysis
-requests, and requests to investigate failures without immediately changing
-code. It requires the agent to verify which existing hooks, skills, configs, or
-scripts should have caught the issue, classify the diagnosis, distinguish
-structural gaps from behavioral lapses, and report before implementing any
-remedy.
-
 The =code-audit= skill is a paired Claude/Codex development skill for finding
 actual correctness, security, error-handling, and data-integrity defects in
 application code. It requires agents to resolve scope, identify project-specific
@@ -361,6 +352,15 @@ verification, read real code paths, and report concrete failure modes. With
 =--accept=, it fixes only confirmed in-scope findings that can be verified and
 committed cleanly; broader readability, architecture, or security-posture
 reviews route to the neighboring audit skills.
+
+The =test-suite= skill is a paired Claude/Codex development workflow for adding
+or expanding high-value tests. It triggers on requests to write tests, improve
+coverage, bootstrap testing, or create regression tests, while routing ordinary
+debugging, code review, lint cleanup, and one-off validation elsewhere. It
+reads project instructions, existing runners, fixtures, dependencies, and
+critical paths before writing behavior-focused tests by risk, then reports
+commands run, coverage added, gaps left, bugs uncovered, and unresolved
+failures.
 
 The =pr-audit= skill is a paired Claude/Codex PR readiness workflow. It
 discovers the branch and PR base, runs project build/test checks, reviews each
@@ -384,6 +384,15 @@ creation, cleans only untracked =.elc= artifacts selected with =git ls-files=
 and moved via Trash, classifies commits since the latest semver tag, writes the
 lockfile release commit, waits for profile testing, then tags, pushes, creates,
 and verifies the GitHub release.
+
+The =diagnose= skill is a paired Claude/Codex diagnostic mode modifier for
+investigating errors, confusion, and process/tooling friction before patching.
+It triggers on =/diagnose=, why-did-this-happen questions, root-cause analysis
+requests, and requests to investigate failures without immediately changing
+code. It requires the agent to verify which existing hooks, skills, configs, or
+scripts should have caught the issue, classify the diagnosis, distinguish
+structural gaps from behavioral lapses, and report before implementing any
+remedy.
 
 The =emacs-freeze= skill is a paired Claude/Codex operations skill for frozen,
 hung, beachballing, or otherwise unresponsive Emacs sessions. It collects
@@ -437,6 +446,14 @@ creating its documentation note, and adding the GitHub profile README card when
 that externally visible update has been explicitly authorized. It saves org IDs
 after creating them, verifies the note/list/profile changes before committing,
 and cleans temporary clones with =trash=.
+
+The =doc-elisp= skill is a paired Claude/Codex workflow for creating or
+updating Org manuals for Elisp packages in the Denote manual style. It resolves
+the correct manual path for standalone repositories versus dotfiles extras,
+distinguishes nearby =generate-readme=, =doc-extras=, and =lint-elisp= requests,
+inventories public options, faces, commands, and functions across all source
+files, avoids broad =.dir-locals.el= changes in the dotfiles monorepo, and
+requires source/manual verification before reporting completion.
 
 The =generate-readme= skill is a paired Claude/Codex workflow for generating or
 updating a GitHub-facing =README.md= for an Emacs Lisp package from its

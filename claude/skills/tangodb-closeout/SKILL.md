@@ -1,6 +1,6 @@
 ---
 name: tangodb-closeout
-description: End-of-session closeout workflow for the tangodb repository. Use when the user says to use $tangodb-closeout, close out, wrap up, update the progress file, prepare a handoff, or make the next "continue" session resume reliably. Updates docs/data-cleanup-progress.md with completed work, current state, exact next step, verification, blockers, and stop conditions.
+description: End-of-session closeout workflow for the tangodb repository. Use when the user explicitly invokes $tangodb-closeout, asks to close out, wrap up, finish a tangodb session, update the tangodb progress file, prepare the tangodb handoff, or make the next "continue" session resume reliably. Do not use for starting or resuming tangodb work; use tangodb-continue instead. Updates docs/data-cleanup-progress.md with completed work, current state, exact next step, verification, blockers, and stop conditions.
 ---
 
 # Tangodb closeout
@@ -13,6 +13,16 @@ session can resume from the user saying only `continue`.
 This skill does not replace judgment. It forces the handoff to be written to
 the repository instead of relying on chat history.
 
+## When not to use
+
+- Do not use this skill to start or resume tangodb work; use
+  `$tangodb-continue`.
+- Do not use this skill for generic non-tangodb handoffs; use the general
+  handoff workflow or the target project's closeout instructions.
+- Do not infer a new cleanup slice during closeout. Record the current state
+  and the next concrete step implied by the completed session and progress
+  files.
+
 ## Workflow
 
 1. Confirm the working directory is the tangodb repo. If not, locate it or ask
@@ -22,8 +32,13 @@ the repository instead of relying on chat history.
 3. Inspect the current work with `git status --short` and focused diffs for
    files changed during the session.
 4. Update or create `docs/data-cleanup-progress.md`.
-5. Run `git diff --check`.
-6. Final response must say:
+5. Re-read `docs/data-cleanup-progress.md` and confirm all required sections
+   below are present and operational.
+6. Review `git diff -- docs/data-cleanup-progress.md` to ensure the recorded
+   next step, verification, blockers, and stop conditions match the current
+   repository state.
+7. Run `git diff --check`.
+8. Final response must say:
    - `docs/data-cleanup-progress.md` was updated;
    - what the next `continue` session should do;
    - what verification ran or why it could not run.

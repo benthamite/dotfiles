@@ -5390,6 +5390,23 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 Using my fork while awaiting merge of [[https://github.com/kidd/org-gcal.el/pull/276][kidd/org-gcal.el#276]].
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package request
+  :ensure (:host github
+                 :repo "tkf/emacs-request"
+                 :files ("request.el")
+                 :depth nil
+                 :wait t)
+  :defer t)
+
+(use-package request-deferred
+  :ensure (:host github
+                 :repo "tkf/emacs-request"
+                 :files ("request-deferred.el")
+                 :depth nil
+                 :wait t)
+  :after request
+  :defer t)
+
 (use-package org-gcal
   :ensure (:host github
                  :repo "benthamite/org-gcal.el"

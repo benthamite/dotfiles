@@ -80,6 +80,12 @@ comparison. Tool-specific skills may
 intentionally diverge when Claude Code and Codex store state differently; these
 cases are recorded in =ai-config-sync.json=.
 
+For paired skills that keep small state files in their skill directories, update
+both tool copies to the same contents unless =ai-config-sync.json= records an
+explicit tool-specific divergence. For example, =ai-journal= keeps its
+=last-run.txt= cutoff synchronized under both =claude/skills/ai-journal/= and
+=codex/skills/ai-journal/=.
+
 Codex discovers global skills from =~/.codex/skills/*/SKILL.md=.  The live
 skills directory is therefore a symlink to the tracked Codex tree.  Run:
 
@@ -169,6 +175,12 @@ maintainability, with special attention to whether the skill captures a
 repeatable workflow, triggers on realistic user phrasing, gives ordered
 operational guidance, defines output and verification expectations, and avoids
 surprising side effects.
+
+The =build= skill is a paired Claude/Codex workflow for turning a rough
+=spec.md= or explicit spec path into an implementation-ready plan. It interviews
+the user in depth, records goals, design, edge cases, implementation order, and
+verification in the spec, and only proceeds to implementation after explicit
+confirmation.
 
 The =update-log= skill is a paired Claude/Codex end-of-session bookkeeping
 workflow. The Codex copy treats =CLAUDE.md= as the session-log index unless the

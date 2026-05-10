@@ -273,6 +273,13 @@ drafting org-sourced posts for =stafforini.com/ai=. Its =find-sessions.py= and
 directories; the workflow checks for cutoff drift before scanning so either
 tool can run it without silently using stale state.
 
+The =finances= skill is a paired Claude/Codex personal workflow for importing
+Wise and Mercado Pago statement CSVs into the user's ledger-cli journal. It
+categorizes transactions with the paired =categorization-guide.md= files under
+=claude/skills/finances/= and =codex/skills/finances/=, stages entries for
+review, validates with =ledger -f journal.ledger bal= before proceeding,
+reconciles matched statement rows, and moves discarded staging files to Trash.
+
 The =update-log= skill is a paired Claude/Codex end-of-session bookkeeping
 workflow. The Codex copy treats =CLAUDE.md= as the session-log index unless the
 project explicitly says otherwise, asks for first-run setup without relying on

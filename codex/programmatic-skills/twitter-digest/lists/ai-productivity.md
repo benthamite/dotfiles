@@ -58,3 +58,19 @@ description: Practical AI productivity tips for knowledge workers — concrete w
 - @bstnxbt
 - @gabrielchua
 - @clairevo
+
+- @addyosmani
+- @paulgauthier
+- @AnthropicAI
+- @builderio
+- @cursor_ai
+- @dolthub
+- @exaailabs
+- @geoffreylitt
+- @github
+- @HamelHusain
+- @mgechev
+- @ona_hq
+- @OpenAI
+- @thorstenball
+- @Sourcegraph

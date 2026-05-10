@@ -405,7 +405,12 @@ package at a time.
 :ID:       A3F5B8D1-7C42-4E9A-B6A1-2D8E4F9C0A73
 :END:
 
-Generates or updates a =README.md= for an Emacs Lisp package from its org manual. Verifies that the repo contains both a valid =.el= package and a =README.org= manual; if either is missing, aborts with guidance. Produces a structured markdown README (title, overview, screenshots, installation for package-vc/Elpaca/straight.el, quick start, documentation link) and optionally moves any roadmap content from the manual into the README.
+Generates or updates a GitHub-facing =README.md= for an Emacs Lisp package from
+its =README.org= manual. It verifies the package/manual prerequisites, reads the
+manual, main Elisp file, and existing Markdown README, preserves accurate
+README-specific material, handles package-vc/use-package =:vc= assumptions
+explicitly, checks links/placeholders and roadmap moves, then commits verified
+README/manual changes when the user requested file edits.
 
 **** org-note
 :PROPERTIES:

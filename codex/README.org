@@ -248,6 +248,14 @@ that externally visible update has been explicitly authorized. It saves org IDs
 after creating them, verifies the note/list/profile changes before committing,
 and cleans temporary clones with =trash=.
 
+The =generate-readme= skill is a paired Claude/Codex workflow for generating or
+updating a GitHub-facing =README.md= for an Emacs Lisp package from its
+=README.org= manual. It verifies the package/manual prerequisites, reads the
+manual, main Elisp file, and existing Markdown README, preserves accurate
+README-specific material, handles package-vc/use-package =:vc= assumptions
+explicitly, checks links/placeholders and roadmap moves, then commits verified
+README/manual changes when the user requested file edits.
+
 The =convert-citations= skill is a paired Claude/Codex workflow for replacing
 raw bibliographic references in org files with =[cite:@KEY]= citations from the
 user's citar bibliography. It validates file, directory, and glob targets,

@@ -1,11 +1,18 @@
 ---
 name: generate-readme
-description: Generate or update a README.md for an Emacs Lisp package from its org manual. Use when the user says "generate readme", "create readme", "update readme", "readme from manual", or wants a GitHub-facing README for an Elisp package.
+description: Generate or update a GitHub-facing README.md for an Emacs Lisp package from its README.org manual. Use when the user says "generate readme", "create readme", "update readme", "readme from manual", or wants a concise Markdown README for an Elisp package. Do not use for general project README writing or for packages without an org manual; use doc-elisp first when the manual is missing.
 ---
 
 # Generate README.md from org manual
 
 Create or update a `README.md` for an Emacs Lisp package. The README is a lightweight GitHub-facing introduction, distinct from the org manual which is the comprehensive reference.
+
+## Workflow
+
+1. Verify the package and manual prerequisites before writing `README.md`.
+2. Read the org manual, the main `.el` file, and any existing `README.md` thoroughly enough to distinguish canonical manual content from README-specific material.
+3. Generate or update `README.md` using the structure below, preserving accurate repo-specific content from an existing README.
+4. Verify the resulting README, any manual edits, and the git diff before reporting completion or committing.
 
 ## Prerequisites
 
@@ -25,13 +32,15 @@ If no org manual exists at all, abort with a message suggesting the user create 
 
 ## Existing README.md
 
-If a `README.md` already exists, ask the user whether they want to update it. If they decline, stop. If they confirm (or if no `README.md` exists), proceed.
+If a `README.md` already exists and the user explicitly asked to create, update, regenerate, or refresh it, proceed without asking for another confirmation. If the request is only exploratory or ambiguous, ask before replacing the existing README.
+
+Before editing an existing README, inspect it for README-specific material that may not belong in the manual: badges, screenshots, CI status, contribution links, license notes, project caveats, installation variants, or historical context. Preserve accurate material that is still useful, and drop stale or duplicate content only when the manual or source files make that safe.
 
 Since `README.org` is the manual, note that once `README.md` exists, GitHub will display `README.md` as the repo's readme instead of `README.org`. This is the desired behavior — the manual remains accessible via its link in the README.
 
 ## Generating the README
 
-Read the org manual and the main `.el` file thoroughly. Then produce a `README.md` with the following structure.
+Read the org manual, the main `.el` file, and the existing README if present. Then produce a `README.md` with the following structure.
 
 ### Structure
 
@@ -71,7 +80,7 @@ If no screenshots exist, omit this section entirely — do not add a placeholder
 
 Include installation instructions for the most common methods:
 
-- **package-vc** (built-in since Emacs 30):
+- **package-vc / use-package `:vc`** (built into Emacs 30):
 
   ```emacs-lisp
   (use-package PACKAGE
@@ -98,9 +107,11 @@ Infer `OWNER/PACKAGE` from the git remote:
 git remote get-url origin
 ```
 
+If the repository has no GitHub remote or the remote cannot be parsed confidently, adapt the snippets to the actual host or state the assumption instead of fabricating an owner or repository name.
+
 If the package has dependencies beyond what Emacs provides, list them after the install snippets under a "Dependencies" sub-heading.
 
-Also mention the minimum Emacs version from the `Package-Requires` header.
+Also mention the minimum Emacs version from the `Package-Requires` header. If the minimum is older than Emacs 30, present the `:vc` example as the Emacs 30+ built-in option rather than implying every supported Emacs version has it.
 
 #### 5. Quick start
 
@@ -147,3 +158,16 @@ Only include these if the repository already has a `CONTRIBUTING.md` or `LICENSE
 - Do not duplicate the full manual content — the README is an entry point, not a mirror.
 - Do not include badges unless the repo already has CI or other badge-worthy infrastructure.
 - Do not add a table of contents — GitHub renders one automatically for markdown files.
+
+## Verification and closeout
+
+Before finishing:
+
+- Re-read the generated `README.md` and any edited `README.org`.
+- Check that every local image, manual, license, and contributing link in the README points to an existing file.
+- Check that the README has no placeholder owner, package, screenshot, or command names.
+- If roadmap content was moved, verify that no Roadmap, Future plans, or Planned features section remains in `README.org`.
+- Run `git diff --check`.
+- Inspect `git status --short` and stage only the README/manual files changed for this task.
+
+If the user asked for file changes and the repo is under git, commit the verified README/manual update using the repository's commit conventions. Do not commit when the user asked only for a draft, review, or recommendation.

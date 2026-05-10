@@ -274,6 +274,19 @@ equivalence after tool-specific normalization.
 
 Skills are reusable prompt modules stored in =skills/<name>/SKILL.md=. The filename must be uppercase =SKILL.md=, since =file-expand-wildcards= is case-sensitive on the Google Drive FUSE mount. Some skills are user-invocable (triggered by typing =/<name>=), others provide context that Claude loads automatically when relevant.
 
+The tracked skill bodies live under =claude/skills/= and =codex/skills/=. The
+live home-directory skill roots (=~/.claude/skills= and =~/.codex/skills=) are
+managed symlink farms created by =bin/skill-prune install= or either
+=claude/bin/install-skills.sh= / =codex/bin/install-skills.sh=. This lets the
+global =skills-disabled.json= file disable a stale paired skill without moving
+or deleting its tracked source directory.
+
+Run =bin/skill-prune apply --days 60= to disable stale paired skills. The scan
+checks recent Claude and Codex transcripts and disables a skill only when both
+tools lack usage inside the threshold window; recent use in either tool keeps
+both live links. It also keeps recently modified skill files. Re-enable a skill
+with =bin/skill-prune enable NAME=.
+
 Epoch-only skills live in the Epoch workspace instead of this global dotfiles tree: =~/My Drive/Epoch/.claude/skills/= for Claude and =~/My Drive/Epoch/.codex/skills/= for Codex. Keep workflows there when their triggers and instructions only make sense inside the Epoch project context.
 
 *** Context skills

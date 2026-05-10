@@ -1,0 +1,381 @@
+#!/usr/bin/env python3
+"""Prune Claude/Codex skills that have not been used recently."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import sqlite3
+import sys
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+MANIFEST = ROOT / "ai-config-sync.json"
+DISABLED = ROOT / "skills-disabled.json"
+MANAGED_MARKER = ".managed-by-dotfiles-skill-prune"
+DEFAULT_DAYS = 60
+
+
+@dataclass
+class Skill:
+    name: str
+    claude: str | None
+    codex: str | None
+    status: str
+
+
+def iso_now() -> str:
+    return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+
+
+def parse_iso(value: str) -> datetime | None:
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def load_manifest() -> list[Skill]:
+    data = json.loads(MANIFEST.read_text())
+    return [
+        Skill(
+            name=item["name"],
+            claude=item.get("claude"),
+            codex=item.get("codex"),
+            status=item.get("status", ""),
+        )
+        for item in data.get("skills", [])
+    ]
+
+
+def load_disabled() -> dict:
+    if not DISABLED.exists():
+        return {"version": 1, "disabled": {}}
+    return json.loads(DISABLED.read_text())
+
+
+def save_disabled(data: dict) -> None:
+    DISABLED.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+
+
+def skill_mtime(skill: Skill) -> float:
+    mtimes: list[float] = []
+    for rel in (skill.claude, skill.codex):
+        if not rel:
+            continue
+        path = ROOT / rel
+        if path.exists():
+            mtimes.append(path.stat().st_mtime)
+    return max(mtimes) if mtimes else 0.0
+
+
+def iter_jsonl(paths: list[Path], needles: tuple[str, ...] = ()):
+    for path in paths:
+        try:
+            with path.open("r", encoding="utf-8", errors="replace") as handle:
+                for line in handle:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    if needles and not any(needle in line for needle in needles):
+                        continue
+                    if "<skills_instructions>" in line or "### Available skills" in line:
+                        continue
+                    try:
+                        yield path, json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+        except OSError:
+            continue
+
+
+def text_parts(value) -> list[str]:
+    parts: list[str] = []
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, list):
+        for item in value:
+            parts.extend(text_parts(item))
+    elif isinstance(value, dict):
+        for key in ("text", "content", "arguments", "cmd", "message"):
+            if key in value:
+                parts.extend(text_parts(value[key]))
+    return parts
+
+
+PATH_PATTERNS = {
+    "claude": re.compile(r"(?:^|[\s'\"(])(?:/[^'\"\s)]*)?claude/skills/([A-Za-z0-9_.-]+)/SKILL\.md"),
+    "codex": re.compile(r"(?:^|[\s'\"(])(?:/[^'\"\s)]*)?codex/skills/([A-Za-z0-9_.-]+)/SKILL\.md"),
+}
+ROOTED_SKILL_RE = re.compile(r"\br[0-9]+/([A-Za-z0-9_.-]+)/SKILL\.md\b")
+CLAUDE_SKILL_TOOL_RE = re.compile(r"\bSkill\(skill:\s*[\"']([A-Za-z0-9_.-]+)[\"']\)")
+BRACKET_SKILL_RE = re.compile(r"\[\$?([A-Za-z0-9_.-]+)\]\([^)]*/skills/\1/SKILL\.md\)")
+EXPLICIT_SKILL_RE = re.compile(r"(?<![\w-])\$([A-Za-z0-9_.-]+)(?![\w-])")
+
+
+def matching_skill_names(text: str, tool: str, skill_names: set[str]) -> set[str]:
+    if (
+        "SKILL.md" not in text
+        and "Skill(skill:" not in text
+    ):
+        return set()
+    matches: set[str] = set()
+    for regex in (PATH_PATTERNS[tool], ROOTED_SKILL_RE, CLAUDE_SKILL_TOOL_RE, BRACKET_SKILL_RE, EXPLICIT_SKILL_RE):
+        for match in regex.finditer(text):
+            name = match.group(1)
+            if name in skill_names:
+                matches.add(name)
+    return matches
+
+
+def note_match(last_used: dict[str, dict[str, float]], tool: str, name: str, timestamp: float) -> None:
+    current = last_used[tool].get(name)
+    if current is None or timestamp > current:
+        last_used[tool][name] = timestamp
+
+
+def scan_claude(skill_names: set[str], cutoff_ts: float, last_used: dict[str, dict[str, float]]) -> None:
+    root = Path.home() / ".claude" / "projects"
+    if not root.exists():
+        return
+    files = [path for path in root.rglob("*.jsonl") if path.stat().st_mtime >= cutoff_ts]
+    for path, record in iter_jsonl(files, ("SKILL.md", '"Skill"', "Skill(skill:")):
+        ts_text = record.get("timestamp")
+        timestamp = path.stat().st_mtime
+        if isinstance(ts_text, str):
+            parsed = parse_iso(ts_text)
+            if parsed:
+                timestamp = parsed.timestamp()
+        message = record.get("message") or {}
+        content = message.get("content")
+        if record.get("type") == "assistant":
+            for item in content if isinstance(content, list) else []:
+                if not isinstance(item, dict):
+                    continue
+                if item.get("type") == "tool_use" and item.get("name") == "Skill":
+                    skill = (item.get("input") or {}).get("skill")
+                    if skill in skill_names:
+                        note_match(last_used, "claude", skill, timestamp)
+        for text in text_parts(content):
+            if "<skills_instructions>" in text or "### Available skills" in text:
+                continue
+            for name in matching_skill_names(text, "claude", skill_names):
+                note_match(last_used, "claude", name, timestamp)
+
+
+def scan_codex_rollouts(skill_names: set[str], cutoff_ts: float, last_used: dict[str, dict[str, float]]) -> None:
+    roots = [Path.home() / ".codex" / "sessions", Path.home() / ".codex" / "archived_sessions"]
+    files: list[Path] = []
+    for root in roots:
+        if root.exists():
+            files.extend(path for path in root.rglob("*.jsonl") if path.stat().st_mtime >= cutoff_ts)
+    for path, record in iter_jsonl(files, ("SKILL.md", "Skill(skill:")):
+        timestamp = path.stat().st_mtime
+        parsed = parse_iso(str(record.get("timestamp", "")))
+        if parsed:
+            timestamp = parsed.timestamp()
+        payload = record.get("payload") or {}
+        role = payload.get("role")
+        if role in {"developer", "system"}:
+            continue
+        for text in text_parts(payload):
+            if "<skills_instructions>" in text or "### Available skills" in text:
+                continue
+            for name in matching_skill_names(text, "codex", skill_names):
+                note_match(last_used, "codex", name, timestamp)
+
+
+def scan_codex_sqlite(skill_names: set[str], cutoff_ts: float, last_used: dict[str, dict[str, float]]) -> None:
+    db = Path.home() / ".codex" / "logs_2.sqlite"
+    if not db.exists():
+        return
+    try:
+        conn = sqlite3.connect(db)
+        rows = conn.execute(
+            """select ts, feedback_log_body from logs
+               where ts >= ?
+                 and feedback_log_body is not null
+                 and (feedback_log_body like '%SKILL.md%'
+                      or feedback_log_body like '%Skill(skill:%')""",
+            (int(cutoff_ts),),
+        )
+        for timestamp, body in rows:
+            if "<skills_instructions>" in body or "### Available skills" in body:
+                continue
+            for name in matching_skill_names(body, "codex", skill_names):
+                note_match(last_used, "codex", name, float(timestamp))
+    except sqlite3.Error:
+        return
+    finally:
+        try:
+            conn.close()
+        except UnboundLocalError:
+            pass
+
+
+def scan_usage(skills: list[Skill], days: int) -> dict[str, dict[str, float]]:
+    cutoff_ts = datetime.now(timezone.utc).timestamp() - days * 86400
+    names = {skill.name for skill in skills}
+    last_used = {"claude": {}, "codex": {}}
+    scan_claude(names, cutoff_ts, last_used)
+    scan_codex_rollouts(names, cutoff_ts, last_used)
+    scan_codex_sqlite(names, cutoff_ts, last_used)
+    return last_used
+
+
+def fmt_ts(timestamp: float | None) -> str:
+    if timestamp is None:
+        return "not found"
+    return datetime.fromtimestamp(timestamp, timezone.utc).strftime("%Y-%m-%d")
+
+
+def stale_skills(skills: list[Skill], days: int, last_used: dict[str, dict[str, float]]) -> list[Skill]:
+    cutoff_ts = datetime.now(timezone.utc).timestamp() - days * 86400
+    stale: list[Skill] = []
+    for skill in skills:
+        if not skill.claude or not skill.codex:
+            continue
+        if skill_mtime(skill) >= cutoff_ts:
+            continue
+        claude_recent = last_used["claude"].get(skill.name, 0) >= cutoff_ts
+        codex_recent = last_used["codex"].get(skill.name, 0) >= cutoff_ts
+        if not claude_recent and not codex_recent:
+            stale.append(skill)
+    return stale
+
+
+def resolve_home(tool: str) -> Path:
+    if tool == "claude":
+        return Path(os.environ.get("CLAUDE_CONFIG_DIR", Path.home() / ".claude"))
+    return Path(os.environ.get("CODEX_HOME", Path.home() / ".codex"))
+
+
+def install_tool_skills(tool: str, disabled_names: set[str]) -> None:
+    source = ROOT / tool / "skills"
+    target = resolve_home(tool) / "skills"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if target.is_symlink():
+        target.unlink()
+    elif target.exists() and not (target / MANAGED_MARKER).exists():
+        raise SystemExit(f"Refusing to replace unmanaged skills directory: {target}")
+    target.mkdir(exist_ok=True)
+    (target / MANAGED_MARKER).write_text(f"Managed by {ROOT / 'bin/skill-prune'}\n")
+
+    desired = {MANAGED_MARKER}
+    for item in sorted(source.iterdir()):
+        if not item.is_dir():
+            continue
+        if item.name.startswith(".") and item.name != ".system":
+            continue
+        if item.name in disabled_names:
+            continue
+        desired.add(item.name)
+        link = target / item.name
+        if link.is_symlink() or link.exists():
+            if link.is_symlink() and link.resolve() == item.resolve():
+                continue
+            if link.is_dir() and not link.is_symlink():
+                raise SystemExit(f"Refusing to replace unmanaged skill entry: {link}")
+            link.unlink()
+        link.symlink_to(item)
+
+    for item in target.iterdir():
+        if item.name not in desired:
+            if item.is_symlink() or item.is_file():
+                item.unlink()
+            else:
+                raise SystemExit(f"Refusing to remove unmanaged skill entry: {item}")
+
+
+def install(disabled_data: dict) -> None:
+    disabled_names = set((disabled_data.get("disabled") or {}).keys())
+    install_tool_skills("claude", disabled_names)
+    install_tool_skills("codex", disabled_names)
+
+
+def audit(args: argparse.Namespace) -> int:
+    skills = load_manifest()
+    disabled = load_disabled()
+    last_used = scan_usage(skills, args.days)
+    stale = stale_skills(skills, args.days, last_used)
+    disabled_names = set((disabled.get("disabled") or {}).keys())
+    if not stale:
+        print(f"No paired skills are stale under the {args.days}-day threshold.")
+    else:
+        print(f"Paired skills stale under the {args.days}-day threshold:")
+        for skill in stale:
+            marker = "disabled" if skill.name in disabled_names else "candidate"
+            print(
+                f"{skill.name}\t{marker}\tclaude={fmt_ts(last_used['claude'].get(skill.name))}"
+                f"\tcodex={fmt_ts(last_used['codex'].get(skill.name))}"
+            )
+    return 0
+
+
+def apply(args: argparse.Namespace) -> int:
+    skills = load_manifest()
+    disabled = load_disabled()
+    disabled.setdefault("version", 1)
+    disabled.setdefault("disabled", {})
+    last_used = scan_usage(skills, args.days)
+    stale = stale_skills(skills, args.days, last_used)
+    now = iso_now()
+    for skill in stale:
+        disabled["disabled"].setdefault(
+            skill.name,
+            {
+                "disabled_at": now,
+                "threshold_days": args.days,
+                "reason": "No Claude or Codex usage found inside the threshold window.",
+                "claude_last_used": fmt_ts(last_used["claude"].get(skill.name)),
+                "codex_last_used": fmt_ts(last_used["codex"].get(skill.name)),
+            },
+        )
+    save_disabled(disabled)
+    install(disabled)
+    print(f"Disabled {len(stale)} stale paired skill(s).")
+    return 0
+
+
+def enable(args: argparse.Namespace) -> int:
+    disabled = load_disabled()
+    changed = False
+    for name in args.name:
+        if disabled.get("disabled", {}).pop(name, None) is not None:
+            changed = True
+    if changed:
+        save_disabled(disabled)
+    install(disabled)
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    subparsers = parser.add_subparsers(dest="command", required=True)
+    audit_parser = subparsers.add_parser("audit", help="Report stale paired skills.")
+    audit_parser.add_argument("--days", type=int, default=DEFAULT_DAYS)
+    apply_parser = subparsers.add_parser("apply", help="Disable stale paired skills and reinstall live skill links.")
+    apply_parser.add_argument("--days", type=int, default=DEFAULT_DAYS)
+    subparsers.add_parser("install", help="Install live skill links from skills-disabled.json.")
+    enable_parser = subparsers.add_parser("enable", help="Re-enable named skills and reinstall live skill links.")
+    enable_parser.add_argument("name", nargs="+")
+    args = parser.parse_args()
+    if args.command == "audit":
+        return audit(args)
+    if args.command == "apply":
+        return apply(args)
+    if args.command == "install":
+        install(load_disabled())
+        return 0
+    if args.command == "enable":
+        return enable(args)
+    raise AssertionError(args.command)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

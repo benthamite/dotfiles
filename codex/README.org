@@ -80,17 +80,33 @@ explicit tool-specific divergence. For example, =ai-journal= keeps its
 rule under its own Claude and Codex skill directories.
 
 Codex discovers global skills from =~/.codex/skills/*/SKILL.md=.  The live
-skills directory is therefore a symlink to the tracked Codex tree.  Run:
+directory is a managed symlink farm populated from the tracked Codex tree,
+omitting names recorded in =skills-disabled.json=.  Run:
 
 #+begin_src sh
 codex/bin/install-skills.sh
 #+end_src
 
-The script ensures =~/.codex/skills= points at =codex/skills/=. Local reusable
-skills belong in both =claude/skills/= and =codex/skills/=, not as untracked
-directories under =~/.codex/skills=. Codex-managed hidden system skills, when
-present, live under ignored =codex/skills/.system/= runtime data and are not
-part of the reusable Claude/Codex skill parity model.
+The script delegates to =bin/skill-prune install=, which installs both
+=~/.claude/skills= and =~/.codex/skills= as managed symlink farms. Local
+reusable skills belong in both =claude/skills/= and =codex/skills/=, not as
+untracked directories under the live home-directory farms. Codex-managed hidden
+system skills, when present, live under ignored =codex/skills/.system/= runtime
+data and are always linked into the Codex live farm; they are not part of the
+reusable Claude/Codex skill parity model.
+
+To reduce context pressure from stale skills, run:
+
+#+begin_src sh
+bin/skill-prune apply --days 60
+#+end_src
+
+The prune command scans recent Claude and Codex transcripts. It disables only
+paired skills for which neither tool shows usage inside the threshold window;
+if either Claude or Codex used the skill recently, both live links are kept. It
+also skips newly modified skill files, so fresh or recently edited skills are
+not removed merely because they have not yet appeared in transcripts. Re-enable
+a disabled skill with =bin/skill-prune enable NAME=.
 
 Project-specific skills belong beside their project instead of this global
 tree. For the Epoch workspace, the Claude copies live in
@@ -685,10 +701,11 @@ instruction file with Codex-safe path references. This is needed for user-level
 instructions; project-level Codex instructions are handled by sibling
 =AGENTS.md= files.
 
-=~/.codex/skills= points directly to =codex/skills/= via
-=codex/bin/install-skills.sh= because Codex does not load arbitrary skill paths
-from =codex/config.toml=. This keeps the live Codex skill inventory aligned
-with the tracked global Claude/Codex skill counterparts. Project-local Codex skills
-are stored under the project's own =.codex/skills/= directory. Codex-managed
-hidden system skills, if present, are ignored runtime data under
-=codex/skills/.system/=.
+=~/.codex/skills= is managed by =bin/skill-prune install=, normally through
+=codex/bin/install-skills.sh=. It is a directory of symlinks to enabled entries
+in =codex/skills/= rather than a direct symlink to the whole tracked tree, so
+=skills-disabled.json= can omit stale global skills without moving their source
+directories. Project-local Codex skills are stored under the project's own
+=.codex/skills/= directory. Codex-managed hidden system skills, if present, are
+ignored runtime data under =codex/skills/.system/= and remain linked into the
+live farm.

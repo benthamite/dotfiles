@@ -19,6 +19,8 @@ from typing import Iterable
 ROOT = Path.home() / "My Drive" / "dotfiles"
 MANIFEST = "ai-config-sync.json"
 MANIFEST_PATH = ROOT / MANIFEST
+DISABLED_SKILLS_PATH = ROOT / "skills-disabled.json"
+SKILL_PRUNE_MARKER = ".managed-by-dotfiles-skill-prune"
 
 TOOL_SPECIFIC_SKILL_FRONTMATTER = {
     "allowed-tools",
@@ -1218,6 +1220,51 @@ def check_symlink(problems: list[str], target: Path, expected: Path, label: str)
         add_problem(problems, f"Wrong live {label} symlink: {target} -> {actual}; expected {expected}")
 
 
+def disabled_skill_names() -> set[str]:
+    if not DISABLED_SKILLS_PATH.exists():
+        return set()
+    try:
+        data = json.loads(DISABLED_SKILLS_PATH.read_text())
+    except json.JSONDecodeError:
+        return set()
+    disabled = data.get("disabled") or {}
+    return set(disabled)
+
+
+def check_live_skill_farm(
+    problems: list[str],
+    target: Path,
+    source: Path,
+    label: str,
+    disabled: set[str],
+) -> None:
+    if target.is_symlink():
+        actual = Path(os.readlink(target))
+        if actual != source:
+            add_problem(problems, f"Wrong live {label} symlink: {target} -> {actual}; expected {source}")
+        if disabled:
+            add_problem(problems, f"Live {label} is a direct symlink and ignores disabled skills: {target}")
+        return
+    marker = target / SKILL_PRUNE_MARKER
+    if not marker.is_file():
+        add_problem(problems, f"Missing managed live {label} directory: {target}")
+        return
+    expected = {
+        path.parent.name: path.parent
+        for path in source.glob("*/SKILL.md")
+        if path.parent.name not in disabled
+    }
+    if label == "Codex skills" and (source / ".system").is_dir():
+        expected[".system"] = source / ".system"
+    for name, expected_target in sorted(expected.items()):
+        link = target / name
+        if not link.is_symlink() or real_path(link) != real_path(expected_target):
+            add_problem(problems, f"Missing live {label} link: {link} -> {expected_target}")
+    for name in sorted(disabled):
+        if (target / name).exists() or (target / name).is_symlink():
+            add_problem(problems, f"Disabled {label} entry is still live: {target / name}")
+
+
 def path_is_inside(path: Path, parent: Path) -> bool:
     try:
         real_path(path).relative_to(real_path(parent))
@@ -1390,17 +1437,20 @@ def audit_skills(problems: list[str], manifest: dict) -> None:
             continue
         add_problem(problems, f"Manifest skill missing from Claude tree: {skill}")
 
-    check_symlink(
+    disabled = disabled_skill_names()
+    check_live_skill_farm(
         problems,
         Path.home() / ".claude" / "skills",
         ROOT / "claude" / "skills",
         "Claude skills",
+        disabled,
     )
-    check_symlink(
+    check_live_skill_farm(
         problems,
         Path.home() / ".codex" / "skills",
         ROOT / "codex" / "skills",
         "Codex skills",
+        disabled,
     )
 
     for skill in sorted(claude_skills & codex_skills):

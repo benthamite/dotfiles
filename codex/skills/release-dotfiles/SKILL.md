@@ -1,11 +1,13 @@
 ---
 name: release-dotfiles
-description: Release a new version of the dotfiles repo after verifying all package repos are clean. Use `/release-dotfiles` to cut a release.
+description: Release a new version of the dotfiles repo. Use when the user says `/release-dotfiles`, asks to cut/publish/prepare a dotfiles release, bump the dotfiles version, or create the GitHub release after local profile testing. Do not use for standalone Emacs package releases; use release instead.
 ---
 
 # Dotfiles release
 
 Cut a new release for the dotfiles repo (benthamite/dotfiles) on GitHub. Before releasing, verify that every repo in the elpaca sources directory has a clean working tree.
+
+This workflow has externally visible side effects: pushing package repos, pushing the dotfiles branch and tag, and creating the GitHub release. Do not perform those actions until the workflow reaches the step that authorizes them.
 
 ## Elpaca profile resolution
 
@@ -20,7 +22,9 @@ ELPACA_SOURCES=~/.config/emacs-profiles/$PROFILE/elpaca/sources
 
 Parse `$ARGUMENTS`:
 
-- `--accept` → skip the confirmation gate (step 7) and proceed directly to execution. All other steps still run normally.
+- `--accept` → skip the pre-release confirmation gate (step 7), and treat clean unpushed package-repo commits in step 1 as approved to push. All other gates still run normally.
+
+`--accept` never skips the post-lockfile profile-test gate in step 9 or the final tag/push/release gate in step 10.
 
 ---
 
@@ -59,9 +63,17 @@ rc=$?
 
 If `rc` is non-zero, the branch has **no upstream configured** — warn but do not abort. If `rc` is zero and the output is non-empty, the repo has **unpushed commits**.
 
-### Auto-push unpushed repos
+### Handle clean unpushed repos
 
-For repos that are **clean but have unpushed commits** (i.e., not dirty), push them automatically without asking. Report any push failures (e.g., permission denied on forks).
+For repos that are **clean but have unpushed commits** (i.e., not dirty), do not push immediately. First report them in a separate table:
+
+```
+| Package          | Status                   |
+|------------------|--------------------------|
+| org-roam-extras  | clean + 2 unpushed       |
+```
+
+If `--accept` was passed, push these clean unpushed repos after reporting them. Without `--accept`, ask the user whether to push them before proceeding. Report any push failures (e.g., permission denied on forks). If a push fails, continue auditing the remaining repos, then stop and ask the user how to handle the failed package before proceeding with the release.
 
 ### Report dirty repos
 
@@ -75,17 +87,17 @@ Only report repos that are **dirty**. Present a table of problems:
 | emacs-slack      | dirty + no upstream      |
 ```
 
-### Pre-clean: delete artifacts
+### Pre-clean: move artifacts to Trash
 
 Before reporting dirty repos, automatically clean up untracked build artifacts:
 
-- **`.elc` files** (byte-compiled Elisp): delete them outright. They are always regenerable and should never be committed.
+- **Untracked `.elc` files** (byte-compiled Elisp): move them to Trash with `trash`. They are regenerable and should never be committed. Only touch files reported as untracked (`??`) by `git status --porcelain`. If `trash` is unavailable, stop and ask rather than deleting them with `rm`.
 
-After deleting artifacts, re-check whether the repo is still dirty. If the only untracked files were artifacts, the repo is now clean.
+After moving artifacts to Trash, re-check whether the repo is still dirty. If the only untracked files were artifacts, the repo is now clean.
 
 ### Offer to commit dirty repos
 
-If any repos are still dirty after pre-cleaning, **ask the user** whether they want you to commit all changes in all dirty repos. If the user accepts:
+If any repos are still dirty after pre-cleaning, **ask the user** whether they want you to commit and push all changes in all dirty repos. Make clear that accepting authorizes both local commits and external pushes. If the user accepts:
 
 1. For each dirty repo, stage all changes (`git add -A`) and create a focused commit with a descriptive message based on the changes.
 2. After committing, push each repo.
@@ -120,9 +132,16 @@ If the local branch is behind the remote, warn the user and ask whether to pull 
 ## Step 4: Fetch latest tag and list unreleased commits
 
 ```bash
-LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null)
-git log "$LATEST_TAG"..HEAD --oneline
+git fetch --tags origin
+LATEST_TAG=$(git describe --tags --abbrev=0 --match '[0-9]*.[0-9]*.[0-9]*' 2>/dev/null)
+if [ -n "$LATEST_TAG" ]; then
+  git log "$LATEST_TAG"..HEAD --oneline
+else
+  git log --oneline
+fi
 ```
+
+If no semver tag is found, treat this as a first release and classify the entire history.
 
 If there are **zero** commits since the last tag, stop — there is nothing to release.
 
@@ -170,7 +189,7 @@ If there are many commits (e.g., 100+), summarize by theme rather than listing e
 
 Present a summary:
 
-- Current version (from tag)
+- Current version (from tag, or `none` for a first release)
 - New version (proposed bump)
 - Number of commits included
 - Elpaca sources cleanliness status (all clean)
@@ -240,10 +259,16 @@ Only after the user confirms:
 3. **Create GitHub release**:
 
    ```bash
-   gh release create NEW_VERSION --title "NEW_VERSION" --notes "RELEASE_NOTES"
+   gh release create NEW_VERSION \
+     --repo benthamite/dotfiles \
+     --title "NEW_VERSION" \
+     --verify-tag \
+     --notes-file - <<'EOF'
+   RELEASE_NOTES
+   EOF
    ```
 
-   Use a heredoc for the notes to preserve formatting.
+   Use a heredoc with `--notes-file -` to preserve formatting and `--verify-tag` so GitHub does not create a release from an unexpected target if the pushed tag is missing.
 
 ---
 
@@ -253,16 +278,16 @@ After the release is created:
 
 ```bash
 gh release view NEW_VERSION --repo benthamite/dotfiles
-gh api repos/benthamite/dotfiles/tags --jq '.[0].name'
+git ls-remote --tags origin "refs/tags/NEW_VERSION"
 ```
 
-Confirm the tag and release are live. Report success or any errors.
+Confirm the exact tag and release are live. Report success or any errors.
 
 ---
 
 ## Error handling
 
-- **No tags exist**: treat the entire history as unreleased. Use the root commit as the base for comparison.
+- **No semver tags exist**: treat the entire history as unreleased. Use `none` as the current version in the summary.
 - **API rate limiting**: if `gh api` returns 403/429, report it and suggest the user wait or authenticate with a higher-rate token.
 - **Emacs not running**: if `emacsclient` fails, stop and tell the user to start Emacs first (needed to resolve the elpaca profile).
 - **Tag format**: dotfiles tags have no `v` prefix (e.g., `7.1.29`). Preserve this convention.

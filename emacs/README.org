@@ -1,0 +1,6 @@
+#+title: Emacs
+
+* Skills
+
+- =doc-extras=: Audits, creates, or refreshes documentation for all Emacs extras packages in the dotfiles repo.
+- =emacs-freeze=: Diagnoses frozen, hung, beachballing, or unresponsive Emacs sessions by collecting evidence and recommending recovery.

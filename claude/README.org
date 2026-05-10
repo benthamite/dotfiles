@@ -315,6 +315,8 @@ Google Drive cleanup skills live under =~/My Drive/.claude/skills/= and
 =~/My Drive/.codex/skills/=. Epoch-only skills live in the Epoch workspace:
 =~/My Drive/Epoch/.claude/skills/= for Claude and
 =~/My Drive/Epoch/.codex/skills/= for Codex.
+Each project-local skill root documents its skills in that project's
+=README.org= under a dedicated =Skills= section.
 
 *** Context skills
 :PROPERTIES:
@@ -749,12 +751,13 @@ guard-commit=. Blocks one-sided Claude/Codex configuration changes in the
 dotfiles repo unless the counterpart is synchronized or =ai-config-sync.json=
 records an artifact-specific status or exemption. It also resolves the git repo
 targeted by the commit command and applies the same checks to project-local
-sibling =CLAUDE.md=/=AGENTS.md= instruction files, =.claude/= and =.codex/= skills,
-hooks, and hook registration files. For skills, the guard checks body and
-auxiliary-file parity after removing tool-specific frontmatter from both sides,
-so unrelated counterpart edits do not satisfy it. This keeps the model explicit:
-the active agent makes both edits and commits them together, or records an
-intentional global exception in the manifest.
+sibling =CLAUDE.md=/=AGENTS.md= instruction files, =.claude/= and =.codex/=
+skills, programmatic skills, hooks, and hook registration files. For skills, the
+guard checks body and auxiliary-file parity after removing tool-specific
+frontmatter from both sides, and requires the project-local =README.org= to be
+updated in the same commit. This keeps the model explicit: the active agent
+makes both edits and commits them together, documents the local skill where it
+lives, or records an intentional global exception in the manifest.
 
 *** require-doc-update.sh (PreToolUse)
 :PROPERTIES:

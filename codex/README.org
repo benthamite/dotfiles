@@ -132,7 +132,8 @@ Google Drive cleanup skills live under =~/My Drive/.claude/skills/= and
 =~/My Drive/Epoch/.codex/skills/=. The sync reminder and commit guard apply to
 these project-local pairs too: changing one local skill reminds the agent to
 update the other, and committing one side without an equivalent counterpart is
-blocked.
+blocked. Each project-local skill root documents its skills in that project's
+=README.org= under a dedicated =Skills= section.
 
 =bin/codex-app-handoff= opens the current Codex thread in the desktop app via
 the app's =codex://threads/<THREAD_ID>= deeplink. Use it from CLI/Emacs turns

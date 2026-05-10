@@ -1,6 +1,6 @@
 ---
 name: doc-elisp
-description: Create or update documentation for an Emacs Lisp package following the Denote manual style. Use when the user wants to document any Elisp package (not just extras).
+description: Create or update an Org manual for an Emacs Lisp package following the Denote manual style. Use when the user asks to document an Elisp package, update README.org/manual docs, refresh command/option/function docs after code changes, or add docs for emacs/extras packages. Do not use for Markdown README generation alone; use generate-readme.
 ---
 
 # Document an Elisp package
@@ -11,14 +11,30 @@ Create or update an `.org` documentation file for an Emacs Lisp package, matchin
 
 For standalone package repositories, the manual is always `README.org` in the repository root. If a case-variant exists instead (e.g. `readme.org`), rename it to `README.org` using `git mv` and commit the rename before proceeding. If the package spans multiple `.el` files (e.g., `foo.el`, `foo-db.el`, `foo-utils.el`), consolidate all public definitions from every file into the single `README.org` documentation file, organizing them thematically rather than by source file.
 
+## Scope boundary
+
+Use this skill for Org manuals that explain an Emacs Lisp package's user-facing behavior, customization surface, and extension points. It applies both to standalone package repositories and to dotfiles extras packages under `emacs/extras/`.
+
+Do not use this skill when the user only wants a Markdown `README.md`; use `generate-readme` after an Org manual already exists. Do not use it to document every extras package in one pass; use `doc-extras`. Do not use it for compiler/checkdoc cleanup without a documentation request; use `lint-elisp`.
+
+## Workflow
+
+1. Resolve the package context: identify the canonical repository, the relevant `.el` source file(s), and the manual path (`README.org` for standalone packages, `emacs/extras/doc/<package>.org` for dotfiles extras).
+2. Inventory the public surface from all source files before editing prose. Include user options, faces, variables, commands, public non-interactive functions/macros, and public mode definitions; exclude private `--` definitions and test helpers.
+3. Compare the inventory with any existing manual. Note added, removed, renamed, and behavior-changed symbols, plus sections that no longer meet the quality standard below.
+4. Edit the manual in place, preserving accurate existing prose while adding missing coverage, removing stale coverage, and improving terse sections.
+5. Handle Texinfo export setup only where this skill says it applies. Avoid creating broad repository-level hooks in the dotfiles monorepo.
+6. Verify the manual against the source and report the changed files, verification performed, and any definitions intentionally left undocumented. Commit changes only when the user requested commits or the local repository conventions require them.
+
 ## Analyzing the source
 
-Extract all public definitions from the `.el` file:
+Extract all public definitions from the package's `.el` source file(s):
 
 - `defcustom` (user options)
-- `defvar`, `defconst` (public variables, no `--` prefix)
-- Interactive `defun` (commands)
-- Non-interactive `defun` without `--` prefix (public functions)
+- `defface` (customizable faces)
+- `defvar`, `defconst`, and `defvar-keymap` (public variables/keymaps, no `--` prefix)
+- Interactive `defun`, `cl-defun`, and mode forms such as `define-minor-mode` or `define-derived-mode` (commands)
+- Non-interactive `defun`, `cl-defun`, `defsubst`, and `defmacro` without a `--` prefix (public functions/macros)
 
 If documentation already exists, perform a structural diff: identify definitions that are added, removed, or renamed relative to what the `.org` file documents. Also check whether existing descriptions still accurately reflect the current docstrings and behavior, and whether the documentation meets the quality standard below.
 
@@ -61,10 +77,11 @@ Every doc file must include these sections in this order. Omit a section only if
 
 1. `* Overview`
 2. `* User options` — for `defcustom` variables
-3. `* Commands` — for interactive functions
-4. `* Functions` — for public non-interactive functions worth documenting
-5. Integration-specific sections — if the package integrates with other packages in notable ways (e.g., `* Embark integration`, `* Transient menus`)
-6. `* Indices` — always last
+3. `* Faces` — for public `defface` definitions
+4. `* Commands` — for interactive functions
+5. `* Functions` — for public non-interactive functions worth documenting
+6. Integration-specific sections — if the package integrates with other packages in notable ways (e.g., `* Embark integration`, `* Transient menus`)
+7. `* Indices` — always last
 
 The Indices section always contains exactly:
 
@@ -115,7 +132,7 @@ Every heading at every level must have a `:PROPERTIES:` drawer with `:CUSTOM_ID:
 ```
 
 Convention for CUSTOM_ID values:
-- Top-level sections: `h:overview`, `h:user-options`, `h:commands`, `h:functions`, `h:indices`
+- Top-level sections: `h:overview`, `h:user-options`, `h:faces`, `h:commands`, `h:functions`, `h:indices`
 - Thematic subsections: `h:DESCRIPTIVE-SLUG` (e.g., `h:file-handling`, `h:entry-processing`)
 - Individual symbols (when they have their own heading): `h:SYMBOL-NAME` (e.g., `h:ebib-extras-download-use-vpn`)
 
@@ -124,7 +141,7 @@ Convention for CUSTOM_ID values:
 Place these directives immediately after the `:END:` of the PROPERTIES drawer, before the prose:
 
 - `#+findex: FUNCTION-NAME` for every documented function and command.
-- `#+vindex: VARIABLE-NAME` for every documented variable and user option.
+- `#+vindex: VARIABLE-NAME` for every documented variable, user option, and face.
 
 When multiple functions are documented under one subsection, place all their `#+findex:` entries together at the top of that subsection.
 
@@ -203,7 +220,9 @@ Internal (`--` prefixed) functions should NOT be documented.
 
 ## Texinfo auto-export
 
-After creating or updating the `.org` documentation file, ensure the package repository has a `.dir-locals.el` that automatically exports to Texinfo on every save. If `.dir-locals.el` already exists, add the `org-mode` entry to it; if it doesn't exist, create it.
+For standalone package repositories, after creating or updating the `.org` documentation file, ensure the package repository has a `.dir-locals.el` that automatically exports to Texinfo on every save. If `.dir-locals.el` already exists, add the `org-mode` entry to it; if it doesn't exist, create it.
+
+For dotfiles extras packages under `~/My Drive/dotfiles/emacs/extras/`, do not create or modify a repository-level `.dir-locals.el` solely for this skill. Keep the edit scoped to `emacs/extras/doc/<package>.org` and any generated Texinfo artifacts that the existing dotfiles hooks update.
 
 The required content:
 
@@ -221,6 +240,20 @@ This hook runs `org-texinfo-export-to-texinfo` silently whenever an Org file in 
 If the repository already has a `.dir-locals.el` with this hook, no action is needed. If it has a `.dir-locals.el` without this hook, merge the `org-mode` entry into the existing alist.
 
 Commit the `.dir-locals.el` change separately from the documentation commit (e.g., "Add .dir-locals.el for auto Texinfo export on save").
+
+## Verification
+
+Before finishing, re-read the source inventory and the edited manual. Confirm that every documented public symbol still exists, every newly public user-facing symbol is either documented or explicitly reported as intentionally omitted, deleted symbols are removed, every heading has a `:CUSTOM_ID:`, and the Indices section matches the required structure.
+
+When practical, run a Texinfo export for the edited manual:
+
+```bash
+emacs --batch -Q --visit README.org --eval "(progn (require 'ox-texinfo) (org-texinfo-export-to-texinfo))"
+```
+
+Use the actual manual path for dotfiles extras docs. If export cannot run because the package needs the user's live Emacs configuration or missing dependencies, state that limitation and perform the structural checks manually.
+
+End with a concise report of files changed, verification performed, commits made if any, and unresolved documentation gaps.
 
 ## Example
 

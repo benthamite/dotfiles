@@ -560,7 +560,7 @@ Installs and configures a new MCP server for Claude Code. Walks through discover
 :ID:       76E6E656-8DCE-4433-B9AA-1F6D0ACDB3B0
 :END:
 
-Adapted from [[https://pjh.is/][Peter Hartree]]'s [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository. Queries multiple AI models with temperature-varied sampling. For each model, generates N responses and selects the best one (using Gemini 3 Flash as judge). Then synthesizes across models using Claude Opus 4.6 with extended thinking. Has a brainstorm mode that merges unique ideas instead of picking one winner. Presets: Quick (4 models x 3), Intense (7 x 5), Ultra (7 x 6).
+Adapted from [[https://pjh.is/][Peter Hartree]]'s [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository. Queries multiple AI models with temperature-varied sampling. For each model, generates N responses and selects the best one (using Gemini 3 Flash as judge). Then synthesizes across models using Claude Opus 4.6 with extended thinking. Has a brainstorm mode that merges unique ideas instead of picking one winner. Presets: Quick (4 models x 3), Intense (7 x 5), Ultra (7 x 6). The skill resolves the live Claude/Codex skill directory before running, uses =models.json= as the source of truth for preset details, excludes deep-research/browser presets from the normal menu, and verifies result files before reporting completion.
 
 **** proofread
 :PROPERTIES:

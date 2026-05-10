@@ -5,7 +5,7 @@
   "description": "Best-of-N sampling: query each model N times, pick the best response, then synthesise across models",
   "type": "module",
   "scripts": {
-    "query": "npx tsx scripts/bon-query.ts",
+    "query": "tsx scripts/bon-query.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit"
   },

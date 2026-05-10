@@ -1,6 +1,6 @@
 ---
 name: best-of-n
-description: This skill should be used when the user asks to "best of n", "best-of-n query", "run best of n", "bon query", "bon", "/best-of-n", "sample multiple responses", "sample each model", or mentions wanting to query each AI model multiple times and pick the best response before synthesising across models.
+description: "Run a Best-of-N multi-model query when the user asks to best of n, /best-of-n, bon query, sample each model multiple times, ask several AI models repeatedly, compare multiple model responses, or synthesize/synthesise the best answers across models. Do not use for ordinary single-model answers unless the user wants multi-model sampling or selection."
 argument-hint: <prompt>
 ---
 
@@ -14,6 +14,31 @@ Query each AI model N times with temperature variation, pick the best response p
 
 **IMPORTANT**: When triggered, follow the execution steps below. Do NOT just describe what the skill does.
 
+Use the live skill directory for the current tool:
+
+- Claude Code: `${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills/best-of-n`
+- Codex: `${CODEX_HOME:-$HOME/.codex}/skills/best-of-n`
+
+In command examples below, set `BON_DIR` to the appropriate directory first:
+
+```bash
+# Claude Code
+BON_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/skills/best-of-n"
+
+# Codex
+BON_DIR="${CODEX_HOME:-$HOME/.codex}/skills/best-of-n"
+
+cd "$BON_DIR"
+```
+
+If dependencies are missing, run `yarn install` in `BON_DIR` before using the query commands.
+
+## When not to use
+
+- Do not use for ordinary questions where the user wants a direct answer from the current agent.
+- Do not use just because the phrase "best of N" appears in unrelated prose.
+- Do not use for deep research or browser-only model workflows unless the user explicitly asks to adapt this script; those models are excluded from normal Best-of-N sampling.
+
 ### Execution steps
 
 #### Step 1: Get or draft the prompt
@@ -26,7 +51,9 @@ Query each AI model N times with temperature variation, pick the best response p
 
 Check whether the prompt suggests brainstorming—look for keywords like "brainstorm", "ideas", "come up with", "creative", "possibilities", or any open-ended ideation task.
 
-**If brainstorming detected**, say "Brainstorm mode: merges all unique ideas across samples instead of picking one best." Then use `AskUserQuestion` to present the presets:
+**If brainstorming detected**, say "Brainstorm mode: merges all unique ideas across samples instead of picking one best." Then use the host's structured question tool (`AskUserQuestion` in Claude Code, `request_user_input` in Codex when available; otherwise ask directly in chat) to present the presets.
+
+Before presenting the options, run `yarn query presets` and treat `models.json`/the command output as the source of truth for model names, sample counts, temperatures, and call counts. The menu should have this shape:
 
 - **Question:** "Which brainstorm preset?"
 - **Header:** "Preset"
@@ -49,17 +76,17 @@ Mapping user selection to CLI:
 First, fetch available presets and models (defined in `models.json`):
 
 ```bash
-cd ~/.claude/skills/best-of-n && yarn query presets 2>/dev/null
+cd "$BON_DIR" && yarn query presets
 ```
 
-Present the non-brainstorm presets as a numbered menu, plus a "Pick models" option. Add "(Recommended)" to the quick preset. Wait for user input.
+Present `quick`, `comprehensive`, and a "Pick models" option as a numbered menu. Add "(Recommended)" to `quick`. Do not present brainstorm, deep-research, or browser-oriented presets in the normal menu unless the user explicitly asked for those modes. Wait for user input.
 
 Deep research and browser models are automatically excluded—they don't benefit from temperature sampling.
 
 If the user selects **Pick models**, fetch the eligible model list:
 
 ```bash
-cd ~/.claude/skills/best-of-n && yarn query models 2>/dev/null
+cd "$BON_DIR" && yarn query models
 ```
 
 Show the output and ask the user to enter model IDs (comma-separated).
@@ -78,10 +105,22 @@ If the user chose a preset, use `--preset <name>`. If they picked individual mod
 
 Generate a slug from the prompt (lowercase, non-alphanumeric to hyphens, max 50 chars).
 
-For brainstorming prompts, add `--brainstorm` to merge all unique ideas across samples instead of picking one best response per model.
+For brainstorm presets (`brainstorm`, `brainstorm-intense`, `brainstorm-ultra`), do not pass `--num-samples` or `--temperature` unless the user explicitly overrides the preset; the preset already defines those values. For custom brainstorming, add `--brainstorm` to merge all unique ideas across samples instead of picking one best response per model.
+
+With a brainstorm preset:
 
 ```bash
-cd ~/.claude/skills/best-of-n && yarn query \
+cd "$BON_DIR" && yarn query \
+  --preset <brainstorm-preset-name> \
+  --synthesise \
+  --output-format both \
+  "<prompt>"
+```
+
+With a normal preset:
+
+```bash
+cd "$BON_DIR" && yarn query \
   --preset <preset-name> \
   --num-samples <n> \
   --temperature <temp> \
@@ -93,7 +132,7 @@ cd ~/.claude/skills/best-of-n && yarn query \
 Or with explicit models:
 
 ```bash
-cd ~/.claude/skills/best-of-n && yarn query \
+cd "$BON_DIR" && yarn query \
   --models "<model-id-1>,<model-id-2>,..." \
   --num-samples <n> \
   --temperature <temp> \
@@ -106,7 +145,7 @@ The script auto-generates an output directory at `data/model-outputs/<timestamp>
 
 #### Step 5: Open results
 
-Open the results file (HTML version if available, otherwise markdown).
+Read the "Results saved to:" line from the script output, then verify the output directory contains `results.md`; if `--output-format both` was used, verify `results.html` as well. Open the HTML version if available, otherwise markdown.
 
 If `$INSIDE_EMACS` is set, use EWW:
 ```bash
@@ -117,6 +156,8 @@ Otherwise:
 ```bash
 open "<output-dir>/results.html"
 ```
+
+In the final response, report the output directory, models that completed, failed models if any, and whether synthesis was produced.
 
 ---
 
@@ -135,7 +176,7 @@ Prompt → [Model₁ × N] → Per-model comparison → Best₁ ─┐
 ## Direct script invocation
 
 ```bash
-cd ~/.claude/skills/best-of-n
+cd "$BON_DIR"
 
 # Basic usage
 yarn query "What are the pros and cons of TypeScript?"
@@ -186,7 +227,8 @@ data/model-outputs/2026-02-08-1430-bon-slug/
         └── …
 ```
 
+In brainstorm mode, per-model directories contain `merged-ideas.md` instead of `best-response.md`.
+
 ## Configuration
 
 API keys are stored in `.env` (gitignored). Model definitions and presets are in `models.json` (shipped). To customise, create a `config.json` with just the keys you want to override—it merges on top of `models.json`.
-

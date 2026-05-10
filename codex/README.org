@@ -117,6 +117,8 @@ in Codex. Record them in =ai-config-sync.json= with =status: codex-only=,
 =claude: null=, and the tracked Codex skill path. The current example is
 =codex-app-browser=, which captures the Codex App in-app browser handoff and
 Browser Use bootstrap procedure; it intentionally has no Claude counterpart.
+The skill defers to the bundled =browser-use:browser= skill for the current
+plugin root and Browser API instead of hard-coding a versioned plugin path.
 
 =bin/codex-app-handoff= opens the current Codex thread in the desktop app via
 the app's =codex://threads/<THREAD_ID>= deeplink. Use it from CLI/Emacs turns

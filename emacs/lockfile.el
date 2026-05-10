@@ -2771,14 +2771,15 @@
    :recipe
    (:package "request" :repo "tkf/emacs-request" :fetcher github :files
 	     ("request.el") :source "MELPA" :id request :type git :protocol
-	     https :inherit t :depth treeless :ref
-	     "c22e3c23a6dd90f64be536e176ea0ed6113a5ba6"))
+	     https :inherit t :depth nil :ref
+	     "c22e3c23a6dd90f64be536e176ea0ed6113a5ba6" :wait t))
  (request-deferred :source "elpaca-menu-lock-file" :recipe
 		   (:package "request-deferred" :repo "tkf/emacs-request"
 			     :fetcher github :files ("request-deferred.el")
 			     :source "MELPA" :id request-deferred :type git
-			     :protocol https :inherit t :depth treeless :ref
-			     "c22e3c23a6dd90f64be536e176ea0ed6113a5ba6"))
+			     :protocol https :inherit t :depth nil :ref
+			     "c22e3c23a6dd90f64be536e176ea0ed6113a5ba6"
+			     :wait t))
  (reveal-in-osx-finder :source "elpaca-menu-lock-file" :recipe
 		       (:package "reveal-in-osx-finder" :repo
 				 "kaz-yos/reveal-in-osx-finder" :fetcher github

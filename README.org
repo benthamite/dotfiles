@@ -1,0 +1,27 @@
+#+title: Pablo's dotfiles
+#+author: Pablo Stafforini
+
+This repository contains my dotfiles, including
+
+- my [[file:emacs/config.org][Emacs config]];
+- my [[file:agents/README.org][agent configuration synchronization docs]];
+- my [[file:karabiner/modifications.org][Karabiner modifications]]; and
+- my [[file:macos/defaults.org][macOS defaults]].
+
+* Skills
+
+- =claude-config-audit=: Audits Claude Code configuration for redundancy, conflicts, dead weight, staleness, and instruction drift.
+- =codex-app-browser=: Maintains the Codex App browser plugin setup for local browser-use workflows.
+- =find-skills=: Discovers, vets, and optionally installs reusable agent skills.
+- =gitguardian-triage=: Triages and remediates GitGuardian secret incidents.
+- =install-mcp-server=: Installs and configures MCP servers with auth verification, placement, registration, sync, and restart/testing checks.
+- =migrate-profile=: Consolidates Claude Code project data after Emacs or elpaca profile changes.
+- =move-session-log=: Relocates Codex session logs by rewriting embedded project paths.
+- =open-session-log=: Opens the current Claude Code session log in Emacs via =agent-log=.
+- =optimize-claude-md=: Optimizes project Claude Code instruction files.
+- =release-dotfiles=: Prepares and publishes dotfiles releases.
+- =skill-audit=: Audits or improves Claude/Codex skills for trigger quality, workflow design, verification, portability, and maintainability.
+- =skill-creator=: Creates or iteratively improves agent skills.
+- =skill-discovery=: Scans recent sessions to discover repeated workflows worth turning into skills.
+- =skill-resolver=: Resolves and reads Claude/Codex skill files by skill name.
+- =try-hartree-skills=: Evaluates HartreeWorks third-party skills one at a time.

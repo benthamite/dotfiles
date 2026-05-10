@@ -817,20 +817,20 @@ def skill_sync_problems(skill: str) -> list[str]:
     return problems
 
 
-def local_skill_sync_problems(repo_root: Path, skill: str) -> list[str]:
+def local_skill_sync_problems(repo_root: Path, skill: str, skill_root: str = "skills") -> list[str]:
     problems: list[str] = []
-    claude_dir = repo_root / ".claude" / "skills" / skill
-    codex_dir = repo_root / ".codex" / "skills" / skill
+    claude_dir = repo_root / ".claude" / skill_root / skill
+    codex_dir = repo_root / ".codex" / skill_root / skill
     claude_skill = claude_dir / "SKILL.md"
     codex_skill = codex_dir / "SKILL.md"
 
     if not claude_skill.exists():
         problems.append(
-            f"Missing Claude project-local skill file: .claude/skills/{skill}/SKILL.md"
+            f"Missing Claude project-local skill file: .claude/{skill_root}/{skill}/SKILL.md"
         )
     if not codex_skill.exists():
         problems.append(
-            f"Missing Codex project-local skill file: .codex/skills/{skill}/SKILL.md"
+            f"Missing Codex project-local skill file: .codex/{skill_root}/{skill}/SKILL.md"
         )
     if problems:
         return problems
@@ -851,6 +851,18 @@ def local_skill_sync_problems(repo_root: Path, skill: str) -> list[str]:
             problems.append(f"Auxiliary project-local skill file drift: {skill}/{rel}")
 
     return problems
+
+
+def local_skill_readme_problems(
+    changed_paths: set[str],
+    skill: str,
+    skill_root: str,
+) -> list[str]:
+    if path_has_change("README.org", changed_paths):
+        return []
+    return [
+        f"Project-local .claude/{skill_root}/{skill} or .codex/{skill_root}/{skill} changed without README.org documentation in the same repo."
+    ]
 
 
 def normalized_project_instruction_text(path: Path) -> str:
@@ -1098,45 +1110,119 @@ def guard_changed_paths(
                 )
         elif path.startswith(".claude/skills/"):
             skill = path.removeprefix(".claude/skills/").split("/", 1)[0]
-            if skill in processed_local_skills:
+            skill_key = f"skills/{skill}"
+            if skill_key in processed_local_skills:
                 continue
-            processed_local_skills.add(skill)
+            processed_local_skills.add(skill_key)
             drift = local_skill_sync_problems(repo_root, skill)
+            doc_drift = local_skill_readme_problems(changed_paths, skill, "skills")
             if not drift:
+                if doc_drift:
+                    add_nested_problems(
+                        problems,
+                        f"Project-local .claude/skills/{skill} changed without a local README.org update:",
+                        doc_drift,
+                    )
                 continue
             counterpart = f".codex/skills/{skill}"
             if has_changed_prefix(counterpart, paths, changed):
                 add_nested_problems(
                     problems,
                     f"Project-local .claude/skills/{skill} and {counterpart} are both changed, but the paired skill still drifts:",
-                    drift,
+                    drift + doc_drift,
                 )
             else:
                 add_nested_problems(
                     problems,
                     f"Project-local .claude/skills/{skill} changed without synchronized counterpart {counterpart}:",
-                    drift,
+                    drift + doc_drift,
                 )
         elif path.startswith(".codex/skills/"):
             skill = path.removeprefix(".codex/skills/").split("/", 1)[0]
-            if skill in processed_local_skills:
+            skill_key = f"skills/{skill}"
+            if skill_key in processed_local_skills:
                 continue
-            processed_local_skills.add(skill)
+            processed_local_skills.add(skill_key)
             drift = local_skill_sync_problems(repo_root, skill)
+            doc_drift = local_skill_readme_problems(changed_paths, skill, "skills")
             if not drift:
+                if doc_drift:
+                    add_nested_problems(
+                        problems,
+                        f"Project-local .codex/skills/{skill} changed without a local README.org update:",
+                        doc_drift,
+                    )
                 continue
             counterpart = f".claude/skills/{skill}"
             if has_changed_prefix(counterpart, paths, changed):
                 add_nested_problems(
                     problems,
                     f"Project-local .codex/skills/{skill} and {counterpart} are both changed, but the paired skill still drifts:",
-                    drift,
+                    drift + doc_drift,
                 )
             else:
                 add_nested_problems(
                     problems,
                     f"Project-local .codex/skills/{skill} changed without synchronized counterpart {counterpart}:",
-                    drift,
+                    drift + doc_drift,
+                )
+        elif path.startswith(".claude/programmatic-skills/"):
+            skill = path.removeprefix(".claude/programmatic-skills/").split("/", 1)[0]
+            skill_key = f"programmatic-skills/{skill}"
+            if skill_key in processed_local_skills:
+                continue
+            processed_local_skills.add(skill_key)
+            drift = local_skill_sync_problems(repo_root, skill, "programmatic-skills")
+            doc_drift = local_skill_readme_problems(changed_paths, skill, "programmatic-skills")
+            if not drift:
+                if doc_drift:
+                    add_nested_problems(
+                        problems,
+                        f"Project-local .claude/programmatic-skills/{skill} changed without a local README.org update:",
+                        doc_drift,
+                    )
+                continue
+            counterpart = f".codex/programmatic-skills/{skill}"
+            if has_changed_prefix(counterpart, paths, changed):
+                add_nested_problems(
+                    problems,
+                    f"Project-local .claude/programmatic-skills/{skill} and {counterpart} are both changed, but the paired skill still drifts:",
+                    drift + doc_drift,
+                )
+            else:
+                add_nested_problems(
+                    problems,
+                    f"Project-local .claude/programmatic-skills/{skill} changed without synchronized counterpart {counterpart}:",
+                    drift + doc_drift,
+                )
+        elif path.startswith(".codex/programmatic-skills/"):
+            skill = path.removeprefix(".codex/programmatic-skills/").split("/", 1)[0]
+            skill_key = f"programmatic-skills/{skill}"
+            if skill_key in processed_local_skills:
+                continue
+            processed_local_skills.add(skill_key)
+            drift = local_skill_sync_problems(repo_root, skill, "programmatic-skills")
+            doc_drift = local_skill_readme_problems(changed_paths, skill, "programmatic-skills")
+            if not drift:
+                if doc_drift:
+                    add_nested_problems(
+                        problems,
+                        f"Project-local .codex/programmatic-skills/{skill} changed without a local README.org update:",
+                        doc_drift,
+                    )
+                continue
+            counterpart = f".claude/programmatic-skills/{skill}"
+            if has_changed_prefix(counterpart, paths, changed):
+                add_nested_problems(
+                    problems,
+                    f"Project-local .codex/programmatic-skills/{skill} and {counterpart} are both changed, but the paired skill still drifts:",
+                    drift + doc_drift,
+                )
+            else:
+                add_nested_problems(
+                    problems,
+                    f"Project-local .codex/programmatic-skills/{skill} changed without synchronized counterpart {counterpart}:",
+                    drift + doc_drift,
                 )
         elif path.startswith(".claude/hooks/"):
             hook = path.removeprefix(".claude/hooks/")

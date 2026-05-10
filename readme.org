@@ -1,9 +1,0 @@
-#+title: Pablo's dotfiles
-#+author: Pablo Stafforini
-
-This repository contains my dotfiles, including
-
-- my [[file:emacs/config.org][Emacs config]];
-- my [[file:agents/README.org][agent configuration synchronization docs]];
-- my [[file:karabiner/modifications.org][Karabiner modifications]]; and
-- my [[file:macos/defaults.org][macOS defaults]].

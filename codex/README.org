@@ -352,14 +352,6 @@ Markdown citation tags or placeholder markers before reporting.
 
 The =audit-mac-app= skill is a paired Claude/Codex static-first workflow for
 auditing macOS applications before running them or granting sensitive
-The =security-audit= skill is a paired Claude/Codex workflow for auditing the
-development environment across secrets hygiene, supply-chain dependencies,
-macOS machine posture, and Claude Code configuration risk. It is audit-only
-unless remediation is explicitly requested, redacts raw secret matches during
-collection and reporting, records unavailable or unsafe checks instead of
-guessing, and reports findings by severity with concrete locations and
-remediation steps.
-
 permissions. It covers trust verification, permission analysis, app type
 detection, Electron source extraction and security checks, network endpoint
 scanning, and spaces-safe binary analysis. Its bundled scanner uses =mktemp=
@@ -373,6 +365,14 @@ references, literal file hits, and indirection layers for live consumers, and
 verifies old-value removal before closing incidents. Secret values are handled
 through protected files, stdin, env vars, or =pass= rather than printed command
 output, and sensitive temporary files are cleaned up before reporting.
+
+The =security-audit= skill is a paired Claude/Codex workflow for auditing the
+development environment across secrets hygiene, supply-chain dependencies,
+macOS machine posture, and Claude Code configuration risk. It is audit-only
+unless remediation is explicitly requested, redacts raw secret matches during
+collection and reporting, records unavailable or unsafe checks instead of
+guessing, and reports findings by severity with concrete locations and
+remediation steps.
 
 The =install-mcp-server= skill is a paired Claude/Codex workflow for installing
 Claude Code MCP servers. It verifies candidate servers and auth before

@@ -368,7 +368,7 @@ Spec-based build workflow inspired by [[https://x.com/trq212/status/200531527502
 :ID:       057FB141-D07F-4BD4-B880-912B67275263
 :END:
 
-Creates or expands high-value test suites for a codebase or module. It triggers on requests to add or write tests, improve coverage, bootstrap testing, or create regression tests, while routing ordinary debugging, code review, lint cleanup, and one-off validation elsewhere. It inventories project instructions, existing test runners, fixtures, dependencies, and critical paths before writing behavior-focused tests by risk, then reports commands run, coverage added, gaps left, bugs uncovered, and unresolved failures.
+Creates comprehensive test suites. Performs reconnaissance on the tech stack, then generates tests prioritized by criticality: data integrity and input boundaries first, business logic and integrations second, regressions and configuration third.
 
 **** lint-elisp
 :PROPERTIES:
@@ -438,7 +438,7 @@ saved org IDs for new notes, and an explicit re-read verification step.
 :ID:       56961BB0-30BB-44D1-BC8F-D74713517D4E
 :END:
 
-Transcribes a recent or named audio file in =~/Downloads/= using whisperx, then restructures the transcript into a well-organized org-mode note saved to =~/My Drive/notes/=. Handles optional language code and filename arguments, avoids verbatim-transcript/subtitle near-misses, saves the generated org ID, and verifies the note before reporting completion.
+Transcribes the most recent audio file in =~/Downloads/= using whisperx, then restructures the transcript into a well-organized org-mode note saved to =~/My Drive/notes/=. Accepts optional language code and filename arguments.
 
 **** add-to-emacs-packages
 :PROPERTIES:
@@ -478,7 +478,7 @@ Cuts releases for the dotfiles repo itself. Verifies that every personal package
 :ID:       D1A897E8-29DC-4FFD-8D16-2AC792A4DA0F
 :END:
 
-Scans, prioritizes, and batch-resolves open GitHub issues for =tlon-team/tlon.el=. Starts with a scope and mode gate that verifies the current checkout, separates read-only triage, local fixes, and externally visible closure, and requires explicit authorization before GitHub comments, issue closure, or org archiving. It presents batches before edits, uses subagents or agent teams when available, verifies =TLON_AI_GITHUB_TOKEN= belongs to =tlon-ai= without creating test comments, commits fixes issue-by-issue, and reports commit, check, GitHub, and org-archive verification.
+Scans, prioritizes, and batch-resolves open GitHub issues for =tlon-team/tlon.el=. Fetches issues, ranks by complexity, presents batches for review, fixes them with parallel subagents, closes on GitHub as =tlon-ai=, and archives the corresponding org headings.
 
 **** gsc-indexing-triage
 :PROPERTIES:
@@ -545,7 +545,14 @@ Claude must not run that command itself.
 :ID:       E913CE0D-4D9C-42E6-82A5-97BA231521A3
 :END:
 
-Tangodb session-start and resume workflow. Reads the project guide, the data-cleanup plan, =docs/data-cleanup-progress.md=, and required slice docs, then resumes the exact next step from the progress file. It keeps chaining safe read-only slices until a progress-file hard stop, approval gate, externally visible action, or real blocker is reached.
+Tangodb session-start and resume workflow. It is only for starting or resuming
+tangodb cleanup work; ending sessions belongs to =tangodb-closeout=, and
+generic handoffs belong to the general handoff workflow. Reads the applicable
+project guide files, the data-cleanup plan, =docs/data-cleanup-progress.md=,
+and required slice docs, then resumes the exact next step from the progress
+file. It keeps chaining safe read-only slices until a progress-file hard stop,
+approval gate, externally visible action, or real blocker is reached, and
+reports the completed slice, verification, stop reason, and closeout state.
 
 **** tangodb-closeout
 :PROPERTIES:
@@ -816,7 +823,7 @@ Audits the entire Claude Code configuration for redundancy, conflicts, dead weig
 :ID:       C9B601B2-393A-4098-B04B-82630F737520
 :END:
 
-Evaluates third-party skills from the [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository, one at a time. (The repository is maintained by my friend [[https://pjh.is/][Peter Hartree]], a Claude Code power user.) It is an interactive queue, not a general installer: the agent tries one listed skill per turn, uses the current tool's tracked skill directory, mirrors kept global skills across the paired Claude/Codex trees, tests with a realistic low-risk prompt, waits for the user's verdict, moves rejected candidates to Trash, and records =keep=, =removed=, =revisit=, or =skipped= with a note.
+Evaluates third-party skills from the [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository, one at a time. (The repository is maintained by my friend [[https://pjh.is/][Peter Hartree]], a Claude Code power user.) Installs each skill, tests it, and records the verdict.
 
 **** walk-list
 :PROPERTIES:

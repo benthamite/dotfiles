@@ -328,7 +328,7 @@ Audits code for intent transparency: magic values, misleading names, missing rat
 :ID:       B2E4A6C8-1D3F-4E9A-8B5C-7F2D9A0E4C16
 :END:
 
-Audits a codebase from the AI agent's perspective: inventories existing verification infrastructure (tests, types, linting, CI), project instructions, code navigability, and automation, then produces prioritized recommendations for reducing friction. Each recommendation is concrete, justified from the AI's perspective, and effort-estimated. Pass =--accept= to implement all recommendations without prompting.
+Audits a codebase from the AI agent's perspective: inventories existing verification infrastructure (tests, types, linting, CI), project instructions, code navigability, and automation, then produces prioritized recommendations for reducing friction. Each recommendation is concrete, justified from the AI's perspective, evidence-backed, and effort-estimated. Pass =--accept= to implement only high-confidence quick wins that are scoped, low-risk, and directly improve future agent orientation or verification.
 
 **** symptom-check
 :PROPERTIES:

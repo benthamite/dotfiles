@@ -212,6 +212,15 @@ verification state; after writing, the skill re-reads the temp file, prints the
 saved contents, and tells the user to run =! emacsclient -e '(ai-agent-codex-handoff)'=.
 Browser Use handoffs stay in =codex-app-browser=.
 
+The =tangodb-closeout= skill is a paired Claude/Codex end-of-session workflow
+for the tangodb repository. It is only for ending tangodb work; starting or
+resuming belongs to =tangodb-continue=, and generic handoffs belong to the
+general handoff workflow. It updates or creates
+=docs/data-cleanup-progress.md= with current state, exact next step for
+=continue=, required first reads, hard stop rules, verification, blockers, and
+compact closeout history, then re-reads the progress file, checks the
+progress-file diff, and runs =git diff --check=.
+
 The =skill-resolver= skill wraps =bin/agent-skill=, a deterministic resolver for
 opening skills by name.  It searches project-local skills before global skills
 and supports =path=, =cat=, =list=, and =roots= so agents do not need to manually

@@ -549,7 +549,14 @@ Tangodb session-start and resume workflow. Reads the project guide, the data-cle
 :ID:       4CC505DA-FBF3-4111-9397-D1FB3D936981
 :END:
 
-Tangodb end-of-session closeout workflow. Updates or creates =docs/data-cleanup-progress.md= with the active plan, current state, exact next step for =continue=, required first reads, hard stop rules, verification, blockers, and compact closeout history so a later Claude Code or Codex session can resume without chat history.
+Tangodb end-of-session closeout workflow. It is only for ending tangodb work;
+starting or resuming belongs to =tangodb-continue=, and generic handoffs belong
+to the general handoff workflow. Updates or creates
+=docs/data-cleanup-progress.md= with the active plan, current state, exact next
+step for =continue=, required first reads, hard stop rules, verification,
+blockers, and compact closeout history so a later Claude Code or Codex session
+can resume without chat history. Before final response, it re-reads the progress
+file, checks the progress-file diff, and runs =git diff --check=.
 
 **** emacs-freeze
 :PROPERTIES:

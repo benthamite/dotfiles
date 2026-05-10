@@ -103,6 +103,13 @@ Walk up ancestor directories from the project root to the git root (inclusive). 
 
 This lets parent directories define project-family-level bookkeeping — master project list updates, shared status syncing, meeting action item reconciliation, etc. — that fires automatically after every `/update-log` invocation, without bloating per-session CLAUDE.md context.
 
+For Epoch project notes, the main project `.org` file is a concise ground-truth brief, not a chronological session dossier. When a hook or local convention asks you to update it:
+
+- refresh current-state fields and sections from the session log just written;
+- keep active work as org `TODO` headings, not checkbox mirrors;
+- archive completed `DONE` headings and stale historical narrative into `<project>_archive.org`;
+- do not create routine `** Meeting references` sections; only record meeting links when they support durable decisions or constraints.
+
 If no such file is found at any level, skip this step. In the final report, state which hooks were found, which hooks ran, and which files they changed.
 
 ## Step 5: Commit

@@ -521,7 +521,13 @@ setup with =AskUserQuestion= when available or a concise fallback question
 otherwise. Updates the =CLAUDE.md= session reference, uses the
 =record-decisions= skill or its local workflow if applicable, runs and reports
 =context/post-update-log-hook.md= hooks, and commits only intended bookkeeping
-paths. Before committing, verifies every intended path was actually staged (=git
+paths. For Epoch project notes, the hook guidance treats the main project
+=.org= file as a concise ground-truth brief: refresh current-state fields,
+track active work as org =TODO= headings rather than checkbox mirrors, archive
+completed =DONE= headings and stale historical narrative to
+=<project>_archive.org=, and avoid routine =** Meeting references= sections
+unless a meeting link supports a durable decision or constraint. Before
+committing, verifies every intended path was actually staged (=git
 diff --cached --name-only= vs the intended list, with =git check-ignore= for any
 missing path), checks the cached diff so pre-existing dirty hunks are not swept
 into the commit, and stops with a clear report rather than silently producing a

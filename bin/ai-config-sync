@@ -85,7 +85,7 @@ Modes:
   guard-commit    Read Bash PreToolUse JSON from stdin and block one-sided commits.
   audit           Check the local Claude/Codex config inventory and content drift.
   migrate-project-instructions [ROOT...]
-                  Create missing project AGENTS.md files from root CLAUDE.md files.
+                  Create missing sibling AGENTS.md files from project CLAUDE.md files.
 """,
         end="",
     )
@@ -199,7 +199,7 @@ def relative_to_repo(path_text: str, cwd: Path, repo_root: Path) -> str:
 
 
 def local_sync_path(rel: str) -> bool:
-    return rel in {"CLAUDE.md", "AGENTS.md"} or rel.startswith((".claude/", ".codex/"))
+    return Path(rel).name in {"CLAUDE.md", "AGENTS.md"} or rel.startswith((".claude/", ".codex/"))
 
 
 def global_sync_path(rel: str) -> bool:
@@ -350,10 +350,12 @@ def local_sync_message_for_path(rel: str, repo_root: Path) -> str:
     if not rel:
         return ""
 
-    if rel == "CLAUDE.md":
-        return "Project-local CLAUDE.md changed; update AGENTS.md in the same repo."
-    if rel == "AGENTS.md":
-        return "Project-local AGENTS.md changed; update CLAUDE.md in the same repo."
+    if Path(rel).name == "CLAUDE.md":
+        counterpart = Path(rel).with_name("AGENTS.md").as_posix()
+        return f"Project-local {rel} changed; update {counterpart} in the same repo."
+    if Path(rel).name == "AGENTS.md":
+        counterpart = Path(rel).with_name("CLAUDE.md").as_posix()
+        return f"Project-local {rel} changed; update {counterpart} in the same repo."
     if rel.startswith(".claude/skills/"):
         skill = rel.removeprefix(".claude/skills/").split("/", 1)[0]
         return (
@@ -846,22 +848,27 @@ def codex_project_instruction_text_from_claude(path: Path) -> str:
     return text
 
 
-def local_instruction_sync_problems(repo_root: Path) -> list[str]:
+def local_instruction_sync_problems(repo_root: Path, rel_dir: str = ".") -> list[str]:
     problems: list[str] = []
-    claude_path = repo_root / "CLAUDE.md"
-    codex_path = repo_root / "AGENTS.md"
+    base_dir = repo_root if rel_dir in {"", "."} else repo_root / rel_dir
+    claude_path = base_dir / "CLAUDE.md"
+    codex_path = base_dir / "AGENTS.md"
+    claude_rel = claude_path.relative_to(repo_root).as_posix()
+    codex_rel = codex_path.relative_to(repo_root).as_posix()
 
     if not claude_path.exists() and not codex_path.exists():
         return problems
     if not claude_path.exists():
-        problems.append("Missing project-local instruction file: CLAUDE.md")
+        problems.append(f"Missing project-local instruction file: {claude_rel}")
     if not codex_path.exists():
-        problems.append("Missing project-local instruction file: AGENTS.md")
+        problems.append(f"Missing project-local instruction file: {codex_rel}")
     if problems:
         return problems
 
     if normalized_project_instruction_text(claude_path) != normalized_project_instruction_text(codex_path):
-        problems.append("Project-local instruction drift after tool-specific normalization.")
+        problems.append(
+            f"Project-local instruction drift after tool-specific normalization: {claude_rel} / {codex_rel}"
+        )
     return problems
 
 
@@ -920,7 +927,7 @@ def guard_changed_paths(
     processed_global_instructions = False
     processed_global_skills: set[str] = set()
     processed_global_hooks: set[str] = set()
-    processed_local_instructions = False
+    processed_local_instruction_dirs: set[str] = set()
     processed_local_skills: set[str] = set()
     processed_local_hooks: set[str] = set()
 
@@ -1045,18 +1052,23 @@ def guard_changed_paths(
             and not manifest_registration_changed(base_manifest, candidate_manifest, path)
         ):
             problems.append(f"{path} changed without a path-specific {MANIFEST} registration update")
-        elif path in {"CLAUDE.md", "AGENTS.md"}:
-            if processed_local_instructions:
+        elif Path(path).name in {"CLAUDE.md", "AGENTS.md"}:
+            rel_dir = Path(path).parent.as_posix()
+            if rel_dir in processed_local_instruction_dirs:
                 continue
-            processed_local_instructions = True
-            drift = local_instruction_sync_problems(repo_root)
+            processed_local_instruction_dirs.add(rel_dir)
+            drift = local_instruction_sync_problems(repo_root, rel_dir)
             if not drift:
                 continue
-            counterpart = "AGENTS.md" if path == "CLAUDE.md" else "CLAUDE.md"
+            counterpart = (
+                Path(path).with_name("AGENTS.md").as_posix()
+                if Path(path).name == "CLAUDE.md"
+                else Path(path).with_name("CLAUDE.md").as_posix()
+            )
             if path_has_change(counterpart, changed_paths):
                 add_nested_problems(
                     problems,
-                    "Project-local CLAUDE.md and AGENTS.md are both changed, but the paired instructions still drift:",
+                    f"Project-local instruction files in {rel_dir} are both changed, but still drift:",
                     drift,
                 )
             else:
@@ -1540,9 +1552,12 @@ def iter_project_claude_files(search_root: Path) -> Iterable[Path]:
             yield Path(current) / "CLAUDE.md"
 
 
+def skip_project_instruction_migration(path: Path) -> bool:
+    return same_path(path, ROOT / GLOBAL_INSTRUCTION_CLAUDE)
+
+
 def migrate_project_instructions(argv: list[str]) -> int:
     roots = [path_from_token(arg, Path.cwd()) for arg in argv] if argv else [ROOT]
-    seen_repos: set[Path] = set()
     created: list[Path] = []
     skipped_existing: list[Path] = []
     skipped_nested: list[Path] = []
@@ -1559,19 +1574,15 @@ def migrate_project_instructions(argv: list[str]) -> int:
             if repo_root is None:
                 skipped_not_git.append(claude_path)
                 continue
-            if repo_root in seen_repos:
-                continue
-            seen_repos.add(repo_root)
             try:
                 rel = claude_path.relative_to(repo_root).as_posix()
             except ValueError:
                 skipped_nested.append(claude_path)
                 continue
-            if rel != "CLAUDE.md":
-                skipped_nested.append(claude_path)
+            if skip_project_instruction_migration(claude_path):
                 continue
 
-            codex_path = repo_root / "AGENTS.md"
+            codex_path = claude_path.with_name("AGENTS.md")
             if codex_path.exists():
                 skipped_existing.append(codex_path)
                 continue

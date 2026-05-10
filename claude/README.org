@@ -314,7 +314,7 @@ Audits code for actual defects: bugs, application-code security issues, error ha
 :ID:       F01330D3-C44B-415D-9107-C1E865FB0B63
 :END:
 
-Audits code for architectural quality: unnecessary complexity, missing or wrong abstractions, duplication, and refactoring opportunities. Pass =--accept= to auto-refactor high-impact findings.
+Audits code for architectural quality: unnecessary complexity, missing or wrong abstractions, duplication, and refactoring opportunities. Pass =--accept= to auto-refactor high-confidence, behavior-preserving high-impact findings.
 
 **** interpretability-audit
 :PROPERTIES:

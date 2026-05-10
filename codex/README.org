@@ -202,6 +202,12 @@ verification, read real code paths, and report concrete failure modes. With
 committed cleanly; broader readability, architecture, or security-posture
 reviews route to the neighboring audit skills.
 
+The =design-audit= skill is a paired Claude/Codex development skill for
+architecture and maintainability reviews. It treats auditing as the default
+mode and uses =--accept= only for high-confidence, behavior-preserving
+high-impact refactors; risky or broad redesigns are reported instead of
+half-applied.
+
 The =automate= skill is a paired Claude/Codex meta-skill for reusable AI
 workflow design. It decides whether a request should become a Claude Code skill,
 a Codex skill, a gptel directive or preset, a gptel tool, or a gptel command,

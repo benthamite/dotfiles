@@ -295,6 +295,16 @@ design, security, and documentation audits, compares paired Claude/Codex copies
 when applicable, and in =--accept= mode applies only high-confidence fixes that
 preserve the skill's intended scope before verifying and committing them.
 
+The =verify= skill is a paired Claude/Codex workflow for running an explicit
+verification loop when the user asks to verify, close the loop, define success
+criteria before work, or rigorously check an output whose correctness is not
+automatically answerable. It generates concrete criteria before acting,
+meta-verifies criteria quality, proceeds without a user checkpoint when criteria
+are clear, asks only when criteria require user/domain judgment or change
+scope/risk, evaluates each criterion, loops on failures, and reports
+pass/fail/uncertain evidence. Ordinary coding and debugging use narrower
+project checks unless this meta-verification workflow was explicitly requested.
+
 The =try-hartree-skills= skill is a paired Claude/Codex queue for evaluating
 third-party skills from HartreeWorks one at a time. It is not a general
 installer: the agent tries one listed skill per turn, uses the current tool's

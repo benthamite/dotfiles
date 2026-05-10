@@ -229,6 +229,17 @@ keys from logging; separates direct lookup from =twitter-digest=,
 =twitter-discover=, and =twitter-vet= workflows; and requires response,
 pagination, and saved-file verification before reporting completion.
 
+The =twitter-vet= skill is a paired Claude/Codex workflow for vetting, scoring,
+ranking, or deciding whether Twitter/X accounts belong on curated lists. It
+requires a handle, list name, rubric, and optional =vet-threshold=; uses the
+active =twitter= skill wrapper for read-only tweet sampling; applies a quick
+filter plus a full 1-10 scoring pass with the shared epistemic quality gate; and
+keeps the shared vet registry under =~/.claude/skills/twitter-vet/vetted/= so
+Claude and Codex callers do not split history. It auto-adds accounts only for
+existing digest lists, returns scores to =twitter-discover= until its save
+phase, and verifies registry/list placement plus clean diffs before standalone
+commits.
+
 The =handoff= skill saves next-session instructions to
 =/tmp/codex-handoff.md= for Codex session transitions. It writes explicit user
 next steps directly, but if next steps must be inferred it first prints the

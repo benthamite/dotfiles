@@ -9,9 +9,10 @@ Scan Claude Code and Codex sessions since the last run, surface interesting AI u
 
 ## Locations
 
-- **Skill directory**: `~/My Drive/dotfiles/claude/skills/ai-journal/`
-- **State file**: `last-run.txt` in the skill directory (ISO 8601 UTC timestamp)
-- **Scan script**: `find-sessions.py` in the skill directory
+- **Claude skill directory**: `~/My Drive/dotfiles/claude/skills/ai-journal/`
+- **Codex skill directory**: `~/My Drive/dotfiles/codex/skills/ai-journal/`
+- **State file**: `last-run.txt` in both paired skill directories (ISO 8601 UTC timestamp; keep the two copies identical)
+- **Scan script**: `find-sessions.py` in both paired skill directories (the two copies should stay identical)
 - **Website**: `~/My Drive/repos/stafforini.com/`
 - **Org source for posts**: `~/My Drive/notes/ai-journal/<slug>.org`
 - **Exported markdown** (generated, gitignored): `~/My Drive/repos/stafforini.com/content/ai/<slug>.md`
@@ -34,7 +35,7 @@ See `~/My Drive/repos/stafforini.com/PUBLISHING.md` and `CLAUDE.md` for the cano
 
 ### 1. Determine cutoff
 
-Read `last-run.txt`. If the file is missing or empty, ask the user how far back to scan (e.g. "last 7 days", "since 2026-04-01"). Do **not** assume a default.
+Read `last-run.txt` from both paired skill directories. They should match; if they differ, resolve the drift before scanning rather than choosing one silently. If both files are missing or empty, ask the user how far back to scan (e.g. "last 7 days", "since 2026-04-01"). Do **not** assume a default.
 
 Convert the user's answer to an ISO 8601 UTC timestamp before invoking the scan script.
 
@@ -62,10 +63,14 @@ If `~/My Drive/notes/ai-journal/` does not exist:
 
 ### 3. Scan sessions
 
-Run the scan script with the cutoff:
+Run the scan script with the cutoff. Use the current tool's paired copy:
 
 ```bash
-python3 ~/.claude/skills/ai-journal/find-sessions.py "<cutoff-iso>"
+# Claude Code
+python3 ~/My\ Drive/dotfiles/claude/skills/ai-journal/find-sessions.py "<cutoff-iso>"
+
+# Codex
+python3 ~/My\ Drive/dotfiles/codex/skills/ai-journal/find-sessions.py "<cutoff-iso>"
 ```
 
 Output is tab-separated, one row per session:
@@ -76,7 +81,7 @@ kind<TAB>start_iso<TAB>cwd<TAB>path<TAB>first_user_excerpt
 
 The excerpt is the first non-wrapper user message, flattened and truncated to 300 chars. Sessions are sorted by start timestamp ascending. `kind` is `claude` or `codex`.
 
-If the scan returns many sessions (say, >30), delegate the triage in step 4 to a subagent so the main context isn't flooded with session content. See `subagent-prompt.md` below for a template.
+If the scan returns many sessions (say, >30), delegate the triage in step 4 to a subagent if the runtime supports subagents, so the main context isn't flooded with session content. If subagents are unavailable, triage in chronological or project-based batches. Use the template below for any delegated review.
 
 ### 4. Triage for candidates
 
@@ -181,12 +186,14 @@ Confirm each expected `<slug>.md` exists. If any slug is missing, check that `:E
 
 After drafts are written, exported, and the user has confirmed they look right:
 
-1. Update `last-run.txt` with the current UTC timestamp:
+1. Update both paired `last-run.txt` files with the same current UTC timestamp:
    ```bash
-   date -u +"%Y-%m-%dT%H:%M:%SZ" > ~/.claude/skills/ai-journal/last-run.txt
+   stamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+   printf '%s\n' "$stamp" > ~/My\ Drive/dotfiles/claude/skills/ai-journal/last-run.txt
+   printf '%s\n' "$stamp" > ~/My\ Drive/dotfiles/codex/skills/ai-journal/last-run.txt
    ```
 2. Commit the org sources: the `~/My Drive/notes/` tree is versioned as part of the `notes` git repo (check with `git -C ~/My\ Drive/notes status`). One commit per post, scope `ai-journal`, description lowercase imperative (e.g. `ai-journal: add post on prompting claude to diagnose before patching`).
-3. Commit the `last-run.txt` bump in the dotfiles repo: `ai-journal: bump last-run to <date>`.
+3. Commit the paired `last-run.txt` bump in the dotfiles repo: `ai-journal: bump last-run to <date>`.
 
 The generated markdown under `content/ai/` is gitignored and not committed; it'll be rebuilt by `deploy.sh`.
 

@@ -846,12 +846,13 @@ Audits Claude/Codex skills and =SKILL.md= files for trigger quality, workflow
 design, progressive disclosure, bundled resources, verification, portability,
 and maintainability. Focuses on whether the skill captures a repeatable
 workflow, triggers on realistic user phrasing, gives ordered operational
-guidance, uses references/scripts appropriately, defines output and verification
-expectations, and avoids surprising side effects. It distinguishes skill audits
-from neighboring code, design, security, and documentation audits, compares
-paired Claude/Codex copies when applicable, and in =--accept= mode applies only
-high-confidence fixes that preserve the skill's intended scope before verifying
-and committing them.
+guidance, keeps trigger descriptions concise without losing routing-critical
+phrases or frontmatter safety, uses references/scripts appropriately, defines
+output and verification expectations, and avoids surprising side effects. It
+distinguishes skill audits from neighboring code, design, security, and
+documentation audits, compares paired Claude/Codex copies when applicable, and
+in =--accept= mode applies only high-confidence fixes that preserve the skill's
+intended scope before verifying and committing them.
 
 **** find-skills
 :PROPERTIES:

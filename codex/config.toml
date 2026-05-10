@@ -389,10 +389,6 @@ path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/find-skills/SKILL.
 enabled = false
 
 [[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/generate-readme/SKILL.md"
-enabled = false
-
-[[skills.config]]
 path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/google-sheets-comments/SKILL.md"
 enabled = false
 

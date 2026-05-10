@@ -9086,9 +9086,15 @@ BACKEND is the resolved `ai-agent' backend."
                 (not (file-in-directory-p session-dir dotfiles)))
             t
           (setq-local init-ai-agent--session-retro-sent t)
-          (funcall (ai-agent--backend-get backend :send-command) command buffer)
+          (init-ai-agent-send-session-retro-command backend buffer command)
           (message "Started %s; run ai-agent-exit again to close this session." command)
           nil))))
+
+  (defun init-ai-agent-send-session-retro-command (backend buffer command)
+    "Send and submit session-retro COMMAND to BACKEND session BUFFER."
+    (funcall (ai-agent--backend-get backend :send-command) command buffer)
+    (when-let* ((send-return-fn (ai-agent--backend-get backend :send-return)))
+      (funcall send-return-fn buffer)))
 
   (defun init-ai-agent-session-retro-command (backend)
     "Return the session-retro command for ai-agent BACKEND."

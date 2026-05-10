@@ -217,7 +217,10 @@ progressive disclosure, bundled resources, verification, portability, and
 maintainability, with special attention to whether the skill captures a
 repeatable workflow, triggers on realistic user phrasing, gives ordered
 operational guidance, defines output and verification expectations, and avoids
-surprising side effects.
+surprising side effects. It distinguishes skill audits from neighboring code,
+design, security, and documentation audits, compares paired Claude/Codex copies
+when applicable, and in =--accept= mode applies only high-confidence fixes that
+preserve the skill's intended scope before verifying and committing them.
 
 The =migrate-profile= skill is a paired Claude/Codex workflow for consolidating
 Claude Code project data after elpaca profile changes. It dry-runs first,

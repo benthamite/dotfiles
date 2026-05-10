@@ -1,13 +1,13 @@
 ---
 name: skill-audit
-description: Audit Claude/Codex skills and SKILL.md files for trigger quality, workflow design, progressive disclosure, bundled resources, verification, portability, and maintainability. Use when the user asks to review, audit, improve, harden, rate, diagnose, or refactor an agent skill; when they want best-practice feedback on a SKILL.md; or when they ask whether a skill is worth keeping, splitting, merging, or turning into a tested workflow.
+description: Audit Claude/Codex skills and SKILL.md files for trigger quality, workflow design, progressive disclosure, bundled resources, verification, portability, and maintainability. Use when the user asks to review, audit, improve, harden, rate, diagnose, or refactor an agent skill; when they want best-practice feedback on a SKILL.md; or when they ask whether a skill is worth keeping, splitting, merging, or turning into a tested workflow. Do not use for ordinary code, security, architecture, or documentation audits unless the target artifact is a skill.
 ---
 
 # Skill audit
 
 Review $ARGUMENTS as an agent skill. The goal is to find concrete changes that would make the skill trigger more reliably, guide the agent more effectively, reduce repeated work, and produce more verifiable results.
 
-If `--accept` is present in $ARGUMENTS, after completing the audit, immediately apply all high-confidence fixes that do not change the skill's intended scope. Preserve the skill name unless the user explicitly asked for a rename. Run any available tests or at least re-read the edited SKILL.md for consistency, then commit the result.
+If `--accept` is present in $ARGUMENTS, after completing the audit, immediately apply all high-confidence fixes that do not change the skill's intended scope. Preserve the skill name unless the user explicitly asked for a rename, then follow the accept-mode verification and commit steps below.
 
 Read the actual skill files before judging. If the user names a skill but does not give a path, use the local skill resolver when available. Choose `--tool claude` for Claude Code skills and `--tool codex` for Codex skills:
 
@@ -19,6 +19,19 @@ Read the actual skill files before judging. If the user names a skill but does n
 ```
 
 If the resolver is unavailable, search likely skill roots with `rg --files -g SKILL.md`.
+
+## Scope Boundaries
+
+Use this skill for reusable agent skills, skill directories, `SKILL.md` files, and closely related skill workflow artifacts. Do not use it for ordinary code review, security review, architecture/design audit, documentation proofreading, or general Claude/Codex configuration cleanup unless the artifact being evaluated is itself a skill or skill-adjacent workflow; route those requests to the neighboring audit or maintenance skills.
+
+## Workflow
+
+1. Resolve the target exactly. If a skill name could refer to both Claude and Codex copies, inspect both unless the request narrows the scope to one tool. If paired copies differ, decide whether the difference is intentional before proposing synchronization.
+2. Inventory the skill directory. Read `SKILL.md` first, then list bundled scripts, references, assets, evals, or state files and open only the ones needed to judge how the skill uses them.
+3. Audit against the checklist below. Prioritize issues that affect triggering, scope boundaries, execution order, safety, verification, or maintainability; skip pure style preferences.
+4. In normal mode, report findings using the output format below.
+5. In `--accept` mode, apply only high-confidence, scope-preserving edits. Keep paired copies synchronized unless their differences are intentional, update directly required docs, run available checks or re-read changed files, inspect `git diff` and `git status`, and commit only the audited skill/docs changes.
+6. After `--accept`, include files changed, commit hash, verification performed, and deferred or unresolved recommendations in the final response.
 
 ## What to Look For
 

@@ -368,7 +368,7 @@ Spec-based build workflow inspired by [[https://x.com/trq212/status/200531527502
 :ID:       057FB141-D07F-4BD4-B880-912B67275263
 :END:
 
-Creates comprehensive test suites. Performs reconnaissance on the tech stack, then generates tests prioritized by criticality: data integrity and input boundaries first, business logic and integrations second, regressions and configuration third.
+Creates or expands high-value test suites for a codebase or module. It triggers on requests to add or write tests, improve coverage, bootstrap testing, or create regression tests, while routing ordinary debugging, code review, lint cleanup, and one-off validation elsewhere. It inventories project instructions, existing test runners, fixtures, dependencies, and critical paths before writing behavior-focused tests by risk, then reports commands run, coverage added, gaps left, bugs uncovered, and unresolved failures.
 
 **** lint-elisp
 :PROPERTIES:

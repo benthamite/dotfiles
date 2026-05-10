@@ -1,14 +1,20 @@
 ---
 name: test-suite
-description: Create a comprehensive test suite for a codebase or specific module. Use when the user wants to add thorough tests, improve test coverage, or bootstrap testing in a project that lacks tests.
+description: Create or expand high-value test suites for a codebase or specific module. Use when the user asks to add or write tests, improve coverage, bootstrap testing, create regression tests, or test a module/codebase; not for ordinary bug-fixing unless tests are the requested deliverable.
 argument-hint: [dir]
 ---
 
 # Test suite
 
-Create a comprehensive test suite for $ARGUMENTS (if no argument provided, default to the current project). The goal is to produce **tests that catch real bugs** — not ceremonial tests that merely confirm the code runs without crashing.
+Create a comprehensive test suite for $ARGUMENTS (if no argument provided, default to the current project). The goal is to produce **tests that catch real bugs** - not ceremonial tests that merely confirm the code runs without crashing.
 
 Use subagents to explore the codebase in parallel where appropriate (e.g., one for backend, one for frontend, one for shared utilities). Read actual code, understand its behavior, and write tests against that behavior.
+
+## Scope boundaries
+
+Use this skill when the deliverable is new or substantially improved tests. Do not use it for ordinary debugging, code review, lint cleanup, PR validation, or one-off command verification unless the user explicitly asks to add tests as part of that work. Route those requests to the neighboring debugging, audit, lint, or PR verification workflows.
+
+Keep the work scoped to the requested project, module, or risk area. If comprehensive coverage would require a broad architecture change, live service credentials, or a new test framework that conflicts with project conventions, document that limit instead of forcing a workaround.
 
 ## Process
 
@@ -16,12 +22,16 @@ Use subagents to explore the codebase in parallel where appropriate (e.g., one f
 
 Before writing any tests:
 
+- **Read project instructions**: check `AGENTS.md`, `CLAUDE.md`, README testing sections, package scripts, and CI config so the suite follows local rules.
+- **Check worktree state**: note unrelated dirty files before editing and avoid overwriting user changes.
 - **Identify the tech stack**: languages, frameworks, existing test runners, assertion libraries, and fixture patterns already in use. Adopt the project's existing conventions.
 - **Find existing tests**: look for test directories, test files, config files (`pytest.ini`, `vitest.config.ts`, `jest.config.js`, `.mocharc.yml`, etc.). Study the patterns and style already established.
+- **Identify verification commands**: find the targeted test command, full suite command, lint/typecheck commands for tests, and any required environment setup.
 - **Map the codebase**: identify the modules, entry points, data flows, and external boundaries (APIs, databases, file I/O, third-party services).
 - **Find the critical paths**: which code handles money, auth, data persistence, user input parsing, or state transitions? These get tested first.
+- **Define coverage goals**: state which behavior, module, or risk area the new tests must cover before writing them.
 
-If there is no testing infrastructure at all, set it up (test runner, config, directory structure) before writing tests, and explain the choices made.
+If there is no testing infrastructure at all, set up the smallest idiomatic runner, config, and directory structure before writing tests. Prefer tools already standard for the language or framework; if adding dependencies, update the relevant manifest and lockfile and explain the choice.
 
 ### 2. What to test
 
@@ -67,6 +77,24 @@ Prioritize tests by the damage a bug would cause:
 - **Don't over-parametrize**: parametrized tests are powerful, but 50 cases in one parametrized test are harder to debug than 5 focused tests. Use parametrize for systematic variation (e.g., all date formats), not as a substitute for thinking about what to test.
 - **Don't ignore test failures**: if a test you wrote fails, investigate. It might have found a real bug. Don't delete or skip it to make the suite green.
 
+### 5. Handling failures and bugs
+
+- Run new tests in isolation before running the broader suite, so failures are easy to localize.
+- If a failure comes from a bad test, fixture, or test infrastructure, fix the test code.
+- If a failure exposes a real product bug, keep the test as the reproduction. Fix the bug only when it is within the requested scope and the fix is narrow; otherwise report the failing command, the suspected bug, and the smallest next step.
+- Do not weaken assertions, add broad skips, or introduce silent fallbacks just to make the suite pass.
+
+## Verification
+
+Before reporting completion:
+
+1. Run the targeted new tests.
+2. Run the relevant existing suite, or the full suite when it is practical.
+3. Run project-standard lint, typecheck, formatting, or compile checks that cover the changed tests.
+4. Re-read changed tests and fixtures to confirm assertions would fail for the wrong behavior, not just for crashes.
+
+If any check cannot be run, state the exact command or check that was skipped and why.
+
 ## Output format
 
 Organize the work into:
@@ -79,9 +107,11 @@ For each test file, include:
 - A brief comment at the top explaining what module/functionality it covers
 - Tests grouped by function or feature being tested
 
-After writing the tests, **run them** and fix any failures before reporting results. A test suite that doesn't pass is not done.
+After writing the tests, **run them** and fix failures caused by the tests or infrastructure before reporting results. If a remaining failure exposes a real product bug that is out of scope to fix, report it as an unresolved blocker; do not call the suite complete.
 
-At the end, offer to:
-- Fix any bugs the tests uncovered
-- Add tests for areas that were skipped
-- Set up CI integration for the test suite
+At the end, report:
+
+- Test files and infrastructure changed
+- Commands run and their results
+- Coverage added and important gaps left
+- Bugs uncovered, whether they were fixed, and any unresolved failures or follow-up work

@@ -1883,12 +1883,14 @@ if the process's buffer has already been deleted."
 
 /[[https://github.com/magit/ghub][ghub]] provides basic support for using the APIs of various Git forges from Emacs packages./
 
+Using my fork for async transport-error handling.
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package ghub
   :ensure (:host github
                  :build (:not elpaca-check-version)
-                 :repo "magit/ghub"
-                 :branch "main")
+                 :repo "benthamite/ghub"
+                 :branch "benthamite/async-transport-errors")
   :defer t
   :config
   (require 'pass))
@@ -12814,6 +12816,8 @@ CLOCK: [2021-04-06 Tue 18:05]--[2021-04-06 Tue 18:34] =>  0:29
 
 /[[https://github.com/zevlg/telega.el][telega]] is an unofficial Emacs Telegram client./
 
+Using my fork while awaiting merge of [[https://github.com/zevlg/telega.el/pull/573][zevlg/telega.el#573]].
+
 To upgrade TDLib with homebrew, run =brew upgrade tdlib --fetch-HEAD= in a terminal, then =M-x telega-server-build=.
 
 If you need to install an earlier version than =HEAD=, you’ll need to build from source:
@@ -12829,6 +12833,10 @@ Then change the value of =telega-server-libs-prefix= from =/opt/homebrew= to =/u
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package telega
+  :ensure (:host github
+                 :repo "benthamite/telega.el"
+                 :branch "fix/ignore-missing-chat-last-message"
+                 :files (:defaults "etc" "server" "contrib" "Makefile"))
   :init
   (setopt telega-server-libs-prefix "/opt/homebrew")
 

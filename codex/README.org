@@ -240,6 +240,15 @@ registry, fails loudly when no listed account fetch succeeds, and verifies fetch
 markers, saved digest, last-run timestamp, diff cleanliness, and staged paths
 before committing digest, timestamp, list, and vet registry changes.
 
+The =twitter-discover= skill is a paired Claude/Codex workflow for iterative,
+graph-based discovery of high-value Twitter accounts in any niche. It
+interviews the user for criteria, acquires seed accounts via search, expands
+through hot promise scores from following-list overlap, uses the active
+Claude/Codex skill root for wrappers and saved state, keeps API responses in a
+per-session temporary directory, verifies its parsing helper, re-reads saved
+logs/lists/registries, and optionally exports high-scoring accounts to a
+=twitter-digest= list.
+
 The =twitter-vet= skill is a paired Claude/Codex workflow for vetting, scoring,
 ranking, or deciding whether Twitter/X accounts belong on curated lists. It
 requires a handle, list name, rubric, and optional =vet-threshold=; uses the

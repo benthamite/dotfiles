@@ -1,33 +1,58 @@
 ---
 name: twitter-discover
-description: Discover high-value Twitter/X accounts in any niche using iterative graph-based exploration. Use when the user says "discover accounts", "find twitter accounts", "twitter discovery", "curate a list", "find people to follow", "who should I follow", or "twitter explore".
+description: Discover high-value Twitter/X accounts in a niche through criteria interview, seed acquisition, graph expansion, and vetting. Use when the user says "discover accounts", "find twitter accounts", "twitter discovery", "curate a list", "find people to follow", "who should I follow", or "twitter explore". Do not use for direct tweet/profile lookup, digest generation, or vetting a known account list.
 ---
 
 # Twitter account discovery
 
-@claude/skills/twitter-vet/SKILL.md
-
 Iterative, graph-based discovery of high-value Twitter/X accounts in any topic area. Uses a "hot promise score" algorithm that combines following-list overlap with bio relevance filtering and continuous score updates.
+
+Use `twitter` for direct tweet/profile lookups, `twitter-digest` for recurring or one-off digests from an existing list, and `twitter-vet` when the user already has accounts to score against a known rubric.
+
+## Active skill paths
+
+Use the active tool's skill root throughout the session:
+
+- Codex: `SKILL_ROOT="$HOME/.codex/skills"`
+- Claude: `SKILL_ROOT="$HOME/.claude/skills"`
+
+Then set:
+
+```bash
+TWITTERAPI="$SKILL_ROOT/twitter/lib/twitterapi.sh"
+TWITTER_VET="$SKILL_ROOT/twitter-vet/SKILL.md"
+DISCOVER_RESULTS="$SKILL_ROOT/twitter-discover/results"
+DIGEST_SKILL="$SKILL_ROOT/twitter-digest/SKILL.md"
+DIGEST_LISTS="$SKILL_ROOT/twitter-digest/lists"
+VET_REGISTRY="$SKILL_ROOT/twitter-vet/vetted"
+SESSION_DIR=$(mktemp -d /tmp/twitter-discover.XXXXXX)
+chmod 700 "$SESSION_DIR"
+HELPER="$SESSION_DIR/twitter_discover_helpers.py"
+test -x "$TWITTERAPI"
+test -r "$TWITTER_VET"
+```
+
+Read `$TWITTER_VET` before applying Procedure A or Procedure B. Save API responses and transient state under `$SESSION_DIR` with descriptive filenames.
 
 ## API access
 
-All twitterapi.io calls go through `~/.claude/skills/twitter/lib/twitterapi.sh`. See the `twitter` skill for the full subcommand reference. Subcommands used here:
+All twitterapi.io calls go through `$TWITTERAPI`. See the `twitter` skill for the full subcommand reference. Subcommands used here:
 
 | Subcommand                | Use for                                   |
 |---------------------------|-------------------------------------------|
-| `twitterapi.sh search`    | Find initial seed accounts by topic       |
-| `twitterapi.sh tweets`    | Sample tweets to evaluate an account      |
-| `twitterapi.sh following` | Get who an account follows (page up to 200) |
-| `twitterapi.sh user`      | Check bio/profile before sampling tweets  |
-| `twitterapi.sh users`     | Find users by keyword                     |
+| `$TWITTERAPI search`      | Find initial seed accounts by topic       |
+| `$TWITTERAPI tweets`      | Sample tweets to evaluate an account      |
+| `$TWITTERAPI following`   | Get who an account follows (page up to 200) |
+| `$TWITTERAPI user`        | Check bio/profile before sampling tweets  |
+| `$TWITTERAPI users`       | Find users by keyword                     |
 
-Save each response to a file under `/tmp/` and pass the file path to the helpers below to parse out the fields you care about.
+Save each response to a file under `$SESSION_DIR` and pass the file path to the helpers below to parse out the fields you care about. Do not print API keys, resolved credential values, or curl commands that include `X-API-Key`.
 
 ## Procedure
 
 ### Phase 1: Interview
 
-Ask the user two things:
+Ask the user for any missing information:
 
 1. **What content are you interested in?** Get specific: topics, the kind of person they want to find (practitioners sharing workflows? researchers? commentators? builders?), what makes an account valuable vs. noise.
 2. **Do you have seed accounts?** An optional list of Twitter usernames they already know are good. Even 2-3 seeds dramatically improve results.
@@ -36,7 +61,7 @@ Synthesize the answers into:
 - `TOPIC_KEYWORDS`: a list of search queries for Phase 2 (if no seeds provided).
 - `RELEVANCE_CRITERIA`: a rubric for scoring accounts (what makes a 9 vs. a 5 vs. a skip). This replaces the generic scoring — tailor it to what the user actually wants.
 
-Confirm the criteria with the user before proceeding.
+If the prompt already gives clear criteria, state the rubric and proceed. If the criteria are underspecified or the request is exploratory, confirm the criteria with the user before making API calls.
 
 ### Phase 2: Seed acquisition
 
@@ -44,12 +69,12 @@ Confirm the criteria with the user before proceeding.
 
 **If not**, find seeds via search:
 
-1. Run 3-5 `twitterapi.sh search` calls using `TOPIC_KEYWORDS` (default `--type=Top`, no need to pass it). Save each response to `/tmp/`.
+1. Run 3-5 `$TWITTERAPI search` calls using `TOPIC_KEYWORDS` (default `--type=Top`, no need to pass it). Save each response to `$SESSION_DIR`.
 2. Extract unique authors from results, filtering out:
    - Accounts with <500 followers (too small to anchor discovery).
    - Accounts whose bio or content is clearly irrelevant (use your judgment).
    - Reply-only results.
-3. For the top 5-8 authors by engagement, sample their tweets (`twitterapi.sh tweets <username>`, ~20 tweets per page).
+3. For the top 5-8 authors by engagement, sample their tweets (`$TWITTERAPI tweets <username>`, ~20 tweets per page).
 4. Score each using `RELEVANCE_CRITERIA`. Any scoring 6+ become seeds.
 5. If fewer than 3 seeds found, try different search queries and repeat.
 
@@ -60,15 +85,15 @@ This is the core loop. Repeat until the user is satisfied.
 #### 3a. Score seed accounts
 
 For each unscored seed:
-1. Fetch ~20 tweets with `twitterapi.sh tweets <username>`.
+1. Fetch ~20 tweets with `$TWITTERAPI tweets <username>`.
 2. Evaluate against `RELEVANCE_CRITERIA`. Assign a score 1-10.
 3. Record the score.
 
 #### 3b. Fetch following lists
 
-For each scored account with score >= 6, fetch their following list (`twitterapi.sh following <username> --page-size=100`).
+For each scored account with score >= 6, fetch their following list (`$TWITTERAPI following <username> --page-size=100`).
 
-**Important**: Do these calls sequentially (not in parallel) to avoid rate limiting. A 2-second pause between calls is not needed but avoid firing more than 3 simultaneously.
+**Important**: Fetch following lists sequentially to avoid rate limiting. If you intentionally batch lower-cost search or timeline calls, cap them at 3 concurrent calls and back off immediately on 429 responses.
 
 #### 3c. Compute hot promise scores
 
@@ -82,11 +107,11 @@ This score updates continuously — every time a new account is scored and its f
 
 #### 3d. Quick filter candidates
 
-Apply **Procedure A** (quick filter) from twitter-vet to the candidate list from `compute_promise_scores`. Use bio, follower count, and who follows them. Sort passing candidates by likely relevance, breaking ties by promise score.
+Apply **Procedure A** (quick filter) from `$TWITTER_VET` to the candidate list from `compute_promise_scores`. Use bio, follower count, and who follows them. Sort passing candidates by likely relevance, breaking ties by promise score.
 
 #### 3e. Full scoring
 
-For the top 5-8 candidates that pass the quick filter, apply **Procedure B** (full scoring) from twitter-vet using `RELEVANCE_CRITERIA` as the rubric. For any scoring 7+, also fetch their following list and update all promise scores (making the loop "hotter"). Repeat from 3c with updated scores.
+For the top 5-8 candidates that pass the quick filter, apply **Procedure B** (full scoring) from `$TWITTER_VET` using `RELEVANCE_CRITERIA` as the rubric. For any scoring 7+, also fetch their following list and update all promise scores (making the loop "hotter"). Repeat from 3c with updated scores.
 
 ### Phase 4: Checkpoint
 
@@ -105,12 +130,13 @@ If the user says continue, go back to Phase 3. If they say stop, save the result
 
 ## Helper script
 
-To efficiently parse the large JSON responses from the API, create a temporary Python script at `/tmp/twitter_discover_helpers.py` at the start of the session:
+To efficiently parse the large JSON responses from the API, create `$HELPER` at the start of the session and run `python3 -m py_compile "$HELPER"` before using it:
 
 ```python
 #!/usr/bin/env python3
 """Helpers for Twitter account discovery."""
-import json, re, sys
+import json
+import sys
 
 def extract_tweets(filepath):
     """Extract tweet text + engagement from a tool result file."""
@@ -185,12 +211,18 @@ def extract_search_authors(filepath, exclude_set=None):
             print(f'  Bio: {data["bio"]}')
         print()
 
-def compute_promise_scores(following_files, scores):
+def compute_promise_scores(state_filepath):
     """Compute hot promise scores from following lists.
 
-    following_files: dict of {username: filepath}
-    scores: dict of {username: int_score}
+    state_filepath: JSON file with:
+      following_files: {username: filepath}
+      scores: {username: int_score}
     """
+    with open(state_filepath) as f:
+        state = json.load(f)
+    following_files = state.get('following_files', {})
+    scores = state.get('scores', {})
+
     all_following = {}
     for username, filepath in following_files.items():
         try:
@@ -254,14 +286,24 @@ if __name__ == '__main__':
     elif cmd == 'search':
         exclude = set(sys.argv[3].split(',')) if len(sys.argv) > 3 else set()
         extract_search_authors(sys.argv[2], exclude)
+    elif cmd == 'promise':
+        compute_promise_scores(sys.argv[2])
 ```
 
 Call it via:
-- `python3 /tmp/twitter_discover_helpers.py tweets <file>` — extract tweets
-- `python3 /tmp/twitter_discover_helpers.py following <file>` — extract following list
-- `python3 /tmp/twitter_discover_helpers.py search <file> [exclude_csv]` — extract search authors
+- `python3 "$HELPER" tweets <file>` — extract tweets
+- `python3 "$HELPER" following <file>` — extract following list
+- `python3 "$HELPER" search <file> [exclude_csv]` — extract search authors
+- `python3 "$HELPER" promise "$SESSION_DIR/state.json"` — compute promise scores
 
-For `compute_promise_scores`, write a one-off Python snippet inline since it requires the current session's `scores` dict and `following_files` dict.
+For promise scoring, update `$SESSION_DIR/state.json` whenever scores or following files change:
+
+```json
+{
+  "scores": {"seed_handle": 8},
+  "following_files": {"seed_handle": "/tmp/twitter-discover.ABC123/seed_handle-following.json"}
+}
+```
 
 ## Saving results
 
@@ -269,7 +311,7 @@ When the user is done, save results in two ways:
 
 ### 1. Discovery log (always)
 
-Save to `~/.claude/skills/twitter-discover/results/YYYY-MM-DD-topic-slug.md`:
+Create `$DISCOVER_RESULTS` if needed and save to `$DISCOVER_RESULTS/YYYY-MM-DD-topic-slug.md`:
 
 ```markdown
 # Twitter discovery: TOPIC
@@ -294,11 +336,11 @@ Criteria: RELEVANCE_CRITERIA summary
 
 ### 2. Digest list (if twitter-digest skill is installed)
 
-Check if `~/.claude/skills/twitter-digest/SKILL.md` exists. If it does:
+Check if `$DIGEST_SKILL` exists. If it does:
 
 1. Ask the user for a short list name (e.g., `ai-tools`, `ml-research`). Suggest one based on the topic.
 2. Ask the user which tiers to include (default: Tier 1 + Tier 2, i.e. score >= 6).
-3. Write the list to `~/.claude/skills/twitter-digest/lists/<list-name>.md` using this format:
+3. Write the list to `$DIGEST_LISTS/<list-name>.md` using this format:
 
 ```markdown
 ---
@@ -312,7 +354,7 @@ description: <derive from RELEVANCE_CRITERIA — what to surface and what to ski
 ```
 
 4. Tell the user they can now run `/twitter-digest <list-name>` or set up a recurring digest with `/loop 4h /twitter-digest <list-name>`.
-5. Write all scored accounts (score + rationale) to `~/.claude/skills/twitter-vet/vetted/<list-name>.md` using the registry format defined in twitter-vet. Include all tiers and below-threshold accounts. This lets twitter-digest skip re-vetting accounts already evaluated here.
+5. Write all scored accounts (score + rationale) to `$VET_REGISTRY/<list-name>.md` using the registry format defined in `$TWITTER_VET`. Include all tiers and below-threshold accounts. This lets twitter-digest skip re-vetting accounts already evaluated here.
 
 If the digest skill is not installed, skip steps 1-5 silently — don't suggest installing it.
 
@@ -332,6 +374,15 @@ Flag to the user if costs are likely to exceed $2. At typical credit balances (1
 
 1. **Hot scores**: Always recompute promise scores after scoring a new account and fetching its following list. Never use stale scores.
 2. **Evaluate bios first**: Read bios and context before spending API calls on tweet sampling. Use your judgment rather than regex — you can assess relevance more accurately than keyword matching.
-3. **Sequential API calls**: Avoid firing many parallel API calls to the same endpoint — rate limits will block you. 2-3 parallel calls are fine; 5+ are not.
+3. **Sequential API calls**: Avoid firing many parallel API calls to the same endpoint — rate limits will block you. Keep following-list calls sequential; use at most 2-3 concurrent search or timeline calls when the credit balance supports it.
 4. **Tailored criteria**: The scoring rubric must reflect what the user actually wants, not a generic "is this account good." A researcher and a marketer want very different things.
 5. **Transparent checkpoints**: Show the user what you found and let them steer. Don't run 50 API calls without checking in.
+
+## Verification and cleanup
+
+Before reporting completion:
+
+1. Re-read the discovery log and any digest list or vet registry files written.
+2. Confirm the saved tiers, handles, scores, rationales, and discovery stats match the final scoreboard.
+3. State how many search, timeline, profile, and following-list pages were fetched; whether a `next_cursor` or candidate backlog remained; and the approximate API cost.
+4. Clean up `$SESSION_DIR` according to the repository deletion policy, preferably with `trash "$SESSION_DIR"`. If cleanup is unavailable or the raw responses should be preserved for debugging, report the path and reason.

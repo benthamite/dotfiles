@@ -695,7 +695,7 @@ Shared account vetting procedure used by =twitter-digest= and =twitter-discover=
 :ID:       D3FF4B1E-429E-4999-951C-FBFB30F1E488
 :END:
 
-Iterative, graph-based discovery of high-value Twitter accounts in any niche. Interviews the user for criteria, acquires seed accounts via search, then expands using a "hot promise score" algorithm: accounts followed by multiple high-scoring seeds are profiled next, with scores recomputed after each round. Presents tiered results (must-follow, strong, situational) at checkpoints and optionally exports to a =twitter-digest= list.
+Iterative, graph-based discovery of high-value Twitter accounts in any niche. Interviews the user for criteria, acquires seed accounts via search, then expands using a "hot promise score" algorithm: accounts followed by multiple high-scoring seeds are profiled next, with scores recomputed after each round. Uses the active Claude/Codex skill root for the Twitter API wrapper, =twitter-vet= rubric, result logs, digest lists, and vet registry; keeps API responses in a per-session temporary directory; verifies the helper script before parsing; and re-reads saved logs/lists/registries before reporting completion. Presents tiered results (must-follow, strong, situational) at checkpoints and optionally exports to a =twitter-digest= list.
 
 **** ai-journal
 :PROPERTIES:

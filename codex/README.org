@@ -243,6 +243,13 @@ verification, read real code paths, and report concrete failure modes. With
 committed cleanly; broader readability, architecture, or security-posture
 reviews route to the neighboring audit skills.
 
+The =pr-audit= skill is a paired Claude/Codex PR readiness workflow. It
+discovers the branch and PR base, runs project build/test checks, reviews each
+commit in the PR range, checks upstream freshness, scans changed files for
+artifacts, secrets, whitespace, and line endings, and polls remote CI only when
+the branch or PR is already pushed. It reports unavailable checks explicitly and
+does not change remote state.
+
 The =emacs-freeze= skill is a paired Claude/Codex operations skill for frozen,
 hung, beachballing, or otherwise unresponsive Emacs sessions. It collects
 per-PID diagnostics, tries to read =*Backtrace*= and =*Messages*= through the

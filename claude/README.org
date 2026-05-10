@@ -380,7 +380,11 @@ Fixes byte-compile warnings and checkdoc notes in one or more Elisp files. Colle
 :ID:       03187E6C-B3E2-47EB-821B-68121F4F883F
 :END:
 
-Six-step PR verification: byte-compile/type-check/lint, run tests, review commits, check upstream alignment, verify file hygiene, and check CI results. I run it before submitting or merging any PR.
+PR readiness verification for the current branch. It discovers the base/PR
+scope, runs project build/test checks, reviews each commit, checks upstream
+freshness, scans changed files for artifacts, secrets, whitespace, and line
+endings, and polls remote CI only when the branch or PR is already pushed. It
+reports not-run checks with concrete reasons and does not change remote state.
 
 *** Documentation skills
 :PROPERTIES:

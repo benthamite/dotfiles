@@ -403,14 +403,6 @@ title, slugifies filenames through Emacs, preserves existing note structure on
 updates, saves org IDs for new notes, and re-reads the note from disk before
 reporting completion.
 
-The =convert-citations= skill is a paired Claude/Codex workflow for replacing
-raw bibliographic references in org files with =[cite:@KEY]= citations from the
-user's citar bibliography. It validates file, directory, and glob targets,
-keeps raw-reference edits out of org metadata and prose, uses the current
-agent's file-editing and web lookup tools, and verifies edited files for
-Markdown citation tags or placeholder markers before reporting.
-
-
 The =transcribe-note= skill is a paired Claude/Codex workflow for turning a
 recent or named audio file in =~/Downloads/= into a structured org note under
 =~/My Drive/notes/=. It checks local =whisperx=, =ffmpeg=, and =emacsclient=
@@ -418,6 +410,14 @@ dependencies, keeps verbatim transcript and subtitle requests out of scope,
 asks for a title with transcript context, saves generated org IDs, cleans
 temporary transcript directories, and verifies the note before reporting
 completion.
+
+The =convert-citations= skill is a paired Claude/Codex workflow for replacing
+raw bibliographic references in org files with =[cite:@KEY]= citations from the
+user's citar bibliography. It validates file, directory, and glob targets,
+keeps raw-reference edits out of org metadata and prose, uses the current
+agent's file-editing and web lookup tools, and verifies edited files for
+Markdown citation tags or placeholder markers before reporting.
+
 The =audit-mac-app= skill is a paired Claude/Codex static-first workflow for
 auditing macOS applications before running them or granting sensitive
 permissions. It covers trust verification, permission analysis, app type

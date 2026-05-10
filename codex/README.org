@@ -313,6 +313,14 @@ tests with a realistic low-risk prompt, waits for the user's verdict, moves
 rejected candidates to Trash, and records =keep=, =removed=, =revisit=, or
 =skipped= with a note.
 
+The =walk-list= skill is a paired Claude/Codex workflow for strict item-by-item
+processing of JSON arrays, newline-delimited JSON, or newline-separated text
+files. It moves the source file into the protected walk-list store, leaves a
+stub with quoted commands generated from the same =walk.py= path that started
+the walk, validates positive concurrency and non-negative stale-claim
+thresholds, and distinguishes strict isolation/concurrency work from ordinary
+summarizing, filtering, sorting, or bulk list transformations.
+
 The =migrate-profile= skill is a paired Claude/Codex workflow for consolidating
 Claude Code project data after elpaca profile changes. It dry-runs first,
 requires confirmation before retargeting the active profile symlink, copying

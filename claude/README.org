@@ -856,6 +856,13 @@ Evaluates third-party skills from the [[https://github.com/HartreeWorks/skills][
 :ID:       01E6C587-5B48-4478-B002-BA5388C32A5B
 :END:
 
+Accepts JSON arrays, newline-delimited JSON, and newline-separated text files.
+It is for strict item isolation and controlled concurrency, not ordinary
+summarizing, filtering, sorting, or bulk transformation of lists that can be
+safely read all at once. Generated stub commands use the same =walk.py= path
+that started the walk, and the script validates positive concurrency limits and
+non-negative stale-claim thresholds.
+
 Processes items from a list file strictly one at a time (sequential) or N-at-a-time (parallel subagent pool), guaranteeing no item is skipped or batched. =walk.py start= /moves/ the input file into =~/.claude/walk-list-data/<uuid>/= and leaves a stub at the original path; a PreToolUse hook (=block-walk-list-access.sh=) denies every tool (Read, Grep, Glob, Edit, Write, Bash, etc.) that tries to touch the protected store except =python .../walk.py= itself — the main session cannot peek ahead, and subagents only see the single item handed to them in their prompt. State updates go through =flock= so concurrent =record= calls from pool subagents cannot clobber each other. Subcommands: =start=, =next= (sequential), =dispatch= + =record= (pool), =pool-status=, =status=, =show-decisions=, =release-stale= (reclaim stuck slots), =set-max-concurrent=, =restore= (finalize and write decisions alongside the original file), =abort=.
 
 ** Hooks

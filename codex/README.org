@@ -185,6 +185,14 @@ repeatable workflow, triggers on realistic user phrasing, gives ordered
 operational guidance, defines output and verification expectations, and avoids
 surprising side effects.
 
+The =code-audit= skill is a paired Claude/Codex development skill for finding
+actual correctness, security, error-handling, and data-integrity defects in
+application code. It requires agents to resolve scope, identify project-specific
+verification, read real code paths, and report concrete failure modes. With
+=--accept=, it fixes only confirmed in-scope findings that can be verified and
+committed cleanly; broader readability, architecture, or security-posture
+reviews route to the neighboring audit skills.
+
 The =automate= skill is a paired Claude/Codex meta-skill for reusable AI
 workflow design. It decides whether a request should become a Claude Code skill,
 a Codex skill, a gptel directive or preset, a gptel tool, or a gptel command,

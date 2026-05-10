@@ -492,7 +492,25 @@ End-to-end workflow for Google Search Console Page indexing emails and validatio
 :ID:       DCC9EC24-1AB4-495E-8C89-DB4C63229744
 :END:
 
-End-of-session bookkeeping. Treats =CLAUDE.md= as the canonical session-log index unless the project says otherwise, detects the project's log directory from the latest-session pointer, and creates a dated session log (what was done, key findings, results, open questions). On first run in a new project, gathers the log directory and optional =decisions/= setup with =AskUserQuestion= when available or a concise fallback question otherwise. Updates the =CLAUDE.md= session reference, uses the =record-decisions= skill or its local workflow if applicable, runs and reports =context/post-update-log-hook.md= hooks, and commits only intended bookkeeping paths. Before committing, verifies every intended path was actually staged (=git diff --cached --name-only= vs the intended list, with =git check-ignore= for any missing path) and stops with a clear report rather than silently producing a partial commit when a parent repo's =.gitignore= has filtered the log. Accepts =--exit= to end the session via the host environment's normal exit mechanism after completing all steps.
+End-of-session bookkeeping triggered by =/update-log=, "update log", "session
+log", "close out", "wrap up", or direct requests to save end-of-session
+progress. Treats =CLAUDE.md= as the canonical session-log index unless the
+project says otherwise, detects the project's log directory from the
+latest-session pointer, snapshots the working tree before edits, and creates a
+dated session log (what was done, key findings, results, open questions). On
+first run in a new project, gathers the log directory and optional =decisions/=
+setup with =AskUserQuestion= when available or a concise fallback question
+otherwise. Updates the =CLAUDE.md= session reference, uses the
+=record-decisions= skill or its local workflow if applicable, runs and reports
+=context/post-update-log-hook.md= hooks, and commits only intended bookkeeping
+paths. Before committing, verifies every intended path was actually staged (=git
+diff --cached --name-only= vs the intended list, with =git check-ignore= for any
+missing path), checks the cached diff so pre-existing dirty hunks are not swept
+into the commit, and stops with a clear report rather than silently producing a
+partial commit when a parent repo's =.gitignore= has filtered the log. Reports
+the log path, pointer, hook/decision status, commit hash, and verification;
+accepts =--exit= to end the session via the host environment's normal exit
+mechanism after completing all steps.
 
 **** record-decisions
 :PROPERTIES:

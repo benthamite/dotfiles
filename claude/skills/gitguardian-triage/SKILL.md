@@ -1,6 +1,6 @@
 ---
 name: gitguardian-triage
-description: Triage and remediate all open GitGuardian secret incidents in the user's workspace. Fetches incidents via the GG API, classifies each (rotate vs ignore vs close), drives provider-side revocation via the matching Chrome profile, updates pass and .zshenv-secrets consumers, and closes each incident in GG. Use when the user says "gitguardian", "gg triage", "secret audit", "process gg incidents", "rotate leaked secrets", or wants to clear their GitGuardian dashboard.
+description: Triage and remediate GitGuardian secret incidents. Use for gitguardian/GG triage, secret audit, rotating leaked secrets, processing incidents, or clearing the GitGuardian dashboard.
 user-invocable: true
 model: opus
 ---

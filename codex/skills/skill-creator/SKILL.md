@@ -1,6 +1,6 @@
 ---
 name: skill-creator
-description: Create or iteratively improve agent skills. Use when users ask to make a new skill, turn a workflow into a skill, edit an existing skill through test prompts, run skill evals or benchmarks, package a .skill file, or optimize a skill description for trigger accuracy. For one-pass audits or reviews without an eval/build loop, use skill-audit instead.
+description: Create or iteratively improve agent skills. Use for making a new skill, turning a workflow into a skill, editing through test prompts, running evals, packaging a .skill file, or optimizing trigger accuracy. For one-pass reviews use skill-audit.
 ---
 
 # Skill Creator

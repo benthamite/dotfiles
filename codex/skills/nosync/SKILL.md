@@ -1,6 +1,6 @@
 ---
 name: nosync
-description: Move one known directory outside Google Drive's sync root so Drive stops syncing it, leaving a symlink in its place. Use when the user names a generated dependency/build/cache directory in ~/My Drive (for example node_modules) or Drive reports symlink errors for a specific directory; for broad scans use fix-drive-errors.
+description: Move one known generated dependency/build/cache directory out of Google Drive sync and leave a symlink. Use when the user names a specific directory; for broad Drive error scans use fix-drive-errors.
 ---
 
 # Move directory outside Google Drive sync

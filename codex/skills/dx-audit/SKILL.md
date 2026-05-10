@@ -1,6 +1,6 @@
 ---
 name: dx-audit
-description: "Audit a codebase's AI developer experience: project instructions, verification commands, automation, onboarding traps, and collaboration friction. Use when starting work on a new or unfamiliar repo, when the user asks for a DX/AI-readiness audit, or when repeated agent work is slow or error-prone; not for ordinary bug, security, architecture, readability, or PR reviews."
+description: Audit a codebase's AI developer experience, including project instructions, verification commands, automation, onboarding traps, and collaboration friction. Not for ordinary bug, security, architecture, readability, or PR reviews.
 ---
 
 # AI developer experience audit

@@ -1,6 +1,6 @@
 ---
 name: twitter-discover
-description: Discover high-value Twitter/X accounts in a niche through criteria interview, seed acquisition, graph expansion, and vetting. Use when the user says "discover accounts", "find twitter accounts", "twitter discovery", "curate a list", "find people to follow", "who should I follow", or "twitter explore". Do not use for direct tweet/profile lookup, digest generation, or vetting a known account list.
+description: Discover high-value Twitter/X accounts in a niche through criteria, seeds, graph expansion, and vetting. Use for find accounts, who should I follow, curate a list, or twitter discovery; not for direct lookup, digests, or known-list vetting.
 ---
 
 # Twitter account discovery

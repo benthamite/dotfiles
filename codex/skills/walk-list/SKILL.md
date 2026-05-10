@@ -1,6 +1,6 @@
 ---
 name: walk-list
-description: Process items from a list file strictly one at a time (sequential) or N-at-a-time (parallel subagent pool). The input file is MOVED into a protected store that only walk.py can read; a PreToolUse hook blocks every other tool from accessing the store. In pool mode, items are dispatched to concurrent subagents (each handling one item) with a fixed-size in-flight cap — you cannot dispatch past the cap, and slots only free up when record is called. Use when a list file must be processed item-by-item without batching or peeking ahead; do not use for ordinary summarizing, filtering, or transforming lists that can be safely read all at once.
+description: Process a list file strictly item by item, sequentially or with a bounded subagent pool. Use when the user needs no skipping, batching, or peeking ahead; not for lists that can be safely read all at once.
 ---
 
 # walk-list: strict 1-at-a-time or N-at-a-time processing (structural)

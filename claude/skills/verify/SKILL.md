@@ -1,6 +1,6 @@
 ---
 name: verify
-description: Execute a task under an explicit verification loop when the user says "verify", "verified task", "close the loop", asks for success criteria before work, or wants rigorous checking of writing, research, analysis, classification, data work, or other outputs where "did I get this right?" is not automatically answerable. Generate concrete criteria before acting, verify against them after, and loop on failures. Do not use for ordinary implementation or debugging when project tests or a narrower audit/debugging skill already provide the verification path, unless the user explicitly requests this meta-verification workflow.
+description: Run an explicit verification loop. Use when the user says verify, verified task, close the loop, asks for success criteria, or wants rigorous checking not covered by ordinary tests or a narrower audit/debug skill.
 user-invocable: true
 argument-hint: <task description>
 ---

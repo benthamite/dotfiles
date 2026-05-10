@@ -1,6 +1,6 @@
 ---
 name: twitter-digest
-description: Fetch recent tweets from a named curated account list, triage them against the list rubric, save an org digest, and update last-run state. Use when the user says "twitter digest", "check twitter", "twitter update", "what's new on twitter", or "twitter roundup"; use twitter for direct tweet/profile/search lookups, twitter-discover for finding accounts, and twitter-vet for standalone account scoring.
+description: Fetch recent tweets from a curated account list, triage them against its rubric, save an org digest, and update last-run state. Use twitter for direct lookups, twitter-discover for finding accounts, and twitter-vet for account scoring.
 argument-hint: "[list-name]"
 argument-source: "lists/*.md"
 argument-multiple: true

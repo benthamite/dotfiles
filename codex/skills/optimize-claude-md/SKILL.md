@@ -1,6 +1,6 @@
 ---
 name: optimize-claude-md
-description: Optimize a project's Claude Code instruction files for maximum agent effectiveness. Use when the user says "optimize claude md", "improve claude md", "clean up claude md", "review my claude md", or wants persistent CLAUDE.md guidance made more concise, concrete, and reliable. Do not use for ordinary project docs, code reviews, architecture reviews, or one-off prompt advice.
+description: Optimize project Claude Code instruction files. Use for optimize/improve/clean up/review Claude.md or making persistent CLAUDE.md guidance more concise, concrete, and reliable; not for ordinary docs or code reviews.
 ---
 
 # Optimize CLAUDE.md

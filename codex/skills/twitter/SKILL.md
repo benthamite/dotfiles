@@ -1,6 +1,6 @@
 ---
 name: twitter
-description: Read, fetch, summarize, or save specific Twitter/X tweets, threads, replies, user profiles, timelines, follower/following lists, and keyword search results via twitterapi.io. Use for prompts like "read tweet", "get tweet", "fetch tweet", "read thread", "replies to this tweet", "tweets from @handle", "profile @handle", "search twitter", or "save tweets"; use twitter-digest, twitter-discover, or twitter-vet for curated digests, account discovery, or account vetting.
+description: Fetch, read, summarize, or save specific Twitter/X tweets, threads, replies, profiles, timelines, follower lists, or searches. Use twitter-digest, twitter-discover, or twitter-vet for digests, account discovery, or account scoring.
 ---
 
 # Twitter

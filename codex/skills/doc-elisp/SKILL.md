@@ -1,6 +1,6 @@
 ---
 name: doc-elisp
-description: Create or update an Org manual for an Emacs Lisp package following the Denote manual style. Use when the user asks to document an Elisp package, update README.org/manual docs, refresh command/option/function docs after code changes, or add docs for emacs/extras packages. Do not use for Markdown README generation alone; use generate-readme.
+description: Create or update an Org manual for an Emacs Lisp package in the Denote manual style. Use for documenting Elisp packages or emacs/extras; use generate-readme for Markdown README generation alone.
 ---
 
 # Document an Elisp package

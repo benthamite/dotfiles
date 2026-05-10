@@ -1,6 +1,6 @@
 ---
 name: tangodb-closeout
-description: End-of-session closeout workflow for the tangodb repository. Use when the user explicitly invokes $tangodb-closeout, asks to close out, wrap up, finish a tangodb session, update the tangodb progress file, prepare the tangodb handoff, or make the next "continue" session resume reliably. Do not use for starting or resuming tangodb work; use tangodb-continue instead. Updates docs/data-cleanup-progress.md with completed work, current state, exact next step, verification, blockers, and stop conditions.
+description: Tangodb end-of-session closeout. Use when the user invokes $tangodb-closeout, asks to wrap up tangodb work, update progress, prepare handoff, or make the next continue session resume reliably. Use tangodb-continue for starting/resuming work.
 ---
 
 # Tangodb closeout

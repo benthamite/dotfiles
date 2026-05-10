@@ -321,7 +321,12 @@ Audits code for architectural quality: unnecessary complexity, missing or wrong 
 :ID:       800B3CAA-A993-4929-BB4A-7467A56FA70C
 :END:
 
-Audits code for intent transparency: magic values, misleading names, missing rationale comments, undocumented conventions. Pass =--accept= to auto-fix high-impact clarity issues.
+Audits code for reader comprehension: unclear names, magic values, missing
+rationale, undocumented conventions, implicit phases, opaque score formulas,
+duplicated explanatory logic, and type-safety escapes that obscure intent. Pass
+=--accept= to apply high-confidence, behavior-preserving clarity fixes and
+report risky renames, broad refactors, public API changes, or domain-judgment
+calls instead of applying them.
 
 **** dx-audit
 :PROPERTIES:

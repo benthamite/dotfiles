@@ -1,50 +1,64 @@
 ---
 name: interpretability-audit
-description: Audit a codebase for intent transparency and readability. Use when the user wants to check if code is understandable, if intentions are clear, or if there are obscurities a reader would struggle with.
+description: Audit code for intent transparency and reader comprehension. Use when the user asks whether code is understandable, readable, self-explanatory, well named, clear about why it works, or likely to confuse future maintainers. Do not use for bug/security reviews, architecture refactors, developer-experience audits, or lint-only cleanup.
 argument-hint: [--accept] [dir]
 argument-choices: "--accept"
 ---
 
 # Interpretability audit
 
-Review $ARGUMENTS for clarity and intent transparency. The goal is NOT to find bugs, security issues, or style violations — it's to identify places where a reader (like yourself) would struggle to understand what the code is doing or why.
+Review $ARGUMENTS for clarity and intent transparency. The audit asks whether a competent maintainer can understand what the code means, why it is shaped this way, and which assumptions it relies on.
 
-If `--accept` is present in `$ARGUMENTS`, after completing the audit, immediately address **all** findings (high, medium, and low impact) without asking for confirmation. Byte-compile and run tests after applying all changes. Commit the result.
+## Scope boundary
 
-Use subagents to explore the codebase in parallel where appropriate (e.g., one for backend, one for frontend). Read actual code — don't guess from file names.
+- In scope: naming clarity, magic values, missing rationale, undocumented conventions, hard-to-follow phases, unclear score formulas, duplicated explanatory logic, and type-safety escapes that obscure meaning.
+- Out of scope: finding defects, security issues, performance problems, broad architecture changes, missing tests, or formatting/lint-only cleanup. If those appear, mention them only when they also make intent unclear and route the main concern to the appropriate audit skill.
+- Do not suggest new features, broader validation, or behavior changes unless they are necessary to make the existing intent explicit.
+- Prefer clearer names and small extractions for "what" confusion, and comments for "why" or domain-context confusion.
+
+## Workflow
+
+1. Resolve the review scope from `$ARGUMENTS`. If the request names a whole repo, audit the main implementation paths and representative complex areas unless the user asks for exhaustive coverage.
+2. Identify the project context before judging code: read local instructions, README/design notes, relevant tests, and nearby modules that explain conventions.
+3. Read actual code and record line numbers. Use parallel exploration or subagents when available and useful for independent areas such as backend/frontend or package/module boundaries.
+4. Classify findings by reader impact:
+   - **High**: a maintainer is likely to misunderstand behavior, change the wrong thing, or miss a critical convention.
+   - **Medium**: comprehension is slowed by hidden rationale, ambiguous names, or dense structure, but the confusion is localized.
+   - **Low**: polish that would improve clarity but is not blocking.
+5. For every finding, state the confusing surface, the inferred intent, the evidence for that inference, and the smallest concrete edit that would clarify it.
+6. If `--accept` is present, apply only high-confidence, behavior-preserving clarity fixes across impact levels. Leave risky renames, public API changes, broad refactors, and domain-judgment calls as unresolved findings with reasons. After editing, run the relevant project checks, byte-compile only where applicable, inspect the diff, and commit the scoped result.
 
 ## What to look for
 
-For each file or module you examine, note:
+- **Magic values**: hardcoded numbers, strings, thresholds, or sentinels without the reason they were chosen, such as `maxsize=65536`, `score >= 0.85`, or `"Zzzzz"`.
+- **Misleading names**: functions, variables, or parameters whose names do not describe what they compute or represent, such as `_overlap` for Jaccard similarity.
+- **Implicit phases or structure**: long functions with logical stages that are not separated by helper extraction or short orienting comments.
+- **Undocumented conventions**: import aliases, key formats, sentinel values, cache semantics, or `None`/`nil` meanings that require project lore.
+- **Missing rationale comments**: code where the mechanics are clear but the reason for the approach, threshold, ordering, or exception is not.
+- **Score formula obscurity**: computed values whose intended range, monotonic behavior, or weighting tradeoff is unclear.
+- **Duplicated explanatory logic**: repeated switches, threshold tables, or helper snippets that make the same concept harder to update consistently.
+- **Type safety escapes**: `as any`, untyped returns, union abuse, or overloaded `None`/`nil` returns that hide distinct states or error cases.
 
-- **Magic values**: hardcoded numbers, strings, or thresholds without explanation of why they were chosen (e.g., `maxsize=65536`, `score >= 0.85`, a `"Zzzzz"` sentinel)
-- **Misleading names**: functions, variables, or parameters whose names don't accurately describe what they compute or represent (e.g., a function called `_overlap` that computes Jaccard similarity)
-- **Implicit phases or structure**: long functions with multiple logical stages that aren't delineated with comments or method extraction — the reader has to reverse-engineer the structure
-- **Undocumented conventions**: patterns (like import aliases, sentinel values, key formats, or `None` meaning "pending") that a reader wouldn't understand without project context
-- **Missing "why" comments**: code where the *what* is clear from reading it but the *reason* for the approach is not
-- **Score formula obscurity**: computed values (scores, thresholds, mappings) where the formula isn't accompanied by an explanation of the intended range or behavior
-- **Duplicated logic**: the same logic (switch statements, helper functions, threshold values) copy-pasted across files instead of being extracted to a shared module
-- **Type safety escapes**: `as any`, untyped returns, or `None` return values that conflate different error conditions
+## What not to flag
 
-## What NOT to flag
-
-- Formatting or linting issues (that's what linters are for)
-- Missing tests (that's a separate concern)
-- Performance issues (unless they're also clarity issues)
-- Suggestions to add features or error handling beyond what exists
-- Code that is clear and working fine — don't suggest changes for the sake of changes
+- Formatting or linting issues that a formatter/linter should handle.
+- Missing tests, unless the absence of executable examples is the reason a convention cannot be understood.
+- Performance issues, unless the optimization makes the code hard to understand and lacks rationale.
+- Error handling or validation gaps that would change behavior rather than clarify current behavior.
+- Clear code that merely follows a style you would not have chosen.
 
 ## What to highlight positively
 
-Also note things that ARE well done — clear naming, good structure, effective documentation, elegant abstractions — so the audit is balanced and the positive patterns can serve as models for the rest of the codebase.
+Note clear naming, effective structure, helpful comments, readable abstractions, and documentation patterns worth copying elsewhere. Positive examples make the audit more useful than a list of complaints.
 
 ## Output format
 
-Organize findings into:
+In audit-only mode, organize the report as:
 
-1. **Overall verdict**: one paragraph assessing the codebase's clarity
-2. **Clarity issues worth addressing**: grouped by priority (highest-impact first), with specific file paths, function names, and line numbers
-3. **Things that are done well**: specific examples of clear, well-structured code
-4. **What I would NOT bother with**: lower-priority items that aren't worth the effort unless onboarding other developers
+1. **Overall verdict**: one paragraph assessing reader clarity and the main source of interpretability risk.
+2. **Clarity issues worth addressing**: grouped by impact, with file paths, function names, line numbers, inferred intent, why the current code obscures it, and a concrete fix.
+3. **Things done well**: specific patterns that should be preserved or reused.
+4. **Not worth changing**: lower-priority items you intentionally left alone.
+5. **Verification**: what you read or checked, and what remains unverified.
 
-At the end, offer to address the high-impact issues.
+In `--accept` mode, finish with files changed, fixes applied, unresolved findings with reasons, verification performed, and the commit hash.

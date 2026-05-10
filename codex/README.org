@@ -233,6 +233,14 @@ mode and uses =--accept= only for high-confidence, behavior-preserving
 high-impact refactors; risky or broad redesigns are reported instead of
 half-applied.
 
+The =interpretability-audit= skill is a paired Claude/Codex development skill
+for reader-comprehension reviews. It targets unclear names, magic values,
+missing rationale, undocumented conventions, implicit phases, opaque score
+formulas, duplicated explanatory logic, and type-safety escapes that obscure
+intent. With =--accept=, it applies only high-confidence, behavior-preserving
+clarity fixes and reports risky renames, broad refactors, public API changes,
+or domain-judgment calls instead of applying them.
+
 The =claude-config-audit= skill is a paired Claude/Codex meta-skill for auditing
 Claude Code configuration across CLAUDE.md, skills, memory, hooks, settings, and
 documentation. It inventories instruction sources, redacts sensitive setting

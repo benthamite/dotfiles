@@ -1,6 +1,6 @@
 ---
 name: update-log
-description: End-of-session bookkeeping. Use when the user says "/update-log", "update log", "session log", "close out", "wrap up", or asks to save end-of-session progress by updating the session log and project status. Only consider using proactively (e.g. when the session is running low on context) in projects that already have a log directory and a log reference in CLAUDE.md from a previous user invocation. Never invoke autonomously in projects without existing logs.
+description: End-of-session bookkeeping. Use when the user says /update-log, update log, session log, close out, wrap up, or asks to save project progress. Only invoke proactively in projects with existing log conventions.
 ---
 
 # End-of-session log update

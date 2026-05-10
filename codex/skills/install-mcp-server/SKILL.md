@@ -1,6 +1,6 @@
 ---
 name: install-mcp-server
-description: Install and configure a new MCP server for Claude Code. Handles discovery, auth verification, credential-safe setup, scope placement, registration, account sync, and restart/testing expectations. Use when the user says "install mcp server", "add mcp server", "set up mcp", "new mcp server", or wants to connect a new service via MCP.
+description: Install and configure a new MCP server for Claude Code, including discovery, auth verification, credential-safe setup, scope placement, registration, sync, and restart/testing expectations.
 ---
 
 # Install MCP server

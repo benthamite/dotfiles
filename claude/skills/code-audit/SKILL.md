@@ -1,6 +1,6 @@
 ---
 name: code-audit
-description: "Audit code for actual defects: bugs, security vulnerabilities in application code, error handling gaps, and correctness problems. Use when the user asks to find bugs, review code for defects, debug risky edge cases, run a code vulnerability check, or apply confirmed fixes with --accept. Do not use for readability, architecture, test coverage, performance-only, or broad environment security reviews."
+description: Audit code for actual defects, including bugs, application security issues, error handling gaps, and correctness problems. Not for readability, architecture, test coverage, performance-only, or broad environment security reviews.
 argument-hint: "[--accept] [dir]"
 argument-choices: "--accept"
 ---

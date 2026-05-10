@@ -1,6 +1,6 @@
 ---
 name: fix-drive-errors
-description: Triage Google Drive sync errors by scanning My Drive for generated dependency, build, and cache directories, moving confirmed offenders to ~/.drive-nosync, repairing symlinks, and restarting Google Drive. Use when Drive reports sync errors, symlink problems, or recurring generated-directory churn in My Drive; for one known directory use nosync instead.
+description: Triage Google Drive sync errors by finding generated dependency/build/cache directories, moving confirmed offenders out of Drive, repairing symlinks, and restarting Drive. For one named directory use nosync.
 ---
 
 # Fix Google Drive sync errors

@@ -1,6 +1,6 @@
 ---
 name: interpretability-audit
-description: Audit code for intent transparency and reader comprehension. Use when the user asks whether code is understandable, readable, self-explanatory, well named, clear about why it works, or likely to confuse future maintainers. Do not use for bug/security reviews, architecture refactors, developer-experience audits, or lint-only cleanup.
+description: Audit code for intent transparency and reader comprehension. Use for understandable, readable, self-explanatory, naming, or future-maintainer clarity reviews; not for bug/security, architecture, DX, or lint-only reviews.
 argument-hint: [--accept] [dir]
 argument-choices: "--accept"
 ---

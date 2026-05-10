@@ -1,6 +1,6 @@
 ---
 name: symptom-check
-description: Force an invariant-focused root-cause check before applying a non-trivial bug fix. Use when a bug, regression, test failure, or suspicious behavior has a tempting local patch and you need to decide whether to fix locally, fix plus flag in architectural-issues.md, or stop for a refactor. Use after initial debugging when you would otherwise jump to a patch; do not use for trivial typo/formatting fixes or greenfield features.
+description: Run an invariant-focused root-cause check before a non-trivial bug fix. Use after initial debugging when a local patch is tempting; not for trivial typo/formatting fixes or greenfield features.
 ---
 
 The user (or you, on your own initiative) has flagged an apparent bug, and a fix is being considered. Your job is to **stop and force a structured root-cause analysis before any edit happens**, then recommend whether to fix locally, fix + flag for follow-up, or refactor.

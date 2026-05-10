@@ -93,6 +93,10 @@ directories under =~/.codex/skills=. Codex-managed hidden system skills, when
 present, live under ignored =codex/skills/.system/= runtime data and are not
 part of the reusable Claude/Codex skill parity model.
 
+Skill frontmatter descriptions are loaded for routing, so keep them concise:
+preserve user phrasing, scope boundaries, and important near-miss exclusions,
+but move implementation details to the skill body.
+
 To reduce context pressure from stale skills, run:
 
 #+begin_src sh

@@ -1,6 +1,6 @@
 ---
 name: claude-config-audit
-description: Audit Claude Code configuration across CLAUDE.md, skills, memory, hooks, settings, and documentation for redundancy, conflicts, dead weight, staleness, and instruction drift. Use when the user says "audit config", "audit setup", "clean up my config", "prune my instructions", "review my claude.md", "check for duplicate rules", "audit hooks", "audit memory", or wants to optimize their Claude Code instruction set.
+description: Audit Claude Code configuration for redundancy, conflicts, dead weight, staleness, and instruction drift across CLAUDE.md, skills, memory, hooks, settings, and docs.
 ---
 
 # Audit Claude Code configuration

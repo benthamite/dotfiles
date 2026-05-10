@@ -1,6 +1,6 @@
 ---
 name: build
-description: Spec-based build workflow. Use when the user says "/build", "build from spec", "interview me about the spec", "turn this rough spec into a plan", or asks to develop spec.md into an implementation-ready plan. Reads a spec file, interviews the user, writes the finalized spec, and implements it only after explicit confirmation.
+description: Spec-based build workflow. Use for /build, build from spec, interview me about the spec, turn this rough spec into a plan, or developing spec.md into an implementation-ready plan before implementation.
 argument-hint: [spec-file]
 ---
 

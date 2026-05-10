@@ -1,6 +1,6 @@
 ---
 name: tangodb-continue
-description: Tangodb session-start and resume workflow. Use when the user explicitly invokes $tangodb-continue, asks to start or resume a tangodb cleanup working session, or asks to run the tangodb resume workflow. Do not use for ending a tangodb session, generic handoffs, or non-tangodb continue prompts. Reads the project guide, master data-cleanup plan, progress file, and required slice docs; resumes the exact next step from docs/data-cleanup-progress.md, then keeps chaining safe read-only work until a hard stop, approval gate, or real blocker is reached.
+description: Tangodb session-start and resume workflow. Use when the user invokes $tangodb-continue or asks to start/resume a tangodb cleanup session. Do not use for session closeout, generic handoffs, or non-tangodb continue prompts.
 ---
 
 # Tangodb continue

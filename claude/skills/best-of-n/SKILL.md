@@ -1,6 +1,6 @@
 ---
 name: best-of-n
-description: "Run a Best-of-N multi-model query when the user asks to best of n, /best-of-n, bon query, sample each model multiple times, ask several AI models repeatedly, compare multiple model responses, or synthesize/synthesise the best answers across models. Do not use for ordinary single-model answers unless the user wants multi-model sampling or selection."
+description: Run a Best-of-N multi-model query. Use when the user asks to best of n, /best-of-n, bon query, sample models repeatedly, compare multiple model responses, or synthesize the best answer across models.
 argument-hint: <prompt>
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: pr-audit
-description: "Verify a pull request or PR-ready branch before submitting, pushing, merging, or after revising it. Runs build/test checks, commit review, upstream alignment, file hygiene, and remote CI checks when available. Use when the user asks to validate a PR, run pre-submit checks, review before pushing, check PR readiness, or verify after rebasing or force-pushing revisions."
+description: Verify a PR or PR-ready branch before submitting, pushing, merging, or after revision. Runs build/test checks, commit review, upstream alignment, file hygiene, and remote CI checks when available.
 ---
 
 # PR verification

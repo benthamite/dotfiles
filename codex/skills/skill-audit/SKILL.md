@@ -1,6 +1,6 @@
 ---
 name: skill-audit
-description: Audit Claude/Codex skills and SKILL.md files for trigger quality, workflow design, progressive disclosure, bundled resources, verification, portability, and maintainability. Use when the user asks to review, audit, improve, harden, rate, diagnose, or refactor an agent skill; when they want best-practice feedback on a SKILL.md; or when they ask whether a skill is worth keeping, splitting, merging, or turning into a tested workflow. Do not use for ordinary code, security, architecture, or documentation audits unless the target artifact is a skill.
+description: Audit or improve Claude/Codex skills for trigger quality, workflow design, progressive disclosure, verification, portability, and maintainability. Use for SKILL.md reviews, hardening, refactors, or keep/split/merge decisions; not for ordinary code/docs audits.
 ---
 
 # Skill audit

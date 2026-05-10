@@ -1,6 +1,6 @@
 ---
 name: gsc-indexing-triage
-description: 'Triage stafforini.com Google Search Console Page indexing emails and validation failures. Use when the user mentions GSC/Search Console indexing emails, Page indexing issues, failed validation, "validate fix", or asks to fix, deploy, validate, archive, and log stafforini.com indexing alerts. Do not use for unrelated Search Console performance, Core Web Vitals, analytics, ownership, or non-stafforini.com work.'
+description: Triage stafforini.com Google Search Console page-indexing emails and validation failures. Use for GSC indexing alerts, failed validation, validate fix, deploy/archive/log indexing issues; not for performance, Core Web Vitals, or non-stafforini.com work.
 ---
 
 # GSC indexing triage

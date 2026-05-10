@@ -1,6 +1,6 @@
 ---
 name: proofread
-description: "Proofread Markdown documents for spelling errors, grammar mistakes, typos, punctuation issues, and light style/clarity problems using aspell or Gemini Flash. Use when the user says proofread, spell check, check spelling, check grammar, review for typos, check this for errors, or asks for a proofreading pass over a Markdown file."
+description: Proofread Markdown for spelling, grammar, typos, punctuation, and light style/clarity issues. Use for proofread, spell check, grammar check, typo review, or proofreading a Markdown file.
 ---
 
 # Proofread skill

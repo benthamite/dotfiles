@@ -1,6 +1,6 @@
 ---
 name: move-session-log
-description: Relocate Claude Code internal session logs, not Codex logs, and rewrite the embedded paths so resume keeps working. Two modes — single session (move one .jsonl from another project to the current project) and whole-project rename (move all sessions when a project directory has been renamed). Use when the user says "move session log", "move session", "move log", "rename project session logs", or wants Claude's session data to follow a project rename while running Claude Code.
+description: Relocate Codex session logs by rewriting embedded project paths so resume and log lookup associate a session with the current project. Use for move session log, import log, or project rename session cleanup.
 argument-hint: "<session-id> | --rename <old-project-path> <new-project-path>"
 tools: Bash, Glob
 ---

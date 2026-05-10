@@ -1,6 +1,6 @@
 ---
 name: automate
-description: Design and build a reusable AI automation. Use when the user says "automate", "create automation", "turn this into a skill/command", "new workflow", "AI helper", or asks whether something should become a Codex/Claude Code skill or a gptel directive, tool, or Emacs command. Do not use for ordinary one-off code changes or non-AI scripts unless the user wants a reusable AI-assisted workflow.
+description: Design and build a reusable AI automation. Use for automate, create automation, turn this into a skill/command, new workflow, AI helper, or deciding whether a workflow should become a skill, directive, tool, or Emacs command.
 argument-hint: <description of what to automate>
 ---
 

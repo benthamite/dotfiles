@@ -1,6 +1,6 @@
 ---
 name: design-audit
-description: "Audit code for architecture and maintainability: unnecessary complexity, premature or missing abstractions, duplication, unclear module boundaries, and refactoring opportunities. Use when the user asks for a design review, architecture review, refactoring audit, simplification pass, or structural critique; not for bug, security, or readability-only reviews."
+description: Audit code architecture and maintainability for unnecessary complexity, premature or missing abstractions, duplication, unclear boundaries, and refactoring opportunities. Not for bug, security, or readability-only reviews.
 ---
 
 # Design audit

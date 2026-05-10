@@ -1,25 +1,19 @@
 # Proofread
 
-A Claude Code skill for AI-powered proofreading using Gemini Flash.
+A paired Claude Code/Codex skill for proofreading Markdown files with aspell or Gemini Flash.
 
 ## Documentation
 
 See [SKILL.md](./SKILL.md) for complete documentation and usage instructions.
 
-## Installation
+## Local setup
 
 ```bash
-# Run install
-npx skills add HartreeWorks/skill--proofread
-
-# When asked "Which agents do you want to install to?", select "Claude Code"
-# in addition to the default "Universal" list.
+yarn install
 ```
 
-If you get "command not found", [install Node](https://github.com/HartreeWorks/skills/blob/main/how-to-install-node.md) then try again.
+The live global skill directories are managed by the dotfiles Claude/Codex sync setup; do not install this tracked copy with `npx skills add`.
 
 ## About
 
-Created by [Peter Hartree](https://x.com/peterhartree). For updates, follow [AI Wow](https://wow.pjh.is), my AI uplift newsletter.
-
-Find more skills at [skills.sh](https://skills.sh) and [HartreeWorks/skills](https://github.com/HartreeWorks/skills).
+Adapted from [Peter Hartree](https://x.com/peterhartree)'s [HartreeWorks/skills](https://github.com/HartreeWorks/skills) repository.

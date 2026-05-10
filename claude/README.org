@@ -395,6 +395,10 @@ Creates or updates documentation for any Elisp package, following the Denote man
 :END:
 
 Scans all =emacs/extras/*.el= files, identifies missing or outdated documentation, and generates docs in parallel using subagents.
+It uses =doc-elisp= for the Denote-style manual standard, includes =paths.el=
+and other top-level extras files, verifies changed Org manuals and Texinfo
+exports before committing, and keeps package documentation commits scoped to one
+package at a time.
 
 **** generate-readme
 :PROPERTIES:

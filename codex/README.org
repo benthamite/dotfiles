@@ -112,6 +112,13 @@ The former dotfiles-project-local Claude skills =find-skills=,
 =claude/skills/= and =codex/skills/= trees so they are available consistently
 from both tools in every project.
 
+The =doc-extras= skill is a paired Claude/Codex documentation workflow for
+auditing, creating, and refreshing manuals under =emacs/extras/doc/= from the
+top-level sources in =emacs/extras/=. It delegates the Denote-style manual
+standard to =doc-elisp=, checks coverage for every top-level =.el= file,
+verifies changed Org manuals and generated Texinfo before committing, and keeps
+package documentation commits scoped to one package at a time.
+
 Codex-only skills are allowed when they document a capability that exists only
 in Codex. Record them in =ai-config-sync.json= with =status: codex-only=,
 =claude: null=, and the tracked Codex skill path. The current example is

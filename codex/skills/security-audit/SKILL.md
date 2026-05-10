@@ -1,6 +1,7 @@
 ---
 name: security-audit
 description: "Scan for exposed API keys and leaked credentials, audit dependency vulnerabilities, review macOS hardening settings, and evaluate Claude Code configuration risks. Use when the user wants a security review, vulnerability scan, dependency audit, secrets check, or periodic security posture assessment."
+argument-hint: "[--secrets] [--deps] [--machine] [--claude] [dir]"
 ---
 
 # Security audit
@@ -9,7 +10,15 @@ Audit the development environment for security risks across four domains. Run al
 
 If `dir` is provided, scope the `--secrets` and `--deps` domains to that directory. Otherwise, audit the current working directory plus well-known config locations (`~/.claude.json`, `~/.zshenv`, etc.).
 
-Use subagents to explore in parallel where appropriate. Read actual files — don't guess from paths.
+Use subagents to explore in parallel where appropriate. Give each subagent the same safety boundaries below. Read actual files — don't guess from paths.
+
+## Safety boundaries
+
+This skill is audit-only unless the user explicitly asks for remediation. Do not rotate credentials, change account settings, post externally visible updates, or mutate external systems while auditing.
+
+When scanning for secrets, never emit raw matching lines to the terminal or final report. Use quiet/list/count modes or a redacting helper that outputs only the path, line number, secret type, and a short fingerprint when needed to distinguish duplicates. Do not read secret store contents, private keys, browser cookies, or credential files; check metadata, references, encryption status, or configured paths instead. When `pass` lookup is necessary, use full paths and `pass find`; do not use `pass ls | grep`.
+
+If a check is unavailable, unsafe to run, or would expose raw secrets, mark it as not checked with the concrete reason rather than guessing.
 
 ## Threat model
 

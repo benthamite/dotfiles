@@ -261,6 +261,20 @@ artifacts, secrets, whitespace, and line endings, and polls remote CI only when
 the branch or PR is already pushed. It reports unavailable checks explicitly and
 does not change remote state.
 
+The =release= skill is a paired Claude/Codex operations workflow for releasing
+the user's listed Emacs packages from =my-emacs-packages.org=. It supports
+=/release <package>= and =/release --audit=, avoids cloning during audits,
+handles untagged package repos as initial releases, strips flags such as
+=--accept= before package inference, and keeps dotfiles releases routed to
+=release-dotfiles=.
+
+The =release-dotfiles= skill is a paired Claude/Codex operations workflow for
+cutting a new =benthamite/dotfiles= release. It checks every personal package
+repo in the active elpaca profile, gates externally visible pushes and release
+creation, cleans only untracked =.elc= artifacts via Trash, classifies commits
+since the latest semver tag, writes the lockfile release commit, waits for
+profile testing, then tags, pushes, creates, and verifies the GitHub release.
+
 The =emacs-freeze= skill is a paired Claude/Codex operations skill for frozen,
 hung, beachballing, or otherwise unresponsive Emacs sessions. It collects
 per-PID diagnostics, tries to read =*Backtrace*= and =*Messages*= through the
@@ -337,6 +351,14 @@ Markdown citation tags or placeholder markers before reporting.
 
 The =audit-mac-app= skill is a paired Claude/Codex static-first workflow for
 auditing macOS applications before running them or granting sensitive
+The =security-audit= skill is a paired Claude/Codex workflow for auditing the
+development environment across secrets hygiene, supply-chain dependencies,
+macOS machine posture, and Claude Code configuration risk. It is audit-only
+unless remediation is explicitly requested, redacts raw secret matches during
+collection and reporting, records unavailable or unsafe checks instead of
+guessing, and reports findings by severity with concrete locations and
+remediation steps.
+
 permissions. It covers trust verification, permission analysis, app type
 detection, Electron source extraction and security checks, network endpoint
 scanning, and spaces-safe binary analysis. Its bundled scanner uses =mktemp=

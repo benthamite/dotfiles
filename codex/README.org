@@ -40,10 +40,10 @@ Codex reads global user instructions from =AGENTS.override.md= and =AGENTS.md=
 in =$CODEX_HOME=, so the live =~/.codex/AGENTS.md= points to the tracked
 =codex/AGENTS.md= file.
 
-Project-level Codex instructions live in project-root =AGENTS.md= files. The
-old =project_doc_fallback_filenames = ["CLAUDE.md"]= setting is intentionally
-not used, so every project-root =CLAUDE.md= should have a project-root
-=AGENTS.md= counterpart. The Claude/Codex sync hooks treat these root
+Project-level Codex instructions live in =AGENTS.md= files next to their
+Claude =CLAUDE.md= peers. The old =project_doc_fallback_filenames = ["CLAUDE.md"]=
+setting is intentionally not used, so every project-local =CLAUDE.md= should
+have a sibling =AGENTS.md= counterpart. The Claude/Codex sync hooks treat these
 instruction files as project-local peers in the git repo being edited or
 committed.
 
@@ -637,7 +637,7 @@ Two hook pairs keep the model simple:
   artifact-specific exemption.
 
 The same hooks also handle project-local instructions, skills, and hooks in the
-git repo being committed. Local pairs use =CLAUDE.md= with =AGENTS.md=,
+git repo being committed. Local pairs use sibling =CLAUDE.md= with =AGENTS.md=,
 =.claude/skills/= with =.codex/skills/=, =.claude/hooks/= with
 =.codex/hooks/=, and =.claude/settings.json= with =.codex/hooks.json=. Local
 skills are compared with the same tool-specific frontmatter normalization used
@@ -673,7 +673,7 @@ run without extra trust prompts; they do not have a Claude settings counterpart.
 
 =~/.codex/AGENTS.md= points to =codex/AGENTS.md= so Codex gets a tracked global
 instruction file with Codex-safe path references. This is needed for user-level
-instructions; project-level Codex instructions are handled by project-root
+instructions; project-level Codex instructions are handled by sibling
 =AGENTS.md= files.
 
 =~/.codex/skills= points directly to =codex/skills/= via

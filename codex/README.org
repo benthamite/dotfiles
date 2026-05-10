@@ -246,6 +246,14 @@ design, security, and documentation audits, compares paired Claude/Codex copies
 when applicable, and in =--accept= mode applies only high-confidence fixes that
 preserve the skill's intended scope before verifying and committing them.
 
+The =try-hartree-skills= skill is a paired Claude/Codex queue for evaluating
+third-party skills from HartreeWorks one at a time. It is not a general
+installer: the agent tries one listed skill per turn, uses the current tool's
+tracked skill directory, mirrors kept global skills across the paired trees,
+tests with a realistic low-risk prompt, waits for the user's verdict, moves
+rejected candidates to Trash, and records =keep=, =removed=, =revisit=, or
+=skipped= with a note.
+
 The =migrate-profile= skill is a paired Claude/Codex workflow for consolidating
 Claude Code project data after elpaca profile changes. It dry-runs first,
 requires confirmation before retargeting the active profile symlink, copying

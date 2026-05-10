@@ -1,22 +1,56 @@
 ---
 name: try-hartree-skills
-description: Try third-party skills one by one. Use when the user says "/try-hartree-skills". Picks the next untried skill from the list, installs and tests it, then waits for the user's verdict.
+description: Evaluate HartreeWorks third-party skills one at a time. Use when the user says "/try-hartree-skills", asks to try Hartree skills, continue the Hartree skill queue, or record a verdict on a tested Hartree skill. Do not use for general skill discovery, local skill audits, or arbitrary third-party installs.
 ---
 
 # Try Hartree skills one by one
 
-## Instructions for Claude
+## Purpose and boundaries
 
-Read this file at the start of the session. Pick the next untried skill from the list below. Install it, then invoke it with a realistic test. Wait for the user to evaluate. After their decision, update this file: change the status to `keep`, `removed`, or `revisit` and add a brief note. Use `revisit` when the skill is interesting but not ready to install — e.g., worth designing a custom version inspired by it. Then move on to the next skill, or stop if the user wants to.
+Use this skill only for the HartreeWorks queue below. It is an interactive
+evaluation workflow, not a general skill search or installer.
 
-Only install and test one skill per turn. Wait for the user to confirm before moving to the next.
+Only install and test one listed skill per turn. Treat an explicit
+`/try-hartree-skills` request as authorization to work on the next untried table
+entry, but do not clone anything outside this table or continue to a second
+candidate without explicit user confirmation.
+
+## Workflow
+
+1. Re-read this file and identify the next table row whose status is blank.
+   If no blank rows remain, report that the queue is complete and stop.
+2. State the chosen skill and repository before installing it.
+3. Install the candidate using the procedure below, then invoke it with a
+   realistic, low-risk test that exercises the skill's main workflow.
+4. Report what was installed, the exact test performed, the observed result,
+   and any limitations or setup gaps.
+5. Wait for the user's verdict. Do not update the table until the user decides.
+6. After the verdict, update this file with one status and a brief note:
+   `keep`, `removed`, `revisit`, or `skipped`.
+7. If the verdict removes an installed candidate, move the candidate directory
+   to Trash rather than deleting it destructively.
+8. Re-read the edited row, inspect `git diff` and `git status --short`, and
+   commit the verdict plus any installed/removed skill files as one scoped
+   change when the user asked the workflow to make persistent changes.
+
+Use `revisit` when the skill is interesting but not ready to install, such as a
+case where a custom local version would be better. Use `skipped` when the skill
+is intentionally not tested because its dependencies, credentials, or scope make
+it a poor fit.
 
 ### How to install a skill
 
-1. Clone the repo to `/tmp`, remove `.git`, move to `claude/skills/<name>/`.
-2. Run `yarn install` or `npm install` if the skill has a `package.json`.
-3. If the skill accepts arguments, add `argument-hint: <hint>` to the SKILL.md frontmatter for autocompletion.
-4. Do **not** use git submodules.
+1. Clone the listed repo to `/tmp`, move its `.git` directory to Trash, then
+   move the skill to the tool-appropriate tracked skill directory:
+   - Claude Code: `claude/skills/<name>/`
+   - Codex: `codex/skills/<name>/`
+2. For skills that should be kept globally, mirror the final accepted version to
+   both `claude/skills/<name>/` and `codex/skills/<name>/` unless the difference
+   is intentionally tool-specific and documented.
+3. Run `yarn install` or `npm install` if the skill has a `package.json`.
+4. If the skill accepts arguments, add `argument-hint: <hint>` to the
+   SKILL.md frontmatter for autocompletion.
+5. Do **not** use git submodules.
 
 Source: https://github.com/HartreeWorks/skills
 

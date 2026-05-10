@@ -1,16 +1,25 @@
 ---
 name: dotfiles-context
-description: Dotfiles worktree structure and documentation instructions for 'extras-' modules. Use when working with dotfiles or Emacs files.
+description: Dotfiles and Emacs package routing context. Use when working in ~/My Drive/dotfiles, editing emacs/config.org or emacs/extras, choosing between the dotfiles repo and an elpaca source clone, or applying dotfiles documentation and commit conventions.
 user-invocable: false
 ---
 
-# Where external Emacs packages live
+# Purpose
 
-All elpaca-managed packages — whether authored by the user or third-party — are cloned to `~/.config/emacs-profiles/<profile>/elpaca/sources/<package>/`. For every package *except* `dotfiles`, that clone is the canonical working copy: edit it directly, commit there, push upstream. There is no separate Drive-side master.
+Use this context to keep dotfiles work in the right clone and verification path. It answers four questions: where to edit files, how to resolve the active elpaca profile, what to do after editing `emacs/config.org`, and which documentation and commit rules apply.
 
-The `dotfiles` package is the single exception: its canonical source is `~/My Drive/dotfiles/`, and the elpaca clone at `elpaca/sources/dotfiles/` is a read-only mirror that syncs via git commits. A PreToolUse hook (`block-elpaca-dotfiles-edit.sh`) enforces this by blocking direct edits to the mirror. After editing the canonical files and committing+pushing, the elpaca clone picks up the change on next sync, and `elpaca-rebuild` (triggered by the `load-elisp-after-edit.sh` PostToolUse hook) compiles the new code.
+If changing Emacs Lisp code, also use `elisp-conventions`; that skill owns style, batch testing, rebuild/reload rules, and live Emacs verification.
 
-If you need to rebuild manually (e.g. after a commit-only change), use:
+# Edit locations
+
+All elpaca-managed packages, whether authored by the user or third-party, are cloned to `~/.config/emacs-profiles/<profile>/elpaca/sources/<package>/`.
+
+- For every package except `dotfiles`, the elpaca source clone is the canonical working copy. Edit it directly and commit there; push only when the task calls for it. There is no separate Drive-side master.
+- The `dotfiles` package is the single exception. Its canonical source is `~/My Drive/dotfiles/`, and the elpaca clone at `elpaca/sources/dotfiles/` is a read-only mirror. Do not edit the mirror; a PreToolUse hook (`block-elpaca-dotfiles-edit.sh`) blocks direct edits there.
+
+After a `dotfiles` commit, the local git `post-commit` and `post-rewrite` hooks sync the elpaca mirror and trigger `elpaca-rebuild` plus `elpaca-extras-reload` for changed extras packages. Pushing is a separate sharing step, not what makes the local elpaca clone current.
+
+If you need to rebuild manually after the relevant working tree changes are committed, use:
 
 ```bash
 emacsclient -e '(progn (elpaca-rebuild (quote dotfiles) t) (elpaca-wait) (elpaca-extras-reload (quote dotfiles)))'
@@ -26,7 +35,20 @@ emacsclient -e 'init-current-profile'
 
 Always use this to resolve the active profile path (`~/.config/emacs-profiles/<profile>/elpaca/`) rather than hardcoding a profile name, since it changes over time.
 
-# Tangling config.org
+# Workflow
+
+1. Identify the layout before editing.
+   - Files under `~/My Drive/dotfiles/` are canonical dotfiles files.
+   - Files under `~/My Drive/dotfiles/emacs/extras/` are dotfiles extras; edit the canonical dotfiles file and use `elisp-conventions` for batch testing, commit-time sync, and live Emacs verification.
+   - Standalone Emacs packages live in the active profile's `elpaca/sources/<package>/` clone; query the active profile instead of guessing the path.
+2. If editing `emacs/config.org`, tangle it with the profile-aware command below.
+3. Update directly required documentation.
+   - Significant changes under `claude/` require `claude/README.org`.
+   - Codex integration changes under `codex/` require `codex/README.org`.
+   - Emacs extras package changes should follow the documentation rules in `elisp-conventions`.
+4. Commit each logical change with the format below, staging only files that belong to that change.
+
+# Tangling `config.org`
 
 After editing `emacs/config.org`, always tangle it to the current profile using:
 
@@ -39,3 +61,12 @@ Do NOT use `org-babel-tangle-file` directly — it doesn't know about the profil
 # Version control
 
 - Commit message format: `<scope>: <description>`, where `<scope>` is a short identifier for the area of change (package name, tool, or subsystem) and `<description>` is a lowercase imperative phrase with no trailing period. Examples: `org-roam-extras: handle nil db version in upgrade check`, `karabiner: swap ¿ and ¡ key mappings in k-mode`, `claude: add emacs-freeze skill for diagnosing frozen Emacs`.
+
+# Verification
+
+Before calling the task done, verify the workflow-specific effect:
+
+- For `emacs/config.org`, confirm the profile-aware tangle command completed.
+- For Emacs Lisp changes, follow `elisp-conventions` verification rather than only checking that the file saved.
+- For paired Claude/Codex configuration or skill changes, run `bin/ai-config-sync audit`.
+- Inspect `git status --short` so unrelated concurrent edits are not staged or committed.

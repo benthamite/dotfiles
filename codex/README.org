@@ -150,6 +150,12 @@ directories.
 Skill files must be named uppercase =SKILL.md=.  This matters on the Google
 Drive mount and for Codex skill discovery.
 
+The =dotfiles-context= skill is a paired Claude/Codex context skill for routing
+dotfiles and Emacs package edits to the correct canonical clone. It explains
+the =dotfiles= exception to the normal elpaca source layout, active profile
+lookup, profile-aware =emacs/config.org= tangling, README update obligations,
+verification handoffs, and the standard =<scope>: <description>= commit format.
+
 The =best-of-n= skill is a paired Claude/Codex workflow for querying several
 models multiple times, selecting or merging the best samples, and synthesizing
 the result.  Agents resolve the live tool-specific skill directory before

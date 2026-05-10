@@ -176,6 +176,12 @@ repeatable workflow, triggers on realistic user phrasing, gives ordered
 operational guidance, defines output and verification expectations, and avoids
 surprising side effects.
 
+The =automate= skill is a paired Claude/Codex meta-skill for reusable AI
+workflow design. It decides whether a request should become a Claude Code skill,
+a Codex skill, a gptel directive or preset, a gptel tool, or a gptel command,
+then builds in the canonical dotfiles paths after confirmation and verifies the
+result before committing.
+
 The =build= skill is a paired Claude/Codex workflow for turning a rough
 =spec.md= or explicit spec path into an implementation-ready plan. It interviews
 the user in depth, records goals, design, edge cases, implementation order, and

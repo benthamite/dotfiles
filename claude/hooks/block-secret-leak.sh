@@ -99,7 +99,7 @@ check_pattern 'xox[bporca]-[A-Za-z0-9-]{10,}' 'Slack token'
 check_pattern 'sk-ant-[A-Za-z0-9_-]{40,}' 'Anthropic API key'
 
 # OpenAI / generic sk- keys (catches sk-..., excluded above for sk-ant-)
-check_pattern 'sk-[a-zA-Z0-9_-]{20,}' 'API secret key (sk-...)'
+check_pattern '(^|[^A-Za-z0-9])sk-[a-zA-Z0-9_-]{20,}' 'API secret key (sk-...)'
 
 # Stripe live/test keys (sk_live_, pk_live_, rk_live_, sk_test_, pk_test_, rk_test_)
 check_pattern '(sk|pk|rk)_(live|test)_[A-Za-z0-9]{20,}' 'Stripe API key'

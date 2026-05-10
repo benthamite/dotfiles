@@ -317,9 +317,9 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
-      "name": "skill-audit",
-      "claude": "claude/skills/skill-audit/SKILL.md",
-      "codex": "codex/skills/skill-audit/SKILL.md",
+      "name": "skill-discovery",
+      "claude": "claude/skills/skill-discovery/SKILL.md",
+      "codex": "codex/skills/skill-discovery/SKILL.md",
       "status": "paired",
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },

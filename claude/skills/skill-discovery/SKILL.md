@@ -1,9 +1,10 @@
 ---
-name: skill-audit
-description: Scan recent Claude Code and Codex sessions to find repeated manual workflows worth turning into skills, present the candidates, and optionally build them via /automate. Use when the user says "skill audit", "audit my skills", "what should I automate", "find automation candidates", "repeated workflows", or wants a periodic review of what to automate next.
+name: skill-discovery
+description: Scan recent Claude Code and Codex sessions to discover repeated manual workflows worth turning into skills, present the candidates, and optionally build them via /automate. Use when the user says "skill discovery", "what should I automate", "find automation candidates", "repeated workflows", "discover skill candidates", or wants a periodic review of what workflows to automate next.
+user-invocable: true
 ---
 
-# Skill audit
+# Skill discovery
 
 Scan Claude Code and Codex sessions since the last run, surface workflows the user has been doing manually more than once, and propose them as skills (or improvements to existing skills). After the user picks, dispatch each pick to `/automate` to actually build it.
 
@@ -11,7 +12,7 @@ This is the "automate your automations" loop: the goal is for the user to wake u
 
 ## Locations
 
-- **Skill directory**: `~/My Drive/dotfiles/claude/skills/skill-audit/`
+- **Skill directory**: `~/My Drive/dotfiles/claude/skills/skill-discovery/`
 - **State file**: `last-run.txt` in the skill directory (ISO 8601 UTC timestamp)
 - **Scan script**: reused from `ai-journal` — `~/.claude/skills/ai-journal/find-sessions.py`
 - **Existing skills index**: `~/My Drive/dotfiles/claude/skills/` (one dir per skill, each with `SKILL.md`)
@@ -95,9 +96,9 @@ After the user confirms the candidates are built (or declined):
 
 1. Update `last-run.txt`:
    ```bash
-   date -u +"%Y-%m-%dT%H:%M:%SZ" > ~/My\ Drive/dotfiles/claude/skills/skill-audit/last-run.txt
+   date -u +"%Y-%m-%dT%H:%M:%SZ" > ~/My\ Drive/dotfiles/claude/skills/skill-discovery/last-run.txt
    ```
-2. Commit the `last-run.txt` bump: `skill-audit: bump last-run to <date>`.
+2. Commit the `last-run.txt` bump: `skill-discovery: bump last-run to <date>`.
 3. Any new skills built by `/automate` will have been committed by `/automate` itself (one commit per skill).
 
 If the user declined all candidates, still bump `last-run.txt` — they've been reviewed.
@@ -107,7 +108,7 @@ If the user declined all candidates, still bump `last-run.txt` — they've been 
 To run this weekly on autopilot (Ole Lehmann's pattern), use `/schedule`:
 
 ```
-/schedule create "skill-audit" "every Monday at 09:00" "/skill-audit"
+/schedule create "skill-discovery" "every Monday at 09:00" "/skill-discovery"
 ```
 
 The cron trigger will fire the skill; the agent will run steps 1-4 and stop at "Which should I build?" — the user picks up from there interactively when they next open Claude Code.
@@ -148,6 +149,6 @@ When session count is large, delegate step 3 to a subagent:
 
 ## Notes
 
-- This skill does **not** build new skills itself. It's a scout: it finds opportunities and hands them to `/automate`. Keeping the roles separate means skill-audit can evolve its triage heuristics independently of how skills get built.
+- This skill does **not** build new skills itself. It's a scout: it finds opportunities and hands them to `/automate`. Keeping the roles separate means skill-discovery can evolve its triage heuristics independently of how skills get built.
 - Sessions older than the cutoff but with activity after are included (mtime-based), which is correct — ongoing sessions still count.
 - Do not count sessions where the user explicitly abandoned the task ("never mind", "forget it") unless the abandoned attempts themselves form a pattern worth automating.

@@ -1,19 +1,41 @@
 ---
 name: gsc-indexing-triage
-description: 'Triage Google Search Console Page indexing emails for stafforini.com end to end. Use when the user says "GSC", "Google Search Console", "Search Console issues", "indexing issues", "validate fixes", or wants Codex/Claude to read Search Console emails, fix stafforini.com indexing problems, quick-deploy, validate fixes in the browser, archive handled emails, and write a persistent log.'
+description: 'Triage stafforini.com Google Search Console Page indexing emails and validation failures. Use when the user mentions GSC/Search Console indexing emails, Page indexing issues, failed validation, "validate fix", or asks to fix, deploy, validate, archive, and log stafforini.com indexing alerts. Do not use for unrelated Search Console performance, Core Web Vitals, analytics, ownership, or non-stafforini.com work.'
 ---
 
 # GSC indexing triage
 
 Resolve Search Console Page indexing issues for `stafforini.com` from inbox alert to browser validation. This workflow is deliberately end-to-end, but deployment, Search Console validation, and email archiving are externally visible actions: do them only when the user's invocation explicitly authorizes that scope.
 
+## Scope gate
+
+Classify the request before mutating anything:
+
+- Read-only triage: reading Gmail/Search Console, checking URLs, and reporting findings is in scope for normal invocations.
+- Local fixes: edit/export/test/commit only when the user asks to fix or apply changes.
+- External actions: deploy, start Search Console validation, archive Gmail messages, or mutate any remote service only when explicitly authorized in the current request.
+
+If authorization is missing, stop after local verification and report the exact deploy, validation, and archive steps left undone.
+
+## When not to use
+
+Do not use this skill for Search Console performance reports, Core Web Vitals, ownership verification, analytics, generic sitemap questions, or properties other than `stafforini.com` unless the user explicitly asks to adapt the workflow.
+
 ## First checks
 
-1. Read `references/stafforini-com.md` from this skill.
-2. Read `/Users/pablostafforini/My Drive/repos/stafforini.com/CLAUDE.md`.
-3. Read the persistent log if it exists:
+1. Resolve this skill directory and use it for bundled references/scripts:
+
+   ```bash
+   tool=codex  # use claude in Claude Code
+   skill_file=$("$HOME/My Drive/dotfiles/bin/agent-skill" path gsc-indexing-triage --tool "$tool")
+   skill_dir=$(dirname "$skill_file")
+   ```
+
+2. Read `$skill_dir/references/stafforini-com.md`.
+3. Read `/Users/pablostafforini/My Drive/repos/stafforini.com/CLAUDE.md`.
+4. Read the persistent log if it exists:
    `/Users/pablostafforini/My Drive/repos/stafforini.com/logs/gsc-indexing.md`.
-4. Inspect worktrees before editing:
+5. Inspect worktrees before editing:
    - `/Users/pablostafforini/My Drive/repos/stafforini.com`
    - `/Users/pablostafforini/My Drive/notes` if org notes may need edits
    - `/Users/pablostafforini/My Drive/bibliographic-notes` if quote sources may need edits
@@ -33,7 +55,8 @@ python3 "/Users/pablostafforini/My Drive/dotfiles/claude/bin/gmail.py" query \
 Prioritize newest failed-validation emails and current validation-started emails. Read candidate messages with `get`; extract issue-detail links with this skill's helper:
 
 ```bash
-scripts/extract-gsc-links.py --account personal MESSAGE_ID...
+python3 "/Users/pablostafforini/My Drive/dotfiles/claude/bin/gmail.py" get MESSAGE_ID --account personal
+python3 "$skill_dir/scripts/extract-gsc-links.py" --account personal MESSAGE_ID...
 ```
 
 The helper decodes the raw Gmail HTML, finds the "View issue details" links, follows the `c.gle` redirect without needing browser auth, and prints the Search Console issue URL when available.
@@ -52,8 +75,9 @@ Do not assume every GSC example needs a redirect. Common root causes include sta
 
 Keep fixes at the source of truth:
 
-- Notes: edit `/Users/pablostafforini/My Drive/notes/*.org`, then run `bash scripts/export-notes.sh`.
-- Quotes: edit `/Users/pablostafforini/My Drive/bibliographic-notes/*.org`, then run the quote export path.
+- Notes: edit `/Users/pablostafforini/My Drive/notes/*.org`, then run `bash scripts/export-notes.sh` from the `stafforini.com` repo. Emacs equivalent: `stafforini-export-all-notes`.
+- Quotes: edit `/Users/pablostafforini/My Drive/bibliographic-notes/*.org`, then run `bash scripts/export-quotes.sh` from the `stafforini.com` repo. Emacs equivalent: `stafforini-export-all-quotes`.
+- Works/BibTeX metadata: edit the `.bib` source named by the site docs, then run `python3 scripts/generate-work-pages.py` from the `stafforini.com` repo. Emacs equivalent: `stafforini-update-works`.
 - Templates, sitemap, redirects, and verification: edit the `stafforini.com` repo.
 - Generated `content/` files are outputs only.
 
@@ -61,14 +85,14 @@ Prefer root-cause fixes over broad catch-all redirects. If redirecting historica
 
 ## Verify locally
 
-Run the relevant export first. Then run:
+From `/Users/pablostafforini/My Drive/repos/stafforini.com`, run the relevant export first. Then run:
 
 ```bash
 npm test
 tmp=$(mktemp -d)
+trap 'trash "$tmp"' EXIT
 hugo --minify --config hugo.toml,hugo.deploy.toml --destination "$tmp" --noBuildLock --quiet
 python3 scripts/verify-site.py --dir "$tmp"
-trash "$tmp"
 ```
 
 Also spot-check affected live-style URLs with `curl -IL` or equivalent. If verification cannot cover a class of issue, log the gap explicitly.
@@ -126,9 +150,9 @@ Append to `/Users/pablostafforini/My Drive/repos/stafforini.com/logs/gsc-indexin
 - Root cause.
 - Files changed and commits.
 - Verification commands and results.
-- Deploy result.
-- Browser validation result and counts.
-- Emails archived.
+- Deploy result, or `not authorized in this invocation`.
+- Browser validation result and counts, or `not authorized in this invocation`.
+- Emails archived, or `not authorized in this invocation`.
 - Open follow-up or reason none remains.
 
 If the log file does not exist, create it with a short heading and append the first dated entry.

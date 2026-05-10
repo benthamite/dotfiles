@@ -172,13 +172,16 @@ deep-research/browser presets from the normal menu, and verify result files
 before reporting completion.
 
 The =gsc-indexing-triage= skill is a paired Claude/Codex operations skill for
-=stafforini.com= Search Console Page indexing alerts.  It includes the
-=scripts/extract-gsc-links.py= helper, a site-specific reference file, and a
-workflow for reading GSC emails, fixing root causes, quick-deploying when
-authorized, validating in the browser, archiving handled emails, and appending
-to the site's persistent =logs/gsc-indexing.md= log.  Its frontmatter is kept
-Codex-safe because Codex skips skills whose =description= field is not parsed as
-a string.
+=stafforini.com= Search Console Page indexing alerts and validation failures.
+It includes the =scripts/extract-gsc-links.py= helper, a site-specific
+reference file, and a workflow for reading GSC emails, fixing root causes, and
+appending to the site's persistent =logs/gsc-indexing.md= log.  The workflow
+resolves bundled helper paths through =bin/agent-skill= and starts with a scope
+gate that separates read-only triage, local fixes, and externally visible
+actions, so quick deploys, Search Console validation, and Gmail archiving only
+happen when the current request explicitly authorizes them.  Its frontmatter is
+kept Codex-safe because Codex skips skills whose =description= field is not
+parsed as a string.
 
 The =google-sheets-comments= skill is a paired Claude/Codex workflow for
 processing Google Sheets comment review, replies, resolves, and reopens. It

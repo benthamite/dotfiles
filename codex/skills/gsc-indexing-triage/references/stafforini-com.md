@@ -38,7 +38,10 @@ python3 "/Users/pablostafforini/My Drive/dotfiles/claude/bin/gmail.py" get MESSA
 Decode issue links:
 
 ```bash
-scripts/extract-gsc-links.py --account personal MESSAGE_ID...
+tool=codex  # use claude in Claude Code
+skill_file=$("$HOME/My Drive/dotfiles/bin/agent-skill" path gsc-indexing-triage --tool "$tool")
+skill_dir=$(dirname "$skill_file")
+python3 "$skill_dir/scripts/extract-gsc-links.py" --account personal MESSAGE_ID...
 ```
 
 Archive a handled message:
@@ -51,13 +54,13 @@ python3 "/Users/pablostafforini/My Drive/dotfiles/claude/bin/gmail.py" archive M
 
 Use `npm test` or `bash scripts/test.sh`, not global `pytest`.
 
-Use a production-profile temporary render before deploying:
+From `/Users/pablostafforini/My Drive/repos/stafforini.com`, use a production-profile temporary render before deploying:
 
 ```bash
 tmp=$(mktemp -d)
+trap 'trash "$tmp"' EXIT
 hugo --minify --config hugo.toml,hugo.deploy.toml --destination "$tmp" --noBuildLock --quiet
 python3 scripts/verify-site.py --dir "$tmp"
-trash "$tmp"
 ```
 
 After quick deploy, check the live sitemap and representative URLs:

@@ -11,7 +11,7 @@ Perform the following bookkeeping steps to preserve this session's work for futu
 
 Determine the project's log directory and whether decisions are tracked:
 
-1. **Read `CLAUDE.md`** in the project root. Look for a reference to a session log file — either:
+1. **Read `CLAUDE.md`** in the project root. For this workflow, `CLAUDE.md` is the canonical session-log index unless the project explicitly says otherwise; in Codex sessions, `AGENTS.md` may contain agent instructions but is not the session-log pointer. Look for a reference to a session log file — either:
    - A path like `<dir>/YYYY-MM-DD.md` in a "Latest session" section (current format), or
    - A legacy `@<dir>/YYYY-MM-DD.md` import (old format — will be migrated in Step 2).
    
@@ -23,11 +23,11 @@ Determine the project's log directory and whether decisions are tracked:
 
 ### First-run setup
 
-This project doesn't have session logging set up. Use the `AskUserQuestion` tool to gather setup preferences before proceeding:
+This project doesn't have session logging set up. Gather setup preferences before proceeding:
 
-1. **Ask both questions in a single `AskUserQuestion` call**:
-   - Question 1 (header: "Log dir"): "Where should session logs be stored?" with options like `logs/` (recommended), `docs/logs/`, and the user can type a custom path via "Other".
-   - Question 2 (header: "Decisions"): "Track architectural decisions in a `decisions/` directory?" with options Yes and No (no recommendation — both are valid).
+1. Ask both questions together. If a structured user-input tool such as `AskUserQuestion` is available, use it; otherwise ask a concise plain-text question:
+   - "Where should session logs be stored?" Suggest `logs/` as the default and `docs/logs/` as an alternative, while allowing a custom path.
+   - "Track architectural decisions in a `decisions/` directory?" Both Yes and No are valid.
 
 2. **After receiving answers**, create the chosen log directory if it doesn't exist.
 
@@ -44,7 +44,7 @@ This project doesn't have session logging set up. Use the `AskUserQuestion` tool
        ```
      - Add a `@decisions-summary.md` reference to CLAUDE.md so decisions are auto-loaded into context.
 
-3. **Update CLAUDE.md**:
+4. **Update CLAUDE.md**:
    - If CLAUDE.md doesn't exist, create it with a minimal structure containing the project name (from the directory name or `package.json`/`pyproject.toml` if available), a "Latest session" section, and (if decisions were opted in) a "Decision records" section with the `@decisions-summary.md` reference.
    - If CLAUDE.md exists but has no "Latest session" section, append one.
    - The "Latest session" section will be populated in Step 2 with a summary + pointer (not an `@` import).
@@ -53,7 +53,7 @@ Then proceed to Step 1.
 
 ## Step 1: Create a session log file
 
-Create a new file at `<log_dir>/YYYY-MM-DD.md` (using today's date). If a file for today already exists, append to it with a horizontal rule separator.
+Create a new file at `<log_dir>/YYYY-MM-DD.md` using the environment/session date. If date context is ambiguous or conflicting, state the date and timezone you are using before writing. If a file for today already exists, append to it with a horizontal rule separator.
 
 The file should contain:
 
@@ -88,7 +88,7 @@ If CLAUDE.md currently has a legacy `@<log_dir>/...` import, replace it with the
 
 ## Step 3: Record decisions
 
-If a `decisions/` directory exists in the project root, run `/record-decisions` to check if any architectural or algorithmic decisions were made this session. If new entries are added, they will be included in the commit.
+If a `decisions/` directory exists in the project root, use the `record-decisions` skill if available to check whether any architectural or algorithmic decisions were made this session. If the skill is unavailable, follow the local workflow directly: inspect `decisions/`, identify qualifying decisions, add `decisions/NNN.md` entries, and update `decisions-summary.md`. If new entries are added, they will be included in the commit.
 
 If no `decisions/` directory exists, skip this step.
 
@@ -98,11 +98,13 @@ Walk up ancestor directories from the project root to the git root (inclusive). 
 
 This lets parent directories define project-family-level bookkeeping — master project list updates, shared status syncing, meeting action item reconciliation, etc. — that fires automatically after every `/update-log` invocation, without bloating per-session CLAUDE.md context.
 
-If no such file is found at any level, skip this step.
+If no such file is found at any level, skip this step. In the final report, state which hooks were found, which hooks ran, and which files they changed.
 
 ## Step 5: Commit
 
-Stage and commit the new log file, updated CLAUDE.md, any changes to `decisions/` or `decisions-summary.md`, and any files modified by post-hooks with a descriptive message.
+Before staging, inspect `git status --short` and identify any pre-existing unrelated changes. Do not stage unrelated user changes.
+
+Stage and commit only the new log file, updated CLAUDE.md, any changes to `decisions/` or `decisions-summary.md`, and any files modified by post-hooks with a descriptive message.
 
 **Before running `git commit`, verify that every intended path was actually staged.** `git add` silently exits 0 for gitignored paths; if the project's notes are accidentally ignored at a parent repo, the log file you just created will not be committed and the orphaning will go undetected. Concretely:
 
@@ -112,6 +114,6 @@ Stage and commit the new log file, updated CLAUDE.md, any changes to `decisions/
 
 ## Step 6: Exit (if requested)
 
-If `--exit` was passed in the arguments, type `/exit` to end the session after all steps are complete.
+If `--exit` was passed in the arguments, end the session using the host environment's normal exit mechanism after all steps are complete. If no explicit exit mechanism is available, state that bookkeeping is complete and stop.
 
 $ARGUMENTS

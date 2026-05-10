@@ -65,17 +65,6 @@ def save_disabled(data: dict) -> None:
     DISABLED.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
 
 
-def skill_mtime(skill: Skill) -> float:
-    mtimes: list[float] = []
-    for rel in (skill.claude, skill.codex):
-        if not rel:
-            continue
-        path = ROOT / rel
-        if path.exists():
-            mtimes.append(path.stat().st_mtime)
-    return max(mtimes) if mtimes else 0.0
-
-
 def iter_jsonl(paths: list[Path], needles: tuple[str, ...] = ()):
     for path in paths:
         try:
@@ -273,8 +262,6 @@ def stale_skills(skills: list[Skill], days: int, last_used: dict[str, dict[str, 
     stale: list[Skill] = []
     for skill in skills:
         if not skill.claude or not skill.codex:
-            continue
-        if skill_mtime(skill) >= cutoff_ts:
             continue
         claude_recent = last_used["claude"].get(skill.name, 0) >= cutoff_ts
         codex_recent = last_used["codex"].get(skill.name, 0) >= cutoff_ts

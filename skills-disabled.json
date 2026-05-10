@@ -1,4 +1,54 @@
 {
-  "disabled": {},
+  "disabled": {
+    "find-skills": {
+      "claude_last_used": "not found",
+      "codex_last_used": "not found",
+      "disabled_at": "2026-05-10T15:14:51+00:00",
+      "reason": "No Claude or Codex usage found inside the threshold window.",
+      "threshold_days": 60
+    },
+    "generate-readme": {
+      "claude_last_used": "not found",
+      "codex_last_used": "not found",
+      "disabled_at": "2026-05-10T15:14:51+00:00",
+      "reason": "No Claude or Codex usage found inside the threshold window.",
+      "threshold_days": 60
+    },
+    "google-sheets-comments": {
+      "claude_last_used": "not found",
+      "codex_last_used": "not found",
+      "disabled_at": "2026-05-10T15:14:51+00:00",
+      "reason": "No Claude or Codex usage found inside the threshold window.",
+      "threshold_days": 60
+    },
+    "post-push-ci": {
+      "claude_last_used": "not found",
+      "codex_last_used": "not found",
+      "disabled_at": "2026-05-10T15:14:51+00:00",
+      "reason": "No Claude or Codex usage found inside the threshold window.",
+      "threshold_days": 60
+    },
+    "skill-discovery": {
+      "claude_last_used": "not found",
+      "codex_last_used": "not found",
+      "disabled_at": "2026-05-10T15:14:51+00:00",
+      "reason": "No Claude or Codex usage found inside the threshold window.",
+      "threshold_days": 60
+    },
+    "skill-resolver": {
+      "claude_last_used": "not found",
+      "codex_last_used": "not found",
+      "disabled_at": "2026-05-10T15:14:51+00:00",
+      "reason": "No Claude or Codex usage found inside the threshold window.",
+      "threshold_days": 60
+    },
+    "systematic-debugging": {
+      "claude_last_used": "not found",
+      "codex_last_used": "not found",
+      "disabled_at": "2026-05-10T15:14:51+00:00",
+      "reason": "No Claude or Codex usage found inside the threshold window.",
+      "threshold_days": 60
+    }
+  },
   "version": 1
 }

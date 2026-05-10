@@ -182,11 +182,25 @@ a Codex skill, a gptel directive or preset, a gptel tool, or a gptel command,
 then builds in the canonical dotfiles paths after confirmation and verifies the
 result before committing.
 
+The =add-to-emacs-packages= skill is a paired Claude/Codex workflow for
+registering one of the user's Emacs packages in =my-emacs-packages.org=,
+creating its documentation note, and adding the GitHub profile README card when
+that externally visible update has been explicitly authorized. It saves org IDs
+after creating them, verifies the note/list/profile changes before committing,
+and cleans temporary clones with =trash=.
+
 The =build= skill is a paired Claude/Codex workflow for turning a rough
 =spec.md= or explicit spec path into an implementation-ready plan. It interviews
 the user in depth, records goals, design, edge cases, implementation order, and
 verification in the spec, and only proceeds to implementation after explicit
 confirmation.
+
+The =ai-journal= skill is a paired Claude/Codex workflow for scanning recent
+Claude Code and Codex sessions, surfacing candidate AI journal topics, and
+drafting org-sourced posts for =stafforini.com/ai=. Its =find-sessions.py= and
+=last-run.txt= auxiliary files are kept synchronized in both paired skill
+directories; the workflow checks for cutoff drift before scanning so either
+tool can run it without silently using stale state.
 
 The =update-log= skill is a paired Claude/Codex end-of-session bookkeeping
 workflow. The Codex copy treats =CLAUDE.md= as the session-log index unless the

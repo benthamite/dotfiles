@@ -1,15 +1,17 @@
 ---
 name: add-to-emacs-packages
-description: Add an Emacs package to the my-emacs-packages note and create its documentation note. Use when the user wants to register a new package in their public packages list.
+description: Add or register one of the user's Emacs packages in my-emacs-packages.org, create its documentation note, and add its GitHub profile README card. Use when the user wants to update the public Emacs packages list for a specific package.
 ---
 
 # Add to Emacs packages
 
-Register one of the user's Emacs packages in the public packages list and create an accompanying documentation note.
+Register one of the user's Emacs packages in the public packages list, create an accompanying documentation note, and add the matching GitHub profile README card.
 
 ## When this skill is invoked
 
 **IMPORTANT**: When triggered, follow the execution steps below. Do NOT just describe what the skill does.
+
+Do not use this for general Emacs package documentation, README generation, or release work unless the user also wants the package registered in the public packages list. Use `doc-elisp`, `generate-readme`, or `release` for those narrower workflows.
 
 ## Key paths
 
@@ -17,11 +19,17 @@ Register one of the user's Emacs packages in the public packages list and create
 - **Notes directory**: `/Users/pablostafforini/My Drive/notes/pablos-miscellany/`
 - **Elpaca sources**: resolve via `emacsclient -e 'init-current-profile'` → `~/.config/emacs-profiles/<profile>/elpaca/sources/<package>/`
 
+## Safety boundaries
+
+- Step 7 creates externally visible GitHub changes. Only push the GitHub profile README change when the current user request explicitly authorizes updating the profile README, or after asking for and receiving confirmation.
+- Clone `benthamite/benthamite` only when Step 7 is authorized. The Step 2 `gh api` read-only check is fine before confirmation.
+- Clean up temporary directories with `trash`, not destructive recursive deletion.
+
 ## Execution steps
 
 ### Step 1: Determine the package name
 
-If `$ARGUMENTS` is provided, use it as the package name. Otherwise, infer the package name from the basename of the current working directory (e.g., if the user is in `~/My Drive/repos/pangram/`, the package is `pangram`).
+If the user supplied a package name, use it. Otherwise, infer the package name from the basename of the current working directory (e.g., if the user is in `~/My Drive/repos/pangram/`, the package is `pangram`).
 
 If neither yields a plausible Emacs package name, ask the user.
 
@@ -30,7 +38,7 @@ If neither yields a plausible Emacs package name, ask the user.
 Check **both** of the following:
 
 1. Whether the package is already listed in `my-emacs-packages.org`.
-2. Whether the package already has a card in the `benthamite/benthamite` GitHub profile README (check with `gh api repos/benthamite/benthamite/contents/README.md --jq .content | base64 -d | grep '<package>'`).
+2. Whether the package already has a card in the `benthamite/benthamite` GitHub profile README (check with `gh api repos/benthamite/benthamite/contents/README.md --jq .content | base64 -d | grep -F "repo=<package>"`).
 
 If the package exists in **both** places, inform the user and stop. If it exists in only one, skip the steps for the place where it already exists and proceed with the remaining steps.
 
@@ -86,7 +94,7 @@ Where `<path-to-readme>` uses the `~/.config/emacs-profiles/<profile>/elpaca/sou
 Then generate an org ID for the top heading:
 
 ```bash
-emacsclient -e '(with-current-buffer (find-file-noselect "<filepath>") (goto-char (point-min)) (org-next-visible-heading 1) (org-id-get-create))'
+emacsclient -e '(with-current-buffer (find-file-noselect "<filepath>") (goto-char (point-min)) (org-next-visible-heading 1) (prog1 (org-id-get-create) (save-buffer)))'
 ```
 
 Capture the returned ID value (strip surrounding quotes) — this is the `NOTE_ID`.
@@ -109,12 +117,12 @@ Insert a new entry in `my-emacs-packages.org` in **alphabetical order** among th
 Then generate an org ID for the newly inserted heading:
 
 ```bash
-emacsclient -e '(with-current-buffer (find-file-noselect "<packages-list-path>") (goto-char (point-min)) (search-forward "** =<package>=") (beginning-of-line) (org-id-get-create))'
+emacsclient -e '(with-current-buffer (find-file-noselect "<packages-list-path>") (goto-char (point-min)) (search-forward "** =<package>=") (beginning-of-line) (prog1 (org-id-get-create) (save-buffer)))'
 ```
 
 ### Step 7: Add the package to the GitHub profile README
 
-Clone the `benthamite/benthamite` repo (the GitHub profile README) into a temporary directory, add a card for the new package in the "Packages I've developed" section, commit, and push.
+If authorized by the user request or by a confirmation in this session, clone the `benthamite/benthamite` repo (the GitHub profile README) into a temporary directory, add a card for the new package in the "Packages I've developed" section, commit, and push. If the GitHub profile update is not authorized, ask for confirmation before this step and do not clone or push yet.
 
 ```bash
 TMPDIR=$(mktemp -d)
@@ -139,10 +147,18 @@ git push
 Finally, clean up the temporary directory:
 
 ```bash
-rm -rf "$TMPDIR"
+trash "$TMPDIR"
 ```
 
-### Step 8: Commit the notes changes
+### Step 8: Verify and commit the notes changes
+
+Before committing, verify that:
+
+1. `<package>.org` exists in the notes directory.
+2. The package list contains the new `** =<package>=` heading in alphabetical order.
+3. Both generated org IDs were saved to disk as `:ID:` properties.
+4. The `[[id:<NOTE_ID>][Full documentation]]` link points to the documentation note ID.
+5. If Step 7 was completed, the GitHub profile README contains the new card and the temporary clone was moved to the trash.
 
 Create a single commit with both files in the notes repo:
 

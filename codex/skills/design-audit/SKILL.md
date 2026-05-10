@@ -1,15 +1,25 @@
 ---
 name: design-audit
-description: Audit code for suboptimal architecture, unnecessary complexity, missing or wrong abstractions, duplication, and refactoring opportunities. Use when the user wants to improve code structure rather than find bugs or readability issues.
+description: "Audit code for architecture and maintainability: unnecessary complexity, premature or missing abstractions, duplication, unclear module boundaries, and refactoring opportunities. Use when the user asks for a design review, architecture review, refactoring audit, simplification pass, or structural critique; not for bug, security, or readability-only reviews."
 ---
 
 # Design audit
 
 Review $ARGUMENTS for architectural quality and structural soundness. The goal is to find code that **works correctly and reads clearly** but is structured in a way that makes it harder to maintain, extend, or reason about than it needs to be.
 
-If `--accept` is present in `$ARGUMENTS`, after completing the audit, immediately refactor **all** findings (high, medium, and low impact) without asking for confirmation. Byte-compile and run tests after applying all changes. Commit the result.
+This is a review skill first. Do not edit code unless the user explicitly asks for refactoring or `--accept` is present in `$ARGUMENTS`.
 
-Use subagents to explore the codebase in parallel where appropriate. Read actual code — don't guess from file names.
+If `--accept` is present in `$ARGUMENTS`, after completing the audit, immediately refactor high-confidence, behavior-preserving **high-impact** findings without asking for confirmation. Do not make speculative medium- or low-impact refactors just because they were observed. If a high-impact finding requires a broad redesign, risky migration, or product judgment, report it as unresolved instead of half-fixing it. Byte-compile and run the available tests or build checks after applying changes, then commit the result.
+
+Use subagents to explore independent areas of the codebase in parallel where appropriate. Read actual code and call sites; don't guess from file names.
+
+## Workflow
+
+1. Identify the requested scope. If no path is supplied, audit the current project. Check local project instructions and the current git status before changing anything.
+2. Map the relevant structure: entry points, module boundaries, data flow, shared helpers, and repeated implementation patterns.
+3. Read representative code and enough call sites to verify each candidate structural issue. Classify near-misses under the separate audit that should handle them instead.
+4. Prioritize findings by maintenance impact and confidence. Prefer fewer, better-supported findings over broad speculation.
+5. Report concrete refactoring paths. With `--accept`, implement only the high-confidence high-impact refactors, keep edits scoped, verify behavior with available checks, and commit.
 
 ## What to look for
 
@@ -74,4 +84,6 @@ For each finding, include:
 - A concrete refactoring approach
 - What the improvement buys you (e.g., "makes it possible to test the validation logic independently")
 
-At the end, offer to refactor the high-impact issues.
+If there are no meaningful design issues, say so clearly and mention any residual uncertainty from areas you did not inspect.
+
+Without `--accept`, end by offering to refactor the high-impact issues. With `--accept`, end with the refactors made, verification performed, commit hash, and any unresolved issues.

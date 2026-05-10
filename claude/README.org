@@ -426,7 +426,9 @@ README/manual changes when the user requested file edits.
 :ID:       F859475D-8BEF-46B7-9417-3F8462826BA9
 :END:
 
-Creates or updates org-mode notes in my notes directory (=~/My Drive/notes/=), with proper slugified filenames and org IDs.
+Creates or updates org-mode notes in my notes directory
+(=~/My Drive/notes/=), with slugified filenames, preserved existing content,
+saved org IDs for new notes, and an explicit re-read verification step.
 
 **** transcribe-note
 :PROPERTIES:

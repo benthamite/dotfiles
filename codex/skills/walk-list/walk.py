@@ -31,6 +31,7 @@ Utilities:
 import contextlib
 import fcntl
 import json
+import shlex
 import shutil
 import sys
 import uuid
@@ -42,6 +43,33 @@ DATA_ROOT = Path.home() / ".claude" / "walk-list-data"
 REGISTRY_PATH = DATA_ROOT / "registry.json"
 STUB_MARKER = "_walk_locked"
 DEFAULT_MAX = 1
+
+
+def parse_positive_int(raw: str, label: str) -> int:
+    try:
+        value = int(raw)
+    except ValueError as exc:
+        raise SystemExit(f"ERROR: {label} must be a positive integer: {raw}") from exc
+    if value < 1:
+        raise SystemExit(f"ERROR: {label} must be a positive integer: {raw}")
+    return value
+
+
+def parse_non_negative_float(raw: str, label: str) -> float:
+    try:
+        value = float(raw)
+    except ValueError as exc:
+        raise SystemExit(f"ERROR: {label} must be a non-negative number: {raw}") from exc
+    if value < 0:
+        raise SystemExit(f"ERROR: {label} must be a non-negative number: {raw}")
+    return value
+
+
+def walk_command(*args: str) -> str:
+    script = Path(__file__).expanduser()
+    if not script.is_absolute():
+        script = script.absolute()
+    return " ".join(shlex.quote(part) for part in ["python", str(script), *args])
 
 
 def ensure_root() -> None:
@@ -204,18 +232,19 @@ def cmd_start(input_file: Path, max_concurrent: int) -> None:
     reg[canonical_key(input_file)] = sid
     save_registry(reg)
 
+    input_arg = str(input_file)
     stub = {
         STUB_MARKER: True,
         "message": "Locked by walk-list. Use walk.py commands to interact.",
         "session_prefix": sid[:8],
         "max_concurrent": max_concurrent,
         "commands": {
-            "dispatch (pool)": f"python ~/.claude/skills/walk-list/walk.py dispatch {input_file}",
-            "record (pool)": f"python ~/.claude/skills/walk-list/walk.py record {input_file} <token> '<decision>'",
-            "pool-status": f"python ~/.claude/skills/walk-list/walk.py pool-status {input_file}",
-            "next (sequential)": f"python ~/.claude/skills/walk-list/walk.py next {input_file} '<decision>'",
-            "status": f"python ~/.claude/skills/walk-list/walk.py status {input_file}",
-            "restore": f"python ~/.claude/skills/walk-list/walk.py restore {input_file}",
+            "dispatch (pool)": walk_command("dispatch", input_arg),
+            "record (pool)": walk_command("record", input_arg, "<token>", "<decision>"),
+            "pool-status": walk_command("pool-status", input_arg),
+            "next (sequential)": walk_command("next", input_arg, "<decision>"),
+            "status": walk_command("status", input_arg),
+            "restore": walk_command("restore", input_arg),
         },
     }
     input_file.write_text(json.dumps(stub, indent=2), encoding="utf-8")
@@ -402,7 +431,7 @@ def cmd_show_decisions(input_file: Path) -> None:
 
 def cmd_release_stale(input_file: Path, max_age_seconds: str) -> None:
     sid, sdir = resolve_session(input_file)
-    threshold = float(max_age_seconds)
+    threshold = parse_non_negative_float(max_age_seconds, "age-seconds")
     now = datetime.now(timezone.utc)
     released = []
     with locked_state(sdir) as state:
@@ -428,9 +457,10 @@ def cmd_release_stale(input_file: Path, max_age_seconds: str) -> None:
 
 def cmd_set_max_concurrent(input_file: Path, n: str) -> None:
     sid, sdir = resolve_session(input_file)
+    max_concurrent = parse_positive_int(n, "max_concurrent")
     with locked_state(sdir) as state:
-        state["max_concurrent"] = int(n)
-    print(f"max_concurrent set to {n}")
+        state["max_concurrent"] = max_concurrent
+    print(f"max_concurrent set to {max_concurrent}")
 
 
 def cmd_restore(input_file: Path, preserve: bool = True) -> None:
@@ -473,9 +503,10 @@ def main() -> None:
         input_file = Path(args[1])
         max_c = DEFAULT_MAX
         rest = args[2:]
-        if "--max-concurrent" in rest:
-            i = rest.index("--max-concurrent")
-            max_c = int(rest[i + 1])
+        if rest:
+            if len(rest) != 2 or rest[0] != "--max-concurrent":
+                raise SystemExit("Usage: walk.py start <file> [--max-concurrent N]")
+            max_c = parse_positive_int(rest[1], "max_concurrent")
         cmd_start(input_file, max_c)
     elif cmd == "next" and len(args) >= 3:
         cmd_next(Path(args[1]), " ".join(args[2:]))

@@ -1,6 +1,6 @@
 ---
 name: walk-list
-description: Process items from a list file strictly one at a time (sequential) or N-at-a-time (parallel subagent pool). The input file is MOVED into a protected store that only walk.py can read; a PreToolUse hook blocks every other tool from accessing the store. In pool mode, items are dispatched to concurrent subagents (each handling one item) with a fixed-size in-flight cap — you cannot dispatch past the cap, and slots only free up when record is called. Use any time a list must be processed individually without batching.
+description: Process items from a list file strictly one at a time (sequential) or N-at-a-time (parallel subagent pool). The input file is MOVED into a protected store that only walk.py can read; a PreToolUse hook blocks every other tool from accessing the store. In pool mode, items are dispatched to concurrent subagents (each handling one item) with a fixed-size in-flight cap — you cannot dispatch past the cap, and slots only free up when record is called. Use when a list file must be processed item-by-item without batching or peeking ahead; do not use for ordinary summarizing, filtering, or transforming lists that can be safely read all at once.
 ---
 
 # walk-list: strict 1-at-a-time or N-at-a-time processing (structural)
@@ -16,6 +16,15 @@ description: Process items from a list file strictly one at a time (sequential) 
 A PreToolUse hook (`block-walk-list-access.sh`) blocks every tool (Read, Grep, Glob, Edit, Write, NotebookEdit, Bash) from touching `~/.claude/walk-list-data/` except `python .../walk.py` invocations.
 
 The state file is read-modify-written under an exclusive `flock` so concurrent subagent `record` calls cannot clobber each other.
+
+## Input and scope
+
+Input files may be JSON arrays, newline-delimited JSON objects/arrays, or
+plain newline-separated text. Empty files are rejected. Use this skill only when
+the user needs strict item isolation, no skipped items, or controlled
+concurrency. For ordinary list summarization, counting, filtering, sorting, or
+bulk transformation where reading the full list is acceptable, use the normal
+file tools instead.
 
 ## Two modes
 
@@ -43,7 +52,7 @@ loop:
     parse token T and item I from out
     spawn background Agent(item=I, claim_token=T, file="/tmp/items.json") with prompt that includes:
       "When you have your verdict, run:
-         python ~/.claude/skills/walk-list/walk.py record /tmp/items.json <T> '<your-verdict>'
+         python <path-to-this-skill>/walk.py record /tmp/items.json <T> '<your-verdict>'
        Then return a one-line summary."
   wait for any Agent completion notification
   # (the completed agent already called walk.py record, freeing its slot)
@@ -80,7 +89,7 @@ Key properties of the pool mode:
 The slot stays claimed. Use `walk.py release-stale <file> <age-seconds>` to re-queue stale claims. Recommended: run this with a 600s threshold every few minutes if you see slots stuck.
 
 **Subagent returns a malformed verdict.**
-`walk.py record` accepts any non-empty string, so the verdict is stored as-is. Post-processing (e.g., mapping to person_reviews.json) can filter or flag malformed entries. If you want the agent to retry, `release-stale` the specific claim and it will re-dispatch.
+`walk.py record` accepts any non-empty string, so the verdict is stored as-is. Post-processing (e.g., mapping to person_reviews.json) can filter or flag malformed entries. If you want the agent to retry, use `release-stale` with an age threshold that matches the stale claim; `release-stale <file> 0` releases every in-flight claim.
 
 **Main session forgets to dispatch more after a completion.**
 No corruption — just idle. `pool-status` always shows available_slots and remaining_to_claim; use it to resume.
@@ -102,9 +111,9 @@ ITEM:
 <item JSON>
 
 When you have your verdict, run:
-  python ~/.claude/skills/walk-list/walk.py record <file> <CLAIM_TOKEN> "<verdict-text>"
+  python <path-to-this-skill>/walk.py record <file> <CLAIM_TOKEN> "<verdict-text>"
 
-Then return a one-line summary mirroring the verdict. Do NOT try to read
+Use the same `walk.py` path that started the walk. Then return a one-line summary mirroring the verdict. Do NOT try to read
 the full input file — the protected-store hook will block you. Use only
 the item above and external sources (hub files, web, etc.).
 ```

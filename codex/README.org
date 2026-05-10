@@ -222,9 +222,10 @@ compact closeout history, then re-reads the progress file, checks the
 progress-file diff, and runs =git diff --check=.
 
 The =skill-resolver= skill wraps =bin/agent-skill=, a deterministic resolver for
-opening skills by name.  It searches project-local skills before global skills
-and supports =path=, =cat=, =list=, and =roots= so agents do not need to manually
-expand skill root aliases such as =r0= / =r1=.
+opening skills by name. It searches project-local roots from the current or
+supplied =--cwd= before workspace/global/system/plugin roots and supports
+=path=, =cat=, =list=, and =roots= so agents do not need to manually expand skill
+root aliases such as =r0= / =r1= or guess canonical edit paths.
 
 The =skill-audit= skill is a paired Claude/Codex meta-skill for reviewing
 skills and =SKILL.md= files. It checks trigger quality, workflow design,

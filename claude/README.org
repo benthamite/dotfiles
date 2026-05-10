@@ -776,7 +776,11 @@ global Claude/Codex skill trees.
 :ID:       9F4D94C6-19C7-4DE2-9A5B-98C52064495C
 :END:
 
-Resolves Claude/Codex skills by name through =bin/agent-skill= instead of relying on manual root-alias expansion. Searches project-local skills before global skills and exposes =path=, =cat=, =list=, and =roots= commands for deterministic skill loading/debugging.
+Resolves Claude/Codex skills by name through =bin/agent-skill= instead of
+relying on manual root-alias expansion. Searches project-local roots from the
+current or supplied =--cwd= before workspace/global/system/plugin roots, exposes
+=path=, =cat=, =list=, and =roots= commands, and tells agents to edit canonical
+tracked skill paths when paired copies need changes.
 
 **** diagnose
 :PROPERTIES:

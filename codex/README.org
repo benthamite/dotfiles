@@ -113,6 +113,13 @@ standard to =doc-elisp=, checks coverage for every top-level =.el= file,
 verifies changed Org manuals and generated Texinfo before committing, and keeps
 package documentation commits scoped to one package at a time.
 
+The =fix-drive-errors= skill is the batch counterpart to =nosync= for Google
+Drive sync cleanup. It scans =~/My Drive/= for generated dependency, build,
+cache, and virtual environment directories; skips ambiguous source/user data;
+moves confirmed offenders to =~/.drive-nosync/=; rewrites broken relative
+symlinks after each move; reports conflicts or missing targets instead of
+guessing; and restarts Google Drive only after changes.
+
 Codex-only skills are allowed when they document a capability that exists only
 in Codex. Record them in =ai-config-sync.json= with =status: codex-only=,
 =claude: null=, and the tracked Codex skill path. The current example is

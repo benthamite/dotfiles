@@ -304,7 +304,17 @@ Claude =skillOverrides= entries set to ="off" in the live
 =bin/skill-prune enable NAME=; add =--keep= when a renamed or otherwise
 intentionally retained skill should remain enabled despite missing history.
 
-Epoch-only skills live in the Epoch workspace instead of this global dotfiles tree: =~/My Drive/Epoch/.claude/skills/= for Claude and =~/My Drive/Epoch/.codex/skills/= for Codex. Keep workflows there when their triggers and instructions only make sense inside the Epoch project context.
+Project-local skills live with the project or workspace that owns their
+workflow instead of this global dotfiles tree. Dotfiles maintenance skills live
+under =~/My Drive/dotfiles/.claude/skills/= and =~/My Drive/dotfiles/.codex/skills/=.
+Emacs-only maintenance skills live under =~/My Drive/dotfiles/emacs/.claude/skills/=
+and =~/My Drive/dotfiles/emacs/.codex/skills/=. Notes workflows live under
+=~/My Drive/notes/.claude/skills/= and =~/My Drive/notes/.codex/skills/=,
+with batch-only note workflows under the matching =programmatic-skills= roots.
+Google Drive cleanup skills live under =~/My Drive/.claude/skills/= and
+=~/My Drive/.codex/skills/=. Epoch-only skills live in the Epoch workspace:
+=~/My Drive/Epoch/.claude/skills/= for Claude and
+=~/My Drive/Epoch/.codex/skills/= for Codex.
 
 *** Context skills
 :PROPERTIES:
@@ -461,17 +471,6 @@ options/faces/commands/functions across all source files, avoids broad
 =.dir-locals.el= changes in the dotfiles monorepo, and requires source/manual
 verification before reporting completion.
 
-**** doc-extras
-:PROPERTIES:
-:ID:       C70171D9-4A5C-45BE-9F74-D7AE244336EF
-:END:
-
-Scans all =emacs/extras/*.el= files, identifies missing or outdated documentation, and generates docs in parallel using subagents.
-It uses =doc-elisp= for the Denote-style manual standard, includes =paths.el=
-and other top-level extras files, verifies changed Org manuals and Texinfo
-exports before committing, and keeps package documentation commits scoped to one
-package at a time.
-
 **** generate-readme
 :PROPERTIES:
 :ID:       A3F5B8D1-7C42-4E9A-B6A1-2D8E4F9C0A73
@@ -484,28 +483,12 @@ README-specific material, handles package-vc/use-package =:vc= assumptions
 explicitly, checks links/placeholders and roadmap moves, then commits verified
 README/manual changes when the user requested file edits.
 
-**** org-note
-:PROPERTIES:
-:ID:       F859475D-8BEF-46B7-9417-3F8462826BA9
-:END:
-
-Creates or updates org-mode notes in my notes directory
-(=~/My Drive/notes/=), with slugified filenames, preserved existing content,
-saved org IDs for new notes, and an explicit re-read verification step.
-
 **** add-to-emacs-packages
 :PROPERTIES:
 :ID:       E8FD1360-FDF6-46FE-940F-BD8A346AE4BF
 :END:
 
 Registers an Emacs package in =my-emacs-packages.org=, creates an accompanying documentation note with =#+INCLUDE= directives pointing to the package's readme, and adds a card to the =benthamite/benthamite= GitHub profile README when that externally visible update has been explicitly authorized. Determines the package name from the argument or the current directory, inserts entries in alphabetical order, saves generated org IDs for both the note and the list entry, and verifies the note/list/profile changes before committing. Marks the exported note as =:unlisted true= via =EXPORT_HUGO_CUSTOM_FRONT_MATTER= so it stays out of the site's note index. Checks both the packages list and the GitHub profile README, skipping whichever is already done.
-
-**** convert-citations
-:PROPERTIES:
-:ID:       EDFDB065-9B7C-4E9A-B858-F9CCD9E1E5D2
-:END:
-
-Replaces raw bibliographic references in =.org= files with org-mode =[cite:@KEY]= citations by resolving each work against the user's citar bibliography. Takes a target file path, directory, or glob as an argument (prompted by =ai-agent-run-skill= when invoked via =ai-agent-menu= → =s=) and processes matching org files sequentially. Uses =emacsclient -e '(tlon-bibliography-lookup FIELD VALUE "=key=")'= for lookups, falling back to substring matching, DOI matching, and the current agent's web fetch/search tools for URL-based or ambiguous references. Preserves formatting (bold, italics, parentheticals, locators like =pp. 123–145= or =ch. 5=); does not fabricate keys for works not found in the bibliography; and verifies edited files for Markdown citation tags or placeholder markers before reporting. Canonical style reference: =~/My Drive/notes/pablos-miscellany/c-d-broad-a-bibliography.org=. This is a native agent replacement for =tlon-bib-replace-citations-in-file=, whose gptel-based agentic loop was brittle for this kind of lookup-heavy task.
 
 *** Release and operations skills
 :PROPERTIES:
@@ -602,42 +585,6 @@ chat history. The skill re-reads the temp file after writing, prints the saved
 contents, and tells the user to run =! emacsclient -e '(ai-agent-claude-handoff)'=;
 Claude must not run that command itself.
 
-**** emacs-freeze
-:PROPERTIES:
-:ID:       5ED7EB34-774B-489C-95C5-27C8131CE048
-:END:
-
-Diagnoses a frozen, hung, beachballing, or otherwise unresponsive Emacs process. First tries to dump =*Backtrace*= and =*Messages*= via the server socket using per-PID diagnostic files and a macOS-safe timeout helper, then samples the stack as fallback evidence. Analysis forces a stuck-vs-busy check and a nested-debugger count *before* identifying any hot path, to avoid confusing timers firing inside a wedged recursive edit with the actual cause. Recovery options are tailored to the diagnosis: =(top-level)= via emacsclient for debugger nesting, =keyboard-quit= for responsive-but-stuck, SIGUSR2/SIGTERM/SIGKILL (with warnings) otherwise; every state-changing recovery action requires explicit confirmation before the agent runs it. Cleanup uses =trash= or non-recursive removal of the known diagnostic files. Explicit rules forbid unverified citations and require labelling observation vs. inference vs. unknowns.
-
-**** nosync
-:PROPERTIES:
-:ID:       BEEADA41-ECD4-457B-8A10-DA8D0C19984B
-:END:
-
-Moves one explicitly named generated directory from inside =~/My Drive/= to
-=~/.drive-nosync/= (outside Drive's sync root) and leaves a symlink in its
-place. Drive skips symlinks, so the directory becomes invisible to sync while
-tooling works transparently. The workflow refuses to merge or overwrite an
-existing mirrored target, verifies the replacement symlink, and walks the
-relocated tree to rewrite broken relative symlinks whose =..= chain pointed
-outside the moved directory. Remaining broken symlinks are reported instead of
-hidden. Use when Google Drive complains about a specific directory (e.g.
-=node_modules/.bin=); use =fix-drive-errors= for broad scans.
-
-**** fix-drive-errors
-:PROPERTIES:
-:ID:       69244292-277A-4484-BC21-2AA9C8D588D9
-:END:
-
-Bulk version of =nosync=. Scans =~/My Drive/= for generated directories causing sync errors (node_modules, build output, Python caches, virtual environments), skips ambiguous source/user data, moves confirmed offenders to =~/.drive-nosync/=, rewrites broken relative symlinks after each move, reports unresolved conflicts or missing targets, and restarts Google Drive after changes. Use periodically or when the error list grows.
-
-**** best-of-n
-:PROPERTIES:
-:ID:       76E6E656-8DCE-4433-B9AA-1F6D0ACDB3B0
-:END:
-
-Adapted from [[https://pjh.is/][Peter Hartree]]'s [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository. Queries multiple AI models with temperature-varied sampling. For each model, generates N responses and selects the best one (using Gemini 3 Flash as judge). Then synthesizes across models using Claude Opus 4.6 with extended thinking. Has a brainstorm mode that merges unique ideas instead of picking one winner. Presets: Quick (4 models x 3), Intense (7 x 5), Ultra (7 x 6). The skill resolves the live Claude/Codex skill directory before running, uses =models.json= as the source of truth for preset details, excludes deep-research/browser presets from the normal menu, and verifies result files before reporting completion.
-
 **** proofread
 :PROPERTIES:
 :ID:       D9EC1B04-5470-4EF9-8C4C-FEDFB2333128
@@ -699,13 +646,6 @@ Iterative, graph-based discovery of high-value Twitter accounts in any niche. In
 :END:
 
 Adapted from [[https://pjh.is/][Peter Hartree]]'s [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository. Static-first security audit of macOS applications before running them or granting sensitive permissions. Covers trust verification, permission analysis, app type detection, Electron source extraction and security checks, network endpoint scanning, and spaces-safe binary analysis. The bundled scanner uses temporary directories created with =mktemp= and moves extracted sources to Trash when possible. Final reports include the verdict, highest-severity findings, verification performed, and static-analysis limitations.
-
-**** gitguardian-triage
-:PROPERTIES:
-:ID:       A3ED4593-1323-4991-8D41-2AA9AF45D093
-:END:
-
-End-to-end processor for the GitGuardian secrets dashboard. Fetches all open incidents via the GG API (token lives in =pass auth-sources/api.gitguardian.com/pablo@stafforini.com=), classifies each into a disposition bucket (rotate, already-invalid, false positive, low risk, test credential, or needs-user-input for unknown-validity), and drives rotation end-to-end for the valid ones. Rotation is routed to the Chrome profile that owns each credential per the mapping in [[*Chrome integration and multi-account][Chrome integration]]: GitHub/OpenAI/Anthropic/Google/Telegram each have provider-specific steps (Regenerate PAT with scope matching, legacy-user-key caveats in OpenAI, =gcloud alpha services api-keys= for Google Cloud, =/revoke= via BotFather in Telegram Desktop). Extracting new secrets from browser tabs uses a download-attribute trick (macOS blocks clipboard writes from backgrounded Chrome tabs), then passes tokens through chmod-600 files, stdin, env vars, or =pass= without printing them. Consumer enumeration runs five complementary searches per leaked value: =.zshenv-secrets=, every line of every =pass= entry (NOT just =head -1= — multi-field entries hide the leaked value on a =<subkey>:= line that =auth-source-pass-get= reaches by name), Elisp/code references to matching pass-entry path prefixes (catches =(auth-source-pass-get "gptel" (concat "tlon/core/openai.com/" tlon-email-shared))= where the literal never appears in source), direct file-level grep for the literal, and indirection layers (=op://= URIs, =gh= keychain). After rotation, the skill re-runs the searches against the OLD value to verify zero remaining consumers. Updates =.zshenv-secrets= and =pass= consumers, commits the dotfiles change, cleans up sensitive temporary files, and closes each GG incident via =/resolve= (rotated) or =/ignore= with =false_positive= | =low_risk= | =test_credential= (the only three valid reasons). Documents the rule "look for the variable, not the exact value" when finding consumers — rotated keys can share git history with their dead predecessors. Explicitly does not rewrite git history; rotating + marking resolved is enough once the old value is dead. After rotating a GitHub PAT, the skill also refreshes =gh='s macOS-keychain entry via =env -u GH_TOKEN gh auth login --with-token < "$NEW_TOKEN_FILE"=, otherwise launchd jobs (which don't inherit =GH_TOKEN=) fall back to the stale keychain token and HTTPS pushes break silently.
 
 **** security-audit
 :PROPERTIES:

@@ -25,6 +25,7 @@ DOTFILES_PROJECT_LOCAL_SKILLS = {
     "claude-config-audit",
     "codex-app-browser",
     "find-skills",
+    "gitguardian-triage",
     "install-mcp-server",
     "migrate-profile",
     "move-session-log",

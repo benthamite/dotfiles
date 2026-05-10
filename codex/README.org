@@ -122,32 +122,17 @@ Project-specific skills belong beside their project instead of this global
 tree. Dotfiles maintenance skills live in the dotfiles repo-root project-local
 =.claude/skills/= and =.codex/skills/= roots so they are available while
 working in the dotfiles tree without loading globally in unrelated projects.
-For the Epoch workspace, the Claude copies live in
+Emacs-only maintenance skills live under =~/My Drive/dotfiles/emacs/.claude/skills/=
+and =~/My Drive/dotfiles/emacs/.codex/skills/=. Notes workflows live under
+=~/My Drive/notes/.claude/skills/= and =~/My Drive/notes/.codex/skills/=,
+with batch-only note workflows under the matching =programmatic-skills= roots.
+Google Drive cleanup skills live under =~/My Drive/.claude/skills/= and
+=~/My Drive/.codex/skills/=. For the Epoch workspace, the Claude copies live in
 =~/My Drive/Epoch/.claude/skills/= and the Codex copies live in
 =~/My Drive/Epoch/.codex/skills/=. The sync reminder and commit guard apply to
 these project-local pairs too: changing one local skill reminds the agent to
 update the other, and committing one side without an equivalent counterpart is
 blocked.
-
-The =doc-extras= skill is a paired Claude/Codex documentation workflow for
-auditing, creating, and refreshing manuals under =emacs/extras/doc/= from the
-top-level sources in =emacs/extras/=. It delegates the Denote-style manual
-standard to =doc-elisp=, checks coverage for every top-level =.el= file,
-verifies changed Org manuals and generated Texinfo before committing, and keeps
-package documentation commits scoped to one package at a time.
-
-The =nosync= skill moves one explicitly named generated directory from
-=~/My Drive/= to =~/.drive-nosync/=, leaves a symlink in its place, refuses to
-merge or overwrite an existing mirrored target, verifies the replacement
-symlink, and reports any broken symlinks that cannot be repaired. Use it for a
-specific problematic directory; use =fix-drive-errors= for broad scans.
-
-The =fix-drive-errors= skill is the batch counterpart to =nosync= for Google
-Drive sync cleanup. It scans =~/My Drive/= for generated dependency, build,
-cache, and virtual environment directories; skips ambiguous source/user data;
-moves confirmed offenders to =~/.drive-nosync/=; rewrites broken relative
-symlinks after each move; reports conflicts or missing targets instead of
-guessing; and restarts Google Drive only after changes.
 
 =bin/codex-app-handoff= opens the current Codex thread in the desktop app via
 the app's =codex://threads/<THREAD_ID>= deeplink. Use it from CLI/Emacs turns
@@ -180,13 +165,6 @@ dotfiles and Emacs package edits to the correct canonical clone. It explains
 the =dotfiles= exception to the normal elpaca source layout, active profile
 lookup, profile-aware =emacs/config.org= tangling, README update obligations,
 verification handoffs, and the standard =<scope>: <description>= commit format.
-
-The =best-of-n= skill is a paired Claude/Codex workflow for querying several
-models multiple times, selecting or merging the best samples, and synthesizing
-the result.  Agents resolve the live tool-specific skill directory before
-running, use =models.json= as the source of truth for preset details, exclude
-deep-research/browser presets from the normal menu, and verify result files
-before reporting completion.
 
 The =proofread= skill is a paired Claude/Codex workflow for proofreading
 Markdown files with aspell or Gemini Flash. It resolves the live tool-specific
@@ -325,13 +303,6 @@ scripts should have caught the issue, classify the diagnosis, distinguish
 structural gaps from behavioral lapses, and report before implementing any
 remedy.
 
-The =emacs-freeze= skill is a paired Claude/Codex operations skill for frozen,
-hung, beachballing, or otherwise unresponsive Emacs sessions. It collects
-per-PID diagnostics, tries to read =*Backtrace*= and =*Messages*= through the
-server socket with a macOS-safe timeout helper, samples the process, and reports
-observations, inferences, unknowns, recovery options, and recurrence-prevention
-steps separately. Recovery actions that change Emacs state are recommendations
-until the user explicitly confirms that the agent should run them, and cleanup
 uses =trash= or non-recursive removal of the known diagnostic files.
 
 The =design-audit= skill is a paired Claude/Codex development skill for
@@ -377,19 +348,6 @@ README-specific material, handles package-vc/use-package =:vc= assumptions
 explicitly, checks links/placeholders and roadmap moves, then commits verified
 README/manual changes when the user requested file edits.
 
-The =org-note= skill is a paired Claude/Codex workflow for creating or updating
-private org-mode notes in =~/My Drive/notes/=. It infers or uses the requested
-title, slugifies filenames through Emacs, preserves existing note structure on
-updates, saves org IDs for new notes, and re-reads the note from disk before
-reporting completion.
-
-The =convert-citations= skill is a paired Claude/Codex workflow for replacing
-raw bibliographic references in org files with =[cite:@KEY]= citations from the
-user's citar bibliography. It validates file, directory, and glob targets,
-keeps raw-reference edits out of org metadata and prose, uses the current
-agent's file-editing and web lookup tools, and verifies edited files for
-Markdown citation tags or placeholder markers before reporting.
-
 The =audit-mac-app= skill is a paired Claude/Codex static-first workflow for
 auditing macOS applications before running them or granting sensitive
 permissions. It covers trust verification, permission analysis, app type
@@ -397,13 +355,6 @@ detection, Electron source extraction and security checks, network endpoint
 scanning, and spaces-safe binary analysis. Its bundled scanner uses =mktemp=
 for temporary directories and moves extracted sources to Trash when possible.
 
-The =gitguardian-triage= skill is a paired Claude/Codex security workflow for
-clearing GitGuardian secret incidents end to end. It fetches incidents via the
-GG API, classifies them into rotate/resolve/ignore buckets, routes provider
-rotation to the owning account, searches =.zshenv-secrets=, =pass=, code
-references, literal file hits, and indirection layers for live consumers, and
-verifies old-value removal before closing incidents. Secret values are handled
-through protected files, stdin, env vars, or =pass= rather than printed command
 output, and sensitive temporary files are cleaned up before reporting.
 
 The =security-audit= skill is a paired Claude/Codex workflow for auditing the

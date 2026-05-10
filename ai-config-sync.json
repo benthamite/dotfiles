@@ -37,13 +37,6 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
-      "name": "best-of-n",
-      "claude": "claude/skills/best-of-n/SKILL.md",
-      "codex": "codex/skills/best-of-n/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
       "name": "build",
       "claude": "claude/skills/build/SKILL.md",
       "codex": "codex/skills/build/SKILL.md",
@@ -79,13 +72,6 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
-      "name": "doc-extras",
-      "claude": "claude/skills/doc-extras/SKILL.md",
-      "codex": "codex/skills/doc-extras/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
       "name": "dotfiles-context",
       "claude": "claude/skills/dotfiles-context/SKILL.md",
       "codex": "codex/skills/dotfiles-context/SKILL.md",
@@ -103,27 +89,6 @@
       "name": "elisp-conventions",
       "claude": "claude/skills/elisp-conventions/SKILL.md",
       "codex": "codex/skills/elisp-conventions/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
-      "name": "emacs-freeze",
-      "claude": "claude/skills/emacs-freeze/SKILL.md",
-      "codex": "codex/skills/emacs-freeze/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
-      "name": "fix-drive-errors",
-      "claude": "claude/skills/fix-drive-errors/SKILL.md",
-      "codex": "codex/skills/fix-drive-errors/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
-      "name": "gitguardian-triage",
-      "claude": "claude/skills/gitguardian-triage/SKILL.md",
-      "codex": "codex/skills/gitguardian-triage/SKILL.md",
       "status": "paired",
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
@@ -152,20 +117,6 @@
       "name": "lint-elisp",
       "claude": "claude/skills/lint-elisp/SKILL.md",
       "codex": "codex/skills/lint-elisp/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
-      "name": "nosync",
-      "claude": "claude/skills/nosync/SKILL.md",
-      "codex": "codex/skills/nosync/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
-      "name": "org-note",
-      "claude": "claude/skills/org-note/SKILL.md",
-      "codex": "codex/skills/org-note/SKILL.md",
       "status": "paired",
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },

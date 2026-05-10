@@ -550,7 +550,7 @@ Moves a directory from inside =~/My Drive/= to =~/.drive-nosync/= (outside Drive
 :ID:       69244292-277A-4484-BC21-2AA9C8D588D9
 :END:
 
-Bulk version of =nosync=. Scans =~/My Drive/= for all directories causing sync errors (node_modules, build output, Python caches, large data dirs), moves them to =~/.drive-nosync/=, repairs broken symlinks, then restarts Google Drive. Use periodically or when the error list grows.
+Bulk version of =nosync=. Scans =~/My Drive/= for generated directories causing sync errors (node_modules, build output, Python caches, virtual environments), skips ambiguous source/user data, moves confirmed offenders to =~/.drive-nosync/=, rewrites broken relative symlinks after each move, reports unresolved conflicts or missing targets, and restarts Google Drive after changes. Use periodically or when the error list grows.
 
 **** install-mcp-server
 :PROPERTIES:

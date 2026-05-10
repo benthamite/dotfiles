@@ -11500,7 +11500,7 @@ CLOCK: [2021-07-26 Mon 14:01]--[2021-07-26 Mon 14:26] =>  0:25
   (org-cite-follow-processor 'citar) ; `org-open-at-point' integration
   (org-cite-activate-processor 'citar) ;
   (org-cite-export-processors
-   '((t . (csl "long-template.csl")))))
+   '((t . (csl "en/long.csl")))))
 #+end_src
 
 ** =oc-csl=
@@ -13670,6 +13670,7 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package elfeed-tube
+  :ensure (:wait t)
   :after elfeed
   :demand t
   :custom

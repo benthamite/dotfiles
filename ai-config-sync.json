@@ -44,6 +44,13 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
+      "name": "codex-app-browser",
+      "claude": null,
+      "codex": "codex/skills/codex-app-browser/SKILL.md",
+      "status": "codex-only",
+      "note": "Codex App Browser Use handoff workflow; Claude Code has no equivalent Codex App browser runtime."
+    },
+    {
       "name": "design-audit",
       "claude": "claude/skills/design-audit/SKILL.md",
       "codex": "codex/skills/design-audit/SKILL.md",

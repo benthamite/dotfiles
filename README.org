@@ -15,7 +15,7 @@ This repository contains my dotfiles, including
 - =find-skills=: Discovers, vets, and optionally installs reusable agent skills.
 - =gitguardian-triage=: Triages and remediates GitGuardian secret incidents.
 - =install-mcp-server=: Installs and configures MCP servers with auth verification, placement, registration, sync, and restart/testing checks.
-- =migrate-profile=: Consolidates Claude Code project data after Emacs or elpaca profile changes.
+- =migrate-profile=: Consolidates Claude Code and Codex session state after Emacs or elpaca profile changes, including explicit old-profile to new-profile migrations and structured session-path rewrites.
 - =move-session-log=: Relocates Codex session logs by rewriting embedded project paths.
   Copied =SKILL (1).md= variants, when present, are kept paired across the
   project-local Claude and Codex skill trees.

@@ -1,33 +1,53 @@
 ---
 name: migrate-profile
-description: Consolidate Claude Code project data after elpaca profile changes. Use when the user says "/migrate-profile", changes Emacs or elpaca profiles, or wants Claude sessions, memory, trust entries, history, cwd paths, or the active profile symlink moved to a new profile.
-argument-hint: "[new-profile]"
+description: Consolidate Claude Code and Codex project data after elpaca profile changes. Use when the user says "/migrate-profile", changes Emacs or elpaca profiles, or wants Claude/Codex sessions, memory, trust entries, history, cwd paths, or the active profile symlink moved to a new profile.
+argument-hint: "[old-profile] to [new-profile]"
 ---
 
 # Profile migration
 
-Consolidate Claude Code project data (sessions, memory, subagents, tool results) across elpaca profile changes by scanning `~/.claude/projects/` for all directories matching the elpaca pattern and grouping them by package name. No explicit package list is needed.
+Consolidate Claude Code and Codex project data across elpaca profile changes. Claude data needs project-directory merging under `~/.claude/projects/`; Codex data needs in-place structured path rewrites across `~/.codex` session, history, index, and archive JSONL files. No explicit package list is needed for Claude project directories.
 
 > **Related skills.** The per-package logic here is essentially the same operation as `move-session-log --rename` (whole-project rename mode), applied in bulk. This skill stays separate because it adds (a) merge semantics — multiple sources can flow into one target — and (b) profile-path rewrites in `~/.claude.json` keyed on the elpaca profile name rather than a single old/new pair. For a single project rename outside an elpaca-profile bump, use the `move-session-log` skill directly (and `rename-project` for full project renames).
 
-Treat this as destructive-adjacent: it retargets a profile symlink and eventually trashes old Claude project directories. Always produce the dry run first and get explicit confirmation before changing the symlink, copying data, rewriting JSONL files, or deleting sources.
+Treat this as destructive-adjacent: it retargets a profile symlink, rewrites agent state files, and eventually trashes old Claude project directories. Always produce the dry run first and get explicit confirmation before changing the symlink, copying data, rewriting JSON/JSONL/log files, or deleting sources.
 
-## Determine new profile
+## Scope
 
-- If `$ARGUMENTS` names a profile (e.g., `8.0.0-dev`), use that.
-- If `$ARGUMENTS` is empty, auto-detect:
+Migrate both stores unless the user explicitly asks for only one:
+
+- **Claude Code**: `~/.claude/projects/`, `~/.claude.json`, `~/.claude/history.jsonl`, and copied session `.jsonl` files.
+- **Codex**: `~/.codex/history.jsonl`, `~/.codex/session_index.jsonl`, `~/.codex/sessions/**/*.jsonl`, and `~/.codex/archived_sessions/**/*.jsonl`.
+
+Codex currently stores sessions by date/rollout ID rather than by encoded project directory. Do not look for Codex equivalents of `~/.claude/projects`; instead, count and rewrite structured `cwd` and `project` fields whose value is an exact elpaca package path under the old profile.
+
+## Determine profiles
+
+- If `$ARGUMENTS` uses `OLD to NEW` or `OLD -> NEW` (e.g., `8.2.0-dev to 8.3.0-dev`), migrate only from `OLD_PROFILE` to `NEW_PROFILE`.
+- If `$ARGUMENTS` names one profile (e.g., `8.3.0-dev`), treat that as `NEW_PROFILE` and discover all older elpaca profile sources.
+- If `$ARGUMENTS` is empty, auto-detect `NEW_PROFILE`:
 
 ```bash
 emacsclient -e 'init-current-profile' | tr -d '"'
 ```
 
-- If `emacsclient` is unavailable, ask the user.
+- If `emacsclient` is unavailable and no `NEW_PROFILE` was given, ask the user.
+- When `OLD_PROFILE` is explicit, dry-run and migrate only matching Claude/Codex references for that old profile. Do not migrate data from other old profiles in the same run.
 
 ## Path encoding
 
 Claude Code encodes project paths as directory names under `~/.claude/projects/` by replacing every `/` with `-`. The leading `/` becomes a leading `-`. Dots are also replaced with `-`.
 
 Example: `/Users/pablostafforini/.config/emacs-profiles/8.0.0-dev/elpaca/sources/elfeed-ai` becomes `-Users-pablostafforini--config-emacs-profiles-8-0-0-dev-elpaca-sources-elfeed-ai`.
+
+Codex stores normal filesystem paths inside JSON/JSONL content, so Codex migration rewrites structured `cwd` and `project` fields from old package paths to new package paths:
+
+```text
+/Users/pablostafforini/.config/emacs-profiles/<old-profile>/elpaca/
+/Users/pablostafforini/.config/emacs-profiles/<new-profile>/elpaca/
+```
+
+Do not perform raw string replacement across Codex transcript text, command output, function-call arguments, or logs. Preserve historical prompts and outputs.
 
 ## Update the active-profile symlink
 
@@ -95,7 +115,7 @@ If the package does not exist under the new profile at all, **ask the user wheth
 
 Use `source_pkg` for matching old `history.jsonl` and session `cwd` values, and `new_path` for the replacement. If no rename applies, skip the package and note this in the summary.
 
-## Migration (non-destructive merge)
+## Claude migration (non-destructive merge)
 
 For each package with both source(s) and a target:
 
@@ -266,9 +286,72 @@ done
 
 This ensures old profile directories don't accumulate and makes it clear which packages have already been migrated.
 
+## Codex migration (structured in-place rewrite)
+
+Codex migration is not a directory merge. Scan the Codex store for JSONL rows containing structured `cwd` or `project` values under the old profile, then rewrite only those structured fields.
+
+### 1. Discover affected Codex files
+
+```bash
+CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
+OLD_PROFILE_PATH="/Users/pablostafforini/.config/emacs-profiles/$OLD_PROFILE"
+
+rg -l "\"(cwd|project)\":\"$OLD_PROFILE_PATH/elpaca/" \
+  "$CODEX_HOME/history.jsonl" \
+  "$CODEX_HOME/session_index.jsonl" \
+  "$CODEX_HOME/sessions" \
+  "$CODEX_HOME/archived_sessions" 2>/dev/null
+```
+
+During the dry run, report:
+
+- affected Codex file count by area (`history`, `session_index`, active sessions, archived sessions, logs)
+- number of structured `cwd` and `project` fields to rewrite
+- whether any matching file is not valid JSONL when it has a `.jsonl` suffix
+
+### 2. Rewrite Codex files
+
+Rewrite `.jsonl` files line by line as JSON. For each object, recursively rewrite only keys named `cwd` or `project` whose value exactly matches an old-profile elpaca package path. Use the same migration records as Claude:
+
+- `source_pkg` matches the old path package name.
+- `new_path` is the verified target path under the new profile.
+- Renamed packages use `source_pkg` for matching and `new_path` for replacement.
+
+```python
+import json
+import re
+from pathlib import Path
+
+project_pattern = re.compile(
+    r"^/Users/pablostafforini/\.config/emacs-profiles/"
+    + re.escape(OLD_PROFILE)
+    + r"/elpaca/(?:repos|sources)/([^/]+)$"
+)
+
+def rewrite_structured_paths(obj):
+    count = 0
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            if key in {"cwd", "project"} and isinstance(value, str):
+                match = project_pattern.match(value)
+                if match:
+                    new_path = migrations.get(match.group(1))
+                    if new_path and value != new_path:
+                        obj[key] = new_path
+                        count += 1
+            else:
+                count += rewrite_structured_paths(value)
+    elif isinstance(obj, list):
+        for item in obj:
+            count += rewrite_structured_paths(item)
+    return count
+```
+
+Do not trash Codex files. Codex history is a single store; this migration only updates structured metadata paths.
+
 ## Execution
 
-1. **Dry run first**: before copying anything, present a summary table showing:
+1. **Dry run first**: before copying anything, present a Claude summary table showing:
    - Package name
    - Source directories (count and profile names)
    - Target directory (existing / will create / package missing from new profile)
@@ -279,14 +362,17 @@ This ensures old profile directories don't accumulate and makes it clear which p
    - Active profile symlink state (already current / will retarget)
    - Status: "will migrate", "already migrated" (all files exist in target), "skipped" (no source or no target)
 
+   Also present a Codex summary showing affected JSONL file counts by area, structured `cwd`/`project` fields to rewrite, JSONL parse problems, and whether the Codex step is "will rewrite" or "already current".
+
 2. **Ask for confirmation** before proceeding with the symlink retarget, actual copy, rewrites, and deletion.
 
-3. **Execute the migration**: retarget the symlink, create any missing targets, copy data without overwriting, rewrite trust/history/session paths, then trash sources whose migration succeeded.
+3. **Execute the migration**: retarget the symlink, create any missing Claude targets, copy Claude data without overwriting, rewrite Claude trust/history/session paths, rewrite Codex history/session/archive structured paths, then trash Claude sources whose migration succeeded.
 
-4. **Post-migration summary**: report whether the active symlink was retargeted, how many sessions and memory files were copied for each package, how many source directories were trashed, how many trust entries were migrated in `~/.claude.json`, how many `history.jsonl` and session `.jsonl` path entries were rewritten, and any packages that were skipped.
+4. **Post-migration summary**: report whether the active symlink was retargeted, how many Claude sessions and memory files were copied for each package, how many Claude source directories were trashed, how many trust entries were migrated in `~/.claude.json`, how many Claude `history.jsonl` and session `.jsonl` path entries were rewritten, how many Codex files and structured fields were rewritten, and any packages or Codex files that were skipped.
 
 ## Important notes
 
-- Existing data in the target is never overwritten — only new files are copied.
-- Source directories are moved to the trash only after their data is copied to the target and path rewrites have succeeded.
+- Existing Claude data in the target is never overwritten — only new files are copied.
+- Claude source directories are moved to the trash only after their data is copied to the target and path rewrites have succeeded.
+- Codex JSONL files are rewritten in place and never trashed.
 - All elpaca project directories are discovered automatically — no package list is needed.

@@ -9121,7 +9121,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 :ID:       D8DEDECF-1CC8-4788-87A6-F98B92CD8DDE
 :END:
 
-/codex is an Emacs client for [[https://openai.com/codex/][Codex]]./
+/[[https://github.com/benthamite/codex][codex]] is an Emacs client for [[https://openai.com/codex/][Codex]]./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package codex

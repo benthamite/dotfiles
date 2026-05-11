@@ -29,3 +29,4 @@ prefix_rule(pattern=["/bin/zsh", "-lc", "UV_CACHE_DIR=/tmp/uv-cache uv run --wit
 prefix_rule(pattern=["kill", "-TERM", "70766"], decision="allow")
 prefix_rule(pattern=["kill", "-TERM", "81009"], decision="allow")
 prefix_rule(pattern=["env", "CODEX_HOME=/Users/pablostafforini/.codex-epoch"], decision="allow")
+prefix_rule(pattern=["emacsclient", "--eval"], decision="allow")

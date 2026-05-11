@@ -237,6 +237,9 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/My Drive/dotfiles/emacs"]
 trust_level = "trusted"
 
+[projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/init"]
+trust_level = "trusted"
+
 [tui]
 theme = "light"
 
@@ -440,6 +443,9 @@ trusted_hash = "sha256:a02a78132ccf90aedca6965c499ba4c548cfdd458ebd13b3fc8de0ff5
 
 [hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:stop:0:0"]
 enabled = true
+trusted_hash = "sha256:974174f46af8f2af28b59c98bd36ba3494ca66a51c59a928a951ad522fbe8ae2"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:stop:0:1"]
 trusted_hash = "sha256:a63a4068a3cb56d0ca7d13c09ed2850f05163dfa08afaf282fa1567e0745c0ee"
 
 [hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:user_prompt_submit:0:0"]

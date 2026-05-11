@@ -7,7 +7,7 @@ description: Save next-session instructions to `/tmp/codex-handoff.md` for Codex
 
 Write a concrete, actionable prompt for the next session and save it
 to `/tmp/codex-handoff.md`. The Emacs command
-`agents-codex-handoff` reads this file, closes the current Codex
+`agent-codex-handoff` reads this file, closes the current Codex
 session, and starts a new one with the handoff prompt.
 
 Do not use this skill for Codex App Browser Use handoffs; use
@@ -64,6 +64,6 @@ When drafting an inferred prompt:
 4. Re-read `/tmp/codex-handoff.md` and verify that it matches the
    intended prompt.
 5. Print the contents so the user can review.
-6. Tell the user to run `! emacsclient -e '(agents-codex-handoff)'`
+6. Tell the user to run `! emacsclient -e '(agent-codex-handoff)'`
    to close this session and start a new one with the prompt auto-submitted.
    Do NOT run this command yourself — only the user should trigger it.

@@ -7,7 +7,7 @@ description: Save next-session instructions to `/tmp/claude-code-handoff.md` for
 
 Write a concrete, actionable prompt for the next session and save it
 to `/tmp/claude-code-handoff.md`. The Emacs command
-`agents-claude-handoff` reads this file, closes the current Claude
+`agent-claude-handoff` reads this file, closes the current Claude
 Code session, and starts a new one with the handoff prompt.
 
 If the user explicitly names a project-specific closeout skill, use
@@ -65,6 +65,6 @@ When drafting an inferred prompt:
 4. Re-read `/tmp/claude-code-handoff.md` and verify that it matches the
    intended prompt.
 5. Print the contents so the user can review.
-6. Tell the user to run `! emacsclient -e '(agents-claude-handoff)'`
+6. Tell the user to run `! emacsclient -e '(agent-claude-handoff)'`
    to close this session and start a new one with the prompt auto-submitted.
    Do NOT run this command yourself — only the user should trigger it.

@@ -557,13 +557,13 @@ the inbox before reporting.
 :ID:       D2278B58-192E-4B4F-A871-4871A5D94B77
 :END:
 
-Reviews the current dotfiles session when the Emacs =agent-exit= before-exit
-prompt asks for lesson capture, writes useful reusable candidates to ignored
-local files under =.agent-learnings/inbox/=, and stops there. It is the
-producer half of the agent-learning workflow: it never promotes lessons to
-durable instructions, skills, hooks, docs, or code. The manual
-=session-retro= skill remains the consumer half that interviews the user and
-implements accepted inbox items.
+Reviews the current session when the Emacs =agent-exit= before-exit prompt asks
+for lesson capture, regardless of the session's working directory. It writes
+useful reusable candidates to ignored local files under the central dotfiles
+=.agent-learnings/inbox/=, and stops there. It is the producer half of the
+agent-learning workflow: it never promotes lessons to durable instructions,
+skills, hooks, docs, or code. The manual =session-retro= skill remains the
+consumer half that interviews the user and implements accepted inbox items.
 
 **** verify
 :PROPERTIES:

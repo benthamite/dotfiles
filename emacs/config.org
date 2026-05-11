@@ -9060,7 +9060,6 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :custom
   (agent-alert-on-ready t)
   (agent-before-exit-skill-name "session-learning-capture")
-  (agent-before-exit-skill-directories '("~/My Drive/dotfiles/"))
   (agent-sync-theme t)
   ;; copilot support is buggy; needs more work
   (agent-claude-copilot-enabled nil)

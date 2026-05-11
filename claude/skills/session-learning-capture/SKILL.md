@@ -1,24 +1,23 @@
 ---
 name: session-learning-capture
-description: Review the current session when a Stop/session-end hook asks for lesson capture, then write candidate reusable lessons to .agent-learnings/inbox without implementing them. Use when a hook prompt says to capture session lessons, review current-session learnings, or populate the agent-learning inbox.
+description: Review the current session when a Stop/session-end hook asks for lesson capture, then write candidate reusable lessons to the central dotfiles .agent-learnings/inbox without implementing them. Use when a hook prompt says to capture session lessons, review current-session learnings, or populate the agent-learning inbox.
 ---
 
 # Session Learning Capture
 
 Use this skill as the automatic first stage of the agent-learning workflow. It
 reviews the current session and writes candidate lessons to
-`.agent-learnings/inbox/`. It does not decide whether lessons should become
-durable instructions, hooks, skills, docs, or code.
+`~/My Drive/dotfiles/.agent-learnings/inbox/`. It does not decide whether
+lessons should become durable instructions, hooks, skills, docs, or code.
 
 The separate `session-retro` skill owns the manual second stage: interviewing
 the user about inbox items and implementing accepted changes.
 
 ## Scope
 
-Run only from `~/My Drive/dotfiles` or a subdirectory. If the hook prompt
-contains `transcript_path`, read that transcript when available. If the
-transcript is unavailable, use the current conversation context and say that the
-capture was context-only.
+Run from any working directory. If the hook prompt contains `transcript_path`,
+read that transcript when available. If the transcript is unavailable, use the
+current conversation context and say that the capture was context-only.
 
 Do not write a file when there are no useful lessons. A useful lesson is a
 reusable observation about agent behavior, missing automation, unclear skill
@@ -28,10 +27,10 @@ implementation details are not lessons.
 
 ## Output Location
 
-Write one Markdown file per captured session:
+Write one Markdown file per captured session in the central dotfiles inbox:
 
 ```text
-.agent-learnings/inbox/YYYY-MM-DD-TOOL-SESSIONID.md
+~/My Drive/dotfiles/.agent-learnings/inbox/YYYY-MM-DD-TOOL-SESSIONID.md
 ```
 
 Use `codex`, `claude`, or `agent` for `TOOL` based on the hook prompt or

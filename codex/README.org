@@ -404,12 +404,13 @@ before reporting.
 
 The =session-learning-capture= skill is the producer half of the same workflow.
 It runs when the Emacs =agent-exit= before-exit prompt asks the active agent
-to review the current dotfiles session. It writes useful reusable lesson
-candidates to ignored local files under =.agent-learnings/inbox/= and does not
-promote, implement, archive, or delete anything; =session-retro= handles those
-manual review steps later. Codex =Stop= hooks are turn-end hooks, not reliable
-session-exit hooks, so the tracked Codex hook configuration does not invoke
-session learning capture from =Stop=.
+to review the current session, regardless of the session's working directory.
+It writes useful reusable lesson candidates to ignored local files under the
+central dotfiles =.agent-learnings/inbox/= and does not promote, implement,
+archive, or delete anything; =session-retro= handles those manual review steps
+later. Codex =Stop= hooks are turn-end hooks, not reliable session-exit hooks,
+so the tracked Codex hook configuration does not invoke session learning
+capture from =Stop=.
 
 Manual audit:
 

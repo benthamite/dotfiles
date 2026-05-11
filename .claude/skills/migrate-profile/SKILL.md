@@ -1,21 +1,23 @@
 ---
 name: migrate-profile
-description: Consolidate Claude Code and Codex project data after elpaca profile changes. Use when the user says "/migrate-profile", changes Emacs or elpaca profiles, or wants Claude/Codex sessions, memory, trust entries, history, cwd paths, or the active profile symlink moved to a new profile.
+description: Run post-Emacs-profile-switch housekeeping after elpaca profile changes. Use when the user says "/migrate-profile", changes Emacs or elpaca profiles, switches to a new profile, or wants Claude/Codex sessions, memory, trust entries, history, cwd paths, profile symlinks/caches, or new-profile repos checked after a profile bump.
 argument-hint: "[old-profile] to [new-profile]"
 ---
 
-# Profile migration
+# Post-profile-switch migration
 
-Consolidate Claude Code and Codex project data across elpaca profile changes. Claude data needs project-directory merging under `~/.claude/projects/`; Codex data needs in-place structured path rewrites across `~/.codex` session, history, index, and archive JSONL files. No explicit package list is needed for Claude project directories.
+Run the housekeeping needed immediately after switching to a new Emacs/elpaca profile. This includes profile-state checks, remote/local repo drift checks, and Claude Code/Codex state migration. Claude data needs project-directory merging under `~/.claude/projects/`; Codex data needs in-place structured path rewrites across `~/.codex` session, history, index, and archive JSONL files. No explicit package list is needed for Claude project directories.
 
 > **Related skills.** The per-package logic here is essentially the same operation as `move-session-log --rename` (whole-project rename mode), applied in bulk. This skill stays separate because it adds (a) merge semantics — multiple sources can flow into one target — and (b) profile-path rewrites in `~/.claude.json` keyed on the elpaca profile name rather than a single old/new pair. For a single project rename outside an elpaca-profile bump, use the `move-session-log` skill directly (and `rename-project` for full project renames).
 
-Treat this as destructive-adjacent: it retargets a profile symlink, rewrites agent state files, and eventually trashes old Claude project directories. Always produce the dry run first and get explicit confirmation before changing the symlink, copying data, rewriting JSON/JSONL/log files, or deleting sources.
+Treat this as destructive-adjacent: it retargets a profile symlink, may pull profile repos after confirmation, rewrites agent state files, and eventually trashes old Claude project directories. Always produce the dry run first and get explicit confirmation before changing symlinks, pulling repos, copying data, rewriting JSON/JSONL/log files, or deleting sources.
 
 ## Scope
 
 Migrate both stores unless the user explicitly asks for only one:
 
+- **Profile state**: `~/.config/emacs-profiles/.current-profile` and `~/.config/emacs-profiles/active`.
+- **New-profile repos**: git repositories under `~/.config/emacs-profiles/<new-profile>/elpaca/sources/` and `repos/`.
 - **Claude Code**: `~/.claude/projects/`, `~/.claude.json`, `~/.claude/history.jsonl`, and copied session `.jsonl` files.
 - **Codex**: `~/.codex/history.jsonl`, `~/.codex/session_index.jsonl`, `~/.codex/sessions/**/*.jsonl`, and `~/.codex/archived_sessions/**/*.jsonl`.
 
@@ -49,13 +51,62 @@ Codex stores normal filesystem paths inside JSON/JSONL content, so Codex migrati
 
 Do not perform raw string replacement across Codex transcript text, command output, function-call arguments, or logs. Preserve historical prompts and outputs.
 
-## Update the active-profile symlink
+## Profile state checks
 
-During the dry run, report whether the stable symlink `~/.config/emacs-profiles/active` already points at the new profile. After confirmation, retarget it so that org `#+INCLUDE:` directives (and anything else using the stable path) resolve to the new profile:
+There are two profile markers with different meanings:
+
+- `~/.config/emacs-profiles/.current-profile` is the real active-profile cache written by Emacs at startup from `init-current-profile`. Git hooks use this cache to avoid `emacsclient` deadlocks.
+- `~/.config/emacs-profiles/active` is a stable/legacy symlink used by any path that intentionally wants a profile-independent filesystem location.
+
+During the dry run, report:
+
+- `NEW_PROFILE` from arguments or `emacsclient -e 'init-current-profile'`
+- `.current-profile` contents and whether it matches `NEW_PROFILE`
+- `active` symlink target and whether it points at `NEW_PROFILE`
+
+If `.current-profile` does not match `NEW_PROFILE`, stop before mutating anything unless the user explicitly confirms that Emacs has not yet been restarted into the new profile or that the mismatch is expected.
+
+After confirmation, retarget `active` only if it exists or if the dry run found paths that use it. Use:
 
 ```bash
 ln -sfn "$HOME/.config/emacs-profiles/$NEW_PROFILE" "$HOME/.config/emacs-profiles/active"
 ```
+
+Do not rewrite `.current-profile` by hand. It is generated by Emacs startup; if it is wrong, ask the user to start/restart Emacs in the intended profile or explicitly confirm continuing despite the mismatch.
+
+## New-profile repo drift check
+
+After a profile switch, the new profile may contain stale clones if work continued in the previous profile and was pushed before the user started using the new profile. Check every git repository under:
+
+```text
+~/.config/emacs-profiles/<new-profile>/elpaca/sources/
+~/.config/emacs-profiles/<new-profile>/elpaca/repos/
+```
+
+For each repo:
+
+1. Record dirty worktree state with `git status --porcelain`.
+2. Find the upstream with `git rev-parse --abbrev-ref --symbolic-full-name @{u}`. If no upstream exists, report `no upstream` and do not fetch/pull it automatically.
+3. Run `git fetch --prune` for repos with upstreams.
+4. Compare local vs upstream with `git rev-list --left-right --count HEAD...@{u}`.
+
+Dry-run report columns:
+
+- package/repo name
+- path
+- dirty? (`yes`/`no`)
+- upstream or `none`
+- local-only commits
+- remote-only commits
+- status: `current`, `needs pull`, `local ahead`, `diverged`, `dirty`, or `no upstream`
+
+After confirmation, pull only repos that are clean, have an upstream, have remote-only commits, and have no local-only commits:
+
+```bash
+git -C "$repo" pull --ff-only
+```
+
+Do not pull dirty repos or diverged repos. Report them as manual follow-up items.
 
 ## Discover and group projects
 
@@ -352,6 +403,8 @@ Do not trash Codex files. Codex history is a single store; this migration only u
 ## Execution
 
 1. **Dry run first**: before copying anything, present a Claude summary table showing:
+   - Profile state: `NEW_PROFILE`, `.current-profile`, `active` symlink target, and whether each matches
+   - Repo drift: counts and table of new-profile repos that are dirty, have no upstream, need pull, are ahead, or diverged
    - Package name
    - Source directories (count and profile names)
    - Target directory (existing / will create / package missing from new profile)
@@ -364,15 +417,16 @@ Do not trash Codex files. Codex history is a single store; this migration only u
 
    Also present a Codex summary showing affected JSONL file counts by area, structured `cwd`/`project` fields to rewrite, JSONL parse problems, and whether the Codex step is "will rewrite" or "already current".
 
-2. **Ask for confirmation** before proceeding with the symlink retarget, actual copy, rewrites, and deletion.
+2. **Ask for confirmation** before proceeding with symlink retarget, repo pulls, actual copy, rewrites, and deletion.
 
-3. **Execute the migration**: retarget the symlink, create any missing Claude targets, copy Claude data without overwriting, rewrite Claude trust/history/session paths, rewrite Codex history/session/archive structured paths, then trash Claude sources whose migration succeeded.
+3. **Execute the migration**: retarget the `active` symlink when appropriate, pull clean fast-forwardable new-profile repos after confirmation, create any missing Claude targets, copy Claude data without overwriting, rewrite Claude trust/history/session paths, rewrite Codex history/session/archive structured paths, then trash Claude sources whose migration succeeded.
 
-4. **Post-migration summary**: report whether the active symlink was retargeted, how many Claude sessions and memory files were copied for each package, how many Claude source directories were trashed, how many trust entries were migrated in `~/.claude.json`, how many Claude `history.jsonl` and session `.jsonl` path entries were rewritten, how many Codex files and structured fields were rewritten, and any packages or Codex files that were skipped.
+4. **Post-migration summary**: report `.current-profile` state, whether the `active` symlink was retargeted, which repos were pulled or need manual attention, how many Claude sessions and memory files were copied for each package, how many Claude source directories were trashed, how many trust entries were migrated in `~/.claude.json`, how many Claude `history.jsonl` and session `.jsonl` path entries were rewritten, how many Codex files and structured fields were rewritten, and any packages or Codex files that were skipped.
 
 ## Important notes
 
 - Existing Claude data in the target is never overwritten — only new files are copied.
 - Claude source directories are moved to the trash only after their data is copied to the target and path rewrites have succeeded.
 - Codex JSONL files are rewritten in place and never trashed.
+- Repo pulls are fast-forward only and only for clean repos.
 - All elpaca project directories are discovered automatically — no package list is needed.

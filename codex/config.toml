@@ -240,6 +240,9 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/init"]
 trust_level = "trusted"
 
+[projects."/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/agents"]
+trust_level = "trusted"
+
 [tui]
 theme = "light"
 

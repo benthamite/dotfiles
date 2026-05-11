@@ -428,7 +428,7 @@
       "claude": "claude/hooks/session-learning-capture.sh",
       "codex": "codex/hooks/session-learning-capture.sh",
       "status": "paired-unregistered",
-      "note": "Paired legacy Stop helper kept for tool parity, but it is not registered in live ~/.claude/settings.json or codex/hooks.json because Stop fires at turn end rather than true session exit. Session learning capture is prompted by the Emacs ai-agent-before-exit path configured in emacs/config.org."
+      "note": "Paired legacy Stop helper kept for tool parity, but it is not registered in live ~/.claude/settings.json or codex/hooks.json because Stop fires at turn end rather than true session exit. Session learning capture is prompted by the Emacs agents-before-exit path configured in emacs/config.org."
     },
     {
       "name": "track-elisp-skill.sh",
@@ -464,14 +464,14 @@
       "tool": "Claude Code",
       "path": "~/.claude/settings.json",
       "tracked": false,
-      "note": "Mutable live global settings; sync hooks added in place. The Stop hook chain forwards session-end state to Emacs via the fire-and-forget notifier. Session learning capture is handled by the Emacs ai-agent-before-exit path rather than the Stop hook, because Stop fires at turn end rather than true session exit."
+      "note": "Mutable live global settings; sync hooks added in place. The Stop hook chain forwards session-end state to Emacs via the fire-and-forget notifier. Session learning capture is handled by the Emacs agents-before-exit path rather than the Stop hook, because Stop fires at turn end rather than true session exit."
     },
     {
       "tool": "Codex",
       "path": "codex/hooks.json",
       "tracked": true,
       "live_path": "~/.codex/hooks.json",
-      "note": "Live global Codex hook file is a symlink to the tracked repo file. The tracked file intentionally lives outside a repo-root .codex/ directory so launching Codex from the dotfiles root does not load the same hooks a second time as project-local hooks. Codex-only codex-hook-wrapper entries point at the Emacs package source tree because elpaca/builds contains compiled Elisp but not the wrapper script, and include explicit emacsclient/socket arguments so dispatch targets the active Emacs server. The apply_patch and Edit|Write matchers are collapsed into a single apply_patch|Edit|Write block per event to keep the trust-review list compact under the Codex 0.129 hook trust gate. Codex Stop routes only through codex-hook-wrapper because Stop fires at turn end; session learning capture is handled by the Emacs ai-agent-before-exit path. Matcher fields use \"*\" everywhere (including UserPromptSubmit) for consistency. PreCompact and PostCompact route through codex-hook-wrapper so the Emacs side observes the full lifecycle."
+      "note": "Live global Codex hook file is a symlink to the tracked repo file. The tracked file intentionally lives outside a repo-root .codex/ directory so launching Codex from the dotfiles root does not load the same hooks a second time as project-local hooks. Codex-only codex-hook-wrapper entries point at the Emacs package source tree because elpaca/builds contains compiled Elisp but not the wrapper script, and include explicit emacsclient/socket arguments so dispatch targets the active Emacs server. The apply_patch and Edit|Write matchers are collapsed into a single apply_patch|Edit|Write block per event to keep the trust-review list compact under the Codex 0.129 hook trust gate. Codex Stop routes only through codex-hook-wrapper because Stop fires at turn end; session learning capture is handled by the Emacs agents-before-exit path. Matcher fields use \"*\" everywhere (including UserPromptSubmit) for consistency. PreCompact and PostCompact route through codex-hook-wrapper so the Emacs side observes the full lifecycle."
     },
     {
       "tool": "Codex",

@@ -167,9 +167,9 @@ Separate per account:
 - =.claude.json= — OAuth identity, user ID, and MCP servers (synced from =~/.claude.json=)
 - Keychain credentials — the actual OAuth tokens
 
-The active account is stored in =~/.claude-current-account=. From Emacs, =ai-agent-claude-start-or-switch= uses the persisted account automatically (configured via =ai-agent-claude-accounts=). Use =ai-agent-claude-select-account= to change it. From the terminal, the shell aliases =claude-personal=, =claude-tlon=, and =claude-epoch= are available.
+The active account is stored in =~/.claude-current-account=. From Emacs, =agents-claude-start-or-switch= uses the persisted account automatically (configured via =agents-claude-accounts=). Use =agents-claude-select-account= to change it. From the terminal, the shell aliases =claude-personal=, =claude-tlon=, and =claude-epoch= are available.
 
-*Adding a new account:* add it to =ai-agent-claude-accounts=, then run =M-x ai-agent-claude-init-account= *before* invoking =claude= for that account. This creates the config dir and all shared symlinks up front; otherwise =claude= writes real empty =settings.json=/=history.jsonl=/etc. on first login, which divorces the new account from your permissions and history.  If this happens anyway, re-running =init-account= (or =select-account=) heals virgin-state files automatically; non-virgin files are left alone with a warning so you can migrate them by hand.
+*Adding a new account:* add it to =agents-claude-accounts=, then run =M-x agents-claude-init-account= *before* invoking =claude= for that account. This creates the config dir and all shared symlinks up front; otherwise =claude= writes real empty =settings.json=/=history.jsonl=/etc. on first login, which divorces the new account from your permissions and history.  If this happens anyway, re-running =init-account= (or =select-account=) heals virgin-state files automatically; non-virgin files are left alone with a warning so you can migrate them by hand.
 
 *1Password service account:* All =op://= references resolve silently via =OP_SERVICE_ACCOUNT_TOKEN= (a 1Password service account token with read-only access to the "Automations" vault).  The token is stored in =pass= at =epoch/1password-service-account-token= and exported in =.zshenv-secrets=.  No Touch ID prompts are needed.  To rotate: delete the old service account in the admin console, create a new one with =op service-account create "Epoch Ops Automation" --vault "Automations:read_items" --raw=, and update the =pass= entry.  Item names in the Automations vault must not contain parentheses (they break =op://= parsing).
 
@@ -207,7 +207,7 @@ You may see =chromeExtension.pairedDeviceId= and =pairedDeviceName= populated in
 *Known issues:*
 - *Silent bridge failure:* the Chrome bridge can fail to connect at session startup (e.g. due to stale sockets or timing issues). When this happens, =/chrome= shows "Status: Disabled" even though =--chrome= was passed. The only fix is starting a new session. There is no mid-session reconnect mechanism.
 - *Stale bridge sockets:* old sockets in =/tmp/claude-mcp-browser-bridge-pablostafforini/= are not automatically cleaned up and may interfere with new connections.
-- *Session-account binding:* if you switch accounts mid-session (e.g. via =ai-agent-claude-select-account=), Chrome will still use the original account. The running process retains its =CLAUDE_CONFIG_DIR=; you must start a fresh session under the new account — use =/handoff= to preserve context if needed.
+- *Session-account binding:* if you switch accounts mid-session (e.g. via =agents-claude-select-account=), Chrome will still use the original account. The running process retains its =CLAUDE_CONFIG_DIR=; you must start a fresh session under the new account — use =/handoff= to preserve context if needed.
 
 *Architecture:*
 - Chrome extension (ID =fcoeoabgfenejglbffodgkkbkcdhcgfn=) communicates via native messaging
@@ -238,7 +238,7 @@ Notable current values:
 :ID:       709B6F3F-F5B6-44F1-AA4E-1D2BE510FC1E
 :END:
 
-Machine-specific tool whitelists and the =theme= key (synced from Emacs by =ai-agent-claude--sync-theme=). Also lives at =~/.claude/settings.local.json= as a regular file, not tracked.
+Machine-specific tool whitelists and the =theme= key (synced from Emacs by =agents-claude--sync-theme=). Also lives at =~/.claude/settings.local.json= as a regular file, not tracked.
 
 *** CLAUDE.md
 :PROPERTIES:
@@ -282,10 +282,10 @@ live Claude skill root, =~/.claude/skills=, is a symlink to that tracked tree,
 created by =bin/skill-prune install= or =claude/bin/install-skills.sh=.
 
 Programmatic-only skills are not available in ordinary Claude Code sessions.
-They live in =programmatic-skills/= directories so =ai-agent-run-skill= can find
+They live in =programmatic-skills/= directories so =agents-run-skill= can find
 and run them explicitly from Emacs without adding them to every interactive
 Claude session. The installer exposes those directories at
-=~/.claude/programmatic-skills= because =ai-agent-run-skill= discovers Claude
+=~/.claude/programmatic-skills= because =agents-run-skill= discovers Claude
 skills from that live path.
 
 Run =bin/skill-prune apply --days 60= to disable stale paired skills. The scan
@@ -544,7 +544,7 @@ the inbox before reporting.
 :ID:       D2278B58-192E-4B4F-A871-4871A5D94B77
 :END:
 
-Reviews the current dotfiles session when the Emacs =ai-agent-exit= before-exit
+Reviews the current dotfiles session when the Emacs =agents-exit= before-exit
 prompt asks for lesson capture, writes useful reusable candidates to ignored
 local files under =.agent-learnings/inbox/=, and stops there. It is the
 producer half of the agent-learning workflow: it never promotes lessons to
@@ -581,7 +581,7 @@ code block, and asks the user to confirm via =AskUserQuestion= before writing.
 Inferred prompts include exact dates, concrete file paths, command names,
 commit hashes, and verification state so the next session does not depend on
 chat history. The skill re-reads the temp file after writing, prints the saved
-contents, and tells the user to run =! emacsclient -e '(ai-agent-claude-handoff)'=;
+contents, and tells the user to run =! emacsclient -e '(agents-claude-handoff)'=;
 Claude must not run that command itself.
 
 **** proofread
@@ -821,7 +821,7 @@ Returns a blocking prompt asking the active agent to use
 =stop_hook_active= and does nothing outside =~/My Drive/dotfiles=. It is not
 registered in the live Claude or Codex hook configuration because Stop hooks are
 turn-end hooks rather than reliable session-exit hooks; session learning capture
-is triggered by the Emacs =ai-agent-before-exit= path instead.
+is triggered by the Emacs =agents-before-exit= path instead.
 
 *** claude-code-hook-wrapper (Notification, Stop)
 :PROPERTIES:

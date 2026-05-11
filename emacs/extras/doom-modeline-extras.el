@@ -141,38 +141,38 @@ Uses strikethrough to indicate the cost is not actually charged."
   
 ;;;;;; AI session status
 
-(declare-function ai-agent--detect-backend "ai-agent")
-(declare-function ai-agent--backend-get "ai-agent")
-(declare-function ai-agent-backend-icon "ai-agent")
-(declare-function ai-agent-display-name "ai-agent")
-(declare-function ai-agent-alert-indicator "ai-agent")
-(declare-function ai-agent-toggle-alert "ai-agent")
-(declare-function ai-agent-claude-status-model "ai-agent-claude")
-(declare-function ai-agent-claude-status-cost "ai-agent-claude")
-(declare-function ai-agent-claude-status-context-percent "ai-agent-claude")
-(declare-function ai-agent-claude-status-token-count "ai-agent-claude")
-(declare-function ai-agent-claude-status-lines-added "ai-agent-claude")
-(declare-function ai-agent-claude-status-lines-removed "ai-agent-claude")
-(declare-function ai-agent-claude-status-duration-ms "ai-agent-claude")
-(declare-function ai-agent-claude-status-cache-read-tokens "ai-agent-claude")
-(declare-function ai-agent-claude-status-cache-total-tokens "ai-agent-claude")
-(declare-function ai-agent-claude-display-name "ai-agent-claude")
-(declare-function ai-agent-claude-buffer-account "ai-agent-claude")
-(declare-function ai-agent-claude-status-session-usage "ai-agent-claude")
-(declare-function ai-agent-claude-status-weekly-usage "ai-agent-claude")
-(declare-function ai-agent-claude-status-session-reset "ai-agent-claude")
-(declare-function ai-agent-claude-status-weekly-reset "ai-agent-claude")
-(declare-function ai-agent-codex-status-model "ai-agent-codex")
-(declare-function ai-agent-codex-status-duration-ms "ai-agent-codex")
+(declare-function agents--detect-backend "agents")
+(declare-function agents--backend-get "agents")
+(declare-function agents-backend-icon "agents")
+(declare-function agents-display-name "agents")
+(declare-function agents-alert-indicator "agents")
+(declare-function agents-toggle-alert "agents")
+(declare-function agents-claude-status-model "agents-claude")
+(declare-function agents-claude-status-cost "agents-claude")
+(declare-function agents-claude-status-context-percent "agents-claude")
+(declare-function agents-claude-status-token-count "agents-claude")
+(declare-function agents-claude-status-lines-added "agents-claude")
+(declare-function agents-claude-status-lines-removed "agents-claude")
+(declare-function agents-claude-status-duration-ms "agents-claude")
+(declare-function agents-claude-status-cache-read-tokens "agents-claude")
+(declare-function agents-claude-status-cache-total-tokens "agents-claude")
+(declare-function agents-claude-display-name "agents-claude")
+(declare-function agents-claude-buffer-account "agents-claude")
+(declare-function agents-claude-status-session-usage "agents-claude")
+(declare-function agents-claude-status-weekly-usage "agents-claude")
+(declare-function agents-claude-status-session-reset "agents-claude")
+(declare-function agents-claude-status-weekly-reset "agents-claude")
+(declare-function agents-codex-status-model "agents-codex")
+(declare-function agents-codex-status-duration-ms "agents-codex")
 (declare-function parse-iso8601-time-string "parse-time")
-(defvar ai-agent-alert-on-ready)
-(defvar ai-agent-claude--status-data)
+(defvar agents-alert-on-ready)
+(defvar agents-claude--status-data)
 
 (defun doom-modeline-extras--toggle-alert-click (event)
   "Toggle AI session alert from a mouse click EVENT in the modeline."
   (interactive "e")
   (with-selected-window (posn-window (event-start event))
-    (ai-agent-toggle-alert)
+    (agents-toggle-alert)
     (force-mode-line-update)))
 
 (defvar doom-modeline-extras--alert-map
@@ -189,21 +189,21 @@ backends.  When the backend is Claude Code and status data is
 available, additional fields (model, cost, context%) are inserted
 between the name and the alert indicator."
   (when (and doom-modeline-extras-claude-code
-             (fboundp 'ai-agent--detect-backend))
-    (let ((backend (ai-agent--detect-backend (current-buffer))))
+             (fboundp 'agents--detect-backend))
+    (let ((backend (agents--detect-backend (current-buffer))))
       (when backend
-        (let ((icon (ai-agent-backend-icon backend 'mode-line-active))
-              (name (ai-agent-display-name (current-buffer))))
+        (let ((icon (agents-backend-icon backend 'mode-line-active))
+              (name (agents-display-name (current-buffer))))
           (concat
            (doom-modeline-spc)
            (when (and icon (not (string-empty-p icon)))
              (concat icon " "))
            (propertize name
                        'face '(bold doom-modeline-buffer-major-mode)
-                       'help-echo (format "%s session" (or (ai-agent--backend-get backend :label) "AI")))
+                       'help-echo (format "%s session" (or (agents--backend-get backend :label) "AI")))
            (pcase backend
              ('claude-code
-              (when (bound-and-true-p ai-agent-claude--status-data)
+              (when (bound-and-true-p agents-claude--status-data)
                 (doom-modeline-extras--format-claude-status-fields)))
              ('codex
               (doom-modeline-extras--format-codex-status-fields)))
@@ -213,20 +213,20 @@ between the name and the alert indicator."
 (defun doom-modeline-extras--format-claude-status-fields ()
   "Return Claude Code-specific status fields for the modeline.
 These are inserted between the session name and the alert indicator."
-  (let ((model (ai-agent-claude-status-model))
-        (account (ai-agent-claude-buffer-account))
-        (session-usage (ai-agent-claude-status-session-usage))
-        (weekly-usage (ai-agent-claude-status-weekly-usage))
-        (session-reset (ai-agent-claude-status-session-reset))
-        (weekly-reset (ai-agent-claude-status-weekly-reset))
-        (tokens (ai-agent-claude-status-token-count))
-        (cost (ai-agent-claude-status-cost))
-        (pct (ai-agent-claude-status-context-percent))
-        (added (ai-agent-claude-status-lines-added))
-        (removed (ai-agent-claude-status-lines-removed))
-        (duration (ai-agent-claude-status-duration-ms))
-        (cache-read (ai-agent-claude-status-cache-read-tokens))
-        (cache-total (ai-agent-claude-status-cache-total-tokens)))
+  (let ((model (agents-claude-status-model))
+        (account (agents-claude-buffer-account))
+        (session-usage (agents-claude-status-session-usage))
+        (weekly-usage (agents-claude-status-weekly-usage))
+        (session-reset (agents-claude-status-session-reset))
+        (weekly-reset (agents-claude-status-weekly-reset))
+        (tokens (agents-claude-status-token-count))
+        (cost (agents-claude-status-cost))
+        (pct (agents-claude-status-context-percent))
+        (added (agents-claude-status-lines-added))
+        (removed (agents-claude-status-lines-removed))
+        (duration (agents-claude-status-duration-ms))
+        (cache-read (agents-claude-status-cache-read-tokens))
+        (cache-total (agents-claude-status-cache-total-tokens)))
     (concat
      (doom-modeline-extras--format-model model)
      (doom-modeline-extras--format-account account)
@@ -245,17 +245,17 @@ These are inserted between the session name and the alert indicator."
 
 (defun doom-modeline-extras--format-codex-status-fields ()
   "Return Codex-specific status fields for the modeline."
-  (let ((model (ai-agent-codex-status-model))
-        (duration (ai-agent-codex-status-duration-ms)))
+  (let ((model (agents-codex-status-model))
+        (duration (agents-codex-status-duration-ms)))
     (concat
      (doom-modeline-extras--format-model model)
      (doom-modeline-extras--format-duration duration))))
 
 (defun doom-modeline-extras--format-alert-indicator ()
   "Format the alert indicator with click action and tooltip."
-  (propertize (ai-agent-alert-indicator)
+  (propertize (agents-alert-indicator)
               'help-echo (format "Alert notifications: %s\nmouse-1: Toggle"
-                                 (if ai-agent-alert-on-ready
+                                 (if agents-alert-on-ready
                                      "enabled" "disabled"))
               'mouse-face 'doom-modeline-highlight
               'local-map doom-modeline-extras--alert-map))

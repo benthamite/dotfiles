@@ -87,11 +87,11 @@
 			      :source "MELPA" :id aggressive-indent :type git
 			      :protocol https :inherit t :depth treeless :ref
 			      "a437a45868f94b77362c6b913c5ee8e67b273c42"))
- (ai-agent :source "elpaca-menu-lock-file" :recipe
-	   (:source nil :package "ai-agent" :id ai-agent :host github :repo
-		    "benthamite/ai-agent" :type git :protocol https :inherit t
+ (agents :source "elpaca-menu-lock-file" :recipe
+	   (:source nil :package "agents" :id agents :host github :repo
+		    "benthamite/agents" :type git :protocol https :inherit t
 		    :depth treeless :ref
-		    "5fd0334f60e366c1f110b4593c3e8fbc19215d31"))
+		    "26c3b1cd25799c69139aec6b271300cc08427b66"))
  (aidermacs :source "elpaca-menu-lock-file" :recipe
 	    (:package "aidermacs" :fetcher github :repo "MatthewZMD/aidermacs"
 		      :files

@@ -412,6 +412,15 @@ counterparts synchronized, update required docs, verify, run
 =bin/ai-config-sync audit=, and leave only deferred suggestions in the inbox
 before reporting.
 
+The =session-learning-capture= skill is the producer half of the same workflow.
+It runs when a Stop hook or =ai-agent-exit= before-exit prompt asks the active
+agent to review the current dotfiles session. It writes useful reusable lesson
+candidates to ignored local files under =.agent-learnings/inbox/= and does not
+promote, implement, archive, or delete anything; =session-retro= handles those
+manual review steps later. The paired Stop hook returns a blocking prompt so
+Codex continues with a submitted instruction instead of only inserting text in
+the Emacs buffer.
+
 Manual audit:
 
 #+begin_src sh

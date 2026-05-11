@@ -1,9 +1,11 @@
 model = "gpt-5.5"
 model_reasoning_effort = "medium"
-approval_policy = "never"
-sandbox_mode = "workspace-write"
+service_tier = "fast"
+approval_policy = "on-request"
+sandbox_mode = "danger-full-access"
 suppress_unstable_features_warning = true
 approvals_reviewer = "auto_review"
+personality = "pragmatic"
 
 [features]
 hooks = true
@@ -263,6 +265,9 @@ enabled = true
 [plugins."browser-use@openai-bundled"]
 enabled = true
 
+[plugins."github@openai-curated"]
+enabled = true
+
 [hooks.state]
 
 [hooks.state."/Users/pablostafforini/.codex-epoch/hooks.json:permission_request:0:0"]
@@ -350,6 +355,94 @@ trusted_hash = "sha256:a02a78132ccf90aedca6965c499ba4c548cfdd458ebd13b3fc8de0ff5
 trusted_hash = "sha256:a63a4068a3cb56d0ca7d13c09ed2850f05163dfa08afaf282fa1567e0745c0ee"
 
 [hooks.state."/Users/pablostafforini/.codex-epoch/hooks.json:user_prompt_submit:0:0"]
+trusted_hash = "sha256:a26be4a779a3df7d64e93948953c7b288c444444e78df682b6048b0a1a2d05ca"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:permission_request:0:0"]
+trusted_hash = "sha256:0471abb006ca3333294467313667ec6a250416793a7d1e1c21a3aa662d7cfb8b"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:post_compact:0:0"]
+trusted_hash = "sha256:85e314b38034b0cac1a212763e01d866e4edf1815b4ba2afe49ac32bf75e800e"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:post_tool_use:0:0"]
+trusted_hash = "sha256:69fd2e4f29e4e6b098d05350785d4b5039facb21a05de1c3b85fcb15d1080172"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:post_tool_use:0:1"]
+trusted_hash = "sha256:03dbf36a2882210ff72e464ed6fea30ec405e60cf5540063fe0fa9167df58ce6"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:post_tool_use:1:0"]
+trusted_hash = "sha256:a0f848146689f5969562d709bc272ca2c8014b682a3e958545e9e22dd325a0cf"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:post_tool_use:1:1"]
+trusted_hash = "sha256:da89ce755e26f8aee23ba08664de2b27cfde16ec649ee9ed91a41ba26a2c84b4"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:post_tool_use:1:2"]
+trusted_hash = "sha256:904926bcb3df90c2bf3b5e59acb0b634107c11154e59ad51391f485350b355cf"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:post_tool_use:1:3"]
+trusted_hash = "sha256:dd435ee99a16b0d6b30ace5db808ff60d741a21a8e639505d1a6b185c4522e5a"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:post_tool_use:2:0"]
+trusted_hash = "sha256:6c99a7779b0438ffb6b856111fca6da5bdca5371a5d5d8b4e8eb4bb77f11e1d8"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:pre_compact:0:0"]
+trusted_hash = "sha256:8fbbf3cd4cdfe86e3ae47eaeb6172950ef1af7831f649a26c9894c8cd840b2af"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:pre_tool_use:0:0"]
+trusted_hash = "sha256:79c2a2b27422cdf7fc33e09ff225f38116bb42498dee85102923ba984d09cfc8"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:pre_tool_use:0:1"]
+trusted_hash = "sha256:a0da68685df2345d90193a1cfc03ef7d1a3ad86f8d7ad42d006108e69f973db2"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:pre_tool_use:0:2"]
+trusted_hash = "sha256:bb250bf41056db92bbb78981d7b8fd16fe2e0b0cc415c6dd6f68f8b6b3f78edf"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:pre_tool_use:0:3"]
+trusted_hash = "sha256:71cf254c1af844c74f72eb477e24bc7cb9506c76de1b5357e64ad6866f896309"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:pre_tool_use:0:4"]
+trusted_hash = "sha256:3cca4ac78df45330fd6205b616f96ee75194007c6059bf2883471db85f98e19b"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:pre_tool_use:0:5"]
+trusted_hash = "sha256:344ffcb2695b4eac01532e28bfe0f3b6729efd08cf3b532b7dbff5555a71ea93"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:pre_tool_use:0:6"]
+trusted_hash = "sha256:570902351de347cde1d76e2b8e939bd9524726c8dd782183933bc3f1ee071ec5"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:pre_tool_use:0:7"]
+trusted_hash = "sha256:d3fb29cb854ef57f24e934d0497496fe392b29e58e544917c19ecf0335fa7663"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:pre_tool_use:0:8"]
+trusted_hash = "sha256:e23c8ad130f99db0bbc99abd88be9cfb51753e564b1c79c01f7b0a0bb01b0591"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:pre_tool_use:0:9"]
+trusted_hash = "sha256:9d8aab8357efce1be13308a54ea67a6615f9fa096e1020b0b72df8c15dcb2f26"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:pre_tool_use:1:0"]
+trusted_hash = "sha256:0e70fed86f8fc8a276b1eff275732505ed7e61d0d1aeb6487ecea593e3cccd8f"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:pre_tool_use:2:0"]
+trusted_hash = "sha256:ea131c31d2e50cec34e0e6c737f2754beb0d5ae1022fa163039d5bed9b2a2ffd"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:pre_tool_use:2:1"]
+trusted_hash = "sha256:23fd1d1b8071cd40976b0072f9d5abefeffe2eb2217f0c078058c4f0fcd89a89"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:pre_tool_use:2:2"]
+trusted_hash = "sha256:f433f9f27f7592c4c4f15842371e3dd0684e058a567998b7fc775fea6077554c"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:pre_tool_use:2:3"]
+trusted_hash = "sha256:750032ac416ce78bea483be5c5889353937af6fd4f6631a126a3dae850545064"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:pre_tool_use:3:0"]
+trusted_hash = "sha256:4d81ee8aab72e102919629d8cae2c5371372a8eef2d042d42d5a84b2a7cd8247"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:session_start:0:0"]
+trusted_hash = "sha256:a02a78132ccf90aedca6965c499ba4c548cfdd458ebd13b3fc8de0ff5472e024"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:stop:0:0"]
+enabled = true
+trusted_hash = "sha256:a63a4068a3cb56d0ca7d13c09ed2850f05163dfa08afaf282fa1567e0745c0ee"
+
+[hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:user_prompt_submit:0:0"]
 trusted_hash = "sha256:a26be4a779a3df7d64e93948953c7b288c444444e78df682b6048b0a1a2d05ca"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:permission_request:0:0"]

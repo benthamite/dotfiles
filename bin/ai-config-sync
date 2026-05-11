@@ -23,7 +23,6 @@ DISABLED_SKILLS_PATH = ROOT / "skills-disabled.json"
 
 DOTFILES_PROJECT_LOCAL_SKILLS = {
     "claude-config-audit",
-    "codex-app-browser",
     "find-skills",
     "gitguardian-triage",
     "install-mcp-server",

@@ -372,6 +372,14 @@ history, and no routine =** Meeting references= sections), verifies the cached
 diff, commits only intended bookkeeping paths, and reports the resulting log
 path, pointer, hook/decision status, commit hash, and verification.
 
+The =move-session-log= skill relocates Codex session logs by
+rewriting structured project-path metadata so resume and log lookup associate a
+session with the intended project. It supports a single-session import into the
+current project and a whole-project rename mode for exact =cwd= and =project=
+fields. The current implementation is a paired global skill; the retained
+=SKILL (1).md= variant documents the older Claude Code internal-log move
+workflow.
+
 The =record-decisions= skill is a Codex workflow for extracting
 architectural, algorithmic, or design decisions from the current session into
 =decisions/NNN.md= files. It triggers from =/update-log= or direct requests to

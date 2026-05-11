@@ -114,6 +114,13 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
+      "name": "move-session-log",
+      "claude": "claude/skills/move-session-log/SKILL.md",
+      "codex": "codex/skills/move-session-log/SKILL.md",
+      "status": "paired",
+      "equivalence": "Moved from dotfiles project-local .claude/.codex skill trees into the global skill trees; equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
+    },
+    {
       "name": "pr-audit",
       "claude": "claude/skills/pr-audit/SKILL.md",
       "codex": "codex/skills/pr-audit/SKILL.md",

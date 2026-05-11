@@ -515,6 +515,18 @@ Cuts releases for my Emacs packages (read dynamically from the listed package he
 
 End-of-session bookkeeping triggered by =/update-log=, "update log", "session log", "close out", "wrap up", or direct requests to save end-of-session progress. Also runs at the end of sessions that changed durable project state: code, docs, config, data, findings, decisions, TODOs, blockers, external-service outcomes, or status changes future sessions should know. It does not run after pure Q&A or trivial read-only lookups where nothing durable changed; session-end hooks should use this policy to remind or guard, not silently run the mutating workflow unattended. Treats =CLAUDE.md= as the canonical session-log index unless the project says otherwise, detects the project's log directory from the latest-session pointer, snapshots the working tree before edits, and creates a dated session log (what was done, key findings, results, open questions). On first run in a new project, gathers the log directory and optional =decisions/= setup with =AskUserQuestion= when available or a concise fallback question otherwise. Updates the =CLAUDE.md= session reference, uses the =record-decisions= skill or its local workflow if applicable, runs and reports =context/post-update-log-hook.md= hooks, and commits only intended bookkeeping paths. For Epoch project notes, the hook guidance treats the main project =.org= file as a concise ground-truth brief: refresh current-state fields, track active work as org =TODO= headings rather than checkbox mirrors, archive completed =DONE= headings and stale historical narrative to =<project>_archive.org=, and avoid routine =** Meeting references= sections unless a meeting link supports a durable decision or constraint. Before committing, verifies every intended path was actually staged (=git diff --cached --name-only= vs the intended list, with =git check-ignore= for any missing path), checks the cached diff so pre-existing dirty hunks are not swept into the commit, and stops with a clear report rather than silently producing a partial commit when a parent repo's =.gitignore= has filtered the log. Reports the log path, pointer, hook/decision status, commit hash, and verification; accepts =--exit= to end the session via the host environment's normal exit mechanism after completing all steps.
 
+**** move-session-log
+:PROPERTIES:
+:ID:       40E66E43-8D89-4F63-BD6D-5A8E0F45B7C0
+:END:
+
+Relocates Codex session logs by rewriting structured project-path metadata so
+resume and log lookup associate a session with the intended project. Supports a
+single-session import into the current project and a whole-project rename mode
+for exact =cwd= and =project= fields. The current implementation is a paired
+global skill; the retained =SKILL (1).md= variant documents the older Claude
+Code internal-log move workflow.
+
 **** record-decisions
 :PROPERTIES:
 :ID:       D62A0EFB-05AC-4A56-88A0-668E632460AE

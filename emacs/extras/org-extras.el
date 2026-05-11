@@ -28,10 +28,12 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'el-patch)
 (require 'org)
 (require 'org-agenda)
 (require 'paths)
+(require 'subr-x)
 (require 'transient)
 
 ;;;; Workarounds
@@ -268,16 +270,19 @@ Excludes the heading itself and any child subtrees."
   (goto-char (point-min))
   (org-next-visible-heading 1))
 
-;; TODO: revise this
 (defvar browse-url-handlers)
 (defun org-extras-super-return ()
   "Call a special form of RET.
 When `org-return-follows-link' is non-nil and point is on a link, call
-`org-open-at-point' and set `browse-url-browser-function' to `eww-browse-url'"
+`org-open-at-point' and set `browse-url-browser-function' to
+`eww-browse-url'.  Otherwise call `org-return'."
   (interactive)
-  (let ((browse-url-browser-function 'eww-browse-url)
-	(browse-url-handlers nil))
-    (org-open-at-point)))
+  (if (and org-return-follows-link
+	   (org-in-regexp org-link-any-re nil t))
+      (let ((browse-url-browser-function 'eww-browse-url)
+	    (browse-url-handlers nil))
+	(org-open-at-point))
+    (org-return)))
 
 (autoload 'simple-extras-pandoc-convert "simple-extras")
 (defun org-extras-paste-with-conversion ()
@@ -1036,8 +1041,8 @@ SEPARATOR is nil, use ' • '."
 
 ;;;;; ol-eww
 
-;; like `org-eww-copy-for-org-mode', but also handle italics, boldface and bullets
-;; TODO: handle headings. The relevant faces are `shr-h1', `shr-h2', etc.
+;; like `org-eww-copy-for-org-mode', but also handle italics, boldface, bullets,
+;; and headings
 (defvar shr-bullet)
 (defun org-extras-eww-copy-for-org-mode ()
   "Copy current buffer content or active region with `org-mode' style links.
@@ -1069,22 +1074,32 @@ keep the structure of the Org file."
 							 (next-single-property-change (point) 'shr-url nil transform-end)
 							 transform-end)))
 	       (formatted-text (replace-regexp-in-string shr-bullet "- " text)))
-	  ;; Apply Org mode formatting for italics and bold where applicable.
-	  (when (memq 'italic text-face)
-	    (setq formatted-text (concat "/" formatted-text "/")))
-	  (when (memq 'bold text-face)
-	    (setq formatted-text (concat "*" formatted-text "*")))
+	  (if-let* ((level (org-extras-shr-heading-level text-face)))
+	      (setq formatted-text
+		    (concat (make-string level ?*) " "
+			    (string-trim formatted-text)))
+	    (when (memq 'italic text-face)
+	      (setq formatted-text (concat "/" formatted-text "/")))
+	    (when (memq 'bold text-face)
+	      (setq formatted-text (concat "*" formatted-text "*"))))
 	  ;; Format links according to Org mode syntax.
 	  (when link
 	    (setq formatted-text (concat "[[" link "][" text "]]")))
 	  ;; Append the formatted text to the return content.
 	  (setq return-content (concat return-content formatted-text))
 	  ;; Advance the point.
-	  (goto-char (or (next-single-property-change (point) 'face)
-			 (next-single-property-change (point) 'shr-url)
-			 (point-max))))))
+	  (goto-char (or (next-single-property-change (point) 'face nil transform-end)
+			 (next-single-property-change (point) 'shr-url nil transform-end)
+			 transform-end)))))
     ;; Copy the whole formatted content to the kill ring.
     (kill-new return-content)))
+
+(defun org-extras-shr-heading-level (faces)
+  "Return the Org heading level represented by FACES, if any."
+  (cl-loop for face in faces
+	   when (and (symbolp face)
+		     (string-match "\\`shr-h\\([1-6]\\)\\'" (symbol-name face)))
+	   return (string-to-number (match-string 1 (symbol-name face)))))
 
 ;;;;; ob
 

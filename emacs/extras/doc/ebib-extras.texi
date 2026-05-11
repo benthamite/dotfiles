@@ -423,7 +423,7 @@ For book entries, the title is retrieved from either the @samp{title} or @samp{b
 @subsection Searching by identifier
 
 @findex ebib-extras-search-by-identifier
-The command @code{ebib-extras-search-by-identifier} searches for the entry using its ISBN or DOI@. It first checks the @samp{isbn} field (via @code{ebib-extras-get-isbn}), then falls back to the @samp{doi} field, and finally prompts the user for a manual identifier. If the identifier looks like an ISBN, it calls @code{ebib-extras-search-book}; if it looks like a DOI (via @code{annas-archive--doi-p}), it calls @code{ebib-extras-search-article}.
+The command @code{ebib-extras-search-by-identifier} searches for the entry using its ISBN, DOI, or arXiv identifier. It first checks the @samp{isbn} field (via @code{ebib-extras-get-isbn}), then the @samp{doi} field, then arXiv metadata from @samp{eprint} plus @samp{eprinttype} or @samp{archiveprefix}, and finally arXiv URLs in the @samp{url} field. If no identifier is found, it prompts for one manually. ISBNs dispatch to @code{ebib-extras-search-book}; DOIs and arXiv identifiers dispatch to @code{ebib-extras-search-article}.
 
 The aliases @code{ebib-extras-search-book-by-identifier} and @code{ebib-extras-search-article-by-identifier} both point to this command. The alias @code{ebib-extras-search-film-by-identifier} points to @code{ebib-extras-search-film-by-title} because films have no standard identifier.
 

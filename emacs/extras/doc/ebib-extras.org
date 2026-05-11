@@ -257,7 +257,7 @@ For book entries, the title is retrieved from either the =title= or =booktitle= 
 :END:
 
 #+findex: ebib-extras-search-by-identifier
-The command ~ebib-extras-search-by-identifier~ searches for the entry using its ISBN or DOI. It first checks the =isbn= field (via ~ebib-extras-get-isbn~), then falls back to the =doi= field, and finally prompts the user for a manual identifier. If the identifier looks like an ISBN, it calls ~ebib-extras-search-book~; if it looks like a DOI (via ~annas-archive--doi-p~), it calls ~ebib-extras-search-article~.
+The command ~ebib-extras-search-by-identifier~ searches for the entry using its ISBN, DOI, or arXiv identifier. It first checks the =isbn= field (via ~ebib-extras-get-isbn~), then the =doi= field, then arXiv metadata from =eprint= plus =eprinttype= or =archiveprefix=, and finally arXiv URLs in the =url= field. If no identifier is found, it prompts for one manually. ISBNs dispatch to ~ebib-extras-search-book~; DOIs and arXiv identifiers dispatch to ~ebib-extras-search-article~.
 
 The aliases ~ebib-extras-search-book-by-identifier~ and ~ebib-extras-search-article-by-identifier~ both point to this command. The alias ~ebib-extras-search-film-by-identifier~ points to ~ebib-extras-search-film-by-title~ because films have no standard identifier.
 

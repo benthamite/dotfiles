@@ -171,8 +171,12 @@ If point is not on a highlight heading, or if there is no next annotation at the
 @section Dehyphenation
 
 @findex org-noter-extras-dehyphenate
+@findex org-noter-extras-dehyphenate-inserted-heading
 @findex org-noter-extras-set-hyphen
 Text extracted from PDFs often contains hyphens at the positions where the original layout engine broke words across lines. The command @code{org-noter-extras-dehyphenate} removes these artifacts by searching for the pattern ``letter-hyphen space letter'' and joining the two letter sequences. It operates on the current paragraph by default, or on the active region if one is set. The hyphen characters it searches for are defined by @code{org-noter-extras-dehyphenate-hyphens} (@ref{Dehyphenation characters}).
+
+New headings inserted by @code{org-noter} are dehyphenated automatically via
+@code{org-noter-insert-heading-hook}.
 
 The command @code{org-noter-extras-set-hyphen} lets you interactively change the hyphen character used for dehyphenation. It presents a choice between @samp{-} (standard ASCII hyphen) and @samp{­} (soft hyphen) and updates @code{org-noter-extras-dehyphenate-hyphens} accordingly. This is useful when you encounter a PDF that uses an unusual character for line-break hyphens.
 

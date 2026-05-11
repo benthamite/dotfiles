@@ -104,7 +104,6 @@ heading in a quote block, and append a citation that includes the page number."
 
 ;;;;; dehyphenate
 
-;; TODO: find `org-noter' hook to run this automatically
 (defun org-noter-extras-dehyphenate ()
   "Remove leftover hyphens in hyphenated text.
 Operate on the current paragraph, or the region if active."
@@ -121,6 +120,14 @@ Operate on the current paragraph, or the region if active."
 	(goto-char start)
 	(while (re-search-forward (format pattern hyphen) end t)
 	  (replace-match "\\1\\2"))))))
+
+(defun org-noter-extras-dehyphenate-inserted-heading ()
+  "Dehyphenate text inserted by `org-noter' in the current heading."
+  (save-excursion
+    (org-end-of-meta-data t)
+    (org-noter-extras-dehyphenate)))
+
+(add-hook 'org-noter-insert-heading-hook #'org-noter-extras-dehyphenate-inserted-heading)
 
 (defun org-noter-extras-set-hyphen ()
   "Set hyphen character for de-hyphenation."

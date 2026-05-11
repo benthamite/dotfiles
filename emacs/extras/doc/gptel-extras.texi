@@ -70,7 +70,6 @@ Conversation management
 
 General convenience commands
 
-* Setting backend and model::
 * Toggling default major mode::
 * Navigating and sending::
 * Rewriting function definitions::
@@ -85,8 +84,14 @@ Functions
 * Post-response hooks::
 * Model-specific workarounds::
 * Running queries programmatically::
+* Setting backend and model::
+* Buffer validation::
 * Repository identification::
 * Preset macro::
+
+Model-specific workarounds
+
+* Fast JSON logging::
 
 Tools
 
@@ -269,11 +274,14 @@ The default value is @code{nil}. This is useful when using slow models where you
 @section Commit summarization
 
 @findex gptel-extras-summarize-commit-diffs
+@vindex gptel-extras-changelog-file
 When reviewing a series of commits in a @samp{magit-log-mode} buffer, you may want a quick, high-level summary of what changed. The command @code{gptel-extras-summarize-commit-diffs} takes the active region in the log buffer, extracts the diffs for all commits within that region, and sends them to the LLM with a prompt requesting an Org-mode-formatted changelog summary.
 
-The summary is displayed in a dedicated @samp{*Commit Summary*} buffer. The prompt is structured using the template in @code{gptel-extras-changelog-file}, which helps the LLM produce output organized by package or feature.
+The summary is displayed in a dedicated @samp{*Commit Summary*} buffer. The prompt is structured using the template in the constant @code{gptel-extras-changelog-file} (which points to the changelog template file in the extras directory), helping the LLM produce output organized by package or feature.
 
 With a prefix argument (@samp{C-u}), the command includes full diff content with unified context rather than the default three-line unified diff. This can help the LLM understand broader context around each change.
+
+Tool use (@code{gptel-use-tools}) is disabled for this request, since it is a programmatic call that should produce a plain-text summary without invoking any tools.
 
 This command must be invoked from a @samp{magit-log-mode} buffer with an active region spanning the commits of interest.
 
@@ -291,7 +299,8 @@ These commands manage the repository map and conventions file that provide proje
 @subsection Showing and managing the repository map
 
 @findex gptel-extras-show-repo-map
-The command @code{gptel-extras-show-repo-map} generates (or retrieves from cache) the repository map for the current project and displays it in a dedicated buffer named @samp{*Repo Map: PROJECT-NAME*}. Use this to inspect the map before deciding whether to include it in the context.
+@vindex gptel-extras-repo-map-buffer-name-formatter
+The command @code{gptel-extras-show-repo-map} generates (or retrieves from cache) the repository map for the current project and displays it in a dedicated buffer. The buffer name follows the format string @code{gptel-extras-repo-map-buffer-name-formatter} (default @samp{*Repo Map: %s*}, where @samp{%s} is the project name). Use this to inspect the map before deciding whether to include it in the context.
 
 @findex gptel-extras-add-repo-map-to-context
 The command @code{gptel-extras-add-repo-map-to-context} generates the repository map, removes any previously added map from the @samp{gptel} context, and then adds the current map with explanatory preamble text. The preamble instructs the LLM to use the map for understanding project structure and to request relevant files.
@@ -366,6 +375,8 @@ With a prefix argument (@samp{C-u}), the command lets you edit the prompt before
 
 Before sending, the command calls @code{gptel-extras-warn-when-context} (@ref{Context warning}) to alert you if there is existing context that might interfere. After the request is sent, all context is removed.
 
+Tool use (@code{gptel-use-tools}) is disabled for this request, since the reply drafting is a programmatic call that should produce plain text without invoking any tools.
+
 @node Search integration
 @section Search integration
 
@@ -385,7 +396,6 @@ This is useful for quick research where you want both traditional web results an
 @section General convenience commands
 
 @menu
-* Setting backend and model::
 * Toggling default major mode::
 * Navigating and sending::
 * Rewriting function definitions::
@@ -394,14 +404,6 @@ This is useful for quick research where you want both traditional web results an
 * Context warning::
 * Connecting to MCP servers::
 @end menu
-
-@node Setting backend and model
-@subsection Setting backend and model
-
-@findex gptel-extras-set-backend-and-model
-The command @code{gptel-extras-set-backend-and-model} sets @code{gptel-backend} and @code{gptel-model} buffer-locally in the current Org buffer. When called from Lisp, pass the backend name as a string and the model as a symbol. If either argument is nil, the current global value is used.
-
-This is primarily a helper used by other commands such as @code{gptel-extras-run-query} (@ref{Functions}) and @code{gptel-extras-search-and-ask-model} (@ref{Search integration}).
 
 @node Toggling default major mode
 @subsection Toggling default major mode
@@ -459,6 +461,8 @@ The command @code{gptel-extras-connect-to-all-servers} connects to all configure
 * Post-response hooks::
 * Model-specific workarounds::
 * Running queries programmatically::
+* Setting backend and model::
+* Buffer validation::
 * Repository identification::
 * Preset macro::
 @end menu
@@ -486,6 +490,18 @@ The function @code{gptel-extras-set-mullvad} is added as @samp{:around} advice o
 
 The VPN connection is made silently (no user prompt). The @samp{mullvad} package must be installed and configured separately.
 
+@menu
+* Fast JSON logging::
+@end menu
+
+@node Fast JSON logging
+@subsection Fast JSON logging
+
+@findex gptel-extras--fast-log
+The function @code{gptel-extras--fast-log} is added as @samp{:around} advice on @code{gptel--log}. The upstream @code{gptel--log} function calls @code{json-pretty-print}, which uses @code{replace-region-contents} internally.  That function runs the O(n²) @samp{compareseq} diff algorithm, which freezes Emacs on large JSON payloads (such as full LLM request/response bodies).
+
+This advice replaces the pretty-printing step with a direct parse-then-insert approach: the JSON data is parsed with @code{json-parse-string} and re-inserted with @code{json-encode} (with @code{json-encoding-pretty-print} bound to @samp{t}), avoiding the diff entirely.
+
 @node Running queries programmatically
 @section Running queries programmatically
 
@@ -494,11 +510,27 @@ The function @code{gptel-extras-run-query} creates a new @samp{gptel} buffer fro
 
 The buffer name is a slugified version of the query with the appropriate file extension. If @samp{BACKEND} or @samp{MODEL} are nil, the global defaults are used.
 
+Tool use (@code{gptel-use-tools}) is disabled for this request, since it is a programmatic call that should produce a plain-text response without invoking any tools.
+
+@node Setting backend and model
+@section Setting backend and model
+
+@findex gptel-extras-set-backend-and-model
+The function @code{gptel-extras-set-backend-and-model} sets @code{gptel-backend} and @code{gptel-model} buffer-locally in the current Org buffer. Pass the backend name as a string and the model as a symbol. If either argument is nil, the current global value is used.
+
+This is a helper function (not a command) used by @code{gptel-extras-run-query} (@ref{Running queries programmatically}) and @code{gptel-extras-search-and-ask-model} (@ref{Search integration}).
+
+@node Buffer validation
+@section Buffer validation
+
+@findex gptel-extras-ensure-gptel-mode
+The function @code{gptel-extras-ensure-gptel-mode} signals an error if @code{gptel-mode} is not active in the current buffer. It is used as a guard by commands such as @code{gptel-extras-continue-in-new-buffer} (@ref{Continuing in a new buffer}) that require an active @samp{gptel} session.
+
 @node Repository identification
 @section Repository identification
 
 @findex gptel-extras-get-repo
-The function @code{gptel-extras-get-repo} determines the repository path for the current request. In Org mode, it checks the @samp{GPTEL_REPO} property at the document level; if not set, it prompts the user and stores the selection. In other modes, it uses @code{project-root} if a project is detected, falling back to a directory prompt.
+The function @code{gptel-extras-get-repo} determines the repository path for the current request. In Org mode, it checks the @samp{GPTEL_REPO} property at the document level; if not set, it prompts the user and stores the selection. In Markdown mode, it reads or writes a @samp{GPTEL_REPO} key in YAML front matter. In other modes, it uses @code{project-root} if a project is detected, falling back to a directory prompt.
 
 @findex gptel-extras-get-repo-map
 The function @code{gptel-extras-get-repo-map} returns the repository map for the current project, using the cached version if it is still valid (checked via @code{gptel-extras-repo-map-cache-valid-p}). When the cache is stale or empty, it calls @samp{aider --show-repo-map} to generate a fresh map and stores it along with the current timestamp and git HEAD reference.

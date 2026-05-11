@@ -774,7 +774,6 @@ ENSURE, REST, and STATE are `use-package' handler arguments."
   (use-package-compute-statistics t)
   (use-package-hook-name-suffix nil) ; use real name for hooks, i.e. do not omit the `-hook' bit
   (use-package-minimum-reported-time 0.1)
-
   :config
   (defun init-personal-package-recipe (name)
     "Return the dotfiles Elpaca recipe for personal package NAME."
@@ -9069,6 +9068,10 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (ai-agent-claude-accounts '(("personal"  . "~/.claude-personal")
                               ("tlon"     . "~/.claude-tlon")
                               ("epoch"    . "~/.claude-epoch")))
+
+  (ai-agent-codex-accounts '(("tlon"     . "~/.codex-tlon")
+			     ("epoch"    . "~/.codex-epoch")))
+  
   :config
   (with-eval-after-load 'debug
     (bind-keys :map debugger-mode-map

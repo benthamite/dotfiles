@@ -438,7 +438,7 @@ the audit scope.
 therefore updates the live global Codex configuration.
 
 =codex/config.toml= sets the default model, reasoning effort, fast service
-tier, approval policy, sandbox mode, and personality; enables Codex hooks,
+tier, approval policy, sandbox mode, light TUI theme, and personality; enables Codex hooks,
 plugins, the goals UI, and terminal resize reflow; records trusted project
 roots; and records model-availability and hook-trust state written by Codex.
 When =ai-agent= starts Codex with an account-specific =CODEX_HOME= such as

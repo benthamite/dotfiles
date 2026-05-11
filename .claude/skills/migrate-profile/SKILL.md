@@ -6,7 +6,7 @@ argument-hint: "[old-profile] to [new-profile]"
 
 # Post-profile-switch migration
 
-Run the housekeeping needed immediately after switching to a new Emacs/elpaca profile. This includes profile-state checks, remote/local repo drift checks, and Claude Code/Codex state migration. Claude data needs project-directory merging under `~/.claude/projects/`; Codex data needs in-place structured path rewrites across `~/.codex` session, history, index, and archive JSONL files. No explicit package list is needed for Claude project directories.
+Run the housekeeping needed immediately after switching to a new Emacs/elpaca profile. This includes profile-state checks, remote/local repo drift checks, per-package agent directory migration, and Claude Code/Codex state migration. Claude data needs project-directory merging under `~/.claude/projects/`; Codex data needs in-place structured path rewrites across `~/.codex` session, history, index, and archive JSONL files. Package-local `.claude/` and `.codex/` directories need non-destructive copying from old-profile package directories to their new-profile package directories. No explicit package list is needed for Claude project directories.
 
 > **Related skills.** The per-package logic here is essentially the same operation as `move-session-log --rename` (whole-project rename mode), applied in bulk. This skill stays separate because it adds (a) merge semantics — multiple sources can flow into one target — and (b) profile-path rewrites in `~/.claude.json` keyed on the elpaca profile name rather than a single old/new pair. For a single project rename outside an elpaca-profile bump, use the `move-session-log` skill directly (and `rename-project` for full project renames).
 
@@ -18,6 +18,7 @@ Migrate both stores unless the user explicitly asks for only one:
 
 - **Profile state**: `~/.config/emacs-profiles/.current-profile` and `~/.config/emacs-profiles/active`.
 - **New-profile repos**: git repositories under `~/.config/emacs-profiles/<new-profile>/elpaca/sources/` and `repos/`.
+- **Package-local agent directories**: `.claude/` and `.codex/` directories inside old-profile elpaca package directories, copied into the corresponding new-profile package directories.
 - **Claude Code**: `~/.claude/projects/`, `~/.claude.json`, `~/.claude/history.jsonl`, and copied session `.jsonl` files.
 - **Codex**: `~/.codex/history.jsonl`, `~/.codex/session_index.jsonl`, `~/.codex/sessions/**/*.jsonl`, and `~/.codex/archived_sessions/**/*.jsonl`.
 
@@ -165,6 +166,48 @@ If the package does not exist under the new profile at all, **ask the user wheth
 - `new_path`: the actual target filesystem path under the new profile.
 
 Use `source_pkg` for matching old `history.jsonl` and session `cwd` values, and `new_path` for the replacement. If no rename applies, skip the package and note this in the summary.
+
+## Package-local agent directory migration
+
+Some package repositories contain agent-local state under `.claude/` or `.codex/`, such as:
+
+```text
+/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/tlon/.claude
+/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/tlon/.codex
+```
+
+For each migration record, check the old package path for `.claude/` and `.codex/`. If either exists, copy it to the verified `new_path` for that package without overwriting existing target files. Treat this as part of the same per-package migration record as the Claude project directory and Codex structured-path rewrite.
+
+Dry-run reporting:
+
+- Count source `.claude/` and `.codex/` directories found under old-profile package paths.
+- For each package, report whether the target `.claude/` or `.codex/` directory already exists, will be created, will receive only missing files, or is skipped because the package has no verified new-profile target.
+- Count files that would be copied and files that would be skipped because the target already has the same relative path.
+
+Execution rules:
+
+- Create `new_path/.claude/` or `new_path/.codex/` only when the corresponding source directory exists.
+- Copy files and subdirectories recursively while preserving metadata.
+- Do not overwrite existing target files. If both source and target contain the same relative file path, leave the target file untouched and count it as skipped.
+- Do not rewrite contents inside package-local `.claude/` or `.codex/` files unless a later explicit section says to; this step is a non-destructive directory merge only.
+- Do not trash the old package directory after copying these local agent directories. The profile cleanup only trashes old encoded directories under `~/.claude/projects/`.
+
+Example shell shape:
+
+```bash
+for agent_dir in .claude .codex; do
+  src="$old_path/$agent_dir"
+  dst="$new_path/$agent_dir"
+  [ -d "$src" ] || continue
+  mkdir -p "$dst"
+  (cd "$src" && find . -type d -exec mkdir -p "$dst/{}" \;)
+  (cd "$src" && find . -type f -print | while read -r rel; do
+    if [ ! -e "$dst/$rel" ]; then
+      cp -p "$src/$rel" "$dst/$rel"
+    fi
+  done)
+done
+```
 
 ## Claude migration (non-destructive merge)
 
@@ -410,6 +453,7 @@ Do not trash Codex files. Codex history is a single store; this migration only u
    - Target directory (existing / will create / package missing from new profile)
    - Sessions to copy (count)
    - Memory files to copy (count)
+   - Package-local `.claude/` and `.codex/` directories to merge, with files to copy and existing target files to skip
    - Trust entry in `~/.claude.json` (yes/no)
    - history.jsonl entries to rewrite (count)
    - Active profile symlink state (already current / will retarget)
@@ -419,13 +463,14 @@ Do not trash Codex files. Codex history is a single store; this migration only u
 
 2. **Ask for confirmation** before proceeding with symlink retarget, repo pulls, actual copy, rewrites, and deletion.
 
-3. **Execute the migration**: retarget the `active` symlink when appropriate, pull clean fast-forwardable new-profile repos after confirmation, create any missing Claude targets, copy Claude data without overwriting, rewrite Claude trust/history/session paths, rewrite Codex history/session/archive structured paths, then trash Claude sources whose migration succeeded.
+3. **Execute the migration**: retarget the `active` symlink when appropriate, pull clean fast-forwardable new-profile repos after confirmation, merge package-local `.claude/` and `.codex/` directories without overwriting, create any missing Claude targets, copy Claude data without overwriting, rewrite Claude trust/history/session paths, rewrite Codex history/session/archive structured paths, then trash Claude sources whose migration succeeded.
 
-4. **Post-migration summary**: report `.current-profile` state, whether the `active` symlink was retargeted, which repos were pulled or need manual attention, how many Claude sessions and memory files were copied for each package, how many Claude source directories were trashed, how many trust entries were migrated in `~/.claude.json`, how many Claude `history.jsonl` and session `.jsonl` path entries were rewritten, how many Codex files and structured fields were rewritten, and any packages or Codex files that were skipped.
+4. **Post-migration summary**: report `.current-profile` state, whether the `active` symlink was retargeted, which repos were pulled or need manual attention, how many package-local `.claude/` and `.codex/` files were copied or skipped, how many Claude sessions and memory files were copied for each package, how many Claude source directories were trashed, how many trust entries were migrated in `~/.claude.json`, how many Claude `history.jsonl` and session `.jsonl` path entries were rewritten, how many Codex files and structured fields were rewritten, and any packages or Codex files that were skipped.
 
 ## Important notes
 
 - Existing Claude data in the target is never overwritten — only new files are copied.
+- Existing package-local `.claude/` and `.codex/` files in the new profile are never overwritten — only missing files are copied.
 - Claude source directories are moved to the trash only after their data is copied to the target and path rewrites have succeeded.
 - Codex JSONL files are rewritten in place and never trashed.
 - Repo pulls are fast-forward only and only for clean repos.

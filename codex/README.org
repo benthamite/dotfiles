@@ -139,6 +139,12 @@ one side without an equivalent counterpart is blocked. Each project-local skill
 root documents its skills in that project's =README.org= under a dedicated
 =Skills= section.
 
+When switching Emacs/elpaca profiles, the dotfiles-local
+=migrate-profile= skill migrates project-local agent roots that live inside
+profile package clones: =<old-profile>/elpaca/{sources,repos}/<package>/.codex/=
+is copied into the verified new-profile package path without overwriting
+existing target files.
+
 =bin/codex-app-handoff= opens the current Codex thread in the desktop app via
 the app's =codex://threads/<THREAD_ID>= deeplink. Use it from CLI/Emacs turns
 when a task needs App-only Browser Use tools; the next turn must be sent from

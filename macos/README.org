@@ -1,0 +1,21 @@
+#+title: macOS Maintenance
+#+author: Pablo Stafforini
+
+* Skills
+
+Project-local skills for macOS maintenance live under this directory so they
+load only while working on macOS security and machine-posture tasks.
+
+** audit-mac-app
+
+Static-first security audit of macOS applications before running them or
+granting sensitive permissions. Covers trust verification, permission analysis,
+app type detection, Electron source extraction and security checks, network
+endpoint scanning, and spaces-safe binary analysis.
+
+** security-audit
+
+Audits the development environment security posture across secrets hygiene,
+supply-chain dependencies, macOS machine posture, and Claude Code configuration
+risk. It is audit-only unless remediation is explicitly requested and reports
+findings by severity with concrete locations and remediation steps.

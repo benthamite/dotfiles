@@ -23,13 +23,6 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
-      "name": "audit-mac-app",
-      "claude": "claude/skills/audit-mac-app/SKILL.md",
-      "codex": "codex/skills/audit-mac-app/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
       "name": "automate",
       "claude": "claude/skills/automate/SKILL.md",
       "codex": "codex/skills/automate/SKILL.md",
@@ -163,13 +156,6 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
-      "name": "security-audit",
-      "claude": "claude/skills/security-audit/SKILL.md",
-      "codex": "codex/skills/security-audit/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
       "name": "session-retro",
       "claude": "claude/skills/session-retro/SKILL.md",
       "codex": "codex/skills/session-retro/SKILL.md",
@@ -201,13 +187,6 @@
       "name": "test-suite",
       "claude": "claude/skills/test-suite/SKILL.md",
       "codex": "codex/skills/test-suite/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
-      "name": "triage-issues",
-      "claude": "claude/skills/triage-issues/SKILL.md",
-      "codex": "codex/skills/triage-issues/SKILL.md",
       "status": "paired",
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
@@ -478,7 +457,7 @@
       "path": "codex/config.toml",
       "tracked": true,
       "live_path": "~/.codex/config.toml",
-      "note": "Live global Codex config is a symlink to the tracked repo file; trusted project entries, account-home hook trust entries, theme state, and marketplace timestamps are Codex-local and do not have a Claude counterpart, including the nested dotfiles/emacs project allowlist entry used when opening Emacs config work independently, active Elpaca source clones trusted for package work, and account-specific CODEX_HOME paths such as ~/.codex-epoch. It does not register skills or project-doc fallbacks. bin/skill-prune may add or remove managed [[skills.config]] entries here to disable or re-enable stale paired global and project-local skills; the Claude counterpart is the live untracked ~/.claude/settings.local.json skillOverrides block, with tracked state and absolute project-local paths recorded in skills-disabled.json. Codex 0.129 renamed [features].codex_hooks to [features].hooks; the audit check in bin/ai-config-sync was updated accordingly."
+      "note": "Live global Codex config is a symlink to the tracked repo file; trusted project entries, account-home hook trust entries, theme state, and marketplace timestamps are Codex-local and do not have a Claude counterpart, including the nested dotfiles/emacs project allowlist entry used when opening Emacs config work independently, active Elpaca source clones trusted for package work, and account-specific CODEX_HOME paths such as ~/.codex-epoch. It does not register skills or project-doc fallbacks. bin/skill-prune may add or remove managed [[skills.config]] entries here to disable or re-enable stale paired global and project-local skills; the Claude counterpart is the live untracked ~/.claude/settings.local.json skillOverrides block, with tracked state and absolute project-local paths recorded in skills-disabled.json. The former global triage-issues disable entry was removed when that workflow moved to the tlon project-local skill roots. Codex 0.129 renamed [features].codex_hooks to [features].hooks; the audit check in bin/ai-config-sync was updated accordingly."
     },
     {
       "tool": "Codex",

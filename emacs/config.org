@@ -395,7 +395,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#ob-aider][ob-aider]]
   - [[#agent-shell][agent-shell]]
   - [[#claude-code][claude-code]]
-  - [[#agents][agents]]
+  - [[#agent][agent]]
   - [[#agent-log][agent-log]]
   - [[#monet][monet]]
   - [[#codex][codex]]
@@ -9028,7 +9028,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (claude-code-mode)
 
   :bind
-  ("H-e" . agents-menu)
+  ("H-e" . agent-menu)
   ("H-E" . claude-code-transient)
   (:repeat-map my-claude-code-map
                ("M" . claude-code-cycle-mode))
@@ -9038,44 +9038,44 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 
   :hook
   (claude-code-process-environment-functions . monet-start-server-function)
-  (claude-code-process-environment-functions . agents-claude-account-env))
+  (claude-code-process-environment-functions . agent-claude-account-env))
 #+end_src
 
-** =agents=
+** =agent=
 :PROPERTIES:
 :ID:       2E2F1B58-BDCE-46D4-A31D-B1C5B0D8761F
 :END:
 
-/[[https://github.com/benthamite/agents][agents]] provides Emacs integration for AI coding agents./
+/[[https://github.com/benthamite/agent][agent]] provides Emacs integration for AI coding agents./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package agents
+(use-package agent
   :ensure (:host github
-                 :repo "benthamite/agents")
+                 :repo "benthamite/agent")
   :demand t
   :config
-  (require 'agents-claude)
-  (require 'agents-codex)
+  (require 'agent-claude)
+  (require 'agent-codex)
 
   :custom
-  (agents-alert-on-ready t)
-  (agents-before-exit-skill-name "session-learning-capture")
-  (agents-before-exit-skill-directories '("~/My Drive/dotfiles/"))
-  (agents-sync-theme t)
+  (agent-alert-on-ready t)
+  (agent-before-exit-skill-name "session-learning-capture")
+  (agent-before-exit-skill-directories '("~/My Drive/dotfiles/"))
+  (agent-sync-theme t)
   ;; copilot support is buggy; needs more work
-  (agents-claude-copilot-enabled nil)
-  (agents-claude-org-todo-in-progress-keyword "DOING")
-  (agents-claude-accounts '(("personal"  . "~/.claude-personal")
+  (agent-claude-copilot-enabled nil)
+  (agent-claude-org-todo-in-progress-keyword "DOING")
+  (agent-claude-accounts '(("personal"  . "~/.claude-personal")
                               ("tlon"     . "~/.claude-tlon")
                               ("epoch"    . "~/.claude-epoch")))
 
-  (agents-codex-accounts '(("tlon"     . "~/.codex-tlon")
+  (agent-codex-accounts '(("tlon"     . "~/.codex-tlon")
 			     ("epoch"    . "~/.codex-epoch")))
   
   :config
   (with-eval-after-load 'debug
     (bind-keys :map debugger-mode-map
-               ("D" . agents-debug-backtrace))))
+               ("D" . agent-debug-backtrace))))
 #+end_src
 
 

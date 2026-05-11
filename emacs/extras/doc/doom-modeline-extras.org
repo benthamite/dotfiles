@@ -78,8 +78,8 @@ whether rate limit burn-rate deviations are displayed in the Claude
 Code modeline segment.  The default value is ~t~.  When non-~nil~, the
 segment shows how far ahead or behind the user is relative to a
 uniform consumption pace for both the 5-hour session and 7-day weekly
-windows.  Data is sourced from the usage polling in =agents-claude=
-([[info:agents-claude#Top][agents-claude]]).
+windows.  Data is sourced from the usage polling in =agent-claude=
+([[info:agent-claude#Top][agent-claude]]).
 
 ** Claude Code cost display
 :PROPERTIES:
@@ -167,8 +167,8 @@ available, it displays multiple pipe-separated fields:
   sustainable; a negative value (green) means the user is under budget.
   Hovering shows a tooltip with raw utilization and the relative reset
   time (e.g., "27% used, -66% vs pace / Resets: in 2h 30m").  The
-  underlying data comes from the usage polling in =agents-claude=
-  ([[info:agents-claude#Top][agents-claude]]).
+  underlying data comes from the usage polling in =agent-claude=
+  ([[info:agent-claude#Top][agent-claude]]).
 - *Token count*: formatted compactly (e.g., "12.3k", "1.5M").
 - *Cost*: shown as a dollar amount, optionally with strikethrough on
   subscription plans ([[#h:claude-code-cost][Claude Code cost display]]).
@@ -179,7 +179,7 @@ available, it displays multiple pipe-separated fields:
 - *Duration*: elapsed session time in a compact format (e.g., "5m23s").
 - *Cache efficiency*: the ratio of cache-read tokens to total tokens,
   color-coded (green above 80%, yellow 50-79%, red below 50%).
-- *Alert indicator*: from ~agents-claude-alert-indicator~.
+- *Alert indicator*: from ~agent-claude-alert-indicator~.
 
 Before status data arrives, the segment displays only the session name.
 

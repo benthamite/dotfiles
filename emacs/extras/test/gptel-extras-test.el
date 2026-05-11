@@ -39,6 +39,29 @@
   (should (equal (gptel-extras--generate-next-heading "")
                  " 2")))
 
+;;;; Markdown repository metadata
+
+(ert-deftest gptel-extras-test-get-markdown-repo ()
+  "Read GPTEL_REPO from Markdown YAML front matter."
+  (with-temp-buffer
+    (insert "---\nGPTEL_REPO: /tmp/repo\n---\n\n# Chat\n")
+    (should (equal (gptel-extras-get-markdown-repo) "/tmp/repo"))))
+
+(ert-deftest gptel-extras-test-set-markdown-repo-adds-front-matter ()
+  "Add Markdown YAML front matter when absent."
+  (with-temp-buffer
+    (insert "# Chat\n")
+    (gptel-extras-set-markdown-repo "/tmp/repo")
+    (should (string-prefix-p "---\nGPTEL_REPO: /tmp/repo\n---\n\n# Chat"
+			     (buffer-string)))))
+
+(ert-deftest gptel-extras-test-set-markdown-repo-updates-existing-key ()
+  "Update an existing Markdown GPTEL_REPO key."
+  (with-temp-buffer
+    (insert "---\nGPTEL_REPO: /old\n---\n")
+    (gptel-extras-set-markdown-repo "/new")
+    (should (string-match-p "^GPTEL_REPO: /new$" (buffer-string)))))
+
 ;;;; Normalize whitespace
 
 (ert-deftest gptel-extras-test-normalize-whitespace-basic ()

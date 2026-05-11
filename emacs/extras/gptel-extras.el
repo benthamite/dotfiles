@@ -33,6 +33,7 @@
 (require 'org)
 (require 'seq)
 (require 'paths)
+(require 'subr-x)
 
 (defvar gptel-use-tools)
 
@@ -392,11 +393,41 @@ Keys are repository paths, values are cons cells of the form (TIMESTAMP . MAP)."
 	   (let ((repo (funcall prompt)))
 	     (org-entry-put (point-min) "GPTEL_REPO" repo)
 	     repo)))
-      ;; TODO: Add markdown-mode support
-      ('markdown-mode)
+      ('markdown-mode
+       (or (gptel-extras-get-markdown-repo)
+	   (let ((repo (funcall prompt)))
+	     (gptel-extras-set-markdown-repo repo)
+	     repo)))
       (_ (if-let* ((project (project-current)))
 	     (project-root project)
 	   (funcall prompt))))))
+
+(defun gptel-extras-get-markdown-repo ()
+  "Return GPTEL_REPO from the current Markdown buffer, if present."
+  (save-excursion
+    (goto-char (point-min))
+    (when (looking-at "---\n")
+      (let ((end (save-excursion
+		   (forward-line 1)
+		   (re-search-forward "^---$" nil t))))
+	(when end
+	  (goto-char (line-beginning-position))
+	  (when (re-search-forward "^GPTEL_REPO:[[:space:]]*\\(.+\\)$" end t)
+	    (string-trim (match-string 1))))))))
+
+(defun gptel-extras-set-markdown-repo (repo)
+  "Set GPTEL_REPO to REPO in the current Markdown buffer."
+  (save-excursion
+    (goto-char (point-min))
+    (if (looking-at "---\n")
+	(let ((end (save-excursion
+		     (forward-line 1)
+		     (re-search-forward "^---$" nil t))))
+	  (if (and end (re-search-forward "^GPTEL_REPO:.*$" end t))
+	      (replace-match (format "GPTEL_REPO: %s" repo))
+	    (forward-line 1)
+	    (insert (format "GPTEL_REPO: %s\n" repo))))
+      (insert (format "---\nGPTEL_REPO: %s\n---\n\n" repo)))))
 
 (defun gptel-extras-get-git-head-ref (repo)
   "Return the current git HEAD reference for REPO."

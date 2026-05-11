@@ -545,16 +545,22 @@ OLD-FUN and ARGS are arguments passed to the original function."
 	 (file (file-name-concat dir selection)))
     (find-file file)))
 
-;; TODO: Expand for other modes
+(declare-function dired-get-filename "dired")
 ;;;###autoload
 (defun files-extras-copy-as-kill-dwim ()
   "Copy the relevant string in the current buffer, depending on its mode.
 - In a `helpful-mode' buffer, get the name of the symbol whose docstring the
-current helpful buffer displays, then kill the buffer."
+current helpful buffer displays, then kill the buffer.
+- In a `dired-mode' buffer, copy the file at point.
+- In a file-visiting buffer, copy the buffer's file name."
   (interactive)
   (pcase major-mode
     ('helpful-mode (kill-new (replace-regexp-in-string "\\(\\*helpful .*: \\)\\(.*\\)\\(\\*\\)" "\\2" (buffer-name)))
-		   (files-extras-kill-this-buffer-switch-to-other-window))))
+		   (files-extras-kill-this-buffer-switch-to-other-window))
+    ('dired-mode (kill-new (dired-get-filename)))
+    (_ (if-let* ((file (buffer-file-name)))
+	   (kill-new file)
+	 (user-error "No context-specific text to copy")))))
 
 (defun files-extras-grammarly-open-in-external-editor ()
   "Open Grammarly's external editor."

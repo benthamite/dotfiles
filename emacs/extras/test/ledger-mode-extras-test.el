@@ -29,6 +29,20 @@
   (should (equal (ledger-extras-convert-interactive-brokers-date "20200229")
                  "2020-02-29")))
 
+;;;; Parse Polymarket CSV
+
+(ert-deftest ledger-mode-extras-test-parse-polymarket-row-basic ()
+  "Parse a simple Polymarket CSV row."
+  (should (equal (ledger-mode-extras-parse-polymarket-row
+		  "Question,Buy,12.5,50,ignored,1700000000")
+		 '("Question" "Buy" "12.5" "50" "ignored" "1700000000"))))
+
+(ert-deftest ledger-mode-extras-test-parse-polymarket-row-quoted-comma ()
+  "Parse a quoted Polymarket CSV field containing a comma."
+  (should (equal (ledger-mode-extras-parse-polymarket-row
+		  "\"Question, with comma\",Sell,10,20,ignored,1700000000")
+		 '("Question, with comma" "Sell" "10" "20" "ignored" "1700000000"))))
+
 ;;;; Parse Wise date
 
 (ert-deftest ledger-mode-extras-test-parse-wise-date-standard ()

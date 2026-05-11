@@ -590,6 +590,25 @@
     (goto-char 10) ; inside the URL
     (should (equal (simple-extras-get-url-at-point) "http://www.example.com"))))
 
+;;;; Strip thing at point
+
+(ert-deftest simple-extras-test-strip-url-replaces-only-url ()
+  "Strip-url replaces the URL at point without searching the line."
+  (with-temp-buffer
+    (insert "See https://www.example.com/ and https://www.other.com/")
+    (goto-char 15)
+    (simple-extras-strip-url)
+    (should (equal (buffer-string)
+		   "See example.com and https://www.other.com/"))))
+
+(ert-deftest simple-extras-test-strip-thing-at-point-filename ()
+  "Strip-thing-at-point shortens file names."
+  (with-temp-buffer
+    (insert "/tmp/example.txt")
+    (goto-char 6)
+    (simple-extras-strip-thing-at-point)
+    (should (equal (buffer-string) "example.txt"))))
+
 ;;;; Narrow or widen DWIM
 
 (ert-deftest simple-extras-test-narrow-or-widen-dwim-widens-when-narrowed ()

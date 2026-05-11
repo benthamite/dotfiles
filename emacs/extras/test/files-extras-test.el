@@ -415,5 +415,18 @@ which `file-name-as-directory' converts to \"./\"."
             (should (eq buffer-offer-save t))))
       (when (and buf (buffer-live-p buf)) (kill-buffer buf)))))
 
+;;;; Copy as kill DWIM
+
+(ert-deftest files-extras-test-copy-as-kill-dwim-file-buffer ()
+  "Copy the file name in a file-visiting buffer."
+  (let* ((file (make-temp-file "files-extras-copy"))
+	 (buf (find-file-noselect file)))
+    (unwind-protect
+	(with-current-buffer buf
+	  (files-extras-copy-as-kill-dwim)
+	  (should (equal (current-kill 0) file)))
+      (when (buffer-live-p buf) (kill-buffer buf))
+      (delete-file file))))
+
 (provide 'files-extras-test)
 ;;; files-extras-test.el ends here

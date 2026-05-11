@@ -586,5 +586,12 @@
     ;; Still has unchecked checkboxes
     (should (string-match-p "\\[ \\]" (buffer-string)))))
 
+;;;; EWW copy formatting
+
+(ert-deftest org-extras-test-shr-heading-level ()
+  "Detect heading levels from shr faces."
+  (should (= (org-extras-shr-heading-level '(shr-h2 bold)) 2))
+  (should-not (org-extras-shr-heading-level '(bold italic))))
+
 (provide 'org-extras-test)
 ;;; org-extras-test.el ends here

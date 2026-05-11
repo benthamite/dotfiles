@@ -782,8 +782,6 @@ FILE is the path to the file.  KEY is the BibTeX key string."
   (ebib-extras-attach-file file key)
   (message "Attached `%s' to %s" file key))
 
-;; TODO: Ensure `ebib-extras-set-abstract' works correctly for TARGET-KEY if
-;; it's not the currently displayed Ebib entry.
 (defun ebib-extras-attach-files (&optional key)
   "Attach files appropriate for the entry with KEY (DWIM).
 If KEY is nil, use the entry at point.  If a file is already
@@ -802,7 +800,7 @@ KEY is an optional BibTeX key string, passed interactively as nil."
         (mapcar (lambda (field) (ebib-extras-get-field field target-key))
                 '("doi" "url" "isbn" "=type=" "file"))
       (if file
-          (ebib-extras-set-abstract) ; May need adjustment for target-key context
+          (ebib-extras-set-abstract target-key)
         (cond (doi (ebib-extras-doi-attach target-key))
               ((or isbn (member type ebib-extras-book-like-entry-types))
                (ebib-extras-book-attach target-key))
@@ -1118,18 +1116,47 @@ The list of film search functions is specified by
      (beep))))
 
 (defun ebib-extras-search-by-identifier ()
-  "Search for a book or article by the ISBN or DOI of the entry at point."
+  "Search for a book or article by the ISBN, DOI, or arXiv ID at point."
   (interactive)
-  ;; TODO: Add support for arXiv
   (let ((id (or (ebib-extras-get-isbn)
 		(ebib-extras-get-field "doi")
-		(read-string "Enter ISBN or DOI: "))))
+		(ebib-extras-get-arxiv-id)
+		(read-string "Enter ISBN, DOI, or arXiv ID: "))))
     (cond ((ebib-extras-isbn-p id)
 	   (ebib-extras-search-book id))
 	  ((annas-archive--doi-p id)
 	   (ebib-extras-search-article id))
+	  ((ebib-extras-arxiv-id-p id)
+	   (ebib-extras-search-article id))
 	  (t
-	   (user-error "Identifier does not appear to be an ISBN or DOI")))))
+	   (user-error "Identifier does not appear to be an ISBN, DOI, or arXiv ID")))))
+
+(defun ebib-extras-get-arxiv-id ()
+  "Return the arXiv identifier for the current entry, if present."
+  (or (ebib-extras-get-arxiv-id-from-eprint)
+      (ebib-extras-get-arxiv-id-from-url)))
+
+(defun ebib-extras-get-arxiv-id-from-eprint ()
+  "Return the arXiv identifier from the eprint fields, if present."
+  (when-let* ((eprint (ebib-extras-get-field "eprint"))
+	      (type (or (ebib-extras-get-field "eprinttype")
+			(ebib-extras-get-field "archiveprefix"))))
+    (when (string-match-p "\\`arxiv\\'" (downcase type))
+      eprint)))
+
+(defun ebib-extras-get-arxiv-id-from-url ()
+  "Return the arXiv identifier from the URL field, if present."
+  (when-let* ((url (ebib-extras-get-field "url"))
+	      ((string-match
+		"arxiv\\.org/\\(?:abs\\|pdf\\)/\\([^?#]+?\\)\\(?:\\.pdf\\)?\\(?:[?#].*\\)?\\'"
+		url)))
+    (match-string 1 url)))
+
+(defun ebib-extras-arxiv-id-p (id)
+  "Return non-nil if ID looks like an arXiv identifier."
+  (string-match-p
+   "\\`\\(?:arXiv:\\)?\\(?:[0-9]\\{4\\}\\.[0-9]\\{4,5\\}\\(?:v[0-9]+\\)?\\|[a-z-]+\\(?:\\.[A-Z][A-Z]\\)?/[0-9]\\{7\\}\\(?:v[0-9]+\\)?\\)\\'"
+   id))
 
 (defalias 'ebib-extras-search-book-by-identifier 'ebib-extras-search-by-identifier)
 (defalias 'ebib-extras-search-article-by-identifier 'ebib-extras-search-by-identifier)
@@ -1361,9 +1388,9 @@ file."
 
 ;;;;; <new section>
 
-(defvar tlon-file-fluid)
-(defvar tlon-file-stable)
-(defvar tlon-file-db)
+(defvar tlon-file-fluid nil)
+(defvar tlon-file-stable nil)
+(defvar tlon-file-db nil)
 (defconst ebib-extras-db-numbers
   `((,paths-file-personal-bibliography-new . 1)
     (,paths-file-personal-bibliography-old . 2)
@@ -1398,7 +1425,6 @@ If applicable, open external website to set rating there as well."
 	(supertype (ebib-extras-get-supertype))
 	(title (ebib-extras-get-field "title"))
 	(db ebib--cur-db))
-    ;; TODO: open rating websites based on supertype
     (pcase supertype
       ("book" (ebib-extras-search-goodreads title))
       ("film"

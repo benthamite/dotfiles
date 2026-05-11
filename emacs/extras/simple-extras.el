@@ -31,6 +31,7 @@
 (require 'cl-lib)
 (require 'no-littering)
 (require 'paths)
+(require 'subr-x)
 
 ;;;; User options
 
@@ -649,26 +650,48 @@ If PT is non-nil, start at that position instead of `point'."
   (simple-extras-remove-trailing-slash
    (replace-regexp-in-string "\\`\\(https?://\\)?\\(www\\.\\)?" "" url)))
 
-;; TODO: cleanup this
 (defun simple-extras-strip-url ()
   "Strip URL of unnecessary elements."
   (interactive)
-  (unless (simple-extras-get-url-at-point)
-    (user-error "No URL at point"))
-  (let* ((url-original (simple-extras-get-url-at-point))
-	 (url-stripped (simple-extras-simplify-url url-original)))
-    (search-backward " ")
-    (while (search-forward url-original nil t)
-      (replace-match url-stripped nil t))
-    (search-backward url-stripped)))
+  (let* ((bounds (bounds-of-thing-at-point 'url))
+	 (url-original (simple-extras-get-url-at-point))
+	 (url-stripped (and url-original
+			    (simple-extras-simplify-url url-original))))
+    (unless (and bounds url-original)
+      (user-error "No URL at point"))
+    (delete-region (car bounds) (cdr bounds))
+    (goto-char (car bounds))
+    (insert url-stripped)))
 
-;; TODO: expand
 (defun simple-extras-strip-thing-at-point ()
   "Strip thing at point."
   (interactive)
   (cond ((simple-extras-get-url-at-point)
-	 (simple-extras-strip-url)))
-  (just-one-space 0))
+	 (simple-extras-strip-url))
+	((thing-at-point 'filename)
+	 (simple-extras-strip-filename-at-point))
+	((thing-at-point 'symbol)
+	 (simple-extras-strip-symbol-at-point))
+	(t
+	 (user-error "No strippable thing at point")))
+  (unless (or (bolp) (eolp))
+    (just-one-space 0)))
+
+(defun simple-extras-strip-filename-at-point ()
+  "Replace the filename at point with its nondirectory component."
+  (let ((bounds (bounds-of-thing-at-point 'filename))
+	(filename (thing-at-point 'filename t)))
+    (delete-region (car bounds) (cdr bounds))
+    (goto-char (car bounds))
+    (insert (file-name-nondirectory filename))))
+
+(defun simple-extras-strip-symbol-at-point ()
+  "Replace the symbol at point with a simplified, slug-like form."
+  (let ((bounds (bounds-of-thing-at-point 'symbol))
+	(symbol (thing-at-point 'symbol t)))
+    (delete-region (car bounds) (cdr bounds))
+    (goto-char (car bounds))
+    (insert (downcase symbol))))
 
 ;; stackoverflow.com/a/24283996/4479455
 (defmacro simple-extras-save-excursion (&rest forms)

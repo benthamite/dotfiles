@@ -79,8 +79,8 @@ from Polymarket's transaction history and inserts the corresponding
 Ledger transactions at the end of the ledger file.  It prompts for the
 CSV file path (defaulting to the downloads directory) and, for each
 new token encountered, asks for a short symbol to use in the ledger.
-Only "Buy" and "Sell" rows are processed; other transaction types
-signal an error.
+The CSV header row and "Reward" rows are ignored.  Only "Buy" and
+"Sell" rows are processed; other transaction types signal an error.
 
 *Note:* as of early 2025 the Polymarket export functionality appears
 broken.  The docstring recommends recording balance changes as capital

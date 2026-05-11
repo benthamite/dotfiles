@@ -293,7 +293,7 @@ The command ~simple-extras-fill-or-unfill-paragraph~ acts like ~fill-paragraph~ 
 #+findex: simple-extras-strip-thing-at-point
 The command ~simple-extras-strip-url~ simplifies the URL at point by removing the =http(s)://= scheme, the =www.= prefix, and any trailing slash. It replaces the URL in the buffer with the simplified version. If no URL is found at point, it signals an error.
 
-The command ~simple-extras-strip-thing-at-point~ is a DWIM wrapper that dispatches to the appropriate stripping function based on the thing at point. Currently, it only supports URLs (delegating to ~simple-extras-strip-url~) and collapses any surrounding whitespace afterward via ~just-one-space~. This command is designed to be extended with additional thing types in the future.
+The command ~simple-extras-strip-thing-at-point~ is a DWIM wrapper that dispatches to the appropriate stripping function based on the thing at point. It supports URLs (delegating to ~simple-extras-strip-url~), filenames (replacing them with their nondirectory component), and symbols (lowercasing them). It collapses surrounding whitespace afterward when point is not at the beginning or end of a line.
 
 Both commands rely on ~simple-extras-get-url-at-point~ to detect URLs and ~simple-extras-simplify-url~ to perform the simplification ([[#h:url-utilities][URL utilities]]).
 

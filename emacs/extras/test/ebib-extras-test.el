@@ -265,5 +265,21 @@
   (should-error (ebib-extras-check-valid-key "bad")
                 :type 'user-error))
 
+;;;; arXiv identifiers
+
+(ert-deftest ebib-extras-test-arxiv-id-p-new-style ()
+  "Recognize modern arXiv identifiers."
+  (should (ebib-extras-arxiv-id-p "2401.01234"))
+  (should (ebib-extras-arxiv-id-p "2401.01234v2")))
+
+(ert-deftest ebib-extras-test-arxiv-id-p-old-style ()
+  "Recognize legacy arXiv identifiers."
+  (should (ebib-extras-arxiv-id-p "math/0309136"))
+  (should (ebib-extras-arxiv-id-p "hep-th/9901001v1")))
+
+(ert-deftest ebib-extras-test-arxiv-id-p-rejects-doi ()
+  "Do not treat DOI strings as arXiv identifiers."
+  (should-not (ebib-extras-arxiv-id-p "10.1000/example")))
+
 (provide 'ebib-extras-test)
 ;;; ebib-extras-test.el ends here

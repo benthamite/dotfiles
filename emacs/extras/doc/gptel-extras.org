@@ -434,7 +434,7 @@ The function ~gptel-extras-ensure-gptel-mode~ signals an error if ~gptel-mode~ i
 :END:
 
 #+findex: gptel-extras-get-repo
-The function ~gptel-extras-get-repo~ determines the repository path for the current request. In Org mode, it checks the =GPTEL_REPO= property at the document level; if not set, it prompts the user and stores the selection. In other modes, it uses ~project-root~ if a project is detected, falling back to a directory prompt.
+The function ~gptel-extras-get-repo~ determines the repository path for the current request. In Org mode, it checks the =GPTEL_REPO= property at the document level; if not set, it prompts the user and stores the selection. In Markdown mode, it reads or writes a =GPTEL_REPO= key in YAML front matter. In other modes, it uses ~project-root~ if a project is detected, falling back to a directory prompt.
 
 #+findex: gptel-extras-get-repo-map
 The function ~gptel-extras-get-repo-map~ returns the repository map for the current project, using the cached version if it is still valid (checked via ~gptel-extras-repo-map-cache-valid-p~). When the cache is stale or empty, it calls =aider --show-repo-map= to generate a fresh map and stores it along with the current timestamp and git HEAD reference.
@@ -517,4 +517,3 @@ The function ~gptel-extras--modify-value-append-fix~ is added as =:around= advic
 :INDEX: vr
 :CUSTOM_ID: h:variable-index
 :END:
-

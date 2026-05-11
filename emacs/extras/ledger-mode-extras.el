@@ -47,7 +47,6 @@
 
 ;;;;; Import
 
-;; TODO: remove first line and "rewards" lines
 ;; TODO: handle "redeem", "merge" transactions
 ;;;###autoload
 (defun ledger-extras-import-polymarket (file)
@@ -65,23 +64,36 @@ gains."
   (let (token-alist)
     (with-temp-buffer
       (insert-file-contents file)
-      (dolist (raw (split-string (buffer-string) "\n" t))
-        (let* ((clean (split-string (replace-regexp-in-string "\"" "" raw) "," t))
-               (payee "Polymarket")
-               (date (format-time-string "%Y-%m-%d" (seconds-to-time (string-to-number (nth 5 clean)))))
-               (account "Assets:Polymarket")
-               (sign (pcase (nth 1 clean) ("Buy" 1) ("Sell" -1)
-			    (_ (user-error "Unknown transaction type `%s'" (nth 1 clean)))))
-               (quantity (float (* sign (string-to-number (nth 3 clean)))))
-               (token-name (string-trim (nth 0 clean)))
-               (token-symbol
-                (if-let* ((match (alist-get token-name token-alist nil nil #'string=)))
-                    match
-                  (read-string (format "Token symbol for `%s': " token-name))))
-               (proceeds (float (string-to-number (nth 2 clean))))
-               (price (abs (/ proceeds quantity))))
-          (push (cons token-name token-symbol) token-alist)
-          (ledger-mode-extras-insert-transaction (list payee date account quantity token-symbol price nil)))))))
+      (dolist (raw (cdr (split-string (buffer-string) "\n" t)))
+	(let* ((clean (ledger-mode-extras-parse-polymarket-row raw))
+	       (type (nth 1 clean)))
+	  (unless (string= type "Reward")
+	    (let* ((payee "Polymarket")
+		   (date (format-time-string "%Y-%m-%d" (seconds-to-time (string-to-number (nth 5 clean)))))
+		   (account "Assets:Polymarket")
+		   (sign (pcase type ("Buy" 1) ("Sell" -1)
+			   (_ (user-error "Unknown transaction type `%s'" type))))
+		   (quantity (float (* sign (string-to-number (nth 3 clean)))))
+		   (token-name (string-trim (nth 0 clean)))
+		   (token-symbol
+		    (if-let* ((match (alist-get token-name token-alist nil nil #'string=)))
+			match
+		      (read-string (format "Token symbol for `%s': " token-name))))
+		   (proceeds (float (string-to-number (nth 2 clean))))
+		   (price (abs (/ proceeds quantity))))
+	      (push (cons token-name token-symbol) token-alist)
+	      (ledger-mode-extras-insert-transaction (list payee date account quantity token-symbol price nil)))))))))
+
+(defun ledger-mode-extras-parse-polymarket-row (row)
+  "Parse Polymarket CSV ROW into a list of fields."
+  (let ((start 0)
+	(fields nil))
+    (while (string-match "\\(?:\\`\\|,\\)\\(\"\\([^\"]*\\(?:\"\"[^\"]*\\)*\\)\"\\|[^,]*\\)" row start)
+      (push (replace-regexp-in-string "\"\"" "\"" (or (match-string 2 row)
+						      (match-string 1 row)))
+	    fields)
+      (setq start (match-end 0)))
+    (nreverse fields)))
 
 ;;;###autoload
 (defun ledger-extras-import-interactive-brokers (file)

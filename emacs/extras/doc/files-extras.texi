@@ -268,8 +268,10 @@ file to the kill ring.  When called interactively, it uses the file at
 point in Dired, the current buffer's file, or prompts for a file.
 
 The command @code{files-extras-copy-as-kill-dwim} copies a context-appropriate
-string to the kill ring.  Currently, in a @code{helpful-mode} buffer, it
-extracts the symbol name from the buffer title and kills the buffer.
+string to the kill ring.  In a @code{helpful-mode} buffer, it extracts the
+symbol name from the buffer title and kills the buffer.  In Dired, it
+copies the file at point.  In a file-visiting buffer, it copies the
+buffer's file name.
 
 The command @code{files-extras-copy-most-recent-screenshot} finds the most
 recent screenshot in @code{files-extras-screenshot-directory}

@@ -305,6 +305,8 @@ workflow instead of this global dotfiles tree:
 
 - Dotfiles maintenance: =~/My Drive/dotfiles/.claude/skills/=.
 - Emacs-only maintenance: =~/My Drive/dotfiles/emacs/.claude/skills/=.
+- macOS maintenance: =~/My Drive/dotfiles/macos/.claude/skills/=.
+- Tlön issue triage: =~/.config/emacs-profiles/8.3.0-dev/elpaca/sources/tlon/.claude/skills/=.
 - Notes workflows: =~/My Drive/notes/.claude/skills/=.
 - Batch-only notes workflows: the matching =programmatic-skills= roots under
   =~/My Drive/notes/.claude/=.
@@ -500,13 +502,6 @@ Registers an Emacs package in =my-emacs-packages.org=, creates an accompanying d
 
 Cuts releases for my Emacs packages (read dynamically from the listed package headings in =my-emacs-packages.org=, excluding the unlisted section). Validates the repo, classifies commits since the last tag, suggests a semver bump, and drafts release notes. Also has an audit mode that scans all packages for version mismatches or unreleased commits without cloning or creating tags/releases. Handles untagged package repos as initial releases, strips flags such as =--accept= before package inference, and routes dotfiles releases to the dotfiles-local release workflow. Pass =--accept= to skip the confirmation gate.
 
-**** triage-issues
-:PROPERTIES:
-:ID:       D1A897E8-29DC-4FFD-8D16-2AC792A4DA0F
-:END:
-
-Scans, prioritizes, and batch-resolves open GitHub issues for =tlon-team/tlon.el=. Starts with a scope and mode gate that verifies the current checkout, separates read-only triage, local fixes, and externally visible closure, and requires explicit authorization before GitHub comments, issue closure, or org archiving. It presents batches before edits, uses subagents or agent teams when available, verifies =TLON_AI_GITHUB_TOKEN= belongs to =tlon-ai= without creating test comments, commits fixes issue-by-issue, and reports commit, check, GitHub, and org-archive verification.
-
 **** update-log
 :PROPERTIES:
 :ID:       DCC9EC24-1AB4-495E-8C89-DB4C63229744
@@ -638,20 +633,6 @@ Shared account vetting procedure used by =twitter-digest= and =twitter-discover=
 :END:
 
 Iterative, graph-based discovery of high-value Twitter accounts in any niche. Interviews the user for criteria, acquires seed accounts via search, then expands using a "hot promise score" algorithm: accounts followed by multiple high-scoring seeds are profiled next, with scores recomputed after each round. Uses the active Claude skill root for the Twitter API wrapper, =twitter-vet= rubric, result logs, digest lists, and vet registry; keeps API responses in a per-session temporary directory; verifies the helper script before parsing; and re-reads saved logs/lists/registries before reporting completion. Presents tiered results (must-follow, strong, situational) at checkpoints and optionally exports to a =twitter-digest= list.
-
-**** audit-mac-app
-:PROPERTIES:
-:ID:       0266B51A-276F-40DB-85F9-DDFBDF19E71D
-:END:
-
-Adapted from [[https://pjh.is/][Peter Hartree]]'s [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository. Static-first security audit of macOS applications before running them or granting sensitive permissions. Covers trust verification, permission analysis, app type detection, Electron source extraction and security checks, network endpoint scanning, and spaces-safe binary analysis. The bundled scanner uses temporary directories created with =mktemp= and moves extracted sources to Trash when possible. Final reports include the verdict, highest-severity findings, verification performed, and static-analysis limitations.
-
-**** security-audit
-:PROPERTIES:
-:ID:       8D6548E8-93F8-40B8-9619-DF1956653ED7
-:END:
-
-Audits the development environment security posture across four domains, each runnable independently via flags. Framed around the threat model "you will eventually run malware via supply chain compromise; limit what it can do." =--secrets=: plaintext credentials in configs, globally exported secrets in shell rc files (recommends =envchain= / per-process injection), git-crypt coverage, gitignore gaps, shell history leaks, 1Password/pass consistency, =.envrc= keychain lookups. =--deps=: =ignore-scripts= in =.npmrc= (postinstall as primary supply chain vector), =minimum-release-age= (native in npm 11.10+, pnpm 10.16+), known vulnerabilities via =npm audit= / =pip audit= / =cargo audit= / Dependabot, unpinned versions, =--frozen-lockfile= usage, Python =setup.py= install-time risk, Socket.dev for GitHub repos. =--machine=: macOS Lockdown Mode, code execution isolation (VMs, Claude Code Web), browser profile separation, password manager presence, Google Advanced Protection, hardware security keys, plus existing checks (FileVault, Firewall, Gatekeeper, SIP, SSH keys, browser extensions, login items, egress controls). =--claude=: permission mode compensating controls, MCP server credential storage, hook coverage gaps, unenforceable CLAUDE.md safety instructions, skill privilege escalation risk, memory exposure. Produces findings organized by severity (critical, high, medium, low) with specific file paths and concrete remediation steps. Secret scans must redact raw matches during collection, not only in the final report, and external remediation is opt-in. Complements =block-secret-leak.sh= (which prevents leaks in real time) by auditing the broader security posture on demand.
 
 *** Meta skills
 :PROPERTIES:

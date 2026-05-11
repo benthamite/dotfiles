@@ -125,6 +125,8 @@ tree:
   available while working in dotfiles without loading globally in unrelated
   projects.
 - Emacs-only maintenance: =~/My Drive/dotfiles/emacs/.codex/skills/=.
+- macOS maintenance: =~/My Drive/dotfiles/macos/.codex/skills/=.
+- Tlön issue triage: =~/.config/emacs-profiles/8.3.0-dev/elpaca/sources/tlon/.codex/skills/=.
 - Notes workflows: =~/My Drive/notes/.codex/skills/=.
 - Batch-only notes workflows: the matching =programmatic-skills= roots under
   =~/My Drive/notes/.codex/=.
@@ -174,15 +176,6 @@ Markdown files with aspell or Gemini Flash. It resolves the live tool-specific
 skill directory, keeps API keys scoped to the skill =.env= file, writes reviewed
 output to =*.proofread.md=, applies accepted suggestions to =*.final.md=, and
 uses British English conventions by default.
-
-The =triage-issues= skill is a Codex operations workflow for
-open GitHub issues in =tlon-team/tlon.el=. It starts with a scope and mode gate
-that verifies the current checkout, separates read-only triage, local fixes,
-and externally visible closure, and requires explicit authorization before
-GitHub comments, issue closure, or org archiving. It presents batches before
-edits, verifies =TLON_AI_GITHUB_TOKEN= belongs to =tlon-ai= without creating
-test comments, commits fixes issue-by-issue, and reports commit, check,
-GitHub, and org-archive verification.
 
 The =google-sheets-comments= skill is a Codex workflow for
 processing Google Sheets comment review, replies, resolves, and reopens. It
@@ -349,23 +342,6 @@ manual, main Elisp file, and existing Markdown README, preserves accurate
 README-specific material, handles package-vc/use-package =:vc= assumptions
 explicitly, checks links/placeholders and roadmap moves, then commits verified
 README/manual changes when the user requested file edits.
-
-The =audit-mac-app= skill is a Codex static-first workflow for
-auditing macOS applications before running them or granting sensitive
-permissions. It covers trust verification, permission analysis, app type
-detection, Electron source extraction and security checks, network endpoint
-scanning, and spaces-safe binary analysis. Its bundled scanner uses =mktemp=
-for temporary directories and moves extracted sources to Trash when possible.
-
-output, and sensitive temporary files are cleaned up before reporting.
-
-The =security-audit= skill is a Codex workflow for auditing the
-development environment across secrets hygiene, supply-chain dependencies,
-macOS machine posture, and Claude Code configuration risk. It is audit-only
-unless remediation is explicitly requested, redacts raw secret matches during
-collection and reporting, records unavailable or unsafe checks instead of
-guessing, and reports findings by severity with concrete locations and
-remediation steps.
 
 The =build= skill is a Codex workflow for turning a rough
 =spec.md= or explicit spec path into an implementation-ready plan. It interviews

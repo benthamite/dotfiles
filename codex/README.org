@@ -449,7 +449,9 @@ the same trusted hook set without repeated prompts.
 Trusted project roots are Codex-local allowlist entries for directories that can
 run without extra trust prompts; they do not have a Claude settings counterpart.
 The tracked allowlist includes the nested =dotfiles/emacs= project because it is
-opened independently from the dotfiles root during Emacs configuration work.
+opened independently from the dotfiles root during Emacs configuration work, and
+may include active Elpaca source clones that are edited as canonical package
+checkouts.
 
 =~/.codex/AGENTS.md= points to =codex/AGENTS.md= so Codex gets a tracked global
 instruction file with Codex-safe path references. This is needed for user-level

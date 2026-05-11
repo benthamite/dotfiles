@@ -4195,7 +4195,7 @@ CLOCK: [2021-02-07 Sun 13:37]--[2021-02-07 Sun 13:54] =>  0:17
                ("q" . files-extras-bury-buffer-switch-to-other-window)))
   (with-eval-after-load 'elfeed
     (bind-keys :map elfeed-show-mode-map
-               ("q" . files-extras-kill-this-buffer)))
+               ("q" . files-extras-kill-this-buffer-switch-to-other-window)))
   (with-eval-after-load 'finder
     (bind-keys :map finder-mode-map
                ("q" . files-extras-kill-this-buffer)))

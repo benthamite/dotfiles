@@ -9059,7 +9059,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 
   :custom
   (ai-agent-alert-on-ready t)
-  (ai-agent-before-exit-skill-name "session-retro")
+  (ai-agent-before-exit-skill-name "session-learning-capture")
   (ai-agent-before-exit-skill-directories '("~/My Drive/dotfiles/"))
   (ai-agent-sync-theme t)
   ;; copilot support is buggy; needs more work

@@ -539,6 +539,19 @@ skill, keep Claude/Codex counterparts synchronized, update required docs,
 verify, run =bin/ai-config-sync audit=, and leave only deferred suggestions in
 the inbox before reporting.
 
+**** session-learning-capture
+:PROPERTIES:
+:ID:       D2278B58-192E-4B4F-A871-4871A5D94B77
+:END:
+
+Reviews the current dotfiles session when a Stop hook or =ai-agent-exit=
+before-exit prompt asks for lesson capture, writes useful reusable candidates
+to ignored local files under =.agent-learnings/inbox/=, and stops there. It is
+the producer half of the agent-learning workflow: it never promotes lessons to
+durable instructions, skills, hooks, docs, or code. The manual
+=session-retro= skill remains the consumer half that interviews the user and
+implements accepted inbox items.
+
 **** verify
 :PROPERTIES:
 :CUSTOM_ID: h:verify
@@ -679,7 +692,7 @@ Processes items from a list file strictly one at a time (sequential) or N-at-a-t
 :ID:       4D862953-7E8A-4154-BC16-919ED6B092A5
 :END:
 
-Twenty-eight hook and utility scripts handle workflow invariants, security, Emacs integration, and configuration sync. Most Claude hooks are defined in the global =~/.claude/settings.json= and use early-exit guards to skip inapplicable projects. =notify-emacs-session-end.sh= and =notify-emacs-notification.sh= escape interpolated buffer-name values before embedding them in Elisp strings; =load-elisp-after-edit.sh= base64-encodes the changed file path and decodes it via =base64-decode-string= on the Elisp side so command-substitution metacharacters never reach the shell during interpolation. =lib-repo-root.sh= extracts a leading =cd <path>= from the bash command via a bash-regex match (bailing out on any =$(...)= or backtick) and calls =git -C <path>= rather than re-shelling the command; when the hook payload contains a structured =cwd= or =workdir=, that directory is used as the fallback repo context before the hook process cwd.
+The hook and utility scripts handle workflow invariants, security, Emacs integration, and configuration sync. Most Claude hooks are defined in the global =~/.claude/settings.json= and use early-exit guards to skip inapplicable projects. =notify-emacs-session-end.sh= and =notify-emacs-notification.sh= escape interpolated buffer-name values before embedding them in Elisp strings; =load-elisp-after-edit.sh= base64-encodes the changed file path and decodes it via =base64-decode-string= on the Elisp side so command-substitution metacharacters never reach the shell during interpolation. =lib-repo-root.sh= extracts a leading =cd <path>= from the bash command via a bash-regex match (bailing out on any =$(...)= or backtick) and calls =git -C <path>= rather than re-shelling the command; when the hook payload contains a structured =cwd= or =workdir=, that directory is used as the fallback repo context before the hook process cwd.
 
 Claude and Codex hooks are no longer shared through adapters.  Claude hooks live
 in =claude/hooks/=; Codex counterparts live in =codex/hooks/=.  The mapping and
@@ -797,6 +810,17 @@ Resolves the active elpaca profile dynamically (via =emacsclient -e 'init-curren
 :END:
 
 Forwards the session-end event to Emacs via =claude-code-handle-hook=. Runs through =fire-and-forget.sh= so the CLI doesn't block on =emacsclient=. Works together with =agent-log-sync-on-session-end= to trigger log syncing when a session ends.
+
+*** session-learning-capture.sh (Stop)
+:PROPERTIES:
+:ID:       D1F2B82D-29B5-4490-8E6D-22352A345301
+:END:
+
+Blocks once at the end of dotfiles sessions and returns a prompt asking the
+active agent to use =session-learning-capture=. This makes the CLI continue
+with an actual submitted instruction rather than merely inserting text into an
+Emacs buffer. It skips recursive Stop hooks via =stop_hook_active= and does
+nothing outside =~/My Drive/dotfiles=.
 
 *** claude-code-hook-wrapper (Notification, Stop)
 :PROPERTIES:

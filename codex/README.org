@@ -432,6 +432,11 @@ therefore updates the live global Codex configuration.
 hooks, enables the goals UI and terminal resize reflow, records trusted project
 roots, records model-availability and hook-trust state written by Codex, and
 sets the TUI theme.
+When =ai-agent= starts Codex with an account-specific =CODEX_HOME= such as
+=~/.codex-epoch=, Codex may write account-home hook trust entries into this
+tracked config. Those entries are kept here with the ordinary global
+=~/.codex/hooks.json= trust entries so account-switched Codex sessions can run
+the same trusted hook set without repeated prompts.
 Trusted project roots are Codex-local allowlist entries for directories that can
 run without extra trust prompts; they do not have a Claude settings counterpart.
 The tracked allowlist includes the nested =dotfiles/emacs= project because it is

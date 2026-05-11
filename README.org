@@ -17,6 +17,8 @@ This repository contains my dotfiles, including
 - =install-mcp-server=: Installs and configures MCP servers with auth verification, placement, registration, sync, and restart/testing checks.
 - =migrate-profile=: Consolidates Claude Code project data after Emacs or elpaca profile changes.
 - =move-session-log=: Relocates Codex session logs by rewriting embedded project paths.
+  Copied =SKILL (1).md= variants, when present, are kept paired across the
+  project-local Claude and Codex skill trees.
 - =open-session-log=: Opens the current Claude Code session log in Emacs via =agent-log=.
 - =optimize-claude-md=: Optimizes project Claude Code instruction files.
 - =release-dotfiles=: Prepares and publishes dotfiles releases.

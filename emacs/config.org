@@ -395,7 +395,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#ob-aider][ob-aider]]
   - [[#agent-shell][agent-shell]]
   - [[#claude-code][claude-code]]
-  - [[#ai-agent][ai-agent]]
+  - [[#agents][agents]]
   - [[#agent-log][agent-log]]
   - [[#monet][monet]]
   - [[#codex][codex]]
@@ -9028,7 +9028,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (claude-code-mode)
 
   :bind
-  ("H-e" . ai-agent-menu)
+  ("H-e" . agents-menu)
   ("H-E" . claude-code-transient)
   (:repeat-map my-claude-code-map
                ("M" . claude-code-cycle-mode))
@@ -9038,44 +9038,44 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 
   :hook
   (claude-code-process-environment-functions . monet-start-server-function)
-  (claude-code-process-environment-functions . ai-agent-claude-account-env))
+  (claude-code-process-environment-functions . agents-claude-account-env))
 #+end_src
 
-** =ai-agent=
+** =agents=
 :PROPERTIES:
 :ID:       2E2F1B58-BDCE-46D4-A31D-B1C5B0D8761F
 :END:
 
-/[[https://github.com/benthamite/ai-agent][ai-agent]] provides Emacs integration for AI coding agents./
+/[[https://github.com/benthamite/agents][agents]] provides Emacs integration for AI coding agents./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package ai-agent
+(use-package agents
   :ensure (:host github
-                 :repo "benthamite/ai-agent")
+                 :repo "benthamite/agents")
   :demand t
   :config
-  (require 'ai-agent-claude)
-  (require 'ai-agent-codex)
+  (require 'agents-claude)
+  (require 'agents-codex)
 
   :custom
-  (ai-agent-alert-on-ready t)
-  (ai-agent-before-exit-skill-name "session-learning-capture")
-  (ai-agent-before-exit-skill-directories '("~/My Drive/dotfiles/"))
-  (ai-agent-sync-theme t)
+  (agents-alert-on-ready t)
+  (agents-before-exit-skill-name "session-learning-capture")
+  (agents-before-exit-skill-directories '("~/My Drive/dotfiles/"))
+  (agents-sync-theme t)
   ;; copilot support is buggy; needs more work
-  (ai-agent-claude-copilot-enabled nil)
-  (ai-agent-claude-org-todo-in-progress-keyword "DOING")
-  (ai-agent-claude-accounts '(("personal"  . "~/.claude-personal")
+  (agents-claude-copilot-enabled nil)
+  (agents-claude-org-todo-in-progress-keyword "DOING")
+  (agents-claude-accounts '(("personal"  . "~/.claude-personal")
                               ("tlon"     . "~/.claude-tlon")
                               ("epoch"    . "~/.claude-epoch")))
 
-  (ai-agent-codex-accounts '(("tlon"     . "~/.codex-tlon")
+  (agents-codex-accounts '(("tlon"     . "~/.codex-tlon")
 			     ("epoch"    . "~/.codex-epoch")))
   
   :config
   (with-eval-after-load 'debug
     (bind-keys :map debugger-mode-map
-               ("D" . ai-agent-debug-backtrace))))
+               ("D" . agents-debug-backtrace))))
 #+end_src
 
 

@@ -89,9 +89,9 @@ native skill-disable settings recorded by =bin/skill-prune=. Local reusable
 Codex skills belong in =codex/skills/=, not as untracked directories under
 =~/.codex/skills=. Programmatic-only skills are not available in ordinary Codex
 sessions. They live in =programmatic-skills/= directories so
-=ai-agent-run-skill= can find and run them explicitly from Emacs without adding
+=agents-run-skill= can find and run them explicitly from Emacs without adding
 them to every interactive Codex session. The installer exposes those directories
-at =~/.codex/programmatic-skills= because =ai-agent-run-skill= discovers Codex
+at =~/.codex/programmatic-skills= because =agents-run-skill= discovers Codex
 skills from that live path. Codex-managed hidden system skills, when present,
 live under ignored =codex/skills/.system/= runtime data and are not part of the
 reusable cross-tool skill parity model.
@@ -237,7 +237,7 @@ next steps directly, but if next steps must be inferred it first prints the
 full proposed prompt as a code block and asks for yes/no confirmation. Inferred
 prompts include exact dates, file paths, command names, commit hashes, and
 verification state; after writing, the skill re-reads the temp file, prints the
-saved contents, and tells the user to run =! emacsclient -e '(ai-agent-codex-handoff)'=.
+saved contents, and tells the user to run =! emacsclient -e '(agents-codex-handoff)'=.
 
 The =verify= skill is a Codex workflow for running an explicit
 verification loop when the user asks to verify, close the loop, define success
@@ -413,7 +413,7 @@ counterparts synchronized, update required docs, verify, run
 before reporting.
 
 The =session-learning-capture= skill is the producer half of the same workflow.
-It runs when the Emacs =ai-agent-exit= before-exit prompt asks the active agent
+It runs when the Emacs =agents-exit= before-exit prompt asks the active agent
 to review the current dotfiles session. It writes useful reusable lesson
 candidates to ignored local files under =.agent-learnings/inbox/= and does not
 promote, implement, archive, or delete anything; =session-retro= handles those
@@ -441,7 +441,7 @@ therefore updates the live global Codex configuration.
 tier, approval policy, sandbox mode, light TUI theme, and personality; enables Codex hooks,
 plugins, the goals UI, and terminal resize reflow; records trusted project
 roots; and records model-availability and hook-trust state written by Codex.
-When =ai-agent= starts Codex with an account-specific =CODEX_HOME= such as
+When =agents= starts Codex with an account-specific =CODEX_HOME= such as
 =~/.codex-epoch=, Codex may write account-home hook trust entries into this
 tracked config. Those entries are kept here with the ordinary global
 =~/.codex/hooks.json= trust entries so account-switched Codex sessions can run

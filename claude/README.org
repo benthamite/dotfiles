@@ -544,10 +544,10 @@ the inbox before reporting.
 :ID:       D2278B58-192E-4B4F-A871-4871A5D94B77
 :END:
 
-Reviews the current dotfiles session when a Stop hook or =ai-agent-exit=
-before-exit prompt asks for lesson capture, writes useful reusable candidates
-to ignored local files under =.agent-learnings/inbox/=, and stops there. It is
-the producer half of the agent-learning workflow: it never promotes lessons to
+Reviews the current dotfiles session when the Emacs =ai-agent-exit= before-exit
+prompt asks for lesson capture, writes useful reusable candidates to ignored
+local files under =.agent-learnings/inbox/=, and stops there. It is the
+producer half of the agent-learning workflow: it never promotes lessons to
 durable instructions, skills, hooks, docs, or code. The manual
 =session-retro= skill remains the consumer half that interviews the user and
 implements accepted inbox items.
@@ -811,16 +811,17 @@ Resolves the active elpaca profile dynamically (via =emacsclient -e 'init-curren
 
 Forwards the session-end event to Emacs via =claude-code-handle-hook=. Runs through =fire-and-forget.sh= so the CLI doesn't block on =emacsclient=. Works together with =agent-log-sync-on-session-end= to trigger log syncing when a session ends.
 
-*** session-learning-capture.sh (Stop)
+*** session-learning-capture.sh (legacy Stop helper)
 :PROPERTIES:
 :ID:       D1F2B82D-29B5-4490-8E6D-22352A345301
 :END:
 
-Blocks once at the end of dotfiles sessions and returns a prompt asking the
-active agent to use =session-learning-capture=. This makes the CLI continue
-with an actual submitted instruction rather than merely inserting text into an
-Emacs buffer. It skips recursive Stop hooks via =stop_hook_active= and does
-nothing outside =~/My Drive/dotfiles=.
+Returns a blocking prompt asking the active agent to use
+=session-learning-capture=. It skips recursive Stop hooks via
+=stop_hook_active= and does nothing outside =~/My Drive/dotfiles=. It is not
+registered in the live Claude or Codex hook configuration because Stop hooks are
+turn-end hooks rather than reliable session-exit hooks; session learning capture
+is triggered by the Emacs =ai-agent-before-exit= path instead.
 
 *** claude-code-hook-wrapper (Notification, Stop)
 :PROPERTIES:

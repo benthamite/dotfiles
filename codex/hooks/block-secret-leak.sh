@@ -7,7 +7,7 @@
 # control for auto/bypass permission modes — it enforces what CLAUDE.md's
 # "never echo or print secrets" instruction cannot guarantee.
 #
-# Matchers: Bash, Write, apply_patch
+# Matchers: Bash, exec_command, functions.exec_command, Write, apply_patch
 
 set -euo pipefail
 
@@ -21,8 +21,8 @@ TOOL_NAME=$(codex_tool_name "$INPUT")
 # Extract the content to scan based on tool type
 CONTENT=""
 case "$TOOL_NAME" in
-  Bash)
-    CONTENT=$(codex_tool_input_field "$INPUT" command)
+  Bash|exec_command|functions.exec_command)
+    CONTENT=$(codex_shell_command "$INPUT")
     ;;
   Write|Edit|apply_patch)
     CONTENT=$(codex_patch_content_for_scan "$INPUT")
@@ -36,7 +36,7 @@ esac
 
 # --- Allowlist: commands that legitimately read secrets ---
 # pass, op, security (Keychain), git-crypt, and secret-scanning tools themselves
-if [ "$TOOL_NAME" = "Bash" ]; then
+if codex_shell_tool_p "$TOOL_NAME"; then
   # Allow pass/op/security/git-crypt commands
   if echo "$CONTENT" | grep -qE '^\s*(pass|op |security |git-crypt )'; then
     exit 0
@@ -145,7 +145,7 @@ check_pattern "(api[_-]?key|api[_-]?secret|secret[_-]?key|access[_-]?token|auth[
 
 # --- Exfiltration patterns (Bash only) ---
 # Detect sensitive file content being piped to network tools.
-if [ "$TOOL_NAME" = "Bash" ]; then
+if codex_shell_tool_p "$TOOL_NAME"; then
 
   # Sensitive path fragments used in exfiltration checks
   SENSITIVE_PATH_RE='\.(ssh/id_|zshenv-secrets|password-store|gnupg/)|tokens\.json'

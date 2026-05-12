@@ -59,7 +59,11 @@ See `emacs/extras/doc/elisp-development-workflow.org` for the dotfiles-specific 
 # Pre-commit checks (hook-enforced)
 
 - **Batch test**: `batch-test.sh PACKAGE` must run cleanly in this session before `git commit` is allowed (`require-elisp-test-before-commit.sh` enforces this).
-- **Stage documentation**: stage the corresponding `emacs/extras/doc/<package>.org` manual update alongside `.el` files. Use `/doc-elisp` to generate or update documentation.
+- **Stage documentation**: stage the matching Org manual update alongside
+  `.el` files. Extras packages use `emacs/extras/doc/<package>.org`;
+  standalone packages normally use the package root `README.org`, or
+  `README.md` when the repo has no Org manual. Use `/doc-elisp` to generate
+  or update Org documentation.
 
 # Stale-load detection
 

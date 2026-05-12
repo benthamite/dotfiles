@@ -13,7 +13,7 @@ source "$SCRIPT_DIR/lib-codex-hook-json.sh"
 
 INPUT=$(cat)
 
-COMMAND=$(codex_tool_input_field "$INPUT" command)
+COMMAND=$(codex_shell_command "$INPUT")
 
 # Only intercept git commit commands
 if ! echo "$COMMAND" | grep -qE '\bgit\s+commit\b'; then

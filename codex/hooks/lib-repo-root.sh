@@ -12,7 +12,7 @@
 # The script also cds into $REPO_ROOT so subsequent git commands
 # (including lib-staged-files.sh) operate on the correct repo.
 #
-#   COMMAND=$(codex_tool_input_field "$INPUT" command)
+#   COMMAND=$(codex_shell_command "$INPUT")
 #   source "$(dirname "$0")/lib-repo-root.sh"
 #   # $REPO_ROOT is set and cwd is $REPO_ROOT
 

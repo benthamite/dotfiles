@@ -380,10 +380,12 @@ path, pointer, hook/decision status, commit hash, and verification.
 The =move-session-log= skill relocates Codex session logs by
 rewriting structured project-path metadata so resume and log lookup associate a
 session with the intended project. It supports a single-session import into the
-current project and a whole-project rename mode for exact =cwd= and =project=
-fields. The current implementation is a paired global skill; the retained
-=SKILL (1).md= variant documents the older Claude Code internal-log move
-workflow.
+current project and a whole-project rename mode for exact =cwd=, =project=,
+=workdir=, and =working_dir= fields, including those inside valid JSON
+=arguments= payloads, and for the =state_5.sqlite= thread-store =threads.cwd=
+row that drives the =/resume= session-directory prompt. The current
+implementation is a paired global skill; the retained =SKILL (1).md= variant
+documents the older Claude Code internal-log move workflow.
 
 The =record-decisions= skill is a Codex workflow for extracting
 architectural, algorithmic, or design decisions from the current session into

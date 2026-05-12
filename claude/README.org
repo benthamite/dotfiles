@@ -540,10 +540,13 @@ Extracts and records architectural, algorithmic, or design decisions from the cu
 :END:
 
 Reviews dotfiles agent-learning inbox suggestions under
-=.agent-learnings/inbox/=, interviews the user about each distinct suggestion
-with implement/defer/drop choices, and waits until every suggestion is
-classified before applying accepted improvements. It treats raw inbox files as
-local working material, keeps deferred suggestions in the inbox, archives
+=.agent-learnings/inbox/= using ignore-aware file discovery because the records
+are intentionally untracked local working material. It ranks distinct
+suggestions by expected value, interviews the user from highest to lowest value
+with native implement/defer/drop multiple-choice prompts when available, and
+waits until every suggestion is classified before applying accepted
+improvements. It treats raw inbox files as local working material, keeps
+deferred suggestions in the inbox, archives
 implemented suggestions under =.agent-learnings/archive/YYYY-MM-DD/= with
 source, changed files, verification, and commit metadata, and deletes dropped
 suggestions with the system trash command rather than destructive removal.

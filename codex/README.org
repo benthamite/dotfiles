@@ -389,11 +389,14 @@ writing, avoids duplicate entries and invented rejected alternatives, updates
 decision files plus the summary before reporting.
 
 The =session-retro= skill is a Codex workflow for reviewing dotfiles
-agent-learning inbox suggestions under =.agent-learnings/inbox/=. It interviews
-the user about each distinct suggestion with implement/defer/drop choices, waits
-until every suggestion is classified before applying accepted improvements,
-treats raw inbox files as local working material, keeps deferred suggestions in
-the inbox, archives implemented suggestions under
+agent-learning inbox suggestions under =.agent-learnings/inbox/= using
+ignore-aware file discovery because the records are intentionally untracked
+local working material. It ranks distinct suggestions by expected value,
+interviews the user from highest to lowest value with native
+implement/defer/drop multiple-choice prompts when available, waits until every
+suggestion is classified before applying accepted improvements, treats raw
+inbox files as local working material, keeps deferred suggestions in the inbox,
+archives implemented suggestions under
 =.agent-learnings/archive/YYYY-MM-DD/= with source, changed files,
 verification, and commit metadata, and deletes dropped suggestions with the
 system trash command rather than destructive removal. Implementation follows

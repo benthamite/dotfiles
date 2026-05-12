@@ -9,6 +9,12 @@ Use this skill in the dotfiles repo when the user asks to review agent-learning
 inbox items, process session retros, triage improvement suggestions, or clear
 `.agent-learnings/inbox`.
 
+This skill requires Plan mode or another runtime mode where the native
+structured multiple-choice question tool is available. If the tool is
+unavailable, stop before the interview phase and tell the user to rerun
+`session-retro` in Plan mode. Do not fall back to typed implement/defer/drop
+prompts.
+
 The goal is to turn raw end-of-session suggestions into deliberate changes. Do
 not silently promote suggestions into durable instructions, hooks, skills, or
 docs. The user decides whether each candidate is implemented, deferred, or
@@ -85,6 +91,15 @@ at a time, in descending value order, with:
 - A concise summary of the proposed improvement
 - Why it might matter
 - Any obvious risk, cost, or missing information
+- The implementation proposal if the user chooses `implement`, including:
+  - Target type: `instruction`, `skill`, `hook`, `script`, `docs`, `test`,
+    `decision`, or `unknown`
+  - Likely owner: the specific existing skill, hook, README, instruction file,
+    script, or project area to change
+  - Expected edit shape: add guidance, revise trigger text, add a helper
+    script, add/update tests, update docs, or another concrete action
+  - Verification plan: the command, audit, fixture, or manual check that would
+    prove the implementation worked
 
 Ask the user to choose exactly one option:
 
@@ -92,14 +107,15 @@ Ask the user to choose exactly one option:
 - `defer`: leave this suggestion in the inbox for a later session
 - `drop`: discard this suggestion
 
-If a native structured multiple-choice question tool is available, use it for
-this choice. Use exactly these three choices, with `implement` first when it is
-the recommended option for high-value actionable suggestions, otherwise put the
-best conservative option first and mark it as recommended. Do not use a
-plain-text prompt while the native multiple-choice tool is available. If the
-runtime genuinely has no such tool, ask a concise plain-text question, say that
-the native choice tool is unavailable, and wait for the user. Continue until
-every suggestion has a recorded decision.
+Use the native structured multiple-choice question tool for this choice. Use
+exactly these three choices, with `implement` first when it is the recommended
+option for high-value actionable suggestions, otherwise put the best
+conservative option first and mark it as recommended. Include the
+implementation proposal in the question text or option descriptions so the user
+knows what implementation would mean before choosing. If the native
+multiple-choice tool is unavailable, stop and report that `session-retro` must
+run in Plan mode or another mode that exposes the tool. Do not ask the user to
+type `implement`, `defer`, or `drop`.
 
 If the user gives a free-form answer, map it conservatively:
 

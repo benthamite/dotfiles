@@ -393,9 +393,12 @@ agent-learning inbox suggestions under =.agent-learnings/inbox/= using
 ignore-aware file discovery because the records are intentionally untracked
 local working material. It ranks distinct suggestions by expected value,
 interviews the user from highest to lowest value with native
-implement/defer/drop multiple-choice prompts when available, waits until every
-suggestion is classified before applying accepted improvements, treats raw
-inbox files as local working material, keeps deferred suggestions in the inbox,
+implement/defer/drop multiple-choice prompts, and requires Plan mode or another
+runtime mode where that native picker is available. Each prompt summarizes the
+proposed implementation target, likely owner, edit shape, and verification plan
+before the user chooses. It waits until every suggestion is classified before
+applying accepted improvements, treats raw inbox files as local working
+material, keeps deferred suggestions in the inbox,
 archives implemented suggestions under
 =.agent-learnings/archive/YYYY-MM-DD/= with source, changed files,
 verification, and commit metadata, and deletes dropped suggestions with the

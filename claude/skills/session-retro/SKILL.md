@@ -32,9 +32,19 @@ deleted with the system trash command rather than destructive removal.
 Work from the dotfiles repo root. If the current directory is not inside
 `~/My Drive/dotfiles`, stop and ask the user to rerun from the dotfiles repo.
 
-List `.agent-learnings/inbox/` for suggestion files. Ignore `.gitkeep`,
-temporary editor files, and directories. If no files remain, report that the
-inbox is empty and stop.
+List `.agent-learnings/inbox/` for suggestion files with an ignore-aware
+filesystem command, because inbox records are intentionally ignored local
+working material. Prefer:
+
+```bash
+find .agent-learnings/inbox -maxdepth 1 -type f ! -name .gitkeep -print
+```
+
+`rg --files` is not sufficient unless run with ignore-bypassing flags such as
+`rg -uuu --files .agent-learnings/inbox`, because otherwise it can hide the
+very records this skill is meant to process. Ignore `.gitkeep`, temporary
+editor files, and directories. If no files remain after an ignore-aware check,
+report that the inbox is empty and stop.
 
 Read every inbox file before interviewing the user. Treat each distinct
 actionable recommendation as a separate suggestion, even when several appear in
@@ -45,13 +55,33 @@ When a file is vague, split only on clear recommendation boundaries. If a note
 contains background with no actionable recommendation, create one candidate
 with the best concise summary and mark the uncertainty.
 
-### 2. Interview the user
+### 2. Rank suggestions
+
+Before interviewing the user, rate every suggestion for expected value and sort
+the interview queue from highest value to lowest value. Use judgment, but make
+the rating explicit enough that the ordering is auditable. Favor suggestions
+that:
+
+- Prevent recurring failures, data loss, security mistakes, externally visible
+  mistakes, or expensive user interruptions.
+- Capture a clear user correction or repeated workflow friction.
+- Are actionable in a specific instruction, skill, hook, script, test, or docs
+  target.
+- Have a broad blast radius across projects or future sessions.
+
+Deprioritize suggestions that are one-off, already covered by existing durable
+guidance, speculative, low-impact, or too vague to implement safely. Use a
+simple `high`, `medium`, or `low` value rating plus one short reason. Preserve
+the source file and candidate number so the original record remains traceable.
+
+### 3. Interview the user
 
 Process every suggestion before implementing anything. Present one suggestion
-at a time with:
+at a time, in descending value order, with:
 
 - A short title
 - The source file
+- The value rating and reason
 - A concise summary of the proposed improvement
 - Why it might matter
 - Any obvious risk, cost, or missing information
@@ -62,9 +92,14 @@ Ask the user to choose exactly one option:
 - `defer`: leave this suggestion in the inbox for a later session
 - `drop`: discard this suggestion
 
-If a structured question tool is available, use it with those three choices.
-Otherwise ask a concise plain-text question and wait for the user. Continue
-until every suggestion has a recorded decision.
+If a native structured multiple-choice question tool is available, use it for
+this choice. Use exactly these three choices, with `implement` first when it is
+the recommended option for high-value actionable suggestions, otherwise put the
+best conservative option first and mark it as recommended. Do not use a
+plain-text prompt while the native multiple-choice tool is available. If the
+runtime genuinely has no such tool, ask a concise plain-text question, say that
+the native choice tool is unavailable, and wait for the user. Continue until
+every suggestion has a recorded decision.
 
 If the user gives a free-form answer, map it conservatively:
 
@@ -75,7 +110,7 @@ If the user gives a free-form answer, map it conservatively:
 
 If the answer is ambiguous, ask once for clarification.
 
-### 3. Plan accepted work
+### 4. Plan accepted work
 
 After all suggestions are classified, group implemented suggestions into
 logical changes. Identify which existing skill, hook, README, instruction file,
@@ -94,7 +129,7 @@ opening issues, creating PRs, sending messages, or changing remote services.
 Ask for explicit confirmation if an accepted suggestion requires one of those
 actions.
 
-### 4. Implement accepted suggestions
+### 5. Implement accepted suggestions
 
 Apply each accepted suggestion using the normal dotfiles rules:
 
@@ -110,7 +145,7 @@ If an accepted suggestion turns out to be unsafe, obsolete, impossible, or based
 on a false premise, stop implementing that suggestion and report it. Ask whether
 to defer or drop it instead of quietly changing its classification.
 
-### 5. Reconcile inbox files
+### 6. Reconcile inbox files
 
 After implementation and verification, rewrite the suggestion records at
 suggestion granularity:
@@ -134,7 +169,7 @@ suggestion granularity:
 
 Never leave an implemented or dropped suggestion in the inbox.
 
-### 6. Commit and report
+### 7. Commit and report
 
 Commit the skill/config/docs implementation as normal dotfiles work. Do not
 commit raw inbox suggestion files unless the user explicitly asks; they are

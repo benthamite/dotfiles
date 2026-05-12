@@ -99,6 +99,199 @@ Hidden Codex-managed system skills may exist under ignored
 =codex/skills/.system/= runtime data, but they are not part of the reusable
 skill parity model.
 
+** Master Skill Inventory
+
+This inventory is path-based and includes global, programmatic, system, and
+project-local skills currently present in this repo. The skill name shown is the
+directory name; if a =SKILL.md= frontmatter name differs, the mismatch is noted.
+
+- =add-to-emacs-packages=: Add or register one of the user's Emacs packages in
+  =my-emacs-packages.org=, create its documentation note, and add its GitHub
+  profile README card. Locations: =claude/skills/add-to-emacs-packages/=,
+  =codex/skills/add-to-emacs-packages/=.
+- =audit-mac-app=: Audit a macOS =.app= before running it or granting
+  permissions. Locations: =macos/.claude/skills/audit-mac-app/=,
+  =macos/.codex/skills/audit-mac-app/=.
+- =automate=: Design and build a reusable AI automation. Locations:
+  =claude/skills/automate/=, =codex/skills/automate/=.
+- =build=: Spec-based build workflow. Locations: =claude/skills/build/=,
+  =codex/skills/build/=.
+- =claude-config-audit=: Audit Claude Code configuration for redundancy,
+  conflicts, dead weight, staleness, and instruction drift. Locations:
+  =.claude/skills/claude-config-audit/=,
+  =.codex/skills/claude-config-audit/=,
+  =claude/skills/claude-config-audit/=,
+  =codex/skills/claude-config-audit/=.
+- =code-audit=: Audit code for actual defects, security issues, error handling
+  gaps, and correctness problems. Locations: =claude/skills/code-audit/=,
+  =codex/skills/code-audit/=.
+- =codex-app-browser=: Use the Codex App in-app browser for local browser
+  inspection, navigation, screenshots, and testing. Locations:
+  =codex/skills/codex-app-browser/=.
+- =design-audit=: Audit code architecture and maintainability for unnecessary
+  complexity, duplication, unclear boundaries, and refactoring opportunities.
+  Locations: =claude/skills/design-audit/=, =codex/skills/design-audit/=.
+- =diagnose=: Diagnose errors, confusion, or workflow friction before fixing.
+  Locations: =claude/skills/diagnose/=, =codex/skills/diagnose/=.
+- =doc-elisp=: Create or update an Org manual for an Emacs Lisp package.
+  Locations: =claude/skills/doc-elisp/=, =codex/skills/doc-elisp/=.
+- =doc-extras=: Audit, create, or refresh documentation for all Emacs extras
+  packages in this repo. Locations: =claude/skills/doc-extras/=,
+  =codex/skills/doc-extras/=,
+  =emacs/.claude/skills/doc-extras/=, =emacs/.codex/skills/doc-extras/=.
+- =dotfiles-context=: Dotfiles and Emacs package routing context. Locations:
+  =claude/skills/dotfiles-context/=, =codex/skills/dotfiles-context/=.
+- =dx-audit=: Audit a codebase's AI developer experience, including
+  instructions, verification commands, automation, onboarding traps, and
+  collaboration friction. Locations: =claude/skills/dx-audit/=,
+  =codex/skills/dx-audit/=.
+- =elisp-conventions=: Emacs Lisp style, testing, rebuild, docstring, error
+  message, and transient suffix conventions. Locations:
+  =claude/skills/elisp-conventions/=, =codex/skills/elisp-conventions/=.
+- =emacs-freeze=: Diagnose frozen, hung, beachballing, or unresponsive Emacs.
+  Locations: =claude/skills/emacs-freeze/=,
+  =codex/skills/emacs-freeze/=,
+  =emacs/.claude/skills/emacs-freeze/=,
+  =emacs/.codex/skills/emacs-freeze/=.
+- =find-skills=: Discover, vet, and optionally install reusable or installable
+  agent capabilities. Locations: =.claude/skills/find-skills/=,
+  =.codex/skills/find-skills/=.
+- =generate-readme=: Generate or update a GitHub-facing Markdown README for an
+  Emacs Lisp package from its Org manual. Locations:
+  =claude/skills/generate-readme/=, =codex/skills/generate-readme/=.
+- =gitguardian-triage=: Triage and remediate GitGuardian secret incidents.
+  Locations: =.claude/skills/gitguardian-triage/=,
+  =.codex/skills/gitguardian-triage/=,
+  =claude/skills/gitguardian-triage/=,
+  =codex/skills/gitguardian-triage/=.
+- =google-sheets-comments=: Handle Google Sheets comment review, replies,
+  resolves, reopens, and notification emails correctly. Locations:
+  =claude/skills/google-sheets-comments/=,
+  =codex/skills/google-sheets-comments/=.
+- =handoff=: Save next-session instructions for Claude Code or Codex session
+  transitions. Locations: =claude/skills/handoff/=, =codex/skills/handoff/=.
+- =imagegen=: Generate or edit raster images for bitmap visuals. Locations:
+  =codex/skills/.system/imagegen/=.
+- =install-mcp-server=: Install and configure a new MCP server for Claude Code.
+  Locations: =.claude/skills/install-mcp-server/=,
+  =.codex/skills/install-mcp-server/=,
+  =claude/skills/install-mcp-server/=,
+  =codex/skills/install-mcp-server/=.
+- =interpretability-audit=: Audit code for intent transparency and reader
+  comprehension. Locations: =claude/skills/interpretability-audit/=,
+  =codex/skills/interpretability-audit/=.
+- =lint-elisp=: Fix byte-compile warnings, checkdoc notes, and other Elisp
+  diagnostics. Locations: =claude/skills/lint-elisp/=,
+  =codex/skills/lint-elisp/=.
+- =migrate-profile=: Consolidate or check agent project data across Emacs
+  profile changes. Locations: =.claude/skills/migrate-profile/=,
+  =.codex/skills/migrate-profile/=, =claude/skills/migrate-profile/=,
+  =codex/skills/migrate-profile/=.
+- =move-session-log=: Relocate Codex session logs by rewriting embedded project
+  paths. Locations: =claude/skills/move-session-log/=,
+  =codex/skills/move-session-log/=.
+- =open-session-log=: Open the current Claude Code or Codex session log in
+  Emacs. Locations: =.claude/skills/open-session-log/=,
+  =.codex/skills/open-session-log/=, =claude/skills/open-session-log/=,
+  =codex/skills/open-session-log/=.
+- =openai-docs=: Use up-to-date official OpenAI documentation for OpenAI API
+  and product questions. Locations: =codex/skills/.system/openai-docs/=.
+- =optimize-claude-md=: Optimize project Claude Code instruction files.
+  Locations: =.claude/skills/optimize-claude-md/=,
+  =.codex/skills/optimize-claude-md/=,
+  =claude/skills/optimize-claude-md/=,
+  =codex/skills/optimize-claude-md/=.
+- =plugin-creator=: Create and scaffold Codex plugin directories and metadata.
+  Locations: =codex/skills/.system/plugin-creator/=.
+- =post-push-ci=: Wait for GitHub Actions after a push, inspect failures, and
+  fix push-triggered CI failures. Locations: =claude/skills/post-push-ci/=,
+  =codex/skills/post-push-ci/=.
+- =pr-audit=: Verify a PR or PR-ready branch before submitting, pushing,
+  merging, or after revision. Locations: =claude/skills/pr-audit/=,
+  =codex/skills/pr-audit/=.
+- =proofread=: Proofread Markdown for spelling, grammar, typos, punctuation,
+  and light style issues. Locations: =claude/skills/proofread/=,
+  =codex/skills/proofread/=.
+- =record-decisions=: Extract and record architectural, algorithmic, or design
+  decisions from a session. Locations: =claude/skills/record-decisions/=,
+  =codex/skills/record-decisions/=.
+- =release=: Release one of the user's Emacs packages or audit package release
+  readiness. Locations: =claude/skills/release/=, =codex/skills/release/=.
+- =release-dotfiles=: Release a new version of the dotfiles repo. Locations:
+  =.claude/skills/release-dotfiles/=, =.codex/skills/release-dotfiles/=,
+  =claude/skills/release-dotfiles/=, =codex/skills/release-dotfiles/=.
+- =rename-package=: Rename an Emacs package end to end. Locations:
+  =emacs/.claude/skills/rename-package/=,
+  =emacs/.codex/skills/rename-package/=.
+- =security-audit=: Scan for exposed API keys, leaked credentials, dependency
+  vulnerabilities, macOS hardening gaps, and Claude Code configuration risks.
+  Locations: =macos/.claude/skills/security-audit/=,
+  =macos/.codex/skills/security-audit/=.
+- =session-learning-capture=: Capture candidate reusable lessons from the
+  current session into the central dotfiles agent-learning inbox. Locations:
+  =claude/skills/session-learning-capture/=,
+  =codex/skills/session-learning-capture/=.
+- =session-retro=: Review agent-learning inbox suggestions and implement,
+  defer, or drop accepted improvements. Locations:
+  =claude/skills/session-retro/=, =codex/skills/session-retro/=.
+- =skill-audit=: Audit or improve Claude/Codex skills for trigger quality,
+  workflow design, progressive disclosure, verification, portability, and
+  maintainability. Locations: =.claude/skills/skill-audit/=,
+  =.codex/skills/skill-audit/=, =claude/skills/skill-audit/=,
+  =codex/skills/skill-audit/=.
+- =skill-creator=: Create or iteratively improve agent skills. Locations:
+  =.claude/skills/skill-creator/=, =.codex/skills/skill-creator/=,
+  =codex/skills/.system/skill-creator/=.
+- =skill-discovery=: Discover repeated manual workflows worth turning into
+  skills. Locations: =.claude/skills/skill-discovery/=,
+  =.codex/skills/skill-discovery/=.
+- =skill-installer=: Install Codex skills into =$CODEX_HOME/skills= from a
+  curated list or GitHub repo path. Locations:
+  =codex/skills/.system/skill-installer/=.
+- =skill-resolver=: Resolve and read Claude/Codex skill files by skill name with
+  deterministic filesystem lookup. Locations: =.claude/skills/skill-resolver/=,
+  =.codex/skills/skill-resolver/=.
+- =symptom-check=: Run an invariant-focused root-cause check before a
+  non-trivial bug fix. Locations: =claude/skills/symptom-check/=,
+  =codex/skills/symptom-check/=.
+- =systematic-debugging=: Debug bugs, failing tests/builds, flaky behavior,
+  regressions, crashes, performance anomalies, and other unexpected technical
+  behavior before proposing fixes. Locations: =claude/skills/systematic-debugging/=,
+  =codex/skills/systematic-debugging/=.
+- =test-suite=: Create or expand high-value test suites for a codebase or
+  module. Locations: =claude/skills/test-suite/=, =codex/skills/test-suite/=.
+- =try-hartree-skills=: Evaluate HartreeWorks third-party skills one at a time.
+  Locations: =.claude/skills/try-hartree-skills/=,
+  =.codex/skills/try-hartree-skills/=,
+  =claude/skills/try-hartree-skills/=, =codex/skills/try-hartree-skills/=.
+- =twitter=: Read, fetch, summarize, or save Twitter/X tweets, threads, profiles,
+  timelines, follower lists, or searches. Locations:
+  =claude/programmatic-skills/twitter/=, =claude/skills/twitter/=,
+  =codex/programmatic-skills/twitter/=, =codex/skills/twitter/=.
+- =twitter-digest=: Fetch recent tweets from a curated account list, triage
+  them, save a digest, and update last-run state. Locations:
+  =claude/programmatic-skills/twitter-digest/=,
+  =claude/skills/twitter-digest/=,
+  =codex/programmatic-skills/twitter-digest/=,
+  =codex/skills/twitter-digest/=.
+- =twitter-discover=: Discover high-value Twitter/X accounts in a niche.
+  Locations: =claude/programmatic-skills/twitter-discover/=,
+  =claude/skills/twitter-discover/=,
+  =codex/programmatic-skills/twitter-discover/=,
+  =codex/skills/twitter-discover/=.
+- =twitter-vet=: Vet, score, or decide whether Twitter/X accounts belong on a
+  curated list. Locations: =claude/programmatic-skills/twitter-vet/=,
+  =claude/skills/twitter-vet/=, =codex/programmatic-skills/twitter-vet/=,
+  =codex/skills/twitter-vet/=.
+- =update-log=: End-of-session bookkeeping. Locations:
+  =claude/skills/update-log/=, =codex/skills/update-log/=.
+- =verify=: Run an explicit verification loop. Locations:
+  =claude/skills/verify/=, =codex/skills/verify/=.
+- =walk-list=: Process a list file strictly item by item, sequentially or with a
+  bounded subagent pool. Locations: =claude/programmatic-skills/walk-list/=,
+  =claude/skills/walk-list/=, =codex/programmatic-skills/walk-list/=,
+  =codex/skills/walk-list/=.
+
 * Hooks
 
 Hook scripts are paired when the two tools expose compatible events and payloads.

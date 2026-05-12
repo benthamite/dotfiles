@@ -1,0 +1,388 @@
+---
+name: twitter-discover
+description: Discover high-value Twitter/X accounts in a niche through criteria, seeds, graph expansion, and vetting. Use for find accounts, who should I follow, curate a list, or twitter discovery; not for direct lookup, digests, or known-list vetting.
+---
+
+# Twitter account discovery
+
+Iterative, graph-based discovery of high-value Twitter/X accounts in any topic area. Uses a "hot promise score" algorithm that combines following-list overlap with bio relevance filtering and continuous score updates.
+
+Use `twitter` for direct tweet/profile lookups, `twitter-digest` for recurring or one-off digests from an existing list, and `twitter-vet` when the user already has accounts to score against a known rubric.
+
+## Active skill paths
+
+Use the active tool's skill root throughout the session:
+
+- Codex: `SKILL_ROOT="$HOME/.codex/skills"`
+- Claude: `SKILL_ROOT="$HOME/.claude/skills"`
+
+Then set:
+
+```bash
+TWITTERAPI="$SKILL_ROOT/twitter/lib/twitterapi.sh"
+TWITTER_VET="$SKILL_ROOT/twitter-vet/SKILL.md"
+DISCOVER_RESULTS="$SKILL_ROOT/twitter-discover/results"
+DIGEST_SKILL="$SKILL_ROOT/twitter-digest/SKILL.md"
+DIGEST_LISTS="$SKILL_ROOT/twitter-digest/lists"
+VET_REGISTRY="$SKILL_ROOT/twitter-vet/vetted"
+SESSION_DIR=$(mktemp -d /tmp/twitter-discover.XXXXXX)
+chmod 700 "$SESSION_DIR"
+HELPER="$SESSION_DIR/twitter_discover_helpers.py"
+test -x "$TWITTERAPI"
+test -r "$TWITTER_VET"
+```
+
+Read `$TWITTER_VET` before applying Procedure A or Procedure B. Save API responses and transient state under `$SESSION_DIR` with descriptive filenames.
+
+## API access
+
+All twitterapi.io calls go through `$TWITTERAPI`. See the `twitter` skill for the full subcommand reference. Subcommands used here:
+
+| Subcommand                | Use for                                   |
+|---------------------------|-------------------------------------------|
+| `$TWITTERAPI search`      | Find initial seed accounts by topic       |
+| `$TWITTERAPI tweets`      | Sample tweets to evaluate an account      |
+| `$TWITTERAPI following`   | Get who an account follows (page up to 200) |
+| `$TWITTERAPI user`        | Check bio/profile before sampling tweets  |
+| `$TWITTERAPI users`       | Find users by keyword                     |
+
+Save each response to a file under `$SESSION_DIR` and pass the file path to the helpers below to parse out the fields you care about. Do not print API keys, resolved credential values, or curl commands that include `X-API-Key`.
+
+## Procedure
+
+### Phase 1: Interview
+
+Ask the user for any missing information:
+
+1. **What content are you interested in?** Get specific: topics, the kind of person they want to find (practitioners sharing workflows? researchers? commentators? builders?), what makes an account valuable vs. noise.
+2. **Do you have seed accounts?** An optional list of Twitter usernames they already know are good. Even 2-3 seeds dramatically improve results.
+
+Synthesize the answers into:
+- `TOPIC_KEYWORDS`: a list of search queries for Phase 2 (if no seeds provided).
+- `RELEVANCE_CRITERIA`: a rubric for scoring accounts (what makes a 9 vs. a 5 vs. a skip). This replaces the generic scoring — tailor it to what the user actually wants.
+
+If the prompt already gives clear criteria, state the rubric and proceed. If the criteria are underspecified or the request is exploratory, confirm the criteria with the user before making API calls.
+
+### Phase 2: Seed acquisition
+
+**If the user provided seeds**, skip to Phase 3.
+
+**If not**, find seeds via search:
+
+1. Run 3-5 `$TWITTERAPI search` calls using `TOPIC_KEYWORDS` (default `--type=Top`, no need to pass it). Save each response to `$SESSION_DIR`.
+2. Extract unique authors from results, filtering out:
+   - Accounts with <500 followers (too small to anchor discovery).
+   - Accounts whose bio or content is clearly irrelevant (use your judgment).
+   - Reply-only results.
+3. For the top 5-8 authors by engagement, sample their tweets (`$TWITTERAPI tweets <username>`, ~20 tweets per page).
+4. Score each using `RELEVANCE_CRITERIA`. Any scoring 6+ become seeds.
+5. If fewer than 3 seeds found, try different search queries and repeat.
+
+### Phase 3: Score and expand (iterative)
+
+This is the core loop. Repeat until the user is satisfied.
+
+#### 3a. Score seed accounts
+
+For each unscored seed:
+1. Fetch ~20 tweets with `$TWITTERAPI tweets <username>`.
+2. Evaluate against `RELEVANCE_CRITERIA`. Assign a score 1-10.
+3. Record the score.
+
+#### 3b. Fetch following lists
+
+For each scored account with score >= 6, fetch their following list (`$TWITTERAPI following <username> --page-size=100`).
+
+**Important**: Fetch following lists sequentially to avoid rate limiting. If you intentionally batch lower-cost search or timeline calls, cap them at 3 concurrent calls and back off immediately on 429 responses.
+
+#### 3c. Compute hot promise scores
+
+For every account that appears in 2+ following lists of scored accounts:
+
+```
+promise_score = sum(score of each scored account that follows them)
+```
+
+This score updates continuously — every time a new account is scored and its following list fetched, all promise scores are recalculated. This is what makes the scores "hot."
+
+#### 3d. Quick filter candidates
+
+Apply **Procedure A** (quick filter) from `$TWITTER_VET` to the candidate list from `compute_promise_scores`. Use bio, follower count, and who follows them. Sort passing candidates by likely relevance, breaking ties by promise score.
+
+#### 3e. Full scoring
+
+For the top 5-8 candidates that pass the quick filter, apply **Procedure B** (full scoring) from `$TWITTER_VET` using `RELEVANCE_CRITERIA` as the rubric. For any scoring 7+, also fetch their following list and update all promise scores (making the loop "hotter"). Repeat from 3c with updated scores.
+
+### Phase 4: Checkpoint
+
+After profiling ~10-15 new accounts in a round, present findings:
+
+1. Show the full scoreboard grouped by tier:
+   - **Tier 1 (8-10)**: Must follow
+   - **Tier 2 (6-7)**: Strong follow
+   - **Tier 3 (4-5)**: Situational / niche value
+   - Below 4: skipped, don't list
+2. For each account show: handle, score, one-line description of why.
+3. Show discovery stats: how many accounts profiled, how many following lists fetched, approximate API cost.
+4. Ask: "Want to continue discovery, or is this a good list?"
+
+If the user says continue, go back to Phase 3. If they say stop, save the results.
+
+## Helper script
+
+To efficiently parse the large JSON responses from the API, create `$HELPER` at the start of the session and run `python3 -m py_compile "$HELPER"` before using it:
+
+```python
+#!/usr/bin/env python3
+"""Helpers for Twitter account discovery."""
+import json
+import sys
+
+def extract_tweets(filepath):
+    """Extract tweet text + engagement from a tool result file."""
+    with open(filepath) as f:
+        raw = json.load(f)
+    if isinstance(raw, list) and raw and 'text' in raw[0]:
+        inner = json.loads(raw[0]['text'])
+    else:
+        inner = raw
+    tweets = inner.get('tweets', inner.get('data', {}).get('tweets', []))
+    if isinstance(tweets, dict):
+        tweets = tweets.get('tweets', [])
+    for t in tweets:
+        text = t.get('text', '')[:300].replace('\n', ' ')
+        date = t.get('createdAt', '')[:16]
+        likes = t.get('likeCount', '?')
+        views = t.get('viewCount', '?')
+        is_rt = text.startswith('RT @')
+        prefix = 'RT' if is_rt else '  '
+        print(f'{prefix} [{date}] {text}')
+        print(f'   likes:{likes} views:{views}')
+        print()
+
+def extract_following(filepath):
+    """Extract following list from a tool result file."""
+    with open(filepath) as f:
+        raw = json.load(f)
+    if isinstance(raw, list) and raw and 'text' in raw[0]:
+        inner = json.loads(raw[0]['text'])
+    else:
+        inner = raw
+    followings = inner.get('followings', [])
+    for u in followings:
+        username = u.get('userName', '')
+        bio = (u.get('description', '') or '')[:120].replace('\n', ' ')
+        followers = u.get('followers', 0)
+        print(f'@{username}\t{followers}\t{bio}')
+
+def extract_search_authors(filepath, exclude_set=None):
+    """Extract unique authors from search results, sorted by engagement."""
+    exclude_set = exclude_set or set()
+    with open(filepath) as f:
+        raw = json.load(f)
+    if isinstance(raw, list) and raw and 'text' in raw[0]:
+        inner = json.loads(raw[0]['text'])
+    else:
+        inner = raw
+    tweets = inner.get('tweets', [])
+    authors = {}
+    for t in tweets:
+        if t.get('isReply'):
+            continue
+        author = t.get('author', {})
+        username = author.get('userName', '?')
+        if username.lower() in {x.lower() for x in exclude_set}:
+            continue
+        likes = t.get('likeCount', 0)
+        bio = author.get('description', '') or ''
+        if username not in authors or likes > authors[username]['likes']:
+            authors[username] = {
+                'text': t.get('text', '')[:200].replace('\n', ' '),
+                'likes': likes,
+                'views': t.get('viewCount', 0),
+                'followers': author.get('followers', 0),
+                'bio': bio[:150].replace('\n', ' ')
+            }
+    sorted_authors = sorted(authors.items(), key=lambda x: x[1]['likes'], reverse=True)
+    for username, data in sorted_authors:
+        print(f'@{username} ({data["followers"]:,} flw, {data["likes"]} likes)')
+        print(f'  Tweet: {data["text"]}')
+        if data['bio']:
+            print(f'  Bio: {data["bio"]}')
+        print()
+
+def compute_promise_scores(state_filepath):
+    """Compute hot promise scores from following lists.
+
+    state_filepath: JSON file with:
+      following_files: {username: filepath}
+      scores: {username: int_score}
+    """
+    with open(state_filepath) as f:
+        state = json.load(f)
+    following_files = state.get('following_files', {})
+    scores = state.get('scores', {})
+
+    all_following = {}
+    for username, filepath in following_files.items():
+        try:
+            with open(filepath) as f:
+                raw = json.load(f)
+            if isinstance(raw, list) and raw and 'text' in raw[0]:
+                inner = json.loads(raw[0]['text'])
+            else:
+                inner = raw
+            followings = inner.get('followings', [])
+            all_following[username] = {
+                u.get('userName', ''): {
+                    'followers': u.get('followers', 0),
+                    'bio': (u.get('description', '') or ''),
+                    'name': u.get('name', ''),
+                } for u in followings if u.get('userName')
+            }
+        except Exception as e:
+            print(f'Error loading {username}: {e}', file=sys.stderr)
+
+    promise = {}
+    scored_lower = {k.lower() for k in scores}
+    for scorer, fdict in all_following.items():
+        sc = scores.get(scorer, 0)
+        if sc == 0:
+            continue
+        for followed, info in fdict.items():
+            if followed.lower() in scored_lower:
+                continue
+            if followed not in promise:
+                promise[followed] = {
+                    'score': 0, 'followed_by': [],
+                    'bio': info['bio'], 'followers': info['followers'],
+                    'name': info.get('name', '')
+                }
+            promise[followed]['score'] += sc
+            promise[followed]['followed_by'].append(f'{scorer}({sc})')
+
+    results = []
+    for username, data in promise.items():
+        if len(data['followed_by']) < 2:
+            continue
+        data['username'] = username
+        results.append(data)
+
+    results.sort(key=lambda d: d['score'], reverse=True)
+
+    print(f'{"":2} {"Username":20} {"Promise":>7} {"Flw":>8}  {"Followed by":40}  Bio')
+    print('-' * 130)
+    for i, d in enumerate(results[:50]):
+        fb = ', '.join(d['followed_by'])
+        bio = d['bio'][:60].replace('\n', ' ')
+        print(f'{i+1:2}. @{d["username"]:19} {d["score"]:>7} {d["followers"]:>8,}  {fb:40}  {bio}')
+
+if __name__ == '__main__':
+    cmd = sys.argv[1] if len(sys.argv) > 1 else ''
+    if cmd == 'tweets':
+        extract_tweets(sys.argv[2])
+    elif cmd == 'following':
+        extract_following(sys.argv[2])
+    elif cmd == 'search':
+        exclude = set(sys.argv[3].split(',')) if len(sys.argv) > 3 else set()
+        extract_search_authors(sys.argv[2], exclude)
+    elif cmd == 'promise':
+        compute_promise_scores(sys.argv[2])
+```
+
+Call it via:
+- `python3 "$HELPER" tweets <file>` — extract tweets
+- `python3 "$HELPER" following <file>` — extract following list
+- `python3 "$HELPER" search <file> [exclude_csv]` — extract search authors
+- `python3 "$HELPER" promise "$SESSION_DIR/state.json"` — compute promise scores
+
+For promise scoring, update `$SESSION_DIR/state.json` whenever scores or following files change:
+
+```json
+{
+  "scores": {"seed_handle": 8},
+  "following_files": {"seed_handle": "/tmp/twitter-discover.ABC123/seed_handle-following.json"}
+}
+```
+
+## Saving results
+
+When the user is done, save results in two ways:
+
+### 1. Discovery log (always)
+
+Create `$DISCOVER_RESULTS` if needed and save to `$DISCOVER_RESULTS/YYYY-MM-DD-topic-slug.md`:
+
+```markdown
+# Twitter discovery: TOPIC
+
+Date: YYYY-MM-DD
+Criteria: RELEVANCE_CRITERIA summary
+
+## Tier 1 (8-10)
+
+- **@handle** (score) — one-line description
+
+## Tier 2 (6-7)
+
+- **@handle** (score) — one-line description
+
+## Discovery stats
+
+- Accounts profiled: N
+- Following lists fetched: N
+- Approximate API cost: $X.XX
+```
+
+### 2. Digest list (if twitter-digest skill is installed)
+
+Check if `$DIGEST_SKILL` exists. If it does:
+
+1. Ask the user for a short list name (e.g., `ai-tools`, `ml-research`). Suggest one based on the topic.
+2. Ask the user which tiers to include (default: Tier 1 + Tier 2, i.e. score >= 6).
+3. Write the list to `$DIGEST_LISTS/<list-name>.md` using this format:
+
+```markdown
+---
+name: <list-name>
+description: <derive from RELEVANCE_CRITERIA — what to surface and what to skip>
+---
+
+- @handle1
+- @handle2
+- @handle3
+```
+
+4. Tell the user they can now run `/twitter-digest <list-name>` or set up a recurring digest with `/loop 4h /twitter-digest <list-name>`.
+5. Write all scored accounts (score + rationale) to `$VET_REGISTRY/<list-name>.md` using the registry format defined in `$TWITTER_VET`. Include all tiers and below-threshold accounts. This lets twitter-digest skip re-vetting accounts already evaluated here.
+
+If the digest skill is not installed, skip steps 1-5 silently — don't suggest installing it.
+
+## Cost awareness
+
+See the `twitter` skill for full pricing and rate limit details. Key numbers for discovery:
+
+- 20-tweet timeline sample: ~$0.003 (300 credits)
+- 100-account following list: ~$0.015 (1,500 credits)
+- Search (20 results): ~$0.003 (300 credits)
+- A full discovery round (scoring ~15 accounts + fetching ~8 following lists + 5 searches): ~$0.18
+- A complete session (3-4 rounds): ~$0.50-$1.00
+
+Flag to the user if costs are likely to exceed $2. At typical credit balances (1K-5K), do not fire more than 3 parallel API calls.
+
+## Key principles
+
+1. **Hot scores**: Always recompute promise scores after scoring a new account and fetching its following list. Never use stale scores.
+2. **Evaluate bios first**: Read bios and context before spending API calls on tweet sampling. Use your judgment rather than regex — you can assess relevance more accurately than keyword matching.
+3. **Sequential API calls**: Avoid firing many parallel API calls to the same endpoint — rate limits will block you. Keep following-list calls sequential; use at most 2-3 concurrent search or timeline calls when the credit balance supports it.
+4. **Tailored criteria**: The scoring rubric must reflect what the user actually wants, not a generic "is this account good." A researcher and a marketer want very different things.
+5. **Transparent checkpoints**: Show the user what you found and let them steer. Don't run 50 API calls without checking in.
+
+## Verification and cleanup
+
+Before reporting completion:
+
+1. Re-read the discovery log and any digest list or vet registry files written.
+2. Confirm the saved tiers, handles, scores, rationales, and discovery stats match the final scoreboard.
+3. State how many search, timeline, profile, and following-list pages were fetched; whether a `next_cursor` or candidate backlog remained; and the approximate API cost.
+4. Clean up `$SESSION_DIR` according to the repository deletion policy, preferably with `trash "$SESSION_DIR"`. If cleanup is unavailable or the raw responses should be preserved for debugging, report the path and reason.

@@ -71,6 +71,11 @@ tool-specific frontmatter keys such as
 comparison. Tool-specific skills may
 intentionally diverge when agents store state differently; these cases are
 recorded in =ai-config-sync.json=.
+The cross-tool master inventory of global, programmatic, system, and
+project-local skills lives in =../agents/README.org=, so agents can discover
+skills even when they are local to another project. Reusable skills that
+graduate out of project-local roots should be added here, paired in
+=claude/skills/= where possible, and recorded in =ai-config-sync.json=.
 
 For paired skills that keep small state files in their skill directories, update
 both tool copies to the same contents unless =ai-config-sync.json= records an

@@ -16,7 +16,7 @@ source "$SCRIPT_DIR/lib-codex-hook-json.sh"
 
 INPUT=$(cat)
 
-COMMAND=$(codex_tool_input_field "$INPUT" command)
+COMMAND=$(codex_shell_command "$INPUT")
 SESSION_ID=$(codex_session_id "$INPUT")
 EXIT_CODE=$(codex_hook_jq "$INPUT" '
   .tool_output.exitCode //

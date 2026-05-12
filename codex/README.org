@@ -441,6 +441,18 @@ the audit scope.
 =~/.codex/hooks.json= points to =codex/hooks.json=.  Updating the tracked files
 therefore updates the live global Codex configuration.
 
+Codex shell hooks are registered for both legacy =Bash= tool events and the
+current =exec_command=/=functions.exec_command= tool names. The hook scripts
+read both =command= and =cmd= payload fields so commit gates, security guards,
+and Elisp verification markers work in CLI/API sessions as well as older
+Bash-shaped payloads.
+
+The Elisp documentation gate accepts =doc/*.org= manuals, root =README.org=
+manuals, and root =README.md= as a fallback only when the repo has no Org
+manual. This keeps standalone packages such as =emacs-slack= covered without
+treating Markdown READMEs as the preferred manual format for repos that already
+have Org documentation.
+
 =codex/config.toml= sets the default model, reasoning effort, fast service
 tier, approval policy, sandbox mode, light TUI theme, and personality; enables Codex hooks,
 plugins, the goals UI, and terminal resize reflow; records trusted project

@@ -73,8 +73,8 @@ case "$TOOL_NAME" in
       deny "$TOOL_NAME pattern references walk-list protected path: $PATTERN"
     fi
     ;;
-  Bash)
-    CMD=$(codex_tool_input_field "$INPUT" command)
+  Bash|exec_command|functions.exec_command)
+    CMD=$(codex_shell_command "$INPUT")
     [ -z "$CMD" ] && exit 0
     # If the command doesn't reference the guarded dir at all, allow.
     if ! echo "$CMD" | grep -qE "(\.claude/walk-list-data|~/\.claude/walk-list-data|$EXPANDED_HOME)"; then

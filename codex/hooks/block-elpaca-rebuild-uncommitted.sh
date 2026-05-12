@@ -17,7 +17,7 @@ source "$SCRIPT_DIR/lib-codex-hook-json.sh"
 
 INPUT=$(cat)
 
-COMMAND=$(codex_tool_input_field "$INPUT" command)
+COMMAND=$(codex_shell_command "$INPUT")
 
 # Only intercept emacsclient commands that trigger elpaca-rebuild or reload
 if ! echo "$COMMAND" | grep -qE '\bemacsclient\b'; then

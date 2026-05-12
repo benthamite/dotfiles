@@ -13,7 +13,7 @@ source "$SCRIPT_DIR/lib-codex-hook-json.sh"
 
 INPUT=$(cat)
 
-COMMAND=$(codex_tool_input_field "$INPUT" command)
+COMMAND=$(codex_shell_command "$INPUT")
 SESSION_ID=$(codex_session_id "$INPUT")
 
 # Only intercept git commit commands

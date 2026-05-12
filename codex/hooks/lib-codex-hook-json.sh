@@ -46,3 +46,21 @@ codex_tool_input_field() {
   printf '%s' "$input" | jq -r --arg field "$field" "${CODEX_HOOK_JQ_DEFS}
 codex_tool_input[\$field] // empty"
 }
+
+codex_shell_command() {
+  local input="$1"
+  codex_hook_jq "$input" '
+    codex_tool_input.command //
+    codex_tool_input.cmd //
+    codex_tool_input.input //
+    empty
+  '
+}
+
+codex_shell_tool_p() {
+  local tool_name="$1"
+  case "$tool_name" in
+    Bash|exec_command|functions.exec_command) return 0 ;;
+    *) return 1 ;;
+  esac
+}

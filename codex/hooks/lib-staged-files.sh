@@ -8,7 +8,7 @@
 #
 # Usage: source this file after setting $COMMAND, then use $STAGED.
 #
-#   COMMAND=$(codex_tool_input_field "$INPUT" command)
+#   COMMAND=$(codex_shell_command "$INPUT")
 #   source "$(dirname "$0")/lib-staged-files.sh"
 #   # $STAGED now contains the list of staged files
 

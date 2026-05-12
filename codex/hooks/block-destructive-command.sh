@@ -4,7 +4,7 @@
 # Enforces CLAUDE.md's "use trash instead of rm -rf" instruction with code,
 # not just prose.
 #
-# Matcher: Bash
+# Matcher: Bash|exec_command|functions.exec_command
 
 set -euo pipefail
 
@@ -15,9 +15,9 @@ source "$SCRIPT_DIR/lib-codex-hook-json.sh"
 INPUT=$(cat)
 
 TOOL_NAME=$(codex_tool_name "$INPUT")
-[ "$TOOL_NAME" != "Bash" ] && exit 0
+codex_shell_tool_p "$TOOL_NAME" || exit 0
 
-CMD=$(codex_tool_input_field "$INPUT" command)
+CMD=$(codex_shell_command "$INPUT")
 [ -z "$CMD" ] && exit 0
 
 deny() {

@@ -251,7 +251,11 @@ The global =~/.claude/CLAUDE.md= (symlinked here) is the user-level memory loade
 - Fix root causes, not symptoms; no silent fallbacks or workaround code unless explicitly labeled, justified, and approved.
 - Verify fixes end-to-end before declaring them done; say exactly what could not be verified.
 - Commit each logical change immediately; prefer amending when iterating on the same logical change (unless already pushed).
-- Pre-commit checklist (hook-enforced): Elisp pre-commit checks (batch-test, stage =doc/*.org=) are in the =elisp-conventions= skill; the =README.org= staging rule is in the project =CLAUDE.md=.
+- Pre-commit checklist (hook-enforced): Elisp pre-commit checks are in
+  the =elisp-conventions= skill. Extras package changes stage the matching
+  =emacs/extras/doc/*.org= manual; standalone package changes stage the package
+  root =README.org= manual, or =README.md= when the repo has no Org manual.
+  The agent README staging rule is in the project =CLAUDE.md=.
 - Use subagents and teams liberally; prefer the most powerful model.
 - Use =trash= instead of =rm -rf=; never send signals to Emacs without confirmation.
 - Anything the user is asked to paste — message, credential, URL, snippet — goes to the Emacs kill ring via =emacsclient= (and =pbcopy= as well when the paste target is a Chrome or native form). Multi-line or secret content uses the temp-file =insert-file-contents= → =kill-new= pattern to avoid Elisp string-escaping.
@@ -757,7 +761,7 @@ intentionally a reminder, not an auto-sync mechanism.
 :ID:       5428CDD1-C447-4549-8365-56066C479F61
 :END:
 
-Fires before Bash =git commit= commands and calls =bin/ai-config-sync
+Fires before shell =git commit= commands and calls =bin/ai-config-sync
 guard-commit=. Blocks one-sided Claude/Codex configuration changes in the
 dotfiles repo unless the counterpart is synchronized or =ai-config-sync.json=
 records an artifact-specific status or exemption. It also resolves the git repo
@@ -778,7 +782,19 @@ global exception in the manifest.
 :ID:       BB6FE0BD-FC74-4BEB-89AB-4FE902A84055
 :END:
 
-Blocks =git commit= when =.el= files are staged but no =doc/*.org= or =README.org= manual update is included. Applies only in repos that have a =doc/= directory or a =README.org= at the root. When scanning a combined =git add && git commit= command, only the =git add= arguments are examined (not the commit message) to avoid false positives from commit messages that mention =.el= files. Verifies that doc files have actual modifications (staged or unstaged) rather than accepting unchanged files. If a staged org manual, or an org manual in the same command's =git add= arguments, has Texinfo export headers and dirty generated =.texi= or tracked =.info= outputs, blocks the commit until those generated files are staged too. Ensures documentation stays in sync with code changes.
+Blocks =git commit= when =.el= files are staged but no =doc/*.org= or
+=README.org= manual update is included. Applies only in repos that have a
+=doc/= directory, a =README.org= at the root, or only a root =README.md=.
+Extras packages use the =doc/*.org= manual; standalone packages that keep an
+Org manual at the root use =README.org=; repos with no Org manual fall back to
+=README.md=. When scanning a combined =git add && git commit= command, only the
+=git add= arguments are examined (not the commit message) to avoid false
+positives from commit messages that mention =.el= files. Verifies that doc
+files have actual modifications (staged or unstaged) rather than accepting
+unchanged files. If a staged org manual, or an org manual in the same command's
+=git add= arguments, has Texinfo export headers and dirty generated =.texi= or
+tracked =.info= outputs, blocks the commit until those generated files are
+staged too. Ensures documentation stays in sync with code changes.
 
 *** block-elpaca-rebuild-uncommitted.sh (PreToolUse)
 :PROPERTIES:
@@ -897,7 +913,7 @@ Creates a session marker (=/tmp/claude-elisp-skill-{SESSION_ID}=) when the =elis
 :ID:       130ACA78-30B6-4B1A-9E02-EC99B126079D
 :END:
 
-Blocks all Bash commands (except =emacsclient= and =batch-test.sh=) after committing =.el= files until verification via =emacsclient -e= has been run. Uses a session marker created by the companion =track-elisp-verify.sh= hook. Ensures the agent verifies that committed Elisp loads correctly in the running Emacs before moving on.
+Blocks all shell commands (except =emacsclient= and =batch-test.sh=) after committing =.el= files until verification via =emacsclient -e= has been run. Uses a session marker created by the companion =track-elisp-verify.sh= hook. Ensures the agent verifies that committed Elisp loads correctly in the running Emacs before moving on.
 
 *** track-elisp-verify.sh (PostToolUse)
 :PROPERTIES:

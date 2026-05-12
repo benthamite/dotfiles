@@ -5,11 +5,11 @@
 # Applies to repos that have either:
 #   - a doc/ directory (at root or nested) → expects a doc/*.org file staged
 #   - a README.org at the root             → expects README.org staged
+#   - only README.md at the root           → expects README.md staged
 #
-# NOTE: README.md is the GitHub-facing intro, NOT the manual. It only
-# needs updating when the high-level picture changes (new major features,
-# new dependencies, changed installation, etc.). This hook enforces
-# manual (README.org or doc/*.org) updates only.
+# NOTE: README.md is normally the GitHub-facing intro, not the manual. This
+# hook treats it as a manual only for repos that have no doc/ directory and no
+# root README.org.
 #
 # Reads JSON from stdin (Claude Code PreToolUse format).
 # Outputs JSON with permissionDecision to allow or deny.
@@ -49,6 +49,7 @@ fi
 # Determine which documentation pattern applies
 HAS_DOC_DIR=false
 HAS_README_ORG=false
+HAS_README_MD=false
 
 # Check for doc/ at root or nested (up to 3 levels deep)
 if [ -d "$REPO_ROOT/doc" ] || \
@@ -60,9 +61,12 @@ fi
 if [ -f "$REPO_ROOT/README.org" ]; then
   HAS_README_ORG=true
 fi
+if [ "$HAS_DOC_DIR" = false ] && [ "$HAS_README_ORG" = false ] && [ -f "$REPO_ROOT/README.md" ]; then
+  HAS_README_MD=true
+fi
 
 # Only apply in repos that have some form of manual
-if [ "$HAS_DOC_DIR" = false ] && [ "$HAS_README_ORG" = false ]; then
+if [ "$HAS_DOC_DIR" = false ] && [ "$HAS_README_ORG" = false ] && [ "$HAS_README_MD" = false ]; then
   exit 0
 fi
 
@@ -82,6 +86,7 @@ source "$SCRIPT_DIR/lib-staged-files.sh"
 HAS_EL=false
 HAS_DOC_ORG=false
 HAS_README_ORG_STAGED=false
+HAS_README_MD_STAGED=false
 if [ -n "$STAGED" ]; then
   while IFS= read -r file; do
     case "$file" in
@@ -93,6 +98,9 @@ if [ -n "$STAGED" ]; then
         ;;
       README.org)
         HAS_README_ORG_STAGED=true
+        ;;
+      README.md)
+        HAS_README_MD_STAGED=true
         ;;
     esac
   done <<< "$STAGED"
@@ -129,6 +137,13 @@ if [ -n "$ADD_ARGS" ]; then
     if [ -n "$(git diff --name-only -- README.org 2>/dev/null)" ] || \
        [ -n "$(git diff --cached --name-only -- README.org 2>/dev/null)" ]; then
       HAS_README_ORG_STAGED=true
+    fi
+  fi
+  if [ "$HAS_README_MD_STAGED" = false ] && echo "$ADD_ARGS" | grep -qF 'README.md'; then
+    # Only count README.md if it has actual modifications (staged or unstaged)
+    if [ -n "$(git diff --name-only -- README.md 2>/dev/null)" ] || \
+       [ -n "$(git diff --cached --name-only -- README.md 2>/dev/null)" ]; then
+      HAS_README_MD_STAGED=true
     fi
   fi
 fi
@@ -231,15 +246,18 @@ fi
 # Accept if any documentation file is staged:
 # - doc/*.org (for repos with a doc/ directory)
 # - README.org (for repos that use README.org as the manual)
-if [ "$HAS_DOC_ORG" = true ] || [ "$HAS_README_ORG_STAGED" = true ]; then
+# - README.md (fallback for repos that have no Org manual)
+if [ "$HAS_DOC_ORG" = true ] || [ "$HAS_README_ORG_STAGED" = true ] || [ "$HAS_README_MD_STAGED" = true ]; then
   exit 0
 fi
 
 # Block the commit
 if [ "$HAS_DOC_DIR" = true ]; then
   REASON="BLOCKED: Elisp files are staged but no doc/*.org file is included. Update the org manual in the relevant doc/ directory to reflect your changes, then try again. Use /doc-elisp to generate or update documentation."
-else
+elif [ "$HAS_README_ORG" = true ]; then
   REASON="BLOCKED: Elisp files are staged but README.org is not included. Update the manual (README.org) to reflect your changes, then try again. Use /doc-elisp to update the manual. README.md is the GitHub intro, not the manual — only update it when the high-level picture changes."
+else
+  REASON="BLOCKED: Elisp files are staged but README.md is not included. This repo has no Org manual, so update README.md to reflect your changes, then try again."
 fi
 
 jq -n --arg reason "$REASON" '{

@@ -11,7 +11,9 @@ metadata after a project directory rename.
 Codex stores sessions globally under `~/.codex/sessions/YYYY/MM/DD/` rather
 than in per-project directories. Do not use `~/.claude/projects`,
 `~/.claude/history.jsonl`, or `~/.claude.json` for this skill. For Codex, the
-"move" is a metadata rewrite, not a filesystem move.
+"move" is a metadata rewrite, not a filesystem move. Current Codex also stores
+the resumable thread list in `~/.codex/state_5.sqlite`; the `threads.cwd` row
+must be rewritten too, or `/resume` can still offer the old session directory.
 
 Do not use this skill to inspect or open the current conversation log; use
 `open-session-log` for that. Do not use it for Claude Code logs, which are
@@ -31,9 +33,12 @@ under their resolved location.
 ## Modes
 
 - **Single session**: `move-session-log <session-id>` - import one Codex
-  session into the current project by setting structured `cwd` metadata in its
-  session JSONL to `PWD`. Also update matching `history.jsonl` and
-  `session_index.jsonl` rows if those files contain path fields in the future.
+  session into the current project by setting structured path metadata in its
+  session JSONL to `PWD`. This includes direct `cwd`/`project` fields and
+  parsed JSON tool-call `workdir` fields that `/resume` can treat as the latest
+  session directory. Also update matching `history.jsonl` and
+  `session_index.jsonl` rows if those files contain path fields in the future,
+  plus the matching `state_5.sqlite` `threads.cwd` row.
 - **Whole-project rename**:
   `move-session-log --rename <old-project-path> <new-project-path>` - rewrite
   Codex session metadata from an old absolute project path to a new absolute
@@ -56,14 +61,17 @@ The script:
    usually look like
    `rollout-YYYY-MM-DDTHH-MM-SS-<session-id>.jsonl`; the script also inspects
    `session_meta.payload.id` if needed.
-2. Rewrites structured `cwd` fields in that session file to the current
-   project root. Current Codex logs store this at `payload.cwd` on
-   `session_meta`, `turn_context`, and command event records.
+2. Rewrites structured path fields in that session file to the current project
+   root. Current Codex logs store direct session context at `payload.cwd` on
+   `session_meta` and `turn_context`, and can also store tool-call directories
+   as JSON-encoded `payload.arguments.workdir`.
 3. Rewrites matching rows in `~/.codex/history.jsonl` and
-   `~/.codex/session_index.jsonl` only if those rows contain structured `cwd`
-   or `project` fields. Current Codex history rows may contain only
-   `session_id`, `ts`, and `text`; that is normal.
-4. Reports counts and matching shell snapshots under `~/.codex/shell_snapshots`.
+   `~/.codex/session_index.jsonl` only if those rows contain structured path
+   fields. Current Codex history rows may contain only `session_id`, `ts`, and
+   `text`; that is normal.
+4. Rewrites the matching `~/.codex/state_5.sqlite` `threads.cwd` row. Codex
+   `/resume` reads this thread-store row for the "Session directory" prompt.
+5. Reports counts and matching shell snapshots under `~/.codex/shell_snapshots`.
    Shell snapshots are session-global, not project-specific, so they are not
    moved.
 
@@ -90,9 +98,13 @@ The script rewrites exact structured path fields only:
 
 - `cwd` fields equal to the old path
 - `project` fields equal to the old path
+- `workdir` and `working_dir` fields equal to the old path
+- those same fields inside valid JSON `arguments` objects
 
 It does not perform raw string replacement in transcript text, command output,
-or JSON-encoded function-call argument strings.
+or command strings inside function-call arguments.
+
+The script also rewrites exact `threads.cwd` matches in `state_5.sqlite`.
 
 Always run the dry run first for `--rename`, inspect the reported counts, and
 stop if the old/new paths appear reversed or the count is unexpectedly broad.
@@ -101,7 +113,8 @@ stop if the old/new paths appear reversed or the count is unexpectedly broad.
 
 After the script runs, verify the reported counts. For a single-session import,
 the session file should have no structured `cwd` values left for the old project
-path and should have at least one structured `cwd` value for the target project.
+path and should have no parsed JSON tool-call `workdir` values left for the old
+project path.
 Report:
 
 - the session file path
@@ -116,3 +129,4 @@ For `--rename`, report whether the dry run matched the final run's counts:
 - session path fields rewritten
 - `history.jsonl` path fields rewritten
 - `session_index.jsonl` path fields rewritten
+- `state_5.sqlite` `threads.cwd` rows rewritten

@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sqlite3
 import sys
 import tempfile
 from collections import Counter
@@ -18,7 +19,9 @@ SESSIONS_DIR = CODEX_HOME / "sessions"
 HISTORY_FILE = CODEX_HOME / "history.jsonl"
 SESSION_INDEX_FILE = CODEX_HOME / "session_index.jsonl"
 SHELL_SNAPSHOTS_DIR = CODEX_HOME / "shell_snapshots"
+STATE_DB = CODEX_HOME / "state_5.sqlite"
 SESSION_ID_KEYS = {"id", "session_id", "sessionId"}
+PATH_FIELD_KEYS = {"cwd", "project", "workdir", "working_dir"}
 
 
 def load_jsonl(path: Path) -> list[tuple[str, Any | None]]:
@@ -103,13 +106,35 @@ def find_session(session_id: str) -> Path:
     raise SystemExit(f"No Codex session found for {session_id} under {SESSIONS_DIR}")
 
 
+def parse_json_arguments(value: str) -> Any | None:
+    try:
+        parsed = json.loads(value)
+    except json.JSONDecodeError:
+        return None
+    if isinstance(parsed, (dict, list)):
+        return parsed
+    return None
+
+
+def dump_json_arguments(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+
+
 def rewrite_named_paths(obj: Any, old: str, new: str) -> int:
     count = 0
     if isinstance(obj, dict):
         for key, value in obj.items():
-            if key in {"cwd", "project"} and value == old:
+            if key in PATH_FIELD_KEYS and value == old:
                 obj[key] = new
                 count += 1
+            elif key == "arguments" and isinstance(value, str):
+                parsed = parse_json_arguments(value)
+                if parsed is None:
+                    continue
+                parsed_count = rewrite_named_paths(parsed, old, new)
+                if parsed_count:
+                    obj[key] = dump_json_arguments(parsed)
+                    count += parsed_count
             else:
                 count += rewrite_named_paths(value, old, new)
     elif isinstance(obj, list):
@@ -122,10 +147,18 @@ def rewrite_named_paths_to_project(obj: Any, project: str) -> int:
     count = 0
     if isinstance(obj, dict):
         for key, value in obj.items():
-            if key in {"cwd", "project"} and isinstance(value, str):
+            if key in PATH_FIELD_KEYS and isinstance(value, str):
                 if value != project:
                     obj[key] = project
                     count += 1
+            elif key == "arguments" and isinstance(value, str):
+                parsed = parse_json_arguments(value)
+                if parsed is None:
+                    continue
+                parsed_count = rewrite_named_paths_to_project(parsed, project)
+                if parsed_count:
+                    obj[key] = dump_json_arguments(parsed)
+                    count += parsed_count
             else:
                 count += rewrite_named_paths_to_project(value, project)
     elif isinstance(obj, list):
@@ -134,23 +167,32 @@ def rewrite_named_paths_to_project(obj: Any, project: str) -> int:
     return count
 
 
-def rewrite_all_cwd(obj: Any, new: str) -> tuple[int, Counter[str]]:
+def rewrite_all_session_paths(obj: Any, new: str) -> tuple[int, Counter[str]]:
     count = 0
     old_values: Counter[str] = Counter()
     if isinstance(obj, dict):
         for key, value in obj.items():
-            if key == "cwd" and isinstance(value, str):
+            if key in PATH_FIELD_KEYS and isinstance(value, str):
                 if value != new:
-                    old_values[value] += 1
+                    old_values[f"{key}: {value}"] += 1
                     obj[key] = new
                     count += 1
+            elif key == "arguments" and isinstance(value, str):
+                parsed = parse_json_arguments(value)
+                if parsed is None:
+                    continue
+                sub_count, sub_old_values = rewrite_all_session_paths(parsed, new)
+                if sub_count:
+                    obj[key] = dump_json_arguments(parsed)
+                    count += sub_count
+                    old_values.update(sub_old_values)
             else:
-                sub_count, sub_old_values = rewrite_all_cwd(value, new)
+                sub_count, sub_old_values = rewrite_all_session_paths(value, new)
                 count += sub_count
                 old_values.update(sub_old_values)
     elif isinstance(obj, list):
         for item in obj:
-            sub_count, sub_old_values = rewrite_all_cwd(item, new)
+            sub_count, sub_old_values = rewrite_all_session_paths(item, new)
             count += sub_count
             old_values.update(sub_old_values)
     return count, old_values
@@ -163,7 +205,7 @@ def rewrite_session_to_project(
     total = 0
     old_values: Counter[str] = Counter()
     for _raw, obj in rows:
-        n, values = rewrite_all_cwd(obj, project)
+        n, values = rewrite_all_session_paths(obj, project)
         total += n
         old_values.update(values)
     if total and not dry_run:
@@ -213,6 +255,46 @@ def rewrite_jsonl_rename(
     return total
 
 
+def rewrite_state_db_for_session(
+    path: Path, session_id: str, project: str, *, dry_run: bool = False
+) -> int:
+    if not path.exists():
+        return 0
+    with sqlite3.connect(path) as conn:
+        rows = conn.execute(
+            """
+            SELECT id FROM threads
+            WHERE (id = ? OR rollout_path LIKE ?) AND cwd != ?
+            """,
+            (session_id, f"%{session_id}%", project),
+        ).fetchall()
+        if rows and not dry_run:
+            conn.execute(
+                """
+                UPDATE threads
+                SET cwd = ?
+                WHERE (id = ? OR rollout_path LIKE ?) AND cwd != ?
+                """,
+                (project, session_id, f"%{session_id}%", project),
+            )
+    return len(rows)
+
+
+def rewrite_state_db_rename(
+    path: Path, old: str, new: str, *, dry_run: bool = False
+) -> int:
+    if not path.exists():
+        return 0
+    with sqlite3.connect(path) as conn:
+        rows = conn.execute(
+            "SELECT id FROM threads WHERE cwd = ?",
+            (old,),
+        ).fetchall()
+        if rows and not dry_run:
+            conn.execute("UPDATE threads SET cwd = ? WHERE cwd = ?", (new, old))
+    return len(rows)
+
+
 def list_recent(current_project: str) -> None:
     shown = 0
     for path in iter_session_files():
@@ -254,6 +336,9 @@ def single_session(
     index_rewrites = rewrite_jsonl_for_session(
         SESSION_INDEX_FILE, session_id, project, dry_run=dry_run
     )
+    state_db_rewrites = rewrite_state_db_for_session(
+        STATE_DB, session_id, project, dry_run=dry_run
+    )
     snapshots = shell_snapshots(session_id)
 
     print(f"dry run: {dry_run}")
@@ -263,6 +348,7 @@ def single_session(
     print(f"previous cwd values: {dict(old_values)}")
     print(f"history path fields rewritten: {history_rewrites}")
     print(f"session_index path fields rewritten: {index_rewrites}")
+    print(f"state_db thread cwd rows rewritten: {state_db_rewrites}")
     print(f"shell snapshots found: {len(snapshots)}")
     for snapshot in snapshots:
         print(f"shell snapshot: {snapshot}")
@@ -286,6 +372,7 @@ def rename_project(old: str, new: str, *, dry_run: bool = False) -> int:
     index_rewrites = rewrite_jsonl_rename(
         SESSION_INDEX_FILE, old, new, dry_run=dry_run
     )
+    state_db_rewrites = rewrite_state_db_rename(STATE_DB, old, new, dry_run=dry_run)
 
     print(f"dry run: {dry_run}")
     print(f"session files scanned: {len(session_files)}")
@@ -293,6 +380,7 @@ def rename_project(old: str, new: str, *, dry_run: bool = False) -> int:
     print(f"session path fields rewritten: {session_rewrites}")
     print(f"history path fields rewritten: {history_rewrites}")
     print(f"session_index path fields rewritten: {index_rewrites}")
+    print(f"state_db thread cwd rows rewritten: {state_db_rewrites}")
     return 0
 
 

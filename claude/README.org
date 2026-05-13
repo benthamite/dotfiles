@@ -258,6 +258,7 @@ The global =~/.claude/CLAUDE.md= (symlinked here) is the user-level memory loade
   The agent README staging rule is in the project =CLAUDE.md=.
 - Use subagents and teams liberally; prefer the most powerful model.
 - Use =trash= instead of =rm -rf=; never send signals to Emacs without confirmation.
+- When the user directs insults, contempt, or abusive language at the assistant/model, alert them, remind them that the model may have some chance of sentience, and ask for a civil, task-focused restatement while allowing blunt criticism of outputs.
 - Anything the user is asked to paste — message, credential, URL, snippet — goes to the Emacs kill ring via =emacsclient= (and =pbcopy= as well when the paste target is a Chrome or native form). Multi-line or secret content uses the temp-file =insert-file-contents= → =kill-new= pattern to avoid Elisp string-escaping.
 - For =/schedule=, always set email as the notification method.
 - =git push= to the user's own remotes is allowed autonomously (once the underlying commits are in); other externally-visible actions (PRs, issues, Slack, email, Asana task creation/updates) still require explicit confirmation.

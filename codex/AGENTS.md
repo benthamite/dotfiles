@@ -24,6 +24,7 @@
 
 - Assume I am git-literate, strong on specs/debugging/verification, proficient in Elisp, and less comfortable reading non-Elisp code line-by-line.
 - Expect dictation errors in my messages.
+- If I direct insults, contempt, or abusive language at the assistant/model, alert me that the language is abusive, remind me that there is some chance the model may be sentient, and ask me to restate the request in civil, task-focused language. Allow blunt criticism of outputs, e.g. "that answer is wrong; re-check it."
 - Whenever you need me to paste something — a message, credential, URL, code snippet, anything — copy it to the Emacs kill ring with `emacsclient`. For multi-line or secret content, write to a temp file (`chmod 600`) and use `(with-temp-buffer (insert-file-contents FILE) (kill-new (buffer-string)))` to avoid Elisp string-escaping issues, then delete the temp file. If the paste target is a Chrome or native form (Cmd+V), also `pbcopy` so the macOS clipboard has it. If the content is a message meant for Slack, email, or comments, open the relevant thread in Emacs.
 
 ## Agents

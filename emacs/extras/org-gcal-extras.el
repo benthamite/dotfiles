@@ -162,6 +162,12 @@ invocations outside the chain all proceed normally."
 	     (org-element--cache-active-p))
     (org-element-cache-reset)))
 
+(defun org-gcal-extras--reset-open-org-buffer-caches ()
+  "Reset org-element caches in all open Org buffers."
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (org-gcal-extras--reset-element-cache))))
+
 (defun org-gcal-extras--inhibit-modification-hooks (orig-fun &rest args)
   "Call ORIG-FUN with ARGS while inhibiting modification hooks.
 This prevents `org-modern-indent' and `track-changes' from triggering
@@ -182,6 +188,23 @@ returns nil when that variable is non-nil."
 (advice-add 'org-gcal-post-at-point :around #'org-gcal-extras--inhibit-modification-hooks)
 (advice-add 'org-gcal--update-entry :around #'org-gcal-extras--inhibit-modification-hooks)
 (advice-add 'org-gcal--sync-handle-events :around #'org-gcal-extras--inhibit-modification-hooks)
+
+(defun org-gcal-extras--reset-caches-around-entry-id-scan
+    (orig-fun id-prop &rest args)
+  "Call ORIG-FUN with ID-PROP and ARGS after resetting Org caches.
+Only reset caches for `org-gcal-entry-id-property' scans.  The generic ID
+scanner reuses open Org buffers when possible, so it can otherwise read a
+stale org-element cache after an async calendar sync has edited a buffer."
+  (if (equal id-prop org-gcal-entry-id-property)
+      (progn
+        (org-gcal-extras--reset-open-org-buffer-caches)
+        (unwind-protect
+            (apply orig-fun id-prop args)
+          (org-gcal-extras--reset-open-org-buffer-caches)))
+    (apply orig-fun id-prop args)))
+
+(advice-add 'org-generic-id-update-id-locations
+            :around #'org-gcal-extras--reset-caches-around-entry-id-scan)
 
 ;;;###autoload
 (defun org-gcal-extras-open-at-point ()

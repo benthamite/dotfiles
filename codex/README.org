@@ -447,6 +447,12 @@ read both =command= and =cmd= payload fields so commit gates, security guards,
 and Elisp verification markers work in CLI/API sessions as well as older
 Bash-shaped payloads.
 
+The =UserPromptSubmit= hook runs =civility-guard.sh= before Emacs lifecycle
+dispatch. It blocks obvious abusive prompts directed at the assistant, asks for
+a rewrite on the first violation, and locks the session on a second violation
+until the reset phrase =I commit to a civil reset.= is submitted. The matcher is
+empty because =UserPromptSubmit= has no tool name.
+
 The Elisp documentation gate accepts =doc/*.org= manuals, root =README.org=
 manuals, and root =README.md= as a fallback only when the repo has no Org
 manual. This keeps standalone packages such as =emacs-slack= covered without

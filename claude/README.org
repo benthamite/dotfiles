@@ -715,6 +715,21 @@ Claude and Codex hooks are no longer shared through adapters.  Claude hooks live
 in =claude/hooks/=; Codex counterparts live in =codex/hooks/=.  The mapping and
 known non-pairs are recorded in =ai-config-sync.json=.
 
+*** civility-guard.sh (UserPromptSubmit)
+:PROPERTIES:
+:ID:       1F8C8BD0-3F2C-4C7F-A27D-4B08B2758877
+:END:
+
+Blocks obvious abusive prompts directed at the assistant before the model
+answers. The first violation in a session is blocked with a rewrite request; a
+second violation locks the session until the user sends the exact reset phrase
+=I commit to a civil reset.= The hook is intentionally conservative and
+regex-based: it catches direct insults and severe phrases aimed at =you=,
+=assistant=, =model=, =Claude=, =Codex=, or =ChatGPT=, while allowing blunt
+task-focused correction such as "that answer is wrong; re-check it." State is
+stored per session under =$XDG_STATE_HOME/agent-civility-guard= or
+=~/.local/state/agent-civility-guard=.
+
 *** require-elisp-test-before-commit.sh (PreToolUse)
 :PROPERTIES:
 :ID:       4E0CDC5D-C436-4701-AC99-E29F950318B4

@@ -389,6 +389,13 @@
       "note": "Claude Chrome SessionStart no-op placeholder; not relevant to Codex."
     },
     {
+      "name": "civility-guard.sh",
+      "claude": "claude/hooks/civility-guard.sh",
+      "codex": "codex/hooks/civility-guard.sh",
+      "status": "paired",
+      "note": "Paired UserPromptSubmit guard that blocks obvious abusive prompts directed at the assistant. The first violation in a session asks for a rewrite; a second violation locks the session until the configured civil reset phrase is submitted."
+    },
+    {
       "name": "elpaca-run.sh",
       "claude": "claude/hooks/elpaca-run.sh",
       "codex": null,
@@ -569,14 +576,14 @@
       "tool": "Claude Code",
       "path": "~/.claude/settings.json",
       "tracked": false,
-      "note": "Mutable live global settings; sync hooks added in place. The Stop hook chain forwards session-end state to Emacs via the fire-and-forget notifier. Session learning capture is handled by the Emacs agent-before-exit path rather than the Stop hook, because Stop fires at turn end rather than true session exit."
+      "note": "Mutable live global settings; sync hooks added in place. The UserPromptSubmit civility guard blocks abusive prompts before the assistant answers. The Stop hook chain forwards session-end state to Emacs via the fire-and-forget notifier. Session learning capture is handled by the Emacs agent-before-exit path rather than the Stop hook, because Stop fires at turn end rather than true session exit."
     },
     {
       "tool": "Codex",
       "path": "codex/hooks.json",
       "tracked": true,
       "live_path": "~/.codex/hooks.json",
-      "note": "Live global Codex hook file is a symlink to the tracked repo file. The tracked file intentionally lives outside a repo-root .codex/ directory so launching Codex from the dotfiles root does not load the same hooks a second time as project-local hooks. Codex-only codex-hook-wrapper entries point at the Emacs package source tree because elpaca/builds contains compiled Elisp but not the wrapper script, and include explicit emacsclient/socket arguments so dispatch targets the active Emacs server. The apply_patch and Edit|Write matchers are collapsed into a single apply_patch|Edit|Write block per event to keep the trust-review list compact under the Codex 0.129 hook trust gate. Codex Stop routes only through codex-hook-wrapper because Stop fires at turn end; session learning capture is handled by the Emacs agent-before-exit path. Matcher fields use \"*\" everywhere (including UserPromptSubmit) for consistency. PreCompact and PostCompact route through codex-hook-wrapper so the Emacs side observes the full lifecycle."
+      "note": "Live global Codex hook file is a symlink to the tracked repo file. The tracked file intentionally lives outside a repo-root .codex/ directory so launching Codex from the dotfiles root does not load the same hooks a second time as project-local hooks. Codex-only codex-hook-wrapper entries point at the Emacs package source tree because elpaca/builds contains compiled Elisp but not the wrapper script, and include explicit emacsclient/socket arguments so dispatch targets the active Emacs server. The apply_patch and Edit|Write matchers are collapsed into a single apply_patch|Edit|Write block per event to keep the trust-review list compact under the Codex 0.129 hook trust gate. Codex UserPromptSubmit uses the empty matcher because that event has no tool name; it runs the civility guard before codex-hook-wrapper. Codex Stop routes only through codex-hook-wrapper because Stop fires at turn end; session learning capture is handled by the Emacs agent-before-exit path. PreCompact and PostCompact route through codex-hook-wrapper so the Emacs side observes the full lifecycle."
     },
     {
       "tool": "Codex",

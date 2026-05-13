@@ -114,5 +114,49 @@
         (org-gcal-extras--reset-element-cache)))
     (should-not cache-reset-called)))
 
+;;;; entry-id scan cache reset
+
+(ert-deftest org-gcal-extras-test-reset-open-org-buffer-caches ()
+  "Resets caches in open Org buffers only."
+  (skip-unless org-gcal-extras-test--loadable)
+  (let (buffers)
+    (with-temp-buffer
+      (rename-buffer "org-gcal-extras-test-org")
+      (org-mode)
+      (with-temp-buffer
+        (rename-buffer "org-gcal-extras-test-fundamental")
+        (fundamental-mode)
+        (cl-letf (((symbol-function 'org-gcal-extras--reset-element-cache)
+                   (lambda ()
+                     (when (derived-mode-p 'org-mode)
+                       (push (buffer-name) buffers)))))
+          (org-gcal-extras--reset-open-org-buffer-caches))))
+    (should (member "org-gcal-extras-test-org" buffers))
+    (should-not (member "org-gcal-extras-test-fundamental" buffers))))
+
+(ert-deftest org-gcal-extras-test-entry-id-scan-resets-caches ()
+  "Resets caches around org-gcal entry-id scans."
+  (skip-unless org-gcal-extras-test--loadable)
+  (let ((reset-count 0))
+    (cl-letf (((symbol-function 'org-gcal-extras--reset-open-org-buffer-caches)
+               (lambda () (cl-incf reset-count))))
+      (org-gcal-extras--reset-caches-around-entry-id-scan
+       (lambda (&rest args) args)
+       org-gcal-entry-id-property
+       'file 'silent))
+    (should (= 2 reset-count))))
+
+(ert-deftest org-gcal-extras-test-non-entry-id-scan-skips-cache-reset ()
+  "Does not reset caches around unrelated generic ID scans."
+  (skip-unless org-gcal-extras-test--loadable)
+  (let ((reset-count 0))
+    (cl-letf (((symbol-function 'org-gcal-extras--reset-open-org-buffer-caches)
+               (lambda () (cl-incf reset-count))))
+      (org-gcal-extras--reset-caches-around-entry-id-scan
+       (lambda (&rest args) args)
+       "ID"
+       'file 'silent))
+    (should (= 0 reset-count))))
+
 (provide 'org-gcal-extras-test)
 ;;; org-gcal-extras-test.el ends here

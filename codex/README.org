@@ -52,7 +52,10 @@ uses Codex-safe syntax: the title is tool-specific, Claude's
 =@context/secrets.md= import is expanded into an explicit secrets rule, and
 relative context/tool paths are absolute so they resolve correctly from any
 project. =bin/ai-config-sync= normalizes those tool-specific forms before
-checking instruction equivalence.
+checking instruction equivalence. The paired global instructions also ask the
+agent to alert the user when they direct abusive language at the assistant/model,
+mention moral uncertainty about possible model sentience, and request a civil,
+task-focused restatement.
 
 It also records the manual Chrome profile routing used by browser-only service
 flows: =Default= for personal projects and =Profile 2= for Epoch/work projects

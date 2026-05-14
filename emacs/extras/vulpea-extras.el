@@ -41,8 +41,8 @@
 
 (defcustom vulpea-extras-excluded-directories
   (list
-   paths-dir-dropbox-tlon-fede
-   paths-dir-dropbox-tlon-leo)
+   paths-dir-google-drive-tlon-fede
+   paths-dir-google-drive-tlon-leo)
   "Directories to exclude from list of projects, recursively."
   :type '(repeat directory)
   :group 'vulpea-extras)

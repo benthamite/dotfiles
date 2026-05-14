@@ -184,45 +184,38 @@ These directories hold Citation Style Language resources, used by =citeproc-el= 
 - ~paths-dir-personal-csl-styles~ and ~paths-dir-personal-csl-locales~: personal CSL files (children of ~paths-dir-personal-bibliography~).
 - ~paths-dir-tlon-csl-styles~ and ~paths-dir-tlon-csl-locales~: organization CSL files (children of ~paths-dir-babel-refs~).
 
-*** Tlon Dropbox and Google Drive directories
+*** Tlon Google Drive directories
 :PROPERTIES:
 :CUSTOM_ID: h:tlon-directories
 :END:
 
-#+vindex: paths-dir-dropbox-tlon
-#+vindex: paths-dir-dropbox-tlon-core
-#+vindex: paths-dir-dropbox-tlon-leo
-#+vindex: paths-dir-dropbox-tlon-fede
-#+vindex: paths-dir-dropbox-tlon-pablo
-#+vindex: paths-dir-dropbox-tlon-ledger
-#+vindex: paths-dir-dropbox-tlon-pass
 #+vindex: paths-dir-google-drive-tlon
-#+vindex: paths-dir-google-drive-tlon-leo
 #+vindex: paths-dir-google-drive-tlon-core
+#+vindex: paths-dir-google-drive-tlon-leo
 #+vindex: paths-dir-google-drive-tlon-fede
-These directories organize shared team resources across Dropbox and Google Drive. Each team member has a personal subdirectory, and shared resources (ledger, pass) live under the =core= subdirectory.
+#+vindex: paths-dir-google-drive-tlon-pablo
+#+vindex: paths-dir-google-drive-tlon-ledger
+#+vindex: paths-dir-google-drive-tlon-pass
+These directories organize shared team resources under ~paths-dir-google-drive-tlon~. Each team member has a personal subdirectory, and shared resources (ledger, pass) live under the =core= subdirectory.
 
-The Dropbox tree includes ~paths-dir-dropbox-tlon-babel~ as the parent for per-project directories:
+Active organization-wide directories sit at the root:
 
-#+vindex: paths-dir-dropbox-tlon-babel
-#+vindex: paths-dir-dropbox-tlon-EAN
-#+vindex: paths-dir-dropbox-tlon-FM
-#+vindex: paths-dir-dropbox-tlon-GPE
-#+vindex: paths-dir-dropbox-tlon-HEAR
-#+vindex: paths-dir-dropbox-tlon-LBDLH
-#+vindex: paths-dir-dropbox-tlon-LP
-#+vindex: paths-dir-dropbox-tlon-RAE
-#+vindex: paths-dir-dropbox-tlon-RCG
+#+vindex: paths-dir-google-drive-tlon-uqbar
+#+vindex: paths-dir-google-drive-tlon-projects
+#+vindex: paths-dir-google-drive-tlon-archive
 
-The Google Drive tree mirrors this structure, with ~paths-dir-google-drive-tlon-babel~ as the parent:
+Active projects live under ~paths-dir-google-drive-tlon-projects~:
 
-#+vindex: paths-dir-google-drive-tlon-babel
+#+vindex: paths-dir-google-drive-tlon-EAI
 #+vindex: paths-dir-google-drive-tlon-EAN
+#+vindex: paths-dir-google-drive-tlon-LBDLH
+#+vindex: paths-dir-google-drive-tlon-boletin
+
+Obsolete projects live under ~paths-dir-google-drive-tlon-archive~:
+
 #+vindex: paths-dir-google-drive-tlon-FM
 #+vindex: paths-dir-google-drive-tlon-GPE
 #+vindex: paths-dir-google-drive-tlon-HEAR
-#+vindex: paths-dir-google-drive-tlon-LBDLH
-#+vindex: paths-dir-google-drive-tlon-LP
 #+vindex: paths-dir-google-drive-tlon-RAE
 #+vindex: paths-dir-google-drive-tlon-RCG
 

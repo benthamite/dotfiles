@@ -241,32 +241,26 @@ Disable the mode if ARG is a negative number."
     ("p a" "consensus-trader" (lambda () (interactive) (dired (file-name-concat paths-dir-personal-repos "consensus-trader"))))
     ("p b" "stafforini.com" (lambda () (interactive) (dired (file-name-concat paths-dir-personal-repos "stafforini.com"))))
     ("p c" "tangodb" (lambda () (interactive) (dired (file-name-concat paths-dir-personal-repos "tangodb"))))]
-   ["Tlön: Google Drive"
-    ("t H-b" "Google Drive: Babel" (lambda () (interactive) (dired paths-dir-google-drive-tlon-babel)))
-    ("t H-n" "Google Drive: EAN" (lambda () (interactive) (dired paths-dir-google-drive-tlon-EAN)))
-    ("t H-m" "Google Drive: FM" (lambda () (interactive) (dired paths-dir-google-drive-tlon-FM)))
-    ("t H-g" "Google Drive: GPE" (lambda () (interactive) (dired paths-dir-google-drive-tlon-GPE)))
-    ("t H-h" "Google Drive: HEAR" (lambda () (interactive) (dired paths-dir-google-drive-tlon-HEAR)))
-    ("t H-d" "Google Drive: LBDLH" (lambda () (interactive) (dired paths-dir-google-drive-tlon-LBDLH)))
-    ("t H-p" "Google Drive: LP" (lambda () (interactive) (dired paths-dir-google-drive-tlon-LP)))
-    ("t H-r" "Google Drive: RAE" (lambda () (interactive) (dired paths-dir-google-drive-tlon-RAE)))
-    ("t H-t" "Google Drive: tlon" (lambda () (interactive) (dired paths-dir-google-drive-tlon)))
-    ("t H-c" "Google Drive: core" (lambda () (interactive) (dired paths-dir-google-drive-tlon-core)))
-    ("t H-l" "Google Drive: leo" (lambda () (interactive) (dired paths-dir-google-drive-tlon-leo)))
-    ("t H-f" "Google Drive: fede" (lambda () (interactive) (dired paths-dir-google-drive-tlon-fede)))]
-   ["Tlön: Dropbox"
-    ("t b" "Dropbox: Babel" (lambda () (interactive) (dired paths-dir-dropbox-tlon-babel)))
-    ("t n" "Dropbox: EAN" (lambda () (interactive) (dired paths-dir-dropbox-tlon-EAN)))
-    ("t m" "Dropbox: FM" (lambda () (interactive) (dired paths-dir-dropbox-tlon-FM)))
-    ("t g" "Dropbox: GPE" (lambda () (interactive) (dired paths-dir-dropbox-tlon-GPE)))
-    ("t h" "Dropbox: HEAR" (lambda () (interactive) (dired paths-dir-dropbox-tlon-HEAR)))
-    ("t d" "Dropbox: LBDLH" (lambda () (interactive) (dired paths-dir-dropbox-tlon-LBDLH)))
-    ("t p" "Dropbox: LP" (lambda () (interactive) (dired paths-dir-dropbox-tlon-LP)))
-    ("t r" "Dropbox: RAE" (lambda () (interactive) (dired paths-dir-dropbox-tlon-RAE)))
-    ("t t" "Dropbox: tlon" (lambda () (interactive) (dired paths-dir-dropbox-tlon)))
-    ("t c" "Dropbox: core" (lambda () (interactive) (dired paths-dir-dropbox-tlon-core)))
-    ("t f" "Dropbox: fede" (lambda () (interactive) (dired paths-dir-dropbox-tlon-fede)))
-    ("t l" "Dropbox: leo" (lambda () (interactive) (dired paths-dir-dropbox-tlon-leo)))]])
+   ["Tlön"
+    ("t t" "tlon" (lambda () (interactive) (dired paths-dir-google-drive-tlon)))
+    ("t c" "core" (lambda () (interactive) (dired paths-dir-google-drive-tlon-core)))
+    ("t l" "leo" (lambda () (interactive) (dired paths-dir-google-drive-tlon-leo)))
+    ("t f" "fede" (lambda () (interactive) (dired paths-dir-google-drive-tlon-fede)))
+    ("t b" "pablo" (lambda () (interactive) (dired paths-dir-google-drive-tlon-pablo)))
+    ("t u" "uqbar" (lambda () (interactive) (dired paths-dir-google-drive-tlon-uqbar)))
+    ("t p" "projects" (lambda () (interactive) (dired paths-dir-google-drive-tlon-projects)))
+    ("t a" "archive" (lambda () (interactive) (dired paths-dir-google-drive-tlon-archive)))]
+   ["Tlön projects"
+    ("t i" "ea.international" (lambda () (interactive) (dired paths-dir-google-drive-tlon-EAI)))
+    ("t n" "ea.news" (lambda () (interactive) (dired paths-dir-google-drive-tlon-EAN)))
+    ("t s" "bisagra" (lambda () (interactive) (dired paths-dir-google-drive-tlon-LBDLH)))
+    ("t L" "boletin" (lambda () (interactive) (dired paths-dir-google-drive-tlon-boletin)))]
+   ["Tlön archive"
+    ("t F" "FM" (lambda () (interactive) (dired paths-dir-google-drive-tlon-FM)))
+    ("t g" "GPE" (lambda () (interactive) (dired paths-dir-google-drive-tlon-GPE)))
+    ("t h" "HEAR" (lambda () (interactive) (dired paths-dir-google-drive-tlon-HEAR)))
+    ("t r" "RAE" (lambda () (interactive) (dired paths-dir-google-drive-tlon-RAE)))
+    ("t G" "RCG" (lambda () (interactive) (dired paths-dir-google-drive-tlon-RCG)))]])
 
 (provide 'dired-extras)
 ;;; dired-extras.el ends here

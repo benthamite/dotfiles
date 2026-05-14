@@ -1549,7 +1549,7 @@ CLOCK: [2021-04-11 Sun 12:01]--[2021-04-11 Sun 12:10] =>  0:09
   (pass-show-keybindings nil)
 
   :config
-  (run-with-timer (* 5 60) t (lambda () (magit-extras-warn-if-repo-is-dirty paths-dir-dropbox-tlon-pass)))
+  (run-with-timer (* 5 60) t (lambda () (magit-extras-warn-if-repo-is-dirty paths-dir-google-drive-tlon-pass)))
 
   :bind
   (("A-H-o" . pass)
@@ -9061,8 +9061,6 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (agent-alert-on-ready t)
   (agent-before-exit-skill-name "session-learning-capture")
   (agent-sync-theme t)
-  ;; copilot support is buggy; needs more work
-  (agent-claude-copilot-enabled nil)
   (agent-claude-org-todo-in-progress-keyword "DOING")
   (agent-claude-accounts '(("personal"  . "~/.claude-personal")
                               ("tlon"     . "~/.claude-tlon")
@@ -9744,12 +9742,12 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
 
   :custom
   (org-extras-id-auto-add-excluded-directories (list paths-dir-anki
-                                                     paths-dir-dropbox-tlon-leo
-                                                     paths-dir-dropbox-tlon-fede
+                                                     paths-dir-google-drive-tlon-leo
+                                                     paths-dir-google-drive-tlon-fede
                                                      paths-dir-android
-                                                     (file-name-concat paths-dir-dropbox-tlon-leo "gptel/")
-                                                     (file-name-concat paths-dir-dropbox-tlon-fede "archive/")
-                                                     (file-name-concat paths-dir-dropbox-tlon-core "legal/contracts/")))
+                                                     (file-name-concat paths-dir-google-drive-tlon-leo "gptel/")
+                                                     (file-name-concat paths-dir-google-drive-tlon-fede "archive/")
+                                                     (file-name-concat paths-dir-google-drive-tlon-core "legal/contracts/")))
 
   (org-extras-agenda-files-excluded (list paths-file-tlon-tareas-leo
                                           paths-file-tlon-tareas-fede))
@@ -13129,7 +13127,7 @@ Then change the value of =telega-server-libs-prefix= from =/opt/homebrew= to =/u
   :after telega)
 #+end_src
 
-** sgn
+** =sgn=
 :PROPERTIES:
 :ID:       EE8FDB64-9E1A-4B5E-8F67-E8A0AD6F077D
 :END:

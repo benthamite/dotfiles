@@ -46,9 +46,9 @@
   (list
    paths-dir-inactive
    paths-dir-archive
-   paths-dir-dropbox-tlon-leo
-   paths-dir-dropbox-tlon-fede
-   (file-name-concat paths-dir-dropbox-tlon-fede "archive/"))
+   paths-dir-google-drive-tlon-leo
+   paths-dir-google-drive-tlon-fede
+   (file-name-concat paths-dir-google-drive-tlon-fede "archive/"))
   "List of directories to exclude from `org-roam'."
   :type '(repeat directory)
   :group 'org-roam-extras)

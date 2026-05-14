@@ -7,6 +7,8 @@ description: Design and build a reusable AI automation. Use for automate, create
 
 Given a description of something the user wants to automate with AI, analyze the requirements, choose the right implementation approach, and build it.
 
+If the request is still creative or underspecified, use Superpowers `brainstorming` first when available. This skill owns the automation-type decision and implementation path after the shape of the workflow is clear.
+
 ## Arguments
 
 `$ARGUMENTS` contains the user's description of what they want to automate. If empty, ask them to describe the workflow.

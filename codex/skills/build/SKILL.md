@@ -13,6 +13,8 @@ When triggered for an actual build workflow, follow the execution steps below in
 
 Do not use this skill for ordinary small fixes, code review, bug diagnosis, or open-ended brainstorming where the user has not asked to create or refine a spec.
 
+This skill owns the interview/spec-refinement phase. When Superpowers is available, hand implementation planning and execution to `superpowers:writing-plans`, `superpowers:using-git-worktrees`, and the relevant Superpowers execution skill instead of duplicating that workflow here.
+
 ### Execution steps
 
 #### Step 1: Locate the spec file
@@ -59,10 +61,11 @@ Tell the user: "The spec is ready. You can now start a new session and ask an ag
 
 If the user asks to proceed with implementation in the current session, execute the spec step by step:
 
-1. Break the spec into discrete, ordered tasks
-2. Implement each task, committing after each logical unit of work
-3. Run tests and verify each step before moving on
-4. Flag any spec ambiguities that surface during implementation
+1. If Superpowers is available, use `superpowers:writing-plans` to convert the spec into an execution plan, then follow the Superpowers worktree/execution workflow.
+2. If Superpowers is unavailable, break the spec into discrete, ordered tasks.
+3. Implement each task, committing after each logical unit of work.
+4. Run tests and verify each step before moving on.
+5. Flag any spec ambiguities that surface during implementation.
 
 When implementation is complete, report the spec path, files changed, commits made, verification performed, and any unresolved issues.
 

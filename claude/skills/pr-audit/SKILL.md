@@ -13,6 +13,8 @@ If a check is not applicable or cannot be run because required tooling, auth, ne
 
 Do not push, force-push, create a PR, post comments, approve reviews, or otherwise change remote/shared state unless the user explicitly asked for that action.
 
+When Superpowers is available, use `superpowers:finishing-a-development-branch` for the normal branch-completion menu. Use this skill when the user asks for PR readiness, pre-submit verification, post-revision verification, or a deeper audit than the branch-completion workflow provides.
+
 ## When not to use
 
 - General bug, security, or architecture review of code that is not tied to PR readiness; use `code-audit`, `security-audit`, or `design-audit` instead.

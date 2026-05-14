@@ -1,6 +1,6 @@
 ---
 name: verify
-description: Run an explicit verification loop. Use when the user says verify, verified task, close the loop, asks for success criteria, or wants rigorous checking not covered by ordinary tests or a narrower audit/debug skill.
+description: Run an explicit user-requested verification loop. Use when the user asks to verify, close the loop, define success criteria, or rigorously check non-code outputs; not for routine coding completion or narrower audit/debug checks.
 user-invocable: true
 argument-hint: <task description>
 ---
@@ -17,6 +17,7 @@ Execute $ARGUMENTS with self-generated verification criteria that close the agen
 
 - Do not use for a simple direct check where the user asked for one command or one fact and no verification loop is needed.
 - Do not use for ordinary coding, debugging, PR, security, or design-review work when a narrower local skill already defines the right verification path. Use that skill's checks instead.
+- Do not use as the ordinary final gate for code changes. Superpowers `verification-before-completion` owns the mandatory "before claiming done" check when available; use this skill only when the user explicitly requested a criteria-driven verification loop or when no narrower workflow applies.
 - Do not use self-generated criteria as a substitute for required external confirmation, domain authority, or user approval for irreversible or externally visible actions.
 
 ### Execution steps

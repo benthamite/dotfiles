@@ -592,7 +592,4 @@ enabled = false
 path = "/Users/pablostafforini/My Drive/dotfiles/.codex/skills/skill-resolver/SKILL.md"
 enabled = false
 
-[[skills.config]]
-path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/systematic-debugging/SKILL.md"
-enabled = false
 # END skill-prune disabled skills

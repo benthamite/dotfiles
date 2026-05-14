@@ -30,13 +30,6 @@
       "disabled_at": "2026-05-10T15:14:51+00:00",
       "reason": "No Claude or Codex usage found inside the threshold window.",
       "threshold_days": 60
-    },
-    "systematic-debugging": {
-      "claude_last_used": "not found",
-      "codex_last_used": "not found",
-      "disabled_at": "2026-05-10T15:14:51+00:00",
-      "reason": "No Claude or Codex usage found inside the threshold window.",
-      "threshold_days": 60
     }
   },
   "enabled": {

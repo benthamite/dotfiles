@@ -19,7 +19,7 @@ The default failure mode this skill exists to prevent: agents fix the immediate 
 
 - Do not use for trivial, mechanically obvious changes such as typo fixes, formatting-only edits, or comment cleanup.
 - Do not use for greenfield feature work where no broken behavior or proposed bug fix exists.
-- Use `systematic-debugging` first when the root cause is still unknown; use this skill once a local patch is tempting and you need to decide whether it is an isolated repair or a broader architectural issue.
+- Use `superpowers:systematic-debugging` first when the root cause is still unknown; use this skill once a local patch is tempting and you need to decide whether it is an isolated repair or a broader architectural issue.
 - Use `code-audit` or `design-audit` for broad reviews that are not anchored to a concrete symptom.
 
 ## Workflow

@@ -128,8 +128,8 @@ currently present in this repo. The skill name shown is the directory name.
 - =design-audit=: Audit code architecture and maintainability for unnecessary
   complexity, premature or missing abstractions, duplication, unclear
   boundaries, and refactoring opportunities. Scope: Global.
-- =diagnose=: Diagnose errors, confusion, or workflow friction before fixing.
-  Scope: Global.
+- =diagnose=: Diagnose agent, tooling, configuration, or workflow failures before
+  fixing. Scope: Global.
 - =doc-elisp=: Create or update an Org manual for an Emacs Lisp package in the
   Denote manual style. Scope: Global.
 - =doc-extras=: Audit, create, or refresh documentation for all Emacs extras
@@ -229,11 +229,6 @@ currently present in this repo. The skill name shown is the directory name.
   with deterministic filesystem lookup. Scope: Project-local: dotfiles.
 - =symptom-check=: Run an invariant-focused root-cause check before a
   non-trivial bug fix. Scope: Global.
-- =systematic-debugging=: Use when debugging bugs, failing tests/builds, flaky
-  behavior, regressions, crashes, performance anomalies, or other unexpected
-  technical behavior before proposing fixes; especially when asked to diagnose,
-  find root cause, stop guessing, or recover after a failed fix attempt. Scope:
-  Global.
 - =test-suite=: Create or expand high-value test suites for a codebase or
   specific module. Scope: Global.
 - =try-hartree-skills=: Evaluate HartreeWorks third-party skills one at a
@@ -249,7 +244,7 @@ currently present in this repo. The skill name shown is the directory name.
 - =twitter-vet=: Vet, score, or decide whether to add Twitter/X accounts to a
   curated list. Scope: Global.
 - =update-log=: End-of-session bookkeeping. Scope: Global.
-- =verify=: Run an explicit verification loop. Scope: Global.
+- =verify=: Run an explicit user-requested verification loop. Scope: Global.
 - =walk-list=: Process a list file strictly item by item, sequentially or with
   a bounded subagent pool. Scope: Global.
 

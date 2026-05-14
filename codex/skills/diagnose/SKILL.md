@@ -1,6 +1,6 @@
 ---
 name: diagnose
-description: Diagnose errors, confusion, or workflow friction before fixing. Use when the user says "/diagnose", asks why something went wrong, asks for root-cause analysis, or asks to investigate process/tooling failure without immediately changing code.
+description: Diagnose agent, tooling, configuration, or workflow failures before fixing. Use for /diagnose, why-did-this-happen questions, process friction, broken hooks/skills/scripts, or structural-remedy investigations; not for ordinary code bugs.
 ---
 
 The user is asking you to investigate a problem diagnostically. Treat errors, confusion, and friction as *symptoms* of an underlying structural issue, not as problems to fix directly. The deliverable is a diagnosis, not a patch.

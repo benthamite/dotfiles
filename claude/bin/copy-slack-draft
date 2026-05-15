@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Copy a Slack draft to the Emacs kill ring and optionally open a thread."""
+"""Copy a Slack draft to the Emacs kill ring and optionally prefill a reply."""
 
 import argparse
 import json
@@ -11,18 +11,6 @@ from pathlib import Path
 def run_emacs_eval(expr: str) -> None:
     result = subprocess.run(
         ["emacsclient", "--eval", expr],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode != 0:
-        detail = (result.stderr or result.stdout).strip()
-        raise RuntimeError(detail or "emacsclient failed")
-
-
-def run_emacs_no_wait(expr: str) -> None:
-    result = subprocess.run(
-        ["emacsclient", "--no-wait", "--eval", expr],
         check=False,
         capture_output=True,
         text=True,
@@ -46,32 +34,49 @@ def copy_to_kill_ring(path: Path) -> None:
     run_emacs_eval(expr)
 
 
-def open_slack_thread(permalink: str) -> None:
+def prefill_slack_reply(permalink: str, path: Path) -> None:
     expr = (
         "(progn "
         "(require (quote cl-lib)) "
+        "(unless (fboundp (quote slack-browse-url)) "
+        "  (require (quote slack) nil t)) "
+        "(unless (fboundp (quote slack-browse-url)) "
+        '(error "slack-browse-url is not available")) '
         "(cl-letf (((symbol-function (quote browse-url-default-browser)) "
         "(lambda (&rest _) "
         '(error "Blocked browser fallback from slack-browse-url")))) '
         f"(slack-browse-url {elisp_string(permalink)})) "
+        "(sit-for 1.0) "
+        "(unless (fboundp (quote slack-thread-reply)) "
+        "  (require (quote slack-message-buffer) nil t)) "
+        "(unless (fboundp (quote slack-thread-reply)) "
+        '(error "slack-thread-reply is not available")) '
+        "(call-interactively (quote slack-thread-reply)) "
+        "(sit-for 0.5) "
+        f"(insert-file-contents {elisp_string(str(path))}) "
         "nil)"
     )
-    run_emacs_no_wait(expr)
+    run_emacs_eval(expr)
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Copy a Slack draft to Emacs kill ring and open its thread."
+        description=(
+            "Copy a Slack draft to the Emacs kill ring and prefill its reply."
+        )
     )
     parser.add_argument("--file", required=True, help="Path to the draft text file")
     parser.add_argument(
         "--permalink",
-        help="Slack permalink to open in Emacs after copying the draft",
+        help="Slack permalink to open and prefill in Emacs after copying the draft",
     )
     parser.add_argument(
         "--no-open",
         action="store_true",
-        help="Only copy the draft; do not open Slack. Useful for smoke tests.",
+        help=(
+            "Only copy the draft; do not open or prefill Slack. "
+            "Useful for smoke tests."
+        ),
     )
     args = parser.parse_args()
 
@@ -101,11 +106,14 @@ def main() -> int:
         return 0
 
     try:
-        open_slack_thread(args.permalink)
+        prefill_slack_reply(args.permalink, draft_path)
     except RuntimeError as exc:
-        sys.stderr.write(f"ERROR: failed to open Slack thread in Emacs: {exc}\n")
+        sys.stderr.write(
+            "ERROR: failed to open Slack reply composer and insert draft in "
+            f"Emacs: {exc}\n"
+        )
         return 1
-    print("Opened Slack thread in Emacs")
+    print("Opened Slack reply composer and inserted draft in Emacs")
     return 0
 
 

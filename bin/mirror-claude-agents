@@ -1,0 +1,85 @@
+#!/bin/bash
+# mirror-claude-agents — Copy a project's CLAUDE.md to AGENTS.md (or vice
+# versa) when both files are kept as semantic mirrors. Idempotent; safe to
+# call after editing the canonical copy. Project-local hooks (e.g. Epoch's)
+# remind reciprocally when one side changes; this helper completes the pair.
+#
+# Usage:
+#   mirror-claude-agents <project-dir>            # copy CLAUDE.md -> AGENTS.md
+#   mirror-claude-agents --reverse <project-dir>  # copy AGENTS.md -> CLAUDE.md
+#   mirror-claude-agents --check <project-dir>    # report only, exit 1 on drift
+#
+# Behavior:
+#   - If only one of CLAUDE.md / AGENTS.md exists, exits 0 with a note;
+#     the caller should decide whether to create the missing file.
+#   - If both files exist and already match, exits 0 with a note.
+#   - If they differ and --check is set, prints a bounded diff and exits 1.
+#   - Otherwise copies the canonical file over the other.
+#
+# Use only when both files are intentional mirrors. If the project keeps
+# different content per tool, read both files first and merge by hand.
+
+set -euo pipefail
+
+CHECK=false
+REVERSE=false
+PROJECT_DIR=""
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --check) CHECK=true; shift ;;
+    --reverse) REVERSE=true; shift ;;
+    -h|--help)
+      sed -n '/^# /,/^[^#]/{s/^# \?//;p}' "$0" | sed -n '/^mirror-claude-agents/,$p' | head -25
+      exit 0
+      ;;
+    --) shift; PROJECT_DIR="${1:-}"; shift || true ;;
+    -*) echo "mirror-claude-agents: unknown flag: $1" >&2; exit 2 ;;
+    *)  PROJECT_DIR="$1"; shift ;;
+  esac
+done
+
+if [ -z "$PROJECT_DIR" ]; then
+  echo "mirror-claude-agents: missing project dir" >&2
+  echo "usage: mirror-claude-agents [--check|--reverse] <project-dir>" >&2
+  exit 2
+fi
+
+if [ ! -d "$PROJECT_DIR" ]; then
+  echo "mirror-claude-agents: not a directory: $PROJECT_DIR" >&2
+  exit 2
+fi
+
+CLAUDE_FILE="$PROJECT_DIR/CLAUDE.md"
+AGENTS_FILE="$PROJECT_DIR/AGENTS.md"
+
+if [ ! -f "$CLAUDE_FILE" ] && [ ! -f "$AGENTS_FILE" ]; then
+  echo "mirror-claude-agents: no CLAUDE.md or AGENTS.md in $PROJECT_DIR"
+  exit 0
+fi
+
+if [ ! -f "$CLAUDE_FILE" ] || [ ! -f "$AGENTS_FILE" ]; then
+  missing="CLAUDE.md"; present="AGENTS.md"
+  if [ ! -f "$AGENTS_FILE" ]; then missing="AGENTS.md"; present="CLAUDE.md"; fi
+  echo "mirror-claude-agents: $PROJECT_DIR has only $present (no $missing); not mirroring"
+  exit 0
+fi
+
+if cmp -s "$CLAUDE_FILE" "$AGENTS_FILE"; then
+  echo "mirror-claude-agents: $PROJECT_DIR already in sync"
+  exit 0
+fi
+
+if [ "$CHECK" = "true" ]; then
+  echo "mirror-claude-agents: $PROJECT_DIR DIFFERS"
+  diff -u "$CLAUDE_FILE" "$AGENTS_FILE" | head -40 || true
+  exit 1
+fi
+
+if [ "$REVERSE" = "true" ]; then
+  cp "$AGENTS_FILE" "$CLAUDE_FILE"
+  echo "mirror-claude-agents: copied AGENTS.md -> CLAUDE.md in $PROJECT_DIR"
+else
+  cp "$CLAUDE_FILE" "$AGENTS_FILE"
+  echo "mirror-claude-agents: copied CLAUDE.md -> AGENTS.md in $PROJECT_DIR"
+fi

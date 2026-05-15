@@ -96,6 +96,8 @@ supported through the Anthropic Admin API; Anthropic runtime key creation is
 still a console step because the public Admin API documents key list/update, not
 key creation. Use the helper instead of ambient =OPENAI_API_KEY= or
 =ANTHROPIC_API_KEY= values when adding AI model access to automation projects.
+The default Anthropic broker credential is
+=op://Employee/Anthropic - api-provisioning-admin/credential=.
 
 **** Settings hierarchy
 :PROPERTIES:

@@ -3,7 +3,7 @@
 #
 # After a successful `git commit` that includes .el files, creates a
 # marker signaling that live Emacs verification is needed.
-# After an `emacsclient -e` command, clears the marker.
+# After an `emacsclient -e` (or equivalent `--eval`) command, clears the marker.
 #
 # Works in tandem with require-elisp-verify-after-commit.sh which
 # blocks subsequent commands until the marker is cleared.
@@ -62,8 +62,8 @@ if echo "$COMMAND" | grep -qE '\bgit\s+commit\b'; then
   fi
 fi
 
-# On emacsclient -e: clear marker
-if echo "$COMMAND" | grep -qE '\bemacsclient\s.*-e\b|\bemacsclient\s+-e\b'; then
+# On emacsclient -e / --eval: clear marker
+if echo "$COMMAND" | grep -qE '\bemacsclient\b.*\s(-e|--eval)\b'; then
   if [ "$EXIT_CODE" = "0" ] && [ -f "$MARKER" ]; then
     rm -f "$MARKER"
   fi

@@ -110,7 +110,72 @@ If the user declines, abort the release.
 
 ---
 
-## Step 2: Check dotfiles working tree
+## Step 2: Check temporary Elpaca PR pins
+
+Before checking the dotfiles working tree, scan `emacs/config.org` for
+Elpaca recipes that are temporarily pinned to a fork branch for an upstream
+pull request. These are typically `use-package` `:ensure` recipes with a
+GitHub PR URL comment near the `:repo` or `:branch` fields, for example:
+
+```elisp
+(use-package some-package
+  :ensure (:host github
+                 :repo "benthamite/some-package"
+                 :branch "fix/something") ; https://github.com/upstream/some-package/pull/123
+  ...)
+```
+
+Use `rg -n "github\\.com/.*/.*/pull/[0-9]+" emacs/config.org` to find
+candidate pins. For each candidate:
+
+1. Parse the PR URL and query GitHub:
+
+   ```bash
+   gh pr view "$PR_URL" \
+     --json state,merged,baseRepository,baseRefName,headRepository,headRefName,url
+   ```
+
+2. Inspect the enclosing `use-package` form and confirm the current recipe
+   points at the PR head repo and head branch. If it does not, report it as
+   "comment only / already restored" and leave it unchanged.
+3. If the PR is **open**, keep the pin but include it in the pre-release
+   summary as an intentional temporary fork pin.
+4. If the PR is **closed but not merged**, stop and ask the user how to
+   proceed. Do not cut a release with a fork pin for an abandoned PR unless
+   the user explicitly confirms it.
+5. If the PR is **merged**, restore the recipe to the PR base repository:
+   - Change `:repo` from the head repo to the base repo.
+   - Remove `:branch` when it names the PR head branch and the PR base branch
+     is the base repository's default branch.
+   - Otherwise change `:branch` to the PR base branch.
+   - Remove the PR URL comment only when it was attached to the temporary
+     `:branch` line that is being removed. If the comment has additional
+     explanatory text or the branch line remains, keep or update it
+     conservatively.
+
+After restoring any merged PR pins:
+
+1. Run the profile-aware tangle:
+
+   ```bash
+   emacsclient -e '(init-build-profile (file-name-directory user-init-file))'
+   ```
+
+2. Review `git diff -- emacs/config.org` and verify it contains only the
+   intended recipe restorations.
+3. Commit the restoration separately before continuing:
+
+   ```bash
+   git add emacs/config.org
+   git commit -m "emacs: restore merged package recipe pins"
+   ```
+
+4. Re-run the temporary-pin scan and continue only when all remaining pins
+   are open PRs that are reported in the pre-release summary.
+
+---
+
+## Step 3: Check dotfiles working tree
 
 ```bash
 git status --porcelain
@@ -120,7 +185,7 @@ If the output is non-empty, **refuse to proceed**. Tell the user to commit or st
 
 ---
 
-## Step 3: Sync with remote
+## Step 4: Sync with remote
 
 ```bash
 git fetch origin
@@ -131,7 +196,7 @@ If the local branch is behind the remote, warn the user and ask whether to pull 
 
 ---
 
-## Step 4: Fetch latest tag and list unreleased commits
+## Step 5: Fetch latest tag and list unreleased commits
 
 ```bash
 git fetch --tags origin
@@ -149,7 +214,7 @@ If there are **zero** commits since the last tag, stop — there is nothing to r
 
 ---
 
-## Step 5: Classify commits and suggest bump
+## Step 6: Classify commits and suggest bump
 
 The dotfiles uses a `MAJOR.MINOR.PATCH` version scheme (e.g., `7.1.29`). There is no `Version:` header — the version lives only in the git tag.
 
@@ -164,7 +229,7 @@ Suggest the appropriate semver bump based on the highest-priority category prese
 
 ---
 
-## Step 6: Draft release notes
+## Step 7: Draft release notes
 
 Group commits by category and draft release notes in this format:
 
@@ -187,7 +252,7 @@ If there are many commits (e.g., 100+), summarize by theme rather than listing e
 
 ---
 
-## Step 7: Pre-release summary
+## Step 8: Pre-release summary
 
 Present a summary:
 
@@ -195,13 +260,15 @@ Present a summary:
 - New version (proposed bump)
 - Number of commits included
 - Elpaca sources cleanliness status (all clean)
+- Temporary Elpaca PR pins that remain, with package, recipe repo/branch, PR
+  URL, and PR state
 - Release notes draft
 
 **Wait for explicit user confirmation before proceeding** (unless `--accept` was passed). Do not take any action until the user says yes. If the user wants changes to the version or notes, revise and re-present.
 
 ---
 
-## Step 8: Write lockfile and commit
+## Step 9: Write lockfile and commit
 
 After the user confirms the version and notes:
 
@@ -234,7 +301,7 @@ After the user confirms the version and notes:
 
 ---
 
-## Step 9: Release gate
+## Step 10: Release gate
 
 **Wait for explicit user confirmation** that the profile tested successfully. Do not proceed until the user explicitly says to continue.
 
@@ -242,7 +309,7 @@ If the user made additional dotfiles changes after step 8 (e.g., fixing issues f
 
 ---
 
-## Step 10: Tag, push, and create release
+## Step 11: Tag, push, and create release
 
 Only after the user confirms:
 
@@ -274,7 +341,7 @@ Only after the user confirms:
 
 ---
 
-## Step 11: Post-release verification
+## Step 12: Post-release verification
 
 After the release is created:
 

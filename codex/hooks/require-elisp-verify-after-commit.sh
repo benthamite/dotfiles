@@ -35,7 +35,7 @@ if echo "$COMMAND" | grep -qE 'batch-test\.sh'; then
 fi
 
 # Block everything else
-REASON="BLOCKED: You committed Elisp changes but have not verified them in the running Emacs. Run \`emacsclient -e\` to exercise the changed code path before continuing. The post-commit hook has already reloaded the code — verify the fix works, don't just compile."
+REASON="BLOCKED: You committed Elisp changes but have not verified them in the running Emacs. Run \`emacsclient -e\` (or \`emacsclient --eval\`) to exercise the changed code path before continuing. The post-commit hook has already reloaded the code — verify the fix works, don't just compile."
 jq -n --arg reason "$REASON" '{
   "hookSpecificOutput": {
     "hookEventName": "PreToolUse",

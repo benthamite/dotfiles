@@ -938,14 +938,14 @@ Creates a session marker (=/tmp/claude-elisp-skill-{SESSION_ID}=) when the =elis
 :ID:       130ACA78-30B6-4B1A-9E02-EC99B126079D
 :END:
 
-Blocks all shell commands (except =emacsclient= and =batch-test.sh=) after committing =.el= files until verification via =emacsclient -e= has been run. Uses a session marker created by the companion =track-elisp-verify.sh= hook. Ensures the agent verifies that committed Elisp loads correctly in the running Emacs before moving on.
+Blocks all shell commands (except =emacsclient= and =batch-test.sh=) after committing =.el= files until verification via =emacsclient -e= (or =emacsclient --eval=) has been run. Uses a session marker created by the companion =track-elisp-verify.sh= hook. Ensures the agent verifies that committed Elisp loads correctly in the running Emacs before moving on.
 
 *** track-elisp-verify.sh (PostToolUse)
 :PROPERTIES:
 :ID:       CEA9EC73-B53B-4097-B9CA-38828EB94D97
 :END:
 
-Creates a verification marker (=/tmp/claude-elisp-verify-needed-{SESSION_ID}=) after a successful =git commit= whose target repo's just-created commit includes =.el= files. Clears the marker when =emacsclient -e= runs. Skips test files (=*-test.el=, =*-tests.el=). Cleans up stale markers older than 2 hours.
+Creates a verification marker (=/tmp/claude-elisp-verify-needed-{SESSION_ID}=) after a successful =git commit= whose target repo's just-created commit includes =.el= files. Clears the marker when =emacsclient -e= or =emacsclient --eval= runs. Skips test files (=*-test.el=, =*-tests.el=). Cleans up stale markers older than 2 hours.
 
 *** notify-emacs-notification.sh (Notification)
 :PROPERTIES:

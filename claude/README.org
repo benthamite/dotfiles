@@ -524,7 +524,7 @@ Registers an Emacs package in =my-emacs-packages.org=, creates an accompanying d
 :ID:       10DF729B-32D5-48E0-A150-9F5D18F799AF
 :END:
 
-Cuts releases for my Emacs packages (read dynamically from the listed package headings in =my-emacs-packages.org=, excluding the unlisted section). Validates the repo, classifies commits since the last tag, suggests a semver bump, and drafts release notes. Also has an audit mode that scans all packages for version mismatches or unreleased commits without cloning or creating tags/releases. Handles untagged package repos as initial releases, strips flags such as =--accept= before package inference, and routes dotfiles releases to the dotfiles-local release workflow. Pass =--accept= to skip the confirmation gate.
+Cuts releases for my Emacs packages (read dynamically from the listed package headings in =my-emacs-packages.org=, excluding the unlisted section). Validates the repo, classifies commits since the last tag, suggests a semver bump, and drafts release notes. Also has an audit mode that scans all packages for version mismatches or unreleased commits without cloning or creating tags/releases. Handles untagged package repos as initial releases, strips flags such as =--accept= before package inference, and routes dotfiles releases to the dotfiles-local release workflow. Dotfiles releases check =emacs/config.org= for temporary Elpaca PR fork pins, restore merged pins when safe, and report any open pins in the pre-release summary. Pass =--accept= to skip the confirmation gate.
 
 **** update-log
 :PROPERTIES:

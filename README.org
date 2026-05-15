@@ -21,7 +21,8 @@ This repository contains my dotfiles, including
   project-local Claude and Codex skill trees.
 - =open-session-log=: Opens the current Claude Code session log in Emacs via =agent-log=.
 - =optimize-claude-md=: Optimizes project Claude Code instruction files.
-- =release-dotfiles=: Prepares and publishes dotfiles releases.
+- =release-dotfiles=: Prepares and publishes dotfiles releases, including
+  checks/restoration for temporary Elpaca PR fork pins in =emacs/config.org=.
 - =skill-audit=: Audits or improves agent skills for trigger quality, workflow design, verification, portability, and maintainability.
 - =skill-creator=: Creates or iteratively improves agent skills.
 - =skill-discovery=: Scans recent sessions to discover repeated workflows worth turning into skills.

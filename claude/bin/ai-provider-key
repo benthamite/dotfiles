@@ -8,11 +8,11 @@ This command separates provider admin credentials from project runtime keys:
 - Runtime keys are stored in the Automations vault as provider/project-scoped
   items such as "OpenAI - automations-dashboard".
 
-The OpenAI flow can create the project and service-account key through the
-OpenAI organization API when the admin credential has sufficient permissions.
-Anthropic's public Admin API supports workspace management and API-key
-inventory/update, but not API-key creation, so the Anthropic flow stores a key
-that was created in the console.
+OpenAI automation keys are service-account keys in the shared OpenAI
+Automations project. Anthropic automation keys are keys in the shared Anthropic
+Automations workspace; Anthropic's public Admin API supports workspace
+management and API-key inventory/update, but not API-key creation, so the
+Anthropic flow stores a key that was created in the console.
 """
 
 from __future__ import annotations
@@ -34,6 +34,8 @@ from typing import Any
 DEFAULT_AUTOMATIONS_VAULT = "Automations"
 DEFAULT_OPENAI_ADMIN_REF = "op://Employee/OpenAI - api-provisioning-admin/credential"
 DEFAULT_ANTHROPIC_ADMIN_REF = "op://Employee/Anthropic - api-provisioning-admin/credential"
+DEFAULT_OPENAI_AUTOMATIONS_PROJECT_ID = "proj_mdM7wTXIQUFqquI4A1zCO2BF"
+DEFAULT_ANTHROPIC_AUTOMATIONS_WORKSPACE_ID = "wrkspc_016hokUAzbZA7qVGuAUjfZTb"
 ANTHROPIC_VERSION = "2023-06-01"
 
 
@@ -254,7 +256,12 @@ def write_env_op(repo: Path, env_name: str, op_ref: str, *, force: bool) -> None
 def create_openai(args: argparse.Namespace) -> RuntimeCredential:
     admin_ref = args.admin_key_ref or os.environ.get("EPOCH_OPENAI_ADMIN_KEY_REF") or DEFAULT_OPENAI_ADMIN_REF
     admin_key = op_read(admin_ref, desktop_session=admin_ref.startswith("op://Employee/"))
-    project_id, _ = get_or_create_openai_project(admin_key, args.provider_project_name or args.project)
+    if args.provider_resource_id:
+        project_id = args.provider_resource_id
+    elif args.provider_project_name:
+        project_id, _ = get_or_create_openai_project(admin_key, args.provider_project_name)
+    else:
+        project_id = DEFAULT_OPENAI_AUTOMATIONS_PROJECT_ID
     service_account_id, secret = create_openai_service_account(admin_key, project_id, args.key_name or args.project)
     item_title = f"OpenAI - {args.project}"
     env_name = args.env_name or env_name_for(args.project, "OPENAI")
@@ -265,7 +272,12 @@ def create_openai(args: argparse.Namespace) -> RuntimeCredential:
 def create_anthropic(args: argparse.Namespace) -> RuntimeCredential:
     admin_ref = args.admin_key_ref or os.environ.get("EPOCH_ANTHROPIC_ADMIN_KEY_REF") or DEFAULT_ANTHROPIC_ADMIN_REF
     admin_key = op_read(admin_ref, desktop_session=admin_ref.startswith("op://Employee/"))
-    workspace_id, _ = get_or_create_anthropic_workspace(admin_key, args.provider_project_name or args.project)
+    if args.provider_resource_id:
+        workspace_id = args.provider_resource_id
+    elif args.provider_project_name:
+        workspace_id, _ = get_or_create_anthropic_workspace(admin_key, args.provider_project_name)
+    else:
+        workspace_id = DEFAULT_ANTHROPIC_AUTOMATIONS_WORKSPACE_ID
     secret = read_secret_argument(args)
     item_title = f"Anthropic - {args.project}"
     env_name = args.env_name or env_name_for(args.project, "ANTHROPIC")
@@ -283,9 +295,17 @@ def dry_run_plan(args: argparse.Namespace) -> dict[str, Any]:
             admin_ref = os.environ.get("EPOCH_OPENAI_ADMIN_KEY_REF") or DEFAULT_OPENAI_ADMIN_REF
         else:
             admin_ref = os.environ.get("EPOCH_ANTHROPIC_ADMIN_KEY_REF") or DEFAULT_ANTHROPIC_ADMIN_REF
+    if args.provider_resource_id:
+        provider_resource = args.provider_resource_id
+    elif args.provider_project_name:
+        provider_resource = args.provider_project_name
+    elif args.provider == "openai":
+        provider_resource = DEFAULT_OPENAI_AUTOMATIONS_PROJECT_ID
+    else:
+        provider_resource = DEFAULT_ANTHROPIC_AUTOMATIONS_WORKSPACE_ID
     return {
         "provider": args.provider,
-        "provider_project_or_workspace_name": args.provider_project_name or args.project,
+        "provider_project_or_workspace": provider_resource,
         "provider_key_or_service_account_name": args.key_name or args.project,
         "admin_key_ref": admin_ref,
         "item_title": item_title,
@@ -305,7 +325,8 @@ def read_secret_argument(args: argparse.Namespace) -> str:
     else:
         raise ProvisionError(
             "Anthropic workspace creation is supported, but API-key creation is not exposed by the public Admin API. "
-            "Create the workspace key in the Anthropic Console and pass it with --secret-file or --secret-stdin."
+            "Create the key in the shared Anthropic Automations workspace "
+            f"({DEFAULT_ANTHROPIC_AUTOMATIONS_WORKSPACE_ID}) and pass it with --secret-file or --secret-stdin."
         )
     if not secret:
         raise ProvisionError("Provided secret is empty.")
@@ -318,7 +339,14 @@ def build_parser() -> argparse.ArgumentParser:
     create = subparsers.add_parser("create-automation", help="Create/store an automation runtime key")
     create.add_argument("--provider", choices=("openai", "anthropic"), required=True)
     create.add_argument("--project", required=True, help="Automation project slug, e.g. automations-dashboard")
-    create.add_argument("--provider-project-name", help="Provider project/workspace name; defaults to --project")
+    create.add_argument(
+        "--provider-project-name",
+        help="Override provider project/workspace name; defaults to the shared Automations resource",
+    )
+    create.add_argument(
+        "--provider-resource-id",
+        help="Override provider project/workspace id; defaults to the shared Automations resource",
+    )
     create.add_argument("--key-name", help="Provider key/service-account name; defaults to --project")
     create.add_argument("--vault", default=DEFAULT_AUTOMATIONS_VAULT)
     create.add_argument("--admin-key-ref", help="1Password reference for the provider admin/broker key")

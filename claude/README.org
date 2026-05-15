@@ -89,15 +89,17 @@ are project-local by definition and must not be used as targets for global
 =claude/bin/ai-provider-key= provisions project-scoped AI-provider runtime
 keys for Epoch automation projects. It keeps provider admin/broker credentials
 out of project repos and stores runtime credentials in the =Automations= vault,
-then optionally writes the project repo's =.env.op= entry. OpenAI automation
-keys are created through the OpenAI organization/project API when the configured
-admin key has project-management permissions. Anthropic workspace creation is
-supported through the Anthropic Admin API; Anthropic runtime key creation is
-still a console step because the public Admin API documents key list/update, not
-key creation. Use the helper instead of ambient =OPENAI_API_KEY= or
-=ANTHROPIC_API_KEY= values when adding AI model access to automation projects.
-The default Anthropic broker credential is
-The default OpenAI broker credential is
+then optionally writes the project repo's =.env.op= entry. Provider-side
+automation keys belong in the shared Automations resources, not one
+provider-side project/workspace per automation repo: OpenAI project
+=proj_mdM7wTXIQUFqquI4A1zCO2BF= and Anthropic workspace
+=wrkspc_016hokUAzbZA7qVGuAUjfZTb=. OpenAI automation keys are service-account
+keys created through the OpenAI organization/project API when the configured
+admin key has project-management permissions. Anthropic runtime key creation is
+still a console step in the shared Anthropic Automations workspace because the
+public Admin API documents key list/update, not key creation. Use the helper
+instead of ambient =OPENAI_API_KEY= or =ANTHROPIC_API_KEY= values when adding AI
+model access to automation projects. The default OpenAI broker credential is
 =op://Employee/OpenAI - api-provisioning-admin/credential=; the default
 Anthropic broker credential is
 =op://Employee/Anthropic - api-provisioning-admin/credential=.

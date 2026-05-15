@@ -134,8 +134,9 @@ currently present in this repo. The skill name shown is the directory name.
   Denote manual style. Scope: Global.
 - =doc-extras=: Audit, create, or refresh documentation for all Emacs extras
   packages in the dotfiles repo. Scope: Global; Project-local: emacs.
-- =dotfiles-context=: Dotfiles and Emacs package routing context. Scope:
-  Global.
+- =dotfiles-context=: Dotfiles and Emacs package routing context, including
+  the normal post-PR =config.org= pin for upstream Elpaca package branches
+  awaiting merge. Scope: Global.
 - =dx-audit=: Audit a codebase's AI developer experience, including project
   instructions, verification commands, automation, onboarding traps, and
   collaboration friction. Scope: Global.
@@ -191,9 +192,6 @@ currently present in this repo. The skill name shown is the directory name.
 - =post-push-ci=: Close the loop after agent pushes by waiting for GitHub
   Actions, inspecting failed logs, fixing push-triggered CI failures, and
   repeating until the pushed commit is green or a real blocker is identified.
-  Scope: Global.
-- =pin-elisp-pr=: Update =emacs/config.org= to temporarily pin an
-  Elpaca-managed Emacs package to an upstream PR branch while it awaits merge.
   Scope: Global.
 - =pr-audit=: Verify a PR or PR-ready branch before submitting, pushing,
   merging, or after revision. Scope: Global.

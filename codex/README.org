@@ -298,6 +298,11 @@ causes, commits and pushes follow-up fixes, and repeats until the pushed commit
 is green or a concrete blocker is identified. It does not grant permission to
 push; it only applies after a push has already been authorized.
 
+The =pin-elisp-pr= skill updates =emacs/config.org= after an upstream Emacs
+package PR exists, temporarily pointing the Elpaca recipe at the PR head
+repo/branch and adding an explicit =awaiting PR merge:= marker with the PR URL.
+It tangles the profile-aware config and commits the dotfiles pin separately.
+
 The =release= skill is a Codex operations workflow for releasing
 the user's listed Emacs packages from the listed headings in
 =my-emacs-packages.org=, excluding the unlisted section. It supports =/release
@@ -306,7 +311,8 @@ during audits, handles untagged package repos as initial releases, strips flags
 such as =--accept= before package inference, and keeps dotfiles releases routed
 to the dotfiles-local release workflow. The dotfiles release workflow checks
 =emacs/config.org= for temporary Elpaca PR fork pins, restores merged pins when
-safe, and reports any open pins in the pre-release summary.
+safe, and reports any open pins in the pre-release summary. Temporary pins
+should be marked in =config.org= as =awaiting PR merge:= followed by the PR URL.
 
 The =diagnose= skill is a Codex diagnostic mode modifier for
 investigating agent, tooling, configuration, and workflow failures before

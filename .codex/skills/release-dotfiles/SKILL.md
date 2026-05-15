@@ -114,19 +114,21 @@ If the user declines, abort the release.
 
 Before checking the dotfiles working tree, scan `emacs/config.org` for
 Elpaca recipes that are temporarily pinned to a fork branch for an upstream
-pull request. These are typically `use-package` `:ensure` recipes with a
-GitHub PR URL comment near the `:repo` or `:branch` fields, for example:
+pull request. These are `use-package` `:ensure` recipes with an `awaiting PR
+merge` marker near the temporary `:repo` or `:branch` fields, for example:
 
 ```elisp
 (use-package some-package
   :ensure (:host github
                  :repo "benthamite/some-package"
-                 :branch "fix/something") ; https://github.com/upstream/some-package/pull/123
+                 :branch "fix/something") ; awaiting PR merge: https://github.com/upstream/some-package/pull/123
   ...)
 ```
 
-Use `rg -n "github\\.com/.*/.*/pull/[0-9]+" emacs/config.org` to find
-candidate pins. For each candidate:
+Use `rg -n "awaiting PR merge: .*github\\.com/.*/.*/pull/[0-9]+|github\\.com/.*/.*/pull/[0-9]+" emacs/config.org`
+to find candidate pins. Prefer the explicit `awaiting PR merge` marker; treat
+a bare PR URL as a legacy candidate to inspect and normalize if you edit it.
+For each candidate:
 
 1. Parse the PR URL and query GitHub:
 
@@ -151,7 +153,8 @@ candidate pins. For each candidate:
    - Remove the PR URL comment only when it was attached to the temporary
      `:branch` line that is being removed. If the comment has additional
      explanatory text or the branch line remains, keep or update it
-     conservatively.
+     conservatively. The expected marker for any remaining temporary pin is
+     `; awaiting PR merge: <PR URL>`.
 
 After restoring any merged PR pins:
 

@@ -198,6 +198,13 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
+      "name": "pin-elisp-pr",
+      "claude": "claude/skills/pin-elisp-pr/SKILL.md",
+      "codex": "codex/skills/pin-elisp-pr/SKILL.md",
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
+    },
+    {
       "name": "pr-audit",
       "claude": "claude/skills/pr-audit/SKILL.md",
       "codex": "codex/skills/pr-audit/SKILL.md",

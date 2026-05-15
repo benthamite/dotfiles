@@ -192,6 +192,9 @@ currently present in this repo. The skill name shown is the directory name.
   Actions, inspecting failed logs, fixing push-triggered CI failures, and
   repeating until the pushed commit is green or a real blocker is identified.
   Scope: Global.
+- =pin-elisp-pr=: Update =emacs/config.org= to temporarily pin an
+  Elpaca-managed Emacs package to an upstream PR branch while it awaits merge.
+  Scope: Global.
 - =pr-audit=: Verify a PR or PR-ready branch before submitting, pushing,
   merging, or after revision. Scope: Global.
 - =proofread=: Proofread Markdown for spelling, grammar, typos, punctuation,

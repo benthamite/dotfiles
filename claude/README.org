@@ -45,6 +45,7 @@ authoritative cross-tool path-role table lives in =../agents/README.org=.
 ├── bin/sheets.py                     ← Sheets API CLI (--account epoch|personal)
 ├── bin/slack.py                      ← Slack web-API CLI, including permalink/thread fetches
 ├── bin/copy-slack-draft              ← Copies Slack reply drafts to Emacs kill ring and prefills the reply composer
+├── bin/ai-provider-key               ← Creates/stores project-scoped AI-provider runtime keys
 ├── bin/_gworkspace_auth.py           ← shared OAuth helper for gmail.py / sheets.py
 ├── ../bin/ai-config-sync             ← Claude/Codex sync audit and hook checker
 └── README.org                        ← this file
@@ -84,6 +85,17 @@ are project-local by definition and must not be used as targets for global
 *MCP server reference.* Placement rules, current inventory, multi-account notes, account-specific credential handling, identity checks, and reload requirements for remaining project-local exceptions live in =context/mcp-servers.md=. The global =CLAUDE.md= points agents there when MCP-specific context is needed, so they do not need to read this whole README just to configure or debug an MCP server.
 
 *Service access tools.* The global =CLAUDE.md= lists the local tools used to connect to external services: Anna's Archive, Twitter/X, Gmail, Google Sheets, Slack, Google Calendar, Google Docs/Drive, and GitHub. These local tools are the default path for Claude workflows; MCP servers and hosted connectors are exceptions documented in =context/mcp-servers.md= and service-specific context files.
+
+=claude/bin/ai-provider-key= provisions project-scoped AI-provider runtime
+keys for Epoch automation projects. It keeps provider admin/broker credentials
+out of project repos and stores runtime credentials in the =Automations= vault,
+then optionally writes the project repo's =.env.op= entry. OpenAI automation
+keys are created through the OpenAI organization/project API when the configured
+admin key has project-management permissions. Anthropic workspace creation is
+supported through the Anthropic Admin API; Anthropic runtime key creation is
+still a console step because the public Admin API documents key list/update, not
+key creation. Use the helper instead of ambient =OPENAI_API_KEY= or
+=ANTHROPIC_API_KEY= values when adding AI model access to automation projects.
 
 **** Settings hierarchy
 :PROPERTIES:

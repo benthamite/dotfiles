@@ -11763,6 +11763,10 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 /[[file:extras/bibtex-extras.el][bibtex-extras]] collects my extensions for =bibtex=./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(elpaca (ebib :host github
+              :repo "benthamite/ebib"
+              :branch "codex/handle-killed-ebib-buffers")) ; awaiting PR merge: https://github.com/joostkremers/ebib/pull/325
+
 (use-personal-package bibtex-extras
   :after bibtex
   :demand t

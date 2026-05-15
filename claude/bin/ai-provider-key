@@ -32,7 +32,7 @@ from typing import Any
 
 
 DEFAULT_AUTOMATIONS_VAULT = "Automations"
-DEFAULT_OPENAI_ADMIN_REF = "op://Employee/OpenAI - ai-tool-usage-reporting-admin/credential"
+DEFAULT_OPENAI_ADMIN_REF = "op://Employee/OpenAI - api-provisioning-admin/credential"
 DEFAULT_ANTHROPIC_ADMIN_REF = "op://Employee/Anthropic - api-provisioning-admin/credential"
 ANTHROPIC_VERSION = "2023-06-01"
 

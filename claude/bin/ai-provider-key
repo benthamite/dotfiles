@@ -1,0 +1,359 @@
+#!/usr/bin/env python3
+"""Create/store AI-provider runtime keys for Epoch automation projects.
+
+This command separates provider admin credentials from project runtime keys:
+
+- Admin credentials are read from a fixed 1Password reference and are never
+  stored in project repos or automation runtime env files.
+- Runtime keys are stored in the Automations vault as provider/project-scoped
+  items such as "OpenAI - automations-dashboard".
+
+The OpenAI flow can create the project and service-account key through the
+OpenAI organization API when the admin credential has sufficient permissions.
+Anthropic's public Admin API supports workspace management and API-key
+inventory/update, but not API-key creation, so the Anthropic flow stores a key
+that was created in the console.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import subprocess
+import sys
+import tempfile
+import urllib.error
+import urllib.parse
+import urllib.request
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+
+DEFAULT_AUTOMATIONS_VAULT = "Automations"
+DEFAULT_OPENAI_ADMIN_REF = "op://Employee/OpenAI - ai-tool-usage-reporting-admin/credential"
+DEFAULT_ANTHROPIC_ADMIN_REF = "op://Employee/Anthropic - ai-tool-usage-admin/credential"
+ANTHROPIC_VERSION = "2023-06-01"
+
+
+class ProvisionError(RuntimeError):
+    pass
+
+
+@dataclass(frozen=True)
+class RuntimeCredential:
+    provider: str
+    item_title: str
+    env_name: str
+    op_ref: str
+    project_or_workspace_id: str
+    secret: str
+
+
+def run(args: list[str], *, input_text: str | None = None, capture: bool = True) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        args,
+        input=input_text,
+        capture_output=capture,
+        text=True,
+        check=False,
+    )
+
+
+def op_read(reference: str, *, desktop_session: bool = False) -> str:
+    args = ["op", "read", reference]
+    if desktop_session:
+        args = ["env", "-u", "OP_SERVICE_ACCOUNT_TOKEN", *args]
+    result = run(args)
+    if result.returncode != 0:
+        raise ProvisionError(f"Could not read {reference}: {result.stderr.strip()}")
+    return result.stdout.rstrip("\n")
+
+
+def op_item_exists(title: str, vault: str) -> bool:
+    result = run(["op", "item", "get", title, "--vault", vault, "--format", "json"])
+    return result.returncode == 0
+
+
+def ensure_desktop_op_session() -> None:
+    result = run(["env", "-u", "OP_SERVICE_ACCOUNT_TOKEN", "op", "whoami"])
+    if result.returncode == 0:
+        return
+    signin = run(["env", "-u", "OP_SERVICE_ACCOUNT_TOKEN", "op", "signin", "--force"])
+    if signin.returncode != 0:
+        raise ProvisionError("1Password desktop session is unavailable; cannot write secret item.")
+
+
+def create_or_update_automation_item(credential: RuntimeCredential, vault: str, *, force: bool) -> None:
+    ensure_desktop_op_session()
+    if op_item_exists(credential.item_title, vault):
+        if not force:
+            raise ProvisionError(
+                f"{credential.item_title!r} already exists in {vault}; use --force to replace the credential field."
+            )
+        result = run(
+            [
+                "env",
+                "-u",
+                "OP_SERVICE_ACCOUNT_TOKEN",
+                "op",
+                "item",
+                "edit",
+                credential.item_title,
+                "--vault",
+                vault,
+                f"credential[concealed]={credential.secret}",
+                f"provider[text]={credential.provider}",
+                f"scope[text]={credential.item_title.split(' - ', 1)[1]}",
+                f"env_var[text]={credential.env_name}",
+                f"provider_resource_id[text]={credential.project_or_workspace_id}",
+            ]
+        )
+    else:
+        result = run(
+            [
+                "env",
+                "-u",
+                "OP_SERVICE_ACCOUNT_TOKEN",
+                "op",
+                "item",
+                "create",
+                "--category=API Credential",
+                f"--title={credential.item_title}",
+                f"--vault={vault}",
+                f"credential[concealed]={credential.secret}",
+                f"provider[text]={credential.provider}",
+                f"scope[text]={credential.item_title.split(' - ', 1)[1]}",
+                f"env_var[text]={credential.env_name}",
+                f"provider_resource_id[text]={credential.project_or_workspace_id}",
+            ]
+        )
+    if result.returncode != 0:
+        raise ProvisionError(f"Could not write {credential.item_title}: {result.stderr.strip()}")
+
+    verify = run(["op", "read", credential.op_ref])
+    if verify.returncode != 0:
+        raise ProvisionError(f"Wrote item, but service-account read verification failed: {verify.stderr.strip()}")
+
+
+def request_json(url: str, *, method: str = "GET", headers: dict[str, str], body: dict[str, Any] | None = None) -> dict[str, Any]:
+    payload = None if body is None else json.dumps(body).encode("utf-8")
+    request = urllib.request.Request(url, data=payload, method=method, headers=headers)
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            return json.loads(response.read())
+    except urllib.error.HTTPError as exc:
+        try:
+            error_body = json.loads(exc.read())
+        except Exception:
+            error_body = {"error": {"message": "non-json error response"}}
+        message = error_body.get("error", {}).get("message", error_body)
+        raise ProvisionError(f"{method} {url} failed with HTTP {exc.code}: {message}") from None
+
+
+def openai_headers(admin_key: str) -> dict[str, str]:
+    return {
+        "Authorization": f"Bearer {admin_key}",
+        "Content-Type": "application/json",
+    }
+
+
+def list_openai_projects(admin_key: str) -> list[dict[str, Any]]:
+    url = "https://api.openai.com/v1/organization/projects?limit=100&include_archived=false"
+    data = request_json(url, headers=openai_headers(admin_key))
+    return data.get("data", [])
+
+
+def get_or_create_openai_project(admin_key: str, name: str) -> tuple[str, bool]:
+    for project in list_openai_projects(admin_key):
+        if project.get("name") == name:
+            return project["id"], False
+    data = request_json(
+        "https://api.openai.com/v1/organization/projects",
+        method="POST",
+        headers=openai_headers(admin_key),
+        body={"name": name},
+    )
+    return data["id"], True
+
+
+def create_openai_service_account(admin_key: str, project_id: str, name: str) -> tuple[str, str]:
+    url = f"https://api.openai.com/v1/organization/projects/{project_id}/service_accounts"
+    data = request_json(url, method="POST", headers=openai_headers(admin_key), body={"name": name})
+    secret = (data.get("api_key") or {}).get("value")
+    if not secret:
+        raise ProvisionError("OpenAI did not return a service-account key value.")
+    return data["id"], secret
+
+
+def anthropic_headers(admin_key: str) -> dict[str, str]:
+    return {
+        "x-api-key": admin_key,
+        "anthropic-version": ANTHROPIC_VERSION,
+        "Content-Type": "application/json",
+    }
+
+
+def list_anthropic_workspaces(admin_key: str) -> list[dict[str, Any]]:
+    data = request_json(
+        "https://api.anthropic.com/v1/organizations/workspaces?limit=100",
+        headers=anthropic_headers(admin_key),
+    )
+    return data.get("data", [])
+
+
+def get_or_create_anthropic_workspace(admin_key: str, name: str) -> tuple[str, bool]:
+    for workspace in list_anthropic_workspaces(admin_key):
+        if workspace.get("name") == name and workspace.get("archived_at") is None:
+            return workspace["id"], False
+    data = request_json(
+        "https://api.anthropic.com/v1/organizations/workspaces",
+        method="POST",
+        headers=anthropic_headers(admin_key),
+        body={"name": name},
+    )
+    return data["id"], True
+
+
+def env_name_for(project_slug: str, provider: str) -> str:
+    prefix = project_slug.upper().replace("-", "_")
+    return f"{prefix}_{provider.upper()}_API_KEY"
+
+
+def write_env_op(repo: Path, env_name: str, op_ref: str, *, force: bool) -> None:
+    path = repo / ".env.op"
+    lines: list[str] = []
+    if path.exists():
+        lines = path.read_text(encoding="utf-8").splitlines()
+    entry = f"{env_name}={op_ref}"
+    replaced = False
+    next_lines = []
+    for line in lines:
+        if line.startswith(f"{env_name}="):
+            if not force and line != entry:
+                raise ProvisionError(f"{path} already defines {env_name}; use --force to replace it.")
+            next_lines.append(entry)
+            replaced = True
+        else:
+            next_lines.append(line)
+    if not replaced:
+        if next_lines and next_lines[-1].strip():
+            next_lines.append("")
+        if not next_lines:
+            next_lines.extend(
+                [
+                    "# 1Password secret references — resolved at runtime by `op run --env-file .env.op`.",
+                    "# Project runtime keys only; never use ambient personal API keys.",
+                ]
+            )
+        next_lines.append(entry)
+    path.write_text("\n".join(next_lines) + "\n", encoding="utf-8")
+
+
+def create_openai(args: argparse.Namespace) -> RuntimeCredential:
+    admin_ref = args.admin_key_ref or os.environ.get("EPOCH_OPENAI_ADMIN_KEY_REF") or DEFAULT_OPENAI_ADMIN_REF
+    admin_key = op_read(admin_ref, desktop_session=admin_ref.startswith("op://Employee/"))
+    project_id, _ = get_or_create_openai_project(admin_key, args.provider_project_name or args.project)
+    service_account_id, secret = create_openai_service_account(admin_key, project_id, args.key_name or args.project)
+    item_title = f"OpenAI - {args.project}"
+    env_name = args.env_name or env_name_for(args.project, "OPENAI")
+    op_ref = f"op://{args.vault}/{item_title}/credential"
+    return RuntimeCredential("openai", item_title, env_name, op_ref, f"{project_id}:{service_account_id}", secret)
+
+
+def create_anthropic(args: argparse.Namespace) -> RuntimeCredential:
+    admin_ref = args.admin_key_ref or os.environ.get("EPOCH_ANTHROPIC_ADMIN_KEY_REF") or DEFAULT_ANTHROPIC_ADMIN_REF
+    admin_key = op_read(admin_ref, desktop_session=admin_ref.startswith("op://Employee/"))
+    workspace_id, _ = get_or_create_anthropic_workspace(admin_key, args.provider_project_name or args.project)
+    secret = read_secret_argument(args)
+    item_title = f"Anthropic - {args.project}"
+    env_name = args.env_name or env_name_for(args.project, "ANTHROPIC")
+    op_ref = f"op://{args.vault}/{item_title}/credential"
+    return RuntimeCredential("anthropic", item_title, env_name, op_ref, workspace_id, secret)
+
+
+def dry_run_plan(args: argparse.Namespace) -> dict[str, Any]:
+    provider_label = {"openai": "OpenAI", "anthropic": "Anthropic"}[args.provider]
+    item_title = f"{provider_label} - {args.project}"
+    env_name = args.env_name or env_name_for(args.project, args.provider.upper())
+    admin_ref = args.admin_key_ref
+    if not admin_ref:
+        if args.provider == "openai":
+            admin_ref = os.environ.get("EPOCH_OPENAI_ADMIN_KEY_REF") or DEFAULT_OPENAI_ADMIN_REF
+        else:
+            admin_ref = os.environ.get("EPOCH_ANTHROPIC_ADMIN_KEY_REF") or DEFAULT_ANTHROPIC_ADMIN_REF
+    return {
+        "provider": args.provider,
+        "provider_project_or_workspace_name": args.provider_project_name or args.project,
+        "provider_key_or_service_account_name": args.key_name or args.project,
+        "admin_key_ref": admin_ref,
+        "item_title": item_title,
+        "env_name": env_name,
+        "op_ref": f"op://{args.vault}/{item_title}/credential",
+        "repo_env_file": str(args.repo / ".env.op") if args.repo else None,
+        "will_create_provider_secret": False,
+        "will_store_secret": False,
+    }
+
+
+def read_secret_argument(args: argparse.Namespace) -> str:
+    if args.secret_file:
+        secret = Path(args.secret_file).read_text(encoding="utf-8").strip()
+    elif args.secret_stdin:
+        secret = sys.stdin.read().strip()
+    else:
+        raise ProvisionError(
+            "Anthropic workspace creation is supported, but API-key creation is not exposed by the public Admin API. "
+            "Create the workspace key in the Anthropic Console and pass it with --secret-file or --secret-stdin."
+        )
+    if not secret:
+        raise ProvisionError("Provided secret is empty.")
+    return secret
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    subparsers = parser.add_subparsers(dest="command", required=True)
+    create = subparsers.add_parser("create-automation", help="Create/store an automation runtime key")
+    create.add_argument("--provider", choices=("openai", "anthropic"), required=True)
+    create.add_argument("--project", required=True, help="Automation project slug, e.g. automations-dashboard")
+    create.add_argument("--provider-project-name", help="Provider project/workspace name; defaults to --project")
+    create.add_argument("--key-name", help="Provider key/service-account name; defaults to --project")
+    create.add_argument("--vault", default=DEFAULT_AUTOMATIONS_VAULT)
+    create.add_argument("--admin-key-ref", help="1Password reference for the provider admin/broker key")
+    create.add_argument("--env-name", help="Runtime env var name to write to .env.op")
+    create.add_argument("--repo", type=Path, help="Repo where .env.op should be created or updated")
+    create.add_argument("--secret-file", help="Existing provider key to store; required for Anthropic")
+    create.add_argument("--secret-stdin", action="store_true", help="Read existing provider key from stdin")
+    create.add_argument("--dry-run", action="store_true", help="Create provider key but do not store it")
+    create.add_argument("--force", action="store_true", help="Replace existing 1Password field/.env.op entry")
+    return parser
+
+
+def main() -> int:
+    args = build_parser().parse_args()
+    if args.command != "create-automation":
+        raise AssertionError(args.command)
+    try:
+        if args.dry_run:
+            print(json.dumps(dry_run_plan(args), indent=2, sort_keys=True))
+            return 0
+        if args.provider == "openai":
+            credential = create_openai(args)
+        else:
+            credential = create_anthropic(args)
+        create_or_update_automation_item(credential, args.vault, force=args.force)
+        if args.repo:
+            write_env_op(args.repo, credential.env_name, credential.op_ref, force=args.force)
+        print(f"stored {credential.op_ref}")
+        if args.repo:
+            print(f"updated {args.repo / '.env.op'}")
+        return 0
+    except ProvisionError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

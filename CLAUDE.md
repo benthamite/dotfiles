@@ -9,3 +9,9 @@ For the configuration architecture (symlink topology, multi-account setup, setti
 # Documentation
 
 When you add, remove, or significantly change anything in the `claude/` subdirectory (skills, hooks, settings, CLAUDE.md), update `claude/README.org` to reflect the change.
+
+## Latest session
+
+Fixed an upstream Ebib bug, opened PR 325, corrected the PR branch after an accidental oversized diff, and pinned the local Elpaca recipe to that PR branch while it awaits merge. `release-dotfiles` now reports open pins and restores merged ones, while `dotfiles-context` now makes the post-PR `config.org` pin with an `awaiting PR merge:` marker part of the normal Elpaca package PR workflow.
+
+Full details: session-logs/2026-05-15.md

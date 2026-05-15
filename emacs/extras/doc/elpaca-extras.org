@@ -68,6 +68,8 @@ The command ~elpaca-extras-update-and-reload~ combines updating a package via El
 
 This provides a convenient single-step workflow: update, build, unload old definitions, and load the new ones.
 
+The command blocks via ~elpaca-wait~ while the build runs, so callers (notably ~emacsclient -e~ verification after a commit) see the rebuilt and reloaded package when the expression returns rather than the still-async pre-rebuild state.
+
 ** Rebuild and reload
 :PROPERTIES:
 :CUSTOM_ID: h:rebuild-and-reload

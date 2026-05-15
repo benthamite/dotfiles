@@ -112,12 +112,17 @@ If PKG is nil, prompt for it."
 
 (defun elpaca-extras--build-and-reload (pkg build-fn verb)
   "Build PKG using BUILD-FN, then reload.
-VERB is a past-tense verb for the success message (e.g., \"Updated\")."
+VERB is a past-tense verb for the success message (e.g., \"Updated\").
+
+Blocks via `elpaca-wait' so callers (notably `emacsclient -e' verification
+after a commit) observe the rebuilt and reloaded package when this
+expression returns, rather than the still-async pre-rebuild state."
   (letrec ((callback
             (lambda ()
               (elpaca-extras--handle-build-complete pkg callback verb))))
     (add-hook 'elpaca-post-queue-hook callback)
-    (funcall build-fn pkg t)))
+    (funcall build-fn pkg t)
+    (elpaca-wait)))
 
 (defun elpaca-extras--handle-build-complete (pkg callback verb)
   "Handle build completion for PKG, removing CALLBACK from hook.

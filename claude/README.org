@@ -364,7 +364,7 @@ These are not invoked directly. They supply background knowledge when Claude wor
 :ID:       3AB926D5-2116-4864-93F2-B6D33CE832C5
 :END:
 
-States where dotfiles and external Emacs packages should be edited: all non-=dotfiles= elpaca packages are edited in the active profile's =~/.config/emacs-profiles/<profile>/elpaca/sources/<package>/= clone, while =dotfiles= is edited only at =~/My Drive/dotfiles/= and the elpaca clone is a read-only mirror synced by git hooks. Also covers active profile lookup, profile-aware =emacs/config.org= tangling, required agent README updates, verification handoffs, and the commit message format (=<scope>: <description>=). See also =elisp-conventions= for Elisp testing/reload rules and =emacs/extras/doc/elisp-development-workflow.org= for the full two-clone sync architecture.
+States where dotfiles and external Emacs packages should be edited: all non-=dotfiles= elpaca packages are edited in the active profile's =~/.config/emacs-profiles/<profile>/elpaca/sources/<package>/= clone, while =dotfiles= is edited only at =~/My Drive/dotfiles/= and the elpaca clone is a read-only mirror synced by git hooks. Also covers active profile lookup, profile-aware =emacs/config.org= tangling, the normal post-PR step that pins upstream package PR branches in =config.org= with an =awaiting PR merge:= marker, required agent README updates, verification handoffs, and the commit message format (=<scope>: <description>=). See also =elisp-conventions= for Elisp testing/reload rules and =emacs/extras/doc/elisp-development-workflow.org= for the full two-clone sync architecture.
 
 **** elisp-conventions
 :PROPERTIES:
@@ -525,13 +525,6 @@ Registers an Emacs package in =my-emacs-packages.org=, creates an accompanying d
 :END:
 
 Cuts releases for my Emacs packages (read dynamically from the listed package headings in =my-emacs-packages.org=, excluding the unlisted section). Validates the repo, classifies commits since the last tag, suggests a semver bump, and drafts release notes. Also has an audit mode that scans all packages for version mismatches or unreleased commits without cloning or creating tags/releases. Handles untagged package repos as initial releases, strips flags such as =--accept= before package inference, and routes dotfiles releases to the dotfiles-local release workflow. Dotfiles releases check =emacs/config.org= for temporary Elpaca PR fork pins, restore merged pins when safe, and report any open pins in the pre-release summary. Pass =--accept= to skip the confirmation gate.
-
-**** pin-elisp-pr
-:PROPERTIES:
-:ID:       3C02CCBD-67C1-4B7D-B9A4-806B9C40BF71
-:END:
-
-Updates =emacs/config.org= after an upstream Emacs package PR exists, temporarily pointing the Elpaca recipe at the PR head repo/branch and adding an explicit =awaiting PR merge:= marker with the PR URL. It tangles the profile-aware config and commits the dotfiles pin separately, so =release-dotfiles= can later report open pins or restore merged ones.
 
 **** update-log
 :PROPERTIES:

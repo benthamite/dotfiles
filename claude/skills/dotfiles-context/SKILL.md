@@ -6,7 +6,7 @@ user-invocable: false
 
 # Purpose
 
-Use this context to keep dotfiles work in the right clone and verification path. It answers four questions: where to edit files, how to resolve the active elpaca profile, what to do after editing `emacs/config.org`, and which documentation and commit rules apply.
+Use this context to keep dotfiles work in the right clone and verification path. It answers five questions: where to edit files, how to resolve the active elpaca profile, what to do after editing `emacs/config.org`, how to keep upstream package PRs active in Elpaca until merge, and which documentation and commit rules apply.
 
 If changing Emacs Lisp code, also use `elisp-conventions`; that skill owns style, batch testing, rebuild/reload rules, and live Emacs verification.
 
@@ -47,6 +47,38 @@ Always use this to resolve the active profile path (`~/.config/emacs-profiles/<p
    - Codex integration changes under `codex/` require `codex/README.org`.
    - Emacs extras package changes should follow the documentation rules in `elisp-conventions`.
 4. Commit each logical change with the format below, staging only files that belong to that change.
+
+# Upstream package PRs
+
+When you create or update an upstream PR for a non-`dotfiles` Elpaca package,
+make the local profile use that PR branch as part of the normal PR creation
+workflow. Do this after the PR URL exists and before you report the PR as done.
+
+1. Query or record the PR metadata:
+
+   ```bash
+   gh pr view --json url,state,merged,baseRepository,baseRefName,headRepository,headRefName
+   ```
+
+2. If the PR is open, edit `~/My Drive/dotfiles/emacs/config.org` and update
+   the package's Elpaca recipe to point at the PR head repo and head branch.
+3. Add the exact lifecycle marker comment, preferably on the temporary
+   `:branch` line:
+
+   ```elisp
+   ; awaiting PR merge: https://github.com/OWNER/REPO/pull/NUMBER
+   ```
+
+4. Tangle with the profile-aware command below.
+5. Review `git diff -- emacs/config.org` and commit the pin separately:
+
+   ```bash
+   git add emacs/config.org
+   git commit -m "emacs: pin PACKAGE to pr branch"
+   ```
+
+If the PR is merged, do not pin; use the upstream/base recipe. If the PR is
+closed but unmerged, stop and ask the user before changing `config.org`.
 
 # Tangling `config.org`
 

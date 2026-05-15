@@ -183,7 +183,9 @@ The =dotfiles-context= skill is a Codex context skill for routing
 dotfiles and Emacs package edits to the correct canonical clone. It explains
 the =dotfiles= exception to the normal elpaca source layout, active profile
 lookup, profile-aware =emacs/config.org= tangling, README update obligations,
-verification handoffs, and the standard =<scope>: <description>= commit format.
+verification handoffs, the normal post-PR step that pins upstream package PR
+branches in =config.org= with an =awaiting PR merge:= marker, and the standard
+=<scope>: <description>= commit format.
 
 The =proofread= skill is a Codex workflow for proofreading
 Markdown files with aspell or Gemini Flash. It resolves the live tool-specific
@@ -297,11 +299,6 @@ wait for push-triggered CI on the pushed SHA, fetches failed logs, fixes root
 causes, commits and pushes follow-up fixes, and repeats until the pushed commit
 is green or a concrete blocker is identified. It does not grant permission to
 push; it only applies after a push has already been authorized.
-
-The =pin-elisp-pr= skill updates =emacs/config.org= after an upstream Emacs
-package PR exists, temporarily pointing the Elpaca recipe at the PR head
-repo/branch and adding an explicit =awaiting PR merge:= marker with the PR URL.
-It tangles the profile-aware config and commits the dotfiles pin separately.
 
 The =release= skill is a Codex operations workflow for releasing
 the user's listed Emacs packages from the listed headings in

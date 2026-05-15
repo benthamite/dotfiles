@@ -176,7 +176,14 @@ if codex_shell_tool_p "$TOOL_NAME"; then
     # We exclude strings starting with http:// or https://, file paths
     # starting with /, pure lowercase (English words), and strings that
     # look like file paths (3+ slash-separated segments).
-    HIGH_ENTROPY=$(echo "$CONTENT" | grep -oE '[A-Za-z0-9/+=_-]{30,}' | \
+    # Strip well-known public-blockchain artifacts first so query strings like
+    # `?user=0x<40-hex>` (Ethereum wallet address) do not trip the heuristic.
+    # 40-hex followed by a non-hex char (or end of string) is unambiguously a
+    # public address; Ethereum private keys are 64 hex and remain in the scan
+    # because the 41st char is still hex, so the pattern does not match.
+    HIGH_ENTROPY=$(echo "$CONTENT" | \
+      sed -E 's/0x[a-fA-F0-9]{40}([^a-fA-F0-9]|$)/\1/g' | \
+      grep -oE '[A-Za-z0-9/+=_-]{30,}' | \
       grep -vE '^https?://' | \
       grep -vE '^/' | \
       grep -vE '^[a-z]+$' | \

@@ -1,0 +1,113 @@
+#!/usr/bin/env python3
+"""Copy a Slack draft to the Emacs kill ring and optionally open a thread."""
+
+import argparse
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+
+def run_emacs_eval(expr: str) -> None:
+    result = subprocess.run(
+        ["emacsclient", "--eval", expr],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout).strip()
+        raise RuntimeError(detail or "emacsclient failed")
+
+
+def run_emacs_no_wait(expr: str) -> None:
+    result = subprocess.run(
+        ["emacsclient", "--no-wait", "--eval", expr],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout).strip()
+        raise RuntimeError(detail or "emacsclient failed")
+
+
+def elisp_string(value: str) -> str:
+    # JSON strings are valid enough Elisp string literals for paths and URLs.
+    return json.dumps(value)
+
+
+def copy_to_kill_ring(path: Path) -> None:
+    expr = (
+        "(with-temp-buffer "
+        f"(insert-file-contents {elisp_string(str(path))}) "
+        "(kill-new (buffer-string)))"
+    )
+    run_emacs_eval(expr)
+
+
+def open_slack_thread(permalink: str) -> None:
+    expr = (
+        "(progn "
+        "(require (quote cl-lib)) "
+        "(cl-letf (((symbol-function (quote browse-url-default-browser)) "
+        "(lambda (&rest _) "
+        '(error "Blocked browser fallback from slack-browse-url")))) '
+        f"(slack-browse-url {elisp_string(permalink)})) "
+        "nil)"
+    )
+    run_emacs_no_wait(expr)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Copy a Slack draft to Emacs kill ring and open its thread."
+    )
+    parser.add_argument("--file", required=True, help="Path to the draft text file")
+    parser.add_argument(
+        "--permalink",
+        help="Slack permalink to open in Emacs after copying the draft",
+    )
+    parser.add_argument(
+        "--no-open",
+        action="store_true",
+        help="Only copy the draft; do not open Slack. Useful for smoke tests.",
+    )
+    args = parser.parse_args()
+
+    draft_path = Path(args.file).expanduser()
+    if not draft_path.exists():
+        sys.stderr.write(f"ERROR: draft file does not exist: {draft_path}\n")
+        return 2
+    if not draft_path.is_file():
+        sys.stderr.write(f"ERROR: draft path is not a file: {draft_path}\n")
+        return 2
+    text = draft_path.read_text()
+    if not text.strip():
+        sys.stderr.write(f"ERROR: draft file is empty: {draft_path}\n")
+        return 2
+    if not args.no_open and not args.permalink:
+        sys.stderr.write("ERROR: --permalink is required unless --no-open is used\n")
+        return 2
+
+    try:
+        copy_to_kill_ring(draft_path)
+    except RuntimeError as exc:
+        sys.stderr.write(f"ERROR: failed to copy draft to Emacs kill ring: {exc}\n")
+        return 1
+    print("Copied draft to Emacs kill ring")
+
+    if args.no_open:
+        return 0
+
+    try:
+        open_slack_thread(args.permalink)
+    except RuntimeError as exc:
+        sys.stderr.write(f"ERROR: failed to open Slack thread in Emacs: {exc}\n")
+        return 1
+    print("Opened Slack thread in Emacs")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

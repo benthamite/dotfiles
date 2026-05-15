@@ -609,6 +609,23 @@ and debugging use narrower project checks, and Superpowers owns the ordinary
 final completion gate, unless this meta-verification workflow was explicitly
 requested.
 
+**** end-to-end
+:PROPERTIES:
+:ID:       F2FB1F36-29D6-4FAD-9ED4-2C18B07F1E1F
+:END:
+
+Narrower companion to =verify=, focused specifically on stopping mocked-test
+substitution for explicit user-requested end-to-end verification. Activates
+when the user says "end to end", "E2E", "real test", "live", "actually try
+it", "in a real session", or after fixes to interactive UI / async / live
+Emacs / terminal display / browser / Slack / scheduled-job code paths. The
+workflow forces the agent to state the success criterion in plain words,
+reproduce the failure on the same surface the user uses BEFORE changing
+code, re-run the same reproduction after the fix, and report verbatim what
+was verified through what surface. When E2E is impossible, the skill
+requires naming the blocked step explicitly rather than substituting a
+local proxy as success.
+
 **** handoff
 :PROPERTIES:
 :ID:       CAB83D10-E108-48D4-871B-17821B1D3CD6

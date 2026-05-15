@@ -186,6 +186,8 @@ lookup, profile-aware =emacs/config.org= tangling, README update obligations,
 verification handoffs, the normal post-PR step that pins upstream package PR
 branches in =config.org= with an =awaiting PR merge:= marker, and the standard
 =<scope>: <description>= commit format.
+It also covers dependency-only packages whose effective Elpaca pin must be an
+explicit =elpaca= order before the dependent package is queued.
 
 The =proofread= skill is a Codex workflow for proofreading
 Markdown files with aspell or Gemini Flash. It resolves the live tool-specific

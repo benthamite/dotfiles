@@ -114,8 +114,9 @@ If the user declines, abort the release.
 
 Before checking the dotfiles working tree, scan `emacs/config.org` for
 Elpaca recipes that are temporarily pinned to a fork branch for an upstream
-pull request. These are `use-package` `:ensure` recipes with an `awaiting PR
-merge` marker near the temporary `:repo` or `:branch` fields, for example:
+pull request. These are usually `use-package` `:ensure` recipes with an
+`awaiting PR merge` marker near the temporary `:repo` or `:branch` fields, for
+example:
 
 ```elisp
 (use-package some-package
@@ -123,6 +124,15 @@ merge` marker near the temporary `:repo` or `:branch` fields, for example:
                  :repo "benthamite/some-package"
                  :branch "fix/something") ; awaiting PR merge: https://github.com/upstream/some-package/pull/123
   ...)
+```
+
+Dependency-only packages may instead use an explicit Elpaca order before the
+dependent package is queued:
+
+```elisp
+(elpaca (some-package :host github
+                      :repo "benthamite/some-package"
+                      :branch "fix/something")) ; awaiting PR merge: https://github.com/upstream/some-package/pull/123
 ```
 
 Use `rg -n "awaiting PR merge: .*github\\.com/.*/.*/pull/[0-9]+|github\\.com/.*/.*/pull/[0-9]+" emacs/config.org`
@@ -137,9 +147,10 @@ For each candidate:
      --json state,merged,baseRepository,baseRefName,headRepository,headRefName,url
    ```
 
-2. Inspect the enclosing `use-package` form and confirm the current recipe
-   points at the PR head repo and head branch. If it does not, report it as
-   "comment only / already restored" and leave it unchanged.
+2. Inspect the enclosing `use-package` form or explicit `elpaca` order and
+   confirm the current recipe points at the PR head repo and head branch. If it
+   does not, report it as "comment only / already restored" and leave it
+   unchanged.
 3. If the PR is **open**, keep the pin but include it in the pre-release
    summary as an intentional temporary fork pin.
 4. If the PR is **closed but not merged**, stop and ask the user how to

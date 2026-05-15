@@ -136,7 +136,8 @@ currently present in this repo. The skill name shown is the directory name.
   packages in the dotfiles repo. Scope: Global; Project-local: emacs.
 - =dotfiles-context=: Dotfiles and Emacs package routing context, including
   the normal post-PR =config.org= pin for upstream Elpaca package branches
-  awaiting merge. Scope: Global.
+  awaiting merge, with explicit =elpaca= orders for dependency-only packages.
+  Scope: Global.
 - =dx-audit=: Audit a codebase's AI developer experience, including project
   instructions, verification commands, automation, onboarding traps, and
   collaboration friction. Scope: Global.

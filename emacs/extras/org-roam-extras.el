@@ -573,5 +573,106 @@ satisfies these criteria."
       (message msg)
       msg)))
 
+;;;;; Batch processing dump
+
+(defun org-roam-extras-dump-actionable-todos (output-file &optional filter-spec)
+  "Write actionable org-roam TODOs to OUTPUT-FILE as a JSON array.
+Return the number of records written.
+
+A TODO is actionable when its todo keyword is set, is not in
+`org-done-keywords', and the node has no scheduled or deadline date.  Each
+record is a JSON object with keys id, file, title, priority, todo, effort,
+tags, and olp.
+
+Optional FILTER-SPEC mirrors `org-roam-extras-node-find-special':
+- nil: no filter
+- (:tag . TAG): only nodes tagged TAG
+- (:dir DIRECTORY): only nodes whose file lives under DIRECTORY"
+  (let* ((done-keywords (or (with-temp-buffer
+			      (delay-mode-hooks (org-mode))
+			      org-done-keywords)
+			    '("DONE" "CANCELLED" "DELEGATED")))
+	 (rows (org-roam-extras--dump-todos-query filter-spec))
+	 (records (delq nil
+			(mapcar (lambda (row)
+				  (org-roam-extras--row-to-todo-record
+				   row done-keywords))
+				rows))))
+    (with-temp-file output-file
+      (insert (json-encode (vconcat records))))
+    (length records)))
+
+(defun org-roam-extras--dump-todos-query (filter-spec)
+  "Query org-roam-db for active TODO node rows.
+FILTER-SPEC is nil, (:tag . TAG), or (:dir DIRECTORY).  Returns a list of
+rows shaped as (ID FILE TITLE PRIORITY TODO PROPERTIES OLP)."
+  (let ((tag (when (eq (car-safe filter-spec) :tag) (cdr filter-spec)))
+	(dir (when (eq (car-safe filter-spec) :dir) (cadr filter-spec))))
+    (cond
+     (tag (org-roam-extras--dump-todos-query-tag tag))
+     (dir (org-roam-extras--dump-todos-query-dir dir))
+     (t (org-roam-extras--dump-todos-query-all)))))
+
+(defun org-roam-extras--dump-todos-query-tag (tag)
+  "Return active TODO rows from org-roam-db tagged with TAG."
+  (org-roam-db-query
+   `[:select [nodes:id nodes:file nodes:title nodes:priority
+		       nodes:todo nodes:properties nodes:olp]
+	     :from nodes
+	     :left-join tags
+	     :on (= nodes:id tags:node-id)
+	     :where (and (= tags:tag ,tag)
+			 (notnull nodes:todo)
+			 (not (notnull nodes:scheduled))
+			 (not (notnull nodes:deadline)))]))
+
+(defun org-roam-extras--dump-todos-query-dir (dir)
+  "Return active TODO rows from org-roam-db whose file lives under DIR."
+  (let ((dir-prefix (concat (file-name-as-directory dir) "%")))
+    (org-roam-db-query
+     `[:select [id file title priority todo properties olp]
+	       :from nodes
+	       :where (and (notnull todo)
+			   (not (notnull scheduled))
+			   (not (notnull deadline))
+			   (like nodes:file ,dir-prefix))])))
+
+(defun org-roam-extras--dump-todos-query-all ()
+  "Return all active TODO rows from org-roam-db."
+  (org-roam-db-query
+   `[:select [id file title priority todo properties olp]
+	     :from nodes
+	     :where (and (notnull todo)
+			 (not (notnull scheduled))
+			 (not (notnull deadline)))]))
+
+(defun org-roam-extras--row-to-todo-record (row done-keywords)
+  "Convert ROW to a TODO record alist, or nil if its todo is in DONE-KEYWORDS.
+ROW has shape (ID FILE TITLE PRIORITY TODO PROPERTIES OLP)."
+  (let ((id (nth 0 row))
+	(todo (nth 4 row)))
+    (unless (member todo done-keywords)
+      `((id . ,id)
+	(file . ,(nth 1 row))
+	(title . ,(nth 2 row))
+	(priority . ,(org-roam-extras--priority-to-string (nth 3 row)))
+	(todo . ,todo)
+	(effort . ,(cdr (assoc "EFFORT" (nth 5 row))))
+	(tags . ,(vconcat (org-roam-extras--node-tags id)))
+	(olp . ,(vconcat (nth 6 row)))))))
+
+(defun org-roam-extras--priority-to-string (priority)
+  "Convert a PRIORITY value from org-roam-db to a string, or nil if absent."
+  (cond
+   ((null priority) nil)
+   ((characterp priority) (char-to-string priority))
+   ((stringp priority) priority)
+   (t (format "%s" priority))))
+
+(defun org-roam-extras--node-tags (id)
+  "Return tag strings for org-roam node ID."
+  (mapcar #'car
+	  (org-roam-db-query `[:select tag :from tags :where (= node-id ,id)])))
+
 (provide 'org-roam-extras)
 ;;; org-roam-extras.el ends here

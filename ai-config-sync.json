@@ -564,6 +564,41 @@
       "note": "paired; Codex version accepts exitCode and exit_code payload keys and normalizes string-wrapped tool_input/tool_response via lib-codex-hook-json.sh"
     }
   ],
+  "mcp_servers": [
+    {
+      "name": "epoch-asana",
+      "scope": "epoch-project-local",
+      "claude_config": "~/My Drive/Epoch/.mcp.json",
+      "codex_config": "~/My Drive/Epoch/.codex/config.toml",
+      "claude_server": "asana",
+      "codex_server": "asana",
+      "compare_public_config": true,
+      "required_env": [
+        "ASANA_ACCESS_TOKEN"
+      ],
+      "identity_checks": [
+        {
+          "label": "Claude Asana token resolves to pablo@epoch.ai",
+          "command": [
+            "/Users/pablostafforini/My Drive/Epoch/scripts/check-asana-mcp-identity.sh",
+            "pablo@epoch.ai",
+            "/Users/pablostafforini/My Drive/Epoch/.mcp.json",
+            "claude"
+          ]
+        },
+        {
+          "label": "Codex Asana token resolves to pablo@epoch.ai",
+          "command": [
+            "/Users/pablostafforini/My Drive/Epoch/scripts/check-asana-mcp-identity.sh",
+            "pablo@epoch.ai",
+            "/Users/pablostafforini/My Drive/Epoch/.codex/config.toml",
+            "codex"
+          ]
+        }
+      ],
+      "note": "Epoch's Asana MCP is project-local and must expose the same server to Claude Code and Codex with the Epoch Asana identity. The audit checks account identity via Asana /users/me and never compares or prints token values."
+    }
+  ],
   "registrations": [
     {
       "tool": "Codex",

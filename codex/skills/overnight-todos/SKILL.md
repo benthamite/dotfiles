@@ -27,13 +27,18 @@ Writes a report to `~/.claude/overnight-todos-data/runs/YYYY-MM-DD-HHMM.md` and 
 
 ## Step 1: Dump TODOs
 
+**Sync the org-roam DB first** so the dump reflects on-disk state. Without this, a TODO marked DONE on disk but not yet re-indexed will re-appear as TODO in the dump and the orchestrator will waste a subagent re-attempting it.
+
 ```bash
+emacsclient -e '(org-roam-db-sync)'
 TODO_FILE=$(mktemp -t overnight-todos-XXXXXX.json)
 emacsclient -e "(org-roam-extras-dump-actionable-todos \"$TODO_FILE\")"
 # Optionally with filter-spec:
 #   "(org-roam-extras-dump-actionable-todos \"$TODO_FILE\" '(:dir \"/path/\"))"
 #   "(org-roam-extras-dump-actionable-todos \"$TODO_FILE\" '(:tag . \"work\"))"
 ```
+
+`org-roam-db-sync` is incremental — it only re-indexes files whose mtime is newer than the recorded one — so the cost is proportional to recent edits, not corpus size. If a future run hits the same stale-DB symptom (a just-completed TODO re-appears), the per-COMPLETED `org-roam-db-update-file` call below didn't fire; fall back to a forced full `(org-roam-db-sync)` and re-dump.
 
 Each JSON record has `id`, `file`, `title`, `priority` (string or null), `todo`, `effort` (e.g., `"30m"` or null), `tags`, `olp`.
 
@@ -137,8 +142,12 @@ Rules:
 2. NEVER ask Pablo a question. If you would need to ask, classify as blocked.
 3. Trust internal code; do not add tests or features beyond what the TODO asks for.
 4. **Decide before editing.** Read the heading body and any referenced context first, classify act-or-block in your head, then act. Never make a speculative edit and roll it back when you change your mind — those round-trips risk corrupting the file. If you start to edit and realize the verdict should be BLOCKED, restore the file and double-check the heading-body hash is byte-clean.
-5. If you make file changes, mark the TODO state DONE on success: `emacsclient -e '(org-extras-mark-done-by-id "{id}")'` (only if that function exists; otherwise leave the state alone and note it in the verdict).
-6. Time budget for this single TODO: 15 minutes. If you exceed it, return BLOCKED with ease=4.
+5. **Leave a verification trail in the heading body.** If the COMPLETED action already adds substantive content (a summary, a draft, a template, a list), that body content is itself the trail. If the COMPLETED action is verification-only (e.g., "Check that X is working" where the answer is yes), append a single line to the heading body BEFORE marking DONE: `Verified [YYYY-MM-DD]: <one-line evidence>`. Otherwise a future reader (you or Pablo) sees just `DONE` with no record of what was verified or how.
+6. On success, mark the TODO state DONE with the canonical Elisp:
+   - Prefer `(org-extras-mark-done-by-id "{id}")`.
+   - If that function is unbound, navigate to the heading via `org-id-goto` (yes — for the mark-done step the cursor jump is needed and self-recovering) and use `(org-todo "DONE")` (the string form). NEVER use `(org-todo 'done)` — the symbol form lands on the wrong closer keyword in this user's setup (DELEGATED) and produces a misleading state.
+   - After marking DONE, sync the org-roam DB for the touched file: `emacsclient -e '(org-roam-db-update-file "<file>")'`. This keeps the next run's dump consistent so the just-completed TODO does not re-appear.
+7. Time budget for this single TODO: 15 minutes. If you exceed it, return BLOCKED with ease=4.
 
 Return ONE verdict line, then call walk.py record:
 

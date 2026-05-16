@@ -39,41 +39,40 @@ Each JSON record has `id`, `file`, `title`, `priority` (string or null), `todo`,
 
 ## Step 2: Triage from titles (no body reads, no subagents)
 
-Read the JSON. For each record, classify by `title` + `tags` + `olp` alone using these heuristics. The orchestrator does this — do NOT spawn a subagent for this step.
+Run the classifier script:
 
-**Drop to blocker list immediately** if the title matches a clearly user-bound pattern. Assign ease per the table below.
+```bash
+REPORT=~/.claude/skills/overnight-todos/runs/$(date +%Y-%m-%d-%H%M)-$MODE.md
+CLASSIFICATIONS=$(mktemp -t overnight-todos-cls-XXXXXX.json)
+python ~/.claude/skills/overnight-todos/triage.py \
+    --input "$TODO_FILE" \
+    --output "$REPORT" \
+    --mode "$MODE" \
+    --max-tasks "$MAX_TASKS" \
+    --classifications-out "$CLASSIFICATIONS"
+```
 
-| Title shape | Ease | Blocker reason |
-|---|---|---|
-| "Ask Pablo …", "Check with …", "Confirm with …" | 1 | Needs your direct input |
-| "Decide …", "Pick …", "Choose between …" | 2 | Needs your decision |
-| "Tell / email / message X" with no clear context | 3 | Needs your voice/framing |
-| "Reflect on …", "Think about …" | 4 | Personal cognitive work |
-| Strategic / long-horizon ("Long-term plan for …", "Goals for …") | 5 | Deep context only you have |
+`triage.py` is the single source of truth for the title-pattern heuristics. It splits records into three buckets:
 
-**Promote to candidate** if the title shape suggests autonomous work:
+- **blocked** — title matches a user-bound pattern (ease 1–5) or a scope-demotion pattern (verb plus too-large object, e.g. "Translate X /book/"). Recorded straight to the report; no subagent.
+- **candidate** — title matches an autonomous-action pattern (read / find / fix / update / etc.). Would be dispatched in act mode.
+- **investigate** — ambiguous title, or `:project:` tag. Would be dispatched in act mode; the subagent's first step is to read the heading body and decide act-vs-block.
 
-- "Read X", "Summarize X", "Extract X from Y"
-- "Find / look up / research X"
-- "Update X with Y", "Add Y to X"
-- "Fix typo / bug / link in X"
-- "Generate / draft X" (drafts are fine — sending is not)
-- "Clean up / organize X"
+Tune patterns by editing `triage.py` — keep the SKILL body high-level.
 
-**Investigate (still a subagent candidate)** for anything ambiguous.
+### Ease scale (blockers)
+
+| Ease | Meaning |
+|---|---|
+| 1 | Missing fact / direct input you can give in seconds |
+| 2 | Yes-no decision |
+| 3 | Outbound voice / framing for communication |
+| 4 | Personal cognitive work |
+| 5 | Deep strategic context only you have |
 
 ## Step 3: Rank candidates
 
-Combined action priority for the subagent dispatch order:
-
-```
-score = priority_value + difficulty_estimate
-```
-
-- `priority_value`: integer from the `priority` field (1-9). If absent, default to `5`.
-- `difficulty_estimate`: 1 (trivial / single read) → 5 (long / risky). Use `effort` if present (`"15m"` → 1, `"30m"` → 2, `"1:00"` → 3, `">2:00"` → 4), else infer from title.
-
-Sort ascending. Dispatch in order until `--max-tasks` or `--time-budget` is reached.
+`triage.py` already sorts candidates by `priority + difficulty` ascending (lower = higher dispatch priority). `priority` defaults to 5 if unset; `difficulty` is 1–5 inferred from `effort` (`"15m"` → 1, `"30m"` → 2, `"1:00"` → 3, `>"2:00"` → 4, none → title-keyword heuristic).
 
 ## Step 4: Dispatch subagents via walk-list
 
@@ -136,9 +135,9 @@ python ~/.claude/skills/walk-list/walk.py release-stale "$TODO_FILE" 0   # recla
 python ~/.claude/skills/walk-list/walk.py restore "$TODO_FILE"           # writes decisions
 ```
 
-Read `${TODO_FILE}.walk-decisions.json`. Combine with the blockers recorded in Step 2.
+Read `${TODO_FILE}.walk-decisions.json`. Combine with the blockers recorded in Step 2 (already in `$REPORT`). Append the act-mode results — completed/failed/blocked-after-investigation/deferred — to the existing report. Skip this step for dry-run with `--max-tasks 0`: the Step 2 report is already complete.
 
-Write report to `~/.claude/skills/overnight-todos/runs/YYYY-MM-DD-HHMM.md`:
+Append the per-run summary using this shape:
 
 ```markdown
 # Overnight TODO run — <date> <HH:MM>
@@ -171,7 +170,7 @@ Subagents dispatched: N. Approx tokens: <if available>.
 After writing:
 
 ```bash
-emacsclient ~/.claude/skills/overnight-todos/runs/YYYY-MM-DD-HHMM.md
+emacsclient "$REPORT"
 ```
 
 ## Safety rails (enforce in orchestrator AND subagents)

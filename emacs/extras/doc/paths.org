@@ -329,7 +329,7 @@ These variables point to template and configuration files:
 
 - ~paths-file-orb-noter-template~: the Org-noter template for bibliographic notes.
 - ~paths-file-orb-capture-template~: the Org-roam-bibtex capture template. Uses =${citekey}= as a placeholder in the filename.
-- ~paths-file-bookmarks~: the Emacs bookmarks file.
+- ~paths-file-bookmarks~: the Emacs bookmarks file (under =Misc/= within the Google Drive directory).
 - ~paths-file-init-tangle-flags-sans-directory~: the filename (without directory) for user-specific tangle flags (default: =tangle-flags-pablo.el=).
 
 ** Other identifiers

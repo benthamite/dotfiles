@@ -757,6 +757,20 @@ task-focused correction such as "that answer is wrong; re-check it." State is
 stored per session under =$XDG_STATE_HOME/agent-civility-guard= or
 =~/.local/state/agent-civility-guard=.
 
+*** completion-claim-guard.sh (Stop)
+:PROPERTIES:
+:ID:       92D63696-DA1B-4371-80FE-A3A76FE831F4
+:END:
+
+Audits final answers for completion-claim discipline. The paired Claude and
+Codex global instructions require agents not to say a bug is fixed, resolved,
+working, or done unless the exact reported user-visible behavior has been
+verified after the change; final answers after changes must include an explicit
+=Verification:= or =Not verified end-to-end:= sentence. This Stop hook scans the
+latest transcript for risky completion language without that verification
+receipt and emits a warning. It is intentionally an audit/reminder control, not
+a hard block, because Stop fires after the answer has already been emitted.
+
 *** require-elisp-test-before-commit.sh (PreToolUse)
 :PROPERTIES:
 :ID:       4E0CDC5D-C436-4701-AC99-E29F950318B4

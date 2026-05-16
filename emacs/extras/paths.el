@@ -688,7 +688,7 @@ This includes personal files and `tlon' files."
   :group 'paths)
 
 (defcustom paths-file-bookmarks
-  (file-name-concat paths-dir-google-drive "bookmarks")
+  (file-name-concat paths-dir-google-drive "Misc/bookmarks")
   "Path to the bookmarks file."
   :type 'file
   :group 'paths)

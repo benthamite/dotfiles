@@ -55,7 +55,11 @@ project. =bin/ai-config-sync= normalizes those tool-specific forms before
 checking instruction equivalence. The paired global instructions also ask the
 agent to alert the user when they direct abusive language at the assistant/model,
 mention moral uncertainty about possible model sentience, and request a civil,
-task-focused restatement.
+task-focused restatement. They also require completion-claim discipline: agents
+must not say a bug is fixed, resolved, working, or done unless the exact
+reported user-visible behavior has been verified after the change, and final
+answers after changes must include an explicit =Verification:= or =Not verified
+end-to-end:= sentence.
 
 It also records the manual Chrome profile routing used by browser-only service
 flows: =Default= for personal projects and =Profile 2= for Epoch/work projects
@@ -468,6 +472,12 @@ dispatch. It blocks obvious abusive prompts directed at the assistant, asks for
 a rewrite on the first violation, and locks the session on a second violation
 until the reset phrase =I commit to a civil reset.= is submitted. The matcher is
 empty because =UserPromptSubmit= has no tool name.
+
+The =Stop= hook runs =completion-claim-guard.sh= before Emacs lifecycle
+dispatch. It scans the latest final answer for words such as "fixed", "done",
+or "resolved" and warns when the answer lacks an explicit verification receipt.
+Because =Stop= fires after the final answer is emitted, this is an audit/reminder
+control rather than a pre-final block.
 
 The Elisp documentation gate accepts =doc/*.org= manuals, root =README.org=
 manuals, and root =README.md= as a fallback only when the repo has no Org

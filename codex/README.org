@@ -286,8 +286,16 @@ straight to the blocker list without subagent cost. Action priority
 combines the explicit org priority (1=highest … 9=lowest) with an
 ease-of-processing score, and hard rails (=--max-tasks=, =--time-budget=,
 externally-visible actions are always blockers with a draft as the next
-step) cap each run. The output report ranks remaining blockers by ease of
-unblock so the user can clear the cheapest gates first.
+step) cap each run. Cross-run state lives in
+=~/.claude/overnight-todos-data/state.json= via =ledger.py= (per-machine
+data dir shared with Claude, outside the dotfiles tree; reports under
+=~/.claude/overnight-todos-data/runs/=). Each TODO's last verdict, ease,
+attempt timestamp, and a SHA-256 hash of the heading body are recorded so
+previously-blocked unchanged items are filtered out of subsequent runs
+(skip window defaults to 14 days). Editing the heading body invalidates
+the hash and re-queues the TODO automatically. The output report ranks remaining blockers by
+ease of unblock and includes a "still blocked since last run" section so
+the user can clear the cheapest gates first.
 
 The =code-audit= skill is a Codex development skill for finding
 actual correctness, security, error-handling, and data-integrity defects in

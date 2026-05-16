@@ -208,6 +208,28 @@ count and effort in the echo area, formatted as hours and minutes.
 This gives you a quick overview of your outstanding workload across the
 entire Org Roam database without needing to visit individual files.
 
+** Batch processing dump
+:PROPERTIES:
+:CUSTOM_ID: h:batch-processing-dump
+:END:
+
+#+findex: org-roam-extras-dump-actionable-todos
+The function ~org-roam-extras-dump-actionable-todos~ writes a JSON array
+of actionable TODOs (active state, no scheduled or deadline date) to a
+file path, returning the count.  Each record carries =id=, =file=,
+=title=, =priority=, =todo=, =effort=, =tags=, and =olp=.  An optional
+filter spec mirrors ~org-roam-extras-node-find-special~: ~(:tag . TAG)~
+restricts to a tag, and ~(:dir DIRECTORY)~ restricts to nodes whose
+file lives under a directory.
+
+This is the input feed for the =overnight-todos= Claude skill, which
+classifies each TODO and acts on those it can complete without user
+input.  It can also be called ad hoc from the shell, for example:
+
+#+begin_src bash
+emacsclient -e "(org-roam-extras-dump-actionable-todos \"/tmp/todos.json\")"
+#+end_src
+
 * Functions
 :PROPERTIES:
 :CUSTOM_ID: h:functions

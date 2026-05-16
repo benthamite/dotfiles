@@ -731,6 +731,25 @@ non-negative stale-claim thresholds.
 
 Processes items from a list file strictly one at a time (sequential) or N-at-a-time (parallel subagent pool), guaranteeing no item is skipped or batched. =walk.py start= /moves/ the input file into =~/.claude/walk-list-data/<uuid>/= and leaves a stub at the original path; a PreToolUse hook (=block-walk-list-access.sh=) denies every tool (Read, Grep, Glob, Edit, Write, Bash, etc.) that tries to touch the protected store except =python .../walk.py= itself — the main session cannot peek ahead, and subagents only see the single item handed to them in their prompt. State updates go through =flock= so concurrent =record= calls from pool subagents cannot clobber each other. Subcommands: =start=, =next= (sequential), =dispatch= + =record= (pool), =pool-status=, =status=, =show-decisions=, =release-stale= (reclaim stuck slots), =set-max-concurrent=, =restore= (finalize and write decisions alongside the original file), =abort=.
 
+**** overnight-todos
+
+Batch-processes org-roam TODOs autonomously, intended for scheduled or
+overnight runs. Pulls actionable TODOs (active state, no scheduled or
+deadline date) from the org-roam database via
+=org-roam-extras-dump-actionable-todos=, then in =--mode act= dispatches
+per-TODO subagents through =walk-list= to do work end-to-end on those that
+can be completed without user input. Title-only heuristics drop obvious
+user-bound TODOs ("Ask Pablo …", "Decide …", "Choose between …") straight
+to the blocker list without subagent cost. Action priority combines the
+explicit org priority (1=highest … 9=lowest) with an ease-of-processing
+score, so quick low-priority work can preempt slow high-priority work.
+Hard rails: =--max-tasks= caps subagent dispatches per run, =--time-budget=
+caps wall-clock, externally visible actions (PRs, email, Slack, push) are
+always blockers with a draft as the recommended next step. Writes a report
+to =runs/YYYY-MM-DD-HHMM.md= ranking blocked TODOs by ease of unblock
+(1=missing fact you can give in seconds, 5=deep strategic context) and
+opens it in Emacs. Default =--mode dry-run= classifies without acting.
+
 ** Hooks
 :PROPERTIES:
 :ID:       4D862953-7E8A-4154-BC16-919ED6B092A5

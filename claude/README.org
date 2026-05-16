@@ -748,11 +748,20 @@ explicit org priority (1=highest … 9=lowest) with an ease-of-processing
 score, so quick low-priority work can preempt slow high-priority work.
 Hard rails: =--max-tasks= caps subagent dispatches per run, =--time-budget=
 caps wall-clock, externally visible actions (PRs, email, Slack, push) are
-always blockers with a draft as the recommended next step. Writes a report
-to gitignored =runs/YYYY-MM-DD-HHMM-<mode>.md= ranking blocked TODOs by
-ease of unblock (1=missing fact you can give in seconds, 5=deep strategic
-context) and opens it in Emacs. Default =--mode dry-run= classifies
-without acting.
+always blockers with a draft as the recommended next step. Cross-run state
+lives in =~/.claude/overnight-todos-data/state.json= keyed by org-id (a
+per-machine data dir, outside the dotfiles tree, alongside reports under
+=~/.claude/overnight-todos-data/runs/=). Each entry records the last
+verdict, ease, attempt timestamp, and a SHA-256 hash of the heading body.
+=ledger.py= filters out TODOs that were BLOCKED on stable content within
+the last 14 days, so the orchestrator does not re-attempt the same blocked
+items every night; editing the heading body invalidates the hash and
+re-queues the TODO automatically. Writes a report to
+=~/.claude/overnight-todos-data/runs/YYYY-MM-DD-HHMM-<mode>.md= ranking
+blocked TODOs by ease of unblock
+(1=missing fact you can give in seconds, 5=deep strategic context),
+including a "still blocked since last run" section, and opens it in Emacs.
+Default =--mode dry-run= classifies without acting.
 
 ** Hooks
 :PROPERTIES:

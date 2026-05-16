@@ -12,7 +12,7 @@ Queries the org-roam database for actionable TODOs, classifies each, and:
 - **Actionable autonomously** → dispatches a subagent that does the work end-to-end.
 - **Blocked on user input** → records the blocker with an *ease-of-unblock* score (1=easiest).
 
-Writes a report to `~/.claude/skills/overnight-todos/runs/YYYY-MM-DD-HHMM.md` and opens it in Emacs.
+Writes a report to `~/.claude/overnight-todos-data/runs/YYYY-MM-DD-HHMM.md` and opens it in Emacs.
 
 ## Default arguments
 
@@ -42,7 +42,7 @@ Each JSON record has `id`, `file`, `title`, `priority` (string or null), `todo`,
 Run the classifier script:
 
 ```bash
-REPORT=~/.claude/skills/overnight-todos/runs/$(date +%Y-%m-%d-%H%M)-$MODE.md
+REPORT=~/.claude/overnight-todos-data/runs/$(date +%Y-%m-%d-%H%M)-$MODE.md
 CLASSIFICATIONS=$(mktemp -t overnight-todos-cls-XXXXXX.json)
 python ~/.claude/skills/overnight-todos/triage.py \
     --input "$TODO_FILE" \
@@ -74,6 +74,28 @@ Tune patterns by editing `triage.py` — keep the SKILL body high-level.
 
 `triage.py` already sorts candidates by `priority + difficulty` ascending (lower = higher dispatch priority). `priority` defaults to 5 if unset; `difficulty` is 1–5 inferred from `effort` (`"15m"` → 1, `"30m"` → 2, `"1:00"` → 3, `>"2:00"` → 4, none → title-keyword heuristic).
 
+## Step 3b: Ledger filter (skip recently-blocked unchanged TODOs)
+
+Cross-run state lives at `~/.claude/overnight-todos-data/state.json` (gitignored). It records each TODO's last verdict, ease, attempt timestamp, and a SHA-256 hash of the heading body. A TODO is filtered out of the candidate/investigate buckets **only if** all three hold:
+
+1. Last verdict was `BLOCKED`.
+2. The current heading-body hash equals the recorded hash (body hasn't changed since last attempt).
+3. The last attempt is within the `--skip-window-days` window (default 14).
+
+`COMPLETED` and `FAILED` entries do not block re-attempts — if the TODO is back in the active set, the orchestrator retries. Editing the heading body invalidates the hash and re-queues the TODO.
+
+```bash
+LEDGER=~/.claude/overnight-todos-data/state.json
+FILTERED=$(mktemp -t overnight-todos-flt-XXXXXX.json)
+python ~/.claude/skills/overnight-todos/ledger.py filter \
+    --classifications "$CLASSIFICATIONS" \
+    --ledger "$LEDGER" \
+    --output "$FILTERED" \
+    --skip-window-days 14
+```
+
+The filtered JSON has the same keys (`blocked`, `candidate`, `investigate`) plus a `still_blocked` array of items that were skipped this run; surface those in the report so the backlog stays visible.
+
 ## Step 4: Dispatch subagents via walk-list
 
 ```bash
@@ -96,6 +118,8 @@ loop:
   refresh elapsed
 ```
 
+Dispatch operates on `$FILTERED` (from Step 3b), not the original triage output, so previously-blocked-unchanged TODOs are skipped.
+
 **Per-TODO subagent prompt** (substitute `{item}`, `{token}`, `{walk_py}`, `{file}`):
 
 ```
@@ -112,8 +136,9 @@ Rules:
 1. NEVER take externally visible actions (open PR, send email, post Slack, modify shared infra, push commits) — those are always blockers, ease=2, with a draft as the recommended next step.
 2. NEVER ask Pablo a question. If you would need to ask, classify as blocked.
 3. Trust internal code; do not add tests or features beyond what the TODO asks for.
-4. If you make file changes, mark the TODO state DONE on success: `emacsclient -e '(org-extras-mark-done-by-id "{id}")'` (only if that function exists; otherwise leave the state alone and note it in the verdict).
-5. Time budget for this single TODO: 15 minutes. If you exceed it, return BLOCKED with ease=4.
+4. **Decide before editing.** Read the heading body and any referenced context first, classify act-or-block in your head, then act. Never make a speculative edit and roll it back when you change your mind — those round-trips risk corrupting the file. If you start to edit and realize the verdict should be BLOCKED, restore the file and double-check the heading-body hash is byte-clean.
+5. If you make file changes, mark the TODO state DONE on success: `emacsclient -e '(org-extras-mark-done-by-id "{id}")'` (only if that function exists; otherwise leave the state alone and note it in the verdict).
+6. Time budget for this single TODO: 15 minutes. If you exceed it, return BLOCKED with ease=4.
 
 Return ONE verdict line, then call walk.py record:
 
@@ -126,6 +151,20 @@ When done:
 Then return a one-line summary mirroring the verdict.
 ```
 
+## Step 4b: Record each verdict to the ledger
+
+Immediately after each subagent returns its verdict (or as soon as you read it back via `walk.py show-decisions`), record it so the next run benefits from the memory:
+
+```bash
+python ~/.claude/skills/overnight-todos/ledger.py record \
+    --ledger ~/.claude/overnight-todos-data/state.json \
+    --id "<org-id>" \
+    --file "<heading-file-path>" \
+    --verdict "<full verdict line>"
+```
+
+`ledger.py record` parses the verdict for kind (COMPLETED/FAILED/BLOCKED/DEFERRED) and ease, recomputes the heading-body hash at record time, and updates the per-TODO entry. Stale entries (TODOs no longer in org-roam) are pruned passively — they simply never match a future record.
+
 ## Step 5: Aggregate and report
 
 When the loop exits (budget exhausted or list drained):
@@ -135,7 +174,7 @@ python ~/.claude/skills/walk-list/walk.py release-stale "$TODO_FILE" 0   # recla
 python ~/.claude/skills/walk-list/walk.py restore "$TODO_FILE"           # writes decisions
 ```
 
-Read `${TODO_FILE}.walk-decisions.json`. Combine with the blockers recorded in Step 2 (already in `$REPORT`). Append the act-mode results — completed/failed/blocked-after-investigation/deferred — to the existing report. Skip this step for dry-run with `--max-tasks 0`: the Step 2 report is already complete.
+Read `${TODO_FILE}.walk-decisions.json`. Combine with the blockers recorded in Step 2 (already in `$REPORT`). Append the act-mode results — completed/failed/blocked-after-investigation/deferred — and the `still_blocked` section from `$FILTERED` to the existing report. Skip this step for dry-run with `--max-tasks 0`: the Step 2 report is already complete.
 
 Append the per-run summary using this shape:
 
@@ -162,6 +201,9 @@ Each: title, file, blocker, ease, suggested next step.
 
 ## Deferred (run budget reached)
 Just title + file + priority. These will be picked up next run.
+
+## Still blocked since last run (skipped by ledger)
+Each: title, file, last verdict reason, days since last attempt.
 
 ## Cost note
 Subagents dispatched: N. Approx tokens: <if available>.

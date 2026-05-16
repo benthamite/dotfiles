@@ -48,7 +48,8 @@ verification_re='(Verification:|Not verified end-to-end:|verified end-to-end|e2e
 
 if grep -Eiq "$risky_claim_re" <<<"$final_answer" \
    && ! grep -Eiq "$verification_re" <<<"$final_answer"; then
-  echo "COMPLETION CLAIM GUARD: Final answer appears to claim completion/fix without an explicit verification receipt. Use a Verification: sentence for verified outcomes, or Not verified end-to-end: when only partial evidence exists."
+  message="COMPLETION CLAIM GUARD: Final answer appears to claim completion/fix without an explicit verification receipt. Use a Verification: sentence for verified outcomes, or Not verified end-to-end: when only partial evidence exists."
+  echo "$message"
 fi
 
 exit 0

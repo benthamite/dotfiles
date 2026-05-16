@@ -476,8 +476,11 @@ empty because =UserPromptSubmit= has no tool name.
 The =Stop= hook runs =completion-claim-guard.sh= before Emacs lifecycle
 dispatch. It scans the latest final answer for words such as "fixed", "done",
 or "resolved" and warns when the answer lacks an explicit verification receipt.
-Because =Stop= fires after the final answer is emitted, this is an audit/reminder
-control rather than a pre-final block.
+When it fires, it returns Codex's supported Stop continuation JSON
+(=decision: block= with a =reason=) rather than =hookSpecificOutput=, because
+Codex Stop hooks reject PostToolUse-style context output. Because =Stop= fires
+after the final answer is emitted, this is an audit/reminder control rather
+than a pre-final block.
 
 The Elisp documentation gate accepts =doc/*.org= manuals, root =README.org=
 manuals, and root =README.md= as a fallback only when the repo has no Org

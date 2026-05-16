@@ -49,12 +49,7 @@ verification_re='(Verification:|Not verified end-to-end:|verified end-to-end|e2e
 if grep -Eiq "$risky_claim_re" <<<"$final_answer" \
    && ! grep -Eiq "$verification_re" <<<"$final_answer"; then
   message="COMPLETION CLAIM GUARD: Final answer appears to claim completion/fix without an explicit verification receipt. Use a Verification: sentence for verified outcomes, or Not verified end-to-end: when only partial evidence exists."
-  jq -n --arg message "$message" '{
-    "hookSpecificOutput": {
-      "hookEventName": "Stop",
-      "additionalContext": $message
-    }
-  }'
+  jq -n --arg message "$message" '{decision: "block", reason: $message}'
 fi
 
 exit 0

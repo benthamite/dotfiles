@@ -354,7 +354,7 @@ def global_sync_message_for_path(rel: str) -> str:
     if rel == "codex/hooks.json":
         return f"codex/hooks.json changed; update ~/.claude/settings.json and {MANIFEST} if the global hook policy changed."
     if rel == "codex/config.toml":
-        return f"codex/config.toml changed; update {MANIFEST} if instruction, skill, or hook registration changed."
+        return f"codex/config.toml changed; update {MANIFEST} if instruction, skill, hook registration, or MCP wiring changed."
     if rel == "codex/rules/default.rules":
         return f"codex/rules/default.rules changed; update {MANIFEST} if the Codex-only policy changed."
     if rel == GLOBAL_INSTRUCTION_CLAUDE:
@@ -421,8 +421,10 @@ def local_sync_message_for_path(rel: str, repo_root: Path) -> str:
     if rel == ".codex/config.toml":
         return (
             "Project-local .codex/config.toml changed; "
-            "update the Claude project config if instruction, skill, or hook policy changed."
+            "check .mcp.json or the Claude project config if instruction, skill, hook policy, or MCP wiring changed."
         )
+    if rel == ".mcp.json":
+        return "Project-local .mcp.json changed; check .codex/config.toml for matching MCP wiring."
     if rel == ".codex/rules/default.rules":
         return (
             "Project-local .codex/rules/default.rules changed; "
@@ -1374,6 +1376,93 @@ def check_native_disabled_skills(problems: list[str]) -> None:
             add_problem(problems, f"Disabled skill missing Codex skills.config disabled entry: {name}")
 
 
+def load_mcp_config(path: Path) -> dict:
+    if path.suffix == ".toml":
+        return tomllib.loads(path.read_text())
+    return json.loads(path.read_text())
+
+
+def mcp_server_entry(data: dict, family: str, name: str) -> dict | None:
+    key = "mcpServers" if family == "claude" else "mcp_servers"
+    entry = (data.get(key) or {}).get(name)
+    return entry if isinstance(entry, dict) else None
+
+
+def public_mcp_entry(entry: dict) -> dict:
+    return {
+        key: entry.get(key)
+        for key in ("command", "args", "transport", "url")
+        if key in entry
+    }
+
+
+def run_identity_check(command: str | list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
+    if isinstance(command, list):
+        return subprocess.run(
+            [str(part) for part in command],
+            check=False,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            cwd=str(cwd),
+        )
+    return subprocess.run(
+        command,
+        shell=True,
+        check=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        cwd=str(cwd),
+    )
+
+
+def audit_mcp_servers(problems: list[str], manifest: dict) -> None:
+    for item in manifest.get("mcp_servers") or []:
+        name = item.get("name", "mcp server")
+        claude_config = path_from_token(str(item.get("claude_config")), ROOT)
+        codex_config = path_from_token(str(item.get("codex_config")), ROOT)
+        claude_name = item.get("claude_server", name)
+        codex_name = item.get("codex_server", name)
+
+        try:
+            claude_data = load_mcp_config(claude_config)
+        except (OSError, json.JSONDecodeError, tomllib.TOMLDecodeError) as exc:
+            add_problem(problems, f"MCP {name}: cannot read Claude config {claude_config}: {exc}")
+            continue
+        try:
+            codex_data = load_mcp_config(codex_config)
+        except (OSError, json.JSONDecodeError, tomllib.TOMLDecodeError) as exc:
+            add_problem(problems, f"MCP {name}: cannot read Codex config {codex_config}: {exc}")
+            continue
+
+        claude = mcp_server_entry(claude_data, "claude", str(claude_name))
+        codex = mcp_server_entry(codex_data, "codex", str(codex_name))
+        if claude is None:
+            add_problem(problems, f"MCP {name}: missing Claude server {claude_name}")
+        if codex is None:
+            add_problem(problems, f"MCP {name}: missing Codex server {codex_name}")
+        if claude is None or codex is None:
+            continue
+
+        if item.get("compare_public_config", True) and public_mcp_entry(claude) != public_mcp_entry(codex):
+            add_problem(problems, f"MCP {name}: Claude and Codex command/args/transport/url differ")
+
+        for key in item.get("required_env") or []:
+            if key not in (claude.get("env") or {}):
+                add_problem(problems, f"MCP {name}: Claude env missing {key}")
+            if key not in (codex.get("env") or {}):
+                add_problem(problems, f"MCP {name}: Codex env missing {key}")
+
+        for check in item.get("identity_checks") or []:
+            label = check.get("label", name) if isinstance(check, dict) else name
+            command = check.get("command") if isinstance(check, dict) else check
+            proc = run_identity_check(command, ROOT)
+            if proc.returncode != 0:
+                detail = (proc.stderr or proc.stdout).strip()
+                add_problem(problems, f"MCP {name}: identity check failed ({label}): {detail or command}")
+
+
 def path_is_inside(path: Path, parent: Path) -> bool:
     try:
         real_path(path).relative_to(real_path(parent))
@@ -1678,6 +1767,7 @@ def audit() -> int:
     audit_instructions(problems, manifest)
     audit_skills(problems, manifest)
     audit_hooks(problems, manifest)
+    audit_mcp_servers(problems, manifest)
     audit_registrations(problems, manifest)
 
     if problems:

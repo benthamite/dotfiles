@@ -756,7 +756,13 @@ verdict, ease, attempt timestamp, and a SHA-256 hash of the heading body.
 =ledger.py= filters out TODOs that were BLOCKED on stable content within
 the last 14 days, so the orchestrator does not re-attempt the same blocked
 items every night; editing the heading body invalidates the hash and
-re-queues the TODO automatically. Writes a report to
+re-queues the TODO automatically. The orchestrator runs =org-roam-db-sync=
+before each dump and each COMPLETED subagent calls =org-roam-db-update-file=
+on the touched file so just-completed TODOs do not re-appear in the next
+run. Verification-only COMPLETED actions (e.g., "Check that X is working")
+must append a =Verified [YYYY-MM-DD]: <evidence>= line to the heading body
+before marking DONE so the audit trail lives in-file, not just in the run
+report. Writes a report to
 =~/.claude/overnight-todos-data/runs/YYYY-MM-DD-HHMM-<mode>.md= ranking
 blocked TODOs by ease of unblock
 (1=missing fact you can give in seconds, 5=deep strategic context),

@@ -293,7 +293,12 @@ data dir shared with Claude, outside the dotfiles tree; reports under
 attempt timestamp, and a SHA-256 hash of the heading body are recorded so
 previously-blocked unchanged items are filtered out of subsequent runs
 (skip window defaults to 14 days). Editing the heading body invalidates
-the hash and re-queues the TODO automatically. The output report ranks remaining blockers by
+the hash and re-queues the TODO automatically. The orchestrator runs
+=org-roam-db-sync= before each dump and each COMPLETED subagent calls
+=org-roam-db-update-file= on the touched file so just-completed TODOs do
+not re-appear in the next run. Verification-only COMPLETED actions must
+append a =Verified [YYYY-MM-DD]: <evidence>= line to the heading body
+before marking DONE so the audit trail lives in-file. The output report ranks remaining blockers by
 ease of unblock and includes a "still blocked since last run" section so
 the user can clear the cheapest gates first.
 

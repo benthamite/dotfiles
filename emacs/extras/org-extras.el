@@ -98,6 +98,24 @@ automatic addition of IDs globally."
   :type '(repeat directory)
   :group 'org-extras)
 
+(defcustom org-extras-id-update-excluded-patterns
+  '("/\\.Trash/"
+    "/\\.worktrees/"
+    "conflicted copy"
+    "/Library/CloudStorage/Dropbox/"
+    "\r")
+  "Regexps matching file paths to skip in `org-extras-id-update-id-locations'.
+Stale entries already present in `org-id-files' or `org-id-locations' whose
+paths match any pattern are also purged, so they do not re-appear as
+duplicates on subsequent scans.
+
+Defaults exclude macOS Trash, git worktree checkouts (which duplicate every
+ID from the main branch), Google Drive sync-conflict files, legacy Dropbox
+copies of files now canonical under `org-directory', and files with carriage
+returns in their names."
+  :type '(repeat regexp)
+  :group 'org-extras)
+
 (defcustom org-extras-bbdb-anniversaries-heading
   "2CE5A4E6-842C-4350-ADD0-13D5FC101A20"
   "Heading in `calendar.org' that contains the BBDB anniversaries.
@@ -842,24 +860,47 @@ eliminates redundant filesystem and regex overhead."
 Store the relation between files and corresponding IDs.  This will
 scan all agenda files, all associated archives, all open Org
 files, recursively all files in `org-directory', and all files in
-`org-id-extra-files'.
+`org-id-extra-files'.  Paths matching `org-extras-id-update-excluded-patterns'
+are skipped, and pre-existing stale entries with matching paths are pruned
+from `org-id-files' and `org-id-locations'.
 
 If `org-id-update-id-locations' reports duplicate IDs, this
 command will automatically call `org-extras-id-find-duplicate-ids'
 to display them in a dedicated buffer."
   (interactive)
+  (org-extras-id--prune-locations)
   (let* ((all-files (directory-files-recursively org-directory "\\.org$"))
-         ;; Filter out files in .Trash directories and files with carriage returns in their names.
-         (filtered-files (seq-filter (lambda (f)
-                                       (and (not (string-match-p "/\\.Trash/" f))
-                                            (not (string-match-p "\r" (file-name-nondirectory f)))))
-                                     all-files)))
+         (filtered-files
+          (cl-remove-if #'org-extras-id--update-excluded-p all-files)))
     (advice-add 'display-warning :after #'org-extras--id-update-warning-handler)
     (unwind-protect
         (condition-case err
             (org-id-update-id-locations filtered-files)
           (error (message "org-extras-id-update-id-locations: %s" (error-message-string err))))
       (advice-remove 'display-warning #'org-extras--id-update-warning-handler))))
+
+(defun org-extras-id--update-excluded-p (file)
+  "Return non-nil when FILE matches any `org-extras-id-update-excluded-patterns'."
+  (and file
+       (seq-some (lambda (pattern) (string-match-p pattern file))
+                 org-extras-id-update-excluded-patterns)))
+
+(defun org-extras-id--prune-locations ()
+  "Drop excluded entries from `org-id-files' and `org-id-locations'.
+Entries whose path matches `org-extras-id-update-excluded-patterns' are
+removed so they are not rescanned by `org-id-update-id-locations',
+preventing them from reappearing as duplicates of canonical files."
+  (when (consp org-id-files)
+    (setq org-id-files
+          (cl-remove-if #'org-extras-id--update-excluded-p org-id-files)))
+  (when (hash-table-p org-id-locations)
+    (let (stale-ids)
+      (maphash (lambda (id file)
+                 (when (org-extras-id--update-excluded-p file)
+                   (push id stale-ids)))
+               org-id-locations)
+      (dolist (id stale-ids)
+        (remhash id org-id-locations)))))
 
 ;;;;;; process duplicate ids
 

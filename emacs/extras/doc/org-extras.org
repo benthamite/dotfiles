@@ -714,12 +714,19 @@ these options.
 :END:
 
 #+findex: org-extras-id-update-id-locations
+#+vindex: org-extras-id-update-excluded-patterns
 The command ~org-extras-id-update-id-locations~ scans all =.org= files
-under ~org-directory~ (excluding those in =.Trash= directories or with
-carriage returns in their names) and updates the ID location database
-via ~org-id-update-id-locations~.  If the scan
-reports duplicate IDs, the command automatically calls
-~org-extras-id-find-duplicate-ids~ ([[#h:finding-duplicate-ids][Finding duplicate IDs]]) so
+under ~org-directory~ and updates the ID location database via
+~org-id-update-id-locations~.  Paths matching any regexp in
+~org-extras-id-update-excluded-patterns~ are skipped, and pre-existing
+stale entries with matching paths are pruned from ~org-id-files~ and
+~org-id-locations~ before the scan so they cannot reappear as
+duplicates on the next run.  The default patterns exclude macOS Trash
+files, git worktree checkouts inside ~org-directory~, Google Drive
+sync-conflict files, legacy Dropbox copies of files now canonical
+under ~org-directory~, and files with carriage returns in their
+names.  If the scan reports duplicate IDs, the command automatically
+calls ~org-extras-id-find-duplicate-ids~ ([[#h:finding-duplicate-ids][Finding duplicate IDs]]) so
 that you can review and resolve them.
 
 Internally, it temporarily advises ~display-warning~ to intercept

@@ -768,8 +768,10 @@ working, or done unless the exact reported user-visible behavior has been
 verified after the change; final answers after changes must include an explicit
 =Verification:= or =Not verified end-to-end:= sentence. This Stop hook scans the
 latest transcript for risky completion language without that verification
-receipt and emits a warning. It is intentionally an audit/reminder control, not
-a hard block, because Stop fires after the answer has already been emitted.
+receipt and emits a warning. The Claude hook emits the warning as plain text;
+the paired Codex hook uses Codex's supported Stop continuation JSON for the same
+reminder behavior. It is intentionally an audit/reminder control, not a hard
+block, because Stop fires after the answer has already been emitted.
 
 *** require-elisp-test-before-commit.sh (PreToolUse)
 :PROPERTIES:

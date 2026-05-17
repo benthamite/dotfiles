@@ -11754,54 +11754,6 @@ CLOCK: [2022-07-16 Sat 16:38]--[2022-07-16 Sat 16:44] =>  0:06
 :ID:       8B243BA8-8CA1-4E6F-82CA-5CD950D8C498
 :END:
 
-** =bibtex-extras=
-:PROPERTIES:
-:ID:       31E4CEF9-8CF3-4921-A108-3C60A7191F8F
-:END:
-
-
-/[[file:extras/bibtex-extras.el][bibtex-extras]] collects my extensions for =bibtex=./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(elpaca (ebib :host github
-              :repo "benthamite/ebib"
-              :branch "codex/handle-killed-ebib-buffers")) ; awaiting PR merge: https://github.com/joostkremers/ebib/pull/325
-
-(use-personal-package bibtex-extras
-  :after bibtex
-  :demand t
-  :custom
-  (bibtex-maintain-sorted-entries
-   '(bibtex-extras-entry-sorter bibtex-extras-lessp))
-
-  :config
-  ;; Replace 'online' entry type
-  (bibtex-extras-replace-element-by-name
-   bibtex-biblatex-entry-alist
-   "Online" '("Online" "Online Resource"
-              (("author" nil nil 0) ("title") ("journaltitle" nil nil 3)
-               ("date" nil nil 1) ("year" nil nil -1)
-               ("doi" nil nil 2) ("url" nil nil 2))
-              nil
-              (("subtitle") ("language") ("version") ("note")
-               ("organization") ("month")
-               ("pubstate") ("eprintclass" nil nil 4) ("primaryclass" nil nil -4)
-               ("eprinttype" nil nil 5) ("archiveprefix" nil nil -5) ("urldate"))))
-
-  (add-to-list 'bibtex-biblatex-entry-alist
-               '("Performance" "A performance entry"
-                 (("author") ("title") ("date")) ; Required fields
-                 nil ; Crossref fields
-                 (("venue") ("location") ("note"))))
-  :bind
-  (:map bibtex-mode-map
-        ("s-a" . bibtex-extras-set-field)
-        ("s-d" . bibtex-extras-url-to-pdf-attach)
-        ("s-h" . bibtex-extras-url-to-html-attach)
-        ("s-i" . bibtex-extras-open-in-ebib)
-        ("s-t" . bibtex-extras-move-entry-to-tlon)))
-#+end_src
-
 ** =bibtex-completion=
 :PROPERTIES:
 :ID:       DCD9D75D-7814-49D8-A3E0-33846D5A08FD
@@ -12114,7 +12066,9 @@ We defer-load the package to activate the timer that in turn updates the bibliog
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package ebib
-  :ensure nil ; `bibtex-extras' queues this package as a dependency.
+  :ensure (:host github
+                 :repo "benthamite/ebib"
+                 :branch "codex/handle-killed-ebib-buffers") ; awaiting PR merge: https://github.com/joostkremers/ebib/pull/325
   :custom
   (ebib-preload-bib-files paths-files-bibliography-all)
   (ebib-notes-directory paths-dir-bibliographic-notes)
@@ -12173,6 +12127,50 @@ We defer-load the package to activate the timer that in turn updates the bibliog
 #+end_src
 
 The macro below generates the commands correctly. But attempting to define key bindings results in duplicate commands. I'm not sure what's on; it seems to be related to ~use-package~.
+
+** =bibtex-extras=
+:PROPERTIES:
+:ID:       31E4CEF9-8CF3-4921-A108-3C60A7191F8F
+:END:
+
+
+/[[file:extras/bibtex-extras.el][bibtex-extras]] collects my extensions for =bibtex=./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-personal-package bibtex-extras
+  :after bibtex
+  :demand t
+  :custom
+  (bibtex-maintain-sorted-entries
+   '(bibtex-extras-entry-sorter bibtex-extras-lessp))
+
+  :config
+  ;; Replace 'online' entry type
+  (bibtex-extras-replace-element-by-name
+   bibtex-biblatex-entry-alist
+   "Online" '("Online" "Online Resource"
+              (("author" nil nil 0) ("title") ("journaltitle" nil nil 3)
+               ("date" nil nil 1) ("year" nil nil -1)
+               ("doi" nil nil 2) ("url" nil nil 2))
+              nil
+              (("subtitle") ("language") ("version") ("note")
+               ("organization") ("month")
+               ("pubstate") ("eprintclass" nil nil 4) ("primaryclass" nil nil -4)
+               ("eprinttype" nil nil 5) ("archiveprefix" nil nil -5) ("urldate"))))
+
+  (add-to-list 'bibtex-biblatex-entry-alist
+               '("Performance" "A performance entry"
+                 (("author") ("title") ("date")) ; Required fields
+                 nil ; Crossref fields
+                 (("venue") ("location") ("note"))))
+  :bind
+  (:map bibtex-mode-map
+        ("s-a" . bibtex-extras-set-field)
+        ("s-d" . bibtex-extras-url-to-pdf-attach)
+        ("s-h" . bibtex-extras-url-to-html-attach)
+        ("s-i" . bibtex-extras-open-in-ebib)
+        ("s-t" . bibtex-extras-move-entry-to-tlon)))
+#+end_src
 
 ** =ebib-utils=
 :PROPERTIES:

@@ -19,8 +19,7 @@
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/civility-guard.sh",
-            "timeout": 5,
-            "statusMessage": "Checking civility guard"
+            "timeout": 5
           },
           {
             "type": "command",
@@ -37,68 +36,57 @@
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/block-sensitive-read.sh",
-            "timeout": 5,
-            "statusMessage": "Checking sensitive file reads"
+            "timeout": 5
           },
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/block-secret-leak.sh",
-            "timeout": 5,
-            "statusMessage": "Checking for secret exposure"
+            "timeout": 5
           },
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/block-destructive-command.sh",
-            "timeout": 5,
-            "statusMessage": "Checking destructive command guard"
+            "timeout": 5
           },
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/block-walk-list-access.sh",
-            "timeout": 5,
-            "statusMessage": "Checking walk-list guard"
+            "timeout": 5
           },
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/require-elisp-test-before-commit.sh",
-            "timeout": 10,
-            "statusMessage": "Checking Elisp test gate"
+            "timeout": 10
           },
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/require-doc-update.sh",
-            "timeout": 10,
-            "statusMessage": "Checking Org manual update"
+            "timeout": 10
           },
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/require-readme-update.sh",
-            "timeout": 10,
-            "statusMessage": "Checking Claude README update"
+            "timeout": 10
           },
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/require-codex-readme-update.sh",
-            "timeout": 10,
-            "statusMessage": "Checking Codex README update"
+            "timeout": 10
           },
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/require-ai-config-sync.sh",
-            "timeout": 10,
-            "statusMessage": "Checking Claude/Codex config sync"
+            "timeout": 10
           },
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/require-elisp-verify-after-commit.sh",
-            "timeout": 5,
-            "statusMessage": "Checking live Elisp verification"
+            "timeout": 5
           },
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/block-elpaca-rebuild-uncommitted.sh",
-            "timeout": 10,
-            "statusMessage": "Checking elpaca rebuild guard"
+            "timeout": 10
           }
         ]
       },
@@ -108,8 +96,7 @@
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/guard-external-actions.sh",
-            "timeout": 5,
-            "statusMessage": "Checking external action guard"
+            "timeout": 5
           }
         ]
       },
@@ -119,26 +106,22 @@
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/block-secret-leak.sh",
-            "timeout": 5,
-            "statusMessage": "Checking for secret exposure"
+            "timeout": 5
           },
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/block-elpaca-dotfiles-edit.sh",
-            "timeout": 5,
-            "statusMessage": "Checking dotfiles source path"
+            "timeout": 5
           },
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/block-texi-edit.sh",
-            "timeout": 5,
-            "statusMessage": "Checking generated Texinfo edit guard"
+            "timeout": 5
           },
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/block-walk-list-access.sh",
-            "timeout": 5,
-            "statusMessage": "Checking walk-list guard"
+            "timeout": 5
           }
         ]
       },
@@ -160,14 +143,12 @@
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/track-elisp-test.sh",
-            "timeout": 5,
-            "statusMessage": "Tracking Elisp batch tests"
+            "timeout": 5
           },
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/track-elisp-verify.sh",
-            "timeout": 5,
-            "statusMessage": "Tracking live Elisp verification"
+            "timeout": 5
           }
         ]
       },
@@ -177,26 +158,22 @@
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/load-elisp-after-edit.sh",
-            "timeout": 30,
-            "statusMessage": "Reloading edited Elisp"
+            "timeout": 30
           },
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/remind-claude-readme-update.sh",
-            "timeout": 5,
-            "statusMessage": "Checking Claude README reminder"
+            "timeout": 5
           },
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/regenerate-manual-after-edit.sh",
-            "timeout": 60,
-            "statusMessage": "Regenerating generated manuals"
+            "timeout": 60
           },
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/remind-ai-config-sync.sh",
-            "timeout": 5,
-            "statusMessage": "Checking Claude/Codex sync reminder"
+            "timeout": 5
           }
         ]
       },
@@ -230,8 +207,7 @@
           {
             "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/completion-claim-guard.sh",
-            "timeout": 5,
-            "statusMessage": "Auditing completion claims"
+            "timeout": 5
           },
           {
             "type": "command",

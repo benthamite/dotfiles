@@ -318,6 +318,12 @@ Claude session. The installer exposes those directories at
 =~/.claude/programmatic-skills= because =agent-run-skill= discovers Claude
 skills from that live path.
 
+Private local skills that should load on this machine but not be committed can
+live under explicitly ignored directories in the live global skill trees. The
+current private pair is =humanize=, under =claude/skills/humanize/= and
+=codex/skills/humanize/=, and =bin/ai-config-sync= excludes it via
+=PRIVATE_GLOBAL_SKILLS=.
+
 Run =bin/skill-prune apply --days 60= to disable stale paired skills. The scan
 checks recent Claude and Codex transcripts and disables a skill only when both
 tools lack usage inside the threshold window; recent use in either tool keeps
@@ -346,7 +352,7 @@ workflow instead of this global dotfiles tree:
 Each project-local skill root documents its skills in that project's
 =README.org= under a dedicated =Skills= section.
 
-When switching Emacs/elpaca profiles, the dotfiles-local
+When switching Emacs/elpaca profiles, the emacs project-local
 =migrate-profile= skill migrates project-local agent roots that live inside
 profile package clones: =<old-profile>/elpaca/{sources,repos}/<package>/.claude/=
 is copied into the verified new-profile package path without overwriting
@@ -381,7 +387,7 @@ warnings.
 :ID:       EBC619A2-2402-43B0-8FBA-8A68EE29BB7D
 :END:
 
-Emacs Lisp coding standards: atomic functions, helper placement, docstring format. Defines the skill boundary for =.el= work, routes compiler/checkdoc lint requests to =lint-elisp= and documentation generation to =doc-elisp=, and documents the elpaca rebuild-wait-reload process enforced by the =load-elisp-after-edit= hook. Prohibits ad-hoc reload mechanisms (=load-file=, =eval-buffer=, =eval-defun=), including after shell edits that bypass edit hooks; those continue through batch-test, commit-triggered sync/rebuild, and targeted live =emacsclient -e= verification. Also documents the critical =emacs --batch= testing pattern: elpaca builds on load-path first, then =push= =emacs/extras= to the front so the edited source always loads instead of the stale =.elc= from elpaca builds. Includes pre-commit checks (batch-test and doc staging) and a transient menus section: after adding or modifying a =transient-define-prefix=, every suffix must be verified as an interactive command (transient defers validation to invocation time).
+Emacs Lisp coding standards: atomic functions, helper placement, docstring format. Defines the skill boundary for =.el= work, routes compiler/checkdoc lint requests to =lint-elisp= and documentation generation to =document-elisp-package=, and documents the elpaca rebuild-wait-reload process enforced by the =load-elisp-after-edit= hook. Prohibits ad-hoc reload mechanisms (=load-file=, =eval-buffer=, =eval-defun=), including after shell edits that bypass edit hooks; those continue through batch-test, commit-triggered sync/rebuild, and targeted live =emacsclient -e= verification. Also documents the critical =emacs --batch= testing pattern: elpaca builds on load-path first, then =push= =emacs/extras= to the front so the edited source always loads instead of the stale =.elc= from elpaca builds. Includes pre-commit checks (batch-test and doc staging) and a transient menus section: after adding or modifying a =transient-define-prefix=, every suffix must be verified as an interactive command (transient defers validation to invocation time).
 
 *** Development skills
 :PROPERTIES:
@@ -491,7 +497,7 @@ authorized push.
 :ID:       7BAA2662-D24F-42B2-A865-5442B2F2E1B1
 :END:
 
-**** doc-elisp
+**** document-elisp-package
 :PROPERTIES:
 :ID:       32BB20B4-C967-4FB4-9EF6-674F87BF9023
 :END:
@@ -500,7 +506,7 @@ Creates or updates Org manuals for Elisp packages, following the Denote manual
 style: PROPERTIES drawers, Texinfo index entries, cross-references, and
 workflow-oriented prose. It defines the standalone =README.org= and dotfiles
 =emacs/extras/doc/*.org= paths explicitly, distinguishes nearby
-=generate-readme=, =doc-extras=, and =lint-elisp= requests, inventories public
+=generate-readme=, =document-elisp-extras=, and =lint-elisp= requests, inventories public
 options/faces/commands/functions across all source files, avoids broad
 =.dir-locals.el= changes in the dotfiles monorepo, and requires source/manual
 verification before reporting completion.
@@ -529,7 +535,7 @@ Registers an Emacs package in =my-emacs-packages.org=, creates an accompanying d
 :ID:       F49B76EA-C29B-45D6-AD8D-D3E47DB4073E
 :END:
 
-**** release
+**** release-package
 :PROPERTIES:
 :ID:       10DF729B-32D5-48E0-A150-9F5D18F799AF
 :END:
@@ -570,24 +576,9 @@ Extracts and records architectural, algorithmic, or design decisions from the cu
 :ID:       295FA722-0E04-41C0-B0F7-49B02379C1CF
 :END:
 
-Reviews dotfiles agent-learning inbox suggestions under
-=.agent-learnings/inbox/= using ignore-aware file discovery because the records
-are intentionally untracked local working material. It ranks distinct
-suggestions by expected value, interviews the user from highest to lowest value
-with native implement/defer/drop multiple-choice prompts, and requires Plan mode
-or another runtime mode where that native picker is available. Each prompt
-summarizes the proposed implementation target, likely owner, edit shape, and
-verification plan before the user chooses. It waits until every suggestion is
-classified before applying accepted improvements. It treats raw inbox files as
-local working material, keeps
-deferred suggestions in the inbox, archives
-implemented suggestions under =.agent-learnings/archive/YYYY-MM-DD/= with
-source, changed files, verification, and commit metadata, and deletes dropped
-suggestions with the system trash command rather than destructive removal.
-Implementation follows the normal dotfiles rules: use the relevant specific
-skill, keep Claude/Codex counterparts synchronized, update required docs,
-verify, run =bin/ai-config-sync audit=, and leave only deferred suggestions in
-the inbox before reporting.
+This workflow is no longer a global Claude skill. It lives as a notes
+project-local skill under =~/My Drive/notes/.claude/skills/session-retro/= with
+the paired Codex copy beside it.
 
 **** session-learning-capture
 :PROPERTIES:
@@ -698,7 +689,7 @@ Fetches recent tweets from a named list of accounts, triages them against the li
 :ID:       A7B3E1D4-5F92-4C8A-B6E0-9D2F4A1C7E53
 :END:
 
-Shared account vetting procedure used by =twitter-digest= and =twitter-discover=, and directly for requests to vet, score, rank, or decide whether a Twitter/X account belongs on a curated list. Defines required inputs (handle, list name, rubric, optional =vet-threshold=), a free quick filter, and a full scoring pass through the active =twitter= skill wrapper rather than a hardcoded Claude-only path. Includes a universal *epistemic quality gate* that penalizes engagement-optimized framing, overclaiming, and hype, and rewards calibrated confidence, caveats, and uncertainty acknowledgment. The shared vet registry remains under =~/.claude/skills/twitter-vet/vetted/= so Claude callers do not split history. Existing digest lists auto-add accounts scoring above threshold; discovery callers receive scores without premature list edits until their save phase. Standalone runs verify registry/list placement, API sample counts, and clean diffs before committing changed list and registry files.
+Shared account vetting procedure used by =twitter-digest= and =twitter-discover=, and directly for requests to vet, score, rank, or decide whether a Twitter/X account belongs on a curated list. Defines required inputs (handle, list name, rubric, optional =vet-threshold=), a free quick filter, and a full scoring pass through the active =twitter= skill wrapper rather than a hardcoded Claude-only path. Includes a universal *epistemic quality gate* that penalizes engagement-optimized framing, overclaiming, and hype, and rewards calibrated confidence, caveats, and uncertainty acknowledgment. The shared vet registry remains under =~/.claude/programmatic-skills/twitter-vet/vetted/= so Claude callers do not split history. Existing digest lists auto-add accounts scoring above threshold; discovery callers receive scores without premature list edits until their save phase. Standalone runs verify registry/list placement, API sample counts, and clean diffs before committing changed list and registry files.
 
 **** twitter-discover
 :PROPERTIES:
@@ -996,6 +987,13 @@ Guards against accidental ingestion of sensitive files into the context window. 
 :END:
 
 Compensating control for permissive modes (=auto=, =bypassPermissions=). Fires on =Bash|Write= and pattern-matches the tool input for common secret formats: AWS access keys, GitHub tokens, GitLab tokens, Slack tokens, generic =sk-= API keys, Anthropic keys (=sk-ant-...=), Stripe live/test keys (=sk_live_=/=pk_live_=/=sk_test_=/...), Linear keys (=lin_api_...=), Airtable personal access tokens (=pat<14>.<64-hex>=), Google API keys (=AIza...=), JWTs, database connection strings with embedded credentials, private key headers, Google OAuth client secrets, and generic high-entropy values assigned to known secret variable names. Blocks the operation with a specific message identifying the secret type. Allowlists legitimate secret-handling commands (=pass=, =op=, =security=, =git-crypt=), pattern-scanning tools (=grep=, =rg=), environment variable references (=$VAR=), and writes to known secret files (=.zshenv-secrets=, =.env.op=). Also detects exfiltration patterns: sensitive files (SSH keys, GPG keys, password store, =tokens.json=, =.zshenv-secrets=) piped to network tools (=curl=, =wget=, =nc=, =ncat=), =curl --data @= uploads of sensitive files, and network commands containing inline high-entropy strings (>30 chars with mixed character classes including digits). Public-blockchain artifacts (=0x= + 40 hex Ethereum addresses) are stripped before the high-entropy scan so wallet-bearing URLs do not produce false positives; 64-hex strings (Ethereum private key shape) are not stripped and still trigger the check. Complements the =/security-audit= skill, which audits the broader security posture on demand rather than blocking in real time.
+
+*** wrap-bash-output.sh + redact-secrets.sh (PreToolUse)
+:PROPERTIES:
+:ID:       7E0F8D2A-3C5F-4A1D-9B2E-1A4F6B9C8E5D
+:END:
+
+Output-side defense layer. =wrap-bash-output.sh= rewrites the =Bash= tool input via =hookSpecificOutput.updatedInput.command= to pipe combined stdout+stderr through =redact-secrets.sh= before the result reaches the model: =\{ <original cmd>; \} 2>&1 | redact-secrets.sh; exit "$\{PIPESTATUS[0]\}"=. =PIPESTATUS[0]= preserves the original exit code, and the wrapper skips heredocs (=<<=) and background launches (trailing =&=) where group-brace wrapping breaks. The wrap is idempotent (matches the redactor's own path so it never double-wraps). Registered LAST in the =Bash= matcher chain so the other pattern-matching hooks see the unmodified command. =redact-secrets.sh= is a =gsed=-based filter that masks prefix-anchored secret shapes (=gg_pat_*=, =AIza...=, =ghp_/ghs_/gho_/github_pat_*=, =sk-ant-*=, =sk-proj-*=, =sk-*=, =xox[bporasct]-*=, =AKIA[16]=, Telegram bot tokens =\d{8,10}:[35]=, postgres/mysql/mongodb credential URIs, =Bearer/Token= headers, =Authorization=/=x-api-key= header values) and multi-line PEM private-key blocks (=-----BEGIN ... PRIVATE KEY-----...-----END=, collapsed via a =:a/N/ba= line-slurp loop bounded by the END marker; uses =[^-]*= to span newlines since base64 contains no hyphens). User-specific patterns belong in the gitignored =~/.claude/redact-secrets.local.sed=. Complements =block-secret-leak.sh= (which guards command /inputs/ for secret literals) and =block-sensitive-read.sh= (which gates reads of known-secret-bearing /paths/) — this layer guards arbitrary /outputs/ that contain secret-shaped data the user did not name on the command line.
 
 *** block-destructive-command.sh (PreToolUse)
 :PROPERTIES:

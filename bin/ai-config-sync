@@ -19,6 +19,8 @@ from typing import Iterable
 ROOT = Path.home() / "My Drive" / "dotfiles"
 MANIFEST = "ai-config-sync.json"
 MANIFEST_PATH = ROOT / MANIFEST
+PRIVATE_MANIFEST = "ai-config-sync.private.json"
+PRIVATE_MANIFEST_PATH = ROOT / PRIVATE_MANIFEST
 DISABLED_SKILLS_PATH = ROOT / "skills-disabled.json"
 
 DOTFILES_PROJECT_LOCAL_SKILLS = {
@@ -708,38 +710,57 @@ def parse_manifest_text(text: str, label: str, problems: list[str]) -> dict:
         return {}
 
 
-def manifest_text_from_head() -> str:
-    text = git_text(["show", f"HEAD:{MANIFEST}"])
+def manifest_text_from_head(manifest: str = MANIFEST, manifest_path: Path = MANIFEST_PATH) -> str:
+    text = git_text(["show", f"HEAD:{manifest}"])
     if text is not None:
         return text
-    if MANIFEST_PATH.exists():
-        return MANIFEST_PATH.read_text()
+    if manifest_path.exists():
+        return manifest_path.read_text()
     return "{}"
+
+
+def changed_manifest(
+    manifest: str,
+    manifest_path: Path,
+    command_paths: set[str],
+    staged: set[str],
+    problems: list[str],
+) -> tuple[dict, dict]:
+    base_text = manifest_text_from_head(manifest, manifest_path)
+    base = parse_manifest_text(base_text, f"HEAD:{manifest}", problems)
+
+    if path_has_change(manifest, command_paths):
+        candidate_text = manifest_path.read_text()
+        label = manifest
+    elif path_has_change(manifest, staged):
+        candidate_text = git_text(["show", f":{manifest}"])
+        if candidate_text is None:
+            problems.append(f"Could not read staged {manifest}")
+            candidate_text = base_text
+        label = f"staged {manifest}"
+    else:
+        candidate_text = base_text
+        label = f"HEAD:{manifest}"
+
+    candidate = parse_manifest_text(candidate_text, label, problems)
+    return base, candidate
 
 
 def guard_manifests(
     command_paths: set[str],
     staged: set[str],
     problems: list[str],
-) -> tuple[dict, dict]:
-    base_text = manifest_text_from_head()
-    base = parse_manifest_text(base_text, f"HEAD:{MANIFEST}", problems)
-
-    if path_has_change(MANIFEST, command_paths):
-        candidate_text = MANIFEST_PATH.read_text()
-        label = MANIFEST
-    elif path_has_change(MANIFEST, staged):
-        candidate_text = git_text(["show", f":{MANIFEST}"])
-        if candidate_text is None:
-            problems.append(f"Could not read staged {MANIFEST}")
-            candidate_text = base_text
-        label = f"staged {MANIFEST}"
+) -> tuple[dict, dict, dict, dict]:
+    base, candidate = changed_manifest(
+        MANIFEST, MANIFEST_PATH, command_paths, staged, problems
+    )
+    if PRIVATE_MANIFEST_PATH.exists():
+        private_candidate = parse_manifest_text(
+            PRIVATE_MANIFEST_PATH.read_text(), PRIVATE_MANIFEST, problems
+        )
     else:
-        candidate_text = base_text
-        label = f"HEAD:{MANIFEST}"
-
-    candidate = parse_manifest_text(candidate_text, label, problems)
-    return base, candidate
+        private_candidate = {}
+    return base, candidate, {}, private_candidate
 
 
 def manifest_item_by_name(manifest: dict, section: str, name: str) -> dict | None:
@@ -995,6 +1016,8 @@ def guard_changed_paths(
     include_global: bool,
     base_manifest: dict,
     candidate_manifest: dict,
+    base_private_manifest: dict,
+    candidate_private_manifest: dict,
 ) -> None:
     processed_global_instructions = False
     processed_global_skills: set[str] = set()
@@ -1095,7 +1118,7 @@ def guard_changed_paths(
             drift = private_skill_sync_problems(skill)
             if not drift:
                 continue
-            item = manifest_item_by_name(candidate_manifest, "private_skills", skill)
+            item = manifest_item_by_name(candidate_private_manifest, "private_skills", skill)
             if manifest_item_is_explicitly_unpaired(item):
                 continue
             counterpart = f"codex/private-skills/{skill}"
@@ -1119,7 +1142,7 @@ def guard_changed_paths(
             drift = private_skill_sync_problems(skill)
             if not drift:
                 continue
-            item = manifest_item_by_name(candidate_manifest, "private_skills", skill)
+            item = manifest_item_by_name(candidate_private_manifest, "private_skills", skill)
             if manifest_item_is_explicitly_unpaired(item):
                 continue
             counterpart = f"claude/private-skills/{skill}"
@@ -1365,9 +1388,15 @@ def guard_commit() -> None:
 
         include_global = same_path(repo_root, ROOT)
         if include_global:
-            base_manifest, candidate_manifest = guard_manifests(command_paths, staged, problems)
+            (
+                base_manifest,
+                candidate_manifest,
+                base_private_manifest,
+                candidate_private_manifest,
+            ) = guard_manifests(command_paths, staged, problems)
         else:
             base_manifest, candidate_manifest = {}, {}
+            base_private_manifest, candidate_private_manifest = {}, {}
 
         guard_changed_paths(
             repo_root,
@@ -1378,6 +1407,8 @@ def guard_commit() -> None:
             include_global,
             base_manifest,
             candidate_manifest,
+            base_private_manifest,
+            candidate_private_manifest,
         )
 
     if not problems:
@@ -1408,6 +1439,12 @@ def guard_commit() -> None:
 
 def load_manifest() -> dict:
     return json.loads(MANIFEST_PATH.read_text())
+
+
+def load_private_manifest() -> dict:
+    if not PRIVATE_MANIFEST_PATH.exists():
+        return {}
+    return json.loads(PRIVATE_MANIFEST_PATH.read_text())
 
 
 def add_problem(problems: list[str], message: str) -> None:
@@ -1888,10 +1925,11 @@ def audit() -> int:
         return 1
 
     manifest = load_manifest()
+    private_manifest = load_private_manifest()
     audit_topology(problems)
     audit_instructions(problems, manifest)
     audit_skills(problems, manifest)
-    audit_private_skills(problems, manifest)
+    audit_private_skills(problems, private_manifest)
     audit_hooks(problems, manifest)
     audit_mcp_servers(problems, manifest)
     audit_registrations(problems, manifest)

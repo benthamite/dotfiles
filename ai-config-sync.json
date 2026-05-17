@@ -593,14 +593,5 @@
       "note": "Codex-only command allowlist rules, including allowed ~/.codex/AGENTS.md symlink targets and account-specific CODEX_HOME launch commands. There is no Claude counterpart; material policy changes should be recorded here."
     }
   ],
-  "audit_command": "bin/ai-config-sync audit",
-  "private_skills": [
-    {
-      "name": "humanize",
-      "claude": "claude/private-skills/humanize/SKILL.md",
-      "codex": "codex/private-skills/humanize/SKILL.md",
-      "status": "paired",
-      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match. Private skills are synchronized but not exposed through the live interactive skill symlinks."
-    }
-  ]
+  "audit_command": "bin/ai-config-sync audit"
 }

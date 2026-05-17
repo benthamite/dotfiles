@@ -321,10 +321,11 @@ queue are programmatic-only and therefore do not live in =claude/skills/=.
 
 Private skills that should remain hidden from ordinary interactive sessions
 live under =claude/private-skills/= with paired Codex copies under
-=codex/private-skills/=. They are recorded in =ai-config-sync.json='s
-=private_skills= section and checked by =bin/ai-config-sync=, but they are not
-part of the live =~/.claude/skills= symlink. The current private pair is
-=humanize=.
+=codex/private-skills/=. Those trees and =ai-config-sync.private.json= are
+git-crypt-encrypted, so neither the content nor the private sync manifest is
+publicly readable. =bin/ai-config-sync= loads the encrypted private manifest
+locally and still checks parity, but private skills are not part of the live
+=~/.claude/skills= symlink.
 
 Run =bin/skill-prune apply --days 60= to disable stale paired skills. The scan
 checks recent Claude and Codex transcripts and disables a skill only when both

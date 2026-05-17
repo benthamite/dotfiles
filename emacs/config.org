@@ -931,48 +931,6 @@ exec "$(dirname "$0")/sync-elpaca-clone.sh"
   :ensure `(seq :build (:before elpaca-activate elpaca-unload-seq)))
 #+end_src
 
-Some packages are dependencies of earlier packages but still have their main
-configuration later in this file.  Declare the custom recipes here so elpaca
-has a single installation owner before any dependency can queue them.
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package compat
-  :ensure (:host github
-                 :repo "emacs-compat/compat"
-                 :branch "main")
-  :defer t)
-
-(use-package hl-todo
-  :ensure (:build (:not elpaca-check-version))
-  :defer t)
-
-(use-package password-generator
-  :ensure (:host github
-                 :repo "vandrlexay/emacs-password-genarator") ; sic
-  :defer t)
-
-(use-package org-noter
-  :ensure (:host github
-                 :repo "org-noter/org-noter")
-  :defer t)
-
-(use-package org-roam
-  :ensure (:host github
-                 :repo "benthamite/org-roam"
-                 :branch "fix/handle-nil-db-version") ; https://github.com/org-roam/org-roam/pull/2609
-  :defer t)
-
-(use-package annas-archive
-  :ensure (:host github
-                 :repo "benthamite/annas-archive")
-  :defer t)
-
-(use-package yaml
-  :ensure (:host github
-                 :repo "zkry/yaml.el")
-  :defer t)
-#+end_src
-
 ** =paths=
 :PROPERTIES:
 :ID:       9D90809B-4CCF-4058-BB8B-396CF12B6E3F
@@ -1625,7 +1583,8 @@ CLOCK: [2021-05-26 Wed 18:56]--[2021-05-26 Wed 19:23] =>  0:27
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package password-generator
-  :ensure nil ; `pass-extras' queues this package as a dependency.
+  :ensure (:host github
+                 :repo "vandrlexay/emacs-password-genarator") ; sic
   :defer t)
 #+end_src
 
@@ -8343,7 +8302,8 @@ This needs to be configured.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package yaml
-  :ensure nil ; Recipe owner is declared near the package bootstrap.
+  :ensure (:host github
+                 :repo "zkry/yaml.el")
   :defer t)
 #+end_src
 
@@ -8408,7 +8368,7 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package hl-todo
-  :ensure nil ; Recipe owner is declared near the package bootstrap.
+  :ensure (:build (:not elpaca-check-version))
   :defer 30
   :config
   (setopt hl-todo-keyword-faces
@@ -11279,7 +11239,9 @@ Using my fork while awaiting merge of [[https://github.com/org-roam/org-roam/pul
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-roam
-  :ensure nil ; Recipe owner is declared near the package bootstrap.
+  :ensure (:host github
+                 :repo "benthamite/org-roam"
+                 :branch "fix/handle-nil-db-version") ; https://github.com/org-roam/org-roam/pull/2609
   :after org
   :custom
   (org-roam-directory paths-dir-org-roam)
@@ -11464,7 +11426,8 @@ CLOCK: [2021-07-17 Sat 12:42]--[2021-07-17 Sat 13:24] =>  0:42
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-noter
-  :ensure nil ; Recipe owner is declared near the package bootstrap.
+  :ensure (:host github
+                 :repo "org-noter/org-noter")
   :after org-extras
   :init
   (with-eval-after-load 'pdf-annot
@@ -12343,7 +12306,8 @@ CLOCK: [2022-07-16 Sat 15:26]--[2022-07-16 Sat 15:40] =>  0:14
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package annas-archive
-  :ensure nil ; `ebib-extras' queues this package as a dependency.
+  :ensure (:host github
+                 :repo "benthamite/annas-archive")
   :defer t
   :init
   (with-eval-after-load 'ebib
@@ -13696,7 +13660,9 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package compat
-  :ensure nil ; Recipe owner is declared near the package bootstrap.
+  :ensure (:host github
+                 :repo "emacs-compat/compat"
+                 :branch "main")
   :demand t)
 
 (use-package elfeed

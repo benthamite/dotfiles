@@ -99,10 +99,12 @@ Hidden Codex-managed system skills may exist under ignored
 =codex/skills/.system/= runtime data, but they are not part of the reusable
 skill parity model.
 
-Private local skills should not be exempted from the sync manifest when they
-live in these tracked skill roots. If a skill is present under
-=claude/skills/= and =codex/skills/=, it belongs in =ai-config-sync.json= so
-future edits still trigger the ordinary Claude/Codex synchronization checks.
+Private skills that should be synchronized but hidden from ordinary interactive
+sessions live under =claude/private-skills/= and =codex/private-skills/=. They
+are recorded in the =private_skills= section of =ai-config-sync.json= and are
+checked by the same audit, reminder, and commit-guard machinery, but those
+directories are not exposed through the live =~/.claude/skills= or
+=~/.codex/skills= symlinks.
 
 ** Master Skill Inventory
 
@@ -165,6 +167,8 @@ currently present in this repo. The skill name shown is the directory name.
   resolves, reopens, and notification emails correctly. Scope: Global.
 - =handoff=: Save next-session instructions to `/tmp/claude-code-handoff.md`
   for Claude Code session transitions. Scope: Global.
+- =humanize=: Rewrite prose to remove patterns that read as AI-generated while
+  preserving facts, citations, quotations, and house style. Scope: Private.
 - =imagegen=: Generate or edit raster images when the task benefits from
   AI-created bitmap visuals such as photos, illustrations, textures, sprites,
   mockups, or transparent-background cutouts. Scope: Global.

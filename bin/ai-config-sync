@@ -342,6 +342,12 @@ def global_sync_message_for_path(rel: str) -> str:
     if rel.startswith("codex/skills/"):
         skill = rel.removeprefix("codex/skills/").split("/", 1)[0]
         return f"codex/skills/{skill} changed; update claude/skills/{skill} in the same session."
+    if rel.startswith("claude/private-skills/"):
+        skill = rel.removeprefix("claude/private-skills/").split("/", 1)[0]
+        return f"claude/private-skills/{skill} changed; update codex/private-skills/{skill} in the same session."
+    if rel.startswith("codex/private-skills/"):
+        skill = rel.removeprefix("codex/private-skills/").split("/", 1)[0]
+        return f"codex/private-skills/{skill} changed; update claude/private-skills/{skill} in the same session."
     if rel.startswith("claude/hooks/"):
         hook = rel.removeprefix("claude/hooks/")
         if (ROOT / "codex" / "hooks" / hook).exists():
@@ -791,34 +797,44 @@ def global_skill_files_absent(skill: str) -> bool:
     ).exists()
 
 
-def skill_sync_problems(skill: str) -> list[str]:
+def paired_skill_sync_problems(skill: str, claude_base: str, codex_base: str, label: str) -> list[str]:
     problems: list[str] = []
-    claude_dir = ROOT / "claude" / "skills" / skill
-    codex_dir = ROOT / "codex" / "skills" / skill
+    claude_dir = ROOT / claude_base / skill
+    codex_dir = ROOT / codex_base / skill
     claude_skill = claude_dir / "SKILL.md"
     codex_skill = codex_dir / "SKILL.md"
 
     if not claude_skill.exists():
-        problems.append(f"Missing Claude skill file: claude/skills/{skill}/SKILL.md")
+        problems.append(f"Missing Claude {label} file: {claude_base}/{skill}/SKILL.md")
     if not codex_skill.exists():
-        problems.append(f"Missing Codex skill file: codex/skills/{skill}/SKILL.md")
+        problems.append(f"Missing Codex {label} file: {codex_base}/{skill}/SKILL.md")
     if problems:
         return problems
 
     if normalized_skill_text(claude_skill) != normalized_skill_text(codex_skill):
-        problems.append(f"Skill content drift after tool-specific frontmatter normalization: {skill}")
+        problems.append(f"{label.capitalize()} content drift after tool-specific frontmatter normalization: {skill}")
 
     claude_aux = skill_aux_files(claude_dir)
     codex_aux = skill_aux_files(codex_dir)
     for rel in sorted(set(claude_aux) - set(codex_aux)):
-        problems.append(f"Auxiliary skill file only in Claude tree: {skill}/{rel}")
+        problems.append(f"Auxiliary {label} file only in Claude tree: {skill}/{rel}")
     for rel in sorted(set(codex_aux) - set(claude_aux)):
-        problems.append(f"Auxiliary skill file only in Codex tree: {skill}/{rel}")
+        problems.append(f"Auxiliary {label} file only in Codex tree: {skill}/{rel}")
     for rel in sorted(set(claude_aux) & set(codex_aux)):
         if not filecmp.cmp(claude_aux[rel], codex_aux[rel], shallow=False):
-            problems.append(f"Auxiliary skill file drift: {skill}/{rel}")
+            problems.append(f"Auxiliary {label} file drift: {skill}/{rel}")
 
     return problems
+
+
+def skill_sync_problems(skill: str) -> list[str]:
+    return paired_skill_sync_problems(skill, "claude/skills", "codex/skills", "skill")
+
+
+def private_skill_sync_problems(skill: str) -> list[str]:
+    return paired_skill_sync_problems(
+        skill, "claude/private-skills", "codex/private-skills", "private skill"
+    )
 
 
 def local_skill_sync_problems(repo_root: Path, skill: str, skill_root: str = "skills") -> list[str]:
@@ -982,6 +998,7 @@ def guard_changed_paths(
 ) -> None:
     processed_global_instructions = False
     processed_global_skills: set[str] = set()
+    processed_global_private_skills: set[str] = set()
     processed_global_hooks: set[str] = set()
     processed_local_instruction_dirs: set[str] = set()
     processed_local_skills: set[str] = set()
@@ -1068,6 +1085,54 @@ def guard_changed_paths(
                 add_nested_problems(
                     problems,
                     f"codex/skills/{skill} changed without synchronized counterpart {counterpart} or a skill-specific {MANIFEST} exemption:",
+                    drift,
+                )
+        elif include_global and path.startswith("claude/private-skills/"):
+            skill = path.removeprefix("claude/private-skills/").split("/", 1)[0]
+            if skill in processed_global_private_skills:
+                continue
+            processed_global_private_skills.add(skill)
+            drift = private_skill_sync_problems(skill)
+            if not drift:
+                continue
+            item = manifest_item_by_name(candidate_manifest, "private_skills", skill)
+            if manifest_item_is_explicitly_unpaired(item):
+                continue
+            counterpart = f"codex/private-skills/{skill}"
+            if has_changed_prefix(counterpart, paths, changed):
+                add_nested_problems(
+                    problems,
+                    f"claude/private-skills/{skill} and {counterpart} are both changed, but the paired private skill still drifts:",
+                    drift,
+                )
+            else:
+                add_nested_problems(
+                    problems,
+                    f"claude/private-skills/{skill} changed without synchronized counterpart {counterpart} or a private-skill-specific {MANIFEST} exemption:",
+                    drift,
+                )
+        elif include_global and path.startswith("codex/private-skills/"):
+            skill = path.removeprefix("codex/private-skills/").split("/", 1)[0]
+            if skill in processed_global_private_skills:
+                continue
+            processed_global_private_skills.add(skill)
+            drift = private_skill_sync_problems(skill)
+            if not drift:
+                continue
+            item = manifest_item_by_name(candidate_manifest, "private_skills", skill)
+            if manifest_item_is_explicitly_unpaired(item):
+                continue
+            counterpart = f"claude/private-skills/{skill}"
+            if has_changed_prefix(counterpart, paths, changed):
+                add_nested_problems(
+                    problems,
+                    f"codex/private-skills/{skill} and {counterpart} are both changed, but the paired private skill still drifts:",
+                    drift,
+                )
+            else:
+                add_nested_problems(
+                    problems,
+                    f"codex/private-skills/{skill} changed without synchronized counterpart {counterpart} or a private-skill-specific {MANIFEST} exemption:",
                     drift,
                 )
         elif include_global and path.startswith("claude/hooks/"):
@@ -1703,6 +1768,34 @@ def audit_skills(problems: list[str], manifest: dict) -> None:
                 add_problem(problems, f"Auxiliary skill file drift: {skill}/{rel}")
 
 
+def audit_private_skills(problems: list[str], manifest: dict) -> None:
+    manifest_items = {item["name"]: item for item in manifest.get("private_skills") or []}
+    manifest_skills = set(manifest_items)
+    claude_skills = {
+        path.parent.name for path in (ROOT / "claude" / "private-skills").glob("*/SKILL.md")
+    }
+    codex_skills = {
+        path.parent.name for path in (ROOT / "codex" / "private-skills").glob("*/SKILL.md")
+    }
+
+    for skill in sorted(claude_skills - codex_skills):
+        add_problem(problems, f"Missing Codex private skill counterpart: {skill}")
+    for skill in sorted(codex_skills - claude_skills):
+        add_problem(problems, f"Codex private skill lacks Claude counterpart: {skill}")
+    for skill in sorted(claude_skills - manifest_skills):
+        add_problem(problems, f"Private skill missing from manifest: {skill}")
+    for skill in sorted(manifest_skills - claude_skills):
+        add_problem(problems, f"Manifest private skill missing from Claude tree: {skill}")
+
+    for skill in sorted(claude_skills & codex_skills):
+        item = manifest_item_by_name(manifest, "private_skills", skill)
+        if manifest_item_is_explicitly_unpaired(item):
+            continue
+        drift = private_skill_sync_problems(skill)
+        for problem in drift:
+            add_problem(problems, problem)
+
+
 def audit_hooks(problems: list[str], manifest: dict) -> None:
     manifest_hooks = {item["name"]: item for item in manifest.get("hooks") or []}
     claude_hooks = {path.name for path in (ROOT / "claude" / "hooks").iterdir() if path.is_file()}
@@ -1798,6 +1891,7 @@ def audit() -> int:
     audit_topology(problems)
     audit_instructions(problems, manifest)
     audit_skills(problems, manifest)
+    audit_private_skills(problems, manifest)
     audit_hooks(problems, manifest)
     audit_mcp_servers(problems, manifest)
     audit_registrations(problems, manifest)

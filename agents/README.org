@@ -100,10 +100,11 @@ Hidden Codex-managed system skills may exist under ignored
 skill parity model.
 
 Private skills that should be synchronized but hidden from ordinary interactive
-sessions live under =claude/private-skills/= and =codex/private-skills/=. They
-are recorded in the =private_skills= section of =ai-config-sync.json= and are
-checked by the same audit, reminder, and commit-guard machinery, but those
-directories are not exposed through the live =~/.claude/skills= or
+sessions live under =claude/private-skills/= and =codex/private-skills/=.
+Those trees and =ai-config-sync.private.json= are git-crypt-encrypted. The
+public =ai-config-sync.json= does not name private skills; =bin/ai-config-sync=
+loads the encrypted private manifest locally and still checks Claude/Codex
+parity. Private skills are not exposed through the live =~/.claude/skills= or
 =~/.codex/skills= symlinks.
 
 ** Master Skill Inventory

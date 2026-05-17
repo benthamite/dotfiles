@@ -1,2 +1,5 @@
 **/.env filter=git-crypt diff=git-crypt
 **/.env.local filter=git-crypt diff=git-crypt
+ai-config-sync.private.json filter=git-crypt diff=git-crypt
+claude/private-skills/** filter=git-crypt diff=git-crypt
+codex/private-skills/** filter=git-crypt diff=git-crypt

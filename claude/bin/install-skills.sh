@@ -47,3 +47,4 @@ if [ -d "$programmatic_source_dir" ]; then
   printf 'Claude programmatic skills directory linked: %s -> %s\n' "$programmatic_target_dir" "$programmatic_source_dir"
 fi
 "$repo_root/bin/skill-prune" install
+"$repo_root/bin/install-private-skills"

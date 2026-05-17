@@ -326,7 +326,9 @@ git-crypt-encrypted, so neither the content nor the private sync manifest is
 publicly readable. =bin/ai-config-sync= loads the encrypted private manifest
 locally and still checks parity. Public private-skill directories use opaque
 IDs; the real skill names live only in the encrypted private manifest. Private
-skills are not part of the live =~/.claude/skills= symlink.
+skills are exposed to local Claude sessions by =bin/install-private-skills=,
+which creates gitignored shims under =~/.claude/skills= from the encrypted
+manifest.
 
 Run =bin/skill-prune apply --days 60= to disable stale paired skills. The scan
 checks recent Claude and Codex transcripts and disables a skill only when both

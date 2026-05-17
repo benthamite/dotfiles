@@ -1,6 +1,6 @@
 ---
 name: pin-elisp-pr
-description: Pin an Emacs/Elpaca package in dotfiles to a fork, branch, or upstream PR while it awaits merge. Use when the user asks to use their fork, pin a package to a PR branch, temporarily install an Elisp package from a fork, or keep an upstream fix active in emacs/config.org. Enforces one package, one recipe: modify or move the existing package recipe instead of adding duplicate use-package or elpaca declarations.
+description: "Pin an Emacs/Elpaca package in dotfiles to a fork, branch, or upstream PR while it awaits merge. Use when the user asks to use their fork, pin a package to a PR branch, temporarily install an Elisp package from a fork, or keep an upstream fix active in emacs/config.org. Enforces one package, one recipe: modify or move the existing package recipe instead of adding duplicate use-package or elpaca declarations."
 user-invocable: true
 ---
 

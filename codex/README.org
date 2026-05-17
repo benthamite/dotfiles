@@ -192,7 +192,7 @@ branches in =config.org= with an =awaiting PR merge:= marker while preserving
 the invariant that each package has one recipe and no duplicate dependency pin
 declarations, and the standard =<scope>: <description>= commit format.
 
-The =pin-elisp-pr= skill is the detailed Codex workflow for pinning an
+The =pin-elisp-pr= skill defines the detailed Codex workflow for pinning an
 Emacs/Elpaca package in =emacs/config.org= to a fork, branch, or upstream PR
 while it awaits merge. It requires agents to locate all existing package
 declarations before editing, modify or move the existing recipe owner instead of

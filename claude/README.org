@@ -368,7 +368,7 @@ States where dotfiles and external Emacs packages should be edited: all non-=dot
 
 **** pin-elisp-pr
 
-Pins an Emacs/Elpaca package in =emacs/config.org= to a fork, branch, or
+Defines the workflow for pinning an Emacs/Elpaca package in =emacs/config.org= to a fork, branch, or
 upstream PR while it awaits merge. It requires agents to locate all existing
 package declarations before editing, modify or move the existing recipe owner
 instead of adding a second declaration, avoid shared dependency-recipe blocks,

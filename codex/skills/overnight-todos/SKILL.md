@@ -169,10 +169,11 @@ python ~/.claude/skills/overnight-todos/ledger.py record \
     --ledger ~/.claude/overnight-todos-data/state.json \
     --id "<org-id>" \
     --file "<heading-file-path>" \
+    --title "<heading title from the dump>" \
     --verdict "<full verdict line>"
 ```
 
-`ledger.py record` parses the verdict for kind (COMPLETED/FAILED/BLOCKED/DEFERRED) and ease, recomputes the heading-body hash at record time, and updates the per-TODO entry. Stale entries (TODOs no longer in org-roam) are pruned passively — they simply never match a future record.
+`ledger.py record` parses the verdict for kind (COMPLETED/FAILED/BLOCKED/DEFERRED) and ease, recomputes the heading-body hash, updates the per-TODO entry, AND appends a human-readable line to `~/.claude/overnight-todos-data/history.md` — the durable append-only changelog of every verdict ever recorded. `runs/*.md` can be deleted at any point without losing the history. Pass `--title` so the changelog entries are readable. Stale entries (TODOs no longer in org-roam) are pruned passively — they simply never match a future record.
 
 ## Step 5: Aggregate and report
 

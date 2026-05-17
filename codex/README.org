@@ -505,6 +505,16 @@ read both =command= and =cmd= payload fields so commit gates, security guards,
 and Elisp verification markers work in CLI/API sessions as well as older
 Bash-shaped payloads.
 
+The shell hook chain starts with =block-sensitive-read.sh=, which blocks
+commands that would read or search known credential-bearing paths such as
+=.mcp.json=, =.zshenv-secrets=, password stores, private-key directories,
+OAuth token/client-secret JSON, generic credential JSON, and =.env= files.
+It allowlists content-free metadata checks (=ls=, =stat=, =file=, =wc=),
+quiet/count/name-only searches (=grep=/=rg= with =-q=, =-c=, =-l=, or =-L=),
+existence tests, and auth-aware tools (=pass=, =op=, =git-crypt=,
+=security=). This closes the gap where a command could contain no literal
+secret but still print one by reading a credential config.
+
 The =UserPromptSubmit= hook runs =civility-guard.sh= before Emacs lifecycle
 dispatch. It blocks obvious abusive prompts directed at the assistant, asks for
 a rewrite on the first violation, and locks the session on a second violation

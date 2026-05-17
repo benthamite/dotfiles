@@ -36,6 +36,12 @@
         "hooks": [
           {
             "type": "command",
+            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-sensitive-read.sh",
+            "timeout": 5,
+            "statusMessage": "Checking sensitive file reads"
+          },
+          {
+            "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/block-secret-leak.sh",
             "timeout": 5,
             "statusMessage": "Checking for secret exposure"

@@ -293,9 +293,9 @@
     {
       "name": "block-sensitive-read.sh",
       "claude": "claude/hooks/block-sensitive-read.sh",
-      "codex": null,
-      "status": "unsupported-or-replaced",
-      "note": "Claude Read hook; Codex currently has no equivalent read-file hook registration in this setup."
+      "codex": "codex/hooks/block-sensitive-read.sh",
+      "status": "paired",
+      "note": "paired; Codex side gates Bash/exec_command sensitive-path reads and includes a Read branch for future tool-name compatibility, with Codex deny decisions replacing Claude ask decisions"
     },
     {
       "name": "block-texi-edit.sh",

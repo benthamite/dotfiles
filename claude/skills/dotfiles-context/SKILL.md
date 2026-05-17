@@ -61,11 +61,11 @@ workflow. Do this after the PR URL exists and before you report the PR as done.
    ```
 
 2. If the PR is open, edit `~/My Drive/dotfiles/emacs/config.org` and update
-   the package's Elpaca recipe to point at the PR head repo and head branch.
-   If the package is installed only as a dependency of another package and its
-   `use-package` form has `:ensure nil`, add an explicit `(elpaca (PACKAGE
-   ...))` order before the dependent package is queued instead of adding an
-   ineffective `:ensure` recipe.
+   the package's existing Elpaca recipe to point at the PR head repo and head
+   branch. Keep the invariant "one package, one recipe": do not add a second
+   `use-package` or `elpaca` declaration to pin a dependency. If dependency
+   timing matters, move or consolidate the existing recipe owner instead of
+   creating a duplicate. Use the `pin-elisp-pr` skill for the detailed checklist.
 3. Add the exact lifecycle marker comment, preferably on the temporary
    `:branch` line:
 

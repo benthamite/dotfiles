@@ -99,11 +99,10 @@ Hidden Codex-managed system skills may exist under ignored
 =codex/skills/.system/= runtime data, but they are not part of the reusable
 skill parity model.
 
-Private local skills that should load on this machine but not be committed may
-live under the tracked live skill roots when their directories are explicitly
-ignored in =.gitignore= and listed in =PRIVATE_GLOBAL_SKILLS= in
-=bin/ai-config-sync=. They still need Claude/Codex directory counterparts if
-both tools should see them, but they are excluded from the manifest audit.
+Private local skills should not be exempted from the sync manifest when they
+live in these tracked skill roots. If a skill is present under
+=claude/skills/= and =codex/skills/=, it belongs in =ai-config-sync.json= so
+future edits still trigger the ordinary Claude/Codex synchronization checks.
 
 ** Master Skill Inventory
 
@@ -182,8 +181,8 @@ currently present in this repo. The skill name shown is the directory name.
 - =move-session-log=: Relocate Codex session logs by rewriting embedded
   project paths so resume and log lookup associate a session with the current
   project. Scope: Global.
-- =open-session-log=: Open the current Claude Code session's log in Emacs via
-  agent-log. Scope: Global; Project-local: dotfiles.
+- =open-session-log=: Open the current Claude Code or Codex session log in
+  Emacs via agent-log. Scope: Programmatic; Project-local: dotfiles.
 - =openai-docs=: Use when the user asks how to build with OpenAI products or
   APIs and needs up-to-date official documentation with citations, help choosing
   the latest model for a use case, or model upgrade and prompt-upgrade guidance;

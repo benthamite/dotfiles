@@ -18,7 +18,7 @@ This repository contains my dotfiles, including
 - =move-session-log=: Relocates Codex session logs by rewriting embedded project paths.
   Copied =SKILL (1).md= variants, when present, are kept paired across the
   project-local Claude and Codex skill trees.
-- =open-session-log=: Opens the current Claude Code session log in Emacs via =agent-log=.
+- =open-session-log=: Programmatic-only helper that opens the current Claude Code or Codex session log in Emacs via =agent-log=.
 - =optimize-agent-instructions=: Optimizes project agent instruction files.
 - =release-dotfiles=: Prepares and publishes dotfiles releases, including
   checks/restoration for temporary Elpaca PR fork pins in =emacs/config.org=.

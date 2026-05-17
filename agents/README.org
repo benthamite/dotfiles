@@ -104,8 +104,9 @@ sessions live under =claude/private-skills/= and =codex/private-skills/=.
 Those trees and =ai-config-sync.private.json= are git-crypt-encrypted. The
 public =ai-config-sync.json= does not name private skills; =bin/ai-config-sync=
 loads the encrypted private manifest locally and still checks Claude/Codex
-parity. Private skills are not exposed through the live =~/.claude/skills= or
-=~/.codex/skills= symlinks.
+parity. Public private-skill directories use opaque IDs; the real skill names
+live only in the encrypted private manifest. Private skills are not exposed
+through the live =~/.claude/skills= or =~/.codex/skills= symlinks.
 
 ** Master Skill Inventory
 

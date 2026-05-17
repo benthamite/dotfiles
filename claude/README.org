@@ -364,7 +364,17 @@ These are not invoked directly. They supply background knowledge when Claude wor
 :ID:       3AB926D5-2116-4864-93F2-B6D33CE832C5
 :END:
 
-States where dotfiles and external Emacs packages should be edited: all non-=dotfiles= elpaca packages are edited in the active profile's =~/.config/emacs-profiles/<profile>/elpaca/sources/<package>/= clone, while =dotfiles= is edited only at =~/My Drive/dotfiles/= and the elpaca clone is a read-only mirror synced by git hooks. Also covers active profile lookup, profile-aware =emacs/config.org= tangling, the normal post-PR step that pins upstream package PR branches in =config.org= with an =awaiting PR merge:= marker, including dependency-only packages that need an explicit =elpaca= order before the dependent package is queued, required agent README updates, verification handoffs, and the commit message format (=<scope>: <description>=). See also =elisp-conventions= for Elisp testing/reload rules and =emacs/extras/doc/elisp-development-workflow.org= for the full two-clone sync architecture.
+States where dotfiles and external Emacs packages should be edited: all non-=dotfiles= elpaca packages are edited in the active profile's =~/.config/emacs-profiles/<profile>/elpaca/sources/<package>/= clone, while =dotfiles= is edited only at =~/My Drive/dotfiles/= and the elpaca clone is a read-only mirror synced by git hooks. Also covers active profile lookup, profile-aware =emacs/config.org= tangling, the normal post-PR step that pins upstream package PR branches in =config.org= with an =awaiting PR merge:= marker, while preserving the invariant that each package has one recipe and no duplicate dependency pin declarations, required agent README updates, verification handoffs, and the commit message format (=<scope>: <description>=). See also =pin-elisp-pr= for the detailed PR pin checklist, =elisp-conventions= for Elisp testing/reload rules, and =emacs/extras/doc/elisp-development-workflow.org= for the full two-clone sync architecture.
+
+**** pin-elisp-pr
+
+Pins an Emacs/Elpaca package in =emacs/config.org= to a fork, branch, or
+upstream PR while it awaits merge. It requires agents to locate all existing
+package declarations before editing, modify or move the existing recipe owner
+instead of adding a second declaration, avoid shared dependency-recipe blocks,
+tangle with the profile-aware command, and verify that neither source nor
+tangled =init.el= contains duplicate package owners or Elpaca duplicate-queue
+warnings.
 
 **** elisp-conventions
 :PROPERTIES:

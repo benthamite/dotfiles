@@ -136,7 +136,8 @@ currently present in this repo. The skill name shown is the directory name.
   packages in the dotfiles repo. Scope: Global; Project-local: emacs.
 - =dotfiles-context=: Dotfiles and Emacs package routing context, including
   the normal post-PR =config.org= pin for upstream Elpaca package branches
-  awaiting merge, with explicit =elpaca= orders for dependency-only packages.
+  awaiting merge, with one package recipe per package and no duplicate
+  dependency pin declarations.
   Scope: Global.
 - =dx-audit=: Audit a codebase's AI developer experience, including project
   instructions, verification commands, automation, onboarding traps, and
@@ -194,6 +195,9 @@ currently present in this repo. The skill name shown is the directory name.
   Actions, inspecting failed logs, fixing push-triggered CI failures, and
   repeating until the pushed commit is green or a real blocker is identified.
   Scope: Global.
+- =pin-elisp-pr=: Pin an Emacs/Elpaca package in =emacs/config.org= to a fork,
+  branch, or upstream PR while enforcing one package recipe per package and no
+  duplicate dependency pin declarations. Scope: Global.
 - =pr-audit=: Verify a PR or PR-ready branch before submitting, pushing,
   merging, or after revision. Scope: Global.
 - =proofread=: Proofread Markdown for spelling, grammar, typos, punctuation,

@@ -212,6 +212,13 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
+      "name": "pin-elisp-pr",
+      "claude": "claude/skills/pin-elisp-pr/SKILL.md",
+      "codex": "codex/skills/pin-elisp-pr/SKILL.md",
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
+    },
+    {
       "name": "pr-audit",
       "claude": "claude/skills/pr-audit/SKILL.md",
       "codex": "codex/skills/pr-audit/SKILL.md",
@@ -487,6 +494,13 @@
       "note": "paired for apply_patch/Edit/Write path lists; Codex PostToolUse output must include hookEventName and use additionalContext rather than Claude's message field"
     },
     {
+      "name": "redact-secrets.sh",
+      "claude": "claude/hooks/redact-secrets.sh",
+      "codex": null,
+      "status": "claude-only",
+      "note": "Claude Bash output redaction filter used by wrap-bash-output.sh; Codex does not use this Bash command-rewrite hook path."
+    },
+    {
       "name": "remind-ai-config-sync.sh",
       "claude": "claude/hooks/remind-ai-config-sync.sh",
       "codex": "codex/hooks/remind-ai-config-sync.sh",
@@ -576,6 +590,13 @@
       "codex": "codex/hooks/track-elisp-verify.sh",
       "status": "paired",
       "note": "paired; Codex version accepts exitCode and exit_code payload keys and normalizes string-wrapped tool_input/tool_response via lib-codex-hook-json.sh"
+    },
+    {
+      "name": "wrap-bash-output.sh",
+      "claude": "claude/hooks/wrap-bash-output.sh",
+      "codex": null,
+      "status": "claude-only",
+      "note": "Claude PreToolUse Bash command wrapper that pipes output through redact-secrets.sh; Codex does not use this Bash command-rewrite hook path."
     }
   ],
   "mcp_servers": [

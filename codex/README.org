@@ -503,7 +503,9 @@ Codex shell hooks are registered for both legacy =Bash= tool events and the
 current =exec_command=/=functions.exec_command= tool names. The hook scripts
 read both =command= and =cmd= payload fields so commit gates, security guards,
 and Elisp verification markers work in CLI/API sessions as well as older
-Bash-shaped payloads.
+Bash-shaped payloads. Hook entries intentionally omit =statusMessage= because
+Codex renders those progress labels in the TUI, and in persistent Emacs
+terminal buffers they remain as scrollback after the final assistant answer.
 
 The shell hook chain starts with =block-sensitive-read.sh=, which blocks
 commands that would read or search known credential-bearing paths such as

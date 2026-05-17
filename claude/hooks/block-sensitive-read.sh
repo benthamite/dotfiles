@@ -46,9 +46,19 @@ if [ "$TOOL_NAME" = "Read" ]; then
     "$HOME/.password-store/"*|/Users/pablostafforini/.password-store/*)
       ask "password store (GPG-encrypted secrets)" "$FILE_PATH" ;;
   esac
+  # MCP credential configs
+  case "$EXPANDED_PATH" in
+    */.mcp.json|*/mcp.json)
+      ask "MCP credential config" "$FILE_PATH" ;;
+  esac
   # Shell secrets
   case "$EXPANDED_PATH" in
     *.zshenv-secrets) ask "shell secrets file" "$FILE_PATH" ;;
+  esac
+  # Environment secret files
+  case "$EXPANDED_PATH" in
+    */.env|*/.env.*|*/.envrc)
+      ask "environment secrets file" "$FILE_PATH" ;;
   esac
   # SSH private keys
   case "$EXPANDED_PATH" in
@@ -97,18 +107,24 @@ if [ "$TOOL_NAME" = "Bash" ]; then
     SENSITIVE_LABEL="shell secrets file"
   elif echo "$COMMAND" | grep -qE '\.password-store/'; then
     SENSITIVE_LABEL="password store (GPG-encrypted secrets)"
+  elif echo "$COMMAND" | grep -qE '(^|[[:space:]/])\.mcp\.json\b|(^|[[:space:]/])mcp\.json\b'; then
+    SENSITIVE_LABEL="MCP credential config"
+  elif echo "$COMMAND" | grep -qE '(^|[[:space:]/])\.env(\.|[[:space:]]|$)|(^|[[:space:]/])\.envrc\b'; then
+    SENSITIVE_LABEL="environment secrets file"
   elif echo "$COMMAND" | grep -qE '(^|[ /=])\.ssh/id_[A-Za-z0-9_]+\b' && \
        ! echo "$COMMAND" | grep -qE '\.ssh/id_[A-Za-z0-9_]+\.pub\b'; then
     # Match private keys but exclude public keys (.pub).
     SENSITIVE_LABEL="SSH private key"
   elif echo "$COMMAND" | grep -qE '\.gnupg/'; then
     SENSITIVE_LABEL="GPG keyring"
-  elif echo "$COMMAND" | grep -qE '\.config/[^/[:space:]]+/tokens\.json\b'; then
+  elif echo "$COMMAND" | grep -qE '(^|[[:space:]])?/?[^[:space:]]*\.config/[^/[:space:]]+/tokens\.json\b'; then
     SENSITIVE_LABEL="OAuth tokens"
-  elif echo "$COMMAND" | grep -qE '\.gmail-mcp-epoch/credentials/'; then
+  elif echo "$COMMAND" | grep -qE '(^|[[:space:]])?/?[^[:space:]]*\.gmail-mcp-epoch/credentials/'; then
     SENSITIVE_LABEL="Gmail MCP credentials"
-  elif echo "$COMMAND" | grep -qE '\.config/[^/[:space:]]+/(secret\.json|client_secret[^"[:space:]]*\.json)\b'; then
+  elif echo "$COMMAND" | grep -qE '(^|[[:space:]])?/?[^[:space:]]*\.config/[^/[:space:]]+/(secret\.json|client_secret[^"[:space:]]*\.json)\b'; then
     SENSITIVE_LABEL="OAuth client secret"
+  elif echo "$COMMAND" | grep -qE '(^|[[:space:]/])(credentials\.json|service-account[^/[:space:]]*\.json|tokens\.json)\b'; then
+    SENSITIVE_LABEL="credential JSON"
   fi
 
   # No sensitive path mentioned → allow.

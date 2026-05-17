@@ -128,6 +128,13 @@
       "note": "Claude and Codex handoff skills intentionally differ because their Emacs handoff commands read different temp files and have different command names."
     },
     {
+      "name": "humanize",
+      "claude": "claude/skills/humanize/SKILL.md",
+      "codex": "codex/skills/humanize/SKILL.md",
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
+    },
+    {
       "name": "install-mcp-server",
       "claude": "claude/skills/install-mcp-server/SKILL.md",
       "codex": "codex/skills/install-mcp-server/SKILL.md",
@@ -154,13 +161,6 @@
       "codex": "codex/skills/move-session-log/SKILL.md",
       "status": "paired",
       "equivalence": "Moved from dotfiles project-local .claude/.codex skill trees into the global skill trees; equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
-    },
-    {
-      "name": "open-session-log",
-      "claude": "claude/skills/open-session-log/SKILL.md",
-      "codex": "codex/skills/open-session-log/SKILL.md",
-      "status": "tool-specific-divergence",
-      "note": "Claude and Codex session-log lookup intentionally differs because the tools expose different live session metadata and log locations."
     },
     {
       "name": "overnight-todos",

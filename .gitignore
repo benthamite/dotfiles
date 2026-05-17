@@ -27,6 +27,8 @@ ai-marketplace-monitor.log*
 !/.claude/
 !/.claude/skills/
 !/.claude/skills/**
+!/.claude/programmatic-skills/
+!/.claude/programmatic-skills/**
 claude/skills/*/node_modules
 claude/settings.json
 !CLAUDE.md
@@ -36,10 +38,6 @@ codex/.codex/
 codex/skills/.system/
 codex/skills/*/node_modules
 claude/bin/__pycache__/
-
-## private local skills
-claude/skills/humanize/
-codex/skills/humanize/
 
 ## local agent-learning inbox
 .agent-learnings/**

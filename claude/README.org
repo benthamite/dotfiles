@@ -319,11 +319,10 @@ Claude session. The installer exposes those directories at
 skills from that live path. Twitter workflows and the Hartree skill evaluation
 queue are programmatic-only and therefore do not live in =claude/skills/=.
 
-Private local skills that should load on this machine but not be committed can
-live under explicitly ignored directories in the live global skill trees. The
-current private pair is =humanize=, under =claude/skills/humanize/= and
-=codex/skills/humanize/=, and =bin/ai-config-sync= excludes it via
-=PRIVATE_GLOBAL_SKILLS=.
+Private local skills under the tracked live skill trees are still recorded in
+=ai-config-sync.json= and synchronized like other paired skills. The
+=humanize= skill is tracked under =claude/skills/humanize/= and
+=codex/skills/humanize/= so future edits trigger the normal sync checks.
 
 Run =bin/skill-prune apply --days 60= to disable stale paired skills. The scan
 checks recent Claude and Codex transcripts and disables a skill only when both
@@ -580,6 +579,11 @@ Extracts and records architectural, algorithmic, or design decisions from the cu
 This workflow is no longer a global Claude skill. It lives as a notes
 project-local skill under =~/My Drive/notes/.claude/skills/session-retro/= with
 the paired Codex copy beside it.
+
+The =open-session-log= helper is dotfiles project-local and programmatic-only:
+it lives under =.claude/programmatic-skills/open-session-log/= so explicit
+automation can open the current Claude Code session via =agent-log= without
+loading the helper in ordinary interactive session context.
 
 **** session-learning-capture
 :PROPERTIES:

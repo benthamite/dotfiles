@@ -27,17 +27,12 @@ DOTFILES_PROJECT_LOCAL_SKILLS = {
     "gitguardian-triage",
     "install-mcp-server",
     "move-session-log",
-    "open-session-log",
     "optimize-agent-instructions",
     "release-dotfiles",
     "skill-audit",
     "skill-creator",
     "skill-discovery",
     "skill-resolver",
-}
-
-PRIVATE_GLOBAL_SKILLS = {
-    "humanize",
 }
 
 TOOL_SPECIFIC_SKILL_FRONTMATTER = {
@@ -874,6 +869,27 @@ def local_skill_readme_problems(
     ]
 
 
+def local_skill_moved_between_roots(
+    repo_root: Path,
+    changed_paths: set[str],
+    skill: str,
+    source_root: str,
+    target_root: str,
+) -> bool:
+    source_claude = repo_root / ".claude" / source_root / skill / "SKILL.md"
+    source_codex = repo_root / ".codex" / source_root / skill / "SKILL.md"
+    if source_claude.exists() or source_codex.exists():
+        return False
+    target_claude = f".claude/{target_root}/{skill}"
+    target_codex = f".codex/{target_root}/{skill}"
+    if not (
+        has_changed_prefix(target_claude, changed_paths, changed_paths)
+        and has_changed_prefix(target_codex, changed_paths, changed_paths)
+    ):
+        return False
+    return not local_skill_sync_problems(repo_root, skill, target_root)
+
+
 def normalized_project_instruction_text(path: Path) -> str:
     text = path.read_text()
     text = re.sub(r"(?m)^@(\S+)[ \t]*$", r"`\1`", text)
@@ -1125,6 +1141,10 @@ def guard_changed_paths(
             processed_local_skills.add(skill_key)
             drift = local_skill_sync_problems(repo_root, skill)
             doc_drift = local_skill_readme_problems(changed_paths, skill, "skills")
+            if drift and local_skill_moved_between_roots(
+                repo_root, changed_paths, skill, "skills", "programmatic-skills"
+            ):
+                continue
             if not drift:
                 if doc_drift:
                     add_nested_problems(
@@ -1154,6 +1174,10 @@ def guard_changed_paths(
             processed_local_skills.add(skill_key)
             drift = local_skill_sync_problems(repo_root, skill)
             doc_drift = local_skill_readme_problems(changed_paths, skill, "skills")
+            if drift and local_skill_moved_between_roots(
+                repo_root, changed_paths, skill, "skills", "programmatic-skills"
+            ):
+                continue
             if not drift:
                 if doc_drift:
                     add_nested_problems(
@@ -1623,16 +1647,8 @@ def audit_instructions(problems: list[str], manifest: dict) -> None:
 def audit_skills(problems: list[str], manifest: dict) -> None:
     manifest_skill_items = {item["name"]: item for item in manifest.get("skills") or []}
     manifest_skills = set(manifest_skill_items)
-    claude_skills = {
-        path.parent.name
-        for path in (ROOT / "claude" / "skills").glob("*/SKILL.md")
-        if path.parent.name not in PRIVATE_GLOBAL_SKILLS
-    }
-    codex_skills = {
-        path.parent.name
-        for path in (ROOT / "codex" / "skills").glob("*/SKILL.md")
-        if path.parent.name not in PRIVATE_GLOBAL_SKILLS
-    }
+    claude_skills = {path.parent.name for path in (ROOT / "claude" / "skills").glob("*/SKILL.md")}
+    codex_skills = {path.parent.name for path in (ROOT / "codex" / "skills").glob("*/SKILL.md")}
 
     for skill in sorted(claude_skills - codex_skills):
         item = manifest_skill_items.get(skill)

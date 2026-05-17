@@ -1,7 +1,7 @@
 ---
 name: optimize-agent-instructions
 description: Optimize project agent instruction files. Use for optimize/improve/clean up/review Claude.md or making persistent CLAUDE.md or AGENTS.md guidance more concise, concrete, and reliable; not for ordinary docs or code reviews.
-argument-hint: [--accept] [path-to-CLAUDE.md or AGENTS.md]
+argument-hint: "[--accept] [path-to-CLAUDE.md or AGENTS.md]"
 argument-choices: "--accept"
 ---
 

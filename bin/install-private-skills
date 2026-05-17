@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+"""Install local private skill shims from the encrypted private manifest."""
+
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+PRIVATE_MANIFEST = ROOT / "ai-config-sync.private.json"
+EXCLUDE_MARKER_BEGIN = "# BEGIN dotfiles private skill shims"
+EXCLUDE_MARKER_END = "# END dotfiles private skill shims"
+
+
+def load_private_manifest() -> dict:
+    if not PRIVATE_MANIFEST.exists():
+        return {}
+    try:
+        return json.loads(PRIVATE_MANIFEST.read_text())
+    except UnicodeDecodeError:
+        print(
+            f"Private skill manifest is not readable; is git-crypt unlocked? {PRIVATE_MANIFEST}",
+            file=sys.stderr,
+        )
+        return {}
+
+
+def relative_symlink_target(link: Path, target: Path) -> str:
+    return os.path.relpath(target, start=link.parent)
+
+
+def git_exclude_path() -> Path:
+    proc = subprocess.run(
+        ["git", "-C", str(ROOT), "rev-parse", "--git-path", "info/exclude"],
+        check=True,
+        text=True,
+        stdout=subprocess.PIPE,
+    )
+    return Path(proc.stdout.strip())
+
+
+def install_link(link: Path, target: Path) -> None:
+    if not target.exists():
+        print(f"Private skill target missing, skipping: {target}", file=sys.stderr)
+        return
+
+    link.parent.mkdir(parents=True, exist_ok=True)
+    expected = relative_symlink_target(link, target)
+    if link.is_symlink():
+        if os.readlink(link) == expected:
+            return
+        link.unlink()
+    elif link.exists():
+        print(f"Private skill shim path exists and is not a symlink, skipping: {link}", file=sys.stderr)
+        return
+
+    link.symlink_to(expected)
+    print(f"Private skill shim linked: {link} -> {expected}")
+
+
+def update_git_exclude(paths: list[str]) -> None:
+    exclude_path = git_exclude_path()
+    exclude_path.parent.mkdir(parents=True, exist_ok=True)
+    existing = exclude_path.read_text() if exclude_path.exists() else ""
+    lines = existing.splitlines()
+
+    output: list[str] = []
+    in_block = False
+    for line in lines:
+        if line == EXCLUDE_MARKER_BEGIN:
+            in_block = True
+            continue
+        if line == EXCLUDE_MARKER_END:
+            in_block = False
+            continue
+        if not in_block:
+            output.append(line)
+
+    if output and output[-1] != "":
+        output.append("")
+    output.append(EXCLUDE_MARKER_BEGIN)
+    output.extend(sorted(paths))
+    output.append(EXCLUDE_MARKER_END)
+    exclude_path.write_text("\n".join(output) + "\n")
+
+
+def main() -> int:
+    manifest = load_private_manifest()
+    private_skills = manifest.get("private_skills") or []
+    exclude_paths: list[str] = []
+
+    for item in private_skills:
+        name = item.get("name")
+        if not name:
+            continue
+        for side in ("claude", "codex"):
+            source = item.get(side)
+            if not source:
+                continue
+            source_dir = (ROOT / source).parent
+            link = ROOT / side / "skills" / name
+            install_link(link, source_dir)
+            exclude_paths.append(f"/{side}/skills/{name}")
+
+    if exclude_paths:
+        update_git_exclude(exclude_paths)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

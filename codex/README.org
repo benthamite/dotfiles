@@ -114,7 +114,9 @@ git-crypt-encrypted, so neither the content nor the private sync manifest is
 publicly readable. =bin/ai-config-sync= loads the encrypted private manifest
 locally and still checks parity. Public private-skill directories use opaque
 IDs; the real skill names live only in the encrypted private manifest. Private
-skills are not part of the live =~/.codex/skills= symlink.
+skills are exposed to local Codex sessions by =bin/install-private-skills=,
+which creates gitignored shims under =~/.codex/skills= from the encrypted
+manifest.
 
 Skill frontmatter descriptions are loaded for routing, so keep them concise:
 preserve user phrasing, scope boundaries, and important near-miss exclusions,

@@ -583,7 +583,14 @@
       "path": "codex/bin/install-skills.sh",
       "tracked": true,
       "live_path": "~/.codex/skills",
-      "note": "Ensures the live ~/.codex/skills directory is a symlink to the tracked codex/skills tree because Codex discovers global skills from ~/.codex/skills/*/SKILL.md."
+      "note": "Ensures the live ~/.codex/skills directory is a symlink to the tracked codex/skills tree because Codex discovers global skills from ~/.codex/skills/*/SKILL.md. Also installs local gitignored private-skill shims from the encrypted private manifest."
+    },
+    {
+      "tool": "Claude Code and Codex",
+      "path": "bin/install-private-skills",
+      "tracked": true,
+      "live_path": "~/.claude/skills and ~/.codex/skills",
+      "note": "Creates local gitignored private-skill shims under the live skill roots from ai-config-sync.private.json, so explicit private $skill invocations resolve without tracking private names or bodies in the public repo."
     },
     {
       "tool": "Codex",

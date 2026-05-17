@@ -1799,11 +1799,16 @@ def audit_instructions(problems: list[str], manifest: dict) -> None:
         add_nested_problems(problems, "Global instructions are not synchronized:", drift)
 
 
-def audit_skills(problems: list[str], manifest: dict) -> None:
+def audit_skills(problems: list[str], manifest: dict, private_manifest: dict) -> None:
     manifest_skill_items = {item["name"]: item for item in manifest.get("skills") or []}
     manifest_skills = set(manifest_skill_items)
+    private_skill_names = {
+        item["name"] for item in private_manifest.get("private_skills") or []
+    }
     claude_skills = {path.parent.name for path in (ROOT / "claude" / "skills").glob("*/SKILL.md")}
     codex_skills = {path.parent.name for path in (ROOT / "codex" / "skills").glob("*/SKILL.md")}
+    claude_skills -= private_skill_names
+    codex_skills -= private_skill_names
 
     for skill in sorted(claude_skills - codex_skills):
         item = manifest_skill_items.get(skill)
@@ -1884,6 +1889,19 @@ def audit_private_skills(problems: list[str], manifest: dict) -> None:
         for problem in drift:
             add_problem(problems, problem)
 
+        for side in ("claude", "codex"):
+            name = item["name"]
+            source = item.get(side)
+            if not source:
+                continue
+            shim = ROOT / side / "skills" / name
+            expected = (ROOT / source).parent
+            if not shim.is_symlink():
+                add_problem(problems, f"Missing local {side} private skill shim: {shim}")
+                continue
+            if shim.resolve() != expected.resolve():
+                add_problem(problems, f"Wrong local {side} private skill shim: {shim} -> {shim.resolve()}; expected {expected}")
+
 
 def audit_hooks(problems: list[str], manifest: dict) -> None:
     manifest_hooks = {item["name"]: item for item in manifest.get("hooks") or []}
@@ -1963,6 +1981,7 @@ def audit_registrations(problems: list[str], manifest: dict) -> None:
         "~/.claude/settings.json",
         "codex/hooks.json",
         "codex/config.toml",
+        "bin/install-private-skills",
         "codex/bin/install-skills.sh",
         "codex/rules/default.rules",
     ):
@@ -1980,7 +1999,7 @@ def audit() -> int:
     private_manifest = load_private_manifest()
     audit_topology(problems)
     audit_instructions(problems, manifest)
-    audit_skills(problems, manifest)
+    audit_skills(problems, manifest, private_manifest)
     audit_private_skills(problems, private_manifest)
     audit_hooks(problems, manifest)
     audit_mcp_servers(problems, manifest)

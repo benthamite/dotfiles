@@ -106,7 +106,9 @@ public =ai-config-sync.json= does not name private skills; =bin/ai-config-sync=
 loads the encrypted private manifest locally and still checks Claude/Codex
 parity. Public private-skill directories use opaque IDs; the real skill names
 live only in the encrypted private manifest. Private skills are not exposed
-through the live =~/.claude/skills= or =~/.codex/skills= symlinks.
+through tracked public files. =bin/install-private-skills= creates local
+gitignored shims under =~/.claude/skills= and =~/.codex/skills= so explicit
+=$skill= invocations still resolve on unlocked machines.
 
 ** Master Skill Inventory
 
@@ -169,8 +171,6 @@ currently present in this repo. The skill name shown is the directory name.
   resolves, reopens, and notification emails correctly. Scope: Global.
 - =handoff=: Save next-session instructions to `/tmp/claude-code-handoff.md`
   for Claude Code session transitions. Scope: Global.
-- =humanize=: Rewrite prose to remove patterns that read as AI-generated while
-  preserving facts, citations, quotations, and house style. Scope: Private.
 - =imagegen=: Generate or edit raster images when the task benefits from
   AI-created bitmap visuals such as photos, illustrations, textures, sprites,
   mockups, or transparent-background cutouts. Scope: Global.

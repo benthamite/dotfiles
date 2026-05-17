@@ -62,7 +62,7 @@ When the user provides a tweet URL like `https://x.com/username/status/123456789
 
 ## Saving tweets
 
-When the user asks to save tweets, write them to `~/.claude/skills/twitter/saved-tweets/YYYY-MM-DD/`.
+When the user asks to save tweets, write them to `~/.claude/programmatic-skills/twitter/saved-tweets/YYYY-MM-DD/`.
 
 **Markdown format** (default):
 

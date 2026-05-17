@@ -2,5 +2,6 @@
 
 * Skills
 
-- =doc-extras=: Audits, creates, or refreshes documentation for all Emacs extras packages in the dotfiles repo.
+- =document-elisp-extras=: Audits, creates, or refreshes documentation for all Emacs extras packages in the dotfiles repo.
 - =emacs-freeze=: Diagnoses frozen, hung, beachballing, or unresponsive Emacs sessions by collecting evidence and recommending recovery.
+- =migrate-profile=: Runs post-Emacs-profile-switch housekeeping, including profile marker checks, new-profile repo drift checks, package-local =.claude/= and =.codex/= directory merges, Claude Code/Codex session-state migration, and structured session-path rewrites.

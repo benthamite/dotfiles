@@ -22,20 +22,22 @@ MANIFEST_PATH = ROOT / MANIFEST
 DISABLED_SKILLS_PATH = ROOT / "skills-disabled.json"
 
 DOTFILES_PROJECT_LOCAL_SKILLS = {
-    "claude-config-audit",
+    "config-audit",
     "find-skills",
     "gitguardian-triage",
     "install-mcp-server",
-    "migrate-profile",
     "move-session-log",
     "open-session-log",
-    "optimize-claude-md",
+    "optimize-agent-instructions",
     "release-dotfiles",
     "skill-audit",
     "skill-creator",
     "skill-discovery",
     "skill-resolver",
-    "try-hartree-skills",
+}
+
+PRIVATE_GLOBAL_SKILLS = {
+    "humanize",
 }
 
 TOOL_SPECIFIC_SKILL_FRONTMATTER = {
@@ -57,9 +59,15 @@ RUNTIME_PATTERNS = (
     "claude/skills/*/digests/*",
     "claude/skills/*/last-run/*",
     "claude/skills/twitter-vet/vetted/*",
+    "claude/programmatic-skills/*/digests/*",
+    "claude/programmatic-skills/*/last-run/*",
+    "claude/programmatic-skills/twitter-vet/vetted/*",
     "codex/skills/*/digests/*",
     "codex/skills/*/last-run/*",
     "codex/skills/twitter-vet/vetted/*",
+    "codex/programmatic-skills/*/digests/*",
+    "codex/programmatic-skills/*/last-run/*",
+    "codex/programmatic-skills/twitter-vet/vetted/*",
     ".claude/skills/*/digests/*",
     ".claude/skills/*/last-run/*",
     ".claude/skills/twitter-vet/vetted/*",
@@ -1615,8 +1623,16 @@ def audit_instructions(problems: list[str], manifest: dict) -> None:
 def audit_skills(problems: list[str], manifest: dict) -> None:
     manifest_skill_items = {item["name"]: item for item in manifest.get("skills") or []}
     manifest_skills = set(manifest_skill_items)
-    claude_skills = {path.parent.name for path in (ROOT / "claude" / "skills").glob("*/SKILL.md")}
-    codex_skills = {path.parent.name for path in (ROOT / "codex" / "skills").glob("*/SKILL.md")}
+    claude_skills = {
+        path.parent.name
+        for path in (ROOT / "claude" / "skills").glob("*/SKILL.md")
+        if path.parent.name not in PRIVATE_GLOBAL_SKILLS
+    }
+    codex_skills = {
+        path.parent.name
+        for path in (ROOT / "codex" / "skills").glob("*/SKILL.md")
+        if path.parent.name not in PRIVATE_GLOBAL_SKILLS
+    }
 
     for skill in sorted(claude_skills - codex_skills):
         item = manifest_skill_items.get(skill)

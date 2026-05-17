@@ -8,7 +8,7 @@ description: Use when writing, editing, reviewing, or testing Emacs Lisp code, i
 Use this skill before changing any `.el` file and keep it open through
 verification. It supplies local coding conventions plus the rebuild/test path.
 Use `lint-elisp` in addition when the user asks for compiler, checkdoc, or
-lint diagnostics; use `doc-elisp` when package documentation must be generated
+lint diagnostics; use `document-elisp-package` when package documentation must be generated
 or refreshed.
 
 Do not use this as the primary workflow for non-Elisp changes, broad design
@@ -61,7 +61,7 @@ See `emacs/extras/doc/elisp-development-workflow.org` for the dotfiles-specific 
 - **Stage documentation**: stage the matching Org manual update alongside
   `.el` files. Extras packages use `emacs/extras/doc/<package>.org`;
   standalone packages normally use the package root `README.org`, or
-  `README.md` when the repo has no Org manual. Use `/doc-elisp` to generate
+  `README.md` when the repo has no Org manual. Use `/document-elisp-package` to generate
   or update Org documentation.
 
 # Stale-load detection

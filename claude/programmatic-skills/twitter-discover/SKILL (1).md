@@ -6,7 +6,7 @@ user-invocable: true
 
 # Twitter account discovery
 
-@claude/skills/twitter-vet/SKILL.md
+@claude/programmatic-skills/twitter-vet/SKILL.md
 
 Iterative, graph-based discovery of high-value Twitter/X accounts in any topic area. Uses a "hot promise score" algorithm that combines following-list overlap with bio relevance filtering and continuous score updates.
 
@@ -268,7 +268,7 @@ When the user is done, save results in two ways:
 
 ### 1. Discovery log (always)
 
-Save to `~/.claude/skills/twitter-discover/results/YYYY-MM-DD-topic-slug.md`:
+Save to `~/.claude/programmatic-skills/twitter-discover/results/YYYY-MM-DD-topic-slug.md`:
 
 ```markdown
 # Twitter discovery: TOPIC
@@ -293,11 +293,11 @@ Criteria: RELEVANCE_CRITERIA summary
 
 ### 2. Digest list (if twitter-digest skill is installed)
 
-Check if `~/.claude/skills/twitter-digest/SKILL.md` exists. If it does:
+Check if `~/.claude/programmatic-skills/twitter-digest/SKILL.md` exists. If it does:
 
 1. Ask the user for a short list name (e.g., `ai-tools`, `ml-research`). Suggest one based on the topic.
 2. Ask the user which tiers to include (default: Tier 1 + Tier 2, i.e. score >= 6).
-3. Write the list to `~/.claude/skills/twitter-digest/lists/<list-name>.md` using this format:
+3. Write the list to `~/.claude/programmatic-skills/twitter-digest/lists/<list-name>.md` using this format:
 
 ```markdown
 ---
@@ -311,7 +311,7 @@ description: <derive from RELEVANCE_CRITERIA — what to surface and what to ski
 ```
 
 4. Tell the user they can now run `/twitter-digest <list-name>` or set up a recurring digest with `/loop 4h /twitter-digest <list-name>`.
-5. Write all scored accounts (score + rationale) to `~/.claude/skills/twitter-vet/vetted/<list-name>.md` using the registry format defined in twitter-vet. Include all tiers and below-threshold accounts. This lets twitter-digest skip re-vetting accounts already evaluated here.
+5. Write all scored accounts (score + rationale) to `~/.claude/programmatic-skills/twitter-vet/vetted/<list-name>.md` using the registry format defined in twitter-vet. Include all tiers and below-threshold accounts. This lets twitter-digest skip re-vetting accounts already evaluated here.
 
 If the digest skill is not installed, skip steps 1-5 silently — don't suggest installing it.
 

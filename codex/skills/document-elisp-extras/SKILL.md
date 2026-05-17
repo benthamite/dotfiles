@@ -1,5 +1,5 @@
 ---
-name: doc-extras
+name: document-elisp-extras
 description: Audit, create, or refresh documentation for all Emacs extras packages in the dotfiles repo. Use when the user asks to document every extras package, fill missing extras docs, refresh outdated extras docs, check extras documentation coverage, or bring emacs/extras/doc up to date with emacs/extras sources.
 ---
 
@@ -7,18 +7,18 @@ description: Audit, create, or refresh documentation for all Emacs extras packag
 
 Scan all Emacs extras packages, identify missing or outdated documentation, and create or update their `.org` manuals.
 
-Use `doc-elisp` for the detailed documentation style and source-analysis rules. This skill is the batch workflow for the dotfiles extras tree.
+Use `document-elisp-package` for the detailed documentation style and source-analysis rules. This skill is the batch workflow for the dotfiles extras tree.
 
 ## When not to use
 
-- For a single Elisp package or file, use `doc-elisp` directly.
+- For a single Elisp package or file, use `document-elisp-package` directly.
 - For generating GitHub-facing Markdown from an existing Org manual, use `generate-readme`.
 - For linting, byte-compilation, or release readiness, use the relevant Elisp lint or release workflow instead.
-- For non-extras packages outside `~/My Drive/dotfiles/emacs/extras/`, use `doc-elisp` unless the user explicitly asks for a broader batch documentation pass.
+- For non-extras packages outside `~/My Drive/dotfiles/emacs/extras/`, use `document-elisp-package` unless the user explicitly asks for a broader batch documentation pass.
 
 ## Documentation guidelines
 
-@claude/skills/doc-elisp/SKILL.md
+@claude/skills/document-elisp-package/SKILL.md
 
 ## File locations
 
@@ -33,9 +33,9 @@ Each top-level `.el` file should have a corresponding `.org` file in `doc/` with
 
 ### 1. Prepare
 
-- Read `doc-elisp` before judging documentation quality.
+- Read `document-elisp-package` before judging documentation quality.
 - Check `git status --short` and note unrelated dirty files. Do not stage or rewrite unrelated changes.
-- If editing this paired global skill itself, update both `claude/skills/doc-extras/SKILL.md` and `codex/skills/doc-extras/SKILL.md` unless `ai-config-sync.json` records an explicit divergence.
+- If editing this paired global skill itself, update both `claude/skills/document-elisp-extras/SKILL.md` and `codex/skills/document-elisp-extras/SKILL.md` unless `ai-config-sync.json` records an explicit divergence.
 
 ### 2. Scan and classify
 
@@ -55,7 +55,7 @@ Classify each package as:
 
 ### 3. Analyze existing docs for staleness
 
-For packages with existing docs, perform the structural diff, content diff, and quality check described in `doc-elisp`.
+For packages with existing docs, perform the structural diff, content diff, and quality check described in `document-elisp-package`.
 
 At minimum, compare the documented public surface against the public definitions in the source:
 
@@ -67,7 +67,7 @@ Exclude internal `--` symbols from the required documentation set unless the exi
 
 ### 4. Process packages
 
-Use subagents when available, ideally one package per worker. Each worker must read the `.el` source and the existing `.org` manual, then either create a new manual or update the existing one according to `doc-elisp`.
+Use subagents when available, ideally one package per worker. Each worker must read the `.el` source and the existing `.org` manual, then either create a new manual or update the existing one according to `document-elisp-package`.
 
 If subagents are unavailable, process packages in small independent batches. Do not skip the source/doc comparison just because many packages need attention.
 
@@ -76,7 +76,7 @@ If subagents are unavailable, process packages in small independent batches. Do 
 Before committing any package documentation change:
 
 - Re-read the changed `.org` manual and compare it with the source definitions.
-- Confirm each changed manual has required front matter, `CUSTOM_ID` drawers, Texinfo index entries, and the final `* Indices` section from `doc-elisp`.
+- Confirm each changed manual has required front matter, `CUSTOM_ID` drawers, Texinfo index entries, and the final `* Indices` section from `document-elisp-package`.
 - Export changed manuals to Texinfo, or save them in Emacs so `emacs/extras/doc/.dir-locals.el` exports them. When running a direct export, use:
 
 ```bash

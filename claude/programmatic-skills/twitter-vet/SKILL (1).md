@@ -66,7 +66,7 @@ The threshold of 7 can be overridden via an optional `vet-threshold` field in th
 All accounts ever scored against a specific list's rubric are recorded in a persistent registry at:
 
 ```
-~/.claude/skills/twitter-vet/vetted/<list-name>.md
+~/.claude/programmatic-skills/twitter-vet/vetted/<list-name>.md
 ```
 
 **Before vetting any account**, check the registry for the current list. If the account appears in any section, skip it entirely — do not re-score or re-filter.
@@ -115,7 +115,7 @@ Format:
 After vetting is complete, commit all changed markdown files (list files, vet registry) in one commit:
 
 ```bash
-git -C ~/My\ Drive/dotfiles add claude/skills/twitter-vet/vetted/ claude/skills/twitter-digest/lists/ && git -C ~/My\ Drive/dotfiles commit -m "twitter-vet: update <list-name> registry"
+git -C ~/My\ Drive/dotfiles add claude/programmatic-skills/twitter-vet/vetted/ claude/programmatic-skills/twitter-digest/lists/ && git -C ~/My\ Drive/dotfiles commit -m "twitter-vet: update <list-name> registry"
 ```
 
 Only stage paths that actually changed. When called from twitter-digest, skip this — twitter-digest's Step 4 handles the commit.

@@ -9,7 +9,7 @@ user-invocable: true
 
 # Twitter digest
 
-@claude/skills/twitter-vet/SKILL.md
+@claude/programmatic-skills/twitter-vet/SKILL.md
 
 ## COST RULE — READ THIS FIRST
 
@@ -27,7 +27,7 @@ Never use MCP twitter tools for the digest itself. The fetch script calls the RE
 ## Step 1: Fetch
 
 ```bash
-bash ~/.claude/skills/twitter-digest/fetch-tweets.sh <list-name>
+bash ~/.claude/programmatic-skills/twitter-digest/fetch-tweets.sh <list-name>
 ```
 
 Output:
@@ -50,7 +50,7 @@ If no cutoff file exists and running non-interactively, defaults to 48h. If inte
 
 If DESCRIPTION is non-empty, triage tweets: keep only tweets that **directly match** the rubric. The rubric is a hard filter, not a soft signal — if a tweet doesn't clearly fit the described topic, drop it regardless of engagement. Be aggressive — 5-15 tweets from 20+ accounts. Skip noise, hype, self-promotion, low-signal RTs, and anything the rubric's "skip" list covers (read it carefully).
 
-For RT-discovered authors (after `---RT_DISCOVERY---`), triage separately. **Before including any discovered account in the output**, check `~/.claude/skills/twitter-vet/vetted/<list-name>.md` — if the account appears in "Rejected", "Below threshold", or "Skipped" sections, exclude their tweets from the digest entirely.
+For RT-discovered authors (after `---RT_DISCOVERY---`), triage separately. **Before including any discovered account in the output**, check `~/.claude/programmatic-skills/twitter-vet/vetted/<list-name>.md` — if the account appears in "Rejected", "Below threshold", or "Skipped" sections, exclude their tweets from the digest entirely.
 
 Then emit ONE bash command that does everything:
 
@@ -71,32 +71,32 @@ Likes: N | Views: N | Like rate: X.X%
 * Accounts with nothing notable
 @user1, @user2, ...
 ORGEOF
-emacsclient -e "(progn (find-file \"$TMPFILE\") (goto-char (point-min)) (org-fold-show-all))" && echo "<iso-timestamp-of-newest-tweet>" > ~/.claude/skills/twitter-digest/last-run/<name>.txt && cp "$TMPFILE" ~/.claude/skills/twitter-digest/digests/<name>-YYYY-MM-DD.org
+emacsclient -e "(progn (find-file \"$TMPFILE\") (goto-char (point-min)) (org-fold-show-all))" && echo "<iso-timestamp-of-newest-tweet>" > ~/.claude/programmatic-skills/twitter-digest/last-run/<name>.txt && cp "$TMPFILE" ~/.claude/programmatic-skills/twitter-digest/digests/<name>-YYYY-MM-DD.org
 ```
 
 Order by like rate (likes÷views) descending. Omit "Discovered accounts" if none. Unfiltered lists (no description): show all tweets reverse-chrono under `* All tweets`, no other sections.
 
 ## Saving digests
 
-Always save a copy of the digest to `~/.claude/skills/twitter-digest/digests/<name>-YYYY-MM-DD.org`. For multi-list digests, use the combined filename (e.g. `ai-tools-ai-macrostrategy-2026-03-20.org`).
+Always save a copy of the digest to `~/.claude/programmatic-skills/twitter-digest/digests/<name>-YYYY-MM-DD.org`. For multi-list digests, use the combined filename (e.g. `ai-tools-ai-macrostrategy-2026-03-20.org`).
 
 ## Step 3: Vet discovered accounts
 
 If `---RT_DISCOVERY---` yielded accounts:
 
-1. **Check registry**: read `~/.claude/skills/twitter-vet/vetted/<list-name>.md` if it exists. Any RT-discovered account already listed there: skip re-vetting, use the recorded score directly.
+1. **Check registry**: read `~/.claude/programmatic-skills/twitter-vet/vetted/<list-name>.md` if it exists. Any RT-discovered account already listed there: skip re-vetting, use the recorded score directly.
 2. **Quick filter** (Procedure A from twitter-vet): use `---RT_AUTHORS---` metadata (bio, followers) and `---RT_DISCOVERY---` tweets to filter remaining accounts. Cap at top 5 candidates by quick-filter confidence. Skip the rest.
 3. **Full scoring** (Procedure B from twitter-vet): for each account that passes, call `mcp__twitterapi-io__get_user_tweets` (userName, count "20"). Score 1-10 against the list's `description`.
 4. **Auto-add**: score >= 7 (or `vet-threshold` from list YAML) → append `- @username` to the list file. Score 5-6 → report as borderline in the digest. Score <= 4 → skip.
 5. **Update digest**: emit one final Bash call to append a `* Vetted accounts` section to the org file (replacing `* Discovered accounts`) showing each account's score and rationale, and append any new `- @username` lines to the list file.
-6. **Update vet registry**: append newly scored accounts to `~/.claude/skills/twitter-vet/vetted/<list-name>.md` (creating the file with the standard header if it doesn't exist). Include all accounts that went through full scoring, regardless of outcome.
+6. **Update vet registry**: append newly scored accounts to `~/.claude/programmatic-skills/twitter-vet/vetted/<list-name>.md` (creating the file with the standard header if it doesn't exist). Include all accounts that went through full scoring, regardless of outcome.
 
 ## Step 4: Commit
 
 After all steps are complete, commit all changed files in one commit:
 
 ```bash
-git -C ~/My\ Drive/dotfiles add claude/skills/twitter-digest/digests/ claude/skills/twitter-digest/last-run/ claude/skills/twitter-digest/lists/ claude/skills/twitter-vet/vetted/ && git -C ~/My\ Drive/dotfiles commit -m "twitter-digest: <list-name(s)> YYYY-MM-DD"
+git -C ~/My\ Drive/dotfiles add claude/programmatic-skills/twitter-digest/digests/ claude/programmatic-skills/twitter-digest/last-run/ claude/programmatic-skills/twitter-digest/lists/ claude/programmatic-skills/twitter-vet/vetted/ && git -C ~/My\ Drive/dotfiles commit -m "twitter-digest: <list-name(s)> YYYY-MM-DD"
 ```
 
 Only stage paths that actually changed. If vetting didn't run, omit the lists and vetted paths.
@@ -107,4 +107,4 @@ Run fetch-tweets.sh once per list. Combine into one org buffer with `* <list-nam
 
 ## List management
 
-Lists: `~/.claude/skills/twitter-digest/lists/<name>.md`. YAML frontmatter with optional `description` (triage rubric), then `- @username` lines. No arg + 1 list → use it; multiple → ask.
+Lists: `~/.claude/programmatic-skills/twitter-digest/lists/<name>.md`. YAML frontmatter with optional `description` (triage rubric), then `- @username` lines. No arg + 1 list → use it; multiple → ask.

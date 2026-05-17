@@ -15,8 +15,8 @@ Use this skill for direct lookup, search, and save requests. For recurring or cu
 
 All access goes through the wrapper script in the active skill copy. Examples below call it as `$TWITTERAPI`; set that variable to the path for the current agent before the first call:
 
-- Codex: `TWITTERAPI="$HOME/.codex/skills/twitter/lib/twitterapi.sh"`
-- Claude: `TWITTERAPI="$HOME/.claude/skills/twitter/lib/twitterapi.sh"`
+- Codex: `TWITTERAPI="/.codex/programmatic-skills/twitter/lib/twitterapi.sh"`
+- Claude: `TWITTERAPI="/.claude/programmatic-skills/twitter/lib/twitterapi.sh"`
 
 Then verify the wrapper exists with `test -x "$TWITTERAPI"`.
 
@@ -82,8 +82,8 @@ When the user provides a tweet URL like `https://x.com/username/status/123456789
 
 When the user asks to save tweets, write them to the active skill copy's `saved-tweets/YYYY-MM-DD/` directory. Create it with `mkdir -p` if needed.
 
-- Codex: `~/.codex/skills/twitter/saved-tweets/YYYY-MM-DD/`
-- Claude: `~/.claude/skills/twitter/saved-tweets/YYYY-MM-DD/`
+- Codex: `~/.codex/programmatic-skills/twitter/saved-tweets/YYYY-MM-DD/`
+- Claude: `~/.claude/programmatic-skills/twitter/saved-tweets/YYYY-MM-DD/`
 
 **Markdown format** (default):
 

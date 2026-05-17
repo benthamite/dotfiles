@@ -107,6 +107,11 @@ at =~/.codex/programmatic-skills= because =agent-run-skill= discovers Codex
 skills from that live path. Codex-managed hidden system skills, when present,
 live under ignored =codex/skills/.system/= runtime data and are not part of the
 reusable cross-tool skill parity model.
+Private local skills that should load on this machine but not be committed can
+live under explicitly ignored directories in the live global skill trees. The
+current private pair is =humanize=, under =codex/skills/humanize/= and
+=claude/skills/humanize/=, and =bin/ai-config-sync= excludes it via
+=PRIVATE_GLOBAL_SKILLS=.
 
 Skill frontmatter descriptions are loaded for routing, so keep them concise:
 preserve user phrasing, scope boundaries, and important near-miss exclusions,
@@ -151,7 +156,7 @@ one side without an equivalent counterpart is blocked. Each project-local skill
 root documents its skills in that project's =README.org= under a dedicated
 =Skills= section.
 
-When switching Emacs/elpaca profiles, the dotfiles-local
+When switching Emacs/elpaca profiles, the emacs project-local
 =migrate-profile= skill migrates project-local agent roots that live inside
 profile package clones: =<old-profile>/elpaca/{sources,repos}/<package>/.codex/=
 is copied into the verified new-profile package path without overwriting
@@ -214,7 +219,7 @@ one-comment-at-a-time approval before externally visible actions, uses the
 matching =gdoc reply=, =gdoc resolve=, or =gdoc reopen= command, and verifies
 with =gdoc comment-info= before moving on.
 
-The =twitter= skill is a Codex workflow for direct Twitter/X
+The =twitter= skill is a programmatic Codex workflow for direct Twitter/X
 lookup, search, and save requests via the active skill copy's
 =lib/twitterapi.sh= curl wrapper around twitterapi.io. It supports tweet,
 thread/reply, timeline, profile, follower/following, user-search, and keyword
@@ -223,7 +228,7 @@ keys from logging; separates direct lookup from =twitter-digest=,
 =twitter-discover=, and =twitter-vet= workflows; and requires response,
 pagination, and saved-file verification before reporting completion.
 
-The =twitter-digest= skill is a Codex workflow for fetching recent
+The =twitter-digest= skill is a programmatic Codex workflow for fetching recent
 tweets from a named curated account list, triaging them against the list rubric,
 saving an org digest, and updating last-run state. It uses the active
 =fetch-tweets.sh= helper and active =twitterapi.sh= wrapper rather than MCP
@@ -234,7 +239,7 @@ fails loudly when no listed account fetch succeeds, and verifies fetch
 markers, saved digest, last-run timestamp, diff cleanliness, and staged paths
 before committing digest, timestamp, list, and vet registry changes.
 
-The =twitter-discover= skill is a Codex workflow for iterative,
+The =twitter-discover= skill is a programmatic Codex workflow for iterative,
 graph-based discovery of high-value Twitter accounts in any niche. It
 interviews the user for criteria, acquires seed accounts via search, expands
 through hot promise scores from following-list overlap, uses the active
@@ -243,7 +248,7 @@ per-session temporary directory, verifies its parsing helper, re-reads saved
 logs/lists/registries, and optionally exports high-scoring accounts to a
 =twitter-digest= list.
 
-The =twitter-vet= skill is a Codex workflow for vetting, scoring,
+The =twitter-vet= skill is a programmatic Codex workflow for vetting, scoring,
 ranking, or deciding whether Twitter/X accounts belong on curated lists. It
 requires a handle, list name, rubric, and optional =vet-threshold=; uses the
 active =twitter= skill wrapper for read-only tweet sampling; applies a quick
@@ -345,10 +350,10 @@ causes, commits and pushes follow-up fixes, and repeats until the pushed commit
 is green or a concrete blocker is identified. It does not grant permission to
 push; it only applies after a push has already been authorized.
 
-The =release= skill is a Codex operations workflow for releasing
+The =release-package= skill is a Codex operations workflow for releasing
 the user's listed Emacs packages from the listed headings in
-=my-emacs-packages.org=, excluding the unlisted section. It supports =/release
-<package>= and =/release --audit=, avoids cloning or creating tags/releases
+=my-emacs-packages.org=, excluding the unlisted section. It supports =/release-package
+<package>= and =/release-package --audit=, avoids cloning or creating tags/releases
 during audits, handles untagged package repos as initial releases, strips flags
 such as =--accept= before package inference, and keeps dotfiles releases routed
 to the dotfiles-local release workflow. The dotfiles release workflow checks
@@ -395,10 +400,10 @@ that externally visible update has been explicitly authorized. It saves org IDs
 after creating them, verifies the note/list/profile changes before committing,
 and cleans temporary clones with =trash=.
 
-The =doc-elisp= skill is a Codex workflow for creating or
+The =document-elisp-package= skill is a Codex workflow for creating or
 updating Org manuals for Elisp packages in the Denote manual style. It resolves
 the correct manual path for standalone repositories versus dotfiles extras,
-distinguishes nearby =generate-readme=, =doc-extras=, and =lint-elisp= requests,
+distinguishes nearby =generate-readme=, =document-elisp-extras=, and =lint-elisp= requests,
 inventories public options, faces, commands, and functions across all source
 files, avoids broad =.dir-locals.el= changes in the dotfiles monorepo, and
 requires source/manual verification before reporting completion.
@@ -454,25 +459,9 @@ writing, avoids duplicate entries and invented rejected alternatives, updates
 =decisions-summary.md= rows with explicit status values, and verifies edited
 decision files plus the summary before reporting.
 
-The =session-retro= skill is a Codex workflow for reviewing dotfiles
-agent-learning inbox suggestions under =.agent-learnings/inbox/= using
-ignore-aware file discovery because the records are intentionally untracked
-local working material. It ranks distinct suggestions by expected value,
-interviews the user from highest to lowest value with native
-implement/defer/drop multiple-choice prompts, and requires Plan mode or another
-runtime mode where that native picker is available. Each prompt summarizes the
-proposed implementation target, likely owner, edit shape, and verification plan
-before the user chooses. It waits until every suggestion is classified before
-applying accepted improvements, treats raw inbox files as local working
-material, keeps deferred suggestions in the inbox,
-archives implemented suggestions under
-=.agent-learnings/archive/YYYY-MM-DD/= with source, changed files,
-verification, and commit metadata, and deletes dropped suggestions with the
-system trash command rather than destructive removal. Implementation follows
-normal dotfiles rules: use the relevant specific skill, keep Claude/Codex
-counterparts synchronized, update required docs, verify, run
-=bin/ai-config-sync audit=, and leave only deferred suggestions in the inbox
-before reporting.
+The =session-retro= workflow is no longer a global Codex skill. It lives as a
+notes project-local skill under =~/My Drive/notes/.codex/skills/session-retro/=
+with the paired Claude copy beside it.
 
 The =session-learning-capture= skill is the producer half of the same workflow.
 It runs when the Emacs =agent-exit= before-exit prompt asks the active agent

@@ -26,13 +26,13 @@ If there is no rubric, ask for one or have the caller synthesize one before scor
 
 All API access goes through the active `twitter` skill wrapper. Set `TWITTERAPI` before the first API call, then verify it exists with `test -x "$TWITTERAPI"`:
 
-- Codex: `TWITTERAPI="$HOME/.codex/skills/twitter/lib/twitterapi.sh"`
-- Claude: `TWITTERAPI="$HOME/.claude/skills/twitter/lib/twitterapi.sh"`
+- Codex: `TWITTERAPI="/.codex/programmatic-skills/twitter/lib/twitterapi.sh"`
+- Claude: `TWITTERAPI="/.claude/programmatic-skills/twitter/lib/twitterapi.sh"`
 
 The shared vet registry source of truth is the Claude skill data path, even when invoked from Codex:
 
 ```
-~/.claude/skills/twitter-vet/vetted/<list-name>.md
+~/.claude/programmatic-skills/twitter-vet/vetted/<list-name>.md
 ```
 
 This keeps Claude and Codex callers from splitting vetting history. Treat resolved API keys and credential environment variables as secrets: do not echo `TWITTERAPI_API_KEY*`, do not enable shell xtrace, and do not print curl commands that include API headers.
@@ -109,7 +109,7 @@ The threshold of 7 can be overridden via an optional `vet-threshold` field in th
 All accounts ever scored against a specific list's rubric are recorded in a persistent registry at:
 
 ```
-~/.claude/skills/twitter-vet/vetted/<list-name>.md
+~/.claude/programmatic-skills/twitter-vet/vetted/<list-name>.md
 ```
 
 **Before vetting any account**, check the registry for the current list. If the account appears in any section, skip it entirely and use the recorded outcome. Re-score only if the user explicitly asks to revisit a prior judgment.
@@ -160,7 +160,7 @@ Format:
 When running standalone, after vetting is complete, commit all changed markdown files (list files, vet registry) in one commit:
 
 ```bash
-git -C ~/My\ Drive/dotfiles add claude/skills/twitter-vet/vetted/ claude/skills/twitter-digest/lists/ && git -C ~/My\ Drive/dotfiles commit -m "twitter-vet: update <list-name> registry"
+git -C ~/My\ Drive/dotfiles add claude/programmatic-skills/twitter-vet/vetted/ claude/programmatic-skills/twitter-digest/lists/ && git -C ~/My\ Drive/dotfiles commit -m "twitter-vet: update <list-name> registry"
 ```
 
 Only stage paths that actually changed. When called from `twitter-digest` or `twitter-discover`, skip this; the caller's save/commit step owns persistence.

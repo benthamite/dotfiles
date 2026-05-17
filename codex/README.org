@@ -107,10 +107,12 @@ at =~/.codex/programmatic-skills= because =agent-run-skill= discovers Codex
 skills from that live path. Codex-managed hidden system skills, when present,
 live under ignored =codex/skills/.system/= runtime data and are not part of the
 reusable cross-tool skill parity model.
-Private local skills under the tracked live skill trees are still recorded in
-=ai-config-sync.json= and synchronized like other paired skills. The
-=humanize= skill is tracked under =codex/skills/humanize/= and
-=claude/skills/humanize/= so future edits trigger the normal sync checks.
+Private skills that should remain hidden from ordinary interactive sessions
+live under =codex/private-skills/= with paired Claude copies under
+=claude/private-skills/=. They are recorded in =ai-config-sync.json='s
+=private_skills= section and checked by =bin/ai-config-sync=, but they are not
+part of the live =~/.codex/skills= symlink. The current private pair is
+=humanize=.
 
 Skill frontmatter descriptions are loaded for routing, so keep them concise:
 preserve user phrasing, scope boundaries, and important near-miss exclusions,

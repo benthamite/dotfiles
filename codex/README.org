@@ -112,8 +112,9 @@ live under =codex/private-skills/= with paired Claude copies under
 =claude/private-skills/=. Those trees and =ai-config-sync.private.json= are
 git-crypt-encrypted, so neither the content nor the private sync manifest is
 publicly readable. =bin/ai-config-sync= loads the encrypted private manifest
-locally and still checks parity, but private skills are not part of the live
-=~/.codex/skills= symlink.
+locally and still checks parity. Public private-skill directories use opaque
+IDs; the real skill names live only in the encrypted private manifest. Private
+skills are not part of the live =~/.codex/skills= symlink.
 
 Skill frontmatter descriptions are loaded for routing, so keep them concise:
 preserve user phrasing, scope boundaries, and important near-miss exclusions,

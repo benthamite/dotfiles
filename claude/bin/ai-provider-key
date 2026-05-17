@@ -36,6 +36,7 @@ DEFAULT_OPENAI_ADMIN_REF = "op://Employee/OpenAI - api-provisioning-admin/creden
 DEFAULT_ANTHROPIC_ADMIN_REF = "op://Employee/Anthropic - api-provisioning-admin/credential"
 DEFAULT_OPENAI_AUTOMATIONS_PROJECT_ID = "proj_mdM7wTXIQUFqquI4A1zCO2BF"
 DEFAULT_ANTHROPIC_AUTOMATIONS_WORKSPACE_ID = "wrkspc_016hokUAzbZA7qVGuAUjfZTb"
+DEFAULT_MAX_AUTONOMOUS_MONTHLY_SPEND_USD = 500.0
 ANTHROPIC_VERSION = "2023-06-01"
 
 
@@ -303,11 +304,27 @@ def dry_run_plan(args: argparse.Namespace) -> dict[str, Any]:
         provider_resource = DEFAULT_OPENAI_AUTOMATIONS_PROJECT_ID
     else:
         provider_resource = DEFAULT_ANTHROPIC_AUTOMATIONS_WORKSPACE_ID
+    verified_cap = args.verified_monthly_spend_cap_usd
+    if verified_cap is None:
+        policy_status = (
+            "blocked: pass --verified-monthly-spend-cap-usd after checking "
+            "the LLM provider tracker and provider-controls.yml"
+        )
+    elif verified_cap > DEFAULT_MAX_AUTONOMOUS_MONTHLY_SPEND_USD:
+        policy_status = (
+            f"blocked: verified cap ${verified_cap:g} exceeds "
+            f"autonomous maximum ${DEFAULT_MAX_AUTONOMOUS_MONTHLY_SPEND_USD:g}"
+        )
+    else:
+        policy_status = "allowed by helper cap check"
     return {
         "provider": args.provider,
         "provider_project_or_workspace": provider_resource,
         "provider_key_or_service_account_name": args.key_name or args.project,
         "admin_key_ref": admin_ref,
+        "max_autonomous_monthly_spend_usd": DEFAULT_MAX_AUTONOMOUS_MONTHLY_SPEND_USD,
+        "verified_monthly_spend_cap_usd": verified_cap,
+        "provider_controls_policy_status": policy_status,
         "item_title": item_title,
         "env_name": env_name,
         "op_ref": f"op://{args.vault}/{item_title}/credential",
@@ -333,6 +350,23 @@ def read_secret_argument(args: argparse.Namespace) -> str:
     return secret
 
 
+def enforce_spend_cap_precondition(args: argparse.Namespace) -> None:
+    verified_cap = args.verified_monthly_spend_cap_usd
+    if verified_cap is None:
+        raise ProvisionError(
+            "Refusing to create/store an AI-provider runtime key without an explicit "
+            "--verified-monthly-spend-cap-usd value. Check the LLM API providers "
+            "tracker and provider-controls.yml first; for OpenAI Automations, the "
+            "project currently has no budget set."
+        )
+    if verified_cap > DEFAULT_MAX_AUTONOMOUS_MONTHLY_SPEND_USD:
+        raise ProvisionError(
+            f"Refusing to create/store an AI-provider runtime key with verified "
+            f"monthly spend cap ${verified_cap:g}; helper maximum is "
+            f"${DEFAULT_MAX_AUTONOMOUS_MONTHLY_SPEND_USD:g}."
+        )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -354,6 +388,15 @@ def build_parser() -> argparse.ArgumentParser:
     create.add_argument("--repo", type=Path, help="Repo where .env.op should be created or updated")
     create.add_argument("--secret-file", help="Existing provider key to store; required for Anthropic")
     create.add_argument("--secret-stdin", action="store_true", help="Read existing provider key from stdin")
+    create.add_argument(
+        "--verified-monthly-spend-cap-usd",
+        type=float,
+        help=(
+            "Provider-console verified monthly cap for the target project/workspace. "
+            "Required for non-dry-run key creation/storage and must be at or below "
+            f"${DEFAULT_MAX_AUTONOMOUS_MONTHLY_SPEND_USD:g}."
+        ),
+    )
     create.add_argument("--dry-run", action="store_true", help="Create provider key but do not store it")
     create.add_argument("--force", action="store_true", help="Replace existing 1Password field/.env.op entry")
     return parser
@@ -367,6 +410,7 @@ def main() -> int:
         if args.dry_run:
             print(json.dumps(dry_run_plan(args), indent=2, sort_keys=True))
             return 0
+        enforce_spend_cap_precondition(args)
         if args.provider == "openai":
             credential = create_openai(args)
         else:

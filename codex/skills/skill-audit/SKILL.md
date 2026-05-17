@@ -1,140 +1,170 @@
 ---
-name: skill-audit
-description: Audit or improve Claude/Codex skills for trigger quality, workflow design, progressive disclosure, verification, portability, and maintainability. Use for SKILL.md reviews, hardening, refactors, or keep/split/merge decisions; not for ordinary code/docs audits.
+name: skill-discovery
+description: Scan recent Claude Code and Codex sessions to discover repeated manual workflows worth turning into skills, present the candidates, and optionally build them via automate. Use when the user says "skill discovery", "what should I automate", "find automation candidates", "repeated workflows", "discover skill candidates", or wants a periodic review of what workflows to automate next. Do not use for one-off requests to build an already specified automation, AI journal posts, or third-party skill installation.
+user-invocable: true
 ---
 
-# Skill audit
+# Skill discovery
 
-Review $ARGUMENTS as an agent skill. The goal is to find concrete changes that would make the skill trigger more reliably, guide the agent more effectively, reduce repeated work, and produce more verifiable results.
+Scan Claude Code and Codex sessions since the last run, surface workflows the user has been doing manually more than once, and propose them as skills (or improvements to existing skills). After the user picks, dispatch each pick to the local `automate` skill to actually build it.
 
-If `--accept` is present in $ARGUMENTS, after completing the audit, immediately apply all high-confidence fixes that do not change the skill's intended scope. Preserve the skill name unless the user explicitly asked for a rename, then follow the accept-mode verification and commit steps below.
+This is the "automate your automations" loop: the goal is for the user to wake up knowing what to automate next, rather than noticing opportunities ad-hoc.
 
-Read the actual skill files before judging. If the user names a skill but does not give a path, use the local skill resolver when available. Choose `--tool claude` for Claude Code skills and `--tool codex` for Codex skills:
+## Locations
+
+- **Claude skill directory**: `~/My Drive/dotfiles/.claude/skills/skill-discovery/`
+- **Codex skill directory**: `~/My Drive/dotfiles/.codex/skills/skill-discovery/`
+- **State file**: `last-run.txt` in both paired skill directories (ISO 8601 UTC timestamp; keep the two copies identical)
+- **Scan script**: reused from `ai-journal`; use the current tool's paired copy:
+  - Claude Code: `~/My Drive/notes/.claude/skills/ai-journal/find-sessions.py`
+  - Codex: `~/My Drive/notes/.codex/skills/ai-journal/find-sessions.py`
+- **Existing skills indexes**:
+  - `~/My Drive/dotfiles/claude/skills/`
+  - `~/My Drive/dotfiles/codex/skills/`
+
+## Procedure
+
+### 1. Determine cutoff
+
+Read `last-run.txt` from both paired skill directories. They should match; if they differ, resolve the drift before scanning rather than choosing one silently. If both files are missing or empty, ask the user how far back to scan, suggesting "last 7 days" as one option. Convert the user's answer to an ISO 8601 UTC timestamp before invoking the scan script.
+
+### 2. Scan sessions
 
 ```bash
-/Users/pablostafforini/My\ Drive/dotfiles/bin/agent-skill path <skill-name> --tool claude
-/Users/pablostafforini/My\ Drive/dotfiles/bin/agent-skill cat <skill-name> --tool claude
-/Users/pablostafforini/My\ Drive/dotfiles/bin/agent-skill path <skill-name> --tool codex
-/Users/pablostafforini/My\ Drive/dotfiles/bin/agent-skill cat <skill-name> --tool codex
+# Claude Code
+python3 ~/My\ Drive/notes/.claude/skills/ai-journal/find-sessions.py "<cutoff-iso>"
+
+# Codex
+python3 ~/My\ Drive/notes/.codex/skills/ai-journal/find-sessions.py "<cutoff-iso>"
 ```
 
-If the resolver is unavailable, search likely skill roots with `rg --files -g SKILL.md`.
+Run the command for the current tool; the script copies should stay identical.
 
-## Scope Boundaries
+Output is tab-separated: `kind<TAB>start_iso<TAB>cwd<TAB>path<TAB>first_user_excerpt`.
 
-Use this skill for reusable agent skills, skill directories, `SKILL.md` files, and closely related skill workflow artifacts. Do not use it for ordinary code review, security review, architecture/design audit, documentation proofreading, or general Claude/Codex configuration cleanup unless the artifact being evaluated is itself a skill or skill-adjacent workflow; route those requests to the neighboring audit or maintenance skills.
+If the scan returns more than ~30 sessions, delegate triage (step 3) to a subagent so the transcripts don't flood the main context. Use the subagent prompt template at the end of this file.
 
-## Workflow
+### 3. Triage for repeatable workflows
 
-1. Resolve the target exactly. If a skill name could refer to both Claude and Codex copies, inspect both unless the request narrows the scope to one tool. If paired copies differ, decide whether the difference is intentional before proposing synchronization.
-2. Inventory the skill directory. Read `SKILL.md` first, then list bundled scripts, references, assets, evals, or state files and open only the ones needed to judge how the skill uses them.
-3. Audit against the checklist below. Prioritize issues that affect triggering, scope boundaries, execution order, safety, verification, or maintainability; skip pure style preferences.
-4. In normal mode, report findings using the output format below.
-5. In `--accept` mode, apply only high-confidence, scope-preserving edits. Keep paired copies synchronized unless their differences are intentional, update directly required docs, run available checks or re-read changed files, inspect `git diff` and `git status`, and commit only the audited skill/docs changes.
-6. After `--accept`, include files changed, commit hash, verification performed, and deferred or unresolved recommendations in the final response.
+Read the sessions and look for **patterns that repeat across two or more sessions**. Good signals:
 
-## What to Look For
+- The user ran the same multi-step procedure in different sessions (e.g. "open X, grep Y, edit Z, commit")
+- The user had to remind the agent of the same context, conventions, or gotchas
+- The user fixed the same *class* of bug or handled the same *class* of request more than once
+- The user wrote a custom one-off prompt that they clearly could have reused
+- The user chained the same 2-3 tools/commands repeatedly
 
-### Trigger Quality
+**Ignore one-offs.** The whole point is to find *repeated* friction, not to propose a skill for every interesting thing that happened.
 
-- **Weak descriptions**: descriptions that say what the skill is about but not when to use it.
-- **Missing user phrasing**: common prompts, synonyms, typos, and adjacent contexts are absent from the description.
-- **Undertrigger risk**: the description is too modest for a workflow the user expects the agent to notice proactively.
-- **Overtrigger risk**: the description captures broad keywords but not the actual intent boundary.
-- **Misplaced trigger guidance**: "when to use" information lives only in the body, where it will not help the model decide whether to open the skill.
-- **Bloated descriptions**: the description includes implementation details, internal workflow steps, or background that is only needed after the skill has already triggered.
-- **Over-compressed descriptions**: shortening removed user phrasing, scope boundaries, or near-miss exclusions needed for reliable routing.
-- **Unsafe frontmatter**: unquoted YAML-sensitive text, especially `: ` inside plain scalar descriptions, may break parsers or skill loading.
+**Before proposing a new skill, check both `~/My Drive/dotfiles/claude/skills/` and `~/My Drive/dotfiles/codex/skills/` for an existing skill that already covers the workflow.** If one exists, the candidate should be framed as a *gap* ("existing skill X is missing feature Y") rather than a new skill. Use `rg -l "<keyword>" ~/My\ Drive/dotfiles/{claude,codex}/skills` to check quickly. If a skill exists on only one side, mention the pairing gap instead of proposing a duplicate.
 
-### Scope and Fit
+Group related sessions: if the same pattern shows up in 4 sessions, surface it once with 4 linked occurrences.
 
-- **Vague purpose**: the skill is an idea or topic area, not a repeatable workflow.
-- **Omnibus scope**: unrelated workflows are packed into one skill and should be split.
-- **Over-narrow scope**: the skill is so tied to one example that it will not generalize to nearby real prompts.
-- **Missing "when not to use" guidance**: near-miss cases are not separated from valid uses.
-- **Duplicate coverage**: the skill substantially overlaps another local skill without a clear division of responsibility.
+### 4. Present candidates
 
-### Workflow Design
+Show the user a numbered list. For each candidate:
 
-- **Unordered advice**: the body lists tips but does not tell the agent what to do first, next, and last.
-- **Missing operational details**: required commands, tools, source-of-truth locations, accounts, or files are not named.
-- **Manual handoffs**: the skill asks the user to do things the agent can do itself.
-- **Silent fallback patterns**: the skill encourages workaround behavior without labeling tradeoffs or asking for approval where needed.
-- **Unclear stop conditions**: the skill does not define what "done" means.
+- **Proposed name** — short kebab-case name (or `extend: <existing-skill>` if it's a gap)
+- **Trigger phrases** — the natural-language the user would type to invoke it
+- **What it would do** — one-sentence purpose
+- **Evidence** — 2-4 bullets pointing at specific sessions (dates + short quotes from `first_user_excerpt`)
+- **Approach hint** — gptel command vs agent skill (since `automate` will ask anyway, but the hint speeds the decision)
 
-### Progressive Disclosure
+Format example:
 
-- **Overloaded SKILL.md**: the main file is long enough that important instructions are hard to find.
-- **Missing references**: large background material belongs in `references/` with clear instructions for when to read it.
-- **Missing scripts**: agents repeatedly recreate deterministic helper code that should live in `scripts/`.
-- **Unused bundled resources**: assets, references, or scripts exist but the skill body does not say when to use them.
-- **Poor variant organization**: framework-, provider-, or account-specific guidance is mixed together instead of split into targeted reference files.
+```
+## 1. /pr-describe — generate PR descriptions from commit history
 
-### Instruction Quality
+**Trigger phrases**: "describe this PR", "write a PR description", "summarize branch"
 
-- **Commandments without reasons**: heavy `MUST`/`NEVER` language is used where explaining the reason would guide judgment better.
-- **Ambiguous output expectations**: the skill does not specify report structure, file outputs, or final response format.
-- **Missing examples**: there are no realistic input/output examples for nuanced behavior.
-- **Contradictory guidance**: sections pull the agent in different directions.
-- **Local convention drift**: the skill conflicts with repository, tool, or user instructions.
+**What it would do**: Read commits since the branch diverged, classify them, and produce a PR description in the project's house style.
 
-### Verification and Evals
+**Evidence**:
+- 2026-04-12, `~/repos/tlon.el`: "can you write a PR description for this branch"
+- 2026-04-14, `~/repos/stafforini.com`: "summarize the changes since master and draft a PR body"
+- 2026-04-16, `~/repos/consensus-trader`: same request, different repo
 
-- **No verification loop**: the skill does not say how to check that the workflow succeeded.
-- **No realistic test prompts**: the skill has not been tried against prompts a user would actually write.
-- **No near-miss trigger tests**: there are no examples that should not trigger the skill.
-- **Subjective-only evaluation**: objective outputs are available but not checked with assertions, scripts, or deterministic comparisons.
-- **No baseline comparison**: there is no evidence the skill improves behavior compared with not using it.
+**Approach hint**: Claude Code skill (needs git + filesystem). Low complexity.
+```
 
-### Safety and Portability
+Then ask: "Which should I build? (e.g. `1, 3` or `all` or `none`)"
 
-- **Surprising behavior**: the skill may create external side effects, delete data, expose secrets, or contact services without making that clear.
-- **Unstated dependencies**: required CLIs, credentials, MCP servers, browser profiles, or local paths are assumed.
-- **Secret handling gaps**: the skill does not protect credentials or sensitive outputs where relevant.
-- **Non-portable paths**: local paths are used without explaining whether the skill is personal or reusable.
-- **Missing cleanup**: temporary files, servers, or generated artifacts are not cleaned up or handed off explicitly.
+### 5. Build selected candidates
 
-## What Not to Flag
+For each selected candidate, dispatch to the local `automate` skill with the candidate's description as the argument (`/automate` in Claude Code). `automate` will:
 
-- A skill being personal or local-path-specific, if that is intentional and clearly documented.
-- Lack of quantitative evals for strongly subjective workflows where human review is the right judge.
-- A short SKILL.md, if the workflow is simple and complete.
-- Missing scripts when the task is genuinely judgment-heavy and not repetitive.
-- Style preferences that do not affect triggering, execution, verification, safety, or maintainability.
+1. Decide gptel vs agent skill
+2. Ask the user to confirm the approach
+3. Build the skill (or gptel command) and tell the user how to invoke it
 
-## Improvement Guidance
+Do not build new skills yourself — `automate` is the canonical builder. Invoke it once per candidate so each gets its own design pass.
 
-When proposing changes, prefer small edits that preserve the skill's purpose. The highest-value improvements usually are:
+If the candidate is `extend: <existing-skill>`, skip `automate` and edit the existing paired `SKILL.md` files directly to add the missing procedure/section. Update directly required docs, run the relevant verification for that skill, and keep Claude/Codex copies synchronized unless `ai-config-sync.json` records an intentional divergence.
 
-1. Rewrite the description so it triggers on realistic user phrasing.
-2. Keep the description concise but not lossy: preserve routing-critical phrases and move implementation detail into the body.
-3. Add a concise ordered workflow.
-4. Add "when not to use" near-miss guidance.
-5. Specify output format and verification.
-6. Move long material into references or repeated helper logic into scripts.
-7. Add realistic eval prompts, including should-trigger and should-not-trigger cases.
+### 6. Update state and commit
 
-Explain why each recommendation matters. Skills work best when they transmit judgment, not just rules.
+After the user confirms the candidates are built (or declined):
 
-## Output Format
+1. Update both paired `last-run.txt` files to the same timestamp:
+   ```bash
+   stamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+   printf '%s\n' "$stamp" > ~/My\ Drive/dotfiles/.claude/skills/skill-discovery/last-run.txt
+   printf '%s\n' "$stamp" > ~/My\ Drive/dotfiles/.codex/skills/skill-discovery/last-run.txt
+   ```
+2. Commit the paired `last-run.txt` bump: `skill-discovery: bump last-run to <date>`.
+3. Any new skills built by `automate` will have been committed by `automate` itself (one commit per skill).
 
-Lead with findings, ordered by impact:
+If the user declined all candidates, still bump `last-run.txt` — they've been reviewed.
 
-1. **High Impact**: issues likely to prevent the skill from triggering, cause wrong behavior, create unsafe side effects, or make results unverifiable.
-2. **Medium Impact**: issues that make the skill less reusable, slower, more expensive, or harder to maintain.
-3. **Low Impact**: polish that would improve clarity but is not blocking.
+## Scheduling
 
-For each finding include:
+To run this weekly on autopilot (Ole Lehmann's pattern), use `/schedule` and set email as the notification method:
 
-- File path and line number when possible.
-- What is wrong.
-- Why it matters for agent behavior.
-- A concrete edit or replacement text when the fix is straightforward.
+```
+/schedule create "skill-discovery" "every Monday at 09:00" "/skill-discovery"
+```
 
-Then include:
+If `/schedule` prompts for notification settings or exposes them separately, choose email; do not leave the schedule on an in-app/default-only notification.
 
-- **What is working well**: specific strengths worth preserving.
-- **Suggested next revision**: the smallest coherent set of edits to make first.
-- **Verification**: how to test whether the revised skill is better.
+The cron trigger will fire the skill; the agent will run steps 1-4 and stop at "Which should I build?" — the user picks up from there interactively when they next open Claude Code.
 
-If there are no serious issues, say that clearly and focus on residual risks or optional improvements.
+## Subagent prompt template
+
+When session count is large, delegate step 3 to a subagent:
+
+> You are reviewing Claude Code and Codex session transcripts to find **repeated manual workflows** the user could turn into skills.
+>
+> **Criteria for a candidate** (must have more than one occurrence):
+> - Same multi-step procedure across different sessions
+> - Same context/conventions the user had to re-supply
+> - Same class of bug or request, resolved the same way
+> - Same custom one-off prompt used more than once
+> - Same 2-3 tools/commands chained repeatedly
+>
+> **Skip**: one-off tasks, things that only happened once, tasks already covered by an existing skill in `~/My Drive/dotfiles/claude/skills/` or `~/My Drive/dotfiles/codex/skills/` (check both before proposing).
+>
+> **Input**: the session list below (tab-separated `kind<TAB>start<TAB>cwd<TAB>path<TAB>excerpt`). Read the full `.jsonl` for any session whose excerpt looks like a repeat of another, extract the pattern, and return candidates in this format:
+>
+> ```
+> ## <proposed-name> — <one-line purpose>
+> **Trigger phrases**: "phrase 1", "phrase 2"
+> **What it would do**: <one sentence>
+> **Evidence**:
+> - <date>, <cwd>: <quote>
+> - <date>, <cwd>: <quote>
+> **Approach hint**: <gptel command | Claude Code skill>, <complexity note>
+> ```
+>
+> Aim for 3-8 candidates. Under 800 words. If nothing repeats enough to justify a skill, say so explicitly rather than padding the list.
+>
+> Sessions:
+> ```
+> <tsv output of find-sessions.py>
+> ```
+
+## Notes
+
+- This skill does **not** build new skills itself. It's a scout: it finds opportunities and hands them to `automate`. Keeping the roles separate means skill-discovery can evolve its triage heuristics independently of how skills get built.
+- This is a paired Claude/Codex skill. Keep `SKILL.md` and `last-run.txt` synchronized across both copies unless `ai-config-sync.json` records an intentional divergence.
+- Sessions older than the cutoff but with activity after are included (mtime-based), which is correct — ongoing sessions still count.
+- Do not count sessions where the user explicitly abandoned the task ("never mind", "forget it") unless the abandoned attempts themselves form a pattern worth automating.

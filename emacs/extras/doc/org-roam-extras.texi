@@ -32,7 +32,6 @@ This manual describes the features and customization options for the Emacs Lisp 
 * User options::
 * Commands::
 * Functions::
-* Patched functions::
 * Indices::
 
 @detailmenu
@@ -49,6 +48,8 @@ Commands
 * Finding nodes::
 * Navigating to nodes::
 * Replacing star links with ID links::
+* Statistics::
+* Batch processing dump::
 
 Functions
 
@@ -60,10 +61,6 @@ Functions
 * Link utilities::
 * Capture support::
 * Recent files::
-
-Patched functions
-
-* Database query delay::
 
 Indices
 
@@ -78,9 +75,8 @@ Indices
 
 @samp{org-roam-extras.el} extends the @samp{org-roam} package, a personal
 knowledge management system for Emacs based on Zettelkasten principles.
-It depends on @samp{el-patch} for patching the database query function,
-@samp{org-extras} for heading manipulation utilities, and @samp{paths} for
-directory constants.
+It depends on @samp{org-extras} for heading manipulation utilities and
+@samp{paths} for directory constants.
 
 The package adds several capabilities on top of the standard @samp{org-roam}
 interface.  It provides a configurable node inclusion function that
@@ -109,9 +105,8 @@ A set of commands for replacing internal @code{[[*Title]]} links with proper
 @code{[[id:UUID]]} links automates the conversion of legacy link formats
 within entire directories of Org files.
 
-A patch adds a small delay before Org Roam database queries to mitigate
-potential SQLite locking issues that can occur with rapid successive
-queries.
+Finally, a statistics command summarizes your open TODO items and their
+total effort estimates from the Org Roam database (@ref{Statistics}).
 
 @node User options
 @chapter User options
@@ -161,6 +156,8 @@ should be added to @code{find-file-hook}.
 * Finding nodes::
 * Navigating to nodes::
 * Replacing star links with ID links::
+* Statistics::
+* Batch processing dump::
 @end menu
 
 @node Creating notes
@@ -170,9 +167,10 @@ should be added to @code{find-file-hook}.
 @findex org-roam-extras-convert-heading-to-note
 The command @code{org-roam-extras-new-note} creates a new Org Roam note
 through a guided workflow.  It first prompts the user to select a note
-type: ``generic'', ``person'', ``Borges'', ``tango'', or ``tlon-notes''.  The
-type determines the target directory (e.g., @code{paths-dir-notes} for
-generic, @code{paths-dir-people} for person) and the initial tags.
+type: ``generic'', ``person'', ``Epoch'', ``Borges'', ``tango'', or ``tlon-notes''.
+The type determines the target directory (e.g., @code{paths-dir-notes} for
+generic, @code{paths-dir-people} for person, @code{paths-dir-epoch} for Epoch) and
+the initial tags.
 
 After selecting the type, it prompts for the note name, creates a file
 with a slugified version of that name (via @code{simple-extras-slugify}),
@@ -255,6 +253,39 @@ Internally, the command uses
 file and @code{org-roam-extras-get-id-of-title} to resolve titles to IDs
 (@ref{Link utilities}).
 
+@node Statistics
+@section Statistics
+
+@findex org-roam-extras-count-todos-and-efforts
+The command @code{org-roam-extras-count-todos-and-efforts} queries the Org
+Roam database for all nodes with a TODO keyword and tallies those that
+are still open (i.e., not in a done state such as ``DONE'', ``CANCELLED'',
+or ``DELEGATED'').  It sums their effort estimates and reports the total
+count and effort in the echo area, formatted as hours and minutes.
+
+This gives you a quick overview of your outstanding workload across the
+entire Org Roam database without needing to visit individual files.
+
+@node Batch processing dump
+@section Batch processing dump
+
+@findex org-roam-extras-dump-actionable-todos
+The function @code{org-roam-extras-dump-actionable-todos} writes a JSON array
+of actionable TODOs (active state, no scheduled or deadline date) to a
+file path, returning the count.  Each record carries @samp{id}, @samp{file},
+@samp{title}, @samp{priority}, @samp{todo}, @samp{effort}, @samp{tags}, and @samp{olp}.  An optional
+filter spec mirrors @code{org-roam-extras-node-find-special}: @code{(:tag . TAG)}
+restricts to a tag, and @code{(:dir DIRECTORY)} restricts to nodes whose
+file lives under a directory.
+
+This is the input feed for the @samp{overnight-todos} Claude skill, which
+classifies each TODO and acts on those it can complete without user
+input.  It can also be called ad hoc from the shell, for example:
+
+@example
+emacsclient -e "(org-roam-extras-dump-actionable-todos \"/tmp/todos.json\")"
+@end example
+
 @node Functions
 @chapter Functions
 
@@ -298,6 +329,7 @@ Trash, and gptel directories.
 @findex org-roam-extras-backlink-count
 @findex org-roam-extras-update-backlink-count
 @findex org-roam-extras-update-modeline
+@vindex org-roam-extras-current-backlink-count
 The function @code{org-roam-extras-backlink-count} queries the Org Roam
 database for the number of backlinks pointing to the node at point.  It
 returns @code{nil} if the buffer is not in @code{org-mode} or if no node ID is
@@ -373,23 +405,6 @@ modified within the last DAYS@.  An optional LIMIT argument causes the
 function to return the list only if its length is below the limit,
 returning @code{nil} otherwise.  The function excludes files matching
 @code{org-roam-file-exclude-regexp}.
-
-@node Patched functions
-@chapter Patched functions
-
-@menu
-* Database query delay::
-@end menu
-
-@node Database query delay
-@section Database query delay
-
-@findex org-roam-db-query
-The function @code{org-roam-db-query} is patched using @samp{el-patch} to insert
-a 10-millisecond delay (@code{sleep-for 0.01}) before executing each database
-query.  This is a workaround for potential SQLite database locking issues
-that can arise when rapid successive queries are made, particularly
-during bulk operations like indexing or link replacement.
 
 @node Indices
 @chapter Indices

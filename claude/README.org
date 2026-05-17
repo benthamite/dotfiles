@@ -717,6 +717,14 @@ Meta-skill for reusable AI workflow design. Given a description of something to 
 
 Diagnostic mode modifier for agent, tooling, configuration, and workflow failures rather than ordinary code bugs. Prefix any question with =/diagnose=, ask why an agent/tooling process failed, or ask to investigate process friction without immediately changing code. Treats errors and confusion as symptoms to diagnose before patching. The deliverable is a diagnosis, not a patch: the agent checks which existing hooks, skills, configs, or scripts should have prevented or detected the failure; verifies whether each fired and whether its output was acted on; identifies the root cause category; considers whether the issue is part of a broader pattern; and reports findings before implementing remedies. Includes explicit criteria for what counts as a structural fix (a concrete mechanism like a hook, config change, or deterministic resolver CLI) versus aspirational statements that depend on memory and discipline. Requires the usual check before proposing any fix — /would an existing mechanism, firing as intended, have prevented this immediate failure?/ — then adds a second check for whether that mechanism is actually enforced or merely prose that asks the agent to perform a brittle deterministic operation by attention. The skill can therefore distinguish plain behavioral lapses from behavioral lapses with a structural remedy.
 
+**** skill-discovery
+
+Scans recent Claude Code and Codex session logs since the last run to identify
+repeated manual workflows that should become reusable skills or extensions to
+existing skills. It presents candidates with trigger phrases, evidence from
+sessions, and an implementation hint, then hands selected candidates to the
+=automate= skill instead of building them directly.
+
 **** walk-list
 :PROPERTIES:
 :ID:       01E6C587-5B48-4478-B002-BA5388C32A5B

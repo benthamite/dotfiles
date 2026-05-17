@@ -42,6 +42,13 @@ from pathlib import Path
 
 DEFAULT_SKIP_WINDOW_DAYS = 14
 HEADING_LINE = re.compile(r"^\*+ ", re.MULTILINE)
+HISTORY_PATH = Path.home() / ".claude/overnight-todos-data/history.md"
+HISTORY_HEADER = (
+    "# Overnight TODOs — history\n\n"
+    "Append-only changelog of every verdict recorded by `ledger.py record`.\n"
+    "Newest entries at the bottom. This is the durable record across runs;\n"
+    "individual `runs/*.md` reports may be deleted without losing this log.\n\n"
+)
 
 
 def load_ledger(path: str) -> dict:
@@ -144,16 +151,63 @@ def cmd_record(args):
     kind, ease = parse_verdict(args.verdict)
     cur_hash = heading_hash(args.file, args.id) if args.file else None
     existing = ledger["todos"].get(args.id, {})
+    now_iso = datetime.now(timezone.utc).isoformat()
+    title = args.title or existing.get("title")
     ledger["todos"][args.id] = {
         "last_verdict": kind,
         "last_ease": ease,
         "last_reason": args.verdict.strip(),
-        "last_attempted_at": datetime.now(timezone.utc).isoformat(),
+        "last_attempted_at": now_iso,
         "heading_hash": cur_hash,
         "attempts": existing.get("attempts", 0) + 1,
+        "title": title,
+        "file": args.file,
     }
     save_ledger(args.ledger, ledger)
+    append_history({
+        "when": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "verdict": kind,
+        "ease": ease,
+        "title": title or "(untitled)",
+        "file": args.file,
+        "short_reason": short_reason(args.verdict),
+        "refs": refs_from_verdict(args.verdict),
+    })
     print(f"RECORDED: {args.id} {kind}{(' ease=' + str(ease)) if ease else ''}")
+
+
+def short_reason(verdict_text: str) -> str:
+    """Strip leading kind and trailing structured fields."""
+    text = re.sub(r"^(COMPLETED|FAILED|BLOCKED|DEFERRED):\s*", "", verdict_text.strip(), count=1, flags=re.IGNORECASE)
+    return text.split("|")[0].strip()
+
+
+def refs_from_verdict(verdict_text: str) -> str:
+    """Extract the refs=[...] payload from a verdict line."""
+    m = re.search(r"\brefs\s*=\s*\[([^\]]*)\]", verdict_text)
+    return m.group(1).strip() if m else ""
+
+
+def append_history(entry: dict) -> None:
+    """Append one entry to the human-readable history changelog."""
+    HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
+    new_file = not HISTORY_PATH.exists()
+    home = str(Path.home())
+    file_display = entry.get("file") or ""
+    if file_display.startswith(home):
+        file_display = "~" + file_display[len(home):]
+    ease_str = f" ease={entry['ease']}" if entry.get("ease") else ""
+    lines = [f"- `{entry['when']}` **{entry['verdict']}**{ease_str} — {entry['title']}"]
+    if file_display:
+        lines.append(f"  - {file_display}")
+    if entry.get("short_reason"):
+        lines.append(f"  - {entry['short_reason']}")
+    if entry.get("refs"):
+        lines.append(f"  - refs: {entry['refs']}")
+    with HISTORY_PATH.open("a") as f:
+        if new_file:
+            f.write(HISTORY_HEADER)
+        f.write("\n".join(lines) + "\n")
 
 
 def main(argv):
@@ -165,11 +219,12 @@ def main(argv):
     pf.add_argument("--output", required=True)
     pf.add_argument("--skip-window-days", type=int, default=DEFAULT_SKIP_WINDOW_DAYS)
     pf.set_defaults(func=cmd_filter)
-    pr = sub.add_parser("record", help="Record one subagent verdict to the ledger")
+    pr = sub.add_parser("record", help="Record one subagent verdict to the ledger and append to history")
     pr.add_argument("--ledger", required=True)
     pr.add_argument("--id", required=True)
     pr.add_argument("--file", required=True)
     pr.add_argument("--verdict", required=True)
+    pr.add_argument("--title", help="TODO heading title (used in history.md and stored on the ledger entry)")
     pr.set_defaults(func=cmd_record)
     args = p.parse_args(argv)
     args.func(args)

@@ -762,7 +762,10 @@ on the touched file so just-completed TODOs do not re-appear in the next
 run. Verification-only COMPLETED actions (e.g., "Check that X is working")
 must append a =Verified [YYYY-MM-DD]: <evidence>= line to the heading body
 before marking DONE so the audit trail lives in-file, not just in the run
-report. Writes a report to
+report. An append-only changelog at
+=~/.claude/overnight-todos-data/history.md= captures every verdict
+across all runs, so per-run reports can be deleted without losing the
+durable record of what the skill has acted on. Per-run reports go to
 =~/.claude/overnight-todos-data/runs/YYYY-MM-DD-HHMM-<mode>.md= ranking
 blocked TODOs by ease of unblock
 (1=missing fact you can give in seconds, 5=deep strategic context),

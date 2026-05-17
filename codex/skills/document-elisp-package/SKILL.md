@@ -1,5 +1,5 @@
 ---
-name: doc-elisp
+name: document-elisp-package
 description: Create or update an Org manual for an Emacs Lisp package in the Denote manual style. Use for documenting Elisp packages or emacs/extras; use generate-readme for Markdown README generation alone.
 ---
 
@@ -15,7 +15,7 @@ For standalone package repositories, the manual is always `README.org` in the re
 
 Use this skill for Org manuals that explain an Emacs Lisp package's user-facing behavior, customization surface, and extension points. It applies both to standalone package repositories and to dotfiles extras packages under `emacs/extras/`.
 
-Do not use this skill when the user only wants a Markdown `README.md`; use `generate-readme` after an Org manual already exists. Do not use it to document every extras package in one pass; use `doc-extras`. Do not use it for compiler/checkdoc cleanup without a documentation request; use `lint-elisp`.
+Do not use this skill when the user only wants a Markdown `README.md`; use `generate-readme` after an Org manual already exists. Do not use it to document every extras package in one pass; use `document-elisp-extras`. Do not use it for compiler/checkdoc cleanup without a documentation request; use `lint-elisp`.
 
 ## Workflow
 

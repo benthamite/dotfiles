@@ -1,15 +1,15 @@
 ---
-name: claude-config-audit
-description: Audit Claude Code configuration for redundancy, conflicts, dead weight, staleness, and instruction drift across CLAUDE.md, skills, memory, hooks, settings, and docs.
+name: config-audit
+description: Audit agent configuration for redundancy, conflicts, dead weight, staleness, and instruction drift across CLAUDE.md or AGENTS.md, skills, memory, hooks, settings, and docs.
 ---
 
-# Audit Claude Code configuration
+# Audit agent configuration
 
-Perform a comprehensive audit of all Claude Code instruction sources to find redundancy, conflicts, staleness, dead weight, and documentation drift.
+Perform a comprehensive audit of all agent instruction sources to find redundancy, conflicts, staleness, dead weight, and documentation drift.
 
 ## Scope and safety
 
-- Use this for Claude Code configuration audits, not ordinary app config linting, code review, repo architecture review, or general security scans unless the question is specifically about Claude Code instructions or automation behavior.
+- Use this for agent configuration audits, not ordinary app config linting, code review, repo architecture review, or general security scans unless the question is specifically about agent instructions or automation behavior.
 - Treat settings, MCP configuration, memory, and hook payload examples as potentially sensitive. Read them locally, but do not quote secrets, OAuth tokens, API keys, credential helper output, or unnecessary account identifiers in the report. Redact values and report only the setting names or rule effects needed for the audit.
 - If the audit runs inside this dotfiles repo and secret material may be involved, follow the repo secret-handling instructions before inspecting credential-related files.
 - If an expected source is missing, unreadable, generated, or intentionally absent, record that explicitly instead of inferring its contents.
@@ -21,21 +21,21 @@ Create an inventory first, then read every instruction source in the setup. For 
 
 ### Instruction files
 
-- `~/.claude/CLAUDE.md` (global instructions — may be a symlink)
-- Every `CLAUDE.md` in the project directory ancestry (project-level instructions)
-- Resolve `@` includes in any CLAUDE.md and read the referenced files
+- `~/.claude/CLAUDE.md or ~/.codex/AGENTS.md or AGENTS.md` (global instructions — may be a symlink)
+- Every `CLAUDE.md or AGENTS.md` in the project directory ancestry (project-level instructions)
+- Resolve `@` includes in any CLAUDE.md or AGENTS.md and read the referenced files
 
 ### Skills
 
-- Every `SKILL.md` in `~/.claude/skills/` and the project's skill directories
+- Every `SKILL.md` in `~/.claude/skills/ or ~/.codex/skills/` and the project's skill directories
 - Focus on skills with `user-invocable: false` (context skills) — these are loaded automatically and contribute rules to every relevant session
-- For user-invocable skills, check only the frontmatter and any top-level rules outside procedural sections — the procedural body is loaded on demand and doesn't compete for attention with CLAUDE.md
+- For user-invocable skills, check only the frontmatter and any top-level rules outside procedural sections — the procedural body is loaded on demand and doesn't compete for attention with CLAUDE.md or AGENTS.md
 
 ### Memory
 
 - `MEMORY.md` index and every linked memory file in the project memory directory
-- `~/.claude/memory/MEMORY.md` (global memory) and its files
-- Pay special attention to `type: feedback` memories — these are the most likely to duplicate rules that have since been promoted to CLAUDE.md or enforced by hooks
+- `global or project memory files, when present` (global memory) and its files
+- Pay special attention to `type: feedback` memories — these are the most likely to duplicate rules that have since been promoted to CLAUDE.md or AGENTS.md or enforced by hooks
 
 ### Hooks
 
@@ -46,12 +46,12 @@ Create an inventory first, then read every instruction source in the setup. For 
 ### Settings
 
 - `settings.json` and `settings.local.json` for any behavioral configuration
-- `~/.claude.json` for MCP server definitions (referenced by instructions?)
+- `tool configuration files` for MCP server definitions (referenced by instructions?)
 - Redact sensitive values. The audit needs behavioral meaning, configured paths, and rule effects, not raw credentials.
 
 ### Documentation
 
-- Read `claude/README.org` (if present in the project) — this documents the claude/ subdirectory (skills, hooks, settings) and serves as a cross-reference for the audit
+- Read `claude/README.org or codex/README.org` (if present in the project) — this documents the claude/ subdirectory (skills, hooks, settings) and serves as a cross-reference for the audit
 - Flag any discrepancies between README.org and the actual configuration (missing skills, outdated hook descriptions, etc.)
 
 ### Third-party skills
@@ -76,7 +76,7 @@ Evaluate every extracted rule on five criteria. Present the results in a table g
 
 "Is this something I already do by default without being told?"
 
-Claude's system prompt and training already establish many behaviors. Instructions that merely restate defaults consume tokens without changing anything. To evaluate this, consider what you would do if the instruction were absent — if the answer is "the same thing," it's dead weight.
+The active agent system prompt and training already establish many behaviors. Instructions that merely restate defaults consume tokens without changing anything. To evaluate this, consider what you would do if the instruction were absent — if the answer is "the same thing," it's dead weight.
 
 **Examples of likely defaults**: don't mix unrelated changes in a commit, use descriptive variable names, don't introduce security vulnerabilities.
 
@@ -88,8 +88,8 @@ Claude's system prompt and training already establish many behaviors. Instructio
 
 Check for:
 - Direct contradictions (one rule says X, another says not-X)
-- **Global vs. project CLAUDE.md conflicts**: a project file can intentionally narrow or override a global rule (e.g., global says "commit immediately" but a project says "don't commit without PR review"). Flag these and ask whether the override is intentional. If intentional, the project file should say so explicitly. If accidental, one of them needs to change.
-- **Project CLAUDE.md shadowing**: a project file that restates a global rule with slightly different wording creates ambiguity about which version governs. These are repetition bugs, not conflicts — resolve by removing the project-level copy or adding an explicit "overrides global" note.
+- **Global vs. project CLAUDE.md or AGENTS.md conflicts**: a project file can intentionally narrow or override a global rule (e.g., global says "commit immediately" but a project says "don't commit without PR review"). Flag these and ask whether the override is intentional. If intentional, the project file should say so explicitly. If accidental, one of them needs to change.
+- **Project CLAUDE.md or AGENTS.md shadowing**: a project file that restates a global rule with slightly different wording creates ambiguity about which version governs. These are repetition bugs, not conflicts — resolve by removing the project-level copy or adding an explicit "overrides global" note.
 - Tension between a blanket prohibition and a skill that needs to do the prohibited thing (e.g., "never kill Emacs" vs. a skill that sends SIGUSR2 with safeguards)
 - Instructions that intentionally override system prompt defaults — flag these as intentional overrides, not bugs
 - Rules that give different guidance for the same situation depending on which file is loaded
@@ -104,7 +104,7 @@ Check for:
 - Subset rules (rule A says "commit everything immediately"; rule B says "commit skills immediately" — B is a strict subset of A)
 - Rules that are now mechanically enforced by a hook, making the instruction-level statement redundant
 
-When a rule appears in N places, identify the **canonical location** (usually CLAUDE.md or the most general file) and flag the others as duplicates.
+When a rule appears in N places, identify the **canonical location** (usually CLAUDE.md or AGENTS.md or the most general file) and flag the others as duplicates.
 
 ### Criterion 4: Reactive one-off fixes
 
@@ -113,7 +113,7 @@ When a rule appears in N places, identify the **canonical location** (usually CL
 Telltale signs:
 - The rule's `Why` section names a single incident ("missed during the whisperx rewrite")
 - The rule bans a specific word or pattern rather than addressing the underlying behavior ("never say 'should'")
-- The rule is a `type: feedback` memory whose content is a strict subset of a CLAUDE.md rule that was added later
+- The rule is a `type: feedback` memory whose content is a strict subset of a CLAUDE.md or AGENTS.md rule that was added later
 - The rule has been superseded by a hook that now enforces it mechanically
 
 Not all reactive rules are bad — some capture genuinely useful corrections. The question is whether the underlying principle is already covered elsewhere. If so, the reactive rule is redundant.
@@ -151,9 +151,9 @@ Every conflict found, with:
 - Whether the conflict is intentional (override) or a bug
 - Suggested resolution
 
-### 4. Cleaned-up CLAUDE.md
+### 4. Cleaned-up CLAUDE.md or AGENTS.md
 
-A rewritten version of the global CLAUDE.md with:
+A rewritten version of the global CLAUDE.md or AGENTS.md with:
 - Dead weight removed
 - Overlapping rules merged
 - Conflicts resolved
@@ -163,7 +163,7 @@ Show a clear summary of what changed and why.
 
 ### 5. Other file changes
 
-For each non-CLAUDE.md file that needs changes (skills, memory), list the specific edits:
+For each non-CLAUDE.md or AGENTS.md file that needs changes (skills, memory), list the specific edits:
 - Which rules to remove from which files
 - Which memory files to delete
 - Which MEMORY.md entries to remove
@@ -190,7 +190,7 @@ Before calling the audit complete:
 ## Guidelines
 
 - **Do not remove rules that are working.** If a rule changes behavior in a useful way and isn't duplicated elsewhere, it stays — even if it was reactive in origin.
-- **Canonical location principle.** When a rule must exist somewhere, prefer CLAUDE.md (always loaded) over context skills (loaded conditionally) over memory (loaded per-project). If a rule is in CLAUDE.md AND a skill, cut it from the skill.
+- **Canonical location principle.** When a rule must exist somewhere, prefer CLAUDE.md or AGENTS.md (always loaded) over context skills (loaded conditionally) over memory (loaded per-project). If a rule is in CLAUDE.md or AGENTS.md AND a skill, cut it from the skill.
 - **Hooks trump instructions.** If a hook mechanically enforces a rule, the instruction-level statement is documentation at best. It can be cut unless it provides context the hook can't (e.g., explaining *why* the rule exists).
-- **Don't touch procedural skills.** The body of user-invocable skills is procedural, not a competing instruction set. Don't recommend cutting steps from release, twitter-digest, etc. unless they contain general rules that duplicate CLAUDE.md.
+- **Don't touch procedural skills.** The body of user-invocable skills is procedural, not a competing instruction set. Don't recommend cutting steps from release, twitter-digest, etc. unless they contain general rules that duplicate CLAUDE.md or AGENTS.md.
 - **Respect the confirmation boundary.** `--accept` or an explicit apply request authorizes high-confidence cleanup; otherwise, present the full analysis and wait for confirmation before changing files.

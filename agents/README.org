@@ -99,6 +99,12 @@ Hidden Codex-managed system skills may exist under ignored
 =codex/skills/.system/= runtime data, but they are not part of the reusable
 skill parity model.
 
+Private local skills that should load on this machine but not be committed may
+live under the tracked live skill roots when their directories are explicitly
+ignored in =.gitignore= and listed in =PRIVATE_GLOBAL_SKILLS= in
+=bin/ai-config-sync=. They still need Claude/Codex directory counterparts if
+both tools should see them, but they are excluded from the manifest audit.
+
 ** Master Skill Inventory
 
 This inventory includes global, programmatic, system, and project-local skills
@@ -114,10 +120,9 @@ currently present in this repo. The skill name shown is the directory name.
   permissions. Scope: Project-local: macos.
 - =automate=: Design and build a reusable AI automation. Scope: Global.
 - =build=: Spec-based build workflow. Scope: Global.
-- =claude-config-audit=: Audit Claude Code configuration for redundancy,
-  conflicts, dead weight, staleness, and instruction drift across CLAUDE.md,
-  skills, memory, hooks, settings, and docs. Scope: Global; Project-local:
-  dotfiles.
+- =config-audit=: Audit agent configuration for redundancy, conflicts, dead
+  weight, staleness, and instruction drift across CLAUDE.md, AGENTS.md, skills,
+  memory, hooks, settings, and docs. Scope: Project-local: dotfiles.
 - =code-audit=: Audit code for actual defects, including bugs, application
   security issues, error handling gaps, and correctness problems. Scope: Global.
 - =codex-app-browser=: Use when the user explicitly invokes
@@ -130,9 +135,9 @@ currently present in this repo. The skill name shown is the directory name.
   boundaries, and refactoring opportunities. Scope: Global.
 - =diagnose=: Diagnose agent, tooling, configuration, or workflow failures before
   fixing. Scope: Global.
-- =doc-elisp=: Create or update an Org manual for an Emacs Lisp package in the
+- =document-elisp-package=: Create or update an Org manual for an Emacs Lisp package in the
   Denote manual style. Scope: Global.
-- =doc-extras=: Audit, create, or refresh documentation for all Emacs extras
+- =document-elisp-extras=: Audit, create, or refresh documentation for all Emacs extras
   packages in the dotfiles repo. Scope: Global; Project-local: emacs.
 - =dotfiles-context=: Dotfiles and Emacs package routing context, including
   the normal post-PR =config.org= pin for upstream Elpaca package branches
@@ -148,7 +153,7 @@ currently present in this repo. The skill name shown is the directory name.
   transient menu suffix checks. Scope: Global.
 - =emacs-freeze=: Diagnose a frozen, hung, beachballing, or unresponsive Emacs
   by sampling the process, reading server buffers when possible, and
-  recommending recovery. Scope: Global; Project-local: emacs.
+  recommending recovery. Scope: Project-local: emacs.
 - =find-skills=: Discover, vet, and optionally install agent skills when the
   user asks "find a skill for X", "is there a skill that can...", "how do I add
   support for X", or otherwise wants reusable/installable agent capabilities.
@@ -156,7 +161,7 @@ currently present in this repo. The skill name shown is the directory name.
 - =generate-readme=: Generate or update a GitHub-facing README.md for an Emacs
   Lisp package from its README.org manual. Scope: Global.
 - =gitguardian-triage=: Triage and remediate GitGuardian secret incidents.
-  Scope: Global; Project-local: dotfiles.
+  Scope: Project-local: dotfiles.
 - =google-sheets-comments=: Handle Google Sheets comment review, replies,
   resolves, reopens, and notification emails correctly. Scope: Global.
 - =handoff=: Save next-session instructions to `/tmp/claude-code-handoff.md`
@@ -173,7 +178,7 @@ currently present in this repo. The skill name shown is the directory name.
 - =lint-elisp=: Fix byte-compile warnings, checkdoc notes, and other Elisp
   diagnostics in one or more files. Scope: Global.
 - =migrate-profile=: Consolidate Claude Code project data across elpaca
-  profile changes. Scope: Global; Project-local: dotfiles.
+  profile changes. Scope: Project-local: emacs.
 - =move-session-log=: Relocate Codex session logs by rewriting embedded
   project paths so resume and log lookup associate a session with the current
   project. Scope: Global.
@@ -185,8 +190,8 @@ currently present in this repo. The skill name shown is the directory name.
   prioritize OpenAI docs MCP tools, use bundled references only as helper
   context, and restrict any fallback browsing to official OpenAI domains. Scope:
   Global.
-- =optimize-claude-md=: Optimize project Claude Code instruction files. Scope:
-  Global; Project-local: dotfiles.
+- =optimize-agent-instructions=: Optimize project agent instruction files.
+  Scope: Project-local: dotfiles.
 - =plugin-creator=: Create and scaffold plugin directories for Codex with a
   required `.codex-plugin/plugin.json`, optional plugin folders/files, and
   baseline placeholders you can edit before publishing or testing. Scope:
@@ -204,7 +209,7 @@ currently present in this repo. The skill name shown is the directory name.
   and light style/clarity issues. Scope: Global.
 - =record-decisions=: Extract and record architectural, algorithmic, or design
   decisions from the current session. Scope: Global.
-- =release=: Release one of the user's Emacs packages or audit package release
+- =release-package=: Release one of the user's Emacs packages or audit package release
   readiness. Scope: Global.
 - =release-dotfiles=: Release a new version of the dotfiles repo. Scope:
   Global; Project-local: dotfiles.
@@ -217,10 +222,10 @@ currently present in this repo. The skill name shown is the directory name.
   Stop/session-end hook asks for lesson capture, then write candidate reusable
   lessons to the central dotfiles .agent-learnings/inbox without implementing
   them. Scope: Global.
-- =session-retro=: Review dotfiles agent-learning inbox suggestions, interview
+- =session-retro=: Review notes agent-learning inbox suggestions, interview
   the user about each candidate with implement/defer/drop choices, then
   implement accepted improvements and archive or discard the processed records.
-  Scope: Global.
+  Scope: Project-local: notes.
 - =skill-audit=: Audit or improve Claude/Codex skills for trigger quality,
   workflow design, progressive disclosure, verification, portability, and
   maintainability. Scope: Global; Project-local: dotfiles.
@@ -238,17 +243,17 @@ currently present in this repo. The skill name shown is the directory name.
 - =test-suite=: Create or expand high-value test suites for a codebase or
   specific module. Scope: Global.
 - =try-hartree-skills=: Evaluate HartreeWorks third-party skills one at a
-  time. Scope: Global; Project-local: dotfiles.
+  time. Scope: Programmatic.
 - =twitter=: Fetch, read, summarize, or save specific Twitter/X tweets,
   threads, replies, profiles, timelines, follower lists, or searches. Scope:
-  Global.
+  Programmatic.
 - =twitter-digest=: Fetch recent tweets from a curated account list, triage
   them against its rubric, save an org digest, and update last-run state. Scope:
-  Global.
+  Programmatic.
 - =twitter-discover=: Discover high-value Twitter/X accounts in a niche
-  through criteria, seeds, graph expansion, and vetting. Scope: Global.
+  through criteria, seeds, graph expansion, and vetting. Scope: Programmatic.
 - =twitter-vet=: Vet, score, or decide whether to add Twitter/X accounts to a
-  curated list. Scope: Global.
+  curated list. Scope: Programmatic.
 - =update-log=: End-of-session bookkeeping. Scope: Global.
 - =verify=: Run an explicit user-requested verification loop. Scope: Global.
 - =walk-list=: Process a list file strictly item by item, sequentially or with

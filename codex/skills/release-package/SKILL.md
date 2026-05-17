@@ -1,6 +1,6 @@
 ---
-name: release
-description: Release one of the user's Emacs packages or audit package release readiness. Use when the user says `/release <package>`, asks to bump/tag/create a GitHub release, wants release notes for a benthamite Emacs package, or runs `/release --audit`; do not use for dotfiles releases.
+name: release-package
+description: Release one of the user's Emacs packages or audit package release readiness. Use when the user says `/release-package <package>`, asks to bump/tag/create a GitHub release, wants release notes for a benthamite Emacs package, or runs `/release-package --audit`; do not use for dotfiles releases.
 ---
 
 # Package release
@@ -56,7 +56,7 @@ If `--accept` is present in `$ARGUMENTS`, skip the confirmation gate (step 9) an
 
 ---
 
-## Audit mode (`/release --audit`)
+## Audit mode (`/release-package --audit`)
 
 Scan all listed packages **in parallel** where the current agent/tooling supports it, using `gh api` exclusively — do NOT clone any repos. Do not create tags, releases, PRs, issues, or other externally visible changes in audit mode.
 
@@ -116,7 +116,7 @@ Then group results into four sections:
 
 ---
 
-## Release mode (`/release [package-name]`)
+## Release mode (`/release-package [package-name]`)
 
 ### 1. Determine the package
 

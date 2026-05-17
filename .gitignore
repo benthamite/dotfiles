@@ -37,6 +37,10 @@ codex/skills/.system/
 codex/skills/*/node_modules
 claude/bin/__pycache__/
 
+## private local skills
+claude/skills/humanize/
+codex/skills/humanize/
+
 ## local agent-learning inbox
 .agent-learnings/**
 !.agent-learnings/

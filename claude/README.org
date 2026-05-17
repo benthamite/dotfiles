@@ -316,7 +316,8 @@ They live in =programmatic-skills/= directories so =agent-run-skill= can find
 and run them explicitly from Emacs without adding them to every interactive
 Claude session. The installer exposes those directories at
 =~/.claude/programmatic-skills= because =agent-run-skill= discovers Claude
-skills from that live path.
+skills from that live path. Twitter workflows and the Hartree skill evaluation
+queue are programmatic-only and therefore do not live in =claude/skills/=.
 
 Private local skills that should load on this machine but not be committed can
 live under explicitly ignored directories in the live global skill trees. The

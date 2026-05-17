@@ -1,6 +1,6 @@
 ---
 name: generate-readme
-description: Generate or update a GitHub-facing README.md for an Emacs Lisp package from its README.org manual. Use when the user says "generate readme", "create readme", "update readme", "readme from manual", or wants a concise Markdown README for an Elisp package. Do not use for general project README writing or for packages without an org manual; use doc-elisp first when the manual is missing.
+description: Generate or update a GitHub-facing README.md for an Emacs Lisp package from its README.org manual. Use when the user says "generate readme", "create readme", "update readme", "readme from manual", or wants a concise Markdown README for an Elisp package. Do not use for general project README writing or for packages without an org manual; use document-elisp-package first when the manual is missing.
 ---
 
 # Generate README.md from org manual
@@ -24,11 +24,11 @@ The current repository must contain at least one `.el` file with a valid package
 
 ### 2. Org manual
 
-The repository must contain a `README.org` file that serves as the package manual (this is the convention established by the `doc-elisp` skill).
+The repository must contain a `README.org` file that serves as the package manual (this is the convention established by the `document-elisp-package` skill).
 
 If `README.org` is not found but a case-variant exists (e.g. `readme.org`), rename it to `README.org` using `git mv` and commit the rename before proceeding.
 
-If no org manual exists at all, abort with a message suggesting the user create one first (mention the `doc-elisp` skill).
+If no org manual exists at all, abort with a message suggesting the user create one first (mention the `document-elisp-package` skill).
 
 ## Existing README.md
 

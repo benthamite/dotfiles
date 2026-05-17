@@ -7,18 +7,18 @@ description: Fetch recent tweets from a curated account list, triage them agains
 
 When Step 3 runs, read the active `twitter-vet` skill copy:
 
-- Codex: `$HOME/.codex/skills/twitter-vet/SKILL.md`
-- Claude: `$HOME/.claude/skills/twitter-vet/SKILL.md`
+- Codex: `/.codex/programmatic-skills/twitter-vet/SKILL.md`
+- Claude: `/.claude/programmatic-skills/twitter-vet/SKILL.md`
 
 For each Bash command below, set paths for the current agent before using them:
 
-- Codex: `DIGEST_DIR="$HOME/.codex/skills/twitter-digest"; DIGEST_REPO_DIR="codex/skills/twitter-digest"; VET_SKILL_DIR="$HOME/.codex/skills/twitter-vet"; TWITTERAPI="$HOME/.codex/skills/twitter/lib/twitterapi.sh"`
-- Claude: `DIGEST_DIR="$HOME/.claude/skills/twitter-digest"; DIGEST_REPO_DIR="claude/skills/twitter-digest"; VET_SKILL_DIR="$HOME/.claude/skills/twitter-vet"; TWITTERAPI="$HOME/.claude/skills/twitter/lib/twitterapi.sh"`
+- Codex: `DIGEST_DIR="/.codex/programmatic-skills/twitter-digest"; DIGEST_REPO_DIR="codex/programmatic-skills/twitter-digest"; VET_SKILL_DIR="/.codex/programmatic-skills/twitter-vet"; TWITTERAPI="/.codex/programmatic-skills/twitter/lib/twitterapi.sh"`
+- Claude: `DIGEST_DIR="/.claude/programmatic-skills/twitter-digest"; DIGEST_REPO_DIR="claude/programmatic-skills/twitter-digest"; VET_SKILL_DIR="/.claude/programmatic-skills/twitter-vet"; TWITTERAPI="/.claude/programmatic-skills/twitter/lib/twitterapi.sh"`
 
 Shared paired data:
 
-- Curated list files must stay synchronized in both `claude/skills/twitter-digest/lists/` and `codex/skills/twitter-digest/lists/`.
-- The vet registry source of truth is `VET_REGISTRY_DIR="$HOME/.claude/skills/twitter-vet/vetted"` (`VET_REGISTRY_REPO_DIR="claude/skills/twitter-vet/vetted"`), as documented by `twitter-vet`.
+- Curated list files must stay synchronized in both `claude/programmatic-skills/twitter-digest/lists/` and `codex/programmatic-skills/twitter-digest/lists/`.
+- The vet registry source of truth is `VET_REGISTRY_DIR="/.claude/programmatic-skills/twitter-vet/vetted"` (`VET_REGISTRY_REPO_DIR="claude/programmatic-skills/twitter-vet/vetted"`), as documented by `twitter-vet`.
 
 Digest archives and last-run timestamps are active-tool runtime state; do not write those into the other tool's skill tree.
 
@@ -102,7 +102,7 @@ If `---RT_DISCOVERY---` yielded accounts:
 1. **Check registry**: read `$VET_REGISTRY_DIR/<list-name>.md` if it exists. Any RT-discovered account already listed there: skip re-vetting, use the recorded score directly.
 2. **Quick filter** (Procedure A from twitter-vet): use `---RT_AUTHORS---` metadata (bio, followers) and `---RT_DISCOVERY---` tweets to filter remaining accounts. Cap at top 5 candidates by quick-filter confidence. Skip the rest.
 3. **Full scoring** (Procedure B from twitter-vet): for each account that passes, call `"$TWITTERAPI" tweets <username>`. Score 1-10 against the list's `description`.
-4. **Auto-add**: score >= 7 (or `vet-threshold` from list YAML) → append `- @username` to both paired list files (`claude/skills/twitter-digest/lists/<list-name>.md` and `codex/skills/twitter-digest/lists/<list-name>.md`). Score 5-6 → report as borderline in the digest. Score <= 4 → skip.
+4. **Auto-add**: score >= 7 (or `vet-threshold` from list YAML) → append `- @username` to both paired list files (`claude/programmatic-skills/twitter-digest/lists/<list-name>.md` and `codex/programmatic-skills/twitter-digest/lists/<list-name>.md`). Score 5-6 → report as borderline in the digest. Score <= 4 → skip.
 5. **Update digest and lists**: emit one final Bash call to append a `* Vetted accounts` section to the org file (replacing `* Discovered accounts`) showing each account's score and rationale, and append any new `- @username` lines to both paired list files.
 6. **Update vet registry**: append newly scored accounts to `$VET_REGISTRY_DIR/<list-name>.md` (creating the file with the standard header if it doesn't exist). Include all accounts that went through full scoring, regardless of outcome.
 
@@ -114,8 +114,8 @@ After all steps are complete, commit all changed files in one commit:
 
 ```bash
 DIGEST_REPO_DIR="<active repo-relative twitter-digest dir from above>"
-VET_REGISTRY_REPO_DIR="claude/skills/twitter-vet/vetted"
-git -C "$HOME/My Drive/dotfiles" add "$DIGEST_REPO_DIR/digests/" "$DIGEST_REPO_DIR/last-run/" "claude/skills/twitter-digest/lists/" "codex/skills/twitter-digest/lists/" "$VET_REGISTRY_REPO_DIR/" && git -C "$HOME/My Drive/dotfiles" commit -m "twitter-digest: <list-name(s)> YYYY-MM-DD"
+VET_REGISTRY_REPO_DIR="claude/programmatic-skills/twitter-vet/vetted"
+git -C "$HOME/My Drive/dotfiles" add "$DIGEST_REPO_DIR/digests/" "$DIGEST_REPO_DIR/last-run/" "claude/programmatic-skills/twitter-digest/lists/" "codex/programmatic-skills/twitter-digest/lists/" "$VET_REGISTRY_REPO_DIR/" && git -C "$HOME/My Drive/dotfiles" commit -m "twitter-digest: <list-name(s)> YYYY-MM-DD"
 ```
 
 Only stage paths that actually changed. If vetting didn't run, omit the list and vet registry paths.
@@ -135,4 +135,4 @@ Before committing or reporting completion:
 1. Confirm fetch output includes `LIST:`, `CUTOFF:`, `DESCRIPTION:`, and `---TWEETS---`. If the script exits with "no listed account fetches succeeded", stop and report the credential/connectivity problem.
 2. Confirm the saved digest exists and is non-empty at `$DIGEST_DIR/digests/<name>-YYYY-MM-DD.org`.
 3. Confirm `$DIGEST_DIR/last-run/<name>.txt` contains the newest returned tweet timestamp used for the run.
-4. Run `git -C "$HOME/My Drive/dotfiles" diff --check -- "$DIGEST_REPO_DIR" claude/skills/twitter-digest/lists codex/skills/twitter-digest/lists "$VET_REGISTRY_REPO_DIR"` and inspect `git status --short` so unrelated dirty files are not staged.
+4. Run `git -C "$HOME/My Drive/dotfiles" diff --check -- "$DIGEST_REPO_DIR" claude/programmatic-skills/twitter-digest/lists codex/programmatic-skills/twitter-digest/lists "$VET_REGISTRY_REPO_DIR"` and inspect `git status --short` so unrelated dirty files are not staged.

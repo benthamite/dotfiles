@@ -102,7 +102,11 @@ instead of ambient =OPENAI_API_KEY= or =ANTHROPIC_API_KEY= values when adding AI
 model access to automation projects. The default OpenAI broker credential is
 =op://Employee/OpenAI - api-provisioning-admin/credential=; the default
 Anthropic broker credential is
-=op://Employee/Anthropic - api-provisioning-admin/credential=.
+=op://Employee/Anthropic - api-provisioning-admin/credential=. Non-dry-run
+creation/storage requires =--verified-monthly-spend-cap-usd= after checking the
+AI access provider tracker and =provider-controls.yml=; the helper refuses caps
+above the current autonomous maximum of =$500/month=. Dry runs report whether
+that policy precondition is satisfied without creating or storing a secret.
 
 **** Settings hierarchy
 :PROPERTIES:

@@ -44,12 +44,12 @@ User options
 Directory paths
 
 * Core directories::
-* Dropbox directories::
+* Google Drive personal directories::
 * Emacs configuration directories::
-* Google Drive directories::
+* Google Drive media and library directories::
 * Repository directories::
 * CSL directories::
-* Tlon Dropbox and Google Drive directories::
+* Tlon Google Drive directories::
 * Org directories::
 
 File paths
@@ -93,12 +93,12 @@ The directory variables define the filesystem tree used by the Emacs configurati
 
 @menu
 * Core directories::
-* Dropbox directories::
+* Google Drive personal directories::
 * Emacs configuration directories::
-* Google Drive directories::
+* Google Drive media and library directories::
 * Repository directories::
 * CSL directories::
-* Tlon Dropbox and Google Drive directories::
+* Tlon Google Drive directories::
 * Org directories::
 @end menu
 
@@ -122,17 +122,17 @@ The following variables define the top-level directories from which most other p
 @item
 @code{paths-dir-system-apps} (default: @samp{/Applications/}): the macOS applications directory.
 @item
-@code{paths-dir-dropbox} (default: @samp{~/Library/CloudStorage/Dropbox/}): the Dropbox sync directory. Many personal data directories are children of this path.
+@code{paths-dir-dropbox} (default: @samp{~/Library/CloudStorage/Dropbox/}): the Dropbox sync directory. Organization shared directories are children of this path.
 @item
-@code{paths-dir-google-drive} (default: @samp{~/My Drive/}): the Google Drive sync directory. Library and media directories are children of this path.
+@code{paths-dir-google-drive} (default: @samp{~/My Drive/}): the Google Drive sync directory. Most personal data, library, and media directories are children of this path.
 @item
 @code{paths-dir-emacs} (default: @code{user-emacs-directory}): the Emacs configuration directory.
 @item
 @code{paths-dir-emacs-profiles} (default: @samp{~/.config/emacs-profiles/}): the directory containing multiple Emacs profiles.
 @end itemize
 
-@node Dropbox directories
-@subsection Dropbox directories
+@node Google Drive personal directories
+@subsection Google Drive personal directories
 
 @vindex paths-dir-dotfiles
 @vindex paths-dir-dotemacs
@@ -154,11 +154,11 @@ The following variables define the top-level directories from which most other p
 @vindex paths-dir-websites
 @vindex paths-dir-personal-bibliography
 @vindex paths-dir-PW
-These directories are children of @code{paths-dir-dropbox} and contain personal data:
+These directories are children of @code{paths-dir-google-drive} and contain personal data:
 
 @itemize
 @item
-@code{paths-dir-dotfiles}: the dotfiles repository (default: @samp{Dropbox/dotfiles/}).
+@code{paths-dir-dotfiles}: the dotfiles repository (default: @samp{My Drive/dotfiles/}).
 @item
 @code{paths-dir-dotemacs}: the Emacs subdirectory within dotfiles. Its default is user-dependent, resolved at load time based on the @samp{$HOME} environment variable.
 @item
@@ -214,8 +214,8 @@ These directories hold Emacs configuration artifacts:
 @code{paths-dir-init-default}: default target for tangled init files (default: the @samp{develop/} profile under @code{paths-dir-emacs-profiles}).
 @end itemize
 
-@node Google Drive directories
-@subsection Google Drive directories
+@node Google Drive media and library directories
+@subsection Google Drive media and library directories
 
 @vindex paths-dir-pdf-library
 @vindex paths-dir-html-library
@@ -292,41 +292,36 @@ These directories hold Citation Style Language resources, used by @samp{citeproc
 @code{paths-dir-tlon-csl-styles} and @code{paths-dir-tlon-csl-locales}: organization CSL files (children of @code{paths-dir-babel-refs}).
 @end itemize
 
-@node Tlon Dropbox and Google Drive directories
-@subsection Tlon Dropbox and Google Drive directories
+@node Tlon Google Drive directories
+@subsection Tlon Google Drive directories
 
-@vindex paths-dir-dropbox-tlon
-@vindex paths-dir-dropbox-tlon-core
-@vindex paths-dir-dropbox-tlon-leo
-@vindex paths-dir-dropbox-tlon-fede
-@vindex paths-dir-dropbox-tlon-pablo
-@vindex paths-dir-dropbox-tlon-ledger
-@vindex paths-dir-dropbox-tlon-pass
 @vindex paths-dir-google-drive-tlon
-@vindex paths-dir-google-drive-tlon-leo
 @vindex paths-dir-google-drive-tlon-core
+@vindex paths-dir-google-drive-tlon-leo
 @vindex paths-dir-google-drive-tlon-fede
-These directories organize shared team resources across Dropbox and Google Drive. Each team member has a personal subdirectory, and shared resources (ledger, pass) live under the @samp{core} subdirectory.
+@vindex paths-dir-google-drive-tlon-pablo
+@vindex paths-dir-google-drive-tlon-ledger
+@vindex paths-dir-google-drive-tlon-pass
+These directories organize shared team resources under @code{paths-dir-google-drive-tlon}. Each team member has a personal subdirectory, and shared resources (ledger, pass) live under the @samp{core} subdirectory.
 
-The Dropbox tree includes per-project directories for various organization projects:
+Active organization-wide directories sit at the root:
 
-@vindex paths-dir-dropbox-tlon-EAN
-@vindex paths-dir-dropbox-tlon-FM
-@vindex paths-dir-dropbox-tlon-GPE
-@vindex paths-dir-dropbox-tlon-HEAR
-@vindex paths-dir-dropbox-tlon-LBDLH
-@vindex paths-dir-dropbox-tlon-LP
-@vindex paths-dir-dropbox-tlon-RAE
-@vindex paths-dir-dropbox-tlon-RCG
+@vindex paths-dir-google-drive-tlon-uqbar
+@vindex paths-dir-google-drive-tlon-projects
+@vindex paths-dir-google-drive-tlon-archive
 
-The Google Drive tree mirrors this structure:
+Active projects live under @code{paths-dir-google-drive-tlon-projects}:
 
+@vindex paths-dir-google-drive-tlon-EAI
 @vindex paths-dir-google-drive-tlon-EAN
+@vindex paths-dir-google-drive-tlon-LBDLH
+@vindex paths-dir-google-drive-tlon-boletin
+
+Obsolete projects live under @code{paths-dir-google-drive-tlon-archive}:
+
 @vindex paths-dir-google-drive-tlon-FM
 @vindex paths-dir-google-drive-tlon-GPE
 @vindex paths-dir-google-drive-tlon-HEAR
-@vindex paths-dir-google-drive-tlon-LBDLH
-@vindex paths-dir-google-drive-tlon-LP
 @vindex paths-dir-google-drive-tlon-RAE
 @vindex paths-dir-google-drive-tlon-RCG
 
@@ -335,7 +330,7 @@ The Google Drive tree mirrors this structure:
 
 @vindex paths-dir-org
 @vindex paths-dir-org-roam
-The variable @code{paths-dir-org} specifies the root directory for Org files, intended to be used as the value of @code{org-directory}. The default is @code{paths-dir-dropbox}.
+The variable @code{paths-dir-org} specifies the root directory for Org files, intended to be used as the value of @code{org-directory}. The default is @code{paths-dir-google-drive}.
 
 The variable @code{paths-dir-org-roam} specifies the Org-roam directory, intended for @code{org-roam-directory}. The default is the same as @code{paths-dir-org}.
 
@@ -361,6 +356,7 @@ The variable @code{paths-dir-org-roam} specifies the Org-roam directory, intende
 @vindex paths-file-anki
 @vindex paths-file-config
 @vindex paths-file-karabiner
+@vindex paths-file-karabiner-edn
 @vindex paths-file-wiki-notes
 @vindex paths-file-wiki-published
 @vindex paths-file-wiki-help
@@ -386,6 +382,8 @@ These variables point to individual Org files used for task management, knowledg
 @code{paths-file-config} (@samp{emacs/config.org}): the literate Emacs configuration.
 @item
 @code{paths-file-karabiner}: the Karabiner keyboard customization file in Org format.
+@item
+@code{paths-file-karabiner-edn}: the Karabiner configuration in EDN format (@samp{karabiner.edn}).
 @item
 @code{paths-file-work}: the work dashboard.
 @end itemize
@@ -461,7 +459,7 @@ These variables point to template and configuration files:
 @item
 @code{paths-file-orb-capture-template}: the Org-roam-bibtex capture template. Uses @samp{$@{citekey@}} as a placeholder in the filename.
 @item
-@code{paths-file-bookmarks}: the Emacs bookmarks file.
+@code{paths-file-bookmarks}: the Emacs bookmarks file (under @samp{Misc/} within the Google Drive directory).
 @item
 @code{paths-file-init-tangle-flags-sans-directory}: the filename (without directory) for user-specific tangle flags (default: @samp{tangle-flags-pablo.el}).
 @end itemize

@@ -14,7 +14,7 @@ Use `release-dotfiles` instead for the `dotfiles` repo itself. Do not use this s
 Do NOT hard-code a package list. Instead, read the **listed packages** (level-2 `=name=` headings, excluding the "Unlisted packages" section) from:
 
 ```
-~/My Drive/notes/pablos-miscellany/my-emacs-packages.org
+~/My Drive/notes/public/my-emacs-packages.org
 ```
 
 Parse with:
@@ -29,7 +29,7 @@ awk '
     sub(/=$/, "", name)
     print name
   }
-' "$HOME/My Drive/notes/pablos-miscellany/my-emacs-packages.org"
+' "$HOME/My Drive/notes/public/my-emacs-packages.org"
 ```
 
 ## Semver normalization rules

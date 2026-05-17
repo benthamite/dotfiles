@@ -16,8 +16,8 @@ Do not use this for general Emacs package documentation, README generation, or r
 
 ## Key paths
 
-- **Packages list**: `/Users/pablostafforini/My Drive/notes/pablos-miscellany/my-emacs-packages.org`
-- **Notes directory**: `/Users/pablostafforini/My Drive/notes/pablos-miscellany/`
+- **Packages list**: `/Users/pablostafforini/My Drive/notes/public/my-emacs-packages.org`
+- **Notes directory**: `/Users/pablostafforini/My Drive/notes/public/`
 - **Elpaca sources**: resolve via `emacsclient -e 'init-current-profile'` → `~/.config/emacs-profiles/<profile>/elpaca/sources/<package>/`
 
 ## Safety boundaries

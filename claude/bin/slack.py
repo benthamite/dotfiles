@@ -17,10 +17,10 @@ Usage:
       Search messages workspace-wide (search.messages).
   slack.py history <channel-id> [--limit=N] [--oldest=ts] [--latest=ts] [--cursor=...]
       Fetch a channel's recent messages (conversations.history).
-  slack.py replies <channel-id> <thread-ts> [--limit=N] [--cursor=...]
-      Fetch replies in a thread (conversations.replies).
-  slack.py permalink <url> [--limit=N] [--cursor=...]
-      Fetch the message or thread context for a Slack permalink.
+  slack.py replies <channel-id> <thread-ts> [--limit=N] [--cursor=...] [--no-resolve-users]
+      Fetch replies in a thread (conversations.replies), resolving user IDs by default.
+  slack.py permalink <url> [--limit=N] [--cursor=...] [--no-resolve-users]
+      Fetch the message or thread context for a Slack permalink, resolving user IDs by default.
   slack.py channels [--types=public_channel,private_channel,im,mpim] [--cursor=...]
       List channels (conversations.list).
   slack.py users-search <query> [--max=N]
@@ -38,6 +38,7 @@ Output: raw JSON from Slack on stdout. Non-zero exit on API error.
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import urllib.parse
@@ -141,6 +142,99 @@ def _has_replies(message):
         return False
 
 
+_user_cache = {}
+_USER_ID_RE = re.compile(r"^U[A-Z0-9]{8,}$")
+
+
+def _user_display(user):
+    profile = user.get("profile") or {}
+    return (
+        profile.get("display_name")
+        or profile.get("real_name")
+        or user.get("real_name")
+        or user.get("name")
+        or user.get("id")
+    )
+
+
+def _resolve_user(user_id):
+    if not user_id or user_id in _user_cache:
+        return _user_cache.get(user_id)
+    out = call("users.info", user=user_id)
+    user = out.get("user") or {}
+    info = {
+        "id": user.get("id") or user_id,
+        "name": user.get("name"),
+        "real_name": user.get("real_name"),
+        "display_name": _user_display(user),
+    }
+    _user_cache[user_id] = info
+    return info
+
+
+def _collect_user_ids(value):
+    ids = set()
+    if isinstance(value, dict):
+        user_id = value.get("user")
+        if isinstance(user_id, str) and _USER_ID_RE.match(user_id):
+            ids.add(user_id)
+        for key in ("reply_users", "reactions"):
+            nested = value.get(key)
+            if isinstance(nested, list):
+                for item in nested:
+                    ids.update(_collect_user_ids(item))
+        for nested in value.values():
+            if isinstance(nested, (dict, list)):
+                ids.update(_collect_user_ids(nested))
+    elif isinstance(value, list):
+        for item in value:
+            ids.update(_collect_user_ids(item))
+    elif isinstance(value, str) and _USER_ID_RE.match(value):
+        ids.add(value)
+    return ids
+
+
+def _annotate_message_users(message, users_by_id):
+    user_id = message.get("user")
+    if user_id in users_by_id:
+        message["user_profile_resolved"] = users_by_id[user_id]
+
+    reply_users = message.get("reply_users")
+    if isinstance(reply_users, list):
+        message["reply_users_resolved"] = [
+            users_by_id[user_id]
+            for user_id in reply_users
+            if user_id in users_by_id
+        ]
+
+    for reaction in message.get("reactions") or []:
+        reaction_users = reaction.get("users")
+        if isinstance(reaction_users, list):
+            reaction["users_resolved"] = [
+                users_by_id[user_id]
+                for user_id in reaction_users
+                if user_id in users_by_id
+            ]
+
+
+def resolve_users_in_response(out):
+    user_ids = _collect_user_ids(out.get("messages") or [])
+    if not user_ids:
+        out["users_resolved"] = {}
+        return out
+
+    users_by_id = {}
+    for user_id in sorted(user_ids):
+        info = _resolve_user(user_id)
+        if info:
+            users_by_id[user_id] = info
+
+    for message in out.get("messages") or []:
+        _annotate_message_users(message, users_by_id)
+    out["users_resolved"] = users_by_id
+    return out
+
+
 def cmd_search(args):
     out = call("search.messages", query=args.query, count=str(args.max), sort=args.sort)
     print(json.dumps(out, indent=2))
@@ -166,6 +260,8 @@ def cmd_replies(args):
         limit=str(args.limit),
         cursor=args.cursor,
     )
+    if args.resolve_users:
+        resolve_users_in_response(out)
     print(json.dumps(out, indent=2))
 
 
@@ -208,6 +304,8 @@ def cmd_permalink(args):
             out["source"] = "conversations.replies"
 
     out["permalink"] = info
+    if args.resolve_users:
+        resolve_users_in_response(out)
     print(json.dumps(out, indent=2))
 
 
@@ -285,12 +383,26 @@ def main():
     r.add_argument("thread_ts")
     r.add_argument("--limit", type=int, default=200)
     r.add_argument("--cursor")
+    r.add_argument(
+        "--no-resolve-users",
+        action="store_false",
+        dest="resolve_users",
+        help="Do not enrich message user IDs with Slack profile names.",
+    )
+    r.set_defaults(resolve_users=True)
     r.set_defaults(func=cmd_replies)
 
     pl = sub.add_parser("permalink")
     pl.add_argument("url")
     pl.add_argument("--limit", type=int, default=200)
     pl.add_argument("--cursor")
+    pl.add_argument(
+        "--no-resolve-users",
+        action="store_false",
+        dest="resolve_users",
+        help="Do not enrich message user IDs with Slack profile names.",
+    )
+    pl.set_defaults(resolve_users=True)
     pl.set_defaults(func=cmd_permalink)
 
     c = sub.add_parser("channels")

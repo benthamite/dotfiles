@@ -766,6 +766,10 @@ ENSURE, REST, and STATE are `use-package' handler arguments."
   (advice-add #'use-package-handler/:ensure
               :override #'init-elpaca-use-package-handler))
 
+(elpaca (compat :wait t))
+(elpaca-wait)
+(require 'compat-31)
+
 (use-package use-package
   :demand t
   :custom
@@ -13760,12 +13764,6 @@ CLOCK: [2021-04-08 Thu 21:19]--[2021-04-08 Thu 21:50] =>  0:31
 If the lines are breaking at the wrong places, set ~shr-width~ to the right value.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package compat
-  :ensure (:host github
-                 :repo "emacs-compat/compat"
-                 :branch "main")
-  :demand t)
-
 (use-package elfeed
   :ensure (:host github
                  :repo "emacs-elfeed/elfeed")

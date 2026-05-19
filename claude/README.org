@@ -1018,6 +1018,12 @@ Compensating control for permissive modes (=auto=, =bypassPermissions=). Fires o
 
 Output-side defense layer. =wrap-bash-output.sh= rewrites the =Bash= tool input via =hookSpecificOutput.updatedInput.command= to pipe combined stdout+stderr through =redact-secrets.sh= before the result reaches the model: =\{ <original cmd>; \} 2>&1 | redact-secrets.sh; exit "$\{PIPESTATUS[0]\}"=. =PIPESTATUS[0]= preserves the original exit code, and the wrapper skips heredocs (=<<=) and background launches (trailing =&=) where group-brace wrapping breaks. The wrap is idempotent (matches the redactor's own path so it never double-wraps). Registered LAST in the =Bash= matcher chain so the other pattern-matching hooks see the unmodified command. =redact-secrets.sh= is a =gsed=-based filter that masks prefix-anchored secret shapes (=gg_pat_*=, =AIza...=, =ghp_/ghs_/gho_/github_pat_*=, =sk-ant-*=, =sk-proj-*=, =sk-*=, =xox[bporasct]-*=, =AKIA[16]=, Telegram bot tokens =\d{8,10}:[35]=, postgres/mysql/mongodb credential URIs, =Bearer/Token= headers, =Authorization=/=x-api-key= header values) and multi-line PEM private-key blocks (=-----BEGIN ... PRIVATE KEY-----...-----END=, collapsed via a =:a/N/ba= line-slurp loop bounded by the END marker; uses =[^-]*= to span newlines since base64 contains no hyphens). User-specific patterns belong in the gitignored =~/.claude/redact-secrets.local.sed=. Complements =block-secret-leak.sh= (which guards command /inputs/ for secret literals) and =block-sensitive-read.sh= (which gates reads of known-secret-bearing /paths/) — this layer guards arbitrary /outputs/ that contain secret-shaped data the user did not name on the command line.
 
+With the current Claude Code hook API, this output filtering must be a
+=PreToolUse= command rewrite. =PostToolUse= hooks can block or add
+=hookSpecificOutput.additionalContext=, but they cannot replace the tool result
+that the model sees. Use =hookSpecificOutput.updatedInput.command= for
+output-side filtering until the hook API exposes direct output replacement.
+
 *** block-destructive-command.sh (PreToolUse)
 :PROPERTIES:
 :ID:       DC12DCB5-4C06-43D2-B235-9C08B99653D9

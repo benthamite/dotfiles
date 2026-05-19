@@ -13,7 +13,7 @@ This repository contains my dotfiles, including
 - =config-audit=: Audits agent configuration for redundancy, conflicts, dead weight, staleness, and instruction drift.
 - =codex-app-browser=: Maintains the Codex App browser plugin setup for local browser-use workflows.
 - =find-skills=: Discovers, vets, and optionally installs reusable agent skills.
-- =gitguardian-triage=: Triages and remediates GitGuardian secret incidents, including known non-user key patterns and ownership checks before rotating potentially collaborator-owned keys.
+- =gitguardian-triage=: Triages and remediates GitGuardian secret incidents, including known non-user key patterns, ownership checks before rotating potentially collaborator-owned keys, and explicit authorization checks for incident-closing API writes.
 - =install-mcp-server=: Installs and configures MCP servers with auth verification, placement, registration, sync, and restart/testing checks.
 - =move-session-log=: Relocates Codex session logs by rewriting embedded project paths.
   Copied =SKILL (1).md= variants, when present, are kept paired across the

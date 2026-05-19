@@ -53,6 +53,7 @@ Commands
 * Editing and navigation::
 * Agenda management::
 * Clocking and timestamps::
+* Font-lock::
 * Folding, cycling, and narrowing: Folding cycling and narrowing. 
 * ID management::
 * List handling::
@@ -94,6 +95,10 @@ Clocking and timestamps
 * Clock reports::
 * Deleting headings without logbooks::
 * Meeting participants::
+
+Font-lock
+
+* Nested source block fontification::
 
 Folding, cycling, and narrowing
 
@@ -372,6 +377,7 @@ evaluation in your workflow.
 * Editing and navigation::
 * Agenda management::
 * Clocking and timestamps::
+* Font-lock::
 * Folding, cycling, and narrowing: Folding cycling and narrowing. 
 * ID management::
 * List handling::
@@ -735,6 +741,37 @@ populated with ``person'' nodes from Org Roam (via
 selected names as Org ID links, and inserts a ``Participants: @dots{}'' line
 after the heading's metadata.
 
+@node Font-lock
+@section Font-lock
+
+@menu
+* Nested source block fontification::
+@end menu
+
+@node Nested source block fontification
+@subsection Nested source block fontification
+
+@findex org-extras-fontify-nested-src-blocks
+@findex org-extras-enable-nested-src-block-fontification
+Org's built-in fontification function
+@code{org-fontify-meta-lines-and-blocks-1} processes each
+@code{#+begin_...#+end_} pair as a single unit.  When a source block is
+nested inside another block (e.g. @code{#+begin_details}), the outer block
+is fontified first and its entire body is marked with
+@code{font-lock-fontified}, causing the inner @code{#+begin_src} to be skipped.
+The function @code{org-extras-fontify-nested-src-blocks} is added to
+@code{font-lock-keywords} (via @code{font-lock-add-keywords}) and runs after the
+standard Org keywords.  It finds @code{#+begin_src} lines that were not
+fontified with the @code{org-block-begin-line} face and applies the expected
+source-block fontification, including native syntax highlighting when
+@code{org-src-fontify-natively} is non-nil.
+
+To activate this feature in your Org buffers, call
+@code{org-extras-enable-nested-src-block-fontification}.  It appends
+@code{org-extras-fontify-nested-src-blocks} to the buffer-local
+@code{font-lock-keywords} and triggers refontification.  A typical setup
+adds it to @code{org-mode-hook}.
+
 @node Folding cycling and narrowing
 @section Folding, cycling, and narrowing
 
@@ -842,16 +879,37 @@ these options.
 @subsection Updating ID locations
 
 @findex org-extras-id-update-id-locations
-The command @code{org-extras-id-update-id-locations} scans all @samp{.org} and
-@samp{.org.gpg} files under @code{org-directory} (excluding those in @samp{.Trash}
-directories or with carriage returns in their names) and updates the ID
-location database via @code{org-id-update-id-locations}.  If the scan
-reports duplicate IDs, the command automatically calls
-@code{org-extras-id-find-duplicate-ids} (@ref{Finding duplicate IDs}) so
+@vindex org-extras-id-update-excluded-patterns
+The command @code{org-extras-id-update-id-locations} scans all @samp{.org} files
+under @code{org-directory} and updates the ID location database via
+@code{org-id-update-id-locations}.  Paths matching any regexp in
+@code{org-extras-id-update-excluded-patterns} are skipped, and pre-existing
+stale entries with matching paths are pruned from @code{org-id-files} and
+@code{org-id-locations} before the scan so they cannot reappear as
+duplicates on the next run.  The default patterns exclude macOS Trash
+files, git worktree checkouts inside @code{org-directory}, Google Drive
+sync-conflict files, legacy Dropbox copies of files now canonical
+under @code{org-directory}, and files with carriage returns in their
+names.  If the scan reports duplicate IDs, the command automatically
+calls @code{org-extras-id-find-duplicate-ids} (@ref{Finding duplicate IDs}) so
 that you can review and resolve them.
 
 Internally, it temporarily advises @code{display-warning} to intercept
 ``duplicate IDs found'' messages and trigger the duplicate-ID workflow.
+It also temporarily filters @code{org-agenda-files} and @code{org-buffer-list} so
+files in excluded paths, such as git worktree checkouts, do not get
+scanned via Org's implicit agenda-file or ``open Org files'' sources.
+
+Two @code{:around} advices on @code{org-id-update-id-locations} improve
+performance.  The first (@code{org-extras--inhibit-modification-hooks})
+inhibits modification hooks during the scan, preventing
+@code{org-modern-indent} and @code{org-indent} from triggering
+@code{org-element-at-point} on every visited file.  The second
+(@code{org-extras--memoize-file-truename}) caches @code{file-truename} results
+for the duration of the scan.  In Google Drive trees where many org
+files share deeply symlinked path prefixes, this eliminates redundant
+filesystem calls and @code{tramp-completion-file-name-handler} regex
+overhead that would otherwise dominate the scan time.
 
 @node Finding duplicate IDs
 @subsection Finding duplicate IDs
@@ -1216,6 +1274,15 @@ to avoid adding duplicate participant lines (@ref{Meeting participants}).
 
 @node ID update warning handler
 @section ID update warning handler
+
+@findex org-extras--inhibit-modification-hooks
+The function @code{org-extras--inhibit-modification-hooks} is installed as
+@samp{:around} advice on @code{org-id-update-id-locations}.  It binds
+@code{inhibit-modification-hooks} to @code{t} while the ID scan runs, preventing
+@code{org-modern-indent} and @code{org-indent} from triggering
+@code{org-element-at-point} when files are read into existing org buffers.
+Without this, each file insertion fires @code{after-change-functions}, causing
+a cascading O(n*m) freeze.
 
 @findex org-extras--id-update-warning-handler
 The function @code{org-extras--id-update-warning-handler} is installed as

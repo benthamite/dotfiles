@@ -873,11 +873,29 @@ to display them in a dedicated buffer."
          (filtered-files
           (cl-remove-if #'org-extras-id--update-excluded-p all-files)))
     (advice-add 'display-warning :after #'org-extras--id-update-warning-handler)
+    (advice-add 'org-agenda-files :around #'org-extras--id-update-filter-files)
+    (advice-add 'org-buffer-list :around #'org-extras--id-update-filter-org-buffers)
     (unwind-protect
         (condition-case err
             (org-id-update-id-locations filtered-files)
           (error (message "org-extras-id-update-id-locations: %s" (error-message-string err))))
+      (advice-remove 'org-buffer-list #'org-extras--id-update-filter-org-buffers)
+      (advice-remove 'org-agenda-files #'org-extras--id-update-filter-files)
       (advice-remove 'display-warning #'org-extras--id-update-warning-handler))))
+
+(defun org-extras--id-update-filter-files (orig-fun &rest args)
+  "Call ORIG-FUN with ARGS, excluding ignored files."
+  (cl-remove-if #'org-extras-id--update-excluded-p (apply orig-fun args)))
+
+(defun org-extras--id-update-filter-org-buffers (orig-fun &rest args)
+  "Call ORIG-FUN with ARGS, excluding ignored buffers.
+Open Org buffers whose file names match
+`org-extras-id-update-excluded-patterns' are ignored while updating
+Org ID locations."
+  (cl-remove-if (lambda (buffer)
+                  (when-let ((file (buffer-file-name buffer)))
+                    (org-extras-id--update-excluded-p file)))
+                (apply orig-fun args)))
 
 (defun org-extras-id--update-excluded-p (file)
   "Return non-nil when FILE matches any `org-extras-id-update-excluded-patterns'."
@@ -890,6 +908,7 @@ to display them in a dedicated buffer."
 Entries whose path matches `org-extras-id-update-excluded-patterns' are
 removed so they are not rescanned by `org-id-update-id-locations',
 preventing them from reappearing as duplicates of canonical files."
+  (setq org-id--locations-checksum nil)
   (when (consp org-id-files)
     (setq org-id-files
           (cl-remove-if #'org-extras-id--update-excluded-p org-id-files)))

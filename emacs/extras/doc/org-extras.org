@@ -731,6 +731,9 @@ that you can review and resolve them.
 
 Internally, it temporarily advises ~display-warning~ to intercept
 "duplicate IDs found" messages and trigger the duplicate-ID workflow.
+It also temporarily filters ~org-agenda-files~ and ~org-buffer-list~ so
+files in excluded paths, such as git worktree checkouts, do not get
+scanned via Org's implicit agenda-file or "open Org files" sources.
 
 Two ~:around~ advices on ~org-id-update-id-locations~ improve
 performance.  The first (~org-extras--inhibit-modification-hooks~)

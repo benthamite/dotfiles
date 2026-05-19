@@ -131,9 +131,45 @@ For Epoch project notes, the main project `.org` file is a concise ground-truth 
 
 If no such file is found at any level, skip this step. In the final report, state which hooks were found, which hooks ran, and which files they changed.
 
-## Step 5: Commit
+## Step 5: Commit And Push
 
-Before staging, inspect `git status --short` and identify any pre-existing unrelated changes. Do not stage unrelated user changes.
+`/update-log` is not complete while session work is only local. Many Epoch
+automations run from GitHub, so local commits that are not pushed can leave the
+live automation on stale code. Before the final report, every relevant repo must
+be either clean and pushed, or explicitly reported as blocked.
+
+### Step 5A: Publish work repos
+
+Identify all git repos touched by the session before committing the bookkeeping
+repo. Include at least:
+
+- the project root repo from `git rev-parse --show-toplevel`;
+- a project `repo/` subdirectory when it is its own git repo;
+- any other nested repo where files were edited, committed, or referenced as the
+  source of runtime automation changes.
+
+For each relevant repo:
+
+1. Run `git status --short --branch`.
+2. If the repo has unstaged, staged, or untracked changes, inspect the diff and
+   commit all intended session changes before moving on. Use separate logical
+   commits when there are unrelated hunks. Do not commit secrets, credential
+   files, generated junk, or unrelated pre-existing user edits; if such changes
+   are present and cannot be safely separated, stop and ask rather than leaving
+   the repo silently dirty.
+3. If verification has not already been run for code/config changes in that
+   repo, run the project-appropriate test or check before committing. If
+   verification is impossible, record exactly why in the session log and final
+   report.
+4. Push every local commit in the repo. If the branch has no upstream, either
+   push with the appropriate upstream when obvious (`origin` and the current
+   branch), or stop and ask if the target is ambiguous.
+5. Re-run `git status --short --branch` after the push. The repo must not show
+   `ahead N`. If a push is rejected or CI-gated, resolve it or report the
+   blocker; do not call bookkeeping complete while relevant commits remain
+   unpushed.
+
+### Step 5B: Commit bookkeeping
 
 Stage and commit only the new log file, updated CLAUDE.md, any changes to `decisions/` or `decisions-summary.md`, and any files modified by post-hooks with a descriptive message. If any intended file was already dirty in the Step 0 baseline, use hunk-level staging or an index patch so the commit contains only the changes made by this `/update-log` run; do not stage the whole file unless every hunk belongs to this run.
 
@@ -144,9 +180,14 @@ Stage and commit only the new log file, updated CLAUDE.md, any changes to `decis
 3. If any intended path is ignored, **stop**: report the path and the matching `.gitignore` rule to the user, and ask whether to un-ignore the path (preferred — likely a misconfigured parent repo, as in `backlinks-health-automation` 2026-05-04) or to force-add with `git add -f` (only if the user confirms the ignore is intentional and they want this single file through anyway). Do not silently proceed with a partial commit.
 4. Inspect `git diff --cached` and confirm the staged content contains only the intended bookkeeping changes before committing.
 
+After committing the bookkeeping change, push the bookkeeping repo too and
+verify it is not ahead of its upstream. If the bookkeeping repo is also one of
+the work repos from Step 5A, this second push may be only the new bookkeeping
+commit.
+
 ## Step 6: Report and exit (if requested)
 
-Report the log file path, the `CLAUDE.md` pointer that was written, any decisions created or skipped, hooks found and run, files changed by hooks, the commit hash, and the verification performed for staging and commit completeness.
+Report the log file path, the `CLAUDE.md` pointer that was written, any decisions created or skipped, hooks found and run, files changed by hooks, the commit hash, the verification performed for staging and commit completeness, and a per-repo publish receipt: repo path, commits created or already present, push target, and final `git status --short --branch` showing no unpushed commits. If any repo remains dirty or ahead, say that bookkeeping is blocked rather than complete.
 
 If `--exit` was passed in the arguments, end the session using the host environment's normal exit mechanism after all steps are complete. If no explicit exit mechanism is available, state that bookkeeping is complete and stop.
 

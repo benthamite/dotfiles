@@ -447,9 +447,12 @@ hunks are not staged accidentally, uses the =record-decisions= skill or its loca
 workflow when applicable, reports any =context/post-update-log-hook.md= hooks,
 keeps Epoch project notes as concise ground-truth briefs when hook guidance
 applies (current state, org =TODO= headings for active work, archived =DONE=
-history, and no routine =** Meeting references= sections), verifies the cached
-diff, commits only intended bookkeeping paths, and reports the resulting log
-path, pointer, hook/decision status, commit hash, and verification.
+history, and no routine =** Meeting references= sections), publishes relevant
+work repos before completion by committing intended dirty changes, pushing local
+commits, and verifying no repo remains ahead of upstream, verifies the cached
+diff, commits only intended bookkeeping paths, pushes the bookkeeping repo, and
+reports the resulting log path, pointer, hook/decision status, commit hash,
+per-repo publish receipt, and verification.
 
 The =move-session-log= skill relocates Codex session logs by
 rewriting structured project-path metadata so resume and log lookup associate a

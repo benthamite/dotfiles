@@ -15,8 +15,20 @@ input=$(cat)
 
 first_pkg=""
 count=0
+unresolved=0
+
+codex_absolute_changed_path() {
+  local path="$1"
+
+  case "$path" in
+    /*) printf '%s\n' "$path" ;;
+    *) printf '%s\n' "$PWD/$path" ;;
+  esac
+}
 
 while IFS= read -r file_path; do
+  file_path=$(codex_absolute_changed_path "$file_path")
+
   # Only act on .el source files inside elpaca or dotfiles extras.
   [[ "$file_path" == *.el ]]              || continue
   [[ "$file_path" != *.elc ]]             || continue
@@ -53,7 +65,10 @@ while IFS= read -r file_path; do
 
   # Strip quotes from emacsclient output.
   pkg=$(echo "$result" | tr -d '"')
-  [[ "$pkg" != "nil" ]] || continue
+  if [[ "$pkg" == "nil" ]] || [[ -z "$pkg" ]]; then
+    unresolved=$((unresolved + 1))
+    continue
+  fi
 
   count=$((count + 1))
   if [ -z "$first_pkg" ]; then
@@ -61,7 +76,17 @@ while IFS= read -r file_path; do
   fi
 done < <(codex_changed_paths "$input")
 
-[ "$count" -gt 0 ] || exit 0
+if [ "$count" -eq 0 ]; then
+  if [ "$unresolved" -gt 0 ]; then
+    jq -n --argjson c "$unresolved" '{
+      "hookSpecificOutput": {
+        "hookEventName": "PostToolUse",
+        "additionalContext": ("Edited " + ($c|tostring) + " Elisp file(s), but no elpaca package was resolved for rebuild")
+      }
+    }'
+  fi
+  exit 0
+fi
 
 jq -n --arg p "$first_pkg" --argjson c "$count" '{
   "hookSpecificOutput": {

@@ -12,6 +12,17 @@ input=$(cat)
 
 file_path=$(printf '%s' "$input" | jq -r '.tool_input.file_path // empty')
 
+absolute_changed_path() {
+  local path="$1"
+
+  case "$path" in
+    /*) printf '%s\n' "$path" ;;
+    *) printf '%s\n' "$PWD/$path" ;;
+  esac
+}
+
+file_path=$(absolute_changed_path "$file_path")
+
 # Only act on .el source files inside elpaca or dotfiles extras
 [[ "$file_path" == *.el ]]              || exit 0
 [[ "$file_path" != *.elc ]]             || exit 0
@@ -48,7 +59,14 @@ result=$(timeout 30 emacsclient -e "
 
 # Strip quotes from emacsclient output
 pkg=$(echo "$result" | tr -d '"')
-[[ "$pkg" != "nil" ]] || exit 0
+if [[ "$pkg" == "nil" ]] || [[ -z "$pkg" ]]; then
+  jq -n '{
+    "hookSpecificOutput": {
+      "message": "Edited Elisp file, but no elpaca package was resolved for rebuild"
+    }
+  }'
+  exit 0
+fi
 
 jq -n --arg p "$pkg" '{
   "hookSpecificOutput": {

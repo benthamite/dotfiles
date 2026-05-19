@@ -360,6 +360,14 @@ Per-service — ask the user to rotate in Supabase / DigitalOcean / RDS / Kalshi
 
 ## Step 5: Close the GG incident
 
+GitGuardian `/resolve` and `/ignore` calls are externally visible writes. In
+Claude Code, structured `AskUserQuestion` selections may not satisfy the
+auto-mode classifier for the later Bash/API command. Before bulk-closing or
+otherwise mutating incidents, either get explicit plain-chat authorization that
+names the action and incident set, or have the user pre-approve the relevant
+GitGuardian API command permission rule. Read-only triage and local
+classification do not need this extra authorization step.
+
 After rotation is verified (new key works, old key returns 401/403):
 
 ```bash

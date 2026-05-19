@@ -21,6 +21,13 @@ Do not run it after purely conversational Q&A, quick read-only lookups, or sessi
 
 Session-end hooks or reminders should point to this policy instead of duplicating their own criteria. Hooks may remind or block session close when durable state appears unsaved, but they should not silently perform this workflow unattended because it writes logs, updates project notes, may reconcile TODOs, and commits.
 
+If the user explicitly invokes `/update-log` or otherwise asks for end-of-session
+bookkeeping after a log, pointer, or opportunistic summary was already written,
+still run the complete checklist below. An existing log or `CLAUDE.md` pointer is
+only a starting state: continue through decision-record review, post-update-log
+hooks, staging verification, commit completeness, and publish checks. Do not
+stop at "the log already exists" unless every later step has also been checked.
+
 ## Step 0: Detect project setup
 
 Determine the project's log directory and whether decisions are tracked:

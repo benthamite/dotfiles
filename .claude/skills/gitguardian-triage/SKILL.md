@@ -145,6 +145,21 @@ Then rotate (if still used) or `ignore` with reason=`low_risk` (if archived).
 
 ## Step 4: Rotate real secrets
 
+### 4.0 Check for third-party ownership markers
+
+Before treating a live-looking secret as user-rotatable, check whether the leak
+context or any matching `pass` entry indicates that the key belongs to a
+collaborator or another organization. Look for soft ownership hints such as
+`<name>'s key`, `owner:`, `for <person>`, nearby second-person setup
+instructions, or a chat transcript where the user was helping someone else
+configure the service. Treat these as evidence to surface, not as a hard
+classifier.
+
+If ownership is plausibly third-party, stop the provider-rotation path for that
+incident and present a `contact owner` disposition instead: identify the
+probable owner, explain the evidence without printing the secret, and draft the
+message or next action needed to ask them to rotate or confirm revocation.
+
 ### 4.0 Verify the key is actually live
 
 Before any rotation, hit the provider with the key and confirm the call succeeds. Never trust GG's `valid` flag alone — sometimes keys have been manually revoked since last scan.

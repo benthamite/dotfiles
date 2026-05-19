@@ -107,6 +107,7 @@ Patterns the GG detectors misfire on (confirmed by pulling the flagged byte rang
 - Legacy meeting passwords (Zoom, Google Meet, Jitsi) in calendar/meeting notes — the meeting has ended; the password is worthless.
 - 3+ year old OAuth client credentials in inactive/archive folders where the OAuth app has almost certainly been deleted.
 - Slack app credentials from 4+ year old todo.org entries.
+- Google Drive desktop client internal API keys captured from process output, such as `--annotation=anonymous_feedback_submit_api_key=AIza...` or `--annotation=survey_api_key=AIza...`, when the surrounding context points to `/Applications/Google Drive.app/` or Google Drive File Provider internals. These are Google-owned client keys, not user-rotatable credentials. Do not generalize this to arbitrary `AIza...` keys; user-created Google API keys still need the normal ownership and validity checks.
 
 ### 3d. Dev-only credentials → `ignore` reason=`test_credential`
 

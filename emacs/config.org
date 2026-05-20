@@ -101,7 +101,6 @@ The extras come with their own manuals and user options: everything is documente
   - [[#closql][closql]]
   - [[#magit][magit]]
   - [[#magit-extra][magit-extra]]
-  - [[#magit-todos][magit-todos]]
   - [[#with-editor][with-editor]]
   - [[#ghub][ghub]]
   - [[#forge][forge]]
@@ -476,7 +475,6 @@ The extras come with their own manuals and user options: everything is documente
   - [[#org-footnote][org-footnote]]
   - [[#citeproc][citeproc]]
   - [[#bibtex][bibtex]]
-  - [[#bibtex-extras][bibtex-extras]]
   - [[#bibtex-completion][bibtex-completion]]
   - [[#bibtex-completion-extras][bibtex-completion-extras]]
   - [[#org-roam-bibtex][org-roam-bibtex]]
@@ -488,6 +486,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#org-ref][org-ref]]
   - [[#org-ref-extras][org-ref-extras]]
   - [[#ebib][ebib]]
+  - [[#bibtex-extras][bibtex-extras]]
   - [[#ebib-utils][ebib-utils]]
   - [[#ebib-extras][ebib-extras]]
   - [[#bib][bib]]
@@ -790,7 +789,6 @@ ENSURE, REST, and STATE are `use-package' handler arguments."
                       (file-name-concat
                        "emacs/extras/doc"
                        (file-name-with-extension name-str "texi")))
-        :wait t
         :depth nil)))
 
   (defun init-personal-package-menu (request &optional item)
@@ -827,7 +825,7 @@ NAME and ARGS as in `use-package'."
 (elpaca-wait)
 #+end_src
 
-Because =use-personal-package= declares each extras file with an =:ensure= recipe pointing at this GitHub repository, =elpaca= treats them like any other package: it clones the repo into its own =elpaca/sources/dotfiles/= directory and builds the relevant files from there. The matching =init-personal-package-menu= also exposes those recipes to Elpaca's dependency resolver, so extras packages referenced from another package's =Package-Requires= metadata remain installable even when a development profile intentionally has no lockfile. The recipes use =:wait t= because all personal packages share that single source checkout; serializing them prevents concurrent Git checkout steps from racing on the shared index. This means the dotfiles end up in two separate local clones—the primary one in my main dotfiles location (where all edits are made) and the elpaca-managed one under =elpaca/sources/dotfiles/= (which Emacs loads from). To keep them in sync, three git hooks in the primary clone's gitdir automatically propagate changes to the elpaca clone. The =post-commit= hook handles normal commits, the =post-rewrite= hook handles rebases and amends, and both delegate to a shared =sync-elpaca-clone.sh= script. All three files live in the gitdir's =hooks/= directory and must be executable. The script reads the active profile name from a cache file (=~/.config/emacs-profiles/.current-profile=) that Emacs writes at startup, rather than calling =emacsclient=, to avoid deadlocking when the hook is triggered by a synchronous git process inside Emacs (e.g., =magit-commit-squash=).
+Because =use-personal-package= declares each extras file with an =:ensure= recipe pointing at this GitHub repository, =elpaca= treats them like any other package: it clones the repo into its own =elpaca/sources/dotfiles/= directory and builds the relevant files from there. The matching =init-personal-package-menu= also exposes those recipes to Elpaca's dependency resolver, so extras packages referenced from another package's =Package-Requires= metadata remain installable even when a development profile intentionally has no lockfile. The recipes do not use =:wait t=: Elpaca's normal queue processing reads the whole init file before resolving dependency metadata, which lets later package declarations supply recipes for dependencies of earlier personal packages. This means the dotfiles end up in two separate local clones—the primary one in my main dotfiles location (where all edits are made) and the elpaca-managed one under =elpaca/sources/dotfiles/= (which Emacs loads from). To keep them in sync, three git hooks in the primary clone's gitdir automatically propagate changes to the elpaca clone. The =post-commit= hook handles normal commits, the =post-rewrite= hook handles rebases and amends, and both delegate to a shared =sync-elpaca-clone.sh= script. All three files live in the gitdir's =hooks/= directory and must be executable. The script reads the active profile name from a cache file (=~/.config/emacs-profiles/.current-profile=) that Emacs writes at startup, rather than calling =emacsclient=, to avoid deadlocking when the hook is triggered by a synchronous git process inside Emacs (e.g., =magit-commit-squash=).
 
 =hooks/sync-elpaca-clone.sh=:
 
@@ -1859,62 +1857,6 @@ Note that this is called ~magit-extra~ (with no ‘s’ at the end) because Magi
 
   :bind
   ("s-p" . magit-extras-with-editor-finish-and-push))
-#+end_src
-
-** =magit-todos=
-:PROPERTIES:
-:ID:       63750AFE-71E9-4BFA-A127-F3FAA5BD5954
-:END:
-
-/[[https://github.com/alphapapa/magit-todos][magit-todos]] displays TODOs present in project files in the Magit status buffer./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package magit-todos
-  :ensure (:host github
-                 :repo "alphapapa/magit-todos"
-                 :build (:not elpaca-check-version))
-  :after magit hl-todo el-patch
-  :custom
-  (magit-todos-branch-list nil)
-
-  :config
-  ;; Ripgrep exits with code 2 when it emits "No files were searched"
-  ;; (e.g. in an empty repo, or when gitignore/glob filters exclude
-  ;; every file).  Upstream treats that as a fatal error; treat it as
-  ;; a benign empty result instead.  See
-  ;; https://github.com/alphapapa/magit-todos/issues/176.
-  (el-patch-defun magit-todos--async-when-done (proc &optional _change)
-    "Process sentinel used to retrieve the value from the child PROC.
-
-This is a copy of `async-when-done' that does not raise an error
-if the process's buffer has already been deleted."
-    (when (and (memq (process-status proc) '(exit signal))
-               (buffer-live-p (process-buffer proc)))
-      (with-current-buffer (process-buffer proc)
-        (let ((async-current-process proc))
-          (if (el-patch-swap
-                (memq (process-exit-status proc) (process-get proc :allow-exit-codes))
-                (or (memq (process-exit-status proc) (process-get proc :allow-exit-codes))
-                    (and (= (process-exit-status proc) 2)
-                         (save-excursion
-                           (goto-char (point-min))
-                           (search-forward "rg: No files were searched" nil t)))))
-              (if async-callback-for-process
-                  (if async-callback
-                      (prog1
-                          (funcall async-callback proc)
-                        (unless async-debug
-                          (kill-buffer (current-buffer))))
-                    (set (make-local-variable 'async-callback-value) proc)
-                    (set (make-local-variable 'async-callback-value-set) t))
-                (goto-char (point-max))
-                (backward-sexp)
-                (async-handle-result async-callback (read (current-buffer))
-                                     (current-buffer)))
-            (error "magit-todos--async-when-done: Process %S failed with exit code %d.  Output:%S"
-                   (process-name proc) (process-exit-status proc) (buffer-string)))))))
-
-  (magit-todos-mode))
 #+end_src
 
 ** =with-editor=
@@ -13327,11 +13269,16 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
   (slack-message-custom-notifier 'ignore)
   (slack-activity-feed-watch-channels '("automation-alerts"
                                         "cybersecurity-ops"
+					"mirrorcode-compute-planning"
                                         "ops-ai-api-providers"
                                         "pablo-caroline"
                                         "pablo-isabel"
                                         "pablo-maria"
-                                        "pablo-ricardo"))
+                                        "pablo-ricardo"
+					"pablo-elliot"
+					"media-mentions-digest"
+					"analytics-digest"
+					"ai-productivity-digest"))
   (slack-activity-feed-watch-channel-limit 15)
 
   :config
@@ -13767,6 +13714,7 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
 (use-package elfeed
   :ensure (:host github
                  :repo "emacs-elfeed/elfeed")
+  :defer t
   :init
   (run-with-idle-timer (* 5 60) t #'elfeed-extras-update)
 

@@ -1,9 +1,9 @@
 #!/bin/bash
 # PreToolUse hook: block reads of sensitive files (secrets, keys, tokens).
 #
-# Fires on Read AND Bash. Escalates to the user (permissionDecision: ask)
-# when the operation would expose the contents of a sensitive file in the
-# conversation context.
+# Fires on Read AND Bash. Blocks operations that would expose the contents of
+# a sensitive file in the conversation context. This hook must never ask for
+# interactive confirmation because it also protects unattended runs.
 #
 # - On Read: matches the target file_path against a sensitive-path set.
 # - On Bash: scans the command for any mention of the same sensitive paths.
@@ -18,16 +18,44 @@ set -euo pipefail
 INPUT=$(cat)
 TOOL_NAME=$(printf '%s' "$INPUT" | jq -r '.tool_name // empty')
 
-ask() {
+deny() {
   local label="$1" detail="$2"
   jq -n --arg label "$label" --arg detail "$detail" '{
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",
-      "permissionDecision": "ask",
-      "permissionDecisionReason": ("SENSITIVE: " + $label + " — " + $detail + ".\n\nThis would expose secret values in the conversation context. Confirm with the user before proceeding, or use a safe alternative: pass/op/git-crypt for auth-managed secrets; ls/stat/file/wc -l/-c for metadata; grep -l/-c/-q/-L for filename/count/quiet matches.")
+      "permissionDecision": "deny",
+      "permissionDecisionReason": ("BLOCKED: sensitive read: " + $label + " — " + $detail + ".\n\nThis could expose secret values in the conversation context. Use a safe alternative: pass/op/git-crypt for auth-managed secrets; ls/stat/file/wc -l/-c for metadata; grep -l/-c/-q/-L for filename/count/quiet matches. Loading environment files into a subprocess is allowed only when the command does not print or inspect the loaded secrets.")
     }
   }'
   exit 0
+}
+
+allow_env_loader() {
+  jq -n '{
+    "hookSpecificOutput": {
+      "hookEventName": "PreToolUse",
+      "permissionDecision": "allow",
+      "additionalContext": "Sensitive environment file loading was allowed for this Bash command. Do not print, inspect, summarize, or quote loaded environment values; use them only as process environment for the requested command."
+    }
+  }'
+  exit 0
+}
+
+is_safe_env_loader() {
+  local command="$1"
+
+  echo "$command" | grep -qE '(^|[[:space:]&;|(])(\.|source)[[:space:]]+[^&;|[:space:]]*\.env([.[:space:]"'"'"';&|)]|$)|(^|[[:space:]&;|(])(\.|source)[[:space:]]+[^&;|[:space:]]*\.envrc\b' || return 1
+
+  # These commands commonly dump the whole environment or shell state.
+  echo "$command" | grep -qE '(^|[[:space:]&;|])(env|printenv|declare|typeset)([[:space:]&;|]|$)' && return 1
+  echo "$command" | grep -qE '(^|[[:space:]&;|])export[[:space:]]+-p([[:space:]&;|]|$)' && return 1
+  echo "$command" | grep -qE '(^|[[:space:]&;|])set([[:space:]&;|]|$)' && return 1
+
+  # Sourcing is safe; printing or parsing the environment file contents is not.
+  echo "$command" | grep -qE '\b(cat|sed|awk|perl|python[0-9.]*|ruby|node|head|tail|less|more|grep|rg|ripgrep)\b[^&;|]*\.env([.[:space:]"'"'"';&|)]|$)' && return 1
+  echo "$command" | grep -qE '\b(cat|sed|awk|perl|python[0-9.]*|ruby|node|head|tail|less|more|grep|rg|ripgrep)\b[^&;|]*\.envrc\b' && return 1
+
+  return 0
 }
 
 # --------------------------------------------------------------------------
@@ -44,48 +72,48 @@ if [ "$TOOL_NAME" = "Read" ]; then
   # Password store
   case "$EXPANDED_PATH" in
     "$HOME/.password-store/"*|/Users/pablostafforini/.password-store/*)
-      ask "password store (GPG-encrypted secrets)" "$FILE_PATH" ;;
+      deny "password store (GPG-encrypted secrets)" "$FILE_PATH" ;;
   esac
   # MCP credential configs
   case "$EXPANDED_PATH" in
     */.mcp.json|*/mcp.json)
-      ask "MCP credential config" "$FILE_PATH" ;;
+      deny "MCP credential config" "$FILE_PATH" ;;
   esac
   # Shell secrets
   case "$EXPANDED_PATH" in
-    *.zshenv-secrets) ask "shell secrets file" "$FILE_PATH" ;;
+    *.zshenv-secrets) deny "shell secrets file" "$FILE_PATH" ;;
   esac
   # Environment secret files
   case "$EXPANDED_PATH" in
     */.env|*/.env.*|*/.envrc)
-      ask "environment secrets file" "$FILE_PATH" ;;
+      deny "environment secrets file" "$FILE_PATH" ;;
   esac
   # SSH private keys
   case "$EXPANDED_PATH" in
     "$HOME/.ssh/id_"*|/Users/pablostafforini/.ssh/id_*)
-      ask "SSH private key" "$FILE_PATH" ;;
+      deny "SSH private key" "$FILE_PATH" ;;
   esac
   # GPG keys
   case "$EXPANDED_PATH" in
     "$HOME/.gnupg/"*|/Users/pablostafforini/.gnupg/*)
-      ask "GPG keyring" "$FILE_PATH" ;;
+      deny "GPG keyring" "$FILE_PATH" ;;
   esac
   # OAuth tokens
   case "$EXPANDED_PATH" in
     "$HOME/.config/"*/tokens.json|/Users/pablostafforini/.config/*/tokens.json)
-      ask "OAuth tokens" "$FILE_PATH" ;;
+      deny "OAuth tokens" "$FILE_PATH" ;;
   esac
   # Gmail MCP credentials
   case "$EXPANDED_PATH" in
     "$HOME/.gmail-mcp-epoch/credentials/"*|/Users/pablostafforini/.gmail-mcp-epoch/credentials/*)
-      ask "Gmail MCP credentials" "$FILE_PATH" ;;
+      deny "Gmail MCP credentials" "$FILE_PATH" ;;
   esac
   # OAuth client secrets
   case "$EXPANDED_PATH" in
     "$HOME/.config/"*/secret.json|/Users/pablostafforini/.config/*/secret.json)
-      ask "OAuth client secret" "$FILE_PATH" ;;
+      deny "OAuth client secret" "$FILE_PATH" ;;
     "$HOME/.config/"*/client_secret*.json|/Users/pablostafforini/.config/*/client_secret*.json)
-      ask "OAuth client secret" "$FILE_PATH" ;;
+      deny "OAuth client secret" "$FILE_PATH" ;;
   esac
 
   exit 0
@@ -109,7 +137,7 @@ if [ "$TOOL_NAME" = "Bash" ]; then
     SENSITIVE_LABEL="password store (GPG-encrypted secrets)"
   elif echo "$COMMAND" | grep -qE '(^|[[:space:]/])\.mcp\.json\b|(^|[[:space:]/])mcp\.json\b'; then
     SENSITIVE_LABEL="MCP credential config"
-  elif echo "$COMMAND" | grep -qE '(^|[[:space:]/])\.env(\.|[[:space:]]|$)|(^|[[:space:]/])\.envrc\b'; then
+  elif echo "$COMMAND" | grep -qE '(^|[[:space:]/])\.env([.[:space:]"'"'"';&|)]|$)|(^|[[:space:]/])\.envrc\b'; then
     SENSITIVE_LABEL="environment secrets file"
   elif echo "$COMMAND" | grep -qE '(^|[ /=])\.ssh/id_[A-Za-z0-9_]+\b' && \
        ! echo "$COMMAND" | grep -qE '\.ssh/id_[A-Za-z0-9_]+\.pub\b'; then
@@ -129,6 +157,10 @@ if [ "$TOOL_NAME" = "Bash" ]; then
 
   # No sensitive path mentioned → allow.
   [ -z "$SENSITIVE_LABEL" ] && exit 0
+
+  if [ "$SENSITIVE_LABEL" = "environment secrets file" ] && is_safe_env_loader "$COMMAND"; then
+    allow_env_loader
+  fi
 
   # 2. Allowlist of safe operations on these paths.
   #    Each rule must be tight enough that it only matches commands which
@@ -166,7 +198,7 @@ if [ "$TOOL_NAME" = "Bash" ]; then
   fi
 
   # 3. Anything else that touched a sensitive path content-extracts by default.
-  ask "$SENSITIVE_LABEL" "Bash command appears to read or process the contents of $SENSITIVE_LABEL"
+  deny "$SENSITIVE_LABEL" "Bash command appears to read or process the contents of $SENSITIVE_LABEL"
 fi
 
 exit 0

@@ -27,6 +27,32 @@ deny() {
   exit 0
 }
 
+allow_env_loader() {
+  jq -n '{
+    "hookSpecificOutput": {
+      "hookEventName": "PreToolUse",
+      "permissionDecision": "allow",
+      "additionalContext": "Sensitive environment file loading was allowed for this shell command. Do not print, inspect, summarize, or quote loaded environment values; use them only as process environment for the requested command."
+    }
+  }'
+  exit 0
+}
+
+is_safe_env_loader() {
+  local command="$1"
+
+  echo "$command" | grep -qE '(^|[[:space:]&;|(])(\.|source)[[:space:]]+[^&;|[:space:]]*\.env([.[:space:]"'"'"';&|)]|$)|(^|[[:space:]&;|(])(\.|source)[[:space:]]+[^&;|[:space:]]*\.envrc\b' || return 1
+
+  echo "$command" | grep -qE '(^|[[:space:]&;|])(env|printenv|declare|typeset)([[:space:]&;|]|$)' && return 1
+  echo "$command" | grep -qE '(^|[[:space:]&;|])export[[:space:]]+-p([[:space:]&;|]|$)' && return 1
+  echo "$command" | grep -qE '(^|[[:space:]&;|])set([[:space:]&;|]|$)' && return 1
+
+  echo "$command" | grep -qE '\b(cat|sed|awk|perl|python[0-9.]*|ruby|node|head|tail|less|more|grep|rg|ripgrep)\b[^&;|]*\.env([.[:space:]"'"'"';&|)]|$)' && return 1
+  echo "$command" | grep -qE '\b(cat|sed|awk|perl|python[0-9.]*|ruby|node|head|tail|less|more|grep|rg|ripgrep)\b[^&;|]*\.envrc\b' && return 1
+
+  return 0
+}
+
 sensitive_label_for_text() {
   local text="$1"
 
@@ -49,7 +75,7 @@ sensitive_label_for_text() {
     printf '%s\n' "OAuth client secret"
   elif echo "$text" | grep -qE '(^|[[:space:]/])(credentials\.json|service-account[^/[:space:]]*\.json|tokens\.json)\b'; then
     printf '%s\n' "credential JSON"
-  elif echo "$text" | grep -qE '(^|[[:space:]/])\.env(\.|[[:space:]]|$)|(^|[[:space:]/])\.envrc\b'; then
+  elif echo "$text" | grep -qE '(^|[[:space:]/])\.env([.[:space:]"'"'"';&|)]|$)|(^|[[:space:]/])\.envrc\b'; then
     printf '%s\n' "environment secrets file"
   fi
 }
@@ -70,6 +96,10 @@ case "$TOOL_NAME" in
 
     LABEL=$(sensitive_label_for_text "$COMMAND")
     [ -z "$LABEL" ] && exit 0
+
+    if [ "$LABEL" = "environment secrets file" ] && is_safe_env_loader "$COMMAND"; then
+      allow_env_loader
+    fi
 
     # Auth-aware tools manage secrets safely.
     if echo "$COMMAND" | grep -qE '^[[:space:]]*(pass[[:space:]]|op[[:space:]]|git-crypt[[:space:]]|security[[:space:]])'; then

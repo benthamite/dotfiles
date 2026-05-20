@@ -10,7 +10,7 @@
 
 :sim   150
 
-:simlayer-threshold 250}} ; default
+:simlayer-threshold 250}}
 
 :tos {
       ;; macOS
@@ -22,12 +22,12 @@
       :⌘⌃ {:key :Cleft_control}
 
       ;; Emacs
-      :S- {:key :left_shift} ; S
-      :A- {:key :right_command} ; Q
-      :C- {:key :left_control} ; T
-      :H- {:key :left_command} ; C
-      :M- {:key :left_option} ; O
-      :s- {:key :right_control} ; W
+      :S- {:key :left_shift}
+      :A- {:key :right_command}
+      :C- {:key :left_control}
+      :H- {:key :left_command}
+      :M- {:key :left_option}
+      :s- {:key :right_control}
       :A-C- {:key :!Qleft_control}
       :A-H- {:key :!Qleft_command}
       :A-M- {:key :!Qleft_option}
@@ -157,7 +157,6 @@
             :A-C-M-s- [:right_control :left_control :right_command :left_option]
             :A-H-M-s- [:right_command :left_command :left_option :right_control]
             :C-H-M-s- [:left_control :left_command :left_option :right_control]
-            :A-C-H-M-s- [:left_control :left_command :left_option :right_control :right_command]
             }
 
 :applications {
@@ -179,7 +178,7 @@
 
 :simlayers {
             :b-mode {:key :b}
-            :f-mode {:key :f}
+            :k-mode {:key :k}
             :j-mode {:key :j}
             :m-mode {:key :m}
             :p-mode {:key :p}
@@ -201,102 +200,52 @@
 
 :main [
 
-{:des "Disable caps_lock"
+{:des "left_control → C-g/Escape (alone) | M-/⌥ (held)"
  :rules [
-         [:caps_lock :vk_none]
-         ]}
-
-{:des "Emacs: left_control → C-g (alone) M- (held)"
- :rules [
-         [:!Ch {:modi :A-H-M-s- :key :h} :emacs] ; circumvent macOS ⌘h
-         [:!CQh {:modi :A-C-H-s- :key :h} :emacs] ; circumvent macOS ⌘⌥h
+         [:!Ch {:modi :A-H-M-s- :key :h} :emacs]
+         [:!CQh {:modi :A-C-H-s- :key :h} :emacs]
          [:##left_control :M- [:!steam :emacs] {:alone {:modi :C- :key :g}}]
-         ]}
-
-{:des "Outside Emacs: left_control → escape (alone) | ⌥ (held)"
- :rules [
          [:##left_control :⌥ [:!steam :!emacs] {:alone :escape}]
          ]}
 
-{:des "Emacs: left_option → toggle tabs/windows (alone) | S- (held)"
+{:des "left_option → RET (alone) | S-/⇧ (held)"
  :rules [
          [:##left_option :S- :emacs {:alone :return_or_enter}]
-         ]}
-
-{:des "Outside Emacs: left_option → toggle tabs/windows (alone) | ⇧ (held)"
- :rules [
          [:##left_option :⇧ :!emacs {:alone :return_or_enter}]
-         ]}
-
-{:des "left_option + right_command → ⇧ + enter"
- :rules [
          [:!Sright_command {:modi :⇧ :key :return_or_enter}]
          ]}
 
-{:des "Emacs: left_command → other window (alone) | H- (held)"
+{:des "left_command → other window/tab (alone) | H-/⌘ (held)"
  :rules [
          [:##left_command :H- :emacs {:alone {:modi :C-H- :key :0}}]
-         ]}
-
-{:des "Outside Emacs: left_command → other tab (alone) | ⌘ (held)"
- :rules [
          [:##left_command :⌘ :!emacs {:alone {:modi :⌘⌃ :key :0}}]
          ]}
 
-{:des "Emacs: spacebar → C- (held) | ⌘tab (alone)"
+{:des "spacebar → ⌘Tab (alone) | C-/⌃ (held)"
  :rules [
-         [:!Cspacebar {:modi :A-H-M-s- :key :spacebar} :emacs] ; files-extras-switch-to-alternate-buffer
+         [:!Cspacebar {:modi :A-H-M-s- :key :spacebar} :emacs]
          [:##spacebar :C- :emacs {:alone {:modi :⌘ :key :tab}}]
-         ]}
-
-{:des "Outside Emacs: spacebar → ⌃ (held) | ⌘tab (alone)"
- :rules [
-         [:!Cspacebar {:modi :⌘ :key :grave_accent_and_tilde} :!emacs] ; move focus to next window
+         [:!Cspacebar {:modi :⌘ :key :grave_accent_and_tilde} :!emacs]
          [:##spacebar :⌃ :!emacs {:alone {:modi :⌘ :key :tab}}]
          ]}
 
-{:des "Emacs: right_command + left_command → A-H- (held) "
-:rules [
-        [[:right_command :left_command] :A-H- :emacs {:alone {:modi :A- :key :spacebar}}]
-        ]}
-
-{:des "Emacs: right_command + left_shift → A-"
-:rules [
-        [[:right_command :left_option] :A- :emacs]
-        ]}
-
-{:des "Emacs: right_command + spacebar → A-C-"
-:rules [
-        [[:right_command :spacebar] :A-C- :emacs]
-        ]}
-
-{:des "Emacs: right_command + left_control → A-M-"
-:rules [
-        [[:right_command :left_control] :A-M- :emacs]
-        ]}
-
-{:des "Emacs: right_command + right_option → A-s-"
-:rules [
-        [[:right_command :right_option] :A-s- :emacs]
-        ]}
-
-{:des "Emacs: right_command → spacebar"
+{:des "right_command modifier combinations"
  :rules [
-         [:##right_command :spacebar :emacs]
+         [[:right_command :left_command] :A-H- :emacs {:alone {:modi :A- :key :spacebar}}]
+         [[:right_command :left_option] :A- :emacs]
+         [[:right_command :spacebar] :A-C- :emacs]
+         [[:right_command :left_control] :A-M- :emacs]
+         [[:right_command :right_option] :A-s- :emacs]
          ]}
 
-{:des "Outside Emacs: right_command → spacebar"
+{:des "right_command → spacebar"
  :rules [
-         [:##right_command :spacebar :!emacs]
+         [:##right_command :spacebar]
          ]}
 
-{:des "Emacs: right_option → other window (alone) | s- (held)"
+{:des "right_option → Tab (alone) | s-/⌥ (held)"
  :rules [
          [:##right_option :s- :emacs {:alone :tab}]
-         ]}
-
-{:des "Outside Emacs: right_option → other window (alone) | ⌥ (held)"
- :rules [
          [:##right_option :⌥ :!emacs {:alone :tab}]
          ]}
 
@@ -308,33 +257,33 @@
 
 {:des "b-mode (media controls, window sizing)"
  :rules [:b-mode
-         [:u {:modi :C-H- :key :u} :emacs] ; frame-extras-left-half
-         [:u {:modi :⇧⌘⌥⌃ :key :u}] ; Rectangle, left half
-         [:p {:modi :C-H- :key :p} :emacs] ; frame-extras-right-half
-         [:p {:modi :⇧⌘⌥⌃ :key :p}] ; Rectangle, right half
-         [:i {:modi :C-H- :key :i} :emacs] ; frame-extras-maximize-frame
-         [:i {:modi :⇧⌘⌥⌃ :key :i}] ; Rectangle, maximize
-         [:o {:modi :⇧⌘⌥⌃ :key :o}] ; Rectangle, center
+         [:u {:modi :C-H- :key :u} :emacs]
+         [:u {:modi :⇧⌘⌥⌃ :key :u}]
+         [:p {:modi :C-H- :key :p} :emacs]
+         [:p {:modi :⇧⌘⌥⌃ :key :p}]
+         [:i {:modi :C-H- :key :i} :emacs]
+         [:i {:modi :⇧⌘⌥⌃ :key :i}]
+         [:o {:modi :⇧⌘⌥⌃ :key :o}]
          [:j :rewind]
-         [:x {:modi :⇧⌘⌃ :key :3}] ; Copy picture of screen to the clipboard
+         [:x {:modi :⇧⌘⌃ :key :3}]
          [:k :play_or_pause]
          [:semicolon :fast_forward]
          [:comma :volume_increment]
          [:period :volume_decrement]
          [:m :mute]
-         [:c {:modi :C-M-s- :key :c} :emacs] ; connect to bluetooth device
-         [:g {:modi :C-M-s- :key :g} :emacs] ; toggle langs
-         [:h {:modi :⇧⌘⌥⌃ :key :0}] ; dictation
-         [:n {:modi :⇧⌘⌥⌃ :key :1}] ; narration (Settings > Accessibility > Spoken content > Speak selection)
+         [:c {:modi :C-M-s- :key :c} :emacs]
+         [:g {:modi :C-M-s- :key :g} :emacs]
+         [:h {:modi :⇧⌘⌥⌃ :key :0}]
+         [:n {:modi :⇧⌘⌥⌃ :key :1}]
          ]}
 
-{:des "f-mode (special chars)"
- :rules [:f-mode
+{:des "k-mode (special chars)"
+ :rules [:k-mode
          [:d :ð]
          [:e :…]
          [:i :¡]
          [:j [:insert "⸘"]]
-         [:k [:insert "‽"]]
+         [:l [:insert "‽"]]
          [:o :ø]
          [:p :£]
          [:q :œ]
@@ -345,60 +294,37 @@
          [:slash :¿]
          [:comma :«]
          [:period :»]
-         ]
- }
+         ]}
 
 {:des "j-mode (deletion)"
  :rules [:j-mode
          [:a {:modi :C-H-M- :key :a} :emacs]
-         [:!Wa {:modi :C-H-M-s- :key :a} :emacs]
-         [:!WQa {:modi :A-C-H-M-s- :key :a} :emacs]
          [:s {:modi :C-H-M- :key :s} :emacs]
          [:s :delete_or_backspace :!emacs]
          [:d {:modi :C-H-M- :key :d} :emacs]
          [:d :delete_forward :!emacs]
          [:f {:modi :C-H-M- :key :f} :emacs]
-         [:!Wf {:modi :C-H-M-s- :key :f} :emacs]
-         [:!WQf {:modi :A-C-H-M-s- :key :f} :emacs]
          [:q {:modi :C-H-M- :key :q} :emacs]
-         [:!Wq {:modi :C-H-M-s- :key :q} :emacs]
-         [:!WQq {:modi :A-C-H-M-s- :key :q} :emacs]
          [:q {:modi :⌥ :key :delete_or_backspace} :!emacs]
          [:w {:modi :C-H-M- :key :w} :emacs]
-         [:!Ww {:modi :C-H-M-s- :key :w} :emacs]
-         [:!WQw {:modi :A-C-H-M-s- :key :w} :emacs]
          [:w {:modi :⌘ :key :delete_or_backspace} :!emacs]
          [:e {:modi :C-H-M- :key :e} :emacs]
-         [:!We {:modi :C-H-M-s- :key :e} :emacs]
-         [:!WQe {:modi :A-C-H-M-s- :key :e} :emacs]
          [:e {:modi :⌃ :key :k} :!emacs]
          [:r {:modi :C-H-M- :key :r} :emacs]
-         [:!Wr {:modi :C-H-M-s- :key :r} :emacs]
-         [:!WQr {:modi :A-C-H-M-s- :key :r} :emacs]
          [:r {:modi :⌥ :key :delete_forward} :!emacs]
          [:z {:modi :C-H-M- :key :z} :emacs]
-         [:!Wz {:modi :C-H-M-s- :key :z} :emacs]
-         [:!WQz {:modi :A-C-H-M-s- :key :z} :emacs]
          [:z {:modi :⌘ :key :delete_or_backspace} :!emacs]
          [:x {:modi :C-H-M- :key :x} :emacs]
-         [:!Wx {:modi :C-H-M-s- :key :x} :emacs]
-         [:!WQx {:modi :A-C-H-M-s- :key :x} :emacs]
          [:x {:modi :⌘⌥ :key :left_arrow} :!emacs]
          [:c {:modi :C-H-M- :key :c} :emacs]
-         [:!Wc {:modi :C-H-M-s- :key :c} :emacs]
-         [:!WQc {:modi :A-C-H-M-s- :key :c} :emacs]
          [:c {:modi :⌘⌥ :key :right_arrow} :!emacs]
          [:v {:modi :C-H-M- :key :v} :emacs]
-         [:!Wv {:modi :C-H-M-s- :key :v} :emacs]
-         [:!WQv {:modi :A-C-H-M-s- :key :v} :emacs]
          [:v {:modi :⌘ :key :delete_forward} :!emacs]
          [:b {:modi :C-H-M- :key :b} :emacs]
          [:t {:modi :C-H-M- :key :t} :emacs]
          [:t :home :!emacs]
          [:g {:modi :C-H-M- :key :g} :emacs]
          [:g :end :!emacs]
-         [:!Wd {:modi :C-H-M-s- :key :d} :emacs]
-         [:!Ws {:modi :C-H-M-s- :key :s} :emacs]
          ]}
 
 {:des "m-mode (math symbols)"
@@ -441,13 +367,12 @@
          [:x :overdot]
          [:y :circumflex]
          [:z :hook]
-         ]
- }
+         ]}
 
 {:des "q-mode (apps)"
  :rules [:q-mode
          [:b [:open "/Applications/qBitTorrent.app"]]
-         [:c [:open "/Applications/Audacity.app"]]
+         [:c [:open "/Applications/Codex.app"]]
          [:d [:open "/System/Library/CoreServices/Finder.app"]]
          [:e [:open "/Applications/Emacs.app"]]
          [:f [:open "/Applications/Firefox.app"]]
@@ -495,8 +420,7 @@
          [:##p :0]
          [:semicolon :period]
          [:##semicolon :period]
-         ]
- }
+         ]}
 
 {:des "x-mode (avy)"
  :rules [:x-mode
@@ -536,8 +460,8 @@
 
 {:des "y-mode (mouse, screenshots)"
  :rules [:y-mode
-         [:b {:modi :⇧⌘ :key :5}] ; Screenshot and recording options
-         [:c {:modi :⇧⌘ :key :4}] ; Save picture of selected area to a file
+         [:b {:modi :⇧⌘ :key :5}]
+         [:c {:modi :⇧⌘ :key :4}]
          [:d {:mkey {:y 1500}}]
          [:e {:mkey {:y 4500}}]
          [:a {:mkey {:x -1500}}]
@@ -545,9 +469,9 @@
          [:q {:mkey {:x -4500}}]
          [:r {:mkey {:x 4500}}]
          [:s {:mkey {:y -1500}}]
-         [:v {:modi :⇧⌘⌃ :key :4}] ; Copy picture of selected area to the clipboard
+         [:v {:modi :⇧⌘⌃ :key :4}]
          [:w {:mkey {:y -4500}}]
-         [:z {:modi :⇧⌘ :key :3}] ; Save picture of screen as a file
+         [:z {:modi :⇧⌘ :key :3}]
          [:right_command :button2]
          [:return_or_enter :button1]
          ]}
@@ -556,9 +480,9 @@
  :rules [:z-mode
          [:b {:modi :A-C-s- :key :b} :emacs]
          [:c {:modi :A-C-s- :key :c}]
-         [:d {:modi :A-H-M-s- :key :d} :emacs] ; WTQ intercepted by OSX
+         [:d {:modi :A-H-M-s- :key :d} :emacs]
          [:e {:modi :A-C-s- :key :e} :emacs]
-         [:f [{:modi :⌘⌃ :key :n} {:modi :⌘⌃ :key :h}] :chrome] ; Google Docs next heading
+         [:f [{:modi :⌘⌃ :key :n} {:modi :⌘⌃ :key :h}] :chrome]
          [:f {:modi :A-C-s- :key :f}]
          [:g {:modi :A-C-s- :key :g} :emacs]
          [:h {:modi :A-C-s- :key :h} :emacs]
@@ -578,7 +502,7 @@
          [:##o {:modi :⌥ :key :down_arrow}]
          [:p {:modi :A-C-s- :key :p} :emacs]
          [:##p {:modi :⌥ :key :right_arrow}]
-         [:r [{:modi :⌘⌃ :key :p} {:modi :⌘⌃ :key :h}] :chrome] ; Google Docs previous heading
+         [:r [{:modi :⌘⌃ :key :p} {:modi :⌘⌃ :key :h}] :chrome]
          [:r {:modi :A-C-s- :key :r} :emacs]
          [:s {:modi :A-C-s- :key :s} :emacs]
          [:t {:modi :A-C-s- :key :t} :emacs]
@@ -590,14 +514,14 @@
          [:y {:modi :A-C-s- :key :y} :emacs]
          [:##y :page_up]
          [:spacebar {:modi :A-C-s- :key :spacebar} :emacs]
-         [:spacebar {:modi :⌘ :key :up_arrow} :chrome] ; in Chrome, move to top
+         [:spacebar {:modi :⌘ :key :up_arrow} :chrome]
          [:spacebar :home]
          [:comma {:modi :A-C-s- :key :comma} :emacs]
          [:##comma {:modi :⌘ :key :up_arrow}]
          [:period {:modi :A-C-s- :key :period} :emacs]
          [:##period {:modi :⌘ :key :down_arrow}]
          [:right_command {:modi :A-C-s- :key :tab} :emacs]
-         [:right_command {:modi :⌘ :key :down_arrow} :chrome] ; in Chrome, move to bottom
+         [:right_command {:modi :⌘ :key :down_arrow} :chrome]
          [:right_command :end]
          [:semicolon :right_arrow]
          [:##semicolon :right_arrow]
@@ -659,7 +583,7 @@
          [:n {:modi :A-C-H- :key :n}]
          [:o {:modi :A-C-H- :key :o}]
          [:p {:modi :A-C-H- :key :p}]
-         [:q {:modi :A-H-M-s- :key :9}] ; QCOq triggers ⌘⌃Q (lock screen)
+         [:q {:modi :A-H-M-s- :key :9}]
          [:r {:modi :A-C-H- :key :r}]
          [:s {:modi :A-C-H- :key :s}]
          [:t {:modi :A-C-H- :key :t}]
@@ -708,7 +632,7 @@
          [:##right_command :underscore]
          ]}
 
-{:des "slash simlyaer → org-mode (Emacs) | app-specific macros (outside Emacs)"
+{:des "slash simlayer → org-mode"
  :rules [:slash-mode
          [:a {:modi :C-H-M-s- :key :a} :emacs]
          [:b {:modi :C-H-M-s- :key :b} :emacs]

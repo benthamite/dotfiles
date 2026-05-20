@@ -809,9 +809,9 @@ Hold =k= to type characters from various European languages and typographic symb
  :rules [:k-mode
          [:d :ð]
          [:e :…]
-         [:i :¿]
+         [:i :¡]
          [:j [:insert "⸘"]]
-         [:k [:insert "‽"]]
+         [:l [:insert "‽"]]
          [:o :ø]
          [:p :£]
          [:q :œ]
@@ -819,7 +819,7 @@ Hold =k= to type characters from various European languages and typographic symb
          [:s :ß]
          [:t :þ]
          [:u :•]
-         [:slash :¡]
+         [:slash :¿]
          [:comma :«]
          [:period :»]
          ]}
@@ -960,7 +960,7 @@ Hold =q= to open an application. 20+ applications are mapped. The letter choices
 {:des "q-mode (apps)"
  :rules [:q-mode
          [:b [:open "/Applications/qBitTorrent.app"]]
-         [:c [:open "/Applications/Audacity.app"]]
+         [:c [:open "/Applications/Codex.app"]]
          [:d [:open "/System/Library/CoreServices/Finder.app"]]
          [:e [:open "/Applications/Emacs.app"]]
          [:f [:open "/Applications/Firefox.app"]]

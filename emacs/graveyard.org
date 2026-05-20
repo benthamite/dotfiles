@@ -9,6 +9,64 @@ CLOCK: [2021-06-27 Sun 15:59]--[2021-06-27 Sun 16:25] =>  0:26
 
 This is a place where I move Emacs packages I no longer use.
 
+** =magit-todos=
+:PROPERTIES:
+:ID:       63750AFE-71E9-4BFA-A127-F3FAA5BD5954
+:END:
+
+/[[https://github.com/alphapapa/magit-todos][magit-todos]] displays TODOs present in project files in the Magit status buffer./
+
+[2026-05-17 Sun] Moving to graveyard due to poor performance in projects with many TODOs.
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package magit-todos
+  :ensure (:host github
+                 :repo "alphapapa/magit-todos"
+                 :build (:not elpaca-check-version))
+  :after magit hl-todo el-patch
+  :custom
+  (magit-todos-branch-list nil)
+
+  :config
+  ;; Ripgrep exits with code 2 when it emits "No files were searched"
+  ;; (e.g. in an empty repo, or when gitignore/glob filters exclude
+  ;; every file).  Upstream treats that as a fatal error; treat it as
+  ;; a benign empty result instead.  See
+  ;; https://github.com/alphapapa/magit-todos/issues/176.
+  (el-patch-defun magit-todos--async-when-done (proc &optional _change)
+    "Process sentinel used to retrieve the value from the child PROC.
+
+This is a copy of `async-when-done' that does not raise an error
+if the process's buffer has already been deleted."
+    (when (and (memq (process-status proc) '(exit signal))
+               (buffer-live-p (process-buffer proc)))
+      (with-current-buffer (process-buffer proc)
+        (let ((async-current-process proc))
+          (if (el-patch-swap
+                (memq (process-exit-status proc) (process-get proc :allow-exit-codes))
+                (or (memq (process-exit-status proc) (process-get proc :allow-exit-codes))
+                    (and (= (process-exit-status proc) 2)
+                         (save-excursion
+                           (goto-char (point-min))
+                           (search-forward "rg: No files were searched" nil t)))))
+              (if async-callback-for-process
+                  (if async-callback
+                      (prog1
+                          (funcall async-callback proc)
+                        (unless async-debug
+                          (kill-buffer (current-buffer))))
+                    (set (make-local-variable 'async-callback-value) proc)
+                    (set (make-local-variable 'async-callback-value-set) t))
+                (goto-char (point-max))
+                (backward-sexp)
+                (async-handle-result async-callback (read (current-buffer))
+                                     (current-buffer)))
+            (error "magit-todos--async-when-done: Process %S failed with exit code %d.  Output:%S"
+                   (process-name proc) (process-exit-status proc) (buffer-string)))))))
+
+  (magit-todos-mode))
+#+end_src
+
 ** =ef-themes=
 :PROPERTIES:
 :ID:       ABA9A4E3-ABDA-46C2-88E7-285DAFB05F79

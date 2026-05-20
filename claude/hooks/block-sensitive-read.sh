@@ -49,7 +49,7 @@ is_safe_env_loader() {
   # These commands commonly dump the whole environment or shell state.
   echo "$command" | grep -qE '(^|[[:space:]&;|])(env|printenv|declare|typeset)([[:space:]&;|]|$)' && return 1
   echo "$command" | grep -qE '(^|[[:space:]&;|])export[[:space:]]+-p([[:space:]&;|]|$)' && return 1
-  echo "$command" | grep -qE '(^|[[:space:]&;|])set([[:space:]&;|]|$)' && return 1
+  echo "$command" | grep -qE '(^|[[:space:]&;|])set[[:space:]]*([;&|)]|$)' && return 1
 
   # Sourcing is safe; printing or parsing the environment file contents is not.
   echo "$command" | grep -qE '\b(cat|sed|awk|perl|python[0-9.]*|ruby|node|head|tail|less|more|grep|rg|ripgrep)\b[^&;|]*\.env([.[:space:]"'"'"';&|)]|$)' && return 1

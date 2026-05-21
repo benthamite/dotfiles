@@ -9007,9 +9007,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
    (agent-shell-anthropic-make-authentication :login t))
 
   (agent-shell-anthropic-claude-environment
-   '("MAX_THINKING_TOKENS=20000"
-     "ANTHROPIC_API_KEY="
-     "DISABLE_EXTRA_USAGE_COMMAND=1")))
+   '("MAX_THINKING_TOKENS=20000")))
 #+end_src
 
 ** =claude-code=
@@ -9021,12 +9019,6 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 /[[https://github.com/stevemolitor/claude-code.el][claude-code]] is an Emacs client for [[https://code.claude.com/docs/en/overview][Claude Code]]./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(defun my-ai-cli-no-api-billing-env (_buffer-name _directory)
-  "Return environment entries that prevent local API-key billing fallback."
-  '("ANTHROPIC_API_KEY="
-    "OPENAI_API_KEY="
-    "DISABLE_EXTRA_USAGE_COMMAND=1"))
-
 (use-package claude-code
   :ensure (:host github
                  :repo "stevemolitor/claude-code.el" :branch "main"
@@ -9052,7 +9044,6 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   ("C-c c" . claude-code-command-map)
 
   :hook
-  (claude-code-process-environment-functions . my-ai-cli-no-api-billing-env)
   (claude-code-process-environment-functions . monet-start-server-function)
   (claude-code-process-environment-functions . agent-claude-account-env))
 #+end_src
@@ -9141,9 +9132,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 (use-package codex
   :ensure (:host github
                  :repo "benthamite/codex")
-  :defer t
-  :hook
-  (codex-process-environment-functions . my-ai-cli-no-api-billing-env))
+  :defer t)
 #+end_src
 
 ** =mcp=

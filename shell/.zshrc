@@ -103,14 +103,6 @@ alias emacsk="pkill -SIGUSR2 Emacs"
 alias emacsK="while true; do pkill -SIGUSR2 Emacs; done"
 
 # Claude Code multi-account (separate OAuth sessions via config dir)
-function claude() {
-    ANTHROPIC_API_KEY= DISABLE_EXTRA_USAGE_COMMAND=1 command claude "$@"
-}
-
-function codex() {
-    OPENAI_API_KEY= command codex "$@"
-}
-
 alias claude-personal='CLAUDE_CONFIG_DIR=~/.claude-personal claude'
 alias claude-tlon='CLAUDE_CONFIG_DIR=~/.claude-tlon claude'
 alias claude-epoch='CLAUDE_CONFIG_DIR=~/.claude-epoch claude'

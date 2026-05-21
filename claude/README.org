@@ -201,6 +201,13 @@ Separate per account:
 
 The active account is stored in =~/.claude-current-account=. From Emacs, =agent-claude-start-or-switch= uses the persisted account automatically (configured via =agent-claude-accounts=). Use =agent-claude-select-account= to change it. From the terminal, the shell aliases =claude-personal=, =claude-tlon=, and =claude-epoch= are available.
 
+Terminal and Emacs-launched Claude sessions deliberately clear
+=ANTHROPIC_API_KEY= and set =forceLoginMethod= to =claudeai= so Claude Code
+uses the Claude.ai subscription account rather than Anthropic Console/API
+billing. =DISABLE_EXTRA_USAGE_COMMAND= is also set for local launches to hide
+the usage-credit command path. These local guards do not change account-side
+usage-credit or auto-purchase settings on claude.ai.
+
 *Adding a new account:* add it to =agent-claude-accounts=, then run =M-x agent-claude-init-account= *before* invoking =claude= for that account. This creates the config dir and all shared symlinks up front; otherwise =claude= writes real empty =settings.json=/=history.jsonl=/etc. on first login, which divorces the new account from your permissions and history.  If this happens anyway, re-running =init-account= (or =select-account=) heals virgin-state files automatically; non-virgin files are left alone with a warning so you can migrate them by hand.
 
 *1Password service account:* All =op://= references resolve silently via =OP_SERVICE_ACCOUNT_TOKEN= (a 1Password service account token with read-only access to the "Automations" vault).  The token is stored in =pass= at =epoch/1password-service-account-token= and exported in =.zshenv-secrets=.  No Touch ID prompts are needed.  To rotate: delete the old service account in the admin console, create a new one with =op service-account create "Epoch Ops Automation" --vault "Automations:read_items" --raw=, and update the =pass= entry.  Item names in the Automations vault must not contain parentheses (they break =op://= parsing).

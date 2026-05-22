@@ -262,45 +262,57 @@ def cmd_send_draft(args):
     print(out["id"])
 
 
-def main():
-    # Shared --account flag, available on every subcommand.
-    common = argparse.ArgumentParser(add_help=False)
-    common.add_argument(
+def _account_parser(default):
+    parser = argparse.ArgumentParser(add_help=False)
+    kwargs = {}
+    if default is argparse.SUPPRESS:
+        kwargs["default"] = argparse.SUPPRESS
+    else:
+        kwargs["default"] = default
+    parser.add_argument(
         "--account",
         choices=["epoch", "personal"],
-        default="epoch",
         help="Which Google Workspace account to authenticate as (default: epoch).",
+        **kwargs,
     )
+    return parser
 
-    p = argparse.ArgumentParser(description="Gmail API wrapper", parents=[common])
+
+def build_parser():
+    # The root parser owns the default. Subparsers accept --account too, but must
+    # not overwrite a value supplied before the subcommand.
+    root_account = _account_parser("epoch")
+    sub_account = _account_parser(argparse.SUPPRESS)
+
+    p = argparse.ArgumentParser(description="Gmail API wrapper", parents=[root_account])
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    q = sub.add_parser("query", parents=[common])
+    q = sub.add_parser("query", parents=[sub_account])
     q.add_argument("query")
     q.add_argument("--max", type=int, default=20)
     q.set_defaults(func=cmd_query)
 
-    g = sub.add_parser("get", parents=[common])
+    g = sub.add_parser("get", parents=[sub_account])
     g.add_argument("id")
     g.add_argument("--format", choices=["full", "metadata", "raw"], default="full")
     g.set_defaults(func=cmd_get)
 
-    r = sub.add_parser("raw", parents=[common])
+    r = sub.add_parser("raw", parents=[sub_account])
     r.add_argument("id")
     r.set_defaults(func=cmd_raw)
 
-    a = sub.add_parser("attachment", parents=[common])
+    a = sub.add_parser("attachment", parents=[sub_account])
     a.add_argument("message_id")
     a.add_argument("attachment_id")
     a.add_argument("output")
     a.set_defaults(func=cmd_attachment)
 
-    arc = sub.add_parser("archive", parents=[common])
+    arc = sub.add_parser("archive", parents=[sub_account])
     arc.add_argument("id")
     arc.set_defaults(func=cmd_archive)
 
     for name, fn in [("draft", cmd_draft), ("send", cmd_send)]:
-        s = sub.add_parser(name, parents=[common])
+        s = sub.add_parser(name, parents=[sub_account])
         s.add_argument("--to", required=True)
         s.add_argument("--subject", required=True)
         s.add_argument("--body")
@@ -310,7 +322,7 @@ def main():
         s.add_argument("--attach", action="append", default=[])
         s.set_defaults(func=fn)
 
-    rep = sub.add_parser("reply", parents=[common])
+    rep = sub.add_parser("reply", parents=[sub_account])
     rep.add_argument("id")
     rep.add_argument("--to")
     rep.add_argument("--body")
@@ -318,11 +330,15 @@ def main():
     rep.add_argument("--attach", action="append", default=[])
     rep.set_defaults(func=cmd_reply)
 
-    sd = sub.add_parser("send-draft", parents=[common])
+    sd = sub.add_parser("send-draft", parents=[sub_account])
     sd.add_argument("id")
     sd.set_defaults(func=cmd_send_draft)
 
-    args = p.parse_args()
+    return p
+
+
+def main():
+    args = build_parser().parse_args()
     args.func(args)
 
 

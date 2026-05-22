@@ -45,7 +45,7 @@ Pick the account with `--account epoch` (default) or `--account personal` on `gm
 
 The Epoch refresh token also powers `gdoc --account epoch` (which has its own auth flow but uses the same OAuth client). The `gmail-epoch-triage` MCP is separate and exists only for the email-triage bot account (see below). The personal refresh token is used only by `gmail.py`/`sheets.py`; `gdoc --account personal` has its own token under `~/.config/gdoc/accounts/personal/`.
 
-If a token expires (`invalid_grant` errors), regenerate with the recipe under "Generating a new refresh token" below and update the appropriate env var in `~/.zshenv-secrets`.
+If a token expires (`invalid_grant` errors), regenerate it with `claude/bin/update-gworkspace-refresh-token --account <epoch|personal>`. The helper opens the OAuth browser flow, updates the appropriate env var in `~/.zshenv-secrets`, and prints only status metadata, never token values. The manual recipe under "Generating a new refresh token" remains available for unusual recovery cases.
 
 ## Servers by account
 
@@ -83,7 +83,15 @@ Enable at: Google Cloud Console > APIs & Services > Library (project `claude-cod
 
 The recipe below works for both accounts — the only differences are which Google account you sign in as, which env var to update afterwards, and which scopes to request. It prints the refresh token to stdout; copy that into the matching env var in `~/.zshenv-secrets`. If you'd rather not have the token transit your terminal, see the "without printing" variant below.
 
-### Recipe (both accounts)
+### Preferred helper
+
+```bash
+uv run --with google-auth-oauthlib --no-project claude/bin/update-gworkspace-refresh-token --account personal
+```
+
+Use `--account epoch` for the Epoch account. When the browser opens, sign in as the matching Google account: `pablo@epoch.ai` for Epoch or `pablo.stafforini@gmail.com` for personal.
+
+### Manual recipe (both accounts)
 
 Choose your scopes by what the token will be used for:
 

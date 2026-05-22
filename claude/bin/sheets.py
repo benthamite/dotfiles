@@ -129,49 +129,64 @@ def cmd_info(args):
         print(f"{p['sheetId']}\t{p['title']}")
 
 
-def main():
-    common = argparse.ArgumentParser(add_help=False)
-    common.add_argument(
+def _account_parser(default):
+    parser = argparse.ArgumentParser(add_help=False)
+    kwargs = {}
+    if default is argparse.SUPPRESS:
+        kwargs["default"] = argparse.SUPPRESS
+    else:
+        kwargs["default"] = default
+    parser.add_argument(
         "--account",
         choices=["epoch", "personal"],
-        default="epoch",
         help="Which Google Workspace account to authenticate as (default: epoch).",
+        **kwargs,
     )
+    return parser
 
-    p = argparse.ArgumentParser(description="Google Sheets API wrapper", parents=[common])
+
+def build_parser():
+    root_account = _account_parser("epoch")
+    sub_account = _account_parser(argparse.SUPPRESS)
+
+    p = argparse.ArgumentParser(description="Google Sheets API wrapper", parents=[root_account])
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    r = sub.add_parser("read", parents=[common])
+    r = sub.add_parser("read", parents=[sub_account])
     r.add_argument("spreadsheet_id")
     r.add_argument("range")
     r.add_argument("--format", choices=["tsv", "json"], default="tsv")
     r.set_defaults(func=cmd_read)
 
     for name, fn in [("write", cmd_write), ("append", cmd_append), ("clear", cmd_clear)]:
-        s = sub.add_parser(name, parents=[common])
+        s = sub.add_parser(name, parents=[sub_account])
         s.add_argument("spreadsheet_id")
         s.add_argument("range")
         s.set_defaults(func=fn)
 
-    a = sub.add_parser("add-sheet", parents=[common])
+    a = sub.add_parser("add-sheet", parents=[sub_account])
     a.add_argument("spreadsheet_id")
     a.add_argument("title")
     a.set_defaults(func=cmd_add_sheet)
 
-    d = sub.add_parser("delete-sheet", parents=[common])
+    d = sub.add_parser("delete-sheet", parents=[sub_account])
     d.add_argument("spreadsheet_id")
     d.add_argument("sheet_id")
     d.set_defaults(func=cmd_delete_sheet)
 
-    c = sub.add_parser("create", parents=[common])
+    c = sub.add_parser("create", parents=[sub_account])
     c.add_argument("title")
     c.set_defaults(func=cmd_create)
 
-    i = sub.add_parser("info", parents=[common])
+    i = sub.add_parser("info", parents=[sub_account])
     i.add_argument("spreadsheet_id")
     i.set_defaults(func=cmd_info)
 
-    args = p.parse_args()
+    return p
+
+
+def main():
+    args = build_parser().parse_args()
     args.func(args)
 
 

@@ -63,6 +63,7 @@ Functions
 * Org protocol handler::
 * Adding multiple URLs::
 * ISBN fallback::
+* IMDb fallback::
 
 Indices
 
@@ -83,6 +84,8 @@ The package provides the following capabilities:
 @item
 @strong{Enhanced entry addition.} An improved version of @code{zotra-add-entry} that auto-detects URLs from Elfeed and EWW buffers, falls back to an alternative backend on server errors, and automatically opens the new entry in @samp{ebib} for review and processing (@ref{Adding entries}).
 @item
+@strong{IMDb fallback.} IMDb title URLs are imported through OMDb by IMDb ID, avoiding IMDb's browser challenge pages and region-dependent page metadata (@ref{IMDb fallback}).
+@item
 @strong{Batch processing.} A command to add multiple bibliographic entries from a file containing one URL per line (@ref{Batch processing}).
 @item
 @strong{VPN integration.} Optional routing of IMDb requests through Mullvad VPN to control the geographic origin of fetched metadata (@ref{VPN for IMDb}).
@@ -94,7 +97,7 @@ The package provides the following capabilities:
 @strong{Field fetching.} A utility function to retrieve a single bibliographic field for a URL without adding the full entry, with support for skipping excluded domains (@ref{Fetching fields}).
 @end itemize
 
-The package depends on @samp{zotra} and @samp{paths}, and optionally integrates with @samp{ebib}, @samp{ebib-extras}, @samp{mullvad}, @samp{org-ref}, and @samp{tlon}.
+The package depends on @samp{zotra} and @samp{paths}, and optionally integrates with @samp{bib}, @samp{ebib}, @samp{ebib-extras}, @samp{mullvad}, @samp{org-ref}, and @samp{tlon}. IMDb fallback imports require @code{bib-omdb-key} to be configured.
 
 @node User options
 @chapter User options
@@ -172,6 +175,8 @@ The command @code{zotra-extras-add-entry} is the primary entry point for importi
 @item
 @strong{VPN routing.} When @code{zotra-extras-use-mullvad-p} is non-nil and the URL matches @samp{imdb.com}, the command connects through Mullvad VPN before fetching (@ref{VPN for IMDb}).
 @item
+@strong{IMDb fallback via OMDb.} When the input is an IMDb title URL, the command extracts the @samp{tt} identifier and fetches movie metadata from OMDb instead of asking Zotero's IMDb translator to scrape the IMDb page (@ref{IMDb fallback}).
+@item
 @strong{ISBN fallback via Google Books.} When the input is a bare ISBN (10 or 13 digits) and the translation server's search translators return no results, the command automatically retries by looking up the ISBN on Google Books (@ref{ISBN fallback}).
 @item
 @strong{Backend fallback.} If the primary @samp{zotra} backend fails with a JSON parse error indicating an internal server error, the command automatically retries with the @samp{citoid} backend.
@@ -207,6 +212,7 @@ The constant @code{zotra-extras-add-multiple-urls-from-file} (the variable, not 
 * Org protocol handler::
 * Adding multiple URLs::
 * ISBN fallback::
+* IMDb fallback::
 @end menu
 
 @node Ebib post-processing
@@ -252,6 +258,16 @@ The function @code{zotra-extras-add-multiple-urls} is the non-interactive workho
 The Zotero translation server's @samp{/search} endpoint resolves bare ISBNs by querying a chain of library catalog translators (Library of Congress, BnF, K10plus, Open WorldCat). When the ISBN belongs to a publisher or edition not cataloged by any of these services, the search fails with ``No items returned from any translator''.
 
 To handle this, @code{zotra-extras-add-entry} (@ref{Adding entries}) detects the failure, checks whether the input is a bare ISBN using @code{zotra-extras--isbn-p}, and retries the lookup by constructing a Google Books URL with @code{zotra-extras--isbn-to-google-books-url}. The Google Books translator in the translation server's @samp{/web} endpoint has broader ISBN coverage and typically succeeds where the catalog-based search translators fail.
+
+@node IMDb fallback
+@section IMDb fallback
+
+@findex zotra-extras--imdb-id-from-url
+@findex zotra-extras--fetch-omdb-item
+@findex zotra-extras--omdb-item-to-biblatex
+IMDb can return an AWS WAF challenge page to non-browser HTTP clients. When this happens, Zotero's IMDb translator receives no usable page metadata and the translation server falls back to an empty generic @samp{@@online} entry. To avoid this failure mode, @code{zotra-extras-add-entry} detects IMDb title URLs such as @samp{https://www.imdb.com/title/tt0073679/}, extracts the @samp{tt} identifier, fetches metadata from OMDb, and writes a populated Bib@LaTeX{} @samp{@@movie} entry directly.
+
+This path requires the @samp{bib} package and a configured @code{bib-omdb-key}. It still honors the BIBFILE and DO-NOT-OPEN arguments used by the normal adding workflow, writes the entry as UTF-8, and records the inserted key in @code{zotra-extras-most-recent-bibkey} so the entry can be opened in @samp{ebib}.
 
 @node Indices
 @chapter Indices

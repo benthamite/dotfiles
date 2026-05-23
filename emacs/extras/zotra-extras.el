@@ -29,6 +29,7 @@
 ;;; Code:
 
 (require 'paths)
+(require 'url-util)
 (require 'zotra)
 
 ;;;; Variables
@@ -97,6 +98,10 @@ Refer to the `mullvad' package documentation for details."
 (defvar ebib--cur-db)
 (declare-function ebib "ebib")
 (declare-function mullvad-connect-to-website "mullvad")
+(defvar bib-omdb-key)
+(declare-function bib--ensure-key "bib")
+(declare-function bib--http-get "bib")
+(declare-function bib--parse-json "bib")
 (autoload 'eww-copy-page-url "eww")
 (autoload 'elfeed-extras-kill-link-url-of-entry "elfeed-extras")
 ;;;###autoload
@@ -118,22 +123,142 @@ in Ebib after adding it."
 	       (string-match-p "imdb\\.com" url-or-search-string))
       (message "IMDb URL detected and `zotra-extras-use-mullvad-p' is set. Connecting via Mullvad...")
       (mullvad-connect-to-website "IMDb" 1 'silently))
-    (condition-case err
-	(zotra-extras--add-and-maybe-open url-or-search-string entry-format bibfile do-not-open)
-      (error
-       (let ((msg (error-message-string err)))
-	 (cond
-	  ((and (string-match-p "No items returned from any translator" msg)
-		(zotra-extras--isbn-p url-or-search-string))
-	   (message "ISBN search failed. Retrying via Google Books...")
-	   (zotra-extras--add-and-maybe-open
-	    (zotra-extras--isbn-to-google-books-url url-or-search-string)
-	    entry-format bibfile do-not-open))
-	  ((string-match-p "JSON parse error: Internal Server Error" msg)
-	   (let ((zotra-backend 'citoid))
-	     (message "Request with main backend failed. Retrying with `citoid'...")
-	     (zotra-extras--add-and-maybe-open url-or-search-string entry-format bibfile do-not-open)))
-	  (t (signal (car err) (cdr err)))))))))
+    (if (zotra-extras--imdb-id-from-url url-or-search-string)
+	(zotra-extras--add-imdb-entry-and-maybe-open url-or-search-string bibfile do-not-open)
+      (condition-case err
+	  (zotra-extras--add-and-maybe-open url-or-search-string entry-format bibfile do-not-open)
+	(error
+	 (let ((msg (error-message-string err)))
+	   (cond
+	    ((and (string-match-p "No items returned from any translator" msg)
+		  (zotra-extras--isbn-p url-or-search-string))
+	     (message "ISBN search failed. Retrying via Google Books...")
+	     (zotra-extras--add-and-maybe-open
+	      (zotra-extras--isbn-to-google-books-url url-or-search-string)
+	      entry-format bibfile do-not-open))
+	    ((string-match-p "JSON parse error: Internal Server Error" msg)
+	     (let ((zotra-backend 'citoid))
+	       (message "Request with main backend failed. Retrying with `citoid'...")
+	       (zotra-extras--add-and-maybe-open url-or-search-string entry-format bibfile do-not-open)))
+	    (t (signal (car err) (cdr err))))))))))
+
+(defun zotra-extras--add-imdb-entry-and-maybe-open (url bibfile &optional do-not-open)
+  "Add a movie entry for IMDb URL to BIBFILE using OMDb.
+If DO-NOT-OPEN is non-nil, do not open the new entry in Ebib."
+  (let* ((imdb-id (zotra-extras--imdb-id-from-url url))
+	 (item (zotra-extras--fetch-omdb-item imdb-id))
+	 (entry (zotra-extras--omdb-item-to-biblatex item url)))
+    (zotra-extras--insert-entry entry bibfile)
+    (unless do-not-open
+      (zotra-extras-open-in-ebib zotra-extras-most-recent-bibkey))))
+
+(defun zotra-extras--imdb-id-from-url (url)
+  "Return the IMDb title ID in URL, or nil if none is present."
+  (when (and (stringp url)
+	     (string-match-p "imdb\\.com/title/" url)
+	     (string-match "\\btt[0-9]+\\b" url))
+    (match-string 0 url)))
+
+(defun zotra-extras--fetch-omdb-item (imdb-id)
+  "Return OMDb metadata for IMDB-ID."
+  (require 'bib)
+  (bib--ensure-key bib-omdb-key "omdb")
+  (let* ((url (format "https://www.omdbapi.com/?i=%s&plot=full&apikey=%s"
+		      (url-hexify-string imdb-id)
+		      (url-hexify-string bib-omdb-key)))
+	 (body (or (bib--http-get url)
+		   (error "Network request to OMDb failed")))
+	 (item (bib--parse-json body)))
+    (when (equal (alist-get 'Response item) "False")
+      (user-error "OMDb returned no item for IMDb ID `%s': %s"
+		  imdb-id (or (alist-get 'Error item) "unknown error")))
+    item))
+
+(defun zotra-extras--omdb-item-to-biblatex (item url)
+  "Return a BibLaTeX movie entry for OMDb ITEM from URL."
+  (let ((fields `(("title" . ,(alist-get 'Title item))
+		  ("date" . ,(zotra-extras--omdb-year item))
+		  ("author" . ,(zotra-extras--omdb-na-to-nil (alist-get 'Director item)))
+		  ("director" . ,(zotra-extras--omdb-na-to-nil (alist-get 'Director item)))
+		  ("writer" . ,(zotra-extras--omdb-na-to-nil (alist-get 'Writer item)))
+		  ("cast" . ,(zotra-extras--omdb-na-to-nil (alist-get 'Actors item)))
+		  ("abstract" . ,(zotra-extras--omdb-na-to-nil (alist-get 'Plot item)))
+		  ("keywords" . ,(zotra-extras--omdb-na-to-nil (alist-get 'Genre item)))
+		  ("language" . ,(zotra-extras--omdb-na-to-nil (alist-get 'Language item)))
+		  ("location" . ,(zotra-extras--omdb-na-to-nil (alist-get 'Country item)))
+		  ("duration" . ,(zotra-extras--omdb-na-to-nil (alist-get 'Runtime item)))
+		  ("url" . ,(zotra-extras--canonical-imdb-url item url))
+		  ("urldate" . ,(format-time-string "%Y-%m-%d"))
+		  ("note" . ,(format "IMDb ID: %s" (alist-get 'imdbID item))))))
+    (concat
+     (format "@movie{imdb-%s,\n" (alist-get 'imdbID item))
+     (mapconcat #'identity
+		(seq-keep #'zotra-extras--biblatex-field fields)
+		",\n")
+     "\n}\n")))
+
+(defun zotra-extras--omdb-year (item)
+  "Return the BibLaTeX date value for OMDb ITEM."
+  (zotra-extras--omdb-na-to-nil (alist-get 'Year item)))
+
+(defun zotra-extras--canonical-imdb-url (item fallback-url)
+  "Return the canonical IMDb URL for ITEM, falling back to FALLBACK-URL."
+  (if-let* ((id (zotra-extras--omdb-na-to-nil (alist-get 'imdbID item))))
+      (format "https://www.imdb.com/title/%s/" id)
+    fallback-url))
+
+(defun zotra-extras--biblatex-field (field)
+  "Return FIELD as a BibLaTeX field string, or nil if empty."
+  (when-let* ((name (car field))
+	      (value (zotra-extras--omdb-na-to-nil (cdr field))))
+    (format "  %s = {%s}" name (zotra-extras--biblatex-escape value))))
+
+(defun zotra-extras--biblatex-escape (value)
+  "Return VALUE with literal BibLaTeX braces escaped."
+  (string-replace "}" "\\}" (string-replace "{" "\\{" value)))
+
+(defun zotra-extras--omdb-na-to-nil (value)
+  "Return nil when OMDb VALUE is empty or the literal string N/A."
+  (when (and (stringp value)
+	     (not (string-empty-p value))
+	     (not (string= value "N/A")))
+    value))
+
+(defun zotra-extras--process-biblatex-entry (entry)
+  "Process BibLaTeX ENTRY using `zotra-after-get-bibtex-entry-hook'."
+  (with-temp-buffer
+    (insert "\n" entry)
+    (bibtex-mode)
+    (bibtex-set-dialect 'biblatex t)
+    (while (bibtex-next-entry)
+      (save-excursion
+	(save-restriction
+	  (bibtex-narrow-to-entry)
+	  (dolist (hook zotra-after-get-bibtex-entry-hook)
+	    (bibtex-beginning-of-entry)
+	    (ignore-errors (funcall hook))))))
+    (buffer-string)))
+
+(defun zotra-extras--insert-entry (entry bibfile)
+  "Insert BibLaTeX ENTRY into BIBFILE."
+  (with-current-buffer (or (find-buffer-visiting bibfile)
+			   (find-file-noselect bibfile))
+    (set-buffer-file-coding-system 'utf-8-unix t)
+    (save-excursion
+      (save-restriction
+	(widen)
+	(goto-char (point-max))
+	(unless (looking-at "^") (insert "\n"))
+	(insert entry)
+	(setq zotra-extras-most-recent-bibkey
+	      (zotra-extras--entry-key entry))))
+    (let ((coding-system-for-write 'utf-8-unix))
+      (save-buffer))))
+
+(defun zotra-extras--entry-key (entry)
+  "Return the BibTeX key in ENTRY."
+  (when (string-match "@[[:alnum:]]+[[:space:]\n]*{\\([^,\n]+\\)," entry)
+    (match-string 1 entry)))
 
 (defun zotra-extras--isbn-p (string)
   "Return non-nil if STRING looks like a bare ISBN-10 or ISBN-13."

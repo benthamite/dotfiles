@@ -6,7 +6,77 @@
 ;;; Code:
 
 (require 'ert)
+(require 'cl-lib)
 (require 'zotra-extras)
+
+;;;; IMDb fallback
+
+(ert-deftest zotra-extras-test-imdb-id-from-url ()
+  "Extract IMDb title IDs from title URLs."
+  (should
+   (equal (zotra-extras--imdb-id-from-url
+           "https://www.imdb.com/title/tt0073679/?ref_=fn_t_1")
+          "tt0073679")))
+
+(ert-deftest zotra-extras-test-imdb-id-from-url-rejects-non-title-url ()
+  "Return nil when a URL has no IMDb title ID."
+  (should-not
+   (zotra-extras--imdb-id-from-url "https://www.imdb.com/find/?q=carrie")))
+
+(ert-deftest zotra-extras-test-omdb-item-to-biblatex ()
+  "Convert OMDb movie metadata into a populated BibLaTeX movie entry."
+  (let* ((item '((Title . "Carrie")
+                 (Year . "1976")
+                 (Released . "03 Nov 1976")
+                 (Runtime . "98 min")
+                 (Genre . "Horror, Mystery")
+                 (Director . "Brian De Palma")
+                 (Writer . "Stephen King, Lawrence D. Cohen")
+                 (Plot . "Carrie White, a shy teenager, discovers her powers.")
+                 (Language . "English")
+                 (Country . "United States")
+                 (imdbID . "tt0073679")))
+         (entry (zotra-extras--omdb-item-to-biblatex
+                 item "https://www.imdb.com/title/tt0073679/?ref_=fn_t_1")))
+    (should (string-match-p "@movie{imdb-tt0073679," entry))
+    (should (string-match-p "title = {Carrie}" entry))
+    (should (string-match-p "date = {1976}" entry))
+    (should (string-match-p "director = {Brian De Palma}" entry))
+    (should (string-match-p "url = {https://www.imdb.com/title/tt0073679/}" entry))
+    (should (string-match-p "keywords = {Horror, Mystery}" entry))))
+
+(ert-deftest zotra-extras-test-add-entry-uses-omdb-for-imdb-url ()
+  "Add IMDb URLs through the OMDb fallback instead of `zotra-add-entry'."
+  (let ((file (make-temp-file "zotra-imdb-" nil ".bib"))
+        (zotra-extras-use-mullvad-p nil)
+        (zotra-after-get-bibtex-entry-hook nil)
+        (item '((Title . "Carrie")
+                (Year . "1976")
+                (Director . "Brian De Palma")
+                (Writer . "Hervé Villeré")
+                (Genre . "Horror, Mystery")
+                (Plot . "Carrie White, a shy teenager, discovers her powers.")
+                (imdbID . "tt0073679"))))
+    (unwind-protect
+        (cl-letf (((symbol-function 'zotra-extras--fetch-omdb-item)
+                   (lambda (imdb-id)
+                     (should (equal imdb-id "tt0073679"))
+                     item))
+                  ((symbol-function 'zotra-add-entry)
+                   (lambda (&rest _)
+                     (ert-fail "IMDb URLs should not use zotra-add-entry"))))
+          (zotra-extras-add-entry
+           "https://www.imdb.com/title/tt0073679/?ref_=fn_t_1" nil file t)
+          (with-temp-buffer
+            (insert-file-contents file)
+            (let ((contents (buffer-string)))
+              (should (string-match-p "@movie{imdb-tt0073679," contents))
+              (should (string-match-p "title = {Carrie}" contents))
+              (should-not (string-match-p "@online" contents))
+              (should (equal zotra-extras-most-recent-bibkey
+                             "imdb-tt0073679")))))
+      (when (file-exists-p file)
+        (delete-file file)))))
 
 ;;;; fix-octal-sequences
 

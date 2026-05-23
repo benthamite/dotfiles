@@ -22,13 +22,14 @@ This manual describes the features and customization options for the Emacs Lisp 
 The package provides the following capabilities:
 
 - *Enhanced entry addition.* An improved version of ~zotra-add-entry~ that auto-detects URLs from Elfeed and EWW buffers, falls back to an alternative backend on server errors, and automatically opens the new entry in =ebib= for review and processing ([[#h:adding-entries][Adding entries]]).
+- *IMDb fallback.* IMDb title URLs are imported through OMDb by IMDb ID, avoiding IMDb's browser challenge pages and region-dependent page metadata ([[#h:imdb-fallback][IMDb fallback]]).
 - *Batch processing.* A command to add multiple bibliographic entries from a file containing one URL per line ([[#h:batch-processing][Batch processing]]).
 - *VPN integration.* Optional routing of IMDb requests through Mullvad VPN to control the geographic origin of fetched metadata ([[#h:zotra-extras-use-mullvad-p][VPN for IMDb]]).
 - *Org protocol handler.* A protocol handler that enables adding entries directly from a web browser ([[#h:org-protocol][Org protocol handler]]).
 - *BibTeX cleanup.* Post-processing functions that fix octal encoding artifacts, set timestamps, and clean up newly imported entries ([[#h:bibtex-cleanup][BibTeX cleanup]]).
 - *Field fetching.* A utility function to retrieve a single bibliographic field for a URL without adding the full entry, with support for skipping excluded domains ([[#h:fetching-fields][Fetching fields]]).
 
-The package depends on =zotra= and =paths=, and optionally integrates with =ebib=, =ebib-extras=, =mullvad=, =org-ref=, and =tlon=.
+The package depends on =zotra= and =paths=, and optionally integrates with =bib=, =ebib=, =ebib-extras=, =mullvad=, =org-ref=, and =tlon=. IMDb fallback imports require ~bib-omdb-key~ to be configured.
 
 * User options
 :PROPERTIES:
@@ -102,6 +103,7 @@ The command ~zotra-extras-add-entry~ is the primary entry point for importing bi
 - *URL auto-detection.* When invoked from an =elfeed-show-mode= buffer, it copies the current entry's URL to the kill ring. In =eww-mode=, it copies the current page URL. In other modes, it pre-fills the prompt with the most recent kill ring entry.
 - *Bibliography file selection.* If no BIBFILE argument is provided, it prompts the user to choose one via ~zotra-extras-set-bibfile~ ([[#h:bibliography-file-selection][Bibliography file selection]]) and stores the choice in the variable ~zotra-extras-most-recent-bibfile~.
 - *VPN routing.* When ~zotra-extras-use-mullvad-p~ is non-nil and the URL matches =imdb.com=, the command connects through Mullvad VPN before fetching ([[#h:zotra-extras-use-mullvad-p][VPN for IMDb]]).
+- *IMDb fallback via OMDb.* When the input is an IMDb title URL, the command extracts the =tt= identifier and fetches movie metadata from OMDb instead of asking Zotero's IMDb translator to scrape the IMDb page ([[#h:imdb-fallback][IMDb fallback]]).
 - *ISBN fallback via Google Books.* When the input is a bare ISBN (10 or 13 digits) and the translation server's search translators return no results, the command automatically retries by looking up the ISBN on Google Books ([[#h:isbn-fallback][ISBN fallback]]).
 - *Backend fallback.* If the primary =zotra= backend fails with a JSON parse error indicating an internal server error, the command automatically retries with the =citoid= backend.
 - *Ebib integration.* After successfully adding the entry, it opens the new entry in =ebib= for review, unless the optional DO-NOT-OPEN argument is non-nil.
@@ -188,6 +190,18 @@ The function ~zotra-extras-add-multiple-urls~ is the non-interactive workhorse b
 The Zotero translation server's =/search= endpoint resolves bare ISBNs by querying a chain of library catalog translators (Library of Congress, BnF, K10plus, Open WorldCat). When the ISBN belongs to a publisher or edition not cataloged by any of these services, the search fails with "No items returned from any translator".
 
 To handle this, ~zotra-extras-add-entry~ ([[#h:adding-entries][Adding entries]]) detects the failure, checks whether the input is a bare ISBN using ~zotra-extras--isbn-p~, and retries the lookup by constructing a Google Books URL with ~zotra-extras--isbn-to-google-books-url~. The Google Books translator in the translation server's =/web= endpoint has broader ISBN coverage and typically succeeds where the catalog-based search translators fail.
+
+** IMDb fallback
+:PROPERTIES:
+:CUSTOM_ID: h:imdb-fallback
+:END:
+
+#+findex: zotra-extras--imdb-id-from-url
+#+findex: zotra-extras--fetch-omdb-item
+#+findex: zotra-extras--omdb-item-to-biblatex
+IMDb can return an AWS WAF challenge page to non-browser HTTP clients. When this happens, Zotero's IMDb translator receives no usable page metadata and the translation server falls back to an empty generic =@online= entry. To avoid this failure mode, ~zotra-extras-add-entry~ detects IMDb title URLs such as =https://www.imdb.com/title/tt0073679/=, extracts the =tt= identifier, fetches metadata from OMDb, and writes a populated BibLaTeX =@movie= entry directly.
+
+This path requires the =bib= package and a configured ~bib-omdb-key~. It still honors the BIBFILE and DO-NOT-OPEN arguments used by the normal adding workflow, writes the entry as UTF-8, and records the inserted key in ~zotra-extras-most-recent-bibkey~ so the entry can be opened in =ebib=.
 
 * Indices
 :PROPERTIES:

@@ -13451,6 +13451,16 @@ CLOCK: [2021-08-11 Wed 14:04]--[2021-08-11 Wed 14:09] =>  0:05
   (shr-cookie-policy t)
 
   :config
+  (defun ps/shr-set-target-ids-with-live-markers (orig-fun ids)
+    "Call ORIG-FUN with IDS whose markers still have buffers.
+IDS is the list of target-id marker pairs collected while SHR renders a
+document."
+    (funcall orig-fun
+             (seq-filter (lambda (id)
+                           (marker-buffer (cdr id)))
+                         ids)))
+  (advice-add 'shr--set-target-ids :around
+              #'ps/shr-set-target-ids-with-live-markers)
   (faces-extras-set-and-store-face-attributes
    '((shr-text :height 0.65)
      ;; doesn’t seem to be working?

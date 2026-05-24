@@ -13270,16 +13270,16 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
   (slack-message-custom-notifier 'ignore)
   (slack-activity-feed-watch-channels '("automation-alerts"
                                         "cybersecurity-ops"
-					"mirrorcode-compute-planning"
+                                        "mirrorcode-compute-planning"
                                         "ops-ai-api-providers"
                                         "pablo-caroline"
                                         "pablo-isabel"
                                         "pablo-maria"
                                         "pablo-ricardo"
-					"pablo-elliot"
-					"media-mentions-digest"
-					"analytics-digest"
-					"ai-productivity-digest"))
+                                        "pablo-elliot"
+                                        "media-mentions-digest"
+                                        "analytics-digest"
+                                        "ai-productivity-digest"))
   (slack-activity-feed-watch-channel-limit 15)
 
   :config

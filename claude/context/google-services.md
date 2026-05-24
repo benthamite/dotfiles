@@ -32,20 +32,20 @@ The personal-account OAuth grants are against the same `claude-code-gmail-490520
 
 ## Auth
 
-`gmail.py`, `sheets.py`, and the shared `claude/bin/_gworkspace_auth.py` helper support both accounts. The OAuth client (id and secret) is shared; only the refresh token differs per account. Env vars (set in `~/My Drive/dotfiles/shell/.zshenv-secrets`):
+`gmail.py`, `sheets.py`, and the shared `claude/bin/_gworkspace_auth.py` helper support both accounts. The OAuth client (id and secret) is shared; only the refresh token differs per account. These variables are no longer globally exported from `.zshenv-secrets`; the wrappers still accept explicit env vars for one-off overrides, but normally resolve values from the stores below:
 
 | Var | Account | Purpose |
 |---|---|---|
-| `GOOGLE_WORKSPACE_CLIENT_ID` | both | OAuth client ID (shared) |
-| `GOOGLE_WORKSPACE_CLIENT_SECRET` | both | OAuth client secret (shared) |
-| `GOOGLE_WORKSPACE_REFRESH_TOKEN` | epoch | refresh token authenticated as `pablo@epoch.ai` |
-| `GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL` | personal | refresh token authenticated as `pablo.stafforini@gmail.com` |
+| `GOOGLE_WORKSPACE_CLIENT_ID` | both | OAuth client ID (shared); stored in `pass` at `env/google-workspace-client-id` |
+| `GOOGLE_WORKSPACE_CLIENT_SECRET` | both | OAuth client secret (shared); stored in `pass` at `env/google-workspace-client-secret` |
+| `GOOGLE_WORKSPACE_REFRESH_TOKEN` | epoch | refresh token authenticated as `pablo@epoch.ai`; stored in 1Password at `op://Automations/Google Workspace OAuth - Pablo Epoch/credential` |
+| `GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL` | personal | refresh token authenticated as `pablo.stafforini@gmail.com`; stored in `pass` at `env/google-workspace-refresh-token-personal` and injected by the local wrappers |
 
 Pick the account with `--account epoch` (default) or `--account personal` on `gmail.py`/`sheets.py`. The wrapper exchanges the refresh token for an access token and caches per-account at `/tmp/gworkspace-access-token-<account>.json`.
 
 The Epoch refresh token also powers `gdoc --account epoch` (which has its own auth flow but uses the same OAuth client). The `gmail-epoch-triage` MCP is separate and exists only for the email-triage bot account (see below). The personal refresh token is used only by `gmail.py`/`sheets.py`; `gdoc --account personal` has its own token under `~/.config/gdoc/accounts/personal/`.
 
-If a token expires (`invalid_grant` errors), regenerate it with `claude/bin/update-gworkspace-refresh-token --account <epoch|personal>`. The helper opens the OAuth browser flow, updates the appropriate env var in `~/.zshenv-secrets`, and prints only status metadata, never token values. The manual recipe under "Generating a new refresh token" remains available for unusual recovery cases.
+If a token expires (`invalid_grant` errors), regenerate it with `claude/bin/update-gworkspace-refresh-token --account <epoch|personal>`. The helper opens the OAuth browser flow, updates the appropriate backing store (1Password for the Epoch token, `pass` for the personal token), and prints only status metadata, never token values. The manual recipe under "Generating a new refresh token" remains available for unusual recovery cases.
 
 ## Servers by account
 
@@ -117,9 +117,9 @@ print('REFRESH_TOKEN=' + creds.refresh_token)
 "
 ```
 
-When the browser opens, sign in as the account you want the token for: `pablo@epoch.ai` for `GOOGLE_WORKSPACE_REFRESH_TOKEN`, `pablo.stafforini@gmail.com` for `GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL`.
+When the browser opens, sign in as the account you want the token for: `pablo@epoch.ai` for `GOOGLE_WORKSPACE_REFRESH_TOKEN`, `pablo.stafforini@gmail.com` for `GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL`. The helper writes the Epoch token to 1Password at `op://Automations/Google Workspace OAuth - Pablo Epoch/credential` and the personal token to `pass` at `env/google-workspace-refresh-token-personal`.
 
-After printing, paste the value into the corresponding `export` line in `~/.zshenv-secrets`, then `rm /tmp/gworkspace-access-token-<account>.json` to flush the wrapper's token cache and `source ~/.zshenv-secrets` (or open a fresh shell).
+After printing, update the corresponding backing store, then `rm /tmp/gworkspace-access-token-<account>.json` to flush the wrapper's token cache. For the personal account, use `pass insert -m env/google-workspace-refresh-token-personal`; for the Epoch account, update the `credential` field of `Google Workspace OAuth - Pablo Epoch` in the Automations 1Password vault.
 
 ### Without printing the token to the terminal
 
@@ -192,7 +192,7 @@ After running, restart Claude Code so the MCP server picks up the new credential
 The cached access token expired or the refresh token was revoked. Try in order:
 
 1. `rm /tmp/gworkspace-access-token-<account>.json` (`<account>` is `epoch` or `personal` — match whichever account you ran with) and re-run the command. If a stale cache was the only problem, this fixes it.
-2. If still failing, regenerate the refresh token (see "Generating a new refresh token" above), update the matching env var (`GOOGLE_WORKSPACE_REFRESH_TOKEN` for epoch, `GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL` for personal) in `~/.zshenv-secrets`, then `source ~/.zshenv-secrets` (or open a fresh shell).
+2. If still failing, regenerate the refresh token (see "Generating a new refresh token" above), update the matching backing store (`op://Automations/Google Workspace OAuth - Pablo Epoch/credential` for epoch, `env/google-workspace-refresh-token-personal` in `pass` for personal), then clear `/tmp/gworkspace-access-token-<account>.json`.
 
 ### `invalid_grant` from `gdoc --account personal`
 
@@ -206,7 +206,7 @@ A browser opens; sign in as `pablo.stafforini@gmail.com`. The OAuth client is in
 
 ### gmail.py reports "ERROR: missing env var"
 
-`~/.zshenv-secrets` isn't being sourced into the active shell. Open a fresh terminal or `source ~/.zshenv-secrets`.
+The wrapper could not resolve one of the backing stores. Check that `pass show env/google-workspace-client-id`, `pass show env/google-workspace-client-secret`, and the account-specific refresh-token store are available.
 
 ### gmail-epoch-triage says "ACTION REQUIRED: Google Authentication Needed"
 

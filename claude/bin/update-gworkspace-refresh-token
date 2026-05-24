@@ -7,6 +7,7 @@ This helper intentionally prints only status metadata, never token values.
 from pathlib import Path
 import argparse
 import os
+import subprocess
 import sys
 
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -16,6 +17,23 @@ TOKEN_VARS = {
     "epoch": "GOOGLE_WORKSPACE_REFRESH_TOKEN",
     "personal": "GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL",
 }
+
+TOKEN_PASS_ENTRIES = {
+    "personal": "env/google-workspace-refresh-token-personal",
+}
+
+TOKEN_OP_ENTRIES = {
+    "epoch": {
+        "vault": "Automations",
+        "item": "Google Workspace OAuth - Pablo Epoch",
+        "field": "credential",
+    },
+}
+
+CLIENT_ID_ENV = "GOOGLE_WORKSPACE_CLIENT_ID"
+CLIENT_SECRET_ENV = "GOOGLE_WORKSPACE_CLIENT_SECRET"
+CLIENT_ID_PASS = "env/google-workspace-client-id"
+CLIENT_SECRET_PASS = "env/google-workspace-client-secret"
 
 SCOPES = {
     "epoch": [
@@ -47,6 +65,52 @@ def update_env_file(var, value, path):
     path.write_text("".join(lines))
 
 
+def update_pass_entry(entry, value):
+    subprocess.run(
+        ["pass", "insert", "-m", entry],
+        input=value,
+        check=True,
+        text=True,
+    )
+
+
+def read_pass_entry(entry):
+    result = subprocess.run(
+        ["pass", "show", entry],
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+    if result.returncode == 0 and result.stdout:
+        return result.stdout.splitlines()[0]
+    return ""
+
+
+def op_env():
+    env = os.environ.copy()
+    if "OP_SERVICE_ACCOUNT_TOKEN" not in env:
+        token = read_pass_entry("epoch/1password-service-account-token")
+        if token:
+            env["OP_SERVICE_ACCOUNT_TOKEN"] = token
+    return env
+
+
+def op_inject(spec, value):
+    subprocess.run(
+        [
+            "op",
+            "item",
+            "edit",
+            spec["item"],
+            "--vault",
+            spec["vault"],
+            f"{spec['field']}={value}",
+        ],
+        check=True,
+        env=op_env(),
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--account", choices=sorted(TOKEN_VARS), required=True)
@@ -54,11 +118,13 @@ def main():
     args = parser.parse_args()
 
     var = TOKEN_VARS[args.account]
+    client_id = os.environ.get(CLIENT_ID_ENV) or read_pass_entry(CLIENT_ID_PASS)
+    client_secret = os.environ.get(CLIENT_SECRET_ENV) or read_pass_entry(CLIENT_SECRET_PASS)
     flow = InstalledAppFlow.from_client_config(
         {
             "installed": {
-                "client_id": os.environ["GOOGLE_WORKSPACE_CLIENT_ID"],
-                "client_secret": os.environ["GOOGLE_WORKSPACE_CLIENT_SECRET"],
+                "client_id": client_id,
+                "client_secret": client_secret,
                 "redirect_uris": ["http://localhost"],
                 "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                 "token_uri": "https://oauth2.googleapis.com/token",
@@ -67,9 +133,21 @@ def main():
         SCOPES[args.account],
     )
     creds = flow.run_local_server(port=args.port, open_browser=True)
-    secrets = Path.home() / "My Drive" / "dotfiles" / "shell" / ".zshenv-secrets"
-    update_env_file(var, creds.refresh_token, secrets)
-    print(f"Updated {var} in {secrets}", file=sys.stderr)
+    if args.account in TOKEN_OP_ENTRIES:
+        spec = TOKEN_OP_ENTRIES[args.account]
+        op_inject(spec, creds.refresh_token)
+        print(
+            f"Updated {var} in 1Password item {spec['vault']}/{spec['item']}/{spec['field']}",
+            file=sys.stderr,
+        )
+    elif args.account in TOKEN_PASS_ENTRIES:
+        entry = TOKEN_PASS_ENTRIES[args.account]
+        update_pass_entry(entry, creds.refresh_token)
+        print(f"Updated {var} in pass entry {entry}", file=sys.stderr)
+    else:
+        secrets = Path.home() / "My Drive" / "dotfiles" / "shell" / ".zshenv-secrets"
+        update_env_file(var, creds.refresh_token, secrets)
+        print(f"Updated {var} in {secrets}", file=sys.stderr)
 
 
 if __name__ == "__main__":

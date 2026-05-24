@@ -1,0 +1,9 @@
+#!/bin/sh
+set -eu
+
+ANNAS_SECRET_KEY="${ANNAS_SECRET_KEY:-$(pass show tlon/core/annas-archive)}"
+ANNAS_BASE_URL="${ANNAS_BASE_URL:-annas-archive.gl}"
+ANNAS_DOWNLOAD_PATH="${ANNAS_DOWNLOAD_PATH:-$HOME/My Drive/repos/consensus-trader/papers}"
+
+export ANNAS_SECRET_KEY ANNAS_BASE_URL ANNAS_DOWNLOAD_PATH
+exec "$HOME/.local/bin/annas-mcp" "$@"

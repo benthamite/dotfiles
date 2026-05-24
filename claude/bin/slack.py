@@ -48,11 +48,29 @@ API = "https://slack.com/api"
 TOKEN_OP_PATH = "op://Automations/Slack MCP - Epoch Unofficial"
 
 
+def _pass_show(entry):
+    out = subprocess.run(
+        ["pass", "show", entry],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if out.returncode == 0 and out.stdout:
+        return out.stdout.splitlines()[0]
+    return ""
+
+
 def _op_read(path):
+    env = os.environ.copy()
+    if "OP_SERVICE_ACCOUNT_TOKEN" not in env:
+        token = _pass_show("epoch/1password-service-account-token")
+        if token:
+            env["OP_SERVICE_ACCOUNT_TOKEN"] = token
     out = subprocess.run(
         ["op", "read", path],
         check=False,
         capture_output=True,
+        env=env,
         text=True,
     )
     if out.returncode != 0:

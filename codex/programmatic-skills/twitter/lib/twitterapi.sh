@@ -14,7 +14,7 @@
 #   twitterapi.sh users <query> [--cursor=...]
 #
 # Output: raw JSON from the API on stdout. Non-zero exit on error.
-# Auth: resolves TWITTERAPI_API_KEY from the active account environment.
+# Auth: resolves TWITTERAPI_API_KEY from the active account or pass.
 
 set -euo pipefail
 
@@ -44,15 +44,39 @@ esac
 
 # --- Auth resolution -------------------------------------------------------
 
+resolve_tlon_twitterapi_key() {
+  if [[ -n "${TWITTERAPI_API_KEY_TLON:-}" ]]; then
+    printf '%s\n' "$TWITTERAPI_API_KEY_TLON"
+    return
+  fi
+  pass show env/TWITTERAPI_API_KEY_TLON
+}
+
+op_read_automations() {
+  if [[ -n "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]]; then
+    op read "$1"
+    return
+  fi
+  OP_SERVICE_ACCOUNT_TOKEN="$(pass show epoch/1password-service-account-token)" op read "$1"
+}
+
+resolve_epoch_twitterapi_key() {
+  if [[ -n "${TWITTERAPI_API_KEY_EPOCH:-}" ]]; then
+    printf '%s\n' "$TWITTERAPI_API_KEY_EPOCH"
+    return
+  fi
+  op_read_automations "op://Automations/twitterapi.io - Epoch/credential"
+}
+
 if [[ -z "${TWITTERAPI_API_KEY:-}" ]]; then
   config_dir="${CLAUDE_CONFIG_DIR:-}"
   config_dir="${config_dir%/}"
   case "$config_dir" in
     */.claude-epoch)
-      TWITTERAPI_API_KEY="${TWITTERAPI_API_KEY_EPOCH:-}"
+      TWITTERAPI_API_KEY="$(resolve_epoch_twitterapi_key)"
       ;;
     */.claude-personal|*/.claude-tlon|"")
-      TWITTERAPI_API_KEY="${TWITTERAPI_API_KEY_TLON:-}"
+      TWITTERAPI_API_KEY="$(resolve_tlon_twitterapi_key)"
       ;;
     *)
       echo "ERROR: unknown CLAUDE_CONFIG_DIR for twitterapi.sh: $config_dir" >&2
@@ -67,7 +91,7 @@ if [[ -z "${TWITTERAPI_API_KEY:-}" ]]; then
 fi
 
 if [[ "$TWITTERAPI_API_KEY" == op://* ]]; then
-  TWITTERAPI_API_KEY=$(op read "$TWITTERAPI_API_KEY")
+  TWITTERAPI_API_KEY=$(op_read_automations "$TWITTERAPI_API_KEY")
 fi
 
 export TWITTERAPI_API_KEY

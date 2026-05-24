@@ -228,7 +228,12 @@ The =twitter= skill is a programmatic Codex workflow for direct Twitter/X
 lookup, search, and save requests via the active skill copy's
 =lib/twitterapi.sh= curl wrapper around twitterapi.io. It supports tweet,
 thread/reply, timeline, profile, follower/following, user-search, and keyword
-search calls; documents the Codex wrapper path; protects API
+search calls; documents the Codex wrapper path; accepts explicit
+=TWITTERAPI_API_KEY=, falls back to account-specific env vars, and resolves
+account keys from the canonical account stores (=env/TWITTERAPI_API_KEY_TLON=
+in =pass= for personal/tlon and =op://Automations/twitterapi.io -
+Epoch/credential= in 1Password for epoch);
+protects API
 keys from logging; separates direct lookup from =twitter-digest=,
 =twitter-discover=, and =twitter-vet= workflows; and requires response,
 pagination, and saved-file verification before reporting completion.
@@ -237,7 +242,8 @@ The =twitter-digest= skill is a programmatic Codex workflow for fetching recent
 tweets from a named curated account list, triaging them against the list rubric,
 saving an org digest, and updating last-run state. It uses the active
 =fetch-tweets.sh= helper and active =twitterapi.sh= wrapper rather than MCP
-Twitter tools, keeps API keys out of logs, writes digest archives and last-run
+Twitter tools, resolves the personal/tlon API key from =pass= when no ambient
+env var is present, keeps API keys out of logs, writes digest archives and last-run
 timestamps only into the current tool's runtime tree, keeps curated list files
 synchronized through the sync policy, uses the shared =twitter-vet= registry,
 fails loudly when no listed account fetch succeeds, and verifies fetch

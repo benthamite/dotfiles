@@ -2,12 +2,8 @@
 
 Each Google Workspace account has its own refresh token. Both accounts share
 the same OAuth client (client_id, client_secret), differing only in which
-account the refresh token authenticates as. Env vars (set via .zshenv-secrets):
-
-    GOOGLE_WORKSPACE_CLIENT_ID                       (shared)
-    GOOGLE_WORKSPACE_CLIENT_SECRET                   (shared)
-    GOOGLE_WORKSPACE_REFRESH_TOKEN                   (account=epoch)
-    GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL          (account=personal)
+account the refresh token authenticates as. Values are resolved from the
+account's canonical secret store when the corresponding env var is absent.
 
 Access tokens are cached at /tmp/gworkspace-access-token-<account>.json for
 the rest of their lifetime so back-to-back calls don't refresh on every
@@ -16,6 +12,7 @@ invocation.
 
 import json
 import os
+import subprocess
 import sys
 import time
 import urllib.error
@@ -24,11 +21,54 @@ import urllib.request
 
 TOKEN_URL = "https://oauth2.googleapis.com/token"
 
+CLIENT_ID_ENV = "GOOGLE_WORKSPACE_CLIENT_ID"
+CLIENT_SECRET_ENV = "GOOGLE_WORKSPACE_CLIENT_SECRET"
+CLIENT_ID_PASS = "env/google-workspace-client-id"
+CLIENT_SECRET_PASS = "env/google-workspace-client-secret"
+
 # account name -> env var holding that account's refresh token
 REFRESH_TOKEN_ENV = {
     "epoch": "GOOGLE_WORKSPACE_REFRESH_TOKEN",
     "personal": "GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL",
 }
+
+REFRESH_TOKEN_PASS = {
+    "personal": "env/google-workspace-refresh-token-personal",
+}
+
+REFRESH_TOKEN_OP = {
+    "epoch": "op://Automations/Google Workspace OAuth - Pablo Epoch/credential",
+}
+
+
+def _pass_show(entry):
+    result = subprocess.run(
+        ["pass", "show", entry],
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+    if result.returncode == 0 and result.stdout:
+        return result.stdout.splitlines()[0]
+    return ""
+
+
+def _op_read(ref):
+    env = os.environ.copy()
+    if "OP_SERVICE_ACCOUNT_TOKEN" not in env:
+        token = _pass_show("epoch/1password-service-account-token")
+        if token:
+            env["OP_SERVICE_ACCOUNT_TOKEN"] = token
+    result = subprocess.run(
+        ["op", "read", ref],
+        capture_output=True,
+        check=False,
+        env=env,
+        text=True,
+    )
+    if result.returncode == 0:
+        return result.stdout.strip()
+    return ""
 
 
 def _cache_path(account):
@@ -41,15 +81,26 @@ def _read_env(account):
             f"ERROR: unknown account {account!r}; valid: {sorted(REFRESH_TOKEN_ENV)}\n"
         )
         sys.exit(1)
-    try:
-        return (
-            os.environ["GOOGLE_WORKSPACE_CLIENT_ID"],
-            os.environ["GOOGLE_WORKSPACE_CLIENT_SECRET"],
-            os.environ[REFRESH_TOKEN_ENV[account]],
-        )
-    except KeyError as e:
-        sys.stderr.write(f"ERROR: missing env var {e} (account={account})\n")
+    refresh_token = os.environ.get(REFRESH_TOKEN_ENV[account])
+    if not refresh_token and account in REFRESH_TOKEN_PASS:
+        refresh_token = _pass_show(REFRESH_TOKEN_PASS[account])
+    if not refresh_token and account in REFRESH_TOKEN_OP:
+        refresh_token = _op_read(REFRESH_TOKEN_OP[account])
+
+    client_id = os.environ.get(CLIENT_ID_ENV) or _pass_show(CLIENT_ID_PASS)
+    client_secret = os.environ.get(CLIENT_SECRET_ENV) or _pass_show(CLIENT_SECRET_PASS)
+
+    missing = []
+    if not client_id:
+        missing.append(CLIENT_ID_ENV)
+    if not client_secret:
+        missing.append(CLIENT_SECRET_ENV)
+    if not refresh_token:
+        missing.append(REFRESH_TOKEN_ENV[account])
+    if missing:
+        sys.stderr.write(f"ERROR: missing credential(s) {missing} (account={account})\n")
         sys.exit(1)
+    return client_id, client_secret, refresh_token
 
 
 def _refresh_access_token(account):

@@ -30,7 +30,7 @@
 
 ## Agents
 
-- Make liberal use of subagents and agent teams.
+- Make liberal use of subagents and agent teams where available and permitted.
 - Always use the most capable model available for subagents; prefer performance over speed/cost.
 
 ## MCP servers

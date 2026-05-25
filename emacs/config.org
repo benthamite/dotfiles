@@ -9035,7 +9035,6 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (claude-code-mode)
 
   :bind
-  ("H-e" . agent-menu)
   ("H-E" . claude-code-transient)
   (:repeat-map my-claude-code-map
                ("M" . claude-code-cycle-mode))
@@ -9059,7 +9058,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 (use-package agent
   :ensure (:host github
                  :repo "benthamite/agent")
-  :demand t
+  :defer t
   :config
   (require 'agent-claude)
   (require 'agent-codex)
@@ -9076,7 +9075,10 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 
   (agent-codex-accounts '(("tlon"     . "~/.codex-tlon")
 			     ("epoch"    . "~/.codex-epoch")))
-  
+
+  :bind
+  ("H-e" . agent-menu)
+
   :config
   (with-eval-after-load 'debug
     (bind-keys :map debugger-mode-map
@@ -9284,6 +9286,7 @@ servers use the correct version.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package llm
+  :defer t
   :custom
   (llm-warn-on-nonfree nil))
 #+end_src
@@ -13824,9 +13827,7 @@ If the lines are breaking at the wrong places, set ~shr-width~ to the right valu
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package elfeed-tube
-  :ensure (:wait t)
   :after elfeed
-  :demand t
   :custom
   (elfeed-tube-auto-save-p t)
 

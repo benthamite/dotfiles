@@ -544,11 +544,9 @@ or parse those files or dump the environment. This closes the gap where a
 command could contain no literal secret but still print one by reading a
 credential config.
 
-The =UserPromptSubmit= hook runs =civility-guard.sh= before Emacs lifecycle
-dispatch. It blocks obvious abusive prompts directed at the assistant, asks for
-a rewrite on the first violation, and locks the session on a second violation
-until the reset phrase =I commit to a civil reset.= is submitted. The matcher is
-empty because =UserPromptSubmit= has no tool name.
+The =UserPromptSubmit= hook forwards lifecycle state through
+=codex-hook-wrapper=. The matcher is empty because =UserPromptSubmit= has no
+tool name.
 
 Completion-claim discipline is instruction-level, not currently hook-enforced.
 The paired Claude and Codex global instructions require agents not to say a bug

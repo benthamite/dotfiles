@@ -386,6 +386,15 @@ existing target files.
 
 These are not invoked directly. They supply background knowledge when Claude works in this repo.
 
+**** codex-app-browser
+
+Claude-side pointer for the Codex-only =$codex-app-browser= handoff workflow.
+It documents that the source of truth lives in
+=codex/skills/codex-app-browser/SKILL.md=, that Codex should bootstrap the
+Browser plugin with =setupBrowserRuntime=, and that an empty
+=agent.browsers.list()= means the Codex App/browser backend was not attached
+and should trigger =codex-app-handoff= rather than a generic fallback.
+
 **** dotfiles-context
 :PROPERTIES:
 :ID:       3AB926D5-2116-4864-93F2-B6D33CE832C5

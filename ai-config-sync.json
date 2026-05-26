@@ -45,10 +45,10 @@
     },
     {
       "name": "codex-app-browser",
-      "claude": null,
+      "claude": "claude/skills/codex-app-browser/SKILL.md",
       "codex": "codex/skills/codex-app-browser/SKILL.md",
       "status": "codex-only",
-      "note": "Codex App Browser Use handoff workflow; Claude Code has no equivalent Codex App browser runtime."
+      "note": "Codex App Browser Use handoff workflow. Claude Code has no equivalent Codex App browser runtime, so the Claude artifact is a pointer that routes users back to the Codex source-of-truth workflow instead of attempting parity."
     },
     {
       "name": "design-audit",

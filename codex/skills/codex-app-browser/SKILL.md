@@ -7,7 +7,7 @@ description: Use when the user explicitly invokes `$codex-app-browser`, asks to 
 
 This is a Codex-only operational skill. Do not mirror it into Claude Code: it exists to prevent false "browser unavailable" claims when Pablo moves a Codex CLI/Emacs session into the Codex App so the in-app browser is available.
 
-Use this skill together with the bundled `browser-use:browser` skill. This skill explains the handoff and the failure modes; the bundled skill is the authoritative API reference.
+Use this skill together with the bundled `browser-use:browser` skill. This skill explains the handoff and the failure modes; the bundled skill is the authoritative API reference. If this skill's sample code conflicts with the bundled browser skill, trust the bundled browser skill and update this skill.
 
 ## Root cause to remember
 
@@ -47,7 +47,7 @@ The skill must provide the environment-specific context automatically:
 - If this is already a Codex App turn, run the Browser Use preflight immediately.
 - If signed-in sites, browser extensions, or an existing browser profile are needed, choose Computer Use or a structured service connector rather than the unauthenticated in-app browser.
 
-If the user starts in Codex CLI or Emacs and asks for browser work, do not say the task is impossible. Run:
+If the user starts in Codex CLI or Emacs and asks for browser work, or if the Browser runtime loads but reports no available browsers, do not say the task is impossible. Run:
 
 ```bash
 codex-app-handoff
@@ -69,8 +69,12 @@ Use the plugin root from the bundled `browser-use:browser` skill, not a hard-cod
 
 ```js
 if (!globalThis.agent) {
-  const { setupAtlasRuntime } = await import("<plugin root>/scripts/browser-client.mjs");
-  await setupAtlasRuntime({ globals: globalThis });
+  const { setupBrowserRuntime } = await import("<plugin root>/scripts/browser-client.mjs");
+  await setupBrowserRuntime({ globals: globalThis });
+}
+const availableBrowsers = await agent.browsers.list();
+if (!availableBrowsers.includes("iab")) {
+  throw new Error(`In-app browser backend not registered. Available browsers: ${JSON.stringify(availableBrowsers)}`);
 }
 if (!globalThis.browser) {
   globalThis.browser = await agent.browsers.get("iab");
@@ -83,6 +87,8 @@ console.log(JSON.stringify({ ok: true, title: await tab.title(), url: await tab.
 ```
 
 If that succeeds, continue with normal Browser Use operations via `browser` and `tab`.
+
+If the guarded cell reports `Available browsers: []`, treat it as a context/backend attachment failure, not as a task failure and not as evidence that Browser Use is impossible. Run `codex-app-handoff` immediately if it has not already been run in this turn, then tell Pablo the exact thread was opened and that the copied continuation prompt must be sent from the Codex App. When Pablo sends the next message from the App, retry the guarded cell before doing anything else.
 
 ## What not to do
 
@@ -101,4 +107,4 @@ Report the exact failure in plain language and give the next practical option. K
 
 > I tried the Browser Use bootstrap from the Codex App session, but it failed with `<error>`. That means I cannot control the in-app browser from this turn. The clean fallback is `<fallback>`.
 
-Only then choose a fallback, and only if it matches the user's constraints.
+If the failure is `In-app browser backend not registered` or `Browser is not available: iab`, the next practical option is not a generic fallback. Run `codex-app-handoff` and ask Pablo to send the copied continuation prompt from the Codex App thread. Only choose another browser-control path if Pablo explicitly permits it or the task does not require the in-app browser.

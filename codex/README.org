@@ -122,6 +122,13 @@ Skill frontmatter descriptions are loaded for routing, so keep them concise:
 preserve user phrasing, scope boundaries, and important near-miss exclusions,
 but move implementation details to the skill body.
 
+=codex-app-browser= is a Codex-only operational skill for the Codex App
+in-app browser handoff. It must track the installed Browser plugin bootstrap
+API, currently =setupBrowserRuntime=. If the runtime loads but
+=agent.browsers.list()= is empty or lacks =iab=, agents should treat that as a
+Codex App/backend attachment failure and run =codex-app-handoff= rather than
+falling back silently.
+
 To reduce context pressure from stale skills, run:
 
 #+begin_src sh

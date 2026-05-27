@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper PermissionRequest --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper PermissionRequest --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
             "timeout": 30
           }
         ]
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper UserPromptSubmit --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper UserPromptSubmit --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
             "timeout": 30
           }
         ]
@@ -125,7 +125,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper PreToolUse --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper PreToolUse --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
             "timeout": 30
           }
         ]
@@ -177,7 +177,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper PostToolUse --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper PostToolUse --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
             "timeout": 30
           }
         ]
@@ -189,7 +189,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper SessionStart --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper SessionStart --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
             "timeout": 30
           }
         ]
@@ -201,7 +201,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper Stop --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper Stop --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
             "timeout": 30
           }
         ]
@@ -213,7 +213,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper PreCompact --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper PreCompact --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
             "timeout": 30
           }
         ]
@@ -225,7 +225,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/pablostafforini/.config/emacs-profiles/8.2.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper PostCompact --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
+            "command": "/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/codex/bin/codex-hook-wrapper PostCompact --emacsclient /opt/homebrew/bin/emacsclient --socket-name server",
             "timeout": 30
           }
         ]

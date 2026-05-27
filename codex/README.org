@@ -518,6 +518,14 @@ the audit scope.
 =~/.codex/hooks.json= points to =codex/hooks.json=.  Updating the tracked files
 therefore updates the live global Codex configuration.
 
+The Emacs =codex= package also touches these files when =codex-mode= ensures
+CLI hooks are configured. Its hook installer must preserve the live symlinks
+when writing =config.toml= or =hooks.json=; otherwise Codex-generated state is
+divorced from the tracked files and =bin/ai-config-sync audit= reports live
+symlink drift. It owns all eight =codex-hook-wrapper= lifecycle entries,
+including =PreCompact= and =PostCompact=, so switching Emacs profiles replaces
+stale profile-specific wrapper paths instead of appending duplicates.
+
 Codex shell hooks are registered for both legacy =Bash= tool events and the
 current =exec_command=/=functions.exec_command= tool names. The hook scripts
 read both =command= and =cmd= payload fields so commit gates, security guards,
@@ -563,12 +571,14 @@ treating Markdown READMEs as the preferred manual format for repos that already
 have Org documentation.
 
 =codex/config.toml= sets the default model, reasoning effort, fast service
-tier, approval policy, sandbox mode, light TUI theme, and personality; enables Codex hooks,
-plugins, the goals UI, terminal resize reflow, and local notice preferences
-such as hiding the rate-limit model nudge; records trusted project roots; and
-records model-availability and hook-trust state written by Codex. It also
-tracks enabled Codex plugins, including the curated GitHub, Browser, and
-Superpowers plugins used by interactive sessions.
+tier, approval policy, sandbox mode, light TUI theme, desktop/app preferences,
+desktop turn-end notifications, and personality; enables Codex hooks, plugins,
+the goals UI, terminal resize reflow, and local notice preferences such as
+hiding the rate-limit model nudge; records trusted project roots; and records
+model-availability and hook-trust state written by Codex. It also tracks enabled
+Codex plugins, including the curated GitHub, Browser, Chrome, and Superpowers
+plugins used by interactive sessions, and the Codex App =node_repl= MCP server
+used by Browser/Chrome automation.
 When =agent= starts Codex with an account-specific =CODEX_HOME= such as
 =~/.codex-epoch=, Codex may write account-home hook trust entries into this
 tracked config. Those entries are kept here with the ordinary global

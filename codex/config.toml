@@ -7,10 +7,13 @@ suppress_unstable_features_warning = true
 approvals_reviewer = "auto_review"
 personality = "pragmatic"
 
+notify = ["/Users/pablostafforini/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient", "turn-ended"]
+
 [features]
 hooks = true
 terminal_resize_reflow = true
 goals = true
+js_repl = false
 
 [projects."/Users/pablostafforini/My Drive/repos/consensus-trader"]
 trust_level = "trusted"
@@ -312,6 +315,21 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/markdown-mode"]
 trust_level = "trusted"
 
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/slack-emoji-to-asana"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/meetings"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/link-archiver"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/ai-tools-rollout"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/spam-filtering"]
+trust_level = "trusted"
+
 [tui]
 theme = "light"
 
@@ -319,12 +337,12 @@ theme = "light"
 "gpt-5.5" = 4
 
 [marketplaces.openai-bundled]
-last_updated = "2026-05-19T21:24:53Z"
+last_updated = "2026-05-26T12:21:58Z"
 source_type = "local"
 source = "/Users/pablostafforini/.codex/.tmp/bundled-marketplaces/openai-bundled"
 
 [marketplaces.openai-primary-runtime]
-last_updated = "2026-05-19T12:48:59Z"
+last_updated = "2026-05-25T22:49:04Z"
 source_type = "local"
 source = "/Users/pablostafforini/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
 
@@ -347,6 +365,9 @@ enabled = true
 enabled = true
 
 [plugins."browser@openai-bundled"]
+enabled = true
+
+[plugins."chrome@openai-bundled"]
 enabled = true
 
 [hooks.state]
@@ -442,7 +463,7 @@ trusted_hash = "sha256:a63a4068a3cb56d0ca7d13c09ed2850f05163dfa08afaf282fa1567e0
 trusted_hash = "sha256:a63a4068a3cb56d0ca7d13c09ed2850f05163dfa08afaf282fa1567e0745c0ee"
 
 [hooks.state."/Users/pablostafforini/.codex-epoch/hooks.json:user_prompt_submit:0:0"]
-trusted_hash = "sha256:9e0b8d41b9eb1e6e58248ea8f8fdede0aeab1be40d9e8e64b413513daf94c9e0"
+trusted_hash = "sha256:a26be4a779a3df7d64e93948953c7b288c444444e78df682b6048b0a1a2d05ca"
 
 [hooks.state."/Users/pablostafforini/.codex-epoch/hooks.json:user_prompt_submit:0:1"]
 trusted_hash = "sha256:a26be4a779a3df7d64e93948953c7b288c444444e78df682b6048b0a1a2d05ca"
@@ -671,6 +692,24 @@ trusted_hash = "sha256:9e0b8d41b9eb1e6e58248ea8f8fdede0aeab1be40d9e8e64b413513da
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:user_prompt_submit:0:1"]
 trusted_hash = "sha256:a26be4a779a3df7d64e93948953c7b288c444444e78df682b6048b0a1a2d05ca"
 
+[hooks.state."/Users/pablostafforini/.codex-epoch/hooks.json:pre_tool_use:4:0"]
+trusted_hash = "sha256:84371657412f1c7824551cba5781509e482cf1b519d53be1454604839414ca22"
+
+[hooks.state."/Users/pablostafforini/.codex-epoch/hooks.json:permission_request:1:0"]
+trusted_hash = "sha256:b49c2b9ef2d97322cecce7db38027e3497e06c90d93ab65ed458be304a630c1c"
+
+[hooks.state."/Users/pablostafforini/.codex-epoch/hooks.json:post_tool_use:3:0"]
+trusted_hash = "sha256:abac80d7a57f38b60bdc489649bf84ef65b57dc45c8e28505f21831886f8a94c"
+
+[hooks.state."/Users/pablostafforini/.codex-epoch/hooks.json:session_start:1:0"]
+trusted_hash = "sha256:7e73e464ed5904836a7ff9b6a6bb4ad2758a779a4659f7116cd2a0b0257453cd"
+
+[hooks.state."/Users/pablostafforini/.codex-epoch/hooks.json:user_prompt_submit:1:0"]
+trusted_hash = "sha256:1fbf7a34bd77f8d65553ebc64857457356643d4c85f620dd49d67faf794b95db"
+
+[hooks.state."/Users/pablostafforini/.codex-epoch/hooks.json:stop:1:0"]
+trusted_hash = "sha256:8e7d0a878bbfe3eadfd378f7248688eba3696a45b7083d9a3ec17480cc37cebe"
+
 [[skills.config]]
 path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/google-sheets-comments/SKILL.md"
 enabled = false
@@ -685,5 +724,27 @@ enabled = false
 
 [notice]
 hide_rate_limit_model_nudge = true
+
+[desktop]
+ambient-suggestions-enabled = false
+conversationDetailMode = "STEPS_COMMANDS"
+default-service-tier = "priority"
+
+[mcp_servers.node_repl]
+args = []
+command = "/Applications/Codex.app/Contents/Resources/node_repl"
+startup_timeout_sec = 120
+
+[mcp_servers.node_repl.env]
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
+BROWSER_USE_MARKETPLACE_NAME = "openai-bundled"
+CODEX_CLI_PATH = "/Applications/Codex.app/Contents/Resources/codex"
+CODEX_HOME = "/Users/pablostafforini/.codex"
+NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS = "1000"
+NODE_REPL_NODE_MODULE_DIRS = ""
+NODE_REPL_NODE_PATH = "/Applications/Codex.app/Contents/Resources/node"
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "167fdf579477181fba1773c1efb067b00c5a64fe85dafb50a2001bde198dc739"
+NODE_REPL_TRUSTED_CODE_PATHS = "/Users/pablostafforini/.codex"
+NODE_REPL_UNTRUSTED_ENV_ALLOWLIST = "BROWSER_USE_MARKETPLACE_NAME"
 
 # END skill-prune disabled skills

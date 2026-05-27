@@ -44,6 +44,7 @@ authoritative cross-tool path-role table lives in =../agents/README.org=.
 ├── bin/gmail.py                      ← Gmail API CLI (--account epoch|personal; attachments supported for send/draft/reply)
 ├── bin/sheets.py                     ← Sheets API CLI (--account epoch|personal)
 ├── bin/update-gworkspace-refresh-token ← refreshes Google Workspace OAuth tokens without printing token values
+├── ../bin/gmail-maildir-sync         ← mu4e Gmail API sync/send wrapper that resolves migrated Epoch OAuth credentials
 ├── bin/slack.py                      ← Slack web-API CLI, including permalink/thread fetches with user-ID resolution
 ├── bin/copy-slack-draft              ← Copies Slack reply drafts to Emacs kill ring and prefills the reply composer
 ├── bin/ai-provider-key               ← Creates/stores project-scoped AI-provider runtime keys

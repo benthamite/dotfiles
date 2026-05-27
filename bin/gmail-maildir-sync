@@ -1,4 +1,46 @@
-#!/bin/bash
+#!/bin/sh
+set -eu
+
 # Entry-point wrapper for gmail-maildir-sync Python package.
-export PYTHONPATH="$HOME/My Drive/repos/gmail-maildir-sync${PYTHONPATH:+:$PYTHONPATH}"
-exec python3 -m gmail_maildir_sync "$@"
+repo="$HOME/My Drive/repos/gmail-maildir-sync"
+uv_bin="${UV_BIN:-$HOME/.local/bin/uv}"
+if [ ! -x "$uv_bin" ]; then
+  uv_bin="$(command -v uv || true)"
+fi
+if [ -z "$uv_bin" ]; then
+  printf '%s\n' "gmail-maildir-sync: uv not found" >&2
+  exit 127
+fi
+
+pass_first_line() {
+  pass show "$1" 2>/dev/null | sed -n '1p'
+}
+
+op_read() {
+  if [ -n "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]; then
+    op read "$1" 2>/dev/null || true
+  else
+    token="$(pass_first_line epoch/1password-service-account-token)"
+    if [ -n "$token" ]; then
+      OP_SERVICE_ACCOUNT_TOKEN="$token" op read "$1" 2>/dev/null || true
+    fi
+  fi
+}
+
+GOOGLE_WORKSPACE_CLIENT_ID="${GOOGLE_WORKSPACE_CLIENT_ID:-$(pass_first_line env/google-workspace-client-id)}"
+GOOGLE_WORKSPACE_CLIENT_SECRET="${GOOGLE_WORKSPACE_CLIENT_SECRET:-$(pass_first_line env/google-workspace-client-secret)}"
+GOOGLE_WORKSPACE_REFRESH_TOKEN="${GOOGLE_WORKSPACE_REFRESH_TOKEN:-$(op_read 'op://Automations/Google Workspace OAuth - Pablo Epoch/credential')}"
+EPOCH_EMAIL="${EPOCH_EMAIL:-pablo@epoch.ai}"
+
+export GOOGLE_WORKSPACE_CLIENT_ID
+export GOOGLE_WORKSPACE_CLIENT_SECRET
+export GOOGLE_WORKSPACE_REFRESH_TOKEN
+export EPOCH_EMAIL
+export PYTHONPATH="$repo${PYTHONPATH:+:$PYTHONPATH}"
+
+exec "$uv_bin" run \
+  --no-project \
+  --with google-api-python-client \
+  --with google-auth-oauthlib \
+  --with google-auth \
+  python -m gmail_maildir_sync "$@"

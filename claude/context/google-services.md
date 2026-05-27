@@ -32,7 +32,7 @@ The personal-account OAuth grants are against the same `claude-code-gmail-490520
 
 ## Auth
 
-`gmail.py`, `sheets.py`, and the shared `claude/bin/_gworkspace_auth.py` helper support both accounts. The OAuth client (id and secret) is shared; only the refresh token differs per account. These variables are no longer globally exported from `.zshenv-secrets`; the wrappers still accept explicit env vars for one-off overrides, but normally resolve values from the stores below:
+`gmail.py`, `sheets.py`, `bin/gmail-maildir-sync`, and the shared `claude/bin/_gworkspace_auth.py` helper support the migrated secret layout. The OAuth client (id and secret) is shared; only the refresh token differs per account. These variables are no longer globally exported from `.zshenv-secrets`; the wrappers still accept explicit env vars for one-off overrides, but normally resolve values from the stores below:
 
 | Var | Account | Purpose |
 |---|---|---|
@@ -41,7 +41,7 @@ The personal-account OAuth grants are against the same `claude-code-gmail-490520
 | `GOOGLE_WORKSPACE_REFRESH_TOKEN` | epoch | refresh token authenticated as `pablo@epoch.ai`; stored in 1Password at `op://Automations/Google Workspace OAuth - Pablo Epoch/credential` |
 | `GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL` | personal | refresh token authenticated as `pablo.stafforini@gmail.com`; stored in `pass` at `env/google-workspace-refresh-token-personal` and injected by the local wrappers |
 
-Pick the account with `--account epoch` (default) or `--account personal` on `gmail.py`/`sheets.py`. The wrapper exchanges the refresh token for an access token and caches per-account at `/tmp/gworkspace-access-token-<account>.json`.
+Pick the account with `--account epoch` (default) or `--account personal` on `gmail.py`/`sheets.py`. The wrapper exchanges the refresh token for an access token and caches per-account at `/tmp/gworkspace-access-token-<account>.json`. `bin/gmail-maildir-sync` is Epoch-only and injects the Epoch Google Workspace credentials before running the Python package used by mu4e.
 
 The Epoch refresh token also powers `gdoc --account epoch` (which has its own auth flow but uses the same OAuth client). The `gmail-epoch-triage` MCP is separate and exists only for the email-triage bot account (see below). The personal refresh token is used only by `gmail.py`/`sheets.py`; `gdoc --account personal` has its own token under `~/.config/gdoc/accounts/personal/`.
 

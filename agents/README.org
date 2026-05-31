@@ -282,7 +282,7 @@ Some hooks cannot be synchronized one-for-one:
 - Claude =Read=/=Grep=/=Glob= hooks do not have equivalent Codex events here.
 - Claude =Skill= hooks do not have equivalent Codex skill hook events here.
 - Claude Notification hooks are replaced by Codex lifecycle forwarding through
-  =codex-hook-wrapper= entries in =codex/hooks.json=.
+  =codex-hook-wrapper= entries in =codex/hooks.json= for Emacs-owned sessions.
 - Chrome-specific Claude hooks have no Codex counterpart.
 
 These cases are recorded in =ai-config-sync.json= rather than treated as drift.

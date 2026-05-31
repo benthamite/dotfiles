@@ -525,6 +525,9 @@ divorced from the tracked files and =bin/ai-config-sync audit= reports live
 symlink drift. It owns all eight =codex-hook-wrapper= lifecycle entries,
 including =PreCompact= and =PostCompact=, so switching Emacs profiles replaces
 stale profile-specific wrapper paths instead of appending duplicates.
+Those global entries are safe for non-Emacs Codex sessions: the wrapper
+consumes hook input and exits successfully when =CODEX_BUFFER_NAME= is absent,
+so only sessions launched by =codex.el= are forwarded to =emacsclient=.
 
 Codex shell hooks are registered for both legacy =Bash= tool events and the
 current =exec_command=/=functions.exec_command= tool names. The hook scripts
@@ -552,17 +555,18 @@ or parse those files or dump the environment. This closes the gap where a
 command could contain no literal secret but still print one by reading a
 credential config.
 
-The =UserPromptSubmit= hook forwards lifecycle state through
-=codex-hook-wrapper=. The matcher is empty because =UserPromptSubmit= has no
-tool name.
+The =UserPromptSubmit= hook forwards lifecycle state for Emacs-owned sessions
+through =codex-hook-wrapper=. The matcher is empty because =UserPromptSubmit=
+has no tool name.
 
 Completion-claim discipline is instruction-level, not currently hook-enforced.
 The paired Claude and Codex global instructions require agents not to say a bug
 is fixed, resolved, working, or done unless the exact reported user-visible
 behavior has been verified after the change; final answers after changes must
 include an explicit =Verification:= or =Not verified end-to-end:= sentence.
-The Codex =Stop= hook currently forwards lifecycle state through
-=codex-hook-wrapper=; it does not run a completion-claim guard.
+The Codex =Stop= hook currently forwards lifecycle state for Emacs-owned
+sessions through =codex-hook-wrapper=; it does not run a completion-claim
+guard.
 
 The Elisp documentation gate accepts =doc/*.org= manuals, root =README.org=
 manuals, and root =README.md= as a fallback only when the repo has no Org

@@ -206,32 +206,19 @@
 
 ;;;; org-agenda
 
-(ert-deftest org-extras-test-agenda-switch-suppresses-file-opening-hooks ()
-  "Suppress expensive hooks when opening files for agenda setup."
+(ert-deftest org-extras-test-agenda-switch-preserves-mode-hooks ()
+  "Preserve mode hooks while building the agenda."
   (let ((observed-hooks nil)
-        (org-extras-bbdb-anniversaries-heading "anniversary-id")
-        (paths-file-config "/tmp/config.org"))
+        (paths-file-config "/tmp/config.org")
+        (change-major-mode-after-body-hook '(change-hook))
+        (find-file-hook '(find-hook))
+        (org-mode-hook '(org-hook))
+        (outline-mode-hook '(outline-hook))
+        (text-mode-hook '(text-hook)))
     (cl-letf (((symbol-function 'window-extras-split-if-unsplit) #'ignore)
               ((symbol-function 'winum-select-window-1) #'ignore)
-              ((symbol-function 'find-file)
-               (lambda (_)
-                 (push (list change-major-mode-after-body-hook
-                             find-file-hook
-                             org-mode-hook
-                             outline-mode-hook
-                             text-mode-hook)
-                       observed-hooks)))
-              ((symbol-function 'org-roam-extras-id-goto)
-               (lambda (_)
-                 (push (list change-major-mode-after-body-hook
-                             find-file-hook
-                             org-mode-hook
-                             outline-mode-hook
-                             text-mode-hook)
-                       observed-hooks)))
-              ((symbol-function 'org-narrow-to-subtree) #'ignore)
-              ((symbol-function 'org-end-of-meta-data) #'ignore)
-              ((symbol-function 'looking-at) (lambda (_) t))
+              ((symbol-function 'find-file) #'ignore)
+              ((symbol-function 'org-extras-agenda-toggle-anniversaries) #'ignore)
               ((symbol-function 'org-buffer-list) (lambda (&optional _) nil))
               ((symbol-function 'org-agenda)
                (lambda (&rest _)
@@ -242,9 +229,41 @@
                              text-mode-hook)
                        observed-hooks))))
       (org-extras-agenda-switch-to-agenda-current-day)
-      (should observed-hooks)
-      (should (seq-every-p (lambda (hooks) (equal hooks '(nil nil nil nil nil)))
-                           observed-hooks)))))
+      (should (equal observed-hooks
+                     '(((change-hook) nil (org-hook) (outline-hook) (text-hook))))))))
+
+(ert-deftest org-extras-test-anniversary-toggle-suppresses-temp-buffer-hooks ()
+  "Suppress presentation hooks only when opening anniversary file internally."
+  (let ((observed-hooks nil)
+        (org-extras-bbdb-anniversaries-heading "anniversary-id")
+        (change-major-mode-after-body-hook '(change-hook))
+        (find-file-hook '(find-hook))
+        (org-mode-hook '(org-hook))
+        (outline-mode-hook '(outline-hook))
+        (text-mode-hook '(text-hook)))
+    (let ((file (make-temp-file "org-extras-anniversary" nil ".org")))
+      (unwind-protect
+          (progn
+            (with-temp-file file
+              (insert "* Birthdays\n:PROPERTIES:\n:ID: anniversary-id\n:END:\n"))
+            (let ((real-find-file-noselect (symbol-function 'find-file-noselect)))
+              (cl-letf (((symbol-function 'org-id-find) (lambda (_) (cons file 1)))
+                        ((symbol-function 'find-file-noselect)
+                         (lambda (&rest args)
+                           (push (list change-major-mode-after-body-hook
+                                       find-file-hook
+                                       org-mode-hook
+                                       outline-mode-hook
+                                       text-mode-hook)
+                                 observed-hooks)
+                           (apply real-find-file-noselect args))))
+                (org-extras-agenda-toggle-anniversaries t)))
+            (should (equal observed-hooks '((nil nil nil nil nil))))
+            (with-temp-buffer
+              (insert-file-contents file)
+              (should (string-match-p "%%(org-bbdb-anniversaries-future 1)"
+                                      (buffer-string)))))
+        (delete-file file)))))
 
 ;;;; copy-heading-name
 

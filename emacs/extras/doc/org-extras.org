@@ -403,12 +403,10 @@ agenda buffer already exists, it simply switches to it; otherwise it
 creates a new agenda view, first enabling anniversary display
 ([[#h:toggling-anniversaries][Toggling anniversaries]]).
 
-When it creates the agenda, file opens performed only for agenda setup
-suppress interactive setup hooks such as ~org-mode-hook~,
-~outline-mode-hook~, ~text-mode-hook~, ~find-file-hook~, and
-~change-major-mode-after-body-hook~.  This prevents expensive
-presentation modes from running while agenda files are merely being
-scanned or adjusted.
+When it creates the agenda, the anniversary-maintenance step opens
+~calendar.org~ without presentation setup hooks if that file is not
+already visiting.  Agenda construction itself still runs normally, so
+the dynamic agenda file list remains intact.
 
 *** Going to an agenda item and clocking in
 :PROPERTIES:

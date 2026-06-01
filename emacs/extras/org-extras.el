@@ -32,6 +32,7 @@
 (require 'el-patch)
 (require 'org)
 (require 'org-agenda)
+(require 'org-id)
 (require 'paths)
 (require 'subr-x)
 (require 'transient)
@@ -410,24 +411,20 @@ number.  Disable the mode if ARG is a negative number."
   (let ((agenda "*Org Agenda(a)*"))
     (if (get-buffer agenda)
 	(switch-to-buffer agenda)
-      ;; Agenda-internal file opens scan and mutate files without presenting
-      ;; them for editing, so skip expensive interactive setup hooks.
-      (let ((change-major-mode-after-body-hook nil)
-            (find-file-hook nil)
-            (org-mode-hook nil)
-            (outline-mode-hook nil)
-            (text-mode-hook nil))
-        (find-file paths-file-config) ; hack to avoid the 'not in org-mode' error
-        (org-extras-agenda-toggle-anniversaries t)
-        ;; Reset element caches to prevent "Invalid search bound" errors
-        ;; from stale caches (e.g. after external file modifications by
-        ;; Dropbox sync).
-        (dolist (buf (org-buffer-list 'files))
-          (with-current-buffer buf
-            (org-element-cache-reset)))
-        ;; Prevent `jinx-mode' from activating via `text-mode-hook', which
-        ;; causes `args-out-of-range' errors when its idle timer fires during
-        ;; `sit-for' in `after-find-file' before the buffer is ready.
+      (find-file paths-file-config) ; hack to avoid the 'not in org-mode' error
+      (org-extras-agenda-toggle-anniversaries t)
+      ;; Reset element caches to prevent "Invalid search bound" errors
+      ;; from stale caches (e.g. after external file modifications by
+      ;; Dropbox sync).
+      (dolist (buf (org-buffer-list 'files))
+        (with-current-buffer buf
+          (org-element-cache-reset)))
+      ;; Suppress `find-file-hook' (flycheck, doom-modeline, etc.) when
+      ;; opening agenda files; they are scanned, not edited interactively.
+      ;; Also prevent `jinx-mode' from activating via `text-mode-hook',
+      ;; which causes `args-out-of-range' errors when its idle timer fires
+      ;; during `sit-for' in `after-find-file' before the buffer is ready.
+      (let ((find-file-hook nil))
         (cl-letf (((symbol-function 'jinx-mode) #'ignore))
           (org-agenda nil "a"))))))
 
@@ -496,17 +493,57 @@ corresponding file.  Else, open the file."
 If JUST-ENABLE is non-nil, always enable the display of birthdays."
   (interactive)
   (when org-extras-bbdb-anniversaries-heading
-    (save-window-excursion
-      (org-roam-extras-id-goto org-extras-bbdb-anniversaries-heading)
-      (org-narrow-to-subtree)
-      (goto-char (point-min))
-      (org-end-of-meta-data t)
-      (if (looking-at "%%")
-	  (unless just-enable
-	    (delete-line))
-	(insert "%%(org-bbdb-anniversaries-future 1)\n")))
+    (org-extras--agenda-update-anniversaries just-enable)
     (unless just-enable
       (org-agenda-redo))))
+
+(defun org-extras--agenda-update-anniversaries (just-enable)
+  "Update the BBDB anniversary line.
+If JUST-ENABLE is non-nil, only insert the anniversary line when it is absent."
+  (if-let* ((location (org-id-find org-extras-bbdb-anniversaries-heading))
+            (file (car location))
+            (pos (cdr location)))
+      (org-extras--agenda-with-anniversary-buffer
+       file pos
+       (lambda ()
+         (org-extras--agenda-update-anniversaries-in-current-buffer just-enable)))
+    (save-window-excursion
+      (org-roam-extras-id-goto org-extras-bbdb-anniversaries-heading)
+      (org-extras--agenda-update-anniversaries-in-current-buffer just-enable))))
+
+(defun org-extras--agenda-with-anniversary-buffer (file pos fn)
+  "Visit FILE at POS for anniversary maintenance and call FN.
+When FILE is not already visiting, open it with presentation hooks suppressed,
+save any changes, then kill the temporary visiting buffer."
+  (let* ((visiting (find-buffer-visiting file))
+         (buffer (or visiting
+                     (let ((change-major-mode-after-body-hook nil)
+                           (find-file-hook nil)
+                           (org-mode-hook nil)
+                           (outline-mode-hook nil)
+                           (text-mode-hook nil))
+                       (find-file-noselect file)))))
+    (unwind-protect
+        (with-current-buffer buffer
+          (save-restriction
+            (widen)
+            (goto-char pos)
+            (funcall fn))
+          (unless visiting
+            (save-buffer)))
+      (unless visiting
+        (kill-buffer buffer)))))
+
+(defun org-extras--agenda-update-anniversaries-in-current-buffer (just-enable)
+  "Update anniversary line in the current buffer.
+If JUST-ENABLE is non-nil, only insert the anniversary line when it is absent."
+  (org-narrow-to-subtree)
+  (goto-char (point-min))
+  (org-end-of-meta-data t)
+  (if (looking-at "%%")
+      (unless just-enable
+	(delete-line))
+    (insert "%%(org-bbdb-anniversaries-future 1)\n")))
 
 (defun org-extras-agenda-toggle-log-mode ()
   "Toggle `org-agenda-log-mode' and `org-agenda-log-mode-items'."

@@ -572,6 +572,13 @@ agenda buffer already exists, it simply switches to it; otherwise it
 creates a new agenda view, first enabling anniversary display
 (@ref{Toggling anniversaries}).
 
+When it creates the agenda, file opens performed only for agenda setup
+suppress interactive setup hooks such as @code{org-mode-hook},
+@code{outline-mode-hook}, @code{text-mode-hook}, @code{find-file-hook}, and
+@code{change-major-mode-after-body-hook}.  This prevents expensive
+presentation modes from running while agenda files are merely being
+scanned or adjusted.
+
 @node Going to an agenda item and clocking in
 @subsection Going to an agenda item and clocking in
 

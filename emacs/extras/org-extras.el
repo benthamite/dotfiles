@@ -410,20 +410,24 @@ number.  Disable the mode if ARG is a negative number."
   (let ((agenda "*Org Agenda(a)*"))
     (if (get-buffer agenda)
 	(switch-to-buffer agenda)
-      (find-file paths-file-config) ; hack to avoid the 'not in org-mode' error
-      (org-extras-agenda-toggle-anniversaries t)
-      ;; Reset element caches to prevent "Invalid search bound" errors
-      ;; from stale caches (e.g. after external file modifications by
-      ;; Dropbox sync).
-      (dolist (buf (org-buffer-list 'files))
-        (with-current-buffer buf
-          (org-element-cache-reset)))
-      ;; Suppress `find-file-hook' (flycheck, doom-modeline, etc.) when
-      ;; opening agenda files; they are scanned, not edited interactively.
-      ;; Also prevent `jinx-mode' from activating via `text-mode-hook',
-      ;; which causes `args-out-of-range' errors when its idle timer fires
-      ;; during `sit-for' in `after-find-file' before the buffer is ready.
-      (let ((find-file-hook nil))
+      ;; Agenda-internal file opens scan and mutate files without presenting
+      ;; them for editing, so skip expensive interactive setup hooks.
+      (let ((change-major-mode-after-body-hook nil)
+            (find-file-hook nil)
+            (org-mode-hook nil)
+            (outline-mode-hook nil)
+            (text-mode-hook nil))
+        (find-file paths-file-config) ; hack to avoid the 'not in org-mode' error
+        (org-extras-agenda-toggle-anniversaries t)
+        ;; Reset element caches to prevent "Invalid search bound" errors
+        ;; from stale caches (e.g. after external file modifications by
+        ;; Dropbox sync).
+        (dolist (buf (org-buffer-list 'files))
+          (with-current-buffer buf
+            (org-element-cache-reset)))
+        ;; Prevent `jinx-mode' from activating via `text-mode-hook', which
+        ;; causes `args-out-of-range' errors when its idle timer fires during
+        ;; `sit-for' in `after-find-file' before the buffer is ready.
         (cl-letf (((symbol-function 'jinx-mode) #'ignore))
           (org-agenda nil "a"))))))
 

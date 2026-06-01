@@ -5,6 +5,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'ert)
 (require 'org-extras)
 (require 'org-clock)
@@ -202,6 +203,48 @@
     (goto-char (point-min))
     (should (equal (org-extras-get-heading-contents)
                    "Not in or on an org heading"))))
+
+;;;; org-agenda
+
+(ert-deftest org-extras-test-agenda-switch-suppresses-file-opening-hooks ()
+  "Suppress expensive hooks when opening files for agenda setup."
+  (let ((observed-hooks nil)
+        (org-extras-bbdb-anniversaries-heading "anniversary-id")
+        (paths-file-config "/tmp/config.org"))
+    (cl-letf (((symbol-function 'window-extras-split-if-unsplit) #'ignore)
+              ((symbol-function 'winum-select-window-1) #'ignore)
+              ((symbol-function 'find-file)
+               (lambda (_)
+                 (push (list change-major-mode-after-body-hook
+                             find-file-hook
+                             org-mode-hook
+                             outline-mode-hook
+                             text-mode-hook)
+                       observed-hooks)))
+              ((symbol-function 'org-roam-extras-id-goto)
+               (lambda (_)
+                 (push (list change-major-mode-after-body-hook
+                             find-file-hook
+                             org-mode-hook
+                             outline-mode-hook
+                             text-mode-hook)
+                       observed-hooks)))
+              ((symbol-function 'org-narrow-to-subtree) #'ignore)
+              ((symbol-function 'org-end-of-meta-data) #'ignore)
+              ((symbol-function 'looking-at) (lambda (_) t))
+              ((symbol-function 'org-buffer-list) (lambda (&optional _) nil))
+              ((symbol-function 'org-agenda)
+               (lambda (&rest _)
+                 (push (list change-major-mode-after-body-hook
+                             find-file-hook
+                             org-mode-hook
+                             outline-mode-hook
+                             text-mode-hook)
+                       observed-hooks))))
+      (org-extras-agenda-switch-to-agenda-current-day)
+      (should observed-hooks)
+      (should (seq-every-p (lambda (hooks) (equal hooks '(nil nil nil nil nil)))
+                           observed-hooks)))))
 
 ;;;; copy-heading-name
 

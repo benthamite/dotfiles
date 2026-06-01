@@ -350,7 +350,9 @@ The function ~org-roam-extras-recent~ returns a list of Org Roam files
 modified within the last DAYS.  An optional LIMIT argument causes the
 function to return the list only if its length is below the limit,
 returning ~nil~ otherwise.  The function excludes files matching
-~org-roam-file-exclude-regexp~.
+~org-roam-file-exclude-regexp~.  It reads modification times from the
+Org Roam database rather than scanning ~org-roam-directory~ at agenda
+startup.
 
 * Indices
 :PROPERTIES:

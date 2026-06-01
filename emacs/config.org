@@ -9907,24 +9907,25 @@ CLOCK: [2021-02-27 Sat 13:40]--[2021-02-27 Sat 13:59] =>  0:19
                 "Narrow to the entry and its children after jumping to it."
                 (org-extras-narrow-to-entry-and-children)))
 
+  (defun config-org-agenda-prepare-readable-buffers (fn files)
+    "Skip agenda files that can't be opened (e.g. Dropbox online-only placeholders).
+Avoid opening files while filtering: doing so runs `org-mode-hook' before
+`org-agenda' is ready and duplicates agenda buffer setup work."
+    (let (readable)
+      (dolist (f files)
+        (cond
+         ((bufferp f)
+          (push f readable))
+         ((and (stringp f)
+               (file-exists-p f)
+               (file-readable-p f))
+          (push f readable))
+         (t
+          (message "org-agenda: skipping unreadable file %s" f))))
+      (funcall fn (nreverse readable))))
+
   (advice-add 'org-agenda-prepare-buffers :around
-              (lambda (fn files)
-                "Skip agenda files that can't be opened (e.g. Dropbox online-only placeholders).
-`org-agenda-prepare-buffers' passes each file to `org-get-agenda-file-buffer'
-and hands the result to `with-current-buffer'.  When a file cannot be read
-\(e.g. a Dropbox online-only placeholder), the call errors out.  Pre-filter
-the file list so that only openable files reach the original function."
-                (let (readable)
-                  (dolist (f files)
-                    (if (bufferp f)
-                        (push f readable)
-                      (condition-case err
-                          (when (org-get-agenda-file-buffer f)
-                            (push f readable))
-                        (error
-                         (message "org-agenda: skipping unreadable file %s: %s"
-                                  f (error-message-string err))))))
-                  (funcall fn (nreverse readable)))))
+              #'config-org-agenda-prepare-readable-buffers)
 
   (advice-add 'org-habit-toggle-display-in-agenda :around
               (lambda (orig-fun &rest args)

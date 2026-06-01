@@ -361,22 +361,25 @@ Optional FILTER-SPEC can be:
 ;;;;; Misc
 
 (defun org-roam-extras-recent (days &optional limit)
-  "Return a list of all files modified in the last DAYS.
+  "Return Org-roam files modified in the last DAYS.
 Optionally, return such list only if its length is less than LIMIT."
-  (let* ((mins (* 60 24 days))
-	 (file-list (split-string
-		     (shell-command-to-string
-		      (format
-		       "find %s -name '*.org'  -mmin -%s"
-		       (directory-file-name org-roam-directory) mins)))))
-    ;; Remove excluded files
-    (setq file-list (cl-delete-if (lambda (k)
-				    (string-match-p org-roam-file-exclude-regexp k))
-				  file-list))
-    (if limit
-	(when (< (length file-list) limit)
-	  file-list)
-      file-list)))
+  (let ((cutoff (time-subtract (current-time) (days-to-time days)))
+	file-list
+	too-many)
+    (catch 'done
+      (dolist (row (org-roam-db-query
+		    [:select [file mtime] :from files :order-by (desc mtime)]))
+	(pcase-let ((`(,file ,mtime) row))
+	  (unless (and mtime (time-less-p cutoff mtime))
+	    (throw 'done nil))
+	  (unless (and (stringp org-roam-file-exclude-regexp)
+		       (string-match-p org-roam-file-exclude-regexp file))
+	    (push file file-list)
+	    (when (and limit (>= (length file-list) limit))
+	      (setq too-many t)
+	      (throw 'done nil))))))
+    (unless too-many
+      (nreverse file-list))))
 
 (defun org-roam-extras-remove-file-level-properties ()
   "Remove `ID' properties from file-level drawer."

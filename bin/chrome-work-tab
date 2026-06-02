@@ -33,6 +33,4 @@ if [ ! -x "$chrome" ]; then
   exit 1
 fi
 
-for url in "$@"; do
-  "$chrome" --profile-directory="$profile_dir" --new-tab "$url" >/dev/null 2>&1 &
-done
+exec "$chrome" --profile-directory="$profile_dir" "$@"

@@ -10,11 +10,35 @@ Usage: chrome-work-tab URL [URL...]
 Open each URL in Chrome Profile 2, the Epoch/work profile for pablo@epoch.ai.
 The command requests new tabs; if no work-profile Chrome window exists, Chrome
 may create one.
+
+When invoked from Codex, this command refuses to open external Chrome unless
+CODEX_ALLOW_EXTERNAL_CHROME=1 is set. Use Codex's built-in browser first when
+it is available; set the override only after choosing external Chrome as the
+fallback.
 EOF
 }
 
 chrome="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 profile_dir="Profile 2"
+
+running_under_codex() {
+  local pid command ppid
+
+  pid="$$"
+  while [ -n "$pid" ] && [ "$pid" -gt 1 ] 2>/dev/null; do
+    command="$(ps -p "$pid" -o command= 2>/dev/null || true)"
+    case "$command" in
+      *"/Applications/Codex.app/"*|*" codex app-server"*|*" codex --"*|*/codex)
+        return 0
+        ;;
+    esac
+    ppid="$(ps -p "$pid" -o ppid= 2>/dev/null | tr -d ' ' || true)"
+    [ -n "$ppid" ] || break
+    pid="$ppid"
+  done
+
+  return 1
+}
 
 if [ "$#" -eq 0 ]; then
   usage >&2
@@ -31,6 +55,18 @@ esac
 if [ ! -x "$chrome" ]; then
   printf 'Google Chrome executable not found at %s\n' "$chrome" >&2
   exit 1
+fi
+
+if running_under_codex && [ "${CODEX_ALLOW_EXTERNAL_CHROME:-}" != "1" ]; then
+  cat >&2 <<'EOF'
+Refusing to open external Chrome from Codex.
+
+Use Codex's built-in browser first when it is available. If you have confirmed
+external Chrome is the intended fallback, rerun with:
+
+  CODEX_ALLOW_EXTERNAL_CHROME=1 chrome-work-tab URL...
+EOF
+  exit 3
 fi
 
 exec "$chrome" --profile-directory="$profile_dir" "$@"

@@ -228,7 +228,7 @@ Chrome integration uses three Chrome profiles, one per Claude Code account. Brow
 | Profile 2      | =pablo@epoch.ai=               | =pablo@epoch.ai=                   | epoch               |
 | Profile 3      | =pablo@tlon.team=              | =tlon.shared@gmail.com=            | tlon                |
 
-When opening Chrome manually for browser-only service flows, use =Default= for personal projects and =Profile 2= for Epoch/work projects. For example, open Epoch Google Cloud pages with =/Applications/Google Chrome.app/Contents/MacOS/Google Chrome --profile-directory="Profile 2" URL=.
+When opening Chrome manually for browser-only service flows, use =chrome-work-tab URL= for Epoch/work projects. It targets Chrome =Profile 2= and requests a new tab, avoiding the profile ambiguity of raw AppleScript against Chrome's front window. Personal projects use =Default=. The lower-level direct command is =/Applications/Google Chrome.app/Contents/MacOS/Google Chrome --profile-directory="Profile 2" --new-tab URL=.
 
 The Google column is the account each Chrome profile is signed into (independent of Anthropic). The Anthropic identity column is the account used to authenticate the Claude Code CLI inside =~/.claude-<account>/= — each =CLAUDE_CONFIG_DIR= holds its own OAuth credentials for a distinct Anthropic account, so =/usage= and rate-limit tracking report each account separately.
 

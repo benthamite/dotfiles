@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Open URLs in the Epoch/work Chrome profile as tabs.
+
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: chrome-work-tab URL [URL...]
+
+Open each URL in Chrome Profile 2, the Epoch/work profile for pablo@epoch.ai.
+The command requests new tabs; if no work-profile Chrome window exists, Chrome
+may create one.
+EOF
+}
+
+chrome="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+profile_dir="Profile 2"
+
+if [ "$#" -eq 0 ]; then
+  usage >&2
+  exit 2
+fi
+
+case "$1" in
+  -h|--help)
+    usage
+    exit 0
+    ;;
+esac
+
+if [ ! -x "$chrome" ]; then
+  printf 'Google Chrome executable not found at %s\n' "$chrome" >&2
+  exit 1
+fi
+
+for url in "$@"; do
+  "$chrome" --profile-directory="$profile_dir" --new-tab "$url" >/dev/null 2>&1 &
+done

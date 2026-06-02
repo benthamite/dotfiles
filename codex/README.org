@@ -62,8 +62,9 @@ answers after changes must include an explicit =Verification:= or =Not verified
 end-to-end:= sentence.
 
 It also records the manual Chrome profile routing used by browser-only service
-flows: =Default= for personal projects and =Profile 2= for Epoch/work projects
-(=pablo@epoch.ai=).
+flows: use =chrome-work-tab URL= for Epoch/work projects so Chrome targets
+=Profile 2= (=pablo@epoch.ai=) and opens a tab instead of relying on the
+frontmost Chrome window. Personal projects use =Default=.
 
 =codex/config.toml= enables experimental goals support under =[features]=. It
 also sets =suppress_unstable_features_warning = true= so Codex does not print

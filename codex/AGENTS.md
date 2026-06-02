@@ -43,7 +43,7 @@ Use these local tools to connect to external services: Anna's Archive `annas-mcp
 
 For Google account/auth details, read `/Users/pablostafforini/My Drive/dotfiles/claude/context/google-services.md`. For Twitter workflows, use the `twitter` skill.
 
-When opening Chrome manually for browser-only service flows, use Chrome profile `Default` for personal projects and Chrome profile `Profile 2` for Epoch/work projects (`pablo@epoch.ai`). For example, open work pages with `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome --profile-directory="Profile 2" URL`.
+When opening Chrome manually for browser-only service flows, use `chrome-work-tab URL` for Epoch/work pages; it targets Chrome profile `Profile 2` (`pablo@epoch.ai`) and requests a new tab. Do not use raw AppleScript against Chrome's front window for work pages, because the front window may be the personal profile. Personal projects use Chrome profile `Default`.
 
 ## Filesystem organization
 

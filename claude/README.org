@@ -176,8 +176,10 @@ policy in =../agents/README.org= in the same session. The
 visible but do not auto-edit the counterpart. The commit guard checks skill
 content after tool-specific frontmatter normalization and only accepts
 manifest-based bypasses when the manifest records an artifact-specific status or
-exemption. See =../agents/README.org= for the full synchronization contract and
-known non-portable cases.
+exemption. The manual audit also checks visible skill roots, including enabled
+Claude plugin skill caches, for duplicate =name:= values that would produce
+repeated slash-command entries. See =../agents/README.org= for the full
+synchronization contract and known non-portable cases.
 
 *** Multi-account setup
 :PROPERTIES:

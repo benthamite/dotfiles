@@ -12,6 +12,7 @@ import shlex
 import subprocess
 import sys
 import tomllib
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
@@ -27,13 +28,8 @@ DOTFILES_PROJECT_LOCAL_SKILLS = {
     "config-audit",
     "find-skills",
     "gitguardian-triage",
-    "install-mcp-server",
     "move-session-log",
     "optimize-agent-instructions",
-    "release-dotfiles",
-    "skill-audit",
-    "skill-creator",
-    "skill-discovery",
     "skill-resolver",
 }
 
@@ -974,6 +970,12 @@ def local_skill_moved_between_roots(
     return not local_skill_sync_problems(repo_root, skill, target_root)
 
 
+def local_skill_removed(repo_root: Path, skill: str, skill_root: str = "skills") -> bool:
+    claude_skill = repo_root / ".claude" / skill_root / skill / "SKILL.md"
+    codex_skill = repo_root / ".codex" / skill_root / skill / "SKILL.md"
+    return not claude_skill.exists() and not codex_skill.exists()
+
+
 def normalized_project_instruction_text(path: Path) -> str:
     text = path.read_text()
     text = re.sub(r"(?m)^@(\S+)[ \t]*$", r"`\1`", text)
@@ -1286,6 +1288,14 @@ def guard_changed_paths(
                 repo_root, changed_paths, skill, "skills", "programmatic-skills"
             ):
                 continue
+            if drift and local_skill_removed(repo_root, skill):
+                if doc_drift:
+                    add_nested_problems(
+                        problems,
+                        f"Project-local .claude/skills/{skill} removed without a local README.org update:",
+                        doc_drift,
+                    )
+                continue
             if not drift:
                 if doc_drift:
                     add_nested_problems(
@@ -1319,6 +1329,14 @@ def guard_changed_paths(
                 repo_root, changed_paths, skill, "skills", "programmatic-skills"
             ):
                 continue
+            if drift and local_skill_removed(repo_root, skill):
+                if doc_drift:
+                    add_nested_problems(
+                        problems,
+                        f"Project-local .codex/skills/{skill} removed without a local README.org update:",
+                        doc_drift,
+                    )
+                continue
             if not drift:
                 if doc_drift:
                     add_nested_problems(
@@ -1348,6 +1366,14 @@ def guard_changed_paths(
             processed_local_skills.add(skill_key)
             drift = local_skill_sync_problems(repo_root, skill, "programmatic-skills")
             doc_drift = local_skill_readme_problems(changed_paths, skill, "programmatic-skills")
+            if drift and local_skill_removed(repo_root, skill, "programmatic-skills"):
+                if doc_drift:
+                    add_nested_problems(
+                        problems,
+                        f"Project-local .claude/programmatic-skills/{skill} removed without a local README.org update:",
+                        doc_drift,
+                    )
+                continue
             if not drift:
                 if doc_drift:
                     add_nested_problems(
@@ -1377,6 +1403,14 @@ def guard_changed_paths(
             processed_local_skills.add(skill_key)
             drift = local_skill_sync_problems(repo_root, skill, "programmatic-skills")
             doc_drift = local_skill_readme_problems(changed_paths, skill, "programmatic-skills")
+            if drift and local_skill_removed(repo_root, skill, "programmatic-skills"):
+                if doc_drift:
+                    add_nested_problems(
+                        problems,
+                        f"Project-local .codex/programmatic-skills/{skill} removed without a local README.org update:",
+                        doc_drift,
+                    )
+                continue
             if not drift:
                 if doc_drift:
                     add_nested_problems(
@@ -1656,6 +1690,226 @@ def path_is_inside(path: Path, parent: Path) -> bool:
     except ValueError:
         return False
     return True
+
+
+@dataclass(frozen=True)
+class InteractiveSkillRoot:
+    path: Path
+    tool: str
+    source: str
+    priority: int
+
+
+@dataclass(frozen=True)
+class InteractiveSkillFile:
+    name: str
+    path: Path
+    root: InteractiveSkillRoot
+
+
+def ancestors(cwd: Path) -> list[Path]:
+    resolved = cwd.resolve()
+    return [resolved, *resolved.parents]
+
+
+def add_interactive_skill_root(
+    roots: list[InteractiveSkillRoot],
+    seen: set[tuple[str, str]],
+    path: Path,
+    tool: str,
+    source: str,
+    priority: int,
+) -> None:
+    if not path.is_dir():
+        return
+    key = (tool, str(real_path(path)))
+    if key in seen:
+        return
+    seen.add(key)
+    roots.append(InteractiveSkillRoot(path=path, tool=tool, source=source, priority=priority))
+
+
+def plugin_path_is_orphaned(path: Path) -> bool:
+    for parent in (path, *path.parents):
+        if (parent / ".orphaned_at").exists():
+            return True
+        if parent.name == "cache":
+            return False
+    return False
+
+
+def enabled_claude_plugins(claude_home: Path) -> list[str]:
+    settings = claude_home / "settings.json"
+    try:
+        data = json.loads(settings.read_text())
+    except (OSError, json.JSONDecodeError):
+        return []
+    enabled = data.get("enabledPlugins") or {}
+    if not isinstance(enabled, dict):
+        return []
+    return sorted(plugin_id for plugin_id, active in enabled.items() if active)
+
+
+def add_enabled_claude_plugin_roots(
+    roots: list[InteractiveSkillRoot],
+    seen: set[tuple[str, str]],
+    claude_home: Path,
+) -> None:
+    cache = claude_home / "plugins" / "cache"
+    for plugin_id in enabled_claude_plugins(claude_home):
+        if "@" not in plugin_id:
+            continue
+        plugin, marketplace = plugin_id.rsplit("@", 1)
+        plugin_cache = cache / marketplace / plugin
+        if not plugin_cache.is_dir():
+            continue
+        for version_dir in sorted(path for path in plugin_cache.iterdir() if path.is_dir()):
+            if (version_dir / ".orphaned_at").exists():
+                continue
+            add_interactive_skill_root(
+                roots,
+                seen,
+                version_dir / "skills",
+                "claude",
+                f"claude-plugin-cache:{plugin_id}",
+                200,
+            )
+
+
+def interactive_skill_roots(cwd: Path, tool: str) -> list[InteractiveSkillRoot]:
+    roots: list[InteractiveSkillRoot] = []
+    seen: set[tuple[str, str]] = set()
+
+    for depth, parent in enumerate(ancestors(cwd)):
+        if parent == Path.home():
+            continue
+        if tool == "codex":
+            add_interactive_skill_root(
+                roots,
+                seen,
+                parent / ".codex" / "skills",
+                "codex",
+                f"project-local:{parent}",
+                10 + depth,
+            )
+        if tool == "claude":
+            add_interactive_skill_root(
+                roots,
+                seen,
+                parent / ".claude" / "skills",
+                "claude",
+                f"project-local:{parent}",
+                10 + depth,
+            )
+
+    epoch_root = Path.home() / "My Drive" / "Epoch"
+    if tool == "codex":
+        add_interactive_skill_root(
+            roots,
+            seen,
+            epoch_root / ".codex" / "skills",
+            "codex",
+            "epoch-workspace",
+            40,
+        )
+        codex_home = Path(os.environ.get("CODEX_HOME", Path.home() / ".codex"))
+        add_interactive_skill_root(roots, seen, codex_home / "skills", "codex", "CODEX_HOME", 100)
+        add_interactive_skill_root(roots, seen, ROOT / "codex" / "skills", "codex", "dotfiles", 110)
+
+        plugin_cache = codex_home / "plugins" / "cache"
+        if plugin_cache.is_dir():
+            for skills_dir in sorted(plugin_cache.rglob("skills")):
+                if plugin_path_is_orphaned(skills_dir):
+                    continue
+                add_interactive_skill_root(
+                    roots,
+                    seen,
+                    skills_dir,
+                    "codex",
+                    "codex-plugin-cache",
+                    200,
+                )
+
+    if tool == "claude":
+        add_interactive_skill_root(
+            roots,
+            seen,
+            epoch_root / ".claude" / "skills",
+            "claude",
+            "epoch-workspace",
+            40,
+        )
+        claude_home = Path(os.environ.get("CLAUDE_HOME", Path.home() / ".claude"))
+        add_interactive_skill_root(roots, seen, claude_home / "skills", "claude", "CLAUDE_HOME", 100)
+        add_interactive_skill_root(roots, seen, ROOT / "claude" / "skills", "claude", "dotfiles", 110)
+        add_enabled_claude_plugin_roots(roots, seen, claude_home)
+
+    expanded: list[InteractiveSkillRoot] = []
+    expanded_seen: set[tuple[str, str]] = set()
+    for root in sorted(roots, key=lambda item: (item.priority, str(item.path))):
+        add_interactive_skill_root(expanded, expanded_seen, root.path, root.tool, root.source, root.priority)
+        add_interactive_skill_root(
+            expanded,
+            expanded_seen,
+            root.path / ".system",
+            root.tool,
+            f"{root.source}:system",
+            root.priority + 1,
+        )
+    return sorted(expanded, key=lambda item: (item.priority, str(item.path)))
+
+
+def parse_skill_name(path: Path) -> str:
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return path.parent.name
+    if not text.startswith("---"):
+        return path.parent.name
+    frontmatter = text.split("---", 2)
+    if len(frontmatter) < 3:
+        return path.parent.name
+    for line in frontmatter[1].splitlines():
+        match = re.match(r"\s*name:\s*(.+?)\s*$", line)
+        if match:
+            return match.group(1).strip().strip("\"'")
+    return path.parent.name
+
+
+def interactive_skill_files(cwd: Path, tool: str) -> list[InteractiveSkillFile]:
+    skills: list[InteractiveSkillFile] = []
+    seen_paths: set[str] = set()
+    for root in interactive_skill_roots(cwd, tool):
+        for path in sorted(root.path.glob("*/SKILL.md")):
+            real = str(real_path(path))
+            if real in seen_paths:
+                continue
+            seen_paths.add(real)
+            skills.append(InteractiveSkillFile(name=parse_skill_name(path), path=path, root=root))
+    return sorted(skills, key=lambda item: (item.root.priority, item.name, str(item.path)))
+
+
+def display_path(path: Path) -> str:
+    try:
+        return path.relative_to(ROOT).as_posix()
+    except ValueError:
+        return str(path)
+
+
+def audit_duplicate_skill_names(problems: list[str]) -> None:
+    for tool in ("claude", "codex"):
+        by_name: dict[str, list[InteractiveSkillFile]] = {}
+        for skill in interactive_skill_files(ROOT, tool):
+            by_name.setdefault(skill.name, []).append(skill)
+
+        for name, matches in sorted(by_name.items()):
+            if len(matches) <= 1:
+                continue
+            nested = [
+                f"{display_path(skill.path)} [{skill.root.source}]"
+                for skill in matches
+            ]
+            add_nested_problems(problems, f"Duplicate {tool} skill name: {name}", nested)
 
 
 def audit_topology(problems: list[str]) -> None:
@@ -2000,6 +2254,7 @@ def audit() -> int:
     audit_topology(problems)
     audit_instructions(problems, manifest)
     audit_skills(problems, manifest, private_manifest)
+    audit_duplicate_skill_names(problems)
     audit_private_skills(problems, private_manifest)
     audit_hooks(problems, manifest)
     audit_mcp_servers(problems, manifest)

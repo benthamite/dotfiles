@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import sys
@@ -37,8 +38,10 @@ class SkillFile:
             parts = self.path.parts
             try:
                 cache_index = parts.index("cache")
-                plugin = parts[cache_index + 1]
+                marketplace = parts[cache_index + 1]
+                plugin = parts[cache_index + 2]
                 names.add(f"{plugin}:{self.name}")
+                names.add(f"{plugin}@{marketplace}:{self.name}")
             except (ValueError, IndexError):
                 pass
         return names
@@ -75,6 +78,53 @@ def add_root(
         return
     seen.add(key)
     roots.append(SkillRoot(path=path, tool=tool, source=source, priority=priority))
+
+
+def plugin_path_is_orphaned(path: Path) -> bool:
+    for parent in (path, *path.parents):
+        if (parent / ".orphaned_at").exists():
+            return True
+        if parent.name == "cache":
+            return False
+    return False
+
+
+def enabled_claude_plugins(claude_home: Path) -> list[str]:
+    settings = claude_home / "settings.json"
+    try:
+        data = json.loads(settings.read_text())
+    except (OSError, json.JSONDecodeError):
+        return []
+    enabled = data.get("enabledPlugins") or {}
+    if not isinstance(enabled, dict):
+        return []
+    return sorted(plugin_id for plugin_id, active in enabled.items() if active)
+
+
+def add_claude_plugin_roots(
+    roots: list[SkillRoot],
+    seen: set[tuple[str, str]],
+    claude_home: Path,
+) -> None:
+    cache = claude_home / "plugins" / "cache"
+    for plugin_id in enabled_claude_plugins(claude_home):
+        if "@" not in plugin_id:
+            continue
+        plugin, marketplace = plugin_id.rsplit("@", 1)
+        plugin_cache = cache / marketplace / plugin
+        if not existing_dir(plugin_cache):
+            continue
+        for version_dir in sorted(path for path in plugin_cache.iterdir() if path.is_dir()):
+            if (version_dir / ".orphaned_at").exists():
+                continue
+            add_root(
+                roots,
+                seen,
+                version_dir / "skills",
+                "claude",
+                f"claude-plugin-cache:{plugin_id}",
+                200,
+            )
 
 
 def discover_roots(cwd: Path, tool: str) -> list[SkillRoot]:
@@ -132,12 +182,15 @@ def discover_roots(cwd: Path, tool: str) -> list[SkillRoot]:
         plugin_cache = codex_home / "plugins" / "cache"
         if existing_dir(plugin_cache):
             for skills_dir in sorted(plugin_cache.rglob("skills")):
+                if plugin_path_is_orphaned(skills_dir):
+                    continue
                 add_root(roots, seen, skills_dir, "codex", "codex-plugin-cache", 200)
 
     if "claude" in wanted:
         claude_home = Path(os.environ.get("CLAUDE_HOME", HOME / ".claude"))
         add_root(roots, seen, claude_home / "skills", "claude", "CLAUDE_HOME", 100)
         add_root(roots, seen, REPO_ROOT / "claude" / "skills", "claude", "dotfiles", 110)
+        add_claude_plugin_roots(roots, seen, claude_home)
 
     expanded: list[SkillRoot] = []
     expanded_seen: set[tuple[str, str]] = set()
@@ -227,6 +280,9 @@ def build_parser() -> argparse.ArgumentParser:
     list_parser = subparsers.add_parser("list")
     add_common_args(list_parser)
 
+    duplicates_parser = subparsers.add_parser("duplicates")
+    add_common_args(duplicates_parser)
+
     roots_parser = subparsers.add_parser("roots")
     add_common_args(roots_parser)
 
@@ -247,6 +303,20 @@ def main() -> int:
         for skill in skills:
             print(f"{skill.name}\t{skill.root.tool}\t{skill.path}")
         return 0
+
+    if args.command == "duplicates":
+        by_name: dict[tuple[str, str], list[SkillFile]] = {}
+        for skill in skills:
+            by_name.setdefault((skill.root.tool, skill.name), []).append(skill)
+        found = False
+        for (tool, name), matches in sorted(by_name.items()):
+            if len(matches) <= 1:
+                continue
+            found = True
+            print(f"{tool}\t{name}")
+            for skill in matches:
+                print(f"\t{skill.path}\t{skill.root.source}")
+        return 1 if found else 0
 
     skill = resolve_skill(skills, args.name)
     if args.command == "path":

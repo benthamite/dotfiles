@@ -508,9 +508,11 @@ Manual audit:
 bin/ai-config-sync audit
 #+end_src
 
-The audit is deterministic; it does not edit files.  Its job is to make drift
-visible. See =../agents/README.org= for the full synchronization contract and
-the audit scope.
+The audit is deterministic; it does not edit files. Its job is to make drift
+visible. It also checks visible Claude and Codex skill roots, including enabled
+plugin skill caches, for duplicate =name:= values that would produce repeated
+slash-command entries. See =../agents/README.org= for the full synchronization
+contract and the audit scope.
 
 * Global Activation
 

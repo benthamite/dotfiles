@@ -23,6 +23,4 @@ This repository contains my dotfiles, including
 - =release-dotfiles=: Prepares and publishes dotfiles releases, including
   checks/restoration for temporary Elpaca PR fork pins in =emacs/config.org=.
 - =skill-audit=: Audits or improves agent skills for trigger quality, workflow design, verification, portability, and maintainability.
-- =skill-creator=: Creates or iteratively improves agent skills.
-- =skill-discovery=: Scans recent sessions to discover repeated workflows worth turning into skills.
 - =skill-resolver=: Resolves and reads agent skill files by skill name.

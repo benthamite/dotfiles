@@ -860,7 +860,7 @@ Creates a marker file (=/tmp/claude-elisp-tested-{SESSION_ID}=) whenever =emacs 
 :ID:       F4D78958-4194-4DB3-9624-C04EC7790960
 :END:
 
-Blocks =git commit= when files in =claude/= (skills, hooks, settings, CLAUDE.md) are staged in the command's target repo but =claude/README.org= is not. Also detects when =git add= and =git commit= appear in the same bash command (which would otherwise bypass the staged-file check). Ensures documentation stays in sync with configuration changes. Project-specific skills (under =.claude/skills/=) are excluded from this check, since they belong to their project's documentation, not the dotfiles README. Runtime data paths (=digests/=, =last-run/=, =twitter-vet/vetted/=) are also excluded, since these are skill output files that don't warrant a README update.
+Blocks =git commit= when files in =claude/= (skills, hooks, settings, CLAUDE.md) are staged in the command's target repo but =claude/README.org= is not. Also detects when =git add= and =git commit= appear in the same bash command (which would otherwise bypass the staged-file check). Ensures documentation stays in sync with configuration changes. Project-specific skills (under =.claude/skills/=) are excluded from this check, since they belong to their project's documentation, not the dotfiles README. Runtime data paths (=digests/=, =last-run/=, =twitter-vet/vetted/=) are also excluded, since these are skill output files that don't warrant a README update. The =cd=-detection pattern matches only within the =cd= target itself (=[^&;|]*=, not =.*=), so it does not span =&&=, =;=, or =|=; an unrelated =cd <repo> && git add …/.claude/skills/…= therefore does not trip the guard.
 
 *** remind-claude-readme-update.sh (PostToolUse)
 :PROPERTIES:

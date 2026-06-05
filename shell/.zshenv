@@ -16,6 +16,11 @@ export GOPATH="$HOME/go"
 export PATH="$GOPATH/bin:$PATH"
 export GEM_HOME="$HOME/.gem"
 
+# Custom shims (must stay ahead of /opt/homebrew/bin). The emacsclient shim
+# resolves the server socket via getconf DARWIN_USER_TEMP_DIR so it works when
+# $TMPDIR is overridden (e.g. Claude Code pins TMPDIR=/tmp/claude-$UID).
+export PATH="$HOME/My Drive/dotfiles/shell/shims:$PATH"
+
 # Essential environment variables
 export DOTFILES="$HOME/My Drive/dotfiles"
 export EDITOR="emacsclient -nw"

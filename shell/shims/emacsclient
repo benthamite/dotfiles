@@ -1,0 +1,45 @@
+#!/bin/sh
+# emacsclient PATH shim.
+#
+# Resolves the Emacs server socket via the real macOS per-user temp dir
+# (getconf DARWIN_USER_TEMP_DIR) instead of $TMPDIR, so emacsclient still finds
+# a running server when $TMPDIR has been overridden. Claude Code pins
+# TMPDIR=/tmp/claude-$UID for every command it runs, which hides the socket a
+# normally-launched Emacs creates under /var/folders/.../T/emacs$UID/server;
+# emacsclient then reports "can't find socket; have you started the server?"
+# even though the server is alive. getconf ignores the TMPDIR override and
+# always returns the real dir, so the socket path it computes is correct.
+#
+# Behavior-preserving: only injects --socket-name when the caller passed no
+# socket/server-file flag and set neither EMACS_SOCKET_NAME nor
+# EMACS_SERVER_FILE. In an ordinary shell (TMPDIR already the macOS temp dir)
+# the injected path equals emacsclient's own default, so this is a no-op there.
+#
+# Diagnosed in the ai-access-management project on 2026-06-05. See that
+# project's logs for the full root-cause analysis.
+
+REAL=/opt/homebrew/bin/emacsclient
+[ -x "$REAL" ] || REAL=/usr/local/bin/emacsclient
+
+inject=1
+[ -n "$EMACS_SOCKET_NAME" ] && inject=0
+[ -n "$EMACS_SERVER_FILE" ] && inject=0
+for arg in "$@"; do
+	case "$arg" in
+		-s | -s?* | --socket-name | --socket-name=* | \
+			-f | -f?* | --server-file | --server-file=*)
+			inject=0
+			break
+			;;
+	esac
+done
+
+if [ "$inject" = 1 ]; then
+	tmp=$(getconf DARWIN_USER_TEMP_DIR 2>/dev/null)
+	if [ -n "$tmp" ]; then
+		sock="${tmp}emacs$(id -u)/server"
+		[ -S "$sock" ] && exec "$REAL" --socket-name="$sock" "$@"
+	fi
+fi
+
+exec "$REAL" "$@"

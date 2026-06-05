@@ -3,12 +3,28 @@ name: update-log
 description: End-of-session bookkeeping. Use when the user says /update-log, update log, session log, close out, wrap up, or asks to save project progress. Also use at the end of any session that changed durable project state in a project with existing log conventions.
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
-argument-hint: "[--exit] [optional summary of what was done]"
+argument-hint: "[--exit] [--auto] [optional summary of what was done]"
 ---
 
 # End-of-session log update
 
 Perform the following bookkeeping steps to preserve this session's work for future sessions.
+
+## Triage first (may be a no-op)
+
+Before touching any file, decide whether this session changed durable project state, using the criteria in **When to run** below. This decision is part of the skill, not a precondition the caller is assumed to have checked: the skill is meant to be invoked unconditionally at session end — manually or via the end-of-session chain — and **doing nothing is a valid, friction-free outcome**.
+
+- **If nothing durable changed** (purely conversational Q&A, a quick read-only lookup, or trivial edits with nothing a future agent would need to recover), do nothing: write no log, change no files, make no commit. Report `No durable changes — skipping update-log.` and stop.
+- **Otherwise**, proceed to Step 0.
+
+Exception: if the user explicitly typed `/update-log` or asked for specific bookkeeping, honor it — proceed even if the session was marginal, and do what was asked.
+
+### Non-interactive runs (`--auto`)
+
+`--auto` marks a run from the end-of-session chain rather than a deliberate user invocation. In this mode, never block on input:
+
+- Skip **First-run setup** entirely. If the project has no existing log conventions, stop with `No log conventions here — skipping (run /update-log manually to set up).`
+- Make no other interactive prompts. If a step would need a decision only the user can make, record it in the log and final report and continue with the safe default or skip that step, rather than asking.
 
 ## When to run
 
@@ -91,9 +107,23 @@ The file should contain:
 
 Be concise but specific. Include exact numbers where available (counts, percentages, timings). Future sessions may need to understand *why* decisions were made, so document reasoning for non-obvious choices.
 
-## Step 2: Update CLAUDE.md
+## Step 2: Update the CLAUDE.md session pointer
 
-Update the "Latest session" section in CLAUDE.md with:
+How CLAUDE.md is maintained depends on its shape — the file itself tells you which mode to use:
+
+### Map mode
+
+CLAUDE.md has a `## Current focus` section (and no `## Latest session`). The file is a stable map and the session narrative belongs in the project's brief (e.g. the `.org`), not here. The brief itself is refreshed by the post-update-log hook in Step 4. In this mode:
+
+1. Update `## Current focus` to a **single line** reflecting the session's net current state.
+2. Keep the `## Read first` pointers accurate if any referenced file moved or was added.
+3. Do **not** add a `## Latest session` narrative, and do not lengthen `Current focus` past one line.
+
+This is the shape defined by a project's documentation conventions (for Epoch, `projects/context/project-doc-conventions.md`). When in doubt about what belongs in the map versus the brief, follow that doc.
+
+### Latest-session mode
+
+CLAUDE.md has a `## Latest session` section, or neither section (default/legacy). Update the "Latest session" section with:
 
 1. A **2–4 sentence summary** of this session's work (what was done, key outcomes, important numbers).
 2. A **pointer** to the full log file: `Full details: <log_dir>/YYYY-MM-DD.md`
@@ -132,7 +162,7 @@ Walk up ancestor directories from the project root to the git root (inclusive). 
 
 This lets parent directories define project-family-level bookkeeping — master project list updates, shared status syncing, meeting action item reconciliation, etc. — that fires automatically after every `/update-log` invocation, without bloating per-session CLAUDE.md context.
 
-For Epoch project notes, the main project `.org` file is a concise ground-truth brief, not a chronological session dossier. When a hook or local convention asks you to update it:
+For Epoch project notes, the main project `.org` file is a concise ground-truth brief, not a chronological session dossier; its target shape is defined in `projects/context/project-doc-conventions.md`. When a hook or local convention asks you to update it:
 
 - refresh current-state fields and sections from the session log just written;
 - keep active work as org `TODO` headings, not checkbox mirrors;

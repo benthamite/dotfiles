@@ -58,8 +58,10 @@ if [ "$HAS_CLAUDE_CHANGES" = false ]; then
     if echo "$COMMAND" | grep -qE '(^|[[:space:]])claude/(skills|hooks|settings|CLAUDE)' && ! echo "$COMMAND" | grep -qE '\.claude/' && ! echo "$COMMAND" | grep -qE 'claude/skills/[^/]+/(digests|last-run)/|claude/skills/twitter-vet/vetted/'; then
       HAS_CLAUDE_CHANGES=true
     fi
-    # cd into a claude/ subdirectory before git add (e.g., cd ~/.claude/skills/foo && git add SKILL.md)
-    if echo "$COMMAND" | grep -qE '\bcd\s+.*[~/]\.?claude/(skills|hooks)'; then
+    # cd into a claude/ subdirectory before git add (e.g., cd ~/.claude/skills/foo && git add SKILL.md).
+    # Use [^&;|]* (not .*) so the cd target cannot span a command separator: an
+    # unrelated `cd <repo> && git add .../.claude/skills/...` must not match.
+    if echo "$COMMAND" | grep -qE '\bcd\s+[^&;|]*[~/]\.?claude/(skills|hooks)'; then
       HAS_CLAUDE_CHANGES=true
     fi
   fi

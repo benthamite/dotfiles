@@ -1,1 +1,4 @@
 check_tlon_pass_changes.log
+
+# GAMADV-XTD3 (vendored binary, ~24M; installed locally, not tracked)
+gamadv-xtd3/

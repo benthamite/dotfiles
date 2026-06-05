@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Launcher for the locally-installed GAMADV-XTD3 (the binary dir is gitignored).
+exec "$HOME/bin/gamadv-xtd3/gam" "$@"

@@ -37,6 +37,21 @@ emacsclient -e 'init-current-profile' | tr -d '"'
 - If `emacsclient` is unavailable and no `NEW_PROFILE` was given, ask the user.
 - When `OLD_PROFILE` is explicit, dry-run and migrate only matching Claude/Codex references for that old profile. Do not migrate data from other old profiles in the same run.
 
+## Detect partial migrations
+
+Migrations performed before this skill existed — or with only the Claude step run — leave the stores inconsistent in ways the directory-based discovery below does not catch. In particular, the Claude session **files** may already have been moved (so `~/.claude/projects/` contains no old-profile directories) while these remain stale:
+
+- **Codex** structured `cwd`/`project` fields still point at the old profile. Codex is migrated in place, so nothing moves it implicitly; if the Codex step was never run, every old session keeps its old path.
+- **Claude `history.jsonl`** `project` fields still point at old paths, sometimes for sessions whose `.jsonl` files were already deleted (orphan entries that no longer surface in `agent-log` but still clutter history).
+- **`~/.claude.json`** trust entries still exist for old profiles, often for profiles *older* than the immediate predecessor — an `8.2 -> 8.3` run leaves `7.x` and `8.0` entries untouched.
+
+Therefore do not gate discovery on old-profile directories existing under `~/.claude/projects/`. Independently scan, for **every** profile token that is not `NEW_PROFILE` (not just the named `OLD_PROFILE`):
+
+- Codex: structured `cwd`/`project` fields (see Codex migration).
+- Claude: `project` fields in `history.jsonl` and keys in `~/.claude.json` `projects`.
+
+Report each store's stale count separately in the dry run; a clean result in one store does not imply the others are clean. This is the most common real-world entry point: the symptom is usually old-profile sessions still showing in `agent-log` (which reads the Codex store directly), long after the Claude side looks done.
+
 ## Path encoding
 
 Claude Code encodes project paths as directory names under `~/.claude/projects/` by replacing every `/` with `-`. The leading `/` becomes a leading `-`. Dots are also replaced with `-`.
@@ -158,7 +173,13 @@ for pkg in "${!sources_map[@]}"; do
 done
 ```
 
-If the package does not exist under the new profile at all, **ask the user whether the package was renamed**. Packages are sometimes renamed across profiles (e.g., `claude-log` -> `agent-log`, `infovore` -> `elfeed-ai`). If the user confirms a rename, verify the new package name exists under the new profile and keep both names in the migration record:
+If the package does not exist under the new profile at all, first try to **detect the rename automatically by git remote** before asking the user:
+
+1. Read the old clone's origin URL: `git -C <old-pkg-path> remote get-url origin`.
+2. Normalize to `owner/repo` and check whether any new-profile package shares the same origin. The directory name and the repo name can diverge — e.g. a `signel` directory whose remote is `benthamite/sgn.git` is really the `sgn` package, so the target is `sgn`, not a missing `signel`.
+3. If the repository itself was renamed on the host, the old URL redirects. Resolve it with `gh repo view <owner>/<old-repo> --json name,nameWithOwner`; a redirect returns the new name (e.g. `benthamite/ai-agent` resolves to `benthamite/agent`, so `ai-agent` -> `agent`).
+
+A match on origin URL — directly or via redirect — is strong evidence of a rename: record it as the target package and still surface it in the dry run. Some renames are not captured by the remote (e.g., `claude-log` -> `agent-log`, `infovore` -> `elfeed-ai`); when the remote heuristic is inconclusive, **ask the user**. If the user (or the heuristic) confirms a rename, verify the new package name exists under the new profile and keep both names in the migration record:
 
 - `source_pkg`: the old package name extracted from the source directory.
 - `target_pkg`: the package name under the new profile.
@@ -396,6 +417,8 @@ rg -l "\"(cwd|project)\":\"$OLD_PROFILE_PATH/elpaca/" \
   "$CODEX_HOME/sessions" \
   "$CODEX_HOME/archived_sessions" 2>/dev/null
 ```
+
+When `OLD_PROFILE` is not explicit, do not loop this for a single profile only. Match any non-`NEW_PROFILE` profile token — `rg -l '"(cwd|project)":"/Users/pablostafforini/\.config/emacs-profiles/[^/]+/elpaca/'` then drop hits whose token is `NEW_PROFILE` — so older profiles (e.g. `7.x`, `8.0`) are not silently missed. Match only structured `cwd`/`project` keys, never raw transcript text, and rewrite via an explicit old-full-path -> new-full-path map (also covering subpaths of a package root, e.g. a `cwd` inside the package).
 
 During the dry run, report:
 

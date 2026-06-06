@@ -177,7 +177,7 @@ currently present in this repo. The skill name shown is the directory name.
 - =install-mcp-server=: Install and configure a new MCP server for Claude
   Code, including discovery, auth verification, credential-safe setup, scope
   placement, registration, sync, and restart/testing expectations. Scope:
-  Global.
+  Project-local: dotfiles.
 - =interpretability-audit=: Audit code for intent transparency and reader
   comprehension. Scope: Global.
 - =lint-elisp=: Fix byte-compile warnings, checkdoc notes, and other Elisp
@@ -220,7 +220,7 @@ currently present in this repo. The skill name shown is the directory name.
 - =release-package=: Release one of the user's Emacs packages or audit package release
   readiness. Scope: Global.
 - =release-dotfiles=: Release a new version of the dotfiles repo. Scope:
-  Global.
+  Project-local: dotfiles.
 - =rename-package=: Rename an Emacs package end to end, especially
   elpaca-managed standalone packages. Scope: Project-local: emacs.
 - =security-audit=: Scan for exposed API keys and leaked credentials, audit
@@ -236,7 +236,7 @@ currently present in this repo. The skill name shown is the directory name.
   Scope: Project-local: notes.
 - =skill-audit=: Audit or improve Claude/Codex skills for trigger quality,
   workflow design, progressive disclosure, verification, portability, and
-  maintainability. Scope: Global.
+  maintainability. Scope: Project-local: dotfiles.
 - =skill-installer=: Install Codex skills into $CODEX_HOME/skills from a
   curated list or a GitHub repo path. Scope: Global.
 - =skill-resolver=: Resolve and read Claude/Codex skill files by skill name

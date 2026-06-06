@@ -28,8 +28,11 @@ DOTFILES_PROJECT_LOCAL_SKILLS = {
     "config-audit",
     "find-skills",
     "gitguardian-triage",
+    "install-mcp-server",
     "move-session-log",
     "optimize-agent-instructions",
+    "release-dotfiles",
+    "skill-audit",
     "skill-resolver",
 }
 

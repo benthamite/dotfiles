@@ -19,7 +19,7 @@
 - **Deletion:** use `trash` instead of destructive recursive deletion.
 - **Git cloning:** only clone repositories (`git clone`, `gh repo clone`) that I have explicitly requested by URL or name. If a task seems to require cloning an unmentioned repo, ask first.
 - **Shared systems:** do not create PRs, open issues, post Slack/email/comments, create or update Asana tasks, or take other externally visible actions without my explicit confirmation.
-- @context/secrets.md
+- **Secrets:** when reading, storing, sharing, or placing credentials (`pass`, 1Password, `.zshenv-secrets`, vault choice), read `context/secrets.md` first.
 
 ## User context and communication
 

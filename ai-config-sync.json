@@ -152,8 +152,8 @@
       "name": "move-session-log",
       "claude": "claude/skills/move-session-log/SKILL.md",
       "codex": "codex/skills/move-session-log/SKILL.md",
-      "status": "paired",
-      "equivalence": "Moved from dotfiles project-local .claude/.codex skill trees into the global skill trees; equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
+      "status": "tool-specific-divergence",
+      "note": "Claude and Codex move-session-log skills intentionally differ because each tool stores sessions in its own layout. The Claude version operates on ~/.claude/projects, ~/.claude/history.jsonl, and ~/.claude.json (a script-free Bash/Glob skill); the Codex version operates on ~/.codex/sessions, history.jsonl, session_index.jsonl, and state_5.sqlite via a bundled Python script. They must not be forced to byte-parity."
     },
     {
       "name": "overnight-todos",

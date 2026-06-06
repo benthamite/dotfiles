@@ -184,9 +184,12 @@ currently present in this repo. The skill name shown is the directory name.
   diagnostics in one or more files. Scope: Global.
 - =migrate-profile=: Consolidate Claude Code project data across elpaca
   profile changes. Scope: Project-local: emacs.
-- =move-session-log=: Relocate Codex session logs by rewriting embedded
-  project paths so resume and log lookup associate a session with the current
-  project. Scope: Global.
+- =move-session-log=: Relocate session logs by rewriting embedded project
+  paths so resume and log lookup associate a session with the current project.
+  Tool-specific divergence: the Claude version moves Claude Code session logs
+  under =~/.claude/projects= (with =~/.claude/history.jsonl= and
+  =~/.claude.json=); the Codex version rewrites Codex session metadata under
+  =~/.codex/sessions= (with =state_5.sqlite=). Scope: Global.
 - =open-session-log=: Open the current Claude Code or Codex session log in
   Emacs via agent-log. Scope: Programmatic; Project-local: dotfiles.
 - =openai-docs=: Use when the user asks how to build with OpenAI products or

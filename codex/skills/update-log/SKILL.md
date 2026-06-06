@@ -14,13 +14,13 @@ Before touching any file, decide whether this session changed durable project st
 - **If nothing durable changed** (purely conversational Q&A, a quick read-only lookup, or trivial edits with nothing a future agent would need to recover), do nothing: write no log, change no files, make no commit. Report `No durable changes — skipping update-log.` and stop.
 - **Otherwise**, proceed to Step 0.
 
-Exception: if the user explicitly typed `$update-log` or asked for specific bookkeeping, honor it — proceed even if the session was marginal, and do what was asked.
+Exception: if the user explicitly typed `/update-log` or asked for specific bookkeeping, honor it — proceed even if the session was marginal, and do what was asked.
 
 ### Non-interactive runs (`--auto`)
 
 `--auto` marks a run from the end-of-session chain rather than a deliberate user invocation. In this mode, never block on input:
 
-- Skip **First-run setup** entirely. If the project has no existing log conventions, stop with `No log conventions here — skipping (run $update-log manually to set up).`
+- Skip **First-run setup** entirely. If the project has no existing log conventions, stop with `No log conventions here — skipping (run /update-log manually to set up).`
 - Make no other interactive prompts. If a step would need a decision only the user can make, record it in the log and final report and continue with the safe default or skip that step, rather than asking.
 
 ## When to run

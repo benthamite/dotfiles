@@ -545,6 +545,9 @@ Edit-path hooks normalize relative changed paths against the hook process
 working directory before layout checks, so =apply_patch= payloads such as
 =agent.el= still resolve correctly inside standalone =elpaca/sources/<pkg>=
 repositories.
+The Elisp reload hook uses the same status-token contract as the Claude hook:
+it schedules =elpaca-extras-rebuild-and-reload=, then waits with bounded short
+=emacsclient= polls instead of calling =elpaca-wait= inside the daemon.
 
 The shell hook chain starts with =block-sensitive-read.sh=, which blocks
 commands that would read or search known credential-bearing paths such as

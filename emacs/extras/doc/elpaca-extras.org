@@ -17,7 +17,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-=elpaca-extras.el= extends the =elpaca= package manager with commands that make it easier to iterate on packages without restarting Emacs. When you update or rebuild a package, its old definitions remain loaded in the running session. These extensions automate the tedious process of unloading stale features and reloading the updated versions, and they also provide filtered lock-file writing.
+=elpaca-extras.el= extends the =elpaca= package manager with commands that make it easier to iterate on packages without restarting Emacs. When you update or rebuild a package, its old definitions remain loaded in the running session. These extensions automate the tedious process of force-loading updated features, and they also provide filtered lock-file writing.
 
 The main capabilities are:
 
@@ -52,11 +52,9 @@ The default value is ~nil~ (no exclusions). The type is a list of symbols.
 :END:
 
 #+findex: elpaca-extras-reload
-After making local edits to an installed package or after a manual rebuild, the old feature definitions remain active in the running Emacs session. The command ~elpaca-extras-reload~ unloads and reloads the features provided by a specified package.
+After making local edits to an installed package or after a manual rebuild, the old feature definitions remain active in the running Emacs session. The command ~elpaca-extras-reload~ force-loads the features provided by a specified package so new definitions replace old ones.
 
-It works by scanning the package's installation directory for =.el= files, extracting the feature names from their ~provide~ forms, forcefully unloading those features, and then requiring them again. By default, only features that were already loaded are reloaded. With a prefix argument, all features provided by the package are loaded regardless of their previous state.
-
-*Important:* because ~unload-feature~ is called with the ~force~ flag, any data stored in the package's symbols will be lost. If the package saves state on deactivation or Emacs exit, you should trigger that save before reloading.
+It works by scanning the package's installation directory for =.el= files, extracting the feature names from their ~provide~ forms, and calling ~load~ on the matching feature files. By default, features that were already loaded are loaded again, and the main package feature is also loaded so locally rebuilt packages do not remain in an autoload-only state. With a prefix argument, all features provided by the package are loaded regardless of their previous state.
 
 ** Update and reload
 :PROPERTIES:
@@ -66,9 +64,9 @@ It works by scanning the package's installation directory for =.el= files, extra
 #+findex: elpaca-extras-update-and-reload
 The command ~elpaca-extras-update-and-reload~ combines updating a package via Elpaca with an automatic reload. It prompts for a queued package, triggers ~elpaca-update~, and installs a temporary hook on ~elpaca-post-queue-hook~ to detect when the build finishes. If the build succeeds, it calls ~elpaca-extras-reload~ ([[#h:reload][Reload]]) and reports the result. If the build fails, it directs you to the =*elpaca-log*= buffer for details.
 
-This provides a convenient single-step workflow: update, build, unload old definitions, and load the new ones.
+This provides a convenient single-step workflow: update, build, and force-load the new definitions.
 
-The command returns after enqueueing the build. Reloading is driven by ~elpaca-post-queue-hook~ when Elpaca's build process actually finishes, so callers must not treat the command's return as proof that the rebuilt package is already loaded.
+The command returns a status token after enqueueing the build. Reloading is driven by ~elpaca-post-queue-hook~ when Elpaca's build process actually finishes. Callers that need a deterministic completion point should poll ~elpaca-extras-build-reload-status~ or ~elpaca-extras-format-build-reload-status~ for that token with short calls; they should not call ~elpaca-wait~ inside the daemon.
 
 ** Rebuild and reload
 :PROPERTIES:

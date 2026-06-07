@@ -66,6 +66,7 @@
   (let ((hook-removed nil)
         (reloaded nil)
         (message-result nil)
+        token-status
         (fake-callback (lambda () nil)))
     (cl-letf (((symbol-function 'elpaca-get)
                (lambda (_pkg) 'fake-elpaca))
@@ -80,9 +81,15 @@
               ((symbol-function 'message)
                (lambda (fmt &rest args)
                  (setq message-result (apply #'format fmt args)))))
-      (elpaca-extras--handle-build-complete 'my-pkg fake-callback "Updated")
+      (setq token-status
+            (elpaca-extras--handle-build-complete
+             'my-pkg fake-callback "Updated" "test-token"))
       (should (eq hook-removed fake-callback))
       (should (eq reloaded 'my-pkg))
+      (should (eq token-status 'finished))
+      (should (eq (plist-get (elpaca-extras-build-reload-status "test-token")
+                             :state)
+                  'finished))
       (should (string-match-p "Updated and reloaded: my-pkg" message-result)))))
 
 (ert-deftest elpaca-extras-test-handle-build-complete-failed ()
@@ -90,6 +97,7 @@
   (let* ((hook-removed nil)
          (reloaded nil)
          (message-result nil)
+         token-status
          (fake-callback (lambda () nil))
          ;; Build a fake elpaca struct: a list with log at index 20.
          (fake-elpaca (make-list 21 nil)))
@@ -107,9 +115,15 @@
               ((symbol-function 'message)
                (lambda (fmt &rest args)
                  (setq message-result (apply #'format fmt args)))))
-      (elpaca-extras--handle-build-complete 'broken-pkg fake-callback "Updated")
+      (setq token-status
+            (elpaca-extras--handle-build-complete
+             'broken-pkg fake-callback "Updated" "failed-token"))
       (should (eq hook-removed fake-callback))
       (should-not reloaded)
+      (should (eq token-status 'failed))
+      (should (eq (plist-get (elpaca-extras-build-reload-status "failed-token")
+                             :state)
+                  'failed))
       (should (string-match-p "Build failed for broken-pkg" message-result))
       (should (string-match-p "dependency conflict" message-result)))))
 
@@ -137,6 +151,28 @@
       (elpaca-extras--handle-build-complete 'missing-pkg fake-callback "Updated")
       (should-not hook-removed))))
 
+(ert-deftest elpaca-extras-test-rebuild-and-reload-records-queued-token ()
+  "Scheduling a rebuild records a queued status under the returned token."
+  (let ((added-callback nil)
+        (rebuilt nil))
+    (cl-letf (((symbol-function 'add-hook)
+               (lambda (hook callback)
+                 (when (eq hook 'elpaca-post-queue-hook)
+                   (setq added-callback callback))))
+              ((symbol-function 'elpaca-rebuild)
+               (lambda (pkg _force) (setq rebuilt pkg))))
+      (let* ((token (elpaca-extras-rebuild-and-reload 'my-pkg))
+             (entry (elpaca-extras-build-reload-status token)))
+        (should (stringp token))
+        (should added-callback)
+        (should (eq rebuilt 'my-pkg))
+        (should (eq (plist-get entry :package) 'my-pkg))
+        (should (eq (plist-get entry :state) 'queued))))))
+
+(ert-deftest elpaca-extras-test-build-reload-status-missing-token ()
+  "Unknown reload tokens return nil."
+  (should-not (elpaca-extras-build-reload-status "missing-token")))
+
 (ert-deftest elpaca-extras-test-handle-build-complete-failed-no-log ()
   "On failure with empty log, the message reports an unknown error."
   (let* ((message-result nil)
@@ -157,10 +193,9 @@
 
 ;;;; elpaca-extras-reload
 
-(ert-deftest elpaca-extras-test-reload-unloads-and-reloads-loaded-features ()
-  "Only features already present in `features' are unloaded and reloaded."
-  (let* ((unloaded nil)
-         (loaded nil)
+(ert-deftest elpaca-extras-test-reload-loads-loaded-features ()
+  "Loaded package features are force-loaded again."
+  (let* ((loaded nil)
          ;; `features' is not a special variable, so `let' in a
          ;; lexical-binding file creates a lexical binding that is
          ;; invisible to `elpaca-extras-reload'.  Save and restore the
@@ -168,7 +203,8 @@
          (saved-features features))
     (unwind-protect
         (cl-letf (((symbol-function 'locate-file)
-                   (lambda (_name _path _suffixes) "/fake/pkg/pkg.el"))
+                   (lambda (name _path _suffixes)
+                     (format "/fake/pkg/%s.el" name)))
                   ((symbol-function 'directory-files)
                    (lambda (_dir _full _pattern)
                      '("/fake/pkg/pkg-core.el" "/fake/pkg/pkg-extra.el" "/fake/pkg/pkg-utils.el")))
@@ -179,19 +215,17 @@
                        (erase-buffer)
                        (insert (format "(provide '%s)" feature))
                        (goto-char (point-min)))))
-                  ((symbol-function 'unload-feature)
-                   (lambda (feat _force) (push feat unloaded)))
-                  ((symbol-function 'require)
-                   (lambda (feat &rest _) (push feat loaded)))
+                  ((symbol-function 'load)
+                   (lambda (file &rest _)
+                     (push (intern (file-name-sans-extension
+                                    (file-name-nondirectory file)))
+                           loaded)))
                   ((symbol-function 'message)
                    #'ignore))
           (setq features (list 'pkg-core 'pkg-utils 'unrelated-feature))
           (elpaca-extras-reload 'pkg)
-          ;; pkg-core and pkg-utils are in `features', so they should be reloaded.
-          ;; pkg-extra is NOT in `features', so it should be skipped.
-          (should (memq 'pkg-core unloaded))
-          (should (memq 'pkg-utils unloaded))
-          (should-not (memq 'pkg-extra unloaded))
+          ;; The main package feature is always force-loaded after a rebuild.
+          (should (memq 'pkg loaded))
           (should (memq 'pkg-core loaded))
           (should (memq 'pkg-utils loaded))
           (should-not (memq 'pkg-extra loaded)))
@@ -199,10 +233,10 @@
 
 (ert-deftest elpaca-extras-test-reload-allp-loads-all-features ()
   "With ALLP non-nil, all discovered features are loaded regardless of `features'."
-  (let* ((unloaded nil)
-         (loaded nil))
+  (let* ((loaded nil))
     (cl-letf (((symbol-function 'locate-file)
-               (lambda (_name _path _suffixes) "/fake/pkg/pkg.el"))
+               (lambda (name _path _suffixes)
+                 (format "/fake/pkg/%s.el" name)))
               ((symbol-function 'directory-files)
                (lambda (_dir _full _pattern)
                  '("/fake/pkg/pkg-core.el" "/fake/pkg/pkg-extra.el")))
@@ -213,27 +247,26 @@
                    (erase-buffer)
                    (insert (format "(provide '%s)" feature))
                    (goto-char (point-min)))))
-              ((symbol-function 'unload-feature)
-               (lambda (feat _force) (push feat unloaded)))
-              ((symbol-function 'require)
-               (lambda (feat &rest _) (push feat loaded)))
+              ((symbol-function 'load)
+               (lambda (file &rest _)
+                 (push (intern (file-name-sans-extension
+                                (file-name-nondirectory file)))
+                       loaded)))
               ((symbol-function 'message)
                #'ignore))
       (elpaca-extras-reload 'pkg 'allp)
       ;; Both features should be processed regardless of what is in `features'.
-      (should (memq 'pkg-core unloaded))
-      (should (memq 'pkg-extra unloaded))
       (should (memq 'pkg-core loaded))
       (should (memq 'pkg-extra loaded)))))
 
 (ert-deftest elpaca-extras-test-reload-no-matching-features ()
-  "When no discovered features are currently loaded, nothing is unloaded or reloaded."
-  (let* ((unloaded nil)
-         (loaded nil)
+  "When no discovered features are loaded, the main feature is loaded."
+  (let* ((loaded nil)
          (saved-features features))
     (unwind-protect
         (cl-letf (((symbol-function 'locate-file)
-                   (lambda (_name _path _suffixes) "/fake/pkg/pkg.el"))
+                   (lambda (name _path _suffixes)
+                     (format "/fake/pkg/%s.el" name)))
                   ((symbol-function 'directory-files)
                    (lambda (_dir _full _pattern)
                      '("/fake/pkg/pkg-core.el")))
@@ -244,16 +277,16 @@
                        (erase-buffer)
                        (insert (format "(provide '%s)" feature))
                        (goto-char (point-min)))))
-                  ((symbol-function 'unload-feature)
-                   (lambda (feat _force) (push feat unloaded)))
-                  ((symbol-function 'require)
-                   (lambda (feat &rest _) (push feat loaded)))
+                  ((symbol-function 'load)
+                   (lambda (file &rest _)
+                     (push (intern (file-name-sans-extension
+                                    (file-name-nondirectory file)))
+                           loaded)))
                   ((symbol-function 'message)
                    #'ignore))
           (setq features (list 'unrelated-feature))
           (elpaca-extras-reload 'pkg)
-          (should-not unloaded)
-          (should-not loaded))
+          (should (equal loaded '(pkg))))
       (setq features saved-features))))
 
 (provide 'elpaca-extras-test)

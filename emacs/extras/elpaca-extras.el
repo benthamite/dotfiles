@@ -40,6 +40,9 @@
   "List of package identifiers that must never be written to a lock file."
   :type '(repeat symbol))
 
+(defvar elpaca-extras--build-reload-statuses (make-hash-table :test #'equal)
+  "Status table for asynchronous build-and-reload requests.")
+
 ;;;; Functions
 
 ;; github.com/progfolio/elpaca/issues/250
@@ -110,6 +113,22 @@ If PKG is nil, prompt for it."
   (interactive (list (elpaca--read-queued "Rebuild and reload package: ")))
   (elpaca-extras--build-and-reload pkg #'elpaca-rebuild "Rebuilt"))
 
+;;;###autoload
+(defun elpaca-extras-build-reload-status (token)
+  "Return the build-and-reload status plist for TOKEN."
+  (when-let* ((status (gethash token elpaca-extras--build-reload-statuses)))
+    (copy-sequence status)))
+
+;;;###autoload
+(defun elpaca-extras-format-build-reload-status (token)
+  "Return a compact status string for build-and-reload TOKEN.
+The result is formatted as STATE:MESSAGE so shell hooks can poll
+completion with short `emacsclient' calls."
+  (let* ((status (elpaca-extras-build-reload-status token))
+         (state (or (plist-get status :state) 'missing))
+         (message (or (plist-get status :message) "")))
+    (format "%s:%s" state message)))
+
 (defun elpaca-extras--build-and-reload (pkg build-fn verb)
   "Build PKG asynchronously using BUILD-FN, then reload it.
 VERB is a past-tense verb for the success message (e.g., \"Updated\").
@@ -120,15 +139,30 @@ the build is enqueued and this function returns immediately, and the
 reload happens once the build process actually finishes.  This avoids
 `elpaca-wait', whose `sit-for' loop pumps the event loop and can wedge a
 daemon that is concurrently serving `emacsclient' requests."
-  (letrec ((callback
+  (letrec ((token (elpaca-extras--build-reload-token pkg))
+           (callback
             (lambda ()
-              (elpaca-extras--handle-build-complete pkg callback verb))))
+              (elpaca-extras--handle-build-complete pkg callback verb token))))
+    (elpaca-extras--record-build-reload-status
+     token :package pkg :state 'queued :message "Build queued")
     (add-hook 'elpaca-post-queue-hook callback)
-    (funcall build-fn pkg t)))
+    (funcall build-fn pkg t)
+    token))
 
-(defun elpaca-extras--handle-build-complete (pkg callback verb)
+(defun elpaca-extras--build-reload-token (pkg)
+  "Return a unique build-and-reload token for PKG."
+  (format "%s-%s-%s" pkg (float-time) (random most-positive-fixnum)))
+
+(defun elpaca-extras--record-build-reload-status (token &rest status)
+  "Record STATUS under build-and-reload TOKEN."
+  (when token
+    (puthash token status elpaca-extras--build-reload-statuses)))
+
+(defun elpaca-extras--handle-build-complete (pkg callback verb &optional token)
   "Handle build completion for PKG, removing CALLBACK from hook.
-VERB is a past-tense verb for the success message."
+VERB is a past-tense verb for the success message.
+
+TOKEN, when non-nil, identifies the status entry to update."
   (let* ((e (elpaca-get pkg))
          (status (and e (elpaca--status e))))
     (when (memq status '(finished failed))
@@ -136,10 +170,19 @@ VERB is a past-tense verb for the success message."
       (pcase status
         ('finished
          (elpaca-extras-reload pkg)
-         (message "%s and reloaded: %s" verb pkg))
+         (elpaca-extras--record-build-reload-status
+          token :package pkg :state 'finished
+          :message (format "%s and reloaded: %s" verb pkg))
+         (message "%s and reloaded: %s" verb pkg)
+         'finished)
         ('failed
-         (message "Build failed for %s: %s" pkg
-                  (or (and e (nth 2 (car (elpaca<-log e)))) "unknown error")))))))
+         (let ((message (format "Build failed for %s: %s" pkg
+                                (or (and e (nth 2 (car (elpaca<-log e))))
+                                    "unknown error"))))
+           (elpaca-extras--record-build-reload-status
+            token :package pkg :state 'failed :message message)
+           (message "%s" message)
+           'failed))))))
 
 ;;;;; Lock file
 
@@ -161,4 +204,3 @@ ELPACAS, when non-nil, should be a queue-like list as accepted by
 
 (provide 'elpaca-extras)
 ;;; elpaca-extras.el ends here
-

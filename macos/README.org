@@ -41,17 +41,20 @@ Mac:
   updates may require privileges or a restart.
 
 To exclude fragile packages from unattended upgrades, add one package per line
-to =~/.config/personal-updates/hold.txt=. Entries may be unqualified, such as
+to =macos/personal-updates/hold.txt=. Entries may be unqualified, such as
 =visual-studio-code=, or scoped, such as =brew_formula/python= or
-=brew_cask/visual-studio-code=.
+=brew_cask/visual-studio-code=. Use =--hold-file= only for a temporary
+per-run override.
 
 To preserve the cask-exclusion behavior of =macos-update-homebrew=, put cask
-names in =~/.config/personal-updates/excluded-casks.txt=. Excluded casks are
-recorded during scans but skipped by the delayed upgrade lane.
+names in =macos/personal-updates/excluded-casks.txt=. Excluded casks are
+recorded during scans but skipped by the delayed upgrade lane. Use
+=--excluded-casks-file= only for a temporary per-run override.
 
 To add more fast-track Homebrew packages, put one package per line in
-=~/.config/personal-updates/fast-brew.txt=. These entries are added to the
-defaults, not used as a replacement.
+=macos/personal-updates/fast-brew.txt=. These entries are added to the
+defaults, not used as a replacement. Use =--fast-brew-file= only for a
+temporary per-run override.
 
 Install the scheduled Homebrew jobs with:
 

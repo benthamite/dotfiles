@@ -9,11 +9,13 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_POLICY_DIR = REPO_ROOT / "macos/personal-updates"
 DEFAULT_STATE_FILE = Path.home() / ".local/state/personal-updates/state.json"
 DEFAULT_LOG_DIR = Path.home() / ".local/state/personal-updates/logs"
-DEFAULT_HOLD_FILE = Path.home() / ".config/personal-updates/hold.txt"
-DEFAULT_EXCLUDED_CASKS_FILE = Path.home() / ".config/personal-updates/excluded-casks.txt"
-DEFAULT_FAST_BREW_FILE = Path.home() / ".config/personal-updates/fast-brew.txt"
+DEFAULT_HOLD_FILE = DEFAULT_POLICY_DIR / "hold.txt"
+DEFAULT_EXCLUDED_CASKS_FILE = DEFAULT_POLICY_DIR / "excluded-casks.txt"
+DEFAULT_FAST_BREW_FILE = DEFAULT_POLICY_DIR / "fast-brew.txt"
 DEFAULT_FAST_BREW_PACKAGES = ("claude-code@latest", "codex")
 DEFAULT_MIN_AGE_DAYS = 7
 KINDS = ("brew_formula", "brew_cask")

@@ -1,0 +1,2 @@
+# One package per line. Entries may be unqualified, or scoped as
+# brew_formula/name or brew_cask/name.

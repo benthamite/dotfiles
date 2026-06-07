@@ -1,0 +1,3 @@
+# Additional fast-track Homebrew packages. Defaults already include:
+# claude-code@latest
+# codex

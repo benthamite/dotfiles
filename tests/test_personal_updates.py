@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "bin" / "personal-updates"
+POLICY_DIR = ROOT / "macos" / "personal-updates"
 
 
 def load_module():
@@ -247,6 +248,18 @@ class PersonalUpdatesStateTest(unittest.TestCase):
         )
 
         self.assertEqual(result.stdout.strip(), "1")
+
+    def test_default_policy_files_live_in_macos_directory(self):
+        self.assertEqual(self.mod.DEFAULT_POLICY_DIR, POLICY_DIR)
+        self.assertEqual(self.mod.DEFAULT_HOLD_FILE, POLICY_DIR / "hold.txt")
+        self.assertEqual(
+            self.mod.DEFAULT_EXCLUDED_CASKS_FILE,
+            POLICY_DIR / "excluded-casks.txt",
+        )
+        self.assertEqual(
+            self.mod.DEFAULT_FAST_BREW_FILE,
+            POLICY_DIR / "fast-brew.txt",
+        )
 
 
 if __name__ == "__main__":

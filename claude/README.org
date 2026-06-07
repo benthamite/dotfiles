@@ -588,7 +588,10 @@ resolves active Elpaca packages with =bin/elpaca-package-path=, especially
 documents the headless fast-download helper at
 =claude/skills/add-bib-entry/scripts/download_annas_article.py= and its Codex
 counterpart, modeled on =stafforini.com/scripts/download-missing-pdfs.py=, so
-agents can add the PDF and =file= field without driving live EWW.
+agents can add the PDF and =file= field without driving live EWW. It also
+requires targeted metadata cleanup after the programmatic import: site-hosted
+works get =journaltitle=, contained works cross-reference their parent entries,
+and every work has a publication year, including forthcoming works.
 
 *** Release and operations skills
 :PROPERTIES:

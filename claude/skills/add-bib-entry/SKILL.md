@@ -46,6 +46,10 @@ Use Pablo's Emacs bibliography workflow, not ad hoc BibTeX, whenever a work has 
      python3 scripts/download_annas_article.py DOI CITEKEY "/Users/pablostafforini/My Drive/bibliography/new.bib"
      ```
      This mirrors `stafforini.com/scripts/download-missing-pdfs.py`: it reads the Anna's Archive key from `pass show tlon/core/annas-archive`, fetches the DOI SciDB page, extracts the MD5, downloads via `dyn/api/fast_download.json`, saves `~/My Drive/library-pdf/CITEKEY.pdf`, and inserts the `file` field. Read `claude/context/secrets.md` before invoking secret-backed commands, and never print the key.
+   - Re-read the generated entry and do targeted metadata cleanup only for fields the programmatic path missed:
+     - Site-hosted articles, blog posts, and other `@online` works need `journaltitle` set to the site/publication name, such as `Planned Obsolescence`. Zotra often omits this field; add it manually when missing.
+     - Every work needs a publication year. Do not leave works undated, and do not use `date = {forthcoming}` as the only date. For forthcoming works, use the year that the available evidence makes most likely: publisher metadata, DOI metadata, announcement pages, scheduled issue data, or the best available estimate.
+     - Works contained in larger works (`@incollection`, `@inbook`, `@bookinbook`, chapters, encyclopedia entries, stories in collections, and similar cases) should cross-reference the larger work. Search active bibliography files for the parent title/editor/publisher/year; if the parent is missing, add it first. Then set `crossref = {ParentKey}` on the contained work and keep parent-level metadata on the parent entry. Search existing entries with `rg -n "crossref = \\{|@incollection|@inbook|@bookinbook" BIBFILE` for local patterns.
 
 5. Use the returned/generated citekey in notes.
    - Cite as `[cite:@Key]`.
@@ -58,7 +62,7 @@ Use Pablo's Emacs bibliography workflow, not ad hoc BibTeX, whenever a work has 
   - `/Users/pablostafforini/My Drive/dotfiles/emacs/extras/ebib-extras.el`
   - Anna's Archive download behavior: run `"/Users/pablostafforini/My Drive/dotfiles/bin/elpaca-package-path" annas-archive annas-archive.el` and inspect the returned file.
   - package docs in `/Users/pablostafforini/My Drive/dotfiles/emacs/extras/doc/zotra-extras.org` and `ebib-extras.org`
-- Manual BibTeX is acceptable for genuinely unsupported cases such as forthcoming chapters without DOI/ISBN/URL metadata, but say that it is a fallback and verify key style, required fields, and citation resolution.
+- Manual BibTeX is acceptable only for genuinely unsupported cases, and only after the Zotra/Ebib path and relevant implementation have been inspected. Say that it is a fallback and still enforce the same metadata invariants: a publication year for every work, `journaltitle` for site-hosted works, parent `crossref` entries for contained works, valid key style, required fields, and citation resolution.
 - If associated-file download/attachment requires live Emacs interaction, browser/authentication, or a manual choice between candidates, leave the entry in a clearly inspectable state and report the exact missing piece.
 
 ## Verification

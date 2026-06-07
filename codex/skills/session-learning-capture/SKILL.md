@@ -56,6 +56,8 @@ Captured: YYYY-MM-DD
 **Why it matters:** The failure, friction, or repeated correction this would
 prevent.
 
+**Value:** NN/100
+
 **Possible target:** One of `instruction`, `skill`, `hook`, `script`, `docs`,
 `test`, `decision`, or `unknown`.
 
@@ -66,7 +68,13 @@ correction. Do not quote secrets or sensitive content.
 review cautious.
 ```
 
-Add multiple candidates only when they are distinct actionable ideas.
+Set `Value` to an integer from 0 to 100 estimating the importance of later
+implementing this candidate. Use the full range: 90-100 for changes that
+prevent severe or recurring failures across many sessions, 70-89 for high-value
+workflow or safety improvements, 40-69 for useful but narrower improvements,
+10-39 for minor polish or one-off friction, and 0-9 for candidates that barely
+clear the usefulness bar. Add multiple candidates only when they are distinct
+actionable ideas.
 
 ## Workflow
 
@@ -82,7 +90,8 @@ Add multiple candidates only when they are distinct actionable ideas.
    lesson candidates were captured.
 6. If there are useful lessons, create the inbox Markdown file. Do not modify
    `AGENTS.md`, `CLAUDE.md`, skills, hooks, READMEs, decisions, or code.
-7. Report the inbox path and the candidate titles. Tell the user that
+7. Report the inbox path and the candidate titles with their `Value` scores.
+   Tell the user that
    `session-retro` processes the inbox later.
 
 ## Safety

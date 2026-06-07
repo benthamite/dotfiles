@@ -660,8 +660,9 @@ for lesson capture, regardless of the session's working directory. It writes
 useful reusable candidates to ignored local files under the central dotfiles
 =.agent-learnings/inbox/=, and stops there. It is the producer half of the
 agent-learning workflow: it never promotes lessons to durable instructions,
-skills, hooks, docs, or code. The manual =session-retro= skill remains the
-consumer half that interviews the user and implements accepted inbox items.
+skills, hooks, docs, or code. Each candidate includes a numeric =Value= score
+from 0 to 100 so the manual =session-retro= consumer can review high-impact
+items before minor polish.
 
 **** verify
 :PROPERTIES:

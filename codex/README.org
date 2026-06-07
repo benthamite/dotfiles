@@ -506,9 +506,11 @@ to review the current session, regardless of the session's working directory.
 It writes useful reusable lesson candidates to ignored local files under the
 central dotfiles =.agent-learnings/inbox/= and does not promote, implement,
 archive, or delete anything; =session-retro= handles those manual review steps
-later. Codex =Stop= hooks are turn-end hooks, not reliable session-exit hooks,
-so the tracked Codex hook configuration does not invoke session learning
-capture from =Stop=.
+later. Each captured candidate includes a numeric =Value= score from 0 to 100
+so the later retro pass can prioritize high-impact lessons before minor polish.
+Codex =Stop= hooks are turn-end hooks, not reliable session-exit hooks, so the
+tracked Codex hook configuration does not invoke session learning capture from
+=Stop=.
 
 Manual audit:
 

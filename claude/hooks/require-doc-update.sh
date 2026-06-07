@@ -70,11 +70,13 @@ if [ "$HAS_DOC_DIR" = false ] && [ "$HAS_README_ORG" = false ] && [ "$HAS_README
   exit 0
 fi
 
-# Machine-generated .el files that have no corresponding manual
-is_generated_el() {
+# .el files exempt from the manual requirement: machine-generated files
+# and test files, neither of which changes documented behavior.
+is_doc_exempt_el() {
   local file="$1"
   case "${file##*/}" in
     lockfile.el | *-autoloads.el | *-pkg.el) return 0 ;;
+    *-test.el | *-tests.el | test-*.el) return 0 ;;
     *) return 1 ;;
   esac
 }
@@ -91,7 +93,7 @@ if [ -n "$STAGED" ]; then
   while IFS= read -r file; do
     case "$file" in
       *.el)
-        is_generated_el "$file" || HAS_EL=true
+        is_doc_exempt_el "$file" || HAS_EL=true
         ;;
       doc/*.org | */doc/*.org)
         HAS_DOC_ORG=true
@@ -116,7 +118,7 @@ if [ -n "$ADD_ARGS" ]; then
   if [ "$HAS_EL" = false ]; then
     # Extract .el filenames from git add args, skipping machine-generated ones
     for el_file in $(echo "$ADD_ARGS" | grep -oE '[^ ]*\.el\b' || true); do
-      if ! is_generated_el "$el_file"; then
+      if ! is_doc_exempt_el "$el_file"; then
         HAS_EL=true
         break
       fi

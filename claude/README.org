@@ -943,7 +943,10 @@ Blocks =git commit= when =.el= files are staged but no =doc/*.org= or
 =doc/= directory, a =README.org= at the root, or only a root =README.md=.
 Extras packages use the =doc/*.org= manual; standalone packages that keep an
 Org manual at the root use =README.org=; repos with no Org manual fall back to
-=README.md=. When scanning a combined =git add && git commit= command, only the
+=README.md=. Machine-generated files (=lockfile.el=, =*-autoloads.el=,
+=*-pkg.el=) and test files (=*-test.el=, =*-tests.el=, =test-*.el=) are exempt,
+since neither changes documented behavior. When scanning a combined =git add &&
+git commit= command, only the
 =git add= arguments are examined (not the commit message) to avoid false
 positives from commit messages that mention =.el= files. Verifies that doc
 files have actual modifications (staged or unstaged) rather than accepting

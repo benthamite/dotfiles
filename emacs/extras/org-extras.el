@@ -142,9 +142,11 @@ Each element should be a string, as used by Org Babel (e.g., \"python\")."
   :type '(repeat string)
   :group 'org-extras)
 
-(defcustom org-extras-citation-preview-style "en/long.csl"
-  "CSL style used by `org-extras-export-citation-preview'."
-  :type 'string
+(defcustom org-extras-citation-preview-style nil
+  "CSL style used by `org-extras-export-citation-preview'.
+When nil, use Org's built-in CSL fallback style."
+  :type '(choice (const :tag "Use Org default CSL style" nil)
+                 string)
   :group 'org-extras)
 
 ;;;; Variables
@@ -185,9 +187,12 @@ style so each citation appears as an expanded reference."
   (let* ((source (buffer-substring-no-properties (point-min) (point-max)))
          (keys (org-extras--citation-preview-keys source))
          (bib-file (make-temp-file "org-cite-preview-" nil ".bib"))
-         (output (or output-file (org-extras--citation-preview-default-output-file))))
+         (output (org-extras--citation-preview-normalize-output-file
+                  (or output-file
+                      (org-extras--citation-preview-default-output-file)))))
     (unless keys
       (user-error "No org-cite citations found"))
+    (org-extras--citation-preview-check-output-file output)
     (unwind-protect
         (progn
           (org-extras--citation-preview-write-bibliography keys bib-file)
@@ -200,15 +205,29 @@ style so each citation appears as an expanded reference."
 
 (defun org-extras--citation-preview-read-output-file ()
   "Read an output file for `org-extras-export-citation-preview'."
-  (read-file-name "Export citation preview to: "
-                  nil
-                  (org-extras--citation-preview-default-output-file)))
+  (let ((default (org-extras--citation-preview-default-output-file)))
+    (read-file-name "Export citation preview to: "
+                    (file-name-directory default)
+                    (file-name-nondirectory default))))
 
 (defun org-extras--citation-preview-default-output-file ()
   "Return the default citation preview HTML output path."
   (if-let* ((file (buffer-file-name)))
       (concat (file-name-sans-extension file) "-citation-preview.html")
     (expand-file-name "org-citation-preview.html" temporary-file-directory)))
+
+(defun org-extras--citation-preview-normalize-output-file (file)
+  "Return FILE as an expanded HTML output path."
+  (let ((expanded (expand-file-name file)))
+    (if (member (file-name-extension expanded) '("html" "htm"))
+        expanded
+      (concat (file-name-sans-extension expanded) ".html"))))
+
+(defun org-extras--citation-preview-check-output-file (output)
+  "Signal if OUTPUT would overwrite the current source file."
+  (when-let* ((source (buffer-file-name)))
+    (when (file-equal-p source output)
+      (user-error "Refusing to overwrite source Org file"))))
 
 (defun org-extras--citation-preview-keys (source)
   "Return unique citation keys in Org SOURCE."
@@ -306,8 +325,9 @@ style so each citation appears as an expanded reference."
 
 (defun org-extras--citation-preview-export-processors ()
   "Return CSL export processors for citation preview export."
-  (if (org-extras--citation-preview-style-available-p
-       org-extras-citation-preview-style)
+  (if (and org-extras-citation-preview-style
+           (org-extras--citation-preview-style-available-p
+            org-extras-citation-preview-style))
       `((t . (csl ,org-extras-citation-preview-style)))
     '((t . (csl)))))
 
@@ -336,7 +356,10 @@ style so each citation appears as an expanded reference."
     (when (re-search-forward
            (regexp-opt '("NO_ITEM_DATA" "{{< cite" "[cite:"))
            nil t)
-      (user-error "Citation preview export still contains unresolved citations"))))
+      (user-error "Citation preview export still contains unresolved citations"))
+    (goto-char (point-min))
+    (when (re-search-forward "\\[[^]\n]+\\](<a href=" nil t)
+      (user-error "Citation preview export still contains Markdown links"))))
 
 ;; Adapted from lists.gnu.org/archive/html/emacs-orgmode/2011-06/msg00716.html
 (defun org-extras-link-get-thing-at-point (arg)

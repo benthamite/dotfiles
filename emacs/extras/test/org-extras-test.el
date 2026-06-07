@@ -678,6 +678,25 @@
              "date = {2026-06-07}"
              (org-extras--citation-preview-sanitize-entry entry)))))
 
+(ert-deftest org-extras-test-citation-preview-normalize-output-file ()
+  "Normalize citation preview output paths to HTML files."
+  (should (string-suffix-p
+           "preview.html"
+           (org-extras--citation-preview-normalize-output-file "preview.org")))
+  (should (string-suffix-p
+           "preview.html"
+           (org-extras--citation-preview-normalize-output-file "preview.html"))))
+
+(ert-deftest org-extras-test-citation-preview-check-output-file ()
+  "Reject citation preview output paths that overwrite the source file."
+  (let ((file (make-temp-file "org-extras-source-" nil ".org")))
+    (unwind-protect
+        (with-current-buffer (find-file-noselect file)
+          (should-error (org-extras--citation-preview-check-output-file file))
+          (kill-buffer))
+      (when (file-exists-p file)
+        (delete-file file)))))
+
 (ert-deftest org-extras-test-citation-preview-find-entry-in-file ()
   "Find a single BibLaTeX entry by key."
   (let ((file (make-temp-file "org-extras-bib-" nil ".bib")))
@@ -700,6 +719,17 @@
         (progn
           (with-temp-file file
             (insert "<li>(NO_ITEM_DATA:Alpha2020)</li>"))
+          (should-error (org-extras--citation-preview-assert-output file)))
+      (when (file-exists-p file)
+        (delete-file file)))))
+
+(ert-deftest org-extras-test-citation-preview-assert-output-markdown ()
+  "Reject HTML that still contains Markdown link markup."
+  (let ((file (make-temp-file "org-extras-cite-output-" nil ".html")))
+    (unwind-protect
+        (progn
+          (with-temp-file file
+            (insert "<li>[Title](<a href=\"https://example.com\">url</a>)</li>"))
           (should-error (org-extras--citation-preview-assert-output file)))
       (when (file-exists-p file)
         (delete-file file)))))

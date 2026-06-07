@@ -368,12 +368,13 @@ should show full reference text.
 The command does not rely on directory-local citation processors or on
 the whole configured bibliography being parseable by CSL.  It extracts
 the cited keys from the current buffer, writes a temporary bibliography
-containing only those entries, forces CSL export with
-~org-extras-citation-preview-style~, rewrites citations to the CSL
-~bibentry~ style in the temporary export buffer, and opens the generated
-HTML file.  It signals an error if the output still contains unresolved
-markers such as =NO_ITEM_DATA=, Hugo citation shortcodes, or raw
-=org-cite= syntax.
+containing only those entries, rewrites citations to the CSL ~bibentry~
+style in the temporary export buffer, and opens the generated HTML file.
+By default it uses Org's built-in CSL fallback style; set
+~org-extras-citation-preview-style~ to use a specific CSL file.  It
+signals an error if the output still contains unresolved markers such as
+=NO_ITEM_DATA=, Hugo citation shortcodes, raw =org-cite= syntax, or
+Markdown links embedded in the exported HTML.
 
 *** Pasting images from the clipboard
 :PROPERTIES:

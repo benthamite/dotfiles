@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.stafforini.ha-health-check</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/python3</string>
+    <string>/Users/pablostafforini/My Drive/dotfiles/codex/skills/home-assistant-health-check/scripts/send_ha_health_email.py</string>
+    <string>--home-root</string>
+    <string>/Users/pablostafforini/My Drive/home</string>
+    <string>--known-issues</string>
+    <string>/Users/pablostafforini/My Drive/home/context/ha-health-known-issues.md</string>
+    <string>--to</string>
+    <string>pablo.stafforini@gmail.com</string>
+    <string>--gmail-account</string>
+    <string>personal</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>8</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>/Users/pablostafforini/Library/Logs/ha-health-check.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/pablostafforini/Library/Logs/ha-health-check.err.log</string>
+</dict>
+</plist>

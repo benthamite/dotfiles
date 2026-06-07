@@ -819,6 +819,24 @@ blocked TODOs by ease of unblock
 including a "still blocked since last run" section, and opens it in Emacs.
 Default =--mode dry-run= classifies without acting.
 
+**** home-assistant-health-check
+
+Audits Pablo's Home Assistant instance for daily operational breakage without
+mutating HA state. The paired collector script queries the HA REST API with the
+token from =pass=, gathers config entries that are not loaded, unavailable or
+unknown entities, critical workflow entities, recent warning/error log
+patterns, and deltas against the previous run. It redacts signed stream URLs in
+logs, truncates the noisy unavailable-entity list in command output by default,
+and stores the full last snapshot under =~/.local/state/ha-health-check/=.
+The skill then classifies findings as new, actionable, known persistent, or
+transient noise using the home repo's =context/ha-health-known-issues.md= file.
+For this local-only HA workflow, scheduling uses the bundled launchd plist
+=launchd/com.stafforini.ha-health-check.plist= and email runner
+=scripts/send_ha_health_email.py= rather than cloud =/schedule=, because cloud
+scheduled agents cannot reach =homeassistant.local= or local =pass=. Scheduled
+runs should report concise email summaries and must not restart, reload,
+reconfigure, or call device-changing services unless explicitly requested.
+
 ** Hooks
 :PROPERTIES:
 :ID:       4D862953-7E8A-4154-BC16-919ED6B092A5

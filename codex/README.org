@@ -343,6 +343,22 @@ ranks remaining blockers by ease of unblock and includes a "still
 blocked since last run" section so the user can clear the cheapest
 gates first.
 
+The =home-assistant-health-check= skill is a Codex operations workflow for
+daily Home Assistant breakage monitoring. Its collector script queries the HA
+REST API using the token from =pass=, gathers failed config entries,
+unavailable or unknown entities, critical workflow entity states, recent
+warning/error log patterns, and deltas against the previous run, while redacting
+signed stream URLs. The default command output truncates the noisy
+unavailable-entity list while preserving the full list in saved state. Cross-run
+state is stored outside the dotfiles tree under
+=~/.local/state/ha-health-check/=. The skill classifies findings as new,
+actionable, known persistent, or transient noise using
+=~/My Drive/home/context/ha-health-known-issues.md=. For this local-only HA
+workflow, scheduling uses the bundled launchd plist and email runner rather than
+cloud =/schedule=, because cloud scheduled agents cannot reach
+=homeassistant.local= or local =pass=. Scheduled runs should produce concise
+email summaries and must not mutate HA state unless explicitly asked.
+
 The =code-audit= skill is a Codex development skill for finding
 actual correctness, security, error-handling, and data-integrity defects in
 application code. It requires agents to resolve scope, identify project-specific

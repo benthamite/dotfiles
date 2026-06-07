@@ -41,6 +41,11 @@ Use Pablo's Emacs bibliography workflow, not ad hoc BibTeX, whenever a work has 
      - ISBN/book-like entries: searches/downloads through Anna's Archive.
      - Online/article URLs: generates PDF and HTML files with `eww-extras-url-to-file`.
    - Anna's Archive downloads may fall back to the external browser. If the returned file list is empty or incomplete, inspect the `file` field and Downloads/library directories before reporting the exact missing attachment.
+   - For DOI article PDFs, prefer the historical headless download path when live Emacs/EWW is fragile:
+     ```bash
+     python3 scripts/download_annas_article.py DOI CITEKEY "/Users/pablostafforini/My Drive/bibliography/new.bib"
+     ```
+     This mirrors `stafforini.com/scripts/download-missing-pdfs.py`: it reads the Anna's Archive key from `pass show tlon/core/annas-archive`, fetches the DOI SciDB page, extracts the MD5, downloads via `dyn/api/fast_download.json`, saves `~/My Drive/library-pdf/CITEKEY.pdf`, and inserts the `file` field. Read `claude/context/secrets.md` before invoking secret-backed commands, and never print the key.
 
 5. Use the returned/generated citekey in notes.
    - Cite as `[cite:@Key]`.

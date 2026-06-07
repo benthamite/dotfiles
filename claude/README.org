@@ -577,7 +577,11 @@ state: a clean bibliography entry, resolved citekey, and associated PDF/HTML
 files when the Emacs workflow can obtain them; manual BibTeX is reserved for
 unsupported cases. When the workflow requires package source inspection, it
 resolves active Elpaca packages with =bin/elpaca-package-path=, especially
-=annas-archive=, rather than stale library paths.
+=annas-archive=, rather than stale library paths. For DOI article PDFs, it also
+documents the headless fast-download helper at
+=claude/skills/add-bib-entry/scripts/download_annas_article.py= and its Codex
+counterpart, modeled on =stafforini.com/scripts/download-missing-pdfs.py=, so
+agents can add the PDF and =file= field without driving live EWW.
 
 *** Release and operations skills
 :PROPERTIES:

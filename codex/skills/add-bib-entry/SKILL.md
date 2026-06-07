@@ -24,6 +24,7 @@ Use Pablo's Emacs bibliography workflow, not ad hoc BibTeX, whenever a work has 
    - Do not add new personal references to `old.bib` or Babel/Tlön bibliography files unless the user or project context explicitly calls for that.
 
 3. Add and process the entry through Zotra/Ebib.
+   - If you need to inspect or reload an Elpaca package involved in this workflow, resolve it with `/Users/pablostafforini/My Drive/dotfiles/bin/elpaca-package-path PACKAGE`. In particular, use `bin/elpaca-package-path annas-archive annas-archive.el` for Anna's Archive source. Do not use `locate-library`, `symbol-file`, or `~/.emacs.d/elpaca/...` as the source authority.
    - Manual/full workflow: run `zotra-extras-add-entry` in Emacs. It imports metadata via Zotra/Zotero translators, prompts for the target bibfile, opens the entry in Ebib, and then runs the Ebib processing path.
    - Headless/agent workflow: prefer `add_bib_entry_and_process` when available. It imports through Zotra, opens the generated key in Ebib, runs the Ebib processing path noninteractively, waits for asynchronous attachment work, and returns the key plus attached-file status.
    - Headless Emacs equivalent:
@@ -50,6 +51,7 @@ Use Pablo's Emacs bibliography workflow, not ad hoc BibTeX, whenever a work has 
 - If Zotra cannot import the work, inspect the relevant implementation before hand-writing BibTeX:
   - `/Users/pablostafforini/My Drive/dotfiles/emacs/extras/zotra-extras.el`
   - `/Users/pablostafforini/My Drive/dotfiles/emacs/extras/ebib-extras.el`
+  - Anna's Archive download behavior: run `"/Users/pablostafforini/My Drive/dotfiles/bin/elpaca-package-path" annas-archive annas-archive.el` and inspect the returned file.
   - package docs in `/Users/pablostafforini/My Drive/dotfiles/emacs/extras/doc/zotra-extras.org` and `ebib-extras.org`
 - Manual BibTeX is acceptable for genuinely unsupported cases such as forthcoming chapters without DOI/ISBN/URL metadata, but say that it is a fallback and verify key style, required fields, and citation resolution.
 - If associated-file download/attachment requires live Emacs interaction, browser/authentication, or a manual choice between candidates, leave the entry in a clearly inspectable state and report the exact missing piece.

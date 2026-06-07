@@ -34,12 +34,20 @@ emacsclient -e 'init-current-profile'
 
 Always use this to resolve the active profile path (`~/.config/emacs-profiles/<profile>/elpaca/`) rather than hardcoding a profile name, since it changes over time.
 
+For package source paths, prefer the deterministic resolver:
+
+```bash
+bin/elpaca-package-path PACKAGE [relative-path]
+```
+
+This returns `~/My Drive/dotfiles` for the special `dotfiles` package and the active profile's `elpaca/sources/PACKAGE` checkout for standalone packages, falling back to `repos` only when `sources` is absent. Do not use `locate-library`, `symbol-file`, or `~/.emacs.d/elpaca/...` to decide where an elpaca package's editable source lives; those can point at stale builds or legacy checkouts.
+
 # Workflow
 
 1. Identify the layout before editing.
    - Files under `~/My Drive/dotfiles/` are canonical dotfiles files.
    - Files under `~/My Drive/dotfiles/emacs/extras/` are dotfiles extras; edit the canonical dotfiles file and use `elisp-conventions` for batch testing, commit-time sync, and live Emacs verification.
-   - Standalone Emacs packages live in the active profile's `elpaca/sources/<package>/` clone; query the active profile instead of guessing the path.
+   - Standalone Emacs packages live in the active profile's `elpaca/sources/<package>/` clone; resolve them with `bin/elpaca-package-path PACKAGE` instead of guessing the path.
 2. If editing `emacs/config.org`, tangle it with the profile-aware command below.
 3. Update directly required documentation.
    - Significant changes under `claude/` require `claude/README.org`.

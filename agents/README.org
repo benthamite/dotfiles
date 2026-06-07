@@ -120,7 +120,8 @@ currently present in this repo. The skill name shown is the directory name.
   profile README card. Scope: Global.
 - =add-bib-entry=: Add works to Pablo's bibliography using the Emacs/Zotra/Ebib
   workflow, including DOI/ISBN/URL imports, citekey resolution, and headless
-  PDF/HTML attachment processing where available. Scope: Global.
+  PDF/HTML attachment processing where available; resolves involved Elpaca
+  package sources with =bin/elpaca-package-path=. Scope: Global.
 - =audit-mac-app=: Audit a macOS .app before running it or granting
   permissions, especially when the user asks whether a Mac app is safe,
   suspicious, malware, from an unknown developer, or requests screen recording,
@@ -148,9 +149,10 @@ currently present in this repo. The skill name shown is the directory name.
 - =document-elisp-extras=: Audit, create, or refresh documentation for all Emacs extras
   packages in the dotfiles repo. Scope: Global; Project-local: emacs.
 - =dotfiles-context=: Dotfiles and Emacs package routing context, including
-  the normal post-PR =config.org= pin for upstream Elpaca package branches
-  awaiting merge, with one package recipe per package and no duplicate
-  dependency pin declarations.
+  =bin/elpaca-package-path= for active-profile package source resolution, the
+  normal post-PR =config.org= pin for upstream Elpaca package branches awaiting
+  merge, with one package recipe per package and no duplicate dependency pin
+  declarations.
   Scope: Global.
 - =dx-audit=: Audit a codebase's AI developer experience, including project
   instructions, verification commands, automation, onboarding traps, and

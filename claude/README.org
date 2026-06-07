@@ -403,7 +403,7 @@ and should trigger =codex-app-handoff= rather than a generic fallback.
 :ID:       3AB926D5-2116-4864-93F2-B6D33CE832C5
 :END:
 
-States where dotfiles and external Emacs packages should be edited: all non-=dotfiles= elpaca packages are edited in the active profile's =~/.config/emacs-profiles/<profile>/elpaca/sources/<package>/= clone, while =dotfiles= is edited only at =~/My Drive/dotfiles/= and the elpaca clone is a read-only mirror synced by git hooks. Also covers active profile lookup, profile-aware =emacs/config.org= tangling, the normal post-PR step that pins upstream package PR branches in =config.org= with an =awaiting PR merge:= marker, while preserving the invariant that each package has one recipe and no duplicate dependency pin declarations, required agent README updates, verification handoffs, and the commit message format (=<scope>: <description>=). See also =pin-elisp-pr= for the detailed PR pin checklist, =elisp-conventions= for Elisp testing/reload rules, and =emacs/extras/doc/elisp-development-workflow.org= for the full two-clone sync architecture.
+States where dotfiles and external Emacs packages should be edited: all non-=dotfiles= elpaca packages are edited in the active profile's =~/.config/emacs-profiles/<profile>/elpaca/sources/<package>/= clone, resolved via =bin/elpaca-package-path= rather than =locate-library= or legacy =~/.emacs.d= checkouts, while =dotfiles= is edited only at =~/My Drive/dotfiles/= and the elpaca clone is a read-only mirror synced by git hooks. Also covers active profile lookup, profile-aware =emacs/config.org= tangling, the normal post-PR step that pins upstream package PR branches in =config.org= with an =awaiting PR merge:= marker, while preserving the invariant that each package has one recipe and no duplicate dependency pin declarations, required agent README updates, verification handoffs, and the commit message format (=<scope>: <description>=). See also =pin-elisp-pr= for the detailed PR pin checklist, =elisp-conventions= for Elisp testing/reload rules, and =emacs/extras/doc/elisp-development-workflow.org= for the full two-clone sync architecture.
 
 **** pin-elisp-pr
 
@@ -575,7 +575,9 @@ agents need to add DOI, ISBN, URL, or otherwise missing BibTeX/BibLaTeX
 references before citing them in notes. The skill emphasizes the full end
 state: a clean bibliography entry, resolved citekey, and associated PDF/HTML
 files when the Emacs workflow can obtain them; manual BibTeX is reserved for
-unsupported cases.
+unsupported cases. When the workflow requires package source inspection, it
+resolves active Elpaca packages with =bin/elpaca-package-path=, especially
+=annas-archive=, rather than stale library paths.
 
 *** Release and operations skills
 :PROPERTIES:

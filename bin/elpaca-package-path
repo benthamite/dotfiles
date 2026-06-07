@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  echo "Usage: elpaca-package-path <package> [relative-path]" >&2
+}
+
+if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]; then
+  usage
+  exit 2
+fi
+
+package=$1
+relative=${2:-}
+
+if [ "$package" = "dotfiles" ]; then
+  base="$HOME/My Drive/dotfiles"
+else
+  profile=$(timeout 5 emacsclient -e 'init-current-profile' 2>/dev/null | tr -d '"')
+  if [ -z "$profile" ]; then
+    echo "Could not resolve init-current-profile" >&2
+    exit 1
+  fi
+
+  elpaca="$HOME/.config/emacs-profiles/$profile/elpaca"
+  base="$elpaca/sources/$package"
+
+  if [ ! -d "$base" ]; then
+    fallback="$elpaca/repos/$package"
+    if [ -d "$fallback" ]; then
+      base="$fallback"
+    else
+      echo "No active elpaca checkout for package: $package" >&2
+      exit 1
+    fi
+  fi
+fi
+
+if [ -n "$relative" ]; then
+  printf '%s\n' "$base/$relative"
+else
+  printf '%s\n' "$base"
+fi

@@ -2,9 +2,9 @@
 # PostToolUse hook: rebuild and reload elpaca package after editing .el files.
 #
 # Fires on Edit|Write. If the file is .el and belongs to an elpaca package,
-# runs elpaca-rebuild + elpaca-wait + elpaca-extras-reload synchronously so
-# the running Emacs always has the latest byte-compiled code — matching what
-# the user gets after a restart.
+# schedules an asynchronous elpaca rebuild that reloads the package once the
+# build process finishes (via elpaca-post-queue-hook). The emacsclient call
+# returns immediately and never blocks the daemon's command loop.
 
 set -euo pipefail
 
@@ -35,9 +35,12 @@ file_path=$(absolute_changed_path "$file_path")
 # without ever exposing $(...) or backticks to the shell during interpolation.
 path_b64=$(printf '%s' "$file_path" | base64 | tr -d '\n')
 
-# Ask Emacs to find the package and schedule a rebuild.
-# The rebuild is deferred via run-at-time because elpaca-wait uses sit-for,
-# which deadlocks when called from inside emacsclient's server process filter.
+# Ask Emacs to find the package and schedule an async rebuild.
+# `elpaca-extras-rebuild-and-reload' enqueues the build and reloads on
+# completion via `elpaca-post-queue-hook' (elpaca's process sentinels), so it
+# never blocks the command loop.  The enqueue is deferred via `run-at-time' 0
+# only to leave the emacsclient process-filter context cleanly; it is a
+# one-shot defer, not a wait loop.
 # First try the file's basename as a package name (handles extras packages
 # that share the dotfiles source dir).  Fall back to source dir prefix match.
 result=$(timeout 30 emacsclient -e "
@@ -49,12 +52,7 @@ result=$(timeout 30 emacsclient -e "
                          when (and src (string-prefix-p src file))
                          return (cadr e)))))
   (when pkg
-    (run-at-time 0 nil
-      (lambda ()
-        (elpaca-rebuild pkg t)
-        (elpaca-wait)
-        (elpaca-extras-reload pkg)
-        (message \"Rebuilt and reloaded: %s\" pkg)))
+    (run-at-time 0 nil (lambda () (elpaca-extras-rebuild-and-reload pkg)))
     (format \"%s\" pkg)))" 2>&1) || exit 0
 
 # Strip quotes from emacsclient output
@@ -70,6 +68,6 @@ fi
 
 jq -n --arg p "$pkg" '{
   "hookSpecificOutput": {
-    "message": ("Rebuilt and reloaded: " + $p)
+    "message": ("Scheduled async rebuild+reload of " + $p + " (reloads when the build finishes)")
   }
 }'

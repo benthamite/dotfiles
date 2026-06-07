@@ -111,18 +111,20 @@ If PKG is nil, prompt for it."
   (elpaca-extras--build-and-reload pkg #'elpaca-rebuild "Rebuilt"))
 
 (defun elpaca-extras--build-and-reload (pkg build-fn verb)
-  "Build PKG using BUILD-FN, then reload.
+  "Build PKG asynchronously using BUILD-FN, then reload it.
 VERB is a past-tense verb for the success message (e.g., \"Updated\").
 
-Blocks via `elpaca-wait' so callers (notably `emacsclient -e' verification
-after a commit) observe the rebuilt and reloaded package when this
-expression returns, rather than the still-async pre-rebuild state."
+Completion is driven entirely by `elpaca-post-queue-hook', which elpaca
+runs from its build-process sentinels.  Nothing blocks the command loop:
+the build is enqueued and this function returns immediately, and the
+reload happens once the build process actually finishes.  This avoids
+`elpaca-wait', whose `sit-for' loop pumps the event loop and can wedge a
+daemon that is concurrently serving `emacsclient' requests."
   (letrec ((callback
             (lambda ()
               (elpaca-extras--handle-build-complete pkg callback verb))))
     (add-hook 'elpaca-post-queue-hook callback)
-    (funcall build-fn pkg t)
-    (elpaca-wait)))
+    (funcall build-fn pkg t)))
 
 (defun elpaca-extras--handle-build-complete (pkg callback verb)
   "Handle build completion for PKG, removing CALLBACK from hook.

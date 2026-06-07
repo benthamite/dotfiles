@@ -538,8 +538,10 @@ the cited keys from the current buffer, writes a temporary bibliography
 containing only those entries, rewrites citations to the CSL @code{bibentry}
 style in the temporary export buffer, and opens the generated HTML file.
 By default it uses Org's built-in CSL fallback style; set
-@code{org-extras-citation-preview-style} to use a specific CSL file.  It
-signals an error if the output still contains unresolved markers such as
+@code{org-extras-citation-preview-style} to use a specific CSL file.  The
+legacy value @samp{en/long.csl} is ignored because it emits Markdown-oriented
+reference text that is not valid HTML output.  The command signals an
+error if the output still contains unresolved markers such as
 @samp{NO_ITEM_DATA}, Hugo citation shortcodes, raw @samp{org-cite} syntax, or
 Markdown links embedded in the exported HTML@.
 

@@ -325,11 +325,16 @@ style so each citation appears as an expanded reference."
 
 (defun org-extras--citation-preview-export-processors ()
   "Return CSL export processors for citation preview export."
-  (if (and org-extras-citation-preview-style
+  (if (and (org-extras--citation-preview-effective-style)
            (org-extras--citation-preview-style-available-p
-            org-extras-citation-preview-style))
-      `((t . (csl ,org-extras-citation-preview-style)))
+            (org-extras--citation-preview-effective-style)))
+      `((t . (csl ,(org-extras--citation-preview-effective-style))))
     '((t . (csl)))))
+
+(defun org-extras--citation-preview-effective-style ()
+  "Return the effective CSL style for citation preview export."
+  (unless (equal org-extras-citation-preview-style "en/long.csl")
+    org-extras-citation-preview-style))
 
 (defun org-extras--citation-preview-style-available-p (style)
   "Return non-nil when CSL STYLE is available."

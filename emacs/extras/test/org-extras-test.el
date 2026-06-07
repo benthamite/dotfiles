@@ -687,6 +687,14 @@
            "preview.html"
            (org-extras--citation-preview-normalize-output-file "preview.html"))))
 
+(ert-deftest org-extras-test-citation-preview-effective-style ()
+  "Ignore the legacy Markdown-oriented citation preview style."
+  (let ((org-extras-citation-preview-style "en/long.csl"))
+    (should-not (org-extras--citation-preview-effective-style)))
+  (let ((org-extras-citation-preview-style "chicago-author-date.csl"))
+    (should (equal (org-extras--citation-preview-effective-style)
+                   "chicago-author-date.csl"))))
+
 (ert-deftest org-extras-test-citation-preview-check-output-file ()
   "Reject citation preview output paths that overwrite the source file."
   (let ((file (make-temp-file "org-extras-source-" nil ".org")))

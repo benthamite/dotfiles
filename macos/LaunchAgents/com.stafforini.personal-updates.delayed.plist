@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.stafforini.personal-updates.delayed</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/pablostafforini/My Drive/dotfiles/bin/personal-updates</string>
+    <string>delayed</string>
+    <string>--min-age-days</string>
+    <string>7</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>9</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/Users/pablostafforini/.local/state/personal-updates/launchd.delayed.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/pablostafforini/.local/state/personal-updates/launchd.delayed.err.log</string>
+</dict>
+</plist>

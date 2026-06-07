@@ -19,3 +19,38 @@ Audits the development environment security posture across secrets hygiene,
 supply-chain dependencies, macOS machine posture, and Claude Code configuration
 risk. It is audit-only unless remediation is explicitly requested and reports
 findings by severity with concrete locations and remediation steps.
+
+* Personal updates
+
+=bin/personal-updates= implements a two-lane update policy for an individual
+Mac:
+
+- =scan= runs =brew update= and records outdated Homebrew formulae and casks in
+  =~/.local/state/personal-updates/state.json= with the first time each
+  available version was seen.
+- =delayed --min-age-days 7= upgrades only Homebrew items that have remained
+  outdated for at least seven days.
+- =fast= runs =softwareupdate --install --recommended=. This is available for
+  manual use, but it is not installed as a LaunchAgent by default because macOS
+  updates may require privileges or a restart.
+
+To exclude fragile packages from unattended upgrades, add one package per line
+to =~/.config/personal-updates/hold.txt=. Entries may be unqualified, such as
+=visual-studio-code=, or scoped, such as =brew_formula/python= or
+=brew_cask/visual-studio-code=.
+
+Install the scheduled Homebrew jobs with:
+
+#+begin_src sh
+mkdir -p ~/Library/LaunchAgents ~/.local/state/personal-updates
+ln -sfn "$PWD/macos/LaunchAgents/com.stafforini.personal-updates.scan.plist" \
+  ~/Library/LaunchAgents/com.stafforini.personal-updates.scan.plist
+ln -sfn "$PWD/macos/LaunchAgents/com.stafforini.personal-updates.delayed.plist" \
+  ~/Library/LaunchAgents/com.stafforini.personal-updates.delayed.plist
+launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.stafforini.personal-updates.scan.plist
+launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.stafforini.personal-updates.delayed.plist
+#+end_src
+
+For the security-fast lane, keep macOS automatic security updates and Rapid
+Security Responses enabled in System Settings. Use =bin/personal-updates fast=
+only when an unattended OS update is acceptable.

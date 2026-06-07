@@ -1,0 +1,200 @@
+#!/usr/bin/env python3
+
+import argparse
+import json
+import subprocess
+import sys
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+
+DEFAULT_STATE_FILE = Path.home() / ".local/state/personal-updates/state.json"
+DEFAULT_LOG_DIR = Path.home() / ".local/state/personal-updates/logs"
+DEFAULT_HOLD_FILE = Path.home() / ".config/personal-updates/hold.txt"
+DEFAULT_MIN_AGE_DAYS = 7
+KINDS = ("brew_formula", "brew_cask")
+
+
+def now_utc():
+    return datetime.now(timezone.utc)
+
+
+def merge_scan(state, updates, now):
+    merged = {}
+    timestamp = now.isoformat()
+    for kind in KINDS:
+        previous = state.get(kind, {})
+        current = {}
+        for update in updates.get(kind, []):
+            name = update["name"]
+            old_entry = previous.get(name)
+            if old_entry and old_entry.get("available") == update["available"]:
+                first_seen = old_entry["first_seen"]
+            else:
+                first_seen = timestamp
+            current[name] = {
+                "installed": update.get("installed", ""),
+                "available": update["available"],
+                "first_seen": first_seen,
+            }
+        if current or kind in state:
+            merged[kind] = current
+    return merged
+
+
+def parse_holds(text):
+    holds = set()
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped and not stripped.startswith("#"):
+            holds.add(stripped)
+    return holds
+
+
+def load_holds(path):
+    if not path.exists():
+        return set()
+    return parse_holds(path.read_text())
+
+
+def is_held(kind, name, holds):
+    return name in holds or f"{kind}/{name}" in holds
+
+
+def eligible_updates(state, min_age_days, now, holds=None):
+    holds = holds or set()
+    cutoff = now - timedelta(days=min_age_days)
+    eligible = {}
+    for kind in KINDS:
+        names = []
+        for name, entry in state.get(kind, {}).items():
+            if is_held(kind, name, holds):
+                continue
+            first_seen = datetime.fromisoformat(entry["first_seen"])
+            if first_seen <= cutoff:
+                names.append(name)
+        if names:
+            eligible[kind] = sorted(names)
+    return eligible
+
+
+def load_json(path, default):
+    if not path.exists():
+        return default
+    with path.open() as handle:
+        return json.load(handle)
+
+
+def save_json(path, data):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp_path = path.with_suffix(path.suffix + ".tmp")
+    with tmp_path.open("w") as handle:
+        json.dump(data, handle, indent=2, sort_keys=True)
+        handle.write("\n")
+    tmp_path.replace(path)
+
+
+def run(command, *, check=True):
+    return subprocess.run(command, check=check, text=True, capture_output=True)
+
+
+def brew_outdated():
+    run(["brew", "update"])
+    result = run(["brew", "outdated", "--json=v2"], check=False)
+    if result.returncode not in (0, 1):
+        raise RuntimeError(result.stderr.strip() or result.stdout.strip())
+    data = json.loads(result.stdout or "{}")
+    return {
+        "brew_formula": [
+            {
+                "name": item["name"],
+                "installed": ", ".join(item.get("installed_versions", [])),
+                "available": item["current_version"],
+            }
+            for item in data.get("formulae", [])
+        ],
+        "brew_cask": [
+            {
+                "name": item["name"],
+                "installed": item.get("installed_versions", ""),
+                "available": item["current_version"],
+            }
+            for item in data.get("casks", [])
+        ],
+    }
+
+
+def upgrade_brew(eligible):
+    for name in eligible.get("brew_formula", []):
+        run(["brew", "upgrade", name])
+    for name in eligible.get("brew_cask", []):
+        run(["brew", "upgrade", "--cask", name])
+
+
+def append_log(log_dir, message):
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_path = log_dir / f"{now_utc().date().isoformat()}.log"
+    with log_path.open("a") as handle:
+        handle.write(message.rstrip() + "\n")
+
+
+def command_scan(args):
+    state = load_json(args.state_file, {})
+    updates = brew_outdated()
+    new_state = merge_scan(state, updates, now_utc())
+    save_json(args.state_file, new_state)
+    append_log(args.log_dir, f"scan recorded {sum(len(v) for v in new_state.values())} pending updates")
+    print(json.dumps(new_state, indent=2, sort_keys=True))
+
+
+def command_delayed(args):
+    state = load_json(args.state_file, {})
+    eligible = eligible_updates(state, args.min_age_days, now_utc(), load_holds(args.hold_file))
+    if args.dry_run:
+        print(json.dumps(eligible, indent=2, sort_keys=True))
+        return
+    upgrade_brew(eligible)
+    append_log(args.log_dir, f"delayed upgraded {sum(len(v) for v in eligible.values())} updates")
+    command_scan(args)
+
+
+def command_fast(args):
+    run(["softwareupdate", "--install", "--recommended"])
+    append_log(args.log_dir, "fast lane installed recommended macOS updates")
+
+
+def build_parser():
+    parser = argparse.ArgumentParser(description="Apply a delayed personal update policy.")
+    parser.add_argument("--state-file", type=Path, default=DEFAULT_STATE_FILE)
+    parser.add_argument("--log-dir", type=Path, default=DEFAULT_LOG_DIR)
+    parser.add_argument("--hold-file", type=Path, default=DEFAULT_HOLD_FILE)
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    subparsers.add_parser("scan")
+
+    delayed = subparsers.add_parser("delayed")
+    delayed.add_argument("--min-age-days", type=int, default=DEFAULT_MIN_AGE_DAYS)
+    delayed.add_argument("--dry-run", action="store_true")
+
+    subparsers.add_parser("fast")
+    return parser
+
+
+def main(argv=None):
+    args = build_parser().parse_args(argv)
+    try:
+        if args.command == "scan":
+            command_scan(args)
+        elif args.command == "delayed":
+            command_delayed(args)
+        elif args.command == "fast":
+            command_fast(args)
+    except Exception as error:
+        append_log(args.log_dir, f"error: {error}")
+        print(error, file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

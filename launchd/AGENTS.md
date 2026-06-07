@@ -25,6 +25,17 @@ LaunchAgents without explicit confirmation.
 - `plans/`: private implementation and remediation plans.
 - `bin/`: helper scripts, when they are public-safe.
 
+## Audit
+
+Run the read-only audit with:
+
+```sh
+python3 /Users/pablostafforini/My\ Drive/dotfiles/launchd/bin/launchd-audit.py --registry /Users/pablostafforini/My\ Drive/dotfiles/launchd/registry/jobs.json
+```
+
+Use `--no-launchctl` when you only want to compare the encrypted registry with
+`/Users/pablostafforini/Library/LaunchAgents`.
+
 ## Privacy Rule
 
 If in doubt, put the file under an encrypted subtree first. It can be moved to a

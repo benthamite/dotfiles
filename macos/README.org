@@ -28,6 +28,9 @@ Mac:
 - =scan= runs =brew update= and records outdated Homebrew formulae and casks in
   =~/.local/state/personal-updates/state.json= with the first time each
   available version was seen.
+- =fast-brew= immediately upgrades fast-track Homebrew packages. By default
+  this preserves the previous dedicated launchd jobs for =claude-code@latest=
+  and =codex=.
 - =delayed --min-age-days 7= upgrades only Homebrew items that have remained
   outdated for at least seven days.
 - =fast= runs =softwareupdate --install --recommended=. This is available for
@@ -39,17 +42,28 @@ to =~/.config/personal-updates/hold.txt=. Entries may be unqualified, such as
 =visual-studio-code=, or scoped, such as =brew_formula/python= or
 =brew_cask/visual-studio-code=.
 
+To add more fast-track Homebrew packages, put one package per line in
+=~/.config/personal-updates/fast-brew.txt=. These entries are added to the
+defaults, not used as a replacement.
+
 Install the scheduled Homebrew jobs with:
 
 #+begin_src sh
 mkdir -p ~/Library/LaunchAgents ~/.local/state/personal-updates
+ln -sfn "$PWD/macos/LaunchAgents/com.stafforini.personal-updates.fast-brew.plist" \
+  ~/Library/LaunchAgents/com.stafforini.personal-updates.fast-brew.plist
 ln -sfn "$PWD/macos/LaunchAgents/com.stafforini.personal-updates.scan.plist" \
   ~/Library/LaunchAgents/com.stafforini.personal-updates.scan.plist
 ln -sfn "$PWD/macos/LaunchAgents/com.stafforini.personal-updates.delayed.plist" \
   ~/Library/LaunchAgents/com.stafforini.personal-updates.delayed.plist
+launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.stafforini.personal-updates.fast-brew.plist
 launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.stafforini.personal-updates.scan.plist
 launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.stafforini.personal-updates.delayed.plist
 #+end_src
+
+If the standalone launchd jobs =com.stafforini.brew-claude-upgrade= and
+=com.stafforini.brew-codex-upgrade= are still loaded, unload them before loading
+=com.stafforini.personal-updates.fast-brew= to avoid duplicate daily attempts.
 
 For the security-fast lane, keep macOS automatic security updates and Rapid
 Security Responses enabled in System Settings. Use =bin/personal-updates fast=

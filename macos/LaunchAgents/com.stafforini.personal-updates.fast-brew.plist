@@ -4,12 +4,12 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.stafforini.personal-updates.scan</string>
+  <string>com.stafforini.personal-updates.fast-brew</string>
 
   <key>ProgramArguments</key>
   <array>
     <string>/Users/pablostafforini/My Drive/dotfiles/bin/personal-updates</string>
-    <string>scan</string>
+    <string>fast-brew</string>
   </array>
 
   <key>EnvironmentVariables</key>
@@ -23,14 +23,14 @@
   <key>StartCalendarInterval</key>
   <dict>
     <key>Hour</key>
-    <integer>8</integer>
+    <integer>3</integer>
     <key>Minute</key>
-    <integer>15</integer>
+    <integer>0</integer>
   </dict>
 
   <key>StandardOutPath</key>
-  <string>/Users/pablostafforini/.local/state/personal-updates/launchd.scan.out.log</string>
+  <string>/Users/pablostafforini/.local/state/personal-updates/launchd.fast-brew.out.log</string>
   <key>StandardErrorPath</key>
-  <string>/Users/pablostafforini/.local/state/personal-updates/launchd.scan.err.log</string>
+  <string>/Users/pablostafforini/.local/state/personal-updates/launchd.fast-brew.err.log</string>
 </dict>
 </plist>

@@ -167,6 +167,35 @@ class PersonalUpdatesStateTest(unittest.TestCase):
 
         self.assertEqual(result, {"visual-studio-code", "brew_formula/python"})
 
+    def test_default_fast_brew_packages_reflect_existing_launchd_jobs(self):
+        self.assertEqual(
+            self.mod.DEFAULT_FAST_BREW_PACKAGES,
+            ("claude-code@latest", "codex"),
+        )
+
+    def test_brew_upgrade_commands_targets_each_fast_lane_package(self):
+        result = self.mod.brew_upgrade_commands(["claude-code@latest", "codex"])
+
+        self.assertEqual(
+            result,
+            [
+                ["brew", "upgrade", "claude-code@latest"],
+                ["brew", "upgrade", "codex"],
+            ],
+        )
+
+    def test_load_fast_brew_packages_extends_defaults(self):
+        class FakePath:
+            def exists(self):
+                return True
+
+            def read_text(self):
+                return "extra-tool\ncodex\n"
+
+        result = self.mod.load_fast_brew_packages(FakePath())
+
+        self.assertEqual(result, ["claude-code@latest", "codex", "extra-tool"])
+
 
 if __name__ == "__main__":
     unittest.main()

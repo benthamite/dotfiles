@@ -11,6 +11,8 @@ from pathlib import Path
 DEFAULT_STATE_FILE = Path.home() / ".local/state/personal-updates/state.json"
 DEFAULT_LOG_DIR = Path.home() / ".local/state/personal-updates/logs"
 DEFAULT_HOLD_FILE = Path.home() / ".config/personal-updates/hold.txt"
+DEFAULT_FAST_BREW_FILE = Path.home() / ".config/personal-updates/fast-brew.txt"
+DEFAULT_FAST_BREW_PACKAGES = ("claude-code@latest", "codex")
 DEFAULT_MIN_AGE_DAYS = 7
 KINDS = ("brew_formula", "brew_cask")
 
@@ -55,6 +57,13 @@ def load_holds(path):
     if not path.exists():
         return set()
     return parse_holds(path.read_text())
+
+
+def load_fast_brew_packages(path):
+    packages = list(DEFAULT_FAST_BREW_PACKAGES)
+    if path.exists():
+        packages.extend(sorted(parse_holds(path.read_text())))
+    return sorted(dict.fromkeys(packages))
 
 
 def is_held(kind, name, holds):
@@ -131,6 +140,15 @@ def upgrade_brew(eligible):
         run(["brew", "upgrade", "--cask", name])
 
 
+def brew_upgrade_commands(packages):
+    return [["brew", "upgrade", package] for package in packages]
+
+
+def upgrade_fast_brew(packages):
+    for command in brew_upgrade_commands(packages):
+        run(command)
+
+
 def append_log(log_dir, message):
     log_dir.mkdir(parents=True, exist_ok=True)
     log_path = log_dir / f"{now_utc().date().isoformat()}.log"
@@ -163,11 +181,21 @@ def command_fast(args):
     append_log(args.log_dir, "fast lane installed recommended macOS updates")
 
 
+def command_fast_brew(args):
+    packages = load_fast_brew_packages(args.fast_brew_file)
+    if args.dry_run:
+        print(json.dumps(packages, indent=2, sort_keys=True))
+        return
+    upgrade_fast_brew(packages)
+    append_log(args.log_dir, f"fast brew upgraded {', '.join(packages)}")
+
+
 def build_parser():
     parser = argparse.ArgumentParser(description="Apply a delayed personal update policy.")
     parser.add_argument("--state-file", type=Path, default=DEFAULT_STATE_FILE)
     parser.add_argument("--log-dir", type=Path, default=DEFAULT_LOG_DIR)
     parser.add_argument("--hold-file", type=Path, default=DEFAULT_HOLD_FILE)
+    parser.add_argument("--fast-brew-file", type=Path, default=DEFAULT_FAST_BREW_FILE)
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     subparsers.add_parser("scan")
@@ -177,6 +205,9 @@ def build_parser():
     delayed.add_argument("--dry-run", action="store_true")
 
     subparsers.add_parser("fast")
+
+    fast_brew = subparsers.add_parser("fast-brew")
+    fast_brew.add_argument("--dry-run", action="store_true")
     return parser
 
 
@@ -189,6 +220,8 @@ def main(argv=None):
             command_delayed(args)
         elif args.command == "fast":
             command_fast(args)
+        elif args.command == "fast-brew":
+            command_fast_brew(args)
     except Exception as error:
         append_log(args.log_dir, f"error: {error}")
         print(error, file=sys.stderr)

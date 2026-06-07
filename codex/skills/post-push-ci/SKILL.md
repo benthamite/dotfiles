@@ -40,7 +40,9 @@ Do not use this as permission to push. Only push when the current task or the us
    - Fix the root cause, not just the specific assertion or warning.
    - Run the narrow regression check and then the relevant full local check.
    - Commit the fix as a separate logical commit.
-   - Push again and rerun `ci-after-push`.
+   - If the current task's push authorization still covers this follow-up CI
+     fix, push again and rerun `ci-after-push`. Otherwise, stop after the
+     local commit and ask the user to confirm the follow-up push.
 
 5. Repeat the loop until the current pushed SHA has no failing GitHub Actions runs, or until you can state a concrete blocker such as missing credentials, unavailable GitHub access, an upstream service outage, or an environmental matrix failure that cannot be reproduced or fixed locally.
 
@@ -54,7 +56,7 @@ Do not use this as permission to push. Only push when the current task or the us
 
 ## External action boundaries
 
-- Do not create PRs, issues, review comments, Slack messages, emails, or other externally visible records as part of this loop unless the user explicitly authorizes that action.
+- Do not push, create PRs, issues, review comments, Slack messages, emails, or other externally visible records as part of this loop unless the user explicitly authorizes that action for the current task.
 - Do not force-push unless the user explicitly requested or approved it for the current task.
 - Do not rewrite or revert user changes to get CI green. Work with the existing tree and ask only if the conflict makes progress impossible.
 

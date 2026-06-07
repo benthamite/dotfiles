@@ -377,7 +377,9 @@ GitHub Actions loop after an authorized agent push. It runs =ci-after-push= to
 wait for push-triggered CI on the pushed SHA, fetches failed logs, fixes root
 causes, commits and pushes follow-up fixes, and repeats until the pushed commit
 is green or a concrete blocker is identified. It does not grant permission to
-push; it only applies after a push has already been authorized.
+push; it only applies after a push has already been authorized. Follow-up CI-fix
+pushes require the original authorization to still cover that push, otherwise
+the agent must ask after committing the local fix.
 
 The =release-package= skill is a Codex operations workflow for releasing
 the user's listed Emacs packages from the listed headings in

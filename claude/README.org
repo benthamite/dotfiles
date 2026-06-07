@@ -530,7 +530,9 @@ commit, runs =ci-after-push= to wait for push-triggered CI on the pushed SHA,
 fetches failed logs, fixes root causes, commits and pushes follow-up fixes, and
 repeats until the pushed commit is green or a concrete blocker is identified.
 It does not grant permission to push; it only closes the loop after an
-authorized push.
+authorized push. Follow-up CI-fix pushes require the original authorization to
+still cover that push, otherwise the agent must ask after committing the local
+fix.
 
 *** Documentation skills
 :PROPERTIES:

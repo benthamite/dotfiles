@@ -32,6 +32,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 * User options::
 * Commands::
 * Functions::
+* Patches::
 * Indices::
 
 @detailmenu
@@ -58,6 +59,11 @@ Functions
 * YouTube handling::
 * File generation internals::
 
+Patches
+
+* Readability scoring::
+* Readability node selection::
+
 Indices
 
 * Function index::
@@ -72,7 +78,7 @@ Indices
 @samp{eww-extras.el} extends EWW (Emacs Web Wowser), the built-in Emacs web
 browser, with capabilities for generating files from web pages, managing
 readability mode, navigating URL hierarchies, and integrating with other
-packages.  It depends on the @samp{paths} package for directory constants.
+packages.  It depends on the @samp{paths} and @samp{el-patch} packages.
 
 The most substantial feature is the ability to generate PDF and HTML
 files from any URL using headless Chrome.  This requires Chrome to be
@@ -86,7 +92,9 @@ The package also enhances EWW's readability mode.  By default, every
 page rendered in EWW is automatically converted to its ``readable'' form
 (stripping navigation, ads, and other clutter).  A file-backed exception
 list allows excluding specific domains where readability mode produces
-poor results.  Adding exceptions is a single command away.
+poor results.  Adding exceptions is a single command away.  The package
+also patches an upstream bug in @code{eww-score-readability} that causes
+CSS-heavy pages to render as empty buffers (@ref{Patches}).
 
 For navigation, the package provides Vimium-style commands: editing the
 current URL, opening kill ring content, and moving up or to the root of
@@ -185,6 +193,9 @@ The commands require Chrome profile copies to exist for authentication.
 Use @code{eww-extras-chrome-copy-data-dirs} to create or update them
 (@ref{Chrome data management}).  The processes run asynchronously; check the
 @samp{*eww-extras download file process*} buffer for detailed output.
+Headless rendering always uses the copied Chrome @samp{Default} profile, and the
+rendering script removes common subscription, cookie, modal, and overlay
+elements before saving the PDF or HTML@.
 
 @node Chrome data management
 @section Chrome data management
@@ -281,7 +292,13 @@ available only in @code{eww-mode} buffers.
 The function @code{eww-extras-readable-autoview} is added to
 @code{eww-after-render-hook}.  It automatically calls @code{eww-readable} unless
 the current URL matches a pattern in @code{eww-extras-readable-exceptions} or
-the page has no source content to process.
+the page has no source content to process.  If the readability heuristic
+selects a non-visible node (producing an empty buffer) or a node
+covering only a tiny fraction of the article content, the function falls
+back to displaying the full page.  This guards against the upstream
+scoring bug described in @ref{Patches}) and against cases where
+navigation-heavy elements drag down the full content node's score,
+causing a narrow subsection to be selected instead.
 
 The function @code{eww-extras-set-readable-exceptions-from-file} reads the
 exception patterns from @code{eww-extras-readable-exceptions-file} and
@@ -310,11 +327,16 @@ player.
 The function @code{eww-extras-url-to-file} is the core logic shared by
 @code{eww-extras-url-to-pdf} and @code{eww-extras-url-to-html}.  It determines
 the URL and output file name from context, constructs and starts the
-headless Chrome process, and sets up the process sentinel.
+headless Chrome process, and sets up the process sentinel.  An optional
+@code{key} argument lets callers supply the Bib@TeX{} key directly, bypassing
+the buffer-derived lookup.
 
 The function @code{eww-extras-url-to-file-make-command} builds the shell
-command for headless Chrome, including GPU disabling flags and a
-15-second timeout.
+command for the headless Chrome rendering script, including the copied Chrome
+data directory, the @samp{Default} profile, and a 30-second timeout.  URLs and
+output paths are shell-quoted for safety.  The script drives Chrome through the
+DevTools Protocol so it can remove common overlays before printing or dumping
+the cleaned DOM@.
 
 The function @code{eww-extras-url-to-file-sentinel} creates a process
 sentinel that checks the exit status.  It runs the callback on success,
@@ -323,6 +345,53 @@ happen with certain Chrome warnings).
 
 The function @code{eww-extras-run-callback} safely executes the optional
 callback function with the output file and Bib@TeX{} key as arguments.
+
+@node Patches
+@chapter Patches
+
+@menu
+* Readability scoring::
+* Readability node selection::
+@end menu
+
+@node Readability scoring
+@section Readability scoring
+
+@findex eww-score-readability
+The built-in function @code{eww-score-readability} determines which part of a
+web page contains the main textual content for @code{eww-readable}.  It
+excludes @code{script}, @code{head}, and @code{comment} tags from scoring, but does not
+exclude @code{style} tags.  CSS text inside @samp{<style>} elements is therefore
+counted as readable content, which can cause CSS-heavy nodes (such as
+Wikipedia's @samp{div.navbox-styles}) to win the readability contest over the
+actual article.  The result is an empty buffer because the selected node
+contains only invisible CSS@.
+
+This package uses @code{el-patch} to add @code{style} to the exclusion list in
+@code{eww-score-readability}, giving @samp{<style>} elements a score of -2 (the
+same penalty applied to @code{script} and @code{head}).  As an additional safety
+net, @code{eww-extras-readable-autoview} detects when the readable render
+produces an empty buffer or a result smaller than 2% of the HTML source
+size, and falls back to displaying the full page
+(@ref{Readability management}).
+
+@node Readability node selection
+@section Readability node selection
+
+@findex eww-highest-readability
+The built-in function @code{eww-highest-readability} selects the DOM node
+with the highest readability score for @code{eww-readable}.  It replaces the
+current best node with a deeper child whenever the child scores higher
+and contains more than 100 words.  On pages where navigation-heavy
+elements (navboxes, table of contents, categories) drag down the full
+content node's aggregate score, a small subsection—such as the lead
+paragraph—can win the readability contest over the full article.
+
+This package uses @code{el-patch} to raise the minimum word threshold from a
+fixed 100 to @code{max(100, 1/3 of the current best node's word count)}.
+This ensures a child must contain a substantial fraction of the
+parent's text to replace it, preventing narrow subsections from winning
+over broader content areas.
 
 @node Indices
 @chapter Indices

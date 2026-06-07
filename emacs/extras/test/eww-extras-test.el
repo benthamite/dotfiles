@@ -12,21 +12,26 @@
 
 (ert-deftest eww-extras-test-make-command-pdf ()
   "Make-command constructs a PDF download command."
-  (let ((browse-url-chrome-program "/usr/bin/chrome"))
+  (let ((browse-url-chrome-program "/usr/bin/chrome")
+        (eww-extras-node-program "/usr/bin/node"))
     (let ((cmd (eww-extras-url-to-file-make-command
                 "https://example.com" "/tmp/out.pdf" "pdf")))
       (should (listp cmd))
       (should (= (length cmd) 3))
-      (should (string-match-p "print-to-pdf" (nth 2 cmd)))
+      (should (string-match-p "eww-extras-render-url\\.js" (nth 2 cmd)))
+      (should (string-match-p "--type pdf" (nth 2 cmd)))
+      (should (string-match-p "--profile-directory Default" (nth 2 cmd)))
       (should (string-match-p "example.com" (nth 2 cmd))))))
 
 (ert-deftest eww-extras-test-make-command-html ()
   "Make-command constructs an HTML download command."
-  (let ((browse-url-chrome-program "/usr/bin/chrome"))
+  (let ((browse-url-chrome-program "/usr/bin/chrome")
+        (eww-extras-node-program "/usr/bin/node"))
     (let ((cmd (eww-extras-url-to-file-make-command
                 "https://example.com" "/tmp/out.html" "html")))
       (should (listp cmd))
-      (should (string-match-p "dump-dom" (nth 2 cmd))))))
+      (should (string-match-p "eww-extras-render-url\\.js" (nth 2 cmd)))
+      (should (string-match-p "--type html" (nth 2 cmd))))))
 
 (ert-deftest eww-extras-test-make-command-invalid-type ()
   "Make-command signals error for invalid type."

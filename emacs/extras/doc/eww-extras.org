@@ -132,6 +132,9 @@ The commands require Chrome profile copies to exist for authentication.
 Use ~eww-extras-chrome-copy-data-dirs~ to create or update them
 ([[#h:chrome-data-management][Chrome data management]]).  The processes run asynchronously; check the
 =*eww-extras download file process*= buffer for detailed output.
+Headless rendering always uses the copied Chrome =Default= profile, and the
+rendering script removes common subscription, cookie, modal, and overlay
+elements before saving the PDF or HTML.
 
 ** Chrome data management
 :PROPERTIES:
@@ -280,8 +283,11 @@ headless Chrome process, and sets up the process sentinel.  An optional
 the buffer-derived lookup.
 
 The function ~eww-extras-url-to-file-make-command~ builds the shell
-command for headless Chrome, including GPU disabling flags and a
-15-second timeout.  URLs and output paths are shell-quoted for safety.
+command for the headless Chrome rendering script, including the copied Chrome
+data directory, the =Default= profile, and a 30-second timeout.  URLs and
+output paths are shell-quoted for safety.  The script drives Chrome through the
+DevTools Protocol so it can remove common overlays before printing or dumping
+the cleaned DOM.
 
 The function ~eww-extras-url-to-file-sentinel~ creates a process
 sentinel that checks the exit status.  It runs the callback on success,

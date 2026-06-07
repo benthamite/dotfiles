@@ -93,20 +93,6 @@
 
 ;;;; Variables
 
-;;;;; Chrome headless
-
-(defconst eww-extras-convert-to-pdf
-  "'%s' --headless --user-data-dir='%s' --no-pdf-header-footer '%s' --print-to-pdf='%s'"
-  "Command to convert a URL to a PDF file.
-The placeholders `%s' are replaced by the Chrome program, the Chrome cookie data
-directory, the URL, and the output file.")
-
-(defconst eww-extras-convert-to-html
-  "'%s' --headless --user-data-dir='%s' --dump-dom '%s' > %s"
-  "Command to convert a URL to an HTML file.
-The placeholders `%s' are replaced by the Chrome program, the Chrome cookie data
-directory, the URL, and the output file.")
-
 ;;;;; Subtitles
 
 (defconst eww-extras-download-subtitles
@@ -137,6 +123,17 @@ The placeholders are replaced by the URL.")
   :type 'directory
   :group 'eww-extras)
 
+(defcustom eww-extras-chrome-profile-directory "Default"
+  "Chrome profile directory used by headless URL rendering."
+  :type 'string
+  :group 'eww-extras)
+
+(defcustom eww-extras-node-program
+  (or (executable-find "node") "/opt/homebrew/bin/node")
+  "Node.js executable used by the headless URL rendering script."
+  :type 'file
+  :group 'eww-extras)
+
 ;;;; Variables
 
 (defconst eww-extras-chrome-data-dir-base
@@ -162,6 +159,11 @@ simultaneously.")
   "The `rsync' command to make a copy of the Chrome data directory.
 The placeholders `%s' are replaced by with the source and destination
 directories.")
+
+(defconst eww-extras-url-render-script
+  (file-name-concat paths-dir-dotemacs
+                    "extras/scripts/eww-extras-render-url.js")
+  "Script used to render URLs to PDF or HTML through headless Chrome.")
 
 ;;;; Functions
 
@@ -256,16 +258,19 @@ PROC, the process object, and EVENT, a string describing the process status."
 		     ("pdf" eww-extras-chrome-data-dir-copy-pdf)
 		     ("html" eww-extras-chrome-data-dir-copy-html)
 		     (_ (user-error "Invalid type: %s" type))))
-	 (common (format "timeout 15s '%s' --headless --user-data-dir=\"%s\" "
-			 browse-url-chrome-program data-dir))
-	 (flags "--disable-gpu --disable-extensions --disable-software-rasterizer ")
 	 (quoted-url (shell-quote-argument url))
 	 (quoted-output (shell-quote-argument output-file))
-	 (format-string (pcase type
-			  ("pdf" "--no-pdf-header-footer %s --print-to-pdf=%s")
-			  ("html" "%s --dump-dom > %s")))
-	 (specific (format format-string quoted-url quoted-output)))
-    (list shell-file-name shell-command-switch (concat common flags specific))))
+         (quoted-data-dir (shell-quote-argument data-dir))
+         (quoted-script (shell-quote-argument eww-extras-url-render-script))
+         (quoted-node (shell-quote-argument eww-extras-node-program))
+         (quoted-chrome (shell-quote-argument browse-url-chrome-program))
+         (quoted-profile
+          (shell-quote-argument eww-extras-chrome-profile-directory)))
+    (list shell-file-name shell-command-switch
+          (format
+           "timeout 30s %s %s --type %s --url %s --output %s --chrome-program %s --user-data-dir %s --profile-directory %s"
+           quoted-node quoted-script type quoted-url quoted-output quoted-chrome
+           quoted-data-dir quoted-profile))))
 
 (defun eww-extras-run-callback (callback file key)
   "When CALLBACK is non-nil, run it with FILE and KEY as arguments.

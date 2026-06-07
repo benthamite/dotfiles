@@ -23,6 +23,13 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
+      "name": "add-bib-entry",
+      "claude": "claude/skills/add-bib-entry/SKILL.md",
+      "codex": "codex/skills/add-bib-entry/SKILL.md",
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
+    },
+    {
       "name": "automate",
       "claude": "claude/skills/automate/SKILL.md",
       "codex": "codex/skills/automate/SKILL.md",

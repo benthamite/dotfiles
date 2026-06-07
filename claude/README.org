@@ -563,6 +563,19 @@ README/manual changes when the user requested file edits.
 
 Registers an Emacs package in =my-emacs-packages.org=, creates an accompanying documentation note with =#+INCLUDE= directives pointing to the package's readme, and adds a card to the =benthamite/benthamite= GitHub profile README when that externally visible update has been explicitly authorized. Determines the package name from the argument or the current directory, inserts entries in alphabetical order, saves generated org IDs for both the note and the list entry, and verifies the note/list/profile changes before committing. Marks the exported note as =:unlisted true= via =EXPORT_HUGO_CUSTOM_FRONT_MATTER= so it stays out of the site's note index. Checks both the packages list and the GitHub profile README, skipping whichever is already done.
 
+**** add-bib-entry
+:PROPERTIES:
+:ID:       DB885721-4C49-46D8-A673-0C8C327151D3
+:END:
+
+Documents the preferred workflow for adding works to Pablo's bibliography with
+=zotra-extras-add-entry=, =ebib-extras-process-entry=, and the related
+=search_bibliography= / =add_bib_entry= tool path. It triggers when agents need
+to add DOI, ISBN, URL, or otherwise missing BibTeX/BibLaTeX references before
+citing them in notes. The skill emphasizes the full end state: a clean
+bibliography entry, resolved citekey, and associated PDF/HTML files when the
+Emacs workflow can obtain them; manual BibTeX is reserved for unsupported cases.
+
 *** Release and operations skills
 :PROPERTIES:
 :ID:       F49B76EA-C29B-45D6-AD8D-D3E47DB4073E

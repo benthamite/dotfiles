@@ -118,6 +118,9 @@ currently present in this repo. The skill name shown is the directory name.
 - =add-to-emacs-packages=: Add or register one of the user's Emacs packages in
   my-emacs-packages.org, create its documentation note, and add its GitHub
   profile README card. Scope: Global.
+- =add-bib-entry=: Add works to Pablo's bibliography using the Emacs/Zotra/Ebib
+  workflow, including DOI/ISBN/URL imports, citekey resolution, and associated
+  PDF/HTML file verification. Scope: Global.
 - =audit-mac-app=: Audit a macOS .app before running it or granting
   permissions, especially when the user asks whether a Mac app is safe,
   suspicious, malware, from an unknown developer, or requests screen recording,

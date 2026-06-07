@@ -156,7 +156,7 @@ def brew_outdated():
 def upgrade_brew(eligible):
     for command in brew_upgrade_commands_for_eligible(eligible):
         run(command)
-    run(["brew", "doctor"])
+    run(["brew", "doctor"], check=False)
 
 
 def brew_upgrade_commands_for_eligible(eligible):
@@ -193,17 +193,20 @@ def command_scan(args):
     print(json.dumps(new_state, indent=2, sort_keys=True))
 
 
-def command_delayed(args):
+def command_delayed(args, now=None):
     state = load_json(args.state_file, {})
     eligible = eligible_updates(
         state,
         args.min_age_days,
-        now_utc(),
+        now or now_utc(),
         load_holds(args.hold_file),
         load_excluded_casks(args.excluded_casks_file),
     )
     if args.dry_run:
         print(json.dumps(eligible, indent=2, sort_keys=True))
+        return
+    if not eligible:
+        append_log(args.log_dir, "delayed found 0 eligible updates")
         return
     upgrade_brew(eligible)
     append_log(args.log_dir, f"delayed upgraded {sum(len(v) for v in eligible.values())} updates")

@@ -1,7 +1,9 @@
 import importlib.util
 import importlib.machinery
 import pathlib
+import tempfile
 import unittest
+from argparse import Namespace
 from datetime import datetime, timezone
 
 
@@ -248,6 +250,58 @@ class PersonalUpdatesStateTest(unittest.TestCase):
         )
 
         self.assertEqual(result.stdout.strip(), "1")
+
+    def test_delayed_command_skips_upgrade_when_nothing_is_eligible(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            temp_path = pathlib.Path(temp_dir)
+            state_file = temp_path / "state.json"
+            state_file.write_text(
+                """
+                {
+                  "brew_formula": {
+                    "new": {
+                      "installed": "1.0.0",
+                      "available": "1.1.0",
+                      "first_seen": "2026-06-05T12:00:00+00:00"
+                    }
+                  }
+                }
+                """
+            )
+            args = Namespace(
+                state_file=state_file,
+                log_dir=temp_path / "logs",
+                hold_file=temp_path / "hold.txt",
+                excluded_casks_file=temp_path / "excluded-casks.txt",
+                min_age_days=7,
+                dry_run=False,
+            )
+            old_upgrade_brew = self.mod.upgrade_brew
+            old_command_scan = self.mod.command_scan
+            self.mod.upgrade_brew = lambda _eligible: self.fail("upgrade_brew called")
+            self.mod.command_scan = lambda _args: self.fail("command_scan called")
+            try:
+                self.mod.command_delayed(args, now=self.now)
+            finally:
+                self.mod.upgrade_brew = old_upgrade_brew
+                self.mod.command_scan = old_command_scan
+
+    def test_upgrade_brew_runs_doctor_without_failing_job(self):
+        calls = []
+        old_run = self.mod.run
+        self.mod.run = lambda command, **kwargs: calls.append((command, kwargs))
+        try:
+            self.mod.upgrade_brew({"brew_formula": ["ripgrep"]})
+        finally:
+            self.mod.run = old_run
+
+        self.assertEqual(
+            calls,
+            [
+                (["brew", "upgrade", "ripgrep"], {}),
+                (["brew", "doctor"], {"check": False}),
+            ],
+        )
 
     def test_default_policy_files_live_in_macos_directory(self):
         self.assertEqual(self.mod.DEFAULT_POLICY_DIR, POLICY_DIR)

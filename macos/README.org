@@ -27,12 +27,15 @@ Mac:
 
 - =scan= runs =brew update= and records outdated Homebrew formulae and casks in
   =~/.local/state/personal-updates/state.json= with the first time each
-  available version was seen.
+  available version was seen. Like =macos-update-homebrew= from the =macos=
+  Emacs package, it first runs =brew update-reset -q= and then =brew update=.
 - =fast-brew= immediately upgrades fast-track Homebrew packages. By default
   this preserves the previous dedicated launchd jobs for =claude-code@latest=
   and =codex=.
 - =delayed --min-age-days 7= upgrades only Homebrew items that have remained
-  outdated for at least seven days.
+  outdated for at least seven days. Homebrew operations set
+  =HOMEBREW_NO_INSTALL_CLEANUP=1=; cask upgrades use =--greedy=; and the delayed
+  lane runs =brew doctor= after upgrade attempts.
 - =fast= runs =softwareupdate --install --recommended=. This is available for
   manual use, but it is not installed as a LaunchAgent by default because macOS
   updates may require privileges or a restart.
@@ -41,6 +44,10 @@ To exclude fragile packages from unattended upgrades, add one package per line
 to =~/.config/personal-updates/hold.txt=. Entries may be unqualified, such as
 =visual-studio-code=, or scoped, such as =brew_formula/python= or
 =brew_cask/visual-studio-code=.
+
+To preserve the cask-exclusion behavior of =macos-update-homebrew=, put cask
+names in =~/.config/personal-updates/excluded-casks.txt=. Excluded casks are
+recorded during scans but skipped by the delayed upgrade lane.
 
 To add more fast-track Homebrew packages, put one package per line in
 =~/.config/personal-updates/fast-brew.txt=. These entries are added to the

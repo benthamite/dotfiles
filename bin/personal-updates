@@ -2,6 +2,7 @@
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
@@ -11,6 +12,7 @@ from pathlib import Path
 DEFAULT_STATE_FILE = Path.home() / ".local/state/personal-updates/state.json"
 DEFAULT_LOG_DIR = Path.home() / ".local/state/personal-updates/logs"
 DEFAULT_HOLD_FILE = Path.home() / ".config/personal-updates/hold.txt"
+DEFAULT_EXCLUDED_CASKS_FILE = Path.home() / ".config/personal-updates/excluded-casks.txt"
 DEFAULT_FAST_BREW_FILE = Path.home() / ".config/personal-updates/fast-brew.txt"
 DEFAULT_FAST_BREW_PACKAGES = ("claude-code@latest", "codex")
 DEFAULT_MIN_AGE_DAYS = 7
@@ -59,6 +61,12 @@ def load_holds(path):
     return parse_holds(path.read_text())
 
 
+def load_excluded_casks(path):
+    if not path.exists():
+        return set()
+    return parse_holds(path.read_text())
+
+
 def load_fast_brew_packages(path):
     packages = list(DEFAULT_FAST_BREW_PACKAGES)
     if path.exists():
@@ -70,14 +78,17 @@ def is_held(kind, name, holds):
     return name in holds or f"{kind}/{name}" in holds
 
 
-def eligible_updates(state, min_age_days, now, holds=None):
+def eligible_updates(state, min_age_days, now, holds=None, excluded_casks=None):
     holds = holds or set()
+    excluded_casks = excluded_casks or set()
     cutoff = now - timedelta(days=min_age_days)
     eligible = {}
     for kind in KINDS:
         names = []
         for name, entry in state.get(kind, {}).items():
             if is_held(kind, name, holds):
+                continue
+            if kind == "brew_cask" and name in excluded_casks:
                 continue
             first_seen = datetime.fromisoformat(entry["first_seen"])
             if first_seen <= cutoff:
@@ -104,11 +115,18 @@ def save_json(path, data):
 
 
 def run(command, *, check=True):
-    return subprocess.run(command, check=check, text=True, capture_output=True)
+    env = os.environ.copy()
+    env["HOMEBREW_NO_INSTALL_CLEANUP"] = "1"
+    return subprocess.run(command, check=check, text=True, capture_output=True, env=env)
+
+
+def brew_update(run_command=run):
+    run_command(["brew", "update-reset", "-q"], check=False)
+    run_command(["brew", "update"])
 
 
 def brew_outdated():
-    run(["brew", "update"])
+    brew_update()
     result = run(["brew", "outdated", "--json=v2"], check=False)
     if result.returncode not in (0, 1):
         raise RuntimeError(result.stderr.strip() or result.stdout.strip())
@@ -134,10 +152,18 @@ def brew_outdated():
 
 
 def upgrade_brew(eligible):
+    for command in brew_upgrade_commands_for_eligible(eligible):
+        run(command)
+    run(["brew", "doctor"])
+
+
+def brew_upgrade_commands_for_eligible(eligible):
+    commands = []
     for name in eligible.get("brew_formula", []):
-        run(["brew", "upgrade", name])
+        commands.append(["brew", "upgrade", name])
     for name in eligible.get("brew_cask", []):
-        run(["brew", "upgrade", "--cask", name])
+        commands.append(["brew", "upgrade", "--cask", "--greedy", name])
+    return commands
 
 
 def brew_upgrade_commands(packages):
@@ -167,7 +193,13 @@ def command_scan(args):
 
 def command_delayed(args):
     state = load_json(args.state_file, {})
-    eligible = eligible_updates(state, args.min_age_days, now_utc(), load_holds(args.hold_file))
+    eligible = eligible_updates(
+        state,
+        args.min_age_days,
+        now_utc(),
+        load_holds(args.hold_file),
+        load_excluded_casks(args.excluded_casks_file),
+    )
     if args.dry_run:
         print(json.dumps(eligible, indent=2, sort_keys=True))
         return
@@ -195,6 +227,7 @@ def build_parser():
     parser.add_argument("--state-file", type=Path, default=DEFAULT_STATE_FILE)
     parser.add_argument("--log-dir", type=Path, default=DEFAULT_LOG_DIR)
     parser.add_argument("--hold-file", type=Path, default=DEFAULT_HOLD_FILE)
+    parser.add_argument("--excluded-casks-file", type=Path, default=DEFAULT_EXCLUDED_CASKS_FILE)
     parser.add_argument("--fast-brew-file", type=Path, default=DEFAULT_FAST_BREW_FILE)
     subparsers = parser.add_subparsers(dest="command", required=True)
 

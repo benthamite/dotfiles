@@ -118,7 +118,7 @@ class PersonalUpdatesStateTest(unittest.TestCase):
 
         self.assertEqual(result, {"brew_formula": {}})
 
-    def test_eligible_updates_respects_minimum_age_and_holds(self):
+    def test_eligible_updates_respects_minimum_age_holds_and_excluded_casks(self):
         state = {
             "brew_formula": {
                 "old": {
@@ -146,6 +146,7 @@ class PersonalUpdatesStateTest(unittest.TestCase):
             min_age_days=7,
             now=self.now,
             holds={"brew_cask/aged-cask"},
+            excluded_casks={"excluded-cask"},
         )
 
         self.assertEqual(
@@ -154,6 +155,26 @@ class PersonalUpdatesStateTest(unittest.TestCase):
                 "brew_formula": ["old"],
             },
         )
+
+    def test_eligible_updates_skips_excluded_casks(self):
+        state = {
+            "brew_cask": {
+                "excluded-cask": {
+                    "installed": "1.0.0",
+                    "available": "1.1.0",
+                    "first_seen": "2026-05-31T12:00:00+00:00",
+                }
+            }
+        }
+
+        result = self.mod.eligible_updates(
+            state,
+            min_age_days=7,
+            now=self.now,
+            excluded_casks={"excluded-cask"},
+        )
+
+        self.assertEqual(result, {})
 
     def test_load_holds_ignores_comments_and_blank_lines(self):
         text = """
@@ -195,6 +216,37 @@ class PersonalUpdatesStateTest(unittest.TestCase):
         result = self.mod.load_fast_brew_packages(FakePath())
 
         self.assertEqual(result, ["claude-code@latest", "codex", "extra-tool"])
+
+    def test_brew_update_uses_update_reset_before_update(self):
+        commands = []
+
+        self.mod.brew_update(run_command=lambda command, **_kwargs: commands.append(command))
+
+        self.assertEqual(commands, [["brew", "update-reset", "-q"], ["brew", "update"]])
+
+    def test_brew_upgrade_commands_use_greedy_for_casks(self):
+        result = self.mod.brew_upgrade_commands_for_eligible(
+            {"brew_formula": ["ripgrep"], "brew_cask": ["visual-studio-code"]}
+        )
+
+        self.assertEqual(
+            result,
+            [
+                ["brew", "upgrade", "ripgrep"],
+                ["brew", "upgrade", "--cask", "--greedy", "visual-studio-code"],
+            ],
+        )
+
+    def test_run_sets_homebrew_no_install_cleanup(self):
+        result = self.mod.run(
+            [
+                "python3",
+                "-c",
+                "import os; print(os.environ.get('HOMEBREW_NO_INSTALL_CLEANUP'))",
+            ]
+        )
+
+        self.assertEqual(result.stdout.strip(), "1")
 
 
 if __name__ == "__main__":

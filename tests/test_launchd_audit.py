@@ -164,6 +164,44 @@ class LaunchdAuditTests(unittest.TestCase):
                 findings,
             )
 
+    def test_audit_reports_managed_job_not_symlinked_to_canonical(self):
+        module = load_module()
+        with tempfile.TemporaryDirectory() as directory:
+            tmp_path = Path(directory)
+            live_path = tmp_path / "com.example.job.plist"
+            canonical = tmp_path / "launchd/agents/private/com.example.job.plist"
+            canonical.parent.mkdir(parents=True)
+            canonical.write_text("placeholder")
+            live_path.write_bytes(plistlib.dumps({"Label": "com.example.job"}))
+            registry = {
+                "managed_jobs": [
+                    {
+                        "label": "com.example.job",
+                        "canonical_plist": "launchd/agents/private/com.example.job.plist",
+                        "live_plist": str(live_path),
+                    }
+                ],
+                "unmanaged_first_party_jobs": [],
+                "ignored_jobs": [],
+            }
+
+            findings = module.audit_registry(
+                registry,
+                live_plists={"com.example.job": {"path": str(live_path), "label": "com.example.job"}},
+                loaded_labels={"com.example.job"},
+                repo_root=tmp_path,
+            )
+
+            self.assertIn(
+                {
+                    "severity": "WARN",
+                    "label": "com.example.job",
+                    "message": "managed job live plist is not symlinked to canonical plist",
+                    "path": str(live_path),
+                },
+                findings,
+            )
+
     def test_parse_launchctl_print_extracts_labels(self):
         module = load_module()
         output = """
@@ -182,6 +220,20 @@ gui/501 = {
         self.assertEqual(
             module.parse_launchctl_labels(output),
             {"com.stafforini.example", "homebrew.mxcl.postgresql@17"},
+        )
+
+    def test_parse_launchctl_print_extracts_table_style_labels(self):
+        module = load_module()
+        output = """
+services = {
+    0      0  com.stafforini.brew-codex-upgrade
+    0      0  application.com.apple.Terminal.123456
+}
+"""
+
+        self.assertEqual(
+            module.parse_launchctl_labels(output),
+            {"com.stafforini.brew-codex-upgrade", "application.com.apple.Terminal.123456"},
         )
 
 

@@ -50,7 +50,9 @@ def discover_live_plists(directory):
 
 
 def parse_launchctl_labels(output):
-    return set(re.findall(r"^\s*label = ([^\s]+)\s*$", output, flags=re.MULTILINE))
+    labels = set(re.findall(r"^\s*label = ([^\s]+)\s*$", output, flags=re.MULTILINE))
+    labels.update(re.findall(r"^\s*\d+\s+\d+\s+([^\s{}]+)\s*$", output, flags=re.MULTILINE))
+    return labels
 
 
 def discover_launchctl_labels(domain):
@@ -104,15 +106,28 @@ def audit_registry(registry, live_plists, loaded_labels, repo_root):
             )
 
         canonical = job.get("canonical_plist")
-        if canonical and not (repo_root / canonical).exists():
-            findings.append(
-                {
-                    "severity": "ERROR",
-                    "label": label,
-                    "message": "managed job canonical plist missing",
-                    "path": str(repo_root / canonical),
-                }
-            )
+        if canonical:
+            canonical_path = repo_root / canonical
+            if not canonical_path.exists():
+                findings.append(
+                    {
+                        "severity": "ERROR",
+                        "label": label,
+                        "message": "managed job canonical plist missing",
+                        "path": str(canonical_path),
+                    }
+                )
+            elif label in live_plists:
+                live_path = Path(live_plists[label]["path"])
+                if not live_path.is_symlink() or live_path.resolve() != canonical_path.resolve():
+                    findings.append(
+                        {
+                            "severity": "WARN",
+                            "label": label,
+                            "message": "managed job live plist is not symlinked to canonical plist",
+                            "path": str(live_path),
+                        }
+                    )
 
     for label, info in sorted(live_plists.items()):
         if label in known_labels:

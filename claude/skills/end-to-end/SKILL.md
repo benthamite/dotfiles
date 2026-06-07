@@ -34,6 +34,11 @@ Skip if the change is a refactor or pure-logic fix with full unit coverage and n
 - **Browser-rendered UI**: load the page in a real browser at the relevant viewport size; static HTML grep is not enough.
 - **Slack / Sheets / external-system output**: post a fixture to a preview channel or read back the live document, not only the local renderer.
 - **Scheduled job / CI / cron**: trigger the real schedule (or a manual dispatch of the same workflow), not a local script invocation that bypasses the scheduler harness.
+- **Secret-backed remote notifications**: when credentials live only in CI or
+  another remote secret store, prefer an explicit opt-in test-alert/manual
+  dispatch path that exercises the real remote credentials and delivery channel
+  without mutating production state. Label the message clearly, keep the
+  audience minimal, and respect external-action confirmation rules.
 
 ## When E2E is not possible
 

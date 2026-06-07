@@ -693,9 +693,11 @@ Emacs / terminal display / browser / Slack / scheduled-job code paths. The
 workflow forces the agent to state the success criterion in plain words,
 reproduce the failure on the same surface the user uses BEFORE changing
 code, re-run the same reproduction after the fix, and report verbatim what
-was verified through what surface. When E2E is impossible, the skill
-requires naming the blocked step explicitly rather than substituting a
-local proxy as success.
+was verified through what surface. For secret-backed remote notifications,
+it prefers clearly labeled opt-in test alerts or manual dispatches that use
+the real remote credentials without mutating production state. When E2E is
+impossible, the skill requires naming the blocked step explicitly rather than
+substituting a local proxy as success.
 
 **** handoff
 :PROPERTIES:

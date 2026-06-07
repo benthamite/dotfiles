@@ -560,5 +560,43 @@ literal in the pattern."
               (should-not (string-search "** User" text)))))
       (delete-file tmp))))
 
+;;;; Bibliography entry processing
+
+(ert-deftest gptel-extras-test-add-bib-entry-and-process-orchestrates ()
+  "Add-and-process imports metadata, opens the key, then processes attachments."
+  (let (calls
+        (old-key-bound (boundp 'zotra-extras-most-recent-bibkey))
+        (old-key (and (boundp 'zotra-extras-most-recent-bibkey)
+                      zotra-extras-most-recent-bibkey))
+        (old-require (symbol-function 'require)))
+    (unwind-protect
+        (cl-letf (((symbol-function 'require)
+                   (lambda (feature &optional filename noerror)
+                     (if (memq feature '(zotra-extras ebib-extras))
+                         t
+                       (funcall old-require feature filename noerror))))
+                  ((symbol-function 'zotra-extras-add-entry)
+                   (lambda (identifier entry-format bibfile do-not-open)
+                     (push (list 'add identifier entry-format bibfile do-not-open) calls)
+                     (setq zotra-extras-most-recent-bibkey "smith2024test")))
+                  ((symbol-function 'gptel-extras--open-bib-entry-for-processing)
+                   (lambda (bibfile key)
+                     (push (list 'open bibfile key) calls)))
+                  ((symbol-function 'gptel-extras--process-bib-entry-headless)
+                   (lambda (timeout)
+                     (push (list 'process timeout) calls)
+                     '(:key "smith2024test" :files ("/tmp/smith2024test.pdf")))))
+          (should
+           (equal (gptel-extras-add-bib-entry-and-process "10.123/example" "new.bib" 7)
+                  '(:key "smith2024test" :files ("/tmp/smith2024test.pdf"))))
+          (should
+           (equal (nreverse calls)
+                  '((add "10.123/example" nil "new.bib" t)
+                    (open "new.bib" "smith2024test")
+                    (process 7)))))
+      (if old-key-bound
+          (setq zotra-extras-most-recent-bibkey old-key)
+        (makunbound 'zotra-extras-most-recent-bibkey)))))
+
 (provide 'gptel-extras-test)
 ;;; gptel-extras-test.el ends here

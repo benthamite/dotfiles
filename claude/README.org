@@ -570,11 +570,12 @@ Registers an Emacs package in =my-emacs-packages.org=, creates an accompanying d
 
 Documents the preferred workflow for adding works to Pablo's bibliography with
 =zotra-extras-add-entry=, =ebib-extras-process-entry=, and the related
-=search_bibliography= / =add_bib_entry= tool path. It triggers when agents need
-to add DOI, ISBN, URL, or otherwise missing BibTeX/BibLaTeX references before
-citing them in notes. The skill emphasizes the full end state: a clean
-bibliography entry, resolved citekey, and associated PDF/HTML files when the
-Emacs workflow can obtain them; manual BibTeX is reserved for unsupported cases.
+=search_bibliography= / =add_bib_entry_and_process= tool path. It triggers when
+agents need to add DOI, ISBN, URL, or otherwise missing BibTeX/BibLaTeX
+references before citing them in notes. The skill emphasizes the full end
+state: a clean bibliography entry, resolved citekey, and associated PDF/HTML
+files when the Emacs workflow can obtain them; manual BibTeX is reserved for
+unsupported cases.
 
 *** Release and operations skills
 :PROPERTIES:

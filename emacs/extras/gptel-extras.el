@@ -28,6 +28,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'gptel)
 (require 'gptel-context)
 (require 'org)
@@ -1061,7 +1062,27 @@ If no matches are found, returns nil."
  :category "bibtex")
 
 (defvar zotra-extras-most-recent-bibkey)
+(defvar zotra-extras-most-recent-bibfile)
+(defvar ebib--cur-db)
 (declare-function zotra-extras-add-entry "zotra-extras")
+(declare-function ebib "ebib")
+(declare-function ebib--get-key-at-point "ebib")
+(declare-function ebib--split-files "ebib")
+(declare-function ebib--update-buffers "ebib")
+(declare-function ebib-db-get-filename "ebib-db")
+(declare-function ebib-edit-entry "ebib")
+(declare-function ebib-extras-attach-files "ebib-extras")
+(declare-function ebib-extras-check-crossref "ebib-extras")
+(declare-function ebib-extras-get-db-number "ebib-extras")
+(declare-function ebib-extras-get-field "ebib-extras")
+(declare-function ebib-extras-get-or-set-language "ebib-extras")
+(declare-function ebib-extras-open-key "ebib-extras")
+(declare-function ebib-extras-open-or-switch "ebib-extras")
+(declare-function ebib-extras-reload-database-no-confirm "ebib-extras")
+(declare-function ebib-extras-sort "ebib-extras")
+(declare-function ebib-generate-autokey "ebib-autokey")
+(declare-function ebib-save-current-database "ebib")
+(declare-function ebib-switch-to-database-nth "ebib")
 (defun gptel-extras-add-bib-entry (identifier bibfile)
   "Add bibliographic entry for IDENTIFIER to BIBFILE and return the entry’s bibkey.
 IDENTIFIER can be a URL, ISBN, or DOI.  This function calls
@@ -1069,6 +1090,122 @@ IDENTIFIER can be a URL, ISBN, or DOI.  This function calls
 argument."
   (zotra-extras-add-entry identifier nil bibfile t)
   zotra-extras-most-recent-bibkey)
+
+(defcustom gptel-extras-bib-entry-process-timeout 45
+  "Seconds to wait for asynchronous bibliography attachment processing."
+  :type 'integer
+  :group 'gptel-extras)
+
+(defun gptel-extras--open-bib-entry-for-processing (bibfile key)
+  "Open KEY from BIBFILE in Ebib without asking processing questions."
+  (require 'ebib)
+  (require 'ebib-extras)
+  (ebib)
+  (when-let* ((db-number (ebib-extras-get-db-number bibfile)))
+    (ebib-switch-to-database-nth db-number))
+  (ebib-extras-open-or-switch)
+  (when ebib--cur-db
+    (ebib-extras-reload-database-no-confirm ebib--cur-db))
+  (ebib--update-buffers)
+  (ebib bibfile key)
+  (ebib-extras-sort 'Timestamp)
+  (goto-char (point-min))
+  (ebib-extras-open-key key)
+  (ebib-save-current-database t))
+
+(defun gptel-extras--first-completion (collection)
+  "Return the first value from COLLECTION for headless prompts."
+  (cond ((hash-table-p collection)
+         (catch 'result
+           (maphash (lambda (key _value) (throw 'result key)) collection)
+           nil))
+        ((functionp collection)
+         (let (result)
+           (funcall collection "" nil
+                    (lambda (candidate)
+                      (unless result
+                        (setq result candidate))))
+           result))
+        ((consp collection)
+         (let ((first (car collection)))
+           (if (consp first) (car first) first)))))
+
+(defun gptel-extras--bib-files-for-key (key)
+  "Return existing attachment files for bibliography entry KEY."
+  (when-let* ((file-field (ebib-extras-get-field "file" key)))
+    (seq-filter #'file-exists-p
+                (mapcar (lambda (file)
+                          (expand-file-name (string-trim file)))
+                        (ebib--split-files file-field)))))
+
+(defun gptel-extras--bib-attachment-process-live-p ()
+  "Return non-nil when known bibliography attachment processes are live."
+  (seq-some (lambda (process)
+              (and (process-live-p process)
+                   (string-match-p
+                    "\\`\\(?:url-to-\\|eww\\|url-retrieve\\)"
+                    (process-name process))))
+            (process-list)))
+
+(defun gptel-extras--wait-for-bib-attachments (key timeout)
+  "Wait up to TIMEOUT seconds for asynchronous attachments for KEY."
+  (let ((deadline (+ (float-time) timeout))
+        files)
+    (while (and (< (float-time) deadline)
+                (or (gptel-extras--bib-attachment-process-live-p)
+                    (null files)))
+      (accept-process-output nil 1)
+      (setq files (gptel-extras--bib-files-for-key key)))
+    (or files (gptel-extras--bib-files-for-key key))))
+
+(defun gptel-extras--process-bib-entry-headless (&optional timeout)
+  "Run Ebib post-processing for the current entry without prompting.
+Return a plist describing the resulting key and attachment files."
+  (let ((timeout (or timeout gptel-extras-bib-entry-process-timeout)))
+    (cl-letf (((symbol-function 'y-or-n-p)
+               (lambda (prompt)
+                 (not (string-match-p "Regenerate key\\|Overwrite" prompt))))
+              ((symbol-function 'yes-or-no-p)
+               (lambda (_prompt) t))
+              ((symbol-function 'read-string)
+               (lambda (_prompt &optional initial-input &rest _args)
+                 (or initial-input "")))
+              ((symbol-function 'completing-read)
+               (lambda (_prompt collection &optional _predicate _require-match
+                                initial-input &rest _args)
+                 (or initial-input
+                     (gptel-extras--first-completion collection)
+                     ""))))
+      (let* ((initial-key (ebib--get-key-at-point))
+             (key (if (string-match-p "^[[:alnum:]_-]+[0-9][[:alnum:]_-]*$" initial-key)
+                      initial-key
+                    (ebib-generate-autokey)
+                    (ebib--get-key-at-point))))
+        (ebib-extras-get-or-set-language)
+        (ebib-extras-attach-files key)
+        (ebib-extras-check-crossref key)
+        (let ((files (gptel-extras--wait-for-bib-attachments key timeout)))
+          (list :key key
+                :bibfile (when ebib--cur-db (ebib-db-get-filename ebib--cur-db))
+                :files files
+                :file-count (length files)
+                :file-field (ebib-extras-get-field "file" key)))))))
+
+(defun gptel-extras-add-bib-entry-and-process (identifier bibfile &optional timeout)
+  "Add IDENTIFIER to BIBFILE, run Ebib processing, and return attachment status.
+IDENTIFIER can be a URL, ISBN, DOI, or other string supported by Zotra.  This
+function is intended for agent/headless use: it imports metadata with
+`zotra-extras-add-entry', opens the new entry in Ebib, runs the same file
+attachment path as `ebib-extras-process-entry', waits for asynchronous
+attachment work for TIMEOUT seconds, and returns a plist with the final key and
+attached files."
+  (require 'zotra-extras)
+  (require 'ebib-extras)
+  (zotra-extras-add-entry identifier nil bibfile t)
+  (let ((key zotra-extras-most-recent-bibkey)
+        (zotra-extras-most-recent-bibfile bibfile))
+    (gptel-extras--open-bib-entry-for-processing bibfile key)
+    (gptel-extras--process-bib-entry-headless timeout)))
 
 (gptel-make-tool
  :function #'gptel-extras-add-bib-entry
@@ -1080,6 +1217,21 @@ argument."
              '(:name "bibfile"
 		     :type string
 		     :description "The path to the BibTeX file to add the entry to."))
+ :category "bibtex")
+
+(gptel-make-tool
+ :function #'gptel-extras-add-bib-entry-and-process
+ :name "add_bib_entry_and_process"
+ :description "Adds a bibliographic entry and runs Ebib processing to attach associated files."
+ :args (list '(:name "identifier"
+		     :type string
+		     :description "The URL, ISBN, DOI, or search string of the item to add.")
+             '(:name "bibfile"
+		     :type string
+		     :description "The path to the BibTeX file to add the entry to.")
+             '(:name "timeout"
+                     :type integer
+                     :description "Optional seconds to wait for attachment processing."))
  :category "bibtex")
 
 ;;;;; mu4e

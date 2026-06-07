@@ -23,19 +23,23 @@ Use Pablo's Emacs bibliography workflow, not ad hoc BibTeX, whenever a work has 
    - For Pablo's personal notes, default to `paths-file-personal-bibliography-new`, normally `/Users/pablostafforini/My Drive/bibliography/new.bib`.
    - Do not add new personal references to `old.bib` or Babel/Tlön bibliography files unless the user or project context explicitly calls for that.
 
-3. Add the entry through Zotra.
+3. Add and process the entry through Zotra/Ebib.
    - Manual/full workflow: run `zotra-extras-add-entry` in Emacs. It imports metadata via Zotra/Zotero translators, prompts for the target bibfile, opens the entry in Ebib, and then runs the Ebib processing path.
-   - Headless/Codex shortcut when the `add_bib_entry` tool is available: use it for URL/ISBN/DOI imports, but treat it as metadata-only until file processing is verified. It delegates to `gptel-extras-add-bib-entry`, which calls `zotra-extras-add-entry` with `DO-NOT-OPEN`.
+   - Headless/agent workflow: prefer `add_bib_entry_and_process` when available. It imports through Zotra, opens the generated key in Ebib, runs the Ebib processing path noninteractively, waits for asynchronous attachment work, and returns the key plus attached-file status.
    - Headless Emacs equivalent:
      ```bash
-     emacsclient -e '(progn (require '\''gptel-extras) (gptel-extras-add-bib-entry "IDENTIFIER" "/Users/pablostafforini/My Drive/bibliography/new.bib"))'
+     emacsclient -e '(progn (require '\''gptel-extras) (gptel-extras-add-bib-entry-and-process "IDENTIFIER" "/Users/pablostafforini/My Drive/bibliography/new.bib"))'
      ```
+   - Use `add_bib_entry` only as a metadata-only fallback. It deliberately passes `DO-NOT-OPEN` to `zotra-extras-add-entry`, so it does not run Ebib post-processing or attach files.
 
 4. Complete post-processing.
    - The full manual path calls `zotra-extras-open-in-ebib`, which confirms the entry type/key and invokes `ebib-extras-process-entry`.
    - `ebib-extras-process-entry` regenerates/validates the key, sets language, calls `ebib-extras-attach-files`, and checks crossrefs.
-   - `ebib-extras-attach-files` chooses attachments from DOI, ISBN/book type, video URL, or online/article URL. Online/article URLs can produce both PDF and HTML attachments.
-   - If the import was done through the headless shortcut, verify the `file` field yourself. Do not claim the bibliography work is complete unless the expected associated file(s) exist or you explicitly report what could not be attached.
+   - `ebib-extras-attach-files` chooses attachments from DOI, ISBN/book type, video URL, or online/article URL:
+     - DOI: searches/downloads through Anna's Archive.
+     - ISBN/book-like entries: searches/downloads through Anna's Archive.
+     - Online/article URLs: generates PDF and HTML files with `eww-extras-url-to-file`.
+   - Anna's Archive downloads may fall back to the external browser. If the returned file list is empty or incomplete, inspect the `file` field and Downloads/library directories before reporting the exact missing attachment.
 
 5. Use the returned/generated citekey in notes.
    - Cite as `[cite:@Key]`.

@@ -22,41 +22,41 @@ findings by severity with concrete locations and remediation steps.
 
 * Personal updates
 
-=bin/personal-updates= implements a two-lane update policy for an individual
-Mac:
+=bin/personal-updates= manages Homebrew updates with three scheduled jobs:
 
-- =scan= runs =brew update= and records outdated Homebrew formulae and casks in
-  =~/.local/state/personal-updates/state.json= with the first time each
-  available version was seen. Like =macos-update-homebrew= from the =macos=
-  Emacs package, it first runs =brew update-reset -q= and then =brew update=.
-- =fast-brew= immediately upgrades fast-track Homebrew packages. By default
-  this preserves the previous dedicated launchd jobs for =claude-code@latest=
-  and =codex=.
-- =delayed --min-age-days 7= upgrades only Homebrew items that have remained
-  outdated for at least seven days. Homebrew operations set
-  =HOMEBREW_NO_INSTALL_CLEANUP=1=; cask upgrades use =--greedy=; and the delayed
-  lane runs =brew doctor= after upgrade attempts.
-- =fast= runs =softwareupdate --install --recommended=. This is available for
-  manual use, but it is not installed as a LaunchAgent by default because macOS
-  updates may require privileges or a restart.
+| Job | Runs | What it does |
+|-----+------+--------------|
+| =fast-brew= | 03:00 daily | Upgrades fast-track packages immediately. Defaults: =claude-code@latest= and =codex=. |
+| =scan= | 08:15 daily | Checks what Homebrew packages are outdated and records when each update was first seen. |
+| =delayed= | 09:00 daily | Upgrades packages that have been outdated for at least 7 days. |
 
-To exclude fragile packages from unattended upgrades, add one package per line
-to =macos/personal-updates/hold.txt=. Entries may be unqualified, such as
-=visual-studio-code=, or scoped, such as =brew_formula/python= or
-=brew_cask/visual-studio-code=. Use =--hold-file= only for a temporary
-per-run override.
+The important idea is simple: critical tools can update immediately, while
+ordinary Homebrew updates wait until they have been visible for a week.
 
-To preserve the cask-exclusion behavior of =macos-update-homebrew=, put cask
-names in =macos/personal-updates/excluded-casks.txt=. Excluded casks are
-recorded during scans but skipped by the delayed upgrade lane. Use
-=--excluded-casks-file= only for a temporary per-run override.
+The state file is:
 
-To add more fast-track Homebrew packages, put one package per line in
-=macos/personal-updates/fast-brew.txt=. These entries are added to the
-defaults, not used as a replacement. Use =--fast-brew-file= only for a
-temporary per-run override.
+#+begin_src text
+~/.local/state/personal-updates/state.json
+#+end_src
 
-Install the scheduled Homebrew jobs with:
+The policy files are:
+
+| File | Meaning |
+|------+---------|
+| =macos/personal-updates/fast-brew.txt= | Extra packages to update immediately. |
+| =macos/personal-updates/hold.txt= | Packages to skip in the delayed updater. |
+| =macos/personal-updates/excluded-casks.txt= | Casks to record but never upgrade automatically. |
+
+Leave those files empty unless a package needs special handling.
+
+Manual checks:
+
+#+begin_src sh
+bin/personal-updates fast-brew --dry-run
+bin/personal-updates delayed --dry-run
+#+end_src
+
+Install or refresh the scheduled jobs with:
 
 #+begin_src sh
 mkdir -p ~/Library/LaunchAgents ~/.local/state/personal-updates
@@ -71,10 +71,11 @@ launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.stafforini.persona
 launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.stafforini.personal-updates.delayed.plist
 #+end_src
 
-If the standalone launchd jobs =com.stafforini.brew-claude-upgrade= and
-=com.stafforini.brew-codex-upgrade= are still loaded, unload them before loading
-=com.stafforini.personal-updates.fast-brew= to avoid duplicate daily attempts.
+There is also a manual command for macOS system updates:
 
-For the security-fast lane, keep macOS automatic security updates and Rapid
-Security Responses enabled in System Settings. Use =bin/personal-updates fast=
-only when an unattended OS update is acceptable.
+#+begin_src sh
+bin/personal-updates fast
+#+end_src
+
+That command runs =softwareupdate --install --recommended=. It is not scheduled
+because macOS updates may require privileges or a restart.

@@ -142,6 +142,11 @@ Each element should be a string, as used by Org Babel (e.g., \"python\")."
   :type '(repeat string)
   :group 'org-extras)
 
+(defcustom org-extras-citation-preview-style "en/long.csl"
+  "CSL style used by `org-extras-export-citation-preview'."
+  :type 'string
+  :group 'org-extras)
+
 ;;;; Variables
 
 (defvar-local org-extras-id-auto-add-exclude-file nil
@@ -165,6 +170,173 @@ Each element should be a string, as used by Org Babel (e.g., \"python\")."
     (kill-new (thing-at-point-url-at-point)))
    ((org-extras-link-get-url-at-point)
     (kill-new (org-extras-link-get-thing-at-point 1)))))
+
+(defun org-extras-export-citation-preview (&optional output-file)
+  "Export current Org buffer to HTML with citations as reference entries.
+OUTPUT-FILE is the HTML file to write.  Interactively, default to a
+\"-citation-preview.html\" file next to the current buffer file.
+
+The command ignores directory-local citation processors, builds a temporary
+BibLaTeX file containing only cited keys, and uses the CSL bibentry citation
+style so each citation appears as an expanded reference."
+  (interactive (list (org-extras--citation-preview-read-output-file)))
+  (unless (derived-mode-p 'org-mode)
+    (user-error "Current buffer is not in org-mode"))
+  (let* ((source (buffer-substring-no-properties (point-min) (point-max)))
+         (keys (org-extras--citation-preview-keys source))
+         (bib-file (make-temp-file "org-cite-preview-" nil ".bib"))
+         (output (or output-file (org-extras--citation-preview-default-output-file))))
+    (unless keys
+      (user-error "No org-cite citations found"))
+    (unwind-protect
+        (progn
+          (org-extras--citation-preview-write-bibliography keys bib-file)
+          (org-extras--citation-preview-export source bib-file output)
+          (org-extras--citation-preview-assert-output output)
+          (browse-url-of-file output)
+          output)
+      (when (file-exists-p bib-file)
+        (delete-file bib-file)))))
+
+(defun org-extras--citation-preview-read-output-file ()
+  "Read an output file for `org-extras-export-citation-preview'."
+  (read-file-name "Export citation preview to: "
+                  nil
+                  (org-extras--citation-preview-default-output-file)))
+
+(defun org-extras--citation-preview-default-output-file ()
+  "Return the default citation preview HTML output path."
+  (if-let* ((file (buffer-file-name)))
+      (concat (file-name-sans-extension file) "-citation-preview.html")
+    (expand-file-name "org-citation-preview.html" temporary-file-directory)))
+
+(defun org-extras--citation-preview-keys (source)
+  "Return unique citation keys in Org SOURCE."
+  (require 'oc)
+  (with-temp-buffer
+    (insert source)
+    (org-mode)
+    (let (keys)
+      (org-element-map (org-element-parse-buffer) 'citation-reference
+        (lambda (reference)
+          (cl-pushnew (org-element-property :key reference) keys
+                      :test #'string=)))
+      (nreverse keys))))
+
+(defun org-extras--citation-preview-write-bibliography (keys bib-file)
+  "Write BibLaTeX entries for KEYS to BIB-FILE."
+  (let ((entries (mapcar #'org-extras--citation-preview-find-entry keys)))
+    (with-temp-file bib-file
+      (insert (mapconcat #'org-extras--citation-preview-sanitize-entry
+                         entries
+                         "\n\n")))))
+
+(defun org-extras--citation-preview-find-entry (key)
+  "Return the BibLaTeX entry for KEY."
+  (or (cl-some (lambda (file)
+                 (org-extras--citation-preview-find-entry-in-file key file))
+               (org-extras--citation-preview-bibliography-files))
+      (user-error "No BibLaTeX entry found for %s" key)))
+
+(defun org-extras--citation-preview-bibliography-files ()
+  "Return bibliography files used by citation preview export."
+  (cond
+   (org-cite-global-bibliography org-cite-global-bibliography)
+   ((boundp 'paths-files-bibliography-all) paths-files-bibliography-all)
+   (t (user-error "No bibliography files configured"))))
+
+(defun org-extras--citation-preview-find-entry-in-file (key file)
+  "Return the BibLaTeX entry for KEY in FILE, or nil."
+  (when (file-readable-p file)
+    (with-temp-buffer
+      (insert-file-contents file)
+      (goto-char (point-min))
+      (when (re-search-forward
+             (format "@[[:alpha:]]+[[:space:]\n\r]*{[[:space:]\n\r]*%s[[:space:]\n\r]*,"
+                     (regexp-quote key))
+             nil t)
+        (goto-char (match-beginning 0))
+        (buffer-substring-no-properties
+         (point)
+         (org-extras--citation-preview-entry-end))))))
+
+(defun org-extras--citation-preview-entry-end ()
+  "Return point after the current BibLaTeX entry."
+  (let ((depth 0)
+        (started nil))
+    (while (and (not (and started (zerop depth))) (not (eobp)))
+      (pcase (char-after)
+        (?{ (setq depth (1+ depth)
+                  started t))
+        (?} (setq depth (1- depth))))
+      (forward-char))
+    (point)))
+
+(defun org-extras--citation-preview-sanitize-entry (entry)
+  "Return ENTRY with CSL-hostile date fields made parseable."
+  (replace-regexp-in-string
+   "\\(^[[:space:]]*\\)date\\([[:space:]]*=[[:space:]]*{\\([^}]+\\)},?\\)"
+   (lambda (field)
+     (if (org-extras--citation-preview-valid-date-p (match-string 3 field))
+         field
+       (concat (match-string 1 field) "pubstate" (match-string 2 field))))
+   entry))
+
+(defun org-extras--citation-preview-valid-date-p (date)
+  "Return non-nil when DATE is parseable as a CSL date."
+  (string-match-p
+   "\\`[0-9][0-9][0-9][0-9]\\(?:-[0-9][0-9]\\(?:-[0-9][0-9]\\)?\\)?\\'"
+   date))
+
+(defun org-extras--citation-preview-export (source bib-file output)
+  "Export Org SOURCE using BIB-FILE to HTML OUTPUT."
+  (require 'ox-html)
+  (with-temp-buffer
+    (insert source)
+    (goto-char (point-min))
+    (insert (format "#+bibliography: %s\n"
+                    (org-extras--citation-preview-quote-file bib-file)))
+    (org-extras--citation-preview-use-bibentry-style)
+    (org-mode)
+    (let ((org-cite-global-bibliography (list bib-file))
+          (org-cite-export-processors
+           (org-extras--citation-preview-export-processors))
+          (org-export-use-babel nil))
+      (org-export-to-file 'html output nil nil nil nil nil))))
+
+(defun org-extras--citation-preview-export-processors ()
+  "Return CSL export processors for citation preview export."
+  (if (org-extras--citation-preview-style-available-p
+       org-extras-citation-preview-style)
+      `((t . (csl ,org-extras-citation-preview-style)))
+    '((t . (csl)))))
+
+(defun org-extras--citation-preview-style-available-p (style)
+  "Return non-nil when CSL STYLE is available."
+  (or (file-exists-p style)
+      (and (bound-and-true-p org-cite-csl-styles-dir)
+           (file-exists-p
+            (expand-file-name style org-cite-csl-styles-dir)))))
+
+(defun org-extras--citation-preview-quote-file (file)
+  "Return FILE quoted for an Org bibliography keyword."
+  (shell-quote-argument (expand-file-name file)))
+
+(defun org-extras--citation-preview-use-bibentry-style ()
+  "Make all citations in the current buffer use CSL bibentry style."
+  (goto-char (point-min))
+  (while (re-search-forward "\\[cite\\(?:/[^][: \t\n]+\\)?:"
+                            nil t)
+    (replace-match "[cite/bibentry:" nil t)))
+
+(defun org-extras--citation-preview-assert-output (output)
+  "Signal an error if OUTPUT still contains unresolved citation markup."
+  (with-temp-buffer
+    (insert-file-contents output)
+    (when (re-search-forward
+           (regexp-opt '("NO_ITEM_DATA" "{{< cite" "[cite:"))
+           nil t)
+      (user-error "Citation preview export still contains unresolved citations"))))
 
 ;; Adapted from lists.gnu.org/archive/html/emacs-orgmode/2011-06/msg00716.html
 (defun org-extras-link-get-thing-at-point (arg)

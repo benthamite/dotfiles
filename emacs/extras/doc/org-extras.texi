@@ -74,6 +74,7 @@ Editing and navigation
 * Jumping to the first heading::
 * Opening links in EWW::
 * Pasting clipboard content as Org::
+* Exporting citation previews::
 * Pasting images from the clipboard::
 * Toggling inline images::
 
@@ -401,6 +402,7 @@ evaluation in your workflow.
 * Jumping to the first heading::
 * Opening links in EWW::
 * Pasting clipboard content as Org::
+* Exporting citation previews::
 * Pasting images from the clipboard::
 * Toggling inline images::
 @end menu
@@ -519,6 +521,26 @@ Internally it calls @code{simple-extras-pandoc-convert} from @samp{simple-extras
 For the reverse operation (copying Org as formatted HTML), see
 @code{ox-clip-formatted-copy}.  For the Markdown equivalent, see
 @code{markdown-mode-extras-paste-with-conversion} in @samp{markdown-mode-extras.el}.
+
+@node Exporting citation previews
+@subsection Exporting citation previews
+
+@findex org-extras-export-citation-preview
+The command @code{org-extras-export-citation-preview} exports the current Org
+buffer to HTML with each @samp{org-cite} citation rendered as an expanded CSL
+bibliography entry.  It is meant for checking bibliography-list notes
+where the source contains items such as @code{[cite:@@Key]} but the preview
+should show full reference text.
+
+The command does not rely on directory-local citation processors or on
+the whole configured bibliography being parseable by CSL@.  It extracts
+the cited keys from the current buffer, writes a temporary bibliography
+containing only those entries, forces CSL export with
+@code{org-extras-citation-preview-style}, rewrites citations to the CSL
+@code{bibentry} style in the temporary export buffer, and opens the generated
+HTML file.  It signals an error if the output still contains unresolved
+markers such as @samp{NO_ITEM_DATA}, Hugo citation shortcodes, or raw
+@samp{org-cite} syntax.
 
 @node Pasting images from the clipboard
 @subsection Pasting images from the clipboard

@@ -353,6 +353,28 @@ For the reverse operation (copying Org as formatted HTML), see
 ~ox-clip-formatted-copy~.  For the Markdown equivalent, see
 ~markdown-mode-extras-paste-with-conversion~ in =markdown-mode-extras.el=.
 
+*** Exporting citation previews
+:PROPERTIES:
+:CUSTOM_ID: h:exporting-citation-previews
+:END:
+
+#+findex: org-extras-export-citation-preview
+The command ~org-extras-export-citation-preview~ exports the current Org
+buffer to HTML with each =org-cite= citation rendered as an expanded CSL
+bibliography entry.  It is meant for checking bibliography-list notes
+where the source contains items such as ~[cite:@Key]~ but the preview
+should show full reference text.
+
+The command does not rely on directory-local citation processors or on
+the whole configured bibliography being parseable by CSL.  It extracts
+the cited keys from the current buffer, writes a temporary bibliography
+containing only those entries, forces CSL export with
+~org-extras-citation-preview-style~, rewrites citations to the CSL
+~bibentry~ style in the temporary export buffer, and opens the generated
+HTML file.  It signals an error if the output still contains unresolved
+markers such as =NO_ITEM_DATA=, Hugo citation shortcodes, or raw
+=org-cite= syntax.
+
 *** Pasting images from the clipboard
 :PROPERTIES:
 :CUSTOM_ID: h:pasting-images

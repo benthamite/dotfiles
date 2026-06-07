@@ -648,6 +648,62 @@
     ;; Still has unchecked checkboxes
     (should (string-match-p "\\[ \\]" (buffer-string)))))
 
+;;;; Citation preview export
+
+(ert-deftest org-extras-test-citation-preview-keys ()
+  "Extract unique org-cite keys from Org source."
+  (should (equal (org-extras--citation-preview-keys
+                  "[cite:@Alpha2020; @Beta2021]\n[cite:@Alpha2020]")
+                 '("Alpha2020" "Beta2021"))))
+
+(ert-deftest org-extras-test-citation-preview-use-bibentry-style ()
+  "Rewrite org-cite markers to the CSL bibentry style."
+  (with-temp-buffer
+    (insert "[cite:@Alpha2020]\n[cite/t:@Beta2021]\n")
+    (org-extras--citation-preview-use-bibentry-style)
+    (should (equal (buffer-string)
+                   "[cite/bibentry:@Alpha2020]\n[cite/bibentry:@Beta2021]\n"))))
+
+(ert-deftest org-extras-test-citation-preview-sanitize-entry ()
+  "Move non-date date fields to pubstate for CSL parsing."
+  (let ((entry "@book{Alpha,\n  date = {forthcoming},\n  title = {A}\n}"))
+    (let ((sanitized (org-extras--citation-preview-sanitize-entry entry)))
+      (should (string-match-p "pubstate = {forthcoming}" sanitized))
+      (should-not (string-match-p "date = {forthcoming}" sanitized)))))
+
+(ert-deftest org-extras-test-citation-preview-preserve-valid-date ()
+  "Preserve valid date fields when sanitizing BibLaTeX entries."
+  (let ((entry "@book{Alpha,\n  date = {2026-06-07},\n  title = {A}\n}"))
+    (should (string-match-p
+             "date = {2026-06-07}"
+             (org-extras--citation-preview-sanitize-entry entry)))))
+
+(ert-deftest org-extras-test-citation-preview-find-entry-in-file ()
+  "Find a single BibLaTeX entry by key."
+  (let ((file (make-temp-file "org-extras-bib-" nil ".bib")))
+    (unwind-protect
+        (progn
+          (with-temp-file file
+            (insert "@book{Alpha2020,\n  title = {Alpha}\n}\n\n")
+            (insert "@book{Beta2021,\n  title = {Beta {Nested}}\n}\n"))
+          (should (string-match-p
+                   "Beta {Nested}"
+                   (org-extras--citation-preview-find-entry-in-file
+                    "Beta2021" file))))
+      (when (file-exists-p file)
+        (delete-file file)))))
+
+(ert-deftest org-extras-test-citation-preview-assert-output ()
+  "Reject HTML that still contains unresolved citation output."
+  (let ((file (make-temp-file "org-extras-cite-output-" nil ".html")))
+    (unwind-protect
+        (progn
+          (with-temp-file file
+            (insert "<li>(NO_ITEM_DATA:Alpha2020)</li>"))
+          (should-error (org-extras--citation-preview-assert-output file)))
+      (when (file-exists-p file)
+        (delete-file file)))))
+
 ;;;; EWW copy formatting
 
 (ert-deftest org-extras-test-shr-heading-level ()

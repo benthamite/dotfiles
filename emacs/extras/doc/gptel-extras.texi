@@ -592,6 +592,9 @@ Each result is a pair of @samp{(FORMATTED-CITATION . CITE-KEY)}. The default lim
 @findex gptel-extras-add-bib-entry
 The tool @strong{add@math{_bib}@math{_entry}} (@code{gptel-extras-add-bib-entry}) adds a bibliographic entry for a URL, ISBN, or DOI to a specified Bib@TeX{} file. It delegates to @code{zotra-extras-add-entry} from @samp{zotra-extras.el} and returns the citation key of the newly added entry.
 
+@findex gptel-extras-add-bib-entry-and-process
+The tool @strong{add@math{_bib}@math{_entry}@math{_and}@math{_process}} (@code{gptel-extras-add-bib-entry-and-process}) imports the entry, opens it in @samp{Ebib}, and runs the same post-processing path used manually for key confirmation, language handling, crossref checks, and attachment lookup. In headless use, it answers confirmation prompts conservatively, including @samp{read-answer} prompts, and returns the final citekey plus attachment status.
+
 @node Robustifying tool presets
 @section Robustifying tool presets
 

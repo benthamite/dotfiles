@@ -1130,6 +1130,15 @@ argument."
          (let ((first (car collection)))
            (if (consp first) (car first) first)))))
 
+(defun gptel-extras--headless-answer (answers)
+  "Return a conservative affirmative answer from ANSWERS."
+  (or (seq-some (lambda (preferred)
+                  (car (seq-find (lambda (answer)
+                                   (string= (car answer) preferred))
+                                 answers)))
+                '("session only" "yes" "always"))
+      (caar answers)))
+
 (defun gptel-extras--bib-files-for-key (key)
   "Return existing attachment files for bibliography entry KEY."
   (when-let* ((file-field (ebib-extras-get-field "file" key)))
@@ -1175,7 +1184,10 @@ Return a plist describing the resulting key and attachment files."
                                 initial-input &rest _args)
                  (or initial-input
                      (gptel-extras--first-completion collection)
-                     ""))))
+                     "")))
+              ((symbol-function 'read-answer)
+               (lambda (_question answers)
+                 (gptel-extras--headless-answer answers))))
       (let* ((initial-key (ebib--get-key-at-point))
              (key (if (string-match-p "^[[:alnum:]_-]+[0-9][[:alnum:]_-]*$" initial-key)
                       initial-key

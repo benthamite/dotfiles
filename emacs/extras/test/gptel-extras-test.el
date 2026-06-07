@@ -562,6 +562,16 @@ literal in the pattern."
 
 ;;;; Bibliography entry processing
 
+(ert-deftest gptel-extras-test-headless-answer-prefers-conservative-yes ()
+  "Headless prompt answers prefer session-scoped affirmative choices."
+  (should
+   (equal (gptel-extras--headless-answer
+           '(("no" . nil) ("session only" . session) ("always" . t)))
+          "session only"))
+  (should
+   (equal (gptel-extras--headless-answer '(("yes" . t) ("no" . nil)))
+          "yes")))
+
 (ert-deftest gptel-extras-test-add-bib-entry-and-process-orchestrates ()
   "Add-and-process imports metadata, opens the key, then processes attachments."
   (let (calls

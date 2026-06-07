@@ -493,6 +493,9 @@ Each result is a pair of =(FORMATTED-CITATION . CITE-KEY)=. The default limit is
 #+findex: gptel-extras-add-bib-entry
 The tool *add_bib_entry* (~gptel-extras-add-bib-entry~) adds a bibliographic entry for a URL, ISBN, or DOI to a specified BibTeX file. It delegates to ~zotra-extras-add-entry~ from =zotra-extras.el= and returns the citation key of the newly added entry.
 
+#+findex: gptel-extras-add-bib-entry-and-process
+The tool *add_bib_entry_and_process* (~gptel-extras-add-bib-entry-and-process~) imports the entry, opens it in =Ebib=, and runs the same post-processing path used manually for key confirmation, language handling, crossref checks, and attachment lookup. In headless use, it answers confirmation prompts conservatively, including =read-answer= prompts, and returns the final citekey plus attachment status.
+
 ** Robustifying tool presets
 :PROPERTIES:
 :CUSTOM_ID: h:append-fix

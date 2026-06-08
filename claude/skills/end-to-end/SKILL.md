@@ -23,8 +23,9 @@ Skip if the change is a refactor or pure-logic fix with full unit coverage and n
 1. **State the success criterion in plain words.** What exact sequence of user-visible actions must produce what exact user-visible outcome? Write it down before designing the test.
 2. **Reproduce the failure end to end FIRST.** Before changing any code, reproduce the exact user-reported symptom in the same surface the user uses (live Emacs buffer, real browser tab, the actual scheduled run, a fixture posted to a preview channel). If reproduction fails, stop and report what was tried and why; do not proceed to a fix on speculation.
 3. **Implement the fix.**
-4. **Re-run the same end-to-end reproduction.** Same surface, same input, same observation. Unit tests remain useful as supporting evidence; they do not replace this step.
-5. **Report verbatim what was verified.** Explicitly name the surface and the observed outcome. Forbidden phrasings: "should now work", "fix verified" without saying through what surface, "tests pass" as the sole evidence for an interactive bug.
+4. **Run the edited code in the user-visible workflow before committing when feasible.** For interactive UI, live Emacs, and network fixes, re-run the exact user-visible workflow against the edited code before `git commit` whenever the edited code can be loaded safely into that surface. If the architecture requires a commit-triggered sync or reload before the running app can see the edited code, commit only after non-live checks pass, then immediately live-verify before pushing, reporting success, or moving on.
+5. **Re-run the same end-to-end reproduction.** Same surface, same input, same observation. Unit tests remain useful as supporting evidence; they do not replace this step. For Slack, network, or other external-system workflows, use a read-only preview, clearly labeled opt-in test path, or explicit confirmation before any externally visible mutation.
+6. **Report verbatim what was verified.** Explicitly name the surface and the observed outcome. Forbidden phrasings: "should now work", "fix verified" without saying through what surface, "tests pass" as the sole evidence for an interactive bug.
 
 ## Reproduction surfaces (defaults)
 
@@ -48,7 +49,7 @@ Sometimes the live surface cannot be exercised in this session — secrets unava
 2. Run the closest local proxy (unit + integration tests) and say so explicitly.
 3. Recommend the smallest hand-off step the user can take (command X, observed state Y).
 
-Never substitute the local proxy and report success without naming the gap.
+Never substitute the local proxy and report success without naming the gap. Preserve blocked live verification reporting in final messages: use `Not verified end-to-end:` or explicitly name the blocked live verification step instead of implying the user-visible workflow was exercised.
 
 ## Anti-patterns
 

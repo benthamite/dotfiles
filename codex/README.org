@@ -217,6 +217,23 @@ branches in =config.org= with an =awaiting PR merge:= marker while preserving
 the invariant that each package has one recipe and no duplicate dependency pin
 declarations, and the standard =<scope>: <description>= commit format.
 
+The =elisp-conventions= skill separates standalone package verification from
+dotfiles extras verification. Standalone packages live-verify the exact changed
+command/path before commit when auto-reload has loaded edited code; dotfiles
+extras run batch-test, commit only to trigger the required sync/reload, then
+immediately live-verify before pushing, reporting success, or moving on. It
+preserves blocked-live-verification reporting when the live path cannot be
+exercised safely.
+
+The =end-to-end= skill requires interactive UI, live Emacs, and network fixes
+to run the same user-visible workflow against edited code before committing
+when the edited code can be loaded safely. If the architecture requires a
+commit-triggered sync/reload before live code reaches the running app, agents
+commit only after non-live checks and immediately live-verify before pushing,
+reporting success, or moving on. External-system checks should use read-only
+previews, opt-in test paths, or explicit confirmation before externally visible
+mutations.
+
 The =pin-elisp-pr= skill defines the detailed Codex workflow for pinning an
 Emacs/Elpaca package in =emacs/config.org= to a fork, branch, or upstream PR
 while it awaits merge. It requires agents to locate all existing package

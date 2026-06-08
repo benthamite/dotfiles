@@ -35,22 +35,25 @@ Every `.el` file you edit belongs to one of two layouts. The verification workfl
 
 **Standalone**: file lives directly under `elpaca/sources/<pkg>/` (canonical source IS the elpaca clone). No two-clone problem. The PostToolUse hook on save schedules `elpaca-rebuild` + reload in the running Emacs, then waits for the returned status token with short `emacsclient` polls. There is no post-commit sync because the package's git repo is not the dotfiles repo.
 
-# Unified workflow
+# Verification workflow
 
-Same five steps for both layouts:
+The verification sequence differs by layout because standalone packages can
+usually reload edited source before commit, while dotfiles extras require the
+commit-triggered sync/reload before live Emacs sees canonical code.
 
 1. **Edit** the `.el` file.
 2. **Let auto-rebuild fire when the edit path supports it.** `load-elisp-after-edit.sh` (PostToolUse) asks Emacs to enqueue `elpaca-rebuild` and reload the affected package through `elpaca-post-queue-hook` when the build finishes. The hook waits for the returned status token with bounded, short `emacsclient` polls; it does not call `elpaca-wait` inside Emacs. For extras it may compile against the (still stale) elpaca clone — useful sanity check but not a real verification. If a shell command changed the file and no PostToolUse rebuild fired, continue with the batch-test and commit workflow below rather than using an ad-hoc reload.
 3. **Run `batch-test.sh PACKAGE`** to verify in a clean Emacs. The script auto-detects the layout: for extras it pushes `emacs/extras` to the front of `load-path` so the canonical source wins; for standalone it just `(require 'PKG)` from `elpaca/builds/`. This run also creates the test marker the commit hook requires.
-4. **Commit.** For extras, the post-commit hook then syncs the elpaca clone and rebuilds — so the running Emacs gets the canonical code. For standalone there is no post-commit step (already in sync).
-5. **Verify in live Emacs** via `emacsclient -e` exercising the changed code path.
+4. **For standalone packages, live-verify before commit when auto-reload loaded the edited code.** Exercise the exact changed command/path in live Emacs via a targeted `emacsclient -e` check or the real UI action. If auto-reload did not run or cannot safely load the edit, report the blocked live verification and do not imply the live workflow was checked.
+5. **For dotfiles extras, commit only after batch-test passes.** The post-commit hook then syncs the elpaca clone and rebuilds, so the running Emacs gets the canonical code.
+6. **For dotfiles extras, immediately live-verify after the commit-triggered sync/reload.** Exercise the exact changed command/path in live Emacs before pushing, reporting success, or moving on.
 
 ```bash
 ~/My\ Drive/dotfiles/claude/bin/batch-test.sh PACKAGE
 ~/My\ Drive/dotfiles/claude/bin/batch-test.sh PACKAGE '(message "%S" (PACKAGE-some-fn))'
 ```
 
-**Never** use `load-file`, `eval-buffer`, `eval-defun`, or manual `byte-compile-file` to reload Elisp. The edit/commit hooks and `elpaca-extras-rebuild-and-reload` are the only sanctioned reload paths; for extras with uncommitted changes, wait for the post-commit sync before live Emacs verification.
+**Never** use `load-file`, `eval-buffer`, `eval-defun`, or manual `byte-compile-file` to reload Elisp. The edit/commit hooks and `elpaca-extras-rebuild-and-reload` are the only sanctioned reload paths; for dotfiles extras with uncommitted changes, wait for the commit-triggered sync/reload before live Emacs verification.
 
 A PreToolUse hook (`block-elpaca-rebuild-uncommitted.sh`) blocks manual `elpaca-rebuild` calls when there are uncommitted `.el` changes in dotfiles/extras — running rebuild against a stale clone silently loads old code.
 

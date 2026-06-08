@@ -428,7 +428,7 @@ warnings.
 :ID:       EBC619A2-2402-43B0-8FBA-8A68EE29BB7D
 :END:
 
-Emacs Lisp coding standards: atomic functions, helper placement, docstring format. Defines the skill boundary for =.el= work, routes compiler/checkdoc lint requests to =lint-elisp= and documentation generation to =document-elisp-package=, and documents the async elpaca rebuild-and-reload process enforced by the =load-elisp-after-edit= hook. Prohibits ad-hoc reload mechanisms (=load-file=, =eval-buffer=, =eval-defun=), including after shell edits that bypass edit hooks; those continue through batch-test, commit-triggered sync/rebuild, and targeted live =emacsclient -e= verification after the hook's bounded status-token poll reports completion. Also documents the critical =emacs --batch= testing pattern: elpaca builds on load-path first, then =push= =emacs/extras= to the front so the edited source always loads instead of the stale =.elc= from elpaca builds. Includes pre-commit checks (batch-test and doc staging) and a transient menus section: after adding or modifying a =transient-define-prefix=, every suffix must be verified as an interactive command (transient defers validation to invocation time).
+Emacs Lisp coding standards: atomic functions, helper placement, docstring format. Defines the skill boundary for =.el= work, routes compiler/checkdoc lint requests to =lint-elisp= and documentation generation to =document-elisp-package=, and documents the async elpaca rebuild-and-reload process enforced by the =load-elisp-after-edit= hook. Prohibits ad-hoc reload mechanisms (=load-file=, =eval-buffer=, =eval-defun=), including after shell edits that bypass edit hooks. Clarifies the verification split: standalone packages live-verify the exact changed command/path before commit when auto-reload has loaded edited code, while dotfiles extras run batch-test first, commit only to trigger the required sync/reload, then immediately live-verify before pushing, reporting success, or moving on. Also documents the critical =emacs --batch= testing pattern: elpaca builds on load-path first, then =push= =emacs/extras= to the front so the edited source always loads instead of the stale =.elc= from elpaca builds. Includes pre-commit checks (batch-test and doc staging), blocked-live-verification reporting, and a transient menus section: after adding or modifying a =transient-define-prefix=, every suffix must be verified as an interactive command (transient defers validation to invocation time).
 
 *** Development skills
 :PROPERTIES:
@@ -694,12 +694,17 @@ it", "in a real session", or after fixes to interactive UI / async / live
 Emacs / terminal display / browser / Slack / scheduled-job code paths. The
 workflow forces the agent to state the success criterion in plain words,
 reproduce the failure on the same surface the user uses BEFORE changing
-code, re-run the same reproduction after the fix, and report verbatim what
-was verified through what surface. For secret-backed remote notifications,
-it prefers clearly labeled opt-in test alerts or manual dispatches that use
-the real remote credentials without mutating production state. When E2E is
-impossible, the skill requires naming the blocked step explicitly rather than
-substituting a local proxy as success.
+code, run the edited code through the same user-visible workflow before
+committing when safe to load, re-run the same reproduction after the fix, and
+report verbatim what was verified through what surface. If a commit-triggered
+sync or reload is required before live code reaches the running app, the skill
+allows committing only after non-live checks, then requires immediate
+live-verification before pushing, reporting success, or moving on. For
+secret-backed remote notifications, it prefers clearly labeled opt-in test
+alerts, read-only previews, or manual dispatches that use the real remote
+credentials without mutating production state. When E2E is impossible, the
+skill requires naming the blocked step explicitly rather than substituting a
+local proxy as success.
 
 **** handoff
 :PROPERTIES:

@@ -1,26 +1,38 @@
 #+title: macOS Maintenance
 #+author: Pablo Stafforini
 
-* Skills
+** Skills
+:PROPERTIES:
+:ID:       0EBE133A-CF98-4CB0-9391-F596598BFEC9
+:END:
 
 Project-local skills for macOS maintenance live under this directory so they
 load only while working on macOS security and machine-posture tasks.
 
-** audit-mac-app
+*** audit-mac-app
+:PROPERTIES:
+:ID:       22CD790D-004C-42DE-8AA3-AF9CB0088948
+:END:
 
 Static-first security audit of macOS applications before running them or
 granting sensitive permissions. Covers trust verification, permission analysis,
 app type detection, Electron source extraction and security checks, network
 endpoint scanning, and spaces-safe binary analysis.
 
-** security-audit
+*** security-audit
+:PROPERTIES:
+:ID:       E7A2C626-9A58-48B3-B8F8-124BE3A61945
+:END:
 
 Audits the development environment security posture across secrets hygiene,
 supply-chain dependencies, macOS machine posture, and Claude Code configuration
 risk. It is audit-only unless remediation is explicitly requested and reports
 findings by severity with concrete locations and remediation steps.
 
-* Personal updates
+** Personal updates
+:PROPERTIES:
+:ID:       ADAD483E-B9D6-498E-974B-0A4D3775C2E0
+:END:
 
 =bin/personal-updates= manages Homebrew updates with three scheduled jobs:
 

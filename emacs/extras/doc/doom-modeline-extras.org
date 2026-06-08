@@ -157,6 +157,7 @@ available, it displays multiple pipe-separated fields:
 
 - *Session name*: shown in bold, extracted from the buffer name.
 - *Model*: the Claude model in use (e.g., "opus", "sonnet").
+- *Effort*: the Claude Code reasoning effort level (e.g., "high").
 - *Account*: the Claude account used for this session (e.g., "personal",
   "work"), when multi-account support is configured.
 - *Rate limit burn rate*: shown as =5h:+N% 7d:-M%= when

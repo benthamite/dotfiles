@@ -148,6 +148,7 @@ Uses strikethrough to indicate the cost is not actually charged."
 (declare-function agent-alert-indicator "agents")
 (declare-function agent-toggle-alert "agents")
 (declare-function agent-claude-status-model "agent-claude")
+(declare-function agent-claude-status-effort "agent-claude")
 (declare-function agent-claude-status-cost "agent-claude")
 (declare-function agent-claude-status-context-percent "agent-claude")
 (declare-function agent-claude-status-token-count "agent-claude")
@@ -215,6 +216,7 @@ between the name and the alert indicator."
   "Return Claude Code-specific status fields for the modeline.
 These are inserted between the session name and the alert indicator."
   (let ((model (agent-claude-status-model))
+        (effort (agent-claude-status-effort))
         (account (agent-claude-buffer-account))
         (session-usage (agent-claude-status-session-usage))
         (weekly-usage (agent-claude-status-weekly-usage))
@@ -230,6 +232,7 @@ These are inserted between the session name and the alert indicator."
         (cache-total (agent-claude-status-cache-total-tokens)))
     (concat
      (doom-modeline-extras--format-model model)
+     (doom-modeline-extras--format-effort effort)
      (doom-modeline-extras--format-account account)
      (when (bound-and-true-p doom-modeline-extras-claude-code-usage)
        (doom-modeline-extras--format-usage session-usage weekly-usage

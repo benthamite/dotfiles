@@ -218,6 +218,8 @@ available, it displays multiple pipe-separated fields:
 @item
 @strong{Model}: the Claude model in use (e.g., ``opus'', ``sonnet'').
 @item
+@strong{Effort}: the Claude Code reasoning effort level (e.g., ``high'').
+@item
 @strong{Account}: the Claude account used for this session (e.g., ``personal'',
 ``work''), when multi-account support is configured.
 @item

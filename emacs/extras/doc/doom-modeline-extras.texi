@@ -30,6 +30,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 @menu
 * Overview::
 * User options::
+* Faces::
 * Modeline segments::
 * Modeline definitions::
 * Functions::
@@ -42,6 +43,7 @@ User options
 
 * Segment visibility::
 * Claude Code cost display::
+* Claude Code detail toggles::
 
 Modeline segments
 
@@ -101,6 +103,7 @@ GitHub notifications arrive.
 @menu
 * Segment visibility::
 * Claude Code cost display::
+* Claude Code detail toggles::
 @end menu
 
 @node Segment visibility
@@ -110,6 +113,7 @@ GitHub notifications arrive.
 @vindex doom-modeline-extras-tlon-split
 @vindex doom-modeline-extras-ai-context
 @vindex doom-modeline-extras-claude-code
+@vindex doom-modeline-extras-claude-code-usage
 The user option @code{doom-modeline-extras-org-roam} controls whether the Org
 Roam backlink count segment is displayed.  When non-@code{nil} (the default),
 the backlink count appears in the modeline while visiting an Org mode
@@ -129,6 +133,14 @@ The user option @code{doom-modeline-extras-claude-code} controls whether the
 Claude Code status segment is displayed in Claude Code buffers.  The
 default value is @code{t}.
 
+The user option @code{doom-modeline-extras-claude-code-usage} controls
+whether rate limit burn-rate deviations are displayed in the Claude
+Code modeline segment.  The default value is @code{t}.  When non-@code{nil}, the
+segment shows how far ahead or behind the user is relative to a
+uniform consumption pace for both the 5-hour session and 7-day weekly
+windows.  Data is sourced from the usage polling in @samp{agent-claude}
+(@ref{Top,agent-claude,,agent-claude,}).
+
 @node Claude Code cost display
 @section Claude Code cost display
 
@@ -143,6 +155,39 @@ token.
 
 The boolean type accepts @code{t} or @code{nil}.  You should set this to @code{t} if
 you are using the Claude API directly rather than a subscription plan.
+
+@node Claude Code detail toggles
+@section Claude Code detail toggles
+
+@vindex doom-modeline-extras-claude-code-tokens
+@vindex doom-modeline-extras-claude-code-lines-changed
+@vindex doom-modeline-extras-claude-code-cache-efficiency
+The Claude Code status segment can display several optional detail
+fields.  Each is controlled by a boolean user option that defaults to
+@code{nil} (hidden).  Set any of them to @code{t} to include the corresponding
+information in the modeline.
+
+The user option @code{doom-modeline-extras-claude-code-tokens} controls
+whether the input token count is shown.  When non-@code{nil}, the segment
+displays a compact token count (e.g., ``12.3k'', ``1.5M'').
+
+The user option @code{doom-modeline-extras-claude-code-lines-changed}
+controls whether lines added and removed are shown.  When non-@code{nil},
+the segment displays a @samp{+N/-M} indicator with color-coded faces.
+
+The user option @code{doom-modeline-extras-claude-code-cache-efficiency}
+controls whether the cache hit ratio is shown.  When non-@code{nil}, the
+segment displays the percentage of cache-read tokens relative to total
+tokens, color-coded by efficiency.
+
+@node Faces
+@chapter Faces
+
+@vindex doom-modeline-extras-cost-free
+The face @code{doom-modeline-extras-cost-free} is used to render the session
+cost on non-API (subscription) plans.  It inherits from
+@code{doom-modeline} and adds a strikethrough attribute, visually indicating
+that the displayed cost is not actually charged to the user.
 
 @node Modeline segments
 @chapter Modeline segments
@@ -173,6 +218,20 @@ available, it displays multiple pipe-separated fields:
 @item
 @strong{Model}: the Claude model in use (e.g., ``opus'', ``sonnet'').
 @item
+@strong{Account}: the Claude account used for this session (e.g., ``personal'',
+``work''), when multi-account support is configured.
+@item
+@strong{Rate limit burn rate}: shown as @samp{5h:+N% 7d:-M%} when
+@code{doom-modeline-extras-claude-code-usage} is non-@code{nil}.  Each figure
+is a deviation from the expected usage at this point in the window,
+assuming uniform consumption across the entire period.  A positive
+value (red) means the user is burning through the budget faster than
+sustainable; a negative value (green) means the user is under budget.
+Hovering shows a tooltip with raw utilization and the relative reset
+time (e.g., ``27% used, -66% vs pace / Resets: in 2h 30m'').  The
+underlying data comes from the usage polling in @samp{agent-claude}
+(@ref{Top,agent-claude,,agent-claude,}).
+@item
 @strong{Token count}: formatted compactly (e.g., ``12.3k'', ``1.5M'').
 @item
 @strong{Cost}: shown as a dollar amount, optionally with strikethrough on
@@ -192,10 +251,18 @@ color-coded (green above 80%, yellow 50-79%, red below 50%).
 @strong{Alert indicator}: from @code{agent-claude-alert-indicator}.
 @end itemize
 
-Before status data arrives, the segment displays only the session name.
+Codex sessions display the session name, configured model, reasoning
+effort, elapsed duration, and alert indicator when those values are
+available.  The reasoning effort comes from the live Codex buffer
+override first, falling back to the account's @samp{config.toml}.
+
+Before Claude status data arrives, the segment displays only the session
+name.
 
 The formatting is handled by several internal helper functions:
 @code{doom-modeline-extras--format-model},
+@code{doom-modeline-extras--format-account},
+@code{doom-modeline-extras--format-effort},
 @code{doom-modeline-extras--format-tokens},
 @code{doom-modeline-extras--format-cost},
 @code{doom-modeline-extras--format-context-percent},
@@ -254,6 +321,8 @@ view of the session state.
 @section GitHub notification handling
 
 @findex doom-modeline-extras-handle-github-notifications
+@findex doom-modeline-extras-refresh-github-after-forge
+@vindex doom-modeline-extras-github-last-count
 The function @code{doom-modeline-extras-handle-github-notifications} is
 added to @code{doom-modeline-after-github-fetch-notification-hook}.  After
 Doom Modeline fetches the GitHub notification count, this function
@@ -261,10 +330,16 @@ compares the new count against the previously stored count in the
 variable @code{doom-modeline-extras-github-last-count}.
 
 When the count has changed and is greater than zero, the function calls
-@code{forge-pull-notifications} from the @samp{forge} package to retrieve full
-notification details.  It then updates the stored count.  This provides
-a bridge between Doom Modeline's lightweight notification polling and
-Forge's detailed notification management.
+@code{forge-extras-pull-notifications} from the @samp{forge-extras} package to
+retrieve full notification details.  It then updates the stored count.
+This provides a bridge between Doom Modeline's lightweight notification
+polling and Forge's detailed notification management.
+
+The function @code{doom-modeline-extras-refresh-github-after-forge} works in
+the opposite direction: it is installed as @samp{:after} advice on
+@code{forge--ghub-update-notifications} so that after Forge pulls
+notifications, the Doom Modeline GitHub count updates immediately
+rather than waiting for the next timer cycle.
 
 @node Formatting helpers
 @section Formatting helpers

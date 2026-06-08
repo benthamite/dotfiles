@@ -163,6 +163,7 @@ Uses strikethrough to indicate the cost is not actually charged."
 (declare-function agent-claude-status-session-reset "agent-claude")
 (declare-function agent-claude-status-weekly-reset "agent-claude")
 (declare-function agent-codex-status-model "agent-codex")
+(declare-function agent-codex-status-effort "agent-codex")
 (declare-function agent-codex-status-duration-ms "agent-codex")
 (declare-function parse-iso8601-time-string "parse-time")
 (defvar agent-alert-on-ready)
@@ -246,9 +247,11 @@ These are inserted between the session name and the alert indicator."
 (defun doom-modeline-extras--format-codex-status-fields ()
   "Return Codex-specific status fields for the modeline."
   (let ((model (agent-codex-status-model))
+        (effort (agent-codex-status-effort))
         (duration (agent-codex-status-duration-ms)))
     (concat
      (doom-modeline-extras--format-model model)
+     (doom-modeline-extras--format-effort effort)
      (doom-modeline-extras--format-duration duration))))
 
 (defun doom-modeline-extras--format-alert-indicator ()
@@ -264,6 +267,11 @@ These are inserted between the session name and the alert indicator."
   "Format MODEL name with separator."
   (when model
     (concat " | " (propertize model 'help-echo "Model"))))
+
+(defun doom-modeline-extras--format-effort (effort)
+  "Format reasoning EFFORT with separator."
+  (when effort
+    (concat " | " (propertize effort 'help-echo "Reasoning effort"))))
 
 (defun doom-modeline-extras--format-account (account)
   "Format ACCOUNT name with separator."

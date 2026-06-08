@@ -181,11 +181,18 @@ available, it displays multiple pipe-separated fields:
   color-coded (green above 80%, yellow 50-79%, red below 50%).
 - *Alert indicator*: from ~agent-claude-alert-indicator~.
 
-Before status data arrives, the segment displays only the session name.
+Codex sessions display the session name, configured model, reasoning
+effort, elapsed duration, and alert indicator when those values are
+available.  The reasoning effort comes from the live Codex buffer
+override first, falling back to the account's =config.toml=.
+
+Before Claude status data arrives, the segment displays only the session
+name.
 
 The formatting is handled by several internal helper functions:
 ~doom-modeline-extras--format-model~,
 ~doom-modeline-extras--format-account~,
+~doom-modeline-extras--format-effort~,
 ~doom-modeline-extras--format-tokens~,
 ~doom-modeline-extras--format-cost~,
 ~doom-modeline-extras--format-context-percent~,

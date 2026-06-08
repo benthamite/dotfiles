@@ -130,5 +130,16 @@
   "Humanize reset returns nil for invalid input."
   (should-not (doom-modeline-extras--humanize-reset "not-a-date")))
 
+(ert-deftest doom-modeline-extras-test-format-codex-status-fields-shows-effort ()
+  "Format Codex modeline fields with model and reasoning effort."
+  (cl-letf (((symbol-function 'agent-codex-status-model)
+             (lambda () "gpt-5.5"))
+            ((symbol-function 'agent-codex-status-effort)
+             (lambda () "high"))
+            ((symbol-function 'agent-codex-status-duration-ms)
+             (lambda () nil)))
+    (should (equal (doom-modeline-extras--format-codex-status-fields)
+                   " | gpt-5.5 | high"))))
+
 (provide 'doom-modeline-extras-test)
 ;;; doom-modeline-extras-test.el ends here

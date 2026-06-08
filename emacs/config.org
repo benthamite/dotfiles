@@ -9067,7 +9067,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :custom
   (agent-alert-on-ready t)
   (agent-before-exit-skill-names '("session-learning-capture"
-                                   ("update-log" :directories ("~/My Drive/Epoch") :args "--auto")))
+                                   ("update-log" :args "--auto")))
   (agent-sync-theme t)
   (agent-claude-org-todo-in-progress-keyword "DOING")
   (agent-claude-accounts '(("personal"  . "~/.claude-personal")

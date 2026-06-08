@@ -663,7 +663,10 @@ useful reusable candidates to ignored local files under the central dotfiles
 agent-learning workflow: it never promotes lessons to durable instructions,
 skills, hooks, docs, or code. Each candidate includes a numeric =Value= score
 from 0 to 100 so the manual =session-retro= consumer can review high-impact
-items before minor polish.
+items before minor polish. The same Emacs before-exit chain invokes
+=update-log --auto= immediately afterward for every working directory; projects
+without durable state changes or log conventions should no-op inside
+=update-log= rather than being excluded by the launcher.
 
 **** verify
 :PROPERTIES:

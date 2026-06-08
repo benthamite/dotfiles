@@ -52,7 +52,7 @@ The constant ~org-noter-extras-dehyphenate-hyphens~ holds a list of strings repr
 #+vindex: org-noter-quote-end
 Several constants define the patterns that =org-noter-extras.el= uses to identify and manipulate annotation structures:
 
-The constant ~org-noter-highlight-heading-regexp~ matches the default heading format that =org-noter= creates for highlight annotations: ="Highlight on page[s]? \\(.*\\)"=. The first capture group extracts the page number or page range. This pattern is used by the cleanup, merge, and offset commands.
+The constant ~org-noter-highlight-heading-regexp~ matches the default heading formats that =org-noter= creates for highlight annotations, including page headings such as ="Highlight on page 42"= or ="Highlight on p. 42"=, and chapter headings such as ="Highlight on chapter 2"=. The first capture group extracts the page, page range, chapter, or chapter range. This pattern is used by the cleanup and merge commands.
 
 The constant ~org-noter-quote-begin~ holds the string ="\n#+begin_quote\n"=, used when wrapping annotation content in an Org quote block during cleanup ([[#h:annotation-cleanup][Annotation cleanup]]).
 
@@ -69,7 +69,7 @@ The constant ~org-noter-quote-end~ holds the string ="\n#+end_quote\n"=, matchin
 :END:
 
 #+findex: org-noter-extras-cleanup-annotation
-After running ~org-noter-create-skeleton~ to generate annotations from PDF highlights, each annotation gets a generic heading like "Highlight on page 42" with the extracted text in a child "Contents" heading. The command ~org-noter-extras-cleanup-annotation~ transforms this into a more useful format:
+After running ~org-noter-create-skeleton~ to generate annotations from PDF highlights, each annotation gets a generic heading like "Highlight on page 42" or "Highlight on p. 42" with the extracted text in a child "Contents" heading. The command ~org-noter-extras-cleanup-annotation~ transforms this into a more useful format:
 
 1. It synchronizes the current note position with the PDF viewer.
 2. It switches to the Org notes buffer.
@@ -77,9 +77,9 @@ After running ~org-noter-create-skeleton~ to generate annotations from PDF highl
 4. It extracts the text content from the "Contents" subheading, running dehyphenation and filling the text to remove PDF line breaks.
 5. It replaces the generic heading with the supplied title (without any page-number suffix).
 6. It wraps the extracted content in an Org quote block (=#+begin_quote= ... =#+end_quote=).
-7. It appends a citation of the form =[cite:@KEY, p. N]= after the quote block, where =KEY= is the bib key obtained from the inherited =Custom_ID= property and =N= is the page number extracted from the original heading.
+7. It appends a citation after the quote block, where =KEY= is the bib key obtained from the inherited =Custom_ID= property and the locator is extracted from the original heading. Page headings produce citations like =[cite:@KEY, p. N]=; chapter headings produce citations like =[cite:@KEY, chap. N]=.
 
-This command is intended to be called with point on a "Highlight on page N" heading or its "Contents" child heading. It signals an error if no =Custom_ID= property can be found by inheritance.
+This command is intended to be called with point on a highlight heading or its "Contents" child heading. It signals an error if no =Custom_ID= property can be found by inheritance.
 
 ** Merging annotations
 :PROPERTIES:

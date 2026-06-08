@@ -6,6 +6,7 @@
 ;;; Code:
 
 (require 'ert)
+(require 'cl-lib)
 (require 'org-noter-extras)
 
 ;;;; Dehyphenate
@@ -86,6 +87,51 @@
       (org-noter-extras-highlight-offset 10)
       (should (equal (buffer-string) text)))))
 
+;;;; Cleanup
+
+(ert-deftest org-noter-extras-test-cleanup-annotation-abbreviated-page ()
+  "Cleanup accepts abbreviated org-noter highlight headings."
+  (with-temp-buffer
+    (org-mode)
+    (insert "* Work\n"
+            ":PROPERTIES:\n"
+            ":Custom_ID: Sebo2025MoralCircleWho\n"
+            ":END:\n"
+            "** Skeleton\n"
+            "*** Highlight on p. 47\n"
+            ":PROPERTIES:\n"
+            ":NOTER_PAGE: (47 . 0.7512626666666666)\n"
+            ":END:\n"
+            "**** Contents\n"
+            "As the history of our treatment of nonhuman animals illustrates.\n")
+    (goto-char (point-min))
+    (search-forward "**** Contents")
+    (cl-letf (((symbol-function 'org-noter-sync-current-note) #'ignore)
+              ((symbol-function 'other-window) #'ignore))
+      (org-noter-extras-cleanup-annotation "Moral circle"))
+    (should (string-match-p "\\*\\*\\* Moral circle" (buffer-string)))
+    (should (string-match-p "#\\+begin_quote\nAs the history" (buffer-string)))
+    (should (string-match-p "\\[cite:@Sebo2025MoralCircleWho, p\\. 47\\]" (buffer-string)))))
+
+(ert-deftest org-noter-extras-test-cleanup-annotation-chapter ()
+  "Cleanup formats chapter locators in citations."
+  (with-temp-buffer
+    (org-mode)
+    (insert "* Work\n"
+            ":PROPERTIES:\n"
+            ":Custom_ID: Sebo2025MoralCircleWho\n"
+            ":END:\n"
+            "** Skeleton\n"
+            "*** Highlight on chapter 2\n"
+            "**** Contents\n"
+            "The moral circle can expand.\n")
+    (goto-char (point-min))
+    (search-forward "**** Contents")
+    (cl-letf (((symbol-function 'org-noter-sync-current-note) #'ignore)
+              ((symbol-function 'other-window) #'ignore))
+      (org-noter-extras-cleanup-annotation "Expansion"))
+    (should (string-match-p "\\[cite:@Sebo2025MoralCircleWho, chap\\. 2\\]" (buffer-string)))))
+
 ;;;; Regexp matching
 
 (ert-deftest org-noter-extras-test-highlight-heading-regexp ()
@@ -97,6 +143,11 @@
   "Highlight-heading-regexp matches multi-page headings."
   (should (string-match org-noter-highlight-heading-regexp "Highlight on pages 42-43"))
   (should (equal (match-string 1 "Highlight on pages 42-43") "42-43")))
+
+(ert-deftest org-noter-extras-test-highlight-heading-regexp-abbreviated-page ()
+  "Highlight-heading-regexp matches abbreviated org-noter headings."
+  (should (string-match org-noter-highlight-heading-regexp "Highlight on p. 47"))
+  (should (equal (match-string 1 "Highlight on p. 47") "47")))
 
 (provide 'org-noter-extras-test)
 ;;; org-noter-extras-test.el ends here

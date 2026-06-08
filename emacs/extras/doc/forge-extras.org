@@ -256,24 +256,30 @@ Two guards prevent this.  The command-level guard
 ~forge--query~, catches re-entrant calls that enter forge through any
 other path (such as callback hooks or other timers).
 
-** Graceful handling of unsupported notification types
+** GitHub CI notifications
 :PROPERTIES:
-:CUSTOM_ID: h:massage-notification-gracefully
+:CUSTOM_ID: h:ci-notifications
 :END:
 
 #+findex: forge-extras-massage-notification-gracefully
-GitHub occasionally introduces new notification types (such as
-CheckSuite) that Forge does not yet know how to parse.  When
-~forge--ghub-massage-notification~ encounters one of these, it signals
-an error, which aborts the entire notification pull.
+GitHub exposes workflow failure notifications as notification threads
+with subject type ~CheckSuite~ and reason ~ci_activity~.  These
+notifications do not correspond to issues, pull requests, or
+discussions, and GitHub's notification payload does not include the
+exact Actions run URL.
 
 The function ~forge-extras-massage-notification-gracefully~ is installed
-as ~:around~ advice on ~forge--ghub-massage-notification~.  It wraps the
-original function in a ~condition-case~: if the call succeeds, its
-return value is passed through unchanged; if it signals an error, the
-advice returns ~nil~ instead.  Because ~forge-pull-notifications~ feeds
-the results through ~seq-keep~, a ~nil~ return causes the unsupported
-notification to be silently filtered out rather than crashing the pull.
+as ~:around~ advice on ~forge--ghub-massage-notification~.  It still
+filters unsupported notification types gracefully, but it now preserves
+supported no-topic notifications such as ~CheckSuite~.  These are stored
+in Forge's notification table with a nil topic and displayed by
+~forge-list-notifications~ as CI rows.
+
+Because there is no exact run URL in the notification thread, CI
+notifications use the repository's Actions page as their browse URL.
+Unread CI notifications are selected for the normal Forge notification
+inbox using their GitHub ~last_read_at~ field rather than a Forge topic
+status.
 
 ** Notification and read-status synchronization
 :PROPERTIES:
@@ -287,11 +293,12 @@ function ~forge-extras-sync-read-status~ bridges this gap by calling the
 GitHub REST API (~PATCH /notifications/threads/{thread-id}~) to mark
 the notification thread as read.
 
-The function only acts when the topic at point has an ~unread~ status in
-Forge.  It looks up the corresponding ~forge-notification~ object to
-obtain the GitHub thread ID, then issues the API call asynchronously
-via ~forge--rest~.  On success, it refreshes the notification count in
-Doom Modeline (if ~doom-modeline-github~ is enabled).
+The function acts when the topic at point has an ~unread~ status in
+Forge, or when the current notification is a no-topic CI notification
+with a nil ~last_read_at~ value.  It looks up the corresponding GitHub
+thread ID, then issues the API call asynchronously via ~forge--rest~.
+On success, it refreshes the notification count in Doom Modeline (if
+~doom-modeline-github~ is enabled).
 
 #+findex: forge-extras-sync-unread-from-github
 The complementary function ~forge-extras-sync-unread-from-github~

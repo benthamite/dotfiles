@@ -128,14 +128,48 @@ If ISSUE is nil, use the issue at point or in the current buffer."
 (defun forge-extras-massage-notification-gracefully (fn data githost)
   "Advice around FN to skip unsupported notification types.
 Call FN with DATA and GITHOST.  GitHub may introduce new notification
-types (e.g. CheckSuite) that Forge does not yet handle.  Rather than
-erroring, return nil so `seq-keep' filters them."
-  (condition-case nil
-      (funcall fn data githost)
-    (error nil)))
+types that Forge does not yet handle.  Store supported no-topic types
+through `forge-extras--massage-orphan-notification' and return nil for
+unsupported types so `seq-keep' filters them."
+  (let-alist data
+    (let ((type (forge-extras--normalize-github-notification-type .subject.type)))
+      (condition-case nil
+          (if (forge-extras--orphan-notification-type-p type)
+              (forge-extras--massage-orphan-notification data githost)
+            (funcall fn data githost))
+        (error nil)))))
 
 (advice-add 'forge--ghub-massage-notification :around
             #'forge-extras-massage-notification-gracefully)
+
+(defconst forge-extras-orphan-notification-types '(checksuite)
+  "GitHub notification types that do not correspond to Forge topics.")
+
+(defun forge-extras--normalize-github-notification-type (type)
+  "Return Forge's symbol for GitHub notification TYPE."
+  (let ((symbol (intern (downcase (or type "")))))
+    (if (eq symbol 'pullrequest) 'pullreq symbol)))
+
+(defun forge-extras--orphan-notification-type-p (type)
+  "Return non-nil when TYPE is a supported no-topic notification type."
+  (memq type forge-extras-orphan-notification-types))
+
+(defun forge-extras--massage-orphan-notification (data githost)
+  "Return Forge pull tuple for orphan notification DATA from GITHOST."
+  (let-alist data
+    (let* ((type (forge-extras--normalize-github-notification-type .subject.type))
+           (repo (forge-get-repository
+                  (list githost .repository.owner.login .repository.name)
+                  nil :insert!))
+           (repoid (oref repo id))
+           (id (forge--object-id repoid (string-to-number .id)))
+           (alias (intern (concat "_" (string-replace "=" "_" id)))))
+      (and (forge-extras--orphan-notification-type-p type)
+           (list alias id nil repo type data)))))
+
+(defun forge-extras--repository-actions-url (owner name)
+  "Return the GitHub Actions URL for repository OWNER and NAME."
+  (format "https://github.com/%s/%s/actions" owner name))
 
 (defvar forge-extras-pull-notifications-timeout 15
   "Timeout in seconds for `forge-extras-pull-notifications'.
@@ -190,30 +224,66 @@ Emacs does not freeze when there is no internet connection."
 (autoload 'doom-modeline--github-fetch-notifications "doom-modeline-segments")
 (defun forge-extras-sync-read-status (&optional _)
   "Mark the notification at point as read on GitHub via the REST API.
-When the topic at point has an `unread' status, call the GitHub notifications
-API to mark its thread as read."
-  (when-let* ((topic (forge-current-topic))
-              ((eq (oref topic status) 'unread))
-              ;; Query the notification table directly because
-              ;; `forge-get-notification' looks up by topic number,
-              ;; but the table stores the full topic id.
-              (thread-id (caar (forge-sql
-                                [:select [thread-id] :from notification
-                                 :where (= topic $s1)]
-                                (oref topic id))))
-              (repo (forge-get-repository topic)))
+When the notification has no Forge topic, mark the notification thread
+directly.  Otherwise, when the topic at point has an `unread' status,
+call the GitHub notifications API to mark its thread as read."
+  (if-let* ((notif (forge-current-notification))
+            ((forge-extras--orphan-notification-p notif)))
+      (forge-extras-sync-orphan-read-status notif)
+    (when-let* ((topic (forge-current-topic))
+                ((eq (oref topic status) 'unread))
+                ;; Query the notification table directly because
+                ;; `forge-get-notification' looks up by topic number,
+                ;; but the table stores the full topic id.
+                (thread-id (caar (forge-sql
+                                  [:select [thread-id] :from notification
+                                   :where (= topic $s1)]
+                                  (oref topic id))))
+                (repo (forge-get-repository topic)))
+      (forge--rest repo "PATCH"
+        (format "/notifications/threads/%s" thread-id)
+        nil
+        :callback (lambda (&rest _)
+                    (when (bound-and-true-p doom-modeline-github)
+                      (doom-modeline--github-fetch-notifications)))
+        :errorback (lambda (&rest _)
+                     (forge-extras-message-debug
+                      "Failed to mark notification thread %s as read on GitHub"
+                      thread-id))))))
+
+(defun forge-extras-sync-orphan-read-status (&optional notif)
+  "Mark orphan notification NOTIF, or the current notification, as read."
+  (when-let* ((notif (or notif (forge-current-notification)))
+              ((forge-extras--orphan-notification-p notif))
+              ((null (oref notif last-read)))
+              (repo (forge-get-repository notif))
+              (thread-id (oref notif thread-id)))
     (forge--rest repo "PATCH"
       (format "/notifications/threads/%s" thread-id)
       nil
       :callback (lambda (&rest _)
+                  (oset notif last-read (format-time-string "%FT%TZ" nil t))
                   (when (bound-and-true-p doom-modeline-github)
                     (doom-modeline--github-fetch-notifications)))
       :errorback (lambda (&rest _)
                    (forge-extras-message-debug
-                    "Failed to mark notification thread %s as read on GitHub"
+                    "Failed to mark orphan notification thread %s as read"
                     thread-id)))))
 
 ;;;;; Sync unread status from GitHub
+
+(defun forge-extras-update-notifications-with-orphans
+    (fn notifs topics initial-pull)
+  "Call FN for normal NOTIFS and store no-topic notifications.
+TOPICS and INITIAL-PULL have the same meanings as in
+`forge--ghub-update-notifications'."
+  (let* ((split (forge-extras--split-orphan-notifications notifs))
+         (normal (car split))
+         (orphan (cdr split)))
+    (funcall fn normal topics initial-pull)
+    (closql-with-transaction (forge-db)
+      (pcase-dolist (`(,_alias ,id ,_query ,repo ,type ,data) orphan)
+        (forge-extras--store-orphan-notification id repo type data)))))
 
 (defun forge-extras-sync-unread-from-github (_notifs _topics initial-pull)
   "Sync unread notification status from GitHub after storing notifications.
@@ -268,8 +338,113 @@ notifications are already fetched in that case."
        (forge-extras-message-debug
         "forge-extras-sync-unread-from-github: %S" err)))))
 
+(advice-add 'forge--ghub-update-notifications :around
+            #'forge-extras-update-notifications-with-orphans)
 (advice-add 'forge--ghub-update-notifications :after
             #'forge-extras-sync-unread-from-github)
+
+(defun forge-extras--store-orphan-notification (id repo type data)
+  "Store orphan notification ID for REPO with TYPE and DATA."
+  (let-alist data
+    (let ((notif (or (forge-get-notification id)
+                     (closql-insert
+                      (forge-db)
+                      (forge-notification
+                       :id id
+                       :thread-id .id
+                       :repository (oref repo id)
+                       :type type
+                       :topic nil
+                       :url (forge-extras--orphan-notification-url data))))))
+      (oset notif title .subject.title)
+      (oset notif reason (intern (downcase .reason)))
+      (oset notif last-read .last_read_at)
+      (oset notif updated .updated_at)
+      notif)))
+
+(defun forge-extras--orphan-notification-url (data)
+  "Return the best browser URL for orphan notification DATA."
+  (let-alist data
+    (or .subject.url
+        (forge-extras--repository-actions-url
+         .repository.owner.login
+         .repository.name))))
+
+(defun forge-extras--split-orphan-notifications (notifs)
+  "Return a cons of normal and orphan NOTIFS."
+  (let (normal orphan)
+    (dolist (notif notifs)
+      (if (forge-extras--orphan-notification-type-p (nth 4 notif))
+          (push notif orphan)
+        (push notif normal)))
+    (cons (nreverse normal) (nreverse orphan))))
+
+(defun forge-extras-ls-notifications-with-orphans (fn status)
+  "Append orphan notifications to FN result for STATUS."
+  (sort (append (seq-remove #'forge-extras--orphan-notification-p
+                            (funcall fn status))
+                (forge-extras--ls-orphan-notifications status))
+        (lambda (a b)
+          (string> (or (oref a updated) "")
+                   (or (oref b updated) "")))))
+
+(advice-add 'forge--ls-notifications :around
+            #'forge-extras-ls-notifications-with-orphans)
+
+(defun forge-extras--ls-orphan-notifications (status)
+  "Return orphan notifications matching STATUS."
+  (seq-filter
+   (lambda (notif)
+     (and (forge-extras--orphan-notification-p notif)
+          (forge-extras--orphan-notification-selected-p notif status)))
+   (mapcar
+    (lambda (row)
+      (closql--remake-instance 'forge-notification (forge-db) row))
+    (forge-sql
+     [:select * :from notification
+      :where (in type $v1)
+      :order-by [(desc updated)]]
+     (vconcat forge-extras-orphan-notification-types)))))
+
+(defun forge-extras--orphan-notification-p (notif)
+  "Return non-nil when NOTIF has no Forge topic."
+  (and (forge-extras--orphan-notification-type-p (oref notif type))
+       (null (oref notif topic))))
+
+(defun forge-extras--orphan-notification-selected-p (notif status)
+  "Return non-nil when orphan NOTIF matches STATUS selection."
+  (let ((status (ensure-list status)))
+    (cond
+     ((seq-set-equal-p status '(unread pending done) #'eq) t)
+     ((memq 'unread status) (null (oref notif last-read)))
+     ((memq 'done status) (oref notif last-read)))))
+
+(defun forge-extras-insert-notification-with-orphans (fn notif)
+  "Call FN for normal NOTIF and custom-render orphan notifications."
+  (if (forge-extras--orphan-notification-p notif)
+      (forge-extras-insert-orphan-notification notif)
+    (funcall fn notif)))
+
+(advice-add 'forge-insert-notification :around
+            #'forge-extras-insert-notification-with-orphans)
+
+(defun forge-extras-insert-orphan-notification (notif)
+  "Insert orphan notification NOTIF into a Forge notifications buffer."
+  (magit-insert-section (notification notif)
+    (insert
+     (propertize
+      (forge-extras--orphan-notification-display-title notif)
+      'font-lock-face
+      (if (null (oref notif last-read))
+          'forge-topic-unread
+        'forge-topic-done)))
+    (insert "\n")))
+
+(defun forge-extras--orphan-notification-display-title (notif)
+  "Return display title for orphan notification NOTIF."
+  (pcase (oref notif type)
+    ('checksuite (format "CI: %s" (oref notif title)))
+    (_ (format "%s: %s" (oref notif type) (oref notif title)))))
 
 ;;;;; Track repos
 

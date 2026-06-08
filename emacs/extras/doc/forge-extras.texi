@@ -54,11 +54,16 @@ Commands
 * Browsing the GitHub notification inbox::
 * Toggling issue or pull request state::
 * Pulling notifications::
+* GitHub CI notifications::
 * Notification and read-status synchronization::
 * Tracking repositories::
 * Navigating messages in a topic buffer::
 * Copying a message body::
 * Inserting Markdown links to GitHub issues::
+
+Pulling notifications
+
+* Re-entrancy protection::
 
 GitHub Project integration
 
@@ -251,6 +256,7 @@ GraphQL API calls used by the project integration features
 * Browsing the GitHub notification inbox::
 * Toggling issue or pull request state::
 * Pulling notifications::
+* GitHub CI notifications::
 * Notification and read-status synchronization::
 * Tracking repositories::
 * Navigating messages in a topic buffer::
@@ -320,6 +326,49 @@ This command is primarily intended for use in timers or hooks (for
 example, to refresh notifications periodically in the background) rather
 than direct interactive invocation.
 
+@menu
+* Re-entrancy protection::
+@end menu
+
+@node Re-entrancy protection
+@subsection Re-entrancy protection
+
+Forge queries involve synchronous GPG decryption (via @code{epg-wait-for-status})
+and network waits (via @code{url-retrieve-synchronously}), both of which call
+@code{accept-process-output}.  This services the Emacs event loop, allowing
+timers to fire re-entrantly.  Each re-entrant @code{forge--query} blocks on
+GPG again, creating unbounded nesting that can freeze Emacs.
+
+Two guards prevent this.  The command-level guard
+@code{forge-extras--pull-in-progress} prevents re-entrant calls through
+@code{forge-extras-pull-notifications} itself.  The lower-level guard
+@code{forge-extras--query-active}, installed as @code{:around} advice on
+@code{forge--query}, catches re-entrant calls that enter forge through any
+other path (such as callback hooks or other timers).
+
+@node GitHub CI notifications
+@section GitHub CI notifications
+
+@findex forge-extras-massage-notification-gracefully
+GitHub exposes workflow failure notifications as notification threads
+with subject type @code{CheckSuite} and reason @code{ci_activity}.  These
+notifications do not correspond to issues, pull requests, or
+discussions, and GitHub's notification payload does not include the
+exact Actions run URL@.
+
+The function @code{forge-extras-massage-notification-gracefully} is installed
+as @code{:around} advice on @code{forge--ghub-massage-notification}.  It still
+filters unsupported notification types gracefully, but it now preserves
+supported no-topic notifications such as @code{CheckSuite}.  These are stored
+in Forge's notification table with a nil topic and displayed by
+@code{forge-list-notifications} as CI rows.
+
+Because there is no exact run URL in the notification thread, CI
+notifications use the repository's Actions page as their browse URL@.
+Unread CI notifications are selected for the normal Forge notification
+inbox using their GitHub @code{last_read_at} field rather than a Forge topic
+status.
+
 @node Notification and read-status synchronization
 @section Notification and read-status synchronization
 
@@ -330,11 +379,12 @@ function @code{forge-extras-sync-read-status} bridges this gap by calling the
 GitHub REST API (@code{PATCH /notifications/threads/@{thread-id@}}) to mark
 the notification thread as read.
 
-The function only acts when the topic at point has an @code{unread} status in
-Forge.  It looks up the corresponding @code{forge-notification} object to
-obtain the GitHub thread ID, then issues the API call asynchronously
-via @code{forge--rest}.  On success, it refreshes the notification count in
-Doom Modeline (if @code{doom-modeline-github} is enabled).
+The function acts when the topic at point has an @code{unread} status in
+Forge, or when the current notification is a no-topic CI notification
+with a nil @code{last_read_at} value.  It looks up the corresponding GitHub
+thread ID, then issues the API call asynchronously via @code{forge--rest}.
+On success, it refreshes the notification count in Doom Modeline (if
+@code{doom-modeline-github} is enabled).
 
 @findex forge-extras-sync-unread-from-github
 The complementary function @code{forge-extras-sync-unread-from-github}

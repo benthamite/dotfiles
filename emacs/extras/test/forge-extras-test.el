@@ -82,6 +82,129 @@
          (result (forge-extras--parse-gh-issue-table table "owner/repo")))
     (should (equal (plist-get (car result) :url) "https://github.com/owner/repo/issues/42"))))
 
+;;;; Orphan GitHub notifications
+
+(ert-deftest forge-extras-test-orphan-notification-type-p ()
+  "Recognize GitHub notification types that have no Forge topic."
+  (should (forge-extras--orphan-notification-type-p 'checksuite))
+  (should-not (forge-extras--orphan-notification-type-p 'issue))
+  (should-not (forge-extras--orphan-notification-type-p 'pullreq))
+  (should-not (forge-extras--orphan-notification-type-p 'discussion)))
+
+(ert-deftest forge-extras-test-checksuite-actions-url ()
+  "Build the fallback Actions URL for a CheckSuite notification."
+  (should
+   (equal (forge-extras--repository-actions-url "benthamite" "agent-log")
+          "https://github.com/benthamite/agent-log/actions")))
+
+(ert-deftest forge-extras-test-normalize-github-notification-type ()
+  "Normalize GitHub notification subject types to Forge symbols."
+  (should (eq (forge-extras--normalize-github-notification-type "PullRequest")
+              'pullreq))
+  (should (eq (forge-extras--normalize-github-notification-type "CheckSuite")
+              'checksuite))
+  (should (eq (forge-extras--normalize-github-notification-type "Issue")
+              'issue)))
+
+(ert-deftest forge-extras-test-massage-orphan-checksuite-notification ()
+  "Build a Forge notification tuple for a CheckSuite notification."
+  (cl-letf (((symbol-function 'forge-get-repository)
+             (lambda (_repo &optional _stub _insert)
+               (make-instance 'forge-github-repository
+                              :id "github.com/benthamite/agent-log"
+                              :owner "benthamite"
+                              :name "agent-log")))
+            ((symbol-function 'forge--object-id)
+             (lambda (repoid number)
+               (format "%s:%s" repoid number))))
+    (let* ((data '((id . "24153295400")
+                   (reason . "ci_activity")
+                   (updated_at . "2026-06-08T15:22:03Z")
+                   (last_read_at . nil)
+                   (subject
+                    (title . "test workflow run failed for main branch")
+                    (type . "CheckSuite")
+                    (url . nil))
+                   (repository
+                    (owner (login . "benthamite"))
+                    (name . "agent-log"))))
+           (result (forge-extras--massage-orphan-notification data "github.com")))
+      (should (equal (nth 1 result)
+                     "github.com/benthamite/agent-log:24153295400"))
+      (should (null (nth 2 result)))
+      (should (eq (nth 4 result) 'checksuite))
+      (should (eq (nth 5 result) data)))))
+
+(ert-deftest forge-extras-test-orphan-notification-url-prefers-subject-url ()
+  "Use subject.url when GitHub provides one."
+  (let ((data '((subject (url . "https://api.github.com/example"))
+                (repository
+                 (owner (login . "benthamite"))
+                 (name . "agent-log")))))
+    (should (equal (forge-extras--orphan-notification-url data)
+                   "https://api.github.com/example"))))
+
+(ert-deftest forge-extras-test-orphan-notification-url-falls-back-to-actions ()
+  "Use the repository Actions page when subject.url is nil."
+  (let ((data '((subject (url . nil))
+                (repository
+                 (owner (login . "benthamite"))
+                 (name . "agent-log")))))
+    (should (equal (forge-extras--orphan-notification-url data)
+                   "https://github.com/benthamite/agent-log/actions"))))
+
+(ert-deftest forge-extras-test-orphan-notification-selected-p-inbox ()
+  "Inbox selection includes unread orphan notifications only."
+  (let ((unread (make-instance 'forge-notification
+                               :type 'checksuite
+                               :topic nil
+                               :last-read nil))
+        (read (make-instance 'forge-notification
+                             :type 'checksuite
+                             :topic nil
+                             :last-read "2026-06-08T15:23:30Z")))
+    (should (forge-extras--orphan-notification-selected-p
+             unread '(unread pending)))
+    (should-not (forge-extras--orphan-notification-selected-p
+                 read '(unread pending)))))
+
+(ert-deftest forge-extras-test-orphan-notification-selected-p-all ()
+  "All selection includes read and unread orphan notifications."
+  (let ((read (make-instance 'forge-notification
+                             :type 'checksuite
+                             :topic nil
+                             :last-read "2026-06-08T15:23:30Z")))
+    (should (forge-extras--orphan-notification-selected-p
+             read '(unread pending done)))))
+
+(ert-deftest forge-extras-test-orphan-notification-display-title ()
+  "Format a concise display title for orphan notifications."
+  (let ((notif (make-instance 'forge-notification
+                              :type 'checksuite
+                              :title "test workflow run failed for main branch"
+                              :reason 'ci_activity)))
+    (should (equal (forge-extras--orphan-notification-display-title notif)
+                   "CI: test workflow run failed for main branch"))))
+
+(ert-deftest forge-extras-test-sync-orphan-read-status-calls-thread-api ()
+  "Mark orphan notifications read through the notification thread API."
+  (let ((called nil)
+        (notif (make-instance 'forge-notification
+                              :type 'checksuite
+                              :topic nil
+                              :thread-id "24153295400"
+                              :last-read nil)))
+    (cl-letf (((symbol-function 'forge-current-notification)
+               (lambda (&optional _demand) notif))
+              ((symbol-function 'forge-get-repository)
+               (lambda (_notif) 'repo))
+              ((symbol-function 'forge--rest)
+               (lambda (_repo method path _data &rest _args)
+                 (setq called (list method path)))))
+      (forge-extras-sync-orphan-read-status)
+      (should (equal called
+                     '("PATCH" "/notifications/threads/24153295400"))))))
+
 ;;;; Parse issue fields (GraphQL)
 
 (ert-deftest forge-extras-test-parse-issue-fields-basic ()

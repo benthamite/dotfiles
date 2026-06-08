@@ -7,14 +7,6 @@
       "reason": "No Claude or Codex usage found inside the threshold window.",
       "threshold_days": 60
     },
-    "skill-discovery": {
-      "claude_last_used": "not found",
-      "codex_last_used": "not found",
-      "codex_path": ".codex/skills/skill-discovery/SKILL.md",
-      "disabled_at": "2026-05-10T15:14:51+00:00",
-      "reason": "No Claude or Codex usage found inside the threshold window.",
-      "threshold_days": 60
-    },
     "skill-resolver": {
       "claude_last_used": "not found",
       "codex_last_used": "not found",

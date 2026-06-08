@@ -96,8 +96,8 @@ usage in either Claude or Codex; a recent use in either tool keeps both tools
 enabled. Local reusable skills should live in both =claude/skills/= and
 =codex/skills/= instead of living only under a live home-directory symlink.
 Hidden Codex-managed system skills may exist under ignored
-=codex/skills/.system/= runtime data, but they are not part of the reusable
-skill parity model.
+=codex/skills/.system/= runtime data. They are Codex system/runtime skills, not
+part of the reusable skill parity model.
 
 Private skills that should be synchronized but hidden from ordinary interactive
 sessions live under =claude/private-skills/= and =codex/private-skills/=.
@@ -112,7 +112,8 @@ gitignored shims under =~/.claude/skills= and =~/.codex/skills= so explicit
 
 ** Master Skill Inventory
 
-This inventory includes global, programmatic, system, and project-local skills
+This inventory includes global, programmatic, Codex system/runtime, and
+project-local skills
 currently present in this repo. The skill name shown is the directory name.
 
 - =add-to-emacs-packages=: Add or register one of the user's Emacs packages in
@@ -172,13 +173,13 @@ currently present in this repo. The skill name shown is the directory name.
   Lisp package from its README.org manual. Scope: Global.
 - =gitguardian-triage=: Triage and remediate GitGuardian secret incidents.
   Scope: Project-local: dotfiles.
-- =google-sheets-comments=: Handle Google Sheets comment review, replies,
+- =google-sheets-comments= (disabled by =skill-prune=): Handle Google Sheets comment review, replies,
   resolves, reopens, and notification emails correctly. Scope: Global.
 - =handoff=: Save next-session instructions to `/tmp/claude-code-handoff.md`
   for Claude Code session transitions. Scope: Global.
 - =imagegen=: Generate or edit raster images when the task benefits from
   AI-created bitmap visuals such as photos, illustrations, textures, sprites,
-  mockups, or transparent-background cutouts. Scope: Global.
+  mockups, or transparent-background cutouts. Scope: Codex system/runtime.
 - =install-mcp-server=: Install and configure a new MCP server for Claude
   Code, including discovery, auth verification, credential-safe setup, scope
   placement, registration, sync, and restart/testing expectations. Scope:
@@ -202,13 +203,13 @@ currently present in this repo. The skill name shown is the directory name.
   the latest model for a use case, or model upgrade and prompt-upgrade guidance;
   prioritize OpenAI docs MCP tools, use bundled references only as helper
   context, and restrict any fallback browsing to official OpenAI domains. Scope:
-  Global.
+  Codex system/runtime.
 - =optimize-agent-instructions=: Optimize project agent instruction files.
   Scope: Project-local: dotfiles.
 - =plugin-creator=: Create and scaffold plugin directories for Codex with a
   required `.codex-plugin/plugin.json`, optional plugin folders/files, and
   baseline placeholders you can edit before publishing or testing. Scope:
-  Global.
+  Codex system/runtime.
 - =post-push-ci=: Close the loop after agent pushes by waiting for GitHub
   Actions, inspecting failed logs, fixing push-triggered CI failures, and
   repeating until the pushed commit is green or a real blocker is identified.
@@ -243,8 +244,8 @@ currently present in this repo. The skill name shown is the directory name.
   workflow design, progressive disclosure, verification, portability, and
   maintainability. Scope: Project-local: dotfiles.
 - =skill-installer=: Install Codex skills into $CODEX_HOME/skills from a
-  curated list or a GitHub repo path. Scope: Global.
-- =skill-resolver=: Resolve and read Claude/Codex skill files by skill name
+  curated list or a GitHub repo path. Scope: Codex system/runtime.
+- =skill-resolver= (disabled by =skill-prune=): Resolve and read Claude/Codex skill files by skill name
   with deterministic filesystem lookup. Scope: Project-local: dotfiles.
 - =symptom-check=: Run an invariant-focused root-cause check before a
   non-trivial bug fix. Scope: Global.

@@ -50,10 +50,9 @@ instruction files as project-local peers in the git repo being edited or
 committed.
 
 The tracked =codex/AGENTS.md= is the Codex-side peer of =claude/CLAUDE.md=. It
-uses Codex-safe syntax: the title is tool-specific, Claude's
-=@context/secrets.md= import is expanded into an explicit secrets rule, and
-relative context/tool paths are absolute so they resolve correctly from any
-project. =bin/ai-config-sync= normalizes those tool-specific forms before
+uses Codex-safe syntax: the title is tool-specific, and relative context/tool
+paths are absolute so they resolve correctly from any project.
+=bin/ai-config-sync= normalizes those tool-specific forms before
 checking instruction equivalence. The paired global instructions also ask the
 agent to alert the user when they direct abusive language at the assistant/model,
 mention moral uncertainty about possible model sentience, and request a civil,
@@ -63,10 +62,7 @@ reported user-visible behavior has been verified after the change, and final
 answers after changes must include an explicit =Verification:= or =Not verified
 end-to-end:= sentence. Passing metrics, scorecards, and counts count as
 completion evidence only after confirming that they directly cover the user's
-stated requirement. They also require plain-language decision points:
-before asking the user to choose, agents must state the concrete action, why it
-is needed, what it will and will not do, and what remains uncertain or future
-work.
+stated requirement. They also require clear, plain language.
 
 It also records the manual Chrome profile routing used by browser-only service
 flows: use =chrome-work-tab URL= for Epoch/work projects so Chrome targets
@@ -113,8 +109,9 @@ sessions. They live in =programmatic-skills/= directories so
 them to every interactive Codex session. The installer exposes those directories
 at =~/.codex/programmatic-skills= because =agent-run-skill= discovers Codex
 skills from that live path. Codex-managed hidden system skills, when present,
-live under ignored =codex/skills/.system/= runtime data and are not part of the
-reusable cross-tool skill parity model.
+live under ignored =codex/skills/.system/= runtime data and are Codex
+system/runtime skills rather than part of the reusable cross-tool skill parity
+model.
 Private skills that should remain hidden from ordinary interactive sessions
 live under =codex/private-skills/= with paired Claude copies under
 =claude/private-skills/=. Those trees and =ai-config-sync.private.json= are
@@ -248,13 +245,13 @@ skill directory, keeps API keys scoped to the skill =.env= file, writes reviewed
 output to =*.proofread.md=, applies accepted suggestions to =*.final.md=, and
 uses British English conventions by default.
 
-The =google-sheets-comments= skill is a Codex workflow for
-processing Google Sheets comment review, replies, resolves, and reopens. It
-makes Drive comments via =gdoc comments= the source of truth, treats Gmail
-notifications only as pointers, excludes ordinary spreadsheet editing, requires
-one-comment-at-a-time approval before externally visible actions, uses the
-matching =gdoc reply=, =gdoc resolve=, or =gdoc reopen= command, and verifies
-with =gdoc comment-info= before moving on.
+The =google-sheets-comments= skill is currently disabled by =skill-prune=. When
+enabled, it is a Codex workflow for processing Google Sheets comment review,
+replies, resolves, and reopens. It makes Drive comments via =gdoc comments= the
+source of truth, treats Gmail notifications only as pointers, excludes ordinary
+spreadsheet editing, requires one-comment-at-a-time approval before externally
+visible actions, uses the matching =gdoc reply=, =gdoc resolve=, or =gdoc
+reopen= command, and verifies with =gdoc comment-info= before moving on.
 
 The =twitter= skill is a programmatic Codex workflow for direct Twitter/X
 lookup, search, and save requests via the active skill copy's
@@ -622,8 +619,8 @@ manual. This keeps standalone packages such as =emacs-slack= covered without
 treating Markdown READMEs as the preferred manual format for repos that already
 have Org documentation.
 
-=codex/config.toml= sets the default model, reasoning effort, fast service
-tier, approval policy, sandbox mode, light TUI theme, desktop/app preferences,
+=codex/config.toml= sets the default model, fast service tier, approval policy,
+sandbox mode, light TUI theme, desktop/app preferences,
 desktop turn-end notifications, and personality; enables Codex hooks, plugins,
 the goals UI, terminal resize reflow, and local notice preferences such as
 hiding the rate-limit model nudge; records trusted project roots; and records
@@ -655,4 +652,5 @@ from =codex/config.toml=. =bin/skill-prune= disables stale skills natively with
 =[[skills.config]]= entries in =codex/config.toml= instead of moving skill
 directories. Project-local Codex skills are stored under the project's own
 =.codex/skills/= directory. Codex-managed hidden system skills, if present, are
-ignored runtime data under =codex/skills/.system/=.
+ignored runtime data under =codex/skills/.system/= and are not synchronized as
+reusable skills.

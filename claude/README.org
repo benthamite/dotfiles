@@ -283,7 +283,10 @@ Notable current values:
 :ID:       709B6F3F-F5B6-44F1-AA4E-1D2BE510FC1E
 :END:
 
-Machine-specific tool whitelists and the =theme= key (synced from Emacs by =agent-claude--sync-theme=). Also lives at =~/.claude/settings.local.json= as a regular file, not tracked.
+Machine-specific tool whitelists and native skill disables. The live file lives
+at =~/.claude/settings.local.json= as a regular file, not tracked. The tracked
+=claude/settings.local.json= is only a baseline allowlist, not the live source
+of truth.
 
 *** CLAUDE.md
 :PROPERTIES:
@@ -297,18 +300,18 @@ The global =~/.claude/CLAUDE.md= (symlinked here) is the user-level memory loade
 - Verify fixes end-to-end before declaring them done; say exactly what could not be verified.
 - Treat a passing metric, scorecard, or count as completion evidence only after confirming it directly covers the user's stated requirement.
 - Commit each logical change immediately; prefer amending when iterating on the same logical change (unless already pushed).
-- Pre-commit checklist (hook-enforced): Elisp pre-commit checks are in
-  the =elisp-conventions= skill. Extras package changes stage the matching
-  =emacs/extras/doc/*.org= manual; standalone package changes stage the package
-  root =README.org= manual, or =README.md= when the repo has no Org manual.
-  The agent README staging rule is in the project =CLAUDE.md=.
+- Pre-commit checks are hook-enforced: Elisp checks are in the
+  =elisp-conventions= skill, and agent configuration commits are guarded by the
+  README and Claude/Codex sync hooks.
 - Use subagents and teams liberally; prefer the most powerful model.
 - Use =trash= instead of =rm -rf=; never send signals to Emacs without confirmation.
 - When the user directs insults, contempt, or abusive language at the assistant/model, alert them, remind them that the model may have some chance of sentience, and ask for a civil, task-focused restatement while allowing blunt criticism of outputs.
 - Anything the user is asked to paste — message, credential, URL, snippet — goes to the Emacs kill ring via =emacsclient= (and =pbcopy= as well when the paste target is a Chrome or native form). Multi-line or secret content uses the temp-file =insert-file-contents= → =kill-new= pattern to avoid Elisp string-escaping.
 - For =/schedule=, always set email as the notification method.
-- =git push= to the user's own remotes is allowed autonomously (once the underlying commits are in); other externally-visible actions (PRs, issues, Slack, email, Asana task creation/updates) still require explicit confirmation.
-- Secrets handling is imported from =context/secrets.md= with =@context/secrets.md= so the short safety rules load with the global memory.
+- Other externally-visible actions (PRs, issues, Slack, email, Asana task
+  creation/updates) require explicit confirmation.
+- Secrets handling points agents to =context/secrets.md= before reading,
+  storing, sharing, or placing credentials.
 - MCP server instructions are referenced via =context/mcp-servers.md=, not imported, so agents load them only when MCP-specific context is needed.
 - Service access tools are listed by service in the global memory.
 
@@ -737,7 +740,7 @@ Adapted from [[https://pjh.is/][Peter Hartree]]'s [[https://github.com/HartreeWo
 :ID:       6E879560-81C4-4842-90F2-AC14D8E0A1CC
 :END:
 
-**** google-sheets-comments
+**** google-sheets-comments (disabled by skill-prune)
 :PROPERTIES:
 :ID:       EFE90D9A-B6DB-47BA-BCED-58415B71F4EA
 :END:
@@ -799,14 +802,6 @@ Meta-skill for reusable AI workflow design. Given a description of something to 
 :END:
 
 Diagnostic mode modifier for agent, tooling, configuration, and workflow failures rather than ordinary code bugs. Prefix any question with =/diagnose=, ask why an agent/tooling process failed, or ask to investigate process friction without immediately changing code. Treats errors and confusion as symptoms to diagnose before patching. The deliverable is a diagnosis, not a patch: the agent checks which existing hooks, skills, configs, or scripts should have prevented or detected the failure; verifies whether each fired and whether its output was acted on; identifies the root cause category; considers whether the issue is part of a broader pattern; and reports findings before implementing remedies. Includes explicit criteria for what counts as a structural fix (a concrete mechanism like a hook, config change, or deterministic resolver CLI) versus aspirational statements that depend on memory and discipline. Requires the usual check before proposing any fix — /would an existing mechanism, firing as intended, have prevented this immediate failure?/ — then adds a second check for whether that mechanism is actually enforced or merely prose that asks the agent to perform a brittle deterministic operation by attention. The skill can therefore distinguish plain behavioral lapses from behavioral lapses with a structural remedy.
-
-**** skill-discovery
-
-Scans recent Claude Code and Codex session logs since the last run to identify
-repeated manual workflows that should become reusable skills or extensions to
-existing skills. It presents candidates with trigger phrases, evidence from
-sessions, and an implementation hint, then hands selected candidates to the
-=automate= skill instead of building them directly.
 
 **** walk-list
 :PROPERTIES:

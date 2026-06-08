@@ -48,6 +48,9 @@ setting is intentionally not used, so every project-local =CLAUDE.md= should
 have a sibling =AGENTS.md= counterpart. The Claude/Codex sync hooks treat these
 instruction files as project-local peers in the git repo being edited or
 committed.
+When a project uses session logging, the project-level =AGENTS.md= mirrors the
+=CLAUDE.md= latest-session pointer so Codex sessions can find the same log
+without loading it into every turn.
 
 The tracked =codex/AGENTS.md= is the Codex-side peer of =claude/CLAUDE.md=. It
 uses Codex-safe syntax: the title is tool-specific, and relative context/tool

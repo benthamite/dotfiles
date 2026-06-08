@@ -155,7 +155,7 @@ Claude Code loads =CLAUDE.md= files from several locations. When working in a pr
 1. =~/.claude/CLAUDE.md= — user-level global conventions (symlinked to =dotfiles/claude/CLAUDE.md=)
 2. =<project>/CLAUDE.md= — project-level instructions (if present)
 
-Each file should contain distinct content. The global one defines behavioral conventions (verify work, fix root causes, commit immediately, explain decision points in plain language, etc.). Project-level ones define project-specific context.
+Each file should contain distinct content. The global one defines behavioral conventions (verify work, fix root causes, commit immediately, explain decision points in plain language, etc.). Project-level ones define project-specific context. When a project uses session logging, the project-level =CLAUDE.md= carries the latest-session pointer that the sibling =AGENTS.md= mirrors for Codex.
 
 **** Where to put things
 :PROPERTIES:

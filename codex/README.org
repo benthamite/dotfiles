@@ -477,14 +477,16 @@ The =update-log= skill is a Codex end-of-session bookkeeping
 workflow. It triggers from =/update-log=, "update log", "session log",
 "close out", "wrap up", or direct requests to save end-of-session progress, and
 also runs at the end of sessions that changed durable project state. It does not
-run after pure Q&A or read-only lookups where nothing durable changed;
-session-end hooks should use the skill policy to remind or guard, not silently
-run the mutating workflow unattended. If the user invokes =/update-log= after a
+run after pure Q&A or read-only lookups where nothing durable changed. In
+=--auto= end-of-session-chain runs, it may initialize logging in first-run
+projects without prompting by using =logs/=, leaving decision tracking disabled,
+and creating or updating =CLAUDE.md= before writing the dated log. If the user invokes =/update-log= after a
 log, pointer, or opportunistic summary already exists, the workflow still runs
 the complete checklist, including decision review, post-update hooks, staging
 verification, commit completeness, and publish checks. The Codex workflow treats =CLAUDE.md= as
 the session-log index unless the project explicitly says otherwise, asks for
-first-run setup without relying on another tool's helpers, snapshots the working tree before edits so pre-existing dirty
+interactive first-run setup without relying on another tool's helpers when not
+running with =--auto=, snapshots the working tree before edits so pre-existing dirty
 hunks are not staged accidentally, uses the =record-decisions= skill or its local
 workflow when applicable, reports any =context/post-update-log-hook.md= hooks,
 keeps Epoch project notes as concise ground-truth briefs when hook guidance

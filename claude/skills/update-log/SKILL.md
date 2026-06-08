@@ -1,6 +1,6 @@
 ---
 name: update-log
-description: End-of-session bookkeeping. Use when the user says /update-log, update log, session log, close out, wrap up, or asks to save project progress. Also use at the end of any session that changed durable project state in a project with existing log conventions.
+description: End-of-session bookkeeping. Use when the user says /update-log, update log, session log, close out, wrap up, or asks to save project progress. Also use at the end of any session that changed durable project state, including first-run projects without existing log conventions.
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
 argument-hint: "[--exit] [--auto] [optional summary of what was done]"
@@ -23,7 +23,10 @@ Exception: if the user explicitly typed `/update-log` or asked for specific book
 
 `--auto` marks a run from the end-of-session chain rather than a deliberate user invocation. In this mode, never block on input:
 
-- Skip **First-run setup** entirely. If the project has no existing log conventions, stop with `No log conventions here — skipping (run /update-log manually to set up).`
+- If the project has no existing log conventions, perform **First-run setup**
+  with deterministic defaults instead of asking: use `logs/` as the log
+  directory, do not create `decisions/` or `decisions-summary.md`, create or
+  update `CLAUDE.md`, then continue to write the session log.
 - Make no other interactive prompts. If a step would need a decision only the user can make, record it in the log and final report and continue with the safe default or skip that step, rather than asking.
 
 ## When to run
@@ -38,7 +41,7 @@ Run this skill at the end of any session that changed durable project state. Dur
 
 Do not run it after purely conversational Q&A, quick read-only lookups, or sessions where nothing durable changed. If uncertain, prefer running it when the project already has logs and the session produced information a future agent would otherwise need to recover from the transcript.
 
-Session-end hooks or reminders should point to this policy instead of duplicating their own criteria. Hooks may remind or block session close when durable state appears unsaved, but they should not silently perform this workflow unattended because it writes logs, updates project notes, may reconcile TODOs, and commits.
+Session-end hooks or reminders should point to this policy instead of duplicating their own criteria. Hooks may invoke this skill unattended with `--auto`; in that mode it uses deterministic first-run defaults and safe no-op behavior instead of prompting. Non-auto hooks may remind or block session close when durable state appears unsaved, but should not silently perform the mutating workflow without user intent.
 
 If the user explicitly invokes `/update-log` or otherwise asks for end-of-session
 bookkeeping after a log, pointer, or opportunistic summary was already written,
@@ -65,13 +68,18 @@ Determine the project's log directory and whether decisions are tracked:
 
 ### First-run setup
 
-This project doesn't have session logging set up. Gather setup preferences before proceeding:
+This project doesn't have session logging set up. In an interactive run, gather
+setup preferences before proceeding. In a `--auto` run, do not ask: use `logs/`
+as the log directory, leave decision tracking disabled, create or update
+`CLAUDE.md`, and continue.
 
-1. Ask both questions together. If a structured user-input tool such as `AskUserQuestion` is available, use it; otherwise ask a concise plain-text question:
+1. If not running with `--auto`, ask both questions together. If a structured user-input tool such as `AskUserQuestion` is available, use it; otherwise ask a concise plain-text question:
    - "Where should session logs be stored?" Suggest `logs/` as the default and `docs/logs/` as an alternative, while allowing a custom path.
    - "Track architectural decisions in a `decisions/` directory?" Both Yes and No are valid.
+   If running with `--auto`, set the answers internally to `logs/` and "No
+   decisions."
 
-2. **After receiving answers**, create the chosen log directory if it doesn't exist.
+2. Create the chosen log directory if it doesn't exist.
 
 3. If decisions were opted in:
      - Create `decisions/` directory.

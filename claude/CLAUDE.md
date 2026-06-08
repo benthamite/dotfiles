@@ -12,7 +12,6 @@
 - Clean up temporary files/code you created before finishing.
 - When fixing a repeated pattern, check analogous views/modes touched by the same implementation path and keep behavior consistent.
 - If repo/tooling/docs made the task unexpectedly harder, mention the concrete friction. For deep investigation, use the `diagnose` skill.
-- When using `/schedule`, always set email as the notification method.
 
 ## Safety
 

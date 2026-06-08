@@ -347,6 +347,15 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/My Drive/android"]
 trust_level = "trusted"
 
+[projects."/private/tmp/codex-gt"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/repos/launchd"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/repos/macrostrategy"]
+trust_level = "trusted"
+
 [tui]
 theme = "light"
 
@@ -387,10 +396,10 @@ enabled = true
 [hooks.state]
 
 [hooks.state."/Users/pablostafforini/.codex-epoch/hooks.json:permission_request:0:0"]
-trusted_hash = "sha256:0471abb006ca3333294467313667ec6a250416793a7d1e1c21a3aa662d7cfb8b"
+trusted_hash = "sha256:b49c2b9ef2d97322cecce7db38027e3497e06c90d93ab65ed458be304a630c1c"
 
 [hooks.state."/Users/pablostafforini/.codex-epoch/hooks.json:post_compact:0:0"]
-trusted_hash = "sha256:85e314b38034b0cac1a212763e01d866e4edf1815b4ba2afe49ac32bf75e800e"
+trusted_hash = "sha256:0a0706a13d0dc6af4f69989850abe704010133fd4d220a7e57a98934c1ba3433"
 
 [hooks.state."/Users/pablostafforini/.codex-epoch/hooks.json:post_tool_use:0:0"]
 trusted_hash = "sha256:e30897279bd9e3eec5bbc1b40bc86b21a3258234beb8a57877e373f6b57ede4e"
@@ -411,10 +420,10 @@ trusted_hash = "sha256:b997cabca192808e55c59dad1506dc87727f6a8c3646b13ca190bf64f
 trusted_hash = "sha256:5c4fc046f32c213c7fd596664219a895d1e99f288a3059f3b94dbcd1c7b105e4"
 
 [hooks.state."/Users/pablostafforini/.codex-epoch/hooks.json:post_tool_use:2:0"]
-trusted_hash = "sha256:6c99a7779b0438ffb6b856111fca6da5bdca5371a5d5d8b4e8eb4bb77f11e1d8"
+trusted_hash = "sha256:abac80d7a57f38b60bdc489649bf84ef65b57dc45c8e28505f21831886f8a94c"
 
 [hooks.state."/Users/pablostafforini/.codex-epoch/hooks.json:pre_compact:0:0"]
-trusted_hash = "sha256:8fbbf3cd4cdfe86e3ae47eaeb6172950ef1af7831f649a26c9894c8cd840b2af"
+trusted_hash = "sha256:3cc3cfbaf38bffeece5f5d550a62a658de7bdea7f20e3cf91d69e955d720d8b3"
 
 [hooks.state."/Users/pablostafforini/.codex-epoch/hooks.json:pre_tool_use:0:0"]
 trusted_hash = "sha256:0fbc324356870f8b60257a2fd426772e8bfa05a1d30530109044953d6373cd19"
@@ -465,19 +474,19 @@ trusted_hash = "sha256:ea596c82ee86433b0fc9a7c44144634d8271d531fbde509da9693a1a2
 trusted_hash = "sha256:fced58c9d5f6ff9709656f453c2fdc66512c250a86f608e829cc73f6a7212a7c"
 
 [hooks.state."/Users/pablostafforini/.codex-epoch/hooks.json:pre_tool_use:3:0"]
-trusted_hash = "sha256:4d81ee8aab72e102919629d8cae2c5371372a8eef2d042d42d5a84b2a7cd8247"
+trusted_hash = "sha256:84371657412f1c7824551cba5781509e482cf1b519d53be1454604839414ca22"
 
 [hooks.state."/Users/pablostafforini/.codex-epoch/hooks.json:session_start:0:0"]
-trusted_hash = "sha256:a02a78132ccf90aedca6965c499ba4c548cfdd458ebd13b3fc8de0ff5472e024"
+trusted_hash = "sha256:7e73e464ed5904836a7ff9b6a6bb4ad2758a779a4659f7116cd2a0b0257453cd"
 
 [hooks.state."/Users/pablostafforini/.codex-epoch/hooks.json:stop:0:0"]
-trusted_hash = "sha256:a63a4068a3cb56d0ca7d13c09ed2850f05163dfa08afaf282fa1567e0745c0ee"
+trusted_hash = "sha256:8e7d0a878bbfe3eadfd378f7248688eba3696a45b7083d9a3ec17480cc37cebe"
 
 [hooks.state."/Users/pablostafforini/.codex-epoch/hooks.json:stop:0:1"]
 trusted_hash = "sha256:a63a4068a3cb56d0ca7d13c09ed2850f05163dfa08afaf282fa1567e0745c0ee"
 
 [hooks.state."/Users/pablostafforini/.codex-epoch/hooks.json:user_prompt_submit:0:0"]
-trusted_hash = "sha256:a26be4a779a3df7d64e93948953c7b288c444444e78df682b6048b0a1a2d05ca"
+trusted_hash = "sha256:1fbf7a34bd77f8d65553ebc64857457356643d4c85f620dd49d67faf794b95db"
 
 [hooks.state."/Users/pablostafforini/.codex-epoch/hooks.json:user_prompt_submit:0:1"]
 trusted_hash = "sha256:a26be4a779a3df7d64e93948953c7b288c444444e78df682b6048b0a1a2d05ca"

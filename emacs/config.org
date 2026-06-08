@@ -14484,10 +14484,11 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
   :defer t
   :custom
   (trx-category-directories
-          '(("movies\\|other" . "~/Movies/")
-            ("tv\\|show"     . "~/Movies-TV/")
-            ("short"  . "~/Movies-Short/")
-            (t        . "~/downloads/"))))
+   '(("movies\\|other" . "~/Movies/")
+     ("tv\\|show"     . "~/Movies-TV/")
+     ("short"  . "~/Movies-Short/")
+     ("audiobook" . "~/My Drive/audiobooks/")
+     (t        . "~/downloads/"))))
 #+end_src
 
 ** =ytdl=

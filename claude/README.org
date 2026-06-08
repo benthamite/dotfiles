@@ -295,6 +295,7 @@ The global =~/.claude/CLAUDE.md= (symlinked here) is the user-level memory loade
 - Never present guesses as facts; state uncertainty and verify claims that matter.
 - Fix root causes, not symptoms; no silent fallbacks or workaround code unless explicitly labeled, justified, and approved.
 - Verify fixes end-to-end before declaring them done; say exactly what could not be verified.
+- Treat a passing metric, scorecard, or count as completion evidence only after confirming it directly covers the user's stated requirement.
 - Commit each logical change immediately; prefer amending when iterating on the same logical change (unless already pushed).
 - Pre-commit checklist (hook-enforced): Elisp pre-commit checks are in
   the =elisp-conventions= skill. Extras package changes stage the matching

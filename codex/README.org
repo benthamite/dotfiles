@@ -61,7 +61,9 @@ task-focused restatement. They also require completion-claim discipline: agents
 must not say a bug is fixed, resolved, working, or done unless the exact
 reported user-visible behavior has been verified after the change, and final
 answers after changes must include an explicit =Verification:= or =Not verified
-end-to-end:= sentence. They also require plain-language decision points:
+end-to-end:= sentence. Passing metrics, scorecards, and counts count as
+completion evidence only after confirming that they directly cover the user's
+stated requirement. They also require plain-language decision points:
 before asking the user to choose, agents must state the concrete action, why it
 is needed, what it will and will not do, and what remains uncertain or future
 work.

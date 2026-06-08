@@ -277,6 +277,9 @@ in Forge's notification table with a nil topic and displayed by
 
 Because there is no exact run URL in the notification thread, CI
 notifications use the repository's Actions page as their browse URL.
+Pressing ~RET~ on a CI notification opens that Actions page.
+Already-open notification buffers get the same behavior without needing
+to be refreshed first.
 Unread CI notifications are selected for the normal Forge notification
 inbox using their GitHub ~last_read_at~ field rather than a Forge topic
 status.

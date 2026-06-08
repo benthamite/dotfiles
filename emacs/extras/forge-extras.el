@@ -428,9 +428,36 @@ notifications are already fetched in that case."
 (advice-add 'forge-insert-notification :around
             #'forge-extras-insert-notification-with-orphans)
 
+(defvar-keymap forge-extras-orphan-notification-section-map
+  "<remap> <magit-visit-thing>" #'forge-extras-visit-orphan-notification)
+
+(defun forge-extras-visit-orphan-notification (&optional notif)
+  "Visit orphan notification NOTIF, or the current notification."
+  (interactive)
+  (let ((notif (or notif (forge-current-notification t))))
+    (unless (forge-extras--orphan-notification-p notif)
+      (user-error "No orphan notification at point"))
+    (if-let* ((url (oref notif url)))
+        (progn
+          (forge-extras-sync-orphan-read-status notif)
+          (browse-url url))
+      (user-error "Notification has no URL"))))
+
+(defun forge-extras-visit-thing-with-orphan-notifications (fn &rest args)
+  "Handle orphan notifications before calling FN with ARGS."
+  (if-let* (((derived-mode-p 'forge-notifications-mode))
+            (notif (forge-current-notification))
+            ((forge-extras--orphan-notification-p notif)))
+      (forge-extras-visit-orphan-notification notif)
+    (apply fn args)))
+
+(advice-add 'magit-visit-thing :around
+            #'forge-extras-visit-thing-with-orphan-notifications)
+
 (defun forge-extras-insert-orphan-notification (notif)
   "Insert orphan notification NOTIF into a Forge notifications buffer."
-  (magit-insert-section (notification notif)
+  (magit-insert-section section (notification notif)
+    (oset section keymap 'forge-extras-orphan-notification-section-map)
     (insert
      (propertize
       (forge-extras--orphan-notification-display-title notif)

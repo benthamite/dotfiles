@@ -186,6 +186,74 @@
     (should (equal (forge-extras--orphan-notification-display-title notif)
                    "CI: test workflow run failed for main branch"))))
 
+(ert-deftest forge-extras-test-visit-orphan-notification-browses-url ()
+  "Visit orphan notifications by browsing their stored URL."
+  (let ((visited nil)
+        (synced nil)
+        (notif (make-instance 'forge-notification
+                              :type 'checksuite
+                              :topic nil
+                              :url "https://github.com/benthamite/agent-log/actions")))
+    (cl-letf (((symbol-function 'browse-url)
+               (lambda (url &rest _args)
+                 (setq visited url)))
+              ((symbol-function 'forge-extras-sync-orphan-read-status)
+               (lambda (arg)
+                 (setq synced arg))))
+      (forge-extras-visit-orphan-notification notif)
+      (should (equal visited "https://github.com/benthamite/agent-log/actions"))
+      (should (eq synced notif)))))
+
+(ert-deftest forge-extras-test-insert-orphan-notification-remaps-visit ()
+  "Orphan notification sections have a RET visitor."
+  (let ((notif (make-instance 'forge-notification
+                              :id "github.com/benthamite/agent-log:24153295400"
+                              :repository "github.com/benthamite/agent-log"
+                              :type 'checksuite
+                              :topic nil
+                              :title "test workflow run failed for main branch"
+                              :last-read "2026-06-08T15:23:30Z"
+                              :url "https://github.com/benthamite/agent-log/actions")))
+    (with-temp-buffer
+      (magit-section-mode)
+      (let ((inhibit-read-only t))
+        (forge-extras-insert-orphan-notification notif))
+      (goto-char (point-min))
+      (let ((section (magit-current-section)))
+        (should (eq (oref section type) 'notification))
+        (should (eq (oref section value) notif))
+        (should (eq (symbol-value (oref section keymap))
+                    forge-extras-orphan-notification-section-map))
+        (should (eq (lookup-key (symbol-value (oref section keymap))
+                                [remap magit-visit-thing])
+                    #'forge-extras-visit-orphan-notification))))))
+
+(ert-deftest forge-extras-test-magit-visit-thing-visits-existing-orphan-section ()
+  "Existing orphan notification sections visit through `magit-visit-thing'."
+  (let ((visited nil)
+        (notif (make-instance 'forge-notification
+                              :id "github.com/benthamite/agent-log:24153295400"
+                              :repository "github.com/benthamite/agent-log"
+                              :type 'checksuite
+                              :topic nil
+                              :title "test workflow run failed for main branch"
+                              :last-read "2026-06-08T15:23:30Z"
+                              :url "https://github.com/benthamite/agent-log/actions")))
+    (with-temp-buffer
+      (magit-section-mode)
+      (let ((inhibit-read-only t))
+        (magit-insert-section (notification notif)
+          (insert "CI: test workflow run failed for main branch\n")))
+      (goto-char (point-min))
+      (cl-letf (((symbol-function 'browse-url)
+                 (lambda (url &rest _args)
+                   (setq visited url)))
+                ((symbol-function 'derived-mode-p)
+                 (lambda (&rest modes)
+                   (memq 'forge-notifications-mode modes))))
+        (magit-visit-thing)
+        (should (equal visited "https://github.com/benthamite/agent-log/actions"))))))
+
 (ert-deftest forge-extras-test-sync-orphan-read-status-calls-thread-api ()
   "Mark orphan notifications read through the notification thread API."
   (let ((called nil)

@@ -39,7 +39,7 @@ if [ -n "$STAGED" ]; then
       codex/README.org)
         HAS_README=true
         ;;
-      AGENTS.md|.codex/*|codex/*|ai-config-sync.json|bin/ai-config-sync)
+      .codex/*|codex/*|ai-config-sync.json|bin/ai-config-sync)
         HAS_CODEX_CHANGES=true
         ;;
     esac
@@ -52,7 +52,7 @@ if [ "$HAS_CODEX_CHANGES" = false ] && echo "$COMMAND" | grep -qE '\bgit\s+add\b
   # `.codex/skills/...`, and Codex hook payloads do not always include enough
   # cwd/workdir context for lib-repo-root.sh to distinguish those commands
   # before `git add` has run.
-  if echo "$COMMAND" | grep -qE '(^|[[:space:]])(AGENTS\.md|codex/|ai-config-sync\.json|bin/ai-config-sync)'; then
+  if echo "$COMMAND" | grep -qE '(^|[[:space:]])(codex/|ai-config-sync\.json|bin/ai-config-sync)'; then
     HAS_CODEX_CHANGES=true
   fi
 fi

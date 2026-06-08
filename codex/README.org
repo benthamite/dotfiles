@@ -28,7 +28,7 @@ ai-config-sync.json        <- Claude/Codex sync manifest
 bin/ai-config-sync         <- audit, reminder, and commit-guard checker
 #+end_example
 
-The =hooks/= counterparts mirror the Claude guard hooks. =hooks/require-readme-update.sh= shares the Claude version's cd-detection logic, including the =[^&;|]*= fix that stops an unrelated =cd <repo> && git add …/.claude/…= from tripping the README guard.
+The =hooks/= counterparts mirror the Claude guard hooks. =hooks/require-readme-update.sh= shares the Claude version's cd-detection logic, including the =[^&;|]*= fix that stops an unrelated =cd <repo> && git add …/.claude/…= from tripping the README guard. =hooks/require-codex-readme-update.sh= covers Codex integration paths such as =codex/=, =.codex/=, =ai-config-sync.json=, and =bin/ai-config-sync=, but deliberately does not treat the repo-root project =AGENTS.md= mirror as Codex integration.
 
 Repo-root =.codex/= is reserved for project-local Codex config. Do not use
 =~/My Drive/dotfiles/.codex/= as a target for live global =~/.codex/= symlinks;

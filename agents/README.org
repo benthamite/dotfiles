@@ -214,6 +214,10 @@ currently present in this repo. The skill name shown is the directory name.
   Actions, inspecting failed logs, fixing push-triggered CI failures, and
   repeating until the pushed commit is green or a real blocker is identified.
   Scope: Global.
+- =plan-location=: Local patch invoked only after
+  =superpowers:writing-plans=; overrides that plugin skill's repo-local plan
+  path so implementation plans save under =/tmp/codex-plans/= unless the user
+  asks for a repo-tracked file. Scope: Global.
 - =pin-elisp-pr=: Pin an Emacs/Elpaca package in =emacs/config.org= to a fork,
   branch, or upstream PR while enforcing one package recipe per package and no
   duplicate dependency pin declarations. Scope: Global.

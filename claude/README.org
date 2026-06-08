@@ -539,6 +539,16 @@ authorized push. Follow-up CI-fix pushes require the original authorization to
 still cover that push, otherwise the agent must ask after committing the local
 fix.
 
+**** plan-location
+:PROPERTIES:
+:ID:       BAB18C45-AD78-41EE-8B11-D3B1C89F12A6
+:END:
+
+Workflow guard invoked only after =superpowers:writing-plans=. It locally
+patches that plugin skill's repo-local plan path so implementation plans are
+saved under =/tmp/codex-plans/= unless the user explicitly asks for a
+repo-tracked file.
+
 *** Documentation skills
 :PROPERTIES:
 :ID:       7BAA2662-D24F-42B2-A865-5442B2F2E1B1

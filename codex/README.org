@@ -400,6 +400,11 @@ push; it only applies after a push has already been authorized. Follow-up CI-fix
 pushes require the original authorization to still cover that push, otherwise
 the agent must ask after committing the local fix.
 
+The =plan-location= skill is a Codex workflow guard invoked only after
+=superpowers:writing-plans=. It locally patches that plugin skill's repo-local
+plan path so implementation plans are saved under =/tmp/codex-plans/= unless
+the user explicitly asks for a repo-tracked file.
+
 The =release-package= skill is a Codex operations workflow for releasing
 the user's listed Emacs packages from the listed headings in
 =my-emacs-packages.org=, excluding the unlisted section. It supports =/release-package

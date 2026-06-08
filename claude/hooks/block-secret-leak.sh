@@ -31,9 +31,27 @@ esac
 
 [ -z "$CONTENT" ] && exit 0
 
+deny_op_reveal_output() {
+  jq -n --arg tool "$TOOL_NAME" '{
+    "hookSpecificOutput": {
+      "hookEventName": "PreToolUse",
+      "permissionDecision": "deny",
+      "permissionDecisionReason": ("BLOCKED: " + $tool + " command would print a revealed 1Password field.\n\nDo not run standalone `op item get ... --reveal` commands. Capture the value through command substitution, pass it through stdin/env/temp files with restricted permissions, or use `op://` references where supported.")
+    }
+  }'
+  exit 0
+}
+
 # --- Allowlist: commands that legitimately read secrets ---
 # pass, op, security (Keychain), git-crypt, and secret-scanning tools themselves
 if [ "$TOOL_NAME" = "Bash" ]; then
+  # Standalone `op item get ... --reveal` prints the revealed field into tool
+  # output before the output redactor can be treated as reliable protection.
+  if echo "$CONTENT" | grep -qE '^\s*op\s+item\s+get\b' && \
+     echo "$CONTENT" | grep -qE -- '(^|[[:space:]])--reveal([[:space:]]|$)' && \
+     ! echo "$CONTENT" | grep -qE '[|>]'; then
+    deny_op_reveal_output
+  fi
   # Allow pass/op/security/git-crypt commands
   if echo "$CONTENT" | grep -qE '^\s*(pass|op |security |git-crypt )'; then
     exit 0

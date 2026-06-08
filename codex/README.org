@@ -570,6 +570,14 @@ or parse those files or dump the environment. This closes the gap where a
 command could contain no literal secret but still print one by reading a
 credential config.
 
+=block-secret-leak.sh= is the input-side literal secret guard in the same shell
+hook chain. It allowlists normal auth-aware tooling such as =pass=, =op=,
+=git-crypt=, and =security=, but denies standalone =op item get ... --reveal=
+commands before the =op= allowlist because they print revealed 1Password fields
+into tool output. Safe 1Password patterns capture values through command
+substitution, stdin/env/temp files with restricted permissions, or =op://=
+references where supported.
+
 The =UserPromptSubmit= hook forwards lifecycle state for Emacs-owned sessions
 through =codex-hook-wrapper=. The matcher is empty because =UserPromptSubmit=
 has no tool name.

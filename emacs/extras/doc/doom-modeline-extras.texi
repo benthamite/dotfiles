@@ -254,8 +254,8 @@ color-coded (green above 80%, yellow 50-79%, red below 50%).
 @end itemize
 
 Codex sessions display the session name, configured model, reasoning
-effort, elapsed duration, and alert indicator when those values are
-available.  The reasoning effort comes from the live Codex buffer
+effort, account, elapsed duration, and alert indicator when those values
+are available.  The reasoning effort comes from the live Codex buffer
 override first, falling back to the account's @samp{config.toml}.
 
 Before Claude status data arrives, the segment displays only the session

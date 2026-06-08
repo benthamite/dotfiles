@@ -136,10 +136,12 @@
              (lambda () "gpt-5.5"))
             ((symbol-function 'agent-codex-status-effort)
              (lambda () "high"))
+            ((symbol-function 'agent-codex-buffer-account)
+             (lambda () "epoch"))
             ((symbol-function 'agent-codex-status-duration-ms)
              (lambda () nil)))
     (should (equal (doom-modeline-extras--format-codex-status-fields)
-                   " | gpt-5.5 | high"))))
+                   " | gpt-5.5 | high | epoch"))))
 
 (ert-deftest doom-modeline-extras-test-format-claude-status-fields-shows-effort ()
   "Format Claude modeline fields with model and effort."

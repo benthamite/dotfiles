@@ -183,8 +183,8 @@ available, it displays multiple pipe-separated fields:
 - *Alert indicator*: from ~agent-claude-alert-indicator~.
 
 Codex sessions display the session name, configured model, reasoning
-effort, elapsed duration, and alert indicator when those values are
-available.  The reasoning effort comes from the live Codex buffer
+effort, account, elapsed duration, and alert indicator when those values
+are available.  The reasoning effort comes from the live Codex buffer
 override first, falling back to the account's =config.toml=.
 
 Before Claude status data arrives, the segment displays only the session

@@ -165,6 +165,7 @@ Uses strikethrough to indicate the cost is not actually charged."
 (declare-function agent-claude-status-weekly-reset "agent-claude")
 (declare-function agent-codex-status-model "agent-codex")
 (declare-function agent-codex-status-effort "agent-codex")
+(declare-function agent-codex-buffer-account "agent-codex")
 (declare-function agent-codex-status-duration-ms "agent-codex")
 (declare-function parse-iso8601-time-string "parse-time")
 (defvar agent-alert-on-ready)
@@ -251,10 +252,12 @@ These are inserted between the session name and the alert indicator."
   "Return Codex-specific status fields for the modeline."
   (let ((model (agent-codex-status-model))
         (effort (agent-codex-status-effort))
+        (account (agent-codex-buffer-account))
         (duration (agent-codex-status-duration-ms)))
     (concat
      (doom-modeline-extras--format-model model)
      (doom-modeline-extras--format-effort effort)
+     (doom-modeline-extras--format-account account)
      (doom-modeline-extras--format-duration duration))))
 
 (defun doom-modeline-extras--format-alert-indicator ()

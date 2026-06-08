@@ -11,6 +11,12 @@ Use this for frozen, hung, beachballing, or otherwise unresponsive Emacs session
 
 Safety boundary: diagnostics are allowed, but recovery actions that change Emacs state require explicit user confirmation before you run them. This includes `(top-level)`, `(keyboard-quit)`, `kill -SIGUSR2`, SIGTERM, and SIGKILL. You may recommend them with warnings; do not send signals to an active Emacs session without confirmation.
 
+Channel boundary: an `emacsclient` timeout is evidence that the server/eval
+channel did not return. It is not, by itself, proof that the user's interactive
+Emacs UI is frozen. If the user reports that Emacs accepts input or otherwise
+looks responsive, treat that as primary evidence about the UI channel and
+diagnose queued clients, hooks, and server requests separately.
+
 ## Procedure
 
 ### 1. Find the Emacs process
@@ -66,7 +72,10 @@ run_with_timeout 2 emacsclient -s "$SOCKET" -e \
   > "$MESSAGES_FILE"
 ```
 
-If `run_with_timeout` kills either command, the main loop is blocked and the sample is your only source. If they return data, read them — those buffers usually pinpoint the error immediately.
+If `run_with_timeout` kills either command, the server request did not complete.
+Use the sample, process state, and the user's report of interactive UI behavior
+before inferring that Emacs itself is frozen. If the commands return data, read
+them — those buffers usually pinpoint the error immediately.
 
 ### 3. Read and analyze the sample
 
@@ -112,6 +121,7 @@ Report, in this order:
 2. **What I infer**: the likely cause, clearly labelled as inference. Explain the reasoning from the observations.
 3. **What I don't know**: explicitly state gaps. Examples: "I can't tell from the sample which Elisp code owned the URL callback that errored"; "the specific error condition isn't in the sample." Never paper over gaps with plausible-sounding stories.
 4. **How to recover now** — tailored to the diagnosis. Present the least invasive viable action first, ask for explicit confirmation before running any recovery command yourself, and **always warn about data-loss risk before suggesting any kill command**:
+   - Do not recommend restart, `kill -SIGUSR2`, `(keyboard-quit)`, `(top-level)`, or other recovery actions solely because `emacsclient` timed out. First establish that the user-facing Emacs UI is actually frozen or that the requested recovery targets only the blocked server/client channel.
    - **If stuck in nested debuggers** and the server is responsive: recommend `run_with_timeout 2 emacsclient -s "$SOCKET" -e '(top-level)'` first — this throws out of all recursive edits and returns to top level, preserving state. Run it only after confirmation.
    - **If stuck with server responsive** but not in debugger: recommend `run_with_timeout 2 emacsclient -s "$SOCKET" -e '(keyboard-quit)'`. Run it only after confirmation.
    - **If server unresponsive but process accepts signals**: recommend `kill -SIGUSR2 <PID>` to toggle `debug-on-quit`, then `C-g` in Emacs. Signal the process only after confirmation.

@@ -67,8 +67,9 @@ reported user-visible behavior has been verified after the change, and final
 answers after changes must include an explicit =Verification:= or =Not verified
 end-to-end:= sentence. Passing metrics, scorecards, and counts count as
 completion evidence only after confirming that they directly cover the user's
-stated requirement. They also require clear, plain language and avoiding
-obfuscatory jargon.
+stated requirement. Substantive-work closeouts must include the broader project
+significance and the concrete next action or decision. They also require clear,
+plain language and avoiding obfuscatory jargon.
 
 It also records the manual Chrome profile routing used by browser-only service
 flows: use =chrome-work-tab URL= for Epoch/work projects so Chrome targets
@@ -620,6 +621,8 @@ The paired Claude and Codex global instructions require agents not to say a bug
 is fixed, resolved, working, or done unless the exact reported user-visible
 behavior has been verified after the change; final answers after changes must
 include an explicit =Verification:= or =Not verified end-to-end:= sentence.
+They also require substantive-work closeouts to include the broader project
+significance and the concrete next action or decision.
 The Codex =Stop= hook currently forwards lifecycle state for Emacs-owned
 sessions through =codex-hook-wrapper=; it does not run a completion-claim
 guard.

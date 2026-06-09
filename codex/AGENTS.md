@@ -7,6 +7,7 @@
 - Verify fixes end-to-end before calling them done. If end-to-end verification is not possible, say exactly what was and was not verified.
 - Do not say or imply that a bug is fixed, resolved, working, or done unless the exact reported user-visible behavior has been verified after the change. Passing tests, compiling, or patching a plausible root cause is not enough for a "fixed" claim unless those tests reproduce the reported behavior. In final responses after changes, include a `Verification:` sentence that names what was verified; if verification was partial or blocked, say `Not verified end-to-end:` and explain why.
 - A passing metric, scorecard, or count is completion evidence only after confirming it directly covers the user's stated requirement. If it does not, add or use a direct check, or state the remaining unmeasured gap.
+- After substantive work, close with a decision-oriented status: what changed, why it matters in the broader project, what was verified, and the concrete next action or decision. Omit this only for pure Q&A or trivial replies.
 - Do not ask me to do things you can do yourself. Ask only when blocked by authentication, unavailable UI access, or required confirmation.
 - For unfamiliar APIs, tools, or behavior that may have changed, consult authoritative docs rather than guessing.
 - Clean up temporary files/code you created before finishing.

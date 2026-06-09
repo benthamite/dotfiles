@@ -891,6 +891,8 @@ The paired Claude and Codex global instructions require agents not to say a bug
 is fixed, resolved, working, or done unless the exact reported user-visible
 behavior has been verified after the change; final answers after changes must
 include an explicit =Verification:= or =Not verified end-to-end:= sentence.
+They also require substantive-work closeouts to include the broader project
+significance and the concrete next action or decision.
 There is currently no registered Stop hook that enforces this mechanically.
 
 *** require-elisp-test-before-commit.sh (PreToolUse)

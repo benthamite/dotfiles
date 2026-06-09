@@ -748,6 +748,13 @@ Claude must not run that command itself.
 
 Adapted from [[https://pjh.is/][Peter Hartree]]'s [[https://github.com/HartreeWorks/skills][HartreeWorks/skills]] repository. Proofreads Markdown files using either aspell (fast, spelling-only) or an LLM (Gemini Flash, with configurable depth: mechanical, light style, or comprehensive). Resolves the live tool-specific skill directory, keeps API keys scoped to the skill =.env= file, writes reviewed output to =*.proofread.md=, and applies accepted suggestions to =*.final.md=. Uses British English conventions by default. Depends on =ai= (v6) and =@ai-sdk/google= (v3).
 
+**** org-note-conventions
+
+Applies private Org note structure and prose-formatting conventions: reserve
+level-one headings for the note root/title, use level-two headings for
+top-level content sections under that root, and keep prose paragraphs unfilled
+rather than hard-wrapped.
+
 *** Twitter and communication skills
 :PROPERTIES:
 :ID:       6E879560-81C4-4842-90F2-AC14D8E0A1CC

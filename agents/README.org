@@ -200,6 +200,10 @@ currently present in this repo. The skill name shown is the directory name.
   under =~/.claude/projects= (with =~/.claude/history.jsonl= and
   =~/.claude.json=); the Codex version rewrites Codex session metadata under
   =~/.codex/sessions= (with =state_5.sqlite=). Scope: Global.
+- =org-note-conventions=: Apply private Org note structure and prose-formatting
+  conventions: reserve level-one headings for the note root/title, use
+  level-two headings for top-level content sections, and keep prose paragraphs
+  unfilled. Scope: Global.
 - =open-session-log=: Open the current Claude Code or Codex session log in
   Emacs via agent-log. Scope: Programmatic; Project-local: dotfiles.
 - =openai-docs=: Use when the user asks how to build with OpenAI products or

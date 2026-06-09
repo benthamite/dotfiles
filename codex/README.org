@@ -260,6 +260,11 @@ spreadsheet editing, requires one-comment-at-a-time approval before externally
 visible actions, uses the matching =gdoc reply=, =gdoc resolve=, or =gdoc
 reopen= command, and verifies with =gdoc comment-info= before moving on.
 
+The =org-note-conventions= skill is a Codex context skill for private Org
+notes. It reserves level-one headings for the note root/title, requires
+level-two headings for top-level content sections under that root, and keeps
+prose paragraphs unfilled rather than hard-wrapped.
+
 The =twitter= skill is a programmatic Codex workflow for direct Twitter/X
 lookup, search, and save requests via the active skill copy's
 =lib/twitterapi.sh= curl wrapper around twitterapi.io. It supports tweet,

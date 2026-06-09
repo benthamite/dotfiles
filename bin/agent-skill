@@ -14,6 +14,15 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 HOME = Path.home()
+BIN_DIR = Path(__file__).resolve().parent
+if str(BIN_DIR) not in sys.path:
+    sys.path.insert(0, str(BIN_DIR))
+
+from codex_plugin_roots import (  # noqa: E402
+    codex_plugin_skill_roots,
+    load_codex_plugin_list,
+    stale_codex_prompt_plugin_roots,
+)
 
 
 @dataclass(frozen=True)
@@ -179,12 +188,11 @@ def discover_roots(cwd: Path, tool: str) -> list[SkillRoot]:
         add_root(roots, seen, codex_home / "skills", "codex", "CODEX_HOME", 100)
         add_root(roots, seen, REPO_ROOT / "codex" / "skills", "codex", "dotfiles", 110)
 
-        plugin_cache = codex_home / "plugins" / "cache"
-        if existing_dir(plugin_cache):
-            for skills_dir in sorted(plugin_cache.rglob("skills")):
-                if plugin_path_is_orphaned(skills_dir):
-                    continue
-                add_root(roots, seen, skills_dir, "codex", "codex-plugin-cache", 200)
+        for skills_dir in codex_plugin_skill_roots(
+            codex_home,
+            load_codex_plugin_list(codex_home),
+        ):
+            add_root(roots, seen, skills_dir, "codex", "codex-plugin-cache", 200)
 
     if "claude" in wanted:
         claude_home = Path(os.environ.get("CLAUDE_HOME", HOME / ".claude"))

@@ -14,6 +14,23 @@
     (error nil))
   "Non-nil when mu4e-extras loaded successfully.")
 
+;;;; Chrome helpers
+
+(ert-deftest mu4e-extras-test-browse-url-in-chrome-profile-opens-new-tab-directly ()
+  "Chrome profile opening calls Chrome directly with a new-tab request."
+  (skip-unless mu4e-extras-test--loadable)
+  (let (process-args)
+    (cl-letf (((symbol-function 'start-process)
+               (lambda (&rest args)
+                 (setq process-args args)
+                 'process)))
+      (mu4e-extras-browse-url-in-chrome-profile
+       "https://mail.google.com/mail/u/0/#inbox" "Profile 2"))
+    (should-not (equal (nth 2 process-args) "open"))
+    (should (member "--new-tab" process-args))
+    (should (member "--profile-directory=Profile 2" process-args))
+    (should (member "https://mail.google.com/mail/u/0/#inbox" process-args))))
+
 ;;;; msg-is-personal-p
 
 (ert-deftest mu4e-extras-test-personal-p-personal-gmail ()

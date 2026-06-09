@@ -127,6 +127,7 @@ includes common emojis such as thumbs up, heart, and check mark.
 
 #+vindex: mu4e-extras-chrome-profile-personal
 #+vindex: mu4e-extras-chrome-profile-work
+#+vindex: mu4e-extras-chrome-program
 Commands that open Gmail in a browser route the URL to a specific
 Chrome profile based on the email account.  This is useful when you
 run separate Chrome profiles for personal and work browsing.
@@ -143,6 +144,10 @@ are ="Profile 1"=, ="Profile 2"=, and so on.  The default value is
 The user option ~mu4e-extras-chrome-profile-work~ specifies the Chrome
 profile directory for work (Epoch) email, using the same naming
 convention.  The default value is ="Profile 2"=.
+
+The user option ~mu4e-extras-chrome-program~ specifies the Chrome
+executable used to open Gmail URLs.  The default value is the standard
+macOS Chrome executable path.
 
 These options are consulted by ~mu4e-extras-chrome-profile-for-msg~
 ([[#h:chrome-profile-helpers][Chrome profile helpers]]), which is called by ~mu4e-extras-view-in-gmail~,
@@ -538,10 +543,11 @@ others.
 
 #+findex: mu4e-extras-browse-url-in-chrome-profile
 #+findex: mu4e-extras-chrome-profile-for-msg
+#+vindex: mu4e-extras-chrome-program
 The function ~mu4e-extras-browse-url-in-chrome-profile~ opens a URL in
-a specific Chrome profile by launching Chrome with the
-=--profile-directory= flag via =open -na=.  PROFILE is a directory name
-like ="Default"= or ="Profile 2"=.
+a specific Chrome profile by launching ~mu4e-extras-chrome-program~
+with the =--profile-directory= and =--new-tab= flags.  PROFILE is a
+directory name like ="Default"= or ="Profile 2"=.
 
 The function ~mu4e-extras-chrome-profile-for-msg~ returns the Chrome
 profile directory for a given message.  It returns

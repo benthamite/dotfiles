@@ -111,6 +111,12 @@ the second, etc."
   :type 'string
   :group 'mu4e-extras)
 
+(defcustom mu4e-extras-chrome-program
+  "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+  "Path to the Google Chrome executable."
+  :type 'file
+  :group 'mu4e-extras)
+
 ;;;; Variables
 
 (defvar mu4e-extras-mark-as-read-queue '()
@@ -367,8 +373,8 @@ If no message is found, return nil."
 (defun mu4e-extras-browse-url-in-chrome-profile (url profile)
   "Open URL in the Chrome profile named PROFILE.
 PROFILE is a directory name like \"Default\" or \"Profile 2\"."
-  (start-process "chrome" nil "open" "-na" "Google Chrome"
-		 "--args" (concat "--profile-directory=" profile) url))
+  (start-process "chrome" nil mu4e-extras-chrome-program
+		 (concat "--profile-directory=" profile) "--new-tab" url))
 
 (defun mu4e-extras-chrome-profile-for-msg (&optional msg)
   "Return the Chrome profile directory for MSG.

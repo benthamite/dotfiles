@@ -11,6 +11,8 @@ Analyze and rewrite the project's agent instruction files to maximize agent inst
 
 Use this skill for persistent agent instructions: `CLAUDE.md or AGENTS.md`, `.claude/CLAUDE.md or AGENTS.md`, `CLAUDE.local.md`, and `.claude/rules/**/*.md`. If `--accept` is present in `$ARGUMENTS`, apply all high-confidence changes without asking for confirmation. Otherwise, present the analysis and proposed rewrite, then wait for approval.
 
+Use the canonical placement policy in `agents/instruction-placement.org` from the dotfiles repo root when deciding whether guidance belongs in an instruction file, skill, hook, linter, reference doc, or project brief.
+
 ## Background: why this matters
 
 Claude Code or Codex loads CLAUDE.md or AGENTS.md files, imports, local memories, and rules as context rather than enforced configuration. They are high-leverage because they shape every relevant session, but the instruction budget is finite: frontier thinking models reliably follow ~150-200 instructions total, and Claude Code or Codex's system prompt already consumes ~50 of those. Every line in persistent instructions competes for the remainder.

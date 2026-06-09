@@ -164,7 +164,9 @@ Each file should contain distinct content. The global one defines behavioral con
 :END:
 
 Use this table for Claude-specific placement. For reusable artifacts that should
-work in both Claude and Codex, =../agents/README.org= is authoritative.
+work in both Claude and Codex, =../agents/README.org= is authoritative. For
+instruction-content placement, use =../agents/instruction-placement.org= before
+adding guidance to =CLAUDE.md=.
 
 | What | Where | Why |
 |------+-------+-----|

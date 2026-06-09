@@ -5,6 +5,8 @@
 
 This directory contains the version-controlled parts of my [[https://developers.openai.com/codex/][Codex]] setup.
 The cross-tool synchronization policy is documented in =../agents/README.org=.
+Instruction-content placement is documented in
+=../agents/instruction-placement.org=.
 This file covers the Codex-specific activation files and local conventions.
 
 Claude and Codex artifacts are peer implementations of shared agent behavior.

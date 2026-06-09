@@ -1,0 +1,71 @@
+#+title: Agent instruction placement
+#+author: Pablo Stafforini
+
+* Purpose
+
+This is the canonical placement policy for agent-facing guidance in the
+dotfiles setup. Use it to decide whether guidance belongs in =CLAUDE.md=,
+=AGENTS.md=, a skill, a hook, a linter, a reference doc, or a project brief.
+
+It complements =agents/README.org=, which owns Claude/Codex topology and sync.
+Tool-specific READMEs document activation details. Project-specific convention
+docs may specialize this policy for a project family.
+
+* Principle
+
+Use progressive disclosure. Keep always-loaded context small, stable, and
+high-signal; put detailed workflows and volatile state where agents load them
+only when needed; enforce mechanical rules with code.
+
+=CLAUDE.md= and =AGENTS.md= are expensive because they load every session in
+their scope. Add to them only when the guidance is both important and likely to
+matter in nearly every session covered by that file.
+
+* Placement Matrix
+
+| Guidance type | Preferred home | Use when |
+|---------------+----------------+----------|
+| Global behavioral invariant | Global =CLAUDE.md= / =AGENTS.md= pair | It applies across almost all sessions and cannot be more reliably handled by a hook, skill, linter, or test. Keep it terse. |
+| Project map or invariant | Project =CLAUDE.md= / =AGENTS.md= pair | It orients every session in that project: identity, key paths, hard safety constraints, and pointers. |
+| Current state, next steps, session history | Project brief and logs | It changes often or is useful only after the agent chooses to inspect project state. |
+| Operational workflow | Skill | It is a trigger-to-action procedure the agent must execute when a request matches a pattern. |
+| Mechanical rule | Hook, linter, formatter, test, or script | Compliance can be checked deterministically or the tool can block bad actions directly. |
+| Path- or file-type-specific convention | Path-scoped rule where supported, otherwise a skill or local reference | It matters only for a subset of files or tasks. |
+| Reference fact or lookup | Reference doc, linked from the relevant map | It is information to consult, not a procedure to remember every turn. |
+| Claude/Codex artifact topology and sync | =agents/README.org= | It concerns counterpart paths, activation, sync checks, or non-portable tool differences. |
+
+* Decision Test
+
+1. Does this need to be in context for almost every session in this scope? If
+   not, keep it out of =CLAUDE.md= and =AGENTS.md=.
+2. Would omitting it cause the agent to silently skip an expected action? If
+   yes, make or update a skill.
+3. Would omitting it merely make the agent ask for or look up a fact? If yes,
+   put it in a reference doc and link to it.
+4. Can compliance be checked mechanically? If yes, prefer a hook, linter,
+   formatter, test, or script.
+5. Is it volatile status, session narrative, or a next action? If yes, put it
+   in the project brief or log, not the always-loaded instruction file.
+6. Is it reusable across Claude and Codex? If yes, update the counterpart
+   artifact or record an explicit sync exemption, then run the sync audit.
+
+* Anti-Patterns
+
+- Long SOPs pasted into =CLAUDE.md= or =AGENTS.md=.
+- Duplicating the same policy in global, project, skill, and README files.
+- Plain links to operational workflows that should be triggerable skills.
+- Asking the model to enforce deterministic style or safety rules that a hook,
+  linter, formatter, or test could enforce.
+- Vague instructions such as "be careful", "write clean code", or "keep the
+  user informed" without concrete behavior or verification.
+
+* Related Docs
+
+- =agents/README.org= defines the Claude/Codex synchronization topology.
+- =claude/README.org= and =codex/README.org= document tool-specific activation
+  and local conventions.
+- =.claude/skills/optimize-agent-instructions/SKILL.md= and
+  =.codex/skills/optimize-agent-instructions/SKILL.md= apply this policy when
+  auditing or rewriting instruction files.
+- Epoch project notes specialize this policy in
+  =/Users/pablostafforini/My Drive/Epoch/projects/context/project-doc-conventions.md=.

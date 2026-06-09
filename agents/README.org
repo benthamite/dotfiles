@@ -11,6 +11,10 @@ This file is the authoritative cross-tool topology reference. If a tool-specific
 README conflicts with this file about where a shared artifact belongs, follow
 this file.
 
+Instruction-content placement is handled by =instruction-placement.org=. Use
+that policy to decide whether guidance belongs in =CLAUDE.md=, =AGENTS.md=, a
+skill, a hook, a linter, a reference doc, or a project brief.
+
 The synchronization model is intentionally manual, not auto-generated. When an
 agent changes a reusable Claude or Codex artifact, whether global or
 project-local, hooks remind it to update the counterpart during the same

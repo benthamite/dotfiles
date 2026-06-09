@@ -1,0 +1,69 @@
+#!/bin/bash
+# Run ERT for an Elisp package in the active Emacs profile.
+#
+# Usage: elisp-ert <package> <test-file> [test-name]
+#
+# Examples:
+#   elisp-ert agent-codex test/agent-codex-test.el
+#   elisp-ert agent-codex test/agent-codex-test.el agent-codex-test-restart
+
+set -euo pipefail
+
+if [ $# -lt 2 ] || [ $# -gt 3 ]; then
+  echo "Usage: elisp-ert <package> <test-file> [test-name]" >&2
+  exit 1
+fi
+
+PACKAGE="$1"
+TEST_FILE="$2"
+TEST_NAME="${3:-}"
+
+case "$PACKAGE" in
+  *[!A-Za-z0-9._-]*|"")
+    echo "Invalid package name: $PACKAGE" >&2
+    exit 1
+    ;;
+esac
+
+if [ -n "$TEST_NAME" ]; then
+  case "$TEST_NAME" in
+    *[!A-Za-z0-9._:-]*)
+      echo "Invalid ERT test name: $TEST_NAME" >&2
+      exit 1
+      ;;
+  esac
+fi
+
+if [ ! -f "$TEST_FILE" ]; then
+  echo "Test file not found: $TEST_FILE" >&2
+  exit 1
+fi
+
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+PROFILE=$(emacsclient -e 'init-current-profile' 2>/dev/null | tr -d '"')
+ELPACA="$HOME/.config/emacs-profiles/$PROFILE/elpaca"
+EXTRAS="$REPO_ROOT/emacs/extras"
+SOURCE="$ELPACA/sources/$PACKAGE"
+
+ARGS=(--batch)
+
+# Prepend all elpaca builds so package versions beat built-in libraries.
+ARGS+=(--eval "(dolist (dir (file-expand-wildcards \"$ELPACA/builds/*/\")) (add-to-list 'load-path dir))")
+
+if [ -f "$EXTRAS/$PACKAGE.el" ]; then
+  rm -f "$EXTRAS/$PACKAGE.elc"
+  ARGS+=(--eval "(push \"$EXTRAS\" load-path)")
+elif [ -d "$SOURCE" ]; then
+  ARGS+=(--eval "(push \"$SOURCE\" load-path)")
+fi
+
+ARGS+=(--eval "(require 'ert)")
+ARGS+=(-l "$TEST_FILE")
+
+if [ -n "$TEST_NAME" ]; then
+  ARGS+=(--eval "(ert-run-tests-batch-and-exit '$TEST_NAME)")
+else
+  ARGS+=(-f ert-run-tests-batch-and-exit)
+fi
+
+exec emacs "${ARGS[@]}" 2>&1

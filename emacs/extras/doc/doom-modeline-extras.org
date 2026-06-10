@@ -180,7 +180,7 @@ available, it displays multiple pipe-separated fields:
 - *Duration*: elapsed session time in a compact format (e.g., "5m23s").
 - *Cache efficiency*: the ratio of cache-read tokens to total tokens,
   color-coded (green above 80%, yellow 50-79%, red below 50%).
-- *Alert indicator*: from ~agent-claude-alert-indicator~.
+- *Alert indicator*: from ~agent-alert-indicator~.
 
 Codex sessions display the session name, configured model, reasoning
 effort, account, elapsed duration, and alert indicator when those values

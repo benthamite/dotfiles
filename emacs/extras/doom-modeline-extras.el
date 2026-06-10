@@ -157,7 +157,6 @@ Uses strikethrough to indicate the cost is not actually charged."
 (declare-function agent-claude-status-duration-ms "agent-claude")
 (declare-function agent-claude-status-cache-read-tokens "agent-claude")
 (declare-function agent-claude-status-cache-total-tokens "agent-claude")
-(declare-function agent-claude-display-name "agent-claude")
 (declare-function agent-claude-buffer-account "agent-claude")
 (declare-function agent-claude-status-session-usage "agent-claude")
 (declare-function agent-claude-status-weekly-usage "agent-claude")

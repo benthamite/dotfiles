@@ -250,7 +250,7 @@ deletions.
 @strong{Cache efficiency}: the ratio of cache-read tokens to total tokens,
 color-coded (green above 80%, yellow 50-79%, red below 50%).
 @item
-@strong{Alert indicator}: from @code{agent-claude-alert-indicator}.
+@strong{Alert indicator}: from @code{agent-alert-indicator}.
 @end itemize
 
 Codex sessions display the session name, configured model, reasoning

@@ -9135,7 +9135,9 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 (use-package codex
   :ensure (:host github
                  :repo "benthamite/codex")
-  :defer t)
+  :defer t
+  :custom
+  (codex-reasoning-effort "high"))
 #+end_src
 
 ** =mcp=

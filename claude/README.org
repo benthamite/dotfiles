@@ -724,11 +724,15 @@ report verbatim what was verified through what surface. If a commit-triggered
 sync or reload is required before live code reaches the running app, the skill
 allows committing only after non-live checks, then requires immediate
 live-verification before pushing, reporting success, or moving on. For
-secret-backed remote notifications, it prefers clearly labeled opt-in test
-alerts, read-only previews, or manual dispatches that use the real remote
-credentials without mutating production state. When E2E is impossible, the
-skill requires naming the blocked step explicitly rather than substituting a
-local proxy as success.
+resume, restart, reconnect, or restore commands whose contract is to continue
+an existing session, the success criterion and regression coverage must assert
+original identity/history reuse and fail before kill/start if that identity is
+missing; explicit new/start/fork flows and documented fresh-state restart
+commands are excluded. For secret-backed remote notifications, it prefers
+clearly labeled opt-in test alerts, read-only previews, or manual dispatches
+that use the real remote credentials without mutating production state. When
+E2E is impossible, the skill requires naming the blocked step explicitly rather
+than substituting a local proxy as success.
 
 **** handoff
 :PROPERTIES:

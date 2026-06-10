@@ -236,7 +236,11 @@ commit-triggered sync/reload before live code reaches the running app, agents
 commit only after non-live checks and immediately live-verify before pushing,
 reporting success, or moving on. External-system checks should use read-only
 previews, opt-in test paths, or explicit confirmation before externally visible
-mutations.
+mutations. For resume, restart, reconnect, or restore commands whose contract
+is to continue an existing session, the success criterion and regression
+coverage must assert original identity/history reuse and fail before kill/start
+if that identity is missing; explicit new/start/fork flows and documented
+fresh-state restart commands are excluded.
 
 The =pin-elisp-pr= skill defines the detailed Codex workflow for pinning an
 Emacs/Elpaca package in =emacs/config.org= to a fork, branch, or upstream PR

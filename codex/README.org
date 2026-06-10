@@ -546,10 +546,13 @@ central dotfiles =.agent-learnings/inbox/= and does not promote, implement,
 archive, or delete anything; =session-retro= handles those manual review steps
 later. Each captured candidate includes a numeric =Value= score from 0 to 100
 so the later retro pass can prioritize high-impact lessons before minor polish.
-Candidates also record provenance, loaded or relevant skills, proposed action,
-target artifact, autonomy level, and curation hints. High-confidence candidates
-may include an inert proposed patch inside the inbox file, but capture never
-applies those patches or edits the target artifact.
+Candidates also include a separate =Implementation safety= score from 0 to 100
+so clearly clerical, local, low-risk candidates can be routed to
+=session-retro='s trivial-auto fast lane without confusing safety with value.
+They also record provenance, loaded or relevant skills, proposed action, target
+artifact, autonomy level, and curation hints. High-confidence candidates may
+include an inert proposed patch inside the inbox file, but capture never applies
+those patches or edits the target artifact.
 The Emacs before-exit chain then invokes =update-log --auto= for every working
 directory, after =session-learning-capture=. The =update-log= skill owns its
 own no-op criteria, so projects without durable state changes or log
@@ -557,8 +560,9 @@ conventions should skip cleanly inside the skill rather than being filtered out
 by the launcher.
 Codex =Stop= hooks are turn-end hooks, not reliable session-exit hooks, so the
 tracked Codex hook configuration does not invoke session learning capture from
-=Stop=; the legacy helper's prompt still asks for the same capture metadata if
-it is run manually or re-enabled.
+=Stop=; the legacy helper's prompt still asks for the same capture metadata,
+including =Value= and =Implementation safety=, if it is run manually or
+re-enabled.
 
 Manual audit:
 

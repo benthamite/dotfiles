@@ -70,6 +70,8 @@ prevent.
 
 **Value:** NN/100
 
+**Implementation safety:** NN/100
+
 **Proposed action:** One of `remember`, `patch-skill`, `create-skill`,
 `add-reference`, `hook`, `script`, `docs`, `test`, `decision`, or `unknown`.
 
@@ -99,6 +101,18 @@ workflow or safety improvements, 40-69 for useful but narrower improvements,
 clear the usefulness bar. Add multiple candidates only when they are distinct
 actionable ideas.
 
+Set `Implementation safety` to an integer from 0 to 100 estimating how safe the
+candidate would be for later `session-retro` automation, not how valuable it is.
+Use 90-100 only for local, tracked, clerical edits with an unambiguous owner,
+clear verification, no behavior or policy change, and no external effects;
+70-89 for low-blast-radius local changes that still require ordinary review;
+40-69 for meaningful behavior, workflow, or test changes; 10-39 for policy,
+tooling, delegation, prioritization, default-behavior, or approval-boundary
+changes; and 0-9 for external actions, secrets/authentication, destructive
+operations, network/service mutations, unclear ownership, or missing context.
+This score is only a routing hint for `session-retro`; it never authorizes this
+skill to apply a change.
+
 ## Workflow
 
 1. Identify the session metadata from the hook prompt: `session_id`,
@@ -121,8 +135,8 @@ actionable ideas.
    text artifact. Use `interview-required` when the right change depends on the
    user's preference or on missing context.
 9. Report the inbox path and the candidate titles with their `Value`,
-   `Proposed action`, and `Autonomy level`. Tell the user that `session-retro`
-   processes the inbox later.
+   `Implementation safety`, `Proposed action`, and `Autonomy level`. Tell the
+   user that `session-retro` processes the inbox later.
 
 ## Safety
 

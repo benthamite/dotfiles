@@ -23,7 +23,7 @@ esac
 reason=$(cat <<EOF
 Use the session-learning-capture skill now.
 
-Review this session for reusable lessons and write candidate lessons to .agent-learnings/inbox/ if any are worth preserving. Include provenance, loaded or relevant skills, proposed action, target artifact, autonomy level, curation hints, and inert proposed patches when useful.
+Review this session for reusable lessons and write candidate lessons to .agent-learnings/inbox/ if any are worth preserving. Include provenance, loaded or relevant skills, Value, Implementation safety, proposed action, target artifact, autonomy level, curation hints, and inert proposed patches when useful.
 
 Hook context:
 - tool: codex

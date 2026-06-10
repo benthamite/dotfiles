@@ -247,7 +247,9 @@ currently present in this repo. The skill name shown is the directory name.
 - =session-learning-capture=: Review the current session when a
   Stop/session-end hook asks for lesson capture, then write candidate reusable
   lessons plus promotion metadata to the central dotfiles .agent-learnings/inbox
-  without implementing them. Scope: Global.
+  without implementing them. Captures separate =Value= and =Implementation
+  safety= scores so later review can distinguish impact from clerical
+  auto-implementation suitability. Scope: Global.
 - =session-retro=: Review notes agent-learning inbox suggestions, interview
   the user about each candidate with implement/defer/drop choices, then
   implement accepted improvements and archive or discard the processed records.

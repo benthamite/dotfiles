@@ -680,11 +680,14 @@ useful reusable candidates to ignored local files under the central dotfiles
 agent-learning workflow: it never promotes lessons to durable instructions,
 skills, hooks, docs, or code. Each candidate includes a numeric =Value= score
 from 0 to 100 so the manual =session-retro= consumer can review high-impact
-items before minor polish. Candidates also record provenance, loaded or
-relevant skills, proposed action, target artifact, autonomy level, and curation
-hints. High-confidence candidates may include an inert proposed patch inside
-the inbox file, but capture never applies those patches or edits the target
-artifact. The same Emacs before-exit chain invokes
+items before minor polish, plus a separate =Implementation safety= score from 0
+to 100 so clearly clerical, local, low-risk candidates can be routed to
+=session-retro='s trivial-auto fast lane without confusing safety with value.
+Candidates also record provenance, loaded or relevant skills, proposed action,
+target artifact, autonomy level, and curation hints. High-confidence candidates
+may include an inert proposed patch inside the inbox file, but capture never
+applies those patches or edits the target artifact. The same Emacs before-exit
+chain invokes
 =update-log --auto= immediately afterward for every working directory; projects
 without durable state changes or log conventions should no-op inside
 =update-log= rather than being excluded by the launcher.
@@ -1045,8 +1048,9 @@ Forwards the session-end event to Emacs via =claude-code-handle-hook=. Runs thro
 :END:
 
 Returns a blocking prompt asking the active agent to use
-=session-learning-capture=, including provenance, target, autonomy, curation,
-and optional inert patch metadata in captured candidates. It skips recursive Stop hooks via
+=session-learning-capture=, including provenance, =Value=, =Implementation
+safety=, target, autonomy, curation, and optional inert patch metadata in
+captured candidates. It skips recursive Stop hooks via
 =stop_hook_active= and does nothing outside =~/My Drive/dotfiles=. It is not
 registered in the live Claude or Codex hook configuration because Stop hooks are
 turn-end hooks rather than reliable session-exit hooks; session learning capture

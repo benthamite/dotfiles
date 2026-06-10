@@ -23,7 +23,7 @@ esac
 reason=$(cat <<EOF
 Use the session-learning-capture skill now.
 
-Review this session for reusable lessons and write candidate lessons to .agent-learnings/inbox/ if any are worth preserving.
+Review this session for reusable lessons and write candidate lessons to .agent-learnings/inbox/ if any are worth preserving. Include provenance, loaded or relevant skills, proposed action, target artifact, autonomy level, curation hints, and inert proposed patches when useful.
 
 Hook context:
 - tool: claude
@@ -31,7 +31,7 @@ Hook context:
 - transcript_path: $transcript_path
 - cwd: $cwd
 
-Do not implement or promote lessons. Do not run session-retro. If there are no useful lessons, say so and stop.
+Do not implement or promote lessons. Do not apply proposed patches. Do not run session-retro. If there are no useful lessons, say so and stop.
 EOF
 )
 

@@ -998,6 +998,13 @@ unchanged files. If a staged org manual, or an org manual in the same command's
 tracked =.info= outputs, blocks the commit until those generated files are
 staged too. Ensures documentation stays in sync with code changes.
 
+The requirement can be deferred on a feature branch with local git config:
+=git config branch.<branch>.deferDocUpdates true= (remove with =--unset= when
+the branch merges). This suits multi-commit refactors that update the manual
+at milestone boundaries instead of per commit. The setting is ignored on
+=main= and =master=, so the guard cannot be disabled on mainline. The Codex
+counterpart hook honors the same setting.
+
 *** block-elpaca-rebuild-uncommitted.sh (PreToolUse)
 :PROPERTIES:
 :CUSTOM_ID: h:block-elpaca-rebuild-uncommitted

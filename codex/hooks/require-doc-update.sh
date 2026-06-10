@@ -48,6 +48,19 @@ if [ -d "$GIT_DIR/rebase-merge" ] || [ -d "$GIT_DIR/rebase-apply" ] || \
   exit 0
 fi
 
+# Allow deferring the manual requirement on a feature branch via local
+# git config, for multi-commit work that updates documentation at
+# milestone boundaries instead of per commit:
+#   git config branch.<branch>.deferDocUpdates true     # enable
+#   git config --unset branch.<branch>.deferDocUpdates  # remove on merge
+# Ignored on main/master so the guard cannot be disabled on mainline.
+CURRENT_BRANCH=$(git -C "$REPO_ROOT" branch --show-current 2>/dev/null || true)
+if [ -n "$CURRENT_BRANCH" ] && \
+   [ "$CURRENT_BRANCH" != "main" ] && [ "$CURRENT_BRANCH" != "master" ] && \
+   [ "$(git -C "$REPO_ROOT" config --bool "branch.$CURRENT_BRANCH.deferDocUpdates" 2>/dev/null || echo false)" = "true" ]; then
+  exit 0
+fi
+
 # Determine which documentation pattern applies
 HAS_DOC_DIR=false
 HAS_README_ORG=false

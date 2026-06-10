@@ -1,4 +1,5 @@
 model = "gpt-5.5"
+model_reasoning_effort = "high"
 service_tier = "fast"
 approval_policy = "on-request"
 sandbox_mode = "danger-full-access"

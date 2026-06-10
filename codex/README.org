@@ -638,8 +638,8 @@ manual. This keeps standalone packages such as =emacs-slack= covered without
 treating Markdown READMEs as the preferred manual format for repos that already
 have Org documentation.
 
-=codex/config.toml= sets the default model, fast service tier, approval policy,
-sandbox mode, light TUI theme, desktop/app preferences,
+=codex/config.toml= sets the default model, high reasoning effort, fast service
+tier, approval policy, sandbox mode, TUI theme, desktop/app preferences,
 desktop turn-end notifications, and personality; enables Codex hooks, plugins,
 the goals UI, terminal resize reflow, and local notice preferences such as
 hiding the rate-limit model nudge; records trusted project roots; and records

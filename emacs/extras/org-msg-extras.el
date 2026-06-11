@@ -50,7 +50,7 @@
   :group 'org-msg-extras)
 
 (defcustom org-msg-extras-epoch-plain-text-signature
-  "\n--\nPablo Stafforini\nOperations Associate, Automations\nEpoch AI | https://epoch.ai/\n"
+  "\n--\nPablo Stafforini\nAI Enablement Manager\nEpoch AI | https://epoch.ai/\n"
   "Epoch AI signature for plain text emails."
   :type 'string
   :group 'org-msg-extras)

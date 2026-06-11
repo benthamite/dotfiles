@@ -9070,6 +9070,9 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (agent-before-exit-skill-names '("session-learning-capture"
                                    ("update-log" :args "--auto")))
   (agent-sync-theme t)
+  (agent-epoch-project-registry-file
+   "/Users/pablostafforini/My Drive/Epoch/projects/shared/project-registry.json")
+  (agent-epoch-projects-root "/Users/pablostafforini/My Drive/Epoch/projects/")
   (agent-claude-org-todo-in-progress-keyword "DOING")
   (agent-claude-accounts '(("personal"  . "~/.claude-personal")
                               ("tlon"     . "~/.claude-tlon")

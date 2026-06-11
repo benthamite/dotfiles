@@ -143,7 +143,7 @@ Uses strikethrough to indicate the cost is not actually charged."
 
 (declare-function agent--detect-backend "agents")
 (declare-function agent--backend-get "agents")
-(declare-function agent-backend-icon "agents")
+(declare-function agent-backend-icon-string "agents")
 (declare-function agent-display-name "agents")
 (declare-function agent-alert-indicator "agents")
 (declare-function agent-toggle-alert "agents")
@@ -194,7 +194,7 @@ between the name and the alert indicator."
              (fboundp 'agent--detect-backend))
     (let ((backend (agent--detect-backend (current-buffer))))
       (when backend
-        (let ((icon (agent-backend-icon backend 'mode-line-active))
+        (let ((icon (agent-backend-icon-string backend 'mode-line-active))
               (name (agent-display-name (current-buffer))))
           (concat
            (doom-modeline-spc)

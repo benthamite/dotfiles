@@ -155,6 +155,8 @@ this package.  It activates only in buffers recognized as Claude Code
 sessions (via ~claude-code--buffer-p~).  When session status data is
 available, it displays multiple pipe-separated fields:
 
+- *Backend icon*: the registered backend's icon, rendered via
+  ~agent-backend-icon-string~ from the =agent= package.
 - *Session name*: shown in bold, extracted from the buffer name.
 - *Model*: the Claude model in use (e.g., "opus", "sonnet").
 - *Effort*: the Claude Code reasoning effort level (e.g., "high").

@@ -214,6 +214,9 @@ available, it displays multiple pipe-separated fields:
 
 @itemize
 @item
+@strong{Backend icon}: the registered backend's icon, rendered via
+@code{agent-backend-icon-string} from the @samp{agent} package.
+@item
 @strong{Session name}: shown in bold, extracted from the buffer name.
 @item
 @strong{Model}: the Claude model in use (e.g., ``opus'', ``sonnet'').

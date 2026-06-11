@@ -21,6 +21,10 @@ Your job is to:
 
 Do NOT try to fix or work around the original error. Focus entirely on diagnosis and structural remedies. Present your findings, then wait for the user to decide what action to take.
 
+## Diagnostic communication
+
+When a diagnosis uses overloaded local tooling labels, define the concrete artifact in plain language before relying on the label: e.g. a Markdown skill file, plugin bundle, agent-skill helper, Emacs package, command wrapper, or hook script. Do this only when ambiguity could affect the explanation; do not define ordinary unambiguous terms.
+
 ## Before proposing any fix
 
 Run this check: *would an existing mechanism, firing as intended, have prevented this immediate failure?* If no, a structural gap exists and a fix is warranted.

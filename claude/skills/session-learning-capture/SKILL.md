@@ -63,6 +63,10 @@ include why this candidate surfaced.
 
 **Loaded or relevant skills:** `skill-a`, `skill-b`, or `none observed`.
 
+**Project:** Concrete project/repository name such as `email-triage`,
+`stafforini.com`, `consensus-trader`, or `unknown` only when the session does
+not identify one.
+
 **Summary:** What should be improved or remembered.
 
 **Why it matters:** The failure, friction, or repeated correction this would
@@ -93,6 +97,14 @@ review cautious.
 only when the change is narrow and high-confidence; do not apply it.
 ```
 
+Set `Project` to the concrete project, repository, package, website, or
+automation name that owns the work. Prefer the exact repo/project slug from the
+working directory, project notes, git remote, or transcript (`email-triage`,
+`stafforini.com`, `consensus-trader`, `time-tracker`). Avoid vague labels such
+as `Epoch project documentation conventions`, `browser automation`, or
+`dotfiles guidance` when a real project name is available. Use `unknown` only
+when the transcript and `cwd` do not identify a project.
+
 Set `Value` to an integer from 0 to 100 estimating the importance of later
 implementing this candidate. Use the full range: 90-100 for changes that
 prevent severe or recurring failures across many sessions, 70-89 for high-value
@@ -121,9 +133,10 @@ skill to apply a change.
    every turn.
 3. Extract only reusable candidate lessons. Prefer fewer, sharper candidates
    over broad self-criticism.
-4. For each candidate, classify the proposed action, target artifact, autonomy
-   level, and curation hints. Prefer improving an existing loaded or relevant
-   skill over creating a new skill when the lesson fits an existing workflow.
+4. For each candidate, record the concrete project name, classify the proposed
+   action, target artifact, autonomy level, and curation hints. Prefer
+   improving an existing loaded or relevant skill over creating a new skill when
+   the lesson fits an existing workflow.
 5. Redact secrets, credentials, private tokens, personal data, and raw command
    output that is not needed as evidence.
 6. If there are no useful lessons, do not create an inbox file. Report that no
@@ -134,7 +147,7 @@ skill to apply a change.
    the change is narrow, high-confidence, and aimed at a repository-visible
    text artifact. Use `interview-required` when the right change depends on the
    user's preference or on missing context.
-9. Report the inbox path and the candidate titles with their `Value`,
+9. Report the inbox path and the candidate titles with their `Project`, `Value`,
    `Implementation safety`, `Proposed action`, and `Autonomy level`. Tell the
    user that `session-retro` processes the inbox later.
 

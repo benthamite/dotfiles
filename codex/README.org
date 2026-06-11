@@ -551,10 +551,10 @@ so the later retro pass can prioritize high-impact lessons before minor polish.
 Candidates also include a separate =Implementation safety= score from 0 to 100
 so clearly clerical, local, low-risk candidates can be routed to
 =session-retro='s trivial-auto fast lane without confusing safety with value.
-They also record provenance, loaded or relevant skills, proposed action, target
-artifact, autonomy level, and curation hints. High-confidence candidates may
-include an inert proposed patch inside the inbox file, but capture never applies
-those patches or edits the target artifact.
+They also record provenance, loaded or relevant skills, concrete project name,
+proposed action, target artifact, autonomy level, and curation hints.
+High-confidence candidates may include an inert proposed patch inside the inbox
+file, but capture never applies those patches or edits the target artifact.
 The Emacs before-exit chain then invokes =update-log --auto= for every working
 directory, after =session-learning-capture=. The =update-log= skill owns its
 own no-op criteria, so projects without durable state changes or log
@@ -563,8 +563,8 @@ by the launcher.
 Codex =Stop= hooks are turn-end hooks, not reliable session-exit hooks, so the
 tracked Codex hook configuration does not invoke session learning capture from
 =Stop=; the legacy helper's prompt still asks for the same capture metadata,
-including =Value= and =Implementation safety=, if it is run manually or
-re-enabled.
+including concrete =Project=, =Value=, and =Implementation safety=, if it is run
+manually or re-enabled.
 
 Manual audit:
 

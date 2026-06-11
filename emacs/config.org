@@ -9062,6 +9062,8 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (require 'agent-claude)
   (require 'agent-codex)
   (require 'agent-chief)
+  (agent-claude-mode 1)
+  (agent-codex-mode 1)
 
   :custom
   (agent-alert-on-ready t)

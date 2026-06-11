@@ -223,8 +223,10 @@ available, it displays multiple pipe-separated fields:
 @item
 @strong{Effort}: the Claude Code reasoning effort level (e.g., ``high'').
 @item
-@strong{Account}: the Claude account used for this session (e.g., ``personal'',
-``work''), when multi-account support is configured.
+@strong{Account}: the account used for this session (e.g., ``personal'',
+``work''), when multi-account support is configured.  The value is read
+from the buffer's session via @code{agent-session} and
+@code{agent-session-account} from the @samp{agent} package.
 @item
 @strong{Rate limit burn rate}: shown as @samp{5h:+N% 7d:-M%} when
 @code{doom-modeline-extras-claude-code-usage} is non-@code{nil}.  Each figure

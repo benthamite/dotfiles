@@ -160,8 +160,10 @@ available, it displays multiple pipe-separated fields:
 - *Session name*: shown in bold, extracted from the buffer name.
 - *Model*: the Claude model in use (e.g., "opus", "sonnet").
 - *Effort*: the Claude Code reasoning effort level (e.g., "high").
-- *Account*: the Claude account used for this session (e.g., "personal",
-  "work"), when multi-account support is configured.
+- *Account*: the account used for this session (e.g., "personal",
+  "work"), when multi-account support is configured.  The value is read
+  from the buffer's session via ~agent-session~ and
+  ~agent-session-account~ from the =agent= package.
 - *Rate limit burn rate*: shown as =5h:+N% 7d:-M%= when
   ~doom-modeline-extras-claude-code-usage~ is non-~nil~.  Each figure
   is a deviation from the expected usage at this point in the window,

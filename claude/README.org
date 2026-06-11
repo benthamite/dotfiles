@@ -410,8 +410,10 @@ Claude-side pointer for the Codex-only =$codex-app-browser= handoff workflow.
 It documents that the source of truth lives in
 =codex/skills/codex-app-browser/SKILL.md=, that Codex should bootstrap the
 Browser plugin with =setupBrowserRuntime=, and that an empty
-=agent.browsers.list()= means the Codex App/browser backend was not attached
-and should trigger =codex-app-handoff= rather than a generic fallback.
+=agent.browsers.list()= or one containing neither legacy string =iab= nor a
+BrowserInfo object whose =id= or =type= is =iab= means the Codex App/browser
+backend was not attached and should trigger =codex-app-handoff= rather than a
+generic fallback.
 
 **** dotfiles-context
 :PROPERTIES:

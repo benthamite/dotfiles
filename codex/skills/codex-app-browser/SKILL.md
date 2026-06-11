@@ -73,7 +73,13 @@ if (!globalThis.agent) {
   await setupBrowserRuntime({ globals: globalThis });
 }
 const availableBrowsers = await agent.browsers.list();
-if (!availableBrowsers.includes("iab")) {
+const hasInAppBrowser = availableBrowsers.some(
+  (browserInfo) =>
+    browserInfo === "iab" ||
+    browserInfo?.id === "iab" ||
+    browserInfo?.type === "iab"
+);
+if (!hasInAppBrowser) {
   throw new Error(`In-app browser backend not registered. Available browsers: ${JSON.stringify(availableBrowsers)}`);
 }
 if (!globalThis.browser) {

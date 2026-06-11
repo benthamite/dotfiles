@@ -19,6 +19,6 @@ Current Codex behavior to preserve:
 
 - Use the bundled Browser skill as the authoritative API reference.
 - Bootstrap with `setupBrowserRuntime`, not the removed `setupAtlasRuntime`.
-- Check `agent.browsers.list()` before claiming that `iab` is unavailable.
+- Check `agent.browsers.list()` for either string entries or BrowserInfo objects with `id` or `type` equal to `iab` before claiming that `iab` is unavailable.
 - If the list is empty or `iab` is missing, treat it as a Codex App/backend attachment failure and run `codex-app-handoff`.
 - Do not offer a generic fallback unless Pablo explicitly permits a non-in-app-browser path.

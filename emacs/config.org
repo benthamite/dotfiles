@@ -831,7 +831,7 @@ Because =use-personal-package= declares each extras file with an =:ensure= recip
 
 #+begin_src shell :tangle no
 #!/bin/sh
-# Propagate the current state of master to the elpaca dotfiles clone.
+# Propagate the current state of master to the elpaca repos clone.
 # Reads the active profile from a cache file written by Emacs at startup,
 # avoiding emacsclient calls that deadlock when git is spawned synchronously
 # by Emacs.
@@ -854,6 +854,47 @@ if [ -n "$ELPACA_DOTFILES" ]; then
     unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE
     git -C "$ELPACA_DOTFILES" fetch "$GITDIR" master 2>&1 &&
     git -C "$ELPACA_DOTFILES" reset --hard FETCH_HEAD 2>&1
+
+    # Rebuild+reload any extras packages whose .el files changed in this
+    # commit.  Run asynchronously to avoid deadlocking when git is spawned
+    # synchronously by Emacs (e.g. magit-commit).
+    CHANGED_EL=$(git -C "$ELPACA_DOTFILES" diff --name-only HEAD~1 HEAD -- 'emacs/extras/*.el' 2>/dev/null || true)
+    if [ -n "$CHANGED_EL" ]; then
+        PKGS=""
+        for f in $CHANGED_EL; do
+            pkg=$(basename "$f" .el)
+            PKGS="$PKGS $pkg"
+        done
+        (
+            strip_emacs_string() {
+                sed 's/^"//; s/"$//'
+            }
+
+            reload_timeout=${ELPACA_RELOAD_TIMEOUT_SECONDS:-120}
+            reload_poll_interval=${ELPACA_RELOAD_POLL_INTERVAL_SECONDS:-1}
+            for pkg in $PKGS; do
+                raw_token=$(timeout 30 emacsclient -e "(when (elpaca-get '$pkg) (elpaca-extras-rebuild-and-reload '$pkg))" 2>&1) || continue
+                token=$(printf '%s' "$raw_token" | strip_emacs_string)
+                if [ -z "$token" ] || [ "$token" = "nil" ]; then
+                    continue
+                fi
+
+                deadline=$(( $(date +%s) + reload_timeout ))
+                status="queued"
+                while [ "$(date +%s)" -le "$deadline" ]; do
+                    raw_status=$(timeout 10 emacsclient -e "(elpaca-extras-format-build-reload-status \"$token\")" 2>&1) || raw_status="poll-error:$raw_status"
+                    status_result=$(printf '%s' "$raw_status" | strip_emacs_string)
+                    status=${status_result%%:*}
+                    case "$status" in
+                        finished|failed)
+                            break
+                            ;;
+                    esac
+                    sleep "$reload_poll_interval"
+                done
+            done
+        ) >/dev/null 2>&1 &
+    fi
 fi
 #+end_src
 

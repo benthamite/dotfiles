@@ -22,7 +22,7 @@ Three git hooks in the working tree's gitdir (=/Users/pablostafforini/git-dirs/d
 | =post-rewrite= | Rebases, amends | Delegates to =sync-elpaca-clone.sh= |
 | =sync-elpaca-clone.sh= | Called by the above | Fetches from the working tree's gitdir into the elpaca clone, then =reset --hard FETCH_HEAD= |
 
-After the sync, =sync-elpaca-clone.sh= also triggers =elpaca-rebuild= + =elpaca-wait= + =elpaca-extras-reload= asynchronously via =emacsclient= for any extras packages whose =.el= files changed.  This runs fire-and-forget (backgrounded with a 15-second timeout) to avoid deadlocking when git is spawned synchronously by Emacs (e.g. =magit-commit-squash=).
+After the sync, =sync-elpaca-clone.sh= also asks Emacs to run =elpaca-extras-rebuild-and-reload= for any extras packages whose =.el= files changed.  The hook runs fire-and-forget to avoid deadlocking when git is spawned synchronously by Emacs (e.g. =magit-commit-squash=), then a background shell process polls the returned status token with short =emacsclient= calls.  It does not call =elpaca-wait= inside the live daemon.
 
 The active elpaca profile is read from =~/.config/emacs-profiles/.current-profile= (a cache file written by Emacs at startup), not from =emacsclient=, to avoid the same deadlock.
 
@@ -33,7 +33,7 @@ The elpaca clone tracks git history, not the filesystem.  *Uncommitted edits in 
 - After =git commit=: elpaca clone is up to date, =elpaca-rebuild= compiles the new code.
 - Before =git commit=: elpaca clone is stale, =elpaca-rebuild= compiles old code.
 
-The =load-elisp-after-edit.sh= Claude Code hook fires on every Edit/Write of an =.el= file and calls =elpaca-rebuild= + =elpaca-extras-reload=.  But if the edit hasn't been committed yet, the rebuild compiles from the stale elpaca source.  This is harmless because the =post-commit= hook triggers a second rebuild from the correct source.  But it means that *between editing and committing, the running Emacs may have stale code*.
+The =load-elisp-after-edit.sh= Claude Code hook fires on every Edit/Write of an =.el= file and schedules =elpaca-extras-rebuild-and-reload=.  But if the edit hasn't been committed yet, the rebuild compiles from the stale elpaca source.  This is harmless because the =post-commit= hook triggers a second rebuild from the correct source.  But it means that *between editing and committing, the running Emacs may have stale code*.
 
 * Batch testing (=emacs --batch=)
 
@@ -69,14 +69,18 @@ Never hardcode a profile name.  Stale profiles have stale elpaca clones that are
 
 ** =elpaca-rebuild= without =elpaca-extras-reload=
 
-=elpaca-rebuild= + =elpaca-wait= byte-compiles the source into =elpaca/builds/= but does *not* load the new code into the running Emacs session.  =elpaca-extras-reload= is the step that calls =load= on each feature, which re-evaluates =defconst=, =defvar=, =defun=, etc.
+=elpaca-rebuild= byte-compiles the source into =elpaca/builds/= but does *not* load the new code into the running Emacs session.  =elpaca-extras-reload= is the step that calls =load= on each feature, which re-evaluates =defconst=, =defvar=, =defun=, etc.
 
-Always call all three:
+In the live daemon, do not call =elpaca-wait= inside one long =emacsclient= expression.  Use =elpaca-extras-rebuild-and-reload= and poll its status token with short =emacsclient= calls:
 
-#+begin_src emacs-lisp
-(elpaca-rebuild 'PACKAGE t)
-(elpaca-wait)
-(elpaca-extras-reload 'PACKAGE)
+#+begin_src shell
+token=$(emacsclient -e "(elpaca-extras-rebuild-and-reload 'PACKAGE)" | sed 's/^"//; s/"$//')
+while status=$(emacsclient -e "(elpaca-extras-format-build-reload-status \"$token\")" | sed 's/^"//; s/"$//'); do
+  case "$status" in
+    finished:*|failed:*) printf '%s\n' "$status"; break ;;
+  esac
+  sleep 1
+done
 #+end_src
 
 ** Editing before committing
@@ -92,5 +96,6 @@ If you edit a file and immediately check whether Emacs picked up the change (e.g
 5. =git commit= -> =post-commit= hook -> =sync-elpaca-clone.sh=:
    a. Fetches committed changes into elpaca clone
    b. =reset --hard FETCH_HEAD=
-   c. Async =emacsclient=: =elpaca-rebuild= + =elpaca-wait= + =elpaca-extras-reload=
-6. Running Emacs now has the new byte-compiled code
+   c. Async =emacsclient=: =elpaca-extras-rebuild-and-reload=
+   d. Background shell polling with =elpaca-extras-format-build-reload-status=
+6. After the async status reaches =finished=, running Emacs has the new byte-compiled code

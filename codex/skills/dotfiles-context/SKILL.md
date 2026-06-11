@@ -16,12 +16,18 @@ All elpaca-managed packages, whether authored by the user or third-party, are cl
 - For every package except `dotfiles`, the elpaca source clone is the canonical working copy. Edit it directly and commit there; push only when the task calls for it. There is no separate Drive-side master.
 - The `dotfiles` package is the single exception. Its canonical source is `~/My Drive/dotfiles/`, and the elpaca clone at `elpaca/sources/dotfiles/` is a read-only mirror. Do not edit the mirror; a PreToolUse hook (`block-elpaca-dotfiles-edit.sh`) blocks direct edits there.
 
-After a `dotfiles` commit, the local git `post-commit` and `post-rewrite` hooks sync the elpaca mirror and trigger `elpaca-rebuild` plus `elpaca-extras-reload` for changed extras packages. Pushing is a separate sharing step, not what makes the local elpaca clone current.
+After a `dotfiles` commit, the local git `post-commit` and `post-rewrite` hooks sync the elpaca mirror and trigger `elpaca-extras-rebuild-and-reload` for changed extras packages. The hook polls the returned status token with short `emacsclient` calls instead of calling `elpaca-wait` inside the live daemon. Pushing is a separate sharing step, not what makes the local elpaca clone current.
 
-If you need to rebuild manually after the relevant working tree changes are committed, use:
+If you need to rebuild manually after the relevant working tree changes are committed, use the same status-token pattern:
 
 ```bash
-emacsclient -e '(progn (elpaca-rebuild (quote dotfiles) t) (elpaca-wait) (elpaca-extras-reload (quote dotfiles)))'
+token=$(emacsclient -e "(elpaca-extras-rebuild-and-reload 'dotfiles)" | sed 's/^"//; s/"$//')
+while status=$(emacsclient -e "(elpaca-extras-format-build-reload-status \"$token\")" | sed 's/^"//; s/"$//'); do
+  case "$status" in
+    finished:*|failed:*) printf '%s\n' "$status"; break ;;
+  esac
+  sleep 1
+done
 ```
 
 # Elpaca profile

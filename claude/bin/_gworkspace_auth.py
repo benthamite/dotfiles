@@ -40,6 +40,12 @@ REFRESH_TOKEN_OP = {
     "epoch": "op://Automations/Google Workspace OAuth - Pablo Epoch/credential",
 }
 
+TOKEN_FILE = {
+    "email-triage": os.path.expanduser(
+        "~/.gmail-mcp-epoch/credentials/email-triage@epoch.ai.json"
+    ),
+}
+
 
 def _pass_show(entry):
     result = subprocess.run(
@@ -76,9 +82,33 @@ def _cache_path(account):
 
 
 def _read_env(account):
+    if account in TOKEN_FILE:
+        try:
+            with open(TOKEN_FILE[account]) as f:
+                data = json.load(f)
+        except FileNotFoundError:
+            sys.stderr.write(
+                f"ERROR: missing credential file {TOKEN_FILE[account]!r} "
+                f"(account={account})\n"
+            )
+            sys.exit(1)
+        missing = [
+            key
+            for key in ("client_id", "client_secret", "refresh_token")
+            if not data.get(key)
+        ]
+        if missing:
+            sys.stderr.write(
+                f"ERROR: credential file {TOKEN_FILE[account]!r} is missing {missing} "
+                f"(account={account})\n"
+            )
+            sys.exit(1)
+        return data["client_id"], data["client_secret"], data["refresh_token"]
+
     if account not in REFRESH_TOKEN_ENV:
         sys.stderr.write(
-            f"ERROR: unknown account {account!r}; valid: {sorted(REFRESH_TOKEN_ENV)}\n"
+            f"ERROR: unknown account {account!r}; "
+            f"valid: {sorted(set(REFRESH_TOKEN_ENV) | set(TOKEN_FILE))}\n"
         )
         sys.exit(1)
     refresh_token = os.environ.get(REFRESH_TOKEN_ENV[account])

@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-"""gmail.py — thin Gmail API wrapper for one of two Google Workspace accounts.
+"""gmail.py — thin Gmail API wrapper for Google Workspace accounts.
 
 Replaces the gmail_* tools from the (former) google-workspace-epoch MCP
 server. Auth is shared with sheets.py via _gworkspace_auth.py and uses the
 GOOGLE_WORKSPACE_* env vars; see that module for the per-account env-var
 mapping.
 
-Pass --account {epoch,personal} on any subcommand. Default is `epoch`.
+Pass --account {epoch,personal,email-triage} on any subcommand. Default is `epoch`.
 
 Usage:
-  gmail.py [--account epoch|personal] query <gmail-search-query> [--max=N]
+  gmail.py [--account epoch|personal|email-triage] query <gmail-search-query> [--max=N]
       Search Gmail. Returns one line per match: <id>\\t<from>\\t<date>\\t<subject>.
+  gmail.py [--account ...] whoami
+      Print the authenticated Google account email.
   gmail.py [--account ...] get <message-id> [--format=full|metadata|raw]
       Fetch a message. Default format=full prints headers + plaintext body
       (or HTML stripped to text if no plaintext part exists).
@@ -43,6 +45,8 @@ sys.path.insert(0, os.path.dirname(__file__))
 from _gworkspace_auth import api_request  # noqa: E402
 
 API = "https://gmail.googleapis.com/gmail/v1/users/me"
+USERINFO_API = "https://www.googleapis.com/oauth2/v2/userinfo"
+ACCOUNTS = ["epoch", "personal", "email-triage"]
 
 
 def _decode_body(payload):
@@ -155,6 +159,11 @@ def cmd_query(args):
         )
         h = _headers(meta)
         print(f"{m['id']}\t{h.get('from', '?')}\t{h.get('date', '?')}\t{h.get('subject', '?')}")
+
+
+def cmd_whoami(args):
+    out = api_request("GET", USERINFO_API, account=args.account)
+    print(out.get("email", ""))
 
 
 def cmd_get(args):
@@ -271,7 +280,7 @@ def _account_parser(default):
         kwargs["default"] = default
     parser.add_argument(
         "--account",
-        choices=["epoch", "personal"],
+        choices=ACCOUNTS,
         help="Which Google Workspace account to authenticate as (default: epoch).",
         **kwargs,
     )
@@ -291,6 +300,9 @@ def build_parser():
     q.add_argument("query")
     q.add_argument("--max", type=int, default=20)
     q.set_defaults(func=cmd_query)
+
+    who = sub.add_parser("whoami", parents=[sub_account])
+    who.set_defaults(func=cmd_whoami)
 
     g = sub.add_parser("get", parents=[sub_account])
     g.add_argument("id")

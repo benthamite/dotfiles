@@ -1,6 +1,6 @@
 # Google services setup
 
-Pablo uses two Google accounts and accesses each via different tools.
+Pablo uses two human Google accounts plus a bot account, and accesses each via different tools.
 
 ## Accounts
 
@@ -8,6 +8,7 @@ Pablo uses two Google accounts and accesses each via different tools.
 |------------------------------|--------------------|
 | `pablo@epoch.ai`             | Epoch work account |
 | `pablo.stafforini@gmail.com` | Personal account   |
+| `email-triage@epoch.ai`      | Email-triage bot account |
 
 ## Tooling by service
 
@@ -30,9 +31,15 @@ For the **personal** account (`pablo.stafforini@gmail.com`):
 
 The personal-account OAuth grants are against the same `claude-code-gmail-490520` GCP project as the Epoch one, with `pablo.stafforini@gmail.com` added as a test user on the OAuth consent screen.
 
+For the **email-triage bot** account (`email-triage@epoch.ai`), use
+`gmail.py --account email-triage`. This account is only for email-triage
+automation maintenance, bot mailbox checks, and related debugging. Do not use it
+for Pablo's Epoch inbox, Pablo's personal inbox, Mercury receipts, or one-off
+human-account email work.
+
 ## Auth
 
-`gmail.py`, `sheets.py`, `bin/gmail-maildir-sync`, and the shared `claude/bin/_gworkspace_auth.py` helper support the migrated secret layout. The OAuth client (id and secret) is shared; only the refresh token differs per account. These variables are no longer globally exported from `.zshenv-secrets`; the wrappers still accept explicit env vars for one-off overrides, but normally resolve values from the stores below:
+`gmail.py`, `sheets.py`, `bin/gmail-maildir-sync`, and the shared `claude/bin/_gworkspace_auth.py` helper support the migrated secret layout. For the human accounts, the OAuth client (id and secret) is shared and only the refresh token differs per account. These variables are no longer globally exported from `.zshenv-secrets`; the wrappers still accept explicit env vars for one-off overrides, but normally resolve values from the stores below:
 
 | Var | Account | Purpose |
 |---|---|---|
@@ -41,22 +48,28 @@ The personal-account OAuth grants are against the same `claude-code-gmail-490520
 | `GOOGLE_WORKSPACE_REFRESH_TOKEN` | epoch | refresh token authenticated as `pablo@epoch.ai`; stored in 1Password at `op://Automations/Google Workspace OAuth - Pablo Epoch/credential` |
 | `GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL` | personal | refresh token authenticated as `pablo.stafforini@gmail.com`; stored in `pass` at `env/google-workspace-refresh-token-personal` and injected by the local wrappers |
 
-Pick the account with `--account epoch` (default) or `--account personal` on `gmail.py`/`sheets.py`. The wrapper exchanges the refresh token for an access token and caches per-account at `/tmp/gworkspace-access-token-<account>.json`. `bin/gmail-maildir-sync` is Epoch-only and injects the Epoch Google Workspace credentials before running the Python package used by mu4e.
+Pick the account with `--account epoch` (default), `--account personal`, or
+`--account email-triage` on `gmail.py`; `sheets.py` supports the two human
+accounts. The wrapper exchanges the refresh token for an access token and
+caches per-account at `/tmp/gworkspace-access-token-<account>.json`.
+`bin/gmail-maildir-sync` is Epoch-only and injects the Epoch Google Workspace
+credentials before running the Python package used by mu4e. The email-triage
+bot account uses the existing local OAuth credential file at
+`~/.gmail-mcp-epoch/credentials/email-triage@epoch.ai.json`.
 
-The Epoch refresh token also powers `gdoc --account epoch` (which has its own auth flow but uses the same OAuth client). The `gmail-epoch-triage` MCP is separate and exists only for the email-triage bot account (see below). The personal refresh token is used only by `gmail.py`/`sheets.py`; `gdoc --account personal` has its own token under `~/.config/gdoc/accounts/personal/`.
+The Epoch refresh token also powers `gdoc --account epoch` (which has its own auth flow but uses the same OAuth client). The personal refresh token is used only by `gmail.py`/`sheets.py`; `gdoc --account personal` has its own token under `~/.config/gdoc/accounts/personal/`.
 
 If a token expires (`invalid_grant` errors), regenerate it with `claude/bin/update-gworkspace-refresh-token --account <epoch|personal>`. The helper opens the OAuth browser flow, updates the appropriate backing store (1Password for the Epoch token, `pass` for the personal token), and prints only status metadata, never token values. The manual recipe under "Generating a new refresh token" remains available for unusual recovery cases.
 
-## Servers by account
+## Tooling by account
 
 ### work account
 
-**gmail-epoch-triage** (project-scoped to Epoch, defined in `~/My Drive/Epoch/.mcp.json`)
-- **Package:** `workspace-mcp` via `uvx` (configured with `--tools gmail`)
-- **Covers:** Gmail only, for the `email-triage@epoch.ai` bot account (NOT `pablo@epoch.ai`).
-- **Credentials:** stored in `~/.gmail-mcp-epoch/credentials/` as `{email}.json` files. Directory set via `WORKSPACE_MCP_CREDENTIALS_DIR`.
-- **Use only for bot-owned operations:** email-triage automation maintenance, bot mailbox checks, and related debugging. Do not use it for Pablo's Epoch inbox, Pablo's personal inbox, Mercury receipts, or one-off human-account email work.
-- **Not redundant with `gmail.py`:** the wrapper is authenticated as `pablo@epoch.ai` or `pablo.stafforini@gmail.com`; this server is the `email-triage@epoch.ai` bot.
+Use `gmail.py --account epoch` for `pablo@epoch.ai`.
+
+### email-triage bot account
+
+Use `gmail.py --account email-triage` for `email-triage@epoch.ai`. This replaces the previous `gmail-epoch-triage` MCP server path for local agent workflows.
 
 ### personal account
 
@@ -146,9 +159,9 @@ print(f"Wrote {VAR} to {secrets}", file=sys.stderr)
 
 Note: the OAuth flow's `port=8080` matches the redirect URI registered for `claude-code-gmail-490520`. `port=0` (random ephemeral) returns a Google 400 because the loopback redirect URI isn't auto-registered for this client.
 
-### gmail-epoch-triage (email-triage@epoch.ai)
+### email-triage bot account (email-triage@epoch.ai)
 
-The built-in OAuth flow does not work for this server (port-conflict-related, when both this and the old `google-workspace-epoch` ran). Generate tokens manually using `InstalledAppFlow` on a different port and write to the credentials directory:
+The built-in OAuth flow previously used by the MCP server was port-conflict-prone. Generate tokens manually using `InstalledAppFlow` on a different port and write to the credentials directory:
 
 ```bash
 python3 -c "
@@ -183,7 +196,7 @@ print('Credentials saved. Sign in as email-triage@epoch.ai in the browser.')
 "
 ```
 
-After running, restart Claude Code so the MCP server picks up the new credentials.
+After running, clear `/tmp/gworkspace-access-token-email-triage.json` so the CLI refreshes from the new credentials.
 
 ## Troubleshooting
 
@@ -208,9 +221,9 @@ A browser opens; sign in as `pablo.stafforini@gmail.com`. The OAuth client is in
 
 The wrapper could not resolve one of the backing stores. Check that `pass show env/google-workspace-client-id`, `pass show env/google-workspace-client-secret`, and the account-specific refresh-token store are available.
 
-### gmail-epoch-triage says "ACTION REQUIRED: Google Authentication Needed"
+### `gmail.py --account email-triage` reports missing or expired credentials
 
-The credential file is missing or the refresh token is expired. Regenerate using the manual flow above and write to `~/.gmail-mcp-epoch/credentials/{email}.json`. Then restart Claude Code.
+The credential file is missing or the refresh token is expired. Regenerate using the manual flow above, write to `~/.gmail-mcp-epoch/credentials/{email}.json`, and clear `/tmp/gworkspace-access-token-email-triage.json`.
 
 ### Other issues
 

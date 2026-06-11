@@ -5,6 +5,7 @@
 ;;; Code:
 
 (require 'ert)
+(require 'agent)
 (require 'doom-modeline-extras)
 
 ;;;; Humanize tokens
@@ -136,12 +137,15 @@
              (lambda () "gpt-5.5"))
             ((symbol-function 'agent-codex-status-effort)
              (lambda () "high"))
-            ((symbol-function 'agent-codex-buffer-account)
-             (lambda () "epoch"))
             ((symbol-function 'agent-codex-status-duration-ms)
              (lambda () nil)))
-    (should (equal (doom-modeline-extras--format-codex-status-fields)
-                   " | gpt-5.5 | high | epoch"))))
+    (with-temp-buffer
+      (agent--set-session (current-buffer)
+                          (agent-session-create :backend 'codex
+                                                :account "epoch"
+                                                :directory "~/project/"))
+      (should (equal (doom-modeline-extras--format-codex-status-fields)
+                     " | gpt-5.5 | high | epoch")))))
 
 (ert-deftest doom-modeline-extras-test-format-claude-status-fields-shows-effort ()
   "Format Claude modeline fields with model and effort."
@@ -153,8 +157,6 @@
                (lambda () "Opus 4.8"))
               ((symbol-function 'agent-claude-status-effort)
                (lambda () "high"))
-              ((symbol-function 'agent-claude-buffer-account)
-               (lambda () nil))
               ((symbol-function 'agent-claude-status-session-usage)
                (lambda () nil))
               ((symbol-function 'agent-claude-status-weekly-usage)
@@ -179,8 +181,13 @@
                (lambda () nil))
               ((symbol-function 'agent-claude-status-cache-total-tokens)
                (lambda () nil)))
-      (should (equal (doom-modeline-extras--format-claude-status-fields)
-                     " | Opus 4.8 | high")))))
+      (with-temp-buffer
+        (agent--set-session (current-buffer)
+                            (agent-session-create :backend 'claude-code
+                                                  :account nil
+                                                  :directory "~/project/"))
+        (should (equal (doom-modeline-extras--format-claude-status-fields)
+                       " | Opus 4.8 | high"))))))
 
 (provide 'doom-modeline-extras-test)
 ;;; doom-modeline-extras-test.el ends here

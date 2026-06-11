@@ -9043,8 +9043,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   ("C-c c" . claude-code-command-map)
 
   :hook
-  (claude-code-process-environment-functions . monet-start-server-function)
-  (claude-code-process-environment-functions . agent-claude-account-env))
+  (claude-code-process-environment-functions . monet-start-server-function))
 #+end_src
 
 ** =agent=

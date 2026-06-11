@@ -199,6 +199,8 @@ if codex_shell_tool_p "$TOOL_NAME"; then
     # 40-hex followed by a non-hex char (or end of string) is unambiguously a
     # public address; Ethereum private keys are 64 hex and remain in the scan
     # because the 41st char is still hex, so the pattern does not match.
+    # macOS/BSD sed does not support \b word boundaries; use explicit hex
+    # boundaries here.
     HIGH_ENTROPY=$(echo "$CONTENT" | \
       sed -E 's/0x[a-fA-F0-9]{40}([^a-fA-F0-9]|$)/\1/g' | \
       grep -oE '[A-Za-z0-9/+=_-]{30,}' | \

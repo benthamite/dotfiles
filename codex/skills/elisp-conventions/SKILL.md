@@ -62,7 +62,7 @@ See `emacs/extras/doc/elisp-development-workflow.org` for the dotfiles-specific 
 
 # Pre-commit checks (hook-enforced)
 
-- **Batch test**: `batch-test.sh PACKAGE` must run cleanly in this session before `git commit` is allowed (`require-elisp-test-before-commit.sh` enforces this).
+- **Batch test**: `batch-test.sh PACKAGE` must run cleanly in this session before `git commit` is allowed (`require-elisp-test-before-commit.sh` enforces this). If the commit hook blocks and prints a specific `batch-test.sh PACKAGE` command, run that exact package name before retrying, even when it differs from the repo or package root you expected.
 - **Stage documentation**: stage the matching Org manual update alongside
   `.el` files. Extras packages use `emacs/extras/doc/<package>.org`;
   standalone packages normally use the package root `README.org`, or

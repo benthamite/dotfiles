@@ -8,12 +8,14 @@ description: Relocate Codex session logs by rewriting embedded project paths so 
 Import one Codex session into the current project, or rewrite Codex session
 metadata after a project directory rename.
 
-Codex stores sessions globally under `~/.codex/sessions/YYYY/MM/DD/` rather
+Codex stores sessions globally under `$CODEX_HOME/sessions/YYYY/MM/DD/` when
+`CODEX_HOME` is set, otherwise under `~/.codex/sessions/YYYY/MM/DD/`, rather
 than in per-project directories. Do not use `~/.claude/projects`,
 `~/.claude/history.jsonl`, or `~/.claude.json` for this skill. For Codex, the
 "move" is a metadata rewrite, not a filesystem move. Current Codex also stores
-the resumable thread list in `~/.codex/state_5.sqlite`; the `threads.cwd` row
-must be rewritten too, or `/resume` can still offer the old session directory.
+the resumable thread list in `$CODEX_HOME/state_5.sqlite` when `CODEX_HOME` is
+set, otherwise in `~/.codex/state_5.sqlite`; the `threads.cwd` row must be
+rewritten too, or `/resume` can still offer the old session directory.
 
 Do not use this skill to inspect or open the current conversation log; use
 `open-session-log` for that. Do not use it for Claude Code logs, which are
@@ -57,27 +59,27 @@ python3 /Users/pablostafforini/My\ Drive/dotfiles/codex/skills/move-session-log/
 
 The script:
 
-1. Finds the matching session JSONL under `~/.codex/sessions`. Codex filenames
-   usually look like
+1. Finds the matching session JSONL under the Codex home `sessions` directory.
+   Codex filenames usually look like
    `rollout-YYYY-MM-DDTHH-MM-SS-<session-id>.jsonl`; the script also inspects
    `session_meta.payload.id` if needed.
 2. Rewrites structured path fields in that session file to the current project
    root. Current Codex logs store direct session context at `payload.cwd` on
    `session_meta` and `turn_context`, and can also store tool-call directories
    as JSON-encoded `payload.arguments.workdir`.
-3. Rewrites matching rows in `~/.codex/history.jsonl` and
-   `~/.codex/session_index.jsonl` only if those rows contain structured path
-   fields. Current Codex history rows may contain only `session_id`, `ts`, and
-   `text`; that is normal.
-4. Rewrites the matching `~/.codex/state_5.sqlite` `threads.cwd` row. Codex
+3. Rewrites matching rows in the Codex home `history.jsonl` and
+   `session_index.jsonl` only if those rows contain structured path fields.
+   Current Codex history rows may contain only `session_id`, `ts`, and `text`;
+   that is normal.
+4. Rewrites the matching Codex home `state_5.sqlite` `threads.cwd` row. Codex
    `/resume` reads this thread-store row for the "Session directory" prompt.
-5. Reports counts and matching shell snapshots under `~/.codex/shell_snapshots`.
-   Shell snapshots are session-global, not project-specific, so they are not
-   moved.
+5. Reports counts and matching shell snapshots under the Codex home
+   `shell_snapshots` directory. Shell snapshots are session-global, not
+   project-specific, so they are not moved.
 
-If no session ID is supplied, list recent sessions from `~/.codex/sessions`
-whose `session_meta.payload.cwd` is not the current project and ask the user
-which one to import.
+If no session ID is supplied, list recent sessions from the Codex home
+`sessions` directory whose `session_meta.payload.cwd` is not the current
+project and ask the user which one to import.
 
 If the target project is not the shell's current directory, pass it explicitly:
 

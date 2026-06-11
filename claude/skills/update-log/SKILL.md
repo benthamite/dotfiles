@@ -155,7 +155,14 @@ If CLAUDE.md currently has a legacy `@<log_dir>/...` import, replace it with the
 Many Epoch projects keep a sibling `AGENTS.md` next to `CLAUDE.md` as a Codex-side mirror of the same content. When that pairing exists, the same edit must land in both files in this run; project-local hooks otherwise fire a reciprocal reminder and block the bookkeeping commit. Procedure:
 
 1. Before editing, `diff -u CLAUDE.md AGENTS.md`. If they were already in sync, treat them as mirrors. If they were already drifted, do not assume mirror semantics — apply the Latest-session edit by hand in both, preserving each file's intended divergence.
-2. After updating CLAUDE.md, mirror the change by running `bin/mirror-claude-agents <project-dir>`. The helper copies CLAUDE.md → AGENTS.md, no-ops if they're already in sync, and reports if only one of the two exists. Pass `--check` first to confirm exactly what it would copy.
+2. After updating CLAUDE.md, mirror the change with the first available helper:
+   use the project-local `bin/mirror-claude-agents <project-dir>` when present,
+   otherwise fall back to
+   `/Users/pablostafforini/My Drive/dotfiles/bin/mirror-claude-agents
+   <project-dir>`. The helper copies CLAUDE.md → AGENTS.md, no-ops if they're
+   already in sync, and reports if only one of the two exists. Pass `--check`
+   first to confirm exactly what it would copy, then run the same helper without
+   `--check` if mirroring is needed.
 3. Verify with a final `diff -u CLAUDE.md AGENTS.md` returning no output before staging.
 
 ## Step 3: Record decisions

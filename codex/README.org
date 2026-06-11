@@ -522,7 +522,8 @@ session with the intended project. It supports a single-session import into the
 current project and a whole-project rename mode for exact =cwd=, =project=,
 =workdir=, and =working_dir= fields, including those inside valid JSON
 =arguments= payloads, and for the =state_5.sqlite= thread-store =threads.cwd=
-row that drives the =/resume= session-directory prompt. The current
+row that drives the =/resume= session-directory prompt. Codex storage is
+resolved under =$CODEX_HOME= when set, otherwise =~/.codex=. The current
 implementation is a paired global skill; the retained =SKILL (1).md= variant
 documents the older Claude Code internal-log move workflow.
 
@@ -628,7 +629,9 @@ hook chain. It allowlists normal auth-aware tooling such as =pass=, =op=,
 commands before the =op= allowlist because they print revealed 1Password fields
 into tool output. Safe 1Password patterns capture values through command
 substitution, stdin/env/temp files with restricted permissions, or =op://=
-references where supported.
+references where supported. Its Ethereum-address stripping pattern uses
+explicit hex boundaries because macOS/BSD =sed= does not support =\b= word
+boundaries.
 
 The =UserPromptSubmit= hook forwards lifecycle state for Emacs-owned sessions
 through =codex-hook-wrapper=. The matcher is empty because =UserPromptSubmit=

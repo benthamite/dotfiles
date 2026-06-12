@@ -46,3 +46,8 @@ claude/bin/__pycache__/
 !.agent-learnings/archive/
 !.agent-learnings/inbox/.gitkeep
 !.agent-learnings/archive/.gitkeep
+/logs/
+/session-logs/
+/docs/logs/
+/CLAUDE.md
+/AGENTS.md

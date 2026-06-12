@@ -1,0 +1,245 @@
+#!/usr/bin/env python3
+"""Guarded Ahrefs API helper.
+
+Every paid Ahrefs API call must be preceded by the free subscription-info
+quota probe. This wrapper makes that preflight mandatory before forwarding
+requests to api.ahrefs.com.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import subprocess
+import sys
+import urllib.error
+import urllib.parse
+import urllib.request
+from dataclasses import dataclass
+from typing import Any
+
+
+DEFAULT_BASE_URL = "https://api.ahrefs.com/v3"
+DEFAULT_MIN_REMAINING = 100_000
+DEFAULT_OP_REF = "op://Automations/Ahrefs API/credential"
+USAGE_PATH = "/subscription-info/limits-and-usage"
+
+
+class GuardError(RuntimeError):
+    pass
+
+
+@dataclass(frozen=True)
+class Usage:
+    used: int
+    limit: int
+    remaining: int
+    key_usage: int | None
+    key_limit: int | None
+    reset_date: str | None
+
+
+def normalize_path(path: str) -> str:
+    return path if path.startswith("/") else f"/{path}"
+
+
+def is_free_usage_endpoint(path: str) -> bool:
+    return normalize_path(path) == USAGE_PATH
+
+
+def parse_params(items: list[str]) -> dict[str, str]:
+    params: dict[str, str] = {}
+    for item in items:
+        if "=" not in item:
+            raise GuardError(f"Invalid --param value {item!r}; expected KEY=VALUE.")
+        key, value = item.split("=", 1)
+        if not key:
+            raise GuardError(f"Invalid --param value {item!r}; key is empty.")
+        params[key] = value
+    return params
+
+
+def api_key_from_env_or_op(env: dict[str, str], op_ref: str) -> str:
+    key = env.get("AHREFS_API_KEY")
+    if key:
+        return key
+    try:
+        result = subprocess.run(
+            ["op", "read", op_ref],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+    except (FileNotFoundError, subprocess.CalledProcessError) as exc:
+        raise GuardError(
+            "AHREFS_API_KEY is not set and 1Password lookup failed. "
+            "Run through an op-enabled environment or set AHREFS_API_KEY."
+        ) from exc
+    key = result.stdout.strip()
+    if not key:
+        raise GuardError("1Password returned an empty Ahrefs API key.")
+    return key
+
+
+def build_url(base_url: str, path: str, params: dict[str, str] | None = None) -> str:
+    url = urllib.parse.urljoin(base_url.rstrip("/") + "/", normalize_path(path).lstrip("/"))
+    if params:
+        return f"{url}?{urllib.parse.urlencode(params)}"
+    return url
+
+
+def request_json(
+    method: str,
+    url: str,
+    api_key: str,
+    *,
+    body: bytes | None = None,
+    urlopen=urllib.request.urlopen,
+) -> dict[str, Any]:
+    request = urllib.request.Request(
+        url,
+        data=body,
+        method=method.upper(),
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "User-Agent": "ahrefs-api-guard/1.0",
+        },
+    )
+    try:
+        with urlopen(request, timeout=60) as response:
+            raw = response.read().decode("utf-8")
+    except urllib.error.HTTPError as exc:
+        raw = exc.read().decode("utf-8", errors="replace")
+        raise GuardError(f"Ahrefs API returned HTTP {exc.code}: {raw[:500]}") from exc
+    if not raw:
+        return {}
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise GuardError(f"Ahrefs API returned non-JSON response: {raw[:500]}") from exc
+
+
+def fetch_usage(api_key: str, base_url: str, *, urlopen=urllib.request.urlopen) -> Usage:
+    data = request_json(
+        "GET",
+        build_url(base_url, USAGE_PATH),
+        api_key,
+        urlopen=urlopen,
+    ).get("limits_and_usage", {})
+    used = int(data.get("units_usage_workspace") or 0)
+    limit = int(data.get("units_limit_workspace") or 0)
+    if limit <= 0:
+        raise GuardError("Ahrefs usage probe did not return a positive workspace limit.")
+    return Usage(
+        used=used,
+        limit=limit,
+        remaining=limit - used,
+        key_usage=data.get("units_usage_api_key"),
+        key_limit=data.get("units_limit_api_key"),
+        reset_date=data.get("usage_reset_date"),
+    )
+
+
+def assert_budget_allows_call(
+    usage: Usage,
+    *,
+    min_remaining: int,
+    estimated_cost: int,
+) -> None:
+    projected_remaining = usage.remaining - estimated_cost
+    if projected_remaining < min_remaining:
+        raise GuardError(
+            "Ahrefs guard blocked paid API call: "
+            f"{usage.remaining:,} units remain before call, "
+            f"estimated cost is {estimated_cost:,}, "
+            f"projected remaining is {projected_remaining:,}, "
+            f"minimum required reserve is {min_remaining:,}. "
+            f"Reset: {usage.reset_date or 'unknown'}."
+        )
+
+
+def usage_payload(usage: Usage) -> dict[str, Any]:
+    return {
+        "units_usage_workspace": usage.used,
+        "units_limit_workspace": usage.limit,
+        "units_remaining_workspace": usage.remaining,
+        "units_usage_api_key": usage.key_usage,
+        "units_limit_api_key": usage.key_limit,
+        "usage_reset_date": usage.reset_date,
+    }
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Guarded Ahrefs API access")
+    parser.add_argument("--base-url", default=DEFAULT_BASE_URL)
+    parser.add_argument("--op-ref", default=DEFAULT_OP_REF)
+
+    sub = parser.add_subparsers(dest="cmd", required=True)
+
+    usage = sub.add_parser("usage", help="Print free Ahrefs quota state")
+    usage.set_defaults(func=cmd_usage)
+
+    request = sub.add_parser("request", help="Run an Ahrefs API request after quota guard")
+    request.add_argument("path", help="API path, e.g. /site-explorer/all-backlinks")
+    request.add_argument("--method", default="GET")
+    request.add_argument("--param", action="append", default=[], help="Query parameter KEY=VALUE")
+    request.add_argument("--json-body", help="JSON request body")
+    request.add_argument("--min-remaining", type=int, default=DEFAULT_MIN_REMAINING)
+    request.add_argument("--estimated-cost", type=int, default=0)
+    request.set_defaults(func=cmd_request)
+
+    return parser
+
+
+def cmd_usage(args: argparse.Namespace) -> int:
+    key = api_key_from_env_or_op(os.environ, args.op_ref)
+    usage = fetch_usage(key, args.base_url)
+    print(json.dumps(usage_payload(usage), indent=2, sort_keys=True))
+    return 0
+
+
+def cmd_request(args: argparse.Namespace) -> int:
+    key = api_key_from_env_or_op(os.environ, args.op_ref)
+    params = parse_params(args.param)
+    body = None
+    if args.json_body:
+        body = json.dumps(json.loads(args.json_body)).encode("utf-8")
+
+    if not is_free_usage_endpoint(args.path):
+        usage = fetch_usage(key, args.base_url)
+        assert_budget_allows_call(
+            usage,
+            min_remaining=args.min_remaining,
+            estimated_cost=args.estimated_cost,
+        )
+        print(
+            "Ahrefs guard passed: "
+            f"{usage.remaining:,} units remaining; "
+            f"reserve {args.min_remaining:,}; "
+            f"estimated cost {args.estimated_cost:,}.",
+            file=sys.stderr,
+        )
+
+    data = request_json(
+        args.method,
+        build_url(args.base_url, args.path, params),
+        key,
+        body=body,
+    )
+    print(json.dumps(data, indent=2, sort_keys=True))
+    return 0
+
+
+def main() -> int:
+    args = build_parser().parse_args()
+    try:
+        return args.func(args)
+    except GuardError as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

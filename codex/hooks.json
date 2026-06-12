@@ -40,6 +40,11 @@
           },
           {
             "type": "command",
+            "command": "~/My\\ Drive/dotfiles/codex/hooks/block-unguarded-ahrefs-api.sh",
+            "timeout": 5
+          },
+          {
+            "type": "command",
             "command": "~/My\\ Drive/dotfiles/codex/hooks/block-destructive-command.sh",
             "timeout": 5
           },

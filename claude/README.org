@@ -49,8 +49,10 @@ authoritative cross-tool path-role table lives in =../agents/README.org=.
 ├── bin/slack.py                      ← Slack web-API CLI, including permalink/thread fetches with user-ID resolution
 ├── bin/copy-slack-draft              ← Copies Slack reply drafts to Emacs kill ring and prefills the reply composer
 ├── bin/ai-provider-key               ← Creates/stores project-scoped AI-provider runtime keys
+├── bin/ahrefs-api-guard              ← Guarded Ahrefs API CLI; checks live quota before paid calls
 ├── bin/_gworkspace_auth.py           ← shared OAuth helper for gmail.py / sheets.py
 ├── ../bin/ai-config-sync             ← Claude/Codex sync audit and hook checker
+├── ../bin/ahrefs-api-guard           ← PATH-facing wrapper for the guarded Ahrefs API CLI
 └── README.org                        ← this file
 #+end_example
 
@@ -125,6 +127,14 @@ creation/storage requires =--verified-monthly-spend-cap-usd= after checking the
 AI access provider tracker and =provider-controls.yml=; the helper refuses caps
 above the current autonomous maximum of =$500/month=. Dry runs report whether
 that policy precondition is satisfied without creating or storing a secret.
+
+=claude/bin/ahrefs-api-guard= is the required path for manual Ahrefs API calls.
+It reads the shared Epoch Ahrefs API key from =AHREFS_API_KEY= or
+=op://Automations/Ahrefs API/credential=, probes the free
+=subscription-info/limits-and-usage= endpoint before any paid request, and
+blocks the call when the projected remaining workspace units would fall below
+the default 100,000-unit reserve. The top-level =bin/ahrefs-api-guard= wrapper
+exposes the same command on the normal dotfiles bin path.
 
 **** Settings hierarchy
 :PROPERTIES:
@@ -1102,6 +1112,18 @@ Compensating control for permissive modes (=auto=, =bypassPermissions=). Fires o
 
 The Ethereum-address stripping pattern uses explicit hex boundaries because macOS/BSD =sed= does not support =\b= word boundaries.
 
+*** block-unguarded-ahrefs-api.sh (PreToolUse)
+:PROPERTIES:
+:ID:       21C5EC02-87D4-41E7-822E-AB3403D990D6
+:END:
+
+Blocks raw shell commands that contact =api.ahrefs.com= except direct calls to
+the free =subscription-info/limits-and-usage= endpoint and calls routed through
+=ahrefs-api-guard=. The guard exists because Ahrefs read-only calls consume a
+shared monthly workspace unit budget. Agents must use the wrapper so the live
+quota probe runs and paid calls are denied below the configured reserve before
+any units are spent.
+
 *** wrap-bash-output.sh + redact-secrets.sh (PreToolUse)
 :PROPERTIES:
 :ID:       7E0F8D2A-3C5F-4A1D-9B2E-1A4F6B9C8E5D
@@ -1128,6 +1150,11 @@ Blocks or gates destructive shell commands that are hard to reverse. Hard-blocks
 :END:
 
 Deny-by-default guard for all MCP tools. Fires on all =mcp__= tools. Read-only tools are explicitly allowlisted (pattern-matched on verb prefixes like =read_*=, =list_*=, =get_*=, =search_*=, plus specific tool names per server). Everything else exits 2 to require user confirmation. This ensures new MCP servers and tools are guarded automatically without needing to enumerate every dangerous action.
+
+Ahrefs MCP tools are a special case: only documentation and subscription-info
+tools are treated as read-only-safe. Paid Ahrefs analytics endpoints consume
+shared workspace units even when they do not mutate external state, so they are
+not allowlisted here.
 
 *** require-elisp-skill.sh (PreToolUse)
 :PROPERTIES:

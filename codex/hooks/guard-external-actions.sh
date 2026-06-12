@@ -131,8 +131,10 @@ case "$bare_tool" in
     exit 0
     ;;
 
-  # Ahrefs — entire server is read-only analytics; match common prefixes
-  doc|site-explorer-*|site-audit-*|keywords-explorer-*|rank-tracker-*|web-analytics-*|brand-radar-*|gsc-*|serp-overview|batch-analysis|public-crawler-*|subscription-info-*|management-*)
+  # Ahrefs — only docs and the free subscription-info endpoint are safe.
+  # Paid read-only analytics still consume shared API units and must go
+  # through ahrefs-api-guard or project code with an equivalent quota gate.
+  doc|subscription-info-*)
     exit 0
     ;;
 

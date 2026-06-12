@@ -284,6 +284,13 @@
    "note": "paired; Codex version scans Bash and apply_patch payloads; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
   },
   {
+   "name": "block-unguarded-ahrefs-api.sh",
+   "claude": "claude/hooks/block-unguarded-ahrefs-api.sh",
+   "codex": "codex/hooks/block-unguarded-ahrefs-api.sh",
+   "status": "paired",
+   "note": "paired for Bash/exec_command raw Ahrefs API guards; allows the free subscription-info quota endpoint and the ahrefs-api-guard wrapper, blocks paid api.ahrefs.com shell calls that have not checked the live workspace reserve"
+  },
+  {
    "name": "block-sensitive-read.sh",
    "claude": "claude/hooks/block-sensitive-read.sh",
    "codex": "codex/hooks/block-sensitive-read.sh",
@@ -337,7 +344,7 @@
    "claude": "claude/hooks/guard-external-actions.sh",
    "codex": "codex/hooks/guard-external-actions.sh",
    "status": "paired",
-   "note": "paired for MCP tool names"
+   "note": "paired for MCP tool names; Ahrefs MCP allowlist intentionally covers only docs and subscription-info tools because paid read-only Ahrefs analytics calls consume shared workspace units"
   },
   {
    "name": "lib-codex-hook-json.sh",
@@ -548,14 +555,14 @@
    "tool": "Claude Code",
    "path": "~/.claude/settings.json",
    "tracked": false,
-   "note": "Mutable live global settings; sync hooks added in place. The Stop hook chain forwards session-end state to Emacs via the fire-and-forget notifier. Session learning capture is handled by the Emacs agent-before-exit path rather than the Stop hook, because Stop fires at turn end rather than true session exit."
+   "note": "Mutable live global settings; sync hooks added in place. The Stop hook chain forwards session-end state to Emacs via the fire-and-forget notifier. Session learning capture is handled by the Emacs agent-before-exit path rather than the Stop hook, because Stop fires at turn end rather than true session exit. The 2026-06 Ahrefs guard added block-unguarded-ahrefs-api.sh globally so raw paid shell calls to api.ahrefs.com must go through the live quota wrapper."
   },
   {
    "tool": "Codex",
    "path": "codex/hooks.json",
    "tracked": true,
    "live_path": "~/.codex/hooks.json",
-   "note": "Live global Codex hook file is a symlink to the tracked repo file. The tracked file intentionally lives outside a repo-root .codex/ directory so launching Codex from the dotfiles root does not load the same hooks a second time as project-local hooks. Codex-only codex-hook-wrapper entries point at the Emacs package source tree because elpaca/builds contains compiled Elisp but not the wrapper script, and include explicit emacsclient/socket arguments so dispatch targets the active Emacs server. The apply_patch and Edit|Write matchers are collapsed into a single apply_patch|Edit|Write block per event to keep the trust-review list compact under the Codex 0.129 hook trust gate. Codex UserPromptSubmit uses the empty matcher because that event has no tool name. Codex Stop routes through codex-hook-wrapper so Emacs observes turn end; session learning capture is handled by the Emacs agent-before-exit path. PreCompact and PostCompact route through codex-hook-wrapper so the Emacs side observes the full lifecycle. The 2026-05 symlink-drift repair refreshed all eight lifecycle wrapper paths to the active 8.3.0-dev Emacs profile after the standalone codex package learned to replace stale profile-specific wrapper entries instead of appending duplicates."
+   "note": "Live global Codex hook file is a symlink to the tracked repo file. The tracked file intentionally lives outside a repo-root .codex/ directory so launching Codex from the dotfiles root does not load the same hooks a second time as project-local hooks. Codex-only codex-hook-wrapper entries point at the Emacs package source tree because elpaca/builds contains compiled Elisp but not the wrapper script, and include explicit emacsclient/socket arguments so dispatch targets the active Emacs server. The apply_patch and Edit|Write matchers are collapsed into a single apply_patch|Edit|Write block per event to keep the trust-review list compact under the Codex 0.129 hook trust gate. Codex UserPromptSubmit uses the empty matcher because that event has no tool name. Codex Stop routes through codex-hook-wrapper so Emacs observes turn end; session learning capture is handled by the Emacs agent-before-exit path. PreCompact and PostCompact route through codex-hook-wrapper so the Emacs side observes the full lifecycle. The 2026-05 symlink-drift repair refreshed all eight lifecycle wrapper paths to the active 8.3.0-dev Emacs profile after the standalone codex package learned to replace stale profile-specific wrapper entries instead of appending duplicates. The 2026-06 Ahrefs guard registers block-unguarded-ahrefs-api.sh for shell tools so raw paid api.ahrefs.com commands are denied unless routed through ahrefs-api-guard."
   },
   {
    "tool": "Codex",

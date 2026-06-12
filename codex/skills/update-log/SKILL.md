@@ -22,9 +22,10 @@ Exception: if the user explicitly typed `/update-log` or asked for specific book
 
 - If the project has no existing log conventions, perform **First-run setup**
   with deterministic defaults instead of asking: use `logs/` as the log
-  directory, keep session logs local-only by adding the log directory to
-  `.gitignore`, do not create `decisions/` or `decisions-summary.md`, create or
-  update `CLAUDE.md`, then continue to write the session log.
+  directory, keep session bookkeeping local-only by adding the log directory,
+  `CLAUDE.md`, and `AGENTS.md` to `.gitignore`, do not create `decisions/` or
+  `decisions-summary.md`, create or update `CLAUDE.md`, then continue to write
+  the session log.
 - Make no other interactive prompts. If a step would need a decision only the user can make, record it in the log and final report and continue with the safe default or skip that step, rather than asking.
 
 ## When to run
@@ -68,26 +69,30 @@ Determine the project's log directory and whether decisions are tracked:
 
 This project doesn't have session logging set up. In an interactive run, gather
 setup preferences before proceeding. In a `--auto` run, do not ask: use `logs/`
-as the log directory, add the log directory to `.gitignore`, leave decision
-tracking disabled, create or update `CLAUDE.md`, and continue.
+as a local-only log directory in the repo working tree; add the log directory,
+`CLAUDE.md`, and `AGENTS.md` to `.gitignore`; leave decision tracking disabled;
+create or update `CLAUDE.md`; and continue.
 
 1. If not running with `--auto`, ask all first-run questions together. If a structured user-input tool such as `AskUserQuestion` is available, use it; otherwise ask a concise plain-text question:
-   - "Where should session logs be stored?" Suggest `logs/` as the default and `docs/logs/` as an alternative, while allowing a custom path.
-   - "Should the session log directory be added to `.gitignore` so logs remain local-only?" Recommend Yes for public repos or any repo where session logs might contain private context; No is valid for private repos where logs are intended to be shared.
+   - "Keep a local session-log folder inside this repo's working tree?" Recommend Yes for public repos or any repo where session logs might contain private context; No is valid when the user wants shared, committed logs or a path outside the repo.
+   - "Where should session logs be stored?" If the user wants local logs in the repo, suggest `logs/` as the default and `docs/logs/` as an alternative, while allowing a custom path. If not, ask for the intended shared or external path.
    - "Track architectural decisions in a `decisions/` directory?" Both Yes and No are valid.
-   If running with `--auto`, set the answers internally to `logs/`, "Yes,
-   gitignore the log directory", and "No decisions."
+   If running with `--auto`, set the answers internally to "Yes, keep local
+   logs in the repo", `logs/`, and "No decisions."
 
 2. Create the chosen log directory if it doesn't exist.
 
-3. If the user chose local-only logs, ensure the chosen log directory is ignored
-   before writing the first log:
+3. If the user chose to keep a local session-log folder inside the repo, ensure
+   the chosen log directory and agent pointer files are ignored before writing
+   the first log:
      - Add a root-relative directory pattern for the log directory to
        `.gitignore` if no existing ignore rule already covers it, e.g. `/logs/`
        for `logs/` or `/docs/logs/` for `docs/logs/`.
+     - Add root-relative file patterns for `/CLAUDE.md` and `/AGENTS.md` if no
+       existing ignore rule already covers them.
      - Do not remove existing `.gitignore` entries or reorder unrelated rules.
-     - Verify the dated log path will be ignored with `git check-ignore -v`
-       after the log file exists.
+     - Verify the dated log path, `CLAUDE.md`, and `AGENTS.md` will be ignored
+       with `git check-ignore -v` after they exist.
 
 4. If decisions were opted in:
      - Create `decisions/` directory.
@@ -235,20 +240,22 @@ For each relevant repo:
 ### Step 5B: Commit bookkeeping
 
 Stage and commit only the new log file when logs are intended to be shared,
-updated CLAUDE.md, the `.gitignore` entry for local-only first-run logs, any
-changes to `decisions/` or `decisions-summary.md`, and any files modified by
-post-hooks with a descriptive message. If the first-run setup chose local-only
-logs, do not stage or force-add the ignored log file; the log remains available
-only in the local working copy. If any intended file was already dirty in the
-Step 0 baseline, use hunk-level staging or an index patch so the commit contains
-only the changes made by this `/update-log` run; do not stage the whole file
-unless every hunk belongs to this run.
+updated CLAUDE.md, updated AGENTS.md when it is a sibling mirror, the
+`.gitignore` entries for local-only first-run bookkeeping, any changes to
+`decisions/` or `decisions-summary.md`, and any files modified by post-hooks
+with a descriptive message. If the first-run setup chose a local log folder in
+the repo, do not stage or force-add the ignored log file, `CLAUDE.md`, or
+`AGENTS.md`; they remain available only in the local working copy. If any
+intended file was already dirty in the Step 0 baseline, use hunk-level staging
+or an index patch so the commit contains only the changes made by this
+`/update-log` run; do not stage the whole file unless every hunk belongs to this
+run.
 
 **Before running `git commit`, verify that every intended path was actually staged.** `git add` silently exits 0 for gitignored paths; if the project's notes are accidentally ignored at a parent repo, the log file you just created will not be committed and the orphaning will go undetected. Concretely:
 
-1. Build a list of paths you intended to stage (the new log file unless
-   local-only, CLAUDE.md, `.gitignore`, etc.) and a separate list of local-only
-   paths that must remain unstaged.
+1. Build a list of paths you intended to stage (the new log file, `CLAUDE.md`,
+   and `AGENTS.md` unless local-only, `.gitignore`, etc.) and a separate list of
+   local-only paths that must remain unstaged.
 2. After `git add`, compare the intended staged paths against
    `git diff --cached --name-only`. For any intended staged path that does not
    appear in the cached diff, run `git check-ignore -v <path>` to identify the
@@ -259,8 +266,9 @@ unless every hunk belongs to this run.
    `backlinks-health-automation` 2026-05-04) or to force-add with `git add -f`
    (only if the user confirms the ignore is intentional and they want this
    single file through anyway). Do not silently proceed with a partial commit.
-4. For each local-only log path, verify `git check-ignore -v <path>` identifies
-   the intended log-directory ignore rule and verify the path is absent from
+4. For each local-only path, including the log path, `CLAUDE.md`, and
+   `AGENTS.md`, verify `git check-ignore -v <path>` identifies the intended
+   `.gitignore` rule and verify the path is absent from
    `git diff --cached --name-only`.
 5. Inspect `git diff --cached` and confirm the staged content contains only the intended bookkeeping changes before committing.
 
@@ -271,13 +279,14 @@ commit.
 
 ## Step 6: Report and exit (if requested)
 
-Report the log file path, whether it was committed or kept local-only by
-`.gitignore`, the `CLAUDE.md` pointer that was written, any decisions created or
-skipped, hooks found and run, files changed by hooks, the commit hash, the
-verification performed for staging and commit completeness, and a per-repo
-publish receipt: repo path, commits created or already present, push target, and
-final `git status --short --branch` showing no unpushed commits. If any repo
-remains dirty or ahead, say that bookkeeping is blocked rather than complete.
+Report the log file path, whether the log folder and agent pointer files were
+committed or kept local-only by `.gitignore`, the `CLAUDE.md` pointer that was
+written, any decisions created or skipped, hooks found and run, files changed by
+hooks, the commit hash, the verification performed for staging and commit
+completeness, and a per-repo publish receipt: repo path, commits created or
+already present, push target, and final `git status --short --branch` showing no
+unpushed commits. If any repo remains dirty or ahead, say that bookkeeping is
+blocked rather than complete.
 
 If `--exit` was passed in the arguments, end the session using the host environment's normal exit mechanism after all steps are complete. If no explicit exit mechanism is available, state that bookkeeping is complete and stop.
 

@@ -506,16 +506,17 @@ workflow. It triggers from =/update-log=, "update log", "session log",
 also runs at the end of sessions that changed durable project state. It does not
 run after pure Q&A or read-only lookups where nothing durable changed. In
 =--auto= end-of-session-chain runs, it may initialize logging in first-run
-projects without prompting by using =logs/=, adding the log directory to
-=.gitignore= so first-run logs remain local-only, leaving decision tracking
-disabled, and creating or updating =CLAUDE.md= before writing the dated log. If the user invokes =/update-log= after a
+projects without prompting by using =logs/= as a local-only repo log folder,
+adding the log directory plus =CLAUDE.md= and =AGENTS.md= to =.gitignore=,
+leaving decision tracking disabled, and creating or updating =CLAUDE.md= before writing the dated log. If the user invokes =/update-log= after a
 log, pointer, or opportunistic summary already exists, the workflow still runs
 the complete checklist, including decision review, post-update hooks, staging
 verification, commit completeness, and publish checks. The Codex workflow treats =CLAUDE.md= as
 the session-log index unless the project explicitly says otherwise, asks for
-interactive first-run setup, including whether to gitignore the log directory,
-without relying on another tool's helpers when not running with =--auto=,
-so public repos do not accidentally publish session logs, snapshots the working tree before edits so pre-existing dirty
+interactive first-run setup, including whether to keep a local session-log
+folder in the repo and, if so, gitignore that folder plus =CLAUDE.md= and
+=AGENTS.md=, without relying on another tool's helpers when not running with
+=--auto=, so public repos do not accidentally publish session logs, snapshots the working tree before edits so pre-existing dirty
 hunks are not staged accidentally, uses the =record-decisions= skill or its local
 workflow when applicable, reports any =context/post-update-log-hook.md= hooks,
 keeps Epoch project notes as concise ground-truth briefs when hook guidance
@@ -524,10 +525,10 @@ history, and no routine =** Meeting references= sections), publishes relevant
 work repos before completion by committing intended dirty changes, pushing local
 commits, and verifying no repo remains ahead of upstream, verifies the cached
 diff, commits only intended bookkeeping paths, keeps intentionally local-only
-logs unstaged after verifying their ignore rule, pushes the bookkeeping repo,
-and reports the resulting log path, whether it was committed or local-only,
-pointer, hook/decision status, commit hash, per-repo publish receipt, and
-verification.
+logs and agent pointer files unstaged after verifying their ignore rules, pushes
+the bookkeeping repo, and reports the resulting log path, whether it was
+committed or local-only, pointer, hook/decision status, commit hash, per-repo
+publish receipt, and verification.
 
 The =move-session-log= skill relocates Codex session logs by
 rewriting structured project-path metadata so resume and log lookup associate a

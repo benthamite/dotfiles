@@ -327,6 +327,13 @@ These cases are recorded in =ai-config-sync.json= rather than treated as drift.
   instruction equivalence, skill content parity after tool-specific frontmatter normalization,
   auxiliary skill files, duplicate visible skill names, hook file inventory,
   hook registrations, the live skill symlinks, and Codex activation files.
+  Within that manifest scope, it checks only MCP servers recorded in
+  =ai-config-sync.json= as manifest-declared shared MCP wiring: paired local
+  presence in the Claude and Codex public configs, public config parity,
+  required environment key presence, and any configured identity checks. Hosted
+  Claude connectors, Codex plugins, Codex App runtime MCP servers, and
+  unmanifested tool-local MCP servers are outside this parity requirement
+  unless they are recorded in the manifest.
   Topology checks include
   forbidden dotfiles-local =.codex/hooks.json= files, live symlinks resolving
   into project-local config, undocumented tool-home symlinks, and dotfiles

@@ -53,8 +53,12 @@ case "$COMMAND" in
     if [[ "$COMMAND" =~ ^[[:space:]]*cd[[:space:]]+([^\&\;\|]+) ]]; then
       _cd_target="${BASH_REMATCH[1]}"
       _cd_target="${_cd_target%"${_cd_target##*[![:space:]]}"}"  # rtrim
-      _cd_target="${_cd_target/#~/$HOME}"                          # tilde
-      _cd_target="${_cd_target//\\ / }"                            # \  → ' '
+      if [[ "$_cd_target" =~ ^\"(.*)\"$ || "$_cd_target" =~ ^\'(.*)\'$ ]]; then
+        _cd_target="${BASH_REMATCH[1]}"                            # unquote
+      else
+        _cd_target="${_cd_target/#~/$HOME}"                        # tilde
+        _cd_target="${_cd_target//\\ / }"                          # \  → ' '
+      fi
     fi
     ;;
 esac

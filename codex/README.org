@@ -239,7 +239,12 @@ to run the same user-visible workflow against edited code before committing
 when the edited code can be loaded safely. If the architecture requires a
 commit-triggered sync/reload before live code reaches the running app, agents
 commit only after non-live checks and immediately live-verify before pushing,
-reporting success, or moving on. External-system checks should use read-only
+reporting success, or moving on. For interactive Emacs UI changes, acceptance
+criteria name the relevant visible text or overlay strings, face/remapping
+state, active key binding and resolved command, and post-command result from
+the actual user action; helper and temp-buffer checks are only supporting
+evidence against the real or equivalent displayed buffer after the sanctioned
+reload path. External-system checks should use read-only
 previews, opt-in test paths, or explicit confirmation before externally visible
 mutations. For resume, restart, reconnect, or restore commands whose contract
 is to continue an existing session, the success criterion and regression

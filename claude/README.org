@@ -731,6 +731,11 @@ report verbatim what was verified through what surface. If a commit-triggered
 sync or reload is required before live code reaches the running app, the skill
 allows committing only after non-live checks, then requires immediate
 live-verification before pushing, reporting success, or moving on. For
+interactive Emacs UI changes, acceptance criteria name the relevant visible
+text or overlay strings, face/remapping state, active key binding and resolved
+command, and post-command result from the actual user action; helper and
+temp-buffer checks are only supporting evidence against the real or equivalent
+displayed buffer after the sanctioned reload path. For
 resume, restart, reconnect, or restore commands whose contract is to continue
 an existing session, the success criterion and regression coverage must assert
 original identity/history reuse and fail before kill/start if that identity is

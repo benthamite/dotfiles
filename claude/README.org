@@ -829,7 +829,7 @@ Iterative, graph-based discovery of high-value Twitter accounts in any niche. In
 :ID:       A1AC6915-C52E-4382-B1A6-731C697E736B
 :END:
 
-Meta-skill for reusable AI workflow design. Given a description of something to automate, analyzes the requirements along dimensions like context source, tool access, multi-step reasoning, and Emacs integration, then recommends the right approach: a Claude Code skill, a Codex skill, a gptel directive or preset, a gptel tool, or a gptel command. Creative or underspecified automation requests first use Superpowers brainstorming when available; this skill owns the automation-type decision and implementation path after the workflow shape is clear. After confirmation, builds it in the canonical dotfiles paths, verifies the result, and commits the logical change.
+Meta-skill for reusable AI workflow design. Given a description of something to automate, analyzes the requirements along dimensions like context source, tool access, multi-step reasoning, and Emacs integration, then recommends the right approach: a Claude Code skill, a Codex skill, paired project-local skills, a gptel directive or preset, a gptel tool, or a gptel command. Creative or underspecified automation requests first use Superpowers brainstorming when available; this skill owns the automation-type decision and implementation path after the workflow shape is clear. After confirmation, builds it in the canonical paths, checks local skill-root conventions before choosing a single target, keeps paired skill copies equivalent when the repo uses paired roots, verifies the result, and commits the logical change unless explicitly told not to.
 
 **** diagnose
 :PROPERTIES:

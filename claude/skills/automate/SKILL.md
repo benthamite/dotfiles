@@ -39,7 +39,7 @@ Consider these dimensions:
 - **Claude Code skill**: A markdown file under `claude/skills/<name>/SKILL.md`. Use when the workflow is meant for Claude Code.
 - **Codex skill**: A markdown file under `codex/skills/<name>/SKILL.md`. Use when the workflow is meant for Codex.
 
-Honor an explicit target if the user names one. If they do not, recommend the option that best fits the workflow and the environment they are currently using.
+Honor an explicit single-tool target only when the user clearly asks for a Claude-only or Codex-only skill. Otherwise, check whether the active repository uses paired global or project-local skill roots before choosing where to write the skill.
 
 ## Step 2: Present the recommendation
 
@@ -59,14 +59,17 @@ Work in the repository's canonical paths. In this dotfiles repo, `~/.claude/skil
 ### If building an agent skill
 
 1. Derive a short kebab-case name for the skill.
-2. Choose the target root:
-   - Claude Code: `claude/skills/<name>/`
-   - Codex: `codex/skills/<name>/`
+2. Resolve the target root before writing:
+   - If the user clearly asked for Claude-only or Codex-only, use only that tool's root and record or justify the missing counterpart according to local conventions.
+   - Otherwise, inspect the active repository's `README.org`, `AGENTS.md`, `CLAUDE.md`, and nearby conventions for project-local skill roots before choosing.
+   - If the repo uses paired project-local skills under `.claude/skills/<name>/` and `.codex/skills/<name>/`, create or update both copies up front. Keep bodies and auxiliary files equivalent except tool-specific frontmatter or argument metadata, and update the repo-local `README.org` Skills section when local conventions or guards require it.
+   - If editing global paired dotfiles skills under `claude/skills/<name>/` and `codex/skills/<name>/`, update both copies unless `ai-config-sync.json` records an explicit artifact-specific divergence, keep the paired-copy expectations intact, and run the relevant parity or audit guard.
+   - If the active repo has only one local skill root and no paired convention, use that root.
 3. Read 2-3 nearby skills for conventions, plus `skill-creator` if you are creating a skill from scratch.
 4. Write `SKILL.md` following the conventions of existing skills:
    - Frontmatter: `name`, `description`, and optional fields already used by that tool's local skills.
    - Body: clear procedural steps the agent should follow.
-5. If you change `claude/`, update `claude/README.org` when the repo instructions require it.
+5. If you change `claude/` or `codex/`, update `claude/README.org` or `codex/README.org` when the repo instructions require it.
 6. Tell the user the skill is ready and how to invoke it, either by slash command if supported or by trigger phrases in the description.
 
 ### If building a gptel directive
@@ -100,7 +103,7 @@ Work in the repository's canonical paths. In this dotfiles repo, `~/.claude/skil
 
 Verify the artifact before calling it done:
 
-- Agent skill: re-read the edited `SKILL.md`, run the local skill resolver if available, and do a dry-run walkthrough against the user's example prompt.
+- Agent skill: re-read the edited `SKILL.md`, run the local skill resolver if available, and do a dry-run walkthrough against the user's example prompt. For paired skills, run a direct diff or normalization-aware parity check across both copies, including auxiliary files. When editing dotfiles paired configuration or skills, run `bin/ai-config-sync audit`.
 - Emacs Lisp: byte-compile changed `.el` files, run relevant ERT tests when available, and tangle `emacs/config.org` if you changed it.
 - Documentation: update required docs for touched subsystems.
 - Git: commit each logical change unless the user explicitly asked not to.

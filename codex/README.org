@@ -461,10 +461,13 @@ or domain-judgment calls instead of applying them.
 
 The =automate= skill is a Codex meta-skill for reusable AI
 workflow design. It decides whether a request should become a Claude Code skill,
-a Codex skill, a gptel directive or preset, a gptel tool, or a gptel command,
-then builds in the canonical dotfiles paths after confirmation and verifies the
-result before committing. Creative or underspecified automation requests first
-use Superpowers brainstorming when available.
+a Codex skill, paired project-local skills, a gptel directive or preset, a
+gptel tool, or a gptel command, then builds in the canonical paths after
+confirmation and verifies the result before committing unless explicitly told
+not to. For agent skills, it checks local skill-root conventions before choosing
+a single target and keeps paired copies equivalent when the repo uses paired
+roots. Creative or underspecified automation requests first use Superpowers
+brainstorming when available.
 
 The =add-to-emacs-packages= skill is a Codex workflow for
 registering one of the user's Emacs packages in =my-emacs-packages.org=,

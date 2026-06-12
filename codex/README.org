@@ -512,7 +512,7 @@ verification, commit completeness, and publish checks. The Codex workflow treats
 the session-log index unless the project explicitly says otherwise, asks for
 interactive first-run setup, including whether to gitignore the log directory,
 without relying on another tool's helpers when not running with =--auto=,
-snapshots the working tree before edits so pre-existing dirty
+so public repos do not accidentally publish session logs, snapshots the working tree before edits so pre-existing dirty
 hunks are not staged accidentally, uses the =record-decisions= skill or its local
 workflow when applicable, reports any =context/post-update-log-hook.md= hooks,
 keeps Epoch project notes as concise ground-truth briefs when hook guidance

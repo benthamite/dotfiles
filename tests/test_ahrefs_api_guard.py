@@ -73,7 +73,7 @@ class AhrefsApiGuardTest(unittest.TestCase):
         with self.assertRaises(self.mod.GuardError):
             self.mod.assert_budget_allows_call(
                 usage,
-                min_remaining=100_000,
+                min_remaining=200_000,
                 estimated_cost=4_250,
             )
 
@@ -89,7 +89,7 @@ class AhrefsApiGuardTest(unittest.TestCase):
 
         self.mod.assert_budget_allows_call(
             usage,
-            min_remaining=100_000,
+            min_remaining=200_000,
             estimated_cost=4_250,
         )
 

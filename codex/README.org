@@ -659,7 +659,7 @@ boundaries.
 unless they go through =ahrefs-api-guard= or only call the free
 =subscription-info/limits-and-usage= endpoint. The wrapper checks live Ahrefs
 workspace usage before paid calls and denies requests below the configured
-reserve, which is currently 100,000 units by default.
+reserve, which is currently 200,000 units by default.
 
 The =UserPromptSubmit= hook forwards lifecycle state for Emacs-owned sessions
 through =codex-hook-wrapper=. The matcher is empty because =UserPromptSubmit=

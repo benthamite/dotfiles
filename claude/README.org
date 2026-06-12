@@ -133,7 +133,7 @@ It reads the shared Epoch Ahrefs API key from =AHREFS_API_KEY= or
 =op://Automations/Ahrefs API/credential=, probes the free
 =subscription-info/limits-and-usage= endpoint before any paid request, and
 blocks the call when the projected remaining workspace units would fall below
-the default 100,000-unit reserve. The top-level =bin/ahrefs-api-guard= wrapper
+the default 200,000-unit reserve. The top-level =bin/ahrefs-api-guard= wrapper
 exposes the same command on the normal dotfiles bin path.
 
 **** Settings hierarchy

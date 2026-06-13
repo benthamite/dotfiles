@@ -1,6 +1,6 @@
 ---
 name: update-log
-description: End-of-session bookkeeping. Use when the user says /update-log, update log, session log, close out, wrap up, or asks to save project progress. Also use at the end of any session that changed durable project state, including first-run projects without existing log conventions.
+description: End-of-session bookkeeping. Invoke ONLY when the user explicitly asks for it — never autonomously or proactively. Triggers: the user types /update-log or says update log, session log, close out, wrap up, or asks to save project progress. Do NOT invoke at session end on your own initiative, even when the session clearly changed durable project state — wait for an explicit request.
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
 argument-hint: "[--exit] [--auto] [optional summary of what was done]"
@@ -10,9 +10,11 @@ argument-hint: "[--exit] [--auto] [optional summary of what was done]"
 
 Perform the following bookkeeping steps to preserve this session's work for future sessions.
 
+> **Invocation policy:** This skill runs only on explicit user request (`/update-log`, or the user asking to log / close out / wrap up / save progress). Never invoke it autonomously, proactively, or as an automatic session-end step — even when the session clearly changed durable state. If you think a log would help but the user has not asked, you may briefly suggest it, then stop; do not run the skill until they confirm.
+
 ## Triage first (may be a no-op)
 
-Before touching any file, decide whether this session changed durable project state, using the criteria in **When to run** below. This decision is part of the skill, not a precondition the caller is assumed to have checked: the skill is meant to be invoked unconditionally at session end — manually or via the end-of-session chain — and **doing nothing is a valid, friction-free outcome**.
+Before touching any file, decide whether this session changed durable project state, using the criteria in **What counts as durable project state** below. This decision is part of the skill: even once the user has explicitly invoked it, **doing nothing is a valid, friction-free outcome** if the session changed nothing durable.
 
 - **If nothing durable changed** (purely conversational Q&A, a quick read-only lookup, or trivial edits with nothing a future agent would need to recover), do nothing: write no log, change no files, make no commit. Report `No durable changes — skipping update-log.` and stop.
 - **Otherwise**, proceed to Step 0.
@@ -31,9 +33,9 @@ Exception: if the user explicitly typed `/update-log` or asked for specific book
   the session log.
 - Make no other interactive prompts. If a step would need a decision only the user can make, record it in the log and final report and continue with the safe default or skip that step, rather than asking.
 
-## When to run
+## What counts as durable project state
 
-Run this skill at the end of any session that changed durable project state. Durable project state includes:
+Once the user has explicitly invoked the skill, use these criteria for the triage decision above (write a log vs. no-op). Durable project state includes:
 
 - code, docs, configuration, workflow, or data changes;
 - new findings, debugging results, validation results, or service-state changes that future sessions should know;
@@ -43,7 +45,7 @@ Run this skill at the end of any session that changed durable project state. Dur
 
 Do not run it after purely conversational Q&A, quick read-only lookups, or sessions where nothing durable changed. If uncertain, prefer running it when the project already has logs and the session produced information a future agent would otherwise need to recover from the transcript.
 
-Session-end hooks or reminders should point to this policy instead of duplicating their own criteria. Hooks may invoke this skill unattended with `--auto`; in that mode it uses deterministic first-run defaults and safe no-op behavior instead of prompting. Non-auto hooks may remind or block session close when durable state appears unsaved, but should not silently perform the mutating workflow without user intent.
+This skill must not be wired to run automatically at session end. A session-end hook or reminder may *remind* the user that durable state looks unsaved and suggest running `/update-log`, but must never invoke the mutating workflow on the user's behalf. The `--auto` flag below exists only for a non-interactive run the user has explicitly opted into (e.g. a hook the user deliberately configured); absent that explicit opt-in, the skill is driven entirely by explicit user invocation.
 
 If the user explicitly invokes `/update-log` or otherwise asks for end-of-session
 bookkeeping after a log, pointer, or opportunistic summary was already written,

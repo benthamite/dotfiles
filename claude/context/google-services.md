@@ -37,6 +37,32 @@ automation maintenance, bot mailbox checks, and related debugging. Do not use it
 for Pablo's Epoch inbox, Pablo's personal inbox, Mercury receipts, or one-off
 human-account email work.
 
+## Google Docs browser body edits
+
+Google Docs edits are externally visible. Do not use this protocol as approval
+to edit a shared doc; it only describes how to perform browser body edits after
+the normal approval boundary has already been satisfied.
+
+For approved Google Docs browser body edits:
+
+- Never use `Cmd+A` in the document body during browser automation.
+- After opening find with `Cmd+F` and before typing, screenshot and verify that
+  focus is in the intended find field or document body target.
+- Click checkboxes or table cells only at coordinates confirmed in the
+  immediately preceding screenshot.
+- Select table or body text only with scoped gestures, such as triple-clicking
+  inside a single table cell. Before applying formatting, verify by screenshot
+  that the selection is contained in the intended cell or text range.
+- If any unexpected text change occurs, press `Cmd+Z` immediately and stop
+  instead of continuing the edit batch.
+
+After browser body edits, verify content integrity at the revision level: export
+the last pre-session revision and the current document as `text/plain`, then
+byte-compare the exports. A plain-text compare catches body content damage, not
+all formatting damage; when checkbox state, strikethrough, or similar formatting
+matters, also check an export format that preserves it, such as Markdown or
+HTML.
+
 ## Auth
 
 `gmail.py`, `sheets.py`, `bin/gmail-maildir-sync`, and the shared `claude/bin/_gworkspace_auth.py` helper support the migrated secret layout. For the human accounts, the OAuth client (id and secret) is shared and only the refresh token differs per account. These variables are no longer globally exported from `.zshenv-secrets`; the wrappers still accept explicit env vars for one-off overrides, but normally resolve values from the stores below:

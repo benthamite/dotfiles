@@ -63,6 +63,27 @@ all formatting damage; when checkbox state, strikethrough, or similar formatting
 matters, also check an export format that preserves it, such as Markdown or
 HTML.
 
+## Google Docs read-only inspection caveats (observed 2026-06-11)
+
+For read-only Google Docs inspection, treat Drive API exports as the reliable
+source for document body state. `gdoc cat` and `gdoc info` can be convenient
+orientation tools, but do not use their output alone for content-change claims.
+
+- Use HTML export to locate inline comment anchors, including inline `[letter]`
+  markers.
+- Use Markdown export to preserve and check checkbox state (`- [ ]` / `- [x]`)
+  and strikethrough (`~~`).
+- For read-only inspection, resolved comments are absent from body exports, so
+  the absence of a comment in an export does not prove that the comment was
+  never present.
+- Treat `gdoc` "edited by X" or since-last-interaction banners, and `gdoc info`
+  word counts, as unreliable signals for content-change claims.
+- Verify real content edits with Drive revisions plus per-revision export
+  byte-compare.
+
+This behavior was observed with installed gdoc v0.7.6 on 2026-06-11. Re-check
+after `gdoc` upgrades before relying on exact subcommand limitations.
+
 ## Auth
 
 `gmail.py`, `sheets.py`, `bin/gmail-maildir-sync`, and the shared `claude/bin/_gworkspace_auth.py` helper support the migrated secret layout. For the human accounts, the OAuth client (id and secret) is shared and only the refresh token differs per account. These variables are no longer globally exported from `.zshenv-secrets`; the wrappers still accept explicit env vars for one-off overrides, but normally resolve values from the stores below:

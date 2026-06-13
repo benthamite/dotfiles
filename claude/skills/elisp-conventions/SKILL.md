@@ -69,6 +69,12 @@ See `emacs/extras/doc/elisp-development-workflow.org` for the dotfiles-specific 
   standalone packages normally use the package root `README.org`, or
   `README.md` when the repo has no Org manual. Use `/document-elisp-package` to generate
   or update Org documentation.
+- **Branch-local deferral for deliberate refactors**: deliberate multi-commit
+  feature-branch refactors may defer manual/README updates to milestone
+  boundaries by setting `git config branch.<branch>.deferDocUpdates true` at
+  branch creation or the start of the refactor. Remove it before merge with
+  `git config --unset branch.<branch>.deferDocUpdates`. The setting is ignored
+  on `main` and `master`, and it is not a routine bypass for ordinary commits.
 
 # Stale-load detection
 

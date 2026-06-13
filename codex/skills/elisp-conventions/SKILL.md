@@ -54,6 +54,12 @@ commit-triggered sync/reload before live Emacs sees canonical code.
 ~/My\ Drive/dotfiles/claude/bin/elisp-ert PACKAGE test/PACKAGE-test.el TEST-NAME
 ```
 
+When an ERT test asserts copied/killed text or that the kill ring did not
+change around `kill-region`, `kill-ring-save`, `copy-region-as-kill`,
+`kill-new`, or wrappers, bind `kill-ring` and `kill-ring-yank-pointer`
+locally. Bind `last-command` only when prior-kill append behavior can affect
+the result, or when the test intentionally covers append semantics.
+
 **Never** use `load-file`, `eval-buffer`, `eval-defun`, or manual `byte-compile-file` to reload Elisp. The edit/commit hooks and `elpaca-extras-rebuild-and-reload` are the only sanctioned reload paths; for dotfiles extras with uncommitted changes, wait for the commit-triggered sync/reload before live Emacs verification.
 
 A PreToolUse hook (`block-elpaca-rebuild-uncommitted.sh`) blocks manual `elpaca-rebuild` calls when there are uncommitted `.el` changes in dotfiles/extras — running rebuild against a stale clone silently loads old code.

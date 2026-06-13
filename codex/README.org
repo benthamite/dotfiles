@@ -241,7 +241,9 @@ safely, and documents the branch-local =deferDocUpdates= lifecycle for
 deliberate multi-commit refactors. After source-rewinding git operations such
 as =stash= or =checkout=, RED-baseline checks must recompile first or use a full
 compile-first test target rather than trusting =elisp-ert= or package-specific
-targets that skip compilation.
+targets that skip compilation. Tests around copied or killed text locally bind
+=kill-ring= and =kill-ring-yank-pointer=, adding =last-command= only for
+append-sensitive cases.
 
 The =end-to-end= skill requires interactive UI, live Emacs, and network fixes
 to run the same user-visible workflow against edited code before committing

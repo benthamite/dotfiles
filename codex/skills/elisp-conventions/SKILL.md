@@ -73,6 +73,14 @@ See `emacs/extras/doc/elisp-development-workflow.org` for the dotfiles-specific 
 
 The PostToolUse hook (`track-elisp-test.sh`) inspects batch-test output for actual stale-load warnings (`newer than byte-compiled file`, `using older file`). If it sees one, the test marker is NOT created and the commit hook stays blocked. Don't try to bypass this — fix the load-path order instead.
 
+After git operations that rewind source, such as `stash`, `checkout`, or
+similar RED-baseline checks, do not trust `elisp-ert` or package-specific test
+targets that skip compilation. Recompile first or use the project's full
+compile-first test target, because stale co-located `.elc` files or stale
+Elpaca builds can silently satisfy the load. For `emacs-slack`, after stashing
+a fix to verify RED, run full `make test`; do not rely on `make test-upstream`
+alone, because it skips `compile`.
+
 # Emacs session safety
 
 - Never run ERT test suites (`ert-run-tests-batch`, etc.) in the active Emacs session via emacsclient. Use a separate `emacs --batch` process. The active session is for loading code and interactive testing, not test suites.

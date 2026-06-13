@@ -232,7 +232,10 @@ extras run batch-test, commit only to trigger the required sync/reload, wait for
 the post-commit status-token reload path to finish, then immediately live-verify
 before pushing, reporting success, or moving on. It preserves
 blocked-live-verification reporting when the live path cannot be exercised
-safely.
+safely. After source-rewinding git operations such as =stash= or =checkout=,
+RED-baseline checks must recompile first or use a full compile-first test target
+rather than trusting =elisp-ert= or package-specific targets that skip
+compilation.
 
 The =end-to-end= skill requires interactive UI, live Emacs, and network fixes
 to run the same user-visible workflow against edited code before committing

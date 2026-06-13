@@ -262,13 +262,59 @@
 (ert-deftest simple-extras-test-smart-kill-region-with-region ()
   "Smart-kill-region kills region when active."
   (with-temp-buffer
-    (insert "hello world")
-    (set-mark 1)
-    (goto-char 6)
-    (activate-mark)
-    (simple-extras-smart-kill-region)
-    (should (equal (buffer-string) " world"))
-    (should (equal (car kill-ring) "hello"))))
+    (let ((kill-ring nil)
+          (kill-ring-yank-pointer nil)
+          (last-command nil))
+      (insert "hello world")
+      (set-mark 1)
+      (goto-char 6)
+      (activate-mark)
+      (simple-extras-smart-kill-region)
+      (should (equal (buffer-string) " world"))
+      (should (equal (car kill-ring) "hello")))))
+
+(ert-deftest simple-extras-test-smart-kill-region-with-mark-active ()
+  "Smart-kill-region kills the region when Transient Mark mode is off."
+  (with-temp-buffer
+    (let ((kill-ring nil)
+          (kill-ring-yank-pointer nil)
+          (last-command nil))
+      (transient-mark-mode -1)
+      (insert "hello world")
+      (set-mark 1)
+      (goto-char 6)
+      (simple-extras-smart-kill-region)
+      (should (equal (buffer-string) " world"))
+      (should (equal (car kill-ring) "hello")))))
+
+(ert-deftest simple-extras-test-smart-delete-region-with-mark-active ()
+  "Smart-delete-region deletes the region when Transient Mark mode is off."
+  (with-temp-buffer
+    (let ((kill-ring nil)
+          (kill-ring-yank-pointer nil)
+          (last-command nil))
+      (transient-mark-mode -1)
+      (insert "hello world")
+      (set-mark 1)
+      (goto-char 6)
+      (let ((kill-ring-before (copy-sequence kill-ring)))
+        (simple-extras-smart-delete-region)
+        (should (equal (buffer-string) " world"))
+        (should (equal kill-ring kill-ring-before))))))
+
+(ert-deftest simple-extras-test-smart-copy-region-with-mark-active ()
+  "Smart-copy-region copies the region when Transient Mark mode is off."
+  (with-temp-buffer
+    (let ((kill-ring nil)
+          (kill-ring-yank-pointer nil)
+          (last-command nil))
+      (transient-mark-mode -1)
+      (insert "hello world")
+      (set-mark 1)
+      (goto-char 6)
+      (simple-extras-smart-copy-region)
+      (should (equal (buffer-string) "hello world"))
+      (should (equal (car kill-ring) "hello")))))
 
 ;;;; New buffer detection
 

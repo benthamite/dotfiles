@@ -24,7 +24,8 @@ Skip if the change is a refactor or pure-logic fix with full unit coverage and n
 3. **Implement the fix.**
 4. **Run the edited code in the user-visible workflow before committing when feasible.** For interactive UI, live Emacs, and network fixes, re-run the exact user-visible workflow against the edited code before `git commit` whenever the edited code can be loaded safely into that surface. If the architecture requires a commit-triggered sync or reload before the running app can see the edited code, commit only after non-live checks pass, then immediately live-verify before pushing, reporting success, or moving on.
 5. **Re-run the same end-to-end reproduction.** Same surface, same input, same observation. Unit tests remain useful as supporting evidence; they do not replace this step. For Slack, network, or other external-system workflows, use a read-only preview, clearly labeled opt-in test path, or explicit confirmation before any externally visible mutation.
-6. **Report verbatim what was verified.** Explicitly name the surface and the observed outcome. Forbidden phrasings: "should now work", "fix verified" without saying through what surface, "tests pass" as the sole evidence for an interactive bug.
+6. **Gate retry requests to affected users on controlled live evidence.** Before drafting, inserting, or sending language that asks an affected user to "please retry", "try again", or otherwise test the fix again, run the closest controlled live check feasible without relying on that user: owned/test artifacts, synthetic signed events, preview channels, dry-run or test-mode dispatches, KV/log checks, read-backs, or an equivalent opt-in path. Prefer owned/test artifacts. Preserve explicit approval requirements for any synthetic check that creates real Slack, Asana, GitHub, email, calendar, or other external side effects. If the controlled check bypasses a layer, state the exercised layers and the gap. Ask the affected user to retry only after the controlled path passes, or when no controlled path is possible and the blocker or gap is explicit.
+7. **Report verbatim what was verified.** Explicitly name the surface and the observed outcome. Forbidden phrasings: "should now work", "fix verified" without saying through what surface, "tests pass" as the sole evidence for an interactive bug.
 
 ## Reproduction surfaces (defaults)
 
@@ -33,6 +34,10 @@ Skip if the change is a refactor or pure-logic fix with full unit coverage and n
 - **Terminal / Eat display**: render in a real Codex/Eat buffer and inspect both `point-max - eat-term-end` and the visible text.
 - **Browser-rendered UI**: load the page in a real browser at the relevant viewport size; static HTML grep is not enough.
 - **Slack / Sheets / external-system output**: post a fixture to a preview channel or read back the live document, not only the local renderer.
+- **Affected-user retry requests**: before asking the affected user to retry or
+  test again, exercise the closest controlled live path first. Synthetic events
+  and owned/test artifacts are preferred; any check that creates real external
+  side effects still needs explicit approval.
 - **Scheduled job / CI / cron**: trigger the real schedule (or a manual dispatch of the same workflow), not a local script invocation that bypasses the scheduler harness.
 - **Secret-backed remote notifications**: when credentials live only in CI or
   another remote secret store, prefer an explicit opt-in test-alert/manual

@@ -201,6 +201,11 @@ Claude plugin skill caches, for duplicate =name:= values that would produce
 repeated slash-command entries. See =../agents/README.org= for the full
 synchronization contract and known non-portable cases.
 
+The paired =end-to-end= skill includes a communication gate: before asking an
+affected user to =please retry= or =try again=, agents must run the closest
+controlled live check feasible with owned/test artifacts or state the explicit
+gap/blocker.
+
 *** Multi-account setup
 :PROPERTIES:
 :CUSTOM_ID: h:multi-account

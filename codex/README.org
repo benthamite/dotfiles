@@ -436,7 +436,8 @@ the user's listed Emacs packages from the listed headings in
 <package>= and =/release-package --audit=, avoids cloning or creating tags/releases
 during audits, handles untagged package repos as initial releases, strips flags
 such as =--accept= before package inference, and keeps dotfiles releases routed
-to the dotfiles-local release workflow. The dotfiles release workflow checks
+to the dotfiles-local release workflow. Package releases push lightweight tags
+explicitly after pushing the branch. The dotfiles release workflow checks
 =emacs/config.org= for temporary Elpaca PR fork pins, restores merged pins when
 safe, and reports any open pins in the pre-release summary. Temporary pins
 should be marked in =config.org= as =awaiting PR merge:= followed by the PR URL.

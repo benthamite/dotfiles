@@ -249,7 +249,8 @@ Only after confirmation, or after step 9 has been skipped by `--accept`:
 4. **Push commit and tag**:
 
    ```bash
-   git push origin HEAD --follow-tags
+   git push origin HEAD
+   git push origin NEW_VERSION
    ```
 
 5. **Create GitHub release**:

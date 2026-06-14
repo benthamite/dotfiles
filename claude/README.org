@@ -966,6 +966,19 @@ Blocks =git commit= when files in =claude/= (skills, hooks, settings, CLAUDE.md)
 
 Companion to =require-readme-update.sh=. Fires globally after any Write or Edit, resolves the target path through symlinks, and outputs a reminder if the file is under =dotfiles/claude/= but the agent is working in a different project. This closes the gap where the commit-blocking hook never fires because the agent never switches to the dotfiles repo to commit. Silent when editing =README.org= itself or when already in the dotfiles repo. The Claude hook emits the reminder as plain stdout; the Codex counterpart wraps the same reminder as PostToolUse JSON because Codex treats plain stdout as invalid hook protocol output.
 
+*** remind-plan-review.sh (PostToolUse)
+:PROPERTIES:
+:ID:       1635C612-8D50-4127-B2D2-72EA38F31E1E
+:END:
+
+Fires after Claude Write or Edit operations that modify
+=docs/superpowers/plans/*.md=, =.claude/private-plans/*.md=, or
+=/tmp/claude-plans/*.md=. It prints an advisory reminder to dispatch a
+plan-review subagent before presenting the plan as ready, or to explicitly
+state why subagent review is unavailable. This is a reminder rather than a
+blocker because review quality depends on model/tool availability and the plan
+may still be mid-draft.
+
 *** remind-ai-config-sync.sh (PostToolUse)
 :PROPERTIES:
 :ID:       44F44D89-3847-49A8-BD92-380CD88CC0B1

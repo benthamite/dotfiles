@@ -48,6 +48,14 @@ commit-triggered sync/reload before live Emacs sees canonical code.
 5. **For dotfiles extras, commit only after batch-test passes.** The post-commit hook then syncs the elpaca clone and schedules rebuild+reload through the status-token path, so the running Emacs gets the canonical code after that async status reaches `finished`.
 6. **For dotfiles extras, immediately live-verify after the commit-triggered sync/reload.** Exercise the exact changed command/path in live Emacs before pushing, reporting success, or moving on.
 
+For standalone package post-commit behavior, a pre-commit live check may not be
+enough. If hooks or commit-triggered state are part of the behavior, run a fresh
+targeted `emacsclient --eval` after the commit before reporting the live path.
+For Elisp changes that retrofit buffer-local or session lifecycle state, hooks,
+timers, or teardown onto already-live buffers, test fresh state and
+legacy/partial state; live verification should check idempotence, not only that
+missing state is added.
+
 ```bash
 ~/My\ Drive/dotfiles/claude/bin/batch-test.sh PACKAGE
 ~/My\ Drive/dotfiles/claude/bin/batch-test.sh PACKAGE '(message "%S" (PACKAGE-some-fn))'
@@ -55,11 +63,22 @@ commit-triggered sync/reload before live Emacs sees canonical code.
 ~/My\ Drive/dotfiles/claude/bin/elisp-ert PACKAGE test/PACKAGE-test.el TEST-NAME
 ```
 
+If the `batch-test.sh PACKAGE EXPR` form needs multiple top-level forms, wrap
+them in `progn`; the `--eval` argument evaluates one form. For standalone
+packages with multiple libraries, `elisp-ert` PACKAGE is the Elpaca source
+directory/package name, not the test file or library basename; use
+`elisp-ert agent test/agent-claude-test.el`, not `elisp-ert agent-claude ...`.
+
 When an ERT test asserts copied/killed text or that the kill ring did not
 change around `kill-region`, `kill-ring-save`, `copy-region-as-kill`,
 `kill-new`, or wrappers, bind `kill-ring` and `kill-ring-yank-pointer`
 locally. Bind `last-command` only when prior-kill append behavior can affect
 the result, or when the test intentionally covers append semantics.
+
+For byte-compiled code under test, do not stub `cl-defstruct` accessors or
+other inlinable functions with `cl-letf`; compiled call sites may bypass the
+stub. Construct real objects or test through a non-inlined interface, and force
+RED against the unfixed source.
 
 **Never** use `load-file`, `eval-buffer`, `eval-defun`, or manual `byte-compile-file` to reload Elisp. The edit/commit hooks and `elpaca-extras-rebuild-and-reload` are the only sanctioned reload paths; for dotfiles extras with uncommitted changes, wait for the commit-triggered sync/reload before live Emacs verification.
 
@@ -94,6 +113,22 @@ Elpaca builds can silently satisfy the load. For `emacs-slack`, after stashing
 a fix to verify RED, run full `make test`; do not rely on `make test-upstream`
 alone, because it skips `compile`.
 
+If official standalone package checks are blocked because Cask is missing,
+report the official Cask command as blocked. A targeted `emacs -Q --batch`
+check that loads the source checkout plus the active profile's `elpaca/builds`
+dependencies is only partial, narrow evidence.
+
+# `emacs/config.org`
+
+For the one-active-tangled-Elisp-block cleanup convention, apply it to package
+sections unless the user broadens the scope. Do not collapse prose-oriented
+literate sections such as early-init merely because they contain multiple source
+blocks.
+
+In Elpaca-backed `use-package` recipes, `:defer t` does not neutralize
+recipe-level `:wait t`. Add `:wait t` only for a specific bootstrap or ordering
+need, and verify startup impact.
+
 # Emacs session safety
 
 - Never run ERT test suites (`ert-run-tests-batch`, etc.) in the active Emacs session via emacsclient. Use a separate `emacs --batch` process. The active session is for loading code and interactive testing, not test suites.
@@ -103,7 +138,17 @@ alone, because it skips `compile`.
 - Never output large emoji data structures to the terminal. The eat terminal emulator freezes on bulk emoji rendering. Write emoji data to a file or check specific keys only.
 - If `sed` or other shell commands change `.el` files and bypass the edit hook, do not call `load-file`; rely on `batch-test.sh`, the commit-triggered sync/rebuild, and a targeted live `emacsclient -e` verification after commit.
 - Do not run multiple background agents that edit `.el` files simultaneously — the elpaca rebuild hook fires on each save, flooding Emacs with concurrent rebuilds. Serialize edits or batch into a single agent.
+- Put complex synthetic command reproductions with mode state,
+  tabulated-list positioning, or many stubs in batch/ERT. Use live
+  `emacsclient` for small loaded-code checks or for the real UI action when
+  safe.
 
 # Transient menus
 
 After adding or modifying a `transient-define-prefix`, verify that **every suffix symbol** is an interactive command. Transient defers suffix validation to invocation time, so byte-compilation and `commandp` on the prefix itself will not catch non-interactive suffixes. Before committing, check every suffix via `emacsclient -e '(interactive-form (quote SYMBOL))'` — any that return `nil` need an `(interactive)` spec added to their `defun`.
+
+# DWIM wrappers
+
+For DWIM wrappers around built-in commands, inspect the wrapped command's
+interactive form and reproduce its boundary conditions before choosing
+predicates such as `region-active-p`, `use-region-p`, or `mark-active`.

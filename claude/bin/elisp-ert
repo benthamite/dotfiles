@@ -6,6 +6,10 @@
 # Examples:
 #   elisp-ert agent-codex test/agent-codex-test.el
 #   elisp-ert agent-codex test/agent-codex-test.el agent-codex-test-restart
+#   elisp-ert agent test/agent-claude-test.el agent-claude-test/foo
+#
+# For standalone packages with multiple libraries, PACKAGE is the Elpaca source
+# directory/package name, not the test file or library basename.
 
 set -euo pipefail
 
@@ -27,7 +31,7 @@ esac
 
 if [ -n "$TEST_NAME" ]; then
   case "$TEST_NAME" in
-    *[!A-Za-z0-9._:-]*)
+    *[!A-Za-z0-9._:/-]*)
       echo "Invalid ERT test name: $TEST_NAME" >&2
       exit 1
       ;;

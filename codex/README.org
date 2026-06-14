@@ -243,7 +243,10 @@ as =stash= or =checkout=, RED-baseline checks must recompile first or use a full
 compile-first test target rather than trusting =elisp-ert= or package-specific
 targets that skip compilation. Tests around copied or killed text locally bind
 =kill-ring= and =kill-ring-yank-pointer=, adding =last-command= only for
-append-sensitive cases.
+append-sensitive cases. It also records the narrow =elisp-ert= PACKAGE rule for
+standalone multi-library packages, slash-bearing ERT symbols, =progn= for
+multi-form =batch-test.sh PACKAGE EXPR= checks, and lifecycle-state/idempotence
+checks for already-live buffers.
 
 The =end-to-end= skill requires interactive UI, live Emacs, and network fixes
 to run the same user-visible workflow against edited code before committing
@@ -255,7 +258,10 @@ criteria name the relevant visible text or overlay strings, face/remapping
 state, active key binding and resolved command, and post-command result from
 the actual user action; helper and temp-buffer checks are only supporting
 evidence against the real or equivalent displayed buffer after the sanctioned
-reload path. External-system checks should use read-only
+reload path. For Emacs profile startup regressions, it distinguishes
+`emacs --batch` from foreground daemon startup with the active
+`--init-directory` and forbids reusing or signaling the active daemon.
+External-system checks should use read-only
 previews, opt-in test paths, or explicit confirmation before externally visible
 mutations. For resume, restart, reconnect, or restore commands whose contract
 is to continue an existing session, the success criterion and regression

@@ -30,6 +30,12 @@ Skip if the change is a refactor or pure-logic fix with full unit coverage and n
 ## Reproduction surfaces (defaults)
 
 - **Live Emacs UI bug**: after the sanctioned reload path, open the real displayed buffer or an equivalent displayed buffer with the same mode and state. Run the exact command or key binding the user invoked; when key behavior matters, confirm the active keymap resolves that binding to the expected command. Observe the relevant visible text or overlay strings, face/remapping state, and post-command buffer result. Helper/temp-buffer checks are supporting evidence only; don't stop at `(fboundp ...)` or helper output without checking the visible effect.
+- **Live Emacs profile startup**: `emacs --batch` is not evidence that the
+  user profile starts cleanly; batch implies `-q`. For startup regressions, use
+  a fresh, unique foreground daemon with the active profile's
+  `--init-directory`, inspect console output and warnings as relevant, and exit
+  through Emacs Lisp such as `(kill-emacs)`. Never reuse or signal the active
+  daemon for this check.
 - **Async / network code**: drive the real async path, not a mocked callback. Capture timing if performance is the symptom.
 - **Terminal / Eat display**: render in a real Codex/Eat buffer and inspect both `point-max - eat-term-end` and the visible text.
 - **Browser-rendered UI**: load the page in a real browser at the relevant viewport size; static HTML grep is not enough.

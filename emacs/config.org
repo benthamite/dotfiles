@@ -14340,8 +14340,7 @@ CLOCK: [2021-10-01 Fri 21:10]--[2021-10-01 Fri 21:51] =>  0:41
   :ensure (:host github
                  :repo "tkf/emacs-request"
                  :files ("request.el")
-                 :depth nil
-                 :wait t)
+                 :depth nil)
   :defer t)
 #+end_src
 
@@ -14357,8 +14356,7 @@ CLOCK: [2021-10-01 Fri 21:10]--[2021-10-01 Fri 21:51] =>  0:41
   :ensure (:host github
                  :repo "tkf/emacs-request"
                  :files ("request-deferred.el")
-                 :depth nil
-                 :wait t)
+                 :depth nil)
   :after request
   :defer t)
 #+end_src

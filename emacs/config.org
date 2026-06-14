@@ -4642,9 +4642,8 @@ I use this package in combination with =prot-scratch= (see above) to persist scr
   (persistent-scratch-autosave-interval 10)
   (persistent-scratch-backup-directory
    (no-littering-expand-var-file-name "auto-save/scratch-buffers/"))
-
-  :config
-  (persistent-scratch-setup-default))
+  :hook
+  (emacs-startup . persistent-scratch-setup-default))
 #+end_src
 
 ** =executable=
@@ -8399,8 +8398,7 @@ This needs to be configured.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package shut-up
-  ;; Personal packages queue this package as a dependency.
-  :ensure nil)
+  :defer t)
 #+end_src
 
 ** =puni=

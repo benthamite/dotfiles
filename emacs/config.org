@@ -4763,7 +4763,7 @@ CLOCK: [2022-08-20 Sat 18:11]--[2022-08-20 Sat 18:32] =>  0:21
   :defer t)
 #+end_src
 
-** track-changes
+** =track-changes=
 :PROPERTIES:
 :ID:       CC86371A-6A48-4DE2-A87F-51F69B60AE14
 :END:
@@ -5144,7 +5144,7 @@ CLOCK: [2021-03-30 Tue 21:45]--[2021-03-30 Tue 22:02] =>  0:17
   ("H-u" . writeroom-mode))
 #+end_src
 
-** logos
+** =logos=
 :PROPERTIES:
 :ID:       C5AA50F1-5477-4380-A9E3-1C542CFBD686
 :END:
@@ -5361,23 +5361,6 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 Using my fork while awaiting merge of [[https://github.com/kidd/org-gcal.el/pull/276][kidd/org-gcal.el#276]].
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package request
-  :ensure (:host github
-                 :repo "tkf/emacs-request"
-                 :files ("request.el")
-                 :depth nil
-                 :wait t)
-  :defer t)
-
-(use-package request-deferred
-  :ensure (:host github
-                 :repo "tkf/emacs-request"
-                 :files ("request-deferred.el")
-                 :depth nil
-                 :wait t)
-  :after request
-  :defer t)
-
 (use-package org-gcal
   :ensure (:host github
                  :repo "benthamite/org-gcal.el"
@@ -9169,7 +9152,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   :demand t)
 #+end_src
 
-** codex
+** =codex=
 :PROPERTIES:
 :ID:       D8DEDECF-1CC8-4788-87A6-F98B92CD8DDE
 :END:
@@ -9196,32 +9179,30 @@ Ensure nvm's default Node.js is on =exec-path= so that =npx= calls from MCP
 servers use the correct version.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(let* ((default-file (expand-file-name "~/.nvm/alias/default")))
-  (when (file-readable-p default-file)
-    (let* ((alias (string-trim (with-temp-buffer
-                                 (insert-file-contents default-file)
-                                 (buffer-string))))
-           (major (if (string-match "^v?\\([0-9]+\\)" alias)
-                      (match-string 1 alias)
-                    alias))
-           (node-dir (expand-file-name "~/.nvm/versions/node/"))
-           (versions (when (file-directory-p node-dir)
-                       (directory-files node-dir nil
-                                        (concat "^v" (regexp-quote major) "\\."))))
-           (latest (car (last (sort (copy-sequence versions) #'string<))))
-           (bin-dir (when latest (expand-file-name (concat latest "/bin") node-dir))))
-      (when (and bin-dir (file-directory-p bin-dir))
-        (add-to-list 'exec-path bin-dir)
-        (setenv "PATH" (concat bin-dir ":" (getenv "PATH")))))))
-#+end_src
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package mcp
   :ensure (:host github
                  :repo "lizqwerscott/mcp.el"
                  :build (:not elpaca-check-version))
   :after gptel
   :config
+  (let* ((default-file (expand-file-name "~/.nvm/alias/default")))
+    (when (file-readable-p default-file)
+      (let* ((alias (string-trim (with-temp-buffer
+                                   (insert-file-contents default-file)
+                                   (buffer-string))))
+             (major (if (string-match "^v?\\([0-9]+\\)" alias)
+                        (match-string 1 alias)
+                      alias))
+             (node-dir (expand-file-name "~/.nvm/versions/node/"))
+             (versions (when (file-directory-p node-dir)
+                         (directory-files node-dir nil
+                                          (concat "^v" (regexp-quote major) "\\."))))
+             (latest (car (last (sort (copy-sequence versions) #'string<))))
+             (bin-dir (when latest (expand-file-name (concat latest "/bin") node-dir))))
+        (when (and bin-dir (file-directory-p bin-dir))
+          (add-to-list 'exec-path bin-dir)
+          (setenv "PATH" (concat bin-dir ":" (getenv "PATH")))))))
+
   (setq mcp-hub-servers
         `(("context7" . (:command "npx"
                                   :args ("-y" "@upstash/context7-mcp@latest")))
@@ -14358,7 +14339,29 @@ CLOCK: [2021-10-01 Fri 21:10]--[2021-10-01 Fri 21:51] =>  0:41
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package request
-  :ensure nil ; Queued as a dependency before this configuration block.
+  :ensure (:host github
+                 :repo "tkf/emacs-request"
+                 :files ("request.el")
+                 :depth nil
+                 :wait t)
+  :defer t)
+#+end_src
+
+** =request-deferred=
+:PROPERTIES:
+:ID:       834D21B0-5BE1-47E4-B613-C8E4B5C724D6
+:END:
+
+/[[https://github.com/tkf/emacs-request][request-deferred]] provides deferred integration for =request=./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package request-deferred
+  :ensure (:host github
+                 :repo "tkf/emacs-request"
+                 :files ("request-deferred.el")
+                 :depth nil
+                 :wait t)
+  :after request
   :defer t)
 #+end_src
 

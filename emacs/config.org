@@ -9163,7 +9163,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
                  :repo "benthamite/codex")
   :defer t
   :custom
-  (codex-reasoning-effort "high"))
+  (codex-terminal-backend 'app-server))
 #+end_src
 
 ** =mcp=

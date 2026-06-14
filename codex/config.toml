@@ -7,6 +7,8 @@ suppress_unstable_features_warning = true
 approvals_reviewer = "auto_review"
 personality = "pragmatic"
 
+
+
 notify = ["/Users/pablostafforini/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient", "turn-ended"]
 
 [features]
@@ -357,6 +359,63 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/My Drive/repos/macrostrategy"]
 trust_level = "trusted"
 
+[projects."/Users/pablostafforini/My Drive/Epoch/projects"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/agent-readiness"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/dotfiles"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/conversations-with-champions"]
+trust_level = "trusted"
+
+[projects."/private/tmp/agent-codex-e2e.n4Pn1F"]
+trust_level = "trusted"
+
+[projects."/private/var/folders/n6/67613fgn44zbwm4x_y9mgr4m0000gn/T/agent-codex-e2e.Wql6zy"]
+trust_level = "trusted"
+
+[projects."/private/tmp/agent-codex-history-e2e.AzfiDj"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/gdocs-addon"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/repos/orbit"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/annas-archive"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/staff-availability"]
+trust_level = "trusted"
+
+[projects."/"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/shared"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/slack-maintenance"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/Videos/Harvard CS50s Intro to Cybersecurity"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/wikipedia"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/org-gcal"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/epoch-access"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/epoch-find"]
+trust_level = "trusted"
+
 [tui]
 theme = "light"
 
@@ -364,12 +423,12 @@ theme = "light"
 "gpt-5.5" = 4
 
 [marketplaces.openai-bundled]
-last_updated = "2026-05-31T23:33:37Z"
+last_updated = "2026-06-14T13:58:25Z"
 source_type = "local"
 source = "/Users/pablostafforini/.codex/.tmp/bundled-marketplaces/openai-bundled"
 
 [marketplaces.openai-primary-runtime]
-last_updated = "2026-05-25T22:49:04Z"
+last_updated = "2026-06-09T15:49:27Z"
 source_type = "local"
 source = "/Users/pablostafforini/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
 
@@ -392,6 +451,9 @@ enabled = true
 enabled = true
 
 [plugins."browser@openai-bundled"]
+enabled = true
+
+[plugins."chrome@openai-bundled"]
 enabled = true
 
 [hooks.state]
@@ -758,7 +820,7 @@ command = "/Applications/Codex.app/Contents/Resources/node_repl"
 startup_timeout_sec = 120
 
 [mcp_servers.node_repl.env]
-BROWSER_USE_AVAILABLE_BACKENDS = "iab"
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
 BROWSER_USE_MARKETPLACE_NAME = "openai-bundled"
 CODEX_CLI_PATH = "/Applications/Codex.app/Contents/Resources/codex"
 CODEX_HOME = "/Users/pablostafforini/.codex"

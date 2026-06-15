@@ -928,6 +928,41 @@ Claude and Codex hooks are no longer shared through adapters.  Claude hooks live
 in =claude/hooks/=; Codex counterparts live in =codex/hooks/=.  The mapping and
 known non-pairs are recorded in =ai-config-sync.json=.
 
+*** pretooluse-bash.sh (PreToolUse dispatcher)
+:PROPERTIES:
+:ID:       1B0E6D2F-9C4A-4E2B-8F1D-6A2C7E9B4F03
+:END:
+
+The =Bash= matcher in =~/.claude/settings.json= registers a single dispatcher,
+=pretooluse-bash.sh=, instead of one entry per check. Claude Code runs every
+hook matched to an event and aggregates their outputs with precedence
+=deny= > =ask= > =allow= (=permissionDecision= and =updatedInput= may coexist),
+so one dispatcher that reads stdin once, parses JSON once, and emits a single
+aggregated =hookSpecificOutput= is behaviorally equivalent to the separate
+hooks while spawning one process instead of ~13. Measured on a typical command
+this cut the per-=Bash= hook cost from ~454 ms to ~182 ms (≈60%).
+
+Self-contained, always-run checks are ported into the dispatcher (the only way
+to drop their per-command spawn): =block-secret-leak= (Bash branch),
+=block-unguarded-ahrefs-api=, =block-sensitive-read= (Bash branch),
+=block-destructive-command=, =block-walk-list-access= (Bash branch),
+=require-elisp-verify-after-commit=, and =wrap-bash-output= (runs last). Checks
+that do git/filesystem work behind a cheap regex gate are *delegated* to their
+unchanged standalone scripts, and only when their gate matches, so they add no
+spawn on the common path and behave identically:
+=require-elisp-test-before-commit=, =require-doc-update=, =require-readme-update=,
+and =require-ai-config-sync= (gated on a =commit= mention),
+=block-elpaca-rebuild-uncommitted= (gated on =emacsclient= + =elpaca-rebuild=),
+and =block-long-pipeline-run-unchecked= (gated on the pipeline launch pattern).
+
+The standalone hooks remain in =claude/hooks/= as the source of truth for the
+delegated checks, the =Edit/Write/Read/Grep= registrations of the shared guards
+(=block-secret-leak=, =block-sensitive-read=, =block-walk-list-access=), and a
+rollback path: restore the previous multi-entry =Bash= matcher (a timestamped
+=~/.claude/settings.json.bak-pretooluse-*= backup is written when migrating) to
+revert. The per-hook sections below document each check's logic; they apply
+whether the check runs standalone or inside the dispatcher.
+
 *** Completion-claim discipline
 :PROPERTIES:
 :ID:       92D63696-DA1B-4371-80FE-A3A76FE831F4

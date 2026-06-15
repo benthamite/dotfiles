@@ -103,57 +103,58 @@ check_pattern() {
   fi
 }
 
-# AWS access key
-check_pattern 'AKIA[0-9A-Z]{16}' 'AWS access key'
+# Secret patterns, each paired with its human-readable label. Defined once and
+# used both for the fast combined gate below and for per-pattern classification,
+# so the two can never drift. Order matters: more specific patterns (e.g.
+# sk-ant- before generic sk-) come first so the most precise label wins.
+SECRET_PATTERNS=(
+  'AKIA[0-9A-Z]{16}'                                                       # AWS access key
+  'gh[ps]_[A-Za-z0-9_]{36,}'                                              # GitHub token
+  'github_pat_[A-Za-z0-9_]{22,}'                                          # GitHub PAT
+  'xox[bporca]-[A-Za-z0-9-]{10,}'                                         # Slack token
+  'sk-ant-[A-Za-z0-9_-]{40,}'                                             # Anthropic key
+  '(^|[^A-Za-z0-9])sk-[a-zA-Z0-9_-]{20,}'                                 # generic sk- key
+  '(sk|pk|rk)_(live|test)_[A-Za-z0-9]{20,}'                              # Stripe key
+  'lin_api_[A-Za-z0-9]{40,}'                                             # Linear key
+  'pat[A-Za-z0-9]{14}\.[a-f0-9]{64}'                                     # Airtable PAT
+  '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----'                      # private key
+  '"client_secret"\s*:\s*"[A-Za-z0-9_-]{20,}"'                           # Google OAuth secret
+  'AIza[0-9A-Za-z_-]{35}'                                                # Google API key
+  'glpat-[A-Za-z0-9_-]{20,}'                                             # GitLab token
+  'eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+'               # JWT
+  '(postgres|postgresql|mysql|mongodb|mongodb\+srv|redis|amqp|amqps|mssql)://[^:/ ]+:[^@/ ]+@'  # DB URL with creds
+  "(api[_-]?key|api[_-]?secret|secret[_-]?key|access[_-]?token|auth[_-]?token)\s*[=:]\s*['\"][A-Za-z0-9/+=_-]{32,}"  # assigned secret
+)
+SECRET_LABELS=(
+  'AWS access key'
+  'GitHub token'
+  'GitHub personal access token'
+  'Slack token'
+  'Anthropic API key'
+  'API secret key (sk-...)'
+  'Stripe API key'
+  'Linear API key'
+  'Airtable personal access token'
+  'private key'
+  'Google OAuth client secret'
+  'Google API key'
+  'GitLab token'
+  'JWT'
+  'database connection string with embedded credentials'
+  'hardcoded secret value'
+)
 
-# GitHub tokens
-check_pattern 'gh[ps]_[A-Za-z0-9_]{36,}' 'GitHub token'
-check_pattern 'github_pat_[A-Za-z0-9_]{22,}' 'GitHub personal access token'
-
-# Slack tokens
-check_pattern 'xox[bporca]-[A-Za-z0-9-]{10,}' 'Slack token'
-
-# Anthropic API key (more specific than generic sk- below)
-check_pattern 'sk-ant-[A-Za-z0-9_-]{40,}' 'Anthropic API key'
-
-# OpenAI / generic sk- keys (catches sk-..., excluded above for sk-ant-)
-check_pattern '(^|[^A-Za-z0-9])sk-[a-zA-Z0-9_-]{20,}' 'API secret key (sk-...)'
-
-# Stripe live/test keys (sk_live_, pk_live_, rk_live_, sk_test_, pk_test_, rk_test_)
-check_pattern '(sk|pk|rk)_(live|test)_[A-Za-z0-9]{20,}' 'Stripe API key'
-
-# Linear API key
-check_pattern 'lin_api_[A-Za-z0-9]{40,}' 'Linear API key'
-
-# Airtable personal access token (modern format: patXXXXXXXXXXXXXX.<64 hex>)
-check_pattern 'pat[A-Za-z0-9]{14}\.[a-f0-9]{64}' 'Airtable personal access token'
-
-# Private keys
-check_pattern '-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----' 'private key'
-
-# Google OAuth client secret (the secret, not the ID)
-# Client IDs are semi-public; secrets are not.
-check_pattern '"client_secret"\s*:\s*"[A-Za-z0-9_-]{20,}"' 'Google OAuth client secret'
-
-# Google API key (AIza...)
-check_pattern 'AIza[0-9A-Za-z_-]{35}' 'Google API key'
-
-# GitLab personal access token
-check_pattern 'glpat-[A-Za-z0-9_-]{20,}' 'GitLab token'
-
-# JWT (three base64url segments separated by dots)
-# JWTs always start with eyJ (base64 of {") and have exactly two dots.
-check_pattern 'eyJ[A-Za-z0-9_-]+\.eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+' 'JWT'
-
-# Database connection string with embedded credentials.
-# Matches scheme://user:password@host for common DB schemes. Credential-less
-# URLs (e.g. postgres://localhost/db) do not match.
-check_pattern '(postgres|postgresql|mysql|mongodb|mongodb\+srv|redis|amqp|amqps|mssql)://[^:/ ]+:[^@/ ]+@' 'database connection string with embedded credentials'
-
-# Generic high-entropy tokens assigned to known secret variable names
-# This catches: API_KEY=abc123..., secret: "abc123...", token = "abc123..."
-# The {32,} threshold reduces false positives from short values.
-check_pattern "(api[_-]?key|api[_-]?secret|secret[_-]?key|access[_-]?token|auth[_-]?token)\s*[=:]\s*['\"][A-Za-z0-9/+=_-]{32,}" 'hardcoded secret value'
+# Fast path: one grep tests every pattern at once. The common case (no secret)
+# returns after a single subprocess instead of one per pattern. Only when the
+# combined gate matches do we run the per-pattern loop to classify the hit and
+# emit a specific label.
+gate_args=()
+for _pat in "${SECRET_PATTERNS[@]}"; do gate_args+=(-e "$_pat"); done
+if echo "$CONTENT" | grep -qE "${gate_args[@]}"; then
+  for _i in "${!SECRET_PATTERNS[@]}"; do
+    check_pattern "${SECRET_PATTERNS[$_i]}" "${SECRET_LABELS[$_i]}"
+  done
+fi
 
 # --- Exfiltration patterns (Bash only) ---
 # Detect sensitive file content being piped to network tools.

@@ -262,9 +262,9 @@ The command @code{simple-extras-transpose-chars-backward} transposes the two cha
 @findex simple-extras-smart-kill-region
 @findex simple-extras-smart-delete-region
 @findex simple-extras-smart-copy-region
-These three commands provide DWIM behavior for acting on text: if the mark is active, they operate on the region; otherwise, they operate on the whole current line. This makes them convenient as general-purpose bindings since they adapt to context.
+These three commands provide DWIM behavior for acting on text: if the mark is usable by the underlying region command, they operate on the region; otherwise, they operate on the whole current line. This makes them convenient as general-purpose bindings since they adapt to context.
 
-The command @code{simple-extras-smart-kill-region} calls @code{kill-region} when the mark is active, and @code{kill-whole-line} otherwise. The command @code{simple-extras-smart-delete-region} calls @code{delete-region} or @code{simple-extras-delete-whole-line} (@ref{Line operations}). The command @code{simple-extras-smart-copy-region} calls @code{copy-region-as-kill} or @code{simple-extras-copy-whole-line}.
+The command @code{simple-extras-smart-kill-region} calls @code{kill-region} when the mark is usable, and @code{kill-whole-line} otherwise. The command @code{simple-extras-smart-delete-region} calls @code{delete-region} or @code{simple-extras-delete-whole-line} (@ref{Line operations}). The command @code{simple-extras-smart-copy-region} calls @code{copy-region-as-kill} or @code{simple-extras-copy-whole-line}.
 
 @node Yank commands
 @section Yank commands

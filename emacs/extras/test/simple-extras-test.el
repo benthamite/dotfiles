@@ -287,6 +287,20 @@
       (should (equal (buffer-string) " world"))
       (should (equal (car kill-ring) "hello")))))
 
+(ert-deftest simple-extras-test-smart-kill-region-with-inactive-mark ()
+  "Smart-kill-region follows kill-region when the mark is inactive."
+  (with-temp-buffer
+    (let ((kill-ring nil)
+          (kill-ring-yank-pointer nil)
+          (last-command nil))
+      (insert "hello world")
+      (set-marker (mark-marker) 1)
+      (goto-char 6)
+      (setq mark-active nil)
+      (simple-extras-smart-kill-region)
+      (should (equal (buffer-string) " world"))
+      (should (equal (car kill-ring) "hello")))))
+
 (ert-deftest simple-extras-test-smart-delete-region-with-mark-active ()
   "Smart-delete-region deletes the region when Transient Mark mode is off."
   (with-temp-buffer
@@ -302,6 +316,21 @@
         (should (equal (buffer-string) " world"))
         (should (equal kill-ring kill-ring-before))))))
 
+(ert-deftest simple-extras-test-smart-delete-region-with-inactive-mark ()
+  "Smart-delete-region follows delete-region when the mark is inactive."
+  (with-temp-buffer
+    (let ((kill-ring nil)
+          (kill-ring-yank-pointer nil)
+          (last-command nil))
+      (insert "hello world")
+      (set-marker (mark-marker) 1)
+      (goto-char 6)
+      (setq mark-active nil)
+      (let ((kill-ring-before (copy-sequence kill-ring)))
+        (simple-extras-smart-delete-region)
+        (should (equal (buffer-string) " world"))
+        (should (equal kill-ring kill-ring-before))))))
+
 (ert-deftest simple-extras-test-smart-copy-region-with-mark-active ()
   "Smart-copy-region copies the region when Transient Mark mode is off."
   (with-temp-buffer
@@ -312,6 +341,20 @@
       (insert "hello world")
       (set-mark 1)
       (goto-char 6)
+      (simple-extras-smart-copy-region)
+      (should (equal (buffer-string) "hello world"))
+      (should (equal (car kill-ring) "hello")))))
+
+(ert-deftest simple-extras-test-smart-copy-region-with-inactive-mark ()
+  "Smart-copy-region follows copy-region-as-kill when the mark is inactive."
+  (with-temp-buffer
+    (let ((kill-ring nil)
+          (kill-ring-yank-pointer nil)
+          (last-command nil))
+      (insert "hello world")
+      (set-marker (mark-marker) 1)
+      (goto-char 6)
+      (setq mark-active nil)
       (simple-extras-smart-copy-region)
       (should (equal (buffer-string) "hello world"))
       (should (equal (car kill-ring) "hello")))))

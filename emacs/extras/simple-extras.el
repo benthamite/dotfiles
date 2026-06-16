@@ -427,14 +427,20 @@ Negative arg -N means copy N sexps after point."
 (defun simple-extras-smart-copy-region ()
   "Copy region if the mark is usable, else copy line."
   (interactive)
-  (if (simple-extras--mark-usable-p)
-      (call-interactively 'copy-region-as-kill)
+  (if-let* ((bounds (simple-extras--mark-usable-bounds)))
+      (simple-extras--copy-bounds (car bounds) (cdr bounds))
     (call-interactively 'simple-extras-copy-whole-line)))
 
-(defun simple-extras--mark-usable-p ()
-  "Return non-nil if region commands can use the mark."
+(defun simple-extras--copy-bounds (beg end)
+  "Copy text between BEG and END directly."
+  (kill-new (filter-buffer-substring beg end))
+  (setq deactivate-mark t))
+
+(defun simple-extras--mark-usable-bounds ()
+  "Return region bounds if region commands can use the mark."
   (condition-case nil
-      (progn (mark) t)
+      (let ((mark (mark)))
+        (cons (min (point) mark) (max (point) mark)))
     (mark-inactive nil)
     (error nil)))
 

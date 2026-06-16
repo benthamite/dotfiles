@@ -411,16 +411,16 @@ Negative arg -N means copy N sexps after point."
 ;;;;;; Region
 
 (defun simple-extras-smart-kill-region ()
-  "Kill region if the mark is usable, else kill line."
+  "Kill region if the mark is active, else kill line."
   (interactive)
-  (if (simple-extras--mark-usable-p)
+  (if (simple-extras--mark-active-p)
       (call-interactively 'kill-region)
     (call-interactively 'kill-whole-line)))
 
 (defun simple-extras-smart-delete-region ()
-  "Delete region if the mark is usable, else delete line."
+  "Delete region if the mark is active, else delete line."
   (interactive)
-  (if (simple-extras--mark-usable-p)
+  (if (simple-extras--mark-active-p)
       (call-interactively 'delete-region)
     (call-interactively 'simple-extras-delete-whole-line)))
 
@@ -437,6 +437,10 @@ Negative arg -N means copy N sexps after point."
       (progn (mark) t)
     (mark-inactive nil)
     (error nil)))
+
+(defun simple-extras--mark-active-p ()
+  "Return non-nil if the current buffer's mark is active."
+  (and mark-active (mark t)))
 
 ;;;;;; Yank
 

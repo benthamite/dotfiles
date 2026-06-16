@@ -288,7 +288,7 @@
       (should (equal (car kill-ring) "hello")))))
 
 (ert-deftest simple-extras-test-smart-kill-region-with-inactive-mark ()
-  "Smart-kill-region follows kill-region when the mark is inactive."
+  "Smart-kill-region kills the current line when the mark is inactive."
   (with-temp-buffer
     (let ((kill-ring nil)
           (kill-ring-yank-pointer nil)
@@ -298,8 +298,8 @@
       (goto-char 6)
       (setq mark-active nil)
       (simple-extras-smart-kill-region)
-      (should (equal (buffer-string) " world"))
-      (should (equal (car kill-ring) "hello")))))
+      (should (equal (buffer-string) ""))
+      (should (equal (car kill-ring) "hello world")))))
 
 (ert-deftest simple-extras-test-smart-delete-region-with-mark-active ()
   "Smart-delete-region deletes the region when Transient Mark mode is off."
@@ -317,7 +317,7 @@
         (should (equal kill-ring kill-ring-before))))))
 
 (ert-deftest simple-extras-test-smart-delete-region-with-inactive-mark ()
-  "Smart-delete-region follows delete-region when the mark is inactive."
+  "Smart-delete-region deletes the current line when the mark is inactive."
   (with-temp-buffer
     (let ((kill-ring nil)
           (kill-ring-yank-pointer nil)
@@ -328,7 +328,7 @@
       (setq mark-active nil)
       (let ((kill-ring-before (copy-sequence kill-ring)))
         (simple-extras-smart-delete-region)
-        (should (equal (buffer-string) " world"))
+        (should (equal (buffer-string) ""))
         (should (equal kill-ring kill-ring-before))))))
 
 (ert-deftest simple-extras-test-smart-copy-region-with-mark-active ()

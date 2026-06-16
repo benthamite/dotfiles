@@ -359,31 +359,29 @@
       (should (equal (buffer-string) "hello world"))
       (should (equal (car kill-ring) "hello")))))
 
-(ert-deftest simple-extras-test-smart-copy-region-saves-text-directly ()
-  "Smart-copy-region saves mark text without interactive copy dispatch."
+(ert-deftest simple-extras-test-smart-copy-region-delegates-active-region ()
+  "Smart-copy-region delegates active regions to copy-region-as-kill."
   (with-temp-buffer
     (let ((kill-ring nil)
           (kill-ring-yank-pointer nil)
           (last-command nil)
-          saved-text
-          copy-called)
+          copied-bounds
+          line-copy-called)
       (insert "hello world")
       (set-mark 1)
       (goto-char 6)
       (activate-mark)
       (cl-letf (((symbol-function 'copy-region-as-kill)
-                 (lambda (_beg _end)
+                 (lambda (beg end)
                    (interactive "r")
-                   (setq copy-called t)))
-                ((symbol-function 'kill-ring-save)
-                 (lambda (&rest _args)
-                   (setq copy-called t)))
-                ((symbol-function 'kill-new)
-                 (lambda (string &optional _replace)
-                   (setq saved-text string))))
+                   (setq copied-bounds (list beg end))))
+                ((symbol-function 'simple-extras-copy-whole-line)
+                 (lambda ()
+                   (interactive)
+                   (setq line-copy-called t))))
         (simple-extras-smart-copy-region))
-      (should-not copy-called)
-      (should (equal saved-text "hello")))))
+      (should (equal copied-bounds '(1 6)))
+      (should-not line-copy-called))))
 
 ;;;; New buffer detection
 

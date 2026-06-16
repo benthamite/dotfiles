@@ -262,9 +262,9 @@ The command @code{simple-extras-transpose-chars-backward} transposes the two cha
 @findex simple-extras-smart-kill-region
 @findex simple-extras-smart-delete-region
 @findex simple-extras-smart-copy-region
-These three commands provide DWIM behavior for acting on text. Kill and delete operate on the region only when the mark is active, while copy saves the point/mark text directly and also accepts an inactive mark that Emacs still considers usable. Otherwise, they operate on the whole current line. This makes them convenient as general-purpose bindings since they adapt to context.
+These three commands provide DWIM behavior for acting on text. Kill and delete operate on the region only when the mark is active, while copy delegates to @code{copy-region-as-kill} and also accepts an inactive mark that Emacs still considers usable. Otherwise, they operate on the whole current line. This makes them convenient as general-purpose bindings since they adapt to context.
 
-The command @code{simple-extras-smart-kill-region} calls @code{kill-region} when the mark is active, and @code{kill-whole-line} otherwise. The command @code{simple-extras-smart-delete-region} calls @code{delete-region} when the mark is active, and @code{simple-extras-delete-whole-line} (@ref{Line operations}) otherwise. The command @code{simple-extras-smart-copy-region} saves the text between point and mark directly with @code{kill-new} when the mark is usable, and @code{simple-extras-copy-whole-line} otherwise.
+The command @code{simple-extras-smart-kill-region} calls @code{kill-region} when the mark is active, and @code{kill-whole-line} otherwise. The command @code{simple-extras-smart-delete-region} calls @code{delete-region} when the mark is active, and @code{simple-extras-delete-whole-line} (@ref{Line operations}) otherwise. The command @code{simple-extras-smart-copy-region} calls @code{copy-region-as-kill} when the mark is usable, and @code{simple-extras-copy-whole-line} otherwise.
 
 @node Yank commands
 @section Yank commands

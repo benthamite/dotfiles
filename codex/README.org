@@ -30,7 +30,7 @@ ai-config-sync.json        <- Claude/Codex sync manifest
 bin/ai-config-sync         <- audit, reminder, and commit-guard checker
 #+end_example
 
-The =hooks/= counterparts mirror the Claude guard hooks. =hooks/require-readme-update.sh= shares the Claude version's cd-detection logic, including the =[^&;|]*= fix that stops an unrelated =cd <repo> && git add …/.claude/…= from tripping the README guard. =hooks/require-codex-readme-update.sh= covers Codex integration paths such as =codex/=, =.codex/=, =ai-config-sync.json=, and =bin/ai-config-sync=, but deliberately does not treat the repo-root project =AGENTS.md= mirror as Codex integration. =hooks/require-doc-update.sh= honors the same per-branch =deferDocUpdates= git-config escape as the Claude version (see the Claude README for details); the setting is ignored on =main=/=master=. =hooks/lib-repo-root.sh= mirrors the Claude version's quoted =cd= target handling: quotes are stripped before the directory test so quoted paths resolve the correct repo. =hooks/block-unguarded-ahrefs-api.sh= blocks raw shell calls to =api.ahrefs.com= unless they use =ahrefs-api-guard= or only hit the free subscription-info quota endpoint. =hooks/remind-plan-review.sh= is a PostToolUse reminder for =docs/superpowers/plans/*.md=, =.codex/private-plans/*.md=, and =/tmp/codex-plans/*.md= edits; it asks the agent to dispatch a plan-review subagent before presenting a plan as ready.
+The =hooks/= counterparts mirror the Claude guard hooks. =hooks/require-readme-update.sh= shares the Claude version's cd-detection logic, including the =[^&;|]*= fix that stops an unrelated =cd <repo> && git add …/.claude/…= from tripping the README guard. =hooks/require-codex-readme-update.sh= covers Codex integration paths such as =codex/=, =.codex/=, =ai-config-sync.json=, and =bin/ai-config-sync=, but deliberately does not treat the repo-root project =AGENTS.md= mirror as Codex integration. =hooks/require-doc-update.sh= honors the same per-branch =deferDocUpdates= git-config escape as the Claude version (see the Claude README for details); the setting is ignored on =main=/=master=. =hooks/lib-repo-root.sh= mirrors the Claude version's quoted =cd= target handling: quotes are stripped before the directory test so quoted paths resolve the correct repo. =hooks/block-unguarded-ahrefs-api.sh= blocks raw shell calls to =api.ahrefs.com= unless they use =ahrefs-api-guard= or only hit the free subscription-info quota endpoint. =hooks/block-github-write-command.sh= blocks =git push= and write-style =gh= operations unless the target repository is listed in the shared =agents/github-write-allowlist.txt= file, which is empty by default. =hooks/block-github-guard-edit.sh= prevents agents from editing that allowlist, the guard scripts, or the hook registration files. =hooks/remind-plan-review.sh= is a PostToolUse reminder for =docs/superpowers/plans/*.md=, =.codex/private-plans/*.md=, and =/tmp/codex-plans/*.md= edits; it asks the agent to dispatch a plan-review subagent before presenting a plan as ready.
 
 Repo-root =.codex/= is reserved for project-local Codex config. Do not use
 =~/My Drive/dotfiles/.codex/= as a target for live global =~/.codex/= symlinks;
@@ -682,6 +682,15 @@ unless they go through =ahrefs-api-guard= or only call the free
 =subscription-info/limits-and-usage= endpoint. The wrapper checks live Ahrefs
 workspace usage before paid calls and denies requests below the configured
 reserve, which is currently 200,000 units by default.
+
+=block-github-write-command.sh= blocks agent-initiated GitHub writes unless the
+target repository is listed in =agents/github-write-allowlist.txt=. It covers
+=git push=, mutating =gh pr= / =gh issue= / =gh secret= / =gh workflow= / =gh
+release= / =gh repo= commands, and write-style =gh api= calls. Read-only =gh=
+inspection remains allowed. =block-github-guard-edit.sh= makes the allowlist,
+guard files, tracked =codex/hooks.json=, live =~/.codex/hooks.json=, and live
+=~/.claude/settings.json= self-protected so an agent cannot first edit its own
+policy and then perform the blocked write. The allowlist is empty by default.
 
 The =UserPromptSubmit= hook forwards lifecycle state for Emacs-owned sessions
 through =codex-hook-wrapper=. The matcher is empty because =UserPromptSubmit=

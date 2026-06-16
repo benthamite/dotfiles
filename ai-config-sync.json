@@ -259,7 +259,7 @@
    "name": "block-destructive-command.sh",
    "claude": "claude/hooks/block-destructive-command.sh",
    "codex": "codex/hooks/block-destructive-command.sh",
-   "status": "paired",
+   "status": "paired-dispatched",
    "note": "paired; Claude ask decisions become deny-with-user-confirmation instructions; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
   },
   {
@@ -273,8 +273,22 @@
    "name": "block-elpaca-rebuild-uncommitted.sh",
    "claude": "claude/hooks/block-elpaca-rebuild-uncommitted.sh",
    "codex": "codex/hooks/block-elpaca-rebuild-uncommitted.sh",
-   "status": "paired",
+   "status": "paired-dispatched",
    "note": "paired for Bash emacsclient guard; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
+  },
+  {
+   "name": "block-github-guard-edit.sh",
+   "claude": "claude/hooks/block-github-guard-edit.sh",
+   "codex": "codex/hooks/block-github-guard-edit.sh",
+   "status": "paired",
+   "note": "paired self-protection for the shared GitHub write allowlist, guard scripts, tracked codex/hooks.json, live ~/.codex/hooks.json, and live ~/.claude/settings.json; Claude handles Edit/Write/NotebookEdit file_path payloads, while Codex handles apply_patch/Edit/Write changed paths via lib-codex-paths.sh"
+  },
+  {
+   "name": "block-github-write-command.sh",
+   "claude": "claude/hooks/block-github-write-command.sh",
+   "codex": "codex/hooks/block-github-write-command.sh",
+   "status": "paired-dispatched",
+   "note": "paired GitHub write gate for shell commands; blocks git push and mutating gh operations unless the target repo is in agents/github-write-allowlist.txt. Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh; Claude side is delegated by pretooluse-bash.sh."
   },
   {
    "name": "block-secret-leak.sh",
@@ -287,7 +301,7 @@
    "name": "block-unguarded-ahrefs-api.sh",
    "claude": "claude/hooks/block-unguarded-ahrefs-api.sh",
    "codex": "codex/hooks/block-unguarded-ahrefs-api.sh",
-   "status": "paired",
+   "status": "paired-dispatched",
    "note": "paired for Bash/exec_command raw Ahrefs API guards; allows the free subscription-info quota endpoint and the ahrefs-api-guard wrapper, blocks paid api.ahrefs.com shell calls that have not checked the live workspace reserve"
   },
   {
@@ -396,6 +410,13 @@
    "note": "Claude Stop event wrapper; Codex routes Stop through codex-hook-wrapper directly."
   },
   {
+   "name": "pretooluse-bash.sh",
+   "claude": "claude/hooks/pretooluse-bash.sh",
+   "codex": null,
+   "status": "claude-only",
+   "note": "Claude Bash PreToolUse dispatcher registered in ~/.claude/settings.json. It ports cheap Bash guards in-process and delegates heavier git/filesystem checks, including the GitHub write guard, to their standalone hook scripts. Codex registers the corresponding shell hooks directly in codex/hooks.json instead of using this dispatcher."
+  },
+  {
    "name": "regenerate-manual-after-edit.sh",
    "claude": "claude/hooks/regenerate-manual-after-edit.sh",
    "codex": "codex/hooks/regenerate-manual-after-edit.sh",
@@ -434,7 +455,7 @@
    "name": "require-ai-config-sync.sh",
    "claude": "claude/hooks/require-ai-config-sync.sh",
    "codex": "codex/hooks/require-ai-config-sync.sh",
-   "status": "paired",
+   "status": "paired-dispatched",
    "note": "paired as Claude/Codex wrappers around bin/ai-config-sync"
   },
   {
@@ -448,7 +469,7 @@
    "name": "require-doc-update.sh",
    "claude": "claude/hooks/require-doc-update.sh",
    "codex": "codex/hooks/require-doc-update.sh",
-   "status": "paired",
+   "status": "paired-dispatched",
    "note": "paired for Bash git commit gate; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
   },
   {
@@ -462,21 +483,21 @@
    "name": "require-elisp-test-before-commit.sh",
    "claude": "claude/hooks/require-elisp-test-before-commit.sh",
    "codex": "codex/hooks/require-elisp-test-before-commit.sh",
-   "status": "paired",
+   "status": "paired-dispatched",
    "note": "paired for Bash git commit gate; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
   },
   {
    "name": "require-elisp-verify-after-commit.sh",
    "claude": "claude/hooks/require-elisp-verify-after-commit.sh",
    "codex": "codex/hooks/require-elisp-verify-after-commit.sh",
-   "status": "paired",
+   "status": "paired-dispatched",
    "note": "paired for Bash post-commit verification gate; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
   },
   {
    "name": "require-readme-update.sh",
    "claude": "claude/hooks/require-readme-update.sh",
    "codex": "codex/hooks/require-readme-update.sh",
-   "status": "paired",
+   "status": "paired-dispatched",
    "note": "paired for Claude config README gate; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh"
   },
   {
@@ -562,14 +583,21 @@
    "tool": "Claude Code",
    "path": "~/.claude/settings.json",
    "tracked": false,
-   "note": "Mutable live global settings; sync hooks added in place. The Stop hook chain forwards session-end state to Emacs via the fire-and-forget notifier. Session learning capture is handled by the Emacs agent-before-exit path rather than the Stop hook, because Stop fires at turn end rather than true session exit. The 2026-06 Ahrefs guard added block-unguarded-ahrefs-api.sh globally so raw paid shell calls to api.ahrefs.com must go through the live quota wrapper."
+   "note": "Mutable live global settings; sync hooks added in place. The Stop hook chain forwards session-end state to Emacs via the fire-and-forget notifier. Session learning capture is handled by the Emacs agent-before-exit path rather than the Stop hook, because Stop fires at turn end rather than true session exit. The 2026-06 Ahrefs guard added block-unguarded-ahrefs-api.sh globally so raw paid shell calls to api.ahrefs.com must go through the live quota wrapper. The 2026-06 GitHub write guard is delegated by pretooluse-bash.sh for Bash commands and registers block-github-guard-edit.sh for Edit/Write self-protection."
   },
   {
    "tool": "Codex",
    "path": "codex/hooks.json",
    "tracked": true,
    "live_path": "~/.codex/hooks.json",
-   "note": "Live global Codex hook file is a symlink to the tracked repo file. The tracked file intentionally lives outside a repo-root .codex/ directory so launching Codex from the dotfiles root does not load the same hooks a second time as project-local hooks. Codex-only codex-hook-wrapper entries point at the Emacs package source tree because elpaca/builds contains compiled Elisp but not the wrapper script, and include explicit emacsclient/socket arguments so dispatch targets the active Emacs server. The apply_patch and Edit|Write matchers are collapsed into a single apply_patch|Edit|Write block per event to keep the trust-review list compact under the Codex 0.129 hook trust gate. Codex UserPromptSubmit uses the empty matcher because that event has no tool name. Codex Stop routes through codex-hook-wrapper so Emacs observes turn end; session learning capture is handled by the Emacs agent-before-exit path. PreCompact and PostCompact route through codex-hook-wrapper so the Emacs side observes the full lifecycle. The 2026-05 symlink-drift repair refreshed all eight lifecycle wrapper paths to the active 8.3.0-dev Emacs profile after the standalone codex package learned to replace stale profile-specific wrapper entries instead of appending duplicates. The 2026-06 Ahrefs guard registers block-unguarded-ahrefs-api.sh for shell tools so raw paid api.ahrefs.com commands are denied unless routed through ahrefs-api-guard."
+   "note": "Live global Codex hook file is a symlink to the tracked repo file. The tracked file intentionally lives outside a repo-root .codex/ directory so launching Codex from the dotfiles root does not load the same hooks a second time as project-local hooks. Codex-only codex-hook-wrapper entries point at the Emacs package source tree because elpaca/builds contains compiled Elisp but not the wrapper script, and include explicit emacsclient/socket arguments so dispatch targets the active Emacs server. The apply_patch and Edit|Write matchers are collapsed into a single apply_patch|Edit|Write block per event to keep the trust-review list compact under the Codex 0.129 hook trust gate. Codex UserPromptSubmit uses the empty matcher because that event has no tool name. Codex Stop routes through codex-hook-wrapper so Emacs observes turn end; session learning capture is handled by the Emacs agent-before-exit path. PreCompact and PostCompact route through codex-hook-wrapper so the Emacs side observes the full lifecycle. The 2026-05 symlink-drift repair refreshed all eight lifecycle wrapper paths to the active 8.3.0-dev Emacs profile after the standalone codex package learned to replace stale profile-specific wrapper entries instead of appending duplicates. The 2026-06 Ahrefs guard registers block-unguarded-ahrefs-api.sh for shell tools so raw paid api.ahrefs.com commands are denied unless routed through ahrefs-api-guard. The 2026-06 GitHub write guard registers block-github-write-command.sh for shell tools and block-github-guard-edit.sh for allowlist/guard self-protection."
+  },
+  {
+   "tool": "Claude Code and Codex",
+   "path": "agents/github-write-allowlist.txt",
+   "tracked": true,
+   "live_path": "tracked dotfiles file",
+   "note": "Shared deny-by-default allowlist for agent-initiated GitHub writes. Claude and Codex guards block git push and mutating gh operations unless the target repo appears here; the file is empty by default and should include only repos Pablo personally created."
   },
   {
    "tool": "Codex",

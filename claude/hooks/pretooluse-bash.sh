@@ -339,6 +339,9 @@ echo "$COMMAND" | grep -qE '\bcommit\b' && IS_COMMIT=1
 
 check_secret_leak
 check_ahrefs
+if echo "$COMMAND" | grep -qE '(^|[[:space:];|&])(git[[:space:]]+push|gh[[:space:]]+(api|pr|issue|secret|variable|workflow|run|release|repo|label|milestone|gist)[[:space:]])|agents/github-write-allowlist\.txt|codex/(hooks/block-github-write-command\.sh|hooks/block-github-guard-edit\.sh|hooks\.json)|claude/(hooks/block-github-write-command\.sh|hooks/block-github-guard-edit\.sh|hooks/pretooluse-bash\.sh)|\.codex/hooks\.json|\.claude/settings\.json'; then
+  delegate block-github-write-command.sh
+fi
 check_sensitive_read
 check_destructive
 check_walk_list

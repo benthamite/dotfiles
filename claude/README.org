@@ -950,15 +950,18 @@ to drop their per-command spawn): =block-secret-leak= (Bash branch),
 that do git/filesystem work behind a cheap regex gate are *delegated* to their
 unchanged standalone scripts, and only when their gate matches, so they add no
 spawn on the common path and behave identically:
-=require-elisp-test-before-commit=, =require-doc-update=, =require-readme-update=,
-and =require-ai-config-sync= (gated on a =commit= mention),
+=block-github-write-command= (gated on =git push=, write-style =gh= commands,
+or GitHub guard-file paths), =require-elisp-test-before-commit=,
+=require-doc-update=, =require-readme-update=, and =require-ai-config-sync=
+(gated on a =commit= mention),
 =block-elpaca-rebuild-uncommitted= (gated on =emacsclient= + =elpaca-rebuild=),
 and =block-long-pipeline-run-unchecked= (gated on the pipeline launch pattern).
 
 The standalone hooks remain in =claude/hooks/= as the source of truth for the
 delegated checks, the =Edit/Write/Read/Grep= registrations of the shared guards
-(=block-secret-leak=, =block-sensitive-read=, =block-walk-list-access=), and a
-rollback path: restore the previous multi-entry =Bash= matcher (a timestamped
+(=block-secret-leak=, =block-sensitive-read=, =block-walk-list-access=, and
+=block-github-guard-edit=), and a rollback path: restore the previous
+multi-entry =Bash= matcher (a timestamped
 =~/.claude/settings.json.bak-pretooluse-*= backup is written when migrating) to
 revert. The per-hook sections below document each check's logic; they apply
 whether the check runs standalone or inside the dispatcher.
@@ -1202,7 +1205,31 @@ output-side filtering until the hook API exposes direct output replacement.
 :ID:       DC12DCB5-4C06-43D2-B235-9C08B99653D9
 :END:
 
-Blocks or gates destructive shell commands that are hard to reverse. Hard-blocks (deny): =rm -rf= (suggests =trash=), =git push --force=, =git reset --hard=, =git clean -f=, =git checkout -- .=, and =git branch -D=. Prompts for confirmation (ask): =git push= (all pushes), =git clone= / =gh repo clone=. Each pattern includes a specific remediation suggestion. Users can run blocked commands manually via =!=.
+Blocks or gates destructive shell commands that are hard to reverse. Hard-blocks (deny): =rm -rf= (suggests =trash=), =git push --force=, =git reset --hard=, =git clean -f=, =git checkout -- .=, and =git branch -D=. Prompts for confirmation (ask): =git clone= / =gh repo clone=. Non-force =git push= is handled by =block-github-write-command.sh= instead of this destructive-command hook. Each pattern includes a specific remediation suggestion. Users can run blocked commands manually via =!=.
+
+*** block-github-write-command.sh (PreToolUse)
+:PROPERTIES:
+:ID:       2B5F734F-9472-4944-A44D-2E2C9C86E76B
+:END:
+
+Blocks agent-initiated GitHub writes unless the target repository is listed in
+the shared =agents/github-write-allowlist.txt= file. The allowlist is empty by
+default and should contain only repositories Pablo personally created and
+explicitly wants agents to mutate. The hook covers =git push=, mutating =gh pr=
+/ =gh issue= / =gh secret= / =gh workflow= / =gh release= / =gh repo= commands,
+and write-style =gh api= calls. Read-only =gh= inspection remains allowed.
+
+*** block-github-guard-edit.sh (PreToolUse)
+:PROPERTIES:
+:ID:       280F37C2-3311-4B37-9330-5390612DF915
+:END:
+
+Blocks agent edits to =agents/github-write-allowlist.txt=, the GitHub write
+guard scripts, tracked =codex/hooks.json=, live =~/.codex/hooks.json=, and live
+=~/.claude/settings.json=. This makes the GitHub write gate a hard local
+mechanism rather than a policy an agent can bypass by patching its own
+allowlist or disabling the hook. Policy changes should be made manually outside
+the agent session.
 
 *** guard-external-actions.sh (PreToolUse)
 :PROPERTIES:

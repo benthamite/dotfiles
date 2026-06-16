@@ -1,0 +1,6 @@
+# GitHub repositories where agents are allowed to perform write operations.
+#
+# Format: one OWNER/REPO per line. Blank lines and comments are ignored.
+#
+# Keep this list empty by default. Add only repositories Pablo personally
+# created and explicitly wants agents to be able to mutate.

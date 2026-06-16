@@ -35,6 +35,7 @@ record an explicit artifact-specific status or exemption.
 | =~/.claude/settings.local.json= | Claude machine-local permissions | No | Real mutable file, edited in place |
 | =codex/hooks.json= | Codex global hook registration | Yes | =~/.codex/hooks.json= symlink |
 | =codex/config.toml= | Codex global settings | Yes | =~/.codex/config.toml= symlink |
+| =agents/github-write-allowlist.txt= | Shared GitHub write allowlist | Yes | Read by Claude and Codex GitHub write guards |
 | =<project>/.claude/= and =<project>/.codex/= | Project-local tool config | Project-dependent | Loaded only for that project |
 
 Repo-root =.claude/= and =.codex/= paths are project-local by definition. Do
@@ -67,6 +68,23 @@ instructions live in =AGENTS.md=.
 
 Instruction equivalence checks normalize the Claude-only =@context= syntax and
 Codex-safe path references before comparing paired instruction files.
+
+* External Write Gates
+
+=agents/github-write-allowlist.txt= is the shared deny-by-default allowlist for
+agent-initiated GitHub writes. Claude and Codex hooks block =git push= and
+write-style =gh= operations, including PRs, issues, secrets, workflow runs,
+releases, repo mutations, and write-style =gh api= calls, unless the target
+repository is listed in this file. The file is intentionally empty by default;
+entries should be added only for repositories Pablo personally created and
+explicitly wants agents to mutate.
+
+The allowlist and its guard scripts are self-protected by edit hooks. Agents
+may inspect them, but they may not edit the allowlist, remove tracked or live
+hook registrations, or patch the guard scripts as a way to bypass the gate.
+The protected registration paths include =codex/hooks.json=,
+=~/.codex/hooks.json=, and =~/.claude/settings.json=. Policy changes should be
+made manually outside the agent session.
 
 * Skills
 

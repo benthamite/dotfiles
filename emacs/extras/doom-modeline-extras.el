@@ -142,7 +142,8 @@ Uses strikethrough to indicate the cost is not actually charged."
 ;;;;;; AI session status
 
 (declare-function agent--detect-backend "agents")
-(declare-function agent--backend-get "agents")
+(declare-function agent-backend "agent")
+(declare-function agent-backend-label "agent")
 (declare-function agent-backend-icon-string "agents")
 (declare-function agent-display-name "agents")
 (declare-function agent-alert-indicator "agents")
@@ -202,7 +203,10 @@ between the name and the alert indicator."
              (concat icon " "))
            (propertize name
                        'face '(bold doom-modeline-buffer-major-mode)
-                       'help-echo (format "%s session" (or (agent--backend-get backend :label) "AI")))
+                       'help-echo (format "%s session"
+                                          (or (when-let* ((struct (agent-backend backend)))
+                                                (agent-backend-label struct))
+                                              "AI")))
            (pcase backend
              ('claude-code
               (when (bound-and-true-p agent-claude--status-data)

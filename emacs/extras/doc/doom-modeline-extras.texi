@@ -218,6 +218,9 @@ available, it displays multiple pipe-separated fields:
 @code{agent-backend-icon-string} from the @samp{agent} package.
 @item
 @strong{Session name}: shown in bold, extracted from the buffer name.
+Hovering shows the backend's label (resolved via @code{agent-backend} and
+@code{agent-backend-label} from the @samp{agent} package), e.g. ``Claude Code
+session''.
 @item
 @strong{Model}: the Claude model in use (e.g., ``opus'', ``sonnet'').
 @item

@@ -158,6 +158,9 @@ available, it displays multiple pipe-separated fields:
 - *Backend icon*: the registered backend's icon, rendered via
   ~agent-backend-icon-string~ from the =agent= package.
 - *Session name*: shown in bold, extracted from the buffer name.
+  Hovering shows the backend's label (resolved via ~agent-backend~ and
+  ~agent-backend-label~ from the =agent= package), e.g. "Claude Code
+  session".
 - *Model*: the Claude model in use (e.g., "opus", "sonnet").
 - *Effort*: the Claude Code reasoning effort level (e.g., "high").
 - *Account*: the account used for this session (e.g., "personal",

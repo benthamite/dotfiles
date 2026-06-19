@@ -294,7 +294,7 @@ Lives at =~/.claude/settings.json= as a regular file, not tracked in this repo. 
 Notable current values:
 - *Permission mode*: =auto= — a background classifier allows most actions while blocking risky ones.
 - *Agent teams*: enabled (=CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=).
-- *Effort level*: =xhigh= (persistent) with =CLAUDE_CODE_EFFORT_LEVEL=max= in =env= to force max across sessions.
+- *Effort level*: set interactively per session via =/effort= (no environment override).
 
 *** settings.local.json
 :PROPERTIES:

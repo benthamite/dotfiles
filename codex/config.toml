@@ -416,6 +416,39 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/My Drive/Epoch/projects/epoch-find"]
 trust_level = "trusted"
 
+[projects."/Users/pablostafforini/Movies"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/epoch-availability"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/epoch-asana"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/epoch-ai-info"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/trx"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/epoch-staff-availability"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/benchmark-candidate-digest"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/lever-assistant"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/source/agent-c"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/repos/reasoning-excellence"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/local-cybersecurity-checkup"]
+trust_level = "trusted"
+
 [tui]
 theme = "light"
 
@@ -423,7 +456,7 @@ theme = "light"
 "gpt-5.5" = 4
 
 [marketplaces.openai-bundled]
-last_updated = "2026-06-14T13:58:25Z"
+last_updated = "2026-06-14T20:26:22Z"
 source_type = "local"
 source = "/Users/pablostafforini/.codex/.tmp/bundled-marketplaces/openai-bundled"
 
@@ -698,32 +731,32 @@ trusted_hash = "sha256:0fbc324356870f8b60257a2fd426772e8bfa05a1d30530109044953d6
 trusted_hash = "sha256:99bf9d526b680333cc799baeca5f42de34bf7c237c450dc3ee28ba15fba86edf"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:10"]
-trusted_hash = "sha256:81271b38faccd57f7c39cb778eceb5a066d7f1fbecd4f40ea4a188e109af6c7e"
+trusted_hash = "sha256:fb479b5722c36391d5a7e72b0b7e51a7c528d1d8e301350f43d42db3f7807e2b"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:2"]
-trusted_hash = "sha256:a2fe784b9bf0f236ac4b6b3fb67aa2bf6d7a7130dbf279e07a47162a566dbf58"
+trusted_hash = "sha256:13ae5e92e9c7aaa64b36a22fc74642e43fa33b5abc740887aace0eafc3faa92e"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:3"]
-trusted_hash = "sha256:4a87ce8f56916e94a1a22637e1cedeb9619e626c3a64b710126429dc39789c8a"
+trusted_hash = "sha256:df6b4aa240597020e0f821899a98a3abd2a701ae8a3d40d37d26471dd0ef47e4"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:4"]
-trusted_hash = "sha256:50898739ef816718ee53a63947672448c4e7a2d087da571d4f730e790faf9fb5"
+trusted_hash = "sha256:a2fe784b9bf0f236ac4b6b3fb67aa2bf6d7a7130dbf279e07a47162a566dbf58"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:5"]
-trusted_hash = "sha256:75c163a8425ba518c4911bb5c3f7fc8cb352e1ae5227ada402fb9e960cba38a1"
+trusted_hash = "sha256:4a87ce8f56916e94a1a22637e1cedeb9619e626c3a64b710126429dc39789c8a"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:6"]
-trusted_hash = "sha256:4c81bb25a0151cb01d9a2ec9d56ec9a44f32710c58d0fddb0ecad9f9f6b89b68"
+trusted_hash = "sha256:50898739ef816718ee53a63947672448c4e7a2d087da571d4f730e790faf9fb5"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:7"]
 enabled = true
-trusted_hash = "sha256:ea596e4a65f48e9b900b7850842e36bd0cd898d57438eadc53da5d29527e152f"
+trusted_hash = "sha256:75c163a8425ba518c4911bb5c3f7fc8cb352e1ae5227ada402fb9e960cba38a1"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:8"]
-trusted_hash = "sha256:fb479b5722c36391d5a7e72b0b7e51a7c528d1d8e301350f43d42db3f7807e2b"
+trusted_hash = "sha256:4c81bb25a0151cb01d9a2ec9d56ec9a44f32710c58d0fddb0ecad9f9f6b89b68"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:9"]
-trusted_hash = "sha256:dab85b7d3d4fdda77fd3a47dff43139bd7ff553d7c20b90c3c96f051a1242333"
+trusted_hash = "sha256:ea596e4a65f48e9b900b7850842e36bd0cd898d57438eadc53da5d29527e152f"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:1:0"]
 trusted_hash = "sha256:fbde2a0e426cfe9f31207719d307840ac8211f1815a8c7d58cb53da4866124ca"
@@ -798,6 +831,18 @@ trusted_hash = "sha256:8e7d0a878bbfe3eadfd378f7248688eba3696a45b7083d9a3ec17480c
 
 [hooks.state."/Users/pablostafforini/.codex-tlon/hooks.json:pre_tool_use:0:10"]
 trusted_hash = "sha256:81271b38faccd57f7c39cb778eceb5a066d7f1fbecd4f40ea4a188e109af6c7e"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:11"]
+trusted_hash = "sha256:dab85b7d3d4fdda77fd3a47dff43139bd7ff553d7c20b90c3c96f051a1242333"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:12"]
+trusted_hash = "sha256:81271b38faccd57f7c39cb778eceb5a066d7f1fbecd4f40ea4a188e109af6c7e"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:2:4"]
+trusted_hash = "sha256:c1a1cd200ab8775d3b193265d52bd662fa4fbad5606b375e148c5c5f94fde7d8"
+
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:post_tool_use:1:4"]
+trusted_hash = "sha256:1ef9cd07e6b3968261e484743978641b54628671e504a50b6248700a8652899d"
 
 [[skills.config]]
 path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/google-sheets-comments/SKILL.md"

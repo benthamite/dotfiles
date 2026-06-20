@@ -597,7 +597,7 @@
    "path": "agents/github-write-allowlist.txt",
    "tracked": true,
    "live_path": "tracked dotfiles file",
-   "note": "Shared deny-by-default allowlist for agent-initiated GitHub writes. Claude and Codex guards block git push and mutating gh operations unless the target repo appears here; the file is empty by default and should include only repos Pablo personally created."
+   "note": "Shared deny-by-default allowlist for agent-initiated GitHub writes. Codex guards block git push and mutating gh operations unless the target repo appears here. The Claude shell guard also permits repos administered by the authenticated gh user, checked live through GitHub permissions and failing closed to this allowlist. The file is empty by default and should include only repos Pablo personally created."
   },
   {
    "tool": "Codex",

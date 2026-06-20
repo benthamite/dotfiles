@@ -1214,12 +1214,14 @@ Blocks or gates destructive shell commands that are hard to reverse. Hard-blocks
 :ID:       2B5F734F-9472-4944-A44D-2E2C9C86E76B
 :END:
 
-Blocks agent-initiated GitHub writes unless the target repository is listed in
-the shared =agents/github-write-allowlist.txt= file. The allowlist is empty by
-default and should contain only repositories Pablo personally created and
-explicitly wants agents to mutate. The hook covers =git push=, mutating =gh pr=
-/ =gh issue= / =gh secret= / =gh workflow= / =gh release= / =gh repo= commands,
-and write-style =gh api= calls. Read-only =gh= inspection remains allowed.
+Blocks agent-initiated GitHub writes unless the authenticated =gh= user
+administers the target repository or the target repository is listed in the
+shared =agents/github-write-allowlist.txt= file. The live admin check uses
+=gh api repos/<owner>/<repo> --jq .permissions.admin= and fails closed to the
+allowlist when =gh= is unavailable, unauthenticated, offline, or cannot access
+the repo. The hook covers =git push=, mutating =gh pr= / =gh issue= /
+=gh secret= / =gh workflow= / =gh release= / =gh repo= commands, and
+write-style =gh api= calls. Read-only =gh= inspection remains allowed.
 
 *** block-github-guard-edit.sh (PreToolUse)
 :PROPERTIES:

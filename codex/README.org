@@ -68,8 +68,12 @@ answers after changes must include an explicit =Verification:= or =Not verified
 end-to-end:= sentence. Passing metrics, scorecards, and counts count as
 completion evidence only after confirming that they directly cover the user's
 stated requirement. Substantive-work closeouts must include the broader project
-significance and the concrete next action or decision. They also require clear,
-plain language and avoiding obfuscatory jargon.
+significance and the concrete next action or decision. They also require agents
+to use subagents or teams when available and whenever parallel or
+separate-context work helps, with the most capable available subagent model and
+an effort level matching the main agent unless the user requests a cheaper or
+faster path. They also require clear, plain language and avoiding obfuscatory
+jargon.
 
 It also records the manual Chrome profile routing used by browser-only service
 flows: use =chrome-work-tab URL= for Epoch/work projects so Chrome targets

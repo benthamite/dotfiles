@@ -32,8 +32,8 @@
 
 ## Agents
 
-- Make liberal use of subagents and agent teams where available and permitted.
-- Always use the most capable model available for subagents; prefer performance over speed/cost.
+- When subagents or agent teams are available, use them whenever independent investigation, implementation, review, or verification work can run in parallel or benefits from a separate context window.
+- For subagents, use the most capable available model and match the main agent's current effort level unless the user explicitly asks for a cheaper or faster path; prefer performance over speed/cost.
 
 ## MCP servers
 

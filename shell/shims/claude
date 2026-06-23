@@ -1,0 +1,16 @@
+#!/bin/sh
+# Claude Code PATH shim.
+#
+# Keep Claude Code's OAuth account selection from being overridden by ambient
+# Anthropic API credentials that are exported for ordinary API clients. Set
+# CLAUDE_CODE_ALLOW_API_KEY_AUTH=1 to intentionally use API-key auth.
+
+REAL=/opt/homebrew/bin/claude
+[ -x "$REAL" ] || REAL=/usr/local/bin/claude
+
+if [ -z "$CLAUDE_CODE_ALLOW_API_KEY_AUTH" ]; then
+	unset ANTHROPIC_API_KEY
+	unset ANTHROPIC_AUTH_TOKEN
+fi
+
+exec "$REAL" "$@"

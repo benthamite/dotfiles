@@ -106,6 +106,7 @@ alias emacsK="while true; do pkill -SIGUSR2 Emacs; done"
 alias claude-personal='CLAUDE_CONFIG_DIR=~/.claude-personal claude'
 alias claude-tlon='CLAUDE_CONFIG_DIR=~/.claude-tlon claude'
 alias claude-epoch='CLAUDE_CONFIG_DIR=~/.claude-epoch claude'
+alias claude-trajectory='CLAUDE_CONFIG_DIR=~/.claude-trajectory claude'
 
 # make node use local certs
 export NODE_EXTRA_CA_CERTS="$HOME/Library/Application Support/mkcert/rootCA.pem"

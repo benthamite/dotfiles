@@ -9097,8 +9097,9 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (agent-epoch-projects-root "/Users/pablostafforini/My Drive/Epoch/projects/")
   (agent-claude-org-todo-in-progress-keyword "DOING")
   (agent-claude-accounts '(("personal"  . "~/.claude-personal")
-                              ("tlon"     . "~/.claude-tlon")
-                              ("epoch"    . "~/.claude-epoch")))
+                           ("tlon"     . "~/.claude-tlon")
+                           ("epoch"    . "~/.claude-epoch")
+                           ("trajectory" . "~/.claude-trajectory")))
 
   (agent-codex-accounts '(("tlon"     . "~/.codex-tlon")
 			     ("epoch"    . "~/.codex-epoch")))

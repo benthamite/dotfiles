@@ -212,7 +212,7 @@ gap/blocker.
 :ID:       239E0918-2383-460C-8C9C-2ABC4E3D344D
 :END:
 
-Three OAuth accounts (personal, tlon, and epoch) are supported without re-authenticating. Each account uses a separate =CLAUDE_CONFIG_DIR= (=~/.claude-personal/=, =~/.claude-tlon/=, and =~/.claude-epoch/=) to keep its OAuth credentials and identity isolated, while sharing everything else via symlinks back to =~/.claude/=.
+Four OAuth accounts (personal, tlon, epoch, and trajectory) are supported without re-authenticating. Each account uses a separate =CLAUDE_CONFIG_DIR= (=~/.claude-personal/=, =~/.claude-tlon/=, =~/.claude-epoch/=, and =~/.claude-trajectory/=) to keep its OAuth credentials and identity isolated, while sharing everything else via symlinks back to =~/.claude/=.
 
 Shared (symlinked into each account dir):
 - =settings.json=, =settings.local.json= — preferences and permissions
@@ -228,7 +228,9 @@ Separate per account:
 - =.claude.json= — OAuth identity, user ID, and MCP servers (synced from =~/.claude.json=)
 - Keychain credentials — the actual OAuth tokens
 
-The active account is stored in =~/.claude-current-account=. From Emacs, =agent-claude-start-or-switch= uses the persisted account automatically (configured via =agent-claude-accounts=). Use =agent-claude-select-account= to change it. From the terminal, the shell aliases =claude-personal=, =claude-tlon=, and =claude-epoch= are available.
+The active account is stored in =~/.claude-current-account=. From Emacs, =agent-claude-start-or-switch= uses the persisted account automatically (configured via =agent-claude-accounts=). Use =agent-claude-select-account= to change it. From the terminal, the shell aliases =claude-personal=, =claude-tlon=, =claude-epoch=, and =claude-trajectory= are available.
+
+The =claude= PATH shim removes ambient =ANTHROPIC_API_KEY= and =ANTHROPIC_AUTH_TOKEN= before executing Claude Code, because those variables take precedence over the selected =CLAUDE_CONFIG_DIR= OAuth account. Set =CLAUDE_CODE_ALLOW_API_KEY_AUTH=1= only for deliberate API-key-auth Claude Code sessions.
 
 *Adding a new account:* add it to =agent-claude-accounts=, then run =M-x agent-claude-init-account= *before* invoking =claude= for that account. This creates the config dir and all shared symlinks up front; otherwise =claude= writes real empty =settings.json=/=history.jsonl=/etc. on first login, which divorces the new account from your permissions and history.  If this happens anyway, re-running =init-account= (or =select-account=) heals virgin-state files automatically; non-virgin files are left alone with a warning so you can migrate them by hand.
 

@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 """slack.py — thin Slack web-API wrapper using xoxc/xoxd browser-session tokens.
 
-Replaces the slack-unofficial-epochai MCP server. Auth tokens come from
-1Password via `op read`:
+Replaces the slack-unofficial-epochai MCP server. Tokens are scraped from a
+logged-in browser session and impersonate the user account, so
+mark/unread/saved-message operations work as your account sees them (unlike a
+bot OAuth token).
 
-  op://Automations/Slack MCP - Epoch Unofficial/xoxc_token  -> Bearer token
-  op://Automations/Slack MCP - Epoch Unofficial/xoxd_token  -> 'd' cookie
+Multiple workspaces are supported via the WORKSPACES registry and the global
+`-w/--workspace` flag (or the SLACK_WORKSPACE env var; default: epoch):
 
-This is the same auth model the unofficial slack-mcp-server uses; tokens
-are scraped from a logged-in browser session and impersonate the user
-account, so mark/unread/saved-message operations work as your account
-sees them (unlike a bot OAuth token).
+  epoch       -> 1Password: op://Automations/Slack MCP - Epoch Unofficial
+                 (.../xoxc_token -> Bearer token, .../xoxd_token -> 'd' cookie)
+  trajectory  -> pass entry trajectory/slack.com/trajectorylabs
+                 (token: field -> Bearer token, cookie: field -> 'd' cookie)
 
 Usage:
+  slack.py [-w WORKSPACE] <subcommand> ...
   slack.py search '<query>' [--max=N] [--sort=score|timestamp]
       Search messages workspace-wide (search.messages).
   slack.py history <channel-id> [--limit=N] [--oldest=ts] [--latest=ts] [--cursor=...]
@@ -45,7 +48,28 @@ import urllib.parse
 import urllib.request
 
 API = "https://slack.com/api"
-TOKEN_OP_PATH = "op://Automations/Slack MCP - Epoch Unofficial"
+
+# Workspace registry. Each entry describes where this workspace's xoxc/xoxd
+# session tokens come from. Two source kinds:
+#   "op"   -> 1Password: read <op_path>/xoxc_token and <op_path>/xoxd_token.
+#   "pass" -> pass entry with named fields <token_field> (xoxc) and
+#             <cookie_field> (xoxd), e.g. the org-prefixed slack.com entries.
+WORKSPACES = {
+    "epoch": {
+        "source": "op",
+        "op_path": "op://Automations/Slack MCP - Epoch Unofficial",
+    },
+    "trajectory": {
+        "source": "pass",
+        "pass_entry": "trajectory/slack.com/trajectorylabs",
+        "token_field": "token",
+        "cookie_field": "cookie",
+    },
+}
+DEFAULT_WORKSPACE = "epoch"
+
+# Selected workspace key, set from --workspace / SLACK_WORKSPACE in main().
+_workspace = DEFAULT_WORKSPACE
 
 
 def _pass_show(entry):
@@ -79,6 +103,25 @@ def _op_read(path):
     return out.stdout.strip()
 
 
+def _pass_field(entry, field):
+    """Return the value of a named field (e.g. "token: <value>") from a pass entry."""
+    out = subprocess.run(
+        ["pass", "show", entry],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    if out.returncode != 0:
+        sys.stderr.write(f"ERROR: pass show {entry}: {out.stderr.strip()}\n")
+        sys.exit(1)
+    prefix = f"{field}:"
+    for line in out.stdout.splitlines():
+        if line.startswith(prefix):
+            return line[len(prefix):].strip()
+    sys.stderr.write(f"ERROR: pass entry {entry} has no '{field}:' field\n")
+    sys.exit(1)
+
+
 _xoxc = None
 _xoxd = None
 
@@ -86,8 +129,24 @@ _xoxd = None
 def _tokens():
     global _xoxc, _xoxd
     if _xoxc is None:
-        _xoxc = _op_read(f"{TOKEN_OP_PATH}/xoxc_token")
-        _xoxd = _op_read(f"{TOKEN_OP_PATH}/xoxd_token")
+        ws = WORKSPACES.get(_workspace)
+        if ws is None:
+            valid = ", ".join(sorted(WORKSPACES))
+            sys.stderr.write(
+                f"ERROR: unknown workspace '{_workspace}'. Valid: {valid}\n"
+            )
+            sys.exit(2)
+        if ws["source"] == "op":
+            _xoxc = _op_read(f"{ws['op_path']}/xoxc_token")
+            _xoxd = _op_read(f"{ws['op_path']}/xoxd_token")
+        elif ws["source"] == "pass":
+            _xoxc = _pass_field(ws["pass_entry"], ws["token_field"])
+            _xoxd = _pass_field(ws["pass_entry"], ws["cookie_field"])
+        else:
+            sys.stderr.write(
+                f"ERROR: workspace '{_workspace}' has invalid source '{ws['source']}'\n"
+            )
+            sys.exit(2)
     return _xoxc, _xoxd
 
 
@@ -380,6 +439,15 @@ def cmd_unreads(args):
 
 def main():
     p = argparse.ArgumentParser(description="Slack web-API wrapper (xoxc/xoxd auth)")
+    p.add_argument(
+        "-w",
+        "--workspace",
+        default=os.environ.get("SLACK_WORKSPACE", DEFAULT_WORKSPACE),
+        help=(
+            "Workspace key (default: %(default)s; or set SLACK_WORKSPACE). "
+            f"Valid: {', '.join(sorted(WORKSPACES))}."
+        ),
+    )
     sub = p.add_subparsers(dest="cmd", required=True)
 
     s = sub.add_parser("search")
@@ -446,6 +514,8 @@ def main():
     u.set_defaults(func=cmd_unreads)
 
     args = p.parse_args()
+    global _workspace
+    _workspace = args.workspace
     args.func(args)
 
 

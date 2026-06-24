@@ -964,6 +964,41 @@ def local_skill_readme_problems(
     ]
 
 
+def local_manifest(repo_root: Path) -> dict:
+    """Read a project-local ai-config-sync.json marker, or {} if absent/unreadable.
+
+    Parse failures fail closed (return {}) so a malformed marker never silently
+    suppresses the guard — enforcement stays on until the marker is valid.
+    """
+    path = repo_root / MANIFEST
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text())
+    except (json.JSONDecodeError, OSError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def local_artifact_single_agent(repo_root: Path, artifact: str) -> bool:
+    """True when the repo's ai-config-sync.json marks `artifact` (e.g. "skills")
+    as deliberately single-agent, suppressing the counterpart + README guard for
+    that artifact type in THIS repo only.
+
+    Marker shape (repo root):
+        { "local": { "skills": "claude-only" } }
+    Any non-empty status that does not start with "paired" (the
+    `manifest_item_is_explicitly_unpaired` convention) counts as an opt-out, so
+    "claude-only" / "codex-only" both suppress. Default (no marker) = enforce, so
+    a new skill is still forced to create its counterpart everywhere else.
+    """
+    local = local_manifest(repo_root).get("local")
+    if not isinstance(local, dict):
+        return False
+    status = str(local.get(artifact) or "")
+    return bool(status) and not status.startswith(PEER_STATUS_PREFIXES)
+
+
 def local_skill_moved_between_roots(
     repo_root: Path,
     changed_paths: set[str],
@@ -1090,6 +1125,11 @@ def guard_changed_paths(
     processed_local_instruction_dirs: set[str] = set()
     processed_local_skills: set[str] = set()
     processed_local_hooks: set[str] = set()
+
+    # Project-local opt-out: a repo may declare its skills single-agent (no
+    # Claude<->Codex mirror) via ai-config-sync.json. Default is enforce, so a
+    # new skill is still forced to create its counterpart unless this is set.
+    local_skills_single_agent = local_artifact_single_agent(repo_root, "skills")
 
     for path in sorted(changed_paths):
         if skip_runtime_path(path):
@@ -1297,6 +1337,8 @@ def guard_changed_paths(
             if skill_key in processed_local_skills:
                 continue
             processed_local_skills.add(skill_key)
+            if local_skills_single_agent:
+                continue
             drift = local_skill_sync_problems(repo_root, skill)
             doc_drift = local_skill_readme_problems(changed_paths, skill, "skills")
             if drift and local_skill_moved_between_roots(
@@ -1338,6 +1380,8 @@ def guard_changed_paths(
             if skill_key in processed_local_skills:
                 continue
             processed_local_skills.add(skill_key)
+            if local_skills_single_agent:
+                continue
             drift = local_skill_sync_problems(repo_root, skill)
             doc_drift = local_skill_readme_problems(changed_paths, skill, "skills")
             if drift and local_skill_moved_between_roots(

@@ -970,6 +970,13 @@ multi-entry =Bash= matcher (a timestamped
 revert. The per-hook sections below document each check's logic; they apply
 whether the check runs standalone or inside the dispatcher.
 
+*** sync-agent-c-worktree.sh (SessionStart)
+:PROPERTIES:
+:ID:       C651B1C5-783D-4DBA-99F9-1A60752EA59C
+:END:
+
+Keeps a Trajectory =agent-c= task worktree current with =origin/main= at session start, so the tracked CR skills, docs, and engine never go stale on a feature branch. It is registered globally and fires in every session, so it self-guards: it exits silently unless =origin= is the =trajectory-labs-pbc/agent-c= repo (a no-op in all other projects). For an agent-c worktree it: (1) repairs the per-worktree API-key symlink if missing or stale — done here in the hook because the agent =Bash= secret-guard blocks any agent command naming that file, so it would otherwise be a manual step; (2) skips, with a printed reason, on a detached HEAD, a tracked-dirty tree, or a would-conflict (diverged) branch; (3) otherwise =git fetch=es and does a conflict-gated merge of =origin/main=. It never pushes. The =syncagentc= shell function runs the same script on demand. Design notes: =~/Trajectory/docs/superpowers/specs/2026-06-24-agent-c-worktree-sync-design.md=.
+
 *** Completion-claim discipline
 :PROPERTIES:
 :ID:       92D63696-DA1B-4371-80FE-A3A76FE831F4

@@ -108,6 +108,23 @@ alias claude-tlon='CLAUDE_CONFIG_DIR=~/.claude-tlon claude'
 alias claude-epoch='CLAUDE_CONFIG_DIR=~/.claude-epoch claude'
 alias claude-trajectory='CLAUDE_CONFIG_DIR=~/.claude-trajectory claude'
 
+# Trajectory agent-c: create a new task worktree + wire its API-key symlink in one step.
+# Usage: newtask <task-slug>   (e.g. newtask compensate-misaligned-ais)
+# Then: cd ~/Trajectory/agent-c/<task-slug> && claude-trajectory
+newtask() {
+  if [ -z "$1" ]; then echo "usage: newtask <task-slug>"; return 1; fi
+  local root=~/Trajectory/agent-c
+  git -C "$root/main" worktree add "$root/$1" -b "pablo/$1" &&
+    ln -s "$root/agent-c-cr-studio/.claude/.env" "$root/$1/.claude/.env" &&
+    echo "ready: cd $root/$1 && claude-trajectory"
+}
+
+# Manually merge origin/main into the current agent-c worktree (skills/docs/etc).
+# Runs the same conflict-gated sync that fires automatically at session start.
+syncagentc() {
+  SYNC_AGENT_C_VERBOSE=1 ~/My\ Drive/dotfiles/claude/hooks/sync-agent-c-worktree.sh </dev/null
+}
+
 # make node use local certs
 export NODE_EXTRA_CA_CERTS="$HOME/Library/Application Support/mkcert/rootCA.pem"
 

@@ -508,6 +508,13 @@
    "note": "Paired legacy Stop helper kept for tool parity, but it is not registered in live ~/.claude/settings.json or codex/hooks.json because Stop fires at turn end rather than true session exit. Session learning capture is prompted by the Emacs agent-before-exit path configured in emacs/config.org."
   },
   {
+   "name": "sync-agent-c-worktree.sh",
+   "claude": "claude/hooks/sync-agent-c-worktree.sh",
+   "codex": null,
+   "status": "unsupported-or-replaced",
+   "note": "Claude SessionStart hook for Trajectory agent-c worktrees: repairs the local key symlink, restores upstream AGENTS.md/CLAUDE.md before merging origin/main, then reapplies Pablo's local-only trimmed instruction overlay. Codex has no matching SessionStart hook in this setup; creation-time overlay is handled by the Emacs agent-trajectory-new-task command, and existing worktrees can be synced manually with the shared syncagentc shell function."
+  },
+  {
    "name": "track-elisp-skill.sh",
    "claude": "claude/hooks/track-elisp-skill.sh",
    "codex": null,

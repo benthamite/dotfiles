@@ -31,6 +31,34 @@ cat >/dev/null 2>&1 || true
 verbose="${SYNC_AGENT_C_VERBOSE:-0}"
 vsay() { [ "$verbose" = "1" ] && echo "[sync-agent-c] $*"; return 0; }
 say()  { echo "[sync-agent-c] $*"; }
+overlay_dir="${SYNC_AGENT_C_OVERLAY_DIR:-$HOME/My Drive/dotfiles/claude/templates/agent-c}"
+
+overlay_available() {
+  [ -r "$overlay_dir/AGENTS.md" ] && [ -r "$overlay_dir/CLAUDE.md" ]
+}
+
+is_skip_worktree() {
+  git ls-files -v -- "$1" 2>/dev/null | grep -q '^S'
+}
+
+restore_agent_context_for_sync() {
+  overlay_available || return 0
+  for file in AGENTS.md CLAUDE.md; do
+    git ls-files --error-unmatch "$file" >/dev/null 2>&1 || continue
+    if is_skip_worktree "$file" || { [ -e "$file" ] && cmp -s "$overlay_dir/$file" "$file"; }; then
+      git update-index --no-skip-worktree -- "$file" 2>/dev/null || true
+      git restore --source=HEAD --worktree -- "$file" 2>/dev/null || true
+    fi
+  done
+}
+
+apply_agent_context_overlay() {
+  overlay_available || return 0
+  cp "$overlay_dir/AGENTS.md" AGENTS.md || return 0
+  cp "$overlay_dir/CLAUDE.md" CLAUDE.md || return 0
+  git update-index --skip-worktree -- AGENTS.md CLAUDE.md 2>/dev/null || true
+  vsay "applied local AGENTS.md/CLAUDE.md overlay."
+}
 
 cd "${CLAUDE_PROJECT_DIR:-$PWD}" 2>/dev/null || exit 0
 
@@ -64,11 +92,18 @@ fi
 branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
 [ -n "$branch" ] || { say "detached HEAD — skipping sync."; exit 0; }
 
+# Local-only root agent instructions are deliberately not pushed to agent-c.
+# Before merging origin/main, restore upstream copies so upstream changes to
+# AGENTS.md/CLAUDE.md never block the pull; after every exit path below,
+# reapply the local overlay and hide it from ordinary status.
+restore_agent_context_for_sync
+
 # Never disturb tracked uncommitted work. Untracked files (e.g. local run
 # artifacts: answers/, local-runs/, coverage maps) are ignored — they don't
 # block a clean merge, and an actively-worked task almost always has them; git
 # itself still refuses (and we abort) if a merge would overwrite one.
 if [ -n "$(git status --porcelain --untracked-files=no 2>/dev/null)" ]; then
+  apply_agent_context_overlay
   say "tracked uncommitted changes on $branch — skipping; commit/stash then run 'syncagentc'."
   exit 0
 fi
@@ -84,6 +119,7 @@ fi
 
 # Already current?
 if git merge-base --is-ancestor origin/main HEAD 2>/dev/null; then
+  apply_agent_context_overlay
   vsay "$branch already current with origin/main."
   exit 0
 fi
@@ -91,6 +127,7 @@ fi
 # Dry-run merge: only proceed if conflict-free (auto-skips the diverged main branch).
 if ! git merge-tree --write-tree HEAD origin/main >/dev/null 2>&1; then
   behind="$(git rev-list --count HEAD..origin/main 2>/dev/null || echo '?')"
+  apply_agent_context_overlay
   say "$branch is $behind behind origin/main but would CONFLICT — NOT merging."
   say "(expected for the diverged work-trial branch; merge manually if you want it current.)"
   exit 0
@@ -102,9 +139,11 @@ if git merge --no-edit origin/main >/dev/null 2>&1; then
   changed="$(git diff --name-only "$before" HEAD 2>/dev/null)"
   files="$(printf '%s\n' "$changed" | grep -c . || true)"
   skills="$(printf '%s\n' "$changed" | grep -c '^\.claude/skills/' || true)"
+  apply_agent_context_overlay
   say "merged origin/main into $branch: $files files updated ($skills skill files). Not pushed."
 else
   git merge --abort 2>/dev/null || true
+  apply_agent_context_overlay
   say "merge of origin/main failed unexpectedly — aborted, tree unchanged."
 fi
 exit 0

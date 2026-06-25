@@ -32,6 +32,7 @@ verbose="${SYNC_AGENT_C_VERBOSE:-0}"
 vsay() { [ "$verbose" = "1" ] && echo "[sync-agent-c] $*"; return 0; }
 say()  { echo "[sync-agent-c] $*"; }
 overlay_dir="${SYNC_AGENT_C_OVERLAY_DIR:-$HOME/My Drive/dotfiles/claude/templates/agent-c}"
+parent_agents="${SYNC_AGENT_C_PARENT_AGENTS:-$HOME/Trajectory/AGENTS.md}"
 
 overlay_available() {
   [ -r "$overlay_dir/AGENTS.md" ] && [ -r "$overlay_dir/CLAUDE.md" ]
@@ -54,10 +55,22 @@ restore_agent_context_for_sync() {
 
 apply_agent_context_overlay() {
   overlay_available || return 0
-  cp "$overlay_dir/AGENTS.md" AGENTS.md || return 0
+  compose_agents_overlay || return 0
   cp "$overlay_dir/CLAUDE.md" CLAUDE.md || return 0
   git update-index --skip-worktree -- AGENTS.md CLAUDE.md 2>/dev/null || true
   vsay "applied local AGENTS.md/CLAUDE.md overlay."
+}
+
+compose_agents_overlay() {
+  if [ -r "$parent_agents" ]; then
+    {
+      cat "$parent_agents"
+      printf '\n--- local agent-c overlay ---\n\n'
+      cat "$overlay_dir/AGENTS.md"
+    } >AGENTS.md
+  else
+    cp "$overlay_dir/AGENTS.md" AGENTS.md
+  fi
 }
 
 cd "${CLAUDE_PROJECT_DIR:-$PWD}" 2>/dev/null || exit 0

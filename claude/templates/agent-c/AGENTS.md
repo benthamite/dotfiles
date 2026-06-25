@@ -1,8 +1,9 @@
-# AGENTS.md - local CR task pointer
+# AGENTS.md - local agent-c overlay
 
-This is Pablo's local-only agent-c instruction overlay. It is copied into task
-worktrees for local agent sessions and hidden from ordinary git status; do not
-push it to the shared `trajectory-labs-pbc/agent-c` repo.
+This is Pablo's local-only agent-c instruction overlay. The worktree setup and
+sync helpers prepend `~/Trajectory/AGENTS.md`, then append this file into task
+worktrees and hide the result from ordinary git status; do not push it to the
+shared `trajectory-labs-pbc/agent-c` repo.
 
 Use this checkout here primarily for Trajectory conceptual-reasoning
 ("grantmaking") tasks. Keep root context small: detailed workflow guidance

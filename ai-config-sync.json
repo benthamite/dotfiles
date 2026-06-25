@@ -512,7 +512,7 @@
    "claude": "claude/hooks/sync-agent-c-worktree.sh",
    "codex": null,
    "status": "unsupported-or-replaced",
-   "note": "Claude SessionStart hook for Trajectory agent-c worktrees: repairs the local key symlink, restores upstream AGENTS.md/CLAUDE.md before merging origin/main, then reapplies Pablo's local-only trimmed instruction overlay. Codex has no matching SessionStart hook in this setup; creation-time overlay is handled by the Emacs agent-trajectory-new-task command, and existing worktrees can be synced manually with the shared syncagentc shell function."
+   "note": "Claude SessionStart hook for Trajectory agent-c worktrees: repairs the local key symlink, restores upstream AGENTS.md/CLAUDE.md before merging origin/main, then reapplies Pablo's local-only trimmed instruction overlay, prepending ~/Trajectory/AGENTS.md so Codex worktree sessions get the Trajectory parent context despite each agent-c worktree being its own Git root. Codex has no matching SessionStart hook in this setup; creation-time overlay is handled by the Emacs agent-trajectory-new-task command, and existing worktrees can be synced manually with the shared syncagentc shell function."
   },
   {
    "name": "track-elisp-skill.sh",

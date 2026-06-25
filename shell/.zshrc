@@ -114,7 +114,8 @@ alias claude-trajectory='CLAUDE_CONFIG_DIR=~/.claude-trajectory claude'
 newtask() {
   if [ -z "$1" ]; then echo "usage: newtask <task-slug>"; return 1; fi
   local root=~/Trajectory/agent-c
-  git -C "$root/main" worktree add "$root/$1" -b "pablo/$1" &&
+  git -C "$root/main" fetch origin main &&
+    git -C "$root/main" worktree add "$root/$1" -b "pablo/$1" origin/main &&
     ln -s "$root/agent-c-cr-studio/.claude/.env" "$root/$1/.claude/.env" &&
     echo "ready: cd $root/$1 && claude-trajectory"
 }

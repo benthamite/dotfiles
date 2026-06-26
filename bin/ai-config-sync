@@ -579,6 +579,12 @@ def tracked_dirty_paths(repo: Path = ROOT) -> set[str]:
     return set(git_lines(["diff", "--name-only"], repo))
 
 
+def tracked_deleted_paths(repo: Path = ROOT) -> set[str]:
+    paths = set(git_lines(["diff", "--name-only", "--diff-filter=D"], repo))
+    paths.update(git_lines(["diff", "--cached", "--name-only", "--diff-filter=D"], repo))
+    return paths
+
+
 def path_has_change(path: str, changed: set[str]) -> bool:
     if path in changed:
         return True
@@ -703,6 +709,112 @@ def command_paths_and_commit_repos(
 
 def skip_runtime_path(path: str) -> bool:
     return any(fnmatch.fnmatchcase(path, pattern) for pattern in RUNTIME_PATTERNS)
+
+
+@dataclass(frozen=True)
+class PairedArtifactRoot:
+    side: str
+    counterpart_side: str
+    path: str
+    counterpart: str
+
+
+def paired_artifact_root_for_path(path: str) -> PairedArtifactRoot | None:
+    parts = Path(path).parts
+    if not parts:
+        return None
+
+    if path == GLOBAL_INSTRUCTION_CLAUDE:
+        return PairedArtifactRoot("Claude", "Codex", path, GLOBAL_INSTRUCTION_CODEX)
+    if path == GLOBAL_INSTRUCTION_CODEX:
+        return PairedArtifactRoot("Codex", "Claude", path, GLOBAL_INSTRUCTION_CLAUDE)
+
+    if parts[0] in {"claude", "codex"} and len(parts) >= 3:
+        side, counterpart_side, counterpart_root = (
+            ("Claude", "Codex", "codex")
+            if parts[0] == "claude"
+            else ("Codex", "Claude", "claude")
+        )
+        if parts[1] in {"skills", "programmatic-skills", "private-skills"}:
+            artifact = Path(parts[0], parts[1], parts[2]).as_posix()
+            counterpart = Path(counterpart_root, parts[1], parts[2]).as_posix()
+            return PairedArtifactRoot(side, counterpart_side, artifact, counterpart)
+        if parts[1] == "hooks":
+            artifact = Path(parts[0], parts[1], *parts[2:]).as_posix()
+            counterpart = Path(counterpart_root, parts[1], *parts[2:]).as_posix()
+            return PairedArtifactRoot(side, counterpart_side, artifact, counterpart)
+
+    for index, part in enumerate(parts):
+        if part not in {".claude", ".codex"}:
+            continue
+        if index + 1 >= len(parts):
+            return None
+
+        side, counterpart_side, counterpart_dir = (
+            ("Claude", "Codex", ".codex")
+            if part == ".claude"
+            else ("Codex", "Claude", ".claude")
+        )
+        prefix = parts[:index]
+        if parts[index + 1] in {"skills", "programmatic-skills"} and index + 3 < len(parts):
+            artifact = Path(*prefix, part, parts[index + 1], parts[index + 2]).as_posix()
+            counterpart = Path(
+                *prefix,
+                counterpart_dir,
+                parts[index + 1],
+                parts[index + 2],
+            ).as_posix()
+            return PairedArtifactRoot(side, counterpart_side, artifact, counterpart)
+        if parts[index + 1] == "hooks" and index + 2 < len(parts):
+            artifact = Path(*prefix, part, parts[index + 1], *parts[index + 2 :]).as_posix()
+            counterpart = Path(
+                *prefix,
+                counterpart_dir,
+                parts[index + 1],
+                *parts[index + 2 :],
+            ).as_posix()
+            return PairedArtifactRoot(side, counterpart_side, artifact, counterpart)
+        if part == ".claude" and parts[index + 1] == "settings.json":
+            artifact = Path(*prefix, ".claude", "settings.json").as_posix()
+            counterpart = Path(*prefix, ".codex", "hooks.json").as_posix()
+            return PairedArtifactRoot(side, counterpart_side, artifact, counterpart)
+        if part == ".codex" and parts[index + 1] == "hooks.json":
+            artifact = Path(*prefix, ".codex", "hooks.json").as_posix()
+            counterpart = Path(*prefix, ".claude", "settings.json").as_posix()
+            return PairedArtifactRoot(side, counterpart_side, artifact, counterpart)
+
+    if Path(path).name == "CLAUDE.md":
+        return PairedArtifactRoot("Claude", "Codex", path, Path(path).with_name("AGENTS.md").as_posix())
+    if Path(path).name == "AGENTS.md":
+        return PairedArtifactRoot("Codex", "Claude", path, Path(path).with_name("CLAUDE.md").as_posix())
+    return None
+
+
+def tracked_root_has_non_deleted_files(repo: Path, root: str, deleted_paths: set[str]) -> bool:
+    tracked = set(git_lines(["ls-files", "--", root], repo))
+    return any(path not in deleted_paths for path in tracked)
+
+
+def audit_tracked_pair_deletions(problems: list[str], repo: Path = ROOT) -> None:
+    deleted_paths = tracked_deleted_paths(repo)
+    reported: set[tuple[str, str]] = set()
+    for path in sorted(deleted_paths):
+        if skip_runtime_path(path):
+            continue
+        artifact = paired_artifact_root_for_path(path)
+        if artifact is None:
+            continue
+        key = (artifact.path, artifact.counterpart)
+        if key in reported:
+            continue
+        if not tracked_root_has_non_deleted_files(repo, artifact.counterpart, deleted_paths):
+            continue
+        reported.add(key)
+        add_problem(
+            problems,
+            f"Tracked paired artifact deleted on {artifact.side} side while "
+            f"{artifact.counterpart_side} side remains: {artifact.path} -> {artifact.counterpart}",
+        )
 
 
 def has_changed_prefix(prefix: str, paths: set[str], changed: set[str]) -> bool:
@@ -2309,6 +2421,7 @@ def audit() -> int:
 
     manifest = load_manifest()
     private_manifest = load_private_manifest()
+    audit_tracked_pair_deletions(problems)
     audit_topology(problems)
     audit_instructions(problems, manifest)
     audit_skills(problems, manifest, private_manifest)

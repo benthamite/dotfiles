@@ -639,6 +639,13 @@ and every work has a publication year, including forthcoming works.
 :ID:       F49B76EA-C29B-45D6-AD8D-D3E47DB4073E
 :END:
 
+**** refresh-cr-tracker
+:PROPERTIES:
+:ID:       9BD64A03-E7F4-4438-AEE9-05E0560E262D
+:END:
+
+Rebuilds and republishes the CR-task master tracker artifact (the consolidated conceptual-reasoning task list at a fixed claude.ai artifact URL). Runs the local =~/Trajectory/cr-scout-runs/cr-tracker/build.py= to re-derive every row from the agent-c branches plus crawler pools, re-query GitHub issues via the REST API, verify each task directory exists before linking, dedupe by article URL, and regenerate the HTML; then redeploys it via the Artifact tool. Must run in an interactive session, since the Artifact tool is unavailable in headless =claude -p= or cloud routines. =build.py= refuses to publish when it cannot read GitHub issues, so a broken token never silently produces a zero-issue page. Triggered manually (no schedule): the cloud-routine path was ruled out because the sandbox proxy blocks access to the team =agent-c= repo.
+
 **** release-package
 :PROPERTIES:
 :ID:       10DF729B-32D5-48E0-A150-9F5D18F799AF

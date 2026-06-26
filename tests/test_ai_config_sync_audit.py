@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.machinery
 import importlib.util
+import json
 import subprocess
 import sys
 import tempfile
@@ -130,6 +131,54 @@ class AiConfigSyncAuditTests(unittest.TestCase):
         self.module.audit_tracked_pair_deletions(problems, repo)
 
         self.assertEqual([], problems)
+
+    def test_remind_claude_emits_post_tool_additional_context_json(self):
+        repo = self.make_repo(["CLAUDE.md", "AGENTS.md"])
+        proc = subprocess.run(
+            [sys.executable, str(DOTFILES / "bin" / "ai-config-sync"), "remind-claude"],
+            cwd=repo,
+            input=json.dumps(
+                {
+                    "hook_event_name": "PostToolUse",
+                    "cwd": str(repo),
+                    "tool_name": "Edit",
+                    "tool_input": {"file_path": str(repo / "CLAUDE.md")},
+                }
+            ),
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+
+        output = json.loads(proc.stdout)
+
+        self.assertEqual(
+            {
+                "hookEventName": "PostToolUse",
+                "additionalContext": "Project-local CLAUDE.md changed; update AGENTS.md in the same repo.",
+            },
+            output["hookSpecificOutput"],
+        )
+
+    def test_audit_known_project_instruction_pairs_reports_drift(self):
+        repo = self.make_repo(["CLAUDE.md", "AGENTS.md"])
+        self.write_file(repo, "CLAUDE.md", "same\n")
+        self.write_file(repo, "AGENTS.md", "different\n")
+        original_roots = self.module.KNOWN_PROJECT_INSTRUCTION_ROOTS
+        self.module.KNOWN_PROJECT_INSTRUCTION_ROOTS = [repo]
+        self.addCleanup(setattr, self.module, "KNOWN_PROJECT_INSTRUCTION_ROOTS", original_roots)
+
+        problems: list[str] = []
+        self.module.audit_known_project_instruction_pairs(problems)
+
+        self.assertEqual(
+            [
+                f"Known project-local instruction pair is not synchronized: {repo}",
+                "  - Project-local instruction drift after tool-specific normalization: CLAUDE.md / AGENTS.md",
+            ],
+            problems,
+        )
 
 
 if __name__ == "__main__":

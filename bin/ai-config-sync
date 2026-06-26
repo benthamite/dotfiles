@@ -91,6 +91,9 @@ SYNC_CONFIG_PATHS = {
 GLOBAL_INSTRUCTION_NAME = "global-instructions"
 GLOBAL_INSTRUCTION_CLAUDE = "claude/CLAUDE.md"
 GLOBAL_INSTRUCTION_CODEX = "codex/AGENTS.md"
+KNOWN_PROJECT_INSTRUCTION_ROOTS = [
+    Path.home() / "Trajectory",
+]
 
 GIT_OPTIONS_WITH_VALUE = {
     "-C",
@@ -473,7 +476,7 @@ def print_reminders(paths: Iterable[str], cwd: Path | None = None) -> None:
         print(message)
 
 
-def print_codex_post_tool_message(messages: Iterable[str]) -> None:
+def print_post_tool_context_message(messages: Iterable[str]) -> None:
     text = "\n".join(message for message in messages if message)
     if not text:
         return
@@ -494,12 +497,12 @@ def remind_claude() -> None:
     data = read_input_json()
     path = direct_file_path(data)
     if path:
-        print_reminders([path], hook_cwd(data))
+        print_post_tool_context_message(reminder_messages([path], hook_cwd(data)))
 
 
 def remind_codex() -> None:
     data = read_input_json()
-    print_codex_post_tool_message(reminder_messages(paths_from_codex_input(data), hook_cwd(data)))
+    print_post_tool_context_message(reminder_messages(paths_from_codex_input(data), hook_cwd(data)))
 
 
 def shell_tokens(command: str) -> list[str]:
@@ -2126,6 +2129,19 @@ def audit_topology(problems: list[str]) -> None:
         add_nested_problems(problems, "Dotfiles project instructions are not synchronized:", drift)
 
 
+def audit_known_project_instruction_pairs(problems: list[str]) -> None:
+    for root in KNOWN_PROJECT_INSTRUCTION_ROOTS:
+        if not root.exists():
+            continue
+        drift = local_instruction_sync_problems(root)
+        if drift:
+            add_nested_problems(
+                problems,
+                f"Known project-local instruction pair is not synchronized: {root}",
+                drift,
+            )
+
+
 def normalized_skill_text(path: Path) -> str:
     text = path.read_text()
     if not text.startswith("---\n"):
@@ -2423,6 +2439,7 @@ def audit() -> int:
     private_manifest = load_private_manifest()
     audit_tracked_pair_deletions(problems)
     audit_topology(problems)
+    audit_known_project_instruction_pairs(problems)
     audit_instructions(problems, manifest)
     audit_skills(problems, manifest, private_manifest)
     audit_duplicate_skill_names(problems)

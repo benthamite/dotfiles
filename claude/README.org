@@ -1134,6 +1134,21 @@ Fires on every Edit or Write of an =.el= file under =elpaca/sources/= or =dotfil
 
 Regenerates Texinfo manuals after Edit or Write touches an org source with =#+texinfo_filename= or =#+export_file_name= headers. This covers agent edits that bypass package-local =after-save-hook= entries. The hook runs =ox-texinfo= in a clean batch Emacs with lockfile creation disabled, so stale or active locks on generated =.texi= outputs do not make batch export fail. It uses the exact =.texi= path returned by =org-texinfo-export-to-texinfo= and runs =makeinfo --no-split= only for the matching =.info= file when that file already exists in the repository layout.
 
+*** regenerate-coverage-map.sh (PostToolUse)
+:PROPERTIES:
+:ID:       2FA8B299-CB4C-4D20-8905-08377840BEAD
+:END:
+
+Keeps Trajectory CR rubric-visualizer output current during Claude sessions.
+Fires after Edit or Write and silently exits unless the edited file is a task's
+=grading/rubric.md= or =grading/coverage-map.json=. For matching task files,
+it derives the task directory, checks that =~/My Drive/repos/rubric-visualizer/coverage_map.py=
+and the task's =grading/= directory exist, then regenerates
+=grading/coverage-map.html= with that renderer. Output is suppressed and the
+hook never blocks the edit path. =register-coverage-hook.py= is the local
+one-shot helper that idempotently adds this hook to =~/.claude/settings.json=;
+it is not itself a runtime hook.
+
 *** elpaca-run.sh (utility)
 :PROPERTIES:
 :ID:       54F62C33-E882-4B75-A4F0-A8963E5AF345

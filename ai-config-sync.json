@@ -424,6 +424,20 @@
    "note": "paired for apply_patch/Edit/Write path lists; Codex PostToolUse output must include hookEventName and use additionalContext rather than Claude's message field"
   },
   {
+   "name": "regenerate-coverage-map.sh",
+   "claude": "claude/hooks/regenerate-coverage-map.sh",
+   "codex": null,
+   "status": "claude-only",
+   "note": "Claude PostToolUse Edit|Write hook that refreshes rubric-visualizer coverage maps after CR task grading/rubric.md or grading/coverage-map.json edits. Codex has no matching global PostToolUse hook for this Trajectory-specific Claude workflow."
+  },
+  {
+   "name": "register-coverage-hook.py",
+   "claude": "claude/hooks/register-coverage-hook.py",
+   "codex": null,
+   "status": "claude-only-unregistered-helper",
+   "note": "One-shot helper used to register regenerate-coverage-map.sh in ~/.claude/settings.json; kept beside the runtime hook for local maintenance. It is not a runtime hook and has no Codex counterpart."
+  },
+  {
    "name": "redact-secrets.sh",
    "claude": "claude/hooks/redact-secrets.sh",
    "codex": null,

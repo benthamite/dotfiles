@@ -50,6 +50,6 @@ WRAPPED="{ ${COMMAND}; } 2>&1 | \"${REDACTOR}\"; exit \"\${PIPESTATUS[0]}\""
 jq -nc --arg cmd "$WRAPPED" '{
   hookSpecificOutput: {
     hookEventName: "PreToolUse",
-    updatedInput: { command: $cmd }
+    updatedInput: (input.tool_input + { command: $cmd })
   }
-}'
+}' <<<"$INPUT"

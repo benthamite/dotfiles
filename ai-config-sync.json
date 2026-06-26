@@ -414,7 +414,7 @@
    "claude": "claude/hooks/pretooluse-bash.sh",
    "codex": null,
    "status": "claude-only",
-   "note": "Claude Bash PreToolUse dispatcher registered in ~/.claude/settings.json. It ports cheap Bash guards in-process and delegates heavier git/filesystem checks, including the GitHub write guard, to their standalone hook scripts. Codex registers the corresponding shell hooks directly in codex/hooks.json instead of using this dispatcher."
+   "note": "Claude Bash PreToolUse dispatcher registered in ~/.claude/settings.json. It ports cheap Bash guards in-process and delegates heavier git/filesystem checks, including the GitHub write guard, to their standalone hook scripts. Its Bash command rewrite emits the full original tool_input with only command replaced so Claude's replacement-style updatedInput preserves timeout/run_in_background. Codex registers the corresponding shell hooks directly in codex/hooks.json instead of using this dispatcher and has no Bash command-rewrite counterpart."
   },
   {
    "name": "regenerate-manual-after-edit.sh",
@@ -540,7 +540,7 @@
    "claude": "claude/hooks/wrap-bash-output.sh",
    "codex": null,
    "status": "claude-only",
-   "note": "Claude PreToolUse Bash command wrapper that pipes output through redact-secrets.sh; Codex does not use this Bash command-rewrite hook path."
+   "note": "Claude PreToolUse Bash command wrapper that pipes output through redact-secrets.sh and preserves non-command Bash tool_input fields when emitting replacement-style updatedInput; Codex does not use this Bash command-rewrite hook path."
   }
  ],
  "mcp_servers": [

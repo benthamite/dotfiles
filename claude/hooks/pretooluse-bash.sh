@@ -45,6 +45,10 @@ UPDATED_CMD=""
 add_deny() { DENY_REASONS+=("$1"); }
 add_ask()  { ASK_REASONS+=("$1"); }
 
+updated_input_json() {
+  printf '%s' "$INPUT" | jq -c --arg cmd "$UPDATED_CMD" '.tool_input + {command:$cmd}'
+}
+
 # Delegate to an unchanged standalone hook; fold any deny it emits into the
 # accumulator. Used for checks that do git/fs work behind a cheap gate, so they
 # only spawn when relevant.
@@ -373,17 +377,17 @@ if [ "${#DENY_REASONS[@]}" -gt 0 ]; then
 elif [ "${#ASK_REASONS[@]}" -gt 0 ]; then
   reason=$(join_reasons "${ASK_REASONS[@]}")
   if [ -n "$UPDATED_CMD" ]; then
-    jq -nc --arg r "$reason" --arg cmd "$UPDATED_CMD" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"ask",permissionDecisionReason:$r,updatedInput:{command:$cmd}}}'
+    jq -nc --arg r "$reason" --argjson input "$(updated_input_json)" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"ask",permissionDecisionReason:$r,updatedInput:$input}}'
   else
     jq -n --arg r "$reason" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"ask",permissionDecisionReason:$r}}'
   fi
 elif [ -n "$ALLOW_CONTEXT" ]; then
   if [ -n "$UPDATED_CMD" ]; then
-    jq -nc --arg ctx "$ALLOW_CONTEXT" --arg cmd "$UPDATED_CMD" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"allow",additionalContext:$ctx,updatedInput:{command:$cmd}}}'
+    jq -nc --arg ctx "$ALLOW_CONTEXT" --argjson input "$(updated_input_json)" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"allow",additionalContext:$ctx,updatedInput:$input}}'
   else
     jq -n --arg ctx "$ALLOW_CONTEXT" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"allow",additionalContext:$ctx}}'
   fi
 elif [ -n "$UPDATED_CMD" ]; then
-  jq -nc --arg cmd "$UPDATED_CMD" '{hookSpecificOutput:{hookEventName:"PreToolUse",updatedInput:{command:$cmd}}}'
+  jq -nc --argjson input "$(updated_input_json)" '{hookSpecificOutput:{hookEventName:"PreToolUse",updatedInput:$input}}'
 fi
 exit 0

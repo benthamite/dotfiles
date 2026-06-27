@@ -106,6 +106,35 @@ inject_private_skills() {
   vsay "injected $n private skill(s) into .claude/skills/ (source: $private_skills_dir)."
 }
 
+# PERMANENT key-symlink guarantee — runs in EVERY session, BEFORE the cwd/origin
+# guards below. Those guards make the whole hook a no-op when a session starts
+# outside an agent-c worktree (e.g. from the umbrella root ~/Trajectory), and the
+# per-cwd repair further down only fixes the ONE worktree you launched in. That
+# combination left sibling worktrees with no .claude/.env key, so the agent
+# dead-ended at "ANTHROPIC_API_KEY is not set" and (wrongly) asked Pablo to run
+# `ln -s`. This loop repairs EVERY agent-c task worktree's key symlink on every
+# session start, regardless of cwd — the mechanical guarantee that a future
+# session can never see a missing key. Cheap, idempotent; never reads the secret.
+repair_all_worktree_keys() {
+  local canonical="$HOME/Trajectory/agent-c/agent-c-cr-studio/.claude/.env"
+  [ -e "$canonical" ] || return 0
+  local d name link n=0
+  for d in "$HOME"/Trajectory/agent-c/*/; do
+    [ -d "$d" ] || continue
+    name="$(basename "$d")"
+    case "$name" in main|agent-c-cr-studio) continue;; esac
+    link="$d.claude/.env"
+    # Leave a real key file (regular file, not a symlink) untouched.
+    [ -e "$link" ] && [ ! -L "$link" ] && continue
+    [ "$(readlink "$link" 2>/dev/null || true)" = "$canonical" ] && continue
+    mkdir -p "$d.claude" 2>/dev/null || true
+    ln -sfn "$canonical" "$link" 2>/dev/null && n=$((n+1))
+  done
+  [ "$n" -gt 0 ] && say "repaired $n agent-c worktree key symlink(s) -> canonical."
+  return 0
+}
+repair_all_worktree_keys
+
 cd "${CLAUDE_PROJECT_DIR:-$PWD}" 2>/dev/null || exit 0
 
 # Must be inside a git work tree.

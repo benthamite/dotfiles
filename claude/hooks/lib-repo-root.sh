@@ -50,7 +50,7 @@ _cd_target=""
 case "$COMMAND" in
   *'$('* | *'`'* ) ;;  # bail: command substitution present
   *)
-    if [[ "$COMMAND" =~ ^[[:space:]]*cd[[:space:]]+([^\&\;\|]+) ]]; then
+    if [[ "$COMMAND" =~ ^[[:space:]]*cd[[:space:]]+([^\&\;\|[:cntrl:]]+) ]]; then
       _cd_target="${BASH_REMATCH[1]}"
       _cd_target="${_cd_target%"${_cd_target##*[![:space:]]}"}"  # rtrim
       if [[ "$_cd_target" =~ ^\"(.*)\"$ || "$_cd_target" =~ ^\'(.*)\'$ ]]; then

@@ -33,6 +33,9 @@ vsay() { [ "$verbose" = "1" ] && echo "[sync-agent-c] $*"; return 0; }
 say()  { echo "[sync-agent-c] $*"; }
 overlay_dir="${SYNC_AGENT_C_OVERLAY_DIR:-$HOME/My Drive/dotfiles/claude/templates/agent-c}"
 parent_agents="${SYNC_AGENT_C_PARENT_AGENTS:-$HOME/Trajectory/AGENTS.md}"
+# Private (project-scoped, NOT user-level) skills to inject into agent-c worktrees.
+# Whatever skill dirs live here are picked up automatically — not hardcoded.
+private_skills_dir="${SYNC_AGENT_C_PRIVATE_SKILLS_DIR:-$HOME/Trajectory/.claude/skills}"
 
 overlay_available() {
   [ -r "$overlay_dir/AGENTS.md" ] && [ -r "$overlay_dir/CLAUDE.md" ]
@@ -73,6 +76,36 @@ compose_agents_overlay() {
   fi
 }
 
+# Make Pablo's PRIVATE CR skills available in THIS agent-c worktree without making
+# them user-level (which would pollute every unrelated session). Every skill dir in
+# $private_skills_dir is symlinked into the worktree's .claude/skills/ — the set is
+# globbed, never hardcoded, so new private skills appear automatically. Injected
+# links are added to the worktree-local git exclude so they never show in `git
+# status` or get committed/pushed (the public skills next to them stay tracked).
+# Stale links (whose source was removed) are pruned. Idempotent.
+inject_private_skills() {
+  [ -d "$private_skills_dir" ] || return 0
+  mkdir -p .claude/skills || return 0
+  local exclude src name resolved n=0
+  exclude="$(git rev-parse --git-path info/exclude 2>/dev/null || true)"
+  for src in "$private_skills_dir"/*/; do
+    [ -d "$src" ] || continue
+    name="$(basename "$src")"
+    ln -sfn "${src%/}" ".claude/skills/$name" && n=$((n+1))
+    if [ -n "$exclude" ] && ! grep -qxF "/.claude/skills/$name" "$exclude" 2>/dev/null; then
+      printf '/.claude/skills/%s\n' "$name" >>"$exclude"
+    fi
+  done
+  for link in .claude/skills/*; do
+    [ -L "$link" ] || continue
+    resolved="$(readlink "$link" 2>/dev/null || true)"
+    case "$resolved" in
+      "$private_skills_dir"/*) [ -e "$link" ] || rm -f "$link" ;;
+    esac
+  done
+  vsay "injected $n private skill(s) into .claude/skills/ (source: $private_skills_dir)."
+}
+
 cd "${CLAUDE_PROJECT_DIR:-$PWD}" 2>/dev/null || exit 0
 
 # Must be inside a git work tree.
@@ -100,6 +133,11 @@ if [ -e "$canonical_key" ] && { [ -L .claude/.env ] || [ ! -e .claude/.env ]; };
     ln -sfn "$canonical_key" .claude/.env && say "repaired .claude/.env key symlink -> canonical."
   fi
 fi
+
+# Inject Pablo's private CR skills (project-scoped, not user-level). Runs on every
+# agent-c session start, independent of the merge below, so the skills are present
+# regardless of branch/merge state.
+inject_private_skills
 
 # Skip detached HEAD (e.g. agent-c-cr-studio pinned to peter/cr-studio).
 branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)"

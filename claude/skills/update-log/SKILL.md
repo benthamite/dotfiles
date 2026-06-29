@@ -141,9 +141,11 @@ How CLAUDE.md is maintained depends on its shape — the file itself tells you w
 
 CLAUDE.md has a `## Current focus` section (and no `## Latest session`). The file is a stable map and the session narrative belongs in the project's brief (e.g. the `.org`), not here. The brief itself is refreshed by the post-update-log hook in Step 4. In this mode:
 
-1. Update `## Current focus` to a **single line** reflecting the session's net current state.
+1. **Regenerate `## Current focus`, replacing the previous content — never append to it.** Derive it from the project brief's open work (for `.org` briefs, the `** Active TODOs` headings) *after* the Step 4 post-hook has refreshed that brief, so the digest reflects the just-updated state. Output a short digest: a one-line orientation, optionally followed by up to ~6 bullets of the live open priorities. Hard cap ~120 words. **No dates and no session narrative** (e.g. "On 2026-06-29 did X") — those live in `logs/`; durable state lives in the brief.
+   - **Why replace, not append:** appending is what turns `Current focus` into a chronological blob that duplicates the log and the brief. Replacing loses nothing — the session log you just wrote holds the narrative, and the brief's `** Active TODOs` hold the live state. `Current focus` is only a convenience index into those.
+   - If the existing `Current focus` is already a multi-paragraph blob, this run is the moment to compact it down to the digest; do not preserve the old chronology.
 2. Keep the `## Read first` pointers accurate if any referenced file moved or was added.
-3. Do **not** add a `## Latest session` narrative, and do not lengthen `Current focus` past one line.
+3. Do **not** add a `## Latest session` narrative. If the brief's `STATUS_DETAIL` / `NEXT_STEP` dashboard abstracts have themselves blobbed past their word caps (≤120 / ≤40), compact them the same way while updating the brief in Step 4 — they are derived summaries of `** Current state` / `** Active TODOs`, not changelogs.
 
 This is the shape defined by a project's documentation conventions (for Epoch, `projects/context/project-doc-conventions.md`). When in doubt about what belongs in the map versus the brief, follow that doc.
 

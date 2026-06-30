@@ -1,0 +1,86 @@
+#!/bin/bash
+# Bulk-sync Trajectory agent-c task worktrees with origin/main.
+#
+# This is the unattended wrapper for the existing per-worktree safety logic in
+# claude/hooks/sync-agent-c-worktree.sh. It fetches once, skips protected
+# non-task worktrees, then lets the per-worktree script handle dirty trees,
+# detached heads, dry-run merge conflicts, local overlays, and key symlinks.
+
+set -euo pipefail
+
+root="${AGENT_C_WORKTREES_ROOT:-$HOME/Trajectory/agent-c}"
+main="${AGENT_C_MAIN_WORKTREE:-$root/main}"
+sync_script="${AGENT_C_SYNC_SCRIPT:-$HOME/My Drive/dotfiles/claude/hooks/sync-agent-c-worktree.sh}"
+log_dir="${AGENT_C_SYNC_LOG_DIR:-$HOME/.local/state/agent-c-worktree-sync}"
+
+mkdir -p "$log_dir"
+run_id="$(date '+%Y%m%d-%H%M%S')"
+log_file="$log_dir/sync-$run_id.log"
+latest_log="$log_dir/latest.log"
+exec > >(tee -a "$log_file") 2>&1
+ln -sfn "$log_file" "$latest_log" 2>/dev/null || true
+
+lock_dir="$log_dir/.lock"
+if ! mkdir "$lock_dir" 2>/dev/null; then
+  echo "[agent-c-sync-all] another sync is already running; exiting."
+  exit 0
+fi
+trap 'rmdir "$lock_dir" 2>/dev/null || true' EXIT
+
+echo "[agent-c-sync-all] started $(date '+%Y-%m-%d %H:%M:%S')"
+echo "[agent-c-sync-all] root: $root"
+
+if [ ! -d "$main" ]; then
+  echo "[agent-c-sync-all] missing main worktree: $main"
+  exit 1
+fi
+
+if [ ! -x "$sync_script" ]; then
+  echo "[agent-c-sync-all] missing executable sync script: $sync_script"
+  exit 1
+fi
+
+if [ "${AGENT_C_BULK_SKIP_FETCH:-0}" = "1" ]; then
+  echo "[agent-c-sync-all] fetch skipped by caller."
+else
+  echo "[agent-c-sync-all] fetching origin/main once."
+  git -C "$main" fetch --quiet origin main || \
+    echo "[agent-c-sync-all] warning: fetch failed; using existing origin/main ref."
+fi
+
+processed=0
+skipped=0
+failed=0
+
+while IFS= read -r path; do
+  [ -n "$path" ] || continue
+  name="$(basename "$path")"
+  case "$name" in
+    main|agent-c-cr-studio)
+      echo "[agent-c-sync-all] skip protected worktree: $path"
+      skipped=$((skipped + 1))
+      continue
+      ;;
+  esac
+
+  if [ ! -d "$path" ]; then
+    echo "[agent-c-sync-all] skip missing worktree path: $path"
+    skipped=$((skipped + 1))
+    continue
+  fi
+
+  echo "[agent-c-sync-all] sync: $path"
+  if CLAUDE_PROJECT_DIR="$path" SYNC_AGENT_C_VERBOSE=1 SYNC_AGENT_C_SKIP_FETCH=1 "$sync_script" </dev/null; then
+    processed=$((processed + 1))
+  else
+    echo "[agent-c-sync-all] failed: $path"
+    failed=$((failed + 1))
+  fi
+done < <(git -C "$main" worktree list --porcelain | sed -n 's/^worktree //p')
+
+echo "[agent-c-sync-all] finished $(date '+%Y-%m-%d %H:%M:%S')"
+echo "[agent-c-sync-all] summary: processed=$processed skipped=$skipped failed=$failed log=$log_file"
+
+if [ "$failed" -gt 0 ]; then
+  exit 1
+fi

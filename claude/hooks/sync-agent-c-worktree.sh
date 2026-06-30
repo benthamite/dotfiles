@@ -189,7 +189,11 @@ if [ -n "$(git status --porcelain --untracked-files=no 2>/dev/null)" ]; then
 fi
 
 # Fetch origin/main, time-bounded (the hook's own timeout is the outer bound).
-if command -v timeout >/dev/null 2>&1; then
+# Bulk callers fetch once before walking every worktree and set this flag to
+# avoid dozens of redundant network calls.
+if [ "${SYNC_AGENT_C_SKIP_FETCH:-0}" = "1" ]; then
+  vsay "fetch skipped by bulk caller; using local origin/main."
+elif command -v timeout >/dev/null 2>&1; then
   timeout 20 git fetch --quiet origin main 2>/dev/null || true
 elif command -v gtimeout >/dev/null 2>&1; then
   gtimeout 20 git fetch --quiet origin main 2>/dev/null || true

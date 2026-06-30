@@ -1,0 +1,566 @@
+#!/usr/bin/env python3
+"""Private CR Taiga run ledger and exact-job comparison tool."""
+
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import hashlib
+import json
+import os
+import shutil
+import statistics
+import subprocess
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
+
+
+TAIGA_ENV = "TGA-conceptual_domains_v001_TRJ"
+TAIGA_ENV_ID = "fbf70736-91c1-40ab-963f-a75187b340c6"
+IMAGE_PREFIX = "us-east1-docker.pkg.dev/gcp-taiga/trajectorylabs/grantmaking"
+LEDGER_NAME = "run-ledger.jsonl"
+TASK_HASH_FILES = [
+    "basic_info.json",
+    "prompt.txt",
+    "grading/rubric.md",
+]
+
+
+class TaigaLedgerError(Exception):
+    """Raised when the local Taiga ledger/artifacts are ambiguous or missing."""
+
+
+@dataclass(frozen=True)
+class GitInfo:
+    sha: str
+    branch: str
+    is_dirty: bool
+
+
+def utc_now() -> str:
+    return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds").replace(
+        "+00:00", "Z"
+    )
+
+
+def run_git(worktree: Path, *args: str) -> str:
+    result = subprocess.run(
+        ["git", "-C", str(worktree), *args],
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    return result.stdout.strip()
+
+
+def git_info(worktree: Path) -> GitInfo:
+    sha = run_git(worktree, "rev-parse", "HEAD")
+    branch = run_git(worktree, "rev-parse", "--abbrev-ref", "HEAD")
+    dirty = bool(run_git(worktree, "status", "--short"))
+    return GitInfo(sha=sha, branch=branch, is_dirty=dirty)
+
+
+def find_task_dir(slug: str, start: Path | None = None) -> Path:
+    root = (start or Path.cwd()).resolve()
+    for base in [root, *root.parents]:
+        candidate = base / "tasks" / slug
+        if candidate.is_dir():
+            return candidate
+    raise TaigaLedgerError(f"could not find tasks/{slug} from {root}")
+
+
+def worktree_root(task_dir: Path) -> Path:
+    try:
+        return Path(
+            subprocess.run(
+                ["git", "-C", str(task_dir), "rev-parse", "--show-toplevel"],
+                text=True,
+                capture_output=True,
+                check=True,
+            ).stdout.strip()
+        )
+    except subprocess.CalledProcessError as exc:
+        raise TaigaLedgerError(f"{task_dir} is not inside a git worktree") from exc
+
+
+def sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def task_hashes(task_dir: Path) -> dict[str, str]:
+    hashes: dict[str, str] = {}
+    for rel in TASK_HASH_FILES:
+        path = task_dir / rel
+        if path.is_file():
+            hashes[rel] = sha256_file(path)
+    return hashes
+
+
+def task_tree_hash(hashes: dict[str, str]) -> str:
+    payload = json.dumps(hashes, sort_keys=True, separators=(",", ":")).encode()
+    return hashlib.sha256(payload).hexdigest()
+
+
+def image_for_sha(sha: str) -> str:
+    return f"{IMAGE_PREFIX}:sha-{sha}"
+
+
+def transcript_url(job_id: str, slug: str, attempt: int = 1) -> str:
+    return (
+        "https://taiga.ant.dev/transcripts/"
+        f"?id={job_id}&problemId={slug}&attempt={attempt}"
+        f"&referrer=job&environmentId={TAIGA_ENV_ID}"
+    )
+
+
+def ledger_path(task_dir: Path) -> Path:
+    configured = os.environ.get("CR_TAIGA_LEDGER_DIR")
+    if configured:
+        return Path(configured).expanduser() / f"{task_dir.name}.jsonl"
+    for parent in [task_dir, *task_dir.parents]:
+        if (parent / "agent-c").is_dir() and (parent / "cr-pipeline").is_dir():
+            return parent / "logs" / "taiga-ledger" / f"{task_dir.name}.jsonl"
+    return task_dir / "taiga" / LEDGER_NAME
+
+
+def archive_dir(task_dir: Path, job_id: str) -> Path:
+    path = ledger_path(task_dir)
+    if path.name == f"{task_dir.name}.jsonl":
+        return path.parent / task_dir.name / job_id
+    return path.parent / "archives" / job_id
+
+
+def read_ledger(task_dir: Path) -> list[dict[str, Any]]:
+    path = ledger_path(task_dir)
+    if not path.is_file():
+        return []
+    events: list[dict[str, Any]] = []
+    for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if not line.strip():
+            continue
+        try:
+            events.append(json.loads(line))
+        except json.JSONDecodeError as exc:
+            raise TaigaLedgerError(f"{path}:{lineno}: invalid JSONL entry") from exc
+    return events
+
+
+def append_ledger(task_dir: Path, event: dict[str, Any]) -> Path:
+    path = ledger_path(task_dir)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(event, sort_keys=True) + "\n")
+    return path
+
+
+def build_ledger_event(
+    *,
+    task_dir: Path,
+    git_info: GitInfo,
+    status: str,
+    model: str,
+    epochs: int,
+    job_id: str | None = None,
+    build_run_url: str | None = None,
+    build_run_id: str | None = None,
+    note: str | None = None,
+) -> dict[str, Any]:
+    slug = task_dir.name
+    hashes = task_hashes(task_dir)
+    image = image_for_sha(git_info.sha)
+    event: dict[str, Any] = {
+        "schema_version": 1,
+        "kind": "cr-taiga-run",
+        "recorded_at": utc_now(),
+        "slug": slug,
+        "status": status,
+        "git_sha": git_info.sha,
+        "branch": git_info.branch,
+        "git_dirty": git_info.is_dirty,
+        "image": image,
+        "model": model,
+        "epochs": epochs,
+        "taiga_env": TAIGA_ENV,
+        "taiga_env_id": TAIGA_ENV_ID,
+        "task_hashes": hashes,
+        "task_tree_hash": task_tree_hash(hashes),
+        "commands": {
+            "build": (
+                "gh workflow run grantmaking-build.yml "
+                f"--ref {git_info.branch} -f push=true"
+            ),
+            "submit": (
+                "uv run --no-sync --project meta/trajectory_labs tl run "
+                f"{slug} --taiga --epochs {epochs} --model {model} --image {image}"
+            ),
+            "poll": (
+                "uv run --no-sync --project meta/trajectory_labs tl runs "
+                f"{slug} --taiga {TAIGA_ENV} --job <job-id> --no-save --json"
+            ),
+            "pull": (
+                "uv run --no-sync --project meta/trajectory_labs tl runs "
+                f"{slug} --taiga {TAIGA_ENV} --job <job-id>"
+            ),
+        },
+    }
+    if job_id:
+        event["job_id"] = job_id
+        event["transcript_url"] = transcript_url(job_id, slug)
+        event["commands"]["poll"] = event["commands"]["poll"].replace("<job-id>", job_id)
+        event["commands"]["pull"] = event["commands"]["pull"].replace("<job-id>", job_id)
+    if build_run_url:
+        event["build_run_url"] = build_run_url
+    if build_run_id:
+        event["build_run_id"] = build_run_id
+    if note:
+        event["note"] = note
+    return event
+
+
+def _main_reward(rewards: list[dict[str, Any]]) -> dict[str, Any] | None:
+    for reward in rewards:
+        if not reward.get("is_auxiliary_grade", False):
+            return reward
+    return rewards[0] if rewards else None
+
+
+def _attempt_sort_key(path: Path) -> tuple[int, str]:
+    parent = path.parent.name
+    if parent.isdigit():
+        return (int(parent), str(path))
+    if parent.startswith("attempt-") and parent.split("-", 1)[1].isdigit():
+        return (int(parent.split("-", 1)[1]), str(path))
+    return (10**9, str(path))
+
+
+def run_json_files(task_dir: Path) -> list[Path]:
+    taiga = task_dir / "taiga"
+    if not taiga.is_dir():
+        return []
+    paths = []
+    for path in taiga.glob("**/run.json"):
+        try:
+            rel_parts = path.relative_to(taiga).parts
+        except ValueError:
+            rel_parts = ()
+        if "archives" in rel_parts:
+            continue
+        paths.append(path)
+    return sorted(paths, key=_attempt_sort_key)
+
+
+def archived_run_json_files(task_dir: Path, job_id: str) -> list[Path]:
+    root = archive_dir(task_dir, job_id)
+    if not root.is_dir():
+        return []
+    return sorted(root.glob("**/run.json"), key=_attempt_sort_key)
+
+
+def job_ids_in_artifact_dir(path: Path) -> set[str]:
+    ids: set[str] = set()
+    for run_json in sorted(path.glob("**/run.json")):
+        try:
+            data = json.loads(run_json.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            continue
+        job_id = data.get("job_id")
+        if isinstance(job_id, str) and job_id:
+            ids.add(job_id)
+    return ids
+
+
+def resolve_job_spec(task_dir: Path, spec: str) -> str:
+    if spec in {"latest", "previous"}:
+        with_jobs = [
+            event
+            for event in read_ledger(task_dir)
+            if event.get("job_id") and event.get("status") != "planned"
+        ]
+        if not with_jobs:
+            raise TaigaLedgerError(f"{spec}: no ledger entries with job_id")
+        index = -1 if spec == "latest" else -2
+        try:
+            return str(with_jobs[index]["job_id"])
+        except IndexError as exc:
+            raise TaigaLedgerError(f"{spec}: ledger has only one job_id entry") from exc
+
+    artifact = Path(spec)
+    if not artifact.exists():
+        artifact = task_dir / "taiga" / spec
+    if artifact.exists():
+        ids = job_ids_in_artifact_dir(artifact)
+        if not ids:
+            raise TaigaLedgerError(f"{artifact} does not contain a Taiga job_id")
+        if len(ids) > 1:
+            joined = ", ".join(sorted(ids))
+            raise TaigaLedgerError(f"{artifact} contains multiple job_id values: {joined}")
+        return next(iter(ids))
+
+    return spec
+
+
+def load_attempts_for_job(task_dir: Path, job_id: str) -> list[dict[str, Any]]:
+    attempts: list[dict[str, Any]] = []
+    source_files = []
+    for run_json in run_json_files(task_dir):
+        data = json.loads(run_json.read_text(encoding="utf-8"))
+        if data.get("job_id") != job_id:
+            continue
+        source_files.append(run_json)
+    if not source_files:
+        source_files = archived_run_json_files(task_dir, job_id)
+    for run_json in source_files:
+        data = json.loads(run_json.read_text(encoding="utf-8"))
+        main = _main_reward(data.get("rewards") or [])
+        if main is None:
+            continue
+        score = main.get("normalized_score", data.get("final_score"))
+        if score is None:
+            continue
+        criteria: dict[str, float] = {}
+        for subscore in main.get("subscores", []):
+            criterion = subscore.get("grading_criteria") or subscore.get("name")
+            if not criterion:
+                continue
+            max_score = subscore.get("max_score") or 1.0
+            raw = subscore.get("score")
+            if raw is None:
+                continue
+            criteria[str(criterion)] = float(raw) / float(max_score)
+        attempts.append(
+            {
+                "path": str(run_json),
+                "attempt": data.get("attempt_number") or run_json.parent.name,
+                "score": float(score),
+                "criteria": criteria,
+            }
+        )
+    if not attempts:
+        raise TaigaLedgerError(f"no pulled run.json artifacts found for job_id {job_id}")
+    return attempts
+
+
+def archive_job_artifacts(task_dir: Path, job_id: str) -> Path:
+    matching = []
+    for run_json in run_json_files(task_dir):
+        data = json.loads(run_json.read_text(encoding="utf-8"))
+        if data.get("job_id") == job_id:
+            matching.append(run_json)
+    if not matching:
+        raise TaigaLedgerError(f"no pulled run.json artifacts found for job_id {job_id}")
+
+    root = archive_dir(task_dir, job_id)
+    root.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "job_id": job_id,
+        "slug": task_dir.name,
+        "archived_at": utc_now(),
+        "attempts": [],
+    }
+    for run_json in sorted(matching, key=_attempt_sort_key):
+        data = json.loads(run_json.read_text(encoding="utf-8"))
+        attempt = data.get("attempt_number") or run_json.parent.name
+        try:
+            attempt_number = int(attempt)
+            target_name = f"attempt-{attempt_number:02d}"
+        except (TypeError, ValueError):
+            target_name = str(attempt)
+        target = root / target_name
+        shutil.copytree(run_json.parent, target, dirs_exist_ok=True)
+        manifest["attempts"].append(
+            {
+                "attempt": attempt,
+                "run_id": data.get("id"),
+                "source": str(run_json.parent),
+                "archive": str(target),
+            }
+        )
+    (root / "manifest.json").write_text(
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    return root
+
+
+def summarize_job(task_dir: Path, job_id: str) -> dict[str, Any]:
+    attempts = load_attempts_for_job(task_dir, job_id)
+    criterion_ids: list[str] = []
+    for attempt in attempts:
+        for criterion in attempt["criteria"]:
+            if criterion not in criterion_ids:
+                criterion_ids.append(criterion)
+    criterion_means = {}
+    for criterion in criterion_ids:
+        values = [
+            attempt["criteria"][criterion]
+            for attempt in attempts
+            if criterion in attempt["criteria"]
+        ]
+        criterion_means[criterion] = statistics.mean(values) if values else 0.0
+    return {
+        "job_id": job_id,
+        "n": len(attempts),
+        "mean": statistics.mean(attempt["score"] for attempt in attempts),
+        "criteria": criterion_means,
+        "scores": [attempt["score"] for attempt in attempts],
+    }
+
+
+def fmt(value: float | None) -> str:
+    return "N/A" if value is None else f"{value:.3f}"
+
+
+def compare_jobs(task_dir: Path, old_job: str, new_job: str) -> str:
+    old = summarize_job(task_dir, old_job)
+    new = summarize_job(task_dir, new_job)
+    rows = [
+        "| Criterion | Old | New | Delta |",
+        "|---|---:|---:|---:|",
+    ]
+    delta = new["mean"] - old["mean"]
+    rows.append(f"| Overall | {fmt(old['mean'])} | {fmt(new['mean'])} | {delta:+.3f} |")
+    for criterion in sorted(set(old["criteria"]) | set(new["criteria"])):
+        old_value = old["criteria"].get(criterion)
+        new_value = new["criteria"].get(criterion)
+        if old_value is None or new_value is None:
+            delta_text = "N/A"
+        else:
+            delta_text = f"{new_value - old_value:+.3f}"
+        rows.append(
+            f"| {criterion} | {fmt(old_value)} | {fmt(new_value)} | {delta_text} |"
+        )
+    rows.extend(
+        [
+            "",
+            f"Old job: `{old_job}` ({old['n']} attempts)",
+            f"New job: `{new_job}` ({new['n']} attempts)",
+        ]
+    )
+    return "\n".join(rows)
+
+
+def format_run_event(event: dict[str, Any], path: Path | None) -> str:
+    lines = [
+        f"slug: {event['slug']}",
+        f"status: {event['status']}",
+        f"git: {event['git_sha']} ({event['branch']})"
+        + (" dirty" if event["git_dirty"] else ""),
+        f"image: {event['image']}",
+    ]
+    if path is not None:
+        lines.append(f"ledger: {path}")
+    if event.get("job_id"):
+        lines.append(f"job: {event['job_id']}")
+        lines.append(f"transcript: {event['transcript_url']}")
+    if event.get("build_run_url"):
+        lines.append(f"build: {event['build_run_url']}")
+    if event.get("archive_dir"):
+        lines.append(f"archive: {event['archive_dir']}")
+    lines.append("")
+    lines.append("commands:")
+    for name in ["build", "submit", "poll", "pull"]:
+        lines.append(f"- {name}: {event['commands'][name]}")
+    return "\n".join(lines)
+
+
+def command_run(args: argparse.Namespace) -> int:
+    task_dir = find_task_dir(args.slug, Path(args.worktree) if args.worktree else None)
+    root = worktree_root(task_dir)
+    status = args.status or ("submitted" if args.job_id else "planned")
+    event = build_ledger_event(
+        task_dir=task_dir,
+        git_info=git_info(root),
+        status=status,
+        model=args.model,
+        epochs=args.epochs,
+        job_id=args.job_id,
+        build_run_url=args.build_run_url,
+        build_run_id=args.build_run_id,
+        note=args.note,
+    )
+    archive = None
+    if status == "pulled" and args.job_id and not args.no_write:
+        archive = archive_job_artifacts(task_dir, args.job_id)
+        event["archive_dir"] = str(archive)
+    elif status == "pulled" and args.job_id:
+        event["archive_dir"] = str(archive_dir(task_dir, args.job_id))
+    path = None if args.no_write else append_ledger(task_dir, event)
+    if args.json:
+        print(json.dumps(event, indent=2, sort_keys=True))
+    else:
+        print(format_run_event(event, path))
+    return 0
+
+
+def command_compare(args: argparse.Namespace) -> int:
+    task_dir = find_task_dir(args.slug, Path(args.worktree) if args.worktree else None)
+    old_job = resolve_job_spec(task_dir, args.old)
+    new_job = resolve_job_spec(task_dir, args.new)
+    if args.json:
+        print(
+            json.dumps(
+                {
+                    "old": summarize_job(task_dir, old_job),
+                    "new": summarize_job(task_dir, new_job),
+                },
+                indent=2,
+                sort_keys=True,
+            )
+        )
+    else:
+        print(compare_jobs(task_dir, old_job, new_job))
+    return 0
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Record and compare exact CR Taiga jobs."
+    )
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    run = sub.add_parser("run", help="record a planned/submitted Taiga run")
+    run.add_argument("slug")
+    run.add_argument("--worktree")
+    run.add_argument("--status", choices=["planned", "submitted", "pulled", "failed"])
+    run.add_argument("--model", default="claude-opus-4-8")
+    run.add_argument("--epochs", type=int, default=10)
+    run.add_argument("--job-id")
+    run.add_argument("--build-run-url")
+    run.add_argument("--build-run-id")
+    run.add_argument("--note")
+    run.add_argument("--no-write", action="store_true")
+    run.add_argument("--json", action="store_true")
+    run.set_defaults(func=command_run)
+
+    compare = sub.add_parser("compare", help="compare two exact Taiga jobs")
+    compare.add_argument("slug")
+    compare.add_argument("old")
+    compare.add_argument("new")
+    compare.add_argument("--worktree")
+    compare.add_argument("--json", action="store_true")
+    compare.set_defaults(func=command_compare)
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    try:
+        return args.func(args)
+    except TaigaLedgerError as exc:
+        print(f"cr-taiga: {exc}", file=sys.stderr)
+        return 2
+    except subprocess.CalledProcessError as exc:
+        stderr = exc.stderr.strip() if exc.stderr else str(exc)
+        print(f"cr-taiga: command failed: {stderr}", file=sys.stderr)
+        return exc.returncode or 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

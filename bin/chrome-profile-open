@@ -1,0 +1,358 @@
+#!/usr/bin/env python3
+"""Open URLs in a configured Chrome profile alias."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+
+
+DEFAULT_CHROME_ROOT = Path.home() / "Library/Application Support/Google/Chrome"
+DEFAULT_CHROME_PATH = Path(
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+)
+DEFAULT_CONFIG_PATH = (
+    Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
+    / "chrome-profile-open"
+    / "profiles.json"
+)
+ALIAS_RE = re.compile(r"^[a-z][a-z0-9_-]*$")
+
+
+class ConfigError(Exception):
+    """Raised when a Chrome profile alias is not safely configured."""
+
+
+@dataclass(frozen=True)
+class ChromeProfile:
+    directory: str
+    name: str
+    user_name: str
+    gaia_name: str = ""
+
+
+@dataclass(frozen=True)
+class OpenConfig:
+    alias: str
+    profile_directory: str
+    profile_name: str
+    user_name: str
+    chrome_root: Path
+
+
+def discover_profiles(chrome_root: Path = DEFAULT_CHROME_ROOT) -> list[ChromeProfile]:
+    local_state = chrome_root / "Local State"
+    try:
+        data = json.loads(local_state.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise ConfigError(f"Chrome Local State not found: {local_state}") from exc
+    except json.JSONDecodeError as exc:
+        raise ConfigError(f"Chrome Local State is not valid JSON: {local_state}") from exc
+
+    info_cache = data.get("profile", {}).get("info_cache", {})
+    if not isinstance(info_cache, dict):
+        raise ConfigError(f"Chrome Local State has no profile info_cache: {local_state}")
+
+    profiles: list[ChromeProfile] = []
+    for directory, info in info_cache.items():
+        if not isinstance(info, dict):
+            continue
+        profiles.append(
+            ChromeProfile(
+                directory=str(directory),
+                name=str(info.get("name") or ""),
+                user_name=str(info.get("user_name") or ""),
+                gaia_name=str(info.get("gaia_name") or ""),
+            )
+        )
+    return sorted(profiles, key=lambda profile: profile.directory)
+
+
+def _profile_by_directory(
+    profiles: list[ChromeProfile], profile_directory: str
+) -> ChromeProfile | None:
+    for profile in profiles:
+        if profile.directory == profile_directory:
+            return profile
+    return None
+
+
+def _validate_alias(alias: str) -> None:
+    if not ALIAS_RE.match(alias):
+        raise ConfigError(
+            f"Invalid alias '{alias}'. Use lowercase letters, numbers, hyphens, and underscores."
+        )
+
+
+def _read_payload(config_path: Path) -> dict:
+    try:
+        data = json.loads(config_path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return {"version": 1, "aliases": {}}
+    except json.JSONDecodeError as exc:
+        raise ConfigError(f"Chrome profile config is not valid JSON: {config_path}") from exc
+    if not isinstance(data, dict):
+        raise ConfigError(f"Chrome profile config is malformed: {config_path}")
+    aliases = data.setdefault("aliases", {})
+    if not isinstance(aliases, dict):
+        raise ConfigError(f"Chrome profile config aliases are malformed: {config_path}")
+    data.setdefault("version", 1)
+    return data
+
+
+def write_alias_config(
+    config_path: Path,
+    chrome_root: Path,
+    alias: str,
+    profile_directory: str,
+) -> OpenConfig:
+    _validate_alias(alias)
+    profiles = discover_profiles(chrome_root)
+    profile = _profile_by_directory(profiles, profile_directory)
+    if profile is None:
+        known = ", ".join(profile.directory for profile in profiles) or "(none)"
+        raise ConfigError(
+            f"Unknown Chrome profile '{profile_directory}'. Known profiles: {known}"
+        )
+
+    payload = _read_payload(config_path)
+    payload["version"] = 1
+    payload["chromeRoot"] = str(chrome_root)
+    payload["aliases"][alias] = {
+        "profileDirectory": profile.directory,
+        "profileName": profile.name,
+        "userName": profile.user_name,
+    }
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    config_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+    return OpenConfig(
+        alias=alias,
+        profile_directory=profile.directory,
+        profile_name=profile.name,
+        user_name=profile.user_name,
+        chrome_root=chrome_root,
+    )
+
+
+def load_alias_config(
+    config_path: Path = DEFAULT_CONFIG_PATH,
+    alias: str | None = None,
+    chrome_root: Path | None = None,
+) -> OpenConfig:
+    if alias is None:
+        raise ConfigError("No Chrome profile alias was provided")
+    _validate_alias(alias)
+    try:
+        data = json.loads(config_path.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise ConfigError(f"Chrome profile aliases are not configured: {config_path}") from exc
+    except json.JSONDecodeError as exc:
+        raise ConfigError(f"Chrome profile config is not valid JSON: {config_path}") from exc
+
+    aliases = data.get("aliases")
+    if not isinstance(aliases, dict):
+        raise ConfigError(f"Chrome profile config has no aliases: {config_path}")
+    entry = aliases.get(alias)
+    if not isinstance(entry, dict):
+        known = ", ".join(sorted(aliases)) or "(none)"
+        raise ConfigError(f"Alias '{alias}' is not configured. Known aliases: {known}")
+
+    profile_directory = entry.get("profileDirectory")
+    if not isinstance(profile_directory, str) or not profile_directory:
+        raise ConfigError(f"Alias '{alias}' has no profileDirectory: {config_path}")
+
+    root = chrome_root or Path(data.get("chromeRoot") or DEFAULT_CHROME_ROOT)
+    profiles = discover_profiles(root)
+    profile = _profile_by_directory(profiles, profile_directory)
+    if profile is None:
+        raise ConfigError(
+            f"Configured Chrome profile '{profile_directory}' for alias '{alias}' "
+            f"no longer exists in {root}"
+        )
+
+    expected_user = entry.get("userName") or ""
+    expected_name = entry.get("profileName") or ""
+    if expected_user and profile.user_name and expected_user != profile.user_name:
+        raise ConfigError(
+            f"Alias '{alias}' profile identity changed: expected {expected_user}, "
+            f"found {profile.user_name}"
+        )
+    if expected_name and profile.name and expected_name != profile.name:
+        raise ConfigError(
+            f"Alias '{alias}' profile identity changed: expected {expected_name}, "
+            f"found {profile.name}"
+        )
+
+    return OpenConfig(
+        alias=alias,
+        profile_directory=profile.directory,
+        profile_name=profile.name,
+        user_name=profile.user_name,
+        chrome_root=root,
+    )
+
+
+def build_chrome_command(
+    config: OpenConfig,
+    urls: list[str],
+    *,
+    chrome_path: Path = DEFAULT_CHROME_PATH,
+    new_window: bool = False,
+) -> list[str]:
+    command = [str(chrome_path), f"--profile-directory={config.profile_directory}"]
+    if new_window:
+        command.append("--new-window")
+    command.extend(urls)
+    return command
+
+
+def print_profiles(profiles: list[ChromeProfile]) -> None:
+    for index, profile in enumerate(profiles, 1):
+        label = profile.name or "(unnamed)"
+        user = profile.user_name or profile.gaia_name or "(no signed-in user)"
+        print(f"{index}. {profile.directory}\t{label}\t{user}")
+
+
+def print_aliases(config_path: Path) -> None:
+    data = _read_payload(config_path)
+    aliases = data.get("aliases", {})
+    for alias in sorted(aliases):
+        entry = aliases[alias]
+        directory = entry.get("profileDirectory", "")
+        name = entry.get("profileName", "")
+        user = entry.get("userName", "")
+        print(f"{alias}\t{directory}\t{name}\t{user}")
+
+
+def _select_profile_interactively(profiles: list[ChromeProfile], alias: str) -> str:
+    print_profiles(profiles)
+    choice = input(f"Select Chrome profile number for alias '{alias}': ").strip()
+    try:
+        index = int(choice)
+    except ValueError as exc:
+        raise ConfigError(f"Invalid profile selection: {choice!r}") from exc
+    if index < 1 or index > len(profiles):
+        raise ConfigError(f"Profile selection out of range: {choice!r}")
+    return profiles[index - 1].directory
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Open URLs in a configured Chrome profile alias."
+    )
+    parser.add_argument("alias", nargs="?", help="profile alias to use")
+    parser.add_argument("urls", nargs="*", help="URLs to open")
+    parser.add_argument(
+        "--setup",
+        metavar="ALIAS",
+        help="configure a profile alias, e.g. --setup trajectory",
+    )
+    parser.add_argument(
+        "--list-profiles", action="store_true", help="list discoverable Chrome profiles"
+    )
+    parser.add_argument(
+        "--list-aliases", action="store_true", help="list configured profile aliases"
+    )
+    parser.add_argument(
+        "--profile-directory",
+        help="Chrome profile directory to store during --setup, e.g. 'Profile 4'",
+    )
+    parser.add_argument(
+        "--config",
+        type=Path,
+        default=Path(os.environ.get("CHROME_PROFILE_OPEN_CONFIG", DEFAULT_CONFIG_PATH)),
+        help="config file path",
+    )
+    parser.add_argument(
+        "--chrome-root",
+        type=Path,
+        default=Path(os.environ.get("CHROME_PROFILE_OPEN_CHROME_ROOT", DEFAULT_CHROME_ROOT)),
+        help="Chrome user data root",
+    )
+    parser.add_argument(
+        "--chrome",
+        type=Path,
+        default=Path(os.environ.get("CHROME_PROFILE_OPEN_CHROME_PATH", DEFAULT_CHROME_PATH)),
+        help="Chrome executable",
+    )
+    parser.add_argument(
+        "--new-window",
+        action="store_true",
+        help="request a new Chrome window instead of Chrome's default tab behavior",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="print the Chrome command instead of executing it",
+    )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+
+    try:
+        if args.list_profiles:
+            print_profiles(discover_profiles(args.chrome_root))
+            return 0
+
+        if args.list_aliases:
+            print_aliases(args.config)
+            return 0
+
+        if args.setup:
+            profiles = discover_profiles(args.chrome_root)
+            if not profiles:
+                raise ConfigError(f"No Chrome profiles found in {args.chrome_root}")
+            profile_directory = args.profile_directory or _select_profile_interactively(
+                profiles, args.setup
+            )
+            config = write_alias_config(
+                args.config, args.chrome_root, args.setup, profile_directory
+            )
+            print(
+                f"Configured Chrome profile alias '{config.alias}': "
+                f"{config.profile_directory} ({config.profile_name}, {config.user_name})"
+            )
+            print(f"Config: {args.config}")
+            return 0
+
+        if not args.alias or not args.urls:
+            build_parser().print_usage(sys.stderr)
+            return 2
+
+        config = load_alias_config(args.config, args.alias, args.chrome_root)
+        command = build_chrome_command(
+            config,
+            list(args.urls),
+            chrome_path=args.chrome,
+            new_window=args.new_window,
+        )
+        if args.dry_run:
+            print(json.dumps(command))
+            return 0
+        subprocess.run(command, check=True)
+        return 0
+    except ConfigError as exc:
+        print(f"chrome-profile-open: {exc}", file=sys.stderr)
+        if args.alias and args.urls:
+            print(
+                f"Not opening URLs because alias '{args.alias}' is not verified.",
+                file=sys.stderr,
+            )
+            for url in args.urls:
+                print(f"URL: {url}", file=sys.stderr)
+            print(f"Run: chrome-profile-open --setup {args.alias}", file=sys.stderr)
+        return 2
+    except subprocess.CalledProcessError as exc:
+        return exc.returncode
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

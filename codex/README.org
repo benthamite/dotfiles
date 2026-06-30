@@ -76,12 +76,12 @@ faster path. They also require clear, plain language and avoiding obfuscatory
 jargon.
 
 It also records the manual Chrome profile routing used by browser-only service
-flows: use =chrome-work-tab URL= for Epoch/work projects so Chrome targets
-=Profile 2= (=pablo@epoch.ai=) and opens a tab instead of relying on the
-frontmost Chrome window. Personal projects use =Default=. Trajectory/CR pages
-are the exception: use =trajectory-open URL=, backed by a durable profile
-directory selected once with =trajectory-open --setup=, so localhost visualizers
-cannot be routed by the wrong open Chrome profile.
+flows: use =chrome-profile-open ALIAS URL= for project-specific profiles,
+configured with =chrome-profile-open --setup ALIAS --profile-directory "Profile
+N"=. The shared config lives at =~/.config/chrome-profile-open/profiles.json=,
+and the opener validates the stored profile directory plus profile/account
+metadata before opening. =trajectory-open URL= is a compatibility wrapper around
+=chrome-profile-open trajectory URL= for Trajectory/CR pages.
 
 =codex/config.toml= enables experimental goals support under =[features]=. It
 also sets =suppress_unstable_features_warning = true= so Codex does not print

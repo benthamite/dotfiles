@@ -1,274 +1,31 @@
 #!/usr/bin/env python3
-"""Open Trajectory pages in the configured Chrome profile."""
+"""Compatibility wrapper for opening URLs with the Trajectory Chrome profile."""
 
 from __future__ import annotations
 
-import argparse
-import json
-import os
 import subprocess
 import sys
-from dataclasses import dataclass
 from pathlib import Path
 
 
-DEFAULT_CHROME_ROOT = Path.home() / "Library/Application Support/Google/Chrome"
-DEFAULT_CHROME_PATH = Path(
-    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-)
-DEFAULT_CONFIG_PATH = (
-    Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
-    / "trajectory"
-    / "chrome-profile.json"
-)
+ALIAS = "trajectory"
 
 
-class ConfigError(Exception):
-    """Raised when the Trajectory Chrome profile is not safely configured."""
-
-
-@dataclass(frozen=True)
-class ChromeProfile:
-    directory: str
-    name: str
-    user_name: str
-    gaia_name: str = ""
-
-
-@dataclass(frozen=True)
-class OpenConfig:
-    profile_directory: str
-    profile_name: str
-    user_name: str
-    chrome_root: Path
-
-
-def discover_profiles(chrome_root: Path = DEFAULT_CHROME_ROOT) -> list[ChromeProfile]:
-    local_state = chrome_root / "Local State"
-    try:
-        data = json.loads(local_state.read_text(encoding="utf-8"))
-    except FileNotFoundError as exc:
-        raise ConfigError(f"Chrome Local State not found: {local_state}") from exc
-    except json.JSONDecodeError as exc:
-        raise ConfigError(f"Chrome Local State is not valid JSON: {local_state}") from exc
-
-    info_cache = data.get("profile", {}).get("info_cache", {})
-    if not isinstance(info_cache, dict):
-        raise ConfigError(f"Chrome Local State has no profile info_cache: {local_state}")
-
-    profiles: list[ChromeProfile] = []
-    for directory, info in info_cache.items():
-        if not isinstance(info, dict):
-            continue
-        profiles.append(
-            ChromeProfile(
-                directory=str(directory),
-                name=str(info.get("name") or ""),
-                user_name=str(info.get("user_name") or ""),
-                gaia_name=str(info.get("gaia_name") or ""),
-            )
-        )
-    return sorted(profiles, key=lambda profile: profile.directory)
-
-
-def _profile_by_directory(
-    profiles: list[ChromeProfile], profile_directory: str
-) -> ChromeProfile | None:
-    for profile in profiles:
-        if profile.directory == profile_directory:
-            return profile
-    return None
-
-
-def write_config(
-    config_path: Path,
-    chrome_root: Path,
-    profile_directory: str,
-) -> OpenConfig:
-    profiles = discover_profiles(chrome_root)
-    profile = _profile_by_directory(profiles, profile_directory)
-    if profile is None:
-        known = ", ".join(profile.directory for profile in profiles) or "(none)"
-        raise ConfigError(
-            f"Unknown Chrome profile '{profile_directory}'. Known profiles: {known}"
-        )
-
-    payload = {
-        "version": 1,
-        "chromeRoot": str(chrome_root),
-        "profileDirectory": profile.directory,
-        "profileName": profile.name,
-        "userName": profile.user_name,
-    }
-    config_path.parent.mkdir(parents=True, exist_ok=True)
-    config_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-    return OpenConfig(
-        profile_directory=profile.directory,
-        profile_name=profile.name,
-        user_name=profile.user_name,
-        chrome_root=chrome_root,
-    )
-
-
-def load_config(
-    config_path: Path = DEFAULT_CONFIG_PATH,
-    chrome_root: Path | None = None,
-) -> OpenConfig:
-    try:
-        data = json.loads(config_path.read_text(encoding="utf-8"))
-    except FileNotFoundError as exc:
-        raise ConfigError(
-            f"Trajectory Chrome profile is not configured: {config_path}"
-        ) from exc
-    except json.JSONDecodeError as exc:
-        raise ConfigError(f"Trajectory config is not valid JSON: {config_path}") from exc
-
-    profile_directory = data.get("profileDirectory")
-    if not isinstance(profile_directory, str) or not profile_directory:
-        raise ConfigError(f"Trajectory config has no profileDirectory: {config_path}")
-
-    root = chrome_root or Path(data.get("chromeRoot") or DEFAULT_CHROME_ROOT)
-    profiles = discover_profiles(root)
-    profile = _profile_by_directory(profiles, profile_directory)
-    if profile is None:
-        raise ConfigError(
-            f"Configured Chrome profile '{profile_directory}' no longer exists in {root}"
-        )
-
-    return OpenConfig(
-        profile_directory=profile.directory,
-        profile_name=profile.name,
-        user_name=profile.user_name,
-        chrome_root=root,
-    )
-
-
-def build_chrome_command(
-    config: OpenConfig,
-    urls: list[str],
-    *,
-    chrome_path: Path = DEFAULT_CHROME_PATH,
-    new_window: bool = False,
-) -> list[str]:
-    command = [str(chrome_path), f"--profile-directory={config.profile_directory}"]
-    if new_window:
-        command.append("--new-window")
-    command.extend(urls)
-    return command
-
-
-def print_profiles(profiles: list[ChromeProfile]) -> None:
-    for index, profile in enumerate(profiles, 1):
-        label = profile.name or "(unnamed)"
-        user = profile.user_name or profile.gaia_name or "(no signed-in user)"
-        print(f"{index}. {profile.directory}\t{label}\t{user}")
-
-
-def _select_profile_interactively(profiles: list[ChromeProfile]) -> str:
-    print_profiles(profiles)
-    choice = input("Select Trajectory Chrome profile number: ").strip()
-    try:
-        index = int(choice)
-    except ValueError as exc:
-        raise ConfigError(f"Invalid profile selection: {choice!r}") from exc
-    if index < 1 or index > len(profiles):
-        raise ConfigError(f"Profile selection out of range: {choice!r}")
-    return profiles[index - 1].directory
-
-
-def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description="Open URLs in the configured Trajectory Chrome profile."
-    )
-    parser.add_argument("urls", nargs="*", help="URLs to open")
-    parser.add_argument("--setup", action="store_true", help="configure the profile")
-    parser.add_argument(
-        "--list-profiles", action="store_true", help="list discoverable Chrome profiles"
-    )
-    parser.add_argument(
-        "--profile-directory",
-        help="Chrome profile directory to store during --setup, e.g. 'Profile 4'",
-    )
-    parser.add_argument(
-        "--config",
-        type=Path,
-        default=Path(os.environ.get("TRAJECTORY_OPEN_CONFIG", DEFAULT_CONFIG_PATH)),
-        help="config file path",
-    )
-    parser.add_argument(
-        "--chrome-root",
-        type=Path,
-        default=Path(os.environ.get("TRAJECTORY_CHROME_ROOT", DEFAULT_CHROME_ROOT)),
-        help="Chrome user data root",
-    )
-    parser.add_argument(
-        "--chrome",
-        type=Path,
-        default=Path(os.environ.get("TRAJECTORY_CHROME_PATH", DEFAULT_CHROME_PATH)),
-        help="Chrome executable",
-    )
-    parser.add_argument(
-        "--new-window",
-        action="store_true",
-        help="request a new Chrome window instead of Chrome's default tab behavior",
-    )
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="print the Chrome command instead of executing it",
-    )
-    return parser
+def _forward_args(argv: list[str]) -> list[str]:
+    args = list(argv)
+    if "--setup" in args:
+        index = args.index("--setup")
+        if index == len(args) - 1 or args[index + 1].startswith("-"):
+            args.insert(index + 1, ALIAS)
+        return args
+    return [ALIAS, *args]
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
-
-    try:
-        if args.list_profiles:
-            print_profiles(discover_profiles(args.chrome_root))
-            return 0
-
-        if args.setup:
-            profiles = discover_profiles(args.chrome_root)
-            if not profiles:
-                raise ConfigError(f"No Chrome profiles found in {args.chrome_root}")
-            profile_directory = args.profile_directory or _select_profile_interactively(
-                profiles
-            )
-            config = write_config(args.config, args.chrome_root, profile_directory)
-            print(
-                "Configured Trajectory Chrome profile: "
-                f"{config.profile_directory} ({config.profile_name}, {config.user_name})"
-            )
-            print(f"Config: {args.config}")
-            return 0
-
-        if not args.urls:
-            build_parser().print_usage(sys.stderr)
-            return 2
-
-        config = load_config(args.config, args.chrome_root)
-        command = build_chrome_command(
-            config,
-            list(args.urls),
-            chrome_path=args.chrome,
-            new_window=args.new_window,
-        )
-        if args.dry_run:
-            print(json.dumps(command))
-            return 0
-        subprocess.run(command, check=True)
-        return 0
-    except ConfigError as exc:
-        print(f"trajectory-open: {exc}", file=sys.stderr)
-        if args.urls:
-            print("Not opening URLs because the Trajectory profile is not verified.", file=sys.stderr)
-            for url in args.urls:
-                print(f"URL: {url}", file=sys.stderr)
-            print("Run: trajectory-open --setup", file=sys.stderr)
-        return 2
-    except subprocess.CalledProcessError as exc:
-        return exc.returncode
+    opener = Path(__file__).resolve().with_name("chrome-profile-open")
+    forwarded = _forward_args(list(sys.argv[1:] if argv is None else argv))
+    proc = subprocess.run([str(opener), *forwarded], text=True)
+    return proc.returncode
 
 
 if __name__ == "__main__":

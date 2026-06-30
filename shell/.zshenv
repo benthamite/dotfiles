@@ -40,3 +40,15 @@ export CPPFLAGS="-I/opt/homebrew/opt/sqlite/include"
 # Local variables and secrets (keep if needed in non-interactive shells)
 source ~/.zvars
 source "$DOTFILES/shell/.zshenv-secrets"
+
+# Strip the poison empty ANTHROPIC_AUTH_TOKEN that the agent harness exports.
+# An empty string (not unset) makes the Anthropic SDK emit an illegal "Bearer "
+# header -> APIConnectionError on every `tl grantmaking` call. .zshenv is sourced
+# by EVERY zsh (interactive, login, and the non-interactive shells agent tools
+# spawn), and by both Claude Code and Codex regardless of launch path -- so this
+# is the one place that neutralizes the footgun universally. Only strips when the
+# var is set-and-empty; a real token (deliberate API-key session) is preserved.
+# This replaces the old per-command `env -u ANTHROPIC_AUTH_TOKEN` workaround.
+if [ "${ANTHROPIC_AUTH_TOKEN+set}" = set ] && [ -z "$ANTHROPIC_AUTH_TOKEN" ]; then
+	unset ANTHROPIC_AUTH_TOKEN
+fi

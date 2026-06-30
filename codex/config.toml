@@ -449,6 +449,21 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/My Drive/Epoch/projects/local-cybersecurity-checkup"]
 trust_level = "trusted"
 
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/citation-tracker"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Trajectory"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/Trajectory"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/Trajectory/agent-c/main"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/repos/rubric-visualizer"]
+trust_level = "trusted"
+
 [tui]
 theme = "light"
 

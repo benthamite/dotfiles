@@ -190,8 +190,10 @@ can always split an existing repository manually with
 The command @code{vc-extras-create-repo} creates a new repository on GitHub
 using the @samp{gh} CLI@.  It prompts for a name, an account (from the
 profiles in @code{vc-extras-profiles}), a description, and whether the
-repository should be private.  After creation, it offers to clone the
-new repository locally using @code{vc-extras-clone-repo}
+repository should be private.  The account selection must match a
+configured profile, so the command cannot accidentally target an
+unconfigured GitHub owner from completion history.  After creation, it
+offers to clone the new repository locally using @code{vc-extras-clone-repo}
 (@ref{Cloning repositories}).
 
 @node Cloning repositories
@@ -364,7 +366,9 @@ directories.
 @findex vc-extras-gh-list-repos-in-account
 @findex vc-extras-gh-list-repos-in-all-accounts
 The function @code{vc-extras-gh-create-repo} executes the @samp{gh repo create}
-command with the given name, account, description, and visibility.
+command with the given name, account, description, and visibility.  If
+@samp{gh} exits unsuccessfully, the function signals a user error containing
+the command output.
 
 The function @code{vc-extras-ensure-gh-exists} signals an error if @samp{gh} is
 not installed.

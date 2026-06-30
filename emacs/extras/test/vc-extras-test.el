@@ -4,6 +4,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'ert)
 (require 'vc-extras)
 
@@ -127,6 +128,53 @@
   (let ((vc-extras-profiles
          '((:name personal :account "testuser" :dir "/tmp/repos"))))
     (should-not (vc-extras-get-account-prop "nonexistent" :dir))))
+
+;;;; vc-extras-create-repo
+
+(ert-deftest vc-extras-test-create-repo-rejects-unknown-account ()
+  "Reject unknown accounts before creating a remote repository."
+  (let ((vc-extras-profiles
+         '((:name work :account "tlon-team" :dir "/tmp/repos")))
+        (created nil))
+    (cl-letf (((symbol-function 'read-string)
+               (lambda (prompt &rest _)
+                 (if (string-prefix-p "Name" prompt) "repo" "description")))
+              ((symbol-function 'completing-read)
+               (lambda (&rest _) "tlon"))
+              ((symbol-function 'y-or-n-p)
+               (lambda (&rest _) nil))
+              ((symbol-function 'vc-extras-gh-create-repo)
+               (lambda (&rest _)
+                 (setq created t))))
+      (should-error (vc-extras-create-repo) :type 'user-error)
+      (should-not created))))
+
+;;;; vc-extras-gh-create-repo
+
+(ert-deftest vc-extras-test-gh-create-repo-signals-gh-error ()
+  "Signal a `user-error' containing the failed `gh' output."
+  (let* ((process-environment (copy-sequence process-environment))
+         (vc-extras-gh-executable
+          (vc-extras-test--fake-gh "tlon: permission request pending" 1)))
+    (unwind-protect
+        (let ((err (should-error
+                    (vc-extras-gh-create-repo "repo" "tlon" "description")
+                    :type 'user-error)))
+          (should (string-match-p "tlon: permission request pending"
+                                  (cadr err))))
+      (delete-file vc-extras-gh-executable))))
+
+(defun vc-extras-test--fake-gh (output exit-status)
+  "Create a fake `gh' executable that prints OUTPUT and exits EXIT-STATUS."
+  (let ((file (make-temp-file "vc-extras-gh-" nil ".sh")))
+    (with-temp-file file
+      (insert "#!/bin/sh\n")
+      (insert "printf '%s\\n' \"$VC_EXTRAS_FAKE_GH_OUTPUT\" >&2\n")
+      (insert "exit \"$VC_EXTRAS_FAKE_GH_EXIT\"\n"))
+    (set-file-modes file #o700)
+    (setenv "VC_EXTRAS_FAKE_GH_OUTPUT" output)
+    (setenv "VC_EXTRAS_FAKE_GH_EXIT" (number-to-string exit-status))
+    file))
 
 ;;;; vc-extras-get-repo-dir
 

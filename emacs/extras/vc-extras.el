@@ -29,6 +29,7 @@
 ;;; Code:
 
 (require 'paths)
+(require 'subr-x)
 (require 'vc)
 (require 'transient)
 
@@ -111,16 +112,31 @@ created by `vc-extras-split-local-repo'."
 If NAME is nil, prompt for one.  If ACCOUNT is nil, select one."
   (interactive)
   (let* ((name (or name (read-string "Name: ")))
-         (account (or account (completing-read "Account: "
-					       (mapcar (lambda (profile)
-							 (plist-get profile :account))
-						       vc-extras-profiles))))
+         (account (vc-extras--ensure-account
+                   (or account (vc-extras--read-account))))
          (description (read-string "Description: "))
          (private (y-or-n-p "Private? "))
 	 (default-directory (vc-extras-get-account-prop account :dir)))
     (vc-extras-gh-create-repo name account description private)
     (when (y-or-n-p "Clone repository? ")
       (vc-extras-clone-repo name account))))
+
+(defun vc-extras--read-account ()
+  "Read a configured GitHub account from `vc-extras-profiles'."
+  (vc-extras--ensure-account
+   (completing-read "Account: " (vc-extras--account-candidates) nil t)))
+
+(defun vc-extras--ensure-account (account)
+  "Return ACCOUNT if it is configured in `vc-extras-profiles'."
+  (if (member account (vc-extras--account-candidates))
+      account
+    (user-error "Unknown GitHub account `%s'" account)))
+
+(defun vc-extras--account-candidates ()
+  "Return configured GitHub account names."
+  (mapcar (lambda (profile)
+            (plist-get profile :account))
+          vc-extras-profiles))
 
 ;;;;; Clone
 
@@ -381,10 +397,7 @@ After renaming, the remote URL is updated in the Git configuration."
                        (read-string (format "Rename `%s' to: " old-name))))
          (account (or account
                       (vc-extras-get-account-of-name old-name)
-                      (completing-read "Account: "
-                                       (mapcar (lambda (profile)
-                                                 (plist-get profile :account))
-                                               vc-extras-profiles))))
+                      (vc-extras--read-account)))
          (old-main-dir (vc-extras-resolve-repo-dir old-name account candidates))
          (new-main-dir (file-name-concat
                         (file-name-directory (directory-file-name old-main-dir))
@@ -514,14 +527,19 @@ included."
 (defun vc-extras-gh-create-repo (name account description &optional private)
   "Create a new GitHub repository in ACCOUNT with NAME and DESCRIPTION.
 If PRIVATE is non-nil, make it a private repository."
-  (shell-command-to-string
-   (format
-    "%s repo create %s/%s %s --description %s"
-    vc-extras-gh-executable
-    (shell-quote-argument account)
-    (shell-quote-argument name)
-    (if private "--private" "--public")
-    (shell-quote-argument description))))
+  (vc-extras-ensure-gh-exists)
+  (with-temp-buffer
+    (let ((status (process-file vc-extras-gh-executable nil
+                                (list (current-buffer) t) nil
+                                "repo" "create" (format "%s/%s" account name)
+                                (if private "--private" "--public")
+                                "--description" description))
+          (output (string-trim (buffer-string))))
+      (unless (zerop status)
+        (user-error "gh repo create failed (%s): %s"
+                    status
+                    (if (string-empty-p output) "no output" output)))
+      output)))
 
 (defun vc-extras-ensure-gh-exists ()
   "Check that `gh' exists, else signal an error."

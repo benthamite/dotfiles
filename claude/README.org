@@ -257,6 +257,8 @@ Chrome integration uses three Chrome profiles, one per Claude Code account. Brow
 
 When opening Chrome manually for browser-only service flows, use =chrome-work-tab URL= for Epoch/work projects. It targets Chrome =Profile 2= and requests a new tab, avoiding the profile ambiguity of raw AppleScript against Chrome's front window. Personal projects use =Default=. The lower-level direct command is =/Applications/Google Chrome.app/Contents/MacOS/Google Chrome --profile-directory="Profile 2" --new-tab URL=.
 
+Trajectory/CR pages are a separate case: use =trajectory-open URL=. It reads the durable Chrome profile directory chosen with =trajectory-open --setup= (currently the Trajectory Labs profile) and fails closed if that profile is not configured or no longer exists, instead of guessing from the front window or a localhost tab.
+
 The Google column is the account each Chrome profile is signed into (independent of Anthropic). The Anthropic identity column is the account used to authenticate the Claude Code CLI inside =~/.claude-<account>/= — each =CLAUDE_CONFIG_DIR= holds its own OAuth credentials for a distinct Anthropic account, so =/usage= and rate-limit tracking report each account separately.
 
 *Setup:* make sure each target Chrome profile has the Claude extension installed and is signed into =claude.ai= using the Anthropic identity the table above assigns to that profile. That's the whole setup — no CLI-side pairing step is needed.

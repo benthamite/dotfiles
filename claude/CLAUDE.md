@@ -45,7 +45,7 @@ Use these local tools to connect to external services: Anna's Archive `annas-mcp
 
 For Google account/auth details, read `context/google-services.md`. For Twitter workflows, use the `twitter` skill.
 
-When opening Chrome manually for browser-only service flows, use `chrome-work-tab URL` for Epoch/work pages; it targets Chrome profile `Profile 2` (`pablo@epoch.ai`) and requests a new tab. Do not use raw AppleScript against Chrome's front window for work pages, because the front window may be the personal profile. Personal projects use Chrome profile `Default`.
+When opening Chrome manually for browser-only service flows, use `chrome-work-tab URL` for Epoch/work pages; it targets Chrome profile `Profile 2` (`pablo@epoch.ai`) and requests a new tab. **Trajectory/CR pages are an exception:** use `trajectory-open URL`, which targets the configured Trajectory Chrome profile directory and fails closed if unset. Do not use raw AppleScript against Chrome's front window for work pages, because the front window may be the personal profile. Personal projects use Chrome profile `Default`.
 
 ## Filesystem organization
 

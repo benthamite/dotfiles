@@ -51,7 +51,7 @@ The user option ~org-msg-extras-personal-html-signature~ holds the signature for
 
 The user option ~org-msg-extras-epoch-plain-text-signature~ holds the signature for Epoch AI emails in plain text, including name, title, and website URL. The type is a string.
 
-The user option ~org-msg-extras-epoch-html-signature~ holds the signature for Epoch AI emails in Org/HTML format, including the Epoch logo and links to the website, Twitter, and newsletter. The type is a string.
+The user option ~org-msg-extras-epoch-html-signature~ holds the signature for Epoch AI emails in Org/HTML format, including the current job title, Epoch logo, and links to the website, Twitter, and newsletter. The type is a string.
 
 The user option ~org-msg-extras-tlon-plain-text-signature~ holds the signature for Tlön emails in plain text, including name, title, and company name. The type is a string.
 

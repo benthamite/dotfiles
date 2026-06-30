@@ -68,5 +68,16 @@
     (should (string-match-p "end_signature" sig))
     (should (string-match-p "Pablo" sig))))
 
+(ert-deftest org-msg-extras-test-epoch-signatures-default-title ()
+  "Epoch signature defaults use the current job title."
+  (if (condition-case nil
+          (progn (require 'org-msg-extras) t)
+        (error nil))
+      (dolist (signature (list org-msg-extras-epoch-plain-text-signature
+                               org-msg-extras-epoch-html-signature))
+        (should (string-match-p "AI Enablement Manager" signature))
+        (should-not (string-match-p "Operations Associate" signature)))
+    (ert-skip "org-msg-extras dependencies unavailable")))
+
 (provide 'org-msg-extras-test)
 ;;; org-msg-extras-test.el ends here

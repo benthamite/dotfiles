@@ -62,7 +62,7 @@
    "<span style=\"display:block; font-family:Arial,Helvetica,sans-serif;"
    " font-size:13px; line-height:1.4\">"
    "<b>Pablo Stafforini</b><br>"
-   "Operations Associate, Automations</span>\n"
+   "AI Enablement Manager</span>\n"
    "#+end_export\n"
    "#+attr_html: :width 120\n"
    "[[file:~/.local/share/epoch/epoch-logo.png]]\n"
@@ -154,4 +154,3 @@ This is a slightly tweaked version of `org-msg-goto-body'."
 
 (provide 'org-msg-extras)
 ;;; org-msg-extras.el ends here
-

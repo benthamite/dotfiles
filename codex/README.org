@@ -78,10 +78,9 @@ jargon.
 It also records the manual Chrome profile routing used by browser-only service
 flows: use =chrome-profile-open ALIAS URL= for project-specific profiles,
 configured with =chrome-profile-open --setup ALIAS --profile-directory "Profile
-N"=. The shared config lives at =~/.config/chrome-profile-open/profiles.json=,
-and the opener validates the stored profile directory plus profile/account
-metadata before opening. =trajectory-open URL= is a compatibility wrapper around
-=chrome-profile-open trajectory URL= for Trajectory/CR pages.
+N"=. The shared config lives at =~/.config/chrome-profile-open/profiles.json=.
+=trajectory-open URL= is a compatibility wrapper around =chrome-profile-open
+trajectory URL= for Trajectory/CR pages.
 
 =codex/config.toml= enables experimental goals support under =[features]=. It
 also sets =suppress_unstable_features_warning = true= so Codex does not print

@@ -255,9 +255,9 @@ Chrome integration uses three Chrome profiles, one per Claude Code account. Brow
 | Profile 2      | =pablo@epoch.ai=               | =pablo@epoch.ai=                   | epoch               |
 | Profile 3      | =pablo@tlon.team=              | =tlon.shared@gmail.com=            | tlon                |
 
-When opening Chrome manually for browser-only service flows, use the centralized alias opener: =chrome-profile-open ALIAS URL=. Configure aliases with =chrome-profile-open --setup ALIAS --profile-directory "Profile N"=; the config lives at =~/.config/chrome-profile-open/profiles.json=. The opener validates the stored Chrome profile directory plus profile/account metadata before opening, and fails closed rather than guessing from the front window or a localhost tab.
+When opening Chrome manually for browser-only service flows, use the centralized alias opener: =chrome-profile-open ALIAS URL=. Configure aliases with =chrome-profile-open --setup ALIAS --profile-directory "Profile N"=; the config lives at =~/.config/chrome-profile-open/profiles.json=.
 
-=trajectory-open URL= is the Trajectory/CR compatibility wrapper around =chrome-profile-open trajectory URL=. Existing older helpers such as =chrome-work-tab URL= may still target a specific profile directly, but new project-specific browser routing should use a =chrome-profile-open= alias.
+=trajectory-open URL= is the Trajectory/CR compatibility wrapper around =chrome-profile-open trajectory URL=. New project-specific browser routing should use a =chrome-profile-open= alias.
 
 The Google column is the account each Chrome profile is signed into (independent of Anthropic). The Anthropic identity column is the account used to authenticate the Claude Code CLI inside =~/.claude-<account>/= — each =CLAUDE_CONFIG_DIR= holds its own OAuth credentials for a distinct Anthropic account, so =/usage= and rate-limit tracking report each account separately.
 

@@ -45,7 +45,7 @@ Use these local tools to connect to external services: Anna's Archive `annas-mcp
 
 For Google account/auth details, read `/Users/pablostafforini/My Drive/dotfiles/claude/context/google-services.md`. For Twitter workflows, use the `twitter` skill.
 
-When opening Chrome manually for browser-only service flows, use the centralized profile opener: `chrome-profile-open <alias> URL`, configured with `chrome-profile-open --setup <alias>`. It validates the stored Chrome profile directory and account metadata before opening, and fails closed if the alias is unset or stale. Existing project wrappers may call it, e.g. `trajectory-open URL` for Trajectory/CR pages. Do not use raw AppleScript against Chrome's front window for work pages, because the front window may be the personal profile.
+When opening Chrome manually for browser-only service flows, use `chrome-profile-open <alias> URL`; configure aliases with `chrome-profile-open --setup <alias>`. Project wrappers may call it, e.g. `trajectory-open URL` for Trajectory/CR pages.
 
 ## Filesystem organization
 

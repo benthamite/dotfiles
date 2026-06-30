@@ -61,6 +61,10 @@ class TrajectoryOpenWrapperTest(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, result.stderr)
         command = json.loads(result.stdout)
+        self.assertEqual(
+            command[:5],
+            ["/usr/bin/open", "-n", "-b", "com.google.Chrome", "--args"],
+        )
         self.assertIn("--profile-directory=Profile 4", command)
         self.assertEqual(command[-1], "http://127.0.0.1:8770/")
 

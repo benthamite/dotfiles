@@ -6,6 +6,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -86,6 +87,48 @@ class ChromeProfileOpenTest(unittest.TestCase):
 
         self.assertEqual(config.alias, "trajectory")
         self.assertEqual(config.profile_directory, "Profile 4")
+        self.assertIn("--profile-directory=Profile 4", command)
+        self.assertEqual(command[-1], "http://127.0.0.1:8770/")
+
+    def test_macos_default_opener_uses_launch_services_new_instance(self):
+        config = self.mod.OpenConfig(
+            alias="trajectory",
+            profile_directory="Profile 4",
+            profile_name="Trajectory Labs",
+            user_name="pablo.stafforini@trajectorylabs.net",
+            chrome_root=pathlib.Path("/tmp/Chrome"),
+        )
+
+        with mock.patch.object(self.mod.sys, "platform", "darwin"):
+            command = self.mod.build_chrome_command(
+                config,
+                ["http://127.0.0.1:8770/"],
+            )
+
+        self.assertEqual(
+            command[:5],
+            ["/usr/bin/open", "-n", "-b", "com.google.Chrome", "--args"],
+        )
+        self.assertIn("--profile-directory=Profile 4", command)
+        self.assertEqual(command[-1], "http://127.0.0.1:8770/")
+
+    def test_custom_chrome_path_keeps_direct_executable_launch(self):
+        config = self.mod.OpenConfig(
+            alias="trajectory",
+            profile_directory="Profile 4",
+            profile_name="Trajectory Labs",
+            user_name="pablo.stafforini@trajectorylabs.net",
+            chrome_root=pathlib.Path("/tmp/Chrome"),
+        )
+
+        with mock.patch.object(self.mod.sys, "platform", "darwin"):
+            command = self.mod.build_chrome_command(
+                config,
+                ["http://127.0.0.1:8770/"],
+                chrome_path=pathlib.Path("/tmp/fake-chrome"),
+            )
+
+        self.assertEqual(command[0], "/tmp/fake-chrome")
         self.assertIn("--profile-directory=Profile 4", command)
         self.assertEqual(command[-1], "http://127.0.0.1:8770/")
 
@@ -238,6 +281,10 @@ class ChromeProfileOpenTest(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, result.stderr)
         command = json.loads(result.stdout)
+        self.assertEqual(
+            command[:5],
+            ["/usr/bin/open", "-n", "-b", "com.google.Chrome", "--args"],
+        )
         self.assertIn("--profile-directory=Profile 4", command)
         self.assertEqual(command[-1], "http://127.0.0.1:8770/")
 

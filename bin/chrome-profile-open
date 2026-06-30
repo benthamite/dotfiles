@@ -17,6 +17,8 @@ DEFAULT_CHROME_ROOT = Path.home() / "Library/Application Support/Google/Chrome"
 DEFAULT_CHROME_PATH = Path(
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 )
+DEFAULT_MACOS_OPEN_PATH = Path("/usr/bin/open")
+DEFAULT_CHROME_BUNDLE_ID = "com.google.Chrome"
 DEFAULT_CONFIG_PATH = (
     Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
     / "chrome-profile-open"
@@ -205,11 +207,20 @@ def build_chrome_command(
     chrome_path: Path = DEFAULT_CHROME_PATH,
     new_window: bool = False,
 ) -> list[str]:
-    command = [str(chrome_path), f"--profile-directory={config.profile_directory}"]
+    chrome_args = [f"--profile-directory={config.profile_directory}"]
     if new_window:
-        command.append("--new-window")
-    command.extend(urls)
-    return command
+        chrome_args.append("--new-window")
+    chrome_args.extend(urls)
+    if sys.platform == "darwin" and chrome_path == DEFAULT_CHROME_PATH:
+        return [
+            str(DEFAULT_MACOS_OPEN_PATH),
+            "-n",
+            "-b",
+            DEFAULT_CHROME_BUNDLE_ID,
+            "--args",
+            *chrome_args,
+        ]
+    return [str(chrome_path), *chrome_args]
 
 
 def print_profiles(profiles: list[ChromeProfile]) -> None:

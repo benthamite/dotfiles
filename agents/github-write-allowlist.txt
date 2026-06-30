@@ -4,3 +4,4 @@
 #
 # Keep this list empty by default. Add only repositories Pablo personally
 # created and explicitly wants agents to be able to mutate.
+trajectory-labs-pbc/agent-c

@@ -42,7 +42,7 @@ if echo "$COMMAND" | grep -qE '\bgit\s+commit\b'; then
 
     # After a successful commit, the staged files are now committed.
     # Check the just-committed files via git diff-tree.
-    COMMITTED=$(git diff-tree --no-commit-id --name-only -r HEAD 2>/dev/null || true)
+    COMMITTED=$(git -C "$REPO_ROOT" diff-tree --no-commit-id --name-only -r HEAD 2>/dev/null || true)
     HAS_ELISP=false
     if [ -n "$COMMITTED" ]; then
       while IFS= read -r file; do

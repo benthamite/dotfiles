@@ -44,24 +44,47 @@ if [ -z "$_repo_context_dir" ] && [ -n "${INPUT:-}" ] && command -v jq >/dev/nul
 fi
 
 # Extract the cd target from "cd <path> ..." patterns without re-evaluating
-# the command in a subshell.  Reject inputs that contain command substitution
-# so an injected `$(...)` or backtick can't reach `git -C`.
+# the command in a subshell.  Pure parameter expansion (no `[[ =~ ]]`) so the
+# behaviour is identical whether this file is sourced into bash or zsh -- the
+# `[[ =~ ]]` ERE engine differs between the two and silently failed to capture
+# quoted paths under zsh, falling back to the hook's cwd.  Reject inputs that
+# contain command substitution so an injected `$(...)` or backtick can't reach
+# `git -C`.
 _cd_target=""
+_dq='"'
+_sq="'"
 case "$COMMAND" in
   *'$('* | *'`'* ) ;;  # bail: command substitution present
   *)
-    if [[ "$COMMAND" =~ ^[[:space:]]*cd[[:space:]]+([^\&\;\|[:cntrl:]]+) ]]; then
-      _cd_target="${BASH_REMATCH[1]}"
-      _cd_target="${_cd_target%"${_cd_target##*[![:space:]]}"}"  # rtrim
-      if [[ "$_cd_target" =~ ^\"(.*)\"$ || "$_cd_target" =~ ^\'(.*)\'$ ]]; then
-        _cd_target="${BASH_REMATCH[1]}"                            # unquote
-      else
-        _cd_target="${_cd_target/#~/$HOME}"                        # tilde
-        _cd_target="${_cd_target//\\ / }"                          # \  → ' '
-      fi
-    fi
+    _rest="${COMMAND#"${COMMAND%%[![:space:]]*}"}"        # ltrim
+    # Strip leading shell-group openers.  The output-redaction wrapper rewrites
+    # every command to `{ CMD; } 2>&1 | ...`, and PostToolUse hooks see that
+    # wrapped form -- so the cd target sits after a leading `{` (or `(`).
+    while :; do
+      case "$_rest" in
+        '{'* | '('* ) _rest="${_rest#?}"; _rest="${_rest#"${_rest%%[![:space:]]*}"}" ;;
+        * ) break ;;
+      esac
+    done
+    case "$_rest" in
+      cd[[:space:]]*)
+        _rest="${_rest#cd}"                               # drop leading 'cd'
+        _rest="${_rest#"${_rest%%[![:space:]]*}"}"        # ltrim again
+        case "$_rest" in
+          "$_dq"*) _rest="${_rest#"$_dq"}"; _cd_target="${_rest%%"$_dq"*}" ;;  # "..."
+          "$_sq"*) _rest="${_rest#"$_sq"}"; _cd_target="${_rest%%"$_sq"*}" ;;  # '...'
+          *)       _cd_target="${_rest%%[[:space:]]*}"     # bare: up to whitespace
+                   _cd_target="${_cd_target%%'&'*}"        # or command separator
+                   _cd_target="${_cd_target%%';'*}"
+                   _cd_target="${_cd_target%%'|'*}"
+                   _cd_target="${_cd_target/#\~/$HOME}"    # tilde
+                   _cd_target="${_cd_target//'\ '/ }" ;;   # backslash-space -> space
+        esac
+        ;;
+    esac
     ;;
 esac
+unset _dq _sq _rest 2>/dev/null || true
 
 if [ -n "$_cd_target" ] && [ -d "$_cd_target" ]; then
   REPO_ROOT=$(git -C "$_cd_target" rev-parse --show-toplevel 2>/dev/null || true)

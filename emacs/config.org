@@ -540,6 +540,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#org-web-tools][org-web-tools]]
   - [[#org-web-tools-extras][org-web-tools-extras]]
   - [[#request][request]]
+  - [[#request-deferred][request-deferred]]
   - [[#deferred][deferred]]
   - [[#graphql-mode][graphql-mode]]
   - [[#mullvad][mullvad]]
@@ -9102,7 +9103,7 @@ The author provides a good overview of the package in [[https://www.youtube.com/
                            ("trajectory" . "~/.claude-trajectory")))
 
   (agent-codex-accounts '(("tlon"     . "~/.codex-tlon")
-			     ("epoch"    . "~/.codex-epoch")))
+                          ("epoch"    . "~/.codex-epoch")))
 
   :bind
   ("H-e" . agent-menu)
@@ -9113,6 +9114,53 @@ The author provides a good overview of the package in [[https://www.youtube.com/
                ("D" . agent-debug-backtrace))))
 #+end_src
 
+
+** Trajectory: new CR task
+
+/Create (if needed) the agent-c worktree for a CR task and launch a Claude session in it, with no terminal step. The worktree is based on =origin/main= so it always has current skills; the SessionStart hook (=sync-agent-c-worktree.sh=) wires its API-key symlink./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(defun ps/trajectory-new-task (slug)
+  "Create the agent-c worktree for SLUG if needed, then launch Claude in it.
+The worktree is based on `origin/main' so it always carries current CR
+skills, and the SessionStart hook wires its API-key symlink, so there is
+no manual step.  When the worktree already exists, skip creation and
+just start a session.  The session uses the `trajectory' Claude account."
+  (interactive (list (read-string "Task slug: ")))
+  (require 'agent)
+  (setq slug (string-trim slug))
+  (when (string-empty-p slug)
+    (user-error "Task slug must not be empty"))
+  (let* ((root (expand-file-name "~/Trajectory/agent-c"))
+         (dir (expand-file-name slug root)))
+    (unless (file-directory-p dir)
+      (ps/trajectory--add-worktree slug dir root))
+    (agent-start-session
+     (agent-session-create
+      :backend 'claude-code :account "trajectory"
+      :directory (abbreviate-file-name (file-name-as-directory dir))))))
+
+(defun ps/trajectory--add-worktree (slug dir root)
+  "Add the agent-c worktree DIR for SLUG, based on `origin/main'.
+ROOT is the agent-c worktrees directory.  Fetch first so the new task is
+not born behind upstream; reattach the `pablo/SLUG' branch if it already
+exists, otherwise create it off `origin/main'."
+  (let ((default-directory (expand-file-name "main" root))
+        (branch (concat "pablo/" slug))
+        (buffer "*trajectory-new-task*"))
+    (message "trajectory-new-task: creating worktree %s…" slug)
+    (call-process "git" nil nil nil "fetch" "--quiet" "origin" "main")
+    (let* ((have-branch (zerop (call-process "git" nil nil nil "rev-parse"
+                                             "--verify" "--quiet"
+                                             (concat "refs/heads/" branch))))
+           (args (if have-branch
+                     (list "worktree" "add" dir branch)
+                   (list "worktree" "add" dir "-b" branch "origin/main")))
+           (status (apply #'call-process "git" nil buffer nil args)))
+      (unless (zerop status)
+        (pop-to-buffer buffer)
+        (user-error "git worktree add failed for %s — see %s" slug buffer)))))
+#+end_src
 
 ** =agent-log=
 :PROPERTIES:

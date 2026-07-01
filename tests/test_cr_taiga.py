@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import textwrap
 import unittest
 
 
@@ -61,6 +62,15 @@ def write_run(task_dir, label, attempt, job_id, score, subscores):
     )
 
 
+def git(worktree, *args):
+    return subprocess.run(
+        ["git", "-C", str(worktree), *args],
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+
+
 class CrTaigaTest(unittest.TestCase):
     def setUp(self):
         self.mod = load_module()
@@ -73,6 +83,45 @@ class CrTaigaTest(unittest.TestCase):
         (task_dir / "grading").mkdir(parents=True, exist_ok=True)
         (task_dir / "grading" / "rubric.md").write_text("Rubric\n", encoding="utf-8")
         return worktree, task_dir
+
+    def make_git_task(self, temp):
+        worktree, task_dir = self.make_task(temp)
+        git(worktree, "init")
+        git(worktree, "config", "user.email", "test@example.com")
+        git(worktree, "config", "user.name", "Test User")
+        git(worktree, "add", ".")
+        git(worktree, "commit", "-m", "baseline")
+        return worktree, task_dir
+
+    def write_impact_report(self, task_dir, task_tree_hash, recommendation="run"):
+        report = task_dir / "grading" / "hardening-impact.md"
+        report.write_text(
+            textwrap.dedent(
+                f"""\
+                # Hardening impact
+
+                <!-- cr-taiga-impact
+                {{
+                  "schema_version": 1,
+                  "slug": "{task_dir.name}",
+                  "task_tree_hash": "{task_tree_hash}",
+                  "baseline_job_id": "old-job",
+                  "baseline_mean": 0.678,
+                  "estimated_mean": 0.61,
+                  "estimated_delta": -0.068,
+                  "recommendation": "{recommendation}",
+                  "reviewed_prompt_risks": true
+                }}
+                -->
+
+                ## Cross-criterion effects
+
+                Reviewed all prompt edits against every criterion.
+                """
+            ),
+            encoding="utf-8",
+        )
+        return report
 
     def test_build_ledger_event_binds_revision_image_job_and_hashes(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -187,6 +236,127 @@ class CrTaigaTest(unittest.TestCase):
             command = json.loads(result.stdout)
             self.assertEqual(pathlib.Path(command[0]).name, "cr-taiga")
             self.assertEqual(command[1], subcommand)
+
+    def test_preflight_fails_when_task_changed_without_impact_report(self):
+        with tempfile.TemporaryDirectory() as temp:
+            worktree, task_dir = self.make_git_task(temp)
+            (task_dir / "prompt.txt").write_text("Prompt with new hardening cue\n", encoding="utf-8")
+
+            result = subprocess.run(
+                [
+                    str(SCRIPT),
+                    "preflight",
+                    "sample-task",
+                    "--worktree",
+                    str(worktree),
+                    "--base-ref",
+                    "HEAD",
+                ],
+                text=True,
+                capture_output=True,
+            )
+
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("impact report required", result.stderr)
+        self.assertIn("prompt.txt", result.stderr)
+
+    def test_preflight_flags_prompt_phrases_that_mirror_rubric(self):
+        with tempfile.TemporaryDirectory() as temp:
+            worktree, task_dir = self.make_git_task(temp)
+            (task_dir / "grading" / "rubric.md").write_text(
+                textwrap.dedent(
+                    """\
+                    | id | Criterion | Pts | Pass condition |
+                    | -- | --------- | --- | -------------- |
+                    | `trade_bloc_threshold` | **Trade makes the bloc, not the country, the growth unit; self-sufficiency is costly but potentially bearable** | 15 | A lone country cannot pull away because the rest of the world can trade with itself and outgrow it. Also explains whether decoupling costs are fatal or potentially bearable. |
+                    """
+                ),
+                encoding="utf-8",
+            )
+            git(worktree, "add", ".")
+            git(worktree, "commit", "-m", "rubric")
+            (task_dir / "prompt.txt").write_text(
+                "Q1: explain whether those costs are fatal or potentially bearable, and whether the unit is outgrown by the rest of the world trading with itself.\n",
+                encoding="utf-8",
+            )
+
+            result = subprocess.run(
+                [
+                    str(SCRIPT),
+                    "preflight",
+                    "sample-task",
+                    "--worktree",
+                    str(worktree),
+                    "--base-ref",
+                    "HEAD",
+                ],
+                text=True,
+                capture_output=True,
+            )
+
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("prompt over-scaffolding risk", result.stderr)
+        self.assertIn("fatal or potentially bearable", result.stderr)
+        self.assertIn("outgrown by the rest of the world", result.stderr)
+
+    def test_preflight_accepts_current_impact_report(self):
+        with tempfile.TemporaryDirectory() as temp:
+            worktree, task_dir = self.make_git_task(temp)
+            (task_dir / "prompt.txt").write_text("Prompt with new hardening cue\n", encoding="utf-8")
+            task_tree = self.mod.task_tree_hash(self.mod.task_hashes(task_dir))
+            self.write_impact_report(task_dir, task_tree)
+
+            result = subprocess.run(
+                [
+                    str(SCRIPT),
+                    "preflight",
+                    "sample-task",
+                    "--worktree",
+                    str(worktree),
+                    "--base-ref",
+                    "HEAD",
+                ],
+                text=True,
+                capture_output=True,
+            )
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("preflight passed", result.stdout)
+
+    def test_preflight_rejects_stale_impact_report(self):
+        with tempfile.TemporaryDirectory() as temp:
+            worktree, task_dir = self.make_git_task(temp)
+            (task_dir / "prompt.txt").write_text("Prompt with new hardening cue\n", encoding="utf-8")
+            self.write_impact_report(task_dir, "stale-hash")
+
+            result = subprocess.run(
+                [
+                    str(SCRIPT),
+                    "preflight",
+                    "sample-task",
+                    "--worktree",
+                    str(worktree),
+                    "--base-ref",
+                    "HEAD",
+                ],
+                text=True,
+                capture_output=True,
+            )
+
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("stale impact report", result.stderr)
+
+    def test_compare_jobs_leads_with_regression_alarm_for_large_score_jump(self):
+        with tempfile.TemporaryDirectory() as temp:
+            _, task_dir = self.make_task(temp)
+            write_run(task_dir, "grantmaking-sample-task-old", 1, "old-job", 0.60, {"a": 0.5})
+            write_run(task_dir, "grantmaking-sample-task-new", 1, "new-job", 0.95, {"a": 1.0})
+
+            report = self.mod.compare_jobs(task_dir, "old-job", "new-job")
+
+        self.assertTrue(report.startswith("REGRESSION ALARM"))
+        self.assertIn("Overall changed by +0.350", report)
+        self.assertIn("a changed by +0.500", report)
 
 
 if __name__ == "__main__":

@@ -8,6 +8,7 @@ import datetime as dt
 import hashlib
 import json
 import os
+import re
 import shutil
 import statistics
 import subprocess
@@ -26,6 +27,9 @@ TASK_HASH_FILES = [
     "prompt.txt",
     "grading/rubric.md",
 ]
+IMPACT_REPORT_REL = "grading/hardening-impact.md"
+EVAL_CHANGE_FILES = ["prompt.txt", "grading/rubric.md"]
+DEFAULT_MAX_ESTIMATED_DELTA = 0.05
 
 
 class TaigaLedgerError(Exception):
@@ -53,6 +57,22 @@ def run_git(worktree: Path, *args: str) -> str:
         check=True,
     )
     return result.stdout.strip()
+
+
+def run_git_allowing_diff(worktree: Path, *args: str) -> str:
+    result = subprocess.run(
+        ["git", "-C", str(worktree), *args],
+        text=True,
+        capture_output=True,
+    )
+    if result.returncode not in {0, 1}:
+        raise subprocess.CalledProcessError(
+            result.returncode,
+            result.args,
+            output=result.stdout,
+            stderr=result.stderr,
+        )
+    return result.stdout
 
 
 def git_info(worktree: Path) -> GitInfo:
@@ -107,6 +127,11 @@ def task_tree_hash(hashes: dict[str, str]) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
+def task_rel(task_dir: Path, rel: str) -> str:
+    root = worktree_root(task_dir)
+    return str((task_dir / rel).relative_to(root))
+
+
 def image_for_sha(sha: str) -> str:
     return f"{IMAGE_PREFIX}:sha-{sha}"
 
@@ -149,6 +174,16 @@ def read_ledger(task_dir: Path) -> list[dict[str, Any]]:
         except json.JSONDecodeError as exc:
             raise TaigaLedgerError(f"{path}:{lineno}: invalid JSONL entry") from exc
     return events
+
+
+def latest_run_event_with_hashes(task_dir: Path) -> dict[str, Any] | None:
+    for event in reversed(read_ledger(task_dir)):
+        if event.get("status") == "planned":
+            continue
+        hashes = event.get("task_hashes")
+        if isinstance(hashes, dict) and any(key in hashes for key in EVAL_CHANGE_FILES):
+            return event
+    return None
 
 
 def append_ledger(task_dir: Path, event: dict[str, Any]) -> Path:
@@ -228,6 +263,233 @@ def _main_reward(rewards: list[dict[str, Any]]) -> dict[str, Any] | None:
         if not reward.get("is_auxiliary_grade", False):
             return reward
     return rewards[0] if rewards else None
+
+
+def changed_eval_files_from_ref(task_dir: Path, base_ref: str) -> list[str]:
+    root = worktree_root(task_dir)
+    rels = [task_rel(task_dir, rel) for rel in EVAL_CHANGE_FILES]
+    output = run_git_allowing_diff(root, "diff", "--name-only", base_ref, "--", *rels)
+    changed = []
+    for line in output.splitlines():
+        for rel in EVAL_CHANGE_FILES:
+            if line == task_rel(task_dir, rel):
+                changed.append(rel)
+    return changed
+
+
+def changed_eval_files_from_event(task_dir: Path, event: dict[str, Any] | None) -> list[str]:
+    if not event:
+        return []
+    current = task_hashes(task_dir)
+    previous = event.get("task_hashes") or {}
+    changed = []
+    for rel in EVAL_CHANGE_FILES:
+        if current.get(rel) != previous.get(rel):
+            changed.append(rel)
+    return changed
+
+
+def added_prompt_lines_from_ref(task_dir: Path, base_ref: str | None) -> list[str]:
+    if not base_ref:
+        return []
+    root = worktree_root(task_dir)
+    rel = task_rel(task_dir, "prompt.txt")
+    output = run_git_allowing_diff(root, "diff", "--unified=0", base_ref, "--", rel)
+    added = []
+    for line in output.splitlines():
+        if line.startswith("+++") or not line.startswith("+"):
+            continue
+        text = line[1:].strip()
+        if text:
+            added.append(text)
+    return added
+
+
+_WORD_RE = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)?")
+_STOPWORDS = {
+    "a",
+    "about",
+    "all",
+    "also",
+    "an",
+    "and",
+    "are",
+    "as",
+    "at",
+    "be",
+    "because",
+    "by",
+    "can",
+    "could",
+    "do",
+    "does",
+    "for",
+    "from",
+    "has",
+    "have",
+    "how",
+    "if",
+    "in",
+    "into",
+    "is",
+    "it",
+    "its",
+    "not",
+    "of",
+    "on",
+    "or",
+    "rather",
+    "should",
+    "than",
+    "that",
+    "the",
+    "their",
+    "them",
+    "this",
+    "those",
+    "to",
+    "under",
+    "what",
+    "whether",
+    "which",
+    "while",
+    "with",
+    "would",
+}
+
+
+def content_words(text: str) -> set[str]:
+    return {word for word in _WORD_RE.findall(text.lower()) if word not in _STOPWORDS}
+
+
+def prompt_scaffolding_flags(task_dir: Path, added_prompt_lines: list[str]) -> list[str]:
+    if not added_prompt_lines:
+        return []
+    rubric = task_dir / "grading" / "rubric.md"
+    if not rubric.is_file():
+        return []
+    rubric_text = rubric.read_text(encoding="utf-8")
+    rubric_words = content_words(rubric_text)
+    flags: list[str] = []
+    for line in added_prompt_lines:
+        words = content_words(line)
+        overlap = words & rubric_words
+        if len(overlap) >= 5:
+            flags.append(line)
+    return flags
+
+
+def load_impact_metadata(path: Path) -> dict[str, Any]:
+    try:
+        text = path.read_text(encoding="utf-8")
+    except FileNotFoundError as exc:
+        raise TaigaLedgerError(f"impact report required at {path}") from exc
+    match = re.search(r"<!--\s*cr-taiga-impact\s*(\{.*?\})\s*-->", text, re.DOTALL)
+    if not match:
+        raise TaigaLedgerError(
+            f"{path}: missing cr-taiga-impact metadata block"
+        )
+    try:
+        data = json.loads(match.group(1))
+    except json.JSONDecodeError as exc:
+        raise TaigaLedgerError(f"{path}: invalid cr-taiga-impact JSON") from exc
+    if not isinstance(data, dict):
+        raise TaigaLedgerError(f"{path}: cr-taiga-impact metadata must be an object")
+    return data
+
+
+def impact_report_path(task_dir: Path, override: str | None = None) -> Path:
+    return Path(override).expanduser() if override else task_dir / IMPACT_REPORT_REL
+
+
+def validate_impact_report(
+    *,
+    task_dir: Path,
+    path: Path,
+    prompt_changed: bool,
+    scaffold_flags: list[str],
+    max_estimated_delta: float,
+) -> None:
+    metadata = load_impact_metadata(path)
+    if metadata.get("slug") != task_dir.name:
+        raise TaigaLedgerError(f"{path}: impact report slug does not match {task_dir.name}")
+    current_tree = task_tree_hash(task_hashes(task_dir))
+    if metadata.get("task_tree_hash") != current_tree:
+        raise TaigaLedgerError(
+            f"stale impact report at {path}: task_tree_hash does not match current task"
+        )
+    if metadata.get("recommendation") != "run":
+        raise TaigaLedgerError(f"{path}: recommendation is not 'run'")
+    estimated_delta = metadata.get("estimated_delta")
+    if isinstance(estimated_delta, (int, float)) and estimated_delta > max_estimated_delta:
+        raise TaigaLedgerError(
+            f"{path}: estimated_delta {estimated_delta:+.3f} exceeds +{max_estimated_delta:.3f}"
+        )
+    if prompt_changed and scaffold_flags and metadata.get("reviewed_prompt_risks") is not True:
+        raise TaigaLedgerError(
+            f"{path}: prompt over-scaffolding risks were not explicitly reviewed"
+        )
+
+
+def preflight_message(
+    *,
+    changed_files: list[str],
+    scaffold_flags: list[str],
+    report_path: Path,
+    has_report: bool,
+    current_task_tree_hash: str,
+) -> str:
+    lines = [
+        f"prompt/rubric changed: {', '.join(changed_files)}",
+        f"current task_tree_hash: {current_task_tree_hash}",
+    ]
+    if scaffold_flags:
+        lines.append("prompt over-scaffolding risk:")
+        lines.extend(f"- {flag}" for flag in scaffold_flags)
+    if not has_report:
+        lines.append(f"impact report required at {report_path}")
+    return "\n".join(lines)
+
+
+def run_preflight(
+    *,
+    task_dir: Path,
+    base_ref: str | None = None,
+    report_override: str | None = None,
+    max_estimated_delta: float = DEFAULT_MAX_ESTIMATED_DELTA,
+) -> tuple[bool, str]:
+    if base_ref:
+        changed_files = changed_eval_files_from_ref(task_dir, base_ref)
+    else:
+        changed_files = changed_eval_files_from_event(
+            task_dir, latest_run_event_with_hashes(task_dir)
+        )
+    if not changed_files:
+        return False, "preflight passed: no prompt/rubric changes detected"
+
+    scaffold_flags = prompt_scaffolding_flags(
+        task_dir, added_prompt_lines_from_ref(task_dir, base_ref)
+    )
+    report = impact_report_path(task_dir, report_override)
+    if not report.is_file():
+        raise TaigaLedgerError(
+            preflight_message(
+                changed_files=changed_files,
+                scaffold_flags=scaffold_flags,
+                report_path=report,
+                has_report=False,
+                current_task_tree_hash=task_tree_hash(task_hashes(task_dir)),
+            )
+        )
+
+    validate_impact_report(
+        task_dir=task_dir,
+        path=report,
+        prompt_changed="prompt.txt" in changed_files,
+        scaffold_flags=scaffold_flags,
+        max_estimated_delta=max_estimated_delta,
+    )
+    return True, f"preflight passed: impact report current at {report}"
 
 
 def _attempt_sort_key(path: Path) -> tuple[int, str]:
@@ -419,12 +681,20 @@ def fmt(value: float | None) -> str:
 def compare_jobs(task_dir: Path, old_job: str, new_job: str) -> str:
     old = summarize_job(task_dir, old_job)
     new = summarize_job(task_dir, new_job)
+    alarms = []
+    overall_delta = new["mean"] - old["mean"]
+    if abs(overall_delta) >= 0.10:
+        alarms.append(f"- Overall changed by {overall_delta:+.3f}")
+    for criterion in sorted(set(old["criteria"]) & set(new["criteria"])):
+        delta = new["criteria"][criterion] - old["criteria"][criterion]
+        if abs(delta) >= 0.25:
+            alarms.append(f"- {criterion} changed by {delta:+.3f}")
+
     rows = [
         "| Criterion | Old | New | Delta |",
         "|---|---:|---:|---:|",
     ]
-    delta = new["mean"] - old["mean"]
-    rows.append(f"| Overall | {fmt(old['mean'])} | {fmt(new['mean'])} | {delta:+.3f} |")
+    rows.append(f"| Overall | {fmt(old['mean'])} | {fmt(new['mean'])} | {overall_delta:+.3f} |")
     for criterion in sorted(set(old["criteria"]) | set(new["criteria"])):
         old_value = old["criteria"].get(criterion)
         new_value = new["criteria"].get(criterion)
@@ -442,6 +712,8 @@ def compare_jobs(task_dir: Path, old_job: str, new_job: str) -> str:
             f"New job: `{new_job}` ({new['n']} attempts)",
         ]
     )
+    if alarms:
+        return "\n".join(["REGRESSION ALARM", *alarms, "", *rows])
     return "\n".join(rows)
 
 
@@ -473,6 +745,15 @@ def command_run(args: argparse.Namespace) -> int:
     task_dir = find_task_dir(args.slug, Path(args.worktree) if args.worktree else None)
     root = worktree_root(task_dir)
     status = args.status or ("submitted" if args.job_id else "planned")
+    if status in {"planned", "submitted"}:
+        _, message = run_preflight(
+            task_dir=task_dir,
+            base_ref=args.base_ref,
+            report_override=args.impact_report,
+            max_estimated_delta=args.max_estimated_delta,
+        )
+        if args.verbose_preflight:
+            print(message, file=sys.stderr)
     event = build_ledger_event(
         task_dir=task_dir,
         git_info=git_info(root),
@@ -518,6 +799,18 @@ def command_compare(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_preflight(args: argparse.Namespace) -> int:
+    task_dir = find_task_dir(args.slug, Path(args.worktree) if args.worktree else None)
+    _, message = run_preflight(
+        task_dir=task_dir,
+        base_ref=args.base_ref,
+        report_override=args.impact_report,
+        max_estimated_delta=args.max_estimated_delta,
+    )
+    print(message)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Record and compare exact CR Taiga jobs."
@@ -536,6 +829,10 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--note")
     run.add_argument("--no-write", action="store_true")
     run.add_argument("--json", action="store_true")
+    run.add_argument("--base-ref")
+    run.add_argument("--impact-report")
+    run.add_argument("--max-estimated-delta", type=float, default=DEFAULT_MAX_ESTIMATED_DELTA)
+    run.add_argument("--verbose-preflight", action="store_true")
     run.set_defaults(func=command_run)
 
     compare = sub.add_parser("compare", help="compare two exact Taiga jobs")
@@ -545,6 +842,17 @@ def build_parser() -> argparse.ArgumentParser:
     compare.add_argument("--worktree")
     compare.add_argument("--json", action="store_true")
     compare.set_defaults(func=command_compare)
+
+    preflight = sub.add_parser(
+        "preflight",
+        help="require a current hardening-impact report before an expensive Taiga run",
+    )
+    preflight.add_argument("slug")
+    preflight.add_argument("--worktree")
+    preflight.add_argument("--base-ref")
+    preflight.add_argument("--impact-report")
+    preflight.add_argument("--max-estimated-delta", type=float, default=DEFAULT_MAX_ESTIMATED_DELTA)
+    preflight.set_defaults(func=command_preflight)
     return parser
 
 

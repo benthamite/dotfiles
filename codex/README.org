@@ -469,7 +469,9 @@ friction, broken hooks/skills/scripts, and structural-remedy investigations
 that are not ordinary code bugs. It requires the agent to verify which existing hooks, skills, configs, or
 scripts should have caught the issue, classify the diagnosis, distinguish
 structural gaps from behavioral lapses, and report before implementing any
-remedy. It defines overloaded local tooling labels in plain language when
+remedy. For agent instruction-loading or context-loading questions, it inspects
+the actual loaded context or the mechanism that creates it before answering. It
+defines overloaded local tooling labels in plain language when
 ambiguity could affect the diagnosis.
 
 uses =trash= or non-recursive removal of the known diagnostic files.

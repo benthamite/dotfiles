@@ -26,6 +26,8 @@ When a diagnosis uses overloaded local tooling labels, define the concrete artif
 
 ## Before proposing any fix
 
+For agent instruction-loading or context-loading questions, inspect the actual loaded context or the mechanism that creates it before answering. Use the relevant agent's diagnostic tool when one exists; otherwise verify the concrete files, hooks, or configs that determine the loaded context.
+
 Run this check: *would an existing mechanism, firing as intended, have prevented this immediate failure?* If no, a structural gap exists and a fix is warranted.
 
 If yes, run one more check before stopping: *is the existing mechanism an enforced mechanism, or only prose/instructions that require the agent to perform a brittle deterministic operation correctly by attention?* If it is enforced and worked, stop with "behavioral lapse; existing rule X was violated." If it is only a manual/prose mechanism and the operation can be made deterministic with a tool, hook, config, or wrapper, diagnose it as "behavioral lapse with structural remedy" rather than stopping at discipline.

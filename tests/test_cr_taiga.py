@@ -546,6 +546,88 @@ class CrTaigaTest(unittest.TestCase):
             changes = self.mod.rubric_weight_changes(task_dir.resolve(), "HEAD")
             self.assertEqual(changes, {"crit_a": (13.0, 9.0), "crit_b": (9.0, 13.0)})
 
+    def test_run_blocks_hardening_rerun_without_base_ref(self):
+        with tempfile.TemporaryDirectory() as temp:
+            worktree, task_dir = self.make_git_task(temp)
+            # A prior submitted run recorded against the v1 rubric.
+            (task_dir / "grading" / "rubric.md").write_text(
+                self._rubric(13, 9), encoding="utf-8"
+            )
+            v1_hashes = self.mod.task_hashes(task_dir)
+            ledger = task_dir / "taiga" / "run-ledger.jsonl"
+            ledger.parent.mkdir(parents=True, exist_ok=True)
+            ledger.write_text(
+                json.dumps(
+                    {
+                        "status": "submitted",
+                        "job_id": "old-job",
+                        "task_hashes": v1_hashes,
+                        "recorded_at": "2026-06-30T10:00:00Z",
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            # Rubric now reweighted (v2); try to record a submit WITHOUT --base-ref.
+            (task_dir / "grading" / "rubric.md").write_text(
+                self._rubric(9, 13), encoding="utf-8"
+            )
+
+            result = subprocess.run(
+                [
+                    str(SCRIPT),
+                    "run",
+                    "sample-task",
+                    "--worktree",
+                    str(worktree),
+                    "--status",
+                    "submitted",
+                    "--job-id",
+                    "new-job",
+                    "--no-write",
+                ],
+                text=True,
+                capture_output=True,
+            )
+
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("no --base-ref", result.stderr)
+        self.assertIn("grading/rubric.md", result.stderr)
+
+    def test_run_allows_rerun_with_base_ref_and_valid_report(self):
+        with tempfile.TemporaryDirectory() as temp:
+            worktree, task_dir = self.make_git_task(temp)
+            (task_dir / "grading" / "rubric.md").write_text(
+                self._rubric(13, 9), encoding="utf-8"
+            )
+            git(worktree, "add", ".")
+            git(worktree, "commit", "-m", "v1")
+            # Pass-condition tightening only (no weight change) vs HEAD.
+            (task_dir / "grading" / "rubric.md").write_text(
+                self._rubric(13, 9, crit_a_tail=" Also A-prime."), encoding="utf-8"
+            )
+            task_tree = self.mod.task_tree_hash(self.mod.task_hashes(task_dir))
+            self.write_impact_report(task_dir, task_tree)
+
+            result = subprocess.run(
+                [
+                    str(SCRIPT),
+                    "run",
+                    "sample-task",
+                    "--worktree",
+                    str(worktree),
+                    "--status",
+                    "planned",
+                    "--base-ref",
+                    "HEAD",
+                    "--no-write",
+                ],
+                text=True,
+                capture_output=True,
+            )
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -848,6 +848,22 @@ def command_run(args: argparse.Namespace) -> int:
     root = worktree_root(task_dir)
     status = args.status or ("submitted" if args.job_id else "planned")
     if status in {"planned", "submitted"}:
+        # A hardening rerun must go through preflight with an explicit base-ref so the
+        # reweight/importance and over-scaffolding gates actually run. Without a base-ref
+        # the weight diff cannot be computed, so refuse to record a planned/submitted run
+        # whose prompt/rubric changed vs the last recorded run unless a base-ref is given.
+        if not args.base_ref:
+            changed = changed_eval_files_from_event(
+                task_dir, latest_run_event_with_hashes(task_dir)
+            )
+            if changed:
+                raise TaigaLedgerError(
+                    f"{args.slug}: prompt/rubric changed since the last recorded run "
+                    f"({', '.join(changed)}) but no --base-ref was given. Record a hardening "
+                    "rerun with `cr-taiga run ... --base-ref <accepted-baseline>` so preflight "
+                    "runs the reweight/importance and over-scaffolding gates against the change. "
+                    "Weights encode importance, not difficulty — a bare submit cannot skip the gate."
+                )
         _, message = run_preflight(
             task_dir=task_dir,
             base_ref=args.base_ref,

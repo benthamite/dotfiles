@@ -93,35 +93,45 @@ class CrTaigaTest(unittest.TestCase):
         git(worktree, "commit", "-m", "baseline")
         return worktree, task_dir
 
-    def write_impact_report(self, task_dir, task_tree_hash, recommendation="run"):
+    def write_impact_report(
+        self,
+        task_dir,
+        task_tree_hash,
+        recommendation="run",
+        weight_change_justifications=None,
+    ):
         report = task_dir / "grading" / "hardening-impact.md"
+        meta = {
+            "schema_version": 1,
+            "slug": task_dir.name,
+            "task_tree_hash": task_tree_hash,
+            "baseline_job_id": "old-job",
+            "baseline_mean": 0.678,
+            "estimated_mean": 0.61,
+            "estimated_delta": -0.068,
+            "recommendation": recommendation,
+            "reviewed_prompt_risks": True,
+        }
+        if weight_change_justifications is not None:
+            meta["weight_change_justifications"] = weight_change_justifications
         report.write_text(
-            textwrap.dedent(
-                f"""\
-                # Hardening impact
-
-                <!-- cr-taiga-impact
-                {{
-                  "schema_version": 1,
-                  "slug": "{task_dir.name}",
-                  "task_tree_hash": "{task_tree_hash}",
-                  "baseline_job_id": "old-job",
-                  "baseline_mean": 0.678,
-                  "estimated_mean": 0.61,
-                  "estimated_delta": -0.068,
-                  "recommendation": "{recommendation}",
-                  "reviewed_prompt_risks": true
-                }}
-                -->
-
-                ## Cross-criterion effects
-
-                Reviewed all prompt edits against every criterion.
-                """
-            ),
+            "# Hardening impact\n\n<!-- cr-taiga-impact\n"
+            + json.dumps(meta, indent=2)
+            + "\n-->\n\n## Cross-criterion effects\n\n"
+            "Reviewed all prompt edits against every criterion.\n",
             encoding="utf-8",
         )
         return report
+
+    def _rubric(self, crit_a_pts, crit_b_pts, crit_a_tail=""):
+        return textwrap.dedent(
+            f"""\
+            | id | Criterion | Pts | Pass condition |
+            | -- | --------- | --- | -------------- |
+            | `crit_a` | **A** | {crit_a_pts} | Does A.{crit_a_tail} |
+            | `crit_b` | **B** | {crit_b_pts} | Does B. |
+            """
+        )
 
     def test_build_ledger_event_binds_revision_image_job_and_hashes(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -151,8 +161,14 @@ class CrTaigaTest(unittest.TestCase):
             "us-east1-docker.pkg.dev/gcp-taiga/trajectorylabs/grantmaking:sha-abc123",
         )
         self.assertEqual(event["job_id"], "11111111-1111-4111-8111-111111111111")
-        self.assertIn("transcripts/?id=11111111-1111-4111-8111-111111111111", event["transcript_url"])
-        self.assertEqual(set(event["task_hashes"]), {"basic_info.json", "prompt.txt", "grading/rubric.md"})
+        self.assertIn(
+            "transcripts/?id=11111111-1111-4111-8111-111111111111",
+            event["transcript_url"],
+        )
+        self.assertEqual(
+            set(event["task_hashes"]),
+            {"basic_info.json", "prompt.txt", "grading/rubric.md"},
+        )
         self.assertEqual(event["note"], "after hardening")
 
     def test_latest_and_previous_resolve_from_ledger(self):
@@ -160,12 +176,23 @@ class CrTaigaTest(unittest.TestCase):
             _, task_dir = self.make_task(temp)
             ledger = task_dir / "taiga" / "run-ledger.jsonl"
             events = [
-                {"status": "submitted", "job_id": "old-job", "recorded_at": "2026-06-30T10:00:00Z"},
+                {
+                    "status": "submitted",
+                    "job_id": "old-job",
+                    "recorded_at": "2026-06-30T10:00:00Z",
+                },
                 {"status": "planned", "recorded_at": "2026-06-30T11:00:00Z"},
-                {"status": "submitted", "job_id": "new-job", "recorded_at": "2026-06-30T12:00:00Z"},
+                {
+                    "status": "submitted",
+                    "job_id": "new-job",
+                    "recorded_at": "2026-06-30T12:00:00Z",
+                },
             ]
             ledger.parent.mkdir(parents=True, exist_ok=True)
-            ledger.write_text("\n".join(json.dumps(event) for event in events) + "\n", encoding="utf-8")
+            ledger.write_text(
+                "\n".join(json.dumps(event) for event in events) + "\n",
+                encoding="utf-8",
+            )
 
             self.assertEqual(self.mod.resolve_job_spec(task_dir, "latest"), "new-job")
             self.assertEqual(self.mod.resolve_job_spec(task_dir, "previous"), "old-job")
@@ -175,7 +202,9 @@ class CrTaigaTest(unittest.TestCase):
             trajectory = pathlib.Path(temp) / "Trajectory"
             (trajectory / "agent-c").mkdir(parents=True)
             (trajectory / "cr-pipeline").mkdir()
-            task_dir = trajectory / "agent-c" / "sample-worktree" / "tasks" / "sample-task"
+            task_dir = (
+                trajectory / "agent-c" / "sample-worktree" / "tasks" / "sample-task"
+            )
             task_dir.mkdir(parents=True)
 
             path = self.mod.ledger_path(task_dir)
@@ -188,10 +217,38 @@ class CrTaigaTest(unittest.TestCase):
     def test_compare_exact_jobs_outputs_score_and_criterion_deltas(self):
         with tempfile.TemporaryDirectory() as temp:
             _, task_dir = self.make_task(temp)
-            write_run(task_dir, "grantmaking-sample-task", 1, "old-job", 0.50, {"a": 0.0, "b": 1.0})
-            write_run(task_dir, "grantmaking-sample-task", 2, "old-job", 1.00, {"a": 1.0, "b": 1.0})
-            write_run(task_dir, "grantmaking-sample-task-new", 1, "new-job", 0.75, {"a": 0.5, "b": 1.0})
-            write_run(task_dir, "grantmaking-sample-task-new", 2, "new-job", 0.25, {"a": 0.5, "b": 0.0})
+            write_run(
+                task_dir,
+                "grantmaking-sample-task",
+                1,
+                "old-job",
+                0.50,
+                {"a": 0.0, "b": 1.0},
+            )
+            write_run(
+                task_dir,
+                "grantmaking-sample-task",
+                2,
+                "old-job",
+                1.00,
+                {"a": 1.0, "b": 1.0},
+            )
+            write_run(
+                task_dir,
+                "grantmaking-sample-task-new",
+                1,
+                "new-job",
+                0.75,
+                {"a": 0.5, "b": 1.0},
+            )
+            write_run(
+                task_dir,
+                "grantmaking-sample-task-new",
+                2,
+                "new-job",
+                0.25,
+                {"a": 0.5, "b": 0.0},
+            )
 
             report = self.mod.compare_jobs(task_dir, "old-job", "new-job")
 
@@ -202,8 +259,12 @@ class CrTaigaTest(unittest.TestCase):
     def test_archive_preserves_job_for_later_comparison(self):
         with tempfile.TemporaryDirectory() as temp:
             _, task_dir = self.make_task(temp)
-            write_run(task_dir, "grantmaking-sample-task", 1, "old-job", 0.50, {"a": 0.0})
-            write_run(task_dir, "grantmaking-sample-task", 2, "old-job", 1.00, {"a": 1.0})
+            write_run(
+                task_dir, "grantmaking-sample-task", 1, "old-job", 0.50, {"a": 0.0}
+            )
+            write_run(
+                task_dir, "grantmaking-sample-task", 2, "old-job", 1.00, {"a": 1.0}
+            )
 
             archive = self.mod.archive_job_artifacts(task_dir, "old-job")
             shutil.rmtree(task_dir / "taiga" / "grantmaking-sample-task")
@@ -216,9 +277,14 @@ class CrTaigaTest(unittest.TestCase):
     def test_artifact_directory_without_job_id_is_rejected(self):
         with tempfile.TemporaryDirectory() as temp:
             _, task_dir = self.make_task(temp)
-            write_json(task_dir / "taiga" / "transcoded" / "attempt-01" / "run.json", {"id": "run-1", "attempt": 1})
+            write_json(
+                task_dir / "taiga" / "transcoded" / "attempt-01" / "run.json",
+                {"id": "run-1", "attempt": 1},
+            )
 
-            with self.assertRaisesRegex(self.mod.TaigaLedgerError, "does not contain a Taiga job_id"):
+            with self.assertRaisesRegex(
+                self.mod.TaigaLedgerError, "does not contain a Taiga job_id"
+            ):
                 self.mod.resolve_job_spec(task_dir, "transcoded")
 
     def test_path_wrappers_forward_to_main_subcommands(self):
@@ -240,7 +306,9 @@ class CrTaigaTest(unittest.TestCase):
     def test_preflight_fails_when_task_changed_without_impact_report(self):
         with tempfile.TemporaryDirectory() as temp:
             worktree, task_dir = self.make_git_task(temp)
-            (task_dir / "prompt.txt").write_text("Prompt with new hardening cue\n", encoding="utf-8")
+            (task_dir / "prompt.txt").write_text(
+                "Prompt with new hardening cue\n", encoding="utf-8"
+            )
 
             result = subprocess.run(
                 [
@@ -302,7 +370,9 @@ class CrTaigaTest(unittest.TestCase):
     def test_preflight_accepts_current_impact_report(self):
         with tempfile.TemporaryDirectory() as temp:
             worktree, task_dir = self.make_git_task(temp)
-            (task_dir / "prompt.txt").write_text("Prompt with new hardening cue\n", encoding="utf-8")
+            (task_dir / "prompt.txt").write_text(
+                "Prompt with new hardening cue\n", encoding="utf-8"
+            )
             task_tree = self.mod.task_tree_hash(self.mod.task_hashes(task_dir))
             self.write_impact_report(task_dir, task_tree)
 
@@ -326,7 +396,9 @@ class CrTaigaTest(unittest.TestCase):
     def test_preflight_rejects_stale_impact_report(self):
         with tempfile.TemporaryDirectory() as temp:
             worktree, task_dir = self.make_git_task(temp)
-            (task_dir / "prompt.txt").write_text("Prompt with new hardening cue\n", encoding="utf-8")
+            (task_dir / "prompt.txt").write_text(
+                "Prompt with new hardening cue\n", encoding="utf-8"
+            )
             self.write_impact_report(task_dir, "stale-hash")
 
             result = subprocess.run(
@@ -349,14 +421,130 @@ class CrTaigaTest(unittest.TestCase):
     def test_compare_jobs_leads_with_regression_alarm_for_large_score_jump(self):
         with tempfile.TemporaryDirectory() as temp:
             _, task_dir = self.make_task(temp)
-            write_run(task_dir, "grantmaking-sample-task-old", 1, "old-job", 0.60, {"a": 0.5})
-            write_run(task_dir, "grantmaking-sample-task-new", 1, "new-job", 0.95, {"a": 1.0})
+            write_run(
+                task_dir, "grantmaking-sample-task-old", 1, "old-job", 0.60, {"a": 0.5}
+            )
+            write_run(
+                task_dir, "grantmaking-sample-task-new", 1, "new-job", 0.95, {"a": 1.0}
+            )
 
             report = self.mod.compare_jobs(task_dir, "old-job", "new-job")
 
         self.assertTrue(report.startswith("REGRESSION ALARM"))
         self.assertIn("Overall changed by +0.350", report)
         self.assertIn("a changed by +0.500", report)
+
+    def _commit_v1_then_stage_working(self, temp, working_rubric):
+        worktree, task_dir = self.make_git_task(temp)
+        (task_dir / "grading" / "rubric.md").write_text(
+            self._rubric(13, 9), encoding="utf-8"
+        )
+        git(worktree, "add", ".")
+        git(worktree, "commit", "-m", "v1 rubric")
+        (task_dir / "grading" / "rubric.md").write_text(
+            working_rubric, encoding="utf-8"
+        )
+        return worktree, task_dir
+
+    def _run_preflight(self, worktree):
+        return subprocess.run(
+            [
+                str(SCRIPT),
+                "preflight",
+                "sample-task",
+                "--worktree",
+                str(worktree),
+                "--base-ref",
+                "HEAD",
+            ],
+            text=True,
+            capture_output=True,
+        )
+
+    def test_preflight_blocks_reweight_without_importance_justification(self):
+        with tempfile.TemporaryDirectory() as temp:
+            # crit_a 13->9, crit_b 9->13: a pure reweight, no pass-condition change.
+            worktree, task_dir = self._commit_v1_then_stage_working(
+                temp, self._rubric(9, 13)
+            )
+            task_tree = self.mod.task_tree_hash(self.mod.task_hashes(task_dir))
+            self.write_impact_report(
+                task_dir, task_tree
+            )  # no weight_change_justifications
+
+            result = self._run_preflight(worktree)
+
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("weights changed", result.stderr)
+        self.assertIn("importance", result.stderr)
+        self.assertIn("crit_a", result.stderr)
+        self.assertIn("crit_b", result.stderr)
+
+    def test_preflight_accepts_reweight_with_importance_justification(self):
+        with tempfile.TemporaryDirectory() as temp:
+            worktree, task_dir = self._commit_v1_then_stage_working(
+                temp, self._rubric(9, 13)
+            )
+            task_tree = self.mod.task_tree_hash(self.mod.task_hashes(task_dir))
+            self.write_impact_report(
+                task_dir,
+                task_tree,
+                weight_change_justifications={
+                    "crit_a": "A is a textbook step; lower intrinsic importance than B.",
+                    "crit_b": "B is the load-bearing discriminator; was underweighted.",
+                },
+            )
+
+            result = self._run_preflight(worktree)
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("preflight passed", result.stdout)
+
+    def test_preflight_rejects_reweight_with_partial_justification(self):
+        with tempfile.TemporaryDirectory() as temp:
+            worktree, task_dir = self._commit_v1_then_stage_working(
+                temp, self._rubric(9, 13)
+            )
+            task_tree = self.mod.task_tree_hash(self.mod.task_hashes(task_dir))
+            self.write_impact_report(
+                task_dir,
+                task_tree,
+                weight_change_justifications={
+                    "crit_a": "textbook step"
+                },  # crit_b missing
+            )
+
+            result = self._run_preflight(worktree)
+
+        self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        self.assertIn("without an importance justification", result.stderr)
+        self.assertIn("crit_b", result.stderr)
+
+    def test_preflight_allows_passcondition_change_without_weight_change(self):
+        with tempfile.TemporaryDirectory() as temp:
+            # Same weights (13, 9) but crit_a's pass condition tightened: no weight gate.
+            worktree, task_dir = self._commit_v1_then_stage_working(
+                temp, self._rubric(13, 9, crit_a_tail=" Also does A-prime.")
+            )
+            task_tree = self.mod.task_tree_hash(self.mod.task_hashes(task_dir))
+            self.write_impact_report(task_dir, task_tree)  # no justifications needed
+
+            result = self._run_preflight(worktree)
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("preflight passed", result.stdout)
+
+    def test_criterion_weights_and_changes_parse(self):
+        with tempfile.TemporaryDirectory() as temp:
+            worktree, task_dir = self._commit_v1_then_stage_working(
+                temp, self._rubric(9, 13)
+            )
+            weights = self.mod.criterion_weights_from_text(self._rubric(13, 9))
+            self.assertEqual(weights, {"crit_a": 13.0, "crit_b": 9.0})
+            # resolve() so task_dir and git's toplevel agree on macOS (/var vs /private/var);
+            # real worktrees live under /Users and never hit this symlink mismatch.
+            changes = self.mod.rubric_weight_changes(task_dir.resolve(), "HEAD")
+            self.assertEqual(changes, {"crit_a": (13.0, 9.0), "crit_b": (9.0, 13.0)})
 
 
 if __name__ == "__main__":

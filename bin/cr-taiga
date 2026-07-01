@@ -305,6 +305,74 @@ def added_prompt_lines_from_ref(task_dir: Path, base_ref: str | None) -> list[st
     return added
 
 
+def criterion_weights_from_text(text: str) -> dict[str, float]:
+    """Parse a rubric.md into {criterion_id: Pts}.
+
+    Rows look like: ``| `id` | **Criterion** | Pts | Pass condition |``. We split
+    on the pipe and read column 0 (id) and column 2 (Pts) so a pass-condition cell
+    that contains numbers or stray pipes cannot fool the parse.
+    """
+    weights: dict[str, float] = {}
+    for line in text.splitlines():
+        s = line.strip()
+        if not s.startswith("|"):
+            continue
+        cells = [c.strip() for c in s.strip("|").split("|")]
+        if len(cells) < 4:
+            continue
+        m = re.match(r"^`([a-z0-9_]+)`$", cells[0])
+        if not m:
+            continue
+        try:
+            weights[m.group(1)] = float(cells[2])
+        except ValueError:
+            continue
+    return weights
+
+
+def rubric_weight_changes(
+    task_dir: Path, base_ref: str | None
+) -> dict[str, tuple[float | None, float | None]]:
+    """Return {criterion_id: (old_pts, new_pts)} for every criterion whose weight
+    differs between base_ref's rubric and the current working-tree rubric.
+
+    Only computable with an explicit base_ref (the hardening-rerun path). Without
+    one this returns {} — the diff has no reference point.
+    """
+    if not base_ref:
+        return {}
+    root = worktree_root(task_dir)
+    rel = task_rel(task_dir, "grading/rubric.md")
+    try:
+        old_text = run_git(root, "show", f"{base_ref}:{rel}")
+    except subprocess.CalledProcessError:
+        old_text = ""
+    new_path = task_dir / "grading" / "rubric.md"
+    new_text = new_path.read_text(encoding="utf-8") if new_path.is_file() else ""
+    old_w = criterion_weights_from_text(old_text)
+    new_w = criterion_weights_from_text(new_text)
+    changes: dict[str, tuple[float | None, float | None]] = {}
+    for cid in set(old_w) | set(new_w):
+        old = old_w.get(cid)
+        new = new_w.get(cid)
+        if old != new:
+            changes[cid] = (old, new)
+    return changes
+
+
+def _fmt_weight_changes(
+    changes: dict[str, tuple[float | None, float | None]]
+) -> str:
+    def fmt(v: float | None) -> str:
+        if v is None:
+            return "—"
+        return f"{v:g}"
+
+    return "; ".join(
+        f"{cid} {fmt(o)}->{fmt(n)}" for cid, (o, n) in sorted(changes.items())
+    )
+
+
 _WORD_RE = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)?")
 _STOPWORDS = {
     "a",
@@ -409,6 +477,7 @@ def validate_impact_report(
     prompt_changed: bool,
     scaffold_flags: list[str],
     max_estimated_delta: float,
+    weight_changes: dict[str, tuple[float | None, float | None]] | None = None,
 ) -> None:
     metadata = load_impact_metadata(path)
     if metadata.get("slug") != task_dir.name:
@@ -418,6 +487,30 @@ def validate_impact_report(
         raise TaigaLedgerError(
             f"stale impact report at {path}: task_tree_hash does not match current task"
         )
+    if weight_changes:
+        justifications = metadata.get("weight_change_justifications")
+        if not isinstance(justifications, dict):
+            raise TaigaLedgerError(
+                f"{path}: criterion weights changed vs base-ref "
+                f"({_fmt_weight_changes(weight_changes)}). Weights encode a criterion's "
+                "intrinsic importance, not a difficulty knob — never reweight to move a "
+                "score. Add a 'weight_change_justifications' object to the cr-taiga-impact "
+                "block giving an importance rationale for each changed criterion, or revert "
+                "the weights to the base-ref values."
+            )
+        missing = [
+            cid
+            for cid in weight_changes
+            if not isinstance(justifications.get(cid), str)
+            or not justifications.get(cid, "").strip()
+        ]
+        if missing:
+            raise TaigaLedgerError(
+                f"{path}: weight change(s) without an importance justification: "
+                f"{', '.join(sorted(missing))}. Each changed criterion needs a non-empty "
+                "'weight_change_justifications' entry explaining why the criterion's "
+                "importance (not its score) warrants the new weight."
+            )
     if metadata.get("recommendation") != "run":
         raise TaigaLedgerError(f"{path}: recommendation is not 'run'")
     estimated_delta = metadata.get("estimated_delta")
@@ -438,11 +531,17 @@ def preflight_message(
     report_path: Path,
     has_report: bool,
     current_task_tree_hash: str,
+    weight_changes: dict[str, tuple[float | None, float | None]] | None = None,
 ) -> str:
     lines = [
         f"prompt/rubric changed: {', '.join(changed_files)}",
         f"current task_tree_hash: {current_task_tree_hash}",
     ]
+    if weight_changes:
+        lines.append(
+            "criterion weight change(s) — each needs an importance justification in "
+            "'weight_change_justifications': " + _fmt_weight_changes(weight_changes)
+        )
     if scaffold_flags:
         lines.append("prompt over-scaffolding risk:")
         lines.extend(f"- {flag}" for flag in scaffold_flags)
@@ -470,6 +569,7 @@ def run_preflight(
     scaffold_flags = prompt_scaffolding_flags(
         task_dir, added_prompt_lines_from_ref(task_dir, base_ref)
     )
+    weight_changes = rubric_weight_changes(task_dir, base_ref)
     report = impact_report_path(task_dir, report_override)
     if not report.is_file():
         raise TaigaLedgerError(
@@ -479,6 +579,7 @@ def run_preflight(
                 report_path=report,
                 has_report=False,
                 current_task_tree_hash=task_tree_hash(task_hashes(task_dir)),
+                weight_changes=weight_changes,
             )
         )
 
@@ -488,6 +589,7 @@ def run_preflight(
         prompt_changed="prompt.txt" in changed_files,
         scaffold_flags=scaffold_flags,
         max_estimated_delta=max_estimated_delta,
+        weight_changes=weight_changes,
     )
     return True, f"preflight passed: impact report current at {report}"
 

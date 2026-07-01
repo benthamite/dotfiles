@@ -135,6 +135,13 @@ repair_all_worktree_keys() {
 }
 repair_all_worktree_keys
 
+# Garbage-collect stale transient CR QA worktrees under ~/Trajectory/agent-c/.cr-tmp/.
+# Best-effort and strictly non-fatal: runs AFTER the critical key-repair above so it
+# can never affect it, and only removes worktrees that are clean AND fully pushed
+# (the script keeps anything with uncommitted/unpushed work). See cr-worktree-gc.sh.
+gc_script="${SYNC_AGENT_C_GC_SCRIPT:-$HOME/My Drive/dotfiles/claude/bin/cr-worktree-gc.sh}"
+[ -x "$gc_script" ] && "$gc_script" || true
+
 cd "${CLAUDE_PROJECT_DIR:-$PWD}" 2>/dev/null || exit 0
 
 # Must be inside a git work tree.

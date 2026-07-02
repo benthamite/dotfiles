@@ -9,10 +9,13 @@
 # every session start (wired into sync-agent-c-worktree.sh) plus on demand.
 #
 # Safety: a worktree is removed ONLY when it is BOTH clean (no uncommitted tracked
-# changes) AND fully pushed (its HEAD is reachable from some origin branch). Any
-# worktree with uncommitted or unpushed work is KEPT and reported — the GC can
-# never destroy in-progress edits. Real task worktrees never live under .cr-tmp/,
-# so they are never touched.
+# changes AND no meaningful untracked files) AND fully pushed (its HEAD is
+# reachable from some origin branch). Untracked new files (e.g. a hand-written
+# hardening-impact.md) count as in-progress work and KEEP the worktree; only the
+# ephemeral uv virtualenv (.venv/, not gitignored) is disregarded, and taiga pull
+# artifacts are already gitignored. Any worktree with uncommitted, untracked, or
+# unpushed work is KEPT and reported — the GC can never destroy in-progress edits.
+# Real task worktrees never live under .cr-tmp/, so they are never touched.
 set -uo pipefail
 
 base="$HOME/Trajectory/agent-c"
@@ -27,9 +30,12 @@ for d in "$tmp"/*/; do
   [ -d "$d" ] || continue
   name="$(basename "${d%/}")"
 
-  # Keep if there are uncommitted tracked changes.
-  if [ -n "$(git -C "$d" status --porcelain --untracked-files=no 2>/dev/null)" ]; then
-    echo "[cr-worktree-gc] kept .cr-tmp/$name (uncommitted changes)"
+  # Keep if there is any uncommitted work — tracked changes OR new untracked
+  # files. Disregard only the ephemeral uv virtualenv (.venv/, which is NOT
+  # gitignored so it would otherwise flag every worktree); taiga pull artifacts
+  # are already gitignored and never appear here.
+  if [ -n "$(git -C "$d" status --porcelain --untracked-files=normal 2>/dev/null | grep -vE '(^|/)\.venv/|[[:space:]]\.venv/')" ]; then
+    echo "[cr-worktree-gc] kept .cr-tmp/$name (uncommitted or untracked changes)"
     kept=$((kept + 1))
     continue
   fi

@@ -11,6 +11,15 @@ Use this for frozen, hung, beachballing, or otherwise unresponsive Emacs session
 
 Safety boundary: diagnostics are allowed, but recovery actions that change Emacs state require explicit user confirmation before you run them. This includes `(top-level)`, `(keyboard-quit)`, `kill -SIGUSR2`, SIGTERM, and SIGKILL. You may recommend them with warnings; do not send signals to an active Emacs session without confirmation.
 
+User workflow invariant: `debug-on-error` is intentionally enabled for the
+user's normal workflow. Do not recommend disabling it globally or commenting
+out the user's global `debug-on-error` toggle as a prevention or recovery
+strategy. If `debug-on-error` turns async, timer, process-filter, or sentinel
+errors into disruptive recursive debuggers, recommend a narrow containment
+around the specific recurring async path instead: bind `debug-on-error` to nil
+inside that timer/sentinel/filter, catch and message the error, and preserve
+global `debug-on-error` everywhere else.
+
 Channel boundary: an `emacsclient` timeout is evidence that the server/eval
 channel did not return. It is not, by itself, proof that the user's interactive
 Emacs UI is frozen. If the user reports that Emacs accepts input or otherwise
@@ -127,7 +136,13 @@ Report, in this order:
    - **If server unresponsive but process accepts signals**: recommend `kill -SIGUSR2 <PID>` to toggle `debug-on-quit`, then `C-g` in Emacs. Signal the process only after confirmation.
    - **Escalation**: recommend `kill <PID>` (SIGTERM) for graceful shutdown only after confirmation. Warn that SIGTERM may not save unsaved buffers if the main thread is blocked in C code.
    - **Last resort only — never run this without explicit user confirmation**: `kill -9 <PID>` (SIGKILL). **This will terminate Emacs immediately with no chance to save unsaved buffers or run shutdown hooks. Any unsaved changes will be lost.** Do NOT include this command in a code block the user might copy-paste without reading. Always present it as a clearly separated warning and ask the user to confirm before proceeding.
-5. **How to prevent recurrence**: specific configuration changes only when supported by the observations. Reference the user's `config.org` if the relevant package is configured there.
+5. **How to prevent recurrence**: specific configuration changes only when
+   supported by the observations. Reference the user's `config.org` if the
+   relevant package is configured there. Preserve the user's global
+   `debug-on-error` workflow. Do not suggest disabling it. For debugger freezes
+   caused by async callbacks, recommend narrowly wrapping only the identified
+   recurring timer, process filter, sentinel, or package entry point with local
+   `debug-on-error` suppression and explicit error reporting.
 
 ### Rules
 

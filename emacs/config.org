@@ -9876,10 +9876,6 @@ CLOCK: [2021-06-11 Fri 18:27]--[2021-06-11 Fri 18:33] =>  0:06
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package org-extras
-  :init
-  (setq org-extras-agenda-switch-to-agenda-current-day-timer
-        (run-with-idle-timer (* 10 60) nil #'org-extras-agenda-switch-to-agenda-current-day))
-
   :custom
   (org-extras-id-auto-add-excluded-directories (list paths-dir-anki
                                                      paths-dir-google-drive-tlon-leo

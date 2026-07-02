@@ -607,10 +607,11 @@ During agenda file preparation, agenda files are opened for scanning
 rather than interactive editing.  The helper
 @code{org-extras-with-suppressed-agenda-file-opening-hooks} keeps unrelated
 mode hooks intact but filters interactive setup functions from that scan,
-including @code{variable-pitch-mode}, @code{org-indent-pixel-mode}, @code{org-modern-indent-mode},
-and @code{jinx-mode} activation.  This keeps presentation setup such as
-variable-pitch indentation from doing expensive Org element parsing while
-the agenda is being built.
+including @code{variable-pitch-mode}, @code{org-indent-mode}, @code{org-indent-pixel-mode},
+@code{org-modern-indent-mode}, and @code{jinx-mode} activation.  It also disables
+@code{org-startup-indented} and file-local variables only for the scan.  This
+keeps presentation setup such as variable-pitch indentation and file-local
+eval forms from doing unrelated work while the agenda is being built.
 
 @node Going to an agenda item and clocking in
 @subsection Going to an agenda item and clocking in
@@ -1029,10 +1030,19 @@ should be both relocated and archived in one step.
 @subsection Regenerating the refile cache
 
 @findex org-extras-refile-regenerate-cache
+@vindex org-extras-refile-regenerate-cache-timer
 The command @code{org-extras-refile-regenerate-cache} clears the existing
 @code{org-refile} target cache and rebuilds it from scratch.  This is needed
 when refile targets have changed (files added, headings renamed) and the
-cached completions are stale.
+cached completions are stale.  Rebuilds suppress interactive Org file
+setup hooks and file-local variable evaluation while they scan agenda
+files, reset live Org element caches before scanning, load the optional
+@code{files-extras} open-buffer target provider used by the configured refile
+targets, and remain interruptible.  The configuration schedules this
+refresh with a single idle timer stored in
+@code{org-extras-refile-regenerate-cache-timer}, cancelling any previous timer
+on reload.  If a refresh is already active, overlapping timer calls are
+skipped.
 
 @node Links and sorting
 @section Links and sorting

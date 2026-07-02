@@ -486,6 +486,7 @@ FN and FILE are arguments in the adviced function."
 
 (advice-add #'make-backup-file-name-1 :around #'files-extras-make-hashed-backup-file-name-a)
 
+;;;###autoload
 (defun files-extras-open-buffer-files ()
   "Return the list of files currently open in Emacs."
   (delq nil

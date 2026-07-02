@@ -421,7 +421,9 @@ the current buffer, adjusting paths that go through the @samp{git-dirs}
 directory structure to point to their canonical locations.
 
 The function @code{files-extras-open-buffer-files} returns a list of all
-@samp{.org} files currently open in Emacs buffers.
+@samp{.org} files currently open in Emacs buffers.  It is autoloaded so it can
+be used directly in places such as @code{org-refile-targets} before the full
+@code{files-extras} package has been loaded.
 
 The function @code{files-extras-bollp} returns @code{t} if point is at the
 beginning of the last line in the buffer.

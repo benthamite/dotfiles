@@ -10524,10 +10524,14 @@ CLOCK: [2021-02-24 Wed 06:47]--[2021-02-24 Wed 07:30] =>  0:43
   (org-outline-path-complete-in-steps nil)
   (org-refile-allow-creating-parent-nodes nil)
   (org-refile-use-cache t) ;  build cache at startup
-
   :config
-  ;; Regenerate cache every half hour
-  (run-with-idle-timer (* 60 30) t #'org-extras-refile-regenerate-cache))
+  (defvar org-extras-refile-regenerate-cache-timer nil
+    "Timer used to refresh the Org refile cache.")
+  (when (timerp org-extras-refile-regenerate-cache-timer)
+    (cancel-timer org-extras-refile-regenerate-cache-timer))
+  (setq org-extras-refile-regenerate-cache-timer
+        (run-with-idle-timer
+         (* 60 30) t #'org-extras-refile-regenerate-cache)))
 #+end_src
 
 ** =org-keys=

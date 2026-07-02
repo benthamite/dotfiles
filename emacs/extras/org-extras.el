@@ -602,6 +602,13 @@ number.  Disable the mode if ARG is a negative number."
 
 (declare-function window-extras-split-if-unsplit "window-extras")
 (declare-function winum-select-window-1 "winum")
+
+(defun org-extras-reset-org-element-caches ()
+  "Reset Org element caches for live Org file buffers."
+  (dolist (buf (org-buffer-list 'files))
+    (with-current-buffer buf
+      (org-element-cache-reset))))
+
 ;;;###autoload
 (defun org-extras-agenda-switch-to-agenda-current-day ()
   "Open agenda in left window, creating it if necessary."
@@ -616,9 +623,7 @@ number.  Disable the mode if ARG is a negative number."
       ;; Reset element caches to prevent "Invalid search bound" errors
       ;; from stale caches (e.g. after external file modifications by
       ;; Dropbox sync).
-      (dolist (buf (org-buffer-list 'files))
-        (with-current-buffer buf
-          (org-element-cache-reset)))
+      (org-extras-reset-org-element-caches)
       ;; Suppress `find-file-hook' (flycheck, doom-modeline, etc.) when
       ;; opening agenda files; they are scanned, not edited interactively.
       ;; Also prevent `jinx-mode' from activating via `text-mode-hook',
@@ -635,6 +640,7 @@ number.  Disable the mode if ARG is a negative number."
     copilot-extras-enable-conditionally
     jinx-mode
     org-appear-mode
+    org-indent-mode
     org-indent-pixel--maybe-activate
     org-indent-pixel-mode
     org-modern-indent-mode
@@ -652,6 +658,8 @@ number.  Disable the mode if ARG is a negative number."
         (find-file-hook nil)
         (org-mode-hook
          (org-extras--agenda-filter-file-opening-hook org-mode-hook))
+        (org-startup-indented nil)
+        (enable-local-variables nil)
         (outline-mode-hook
          (org-extras--agenda-filter-file-opening-hook outline-mode-hook))
         (text-mode-hook
@@ -1339,19 +1347,44 @@ empty, it is killed."
 
 (autoload 'org-refile-cache-clear "org-refile")
 (declare-function org-refile-get-targets "org-refile")
+
+(defvar org-extras-refile-regenerate-cache--running nil
+  "Non-nil while the Org refile cache is being regenerated.")
+
+(defvar org-extras-refile-regenerate-cache-timer nil
+  "Timer used to refresh the Org refile cache.")
+
 ;;;###autoload
 (defun org-extras-refile-regenerate-cache ()
   "Regenerate the `org-refile' cache."
   (interactive)
-  (org-refile-cache-clear)
-  (condition-case err
-      (let ((inhibit-quit t))
-        (with-temp-buffer
-          (org-mode)
-          (message "Regenerating cache...")
-          (org-refile-get-targets)
-          (message "Cache regenerated.")))
-    (error (message "Refile cache regeneration failed: %S" (cdr err)))))
+  (if org-extras-refile-regenerate-cache--running
+      (message "Refile cache regeneration already running; skipping.")
+    (let ((org-extras-refile-regenerate-cache--running t))
+      (condition-case err
+          (org-extras-with-suppressed-agenda-file-opening-hooks
+           (lambda ()
+             (org-refile-cache-clear)
+             (org-extras-reset-org-element-caches)
+             (with-temp-buffer
+               (org-mode)
+               (message "Regenerating cache...")
+               (require 'files-extras nil t)
+               (org-refile-get-targets)
+               (message "Cache regenerated."))))
+        (error (message "Refile cache regeneration failed: %S" (cdr err)))))))
+
+;;;###autoload
+(defun org-extras-refile-regenerate-cache-start-timer (&optional interval)
+  "Start the timer for refreshing the Org refile cache.
+Use INTERVAL seconds between refreshes, or 30 minutes when INTERVAL
+is nil.  If an earlier owned timer exists, cancel it first."
+  (let ((interval (or interval (* 60 30))))
+    (when (timerp org-extras-refile-regenerate-cache-timer)
+      (cancel-timer org-extras-refile-regenerate-cache-timer))
+    (setq org-extras-refile-regenerate-cache-timer
+          (run-with-idle-timer
+           interval t #'org-extras-refile-regenerate-cache))))
 
 ;;;;; ol
 

@@ -200,6 +200,7 @@ def build_ledger_event(
     git_info: GitInfo,
     status: str,
     model: str,
+    grading_model: str = "claude-fable-5",
     epochs: int,
     job_id: str | None = None,
     build_run_url: str | None = None,
@@ -220,6 +221,7 @@ def build_ledger_event(
         "git_dirty": git_info.is_dirty,
         "image": image,
         "model": model,
+        "grading_model": grading_model,
         "epochs": epochs,
         "taiga_env": TAIGA_ENV,
         "taiga_env_id": TAIGA_ENV_ID,
@@ -237,7 +239,7 @@ def build_ledger_event(
                 "uv run --no-sync --project meta/trajectory_labs python "
                 "platform/environments/grantmaking/submit_to_taiga.py "
                 f"--task-id {slug} --image {image} --epochs {epochs} "
-                f"--environment {TAIGA_ENV} --model {model} --grading-model {model}"
+                f"--environment {TAIGA_ENV} --model {model} --grading-model {grading_model}"
             ),
             "poll": (
                 "uv run --no-sync --project meta/trajectory_labs tl runs "
@@ -708,6 +710,7 @@ def load_attempts_for_job(task_dir: Path, job_id: str) -> list[dict[str, Any]]:
                 "attempt": data.get("attempt_number") or run_json.parent.name,
                 "score": float(score),
                 "criteria": criteria,
+                "model": data.get("api_model_name"),
             }
         )
     if not attempts:
@@ -772,12 +775,15 @@ def summarize_job(task_dir: Path, job_id: str) -> dict[str, Any]:
             if criterion in attempt["criteria"]
         ]
         criterion_means[criterion] = statistics.mean(values) if values else 0.0
+    models = sorted({attempt["model"] for attempt in attempts if attempt.get("model")})
     return {
         "job_id": job_id,
         "n": len(attempts),
         "mean": statistics.mean(attempt["score"] for attempt in attempts),
         "criteria": criterion_means,
         "scores": [attempt["score"] for attempt in attempts],
+        "models": models,
+        "model": models[0] if len(models) == 1 else None,
     }
 
 
@@ -785,9 +791,23 @@ def fmt(value: float | None) -> str:
     return "N/A" if value is None else f"{value:.3f}"
 
 
+def _model_label(summary: dict[str, Any]) -> str:
+    if summary.get("model"):
+        return summary["model"]
+    if summary.get("models"):
+        return "/".join(summary["models"])
+    return "unknown"
+
+
 def compare_jobs(task_dir: Path, old_job: str, new_job: str) -> str:
     old = summarize_job(task_dir, old_job)
     new = summarize_job(task_dir, new_job)
+    old_model, new_model = _model_label(old), _model_label(new)
+    # A cross-model compare conflates candidate difficulty with the model swap, so
+    # its deltas (and any REGRESSION ALARM below) are not a task/rubric signal.
+    model_mismatch = (
+        old_model != new_model and "unknown" not in (old_model, new_model)
+    )
     alarms = []
     overall_delta = new["mean"] - old["mean"]
     if abs(overall_delta) >= 0.10:
@@ -815,13 +835,23 @@ def compare_jobs(task_dir: Path, old_job: str, new_job: str) -> str:
     rows.extend(
         [
             "",
-            f"Old job: `{old_job}` ({old['n']} attempts)",
-            f"New job: `{new_job}` ({new['n']} attempts)",
+            f"Old job: `{old_job}` ({old['n']} attempts, model {old_model})",
+            f"New job: `{new_job}` ({new['n']} attempts, model {new_model})",
         ]
     )
+    mismatch_block = (
+        [
+            f"⚠️ MODEL MISMATCH: old={old_model}, new={new_model} — the deltas below "
+            "reflect the candidate-model change, not a task/rubric regression; "
+            "any REGRESSION ALARM here is likely spurious. Compare same-model jobs.",
+            "",
+        ]
+        if model_mismatch
+        else []
+    )
     if alarms:
-        return "\n".join(["REGRESSION ALARM", *alarms, "", *rows])
-    return "\n".join(rows)
+        return "\n".join([*mismatch_block, "REGRESSION ALARM", *alarms, "", *rows])
+    return "\n".join([*mismatch_block, *rows]) if mismatch_block else "\n".join(rows)
 
 
 def format_run_event(event: dict[str, Any], path: Path | None) -> str:
@@ -882,6 +912,7 @@ def command_run(args: argparse.Namespace) -> int:
         git_info=git_info(root),
         status=status,
         model=args.model,
+        grading_model=args.grading_model,
         epochs=args.epochs,
         job_id=args.job_id,
         build_run_url=args.build_run_url,
@@ -945,6 +976,10 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--worktree")
     run.add_argument("--status", choices=["planned", "submitted", "pulled", "failed"])
     run.add_argument("--model", default="claude-fable-5")
+    # Grader is independent of the candidate: it stays fixed (Fable 5, the model
+    # the difficulty bar is calibrated on) even when --model is overridden, so
+    # means remain comparable across candidate swaps. Override only deliberately.
+    run.add_argument("--grading-model", default="claude-fable-5")
     run.add_argument("--epochs", type=int, default=10)
     run.add_argument("--job-id")
     run.add_argument("--build-run-url")

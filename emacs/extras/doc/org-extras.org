@@ -744,6 +744,7 @@ these options.
 :END:
 
 #+findex: org-extras-id-update-id-locations
+#+findex: org-extras-id-update-id-locations-background
 #+vindex: org-extras-id-update-excluded-patterns
 The command ~org-extras-id-update-id-locations~ scans all =.org= files
 under ~org-directory~ and updates the ID location database via
@@ -764,6 +765,12 @@ Internally, it temporarily advises ~display-warning~ to intercept
 It also temporarily filters ~org-agenda-files~ and ~org-buffer-list~ so
 files in excluded paths, such as git worktree checkouts, do not get
 scanned via Org's implicit agenda-file or "open Org files" sources.
+
+The companion function ~org-extras-id-update-id-locations-background~
+runs the same update with ~debug-on-error~ locally disabled.  It is for
+background hooks such as ~midnight-hook~, where maintenance failures
+should be reported without opening a recursive debugger.  The main
+interactive command keeps its normal behavior.
 
 Two ~:around~ advices on ~org-id-update-id-locations~ improve
 performance.  The first (~org-extras--inhibit-modification-hooks~)

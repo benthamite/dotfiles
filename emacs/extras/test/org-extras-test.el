@@ -749,5 +749,20 @@
   (should (= (org-extras-shr-heading-level '(shr-h2 bold)) 2))
   (should-not (org-extras-shr-heading-level '(bold italic))))
 
+;;;; Org ID background maintenance
+
+(ert-deftest org-extras-test-id-update-background-binds-debug-on-error ()
+  "Disable debugger entry only around the background Org ID update wrapper."
+  (let ((called nil)
+        (debug-on-error-seen nil))
+    (cl-letf (((symbol-function 'org-extras-id-update-id-locations)
+               (lambda ()
+                 (setq called t)
+                 (setq debug-on-error-seen debug-on-error))))
+      (let ((debug-on-error t))
+        (org-extras-id-update-id-locations-background)))
+    (should called)
+    (should-not debug-on-error-seen)))
+
 (provide 'org-extras-test)
 ;;; org-extras-test.el ends here

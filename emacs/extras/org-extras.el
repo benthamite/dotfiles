@@ -1124,6 +1124,13 @@ to display them in a dedicated buffer."
       (advice-remove 'org-agenda-files #'org-extras--id-update-filter-files)
       (advice-remove 'display-warning #'org-extras--id-update-warning-handler))))
 
+(defun org-extras-id-update-id-locations-background ()
+  "Run `org-extras-id-update-id-locations' from background hooks.
+Keep interactive debugging enabled elsewhere, but avoid opening the
+debugger from idle maintenance such as `midnight-hook'."
+  (let ((debug-on-error nil))
+    (org-extras-id-update-id-locations)))
+
 (defun org-extras--id-update-filter-files (orig-fun &rest args)
   "Call ORIG-FUN with ARGS, excluding ignored files."
   (cl-remove-if #'org-extras-id--update-excluded-p (apply orig-fun args)))

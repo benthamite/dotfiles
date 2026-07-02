@@ -1123,6 +1123,59 @@ CLOCK: [2021-10-04 Mon 18:59]--[2021-10-04 Mon 19:31] =>  0:32
 (use-package el-patch)
 #+end_src
 
+** =websocket=
+:PROPERTIES:
+:ID:       24B91D8E-3101-4E47-B2F5-405E47625E78
+:END:
+
+/[[https://github.com/ahyatt/emacs-websocket][websocket]] provides WebSocket client and server support for Emacs packages such as =slack=./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package websocket
+  :after el-patch
+  :defer t
+  :config
+  (defun init-websocket-process-ping-frame (websocket frame)
+    "Reply to ping FRAME on WEBSOCKET without entering the debugger.
+This is used from process filters, where a stale socket should be reported
+through the websocket error callback instead of opening a recursive debugger."
+    (let ((debug-on-error nil))
+      (condition-case err
+          (websocket-send websocket
+                          (make-websocket-frame
+                           :opcode 'pong
+                           :payload (websocket-frame-payload frame)
+                           :completep t))
+        (error
+         (setf (websocket-ready-state websocket) 'closed)
+         (funcall (websocket-on-error websocket)
+                  websocket 'on-ping err)))))
+
+  (el-patch-defun websocket-process-frame (websocket frame)
+    "Using the WEBSOCKET's filter and connection, process the FRAME.
+This returns a lambda that should be executed when all frames have
+been processed.  If the frame has a payload, the lambda has the frame
+passed to the filter slot of WEBSOCKET.  If the frame is a ping,
+the lambda has a reply with a pong.  If the frame is a close, the lambda
+has connection termination."
+    (let ((opcode (websocket-frame-opcode frame)))
+      (cond ((memq opcode '(continuation text binary))
+             (lambda () (websocket-try-callback 'websocket-on-message 'on-message
+                                                websocket frame)))
+            ((eq opcode 'ping)
+             (el-patch-swap
+               (lambda () (websocket-send websocket
+                                          (make-websocket-frame
+                                           :opcode 'pong
+                                           :payload (websocket-frame-payload frame)
+                                           :completep t)))
+               (apply-partially #'init-websocket-process-ping-frame
+                                websocket frame)))
+            ((eq opcode 'close)
+             (lambda () (delete-process (websocket-conn websocket))))
+            (t (lambda ()))))))
+#+end_src
+
 ** =casual=
 :PROPERTIES:
 :ID:       53C5FB12-8D49-44D6-84B2-9D43F9201761
@@ -14877,7 +14930,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
                            ledger-mode-extras-update-commodities
                            magit-extras-stage-commit-and-push-all-repos
                            org-roam-db-sync
-                           org-extras-id-update-id-locations
+                           org-extras-id-update-id-locations-background
                            el-patch-validate-all
                            org-extras-agenda-switch-to-agenda-current-day
                            mu4e-extras-update-all-mail-and-index

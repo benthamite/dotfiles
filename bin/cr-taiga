@@ -237,7 +237,7 @@ def build_ledger_event(
                 "uv run --no-sync --project meta/trajectory_labs python "
                 "platform/environments/grantmaking/submit_to_taiga.py "
                 f"--task-id {slug} --image {image} --epochs {epochs} "
-                f"--model {model} --grading-model {model}"
+                f"--environment {TAIGA_ENV} --model {model} --grading-model {model}"
             ),
             "poll": (
                 "uv run --no-sync --project meta/trajectory_labs tl runs "

@@ -31,10 +31,13 @@ for d in "$tmp"/*/; do
   name="$(basename "${d%/}")"
 
   # Keep if there is any uncommitted work — tracked changes OR new untracked
-  # files. Disregard only the ephemeral uv virtualenv (.venv/, which is NOT
-  # gitignored so it would otherwise flag every worktree); taiga pull artifacts
-  # are already gitignored and never appear here.
-  if [ -n "$(git -C "$d" status --porcelain --untracked-files=normal 2>/dev/null | grep -vE '(^|/)\.venv/|[[:space:]]\.venv/')" ]; then
+  # files. Disregard ONLY an untracked ephemeral uv virtualenv (.venv/, which is
+  # NOT gitignored so it would otherwise flag every worktree); taiga pull
+  # artifacts are already gitignored and never appear here. The filter matches
+  # only an untracked ('?? ') .venv/ *directory* entry (git collapses untracked
+  # dirs to a single trailing-slash line, quoted or not), so a tracked change or
+  # a real file that merely lives under a .venv path is still kept.
+  if [ -n "$(git -C "$d" status --porcelain --untracked-files=normal 2>/dev/null | grep -vE '^\?\? "?([^"]*/)?\.venv/"?$')" ]; then
     echo "[cr-worktree-gc] kept .cr-tmp/$name (uncommitted or untracked changes)"
     kept=$((kept + 1))
     continue

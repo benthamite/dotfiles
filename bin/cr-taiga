@@ -944,7 +944,7 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("slug")
     run.add_argument("--worktree")
     run.add_argument("--status", choices=["planned", "submitted", "pulled", "failed"])
-    run.add_argument("--model", default="claude-opus-4-8")
+    run.add_argument("--model", default="claude-fable-5")
     run.add_argument("--epochs", type=int, default=10)
     run.add_argument("--job-id")
     run.add_argument("--build-run-url")

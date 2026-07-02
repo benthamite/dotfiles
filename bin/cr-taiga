@@ -231,8 +231,13 @@ def build_ledger_event(
                 f"--ref {git_info.branch} -f push=true"
             ),
             "submit": (
-                "uv run --no-sync --project meta/trajectory_labs tl run "
-                f"{slug} --taiga --epochs {epochs} --model {model} --image {image}"
+                # Grantmaking submits via its standalone script, NOT `tl run
+                # --taiga`: that path is wired to the browser-injections loader,
+                # which filters grantmaking tasks out (-> "No problems found").
+                "uv run --no-sync --project meta/trajectory_labs python "
+                "platform/environments/grantmaking/submit_to_taiga.py "
+                f"--task-id {slug} --image {image} --epochs {epochs} "
+                f"--model {model} --grading-model {model}"
             ),
             "poll": (
                 "uv run --no-sync --project meta/trajectory_labs tl runs "

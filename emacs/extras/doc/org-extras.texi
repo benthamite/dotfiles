@@ -602,6 +602,16 @@ When it creates the agenda, the anniversary-maintenance step opens
 already visiting.  Agenda construction itself still runs normally, so
 the dynamic agenda file list remains intact.
 
+@findex org-extras-with-suppressed-agenda-file-opening-hooks
+During agenda file preparation, agenda files are opened for scanning
+rather than interactive editing.  The helper
+@code{org-extras-with-suppressed-agenda-file-opening-hooks} keeps unrelated
+mode hooks intact but filters interactive setup functions from that scan,
+including @code{variable-pitch-mode}, @code{org-indent-pixel-mode}, @code{org-modern-indent-mode},
+and @code{jinx-mode} activation.  This keeps presentation setup such as
+variable-pitch indentation from doing expensive Org element parsing while
+the agenda is being built.
+
 @node Going to an agenda item and clocking in
 @subsection Going to an agenda item and clocking in
 

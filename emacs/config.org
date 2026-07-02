@@ -10051,7 +10051,9 @@ Avoid opening files while filtering: doing so runs `org-mode-hook' before
           (push f readable))
          (t
           (message "org-agenda: skipping unreadable file %s" f))))
-      (funcall fn (nreverse readable))))
+      (org-extras-with-suppressed-agenda-file-opening-hooks
+       (lambda ()
+         (funcall fn (nreverse readable))))))
 
   (advice-add 'org-agenda-prepare-buffers :around
               #'config-org-agenda-prepare-readable-buffers)

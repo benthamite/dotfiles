@@ -10,6 +10,8 @@
 (require 'org-extras)
 (require 'org-clock)
 
+(defvar buffer-face-mode-hook)
+
 ;;;; count-lines-with-expression
 
 (ert-deftest org-extras-test-count-lines-with-expression-basic-match ()
@@ -231,6 +233,67 @@
       (org-extras-agenda-switch-to-agenda-current-day)
       (should (equal observed-hooks
                      '(((change-hook) nil (org-hook) (outline-hook) (text-hook))))))))
+
+(ert-deftest org-extras-test-agenda-file-opening-hooks-suppressed ()
+  "Suppress interactive setup while preserving unrelated mode hooks."
+  (let ((observed-hooks nil)
+        (called nil)
+        (change-major-mode-after-body-hook '(change-hook variable-pitch-mode))
+        (find-file-hook '(find-hook))
+        (org-mode-hook '(org-hook org-modern-indent-mode org-tidy-mode))
+        (outline-mode-hook '(outline-hook variable-pitch-mode))
+        (text-mode-hook '(text-hook jinx-mode))
+        (buffer-face-mode-hook '(face-hook org-indent-pixel--maybe-activate)))
+    (cl-letf (((symbol-function 'jinx-mode)
+               (lambda (&rest _)
+                 (push 'jinx-mode called)))
+              ((symbol-function 'org-indent-pixel--maybe-activate)
+               (lambda (&rest _)
+                 (push 'org-indent-pixel--maybe-activate called)))
+              ((symbol-function 'org-indent-pixel-mode)
+               (lambda (&rest _)
+                 (push 'org-indent-pixel-mode called)))
+              ((symbol-function 'org-modern-indent-mode)
+               (lambda (&rest _)
+                 (push 'org-modern-indent-mode called)))
+              ((symbol-function 'org-tidy-mode)
+               (lambda (&rest _)
+                 (push 'org-tidy-mode called)))
+              ((symbol-function 'variable-pitch-mode)
+               (lambda (&rest _)
+                 (push 'variable-pitch-mode called))))
+      (org-extras-with-suppressed-agenda-file-opening-hooks
+       (lambda ()
+         (setq observed-hooks
+               (list change-major-mode-after-body-hook
+                     find-file-hook
+                     org-mode-hook
+                     outline-mode-hook
+                     text-mode-hook
+                     buffer-face-mode-hook))
+         (jinx-mode 1)
+         (org-indent-pixel--maybe-activate)
+         (org-indent-pixel-mode 1)
+         (org-modern-indent-mode 1)
+         (org-tidy-mode 1)
+         (variable-pitch-mode 1))))
+    (should (equal observed-hooks
+                   '((change-hook)
+                     nil
+                     (org-hook)
+                     (outline-hook)
+                     (text-hook)
+                     (face-hook))))
+    (should-not called)
+    (should (equal change-major-mode-after-body-hook
+                   '(change-hook variable-pitch-mode)))
+    (should (equal find-file-hook '(find-hook)))
+    (should (equal org-mode-hook
+                   '(org-hook org-modern-indent-mode org-tidy-mode)))
+    (should (equal outline-mode-hook '(outline-hook variable-pitch-mode)))
+    (should (equal text-mode-hook '(text-hook jinx-mode)))
+    (should (equal buffer-face-mode-hook
+                   '(face-hook org-indent-pixel--maybe-activate)))))
 
 (ert-deftest org-extras-test-anniversary-toggle-suppresses-temp-buffer-hooks ()
   "Suppress presentation hooks only when opening anniversary file internally."

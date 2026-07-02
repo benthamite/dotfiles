@@ -628,6 +628,62 @@ number.  Disable the mode if ARG is a negative number."
         (cl-letf (((symbol-function 'jinx-mode) #'ignore))
           (org-agenda nil "a"))))))
 
+(defvar buffer-face-mode-hook)
+
+(defconst org-extras--agenda-file-opening-functions
+  '(cape-enable-completions
+    copilot-extras-enable-conditionally
+    jinx-mode
+    org-appear-mode
+    org-indent-pixel--maybe-activate
+    org-indent-pixel-mode
+    org-modern-indent-mode
+    org-table-wrap-mode
+    org-tidy-mode
+    simple-extras-visual-line-mode-enhanced
+    variable-pitch-mode)
+  "Interactive setup functions to suppress during agenda file scans.")
+
+(defun org-extras-with-suppressed-agenda-file-opening-hooks (fn)
+  "Call FN while suppressing interactive setup for agenda file scans."
+  (let ((change-major-mode-after-body-hook
+         (org-extras--agenda-filter-file-opening-hook
+          change-major-mode-after-body-hook))
+        (find-file-hook nil)
+        (org-mode-hook
+         (org-extras--agenda-filter-file-opening-hook org-mode-hook))
+        (outline-mode-hook
+         (org-extras--agenda-filter-file-opening-hook outline-mode-hook))
+        (text-mode-hook
+         (org-extras--agenda-filter-file-opening-hook text-mode-hook))
+        (buffer-face-mode-hook
+         (and (boundp 'buffer-face-mode-hook)
+              (org-extras--agenda-filter-file-opening-hook
+               buffer-face-mode-hook))))
+    (org-extras--with-ignored-agenda-file-opening-functions fn)))
+
+(defun org-extras--agenda-filter-file-opening-hook (hook)
+  "Return HOOK without agenda file-opening setup functions."
+  (cl-remove-if #'org-extras--agenda-file-opening-function-p hook))
+
+(defun org-extras--agenda-file-opening-function-p (function)
+  "Return non-nil when FUNCTION should be skipped in agenda scans."
+  (memq function org-extras--agenda-file-opening-functions))
+
+(defun org-extras--with-ignored-agenda-file-opening-functions (fn)
+  "Call FN with agenda file-opening setup functions ignored."
+  (org-extras--with-ignored-functions
+   fn
+   (cl-remove-if-not #'fboundp org-extras--agenda-file-opening-functions)))
+
+(defun org-extras--with-ignored-functions (fn functions)
+  "Call FN with FUNCTIONS temporarily rebound to `ignore'."
+  (if functions
+      (let ((function (car functions)))
+        (cl-letf (((symbol-function function) #'ignore))
+          (org-extras--with-ignored-functions fn (cdr functions))))
+    (funcall fn)))
+
 (defun org-extras-agenda-goto-and-start-clock ()
   "Go to the Org entry for the item at point and start the clock there.
 This must be called from an Org agenda buffer.  It first checks if the point is

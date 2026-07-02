@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROFILE="${EMACS_PROFILE:-$(cat "$HOME/.config/emacs-profiles/.current-profile")}"
+PROFILE_DIR="$HOME/.config/emacs-profiles/$PROFILE"
+EMACS_BIN="${EMACS_BIN:-/Applications/Emacs.app/Contents/MacOS/Emacs}"
+NICE_LEVEL="${ORG_AGENDA_PROFILER_NICE:-10}"
+
+if [ ! -f "$PROFILE_DIR/init.el" ]; then
+  printf 'No init.el for Emacs profile: %s\n' "$PROFILE" >&2
+  exit 1
+fi
+
+exec nice -n "$NICE_LEVEL" "$EMACS_BIN" \
+  --batch \
+  --init-directory="$PROFILE_DIR" \
+  -l "$PROFILE_DIR/init.el" \
+  -L "$SCRIPT_DIR" \
+  -l "$SCRIPT_DIR/org-agenda-profiler.el" \
+  --eval '(org-agenda-profiler-main command-line-args-left)' \
+  -- "$@"

@@ -1,0 +1,62 @@
+#+title: Org agenda profiler
+#+author: Pablo Stafforini
+
+* Overview
+
+=org-agenda-profiler= profiles Org agenda file preparation in a separate batch
+Emacs process.  It is intended for diagnosing agenda freezes without sending
+long-running forms through =emacsclient= or touching the live daemon.
+
+The wrapper script lives at =emacs/extras/scripts/org-agenda-profiler=.  It
+loads the active Emacs profile in batch mode, runs at a configurable =nice=
+level, and writes a TSV report.
+
+* Usage
+
+#+begin_src shell
+emacs/extras/scripts/org-agenda-profiler \
+  --top 30 \
+  --output logs/org-agenda-profiler/YYYY-MM-DD.tsv
+#+end_src
+
+The wrapper reads the active profile name from
+=~/.config/emacs-profiles/.current-profile=.  To override the profile or Emacs
+binary, set =EMACS_PROFILE= or =EMACS_BIN=.  To change priority, set
+=ORG_AGENDA_PROFILER_NICE=.
+
+* Options
+
+| Option | Meaning |
+|--------+---------|
+| =--output FILE= | Write the TSV report to =FILE=. |
+| =--limit N= | Profile only the first =N= agenda files. |
+| =--top N= | Include the =N= slowest files in the summary. |
+| =--manifest FILE= | Read agenda files from =FILE=, one path per line. |
+| =--skip-dynamic-update= | Do not call the dynamic Vulpea agenda refresh. |
+
+* Report format
+
+The report starts with comment lines containing the generation time, file
+count, total elapsed time, and a slowest-files summary.  The table columns are:
+
+| Column | Meaning |
+|--------+---------|
+| =seconds= | Time spent preparing one agenda file. |
+| =status= | =ok= or =error=. |
+| =already_open= | Whether the file already had a visiting buffer. |
+| =new_buffers= | Number of buffers opened by agenda preparation. |
+| =file= | Agenda file path or buffer name. |
+| =error= | Captured error message, if any. |
+
+* Isolation notes
+
+The profiler adds the active profile's =elpaca/builds/*= directories to
+=load-path= so batch mode can load the same helper packages used by the live
+configuration.  It also loads common file-local-variable helpers such as
+=files-extras=, =flycheck=, and =git-auto-commit-mode= before scanning agenda
+files.
+
+Global =debug-on-error= remains part of the user's normal live workflow.  The
+profiler binds =debug-on-error= to =nil= only around each per-file measurement,
+so a bad file records an =error= row instead of dropping the batch diagnostic
+into a debugger.

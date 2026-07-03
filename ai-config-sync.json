@@ -555,6 +555,20 @@
    "codex": null,
    "status": "claude-only",
    "note": "Claude PreToolUse Bash command wrapper that pipes output through redact-secrets.sh and preserves non-command Bash tool_input fields when emitting replacement-style updatedInput; Codex does not use this Bash command-rewrite hook path."
+  },
+  {
+   "name": "cr-skill-routing-reminder.sh",
+   "claude": "claude/hooks/cr-skill-routing-reminder.sh",
+   "codex": null,
+   "status": "claude-only",
+   "note": "Claude PreToolUse Edit/Write reminder: fires when editing a CR prompt/rubric/GOLDEN, telling the agent authoring is owned by /article-to-rubric (QA by /qa-reasoning) and to invoke the skill rather than hand-author. Non-blocking additionalContext. CR-scoped; no Codex peer."
+  },
+  {
+   "name": "cr-card-body-gate.sh",
+   "claude": "claude/hooks/cr-card-body-gate.sh",
+   "codex": null,
+   "status": "claude-only",
+   "note": "Claude PreToolUse Bash gate: denies a GitHub issue create/edit command when its --body-file is a CR card attempt that fails cr_card_body.py check (missing biblio/author/abstract), forcing CR cards through the template tool. Scoped to CR-card bodies; no Codex peer."
   }
  ],
  "mcp_servers": [

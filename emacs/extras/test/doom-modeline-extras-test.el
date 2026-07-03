@@ -8,6 +8,8 @@
 (require 'agent)
 (require 'doom-modeline-extras)
 
+(defvar ghub-default-host-alist)
+
 ;;;; Humanize tokens
 
 (ert-deftest doom-modeline-extras-test-humanize-tokens-millions ()
@@ -130,6 +132,61 @@
 (ert-deftest doom-modeline-extras-test-humanize-reset-invalid ()
   "Humanize reset returns nil for invalid input."
   (should-not (doom-modeline-extras--humanize-reset "not-a-date")))
+
+;;;; GitHub notifications
+
+(ert-deftest doom-modeline-extras-test-github-fetch-count-form-returns-count ()
+  "GitHub fetch count form returns a count instead of the payload."
+  (require 'async)
+  (let ((ghub-default-host-alist '((github . "api.github.com")))
+        (orig-require (symbol-function 'require))
+        calls)
+    (cl-letf (((symbol-function 'require)
+               (lambda (feature &optional filename noerror)
+                 (if (eq feature 'ghub)
+                     t
+                   (funcall orig-require feature filename noerror))))
+              ((symbol-function 'run-hooks)
+               (lambda (&rest _) nil))
+              ((symbol-function 'ghub--username)
+               (lambda (host)
+                 (push (list :username host) calls)
+                 "user"))
+              ((symbol-function 'ghub--token)
+               (lambda (&rest args)
+                 (push (cons :token args) calls)
+                 "token"))
+              ((symbol-function 'ghub-get)
+               (lambda (&rest args)
+                 (push (cons :get args) calls)
+                 '((id . "1") (id . "2")))))
+      (should (= (funcall (doom-modeline-extras--github-fetch-count-form)) 2))
+      (should (assq :get calls)))))
+
+(ert-deftest doom-modeline-extras-test-github-fetch-disables-password-prompt ()
+  "GitHub fetch disables async password prompting and skips overlap."
+  (require 'async)
+  (let ((doom-modeline-github t)
+        (doom-modeline-extras--github-fetch-active nil)
+        (orig-require (symbol-function 'require))
+        captured-finish
+        captured-prompt
+        (start-count 0))
+    (cl-letf (((symbol-function 'require)
+               (lambda (feature &optional filename noerror)
+                 (funcall orig-require feature filename noerror)))
+              ((symbol-function 'async-start)
+               (lambda (_start finish)
+                 (cl-incf start-count)
+                 (setq captured-finish finish
+                       captured-prompt async-prompt-for-password)
+                 'process)))
+      (doom-modeline-extras--github-fetch-notifications)
+      (doom-modeline-extras--github-fetch-notifications)
+      (should (= start-count 1))
+      (should-not captured-prompt)
+      (funcall captured-finish 7)
+      (should-not doom-modeline-extras--github-fetch-active))))
 
 (ert-deftest doom-modeline-extras-test-format-codex-status-fields-shows-effort ()
   "Format Codex modeline fields with model and reasoning effort."

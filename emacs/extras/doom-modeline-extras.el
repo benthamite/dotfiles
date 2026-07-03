@@ -30,10 +30,25 @@
 
 (require 'doom-modeline)
 
+(defvar async-prompt-for-password)
+(defvar doom-modeline--github-notification-number)
+(defvar doom-modeline-after-github-fetch-notification-hook)
+(defvar doom-modeline-before-github-fetch-notification-hook)
+(defvar doom-modeline-github)
+(defvar ghub-default-host-alist)
+(declare-function async-inject-variables "async")
+(declare-function async-start "async")
+(declare-function ghub--token "ghub")
+(declare-function ghub--username "ghub")
+(declare-function ghub-get "ghub")
+
 ;;;; Variables
 
 (defvar doom-modeline-extras-github-last-count 0
   "Last count of GitHub notifications.")
+
+(defvar doom-modeline-extras--github-fetch-active nil
+  "Non-nil while an async GitHub notification count fetch is running.")
 
 ;;;; User options
 
@@ -486,6 +501,53 @@ a forge notification pull to keep forge in sync."
 
 (autoload 'doom-modeline--github-fetch-notifications "doom-modeline-segments")
 
+(defun doom-modeline-extras--github-fetch-notifications ()
+  "Fetch the GitHub notification count without returning the payload."
+  (when (and doom-modeline-github
+             (not doom-modeline-extras--github-fetch-active)
+             (require 'async nil t))
+    (setq doom-modeline-extras--github-fetch-active t)
+    (condition-case err
+        (let ((async-prompt-for-password nil))
+          (async-start (doom-modeline-extras--github-fetch-count-form)
+                       #'doom-modeline-extras--github-fetch-finished))
+      (error
+       (setq doom-modeline-extras--github-fetch-active nil)
+       (message "doom-modeline-extras: GitHub fetch failed: %S" err)))))
+
+(defun doom-modeline-extras--github-fetch-count-form ()
+  "Return an async child form that fetches the GitHub notification count."
+  `(lambda ()
+     ,(async-inject-variables
+       "\\`\\(load-path\\|auth-sources\\|doom-modeline-before-github-fetch-notification-hook\\)\\'")
+     (run-hooks 'doom-modeline-before-github-fetch-notification-hook)
+     (if (require 'ghub nil t)
+         (condition-case nil
+             (with-timeout (10 0)
+               (if-let* ((host (alist-get 'github ghub-default-host-alist))
+                         (username (ghub--username host))
+                         (token (or (ghub--token host username 'forge t)
+                                    (ghub--token host username 'ghub t))))
+                   (length
+                    (ghub-get "/notifications"
+                              '((notifications . t))
+                              :host host
+                              :username username
+                              :auth token
+                              :unpaginate t
+                              :noerror t))
+                 0))
+           (error 0))
+       0)))
+
+(defun doom-modeline-extras--github-fetch-finished (result)
+  "Store GitHub notification count RESULT and run follow-up hooks."
+  (setq doom-modeline-extras--github-fetch-active nil)
+  (message "")
+  (setq doom-modeline--github-notification-number
+        (if (natnump result) result 0))
+  (run-hooks 'doom-modeline-after-github-fetch-notification-hook))
+
 (defun doom-modeline-extras--safe-default-directory (orig-fn &rest args)
   "Call ORIG-FN with ARGS, ensuring `default-directory' exists.
 `async-start' inherits `default-directory' as the working directory
@@ -499,6 +561,9 @@ Fall back to the user's home directory in that case."
 
 (advice-add 'doom-modeline--github-fetch-notifications :around
             #'doom-modeline-extras--safe-default-directory)
+
+(advice-add 'doom-modeline--github-fetch-notifications :override
+            #'doom-modeline-extras--github-fetch-notifications)
 
 (defun doom-modeline-extras-refresh-github-after-forge (&rest _)
   "Refresh the doom-modeline GitHub count after forge pulls notifications.

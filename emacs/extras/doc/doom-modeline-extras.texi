@@ -331,6 +331,7 @@ view of the session state.
 @section GitHub notification handling
 
 @findex doom-modeline-extras-handle-github-notifications
+@findex doom-modeline-extras--github-fetch-notifications
 @findex doom-modeline-extras-refresh-github-after-forge
 @vindex doom-modeline-extras-github-last-count
 The function @code{doom-modeline-extras-handle-github-notifications} is
@@ -344,6 +345,13 @@ When the count has changed and is greater than zero, the function calls
 retrieve full notification details.  It then updates the stored count.
 This provides a bridge between Doom Modeline's lightweight notification
 polling and Forge's detailed notification management.
+
+The function @code{doom-modeline-extras--github-fetch-notifications}
+overrides Doom Modeline's GitHub fetcher.  It keeps the existing
+asynchronous behavior, but the child process returns only the numeric
+notification count instead of the full GitHub notification payload.
+It also disables @code{async.el} password prompting for this API poll and
+skips overlapping fetches while one is already in flight.
 
 The function @code{doom-modeline-extras-refresh-github-after-forge} works in
 the opposite direction: it is installed as @samp{:after} advice on

@@ -2175,11 +2175,18 @@ def skill_aux_files(skill_dir: Path) -> dict[str, Path]:
     return files
 
 
+INTERPRETER_TOKENS = {"bash", "sh", "zsh", "python", "python3", "uv", "env", "node"}
+
+
 def command_executable(command: str) -> Path | None:
     try:
         parts = shlex.split(command)
     except ValueError:
         return None
+    # Skip interpreter prefixes (e.g. `bash '/path with spaces/hook.sh'`) and
+    # their flags so the script path, not the interpreter name, is checked.
+    while parts and (Path(parts[0]).name in INTERPRETER_TOKENS or parts[0].startswith("-")):
+        parts.pop(0)
     if not parts:
         return None
     return path_from_token(parts[0], ROOT)

@@ -252,6 +252,13 @@
       "codex": "codex/skills/walk-list/SKILL.md",
       "status": "paired",
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
+    },
+    {
+      "name": "refresh-cr-tracker",
+      "claude": "claude/skills/refresh-cr-tracker/SKILL.md",
+      "codex": "codex/skills/refresh-cr-tracker/SKILL.md",
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     }
   ],
   "hooks": [

@@ -9,9 +9,9 @@ Rebuilds `~/Trajectory/cr-scout-runs/cr-task-master-list.html` from live sources
 redeploys it to the existing claude.ai artifact (so newly-registered GitHub issues, new
 cohort tasks, and updated scores show up).
 
-**Must run in an INTERACTIVE Claude session** — the Artifact tool is not available in
-headless `claude -p` or cloud routines. Requires the local `~/Trajectory/agent-c/main`
-worktree and a working `gh`/GitHub token (both present on Pablo's Mac).
+**Must run in an INTERACTIVE session** — the Artifact tool is not available in headless
+`claude -p` or cloud routines. Requires the local `~/Trajectory/agent-c/main` worktree and
+a working `gh`/GitHub token (both present on Pablo's Mac).
 
 ## Steps
 

@@ -437,6 +437,20 @@ def cmd_unreads(args):
     print(json.dumps(out, indent=2))
 
 
+def cmd_saved_list(args):
+    """List "Save for later" items (internal saved.list endpoint; stars.list
+    is the legacy API and returns nothing for Later items)."""
+    out = call("saved.list", limit=args.limit)
+    print(json.dumps(out, indent=2))
+
+
+def cmd_unsave(args):
+    """Remove a "Save for later" item (internal saved.delete endpoint).
+    For message items, item_id is the CHANNEL id and ts the message ts."""
+    out = call("saved.delete", item_id=args.channel, item_type="message", ts=args.ts)
+    print(json.dumps(out, indent=2))
+
+
 def main():
     p = argparse.ArgumentParser(description="Slack web-API wrapper (xoxc/xoxd auth)")
     p.add_argument(
@@ -509,6 +523,15 @@ def main():
     m.add_argument("channel")
     m.add_argument("ts")
     m.set_defaults(func=cmd_mark)
+
+    sl = sub.add_parser("saved-list")
+    sl.add_argument("--limit", type=int, default=50)
+    sl.set_defaults(func=cmd_saved_list)
+
+    un = sub.add_parser("unsave")
+    un.add_argument("channel")
+    un.add_argument("ts")
+    un.set_defaults(func=cmd_unsave)
 
     u = sub.add_parser("unreads")
     u.set_defaults(func=cmd_unreads)

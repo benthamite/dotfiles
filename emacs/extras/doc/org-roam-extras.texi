@@ -49,6 +49,7 @@ Commands
 * Navigating to nodes::
 * Replacing star links with ID links::
 * Statistics::
+* Database synchronization::
 * Batch processing dump::
 
 Functions
@@ -157,6 +158,7 @@ should be added to @code{find-file-hook}.
 * Navigating to nodes::
 * Replacing star links with ID links::
 * Statistics::
+* Database synchronization::
 * Batch processing dump::
 @end menu
 
@@ -265,6 +267,16 @@ count and effort in the echo area, formatted as hours and minutes.
 
 This gives you a quick overview of your outstanding workload across the
 entire Org Roam database without needing to visit individual files.
+
+@node Database synchronization
+@section Database synchronization
+
+@findex org-roam-extras-setup-db-sync
+The function @code{org-roam-extras-setup-db-sync} disables Org Roam's
+autosync mode and installs a repeating idle timer that calls
+@code{org-roam-db-sync} every 20 minutes.  Because this timer runs as
+background maintenance, it locally disables @code{debug-on-error} and reports
+sync failures with @code{message} instead of opening the debugger.
 
 @node Batch processing dump
 @section Batch processing dump

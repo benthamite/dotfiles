@@ -456,6 +456,7 @@ The function ~simple-extras-new-buffer-auto-save-dir~ is an ~:around~ advice on 
 #+findex: simple-extras-init-disable-funs
 #+findex: simple-extras-get-next-element
 #+findex: simple-extras-call-verbosely
+#+findex: simple-extras-call-verbosely-in-background
 #+findex: simple-extras-get-emacs-distro
 #+findex: simple-extras-string-at-point
 #+findex: simple-extras-local-set-key
@@ -464,6 +465,12 @@ The function ~simple-extras-init-disable-funs~ disables a list of functions afte
 The function ~simple-extras-get-next-element~ returns the next element in a list after a given element, cycling back to the first element when the end is reached. This is useful for implementing cycling behaviors in commands.
 
 The function ~simple-extras-call-verbosely~ calls a function and displays a message with its name, optionally using a custom format string. This is useful for debugging or logging which functions are being called during complex operations.
+
+The function ~simple-extras-call-verbosely-in-background~ is the
+background-maintenance variant. It logs the function call, runs it with
+~debug-on-error~ locally disabled, catches errors, reports them with
+~message~, and returns ~nil~ on failure so hooks such as ~midnight-hook~
+do not enter the debugger or abort the rest of the hook.
 
 The function ~simple-extras-get-emacs-distro~ detects whether the current Emacs build is the Mac port (=emacs-mac=) or Emacs Plus (=emacs-plus=) by checking for distribution-specific bound variables.
 

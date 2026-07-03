@@ -1012,6 +1012,19 @@ take a single argument, the name of the function being called."
     (message format-string (symbol-name fun))
     (funcall fun)))
 
+;;;###autoload
+(defun simple-extras-call-verbosely-in-background (fun &optional format-string)
+  "Call FUN verbosely from background maintenance.
+FORMAT-STRING is passed to `simple-extras-call-verbosely'.  Bind
+`debug-on-error' to nil around FUN, report errors with `message',
+and return nil when FUN fails."
+  (let ((debug-on-error nil))
+    (condition-case err
+        (simple-extras-call-verbosely fun format-string)
+      (error
+       (message "%s failed: %s" fun (error-message-string err))
+       nil))))
+
 (defun simple-extras-get-emacs-distro ()
   "Return the Emacs distribution."
   (cond ((boundp 'mac-effective-appearance-change-hook) 'emacs-mac)

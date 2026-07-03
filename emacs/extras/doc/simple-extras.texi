@@ -514,6 +514,7 @@ The function @code{simple-extras-new-buffer-auto-save-dir} is an @code{:around} 
 @findex simple-extras-init-disable-funs
 @findex simple-extras-get-next-element
 @findex simple-extras-call-verbosely
+@findex simple-extras-call-verbosely-in-background
 @findex simple-extras-get-emacs-distro
 @findex simple-extras-string-at-point
 @findex simple-extras-local-set-key
@@ -522,6 +523,12 @@ The function @code{simple-extras-init-disable-funs} disables a list of functions
 The function @code{simple-extras-get-next-element} returns the next element in a list after a given element, cycling back to the first element when the end is reached. This is useful for implementing cycling behaviors in commands.
 
 The function @code{simple-extras-call-verbosely} calls a function and displays a message with its name, optionally using a custom format string. This is useful for debugging or logging which functions are being called during complex operations.
+
+The function @code{simple-extras-call-verbosely-in-background} is the
+background-maintenance variant. It logs the function call, runs it with
+@code{debug-on-error} locally disabled, catches errors, reports them with
+@code{message}, and returns @code{nil} on failure so hooks such as @code{midnight-hook}
+do not enter the debugger or abort the rest of the hook.
 
 The function @code{simple-extras-get-emacs-distro} detects whether the current Emacs build is the Mac port (@samp{emacs-mac}) or Emacs Plus (@samp{emacs-plus}) by checking for distribution-specific bound variables.
 

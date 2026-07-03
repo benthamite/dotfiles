@@ -539,11 +539,13 @@ satisfies these criteria."
   (org-roam-db-autosync-mode -1)
   (run-with-idle-timer (* 20 60) t
    (lambda ()
-     (condition-case err
+     (let ((debug-on-error nil))
+       (condition-case err
          (org-roam-db-sync)
        (quit nil)
-       (file-error
-        (message "org-roam-db-sync: skipped due to file error: %S" err))))))
+       (error
+        (message "org-roam-db-sync: skipped due to error: %S" err)
+        nil))))))
 
 ;;;;; Statistics
 

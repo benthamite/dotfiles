@@ -208,6 +208,18 @@ count and effort in the echo area, formatted as hours and minutes.
 This gives you a quick overview of your outstanding workload across the
 entire Org Roam database without needing to visit individual files.
 
+** Database synchronization
+:PROPERTIES:
+:CUSTOM_ID: h:database-synchronization
+:END:
+
+#+findex: org-roam-extras-setup-db-sync
+The function ~org-roam-extras-setup-db-sync~ disables Org Roam's
+autosync mode and installs a repeating idle timer that calls
+~org-roam-db-sync~ every 20 minutes.  Because this timer runs as
+background maintenance, it locally disables ~debug-on-error~ and reports
+sync failures with ~message~ instead of opening the debugger.
+
 ** Batch processing dump
 :PROPERTIES:
 :CUSTOM_ID: h:batch-processing-dump

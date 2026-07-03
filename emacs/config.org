@@ -14939,7 +14939,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
                            org-gcal-sync
                            elfeed-update)))
     (add-hook 'midnight-hook
-              (apply-partially #'simple-extras-call-verbosely
+              (apply-partially #'simple-extras-call-verbosely-in-background
                                fun "Midnight hook now calling `%s'..."))))
 #+end_src
 

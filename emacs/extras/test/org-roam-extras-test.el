@@ -331,6 +331,34 @@
       (should (string-match-p "3 open TODOs" msg))
       (should (string-match-p "1:15" msg)))))
 
+;;;; DB sync
+
+(ert-deftest org-roam-extras-test-db-sync-timer-catches-errors ()
+  "Scheduled DB sync reports arbitrary errors without entering the debugger."
+  (skip-unless (featurep 'org-roam))
+  (let (timer-function debug-on-error-seen messages)
+    (cl-letf (((symbol-function 'org-roam-db-autosync-mode)
+               #'ignore)
+              ((symbol-function 'run-with-idle-timer)
+               (lambda (_seconds _repeat function &rest _args)
+                 (setq timer-function function)))
+              ((symbol-function 'org-roam-db-sync)
+               (lambda ()
+                 (setq debug-on-error-seen debug-on-error)
+                 (error "db boom")))
+              ((symbol-function 'message)
+               (lambda (format-string &rest args)
+                 (push (apply #'format-message format-string args) messages))))
+      (org-roam-extras-setup-db-sync)
+      (let ((debug-on-error t))
+        (should-not (funcall timer-function)))
+      (should-not debug-on-error-seen)
+      (should (seq-some
+               (lambda (message)
+                 (string-match-p "org-roam-db-sync: skipped due to error"
+                                 message))
+               messages)))))
+
 ;;;; get-id-of-title
 
 (ert-deftest org-roam-extras-test-get-id-of-title-single-match ()

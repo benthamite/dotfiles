@@ -189,6 +189,40 @@
   "Get-next-element returns the single element when list has one item."
   (should (equal (simple-extras-get-next-element 'a '(a)) 'a)))
 
+;;;; Verbose calls
+
+(ert-deftest simple-extras-test-call-verbosely-in-background-catches-errors ()
+  "Background verbose calls report errors without entering the debugger."
+  (let (called debug-on-error-seen messages)
+    (cl-letf (((symbol-function 'simple-extras-test--background-error)
+               (lambda ()
+                 (setq called t
+                       debug-on-error-seen debug-on-error)
+                 (error "boom")))
+              ((symbol-function 'message)
+               (lambda (format-string &rest args)
+                 (push (apply #'format-message format-string args) messages))))
+      (let ((debug-on-error t))
+        (should-not
+         (simple-extras-call-verbosely-in-background
+          'simple-extras-test--background-error
+          "Midnight hook now calling `%s'...")))
+      (should called)
+      (should-not debug-on-error-seen)
+      (should (cl-some
+               (lambda (message)
+                 (and (string-match-p "Midnight hook now calling" message)
+                      (string-match-p
+                       "simple-extras-test--background-error"
+                       message)))
+               messages))
+      (should (cl-some
+               (lambda (message)
+                 (string-match-p
+                  "simple-extras-test--background-error failed: boom"
+                  message))
+               messages)))))
+
 ;;;; Buffer text operations
 
 (ert-deftest simple-extras-test-delete-word-removes-text ()

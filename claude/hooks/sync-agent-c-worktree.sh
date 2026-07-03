@@ -170,6 +170,46 @@ if [ -e "$canonical_key" ] && { [ -L .claude/.env ] || [ ! -e .claude/.env ]; };
   fi
 fi
 
+# Register the CR issue-comment freshness guard in this worktree's local (untracked,
+# git-ignored) Claude settings. Idempotent merge — existing keys are preserved; the
+# tracked public settings.json is never touched. The guard blocks posting a comment
+# to an agent-c issue whose newest comment the agent hasn't acknowledged (the
+# 2026-07-03 stale-QA-comment incident). Runs in the hook, not the agent's bash
+# tool, so no agent command ever has to name the settings file.
+freshness_hook="$HOME/My Drive/dotfiles/claude/hooks/cr-issue-comment-freshness.sh"
+if [ -x "$freshness_hook" ]; then
+  FRESHNESS_HOOK="$freshness_hook" python3 - <<'PYEOF' 2>/dev/null \
+    && vsay "freshness guard present in local settings." \
+    || say "could not register freshness guard in local settings (malformed JSON?)."
+import json, os, pathlib
+path = pathlib.Path(".claude/settings.local.json")
+cmd = '"' + os.environ["FRESHNESS_HOOK"] + '"'
+data = json.loads(path.read_text() or "{}") if path.exists() else {}
+pre = data.setdefault("hooks", {}).setdefault("PreToolUse", [])
+for entry in pre:
+    if any(cmd in (h.get("command") or "") for h in entry.get("hooks", [])):
+        raise SystemExit(0)  # already registered
+pre.append({"matcher": "Bash", "hooks": [{"type": "command", "command": cmd}]})
+path.parent.mkdir(exist_ok=True)
+path.write_text(json.dumps(data, indent=2) + "\n")
+PYEOF
+fi
+
+# Task-state banner: a deterministic map of which branch / run / rubric revision is
+# live for this worktree's task, with divergence warnings (the 2026-07-03 wrong-
+# lineage incident: a QA audit ran against a stale PR branch while the live work
+# sat on ryan/eval-106 and in thread comments). Best-effort, hard 40s self-timeout
+# inside the script, silent for non-task worktrees (batch dirs, studio) where no
+# branch matches the directory name.
+if [ -x "$HOME/bin/cr-task-state" ]; then
+  ts_out="$("$HOME/bin/cr-task-state" --hook 2>/dev/null || true)"
+  case "$ts_out" in
+    ""|*"no remote branches touch"*) vsay "no task-state banner (not a single-task worktree)." ;;
+    *) say "task-state map:
+$ts_out" ;;
+  esac
+fi
+
 # Inject Pablo's private CR skills (project-scoped, not user-level). Runs on every
 # agent-c session start, independent of the merge below, so the skills are present
 # regardless of branch/merge state.

@@ -1,0 +1,260 @@
+#!/usr/bin/env python3
+"""cr-task-state — one-screen state map for a CR task, with divergence banner.
+
+Answers "which branch / run / rubric revision is live for this task?"
+deterministically, so a fresh session never resolves it by trial-and-error.
+
+Sources scanned (all read-only):
+  * remote branches whose name mentions the slug or its numeric id token
+  * branches linked from the task's GitHub issue comments (tree/blob URLs)
+  * each candidate branch's last commit touching tasks/<slug>/, its rubric
+    criterion-id fingerprint, and its pinned basic_info.json taigaLink
+  * the working tree's own branch / rubric / taigaLink / dirty files
+  * the issue thread: newest comment, plus every Taiga job UUID mentioned
+    (runs launched from unpushed trees still surface here — comments are the
+    only place they exist)
+
+Divergence banners fire when: branch tips carry different rubric fingerprints;
+the newest task-touching tip is not the working tree's branch; the thread has
+activity newer than the working tree's lineage; or comments mention Taiga jobs
+that no branch pins.
+
+Usage: cr-task-state [<slug>] [--repo OWNER/NAME] [--hook] [--no-fetch]
+  <slug>      defaults to the worktree directory's basename
+  --hook      compact, never-fail mode for the SessionStart banner
+  --no-fetch  skip `git fetch` (offline; uses whatever refs are local)
+"""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import re
+import subprocess
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+DEFAULT_REPO = "trajectory-labs-pbc/agent-c"
+UUID_RE = re.compile(r"\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b")
+
+
+def run(cmd: list[str], cwd: str | None = None, timeout: int = 30) -> str:
+    try:
+        out = subprocess.run(
+            cmd, cwd=cwd, capture_output=True, text=True, timeout=timeout
+        )
+        return out.stdout if out.returncode == 0 else ""
+    except (subprocess.TimeoutExpired, OSError):
+        return ""
+
+
+def git(args: list[str], timeout: int = 30) -> str:
+    return run(["git", *args], timeout=timeout)
+
+
+def parse_iso(s: str) -> datetime | None:
+    try:
+        return datetime.fromisoformat(s.replace("Z", "+00:00")).astimezone(timezone.utc)
+    except ValueError:
+        return None
+
+
+def rubric_fingerprint(blob: str) -> tuple[str, int]:
+    """Fingerprint = short hash of the sorted rubric criterion ids."""
+    ids = sorted(set(re.findall(r"^\|\s*`([a-z0-9_]+)`", blob, re.M)))
+    if not ids:
+        return ("-", 0)
+    digest = hashlib.sha1(",".join(ids).encode()).hexdigest()[:6]
+    return (digest, len(ids))
+
+
+def taiga_job_of(basic_info_blob: str) -> str:
+    try:
+        link = json.loads(basic_info_blob).get("taigaLink") or ""
+    except (json.JSONDecodeError, AttributeError):
+        return "-"
+    m = UUID_RE.search(link)
+    return m.group(0)[:8] if m else "-"
+
+
+def branch_facts(ref: str, slug: str) -> dict | None:
+    """Last task-touching commit + rubric fingerprint + taigaLink at a ref."""
+    line = git(
+        ["log", "-1", "--format=%H\x1f%aI\x1f%an\x1f%s", ref, "--", f"tasks/{slug}/"]
+    ).strip()
+    if not line:
+        return None
+    sha, date, author, subject = line.split("\x1f")
+    fp, n = rubric_fingerprint(git(["show", f"{ref}:tasks/{slug}/grading/rubric.md"]))
+    job = taiga_job_of(git(["show", f"{ref}:tasks/{slug}/basic_info.json"]))
+    return {
+        "ref": ref, "sha": sha[:10], "date": date, "author": author,
+        "subject": subject[:64], "fp": fp, "ncrit": n, "job": job,
+    }
+
+
+def issue_facts(slug: str, repo: str) -> dict:
+    """Issue number, newest comment, branch links and job UUIDs in the thread."""
+    facts = {"number": None, "comments": [], "branches": set(), "jobs": []}
+    listing = run(
+        ["gh", "issue", "list", "--repo", repo, "--search", f"{slug} in:title",
+         "--state", "all", "--json", "number,title"], timeout=25)
+    try:
+        items = [i for i in json.loads(listing) if i["title"].strip() == slug] or json.loads(listing)
+        facts["number"] = items[0]["number"] if items else None
+    except (json.JSONDecodeError, IndexError, KeyError):
+        return facts
+    if not facts["number"]:
+        return facts
+    raw = run(
+        ["gh", "issue", "view", str(facts["number"]), "--repo", repo,
+         "--json", "comments,body"], timeout=25)
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        return facts
+    texts = [data.get("body", "")]
+    for c in data.get("comments", []):
+        facts["comments"].append({
+            "at": c["createdAt"], "who": c["author"]["login"],
+            "head": c["body"].split("\n", 1)[0][:88],
+        })
+        texts.append(c["body"])
+    for t in texts:
+        for m in re.finditer(rf"/(?:tree|blob)/([^\s)\"'#]+?)/tasks/{re.escape(slug)}", t):
+            facts["branches"].add(m.group(1))
+        env_uuids = set(re.findall(r"environmentId=([0-9a-f-]{36})", t))
+        facts["jobs"].extend(u for u in UUID_RE.findall(t) if u not in env_uuids)
+    # de-dup jobs, newest-mention-last order preserved
+    seen: set[str] = set()
+    facts["jobs"] = [j for j in facts["jobs"] if not (j in seen or seen.add(j))]
+    return facts
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("slug", nargs="?")
+    ap.add_argument("--repo", default=DEFAULT_REPO)
+    ap.add_argument("--hook", action="store_true")
+    ap.add_argument("--no-fetch", action="store_true")
+    args = ap.parse_args()
+
+    if args.hook:
+        # A session-start banner must never hang the hook: hard 40s ceiling.
+        import signal
+
+        def _bail(signum, frame):
+            print("task-state: timed out (network?) — run `cr-task-state` manually")
+            raise SystemExit(0)
+
+        signal.signal(signal.SIGALRM, _bail)
+        signal.alarm(40)
+
+    root = git(["rev-parse", "--show-toplevel"]).strip()
+    if not root:
+        print("cr-task-state: not in a git repo", file=sys.stderr)
+        return 0 if args.hook else 1
+    slug = args.slug or Path(root).name
+    id_token = next((t for t in slug.split("-") if t.isdigit()), None)
+
+    # --- candidate branches: by name, then by issue-comment links -----------
+    heads = git(["ls-remote", "--heads", "origin"], timeout=40)
+    by_name = set()
+    for line in heads.splitlines():
+        name = line.split("refs/heads/", 1)[-1]
+        if slug in name or (id_token and re.search(rf"(?<![0-9]){id_token}(?![0-9])", name)):
+            by_name.add(name)
+
+    issue = issue_facts(slug, args.repo)
+    candidates = sorted(by_name | issue["branches"])
+
+    if candidates and not args.no_fetch:
+        git(["fetch", "--quiet", "origin",
+             *[f"+refs/heads/{b}:refs/remotes/origin/{b}" for b in candidates]],
+            timeout=90)
+
+    rows = []
+    for b in candidates:
+        f = branch_facts(f"origin/{b}", slug)
+        if f:
+            f["ref"] = b
+            rows.append(f)
+    rows.sort(key=lambda r: parse_iso(r["date"]) or datetime.min.replace(tzinfo=timezone.utc),
+              reverse=True)
+
+    # --- working tree --------------------------------------------------------
+    wt_branch = git(["branch", "--show-current"]).strip() or "(detached)"
+    wt = None
+    if (Path(root) / "tasks" / slug).is_dir():
+        fp, n = rubric_fingerprint(
+            (Path(root) / "tasks" / slug / "grading" / "rubric.md").read_text()
+            if (Path(root) / "tasks" / slug / "grading" / "rubric.md").exists() else "")
+        bi = Path(root) / "tasks" / slug / "basic_info.json"
+        wt = {"fp": fp, "ncrit": n,
+              "job": taiga_job_of(bi.read_text()) if bi.exists() else "-"}
+
+    # --- report --------------------------------------------------------------
+    out: list[str] = []
+    hdr = f"task-state: {slug}"
+    if issue["number"]:
+        hdr += f" · issue #{issue['number']}"
+    out.append(hdr)
+
+    if rows:
+        out.append(f"{'branch':40} {'last task commit':25} {'rubric':12} {'taigaLink':9}")
+        for r in rows:
+            out.append(
+                f"{r['ref']:40} {r['date'][:16]:25} "
+                f"{r['fp']}({r['ncrit']}){'':<4} {r['job']:9}  {r['author']}: {r['subject']}")
+    else:
+        out.append(f"no remote branches touch tasks/{slug}/")
+    if wt:
+        out.append(
+            f"{'[working tree] ' + wt_branch:40} {'':25} "
+            f"{wt['fp']}({wt['ncrit']}){'':<4} {wt['job']:9}")
+    elif rows:
+        out.append(f"[working tree] {wt_branch} — tasks/{slug}/ NOT checked out here")
+
+    if issue["comments"]:
+        newest = issue["comments"][-1]
+        out.append(f"thread: {len(issue['comments'])} comments; newest "
+                   f"{newest['at'][:16]} {newest['who']}: {newest['head']}")
+
+    # --- divergence banners ---------------------------------------------------
+    warns: list[str] = []
+    fps = {r["fp"] for r in rows if r["fp"] != "-"}
+    if len(fps) > 1:
+        warns.append(f"{len(fps)} distinct rubric variants across branches — "
+                     "identify the live lineage before any audit/edit")
+    if rows and wt:
+        if wt["fp"] not in fps and wt["fp"] != "-":
+            warns.append("working-tree rubric matches NO remote branch (local variant?)")
+        if rows[0]["fp"] != wt["fp"]:
+            warns.append(f"newest lineage is {rows[0]['ref']} "
+                         f"({rows[0]['date'][:10]}) — NOT what the working tree has")
+    if rows and issue["comments"]:
+        newest_c = parse_iso(issue["comments"][-1]["at"])
+        newest_b = max(parse_iso(r["date"]) for r in rows)
+        if newest_c and newest_b and newest_c > newest_b:
+            warns.append("thread activity is newer than every pushed branch — "
+                         "someone is working from an unpushed tree; read the "
+                         "newest comments before trusting git state")
+    pinned = {r["job"] for r in rows if r["job"] != "-"} | ({wt["job"]} if wt else set())
+    stray = [j[:8] for j in issue["jobs"] if j[:8] not in pinned][-4:]
+    if stray:
+        warns.append(f"thread mentions Taiga job(s) no branch pins: {', '.join(stray)} "
+                     "— runs may exist from unpushed task states")
+
+    for w in warns:
+        out.append(f"⚠️  {w}")
+    if not warns and rows:
+        out.append("✓ single coherent lineage; working tree matches newest")
+
+    print("\n".join(out))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

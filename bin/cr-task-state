@@ -95,6 +95,32 @@ def branch_facts(ref: str, slug: str) -> dict | None:
     }
 
 
+def sweep_path_branches(owner: str, repo_name: str, slug: str) -> set[str]:
+    """Every remote branch with ANY commit touching tasks/<slug>/ (server-side)."""
+    found: set[str] = set()
+    cursor = "null"
+    for _page in range(15):
+        raw = run(
+            ["gh", "api", "graphql", "-f", "query="
+             '{repository(owner:"%s",name:"%s"){refs(refPrefix:"refs/heads/",'
+             "first:100,after:%s){pageInfo{hasNextPage endCursor}"
+             'nodes{name target{...on Commit{history(first:1,path:"tasks/%s")'
+             "{nodes{committedDate}}}}}}}}" % (owner, repo_name, cursor, slug)],
+            timeout=25)
+        try:
+            refs = json.loads(raw)["data"]["repository"]["refs"]
+        except (json.JSONDecodeError, KeyError, TypeError):
+            break
+        for n in refs["nodes"]:
+            hist = ((n.get("target") or {}).get("history") or {}).get("nodes") or []
+            if hist:
+                found.add(n["name"])
+        if not refs["pageInfo"]["hasNextPage"]:
+            break
+        cursor = json.dumps(refs["pageInfo"]["endCursor"])
+    return found
+
+
 def issue_facts(slug: str, repo: str) -> dict:
     """Issue number, newest comment, branch links and job UUIDs in the thread."""
     facts = {"number": None, "comments": [], "branches": set(), "jobs": []}
@@ -167,8 +193,49 @@ def main() -> int:
         if slug in name or (id_token and re.search(rf"(?<![0-9]){id_token}(?![0-9])", name)):
             by_name.add(name)
 
+    # Exhaustive server-side sweep: every remote branch, filtered by whether it
+    # has ANY commit touching tasks/<slug>/ (GraphQL history(path:)). Task work
+    # can live on a branch that carries no slug token and that nothing links
+    # (2026-07-03: the adj lineage sat on pushed `ryan-qa-06-28`; name-and-link
+    # discovery missed it and the state map wrongly implied unpushed work).
+    owner, repo_name = args.repo.split("/", 1)
+    # The full sweep costs ~1 min on a 1200-branch repo, too slow for the
+    # SessionStart banner, so it is cached (6h). Hook mode uses a fresh cache
+    # or, failing that, fast name+link discovery now plus a detached self-run
+    # that refreshes the cache for the next invocation.
+    cache = Path.home() / ".cache" / "cr-task-state" / f"{args.repo.replace('/', '-')}-{slug}.json"
+    cached_branches: set[str] | None = None
+    try:
+        blob = json.loads(cache.read_text())
+        import time
+        if time.time() - blob["ts"] < 6 * 3600:
+            cached_branches = set(blob["branches"])
+    except (OSError, ValueError, KeyError):
+        pass
+
+    stale_note = ""
+    if args.hook and cached_branches is None:
+        subprocess.Popen(  # refresh cache for next time; this run stays fast
+            [str(Path(__file__).resolve()), slug, "--repo", args.repo, "--no-fetch"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            start_new_session=True)
+        stale_note = ("note: branch map from fast discovery only (name matches + "
+                      "thread links); exhaustive sweep refreshing in background — "
+                      "re-run `cr-task-state` in ~1 min for the complete map")
+
+    path_branches: set[str] = set()
+    if cached_branches is not None:
+        path_branches = cached_branches
+    elif not args.hook:
+        path_branches = sweep_path_branches(owner, repo_name, slug)
+        try:
+            import time
+            cache.parent.mkdir(parents=True, exist_ok=True)
+            cache.write_text(json.dumps({"ts": time.time(), "branches": sorted(path_branches)}))
+        except OSError:
+            pass
     issue = issue_facts(slug, args.repo)
-    candidates = sorted(by_name | issue["branches"])
+    candidates = sorted(by_name | issue["branches"] | path_branches)
 
     if candidates and not args.no_fetch:
         git(["fetch", "--quiet", "origin",
@@ -238,19 +305,20 @@ def main() -> int:
         newest_c = parse_iso(issue["comments"][-1]["at"])
         newest_b = max(parse_iso(r["date"]) for r in rows)
         if newest_c and newest_b and newest_c > newest_b:
-            warns.append("thread activity is newer than every pushed branch — "
-                         "someone is working from an unpushed tree; read the "
-                         "newest comments before trusting git state")
+            warns.append("thread activity is newer than every branch's last task "
+                         "commit — read the newest comments before trusting git state")
     pinned = {r["job"] for r in rows if r["job"] != "-"} | ({wt["job"]} if wt else set())
     stray = [j[:8] for j in issue["jobs"] if j[:8] not in pinned][-4:]
     if stray:
         warns.append(f"thread mentions Taiga job(s) no branch pins: {', '.join(stray)} "
-                     "— runs may exist from unpushed task states")
+                     "— check the thread for which task state each evaluated")
 
     for w in warns:
         out.append(f"⚠️  {w}")
     if not warns and rows:
         out.append("✓ single coherent lineage; working tree matches newest")
+    if stale_note:
+        out.append(stale_note)
 
     print("\n".join(out))
     return 0

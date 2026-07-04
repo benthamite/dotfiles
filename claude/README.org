@@ -967,7 +967,9 @@ manual edit (e.g. the 2026-07-03 force-push guard scoping fix, which requires
 the force flag to appear within the =git push= invocation rather than anywhere
 in a compound command, and the same-day quoted-content masking, which stops
 string literals — commit messages, doc prose, grep patterns — from tripping
-the destructive-command checks). Checks
+the destructive-command checks; both were applied to the dispatcher by Pablo
+on 2026-07-03, so the inlined copies are currently in sync with the
+standalone sources). Checks
 that do git/filesystem work behind a cheap regex gate are *delegated* to their
 unchanged standalone scripts, and only when their gate matches, so they add no
 spawn on the common path and behave identically:

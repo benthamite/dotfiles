@@ -79,20 +79,72 @@ def taiga_job_of(basic_info_blob: str) -> str:
     return m.group(0)[:8] if m else "-"
 
 
+def find_task_dir(ref: str, slug: str) -> str | None:
+    """Resolve the task's dir at a ref, tolerating dir-name prefixes that differ
+    from the issue slug (`grantmaking-<slug>`, `cr-<slug>`, `<num>-<slug>`).
+
+    The literal `tasks/<slug>/` match was the 2026-07-04 silent failure: prefixed
+    dirs read as "no branches touch this task", so audits fell back to whatever
+    stale branch carried the bare-slug dir. Returns the full `tasks/<dir>` path."""
+    entries = [e for e in git(["ls-tree", "--name-only", ref, "tasks/"]).splitlines()
+               if e.startswith("tasks/")]
+    bases = {e: e.split("/", 1)[1] for e in entries}
+    for e, b in bases.items():          # exact
+        if b == slug:
+            return e
+    for e, b in bases.items():          # prefixed: <prefix>-<slug>
+        if b.endswith("-" + slug):
+            return e
+    for e, b in bases.items():          # slug as substring (last resort)
+        if slug in b:
+            return e
+    return None
+
+
 def branch_facts(ref: str, slug: str) -> dict | None:
     """Last task-touching commit + rubric fingerprint + taigaLink at a ref."""
+    d = find_task_dir(ref, slug)
+    if not d:
+        return None
     line = git(
-        ["log", "-1", "--format=%H\x1f%aI\x1f%an\x1f%s", ref, "--", f"tasks/{slug}/"]
+        ["log", "-1", "--format=%H\x1f%aI\x1f%an\x1f%s", ref, "--", f"{d}/"]
     ).strip()
     if not line:
         return None
     sha, date, author, subject = line.split("\x1f")
-    fp, n = rubric_fingerprint(git(["show", f"{ref}:tasks/{slug}/grading/rubric.md"]))
-    job = taiga_job_of(git(["show", f"{ref}:tasks/{slug}/basic_info.json"]))
+    fp, n = rubric_fingerprint(git(["show", f"{ref}:{d}/grading/rubric.md"]))
+    job = taiga_job_of(git(["show", f"{ref}:{d}/basic_info.json"]))
     return {
         "ref": ref, "sha": sha[:10], "date": date, "author": author,
         "subject": subject[:64], "fp": fp, "ncrit": n, "job": job,
+        "dir": d.split("/", 1)[1],
     }
+
+
+def pr_facts(issue_number: int | None, slug: str, repo: str) -> dict | None:
+    """The open PR whose branch is this task's canonical lineage. Prefer a PR that
+    closes the issue; fall back to a unique PR whose branch/title carries the slug.
+    The team convention (Slack 2026-07-04) is that the PR branch is the source of
+    truth, so this is the branch every audit/edit must target."""
+    if not repo:
+        return None
+    raw = run(["gh", "pr", "list", "--repo", repo, "--state", "open", "--limit", "300",
+               "--json", "number,headRefName,url,title,closingIssuesReferences"], timeout=30)
+    try:
+        prs = json.loads(raw)
+    except (json.JSONDecodeError, TypeError):
+        return None
+    if issue_number is not None:
+        for pr in prs:
+            if any((r or {}).get("number") == issue_number
+                   for r in pr.get("closingIssuesReferences") or []):
+                return {"number": pr["number"], "branch": pr["headRefName"], "url": pr["url"]}
+    hits = [pr for pr in prs
+            if slug in (pr.get("headRefName") or "") or slug == (pr.get("title") or "").strip()]
+    if len(hits) == 1:
+        return {"number": hits[0]["number"], "branch": hits[0]["headRefName"],
+                "url": hits[0]["url"]}
+    return None
 
 
 def sweep_path_branches(owner: str, repo_name: str, slug: str) -> set[str]:
@@ -165,6 +217,9 @@ def main() -> int:
     ap.add_argument("--repo", default=DEFAULT_REPO)
     ap.add_argument("--hook", action="store_true")
     ap.add_argument("--no-fetch", action="store_true")
+    ap.add_argument("--gate", action="store_true",
+                    help="machine verdict for the QA-entry gate: print one "
+                         "GATE READY|BLOCK line and exit 0 (ready) / 3 (block).")
     args = ap.parse_args()
 
     if args.hook:
@@ -226,7 +281,9 @@ def main() -> int:
     path_branches: set[str] = set()
     if cached_branches is not None:
         path_branches = cached_branches
-    elif not args.hook:
+    elif not args.hook and not args.gate:
+        # --gate runs on every QA-entry tool call, so it must stay fast: rely on
+        # name/link discovery + the resolved PR branch, skip the ~1min sweep.
         path_branches = sweep_path_branches(owner, repo_name, slug)
         try:
             import time
@@ -235,7 +292,9 @@ def main() -> int:
         except OSError:
             pass
     issue = issue_facts(slug, args.repo)
-    candidates = sorted(by_name | issue["branches"] | path_branches)
+    pr = pr_facts(issue["number"], slug, args.repo)
+    pr_branches = {pr["branch"]} if pr else set()
+    candidates = sorted(by_name | issue["branches"] | path_branches | pr_branches)
 
     if candidates and not args.no_fetch:
         git(["fetch", "--quiet", "origin",
@@ -250,6 +309,47 @@ def main() -> int:
             rows.append(f)
     rows.sort(key=lambda r: parse_iso(r["date"]) or datetime.min.replace(tzinfo=timezone.utc),
               reverse=True)
+
+    # --- canonical PR lineage + run provenance -------------------------------
+    MINDT = datetime.min.replace(tzinfo=timezone.utc)
+    pr_row = next((r for r in rows if pr and r["ref"] == pr["branch"]), None)
+    superseder = None
+    if pr_row:
+        for r in rows:
+            if (r["ref"] != pr["branch"] and r["fp"] != "-" and r["fp"] != pr_row["fp"]
+                    and (parse_iso(r["date"]) or MINDT) > (parse_iso(pr_row["date"]) or MINDT)):
+                superseder = r
+                break
+    newest_job = issue["jobs"][-1][:8] if issue["jobs"] else None
+    if not pr_row:
+        prov = ("n/a", "")
+    elif pr_row["job"] == "-":
+        prov = ("unknown", "PR branch pins no taigaLink")
+    elif newest_job and newest_job != pr_row["job"]:
+        prov = ("drifted", f"newest thread run {newest_job} not the PR-pinned {pr_row['job']}")
+    else:
+        prov = ("matched", "")
+
+    # --- gate mode: one machine line + exit code (0 ready / 3 block) ----------
+    if args.gate:
+        if not pr:
+            verdict, reason = "BLOCK", ("no open PR resolves this issue — attach a "
+                                        "canonical PR before QA")
+        elif not pr_row:
+            verdict, reason = "BLOCK", (f"PR #{pr['number']} branch {pr['branch']} "
+                                        "carries no task dir")
+        elif superseder:
+            verdict, reason = "BLOCK", (f"PR #{pr['number']} ({pr['branch']}) superseded by "
+                                        f"non-PR branch {superseder['ref']} "
+                                        f"({superseder['date'][:10]}) — reconcile onto the PR "
+                                        "before QA")
+        else:
+            verdict = "READY"
+            reason = f"canonical PR #{pr['number']} · {pr['branch']}"
+            if prov[0] not in ("matched", "n/a"):
+                reason += f" · provenance {prov[0]}: {prov[1]}"
+        print(f"GATE {verdict}: {slug} — {reason}")
+        return 0 if verdict == "READY" else 3
 
     # --- working tree --------------------------------------------------------
     wt_branch = git(["branch", "--show-current"]).strip() or "(detached)"
@@ -269,14 +369,27 @@ def main() -> int:
         hdr += f" · issue #{issue['number']}"
     out.append(hdr)
 
-    if rows:
-        out.append(f"{'branch':40} {'last task commit':25} {'rubric':12} {'taigaLink':9}")
-        for r in rows:
-            out.append(
-                f"{r['ref']:40} {r['date'][:16]:25} "
-                f"{r['fp']}({r['ncrit']}){'':<4} {r['job']:9}  {r['author']}: {r['subject']}")
+    if pr:
+        line = f"→ canonical PR #{pr['number']} · {pr['branch']}"
+        if pr_row:
+            line += f"  [provenance: {prov[0]}]"
+        else:
+            line += "  ⚠️ branch carries NO task dir"
+        out.append(line)
     else:
-        out.append(f"no remote branches touch tasks/{slug}/")
+        out.append("→ canonical PR: NONE — no open PR resolves this issue")
+
+    if rows:
+        out.append(f" {'branch':39} {'last task commit':25} {'rubric':12} {'taigaLink':9}")
+        for r in rows:
+            mark = "*" if pr and r["ref"] == pr["branch"] else " "
+            out.append(
+                f"{mark}{r['ref']:39} {r['date'][:16]:25} "
+                f"{r['fp']}({r['ncrit']}){'':<4} {r['job']:9}  {r['author']}: {r['subject']}")
+        if pr:
+            out.append("  (* = canonical PR branch — the version to audit/edit)")
+    else:
+        out.append(f"no remote branches carry a dir for {slug} (tried prefixes too)")
     if wt:
         out.append(
             f"{'[working tree] ' + wt_branch:40} {'':25} "
@@ -312,11 +425,21 @@ def main() -> int:
     if stray:
         warns.append(f"thread mentions Taiga job(s) no branch pins: {', '.join(stray)} "
                      "— check the thread for which task state each evaluated")
+    if not pr:
+        warns.append("no open PR resolves this issue — canonical lineage UNSET "
+                     "(team convention: the PR branch is the source of truth)")
+    if superseder:
+        warns.append(f"canonical PR #{pr['number']} ({pr['branch']}) is SUPERSEDED by non-PR "
+                     f"branch {superseder['ref']} ({superseder['date'][:10]}) — reconcile onto "
+                     "the PR before any audit/edit")
+    if pr_row and prov[0] in ("drifted", "unknown"):
+        warns.append(f"run provenance {prov[0]}: {prov[1]} — rerun from the PR branch or name "
+                     "the ref in the QA comment")
 
     for w in warns:
         out.append(f"⚠️  {w}")
     if not warns and rows:
-        out.append("✓ single coherent lineage; working tree matches newest")
+        out.append("✓ single coherent lineage" + (f"; canonical = PR #{pr['number']}" if pr else ""))
     if stale_note:
         out.append(stale_note)
 

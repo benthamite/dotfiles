@@ -9170,11 +9170,11 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 
 ** Trajectory: new CR task
 
-/Create (if needed) the agent-c worktree for a CR task and launch a Claude session in it, with no terminal step. The worktree is based on =origin/main= so it always has current skills; the SessionStart hook (=sync-agent-c-worktree.sh=) wires its API-key symlink./
+/Create (if needed) the reasoning-tasks worktree for a CR task and launch a Claude session in it, with no terminal step. The worktree is based on =origin/main= so it always has current skills; the SessionStart hook (=sync-reasoning-tasks-worktree.sh=) wires its API-key symlink./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (defun ps/trajectory-new-task (slug)
-  "Create the agent-c worktree for SLUG if needed, then launch Claude in it.
+  "Create the reasoning-tasks worktree for SLUG if needed, then launch Claude in it.
 The worktree is based on `origin/main' so it always carries current CR
 skills, and the SessionStart hook wires its API-key symlink, so there is
 no manual step.  When the worktree already exists, skip creation and
@@ -9184,7 +9184,7 @@ just start a session.  The session uses the `trajectory' Claude account."
   (setq slug (string-trim slug))
   (when (string-empty-p slug)
     (user-error "Task slug must not be empty"))
-  (let* ((root (expand-file-name "~/Trajectory/agent-c"))
+  (let* ((root (expand-file-name "~/Trajectory/reasoning-tasks"))
          (dir (expand-file-name slug root)))
     (unless (file-directory-p dir)
       (ps/trajectory--add-worktree slug dir root))
@@ -9194,8 +9194,8 @@ just start a session.  The session uses the `trajectory' Claude account."
       :directory (abbreviate-file-name (file-name-as-directory dir))))))
 
 (defun ps/trajectory--add-worktree (slug dir root)
-  "Add the agent-c worktree DIR for SLUG, based on `origin/main'.
-ROOT is the agent-c worktrees directory.  Fetch first so the new task is
+  "Add the reasoning-tasks worktree DIR for SLUG, based on `origin/main'.
+ROOT is the reasoning-tasks worktrees directory.  Fetch first so the new task is
 not born behind upstream; reattach the `pablo/SLUG' branch if it already
 exists, otherwise create it off `origin/main'."
   (let ((default-directory (expand-file-name "main" root))

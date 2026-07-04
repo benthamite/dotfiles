@@ -440,7 +440,7 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/My Drive/Epoch/projects/lever-assistant"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/source/agent-c"]
+[projects."/Users/pablostafforini/source/reasoning-tasks"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/My Drive/repos/reasoning-excellence"]
@@ -458,7 +458,7 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/Trajectory"]
 trust_level = "trusted"
 
-[projects."/Users/pablostafforini/Trajectory/agent-c/main"]
+[projects."/Users/pablostafforini/Trajectory/reasoning-tasks/main"]
 trust_level = "trusted"
 
 [projects."/Users/pablostafforini/My Drive/repos/rubric-visualizer"]

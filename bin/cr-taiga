@@ -149,7 +149,13 @@ def ledger_path(task_dir: Path) -> Path:
     if configured:
         return Path(configured).expanduser() / f"{task_dir.name}.jsonl"
     for parent in [task_dir, *task_dir.parents]:
-        if (parent / "agent-c").is_dir() and (parent / "cr-pipeline").is_dir():
+        # Existing worktrees may still be reached through the pre-migration
+        # ~/Trajectory/agent-c path even though the canonical root is now
+        # ~/Trajectory/reasoning-tasks.
+        has_task_root = (parent / "reasoning-tasks").is_dir() or (
+            parent / "agent-c"
+        ).is_dir()
+        if has_task_root and (parent / "cr-pipeline").is_dir():
             return parent / "logs" / "taiga-ledger" / f"{task_dir.name}.jsonl"
     return task_dir / "taiga" / LEDGER_NAME
 

@@ -1,12 +1,12 @@
 #!/bin/bash
-# Garbage-collect stale transient CR worktrees under ~/Trajectory/agent-c/.cr-tmp/.
+# Garbage-collect stale transient CR worktrees under ~/Trajectory/reasoning-tasks/.cr-tmp/.
 #
 # Why: CR QA work occasionally needs a throwaway worktree (a taigaLink repin, a
 # corpus add on someone else's branch). Historically these were created ad-hoc
 # (qa-13296-pr, bp-repin, corpus-req, subagent reqa-wt) with inconsistent names
 # and were often left behind. The convention now is: ALL transient QA worktrees
-# live under ~/Trajectory/agent-c/.cr-tmp/, and this GC removes the stale ones at
-# every session start (wired into sync-agent-c-worktree.sh) plus on demand.
+# live under ~/Trajectory/reasoning-tasks/.cr-tmp/, and this GC removes the stale ones at
+# every session start (wired into sync-reasoning-tasks-worktree.sh) plus on demand.
 #
 # Safety: a worktree is removed ONLY when it is BOTH clean (no uncommitted tracked
 # changes AND no meaningful untracked files) AND fully pushed (its HEAD is
@@ -18,9 +18,9 @@
 # Real task worktrees never live under .cr-tmp/, so they are never touched.
 set -uo pipefail
 
-base="$HOME/Trajectory/agent-c"
+base="$HOME/Trajectory/reasoning-tasks"
 tmp="$base/.cr-tmp"
-anchor="$base/agent-c-cr-studio"   # a stable, never-deleted worktree to run git from
+anchor="$base/reasoning-tasks-cr-studio"   # a stable, never-deleted worktree to run git from
 
 [ -d "$tmp" ] || exit 0
 [ -e "$anchor/.git" ] || exit 0

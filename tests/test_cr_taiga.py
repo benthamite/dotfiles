@@ -200,10 +200,10 @@ class CrTaigaTest(unittest.TestCase):
     def test_trajectory_tasks_use_private_parent_ledger(self):
         with tempfile.TemporaryDirectory() as temp:
             trajectory = pathlib.Path(temp) / "Trajectory"
-            (trajectory / "agent-c").mkdir(parents=True)
+            (trajectory / "reasoning-tasks").mkdir(parents=True)
             (trajectory / "cr-pipeline").mkdir()
             task_dir = (
-                trajectory / "agent-c" / "sample-worktree" / "tasks" / "sample-task"
+                trajectory / "reasoning-tasks" / "sample-worktree" / "tasks" / "sample-task"
             )
             task_dir.mkdir(parents=True)
 

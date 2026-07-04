@@ -92,34 +92,34 @@ bin/personal-updates fast
 That command runs =softwareupdate --install --recommended=. It is not scheduled
 because macOS updates may require privileges or a restart.
 
-** Trajectory agent-c worktree sync
+** Trajectory reasoning-tasks worktree sync
 :PROPERTIES:
 :ID:       A8D684A6-AB1B-4D94-8AC9-E5273F1C63E5
 :END:
 
-=bin/sync-agent-c-worktrees= bulk-runs the safe per-worktree =agent-c= sync for
-every task worktree under =~/Trajectory/agent-c=. It fetches =origin/main= once,
-skips protected non-task worktrees such as =main= and =agent-c-cr-studio=, and
-then lets =claude/hooks/sync-agent-c-worktree.sh= handle dirty trees, conflicts,
+=bin/sync-reasoning-tasks-worktrees= bulk-runs the safe per-worktree =reasoning-tasks= sync for
+every task worktree under =~/Trajectory/reasoning-tasks=. It fetches =origin/main= once,
+skips protected non-task worktrees such as =main= and =reasoning-tasks-cr-studio=, and
+then lets =claude/hooks/sync-reasoning-tasks-worktree.sh= handle dirty trees, conflicts,
 local overlays, and key symlinks. It never pushes.
 
 The scheduled job runs nightly at 03:30 and writes logs under:
 
 #+begin_src text
-~/.local/state/agent-c-worktree-sync/
+~/.local/state/reasoning-tasks-worktree-sync/
 #+end_src
 
 Manual run:
 
 #+begin_src sh
-bin/sync-agent-c-worktrees
+bin/sync-reasoning-tasks-worktrees
 #+end_src
 
 Install or refresh the scheduled job with:
 
 #+begin_src sh
-mkdir -p ~/Library/LaunchAgents ~/.local/state/agent-c-worktree-sync
-ln -sfn "$PWD/macos/LaunchAgents/com.stafforini.agent-c-worktree-sync.plist" \
-  ~/Library/LaunchAgents/com.stafforini.agent-c-worktree-sync.plist
-launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.stafforini.agent-c-worktree-sync.plist
+mkdir -p ~/Library/LaunchAgents ~/.local/state/reasoning-tasks-worktree-sync
+ln -sfn "$PWD/macos/LaunchAgents/com.stafforini.reasoning-tasks-worktree-sync.plist" \
+  ~/Library/LaunchAgents/com.stafforini.reasoning-tasks-worktree-sync.plist
+launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.stafforini.reasoning-tasks-worktree-sync.plist
 #+end_src

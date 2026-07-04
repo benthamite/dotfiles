@@ -8,7 +8,7 @@
 # in an always-on doc demonstrably fails to stop it. This hook fires on the ACTION,
 # in every session, with no reliance on what the agent remembers.
 #
-# Registered per agent-c worktree via sync-agent-c-worktree.sh (worktree-local
+# Registered per reasoning-tasks worktree via sync-reasoning-tasks-worktree.sh (worktree-local
 # .claude/settings.local.json), because the user-level ~/.claude/settings.json is a
 # self-protected guard file agents cannot edit.
 

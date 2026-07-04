@@ -1,0 +1,86 @@
+#!/bin/bash
+# Bulk-sync Trajectory reasoning-tasks task worktrees with origin/main.
+#
+# This is the unattended wrapper for the existing per-worktree safety logic in
+# claude/hooks/sync-reasoning-tasks-worktree.sh. It fetches once, skips protected
+# non-task worktrees, then lets the per-worktree script handle dirty trees,
+# detached heads, dry-run merge conflicts, local overlays, and key symlinks.
+
+set -euo pipefail
+
+root="${REASONING_TASKS_WORKTREES_ROOT:-${AGENT_C_WORKTREES_ROOT:-$HOME/Trajectory/reasoning-tasks}}"
+main="${REASONING_TASKS_MAIN_WORKTREE:-${AGENT_C_MAIN_WORKTREE:-$root/main}}"
+sync_script="${REASONING_TASKS_SYNC_SCRIPT:-${AGENT_C_SYNC_SCRIPT:-$HOME/My Drive/dotfiles/claude/hooks/sync-reasoning-tasks-worktree.sh}}"
+log_dir="${REASONING_TASKS_SYNC_LOG_DIR:-${AGENT_C_SYNC_LOG_DIR:-$HOME/.local/state/reasoning-tasks-worktree-sync}}"
+
+mkdir -p "$log_dir"
+run_id="$(date '+%Y%m%d-%H%M%S')"
+log_file="$log_dir/sync-$run_id.log"
+latest_log="$log_dir/latest.log"
+exec > >(tee -a "$log_file") 2>&1
+ln -sfn "$log_file" "$latest_log" 2>/dev/null || true
+
+lock_dir="$log_dir/.lock"
+if ! mkdir "$lock_dir" 2>/dev/null; then
+  echo "[reasoning-tasks-sync-all] another sync is already running; exiting."
+  exit 0
+fi
+trap 'rmdir "$lock_dir" 2>/dev/null || true' EXIT
+
+echo "[reasoning-tasks-sync-all] started $(date '+%Y-%m-%d %H:%M:%S')"
+echo "[reasoning-tasks-sync-all] root: $root"
+
+if [ ! -d "$main" ]; then
+  echo "[reasoning-tasks-sync-all] missing main worktree: $main"
+  exit 1
+fi
+
+if [ ! -x "$sync_script" ]; then
+  echo "[reasoning-tasks-sync-all] missing executable sync script: $sync_script"
+  exit 1
+fi
+
+if [ "${REASONING_TASKS_BULK_SKIP_FETCH:-${AGENT_C_BULK_SKIP_FETCH:-0}}" = "1" ]; then
+  echo "[reasoning-tasks-sync-all] fetch skipped by caller."
+else
+  echo "[reasoning-tasks-sync-all] fetching origin/main once."
+  git -C "$main" fetch --quiet origin main || \
+    echo "[reasoning-tasks-sync-all] warning: fetch failed; using existing origin/main ref."
+fi
+
+processed=0
+skipped=0
+failed=0
+
+while IFS= read -r path; do
+  [ -n "$path" ] || continue
+  name="$(basename "$path")"
+  case "$name" in
+    main|reasoning-tasks-cr-studio|agent-c-cr-studio)
+      echo "[reasoning-tasks-sync-all] skip protected worktree: $path"
+      skipped=$((skipped + 1))
+      continue
+      ;;
+  esac
+
+  if [ ! -d "$path" ]; then
+    echo "[reasoning-tasks-sync-all] skip missing worktree path: $path"
+    skipped=$((skipped + 1))
+    continue
+  fi
+
+  echo "[reasoning-tasks-sync-all] sync: $path"
+  if CLAUDE_PROJECT_DIR="$path" SYNC_REASONING_TASKS_VERBOSE=1 SYNC_REASONING_TASKS_SKIP_FETCH=1 "$sync_script" </dev/null; then
+    processed=$((processed + 1))
+  else
+    echo "[reasoning-tasks-sync-all] failed: $path"
+    failed=$((failed + 1))
+  fi
+done < <(git -C "$main" worktree list --porcelain | sed -n 's/^worktree //p')
+
+echo "[reasoning-tasks-sync-all] finished $(date '+%Y-%m-%d %H:%M:%S')"
+echo "[reasoning-tasks-sync-all] summary: processed=$processed skipped=$skipped failed=$failed log=$log_file"
+
+if [ "$failed" -gt 0 ]; then
+  exit 1
+fi

@@ -4,11 +4,11 @@
 <plist version="1.0">
 <dict>
   <key>Label</key>
-  <string>com.stafforini.agent-c-worktree-sync</string>
+  <string>com.stafforini.reasoning-tasks-worktree-sync</string>
 
   <key>ProgramArguments</key>
   <array>
-    <string>/Users/pablostafforini/My Drive/dotfiles/bin/sync-agent-c-worktrees</string>
+    <string>/Users/pablostafforini/My Drive/dotfiles/bin/sync-reasoning-tasks-worktrees</string>
   </array>
 
   <key>EnvironmentVariables</key>
@@ -28,8 +28,8 @@
   </dict>
 
   <key>StandardOutPath</key>
-  <string>/Users/pablostafforini/.local/state/reasoning-tasks-worktree-sync/legacy-launchd.out.log</string>
+  <string>/Users/pablostafforini/.local/state/reasoning-tasks-worktree-sync/launchd.out.log</string>
   <key>StandardErrorPath</key>
-  <string>/Users/pablostafforini/.local/state/reasoning-tasks-worktree-sync/legacy-launchd.err.log</string>
+  <string>/Users/pablostafforini/.local/state/reasoning-tasks-worktree-sync/launchd.err.log</string>
 </dict>
 </plist>

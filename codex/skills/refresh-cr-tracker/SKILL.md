@@ -1,6 +1,6 @@
 ---
 name: refresh-cr-tracker
-description: Rebuild and republish the CR-task master tracker artifact. Use when the user says "refresh cr tracker", "update the CR task tracker", "/refresh-cr-tracker", or wants the conceptual-reasoning task master list re-pulled from live agent-c data + GitHub issues and redeployed to its claude.ai artifact.
+description: Rebuild and republish the CR-task master tracker artifact. Use when the user says "refresh cr tracker", "update the CR task tracker", "/refresh-cr-tracker", or wants the conceptual-reasoning task master list re-pulled from live reasoning-tasks data + GitHub issues and redeployed to its claude.ai artifact.
 ---
 
 # Refresh the CR-task master tracker
@@ -10,7 +10,7 @@ redeploys it to the existing claude.ai artifact (so newly-registered GitHub issu
 cohort tasks, and updated scores show up).
 
 **Must run in an INTERACTIVE session** — the Artifact tool is not available in headless
-`claude -p` or cloud routines. Requires the local `~/Trajectory/agent-c/main` worktree and
+`claude -p` or cloud routines. Requires the local `~/Trajectory/reasoning-tasks/main` worktree and
 a working `gh`/GitHub token (both present on Pablo's Mac).
 
 ## Steps
@@ -19,7 +19,7 @@ a working `gh`/GitHub token (both present on Pablo's Mac).
    ```
    python3 ~/Trajectory/cr-scout-runs/cr-tracker/build.py
    ```
-   It re-derives every row from the agent-c branches (`ryan/cr-collect-cohort` results +
+   It re-derives every row from the reasoning-tasks branches (`ryan/cr-collect-cohort` results +
    crawler pools, `ryan/collect-lw-gdocs`, `pablo/cr-scout-batch-1`), fuzzy-matches gdoc
    tasks to source articles, re-queries GitHub issues via the REST API, verifies each task
    dir exists before linking, dedupes, regenerates the HTML, and prints a one-line JSON

@@ -7,29 +7,29 @@ import unittest
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "bin" / "sync-agent-c-worktrees"
-PLIST = ROOT / "macos" / "LaunchAgents" / "com.stafforini.agent-c-worktree-sync.plist"
+SCRIPT = ROOT / "bin" / "sync-reasoning-tasks-worktrees"
+PLIST = ROOT / "macos" / "LaunchAgents" / "com.stafforini.reasoning-tasks-worktree-sync.plist"
 
 
 def run(command, **kwargs):
     return subprocess.run(command, check=True, text=True, **kwargs)
 
 
-class AgentCWorktreeSyncTest(unittest.TestCase):
+class ReasoningTasksWorktreeSyncTest(unittest.TestCase):
     def test_bulk_wrapper_runs_sync_for_task_worktrees_only(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             temp = pathlib.Path(temp_dir)
-            root = temp / "agent-c"
+            root = temp / "reasoning-tasks"
             main = root / "main"
             task_a = root / "task-a"
             task_b = root / "task-b"
-            cr_studio = root / "agent-c-cr-studio"
+            cr_studio = root / "reasoning-tasks-cr-studio"
             root.mkdir()
 
             run(["git", "init", "-q", str(main)])
             run(["git", "-C", str(main), "config", "user.name", "Test User"])
             run(["git", "-C", str(main), "config", "user.email", "test@example.com"])
-            (main / "README.md").write_text("agent-c\n")
+            (main / "README.md").write_text("reasoning-tasks\n")
             run(["git", "-C", str(main), "add", "README.md"])
             run(["git", "-C", str(main), "commit", "-q", "-m", "initial"])
             run(["git", "-C", str(main), "worktree", "add", "-q", "-b", "pablo/task-a", str(task_a)])
@@ -47,11 +47,11 @@ class AgentCWorktreeSyncTest(unittest.TestCase):
             env = os.environ.copy()
             env.update(
                 {
-                    "AGENT_C_WORKTREES_ROOT": str(root),
-                    "AGENT_C_MAIN_WORKTREE": str(main),
-                    "AGENT_C_SYNC_SCRIPT": str(fake_sync),
-                    "AGENT_C_SYNC_LOG_DIR": str(temp / "logs"),
-                    "AGENT_C_BULK_SKIP_FETCH": "1",
+                    "REASONING_TASKS_WORKTREES_ROOT": str(root),
+                    "REASONING_TASKS_MAIN_WORKTREE": str(main),
+                    "REASONING_TASKS_SYNC_SCRIPT": str(fake_sync),
+                    "REASONING_TASKS_SYNC_LOG_DIR": str(temp / "logs"),
+                    "REASONING_TASKS_BULK_SKIP_FETCH": "1",
                     "CALLS_FILE": str(calls_file),
                 }
             )
@@ -67,8 +67,8 @@ class AgentCWorktreeSyncTest(unittest.TestCase):
         with PLIST.open("rb") as handle:
             job = plistlib.load(handle)
 
-        self.assertEqual(job["Label"], "com.stafforini.agent-c-worktree-sync")
+        self.assertEqual(job["Label"], "com.stafforini.reasoning-tasks-worktree-sync")
         self.assertEqual(job["ProgramArguments"], [str(SCRIPT)])
         self.assertEqual(job["StartCalendarInterval"], {"Hour": 3, "Minute": 30})
-        self.assertIn("agent-c-worktree-sync", job["StandardOutPath"])
-        self.assertIn("agent-c-worktree-sync", job["StandardErrorPath"])
+        self.assertIn("reasoning-tasks-worktree-sync", job["StandardOutPath"])
+        self.assertIn("reasoning-tasks-worktree-sync", job["StandardErrorPath"])

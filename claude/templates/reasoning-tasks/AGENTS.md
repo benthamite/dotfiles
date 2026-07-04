@@ -1,11 +1,11 @@
-# AGENTS.md - local agent-c overlay
+# AGENTS.md - local reasoning-tasks overlay
 
-This is Pablo's local-only agent-c instruction overlay. The worktree setup and
+This is Pablo's local-only reasoning-tasks instruction overlay. The worktree setup and
 sync helpers prepend `~/Trajectory/AGENTS.md` — the umbrella layer that owns
 where-to-work mechanics, skill routing, standing constraints (the approval and
 publishing gates), and all pipeline pointers — then append this file into task
 worktrees and hide the result from ordinary git status. Do not push it to the
-shared `trajectory-labs-pbc/agent-c` repo, and do not restate umbrella-layer
+shared `trajectory-labs-pbc/reasoning-tasks` repo, and do not restate umbrella-layer
 rules here. If the umbrella layer is ever missing above this line, stop and
 treat every push/GitHub/board action as gated on Pablo's explicit OK.
 

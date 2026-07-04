@@ -218,9 +218,22 @@ fi
 # regardless of branch/merge state.
 inject_private_skills
 
-# Skip detached HEAD (e.g. agent-c-cr-studio pinned to peter/cr-studio).
+# Detached HEAD (e.g. the fable-* run-snapshot worktrees): no merge is possible,
+# but the local instruction overlay must still apply — Codex only discovers
+# AGENTS.md inside the worktree's own git root, so without the baked-in umbrella
+# layer a Codex session there loses Claude/Codex parity (Claude still inherits
+# ~/Trajectory/CLAUDE.md from the ancestor directory). Only agent-c-cr-studio
+# (pinned to peter/cr-studio) stays pristine.
 branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
-[ -n "$branch" ] || { say "detached HEAD — skipping sync."; exit 0; }
+if [ -z "$branch" ]; then
+  if [ "$(basename "$PWD")" != "agent-c-cr-studio" ]; then
+    apply_agent_context_overlay
+    say "detached HEAD — applied local overlay; skipping merge sync."
+  else
+    say "detached HEAD — skipping sync."
+  fi
+  exit 0
+fi
 
 # Local-only root agent instructions are deliberately not pushed to agent-c.
 # Before merging origin/main, restore upstream copies so upstream changes to

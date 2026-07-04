@@ -965,7 +965,9 @@ and since the dispatcher is a self-protected GitHub write-guard file, an agent
 can fix only the standalone scripts; the dispatcher's copy needs Pablo's
 manual edit (e.g. the 2026-07-03 force-push guard scoping fix, which requires
 the force flag to appear within the =git push= invocation rather than anywhere
-in a compound command). Checks
+in a compound command, and the same-day quoted-content masking, which stops
+string literals — commit messages, doc prose, grep patterns — from tripping
+the destructive-command checks). Checks
 that do git/filesystem work behind a cheap regex gate are *delegated* to their
 unchanged standalone scripts, and only when their gate matches, so they add no
 spawn on the common path and behave identically:
@@ -1256,6 +1258,8 @@ case explicitly before removing the =PreToolUse= wrapper.
 :END:
 
 Blocks or gates destructive shell commands that are hard to reverse. Hard-blocks (deny): =rm -rf= (suggests =trash=), =git push --force= (the force flag must appear within the =git push= invocation itself, before the next command separator — a =[ -f file ]= test elsewhere in a compound command used to false-positive this), =git reset --hard=, =git clean -f=, =git checkout -- .=, and =git branch -D=. Prompts for confirmation (ask): =git clone= / =gh repo clone=. Non-force =git push= is handled by =block-github-write-command.sh= instead of this destructive-command hook. Each pattern includes a specific remediation suggestion. Users can run blocked commands manually via =!=.
+
+All patterns are matched against a *quoted-content-masked* copy of the command (=mask_quoted=): the contents of single-quoted, =$'...'=, and expansion-free double-quoted strings, plus quoted-delimiter heredoc bodies, are blanked before matching, so a commit message or doc string that merely *mentions* a destructive command no longer trips the guard (three 2026-07-03 false positives: a quoted force-push mention in a commit message, guard prose inside a python heredoc, and a grep pattern argument). Masking is skipped entirely when the command mentions a shell-interpreter word (=eval=, =bash=, =sh=, =zsh=, =dash=, =ksh=, =xargs=, =ssh=) because their quoted arguments and heredoc bodies are executed; any parse uncertainty (unterminated quote/heredoc) keeps the remainder verbatim, and double-quoted spans containing =$= or a backtick are kept verbatim, so masking can only suppress a quoted-literal match, never hide unquoted syntax. The dispatcher's inlined copy (=dc_mask_quoted= in =pretooluse-bash.sh=) must be kept in sync by hand (self-protected file — Pablo edits it manually).
 
 *** block-github-write-command.sh (PreToolUse)
 :PROPERTIES:

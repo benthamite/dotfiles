@@ -257,9 +257,11 @@ check_destructive() {
   if echo "$COMMAND" | grep -qE '\brm\s+(-[a-zA-Z]*r[a-zA-Z]*f|(-[a-zA-Z]*f[a-zA-Z]*r)|-rf|-fr)\b'; then
     dc_deny "rm -rf detected" "Use 'trash' instead of 'rm -rf' to allow recovery."; return 0
   fi
-  if echo "$COMMAND" | grep -qE '\bgit\s+push\b' && \
-     echo "$COMMAND" | grep -qE '(\s-f\b|\s--force\b)' && \
-     ! echo "$COMMAND" | grep -qF -- '--force-with-lease'; then
+  # -f/--force must appear WITHIN the git push invocation (before the next
+  # command separator), not merely anywhere in a compound command — a
+  # `[ -f file ]` test elsewhere in the string used to false-positive this.
+  if echo "$COMMAND" | grep -qE '\bgit\s+push[^|;&]*(\s-f\b|\s--force\b)' && \
+     ! echo "$COMMAND" | grep -qE '\bgit\s+push[^|;&]*--force-with-lease'; then
     dc_deny "git push --force detected" "Force-pushing can overwrite upstream history. Use --force-with-lease for branch-scoped pushes, or confirm with the user."; return 0
   fi
   if echo "$COMMAND" | grep -qE '\b(git\s+clone|gh\s+repo\s+clone)\b'; then

@@ -414,8 +414,10 @@ check_destructive() {
   if echo "$SCAN" | grep -qE '\bbq\s+rm\b'; then
     dc_deny "bq rm detected" "BigQuery rm is irreversible. Confirm with the user first."; return 0
   fi
-  if echo "$SCAN" | grep -qE '\baws\s+s3\s+rm\b' && \
-     echo "$SCAN" | grep -qE '(--recursive\b|\s-r\b)'; then
+  # The recursive flag must appear WITHIN the aws s3 rm invocation (before
+  # the next command separator), not merely anywhere in a compound command
+  # (same cross-segment false-positive class as the force-push guard).
+  if echo "$SCAN" | grep -qE '\baws\s+s3\s+rm[^|;&]*(\s--recursive\b|\s-r\b)'; then
     dc_deny "aws s3 rm --recursive detected" "Recursive S3 deletion is irreversible. Confirm with the user first."; return 0
   fi
   if echo "$SCAN" | grep -qE '\bop\s+item\s+(delete|remove)\b'; then

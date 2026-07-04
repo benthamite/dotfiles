@@ -15,13 +15,20 @@ guidance under the relevant directory (`tasks/AGENTS.md`, `platform/AGENTS.md`,
 `.github/AGENTS.md`) and the matching skill; for general task mechanics, load
 the repo `tasks` skill.
 
+CR-scoped repo docs (this overlay replaces the upstream root AGENTS.md — the
+attack-task system doc — so jump to these directly): `meta/trajectory_labs/
+AGENTS.md` (the `tl grantmaking` engine, Taiga-run normalization, and the v2
+`## Q<n>.` question-rubric format) and `platform/environments/grantmaking/
+AGENTS.md` (the Taiga task category, image, and MCP corpus server).
+
 ## CR Invariants
 
 - Do not hand-score or improvise graders. Use the supported CR grading loop and
   the current rubric/grader contract.
 - When reporting a score, state what was graded (model answer vs gold), the
   rubric version, the run/backend, the per-criterion breakdown, and the
-  recomputed weighted mean.
+  recomputed weighted mean. Always link the Taiga job when discussing run
+  results (`https://taiga.ant.dev/jobs/<job_id>`), including interim ones.
 - Grade against the real gold source when fairness matters. `grading/GOLDEN.md`
   is a lossy target extraction, not a substitute for the source.
 - Keep prompt and rubric aligned: every prompt ask should be scored or softened;

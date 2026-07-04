@@ -1,0 +1,98 @@
+#!/bin/bash
+# cr-pull-pinned — pull the taigaLink-pinned Taiga job for a CR task, verified.
+#
+# Solves the three pull footguns that burned the 2026-07-04 #117 sessions:
+#   1. Review branches often predate `pull-taiga`/`runs.py`, so the engine must
+#      come from the MAIN worktree regardless of the target branch's age.
+#   2. `pull-taiga` has no --job flag; this always pins basic_info.taigaLink's
+#      job via fetch_runs(job_id=…) and verifies every epoch afterwards.
+#   3. Concurrent pulls interleave writes into the shared per-attempt dirs
+#      (1..10 are reused across jobs) and silently mix jobs; an atomic
+#      mkdir-lock serializes pulls per task dir, across sessions.
+#
+# Usage: cr-pull-pinned <slug> [--worktree PATH]
+#   PATH defaults to the git toplevel of the cwd (run it from the review
+#   worktree cr-review-worktree printed). Writes tasks/<slug>/taiga/ there.
+set -uo pipefail
+
+MAIN="$HOME/Trajectory/reasoning-tasks/main"
+ENV_DEFAULT="TGA-conceptual_domains_v001_TRJ"
+
+die() { echo "cr-pull-pinned: $*" >&2; exit 1; }
+
+[ $# -ge 1 ] || die "usage: cr-pull-pinned <slug> [--worktree PATH]"
+slug="$1"; shift
+wt=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --worktree) wt="${2:?--worktree needs a value}"; shift 2 ;;
+    *) die "unknown option: $1" ;;
+  esac
+done
+[ -n "$wt" ] || wt=$(git rev-parse --show-toplevel 2>/dev/null) \
+  || die "not inside a git worktree and no --worktree given"
+
+task_dir="$wt/tasks/$slug"
+[ -d "$task_dir" ] || die "no task dir: $task_dir"
+[ -d "$MAIN/tooling/engine" ] || die "main worktree engine missing: $MAIN/tooling/engine"
+
+# --- resolve the pinned job + env from basic_info.taigaLink ------------------
+link=$(jq -r '.taigaLink // empty' "$task_dir/basic_info.json") \
+  || die "cannot read $task_dir/basic_info.json"
+[ -n "$link" ] || die "basic_info.json has no taigaLink — derive and write it first (cr-taiga-run.md)"
+job=$(printf '%s' "$link" | grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -1)
+[ -n "$job" ] || die "no job UUID in taigaLink: $link"
+env_name="$ENV_DEFAULT"
+case "$link" in
+  *38398286-af03-4313-9f1e-57d94b867b55*) env_name="TGA-grantmaking_pilot_TRJ" ;;
+esac
+echo "pinned job: $job  env: $env_name"
+
+# --- exclusive per-task pull lock (atomic mkdir; survives across sessions) ---
+lock="$task_dir/.taiga-pull-lock"
+if ! mkdir "$lock" 2>/dev/null; then
+  holder=$(cat "$lock/pid" 2>/dev/null || echo "?")
+  if [ "$holder" != "?" ] && kill -0 "$holder" 2>/dev/null; then
+    die "another pull (pid $holder) holds $lock — never run two pulls concurrently; wait or kill it"
+  fi
+  echo "stale lock (pid $holder dead) — reclaiming" >&2
+  rmdir "$lock" 2>/dev/null; mkdir "$lock" || die "lock race — retry"
+fi
+echo $$ > "$lock/pid"
+cleanup() { rmdir "$lock" 2>/dev/null || { rm -f "$lock/pid"; rmdir "$lock" 2>/dev/null; }; }
+trap cleanup EXIT
+
+# --- clean slate, then job-pinned fetch via the main engine ------------------
+if [ -d "$task_dir/taiga" ]; then
+  trash "$task_dir/taiga" 2>/dev/null || die "could not clear existing $task_dir/taiga"
+fi
+pull_py=$(mktemp /tmp/cr-pull-pinned.XXXXXX.py)
+cat > "$pull_py" <<PYEOF
+import asyncio, sys
+sys.path.insert(0, "$MAIN/tooling/engine/src")
+from reasoning_engine.runs import fetch_runs
+asyncio.run(fetch_runs(
+    "$slug",
+    environment="$env_name",
+    save=True,
+    job_id="$job",
+    latest_job=False,
+    problem_id="$slug",
+))
+print("PULL-DONE")
+PYEOF
+( cd "$wt" && TMPDIR=/tmp uv run --project "$MAIN" --no-sync python "$pull_py" ) \
+  || { rm -f "$pull_py"; die "fetch failed — see output above"; }
+rm -f "$pull_py"
+
+# --- verify every epoch is the pinned job ------------------------------------
+shopt -s nullglob
+bad=0; n=0
+for f in "$task_dir"/taiga/*/[0-9]*/run.json; do
+  n=$((n+1))
+  got=$(jq -r '.job_id' "$f")
+  if [ "$got" != "$job" ]; then bad=$((bad+1)); echo "  MIXED: $f -> $got" >&2; fi
+done
+[ "$n" -gt 0 ] || die "no run.json epochs written"
+[ "$bad" -eq 0 ] || die "$bad/$n epochs are NOT the pinned job — another writer raced this pull; find and stop it, then re-run"
+echo "verified: $n/$n epochs are $job"

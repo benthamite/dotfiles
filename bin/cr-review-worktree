@@ -1,0 +1,100 @@
+#!/bin/bash
+# cr-review-worktree — materialize the canonical review worktree for a CR task.
+#
+# Codifies the proven Ready-for-QA review recipe (2026-07-04 "do-both" session,
+# ~/.claude/rendered/Trajectory/2026-07-04_14-41_do-both.md):
+#   1. resolve the canonical PR branch with cr-task-state
+#   2. detached read-only worktree under <main>/.cr-tmp/qa-<issue|slug>
+#   3. sparse-checkout DISABLE — the inherited sparse config silently drops
+#      tasks/ and tooling/ (the recurring "empty worktree" failure)
+#   4. run the reasoning-tasks sync hook inside it (.claude/.env key symlink,
+#      instruction overlay, private skills)
+#   5. verify the task dir exists; print the worktree path (LAST LINE = path,
+#      machine-readable for skills)
+#
+# Usage: cr-review-worktree <slug | issue-number | github-issue-URL>
+#        cr-review-worktree <slug> --branch <branch>   # override resolution
+#
+# Review worktrees are read-only working copies of origin/<canonical-branch>.
+# cr-worktree-gc cleans .cr-tmp/ worktrees that have no local changes.
+set -uo pipefail
+
+REPO="trajectory-labs-pbc/reasoning-tasks"
+MAIN="$HOME/Trajectory/reasoning-tasks/main"
+HOOK="$HOME/My Drive/dotfiles/claude/hooks/sync-reasoning-tasks-worktree.sh"
+
+die() { echo "cr-review-worktree: $*" >&2; exit 1; }
+
+[ $# -ge 1 ] || die "usage: cr-review-worktree <slug|issue-number|issue-URL> [--branch <branch>]"
+arg="$1"; shift
+branch_override=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --branch) branch_override="${2:?--branch needs a value}"; shift 2 ;;
+    *) die "unknown option: $1" ;;
+  esac
+done
+
+[ -d "$MAIN/.git" ] || [ -f "$MAIN/.git" ] || die "main worktree missing: $MAIN"
+
+# --- resolve slug (issue number / URL -> title, which is the bare slug) -----
+slug="$arg"
+issue=""
+if [[ "$arg" =~ ^[0-9]+$ ]]; then
+  issue="$arg"
+elif [[ "$arg" =~ github\.com/.*/issues/([0-9]+) ]]; then
+  issue="${BASH_REMATCH[1]}"
+fi
+if [ -n "$issue" ]; then
+  slug=$(gh issue view "$issue" --repo "$REPO" --json title -q .title 2>/dev/null) \
+    || die "could not resolve issue #$issue via gh"
+  slug="${slug## }"; slug="${slug%% }"
+  echo "issue #$issue -> slug: $slug"
+fi
+
+# --- resolve canonical branch via cr-task-state ------------------------------
+branch="$branch_override"
+if [ -z "$branch" ]; then
+  state=$("$HOME/bin/cr-task-state" "$slug" 2>/dev/null) || true
+  branch=$(printf '%s\n' "$state" \
+    | sed -n 's/^→ canonical PR #[0-9]* · \([^ ]*\).*/\1/p' | head -1)
+  [ -n "$branch" ] || {
+    printf '%s\n' "$state" >&2
+    die "cr-task-state found no canonical PR branch for '$slug' — pass --branch explicitly"
+  }
+  # surface divergence banners; the caller must see them, not just the path
+  printf '%s\n' "$state" | grep -E '^⚠️' >&2 || true
+fi
+[ -n "$issue" ] || issue=$(printf '%s\n' "${state:-}" \
+  | sed -n 's/^task-state: [^·]*· issue #\([0-9]*\).*/\1/p' | head -1)
+echo "canonical branch: $branch"
+
+# --- create or refresh the detached worktree ---------------------------------
+git -C "$MAIN" fetch origin "$branch" --quiet || die "git fetch origin $branch failed"
+wt="$MAIN/.cr-tmp/qa-${issue:-$slug}"
+mkdir -p "$MAIN/.cr-tmp"
+# $MAIN sits behind a symlink, so compare against `worktree list` via the
+# .git pointer on disk rather than porcelain path strings.
+if [ -e "$wt/.git" ]; then
+  git -C "$wt" checkout --detach "origin/$branch" --quiet \
+    || die "existing worktree $wt could not check out origin/$branch (dirty?)"
+  echo "reused worktree at origin/$branch tip"
+else
+  git -C "$MAIN" worktree add --detach "$wt" "origin/$branch" --quiet \
+    || die "git worktree add failed"
+  echo "created worktree at origin/$branch tip"
+fi
+
+# --- THE fix: worktrees inherit a sparse checkout that hides tasks/ + tooling/
+git -C "$wt" sparse-checkout disable 2>/dev/null || true
+
+# --- wire key symlink + instruction overlay + private skills -----------------
+( cd "$wt" && bash "$HOOK" </dev/null >/dev/null 2>&1 ) || true
+
+# --- verify -------------------------------------------------------------------
+taskdir=$(ls -d "$wt"/tasks/*"$slug"* 2>/dev/null | head -1)
+[ -n "$taskdir" ] || die "no tasks/*${slug}* in origin/$branch — wrong branch or slug"
+[ -d "$wt/tooling/engine" ] \
+  || echo "warning: tooling/engine absent on this branch — 'uv run reasoning' unavailable here" >&2
+echo "task dir: ${taskdir#"$wt"/}"
+echo "$wt"

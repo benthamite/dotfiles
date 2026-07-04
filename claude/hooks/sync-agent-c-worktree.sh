@@ -67,7 +67,10 @@ apply_agent_context_overlay() {
 compose_agents_overlay() {
   if [ -r "$parent_agents" ]; then
     {
-      cat "$parent_agents"
+      # Strip the "## Latest session" section: it is umbrella-root resume state
+      # (rewritten by /update-log) and would otherwise be baked, stale, into
+      # every worktree's always-on instructions.
+      awk '/^## Latest session/{skip=1; next} skip && /^## /{skip=0} !skip' "$parent_agents"
       printf '\n--- local agent-c overlay ---\n\n'
       cat "$overlay_dir/AGENTS.md"
     } >AGENTS.md

@@ -1249,7 +1249,7 @@ case explicitly before removing the =PreToolUse= wrapper.
 :ID:       DC12DCB5-4C06-43D2-B235-9C08B99653D9
 :END:
 
-Blocks or gates destructive shell commands that are hard to reverse. Hard-blocks (deny): =rm -rf= (suggests =trash=), =git push --force=, =git reset --hard=, =git clean -f=, =git checkout -- .=, and =git branch -D=. Prompts for confirmation (ask): =git clone= / =gh repo clone=. Non-force =git push= is handled by =block-github-write-command.sh= instead of this destructive-command hook. Each pattern includes a specific remediation suggestion. Users can run blocked commands manually via =!=.
+Blocks or gates destructive shell commands that are hard to reverse. Hard-blocks (deny): =rm -rf= (suggests =trash=), =git push --force= (the force flag must appear within the =git push= invocation itself, before the next command separator — a =[ -f file ]= test elsewhere in a compound command used to false-positive this), =git reset --hard=, =git clean -f=, =git checkout -- .=, and =git branch -D=. Prompts for confirmation (ask): =git clone= / =gh repo clone=. Non-force =git push= is handled by =block-github-write-command.sh= instead of this destructive-command hook. Each pattern includes a specific remediation suggestion. Users can run blocked commands manually via =!=.
 
 *** block-github-write-command.sh (PreToolUse)
 :PROPERTIES:

@@ -50,9 +50,11 @@ fi
 # --- git push --force / -f (dangerous to shared branches) ---
 # --force-with-lease is the safe form (per CLAUDE.md, it's medium-risk on a
 # verified user-owned feature branch) — allow it through.
-if echo "$CMD" | grep -qE '\bgit\s+push\b' && \
-   echo "$CMD" | grep -qE '(\s-f\b|\s--force\b)' && \
-   ! echo "$CMD" | grep -qF -- '--force-with-lease'; then
+# The -f/--force flag must appear WITHIN the git push invocation (before the
+# next command separator), not merely anywhere in a compound command — a
+# `[ -f file ]` test elsewhere in the string used to false-positive this.
+if echo "$CMD" | grep -qE '\bgit\s+push[^|;&]*(\s-f\b|\s--force\b)' && \
+   ! echo "$CMD" | grep -qE '\bgit\s+push[^|;&]*--force-with-lease'; then
   deny "git push --force detected" "Force-pushing can overwrite upstream history. Use --force-with-lease for branch-scoped pushes, or confirm with the user."
 fi
 

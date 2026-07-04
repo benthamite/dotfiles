@@ -312,12 +312,19 @@ def main() -> int:
 
     # --- canonical PR lineage + run provenance -------------------------------
     MINDT = datetime.min.replace(tzinfo=timezone.utc)
+    # A migration/port/rename/scaffold commit can give a STALE copy of the task a
+    # newer commit date than the live PR branch (2026-07-04: pablo/forethought's
+    # old 12-criterion copy re-dated by a "Port agent-c prep branch" commit falsely
+    # superseded PR #464's hardened 10-criterion rubric). Exclude those subjects so
+    # the supersession flag means "newer WORK", not "newer copy".
+    MIGRATION_RE = re.compile(r"port|migrat|rename|scaffold|bulk|prep branch", re.I)
     pr_row = next((r for r in rows if pr and r["ref"] == pr["branch"]), None)
     superseder = None
     if pr_row:
         for r in rows:
             if (r["ref"] != pr["branch"] and r["fp"] != "-" and r["fp"] != pr_row["fp"]
-                    and (parse_iso(r["date"]) or MINDT) > (parse_iso(pr_row["date"]) or MINDT)):
+                    and (parse_iso(r["date"]) or MINDT) > (parse_iso(pr_row["date"]) or MINDT)
+                    and not MIGRATION_RE.search(r["subject"] or "")):
                 superseder = r
                 break
     newest_job = issue["jobs"][-1][:8] if issue["jobs"] else None

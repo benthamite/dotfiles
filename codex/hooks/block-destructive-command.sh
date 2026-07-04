@@ -236,8 +236,10 @@ if echo "$SCAN" | grep -qE '\bbq\s+rm\b'; then
 fi
 
 # --- aws s3 rm --recursive ---
-if echo "$SCAN" | grep -qE '\baws\s+s3\s+rm\b' && \
-   echo "$SCAN" | grep -qE '(--recursive\b|\s-r\b)'; then
+# The recursive flag must appear WITHIN the aws s3 rm invocation (before the
+# next command separator), not merely anywhere in a compound command (same
+# cross-segment false-positive class as the force-push guard).
+if echo "$SCAN" | grep -qE '\baws\s+s3\s+rm[^|;&]*(\s--recursive\b|\s-r\b)'; then
   deny "aws s3 rm --recursive detected" "Recursive S3 deletion is irreversible. Confirm with the user first."
 fi
 

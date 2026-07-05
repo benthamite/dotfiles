@@ -1,14 +1,15 @@
 # Google services setup
 
-Pablo uses two human Google accounts plus a bot account, and accesses each via different tools.
+Pablo uses multiple human Google accounts plus a bot account, and accesses each via different tools.
 
 ## Accounts
 
-| Account                      | Purpose            |
-|------------------------------|--------------------|
-| `pablo@epoch.ai`             | Epoch work account |
-| `pablo.stafforini@gmail.com` | Personal account   |
-| `email-triage@epoch.ai`      | Email-triage bot account |
+| Account                                  | Purpose                       |
+|------------------------------------------|-------------------------------|
+| `pablo@epoch.ai`                         | Epoch work account            |
+| `pablo.stafforini@trajectorylabs.net`    | Trajectory Docs/Drive account |
+| `pablo.stafforini@gmail.com`             | Personal account              |
+| `email-triage@epoch.ai`                  | Email-triage bot account      |
 
 ## Tooling by service
 
@@ -30,6 +31,12 @@ For the **personal** account (`pablo.stafforini@gmail.com`):
 - Calendar: `gcalcli` (already configured for both accounts via shared calendars; no per-account flag).
 
 The personal-account OAuth grants are against the same `claude-code-gmail-490520` GCP project as the Epoch one, with `pablo.stafforini@gmail.com` added as a test user on the OAuth consent screen.
+
+For **Trajectory-owned Google Docs/Drive**, use the Trajectory Labs account:
+`gdoc --account pablo.stafforini@trajectorylabs.net`. Do not fall back to
+`--account epoch` for Trajectory Docs/Drive access; fix sharing or OAuth access
+for the Trajectory account instead. This routing note is Docs/Drive-only and
+does not establish Gmail, Sheets, or Calendar support for the Trajectory account.
 
 For the **email-triage bot** account (`email-triage@epoch.ai`), use
 `gmail.py --account email-triage`. This account is only for email-triage
@@ -263,6 +270,16 @@ gdoc auth --account personal
 ```
 
 A browser opens; sign in as `pablo.stafforini@gmail.com`. The OAuth client is in "testing" mode under GCP project `claude-code-gmail-490520`, so the personal email must remain in the project's **Test users** list (GCP Console → APIs & Services → OAuth consent screen → Audience).
+
+### `access_denied` from `gdoc --account pablo.stafforini@trajectorylabs.net`
+
+If OAuth testing blocks Trajectory Docs/Drive auth with `access_denied`, add
+`pablo.stafforini@trajectorylabs.net` as a test user in the GCP project's OAuth
+consent screen, then rerun:
+
+```bash
+gdoc auth --account pablo.stafforini@trajectorylabs.net
+```
 
 ### gmail.py reports "ERROR: missing env var"
 

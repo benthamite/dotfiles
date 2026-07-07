@@ -106,7 +106,16 @@ alias emacsK="while true; do pkill -SIGUSR2 Emacs; done"
 alias claude-personal='CLAUDE_CONFIG_DIR=~/.claude-personal claude'
 alias claude-tlon='CLAUDE_CONFIG_DIR=~/.claude-tlon claude'
 alias claude-epoch='CLAUDE_CONFIG_DIR=~/.claude-epoch claude'
-alias claude-trajectory='CLAUDE_CONFIG_DIR=~/.claude-trajectory claude'
+# Trajectory org disabled claude.ai sign-in, so this account must auth via its
+# provisioned API key. Inject the key (single source of truth: the CR studio
+# .env) and flip the shim's allow-flag for THIS process only -- never exported,
+# so plain `claude` and the other accounts stay key-free and unaffected.
+claude-trajectory() {
+  local keyfile=~/Trajectory/reasoning-tasks/reasoning-tasks-cr-studio/.claude/.env
+  local key; key=$(grep -m1 '^ANTHROPIC_API_KEY=' "$keyfile" | cut -d= -f2-)
+  if [ -z "$key" ]; then echo "claude-trajectory: no ANTHROPIC_API_KEY in $keyfile" >&2; return 1; fi
+  CLAUDE_CONFIG_DIR=~/.claude-trajectory CLAUDE_CODE_ALLOW_API_KEY_AUTH=1 ANTHROPIC_API_KEY="$key" claude "$@"
+}
 
 # Trajectory reasoning-tasks: create a new task worktree + wire its API-key symlink in one step.
 # Usage: newtask <task-slug>   (e.g. newtask compensate-misaligned-ais)

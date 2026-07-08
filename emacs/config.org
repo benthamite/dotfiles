@@ -13421,6 +13421,11 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
    :token (auth-source-pass-get "token" "epoch/slack.com/epochai")
    :cookie (auth-source-pass-get "cookie" "epoch/slack.com/epochai")
    :animate-image t)
+  (slack-register-team
+   :name "Trajectory Labs"
+   :token (auth-source-pass-get "token" "trajectory/slack.com/trajectorylabs")
+   :cookie (auth-source-pass-get "cookie" "trajectory/slack.com/trajectorylabs")
+   :animate-image t)
 
   :hook
   (slack-buffer-mode-hook . (lambda () (setopt line-spacing nil)))

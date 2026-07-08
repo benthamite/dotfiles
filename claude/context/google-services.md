@@ -269,13 +269,23 @@ The personal-account OAuth token was revoked or aged out. Re-auth:
 gdoc auth --account personal
 ```
 
-A browser opens; sign in as `pablo.stafforini@gmail.com`. The OAuth client is in "testing" mode under GCP project `claude-code-gmail-490520`, so the personal email must remain in the project's **Test users** list (GCP Console → APIs & Services → OAuth consent screen → Audience).
+A browser opens; sign in as `pablo.stafforini@gmail.com`. Expect Google's
+"unverified app" warning (Advanced → continue); that is normal for this client.
+
+The shared OAuth client lives in GCP project `claude-code-gmail-490520` (owned by
+`pablo@epoch.ai`). On 2026-07-08 its publishing status was changed from "Testing"
+to **"In production"**, which removed the 7-day refresh-token expiry that had been
+forcing weekly re-auth. Tokens issued *before* that date still carry the old 7-day
+fuse — one final `gdoc auth --account <name>` after expiry replaces them with a
+persistent token (already done for `pablo.stafforini@trajectorylabs.net`; the
+`personal` and `epoch` gdoc tokens will roll over the next time they expire).
+Do not switch the app to "Internal": the client is shared across epoch, personal,
+and trajectory accounts, and Internal would restrict it to `@epoch.ai` users.
 
 ### `access_denied` from `gdoc --account pablo.stafforini@trajectorylabs.net`
 
-If OAuth testing blocks Trajectory Docs/Drive auth with `access_denied`, add
-`pablo.stafforini@trajectorylabs.net` as a test user in the GCP project's OAuth
-consent screen, then rerun:
+Historical (testing-mode) failure; should no longer occur now that the app is in
+production. If auth fails anyway, rerun:
 
 ```bash
 gdoc auth --account pablo.stafforini@trajectorylabs.net

@@ -884,6 +884,36 @@ def format_run_event(event: dict[str, Any], path: Path | None) -> str:
     return "\n".join(lines)
 
 
+def refresh_derived_scores(task_dir: Path, job_id: str) -> None:
+    """Rebuild the visualizer's derived score artifacts (taiga/scores.json,
+    grading/local-runs/taiga-*.grade.json) from the just-pulled job, via
+    cr-visualize's --refresh-scores mode. Mechanical companion to the accept-a-run
+    rule: prose ("regenerate from the same job") failed four times; this makes the
+    regeneration happen at every recorded pull. Non-fatal: a refresh failure must
+    not lose the ledger event."""
+    script = (
+        Path.home()
+        / "Trajectory/.claude/skills/cr-visualize/cr_visualize.py"
+    )
+    if not script.is_file():
+        print(f"cr-taiga: WARN — {script} not found; derived scores NOT refreshed")
+        return
+    root = task_dir.parent.parent
+    proc = subprocess.run(
+        [sys.executable, str(script), task_dir.name, "--refresh-scores", job_id],
+        cwd=root,
+        capture_output=True,
+        text=True,
+    )
+    for line in (proc.stdout + proc.stderr).splitlines():
+        print(f"  {line}")
+    if proc.returncode != 0:
+        print(
+            "cr-taiga: WARN — derived-score refresh failed (see above); "
+            "taiga/scores.json and local-runs transcodes may be STALE"
+        )
+
+
 def command_run(args: argparse.Namespace) -> int:
     task_dir = find_task_dir(args.slug, Path(args.worktree) if args.worktree else None)
     root = worktree_root(task_dir)
@@ -929,6 +959,7 @@ def command_run(args: argparse.Namespace) -> int:
     if status == "pulled" and args.job_id and not args.no_write:
         archive = archive_job_artifacts(task_dir, args.job_id)
         event["archive_dir"] = str(archive)
+        refresh_derived_scores(task_dir, args.job_id)
     elif status == "pulled" and args.job_id:
         event["archive_dir"] = str(archive_dir(task_dir, args.job_id))
     path = None if args.no_write else append_ledger(task_dir, event)

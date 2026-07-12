@@ -223,6 +223,12 @@ the Epoch Google Workspace admin has disabled IMAP).  With a prefix
 argument, it runs in the background; otherwise, it shows a progress
 window.
 
+Mail updates run from the current buffer's ~default-directory~ when that
+directory still exists, and from the user's home directory otherwise.
+This prevents =mu4e='s subprocess startup from failing when a manual or
+timer-triggered update runs after the current worktree directory has
+been deleted.
+
 The command ~mu4e-extras-check-all-mail~ performs the same operation as
 ~mu4e-extras-update-all-mail-and-index~ but always runs in the
 background.  It is intended for periodic full syncs that can take longer.

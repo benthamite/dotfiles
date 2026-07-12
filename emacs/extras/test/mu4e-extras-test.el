@@ -31,6 +31,32 @@
     (should (member "--profile-directory=Profile 2" process-args))
     (should (member "https://mail.google.com/mail/u/0/#inbox" process-args))))
 
+;;;; update-mail-and-index
+
+(ert-deftest mu4e-extras-test-update-mail-and-index-keeps-live-default-directory ()
+  "Mail updates keep an existing `default-directory'."
+  (skip-unless mu4e-extras-test--loadable)
+  (let ((default-directory temporary-file-directory)
+        seen-directory)
+    (mu4e-extras--update-mail-and-index-with-live-directory
+     (lambda (&rest _args)
+       (setq seen-directory default-directory))
+     nil)
+    (should (equal seen-directory temporary-file-directory))))
+
+(ert-deftest mu4e-extras-test-update-mail-and-index-replaces-missing-directory ()
+  "Mail updates use the home directory when `default-directory' is missing."
+  (skip-unless mu4e-extras-test--loadable)
+  (let ((default-directory (make-temp-name
+                            (expand-file-name "missing-" temporary-file-directory)))
+        seen-directory)
+    (should-not (file-directory-p default-directory))
+    (mu4e-extras--update-mail-and-index-with-live-directory
+     (lambda (&rest _args)
+       (setq seen-directory default-directory))
+     nil)
+    (should (equal seen-directory (expand-file-name "~/")))))
+
 ;;;; msg-is-personal-p
 
 (ert-deftest mu4e-extras-test-personal-p-personal-gmail ()

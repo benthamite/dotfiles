@@ -239,6 +239,20 @@ function marks the saved copy as read."
   (when (derived-mode-p 'mu4e-view-mode)
     (face-remap-add-relative 'shr-text :height 0.9)))
 
+(defun mu4e-extras--update-mail-and-index-with-live-directory (orig-fn &rest args)
+  "Call ORIG-FN with ARGS from a directory that exists."
+  (let ((default-directory (mu4e-extras--live-default-directory)))
+    (apply orig-fn args)))
+
+(defun mu4e-extras--live-default-directory ()
+  "Return `default-directory' if it exists, or the home directory."
+  (if (file-directory-p default-directory)
+      default-directory
+    (expand-file-name "~/")))
+
+(advice-add 'mu4e-update-mail-and-index :around
+	    #'mu4e-extras--update-mail-and-index-with-live-directory)
+
 ;;;;; Commands
 
 ;;;###autoload

@@ -42,24 +42,30 @@ fi
 cd "$ROOT"
 
 poll() {
+  # list_problem_runs (raw records), NOT runs.fetch_runs: the normalized view
+  # drops final_score/rewards entirely, so "graded" would never rise (the
+  # 2026-07-12 false terminal-partial alarm).
   TMPDIR=/tmp timeout 300 uv run --no-sync python - "$SLUG" "$ENVNAME" "$JOB" <<'PY' 2>&1 | tail -1
 import asyncio, json, sys
-from reasoning_engine.runs import fetch_runs
+from reasoning_engine.taiga_api import list_problem_runs, get_taiga_environment_id
 slug, env, job = sys.argv[1:4]
-runs = asyncio.run(fetch_runs(slug, environment=env, save=False, job_id=job, json_output=True)) or []
-def sc(r):
-    for k in ("final_score", "score", "reward"):
-        v = r.get(k) if isinstance(r, dict) else getattr(r, k, None)
-        if v is not None:
-            return v
-graded = [sc(r) for r in runs if sc(r) is not None]
-states = {}
-for r in runs:
-    s = str(r.get("status") if isinstance(r, dict) else getattr(r, "status", "?"))
-    states[s] = states.get(s, 0) + 1
-active = sum(n for s, n in states.items() if s.lower() in ("running", "pending", "queued", "starting"))
-print(json.dumps({"total": len(runs), "graded": len(graded), "active": active,
-                  "states": states, "scores": graded}))
+async def main():
+    runs = await list_problem_runs(slug, get_taiga_environment_id(env), job_id=job)
+    best = {}
+    for r in runs:
+        a = r.get("attempt_number")
+        if a not in best or (r.get("created_at") or "") > (best[a].get("created_at") or ""):
+            best[a] = r
+    runs = list(best.values())
+    graded = [r["final_score"] for r in runs if r.get("final_score") is not None]
+    states = {}
+    for r in runs:
+        s = str(r.get("status", "?"))
+        states[s] = states.get(s, 0) + 1
+    active = sum(n for s, n in states.items() if s.lower() in ("running", "pending", "queued", "starting"))
+    print(json.dumps({"total": len(runs), "graded": len(graded), "active": active,
+                      "states": states, "scores": graded}))
+asyncio.run(main())
 PY
 }
 

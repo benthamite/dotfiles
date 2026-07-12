@@ -1,0 +1,95 @@
+#!/bin/bash
+# cr-taiga-watch — poll a submitted Taiga CR job until it is fully graded.
+#
+# Usage: cr-taiga-watch <slug> <job-id> [--epochs N] [--interval SECS] [--env NAME]
+#
+# Run it from (or under) the task's reasoning-tasks worktree, normally as a
+# background task so the harness notifies on exit. Polls are lightweight
+# fetch_runs() status calls (save=False — never touches on-disk artifacts).
+#
+# Cadence: default 120s. Grading lands minutes after the last epoch completes,
+# so long intervals (the 15-min mistake of 2026-07-12) waste up to a full
+# cycle of wall-clock after the run is actually done. Polls are cheap API
+# calls; there is no reason to space them widely. Epochs run in PARALLEL:
+# expected total wall-clock is one epoch (~15 min) + grading, never hours.
+#
+# Exit codes: 0 = all epochs graded; 1 = terminal-but-partial (some epochs
+# failed/never graded — the stall window elapsed with nothing left running);
+# 2 = watch timeout.
+set -u
+
+SLUG=${1:?usage: cr-taiga-watch <slug> <job-id> [--epochs N] [--interval SECS] [--env NAME]}
+JOB=${2:?job id required}
+shift 2
+EPOCHS=10 INTERVAL=120 ENVNAME=TGA-conceptual_domains_v001_TRJ
+MAX_SECS=$((4 * 3600))      # give up after 4h of watching
+STALL_SECS=$((30 * 60))     # terminal-state runs but graded count frozen this long -> partial
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --epochs) EPOCHS=$2; shift 2 ;;
+    --interval) INTERVAL=$2; shift 2 ;;
+    --env) ENVNAME=$2; shift 2 ;;
+    *) echo "unknown arg: $1" >&2; exit 64 ;;
+  esac
+done
+
+# Locate the worktree root (needs the reasoning_engine venv).
+ROOT=$(git rev-parse --show-toplevel 2>/dev/null)
+if [ -z "$ROOT" ] || [ ! -d "$ROOT/tooling/engine" ]; then
+  echo "cr-taiga-watch: run from inside a reasoning-tasks worktree (tooling/engine not found)" >&2
+  exit 64
+fi
+cd "$ROOT"
+
+poll() {
+  TMPDIR=/tmp timeout 300 uv run --no-sync python - "$SLUG" "$ENVNAME" "$JOB" <<'PY' 2>&1 | tail -1
+import asyncio, json, sys
+from reasoning_engine.runs import fetch_runs
+slug, env, job = sys.argv[1:4]
+runs = asyncio.run(fetch_runs(slug, environment=env, save=False, job_id=job, json_output=True)) or []
+def sc(r):
+    for k in ("final_score", "score", "reward"):
+        v = r.get(k) if isinstance(r, dict) else getattr(r, k, None)
+        if v is not None:
+            return v
+graded = [sc(r) for r in runs if sc(r) is not None]
+states = {}
+for r in runs:
+    s = str(r.get("status") if isinstance(r, dict) else getattr(r, "status", "?"))
+    states[s] = states.get(s, 0) + 1
+active = sum(n for s, n in states.items() if s.lower() in ("running", "pending", "queued", "starting"))
+print(json.dumps({"total": len(runs), "graded": len(graded), "active": active,
+                  "states": states, "scores": graded}))
+PY
+}
+
+START=$(date +%s)
+LAST_GRADED=-1
+LAST_PROGRESS=$START
+i=0
+while :; do
+  i=$((i + 1))
+  OUT=$(poll)
+  NOW=$(date +%s)
+  echo "$(date '+%H:%M:%S') poll $i: $OUT"
+  read -r G A <<EOF2
+$(echo "$OUT" | python3 -c "import sys,json
+try:
+    d=json.loads(sys.stdin.read()); print(d.get('graded',0), d.get('active',0))
+except Exception: print('-1 -1')" 2>/dev/null || echo "-1 -1")
+EOF2
+  if [ "${G:-1}" -ge "$EPOCHS" ]; then
+    echo "RUN GRADED: $G/$EPOCHS epochs scored (job $JOB)"
+    exit 0
+  fi
+  if [ "${G:--1}" -gt "$LAST_GRADED" ]; then LAST_GRADED=$G; LAST_PROGRESS=$NOW; fi
+  if [ "${A:-1}" -eq 0 ] && [ "${G:--1}" -ge 0 ] && [ $((NOW - LAST_PROGRESS)) -ge "$STALL_SECS" ]; then
+    echo "RUN TERMINAL-PARTIAL: $G/$EPOCHS graded, nothing running, no progress for $((STALL_SECS / 60))m (job $JOB) — investigate (infra-dead epochs / grading failure)"
+    exit 1
+  fi
+  if [ $((NOW - START)) -ge "$MAX_SECS" ]; then
+    echo "WATCH TIMEOUT after $((MAX_SECS / 3600))h: $G/$EPOCHS graded (job $JOB)"
+    exit 2
+  fi
+  sleep "$INTERVAL"
+done

@@ -914,6 +914,283 @@ def refresh_derived_scores(task_dir: Path, job_id: str) -> None:
         )
 
 
+# --- accept-a-run (the atomic adoption chain) --------------------------------
+#
+# Why this exists (2026-07-13): the accept chain (pin taigaLink -> verified pull
+# -> ledger/transcodes -> scorecard -> QA refresh) lived only as prose in session
+# notes. Sessions re-improvised it, one exit recorded a truncated version, and
+# both #67 and #414 reached the reviewer with stale /qa-reasoning audits — Ryan
+# had to ask on Slack. This subcommand owns the chain: it EXECUTES the mechanical
+# legs and VERIFIES the judgment legs (scorecard bullets and the QA audit are
+# agent/human work it must never clobber), failing closed (exit 3) with a
+# resumable state file until every leg is done. cr-task-state banners any
+# incomplete state file, so a session dying mid-chain surfaces in the next one.
+
+ACCEPT_STATE_DIR = Path.home() / ".cache" / "cr-accept"
+DEFAULT_REPO = "trajectory-labs-pbc/reasoning-tasks"
+QA_AUTHOR_MARK = "Written by 🤖 Claude"
+UUID_RE = re.compile(
+    r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+)
+QA_HEAD_RE = re.compile(r"HEAD\s*`([0-9a-f]{7,40})`")
+
+
+def accept_state_path(slug: str) -> Path:
+    return ACCEPT_STATE_DIR / f"{slug}.json"
+
+
+def save_accept_state(slug: str, state: dict[str, Any]) -> None:
+    path = accept_state_path(slug)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    state["updated_at"] = utc_now()
+    path.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n")
+
+
+def basic_info_path(task_dir: Path) -> Path:
+    return task_dir / "basic_info.json"
+
+
+def pinned_job_of(task_dir: Path) -> str | None:
+    try:
+        link = json.loads(basic_info_path(task_dir).read_text()).get("taigaLink") or ""
+    except (OSError, ValueError):
+        return None
+    m = UUID_RE.search(link)
+    return m.group(0) if m else None
+
+
+def gh_json(args: list[str]) -> Any:
+    proc = subprocess.run(["gh", *args], capture_output=True, text=True, timeout=60)
+    if proc.returncode != 0:
+        raise TaigaLedgerError(f"gh {' '.join(args[:3])}… failed: {proc.stderr.strip()[:200]}")
+    return json.loads(proc.stdout)
+
+
+def resolve_issue_number(slug: str, repo: str) -> int:
+    items = gh_json(
+        ["issue", "list", "--repo", repo, "--search", f"{slug} in:title",
+         "--state", "all", "--json", "number,title"]
+    )
+    exact = [i for i in items if i["title"].strip() == slug]
+    pool = exact or items
+    if len(pool) == 1:
+        return pool[0]["number"]
+    if not pool:
+        raise TaigaLedgerError(
+            f"no issue titled '{slug}' in {repo} — pass --issue N explicitly"
+        )
+    nums = ", ".join(f"#{i['number']}" for i in pool)
+    raise TaigaLedgerError(
+        f"ambiguous issue for '{slug}' ({nums}) — pass --issue N explicitly"
+    )
+
+
+def qa_freshness(
+    task_dir: Path, job_id: str, repo: str, issue_number: int
+) -> tuple[bool, list[str], str]:
+    """Is the issue's newest /qa-reasoning audit current for HEAD + this job?
+
+    Fresh iff: no uncommitted task-file edits, the newest audit comment names
+    this job, and it covers the last task-touching commit (by recorded HEAD sha
+    when the audit states one, by timestamp otherwise). Any failure to verify
+    counts as STALE — this gate fails closed."""
+    root = worktree_root(task_dir)
+    rel = str(task_dir.relative_to(root))
+    reasons: list[str] = []
+    # Tracked modifications only: untracked derived artifacts (a regenerated
+    # scorecard.md, pulled taiga/ trees) are not part of the reviewed lineage.
+    if run_git(root, "status", "--short", "--untracked-files=no", "--", rel):
+        reasons.append(
+            "uncommitted edits to tracked task files — no posted audit can cover them"
+        )
+    content_sha = run_git(root, "log", "-1", "--format=%H", "--", rel)
+    content_date = run_git(root, "log", "-1", "--format=%cI", "--", rel)
+    data = gh_json(
+        ["issue", "view", str(issue_number), "--repo", repo, "--json", "comments"]
+    )
+    audits = [
+        c for c in data.get("comments", [])
+        if "Verdict:" in c.get("body", "") and QA_AUTHOR_MARK in c.get("body", "")
+    ]
+    if not audits:
+        reasons.append(f"no /qa-reasoning audit comment on issue #{issue_number}")
+        return (False, reasons, content_sha)
+    newest = audits[-1]
+    body = newest["body"]
+    if job_id not in body:
+        reasons.append(
+            f"newest audit ({newest.get('createdAt', '?')[:16]}) does not name "
+            f"job {job_id[:8]} — it reviewed a different run"
+        )
+    stated_heads = QA_HEAD_RE.findall(body)
+    if stated_heads:
+        if not any(
+            content_sha.startswith(h) or h.startswith(content_sha)
+            for h in stated_heads
+        ):
+            reasons.append(
+                f"newest audit covers HEAD `{stated_heads[-1][:10]}`, but the last "
+                f"task-touching commit is `{content_sha[:10]}`"
+            )
+    else:
+        if newest.get("createdAt", "") < content_date:
+            reasons.append(
+                f"newest audit ({newest.get('createdAt', '?')[:16]}) predates the "
+                f"last task-touching commit ({content_date[:16]})"
+            )
+    return (not reasons, reasons, content_sha)
+
+
+def epochs_on_disk(task_dir: Path, job_id: str) -> int:
+    """Epoch count iff every run.json under taiga/ belongs to job_id, else 0."""
+    files = sorted((task_dir / "taiga").glob("*/[0-9]*/run.json"))
+    if not files:
+        return 0
+    for f in files:
+        try:
+            if json.loads(f.read_text()).get("job_id") != job_id:
+                return 0
+        except (OSError, ValueError):
+            return 0
+    return len(files)
+
+
+def command_accept(args: argparse.Namespace) -> int:
+    task_dir = find_task_dir(args.slug, Path(args.worktree) if args.worktree else None)
+    root = worktree_root(task_dir)
+    slug = task_dir.name
+    repo = args.repo
+    job = args.job or pinned_job_of(task_dir)
+    if not job:
+        raise TaigaLedgerError(
+            f"{slug}: no --job given and basic_info.json pins no taigaLink"
+        )
+    if not UUID_RE.fullmatch(job):
+        raise TaigaLedgerError(f"--job must be a full job UUID, got: {job}")
+    issue = args.issue or resolve_issue_number(slug, repo)
+    steps: dict[str, str] = {}
+
+    if args.check_qa:
+        fresh, reasons, content_sha = qa_freshness(task_dir, job, repo, issue)
+        if fresh:
+            print(f"QA-FRESH: issue #{issue} audit covers tasks/{slug} @ "
+                  f"{content_sha[:10]} + job {job[:8]}")
+            return 0
+        print(f"QA-STALE: issue #{issue}, job {job[:8]}")
+        for r in reasons:
+            print(f"  - {r}")
+        print(f"  → run /qa-reasoning against tasks/{slug} @ {content_sha[:10]} + "
+              f"job {job}, post the audit (gated), then re-check")
+        return 3
+
+    # 1. pin taigaLink (FIRST — the accept-a-run rule)
+    bi_path = basic_info_path(task_dir)
+    if pinned_job_of(task_dir) == job:
+        steps["pin"] = "done (already pinned)"
+    else:
+        info = json.loads(bi_path.read_text())
+        info["taigaLink"] = transcript_url(job, slug)
+        bi_path.write_text(json.dumps(info, indent=2, ensure_ascii=False) + "\n")
+        steps["pin"] = "done (written)"
+
+    # 2. local commit of the pin (push stays gated with Pablo, as ever)
+    bi_rel = str(bi_path.relative_to(root))
+    if args.no_commit:
+        steps["commit"] = "skipped (--no-commit)"
+    elif run_git(root, "status", "--short", "--", bi_rel):
+        run_git(root, "add", bi_rel)
+        run_git(root, "commit", "-m", f"{slug}: taigaLink -> {job}", "--", bi_rel)
+        steps["commit"] = f"done ({run_git(root, 'rev-parse', '--short', 'HEAD')})"
+    else:
+        steps["commit"] = "done (nothing to commit)"
+
+    # 3. verified pinned pull (cr-pull-pinned: locks, pins, verifies every epoch)
+    n = epochs_on_disk(task_dir, job)
+    if n:
+        steps["pull"] = f"skipped ({n} epochs of {job[:8]} already on disk)"
+    else:
+        proc = subprocess.run(
+            [str(Path.home() / "bin" / "cr-pull-pinned"), slug, "--worktree", str(root)],
+            text=True,
+        )
+        if proc.returncode != 0:
+            steps["pull"] = "FAILED"
+            save_accept_state(slug, {"slug": slug, "job": job, "issue": issue,
+                                     "status": "in-progress", "steps": steps})
+            raise TaigaLedgerError(
+                f"cr-pull-pinned failed (exit {proc.returncode}) — fix and re-run "
+                f"`cr-taiga accept {slug} --job {job}`"
+            )
+        n = epochs_on_disk(task_dir, job)
+        steps["pull"] = f"done ({n} epochs verified)"
+
+    # 4. ledger event + artifact archive + derived-score transcodes
+    hashes = task_hashes(task_dir)
+    tree_hash = task_tree_hash(hashes)
+    already = any(
+        e.get("status") == "pulled" and e.get("job_id") == job
+        and e.get("task_tree_hash") == tree_hash
+        for e in read_ledger(task_dir)
+    )
+    if already:
+        refresh_derived_scores(task_dir, job)
+        steps["ledger"] = "done (already recorded; transcodes refreshed)"
+    else:
+        event = build_ledger_event(
+            task_dir=task_dir, git_info=git_info(root), status="pulled",
+            model=args.model, grading_model=args.grading_model,
+            epochs=n or args.epochs, job_id=job,
+            note="accepted via cr-taiga accept",
+        )
+        event["archive_dir"] = str(archive_job_artifacts(task_dir, job))
+        refresh_derived_scores(task_dir, job)
+        append_ledger(task_dir, event)
+        steps["ledger"] = "done (event + archive written)"
+
+    # 5. VERIFY scorecard currency (regeneration is agent judgment — the
+    #    "How to improve" bullets must never be clobbered mechanically)
+    scorecard = task_dir / "grading" / "scorecard.md"
+    if scorecard.is_file() and (job in scorecard.read_text() or job[:8] in scorecard.read_text()):
+        steps["scorecard"] = "verified (names the accepted job)"
+        scorecard_ok = True
+    else:
+        steps["scorecard"] = (
+            f"PENDING — regenerate via the cr-scorecard skill so it reflects job "
+            f"{job[:8]} (bullets are judgment; not auto-clobbered)"
+        )
+        scorecard_ok = False
+
+    # 6. VERIFY the /qa-reasoning audit covers HEAD + this job (fails closed)
+    fresh, reasons, content_sha = qa_freshness(task_dir, job, repo, issue)
+    if fresh:
+        steps["qa-audit"] = f"verified (issue #{issue} audit covers {content_sha[:10]} + job)"
+    else:
+        steps["qa-audit"] = (
+            "PENDING — " + "; ".join(reasons)
+            + f". Run /qa-reasoning against tasks/{slug} @ {content_sha[:10]} + job "
+            f"{job}, post the audit on issue #{issue} (gated), then re-run "
+            f"`cr-taiga accept {slug} --job {job}`"
+        )
+
+    complete = scorecard_ok and fresh
+    save_accept_state(slug, {
+        "slug": slug, "job": job, "issue": issue,
+        "status": "complete" if complete else "in-progress",
+        "steps": steps, "head": content_sha,
+    })
+    print(f"ACCEPT {slug} — job {job}")
+    for name in ["pin", "commit", "pull", "ledger", "scorecard", "qa-audit"]:
+        print(f"  {name + ':':11} {steps[name]}")
+    if complete:
+        print("ACCEPT COMPLETE — the run is adopted and the posted QA audit is current.")
+        return 0
+    print(
+        "ACCEPT INCOMPLETE — fails closed until every leg verifies; "
+        f"state: {accept_state_path(slug)}"
+    )
+    return 3
+
+
 def command_run(args: argparse.Namespace) -> int:
     task_dir = find_task_dir(args.slug, Path(args.worktree) if args.worktree else None)
     root = worktree_root(task_dir)
@@ -1037,6 +1314,27 @@ def build_parser() -> argparse.ArgumentParser:
     compare.add_argument("--worktree")
     compare.add_argument("--json", action="store_true")
     compare.set_defaults(func=command_compare)
+
+    accept = sub.add_parser(
+        "accept",
+        help="adopt a graded Taiga run atomically: pin taigaLink, verified pull, "
+        "ledger+transcodes, then FAIL CLOSED until the scorecard and the issue's "
+        "/qa-reasoning audit cover the new HEAD + job",
+    )
+    accept.add_argument("slug")
+    accept.add_argument("--job", help="job UUID to adopt (default: the pinned taigaLink job)")
+    accept.add_argument("--worktree")
+    accept.add_argument("--issue", type=int, help="issue number (default: resolved by exact title)")
+    accept.add_argument("--repo", default=DEFAULT_REPO)
+    accept.add_argument("--model", default="claude-fable-5")
+    accept.add_argument("--grading-model", default="claude-fable-5")
+    accept.add_argument("--epochs", type=int, default=10)
+    accept.add_argument("--no-commit", action="store_true",
+                        help="write the taigaLink pin without committing it")
+    accept.add_argument("--check-qa", action="store_true",
+                        help="read-only: verify only the QA-audit freshness leg "
+                        "(the ball-return gate) and exit 0 fresh / 3 stale")
+    accept.set_defaults(func=command_accept)
 
     preflight = sub.add_parser(
         "preflight",

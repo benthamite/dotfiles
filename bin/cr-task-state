@@ -411,6 +411,23 @@ def main() -> int:
 
     # --- divergence banners ---------------------------------------------------
     warns: list[str] = []
+    # An interrupted `cr-taiga accept` chain must surface in the next session
+    # (2026-07-13: a session died on the acceptance question and the QA-refresh
+    # leg was silently lost; Ryan found stale audits on #67/#414).
+    try:
+        st = json.loads(
+            (Path.home() / ".cache" / "cr-accept" / f"{slug}.json").read_text()
+        )
+        if st.get("status") != "complete":
+            pending = [k for k, v in (st.get("steps") or {}).items()
+                       if "PENDING" in str(v) or "FAILED" in str(v)]
+            warns.append(
+                f"accept-a-run chain INCOMPLETE for job {(st.get('job') or '?')[:8]} "
+                f"(pending: {', '.join(pending) or 'unknown'}) — resume: "
+                f"cr-taiga accept {slug} --job {st.get('job', '')}"
+            )
+    except (OSError, ValueError):
+        pass
     fps = {r["fp"] for r in rows if r["fp"] != "-"}
     if len(fps) > 1:
         warns.append(f"{len(fps)} distinct rubric variants across branches — "

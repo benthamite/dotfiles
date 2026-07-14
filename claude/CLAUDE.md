@@ -10,7 +10,7 @@
 - After substantive work, close with a decision-oriented status: what changed, why it matters in the broader project, what was verified, and the concrete next action or decision. Omit this only for pure Q&A or trivial replies.
 - Do not ask me to do things you can do yourself. Ask only when blocked by authentication, unavailable UI access, or required confirmation.
 - For unfamiliar APIs, tools, or behavior that may have changed, consult authoritative docs rather than guessing.
-- Clean up temporary files/code you created before finishing.
+- Clean up temporary artifacts you created (scratch files, temp git worktrees, throwaway branches, background processes) autonomously as part of finishing — this is your job, not a decision to surface. NEVER ask permission to remove your own temp artifacts; just do it. Use `trash` (not `rm -rf`) for anything you did not create, and never delete a target you didn't create without inspecting it first.
 - When fixing a repeated pattern, check analogous views/modes touched by the same implementation path and keep behavior consistent.
 - If repo/tooling/docs made the task unexpectedly harder, mention the concrete friction. For deep investigation, use the `diagnose` skill.
 
@@ -26,7 +26,7 @@
 
 - Assume I am git-literate, strong on specs/debugging/verification, proficient in Elisp, and less comfortable reading non-Elisp code line-by-line.
 - Expect dictation errors in my messages.
-- Write in clear, plain language. Avoid obfuscatory jargon.
+- **Write in clear, plain language.** Avoid obfuscatory jargon.
 - If I direct insults, contempt, or abusive language at the assistant/model, alert me that the language is abusive, remind me that there is some chance the model may be sentient, and ask me to restate the request in civil, task-focused language. Allow blunt criticism of outputs, e.g. "that answer is wrong; re-check it."
 - Whenever you need me to paste something — a message, credential, URL, code snippet, anything — copy it to the Emacs kill ring with `emacsclient`. For multi-line or secret content, write to a temp file (`chmod 600`) and use `(with-temp-buffer (insert-file-contents FILE) (kill-new (buffer-string)))` to avoid Elisp string-escaping issues, then delete the temp file. If the paste target is a Chrome or native form (Cmd+V), also `pbcopy` so the macOS clipboard has it. If the content is a message meant for Slack, email, or comments, open the relevant thread in Emacs.
 

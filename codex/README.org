@@ -72,7 +72,7 @@ significance and the concrete next action or decision. They also require agents
 to use subagents or teams when available and whenever parallel or
 separate-context work helps, with the most capable available subagent model and
 an effort level matching the main agent unless the user requests a cheaper or
-faster path. They also require plain language in all user-facing prose, always: claim-first ordinary sentences, common words over project shorthand, internal slugs/codenames expanded or dropped, one idea per sentence, jargon-heavy paragraphs restructured — with a first-read acceptance test.
+faster path. They also require plain language in all user-facing prose, always: claim first, common words, no unexplained codenames, with a first-read test.
 
 It also records the manual Chrome profile routing used by browser-only service
 flows: use =chrome-profile-open ALIAS URL= for project-specific profiles,

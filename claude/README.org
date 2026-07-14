@@ -321,7 +321,7 @@ The global =~/.claude/CLAUDE.md= (symlinked here) is the user-level memory loade
 - Fix root causes, not symptoms; no silent fallbacks or workaround code unless explicitly labeled, justified, and approved.
 - Verify fixes end-to-end before declaring them done; say exactly what could not be verified.
 - Treat a passing metric, scorecard, or count as completion evidence only after confirming it directly covers the user's stated requirement.
-- Write in clear, plain language and avoid obfuscatory jargon.
+- Write all user-facing prose in plain language, always: lead with the claim in an ordinary sentence; prefer common words over project shorthand; expand or drop internal slugs/codenames; one idea per sentence; restructure any paragraph that leans on jargon. Acceptance test: a colleague who has not seen the session follows every sentence on first read.
 - Commit each logical change immediately; prefer amending when iterating on the same logical change (unless already pushed).
 - Pre-commit checks are hook-enforced: Elisp checks are in the
   =elisp-conventions= skill, and agent configuration commits are guarded by the

@@ -6770,7 +6770,8 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package eat
   :ensure (:host codeberg
-                 :repo "akib/emacs-eat"
+                 :repo "benthamite/emacs-eat"
+                 :branch "fix-mouse-input-after-buffer-kill" ; awaiting PR merge: https://codeberg.org/akib/emacs-eat/pulls/266
                  :files ("*.el" ("term" "term/*.el") "*.texi"
                          "*.ti" ("terminfo/e" "terminfo/e/*")
                          ("terminfo/65" "terminfo/65/*")

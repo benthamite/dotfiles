@@ -81,9 +81,11 @@ N"=. The shared config lives at =~/.config/chrome-profile-open/profiles.json=.
 =trajectory-open URL= is a compatibility wrapper around =chrome-profile-open
 trajectory URL= for Trajectory/CR pages.
 
-=codex/config.toml= enables experimental goals support under =[features]=. It
-also sets =suppress_unstable_features_warning = true= so Codex does not print
-the startup warning on every launch.
+=codex/config.toml= sets the default model to =gpt-5.6-sol=, the current Sol
+model listed by the local Codex model cache. It enables experimental goals
+support under =[features]=. It also sets
+=suppress_unstable_features_warning = true= so Codex does not print the startup
+warning on every launch.
 
 * Skills
 

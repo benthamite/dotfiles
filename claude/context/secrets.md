@@ -11,6 +11,16 @@
 - **Account-specific MCP secrets**: placement rules live in `context/mcp-servers.md`; treat resolved values as secrets and never print them.
 - **Private GitHub file fetch**: `gh api contents` returns `download_url` with an inline `?token=...`, which the Bash secret hook rightly blocks for `curl`. Use the base64 content path instead: `gh api repos/OWNER/REPO/contents/PATH --jq .content | base64 -D > out`. For files >1 MB, use `gh api repos/OWNER/REPO/git/blobs/SHA --jq .content | base64 -D` or `gh api --paginate`.
 
+## Minimizing 1Password biometric prompts
+
+Desktop-gated `op` operations (any write, and reads outside the `Automations` vault) cost the user one Touch ID approval **per shell invocation** — agent tool calls spawn fresh processes, so sessions never carry over between commands, and there is no cache the agent can extend. Treat each prompt as a real interruption of the user and design around it:
+
+- **Inventory first, then batch.** Before touching `op`, list every desktop-gated operation the task will need (reads of personal vaults, item creates/edits, share links) and run them all in ONE shell invocation. Ten operations in one command is one prompt; ten commands is ten prompts.
+- **Never `op signin --force`.** It discards any live session and forces re-auth. Use `op whoami >/dev/null 2>&1 || op signin` so an existing session is reused when one exists.
+- **Prefer the promptless path when placing secrets.** Reads of `op://Automations/...` go through the read-only service-account token with no prompt ever. If an agent will need to read a secret repeatedly (runtime keys, test credentials for agent-driven verification), weigh placing it in `Automations` at creation time; reserve `Employee`/other vaults for credentials only humans consume.
+- **Warn before prompting.** Tell the user a Touch ID prompt is coming before running the command, so they're at the keyboard — a timed-out prompt means a retry, which is another prompt.
+- **Steady state should be silent.** Prompt bursts are acceptable during one-time provisioning; if routine operation of an automation requires recurring biometric approval, that's a design smell — restructure so runtime reads come from `Automations`.
+
 ## Main Epoch 1Password vaults
 
 The Epoch tenant (`epoch-team.1password.com`) has several vaults; these are the three that matter most for routine work. For the full 9-vault topology and the "where does a new secret belong" rules, use the `epoch-vaults` skill; for create/edit/delete, use `store-secret`.

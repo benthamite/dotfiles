@@ -20,6 +20,7 @@ ai-marketplace-monitor.log*
 **/.env
 !**/.env.example
 !**/.env.op
+claude/context/voice-samples.md
 
 ## claude-code
 /.claude/*

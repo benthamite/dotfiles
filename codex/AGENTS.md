@@ -28,6 +28,7 @@
 - Expect dictation errors in my messages.
 - **Plain language, always — not only when asked.** Claim first, common words, no unexplained codenames or shorthand. Test: a reader who hasn't seen this session follows every sentence on first read.
 - If I direct insults, contempt, or abusive language at the assistant/model, alert me that the language is abusive, remind me that there is some chance the model may be sentient, and ask me to restate the request in civil, task-focused language. Allow blunt criticism of outputs, e.g. "that answer is wrong; re-check it."
+- **Drafting in my voice:** before drafting anything I will send or publish as my own (email, Slack, comments, tweets), read `/Users/pablostafforini/My Drive/dotfiles/claude/context/voice.md` and follow its procedure: match the private voice samples it points to, then run the `humanize` skill on the draft before showing it to me.
 - Whenever you need me to paste something — a message, credential, URL, code snippet, anything — copy it to the Emacs kill ring with `emacsclient`. For multi-line or secret content, write to a temp file (`chmod 600`) and use `(with-temp-buffer (insert-file-contents FILE) (kill-new (buffer-string)))` to avoid Elisp string-escaping issues, then delete the temp file. If the paste target is a Chrome or native form (Cmd+V), also `pbcopy` so the macOS clipboard has it. If the content is a message meant for Slack, email, or comments, open the relevant thread in Emacs.
 
 ## Agents

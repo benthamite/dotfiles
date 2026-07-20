@@ -189,6 +189,7 @@ adding guidance to =CLAUDE.md=.
 | New machine-specific permission | =~/.claude/settings.local.json= | E.g. brew, mpv, pip3 |
 | New MCP server | =~/.claude.json=, then run =claude/bin/sync-mcp-servers.sh= | Syncs to account dirs |
 | New MCP reference detail | =claude/context/mcp-servers.md= | Keeps MCP-specific instructions out of global memory and the long README |
+| New voice/style rule for drafted messages | =claude/context/voice.md= | Read before drafting messages Pablo sends as his own; private samples live in the gitignored =claude/context/voice-samples.md= |
 
 When adding or changing a reusable Claude skill or hook, follow the counterpart
 policy in =../agents/README.org= in the same session. The

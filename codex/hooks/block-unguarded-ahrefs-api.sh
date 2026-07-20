@@ -5,7 +5,7 @@
 # Agents must use claude/bin/ahrefs-api-guard (or an equivalent project-level
 # guard) so the free quota endpoint is checked before any paid request.
 #
-# Matcher: Bash|exec_command|functions.exec_command
+# Matcher: Bash|exec_command|functions.exec|functions.exec_command
 
 set -euo pipefail
 

@@ -31,6 +31,79 @@ esac
 
 [ -z "$CONTENT" ] && exit 0
 
+mask_op_quoted_literals() {
+  printf '%s\n' "$1" | awk '
+    BEGIN { SQ = sprintf("%c", 39); DQ = "\""; BS = "\\" }
+    { text = text $0 "\n" }
+    END {
+      n = length(text); out = ""; i = 1
+      while (i <= n) {
+        c = substr(text, i, 1)
+        if (c == BS) { out = out substr(text, i, 2); i += 2; continue }
+        if (c == SQ) {
+          p = index(substr(text, i + 1), SQ)
+          if (p == 0) { out = out substr(text, i); break }
+          out = out SQ SQ; i = i + p + 1; continue
+        }
+        if (c == DQ) {
+          j = i + 1; span = ""; closed = 0
+          while (j <= n) {
+            d = substr(text, j, 1)
+            if (d == BS) { span = span substr(text, j, 2); j += 2; continue }
+            if (d == DQ) { closed = 1; break }
+            span = span d; j++
+          }
+          if (!closed) { out = out substr(text, i); break }
+          if (index(span, "$") || index(span, "`")) out = out DQ span DQ
+          else out = out DQ DQ
+          i = j + 1; continue
+        }
+        out = out c; i++
+      }
+      printf "%s", out
+    }'
+}
+
+is_explicit_desktop_op_batch() {
+  local flattened
+  flattened=$(printf '%s' "$1" | tr '\n' ' ')
+  printf '%s' "$flattened" | grep -qE "^[[:space:]]*((/usr/bin/|/bin/)?env)[[:space:]]+-u[[:space:]]+OP_SERVICE_ACCOUNT_TOKEN[[:space:]]+((/bin/|/usr/bin/)?(bash|sh|zsh|dash|ksh))[[:space:]]+-l?c[[:space:]]+('[^']*'|\"[^\"]*\")[[:space:]]*$"
+}
+
+contains_raw_op_command() {
+  local raw scan boundary op_bin wrapper
+  raw="$CONTENT"
+  is_explicit_desktop_op_batch "$raw" && return 1
+  if printf '%s' "$raw" | grep -qE 'cmd[[:space:]]*:[[:space:]]*["'"'"'`][[:space:]]*((command|env|xargs|sudo|timeout)[[:space:]]+|(bash|sh|zsh|dash|ksh)[[:space:]]+-l?c[[:space:]]+["'"'"'])?(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|["'"'"'`])'; then
+    return 0
+  fi
+  if printf '%s' "$raw" | grep -qE '(^|[;&|(!][[:space:]]*|\$\([[:space:]]*)(((/bin/|/usr/bin/)?(bash|sh|zsh|dash|ksh))[[:space:]]+-l?c|eval)[[:space:]]+["'"'"'][^"'"'"']*(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|["'"'"'])'; then
+    return 0
+  fi
+  scan=$(mask_op_quoted_literals "$raw")
+  scan=$(printf '%s' "$scan" | sed -E 's#((/usr/bin/|/bin/)?env)[[:space:]]+-u[[:space:]]+OP_SERVICE_ACCOUNT_TOKEN[[:space:]]+(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op[[:space:]]+#op-automations-explicit-desktop #g')
+  scan=$(printf '%s' "$scan" | sed -E 's/(^|[;&|])[[:space:]]*(if|then|elif|while|until|do)[[:space:]]+/\1 /g')
+  boundary='(^[[:space:]]*|[;&|(!][[:space:]]*|\$\([[:space:]]*)'
+  op_bin='(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|$)'
+  wrapper='(command[[:space:]]+|((/usr/bin/|/bin/)?env)([[:space:]]+(-u[[:space:]]+[^[:space:]]+|-i|--|[A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*))*[[:space:]]+|xargs([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+|(sudo|timeout|nice|exec|nohup|time)([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+|[A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)'
+  printf '%s' "$scan" | grep -qE "${boundary}${op_bin}" && return 0
+  printf '%s' "$scan" | grep -qE "${boundary}${wrapper}${op_bin}" && return 0
+  printf '%s' "$scan" | grep -qE 'find[[:space:]].*-exec[[:space:]]+(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|$)' && return 0
+  printf '%s' "$scan" | grep -qE '\$\([[:space:]]*command[[:space:]]+-v[[:space:]]+op[[:space:]]*\)' && return 0
+  return 1
+}
+
+deny_raw_op_command() {
+  jq -n --arg tool "$TOOL_NAME" '{
+    "hookSpecificOutput": {
+      "hookEventName": "PreToolUse",
+      "permissionDecision": "deny",
+      "permissionDecisionReason": ("BLOCKED: " + $tool + " contains a direct 1Password CLI command, which can trigger a separate Touch ID prompt for every process.\n\nFor prompt-free read-only access to the Automations vault, use `op-automations ...`. For a deliberately biometric desktop operation, use `env -u OP_SERVICE_ACCOUNT_TOKEN op ...` and batch every required operation into one shell process.")
+    }
+  }'
+  exit 0
+}
+
 deny_op_reveal_output() {
   jq -n --arg tool "$TOOL_NAME" '{
     "hookSpecificOutput": {
@@ -45,10 +118,18 @@ deny_op_reveal_output() {
 # --- Allowlist: commands that legitimately read secrets ---
 # pass, op, security (Keychain), git-crypt, and secret-scanning tools themselves
 if [ "$TOOL_NAME" = "Bash" ]; then
+  if { printf '%s' "$CONTENT" | grep -qE '(^[[:space:]]*|[;&|(!][[:space:]]*)(op-automations|((/usr/bin/|/bin/)?env)[[:space:]]+-u[[:space:]]+OP_SERVICE_ACCOUNT_TOKEN[[:space:]]+(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op|(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op)[[:space:]]+' || \
+       { is_explicit_desktop_op_batch "$CONTENT" && printf '%s' "$CONTENT" | grep -qE '(^|[;&|[:space:]])op[[:space:]]+'; }; } && \
+     printf '%s' "$CONTENT" | grep -qE -- '(^|[[:space:]])--reveal([^[:alnum:]_-]|$)'; then
+    deny_op_reveal_output
+  fi
+  if contains_raw_op_command; then
+    deny_raw_op_command
+  fi
   # Standalone `op item get ... --reveal` prints the revealed field into tool
   # output before the output redactor can be treated as reliable protection.
   if echo "$CONTENT" | grep -qE '^\s*op\s+item\s+get\b' && \
-     echo "$CONTENT" | grep -qE -- '(^|[[:space:]])--reveal([[:space:]]|$)' && \
+     echo "$CONTENT" | grep -qE -- '(^|[[:space:]])--reveal([^[:alnum:]_-]|$)' && \
      ! echo "$CONTENT" | grep -qE '[|>]'; then
     deny_op_reveal_output
   fi

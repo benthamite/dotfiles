@@ -4,7 +4,7 @@
 # Enforces CLAUDE.md's "use trash instead of rm -rf" instruction with code,
 # not just prose.
 #
-# Matcher: Bash|exec_command|functions.exec_command
+# Matcher: Bash|exec_command|functions.exec|functions.exec_command
 
 set -euo pipefail
 

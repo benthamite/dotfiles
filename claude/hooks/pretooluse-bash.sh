@@ -61,6 +61,12 @@ delegate() {
   fi
 }
 
+dc_explicit_desktop_op_batch_p() {
+  local flattened
+  flattened=$(printf '%s' "$1" | tr '\n' ' ')
+  printf '%s' "$flattened" | grep -qE "^[[:space:]]*((/usr/bin/|/bin/)?env)[[:space:]]+-u[[:space:]]+OP_SERVICE_ACCOUNT_TOKEN[[:space:]]+((/bin/|/usr/bin/)?(bash|sh|zsh|dash|ksh))[[:space:]]+-l?c[[:space:]]+('[^']*'|\"[^\"]*\")[[:space:]]*$"
+}
+
 # ============================================================================
 # Ported checks (verbatim logic from the standalone hooks; Bash branch only).
 # ============================================================================
@@ -68,11 +74,47 @@ delegate() {
 # --- block-secret-leak.sh (Bash branch) ---
 check_secret_leak() {
   local CONTENT="$COMMAND"
+  local OP_EXPLICIT_BATCH=0
   [ -z "$CONTENT" ] && return 0
+  dc_explicit_desktop_op_batch_p "$CONTENT" && OP_EXPLICIT_BATCH=1
+
+  if { printf '%s' "$CONTENT" | grep -qE '(^[[:space:]]*|[;&|(!][[:space:]]*)(op-automations|((/usr/bin/|/bin/)?env)[[:space:]]+-u[[:space:]]+OP_SERVICE_ACCOUNT_TOKEN[[:space:]]+(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op|(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op)[[:space:]]+' || \
+       { [ "$OP_EXPLICIT_BATCH" -eq 1 ] && printf '%s' "$CONTENT" | grep -qE '(^|[;&|[:space:]])op[[:space:]]+'; }; } && \
+     printf '%s' "$CONTENT" | grep -qE -- '(^|[[:space:]])--reveal([^[:alnum:]_-]|$)'; then
+    add_deny "BLOCKED: Bash command would print a revealed 1Password field.
+
+Do not use \`op item get --reveal\`, including through \`op-automations\` or explicit desktop authentication. Read only the required field with \`op read\` and keep the value inside a protected variable, stdin stream, or restricted temp file."
+    return 0
+  fi
+
+  local OP_SCAN OP_BOUNDARY OP_BIN OP_WRAPPER
+  if [ "$OP_EXPLICIT_BATCH" -eq 0 ] && { \
+     printf '%s' "$CONTENT" | grep -qE 'cmd[[:space:]]*:[[:space:]]*["'"'"'`][[:space:]]*((command|env|xargs|sudo|timeout)[[:space:]]+|(bash|sh|zsh|dash|ksh)[[:space:]]+-l?c[[:space:]]+["'"'"'])?(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|["'"'"'`])' || \
+     printf '%s' "$CONTENT" | grep -qE '(^|[;&|(!][[:space:]]*|\$\([[:space:]]*)(((/bin/|/usr/bin/)?(bash|sh|zsh|dash|ksh))[[:space:]]+-l?c|eval)[[:space:]]+["'"'"'][^"'"'"']*(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|["'"'"'])'; }; then
+    add_deny "BLOCKED: Bash contains a direct 1Password CLI command, which can trigger a separate Touch ID prompt for every process.
+
+For prompt-free read-only access to the Automations vault, use \`op-automations ...\`. For a deliberately biometric desktop operation, use \`env -u OP_SERVICE_ACCOUNT_TOKEN op ...\` and batch every required operation into one shell process."
+    return 0
+  fi
+  OP_SCAN=$(dc_mask_quoted) || OP_SCAN="$CONTENT"
+  OP_SCAN=$(printf '%s' "$OP_SCAN" | sed -E 's#((/usr/bin/|/bin/)?env)[[:space:]]+-u[[:space:]]+OP_SERVICE_ACCOUNT_TOKEN[[:space:]]+(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op[[:space:]]+#op-automations-explicit-desktop #g')
+  OP_SCAN=$(printf '%s' "$OP_SCAN" | sed -E 's/(^|[;&|])[[:space:]]*(if|then|elif|while|until|do)[[:space:]]+/\1 /g')
+  OP_BOUNDARY='(^[[:space:]]*|[;&|(!][[:space:]]*|\$\([[:space:]]*)'
+  OP_BIN='(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|$)'
+  OP_WRAPPER='(command[[:space:]]+|((/usr/bin/|/bin/)?env)([[:space:]]+(-u[[:space:]]+[^[:space:]]+|-i|--|[A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*))*[[:space:]]+|xargs([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+|(sudo|timeout|nice|exec|nohup|time)([[:space:]]+[^;&|[:space:]]+)*[[:space:]]+|[A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+)'
+  if [ "$OP_EXPLICIT_BATCH" -eq 0 ] && { printf '%s' "$OP_SCAN" | grep -qE "${OP_BOUNDARY}${OP_BIN}" || \
+     printf '%s' "$OP_SCAN" | grep -qE "${OP_BOUNDARY}${OP_WRAPPER}${OP_BIN}" || \
+     printf '%s' "$OP_SCAN" | grep -qE 'find[[:space:]].*-exec[[:space:]]+(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|$)' || \
+     printf '%s' "$OP_SCAN" | grep -qE '\$\([[:space:]]*command[[:space:]]+-v[[:space:]]+op[[:space:]]*\)'; }; then
+    add_deny "BLOCKED: Bash contains a direct 1Password CLI command, which can trigger a separate Touch ID prompt for every process.
+
+For prompt-free read-only access to the Automations vault, use \`op-automations ...\`. For a deliberately biometric desktop operation, use \`env -u OP_SERVICE_ACCOUNT_TOKEN op ...\` and batch every required operation into one shell process."
+    return 0
+  fi
 
   # Standalone `op item get ... --reveal` prints the revealed field.
   if echo "$CONTENT" | grep -qE '^\s*op\s+item\s+get\b' && \
-     echo "$CONTENT" | grep -qE -- '(^|[[:space:]])--reveal([[:space:]]|$)' && \
+     echo "$CONTENT" | grep -qE -- '(^|[[:space:]])--reveal([^[:alnum:]_-]|$)' && \
      ! echo "$CONTENT" | grep -qE '[|>]'; then
     add_deny "BLOCKED: Bash command would print a revealed 1Password field.
 

@@ -90,7 +90,7 @@ case "$TOOL_NAME" in
     [ -n "$LABEL" ] && deny "$LABEL" "$FILE_PATH"
     ;;
 
-  Bash|exec_command|functions.exec_command)
+  Bash|exec_command|functions.exec|functions.exec_command)
     COMMAND=$(codex_shell_command "$INPUT")
     [ -z "$COMMAND" ] && exit 0
 

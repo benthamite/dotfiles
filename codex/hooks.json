@@ -26,7 +26,7 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Bash|exec_command|functions.exec_command",
+        "matcher": "Bash|exec_command|functions.exec|functions.exec_command",
         "hooks": [
           {
             "type": "command",
@@ -148,7 +148,7 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Bash|exec_command|functions.exec_command",
+        "matcher": "Bash|exec_command|functions.exec|functions.exec_command",
         "hooks": [
           {
             "type": "command",

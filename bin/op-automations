@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Run 1Password CLI commands with the read-only Epoch Automations service account.
+
+set -euo pipefail
+
+PASS_ENTRY="epoch/1password-service-account-token"
+
+if [[ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]]; then
+  if ! command -v pass >/dev/null 2>&1; then
+    printf 'op-automations: pass is required to load %s\n' "$PASS_ENTRY" >&2
+    exit 1
+  fi
+
+  OP_SERVICE_ACCOUNT_TOKEN=$(pass show "$PASS_ENTRY" | sed -n '1p')
+  if [[ -z "$OP_SERVICE_ACCOUNT_TOKEN" ]]; then
+    printf 'op-automations: %s is empty\n' "$PASS_ENTRY" >&2
+    exit 1
+  fi
+  export OP_SERVICE_ACCOUNT_TOKEN
+fi
+
+exec op "$@"

@@ -7,7 +7,7 @@
 # allowed. Write operations are allowed only when the target repo appears in
 # agents/github-write-allowlist.txt.
 #
-# Matcher: Bash|exec_command|functions.exec_command
+# Matcher: Bash|exec_command|functions.exec|functions.exec_command
 
 set -euo pipefail
 

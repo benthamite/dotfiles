@@ -65,9 +65,14 @@ def run(args: list[str], *, input_text: str | None = None, capture: bool = True)
 
 
 def op_read(reference: str, *, desktop_session: bool = False) -> str:
-    args = ["op", "read", reference]
     if desktop_session:
-        args = ["env", "-u", "OP_SERVICE_ACCOUNT_TOKEN", *args]
+        args = ["env", "-u", "OP_SERVICE_ACCOUNT_TOKEN", "op", "read", reference]
+    elif reference.startswith("op://Automations/"):
+        args = ["op-automations", "read", reference]
+    else:
+        raise ProvisionError(
+            "Non-Automations 1Password reads must explicitly use the desktop session."
+        )
     result = run(args)
     if result.returncode != 0:
         raise ProvisionError(f"Could not read {reference}: {result.stderr.strip()}")
@@ -75,7 +80,7 @@ def op_read(reference: str, *, desktop_session: bool = False) -> str:
 
 
 def op_item_exists(title: str, vault: str) -> bool:
-    result = run(["op", "item", "get", title, "--vault", vault, "--format", "json"])
+    result = run(["op-automations", "item", "get", title, "--vault", vault, "--format", "json"])
     return result.returncode == 0
 
 
@@ -83,18 +88,18 @@ def ensure_desktop_op_session() -> None:
     result = run(["env", "-u", "OP_SERVICE_ACCOUNT_TOKEN", "op", "whoami"])
     if result.returncode == 0:
         return
-    signin = run(["env", "-u", "OP_SERVICE_ACCOUNT_TOKEN", "op", "signin", "--force"])
+    signin = run(["env", "-u", "OP_SERVICE_ACCOUNT_TOKEN", "op", "signin"])
     if signin.returncode != 0:
         raise ProvisionError("1Password desktop session is unavailable; cannot write secret item.")
 
 
 def create_or_update_automation_item(credential: RuntimeCredential, vault: str, *, force: bool) -> None:
-    ensure_desktop_op_session()
     if op_item_exists(credential.item_title, vault):
         if not force:
             raise ProvisionError(
                 f"{credential.item_title!r} already exists in {vault}; use --force to replace the credential field."
             )
+        ensure_desktop_op_session()
         result = run(
             [
                 "env",
@@ -114,6 +119,7 @@ def create_or_update_automation_item(credential: RuntimeCredential, vault: str, 
             ]
         )
     else:
+        ensure_desktop_op_session()
         result = run(
             [
                 "env",
@@ -135,7 +141,7 @@ def create_or_update_automation_item(credential: RuntimeCredential, vault: str, 
     if result.returncode != 0:
         raise ProvisionError(f"Could not write {credential.item_title}: {result.stderr.strip()}")
 
-    verify = run(["op", "read", credential.op_ref])
+    verify = run(["op-automations", "read", credential.op_ref])
     if verify.returncode != 0:
         raise ProvisionError(f"Wrote item, but service-account read verification failed: {verify.stderr.strip()}")
 

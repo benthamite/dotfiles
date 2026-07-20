@@ -1188,12 +1188,20 @@ def normalized_global_instruction_text(path: Path) -> str:
     text = text.replace("`claude/context/mcp-servers.md`", "`context/mcp-servers.md`")
     text = text.replace("`claude/context/google-services.md`", "`context/google-services.md`")
     text = text.replace("`claude/context/secrets.md`", "`context/secrets.md`")
+    text = text.replace("`claude/context/voice.md`", "`context/voice.md`")
     codex_secrets_rule = (
         "- **Secrets:** Read `context/secrets.md` before handling secrets. "
         "In particular, never echo or print secrets from `pass`, `.zshenv-secrets`, or MCP credential resolution; "
         "use full `pass` paths and `pass find`, not `pass ls` grep."
     )
     text = text.replace(codex_secrets_rule, "- @context/secrets.md")
+    claude_self_serve_clause = (
+        "including browser automation: if the session lacks browser tools, ask me to enable "
+        "`claude-in-chrome` (type `/chrome`, or restart with `--chrome`) rather than asking me "
+        "to perform the browser steps manually."
+    )
+    codex_self_serve_clause = "including browser automation where the session provides it."
+    text = text.replace(claude_self_serve_clause, codex_self_serve_clause)
     return text
 
 

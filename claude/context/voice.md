@@ -39,3 +39,6 @@ email, Slack, forum comments, tweets, Google Docs/Sheets comments, letters.
 - Minimal exclamation marks, no emoji, no engagement-bait rhetoric.
 - Dashes are used sparingly and deliberately; commas and parentheses carry
   most asides.
+- Always smart quotes, never straight or angular ones. Double quotes for
+  quoting and “scare quoting”; single quotes for mentioning (e.g. the word
+  ‘pet’ has three letters).

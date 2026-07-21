@@ -7543,11 +7543,11 @@ the debugger's `recursive-edit' freezes Emacs inside the timer."
   (johnson-dictionary-directories '("/Users/pablostafforini/My Drive/Dictionaries/"))
   (johnson-dictionary-priorities
    '(;; --- English monolingual (en/en) ---
-     ("Oxford English Dictionary 2 (2009)"                                             . -100)
      ("Shorter Oxford English Dictionary 6"                                            .  -95)
      ("Merriam-Webster's Collegiate Dictionary"                                        .  -90)
-     ("Merriam-Webster's Collegiate Dictionary & Thesaurus (2015)"                     .  -89)
-     ("Webster's Unabridged 3"                                                         .  -88)
+     ("Oxford English Dictionary 2 (2009)"                                             .  -89)
+     ("Merriam-Webster's Collegiate Dictionary & Thesaurus (2015)"                     .  -88)
+     ("Webster's Unabridged 3"                                                         .  -87)
      ("New Oxford American Dictionary 3 (2010)"                                        .  -85)
      ("New Oxford Dictionary of English"                                               .  -84)
      ("Oxford Dictionary of English (2005)"                                            .  -83)

@@ -431,7 +431,17 @@ creates a new agenda view, first enabling anniversary display
 When it creates the agenda, the anniversary-maintenance step opens
 ~calendar.org~ without presentation setup hooks if that file is not
 already visiting.  Agenda construction itself still runs normally, so
-the dynamic agenda file list remains intact.
+the dynamic agenda file list remains intact.  The command no longer
+opens ~config.org~ as a preliminary step; agenda construction does not
+depend on the major mode of the buffer from which the command is called.
+
+#+findex: org-extras-agenda-maintain-current-day
+The function ~org-extras-agenda-maintain-current-day~ is the non-interactive
+counterpart used by overnight maintenance.  It enables anniversary display
+and refreshes an existing daily agenda buffer, but never creates or displays
+an agenda, changes windows, or visits ~config.org~.  If the anniversary
+heading is missing from the Org ID database, it reports an error instead of
+falling back to an interactive Org-roam jump.
 
 #+findex: org-extras-with-suppressed-agenda-file-opening-hooks
 During agenda file preparation, agenda files are opened for scanning

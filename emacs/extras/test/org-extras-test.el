@@ -208,31 +208,159 @@
 
 ;;;; org-agenda
 
-(ert-deftest org-extras-test-agenda-switch-preserves-mode-hooks ()
-  "Preserve mode hooks while building the agenda."
-  (let ((observed-hooks nil)
-        (paths-file-config "/tmp/config.org")
+(ert-deftest org-extras-test-agenda-switch-does-not-visit-config ()
+  "Build the agenda from a non-Org buffer without visiting config."
+  (let ((agenda-called nil)
+        (config-visited nil)
+        (observed-hooks nil)
         (change-major-mode-after-body-hook '(change-hook))
         (find-file-hook '(find-hook))
         (org-mode-hook '(org-hook))
         (outline-mode-hook '(outline-hook))
         (text-mode-hook '(text-hook)))
+    (should-not (get-buffer "*Org Agenda(a)*"))
     (cl-letf (((symbol-function 'window-extras-split-if-unsplit) #'ignore)
               ((symbol-function 'winum-select-window-1) #'ignore)
-              ((symbol-function 'find-file) #'ignore)
+              ((symbol-function 'find-file)
+               (lambda (&rest _)
+                 (setq config-visited t)))
               ((symbol-function 'org-extras-agenda-toggle-anniversaries) #'ignore)
-              ((symbol-function 'org-buffer-list) (lambda (&optional _) nil))
+              ((symbol-function 'org-extras-reset-org-element-caches) #'ignore)
               ((symbol-function 'org-agenda)
                (lambda (&rest _)
+                 (setq agenda-called t)
+                 (should (eq major-mode 'fundamental-mode))
                  (push (list change-major-mode-after-body-hook
                              find-file-hook
                              org-mode-hook
                              outline-mode-hook
                              text-mode-hook)
                        observed-hooks))))
-      (org-extras-agenda-switch-to-agenda-current-day)
+      (with-temp-buffer
+        (should (eq major-mode 'fundamental-mode))
+        (org-extras-agenda-switch-to-agenda-current-day))
+      (should agenda-called)
+      (should-not config-visited)
       (should (equal observed-hooks
                      '(((change-hook) nil (org-hook) (outline-hook) (text-hook))))))))
+
+(ert-deftest org-extras-test-agenda-maintenance-without-agenda-avoids-ui ()
+  "Maintain agenda state without creating or displaying an agenda."
+  (should-not (get-buffer "*Org Agenda(a)*"))
+  (let ((events nil)
+        (original-buffer (current-buffer))
+        (original-window (selected-window))
+        (original-configuration (current-window-configuration)))
+    (cl-letf (((symbol-function 'org-extras-with-suppressed-agenda-file-opening-hooks)
+               (lambda (fn)
+                 (push 'suppressed events)
+                 (funcall fn)))
+              ((symbol-function 'org-extras--agenda-update-anniversaries)
+               (lambda (just-enable no-interactive-fallback)
+                 (should just-enable)
+                 (should no-interactive-fallback)
+                 (push 'anniversaries events)))
+              ((symbol-function 'find-file)
+               (lambda (&rest _)
+                 (ert-fail "Background maintenance visited a file")))
+              ((symbol-function 'org-agenda)
+               (lambda (&rest _)
+                 (ert-fail "Background maintenance created an agenda")))
+              ((symbol-function 'switch-to-buffer)
+               (lambda (&rest _)
+                 (ert-fail "Background maintenance switched buffers")))
+              ((symbol-function 'pop-to-buffer)
+               (lambda (&rest _)
+                 (ert-fail "Background maintenance popped to a buffer")))
+              ((symbol-function 'display-buffer)
+               (lambda (&rest _)
+                 (ert-fail "Background maintenance displayed a buffer")))
+              ((symbol-function 'window-extras-split-if-unsplit)
+               (lambda (&rest _)
+                 (ert-fail "Background maintenance changed windows"))))
+      (with-temp-buffer
+        (should (eq major-mode 'fundamental-mode))
+        (org-extras-agenda-maintain-current-day)
+        (should (eq major-mode 'fundamental-mode)))
+      (should (equal (nreverse events) '(suppressed anniversaries)))
+      (should (eq (current-buffer) original-buffer))
+      (should (eq (selected-window) original-window))
+      (should (compare-window-configurations
+               original-configuration (current-window-configuration))))))
+
+(ert-deftest org-extras-test-agenda-maintenance-refreshes-existing-agenda ()
+  "Refresh an existing agenda without displaying it."
+  (let ((agenda (get-buffer-create "*Org Agenda(a)*"))
+        (events nil)
+        (original-buffer (current-buffer))
+        (original-window (selected-window))
+        (original-configuration (current-window-configuration)))
+    (unwind-protect
+        (progn
+          (with-current-buffer agenda
+            (setq-local major-mode 'org-agenda-mode))
+          (cl-letf (((symbol-function 'org-extras-with-suppressed-agenda-file-opening-hooks)
+                     (lambda (fn)
+                       (push 'suppressed events)
+                       (funcall fn)))
+                    ((symbol-function 'org-extras--agenda-update-anniversaries)
+                     (lambda (just-enable no-interactive-fallback)
+                       (should just-enable)
+                       (should no-interactive-fallback)
+                       (push 'anniversaries events)))
+                    ((symbol-function 'org-agenda-redo)
+                     (lambda ()
+                       (should (eq (current-buffer) agenda))
+                       (push 'refreshed events)))
+                    ((symbol-function 'find-file)
+                     (lambda (&rest _)
+                       (ert-fail "Background maintenance visited a file")))
+                    ((symbol-function 'org-agenda)
+                     (lambda (&rest _)
+                       (ert-fail "Background maintenance created an agenda")))
+                    ((symbol-function 'switch-to-buffer)
+                     (lambda (&rest _)
+                       (ert-fail "Background maintenance switched buffers")))
+                    ((symbol-function 'pop-to-buffer)
+                     (lambda (&rest _)
+                       (ert-fail "Background maintenance popped to a buffer")))
+                    ((symbol-function 'display-buffer)
+                     (lambda (&rest _)
+                       (ert-fail "Background maintenance displayed a buffer"))))
+            (org-extras-agenda-maintain-current-day)
+            (should (equal (nreverse events)
+                           '(suppressed anniversaries refreshed)))
+            (should (eq (current-buffer) original-buffer))
+            (should (eq (selected-window) original-window))
+            (should (compare-window-configurations
+                     original-configuration (current-window-configuration)))))
+      (when (buffer-live-p agenda)
+        (kill-buffer agenda)))))
+
+(ert-deftest org-extras-test-agenda-maintenance-ignores-non-agenda-namesake ()
+  "Do not refresh an ordinary buffer that has the agenda buffer name."
+  (let ((agenda (get-buffer-create "*Org Agenda(a)*")))
+    (unwind-protect
+        (cl-letf (((symbol-function 'org-extras-with-suppressed-agenda-file-opening-hooks)
+                   (lambda (fn) (funcall fn)))
+                  ((symbol-function 'org-extras--agenda-update-anniversaries)
+                   #'ignore)
+                  ((symbol-function 'org-agenda-redo)
+                   (lambda ()
+                     (ert-fail "Refreshed a non-agenda buffer"))))
+          (with-current-buffer agenda
+            (setq-local major-mode 'fundamental-mode))
+          (org-extras-agenda-maintain-current-day))
+      (when (buffer-live-p agenda)
+        (kill-buffer agenda)))))
+
+(ert-deftest org-extras-test-agenda-background-anniversaries-never-jump ()
+  "Report a missing anniversary ID without using an interactive jump."
+  (cl-letf (((symbol-function 'org-id-find) (lambda (&rest _) nil))
+            ((symbol-function 'org-roam-extras-id-goto)
+             (lambda (&rest _)
+               (ert-fail "Background anniversary maintenance jumped interactively"))))
+    (should-error (org-extras--agenda-update-anniversaries t t))))
 
 (ert-deftest org-extras-test-agenda-file-opening-hooks-suppressed ()
   "Suppress interactive setup while preserving unrelated mode hooks."
@@ -421,11 +549,11 @@
   "Suppress presentation hooks only when opening anniversary file internally."
   (let ((observed-hooks nil)
         (org-extras-bbdb-anniversaries-heading "anniversary-id")
-        (change-major-mode-after-body-hook '(change-hook))
-        (find-file-hook '(find-hook))
-        (org-mode-hook '(org-hook))
-        (outline-mode-hook '(outline-hook))
-        (text-mode-hook '(text-hook)))
+        (change-major-mode-after-body-hook '(ignore))
+        (find-file-hook '(ignore))
+        (org-mode-hook '(ignore))
+        (outline-mode-hook '(ignore))
+        (text-mode-hook '(ignore)))
     (let ((file (make-temp-file "org-extras-anniversary" nil ".org")))
       (unwind-protect
           (progn
@@ -443,7 +571,8 @@
                                  observed-hooks)
                            (apply real-find-file-noselect args))))
                 (org-extras-agenda-toggle-anniversaries t)))
-            (should (equal observed-hooks '((nil nil nil nil nil))))
+            (should (equal observed-hooks
+                           '(((ignore) nil (ignore) (ignore) (ignore)))))
             (with-temp-buffer
               (insert-file-contents file)
               (should (string-match-p "%%(org-bbdb-anniversaries-future 1)"

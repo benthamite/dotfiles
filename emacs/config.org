@@ -14940,7 +14940,7 @@ CLOCK: [2021-05-28 Fri 14:34]--[2021-05-28 Fri 14:46] =>  0:12
                            org-roam-db-sync
                            org-extras-id-update-id-locations-background
                            el-patch-validate-all
-                           org-extras-agenda-switch-to-agenda-current-day
+                           org-extras-agenda-maintain-current-day
                            mu4e-extras-update-all-mail-and-index
                            org-gcal-sync
                            elfeed-update)))

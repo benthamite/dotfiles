@@ -618,20 +618,27 @@ number.  Disable the mode if ARG is a negative number."
   (let ((agenda "*Org Agenda(a)*"))
     (if (get-buffer agenda)
 	(switch-to-buffer agenda)
-      (find-file paths-file-config) ; hack to avoid the 'not in org-mode' error
       (org-extras-agenda-toggle-anniversaries t)
       ;; Reset element caches to prevent "Invalid search bound" errors
       ;; from stale caches (e.g. after external file modifications by
       ;; Dropbox sync).
       (org-extras-reset-org-element-caches)
-      ;; Suppress `find-file-hook' (flycheck, doom-modeline, etc.) when
-      ;; opening agenda files; they are scanned, not edited interactively.
-      ;; Also prevent `jinx-mode' from activating via `text-mode-hook',
-      ;; which causes `args-out-of-range' errors when its idle timer fires
-      ;; during `sit-for' in `after-find-file' before the buffer is ready.
-      (let ((find-file-hook nil))
-        (cl-letf (((symbol-function 'jinx-mode) #'ignore))
-          (org-agenda nil "a"))))))
+      (org-extras-with-suppressed-agenda-file-opening-hooks
+       (lambda ()
+         (org-agenda nil "a"))))))
+
+;;;###autoload
+(defun org-extras-agenda-maintain-current-day ()
+  "Maintain today's agenda state without creating or displaying an agenda.
+Enable anniversary display without an interactive ID lookup.  Refresh the
+daily agenda only when its buffer already exists and is in `org-agenda-mode'."
+  (org-extras-with-suppressed-agenda-file-opening-hooks
+   (lambda ()
+     (org-extras--agenda-update-anniversaries t t)
+     (when-let ((agenda (get-buffer "*Org Agenda(a)*")))
+       (with-current-buffer agenda
+         (when (derived-mode-p 'org-agenda-mode)
+           (org-agenda-redo)))))))
 
 (defvar buffer-face-mode-hook)
 
@@ -761,9 +768,12 @@ If JUST-ENABLE is non-nil, always enable the display of birthdays."
     (unless just-enable
       (org-agenda-redo))))
 
-(defun org-extras--agenda-update-anniversaries (just-enable)
+(defun org-extras--agenda-update-anniversaries
+    (just-enable &optional no-interactive-fallback)
   "Update the BBDB anniversary line.
-If JUST-ENABLE is non-nil, only insert the anniversary line when it is absent."
+If JUST-ENABLE is non-nil, only insert the anniversary line when it is absent.
+When NO-INTERACTIVE-FALLBACK is non-nil, signal an error if the heading is not
+in the Org ID database instead of navigating to it interactively."
   (if-let* ((location (org-id-find org-extras-bbdb-anniversaries-heading))
             (file (car location))
             (pos (cdr location)))
@@ -771,9 +781,13 @@ If JUST-ENABLE is non-nil, only insert the anniversary line when it is absent."
        file pos
        (lambda ()
          (org-extras--agenda-update-anniversaries-in-current-buffer just-enable)))
-    (save-window-excursion
-      (org-roam-extras-id-goto org-extras-bbdb-anniversaries-heading)
-      (org-extras--agenda-update-anniversaries-in-current-buffer just-enable))))
+    (if no-interactive-fallback
+        (error "Anniversary heading is missing from the Org ID database: %s"
+               org-extras-bbdb-anniversaries-heading)
+      (save-window-excursion
+        (org-roam-extras-id-goto org-extras-bbdb-anniversaries-heading)
+        (org-extras--agenda-update-anniversaries-in-current-buffer
+         just-enable)))))
 
 (defun org-extras--agenda-with-anniversary-buffer (file pos fn)
   "Visit FILE at POS for anniversary maintenance and call FN.
@@ -781,12 +795,9 @@ When FILE is not already visiting, open it with presentation hooks suppressed,
 save any changes, then kill the temporary visiting buffer."
   (let* ((visiting (find-buffer-visiting file))
          (buffer (or visiting
-                     (let ((change-major-mode-after-body-hook nil)
-                           (find-file-hook nil)
-                           (org-mode-hook nil)
-                           (outline-mode-hook nil)
-                           (text-mode-hook nil))
-                       (find-file-noselect file)))))
+                     (org-extras-with-suppressed-agenda-file-opening-hooks
+                      (lambda ()
+                        (find-file-noselect file))))))
     (unwind-protect
         (with-current-buffer buffer
           (save-restriction

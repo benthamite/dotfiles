@@ -103,7 +103,9 @@ skips protected non-task worktrees such as =main= and =reasoning-tasks-cr-studio
 then lets =claude/hooks/sync-reasoning-tasks-worktree.sh= handle dirty trees, conflicts,
 local overlays, and key symlinks. It never pushes.
 
-The scheduled job runs nightly at 03:30 and writes logs under:
+The scheduled job is owned by the central launchd repository at
+=/Users/pablostafforini/My Drive/repos/launchd=. It runs nightly at 03:30 and
+writes logs under:
 
 #+begin_src text
 ~/.local/state/reasoning-tasks-worktree-sync/
@@ -119,7 +121,7 @@ Install or refresh the scheduled job with:
 
 #+begin_src sh
 mkdir -p ~/Library/LaunchAgents ~/.local/state/reasoning-tasks-worktree-sync
-ln -sfn "$PWD/macos/LaunchAgents/com.stafforini.reasoning-tasks-worktree-sync.plist" \
+ln -sfn "/Users/pablostafforini/My Drive/repos/launchd/agents/com.stafforini.reasoning-tasks-worktree-sync.plist" \
   ~/Library/LaunchAgents/com.stafforini.reasoning-tasks-worktree-sync.plist
 launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.stafforini.reasoning-tasks-worktree-sync.plist
 #+end_src

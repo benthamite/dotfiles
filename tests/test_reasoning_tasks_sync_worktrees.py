@@ -1,6 +1,5 @@
 import os
 import pathlib
-import plistlib
 import subprocess
 import tempfile
 import unittest
@@ -8,7 +7,6 @@ import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "bin" / "sync-reasoning-tasks-worktrees"
-PLIST = ROOT / "macos" / "LaunchAgents" / "com.stafforini.reasoning-tasks-worktree-sync.plist"
 
 
 def run(command, **kwargs):
@@ -62,13 +60,3 @@ class ReasoningTasksWorktreeSyncTest(unittest.TestCase):
                 {os.path.realpath(path) for path in calls_file.read_text().splitlines()},
                 {os.path.realpath(task_a), os.path.realpath(task_b)},
             )
-
-    def test_launchd_job_runs_bulk_wrapper_nightly(self):
-        with PLIST.open("rb") as handle:
-            job = plistlib.load(handle)
-
-        self.assertEqual(job["Label"], "com.stafforini.reasoning-tasks-worktree-sync")
-        self.assertEqual(job["ProgramArguments"], [str(SCRIPT)])
-        self.assertEqual(job["StartCalendarInterval"], {"Hour": 3, "Minute": 30})
-        self.assertIn("reasoning-tasks-worktree-sync", job["StandardOutPath"])
-        self.assertIn("reasoning-tasks-worktree-sync", job["StandardErrorPath"])

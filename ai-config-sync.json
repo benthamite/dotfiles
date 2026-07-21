@@ -170,6 +170,13 @@
       "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
     },
     {
+      "name": "personalize",
+      "claude": "claude/skills/personalize/SKILL.md",
+      "codex": "codex/skills/personalize/SKILL.md",
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
+    },
+    {
       "name": "post-push-ci",
       "claude": "claude/skills/post-push-ci/SKILL.md",
       "codex": "codex/skills/post-push-ci/SKILL.md",

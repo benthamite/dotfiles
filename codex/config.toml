@@ -464,11 +464,21 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/My Drive/repos/rubric-visualizer"]
 trust_level = "trusted"
 
+[projects."/Users/pablostafforini/.claude/rendered/Trajectory"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/.config/emacs-profiles/8.3.0-dev/elpaca/sources/spofy"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/meetings/yafah"]
+trust_level = "trusted"
+
 [tui]
 theme = "light"
 
 [tui.model_availability_nux]
 "gpt-5.5" = 4
+"gpt-5.6-sol" = 3
 
 [marketplaces.openai-bundled]
 last_updated = "2026-06-14T20:26:22Z"
@@ -703,10 +713,10 @@ trusted_hash = "sha256:b49c2b9ef2d97322cecce7db38027e3497e06c90d93ab65ed458be304
 trusted_hash = "sha256:0a0706a13d0dc6af4f69989850abe704010133fd4d220a7e57a98934c1ba3433"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:post_tool_use:0:0"]
-trusted_hash = "sha256:e30897279bd9e3eec5bbc1b40bc86b21a3258234beb8a57877e373f6b57ede4e"
+trusted_hash = "sha256:4e972dbb0de7c1a08a95bb53ce4befc2a4b1abf763eed0bed8c63ba6b76bd167"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:post_tool_use:0:1"]
-trusted_hash = "sha256:efeefbdac187e9499c5a94664fed38e1abe2f6e6fdfd145c8a139cd54883de4b"
+trusted_hash = "sha256:28f3bb2d1496516fb6a62169eae480d9b1bd681090491206a3422a2c836e5228"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:post_tool_use:1:0"]
 trusted_hash = "sha256:96eaebc0ed457c50c41989d05bd6e2ea8e39e8794c7507fdd49605a4b24f2517"
@@ -740,38 +750,38 @@ trusted_hash = "sha256:3cc3cfbaf38bffeece5f5d550a62a658de7bdea7f20e3cf91d69e955d
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:0"]
 enabled = true
-trusted_hash = "sha256:0fbc324356870f8b60257a2fd426772e8bfa05a1d30530109044953d6373cd19"
+trusted_hash = "sha256:076a67e6da4c09a1f5606f70b30230af0531abaed36bd719e092e6037d7a831d"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:1"]
-trusted_hash = "sha256:99bf9d526b680333cc799baeca5f42de34bf7c237c450dc3ee28ba15fba86edf"
+trusted_hash = "sha256:6c949703fa70734fcece377b030ea5052bd3c9aefd6e553fa0d27c37086186fd"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:10"]
-trusted_hash = "sha256:fb479b5722c36391d5a7e72b0b7e51a7c528d1d8e301350f43d42db3f7807e2b"
+trusted_hash = "sha256:e8977374cb7f8b965bcd3d40e8d193200f71c21e0ea7854441790d7a81ddc50e"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:2"]
-trusted_hash = "sha256:13ae5e92e9c7aaa64b36a22fc74642e43fa33b5abc740887aace0eafc3faa92e"
+trusted_hash = "sha256:9540e79dbea3855753bc17d17f00c21c5aa9fc4a6b55e06a02c3143bf1fc6f31"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:3"]
-trusted_hash = "sha256:df6b4aa240597020e0f821899a98a3abd2a701ae8a3d40d37d26471dd0ef47e4"
+trusted_hash = "sha256:0b1ab69dcd52565e0489e1c7ba2f467ea17fafc4eb8176ca8257557609bad050"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:4"]
-trusted_hash = "sha256:a2fe784b9bf0f236ac4b6b3fb67aa2bf6d7a7130dbf279e07a47162a566dbf58"
+trusted_hash = "sha256:f0582a971eec03edd7af6e4db1681c5385a318a0518e8c8936bfa5ca65075606"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:5"]
-trusted_hash = "sha256:4a87ce8f56916e94a1a22637e1cedeb9619e626c3a64b710126429dc39789c8a"
+trusted_hash = "sha256:ac7f96f0b6e979df709cb2db1ceb8b90d16fccc6c5996f8440592628c3787f03"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:6"]
-trusted_hash = "sha256:50898739ef816718ee53a63947672448c4e7a2d087da571d4f730e790faf9fb5"
+trusted_hash = "sha256:d5a5999d3258a060453f9387fb6c9778b9f84ca8dfac4baf61247fa39adcc404"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:7"]
 enabled = true
-trusted_hash = "sha256:75c163a8425ba518c4911bb5c3f7fc8cb352e1ae5227ada402fb9e960cba38a1"
+trusted_hash = "sha256:f83e6c4100c54e10e888084328e177d65f7704707ed11b953540a151bec22b7d"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:8"]
-trusted_hash = "sha256:4c81bb25a0151cb01d9a2ec9d56ec9a44f32710c58d0fddb0ecad9f9f6b89b68"
+trusted_hash = "sha256:51f05e23ee3979bab554164c6438059c3de2473dc24ac99de403f690b89f9d17"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:9"]
-trusted_hash = "sha256:ea596e4a65f48e9b900b7850842e36bd0cd898d57438eadc53da5d29527e152f"
+trusted_hash = "sha256:34dab145cbd12ee6011d1fbc33b06030dafe76026caf43c5f097cc97a45991e8"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:1:0"]
 trusted_hash = "sha256:fbde2a0e426cfe9f31207719d307840ac8211f1815a8c7d58cb53da4866124ca"
@@ -848,10 +858,10 @@ trusted_hash = "sha256:8e7d0a878bbfe3eadfd378f7248688eba3696a45b7083d9a3ec17480c
 trusted_hash = "sha256:81271b38faccd57f7c39cb778eceb5a066d7f1fbecd4f40ea4a188e109af6c7e"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:11"]
-trusted_hash = "sha256:dab85b7d3d4fdda77fd3a47dff43139bd7ff553d7c20b90c3c96f051a1242333"
+trusted_hash = "sha256:b909ed152b354fe8b9a8f24d788d14663e0ee94cdca3ea0a3e6c26b7284dc342"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:12"]
-trusted_hash = "sha256:81271b38faccd57f7c39cb778eceb5a066d7f1fbecd4f40ea4a188e109af6c7e"
+trusted_hash = "sha256:ab4955017a450808dd707f487e2712d13831d044fc5e4a52666ae2b901da2558"
 
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:2:4"]
 trusted_hash = "sha256:c1a1cd200ab8775d3b193265d52bd662fa4fbad5606b375e148c5c5f94fde7d8"

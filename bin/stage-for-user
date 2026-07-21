@@ -1,0 +1,42 @@
+#!/bin/bash
+# stage-for-user — put content on the user's paste surfaces (Emacs kill ring +
+# macOS clipboard) so agents never ask the user to copy text from a terminal.
+#
+# Usage:
+#   stage-for-user FILE            # stage a file's contents
+#   some-command | stage-for-user  # stage stdin
+#   stage-for-user -m "text"       # stage a literal string
+#
+# Secret-safe: content goes through a chmod-600 temp file that is removed on
+# exit; nothing is echoed. Prints only a byte count confirmation.
+set -euo pipefail
+
+umask 077
+tmp=$(mktemp "${TMPDIR:-/tmp}/stage-for-user.XXXXXX")
+trap 'rm -f "$tmp"' EXIT
+
+if [ "${1:-}" = "-m" ]; then
+  shift
+  printf '%s' "$*" > "$tmp"
+elif [ $# -ge 1 ]; then
+  cat "$1" > "$tmp"
+else
+  cat > "$tmp"
+fi
+
+bytes=$(wc -c < "$tmp" | tr -d ' ')
+if [ "$bytes" -eq 0 ]; then
+  echo "stage-for-user: refusing to stage empty content" >&2
+  exit 1
+fi
+
+# Emacs kill ring (temp-file indirection avoids Elisp string-escaping issues).
+if command -v emacsclient >/dev/null 2>&1; then
+  emacsclient --eval "(with-temp-buffer (insert-file-contents \"$tmp\") (kill-new (buffer-string)))" >/dev/null 2>&1 \
+    || echo "stage-for-user: warning: emacsclient staging failed (no server?)" >&2
+fi
+
+# macOS clipboard, for pasting into Chrome/native apps.
+pbcopy < "$tmp"
+
+echo "staged $bytes bytes (Emacs kill ring + clipboard)"

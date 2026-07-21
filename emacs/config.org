@@ -62,6 +62,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#ns-win][ns-win]]
   - [[#iso-transl][iso-transl]]
   - [[#el-patch][el-patch]]
+  - [[#websocket][websocket]]
   - [[#casual][casual]]
   - [[#warnings][warnings]]
   - [[#comp][comp]]
@@ -395,6 +396,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#agent-shell][agent-shell]]
   - [[#claude-code][claude-code]]
   - [[#agent][agent]]
+  - [[#trajectory-new-cr-task][Trajectory: new CR task]]
   - [[#agent-log][agent-log]]
   - [[#monet][monet]]
   - [[#codex][codex]]
@@ -9170,6 +9172,9 @@ The author provides a good overview of the package in [[https://www.youtube.com/
 
 
 ** Trajectory: new CR task
+:PROPERTIES:
+:ID:       879A65A9-B1CB-4685-B07F-62EBF693C15A
+:END:
 
 /Create (if needed) the reasoning-tasks worktree for a CR task and launch a Claude session in it, with no terminal step. The worktree is based on =origin/main= so it always has current skills; the SessionStart hook (=sync-reasoning-tasks-worktree.sh=) wires its API-key symlink./
 

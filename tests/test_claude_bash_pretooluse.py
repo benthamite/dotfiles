@@ -23,7 +23,7 @@ class ClaudeBashPreToolUseTest(unittest.TestCase):
         payload = {
             "tool_name": "Bash",
             "tool_input": {
-                "command": "python3 -c 'print(1)'",
+                "command": "printenv",
                 "timeout": 600000,
                 "run_in_background": True,
                 "description": "long local eval",
@@ -45,6 +45,22 @@ class ClaudeBashPreToolUseTest(unittest.TestCase):
 
     def test_standalone_wrap_rewrite_preserves_bash_input_fields(self):
         self.assert_rewrite_preserves_bash_input_fields("wrap-bash-output.sh")
+
+    def assert_benign_command_is_not_rewritten(self, script):
+        payload = {
+            "tool_name": "Bash",
+            "tool_input": {"command": "git status --short"},
+        }
+        result = run_hook(script, payload)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout, "")
+
+    def test_dispatcher_leaves_benign_command_unchanged(self):
+        self.assert_benign_command_is_not_rewritten("pretooluse-bash.sh")
+
+    def test_standalone_wrap_leaves_benign_command_unchanged(self):
+        self.assert_benign_command_is_not_rewritten("wrap-bash-output.sh")
 
 
 if __name__ == "__main__":

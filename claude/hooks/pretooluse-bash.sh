@@ -494,11 +494,32 @@ check_elisp_verify() {
 }
 
 # --- wrap-bash-output.sh (must run last; sets updatedInput) ---
+# Scoped 2026-07-08: wrap ONLY commands that could plausibly print a secret.
+# The auto-mode permission classifier judges the REWRITTEN command; wrapping
+# every command in '... | redact-secrets.sh; exit ${PIPESTATUS[0]}' reads as
+# output-tunneling and caused false denials on benign gated commands
+# (git commit/push, gh ...). The blocking guards above are unaffected: they
+# still run on every command. Over-matching here is safe (extra wrap = extra
+# protection); under-matching is not — keep the patterns broad.
+wrap_needs_redaction() {
+  # Secret managers and credential printers.
+  printf '%s' "$COMMAND" | grep -qE '(^|[[:space:];|&(])(pass|op|security|git-crypt)[[:space:]]' && return 0
+  printf '%s' "$COMMAND" | grep -qE 'gh[[:space:]]+auth[[:space:]]+token|gcloud[[:space:]]+auth[[:space:]]+print|aws[[:space:]]+sts[[:space:]]|aws[[:space:]]+secretsmanager|kubectl[[:space:]]+get[[:space:]]+secret' && return 0
+  # Environment dumpers (can print every exported credential).
+  printf '%s' "$COMMAND" | grep -qE '(^|[[:space:];|&(])(env|printenv)([[:space:];|&)]|$)' && return 0
+  printf '%s' "$COMMAND" | grep -qE '(^|[[:space:];|&(])export[[:space:]]+-p([[:space:];|&)]|$)' && return 0
+  printf '%s' "$COMMAND" | grep -qE '(^|[[:space:];|&(])(declare|typeset)([[:space:];|&)]|$)' && return 0
+  printf '%s' "$COMMAND" | grep -qE '(^|[[:space:];|&(])set[[:space:]]*([;&|)]|$)' && return 0
+  # References to secret-bearing files or credential-ish identifiers.
+  printf '%s' "$COMMAND" | grep -qE '\.zshenv-secrets|\.env\b|\.envrc\b|\.netrc\b|\.npmrc\b|\.pypirc\b|credentials|tokens\.json|keychain|\.pem\b|\.ssh/|\.gnupg/|_TOKEN|_SECRET|API_KEY|APIKEY|PASSWORD' && return 0
+  return 1
+}
 check_wrap() {
   local REDACTOR="$HOME/My Drive/dotfiles/claude/hooks/redact-secrets.sh"
   case "$COMMAND" in
     *"redact-secrets.sh"*) return 0 ;;
   esac
+  wrap_needs_redaction || return 0
   printf '%s' "$COMMAND" | grep -qE '<<-?[[:space:]]*[A-Za-z_'"'"'"]' && return 0
   printf '%s' "$COMMAND" | grep -qE '&[[:space:]]*$' && return 0
   UPDATED_CMD="{ ${COMMAND}; } 2>&1 | \"${REDACTOR}\"; exit \"\${PIPESTATUS[0]}\""

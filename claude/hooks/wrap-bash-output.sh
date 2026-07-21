@@ -1,6 +1,7 @@
 #!/bin/bash
-# PreToolUse hook: rewrite Bash commands to pipe combined stdout+stderr
-# through `redact-secrets.sh` before the model sees them.
+# PreToolUse hook: rewrite Bash commands that could plausibly print a secret to
+# pipe combined stdout+stderr through `redact-secrets.sh` before the model sees
+# them.
 #
 # Returns `hookSpecificOutput.updatedInput.command` with the wrapped form;
 # exit code propagates the original command's status via PIPESTATUS.
@@ -27,6 +28,22 @@ REDACTOR="$HOME/My Drive/dotfiles/claude/hooks/redact-secrets.sh"
 case "$COMMAND" in
   *"redact-secrets.sh"*) exit 0 ;;
 esac
+
+# Wrapping every command makes benign commands look like output-tunneling to
+# Claude's permission classifier. Keep this broad enough to over-match possible
+# secret sources while leaving ordinary git, gh, and local commands unchanged.
+wrap_needs_redaction() {
+  printf '%s' "$COMMAND" | grep -qE '(^|[[:space:];|&(])(pass|op|security|git-crypt)[[:space:]]' && return 0
+  printf '%s' "$COMMAND" | grep -qE 'gh[[:space:]]+auth[[:space:]]+token|gcloud[[:space:]]+auth[[:space:]]+print|aws[[:space:]]+sts[[:space:]]|aws[[:space:]]+secretsmanager|kubectl[[:space:]]+get[[:space:]]+secret' && return 0
+  printf '%s' "$COMMAND" | grep -qE '(^|[[:space:];|&(])(env|printenv)([[:space:];|&)]|$)' && return 0
+  printf '%s' "$COMMAND" | grep -qE '(^|[[:space:];|&(])export[[:space:]]+-p([[:space:];|&)]|$)' && return 0
+  printf '%s' "$COMMAND" | grep -qE '(^|[[:space:];|&(])(declare|typeset)([[:space:];|&)]|$)' && return 0
+  printf '%s' "$COMMAND" | grep -qE '(^|[[:space:];|&(])set[[:space:]]*([;&|)]|$)' && return 0
+  printf '%s' "$COMMAND" | grep -qE '\.zshenv-secrets|\.env\b|\.envrc\b|\.netrc\b|\.npmrc\b|\.pypirc\b|credentials|tokens\.json|keychain|\.pem\b|\.ssh/|\.gnupg/|_TOKEN|_SECRET|API_KEY|APIKEY|PASSWORD' && return 0
+  return 1
+}
+
+wrap_needs_redaction || exit 0
 
 # Skip heredoc commands — wrapping in `{ ; }` after a heredoc body trips
 # the terminator. The user's existing block-sensitive-read hook still

@@ -671,13 +671,6 @@
     },
     {
       "tool": "Codex",
-      "path": "codex/bin/playwright-mcp",
-      "tracked": true,
-      "live_path": "referenced by ~/My Drive/Epoch/.codex/config.toml",
-      "note": "Launches the pinned Playwright MCP server in Chrome extension mode for Epoch terminal sessions. It retrieves the untracked, profile-specific extension token from the macOS login Keychain so sessions connect without a manual authorization screen; project-local registration prevents the desktop app's background app server from competing for the same extension connection."
-    },
-    {
-      "tool": "Codex",
       "path": "codex/bin/install-skills.sh",
       "tracked": true,
       "live_path": "~/.codex/skills",

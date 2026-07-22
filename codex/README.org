@@ -739,14 +739,8 @@ the goals UI, terminal resize reflow, and local notice preferences such as
 hiding the rate-limit model nudge; records trusted project roots; and records
 model-availability and hook-trust state written by Codex. It also tracks enabled
 Codex plugins, including the curated GitHub, Browser, Chrome, and Superpowers
-plugins used by interactive sessions and the Codex App =node_repl= MCP server
-used by Browser/Chrome automation. The tracked =codex/bin/playwright-mcp=
-launcher supports the Epoch project's local Playwright MCP registration: it
-reads the Epoch Chrome profile's connection token from the macOS login Keychain
-so fresh Codex CLI sessions connect without the extension's manual authorization
-screen; the token itself is never tracked. Keeping the MCP registration
-project-local prevents the desktop app's background app server from competing
-with a terminal Codex session for the extension connection.
+plugins used by interactive sessions, and the Codex App =node_repl= MCP server
+used by Browser/Chrome automation.
 When =agent= starts Codex with an account-specific =CODEX_HOME= such as
 =~/.codex-epoch=, Codex may write account-home hook trust entries into this
 tracked config. Those entries are kept here with the ordinary global

@@ -1,0 +1,17 @@
+#!/bin/zsh
+
+set -euo pipefail
+
+account_name="$(/usr/bin/id -un)"
+extension_token="$(/usr/bin/security find-generic-password \
+  -a "$account_name" \
+  -s 'codex-playwright-mcp-epoch-chrome' \
+  -w 2>/dev/null)" || {
+    print -u2 'Playwright MCP: the Epoch Chrome extension token is missing from the login Keychain.'
+    exit 1
+  }
+
+export PLAYWRIGHT_MCP_EXTENSION_TOKEN="$extension_token"
+unset extension_token
+
+exec /opt/homebrew/bin/npx -y @playwright/mcp@0.0.78 --extension "$@"

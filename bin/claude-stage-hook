@@ -1,0 +1,39 @@
+#!/bin/bash
+# claude-stage-hook — Claude Code `Stop` hook.
+#
+# Auto-stages any `!`-prefixed command from the assistant's final message onto
+# the user's Emacs kill ring + macOS clipboard (via `stage-for-user`), so the
+# user never has to copy a command out of the terminal. The `!`-line is the
+# empirically-validated signature of "run this in your session".
+#
+# Registered as a Stop-hook command in ~/.claude/settings.json. Fails silent:
+# any problem just skips staging. Reads the hook JSON on stdin, which includes
+# { "transcript_path": "...", ... }.
+
+# Hooks may run with a minimal PATH; make sure our tools resolve.
+export PATH="$HOME/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+
+input=$(cat 2>/dev/null) || exit 0
+tp=$(printf '%s' "$input" | jq -r '.transcript_path // empty' 2>/dev/null)
+[ -n "$tp" ] && [ -f "$tp" ] || exit 0
+
+# Text of the last assistant message that contains a text block. Slurp so a
+# multi-line message stays one unit (a naive `tail -n1` would grab only the
+# message's last physical line).
+text=$(tail -n 200 "$tp" 2>/dev/null \
+  | jq -rs 'map(select(.type=="assistant" and ((.message.content|type)=="array"))
+                | (.message.content | map(select(.type=="text").text) | join("\n")))
+            | map(select(length > 0)) | (last // "")' 2>/dev/null)
+[ -n "$text" ] || exit 0
+
+# `!`-prefixed command lines, with the leading `! ` stripped.
+cmds=$(printf '%s\n' "$text" \
+  | grep -E '^[[:space:]]*![[:space:]]+[~/._[:alnum:]]' 2>/dev/null \
+  | sed -E 's/^[[:space:]]*![[:space:]]?//')
+[ -n "$cmds" ] || exit 0
+
+# Bound stage-for-user so a wedged Emacs server can never leave a hung process
+# (GNU timeout is `timeout` or `gtimeout` on macOS; run bare if neither exists).
+TO=$(command -v timeout || command -v gtimeout || true)
+printf '%s\n' "$cmds" | ${TO:+"$TO" 5} stage-for-user >/dev/null 2>&1
+exit 0

@@ -16,6 +16,7 @@ hooks = true
 terminal_resize_reflow = true
 goals = true
 js_repl = false
+remote_plugin = false
 
 [projects."/Users/pablostafforini/My Drive/repos/consensus-trader"]
 trust_level = "trusted"

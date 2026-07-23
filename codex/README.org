@@ -741,6 +741,12 @@ model-availability and hook-trust state written by Codex. It also tracks enabled
 Codex plugins, including the curated GitHub, Browser, Chrome, and Superpowers
 plugins used by interactive sessions, and the Codex App =node_repl= MCP server
 used by Browser/Chrome automation.
+The =remote_plugin= feature is disabled because its authenticated registry path
+currently suppresses locally installed =openai-curated= plugin skills while
+still reporting those plugins as installed and enabled. Keeping the local plugin
+loader active makes the GitHub and Superpowers skill bundles available in fresh
+sessions; remove this override only after the remote registry loads locally
+enabled curated plugins correctly.
 When =agent= starts Codex with an account-specific =CODEX_HOME= such as
 =~/.codex-epoch=, Codex may write account-home hook trust entries into this
 tracked config. Those entries are kept here with the ordinary global

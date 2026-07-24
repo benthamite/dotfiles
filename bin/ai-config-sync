@@ -1020,6 +1020,20 @@ def private_skill_item_sync_problems(item: dict) -> list[str]:
     )
 
 
+def private_skill_pair_removed(dir_name: str, paths: set[str], changed: set[str]) -> bool:
+    """True when a private skill directory was deleted on both sides in this
+    change set. That is the un-privatize/retire path (e.g. the skill moved to
+    the tracked public skills tree), so the missing private-manifest entry is
+    expected rather than an error."""
+    for side in ("claude", "codex"):
+        prefix = f"{side}/private-skills/{dir_name}"
+        if (ROOT / prefix).exists():
+            return False
+        if not has_changed_prefix(prefix, paths, changed):
+            return False
+    return True
+
+
 def private_skill_item_for_path(manifest: dict, path: str, side: str) -> dict | None:
     for item in manifest.get("private_skills") or []:
         rel = item.get(side)
@@ -1351,6 +1365,8 @@ def guard_changed_paths(
                 continue
             processed_global_private_skills.add(key)
             if item is None:
+                if private_skill_pair_removed(key, paths, changed):
+                    continue
                 problems.append(f"{path} changed but is missing from {PRIVATE_MANIFEST}")
                 continue
             drift = private_skill_item_sync_problems(item)
@@ -1378,6 +1394,8 @@ def guard_changed_paths(
                 continue
             processed_global_private_skills.add(key)
             if item is None:
+                if private_skill_pair_removed(key, paths, changed):
+                    continue
                 problems.append(f"{path} changed but is missing from {PRIVATE_MANIFEST}")
                 continue
             drift = private_skill_item_sync_problems(item)

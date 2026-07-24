@@ -106,8 +106,7 @@ def main() -> int:
             install_link(link, source_dir)
             exclude_paths.append(f"/{side}/skills/{name}")
 
-    if exclude_paths:
-        update_git_exclude(exclude_paths)
+    update_git_exclude(exclude_paths)
     return 0
 
 

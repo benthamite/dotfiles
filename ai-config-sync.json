@@ -135,6 +135,13 @@
       "note": "Claude and Codex handoff skills intentionally differ because their Emacs handoff commands read different temp files and have different command names."
     },
     {
+      "name": "humanize",
+      "claude": "claude/skills/humanize/SKILL.md",
+      "codex": "codex/skills/humanize/SKILL.md",
+      "status": "paired",
+      "equivalence": "Equivalent after removing tool-specific skill frontmatter; body and auxiliary files match."
+    },
+    {
       "name": "interpretability-audit",
       "claude": "claude/skills/interpretability-audit/SKILL.md",
       "codex": "codex/skills/interpretability-audit/SKILL.md",

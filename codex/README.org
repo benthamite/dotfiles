@@ -140,7 +140,12 @@ locally and still checks parity. Public private-skill directories use opaque
 IDs; the real skill names live only in the encrypted private manifest. Private
 skills are exposed to local Codex sessions by =bin/install-private-skills=,
 which creates gitignored shims under =~/.codex/skills= from the encrypted
-manifest.
+manifest. To make a private skill public, move both private-skill directories
+into the tracked =codex/skills/= and =claude/skills/= trees (replacing the
+shims), register the pair in =ai-config-sync.json=, drop the entry from
+=ai-config-sync.private.json=, and re-run =bin/install-private-skills= to
+clear the stale git-exclude shims. The private-skills trees may be empty when
+no skill is currently private.
 
 Skill frontmatter descriptions are loaded for routing, so keep them concise:
 preserve user phrasing, scope boundaries, and important near-miss exclusions,

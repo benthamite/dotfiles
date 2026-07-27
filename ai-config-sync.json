@@ -431,6 +431,13 @@
       "note": "Claude Stop event wrapper; Codex routes Stop through codex-hook-wrapper directly."
     },
     {
+      "name": "notify-emacs-state.sh",
+      "claude": "claude/hooks/notify-emacs-state.sh",
+      "codex": null,
+      "status": "unsupported-or-replaced",
+      "note": "Claude turn-state wrapper: forwards activity events (PreToolUse, MessageDisplay, UserPromptSubmit) and blocked events (SessionStart, StopFailure) to agent.el, which cannot otherwise tell when a Claude turn begins because Claude Code exposes no turn-start hook. Codex needs no counterpart: codex.el runs an app server and records turn boundaries from the JSON-RPC stream in codex--app-server-turn-active-p, which agent-codex.el reads directly."
+    },
+    {
       "name": "pretooluse-bash.sh",
       "claude": "claude/hooks/pretooluse-bash.sh",
       "codex": null,

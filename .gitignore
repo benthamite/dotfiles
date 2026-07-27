@@ -38,7 +38,7 @@ claude/settings.json
 codex/.codex/
 codex/skills/.system/
 codex/skills/*/node_modules
-claude/bin/__pycache__/
+claude/bin/__pycache__
 
 ## local agent-learning inbox
 .agent-learnings/**
@@ -52,3 +52,6 @@ claude/bin/__pycache__/
 /docs/logs/
 /CLAUDE.md
 /AGENTS.md
+
+# Drive nosync symlinks (no trailing slash so the symlink is matched)
+.pytest_cache

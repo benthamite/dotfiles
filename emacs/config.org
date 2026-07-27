@@ -14827,7 +14827,15 @@ result to a user-specified file."
                  :repo "benthamite/epoch.el")
   :demand t
   :bind
-  (("H-l" . epoch-menu)))
+  (("H-l" . epoch-menu))
+
+  :config
+  (defvar pablo/epoch-pull-forge-repos-timer nil
+    "Idle timer that periodically pulls Forge topics in all Epoch repos.")
+  (when (timerp pablo/epoch-pull-forge-repos-timer)
+    (cancel-timer pablo/epoch-pull-forge-repos-timer))
+  (setq pablo/epoch-pull-forge-repos-timer
+        (run-with-idle-timer (* 60 60) t #'epoch-pull-forge-repos)))
 #+end_src
 
 ** =calc=

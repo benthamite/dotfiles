@@ -4,6 +4,11 @@
 # Keep Claude Code's OAuth account selection from being overridden by ambient
 # Anthropic API credentials that are exported for ordinary API clients. Set
 # CLAUDE_CODE_ALLOW_API_KEY_AUTH=1 to intentionally use API-key auth.
+#
+# Also put bypassPermissions into the Shift+Tab mode cycle without activating
+# it. The --allow- variant only makes the mode selectable; the starting mode
+# still comes from permissions.defaultMode. Set CLAUDE_NO_BYPASS_OPTION=1 to
+# leave the mode out of the cycle entirely.
 
 REAL=/opt/homebrew/bin/claude
 [ -x "$REAL" ] || REAL=/usr/local/bin/claude
@@ -13,4 +18,8 @@ if [ -z "$CLAUDE_CODE_ALLOW_API_KEY_AUTH" ]; then
 	unset ANTHROPIC_AUTH_TOKEN
 fi
 
-exec "$REAL" "$@"
+if [ -n "$CLAUDE_NO_BYPASS_OPTION" ]; then
+	exec "$REAL" "$@"
+fi
+
+exec "$REAL" --allow-dangerously-skip-permissions "$@"

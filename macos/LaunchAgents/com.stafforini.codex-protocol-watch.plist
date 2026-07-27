@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.stafforini.codex-protocol-watch</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/pablostafforini/My Drive/dotfiles/bin/codex-protocol-watch</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>HOME</key>
+    <string>/Users/pablostafforini</string>
+    <key>PATH</key>
+    <string>/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>4</integer>
+    <key>Minute</key>
+    <integer>15</integer>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/pablostafforini/.local/state/codex-protocol-watch/launchd.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/pablostafforini/.local/state/codex-protocol-watch/launchd.err.log</string>
+</dict>
+</plist>

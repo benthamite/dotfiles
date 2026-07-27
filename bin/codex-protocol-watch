@@ -1,0 +1,83 @@
+#!/bin/bash
+# Watch the Codex CLI for protocol methods codex-app-server.el does not handle.
+#
+# codex-app-server.el reimplements the Codex client instead of hosting the CLI's
+# own TUI, so it inherits nothing when Codex ships a feature: a new protocol
+# method is a feature that exists in Codex and silently does not exist in Emacs.
+# This runs the repo's coverage check on a schedule so an upgrade announces
+# itself instead of being noticed months later.
+#
+# Notifies only when the set of unaccounted-for methods changes, so an untriaged
+# finding does not nag every day. Nothing is lost if a notification is missed:
+# the baseline lives in git, so the finding persists until triaged and any later
+# run reports it again.
+#
+# Run by com.stafforini.codex-protocol-watch. Safe to run by hand; pass --force
+# to notify even when the finding is unchanged.
+set -uo pipefail
+
+repo="${CODEX_EL_REPO:-$HOME/.config/emacs-profiles/8.3.0-dev/elpaca/sources/codex}"
+checker="$repo/ground-truth/protocol_coverage.py"
+state_dir="${CODEX_PROTOCOL_WATCH_STATE:-$HOME/.local/state/codex-protocol-watch}"
+force=0
+[[ "${1:-}" == "--force" ]] && force=1
+
+mkdir -p "$state_dir"
+run_id="$(date '+%Y%m%d-%H%M%S')"
+log_file="$state_dir/watch-$run_id.log"
+exec > >(tee -a "$log_file") 2>&1
+ln -sfn "$log_file" "$state_dir/latest.log" 2>/dev/null || true
+
+lock_dir="$state_dir/.lock"
+if ! mkdir "$lock_dir" 2>/dev/null; then
+  echo "[codex-protocol-watch] another run is in progress; exiting"
+  exit 0
+fi
+trap 'rmdir "$lock_dir" 2>/dev/null || true' EXIT
+
+echo "[codex-protocol-watch] started $(date '+%Y-%m-%d %H:%M:%S')"
+
+if ! command -v codex >/dev/null 2>&1; then
+  echo "[codex-protocol-watch] codex not on PATH; nothing to check"
+  exit 0
+fi
+if [[ ! -f "$checker" ]]; then
+  echo "[codex-protocol-watch] missing $checker; set CODEX_EL_REPO"
+  exit 1
+fi
+
+report="$state_dir/report.txt"
+python3 "$checker" > "$report" 2>&1
+status=$?
+cat "$report"
+
+if (( status == 0 )); then
+  echo "[codex-protocol-watch] no protocol changes; nothing to report"
+  # Clear the signature so a finding that reappears notifies again.
+  rm -f "$state_dir/notified-signature"
+  exit 0
+fi
+
+# Signature covers only the changed-method lines, so a Codex version bump that
+# adds nothing does not re-notify.
+signature=$(grep -E '^\s{2,}[a-zA-Z]+/' "$report" | sort | shasum | cut -d' ' -f1)
+signature_file="$state_dir/notified-signature"
+if (( force == 0 )) && [[ -f "$signature_file" ]] &&
+   [[ "$(cat "$signature_file")" == "$signature" ]]; then
+  echo "[codex-protocol-watch] same finding as last notification; staying quiet"
+  exit 0
+fi
+printf '%s' "$signature" > "$signature_file"
+
+new_count=$(grep -cE '^\s{4,}[a-zA-Z]+/' "$report" || true)
+summary="Codex added protocol methods codex-app-server.el does not handle"
+detail="$new_count method(s). See $state_dir/report.txt"
+echo "[codex-protocol-watch] NOTIFYING: $summary ($new_count)"
+
+osascript -e "display notification \"$detail\" with title \"$summary\"" \
+  >/dev/null 2>&1 || true
+if command -v emacsclient >/dev/null 2>&1; then
+  emacsclient -e "(message \"codex-protocol-watch: $summary ($new_count)\")" \
+    >/dev/null 2>&1 || true
+fi
+exit 0

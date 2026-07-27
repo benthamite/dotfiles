@@ -474,7 +474,14 @@ def cmd_restore(input_file: Path, preserve: bool = True) -> None:
                 "Use `walk.py release-stale <file> 0` first if you want them re-queued."
             )
     if preserve and state_path.exists():
-        out = input_file.with_suffix(input_file.suffix + ".walk-decisions.json")
+        # Write decisions outside the input file's directory. Walks are often
+        # run over a file inside a git repo, and a sidecar dropped next to it
+        # shows up as untracked junk the user then has to notice and ignore.
+        # Named from the input file's stem alone, so callers can predict the
+        # path without knowing the session id.
+        out_dir = Path.home() / ".claude" / "walk-list-out"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out = out_dir / f"{input_file.stem}.walk-decisions.json"
         shutil.copy(str(state_path), str(out))
         print(f"Decisions preserved at: {out}")
     if input_file.exists():

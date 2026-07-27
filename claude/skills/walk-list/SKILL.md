@@ -123,7 +123,11 @@ the item above and external sources (hub files, web, etc.).
 
 ## Output
 
-After `restore`, decisions are at `<input-file>.walk-decisions.json`:
+After `restore`, decisions are at
+`~/.claude/walk-list-out/<input-file-stem>.walk-decisions.json`. They are
+written there rather than next to the input file, which is often inside a git
+repo where a sidecar would show up as untracked junk. `restore` prints the
+exact path:
 
 ```json
 {

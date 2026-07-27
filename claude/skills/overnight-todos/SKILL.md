@@ -187,7 +187,7 @@ python ~/.claude/skills/walk-list/walk.py release-stale "$TODO_FILE" 0   # recla
 python ~/.claude/skills/walk-list/walk.py restore "$TODO_FILE"           # writes decisions
 ```
 
-Read `${TODO_FILE}.walk-decisions.json`. Combine with the blockers recorded in Step 2 (already in `$REPORT`). Append the act-mode results — completed/failed/blocked-after-investigation/deferred — and the `still_blocked` section from `$FILTERED` to the existing report. Skip this step for dry-run with `--max-tasks 0`: the Step 2 report is already complete.
+Read `~/.claude/walk-list-out/$(basename "${TODO_FILE%.*}").walk-decisions.json` (the path `walk.py restore` prints). Combine with the blockers recorded in Step 2 (already in `$REPORT`). Append the act-mode results — completed/failed/blocked-after-investigation/deferred — and the `still_blocked` section from `$FILTERED` to the existing report. Skip this step for dry-run with `--max-tasks 0`: the Step 2 report is already complete.
 
 Append the per-run summary using this shape:
 

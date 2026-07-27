@@ -1,6 +1,9 @@
 ---
 name: walk-list
 description: Process a list file strictly item by item, sequentially or with a bounded subagent pool. Use when the user needs no skipping, batching, or peeking ahead; not for lists that can be safely read all at once.
+user-invocable: true
+allowed-tools: Bash, Read, Agent
+argument-hint: "start <file> [--max-concurrent N] | next <file> <decision> | dispatch <file> | record <file> <token> <decision> | pool-status <file> | status <file> | show-decisions <file> | release-stale <file> <sec> | restore <file> | abort <file>"
 ---
 
 # walk-list: strict 1-at-a-time or N-at-a-time processing (structural)
@@ -120,7 +123,11 @@ the item above and external sources (hub files, web, etc.).
 
 ## Output
 
-After `restore`, decisions are at `<input-file>.walk-decisions.json`:
+After `restore`, decisions are at
+`~/.claude/walk-list-out/<input-file-stem>.walk-decisions.json`. They are
+written there rather than next to the input file, which is often inside a git
+repo where a sidecar would show up as untracked junk. `restore` prints the
+exact path:
 
 ```json
 {

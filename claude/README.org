@@ -1197,19 +1197,6 @@ Resolves the active elpaca profile dynamically (via =emacsclient -e 'init-curren
 
 Forwards the session-end event to Emacs via =claude-code-handle-hook=. Runs through =fire-and-forget.sh= so the CLI doesn't block on =emacsclient=. Works together with =agent-log-sync-on-session-end= to trigger log syncing when a session ends.
 
-*** notify-emacs-state.sh (SessionStart, StopFailure, UserPromptSubmit, PreToolUse, MessageDisplay)
-:PROPERTIES:
-:ID:       3C7E5A18-6B24-4F0D-9A1C-58E4D93B2F76
-:END:
-
-Forwards session turn state to Emacs via =claude-code-handle-hook=, so =agent.el= can tell a working session from one that is waiting for you. Takes one argument, =activity= or =blocked=, and runs through =fire-and-forget.sh= like the other Emacs notifiers.
-
-Claude Code publishes no hook for the start of a turn, so a turn the user did not type — one resumed after a background task finishes, say — is otherwise invisible to Emacs, and the session keeps displaying as waiting while it works. This wrapper substitutes ordinary lifecycle events: =PreToolUse=, =MessageDisplay= and =UserPromptSubmit= report =activity= (the session is demonstrably working), while =SessionStart= and =StopFailure= report =blocked= (a fresh session awaits its first prompt; a failed turn will not resume on its own). A missed event costs latency rather than correctness, because the next one corrects the state.
-
-=activity= is debounced per session, currently ten seconds, since only the first event of a turn changes anything and =PreToolUse= fires on every tool call. A turn beginning inside the window is reported up to that late, then corrects itself. The debounce stamp lives under =$TMPDIR/claude-agent-activity/=, keyed by a hash of the buffer name.
-
-Codex needs no counterpart: =codex.el= runs an app server and takes turn boundaries from the JSON-RPC stream, which =agent-codex.el= reads directly.
-
 *** session-learning-capture.sh (legacy Stop helper)
 :PROPERTIES:
 :ID:       D1F2B82D-29B5-4490-8E6D-22352A345301

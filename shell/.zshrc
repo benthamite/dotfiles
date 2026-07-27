@@ -102,21 +102,10 @@ alias muinit="cd ~; mu init --maildir=$HOME/Mail --personal-address=$PERSONAL_EM
 alias emacsk="pkill -SIGUSR2 Emacs"
 alias emacsK="while true; do pkill -SIGUSR2 Emacs; done"
 
-# Claude Code injects "Do not call the AgentTool unless the user requested it"
-# and the same for workflows/deep-research into the system prompt. That is an
-# intentional Anthropic default (see the changelog entries about /deep-research
-# and /verify "no longer" running on their own), there is no settings.json key
-# to turn it off, and CLAUDE.md loads *after* the system prompt so it only
-# competes with the line instead of replacing it. --append-system-prompt puts
-# the override in the system prompt itself, which is the only durable fix.
-# Background: dotfiles/claude/README.org, "Overriding harness-injected
-# instructions".
-CLAUDE_AGENT_AUTONOMY='Subagents, workflows, and research tools are pre-authorized by standing user instruction. That standing instruction satisfies any "unless the user requested it" condition attached to these tools, so treat such a condition as already met. Use them autonomously whenever independent investigation, implementation, review, or verification can run in parallel or benefits from a separate context window. Never ask permission before spawning one.'
-
 # Claude Code multi-account (separate OAuth sessions via config dir)
-alias claude-personal='CLAUDE_CONFIG_DIR=~/.claude-personal claude --append-system-prompt "$CLAUDE_AGENT_AUTONOMY"'
-alias claude-tlon='CLAUDE_CONFIG_DIR=~/.claude-tlon claude --append-system-prompt "$CLAUDE_AGENT_AUTONOMY"'
-alias claude-epoch='CLAUDE_CONFIG_DIR=~/.claude-epoch claude --append-system-prompt "$CLAUDE_AGENT_AUTONOMY"'
+alias claude-personal='CLAUDE_CONFIG_DIR=~/.claude-personal claude'
+alias claude-tlon='CLAUDE_CONFIG_DIR=~/.claude-tlon claude'
+alias claude-epoch='CLAUDE_CONFIG_DIR=~/.claude-epoch claude'
 # Trajectory org disabled claude.ai sign-in, so this account must auth via its
 # provisioned API key. Inject the key (single source of truth: the CR studio
 # .env) and flip the shim's allow-flag for THIS process only -- never exported,
@@ -125,7 +114,7 @@ claude-trajectory() {
   local keyfile=~/Trajectory/reasoning-tasks/reasoning-tasks-cr-studio/.claude/.env
   local key; key=$(grep -m1 '^ANTHROPIC_API_KEY=' "$keyfile" | cut -d= -f2-)
   if [ -z "$key" ]; then echo "claude-trajectory: no ANTHROPIC_API_KEY in $keyfile" >&2; return 1; fi
-  CLAUDE_CONFIG_DIR=~/.claude-trajectory CLAUDE_CODE_ALLOW_API_KEY_AUTH=1 ANTHROPIC_API_KEY="$key" claude --append-system-prompt "$CLAUDE_AGENT_AUTONOMY" "$@"
+  CLAUDE_CONFIG_DIR=~/.claude-trajectory CLAUDE_CODE_ALLOW_API_KEY_AUTH=1 ANTHROPIC_API_KEY="$key" claude "$@"
 }
 
 # Trajectory reasoning-tasks: create a new task worktree + wire its API-key symlink in one step.

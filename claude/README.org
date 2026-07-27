@@ -173,6 +173,26 @@ Claude Code loads =CLAUDE.md= files from several locations. When working in a pr
 
 Each file should contain distinct content. The global one defines behavioral conventions (verify work, fix root causes, commit immediately, explain decision points in plain language, etc.). Project-level ones define project-specific context. When a project uses session logging, the project-level =CLAUDE.md= carries the latest-session pointer that the sibling =AGENTS.md= mirrors for Codex.
 
+***** Overriding harness-injected instructions
+:PROPERTIES:
+:CUSTOM_ID: h:overriding-harness-instructions
+:END:
+
+Some Claude Code sessions receive system guidance that is not in any config file
+here — not =managed-settings.json=, not an output style, not =CLAUDE.local.md=,
+not either =settings.json=, and not any =CLAUDE.md=. It cannot be edited out
+locally, so it can only be overridden.
+
+The known case is =Do not call the AgentTool unless the user requested it=, which
+one session read as an absolute ban on subagents and consequently worked without
+them for hours. Because that instruction is *conditional*, the =Agents= section of
+=CLAUDE.md= now states outright that it constitutes the standing request the
+condition asks for. Mirror the same wording in =codex/AGENTS.md=.
+
+When a similar conditional instruction surfaces, the fix is the same: add an
+explicit line to =CLAUDE.md= satisfying the condition, rather than hunting for a
+config file to delete.
+
 **** Where to put things
 :PROPERTIES:
 :CUSTOM_ID: h:where-to-put-things

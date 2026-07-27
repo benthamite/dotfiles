@@ -9107,7 +9107,10 @@ The author provides a good overview of the package in [[https://www.youtube.com/
   (claude-code-display-window-fn (lambda (_buffer) (claude-code-switch-to-buffer) nil))
   (claude-code-terminal-backend 'eat)
   (claude-code-optimize-window-resize nil)
-  (claude-code-program-switches '("--chrome"))
+  ;; `--allow-dangerously-skip-permissions' only adds "bypass permissions" to
+  ;; the Shift+Tab cycle; the starting mode still comes from
+  ;; `permissions.defaultMode' in settings.json.
+  (claude-code-program-switches '("--chrome" "--allow-dangerously-skip-permissions"))
 
   :config
   (monet-mode 1)

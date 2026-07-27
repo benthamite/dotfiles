@@ -1146,6 +1146,20 @@ counterpart hook honors the same setting.
 
 Blocks =emacsclient= commands that invoke =elpaca-rebuild= or =elpaca-extras-reload= when there are uncommitted =.el= changes in =emacs/extras/=. The elpaca source clone only has committed code, so rebuilding before committing would silently compile and load stale definitions from the last commit, ignoring the working tree edits. The error message lists the uncommitted files and instructs the agent to commit first.
 
+*** block-dirty-tree-rewrite.sh (PreToolUse)
+:PROPERTIES:
+:CUSTOM_ID: h:block-dirty-tree-rewrite
+:ID:       785A48F8-E1AF-48D5-A364-E85F62083BF9
+:END:
+
+Blocks =git filter-repo= and =git filter-branch= when the target repo has staged or unstaged changes to tracked files. Both commands hard-reset the working tree as part of rewriting history, and uncommitted edits are unrecoverable afterwards: they were never in git, so there is no reflog entry, no dangling blob, and no stash — and a backup bundle does not help either, because it carries only committed history. Added after a 2026-07-27 =filter-repo= run destroyed three files of in-progress work that had been left uncommitted deliberately; they were recovered only because Google Drive had not yet synced the deletion.
+
+Untracked files are deliberately ignored. A hard reset leaves them alone, and the Epoch notes repo routinely carries untracked scratch, so counting them would make the hook fire constantly and train the reader to click past it.
+
+Two details keep it accurate rather than merely loud. Heredoc bodies are stripped before matching, so a commit message that merely *describes* a past rewrite is not mistaken for one — the message for the 2026-07-27 purge would otherwise have tripped it. And the repo under threat is resolved from =git -C <dir>= if present, else the last =cd <dir>= in the command, else the hook's own cwd, so a rewrite run after =cd= into another repo is still checked against the right tree. Escape hatch for a deliberate rewrite over a dirty tree: prefix the command with =ALLOW_DIRTY_REWRITE=1=.
+
+This hook is registered as its own entry under the =Bash= matcher rather than ported into =pretooluse-bash.sh=, because the dispatcher is a self-protected guard file that only Pablo can edit.
+
 *** block-elpaca-dotfiles-edit.sh (PreToolUse)
 :PROPERTIES:
 :ID:       864BDC53-69C3-45F3-BB74-68154834BD4B

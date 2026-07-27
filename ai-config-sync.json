@@ -284,6 +284,14 @@
       "note": "paired; Claude ask decisions become deny-with-user-confirmation instructions; Codex side normalizes string-wrapped tool_input via lib-codex-hook-json.sh and accepts Bash, exec_command, functions.exec, and functions.exec_command shell events"
     },
     {
+      "name": "block-dirty-tree-rewrite.sh",
+      "claude": "claude/hooks/block-dirty-tree-rewrite.sh",
+      "codex": "codex/hooks/block-dirty-tree-rewrite.sh",
+      "status": "paired-unregistered",
+      "note": "Denies `git filter-repo` / `git filter-branch` when the target repo has staged or unstaged changes to tracked files, because both hard-reset the working tree and uncommitted edits are unrecoverable (no reflog, no stash, and a backup bundle carries only committed history). Added after a 2026-07-27 filter-repo run destroyed three files of in-progress work. Untracked files are deliberately ignored: a hard reset leaves them alone, and the notes repo always carries untracked scratch. Heredoc bodies are stripped before matching so a commit message describing a past rewrite is not mistaken for an invocation; the target repo is taken from `git -C`, else the last `cd` in the command, else the hook cwd. Escape hatch: prefix ALLOW_DIRTY_REWRITE=1. The Codex side normalizes Bash, exec_command, functions.exec, and functions.exec_command payloads via lib-codex-hook-json.sh; the two scripts are otherwise identical. UNREGISTERED as of writing: both registration targets (live ~/.claude/settings.json and tracked codex/hooks.json) are self-protected by block-github-guard-edit.sh, so an agent cannot wire this in. Pablo must add the PreToolUse Bash entries by hand, after which this status becomes paired.",
+      "equivalence": "Identical apart from the payload-normalization preamble documented above."
+    },
+    {
       "name": "block-elpaca-dotfiles-edit.sh",
       "claude": "claude/hooks/block-elpaca-dotfiles-edit.sh",
       "codex": "codex/hooks/block-elpaca-dotfiles-edit.sh",

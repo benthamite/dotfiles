@@ -1,6 +1,6 @@
 ---
 name: update-log
-description: End-of-session bookkeeping. Do NOT invoke this on your own initiative. Run it only when the user explicitly asks (the user types /update-log or says update log, session log, close out, wrap up, or asks to save project progress) or when the deliberate end-of-session chain invokes it with --auto. Never trigger it proactively mid-session or at session end on your own judgment, even when the session clearly changed durable project state — wait for an explicit request or the --auto chain.
+description: End-of-session bookkeeping. Do NOT invoke this on your own initiative, and do NOT hand-write a session log yourself instead of invoking it — writing or editing any file under a project's logs/ directory is this skill's job alone. Run it only when the user explicitly asks (the user types /update-log or says update log, session log, close out, wrap up, or asks to save project progress) or when the deliberate end-of-session chain invokes it with --auto. Never trigger it proactively mid-session or at session end on your own judgment, even when the session clearly changed durable project state — wait for an explicit request or the --auto chain.
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, AskUserQuestion
 argument-hint: "[--exit] [--auto] [optional summary of what was done]"
@@ -10,6 +10,15 @@ argument-hint: "[--exit] [--auto] [optional summary of what was done]"
 
 Perform the following bookkeeping steps to preserve this session's work for future sessions.
 
+> **The prohibition is on the act, not just on the skill.** Do not write a session
+> log by hand as a substitute for invoking this skill. Creating or editing any file
+> under a project's `logs/` directory is this skill's job, and only when invoked as
+> below. Bypassing the skill and writing the file directly is the same violation,
+> not a way around it — that is exactly how the rule gets defeated in practice,
+> because the agent never consults a policy attached to a skill it did not consider
+> using. If the same reasoning would stop you invoking `update-log`, it stops you
+> hand-writing the log.
+>
 > **Invocation policy:** Do not invoke this skill on your own initiative. Run it only when (a) the user explicitly asks — `/update-log`, or asking to log / close out / wrap up / save progress — or (b) the deliberate end-of-session chain invokes it with `--auto` (see *Non-interactive runs* below). Both of those are intentional; what is prohibited is the agent proactively deciding to run it mid-session or at session end on its own judgment, even when the session clearly changed durable state. If you think a log would help but neither (a) nor (b) applies, you may briefly suggest it, then stop — do not run it until asked.
 
 ## Triage first (may be a no-op)

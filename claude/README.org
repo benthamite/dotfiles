@@ -1031,10 +1031,14 @@ Blocks =gh issue comment= / comment-POST =gh api= calls targeting =trajectory-la
 
 The paired Claude and Codex global instructions require agents not to say a bug
 is fixed, resolved, working, or done unless the exact reported user-visible
-behavior has been verified after the change; final answers after changes must
-include an explicit =Verification:= or =Not verified end-to-end:= sentence.
-They also require substantive-work closeouts to include the broader project
-significance and the concrete next action or decision.
+behavior has been verified after the change. Reporting what was or wasn't
+verified is a judgment call, owed only when it bears on the user's decision:
+a gap the user would act on, or a "done" claim resting on weaker evidence
+than it looks. The former standing requirements — a =Verification:= or
+=Not verified end-to-end:= sentence in every post-change answer, and a
+decision-oriented closeout naming broader project significance and the next
+action — were removed on 2026-07-28 because together they produced a report
+at the end of every substantive turn regardless of whether it was useful.
 There is currently no registered Stop hook that enforces this mechanically.
 
 *** require-elisp-test-before-commit.sh (PreToolUse)

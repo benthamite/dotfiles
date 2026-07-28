@@ -193,15 +193,12 @@ is_gh_api_write() {
 }
 
 # Extract the single literal directory this command will run in, if it has one.
-# Prints the path and returns 0. Returns 1 when the command changes directory
-# in a way this guard cannot resolve without evaluating the shell (a variable,
-# a command substitution, or more than one `cd`), and 2 when it changes no
-# directory at all and the ambient directory is therefore the right answer.
+# Prints the path and returns 0. Returns 1 when the command changes directory in
+# a way this guard cannot resolve without evaluating the shell, and 2 when it
+# changes no directory at all, so the ambient directory is the right answer.
 resolved_run_dir() {
     local changes=0 target=""
 
-    # Count directory-changing constructs. More than one and we cannot know
-    # which is in effect at the point of the push.
     changes=$(printf '%s\n' "$COMMAND" \
 	| grep -oE '(^|[[:space:];|&(])(cd|pushd)[[:space:]]' \
 	| grep -c . || true)
@@ -214,29 +211,39 @@ resolved_run_dir() {
     if [ "$changes" -eq 0 ] && [ -z "$dash_c" ]; then
 	return 2
     fi
-
     if [ "$changes" -gt 1 ]; then
 	return 1
     fi
 
     if [ -n "$dash_c" ]; then
 	target="$dash_c"
-    elif [[ "$COMMAND" =~ (^|[[:space:];|\&])(cd|pushd)[[:space:]]+\"([^\"]+)\" ]]; then
+    elif [[ "$COMMAND" =~ (^|[[:space:];|\&])(cd|pushd)[[:space:]]+(.*) ]]; then
 	target="${BASH_REMATCH[3]}"
-    elif [[ "$COMMAND" =~ (^|[[:space:];|\&])(cd|pushd)[[:space:]]+\'([^\']+)\' ]]; then
-	target="${BASH_REMATCH[3]}"
-    elif [[ "$COMMAND" =~ (^|[[:space:];|\&])(cd|pushd)[[:space:]]+([^[:space:];\|\&]+) ]]; then
-	target="${BASH_REMATCH[3]}"
+	# Keep only this command, not the rest of the chain.
+	target="${target%%&&*}"
+	target="${target%%;*}"
+	target="${target%%|*}"
+	# Undo quoting so a path containing spaces still resolves. Handles
+	# "a b", 'a b', ~/"a b" and a\ b alike.
+	target="${target//\"/}"
+	target="${target//\'/}"
+	target="${target//\\ / }"
+	# Trim trailing whitespace.
+	target="${target%"${target##*[![:space:]]}"}"
     else
 	return 1
     fi
 
-    # Anything needing shell evaluation is not a literal path.
+    # $HOME and ~ are unambiguous, so expand them rather than refusing.
+    target="${target//\$\{HOME\}/$HOME}"
+    target="${target//\$HOME/$HOME}"
+    target="${target/#\~/$HOME}"
+
+    # Anything still needing shell evaluation is not a literal path.
     case "$target" in
 	*'$'* | *'`'* | *'*'* | *'?'*) return 1 ;;
     esac
 
-    target="${target/#\~/$HOME}"
     [ -d "$target" ] || return 1
     printf '%s' "$target"
 }
@@ -256,12 +263,24 @@ repo_from_git_dir() {
     return 1
 }
 
+# True when the command looks like it would modify a guard file. Redirects that
+# cannot write to a file -- fd duplications and writes to /dev/null -- are
+# stripped first, so an ordinary read carrying 2>/dev/null is not mistaken for
+# an edit.
+guard_modification_p() {
+    local sanitized
+    sanitized=$(printf '%s' "$COMMAND" \
+	| sed -E 's/[0-9]*>>?[[:space:]]*&[0-9-]+//g' \
+	| sed -E 's/[0-9]*>>?[[:space:]]*\/dev\/null//g')
+    printf '%s' "$sanitized" \
+	| grep -qE '(^|[[:space:];|&])(rm|trash|mv|cp|install|sed[[:space:]].*-i|perl[[:space:]].*-pi|git[[:space:]]+(restore|checkout))[[:space:]]|>>?|tee[[:space:]]'
+}
+
 contains_protected_guard_path() {
     echo "$COMMAND" | grep -qE '(agents/github-write-allowlist\.txt|codex/(hooks/block-github-write-command\.sh|hooks/block-github-guard-edit\.sh|hooks\.json)|claude/(hooks/block-github-write-command\.sh|hooks/block-github-guard-edit\.sh|hooks/pretooluse-bash\.sh)|\.codex/hooks\.json|\.claude/settings\.json)'
 }
 
-if contains_protected_guard_path && \
-	echo "$COMMAND" | grep -qE '(^|[[:space:];|&])(rm|trash|mv|cp|install|sed[[:space:]].*-i|perl[[:space:]].*-pi|git[[:space:]]+(restore|checkout))[[:space:]]|>>?|tee[[:space:]]'; then
+if contains_protected_guard_path && guard_modification_p; then
     deny "attempt to modify GitHub write-guard files" "Those files are self-protected. Edit them manually outside Claude if the policy needs to change."
 fi
 

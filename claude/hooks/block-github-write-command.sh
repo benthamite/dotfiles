@@ -192,6 +192,70 @@ is_gh_api_write() {
     return 1
 }
 
+# Extract the single literal directory this command will run in, if it has one.
+# Prints the path and returns 0. Returns 1 when the command changes directory
+# in a way this guard cannot resolve without evaluating the shell (a variable,
+# a command substitution, or more than one `cd`), and 2 when it changes no
+# directory at all and the ambient directory is therefore the right answer.
+resolved_run_dir() {
+    local changes=0 target=""
+
+    # Count directory-changing constructs. More than one and we cannot know
+    # which is in effect at the point of the push.
+    changes=$(printf '%s\n' "$COMMAND" \
+	| grep -oE '(^|[[:space:];|&(])(cd|pushd)[[:space:]]' \
+	| grep -c . || true)
+
+    local dash_c=""
+    if [[ "$COMMAND" =~ (^|[[:space:];|\&])git[[:space:]]+-C[[:space:]]+([^[:space:];\|\&]+) ]]; then
+	dash_c="${BASH_REMATCH[2]}"
+    fi
+
+    if [ "$changes" -eq 0 ] && [ -z "$dash_c" ]; then
+	return 2
+    fi
+
+    if [ "$changes" -gt 1 ]; then
+	return 1
+    fi
+
+    if [ -n "$dash_c" ]; then
+	target="$dash_c"
+    elif [[ "$COMMAND" =~ (^|[[:space:];|\&])(cd|pushd)[[:space:]]+\"([^\"]+)\" ]]; then
+	target="${BASH_REMATCH[3]}"
+    elif [[ "$COMMAND" =~ (^|[[:space:];|\&])(cd|pushd)[[:space:]]+\'([^\']+)\' ]]; then
+	target="${BASH_REMATCH[3]}"
+    elif [[ "$COMMAND" =~ (^|[[:space:];|\&])(cd|pushd)[[:space:]]+([^[:space:];\|\&]+) ]]; then
+	target="${BASH_REMATCH[3]}"
+    else
+	return 1
+    fi
+
+    # Anything needing shell evaluation is not a literal path.
+    case "$target" in
+	*'$'* | *'`'* | *'*'* | *'?'*) return 1 ;;
+    esac
+
+    target="${target/#\~/$HOME}"
+    [ -d "$target" ] || return 1
+    printf '%s' "$target"
+}
+
+# Read the GitHub repo of the remote in a specific directory.
+repo_from_git_dir() {
+    local dir="$1" remote url repo
+    for remote in origin upstream; do
+	url=$(git -C "$dir" remote get-url "$remote" 2>/dev/null || true)
+	[ -n "$url" ] || continue
+	repo=$(repo_from_urlish "$url" || true)
+	if [ -n "$repo" ]; then
+	    printf '%s' "$repo"
+	    return 0
+	fi
+    done
+    return 1
+}
+
 contains_protected_guard_path() {
     echo "$COMMAND" | grep -qE '(agents/github-write-allowlist\.txt|codex/(hooks/block-github-write-command\.sh|hooks/block-github-guard-edit\.sh|hooks\.json)|claude/(hooks/block-github-write-command\.sh|hooks/block-github-guard-edit\.sh|hooks/pretooluse-bash\.sh)|\.codex/hooks\.json|\.claude/settings\.json)'
 }
@@ -207,7 +271,22 @@ if echo "$COMMAND" | grep -qE '(^|[[:space:];|&])git[[:space:]]+push\b'; then
     fi
     repo=$(repo_from_urlish "$COMMAND" || true)
     if [ -z "$repo" ]; then
-	repo=$(repo_from_local_git || true)
+	# Resolve the directory the push will run in. Never fall back to the
+	# ambient directory when the command moves somewhere else first: that
+	# reads the wrong repo's remote and can approve a push to a repo the
+	# user has no rights over.
+	run_dir=$(resolved_run_dir) || run_dir_status=$?
+	case "${run_dir_status:-0}" in
+	    1)
+		deny "git push target directory cannot be resolved" "The command changes directory and does not name a repository, so this guard cannot tell which repo the push goes to without evaluating the shell. Name the target explicitly, e.g. git push https://github.com/OWNER/REPO.git HEAD:BRANCH."
+		;;
+	    2)
+		repo=$(repo_from_local_git || true)
+		;;
+	    *)
+		repo=$(repo_from_git_dir "$run_dir" || true)
+		;;
+	esac
     fi
     require_allowed_repo "git push" "$repo"
 fi

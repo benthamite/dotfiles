@@ -125,7 +125,14 @@ Anthropic broker credential is
 =op://Employee/Anthropic - api-provisioning-admin/credential=. Non-dry-run
 creation/storage requires =--verified-monthly-spend-cap-usd= after checking the
 AI access provider tracker and =provider-controls.yml=; the helper refuses caps
-above the current autonomous maximum of =$500/month=. Dry runs report whether
+above the autonomous maximum, which is =$500/month= by default and per-provider
+in =MAX_AUTONOMOUS_MONTHLY_SPEND_USD_BY_PROVIDER= (Anthropic is =$1000/month= as
+of 2026-07-27). Each entry must equal the matching
+=max_autonomous_monthly_spend_usd= in =provider-controls.yml=, which in turn
+mirrors that provider's real workspace/project spend limit — if the ceiling here
+is lower than the live limit, provisioning deadlocks, because the agent can then
+request neither the true cap (above the ceiling) nor a smaller one (the
+console-verified precondition fails). Dry runs report whether
 that policy precondition is satisfied without creating or storing a secret.
 Read-only =Automations= lookups and post-write verification go through
 =op-automations=. The helper performs its promptless existence check before

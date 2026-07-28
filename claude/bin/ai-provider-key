@@ -37,6 +37,22 @@ DEFAULT_ANTHROPIC_ADMIN_REF = "op://Employee/Anthropic - api-provisioning-admin/
 DEFAULT_OPENAI_AUTOMATIONS_PROJECT_ID = "proj_mdM7wTXIQUFqquI4A1zCO2BF"
 DEFAULT_ANTHROPIC_AUTOMATIONS_WORKSPACE_ID = "wrkspc_016hokUAzbZA7qVGuAUjfZTb"
 DEFAULT_MAX_AUTONOMOUS_MONTHLY_SPEND_USD = 500.0
+# Per-provider overrides of the autonomous ceiling. Keep each entry equal to the
+# matching `max_autonomous_monthly_spend_usd` in
+# `Epoch/projects/ai-access-management/provider-controls.yml`, which in turn
+# mirrors the provider's own workspace/project spend limit. Anthropic is 1000
+# because the shared Automations workspace is set to $1000 and 15 other
+# automation keys share it; a lower ceiling here deadlocks provisioning, since
+# the agent can then request neither the true cap nor a smaller one.
+MAX_AUTONOMOUS_MONTHLY_SPEND_USD_BY_PROVIDER = {
+    "anthropic": 1000.0,
+}
+
+
+def max_autonomous_cap(provider: str) -> float:
+    return MAX_AUTONOMOUS_MONTHLY_SPEND_USD_BY_PROVIDER.get(
+        provider, DEFAULT_MAX_AUTONOMOUS_MONTHLY_SPEND_USD
+    )
 ANTHROPIC_VERSION = "2023-06-01"
 
 
@@ -316,10 +332,10 @@ def dry_run_plan(args: argparse.Namespace) -> dict[str, Any]:
             "blocked: pass --verified-monthly-spend-cap-usd after checking "
             "the LLM provider tracker and provider-controls.yml"
         )
-    elif verified_cap > DEFAULT_MAX_AUTONOMOUS_MONTHLY_SPEND_USD:
+    elif verified_cap > max_autonomous_cap(args.provider):
         policy_status = (
             f"blocked: verified cap ${verified_cap:g} exceeds "
-            f"autonomous maximum ${DEFAULT_MAX_AUTONOMOUS_MONTHLY_SPEND_USD:g}"
+            f"autonomous maximum ${max_autonomous_cap(args.provider):g}"
         )
     else:
         policy_status = "allowed by helper cap check"
@@ -328,7 +344,7 @@ def dry_run_plan(args: argparse.Namespace) -> dict[str, Any]:
         "provider_project_or_workspace": provider_resource,
         "provider_key_or_service_account_name": args.key_name or args.project,
         "admin_key_ref": admin_ref,
-        "max_autonomous_monthly_spend_usd": DEFAULT_MAX_AUTONOMOUS_MONTHLY_SPEND_USD,
+        "max_autonomous_monthly_spend_usd": max_autonomous_cap(args.provider),
         "verified_monthly_spend_cap_usd": verified_cap,
         "provider_controls_policy_status": policy_status,
         "item_title": item_title,
@@ -365,11 +381,11 @@ def enforce_spend_cap_precondition(args: argparse.Namespace) -> None:
             "tracker and provider-controls.yml first; for OpenAI Automations, the "
             "project currently has no budget set."
         )
-    if verified_cap > DEFAULT_MAX_AUTONOMOUS_MONTHLY_SPEND_USD:
+    if verified_cap > max_autonomous_cap(args.provider):
         raise ProvisionError(
             f"Refusing to create/store an AI-provider runtime key with verified "
-            f"monthly spend cap ${verified_cap:g}; helper maximum is "
-            f"${DEFAULT_MAX_AUTONOMOUS_MONTHLY_SPEND_USD:g}."
+            f"monthly spend cap ${verified_cap:g}; helper maximum for "
+            f"{args.provider} is ${max_autonomous_cap(args.provider):g}."
         )
 
 

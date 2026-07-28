@@ -1041,6 +1041,21 @@ action — were removed on 2026-07-28 because together they produced a report
 at the end of every substantive turn regardless of whether it was useful.
 There is currently no registered Stop hook that enforces this mechanically.
 
+*** Decision-fatigue discipline
+
+The paired global instructions forbid ending a turn with a menu of optional
+follow-up work. Work inside the requested scope that the agent can perform
+without user input must be done in the same turn and reported in a line, not
+offered back as "want me to X?". A question is warranted only when the answer
+would change what the agent does and no reasonable default exists, or when the
+act is externally visible, spends money, deletes something, or is hard to
+reverse; uncertainty about priority does not qualify. Added 2026-07-28 after a
+session where each turn closed with a list of open items for the user to
+choose from, converting the agent's own backlog into the user's queue. Pairs
+with the existing "do not ask me to do things you can do yourself" rule, which
+covers asking the user to perform steps; this one covers asking the user to
+authorize steps. No hook enforces it mechanically.
+
 *** require-elisp-test-before-commit.sh (PreToolUse)
 :PROPERTIES:
 :ID:       4E0CDC5D-C436-4701-AC99-E29F950318B4

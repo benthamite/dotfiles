@@ -1043,13 +1043,15 @@ There is currently no registered Stop hook that enforces this mechanically.
 
 *** Decision-fatigue discipline
 
-The paired global instructions forbid ending a turn with a menu of optional
-follow-up work. Work inside the requested scope that the agent can perform
-without user input must be done in the same turn and reported in a line, not
-offered back as "want me to X?". A question is warranted only when the answer
-would change what the agent does and no reasonable default exists, or when the
-act is externally visible, spends money, deletes something, or is hard to
-reverse; uncertainty about priority does not qualify. Added 2026-07-28 after a
+The paired global instructions require the agent to do the work rather than
+hand the user a to-do list. Work inside the requested scope that the agent can
+carry out without user input must be done in the same turn and reported in a
+line, never offered back as "want me to X?". Questions are reserved for real
+decisions: the answer would change what the agent does and no reasonable
+default exists, or the act is externally visible, spends a non-trivial amount
+of money, deletes something, or is hard to reverse. The prohibition covers
+offering work the agent could simply perform, not asking as such — the two
+cases are disjoint. Added 2026-07-28 after a
 session where each turn closed with a list of open items for the user to
 choose from, converting the agent's own backlog into the user's queue. Pairs
 with the existing "do not ask me to do things you can do yourself" rule, which

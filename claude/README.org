@@ -102,11 +102,13 @@ only when raw Slack payloads are explicitly needed.
 =claude/bin/copy-slack-draft= copies a draft reply into the Emacs kill ring
 and opens the exact target Slack thread in Emacs before inserting the draft
 into its reply input. It resolves Slack permalinks inside Emacs, starts the
-registered Epoch Slack team when needed, and keys the reply buffer by room and
-thread timestamp instead of relying on whichever Slack buffer is current. It
-waits for the message/thread load callback before staging, expires callbacks
-that arrive after its timeout, refuses to overwrite existing unsent input, and
-verifies that the staged text exactly matches the draft.
+registered Epoch Slack team when needed, and fetches the thread directly by
+room and root timestamp; a permalink to a plain message uses that message as
+the thread root. Room/thread state updates, thread-buffer creation and caching,
+display, and insertion occur only when the fetch succeeds before the deadline.
+The helper refuses to overwrite existing unsent input, preserves unrelated
+buffers, verifies the staged text exactly, and omits request objects from
+errors so credentials stored in HTTP headers cannot reach stderr.
 
 =claude/bin/ai-provider-key= provisions project-scoped AI-provider runtime
 keys for Epoch automation projects. It keeps provider admin/broker credentials

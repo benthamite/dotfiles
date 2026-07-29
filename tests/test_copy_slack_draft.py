@@ -11,9 +11,11 @@ from unittest import mock
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "claude" / "bin" / "copy-slack-draft"
+THREAD_TS = "1710000000.000000"
+MESSAGE_TS = "1710000000.000100"
 THREAD_PERMALINK = (
-    "https://epochai.slack.com/archives/C123/p1710000000000100"
-    "?thread_ts=1710000000.000000&cid=C123"
+    f"https://epochai.slack.com/archives/C123/p1710000000000100"
+    f"?thread_ts={THREAD_TS}&cid=C123"
 )
 MESSAGE_PERMALINK = (
     "https://epochai.slack.com/archives/C123/p1710000000000100"
@@ -21,7 +23,9 @@ MESSAGE_PERMALINK = (
 
 
 def load_module():
-    loader = importlib.machinery.SourceFileLoader("copy_slack_draft", str(SCRIPT))
+    loader = importlib.machinery.SourceFileLoader(
+        "copy_slack_draft", str(SCRIPT)
+    )
     spec = importlib.util.spec_from_loader("copy_slack_draft", loader)
     module = importlib.util.module_from_spec(spec)
     sys.modules["copy_slack_draft"] = module
@@ -51,17 +55,19 @@ class CopySlackDraftTest(unittest.TestCase):
         thread_ts,
         target_input="",
         other_input="UNRELATED UNSENT",
+        fetch_delay=0,
+        fetch_error=False,
         corrupt_target_after_insert=False,
         force_timeout=False,
     ):
         draft = "First line\nSecond line\n"
+        target_ts = thread_ts or MESSAGE_TS
+        target_name = f"*slack-thread: target - {target_ts}"
         with tempfile.TemporaryDirectory() as temp_dir:
             draft_path = pathlib.Path(temp_dir) / "draft.txt"
             draft_path.write_text(draft)
             expression = self.capture_prefill_expression(permalink, draft_path)
             thread_ts_form = "nil" if thread_ts is None else json.dumps(thread_ts)
-            target_ts = thread_ts or "1710000000.000100"
-            target_buffer_name = f"*slack-thread: target - {target_ts}"
             corrupt_hook = ""
             if corrupt_target_after_insert:
                 corrupt_hook = """
@@ -91,105 +97,103 @@ class CopySlackDraftTest(unittest.TestCase):
                 (require 'subr-x)
                 (defvar test-target-buffer nil)
                 (defvar test-other-buffer nil)
-                (defvar test-created-room nil)
-                (defvar test-created-team nil)
-                (defvar test-created-thread-ts nil)
                 (defvar test-thread-cache
                   (make-hash-table :test 'equal))
-                (defvar test-parent-loaded nil)
-                (defvar test-open-room nil)
-                (defvar test-open-team nil)
-                (defvar test-open-thread-ts nil)
-                (defvar test-open-callback nil)
-                (defvar test-channel-callback nil)
-                (defvar test-channel-buffer nil)
-                (defvar test-callback-delay
-                  {"0.02" if force_timeout else "0"})
+                (defvar test-room-messages nil)
+                (defvar test-fetch-room nil)
+                (defvar test-fetch-team nil)
+                (defvar test-fetch-ts nil)
+                (defvar test-fetch-callback nil)
+                (defvar test-fetch-error-callback nil)
+                (defvar test-fetch-delay {fetch_delay})
+                (defvar test-fetch-error {"t" if fetch_error else "nil"})
                 (defvar test-float-time-calls 0)
+                (defvar test-room-mutation-count 0)
+                (defvar test-thread-create-count 0)
+                (defvar test-display-count 0)
+                (cl-defstruct test-message ts)
                 (cl-defstruct test-thread
                   room team ts has-more buffer)
                 (defun slack-browse-url (&rest _) nil)
                 (defun slack-permalink-to-info (_)
                   (list :team-domain "epochai"
                         :room-id "C123"
-                        :ts "1710000000.000100"
+                        :ts {json.dumps(MESSAGE_TS)}
                         :thread-ts {thread_ts_form}))
                 (defun slack-team-find-by-domain (_) 'epoch-team)
                 (defun slack-team-connectedp (_) t)
                 (defun slack-room-find (_ _) 'target-room)
+                (defun slack-start (&rest _) nil)
+                (defun test-finish-fetch ()
+                  (if test-fetch-error
+                      (funcall
+                       test-fetch-error-callback
+                       :error-thrown '(error http 500)
+                       :symbol-status 'error
+                       :response
+                       '(:settings
+                         (:headers
+                          (("Authorization"
+                            . "Bearer TEST-SLACK-SECRET"))))
+                       :data '(:ok nil :error "channel_not_found"))
+                    (funcall
+                     test-fetch-callback
+                     (list (make-test-message :ts test-fetch-ts))
+                     "next-cursor"
+                     t)))
+                (cl-defun slack-conversations-replies
+                    (room ts team
+                          &key after-success on-error &allow-other-keys)
+                  (setq test-fetch-room room
+                        test-fetch-team team
+                        test-fetch-ts ts
+                        test-fetch-callback after-success
+                        test-fetch-error-callback on-error)
+                  (if (= test-fetch-delay 0)
+                      (test-finish-fetch)
+                    (run-at-time test-fetch-delay nil
+                                 #'test-finish-fetch)))
+                (defun slack-room-set-messages (_ messages _)
+                  (setq test-room-messages messages
+                        test-room-mutation-count
+                        (1+ test-room-mutation-count)))
+                (defun slack-message-set-replies (&rest _)
+                  (setq test-room-mutation-count
+                        (1+ test-room-mutation-count)))
+                (defun slack-room-find-message (_ ts)
+                  (seq-find
+                   (lambda (message)
+                     (equal (test-message-ts message) ts))
+                   test-room-messages))
                 (defun slack-create-thread-message-buffer
-                    (room team thread-ts &optional has-more)
-                  (setq test-created-room room
-                        test-created-team team
-                        test-created-thread-ts thread-ts)
-                  (let* ((key (cons room thread-ts))
+                    (room team ts &optional has-more)
+                  (setq test-thread-create-count
+                        (1+ test-thread-create-count))
+                  (let* ((key (cons room ts))
                          (existing (gethash key test-thread-cache)))
                     (or existing
                         (let ((thread
                                (make-test-thread
                                 :room room
                                 :team team
-                                :ts thread-ts
+                                :ts ts
                                 :has-more has-more
                                 :buffer test-target-buffer)))
                           (puthash key thread test-thread-cache)
                           thread))))
+                (defun slack-thread--sync-buffer (&rest _) nil)
                 (defun slack-buffer-buffer (thread)
                   (test-thread-buffer thread))
                 (defun slack-buffer-display (thread)
+                  (setq test-display-count (1+ test-display-count))
                   (switch-to-buffer (test-thread-buffer thread)))
-                (defun test-finish-thread-open ()
-                  (let* ((key (cons test-open-room
-                                    test-open-thread-ts))
-                         (existing (gethash key test-thread-cache))
-                         (thread
-                          (slack-create-thread-message-buffer
-                           test-open-room test-open-team
-                           test-open-thread-ts t)))
-                    (unless existing
-                      (setq test-parent-loaded t))
-                    (slack-buffer-display thread)
-                    (when test-open-callback
-                      (funcall test-open-callback))))
-                (defun test-finish-channel-open ()
-                  (setq test-parent-loaded t)
-                  (slack-room-display
-                   test-open-room test-open-team
-                   test-channel-callback))
-                (defun slack-open-message
-                    (team room ts thread-ts &rest _)
-                  (setq test-open-room room
-                        test-open-team team
-                        test-open-thread-ts (or thread-ts ts)
-                        test-open-callback nil
-                        test-channel-callback nil)
-                  (run-at-time
-                   test-callback-delay nil
-                   (if thread-ts
-                       #'test-finish-thread-open
-                     #'test-finish-channel-open)))
-                (defun slack-open-message--open-thread
-                    (room thread-ts team callback _)
-                  (setq test-open-room room
-                        test-open-team team
-                        test-open-thread-ts thread-ts
-                        test-open-callback callback)
-                  (run-at-time
-                   test-callback-delay nil
-                   #'test-finish-thread-open))
-                (defun slack-open-message--open-channel
-                    (_ room team callback after-success)
-                  (setq test-open-room room
-                        test-open-team team
-                        test-channel-callback
-                        (or after-success callback))
-                  (run-at-time
-                   test-callback-delay nil
-                   #'test-finish-channel-open))
-                (defun slack-room-display (_ _ &optional callback)
-                  (switch-to-buffer test-channel-buffer)
-                  (when callback
-                    (funcall callback)))
+                ;; Model the inherited implementation's generic opener.  Its
+                ;; target appears after the fixed wait has already selected a
+                ;; different thread buffer.
+                (defun test-finish-legacy-open ()
+                  (switch-to-buffer test-target-buffer))
+                (defun slack-open-message (&rest _)
+                  (run-at-time 0.02 nil #'test-finish-legacy-open))
                 (defun test-input-buffer (name text)
                   (let ((buffer (get-buffer-create name)))
                     (with-current-buffer buffer
@@ -200,25 +204,36 @@ class CopySlackDraftTest(unittest.TestCase):
                     buffer))
                 (setq test-target-buffer
                       (test-input-buffer
-                       {json.dumps(target_buffer_name)}
+                       {json.dumps(target_name)}
                        {json.dumps(target_input)})
                       test-other-buffer
                       (test-input-buffer
                        "*slack-thread: other - 1700000000.000000"
-                       {json.dumps(other_input)})
-                      test-channel-buffer
-                      (get-buffer-create "*slack-channel: target*"))
+                       {json.dumps(other_input)}))
+                ;; A same-timestamp thread in another room must not match.
+                (puthash
+                 (cons 'other-room {json.dumps(target_ts)})
+                 (make-test-thread
+                  :room 'other-room
+                  :team 'epoch-team
+                  :ts {json.dumps(target_ts)}
+                  :has-more nil
+                  :buffer test-other-buffer)
+                 test-thread-cache)
                 {corrupt_hook}
                 (switch-to-buffer test-other-buffer)
                 (let (result failure)
                   (cl-letf (((symbol-function 'sit-for)
-                             (lambda (&rest _) nil))
+                             (lambda (&rest _)
+                               (accept-process-output nil 0.005)))
                             {time_binding})
                     (condition-case err
                         (setq result {expression})
                       (error
                        (setq failure (error-message-string err)))))
-                  (accept-process-output nil 0.05)
+                  ;; Let deliberately late fetch/open callbacks run so the
+                  ;; test observes side effects after the caller returned.
+                  (accept-process-output nil 0.06)
                   (princ
                    (json-encode
                     `((result . ,result)
@@ -232,19 +247,20 @@ class CopySlackDraftTest(unittest.TestCase):
                       (visible
                        . ,(buffer-name
                            (window-buffer (selected-window))))
-                      (parent-loaded . ,test-parent-loaded)
+                      (fetch-room . ,test-fetch-room)
+                      (fetch-team . ,test-fetch-team)
+                      (fetch-ts . ,test-fetch-ts)
+                      (room-mutations . ,test-room-mutation-count)
+                      (thread-creations . ,test-thread-create-count)
+                      (displays . ,test-display-count)
                       (target-has-more
                        . ,(let ((thread
                                  (gethash
                                   (cons 'target-room
-                                        (or {thread_ts_form}
-                                            "1710000000.000100"))
+                                        {json.dumps(target_ts)})
                                   test-thread-cache)))
                             (and thread
-                                 (test-thread-has-more thread))))
-                      (created-room . ,test-created-room)
-                      (created-team . ,test-created-team)
-                      (created-thread-ts . ,test-created-thread-ts))))))
+                                 (test-thread-has-more thread)))))))))
             """
             result = subprocess.run(
                 ["emacs", "-Q", "--batch", "--eval", program],
@@ -254,85 +270,124 @@ class CopySlackDraftTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         return draft, json.loads(result.stdout)
 
-    def test_prefill_targets_exact_permalink_thread(self):
+    def assert_unchanged_on_failure(self, payload, *, target):
+        self.assertIsNotNone(payload["failure"])
+        self.assertEqual(payload["target"], target)
+        self.assertEqual(payload["other"], "UNRELATED UNSENT")
+        self.assertEqual(
+            payload["visible"],
+            "*slack-thread: other - 1700000000.000000",
+        )
+
+    def test_targets_exact_room_and_thread_instead_of_first_buffer(self):
         draft, payload = self.evaluate_prefill(
             THREAD_PERMALINK,
-            thread_ts="1710000000.000000",
+            thread_ts=THREAD_TS,
+        )
+
+        self.assertIsNone(payload["failure"])
+        self.assertEqual(payload["other"], "UNRELATED UNSENT")
+        self.assertEqual(payload["target"], draft)
+        self.assertEqual(payload["fetch-room"], "target-room")
+        self.assertEqual(payload["fetch-team"], "epoch-team")
+        self.assertEqual(payload["fetch-ts"], THREAD_TS)
+        self.assertEqual(
+            payload["visible"],
+            f"*slack-thread: target - {THREAD_TS}",
+        )
+
+    def test_waits_for_async_unloaded_thread_before_staging(self):
+        draft, payload = self.evaluate_prefill(
+            THREAD_PERMALINK,
+            thread_ts=THREAD_TS,
+            fetch_delay=0.02,
         )
 
         self.assertIsNone(payload["failure"])
         self.assertEqual(payload["target"], draft)
-        self.assertEqual(payload["other"], "UNRELATED UNSENT")
-        self.assertTrue(payload["parent-loaded"])
+        self.assertEqual(payload["fetch-ts"], THREAD_TS)
+        self.assertGreater(payload["room-mutations"], 0)
+        self.assertEqual(payload["thread-creations"], 1)
         self.assertTrue(payload["target-has-more"])
-        self.assertEqual(
-            payload["visible"],
-            "*slack-thread: target - 1710000000.000000",
-        )
-        self.assertEqual(payload["created-room"], "target-room")
-        self.assertEqual(payload["created-team"], "epoch-team")
-        self.assertEqual(
-            payload["created-thread-ts"],
-            "1710000000.000000",
-        )
-        self.assertEqual(
-            payload["result"],
-            "*slack-thread: target - 1710000000.000000",
-        )
 
-    def test_plain_message_permalink_targets_new_thread_at_message(self):
+    def test_plain_message_fetches_thread_rooted_at_message_timestamp(self):
         draft, payload = self.evaluate_prefill(
             MESSAGE_PERMALINK,
             thread_ts=None,
+            fetch_delay=0.02,
         )
 
         self.assertIsNone(payload["failure"])
         self.assertEqual(payload["target"], draft)
-        self.assertEqual(payload["other"], "UNRELATED UNSENT")
-        self.assertTrue(payload["parent-loaded"])
+        self.assertEqual(payload["fetch-ts"], MESSAGE_TS)
         self.assertEqual(
             payload["visible"],
-            "*slack-thread: target - 1710000000.000100",
-        )
-        self.assertEqual(
-            payload["created-thread-ts"],
-            "1710000000.000100",
+            f"*slack-thread: target - {MESSAGE_TS}",
         )
 
-    def test_prefill_refuses_to_overwrite_existing_target_input(self):
-        _, payload = self.evaluate_prefill(
+    def test_refuses_to_overwrite_existing_target_input(self):
+        payload = self.evaluate_prefill(
             THREAD_PERMALINK,
-            thread_ts="1710000000.000000",
+            thread_ts=THREAD_TS,
             target_input="TARGET UNSENT",
-        )
+        )[1]
 
-        self.assertIsNotNone(payload["failure"])
+        self.assert_unchanged_on_failure(payload, target="TARGET UNSENT")
         self.assertIn("already contains unsent text", payload["failure"])
-        self.assertEqual(payload["target"], "TARGET UNSENT")
-        self.assertEqual(payload["other"], "UNRELATED UNSENT")
 
-    def test_prefill_detects_non_exact_target_content(self):
-        _, payload = self.evaluate_prefill(
+    def test_corrupt_insertion_is_rejected_and_rolled_back(self):
+        payload = self.evaluate_prefill(
             THREAD_PERMALINK,
-            thread_ts="1710000000.000000",
-            other_input="",
+            thread_ts=THREAD_TS,
             corrupt_target_after_insert=True,
-        )
+        )[1]
 
-        self.assertIsNotNone(payload["failure"])
+        self.assert_unchanged_on_failure(payload, target="")
         self.assertIn("does not exactly match", payload["failure"])
 
-    def test_prefill_timeout_prevents_late_insertion(self):
-        _, payload = self.evaluate_prefill(
+    def test_late_callback_after_timeout_has_no_side_effects(self):
+        payload = self.evaluate_prefill(
             THREAD_PERMALINK,
-            thread_ts="1710000000.000000",
+            thread_ts=THREAD_TS,
+            fetch_delay=0.02,
             force_timeout=True,
-        )
+        )[1]
 
-        self.assertIsNotNone(payload["failure"])
-        self.assertIn("Timed out waiting", payload["failure"])
+        self.assertEqual(
+            payload["visible"],
+            "*slack-thread: other - 1700000000.000000",
+        )
         self.assertEqual(payload["target"], "")
         self.assertEqual(payload["other"], "UNRELATED UNSENT")
+        self.assertIsNotNone(payload["failure"])
+        self.assertIn("Timed out waiting", payload["failure"])
+        self.assertEqual(payload["room-mutations"], 0)
+        self.assertEqual(payload["thread-creations"], 0)
+        self.assertEqual(payload["displays"], 0)
+
+    def test_fetch_error_has_no_side_effects(self):
+        payload = self.evaluate_prefill(
+            THREAD_PERMALINK,
+            thread_ts=THREAD_TS,
+            fetch_error=True,
+        )[1]
+
+        self.assert_unchanged_on_failure(payload, target="")
+        self.assertIn("channel_not_found", payload["failure"])
+        self.assertNotIn("TEST-SLACK-SECRET", payload["failure"])
+        self.assertEqual(payload["room-mutations"], 0)
+        self.assertEqual(payload["thread-creations"], 0)
+        self.assertEqual(payload["displays"], 0)
+
+    def test_emacsclient_stdout_error_is_not_success(self):
+        completed = subprocess.CompletedProcess(
+            ["emacsclient"], 0, stdout='*ERROR*: (error "broken")\n', stderr=""
+        )
+        with mock.patch.object(
+            self.mod.subprocess, "run", return_value=completed
+        ):
+            with self.assertRaisesRegex(RuntimeError, "broken"):
+                self.mod.run_emacs_eval("(error \"broken\")")
 
 
 if __name__ == "__main__":

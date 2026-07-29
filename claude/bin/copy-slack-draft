@@ -45,12 +45,17 @@ def prefill_slack_reply(permalink: str, path: Path) -> str:
     expr = f"""
 (progn
   (require 'cl-lib)
+  (require 'eieio)
   (require 'subr-x)
   (require 'slack-team nil t)
   (unless (fboundp 'slack-browse-url)
     (require 'slack nil t))
   (unless (fboundp 'slack-browse-url)
     (error "slack-browse-url is not available"))
+  (unless (fboundp 'slack-conversations-replies)
+    (require 'slack-conversations nil t))
+  (unless (fboundp 'slack-conversations-replies)
+    (error "slack-conversations-replies is not available"))
   (unless (fboundp 'slack-create-thread-message-buffer)
     (require 'slack-thread-message-buffer nil t))
   (unless (fboundp 'slack-create-thread-message-buffer)
@@ -89,89 +94,147 @@ def prefill_slack_reply(permalink: str, path: Path) -> str:
             done)
         (cl-labels
             ((finish-with-error
-              (err)
+             (err)
               (unless done
                 (setq failure err
                       done t)))
+             (safe-error-value
+              (value)
+              (cond
+               ((stringp value) value)
+               ((symbolp value) (symbol-name value))))
+             (request-error
+              (&rest args)
+              (let* ((data (plist-get args :data))
+                     (detail
+                      (or
+                       (and
+                        (listp data)
+                        (safe-error-value
+                         (plist-get data :error)))
+                       (safe-error-value
+                        (plist-get args :symbol-status))
+                       (safe-error-value
+                        (plist-get args :error-thrown))
+                       (safe-error-value (car args))
+                       "request failed")))
+                ;; Never format the complete response object: request.el keeps
+                ;; request headers, including Slack credentials, inside it.
+                (finish-with-error
+                 (list
+                  'error
+                  (format
+                   "Slack failed to fetch reply target %s in %s: %s"
+                   target-ts room-id detail)))))
              (stage
-              ()
+              (messages _next-cursor has-more)
               (unless done
-                (condition-case err
-                    (let* ((thread
-                          (slack-create-thread-message-buffer
-                           room team target-ts))
-                         (buf (slack-buffer-buffer thread))
-                         (draft
-                          (with-temp-buffer
-                            (insert-file-contents
-                             {elisp_string(str(path))})
-                            (buffer-string))))
-                    (unless (buffer-live-p buf)
-                      (error
-                       "Slack reply buffer is not live for %s in %s"
-                       target-ts room-id))
-                    (with-current-buffer buf
-                      (unless
-                          (and (markerp lui-input-marker)
-                               (eq (marker-buffer lui-input-marker)
-                                   buf))
-                        (error
-                         "Slack reply input is not available in %s"
-                         (buffer-name buf)))
-                      (let ((existing
-                             (buffer-substring-no-properties
-                              lui-input-marker (point-max))))
-                        (unless
-                            (or (string-empty-p existing)
-                                (equal existing draft))
+                ;; The request can finish while the wait loop is crossing its
+                ;; deadline.  Check again before touching Slack or Emacs state.
+                (if (>= (float-time) deadline)
+                    (setq done 'expired)
+                  (condition-case err
+                      (progn
+                        (unless messages
                           (error
-                           "Slack reply input in %s already contains unsent text"
-                           (buffer-name buf)))
-                        (unless (equal existing draft)
-                          (goto-char lui-input-marker)
-                          (insert draft))
-                        (let ((staged
-                               (buffer-substring-no-properties
-                                lui-input-marker (point-max))))
-                          (unless (equal staged draft)
+                           "Slack returned no message for %s in %s"
+                           target-ts room-id))
+                        (slack-room-set-messages room messages team)
+                        (slack-message-set-replies
+                         room target-ts messages)
+                        (let ((parent
+                               (slack-room-find-message
+                                room target-ts)))
+                          (unless parent
                             (error
-                             "Slack reply input in %s does not exactly match the draft"
-                             (buffer-name buf)))
-                          (slack-buffer-display thread)
-                          (setq result (buffer-name buf))))))
-                  (error (setq failure err)))
-                (setq done t)))
-             (after-channel-load
-              ()
-              (unless done
-                (condition-case err
-                    (slack-room-display room team #'stage)
-                  (error (finish-with-error err)))))
-             (open-loaded-thread
-              (parent)
-              (unless done
-                (condition-case err
-                    (slack-thread-show-messages
-                     parent room team #'stage)
-                  (error (finish-with-error err))))))
+                             "Slack did not load message %s in %s"
+                             target-ts room-id))
+                          (let* ((thread
+                                  (slack-create-thread-message-buffer
+                                   room team target-ts has-more))
+                                 (buf
+                                  (progn
+                                    ;; A cached object may predate this fetch.
+                                    (when (eieio-object-p thread)
+                                      (setf
+                                       (slot-value thread 'has-more)
+                                       has-more))
+                                    (slack-thread--sync-buffer
+                                     thread parent room)
+                                    (slack-buffer-buffer thread)))
+                                 (draft
+                                  (with-temp-buffer
+                                    (insert-file-contents
+                                     {elisp_string(str(path))})
+                                    (buffer-string))))
+                            (unless (buffer-live-p buf)
+                              (error
+                               "Slack reply buffer is not live for %s in %s"
+                               target-ts room-id))
+                            (with-current-buffer buf
+                              (unless
+                                  (and
+                                   (markerp lui-input-marker)
+                                   (eq
+                                    (marker-buffer lui-input-marker)
+                                    buf))
+                                (error
+                                 "Slack reply input is not available in %s"
+                                 (buffer-name buf)))
+                              (let ((existing
+                                     (buffer-substring-no-properties
+                                      lui-input-marker (point-max))))
+                                (unless
+                                    (or
+                                     (string-empty-p existing)
+                                     (equal existing draft))
+                                  (error
+                                   "Slack reply input in %s already contains unsent text"
+                                   (buffer-name buf)))
+                                (condition-case insert-error
+                                    (progn
+                                      (unless (equal existing draft)
+                                        (goto-char lui-input-marker)
+                                        (insert draft))
+                                      (let ((staged
+                                             (buffer-substring-no-properties
+                                              lui-input-marker
+                                              (point-max))))
+                                        (unless (equal staged draft)
+                                          (error
+                                           "Slack reply input in %s does not exactly match the draft"
+                                           (buffer-name buf))))
+                                      (slack-buffer-display thread)
+                                      (setq result (buffer-name buf)
+                                            done t))
+                                  (error
+                                   (let ((inhibit-modification-hooks t)
+                                         (inhibit-read-only t))
+                                     (delete-region
+                                      lui-input-marker (point-max))
+                                     (goto-char lui-input-marker)
+                                     (insert existing))
+                                   (signal
+                                    (car insert-error)
+                                    (cdr insert-error)))))))))
+                    (error (finish-with-error err)))))))
           (condition-case err
-              (if thread-ts
-                  (slack-open-message--open-thread
-                   room thread-ts team #'stage
-                   #'open-loaded-thread)
-                (slack-open-message--open-channel
-                 ts room team #'stage #'after-channel-load))
+              (slack-conversations-replies
+               room target-ts team
+               :after-success #'stage
+               :on-error #'request-error)
             (error (finish-with-error err)))
           (while (and (not done)
                       (< (float-time) deadline))
             (accept-process-output nil 0.1))
+          (unless done
+            (setq done 'expired))
           (cond
            (failure
             (signal (car failure) (cdr failure)))
-           ((not done)
-            (setq done 'expired)
+           ((eq done 'expired)
             (error
-             "Timed out waiting for Slack reply buffer for %s in %s"
+             "Timed out waiting for Slack reply target %s in %s"
              target-ts room-id))
            (t result)))))))
 """.strip()

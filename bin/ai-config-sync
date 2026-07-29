@@ -248,6 +248,21 @@ def global_sync_path(rel: str) -> bool:
     )
 
 
+def full_audit_gate_path(rel: str) -> bool:
+    return (
+        global_sync_path(rel)
+        or local_sync_path(rel)
+        or rel
+        in {
+            PRIVATE_MANIFEST,
+            DISABLED_SKILLS_PATH.name,
+            "agents/README.org",
+            "bin/ai-config-sync",
+            "bin/install-private-skills",
+        }
+    )
+
+
 def sync_scope_for_path(
     path_text: str,
     cwd: Path | None = None,
@@ -1673,6 +1688,7 @@ def guard_commit() -> None:
         return
 
     problems: list[str] = []
+    full_audit_required = False
     for repo_root in sorted(commit_repos, key=str):
         changed = dirty_paths(repo_root)
         staged = staged_paths(repo_root)
@@ -1684,6 +1700,8 @@ def guard_commit() -> None:
 
         include_global = same_path(repo_root, ROOT)
         if include_global:
+            if any(full_audit_gate_path(path) for path in changed_paths):
+                full_audit_required = True
             (
                 base_manifest,
                 candidate_manifest,
@@ -1707,13 +1725,23 @@ def guard_commit() -> None:
             candidate_private_manifest,
         )
 
+    if full_audit_required:
+        drift = audit_problems()
+        if drift:
+            add_nested_problems(
+                problems,
+                "The full AI config audit is not clean:",
+                drift,
+            )
+
     if not problems:
         return
 
     reason = (
-        "BLOCKED: AI config sync guard found one-sided Claude/Codex changes.\n\n"
+        "BLOCKED: AI config sync guard found configuration problems.\n\n"
         + "\n".join(problems)
-        + "\n\nUpdate the counterpart in this same session. For global dotfiles "
+        + "\n\nMake the full audit clean before committing agent configuration. "
+        "Update the counterpart in this same session. For global dotfiles "
         f"artifacts, stage {MANIFEST} with an explicit status/exemption if the "
         "counterpart should not exist. When updating README.org files, document "
         "the behavior and paths for that README's own tool or project only; do "
@@ -2471,11 +2499,10 @@ def audit_registrations(problems: list[str], manifest: dict) -> None:
             add_problem(problems, f"Manifest registrations missing: {expected}")
 
 
-def audit() -> int:
+def audit_problems() -> list[str]:
     problems: list[str] = []
     if not MANIFEST_PATH.exists():
-        print(f"Missing manifest: {MANIFEST}")
-        return 1
+        return [f"Missing manifest: {MANIFEST}"]
 
     manifest = load_manifest()
     private_manifest = load_private_manifest()
@@ -2489,6 +2516,11 @@ def audit() -> int:
     audit_hooks(problems, manifest)
     audit_mcp_servers(problems, manifest)
     audit_registrations(problems, manifest)
+    return problems
+
+
+def audit() -> int:
+    problems = audit_problems()
 
     if problems:
         print("AI config sync audit failed:")

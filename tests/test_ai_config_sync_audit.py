@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import importlib.machinery
 import importlib.util
 import json
@@ -7,7 +8,9 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
+from unittest import mock
 
 
 DOTFILES = Path("/Users/pablostafforini/My Drive/dotfiles")
@@ -179,6 +182,75 @@ class AiConfigSyncAuditTests(unittest.TestCase):
             ],
             problems,
         )
+
+    def test_guard_commit_blocks_global_config_commit_when_full_audit_is_red(self):
+        staged = {"claude/README.org"}
+        audit_problem = "Hook missing from manifest: stale-hook.sh"
+        output = io.StringIO()
+
+        with (
+            mock.patch.object(
+                self.module,
+                "read_input_json",
+                return_value={"tool_input": {"command": "git commit -m test"}},
+            ),
+            mock.patch.object(self.module, "hook_cwd", return_value=DOTFILES),
+            mock.patch.object(
+                self.module,
+                "command_paths_and_commit_repos",
+                return_value=({}, {DOTFILES}),
+            ),
+            mock.patch.object(self.module, "dirty_paths", return_value=staged),
+            mock.patch.object(self.module, "staged_paths", return_value=staged),
+            mock.patch.object(
+                self.module,
+                "guard_manifests",
+                return_value=({}, {}, {}, {}),
+            ),
+            mock.patch.object(self.module, "guard_changed_paths"),
+            mock.patch.object(
+                self.module,
+                "audit_problems",
+                return_value=[audit_problem],
+                create=True,
+            ),
+            redirect_stdout(output),
+        ):
+            self.module.guard_commit()
+
+        self.assertTrue(output.getvalue(), "red full audit should block the commit")
+        result = json.loads(output.getvalue())
+        hook_output = result["hookSpecificOutput"]
+        self.assertEqual("deny", hook_output["permissionDecision"])
+        self.assertIn(audit_problem, hook_output["permissionDecisionReason"])
+
+    def test_guard_commit_does_not_run_full_audit_for_project_config_commit(self):
+        repo = self.make_repo(["README.md"])
+        staged = {".claude/hooks/example.sh"}
+        output = io.StringIO()
+
+        with (
+            mock.patch.object(
+                self.module,
+                "read_input_json",
+                return_value={"tool_input": {"command": "git commit -m test"}},
+            ),
+            mock.patch.object(self.module, "hook_cwd", return_value=repo),
+            mock.patch.object(
+                self.module,
+                "command_paths_and_commit_repos",
+                return_value=({}, {repo}),
+            ),
+            mock.patch.object(self.module, "dirty_paths", return_value=staged),
+            mock.patch.object(self.module, "staged_paths", return_value=staged),
+            mock.patch.object(self.module, "guard_changed_paths"),
+            mock.patch.object(self.module, "audit_problems") as audit_mock,
+            redirect_stdout(output),
+        ):
+            self.module.guard_commit()
+
+        audit_mock.assert_not_called()
+        self.assertEqual("", output.getvalue())
 
 
 if __name__ == "__main__":

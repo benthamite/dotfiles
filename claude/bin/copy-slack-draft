@@ -41,62 +41,140 @@ def copy_to_kill_ring(path: Path) -> None:
     run_emacs_eval(expr)
 
 
-def prefill_slack_reply(permalink: str, path: Path) -> None:
-    expr = (
-        "(progn "
-        "(require (quote cl-lib)) "
-        "(require (quote slack-team) nil t) "
-        "(unless (fboundp (quote slack-browse-url)) "
-        "  (require (quote slack) nil t)) "
-        "(unless (fboundp (quote slack-browse-url)) "
-        '(error "slack-browse-url is not available")) '
-        "(let* ((info (slack-permalink-to-info "
-        f"{elisp_string(permalink)})) "
-        "(team-domain (plist-get info :team-domain)) "
-        "(room-id (plist-get info :room-id)) "
-        "(ts (plist-get info :ts)) "
-        "(thread-ts (plist-get info :thread-ts)) "
-        "(team (or (slack-team-find-by-domain team-domain) "
-        "          (--find (or (equal team-domain (oref it name)) "
-        "                      (and (string= team-domain \"epochai\") "
-        "                           (equal (oref it name) \"Epoch AI\"))) "
-        "                  (hash-table-values slack-teams-by-token))))) "
-        "(unless team "
-        "  (error \"No registered Slack team for %s\" team-domain)) "
-        "(unless (slack-team-connectedp team) "
-        "  (slack-start team) "
-        "  (let ((deadline (+ (float-time) 20))) "
-        "    (while (and (not (slack-team-connectedp team)) "
-        "                (< (float-time) deadline)) "
-        "      (accept-process-output nil 0.25)))) "
-        "(let ((room (slack-room-find room-id team))) "
-        "  (unless room "
-        "    (error \"Slack room %s is not loaded for team %s\" "
-        "           room-id (oref team name))) "
-        "  (slack-open-message team room ts thread-ts ts nil))) "
-        "(sit-for 1.5) "
-        # emacs-slack composes the reply in the thread buffer's own lui input
-        # area, at lui-input-marker. There is no separate composer buffer, so
-        # calling slack-thread-reply and then inserting leaves the text
-        # nowhere visible.
-        "(let ((buf (car (seq-filter "
-        "        (lambda (b) (and (string-prefix-p \"*slack-thread: \" (buffer-name b)) "
-        "                         (buffer-local-value (quote lui-input-marker) b))) "
-        "        (buffer-list))))) "
-        "  (unless buf "
-        '    (error "No Slack thread buffer with a reply input is open")) '
-        "  (with-current-buffer buf "
-        "    (goto-char lui-input-marker) "
-        "    (delete-region lui-input-marker (point-max)) "
-        f"    (insert-file-contents {elisp_string(str(path))}) "
-        "    (goto-char (point-max)) "
-        "    (let ((staged (buffer-substring-no-properties "
-        "                    lui-input-marker (point-max)))) "
-        "      (when (string-empty-p (string-trim staged)) "
-        '        (error "Draft did not land in the reply input of %s" '
-        "               (buffer-name buf))) "
-        "      (buffer-name buf)))))"
-    )
+def prefill_slack_reply(permalink: str, path: Path) -> str:
+    expr = f"""
+(progn
+  (require 'cl-lib)
+  (require 'subr-x)
+  (require 'slack-team nil t)
+  (unless (fboundp 'slack-browse-url)
+    (require 'slack nil t))
+  (unless (fboundp 'slack-browse-url)
+    (error "slack-browse-url is not available"))
+  (unless (fboundp 'slack-create-thread-message-buffer)
+    (require 'slack-thread-message-buffer nil t))
+  (unless (fboundp 'slack-create-thread-message-buffer)
+    (error "slack-create-thread-message-buffer is not available"))
+  (let* ((info (slack-permalink-to-info {elisp_string(permalink)}))
+         (team-domain (plist-get info :team-domain))
+         (room-id (plist-get info :room-id))
+         (ts (plist-get info :ts))
+         (thread-ts (plist-get info :thread-ts))
+         (target-ts (or thread-ts ts))
+         (team
+          (or (slack-team-find-by-domain team-domain)
+              (--find
+               (or (equal team-domain (oref it name))
+                   (and (string= team-domain "epochai")
+                        (equal (oref it name) "Epoch AI")))
+               (hash-table-values slack-teams-by-token)))))
+    (unless (and team-domain room-id ts)
+      (error "Could not resolve Slack permalink: %s"
+             {elisp_string(permalink)}))
+    (unless team
+      (error "No registered Slack team for %s" team-domain))
+    (unless (slack-team-connectedp team)
+      (slack-start team)
+      (let ((deadline (+ (float-time) 20)))
+        (while (and (not (slack-team-connectedp team))
+                    (< (float-time) deadline))
+          (accept-process-output nil 0.25))))
+    (let ((room (slack-room-find room-id team)))
+      (unless room
+        (error "Slack room %s is not loaded for team %s"
+               room-id (oref team name)))
+      (let ((deadline (+ (float-time) 30))
+            result
+            failure
+            done)
+        (cl-labels
+            ((finish-with-error
+              (err)
+              (unless done
+                (setq failure err
+                      done t)))
+             (stage
+              ()
+              (unless done
+                (condition-case err
+                    (let* ((thread
+                          (slack-create-thread-message-buffer
+                           room team target-ts))
+                         (buf (slack-buffer-buffer thread))
+                         (draft
+                          (with-temp-buffer
+                            (insert-file-contents
+                             {elisp_string(str(path))})
+                            (buffer-string))))
+                    (unless (buffer-live-p buf)
+                      (error
+                       "Slack reply buffer is not live for %s in %s"
+                       target-ts room-id))
+                    (with-current-buffer buf
+                      (unless
+                          (and (markerp lui-input-marker)
+                               (eq (marker-buffer lui-input-marker)
+                                   buf))
+                        (error
+                         "Slack reply input is not available in %s"
+                         (buffer-name buf)))
+                      (let ((existing
+                             (buffer-substring-no-properties
+                              lui-input-marker (point-max))))
+                        (unless
+                            (or (string-empty-p existing)
+                                (equal existing draft))
+                          (error
+                           "Slack reply input in %s already contains unsent text"
+                           (buffer-name buf)))
+                        (unless (equal existing draft)
+                          (goto-char lui-input-marker)
+                          (insert draft))
+                        (let ((staged
+                               (buffer-substring-no-properties
+                                lui-input-marker (point-max))))
+                          (unless (equal staged draft)
+                            (error
+                             "Slack reply input in %s does not exactly match the draft"
+                             (buffer-name buf)))
+                          (slack-buffer-display thread)
+                          (setq result (buffer-name buf))))))
+                  (error (setq failure err)))
+                (setq done t)))
+             (after-channel-load
+              ()
+              (unless done
+                (condition-case err
+                    (slack-room-display room team #'stage)
+                  (error (finish-with-error err)))))
+             (open-loaded-thread
+              (parent)
+              (unless done
+                (condition-case err
+                    (slack-thread-show-messages
+                     parent room team #'stage)
+                  (error (finish-with-error err))))))
+          (condition-case err
+              (if thread-ts
+                  (slack-open-message--open-thread
+                   room thread-ts team #'stage
+                   #'open-loaded-thread)
+                (slack-open-message--open-channel
+                 ts room team #'stage #'after-channel-load))
+            (error (finish-with-error err)))
+          (while (and (not done)
+                      (< (float-time) deadline))
+            (accept-process-output nil 0.1))
+          (cond
+           (failure
+            (signal (car failure) (cdr failure)))
+           ((not done)
+            (setq done 'expired)
+            (error
+             "Timed out waiting for Slack reply buffer for %s in %s"
+             target-ts room-id))
+           (t result)))))))
+""".strip()
     return run_emacs_eval(expr)
 
 
@@ -150,7 +228,7 @@ def main() -> int:
         buffer_name = prefill_slack_reply(args.permalink, draft_path)
     except RuntimeError as exc:
         sys.stderr.write(
-            "ERROR: failed to open Slack reply composer and insert draft in "
+            "ERROR: failed to open Slack reply input and insert draft in "
             f"Emacs: {exc}\n"
         )
         return 1

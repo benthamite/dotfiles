@@ -100,11 +100,13 @@ profile data instead of inferring names from context. Pass =--no-resolve-users=
 only when raw Slack payloads are explicitly needed.
 
 =claude/bin/copy-slack-draft= copies a draft reply into the Emacs kill ring
-and opens the target Slack thread in Emacs before inserting the draft into the
-reply composer. It resolves Slack permalinks inside Emacs, starts the
-registered Epoch Slack team when needed, and calls the Slack message/thread
-opening path directly instead of relying on =slack-browse-url='s default-browser
-fallback.
+and opens the exact target Slack thread in Emacs before inserting the draft
+into its reply input. It resolves Slack permalinks inside Emacs, starts the
+registered Epoch Slack team when needed, and keys the reply buffer by room and
+thread timestamp instead of relying on whichever Slack buffer is current. It
+waits for the message/thread load callback before staging, expires callbacks
+that arrive after its timeout, refuses to overwrite existing unsent input, and
+verifies that the staged text exactly matches the draft.
 
 =claude/bin/ai-provider-key= provisions project-scoped AI-provider runtime
 keys for Epoch automation projects. It keeps provider admin/broker credentials

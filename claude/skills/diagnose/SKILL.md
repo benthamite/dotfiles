@@ -4,9 +4,9 @@ description: Diagnose agent, tooling, configuration, or workflow failures before
 user-invocable: true
 ---
 
-The user is asking you to investigate a problem diagnostically. Treat errors, confusion, and friction as *symptoms* of an underlying structural issue, not as problems to fix directly. The deliverable is a diagnosis, not a patch.
+The user is asking you to investigate a problem diagnostically. Treat errors, confusion, and friction as *symptoms* of an underlying structural issue, not as problems to fix directly. Establish and report the diagnosis before implementing any remedy.
 
-Do not use this skill for ordinary debugging or implementation requests where the user wants the issue fixed now. If the user asks for both diagnosis and a fix, diagnose first, report the proposed remedy, and wait for confirmation before changing files or external systems.
+Do not use this skill for ordinary debugging or implementation requests that do not call for a structural diagnosis. For a diagnosis-only request, report and stop. If the user explicitly asks for both diagnosis and a fix, complete the diagnostic workflow first, state the root cause and remedy, then implement the remedy in the same turn. Ask again only when the remedy independently requires confirmation under the global safety rules.
 
 Your job is to:
 
@@ -17,9 +17,9 @@ Your job is to:
    - *Behavioral lapse with structural remedy*: an existing instruction covered the immediate failure, but the failure happened in a repetitive, low-level, deterministic operation where relying on attention/manual expansion is itself brittle. In this case, name both: the immediate rule violation and the mechanism that would remove or reduce that class of lapse.
 3. **Consider whether it's an instance of a broader class of problems** — is this a one-off, or does it point to a pattern?
 4. **Propose structural fixes only when a structural gap is confirmed.** If the existing mechanism would have prevented the failure and only discipline was missing, the correct output is to name the rule that was violated, not to propose new mechanisms on top of it.
-5. **Report and stop.** Present the observed symptom, mechanisms checked, diagnosis category, evidence, broader pattern, and any structural remedy candidates. If no reliable structural fix is visible yet, say what remains to investigate. Do not implement the remedy until the user asks.
+5. **Report, then respect the request boundary.** Present the observed symptom, mechanisms checked, diagnosis category, evidence, broader pattern, and any structural remedy candidates. If no reliable structural fix is visible yet, say what remains to investigate. Stop after reporting for diagnosis-only requests; for explicit diagnose-and-fix requests, proceed with the stated remedy and verify it.
 
-Do NOT try to fix or work around the original error. Focus entirely on diagnosis and structural remedies. Present your findings, then wait for the user to decide what action to take.
+Do not patch or work around the original error before establishing the diagnosis. A diagnosis-only request ends with the findings. An explicit diagnose-and-fix request continues with the structural remedy; do not substitute a symptom-level workaround.
 
 ## Diagnostic communication
 

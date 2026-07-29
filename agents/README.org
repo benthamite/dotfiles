@@ -186,6 +186,11 @@ currently present in this repo. The skill name shown is the directory name.
   Lisp code, including dotfiles extras packages, Elpaca rebuild/reload behavior,
   batch-test verification, docstring and error-message conventions, and
   transient menu suffix checks. Scope: Global.
+- =end-to-end=: Use when correctness depends on exercising a real running
+  software workflow through its user-visible or runtime surface; not merely for
+  explaining, writing, reviewing, or running automated E2E tests; deploying
+  something live or checking deployment status; reproducing research results;
+  or verifying pure logic with adequate automated coverage. Scope: Global.
 - =emacs-freeze=: Diagnose a frozen, hung, beachballing, or unresponsive Emacs
   by sampling the process, reading server buffers when possible, and
   recommending recovery. Scope: Project-local: emacs.

@@ -218,10 +218,8 @@ Claude plugin skill caches, for duplicate =name:= values that would produce
 repeated slash-command entries. See =../agents/README.org= for the full
 synchronization contract and known non-portable cases.
 
-The paired =end-to-end= skill includes a communication gate: before asking an
-affected user to =please retry= or =try again=, agents must run the closest
-controlled live check feasible with owned/test artifacts or state the explicit
-gap/blocker.
+For the paired =end-to-end= skill's affected-user retry evidence and
+contact-authorization gates, see =skills/end-to-end/SKILL.md=.
 
 *** Multi-account setup
 :PROPERTIES:
@@ -768,36 +766,19 @@ requested.
 :ID:       F2FB1F36-29D6-4FAD-9ED4-2C18B07F1E1F
 :END:
 
-Narrower companion to =verify=, focused specifically on stopping mocked-test
-substitution for explicit user-requested end-to-end verification. Activates
-when the user says "end to end", "E2E", "real test", "live", "actually try
-it", "in a real session", or after fixes to interactive UI / async / live
-Emacs / terminal display / browser / Slack / scheduled-job code paths. The
-workflow forces the agent to state the success criterion in plain words,
-reproduce the failure on the same surface the user uses BEFORE changing
-code, run the edited code through the same user-visible workflow before
-committing when safe to load, re-run the same reproduction after the fix, and
-report verbatim what was verified through what surface. If a commit-triggered
-sync or reload is required before live code reaches the running app, the skill
-allows committing only after non-live checks, then requires immediate
-live-verification before pushing, reporting success, or moving on. For
-interactive Emacs UI changes, acceptance criteria name the relevant visible
-text or overlay strings, face/remapping state, active key binding and resolved
-command, and post-command result from the actual user action; helper and
-temp-buffer checks are only supporting evidence against the real or equivalent
-displayed buffer after the sanctioned reload path. For Emacs profile startup
-regressions, it distinguishes `emacs --batch` from foreground daemon startup
-with the active `--init-directory` and forbids reusing or signaling the active
-daemon. For
-resume, restart, reconnect, or restore commands whose contract is to continue
-an existing session, the success criterion and regression coverage must assert
-original identity/history reuse and fail before kill/start if that identity is
-missing; explicit new/start/fork flows and documented fresh-state restart
-commands are excluded. For secret-backed remote notifications, it prefers
-clearly labeled opt-in test alerts, read-only previews, or manual dispatches
-that use the real remote credentials without mutating production state. When
-E2E is impossible, the skill requires naming the blocked step explicitly rather
-than substituting a local proxy as success.
+The =end-to-end= skill owns evidence from real running workflows at their
+runtime or user-visible surface; =skills/end-to-end/SKILL.md= is authoritative.
+It routes three modes: =reproduction or verification only=, =unfixed regression
+with repair in scope=, and =existing change or new feature=. The skill supplies
+no authorization. Explicit authorization is required for external or shared
+mutations, destructive actions affecting pre-existing state, and externally
+visible sends or dispatches; creation and cleanup of external/shared artifacts
+must be authorized together.
+
+Every live attempt must prove that the running surface loaded the recorded
+source or artifact identity. A manual dispatch proves only the layers it
+exercises, not scheduler timing, event wiring, or trigger permissions; those
+require an actual scheduler-triggered invocation.
 
 **** handoff
 :PROPERTIES:

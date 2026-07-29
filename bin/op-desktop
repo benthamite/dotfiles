@@ -1,0 +1,396 @@
+#!/usr/bin/env python3
+"""Run desktop-gated 1Password CLI commands through one authorized terminal session.
+
+Why this exists
+---------------
+1Password identifies a CLI authorization by the *controlling terminal* (tty plus
+its start time), and keeps it alive for 10 minutes of inactivity (12 hours
+maximum). Agent tool calls run each command in a fresh shell with no controlling
+terminal at all, so every invocation looks like a brand new session and triggers
+another Touch ID prompt -- even when the desktop app is already unlocked and the
+prompt cannot possibly unlock anything.
+
+This wrapper keeps one detached broker process that owns a real pty, and runs
+every `op` command as a child of that session. All commands therefore share a
+single authorization: one prompt per 10-minute idle window instead of one per
+command. The 10-minute and 12-hour limits are 1Password's own and still apply --
+this does not extend them, it just stops us discarding the session between
+commands.
+
+Usage
+-----
+    op-desktop read "op://Employee/Some Item/credential"
+    op-desktop item get "Title" --vault Employee --format=json
+
+    op-desktop --status     show broker state
+    op-desktop --stop       stop the broker (drops the authorization)
+
+Limitations
+-----------
+stdin is not forwarded to the child; the pty is used as its stdin so that
+1Password can resolve a terminal. Commands that read a document or template from
+stdin must be run some other way.
+
+The broker never writes secret values anywhere: command output goes back over a
+0600 unix socket to the caller and is not logged.
+"""
+
+from __future__ import annotations
+
+import fcntl
+import json
+import os
+import pty
+import signal
+import socket
+import struct
+import subprocess
+import sys
+import termios
+import threading
+import time
+
+RUNTIME_DIR = os.path.join(os.path.expanduser("~"), ".cache", "op-desktop")
+SOCKET_PATH = os.path.join(RUNTIME_DIR, "sock")
+PID_PATH = os.path.join(RUNTIME_DIR, "pid")
+LOG_PATH = os.path.join(RUNTIME_DIR, "broker.log")
+
+# Exit the broker after this long with no requests. Hygiene only -- the
+# authorization itself expires on 1Password's schedule regardless.
+IDLE_EXIT_SECONDS = 3600
+
+START_TIMEOUT_SECONDS = 20
+RECV_CHUNK = 65536
+
+
+# --------------------------------------------------------------------------
+# shared helpers
+# --------------------------------------------------------------------------
+
+def ensure_runtime_dir() -> None:
+    os.makedirs(RUNTIME_DIR, mode=0o700, exist_ok=True)
+    # Refuse to run if someone loosened the directory: the socket inside it is
+    # what lets a caller use the authorized session.
+    mode = os.stat(RUNTIME_DIR).st_mode & 0o777
+    if mode & 0o077:
+        raise SystemExit(
+            f"op-desktop: {RUNTIME_DIR} is mode {mode:o}; it must not be group- or "
+            "world-accessible. Fix with: chmod 700 " + RUNTIME_DIR
+        )
+
+
+def send_json(conn: socket.socket, payload: dict) -> None:
+    body = json.dumps(payload).encode("utf-8")
+    conn.sendall(struct.pack("!I", len(body)) + body)
+
+
+def recv_json(conn: socket.socket):
+    header = b""
+    while len(header) < 4:
+        chunk = conn.recv(4 - len(header))
+        if not chunk:
+            return None
+        header += chunk
+    (length,) = struct.unpack("!I", header)
+    body = b""
+    while len(body) < length:
+        chunk = conn.recv(min(RECV_CHUNK, length - len(body)))
+        if not chunk:
+            return None
+        body += chunk
+    return json.loads(body.decode("utf-8"))
+
+
+def broker_pid():
+    try:
+        with open(PID_PATH) as handle:
+            pid = int(handle.read().strip())
+    except (OSError, ValueError):
+        return None
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        return None
+    return pid
+
+
+# --------------------------------------------------------------------------
+# broker
+# --------------------------------------------------------------------------
+
+def log(message: str) -> None:
+    """Append a line to the broker log. Never called with secret material."""
+    try:
+        with open(LOG_PATH, "a") as handle:
+            handle.write(f"{time.strftime('%Y-%m-%dT%H:%M:%S')} {message}\n")
+    except OSError:
+        pass
+
+
+def acquire_controlling_tty() -> int:
+    """Put this process in a new session that owns a fresh pty.
+
+    The pty is what 1Password keys the authorization to, so it must outlive
+    individual commands. The master end is drained and discarded; command output
+    is captured through pipes instead, so no secret reaches the pty buffer.
+    """
+    master_fd, slave_fd = pty.openpty()
+    os.setsid()
+    fcntl.ioctl(slave_fd, termios.TIOCSCTTY, 0)
+
+    def drain() -> None:
+        while True:
+            try:
+                if not os.read(master_fd, 4096):
+                    return
+            except OSError:
+                return
+
+    threading.Thread(target=drain, daemon=True).start()
+    return slave_fd
+
+
+def run_broker() -> None:
+    ensure_runtime_dir()
+
+    # The whole point is a desktop-authorized session, so a service-account token
+    # inherited from the environment must not shadow it.
+    os.environ.pop("OP_SERVICE_ACCOUNT_TOKEN", None)
+
+    slave_fd = acquire_controlling_tty()
+
+    if os.path.exists(SOCKET_PATH):
+        os.unlink(SOCKET_PATH)
+    server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    old_umask = os.umask(0o077)
+    try:
+        server.bind(SOCKET_PATH)
+    finally:
+        os.umask(old_umask)
+    os.chmod(SOCKET_PATH, 0o600)
+    server.listen(8)
+    server.settimeout(30)
+
+    with open(PID_PATH, "w") as handle:
+        handle.write(str(os.getpid()))
+    os.chmod(PID_PATH, 0o600)
+
+    log(f"broker started pid={os.getpid()} tty={os.ttyname(slave_fd)}")
+
+    def shutdown(_signum=None, _frame=None):
+        log("broker stopping")
+        for path in (SOCKET_PATH, PID_PATH):
+            try:
+                os.unlink(path)
+            except OSError:
+                pass
+        os._exit(0)
+
+    signal.signal(signal.SIGTERM, shutdown)
+    signal.signal(signal.SIGINT, shutdown)
+
+    last_activity = time.time()
+    while True:
+        try:
+            conn, _ = server.accept()
+        except socket.timeout:
+            if time.time() - last_activity > IDLE_EXIT_SECONDS:
+                log("idle timeout")
+                shutdown()
+            continue
+
+        last_activity = time.time()
+        with conn:
+            try:
+                request = recv_json(conn)
+            except (OSError, ValueError):
+                continue
+            if not request:
+                continue
+
+            argv = request.get("argv") or []
+            if not isinstance(argv, list) or not all(isinstance(a, str) for a in argv):
+                send_json(conn, {"rc": 2, "out": "", "err": "op-desktop: bad argv\n"})
+                continue
+
+            env = dict(os.environ)
+            for key, value in (request.get("env") or {}).items():
+                if key.startswith("OP_") and key != "OP_SERVICE_ACCOUNT_TOKEN":
+                    env[key] = value
+            env.pop("OP_SERVICE_ACCOUNT_TOKEN", None)
+
+            cwd = request.get("cwd")
+            if not (isinstance(cwd, str) and os.path.isdir(cwd)):
+                cwd = os.path.expanduser("~")
+
+            log(f"op {' '.join(argv[:2])} ({len(argv)} args)")
+            try:
+                completed = subprocess.run(
+                    ["op", *argv],
+                    stdin=slave_fd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    env=env,
+                    cwd=cwd,
+                )
+                payload = {
+                    "rc": completed.returncode,
+                    "out": completed.stdout.decode("utf-8", "replace"),
+                    "err": completed.stderr.decode("utf-8", "replace"),
+                }
+            except FileNotFoundError:
+                payload = {"rc": 127, "out": "", "err": "op-desktop: `op` not found\n"}
+            except Exception as exc:  # noqa: BLE001 - report, don't kill the broker
+                payload = {"rc": 1, "out": "", "err": f"op-desktop: {exc}\n"}
+
+            log(f"  rc={payload['rc']}")
+            try:
+                send_json(conn, payload)
+            except OSError:
+                pass
+            last_activity = time.time()
+
+
+def spawn_broker() -> None:
+    """Start the broker fully detached so it survives the calling shell."""
+    if os.fork() != 0:
+        return
+    os.setsid()
+    if os.fork() != 0:
+        os._exit(0)
+
+    devnull = os.open(os.devnull, os.O_RDWR)
+    os.dup2(devnull, 0)
+    log_fd = os.open(LOG_PATH, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+    os.dup2(log_fd, 1)
+    os.dup2(log_fd, 2)
+
+    try:
+        run_broker()
+    except Exception as exc:  # noqa: BLE001
+        log(f"broker crashed: {exc}")
+    os._exit(1)
+
+
+# --------------------------------------------------------------------------
+# client
+# --------------------------------------------------------------------------
+
+def connect(timeout: float = 2.0):
+    conn = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    conn.settimeout(timeout)
+    try:
+        conn.connect(SOCKET_PATH)
+    except OSError:
+        conn.close()
+        return None
+    return conn
+
+
+def connect_or_start():
+    conn = connect()
+    if conn:
+        return conn
+
+    # Stale socket from a dead broker.
+    if broker_pid() is None and os.path.exists(SOCKET_PATH):
+        try:
+            os.unlink(SOCKET_PATH)
+        except OSError:
+            pass
+
+    spawn_broker()
+
+    deadline = time.time() + START_TIMEOUT_SECONDS
+    while time.time() < deadline:
+        conn = connect()
+        if conn:
+            return conn
+        time.sleep(0.1)
+
+    raise SystemExit(
+        "op-desktop: broker did not come up within "
+        f"{START_TIMEOUT_SECONDS}s; see {LOG_PATH}"
+    )
+
+
+def cmd_status() -> int:
+    pid = broker_pid()
+    if pid is None:
+        print("op-desktop: no broker running (next command starts one, one prompt)")
+        return 1
+    print(f"op-desktop: broker running, pid {pid}, socket {SOCKET_PATH}")
+    conn = connect()
+    if conn:
+        with conn:
+            send_json(conn, {"argv": ["whoami"], "env": {}, "cwd": os.getcwd()})
+            reply = recv_json(conn) or {}
+        if reply.get("rc") == 0:
+            print("op-desktop: session is authorized")
+            sys.stdout.write(reply.get("out", ""))
+        else:
+            print("op-desktop: session is NOT authorized (next command prompts)")
+            sys.stderr.write(reply.get("err", ""))
+    return 0
+
+
+def cmd_stop() -> int:
+    pid = broker_pid()
+    if pid is None:
+        print("op-desktop: no broker running")
+        return 0
+    os.kill(pid, signal.SIGTERM)
+    for _ in range(50):
+        if broker_pid() is None:
+            print(f"op-desktop: stopped broker {pid}")
+            return 0
+        time.sleep(0.1)
+    print(f"op-desktop: broker {pid} did not stop", file=sys.stderr)
+    return 1
+
+
+def main(argv) -> int:
+    ensure_runtime_dir()
+
+    if not argv:
+        print(__doc__.strip())
+        return 2
+    if argv[0] == "--status":
+        return cmd_status()
+    if argv[0] == "--stop":
+        return cmd_stop()
+    if argv[0] in ("-h", "--help"):
+        print(__doc__.strip())
+        return 0
+
+    conn = connect_or_start()
+    with conn:
+        conn.settimeout(None)
+        send_json(
+            conn,
+            {
+                "argv": argv,
+                "env": {k: v for k, v in os.environ.items() if k.startswith("OP_")},
+                "cwd": os.getcwd(),
+            },
+        )
+        reply = recv_json(conn)
+
+    if reply is None:
+        print("op-desktop: broker closed the connection", file=sys.stderr)
+        return 1
+
+    sys.stdout.write(reply.get("out", ""))
+    sys.stdout.flush()
+    sys.stderr.write(reply.get("err", ""))
+    sys.stderr.flush()
+    return int(reply.get("rc", 1))
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main(sys.argv[1:]))
+    except KeyboardInterrupt:
+        sys.exit(130)
+    except BrokenPipeError:
+        sys.exit(141)

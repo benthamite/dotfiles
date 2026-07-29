@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# Link parent-Drive cleanup skills to their tracked tool-specific sources.
+
+set -euo pipefail
+
+if [ "$#" -ne 1 ]; then
+  printf 'Usage: %s claude|codex\n' "$(basename "$0")" >&2
+  exit 2
+fi
+
+tool="$1"
+case "$tool" in
+  claude) tool_label="Claude" ;;
+  codex) tool_label="Codex" ;;
+  *)
+    printf 'Unsupported tool: %s\n' "$tool" >&2
+    exit 2
+    ;;
+esac
+
+repo_root=$(cd "$(dirname "$0")/.." && pwd)
+source_root="$repo_root/google-drive/.$tool/skills"
+parent_drive_root="${PARENT_DRIVE_ROOT:-$HOME/My Drive}"
+live_root="$parent_drive_root/.$tool/skills"
+backup_root=""
+
+mkdir -p "$live_root"
+
+for skill in fix-drive-errors nosync; do
+  source_dir="$source_root/$skill"
+  target_dir="$live_root/$skill"
+
+  if [ ! -f "$source_dir/SKILL.md" ]; then
+    printf 'Missing tracked %s skill: %s\n' "$tool" "$source_dir/SKILL.md" >&2
+    exit 1
+  fi
+
+  if [ -L "$target_dir" ] && [ "$(readlink "$target_dir")" = "$source_dir" ]; then
+    printf '%s parent-Drive skill already linked: %s -> %s\n' \
+      "$tool_label" "$target_dir" "$source_dir"
+    continue
+  fi
+
+  if [ -L "$target_dir" ]; then
+    unlink "$target_dir"
+  elif [ -e "$target_dir" ]; then
+    if [ -z "$backup_root" ]; then
+      backup_root="$parent_drive_root/.$tool/skills.pre-tracked-alias.$(date +%Y%m%d%H%M%S)"
+      mkdir -p "$backup_root"
+    fi
+    mv "$target_dir" "$backup_root/$skill"
+    printf 'Moved existing %s parent-Drive skill to backup: %s\n' \
+      "$tool" "$backup_root/$skill" >&2
+  fi
+
+  ln -s "$source_dir" "$target_dir"
+  printf '%s parent-Drive skill linked: %s -> %s\n' \
+    "$tool_label" "$target_dir" "$source_dir"
+done

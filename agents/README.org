@@ -203,6 +203,10 @@ currently present in this repo. The skill name shown is the directory name.
   user asks "find a skill for X", "is there a skill that can...", "how do I add
   support for X", or otherwise wants reusable/installable agent capabilities.
   Scope: Project-local: dotfiles.
+- =fix-drive-errors=: Triage Google Drive sync errors, externalize generated
+  dependency/build/cache directories, repair symlinks, and recover from the
+  documented computer-backup registration failure mode. Scope: Project-local:
+  parent Drive; live entries alias the tracked =google-drive/= pair.
 - =generate-readme=: Generate or update a GitHub-facing README.md for an Emacs
   Lisp package from its README.org manual. Scope: Global.
 - =gitguardian-triage=: Triage and remediate GitGuardian secret incidents.
@@ -230,6 +234,10 @@ currently present in this repo. The skill name shown is the directory name.
   under =~/.claude/projects= (with =~/.claude/history.jsonl= and
   =~/.claude.json=); the Codex version rewrites Codex session metadata under
   =~/.codex/sessions= (with =state_5.sqlite=). Scope: Global.
+- =nosync=: Move one named generated dependency/build/cache directory outside
+  Google Drive, leave a working symlink, and remove the surviving cloud copy.
+  Scope: Project-local: parent Drive; live entries alias the tracked
+  =google-drive/= pair.
 - =org-note-conventions=: Apply private Org note structure and prose-formatting
   conventions: reserve level-one headings for the note root/title, use
   level-two headings for top-level content sections, and keep prose paragraphs

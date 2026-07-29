@@ -94,6 +94,11 @@ GLOBAL_INSTRUCTION_CODEX = "codex/AGENTS.md"
 KNOWN_PROJECT_INSTRUCTION_ROOTS = [
     Path.home() / "Trajectory",
 ]
+PARENT_DRIVE_ROOT = Path.home() / "My Drive"
+PARENT_DRIVE_SKILLS = (
+    "fix-drive-errors",
+    "nosync",
+)
 
 GIT_OPTIONS_WITH_VALUE = {
     "-C",
@@ -1801,8 +1806,6 @@ def disabled_skill_names() -> set[str]:
 def check_native_disabled_skills(problems: list[str]) -> None:
     disabled_records = disabled_skill_records()
     disabled = set(disabled_records)
-    if not disabled:
-        return
 
     claude_settings = Path.home() / ".claude" / "settings.local.json"
     try:
@@ -1814,6 +1817,15 @@ def check_native_disabled_skills(problems: list[str]) -> None:
     for name in sorted(disabled):
         if overrides.get(name) != "off":
             add_problem(problems, f"Disabled skill missing Claude skillOverrides off entry: {name}")
+    for name in sorted(
+        name
+        for name, value in overrides.items()
+        if value == "off" and name not in disabled
+    ):
+        add_problem(
+            problems,
+            f"Claude skillOverrides off entry missing from skills-disabled.json: {name}",
+        )
 
     try:
         codex_data = tomllib.loads((ROOT / "codex" / "config.toml").read_text())
@@ -1821,17 +1833,32 @@ def check_native_disabled_skills(problems: list[str]) -> None:
         add_problem(problems, f"Cannot read Codex config for disabled skills: {exc}")
         return
     config_entries = ((codex_data.get("skills") or {}).get("config") or [])
-    disabled_codex_paths = {
-        real_path(path_from_token(str(entry.get("path")), ROOT))
+    disabled_codex_entries = {
+        real_path(path_from_token(str(entry.get("path")), ROOT)): str(
+            entry.get("path")
+        )
         for entry in config_entries
         if entry.get("enabled") is False and entry.get("path")
     }
+    disabled_codex_paths = set(disabled_codex_entries)
+    expected_codex_paths: set[Path] = set()
     for name in sorted(disabled):
         record = disabled_records.get(name) or {}
         codex_path = record.get("codex_path") or f"codex/skills/{name}/SKILL.md"
         expected = path_from_token(str(codex_path), ROOT)
-        if real_path(expected) not in disabled_codex_paths:
+        expected_real = real_path(expected)
+        expected_codex_paths.add(expected_real)
+        if expected_real not in disabled_codex_paths:
             add_problem(problems, f"Disabled skill missing Codex skills.config disabled entry: {name}")
+    for path in sorted(
+        disabled_codex_paths - expected_codex_paths,
+        key=lambda item: str(item),
+    ):
+        add_problem(
+            problems,
+            "Codex skills.config disabled entry missing from "
+            f"skills-disabled.json: {disabled_codex_entries[path]}",
+        )
 
 
 def load_mcp_config(path: Path) -> dict:
@@ -2205,6 +2232,43 @@ def audit_known_project_instruction_pairs(problems: list[str]) -> None:
             )
 
 
+def audit_parent_drive_skill_aliases(problems: list[str]) -> None:
+    canonical_root = ROOT / "google-drive"
+    tracked = set(git_lines(["ls-files", "--", "google-drive"], ROOT))
+    for live_dir in (".claude", ".codex"):
+        for skill in PARENT_DRIVE_SKILLS:
+            rel = Path(
+                "google-drive",
+                live_dir,
+                "skills",
+                skill,
+                "SKILL.md",
+            ).as_posix()
+            if (ROOT / rel).exists() and rel not in tracked:
+                add_problem(
+                    problems,
+                    f"Tracked parent Drive canonical skill file is not tracked: {rel}",
+                )
+
+    for skill in PARENT_DRIVE_SKILLS:
+        drift = local_skill_sync_problems(canonical_root, skill)
+        if drift:
+            add_nested_problems(
+                problems,
+                f"Tracked parent Drive skill pair is not synchronized: {skill}",
+                drift,
+            )
+
+    for tool, live_dir in (("claude", ".claude"), ("codex", ".codex")):
+        for skill in PARENT_DRIVE_SKILLS:
+            check_symlink(
+                problems,
+                PARENT_DRIVE_ROOT / live_dir / "skills" / skill,
+                canonical_root / live_dir / "skills" / skill,
+                f"parent Drive {tool.title()} {skill} skill",
+            )
+
+
 def normalized_skill_text(path: Path) -> str:
     text = path.read_text()
     if not text.startswith("---\n"):
@@ -2509,6 +2573,7 @@ def audit_problems() -> list[str]:
     audit_tracked_pair_deletions(problems)
     audit_topology(problems)
     audit_known_project_instruction_pairs(problems)
+    audit_parent_drive_skill_aliases(problems)
     audit_instructions(problems, manifest)
     audit_skills(problems, manifest, private_manifest)
     audit_duplicate_skill_names(problems)

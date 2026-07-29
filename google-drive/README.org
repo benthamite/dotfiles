@@ -1,0 +1,23 @@
+#+title: Google Drive agent skills
+
+* Skills
+
+This directory is the tracked source for the Google Drive cleanup skills that
+are active at the parent =~/My Drive= workspace:
+
+- =fix-drive-errors=: triage Drive sync failures, externalize generated
+  directories, and follow the verified mirror-recovery runbook.
+- =nosync=: externalize one explicitly named generated directory and leave a
+  working symlink.
+
+Claude and Codex keep separate =.claude/skills/= and =.codex/skills/= copies so
+Claude-only frontmatter such as =model= can remain tool-specific. Their bodies
+must remain equivalent after the normalization performed by
+=bin/ai-config-sync audit=.
+
+=bin/install-parent-drive-skills claude|codex= exposes the tracked copies as
+aliases under =~/My Drive/.claude/skills/= and =~/My Drive/.codex/skills/=.
+The ordinary =claude/bin/install-skills.sh= and =codex/bin/install-skills.sh=
+installers call this helper. If an alias target is occupied by a real directory,
+the helper moves it to a timestamped backup outside the active skill root before
+linking it.

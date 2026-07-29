@@ -474,15 +474,30 @@ trust_level = "trusted"
 [projects."/Users/pablostafforini/My Drive/Epoch/meetings/yafah"]
 trust_level = "trusted"
 
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/onboarding"]
+trust_level = "trusted"
+
+[projects."/Users/pablostafforini/My Drive/Epoch/projects/claude-tag"]
+trust_level = "trusted"
+
+[projects."/private/tmp/agent-log-e2e.WMaXbW"]
+trust_level = "trusted"
+
+[projects."/private/tmp/codex-gt-proto"]
+trust_level = "trusted"
+
+[projects."/private/tmp/codex-gt-proto5"]
+trust_level = "trusted"
+
 [tui]
-theme = "light"
+theme = "dark"
 
 [tui.model_availability_nux]
 "gpt-5.5" = 4
-"gpt-5.6-sol" = 3
+"gpt-5.6-sol" = 4
 
 [marketplaces.openai-bundled]
-last_updated = "2026-06-14T20:26:22Z"
+last_updated = "2026-07-22T18:05:05Z"
 source_type = "local"
 source = "/Users/pablostafforini/.codex/.tmp/bundled-marketplaces/openai-bundled"
 
@@ -509,10 +524,16 @@ enabled = true
 [plugins."superpowers@openai-curated"]
 enabled = true
 
-[plugins."browser@openai-bundled"]
+[plugins."chrome@openai-bundled"]
 enabled = true
 
-[plugins."chrome@openai-bundled"]
+[plugins."sites@openai-bundled"]
+enabled = true
+
+[plugins."visualize@openai-bundled"]
+enabled = true
+
+[plugins."browser@openai-bundled"]
 enabled = true
 
 [hooks.state]
@@ -870,6 +891,9 @@ trusted_hash = "sha256:c1a1cd200ab8775d3b193265d52bd662fa4fbad5606b375e148c5c5f9
 [hooks.state."/Users/pablostafforini/.codex/hooks.json:post_tool_use:1:4"]
 trusted_hash = "sha256:1ef9cd07e6b3968261e484743978641b54628671e504a50b6248700a8652899d"
 
+[hooks.state."/Users/pablostafforini/.codex/hooks.json:pre_tool_use:0:13"]
+trusted_hash = "sha256:a3a61bbf0462760609d7c62b10ce260fdfbadacda005a3f74934e8076571cc58"
+
 [[skills.config]]
 path = "/Users/pablostafforini/My Drive/dotfiles/codex/skills/google-sheets-comments/SKILL.md"
 enabled = false
@@ -884,22 +908,38 @@ hide_rate_limit_model_nudge = true
 [desktop]
 ambient-suggestions-enabled = false
 conversationDetailMode = "STEPS_COMMANDS"
+followUpQueueMode = "queue"
+dock-icon-preference = "codex-system"
 
 [mcp_servers.node_repl]
 args = []
-command = "/Applications/Codex.app/Contents/Resources/node_repl"
+command = "/Applications/Codex.app/Contents/Resources/cua_node/bin/node_repl"
 startup_timeout_sec = 120
 
 [mcp_servers.node_repl.env]
-BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
-BROWSER_USE_MARKETPLACE_NAME = "openai-bundled"
-CODEX_CLI_PATH = "/Applications/Codex.app/Contents/Resources/codex"
-CODEX_HOME = "/Users/pablostafforini/.codex"
 NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS = "1000"
-NODE_REPL_NODE_MODULE_DIRS = ""
-NODE_REPL_NODE_PATH = "/Applications/Codex.app/Contents/Resources/node"
-NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "167fdf579477181fba1773c1efb067b00c5a64fe85dafb50a2001bde198dc739"
+NODE_REPL_NODE_MODULE_DIRS = "/Applications/Codex.app/Contents/Resources/cua_node/lib/node_modules"
+NODE_REPL_NODE_PATH = "/Applications/Codex.app/Contents/Resources/cua_node/bin/node"
 NODE_REPL_TRUSTED_CODE_PATHS = "/Users/pablostafforini/.codex"
-NODE_REPL_UNTRUSTED_ENV_ALLOWLIST = "BROWSER_USE_MARKETPLACE_NAME"
+CODEX_HOME = "/Users/pablostafforini/.codex"
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "6d25aa7656feac858f3a3bdaea5bcbab0dbfd426c9de8e6931ce90c399ee8e4f,d0b55a8f9e8e7e9c88421416ea4ce9542c302abf43aa7fc871be4553ea70dd26"
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
+NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = "Control the in-app browser in conjunction with the Browser Plugin."
+NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = "Control the Chrome browser in conjunction with the Chrome Plugin. Prefer this method of controlling Chrome over alternatives (such as Computer Use) unless the user explicitly mentions an alternative."
+NODE_REPL_INSTRUCTIONS_USE_CASE_COMPUTER_USE = "Control desktop apps on macOS through Computer Use."
+BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
+BROWSER_USE_CODEX_APP_VERSION = "26.715.72359"
+CODEX_CLI_PATH = "/Applications/Codex.app/Contents/Resources/codex"
+
+[mcp_servers.computer-use]
+command = "./Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient"
+args = ["mcp"]
+cwd = "."
+enabled = false
+
+[shell_environment_policy.set]
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
+NODE_REPL_TRUSTED_BROWSER_CLIENT_SHA256S = "6d25aa7656feac858f3a3bdaea5bcbab0dbfd426c9de8e6931ce90c399ee8e4f,d0b55a8f9e8e7e9c88421416ea4ce9542c302abf43aa7fc871be4553ea70dd26"
+NODE_REPL_TRUSTED_CODE_PATHS = "/Users/pablostafforini/.codex"
 
 # END skill-prune disabled skills

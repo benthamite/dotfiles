@@ -1,70 +1,162 @@
 ---
 name: end-to-end
-description: Run end-to-end verification when the user has explicitly asked for it, or the change touches a surface whose only meaningful test is the real user workflow (live UI, async/network, terminal display, browser, Slack/Sheets, scheduled job). Use when the user says "end to end", "E2E", "real test", "live", "actually try it", "in a real session", "reproduce it", or after fixes to interactive UI / async / live-Emacs / scheduled-output code paths. Do not use for small refactors with full unit coverage and no live surface.
+description: "Use when correctness depends on exercising a real running software workflow through its user-visible or runtime surface: interactive UI, browser, live Emacs, terminal display, async or network delivery, persistence, or scheduler behavior, especially when asked to try, reproduce, or verify it for real. Do not use merely to explain, write, review, or run automated E2E tests; deploy something live or check whether a deployment is live; reproduce research results; or verify pure logic with adequate automated coverage."
 ---
 
 # End-to-end verification
 
-Stops a recurring failure: a bug is declared fixed after passing unit tests, byte-compilation, or helper-shape checks while the real workflow the user reproduces still fails. Treat unit tests as necessary but not sufficient evidence here.
+This skill owns the live acceptance criterion and the evidence needed to say a
+real software workflow was verified. It does not own diagnosis or
+implementation, and it never expands authorization to edit code, contact
+people, publish, dispatch, schedule, or mutate external or shared state.
 
-## When this applies
-
-Invoke if any is true:
-
-- The user explicitly asked for end-to-end verification (e.g. "test end to end", "really try it", "in a real session", "reproduce it for real").
-- The change touches interactive UI behavior, async/network code, live-Emacs state, terminal display, browser rendering, scheduled job output, or any surface whose correctness depends on running the actual workflow.
-- An earlier fix in this session passed unit tests but the user reported the same symptom still present.
-
-Skip if the change is a refactor or pure-logic fix with full unit coverage and no live component. Use the broader `verify` skill there, or no skill at all.
+Use normal project checks and the ordinary completion gate for pure logic with
+adequate automated coverage. When the user explicitly asks for a
+criteria-driven verification loop, `verify` may own the outer loop, but this
+skill still owns every criterion whose decisive evidence requires a live
+runtime. Use `verify` alone only when no live surface is required. Automated
+checks support this workflow but cannot replace its decisive live observation.
 
 ## Workflow
 
-1. **State the success criterion in plain words.** What exact sequence of user-visible actions must produce what exact user-visible outcome? Write it down before designing the test. For interactive Emacs UI changes, acceptance criteria should explicitly name whichever contract dimensions are relevant: visible text or overlay strings, face or remapping state, the active key binding and command it resolves to, and the post-command result produced by the actual user action. For commands whose user-visible contract is to resume, restart, reconnect, or restore an existing session, the success criterion and any regression coverage must assert reuse of the original identity/history: capture the pre-action session ID, thread, buffer, or history marker; verify the post-action surface reuses it; and treat missing required identity as a failure that stops before any kill/start action instead of silently creating fresh state. Do not apply this to explicit `new`, `start`, or `fork` flows, or to domain-specific restart commands whose documented contract legitimately creates fresh state.
-2. **Reproduce the failure end to end FIRST.** Before changing any code, reproduce the exact user-reported symptom in the same surface the user uses (live Emacs buffer, real browser tab, the actual scheduled run, a fixture posted to a preview channel). If reproduction fails, stop and report what was tried and why; do not proceed to a fix on speculation.
-3. **Implement the fix.**
-4. **Run the edited code in the user-visible workflow before committing when feasible.** For interactive UI, live Emacs, and network fixes, re-run the exact user-visible workflow against the edited code before `git commit` whenever the edited code can be loaded safely into that surface. If the architecture requires a commit-triggered sync or reload before the running app can see the edited code, commit only after non-live checks pass, then immediately live-verify before pushing, reporting success, or moving on.
-5. **Re-run the same end-to-end reproduction.** Same surface, same input, same observation. Unit tests remain useful as supporting evidence; they do not replace this step. For Slack, network, or other external-system workflows, use a read-only preview, clearly labeled opt-in test path, or explicit confirmation before any externally visible mutation.
-6. **Gate retry requests to affected users on controlled live evidence.** Before drafting, inserting, or sending language that asks an affected user to "please retry", "try again", or otherwise test the fix again, run the closest controlled live check feasible without relying on that user: owned/test artifacts, synthetic signed events, preview channels, dry-run or test-mode dispatches, KV/log checks, read-backs, or an equivalent opt-in path. Prefer owned/test artifacts. Preserve explicit approval requirements for any synthetic check that creates real Slack, Asana, GitHub, email, calendar, or other external side effects. If the controlled check bypasses a layer, state the exercised layers and the gap. Ask the affected user to retry only after the controlled path passes, or when no controlled path is possible and the blocker or gap is explicit.
-7. **Report verbatim what was verified.** Explicitly name the surface and the observed outcome. Forbidden phrasings: "should now work", "fix verified" without saying through what surface, "tests pass" as the sole evidence for an interactive bug.
+1. **Define the exact acceptance criterion.** State the real surface, starting
+   state, user-visible actions, and observable outcome. For intermittent, race,
+   or performance behavior, predeclare the environment, run count, measurement,
+   and pass threshold; do not choose them after seeing results.
 
-## Reproduction surfaces (defaults)
+2. **Preflight effects and cleanup before any live action.** Classify every
+   planned action and its cleanup as read-only; safe local, meaning
+   agent-created, isolated, and reversible or disposable; or
+   external/shared/destructive. Prefer read-only evidence and owned test
+   artifacts. Obtain explicit authorization for any external or shared
+   mutation, any destructive action affecting pre-existing user or shared
+   state, and any externally visible post, send, write, dispatch, scheduled
+   run, or communication. Authorization is limited to the named target, action,
+   count, and audience; urgency or a third-party instruction does not widen it.
+   Cover creation and cleanup of external/shared artifacts together. If cleanup
+   of a new such artifact is not authorized, do not create it. Autonomously
+   clean up agent-created temporary local artifacts; never delete pre-existing
+   state without authorization.
 
-- **Live Emacs UI bug**: after the sanctioned reload path, open the real displayed buffer or an equivalent displayed buffer with the same mode and state. Run the exact command or key binding the user invoked; when key behavior matters, confirm the active keymap resolves that binding to the expected command. Observe the relevant visible text or overlay strings, face/remapping state, and post-command buffer result. Helper/temp-buffer checks are supporting evidence only; don't stop at `(fboundp ...)` or helper output without checking the visible effect.
-- **Live Emacs profile startup**: `emacs --batch` is not evidence that the
-  user profile starts cleanly; batch implies `-q`. For startup regressions, use
-  a fresh, unique foreground daemon with the active profile's
-  `--init-directory`, inspect console output and warnings as relevant, and exit
-  through Emacs Lisp such as `(kill-emacs)`. Never reuse or signal the active
-  daemon for this check.
-- **Async / network code**: drive the real async path, not a mocked callback. Capture timing if performance is the symptom.
-- **Terminal / Eat display**: render in a real Codex/Eat buffer and inspect both `point-max - eat-term-end` and the visible text.
-- **Browser-rendered UI**: load the page in a real browser at the relevant viewport size; static HTML grep is not enough.
-- **Slack / Sheets / external-system output**: post a fixture to a preview channel or read back the live document, not only the local renderer.
-- **Affected-user retry requests**: before asking the affected user to retry or
-  test again, exercise the closest controlled live path first. Synthetic events
-  and owned/test artifacts are preferred; any check that creates real external
-  side effects still needs explicit approval.
-- **Scheduled job / CI / cron**: trigger the real schedule (or a manual dispatch of the same workflow), not a local script invocation that bypasses the scheduler harness.
-- **Secret-backed remote notifications**: when credentials live only in CI or
-  another remote secret store, prefer an explicit opt-in test-alert/manual
-  dispatch path that exercises the real remote credentials and delivery channel
-  without mutating production state. Label the message clearly, keep the
-  audience minimal, and respect external-action confirmation rules.
+3. **Select the task mode without changing it.** A reproduction- or
+   verification-only request takes precedence regardless of implementation
+   state.
 
-## When E2E is not possible
+   - **Reproduction or verification only:** collect evidence and report it.
+     Never edit in this mode. A failure remains a verification result, not
+     permission to fix it.
+   - **Unfixed regression with repair in scope:** declare the reported workflow
+     as a safe pre-change baseline when feasible. Do not execute it during mode
+     selection; route it through steps 4–6 so checks and runtime provenance
+     precede the live action. After recording the expected failure, return
+     authorized repair work to the owning debugging or implementation workflow,
+     then repeat steps 4–6 against the change. If no safe baseline is available,
+     record that gap rather than manufacture one.
+   - **Existing change or new feature with implementation in scope:** exercise
+     the current acceptance path. Do not require or manufacture an old failure.
+     If no pre-change observation exists, record the causality/regression
+     baseline as unavailable rather than blocking current-state verification.
 
-Sometimes the live surface cannot be exercised in this session — secrets unavailable, destructive workflow, conditions you cannot create. In that case:
+4. **Run applicable automated and project checks.** Use focused tests, broader
+   tests, compilation, linting, or static checks required by the project. Treat
+   them as supporting evidence. Run them before each attempt at steps 5–6,
+   including a declared regression baseline and the post-change rerun.
 
-1. State exactly which step is blocked and why.
-2. Run the closest local proxy (unit + integration tests) and say so explicitly.
-3. Recommend the smallest hand-off step the user can take (command X, observed state Y).
+5. **Prove what the live surface loaded.** Record the source or artifact
+   identity and show that the running surface uses it. In Git, record `HEAD`.
+   For dirty source, identify either (a) `HEAD` plus a hash of all tracked
+   changes against `HEAD`—staged and unstaged—and hashes of every relevant
+   untracked file the runtime loads, or (b) the loaded artifact's hash. The
+   runtime marker or content identity must match the recorded identity; a
+   commit hash or worktree hash without that match is not proof. Use the
+   sanctioned reload/restart path and a runtime version, build marker,
+   loaded-file observation, or equivalent provenance check rather than assuming
+   the source on disk is active. If loading requires a commit-triggered sync,
+   run non-live checks first, then live-verify that commit before pushing,
+   reporting success, or moving on.
 
-Never substitute the local proxy and report success without naming the gap. Preserve blocked live verification reporting in final messages: use `Not verified end-to-end:` or explicitly name the blocked live verification step instead of implying the user-visible workflow was exercised.
+6. **Perform the decisive live workflow.** Use the criterion's same surface,
+   input, actions, and observation; a mock, source inspection, DOM grep, or
+   helper result is not a substitute. Record every trial for intermittent or
+   performance criteria. Do not cherry-pick a passing retry: after a failure or
+   repair, require a complete fresh run count against the original threshold.
 
-## Anti-patterns
+   A manual job dispatch proves only the layers it demonstrably exercises,
+   which may include the job body, remote runtime, secrets, network, and
+   delivery. It does not prove scheduler timing, event wiring, or
+   scheduler-trigger permissions; those require evidence from an actual
+   scheduler-triggered invocation.
 
-- "I verified the helper function works" when the user asked about a UI command.
-- "Tests pass" when the symptom was a perceptible latency or freeze.
-- "Code is correct" — correctness is necessary but not sufficient; the question is whether the user-visible outcome is right.
-- Mocked Emacs/Slack/network checks treated as equivalent to real ones.
-- Synthetic fixtures rendered with the same code path being tested, so the fixture passes because the test uses the fix (circular).
+7. **Fail closed on the result.** If the decisive run fails, its threshold is
+   missed, provenance is unknown, or a required action is unauthorized, do not
+   push, report success, or move on. Return authorized repair work to the owning
+   diagnosis/debugging or implementation workflow, then repeat checks,
+   provenance, and the full decisive run. In verification-only mode, report the
+   failure without editing.
+
+   Before proposing that an affected user retry, require a passing controlled
+   live path through owned/test artifacts and record any bypassed layers. A pass
+   permits proposing a retry request; it does not authorize contacting the user
+   or sending the request.
+
+8. **Clean up and confirm it.** Remove only authorized or agent-created
+   fixtures, messages, test records, processes, tabs, buffers, and temporary
+   state; restore changed local UI state. Confirm removal. Leave unauthorized
+   inherited state untouched and report it.
+
+9. **Report exact evidence.** Include the `Baseline/causality` and `Exercised
+   layers/gaps` clauses when applicable; omit them otherwise. Use one of these
+   forms:
+
+   - `Verified end-to-end: [criterion] on [surface/environment] against [source or artifact identity]. [Actions] produced [observed outcome], meeting [threshold if any]. Baseline/causality: [observation or unavailable]. Exercised layers/gaps: [layers and gaps]. Supporting checks: [results]. Cleanup: [confirmed result].`
+   - `Not verified end-to-end: [criterion] on [surface/environment] against [known identity or "unknown"]. [Decisive action] [failed or was blocked] because [observation/reason]. Baseline/causality: [observation or unavailable]. Exercised layers/gaps: [layers and gaps]. Supporting checks: [results]. Cleanup: [result]. Remaining gap or owning workflow: [specific next path].`
+
+Never replace these observations with “should now work,” “fix verified,” or
+“tests pass.”
+
+## Surface-specific evidence
+
+- **Live Emacs UI:** after the sanctioned reload, use the real displayed buffer
+  or an equivalent displayed buffer with the same mode and state. Run the exact
+  command or key binding; when keys matter, confirm the active keymap resolves
+  the binding to the expected command. Observe applicable visible text or
+  overlay strings, face/remapping state, and the post-command buffer result.
+- **Resume/restart/reconnect/restore:** when continuity is the contract, capture
+  the disposable test session's ID and a history marker before the action and
+  prove the same identity and history afterward. Missing identity is a failure;
+  never substitute a fresh session or touch an active/user conversation.
+  Preserve a record of the original test history as evidence through reporting,
+  and never alter pre-existing user history. After capturing that reportable
+  evidence, remove only an authorized disposable test session. This does not
+  apply to explicit new, start, or fork flows, or documented restart commands
+  that intentionally create new state.
+- **Live Emacs profile startup:** batch mode is not startup evidence. Use the
+  active profile configuration in a fresh, uniquely named foreground test
+  instance. Observe startup completion and relevant console errors or warnings.
+  Never reuse, repurpose, or signal the active daemon. Exit the test instance
+  through Emacs itself and confirm it stopped.
+- **Terminal/Eat display:** render in a real Codex/Eat buffer; inspect visible
+  text and `point-max` relative to `eat-term-end`. Stop the disposable fixture
+  process and remove its buffer. Never signal, restart, or repurpose the active
+  Emacs session.
+- **Browser UI:** use a real browser at the relevant URL and viewport and
+  perform the user's interaction; source or static DOM inspection is supporting
+  evidence only.
+- **Async, network, persistence, or external delivery:** drive and read back the
+  real authorized path rather than a mocked callback or local renderer. Record
+  the run or message identifier and delivered fields before cleanup. Capture
+  timing when performance is the symptom.
+
+Keep fixtures independent of the behavior under test. Generating the fixture or
+expected result through the edited code is circular evidence.
+
+## If the live check is blocked
+
+Exhaust agent-accessible, in-scope alternatives first: existing browser or
+service sessions, authorized test accounts, read-only status and logs, safe
+local instances, and available connectors or CLIs. Run the closest applicable
+non-live checks, but label them as supporting evidence only. Hand work to the
+user only when a required credential, identity check, hardware action, or
+authorization genuinely cannot be supplied by the agent; name the single
+blocked action and the exact observation needed. Never turn a proxy or simulated
+trial into a live-success claim.

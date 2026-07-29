@@ -333,7 +333,8 @@ of truth.
 The global =~/.claude/CLAUDE.md= (symlinked here) is the user-level memory loaded in every project. It defines conventions that apply across all projects:
 
 - Never present guesses as facts; state uncertainty and verify claims that matter.
-- Fix root causes, not symptoms; no silent fallbacks or workaround code unless explicitly labeled, justified, and approved.
+- Treat every unintended behavior agents encounter, in any context, as a prompt to diagnose and fix the underlying issue; correct the observed behavior as a consequence rather than targeting it directly.
+- Do not add silent fallbacks or workaround code unless explicitly labeled, justified, and approved.
 - Verify fixes end-to-end before declaring them done; say exactly what could not be verified.
 - Treat a passing metric, scorecard, or count as completion evidence only after confirming it directly covers the user's stated requirement.
 - Plain language, always: claim first, common words, no unexplained codenames; first-read test.

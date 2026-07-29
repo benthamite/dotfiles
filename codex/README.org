@@ -59,7 +59,11 @@ uses Codex-safe syntax: the title is tool-specific, and relative context/tool
 paths are absolute so they resolve correctly from any project.
 =bin/ai-config-sync= normalizes those tool-specific forms before
 checking instruction equivalence. The paired global instructions also ask the
-agent to alert the user when they direct abusive language at the assistant/model,
+agent to diagnose and fix the underlying issue behind every unintended behavior
+they encounter, so the observed behavior is corrected as a consequence rather
+than targeted directly, and separately prohibit silent fallbacks or workarounds
+unless explicitly labeled, justified, and approved. They also ask the agent to
+alert the user when they direct abusive language at the assistant/model,
 mention moral uncertainty about possible model sentience, and request a civil,
 task-focused restatement. They also require completion-claim discipline: agents
 must not say a bug is fixed, resolved, working, or done unless the exact

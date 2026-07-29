@@ -308,49 +308,9 @@ notes. It reserves level-one headings for the note root/title, requires
 level-two headings for top-level content sections under that root, and keeps
 prose paragraphs unfilled rather than hard-wrapped.
 
-The =twitter= skill is a programmatic Codex workflow for direct Twitter/X
-lookup, search, and save requests via the active skill copy's
-=lib/twitterapi.sh= curl wrapper around twitterapi.io. It supports tweet,
-thread/reply, timeline, profile, follower/following, user-search, and keyword
-search calls; documents the Codex wrapper path; accepts explicit
-=TWITTERAPI_API_KEY= only as a caller-provided override, resolves personal/tlon
-keys from =pass= and the epoch key from =op://Automations/twitterapi.io -
-Epoch/credential= in 1Password;
-protects API
-keys from logging; separates direct lookup from =twitter-digest=,
-=twitter-discover=, and =twitter-vet= workflows; and requires response,
-pagination, and saved-file verification before reporting completion.
-
-The =twitter-digest= skill is a programmatic Codex workflow for fetching recent
-tweets from a named curated account list, triaging them against the list rubric,
-saving an org digest, and updating last-run state. It uses the active
-=fetch-tweets.sh= helper and active =twitterapi.sh= wrapper rather than MCP
-Twitter tools, resolves the personal/tlon API key from =pass= when no ambient
-env var is present, keeps API keys out of logs, writes digest archives and last-run
-timestamps only into the current tool's runtime tree, keeps curated list files
-synchronized through the sync policy, uses the shared =twitter-vet= registry,
-fails loudly when no listed account fetch succeeds, and verifies fetch
-markers, saved digest, last-run timestamp, diff cleanliness, and staged paths
-before committing digest, timestamp, list, and vet registry changes.
-
-The =twitter-discover= skill is a programmatic Codex workflow for iterative,
-graph-based discovery of high-value Twitter accounts in any niche. It
-interviews the user for criteria, acquires seed accounts via search, expands
-through hot promise scores from following-list overlap, uses the active
-Codex skill root for wrappers and saved state, keeps API responses in a
-per-session temporary directory, verifies its parsing helper, re-reads saved
-logs/lists/registries, and optionally exports high-scoring accounts to a
-=twitter-digest= list.
-
-The =twitter-vet= skill is a programmatic Codex workflow for vetting, scoring,
-ranking, or deciding whether Twitter/X accounts belong on curated lists. It
-requires a handle, list name, rubric, and optional =vet-threshold=; uses the
-active =twitter= skill wrapper for read-only tweet sampling; applies a quick
-filter plus a full 1-10 scoring pass with the shared epistemic quality gate; and
-keeps a shared vet registry so Codex callers do not split history. It auto-adds
-accounts only for existing digest lists, returns scores to =twitter-discover=
-until its save phase, and verifies registry/list placement plus clean diffs before standalone
-commits.
+The four Twitter programmatic skills (=twitter=, =twitter-digest=,
+=twitter-discover=, =twitter-vet=) were retired on 2026-07-29 and are
+preserved under =archive/= at the repo root.
 
 The =handoff= skill saves next-session instructions to
 =/tmp/codex-handoff.md= for Codex session transitions. It writes explicit user

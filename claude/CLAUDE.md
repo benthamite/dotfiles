@@ -43,9 +43,9 @@ For MCP server placement, inventory, and account-specific MCP notes, read `conte
 
 ## Service access tools
 
-Use these local tools to connect to external services: Anna's Archive `annas-mcp`, Twitter/X `claude/skills/twitter/lib/twitterapi.sh`, Gmail `claude/bin/gmail.py`, Google Sheets `claude/bin/sheets.py`, Slack `claude/bin/slack.py`, Google Calendar `gcalcli`, Google Docs/Drive `gdoc`, GitHub `gh`.
+Use these local tools to connect to external services: Anna's Archive `annas-mcp`, Gmail `claude/bin/gmail.py`, Google Sheets `claude/bin/sheets.py`, Slack `claude/bin/slack.py`, Google Calendar `gcalcli`, Google Docs/Drive `gdoc`, GitHub `gh`.
 
-For Google account/auth details, read `context/google-services.md`. For Twitter workflows, use the `twitter` skill.
+For Google account/auth details, read `context/google-services.md`.
 
 When opening Chrome manually for browser-only service flows, use `chrome-profile-open <alias> URL`; configure aliases with `chrome-profile-open --setup <alias>`. Project wrappers may call it, e.g. `trajectory-open URL` for Trajectory/CR pages.
 

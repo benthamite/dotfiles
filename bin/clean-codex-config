@@ -1,0 +1,188 @@
+#!/usr/bin/env python3
+"""Remove stale machine-written trust tables from Codex config.toml."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import re
+import stat
+import sys
+import tempfile
+import tomllib
+from functools import cache
+from pathlib import Path
+
+
+def plural(count: int, singular: str, plural_form: str) -> str:
+    label = singular if count == 1 else plural_form
+    return f"{count} {label}"
+
+
+def snake_case(name: str) -> str:
+    first_pass = re.sub(r"(.)([A-Z][a-z]+)", r"\1_\2", name)
+    return re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", first_pass).lower()
+
+
+@cache
+def load_hook_events(path_text: str) -> dict[str, list[object]] | None:
+    path = Path(os.path.expanduser(path_text))
+    if not path.is_file():
+        return None
+    with path.open("rb") as handle:
+        payload = json.load(handle)
+    hooks = payload.get("hooks", {})
+    if not isinstance(hooks, dict):
+        raise ValueError(f"{path}: top-level hooks value is not an object")
+    return {snake_case(name): groups for name, groups in hooks.items()}
+
+
+def hook_state_is_live(spec: str) -> bool:
+    try:
+        hooks_path, event, group_text, hook_text = spec.rsplit(":", 3)
+        group_index = int(group_text)
+        hook_index = int(hook_text)
+    except ValueError:
+        # Preserve unfamiliar state keys rather than guessing that they are stale.
+        return True
+
+    events = load_hook_events(hooks_path)
+    if events is None:
+        return False
+    groups = events.get(event)
+    if not isinstance(groups, list) or not 0 <= group_index < len(groups):
+        return False
+    group = groups[group_index]
+    if not isinstance(group, dict):
+        return False
+    hooks = group.get("hooks")
+    return isinstance(hooks, list) and 0 <= hook_index < len(hooks)
+
+
+def stale_entries(config: dict[str, object]) -> tuple[list[str], list[str]]:
+    projects = config.get("projects", {})
+    if not isinstance(projects, dict):
+        raise ValueError("projects must be a table")
+    stale_projects = [
+        path
+        for path in projects
+        if not Path(os.path.expanduser(path)).exists()
+    ]
+
+    hooks = config.get("hooks", {})
+    if not isinstance(hooks, dict):
+        raise ValueError("hooks must be a table")
+    states = hooks.get("state", {})
+    if not isinstance(states, dict):
+        raise ValueError("hooks.state must be a table")
+    stale_hooks = [spec for spec in states if not hook_state_is_live(spec)]
+    return stale_projects, stale_hooks
+
+
+def table_headers(projects: list[str], hooks: list[str]) -> set[str]:
+    headers = {
+        f"[projects.{json.dumps(path)}]"
+        for path in projects
+    }
+    headers.update(
+        f"[hooks.state.{json.dumps(spec)}]"
+        for spec in hooks
+    )
+    return headers
+
+
+def remove_tables(text: str, headers: set[str]) -> str:
+    kept: list[str] = []
+    skip = False
+    for line in text.splitlines(keepends=True):
+        if line.startswith("["):
+            skip = line.rstrip("\r\n") in headers
+        if not skip:
+            kept.append(line)
+    return "".join(kept)
+
+
+def atomic_write(path: Path, text: str) -> None:
+    mode = stat.S_IMODE(path.stat().st_mode)
+    descriptor, temporary = tempfile.mkstemp(
+        dir=path.parent,
+        prefix=f".{path.name}.",
+    )
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            handle.write(text)
+        os.chmod(temporary, mode)
+        os.replace(temporary, path)
+    except BaseException:
+        try:
+            os.unlink(temporary)
+        except FileNotFoundError:
+            pass
+        raise
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+    )
+    parser.add_argument(
+        "--config",
+        type=Path,
+        default=Path("~/.codex/config.toml").expanduser(),
+        help="Codex config file (default: ~/.codex/config.toml)",
+    )
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument(
+        "--check",
+        action="store_true",
+        help="report stale entries without changing the file",
+    )
+    mode.add_argument(
+        "--write",
+        action="store_true",
+        help="remove stale entries atomically",
+    )
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+    config_path = args.config.expanduser()
+    try:
+        original = config_path.read_text(encoding="utf-8")
+        parsed = tomllib.loads(original)
+        stale_projects, stale_hooks = stale_entries(parsed)
+    except (OSError, json.JSONDecodeError, tomllib.TOMLDecodeError, ValueError) as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 2
+
+    if not stale_projects and not stale_hooks:
+        print(f"No stale Codex config entries found in {config_path}")
+        return 0
+
+    project_count = plural(
+        len(stale_projects),
+        "stale project trust entry",
+        "stale project trust entries",
+    )
+    hook_count = plural(
+        len(stale_hooks),
+        "stale hook trust entry",
+        "stale hook trust entries",
+    )
+    if args.check:
+        print(f"Found {project_count} and {hook_count} in {config_path}")
+        return 1
+
+    cleaned = remove_tables(
+        original,
+        table_headers(stale_projects, stale_hooks),
+    )
+    atomic_write(config_path, cleaned)
+    print(f"Removed {project_count} and {hook_count} from {config_path}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

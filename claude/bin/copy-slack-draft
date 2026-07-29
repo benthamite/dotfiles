@@ -8,16 +8,23 @@ import sys
 from pathlib import Path
 
 
-def run_emacs_eval(expr: str) -> None:
+def run_emacs_eval(expr: str) -> str:
     result = subprocess.run(
         ["emacsclient", "--eval", expr],
         check=False,
         capture_output=True,
         text=True,
     )
+    out = (result.stdout or "").strip()
     if result.returncode != 0:
-        detail = (result.stderr or result.stdout).strip()
+        detail = (result.stderr or out).strip()
         raise RuntimeError(detail or "emacsclient failed")
+    # emacsclient exits 0 even when the form signals an error; it reports the
+    # failure on stdout instead. Without this check every failure looks like a
+    # success.
+    if out.startswith("*ERROR*"):
+        raise RuntimeError(out)
+    return out
 
 
 def elisp_string(value: str) -> str:
@@ -68,16 +75,29 @@ def prefill_slack_reply(permalink: str, path: Path) -> None:
         "           room-id (oref team name))) "
         "  (slack-open-message team room ts thread-ts ts nil))) "
         "(sit-for 1.5) "
-        "(unless (fboundp (quote slack-thread-reply)) "
-        "  (require (quote slack-message-buffer) nil t)) "
-        "(unless (fboundp (quote slack-thread-reply)) "
-        '(error "slack-thread-reply is not available")) '
-        "(call-interactively (quote slack-thread-reply)) "
-        "(sit-for 0.5) "
-        f"(insert-file-contents {elisp_string(str(path))}) "
-        "nil)"
+        # emacs-slack composes the reply in the thread buffer's own lui input
+        # area, at lui-input-marker. There is no separate composer buffer, so
+        # calling slack-thread-reply and then inserting leaves the text
+        # nowhere visible.
+        "(let ((buf (car (seq-filter "
+        "        (lambda (b) (and (string-prefix-p \"*slack-thread: \" (buffer-name b)) "
+        "                         (buffer-local-value (quote lui-input-marker) b))) "
+        "        (buffer-list))))) "
+        "  (unless buf "
+        '    (error "No Slack thread buffer with a reply input is open")) '
+        "  (with-current-buffer buf "
+        "    (goto-char lui-input-marker) "
+        "    (delete-region lui-input-marker (point-max)) "
+        f"    (insert-file-contents {elisp_string(str(path))}) "
+        "    (goto-char (point-max)) "
+        "    (let ((staged (buffer-substring-no-properties "
+        "                    lui-input-marker (point-max)))) "
+        "      (when (string-empty-p (string-trim staged)) "
+        '        (error "Draft did not land in the reply input of %s" '
+        "               (buffer-name buf))) "
+        "      (buffer-name buf)))))"
     )
-    run_emacs_eval(expr)
+    return run_emacs_eval(expr)
 
 
 def main() -> int:
@@ -127,14 +147,14 @@ def main() -> int:
         return 0
 
     try:
-        prefill_slack_reply(args.permalink, draft_path)
+        buffer_name = prefill_slack_reply(args.permalink, draft_path)
     except RuntimeError as exc:
         sys.stderr.write(
             "ERROR: failed to open Slack reply composer and insert draft in "
             f"Emacs: {exc}\n"
         )
         return 1
-    print("Opened Slack reply composer and inserted draft in Emacs")
+    print(f"Inserted draft into the Slack reply input of {buffer_name}")
     return 0
 
 

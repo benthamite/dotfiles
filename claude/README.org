@@ -776,9 +776,14 @@ visible sends or dispatches; creation and cleanup of external/shared artifacts
 must be authorized together.
 
 Every live attempt must prove that the running surface loaded the recorded
-source or artifact identity. A manual dispatch proves only the layers it
-exercises, not scheduler timing, event wiring, or trigger permissions; those
-require an actual scheduler-triggered invocation.
+source or artifact identity. A manual dispatch may prove the job body, remote
+runtime, secrets, network, and delivery initiated by that dispatch, but not
+scheduler timing, event wiring, trigger permissions, or scheduled delivery; any
+scheduled-invocation or scheduled-delivery criterion requires an actual
+scheduler trigger.
+
+See the authoritative skill for supporting checks, the failed-run return loop,
+cleanup confirmation, and blocked or failed reporting.
 
 **** handoff
 :PROPERTIES:

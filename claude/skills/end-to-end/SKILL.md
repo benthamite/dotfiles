@@ -54,9 +54,13 @@ checks support this workflow but cannot replace its decisive live observation.
      then repeat steps 4–6 against the change. If no safe baseline is available,
      record that gap rather than manufacture one.
    - **Existing change or new feature with implementation in scope:** exercise
-     the current acceptance path. Do not require or manufacture an old failure.
-     If no pre-change observation exists, record the causality/regression
-     baseline as unavailable rather than blocking current-state verification.
+     the current acceptance path once it is runnable. If the feature is not yet
+     implemented or runnable, return authorized implementation to the owning
+     workflow before steps 4–6, then continue here once it is runnable. Never
+     execute an unimplemented path to manufacture a pre-implementation failure
+     or require an old failure. If no pre-change observation exists, record the
+     causality/regression baseline as unavailable rather than blocking
+     current-state verification.
 
 4. **Run applicable automated and project checks.** Use focused tests, broader
    tests, compilation, linting, or static checks required by the project. Treat
@@ -84,9 +88,10 @@ checks support this workflow but cannot replace its decisive live observation.
 
    A manual job dispatch proves only the layers it demonstrably exercises,
    which may include the job body, remote runtime, secrets, network, and
-   delivery. It does not prove scheduler timing, event wiring, or
-   scheduler-trigger permissions; those require evidence from an actual
-   scheduler-triggered invocation.
+   delivery initiated by that manual dispatch. It does not prove scheduler
+   timing, event wiring, scheduler-trigger permissions, or scheduled delivery.
+   Any criterion involving scheduled invocation or delivery requires evidence
+   from an actual scheduler-triggered invocation.
 
 7. **Fail closed on the result.** If the decisive run fails, its threshold is
    missed, provenance is unknown, or a required action is unauthorized, do not

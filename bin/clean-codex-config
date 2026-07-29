@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import os
 import re
@@ -32,6 +33,8 @@ def load_hook_events(path_text: str) -> dict[str, list[object]] | None:
         return None
     with path.open("rb") as handle:
         payload = json.load(handle)
+    if not isinstance(payload, dict):
+        raise ValueError(f"{path}: top-level JSON value is not an object")
     hooks = payload.get("hooks", {})
     if not isinstance(hooks, dict):
         raise ValueError(f"{path}: top-level hooks value is not an object")
@@ -80,27 +83,88 @@ def stale_entries(config: dict[str, object]) -> tuple[list[str], list[str]]:
     return stale_projects, stale_hooks
 
 
-def table_headers(projects: list[str], hooks: list[str]) -> set[str]:
-    headers = {
-        f"[projects.{json.dumps(path)}]"
-        for path in projects
-    }
-    headers.update(
-        f"[hooks.state.{json.dumps(spec)}]"
-        for spec in hooks
-    )
-    return headers
+HEADER_MARKER = "__clean_codex_config_table_marker__"
 
 
-def remove_tables(text: str, headers: set[str]) -> str:
+def header_path(line: str) -> tuple[str, ...] | None:
+    stripped = line.lstrip()
+    if not stripped.startswith("["):
+        return None
+    if stripped.startswith("[["):
+        return ()
+
+    try:
+        probe = tomllib.loads(
+            f"{stripped.rstrip()}\n{HEADER_MARKER} = true\n"
+        )
+    except tomllib.TOMLDecodeError:
+        # Bracket-prefixed lines inside multiline arrays or strings are values,
+        # not document-level table declarations.
+        return None
+
+    def find_marker(value: object, path: tuple[str, ...]) -> tuple[str, ...] | None:
+        if not isinstance(value, dict):
+            return None
+        if HEADER_MARKER in value:
+            return path
+        for key, child in value.items():
+            found = find_marker(child, (*path, key))
+            if found is not None:
+                return found
+        return None
+
+    found = find_marker(probe, ())
+    if found is None:
+        raise ValueError(f"Cannot identify TOML table header: {line.rstrip()}")
+    return found
+
+
+def remove_tables(text: str, tables: set[tuple[str, ...]]) -> str:
     kept: list[str] = []
     skip = False
     for line in text.splitlines(keepends=True):
-        if line.startswith("["):
-            skip = line.rstrip("\r\n") in headers
+        path = header_path(line)
+        if path is not None:
+            skip = path in tables
         if not skip:
             kept.append(line)
     return "".join(kept)
+
+
+def without_empty_tables(value: object) -> object:
+    if not isinstance(value, dict):
+        return value
+    normalized = {
+        key: without_empty_tables(child)
+        for key, child in value.items()
+    }
+    return {
+        key: child
+        for key, child in normalized.items()
+        if child != {}
+    }
+
+
+def validate_cleaned_config(
+    original: dict[str, object],
+    cleaned_text: str,
+    stale_projects: list[str],
+    stale_hooks: list[str],
+) -> None:
+    expected = copy.deepcopy(original)
+    projects = expected.get("projects", {})
+    for path in stale_projects:
+        projects.pop(path)
+    states = expected.get("hooks", {}).get("state", {})
+    for spec in stale_hooks:
+        states.pop(spec)
+
+    actual = tomllib.loads(cleaned_text)
+    if without_empty_tables(actual) != without_empty_tables(expected):
+        raise ValueError(
+            "cleaned TOML does not equal the original configuration minus "
+            "the selected stale tables"
+        )
 
 
 def atomic_write(path: Path, text: str) -> None:
@@ -148,8 +212,9 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> int:
     args = parse_args()
-    config_path = args.config.expanduser()
+    display_path = args.config.expanduser()
     try:
+        config_path = display_path.resolve(strict=True)
         original = config_path.read_text(encoding="utf-8")
         parsed = tomllib.loads(original)
         stale_projects, stale_hooks = stale_entries(parsed)
@@ -158,7 +223,7 @@ def main() -> int:
         return 2
 
     if not stale_projects and not stale_hooks:
-        print(f"No stale Codex config entries found in {config_path}")
+        print(f"No stale Codex config entries found in {display_path}")
         return 0
 
     project_count = plural(
@@ -172,15 +237,30 @@ def main() -> int:
         "stale hook trust entries",
     )
     if args.check:
-        print(f"Found {project_count} and {hook_count} in {config_path}")
+        print(f"Found {project_count} and {hook_count} in {display_path}")
         return 1
 
-    cleaned = remove_tables(
-        original,
-        table_headers(stale_projects, stale_hooks),
+    tables = {
+        ("projects", path)
+        for path in stale_projects
+    }
+    tables.update(
+        ("hooks", "state", spec)
+        for spec in stale_hooks
     )
-    atomic_write(config_path, cleaned)
-    print(f"Removed {project_count} and {hook_count} from {config_path}")
+    try:
+        cleaned = remove_tables(original, tables)
+        validate_cleaned_config(
+            parsed,
+            cleaned,
+            stale_projects,
+            stale_hooks,
+        )
+        atomic_write(config_path, cleaned)
+    except (OSError, tomllib.TOMLDecodeError, ValueError) as error:
+        print(f"Error: {error}", file=sys.stderr)
+        return 2
+    print(f"Removed {project_count} and {hook_count} from {display_path}")
     return 0
 
 

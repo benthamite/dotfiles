@@ -1,8 +1,9 @@
 # GitHub repositories where agents are allowed to perform write operations.
 #
-# Format: one OWNER/REPO per line. Blank lines and comments are ignored.
+# Format: one OWNER/REPO or OWNER/* account wildcard per line. Blank lines and
+# comments are ignored.
 #
-# Keep this list empty by default. Add only repositories Pablo personally
-# created and explicitly wants agents to be able to mutate.
+# Add only repositories or accounts Pablo explicitly wants agents to mutate.
+benthamite/*
 trajectory-labs-pbc/reasoning-tasks
 epoch-research/bench-scraper

@@ -75,11 +75,10 @@ Codex-safe path references before comparing paired instruction files.
 agent-initiated GitHub writes. Claude and Codex hooks block =git push= and
 write-style =gh= operations, including PRs, issues, secrets, workflow runs,
 releases, repo mutations, and write-style =gh api= calls, unless the target
-repository is explicitly permitted. The Claude shell guard also permits repos
-administered by the authenticated =gh= user, checked live through GitHub
-permissions and failing closed to the allowlist; Codex remains allowlist-only.
-The file is intentionally empty by default; entries should be added only for
-repositories Pablo personally created and explicitly wants agents to mutate.
+repository matches an exact =OWNER/REPO= entry or an =OWNER/*= account
+wildcard. The =benthamite/*= entry permits writes to repositories in Pablo's
+GitHub account. Entries should be added only for repositories or accounts Pablo
+explicitly wants agents to mutate.
 
 The allowlist and its guard scripts are self-protected by edit hooks. Agents
 may inspect them, but they may not edit the allowlist, remove tracked or live

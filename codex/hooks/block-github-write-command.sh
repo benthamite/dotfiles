@@ -4,7 +4,8 @@
 # This is a hard gate for the incident class where an agent creates PRs,
 # pushes branches, sets secrets, or otherwise mutates an organization repo
 # after inferring permission from context. Read-only GitHub inspection remains
-# allowed. Write operations are allowed only when the target repo appears in
+# allowed. Write operations are allowed when the target repo matches an exact
+# OWNER/REPO entry or an OWNER/* account wildcard in
 # agents/github-write-allowlist.txt.
 #
 # Matcher: Bash|exec_command|functions.exec|functions.exec_command
@@ -33,21 +34,21 @@ deny() {
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",
       "permissionDecision": "deny",
-      "permissionDecisionReason": ("BLOCKED: " + $label + ".\n\n" + $detail + "\n\nGitHub writes are allowed only for repos listed in `~/My Drive/dotfiles/agents/github-write-allowlist.txt`. The allowlist is empty by default and should contain only repos Pablo personally created.")
+      "permissionDecisionReason": ("BLOCKED: " + $label + ".\n\n" + $detail + "\n\nGitHub writes are allowed only when the target matches an exact OWNER/REPO entry or OWNER/* account wildcard in `~/My Drive/dotfiles/agents/github-write-allowlist.txt`.")
     }
   }'
   exit 0
 }
 
 normalize_repo() {
-  local value="$1"
-  value="${value#https://github.com/}"
-  value="${value#http://github.com/}"
-  value="${value#ssh://git@github.com/}"
-  value="${value#git@github.com:}"
-  value="${value%.git}"
-  value="${value%%/}"
-  printf '%s' "$value" | tr '[:upper:]' '[:lower:]'
+    local value="$1"
+    value="${value#https://github.com/}"
+    value="${value#http://github.com/}"
+    value="${value#ssh://git@github.com/}"
+    value="${value#git@github.com:}"
+    value="${value%.git}"
+    value="${value%%/}"
+    printf '%s' "$value" | tr '[:upper:]' '[:lower:]'
 }
 
 repo_from_urlish() {
@@ -103,10 +104,19 @@ repo_from_local_git() {
 }
 
 repo_allowed_p() {
-  local repo
+  local repo pattern
   repo=$(normalize_repo "$1")
   [ -f "$ALLOWLIST" ] || return 1
-  awk '
+  while IFS= read -r pattern; do
+      case "$pattern" in
+	  */\*)
+              [[ "$repo" == "${pattern%\*}"* ]] && return 0
+              ;;
+	  *)
+              [ "$repo" = "$pattern" ] && return 0
+              ;;
+      esac
+  done < <(awk '
     /^[[:space:]]*($|#)/ { next }
     {
       repo=$1
@@ -115,68 +125,69 @@ repo_allowed_p() {
       gsub(/\.git$/, "", repo)
       print tolower(repo)
     }
-  ' "$ALLOWLIST" | grep -Fxq "$repo"
+  ' "$ALLOWLIST")
+  return 1
 }
 
 require_allowed_repo() {
-  local action="$1"
-  local repo="$2"
-  if [ -z "$repo" ]; then
-    deny "$action has no unambiguous repository target" "The guard blocks ambiguous GitHub writes. Make the target repo explicit and add it to the allowlist only if Pablo personally created it."
-  fi
-  if ! repo_allowed_p "$repo"; then
-    deny "$action targets non-allowlisted repo $repo" "Do not infer write permission from org membership, affected-repo context, maintainer requests, or a general \"proceed\"."
-  fi
+    local action="$1"
+    local repo="$2"
+    if [ -z "$repo" ]; then
+	deny "$action has no unambiguous repository target" "The guard blocks ambiguous GitHub writes. Make the target repo explicit; use the allowlist only after Pablo explicitly authorizes agent writes to it."
+    fi
+    if ! repo_allowed_p "$repo"; then
+	deny "$action targets non-allowlisted repo $repo" "Do not infer write permission from org membership, affected-repo context, maintainer requests, or a general \"proceed\"."
+    fi
 }
 
 target_repo_for_gh() {
-  local repo
-  repo=$(repo_from_gh_repo_flag || true)
-  if [ -n "$repo" ]; then
-    printf '%s' "$repo"
-    return 0
-  fi
-  repo=$(repo_from_local_git || true)
-  [ -n "$repo" ] && printf '%s' "$repo"
+    local repo
+    repo=$(repo_from_gh_repo_flag || true)
+    if [ -n "$repo" ]; then
+	printf '%s' "$repo"
+	return 0
+    fi
+    repo=$(repo_from_local_git || true)
+    [ -n "$repo" ] && printf '%s' "$repo"
 }
 
 target_repo_for_api() {
-  local repo
-  repo=$(repo_from_gh_api_endpoint || true)
-  if [ -n "$repo" ]; then
-    printf '%s' "$repo"
-    return 0
-  fi
-  target_repo_for_gh
+    local repo
+    repo=$(repo_from_gh_api_endpoint || true)
+    if [ -n "$repo" ]; then
+	printf '%s' "$repo"
+	return 0
+    fi
+    target_repo_for_gh
 }
 
 is_gh_api_write() {
-  echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+api\b' || return 1
+    echo "$CMD" | grep -qE '(^|[[:space:];|&])gh[[:space:]]+api\b' || return 1
 
-  # Explicit read methods are allowed unless write fields are present without
-  # --method GET. `gh api graphql -f query=...` is read-only unless the query
-  # includes a GraphQL mutation.
-  if echo "$CMD" | grep -qE '(^|[[:space:]])(--method|-X)(=|[[:space:]]+)(POST|PUT|PATCH|DELETE)\b'; then
-    return 0
-  fi
-  if echo "$CMD" | grep -qE '(^|[[:space:]])(DELETE|PATCH|POST|PUT)\b'; then
-    return 0
-  fi
-  if echo "$CMD" | grep -qE '(^|[[:space:]])graphql([[:space:]]|$)' && \
-     echo "$CMD" | grep -qE '\bmutation\b'; then
-    return 0
-  fi
-  if echo "$CMD" | grep -qE '(^|[[:space:]])(-f|-F|--field|--raw-field|--input)(=|[[:space:]]+)'; then
-    if echo "$CMD" | grep -qE '(^|[[:space:]])(--method|-X)(=|[[:space:]]+)GET\b'; then
-      return 1
+    # Explicit read methods are allowed unless write fields are present without
+    # --method GET. `gh api graphql -f query=...` is read-only unless the query
+    # includes a GraphQL mutation.
+    if echo "$CMD" | grep -qE '(^|[[:space:]])(--method|-X)(=|[[:space:]]+)(POST|PUT|PATCH|DELETE)\b'; then
+	return 0
+    fi
+    if echo "$CMD" | grep -qE '(^|[[:space:]])(DELETE|PATCH|POST|PUT)\b'; then
+	return 0
     fi
     if echo "$CMD" | grep -qE '(^|[[:space:]])graphql([[:space:]]|$)' && \
-       ! echo "$CMD" | grep -qE '\bmutation\b'; then
-      return 1
+	    echo "$CMD" | grep -qE '\bmutation\b'; then
+	return 0
     fi
-    return 0
-  fi
-  return 1
+    if echo "$CMD" | grep -qE '(^|[[:space:]])(-f|-F|--field|--raw-field|--input)(=|[[:space:]]+)'; then
+	if echo "$CMD" | grep -qE '(^|[[:space:]])(--method|-X)(=|[[:space:]]+)GET\b'; then
+	    return 1
+	fi
+	if echo "$CMD" | grep -qE '(^|[[:space:]])graphql([[:space:]]|$)' && \
+		! echo "$CMD" | grep -qE '\bmutation\b'; then
+	    return 1
+	fi
+	return 0
+    fi
+    return 1
 }
 
 # Extract the single literal directory this command will run in, if it has one.

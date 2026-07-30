@@ -298,6 +298,25 @@ class AiConfigSyncAuditTests(unittest.TestCase):
 
         self.assertEqual([], problems)
 
+    def test_stale_skill_override_without_record_is_reported(self):
+        home = Path(tempfile.mkdtemp())
+        self.addCleanup(lambda: __import__("shutil").rmtree(home, ignore_errors=True))
+        settings = home / ".claude" / "settings.local.json"
+        settings.parent.mkdir(parents=True)
+        settings.write_text(json.dumps({"skillOverrides": {"ghost-skill": "off"}}))
+
+        problems: list[str] = []
+        with (
+            mock.patch.object(self.module, "disabled_skill_records", return_value={}),
+            mock.patch("pathlib.Path.home", return_value=home),
+        ):
+            self.module.check_native_disabled_skills(problems)
+
+        self.assertIn(
+            "Claude skillOverrides off entry has no skills-disabled.json record: ghost-skill",
+            problems,
+        )
+
     def test_parent_drive_absent_workspace_is_skipped(self):
         workspace = self.make_parent_drive_workspace()
 

@@ -30,16 +30,6 @@ claude/context/voice-samples.md
 !/.claude/skills/**
 !/.claude/programmatic-skills/
 !/.claude/programmatic-skills/**
-!/google-drive/.claude/
-/google-drive/.claude/*
-!/google-drive/.claude/skills/
-/google-drive/.claude/skills/*
-!/google-drive/.claude/skills/fix-drive-errors/
-/google-drive/.claude/skills/fix-drive-errors/*
-!/google-drive/.claude/skills/fix-drive-errors/SKILL.md
-!/google-drive/.claude/skills/nosync/
-/google-drive/.claude/skills/nosync/*
-!/google-drive/.claude/skills/nosync/SKILL.md
 claude/skills/*/node_modules
 claude/settings.json
 !CLAUDE.md

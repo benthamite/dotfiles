@@ -8,7 +8,7 @@ Claude Code can load MCP servers through five mechanisms:
 
 | Mechanism | Source of truth | Loaded when | Edit how |
 |-----------|-----------------|-------------|----------|
-| User-level | `~/.claude.json` top-level `mcpServers` | Every session, every directory | Edit `~/.claude.json`, then run `claude/bin/sync-mcp-servers.sh` to merge additions and updates into `~/.claude-epoch/`, `~/.claude-personal/`, `~/.claude-tlon/`, and `~/.claude-trajectory/` |
+| User-level | `~/.claude.json` top-level `mcpServers` | Every session, every directory | Edit `~/.claude.json`, then run `claude/bin/sync-mcp-servers.sh` to propagate to `~/.claude-epoch/`, `~/.claude-personal/`, and `~/.claude-tlon/` |
 | Project-local | `<project>/.mcp.json` | Only when CWD is that project | Edit the file directly; no sync needed |
 | claude.ai connectors | Server-side, no local file | Every session, regardless of CWD | Manage in claude.ai Settings > Connectors |
 | Plugin-managed | `~/.claude/plugins/...` | When the plugin is enabled | Use `/plugin enable/disable <name>` |
@@ -20,16 +20,14 @@ When source code for an MCP server needs to be cloned locally, use `~/My Drive/d
 
 ## Multi-account notes
 
-Claude Code reads `.claude.json` from `$CLAUDE_CONFIG_DIR`, not `$HOME`, when that variable is set. The canonical source of shared user-level additions and updates is `~/.claude.json`; run `claude/bin/sync-mcp-servers.sh` after changing them.
+Claude Code reads `.claude.json` from `$CLAUDE_CONFIG_DIR`, not `$HOME`, when that variable is set. The canonical user-level source of truth is `~/.claude.json`; run `claude/bin/sync-mcp-servers.sh` after adding or removing any user-level MCP server there.
 
-The sync is non-destructive. It deep-merges each canonical server into its account copy: canonical additions and updates win for shared non-`env` fields, account-only servers and fields survive, and existing per-account `env` values win key conflicts. Deleting a server or field from the canonical file does not delete it from account configs; remove it explicitly from every affected per-account `.claude.json`.
-
-When an MCP server needs different credentials per account, place `op://` references or plain text values directly in each per-account `.claude.json` file's MCP server `env` block. Claude Code resolves `op://` natively. To add a new account-specific secret:
+When an MCP server needs different credentials per account, place `op://` references or plain text values directly in each per-account `.claude.json` file's MCP server `env` block. Claude Code resolves `op://` natively. The sync function deep-merges `mcpServers` per server, preserving per-account `env` entries. To add a new account-specific secret:
 
 1. Add the `env` entry to each per-account `.claude.json`, such as `~/.claude-tlon/.claude.json` or `~/.claude-epoch/.claude.json`.
 2. Leave the canonical `~/.claude.json` with an empty `env` for that server.
 
-Claude-in-Chrome has three automatic account/profile pairings: personal, epoch, and tlon. Claude Code has a fourth OAuth account, trajectory; browser-only Trajectory flows use the separate `trajectory-open` profile alias rather than an automatic pairing. Full Chrome integration details live in `README.org` under "Chrome integration and multi-account".
+Chrome integration uses three Chrome profiles, one per Claude Code account. Browser automation from a given Claude Code session targets the Chrome profile its account is paired to. Full Chrome integration details live in `README.org` under "Chrome integration and multi-account".
 
 ## Current inventory
 

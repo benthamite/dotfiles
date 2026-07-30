@@ -321,9 +321,10 @@ Notable current values:
 :END:
 
 Machine-specific tool whitelists and native skill disables. The live file lives
-at =~/.claude/settings.local.json= as a regular file, not tracked. The tracked
-=claude/settings.local.json= is only a baseline allowlist, not the live source
-of truth.
+at =~/.claude/settings.local.json= as a regular file, not tracked. A tracked
+=claude/settings.local.json= baseline copy existed until the 2026-07-29 config
+audit; nothing installed or read it, so it was removed — the live file is the
+only source of truth.
 
 *** CLAUDE.md
 :PROPERTIES:

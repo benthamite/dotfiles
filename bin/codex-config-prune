@@ -1,0 +1,145 @@
+#!/usr/bin/env python3
+"""Prune stale trust records from the Codex config.toml.
+
+The Codex desktop app appends [projects."<path>"] trust entries and
+[hooks.state."<hooks.json>:<event>:<group>:<index>"] hash records but never
+removes them, so the file accumulates paths that no longer exist and hook
+records that no longer map to any active hook. This script removes:
+
+- [projects."<path>"] sections whose path is missing from disk, and
+- [hooks.state."..."] sections whose hooks.json file is missing or whose
+  event/group/index triple is out of bounds in that file.
+
+Usage: codex-config-prune [--dry-run] [CONFIG_TOML]
+
+Defaults to the tracked dotfiles copy. Run it periodically or before
+committing app-written config.toml drift.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import re
+import sys
+import tomllib
+from pathlib import Path
+
+DEFAULT_CONFIG = Path.home() / "My Drive" / "dotfiles" / "codex" / "config.toml"
+
+PROJECT_RE = re.compile(r'^\[projects\."(.+)"\]\s*$')
+HOOK_STATE_RE = re.compile(r'^\[hooks\.state\."(.+)"\]\s*$')
+
+
+def snake_to_camel(event: str) -> str:
+    return "".join(word.capitalize() for word in event.split("_"))
+
+
+def load_hook_shapes(hooks_path: Path) -> dict[str, list[int]] | None:
+    """Return {CamelCaseEvent: [len(group.hooks), ...]} or None if unreadable."""
+    try:
+        data = json.loads(hooks_path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return None
+    hooks = data.get("hooks", data)
+    if not isinstance(hooks, dict):
+        return None
+    shapes: dict[str, list[int]] = {}
+    for event, groups in hooks.items():
+        if isinstance(groups, list):
+            shapes[event] = [
+                len(group.get("hooks", [])) if isinstance(group, dict) else 0
+                for group in groups
+            ]
+    return shapes
+
+
+def hook_state_is_live(key: str, shape_cache: dict[Path, dict | None]) -> bool:
+    parts = key.rsplit(":", 3)
+    if len(parts) != 4:
+        return True  # unknown shape: keep rather than destroy
+    file_str, event, group_str, index_str = parts
+    hooks_path = Path(os.path.expanduser(file_str))
+    if hooks_path not in shape_cache:
+        shape_cache[hooks_path] = load_hook_shapes(hooks_path)
+    shapes = shape_cache[hooks_path]
+    if shapes is None:
+        return False  # hooks.json gone or unreadable: record is stale
+    try:
+        group, index = int(group_str), int(index_str)
+    except ValueError:
+        return True
+    counts = shapes.get(snake_to_camel(event))
+    if counts is None:
+        return False
+    return group < len(counts) and index < counts[group]
+
+
+def split_blocks(lines: list[str]) -> list[list[str]]:
+    """Split file lines into blocks: a preamble, then one block per [section]."""
+    blocks: list[list[str]] = []
+    current: list[str] = []
+    for line in lines:
+        if line.startswith("["):
+            blocks.append(current)
+            current = [line]
+        else:
+            current.append(line)
+    blocks.append(current)
+    return blocks
+
+
+def main() -> int:
+    args = sys.argv[1:]
+    dry_run = "--dry-run" in args
+    args = [a for a in args if a != "--dry-run"]
+    config_path = Path(args[0]) if args else DEFAULT_CONFIG
+
+    lines = config_path.read_text().splitlines(keepends=True)
+    blocks = split_blocks(lines)
+
+    shape_cache: dict[Path, dict | None] = {}
+    kept: list[list[str]] = []
+    dropped_projects: list[str] = []
+    dropped_hooks: list[str] = []
+
+    for block in blocks:
+        if not block or not block[0].startswith("["):
+            kept.append(block)
+            continue
+        header = block[0]
+        project = PROJECT_RE.match(header)
+        if project:
+            path = Path(os.path.expanduser(project.group(1)))
+            if not path.exists():
+                dropped_projects.append(project.group(1))
+                continue
+        hook_state = HOOK_STATE_RE.match(header)
+        if hook_state and not hook_state_is_live(hook_state.group(1), shape_cache):
+            dropped_hooks.append(hook_state.group(1))
+            continue
+        kept.append(block)
+
+    print(f"Projects pruned: {len(dropped_projects)}")
+    for path in dropped_projects:
+        print(f"  - {path}")
+    print(f"Hook-state records pruned: {len(dropped_hooks)}")
+    for key in dropped_hooks:
+        print(f"  - {key}")
+
+    if not dropped_projects and not dropped_hooks:
+        print("Nothing to prune.")
+        return 0
+    if dry_run:
+        print("Dry run: no changes written.")
+        return 0
+
+    new_text = "".join(line for block in kept for line in block)
+    tomllib.loads(new_text)  # refuse to write an unparseable result
+    config_path.write_text(new_text)
+    print(f"Wrote {config_path}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

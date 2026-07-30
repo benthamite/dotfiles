@@ -50,6 +50,7 @@ claude/bin/__pycache__
 /logs/
 /session-logs/
 /docs/logs/
+/.worktrees/
 /CLAUDE.md
 /AGENTS.md
 

@@ -306,7 +306,10 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
+    # parse_intermixed_args: wrappers like trajectory-open emit
+    # `<alias> --options... <url>`, which plain parse_args rejects when
+    # positionals surround the options.
+    args = build_parser().parse_intermixed_args(argv)
 
     try:
         if args.list_profiles:

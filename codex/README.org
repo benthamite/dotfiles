@@ -434,7 +434,10 @@ friction, broken hooks/skills/scripts, and structural-remedy investigations
 that are not ordinary code bugs. It requires the agent to verify which existing hooks, skills, configs, or
 scripts should have caught the issue, classify the diagnosis, distinguish
 structural gaps from behavioral lapses, and report before implementing any
-remedy. For agent instruction-loading or context-loading questions, it inspects
+remedy. When the user's request included a fix, the confirmed remedy is
+implemented in the same turn after the diagnosis; only diagnosis-only requests
+stop at the report, and externally visible or destructive remedies always wait
+for confirmation. For agent instruction-loading or context-loading questions, it inspects
 the actual loaded context or the mechanism that creates it before answering. It
 defines overloaded local tooling labels in plain language when
 ambiguity could affect the diagnosis.

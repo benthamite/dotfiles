@@ -67,12 +67,11 @@ alert the user when they direct abusive language at the assistant/model,
 mention moral uncertainty about possible model sentience, and request a civil,
 task-focused restatement. They also require completion-claim discipline: agents
 must not say a bug is fixed, resolved, working, or done unless the exact
-reported user-visible behavior has been verified after the change, and final
-answers after changes must include an explicit =Verification:= or =Not verified
-end-to-end:= sentence. Passing metrics, scorecards, and counts count as
-completion evidence only after confirming that they directly cover the user's
-stated requirement. Substantive-work closeouts must include the broader project
-significance and the concrete next action or decision. They also require agents
+reported user-visible behavior has been verified after the change. Verification
+gaps are stated only when they bear on the user's decision; mechanical
+=Verification:= boilerplate is explicitly prohibited. Passing metrics,
+scorecards, and counts count as completion evidence only after confirming that
+they directly cover the user's stated requirement. They also require agents
 to use subagents or teams when available and whenever parallel or
 separate-context work helps, with the most capable available subagent model and
 an effort level matching the main agent unless the user requests a cheaper or
@@ -693,10 +692,9 @@ has no tool name.
 Completion-claim discipline is instruction-level, not currently hook-enforced.
 The paired Claude and Codex global instructions require agents not to say a bug
 is fixed, resolved, working, or done unless the exact reported user-visible
-behavior has been verified after the change; final answers after changes must
-include an explicit =Verification:= or =Not verified end-to-end:= sentence.
-They also require substantive-work closeouts to include the broader project
-significance and the concrete next action or decision.
+behavior has been verified after the change; verification gaps are mentioned
+only when they bear on the user's decision, and mechanically appended
+verification notes are explicitly prohibited.
 The Codex =Stop= hook currently forwards lifecycle state for Emacs-owned
 sessions through =codex-hook-wrapper=; it does not run a completion-claim
 guard.

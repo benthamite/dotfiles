@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
-# sync-mcp-servers.sh — Copy top-level mcpServers from ~/.claude.json to account config dirs.
+# sync-mcp-servers.sh — Sync top-level mcpServers from ~/.claude.json to account config dirs.
 #
 # Claude Code reads .claude.json from $CLAUDE_CONFIG_DIR when set, so user-level
 # MCP servers must be synced to each account directory. Run this after adding or
 # removing MCP servers in ~/.claude.json (the canonical source of truth).
+#
+# Merge semantics (documented in claude/context/mcp-servers.md): the canonical
+# file owns the server set and each server's configuration, but per-account
+# `env` entries are preserved — the canonical copy keeps an empty `env` for
+# account-specific secrets, and each account's values win on key conflicts.
 set -euo pipefail
 
 exec python3 - "$@" <<'PYTHON'
@@ -19,6 +24,7 @@ TARGETS = [
     os.path.expanduser("~/.claude-epoch/.claude.json"),
     os.path.expanduser("~/.claude-personal/.claude.json"),
     os.path.expanduser("~/.claude-tlon/.claude.json"),
+    os.path.expanduser("~/.claude-trajectory/.claude.json"),
 ]
 
 if not os.path.isfile(CANONICAL):
@@ -35,6 +41,21 @@ if mcp_servers is None:
 
 print(f"Source: {CANONICAL} ({len(mcp_servers)} servers)")
 
+
+def merge_servers(canonical_servers, account_servers):
+    """Per-server deep merge: canonical config wins except account env entries."""
+    merged = {}
+    for name, config in canonical_servers.items():
+        server = json.loads(json.dumps(config))  # deep copy
+        account_env = (account_servers.get(name) or {}).get("env") or {}
+        if account_env:
+            env = dict(server.get("env") or {})
+            env.update(account_env)
+            server["env"] = env
+        merged[name] = server
+    return merged
+
+
 for target_path in TARGETS:
     target_dir = os.path.dirname(target_path)
     if not os.path.isdir(target_dir):
@@ -47,11 +68,13 @@ for target_path in TARGETS:
     else:
         data = {}
 
-    if data.get("mcpServers") == mcp_servers:
+    merged = merge_servers(mcp_servers, data.get("mcpServers") or {})
+
+    if data.get("mcpServers") == merged:
         print(f"  Already up to date: {target_path}")
         continue
 
-    data["mcpServers"] = mcp_servers
+    data["mcpServers"] = merged
 
     # Atomic write via temp file
     fd, tmp = tempfile.mkstemp(dir=target_dir, suffix=".json")

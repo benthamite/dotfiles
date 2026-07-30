@@ -362,13 +362,6 @@
       "note": "Claude PreToolUse Bash gate blocking long consensus-trader pipeline launches (setup_db.py --full/--target, refresh_data.sh) unless the tree is clean, checkpointing is on, and PREFLIGHT=ok is set. Project-scoped to the consensus-trader repo. No Codex counterpart: the pipeline is driven from Claude Code."
     },
     {
-      "name": "check-chrome-profile-pair.sh",
-      "claude": "claude/hooks/check-chrome-profile-pair.sh",
-      "codex": null,
-      "status": "unsupported-or-replaced",
-      "note": "Claude Chrome SessionStart no-op placeholder; not relevant to Codex."
-    },
-    {
       "name": "elpaca-run.sh",
       "claude": "claude/hooks/elpaca-run.sh",
       "codex": null,

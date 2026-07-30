@@ -80,7 +80,6 @@ contains_raw_shell_op_command() {
     return 0
   fi
   scan=$(mask_op_quoted_literals "$raw")
-  scan=$(printf '%s' "$scan" | sed -E 's#((/usr/bin/|/bin/)?env)[[:space:]]+-u[[:space:]]+OP_SERVICE_ACCOUNT_TOKEN[[:space:]]+(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op[[:space:]]+#op-automations-explicit-desktop #g')
   scan=$(printf '%s' "$scan" | sed -E 's/(^|[;&|])[[:space:]]*(if|then|elif|while|until|do)[[:space:]]+/\1 /g')
   boundary='(^[[:space:]]*|[;&|(!][[:space:]]*|\$\([[:space:]]*)'
   op_bin='(/opt/homebrew/bin/|/usr/local/bin/|/usr/bin/)?op([[:space:]]+|$)'
@@ -126,7 +125,7 @@ deny_raw_op_command() {
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",
       "permissionDecision": "deny",
-      "permissionDecisionReason": ("BLOCKED: " + $tool + " contains a direct 1Password CLI command, which can trigger a separate Touch ID prompt for every process.\n\nFor prompt-free read-only access to the Automations vault, use `op-automations ...`. For a deliberately biometric desktop operation, use `env -u OP_SERVICE_ACCOUNT_TOKEN op ...` and batch every required operation into one shell process.")
+      "permissionDecisionReason": ("BLOCKED: " + $tool + " contains a direct 1Password CLI command, which can trigger a separate Touch ID prompt for every process.\n\nUse `op-desktop ...` for desktop-gated operations: personal-vault reads, item creates/edits, share links. It runs every command inside one authorized terminal session, so a whole task costs one Touch ID prompt instead of one per command.\n\nFor prompt-free read-only access to the Automations vault, use `op-automations ...`.\n\nOnly if `op-desktop` is unavailable, fall back to `env -u OP_SERVICE_ACCOUNT_TOKEN bash -c '"'"'...'"'"'` with every required operation batched into that single shell.")
     }
   }'
   exit 0

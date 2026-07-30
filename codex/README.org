@@ -654,10 +654,15 @@ recognizes common shell control prefixes and wrappers such as =env=, =eval=,
 whole command is =env -u OP_SERVICE_ACCOUNT_TOKEN bash -lc '...'=; a later raw
 =op= command and =--reveal= inside that batch remain denied. It denies direct
 =op= commands before the auth-tool allowlist:
-read-only =Automations= operations must use =op-automations=, while deliberate
-desktop operations must use =env -u OP_SERVICE_ACCOUNT_TOKEN op ...= and batch
-all required operations into one process. This prevents concurrent or repeated
-=op= subprocesses from generating repeated Touch ID dialogs. It also denies
+read-only =Automations= operations must use =op-automations=, while
+desktop-gated operations must use =op-desktop=, which shares one authorized
+terminal session across commands. The single-command
+=env -u OP_SERVICE_ACCOUNT_TOKEN op ...= form is also denied (it spawns one
+Touch ID dialog per process); the batched
+=env -u OP_SERVICE_ACCOUNT_TOKEN bash -c '...'= shell remains the sanctioned
+fallback when =op-desktop= is unavailable. This matches the Claude guard, and
+=tests/test_secret_guard_parity.py= holds the two copies to the same
+decisions. It also denies
 =op item get ... --reveal= through both sanctioned forms, even with output
 redirection, because the whole item must never enter tool output; use =op read=
 for a single required field instead. Other safe 1Password patterns capture values

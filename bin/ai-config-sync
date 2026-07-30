@@ -2373,6 +2373,53 @@ def audit_skills(problems: list[str], manifest: dict, private_manifest: dict) ->
                 add_problem(problems, f"Auxiliary skill file drift: {skill}/{rel}")
 
 
+PARENT_DRIVE_WORKSPACE = Path.home() / "My Drive"
+
+
+def audit_parent_drive_skill_pairs(problems: list[str], workspace: Path | None = None) -> None:
+    """Audit the untracked ~/My Drive/.claude|.codex skill pairs for drift.
+
+    These pairs live outside every git repo, so commit-time guards never see
+    them; this absolute-path check is their only drift detection.
+    """
+    root = PARENT_DRIVE_WORKSPACE if workspace is None else workspace
+    claude_root = root / ".claude" / "skills"
+    codex_root = root / ".codex" / "skills"
+    if not claude_root.is_dir() and not codex_root.is_dir():
+        return
+    claude_skills = (
+        {path.parent.name for path in claude_root.glob("*/SKILL.md")}
+        if claude_root.is_dir()
+        else set()
+    )
+    codex_skills = (
+        {path.parent.name for path in codex_root.glob("*/SKILL.md")}
+        if codex_root.is_dir()
+        else set()
+    )
+    for skill in sorted(claude_skills - codex_skills):
+        add_problem(problems, f"Parent-Drive skill lacks Codex counterpart: {skill}")
+    for skill in sorted(codex_skills - claude_skills):
+        add_problem(problems, f"Parent-Drive skill lacks Claude counterpart: {skill}")
+    for skill in sorted(claude_skills & codex_skills):
+        claude_skill = claude_root / skill / "SKILL.md"
+        codex_skill = codex_root / skill / "SKILL.md"
+        if normalized_skill_text(claude_skill) != normalized_skill_text(codex_skill):
+            add_problem(
+                problems,
+                f"Parent-Drive skill content drift after tool-specific frontmatter normalization: {skill}",
+            )
+        claude_aux = skill_aux_files(claude_skill.parent)
+        codex_aux = skill_aux_files(codex_skill.parent)
+        for rel in sorted(set(claude_aux) - set(codex_aux)):
+            add_problem(problems, f"Parent-Drive auxiliary skill file only in Claude tree: {skill}/{rel}")
+        for rel in sorted(set(codex_aux) - set(claude_aux)):
+            add_problem(problems, f"Parent-Drive auxiliary skill file only in Codex tree: {skill}/{rel}")
+        for rel in sorted(set(claude_aux) & set(codex_aux)):
+            if not filecmp.cmp(claude_aux[rel], codex_aux[rel], shallow=False):
+                add_problem(problems, f"Parent-Drive auxiliary skill file drift: {skill}/{rel}")
+
+
 def audit_private_skills(problems: list[str], manifest: dict) -> None:
     private_items = manifest.get("private_skills") or []
     manifest_paths = {
@@ -2511,6 +2558,7 @@ def audit_problems() -> list[str]:
     audit_known_project_instruction_pairs(problems)
     audit_instructions(problems, manifest)
     audit_skills(problems, manifest, private_manifest)
+    audit_parent_drive_skill_pairs(problems)
     audit_duplicate_skill_names(problems)
     audit_private_skills(problems, private_manifest)
     audit_hooks(problems, manifest)

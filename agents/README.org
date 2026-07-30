@@ -107,6 +107,12 @@ repo root (currently the four Twitter programmatic skills: =twitter=,
 =twitter-digest=, =twitter-discover=, =twitter-vet=). Archived copies are not
 exposed to any live skill root and are excluded from the sync inventory.
 
+The parent-Drive workspace pairs under =~/My Drive/.claude/skills/= and
+=~/My Drive/.codex/skills/= (currently =fix-drive-errors= and =nosync=) live
+outside every git repo, so commit-time guards never see them. =bin/ai-config-sync
+audit= checks them by absolute path with the same frontmatter normalization and
+auxiliary-file comparison as tracked pairs; drift there fails the audit.
+
 Codex discovers global skills from =~/.codex/skills/*/SKILL.md=. Claude
 discovers global skills from =~/.claude/skills/*/SKILL.md=. The tracked skill
 trees are activated by:

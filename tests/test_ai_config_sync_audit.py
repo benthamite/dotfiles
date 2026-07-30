@@ -252,6 +252,60 @@ class AiConfigSyncAuditTests(unittest.TestCase):
         audit_mock.assert_not_called()
         self.assertEqual("", output.getvalue())
 
+    def make_parent_drive_workspace(self) -> Path:
+        temp = tempfile.TemporaryDirectory()
+        self.addCleanup(temp.cleanup)
+        return Path(temp.name)
+
+    def test_parent_drive_pair_drift_is_reported(self):
+        workspace = self.make_parent_drive_workspace()
+        self.write_file(
+            workspace,
+            ".claude/skills/fix-drive-errors/SKILL.md",
+            "---\nname: fix-drive-errors\nmodel: sonnet\n---\nnew recovery safeguards\n",
+        )
+        self.write_file(
+            workspace,
+            ".codex/skills/fix-drive-errors/SKILL.md",
+            "---\nname: fix-drive-errors\n---\nold workflow\n",
+        )
+        self.write_file(workspace, ".claude/skills/nosync/SKILL.md")
+
+        problems: list[str] = []
+        self.module.audit_parent_drive_skill_pairs(problems, workspace)
+
+        self.assertIn(
+            "Parent-Drive skill content drift after tool-specific frontmatter normalization: fix-drive-errors",
+            problems,
+        )
+        self.assertIn("Parent-Drive skill lacks Codex counterpart: nosync", problems)
+
+    def test_parent_drive_pair_in_sync_passes(self):
+        workspace = self.make_parent_drive_workspace()
+        self.write_file(
+            workspace,
+            ".claude/skills/nosync/SKILL.md",
+            "---\nname: nosync\nargument-hint: <dir>\nmodel: sonnet\n---\nshared body\n",
+        )
+        self.write_file(
+            workspace,
+            ".codex/skills/nosync/SKILL.md",
+            "---\nname: nosync\n---\nshared body\n",
+        )
+
+        problems: list[str] = []
+        self.module.audit_parent_drive_skill_pairs(problems, workspace)
+
+        self.assertEqual([], problems)
+
+    def test_parent_drive_absent_workspace_is_skipped(self):
+        workspace = self.make_parent_drive_workspace()
+
+        problems: list[str] = []
+        self.module.audit_parent_drive_skill_pairs(problems, workspace)
+
+        self.assertEqual([], problems)
+
 
 if __name__ == "__main__":
     unittest.main()

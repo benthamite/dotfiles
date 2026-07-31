@@ -1361,6 +1361,28 @@ The hook covers =git push=, mutating =gh pr= / =gh issue= / =gh secret= / =gh
 workflow= / =gh release= / =gh repo= commands, and write-style =gh api= calls.
 Read-only =gh= inspection remains allowed.
 
+It also refuses commands that would *modify* one of the self-protected guard
+files. That check used to be two independent conditions — does the command name a
+protected path anywhere, and does it contain a redirection or file-mutating verb
+anywhere — so any =>= satisfied the second one. On 2026-07-31 a commit was
+refused because its message contained the phrase "deny > allow" while it also
+staged one of these files by name, which is a read plus prose rather than a write.
+The operator must now name the path, which removes that false-positive class and
+is strictly more precise, since an operator elsewhere in the command was never
+evidence about this path. Matching stays inside a single command segment, so a
+redirection before a separator cannot pair with a path after it, and it tolerates
+quotes and backslash-escaped spaces in the path. Reading or staging a protected
+file (=grep=, =sed -n=, =git diff=, =git add=) is allowed; redirecting onto it,
+=tee=, =rm= / =trash= / =mv= / =cp= / =install=, =sed -i=, =perl -pi=, and =git
+restore= / =git checkout= naming it are all still denied. Behaviour is pinned by
+=tests/test_github_write_guard_paths.py=.
+
+This was deliberately *not* fixed with the quoted-content masking that
+=block-destructive-command.sh= uses. That is roughly ninety lines of awk; a third
+hand-synced copy would be a liability in a hard gate, and factoring it into a
+shared library that is not itself self-protected would let an agent neuter all
+three guards by editing the library.
+
 *** block-github-guard-edit.sh (PreToolUse)
 :PROPERTIES:
 :ID:       280F37C2-3311-4B37-9330-5390612DF915

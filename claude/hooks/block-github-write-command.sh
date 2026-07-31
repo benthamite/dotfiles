@@ -289,13 +289,52 @@ repo_from_git_dir() {
 # cannot write to a file -- fd duplications and writes to /dev/null -- are
 # stripped first, so an ordinary read carrying 2>/dev/null is not mistaken for
 # an edit.
+# A protected path merely *mentioned* is not a modification of it. This used to
+# be two independent tests — does the command name a protected path anywhere, and
+# does it contain a redirection or file-mutating verb anywhere — so any '>' made
+# the second one true. On 2026-07-31 a commit was refused because its message
+# contained the phrase "deny > allow" while it also staged one of these files by
+# name, which is a read plus prose and not a write at all.
+#
+# The operator now has to name the path. That removes the false-positive class and
+# is strictly more precise: an operator somewhere else in the command was never
+# evidence about this path. [^|;&]* keeps the match inside one command segment, so
+# a redirection before a separator cannot pair with a path after it, and it
+# tolerates quotes and backslash-escaped spaces in the path that a
+# character-class approach would have missed.
+#
+# Deliberately NOT solved with the quoted-content masking used by
+# block-destructive-command.sh: that is ~90 lines of awk, a third hand-synced copy
+# would be a liability in a hard gate, and factoring it into a shared library that
+# is not itself self-protected would let an agent neuter all three guards by
+# editing the library.
+PROTECTED_GUARD_PATH_RE='(agents/github-write-allowlist\.txt|codex/(hooks/block-github-write-command\.sh|hooks/block-github-guard-edit\.sh|hooks\.json)|claude/(hooks/block-github-write-command\.sh|hooks/block-github-guard-edit\.sh|hooks/pretooluse-bash\.sh)|\.codex/hooks\.json|\.claude/settings\.json)'
+
 guard_modification_p() {
     local sanitized
     sanitized=$(printf '%s' "$COMMAND" \
 	| sed -E 's/[0-9]*>>?[[:space:]]*&[0-9-]+//g' \
 	| sed -E 's/[0-9]*>>?[[:space:]]*\/dev\/null//g')
+
+    # Redirection whose target is a protected path.
     printf '%s' "$sanitized" \
-	| grep -qE '(^|[[:space:];|&])(rm|trash|mv|cp|install|sed[[:space:]].*-i|perl[[:space:]].*-pi|git[[:space:]]+(restore|checkout))[[:space:]]|>>?|tee[[:space:]]'
+	| grep -qE ">>?[^|;&]*${PROTECTED_GUARD_PATH_RE}" && return 0
+
+    # File-mutating verbs naming a protected path as an argument.
+    printf '%s' "$sanitized" \
+	| grep -qE "(^|[[:space:];|&])(rm|trash|mv|cp|install|tee)[[:space:]][^|;&]*${PROTECTED_GUARD_PATH_RE}" && return 0
+
+    # In-place editors, which need their flag before the path.
+    printf '%s' "$sanitized" \
+	| grep -qE "(^|[[:space:];|&])sed[[:space:]][^|;&]*-i[^|;&]*${PROTECTED_GUARD_PATH_RE}" && return 0
+    printf '%s' "$sanitized" \
+	| grep -qE "(^|[[:space:];|&])perl[[:space:]][^|;&]*-pi[^|;&]*${PROTECTED_GUARD_PATH_RE}" && return 0
+
+    # git commands that overwrite a working-tree file.
+    printf '%s' "$sanitized" \
+	| grep -qE "(^|[[:space:];|&])git[[:space:]]+(restore|checkout)[[:space:]][^|;&]*${PROTECTED_GUARD_PATH_RE}" && return 0
+
+    return 1
 }
 
 contains_protected_guard_path() {

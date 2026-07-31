@@ -39,6 +39,10 @@ def run_hook(script: Path, command: str) -> subprocess.CompletedProcess[str]:
 
 
 class CloneRuleTests(unittest.TestCase):
+    @property
+    def guards(self):
+        return DESTRUCTIVE_GUARDS
+
     def decide(self, guard: Path, command: str) -> tuple[str, str]:
         result = run_hook(guard, command)
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -52,34 +56,34 @@ class CloneRuleTests(unittest.TestCase):
 
     def test_no_guard_ever_escalates_a_clone_to_the_user(self):
         """The regression that mattered: a guard must decide, not prompt."""
-        for guard in DESTRUCTIVE_GUARDS:
+        for guard in self.guards:
             for command in (
                 f"git clone {CLONE_URL}",
                 f"ALLOW_CLONE=1 git clone {CLONE_URL}",
             ):
-                with self.subTest(guard=guard.parent.parent.name, command=command):
+                with self.subTest(guard=guard.name, command=command):
                     decision, _ = self.decide(guard, command)
                     self.assertNotEqual(decision, "ask")
 
     def test_unrequested_clone_is_denied(self):
-        for guard in DESTRUCTIVE_GUARDS:
+        for guard in self.guards:
             for command in (
                 f"git clone {CLONE_URL}",
                 f"gh repo clone {CLONE_SLUG}",
             ):
-                with self.subTest(guard=guard.parent.parent.name, command=command):
+                with self.subTest(guard=guard.name, command=command):
                     decision, reason = self.decide(guard, command)
                     self.assertEqual(decision, "deny")
                     self.assertIn("ALLOW_CLONE=1", reason)
 
     def test_requested_clone_proceeds_with_the_escape_hatch(self):
         """A clone Pablo asked for must not be a dead end."""
-        for guard in DESTRUCTIVE_GUARDS:
+        for guard in self.guards:
             for command in (
                 f"ALLOW_CLONE=1 git clone {CLONE_URL}",
                 f"ALLOW_CLONE=1 gh repo clone {CLONE_SLUG}",
             ):
-                with self.subTest(guard=guard.parent.parent.name, command=command):
+                with self.subTest(guard=guard.name, command=command):
                     decision, _ = self.decide(guard, command)
                     self.assertEqual(decision, "allow")
 
@@ -89,28 +93,58 @@ class CloneRuleTests(unittest.TestCase):
         A global early exit on the variable would have been simpler to write and
         would have waved through every other rule in the file.
         """
-        for guard in DESTRUCTIVE_GUARDS:
+        for guard in self.guards:
             for command in (
                 "ALLOW_CLONE=1 rm -rf /tmp/example-guard-target",
                 "ALLOW_CLONE=1 git reset --hard",
                 "ALLOW_CLONE=1 git clean -f",
             ):
-                with self.subTest(guard=guard.parent.parent.name, command=command):
+                with self.subTest(guard=guard.name, command=command):
                     decision, _ = self.decide(guard, command)
                     self.assertEqual(decision, "deny")
 
     def test_ordinary_commands_are_untouched(self):
-        for guard in DESTRUCTIVE_GUARDS:
-            with self.subTest(guard=guard.parent.parent.name):
+        for guard in self.guards:
+            with self.subTest(guard=guard.name):
                 decision, _ = self.decide(guard, "git status --short")
                 self.assertEqual(decision, "allow")
 
 
+class DispatcherCloneRuleTests(CloneRuleTests):
+    """Claude's live path.
+
+    block-destructive-command.sh is not registered in settings.json at all;
+    pretooluse-bash.sh inlines its checks so the Bash matcher emits one
+    aggregated decision. Testing only the standalone script would have passed
+    while Claude still asked on every clone.
+    """
+
+    DISPATCHER = DOTFILES / "claude/hooks/pretooluse-bash.sh"
+
+    def setUp(self):
+        if not self.DISPATCHER.exists():
+            self.skipTest("dispatcher not present")
+        self._guards = (self.DISPATCHER,)
+
+    @property
+    def guards(self):
+        return self._guards
+
+
 class NoAskDecisionTests(unittest.TestCase):
-    def test_neither_copy_can_emit_an_ask_decision(self):
-        for guard in DESTRUCTIVE_GUARDS:
-            with self.subTest(guard=guard.parent.parent.name):
-                self.assertNotIn('"permissionDecision": "ask"', guard.read_text())
+    GUARDS = DESTRUCTIVE_GUARDS + (DOTFILES / "claude/hooks/pretooluse-bash.sh",)
+
+    def test_no_guard_can_emit_an_ask_decision(self):
+        """Structural, not incidental: no ask emitter may exist at all."""
+        for guard in self.GUARDS:
+            with self.subTest(guard=guard.name):
+                text = guard.read_text()
+                self.assertNotIn('"permissionDecision": "ask"', text)
+                self.assertNotIn('permissionDecision:"ask"', text)
+
+    def test_dispatcher_has_no_ask_accumulator(self):
+        dispatcher = DOTFILES / "claude/hooks/pretooluse-bash.sh"
+        self.assertNotIn("ASK_REASONS", dispatcher.read_text())
 
 
 if __name__ == "__main__":

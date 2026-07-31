@@ -39,11 +39,12 @@ SESSION_ID=$(printf '%s' "$INPUT" | jq -r '.session_id // empty')
 # the end with precedence deny > ask > allow.
 # ----------------------------------------------------------------------------
 DENY_REASONS=()
-ASK_REASONS=()
 ALLOW_CONTEXT=""
 UPDATED_CMD=""
 add_deny() { DENY_REASONS+=("$1"); }
-add_ask()  { ASK_REASONS+=("$1"); }
+# No add_ask: CLAUDE.md forbids a guard escalating to Pablo, and the clone rule
+# was the only caller. Removing the accumulator and its emitter branch makes
+# "never ask" structural here rather than a property of the current rule set.
 
 updated_input_json() {
   printf '%s' "$INPUT" | jq -c --arg cmd "$UPDATED_CMD" '.tool_input + {command:$cmd}'
@@ -457,8 +458,18 @@ check_destructive() {
      ! echo "$SCAN" | grep -qE '\bgit\s+push[^|;&]*--force-with-lease'; then
     dc_deny "git push --force detected" "Force-pushing can overwrite upstream history. Use --force-with-lease for branch-scoped pushes, or confirm with the user."; return 0
   fi
-  if echo "$SCAN" | grep -qE '\b(git\s+clone|gh\s+repo\s+clone)\b'; then
-    add_ask "git clone detected. Only clone repositories the user has explicitly requested."; return 0
+  # Denies rather than escalating. CLAUDE.md requires a guard to allow or deny
+  # with a reason and never ask; this was the last ask-style gate in the hooks.
+  # The rule — only clone repositories Pablo requested by URL or name — is not
+  # something a hook can verify, so ALLOW_CLONE=1 is the agent asserting he did,
+  # making this a deliberate step rather than a lock (the same trade
+  # ALLOW_DIRTY_REWRITE=1 makes over higher stakes). Matched against $SCAN so a
+  # hatch inside a quoted string is masked out, and kept inside this branch so it
+  # cannot wave through any other rule here. Keep in sync with
+  # claude/hooks/block-destructive-command.sh, the source of truth.
+  if echo "$SCAN" | grep -qE '\b(git\s+clone|gh\s+repo\s+clone)\b' && \
+     ! echo "$SCAN" | grep -qE '(^|[[:space:]])ALLOW_CLONE=1([[:space:]]|$)'; then
+    dc_deny "git clone detected" "Only clone repositories the user has explicitly requested by URL or name. If this is a clone they asked for, prefix the command with ALLOW_CLONE=1. If it is not, ask them in chat first."; return 0
   fi
   if echo "$SCAN" | grep -qE '\bgit\s+reset\s+--hard\b'; then
     dc_deny "git reset --hard detected" "This discards uncommitted changes irreversibly. Consider 'git stash' instead."; return 0
@@ -582,7 +593,7 @@ fi
 check_wrap
 
 # ============================================================================
-# Aggregate and emit a single hookSpecificOutput (precedence deny > ask > allow).
+# Aggregate and emit a single hookSpecificOutput (precedence deny > allow).
 # ============================================================================
 join_reasons() {
   local sep="" r
@@ -592,13 +603,6 @@ join_reasons() {
 if [ "${#DENY_REASONS[@]}" -gt 0 ]; then
   reason=$(join_reasons "${DENY_REASONS[@]}")
   jq -n --arg r "$reason" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"deny",permissionDecisionReason:$r}}'
-elif [ "${#ASK_REASONS[@]}" -gt 0 ]; then
-  reason=$(join_reasons "${ASK_REASONS[@]}")
-  if [ -n "$UPDATED_CMD" ]; then
-    jq -nc --arg r "$reason" --argjson input "$(updated_input_json)" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"ask",permissionDecisionReason:$r,updatedInput:$input}}'
-  else
-    jq -n --arg r "$reason" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"ask",permissionDecisionReason:$r}}'
-  fi
 elif [ -n "$ALLOW_CONTEXT" ]; then
   if [ -n "$UPDATED_CMD" ]; then
     jq -nc --arg ctx "$ALLOW_CONTEXT" --argjson input "$(updated_input_json)" '{hookSpecificOutput:{hookEventName:"PreToolUse",permissionDecision:"allow",additionalContext:$ctx,updatedInput:$input}}'

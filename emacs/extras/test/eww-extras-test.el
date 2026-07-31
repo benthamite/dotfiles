@@ -33,6 +33,16 @@
       (should (string-match-p "eww-extras-render-url\\.js" (nth 2 cmd)))
       (should (string-match-p "--type html" (nth 2 cmd))))))
 
+(ert-deftest eww-extras-test-make-command-enables-node-websocket ()
+  "Make-command enables WebSocket support in the Node runtime."
+  (let ((browse-url-chrome-program "/usr/bin/chrome")
+        (eww-extras-node-program "/usr/bin/node"))
+    (let ((command (nth 2 (eww-extras-url-to-file-make-command
+                           "https://example.com" "/tmp/out.pdf" "pdf"))))
+      (should (string-match-p
+               "/usr/bin/node --experimental-websocket .*eww-extras-render-url\\.js"
+               command)))))
+
 (ert-deftest eww-extras-test-make-command-invalid-type ()
   "Make-command signals error for invalid type."
   (let ((browse-url-chrome-program "/usr/bin/chrome"))

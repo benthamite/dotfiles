@@ -285,9 +285,10 @@ the buffer-derived lookup.
 The function ~eww-extras-url-to-file-make-command~ builds the shell
 command for the headless Chrome rendering script, including the copied Chrome
 data directory, the =Default= profile, and a 30-second timeout.  URLs and
-output paths are shell-quoted for safety.  The script drives Chrome through the
-DevTools Protocol so it can remove common overlays before printing or dumping
-the cleaned DOM.
+output paths are shell-quoted for safety.  It enables Node's WebSocket support
+explicitly so the renderer also works with Node 20.  The script drives Chrome
+through the DevTools Protocol so it can remove common overlays before printing
+or dumping the cleaned DOM.
 
 The function ~eww-extras-url-to-file-sentinel~ creates a process
 sentinel that checks the exit status.  It runs the callback on success,

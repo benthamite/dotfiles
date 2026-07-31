@@ -268,7 +268,7 @@ PROC, the process object, and EVENT, a string describing the process status."
           (shell-quote-argument eww-extras-chrome-profile-directory)))
     (list shell-file-name shell-command-switch
           (format
-           "timeout 30s %s %s --type %s --url %s --output %s --chrome-program %s --user-data-dir %s --profile-directory %s"
+           "timeout 30s %s --experimental-websocket %s --type %s --url %s --output %s --chrome-program %s --user-data-dir %s --profile-directory %s"
            quoted-node quoted-script type quoted-url quoted-output quoted-chrome
            quoted-data-dir quoted-profile))))
 

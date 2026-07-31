@@ -355,7 +355,7 @@ grep -rn "publish.*provider" . --include="*.json" | grep -v node_modules
 
 | Task | Command |
 |------|---------|
-| Extract asar | `npx asar extract app.asar ./extracted` |
+| Extract asar | `"$SKILL_DIR/scripts/extract-asar.sh" app.asar ./extracted` |
 | All URLs | `grep -rE "https?://" . \| sort -u` |
 | Signing info | `codesign -dv /path/to/App.app` |
 | Entitlements | `codesign -d --entitlements - /path/to/App.app` |

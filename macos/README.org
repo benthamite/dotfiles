@@ -17,7 +17,9 @@ load only while working on macOS security and machine-posture tasks.
 Static-first security audit of macOS applications before running them or
 granting sensitive permissions. Covers trust verification, permission analysis,
 app type detection, Electron source extraction and security checks, network
-endpoint scanning, and spaces-safe binary analysis.
+endpoint scanning, and spaces-safe binary analysis. Electron extraction uses an
+exact =@electron/asar= dependency with a committed lockfile and disabled
+lifecycle scripts.
 
 *** security-audit
 :PROPERTIES:

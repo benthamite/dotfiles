@@ -111,8 +111,10 @@ APP_NAME=$(basename "$APP_PATH" .app)
 AUDIT_DIR="$HOME/.cache/app-audits/$APP_NAME/$(date +%Y%m%d)"
 mkdir -p "$AUDIT_DIR"
 
-# Extract asar
-npx --yes asar extract "$APP_PATH/Contents/Resources/app.asar" "$AUDIT_DIR/extracted"
+# Extract with the skill's exact, lockfile-pinned @electron/asar dependency.
+"$SKILL_DIR/scripts/extract-asar.sh" \
+  "$APP_PATH/Contents/Resources/app.asar" \
+  "$AUDIT_DIR/extracted"
 
 # Also check unpacked resources
 cp -r "$APP_PATH/Contents/Resources/app.asar.unpacked" "$AUDIT_DIR/" 2>/dev/null
@@ -254,8 +256,8 @@ OLD_DIR=$(mktemp -d "${TMPDIR:-/tmp}/old-version.XXXXXX")
 NEW_DIR=$(mktemp -d "${TMPDIR:-/tmp}/new-version.XXXXXX")
 OLD_URLS=$(mktemp "${TMPDIR:-/tmp}/old-urls.XXXXXX")
 NEW_URLS=$(mktemp "${TMPDIR:-/tmp}/new-urls.XXXXXX")
-npx --yes asar extract /Applications/OldApp.app/Contents/Resources/app.asar "$OLD_DIR"
-npx --yes asar extract /Applications/NewApp.app/Contents/Resources/app.asar "$NEW_DIR"
+"$SKILL_DIR/scripts/extract-asar.sh" /Applications/OldApp.app/Contents/Resources/app.asar "$OLD_DIR"
+"$SKILL_DIR/scripts/extract-asar.sh" /Applications/NewApp.app/Contents/Resources/app.asar "$NEW_DIR"
 
 # Diff the extracted source
 diff -r "$OLD_DIR" "$NEW_DIR" | head -100
@@ -274,7 +276,7 @@ comm -13 "$OLD_URLS" "$NEW_URLS"
 | Notarization | `spctl --assess --type execute "$APP_PATH"` |
 | Entitlements | `codesign -d --entitlements - "$APP_PATH"` |
 | App type | `file "$APP_PATH/Contents/MacOS/"*` |
-| Extract Electron | `npx --yes asar extract app.asar ./extracted` |
+| Extract Electron | `"$SKILL_DIR/scripts/extract-asar.sh" app.asar ./extracted` |
 | Find URLs | `grep -rE "https?://" . \| sort -u` |
 | Run full audit | `"$SKILL_DIR/scripts/audit-mac-app.sh" "$APP_PATH"` |
 

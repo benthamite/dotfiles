@@ -1,0 +1,7 @@
+{
+  "name": "audit-mac-app-extractor",
+  "private": true,
+  "dependencies": {
+    "@electron/asar": "4.2.1"
+  }
+}

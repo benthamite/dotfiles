@@ -7,6 +7,8 @@
 # Don't exit on grep failures (no matches returns 1)
 set +e
 
+SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
+
 # Colors for terminal output
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
@@ -249,12 +251,12 @@ if [ "$IS_ELECTRON" = true ]; then
             high "Could not create temporary audit directory; skipping Electron source extraction"
         else
             echo "Extracting Electron app.asar..."
-            if npx --yes asar extract "$APP_PATH/Contents/Resources/app.asar" "$AUDIT_DIR/extracted" 2>/dev/null \
+            if "$SCRIPT_DIR/extract-asar.sh" "$APP_PATH/Contents/Resources/app.asar" "$AUDIT_DIR/extracted" 2>/dev/null \
                 && [ -d "$AUDIT_DIR/extracted" ]; then
                 EXTRACTED_PATH="$AUDIT_DIR/extracted"
                 success "Source code extracted for analysis"
             else
-                high "Failed to extract app.asar; install Node/npm or inspect the bundle manually"
+                high "Failed to extract app.asar with the locked @electron/asar tool; inspect the error or bundle manually"
             fi
         fi
     else

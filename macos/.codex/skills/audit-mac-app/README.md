@@ -14,7 +14,10 @@ SKILL_DIR="/path/to/audit-mac-app"
 "$SKILL_DIR/scripts/audit-mac-app.sh" /Applications/AppName.app
 ```
 
-Electron source extraction requires Node/npm because the scanner uses `npx --yes asar`.
+Electron source extraction uses the exact `@electron/asar` version and integrity
+hashes committed in `package-lock.json`. On first use, the helper selects an
+installed Node 22.12 or newer and runs `npm ci --ignore-scripts`; later audits
+invoke the locked local extractor without resolving a package through `npx`.
 
 ## About
 

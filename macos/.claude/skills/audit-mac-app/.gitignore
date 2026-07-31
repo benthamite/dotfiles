@@ -5,6 +5,9 @@
 /tmp/
 *.tmp
 
+# Locked extractor installation
+/node_modules/
+
 # macOS
 .DS_Store
 

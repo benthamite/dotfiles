@@ -1270,12 +1270,10 @@ Anything else that touches a sensitive path is treated as content-extraction
 and denied with =permissionDecision: "deny"= rather than escalated, because this
 hook also protects unattended runs.
 
-The protected live Claude configuration currently registers this standalone
-hook for =Read= only. =Bash= uses the self-protected inlined copy in
-=pretooluse-bash.sh=, and =Grep= is not yet registered. Therefore the
-single-command Bash rule and Grep coverage described above do not become live
-Claude controls until those protected registrations/copies are updated manually
-outside the agent session.
+The live Claude configuration registers the standalone hook for both =Read=
+and =Grep=. =Bash= uses the self-protected inlined copy in
+=pretooluse-bash.sh=; regression tests hold its compound-command and Git
+metadata decisions to the standalone hook's behavior.
 
 *** block-secret-leak.sh (PreToolUse)
 :PROPERTIES:
@@ -1368,12 +1366,10 @@ anywhere in the normalized name wins before those read-only patterns, so names
 such as =get_or_create_*= and =check_and_update_*= require confirmation.
 Everything else exits 2 to require user confirmation.
 
-The registered matcher must be =mcp__.*= (or =^mcp__=). Current Claude Code and
-Codex releases treat the metacharacter-free matcher =mcp__= as an exact tool
-name, so the protected live Claude registration and tracked Codex registration
-do not currently fire this hook. Until those files are changed manually outside
-the agent session, this hook is not an active compensating control for the MCP
-preallow surface.
+The live Claude and tracked Codex registrations use =mcp__.*=. Current Claude
+Code and Codex releases treat the former metacharacter-free =mcp__= form as an
+exact tool name; the explicit wildcard is therefore required for this hook to
+cover MCP tool names.
 
 Ahrefs MCP tools are a special case: only documentation and subscription-info
 tools are treated as read-only-safe. Paid Ahrefs analytics endpoints consume

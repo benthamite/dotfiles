@@ -14,6 +14,7 @@ EXTERNAL_ACTION_GUARDS = (
 SENSITIVE_READ_GUARDS = (
     DOTFILES / "claude/hooks/block-sensitive-read.sh",
     DOTFILES / "codex/hooks/block-sensitive-read.sh",
+    DOTFILES / "claude/hooks/pretooluse-bash.sh",
 )
 
 
@@ -31,7 +32,48 @@ def permission_decision(result: subprocess.CompletedProcess[str]) -> str:
     if not result.stdout.strip():
         return "allow"
     output = json.loads(result.stdout)
-    return output["hookSpecificOutput"]["permissionDecision"]
+    return output["hookSpecificOutput"].get("permissionDecision", "allow")
+
+
+def hook_matchers(config: dict, command_fragment: str) -> list[str]:
+    return [
+        registration["matcher"]
+        for registration in config["hooks"]["PreToolUse"]
+        if any(
+            command_fragment in hook.get("command", "")
+            for hook in registration.get("hooks", [])
+        )
+    ]
+
+
+class ProtectedHookRegistrationTests(unittest.TestCase):
+    def test_external_action_guards_use_prefix_regex_matchers(self):
+        configs = (
+            (
+                "codex",
+                json.loads((DOTFILES / "codex/hooks.json").read_text()),
+            ),
+            (
+                "claude",
+                json.loads((Path.home() / ".claude/settings.json").read_text()),
+            ),
+        )
+        for name, config in configs:
+            with self.subTest(config=name):
+                self.assertEqual(
+                    hook_matchers(config, "guard-external-actions.sh"),
+                    ["mcp__.*"],
+                )
+
+    def test_live_claude_sensitive_read_guard_covers_read_and_grep(self):
+        config = json.loads((Path.home() / ".claude/settings.json").read_text())
+        matchers = hook_matchers(config, "block-sensitive-read.sh")
+        covered_tools = {
+            tool
+            for matcher in matchers
+            for tool in matcher.split("|")
+        }
+        self.assertGreaterEqual(covered_tools, {"Read", "Grep"})
 
 
 class ExternalActionGuardTests(unittest.TestCase):

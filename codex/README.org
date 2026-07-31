@@ -697,13 +697,6 @@ blocked write. This is a user-level guardrail rather than a privilege boundary;
 alternate path spellings, inactive worktree copies, and future tool surfaces
 still require audit coverage.
 
-=guard-external-actions.sh= contains deny-by-default MCP tool logic. It checks
-for mutating verbs before applying the read-only name allowlist, so mixed names
-such as =get_or_create_*= and =check_and_update_*= require confirmation. The
-registration uses =mcp__.*=: Codex treats a bare =mcp__= matcher as an exact
-tool name, so the explicit wildcard is required for the guard to cover MCP
-tool names.
-
 The =UserPromptSubmit= hook forwards lifecycle state for Emacs-owned sessions
 through =codex-hook-wrapper=. The matcher is empty because =UserPromptSubmit=
 has no tool name.

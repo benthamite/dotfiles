@@ -169,7 +169,7 @@ The user-level =~/.claude/settings.json= and
 =~/.claude/settings.local.json= files are not version-controlled; both are
 edited in place in =~/.claude/=.
 
-The global =settings.json= uses =auto= mode (Anthropic's classifier-backed permission mode that approves most actions while flagging risky ones) inside the =permissions= object. All MCP servers are explicitly listed in =permissions.allow= as a workaround for [[https://github.com/anthropics/claude-code/issues/5140][anthropics/claude-code#5140]]. Safety hooks (=guard-external-actions.sh=, =block-destructive-command.sh=, etc.) provide additional guardrails.
+The global =settings.json= uses =auto= mode (Anthropic's classifier-backed permission mode that approves most actions while flagging risky ones) inside the =permissions= object. All MCP servers are explicitly listed in =permissions.allow= as a workaround for [[https://github.com/anthropics/claude-code/issues/5140][anthropics/claude-code#5140]]. Safety hooks (=block-destructive-command.sh=, =block-sensitive-read.sh=, etc.) provide additional guardrails. The MCP approval guard that used to sit here was removed on 2026-07-31: it escalated 42% of all MCP calls to a confirmation prompt against 4 hard blocks in 7,552 historical calls, which defeats the point of running in =auto= mode.
 
 **** =CLAUDE.md= loading
 :PROPERTIES:
@@ -1369,61 +1369,6 @@ This prevents the ordinary edit-then-write bypass. It is a user-level guardrail,
 not a privilege boundary: alternate path spellings, inactive worktree copies,
 and future tool surfaces need separate audit coverage. Policy changes should be
 made manually outside the agent session.
-
-*** guard-external-actions.sh (PreToolUse)
-:PROPERTIES:
-:ID:       963E9C95-5AA8-4905-905E-F5C0FF68627E
-:END:
-
-Approval-by-default guard for MCP tools. Every call is classified as exactly one
-of =safe= (allowed silently), =needs_approval= (escalated to the user), or
-=deny= (blocked outright); anything unrecognised is =needs_approval=, so a newly
-added MCP server is guarded without enumerating its tools first.
-
-Read-only tools are allowlisted by name (verb prefixes like =read_*=, =list_*=,
-=get_*=, =search_*=, plus specific tool names per server). A mutating verb
-anywhere in the normalized name wins before those read-only patterns, so names
-such as =get_or_create_*= and =check_and_update_*= need approval.
-
-Enforcement is per host, so this hook is =paired-dispatched= rather than
-=paired=: classification and dispatch are byte-identical between the copies,
-which differ only in payload access and in how =needs_approval= is enforced.
-Claude Code emits =permissionDecision: ask=; Codex 0.146.0 has no =ask=
-decision, rejects it as unsupported and then *fails open*, so its copy emits
-=deny= with an instruction to confirm with the user first — the same split
-=block-destructive-command.sh= already makes.
-
-Neither copy may use a bare =exit 2=. Before 2026-07-31 both did, which was
-wrong twice over: Claude Code shows stderr as the blocking reason and the hook
-wrote none, so denials surfaced as =hook error: No stderr output=; and Codex
-treats =exit 2= with an empty stderr as a *failed* hook and lets the call
-through, so the guard blocked nothing at all under Codex.
-=tests/test_security_hook_hardening.py= asserts the decision each host
-receives, not the exit code — the earlier tests asserted =returncode == 2=
-under names that said "requires confirmation", which is why the defect
-survived.
-
-Browser tools (=mcp__claude-in-chrome__*=) are classified from their *inputs*,
-not their names alone. Session plumbing, tab management, observation and
-http(s) navigation are =safe=; clicking, typing, key presses, dragging, forms,
-uploads, arbitrary JavaScript and configured shortcuts are =needs_approval=;
-and =javascript:=, =file:=, =data:=, =about:=, =blob:=, =view-source:= and
-=chrome:= navigation targets are denied, since they reach past the page into
-the browser and the local machine. =browser_batch= is inspected item by item
-and takes the most restrictive verdict, so a batch cannot smuggle a click past
-a check of the wrapper. Name-only matching previously allowed every
-page-reading tool while denying =navigate= and =tabs_create_mcp=, leaving the
-permitted read tools unable to reach a page at all.
-
-The live Claude and tracked Codex registrations use =mcp__.*=. Current Claude
-Code and Codex releases treat the former metacharacter-free =mcp__= form as an
-exact tool name; the explicit wildcard is therefore required for this hook to
-cover MCP tool names.
-
-Ahrefs MCP tools are a special case: only documentation and subscription-info
-tools are treated as read-only-safe. Paid Ahrefs analytics endpoints consume
-shared workspace units even when they do not mutate external state, so they are
-not allowlisted here.
 
 *** require-elisp-skill.sh (PreToolUse)
 :PROPERTIES:

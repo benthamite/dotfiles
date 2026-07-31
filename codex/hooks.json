@@ -101,16 +101,6 @@
         ]
       },
       {
-        "matcher": "mcp__.*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/My\\ Drive/dotfiles/codex/hooks/guard-external-actions.sh",
-            "timeout": 5
-          }
-        ]
-      },
-      {
         "matcher": "apply_patch|Edit|Write",
         "hooks": [
           {

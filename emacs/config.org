@@ -3767,6 +3767,9 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package yasnippet
+  :ensure (:host github
+                 :repo "benthamite/yasnippet"
+                 :branch "fix/post-command-handler-quit") ; awaiting PR merge: https://github.com/joaotavora/yasnippet/pull/1228
   :custom
   (yas-snippet-dirs (list paths-dir-yasnippets
                           paths-dir-yasnippets-private

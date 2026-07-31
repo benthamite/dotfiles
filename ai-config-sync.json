@@ -317,7 +317,7 @@
       "claude": "claude/hooks/block-github-write-command.sh",
       "codex": "codex/hooks/block-github-write-command.sh",
       "status": "paired-dispatched",
-      "note": "paired GitHub write gate for shell commands; blocks git push and mutating gh operations unless the target repo is in agents/github-write-allowlist.txt. Codex side normalizes Bash, exec_command, functions.exec, and functions.exec_command payloads via lib-codex-hook-json.sh; Claude side is delegated by pretooluse-bash.sh."
+      "note": "paired GitHub write gate for shell commands; blocks git push and mutating gh operations unless the target repo matches an exact OWNER/REPO entry or OWNER/* account wildcard in agents/github-write-allowlist.txt. Codex side normalizes Bash, exec_command, functions.exec, and functions.exec_command payloads via lib-codex-hook-json.sh; Claude side is delegated by pretooluse-bash.sh."
     },
     {
       "name": "block-secret-leak.sh",
@@ -668,7 +668,7 @@
       "path": "agents/github-write-allowlist.txt",
       "tracked": true,
       "live_path": "tracked dotfiles file",
-      "note": "Shared deny-by-default allowlist for agent-initiated GitHub writes. Codex guards block git push and mutating gh operations unless the target repo appears here. The Claude shell guard also permits repos administered by the authenticated gh user, checked live through GitHub permissions and failing closed to this allowlist. The file is empty by default and should include only repos Pablo personally created."
+      "note": "Shared deny-by-default allowlist for agent-initiated GitHub writes. Claude and Codex guards block git push and mutating gh operations unless the target repo matches an exact OWNER/REPO entry or OWNER/* account wildcard here. The benthamite/* entry permits repositories in Pablo's GitHub account; other entries should cover only repositories or accounts Pablo explicitly authorizes."
     },
     {
       "tool": "Codex",

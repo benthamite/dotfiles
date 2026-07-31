@@ -4,10 +4,9 @@
 # This is a hard gate for the incident class where an agent creates PRs,
 # pushes branches, sets secrets, or otherwise mutates an organization repo
 # after inferring permission from context. Read-only GitHub inspection remains
-# allowed. Write operations are allowed when the authenticated gh user
-# administers the target repo (i.e. repos you own/created), checked live via
-# `gh api repos/<owner>/<repo> .permissions.admin`; otherwise the target repo
-# must appear in agents/github-write-allowlist.txt.
+# allowed. Write operations are allowed when the target repo matches an exact
+# OWNER/REPO entry or an OWNER/* account wildcard in
+# agents/github-write-allowlist.txt.
 #
 # Matcher: Bash
 
@@ -31,7 +30,7 @@ deny() {
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",
       "permissionDecision": "deny",
-      "permissionDecisionReason": ("BLOCKED: " + $label + ".\n\n" + $detail + "\n\nGitHub writes are auto-allowed for repos you administer on GitHub (checked live via `gh`). Otherwise the target must be listed in `~/My Drive/dotfiles/agents/github-write-allowlist.txt` — add a repo there only if you cannot administer it but still need write access.")
+      "permissionDecisionReason": ("BLOCKED: " + $label + ".\n\n" + $detail + "\n\nGitHub writes are allowed only when the target matches an exact OWNER/REPO entry or OWNER/* account wildcard in `~/My Drive/dotfiles/agents/github-write-allowlist.txt`.")
     }
   }'
     exit 0
@@ -100,26 +99,20 @@ repo_from_local_git() {
     return 1
 }
 
-# True when the authenticated gh user administers the repo (i.e. owns/created
-# it, or is an org admin on it). This is the "it's mine" test that makes the
-# manual allowlist unnecessary. Fails CLOSED: if gh is missing, unauthenticated,
-# offline, or the repo is inaccessible, this returns non-zero and the caller
-# falls through to the explicit allowlist.
-repo_owned_p() {
-    local repo
-    repo=$(normalize_repo "$1")
-    [ -n "$repo" ] || return 1
-    command -v gh >/dev/null 2>&1 || return 1
-    local is_admin
-    is_admin=$(gh api "repos/$repo" --jq '.permissions.admin' 2>/dev/null || true)
-    [ "$is_admin" = "true" ]
-}
-
 repo_allowed_p() {
-    local repo
+    local repo pattern
     repo=$(normalize_repo "$1")
     [ -f "$ALLOWLIST" ] || return 1
-    awk '
+    while IFS= read -r pattern; do
+	case "$pattern" in
+	    */\*)
+		[[ "$repo" == "${pattern%\*}"* ]] && return 0
+		;;
+	    *)
+		[ "$repo" = "$pattern" ] && return 0
+		;;
+	esac
+    done < <(awk '
     /^[[:space:]]*($|#)/ { next }
     {
       repo=$1
@@ -128,7 +121,8 @@ repo_allowed_p() {
       gsub(/\.git$/, "", repo)
       print tolower(repo)
     }
-  ' "$ALLOWLIST" | grep -Fxq "$repo"
+  ' "$ALLOWLIST")
+    return 1
 }
 
 require_allowed_repo() {
@@ -136,9 +130,6 @@ require_allowed_repo() {
     local repo="$2"
     if [ -z "$repo" ]; then
 	deny "$action has no unambiguous repository target" "The guard blocks ambiguous GitHub writes. Make the target repo explicit and add it to the allowlist only if Pablo personally created it."
-    fi
-    if repo_owned_p "$repo"; then
-	return 0
     fi
     if ! repo_allowed_p "$repo"; then
 	deny "$action targets non-allowlisted repo $repo" "Do not infer write permission from org membership, affected-repo context, maintainer requests, or a general \"proceed\"."

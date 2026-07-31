@@ -1,17 +1,19 @@
 #!/bin/bash
 # PreToolUse hook: block reads of sensitive files (secrets, keys, tokens).
 #
-# Fires on Read AND Bash. Blocks operations that would expose the contents of
+# Handles Read, Grep, and Bash. Blocks operations that would expose the contents of
 # a sensitive file in the conversation context. This hook must never ask for
 # interactive confirmation because it also protects unattended runs.
 #
 # - On Read: matches the target file_path against a sensitive-path set.
+# - On Grep: blocks content output when the path, glob, or directory scope can
+#   include sensitive files. Filename/count-only modes remain available.
 # - On Bash: scans the command for any mention of the same sensitive paths.
 #   Allowlists safe operations (ls/stat/file/wc/test, grep -l/-c/-q/-L,
 #   the auth-aware tools pass/op/git-crypt/security). Anything else that
 #   touches a sensitive path content-extracts by default — block.
 #
-# Matchers in settings.json: Read, Bash
+# Matchers in settings.json: Read, Grep, Bash
 
 set -euo pipefail
 
@@ -24,7 +26,7 @@ deny() {
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",
       "permissionDecision": "deny",
-      "permissionDecisionReason": ("BLOCKED: sensitive read: " + $label + " — " + $detail + ".\n\nThis could expose secret values in the conversation context. Use a safe alternative: pass/op/git-crypt for auth-managed secrets; ls/stat/file/wc -l/-c for metadata; grep -l/-c/-q/-L for filename/count/quiet matches. Loading environment files into a subprocess is allowed only when the command does not print or inspect the loaded secrets.")
+      "permissionDecisionReason": ("BLOCKED: sensitive read: " + $label + " — " + $detail + ".\n\nThis could expose secret values in the conversation context. Use a safe alternative: pass/op/git-crypt for auth-managed secrets; ls/stat/file/wc -l/-c or git check-ignore/git ls-files for metadata; grep -l/-c/-q/-L for filename/count/quiet matches. Loading environment files into a subprocess is allowed only when the command does not print or inspect the loaded secrets.")
     }
   }'
   exit 0
@@ -56,6 +58,48 @@ is_safe_env_loader() {
   echo "$command" | grep -qE '\b(cat|sed|awk|perl|python[0-9.]*|ruby|node|head|tail|less|more|grep|rg|ripgrep)\b[^&;|]*\.envrc\b' && return 1
 
   return 0
+}
+
+has_shell_composition() {
+  local command="$1"
+
+  # A safe command prefix is not enough: `ls sensitive; cat sensitive` and
+  # similar chains must not inherit the first command's allowance. Conservatively
+  # require metadata/auth-aware allowances below to be a single shell command.
+  printf '%s' "$command" | grep -qE '[;&|<>`]|[$][(]' && return 0
+  case "$command" in
+    *$'\n'*) return 0 ;;
+  esac
+  return 1
+}
+
+grep_scope_label() {
+  local path="$1"
+
+  case "$path" in
+    "$HOME"|"$HOME/"|/)
+      printf '%s\n' "broad directory scope containing user secrets"; return ;;
+    "$HOME/.ssh"|"$HOME/.ssh/"*|/Users/pablostafforini/.ssh|/Users/pablostafforini/.ssh/*)
+      printf '%s\n' "SSH directory"; return ;;
+    "$HOME/.password-store"|"$HOME/.password-store/"*|/Users/pablostafforini/.password-store|/Users/pablostafforini/.password-store/*)
+      printf '%s\n' "password store"; return ;;
+    "$HOME/.gnupg"|"$HOME/.gnupg/"*|/Users/pablostafforini/.gnupg|/Users/pablostafforini/.gnupg/*)
+      printf '%s\n' "GPG keyring"; return ;;
+    "$HOME/.zsh_history"|"$HOME/.zsh_sessions"|"$HOME/.zsh_sessions/"*|/Users/pablostafforini/.zsh_history|/Users/pablostafforini/.zsh_sessions|/Users/pablostafforini/.zsh_sessions/*)
+      printf '%s\n' "shell history"; return ;;
+    "$HOME/.gmail-mcp-epoch/credentials"|"$HOME/.gmail-mcp-epoch/credentials/"*|/Users/pablostafforini/.gmail-mcp-epoch/credentials|/Users/pablostafforini/.gmail-mcp-epoch/credentials/*)
+      printf '%s\n' "Gmail MCP credentials"; return ;;
+    .env|*/.env|.env.*|*/.env.*|.envrc|*/.envrc)
+      printf '%s\n' "environment secrets file"; return ;;
+    .mcp.json|*/.mcp.json|mcp.json|*/mcp.json)
+      printf '%s\n' "MCP credential config"; return ;;
+    *.zshenv-secrets)
+      printf '%s\n' "shell secrets file"; return ;;
+    */.config/*/tokens.json|*/.config/*/secret.json|*/.config/*/client_secret*.json)
+      printf '%s\n' "OAuth credentials"; return ;;
+    */credentials.json|*/service-account*.json|*/tokens.json)
+      printf '%s\n' "credential JSON"; return ;;
+  esac
 }
 
 # --------------------------------------------------------------------------
@@ -120,6 +164,38 @@ if [ "$TOOL_NAME" = "Read" ]; then
 fi
 
 # --------------------------------------------------------------------------
+# Grep tool branch — content mode can expose matched lines from every file
+# under a directory even when the path itself is not a sensitive filename.
+# --------------------------------------------------------------------------
+
+if [ "$TOOL_NAME" = "Grep" ]; then
+  OUTPUT_MODE=$(printf '%s' "$INPUT" | jq -r '.tool_input.output_mode // "files_with_matches"')
+
+  # Filename/count-only modes do not return matched file contents.
+  case "$OUTPUT_MODE" in
+    files_with_matches|count) exit 0 ;;
+  esac
+
+  GREP_PATH=$(printf '%s' "$INPUT" | jq -r '.tool_input.path // empty')
+  [ -z "$GREP_PATH" ] && GREP_PATH=$(printf '%s' "$INPUT" | jq -r '.cwd // empty')
+  [ -z "$GREP_PATH" ] && GREP_PATH=$PWD
+  EXPANDED_PATH="${GREP_PATH/#\~/$HOME}"
+  GLOB=$(printf '%s' "$INPUT" | jq -r '.tool_input.glob // empty')
+
+  LABEL=$(grep_scope_label "$EXPANDED_PATH")
+  if [ -n "$LABEL" ]; then
+    deny "$LABEL" "Grep content output could return matching lines from $GREP_PATH"
+  fi
+
+  case "$GLOB" in
+    *".env"*|*".envrc"*|*".mcp.json"*|*"mcp.json"*|*".zshenv-secrets"*|*".zsh_history"*|*".zsh_sessions"*|*".password-store"*|*".gnupg"*|*"id_"*|*"credentials.json"*|*"service-account"*|*"tokens.json"*|*"secret.json"*|*"client_secret"*)
+      deny "sensitive file glob" "Grep content output with glob $GLOB could return secret values" ;;
+  esac
+
+  exit 0
+fi
+
+# --------------------------------------------------------------------------
 # Bash tool branch — scan the command string for sensitive path mentions.
 # --------------------------------------------------------------------------
 
@@ -162,6 +238,10 @@ if [ "$TOOL_NAME" = "Bash" ]; then
     allow_env_loader
   fi
 
+  if has_shell_composition "$COMMAND"; then
+    deny "$SENSITIVE_LABEL" "compound Bash command cannot use a metadata-command allowance safely"
+  fi
+
   # 2. Allowlist of safe operations on these paths.
   #    Each rule must be tight enough that it only matches commands which
   #    cannot extract file content.
@@ -169,6 +249,11 @@ if [ "$TOOL_NAME" = "Bash" ]; then
   # Auth-aware tools (these manage secrets safely; allow even when the
   # command names a sensitive path, e.g. `pass insert` or `git-crypt unlock`).
   if echo "$COMMAND" | grep -qE '^[[:space:]]*(pass[[:space:]]|op[[:space:]]|git-crypt[[:space:]]|security[[:space:]])'; then
+    exit 0
+  fi
+
+  # Git ignore/index metadata does not expose tracked file contents.
+  if echo "$COMMAND" | grep -qE '^[[:space:]]*git[[:space:]]+(check-ignore|ls-files)([[:space:]]|$)'; then
     exit 0
   fi
 

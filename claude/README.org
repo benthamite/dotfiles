@@ -1243,7 +1243,39 @@ Blocks edits to =.texi= files, which are auto-generated from =.org= sources via 
 :ID:       8B4D91E7-7EA8-44FC-83E9-FD92097997BA
 :END:
 
-Guards against accidental ingestion of sensitive files into the context window. Fires on =Read= AND =Bash=, checking either the target =file_path= or the Bash command for the same sensitive-path set: =~/.password-store/=, =.mcp.json= / =mcp.json=, =.zshenv-secrets=, =.env= files, =~/.ssh/id_*= (private keys), =~/.gnupg/=, =tokens.json= inside =~/.config/=, =~/.gmail-mcp-epoch/credentials/=, =secret.json= / =client_secret*.json= inside =~/.config/=, and generic credential JSON such as =credentials.json= or =service-account*.json=. The Bash branch allowlists operations that legitimately mention these paths without exposing content: auth-aware tools (=pass=, =op=, =git-crypt=, =security=), metadata commands (=ls=, =stat=, =file=, =basename=, =dirname=, =realpath=), =wc= with safe flags, =grep=/=rg=/=ripgrep= with non-content flags (=-l=, =-c=, =-q=, =-L=), and existence tests (=[ -f=, =[[ -f=, =test -f=). It also allows narrowly safe commands that source quoted or unquoted =.env= / =.envrc= files only as subprocess environment, including common =set -a= / =set +a= wrappers, while still blocking commands that print or parse those files or dump the environment. Anything else that touches a sensitive path is treated as content-extraction and denied with =permissionDecision: "deny"= rather than escalated, because this hook also protects unattended runs. Closes the structural gap that allowed e.g. =grep ANNAS .zshenv-secrets= or =rg asana .mcp.json= to dump the secret value into the transcript via Bash, bypassing literal-secret-only input scanning.
+Guards against accidental ingestion of sensitive files into the context window.
+The standalone hook handles =Read=, =Grep=, and =Bash=. =Read= checks the
+target =file_path=. =Grep= permits filename/count-only modes but denies content
+output when the path, glob, omitted-path working directory, or broad home
+directory scope can include sensitive files. =Bash= checks the command for the
+same sensitive-path set: =~/.password-store/=, =.mcp.json= / =mcp.json=,
+=.zshenv-secrets=, =.env= files, =~/.ssh/id_*= (private keys),
+=~/.gnupg/=, =tokens.json= inside =~/.config/=,
+=~/.gmail-mcp-epoch/credentials/=, =secret.json= / =client_secret*.json=
+inside =~/.config/=, and generic credential JSON such as =credentials.json= or
+=service-account*.json=. The Bash branch allowlists operations that legitimately
+mention these paths without exposing content: auth-aware tools (=pass=, =op=,
+=git-crypt=, =security=), metadata commands (=ls=, =stat=, =file=,
+=basename=, =dirname=, =realpath=), =wc= with safe flags,
+=grep=/=rg=/=ripgrep= with non-content flags (=-l=, =-c=, =-q=, =-L=), and
+existence tests (=[ -f=, =[[ -f=, =test -f=). =git check-ignore= and
+=git ls-files= are also allowed as content-free ignore/index metadata queries.
+These allowances require a single shell command; a compound command cannot
+acquire permission merely because its first command is metadata-only. The hook
+also allows narrowly safe
+commands that source quoted or unquoted =.env= / =.envrc= files only as
+subprocess environment, including common =set -a= / =set +a= wrappers, while
+still blocking commands that print or parse those files or dump the environment.
+Anything else that touches a sensitive path is treated as content-extraction
+and denied with =permissionDecision: "deny"= rather than escalated, because this
+hook also protects unattended runs.
+
+The protected live Claude configuration currently registers this standalone
+hook for =Read= only. =Bash= uses the self-protected inlined copy in
+=pretooluse-bash.sh=, and =Grep= is not yet registered. Therefore the
+single-command Bash rule and Grep coverage described above do not become live
+Claude controls until those protected registrations/copies are updated manually
+outside the agent session.
 
 *** block-secret-leak.sh (PreToolUse)
 :PROPERTIES:
@@ -1316,19 +1348,32 @@ write-style =gh api= calls. Read-only =gh= inspection remains allowed.
 :ID:       280F37C2-3311-4B37-9330-5390612DF915
 :END:
 
-Blocks agent edits to =agents/github-write-allowlist.txt=, the GitHub write
-guard scripts, tracked =codex/hooks.json=, live =~/.codex/hooks.json=, and live
-=~/.claude/settings.json=. This makes the GitHub write gate a hard local
-mechanism rather than a policy an agent can bypass by patching its own
-allowlist or disabling the hook. Policy changes should be made manually outside
-the agent session.
+Blocks direct agent edits to =agents/github-write-allowlist.txt=, the GitHub
+write guard scripts, tracked =codex/hooks.json=, live =~/.codex/hooks.json=,
+and live =~/.claude/settings.json= through the registered edit and shell paths.
+This prevents the ordinary edit-then-write bypass. It is a user-level guardrail,
+not a privilege boundary: alternate path spellings, inactive worktree copies,
+and future tool surfaces need separate audit coverage. Policy changes should be
+made manually outside the agent session.
 
 *** guard-external-actions.sh (PreToolUse)
 :PROPERTIES:
 :ID:       963E9C95-5AA8-4905-905E-F5C0FF68627E
 :END:
 
-Deny-by-default guard for all MCP tools. Fires on all =mcp__= tools. Read-only tools are explicitly allowlisted (pattern-matched on verb prefixes like =read_*=, =list_*=, =get_*=, =search_*=, plus specific tool names per server). Everything else exits 2 to require user confirmation. This ensures new MCP servers and tools are guarded automatically without needing to enumerate every dangerous action.
+Deny-by-default guard logic for MCP tools. Read-only tools are explicitly
+allowlisted (pattern-matched on verb prefixes like =read_*=, =list_*=,
+=get_*=, =search_*=, plus specific tool names per server). A mutating verb
+anywhere in the normalized name wins before those read-only patterns, so names
+such as =get_or_create_*= and =check_and_update_*= require confirmation.
+Everything else exits 2 to require user confirmation.
+
+The registered matcher must be =mcp__.*= (or =^mcp__=). Current Claude Code and
+Codex releases treat the metacharacter-free matcher =mcp__= as an exact tool
+name, so the protected live Claude registration and tracked Codex registration
+do not currently fire this hook. Until those files are changed manually outside
+the agent session, this hook is not an active compensating control for the MCP
+preallow surface.
 
 Ahrefs MCP tools are a special case: only documentation and subscription-info
 tools are treated as read-only-safe. Paid Ahrefs analytics endpoints consume

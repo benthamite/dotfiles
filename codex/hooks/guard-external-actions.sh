@@ -10,7 +10,8 @@
 # *_read*, *_list*, *_get*, *_search*, *_find*, *_context*, *_overview*,
 # *_history*, *_stats*, *_info*, *_check*, plus per-server tool names.
 #
-# Matcher: mcp__
+# Required matcher: mcp__.* (or ^mcp__). A bare mcp__ matcher is an exact
+# tool-name match in current Claude Code and Codex releases, so it never fires.
 
 set -euo pipefail
 
@@ -29,7 +30,22 @@ echo "$TOOL_NAME" | grep -q '^mcp__' || exit 0
 bare_tool="${TOOL_NAME#mcp__}"       # remove first mcp__
 bare_tool="${bare_tool#*__}"          # remove <server>__
 
-# 2. Match read-only patterns against the bare tool name.
+# 2. Reject mixed names that contain a mutating verb before considering
+#    read-only prefixes. Without this check, names such as get_or_create_*
+#    and check_and_update_* are incorrectly admitted by get_* and *_check*.
+normalized_tool=$(
+  printf '%s' "$bare_tool" \
+    | sed -E 's/([[:lower:][:digit:]])([[:upper:]])/\1_\2/g; s/[^[:alnum:]]+/_/g' \
+    | tr '[:upper:]' '[:lower:]'
+)
+normalized_tool="_${normalized_tool}_"
+case "$normalized_tool" in
+  *_create_*|*_update_*|*_delete_*|*_write_*|*_send_*|*_insert_*|*_remove_*|*_set_*|*_add_*|*_upload_*|*_publish_*|*_execute_*|*_trigger_*|*_start_*|*_stop_*|*_enable_*|*_disable_*|*_approve_*|*_reject_*|*_archive_*|*_unarchive_*|*_invite_*|*_move_*|*_copy_*|*_rename_*|*_edit_*|*_modify_*|*_restore_*|*_revoke_*|*_grant_*|*_submit_*|*_reply_*)
+    exit 2
+    ;;
+esac
+
+# 3. Match read-only patterns against the bare tool name.
 #    We use a case statement with glob patterns for clarity and speed.
 case "$bare_tool" in
   # Patterns: <verb>_<rest> (prefix match)

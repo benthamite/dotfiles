@@ -640,8 +640,9 @@ commands that would read or search known credential-bearing paths such as
 OAuth token/client-secret JSON, generic credential JSON, and =.env= files.
 It allowlists content-free metadata checks (=ls=, =stat=, =file=, =wc=),
 quiet/count/name-only searches (=grep=/=rg= with =-q=, =-c=, =-l=, or =-L=),
-existence tests, and auth-aware tools (=pass=, =op=, =git-crypt=,
-=security=). It also allows narrowly safe commands that source quoted or
+existence tests, ignore/index metadata queries (=git check-ignore= and
+=git ls-files=), and auth-aware tools (=pass=, =op=, =git-crypt=, =security=).
+It also allows narrowly safe commands that source quoted or
 unquoted =.env= / =.envrc= files only as subprocess environment, including
 common =set -a= / =set +a= wrappers, while still blocking commands that print
 or parse those files or dump the environment. This closes the gap where a
@@ -685,8 +686,19 @@ target repository is listed in =agents/github-write-allowlist.txt=. It covers
 release= / =gh repo= commands, and write-style =gh api= calls. Read-only =gh=
 inspection remains allowed. =block-github-guard-edit.sh= makes the allowlist,
 guard files, tracked =codex/hooks.json=, live =~/.codex/hooks.json=, and live
-=~/.claude/settings.json= self-protected so an agent cannot first edit its own
-policy and then perform the blocked write. The allowlist is empty by default.
+=~/.claude/settings.json= self-protected through the registered edit and shell
+paths so an agent cannot ordinarily edit its own policy and then perform the
+blocked write. This is a user-level guardrail rather than a privilege boundary;
+alternate path spellings, inactive worktree copies, and future tool surfaces
+still require audit coverage. The allowlist is empty by default.
+
+=guard-external-actions.sh= contains deny-by-default MCP tool logic. It checks
+for mutating verbs before applying the read-only name allowlist, so mixed names
+such as =get_or_create_*= and =check_and_update_*= require confirmation. The
+registration must use =mcp__.*= (or =^mcp__=): Codex treats the current bare
+=mcp__= matcher as an exact tool name, so the protected =codex/hooks.json=
+registration does not currently fire. Updating that matcher remains a manual
+outside-agent policy change.
 
 The =UserPromptSubmit= hook forwards lifecycle state for Emacs-owned sessions
 through =codex-hook-wrapper=. The matcher is empty because =UserPromptSubmit=

@@ -21,7 +21,7 @@ deny() {
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",
       "permissionDecision": "deny",
-      "permissionDecisionReason": ("BLOCKED: sensitive read: " + $label + " — " + $detail + ".\n\nThis could expose secret values in the conversation context. Use a safe alternative: pass/op/git-crypt/security for auth-managed secrets; ls/stat/file/wc for metadata; grep/rg with -l, -c, -q, or -L for filename/count/quiet checks; or a purpose-built helper that returns only non-secret metadata.")
+      "permissionDecisionReason": ("BLOCKED: sensitive read: " + $label + " — " + $detail + ".\n\nThis could expose secret values in the conversation context. Use a safe alternative: pass/op/git-crypt/security for auth-managed secrets; ls/stat/file/wc or git check-ignore/git ls-files for metadata; grep/rg with -l, -c, -q, or -L for filename/count/quiet checks; or a purpose-built helper that returns only non-secret metadata.")
     }
   }'
   exit 0
@@ -51,6 +51,19 @@ is_safe_env_loader() {
   echo "$command" | grep -qE '\b(cat|sed|awk|perl|python[0-9.]*|ruby|node|head|tail|less|more|grep|rg|ripgrep)\b[^&;|]*\.envrc\b' && return 1
 
   return 0
+}
+
+has_shell_composition() {
+  local command="$1"
+
+  # A safe command prefix is not enough: `ls sensitive; cat sensitive` and
+  # similar chains must not inherit the first command's allowance. Conservatively
+  # require metadata/auth-aware allowances below to be a single shell command.
+  printf '%s' "$command" | grep -qE '[;&|<>`]|[$][(]' && return 0
+  case "$command" in
+    *$'\n'*) return 0 ;;
+  esac
+  return 1
 }
 
 sensitive_label_for_text() {
@@ -101,8 +114,17 @@ case "$TOOL_NAME" in
       allow_env_loader
     fi
 
+    if has_shell_composition "$COMMAND"; then
+      deny "$LABEL" "compound shell command cannot use a metadata-command allowance safely"
+    fi
+
     # Auth-aware tools manage secrets safely.
     if echo "$COMMAND" | grep -qE '^[[:space:]]*(pass[[:space:]]|op[[:space:]]|git-crypt[[:space:]]|security[[:space:]])'; then
+      exit 0
+    fi
+
+    # Git ignore/index metadata does not expose tracked file contents.
+    if echo "$COMMAND" | grep -qE '^[[:space:]]*git[[:space:]]+(check-ignore|ls-files)([[:space:]]|$)'; then
       exit 0
     fi
 

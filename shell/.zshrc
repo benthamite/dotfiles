@@ -1,3 +1,6 @@
+# Prevent high-confidence credential patterns from reaching persistent history.
+source "$HOME/My Drive/dotfiles/shell/zsh-history-security.zsh"
+
 # nvm lazy loading (NVM_DIR is in .zshenv; path must also be set here
 # because macOS path_helper in /etc/zprofile reorders PATH after .zshenv)
 export PATH="$NVM_DIR/versions/node/v20.18.2/bin:$PATH"

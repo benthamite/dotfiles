@@ -158,8 +158,24 @@ def build_parser():
     r.add_argument("--format", choices=["tsv", "json"], default="tsv")
     r.set_defaults(func=cmd_read)
 
+    # `write` and `append` take their cell values on stdin, which is easy to
+    # miss: the argument list stops at the range, so the obvious reading is that
+    # the value is a third positional. Say so in --help.
+    stdin_values_help = (
+        "Reads cell values from stdin: one spreadsheet row per line, columns\n"
+        "separated by tabs. The values are not command-line arguments.\n"
+        "\n"
+        "  printf 'new value\\n' | sheets.py write SPREADSHEET_ID C8\n"
+        "  printf 'a\\tb\\nc\\td\\n' | sheets.py write SPREADSHEET_ID A1:B2"
+    )
+
     for name, fn in [("write", cmd_write), ("append", cmd_append), ("clear", cmd_clear)]:
-        s = sub.add_parser(name, parents=[sub_account])
+        s = sub.add_parser(
+            name,
+            parents=[sub_account],
+            description=None if fn is cmd_clear else stdin_values_help,
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+        )
         s.add_argument("spreadsheet_id")
         s.add_argument("range")
         s.set_defaults(func=fn)

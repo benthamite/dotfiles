@@ -379,8 +379,9 @@
       "name": "guard-external-actions.sh",
       "claude": "claude/hooks/guard-external-actions.sh",
       "codex": "codex/hooks/guard-external-actions.sh",
-      "status": "paired",
-      "note": "paired for MCP tool names; Ahrefs MCP allowlist intentionally covers only docs and subscription-info tools because paid read-only Ahrefs analytics calls consume shared workspace units"
+      "status": "paired-dispatched",
+      "note": "paired-dispatched for MCP tool names and inputs; classification and dispatch are byte-identical, and the copies differ only in payload access and in how needs_approval is enforced. Claude emits permissionDecision ask; Codex 0.146.0 has no ask decision and rejects it as unsupported (failing open), so its copy emits deny with a confirm-with-the-user instruction, matching block-destructive-command.sh. Neither copy may use a bare exit 2: Codex treats exit 2 with empty stderr as a failed hook and lets the call through. Ahrefs MCP allowlist intentionally covers only docs and subscription-info tools because paid read-only Ahrefs analytics calls consume shared workspace units.",
+      "equivalence": "Classification and dispatch are byte-identical; the copies differ only in the tool_input accessor and the needs_approval emitter, per the note above."
     },
     {
       "name": "lib-codex-hook-json.sh",

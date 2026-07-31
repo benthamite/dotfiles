@@ -18,10 +18,14 @@ All elpaca-managed packages, whether authored by the user or third-party, are cl
 
 After a `dotfiles` commit, the local git `post-commit` and `post-rewrite` hooks sync the elpaca mirror and trigger `elpaca-extras-rebuild-and-reload` for changed extras packages. The hook polls the returned status token with short `emacsclient` calls instead of calling `elpaca-wait` inside the live daemon. Pushing is a separate sharing step, not what makes the local elpaca clone current.
 
-If you need to rebuild manually after the relevant working tree changes are committed, use the same status-token pattern:
+If you need to rebuild manually after the relevant working tree changes are
+committed, target the changed extras package, not the aggregate `dotfiles`
+source clone.  Use the `.el` basename as the package name (for example,
+`eww-extras` for `eww-extras.el`) with the same status-token pattern:
 
 ```bash
-token=$(emacsclient -e "(elpaca-extras-rebuild-and-reload 'dotfiles)" | sed 's/^"//; s/"$//')
+package=eww-extras
+token=$(emacsclient -e "(elpaca-extras-rebuild-and-reload '$package)" | sed 's/^"//; s/"$//')
 while status=$(emacsclient -e "(elpaca-extras-format-build-reload-status \"$token\")" | sed 's/^"//; s/"$//'); do
   case "$status" in
     finished:*|failed:*) printf '%s\n' "$status"; break ;;

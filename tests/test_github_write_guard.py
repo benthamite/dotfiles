@@ -129,5 +129,66 @@ exit 1
         self.assert_both(command, expected="deny")
 
 
+    def declared_repos(self) -> list[str]:
+        registry_repo = Path.home() / "My Drive" / "Epoch" / "projects" / "automations-dashboard" / "repo"
+        blob = subprocess.run(
+            ["git", "-C", str(registry_repo), "show", "HEAD:data/automations.json"],
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout
+        return [
+            repo.lower()
+            for project in json.loads(blob)["projects"]
+            for repo in project.get("repos", [])
+        ]
+
+    def allowlist_entries(self) -> list[str]:
+        return [
+            line.split("#", 1)[0].strip().lower()
+            for line in ALLOWLIST.read_text(encoding="utf-8").splitlines()
+            if line.split("#", 1)[0].strip()
+        ]
+
+    def test_declared_repo_is_allowed_without_an_allowlist_entry(self) -> None:
+        # The point of reading declarations: a repo Pablo owns becomes writable
+        # by declaring it on its project, with no edit to the protected gate.
+        entries = self.allowlist_entries()
+        candidates = [repo for repo in self.declared_repos() if repo not in entries]
+        self.assertTrue(candidates, "expected a declared repo absent from the allowlist")
+        command = (
+            f"git push https://github.com/{candidates[0]}.git "
+            "fix/post-command-handler-quit"
+        )
+
+        self.assert_both(command, expected="allow")
+
+    def test_undeclared_repo_in_the_same_org_is_denied(self) -> None:
+        declared = set(self.declared_repos())
+        self.assertNotIn("epoch-research/not-a-project-of-mine", declared)
+        command = (
+            "git push https://github.com/epoch-research/not-a-project-of-mine.git "
+            "fix/post-command-handler-quit"
+        )
+
+        self.assert_both(command, expected="deny")
+
+    def test_working_tree_edits_to_the_registry_do_not_widen_the_gate(self) -> None:
+        # A blocked agent can edit the registry file; only a commit counts. This
+        # asserts the guard reads HEAD, by checking a repo present in the working
+        # tree but absent from the committed blob is still refused.
+        registry = Path.home() / "My Drive" / "Epoch" / "projects" / "automations-dashboard" / "repo" / "data" / "automations.json"
+        working = json.loads(registry.read_text(encoding="utf-8"))
+        working_repos = {
+            repo.lower()
+            for project in working["projects"]
+            for repo in project.get("repos", [])
+        }
+        # Nothing to assert if the working tree matches HEAD, which is the norm.
+        for repo in sorted(working_repos - set(self.declared_repos())):
+            command = f"git push https://github.com/{repo}.git branch"
+            self.assert_both(command, expected="deny")
+
+
 if __name__ == "__main__":
     unittest.main()

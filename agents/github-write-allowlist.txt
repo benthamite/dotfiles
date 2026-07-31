@@ -6,4 +6,3 @@
 # Add only repositories or accounts Pablo explicitly wants agents to mutate.
 benthamite/*
 trajectory-labs-pbc/reasoning-tasks
-epoch-research/bench-scraper

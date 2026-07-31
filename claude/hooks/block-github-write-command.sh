@@ -30,7 +30,7 @@ deny() {
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",
       "permissionDecision": "deny",
-      "permissionDecisionReason": ("BLOCKED: " + $label + ".\n\n" + $detail + "\n\nGitHub writes are allowed only when the target matches an exact OWNER/REPO entry or OWNER/* account wildcard in `~/My Drive/dotfiles/agents/github-write-allowlist.txt`.")
+      "permissionDecisionReason": ("BLOCKED: " + $label + ".\n\n" + $detail + "\n\nGitHub writes are allowed only when the target matches an exact OWNER/REPO entry or OWNER/* account wildcard in `~/My Drive/dotfiles/agents/github-write-allowlist.txt`, or is declared by an Epoch project via :REPOS: and committed to the automations registry.")
     }
   }'
     exit 0
@@ -99,10 +99,34 @@ repo_from_local_git() {
     return 1
 }
 
+# Repos declared by Epoch project docs, resolved at decision time.
+#
+# Ownership lives in each project's :REPOS: drawer property and is collected
+# into the `repos` field of the registry below by `make import`. Consulting it
+# here is what keeps the allowlist from needing a second copy of that list:
+# declaring a repo on the project that owns it is enough to make it writable.
+#
+# The committed version is read, never the working tree. An agent can edit a
+# tracked file freely, so trusting the working tree would let a blocked agent
+# add its own target and retry. Requiring a commit means widening this gate
+# always leaves a trail in history.
+#
+# The paths are fixed rather than overridable by environment variable, which
+# would let a caller point this at a registry it controls -- the same bypass.
+DECLARED_REPOS_REPO="$HOME/My Drive/Epoch/projects/automations-dashboard/repo"
+DECLARED_REPOS_PATH="data/automations.json"
+
+declared_repos() {
+    [ -d "$DECLARED_REPOS_REPO" ] || return 0
+    git -C "$DECLARED_REPOS_REPO" show "HEAD:$DECLARED_REPOS_PATH" 2>/dev/null \
+        | jq -r '.projects[]?.repos[]? // empty' 2>/dev/null \
+        | tr '[:upper:]' '[:lower:]'
+}
+
 repo_allowed_p() {
     local repo pattern
     repo=$(normalize_repo "$1")
-    [ -f "$ALLOWLIST" ] || return 1
+    if [ -f "$ALLOWLIST" ]; then
     while IFS= read -r pattern; do
 	case "$pattern" in
 	    */\*)
@@ -122,6 +146,13 @@ repo_allowed_p() {
       print tolower(repo)
     }
   ' "$ALLOWLIST")
+    fi
+
+    # Declared entries are exact repos, never wildcards.
+    while IFS= read -r pattern; do
+        [ "$repo" = "$pattern" ] && return 0
+    done < <(declared_repos)
+
     return 1
 }
 
@@ -132,7 +163,7 @@ require_allowed_repo() {
 	deny "$action has no unambiguous repository target" "The guard blocks ambiguous GitHub writes. Make the target repo explicit and add it to the allowlist only if Pablo personally created it."
     fi
     if ! repo_allowed_p "$repo"; then
-	deny "$action targets non-allowlisted repo $repo" "Do not infer write permission from org membership, affected-repo context, maintainer requests, or a general \"proceed\"."
+	deny "$action targets non-allowlisted repo $repo" "Do not infer write permission from org membership, affected-repo context, maintainer requests, or a general \"proceed\". If this is one of Pablo's own repos, declare it in the owning project's :REPOS: drawer property, re-run 'make import' in automations-dashboard, and commit the registry -- declarations are read from the committed registry, so an uncommitted one has no effect."
     fi
 }
 

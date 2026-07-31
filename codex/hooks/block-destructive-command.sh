@@ -33,19 +33,6 @@ deny() {
   exit 0
 }
 
-ask() {
-  local label="$1"
-  local suggestion="$2"
-  jq -n --arg label "$label" --arg suggestion "$suggestion" '{
-    "hookSpecificOutput": {
-      "hookEventName": "PreToolUse",
-      "permissionDecision": "deny",
-      "permissionDecisionReason": ("BLOCKED: " + $label + ".\n\n" + $suggestion + "\n\nCodex hooks do not have Claude Code ask decision semantics here. Ask the user before running this command.")
-    }
-  }'
-  exit 0
-}
-
 # --- quoted-content masking --------------------------------------------------
 # The checks below match shell *syntax*, so string literals must not trigger
 # them: a commit message mentioning a force push is not a force push. Three
@@ -190,9 +177,26 @@ if echo "$SCAN" | grep -qE '\bgit\s+push[^|;&]*(\s-f\b|\s--force\b)' && \
   deny "git push --force detected" "Force-pushing can overwrite upstream history. Use --force-with-lease for branch-scoped pushes, or confirm with the user."
 fi
 
-# --- git clone (prevent cloning without approval) ---
-if echo "$SCAN" | grep -qE '\b(git\s+clone|gh\s+repo\s+clone)\b'; then
-  ask "git clone detected" "Only clone repositories the user has explicitly requested."
+# --- git clone (only clone what the user asked for) ---
+# Denies rather than escalating. AGENTS.md requires a guard to allow or deny
+# with a reason and never ask, because Pablo runs in auto mode and a prompt
+# interrupts him; the MCP approval guard was deleted on 2026-07-31 for exactly
+# that. Codex has no ask decision anyway, so this branch already denied — what
+# changes is that a requested clone is no longer a dead end.
+#
+# The rule being enforced — only clone repositories he requested by URL or name —
+# is not something a hook can verify, so the escape hatch is the agent asserting
+# that he did. That makes this a deliberate step rather than a lock, the same
+# trade ALLOW_DIRTY_REWRITE=1 makes in block-dirty-tree-rewrite.sh over higher
+# stakes.
+#
+# Two deliberate choices here. The hatch is tested against $SCAN, not $CMD, so a
+# hatch spelled inside a quoted string is masked out and cannot smuggle a clone
+# through. And the check sits inside this branch rather than being a global early
+# exit, so it can never wave through another rule in this file.
+if echo "$SCAN" | grep -qE '\b(git\s+clone|gh\s+repo\s+clone)\b' \
+  && ! echo "$SCAN" | grep -qE '(^|[[:space:]])ALLOW_CLONE=1([[:space:]]|$)'; then
+  deny "git clone detected" "Only clone repositories the user has explicitly requested by URL or name. If this is a clone they asked for, prefix the command with ALLOW_CLONE=1. If it is not, ask them in chat first."
 fi
 
 # --- git reset --hard ---

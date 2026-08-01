@@ -7,7 +7,7 @@ description: Coordinate a two-agent planner/reviewer loop across live Emacs agen
 
 ## Overview
 
-Run a supervised loop where one live `agent.el` session creates or revises work and another live `agent.el` session reviews it. The skill exists to prevent the failure mode where the supervisor stops monitoring, loses session state, or lets an Emacs minibuffer prompt block unattended progress.
+Run a loop where one live `agent.el` session creates or revises work and another live `agent.el` session reviews it. The skill exists to keep monitoring, session state, and Emacs minibuffer prompts under explicit control.
 
 Use the helper script for deterministic Emacs/session operations:
 
@@ -42,18 +42,10 @@ Inspect live sessions:
 python "$SKILL_DIR/scripts/orchestrate_agent_review.py" buffers
 ```
 
-Default helper output is for user-facing monitoring: concise text, no raw JSON,
-and no base64 buffer tails. `--json` is only for debugging or machine parsing
-and still omits buffer tails by default. Use `--include-tail` only for private
-local debugging, never for commentary or prompts sent to another agent. The
-helper suppresses Emacs message logging during its internal evals; agents using
-this skill must not inspect `*Messages*` as part of the workflow.
-
-Do not replace the helper with ad-hoc `emacsclient --eval` probes that return
-buffer lists, raw JSON, base64 tails, or arbitrary buffer substrings. Raw
-Emacs return values are captured in live agent transcripts and can also create
-noisy Emacs messages. If the helper lacks a needed status view, extend the
-helper first; do not improvise status checks in live agent buffers.
+Default helper output is for user-facing monitoring: concise text with bounded
+fields. JSON output is for machine consumers and omits buffer tails unless
+`--include-tail` is supplied. The helper suppresses Emacs message logging during
+its internal evals.
 
 Create a durable run file outside the repo or under an ignored state directory. The helper can create or update a JSON state file, but the supervising agent remains responsible for interpreting it:
 
@@ -132,13 +124,9 @@ python "$SKILL_DIR/scripts/orchestrate_agent_review.py" watch \
 ```
 
 This prints one concise line when state changes. If it produces no output, the
-state has not changed. Do not use `watch --json` for user-facing monitoring,
-and never use `watch --json --include-tail` in a live agent session.
+state has not changed.
 
 Send concise commentary updates when state changes or every 60 seconds during long work.
-Do not ask worker agents to verify orchestration noise, inspect Emacs messages,
-or reason about supervisor internals. Noise prevention belongs in this helper
-and in the supervising agent's command choices.
 
 ## Step 5: Advance the loop
 

@@ -1,142 +1,78 @@
-#+title: macOS Maintenance
+#+title: macOS configuration and maintenance
 #+author: Pablo Stafforini
 
-** Skills
-:PROPERTIES:
-:ID:       0EBE133A-CF98-4CB0-9391-F596598BFEC9
-:END:
+* Defaults
 
-Project-local skills for macOS maintenance live under this directory so they
-load only while working on macOS security and machine-posture tasks.
+[[file:defaults.org][defaults.org]] is the literate source for my macOS preference changes. Its
+shell blocks tangle to [[file:macos][macos]]. Edit the Org source and regenerate the script;
+do not maintain the two files independently. The generated file is not marked
+executable in Git, so apply it explicitly with:
 
-*** audit-mac-app
-:PROPERTIES:
-:ID:       22CD790D-004C-42DE-8AA3-AF9CB0088948
-:END:
-
-Static-first security audit of macOS applications before running them or
-granting sensitive permissions. Covers trust verification, permission analysis,
-app type detection, Electron source extraction and security checks, network
-endpoint scanning, and spaces-safe binary analysis. Electron extraction uses an
-exact =@electron/asar= dependency with a committed lockfile and disabled
-lifecycle scripts.
-
-*** review-lulu-alert
-:PROPERTIES:
-:ID:       45E0D4F0-9AA5-49FA-980C-8B1ABA350D40
-:END:
-
-Audits the LuLu firewall alert currently on screen and recommends allow or
-block. A read-only helper reads the alert through the Accessibility API and
-reports the process, its arguments and path, the destination, and the selected
-rule scope and duration. Reviewing never answers the alert: the skill does not
-press Allow or Block, change the scope or duration, or create a rule, and an
-explicit instruction to act is checked against the audited process and endpoint
-before anything is clicked.
-
-*** security-audit
-:PROPERTIES:
-:ID:       E7A2C626-9A58-48B3-B8F8-124BE3A61945
-:END:
-
-Audits the development environment security posture across secrets hygiene,
-supply-chain dependencies, macOS machine posture, and Claude Code configuration
-risk. It is audit-only unless remediation is explicitly requested and reports
-findings by severity with concrete locations and remediation steps.
-
-** Personal updates
-:PROPERTIES:
-:ID:       ADAD483E-B9D6-498E-974B-0A4D3775C2E0
-:END:
-
-=bin/personal-updates= manages Homebrew updates with three scheduled jobs:
-
-| Job | Runs | What it does |
-|-----+------+--------------|
-| =fast-brew= | 03:00 daily | Upgrades fast-track packages immediately. Defaults: =claude-code@latest= and =codex=. |
-| =scan= | 08:15 daily | Checks what Homebrew packages are outdated and records when each update was first seen. |
-| =delayed= | 09:00 daily | Upgrades packages that have been outdated for at least 7 days. |
-
-The important idea is simple: critical tools can update immediately, while
-ordinary Homebrew updates wait until they have been visible for a week.
-
-The state file is:
-
-#+begin_src text
-~/.local/state/personal-updates/state.json
+#+begin_src sh
+sh macos/macos
 #+end_src
 
-The policy files are:
+The script changes system and application defaults and may request elevated
+privileges. It is an opt-in machine-setup action, not something that runs when
+the repository is cloned.
 
-| File | Meaning |
-|------+---------|
-| =macos/personal-updates/fast-brew.txt= | Extra packages to update immediately. |
-| =macos/personal-updates/hold.txt= | Packages to skip in the delayed updater. |
-| =macos/personal-updates/excluded-casks.txt= | Casks to record but never upgrade automatically. |
+* LaunchAgents
 
-Leave those files empty unless a package needs special handling.
+The four tracked plists under [[file:LaunchAgents/][LaunchAgents/]] are currently symlinked from
+=~/Library/LaunchAgents/=. Their schedules and entry points are:
 
-Manual checks:
+| Label | Schedule | Entry point |
+|-------+----------+-------------|
+| =com.stafforini.personal-updates.fast-brew= | 03:00 daily | =bin/personal-updates fast-brew= |
+| =com.stafforini.codex-protocol-watch= | 04:15 daily | =bin/codex-protocol-watch= |
+| =com.stafforini.personal-updates.scan= | 08:15 daily | =bin/personal-updates scan= |
+| =com.stafforini.personal-updates.delayed= | 09:00 daily | =bin/personal-updates delayed --min-age-days 7= |
+
+The plists write logs under =~/.local/state/= and use absolute paths into this
+checkout. After changing a plist, reload its matching LaunchAgent before
+treating the change as active.
+
+The separate launchd repository owns scheduling for the reasoning-task
+worktree sync; this repository only supplies the
+[[file:../bin/README.org][=sync-reasoning-tasks-worktrees= command]].
+
+* Personal updates
+
+=bin/personal-updates= separates immediate tool updates from ordinary Homebrew
+updates that should age before installation:
+
+| Mode | Behavior |
+|------+----------|
+| =fast-brew= | Upgrades the fast lane; its built-in defaults include =claude-code@latest= and =codex=. |
+| =scan= | Records currently available formula and cask updates and when each version first appeared. |
+| =delayed= | Upgrades eligible entries after the configured minimum age, subject to holds and exclusions. |
+| =fast= | Installs recommended macOS system updates manually; it is not scheduled. |
+
+The policy files are [[file:personal-updates/fast-brew.txt][fast-brew.txt]], [[file:personal-updates/hold.txt][hold.txt]], and
+[[file:personal-updates/excluded-casks.txt][excluded-casks.txt]]. Runtime state lives at
+=~/.local/state/personal-updates/state.json= and logs live under the adjacent
+=logs/= directory. Dry-run the two mutating Homebrew lanes with:
 
 #+begin_src sh
 bin/personal-updates fast-brew --dry-run
 bin/personal-updates delayed --dry-run
 #+end_src
 
-Install or refresh the scheduled jobs with:
+The focused regression suite is:
 
 #+begin_src sh
-mkdir -p ~/Library/LaunchAgents ~/.local/state/personal-updates
-ln -sfn "$PWD/macos/LaunchAgents/com.stafforini.personal-updates.fast-brew.plist" \
-  ~/Library/LaunchAgents/com.stafforini.personal-updates.fast-brew.plist
-ln -sfn "$PWD/macos/LaunchAgents/com.stafforini.personal-updates.scan.plist" \
-  ~/Library/LaunchAgents/com.stafforini.personal-updates.scan.plist
-ln -sfn "$PWD/macos/LaunchAgents/com.stafforini.personal-updates.delayed.plist" \
-  ~/Library/LaunchAgents/com.stafforini.personal-updates.delayed.plist
-launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.stafforini.personal-updates.fast-brew.plist
-launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.stafforini.personal-updates.scan.plist
-launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.stafforini.personal-updates.delayed.plist
+python3 -m unittest tests.test_personal_updates -v
 #+end_src
 
-There is also a manual command for macOS system updates:
+* Project-local security skills
 
-#+begin_src sh
-bin/personal-updates fast
-#+end_src
+Paired macOS-only skills live under =macos/.claude/skills/= and
+=macos/.codex/skills/=. They cover application inspection, LuLu alert review,
+and machine security audits, but they are not global skills: agent discovery
+loads them only while working in this project scope. Their current names,
+descriptions, and paths are generated in the
+[[file:../agents/skill-inventory.org][tracked agent skill inventory]].
 
-That command runs =softwareupdate --install --recommended=. It is not scheduled
-because macOS updates may require privileges or a restart.
-
-** Trajectory reasoning-tasks worktree sync
-:PROPERTIES:
-:ID:       A8D684A6-AB1B-4D94-8AC9-E5273F1C63E5
-:END:
-
-=bin/sync-reasoning-tasks-worktrees= bulk-runs the safe per-worktree =reasoning-tasks= sync for
-every task worktree under =~/Trajectory/reasoning-tasks=. It fetches =origin/main= once,
-skips protected non-task worktrees such as =main= and =reasoning-tasks-cr-studio=, and
-then lets =claude/hooks/sync-reasoning-tasks-worktree.sh= handle dirty trees, conflicts,
-local overlays, and key symlinks. It never pushes.
-
-The scheduled job is owned by the central launchd repository at
-=/Users/pablostafforini/My Drive/repos/launchd=. It runs nightly at 03:30 and
-writes logs under:
-
-#+begin_src text
-~/.local/state/reasoning-tasks-worktree-sync/
-#+end_src
-
-Manual run:
-
-#+begin_src sh
-bin/sync-reasoning-tasks-worktrees
-#+end_src
-
-Install or refresh the scheduled job with:
-
-#+begin_src sh
-mkdir -p ~/Library/LaunchAgents ~/.local/state/reasoning-tasks-worktree-sync
-ln -sfn "/Users/pablostafforini/My Drive/repos/launchd/agents/com.stafforini.reasoning-tasks-worktree-sync.plist" \
-  ~/Library/LaunchAgents/com.stafforini.reasoning-tasks-worktree-sync.plist
-launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.stafforini.reasoning-tasks-worktree-sync.plist
-#+end_src
+The design record for the read-only LuLu alert reviewer is retained at
+[[file:docs/superpowers/specs/2026-08-01-review-lulu-alert-design.md][its local specification]]. Design records explain decisions; they are not
+loaded as executable configuration.

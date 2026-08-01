@@ -1,30 +1,107 @@
-#+title: Pablo's dotfiles
+#+title: Pablo’s dotfiles
 #+author: Pablo Stafforini
 
-This repository contains my dotfiles, including
+* Overview
 
-- my [[file:emacs/config.org][Emacs config]];
-- my [[file:agents/README.org][agent configuration synchronization docs]];
-- my [[file:karabiner/modifications.org][Karabiner modifications]]; and
-- my [[file:macos/defaults.org][macOS defaults]].
+This is the public source repository for my command-line, Emacs, macOS,
+keyboard, application, and AI-agent configuration. It is a working personal
+configuration rather than a portable installer: many files assume my directory
+layout, installed applications, or local accounts. The README in each directory
+records what the tracked files do and how, if at all, they become live.
 
-* Skills
+* Activation model
 
-- =config-audit=: Audits agent configuration for redundancy, conflicts, dead weight, staleness, and instruction drift.
-- =codex-app-browser=: Maintains the Codex App browser plugin setup for local browser-use workflows.
-- =find-skills=: Discovers, vets, and optionally installs reusable agent skills.
-- =gitguardian-triage=: Triages and remediates GitGuardian secret incidents, including known non-user key patterns, ownership checks before rotating potentially collaborator-owned keys, and explicit authorization checks for incident-closing API writes.
-- =install-mcp-server=: Installs and configures MCP servers with auth verification, placement, registration, sync, and restart/testing checks.
-- =move-session-log=: Relocates Codex session logs by rewriting embedded project paths.
-  Copied =SKILL (1).md= variants, when present, are kept paired across the
-  project-local Claude and Codex skill trees.
-- =open-session-log=: Programmatic-only helper that opens the current Claude Code or Codex session log in Emacs via =agent-log=.
-- =optimize-agent-instructions=: Optimizes project agent instruction files.
-- =publish-dotfiles=: Publishes this repository behind a two-layer secret
-  review — deterministic scanning of the exact outgoing history plus an
-  exhaustive model review of every outgoing unit — with ordinary pushes refused
-  and only one exact, expiring, single-use push authorized.
-- =release-dotfiles=: Prepares and publishes dotfiles releases, including
-  checks/restoration for temporary Elpaca PR fork pins in =emacs/config.org=.
-- =skill-audit=: Audits or improves agent skills for trigger quality, workflow design, verification, portability, and maintainability.
-- =skill-resolver=: Resolves and reads agent skill files by skill name.
+Cloning the repository does not activate most of it. The main activation
+patterns are:
+
+- home-directory or application-configuration symlinks pointing into this
+  checkout;
+- literate source files that are tangled into executable configuration;
+- application exports that must be imported or copied deliberately; and
+- commands, hooks, skills, or LaunchAgents that run only after they have been
+  registered with their owner.
+
+Some files are historical records or development inputs and are never loaded.
+The directory READMEs distinguish these cases. In particular, the repository’s
+=.claude/= and =.codex/= directories are project-local agent configuration;
+global Claude and Codex configuration lives under =claude/= and =codex/=.
+
+* Directory map
+
+The first column is deliberately machine-readable: =bin/docs-audit= checks it
+against the tracked top-level tree.
+
+| Directory | Documentation |
+|-----------+---------------|
+| =.agent-learnings= | [[file:.agent-learnings/README.org][Pending and archived agent-learning workflow state]] |
+| =.claude= | [[file:agents/README.org][Dotfiles-local Claude skills and shared agent topology]] |
+| =.codex= | [[file:agents/README.org][Dotfiles-local Codex skills and shared agent topology]] |
+| =.github= | [[file:.github/workflows/test-extras.yml][GitHub Actions workflow for Emacs extras]] |
+| =agents= | [[file:agents/README.org][Cross-tool agent configuration and synchronization]] |
+| =ai-marketplace-monitor= | [[file:ai-marketplace-monitor/README.org][AI marketplace monitor configuration]] |
+| =aider= | [[file:aider/README.org][Aider configuration and conventions]] |
+| =archive= | [[file:archive/README.org][Retired agent skills and their retained output]] |
+| =aspell= | [[file:aspell/README.org][Aspell dictionaries]] |
+| =bin= | [[file:bin/README.org][Command index]] |
+| =claude= | [[file:claude/README.org][Global Claude Code configuration]] |
+| =codex= | [[file:codex/README.org][Global Codex configuration]] |
+| =colima= | [[file:colima/README.org][Colima configuration]] |
+| =dark-reader= | [[file:dark-reader/README.org][Dark Reader settings export]] |
+| =docs= | [[file:docs/README.org][Design records, plans, and documentation policy]] |
+| =emacs= | [[file:emacs/README.org][Emacs configuration and extras packages]] |
+| =enchant= | [[file:enchant/README.org][Enchant dictionaries]] |
+| =enhancer-for-youtube= | [[file:enhancer-for-youtube/README.org][Enhancer for YouTube settings export]] |
+| =karabiner= | [[file:karabiner/README.org][Karabiner and Goku keyboard configuration]] |
+| =ledger= | [[file:ledger/README.org][Ledger configuration]] |
+| =letterboxd-extras= | [[file:letterboxd-extras/README.org][Letterboxd browser extension assets]] |
+| =macos= | [[file:macos/README.org][macOS defaults, scheduled jobs, and security tools]] |
+| =mbsync= | [[file:mbsync/README.org][mbsync mail configuration]] |
+| =moon+reader= | [[file:moon+reader/README.org][Moon+ Reader settings export]] |
+| =moonlander= | [[file:moonlander/README.org][Moonlander keyboard firmware source]] |
+| =mpv= | [[file:mpv/README.org][mpv configuration]] |
+| =pantalaimon= | [[file:pantalaimon/README.org][Pantalaimon configuration]] |
+| =qBittorrent= | [[file:qBittorrent/README.org][qBittorrent settings export]] |
+| =rectangle= | [[file:rectangle/README.org][Rectangle settings export]] |
+| =shell= | [[file:shell/README.org][zsh startup files, shims, and history filtering]] |
+| =tests= | [[file:tests/README.org][Repository test suite]] |
+| =uBlacklist= | [[file:uBlacklist/README.org][uBlacklist subscription list]] |
+| =uBlock= | [[file:uBlock/README.org][uBlock Origin filters and settings]] |
+| =vimium= | [[file:vimium/README.org][Vimium settings export]] |
+
+* Public and private material
+
+The repository is public by default. A tracked path is therefore public unless
+Git attributes explicitly send it through =git-crypt=. The encrypted classes
+are declared in the repository and subsystem =.gitattributes= files; examples
+include the shell secrets file, private agent skills, and private Emacs
+snippets. The public documentation may name an encrypted file and explain its
+role, but it must never reproduce its contents.
+
+Ignored paths are not part of the published configuration. They include
+machine-local state as well as unencrypted private inputs and workflow records,
+such as local environment files, voice samples, and agent-learning candidates.
+Before publication, the guarded dotfiles workflow scans the exact outgoing
+history and candidate tree with deterministic rules and a model review.
+Ordinary =git push= is blocked; the publication design and controls are
+documented in [[file:agents/README.org][the agent configuration manual]].
+
+* Maintenance and verification
+
+Documentation ownership and links are checked with:
+
+#+begin_src sh
+bin/docs-audit audit
+#+end_src
+
+The generated tracked-skill inventory is refreshed with
+=bin/docs-audit generate=. Paired Claude/Codex configuration is checked with
+=bin/ai-config-sync audit=. The Python test suite runs with:
+
+#+begin_src sh
+python3 -m unittest discover -s tests -v
+#+end_src
+
+Emacs extras also have their own batch runner and the
+[[file:.github/workflows/test-extras.yml][GitHub Actions workflow]]. Changes to literate sources should be made in the
+source Org file, regenerated through its documented command, and reviewed as a
+source/generated pair.

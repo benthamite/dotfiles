@@ -1,0 +1,66 @@
+#+title: Moonlander firmware source
+#+author: Pablo Stafforini
+
+* What is tracked
+
+This directory retains a historical Oryx export for my ZSA Moonlander. The
+exact source directory is:
+
+#+begin_example
+moonlander/moonlander_pablo-s-keyboard_source/
+#+end_example
+
+It contains [[file:moonlander_pablo-s-keyboard_source/config.h][config.h]], [[file:moonlander_pablo-s-keyboard_source/keymap.c][keymap.c]], and
+[[file:moonlander_pablo-s-keyboard_source/rules.mk][rules.mk]]. =config.h= identifies the Oryx layout revision as =bJ3OA/zl6pd=.
+The generic build instructions shipped by ZSA have been preserved, unchanged,
+as [[file:UPSTREAM-README.md][UPSTREAM-README.md]].
+
+* Building
+
+Use ZSA’s QMK fork rather than the upstream QMK repository:
+
+#+begin_example
+https://github.com/zsa/qmk_firmware/
+#+end_example
+
+After setting up its build environment, copy the three source files into a
+simple local keymap directory such as:
+
+#+begin_example
+qmk_firmware/keyboards/moonlander/keymaps/pablo/
+#+end_example
+
+Then run this from the =qmk_firmware= root:
+
+#+begin_src sh
+make moonlander:pablo
+#+end_src
+
+The name =pablo= is only the local keymap directory name; another simple name
+works if it is used consistently in the path and command.
+
+[[file:build.log][build.log]] is evidence of an older successful QMK 0.17.0 build. It records
+the keymap and a 58,450-byte binary, but no firmware binary,
+HEX file, or UF2 file is currently tracked. A fresh build should therefore be
+verified from its own exit status and output artifact before flashing.
+
+* Checksum record
+
+[[file:moonlander_pablo-s-keyboard_bJ3OA_zl6pd.md5][moonlander_pablo-s-keyboard_bJ3OA_zl6pd.md5]] contains one MD5 digest without
+an associated filename. The filename suggests that it belongs to an Oryx
+artifact for revision =bJ3OA/zl6pd=, but the repository no longer contains the
+candidate artifact and cannot establish that ownership. Do not treat this
+record as verification of a newly built firmware file.
+
+* Relationship to Karabiner
+
+The intended current keyboard contract is documented in
+[[file:../karabiner/modifications.org::*Firmware configuration][Karabiner’s firmware configuration]]: firmware should expose six thumb-key
+handles, while Karabiner and Goku implement their tap, hold, simlayer, and Emacs
+behavior.
+
+The checked-in 2022 Moonlander source has drifted from that contract. Its base
+layer’s thumb positions do not match the six current handles. It is therefore
+a historical export and build input, not proof that the current Karabiner
+thumb-key layer is installed in the keyboard. Reconcile the source against
+=karabiner/modifications.org= before building firmware intended for current use.

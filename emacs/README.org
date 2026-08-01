@@ -1,7 +1,91 @@
-#+title: Emacs
+#+title: Emacs configuration
+#+author: Pablo Stafforini
 
-* Skills
+* Source and activation
 
-- =document-elisp-extras=: Audits, creates, or refreshes documentation for all Emacs extras packages in the dotfiles repo.
-- =emacs-freeze=: Diagnoses frozen, hung, beachballing, or unresponsive Emacs sessions by collecting evidence and recommending recovery.
-- =migrate-profile=: Runs post-Emacs-profile-switch housekeeping, including profile marker checks, new-profile repo drift checks, package-local =.claude/= and =.codex/= directory merges, Claude Code/Codex session-state migration, and structured session-path rewrites.
+[[file:config.org][config.org]] is the canonical literate configuration. Its code blocks tangle to
+the init files of a named Emacs profile; generated profile files are not edited
+in this repository. After changing =config.org=, tangle it through the live
+profile machinery:
+
+#+begin_src sh
+emacsclient -e '(init-build-profile (file-name-directory user-init-file))'
+#+end_src
+
+This command matters because the target paths are computed by the profile. A
+plain =org-babel-tangle-file= can write to the wrong profile. The active profile
+name is available as =init-current-profile= and should be queried rather than
+hard-coded:
+
+#+begin_src sh
+emacsclient -e 'init-current-profile'
+#+end_src
+
+The =bin/emacs= wrapper starts Emacs with optional profile selection, and
+[[file:../bin/README.org][the command index]] documents the related launchers.
+
+* Extras packages and manuals
+
+The files in [[file:extras/][extras/]] are personal packages that extend built-in or external
+packages. Most use the =-extras= suffix. Their Org manuals live in
+[[file:extras/doc/][extras/doc/]]; generated Texinfo counterparts are tracked beside the manuals
+that produce them. Tests live in [[file:extras/test/][extras/test/]], and the full development and reload
+procedure is documented in
+[[file:extras/doc/elisp-development-workflow.org][the Elisp development workflow]].
+
+The main configuration declares extras with =use-personal-package=. Elpaca
+therefore installs them from this repository and loads them from the active
+profile’s checkout, normally:
+
+#+begin_example
+~/.config/emacs-profiles/<profile>/elpaca/sources/dotfiles/
+#+end_example
+
+That checkout is a read-only runtime mirror. All edits belong in
+=~/My Drive/dotfiles/=. =bin/elpaca-package-path dotfiles= resolves this special
+case to the canonical repository; other packages resolve to the active Elpaca
+profile.
+
+* Snippets, dictionaries, and package state
+
+Public snippets are under [[file:yasnippets/][yasnippets/]]. Private snippets are under
+=yasnippets-private/= and are encrypted with =git-crypt=. The configuration
+adds both directories to =yas-snippet-dirs=, together with the installed
+=yasnippet-snippets= collection. [[file:abbrev/abbrev_defs][abbrev/abbrev_defs]] is the tracked Emacs
+abbreviation file.
+
+[[file:lockfile.el][lockfile.el]] records the Elpaca package revisions used for a dotfiles release.
+The release workflow rewrites it from the current profile with
+=elpaca-extras-write-lock-file-excluding=; it should not be maintained by hand.
+
+* Commit-time synchronization and reload
+
+The canonical Git directory has =post-commit= and =post-rewrite= hooks that
+delegate to =sync-elpaca-clone.sh=. They fetch the committed =master= state
+into the active profile’s dotfiles checkout and reset that mirror to the fetched
+commit; pushing is unrelated to this local activation path.
+For changed files under =emacs/extras/=, the same hook schedules
+=elpaca-extras-rebuild-and-reload= and polls its status through short
+=emacsclient= calls.
+
+This means an uncommitted extras edit is not yet the code loaded by Emacs. The
+safe order is: edit the canonical file, run its batch test, commit, wait for the
+post-commit rebuild and reload, and then exercise the changed command in the
+live Emacs session. Manual rebuilds should name the individual extras package;
+they should not rebuild the aggregate =dotfiles= package.
+
+* Verification and agent support
+
+The complete extras suite runs with:
+
+#+begin_src sh
+bash emacs/extras/test/run-tests.sh
+#+end_src
+
+Individual packages have focused batch commands described in the
+[[file:extras/doc/elisp-development-workflow.org][development workflow]]. The GitHub copy of the extras suite is defined in
+[[file:../.github/workflows/test-extras.yml][test-extras.yml]].
+
+Project-local Emacs skills live under =emacs/.claude/= and =emacs/.codex/=.
+Their names and trigger descriptions are generated in the
+[[file:../agents/skill-inventory.org][tracked agent skill inventory]] rather than copied into this README.

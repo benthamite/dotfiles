@@ -1,0 +1,19 @@
+#+title: Agent-learning workflow state
+#+author: Pablo Stafforini
+
+This directory is local workflow state for the two-stage agent-learning
+process. It is not durable agent memory and nothing here is loaded as an
+instruction merely because a file exists.
+
+The =session-learning-capture= workflow may write a candidate record to
+=inbox/= at the end of a session. Capture stops there: it does not implement a
+proposal, edit instructions, or promote a lesson. The separate
+=session-retro= workflow reviews inbox records with the user and decides
+whether an accepted lesson belongs in a skill, hook, instruction file, test,
+or other owner. Processed records may be retained under =archive/=.
+
+Actual inbox and archive records are ignored by Git; only the two =.gitkeep=
+files and this README are public. Both directories may contain provisional or
+private context, so their contents should not be staged as ordinary dotfiles
+documentation. A record is evidence for later review, not authority to change
+behavior.

@@ -1,0 +1,34 @@
+#+title: Design records and documentation policy
+#+author: Pablo Stafforini
+
+* Contents
+
+The =superpowers/specs/= directory retains design decisions and the
+=superpowers/plans/= directory retains implementation plans. These files
+explain why a change was made and how it was intended to proceed. They are not
+shell configuration, agent instructions, or executable skills, and merely
+being tracked here does not load them into a session.
+
+[[file:readme-policy.json][readme-policy.json]] is different: it is active policy data consumed by
+=bin/docs-audit=. It declares which top-level directories require a README,
+which ones have an explicit exemption, the root directory-map contract, and
+the source/generated pairs and skill inventory owned by the audit.
+
+* Retention and maintenance
+
+Keep a specification when it records a decision that remains useful for
+interpreting the repository. Keep a plan as an implementation record even
+after its checkboxes have been completed; it is evidence, not a live task
+queue. Current behavior belongs in the README or source file owned by the
+subsystem, not only in a dated plan.
+
+When adding a tracked top-level directory, update =readme-policy.json= with
+either a required README or an explicit exemption, then add exactly one row to
+the root [[file:../README.org::*Directory map][directory map]]. Verify the complete documentation graph with:
+
+#+begin_src sh
+bin/docs-audit audit
+#+end_src
+
+The audit is read-only. =bin/docs-audit generate= is the separate command that
+rewrites the [[file:../agents/skill-inventory.org][tracked skill inventory]].

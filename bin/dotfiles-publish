@@ -483,8 +483,12 @@ STRUCTURAL_RULES = (
         r"|client[_-]?secret|secret[_-]?key|token|secret|passwd|password|passphrase)\b[ \t]*(?:[:=]|=>)[ \t]*[\"']?)"
         r"([^\s\"'#;,)]{12,})"
     ),
-    re.compile(r"([a-zA-Z][a-zA-Z0-9+.\-]*://[^\s:@/]+:)([^\s:@/\"']{6,})(?=@)"),
-    re.compile(r"(-----BEGIN (?:[A-Z]+ )*PRIVATE KEY(?: BLOCK)?-----)([\s\S]{1,})"),
+    # The scheme is length-bounded on purpose: an unbounded prefix makes this
+    # rule quadratic, and a long run of ordinary characters then hangs the scan.
+    re.compile(r"(\b[a-zA-Z][a-zA-Z0-9+.\-]{0,15}://[^\s:@/]+:)([^\s:@/\"']{6,})(?=@)"),
+    re.compile(
+        r"(-----BEGIN (?:[A-Z]+ )*PRIVATE KEY(?: BLOCK)?-----)([\s\S]*?)(?=-----END|\Z)"
+    ),
 )
 
 STRUCTURAL_TOKEN = "[REDACTED:structural]"
@@ -944,6 +948,406 @@ def store_findings(repo, run_id, result):
 
 
 # --------------------------------------------------------------------------
+# Complete-history audit
+# --------------------------------------------------------------------------
+
+PULL_REF = re.compile(r"^refs/pull/(\d+)/head$")
+
+AUDIT_SURFACE = (
+    "--branches",
+    "--tags",
+    "--remotes",
+    "--glob=%s/*" % AUDIT_REF_PREFIX,
+)
+
+
+def cat_file_batch(repo, requests, head_bytes=8192):
+    """Resolve many objects through one git cat-file process."""
+    if not requests:
+        return {}
+    process = subprocess.Popen(
+        ["git", "-C", str(repo.root), "cat-file", "--batch"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+    )
+    results = {}
+    try:
+        process.stdin.write(("\n".join(requests) + "\n").encode("utf-8", "replace"))
+        process.stdin.close()
+        for request in requests:
+            header = process.stdout.readline().decode("utf-8", "replace").strip()
+            parts = header.split()
+            if len(parts) != 3:
+                results[request] = None
+                continue
+            size = int(parts[2])
+            data = process.stdout.read(size)
+            process.stdout.read(1)
+            results[request] = (parts[0], parts[1], size, data[:head_bytes])
+    finally:
+        process.stdout.close()
+        process.wait()
+    return results
+
+
+def audit_ref_for(number):
+    return "%s/pull/%s/head" % (AUDIT_REF_PREFIX, number)
+
+
+def remove_audit_refs(repo):
+    listing = run_git(
+        repo.root, "for-each-ref", "--format=%(refname)", AUDIT_REF_PREFIX + "/", check=False
+    )
+    removed = []
+    for ref in listing.text.split():
+        run_git(repo.root, "update-ref", "-d", ref, check=False)
+        removed.append(ref)
+    return removed
+
+
+def fetch_public_refs(repo):
+    """Fetch branches, tags, and pull-request heads into temporary audit refs."""
+    fetched = run_git(repo.root, "fetch", "--quiet", "--tags", repo.remote_name, check=False)
+    if fetched.code != 0:
+        raise PublishError(
+            "could not fetch %s for the audit: %s" % (repo.remote_name, fetched.error_text.strip())
+        )
+    listing = run_git(repo.root, "ls-remote", repo.fetch_url)
+    remote_refs = {}
+    for line in listing.text.splitlines():
+        oid, _, ref = line.partition("\t")
+        ref = ref.strip()
+        if not ref or ref == "HEAD":
+            continue
+        remote_refs[ref] = oid.strip()
+
+    pull_refs = sorted(ref for ref in remote_refs if PULL_REF.match(ref))
+    audit_refs = []
+    for start in range(0, len(pull_refs), 50):
+        chunk = pull_refs[start : start + 50]
+        refspecs = []
+        for ref in chunk:
+            number = PULL_REF.match(ref).group(1)
+            refspecs.append("+%s:%s" % (ref, audit_ref_for(number)))
+            audit_refs.append(audit_ref_for(number))
+        result = run_git(repo.root, "fetch", "--quiet", repo.fetch_url, *refspecs, check=False)
+        if result.code != 0:
+            raise PublishError(
+                "could not fetch pull-request heads for the audit: %s"
+                % result.error_text.strip()
+            )
+    return remote_refs, audit_refs
+
+
+def present_objects(repo, oids):
+    present = []
+    for oid in sorted(oids):
+        if run_git(repo.root, "cat-file", "-e", oid, check=False).code == 0:
+            present.append(oid)
+    return present
+
+
+def reachable_commits(repo, tips):
+    if not tips:
+        return set()
+    listing = run_git(repo.root, "rev-list", *tips, check=False)
+    return set(listing.text.split())
+
+
+def audit_commits(repo):
+    listing = run_git(repo.root, "rev-list", "--topo-order", "--reverse", *AUDIT_SURFACE)
+    return [line.strip() for line in listing.text.splitlines() if line.strip()]
+
+
+def audit_tip_trees(repo):
+    listing = run_git(
+        repo.root, "for-each-ref", "--format=%(objectname)", *[
+            "refs/heads/", "refs/remotes/", "refs/tags/", AUDIT_REF_PREFIX + "/"
+        ]
+    )
+    trees = {}
+    for oid in {line.strip() for line in listing.text.splitlines() if line.strip()}:
+        resolved = run_git(repo.root, "rev-parse", "--quiet", "--verify", oid + "^{tree}", check=False)
+        if resolved.code == 0:
+            trees.setdefault(resolved.text.strip(), oid)
+    return trees
+
+
+def inspect_audit_objects(repo, commits, key, redactor):
+    """Deterministic object findings across history, deduplicated by blob."""
+    requests = []
+    origin = {}
+    attributes_by_commit = {}
+    for commit in commits:
+        paths = [path for status, path in changed_entries(repo, commit) if status[0] != "D"]
+        if not paths:
+            continue
+        attributes_by_commit[commit] = filter_attributes(repo, commit, paths)
+        for path in paths:
+            request = "%s:%s" % (commit, path)
+            requests.append(request)
+            origin[request] = (commit, path)
+
+    resolved = cat_file_batch(repo, requests)
+    records = []
+    seen = set()
+    for request, entry in resolved.items():
+        if entry is None:
+            continue
+        oid, kind, size, head = entry
+        commit, path = origin[request]
+        if (oid, path) in seen:
+            continue
+        seen.add((oid, path))
+
+        def add(rule_id, detail):
+            records.append(
+                finding_record(
+                    "objects",
+                    rule_id,
+                    path,
+                    commit,
+                    None,
+                    None,
+                    fingerprint(key, rule_id, commit, path, oid),
+                    detail,
+                )
+            )
+
+        if kind != "blob":
+            add("submodule-in-history", "non-blob object %s at a tracked path" % kind)
+            continue
+        for pattern, rule_id in RISKY_PATH_RULES:
+            if pattern.search(path):
+                add(rule_id, "risky path name requires inspection")
+        if path.lower().endswith(ARCHIVE_SUFFIXES):
+            add("archive-file", "archive contents are not scannable in place")
+        if size > LARGE_BLOB_LIMIT:
+            add("large-file", "%d bytes exceeds the 2 MiB inspection limit" % size)
+        if looks_binary(head):
+            add("binary-file", "%d bytes of binary content require inspection" % size)
+        if attributes_by_commit.get(commit, {}).get(path) == "git-crypt":
+            if not head.startswith(GIT_CRYPT_HEADER):
+                add(
+                    "git-crypt-plaintext-blob",
+                    "a git-crypt path is stored without the git-crypt header",
+                )
+    return records
+
+
+def classify_findings(findings, public_commits):
+    for finding in findings:
+        commit = finding.get("commit") or ""
+        if commit and commit in public_commits:
+            finding["classification"] = "public-incident"
+        else:
+            finding["classification"] = "unpublished"
+    return findings
+
+
+def scan_full_audit(repo, key):
+    """Scan every commit reachable from local, remote, tag, and pull-request refs."""
+    redactor = Redactor(key)
+    findings = []
+    state = ensure_state_dir(repo)
+    try:
+        remote_refs, _ = fetch_public_refs(repo)
+        public_tips = present_objects(repo, set(remote_refs.values()))
+        public_commits = reachable_commits(repo, public_tips)
+        commits = audit_commits(repo)
+
+        with tempfile.TemporaryDirectory(dir=str(state)) as work:
+            os.chmod(work, DIRECTORY_MODE)
+            results = run_gitleaks(repo, work, git_range=" ".join(AUDIT_SURFACE))
+            findings += convert_gitleaks_results(results, key, redactor, "gitleaks-history")
+
+            for ordinal, (tree, tip) in enumerate(sorted(audit_tip_trees(repo).items())):
+                extracted = Path(work) / ("tip-%d" % ordinal)
+                extracted.mkdir(mode=DIRECTORY_MODE)
+                export_tree(repo, tree, extracted)
+                tip_results = run_gitleaks(repo, work, directory=extracted)
+                findings += convert_gitleaks_results(
+                    tip_results, key, redactor, "gitleaks-tree", tip
+                )
+
+        findings += inspect_audit_objects(repo, commits, key, redactor)
+        findings = classify_findings(deduplicate(findings), public_commits)
+        public_refs = sorted(
+            "%s %s" % (ref, oid) for ref, oid in remote_refs.items() if not ref.endswith("^{}")
+        )
+        return ScanResult(findings=findings, redactor=redactor, commits=commits), public_refs
+    finally:
+        remove_audit_refs(repo)
+
+
+def build_audit_manifest(repo, run_id, result):
+    """Commit, path, high-risk, and finding units across the audited history."""
+    redactor = result.redactor
+    units = []
+    for commit in result.commits:
+        units.append(commit_units(repo, commit, redactor))
+
+    requests = []
+    origin = {}
+    for commit in result.commits:
+        for ordinal, (status, path) in enumerate(changed_entries(repo, commit)):
+            if status[0] == "D":
+                continue
+            request = "%s:%s" % (commit, path)
+            requests.append(request)
+            origin.setdefault(request, (commit, path, ordinal, status))
+
+    resolved = cat_file_batch(repo, requests, head_bytes=LARGE_BLOB_LIMIT)
+    seen = set()
+    for request, entry in resolved.items():
+        if entry is None:
+            continue
+        oid, kind, size, head = entry
+        commit, path, ordinal, status = origin[request]
+        if (oid, path) in seen:
+            continue
+        seen.add((oid, path))
+        units.append(
+            make_unit(
+                "path",
+                commit,
+                path,
+                ordinal,
+                "status %s\npath %s\nobject %s %s\nsize %d" % (status, path, kind, oid, size),
+                {"status": status, "object": oid},
+            )
+        )
+        if kind == "blob" and is_risky_path(path):
+            if looks_binary(head):
+                content = "[binary blob: %d bytes, object %s]" % (size, oid)
+            else:
+                content = redactor.scrub(head.decode("utf-8", "replace"))
+            units.append(
+                make_unit("high-risk-file", commit, path, 0, content, {"object": oid, "size": size})
+            )
+
+    for ordinal, finding in enumerate(result.findings):
+        units.append(
+            make_unit(
+                "deterministic-finding",
+                finding["commit"],
+                finding["path"],
+                ordinal,
+                json.dumps(finding, indent=2, sort_keys=True),
+                {"fingerprint": finding["fingerprint"], "classification": finding["classification"]},
+            )
+        )
+
+    counts = {kind: 0 for kind in MANIFEST_KINDS}
+    for unit in units:
+        counts[unit["kind"]] = counts.get(unit["kind"], 0) + 1
+    digest = hashlib.sha256()
+    digest.update(b"dotfiles-publish-manifest\x00")
+    for unit in units:
+        digest.update(unit["unit_id"].encode("utf-8") + b"\x00")
+        digest.update(hashlib.sha256(unit["content"].encode("utf-8")).digest())
+    return {
+        "schema": SCHEMA,
+        "run_id": run_id,
+        "manifest_id": digest.hexdigest(),
+        "counts": counts,
+        "units": units,
+    }
+
+
+# --------------------------------------------------------------------------
+# Incidents
+# --------------------------------------------------------------------------
+
+
+def load_incidents(repo):
+    path = incidents_path(repo)
+    if not path.exists():
+        return {"schema": SCHEMA, "incidents": {}}
+    data = read_json(path)
+    data.setdefault("incidents", {})
+    return data
+
+
+def flag_incident(repo):
+    """Invalidate the current full-audit receipt after triage."""
+    path = repo.state_dir / "full-audit.json"
+    if not path.exists():
+        return
+    receipt = read_json(path)
+    receipt["incident_flag"] = True
+    write_json(path, receipt)
+
+
+def command_incident_record(args):
+    repo = discover_repository()
+    key = fingerprint_key(repo)
+    record = load_run(repo, args.run)
+    if record["mode"] != "full-audit":
+        raise PublishError(
+            "incidents are recorded against a full-audit run", EXIT_REFUSED
+        )
+    findings = load_findings(repo, args.run)
+    matching = [
+        finding
+        for finding in findings.get("findings", [])
+        if finding["fingerprint"] == args.fingerprint
+    ]
+    if not matching:
+        raise PublishError(
+            "run %s has no finding with fingerprint %s" % (args.run, args.fingerprint),
+            EXIT_REFUSED,
+        )
+    if matching[0].get("classification") != "public-incident":
+        raise PublishError(
+            "fingerprint %s is not published, so remove it from history instead of "
+            "recording an incident" % args.fingerprint,
+            EXIT_REFUSED,
+        )
+
+    evidence_path = Path(args.evidence)
+    if not evidence_path.is_file():
+        raise PublishError("evidence file not found: %s" % args.evidence, EXIT_REFUSED)
+    evidence_bytes = evidence_path.read_bytes()
+    evidence = json.loads(evidence_bytes.decode("utf-8"))
+    if not isinstance(evidence, dict):
+        raise PublishError("the evidence file must contain one JSON object", EXIT_REFUSED)
+    if "value" in evidence or "secret" in evidence:
+        raise PublishError(
+            "the evidence contains a value field; record only redacted evidence", EXIT_REFUSED
+        )
+    for required in ("fingerprint", "action_time", "verification"):
+        if not evidence.get(required):
+            raise PublishError("the evidence is missing %s" % required, EXIT_REFUSED)
+    if evidence["fingerprint"] != args.fingerprint:
+        raise PublishError(
+            "the evidence names a different fingerprint than the finding", EXIT_REFUSED
+        )
+    for broad in ("path", "rule_id", "paths", "rules"):
+        if evidence.get(broad) in ("*", ["*"]):
+            raise PublishError(
+                "a path-wide or rule-wide incident exception is forbidden", EXIT_REFUSED
+            )
+    reject_known_values(
+        evidence_bytes.decode("utf-8", "replace"), set(findings.get("value_hmacs") or []), key
+    )
+
+    incidents = load_incidents(repo)
+    incidents["incidents"][args.fingerprint] = {
+        "resolution": args.resolution,
+        "resolved_at": rfc3339(now_epoch()),
+        "evidence_sha256": hashlib.sha256(evidence_bytes).hexdigest(),
+        "rule_id": matching[0]["rule_id"],
+    }
+    write_json(incidents_path(repo), incidents)
+    flag_incident(repo)
+    print("incident: %s %s" % (args.fingerprint, args.resolution))
+    print("full-audit-invalidated: true")
+    return EXIT_OK
+
+
+# --------------------------------------------------------------------------
 # Review manifest
 # --------------------------------------------------------------------------
 
@@ -1020,6 +1424,18 @@ def split_patch_hunks(patch_text):
         if current is not None:
             current["body"].append(line)
     return hunks
+
+
+def bounded_hunk(hunk):
+    """Keep a reviewable hunk whole; mark an oversized one instead of hiding it."""
+    body = "".join(hunk["body"])
+    if len(body) <= LARGE_BLOB_LIMIT:
+        return hunk["header"] + "\n" + body
+    return "%s\n%s\n[hunk truncated: %d bytes; the large-file finding covers the rest]" % (
+        hunk["header"],
+        body[:LARGE_BLOB_LIMIT],
+        len(body),
+    )
 
 
 def blob_content(repo, oid, size, redactor):
@@ -1108,7 +1524,7 @@ def build_manifest(repo, run_id, boundary, result, mode, tag, release_notes):
                     commit,
                     hunk["path"],
                     ordinal,
-                    redactor.scrub(hunk["header"] + "\n" + "".join(hunk["body"])),
+                    redactor.scrub(bounded_hunk(hunk)),
                     {"old_start": hunk["old_start"], "new_start": hunk["new_start"]},
                 )
             )
@@ -1370,7 +1786,9 @@ class ReviewStatus:
         return not (self.missing or self.extra or self.unit_findings or self.deterministic)
 
 
-def review_status(repo, run_id, resolved_fingerprints=frozenset()):
+def review_status(repo, run_id):
+    record = load_run(repo, run_id)
+    resolved = resolved_fingerprints(repo) if record["mode"] == "full-audit" else frozenset()
     manifest = load_manifest(repo, run_id)
     review = load_review(repo, run_id, manifest)
     expected = [unit["unit_id"] for unit in manifest["units"]]
@@ -1390,7 +1808,7 @@ def review_status(repo, run_id, resolved_fingerprints=frozenset()):
     deterministic = [
         finding["fingerprint"]
         for finding in load_findings(repo, run_id).get("findings", [])
-        if finding["fingerprint"] not in resolved_fingerprints
+        if finding["fingerprint"] not in resolved
     ]
     return ReviewStatus(
         total=len(expected),
@@ -1400,6 +1818,25 @@ def review_status(repo, run_id, resolved_fingerprints=frozenset()):
         unit_findings=unit_findings,
         deterministic=deterministic,
     )
+
+
+def record_full_audit(repo, run_id, status):
+    """A clean, exhaustive audit review is what writes the receipt."""
+    record = load_run(repo, run_id)
+    if record["mode"] != "full-audit" or not status.clean:
+        return None
+    now = now_epoch()
+    receipt = {
+        "schema": SCHEMA,
+        "completed_at": rfc3339(now),
+        "completed_epoch": now,
+        "ruleset_id": record["ruleset_id"],
+        "run_id": run_id,
+        "public_refs": record.get("public_refs") or [],
+        "incident_flag": False,
+    }
+    write_json(repo.state_dir / "full-audit.json", receipt)
+    return receipt
 
 
 def command_review_status(args):
@@ -1416,6 +1853,9 @@ def command_review_status(args):
     for print_key in status.deterministic:
         print("deterministic-finding: %s" % print_key)
     print("clean: %s" % ("yes" if status.clean else "no"))
+    receipt = record_full_audit(repo, args.run, status)
+    if receipt:
+        print("full-audit-recorded: %s" % receipt["completed_at"])
     return EXIT_OK if status.clean else EXIT_REFUSED
 
 
@@ -1439,8 +1879,15 @@ def command_scan(args):
     now = now_epoch()
     staleness = full_audit_staleness(repo, ruleset_id, now)
 
-    result = scan_outgoing(repo, boundary, key)
-    manifest = build_manifest(repo, run_id, boundary, result, args.mode, args.tag, args.release_notes)
+    public_refs = []
+    if args.mode == "full-audit":
+        result, public_refs = scan_full_audit(repo, key)
+        manifest = build_audit_manifest(repo, run_id, result)
+    else:
+        result = scan_outgoing(repo, boundary, key)
+        manifest = build_manifest(
+            repo, run_id, boundary, result, args.mode, args.tag, args.release_notes
+        )
     record = {
         "schema": SCHEMA,
         "mode": args.mode,
@@ -1455,7 +1902,7 @@ def command_scan(args):
         "ruleset_id": ruleset_id,
         "manifest_id": manifest["manifest_id"],
         "full_audit_due": staleness is not None,
-        "public_refs": [],
+        "public_refs": public_refs,
     }
     store_run(repo, record)
     store_findings(repo, run_id, result)
@@ -1472,6 +1919,27 @@ def command_scan(args):
         print(format_finding(finding))
     print("findings: %d" % len(result.findings))
     print("units: %d" % len(manifest["units"]))
+    incidents = [
+        finding
+        for finding in result.findings
+        if finding.get("classification") == "public-incident"
+    ]
+    if incidents:
+        print("handoff: gitguardian-triage")
+        print(
+            "handoff-order: rotate or revoke the credential, then remove it from the "
+            "source, then consider public-history cleanup"
+        )
+        for finding in incidents:
+            print(
+                "public-incident: %s %s %s %s"
+                % (
+                    finding["rule_id"],
+                    finding["path"] or "-",
+                    (finding["commit"] or "-")[:12],
+                    finding["fingerprint"],
+                )
+            )
     print("full-audit-due: %s" % ("true" if staleness else "false"))
     if staleness:
         print("full-audit-reason: %s" % staleness)
@@ -1524,7 +1992,7 @@ def command_repair_start(args):
     repo = discover_repository()
     fingerprint_key(repo)
     record = load_run(repo, args.run)
-    status = review_status(repo, args.run, resolved_fingerprints(repo))
+    status = review_status(repo, args.run)
     if not (status.deterministic or status.unit_findings):
         raise PublishError(
             "run %s has no blocking finding, so there is nothing to repair" % args.run,
@@ -1761,7 +2229,7 @@ def authorize_run(repo, run_id, tag, now):
     if staleness:
         raise PublishError("full audit required: %s" % staleness, EXIT_REFUSED)
 
-    status = review_status(repo, run_id, resolved_fingerprints(repo))
+    status = review_status(repo, run_id)
     if not status.clean:
         details = []
         for unit_id in status.missing:
@@ -2095,13 +2563,6 @@ def command_install(args):
 # --------------------------------------------------------------------------
 
 
-def not_yet(name):
-    def handler(args):
-        raise PublishError("%s is not implemented yet" % name)
-
-    return handler
-
-
 def build_parser():
     parser = argparse.ArgumentParser(
         prog="dotfiles-publish",
@@ -2149,7 +2610,7 @@ def build_parser():
     incident.add_argument("--fingerprint", required=True)
     incident.add_argument("--resolution", required=True, choices=("rotated", "revoked", "invalid"))
     incident.add_argument("--evidence", required=True)
-    incident.set_defaults(handler=not_yet("incident-record"))
+    incident.set_defaults(handler=command_incident_record)
 
     authorize = subparsers.add_parser("authorize", help="write a short-lived push authorization")
     authorize.add_argument("--run", required=True)

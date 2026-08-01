@@ -16,6 +16,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from pathlib import Path
 
@@ -87,7 +88,7 @@ def record(value, path, commit, line_number, line):
 
 
 def scan_git(repo, log_opts, compiled):
-    rev_args = ["--all"] if log_opts in (None, "", "--all") else [log_opts]
+    rev_args = ["--all"] if not log_opts else log_opts.split()
     listing = subprocess.run(
         ["git", "-C", repo, "rev-list", "--reverse", *rev_args],
         capture_output=True,
@@ -653,6 +654,19 @@ class DotfilesPublishScanTests(PublicationFixture):
         self.assertIn(("binary-file", "assets/blob.bin"), rules)
         self.assertIn(("large-file", "assets/huge.dat"), rules)
         self.assertIn(("symlink-in-outgoing-history", "passwd-link"), rules)
+
+    def test_a_large_text_blob_does_not_stall_redaction(self):
+        # Structural redaction once had a quadratic rule that spun for minutes
+        # on a long run of ordinary characters.
+        self.publish_base()
+        self.commit("add generated data", {"assets/generated.txt": "a" * 400000})
+
+        started = time.monotonic()
+        proc, _ = self.scan()
+        elapsed = time.monotonic() - started
+
+        self.assertIn(proc.returncode, (0, 2), proc.stdout + proc.stderr)
+        self.assertLess(elapsed, 60, "scanning a large text blob took %.1fs" % elapsed)
 
     def test_scanner_failure_is_reported_as_a_closed_failure(self):
         self.publish_base()
@@ -1467,15 +1481,38 @@ class DotfilesPublishFullAuditTests(PublicationFixture):
         changed, _ = self.scan()
         self.assertIn("full-audit-due: true", changed.stdout)
 
-    def test_full_audit_finding_on_public_ref_is_classified_as_incident(self):
+    def publish_a_secret(self):
+        """Put a secret on the public branch, the way a real leak arrives."""
         self.publish_base()
         self.commit(
             "publish configuration", {"config/service.conf": "token = %s\n" % TEST_SECRET}
         )
-        self.git(
-            "-c", "core.hooksPath=/dev/null", "push", "--quiet", "origin", "master"
-        )
+        self.git("-c", "core.hooksPath=/dev/null", "push", "--quiet", "origin", "master")
         self.git("fetch", "--quiet", "origin")
+
+    def public_incident(self, run_id):
+        findings = self.read_json(self.run_dir(run_id) / "findings.json")["findings"]
+        incidents = [
+            finding
+            for finding in findings
+            if finding.get("classification") == "public-incident"
+        ]
+        self.assertTrue(incidents, "no finding was classified as a public incident")
+        return incidents[0]
+
+    def write_evidence(self, fingerprint, **extra):
+        evidence = {
+            "fingerprint": fingerprint,
+            "action_time": "2026-01-02T03:04:05Z",
+            "verification": "the credential was rotated and the old one now fails",
+        }
+        evidence.update(extra)
+        path = self.base / ("evidence-%s.json" % fingerprint[:8])
+        path.write_text(json.dumps(evidence))
+        return path
+
+    def test_full_audit_finding_on_public_ref_is_classified_as_incident(self):
+        self.publish_a_secret()
 
         proc, run_id = self.scan("--mode", "full-audit")
 
@@ -1485,6 +1522,250 @@ class DotfilesPublishFullAuditTests(PublicationFixture):
         classes = {finding.get("classification") for finding in findings}
         self.assertIn("public-incident", classes)
         self.assertIn("gitguardian-triage", proc.stdout)
+        self.assertIn("rotate or revoke", proc.stdout)
+        self.assertFalse((self.state_dir() / "authorization.json").exists())
+
+    def test_full_audit_covers_pull_request_heads_and_removes_its_refs(self):
+        self.publish_base()
+        self.commit(
+            "work in a pull request", {"config/pr.conf": "token = %s\n" % TEST_SECRET}
+        )
+        pull_head = self.head()
+        self.git(
+            "-c",
+            "core.hooksPath=/dev/null",
+            "push",
+            "--quiet",
+            "origin",
+            "HEAD:refs/pull/7/head",
+        )
+        self.git("reset", "--quiet", "--hard", self.remote_tip())
+
+        proc, run_id = self.scan("--mode", "full-audit")
+
+        self.assertEqual(2, proc.returncode, proc.stdout + proc.stderr)
+        findings = self.read_json(self.run_dir(run_id) / "findings.json")["findings"]
+        self.assertIn(
+            pull_head,
+            {finding["commit"] for finding in findings},
+            "the pull-request head was not audited",
+        )
+        self.assertEqual("public-incident", self.public_incident(run_id)["classification"])
+        remaining = self.git(
+            "for-each-ref", "--format=%(refname)", "refs/dotfiles-publish/audit/"
+        ).stdout.strip()
+        self.assertEqual("", remaining, "temporary audit refs were left behind")
+
+    def test_audit_refs_are_removed_after_a_scanner_crash(self):
+        self.publish_base()
+        self.git(
+            "-c",
+            "core.hooksPath=/dev/null",
+            "push",
+            "--quiet",
+            "origin",
+            "HEAD:refs/pull/9/head",
+        )
+
+        proc = self.cli(
+            "scan",
+            "--mode",
+            "full-audit",
+            env=self.env(DOTFILES_FAKE_GITLEAKS_FAIL="9"),
+        )
+
+        self.assertEqual(3, proc.returncode, proc.stdout + proc.stderr)
+        remaining = self.git(
+            "for-each-ref", "--format=%(refname)", "refs/dotfiles-publish/audit/"
+        ).stdout.strip()
+        self.assertEqual("", remaining, "a scanner crash left temporary audit refs behind")
+
+    def test_incident_record_resolves_exactly_one_fingerprint(self):
+        self.publish_a_secret()
+        proc, run_id = self.scan("--mode", "full-audit")
+        finding = self.public_incident(run_id)
+
+        recorded = self.cli(
+            "incident-record",
+            "--run",
+            run_id,
+            "--fingerprint",
+            finding["fingerprint"],
+            "--resolution",
+            "rotated",
+            "--evidence",
+            str(self.write_evidence(finding["fingerprint"])),
+        )
+
+        self.assertEqual(0, recorded.returncode, recorded.stdout + recorded.stderr)
+        incidents = self.read_json(self.state_dir() / "incidents.json")["incidents"]
+        self.assertEqual("rotated", incidents[finding["fingerprint"]]["resolution"])
+        self.assertNotIn("value", json.dumps(incidents))
+        self.assertIn("evidence_sha256", incidents[finding["fingerprint"]])
+
+        status = self.cli("review-status", "--run", run_id)
+        self.assertNotIn(
+            "deterministic-finding: %s" % finding["fingerprint"], status.stdout
+        )
+
+    def test_incident_record_rejects_broad_or_value_bearing_evidence(self):
+        self.publish_a_secret()
+        _, run_id = self.scan("--mode", "full-audit")
+        finding = self.public_incident(run_id)
+
+        with_value = self.write_evidence(finding["fingerprint"], value="anything")
+        rejected = self.cli(
+            "incident-record",
+            "--run",
+            run_id,
+            "--fingerprint",
+            finding["fingerprint"],
+            "--resolution",
+            "rotated",
+            "--evidence",
+            str(with_value),
+        )
+        self.assertNotEqual(0, rejected.returncode)
+        self.assertIn("value field", rejected.stderr)
+
+        broad = self.write_evidence(finding["fingerprint"], path="*")
+        wide = self.cli(
+            "incident-record",
+            "--run",
+            run_id,
+            "--fingerprint",
+            finding["fingerprint"],
+            "--resolution",
+            "rotated",
+            "--evidence",
+            str(broad),
+        )
+        self.assertNotEqual(0, wide.returncode)
+        self.assertIn("forbidden", wide.stderr)
+
+        leaking = self.write_evidence(
+            finding["fingerprint"], verification="the value %s was rotated" % TEST_SECRET
+        )
+        detected = self.cli(
+            "incident-record",
+            "--run",
+            run_id,
+            "--fingerprint",
+            finding["fingerprint"],
+            "--resolution",
+            "rotated",
+            "--evidence",
+            str(leaking),
+        )
+        self.assertNotEqual(0, detected.returncode)
+        self.assertIn("scanner detected", detected.stderr)
+
+        self.assertFalse((self.state_dir() / "incidents.json").exists())
+
+    def test_incident_record_refuses_an_unpublished_finding(self):
+        self.publish_base()
+        self.commit(
+            "unpublished configuration", {"config/local.conf": "token = %s\n" % TEST_SECRET}
+        )
+        _, run_id = self.scan("--mode", "full-audit")
+        findings = self.read_json(self.run_dir(run_id) / "findings.json")["findings"]
+        unpublished = [
+            finding
+            for finding in findings
+            if finding.get("classification") == "unpublished" and finding["commit"]
+        ]
+        self.assertTrue(unpublished)
+
+        refused = self.cli(
+            "incident-record",
+            "--run",
+            run_id,
+            "--fingerprint",
+            unpublished[0]["fingerprint"],
+            "--resolution",
+            "rotated",
+            "--evidence",
+            str(self.write_evidence(unpublished[0]["fingerprint"])),
+        )
+
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn("remove it from history", refused.stderr)
+
+    def test_receipt_is_written_only_after_a_clean_audit_review(self):
+        self.publish_base()
+        self.commit("ordinary work", {"docs/notes.md": "notes\n"})
+
+        proc, run_id = self.scan("--mode", "full-audit")
+        self.assertEqual(0, proc.returncode, proc.stdout + proc.stderr)
+        receipt_path = self.state_dir() / "full-audit.json"
+
+        incomplete = self.cli("review-status", "--run", run_id)
+        self.assertNotEqual(0, incomplete.returncode)
+        self.assertFalse(receipt_path.exists())
+
+        self.review_all(run_id)
+        complete = self.cli("review-status", "--run", run_id)
+        self.assertEqual(0, complete.returncode, complete.stderr)
+        self.assertIn("full-audit-recorded: ", complete.stdout)
+        receipt = self.read_json(receipt_path)
+        self.assertFalse(receipt["incident_flag"])
+
+        advanced, publish_run = self.scan()
+        self.assertIn("full-audit-due: false", advanced.stdout)
+
+    def test_an_incident_receipt_invalidates_the_full_audit(self):
+        self.publish_a_secret()
+        _, run_id = self.scan("--mode", "full-audit")
+        finding = self.public_incident(run_id)
+        self.write_full_audit_receipt(run_id)
+
+        self.cli(
+            "incident-record",
+            "--run",
+            run_id,
+            "--fingerprint",
+            finding["fingerprint"],
+            "--resolution",
+            "revoked",
+            "--evidence",
+            str(self.write_evidence(finding["fingerprint"])),
+        )
+
+        after, _ = self.scan()
+        self.assertIn("full-audit-due: true", after.stdout)
+        self.assertIn("incident", after.stdout)
+
+    def test_a_reviewed_branch_advance_keeps_the_receipt_valid(self):
+        self.publish_base()
+        self.commit("first change", {"docs/first.md": "first\n"})
+        _, audit_run = self.scan("--mode", "full-audit")
+        self.review_all(audit_run)
+        self.assertEqual(0, self.cli("review-status", "--run", audit_run).returncode)
+
+        self.commit("second change", {"docs/second.md": "second\n"})
+        advanced, publish_run = self.scan()
+
+        self.assertIn("full-audit-due: false", advanced.stdout)
+        self.review_all(publish_run)
+        authorized = self.cli("authorize", "--run", publish_run)
+        self.assertEqual(0, authorized.returncode, authorized.stdout + authorized.stderr)
+
+    def test_full_audit_never_authorizes_a_push(self):
+        self.publish_base()
+        self.commit("ordinary work", {"docs/notes.md": "notes\n"})
+        _, run_id = self.scan("--mode", "full-audit")
+        self.review_all(run_id)
+        self.cli("review-status", "--run", run_id)
+
+        refused = self.cli("authorize", "--run", run_id)
+
+        self.assertNotEqual(0, refused.returncode)
+        self.assertIn("never publishes", refused.stderr)
+        self.assertFalse((self.state_dir() / "authorization.json").exists())
+        self.assertEqual(
+            self.read_json(self.run_dir(run_id) / "run.json")["remote_oid"],
+            self.remote_tip(),
+        )
 
 
 if __name__ == "__main__":

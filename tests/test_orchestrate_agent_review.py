@@ -200,6 +200,56 @@ class WatchVerdictTests(unittest.TestCase):
 
         self.assertNotIn(" IMPLEMENTATION-READY", output)
 
+    def test_watch_recovers_after_transient_emacsclient_failure(self):
+        error_type = getattr(orchestrator, "EmacsClientError", SystemExit)
+        current = {
+            "repo": {"head": "abc123 resumed"},
+            "planner": {"state": "busy"},
+        }
+        args = argparse.Namespace(json=False, interval=0)
+        output = io.StringIO()
+        with (
+            mock.patch.object(
+                orchestrator,
+                "status",
+                side_effect=[
+                    error_type("emacsclient failed (1): connection refused"),
+                    current,
+                ],
+            ),
+            mock.patch.object(
+                orchestrator.time, "sleep", side_effect=[None, StopIteration]
+            ),
+            redirect_stdout(output),
+            self.assertRaises(StopIteration),
+        ):
+            orchestrator.watch(args)
+
+        rendered = output.getvalue()
+        self.assertIn("monitor-error=emacsclient failed (1): connection refused", rendered)
+        self.assertIn("abc123 resumed | planner=busy", rendered)
+
+    def test_watch_propagates_second_consecutive_emacsclient_failure(self):
+        error_type = orchestrator.EmacsClientError
+        args = argparse.Namespace(json=False, interval=0)
+        output = io.StringIO()
+        with (
+            mock.patch.object(
+                orchestrator,
+                "status",
+                side_effect=[
+                    error_type("emacsclient failed (1): connection refused"),
+                    error_type("emacsclient failed (1): connection refused again"),
+                ],
+            ),
+            mock.patch.object(orchestrator.time, "sleep", return_value=None),
+            redirect_stdout(output),
+            self.assertRaisesRegex(error_type, "connection refused again"),
+        ):
+            orchestrator.watch(args)
+
+        self.assertIn("monitor-error=emacsclient failed (1): connection refused", output.getvalue())
+
 
 class TranscriptMessageTests(unittest.TestCase):
     def test_claude_user_prompts_are_not_assistant_messages(self):

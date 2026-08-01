@@ -157,6 +157,9 @@ This prints one concise line when state changes. If it produces no output, the
 state has not changed. The helper's planner/reviewer option names map to Agent
 1 and Agent 2 for monitoring purposes only. Do not use a reviewer verdict as a
 permission gate: completion of the review response advances the workflow.
+If a read-only poll loses the Emacs server connection, the watcher reports the
+error and retries once after the normal interval. A second consecutive failure
+exits. Submission commands are never retried automatically.
 
 Send concise commentary updates when state changes or every 60 seconds during long work.
 

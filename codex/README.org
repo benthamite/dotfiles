@@ -481,9 +481,12 @@ naming, temp-file prompt submission, Python-based monitoring instead of shell
 =sleep=, feedback handoffs, and stop conditions. Its bundled
 =orchestrate_agent_review.py= helper lists live agent buffers, submits prompt
 files, parses transcripts, reports repo/session status, and watches sessions
-with concise bounded output. Live Emacs status is transferred through one-shot
-temp files while the evaluated Emacs form returns =nil=, so structured status
-data does not travel through the =emacsclient --eval= return channel.
+with concise bounded output. A transient Emacs connection failure during a
+read-only watch poll is reported and retried once; a second failure exits, and
+submission is never retried automatically. Live Emacs status is transferred
+through one-shot temp files while the evaluated Emacs form returns =nil=, so
+structured status data does not travel through the =emacsclient --eval= return
+channel.
 
 The =add-to-emacs-packages= skill is a Codex workflow for
 registering one of the user's Emacs packages in =my-emacs-packages.org=,

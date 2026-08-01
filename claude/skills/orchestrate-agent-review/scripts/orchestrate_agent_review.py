@@ -14,6 +14,10 @@ from pathlib import Path
 from typing import Any
 
 
+class EmacsClientError(RuntimeError):
+    """An emacsclient request failed while the Emacs server may be transiently unavailable."""
+
+
 def run_emacs_eval(expr: str) -> str:
     proc = subprocess.run(
         ["emacsclient", "--eval", expr],
@@ -24,7 +28,9 @@ def run_emacs_eval(expr: str) -> str:
     stdout = proc.stdout.decode("utf-8", "replace")
     stderr = proc.stderr.decode("utf-8", "replace")
     if proc.returncode != 0:
-        raise SystemExit(f"emacsclient failed ({proc.returncode}): {stderr.strip()}")
+        raise EmacsClientError(
+            f"emacsclient failed ({proc.returncode}): {stderr.strip()}"
+        )
     value = stdout.strip()
     if value.startswith('"') and value.endswith('"'):
         try:
@@ -277,7 +283,20 @@ def reviewer_verdict(transcript_key: str, latest: dict[str, str]) -> str | None:
 def watch(args: argparse.Namespace) -> None:
     last_rendered = ""
     while True:
-        current = status(args)
+        try:
+            current = status(args)
+        except EmacsClientError as error:
+            message = " ".join(str(error).split())
+            error_rendered = (
+                json_for_display({"monitor_error": message})
+                if args.json
+                else f"monitor-error={message}"
+            )
+            if error_rendered != last_rendered:
+                print(error_rendered, flush=True)
+                last_rendered = error_rendered
+            time.sleep(args.interval)
+            current = status(args)
         if args.json:
             rendered = json_for_display(current)
         else:
@@ -287,11 +306,17 @@ def watch(args: argparse.Namespace) -> None:
                     parts.append(f"{role}={current[role]['state']}")
             for key in ("planner_transcript", "reviewer_transcript"):
                 if key in current:
-                    latest = current[key]["latest"][0] if current[key]["latest"] else None
+                    latest = (
+                        current[key]["latest"][0]
+                        if current[key]["latest"]
+                        else None
+                    )
                     if latest:
                         verdict_text = reviewer_verdict(key, latest)
                         verdict = f" {verdict_text}" if verdict_text else ""
-                        parts.append(f"{key}_mtime={current[key]['mtime']}{verdict}")
+                        parts.append(
+                            f"{key}_mtime={current[key]['mtime']}{verdict}"
+                        )
             rendered = " | ".join(parts)
         if rendered != last_rendered:
             print(rendered, flush=True)
@@ -345,7 +370,10 @@ def main(argv: list[str] | None = None) -> int:
     p.set_defaults(func=watch)
 
     args = parser.parse_args(argv)
-    args.func(args)
+    try:
+        args.func(args)
+    except EmacsClientError as error:
+        parser.exit(1, f"{error}\n")
     return 0
 
 

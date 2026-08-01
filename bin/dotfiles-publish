@@ -24,12 +24,16 @@ import hashlib
 import hmac
 import json
 import os
+import re
 import secrets
+import shutil
 import stat
 import subprocess
 import sys
+import tarfile
+import tempfile
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 SCHEMA = 1
@@ -463,6 +467,483 @@ def full_audit_staleness(repo, ruleset_id, now):
 
 
 # --------------------------------------------------------------------------
+# Redaction
+# --------------------------------------------------------------------------
+
+# Each rule keeps the surrounding structure and replaces the capturing group
+# that holds the sensitive part.  These run even when no scanner value is
+# known, so an unrecognized credential shape is still blunted.
+STRUCTURAL_RULES = (
+    re.compile(
+        r"(?i)((?:authorization|proxy-authorization|x-api-key|x-auth-token|x-session-token|cookie|set-cookie)"
+        r"[ \t]*:[ \t]*(?:bearer[ \t]+|basic[ \t]+|token[ \t]+)?)([A-Za-z0-9\-\._~\+/=]{16,})"
+    ),
+    re.compile(
+        r"(?i)(\b(?:api[_-]?key|api[_-]?secret|auth[_-]?token|access[_-]?token|refresh[_-]?token"
+        r"|client[_-]?secret|secret[_-]?key|token|secret|passwd|password|passphrase)\b[ \t]*(?:[:=]|=>)[ \t]*[\"']?)"
+        r"([^\s\"'#;,)]{12,})"
+    ),
+    re.compile(r"([a-zA-Z][a-zA-Z0-9+.\-]*://[^\s:@/]+:)([^\s:@/\"']{6,})(?=@)"),
+    re.compile(r"(-----BEGIN (?:[A-Z]+ )*PRIVATE KEY(?: BLOCK)?-----)([\s\S]{1,})"),
+)
+
+STRUCTURAL_TOKEN = "[REDACTED:structural]"
+
+
+def structural_redaction(text):
+    for rule in STRUCTURAL_RULES:
+        text = rule.sub(lambda match: match.group(1) + STRUCTURAL_TOKEN, text)
+    return text
+
+
+class Redactor:
+    """Replaces values the scanners found, then blunts credential shapes."""
+
+    def __init__(self, key):
+        self.key = key
+        self.values = {}
+
+    def learn(self, value, token):
+        if value and len(value) >= 4:
+            self.values[value] = token
+
+    @property
+    def value_hmacs(self):
+        return sorted({value_hmac(self.key, value) for value in self.values})
+
+    def knows(self, candidate):
+        return value_hmac(self.key, candidate) in set(self.value_hmacs)
+
+    def scrub(self, text):
+        if text is None:
+            return None
+        if isinstance(text, bytes):
+            text = text.decode("utf-8", "replace")
+        for value in sorted(self.values, key=len, reverse=True):
+            text = text.replace(value, "[REDACTED:%s]" % self.values[value])
+        return structural_redaction(text)
+
+
+def clip(text, limit=200):
+    if text is None:
+        return ""
+    text = text.strip()
+    return text if len(text) <= limit else text[:limit] + "…"
+
+
+# --------------------------------------------------------------------------
+# Findings
+# --------------------------------------------------------------------------
+
+
+def finding_record(source, rule_id, path, commit, line, column, print_key, context, classification="outgoing"):
+    return {
+        "source": source,
+        "rule_id": rule_id,
+        "path": path,
+        "commit": commit,
+        "line": line,
+        "column": column,
+        "fingerprint": print_key,
+        "context": context,
+        "classification": classification,
+    }
+
+
+def format_finding(record):
+    location = "-"
+    if record.get("line"):
+        location = "%s:%s" % (record["line"], record.get("column") or "?")
+    return "finding: %s %s %s %s %s %s" % (
+        record["source"],
+        record["rule_id"],
+        record["path"] or "-",
+        (record["commit"] or "-")[:12],
+        location,
+        record["fingerprint"],
+    )
+
+
+# --------------------------------------------------------------------------
+# Gitleaks
+# --------------------------------------------------------------------------
+
+
+def gitleaks_executable():
+    configured = os.environ.get("DOTFILES_PUBLISH_GITLEAKS")
+    if configured:
+        return configured
+    found = shutil.which("gitleaks")
+    if not found:
+        raise PublishError(
+            "gitleaks is not installed; install it with 'brew install gitleaks'"
+        )
+    return found
+
+
+def gitleaks_config_argument(repo):
+    config = repo.root / ".gitleaks.toml"
+    return ["--config", str(config)] if config.is_file() else []
+
+
+def run_gitleaks(repo, work, *, git_range=None, directory=None):
+    """Run one scan and return its raw results; the report never outlives this call."""
+    report = Path(work) / "gitleaks-report.json"
+    command = [gitleaks_executable(), "dir" if directory else "git"]
+    command += gitleaks_config_argument(repo)
+    command += [
+        "--no-banner",
+        "--redact=100",
+        "--report-format",
+        "json",
+        "--report-path",
+        str(report),
+    ]
+    if git_range:
+        command.append("--log-opts=%s" % git_range)
+    command.append(str(directory or repo.root))
+    completed = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        if completed.returncode not in (0, 1):
+            raise PublishError(
+                "gitleaks failed with exit code %d: %s"
+                % (completed.returncode, structural_redaction(clip(completed.stderr.decode("utf-8", "replace"), 400))),
+                EXIT_FAILURE,
+            )
+        if not report.exists():
+            return []
+        try:
+            payload = json.loads(report.read_text(encoding="utf-8") or "[]")
+        except json.JSONDecodeError as error:
+            raise PublishError("gitleaks report was not valid JSON: %s" % error.msg, EXIT_FAILURE)
+        return payload or []
+    finally:
+        if report.exists():
+            report.unlink()
+
+
+def convert_gitleaks_results(results, key, redactor, source, default_commit=""):
+    """Learn the raw values in memory, then persist only redacted records."""
+    for result in results:
+        commit = result.get("Commit") or default_commit
+        path = result.get("File") or ""
+        rule = result.get("RuleID") or "unknown"
+        line = result.get("StartLine") or None
+        token = fingerprint(
+            key,
+            "gitleaks",
+            result.get("Fingerprint") or "",
+            commit,
+            path,
+            rule,
+            str(line or ""),
+        )
+        for candidate in (result.get("Secret"), result.get("Match"), result.get("Line")):
+            if candidate and candidate != "REDACTED":
+                redactor.learn(candidate, token)
+        result["_token"] = token
+
+    records = []
+    for result in results:
+        commit = result.get("Commit") or default_commit
+        records.append(
+            finding_record(
+                source,
+                result.get("RuleID") or "unknown",
+                result.get("File") or "",
+                commit,
+                result.get("StartLine") or None,
+                result.get("StartColumn") or None,
+                result["_token"],
+                clip(redactor.scrub(result.get("Match") or "")),
+            )
+        )
+    return records
+
+
+# --------------------------------------------------------------------------
+# Deterministic object detectors
+# --------------------------------------------------------------------------
+
+RISKY_PATH_RULES = (
+    (re.compile(r"(^|/)\.env($|\.)"), "risky-dotenv-file"),
+    (re.compile(r"(?i)(^|/)[^/]*history[^/]*$"), "risky-history-file"),
+    (re.compile(r"(?i)\.log$"), "risky-log-file"),
+    (re.compile(r"(?i)(^|/)[^/]*cookie[^/]*$"), "risky-cookie-file"),
+    (re.compile(r"(?i)(^|/)[^/]*session[^/]*$"), "risky-session-file"),
+    (re.compile(r"(?i)(^|/)[^/]*credential[^/]*$"), "risky-credential-file"),
+    (re.compile(r"(?i)(^|/)[^/]*auth[-_]?state[^/]*$"), "risky-auth-state-file"),
+    (
+        re.compile(
+            r"(?i)(^|/)(id_(rsa|dsa|ecdsa|ed25519)|[^/]*\.(pem|key|p12|pfx|jks|keystore|kdbx))$"
+        ),
+        "risky-private-key-file",
+    ),
+)
+
+ARCHIVE_SUFFIXES = (
+    ".zip",
+    ".tar",
+    ".tgz",
+    ".gz",
+    ".bz2",
+    ".xz",
+    ".7z",
+    ".rar",
+    ".jar",
+    ".dmg",
+)
+
+LARGE_BLOB_LIMIT = 2 * 1024 * 1024
+GIT_CRYPT_HEADER = b"\x00GITCRYPT\x00"
+
+
+def changed_entries(repo, commit):
+    raw = run_git(
+        repo.root, "diff-tree", "--root", "--no-commit-id", "--name-status", "-r", "-z", commit
+    ).out
+    tokens = raw.split(b"\x00")
+    entries = []
+    index = 0
+    while index < len(tokens):
+        status = tokens[index].decode("utf-8", "replace")
+        index += 1
+        if not status:
+            continue
+        if status[0] in ("R", "C"):
+            if index + 1 >= len(tokens):
+                break
+            index += 1
+            path = tokens[index].decode("utf-8", "replace")
+            index += 1
+        else:
+            if index >= len(tokens):
+                break
+            path = tokens[index].decode("utf-8", "replace")
+            index += 1
+        entries.append((status, path))
+    return entries
+
+
+def tree_entry(repo, commit, path):
+    result = run_git(repo.root, "ls-tree", "-z", commit, "--", path, check=False)
+    if result.code != 0 or not result.out.strip():
+        return None
+    record = result.out.split(b"\x00")[0].decode("utf-8", "replace")
+    metadata = record.split("\t", 1)[0]
+    parts = metadata.split()
+    if len(parts) < 3:
+        return None
+    return parts[0], parts[1], parts[2]
+
+
+def blob_size(repo, oid):
+    result = run_git(repo.root, "cat-file", "-s", oid, check=False)
+    if result.code != 0:
+        return 0
+    return int(result.text.strip() or 0)
+
+
+def blob_bytes(repo, oid, limit=None):
+    result = run_git(repo.root, "cat-file", "blob", oid, check=False)
+    if result.code != 0:
+        return b""
+    return result.out[:limit] if limit else result.out
+
+
+def looks_binary(data):
+    return b"\x00" in data[:8000]
+
+
+def filter_attributes(repo, commit, paths):
+    if not paths:
+        return {}
+    stdin = b"".join(path.encode("utf-8", "replace") + b"\x00" for path in paths)
+    result = run_git(
+        repo.root, "check-attr", "--source=%s" % commit, "-z", "filter", "--stdin", input_bytes=stdin, check=False
+    )
+    if result.code != 0:
+        return {}
+    tokens = result.out.split(b"\x00")
+    mapping = {}
+    for index in range(0, max(0, len(tokens) - 2), 3):
+        path = tokens[index].decode("utf-8", "replace")
+        value = tokens[index + 2].decode("utf-8", "replace")
+        mapping[path] = value
+    return mapping
+
+
+def inspect_paths(repo, commit, paths, key, redactor, source):
+    """Deterministic findings for object shape, risky names, and encryption."""
+    records = []
+    attributes = filter_attributes(repo, commit, paths)
+    for path in paths:
+        entry = tree_entry(repo, commit, path)
+        if entry is None:
+            continue
+        mode, kind, oid = entry
+
+        def add(rule_id, detail):
+            records.append(
+                finding_record(
+                    source,
+                    rule_id,
+                    path,
+                    commit,
+                    None,
+                    None,
+                    fingerprint(key, rule_id, commit, path, oid),
+                    detail,
+                )
+            )
+
+        if mode == "120000":
+            target = blob_bytes(repo, oid, 4096).decode("utf-8", "replace")
+            add("symlink-in-outgoing-history", "symlink target %s" % clip(redactor.scrub(target), 80))
+            continue
+        if kind == "commit":
+            add("submodule-in-outgoing-history", "gitlink %s" % oid[:12])
+            continue
+        if kind != "blob":
+            continue
+
+        for pattern, rule_id in RISKY_PATH_RULES:
+            if pattern.search(path):
+                add(rule_id, "risky path name requires inspection")
+
+        lowered = path.lower()
+        if lowered.endswith(ARCHIVE_SUFFIXES):
+            add("archive-file", "archive contents are not scannable in place")
+
+        size = blob_size(repo, oid)
+        if size > LARGE_BLOB_LIMIT:
+            add("large-file", "%d bytes exceeds the 2 MiB inspection limit" % size)
+
+        head = blob_bytes(repo, oid, 8192)
+        binary = looks_binary(head)
+        if binary:
+            add("binary-file", "%d bytes of binary content require inspection" % size)
+
+        if attributes.get(path) == "git-crypt":
+            if not head.startswith(GIT_CRYPT_HEADER):
+                add(
+                    "git-crypt-plaintext-blob",
+                    "a git-crypt path is stored without the git-crypt header",
+                )
+    return records
+
+
+def tree_paths(repo, commit):
+    listing = run_git(repo.root, "ls-tree", "-r", "--name-only", "-z", commit)
+    return [
+        token.decode("utf-8", "replace")
+        for token in listing.out.split(b"\x00")
+        if token.strip()
+    ]
+
+
+def export_tree(repo, commit, destination):
+    """Extract the exact committed tree without touching the working tree."""
+    destination = Path(destination).resolve()
+    archive_path = destination.parent / "candidate.tar"
+    archive_bytes = run_git(repo.root, "archive", "--format=tar", commit).out
+    archive_path.write_bytes(archive_bytes)
+    try:
+        with tarfile.open(str(archive_path)) as archive:
+            for member in archive:
+                if not member.isfile():
+                    continue
+                target = (destination / member.name).resolve()
+                if target != destination and destination not in target.parents:
+                    raise PublishError(
+                        "archive entry escapes the extraction directory: %s" % member.name
+                    )
+                target.parent.mkdir(parents=True, exist_ok=True)
+                source = archive.extractfile(member)
+                if source is None:
+                    continue
+                with source, open(str(target), "wb") as handle:
+                    shutil.copyfileobj(source, handle)
+                os.chmod(str(target), 0o600)
+    finally:
+        archive_path.unlink(missing_ok=True)
+    return destination
+
+
+# --------------------------------------------------------------------------
+# Scanning
+# --------------------------------------------------------------------------
+
+
+@dataclass
+class ScanResult:
+    findings: list = field(default_factory=list)
+    redactor: object = None
+    commits: list = field(default_factory=list)
+
+
+def scan_outgoing(repo, boundary, key):
+    """Scan the outgoing patch range, the candidate tree, and every object."""
+    redactor = Redactor(key)
+    findings = []
+    commits = outgoing_commits(repo, boundary)
+    state = ensure_state_dir(repo)
+
+    with tempfile.TemporaryDirectory(dir=str(state)) as work:
+        os.chmod(work, DIRECTORY_MODE)
+        range_expression = "%s..%s" % (boundary.remote_oid, boundary.candidate_oid)
+        results = run_gitleaks(repo, work, git_range=range_expression)
+        findings += convert_gitleaks_results(results, key, redactor, "gitleaks-range")
+
+        extracted = Path(work) / "candidate-tree"
+        extracted.mkdir(mode=DIRECTORY_MODE)
+        export_tree(repo, boundary.candidate_oid, extracted)
+        tree_results = run_gitleaks(repo, work, directory=extracted)
+        findings += convert_gitleaks_results(
+            tree_results, key, redactor, "gitleaks-tree", boundary.candidate_oid
+        )
+
+    for commit in commits:
+        paths = [path for status, path in changed_entries(repo, commit) if status[0] != "D"]
+        findings += inspect_paths(repo, commit, paths, key, redactor, "objects")
+
+    findings += inspect_paths(
+        repo,
+        boundary.candidate_oid,
+        tree_paths(repo, boundary.candidate_oid),
+        key,
+        redactor,
+        "candidate-tree",
+    )
+
+    return ScanResult(findings=deduplicate(findings), redactor=redactor, commits=commits)
+
+
+def deduplicate(records):
+    seen = set()
+    unique = []
+    for record in records:
+        identity = (record["rule_id"], record["commit"], record["path"], record["fingerprint"])
+        if identity in seen:
+            continue
+        seen.add(identity)
+        unique.append(record)
+    return unique
+
+
+def store_findings(repo, run_id, result):
+    write_json(
+        run_directory(repo, run_id) / "findings.json",
+        {
+            "schema": SCHEMA,
+            "run_id": run_id,
+            "findings": result.findings,
+            "value_hmacs": result.redactor.value_hmacs,
+        },
+    )
+
+
+# --------------------------------------------------------------------------
 # scan
 # --------------------------------------------------------------------------
 
@@ -475,14 +956,14 @@ def command_scan(args):
         raise PublishError("--tag is only meaningful in release mode")
 
     ruleset_id = ruleset_identity(repo.root)
-    fingerprint_key(repo)
+    key = fingerprint_key(repo)
     boundary = resolve_boundary(repo)
     notes_digest = notes_digest_of(args.release_notes)
     run_id = compute_run_id(args.mode, repo, boundary, ruleset_id, args.tag, notes_digest)
     now = now_epoch()
     staleness = full_audit_staleness(repo, ruleset_id, now)
 
-    commits = outgoing_commits(repo, boundary)
+    result = scan_outgoing(repo, boundary, key)
     record = {
         "schema": SCHEMA,
         "mode": args.mode,
@@ -500,6 +981,7 @@ def command_scan(args):
         "public_refs": [],
     }
     store_run(repo, record)
+    store_findings(repo, run_id, result)
 
     print("run: %s" % run_id)
     print("mode: %s" % args.mode)
@@ -507,11 +989,14 @@ def command_scan(args):
     print("remote: %s %s %s" % (repo.remote_name, repo.remote_ref, boundary.remote_oid))
     print("candidate: %s" % boundary.candidate_oid)
     print("ruleset: %s" % ruleset_id)
-    print("outgoing-commits: %d" % len(commits))
+    print("outgoing-commits: %d" % len(result.commits))
+    for finding in result.findings:
+        print(format_finding(finding))
+    print("findings: %d" % len(result.findings))
     print("full-audit-due: %s" % ("true" if staleness else "false"))
     if staleness:
         print("full-audit-reason: %s" % staleness)
-    return EXIT_OK
+    return EXIT_FINDINGS if result.findings else EXIT_OK
 
 
 # --------------------------------------------------------------------------

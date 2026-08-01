@@ -1,0 +1,89 @@
+# Secret-scanning ruleset for guarded dotfiles publication.
+#
+# Every repository rule captures the sensitive value in group 1 and declares it
+# with secretGroup, so Gitleaks fingerprints and redacts the value rather than
+# the surrounding line.
+#
+# There is deliberately no allowlist.  A false positive is repaired by adding
+# the exact rule/path or fingerprint exception that a behaviour scenario
+# demonstrated; suppressing a whole path is forbidden, because that would hide
+# every future secret stored there.
+
+title = "dotfiles publication ruleset"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "dotfiles-credential-assignment"
+description = "Credential assigned to a variable or configuration key"
+regex = '''(?i)\b(?:api[_-]?key|api[_-]?secret|auth[_-]?token|access[_-]?token|refresh[_-]?token|client[_-]?secret|secret[_-]?key|passwd|password|passphrase)\b[ \t]*(?:[:=]|=>)[ \t]*["']?([^\s"'#;,)]{12,})["']?'''
+secretGroup = 1
+keywords = [
+  "api_key",
+  "apikey",
+  "api-key",
+  "api_secret",
+  "auth_token",
+  "access_token",
+  "refresh_token",
+  "client_secret",
+  "secret_key",
+  "passwd",
+  "password",
+  "passphrase",
+]
+
+[[rules]]
+id = "dotfiles-authorization-header"
+description = "Authorization, API-key, or cookie header carrying a credential"
+regex = '''(?i)\b(?:authorization|proxy-authorization|x-api-key|x-auth-token|x-session-token|cookie|set-cookie)\b[ \t]*:[ \t]*(?:bearer[ \t]+|basic[ \t]+|token[ \t]+)?([A-Za-z0-9\-\._~\+/=]{16,})'''
+secretGroup = 1
+keywords = [
+  "authorization",
+  "proxy-authorization",
+  "x-api-key",
+  "x-auth-token",
+  "x-session-token",
+  "cookie",
+]
+
+[[rules]]
+id = "dotfiles-credential-url"
+description = "URL carrying an inline credential"
+regex = '''[a-zA-Z][a-zA-Z0-9+.\-]*://[^\s:@/]+:([^\s:@/"']{6,})@'''
+secretGroup = 1
+keywords = ["://"]
+
+[[rules]]
+id = "dotfiles-inline-command-credential"
+description = "Shell command with an inlined token or password"
+regex = '''(?i)\b(?:curl|wget|http|https|psql|mysql|mysqldump|mongo|mongosh|redis-cli|sshpass|scp|rsync|gh|glab|aws|az|gcloud|op|vault|kubectl)\b[^\n]{0,160}?(?:--(?:password|passwd|token|api[_-]?key|secret|auth)[= ]|-p ?|-u [^\s]+ -p)["']?([^\s"'\\]{8,})'''
+secretGroup = 1
+keywords = [
+  "curl",
+  "wget",
+  "psql",
+  "mysql",
+  "mongosh",
+  "redis-cli",
+  "sshpass",
+  "--password",
+  "--token",
+  "--api-key",
+  "--secret",
+]
+
+[[rules]]
+id = "dotfiles-private-key-header"
+description = "PEM private key header"
+regex = '''-----BEGIN (?:RSA |DSA |EC |OPENSSH |PGP |ENCRYPTED )?PRIVATE KEY(?: BLOCK)?-----([\s\S]{0,80})'''
+secretGroup = 1
+keywords = ["PRIVATE KEY"]
+
+[[rules]]
+id = "dotfiles-session-export"
+description = "Exported session, cookie, token, or credential environment variable"
+regex = '''(?i)\bexport[ \t]+[A-Z0-9_]*(?:SESSION|COOKIE|TOKEN|SECRET|PASSWORD|CREDENTIAL)[A-Z0-9_]*[ \t]*=[ \t]*["']?([^\s"'#]{8,})["']?'''
+secretGroup = 1
+keywords = ["export"]

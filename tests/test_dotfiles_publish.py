@@ -294,7 +294,10 @@ class PublicationFixture(unittest.TestCase):
         for path, content in (files or {}).items():
             target = self.repo / path
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(content)
+            if isinstance(content, bytes):
+                target.write_bytes(content)
+            else:
+                target.write_text(content)
         for path in remove:
             (self.repo / path).unlink()
         self.git("add", "-A")
@@ -589,6 +592,123 @@ class DotfilesPublishScanTests(PublicationFixture):
             "the scanner was not pointed at the exact outgoing range",
         )
 
+    def test_candidate_tree_scan_finds_a_secret_inherited_from_published_history(self):
+        self.commit(
+            "public base with an inherited secret",
+            {
+                "README.md": "public dotfiles\n",
+                "config/legacy.conf": "token = %s\n" % TEST_SECRET,
+            },
+        )
+        self.git(
+            "-c",
+            "core.hooksPath=/dev/null",
+            "push",
+            "--quiet",
+            str(self.remote),
+            "master:refs/heads/master",
+        )
+        self.git("remote", "add", "origin", str(self.remote))
+        self.git("fetch", "--quiet", "origin")
+        self.git("branch", "--set-upstream-to=origin/master", "master")
+        self.commit("unrelated work", {"docs/notes.md": "notes\n"})
+
+        proc, run_id = self.scan()
+
+        self.assertEqual(2, proc.returncode, proc.stdout + proc.stderr)
+        findings = self.read_json(self.run_dir(run_id) / "findings.json")["findings"]
+        sources = {finding["source"] for finding in findings}
+        self.assertIn(
+            "gitleaks-tree",
+            sources,
+            "the candidate tree was not scanned for inherited secrets",
+        )
+        self.assertNotIn(TEST_SECRET, proc.stdout)
+
+    def test_deterministic_detectors_report_risky_names_symlinks_and_large_blobs(self):
+        self.publish_base()
+        os.symlink("/etc/passwd", self.repo / "passwd-link")
+        self.commit(
+            "add objects that need inspection",
+            {
+                "deploy.log": "started\n",
+                "keys/service.pem": "not really a key\n",
+                "assets/blob.bin": bytes(range(256)) * 8,
+                "assets/huge.dat": b"a" * (2 * 1024 * 1024 + 1),
+            },
+        )
+
+        proc, run_id = self.scan()
+
+        self.assertEqual(2, proc.returncode, proc.stdout + proc.stderr)
+        findings = self.read_json(self.run_dir(run_id) / "findings.json")["findings"]
+        rules = {(finding["rule_id"], finding["path"]) for finding in findings}
+        self.assertIn(("risky-log-file", "deploy.log"), rules)
+        self.assertIn(("risky-private-key-file", "keys/service.pem"), rules)
+        self.assertIn(("binary-file", "assets/blob.bin"), rules)
+        self.assertIn(("large-file", "assets/huge.dat"), rules)
+        self.assertIn(("symlink-in-outgoing-history", "passwd-link"), rules)
+
+    def test_scanner_failure_is_reported_as_a_closed_failure(self):
+        self.publish_base()
+        self.commit("add notes", {"docs/notes.md": "notes\n"})
+
+        proc = self.cli(
+            "scan",
+            env=self.env(
+                DOTFILES_FAKE_GITLEAKS_FAIL="7",
+                DOTFILES_FAKE_GITLEAKS_FAIL_TEXT="scanner crashed while reading token = %s"
+                % TEST_SECRET,
+            ),
+        )
+
+        self.assertEqual(3, proc.returncode, proc.stdout + proc.stderr)
+        self.assertIn("gitleaks failed", proc.stderr)
+        self.assertNotIn(TEST_SECRET, proc.stdout + proc.stderr)
+
+    @unittest.skipUnless(shutil.which("gitleaks"), "gitleaks is not installed")
+    def test_live_gitleaks_config_fires_default_and_repository_rules(self):
+        # Values are assembled at run time so no secret-shaped literal is
+        # committed to this file.
+        sample = "\n".join(
+            [
+                "aws_key = " + "AKIA" + "Z2Q7X4M1V9K3T5B8",
+                "db = postgres://admin:" + "hunter2hunter2" + "@db.example.invalid/app",
+            ]
+        )
+        self.commit("public base", {"README.md": "public dotfiles\n"})
+        self.commit("add sample", {"sample.conf": sample + "\n"})
+        report = self.base / "live-report.json"
+
+        completed = subprocess.run(
+            [
+                "gitleaks",
+                "git",
+                "--config",
+                str(REPO_ROOT / ".gitleaks.toml"),
+                "--log-opts=--all",
+                "--no-banner",
+                "--redact=100",
+                "--report-format",
+                "json",
+                "--report-path",
+                str(report),
+                str(self.repo),
+            ],
+            capture_output=True,
+            text=True,
+            env=self.git_env(),
+        )
+
+        self.assertIn(completed.returncode, (0, 1), completed.stderr)
+        results = json.loads(report.read_text() or "[]")
+        rules = {result["RuleID"] for result in results}
+        self.assertTrue(
+            [rule for rule in rules if not rule.startswith("dotfiles-")],
+            "no upstream default detector fired: %s" % rules,
+        )
+        self.assertIn("dotfiles-credential-url", rules)
+
     def test_git_crypt_path_with_plaintext_historical_blob_is_rejected(self):
         self.publish_base()
         self.commit(
@@ -635,8 +755,22 @@ class DotfilesPublishRedactionTests(PublicationFixture):
             if TEST_SECRET.encode() in path.read_bytes()
         ]
         self.assertEqual([], leaked, "the secret value reached persisted state")
+        findings = self.read_json(self.run_dir(run_id) / "findings.json")["findings"]
+        self.assertTrue(findings)
+        self.assertIn("[REDACTED:", json.dumps(findings))
+
+    def test_manifest_units_are_redacted_before_they_are_stored(self):
+        self.publish_base()
+        self.commit(
+            "add configuration", {"config/service.conf": "token = %s\n" % TEST_SECRET}
+        )
+
+        _, run_id = self.scan()
+
         manifest = self.read_json(self.run_dir(run_id) / "manifest.json")
-        self.assertIn("[REDACTED:", json.dumps(manifest))
+        serialized = json.dumps(manifest)
+        self.assertNotIn(TEST_SECRET, serialized)
+        self.assertIn("[REDACTED:", serialized)
 
 
 class DotfilesPublishManifestTests(PublicationFixture):

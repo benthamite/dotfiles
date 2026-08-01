@@ -121,8 +121,11 @@ The dotfiles parity tools change before either repository changes:
   suppresses false edit reminders, and still reports ordinary content drift;
 - `mirror-claude-agents` recognizes the bridge and performs a no-op instead of
   copying the import line over `AGENTS.md`; and
+- the paired `update-log` skills recognize the bridge before their ordinary
+  byte-for-byte mirror procedure, update canonical session state in
+  `AGENTS.md`, and leave the import-only `CLAUDE.md` unchanged; and
 - focused tests cover bridge equivalence, normal drift, a missing target,
-  reminder behavior, and helper safety.
+  reminder behavior, helper safety, and the `update-log` bridge branch.
 
 `agents/README.org` documents import bridges alongside ordinary mirrored pairs.
 Historical repository design documents that describe the old symlink remain
@@ -296,8 +299,9 @@ Expected logical commits are:
    directly required documentation;
 2. **Epoch meeting workflow:** the paired `meeting-debrief` skills and scoped
    ignore rule;
-3. **dotfiles parity tooling:** `ai-config-sync`, `mirror-claude-agents`, tests,
-   and `agents/README.org`;
+3. **dotfiles parity tooling:** `ai-config-sync`, `mirror-claude-agents`, the
+   paired `update-log` skills, tests, `agents/README.org`, and the directly
+   required Claude/Codex README updates;
 4. **rubric-visualizer bridge:** regular import-only `CLAUDE.md`;
 5. **Uqbar bridge:** regular import-only `CLAUDE.md` after safe synchronization;
 6. **Uqbar wrappers:** regular executable `build.py` and `launch.py` plus
@@ -320,7 +324,8 @@ all unrelated dirty and untracked files in every repository.
   location outside Drive, idempotent reinstall, and visible propagation of CLI
   errors.
 - parity tooling: bridge equivalence, normal drift, missing target, reminder
-  behavior, safe helper no-op, focused tests, and full `ai-config-sync audit`.
+  behavior, safe helper no-op, `update-log` bridge handling, focused tests, and
+  full `ai-config-sync audit`.
 - Uqbar wrappers: `bash -n`, mode `100755`, arguments containing spaces,
   arbitrary caller working directories, stdout and stderr, nonzero status, and
   `exec`-preserved behavior through disposable targets.
@@ -428,7 +433,8 @@ source of truth.
   validated helper and no longer create Epoch-account `.gdoc` pointers.
 - Both regular `CLAUDE.md` bridges import canonical `AGENTS.md`; parity tooling
   treats only the exact import-only form as synchronized and cannot overwrite
-  the target.
+  the target. The `update-log` workflow edits canonical `AGENTS.md` without
+  replacing or hand-editing the bridge.
 - Uqbar compatibility names remain executable from any working directory and
   preserve canonical command behavior without copied implementation.
 - Jinx/Enchant reads and writes each language's canonical dictionary through

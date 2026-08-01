@@ -125,7 +125,10 @@ python "$SKILL_DIR/scripts/orchestrate_agent_review.py" watch \
 ```
 
 This prints one concise line when state changes. If it produces no output, the
-state has not changed.
+state has not changed. A verdict label appears only for the designated reviewer
+transcript, only on assistant output, and only when the first nonblank line is
+exactly `IMPLEMENTATION-READY` or `NOT READY`. Verdict words in prompts and
+progress discussion are not terminal signals.
 
 Send concise commentary updates when state changes or every 60 seconds during long work.
 

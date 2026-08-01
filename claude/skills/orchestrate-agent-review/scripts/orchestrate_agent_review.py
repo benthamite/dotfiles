@@ -166,6 +166,8 @@ def transcript_messages(path: Path, since: str | None = None) -> list[dict[str, 
                 text = "\n".join(parts)
         else:
             message = obj.get("message") or {}
+            if message.get("role") != "assistant":
+                continue
             content = message.get("content")
             if isinstance(content, list):
                 parts = []
@@ -257,6 +259,21 @@ def status_cmd(args: argparse.Namespace) -> None:
                 print(f"{key}: mtime={item['mtime']} latest=<none>")
 
 
+def reviewer_verdict(transcript_key: str, latest: dict[str, str]) -> str | None:
+    """Return a terminal reviewer verdict, never verdict vocabulary in chatter."""
+    if transcript_key != "reviewer_transcript":
+        return None
+    if latest.get("kind") not in {"assistant", "complete", "message"}:
+        return None
+    first_line = next(
+        (line.strip() for line in latest.get("text", "").splitlines() if line.strip()),
+        "",
+    )
+    if first_line in {"IMPLEMENTATION-READY", "NOT READY"}:
+        return first_line
+    return None
+
+
 def watch(args: argparse.Namespace) -> None:
     last_rendered = ""
     while True:
@@ -272,12 +289,8 @@ def watch(args: argparse.Namespace) -> None:
                 if key in current:
                     latest = current[key]["latest"][0] if current[key]["latest"] else None
                     if latest:
-                        verdict = ""
-                        text = latest["text"]
-                        if "IMPLEMENTATION-READY" in text:
-                            verdict = " IMPLEMENTATION-READY"
-                        elif "NOT READY" in text:
-                            verdict = " NOT READY"
+                        verdict_text = reviewer_verdict(key, latest)
+                        verdict = f" {verdict_text}" if verdict_text else ""
                         parts.append(f"{key}_mtime={current[key]['mtime']}{verdict}")
             rendered = " | ".join(parts)
         if rendered != last_rendered:

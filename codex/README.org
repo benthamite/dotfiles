@@ -479,7 +479,8 @@ narrow revision prompts, and concrete stop conditions. Its bundled
 =orchestrate_agent_review.py= helper lists live agent buffers, submits prompt
 files, parses transcripts, reports repo/session status, and watches sessions
 with concise human-readable output by default; raw JSON and base64 tails are
-opt-in for debugging or machine parsing.
+separate opt-ins, and JSON omits tails unless =--include-tail= is explicitly
+requested for private local debugging.
 
 The =add-to-emacs-packages= skill is a Codex workflow for
 registering one of the user's Emacs packages in =my-emacs-packages.org=,

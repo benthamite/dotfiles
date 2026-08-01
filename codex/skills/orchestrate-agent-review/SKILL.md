@@ -43,8 +43,9 @@ python "$SKILL_DIR/scripts/orchestrate_agent_review.py" buffers
 ```
 
 Default helper output is for user-facing monitoring: concise text, no raw JSON,
-and no base64 buffer tails. Use `--json` only for debugging or machine parsing;
-do not paste `--json` output into commentary.
+and no base64 buffer tails. `--json` is only for debugging or machine parsing
+and still omits buffer tails by default. Use `--include-tail` only for private
+local debugging, never for commentary or prompts sent to another agent.
 
 Create a durable run file outside the repo or under an ignored state directory. The helper can create or update a JSON state file, but the supervising agent remains responsible for interpreting it:
 
@@ -107,7 +108,8 @@ python "$SKILL_DIR/scripts/orchestrate_agent_review.py" status \
 ```
 
 This prints a short human-readable status. Add `--json` only when another
-program will consume the output.
+program will consume the output; JSON omits buffer tails unless
+`--include-tail` is also supplied.
 
 For a polling loop:
 
@@ -122,7 +124,8 @@ python "$SKILL_DIR/scripts/orchestrate_agent_review.py" watch \
 ```
 
 This prints one concise line when state changes. If it produces no output, the
-state has not changed. Do not use `watch --json` for user-facing monitoring.
+state has not changed. Do not use `watch --json` for user-facing monitoring,
+and never use `watch --json --include-tail` in a live agent session.
 
 Send concise commentary updates when state changes or every 60 seconds during long work.
 

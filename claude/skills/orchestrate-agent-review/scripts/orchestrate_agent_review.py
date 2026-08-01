@@ -36,6 +36,21 @@ def elisp_string(value: str) -> str:
     return json.dumps(value)
 
 
+def without_tails(value: Any) -> Any:
+    """Return VALUE with base64 buffer tails removed from nested structures."""
+    if isinstance(value, dict):
+        return {k: without_tails(v) for k, v in value.items() if k != "tail_b64"}
+    if isinstance(value, list):
+        return [without_tails(item) for item in value]
+    return value
+
+
+def json_for_display(value: Any, include_tail: bool = False) -> str:
+    if not include_tail:
+        value = without_tails(value)
+    return json.dumps(value, ensure_ascii=False, indent=2)
+
+
 def buffers(args: argparse.Namespace) -> None:
     expr = r'''
 (progn
@@ -62,7 +77,7 @@ def buffers(args: argparse.Namespace) -> None:
 '''
     items = json.loads(run_emacs_eval(expr))
     if args.json:
-        print(json.dumps(items, ensure_ascii=False, indent=2))
+        print(json_for_display(items, args.include_tail))
         return
     for item in items:
         print(f"{item['state']:15} {item['buffer']} [{item['directory']}]")
@@ -94,7 +109,7 @@ def buffer_state(buffer: str) -> dict[str, Any]:
 def state_cmd(args: argparse.Namespace) -> None:
     state = buffer_state(args.buffer)
     if args.json:
-        print(json.dumps(state, ensure_ascii=False, indent=2))
+        print(json_for_display(state, args.include_tail))
     else:
         print(f"{state['state']:15} {state['buffer']} [{state['directory']}]")
 
@@ -221,7 +236,7 @@ def status(args: argparse.Namespace) -> dict[str, Any]:
 def status_cmd(args: argparse.Namespace) -> None:
     current = status(args)
     if args.json:
-        print(json.dumps(current, ensure_ascii=False, indent=2))
+        print(json_for_display(current, args.include_tail))
         return
     print("Repo:")
     print(current["repo"]["status"])
@@ -248,7 +263,7 @@ def watch(args: argparse.Namespace) -> None:
     while True:
         current = status(args)
         if args.json:
-            rendered = json.dumps(current, ensure_ascii=False, indent=2)
+            rendered = json_for_display(current, args.include_tail)
         else:
             parts = [current["repo"]["head"]]
             for role in ("planner", "reviewer"):
@@ -286,12 +301,14 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", required=True)
 
     p = sub.add_parser("buffers", help="List live Emacs agent buffers")
-    p.add_argument("--json", action="store_true", help="Emit raw JSON, including base64 buffer tails")
+    p.add_argument("--json", action="store_true", help="Emit structured JSON without buffer tails")
+    p.add_argument("--include-tail", action="store_true", help="Include base64 buffer tails in JSON output")
     p.set_defaults(func=buffers)
 
     p = sub.add_parser("state", help="Inspect one live Emacs agent buffer")
     p.add_argument("--buffer", required=True)
-    p.add_argument("--json", action="store_true", help="Emit raw JSON, including base64 buffer tail")
+    p.add_argument("--json", action="store_true", help="Emit structured JSON without buffer tail")
+    p.add_argument("--include-tail", action="store_true", help="Include base64 buffer tail in JSON output")
     p.set_defaults(func=state_cmd)
 
     p = sub.add_parser("submit", help="Submit a prompt file to a live agent buffer")
@@ -308,13 +325,15 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser("status", help="Collect repo, buffer, and transcript status once")
     add_status_args(p)
-    p.add_argument("--json", action="store_true", help="Emit raw JSON, including base64 buffer tails")
+    p.add_argument("--json", action="store_true", help="Emit structured JSON without buffer tails")
+    p.add_argument("--include-tail", action="store_true", help="Include base64 buffer tails in JSON output")
     p.set_defaults(func=status_cmd)
 
     p = sub.add_parser("watch", help="Poll repo, buffer, and transcript status")
     add_status_args(p)
     p.add_argument("--interval", type=float, default=20.0)
-    p.add_argument("--json", action="store_true", help="Emit raw JSON on each changed poll")
+    p.add_argument("--json", action="store_true", help="Emit structured JSON without buffer tails on each changed poll")
+    p.add_argument("--include-tail", action="store_true", help="Include base64 buffer tails in JSON output")
     p.set_defaults(func=watch)
 
     args = parser.parse_args(argv)

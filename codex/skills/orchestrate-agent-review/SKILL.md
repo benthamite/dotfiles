@@ -47,6 +47,12 @@ and no base64 buffer tails. `--json` is only for debugging or machine parsing
 and still omits buffer tails by default. Use `--include-tail` only for private
 local debugging, never for commentary or prompts sent to another agent.
 
+Do not replace the helper with ad-hoc `emacsclient --eval` probes that return
+buffer lists, raw JSON, base64 tails, or arbitrary buffer substrings. Raw
+Emacs return values are captured in live agent transcripts and can also pollute
+`*Messages*`. If the helper lacks a needed status view, extend the helper first
+and verify the resulting live Emacs output before continuing orchestration.
+
 Create a durable run file outside the repo or under an ignored state directory. The helper can create or update a JSON state file, but the supervising agent remains responsible for interpreting it:
 
 ```json
@@ -128,6 +134,12 @@ state has not changed. Do not use `watch --json` for user-facing monitoring,
 and never use `watch --json --include-tail` in a live agent session.
 
 Send concise commentary updates when state changes or every 60 seconds during long work.
+Before reporting that noisy monitoring is fixed, verify the live Emacs-visible
+behavior. Do not scan `*Messages*` with ad-hoc `emacsclient --eval` expressions
+that return or search large buffer substrings; those requests can block the
+Emacs server and can themselves produce noisy `*Messages*` entries. Use a
+bounded helper command for this verification, or inspect the live UI only when
+the user is already looking at it.
 
 ## Step 5: Advance the loop
 
